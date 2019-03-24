@@ -1,0 +1,116 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package com.alipay.sofa.registry.server.data.remoting.sessionserver.handler;
+
+import com.alipay.sofa.registry.common.model.GenericResponse;
+import com.alipay.sofa.registry.common.model.Node;
+import com.alipay.sofa.registry.common.model.dataserver.Datum;
+import com.alipay.sofa.registry.common.model.dataserver.GetDataRequest;
+import com.alipay.sofa.registry.log.Logger;
+import com.alipay.sofa.registry.log.LoggerFactory;
+import com.alipay.sofa.registry.remoting.Channel;
+import com.alipay.sofa.registry.server.data.bootstrap.DataServerConfig;
+import com.alipay.sofa.registry.server.data.cache.DatumCache;
+import com.alipay.sofa.registry.server.data.remoting.handler.AbstractServerHandler;
+import com.alipay.sofa.registry.server.data.remoting.sessionserver.forward.ForwardService;
+import com.alipay.sofa.registry.server.data.util.ThreadPoolExecutorDataServer;
+import com.alipay.sofa.registry.util.NamedThreadFactory;
+import com.alipay.sofa.registry.util.ParaCheckUtil;
+import org.springframework.beans.factory.annotation.Autowired;
+
+import java.util.Map;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.Executor;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
+
+/**
+ * processor to get specific data
+ *
+ * @author qian.lqlq
+ * @version $Id: GetDataProcessor.java, v 0.1 2017-12-01 15:48 qian.lqlq Exp $
+ */
+public class GetDataHandler extends AbstractServerHandler<GetDataRequest> {
+
+    /** LOGGER */
+    private static final Logger LOGGER = LoggerFactory.getLogger(GetDataHandler.class);
+    @Autowired
+    private ForwardService      forwardService;
+
+    @Autowired
+    private DataServerConfig    dataServerBootstrapConfig;
+
+    private ThreadPoolExecutor  getDataProcessorExecutor;
+
+    @Override
+    public void checkParam(GetDataRequest request) throws RuntimeException {
+        ParaCheckUtil.checkNotBlank(request.getDataInfoId(), "GetDataRequest.dataInfoId");
+    }
+
+    @Override
+    public Object doHandle(Channel channel, GetDataRequest request) {
+        String dataInfoId = request.getDataInfoId();
+        if (forwardService.needForward(dataInfoId)) {
+            try {
+                LOGGER.warn("[forward] Get data request forward, request: {}", request);
+                return forwardService.forwardRequest(dataInfoId, request);
+            } catch (Exception e) {
+                LOGGER.error("[forward] getData request error, request: {}", request, e);
+                GenericResponse response = new GenericResponse();
+                response.setSuccess(false);
+                response.setMessage(e.getMessage());
+                return response;
+            }
+        }
+
+        return new GenericResponse<Map<String, Datum>>().fillSucceed(DatumCache
+            .getDatumGroupByDataCenter(request.getDataCenter(), dataInfoId));
+    }
+
+    @Override
+    public GenericResponse<Map<String, Datum>> buildFailedResponse(String msg) {
+        return new GenericResponse<Map<String, Datum>>().fillFailed(msg);
+    }
+
+    @Override
+    public HandlerType getType() {
+        return HandlerType.PROCESSER;
+    }
+
+    @Override
+    public Class interest() {
+        return GetDataRequest.class;
+    }
+
+    @Override
+    protected Node.NodeType getConnectNodeType() {
+        return Node.NodeType.DATA;
+    }
+
+    @Override
+    public Executor getExecutor() {
+        if (getDataProcessorExecutor == null) {
+            getDataProcessorExecutor = new ThreadPoolExecutorDataServer("GetDataProcessorExecutor",
+                dataServerBootstrapConfig.getGetDataExecutorMinPoolSize(),
+                dataServerBootstrapConfig.getGetDataExecutorMaxPoolSize(),
+                dataServerBootstrapConfig.getGetDataExecutorKeepAliveTime(), TimeUnit.SECONDS,
+                new ArrayBlockingQueue<>(dataServerBootstrapConfig.getGetDataExecutorQueueSize()),
+                new NamedThreadFactory("DataServer-GetDataProcessor-executor", true));
+        }
+        return getDataProcessorExecutor;
+    }
+}

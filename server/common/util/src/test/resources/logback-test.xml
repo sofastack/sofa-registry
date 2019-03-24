@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+    <property name="LOG_HOME" value="${catalina.home}/logs"/>
+
+    <!-- 控制台输出 -->
+    <appender name="testAppender" class="com.alipay.sofa.registry.log.TestAppender">
+        <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+            <pattern>%m%n</pattern>
+        </encoder>
+    </appender>
+
+    <logger name="TRACE-LOGGER" level="TRACE">
+        <appender-ref ref="testAppender"/>
+    </logger>
+
+    <logger name="DEBUG-LOGGER" level="DEBUG">
+        <appender-ref ref="testAppender"/>
+    </logger>
+
+    <logger name="INFO-LOGGER" level="INFO">
+        <appender-ref ref="testAppender"/>
+    </logger>
+
+    <logger name="WARN-LOGGER" level="WARN">
+        <appender-ref ref="testAppender"/>
+    </logger>
+
+    <logger name="ERROR-LOGGER" level="ERROR">
+        <appender-ref ref="testAppender"/>
+    </logger>
+</configuration>

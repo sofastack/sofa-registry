@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE log4j:configuration SYSTEM "log4j.dtd">
+
+<!-- Log4j 1.x config -->
+<log4j:configuration xmlns:log4j="http://jakarta.apache.org/log4j/">
+
+    <!-- appender -->
+    <appender name="ERROR-APPENDER" class="org.apache.log4j.DailyRollingFileAppender">
+        <param name="file" value="${logging.path}/registry/common-error.log"/>
+        <param name="append" value="true"/>
+        <param name="encoding" value="${com.alipay.sofa.registry.client.log.encode}"/>
+        <param name="threshold" value="ERROR"/>
+        <param name="DatePattern" value="'.'yyyy-MM-dd"/>
+        <layout class="org.apache.log4j.PatternLayout">
+            <param name="ConversionPattern" value="%d %-5p %C{1}#%L %-32t - %m%n"/>
+        </layout>
+    </appender>
+
+    <appender name="ROOT-APPENDER" class="org.apache.log4j.DailyRollingFileAppender">
+        <param name="file" value="${logging.path}/registry/common-default.log"/>
+        <param name="append" value="true"/>
+        <param name="encoding" value="${com.alipay.sofa.registry.client.log.encode}"/>
+        <param name="threshold" value="${com.alipay.sofa.registry.client.log.level}"/>
+        <param name="DatePattern" value="'.'yyyy-MM-dd"/>
+        <layout class="org.apache.log4j.PatternLayout">
+            <param name="ConversionPattern" value="%d %-5p %-32t - %m%n"/>
+        </layout>
+        <filter class="org.apache.log4j.varia.LevelRangeFilter">
+            <param name="LevelMin" value="INFO"/>
+            <param name="LevelMax" value="WARN"/>
+        </filter>
+    </appender>
+
+    <appender name="DEFAULT-CLIENT-APPENDER" class="org.apache.log4j.DailyRollingFileAppender">
+        <param name="file" value="${logging.path}/registry/registry-client.log"/>
+        <param name="append" value="true"/>
+        <param name="encoding" value="${com.alipay.sofa.registry.client.log.encode}"/>
+        <param name="threshold" value="${com.alipay.sofa.registry.client.log.level}"/>
+        <param name="DatePattern" value="'.'yyyy-MM-dd"/>
+        <layout class="org.apache.log4j.PatternLayout">
+            <param name="ConversionPattern" value="%d %-5p %-32t - %m%n"/>
+        </layout>
+        <filter class="org.apache.log4j.varia.LevelRangeFilter">
+            <param name="LevelMin" value="INFO"/>
+            <param name="LevelMax" value="WARN"/>
+        </filter>
+    </appender>
+
+    <!-- logger -->
+    <logger name="com.alipay.sofa.registry.client" additivity="false">
+        <level value="${com.alipay.sofa.registry.client.log.level}"/>
+        <appender-ref ref="DEFAULT-CLIENT-APPENDER"/>
+        <appender-ref ref="ERROR-APPENDER"/>
+    </logger>
+
+    <root>
+        <level value="${com.alipay.sofa.registry.client.log.level}"/>
+        <appender-ref ref="ROOT-APPENDER"/>
+        <appender-ref ref="ERROR-APPENDER"/>
+    </root>
+
+</log4j:configuration>
