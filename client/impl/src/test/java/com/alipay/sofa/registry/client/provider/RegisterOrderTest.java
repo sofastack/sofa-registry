@@ -111,7 +111,7 @@ public class RegisterOrderTest extends BaseTest {
             assertTrue(ex instanceof IllegalStateException);
         }
 
-        Thread.sleep(500L);
+        Thread.sleep(1000L);
 
         assertTrue(publisher.isRegistered());
         assertFalse(publisher.isEnabled());
