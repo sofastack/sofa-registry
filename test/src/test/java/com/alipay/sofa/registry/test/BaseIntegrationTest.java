@@ -38,9 +38,12 @@ import com.alipay.sofa.registry.server.test.TestRegistryMain;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
+import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.SpringBootConfiguration;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.ConfigurableApplicationContext;
+import org.springframework.test.context.junit4.SpringRunner;
 
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.core.MediaType;
@@ -62,6 +65,7 @@ import static org.junit.Assert.assertTrue;
  * @author xuanbei 18/12/1
  */
 @SpringBootConfiguration
+@SpringBootTest
 public class BaseIntegrationTest {
     private static final AtomicBoolean              STARTED          = new AtomicBoolean(false);
 

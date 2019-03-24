@@ -32,7 +32,6 @@ import static org.junit.Assert.assertTrue;
  * @since 2019/1/14
  */
 @RunWith(SpringRunner.class)
-@SpringBootTest
 public class MetaDigestResourceTest extends BaseIntegrationTest {
     @Test
     public void testGetRegisterNodeByType() {

@@ -45,7 +45,6 @@ import static org.junit.Assert.assertTrue;
  * @since 2019/1/16
  */
 @RunWith(SpringRunner.class)
-@SpringBootTest
 public class SyncDataHandlerTest extends BaseIntegrationTest {
     @Test
     public void doTest() throws Exception {

@@ -33,7 +33,6 @@ import static org.junit.Assert.assertEquals;
  * @author xuanbei 18/12/2
  */
 @RunWith(SpringRunner.class)
-@SpringBootTest
 public class PubSubTest extends BaseIntegrationTest {
     /**
      * Publisher test.

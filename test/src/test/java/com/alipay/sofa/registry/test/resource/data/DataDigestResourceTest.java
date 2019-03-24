@@ -47,7 +47,6 @@ import static org.junit.Assert.assertTrue;
  * @since 2019/1/14
  */
 @RunWith(SpringRunner.class)
-@SpringBootTest
 public class DataDigestResourceTest extends BaseIntegrationTest {
     private volatile String dataId;
     private volatile String value;

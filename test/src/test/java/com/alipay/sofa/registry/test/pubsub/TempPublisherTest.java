@@ -43,7 +43,6 @@ import static org.junit.Assert.assertEquals;
  * @since 2019/1/15
  */
 @RunWith(SpringRunner.class)
-@SpringBootTest
 public class TempPublisherTest extends BaseIntegrationTest {
     @Test
     public void doTest() throws Exception {

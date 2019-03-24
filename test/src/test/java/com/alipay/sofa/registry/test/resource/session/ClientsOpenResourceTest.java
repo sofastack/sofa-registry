@@ -31,7 +31,6 @@ import static org.junit.Assert.assertTrue;
  * @since 2019/1/14
  */
 @RunWith(SpringRunner.class)
-@SpringBootTest
 public class ClientsOpenResourceTest extends BaseIntegrationTest {
     @Test
     public void testClientOff() throws Exception {

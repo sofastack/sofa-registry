@@ -50,7 +50,6 @@ import static org.junit.Assert.assertTrue;
  * @since 2019/1/16
  */
 @RunWith(SpringRunner.class)
-@SpringBootTest
 public class DataSyncTest extends BaseIntegrationTest {
     private static final int            TEST_SYNC_PORT = 9677;
     private DataServerConnectionFactory dataServerConnectionFactory;

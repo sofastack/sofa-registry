@@ -33,7 +33,6 @@ import static org.junit.Assert.assertEquals;
  * @since 2019/1/14
  */
 @RunWith(SpringRunner.class)
-@SpringBootTest
 public class SessionOpenResourceTest extends BaseIntegrationTest {
     @Test
     public void testCheckAlive() {
