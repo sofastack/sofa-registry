@@ -49,7 +49,7 @@ public class NetUtil {
     /**
      * The constant docker ip.
      */
-    public static final String          DOCKER_IP              = "172.17.0.1";
+    public static final String          DOCKER_IP            = "172.17.0.1";
 
     /** symbol : */
     public static final char            COLON                = ':';
@@ -151,8 +151,8 @@ public class NetUtil {
             return false;
         }
         String name = address.getHostAddress();
-        return (name != null && !ANYHOST.equals(name) && !LOCALHOST.equals(name) && !DOCKER_IP.equals(name) && IP_PATTERN
-            .matcher(name).matches());
+        return (name != null && !ANYHOST.equals(name) && !LOCALHOST.equals(name)
+                && !DOCKER_IP.equals(name) && IP_PATTERN.matcher(name).matches());
     }
 
     private static InetAddress getLocalAddress0() {

@@ -191,7 +191,7 @@ public class BaseIntegrationTest {
             .post(Entity.entity(new CancelAddressRequest(connectIds), MediaType.APPLICATION_JSON),
                 CommonResponse.class);
         assertTrue(response.isSuccess());
-        Thread.sleep(1000);
+        Thread.sleep(2000);
     }
 
     protected int getSourcePort(DefaultRegistryClient registryClient) throws Exception {

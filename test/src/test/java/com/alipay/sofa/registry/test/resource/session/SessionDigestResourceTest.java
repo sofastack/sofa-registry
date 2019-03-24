@@ -57,6 +57,7 @@ public class SessionDigestResourceTest extends BaseIntegrationTest {
     @Before
     public void before() throws Exception {
         super.before();
+        clientOff();
         dataId = "test-dataId-" + System.currentTimeMillis();
         value = "SessionDigestResourceTest";
 
