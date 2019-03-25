@@ -59,6 +59,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 /**
@@ -67,12 +69,15 @@ import static org.junit.Assert.assertTrue;
 @SpringBootConfiguration
 @SpringBootTest
 public class BaseIntegrationTest {
-    private static final AtomicBoolean              STARTED          = new AtomicBoolean(false);
+    private static final AtomicBoolean              STARTED                  = new AtomicBoolean(
+                                                                                 false);
 
-    public static final String                      LOCAL_ADDRESS    = NetUtil.getLocalAddress()
-                                                                         .getHostAddress();
-    public static final String                      LOCAL_DATACENTER = "DefaultDataCenter";
-    public static final String                      LOCAL_REGION     = "DEFAULT_ZONE";
+    public static final String                      LOCAL_ADDRESS            = NetUtil
+                                                                                 .getLocalAddress()
+                                                                                 .getHostAddress();
+    public static final String                      LOCAL_DATACENTER         = "DefaultDataCenter";
+    public static final String                      LOCAL_REGION             = "DEFAULT_ZONE";
+    private static final int                        CLIENT_OFF_MAX_WAIT_TIME = 30;
     protected static ConfigurableApplicationContext metaApplicationContext;
     protected static ConfigurableApplicationContext sessionApplicationContext;
     protected static ConfigurableApplicationContext dataApplicationContext;
@@ -191,7 +196,25 @@ public class BaseIntegrationTest {
             .post(Entity.entity(new CancelAddressRequest(connectIds), MediaType.APPLICATION_JSON),
                 CommonResponse.class);
         assertTrue(response.isSuccess());
-        Thread.sleep(2000);
+        int times = 0;
+        while (times++ < CLIENT_OFF_MAX_WAIT_TIME) {
+            if (clientOffSuccess()) {
+                return;
+            }
+            Thread.sleep(500);
+        }
+        throw new RuntimeException("clientOff failed.");
+    }
+
+    private boolean clientOffSuccess() {
+        String sessionDigestCount = sessionChannel.getWebTarget().path("digest/data/count")
+            .request(APPLICATION_JSON).get(String.class);
+        String dataDigestCount = dataChannel.getWebTarget().path("digest/datum/count")
+            .request(APPLICATION_JSON).get(String.class);
+        return sessionDigestCount
+            .equals("Subscriber count: 0, Publisher count: 0, Watcher count: 0")
+               && dataDigestCount
+                   .contains("[Publisher] size of publisher in DefaultDataCenter is 0");
     }
 
     protected int getSourcePort(DefaultRegistryClient registryClient) throws Exception {
