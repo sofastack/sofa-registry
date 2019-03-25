@@ -17,7 +17,6 @@
 package com.alipay.sofa.registry.test.sync;
 
 import com.alipay.remoting.Connection;
-import com.alipay.sofa.registry.client.api.model.RegistryType;
 import com.alipay.sofa.registry.client.api.registration.SubscriberRegistration;
 import com.alipay.sofa.registry.common.model.CommonResponse;
 import com.alipay.sofa.registry.common.model.dataserver.NotifyDataSyncRequest;
@@ -29,16 +28,15 @@ import com.alipay.sofa.registry.remoting.ChannelHandler;
 import com.alipay.sofa.registry.remoting.Server;
 import com.alipay.sofa.registry.remoting.bolt.BoltChannel;
 import com.alipay.sofa.registry.remoting.bolt.exchange.BoltExchange;
+import com.alipay.sofa.registry.server.data.cache.DatumCache;
 import com.alipay.sofa.registry.server.data.change.DataSourceTypeEnum;
 import com.alipay.sofa.registry.server.data.remoting.DataNodeExchanger;
 import com.alipay.sofa.registry.server.data.remoting.dataserver.DataServerConnectionFactory;
 import com.alipay.sofa.registry.server.data.remoting.dataserver.handler.DataSyncServerConnectionHandler;
 import com.alipay.sofa.registry.test.BaseIntegrationTest;
-import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import static com.alipay.sofa.registry.client.constants.ValueConstants.DEFAULT_GROUP;
@@ -101,9 +99,7 @@ public class DataSyncTest extends BaseIntegrationTest {
         assertEquals(1, userData.getZoneData().get(LOCAL_REGION).size());
         assertEquals(MockSyncDataHandler.value, userData.getZoneData().get(LOCAL_REGION).get(0));
 
-        registryClient1.unregister(MockSyncDataHandler.dataId, DEFAULT_GROUP,
-            RegistryType.SUBSCRIBER);
-        registryClient1.unregister(MockSyncDataHandler.dataId, DEFAULT_GROUP,
-            RegistryType.PUBLISHER);
+        // clear data
+        DatumCache.getAll().clear();
     }
 }

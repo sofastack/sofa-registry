@@ -16,7 +16,6 @@
  */
 package com.alipay.sofa.registry.test.sync;
 
-import com.alipay.sofa.registry.client.api.model.RegistryType;
 import com.alipay.sofa.registry.client.api.registration.PublisherRegistration;
 import com.alipay.sofa.registry.common.model.GenericResponse;
 import com.alipay.sofa.registry.common.model.dataserver.Datum;
@@ -25,12 +24,12 @@ import com.alipay.sofa.registry.common.model.dataserver.SyncDataRequest;
 import com.alipay.sofa.registry.common.model.store.DataInfo;
 import com.alipay.sofa.registry.common.model.store.URL;
 import com.alipay.sofa.registry.remoting.exchange.message.Request;
+import com.alipay.sofa.registry.server.data.cache.DatumCache;
 import com.alipay.sofa.registry.server.data.change.DataSourceTypeEnum;
 import com.alipay.sofa.registry.server.data.remoting.DataNodeExchanger;
 import com.alipay.sofa.registry.test.BaseIntegrationTest;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import java.util.List;
@@ -91,7 +90,7 @@ public class SyncDataHandlerTest extends BaseIntegrationTest {
         assertEquals(value, bytes2Object(datum.getPubMap().values().iterator().next().getDataList()
             .get(0).getBytes()));
 
-        // unregister publisher
-        registryClient1.unregister(dataId, DEFAULT_GROUP, RegistryType.PUBLISHER);
+        // clear data
+        DatumCache.getAll().clear();
     }
 }

@@ -17,10 +17,8 @@
 package com.alipay.sofa.registry.test;
 
 import com.alipay.remoting.Connection;
-import com.alipay.sofa.registry.client.api.ConfigDataObserver;
 import com.alipay.sofa.registry.client.api.RegistryClientConfig;
 import com.alipay.sofa.registry.client.api.SubscriberDataObserver;
-import com.alipay.sofa.registry.client.api.model.ConfigData;
 import com.alipay.sofa.registry.client.api.model.UserData;
 import com.alipay.sofa.registry.client.provider.DefaultRegistryClient;
 import com.alipay.sofa.registry.client.provider.DefaultRegistryClientConfigBuilder;
@@ -35,15 +33,10 @@ import com.alipay.sofa.registry.net.NetUtil;
 import com.alipay.sofa.registry.remoting.Channel;
 import com.alipay.sofa.registry.remoting.jersey.JerseyClient;
 import com.alipay.sofa.registry.server.test.TestRegistryMain;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.SpringBootConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.ConfigurableApplicationContext;
-import org.springframework.test.context.junit4.SpringRunner;
 
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.core.MediaType;
@@ -60,7 +53,6 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 /**
