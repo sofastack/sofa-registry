@@ -56,6 +56,7 @@ public class DataSyncTest extends BaseIntegrationTest {
 
     @BeforeClass
     public static void beforeClass() throws Exception {
+        startServerIfNecessary();
         BoltExchange boltExchange = (BoltExchange) dataApplicationContext.getBean("boltExchange");
         dataServerConnectionFactory = dataApplicationContext.getBean("dataServerConnectionFactory",
             DataServerConnectionFactory.class);

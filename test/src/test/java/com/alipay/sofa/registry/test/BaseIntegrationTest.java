@@ -35,6 +35,7 @@ import com.alipay.sofa.registry.remoting.Channel;
 import com.alipay.sofa.registry.remoting.jersey.JerseyClient;
 import com.alipay.sofa.registry.server.data.cache.DatumCache;
 import com.alipay.sofa.registry.server.test.TestRegistryMain;
+import org.junit.Before;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.SpringBootConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -103,23 +104,24 @@ public class BaseIntegrationTest {
     @Value("${data.server.syncDataPort}")
     protected int                                   syncDataPort;
 
-    public BaseIntegrationTest() {
-        try {
-            if (STARTED.compareAndSet(false, true)) {
-                Map<String, String> configs = new HashMap<>();
-                configs.put("nodes.metaNode", LOCAL_DATACENTER + ":" + LOCAL_ADDRESS);
-                configs.put("nodes.localDataCenter", LOCAL_DATACENTER);
-                configs.put("nodes.localRegion", LOCAL_REGION);
+    @Before
+    public void before() throws Exception {
+        startServerIfNecessary();
+    }
 
-                TestRegistryMain testRegistryMain = new TestRegistryMain();
-                testRegistryMain.startRegistryWithConfig(configs);
-                metaApplicationContext = testRegistryMain.getMetaApplicationContext();
-                sessionApplicationContext = testRegistryMain.getSessionApplicationContext();
-                dataApplicationContext = testRegistryMain.getDataApplicationContext();
-                initRegistryClientAndChannel();
-            }
-        } catch (Throwable t) {
-            throw new RuntimeException(t);
+    public static void startServerIfNecessary() throws Exception {
+        if (STARTED.compareAndSet(false, true)) {
+            Map<String, String> configs = new HashMap<>();
+            configs.put("nodes.metaNode", LOCAL_DATACENTER + ":" + LOCAL_ADDRESS);
+            configs.put("nodes.localDataCenter", LOCAL_DATACENTER);
+            configs.put("nodes.localRegion", LOCAL_REGION);
+
+            TestRegistryMain testRegistryMain = new TestRegistryMain();
+            testRegistryMain.startRegistryWithConfig(configs);
+            metaApplicationContext = testRegistryMain.getMetaApplicationContext();
+            sessionApplicationContext = testRegistryMain.getSessionApplicationContext();
+            dataApplicationContext = testRegistryMain.getDataApplicationContext();
+            initRegistryClientAndChannel();
         }
     }
 
@@ -158,6 +160,7 @@ public class BaseIntegrationTest {
     }
 
     protected static void clientOff() throws Exception {
+        startServerIfNecessary();
         List<String> connectIds = new ArrayList<>();
         connectIds.add(LOCAL_ADDRESS + ":" + getSourcePort(registryClient1));
         connectIds.add(LOCAL_ADDRESS + ":" + getSourcePort(registryClient2));
@@ -198,8 +201,8 @@ public class BaseIntegrationTest {
             .request(APPLICATION_JSON).get(String.class);
         return sessionDigestCount
             .equals("Subscriber count: 0, Publisher count: 0, Watcher count: 0")
-               && dataDigestCount
-                   .contains("[Publisher] size of publisher in DefaultDataCenter is 0");
+               && (dataDigestCount.equals("CacheDigest datum cache is empty") || dataDigestCount
+                   .contains("[Publisher] size of publisher in DefaultDataCenter is 0"));
     }
 
     protected static int getSourcePort(DefaultRegistryClient registryClient) throws Exception {
