@@ -54,6 +54,7 @@ public class StopPushDataSwitchTest extends BaseIntegrationTest {
         // open stop push switch
         assertTrue(metaChannel.getWebTarget().path("stopPushDataSwitch/open")
             .request(APPLICATION_JSON).get(Result.class).isSuccess());
+        BaseIntegrationTest.dataId = null;
 
         // register Publisher & Subscriber, Subscriber get no data
         String dataId = "test-dataId-" + System.currentTimeMillis();
@@ -67,7 +68,7 @@ public class StopPushDataSwitchTest extends BaseIntegrationTest {
         subReg.setScopeEnum(ScopeEnum.dataCenter);
         registryClient1.register(subReg);
         Thread.sleep(1000L);
-        assertNull(this.dataId);
+        assertNull(BaseIntegrationTest.dataId);
 
         // close stop push switch
         assertTrue(metaChannel.getWebTarget().path("stopPushDataSwitch/close")
@@ -98,6 +99,7 @@ public class StopPushDataSwitchTest extends BaseIntegrationTest {
         assertTrue(metaChannel.getWebTarget().path("stopPushDataSwitch/open").request(APPLICATION_JSON)
                 .get(Result.class)
                 .isSuccess());
+        BaseIntegrationTest.dataId = null;
 
         // register Publisher & Subscriber, Subscriber get no data
         String dataId = "test-dataId-hahhahahahha-" + System.currentTimeMillis();
@@ -110,7 +112,7 @@ public class StopPushDataSwitchTest extends BaseIntegrationTest {
         subReg.setScopeEnum(ScopeEnum.dataCenter);
         registryClient1.register(subReg);
         Thread.sleep(1000L);
-        assertNull(this.dataId);
+        assertNull(BaseIntegrationTest.dataId);
 
         // invoke code directly
         Interests sessionInterests = sessionApplicationContext.getBean(Interests.class);

@@ -82,30 +82,23 @@ public class BaseIntegrationTest {
     protected static ConfigurableApplicationContext sessionApplicationContext;
     protected static ConfigurableApplicationContext dataApplicationContext;
 
-    protected DefaultRegistryClient                 registryClient1;
+    protected static DefaultRegistryClient          registryClient1;
 
-    protected DefaultRegistryClient                 registryClient2;
+    protected static DefaultRegistryClient          registryClient2;
 
-    protected Channel                               sessionChannel;
+    protected static Channel                        sessionChannel;
 
-    protected Channel                               dataChannel;
+    protected static Channel                        dataChannel;
 
-    protected Channel                               metaChannel;
+    protected static Channel                        metaChannel;
 
-    protected volatile String                       dataId;
+    protected static volatile String                dataId;
+    protected static volatile String                value;
+    protected static volatile UserData              userData;
 
-    protected volatile UserData                     userData;
-
-    protected volatile ConfigData                   configData;
-
-    @Value("${session.server.httpServerPort}")
-    protected int                                   sessionPort;
-
-    @Value("${meta.server.httpServerPort}")
-    protected int                                   metaPort;
-
-    @Value("${data.server.httpServerPort}")
-    protected int                                   dataPort;
+    protected static int                            sessionPort              = 9603;
+    protected static int                            metaPort                 = 9615;
+    protected static int                            dataPort                 = 9622;
 
     @Value("${meta.server.raftServerPort}")
     protected int                                   raftPort;
@@ -116,24 +109,27 @@ public class BaseIntegrationTest {
     @Value("${data.server.syncDataPort}")
     protected int                                   syncDataPort;
 
-    @BeforeClass
-    public static void beforeClass() throws Exception {
-        if (STARTED.compareAndSet(false, true)) {
-            Map<String, String> configs = new HashMap<>();
-            configs.put("nodes.metaNode", LOCAL_DATACENTER + ":" + LOCAL_ADDRESS);
-            configs.put("nodes.localDataCenter", LOCAL_DATACENTER);
-            configs.put("nodes.localRegion", LOCAL_REGION);
+    public BaseIntegrationTest() {
+        try {
+            if (STARTED.compareAndSet(false, true)) {
+                Map<String, String> configs = new HashMap<>();
+                configs.put("nodes.metaNode", LOCAL_DATACENTER + ":" + LOCAL_ADDRESS);
+                configs.put("nodes.localDataCenter", LOCAL_DATACENTER);
+                configs.put("nodes.localRegion", LOCAL_REGION);
 
-            TestRegistryMain testRegistryMain = new TestRegistryMain();
-            testRegistryMain.startRegistryWithConfig(configs);
-            metaApplicationContext = testRegistryMain.getMetaApplicationContext();
-            sessionApplicationContext = testRegistryMain.getSessionApplicationContext();
-            dataApplicationContext = testRegistryMain.getDataApplicationContext();
+                TestRegistryMain testRegistryMain = new TestRegistryMain();
+                testRegistryMain.startRegistryWithConfig(configs);
+                metaApplicationContext = testRegistryMain.getMetaApplicationContext();
+                sessionApplicationContext = testRegistryMain.getSessionApplicationContext();
+                dataApplicationContext = testRegistryMain.getDataApplicationContext();
+                initRegistryClientAndChannel();
+            }
+        } catch (Throwable t) {
+            throw new RuntimeException(t);
         }
     }
 
-    @Before
-    public void before() throws Exception {
+    private static void initRegistryClientAndChannel() {
         if (registryClient1 == null) {
             RegistryClientConfig config = DefaultRegistryClientConfigBuilder.start()
                 .setAppName("testApp1").setDataCenter(LOCAL_DATACENTER).setZone(LOCAL_REGION)
@@ -157,35 +153,17 @@ public class BaseIntegrationTest {
             dataChannel = JerseyClient.getInstance().connect(new URL(LOCAL_ADDRESS, dataPort));
             metaChannel = JerseyClient.getInstance().connect(new URL(LOCAL_ADDRESS, metaPort));
         }
-
-        dataId = null;
-        userData = null;
     }
 
-    @After
-    public void after() throws Exception {
-        dataId = null;
-        userData = null;
-        configData = null;
-    }
-
-    public class MySubscriberDataObserver implements SubscriberDataObserver {
+    public static class MySubscriberDataObserver implements SubscriberDataObserver {
         @Override
         public void handleData(String dataId, UserData data) {
-            BaseIntegrationTest.this.dataId = dataId;
-            BaseIntegrationTest.this.userData = data;
+            BaseIntegrationTest.dataId = dataId;
+            BaseIntegrationTest.userData = data;
         }
     }
 
-    public class MyConfigDataObserver implements ConfigDataObserver {
-        @Override
-        public void handleData(String dataId, ConfigData configData) {
-            BaseIntegrationTest.this.dataId = dataId;
-            BaseIntegrationTest.this.configData = configData;
-        }
-    }
-
-    protected void clientOff() throws Exception {
+    protected static void clientOff() throws Exception {
         List<String> connectIds = new ArrayList<>();
         connectIds.add(LOCAL_ADDRESS + ":" + getSourcePort(registryClient1));
         connectIds.add(LOCAL_ADDRESS + ":" + getSourcePort(registryClient2));
@@ -206,7 +184,7 @@ public class BaseIntegrationTest {
         throw new RuntimeException("clientOff failed.");
     }
 
-    private boolean clientOffSuccess() {
+    private static boolean clientOffSuccess() {
         String sessionDigestCount = sessionChannel.getWebTarget().path("digest/data/count")
             .request(APPLICATION_JSON).get(String.class);
         String dataDigestCount = dataChannel.getWebTarget().path("digest/datum/count")
@@ -217,7 +195,7 @@ public class BaseIntegrationTest {
                    .contains("[Publisher] size of publisher in DefaultDataCenter is 0");
     }
 
-    protected int getSourcePort(DefaultRegistryClient registryClient) throws Exception {
+    protected static int getSourcePort(DefaultRegistryClient registryClient) throws Exception {
         Field workerThreadField = DefaultRegistryClient.class.getDeclaredField("workerThread");
         workerThreadField.setAccessible(true);
         WorkerThread workerThread = (WorkerThread) workerThreadField.get(registryClient);

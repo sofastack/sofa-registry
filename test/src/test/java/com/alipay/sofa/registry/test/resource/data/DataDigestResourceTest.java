@@ -24,7 +24,9 @@ import com.alipay.sofa.registry.common.model.store.Publisher;
 import com.alipay.sofa.registry.core.model.ScopeEnum;
 import com.alipay.sofa.registry.test.BaseIntegrationTest;
 import org.junit.After;
+import org.junit.AfterClass;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -48,12 +50,9 @@ import static org.junit.Assert.assertTrue;
  */
 @RunWith(SpringRunner.class)
 public class DataDigestResourceTest extends BaseIntegrationTest {
-    private volatile String dataId;
-    private volatile String value;
 
-    @Before
-    public void before() throws Exception {
-        super.before();
+    @BeforeClass
+    public static void beforeClass() throws Exception {
         clientOff();
         dataId = "test-dataId-" + System.currentTimeMillis();
         value = "DataDigestResourceTest";
@@ -69,9 +68,8 @@ public class DataDigestResourceTest extends BaseIntegrationTest {
         Thread.sleep(500L);
     }
 
-    @After
-    public void after() throws Exception {
-        super.after();
+    @AfterClass
+    public static void afterClass() {
         registryClient1.unregister(dataId, DEFAULT_GROUP, RegistryType.SUBSCRIBER);
         registryClient1.unregister(dataId, DEFAULT_GROUP, RegistryType.PUBLISHER);
     }

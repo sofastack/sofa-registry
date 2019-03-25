@@ -35,6 +35,7 @@ import com.alipay.sofa.registry.server.data.remoting.dataserver.DataServerConnec
 import com.alipay.sofa.registry.server.data.remoting.dataserver.handler.DataSyncServerConnectionHandler;
 import com.alipay.sofa.registry.test.BaseIntegrationTest;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -51,14 +52,13 @@ import static org.junit.Assert.assertTrue;
  */
 @RunWith(SpringRunner.class)
 public class DataSyncTest extends BaseIntegrationTest {
-    private static final int            TEST_SYNC_PORT = 9677;
-    private DataServerConnectionFactory dataServerConnectionFactory;
-    private Server                      dataSyncServer;
-    private String                      remoteIP;
+    private static final int                   TEST_SYNC_PORT = 9677;
+    private static DataServerConnectionFactory dataServerConnectionFactory;
+    private static Server                      dataSyncServer;
+    private static String                      remoteIP;
 
-    @Before
-    public void before() throws Exception {
-        super.before();
+    @BeforeClass
+    public static void beforeClass() throws Exception {
         BoltExchange boltExchange = (BoltExchange) dataApplicationContext.getBean("boltExchange");
         dataServerConnectionFactory = dataApplicationContext.getBean("dataServerConnectionFactory",
             DataServerConnectionFactory.class);
@@ -93,7 +93,7 @@ public class DataSyncTest extends BaseIntegrationTest {
 
         // assert result
         Thread.sleep(1000L);
-        assertEquals(MockSyncDataHandler.dataId, this.dataId);
+        assertEquals(MockSyncDataHandler.dataId, BaseIntegrationTest.dataId);
         assertEquals(LOCAL_REGION, userData.getLocalZone());
         assertEquals(1, userData.getZoneData().size());
         assertEquals(1, userData.getZoneData().values().size());
