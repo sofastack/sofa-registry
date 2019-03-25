@@ -182,10 +182,11 @@ public class NetUtil {
                                 continue;
                             }
                         } else {
-                            useNi = !NETWORK_INTERFACE_DENYLIST_VALUE.contains(network
-                                .getDisplayName())
-                                    && !NETWORK_INTERFACE_DENYLIST_VALUE
-                                        .contains(network.getName());
+                            if (NETWORK_INTERFACE_DENYLIST_VALUE.contains(network.getDisplayName())
+                                || NETWORK_INTERFACE_DENYLIST_VALUE.contains(network.getName())) {
+                                continue;
+                            }
+                            useNi = true;
                         }
 
                         Enumeration<InetAddress> addresses = network.getInetAddresses();
