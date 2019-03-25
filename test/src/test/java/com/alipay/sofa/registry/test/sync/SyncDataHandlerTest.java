@@ -24,7 +24,6 @@ import com.alipay.sofa.registry.common.model.dataserver.SyncDataRequest;
 import com.alipay.sofa.registry.common.model.store.DataInfo;
 import com.alipay.sofa.registry.common.model.store.URL;
 import com.alipay.sofa.registry.remoting.exchange.message.Request;
-import com.alipay.sofa.registry.server.data.cache.DatumCache;
 import com.alipay.sofa.registry.server.data.change.DataSourceTypeEnum;
 import com.alipay.sofa.registry.server.data.remoting.DataNodeExchanger;
 import com.alipay.sofa.registry.test.BaseIntegrationTest;
@@ -91,6 +90,6 @@ public class SyncDataHandlerTest extends BaseIntegrationTest {
             .get(0).getBytes()));
 
         // clear data
-        DatumCache.getAll().clear();
+        clearData();
     }
 }

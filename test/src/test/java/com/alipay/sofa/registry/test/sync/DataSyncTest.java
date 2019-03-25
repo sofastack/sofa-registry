@@ -28,7 +28,6 @@ import com.alipay.sofa.registry.remoting.ChannelHandler;
 import com.alipay.sofa.registry.remoting.Server;
 import com.alipay.sofa.registry.remoting.bolt.BoltChannel;
 import com.alipay.sofa.registry.remoting.bolt.exchange.BoltExchange;
-import com.alipay.sofa.registry.server.data.cache.DatumCache;
 import com.alipay.sofa.registry.server.data.change.DataSourceTypeEnum;
 import com.alipay.sofa.registry.server.data.remoting.DataNodeExchanger;
 import com.alipay.sofa.registry.server.data.remoting.dataserver.DataServerConnectionFactory;
@@ -100,6 +99,6 @@ public class DataSyncTest extends BaseIntegrationTest {
         assertEquals(MockSyncDataHandler.value, userData.getZoneData().get(LOCAL_REGION).get(0));
 
         // clear data
-        DatumCache.getAll().clear();
+        clearData();
     }
 }

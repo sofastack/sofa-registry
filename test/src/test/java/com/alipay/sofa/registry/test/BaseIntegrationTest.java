@@ -28,10 +28,12 @@ import com.alipay.sofa.registry.client.task.AbstractWorkerThread;
 import com.alipay.sofa.registry.client.task.WorkerThread;
 import com.alipay.sofa.registry.common.model.CommonResponse;
 import com.alipay.sofa.registry.common.model.sessionserver.CancelAddressRequest;
+import com.alipay.sofa.registry.common.model.store.Publisher;
 import com.alipay.sofa.registry.common.model.store.URL;
 import com.alipay.sofa.registry.net.NetUtil;
 import com.alipay.sofa.registry.remoting.Channel;
 import com.alipay.sofa.registry.remoting.jersey.JerseyClient;
+import com.alipay.sofa.registry.server.data.cache.DatumCache;
 import com.alipay.sofa.registry.server.test.TestRegistryMain;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.SpringBootConfiguration;
@@ -47,6 +49,7 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -174,6 +177,19 @@ public class BaseIntegrationTest {
             Thread.sleep(500);
         }
         throw new RuntimeException("clientOff failed.");
+    }
+
+    protected static void clearData() throws Exception {
+        DatumCache.getAll().clear();
+        List<String> connectIds = new ArrayList<>(Arrays.asList(
+            NetUtil.genHost(LOCAL_ADDRESS, getSourcePort(registryClient1)),
+            NetUtil.genHost(LOCAL_ADDRESS, getSourcePort(registryClient2))));
+        for (String connectId : connectIds) {
+            Map<String, Publisher> publisherMap = DatumCache.getByHost(connectId);
+            if (publisherMap != null) {
+                publisherMap.clear();
+            }
+        }
     }
 
     private static boolean clientOffSuccess() {
