@@ -54,7 +54,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
-
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static org.junit.Assert.assertTrue;
 
@@ -111,6 +110,7 @@ public class BaseIntegrationTest {
                 configs.put("nodes.metaNode", LOCAL_DATACENTER + ":" + LOCAL_ADDRESS);
                 configs.put("nodes.localDataCenter", LOCAL_DATACENTER);
                 configs.put("nodes.localRegion", LOCAL_REGION);
+                configs.put(NetUtil.NETWORK_INTERFACE_DENYLIST, "docker0");
 
                 TestRegistryMain testRegistryMain = new TestRegistryMain();
                 testRegistryMain.startRegistryWithConfig(configs);
