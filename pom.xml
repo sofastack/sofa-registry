@@ -80,6 +80,7 @@
         <commons-io.version>2.4</commons-io.version>
         <jetty.version>9.4.12.v20180830</jetty.version>
         <main.user.dir>${user.dir}</main.user.dir>
+        <argLine>-Dnetwork_interface_denylist=docker0</argLine>
     </properties>
 
     <dependencyManagement>
