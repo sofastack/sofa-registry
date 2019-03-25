@@ -110,7 +110,6 @@ public class BaseIntegrationTest {
                 configs.put("nodes.metaNode", LOCAL_DATACENTER + ":" + LOCAL_ADDRESS);
                 configs.put("nodes.localDataCenter", LOCAL_DATACENTER);
                 configs.put("nodes.localRegion", LOCAL_REGION);
-                configs.put(NetUtil.NETWORK_INTERFACE_DENYLIST, "docker0");
 
                 TestRegistryMain testRegistryMain = new TestRegistryMain();
                 testRegistryMain.startRegistryWithConfig(configs);
