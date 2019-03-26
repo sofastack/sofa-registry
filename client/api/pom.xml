@@ -13,10 +13,6 @@
     <artifactId>registry-client-api</artifactId>
 
     <properties>
-        <!-- Build args -->
-        <maven.compiler.source>1.6</maven.compiler.source>
-        <maven.compiler.target>1.6</maven.compiler.target>
-        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <main.user.dir>../../</main.user.dir>
     </properties>
 
@@ -36,6 +32,16 @@
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.7.0</version>
+                <configuration>
+                    <source>${maven.compiler.source}</source>
+                    <target>${maven.compiler.target}</target>
+                    <encoding>${project.build.sourceEncoding}</encoding>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-install-plugin</artifactId>
                 <configuration>
                     <skip>${module.install.skip}</skip>
@@ -46,6 +52,13 @@
                 <artifactId>maven-deploy-plugin</artifactId>
                 <configuration>
                     <skip>${module.deploy.skip}</skip>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.sonatype.plugins</groupId>
+                <artifactId>nexus-staging-maven-plugin</artifactId>
+                <configuration>
+                    <skipNexusStagingDeployMojo>${nexus.staging.deploy.mojo.skip}</skipNexusStagingDeployMojo>
                 </configuration>
             </plugin>
         </plugins>
