@@ -20,7 +20,6 @@ import com.alipay.sofa.registry.core.model.Result;
 import com.alipay.sofa.registry.test.BaseIntegrationTest;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import javax.ws.rs.client.Entity;
@@ -37,7 +36,6 @@ import static org.junit.Assert.assertTrue;
  * @since 2019/1/14
  */
 @RunWith(SpringRunner.class)
-@SpringBootTest
 public class MetaStoreResourceTest extends BaseIntegrationTest {
     @Test
     public void testManageMetaStoreResource() {

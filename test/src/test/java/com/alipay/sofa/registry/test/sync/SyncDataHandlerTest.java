@@ -16,7 +16,6 @@
  */
 package com.alipay.sofa.registry.test.sync;
 
-import com.alipay.sofa.registry.client.api.model.RegistryType;
 import com.alipay.sofa.registry.client.api.registration.PublisherRegistration;
 import com.alipay.sofa.registry.common.model.GenericResponse;
 import com.alipay.sofa.registry.common.model.dataserver.Datum;
@@ -30,7 +29,6 @@ import com.alipay.sofa.registry.server.data.remoting.DataNodeExchanger;
 import com.alipay.sofa.registry.test.BaseIntegrationTest;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import java.util.List;
@@ -45,7 +43,6 @@ import static org.junit.Assert.assertTrue;
  * @since 2019/1/16
  */
 @RunWith(SpringRunner.class)
-@SpringBootTest
 public class SyncDataHandlerTest extends BaseIntegrationTest {
     @Test
     public void doTest() throws Exception {
@@ -92,7 +89,7 @@ public class SyncDataHandlerTest extends BaseIntegrationTest {
         assertEquals(value, bytes2Object(datum.getPubMap().values().iterator().next().getDataList()
             .get(0).getBytes()));
 
-        // unregister publisher
-        registryClient1.unregister(dataId, DEFAULT_GROUP, RegistryType.PUBLISHER);
+        // clear data
+        clearData();
     }
 }

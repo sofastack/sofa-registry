@@ -23,7 +23,6 @@ import com.alipay.sofa.registry.core.model.ScopeEnum;
 import com.alipay.sofa.registry.test.BaseIntegrationTest;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import static com.alipay.sofa.registry.client.constants.ValueConstants.DEFAULT_GROUP;
@@ -33,7 +32,6 @@ import static org.junit.Assert.assertEquals;
  * @author xuanbei 18/12/2
  */
 @RunWith(SpringRunner.class)
-@SpringBootTest
 public class PubSubTest extends BaseIntegrationTest {
     /**
      * Publisher test.

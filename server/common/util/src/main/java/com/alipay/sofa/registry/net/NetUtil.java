@@ -23,7 +23,10 @@ import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.NetworkInterface;
 import java.net.UnknownHostException;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.Enumeration;
+import java.util.List;
 import java.util.regex.Pattern;
 
 /**
@@ -33,28 +36,39 @@ import java.util.regex.Pattern;
  */
 public class NetUtil {
 
-    private static final Logger         LOGGER               = LoggerFactory
-                                                                 .getLogger(NetUtil.class);
+    private static final Logger         LOGGER                           = LoggerFactory
+                                                                             .getLogger(NetUtil.class);
 
     /**
      * The constant LOCALHOST.
      */
-    public static final String          LOCALHOST            = "127.0.0.1";
+    public static final String          LOCALHOST                        = "127.0.0.1";
 
     /**
      * The constant ANYHOST.
      */
-    public static final String          ANYHOST              = "0.0.0.0";
+    public static final String          ANYHOST                          = "0.0.0.0";
 
     /** symbol : */
-    public static final char            COLON                = ':';
+    public static final char            COLON                            = ':';
 
-    private static volatile InetAddress LOCAL_ADDRESS        = null;
+    private static volatile InetAddress LOCAL_ADDRESS                    = null;
 
-    private static final Pattern        IP_PATTERN           = Pattern
-                                                                 .compile("\\d{1,3}(\\.\\d{1,3}){3,5}$");
+    private static final Pattern        IP_PATTERN                       = Pattern
+                                                                             .compile("\\d{1,3}(\\.\\d{1,3}){3,5}$");
 
-    public static final String          NETWORK_INTERFACE_IN = "network_interface_binding";
+    public static final String          NETWORK_INTERFACE_BINDING        = "network_interface_binding";
+    public static final String          NETWORK_INTERFACE_BINDING_VALUE  = System
+                                                                             .getProperty(NETWORK_INTERFACE_BINDING);
+    public static final String          NETWORK_INTERFACE_DENYLIST       = "network_interface_denylist";
+    public static final List<String>    NETWORK_INTERFACE_DENYLIST_VALUE = System
+                                                                             .getProperty(NETWORK_INTERFACE_DENYLIST) == null ? Collections
+                                                                             .emptyList()
+                                                                             : Arrays
+                                                                                 .asList(System
+                                                                                     .getProperty(
+                                                                                         NETWORK_INTERFACE_DENYLIST)
+                                                                                     .split(","));
 
     /**
      * Gen host string.
@@ -159,15 +173,19 @@ public class NetUtil {
                     try {
                         NetworkInterface network = interfaces.nextElement();
                         boolean useNi;
-                        String rpcNi = System.getProperty(NETWORK_INTERFACE_IN);
-                        if (rpcNi != null && !rpcNi.isEmpty()) {
-                            if (rpcNi.equals(network.getDisplayName())
-                                || rpcNi.equals(network.getName())) {
+                        if (NETWORK_INTERFACE_BINDING_VALUE != null
+                            && !NETWORK_INTERFACE_BINDING_VALUE.isEmpty()) {
+                            if (NETWORK_INTERFACE_BINDING_VALUE.equals(network.getDisplayName())
+                                || NETWORK_INTERFACE_BINDING_VALUE.equals(network.getName())) {
                                 useNi = true;
                             } else {
                                 continue;
                             }
                         } else {
+                            if (NETWORK_INTERFACE_DENYLIST_VALUE.contains(network.getDisplayName())
+                                || NETWORK_INTERFACE_DENYLIST_VALUE.contains(network.getName())) {
+                                continue;
+                            }
                             useNi = true;
                         }
 
