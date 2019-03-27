@@ -36,7 +36,8 @@ public class CollectionUtilsTest {
         boolean allValueSame = true;
         String firstValue = null;
         for (int i = 0; i < 10; i++) {
-            String radomeValue = CollectionUtils.getRandom(stringCollection).get();
+            String radomeValue = i % 2 == 0 ? CollectionUtils.getRandom(stringCollection).get()
+                : new CollectionUtils().getRandom(stringCollection).get();
             Assert.assertTrue(stringCollection.contains(radomeValue));
             if (firstValue == null) {
                 firstValue = radomeValue;

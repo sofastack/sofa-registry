@@ -14,22 +14,27 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alipay.sofa.registry.converter;
+package com.alipay.sofa.registry.util;
 
-import com.alipay.sofa.registry.core.model.ScopeEnum;
 import org.junit.Assert;
 import org.junit.Test;
 
+import java.util.HashMap;
+import java.util.Map;
+
 /**
  * @author xuanbei
- * @since 2018/12/28
+ * @since 2019/3/27
  */
-public class ScopeEnumConverterTest {
+public class VersionsMapUtilsTest {
     @Test
     public void doTest() {
-        Assert.assertEquals(ScopeEnum.zone, new ScopeEnumConverter().convertToScope("zone"));
-        Assert.assertEquals(ScopeEnum.dataCenter, ScopeEnumConverter.convertToScope("dataCenter"));
-        Assert.assertEquals(ScopeEnum.global, ScopeEnumConverter.convertToScope("global"));
-        Assert.assertEquals(ScopeEnum.zone, ScopeEnumConverter.convertToScope("other value"));
+        Map<String, Long> versionsMap = new HashMap<>();
+        Assert.assertTrue(VersionsMapUtils.checkAndUpdateVersions(versionsMap, "mockDataInfoId",
+            20L));
+        Assert.assertTrue(new VersionsMapUtils().checkAndUpdateVersions(versionsMap,
+            "mockDataInfoId", 30L));
+        Assert.assertFalse(new VersionsMapUtils().checkAndUpdateVersions(versionsMap,
+            "mockDataInfoId", 10L));
     }
 }
