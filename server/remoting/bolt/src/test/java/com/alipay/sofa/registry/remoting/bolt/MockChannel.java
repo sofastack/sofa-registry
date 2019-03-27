@@ -14,22 +14,45 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alipay.sofa.registry.converter;
+package com.alipay.sofa.registry.remoting.bolt;
 
-import com.alipay.sofa.registry.core.model.ScopeEnum;
-import org.junit.Assert;
-import org.junit.Test;
+import com.alipay.sofa.registry.remoting.Channel;
+
+import javax.ws.rs.client.WebTarget;
+import java.net.InetSocketAddress;
 
 /**
  * @author xuanbei
- * @since 2018/12/28
+ * @since 2019/3/26
  */
-public class ScopeEnumConverterTest {
-    @Test
-    public void doTest() {
-        Assert.assertEquals(ScopeEnum.zone, new ScopeEnumConverter().convertToScope("zone"));
-        Assert.assertEquals(ScopeEnum.dataCenter, ScopeEnumConverter.convertToScope("dataCenter"));
-        Assert.assertEquals(ScopeEnum.global, ScopeEnumConverter.convertToScope("global"));
-        Assert.assertEquals(ScopeEnum.zone, ScopeEnumConverter.convertToScope("other value"));
+public class MockChannel implements Channel {
+    @Override
+    public InetSocketAddress getRemoteAddress() {
+        return null;
+    }
+
+    @Override
+    public InetSocketAddress getLocalAddress() {
+        return null;
+    }
+
+    @Override
+    public boolean isConnected() {
+        return false;
+    }
+
+    @Override
+    public Object getAttribute(String key) {
+        return null;
+    }
+
+    @Override
+    public void setAttribute(String key, Object value) {
+
+    }
+
+    @Override
+    public WebTarget getWebTarget() {
+        return null;
     }
 }

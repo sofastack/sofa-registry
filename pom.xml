@@ -435,20 +435,6 @@
             </properties>
         </profile>
         <profile>
-            <id>ci-install</id>
-            <properties>
-                <skipTests>true</skipTests>
-                <maven.javadoc.skip>false</maven.javadoc.skip>
-            </properties>
-        </profile>
-        <profile>
-            <id>ci-test</id>
-            <properties>
-                <dependency.test.skip>false</dependency.test.skip>
-                <maven.javadoc.skip>true</maven.javadoc.skip>
-            </properties>
-        </profile>
-        <profile>
             <id>release</id>
             <build>
                 <plugins>
