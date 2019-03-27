@@ -19,8 +19,6 @@ package com.alipay.sofa.registry.timer;
 import io.netty.util.HashedWheelTimer;
 import io.netty.util.Timeout;
 import io.netty.util.TimerTask;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.concurrent.Executor;
 import java.util.concurrent.RejectedExecutionException;
@@ -36,36 +34,11 @@ import java.util.concurrent.TimeUnit;
  * @version $Id: AsyncHashedWheelTimer.java, v 0.1 2019-01-11 10:54 AM kezhu.wukz Exp $
  */
 public class AsyncHashedWheelTimer extends HashedWheelTimer {
-
-    private static final Logger            LOGGER                       = LoggerFactory
-                                                                            .getLogger(AsyncHashedWheelTimer.class);
+    /**  */
+    private final Executor           executor;
 
     /**  */
-    public static final TaskFailedCallback DEFAULT_TASK_FAILED_CALLBACK = new TaskFailedCallback() {
-                                                                            @Override
-                                                                            public void executionRejected(Throwable e) {
-                                                                                LOGGER
-                                                                                    .error(
-                                                                                        "executionRejected: "
-                                                                                                + e.getMessage(),
-                                                                                        e);
-                                                                            }
-
-                                                                            @Override
-                                                                            public void executionFailed(Throwable e) {
-                                                                                LOGGER
-                                                                                    .error(
-                                                                                        "executionFailed: "
-                                                                                                + e.getMessage(),
-                                                                                        e);
-                                                                            }
-                                                                        };
-
-    /**  */
-    private final Executor                 executor;
-
-    /**  */
-    private final TaskFailedCallback       taskFailedCallback;
+    private final TaskFailedCallback taskFailedCallback;
 
     /**
      *
@@ -83,56 +56,6 @@ public class AsyncHashedWheelTimer extends HashedWheelTimer {
         this.executor = new ThreadPoolExecutor(0, Integer.MAX_VALUE, 60L, TimeUnit.SECONDS,
             new SynchronousQueue<>(), asyncThreadFactory);
         this.taskFailedCallback = taskFailedCallback;
-    }
-
-    /**
-     *
-     * @param threadFactory
-     * @param tickDuration
-     * @param unit
-     * @param ticksPerWheel
-     * @param asyncExecutor
-     */
-    public AsyncHashedWheelTimer(ThreadFactory threadFactory, long tickDuration, TimeUnit unit,
-                                 int ticksPerWheel, Executor asyncExecutor,
-                                 TaskFailedCallback taskFailedCallback) {
-        super(threadFactory, tickDuration, unit, ticksPerWheel);
-
-        this.executor = asyncExecutor;
-        this.taskFailedCallback = taskFailedCallback;
-    }
-
-    /**
-     *
-     * @param threadFactory
-     * @param tickDuration
-     * @param unit
-     * @param ticksPerWheel
-     * @param asyncThreadFactory
-     */
-    public AsyncHashedWheelTimer(ThreadFactory threadFactory, long tickDuration, TimeUnit unit,
-                                 int ticksPerWheel, ThreadFactory asyncThreadFactory) {
-        super(threadFactory, tickDuration, unit, ticksPerWheel);
-
-        this.executor = new ThreadPoolExecutor(0, Integer.MAX_VALUE, 60L, TimeUnit.SECONDS,
-            new SynchronousQueue<>(), asyncThreadFactory);
-        this.taskFailedCallback = DEFAULT_TASK_FAILED_CALLBACK;
-    }
-
-    /**
-     *
-     * @param threadFactory
-     * @param tickDuration
-     * @param unit
-     * @param ticksPerWheel
-     * @param asyncExecutor
-     */
-    public AsyncHashedWheelTimer(ThreadFactory threadFactory, long tickDuration, TimeUnit unit,
-                                 int ticksPerWheel, Executor asyncExecutor) {
-        super(threadFactory, tickDuration, unit, ticksPerWheel);
-
-        this.executor = asyncExecutor;
-        this.taskFailedCallback = DEFAULT_TASK_FAILED_CALLBACK;
     }
 
     /**
