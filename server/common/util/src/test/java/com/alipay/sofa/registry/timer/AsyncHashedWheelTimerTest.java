@@ -36,7 +36,7 @@ public class AsyncHashedWheelTimerTest {
 
     @Test
     public void doTest() throws InterruptedException {
-        CountDownLatch countDownLatch = new CountDownLatch(1);
+        CountDownLatch countDownLatch = new CountDownLatch(2);
         ThreadFactoryBuilder threadFactoryBuilder = new ThreadFactoryBuilder();
         threadFactoryBuilder.setDaemon(true);
         final Timer timer = new AsyncHashedWheelTimer(threadFactoryBuilder.setNameFormat(
@@ -51,6 +51,7 @@ public class AsyncHashedWheelTimerTest {
             @Override
             public void executionFailed(Throwable t) {
                 executionFailedThrowable = t;
+                countDownLatch.countDown();
             }
         });
 
@@ -62,7 +63,7 @@ public class AsyncHashedWheelTimerTest {
             throw new Exception("execution failed.");
         },1000, TimeUnit.MILLISECONDS);
 
-        countDownLatch.await();
+        countDownLatch.await(3000, TimeUnit.MILLISECONDS);
         Assert.assertTrue(executeTime >= currentTime + 1000);
         Assert.assertNull(executionRejectedThrowable);
         Assert.assertNotNull(executionFailedThrowable);
