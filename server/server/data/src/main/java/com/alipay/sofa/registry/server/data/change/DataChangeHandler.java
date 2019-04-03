@@ -17,6 +17,7 @@
 package com.alipay.sofa.registry.server.data.change;
 
 import com.alipay.sofa.registry.common.model.dataserver.Datum;
+import com.alipay.sofa.registry.common.model.store.Publisher;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.server.data.bootstrap.DataServerConfig;
@@ -31,6 +32,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import javax.annotation.Resource;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.Executor;
 
 /**
@@ -178,11 +180,19 @@ public class DataChangeHandler implements InitializingBean {
             String dataCenter = datum.getDataCenter();
             String dataInfoId = datum.getDataInfoId();
             long version = datum.getVersion();
+
+            Datum existDatum = DatumCache.get(dataCenter, dataInfoId);
+            if (existDatum != null) {
+                Map<String, Publisher> cachePubMap = existDatum.getPubMap();
+                if (cachePubMap != null && !cachePubMap.isEmpty()) {
+                    datum.getPubMap().putAll(cachePubMap);
+                }
+            }
+
             LOGGER
                 .info(
-                    "[DataChangeHandler][{}] datum handle temp pub,datum={},dataCenter={}, dataInfoId={}, version={}, sourceType={}, changeType={},isContainsUnPub={}",
-                    name, datum.hashCode(), dataCenter, dataInfoId, version, sourceType,
-                    changeType, datum.isContainsUnPub());
+                    "[DataChangeHandler][{}] datum handle temp pub,datum={},dataCenter={}, dataInfoId={}, version={}, sourceType={}, changeType={}",
+                    name, datum.hashCode(), dataCenter, dataInfoId, version, sourceType, changeType);
 
             for (IDataChangeNotifier notifier : dataChangeNotifiers) {
                 if (notifier.getSuitableSource().contains(sourceType)) {

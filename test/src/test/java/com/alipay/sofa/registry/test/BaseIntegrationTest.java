@@ -165,6 +165,8 @@ public class BaseIntegrationTest {
         public void handleData(String dataId, UserData data) {
             BaseIntegrationTest.this.dataId = dataId;
             BaseIntegrationTest.this.userData = data;
+            System.out.println("MySubscriberDataObserver:"
+                               + userData.getZoneData().get(LOCAL_REGION).size());
         }
     }
 
