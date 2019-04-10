@@ -13,6 +13,7 @@ import com.google.common.collect.MapDifference.ValueDifference;
 import com.google.common.collect.Maps;
 
 import java.util.Map;
+import java.util.Set;
 
 /**
  *
@@ -36,6 +37,10 @@ public class MapConfiguration extends AbstractConfiguration {
 
     public String sourceName() {
         return sourceName;
+    }
+
+    public Set<String> keySet() {
+        return configs.keySet();
     }
 
     public String getProperty(String key, String defaultValue) {
