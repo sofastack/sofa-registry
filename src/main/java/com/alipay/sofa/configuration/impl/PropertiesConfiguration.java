@@ -31,6 +31,10 @@ public class PropertiesConfiguration extends AbstractConfiguration {
         return sourceName;
     }
 
+    public Set<String> keySet() {
+        return mapConfiguration.keySet();
+    }
+
     public String getProperty(String key, String defaultValue) {
         return mapConfiguration.getProperty(key, defaultValue);
     }

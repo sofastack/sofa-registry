@@ -154,6 +154,7 @@ public class CompositeConfigurationTest {
         Assert.assertEquals("v3", configuration.getProperty("k3"));
         Assert.assertEquals("v44", configuration.getProperty("k4"));
         Assert.assertEquals("v5", configuration.getProperty("k5"));
+        Assert.assertEquals(5, configuration.keySet().size());
     }
 
     @Test

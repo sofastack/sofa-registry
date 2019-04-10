@@ -9,6 +9,8 @@ public interface Configuration {
 
     void setOrder(int order);
 
+    Set<String> keySet();
+
     String getProperty(String key);
 
     String getProperty(String key, String defaultValue);
