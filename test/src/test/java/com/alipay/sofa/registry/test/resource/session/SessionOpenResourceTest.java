@@ -19,7 +19,6 @@ package com.alipay.sofa.registry.test.resource.session;
 import com.alipay.sofa.registry.test.BaseIntegrationTest;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import javax.ws.rs.core.GenericType;
@@ -33,7 +32,6 @@ import static org.junit.Assert.assertEquals;
  * @since 2019/1/14
  */
 @RunWith(SpringRunner.class)
-@SpringBootTest
 public class SessionOpenResourceTest extends BaseIntegrationTest {
     @Test
     public void testCheckAlive() {

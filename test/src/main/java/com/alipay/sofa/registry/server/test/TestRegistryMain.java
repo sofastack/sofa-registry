@@ -16,6 +16,7 @@
  */
 package com.alipay.sofa.registry.server.test;
 
+import com.alipay.sofa.registry.net.NetUtil;
 import com.alipay.sofa.registry.server.integration.RegistryApplication;
 import com.alipay.sofa.registry.util.FileUtils;
 import org.springframework.context.ConfigurableApplicationContext;
@@ -32,7 +33,7 @@ import static com.alipay.sofa.registry.common.model.constants.ValueConstants.DEF
  @since 2019/3/9
  */
 public class TestRegistryMain {
-    public static final String  LOCAL_ADDRESS = "127.0.0.1";
+    public static final String  LOCAL_ADDRESS = NetUtil.getLocalAddress().getHostAddress();
 
     private Map<String, String> configs       = new HashMap<>();
 

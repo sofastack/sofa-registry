@@ -19,7 +19,6 @@ package com.alipay.sofa.registry.test.resource.meta;
 import com.alipay.sofa.registry.test.BaseIntegrationTest;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import java.util.Map;
@@ -32,7 +31,6 @@ import static org.junit.Assert.assertTrue;
  * @since 2019/1/14
  */
 @RunWith(SpringRunner.class)
-@SpringBootTest
 public class MetaDigestResourceTest extends BaseIntegrationTest {
     @Test
     public void testGetRegisterNodeByType() {

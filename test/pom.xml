@@ -5,7 +5,7 @@
     <parent>
         <groupId>com.alipay.sofa</groupId>
         <artifactId>registry-parent</artifactId>
-        <version>5.2.0-SNAPSHOT</version>
+        <version>5.2.0</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
     <modelVersion>4.0.0</modelVersion>
@@ -20,6 +20,54 @@
         <dependency>
             <groupId>com.alipay.sofa</groupId>
             <artifactId>registry-server-integration</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.alipay.sofa</groupId>
+            <artifactId>registry-server-session</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.alipay.sofa</groupId>
+            <artifactId>registry-server-data</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.alipay.sofa</groupId>
+            <artifactId>registry-server-meta</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.alipay.sofa</groupId>
+            <artifactId>registry-store-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.alipay.sofa</groupId>
+            <artifactId>registry-store-jraft</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.alipay.sofa</groupId>
+            <artifactId>registry-remoting-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.alipay.sofa</groupId>
+            <artifactId>registry-remoting-bolt</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.alipay.sofa</groupId>
+            <artifactId>registry-remoting-http</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.alipay.sofa</groupId>
+            <artifactId>registry-consistency</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.alipay.sofa</groupId>
+            <artifactId>registry-common-model</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.alipay.sofa</groupId>
+            <artifactId>registry-common-util</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.alipay.sofa</groupId>
+            <artifactId>registry-core</artifactId>
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>

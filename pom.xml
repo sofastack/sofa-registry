@@ -6,7 +6,7 @@
 
     <groupId>com.alipay.sofa</groupId>
     <artifactId>registry-parent</artifactId>
-    <version>5.2.0-SNAPSHOT</version>
+    <version>5.2.0</version>
     <packaging>pom</packaging>
 
     <name>${project.groupId}:${project.artifactId}</name>
@@ -80,6 +80,7 @@
         <commons-io.version>2.4</commons-io.version>
         <jetty.version>9.4.12.v20180830</jetty.version>
         <main.user.dir>${user.dir}</main.user.dir>
+        <argLine>-Dnetwork_interface_denylist=docker0</argLine>
     </properties>
 
     <dependencyManagement>
@@ -431,20 +432,6 @@
             <properties>
                 <maven.javadoc.failOnError>false</maven.javadoc.failOnError>
                 <maven.javadoc.quiet>true</maven.javadoc.quiet>
-            </properties>
-        </profile>
-        <profile>
-            <id>ci-install</id>
-            <properties>
-                <skipTests>true</skipTests>
-                <maven.javadoc.skip>false</maven.javadoc.skip>
-            </properties>
-        </profile>
-        <profile>
-            <id>ci-test</id>
-            <properties>
-                <dependency.test.skip>false</dependency.test.skip>
-                <maven.javadoc.skip>true</maven.javadoc.skip>
             </properties>
         </profile>
         <profile>

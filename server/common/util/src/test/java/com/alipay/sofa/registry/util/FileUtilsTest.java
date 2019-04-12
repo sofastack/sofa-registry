@@ -37,7 +37,7 @@ public class FileUtilsTest {
         FileUtils.forceDelete(dir);
 
         String data = "FileUtilsTest";
-        FileUtils.writeByteArrayToFile(file, data.getBytes(), true);
+        new FileUtils().writeByteArrayToFile(file, data.getBytes(), true);
         byte[] readByte = FileUtils.readFileToByteArray(file);
         assertEquals(data, new String(readByte));
 

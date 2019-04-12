@@ -6,7 +6,7 @@
     <parent>
         <groupId>com.alipay.sofa</groupId>
         <artifactId>registry-server-parent</artifactId>
-        <version>5.2.0-SNAPSHOT</version>
+        <version>5.2.0</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
     <modelVersion>4.0.0</modelVersion>
@@ -15,6 +15,9 @@
     <packaging>pom</packaging>
 
     <properties>
+        <module.install.skip>true</module.install.skip>
+        <module.deploy.skip>true</module.deploy.skip>
+        <nexus.staging.deploy.mojo.skip>true</nexus.staging.deploy.mojo.skip>
         <main.user.dir>../../</main.user.dir>
     </properties>
 
@@ -24,5 +27,31 @@
         <module>meta</module>
         <module>integration</module>
     </modules>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-install-plugin</artifactId>
+                <configuration>
+                    <skip>${module.install.skip}</skip>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-deploy-plugin</artifactId>
+                <configuration>
+                    <skip>${module.deploy.skip}</skip>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.sonatype.plugins</groupId>
+                <artifactId>nexus-staging-maven-plugin</artifactId>
+                <configuration>
+                    <skipNexusStagingDeployMojo>${nexus.staging.deploy.mojo.skip}</skipNexusStagingDeployMojo>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
 
 </project>
