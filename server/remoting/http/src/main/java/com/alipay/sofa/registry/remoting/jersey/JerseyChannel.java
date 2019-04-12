@@ -52,7 +52,7 @@ public class JerseyChannel implements Channel {
     @Override
     public boolean isConnected() {
         if (client instanceof org.glassfish.jersey.client.JerseyClient) {
-            return ((org.glassfish.jersey.client.JerseyClient) client).isClosed();
+            return !((org.glassfish.jersey.client.JerseyClient) client).isClosed();
         }
         return false;
     }

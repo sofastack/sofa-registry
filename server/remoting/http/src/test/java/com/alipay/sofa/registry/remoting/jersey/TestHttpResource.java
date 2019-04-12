@@ -14,22 +14,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alipay.sofa.registry.converter;
+package com.alipay.sofa.registry.remoting.jersey;
 
-import com.alipay.sofa.registry.core.model.ScopeEnum;
-import org.junit.Assert;
-import org.junit.Test;
+import javax.ws.rs.GET;
+import javax.ws.rs.Path;
+import javax.ws.rs.Produces;
+import javax.ws.rs.core.MediaType;
 
 /**
  * @author xuanbei
- * @since 2018/12/28
+ * @since 2019/3/27
  */
-public class ScopeEnumConverterTest {
-    @Test
-    public void doTest() {
-        Assert.assertEquals(ScopeEnum.zone, new ScopeEnumConverter().convertToScope("zone"));
-        Assert.assertEquals(ScopeEnum.dataCenter, ScopeEnumConverter.convertToScope("dataCenter"));
-        Assert.assertEquals(ScopeEnum.global, ScopeEnumConverter.convertToScope("global"));
-        Assert.assertEquals(ScopeEnum.zone, ScopeEnumConverter.convertToScope("other value"));
+@Path("test")
+public class TestHttpResource {
+    @GET
+    @Produces(MediaType.APPLICATION_JSON)
+    public String test() {
+        return "TestResource";
     }
 }
