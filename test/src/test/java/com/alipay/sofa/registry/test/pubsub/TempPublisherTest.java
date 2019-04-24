@@ -108,7 +108,7 @@ public class TempPublisherTest extends BaseIntegrationTest {
         PublisherRegistration registration = new PublisherRegistration(dataId);
         registryClient1.register(registration, "test publish");
 
-        Thread.sleep(100L);
+        Thread.sleep(1000L);
 
         // publish temp data
         Publisher tempPublisher = new Publisher();
