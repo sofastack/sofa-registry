@@ -55,6 +55,8 @@ public class DataServerConfig {
 
     private int                clientOffDelayMs;
 
+    private int                notifyTempDataIntervalMs;
+
     private int                rpcTimeout;
 
     private CommonConfig       commonConfig;
@@ -231,6 +233,24 @@ public class DataServerConfig {
      */
     public void setNotifyIntervalMs(int notifyIntervalMs) {
         this.notifyIntervalMs = notifyIntervalMs;
+    }
+
+    /**
+     * Getter method for property <tt>notifyTempDataIntervalMs</tt>.
+     *
+     * @return property value of notifyTempDataIntervalMs
+     */
+    public int getNotifyTempDataIntervalMs() {
+        return notifyTempDataIntervalMs;
+    }
+
+    /**
+     * Setter method for property <tt>notifyTempDataIntervalMs</tt>.
+     *
+     * @param notifyTempDataIntervalMs  value to be assigned to property notifyTempDataIntervalMs
+     */
+    public void setNotifyTempDataIntervalMs(int notifyTempDataIntervalMs) {
+        this.notifyTempDataIntervalMs = notifyTempDataIntervalMs;
     }
 
     /**

@@ -154,6 +154,7 @@ public class BaseIntegrationTest {
     public static class MySubscriberDataObserver implements SubscriberDataObserver {
         @Override
         public void handleData(String dataId, UserData data) {
+
             BaseIntegrationTest.dataId = dataId;
             BaseIntegrationTest.userData = data;
         }

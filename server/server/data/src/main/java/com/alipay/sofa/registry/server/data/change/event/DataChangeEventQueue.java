@@ -16,6 +16,7 @@
  */
 package com.alipay.sofa.registry.server.data.change.event;
 
+import com.alipay.sofa.registry.common.model.PublishType;
 import com.alipay.sofa.registry.common.model.dataserver.Datum;
 import com.alipay.sofa.registry.common.model.store.Publisher;
 import com.alipay.sofa.registry.log.Logger;
@@ -72,6 +73,8 @@ public class DataChangeEventQueue {
 
     private final int                                  notifyIntervalMs;
 
+    private final int                                  notifyTempDataIntervalMs;
+
     private final ReentrantLock                        lock            = new ReentrantLock();
 
     private DataServerConfig                           dataServerConfig;
@@ -92,6 +95,7 @@ public class DataChangeEventQueue {
             eventQueue = new LinkedBlockingDeque<>(queueSize);
         }
         this.notifyIntervalMs = dataServerConfig.getNotifyIntervalMs();
+        this.notifyTempDataIntervalMs = dataServerConfig.getNotifyTempDataIntervalMs();
     }
 
     /**
@@ -121,7 +125,9 @@ public class DataChangeEventQueue {
         lock.lock();
         try {
             Datum datum = changeData.getDatum();
-            CHANGE_DATA_MAP.get(datum.getDataCenter()).remove(datum.getDataInfoId());
+            if (changeData.getSourceType() != DataSourceTypeEnum.PUB_TEMP) {
+                CHANGE_DATA_MAP.get(datum.getDataCenter()).remove(datum.getDataInfoId());
+            }
             return changeData;
         } finally {
             lock.unlock();
@@ -174,8 +180,15 @@ public class DataChangeEventQueue {
                     DataChangeScopeEnum scope = event.getScope();
                     if (scope == DataChangeScopeEnum.DATUM) {
                         DataChangeEvent dataChangeEvent = (DataChangeEvent) event;
-                        handleDatum(dataChangeEvent.getChangeType(),
-                                dataChangeEvent.getSourceType(), dataChangeEvent.getDatum());
+                        //Temporary push data will be notify as soon as,and not merge to normal pub data;
+                        if (dataChangeEvent.getSourceType() == DataSourceTypeEnum.PUB_TEMP){
+                            addTempChangeData(dataChangeEvent.getDatum(),dataChangeEvent.getChangeType(),
+                                    dataChangeEvent.getSourceType());
+                        }
+                        else {
+                            handleDatum(dataChangeEvent.getChangeType(),
+                                    dataChangeEvent.getSourceType(), dataChangeEvent.getDatum());
+                        }
                     } else if (scope == DataChangeScopeEnum.CLIENT) {
                         handleHost((ClientChangeEvent) event);
                     }
@@ -254,5 +267,13 @@ public class DataChangeEventQueue {
         } finally {
             lock.unlock();
         }
+    }
+
+    private void addTempChangeData(Datum targetDatum, DataChangeTypeEnum changeType,
+                                   DataSourceTypeEnum sourceType) {
+
+        ChangeData tempChangeData = new ChangeData(targetDatum, this.notifyTempDataIntervalMs,
+            sourceType, changeType);
+        CHANGE_QUEUE.put(tempChangeData);
     }
 }

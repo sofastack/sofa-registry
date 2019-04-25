@@ -89,8 +89,6 @@ public class DataPushTask extends AbstractSessionTask {
 
             String dataInfoId = datum.getDataInfoId();
 
-            PushTaskClosure pushTaskClosure = getTaskClosure();
-
             for (ScopeEnum scopeEnum : ScopeEnum.values()) {
                 Map<InetSocketAddress, Map<String, Subscriber>> map = getCache(scopeEnum,
                     dataInfoId);
@@ -113,11 +111,11 @@ public class DataPushTask extends AbstractSessionTask {
                                     if (ifLocalDataCenter) {
                                         if (isOldVersion) {
                                             fireUserDataElementPushTask(entry.getKey(), datum,
-                                                subscribersSend, pushTaskClosure);
+                                                subscribersSend);
                                         } else {
                                             fireReceivedDataMultiPushTask(datum,
                                                 subscriberRegisterIdList, ScopeEnum.zone,
-                                                subscriber, pushTaskClosure, subscriberMap);
+                                                subscriber, subscriberMap);
                                         }
                                     }
                                     break;
@@ -125,17 +123,17 @@ public class DataPushTask extends AbstractSessionTask {
                                     if (ifLocalDataCenter) {
                                         if (isOldVersion) {
                                             fireUserDataElementMultiPushTask(entry.getKey(), datum,
-                                                subscribersSend, pushTaskClosure);
+                                                subscribersSend);
                                         } else {
                                             fireReceivedDataMultiPushTask(datum,
                                                 subscriberRegisterIdList, scopeEnum, subscriber,
-                                                pushTaskClosure, subscriberMap);
+                                                subscriberMap);
                                         }
                                     }
                                     break;
                                 case global:
                                     fireReceivedDataMultiPushTask(datum, subscriberRegisterIdList,
-                                        scopeEnum, subscriber, pushTaskClosure, subscriberMap);
+                                        scopeEnum, subscriber, subscriberMap);
                                     break;
                                 default:
                                     LOGGER.warn("unknown scope, {}", subscriber);
@@ -144,38 +142,11 @@ public class DataPushTask extends AbstractSessionTask {
                     }
                 }
             }
-            pushTaskClosure.start();
         }
     }
 
-    public PushTaskClosure getTaskClosure() {
-        PushTaskClosure pushTaskClosure = new PushTaskClosure(executorManager.getPushTaskClosureExecutor());
-        pushTaskClosure.setTaskClosure((status, task) -> {
-            if (status == ProcessingResult.Success) {
-                Datum datum = dataPushRequest.getDatum();
-                String dataCenter = datum.getDataCenter();
-                String dataInfoId = datum.getDataInfoId();
-                Long version = datum.getVersion();
-
-                if (sessionServerConfig.isStopPushSwitch()) {
-                    LOGGER.info("Stop Push switch on,dataCenter {} dataInfoId {} version {} can not be update!",
-                            dataCenter, dataInfoId, version);
-                    return;
-                }
-
-                LOGGER.info("Push all temp data tasks success,dataCenter:{} dataInfoId:{} version:{} update!",
-                        dataCenter, dataInfoId,
-                        version);
-            } else {
-                LOGGER.warn("Push temp data tasks found error,subscribers version can not be update!");
-            }
-        });
-        return pushTaskClosure;
-    }
-
     private void fireReceivedDataMultiPushTask(Datum datum, List<String> subscriberRegisterIdList,
-                                               ScopeEnum scopeEnum, Subscriber subscriber,
-                                               PushTaskClosure pushTaskClosure, Map<String, Subscriber> subscriberMap) {
+                                               ScopeEnum scopeEnum, Subscriber subscriber, Map<String, Subscriber> subscriberMap) {
         Collection<Subscriber> subscribers = new ArrayList<>(subscriberMap.values());
         String dataId = datum.getDataId();
         Predicate<String> zonePredicate = (zone) -> {
@@ -194,6 +165,7 @@ public class DataPushTask extends AbstractSessionTask {
             }
             return false;
         };
+        LOGGER.info("Datum push={}",datum);
         ReceivedData receivedData = ReceivedDataConverter.getReceivedDataMulti(datum, scopeEnum,
                 subscriberRegisterIdList, sessionServerConfig.getSessionServerRegion(), zonePredicate);
 
@@ -201,10 +173,9 @@ public class DataPushTask extends AbstractSessionTask {
         Map<ReceivedData, URL> parameter = new HashMap<>();
         parameter.put(receivedData, subscriber.getSourceAddress());
         TaskEvent taskEvent = new TaskEvent(parameter, TaskType.RECEIVED_DATA_MULTI_PUSH_TASK);
-        taskEvent.setTaskClosure(pushTaskClosure);
         taskEvent.setAttribute(Constant.PUSH_CLIENT_SUBSCRIBERS, subscribers);
-        taskLogger.info("send {} taskURL:{},taskScope:{}", taskEvent.getTaskType(), subscriber.getSourceAddress(),
-                scopeEnum);
+        taskLogger.info("send {} taskURL:{},taskScope:{},version:{}", taskEvent.getTaskType(), subscriber.getSourceAddress(),
+                scopeEnum,receivedData.getVersion());
         taskListenerManager.sendTaskEvent(taskEvent);
     }
 
@@ -214,11 +185,9 @@ public class DataPushTask extends AbstractSessionTask {
     }
 
     private void fireUserDataElementPushTask(InetSocketAddress address, Datum datum,
-                                             Collection<Subscriber> subscribers,
-                                             PushTaskClosure pushTaskClosure) {
+                                             Collection<Subscriber> subscribers) {
 
         TaskEvent taskEvent = new TaskEvent(TaskType.USER_DATA_ELEMENT_PUSH_TASK);
-        taskEvent.setTaskClosure(pushTaskClosure);
 
         taskEvent.setAttribute(Constant.PUSH_CLIENT_SUBSCRIBERS, subscribers);
         taskEvent.setAttribute(Constant.PUSH_CLIENT_DATUM, datum);
@@ -233,11 +202,9 @@ public class DataPushTask extends AbstractSessionTask {
     }
 
     private void fireUserDataElementMultiPushTask(InetSocketAddress address, Datum datum,
-                                                  Collection<Subscriber> subscribers,
-                                                  PushTaskClosure pushTaskClosure) {
+                                                  Collection<Subscriber> subscribers) {
 
         TaskEvent taskEvent = new TaskEvent(TaskType.USER_DATA_ELEMENT_MULTI_PUSH_TASK);
-        taskEvent.setTaskClosure(pushTaskClosure);
 
         taskEvent.setAttribute(Constant.PUSH_CLIENT_SUBSCRIBERS, subscribers);
         taskEvent.setAttribute(Constant.PUSH_CLIENT_DATUM, datum);
