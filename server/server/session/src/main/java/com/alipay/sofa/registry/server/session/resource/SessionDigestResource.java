@@ -142,6 +142,20 @@ public class SessionDigestResource {
         return resultMap;
     }
 
+    @GET
+    @Path("getDataInfoIdList")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Collection<String> getDataInfoIdList() {
+        return sessionInterests.getInterestDataInfoIds();
+    }
+
+    @GET
+    @Path("checkSumDataInfoIdList")
+    @Produces(MediaType.APPLICATION_JSON)
+    public int checkSumDataInfoIdList() {
+        return sessionInterests.getInterestDataInfoIds().hashCode();
+    }
+
     private void fillServerList(String type,
                                 Map<String, Collection<? extends StoreData>> serverList,
                                 Collection<Publisher> publishers,
