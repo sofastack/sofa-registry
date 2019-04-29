@@ -196,6 +196,11 @@ public class SessionDataStore implements DataStore {
     }
 
     @Override
+    public Collection<String> getStoreDataInfoIds() {
+        return registry.keySet();
+    }
+
+    @Override
     public long count() {
         AtomicLong count = new AtomicLong(0);
         for (Map<String, Publisher> map : registry.values()) {
