@@ -183,6 +183,6 @@ public class SessionDigestResourceTest extends BaseIntegrationTest {
     public void testCheckSumDataInfoIdList() {
         int result = sessionChannel.getWebTarget().path("digest/checkSumDataInfoIdList")
             .request(APPLICATION_JSON).get(int.class);
-        assertTrue(result > 0);
+        assertTrue(result != 0);
     }
 }
