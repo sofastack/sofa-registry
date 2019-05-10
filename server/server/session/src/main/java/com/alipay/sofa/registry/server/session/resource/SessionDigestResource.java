@@ -37,6 +37,7 @@ import javax.ws.rs.core.MediaType;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
@@ -146,18 +147,17 @@ public class SessionDigestResource {
     @Path("getDataInfoIdList")
     @Produces(MediaType.APPLICATION_JSON)
     public Collection<String> getDataInfoIdList() {
-        Collection<String> ret = new ArrayList<>();
+        Collection<String> ret = new HashSet<>();
         ret.addAll(sessionInterests.getInterestDataInfoIds());
         ret.addAll(sessionDataStore.getStoreDataInfoIds());
-        return sessionInterests.getInterestDataInfoIds();
+        return ret;
     }
 
     @GET
     @Path("checkSumDataInfoIdList")
     @Produces(MediaType.APPLICATION_JSON)
     public int checkSumDataInfoIdList() {
-        return sessionInterests.getInterestDataInfoIds().hashCode()
-               + sessionDataStore.getStoreDataInfoIds().hashCode();
+        return getDataInfoIdList().hashCode();
     }
 
     private void fillServerList(String type,
