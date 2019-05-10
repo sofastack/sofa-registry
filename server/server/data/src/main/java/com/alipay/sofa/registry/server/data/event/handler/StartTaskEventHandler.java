@@ -54,10 +54,10 @@ public class StartTaskEventHandler extends AbstractEventHandler<StartTaskEvent> 
 
         for (AbstractTask task : tasks) {
             if (event.getSuitableTypes().contains(task.getStartTaskTypeEnum())) {
-                LOGGER.info("[StartTaskEventHandler] start task:%s", task.getName());
+                LOGGER.info("[StartTaskEventHandler] start task:{}", task.getName());
                 executor.scheduleWithFixedDelay(task, task.getInitialDelay(), task.getDelay(),
                     task.getTimeUnit());
-                LOGGER.info("[StartTaskEventHandler] start task:%s success", task.getName());
+                LOGGER.info("[StartTaskEventHandler] start task:{} success", task.getName());
             }
         }
     }
