@@ -18,7 +18,6 @@ package com.alipay.sofa.registry.server.data.event.handler;
 
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
-import com.alipay.sofa.registry.server.data.cache.CacheDigestTask;
 import com.alipay.sofa.registry.server.data.event.StartTaskEvent;
 import com.alipay.sofa.registry.server.data.executor.ExecutorFactory;
 import com.alipay.sofa.registry.server.data.remoting.dataserver.task.AbstractTask;
@@ -50,16 +49,22 @@ public class StartTaskEventHandler extends AbstractEventHandler<StartTaskEvent> 
     @Override
     public void doHandle(StartTaskEvent event) {
         if (executor == null || executor.isShutdown()) {
-            executor = ExecutorFactory.newScheduledThreadPool(tasks.size(), this.getClass()
-                .getSimpleName());
-            for (AbstractTask task : tasks) {
-                LOGGER.info("[StartTaskEventHandler] start task:{}", task.getName());
+            getExecutor();
+        }
+
+        for (AbstractTask task : tasks) {
+            if (event.getSuitableTypes().contains(task.getStartTaskTypeEnum())) {
+                LOGGER.info("[StartTaskEventHandler] start task:%s", task.getName());
                 executor.scheduleWithFixedDelay(task, task.getInitialDelay(), task.getDelay(),
                     task.getTimeUnit());
-                LOGGER.info("[StartTaskEventHandler] start task:{} success", task.getName());
+                LOGGER.info("[StartTaskEventHandler] start task:%s success", task.getName());
             }
-            new CacheDigestTask().start();
         }
+    }
+
+    private void getExecutor() {
+        executor = ExecutorFactory.newScheduledThreadPool(tasks.size(), this.getClass()
+            .getSimpleName());
     }
 
 }
