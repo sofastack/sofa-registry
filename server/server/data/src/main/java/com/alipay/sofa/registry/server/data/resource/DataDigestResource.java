@@ -16,21 +16,34 @@
  */
 package com.alipay.sofa.registry.server.data.resource;
 
+import com.alipay.remoting.Connection;
 import com.alipay.sofa.registry.common.model.dataserver.Datum;
 import com.alipay.sofa.registry.common.model.store.DataInfo;
 import com.alipay.sofa.registry.common.model.store.Publisher;
 import com.alipay.sofa.registry.net.NetUtil;
+import com.alipay.sofa.registry.server.data.bootstrap.DataServerConfig;
 import com.alipay.sofa.registry.server.data.cache.DatumCache;
+import com.alipay.sofa.registry.server.data.node.DataServerNode;
+import com.alipay.sofa.registry.server.data.remoting.dataserver.DataServerNodeFactory;
+import com.alipay.sofa.registry.server.data.remoting.metaserver.MetaServerConnectionFactory;
+import com.alipay.sofa.registry.server.data.remoting.sessionserver.SessionServerConnectionFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  *
@@ -39,6 +52,21 @@ import java.util.Map.Entry;
  */
 @Path("digest")
 public class DataDigestResource {
+
+    private final static String SESSION = "SESSION";
+
+    private final static String DATA    = "DATA";
+
+    private final static String META    = "META";
+
+    @Autowired
+    private SessionServerConnectionFactory sessionServerConnectionFactory;
+
+    @Autowired
+    private MetaServerConnectionFactory metaServerConnectionFactory;
+
+    @Autowired
+    private DataServerConfig dataServerConfig;
 
     @GET
     @Path("datum/query")
@@ -109,6 +137,90 @@ public class DataDigestResource {
         }
 
         return sb.toString();
+    }
+
+    @GET
+    @Path("{type}/serverList/query")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Map<String, List<String>> getServerListAll(@PathParam("type") String type) {
+
+        Map<String,List<String>> map = new HashMap<>();
+        if (type != null && !type.isEmpty()) {
+            String inputType = type.toUpperCase();
+
+            switch (inputType) {
+                case SESSION:
+                    List<String> sessionList = getSessionServerList();
+                    if (sessionList != null) {
+                        map = new HashMap<>();
+                        map.put(dataServerConfig.getLocalDataCenter(), sessionList);
+                    }
+                    break;
+                case DATA:
+                    map = getDataServerList();
+                    break;
+                case META:
+                    map = getMetaServerList();
+                    break;
+                default:
+                    map = new HashMap<>();
+                    break;
+            }
+
+        }
+        return map;
+    }
+
+    public List<String> getSessionServerList() {
+        List<String> connections = sessionServerConnectionFactory.getConnections().stream().filter(connection -> connection != null && connection.isFine())
+                .map(connection -> connection.getRemoteIP() + ":" + connection.getRemotePort())
+                .collect(Collectors.toList());
+        return connections;
+    }
+
+    public Map<String,List<String>> getDataServerList() {
+
+        Map<String,List<String>> map = new HashMap<>();
+        Set<String> allDataCenter = new HashSet<>(DataServerNodeFactory.getAllDataCenters());
+        for (String dataCenter:allDataCenter) {
+
+            List<String> list = map.computeIfAbsent(dataCenter,k->new ArrayList<>());
+
+            Map<String, DataServerNode> dataNodes = DataServerNodeFactory.getDataServerNodes(dataCenter);
+            if(dataNodes != null && !dataNodes.isEmpty()){
+
+                dataNodes.forEach((ip,dataServerNode)->{
+                    if (ip != null && !ip.equals(DataServerConfig.IP)) {
+                        Connection connection = dataServerNode.getConnection();
+                        if (connection != null && connection.isFine()) {
+                            list.add(connection.getRemoteIP());
+                        }
+                    }
+                });
+            }
+        }
+        return map;
+    }
+
+    public Map<String,List<String>> getMetaServerList() {
+
+        Map<String,List<String>> map = new HashMap<>();
+        Set<String> allDataCenter = new HashSet<>(metaServerConnectionFactory.getAllDataCenters());
+        for (String dataCenter:allDataCenter) {
+
+            List<String> list = map.computeIfAbsent(dataCenter,k->new ArrayList<>());
+
+            Map<String, Connection> metaConnections = metaServerConnectionFactory.getConnections(dataCenter);
+            if(metaConnections != null && !metaConnections.isEmpty()){
+
+                metaConnections.forEach((ip,connection)->{
+                    if (connection != null && connection.isFine()) {
+                        list.add(connection.getRemoteIP());
+                    }
+                });
+            }
+        }
+        return map;
     }
 
     private boolean isBlank(String dataInfoId) {
