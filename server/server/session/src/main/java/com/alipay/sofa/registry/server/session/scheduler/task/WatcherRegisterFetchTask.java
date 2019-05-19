@@ -103,15 +103,15 @@ public class WatcherRegisterFetchTask extends AbstractSessionTask {
         }
 
         if (provideData == null) {
-            taskLogger.error("Fetch provider data error,set null value return.dataInfoId={}", watcher.getDataId());
+            taskLogger.error("Fetch provider data error,set null value return.dataInfoId={}",
+                watcher.getDataId());
             provideData = new ProvideData(null, watcher.getDataInfoId(), null);
         }
 
         if (!isOldVersion) {
             DataInfo dataInfo = DataInfo.valueOf(provideData.getDataInfoId());
-            ReceivedConfigData receivedConfigData = ReceivedDataConverter
-                .getReceivedConfigData(provideData.getProvideData(), dataInfo,
-                    provideData.getVersion());
+            ReceivedConfigData receivedConfigData = ReceivedDataConverter.getReceivedConfigData(
+                provideData.getProvideData(), dataInfo, provideData.getVersion());
             receivedConfigData.setConfiguratorRegistIds(subscriberRegisterIdList);
             firePushTask(receivedConfigData);
         }

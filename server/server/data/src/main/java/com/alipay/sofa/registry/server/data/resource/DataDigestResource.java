@@ -53,20 +53,20 @@ import java.util.stream.Collectors;
 @Path("digest")
 public class DataDigestResource {
 
-    private final static String SESSION = "SESSION";
+    private final static String            SESSION = "SESSION";
 
-    private final static String DATA    = "DATA";
+    private final static String            DATA    = "DATA";
 
-    private final static String META    = "META";
+    private final static String            META    = "META";
 
     @Autowired
     private SessionServerConnectionFactory sessionServerConnectionFactory;
 
     @Autowired
-    private MetaServerConnectionFactory metaServerConnectionFactory;
+    private MetaServerConnectionFactory    metaServerConnectionFactory;
 
     @Autowired
-    private DataServerConfig dataServerConfig;
+    private DataServerConfig               dataServerConfig;
 
     @GET
     @Path("datum/query")
@@ -144,7 +144,7 @@ public class DataDigestResource {
     @Produces(MediaType.APPLICATION_JSON)
     public Map<String, List<String>> getServerListAll(@PathParam("type") String type) {
 
-        Map<String,List<String>> map = new HashMap<>();
+        Map<String, List<String>> map = new HashMap<>();
         if (type != null && !type.isEmpty()) {
             String inputType = type.toUpperCase();
 
