@@ -77,4 +77,12 @@ public interface Interests extends DataManager<Subscriber, String, String> {
      */
     Map<InetSocketAddress, Map<String, Subscriber>> querySubscriberIndex(String dataInfoId,
                                                                          ScopeEnum scope);
+
+    /**
+     * get subscriber by dataInfoId and registerId
+     * @param registerId
+     * @param dataInfoId
+     * @return
+     */
+    Subscriber queryById(String registerId, String dataInfoId);
 }
