@@ -108,8 +108,8 @@ public class DefaultSubscriberRegisterFetchTaskStrategy implements
         parameter.put(receivedData, subscriber.getSourceAddress());
         TaskEvent taskEvent = new TaskEvent(parameter,
             TaskEvent.TaskType.RECEIVED_DATA_MULTI_PUSH_TASK);
-        taskLogger.info("send {} taskURL:{},taskScope:{}", taskEvent.getTaskType(),
-            subscriber.getSourceAddress(), receivedData.getScope());
+        taskLogger.info("send {} taskURL:{},taskScope:{},taskId:{}", taskEvent.getTaskType(),
+            subscriber.getSourceAddress(), receivedData.getScope(), taskEvent.getTaskId());
         taskListenerManager.sendTaskEvent(taskEvent);
     }
 
@@ -141,9 +141,9 @@ public class DefaultSubscriberRegisterFetchTaskStrategy implements
         taskEvent.setAttribute(Constant.PUSH_CLIENT_URL, subscriber.getSourceAddress());
 
         int size = datum.getPubMap() != null ? datum.getPubMap().size() : 0;
-        taskLogger.info("send {} taskURL:{},dataInfoId={},dataCenter={},pubSize={}",
+        taskLogger.info("send {} taskURL:{},dataInfoId={},dataCenter={},pubSize={},taskId={}",
             taskEvent.getTaskType(), subscriber.getSourceAddress(), datum.getDataInfoId(),
-            datum.getDataCenter(), size);
+            datum.getDataCenter(), size, taskEvent.getTaskId());
         taskListenerManager.sendTaskEvent(taskEvent);
     }
 
@@ -161,9 +161,9 @@ public class DefaultSubscriberRegisterFetchTaskStrategy implements
 
         int size = datum.getPubMap() != null ? datum.getPubMap().size() : 0;
 
-        taskLogger.info("send {} taskURL:{},dataInfoId={},dataCenter={},pubSize={}",
+        taskLogger.info("send {} taskURL:{},dataInfoId={},dataCenter={},pubSize={},taskId={}",
             taskEvent.getTaskType(), subscriber.getSourceAddress(), datum.getDataInfoId(),
-            datum.getDataCenter(), size);
+            datum.getDataCenter(), size, taskEvent.getTaskId());
         taskListenerManager.sendTaskEvent(taskEvent);
     }
 }
