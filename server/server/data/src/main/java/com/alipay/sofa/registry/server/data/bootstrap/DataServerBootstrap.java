@@ -23,10 +23,12 @@ import com.alipay.sofa.registry.net.NetUtil;
 import com.alipay.sofa.registry.remoting.ChannelHandler;
 import com.alipay.sofa.registry.remoting.Server;
 import com.alipay.sofa.registry.remoting.exchange.Exchange;
+import com.alipay.sofa.registry.server.data.cache.CacheDigestTask;
 import com.alipay.sofa.registry.server.data.datasync.sync.Scheduler;
 import com.alipay.sofa.registry.server.data.event.EventCenter;
 import com.alipay.sofa.registry.server.data.event.MetaServerChangeEvent;
 import com.alipay.sofa.registry.server.data.event.StartTaskEvent;
+import com.alipay.sofa.registry.server.data.event.StartTaskTypeEnum;
 import com.alipay.sofa.registry.server.data.remoting.handler.AbstractServerHandler;
 import com.alipay.sofa.registry.server.data.remoting.metaserver.IMetaServerService;
 import org.glassfish.jersey.server.ResourceConfig;
@@ -38,10 +40,12 @@ import javax.annotation.Resource;
 import javax.ws.rs.Path;
 import javax.ws.rs.ext.Provider;
 import java.lang.annotation.Annotation;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.stream.Collectors;
 
 /**
  *
@@ -186,7 +190,13 @@ public class DataServerBootstrap {
         try {
             if (schedulerStarted.compareAndSet(false, true)) {
                 syncDataScheduler.startScheduler();
-                eventCenter.post(StartTaskEvent.getInstance());
+                // start all startTask except renew task
+                eventCenter.post(new StartTaskEvent(
+                        Arrays.stream(StartTaskTypeEnum.values()).filter(type->type != StartTaskTypeEnum.RENEW).collect(
+                                Collectors.toSet())));
+
+                //start dump log
+                new CacheDigestTask().start();
             }
         } catch (Exception e) {
             schedulerStarted.set(false);

@@ -16,28 +16,30 @@
  */
 package com.alipay.sofa.registry.server.data.event;
 
-import java.util.Set;
-
 /**
  *
- * @author qian.lqlq
- * @version $Id: StartTaskEvent.java, v 0.1 2018-03-13 15:13 qian.lqlq Exp $
+ * @author shangyu.wh
+ * @version $Id: StartTaskTypeEnum.java, v 0.1 2019-04-22 14:35 shangyu.wh Exp $
  */
-public class StartTaskEvent {
-
-    private final Set<StartTaskTypeEnum> suitableTypes;
-
-    public StartTaskEvent(Set<StartTaskTypeEnum> suitableTypes) {
-        this.suitableTypes = suitableTypes;
-    }
+public enum StartTaskTypeEnum {
 
     /**
-     * Getter method for property <tt>suitableTypes</tt>.
-     *
-     * @return property value of suitableTypes
+     * ConnectionRefreshMetaTask
      */
-    public Set<StartTaskTypeEnum> getSuitableTypes() {
-        return suitableTypes;
-    }
+    CONNECT_META,
 
+    /**
+     * ConnectionRefreshDataTask
+     */
+    CONNECT_DATA,
+
+    /**
+     * ReNewNodeTask
+     */
+    RENEW,
+
+    /**
+     * VersionCompareTask
+     */
+    VERSION_COMPARE
 }
