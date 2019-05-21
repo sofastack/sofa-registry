@@ -18,6 +18,7 @@ package com.alipay.sofa.registry.server.data.remoting.dataserver.task;
 
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
+import com.alipay.sofa.registry.server.data.event.StartTaskTypeEnum;
 
 import java.util.concurrent.TimeUnit;
 
@@ -74,4 +75,9 @@ public abstract class AbstractTask implements Runnable {
      */
     public abstract TimeUnit getTimeUnit();
 
+    /**
+     * get type to match post
+     * @return
+     */
+    public abstract StartTaskTypeEnum getStartTaskTypeEnum();
 }
