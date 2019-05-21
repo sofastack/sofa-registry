@@ -191,6 +191,11 @@ public class ReceivedDataMultiPushTask extends AbstractSessionTask implements Ta
 
     @Override
     public void setTaskEvent(TaskEvent taskEvent) {
+        //taskId create from event
+        if (taskEvent.getTaskId() != null) {
+            setTaskId(taskEvent.getTaskId());
+        }
+
         Object obj = taskEvent.getEventObj();
 
         if (obj instanceof Map) {
@@ -211,10 +216,6 @@ public class ReceivedDataMultiPushTask extends AbstractSessionTask implements Ta
         }
 
         taskClosure = taskEvent.getTaskClosure();
-
-        if (taskClosure instanceof PushTaskClosure) {
-            ((PushTaskClosure) taskClosure).addTask(this);
-        }
 
         subscribers = (Collection<Subscriber>) taskEvent
             .getAttribute(Constant.PUSH_CLIENT_SUBSCRIBERS);
