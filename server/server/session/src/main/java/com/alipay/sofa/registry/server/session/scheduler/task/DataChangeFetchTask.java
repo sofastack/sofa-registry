@@ -248,8 +248,8 @@ public class DataChangeFetchTask extends AbstractSessionTask {
         TaskEvent taskEvent = new TaskEvent(parameter, TaskType.RECEIVED_DATA_MULTI_PUSH_TASK);
         taskEvent.setTaskClosure(pushTaskClosure);
         taskEvent.setAttribute(Constant.PUSH_CLIENT_SUBSCRIBERS, subscribers);
-        taskLogger.info("send {} taskURL:{},taskScope:{}", taskEvent.getTaskType(), subscriber.getSourceAddress(),
-                scopeEnum);
+        taskLogger.info("send {} taskURL:{},taskScope:{},,taskId={}", taskEvent.getTaskType(), subscriber.getSourceAddress(),
+                scopeEnum,taskEvent.getTaskId());
         taskListenerManager.sendTaskEvent(taskEvent);
     }
 
@@ -278,9 +278,10 @@ public class DataChangeFetchTask extends AbstractSessionTask {
 
         int size = datum != null && datum.getPubMap() != null ? datum.getPubMap().size() : 0;
 
-        taskLogger.info("send {} taskURL:{},dataInfoId={},dataCenter={},pubSize={},subSize={}",
+        taskLogger.info(
+            "send {} taskURL:{},dataInfoId={},dataCenter={},pubSize={},subSize={},taskId={}",
             taskEvent.getTaskType(), address, datum.getDataInfoId(), datum.getDataCenter(), size,
-            subscribers.size());
+            subscribers.size(), taskEvent.getTaskId());
         taskListenerManager.sendTaskEvent(taskEvent);
     }
 
@@ -297,9 +298,10 @@ public class DataChangeFetchTask extends AbstractSessionTask {
 
         int size = datum != null && datum.getPubMap() != null ? datum.getPubMap().size() : 0;
 
-        taskLogger.info("send {} taskURL:{},dataInfoId={},dataCenter={},pubSize={},subSize={}",
+        taskLogger.info(
+            "send {} taskURL:{},dataInfoId={},dataCenter={},pubSize={},subSize={},taskId={}",
             taskEvent.getTaskType(), address, datum.getDataInfoId(), datum.getDataCenter(), size,
-            subscribers.size());
+            subscribers.size(), taskEvent.getTaskId());
         taskListenerManager.sendTaskEvent(taskEvent);
     }
 
@@ -310,6 +312,12 @@ public class DataChangeFetchTask extends AbstractSessionTask {
 
     @Override
     public void setTaskEvent(TaskEvent taskEvent) {
+
+        //taskId create from event
+        if (taskEvent.getTaskId() != null) {
+            setTaskId(taskEvent.getTaskId());
+        }
+
         Object obj = taskEvent.getEventObj();
 
         if (!(obj instanceof DataChangeRequest)) {
