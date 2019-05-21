@@ -39,6 +39,7 @@ import com.alipay.sofa.registry.server.data.remoting.dataserver.DataServerNodeFa
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -81,11 +82,14 @@ public class DefaultMetaServiceImpl implements IMetaServerService {
         Connection connection = null;
         try {
             if (connectionMap.isEmpty()) {
-                connection = ((BoltChannel) metaNodeExchanger.connect(new URL(
-                    set.iterator().next(), dataServerBootstrapConfig.getMetaServerPort())))
-                    .getConnection();
+                List<String> list = new ArrayList(set);
+                Collections.shuffle(list);
+                connection = ((BoltChannel) metaNodeExchanger.connect(new URL(list.iterator()
+                    .next(), dataServerBootstrapConfig.getMetaServerPort()))).getConnection();
             } else {
-                connection = connectionMap.values().iterator().next();
+                List<Connection> connections = new ArrayList<>(connectionMap.values());
+                Collections.shuffle(connections);
+                connection = connections.iterator().next();
             }
 
             GetNodesRequest request = new GetNodesRequest(NodeType.META);
@@ -127,6 +131,8 @@ public class DefaultMetaServiceImpl implements IMetaServerService {
                 .warn(
                     "[DefaultMetaServiceImpl] refresh connections from metaServer error,refresh leader : {}",
                     con);
+            throw new RuntimeException(
+                "[DefaultMetaServiceImpl] refresh connections from metaServer error!", e);
         }
         return map;
     }
