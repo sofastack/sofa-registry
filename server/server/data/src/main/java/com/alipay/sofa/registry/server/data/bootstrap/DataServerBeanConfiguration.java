@@ -33,7 +33,9 @@ import com.alipay.sofa.registry.server.data.datasync.sync.LocalAcceptorStore;
 import com.alipay.sofa.registry.server.data.datasync.sync.Scheduler;
 import com.alipay.sofa.registry.server.data.datasync.sync.StoreServiceFactory;
 import com.alipay.sofa.registry.server.data.datasync.sync.SyncDataServiceImpl;
+import com.alipay.sofa.registry.server.data.event.AfterWorkingProcess;
 import com.alipay.sofa.registry.server.data.event.EventCenter;
+import com.alipay.sofa.registry.server.data.event.handler.AfterWorkingProcessHandler;
 import com.alipay.sofa.registry.server.data.event.handler.DataServerChangeEventHandler;
 import com.alipay.sofa.registry.server.data.event.handler.LocalDataServerChangeEventHandler;
 import com.alipay.sofa.registry.server.data.event.handler.MetaServerChangeEventHandler;
@@ -76,6 +78,7 @@ import com.alipay.sofa.registry.server.data.resource.HealthResource;
 import com.alipay.sofa.registry.util.PropertySplitter;
 import org.glassfish.jersey.jackson.JacksonFeature;
 import org.glassfish.jersey.server.ResourceConfig;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
@@ -448,5 +451,29 @@ public class DataServerBeanConfiguration {
         public DataDigestResource dataDigestResource() {
             return new DataDigestResource();
         }
+    }
+
+    @Configuration
+    public static class AfterWorkingProcessConfiguration {
+
+        @Autowired
+        DisconnectEventHandler disconnectEventHandler;
+
+        @Autowired
+        NotifyDataSyncHandler  notifyDataSyncHandler;
+
+        @Bean(name = "afterWorkProcessors")
+        public List<AfterWorkingProcess> afterWorkingProcessors() {
+            List<AfterWorkingProcess> list = new ArrayList<>();
+            list.add(disconnectEventHandler);
+            list.add(notifyDataSyncHandler);
+            return list;
+        }
+
+        @Bean
+        public AfterWorkingProcessHandler afterWorkingProcessHandler() {
+            return new AfterWorkingProcessHandler();
+        }
+
     }
 }
