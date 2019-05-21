@@ -30,6 +30,8 @@ import com.alipay.sofa.registry.server.data.bootstrap.DataServerConfig;
 import com.alipay.sofa.registry.server.data.event.DataServerChangeEvent;
 import com.alipay.sofa.registry.server.data.event.EventCenter;
 import com.alipay.sofa.registry.server.data.event.MetaServerChangeEvent;
+import com.alipay.sofa.registry.server.data.event.StartTaskEvent;
+import com.alipay.sofa.registry.server.data.event.StartTaskTypeEnum;
 import com.alipay.sofa.registry.server.data.remoting.MetaNodeExchanger;
 import com.alipay.sofa.registry.server.data.remoting.metaserver.IMetaServerService;
 import com.alipay.sofa.registry.server.data.remoting.metaserver.MetaServerConnectionFactory;
@@ -37,6 +39,7 @@ import com.alipay.sofa.registry.server.data.util.TimeUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.CollectionUtils;
 
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
@@ -150,6 +153,12 @@ public class MetaServerChangeEventHandler extends AbstractEventHandler<MetaServe
                     if (obj instanceof NodeChangeResult) {
                         NodeChangeResult<DataNode> result = (NodeChangeResult<DataNode>) obj;
                         Map<String, Long> versionMap = result.getDataCenterListVersions();
+
+                        //send renew after first register dataNode
+                        Set<StartTaskTypeEnum> set = new HashSet<>();
+                        set.add(StartTaskTypeEnum.RENEW);
+                        eventCenter.post(new StartTaskEvent(set));
+
                         eventCenter.post(new DataServerChangeEvent(result.getNodes(), versionMap));
                         break;
                     }

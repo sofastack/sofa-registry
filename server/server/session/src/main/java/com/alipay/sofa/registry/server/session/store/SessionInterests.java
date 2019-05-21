@@ -180,6 +180,16 @@ public class SessionInterests implements Interests, ReSubscribers {
         return connectIndex.get(connectId);
     }
 
+    public Subscriber queryById(String registerId, String dataInfoId) {
+
+        Map<String, Subscriber> subscribers = interests.get(dataInfoId);
+
+        if (subscribers == null) {
+            return null;
+        }
+        return subscribers.get(registerId);
+    }
+
     @Override
     public Collection<Subscriber> getInterests(String dataInfoId) {
         Map<String, Subscriber> subscribers = interests.get(dataInfoId);

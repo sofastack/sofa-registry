@@ -16,7 +16,6 @@
  */
 package com.alipay.sofa.registry.server.data.change.event;
 
-import com.alipay.sofa.registry.common.model.PublishType;
 import com.alipay.sofa.registry.common.model.dataserver.Datum;
 import com.alipay.sofa.registry.common.model.store.Publisher;
 import com.alipay.sofa.registry.log.Logger;
@@ -205,6 +204,8 @@ public class DataChangeEventQueue {
         synchronized (Interners.newWeakInterner().intern(clientHost)) {
             Map<String, Publisher> pubMap = DatumCache.getByHost(clientHost);
             if (pubMap != null && !pubMap.isEmpty()) {
+                LOGGER.info("[{}] client off begin, host={}, occurTimestamp={},all pub size={}",
+                    getName(), clientHost, event.getOccurredTimestamp(), pubMap.size());
                 int count = 0;
                 for (Publisher publisher : pubMap.values()) {
                     DataServerNode dataServerNode = DataServerNodeFactory.computeDataServerNode(
