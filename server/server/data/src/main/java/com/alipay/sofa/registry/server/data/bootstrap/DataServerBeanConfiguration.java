@@ -460,13 +460,13 @@ public class DataServerBeanConfiguration {
         DisconnectEventHandler disconnectEventHandler;
 
         @Autowired
-        NotifyDataSyncHandler  notifyDataSyncHandler;
+        AbstractClientHandler  notifyDataSyncHandler;
 
         @Bean(name = "afterWorkProcessors")
         public List<AfterWorkingProcess> afterWorkingProcessors() {
             List<AfterWorkingProcess> list = new ArrayList<>();
             list.add(disconnectEventHandler);
-            list.add(notifyDataSyncHandler);
+            list.add((NotifyDataSyncHandler) notifyDataSyncHandler);
             return list;
         }
 
