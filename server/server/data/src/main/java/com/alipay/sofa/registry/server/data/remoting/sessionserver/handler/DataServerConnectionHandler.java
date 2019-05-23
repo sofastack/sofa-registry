@@ -17,6 +17,7 @@
 package com.alipay.sofa.registry.server.data.remoting.sessionserver.handler;
 
 import com.alipay.sofa.registry.common.model.Node;
+import com.alipay.sofa.registry.common.model.Node.NodeType;
 import com.alipay.sofa.registry.net.NetUtil;
 import com.alipay.sofa.registry.remoting.Channel;
 import com.alipay.sofa.registry.remoting.ChannelHandler;
@@ -26,6 +27,10 @@ import com.alipay.sofa.registry.server.data.remoting.sessionserver.SessionServer
 import org.springframework.beans.factory.annotation.Autowired;
 
 /**
+ *
+ * Connection handler for session connect data server
+ *
+ * fix shangyu.wh
  * @author xuanbei
  * @since 2019/2/15
  */
@@ -52,7 +57,7 @@ public class DataServerConnectionHandler extends AbstractServerHandler {
 
     @Override
     protected Node.NodeType getConnectNodeType() {
-        return Node.NodeType.DATA;
+        return NodeType.SESSION;
     }
 
     @Override

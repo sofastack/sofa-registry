@@ -45,6 +45,9 @@ public class DisconnectEventHandler implements InitializingBean, AfterWorkingPro
     private static final Logger                         LOGGER             = LoggerFactory
                                                                                .getLogger(DisconnectEventHandler.class);
 
+    private static final Logger                         LOGGER_START       = LoggerFactory
+                                                                               .getLogger("DATA-START-LOGS");
+
     /**
      * a DelayQueue that contains client disconnect events
      */
@@ -113,7 +116,6 @@ public class DisconnectEventHandler implements InitializingBean, AfterWorkingPro
 
     @Override
     public void afterPropertiesSet() {
-        LOGGER.info("begin start DisconnectEventHandler");
         Executor executor = ExecutorFactory
                 .newSingleThreadExecutor(DisconnectEventHandler.class.getSimpleName());
         executor.execute(() -> {
@@ -152,7 +154,7 @@ public class DisconnectEventHandler implements InitializingBean, AfterWorkingPro
                 }
             }
         });
-        LOGGER.info("start DisconnectEventHandler success");
+        LOGGER_START.info("start DisconnectEventHandler success");
     }
 
     /**

@@ -33,13 +33,15 @@ import java.util.concurrent.ScheduledExecutorService;
  */
 public class StartTaskEventHandler extends AbstractEventHandler<StartTaskEvent> {
 
-    private static final Logger      LOGGER   = LoggerFactory
-                                                  .getLogger(StartTaskEventHandler.class);
+    private static final Logger      LOGGER       = LoggerFactory
+                                                      .getLogger(StartTaskEventHandler.class);
+
+    private static final Logger      LOGGER_START = LoggerFactory.getLogger("DATA-START-LOGS");
 
     @Resource(name = "tasks")
     private List<AbstractTask>       tasks;
 
-    private ScheduledExecutorService executor = null;
+    private ScheduledExecutorService executor     = null;
 
     @Override
     public Class interest() {
@@ -54,10 +56,9 @@ public class StartTaskEventHandler extends AbstractEventHandler<StartTaskEvent> 
 
         for (AbstractTask task : tasks) {
             if (event.getSuitableTypes().contains(task.getStartTaskTypeEnum())) {
-                LOGGER.info("[StartTaskEventHandler] start task:{}", task.getName());
                 executor.scheduleWithFixedDelay(task, task.getInitialDelay(), task.getDelay(),
                     task.getTimeUnit());
-                LOGGER.info("[StartTaskEventHandler] start task:{} success", task.getName());
+                LOGGER_START.info("[StartTaskEventHandler] start task:{} success", task.getName());
             }
         }
     }

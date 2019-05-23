@@ -50,6 +50,9 @@ public class DataChangeEventQueue {
     private static final Logger                        LOGGER          = LoggerFactory
                                                                            .getLogger(DataChangeEventQueue.class);
 
+    private static final Logger                        LOGGER_START    = LoggerFactory
+                                                                           .getLogger("DATA-START-LOGS");
+
     /**
      *
      */
@@ -169,7 +172,6 @@ public class DataChangeEventQueue {
      *
      */
     public void start() {
-        LOGGER.info("[{}] begin start DataChangeEventQueue", getName());
         Executor executor = ExecutorFactory.newSingleThreadExecutor(
                 String.format("%s_%s", DataChangeEventQueue.class.getSimpleName(), getName()));
         executor.execute(() -> {
@@ -196,7 +198,7 @@ public class DataChangeEventQueue {
                 }
             }
         });
-        LOGGER.info("[{}] start DataChangeEventQueue success", getName());
+        LOGGER_START.info("[{}] start DataChangeEventQueue success", getName());
     }
 
     private void handleHost(ClientChangeEvent event) {

@@ -90,6 +90,11 @@ public class DefaultMetaServiceImpl implements IMetaServerService {
                 List<Connection> connections = new ArrayList<>(connectionMap.values());
                 Collections.shuffle(connections);
                 connection = connections.iterator().next();
+                if (!connection.isFine()) {
+                    connection = ((BoltChannel) metaNodeExchanger.connect(new URL(connection
+                        .getRemoteIP(), dataServerBootstrapConfig.getMetaServerPort())))
+                        .getConnection();
+                }
             }
 
             GetNodesRequest request = new GetNodesRequest(NodeType.META);
