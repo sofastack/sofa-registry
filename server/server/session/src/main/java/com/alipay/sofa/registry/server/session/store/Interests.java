@@ -70,7 +70,7 @@ public interface Interests extends DataManager<Subscriber, String, String> {
     Collection<String> getInterestDataInfoIds();
 
     /**
-     * get subscribers whith specify dataInfo and scope,and order by source InetSocketAddress
+     * get subscribers whith specify dataInfo and scope,and group by source InetSocketAddress
      * @param dataInfoId
      * @param scope
      * @return

@@ -103,6 +103,11 @@ public class DataChangeFetchTask extends AbstractSessionTask {
             for (ScopeEnum scopeEnum : ScopeEnum.values()) {
                 Map<InetSocketAddress, Map<String, Subscriber>> map = getCache(scopeEnum);
                 if (map != null && !map.isEmpty()) {
+                    LOGGER
+                        .info(
+                            "Get all subscribers to send from cache size:{},which dataInfoId:{} on dataCenter:{},scope:{}",
+                            map.size(), dataChangeRequest.getDataInfoId(),
+                            dataChangeRequest.getDataCenter(), scopeEnum);
                     for (Entry<InetSocketAddress, Map<String, Subscriber>> entry : map.entrySet()) {
                         Map<String, Subscriber> subscriberMap = entry.getValue();
                         if (subscriberMap != null && !subscriberMap.isEmpty()) {
@@ -113,9 +118,10 @@ public class DataChangeFetchTask extends AbstractSessionTask {
                             if (subscribersSend.isEmpty()) {
                                 LOGGER
                                     .warn(
-                                        "Subscribers send empty,which dataInfoId:{} on dataCenter:{},scope:{}",
+                                        "Subscribers to send empty,which dataInfoId:{} on dataCenter:{},scope:{},address:{},size:{}",
                                         dataChangeRequest.getDataInfoId(),
-                                        dataChangeRequest.getDataCenter(), scopeEnum);
+                                        dataChangeRequest.getDataCenter(), scopeEnum,
+                                        entry.getKey(), subscriberMap.size());
                                 continue;
                             }
 
@@ -163,11 +169,6 @@ public class DataChangeFetchTask extends AbstractSessionTask {
                             }
                         }
                     }
-                } else {
-                    LOGGER.warn(
-                        "Get subscriber data empty,which dataInfoId:{} on dataCenter:{},scope:{}",
-                        dataChangeRequest.getDataInfoId(), dataChangeRequest.getDataCenter(),
-                        scopeEnum);
                 }
             }
 
