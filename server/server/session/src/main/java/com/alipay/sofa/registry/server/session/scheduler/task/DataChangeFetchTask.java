@@ -111,6 +111,11 @@ public class DataChangeFetchTask extends AbstractSessionTask {
                             Collection<Subscriber> subscribersSend = subscribersVersionCheck(subscriberMap
                                 .values());
                             if (subscribersSend.isEmpty()) {
+                                LOGGER
+                                    .warn(
+                                        "Subscribers send empty,which dataInfoId:{} on dataCenter:{},scope:{}",
+                                        dataChangeRequest.getDataInfoId(),
+                                        dataChangeRequest.getDataCenter(), scopeEnum);
                                 continue;
                             }
 
@@ -158,6 +163,11 @@ public class DataChangeFetchTask extends AbstractSessionTask {
                             }
                         }
                     }
+                } else {
+                    LOGGER.warn(
+                        "Get subscriber data empty,which dataInfoId:{} on dataCenter:{},scope:{}",
+                        dataChangeRequest.getDataInfoId(), dataChangeRequest.getDataCenter(),
+                        scopeEnum);
                 }
             }
 
