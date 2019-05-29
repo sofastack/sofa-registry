@@ -121,8 +121,14 @@ public class RaftExchanger {
                     @Override
                     public void startProcess(PeerId leader) {
                         LOGGER_START.info("Start follower process leader {}...", leader);
-                        raftServer.sendNotify(leader, "follower");
+                        // refer: https://github.com/sofastack/sofa-registry/issues/31
+                        try {
+                            Thread.sleep(3000);
+                        } catch (InterruptedException e) {
+                            LOGGER_START.error(e.getMessage(), e);
+                        }
                         registerCurrentNode();
+                        raftServer.sendNotify(leader, "follower");
                     }
 
                     @Override
