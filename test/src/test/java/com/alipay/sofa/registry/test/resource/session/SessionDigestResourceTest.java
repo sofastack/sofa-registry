@@ -37,11 +37,13 @@ import javax.ws.rs.core.MediaType;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import static com.alipay.sofa.registry.client.constants.ValueConstants.DEFAULT_GROUP;
 import static com.alipay.sofa.registry.common.model.constants.ValueConstants.DEFAULT_INSTANCE_ID;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 /**
  * @author xuanbei
@@ -166,5 +168,21 @@ public class SessionDigestResourceTest extends BaseIntegrationTest {
             .request(APPLICATION_JSON).get(Map.class);
         assertEquals(1, result.size());
         assertEquals("open", result.get("pushSwitch"));
+    }
+
+    @Test
+    public void testGetDataInfoIdList() {
+        Set<String> result = sessionChannel.getWebTarget().path("digest/getDataInfoIdList")
+            .request(APPLICATION_JSON).get(Set.class);
+
+        assertTrue(result.contains(DataInfo
+            .toDataInfoId(dataId, DEFAULT_INSTANCE_ID, DEFAULT_GROUP)));
+    }
+
+    @Test
+    public void testCheckSumDataInfoIdList() {
+        int result = sessionChannel.getWebTarget().path("digest/checkSumDataInfoIdList")
+            .request(APPLICATION_JSON).get(int.class);
+        assertTrue(result != 0);
     }
 }

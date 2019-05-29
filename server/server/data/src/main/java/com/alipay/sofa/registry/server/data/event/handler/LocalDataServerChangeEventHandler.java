@@ -228,6 +228,13 @@ public class LocalDataServerChangeEventHandler extends
             Map<String, Map<String, Map<String, BackupTriad>>> toBeSyncMap = new HashMap<>();
             Map<String, List<DataNode>> triadCache = new HashMap<>();
 
+            ConsistentHash<DataNode> consistentHashOld = dataServerCache
+                .calculateOldConsistentHash(dataServerBootstrapConfig.getLocalDataCenter());
+            if (consistentHash == null) {
+                LOGGER.error("Calculate Old ConsistentHash error!");
+                throw new RuntimeException("Calculate Old ConsistentHash error!");
+            }
+
             //compute new triad for every datum in cache
             Map<String, Map<String, Datum>> allMap = DatumCache.getAll();
             for (Entry<String, Map<String, Datum>> dataCenterEntry : allMap.entrySet()) {
@@ -247,8 +254,9 @@ public class LocalDataServerChangeEventHandler extends
                             dataServerBootstrapConfig.getStoreNodes());
                         triadCache.put(dataInfoId, backupNodes);
                     }
-                    BackupTriad backupTriad = dataServerCache.calculateOldBackupTriad(dataInfoId,
-                        dataServerBootstrapConfig.getLocalDataCenter(), dataServerBootstrapConfig);
+                    BackupTriad backupTriad = new BackupTriad(dataInfoId,
+                        consistentHashOld.getNUniqueNodesFor(dataInfoId,
+                            dataServerBootstrapConfig.getStoreNodes()));
                     if (backupTriad != null) {
                         List<DataNode> newJoinedNodes = backupTriad.getNewJoined(backupNodes,
                             dataServerCache.getNotWorking());

@@ -173,6 +173,66 @@
         </encoder>
     </appender>
 
+    <appender name="DATA-CONNECT-APPENDER" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <append>true</append>
+        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+            <level>${LOG_LEVEL}</level>
+        </filter>
+        <filter class="ch.qos.logback.classic.filter.LevelFilter">
+            <level>ERROR</level>
+            <onMatch>DENY</onMatch>
+        </filter>
+        <file>${DATA_LOG_HOME}/registry-connect.log</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <FileNamePattern>${DATA_LOG_HOME}/registry-connect.log.%d{yyyy-MM-dd}</FileNamePattern>
+            <MaxHistory>30</MaxHistory>
+        </rollingPolicy>
+        <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+            <pattern>[%d{ISO8601}][%p][%t][%c{0}] - %m%n</pattern>
+            <charset>${LOG_ENCODE}</charset>
+        </encoder>
+    </appender>
+
+    <appender name="DATA-EXCHANGE-APPENDER" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <append>true</append>
+        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+            <level>${LOG_LEVEL}</level>
+        </filter>
+        <filter class="ch.qos.logback.classic.filter.LevelFilter">
+            <level>ERROR</level>
+            <onMatch>DENY</onMatch>
+        </filter>
+        <file>${DATA_LOG_HOME}/registry-exchange.log</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <FileNamePattern>${DATA_LOG_HOME}/registry-exchange.log.%d{yyyy-MM-dd}</FileNamePattern>
+            <MaxHistory>30</MaxHistory>
+        </rollingPolicy>
+        <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+            <pattern>[%d{ISO8601}][%p][%t][%c{0}] - %m%n</pattern>
+            <charset>${LOG_ENCODE}</charset>
+        </encoder>
+    </appender>
+
+    <appender name="REGISTRY-METRICS-APPENDER" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <append>true</append>
+        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+            <level>${LOG_LEVEL}</level>
+        </filter>
+        <filter class="ch.qos.logback.classic.filter.LevelFilter">
+            <level>ERROR</level>
+            <onMatch>DENY</onMatch>
+        </filter>
+        <file>${DATA_LOG_HOME}/registry-metrics.log</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <FileNamePattern>${DATA_LOG_HOME}/registry-metrics.log.%d{yyyy-MM-dd}</FileNamePattern>
+            <MaxHistory>30</MaxHistory>
+        </rollingPolicy>
+        <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+            <pattern>[%d{ISO8601}][%p][%t][%c{0}] - %m%n</pattern>
+            <charset>${LOG_ENCODE}</charset>
+        </encoder>
+    </appender>
+
     <!-- common loggers -->
 
     <logger name="com.alipay.sofa.registry.jraft" level="${LOG_LEVEL}" additivity="false">
@@ -198,7 +258,7 @@
         <appender-ref ref="COMMON-ERROR-APPENDER"/>
     </logger>
 
-    <logger name="com.alipay.sofa.registry.server.data.change.notify.LogCacheNotifier" level="${LOG_LEVEL}"
+    <logger name="com.alipay.sofa.registry.server.data.change.DataChangeHandler" level="${LOG_LEVEL}"
             additivity="false">
         <appender-ref ref="DATA-DATUM-CHANGE-APPENDER"/>
         <appender-ref ref="COMMON-ERROR-APPENDER"/>
@@ -211,6 +271,39 @@
 
     <logger name="com.alipay.sofa.registry.server.data.resource" level="${LOG_LEVEL}" additivity="false">
         <appender-ref ref="DATA-HTTP-APPENDER"/>
+        <appender-ref ref="COMMON-ERROR-APPENDER"/>
+    </logger>
+
+    <logger name="DATA-START-LOGS" level="${LOG_LEVEL}" additivity="false">
+        <appender-ref ref="DATA-STARTUP-APPENDER"/>
+        <appender-ref ref="STDOUT-APPENDER"/>
+        <appender-ref ref="COMMON-ERROR-APPENDER"/>
+    </logger>
+
+    <logger name="org.springframework.boot.SpringApplication" level="${LOG_LEVEL}" additivity="false">
+        <appender-ref ref="DATA-STARTUP-APPENDER"/>
+        <appender-ref ref="STDOUT-APPENDER"/>
+        <appender-ref ref="COMMON-ERROR-APPENDER"/>
+    </logger>
+
+    <logger name="com.alipay.sofa.registry.server.data.DataApplication" level="${LOG_LEVEL}" additivity="false">
+        <appender-ref ref="DATA-STARTUP-APPENDER"/>
+        <appender-ref ref="STDOUT-APPENDER"/>
+        <appender-ref ref="COMMON-ERROR-APPENDER"/>
+    </logger>
+
+    <logger name="DATA-CONNECT" level="${LOG_LEVEL}" additivity="false">
+        <appender-ref ref="DATA-CONNECT-APPENDER"/>
+        <appender-ref ref="COMMON-ERROR-APPENDER"/>
+    </logger>
+
+    <logger name="DATA-EXCHANGE" level="${LOG_LEVEL}" additivity="false">
+        <appender-ref ref="DATA-EXCHANGE-APPENDER"/>
+        <appender-ref ref="COMMON-ERROR-APPENDER"/>
+    </logger>
+
+    <logger name="REGISTRY-METRICS" level="${LOG_LEVEL}" additivity="false">
+        <appender-ref ref="REGISTRY-METRICS-APPENDER"/>
         <appender-ref ref="COMMON-ERROR-APPENDER"/>
     </logger>
 

@@ -16,10 +16,6 @@
  */
 package com.alipay.sofa.registry.server.meta.bootstrap;
 
-import com.alipay.sofa.registry.log.Logger;
-import com.alipay.sofa.registry.log.LoggerFactory;
-import com.alipay.sofa.registry.net.NetUtil;
-
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -28,6 +24,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicReference;
+
+import com.alipay.sofa.registry.log.Logger;
+import com.alipay.sofa.registry.log.LoggerFactory;
+import com.alipay.sofa.registry.net.NetUtil;
 
 /**
  *
@@ -105,9 +105,6 @@ public abstract class AbstractNodeConfigBean implements NodeConfig {
                 }
             });
 
-            if (ret.get() == null) {
-                LOGGER.error("node ipAddress:" + metaIpAddress + " cannot be found on config list!");
-            }
             dataCenterRet = ret.get();
         }
         return dataCenterRet;

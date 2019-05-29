@@ -98,6 +98,11 @@ public class DataChangeFetchCloudTask extends AbstractSessionTask {
     @Override
     public void setTaskEvent(TaskEvent taskEvent) {
 
+        //taskId create from event
+        if (taskEvent.getTaskId() != null) {
+            setTaskId(taskEvent.getTaskId());
+        }
+
         Object obj = taskEvent.getEventObj();
 
         if (!(obj instanceof String)) {
@@ -239,6 +244,7 @@ public class DataChangeFetchCloudTask extends AbstractSessionTask {
                                          Map<String, Subscriber> subscriberMap,
                                          PushTaskClosure pushTaskClosure) {
         Collection<Subscriber> subscribers = new ArrayList<>(subscriberMap.values());
+        LOGGER.info("Datums push={}", datums);
         ReceivedData receivedData = ReceivedDataConverter.getReceivedDataMulti(datums, scopeEnum,
             subscriberRegisterIdList, subscriber);
 
@@ -248,8 +254,9 @@ public class DataChangeFetchCloudTask extends AbstractSessionTask {
         TaskEvent taskEvent = new TaskEvent(parameter, TaskType.RECEIVED_DATA_MULTI_PUSH_TASK);
         taskEvent.setTaskClosure(pushTaskClosure);
         taskEvent.setAttribute(Constant.PUSH_CLIENT_SUBSCRIBERS, subscribers);
-        taskLogger.info("send {} taskURL:{},taskScope:{}", taskEvent.getTaskType(),
-            subscriber.getSourceAddress(), scopeEnum);
+        taskLogger.info("send {} taskURL:{},taskScope:{},version:{},taskId={}",
+            taskEvent.getTaskType(), subscriber.getSourceAddress(), scopeEnum,
+            receivedData.getVersion(), taskEvent.getTaskId());
         taskListenerManager.sendTaskEvent(taskEvent);
     }
 
@@ -267,9 +274,10 @@ public class DataChangeFetchCloudTask extends AbstractSessionTask {
 
         int size = datum != null && datum.getPubMap() != null ? datum.getPubMap().size() : 0;
 
-        taskLogger.info("send {} taskURL:{},dataInfoId={},dataCenter={},pubSize={},subSize={}",
+        taskLogger.info(
+            "send {} taskURL:{},dataInfoId={},dataCenter={},pubSize={},subSize={},taskId={}",
             taskEvent.getTaskType(), subscriber.getSourceAddress(), datum.getDataInfoId(),
-            datum.getDataCenter(), size, subscribers.size());
+            datum.getDataCenter(), size, subscribers.size(), taskEvent.getTaskId());
         taskListenerManager.sendTaskEvent(taskEvent);
     }
 
@@ -286,9 +294,10 @@ public class DataChangeFetchCloudTask extends AbstractSessionTask {
 
         int size = datum != null && datum.getPubMap() != null ? datum.getPubMap().size() : 0;
 
-        taskLogger.info("send {} taskURL:{},dataInfoId={},dataCenter={},pubSize={},subSize={}",
+        taskLogger.info(
+            "send {} taskURL:{},dataInfoId={},dataCenter={},pubSize={},subSize={},taskId={}",
             taskEvent.getTaskType(), subscriber.getSourceAddress(), datum.getDataInfoId(),
-            datum.getDataCenter(), size, subscribers.size());
+            datum.getDataCenter(), size, subscribers.size(), taskEvent.getTaskId());
         taskListenerManager.sendTaskEvent(taskEvent);
     }
 

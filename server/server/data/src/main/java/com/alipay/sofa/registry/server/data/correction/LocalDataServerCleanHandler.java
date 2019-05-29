@@ -44,8 +44,11 @@ import java.util.concurrent.atomic.AtomicBoolean;
  */
 public class LocalDataServerCleanHandler {
 
-    private static final Logger                         LOGGER      = LoggerFactory
-                                                                        .getLogger(LocalDataServerCleanHandler.class);
+    private static final Logger                         LOGGER       = LoggerFactory
+                                                                         .getLogger(LocalDataServerCleanHandler.class);
+
+    private static final Logger                         LOGGER_START = LoggerFactory
+                                                                         .getLogger("DATA-START-LOGS");
 
     @Autowired
     private DataServerConfig                            dataServerBootstrapConfig;
@@ -61,13 +64,12 @@ public class LocalDataServerCleanHandler {
     /**
      * a DelayQueue that contains clean task
      */
-    private final DelayQueue<DelayItem<LocalCleanTask>> EVENT_QUEUE = new DelayQueue<>();
+    private final DelayQueue<DelayItem<LocalCleanTask>> EVENT_QUEUE  = new DelayQueue<>();
 
     /**
      * constructor
      */
     public LocalDataServerCleanHandler() {
-        LOGGER.info("[LocalDataServerCleanHandler] begin start LocalDataServerCleanHandler");
         Executor executor = ExecutorFactory
                 .newSingleThreadExecutor(LocalDataServerCleanHandler.class.getSimpleName());
         executor.execute(() -> {
@@ -81,7 +83,7 @@ public class LocalDataServerCleanHandler {
                 }
             }
         });
-        LOGGER.info("[LocalDataServerCleanHandler] start LocalDataServerCleanHandler success");
+        LOGGER_START.info("[LocalDataServerCleanHandler] start LocalDataServerCleanHandler success");
     }
 
     /**

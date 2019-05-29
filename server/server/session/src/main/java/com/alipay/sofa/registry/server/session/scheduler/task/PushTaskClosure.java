@@ -21,8 +21,9 @@ import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.task.Task;
 import com.alipay.sofa.registry.task.TaskClosure;
 import com.alipay.sofa.registry.task.batcher.TaskProcessor.ProcessingResult;
+import com.alipay.sofa.registry.task.listener.TaskEvent;
 
-import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
@@ -39,7 +40,8 @@ public class PushTaskClosure implements TaskClosure {
     private final static Logger                         LOGGER          = LoggerFactory
                                                                             .getLogger(PushTaskClosure.class);
 
-    private ConcurrentHashMap<String, Task>             taskMap         = new ConcurrentHashMap<>();
+    private Set<String>                                 tasks           = ConcurrentHashMap
+                                                                            .newKeySet();
 
     private ConcurrentHashMap<String, ProcessingResult> taskResultMap   = new ConcurrentHashMap<>();
 
@@ -64,21 +66,21 @@ public class PushTaskClosure implements TaskClosure {
         }
     }
 
-    public void addTask(Task task) {
-        taskMap.putIfAbsent(task.getTaskId(), task);
+    public void addTask(TaskEvent taskEvent) {
+        tasks.add(taskEvent.getTaskId());
     }
 
     public void start() {
         pushTaskClosureExecutor.execute(() -> {
             try {
-                int size = taskMap.size();
-                LOGGER.info("Push task queue size {},map size {}", completionQueue.size(), size);
+                int size = tasks.size();
+                LOGGER.info("Push task queue size {},all task size {}", completionQueue.size(), size);
                 for (int i = 0; i < size; i++) {
                     String taskId = completionQueue.poll(6000, TimeUnit.MILLISECONDS);
                     if(taskId != null) {
                         ProcessingResult result = taskResultMap.get(taskId);
                         if (result == ProcessingResult.Success) {
-                            taskMap.remove(taskId);
+                            tasks.remove(taskId);
                         }
                     }
                 }
@@ -86,14 +88,14 @@ public class PushTaskClosure implements TaskClosure {
                 LOGGER.error("Push task check InterruptedException!", e);
             }
 
-            if (taskMap.isEmpty()) {
+            if (tasks.isEmpty()) {
                 LOGGER.info("Push all tasks success");
                 if (taskClosure != null) {
                     taskClosure.run(ProcessingResult.Success, null);
                 }
 
             } else {
-                LOGGER.warn("Push tasks found error tasks {} !", taskMap);
+                LOGGER.warn("Push tasks found error tasks {} !", tasks.size());
                 if (taskClosure != null) {
                     taskClosure.run(ProcessingResult.PermanentError, null);
                 }
@@ -102,12 +104,12 @@ public class PushTaskClosure implements TaskClosure {
     }
 
     /**
-     * Getter method for property <tt>taskMap</tt>.
+     * Getter method for property <tt>tasks</tt>.
      *
-     * @return property value of taskMap
+     * @return property value of tasks
      */
-    public Map<String, Task> getTaskMap() {
-        return taskMap;
+    public Set<String> getTasks() {
+        return tasks;
     }
 
     /**

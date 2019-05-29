@@ -14,49 +14,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alipay.sofa.registry.remoting;
-
-import java.net.InetSocketAddress;
-import java.util.Collection;
-
-import com.alipay.sofa.registry.common.model.store.URL;
+package com.alipay.sofa.registry.server.data.event;
 
 /**
  *
  * @author shangyu.wh
- * @version $Id: Server.java, v 0.1 2017-11-20 21:05 shangyu.wh Exp $
+ * @version $Id: AfterWorkingProcessor.java, v 0.1 2019-05-21 11:25 shangyu.wh Exp $
  */
-public interface Server extends Endpoint {
+public interface AfterWorkingProcess {
 
-    /**
-     * get Server status
-     *
-     * @return
-     */
-    boolean isOpen();
+    void afterWorkingProcess();
 
-    /**
-     * get channels.
-     *
-     * @return channels
-     */
-    Collection<Channel> getChannels();
-
-    /**
-     * get channel.
-     *
-     * @param remoteAddress
-     * @return channel
-     */
-    Channel getChannel(InetSocketAddress remoteAddress);
-
-    /**
-     * get channel by url
-     *
-     * @param url
-     * @return channel
-     */
-    Channel getChannel(URL url);
-
-    int getChannelCount();
+    int getOrder();
 }

@@ -27,8 +27,26 @@ import java.util.Collection;
  */
 public interface DataStore extends DataManager<Publisher, String, String> {
 
+    /**
+     * get all publishers by dataInfoId
+     * @param dataInfoId
+     * @return
+     */
     Collection<Publisher> getStoreDataByDataInfoId(String dataInfoId);
 
+    /***
+     * get Publiser by registerId and dataInfoId
+     * @param registerId
+     * @param dataInfoId
+     * @return
+     */
     Publisher queryById(String registerId, String dataInfoId);
+
+    /**
+     * get all publisher dataInfoIds
+     *
+     * @return
+     */
+    Collection<String> getStoreDataInfoIds();
 
 }

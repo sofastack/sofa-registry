@@ -14,49 +14,32 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alipay.sofa.registry.remoting;
-
-import java.net.InetSocketAddress;
-import java.util.Collection;
-
-import com.alipay.sofa.registry.common.model.store.URL;
+package com.alipay.sofa.registry.server.data.event;
 
 /**
  *
  * @author shangyu.wh
- * @version $Id: Server.java, v 0.1 2017-11-20 21:05 shangyu.wh Exp $
+ * @version $Id: StartTaskTypeEnum.java, v 0.1 2019-04-22 14:35 shangyu.wh Exp $
  */
-public interface Server extends Endpoint {
+public enum StartTaskTypeEnum {
 
     /**
-     * get Server status
-     *
-     * @return
+     * ConnectionRefreshMetaTask
      */
-    boolean isOpen();
+    CONNECT_META,
 
     /**
-     * get channels.
-     *
-     * @return channels
+     * ConnectionRefreshDataTask
      */
-    Collection<Channel> getChannels();
+    CONNECT_DATA,
 
     /**
-     * get channel.
-     *
-     * @param remoteAddress
-     * @return channel
+     * ReNewNodeTask
      */
-    Channel getChannel(InetSocketAddress remoteAddress);
+    RENEW,
 
     /**
-     * get channel by url
-     *
-     * @param url
-     * @return channel
+     * VersionCompareTask
      */
-    Channel getChannel(URL url);
-
-    int getChannelCount();
+    VERSION_COMPARE
 }

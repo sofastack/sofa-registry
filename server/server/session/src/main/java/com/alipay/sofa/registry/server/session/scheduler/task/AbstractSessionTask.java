@@ -46,6 +46,10 @@ public abstract class AbstractSessionTask implements SessionTask, Retryable {
         return taskId;
     }
 
+    protected synchronized void setTaskId(String taskId) {
+        this.taskId = taskId;
+    }
+
     protected boolean checkRetryTimes(int configTimes) {
         if (configTimes > 0) {
             if (execCount.incrementAndGet() > configTimes) {

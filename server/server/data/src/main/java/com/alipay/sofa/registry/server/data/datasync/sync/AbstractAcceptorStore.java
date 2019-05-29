@@ -31,6 +31,7 @@ import com.alipay.sofa.registry.server.data.datasync.Operator;
 import com.alipay.sofa.registry.server.data.remoting.dataserver.DataServerConnectionFactory;
 import com.alipay.sofa.registry.server.data.remoting.metaserver.IMetaServerService;
 import com.alipay.sofa.registry.server.data.util.DelayItem;
+import com.alipay.sofa.registry.server.data.util.TimeUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.List;
@@ -191,25 +192,31 @@ public abstract class AbstractAcceptorStore implements AcceptorStore {
                 continue;
             }
 
-            Connection connection = dataServerConnectionFactory.getConnection(targetDataIp);
-            if (connection == null) {
-                LOGGER.error(getLogByClass(String.format(
-                    "Can not get notify data server connection!ip: %s", targetDataIp)));
-                continue;
-            }
-            LOGGER.info(getLogByClass("Notify data server {} change data {} to sync"),
-                connection.getRemoteIP(), request);
+            Server syncServer = boltExchange.getServer(dataServerBootstrapConfig.getSyncDataPort());
+
             for (int tryCount = 0; tryCount < NOTIFY_RETRY; tryCount++) {
                 try {
-                    Server syncServer = boltExchange.getServer(dataServerBootstrapConfig
-                        .getSyncDataPort());
+
+                    Connection connection = dataServerConnectionFactory.getConnection(targetDataIp);
+                    if (connection == null) {
+                        LOGGER.error(getLogByClass(String.format(
+                            "Can not get notify data server connection!ip: %s,retry=%s",
+                            targetDataIp, tryCount)));
+                        TimeUtil.randomDelay(1000);
+                        continue;
+                    }
+                    LOGGER.info(
+                        getLogByClass("Notify data server {} change data {} to sync,retry={}"),
+                        connection.getRemoteIP(), request, tryCount);
+
                     syncServer.sendSync(syncServer.getChannel(connection.getRemoteAddress()),
                         request, 1000);
                     break;
                 } catch (Exception e) {
                     LOGGER.error(getLogByClass(String.format(
-                        "Notify data server %s failed, NotifyDataSyncRequest:%s", targetDataIp,
-                        request)), e);
+                        "Notify data server %s failed, NotifyDataSyncRequest:%s,retry=%s",
+                        targetDataIp, request, tryCount)), e);
+                    TimeUtil.randomDelay(1000);
                 }
             }
         }

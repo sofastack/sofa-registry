@@ -50,6 +50,9 @@ public class DataChangeEventQueue {
     private static final Logger                        LOGGER          = LoggerFactory
                                                                            .getLogger(DataChangeEventQueue.class);
 
+    private static final Logger                        LOGGER_START    = LoggerFactory
+                                                                           .getLogger("DATA-START-LOGS");
+
     /**
      *
      */
@@ -71,6 +74,8 @@ public class DataChangeEventQueue {
     private final DelayQueue<ChangeData>               CHANGE_QUEUE    = new DelayQueue();
 
     private final int                                  notifyIntervalMs;
+
+    private final int                                  notifyTempDataIntervalMs;
 
     private final ReentrantLock                        lock            = new ReentrantLock();
 
@@ -97,6 +102,7 @@ public class DataChangeEventQueue {
             eventQueue = new LinkedBlockingDeque<>(queueSize);
         }
         this.notifyIntervalMs = dataServerConfig.getNotifyIntervalMs();
+        this.notifyTempDataIntervalMs = dataServerConfig.getNotifyTempDataIntervalMs();
     }
 
     /**
@@ -126,7 +132,9 @@ public class DataChangeEventQueue {
         lock.lock();
         try {
             Datum datum = changeData.getDatum();
-            CHANGE_DATA_MAP.get(datum.getDataCenter()).remove(datum.getDataInfoId());
+            if (changeData.getSourceType() != DataSourceTypeEnum.PUB_TEMP) {
+                CHANGE_DATA_MAP.get(datum.getDataCenter()).remove(datum.getDataInfoId());
+            }
             return changeData;
         } finally {
             lock.unlock();
@@ -169,7 +177,6 @@ public class DataChangeEventQueue {
      *
      */
     public void start() {
-        LOGGER.info("[{}] begin start DataChangeEventQueue", getName());
         Executor executor = ExecutorFactory.newSingleThreadExecutor(
                 String.format("%s_%s", DataChangeEventQueue.class.getSimpleName(), getName()));
         executor.execute(() -> {
@@ -179,8 +186,15 @@ public class DataChangeEventQueue {
                     DataChangeScopeEnum scope = event.getScope();
                     if (scope == DataChangeScopeEnum.DATUM) {
                         DataChangeEvent dataChangeEvent = (DataChangeEvent) event;
-                        handleDatum(dataChangeEvent.getChangeType(),
-                                dataChangeEvent.getSourceType(), dataChangeEvent.getDatum());
+                        //Temporary push data will be notify as soon as,and not merge to normal pub data;
+                        if (dataChangeEvent.getSourceType() == DataSourceTypeEnum.PUB_TEMP){
+                            addTempChangeData(dataChangeEvent.getDatum(),dataChangeEvent.getChangeType(),
+                                    dataChangeEvent.getSourceType());
+                        }
+                        else {
+                            handleDatum(dataChangeEvent.getChangeType(),
+                                    dataChangeEvent.getSourceType(), dataChangeEvent.getDatum());
+                        }
                     } else if (scope == DataChangeScopeEnum.CLIENT) {
                         handleClientOff((ClientChangeEvent) event);
                     }
@@ -189,7 +203,7 @@ public class DataChangeEventQueue {
                 }
             }
         });
-        LOGGER.info("[{}] start DataChangeEventQueue success", getName());
+        LOGGER_START.info("[{}] start DataChangeEventQueue success", getName());
     }
 
     private void handleClientOff(ClientChangeEvent event) {
@@ -197,6 +211,8 @@ public class DataChangeEventQueue {
         synchronized (Interners.newWeakInterner().intern(clientHost)) {
             Map<String, Publisher> pubMap = DatumCache.getByHost(clientHost);
             if (pubMap != null && !pubMap.isEmpty()) {
+                LOGGER.info("[{}] client off begin, host={}, occurTimestamp={},all pub size={}",
+                    getName(), clientHost, event.getOccurredTimestamp(), pubMap.size());
                 int count = 0;
                 for (Publisher publisher : pubMap.values()) {
                     // Only care dataInfoIds which belong to this queue
@@ -265,5 +281,13 @@ public class DataChangeEventQueue {
         } finally {
             lock.unlock();
         }
+    }
+
+    private void addTempChangeData(Datum targetDatum, DataChangeTypeEnum changeType,
+                                   DataSourceTypeEnum sourceType) {
+
+        ChangeData tempChangeData = new ChangeData(targetDatum, this.notifyTempDataIntervalMs,
+            sourceType, changeType);
+        CHANGE_QUEUE.put(tempChangeData);
     }
 }
