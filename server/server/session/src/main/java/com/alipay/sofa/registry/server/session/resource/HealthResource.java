@@ -16,15 +16,19 @@
  */
 package com.alipay.sofa.registry.server.session.resource;
 
-import com.alipay.sofa.registry.common.model.CommonResponse;
-import com.alipay.sofa.registry.server.session.bootstrap.SessionServerBootstrap;
-import com.alipay.sofa.registry.server.session.node.RaftClientManager;
-import org.springframework.beans.factory.annotation.Autowired;
-
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.core.Response.ResponseBuilder;
+import javax.ws.rs.core.Response.Status;
+
+import org.springframework.beans.factory.annotation.Autowired;
+
+import com.alipay.sofa.registry.common.model.CommonResponse;
+import com.alipay.sofa.registry.server.session.bootstrap.SessionServerBootstrap;
+import com.alipay.sofa.registry.server.session.node.RaftClientManager;
 
 /**
  *
@@ -43,7 +47,8 @@ public class HealthResource {
     @GET
     @Path("check")
     @Produces(MediaType.APPLICATION_JSON)
-    public CommonResponse checkHealth() {
+    public Response checkHealth() {
+        ResponseBuilder builder = Response.status(Response.Status.OK);
 
         CommonResponse response;
 
@@ -75,10 +80,13 @@ public class HealthResource {
 
         if (ret) {
             response = CommonResponse.buildSuccessResponse(sb.toString());
+            builder.entity(response);
         } else {
             response = CommonResponse.buildFailedResponse(sb.toString());
+            builder.entity(response);
+            builder.status(Status.INTERNAL_SERVER_ERROR);
         }
 
-        return response;
+        return builder.build();
     }
 }
