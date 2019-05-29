@@ -16,6 +16,7 @@
  */
 package com.alipay.sofa.registry.server.data.resource;
 
+import javax.annotation.PostConstruct;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
@@ -27,9 +28,12 @@ import javax.ws.rs.core.Response.Status;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import com.alipay.sofa.registry.common.model.CommonResponse;
+import com.alipay.sofa.registry.metrics.ReporterUtils;
 import com.alipay.sofa.registry.server.data.bootstrap.DataServerBootstrap;
 import com.alipay.sofa.registry.server.data.node.DataNodeStatus;
 import com.alipay.sofa.registry.server.data.util.LocalServerStatusEnum;
+import com.codahale.metrics.Gauge;
+import com.codahale.metrics.MetricRegistry;
 
 /**
  *
@@ -45,13 +49,29 @@ public class HealthResource {
     @Autowired
     private DataNodeStatus      dataNodeStatus;
 
+    @PostConstruct
+    public void init() {
+        MetricRegistry metrics = new MetricRegistry();
+        metrics.register("healthCheck", (Gauge<CommonResponse>) () -> getHealthCheckResult());
+        ReporterUtils.startSlf4jReporter(60, metrics);
+    }
+
     @GET
     @Path("check")
     @Produces(MediaType.APPLICATION_JSON)
     public Response checkHealth() {
 
         ResponseBuilder builder = Response.status(Response.Status.OK);
+        CommonResponse response = getHealthCheckResult();
+        builder.entity(response);
+        if (!response.isSuccess()) {
+            builder.status(Status.INTERNAL_SERVER_ERROR);
+        }
 
+        return builder.build();
+    }
+
+    private CommonResponse getHealthCheckResult() {
         CommonResponse response;
 
         StringBuilder sb = new StringBuilder("DataServerBoot ");
@@ -84,13 +104,9 @@ public class HealthResource {
 
         if (ret) {
             response = CommonResponse.buildSuccessResponse(sb.toString());
-            builder.entity(response);
         } else {
             response = CommonResponse.buildFailedResponse(sb.toString());
-            builder.entity(response);
-            builder.status(Status.INTERNAL_SERVER_ERROR);
         }
-
-        return builder.build();
+        return response;
     }
 }

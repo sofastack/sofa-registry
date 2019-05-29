@@ -16,6 +16,16 @@
  */
 package com.alipay.sofa.registry.remoting.bolt;
 
+import java.net.InetSocketAddress;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Executor;
+import java.util.concurrent.atomic.AtomicBoolean;
+
 import com.alipay.remoting.Connection;
 import com.alipay.remoting.ConnectionEventType;
 import com.alipay.remoting.InvokeCallback;
@@ -32,16 +42,6 @@ import com.alipay.sofa.registry.remoting.ChannelHandler;
 import com.alipay.sofa.registry.remoting.ChannelHandler.HandlerType;
 import com.alipay.sofa.registry.remoting.ChannelHandler.InvokeType;
 import com.alipay.sofa.registry.remoting.Server;
-
-import java.net.InetSocketAddress;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.Executor;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  *
@@ -341,5 +341,10 @@ public class BoltServer implements Server {
 
     public RpcServer getRpcServer() {
         return boltServer;
+    }
+
+    @Override
+    public int getChannelCount(){
+        return channels.size();
     }
 }
