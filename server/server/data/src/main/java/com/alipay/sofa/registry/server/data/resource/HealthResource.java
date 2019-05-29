@@ -52,7 +52,7 @@ public class HealthResource {
 
         ResponseBuilder builder = Response.status(Response.Status.OK);
 
-        CommonResponse  response;
+        CommonResponse response;
 
         StringBuilder sb = new StringBuilder("DataServerBoot ");
 
