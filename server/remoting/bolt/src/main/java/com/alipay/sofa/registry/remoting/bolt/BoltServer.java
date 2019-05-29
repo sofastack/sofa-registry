@@ -344,7 +344,7 @@ public class BoltServer implements Server {
     }
 
     @Override
-    public int getChannelCount(){
+    public int getChannelCount() {
         return channels.size();
     }
 }

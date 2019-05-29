@@ -62,7 +62,7 @@ public class SyncClientsHeartbeatTask {
     public static final String  SYMBOLIC2            = "  └─ ";
 
     @Autowired
-    private Exchange  boltExchange;
+    private Exchange            boltExchange;
 
     @Autowired
     private SessionServerConfig sessionServerConfig;
@@ -97,14 +97,15 @@ public class SyncClientsHeartbeatTask {
         long countPub = sessionDataStore.count();
         long countSubW = sessionWatchers.count();
 
-        int    channelCount  = 0;
+        int channelCount = 0;
         Server sessionServer = boltExchange.getServer(sessionServerConfig.getServerPort());
         if (sessionServer != null) {
             channelCount = sessionServer.getChannelCount();
         }
 
-        CONSOLE_COUNT_LOGGER.info("Subscriber count: {}, Publisher count: {}, Watcher count: {}, Connection count: {}",
-                countSub, countPub, countSubW, channelCount);
+        CONSOLE_COUNT_LOGGER.info(
+            "Subscriber count: {}, Publisher count: {}, Watcher count: {}, Connection count: {}",
+            countSub, countPub, countSubW, channelCount);
     }
 
     @Scheduled(initialDelayString = "${session.server.printTask.fixedDelay}", fixedDelayString = "${session.server.printTask.fixedDelay}")
