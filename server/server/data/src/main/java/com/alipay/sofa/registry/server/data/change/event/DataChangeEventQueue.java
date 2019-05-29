@@ -16,6 +16,14 @@
  */
 package com.alipay.sofa.registry.server.data.change.event;
 
+import java.util.Map;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.DelayQueue;
+import java.util.concurrent.Executor;
+import java.util.concurrent.LinkedBlockingDeque;
+import java.util.concurrent.locks.ReentrantLock;
+
 import com.alipay.sofa.registry.common.model.dataserver.Datum;
 import com.alipay.sofa.registry.common.model.store.Publisher;
 import com.alipay.sofa.registry.log.Logger;
@@ -30,14 +38,6 @@ import com.alipay.sofa.registry.server.data.executor.ExecutorFactory;
 import com.alipay.sofa.registry.server.data.node.DataServerNode;
 import com.alipay.sofa.registry.server.data.remoting.dataserver.DataServerNodeFactory;
 import com.google.common.collect.Interners;
-
-import java.util.Map;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.DelayQueue;
-import java.util.concurrent.Executor;
-import java.util.concurrent.LinkedBlockingDeque;
-import java.util.concurrent.locks.ReentrantLock;
 
 /**
  * a queue of DataChangeEvent
@@ -74,16 +74,21 @@ public class DataChangeEventQueue {
 
     private final ReentrantLock                        lock            = new ReentrantLock();
 
+    private final int queueIdx;
+
     private DataServerConfig                           dataServerConfig;
+
+    private DataChangeEventCenter dataChangeEventCenter;
 
     /**
      * constructor
-     * @param idx
+     * @param queueIdx
      * @param dataServerConfig
      */
-    public DataChangeEventQueue(int idx, DataServerConfig dataServerConfig) {
+    public DataChangeEventQueue(int queueIdx, DataServerConfig dataServerConfig) {
 
-        this.name = String.format("%s_%s", DataChangeEventQueue.class.getSimpleName(), idx);
+        this.queueIdx = queueIdx;
+        this.name = String.format("%s_%s", DataChangeEventQueue.class.getSimpleName(), queueIdx);
         this.dataServerConfig = dataServerConfig;
         int queueSize = dataServerConfig.getQueueSize();
         if (queueSize <= 0) {
@@ -177,7 +182,7 @@ public class DataChangeEventQueue {
                         handleDatum(dataChangeEvent.getChangeType(),
                                 dataChangeEvent.getSourceType(), dataChangeEvent.getDatum());
                     } else if (scope == DataChangeScopeEnum.CLIENT) {
-                        handleHost((ClientChangeEvent) event);
+                        handleClientOff((ClientChangeEvent) event);
                     }
                 } catch (Throwable e) {
                     LOGGER.error("[{}] handle change event failed", getName(), e);
@@ -187,13 +192,19 @@ public class DataChangeEventQueue {
         LOGGER.info("[{}] start DataChangeEventQueue success", getName());
     }
 
-    private void handleHost(ClientChangeEvent event) {
+    private void handleClientOff(ClientChangeEvent event) {
         String clientHost = event.getHost();
         synchronized (Interners.newWeakInterner().intern(clientHost)) {
             Map<String, Publisher> pubMap = DatumCache.getByHost(clientHost);
             if (pubMap != null && !pubMap.isEmpty()) {
                 int count = 0;
                 for (Publisher publisher : pubMap.values()) {
+                    // Only care dataInfoIds which belong to this queue
+                    int queueIdx = this.dataChangeEventCenter.hash(publisher.getDataInfoId());
+                    if(this.queueIdx != queueIdx){
+                        continue;
+                    }
+
                     DataServerNode dataServerNode = DataServerNodeFactory.computeDataServerNode(
                         dataServerConfig.getLocalDataCenter(), publisher.getDataInfoId());
                     //current dataCenter backup data need not unPub,it will be unPub by backup sync event

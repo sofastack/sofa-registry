@@ -16,6 +16,8 @@
  */
 package com.alipay.sofa.registry.server.data.change.event;
 
+import java.util.concurrent.atomic.AtomicBoolean;
+
 import com.alipay.sofa.registry.common.model.PublishType;
 import com.alipay.sofa.registry.common.model.dataserver.Datum;
 import com.alipay.sofa.registry.common.model.store.Publisher;
@@ -23,8 +25,6 @@ import com.alipay.sofa.registry.server.data.bootstrap.DataServerConfig;
 import com.alipay.sofa.registry.server.data.cache.UnPublisher;
 import com.alipay.sofa.registry.server.data.change.DataChangeTypeEnum;
 import com.alipay.sofa.registry.server.data.change.DataSourceTypeEnum;
-
-import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  *
@@ -118,7 +118,7 @@ public class DataChangeEventCenter {
      * @param key
      * @return
      */
-    private int hash(String key) {
+    public int hash(String key) {
         if (queueCount > 1) {
             return Math.abs(key.hashCode() % queueCount);
         } else {
