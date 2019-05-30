@@ -16,6 +16,13 @@
  */
 package com.alipay.sofa.registry.server.data.remoting.sessionserver.handler;
 
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.Executor;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
+
+import org.springframework.beans.factory.annotation.Autowired;
+
 import com.alipay.sofa.registry.common.model.CommonResponse;
 import com.alipay.sofa.registry.common.model.Node;
 import com.alipay.sofa.registry.common.model.PublishType;
@@ -32,12 +39,6 @@ import com.alipay.sofa.registry.server.data.remoting.sessionserver.forward.Forwa
 import com.alipay.sofa.registry.server.data.util.ThreadPoolExecutorDataServer;
 import com.alipay.sofa.registry.util.NamedThreadFactory;
 import com.alipay.sofa.registry.util.ParaCheckUtil;
-import org.springframework.beans.factory.annotation.Autowired;
-
-import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.Executor;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
 
 /**
  * processor to publish data
@@ -94,7 +95,7 @@ public class PublishDataHandler extends AbstractServerHandler<PublishDataRequest
     @Override
     public Object doHandle(Channel channel, PublishDataRequest request) {
         Publisher publisher = Publisher.processPublisher(request.getPublisher());
-        if (forwardService.needForward(publisher.getDataInfoId())) {
+        if (forwardService.needForward()) {
             LOGGER.warn("[forward] Publish request refused, request: {}", request);
             CommonResponse response = new CommonResponse();
             response.setSuccess(false);

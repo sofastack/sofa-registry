@@ -16,6 +16,10 @@
  */
 package com.alipay.sofa.registry.server.data.remoting.sessionserver.forward;
 
+import java.util.List;
+
+import org.springframework.beans.factory.annotation.Autowired;
+
 import com.alipay.remoting.exception.RemotingException;
 import com.alipay.sofa.registry.common.model.store.URL;
 import com.alipay.sofa.registry.log.Logger;
@@ -28,9 +32,6 @@ import com.alipay.sofa.registry.server.data.node.DataServerNode;
 import com.alipay.sofa.registry.server.data.remoting.DataNodeExchanger;
 import com.alipay.sofa.registry.server.data.remoting.dataserver.DataServerNodeFactory;
 import com.alipay.sofa.registry.server.data.util.LocalServerStatusEnum;
-import org.springframework.beans.factory.annotation.Autowired;
-
-import java.util.List;
 
 /**
  * The type Forward service.
@@ -52,10 +53,10 @@ public class ForwardServiceImpl implements ForwardService {
     private DataNodeExchanger   dataNodeExchanger;
 
     /**
-     * @see ForwardService#needForward(String)
+     * @see ForwardService#needForward()
      */
     @Override
-    public boolean needForward(String dataInfoId) {
+    public boolean needForward() {
         return dataNodeStatus.getStatus() != LocalServerStatusEnum.WORKING;
     }
 

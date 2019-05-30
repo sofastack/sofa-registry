@@ -79,19 +79,19 @@ public class DataChangeEventQueue {
 
     private final ReentrantLock                        lock            = new ReentrantLock();
 
-    private final int queueIdx;
+    private final int                                  queueIdx;
 
     private DataServerConfig                           dataServerConfig;
 
-    private DataChangeEventCenter dataChangeEventCenter;
+    private DataChangeEventCenter                      dataChangeEventCenter;
 
     /**
      * constructor
      * @param queueIdx
      * @param dataServerConfig
      */
-    public DataChangeEventQueue(int queueIdx, DataServerConfig dataServerConfig) {
-
+    public DataChangeEventQueue(int queueIdx, DataServerConfig dataServerConfig,
+                                DataChangeEventCenter dataChangeEventCenter) {
         this.queueIdx = queueIdx;
         this.name = String.format("%s_%s", DataChangeEventQueue.class.getSimpleName(), queueIdx);
         this.dataServerConfig = dataServerConfig;
@@ -103,6 +103,7 @@ public class DataChangeEventQueue {
         }
         this.notifyIntervalMs = dataServerConfig.getNotifyIntervalMs();
         this.notifyTempDataIntervalMs = dataServerConfig.getNotifyTempDataIntervalMs();
+        this.dataChangeEventCenter = dataChangeEventCenter;
     }
 
     /**
@@ -182,21 +183,22 @@ public class DataChangeEventQueue {
         executor.execute(() -> {
             while (true) {
                 try {
-                    IDataChangeEvent event = eventQueue.take();
+                    IDataChangeEvent    event = eventQueue.take();
                     DataChangeScopeEnum scope = event.getScope();
                     if (scope == DataChangeScopeEnum.DATUM) {
                         DataChangeEvent dataChangeEvent = (DataChangeEvent) event;
                         //Temporary push data will be notify as soon as,and not merge to normal pub data;
-                        if (dataChangeEvent.getSourceType() == DataSourceTypeEnum.PUB_TEMP){
-                            addTempChangeData(dataChangeEvent.getDatum(),dataChangeEvent.getChangeType(),
+                        if (dataChangeEvent.getSourceType() == DataSourceTypeEnum.PUB_TEMP) {
+                            addTempChangeData(dataChangeEvent.getDatum(), dataChangeEvent.getChangeType(),
                                     dataChangeEvent.getSourceType());
-                        }
-                        else {
+                        } else {
                             handleDatum(dataChangeEvent.getChangeType(),
                                     dataChangeEvent.getSourceType(), dataChangeEvent.getDatum());
                         }
                     } else if (scope == DataChangeScopeEnum.CLIENT) {
                         handleClientOff((ClientChangeEvent) event);
+                    } else if (scope == DataChangeScopeEnum.SNAPSHOT) {
+                        handleSnapshot((DatumSnapshotEvent) event);
                     }
                 } catch (Throwable e) {
                     LOGGER.error("[{}] handle change event failed", getName(), e);
@@ -216,8 +218,7 @@ public class DataChangeEventQueue {
                 int count = 0;
                 for (Publisher publisher : pubMap.values()) {
                     // Only care dataInfoIds which belong to this queue
-                    int queueIdx = this.dataChangeEventCenter.hash(publisher.getDataInfoId());
-                    if(this.queueIdx != queueIdx){
+                    if (!belongTo(publisher.getDataInfoId())) {
                         continue;
                     }
 
@@ -283,11 +284,63 @@ public class DataChangeEventQueue {
         }
     }
 
+    private void handleSnapshot(DatumSnapshotEvent event) {
+        String clientHost = event.getHost();
+        Map<String, Publisher> snapshotPubMap = event.getPubMap();
+        synchronized (Interners.newWeakInterner().intern(clientHost)) {
+            Map<String, Publisher> pubMap = DatumCache.getByHost(clientHost);
+            LOGGER
+                .info("[{}] snapshot begin, host={}, old pub size={}, snapshot pub size={}",
+                    getName(), clientHost, pubMap != null ? pubMap.size() : null,
+                    snapshotPubMap.size());
+            int unpubSize = 0;
+            if (pubMap != null) {
+                for (Publisher publisher : pubMap.values()) {
+                    // Only care dataInfoIds which belong to this queue
+                    if (!belongTo(publisher.getDataInfoId())) {
+                        continue;
+                    }
+                    //backup datum do not need to unPub, it will be unPub by backup sync event
+                    DataServerNode dataServerNode = DataServerNodeFactory.computeDataServerNode(
+                        dataServerConfig.getLocalDataCenter(), publisher.getDataInfoId());
+                    if (!DataServerConfig.IP.equals(dataServerNode.getIp())) {
+                        continue;
+                    }
+
+                    //If snapshot.pubMap does not contain this pub: then build the reverse operation as unpub
+                    if (!snapshotPubMap.containsKey(publisher.getRegisterId())) {
+                        long currentTimeStamp = System.currentTimeMillis();
+                        Datum datum = new Datum(new UnPublisher(publisher.getDataInfoId(),
+                            publisher.getRegisterId(), currentTimeStamp), event.getDataCenter(),
+                            currentTimeStamp);
+                        datum.setContainsUnPub(true);
+                        handleDatum(DataChangeTypeEnum.MERGE, DataSourceTypeEnum.PUB, datum);
+                        unpubSize++;
+                    }
+                }
+            }
+            for (Publisher publisher : snapshotPubMap.values()) {
+                long currentTimeStamp = System.currentTimeMillis();
+                Datum datum = new Datum(publisher, event.getDataCenter(), currentTimeStamp);
+                handleDatum(DataChangeTypeEnum.MERGE, DataSourceTypeEnum.PUB, datum);
+            }
+            LOGGER.info("[{}] snapshot handle, host={}, handle unpub size={}, handle pub size={}",
+                getName(), clientHost, unpubSize, snapshotPubMap.size());
+        }
+    }
+
     private void addTempChangeData(Datum targetDatum, DataChangeTypeEnum changeType,
                                    DataSourceTypeEnum sourceType) {
 
         ChangeData tempChangeData = new ChangeData(targetDatum, this.notifyTempDataIntervalMs,
             sourceType, changeType);
         CHANGE_QUEUE.put(tempChangeData);
+    }
+
+    /**
+     * Determine whether dataInfoId belongs to the current queue
+     */
+    private boolean belongTo(String dataInfoId) {
+        return this.queueIdx == this.dataChangeEventCenter.hash(dataInfoId);
     }
 }

@@ -53,7 +53,7 @@ public class DataChangeEventCenter {
             queueCount = config.getQueueCount();
             dataChangeEventQueues = new DataChangeEventQueue[queueCount];
             for (int idx = 0; idx < queueCount; idx++) {
-                dataChangeEventQueues[idx] = new DataChangeEventQueue(idx, config);
+                dataChangeEventQueues[idx] = new DataChangeEventQueue(idx, config, this);
                 dataChangeEventQueues[idx].start();
             }
         }
@@ -96,6 +96,16 @@ public class DataChangeEventCenter {
      * @param event
      */
     public void onChange(ClientChangeEvent event) {
+        for (DataChangeEventQueue dataChangeEventQueue : dataChangeEventQueues) {
+            dataChangeEventQueue.onChange(event);
+        }
+    }
+
+    /**
+     *
+     * @param event
+     */
+    public void onChange(DatumSnapshotEvent event) {
         for (DataChangeEventQueue dataChangeEventQueue : dataChangeEventQueues) {
             dataChangeEventQueue.onChange(event);
         }

@@ -16,60 +16,72 @@
  */
 package com.alipay.sofa.registry.server.data.remoting.sessionserver.handler;
 
+import java.util.Map;
+import java.util.stream.Collectors;
+
 import org.springframework.beans.factory.annotation.Autowired;
 
 import com.alipay.sofa.registry.common.model.CommonResponse;
+import com.alipay.sofa.registry.common.model.DatumSnapshotRequest;
 import com.alipay.sofa.registry.common.model.Node;
-import com.alipay.sofa.registry.common.model.dataserver.UnPublishDataRequest;
+import com.alipay.sofa.registry.common.model.dataserver.ClientOffRequest;
+import com.alipay.sofa.registry.common.model.store.Publisher;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.remoting.Channel;
 import com.alipay.sofa.registry.server.data.bootstrap.DataServerConfig;
-import com.alipay.sofa.registry.server.data.cache.UnPublisher;
 import com.alipay.sofa.registry.server.data.change.event.DataChangeEventCenter;
+import com.alipay.sofa.registry.server.data.change.event.DatumSnapshotEvent;
 import com.alipay.sofa.registry.server.data.remoting.handler.AbstractServerHandler;
+import com.alipay.sofa.registry.server.data.remoting.sessionserver.disconnect.DisconnectEventHandler;
 import com.alipay.sofa.registry.server.data.remoting.sessionserver.forward.ForwardService;
-import com.alipay.sofa.registry.util.ParaCheckUtil;
 
 /**
- * processor to unPublish specific data
+ * handling snapshot request
  *
- * @author qian.lqlq
- * @version $Id: UnPublishDataProcessor.java, v 0.1 2017-12-01 15:48 qian.lqlq Exp $
+ * @author kezhu.wukz
+ * @version $Id: ClientOffProcessor.java, v 0.1 2019-05-30 15:48 kezhu.wukz Exp $
  */
-public class UnPublishDataHandler extends AbstractServerHandler<UnPublishDataRequest> {
+public class DatumSnapshotHandler extends AbstractServerHandler<DatumSnapshotRequest> {
 
     /** LOGGER */
-    private static final Logger   LOGGER = LoggerFactory.getLogger(UnPublishDataHandler.class);
+    private static final Logger    LOGGER = LoggerFactory.getLogger(DatumSnapshotHandler.class);
 
     @Autowired
-    private ForwardService        forwardService;
+    private ForwardService         forwardService;
 
     @Autowired
-    private DataChangeEventCenter dataChangeEventCenter;
+    private DataServerConfig       dataServerBootstrapConfig;
 
     @Autowired
-    private DataServerConfig      dataServerConfig;
+    private DisconnectEventHandler disconnectEventHandler;
+
+    @Autowired
+    private DataChangeEventCenter  dataChangeEventCenter;
+
+    @Autowired
+    private DataServerConfig       dataServerConfig;
 
     @Override
-    public void checkParam(UnPublishDataRequest request) throws RuntimeException {
-        ParaCheckUtil.checkNotBlank(request.getDataInfoId(), "UnPublishDataRequest.dataInfoId");
-        ParaCheckUtil.checkNotBlank(request.getRegisterId(), "UnPublishDataRequest.registerId");
+    public void checkParam(DatumSnapshotRequest request) throws RuntimeException {
+        //        ParaCheckUtil.checkNotEmpty(request.getHosts(), "ClientOffRequest.hosts");
     }
 
     @Override
-    public Object doHandle(Channel channel, UnPublishDataRequest request) {
+    public Object doHandle(Channel channel, DatumSnapshotRequest request) {
         if (forwardService.needForward()) {
-            LOGGER.warn("[forward] UnPublish request refused, request: {}", request);
+            LOGGER.warn("[forward] Snapshot request refused, request: {}", request);
             CommonResponse response = new CommonResponse();
             response.setSuccess(false);
             response.setMessage("Request refused, Server status is not working");
             return response;
         }
 
-        dataChangeEventCenter.onChange(
-            new UnPublisher(request.getDataInfoId(), request.getRegisterId(), request
-                .getRegisterTimestamp()), dataServerConfig.getLocalDataCenter());
+        Map<String, Publisher> pubMap = request.getPublishers().stream().collect(
+                Collectors.toMap(p -> p.getRegisterId(), p -> p));
+        dataChangeEventCenter.onChange(new DatumSnapshotEvent(request.getConnectId(), dataServerConfig
+                .getLocalDataCenter(), pubMap));
+
         return CommonResponse.buildSuccessResponse();
     }
 
@@ -85,7 +97,7 @@ public class UnPublishDataHandler extends AbstractServerHandler<UnPublishDataReq
 
     @Override
     public Class interest() {
-        return UnPublishDataRequest.class;
+        return ClientOffRequest.class;
     }
 
     @Override
