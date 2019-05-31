@@ -92,7 +92,7 @@ public class AsyncHashedWheelTimer extends HashedWheelTimer {
             } catch (RejectedExecutionException e) {
                 taskFailedCallback.executionRejected(e);
             } catch (Throwable e) {
-                taskFailedCallback.executionRejected(e);
+                taskFailedCallback.executionFailed(e);
             }
         }
 
