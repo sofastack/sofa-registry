@@ -105,7 +105,7 @@ public class PublishDataHandler extends AbstractServerHandler<PublishDataRequest
 
         dataChangeEventCenter.onChange(publisher, dataServerConfig.getLocalDataCenter());
         if (publisher.getPublishType() != PublishType.TEMPORARY) {
-            sessionServerConnectionFactory.registerClient(request.getSessionServerProcessId(),
+            sessionServerConnectionFactory.registerConnectId(request.getSessionServerProcessId(),
                 publisher.getSourceAddress().getAddressString());
         }
 

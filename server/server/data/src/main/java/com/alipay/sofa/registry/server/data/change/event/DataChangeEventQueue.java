@@ -209,12 +209,13 @@ public class DataChangeEventQueue {
     }
 
     private void handleClientOff(ClientChangeEvent event) {
-        String clientHost = event.getHost();
-        synchronized (Interners.newWeakInterner().intern(clientHost)) {
-            Map<String, Publisher> pubMap = DatumCache.getByHost(clientHost);
+        String connectId = event.getHost();
+        synchronized (Interners.newWeakInterner().intern(connectId)) {
+            Map<String, Publisher> pubMap = DatumCache.getByConnectId(connectId);
             if (pubMap != null && !pubMap.isEmpty()) {
-                LOGGER.info("[{}] client off begin, host={}, occurTimestamp={},all pub size={}",
-                    getName(), clientHost, event.getOccurredTimestamp(), pubMap.size());
+                LOGGER.info(
+                    "[{}] client off begin, connectId={}, occurTimestamp={}, all pubSize={}",
+                    getName(), connectId, event.getOccurredTimestamp(), pubMap.size());
                 int count = 0;
                 for (Publisher publisher : pubMap.values()) {
                     // Only care dataInfoIds which belong to this queue
@@ -236,11 +237,11 @@ public class DataChangeEventQueue {
                 }
                 LOGGER
                     .info(
-                        "[{}] client off handle, host={}, occurTimestamp={},version={},handle pub size={}",
-                        getName(), clientHost, event.getOccurredTimestamp(), event.getVersion(),
+                        "[{}] client off handle, connectId={}, occurTimestamp={}, version={}, handle pubSize={}",
+                        getName(), connectId, event.getOccurredTimestamp(), event.getVersion(),
                         count);
             } else {
-                LOGGER.info("[{}] no datum to handle, host={}", getName(), clientHost);
+                LOGGER.info("[{}] no datum to handle, connectId={}", getName(), connectId);
             }
         }
     }
@@ -285,14 +286,12 @@ public class DataChangeEventQueue {
     }
 
     private void handleSnapshot(DatumSnapshotEvent event) {
-        String clientHost = event.getHost();
+        String connectId = event.getHost();
         Map<String, Publisher> snapshotPubMap = event.getPubMap();
-        synchronized (Interners.newWeakInterner().intern(clientHost)) {
-            Map<String, Publisher> pubMap = DatumCache.getByHost(clientHost);
-            LOGGER
-                .info("[{}] snapshot begin, host={}, old pub size={}, snapshot pub size={}",
-                    getName(), clientHost, pubMap != null ? pubMap.size() : null,
-                    snapshotPubMap.size());
+        synchronized (Interners.newWeakInterner().intern(connectId)) {
+            Map<String, Publisher> pubMap = DatumCache.getByConnectId(connectId);
+            LOGGER.info("[{}] snapshot begin, connectId={}, old pubSize={}, snapshot pubSize={}",
+                getName(), connectId, pubMap != null ? pubMap.size() : null, snapshotPubMap.size());
             int unpubSize = 0;
             if (pubMap != null) {
                 for (Publisher publisher : pubMap.values()) {
@@ -324,8 +323,9 @@ public class DataChangeEventQueue {
                 Datum datum = new Datum(publisher, event.getDataCenter(), currentTimeStamp);
                 handleDatum(DataChangeTypeEnum.MERGE, DataSourceTypeEnum.PUB, datum);
             }
-            LOGGER.info("[{}] snapshot handle, host={}, handle unpub size={}, handle pub size={}",
-                getName(), clientHost, unpubSize, snapshotPubMap.size());
+            LOGGER.info(
+                "[{}] snapshot handle, connectId={}, handle unpubSize={}, handle pubSize={}",
+                getName(), connectId, unpubSize, snapshotPubMap.size());
         }
     }
 

@@ -83,7 +83,8 @@ public class DisconnectEventHandler implements InitializingBean, AfterWorkingPro
                 sessionServerDisconnectEvent.getProcessId());
         } else if (event.getType() == DisconnectTypeEnum.CLIENT) {
             ClientDisconnectEvent clientDisconnectEvent = (ClientDisconnectEvent) event;
-            LOGGER.info("receive client off event: clientHost={}", clientDisconnectEvent.getHost());
+            LOGGER.info("receive client off event: connectId={}",
+                clientDisconnectEvent.getConnectId());
         }
 
         if (dataNodeStatus.getStatus() != LocalServerStatusEnum.WORKING) {
@@ -128,22 +129,22 @@ public class DisconnectEventHandler implements InitializingBean, AfterWorkingPro
                 try {
                     DisconnectEvent disconnectEvent = EVENT_QUEUE.take();
                     if (disconnectEvent.getType() == DisconnectTypeEnum.SESSION_SERVER) {
-                        SessionServerDisconnectEvent event = (SessionServerDisconnectEvent) disconnectEvent;
-                        String processId = event.getProcessId();
+                        SessionServerDisconnectEvent event     = (SessionServerDisconnectEvent) disconnectEvent;
+                        String                       processId = event.getProcessId();
                         //check processId confirm remove,and not be registered again when delay time
                         String sessionServerHost = event.getSessionServerHost();
                         if (sessionServerConnectionFactory
                                 .removeProcessIfMatch(processId, sessionServerHost)) {
-                            Set<String> clientHosts = sessionServerConnectionFactory
-                                    .removeClients(processId);
+                            Set<String> connectIds = sessionServerConnectionFactory
+                                    .removeConnectIds(processId);
 
-                            LOGGER.info("session off is triggered: sessionServerHost={}, clientHost={}, processId={}",
+                            LOGGER.info("session off is triggered: sessionServerHost={}, connectId={}, processId={}",
                                     sessionServerHost,
-                                    clientHosts, processId);
+                                    connectIds, processId);
 
-                            if (clientHosts != null && !clientHosts.isEmpty()) {
-                                for (String host : clientHosts) {
-                                    unPub(host, event.getRegisterTimestamp());
+                            if (connectIds != null && !connectIds.isEmpty()) {
+                                for (String connectId : connectIds) {
+                                    unPub(connectId, event.getRegisterTimestamp());
                                 }
                             }
                         } else {
@@ -152,7 +153,7 @@ public class DisconnectEventHandler implements InitializingBean, AfterWorkingPro
                         }
                     } else {
                         ClientDisconnectEvent event = (ClientDisconnectEvent) disconnectEvent;
-                        unPub(event.getHost(), event.getRegisterTimestamp());
+                        unPub(event.getConnectId(), event.getRegisterTimestamp());
                     }
                 } catch (Throwable e) {
                     LOGGER.error("handle client disconnect event failed", e);
@@ -164,11 +165,11 @@ public class DisconnectEventHandler implements InitializingBean, AfterWorkingPro
 
     /**
      *
-     * @param host
+     * @param connectId
      * @param registerTimestamp
      */
-    private void unPub(String host, long registerTimestamp) {
-        dataChangeEventCenter.onChange(new ClientChangeEvent(host, dataServerConfig
+    private void unPub(String connectId, long registerTimestamp) {
+        dataChangeEventCenter.onChange(new ClientChangeEvent(connectId, dataServerConfig
             .getLocalDataCenter(), registerTimestamp));
     }
 }

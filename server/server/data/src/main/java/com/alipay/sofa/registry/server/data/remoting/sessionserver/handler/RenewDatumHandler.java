@@ -17,21 +17,21 @@
 package com.alipay.sofa.registry.server.data.remoting.sessionserver.handler;
 
 import java.util.Map;
-import java.util.stream.Collectors;
 
+import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import com.alipay.sofa.registry.common.model.CommonResponse;
-import com.alipay.sofa.registry.common.model.DatumSnapshotRequest;
+import com.alipay.sofa.registry.common.model.GenericResponse;
 import com.alipay.sofa.registry.common.model.Node;
+import com.alipay.sofa.registry.common.model.PublisherDigestUtil;
+import com.alipay.sofa.registry.common.model.ReNewDatumRequest;
 import com.alipay.sofa.registry.common.model.dataserver.ClientOffRequest;
 import com.alipay.sofa.registry.common.model.store.Publisher;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.remoting.Channel;
-import com.alipay.sofa.registry.server.data.bootstrap.DataServerConfig;
-import com.alipay.sofa.registry.server.data.change.event.DataChangeEventCenter;
-import com.alipay.sofa.registry.server.data.change.event.DatumSnapshotEvent;
+import com.alipay.sofa.registry.server.data.cache.DatumCache;
 import com.alipay.sofa.registry.server.data.remoting.handler.AbstractServerHandler;
 import com.alipay.sofa.registry.server.data.remoting.sessionserver.forward.ForwardService;
 import com.alipay.sofa.registry.util.ParaCheckUtil;
@@ -42,42 +42,33 @@ import com.alipay.sofa.registry.util.ParaCheckUtil;
  * @author kezhu.wukz
  * @version $Id: ClientOffProcessor.java, v 0.1 2019-05-30 15:48 kezhu.wukz Exp $
  */
-public class DatumSnapshotHandler extends AbstractServerHandler<DatumSnapshotRequest> {
+public class RenewDatumHandler extends AbstractServerHandler<ReNewDatumRequest> {
 
     /** LOGGER */
-    private static final Logger   LOGGER = LoggerFactory.getLogger(DatumSnapshotHandler.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(RenewDatumHandler.class);
 
     @Autowired
-    private ForwardService        forwardService;
-
-    @Autowired
-    private DataChangeEventCenter dataChangeEventCenter;
-
-    @Autowired
-    private DataServerConfig      dataServerConfig;
+    private ForwardService      forwardService;
 
     @Override
-    public void checkParam(DatumSnapshotRequest request) throws RuntimeException {
-        ParaCheckUtil.checkNotBlank(request.getConnectId(), "DatumSnapshotRequest.connectId");
-        ParaCheckUtil.checkNotEmpty(request.getPublishers(), "DatumSnapshotRequest.publishers");
+    public void checkParam(ReNewDatumRequest request) throws RuntimeException {
+        ParaCheckUtil.checkNotBlank(request.getConnectId(), "ReNewDatumRequest.connectId");
+        ParaCheckUtil.checkNotBlank(request.getDigestSum(), "ReNewDatumRequest.digestSum");
     }
 
     @Override
-    public Object doHandle(Channel channel, DatumSnapshotRequest request) {
+    public Object doHandle(Channel channel, ReNewDatumRequest request) {
         if (forwardService.needForward()) {
-            LOGGER.warn("[forward] Snapshot request refused, request: {}", request);
+            LOGGER.warn("[forward] Renew request refused, request: {}", request);
             CommonResponse response = new CommonResponse();
             response.setSuccess(false);
-            response.setMessage("Snapshot request refused, Server status is not working");
+            response.setMessage("Renew request refused, Server status is not working");
             return response;
         }
 
-        Map<String, Publisher> pubMap = request.getPublishers().stream().collect(
-                Collectors.toMap(p -> p.getRegisterId(), p -> p));
-        dataChangeEventCenter.onChange(new DatumSnapshotEvent(request.getConnectId(), dataServerConfig
-                .getLocalDataCenter(), pubMap));
+        boolean isDiff = renewDatum(request);
 
-        return CommonResponse.buildSuccessResponse();
+        return new GenericResponse<Boolean>().fillSucceed(isDiff);
     }
 
     @Override
@@ -98,5 +89,24 @@ public class DatumSnapshotHandler extends AbstractServerHandler<DatumSnapshotReq
     @Override
     protected Node.NodeType getConnectNodeType() {
         return Node.NodeType.DATA;
+    }
+
+    /**
+     * 1. Update the timestamp corresponding to connectId in DatumCache
+     * 2. Compare checksum: Get all pubs corresponding to the connId from DatumCache and calculate checksum.
+     */
+    private boolean renewDatum(ReNewDatumRequest request) {
+        String connectId = request.getConnectId();
+        DatumCache.renew(connectId);
+        Map<String, Publisher> publisherMap = DatumCache.getByConnectId(connectId);
+
+        String renewDigest = request.getDigestSum();
+        String cacheDigest = null;
+        if (publisherMap != null && publisherMap.values().size() > 0) {
+            cacheDigest = String.valueOf(PublisherDigestUtil.getDigestValueSum(publisherMap
+                .values()));
+        }
+
+        return StringUtils.equals(renewDigest, cacheDigest);
     }
 }

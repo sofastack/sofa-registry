@@ -16,20 +16,21 @@
  */
 package com.alipay.sofa.registry.server.session.correction;
 
-import com.alipay.sofa.registry.common.model.Node;
-import com.alipay.sofa.registry.common.model.PublisherDigest;
-import com.alipay.sofa.registry.common.model.store.Publisher;
-import com.alipay.sofa.registry.log.Logger;
-import com.alipay.sofa.registry.log.LoggerFactory;
-import com.alipay.sofa.registry.server.session.node.NodeManager;
-import com.alipay.sofa.registry.server.session.store.DataStore;
-import org.springframework.beans.factory.annotation.Autowired;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+
+import org.springframework.beans.factory.annotation.Autowired;
+
+import com.alipay.sofa.registry.common.model.Node;
+import com.alipay.sofa.registry.common.model.PublisherDigestUtil;
+import com.alipay.sofa.registry.common.model.store.Publisher;
+import com.alipay.sofa.registry.log.Logger;
+import com.alipay.sofa.registry.log.LoggerFactory;
+import com.alipay.sofa.registry.server.session.node.NodeManager;
+import com.alipay.sofa.registry.server.session.store.DataStore;
 
 /**
  *
@@ -59,7 +60,7 @@ public class PublisherDigestServiceImpl implements PublisherDigestService {
 
         if(connectIdPubs != null && !connectIdPubs.isEmpty()){
             Map<String, String> digestMap = new HashMap<>();
-            connectIdPubs.forEach((dataIP,publishers)-> digestMap.put(dataIP, String.valueOf(PublisherDigest.getDigestValueSum(publishers))));
+            connectIdPubs.forEach((dataIP,publishers)-> digestMap.put(dataIP, String.valueOf(PublisherDigestUtil.getDigestValueSum(publishers))));
 
             return digestMap;
         }

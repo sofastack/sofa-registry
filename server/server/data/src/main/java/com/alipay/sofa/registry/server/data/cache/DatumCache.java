@@ -16,17 +16,18 @@
  */
 package com.alipay.sofa.registry.server.data.cache;
 
-import com.alipay.sofa.registry.common.model.dataserver.Datum;
-import com.alipay.sofa.registry.common.model.store.Publisher;
-import com.alipay.sofa.registry.server.data.change.DataChangeTypeEnum;
-import org.springframework.util.StringUtils;
-
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+
+import org.apache.commons.lang.StringUtils;
+
+import com.alipay.sofa.registry.common.model.dataserver.Datum;
+import com.alipay.sofa.registry.common.model.store.Publisher;
+import com.alipay.sofa.registry.server.data.change.DataChangeTypeEnum;
 
 /**
  * cache of datum, providing query function to the upper module
@@ -36,21 +37,26 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public class DatumCache {
 
-    public static final long                                 ERROR_DATUM_VERSION = -2L;
+    public static final long                                 ERROR_DATUM_VERSION            = -2L;
 
     /**
      * row:     dataCenter
      * column:  dataInfoId
      * value:   datum
      */
-    private static final Map<String, Map<String, Datum>>     DATUM_MAP           = new ConcurrentHashMap<>();
+    private static final Map<String, Map<String, Datum>>     DATUM_MAP                      = new ConcurrentHashMap<>();
 
     /**
      * row:     ip:port
      * column:  registerId
      * value:   publisher
      */
-    private static final Map<String, Map<String, Publisher>> CLIENT_PUB_MAP      = new ConcurrentHashMap<>();
+    private static final Map<String, Map<String, Publisher>> CONNECT_ID_PUB_MAP             = new ConcurrentHashMap<>();
+
+    /**
+     * record the latest heartbeat time for each connId, format: connId -> lastRenewTimestamp
+     */
+    private static final Map<String, Long>                   CONNECT_ID_RENEW_TIMESTAMP_MAP = new ConcurrentHashMap<>();
 
     /**
      * get datum by specific dataCenter and dataInfoId
@@ -118,11 +124,21 @@ public class DatumCache {
     /**
      *
      *
-     * @param host
+     * @param connectId
      * @return
      */
-    public static Map<String, Publisher> getByHost(String host) {
-        return CLIENT_PUB_MAP.getOrDefault(host, null);
+    public static Map<String, Publisher> getByConnectId(String connectId) {
+        return CONNECT_ID_PUB_MAP.getOrDefault(connectId, null);
+    }
+
+    /**
+     *
+     *
+     * @param connectId
+     * @return
+     */
+    public static void renew(String connectId) {
+        CONNECT_ID_RENEW_TIMESTAMP_MAP.put(connectId, System.currentTimeMillis());
     }
 
     /**
@@ -162,7 +178,7 @@ public class DatumCache {
                     String registerId = publisher.getRegisterId();
                     Map<String, Publisher> clientRegisterMap = new ConcurrentHashMap<>();
                     clientRegisterMap.put(registerId, publisher);
-                    Map<String, Publisher> retMap = CLIENT_PUB_MAP.putIfAbsent(publisher
+                    Map<String, Publisher> retMap = CONNECT_ID_PUB_MAP.putIfAbsent(publisher
                         .getSourceAddress().getAddressString(), clientRegisterMap);
                     if (retMap != null) {
                         retMap.putAll(clientRegisterMap);
@@ -204,8 +220,8 @@ public class DatumCache {
                     //remove from cache
                     if (cachePub != null) {
                         cachePubMap.remove(registerId);
-                        CLIENT_PUB_MAP.get(cachePub.getSourceAddress().getAddressString()).remove(
-                            registerId);
+                        CONNECT_ID_PUB_MAP.get(cachePub.getSourceAddress().getAddressString())
+                            .remove(registerId);
                     }
                 }
                 return true;
@@ -234,7 +250,7 @@ public class DatumCache {
                 if (cachePub != null
                     && pub.getRegisterTimestamp() > cachePub.getRegisterTimestamp()) {
                     cachePubMap.remove(registerId);
-                    CLIENT_PUB_MAP.get(cachePub.getSourceAddress().getAddressString()).remove(
+                    CONNECT_ID_PUB_MAP.get(cachePub.getSourceAddress().getAddressString()).remove(
                         registerId);
                     isChanged = true;
                 }
@@ -250,13 +266,13 @@ public class DatumCache {
                         // if version of both pub and cachePub are not equal, or sourceAddress of both are not equal, update
                         // eg: sessionserver crash, client reconnect to other sessionserver, sourceAddress changed, version not changed
                         // eg: client restart, sourceAddress and version are both changed
-                        if (CLIENT_PUB_MAP.containsKey(cachePubAddr)) {
-                            CLIENT_PUB_MAP.get(cachePubAddr).remove(registerId);
+                        if (CONNECT_ID_PUB_MAP.containsKey(cachePubAddr)) {
+                            CONNECT_ID_PUB_MAP.get(cachePubAddr).remove(registerId);
                         }
-                        if (!CLIENT_PUB_MAP.containsKey(pubAddr)) {
-                            CLIENT_PUB_MAP.putIfAbsent(pubAddr, new ConcurrentHashMap<>());
+                        if (!CONNECT_ID_PUB_MAP.containsKey(pubAddr)) {
+                            CONNECT_ID_PUB_MAP.putIfAbsent(pubAddr, new ConcurrentHashMap<>());
                         }
-                        CLIENT_PUB_MAP.get(pubAddr).put(registerId, pub);
+                        CONNECT_ID_PUB_MAP.get(pubAddr).put(registerId, pub);
                         isChanged = true;
                     }
                 }
@@ -286,10 +302,10 @@ public class DatumCache {
                 String registerId = pubEntry.getKey();
                 Publisher pub = pubEntry.getValue();
                 String pubAddr = pub.getSourceAddress().getAddressString();
-                if (!CLIENT_PUB_MAP.containsKey(pubAddr)) {
-                    CLIENT_PUB_MAP.putIfAbsent(pubAddr, new ConcurrentHashMap<>());
+                if (!CONNECT_ID_PUB_MAP.containsKey(pubAddr)) {
+                    CONNECT_ID_PUB_MAP.putIfAbsent(pubAddr, new ConcurrentHashMap<>());
                 }
-                CLIENT_PUB_MAP.get(pubAddr).put(registerId, pub);
+                CONNECT_ID_PUB_MAP.get(pubAddr).put(registerId, pub);
                 Publisher cachePub = cachePubMap.get(registerId);
                 if (cachePub != null
                     && pubAddr.equals(cachePub.getSourceAddress().getAddressString())) {
@@ -298,7 +314,7 @@ public class DatumCache {
             }
             if (!cachePubMap.isEmpty()) {
                 for (Publisher cachePub : cachePubMap.values()) {
-                    CLIENT_PUB_MAP.get(cachePub.getSourceAddress().getAddressString()).remove(
+                    CONNECT_ID_PUB_MAP.get(cachePub.getSourceAddress().getAddressString()).remove(
                         cachePub.getRegisterId());
                 }
             }
