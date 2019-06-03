@@ -193,7 +193,7 @@ public abstract class BaseInfo implements Serializable, StoreData<String> {
         Map<String, String> newAttributes = new HashMap<>();
         if (attributes != null && !attributes.isEmpty()) {
             attributes.forEach((key, value) -> newAttributes
-                    .put(WordCache.getInstance().getWordCache(key), value));
+                    .put(key, value));
         }
         this.attributes = newAttributes;
     }
@@ -273,7 +273,7 @@ public abstract class BaseInfo implements Serializable, StoreData<String> {
      * @param clientId  value to be assigned to property clientId
      */
     public void setClientId(String clientId) {
-        this.clientId = WordCache.getInstance().getWordCache(clientId);
+        this.clientId = clientId;
     }
 
     /**
