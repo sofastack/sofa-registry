@@ -16,10 +16,6 @@
  */
 package com.alipay.sofa.registry.timer;
 
-import io.netty.util.HashedWheelTimer;
-import io.netty.util.Timeout;
-import io.netty.util.TimerTask;
-
 import java.util.concurrent.Executor;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.SynchronousQueue;
@@ -27,10 +23,14 @@ import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
+import io.netty.util.HashedWheelTimer;
+import io.netty.util.Timeout;
+import io.netty.util.TimerTask;
+
 /**
  * based on HashedWheelTimer, add function:  exec TimerTask async
  *
- * @author kezhu.wukz<kezhu.wukz @ alipay.com>
+ * @author kezhu.wukz<kezhu.wukz               @               alipay.com>
  * @version $Id: AsyncHashedWheelTimer.java, v 0.1 2019-01-11 10:54 AM kezhu.wukz Exp $
  */
 public class AsyncHashedWheelTimer extends HashedWheelTimer {
@@ -51,10 +51,25 @@ public class AsyncHashedWheelTimer extends HashedWheelTimer {
     public AsyncHashedWheelTimer(ThreadFactory threadFactory, long tickDuration, TimeUnit unit,
                                  int ticksPerWheel, ThreadFactory asyncThreadFactory,
                                  TaskFailedCallback taskFailedCallback) {
+        this(threadFactory, tickDuration, unit, ticksPerWheel,
+            new ThreadPoolExecutor(0, Integer.MAX_VALUE, 60L, TimeUnit.SECONDS,
+                new SynchronousQueue<>(), asyncThreadFactory), taskFailedCallback);
+    }
+
+    /**
+     *
+     * @param threadFactory
+     * @param tickDuration
+     * @param unit
+     * @param ticksPerWheel
+     * @param asyncExecutor
+     */
+    public AsyncHashedWheelTimer(ThreadFactory threadFactory, long tickDuration, TimeUnit unit,
+                                 int ticksPerWheel, Executor asyncExecutor,
+                                 TaskFailedCallback taskFailedCallback) {
         super(threadFactory, tickDuration, unit, ticksPerWheel);
 
-        this.executor = new ThreadPoolExecutor(0, Integer.MAX_VALUE, 60L, TimeUnit.SECONDS,
-            new SynchronousQueue<>(), asyncThreadFactory);
+        this.executor = asyncExecutor;
         this.taskFailedCallback = taskFailedCallback;
     }
 

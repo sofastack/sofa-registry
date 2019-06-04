@@ -32,6 +32,7 @@ import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.remoting.Channel;
 import com.alipay.sofa.registry.server.data.cache.DatumCache;
+import com.alipay.sofa.registry.server.data.correction.DatumLeaseManager;
 import com.alipay.sofa.registry.server.data.remoting.handler.AbstractServerHandler;
 import com.alipay.sofa.registry.server.data.remoting.sessionserver.forward.ForwardService;
 import com.alipay.sofa.registry.util.ParaCheckUtil;
@@ -42,13 +43,16 @@ import com.alipay.sofa.registry.util.ParaCheckUtil;
  * @author kezhu.wukz
  * @version $Id: ClientOffProcessor.java, v 0.1 2019-05-30 15:48 kezhu.wukz Exp $
  */
-public class RenewDatumHandler extends AbstractServerHandler<ReNewDatumRequest> {
+public class ReNewDatumHandler extends AbstractServerHandler<ReNewDatumRequest> {
 
     /** LOGGER */
-    private static final Logger LOGGER = LoggerFactory.getLogger(RenewDatumHandler.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(ReNewDatumHandler.class);
 
     @Autowired
     private ForwardService      forwardService;
+
+    @Autowired
+    private DatumLeaseManager   datumLeaseManager;
 
     @Override
     public void checkParam(ReNewDatumRequest request) throws RuntimeException {
@@ -66,7 +70,7 @@ public class RenewDatumHandler extends AbstractServerHandler<ReNewDatumRequest> 
             return response;
         }
 
-        boolean isDiff = renewDatum(request);
+        boolean isDiff = reNewDatum(request);
 
         return new GenericResponse<Boolean>().fillSucceed(isDiff);
     }
@@ -95,9 +99,9 @@ public class RenewDatumHandler extends AbstractServerHandler<ReNewDatumRequest> 
      * 1. Update the timestamp corresponding to connectId in DatumCache
      * 2. Compare checksum: Get all pubs corresponding to the connId from DatumCache and calculate checksum.
      */
-    private boolean renewDatum(ReNewDatumRequest request) {
+    private boolean reNewDatum(ReNewDatumRequest request) {
         String connectId = request.getConnectId();
-        DatumCache.renew(connectId);
+
         Map<String, Publisher> publisherMap = DatumCache.getByConnectId(connectId);
 
         String renewDigest = request.getDigestSum();
@@ -106,6 +110,9 @@ public class RenewDatumHandler extends AbstractServerHandler<ReNewDatumRequest> 
             cacheDigest = String.valueOf(PublisherDigestUtil.getDigestValueSum(publisherMap
                 .values()));
         }
+
+        // record the reNew timestamp
+        datumLeaseManager.reNew(connectId);
 
         return StringUtils.equals(renewDigest, cacheDigest);
     }

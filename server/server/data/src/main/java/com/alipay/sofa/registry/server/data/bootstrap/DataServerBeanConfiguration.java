@@ -16,6 +16,19 @@
  */
 package com.alipay.sofa.registry.server.data.bootstrap;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+
+import org.glassfish.jersey.jackson.JacksonFeature;
+import org.glassfish.jersey.server.ResourceConfig;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Import;
+
 import com.alipay.sofa.registry.remoting.bolt.exchange.BoltExchange;
 import com.alipay.sofa.registry.remoting.exchange.Exchange;
 import com.alipay.sofa.registry.remoting.jersey.exchange.JerseyExchange;
@@ -26,6 +39,7 @@ import com.alipay.sofa.registry.server.data.change.notify.BackUpNotifier;
 import com.alipay.sofa.registry.server.data.change.notify.IDataChangeNotifier;
 import com.alipay.sofa.registry.server.data.change.notify.SessionServerNotifier;
 import com.alipay.sofa.registry.server.data.change.notify.TempPublisherNotifier;
+import com.alipay.sofa.registry.server.data.correction.DatumLeaseManager;
 import com.alipay.sofa.registry.server.data.correction.LocalDataServerCleanHandler;
 import com.alipay.sofa.registry.server.data.datasync.AcceptorStore;
 import com.alipay.sofa.registry.server.data.datasync.SyncDataService;
@@ -68,26 +82,16 @@ import com.alipay.sofa.registry.server.data.remoting.sessionserver.forward.Forwa
 import com.alipay.sofa.registry.server.data.remoting.sessionserver.forward.ForwardServiceImpl;
 import com.alipay.sofa.registry.server.data.remoting.sessionserver.handler.ClientOffHandler;
 import com.alipay.sofa.registry.server.data.remoting.sessionserver.handler.DataServerConnectionHandler;
+import com.alipay.sofa.registry.server.data.remoting.sessionserver.handler.DatumSnapshotHandler;
 import com.alipay.sofa.registry.server.data.remoting.sessionserver.handler.GetDataHandler;
 import com.alipay.sofa.registry.server.data.remoting.sessionserver.handler.GetDataVersionsHandler;
 import com.alipay.sofa.registry.server.data.remoting.sessionserver.handler.PublishDataHandler;
+import com.alipay.sofa.registry.server.data.remoting.sessionserver.handler.ReNewDatumHandler;
 import com.alipay.sofa.registry.server.data.remoting.sessionserver.handler.SessionServerRegisterHandler;
 import com.alipay.sofa.registry.server.data.remoting.sessionserver.handler.UnPublishDataHandler;
 import com.alipay.sofa.registry.server.data.resource.DataDigestResource;
 import com.alipay.sofa.registry.server.data.resource.HealthResource;
 import com.alipay.sofa.registry.util.PropertySplitter;
-import org.glassfish.jersey.jackson.JacksonFeature;
-import org.glassfish.jersey.server.ResourceConfig;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
-import org.springframework.boot.context.properties.EnableConfigurationProperties;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Import;
-
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
 
 /**
  *
@@ -244,6 +248,16 @@ public class DataServerBeanConfiguration {
         }
 
         @Bean
+        public AbstractServerHandler datumSnapshotHandler() {
+            return new DatumSnapshotHandler();
+        }
+
+        @Bean
+        public AbstractServerHandler reNewDatumHandler() {
+            return new ReNewDatumHandler();
+        }
+
+        @Bean
         public AbstractServerHandler publishDataProcessor(DataServerConfig dataServerBootstrapConfig) {
             return new PublishDataHandler(dataServerBootstrapConfig);
         }
@@ -376,6 +390,11 @@ public class DataServerBeanConfiguration {
         @Bean
         public LocalDataServerCleanHandler localDataServerCleanHandler() {
             return new LocalDataServerCleanHandler();
+        }
+
+        @Bean
+        public DatumLeaseManager datumLeaseManager() {
+            return new DatumLeaseManager();
         }
 
         @Bean

@@ -16,14 +16,15 @@
  */
 package com.alipay.sofa.registry.server.data.bootstrap;
 
-import com.alipay.sofa.registry.net.NetUtil;
-import org.springframework.boot.context.properties.ConfigurationProperties;
-
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
+
+import org.springframework.boot.context.properties.ConfigurationProperties;
+
+import com.alipay.sofa.registry.net.NetUtil;
 
 /**
  *
@@ -96,6 +97,8 @@ public class DataServerConfig {
     private int                publishExecutorMaxPoolSize          = 400;
 
     private int                publishExecutorQueueSize            = 10000;
+
+    private int                datumTimeToLiveSec                  = 120;
 
     /**
      * constructor
@@ -618,5 +621,23 @@ public class DataServerConfig {
      */
     public void setNotifySessionRetryTimes(int notifySessionRetryTimes) {
         this.notifySessionRetryTimes = notifySessionRetryTimes;
+    }
+
+    /**
+     * Getter method for property <tt>datumTimeToLiveSec</tt>.
+     *
+     * @return property value of datumTimeToLiveSec
+     */
+    public int getDatumTimeToLiveSec() {
+        return datumTimeToLiveSec;
+    }
+
+    /**
+     * Setter method for property <tt>datumTimeToLiveSec </tt>.
+     *
+     * @param datumTimeToLiveSec  value to be assigned to property datumTimeToLiveSec
+     */
+    public void setDatumTimeToLiveSec(int datumTimeToLiveSec) {
+        this.datumTimeToLiveSec = datumTimeToLiveSec;
     }
 }

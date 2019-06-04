@@ -16,6 +16,13 @@
  */
 package com.alipay.sofa.registry.server.data.datasync.sync;
 
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.DelayQueue;
+
+import org.springframework.beans.factory.annotation.Autowired;
+
 import com.alipay.remoting.Connection;
 import com.alipay.sofa.registry.common.model.dataserver.Datum;
 import com.alipay.sofa.registry.common.model.dataserver.NotifyDataSyncRequest;
@@ -32,12 +39,6 @@ import com.alipay.sofa.registry.server.data.remoting.dataserver.DataServerConnec
 import com.alipay.sofa.registry.server.data.remoting.metaserver.IMetaServerService;
 import com.alipay.sofa.registry.server.data.util.DelayItem;
 import com.alipay.sofa.registry.server.data.util.TimeUtil;
-import org.springframework.beans.factory.annotation.Autowired;
-
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.DelayQueue;
 
 /**
  *
@@ -234,6 +235,8 @@ public abstract class AbstractAcceptorStore implements AcceptorStore {
                 removeCache(acceptor); // compare and remove
             } catch (InterruptedException e) {
                 break;
+            } catch (Throwable e) {
+                LOGGER.error(e.getMessage(), e);
             }
         }
 

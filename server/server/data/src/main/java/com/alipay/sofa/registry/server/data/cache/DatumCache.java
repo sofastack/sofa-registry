@@ -37,26 +37,21 @@ import com.alipay.sofa.registry.server.data.change.DataChangeTypeEnum;
  */
 public class DatumCache {
 
-    public static final long                                 ERROR_DATUM_VERSION            = -2L;
+    public static final long                                 ERROR_DATUM_VERSION = -2L;
 
     /**
      * row:     dataCenter
      * column:  dataInfoId
      * value:   datum
      */
-    private static final Map<String, Map<String, Datum>>     DATUM_MAP                      = new ConcurrentHashMap<>();
+    private static final Map<String, Map<String, Datum>>     DATUM_MAP           = new ConcurrentHashMap<>();
 
     /**
      * row:     ip:port
      * column:  registerId
      * value:   publisher
      */
-    private static final Map<String, Map<String, Publisher>> CONNECT_ID_PUB_MAP             = new ConcurrentHashMap<>();
-
-    /**
-     * record the latest heartbeat time for each connId, format: connId -> lastRenewTimestamp
-     */
-    private static final Map<String, Long>                   CONNECT_ID_RENEW_TIMESTAMP_MAP = new ConcurrentHashMap<>();
+    private static final Map<String, Map<String, Publisher>> CONNECT_ID_PUB_MAP  = new ConcurrentHashMap<>();
 
     /**
      * get datum by specific dataCenter and dataInfoId
@@ -129,16 +124,6 @@ public class DatumCache {
      */
     public static Map<String, Publisher> getByConnectId(String connectId) {
         return CONNECT_ID_PUB_MAP.getOrDefault(connectId, null);
-    }
-
-    /**
-     *
-     *
-     * @param connectId
-     * @return
-     */
-    public static void renew(String connectId) {
-        CONNECT_ID_RENEW_TIMESTAMP_MAP.put(connectId, System.currentTimeMillis());
     }
 
     /**

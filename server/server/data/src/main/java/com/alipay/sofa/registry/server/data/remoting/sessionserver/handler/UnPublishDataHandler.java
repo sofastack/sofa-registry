@@ -16,17 +16,23 @@
  */
 package com.alipay.sofa.registry.server.data.remoting.sessionserver.handler;
 
+import java.util.Map;
+
 import org.springframework.beans.factory.annotation.Autowired;
 
 import com.alipay.sofa.registry.common.model.CommonResponse;
 import com.alipay.sofa.registry.common.model.Node;
+import com.alipay.sofa.registry.common.model.dataserver.Datum;
 import com.alipay.sofa.registry.common.model.dataserver.UnPublishDataRequest;
+import com.alipay.sofa.registry.common.model.store.Publisher;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.remoting.Channel;
 import com.alipay.sofa.registry.server.data.bootstrap.DataServerConfig;
+import com.alipay.sofa.registry.server.data.cache.DatumCache;
 import com.alipay.sofa.registry.server.data.cache.UnPublisher;
 import com.alipay.sofa.registry.server.data.change.event.DataChangeEventCenter;
+import com.alipay.sofa.registry.server.data.correction.DatumLeaseManager;
 import com.alipay.sofa.registry.server.data.remoting.handler.AbstractServerHandler;
 import com.alipay.sofa.registry.server.data.remoting.sessionserver.forward.ForwardService;
 import com.alipay.sofa.registry.util.ParaCheckUtil;
@@ -51,6 +57,9 @@ public class UnPublishDataHandler extends AbstractServerHandler<UnPublishDataReq
     @Autowired
     private DataServerConfig      dataServerConfig;
 
+    @Autowired
+    private DatumLeaseManager     datumLeaseManager;
+
     @Override
     public void checkParam(UnPublishDataRequest request) throws RuntimeException {
         ParaCheckUtil.checkNotBlank(request.getDataInfoId(), "UnPublishDataRequest.dataInfoId");
@@ -70,7 +79,29 @@ public class UnPublishDataHandler extends AbstractServerHandler<UnPublishDataReq
         dataChangeEventCenter.onChange(
             new UnPublisher(request.getDataInfoId(), request.getRegisterId(), request
                 .getRegisterTimestamp()), dataServerConfig.getLocalDataCenter());
+
+        // Attempt to get connectId from DatumCache (Datum may not exist), and record the reNew timestamp
+        String connectId = getConnectId(request);
+        if (connectId != null) {
+            datumLeaseManager.reNew(connectId);
+        }
+
         return CommonResponse.buildSuccessResponse();
+    }
+
+    /**
+     * get connectId from DatumCache
+     */
+    private String getConnectId(UnPublishDataRequest request) {
+        String dataInfoId = request.getDataInfoId();
+        String dataCenter = dataServerConfig.getLocalDataCenter();
+        Datum datum = DatumCache.get(dataCenter, dataInfoId);
+        Map<String, Publisher> pubMap = datum.getPubMap();
+        if (pubMap != null) {
+            Publisher publisher = pubMap.get(request.getRegisterId());
+            return publisher.getSourceAddress().getAddressString();
+        }
+        return null;
     }
 
     @Override
