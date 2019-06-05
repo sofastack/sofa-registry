@@ -109,11 +109,11 @@ public interface SessionServerConfig {
 
     long getPushTaskExecutorKeepAliveTime();
 
-    int getDisconnectClientExecutorMinPoolSize();
+    int getConnectClientExecutorMinPoolSize();
 
-    int getDisconnectClientExecutorMaxPoolSize();
+    int getConnectClientExecutorMaxPoolSize();
 
-    int getDisconnectClientExecutorQueueSize();
+    int getConnectClientExecutorQueueSize();
 
     int getDataChangeFetchTaskMaxBufferSize();
 
@@ -126,6 +126,12 @@ public interface SessionServerConfig {
     int getPushDataTaskRetryFirstDelay();
 
     long getPushDataTaskRetryIncrementDelay();
+
+    int getReNewDatumWheelTicksSize();
+
+    int getReNewDatumWheelTicksDuration();
+
+    long getReNewDatumWheelTaskDelay();
 
     int getNumberOfReplicas();
 

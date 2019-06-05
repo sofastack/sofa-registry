@@ -118,11 +118,11 @@ public class SessionServerConfigBean implements SessionServerConfig {
 
     private long               dataChangeExecutorKeepAliveTime         = 60;
 
-    private int                disconnectClientExecutorMinPoolSize     = 40;
+    private int                connectClientExecutorMinPoolSize        = 60;
 
-    private int                disconnectClientExecutorMaxPoolSize     = 200;
+    private int                connectClientExecutorMaxPoolSize        = 400;
 
-    private int                disconnectClientExecutorQueueSize       = 10000;
+    private int                connectClientExecutorQueueSize          = 10000;
 
     private int                dataChangeFetchTaskMaxBufferSize        = 1000000;
 
@@ -139,6 +139,12 @@ public class SessionServerConfigBean implements SessionServerConfig {
     private int                userDataPushRetryWheelTicksSize         = 5120;
 
     private int                userDataPushRetryWheelTicksDuration     = 100;
+
+    private int                reNewDatumWheelTicksSize                = 2048;
+
+    private int                reNewDatumWheelTicksDuration            = 500;
+
+    private long               reNewDatumWheelTaskDelay                = 30;
 
     private int                pushDataTaskRetryFirstDelay             = 500;
 
@@ -1147,60 +1153,57 @@ public class SessionServerConfigBean implements SessionServerConfig {
     }
 
     /**
-     * Getter method for property <tt>disconnectClientExecutorMinPoolSize</tt>.
+     * Getter method for property <tt>connectClientExecutorMinPoolSize</tt>.
      *
-     * @return property value of disconnectClientExecutorMinPoolSize
+     * @return property value of connectClientExecutorMinPoolSize
      */
-    @Override
-    public int getDisconnectClientExecutorMinPoolSize() {
-        return disconnectClientExecutorMinPoolSize;
+    public int getConnectClientExecutorMinPoolSize() {
+        return connectClientExecutorMinPoolSize;
     }
 
     /**
-     * Setter method for property <tt>disconnectClientExecutorMinPoolSize</tt>.
+     * Getter method for property <tt>connectClientExecutorMaxPoolSize</tt>.
      *
-     * @param disconnectClientExecutorMinPoolSize  value to be assigned to property disconnectClientExecutorMinPoolSize
+     * @return property value of connectClientExecutorMaxPoolSize
      */
-    public void setDisconnectClientExecutorMinPoolSize(int disconnectClientExecutorMinPoolSize) {
-        this.disconnectClientExecutorMinPoolSize = disconnectClientExecutorMinPoolSize;
+    public int getConnectClientExecutorMaxPoolSize() {
+        return connectClientExecutorMaxPoolSize;
     }
 
     /**
-     * Getter method for property <tt>disconnectClientExecutorMaxPoolSize</tt>.
+     * Getter method for property <tt>connectClientExecutorQueueSize</tt>.
      *
-     * @return property value of disconnectClientExecutorMaxPoolSize
+     * @return property value of connectClientExecutorQueueSize
      */
-    @Override
-    public int getDisconnectClientExecutorMaxPoolSize() {
-        return disconnectClientExecutorMaxPoolSize;
+    public int getConnectClientExecutorQueueSize() {
+        return connectClientExecutorQueueSize;
     }
 
     /**
-     * Setter method for property <tt>disconnectClientExecutorMaxPoolSize</tt>.
+     * Setter method for property <tt>connectClientExecutorMinPoolSize</tt>.
      *
-     * @param disconnectClientExecutorMaxPoolSize  value to be assigned to property disconnectClientExecutorMaxPoolSize
+     * @param connectClientExecutorMinPoolSize  value to be assigned to property connectClientExecutorMinPoolSize
      */
-    public void setDisconnectClientExecutorMaxPoolSize(int disconnectClientExecutorMaxPoolSize) {
-        this.disconnectClientExecutorMaxPoolSize = disconnectClientExecutorMaxPoolSize;
+    public void setConnectClientExecutorMinPoolSize(int connectClientExecutorMinPoolSize) {
+        this.connectClientExecutorMinPoolSize = connectClientExecutorMinPoolSize;
     }
 
     /**
-     * Getter method for property <tt>disconnectClientExecutorQueueSize</tt>.
+     * Setter method for property <tt>connectClientExecutorMaxPoolSize</tt>.
      *
-     * @return property value of disconnectClientExecutorQueueSize
+     * @param connectClientExecutorMaxPoolSize  value to be assigned to property connectClientExecutorMaxPoolSize
      */
-    @Override
-    public int getDisconnectClientExecutorQueueSize() {
-        return disconnectClientExecutorQueueSize;
+    public void setConnectClientExecutorMaxPoolSize(int connectClientExecutorMaxPoolSize) {
+        this.connectClientExecutorMaxPoolSize = connectClientExecutorMaxPoolSize;
     }
 
     /**
-     * Setter method for property <tt>disconnectClientExecutorQueueSize</tt>.
+     * Setter method for property <tt>connectClientExecutorQueueSize</tt>.
      *
-     * @param disconnectClientExecutorQueueSize  value to be assigned to property disconnectClientExecutorQueueSize
+     * @param connectClientExecutorQueueSize  value to be assigned to property connectClientExecutorQueueSize
      */
-    public void setDisconnectClientExecutorQueueSize(int disconnectClientExecutorQueueSize) {
-        this.disconnectClientExecutorQueueSize = disconnectClientExecutorQueueSize;
+    public void setConnectClientExecutorQueueSize(int connectClientExecutorQueueSize) {
+        this.connectClientExecutorQueueSize = connectClientExecutorQueueSize;
     }
 
     /**
@@ -1306,6 +1309,60 @@ public class SessionServerConfigBean implements SessionServerConfig {
     @Override
     public long getPushDataTaskRetryIncrementDelay() {
         return pushDataTaskRetryIncrementDelay;
+    }
+
+    /**
+     * Getter method for property <tt>reNewDatumWheelTicksSize</tt>.
+     *
+     * @return property value of reNewDatumWheelTicksSize
+     */
+    public int getReNewDatumWheelTicksSize() {
+        return reNewDatumWheelTicksSize;
+    }
+
+    /**
+     * Getter method for property <tt>reNewDatumWheelTicksDuration</tt>.
+     *
+     * @return property value of reNewDatumWheelTicksDuration
+     */
+    public int getReNewDatumWheelTicksDuration() {
+        return reNewDatumWheelTicksDuration;
+    }
+
+    /**
+     * Getter method for property <tt>reNewDatumWheelTaskDelay</tt>.
+     *
+     * @return property value of reNewDatumWheelTaskDelay
+     */
+    public long getReNewDatumWheelTaskDelay() {
+        return reNewDatumWheelTaskDelay;
+    }
+
+    /**
+     * Setter method for property <tt>reNewDatumWheelTaskDelay</tt>.
+     *
+     * @param reNewDatumWheelTaskDelay  value to be assigned to property reNewDatumWheelTaskDelay
+     */
+    public void setReNewDatumWheelTaskDelay(long reNewDatumWheelTaskDelay) {
+        this.reNewDatumWheelTaskDelay = reNewDatumWheelTaskDelay;
+    }
+
+    /**
+     * Setter method for property <tt>reNewDatumWheelTicksSize</tt>.
+     *
+     * @param reNewDatumWheelTicksSize  value to be assigned to property reNewDatumWheelTicksSize
+     */
+    public void setReNewDatumWheelTicksSize(int reNewDatumWheelTicksSize) {
+        this.reNewDatumWheelTicksSize = reNewDatumWheelTicksSize;
+    }
+
+    /**
+     * Setter method for property <tt>reNewDatumWheelTicksDuration</tt>.
+     *
+     * @param reNewDatumWheelTicksDuration  value to be assigned to property reNewDatumWheelTicksDuration
+     */
+    public void setReNewDatumWheelTicksDuration(int reNewDatumWheelTicksDuration) {
+        this.reNewDatumWheelTicksDuration = reNewDatumWheelTicksDuration;
     }
 
     /**

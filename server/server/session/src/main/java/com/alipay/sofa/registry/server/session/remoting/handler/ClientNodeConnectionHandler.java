@@ -16,11 +16,15 @@
  */
 package com.alipay.sofa.registry.server.session.remoting.handler;
 
+import com.alipay.sofa.registry.common.model.store.URL;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.net.NetUtil;
 import com.alipay.sofa.registry.remoting.Channel;
 import com.alipay.sofa.registry.remoting.RemotingException;
+import com.alipay.sofa.registry.remoting.Server;
+import com.alipay.sofa.registry.remoting.exchange.Exchange;
+import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
 import com.alipay.sofa.registry.server.session.registry.Registry;
 import com.alipay.sofa.registry.server.session.scheduler.ExecutorManager;
 import com.alipay.sofa.registry.server.session.store.DataStore;
@@ -31,6 +35,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 /**
  *
@@ -56,9 +61,21 @@ public class ClientNodeConnectionHandler extends AbstractServerHandler {
     @Autowired
     private ExecutorManager     executorManager;
 
+    @Autowired
+    private SessionServerConfig sessionServerConfig;
+
+    @Autowired
+    private Exchange            boltExchange;
+
     @Override
     public HandlerType getType() {
         return HandlerType.LISENTER;
+    }
+
+    @Override
+    public void connected(Channel channel) throws RemotingException {
+        super.connected(channel);
+        fireReNewDatum(channel);
     }
 
     @Override
@@ -67,9 +84,9 @@ public class ClientNodeConnectionHandler extends AbstractServerHandler {
         fireCancelClient(channel);
     }
 
-    public void fireCancelClient(Channel channel) {
+    private void fireCancelClient(Channel channel) {
         //avoid block connect ConnectionEventExecutor thread pool
-        executorManager.getDisconnectClientExecutor().execute(()->{
+        executorManager.getConnectClientExecutor().execute(()->{
 
             String connectId = NetUtil.toAddressString(channel.getRemoteAddress());
             if(checkCache(connectId)) {
@@ -102,5 +119,21 @@ public class ClientNodeConnectionHandler extends AbstractServerHandler {
     private boolean checkWatcher(String connectId) {
         Map subMap = sessionWatchers.queryByConnectId(connectId);
         return subMap != null && !subMap.isEmpty();
+    }
+
+    private  void fireReNewDatum(Channel channel){
+
+        executorManager.getConnectClientExecutor().execute(()-> {
+            String connectId = NetUtil.toAddressString(channel.getRemoteAddress());
+            executorManager.getAsyncHashedWheelTimerTask().newTimeout(connectId, timerOut -> sessionRegistry.reNewDatum(connectId),
+                    sessionServerConfig.getReNewDatumWheelTaskDelay(), TimeUnit.MILLISECONDS,
+                    () -> {
+                        Server sessionServer = boltExchange.getServer(sessionServerConfig.getServerPort());
+
+                        Channel channelClient = sessionServer.getChannel(URL.valueOf(connectId));
+
+                        return channelClient != null && channel.isConnected();
+                    });
+        });
     }
 }

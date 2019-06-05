@@ -29,6 +29,7 @@ import com.alipay.sofa.registry.remoting.Channel;
 import com.alipay.sofa.registry.remoting.Server;
 import com.alipay.sofa.registry.remoting.exchange.Exchange;
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
+import com.alipay.sofa.registry.server.session.correction.service.PublisherDigestService;
 import com.alipay.sofa.registry.server.session.node.NodeManager;
 import com.alipay.sofa.registry.server.session.node.service.DataNodeService;
 import com.alipay.sofa.registry.server.session.store.DataStore;
@@ -43,8 +44,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -103,6 +107,9 @@ public class SessionRegistry implements Registry {
 
     @Autowired
     private SessionRegistryStrategy sessionRegistryStrategy;
+
+    @Autowired
+    private PublisherDigestService  publisherDigestService;
 
     @Override
     public void register(StoreData storeData) {
@@ -253,6 +260,39 @@ public class SessionRegistry implements Registry {
                 baseInfo.getSourceAddress()));
         }
 
+    }
+
+    @Override
+    public void reNewDatum(String connectId) {
+
+        //TODO check update time to cancel
+        Map<String, String> connectDigest = publisherDigestService.getConnectDigest(connectId);
+
+        Set<String> remainDataIps = new HashSet<>(connectDigest.keySet());
+        for (Entry<String, String> entry : connectDigest.entrySet()) {
+            String dataIp = entry.getKey();
+            String digest = entry.getValue();
+            try {
+                Boolean result = dataNodeService.reNewDatum(dataIp, connectId, digest);
+                if (!result) {
+                    LOGGER
+                        .info(
+                            "ReNew datum request to dataNode got sub digest different!dataIp={},connectId={},digest={}",
+                            dataIp, connectId, digest);
+                    break;
+                } else {
+                    remainDataIps.remove(dataIp);
+                }
+            } catch (Exception e) {
+                LOGGER.error(
+                    "ReNew datum request to dataNode error!dataIp={},connectId={},digest={}",
+                    dataIp, connectId, digest, e);
+            }
+        }
+
+        if (!remainDataIps.isEmpty()) {
+            //TODO SNAPSHOT
+        }
     }
 
     /**

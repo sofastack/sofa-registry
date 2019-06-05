@@ -61,4 +61,9 @@ public interface Registry {
      * for fetchChangData first invoke
      */
     void fetchChangDataProcess();
+
+    /**
+     * Regularly send update Datum with same connectID valid time request service
+     */
+    void reNewDatum(String connectId);
 }
