@@ -24,6 +24,8 @@ import com.alipay.sofa.registry.server.session.cache.CacheGenerator;
 import com.alipay.sofa.registry.server.session.cache.CacheService;
 import com.alipay.sofa.registry.server.session.cache.DatumCacheGenerator;
 import com.alipay.sofa.registry.server.session.cache.SessionCacheService;
+import com.alipay.sofa.registry.server.session.correction.service.PublisherDigestService;
+import com.alipay.sofa.registry.server.session.correction.service.PublisherDigestServiceImpl;
 import com.alipay.sofa.registry.server.session.listener.CancelDataTaskListener;
 import com.alipay.sofa.registry.server.session.listener.DataChangeFetchCloudTaskListener;
 import com.alipay.sofa.registry.server.session.listener.DataChangeFetchTaskListener;
@@ -600,6 +602,15 @@ public class SessionServerConfiguration {
         @ConditionalOnMissingBean
         public ReceivedConfigDataPushTaskStrategy receivedConfigDataPushTaskStrategy() {
             return new DefaultReceivedConfigDataPushTaskStrategy();
+        }
+    }
+
+    @Configuration
+    public static class SessionReNewDatumConfiguration {
+
+        @Bean
+        public PublisherDigestService publisherDigestService() {
+            return new PublisherDigestServiceImpl();
         }
     }
 }

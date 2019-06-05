@@ -97,4 +97,6 @@ public interface DataNodeService {
     void registerSessionProcessId(SessionServerRegisterRequest sessionServerRegisterRequest,
                                   URL dataUrl);
 
+    Boolean reNewDatum(String dataIpAddress, String connectId, String digest);
+
 }
