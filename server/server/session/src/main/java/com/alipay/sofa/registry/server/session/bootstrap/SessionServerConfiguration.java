@@ -24,6 +24,8 @@ import com.alipay.sofa.registry.server.session.cache.CacheGenerator;
 import com.alipay.sofa.registry.server.session.cache.CacheService;
 import com.alipay.sofa.registry.server.session.cache.DatumCacheGenerator;
 import com.alipay.sofa.registry.server.session.cache.SessionCacheService;
+import com.alipay.sofa.registry.server.session.correction.WriteDataAcceptor;
+import com.alipay.sofa.registry.server.session.correction.WriteDataAcceptorImpl;
 import com.alipay.sofa.registry.server.session.correction.service.PublisherDigestService;
 import com.alipay.sofa.registry.server.session.correction.service.PublisherDigestServiceImpl;
 import com.alipay.sofa.registry.server.session.listener.CancelDataTaskListener;
@@ -611,6 +613,11 @@ public class SessionServerConfiguration {
         @Bean
         public PublisherDigestService publisherDigestService() {
             return new PublisherDigestServiceImpl();
+        }
+
+        @Bean
+        public WriteDataAcceptor writeDataAcceptor() {
+            return new WriteDataAcceptorImpl();
         }
     }
 }

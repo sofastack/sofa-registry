@@ -97,6 +97,21 @@ public interface DataNodeService {
     void registerSessionProcessId(SessionServerRegisterRequest sessionServerRegisterRequest,
                                   URL dataUrl);
 
+    /**
+     * check publisher digest same as session current store,and reNew the lastUpdateTime of this connectId
+     * @param dataIpAddress
+     * @param connectId
+     * @param digest
+     * @return
+     */
     Boolean reNewDatum(String dataIpAddress, String connectId, String digest);
+
+    /**
+     * Correct the publishers information of this connectId on dataServer
+     * @param connectId
+     * @param dataIpAddress
+     * @param publishers
+     */
+    void rectifyDatum(String connectId, String dataIpAddress, List<Publisher> publishers);
 
 }
