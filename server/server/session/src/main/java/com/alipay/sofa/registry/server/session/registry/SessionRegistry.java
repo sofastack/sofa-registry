@@ -29,6 +29,8 @@ import com.alipay.sofa.registry.remoting.Channel;
 import com.alipay.sofa.registry.remoting.Server;
 import com.alipay.sofa.registry.remoting.exchange.Exchange;
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
+import com.alipay.sofa.registry.server.session.correction.WriteDataAcceptor;
+import com.alipay.sofa.registry.server.session.correction.WriteDataRequest;
 import com.alipay.sofa.registry.server.session.correction.service.PublisherDigestService;
 import com.alipay.sofa.registry.server.session.node.NodeManager;
 import com.alipay.sofa.registry.server.session.node.service.DataNodeService;
@@ -111,6 +113,9 @@ public class SessionRegistry implements Registry {
     @Autowired
     private PublisherDigestService  publisherDigestService;
 
+    @Autowired
+    private WriteDataAcceptor       writeDataAcceptor;
+
     @Override
     public void register(StoreData storeData) {
 
@@ -121,7 +126,24 @@ public class SessionRegistry implements Registry {
             case PUBLISHER:
                 Publisher publisher = (Publisher) storeData;
 
-                dataNodeService.register(publisher);
+                //dataNodeService.register(publisher);
+
+                writeDataAcceptor.accept(new WriteDataRequest() {
+                    @Override
+                    public Object getRequestBody() {
+                        return publisher;
+                    }
+
+                    @Override
+                    public WriteDataRequestType getRequestType() {
+                        return WriteDataRequestType.PUBLISHER;
+                    }
+
+                    @Override
+                    public String getConnectId() {
+                        return publisher.getClientId();
+                    }
+                });
 
                 sessionDataStore.add(publisher);
 

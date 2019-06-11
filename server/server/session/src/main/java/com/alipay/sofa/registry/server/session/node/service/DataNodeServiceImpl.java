@@ -17,6 +17,7 @@
 package com.alipay.sofa.registry.server.session.node.service;
 
 import com.alipay.sofa.registry.common.model.CommonResponse;
+import com.alipay.sofa.registry.common.model.DatumSnapshotRequest;
 import com.alipay.sofa.registry.common.model.GenericResponse;
 import com.alipay.sofa.registry.common.model.Node;
 import com.alipay.sofa.registry.common.model.ReNewDatumRequest;
@@ -467,7 +468,7 @@ public class DataNodeServiceImpl implements DataNodeService {
         return null;
     }
 
-    public Boolean reNewDatum(String dataIpAddress, String connectId, String digest) {
+    public Boolean reNewDatum(String connectId, String dataIpAddress, String digest) {
         try {
 
             Request<ReNewDatumRequest> request = new Request<ReNewDatumRequest>() {
@@ -508,4 +509,27 @@ public class DataNodeServiceImpl implements DataNodeService {
         }
     }
 
+    public void rectifyDatum(String connectId, String dataIpAddress, List<Publisher> publishers) {
+
+        try {
+            Request<DatumSnapshotRequest> request = new Request<DatumSnapshotRequest>() {
+                @Override
+                public DatumSnapshotRequest getRequestBody() {
+                    return new DatumSnapshotRequest(connectId, dataIpAddress, publishers);
+                }
+
+                @Override
+                public URL getRequestUrl() {
+                    return new URL(dataIpAddress, sessionServerConfig.getDataServerPort());
+                }
+            };
+
+            dataNodeExchanger.request(request);
+
+        } catch (RequestException e) {
+            LOGGER.error("DataNodeService rectify Datum error! " + e.getRequestMessage(), e);
+            throw new RuntimeException("DataNodeService rectify Datum error! "
+                                       + e.getRequestMessage(), e);
+        }
+    }
 }
