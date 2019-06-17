@@ -192,7 +192,7 @@ public class DataServerBootstrap {
         try {
             if (schedulerStarted.compareAndSet(false, true)) {
                 syncDataScheduler.startScheduler();
-                // start all startTask except renew task
+                // start all startTask except correction task
                 eventCenter.post(new StartTaskEvent(
                         Arrays.stream(StartTaskTypeEnum.values()).filter(type -> type != StartTaskTypeEnum.RENEW)
                                 .collect(

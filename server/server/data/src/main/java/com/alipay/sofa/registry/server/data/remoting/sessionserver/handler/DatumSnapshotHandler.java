@@ -24,7 +24,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import com.alipay.sofa.registry.common.model.CommonResponse;
 import com.alipay.sofa.registry.common.model.DatumSnapshotRequest;
 import com.alipay.sofa.registry.common.model.Node;
-import com.alipay.sofa.registry.common.model.dataserver.ClientOffRequest;
+import com.alipay.sofa.registry.common.model.constants.ValueConstants;
 import com.alipay.sofa.registry.common.model.store.Publisher;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
@@ -46,7 +46,12 @@ import com.alipay.sofa.registry.util.ParaCheckUtil;
 public class DatumSnapshotHandler extends AbstractServerHandler<DatumSnapshotRequest> {
 
     /** LOGGER */
-    private static final Logger   LOGGER = LoggerFactory.getLogger(DatumSnapshotHandler.class);
+    private static final Logger   LOGGER       = LoggerFactory
+                                                   .getLogger(DatumSnapshotHandler.class);
+
+    private static final Logger   RENEW_LOGGER = LoggerFactory.getLogger(
+                                                   ValueConstants.LOGGER_NAME_RENEW,
+                                                   "[DatumSnapshotHandler]");
 
     @Autowired
     private ForwardService        forwardService;
@@ -68,6 +73,10 @@ public class DatumSnapshotHandler extends AbstractServerHandler<DatumSnapshotReq
 
     @Override
     public Object doHandle(Channel channel, DatumSnapshotRequest request) {
+        if (RENEW_LOGGER.isDebugEnabled()) {
+            RENEW_LOGGER.debug("doHandle: request={}", request);
+        }
+
         if (forwardService.needForward()) {
             LOGGER.warn("[forward] Snapshot request refused, request: {}", request);
             CommonResponse response = new CommonResponse();
@@ -76,10 +85,10 @@ public class DatumSnapshotHandler extends AbstractServerHandler<DatumSnapshotReq
             return response;
         }
 
-        Map<String, Publisher> pubMap = request.getPublishers().stream().collect(
-                Collectors.toMap(p -> p.getRegisterId(), p -> p));
-        dataChangeEventCenter.onChange(new DatumSnapshotEvent(request.getConnectId(), dataServerConfig
-                .getLocalDataCenter(), pubMap));
+        Map<String, Publisher> pubMap = request.getPublishers().stream()
+                .collect(Collectors.toMap(p -> p.getRegisterId(), p -> p));
+        dataChangeEventCenter.onChange(
+                new DatumSnapshotEvent(request.getConnectId(), dataServerConfig.getLocalDataCenter(), pubMap));
 
         // record the reNew timestamp
         datumLeaseManager.reNew(request.getConnectId());
@@ -99,7 +108,7 @@ public class DatumSnapshotHandler extends AbstractServerHandler<DatumSnapshotReq
 
     @Override
     public Class interest() {
-        return ClientOffRequest.class;
+        return DatumSnapshotRequest.class;
     }
 
     @Override

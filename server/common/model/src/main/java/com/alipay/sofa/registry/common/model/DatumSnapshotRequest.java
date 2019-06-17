@@ -16,27 +16,29 @@
  */
 package com.alipay.sofa.registry.common.model;
 
-import com.alipay.sofa.registry.common.model.store.Publisher;
-
+import java.io.Serializable;
 import java.util.List;
+
+import com.alipay.sofa.registry.common.model.store.Publisher;
 
 /**
  *
  * @author shangyu.wh
  * @version $Id: DatumSnapshotRequest.java, v 0.1 2019-05-30 11:09 shangyu.wh Exp $
  */
-public class DatumSnapshotRequest {
+public class DatumSnapshotRequest implements Serializable {
+
+    private static final long     serialVersionUID = 2193212935059863551L;
 
     private final String          connectId;
 
-    private final String          dataServerAddress;
+    private final String          dataServerIp;
 
     private final List<Publisher> publishers;
 
-    public DatumSnapshotRequest(String connectId, String dataServerAddress,
-                                List<Publisher> publishers) {
+    public DatumSnapshotRequest(String connectId, String dataServerIp, List<Publisher> publishers) {
         this.connectId = connectId;
-        this.dataServerAddress = dataServerAddress;
+        this.dataServerIp = dataServerIp;
         this.publishers = publishers;
     }
 
@@ -50,12 +52,12 @@ public class DatumSnapshotRequest {
     }
 
     /**
-     * Getter method for property <tt>dataServerAddress</tt>.
+     * Getter method for property <tt>dataServerIp</tt>.
      *
-     * @return property value of dataServerAddress
+     * @return property value of dataServerIp
      */
-    public String getDataServerAddress() {
-        return dataServerAddress;
+    public String getDataServerIp() {
+        return dataServerIp;
     }
 
     /**
@@ -65,5 +67,19 @@ public class DatumSnapshotRequest {
      */
     public List<Publisher> getPublishers() {
         return publishers;
+    }
+
+    /**
+     * @see Object#toString()
+     */
+    @Override
+    public String toString() {
+        final StringBuilder sb = new StringBuilder("DatumSnapshotRequest{");
+        sb.append("connectId='").append(connectId).append('\'');
+        sb.append(", dataServerIp='").append(dataServerIp).append('\'');
+        sb.append(", publishers=").append(publishers);
+        sb.append(", super=").append(super.toString());
+        sb.append('}');
+        return sb.toString();
     }
 }

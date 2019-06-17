@@ -67,6 +67,14 @@ public interface SessionServerConfig {
 
     long getCancelDataTaskRetryIncrementDelay();
 
+    int getPublishDataTaskRetryTimes();
+
+    int getUnpublishDataTaskRetryTimes();
+
+    int getDatumSnapshotTaskRetryTimes();
+
+    int getReNewDatumTaskRetryTimes();
+
     int getDataChangeFetchTaskRetryTimes();
 
     int getSubscriberRegisterFetchRetryTimes();
@@ -146,4 +154,6 @@ public interface SessionServerConfig {
     boolean isInvalidForeverZone(String zoneId);
 
     boolean isInvalidIgnored(String dataId);
+
+    int getRenewAndSnapshotSilentPeriodSec();
 }

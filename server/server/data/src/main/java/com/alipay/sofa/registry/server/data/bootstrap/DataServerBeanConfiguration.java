@@ -190,6 +190,8 @@ public class DataServerBeanConfiguration {
             list.add(sessionServerRegisterHandler());
             list.add(unPublishDataHandler());
             list.add(dataServerConnectionHandler());
+            list.add(reNewDatumHandler());
+            list.add(datumSnapshotHandler());
             return list;
         }
 

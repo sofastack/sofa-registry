@@ -14,23 +14,29 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alipay.sofa.registry.server.session.correction;
-
-import com.alipay.sofa.registry.log.Logger;
-import com.alipay.sofa.registry.log.LoggerFactory;
+package com.alipay.sofa.registry.server.session.acceptor;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+import org.springframework.beans.factory.annotation.Autowired;
+
+import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
+import com.alipay.sofa.registry.task.listener.TaskListenerManager;
+
 /**
  *
+ * @author kezhu.wukz
  * @author shangyu.wh
  * @version 1.0: WriteDataAcceptor.java, v 0.1 2019-06-06 12:45 shangyu.wh Exp $
  */
 public class WriteDataAcceptorImpl implements WriteDataAcceptor {
 
-    private static final Logger             LOGGER              = LoggerFactory
-                                                                    .getLogger(WriteDataAcceptorImpl.class);
+    @Autowired
+    private TaskListenerManager             taskListenerManager;
+
+    @Autowired
+    private SessionServerConfig             sessionServerConfig;
 
     /**
      * acceptor for all write data request
@@ -40,29 +46,12 @@ public class WriteDataAcceptorImpl implements WriteDataAcceptor {
      */
     private Map<String, WriteDataProcessor> writeDataProcessors = new ConcurrentHashMap();
 
-    public void accept(WriteDataRequest request){
-
+    public void accept(WriteDataRequest request) {
         String connectId = request.getConnectId();
         WriteDataProcessor writeDataProcessor = writeDataProcessors.computeIfAbsent(connectId,
-                key -> new WriteDataProcessor(connectId));
+                key -> new WriteDataProcessor(connectId, taskListenerManager, sessionServerConfig));
 
         writeDataProcessor.process(request);
-    }
-
-    public boolean halt(String connectId) {
-
-        WriteDataProcessor writeDataProcessor = writeDataProcessors.get(connectId);
-        if (writeDataProcessor != null) {
-            return writeDataProcessor.halt();
-        }
-        return false;
-    }
-
-    public void resume(String connectId) {
-        WriteDataProcessor writeDataProcessor = writeDataProcessors.get(connectId);
-        if (writeDataProcessor != null) {
-            writeDataProcessor.resume();
-        }
     }
 
     public void remove(String connectId) {

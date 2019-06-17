@@ -16,14 +16,14 @@
  */
 package com.alipay.sofa.registry.server.meta.store;
 
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
+
 import com.alipay.sofa.registry.common.model.Node;
 import com.alipay.sofa.registry.common.model.Node.NodeType;
 import com.alipay.sofa.registry.common.model.metaserver.DataCenterNodes;
 import com.alipay.sofa.registry.common.model.metaserver.NodeChangeResult;
-
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
 
 /**
  * interface for node store service
@@ -41,7 +41,7 @@ public interface StoreService<T extends Node> {
     NodeChangeResult setNodes(List<T> nodes);
 
     /**
-     * add new node,when renew request not found node will be add again
+     * add new node,when reNew request not found node will be add again
      * @param node
      * @return
      */

@@ -71,6 +71,26 @@
         </encoder>
     </appender>
 
+    <appender name="RENEW-APPENDER" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <append>true</append>
+        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+            <level>DEBUG</level>
+        </filter>
+        <filter class="ch.qos.logback.classic.filter.LevelFilter">
+            <level>ERROR</level>
+            <onMatch>DENY</onMatch>
+        </filter>
+        <file>${SESSION_LOG_HOME}/registry-renew.log</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <FileNamePattern>${SESSION_LOG_HOME}/registry-renew.log.%d{yyyy-MM-dd}</FileNamePattern>
+            <MaxHistory>30</MaxHistory>
+        </rollingPolicy>
+        <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+            <pattern>[%d{ISO8601}][%p][%t][%c{0}] - %m%n</pattern>
+            <charset>${LOG_ENCODE}</charset>
+        </encoder>
+    </appender>
+
     <!-- session appenders -->
 
     <appender name="SESSION-DEFAULT-APPENDER" class="ch.qos.logback.core.rolling.RollingFileAppender">
@@ -270,6 +290,11 @@
 
     <logger name="com.alipay.sofa.jraft" level="${LOG_LEVEL}" additivity="false">
         <appender-ref ref="JRAFT-APPENDER"/>
+        <appender-ref ref="COMMON-ERROR-APPENDER"/>
+    </logger>
+
+    <logger name="RENEW-LOGGER" level="DEBUG" additivity="false">
+        <appender-ref ref="RENEW-APPENDER"/>
         <appender-ref ref="COMMON-ERROR-APPENDER"/>
     </logger>
 

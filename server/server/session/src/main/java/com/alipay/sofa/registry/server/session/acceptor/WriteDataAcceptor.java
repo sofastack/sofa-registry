@@ -14,30 +14,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alipay.sofa.registry.server.session.correction;
+package com.alipay.sofa.registry.server.session.acceptor;
 
 /**
  *
+ * @author kezhu.wukz
  * @author shangyu.wh
- * @version 1.0: WriteDataRequest.java, v 0.1 2019-06-06 18:42 shangyu.wh Exp $
+ * @version 1.0: WriteDataAcceptor.java, v 0.1 2019-06-11 15:08 shangyu.wh Exp $
  */
-public interface WriteDataRequest<T> {
+public interface WriteDataAcceptor {
 
     /**
-     * The enum for request type
+     * accept all write data request
+     * @param request
      */
-    enum WriteDataRequestType {
-        PUBLISHER, UN_PUBLISHER, CLIENT_OFF
-    }
+    void accept(WriteDataRequest request);
 
     /**
-     * Gets request body.
-     *
-     * @return the request body
+     * remove processor of connectId
+     * @param connectId
      */
-    T getRequestBody();
-
-    WriteDataRequestType getRequestType();
-
-    String getConnectId();
+    void remove(String connectId);
 }

@@ -16,22 +16,27 @@
  */
 package com.alipay.sofa.registry.common.model;
 
+import java.io.Serializable;
+
 /**
  *
  * @author shangyu.wh
+ * @author kezhu.wukz
  * @version $Id: RenewRequest.java, v 0.1 2019-05-30 10:58 shangyu.wh Exp $
  */
-public class ReNewDatumRequest {
+public class ReNewDatumRequest implements Serializable {
 
-    private final String connectId;
+    private static final long serialVersionUID = 683097441984338311L;
 
-    private final String dataServerAddress;
+    private final String      connectId;
 
-    private final String digestSum;
+    private final String      dataServerIp;
 
-    public ReNewDatumRequest(String connectId, String dataServerAddress, String digestSum) {
+    private final String      digestSum;
+
+    public ReNewDatumRequest(String connectId, String dataServerIp, String digestSum) {
         this.connectId = connectId;
-        this.dataServerAddress = dataServerAddress;
+        this.dataServerIp = dataServerIp;
         this.digestSum = digestSum;
     }
 
@@ -45,12 +50,12 @@ public class ReNewDatumRequest {
     }
 
     /**
-     * Getter method for property <tt>dataServerAddress</tt>.
+     * Getter method for property <tt>dataServerIp</tt>.
      *
-     * @return property value of dataServerAddress
+     * @return property value of dataServerIp
      */
-    public String getDataServerAddress() {
-        return dataServerAddress;
+    public String getDataServerIp() {
+        return dataServerIp;
     }
 
     /**
@@ -60,5 +65,19 @@ public class ReNewDatumRequest {
      */
     public String getDigestSum() {
         return digestSum;
+    }
+
+    /**
+     * @see Object#toString()
+     */
+    @Override
+    public String toString() {
+        final StringBuilder sb = new StringBuilder("ReNewDatumRequest{");
+        sb.append("connectId='").append(connectId).append('\'');
+        sb.append(", dataServerIp='").append(dataServerIp).append('\'');
+        sb.append(", digestSum='").append(digestSum).append('\'');
+        sb.append(", super=").append(super.toString());
+        sb.append('}');
+        return sb.toString();
     }
 }

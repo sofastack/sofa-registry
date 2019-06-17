@@ -26,7 +26,7 @@ import com.alipay.sofa.registry.common.model.GenericResponse;
 import com.alipay.sofa.registry.common.model.Node;
 import com.alipay.sofa.registry.common.model.PublisherDigestUtil;
 import com.alipay.sofa.registry.common.model.ReNewDatumRequest;
-import com.alipay.sofa.registry.common.model.dataserver.ClientOffRequest;
+import com.alipay.sofa.registry.common.model.constants.ValueConstants;
 import com.alipay.sofa.registry.common.model.store.Publisher;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
@@ -46,7 +46,11 @@ import com.alipay.sofa.registry.util.ParaCheckUtil;
 public class ReNewDatumHandler extends AbstractServerHandler<ReNewDatumRequest> {
 
     /** LOGGER */
-    private static final Logger LOGGER = LoggerFactory.getLogger(ReNewDatumHandler.class);
+    private static final Logger LOGGER       = LoggerFactory.getLogger(ReNewDatumHandler.class);
+
+    private static final Logger RENEW_LOGGER = LoggerFactory.getLogger(
+                                                 ValueConstants.LOGGER_NAME_RENEW,
+                                                 "[ReNewDatumHandler]");
 
     @Autowired
     private ForwardService      forwardService;
@@ -62,6 +66,10 @@ public class ReNewDatumHandler extends AbstractServerHandler<ReNewDatumRequest> 
 
     @Override
     public Object doHandle(Channel channel, ReNewDatumRequest request) {
+        if (RENEW_LOGGER.isDebugEnabled()) {
+            RENEW_LOGGER.debug("doHandle: request={}", request);
+        }
+
         if (forwardService.needForward()) {
             LOGGER.warn("[forward] Renew request refused, request: {}", request);
             CommonResponse response = new CommonResponse();
@@ -87,7 +95,7 @@ public class ReNewDatumHandler extends AbstractServerHandler<ReNewDatumRequest> 
 
     @Override
     public Class interest() {
-        return ClientOffRequest.class;
+        return ReNewDatumRequest.class;
     }
 
     @Override

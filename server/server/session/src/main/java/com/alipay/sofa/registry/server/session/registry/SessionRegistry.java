@@ -16,7 +16,22 @@
  */
 package com.alipay.sofa.registry.server.session.registry;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
+
+import org.springframework.beans.factory.annotation.Autowired;
+
+import com.alipay.sofa.registry.common.model.DatumSnapshotRequest;
 import com.alipay.sofa.registry.common.model.Node;
+import com.alipay.sofa.registry.common.model.PublisherDigestUtil;
+import com.alipay.sofa.registry.common.model.ReNewDatumRequest;
+import com.alipay.sofa.registry.common.model.constants.ValueConstants;
 import com.alipay.sofa.registry.common.model.store.BaseInfo;
 import com.alipay.sofa.registry.common.model.store.Publisher;
 import com.alipay.sofa.registry.common.model.store.StoreData;
@@ -28,42 +43,32 @@ import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.remoting.Channel;
 import com.alipay.sofa.registry.remoting.Server;
 import com.alipay.sofa.registry.remoting.exchange.Exchange;
+import com.alipay.sofa.registry.server.session.acceptor.WriteDataAcceptor;
+import com.alipay.sofa.registry.server.session.acceptor.WriteDataRequest;
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
-import com.alipay.sofa.registry.server.session.correction.WriteDataAcceptor;
-import com.alipay.sofa.registry.server.session.correction.WriteDataRequest;
-import com.alipay.sofa.registry.server.session.correction.service.PublisherDigestService;
 import com.alipay.sofa.registry.server.session.node.NodeManager;
 import com.alipay.sofa.registry.server.session.node.service.DataNodeService;
 import com.alipay.sofa.registry.server.session.store.DataStore;
 import com.alipay.sofa.registry.server.session.store.Interests;
 import com.alipay.sofa.registry.server.session.store.Watchers;
 import com.alipay.sofa.registry.server.session.strategy.SessionRegistryStrategy;
-import com.alipay.sofa.registry.task.listener.TaskEvent;
-import com.alipay.sofa.registry.task.listener.TaskEvent.TaskType;
-import com.alipay.sofa.registry.task.listener.TaskListenerManager;
-import org.springframework.beans.factory.annotation.Autowired;
-
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Set;
-import java.util.concurrent.TimeUnit;
 
 /**
  *
+ * @author kezhu.wukz
  * @author shangyu.wh
  * @version $Id: AbstractSessionRegistry.java, v 0.1 2017-11-30 18:13 shangyu.wh Exp $
  */
 public class SessionRegistry implements Registry {
 
-    private static final Logger     LOGGER      = LoggerFactory.getLogger(SessionRegistry.class);
+    private static final Logger     LOGGER       = LoggerFactory.getLogger(SessionRegistry.class);
 
-    private static final Logger     TASK_LOGGER = LoggerFactory.getLogger(SessionRegistry.class,
-                                                    "[Task]");
+    private static final Logger     TASK_LOGGER  = LoggerFactory.getLogger(SessionRegistry.class,
+                                                     "[Task]");
+
+    private static final Logger     RENEW_LOGGER = LoggerFactory.getLogger(
+                                                     ValueConstants.LOGGER_NAME_RENEW,
+                                                     "[SessionRegistry]");
 
     /**
      * store subscribers
@@ -90,12 +95,6 @@ public class SessionRegistry implements Registry {
     private DataNodeService         dataNodeService;
 
     /**
-     * trigger task com.alipay.sofa.registry.server.meta.listener process
-     */
-    @Autowired
-    private TaskListenerManager     taskListenerManager;
-
-    /**
      * calculate data node url
      */
     @Autowired
@@ -111,9 +110,6 @@ public class SessionRegistry implements Registry {
     private SessionRegistryStrategy sessionRegistryStrategy;
 
     @Autowired
-    private PublisherDigestService  publisherDigestService;
-
-    @Autowired
     private WriteDataAcceptor       writeDataAcceptor;
 
     @Override
@@ -126,8 +122,10 @@ public class SessionRegistry implements Registry {
             case PUBLISHER:
                 Publisher publisher = (Publisher) storeData;
 
-                //dataNodeService.register(publisher);
+                sessionDataStore.add(publisher);
 
+                // All write operations to DataServer (pub/unpub/clientoff/renew/snapshot)
+                // are handed over to WriteDataAcceptor
                 writeDataAcceptor.accept(new WriteDataRequest() {
                     @Override
                     public Object getRequestBody() {
@@ -141,11 +139,9 @@ public class SessionRegistry implements Registry {
 
                     @Override
                     public String getConnectId() {
-                        return publisher.getClientId();
+                        return publisher.getSourceAddress().getAddressString();
                     }
                 });
-
-                sessionDataStore.add(publisher);
 
                 sessionRegistryStrategy.afterPublisherRegister(publisher);
                 break;
@@ -178,7 +174,26 @@ public class SessionRegistry implements Registry {
 
                 sessionDataStore.deleteById(storeData.getId(), publisher.getDataInfoId());
 
-                dataNodeService.unregister(publisher);
+                //                dataNodeService.unregister(publisher);
+
+                // All write operations to DataServer (pub/unpub/clientoff/renew/snapshot)
+                // are handed over to WriteDataAcceptor
+                writeDataAcceptor.accept(new WriteDataRequest() {
+                    @Override
+                    public Object getRequestBody() {
+                        return publisher;
+                    }
+
+                    @Override
+                    public WriteDataRequestType getRequestType() {
+                        return WriteDataRequestType.UN_PUBLISHER;
+                    }
+
+                    @Override
+                    public String getConnectId() {
+                        return publisher.getSourceAddress().getAddressString();
+                    }
+                });
 
                 sessionRegistryStrategy.afterPublisherUnRegister(publisher);
                 break;
@@ -204,9 +219,38 @@ public class SessionRegistry implements Registry {
 
     @Override
     public void cancel(List<String> connectIds) {
-        TaskEvent taskEvent = new TaskEvent(connectIds, TaskType.CANCEL_DATA_TASK);
-        TASK_LOGGER.info("send " + taskEvent.getTaskType() + " taskEvent:{}", taskEvent);
-        taskListenerManager.sendTaskEvent(taskEvent);
+        //update local firstly, data node send error depend on reNew check
+        List<String> connectIdsWithPub = new ArrayList<>();
+        for (String connectId : connectIds) {
+            if (sessionDataStore.deleteByConnectId(connectId)) {
+                connectIdsWithPub.add(connectId);
+            }
+            sessionInterests.deleteByConnectId(connectId);
+            sessionWatchers.deleteByConnectId(connectId);
+        }
+
+        // All write operations to DataServer (pub/unpub/clientoff/renew/snapshot)
+        // are handed over to WriteDataAcceptor
+        for (String connectId : connectIdsWithPub) {
+            writeDataAcceptor.accept(new WriteDataRequest() {
+                @Override
+                public Object getRequestBody() {
+                    return connectId;
+                }
+
+                @Override
+                public WriteDataRequestType getRequestType() {
+                    return WriteDataRequestType.CLIENT_OFF;
+                }
+
+                @Override
+                public String getConnectId() {
+                    return connectId;
+                }
+            });
+            writeDataAcceptor.remove(connectId);
+        }
+
     }
 
     @Override
@@ -257,10 +301,8 @@ public class SessionRegistry implements Registry {
         if (dataInfoIds != null) {
             dataInfoIds.forEach(dataInfoId -> {
                 Node dataNode = dataNodeManager.getNode(dataInfoId);
-                URL url = new URL(dataNode.getNodeUrl().getIpAddress(),
-                        sessionServerConfig.getDataServerPort());
-                Collection<String> list = map.computeIfAbsent(url.getAddressString(),
-                        k -> new ArrayList<>());
+                URL url = new URL(dataNode.getNodeUrl().getIpAddress(), sessionServerConfig.getDataServerPort());
+                Collection<String> list = map.computeIfAbsent(url.getAddressString(), k -> new ArrayList<>());
                 list.add(dataInfoId);
             });
         }
@@ -286,61 +328,101 @@ public class SessionRegistry implements Registry {
 
     @Override
     public void reNewDatum(String connectId) {
+        if (RENEW_LOGGER.isDebugEnabled()) {
+            RENEW_LOGGER.debug("reNewDatum: connectId={}", connectId);
+        }
 
-        //TODO check update time to cancel
-        Map<String, String> connectDigest = publisherDigestService.getConnectDigest(connectId);
+        List<ReNewDatumRequest> reNewDatumRequests = getReNewDatumRequests(connectId);
+        if (reNewDatumRequests != null) {
+            for (ReNewDatumRequest reNewDatumRequest : reNewDatumRequests) {
+                // All write operations to DataServer (pub/unpub/clientoff/renew/snapshot)
+                // are handed over to WriteDataAcceptor
+                writeDataAcceptor.accept(new WriteDataRequest() {
+                    @Override
+                    public Object getRequestBody() {
+                        return reNewDatumRequest;
+                    }
 
-        Set<String> remainDataIps = new HashSet<>(connectDigest.keySet());
-        for (Entry<String, String> entry : connectDigest.entrySet()) {
-            String dataIp = entry.getKey();
-            String digest = entry.getValue();
-            try {
-                Boolean result = dataNodeService.reNewDatum(dataIp, connectId, digest);
-                if (!result) {
-                    LOGGER
-                        .info(
-                            "ReNew datum request to dataNode got sub digest different!dataIp={},connectId={},digest={}",
-                            dataIp, connectId, digest);
-                    break;
-                } else {
-                    remainDataIps.remove(dataIp);
-                }
-            } catch (Exception e) {
-                LOGGER.error(
-                    "ReNew datum request to dataNode error!dataIp={},connectId={},digest={}",
-                    dataIp, connectId, digest, e);
+                    @Override
+                    public WriteDataRequestType getRequestType() {
+                        return WriteDataRequestType.RENEW_DATUM;
+                    }
+
+                    @Override
+                    public String getConnectId() {
+                        return connectId;
+                    }
+                });
             }
         }
+    }
 
-        if (!remainDataIps.isEmpty()) {
-            //TODO SNAPSHOT
+    @Override
+    public void sendDatumSnapshot(String connectId) {
+        if (RENEW_LOGGER.isDebugEnabled()) {
+            RENEW_LOGGER.debug("sendDatumSnapshot: connectId={}", connectId);
+        }
+
+        List<DatumSnapshotRequest> datumSnapshotRequests = getDatumSnapshotRequests(connectId);
+        if (datumSnapshotRequests != null) {
+            for (DatumSnapshotRequest datumSnapshotRequest : datumSnapshotRequests) {
+                // All write operations to DataServer (pub/unpub/clientoff/renew/snapshot)
+                // are handed over to WriteDataAcceptor
+                writeDataAcceptor.accept(new WriteDataRequest() {
+                    @Override
+                    public Object getRequestBody() {
+                        return datumSnapshotRequest;
+                    }
+
+                    @Override
+                    public WriteDataRequestType getRequestType() {
+                        return WriteDataRequestType.DATUM_SNAPSHOT;
+                    }
+
+                    @Override
+                    public String getConnectId() {
+                        return connectId;
+                    }
+                });
+            }
         }
     }
 
-    /**
-     * Getter method for property <tt>sessionInterests</tt>.
-     *
-     * @return property value of sessionInterests
-     */
-    public Interests getSessionInterests() {
-        return sessionInterests;
+    private List<ReNewDatumRequest> getReNewDatumRequests(String connectId) {
+        List<DatumSnapshotRequest> datumSnapshotRequests = getDatumSnapshotRequests(connectId);
+        if (datumSnapshotRequests != null && !datumSnapshotRequests.isEmpty()) {
+            return datumSnapshotRequests.stream()
+                    .map(datumSnapshotRequest -> new ReNewDatumRequest(datumSnapshotRequest.getConnectId(),
+                            datumSnapshotRequest.getDataServerIp(), String.valueOf(
+                            PublisherDigestUtil.getDigestValueSum(datumSnapshotRequest.getPublishers()))))
+                    .collect(Collectors.toList());
+        }
+        return null;
     }
 
-    /**
-     * Getter method for property <tt>sessionDataStore</tt>.
-     *
-     * @return property value of sessionDataStore
-     */
-    public DataStore getSessionDataStore() {
-        return sessionDataStore;
-    }
-
-    /**
-     * Getter method for property <tt>taskListenerManager</tt>.
-     *
-     * @return property value of taskListenerManager
-     */
-    public TaskListenerManager getTaskListenerManager() {
-        return taskListenerManager;
+    private List<DatumSnapshotRequest> getDatumSnapshotRequests(String connectId) {
+        Map<String, Publisher> pubMap = sessionDataStore.queryByConnectId(connectId);
+        if (pubMap != null && !pubMap.isEmpty()) {
+            Map<String, List<Publisher>> dataServerIpToPubs = new ConcurrentHashMap<>();
+            List<DatumSnapshotRequest> list = new ArrayList<>();
+            pubMap.values().forEach(publisher -> {
+                Node dataNode = dataNodeManager.getNode(publisher.getDataInfoId());
+                List<Publisher> publishers = dataServerIpToPubs
+                        .computeIfAbsent(dataNode.getNodeUrl().getIpAddress(), k -> new ArrayList<>());
+                publishers.add(publisher);
+            });
+            for (Map.Entry<String, List<Publisher>> entry : dataServerIpToPubs.entrySet()) {
+                List<Publisher> publishers = entry.getValue();
+                if (!publishers.isEmpty()) {
+                    DatumSnapshotRequest datumSnapshotRequest = new DatumSnapshotRequest(connectId, entry.getKey(),
+                            publishers);
+                    list.add(datumSnapshotRequest);
+                }
+            }
+            return list;
+        } else {
+            LOGGER.warn("No publishers of connectId:{}!", connectId);
+        }
+        return null;
     }
 }

@@ -16,6 +16,14 @@
  */
 package com.alipay.sofa.registry.server.session.remoting.handler;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.TimeUnit;
+
+import org.springframework.beans.factory.annotation.Autowired;
+
+import com.alipay.sofa.registry.common.model.constants.ValueConstants;
 import com.alipay.sofa.registry.common.model.store.URL;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
@@ -30,12 +38,6 @@ import com.alipay.sofa.registry.server.session.scheduler.ExecutorManager;
 import com.alipay.sofa.registry.server.session.store.DataStore;
 import com.alipay.sofa.registry.server.session.store.Interests;
 import com.alipay.sofa.registry.server.session.store.Watchers;
-import org.springframework.beans.factory.annotation.Autowired;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.TimeUnit;
 
 /**
  *
@@ -44,7 +46,10 @@ import java.util.concurrent.TimeUnit;
  */
 public class ClientNodeConnectionHandler extends AbstractServerHandler {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger("SESSION-CONNECT");
+    private static final Logger LOGGER       = LoggerFactory.getLogger("SESSION-CONNECT");
+    private static final Logger RENEW_LOGGER = LoggerFactory.getLogger(
+                                                 ValueConstants.LOGGER_NAME_RENEW,
+                                                 "[ClientNodeConnectionHandler]");
 
     @Autowired
     private Registry            sessionRegistry;
@@ -86,10 +91,10 @@ public class ClientNodeConnectionHandler extends AbstractServerHandler {
 
     private void fireCancelClient(Channel channel) {
         //avoid block connect ConnectionEventExecutor thread pool
-        executorManager.getConnectClientExecutor().execute(()->{
+        executorManager.getConnectClientExecutor().execute(() -> {
 
             String connectId = NetUtil.toAddressString(channel.getRemoteAddress());
-            if(checkCache(connectId)) {
+            if (checkCache(connectId)) {
                 List<String> connectIds = new ArrayList<>();
                 connectIds.add(connectId);
                 sessionRegistry.cancel(connectIds);
@@ -121,19 +126,21 @@ public class ClientNodeConnectionHandler extends AbstractServerHandler {
         return subMap != null && !subMap.isEmpty();
     }
 
-    private  void fireReNewDatum(Channel channel){
-
-        executorManager.getConnectClientExecutor().execute(()-> {
+    private void fireReNewDatum(Channel channel) {
+        executorManager.getConnectClientExecutor().execute(() -> {
             String connectId = NetUtil.toAddressString(channel.getRemoteAddress());
-            executorManager.getAsyncHashedWheelTimerTask().newTimeout(connectId, timerOut -> sessionRegistry.reNewDatum(connectId),
-                    sessionServerConfig.getReNewDatumWheelTaskDelay(), TimeUnit.MILLISECONDS,
-                    () -> {
-                        Server sessionServer = boltExchange.getServer(sessionServerConfig.getServerPort());
-
-                        Channel channelClient = sessionServer.getChannel(URL.valueOf(connectId));
-
-                        return channelClient != null && channel.isConnected();
-                    });
+            RENEW_LOGGER.info("Renew task is started: {}", connectId);
+            executorManager.getAsyncHashedWheelTimerTask()
+                    .newTimeout(connectId, timerOut -> sessionRegistry.reNewDatum(connectId),
+                            sessionServerConfig.getReNewDatumWheelTaskDelay(), TimeUnit.SECONDS, () -> {
+                                Server sessionServer = boltExchange.getServer(sessionServerConfig.getServerPort());
+                                Channel channelClient = sessionServer.getChannel(URL.valueOf(connectId));
+                                boolean shouldContinue = channelClient != null && channel.isConnected();
+                                if (!shouldContinue) {
+                                    RENEW_LOGGER.info("Renew task is stop: {}", connectId);
+                                }
+                                return shouldContinue;
+                            });
         });
     }
 }

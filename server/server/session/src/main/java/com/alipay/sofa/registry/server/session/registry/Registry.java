@@ -16,9 +16,9 @@
  */
 package com.alipay.sofa.registry.server.session.registry;
 
-import com.alipay.sofa.registry.common.model.store.StoreData;
-
 import java.util.List;
+
+import com.alipay.sofa.registry.common.model.store.StoreData;
 
 /**
  *
@@ -66,4 +66,6 @@ public interface Registry {
      * Regularly send update Datum with same connectID valid time request service
      */
     void reNewDatum(String connectId);
+
+    void sendDatumSnapshot(String connectId);
 }

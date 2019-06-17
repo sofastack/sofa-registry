@@ -16,28 +16,41 @@
  */
 package com.alipay.sofa.registry.server.session.bootstrap;
 
+import java.util.ArrayList;
+import java.util.Collection;
+
+import org.glassfish.jersey.jackson.JacksonFeature;
+import org.glassfish.jersey.server.ResourceConfig;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Import;
+
 import com.alipay.sofa.registry.remoting.bolt.exchange.BoltExchange;
 import com.alipay.sofa.registry.remoting.exchange.Exchange;
 import com.alipay.sofa.registry.remoting.exchange.NodeExchanger;
 import com.alipay.sofa.registry.remoting.jersey.exchange.JerseyExchange;
+import com.alipay.sofa.registry.server.session.acceptor.WriteDataAcceptor;
+import com.alipay.sofa.registry.server.session.acceptor.WriteDataAcceptorImpl;
 import com.alipay.sofa.registry.server.session.cache.CacheGenerator;
 import com.alipay.sofa.registry.server.session.cache.CacheService;
 import com.alipay.sofa.registry.server.session.cache.DatumCacheGenerator;
 import com.alipay.sofa.registry.server.session.cache.SessionCacheService;
-import com.alipay.sofa.registry.server.session.correction.WriteDataAcceptor;
-import com.alipay.sofa.registry.server.session.correction.WriteDataAcceptorImpl;
-import com.alipay.sofa.registry.server.session.correction.service.PublisherDigestService;
-import com.alipay.sofa.registry.server.session.correction.service.PublisherDigestServiceImpl;
 import com.alipay.sofa.registry.server.session.listener.CancelDataTaskListener;
 import com.alipay.sofa.registry.server.session.listener.DataChangeFetchCloudTaskListener;
 import com.alipay.sofa.registry.server.session.listener.DataChangeFetchTaskListener;
 import com.alipay.sofa.registry.server.session.listener.DataPushTaskListener;
+import com.alipay.sofa.registry.server.session.listener.DatumSnapshotTaskListener;
 import com.alipay.sofa.registry.server.session.listener.ProvideDataChangeFetchTaskListener;
+import com.alipay.sofa.registry.server.session.listener.PublishDataTaskListener;
+import com.alipay.sofa.registry.server.session.listener.ReNewDatumTaskListener;
 import com.alipay.sofa.registry.server.session.listener.ReceivedConfigDataPushTaskListener;
 import com.alipay.sofa.registry.server.session.listener.ReceivedDataMultiPushTaskListener;
 import com.alipay.sofa.registry.server.session.listener.SessionRegisterDataTaskListener;
 import com.alipay.sofa.registry.server.session.listener.SubscriberMultiFetchTaskListener;
 import com.alipay.sofa.registry.server.session.listener.SubscriberRegisterFetchTaskListener;
+import com.alipay.sofa.registry.server.session.listener.UnpublishDataTaskListener;
 import com.alipay.sofa.registry.server.session.listener.WatcherRegisterFetchTaskListener;
 import com.alipay.sofa.registry.server.session.node.DataNodeManager;
 import com.alipay.sofa.registry.server.session.node.MetaNodeManager;
@@ -113,16 +126,6 @@ import com.alipay.sofa.registry.task.listener.DefaultTaskListenerManager;
 import com.alipay.sofa.registry.task.listener.TaskListener;
 import com.alipay.sofa.registry.task.listener.TaskListenerManager;
 import com.alipay.sofa.registry.util.PropertySplitter;
-import org.glassfish.jersey.jackson.JacksonFeature;
-import org.glassfish.jersey.server.ResourceConfig;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
-import org.springframework.boot.context.properties.EnableConfigurationProperties;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Import;
-
-import java.util.ArrayList;
-import java.util.Collection;
 
 /**
  *
@@ -513,6 +516,34 @@ public class SessionServerConfiguration {
         }
 
         @Bean
+        public TaskListener datumSnapshotTaskListener(TaskListenerManager taskListenerManager) {
+            TaskListener taskListener = new DatumSnapshotTaskListener();
+            taskListenerManager.addTaskListener(taskListener);
+            return taskListener;
+        }
+
+        @Bean
+        public TaskListener publishDataTaskListener(TaskListenerManager taskListenerManager) {
+            TaskListener taskListener = new PublishDataTaskListener();
+            taskListenerManager.addTaskListener(taskListener);
+            return taskListener;
+        }
+
+        @Bean
+        public TaskListener reNewDatumTaskListener(TaskListenerManager taskListenerManager) {
+            TaskListener taskListener = new ReNewDatumTaskListener();
+            taskListenerManager.addTaskListener(taskListener);
+            return taskListener;
+        }
+
+        @Bean
+        public TaskListener unpublishDataTaskListener(TaskListenerManager taskListenerManager) {
+            TaskListener taskListener = new UnpublishDataTaskListener();
+            taskListenerManager.addTaskListener(taskListener);
+            return taskListener;
+        }
+
+        @Bean
         public TaskListenerManager taskListenerManager() {
             return new DefaultTaskListenerManager();
         }
@@ -609,11 +640,6 @@ public class SessionServerConfiguration {
 
     @Configuration
     public static class SessionReNewDatumConfiguration {
-
-        @Bean
-        public PublisherDigestService publisherDigestService() {
-            return new PublisherDigestServiceImpl();
-        }
 
         @Bean
         public WriteDataAcceptor writeDataAcceptor() {

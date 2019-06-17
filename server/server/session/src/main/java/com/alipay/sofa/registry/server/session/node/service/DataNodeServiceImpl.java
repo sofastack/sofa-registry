@@ -16,6 +16,15 @@
  */
 package com.alipay.sofa.registry.server.session.node.service;
 
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
+
+import org.springframework.beans.factory.annotation.Autowired;
+
 import com.alipay.sofa.registry.common.model.CommonResponse;
 import com.alipay.sofa.registry.common.model.DatumSnapshotRequest;
 import com.alipay.sofa.registry.common.model.GenericResponse;
@@ -42,14 +51,6 @@ import com.alipay.sofa.registry.server.session.node.SessionProcessIdGenerator;
 import com.alipay.sofa.registry.timer.AsyncHashedWheelTimer;
 import com.alipay.sofa.registry.timer.AsyncHashedWheelTimer.TaskFailedCallback;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
-import org.springframework.beans.factory.annotation.Autowired;
-
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  *
@@ -267,11 +268,10 @@ public class DataNodeServiceImpl implements DataNodeService {
                         if (!commonResponse.isSuccess()) {
                             LOGGER.error(
                                     "ClientOff retry RequestRequest get response failed!retryTimes={},target url:{},message:{}",
-                                    retryTimes,
-                                    url, commonResponse.getMessage());
+                                    retryTimes, url, commonResponse.getMessage());
                             throw new RuntimeException(
-                                    "ClientOff retry RequestRequest get response failed! msg:" +
-                                            commonResponse.getMessage());
+                                    "ClientOff retry RequestRequest get response failed! msg:" + commonResponse
+                                            .getMessage());
                         }
                     } else {
                         LOGGER.error(
@@ -400,7 +400,8 @@ public class DataNodeServiceImpl implements DataNodeService {
         return getDatumMap(dataInfoId, null);
     }
 
-    @Override public Map<String, Datum> getDatumMap(String dataInfoId, String dataCenterId) {
+    @Override
+    public Map<String, Datum> getDatumMap(String dataInfoId, String dataCenterId) {
 
         Map<String/*datacenter*/, Datum> map;
 
@@ -441,8 +442,8 @@ public class DataNodeServiceImpl implements DataNodeService {
                     }
                 } else {
                     LOGGER.error("GetDataRequest has not get fail response!msg:{}", genericResponse.getMessage());
-                    throw new RuntimeException("GetDataRequest has not get fail response! msg:" +
-                            genericResponse.getMessage());
+                    throw new RuntimeException(
+                            "GetDataRequest has not get fail response! msg:" + genericResponse.getMessage());
                 }
             } else {
                 LOGGER.error("GetDataRequest has not get response or response type illegal!");
@@ -450,8 +451,7 @@ public class DataNodeServiceImpl implements DataNodeService {
             }
         } catch (RequestException e) {
             LOGGER.error("Get data request to data node error! " + e.getRequestMessage(), e);
-            throw new RuntimeException(
-                    "Get data request to data node error! " + e.getRequestMessage(), e);
+            throw new RuntimeException("Get data request to data node error! " + e.getRequestMessage(), e);
         }
 
         return map;
@@ -468,18 +468,18 @@ public class DataNodeServiceImpl implements DataNodeService {
         return null;
     }
 
-    public Boolean reNewDatum(String connectId, String dataIpAddress, String digest) {
+    public Boolean reNewDatum(ReNewDatumRequest reNewDatumRequest) {
         try {
-
             Request<ReNewDatumRequest> request = new Request<ReNewDatumRequest>() {
                 @Override
                 public ReNewDatumRequest getRequestBody() {
-                    return new ReNewDatumRequest(connectId, dataIpAddress, digest);
+                    return reNewDatumRequest;
                 }
 
                 @Override
                 public URL getRequestUrl() {
-                    return new URL(dataIpAddress, sessionServerConfig.getDataServerPort());
+                    return new URL(reNewDatumRequest.getDataServerIp(),
+                        sessionServerConfig.getDataServerPort());
                 }
             };
 
@@ -509,18 +509,18 @@ public class DataNodeServiceImpl implements DataNodeService {
         }
     }
 
-    public void rectifyDatum(String connectId, String dataIpAddress, List<Publisher> publishers) {
-
+    public void sendDatumSnapshot(DatumSnapshotRequest datumSnapshotRequest) {
         try {
             Request<DatumSnapshotRequest> request = new Request<DatumSnapshotRequest>() {
                 @Override
                 public DatumSnapshotRequest getRequestBody() {
-                    return new DatumSnapshotRequest(connectId, dataIpAddress, publishers);
+                    return datumSnapshotRequest;
                 }
 
                 @Override
                 public URL getRequestUrl() {
-                    return new URL(dataIpAddress, sessionServerConfig.getDataServerPort());
+                    return new URL(datumSnapshotRequest.getDataServerIp(),
+                        sessionServerConfig.getDataServerPort());
                 }
             };
 

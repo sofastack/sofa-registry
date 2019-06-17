@@ -16,67 +16,47 @@
  */
 package com.alipay.sofa.registry.server.session.scheduler.task;
 
-import java.util.List;
-
+import com.alipay.sofa.registry.common.model.DatumSnapshotRequest;
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
 import com.alipay.sofa.registry.server.session.node.service.DataNodeService;
-import com.alipay.sofa.registry.server.session.store.DataStore;
-import com.alipay.sofa.registry.server.session.store.Interests;
-import com.alipay.sofa.registry.server.session.store.Watchers;
 import com.alipay.sofa.registry.task.listener.TaskEvent;
 
 /**
  *
- * @author shangyu.wh
- * @version $Id: CancelDataTask.java, v 0.1 2017-12-27 12:15 shangyu.wh Exp $
+ * @author kezhu.wukz
+ * @version $Id: DatumSnapshotTask.java, v 0.1 2019-06-14 12:15 kezhu.wukz Exp $
  */
-public class CancelDataTask extends AbstractSessionTask {
-    /**
-     * store subscribers
-     */
-    private final Interests           sessionInterests;
-    /**
-     * store publishers
-     */
-    private final DataStore           sessionDataStore;
-
-    private final Watchers            sessionWatchers;
+public class DatumSnapshotTask extends AbstractSessionTask {
     /**
      * transfer data to DataNode
      */
     private final DataNodeService     dataNodeService;
-    private final SessionServerConfig sessionServerConfig;
-    private List<String>              connectIds;
 
-    public CancelDataTask(Interests sessionInterests, DataStore sessionDataStore,
-                          Watchers sessionWatchers, DataNodeService dataNodeService,
-                          SessionServerConfig sessionServerConfig) {
-        this.sessionInterests = sessionInterests;
-        this.sessionDataStore = sessionDataStore;
-        this.sessionWatchers = sessionWatchers;
-        this.dataNodeService = dataNodeService;
+    private final SessionServerConfig sessionServerConfig;
+
+    private DatumSnapshotRequest      datumSnapshotRequest;
+
+    public DatumSnapshotTask(SessionServerConfig sessionServerConfig,
+                             DataNodeService dataNodeService) {
         this.sessionServerConfig = sessionServerConfig;
+        this.dataNodeService = dataNodeService;
     }
 
     @Override
     public void execute() {
-        dataNodeService.clientOff(connectIds);
+        dataNodeService.sendDatumSnapshot(datumSnapshotRequest);
     }
 
     @Override
     public void setTaskEvent(TaskEvent taskEvent) {
-
         //taskId create from event
         if (taskEvent.getTaskId() != null) {
             setTaskId(taskEvent.getTaskId());
         }
 
         Object obj = taskEvent.getEventObj();
-        if (obj instanceof List) {
-            this.connectIds = (List<String>) obj;
-            if (connectIds.isEmpty()) {
-                throw new IllegalArgumentException("Input clientOff connectIds error!");
-            }
+        if (obj instanceof DatumSnapshotRequest) {
+            this.datumSnapshotRequest = (DatumSnapshotRequest) obj;
         } else {
             throw new IllegalArgumentException("Input task event object error!");
         }
@@ -84,13 +64,13 @@ public class CancelDataTask extends AbstractSessionTask {
 
     @Override
     public String toString() {
-        return "CANCEL_DATA_TASK{" + "taskId='" + getTaskId() + '\'' + ", connectIds=" + connectIds
-               + ", retry='" + sessionServerConfig.getCancelDataTaskRetryTimes() + '\'' + '}';
+        return "DATUM_SNAPSHOT_TASK{" + "taskId='" + getTaskId() + '\'' + ", datumSnapshotRequest="
+               + datumSnapshotRequest + ", retry='"
+               + sessionServerConfig.getPublishDataTaskRetryTimes() + '\'' + '}';
     }
 
     @Override
     public boolean checkRetryTimes() {
-        //dataNodeService.clientOff will be retry all the failed
-        return false;
+        return checkRetryTimes(sessionServerConfig.getDatumSnapshotTaskRetryTimes());
     }
 }

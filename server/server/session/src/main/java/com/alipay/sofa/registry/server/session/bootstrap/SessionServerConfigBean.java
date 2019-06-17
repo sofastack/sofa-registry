@@ -16,12 +16,12 @@
  */
 package com.alipay.sofa.registry.server.session.bootstrap;
 
-import org.springframework.boot.context.properties.ConfigurationProperties;
-
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.regex.Pattern;
+
+import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**
  * The type Session server config bean.
@@ -79,6 +79,14 @@ public class SessionServerConfigBean implements SessionServerConfig {
     private int                cancelDataTaskRetryFirstDelay           = 100;
 
     private long               cancelDataTaskRetryIncrementDelay       = 200;
+
+    private int                publishDataTaskRetryTimes               = 3;
+
+    private int                unpublishDataTaskRetryTimes             = 3;
+
+    private int                datumSnapshotTaskRetryTimes             = 3;
+
+    private int                reNewDatumTaskRetryTimes                = 3;
 
     private int                dataChangeFetchTaskRetryTimes           = 3;
 
@@ -173,6 +181,8 @@ public class SessionServerConfigBean implements SessionServerConfig {
 
     private Set<String>        pushEmptyDataDataIdPrefixesSet;
 
+    private int                renewAndSnapshotSilentPeriodSec         = 20;
+
     //end config for enterprise version
 
     private CommonConfig       commonConfig;
@@ -183,6 +193,100 @@ public class SessionServerConfigBean implements SessionServerConfig {
      */
     public SessionServerConfigBean(CommonConfig commonConfig) {
         this.commonConfig = commonConfig;
+    }
+
+    /**
+     * Getter method for property <tt>renewAndSnapshotSilentPeriodSec</tt>.
+     *
+     * @return property value of renewAndSnapshotSilentPeriodSec
+     */
+    public int getRenewAndSnapshotSilentPeriodSec() {
+        return renewAndSnapshotSilentPeriodSec;
+    }
+
+    /**
+     * Setter method for property <tt>renewAndSnapshotSilentPeriodSec </tt>.
+     *
+     * @param renewAndSnapshotSilentPeriodSec  value to be assigned to property renewAndSnapshotSilentPeriodSec
+     */
+    public void setRenewAndSnapshotSilentPeriodSec(int renewAndSnapshotSilentPeriodSec) {
+        this.renewAndSnapshotSilentPeriodSec = renewAndSnapshotSilentPeriodSec;
+    }
+
+    /**
+     * Getter method for property <tt>publishDataTaskRetryTimes</tt>.
+     *
+     * @return property value of publishDataTaskRetryTimes
+     */
+    @Override
+    public int getPublishDataTaskRetryTimes() {
+        return publishDataTaskRetryTimes;
+    }
+
+    /**
+     * Setter method for property <tt>publishDataTaskRetryTimes </tt>.
+     *
+     * @param publishDataTaskRetryTimes  value to be assigned to property publishDataTaskRetryTimes
+     */
+    public void setPublishDataTaskRetryTimes(int publishDataTaskRetryTimes) {
+        this.publishDataTaskRetryTimes = publishDataTaskRetryTimes;
+    }
+
+    /**
+     * Getter method for property <tt>unpublishDataTaskRetryTimes</tt>.
+     *
+     * @return property value of unpublishDataTaskRetryTimes
+     */
+    @Override
+    public int getUnpublishDataTaskRetryTimes() {
+        return unpublishDataTaskRetryTimes;
+    }
+
+    /**
+     * Setter method for property <tt>unpublishDataTaskRetryTimes </tt>.
+     *
+     * @param unpublishDataTaskRetryTimes  value to be assigned to property unpublishDataTaskRetryTimes
+     */
+    public void setUnpublishDataTaskRetryTimes(int unpublishDataTaskRetryTimes) {
+        this.unpublishDataTaskRetryTimes = unpublishDataTaskRetryTimes;
+    }
+
+    /**
+     * Getter method for property <tt>datumSnapshotTaskRetryTimes</tt>.
+     *
+     * @return property value of datumSnapshotTaskRetryTimes
+     */
+    @Override
+    public int getDatumSnapshotTaskRetryTimes() {
+        return datumSnapshotTaskRetryTimes;
+    }
+
+    /**
+     * Setter method for property <tt>datumSnapshotTaskRetryTimes </tt>.
+     *
+     * @param datumSnapshotTaskRetryTimes  value to be assigned to property datumSnapshotTaskRetryTimes
+     */
+    public void setDatumSnapshotTaskRetryTimes(int datumSnapshotTaskRetryTimes) {
+        this.datumSnapshotTaskRetryTimes = datumSnapshotTaskRetryTimes;
+    }
+
+    /**
+     * Getter method for property <tt>reNewDatumTaskRetryTimes</tt>.
+     *
+     * @return property value of reNewDatumTaskRetryTimes
+     */
+    @Override
+    public int getReNewDatumTaskRetryTimes() {
+        return reNewDatumTaskRetryTimes;
+    }
+
+    /**
+     * Setter method for property <tt>reNewDatumTaskRetryTimes </tt>.
+     *
+     * @param reNewDatumTaskRetryTimes  value to be assigned to property reNewDatumTaskRetryTimes
+     */
+    public void setReNewDatumTaskRetryTimes(int reNewDatumTaskRetryTimes) {
+        this.reNewDatumTaskRetryTimes = reNewDatumTaskRetryTimes;
     }
 
     /**

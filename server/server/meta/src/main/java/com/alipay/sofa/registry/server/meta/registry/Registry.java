@@ -16,12 +16,12 @@
  */
 package com.alipay.sofa.registry.server.meta.registry;
 
+import java.util.List;
+
 import com.alipay.sofa.registry.common.model.Node;
 import com.alipay.sofa.registry.common.model.Node.NodeType;
 import com.alipay.sofa.registry.common.model.metaserver.DataCenterNodes;
 import com.alipay.sofa.registry.common.model.metaserver.NodeChangeResult;
-
-import java.util.List;
 
 /**
  *
@@ -59,7 +59,7 @@ public interface Registry<T extends Node> {
     void evict();
 
     /**
-     * renew node expire time
+     * reNew node expire time
      * @param node
      */
     void reNew(T node, int duration);

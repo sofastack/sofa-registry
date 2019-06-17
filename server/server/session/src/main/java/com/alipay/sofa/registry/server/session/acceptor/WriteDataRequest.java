@@ -14,31 +14,31 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alipay.sofa.registry.server.session.correction.service;
-
-import com.alipay.sofa.registry.common.model.store.Publisher;
-
-import java.util.List;
-import java.util.Map;
+package com.alipay.sofa.registry.server.session.acceptor;
 
 /**
  *
+ * @author kezhu.wukz
  * @author shangyu.wh
- * @version $Id: PublisherDigestService.java, v 0.1 2019-05-30 21:08 shangyu.wh Exp $
+ * @version 1.0: WriteDataRequest.java, v 0.1 2019-06-06 18:42 shangyu.wh Exp $
  */
-public interface PublisherDigestService {
+public interface WriteDataRequest<T> {
 
     /**
-     * get session store all publisher digest sum group by dataServerAddress,at same client connectId
-     * @param connectId
-     * @return dataServerIp+digestValue
+     * The enum for request type
      */
-    Map<String, String> getConnectDigest(String connectId);
+    enum WriteDataRequestType {
+        PUBLISHER, UN_PUBLISHER, CLIENT_OFF, RENEW_DATUM, DATUM_SNAPSHOT
+    }
 
     /**
-     * get session store all publishers group by dataServerAddress,at same client connectId
-     * @param connectId
-     * @return
+     * Gets request body.
+     *
+     * @return the request body
      */
-    Map<String, List<Publisher>> getConnectSnapShot(String connectId);
+    T getRequestBody();
+
+    WriteDataRequestType getRequestType();
+
+    String getConnectId();
 }

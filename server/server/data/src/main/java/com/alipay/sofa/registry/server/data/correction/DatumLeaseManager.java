@@ -26,6 +26,7 @@ import java.util.concurrent.TimeUnit;
 import org.apache.commons.lang.time.DateFormatUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import com.alipay.sofa.registry.common.model.constants.ValueConstants;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.server.data.bootstrap.DataServerConfig;
@@ -46,6 +47,10 @@ public class DatumLeaseManager {
                                                                               .getLogger(DatumLeaseManager.class);
     private static final TimeZone              TIME_ZONE                  = TimeZone
                                                                               .getTimeZone("Asia/Shanghai");
+    private static final Logger                RENEW_LOGGER               = LoggerFactory
+                                                                              .getLogger(
+                                                                                  ValueConstants.LOGGER_NAME_RENEW,
+                                                                                  "[DatumLeaseManager]");
 
     /** record the latest heartbeat time for each connectId, format: connectId -> lastRenewTimestamp */
     private final Map<String, Long>            connectIdReNewTimestampMap = new ConcurrentHashMap<>();
@@ -54,6 +59,7 @@ public class DatumLeaseManager {
     private ConcurrentHashMap<String, Boolean> locksForConnectId          = new ConcurrentHashMap();
 
     private final AsyncHashedWheelTimer        datumAsyncHashedWheelTimer;
+
     private final ThreadPoolExecutor           datumExpiredCheckExecutor;
 
     @Autowired
@@ -90,6 +96,10 @@ public class DatumLeaseManager {
      * record the reNew timestamp
      */
     public void reNew(String connectId) {
+        if (RENEW_LOGGER.isDebugEnabled()) {
+            RENEW_LOGGER.debug("reNew: connectId={}", connectId);
+        }
+
         // record the reNew timestamp
         connectIdReNewTimestampMap.put(connectId, System.currentTimeMillis());
         // try to trigger evict task
@@ -110,14 +120,18 @@ public class DatumLeaseManager {
         }
 
         datumAsyncHashedWheelTimer.newTimeout(_timeout -> {
-            boolean continued    = true;
-            long    nextDelaySec = 0;
+            boolean continued = true;
+            long nextDelaySec = 0;
             try {
                 // release lock
                 locksForConnectId.remove(connectId);
 
                 // get lastReNewTime of this connectId
                 long lastReNewTime = connectIdReNewTimestampMap.get(connectId);
+
+                if (RENEW_LOGGER.isDebugEnabled()) {
+                    RENEW_LOGGER.debug("EvictTask: connectId={}, lastReNewTime={}", connectId, format(lastReNewTime));
+                }
 
                 /*
                  * 1. lastReNewTime expires, then:
@@ -129,16 +143,14 @@ public class DatumLeaseManager {
                 boolean isExpired =
                         System.currentTimeMillis() - lastReNewTime > dataServerConfig.getDatumTimeToLiveSec() * 1000L;
                 if (isExpired) {
-                    LOGGER.info("ConnectId({}) expired, lastReNewTime is {}", connectId,
-                            DateFormatUtils.format(lastReNewTime, "yyyy-MM-dd HH:mm:ss", TIME_ZONE));
+                    LOGGER.info("ConnectId({}) expired, lastReNewTime is {}", connectId, format(lastReNewTime));
                     connectIdReNewTimestampMap.remove(connectId, lastReNewTime);
                     disconnectEventHandler.receive(new ClientDisconnectEvent(connectId, System.currentTimeMillis(),
                             dataServerConfig.getClientOffDelayMs() * 10));
                     continued = false;
                 } else {
-                    nextDelaySec =
-                            dataServerConfig.getDatumTimeToLiveSec() -
-                                    (System.currentTimeMillis() - lastReNewTime) / 1000L;
+                    nextDelaySec = dataServerConfig.getDatumTimeToLiveSec()
+                                   - (System.currentTimeMillis() - lastReNewTime) / 1000L;
                     nextDelaySec = nextDelaySec <= 0 ? 1 : nextDelaySec;
                 }
 
@@ -150,5 +162,13 @@ public class DatumLeaseManager {
             }
         }, delaySec, TimeUnit.SECONDS);
 
+        if (RENEW_LOGGER.isDebugEnabled()) {
+            RENEW_LOGGER.debug("scheduleEvictTask: connectId={}, delaySec={}", connectId, delaySec);
+        }
+
+    }
+
+    private String format(long lastReNewTime) {
+        return DateFormatUtils.format(lastReNewTime, "yyyy-MM-dd HH:mm:ss", TIME_ZONE);
     }
 }
