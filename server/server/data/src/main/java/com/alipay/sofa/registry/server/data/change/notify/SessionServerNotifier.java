@@ -16,6 +16,13 @@
  */
 package com.alipay.sofa.registry.server.data.change.notify;
 
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.concurrent.TimeUnit;
+
+import org.springframework.beans.factory.annotation.Autowired;
+
 import com.alipay.remoting.Connection;
 import com.alipay.sofa.registry.common.model.CommonResponse;
 import com.alipay.sofa.registry.common.model.dataserver.Datum;
@@ -33,12 +40,6 @@ import com.alipay.sofa.registry.server.data.remoting.sessionserver.SessionServer
 import com.alipay.sofa.registry.timer.AsyncHashedWheelTimer;
 import com.alipay.sofa.registry.timer.AsyncHashedWheelTimer.TaskFailedCallback;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
-import org.springframework.beans.factory.annotation.Autowired;
-
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.concurrent.TimeUnit;
 
 /**
  * Notify session DataChangeRequest,if fail get result callback retry
@@ -61,6 +62,9 @@ public class SessionServerNotifier implements IDataChangeNotifier {
 
     @Autowired
     private SessionServerConnectionFactory sessionServerConnectionFactory;
+
+    @Autowired
+    private DatumCache                     datumCache;
 
     public SessionServerNotifier() {
         ThreadFactoryBuilder threadFactoryBuilder = new ThreadFactoryBuilder();
@@ -140,7 +144,7 @@ public class SessionServerNotifier implements IDataChangeNotifier {
                             connection.getRemoteAddress(), notifyCallback.retryTimes, request));
                 }
                 //check version, if it's fall behind, stop retry
-                long currentVersion = DatumCache.get(request.getDataCenter(), request.getDataInfoId()).getVersion();
+                long currentVersion = datumCache.get(request.getDataCenter(), request.getDataInfoId()).getVersion();
                 if (request.getVersion() == currentVersion) {
                     doNotify(notifyCallback);
                 } else {

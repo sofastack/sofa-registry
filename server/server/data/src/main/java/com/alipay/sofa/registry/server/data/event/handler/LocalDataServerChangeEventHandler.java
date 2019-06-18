@@ -16,6 +16,19 @@
  */
 package com.alipay.sofa.registry.server.data.event.handler;
 
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Executor;
+import java.util.concurrent.LinkedBlockingDeque;
+import java.util.concurrent.atomic.AtomicBoolean;
+
+import org.springframework.beans.factory.annotation.Autowired;
+
 import com.alipay.sofa.registry.common.model.CommonResponse;
 import com.alipay.sofa.registry.common.model.dataserver.Datum;
 import com.alipay.sofa.registry.common.model.dataserver.NotifyFetchDatumRequest;
@@ -40,18 +53,6 @@ import com.alipay.sofa.registry.server.data.remoting.dataserver.DataServerNodeFa
 import com.alipay.sofa.registry.server.data.util.LocalServerStatusEnum;
 import com.alipay.sofa.registry.server.data.util.TimeUtil;
 import com.google.common.collect.Lists;
-import org.springframework.beans.factory.annotation.Autowired;
-
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Set;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.Executor;
-import java.util.concurrent.LinkedBlockingDeque;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  *
@@ -79,6 +80,9 @@ public class LocalDataServerChangeEventHandler extends
 
     @Autowired
     private DataNodeStatus                            dataNodeStatus;
+
+    @Autowired
+    private DatumCache                                datumCache;
 
     private BlockingQueue<LocalDataServerChangeEvent> events    = new LinkedBlockingDeque<>();
 
@@ -182,7 +186,7 @@ public class LocalDataServerChangeEventHandler extends
                             for (Entry<String, BackupTriad> dataTriadEntry : dataTriadMap
                                 .entrySet()) {
                                 String dataInfoId = dataTriadEntry.getKey();
-                                Datum datum = DatumCache.get(dataCenter, dataInfoId);
+                                Datum datum = datumCache.get(dataCenter, dataInfoId);
                                 if (datum != null) {
                                     versionMap.put(dataInfoId, datum.getVersion());
                                 }
@@ -236,7 +240,7 @@ public class LocalDataServerChangeEventHandler extends
             }
 
             //compute new triad for every datum in cache
-            Map<String, Map<String, Datum>> allMap = DatumCache.getAll();
+            Map<String, Map<String, Datum>> allMap = datumCache.getAll();
             for (Entry<String, Map<String, Datum>> dataCenterEntry : allMap.entrySet()) {
                 String dataCenter = dataCenterEntry.getKey();
                 Map<String, Datum> datumMap = dataCenterEntry.getValue();

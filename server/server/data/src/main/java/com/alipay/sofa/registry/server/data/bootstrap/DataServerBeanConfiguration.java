@@ -32,7 +32,9 @@ import org.springframework.context.annotation.Import;
 import com.alipay.sofa.registry.remoting.bolt.exchange.BoltExchange;
 import com.alipay.sofa.registry.remoting.exchange.Exchange;
 import com.alipay.sofa.registry.remoting.jersey.exchange.JerseyExchange;
+import com.alipay.sofa.registry.server.data.cache.CacheDigestTask;
 import com.alipay.sofa.registry.server.data.cache.DataServerCache;
+import com.alipay.sofa.registry.server.data.cache.DatumCache;
 import com.alipay.sofa.registry.server.data.change.DataChangeHandler;
 import com.alipay.sofa.registry.server.data.change.event.DataChangeEventCenter;
 import com.alipay.sofa.registry.server.data.change.notify.BackUpNotifier;
@@ -127,10 +129,26 @@ public class DataServerBeanConfiguration {
             return new DataNodeStatus();
         }
 
+        @Bean
+        public DatumCache datumCache() {
+            return new DatumCache();
+        }
+
         @Bean(name = "PropertySplitter")
         public PropertySplitter propertySplitter() {
             return new PropertySplitter();
         }
+
+    }
+
+    @Configuration
+    public static class LogTaskConfigConfiguration {
+
+        @Bean
+        public CacheDigestTask cacheDigestTask() {
+            return new CacheDigestTask();
+        }
+
     }
 
     @Configuration

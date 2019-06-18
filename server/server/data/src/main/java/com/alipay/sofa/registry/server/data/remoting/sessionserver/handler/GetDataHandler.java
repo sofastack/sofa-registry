@@ -49,11 +49,15 @@ public class GetDataHandler extends AbstractServerHandler<GetDataRequest> {
 
     /** LOGGER */
     private static final Logger LOGGER = LoggerFactory.getLogger(GetDataHandler.class);
+
     @Autowired
     private ForwardService      forwardService;
 
     @Autowired
     private DataServerConfig    dataServerBootstrapConfig;
+
+    @Autowired
+    private DatumCache          datumCache;
 
     private ThreadPoolExecutor  getDataProcessorExecutor;
 
@@ -78,7 +82,7 @@ public class GetDataHandler extends AbstractServerHandler<GetDataRequest> {
             }
         }
 
-        return new GenericResponse<Map<String, Datum>>().fillSucceed(DatumCache
+        return new GenericResponse<Map<String, Datum>>().fillSucceed(datumCache
             .getDatumGroupByDataCenter(request.getDataCenter(), dataInfoId));
     }
 

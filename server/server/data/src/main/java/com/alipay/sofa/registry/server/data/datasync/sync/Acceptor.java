@@ -16,13 +16,6 @@
  */
 package com.alipay.sofa.registry.server.data.datasync.sync;
 
-import com.alipay.sofa.registry.common.model.dataserver.Datum;
-import com.alipay.sofa.registry.common.model.dataserver.SyncData;
-import com.alipay.sofa.registry.log.Logger;
-import com.alipay.sofa.registry.log.LoggerFactory;
-import com.alipay.sofa.registry.server.data.cache.DatumCache;
-import com.alipay.sofa.registry.server.data.datasync.Operator;
-
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -35,6 +28,13 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
+
+import com.alipay.sofa.registry.common.model.dataserver.Datum;
+import com.alipay.sofa.registry.common.model.dataserver.SyncData;
+import com.alipay.sofa.registry.log.Logger;
+import com.alipay.sofa.registry.log.LoggerFactory;
+import com.alipay.sofa.registry.server.data.cache.DatumCache;
+import com.alipay.sofa.registry.server.data.datasync.Operator;
 
 /**
  *
@@ -57,16 +57,19 @@ public class Acceptor {
     private final Lock                      read                  = readWriteLock.readLock();
     private final Lock                      write                 = readWriteLock.writeLock();
 
+    private final DatumCache                datumCache;
+
     /**
      * constructor
      * @param maxBufferSize
      * @param dataInfoId
      * @param dataCenter
      */
-    public Acceptor(int maxBufferSize, String dataInfoId, String dataCenter) {
+    public Acceptor(int maxBufferSize, String dataInfoId, String dataCenter, DatumCache datumCache) {
         this.maxBufferSize = maxBufferSize;
         this.dataInfoId = dataInfoId;
         this.dataCenter = dataCenter;
+        this.datumCache = datumCache;
     }
 
     /**
@@ -146,7 +149,7 @@ public class Acceptor {
                 //first get all data
                 if (operators.isEmpty()) {
                     wholeDataTag = true;
-                    retList.add(DatumCache.get(dataCenter, dataInfoId));
+                    retList.add(datumCache.get(dataCenter, dataInfoId));
                     LOGGER.info("Get all data!dataInfoID:{} dataCenter:{}.All data size{}:",
                         dataInfoId, dataCenter, retList.size());
                 } else {
@@ -162,7 +165,7 @@ public class Acceptor {
                         "Append log queue is empty,Maybe all logs record expired or no operator append!So must get all data!dataInfoID:{} dataCenter:{}.queue size{}:",
                         dataInfoId, dataCenter, logOperatorsOrder.size());
                 wholeDataTag = true;
-                retList.add(DatumCache.get(dataCenter, dataInfoId));
+                retList.add(datumCache.get(dataCenter, dataInfoId));
                 syncData = new SyncData(dataInfoId, dataCenter, wholeDataTag, retList);
             }
 

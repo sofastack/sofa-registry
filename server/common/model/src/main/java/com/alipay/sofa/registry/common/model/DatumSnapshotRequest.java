@@ -78,7 +78,6 @@ public class DatumSnapshotRequest implements Serializable {
         sb.append("connectId='").append(connectId).append('\'');
         sb.append(", dataServerIp='").append(dataServerIp).append('\'');
         sb.append(", publishers=").append(publishers);
-        sb.append(", super=").append(super.toString());
         sb.append('}');
         return sb.toString();
     }

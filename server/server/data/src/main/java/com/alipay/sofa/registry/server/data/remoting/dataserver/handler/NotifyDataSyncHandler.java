@@ -16,6 +16,15 @@
  */
 package com.alipay.sofa.registry.server.data.remoting.dataserver.handler;
 
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.Executor;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
+
+import org.springframework.beans.factory.annotation.Autowired;
+
 import com.alipay.remoting.Connection;
 import com.alipay.sofa.registry.common.model.CommonResponse;
 import com.alipay.sofa.registry.common.model.Node;
@@ -39,14 +48,6 @@ import com.alipay.sofa.registry.server.data.util.LocalServerStatusEnum;
 import com.alipay.sofa.registry.server.data.util.ThreadPoolExecutorDataServer;
 import com.alipay.sofa.registry.util.NamedThreadFactory;
 import com.alipay.sofa.registry.util.ParaCheckUtil;
-import org.springframework.beans.factory.annotation.Autowired;
-
-import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.Executor;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
 
 /**
  *
@@ -79,6 +80,9 @@ public class NotifyDataSyncHandler extends AbstractClientHandler<NotifyDataSyncR
     @Autowired
     private DataNodeStatus                                        dataNodeStatus;
 
+    @Autowired
+    private DatumCache                                            datumCache;
+
     private static final BlockingQueue<SyncDataRequestForWorking> noWorkQueue = new LinkedBlockingQueue<>();
 
     @Override
@@ -98,23 +102,21 @@ public class NotifyDataSyncHandler extends AbstractClientHandler<NotifyDataSyncR
         return CommonResponse.buildSuccessResponse();
     }
 
-    private void executorRequest(Connection connection,NotifyDataSyncRequest request){
+    private void executorRequest(Connection connection, NotifyDataSyncRequest request) {
         executor.execute(() -> {
             String dataInfoId = request.getDataInfoId();
             String dataCenter = request.getDataCenter();
-            Datum datum = DatumCache.get(dataCenter, dataInfoId);
+            Datum datum = datumCache.get(dataCenter, dataInfoId);
             Long version = (datum == null) ? null : datum.getVersion();
             Long requestVersion = request.getVersion();
             if (version == null || requestVersion == 0L || version < requestVersion) {
-                LOGGER.info(
-                        "[NotifyDataSyncProcessor] begin get sync data, currentVersion={},request={}", version,
+                LOGGER.info("[NotifyDataSyncProcessor] begin get sync data, currentVersion={},request={}", version,
                         request);
-                getSyncDataHandler
-                        .syncData(new SyncDataCallback(getSyncDataHandler, connection, new SyncDataRequest(dataInfoId,
-                                dataCenter, version, request.getDataSourceType()), dataChangeEventCenter));
+                getSyncDataHandler.syncData(new SyncDataCallback(getSyncDataHandler, connection,
+                        new SyncDataRequest(dataInfoId, dataCenter, version, request.getDataSourceType()),
+                        dataChangeEventCenter));
             } else {
-                LOGGER.info(
-                        "[NotifyDataSyncHandler] not need to sync data, version={}", version);
+                LOGGER.info("[NotifyDataSyncHandler] not need to sync data, version={}", version);
             }
         });
     }

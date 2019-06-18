@@ -60,6 +60,9 @@ public class UnPublishDataHandler extends AbstractServerHandler<UnPublishDataReq
     @Autowired
     private DatumLeaseManager     datumLeaseManager;
 
+    @Autowired
+    private DatumCache            datumCache;
+
     @Override
     public void checkParam(UnPublishDataRequest request) throws RuntimeException {
         ParaCheckUtil.checkNotBlank(request.getDataInfoId(), "UnPublishDataRequest.dataInfoId");
@@ -80,7 +83,7 @@ public class UnPublishDataHandler extends AbstractServerHandler<UnPublishDataReq
             new UnPublisher(request.getDataInfoId(), request.getRegisterId(), request
                 .getRegisterTimestamp()), dataServerConfig.getLocalDataCenter());
 
-        // Attempt to get connectId from DatumCache (Datum may not exist), and record the reNew timestamp
+        // Attempt to get connectId from datumCache (Datum may not exist), and record the reNew timestamp
         String connectId = getConnectId(request);
         if (connectId != null) {
             datumLeaseManager.reNew(connectId);
@@ -90,12 +93,12 @@ public class UnPublishDataHandler extends AbstractServerHandler<UnPublishDataReq
     }
 
     /**
-     * get connectId from DatumCache
+     * get connectId from datumCache
      */
     private String getConnectId(UnPublishDataRequest request) {
         String dataInfoId = request.getDataInfoId();
         String dataCenter = dataServerConfig.getLocalDataCenter();
-        Datum datum = DatumCache.get(dataCenter, dataInfoId);
+        Datum datum = datumCache.get(dataCenter, dataInfoId);
         Map<String, Publisher> pubMap = datum.getPubMap();
         if (pubMap != null) {
             Publisher publisher = pubMap.get(request.getRegisterId());

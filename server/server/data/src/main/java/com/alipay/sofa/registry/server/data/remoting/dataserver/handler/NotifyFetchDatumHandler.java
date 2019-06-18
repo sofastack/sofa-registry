@@ -16,6 +16,11 @@
  */
 package com.alipay.sofa.registry.server.data.remoting.dataserver.handler;
 
+import java.util.Map;
+import java.util.Map.Entry;
+
+import org.springframework.beans.factory.annotation.Autowired;
+
 import com.alipay.remoting.Connection;
 import com.alipay.sofa.registry.common.model.CommonResponse;
 import com.alipay.sofa.registry.common.model.GenericResponse;
@@ -39,10 +44,6 @@ import com.alipay.sofa.registry.server.data.remoting.dataserver.DataServerConnec
 import com.alipay.sofa.registry.server.data.remoting.handler.AbstractServerHandler;
 import com.alipay.sofa.registry.server.data.util.TimeUtil;
 import com.alipay.sofa.registry.util.ParaCheckUtil;
-import org.springframework.beans.factory.annotation.Autowired;
-
-import java.util.Map;
-import java.util.Map.Entry;
 
 /**
  *
@@ -64,13 +65,13 @@ public class NotifyFetchDatumHandler extends AbstractServerHandler<NotifyFetchDa
     private DataChangeEventCenter       dataChangeEventCenter;
 
     @Autowired
-    private DataServerConfig            dataServerConfig;
-
-    @Autowired
     private Exchange                    boltExchange;
 
     @Autowired
     private DataServerConfig            dataServerBootstrapConfig;
+
+    @Autowired
+    private DatumCache                  datumCache;
 
     @Override
     public void checkParam(NotifyFetchDatumRequest request) throws RuntimeException {
@@ -85,10 +86,9 @@ public class NotifyFetchDatumHandler extends AbstractServerHandler<NotifyFetchDa
         String ip = request.getIp();
         if (version >= dataServerCache.getCurVersion()) {
             if (versionMap.isEmpty()) {
-                LOGGER
-                        .info(
-                                "[NotifyFetchDatumHandler] get changeVersion map is empty,change version is {},current version is {},ip is {}",
-                                version, dataServerCache.getCurVersion(), ip);
+                LOGGER.info(
+                        "[NotifyFetchDatumHandler] get changeVersion map is empty,change version is {},current version is {},ip is {}",
+                        version, dataServerCache.getCurVersion(), ip);
                 dataServerCache.synced(version, ip);
             } else {
                 ExecutorFactory.getCommonExecutor().execute(() -> {
@@ -97,7 +97,7 @@ public class NotifyFetchDatumHandler extends AbstractServerHandler<NotifyFetchDa
                         Map<String, Long> map = dataCenterEntry.getValue();
                         for (Entry<String, Long> dataInfoEntry : map.entrySet()) {
                             String dataInfoId = dataInfoEntry.getKey();
-                            Datum datum = DatumCache.get(dataCenter, dataInfoId);
+                            Datum datum = datumCache.get(dataCenter, dataInfoId);
                             if (datum != null) {
                                 long inVersion = dataInfoEntry.getValue();
                                 long currentVersion = datum.getVersion();
@@ -121,8 +121,7 @@ public class NotifyFetchDatumHandler extends AbstractServerHandler<NotifyFetchDa
                 });
             }
         } else {
-            LOGGER.info(
-                    "[NotifyFetchDatumHandler] ignore notify because changeVersion {} is less than {},ip is {}",
+            LOGGER.info("[NotifyFetchDatumHandler] ignore notify because changeVersion {} is less than {},ip is {}",
                     version, dataServerCache.getCurVersion(), ip);
         }
         return CommonResponse.buildSuccessResponse();
@@ -136,8 +135,8 @@ public class NotifyFetchDatumHandler extends AbstractServerHandler<NotifyFetchDa
      * @param dataInfoId
      */
     private void fetchDatum(String targetIp, String dataCenter, String dataInfoId) {
-        while ((dataServerCache.getDataServers(dataServerConfig.getLocalDataCenter()).keySet())
-            .contains(targetIp)) {
+        while ((dataServerCache.getDataServers(dataServerBootstrapConfig.getLocalDataCenter())
+            .keySet()).contains(targetIp)) {
             Connection connection = dataServerConnectionFactory.getConnection(targetIp);
             if (connection == null || !connection.isFine()) {
                 throw new RuntimeException(String.format("connection of %s is not available",

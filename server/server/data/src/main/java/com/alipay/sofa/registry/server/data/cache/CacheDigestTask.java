@@ -16,19 +16,21 @@
  */
 package com.alipay.sofa.registry.server.data.cache;
 
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.util.CollectionUtils;
+
 import com.alipay.sofa.registry.common.model.dataserver.Datum;
 import com.alipay.sofa.registry.common.model.store.Publisher;
 import com.alipay.sofa.registry.common.model.store.URL;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.util.NamedThreadFactory;
-import org.springframework.util.CollectionUtils;
-
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ScheduledThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
 
 /**
  *
@@ -39,20 +41,23 @@ public class CacheDigestTask {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(CacheDigestTask.class);
 
+    @Autowired
+    private DatumCache          datumCache;
+
     /**
      *
      */
     public void start() {
-        ScheduledExecutorService executor = new ScheduledThreadPoolExecutor(1, new NamedThreadFactory("CacheDigestTask"));
+        ScheduledExecutorService executor = new ScheduledThreadPoolExecutor(1,
+                new NamedThreadFactory("CacheDigestTask"));
         executor.scheduleAtFixedRate(() -> {
             try {
-                Map<String, Map<String, Datum>> allMap = DatumCache.getAll();
+                Map<String, Map<String, Datum>> allMap = datumCache.getAll();
                 if (!allMap.isEmpty()) {
                     for (Entry<String, Map<String, Datum>> dataCenterEntry : allMap.entrySet()) {
                         String dataCenter = dataCenterEntry.getKey();
                         Map<String, Datum> datumMap = dataCenterEntry.getValue();
-                        LOGGER.info("[CacheDigestTask] size of datum in {} is {}",
-                                dataCenter, datumMap.size());
+                        LOGGER.info("[CacheDigestTask] size of datum in {} is {}", dataCenter, datumMap.size());
                         for (Entry<String, Datum> dataInfoEntry : datumMap.entrySet()) {
                             String dataInfoId = dataInfoEntry.getKey();
                             Datum data = dataInfoEntry.getValue();
@@ -63,14 +68,12 @@ public class CacheDigestTask {
                                     pubStr.append(logPublisher(publisher)).append(";");
                                 }
                             }
-                            LOGGER.info(
-                                    "[Datum] dataInfoId={}, version={}, dataCenter={}, publishers=[{}]",
-                                    dataInfoId, data.getVersion(), dataCenter, pubStr.toString());
+                            LOGGER.info("[Datum] dataInfoId={}, version={}, dataCenter={}, publishers=[{}]", dataInfoId,
+                                    data.getVersion(), dataCenter, pubStr.toString());
                         }
                         int pubCount = datumMap.values().stream().map(Datum::getPubMap)
                                 .filter(map -> map != null && !map.isEmpty()).mapToInt(Map::size).sum();
-                        LOGGER.info("[CacheDigestTask] size of publisher in {} is {}",
-                                dataCenter, pubCount);
+                        LOGGER.info("[CacheDigestTask] size of publisher in {} is {}", dataCenter, pubCount);
                     }
                 } else {
                     LOGGER.info("[CacheDigestTask] datum cache is empty");

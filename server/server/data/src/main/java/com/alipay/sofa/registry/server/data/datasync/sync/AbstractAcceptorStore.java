@@ -33,6 +33,7 @@ import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.remoting.Server;
 import com.alipay.sofa.registry.remoting.exchange.Exchange;
 import com.alipay.sofa.registry.server.data.bootstrap.DataServerConfig;
+import com.alipay.sofa.registry.server.data.cache.DatumCache;
 import com.alipay.sofa.registry.server.data.datasync.AcceptorStore;
 import com.alipay.sofa.registry.server.data.datasync.Operator;
 import com.alipay.sofa.registry.server.data.remoting.dataserver.DataServerConnectionFactory;
@@ -66,6 +67,9 @@ public abstract class AbstractAcceptorStore implements AcceptorStore {
 
     @Autowired
     private DataServerConnectionFactory                                      dataServerConnectionFactory;
+
+    @Autowired
+    private DatumCache                                                       datumCache;
 
     private Map<String/*dataCenter*/, Map<String/*dataInfoId*/, Acceptor>> acceptors               = new ConcurrentHashMap<>();
 
@@ -106,7 +110,8 @@ public abstract class AbstractAcceptorStore implements AcceptorStore {
 
             Acceptor existAcceptor = acceptorMap.get(dataInfoId);
             if (existAcceptor == null) {
-                Acceptor newAcceptor = new Acceptor(DEFAULT_MAX_BUFFER_SIZE, dataInfoId, dataCenter);
+                Acceptor newAcceptor = new Acceptor(DEFAULT_MAX_BUFFER_SIZE, dataInfoId,
+                    dataCenter, datumCache);
                 existAcceptor = acceptorMap.putIfAbsent(dataInfoId, newAcceptor);
                 if (existAcceptor == null) {
                     existAcceptor = newAcceptor;

@@ -17,6 +17,7 @@
 package com.alipay.sofa.registry.server.session.scheduler.task;
 
 import com.alipay.sofa.registry.common.model.ReNewDatumRequest;
+import com.alipay.sofa.registry.common.model.constants.ValueConstants;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
@@ -31,8 +32,9 @@ import com.alipay.sofa.registry.task.listener.TaskEvent;
  */
 public class ReNewDatumTask extends AbstractSessionTask {
 
-    private final static Logger       LOGGER = LoggerFactory.getLogger(ReNewDatumTask.class,
-                                                 "[Task]");
+    private static final Logger       RENEW_LOGGER = LoggerFactory.getLogger(
+                                                       ValueConstants.LOGGER_NAME_RENEW,
+                                                       "[ReNewDatumTask]");
 
     private final DataNodeService     dataNodeService;
 
@@ -55,7 +57,7 @@ public class ReNewDatumTask extends AbstractSessionTask {
         try {
             Boolean result = dataNodeService.reNewDatum(reNewDatumRequest);
             if (!result) {
-                LOGGER
+                RENEW_LOGGER
                     .info(
                         "ReNew datum request to dataNode got sub digest different! reNewDatumRequest={}",
                         reNewDatumRequest);
@@ -65,7 +67,7 @@ public class ReNewDatumTask extends AbstractSessionTask {
 
             }
         } catch (Exception e) {
-            LOGGER.error("ReNew datum request to dataNode error!  reNewDatumRequest={}",
+            RENEW_LOGGER.error("ReNew datum request to dataNode error!  reNewDatumRequest={}",
                 reNewDatumRequest, e);
         }
     }

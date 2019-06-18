@@ -186,12 +186,13 @@ public class BaseIntegrationTest {
     }
 
     protected static void clearData() throws Exception {
-        DatumCache.getAll().clear();
+        DatumCache datumCache = (DatumCache) dataApplicationContext.getBean("datumCache");
+        datumCache.getAll().clear();
         List<String> connectIds = new ArrayList<>(Arrays.asList(
             NetUtil.genHost(LOCAL_ADDRESS, getSourcePort(registryClient1)),
             NetUtil.genHost(LOCAL_ADDRESS, getSourcePort(registryClient2))));
         for (String connectId : connectIds) {
-            Map<String, Publisher> publisherMap = DatumCache.getByConnectId(connectId);
+            Map<String, Publisher> publisherMap = datumCache.getByConnectId(connectId);
             if (publisherMap != null) {
                 publisherMap.clear();
             }

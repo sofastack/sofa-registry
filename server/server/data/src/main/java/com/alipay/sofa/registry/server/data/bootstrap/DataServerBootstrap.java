@@ -84,6 +84,9 @@ public class DataServerBootstrap {
     @Autowired
     private EventCenter                       eventCenter;
 
+    @Autowired
+    private CacheDigestTask                   cacheDigestTask;
+
     @Resource(name = "serverHandlers")
     private Collection<AbstractServerHandler> serverHandlers;
 
@@ -195,11 +198,10 @@ public class DataServerBootstrap {
                 // start all startTask except correction task
                 eventCenter.post(new StartTaskEvent(
                         Arrays.stream(StartTaskTypeEnum.values()).filter(type -> type != StartTaskTypeEnum.RENEW)
-                                .collect(
-                                        Collectors.toSet())));
+                                .collect(Collectors.toSet())));
 
                 //start dump log
-                new CacheDigestTask().start();
+                cacheDigestTask.start();
             }
         } catch (Exception e) {
             schedulerStarted.set(false);

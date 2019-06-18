@@ -85,13 +85,15 @@ public class DataChangeEventQueue {
 
     private DataChangeEventCenter                      dataChangeEventCenter;
 
+    private DatumCache                                 datumCache;
+
     /**
      * constructor
      * @param queueIdx
      * @param dataServerConfig
      */
     public DataChangeEventQueue(int queueIdx, DataServerConfig dataServerConfig,
-                                DataChangeEventCenter dataChangeEventCenter) {
+                                DataChangeEventCenter dataChangeEventCenter, DatumCache datumCache) {
         this.queueIdx = queueIdx;
         this.name = String.format("%s_%s", DataChangeEventQueue.class.getSimpleName(), queueIdx);
         this.dataServerConfig = dataServerConfig;
@@ -104,6 +106,7 @@ public class DataChangeEventQueue {
         this.notifyIntervalMs = dataServerConfig.getNotifyIntervalMs();
         this.notifyTempDataIntervalMs = dataServerConfig.getNotifyTempDataIntervalMs();
         this.dataChangeEventCenter = dataChangeEventCenter;
+        this.datumCache = datumCache;
     }
 
     /**
@@ -211,7 +214,7 @@ public class DataChangeEventQueue {
     private void handleClientOff(ClientChangeEvent event) {
         String connectId = event.getHost();
         synchronized (Interners.newWeakInterner().intern(connectId)) {
-            Map<String, Publisher> pubMap = DatumCache.getByConnectId(connectId);
+            Map<String, Publisher> pubMap = datumCache.getByConnectId(connectId);
             if (pubMap != null && !pubMap.isEmpty()) {
                 LOGGER.info(
                     "[{}] client off begin, connectId={}, occurTimestamp={}, all pubSize={}",
@@ -289,7 +292,7 @@ public class DataChangeEventQueue {
         String connectId = event.getHost();
         Map<String, Publisher> snapshotPubMap = event.getPubMap();
         synchronized (Interners.newWeakInterner().intern(connectId)) {
-            Map<String, Publisher> pubMap = DatumCache.getByConnectId(connectId);
+            Map<String, Publisher> pubMap = datumCache.getByConnectId(connectId);
             LOGGER.info("[{}] snapshot begin, connectId={}, old pubSize={}, snapshot pubSize={}",
                 getName(), connectId, pubMap != null ? pubMap.size() : null, snapshotPubMap.size());
             int unpubSize = 0;

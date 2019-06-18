@@ -58,6 +58,9 @@ public class ReNewDatumHandler extends AbstractServerHandler<ReNewDatumRequest> 
     @Autowired
     private DatumLeaseManager   datumLeaseManager;
 
+    @Autowired
+    private DatumCache          datumCache;
+
     @Override
     public void checkParam(ReNewDatumRequest request) throws RuntimeException {
         ParaCheckUtil.checkNotBlank(request.getConnectId(), "ReNewDatumRequest.connectId");
@@ -104,15 +107,15 @@ public class ReNewDatumHandler extends AbstractServerHandler<ReNewDatumRequest> 
     }
 
     /**
-     * 1. Update the timestamp corresponding to connectId in DatumCache
-     * 2. Compare checksum: Get all pubs corresponding to the connId from DatumCache and calculate checksum.
+     * 1. Update the timestamp corresponding to connectId in datumCache
+     * 2. Compare checksum: Get all pubs corresponding to the connId from datumCache and calculate checksum.
      */
     private boolean reNewDatum(ReNewDatumRequest request) {
         String connectId = request.getConnectId();
-
-        Map<String, Publisher> publisherMap = DatumCache.getByConnectId(connectId);
-
         String renewDigest = request.getDigestSum();
+
+        // Get all pubs corresponding to the connectId from datumCache
+        Map<String, Publisher> publisherMap = datumCache.getOwnByConnectId(connectId);
         String cacheDigest = null;
         if (publisherMap != null && publisherMap.values().size() > 0) {
             cacheDigest = String.valueOf(PublisherDigestUtil.getDigestValueSum(publisherMap

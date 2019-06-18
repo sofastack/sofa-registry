@@ -60,6 +60,9 @@ public class LocalDataServerCleanHandler {
     @Autowired
     private DataChangeEventCenter                       dataChangeEventCenter;
 
+    @Autowired
+    private DatumCache                                  datumCache;
+
     private LocalCleanTask                              task;
 
     /**
@@ -71,8 +74,7 @@ public class LocalDataServerCleanHandler {
      * constructor
      */
     public LocalDataServerCleanHandler() {
-        Executor executor = ExecutorFactory
-                .newSingleThreadExecutor(LocalDataServerCleanHandler.class.getSimpleName());
+        Executor executor = ExecutorFactory.newSingleThreadExecutor(LocalDataServerCleanHandler.class.getSimpleName());
         executor.execute(() -> {
             while (true) {
                 try {
@@ -122,7 +124,7 @@ public class LocalDataServerCleanHandler {
                     ConsistentHash<DataNode> consistentHash = new ConsistentHash<>(
                         dataServerBootstrapConfig.getNumberOfReplicas(), dataNodeMap.values());
 
-                    Map<String, Map<String, Datum>> dataMapAll = DatumCache.getAll();
+                    Map<String, Map<String, Datum>> dataMapAll = datumCache.getAll();
 
                     for (Entry<String, Map<String, Datum>> entryAll : dataMapAll.entrySet()) {
                         String dataCenter = entryAll.getKey();

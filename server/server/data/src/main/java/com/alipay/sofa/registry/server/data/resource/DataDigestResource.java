@@ -70,6 +70,9 @@ public class DataDigestResource {
     @Autowired
     private DataServerConfig               dataServerConfig;
 
+    @Autowired
+    private DatumCache                     datumCache;
+
     @GET
     @Path("datum/query")
     @Produces(MediaType.APPLICATION_JSON)
@@ -83,9 +86,9 @@ public class DataDigestResource {
 
             String dataInfoId = DataInfo.toDataInfoId(dataId, instanceId, group);
             if (isBlank(dataCenter)) {
-                retList = DatumCache.get(dataInfoId);
+                retList = datumCache.get(dataInfoId);
             } else {
-                retList.put(dataCenter, DatumCache.get(dataCenter, dataInfoId));
+                retList.put(dataCenter, datumCache.get(dataCenter, dataInfoId));
             }
 
         }
@@ -101,7 +104,7 @@ public class DataDigestResource {
             map.forEach((ip, port) -> {
                 String connectId = NetUtil.genHost(ip, Integer.valueOf(port));
                 if (!connectId.isEmpty()) {
-                    Map<String, Publisher> publisherMap = DatumCache.getByConnectId(connectId);
+                    Map<String, Publisher> publisherMap = datumCache.getByConnectId(connectId);
                     if (publisherMap != null && !publisherMap.isEmpty()) {
                         ret.put(connectId, publisherMap);
                     }
@@ -118,17 +121,15 @@ public class DataDigestResource {
         StringBuilder sb = new StringBuilder("CacheDigest");
         try {
 
-            Map<String, Map<String, Datum>> allMap = DatumCache.getAll();
+            Map<String, Map<String, Datum>> allMap = datumCache.getAll();
             if (!allMap.isEmpty()) {
                 for (Entry<String, Map<String, Datum>> dataCenterEntry : allMap.entrySet()) {
                     String dataCenter = dataCenterEntry.getKey();
                     Map<String, Datum> datumMap = dataCenterEntry.getValue();
-                    sb.append(String.format(" [Datum] size of datum in %s is %s",
-                            dataCenter, datumMap.size()));
+                    sb.append(String.format(" [Datum] size of datum in %s is %s", dataCenter, datumMap.size()));
                     int pubCount = datumMap.values().stream().map(Datum::getPubMap)
                             .filter(map -> map != null && !map.isEmpty()).mapToInt(Map::size).sum();
-                    sb.append(String.format(",[Publisher] size of publisher in %s is %s",
-                            dataCenter, pubCount));
+                    sb.append(String.format(",[Publisher] size of publisher in %s is %s", dataCenter, pubCount));
                 }
             } else {
                 sb.append(" datum cache is empty");
@@ -174,24 +175,25 @@ public class DataDigestResource {
     }
 
     public List<String> getSessionServerList() {
-        List<String> connections = sessionServerConnectionFactory.getConnections().stream().filter(connection -> connection != null && connection.isFine())
+        List<String> connections = sessionServerConnectionFactory.getConnections().stream()
+                .filter(connection -> connection != null && connection.isFine())
                 .map(connection -> connection.getRemoteIP() + ":" + connection.getRemotePort())
                 .collect(Collectors.toList());
         return connections;
     }
 
-    public Map<String,List<String>> getDataServerList() {
+    public Map<String, List<String>> getDataServerList() {
 
-        Map<String,List<String>> map = new HashMap<>();
+        Map<String, List<String>> map = new HashMap<>();
         Set<String> allDataCenter = new HashSet<>(DataServerNodeFactory.getAllDataCenters());
-        for (String dataCenter:allDataCenter) {
+        for (String dataCenter : allDataCenter) {
 
-            List<String> list = map.computeIfAbsent(dataCenter,k->new ArrayList<>());
+            List<String> list = map.computeIfAbsent(dataCenter, k -> new ArrayList<>());
 
             Map<String, DataServerNode> dataNodes = DataServerNodeFactory.getDataServerNodes(dataCenter);
-            if(dataNodes != null && !dataNodes.isEmpty()){
+            if (dataNodes != null && !dataNodes.isEmpty()) {
 
-                dataNodes.forEach((ip,dataServerNode)->{
+                dataNodes.forEach((ip, dataServerNode) -> {
                     if (ip != null && !ip.equals(DataServerConfig.IP)) {
                         Connection connection = dataServerNode.getConnection();
                         if (connection != null && connection.isFine()) {
@@ -204,18 +206,18 @@ public class DataDigestResource {
         return map;
     }
 
-    public Map<String,List<String>> getMetaServerList() {
+    public Map<String, List<String>> getMetaServerList() {
 
-        Map<String,List<String>> map = new HashMap<>();
+        Map<String, List<String>> map = new HashMap<>();
         Set<String> allDataCenter = new HashSet<>(metaServerConnectionFactory.getAllDataCenters());
-        for (String dataCenter:allDataCenter) {
+        for (String dataCenter : allDataCenter) {
 
-            List<String> list = map.computeIfAbsent(dataCenter,k->new ArrayList<>());
+            List<String> list = map.computeIfAbsent(dataCenter, k -> new ArrayList<>());
 
             Map<String, Connection> metaConnections = metaServerConnectionFactory.getConnections(dataCenter);
-            if(metaConnections != null && !metaConnections.isEmpty()){
+            if (metaConnections != null && !metaConnections.isEmpty()) {
 
-                metaConnections.forEach((ip,connection)->{
+                metaConnections.forEach((ip, connection) -> {
                     if (connection != null && connection.isFine()) {
                         list.add(connection.getRemoteIP());
                     }

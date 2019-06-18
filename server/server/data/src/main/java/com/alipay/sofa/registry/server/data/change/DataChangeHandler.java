@@ -16,6 +16,15 @@
  */
 package com.alipay.sofa.registry.server.data.change;
 
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.Executor;
+
+import javax.annotation.PostConstruct;
+import javax.annotation.Resource;
+
+import org.springframework.beans.factory.annotation.Autowired;
+
 import com.alipay.sofa.registry.common.model.dataserver.Datum;
 import com.alipay.sofa.registry.common.model.store.Publisher;
 import com.alipay.sofa.registry.log.Logger;
@@ -27,13 +36,6 @@ import com.alipay.sofa.registry.server.data.change.event.DataChangeEventCenter;
 import com.alipay.sofa.registry.server.data.change.event.DataChangeEventQueue;
 import com.alipay.sofa.registry.server.data.change.notify.IDataChangeNotifier;
 import com.alipay.sofa.registry.server.data.executor.ExecutorFactory;
-import org.springframework.beans.factory.InitializingBean;
-import org.springframework.beans.factory.annotation.Autowired;
-
-import javax.annotation.Resource;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.Executor;
 
 /**
  * notify sessionserver when data changed
@@ -41,7 +43,7 @@ import java.util.concurrent.Executor;
  * @author qian.lqlq
  * @version $Id: DataChangeHandler.java, v 0.1 2017-12-07 18:44 qian.lqlq Exp $
  */
-public class DataChangeHandler implements InitializingBean {
+public class DataChangeHandler {
 
     private static final Logger       LOGGER       = LoggerFactory
                                                        .getLogger(DataChangeHandler.class);
@@ -54,26 +56,19 @@ public class DataChangeHandler implements InitializingBean {
     @Autowired
     private DataChangeEventCenter     dataChangeEventCenter;
 
+    @Autowired
+    private DatumCache                datumCache;
+
     @Resource
     private List<IDataChangeNotifier> dataChangeNotifiers;
 
-    @Override
-    public void afterPropertiesSet() {
-        //init DataChangeEventCenter
-        dataChangeEventCenter.init(dataServerBootstrapConfig);
-        start();
-    }
-
-    /**
-     *
-     */
+    @PostConstruct
     public void start() {
         DataChangeEventQueue[] queues = dataChangeEventCenter.getQueues();
         int queueCount = queues.length;
-        Executor executor = ExecutorFactory.newFixedThreadPool(queueCount,
-                DataChangeHandler.class.getSimpleName());
-        Executor notifyExecutor = ExecutorFactory.newFixedThreadPool(
-                dataServerBootstrapConfig.getQueueCount() * 5, this.getClass().getSimpleName());
+        Executor executor = ExecutorFactory.newFixedThreadPool(queueCount, DataChangeHandler.class.getSimpleName());
+        Executor notifyExecutor = ExecutorFactory
+                .newFixedThreadPool(dataServerBootstrapConfig.getQueueCount() * 5, this.getClass().getSimpleName());
         for (int idx = 0; idx < queueCount; idx++) {
             final DataChangeEventQueue dataChangeEventQueue = queues[idx];
             final String name = dataChangeEventQueue.getName();
@@ -120,7 +115,7 @@ public class DataChangeHandler implements InitializingBean {
             DataChangeTypeEnum changeType = changeData.getChangeType();
             try {
                 if (sourceType == DataSourceTypeEnum.CLEAN) {
-                    if (DatumCache.cleanDatum(dataCenter, dataInfoId)) {
+                    if (datumCache.cleanDatum(dataCenter, dataInfoId)) {
                         LOGGER
                             .info(
                                 "[DataChangeHandler][{}] clean datum, dataCenter={}, dataInfoId={}, version={},sourceType={}, changeType={}",
@@ -135,11 +130,11 @@ public class DataChangeHandler implements InitializingBean {
                         return;
                     }
 
-                    MergeResult mergeResult = DatumCache.putDatum(changeType, datum);
+                    MergeResult mergeResult = datumCache.putDatum(changeType, datum);
                     lastVersion = mergeResult.getLastVersion();
 
                     if (lastVersion != null
-                        && lastVersion.longValue() == DatumCache.ERROR_DATUM_VERSION) {
+                        && lastVersion.longValue() == datumCache.ERROR_DATUM_VERSION) {
                         LOGGER
                             .error(
                                 "[DataChangeHandler][{}] first put unPub datum into cache error, dataCenter={}, dataInfoId={}, version={}, sourceType={},isContainsUnPub={}",
@@ -183,7 +178,7 @@ public class DataChangeHandler implements InitializingBean {
             String dataInfoId = datum.getDataInfoId();
             long version = datum.getVersion();
 
-            Datum existDatum = DatumCache.get(dataCenter, dataInfoId);
+            Datum existDatum = datumCache.get(dataCenter, dataInfoId);
             if (existDatum != null) {
                 Map<String, Publisher> cachePubMap = existDatum.getPubMap();
                 if (cachePubMap != null && !cachePubMap.isEmpty()) {
