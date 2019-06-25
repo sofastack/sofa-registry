@@ -17,7 +17,6 @@
 package com.alipay.sofa.registry.server.session.registry;
 
 import com.alipay.sofa.registry.common.model.Node;
-import com.alipay.sofa.registry.common.model.store.BaseInfo;
 import com.alipay.sofa.registry.common.model.store.Publisher;
 import com.alipay.sofa.registry.common.model.store.StoreData;
 import com.alipay.sofa.registry.common.model.store.Subscriber;
@@ -25,16 +24,18 @@ import com.alipay.sofa.registry.common.model.store.URL;
 import com.alipay.sofa.registry.common.model.store.Watcher;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
-import com.alipay.sofa.registry.remoting.Channel;
-import com.alipay.sofa.registry.remoting.Server;
 import com.alipay.sofa.registry.remoting.exchange.Exchange;
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
+import com.alipay.sofa.registry.server.session.filter.DataIdMatchStrategy;
 import com.alipay.sofa.registry.server.session.node.NodeManager;
 import com.alipay.sofa.registry.server.session.node.service.DataNodeService;
 import com.alipay.sofa.registry.server.session.store.DataStore;
 import com.alipay.sofa.registry.server.session.store.Interests;
 import com.alipay.sofa.registry.server.session.store.Watchers;
 import com.alipay.sofa.registry.server.session.strategy.SessionRegistryStrategy;
+import com.alipay.sofa.registry.server.session.wrapper.Wrapper;
+import com.alipay.sofa.registry.server.session.wrapper.WrapperInterceptorManager;
+import com.alipay.sofa.registry.server.session.wrapper.WrapperInvocation;
 import com.alipay.sofa.registry.task.listener.TaskEvent;
 import com.alipay.sofa.registry.task.listener.TaskEvent.TaskType;
 import com.alipay.sofa.registry.task.listener.TaskListenerManager;
@@ -46,6 +47,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Supplier;
 
 /**
  *
@@ -54,90 +56,112 @@ import java.util.concurrent.TimeUnit;
  */
 public class SessionRegistry implements Registry {
 
-    private static final Logger     LOGGER      = LoggerFactory.getLogger(SessionRegistry.class);
+    private static final Logger       LOGGER      = LoggerFactory.getLogger(SessionRegistry.class);
 
-    private static final Logger     TASK_LOGGER = LoggerFactory.getLogger(SessionRegistry.class,
-                                                    "[Task]");
+    private static final Logger       TASK_LOGGER = LoggerFactory.getLogger(SessionRegistry.class,
+                                                      "[Task]");
 
     /**
      * store subscribers
      */
     @Autowired
-    private Interests               sessionInterests;
+    private Interests                 sessionInterests;
 
     /**
      * store watchers
      */
     @Autowired
-    private Watchers                sessionWatchers;
+    private Watchers                  sessionWatchers;
 
     /**
      * store publishers
      */
     @Autowired
-    private DataStore               sessionDataStore;
+    private DataStore                 sessionDataStore;
 
     /**
      * transfer data to DataNode
      */
     @Autowired
-    private DataNodeService         dataNodeService;
+    private DataNodeService           dataNodeService;
 
     /**
      * trigger task com.alipay.sofa.registry.server.meta.listener process
      */
     @Autowired
-    private TaskListenerManager     taskListenerManager;
+    private TaskListenerManager       taskListenerManager;
 
     /**
      * calculate data node url
      */
     @Autowired
-    private NodeManager             dataNodeManager;
+    private NodeManager               dataNodeManager;
 
     @Autowired
-    private SessionServerConfig     sessionServerConfig;
+    private SessionServerConfig       sessionServerConfig;
 
     @Autowired
-    private Exchange                boltExchange;
+    private Exchange                  boltExchange;
 
     @Autowired
-    private SessionRegistryStrategy sessionRegistryStrategy;
+    private SessionRegistryStrategy   sessionRegistryStrategy;
+
+    @Autowired
+    private WrapperInterceptorManager wrapperInterceptorManager;
+
+    @Autowired
+    private DataIdMatchStrategy       dataIdMatchStrategy;
 
     @Override
     public void register(StoreData storeData) {
 
-        //check connect already existed
-        checkConnect(storeData);
 
-        switch (storeData.getDataType()) {
-            case PUBLISHER:
-                Publisher publisher = (Publisher) storeData;
+        WrapperInvocation<StoreData,Boolean> wrapperInvocation = new WrapperInvocation(new Wrapper<StoreData,Boolean>() {
+            @Override
+            public Boolean call() {
 
-                dataNodeService.register(publisher);
+                switch (storeData.getDataType()) {
+                    case PUBLISHER:
+                        Publisher publisher = (Publisher) storeData;
 
-                sessionDataStore.add(publisher);
+                        dataNodeService.register(publisher);
 
-                sessionRegistryStrategy.afterPublisherRegister(publisher);
-                break;
-            case SUBSCRIBER:
-                Subscriber subscriber = (Subscriber) storeData;
+                        sessionDataStore.add(publisher);
 
-                sessionInterests.add(subscriber);
+                        sessionRegistryStrategy.afterPublisherRegister(publisher);
+                        break;
+                    case SUBSCRIBER:
+                        Subscriber subscriber = (Subscriber) storeData;
 
-                sessionRegistryStrategy.afterSubscriberRegister(subscriber);
-                break;
-            case WATCHER:
-                Watcher watcher = (Watcher) storeData;
+                        sessionInterests.add(subscriber);
 
-                sessionWatchers.add(watcher);
+                        sessionRegistryStrategy.afterSubscriberRegister(subscriber);
+                        break;
+                    case WATCHER:
+                        Watcher watcher = (Watcher) storeData;
 
-                sessionRegistryStrategy.afterWatcherRegister(watcher);
-                break;
-            default:
-                break;
+                        sessionWatchers.add(watcher);
+
+                        sessionRegistryStrategy.afterWatcherRegister(watcher);
+                        break;
+                    default:
+                        break;
+                }
+                return null;
+            }
+
+            @Override
+            public Supplier<StoreData> getParameterSupplier() {
+                return ()->storeData;
+            }
+
+        }, wrapperInterceptorManager);
+
+        try {
+            wrapperInvocation.proceed();
+        } catch (Exception e) {
+            throw new RuntimeException("Proceed register error!",e);
         }
-
     }
 
     @Override
@@ -239,20 +263,41 @@ public class SessionRegistry implements Registry {
         return map;
     }
 
-    private void checkConnect(StoreData storeData) {
+    public void remove(List<String> connectIds) {
 
-        BaseInfo baseInfo = (BaseInfo) storeData;
+        List<String> connectIdsAll = new ArrayList<>();
+        connectIds.forEach(connectId -> {
+            Map pubMap = getSessionDataStore().queryByConnectId(connectId);
+            boolean pubExisted =  pubMap != null && !pubMap.isEmpty();
 
-        Server sessionServer = boltExchange.getServer(sessionServerConfig.getServerPort());
+            Map<String, Subscriber> subMap = getSessionInterests().queryByConnectId(connectId);
+            boolean subExisted = false;
+            if(subMap != null && !subMap.isEmpty()){
+                subExisted = true;
 
-        Channel channel = sessionServer.getChannel(baseInfo.getSourceAddress());
+                subMap.forEach((registerId,sub)->{
+                    if(dataIdMatchStrategy.match(sub.getDataId(),()->sessionServerConfig.getBlacklistSubDataIdRegex())) {
+                        fireSubscriberPushEmptyTask(sub);
+                    }
+                });
+            }
 
-        if (channel == null) {
-            throw new RuntimeException(String.format(
-                "Register address %s  has not connected session server!",
-                baseInfo.getSourceAddress()));
-        }
+            if(pubExisted || subExisted){
+                connectIdsAll.add(connectId);
+            }
+        });
 
+        TaskEvent taskEvent = new TaskEvent(connectIds, TaskEvent.TaskType.CANCEL_DATA_TASK);
+        TASK_LOGGER.info("send " + taskEvent.getTaskType() + " taskEvent:{}", taskEvent);
+        getTaskListenerManager().sendTaskEvent(taskEvent);
+    }
+
+    private void fireSubscriberPushEmptyTask(Subscriber subscriber) {
+        //trigger empty data push
+        TaskEvent taskEvent = new TaskEvent(subscriber,
+            TaskEvent.TaskType.SUBSCRIBER_PUSH_EMPTY_TASK);
+        TASK_LOGGER.info("send " + taskEvent.getTaskType() + " taskEvent:{}", taskEvent);
+        getTaskListenerManager().sendTaskEvent(taskEvent);
     }
 
     /**

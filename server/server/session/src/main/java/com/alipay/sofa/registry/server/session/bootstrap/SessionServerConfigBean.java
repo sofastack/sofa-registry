@@ -18,7 +18,6 @@ package com.alipay.sofa.registry.server.session.bootstrap;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.regex.Pattern;
@@ -163,9 +162,9 @@ public class SessionServerConfigBean implements SessionServerConfig {
 
     private Pattern            invalidIgnoreDataIdPattern              = null;
 
-    private String             pushEmptyDataDataIdPrefixes             = "";
+    private String             blacklistPubDataIdRegex                 = "*";
 
-    private Set<String>        pushEmptyDataDataIdPrefixesSet;
+    private String             blacklistSubDataIdRegex                 = "*";
 
     //end config for enterprise version
 
@@ -904,10 +903,6 @@ public class SessionServerConfigBean implements SessionServerConfig {
         this.accessDataExecutorKeepAliveTime = accessDataExecutorKeepAliveTime;
     }
 
-    public String getPushEmptyDataDataIdPrefixes() {
-        return pushEmptyDataDataIdPrefixes;
-    }
-
     /**
      * Getter method for property <tt>dataChangeExecutorMinPoolSize</tt>.
      *
@@ -985,15 +980,6 @@ public class SessionServerConfigBean implements SessionServerConfig {
     }
 
     /**
-     * Setter method for property <tt>pushEmptyDataDataIdPrefixes</tt>.
-     *
-     * @param pushEmptyDataDataIdPrefixes  value to be assigned to property pushEmptyDataDataIdPrefixes
-     */
-    public void setPushEmptyDataDataIdPrefixes(String pushEmptyDataDataIdPrefixes) {
-        this.pushEmptyDataDataIdPrefixes = pushEmptyDataDataIdPrefixes;
-    }
-
-    /**
      * Getter method for property <tt>pushTaskExecutorMinPoolSize</tt>.
      *
      * @return property value of pushTaskExecutorMinPoolSize
@@ -1067,29 +1053,6 @@ public class SessionServerConfigBean implements SessionServerConfig {
      */
     public void setPushTaskExecutorKeepAliveTime(long pushTaskExecutorKeepAliveTime) {
         this.pushTaskExecutorKeepAliveTime = pushTaskExecutorKeepAliveTime;
-    }
-
-    public Set<String> getPushEmptyDataDataIdPrefixesSet() {
-        if (pushEmptyDataDataIdPrefixesSet == null || pushEmptyDataDataIdPrefixesSet.isEmpty()) {
-            Set<String> s = new HashSet<>();
-            String[] arr = pushEmptyDataDataIdPrefixes.split(";");
-            for (String str : arr) {
-                if (str.trim().length() > 0) {
-                    s.add(str);
-                }
-            }
-            pushEmptyDataDataIdPrefixesSet = Collections.unmodifiableSet(s);
-        }
-        return pushEmptyDataDataIdPrefixesSet;
-    }
-
-    /**
-     * Setter method for property <tt>pushEmptyDataDataIdPrefixesSet</tt>.
-     *
-     * @param pushEmptyDataDataIdPrefixesSet  value to be assigned to property pushEmptyDataDataIdPrefixesSet
-     */
-    public void setPushEmptyDataDataIdPrefixesSet(Set<String> pushEmptyDataDataIdPrefixesSet) {
-        this.pushEmptyDataDataIdPrefixesSet = pushEmptyDataDataIdPrefixesSet;
     }
 
     /**
@@ -1315,6 +1278,42 @@ public class SessionServerConfigBean implements SessionServerConfig {
      */
     public void setPushDataTaskRetryIncrementDelay(long pushDataTaskRetryIncrementDelay) {
         this.pushDataTaskRetryIncrementDelay = pushDataTaskRetryIncrementDelay;
+    }
+
+    /**
+     * Getter method for property <tt>blacklistPubDataIdRegex</tt>.
+     *
+     * @return property value of blacklistPubDataIdRegex
+     */
+    public String getBlacklistPubDataIdRegex() {
+        return blacklistPubDataIdRegex;
+    }
+
+    /**
+     * Getter method for property <tt>blacklistSubDataIdRegex</tt>.
+     *
+     * @return property value of blacklistSubDataIdRegex
+     */
+    public String getBlacklistSubDataIdRegex() {
+        return blacklistSubDataIdRegex;
+    }
+
+    /**
+     * Setter method for property <tt>blacklistPubDataIdRegex</tt>.
+     *
+     * @param blacklistPubDataIdRegex  value to be assigned to property blacklistPubDataIdRegex
+     */
+    public void setBlacklistPubDataIdRegex(String blacklistPubDataIdRegex) {
+        this.blacklistPubDataIdRegex = blacklistPubDataIdRegex;
+    }
+
+    /**
+     * Setter method for property <tt>blacklistSubDataIdRegex</tt>.
+     *
+     * @param blacklistSubDataIdRegex  value to be assigned to property blacklistSubDataIdRegex
+     */
+    public void setBlacklistSubDataIdRegex(String blacklistSubDataIdRegex) {
+        this.blacklistSubDataIdRegex = blacklistSubDataIdRegex;
     }
 
     @Override

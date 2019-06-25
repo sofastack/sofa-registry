@@ -127,6 +127,10 @@ public interface SessionServerConfig {
 
     long getPushDataTaskRetryIncrementDelay();
 
+    String getBlacklistPubDataIdRegex();
+
+    String getBlacklistSubDataIdRegex();
+
     int getNumberOfReplicas();
 
     boolean isStopPushSwitch();

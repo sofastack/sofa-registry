@@ -56,4 +56,6 @@ public class ValueConstants {
 
     public static final String   STOP_PUSH_DATA_SWITCH_DATA_ID = "session.stop.push.data.switch#@#9600#@#CONFIG";
 
+    public static final String   BLACK_LIST_DATA_ID            = "session.blacklist.data#@#9600#@#CONFIG";
+
 }
