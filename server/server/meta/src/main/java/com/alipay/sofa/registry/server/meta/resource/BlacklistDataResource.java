@@ -41,7 +41,7 @@ import javax.ws.rs.core.MediaType;
  * @author shangyu.wh
  * @version $Id: StopPushDataResource.java, v 0.1 2018-07-25 11:40 shangyu.wh Exp $
  */
-@Path("stopPushDataSwitch")
+@Path("blacklist")
 public class BlacklistDataResource {
 
     private static final Logger DB_LOGGER   = LoggerFactory.getLogger(StopPushDataResource.class,
@@ -57,7 +57,7 @@ public class BlacklistDataResource {
     private TaskListenerManager taskListenerManager;
 
     /**
-     * open push
+     * update blacklist
      */
     @POST
     @Path("update")

@@ -57,6 +57,7 @@ import com.alipay.sofa.registry.server.meta.repository.service.MetaRepositorySer
 import com.alipay.sofa.registry.server.meta.repository.service.SessionConfirmStatusService;
 import com.alipay.sofa.registry.server.meta.repository.service.SessionRepositoryService;
 import com.alipay.sofa.registry.server.meta.repository.service.SessionVersionRepositoryService;
+import com.alipay.sofa.registry.server.meta.resource.BlacklistDataResource;
 import com.alipay.sofa.registry.server.meta.resource.DecisionModeResource;
 import com.alipay.sofa.registry.server.meta.resource.HealthResource;
 import com.alipay.sofa.registry.server.meta.resource.MetaDigestResource;
@@ -357,6 +358,11 @@ public class MetaServerConfiguration {
         @Bean
         public StopPushDataResource stopPushDataResource() {
             return new StopPushDataResource();
+        }
+
+        @Bean
+        public BlacklistDataResource blacklistDataResource() {
+            return new BlacklistDataResource();
         }
     }
 

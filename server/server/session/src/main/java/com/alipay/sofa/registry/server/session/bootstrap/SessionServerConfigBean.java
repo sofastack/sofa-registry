@@ -162,9 +162,9 @@ public class SessionServerConfigBean implements SessionServerConfig {
 
     private Pattern            invalidIgnoreDataIdPattern              = null;
 
-    private String             blacklistPubDataIdRegex                 = "*";
+    private String             blacklistPubDataIdRegex                 = "";
 
-    private String             blacklistSubDataIdRegex                 = "*";
+    private String             blacklistSubDataIdRegex                 = "";
 
     //end config for enterprise version
 

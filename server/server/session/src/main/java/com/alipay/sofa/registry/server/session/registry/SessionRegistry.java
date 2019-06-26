@@ -286,10 +286,11 @@ public class SessionRegistry implements Registry {
                 connectIdsAll.add(connectId);
             }
         });
-
-        TaskEvent taskEvent = new TaskEvent(connectIds, TaskEvent.TaskType.CANCEL_DATA_TASK);
-        TASK_LOGGER.info("send " + taskEvent.getTaskType() + " taskEvent:{}", taskEvent);
-        getTaskListenerManager().sendTaskEvent(taskEvent);
+        if(!connectIds.isEmpty()) {
+            TaskEvent taskEvent = new TaskEvent(connectIds, TaskEvent.TaskType.CANCEL_DATA_TASK);
+            TASK_LOGGER.info("send " + taskEvent.getTaskType() + " taskEvent:{}", taskEvent);
+            getTaskListenerManager().sendTaskEvent(taskEvent);
+        }
     }
 
     private void fireSubscriberPushEmptyTask(Subscriber subscriber) {
