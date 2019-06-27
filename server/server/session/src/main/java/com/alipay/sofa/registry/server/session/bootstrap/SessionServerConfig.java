@@ -73,7 +73,7 @@ public interface SessionServerConfig {
 
     int getDatumSnapshotTaskRetryTimes();
 
-    int getReNewDatumTaskRetryTimes();
+    int getRenewDatumTaskRetryTimes();
 
     int getDataChangeFetchTaskRetryTimes();
 
@@ -135,11 +135,11 @@ public interface SessionServerConfig {
 
     long getPushDataTaskRetryIncrementDelay();
 
-    int getReNewDatumWheelTicksSize();
+    int getRenewDatumWheelTicksSize();
 
-    int getReNewDatumWheelTicksDuration();
+    int getRenewDatumWheelTicksDuration();
 
-    long getReNewDatumWheelTaskDelay();
+    long getRenewDatumWheelTaskDelay();
 
     int getNumberOfReplicas();
 

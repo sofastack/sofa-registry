@@ -80,7 +80,7 @@ public class ClientNodeConnectionHandler extends AbstractServerHandler {
     @Override
     public void connected(Channel channel) throws RemotingException {
         super.connected(channel);
-        fireReNewDatum(channel);
+        fireRenewDatum(channel);
     }
 
     @Override
@@ -126,13 +126,13 @@ public class ClientNodeConnectionHandler extends AbstractServerHandler {
         return subMap != null && !subMap.isEmpty();
     }
 
-    private void fireReNewDatum(Channel channel) {
+    private void fireRenewDatum(Channel channel) {
         executorManager.getConnectClientExecutor().execute(() -> {
             String connectId = NetUtil.toAddressString(channel.getRemoteAddress());
             RENEW_LOGGER.info("Renew task is started: {}", connectId);
             executorManager.getAsyncHashedWheelTimerTask()
-                    .newTimeout(connectId, timerOut -> sessionRegistry.reNewDatum(connectId),
-                            sessionServerConfig.getReNewDatumWheelTaskDelay(), TimeUnit.SECONDS, () -> {
+                    .newTimeout(connectId, timerOut -> sessionRegistry.renewDatum(connectId),
+                            sessionServerConfig.getRenewDatumWheelTaskDelay(), TimeUnit.SECONDS, () -> {
                                 Server sessionServer = boltExchange.getServer(sessionServerConfig.getServerPort());
                                 Channel channelClient = sessionServer.getChannel(URL.valueOf(connectId));
                                 boolean shouldContinue = channelClient != null && channel.isConnected();

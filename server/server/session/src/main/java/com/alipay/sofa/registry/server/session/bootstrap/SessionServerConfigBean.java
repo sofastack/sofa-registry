@@ -86,7 +86,7 @@ public class SessionServerConfigBean implements SessionServerConfig {
 
     private int                datumSnapshotTaskRetryTimes             = 3;
 
-    private int                reNewDatumTaskRetryTimes                = 3;
+    private int                renewDatumTaskRetryTimes                = 3;
 
     private int                dataChangeFetchTaskRetryTimes           = 3;
 
@@ -148,11 +148,11 @@ public class SessionServerConfigBean implements SessionServerConfig {
 
     private int                userDataPushRetryWheelTicksDuration     = 100;
 
-    private int                reNewDatumWheelTicksSize                = 2048;
+    private int                renewDatumWheelTicksSize                = 2048;
 
-    private int                reNewDatumWheelTicksDuration            = 500;
+    private int                renewDatumWheelTicksDuration            = 500;
 
-    private long               reNewDatumWheelTaskDelay                = 30;
+    private long               renewDatumWheelTaskDelay                = 30;
 
     private int                pushDataTaskRetryFirstDelay             = 500;
 
@@ -271,22 +271,22 @@ public class SessionServerConfigBean implements SessionServerConfig {
     }
 
     /**
-     * Getter method for property <tt>reNewDatumTaskRetryTimes</tt>.
+     * Getter method for property <tt>renewDatumTaskRetryTimes</tt>.
      *
-     * @return property value of reNewDatumTaskRetryTimes
+     * @return property value of renewDatumTaskRetryTimes
      */
     @Override
-    public int getReNewDatumTaskRetryTimes() {
-        return reNewDatumTaskRetryTimes;
+    public int getRenewDatumTaskRetryTimes() {
+        return renewDatumTaskRetryTimes;
     }
 
     /**
-     * Setter method for property <tt>reNewDatumTaskRetryTimes </tt>.
+     * Setter method for property <tt>renewDatumTaskRetryTimes </tt>.
      *
-     * @param reNewDatumTaskRetryTimes  value to be assigned to property reNewDatumTaskRetryTimes
+     * @param renewDatumTaskRetryTimes  value to be assigned to property renewDatumTaskRetryTimes
      */
-    public void setReNewDatumTaskRetryTimes(int reNewDatumTaskRetryTimes) {
-        this.reNewDatumTaskRetryTimes = reNewDatumTaskRetryTimes;
+    public void setRenewDatumTaskRetryTimes(int renewDatumTaskRetryTimes) {
+        this.renewDatumTaskRetryTimes = renewDatumTaskRetryTimes;
     }
 
     /**
@@ -1416,57 +1416,57 @@ public class SessionServerConfigBean implements SessionServerConfig {
     }
 
     /**
-     * Getter method for property <tt>reNewDatumWheelTicksSize</tt>.
+     * Getter method for property <tt>renewDatumWheelTicksSize</tt>.
      *
-     * @return property value of reNewDatumWheelTicksSize
+     * @return property value of renewDatumWheelTicksSize
      */
-    public int getReNewDatumWheelTicksSize() {
-        return reNewDatumWheelTicksSize;
+    public int getRenewDatumWheelTicksSize() {
+        return renewDatumWheelTicksSize;
     }
 
     /**
-     * Getter method for property <tt>reNewDatumWheelTicksDuration</tt>.
+     * Getter method for property <tt>renewDatumWheelTicksDuration</tt>.
      *
-     * @return property value of reNewDatumWheelTicksDuration
+     * @return property value of renewDatumWheelTicksDuration
      */
-    public int getReNewDatumWheelTicksDuration() {
-        return reNewDatumWheelTicksDuration;
+    public int getRenewDatumWheelTicksDuration() {
+        return renewDatumWheelTicksDuration;
     }
 
     /**
-     * Getter method for property <tt>reNewDatumWheelTaskDelay</tt>.
+     * Getter method for property <tt>renewDatumWheelTaskDelay</tt>.
      *
-     * @return property value of reNewDatumWheelTaskDelay
+     * @return property value of renewDatumWheelTaskDelay
      */
-    public long getReNewDatumWheelTaskDelay() {
-        return reNewDatumWheelTaskDelay;
+    public long getRenewDatumWheelTaskDelay() {
+        return renewDatumWheelTaskDelay;
     }
 
     /**
-     * Setter method for property <tt>reNewDatumWheelTaskDelay</tt>.
+     * Setter method for property <tt>renewDatumWheelTaskDelay</tt>.
      *
-     * @param reNewDatumWheelTaskDelay  value to be assigned to property reNewDatumWheelTaskDelay
+     * @param renewDatumWheelTaskDelay  value to be assigned to property renewDatumWheelTaskDelay
      */
-    public void setReNewDatumWheelTaskDelay(long reNewDatumWheelTaskDelay) {
-        this.reNewDatumWheelTaskDelay = reNewDatumWheelTaskDelay;
+    public void setRenewDatumWheelTaskDelay(long renewDatumWheelTaskDelay) {
+        this.renewDatumWheelTaskDelay = renewDatumWheelTaskDelay;
     }
 
     /**
-     * Setter method for property <tt>reNewDatumWheelTicksSize</tt>.
+     * Setter method for property <tt>renewDatumWheelTicksSize</tt>.
      *
-     * @param reNewDatumWheelTicksSize  value to be assigned to property reNewDatumWheelTicksSize
+     * @param renewDatumWheelTicksSize  value to be assigned to property renewDatumWheelTicksSize
      */
-    public void setReNewDatumWheelTicksSize(int reNewDatumWheelTicksSize) {
-        this.reNewDatumWheelTicksSize = reNewDatumWheelTicksSize;
+    public void setRenewDatumWheelTicksSize(int renewDatumWheelTicksSize) {
+        this.renewDatumWheelTicksSize = renewDatumWheelTicksSize;
     }
 
     /**
-     * Setter method for property <tt>reNewDatumWheelTicksDuration</tt>.
+     * Setter method for property <tt>renewDatumWheelTicksDuration</tt>.
      *
-     * @param reNewDatumWheelTicksDuration  value to be assigned to property reNewDatumWheelTicksDuration
+     * @param renewDatumWheelTicksDuration  value to be assigned to property renewDatumWheelTicksDuration
      */
-    public void setReNewDatumWheelTicksDuration(int reNewDatumWheelTicksDuration) {
-        this.reNewDatumWheelTicksDuration = reNewDatumWheelTicksDuration;
+    public void setRenewDatumWheelTicksDuration(int renewDatumWheelTicksDuration) {
+        this.renewDatumWheelTicksDuration = renewDatumWheelTicksDuration;
     }
 
     /**

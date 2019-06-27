@@ -16,6 +16,16 @@
  */
 package com.alipay.sofa.registry.server.meta.repository.service;
 
+import java.io.IOException;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
+
+import org.springframework.beans.factory.annotation.Autowired;
+
 import com.alipay.sofa.registry.common.model.metaserver.MetaNode;
 import com.alipay.sofa.registry.jraft.processor.AbstractSnapshotProcess;
 import com.alipay.sofa.registry.jraft.processor.SnapshotProcess;
@@ -26,15 +36,6 @@ import com.alipay.sofa.registry.server.meta.repository.NodeRepository;
 import com.alipay.sofa.registry.server.meta.repository.RepositoryService;
 import com.alipay.sofa.registry.server.meta.store.RenewDecorate;
 import com.alipay.sofa.registry.store.api.annotation.RaftService;
-import org.springframework.beans.factory.annotation.Autowired;
-
-import java.io.IOException;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 /**
  *
@@ -168,7 +169,7 @@ public class MetaRepositoryService extends AbstractSnapshotProcess
                     RenewDecorate<MetaNode> oldRenewDecorate = dataNodes.get(ipAddress);
                     if (oldRenewDecorate != null && oldRenewDecorate.getRenewal() != null) {
                         oldRenewDecorate.setRenewal(metaNode.getRenewal());
-                        oldRenewDecorate.reNew();
+                        oldRenewDecorate.renew();
 
                         metaNodeRepository.setVersion(System.currentTimeMillis());
                     } else {

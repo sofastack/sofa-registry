@@ -22,7 +22,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 
 import com.alipay.sofa.registry.common.model.DatumSnapshotRequest;
-import com.alipay.sofa.registry.common.model.ReNewDatumRequest;
+import com.alipay.sofa.registry.common.model.RenewDatumRequest;
 import com.alipay.sofa.registry.common.model.constants.ValueConstants;
 import com.alipay.sofa.registry.common.model.store.Publisher;
 import com.alipay.sofa.registry.log.Logger;
@@ -165,7 +165,7 @@ public class WriteDataProcessor {
                 if (renewAndSnapshotInSilence()) {
                     return;
                 }
-                doReNewAsync(request);
+                doRenewAsync(request);
             }
                 break;
             case DATUM_SNAPSHOT: {
@@ -184,14 +184,14 @@ public class WriteDataProcessor {
         }
     }
 
-    private void doReNewAsync(WriteDataRequest request) {
+    private void doRenewAsync(WriteDataRequest request) {
         if (RENEW_LOGGER.isDebugEnabled()) {
-            RENEW_LOGGER.debug("doReNewAsync: connectId={}, requestType={}, requestBody={}",
+            RENEW_LOGGER.debug("doRenewAsync: connectId={}, requestType={}, requestBody={}",
                 connectId, request.getRequestType(), request.getRequestBody());
         }
 
-        ReNewDatumRequest reNewDatumRequest = (ReNewDatumRequest) request.getRequestBody();
-        TaskEvent taskEvent = new TaskEvent(reNewDatumRequest, TaskType.RENEW_DATUM_TASK);
+        RenewDatumRequest renewDatumRequest = (RenewDatumRequest) request.getRequestBody();
+        TaskEvent taskEvent = new TaskEvent(renewDatumRequest, TaskType.RENEW_DATUM_TASK);
         taskListenerManager.sendTaskEvent(taskEvent);
     }
 

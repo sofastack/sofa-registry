@@ -541,7 +541,7 @@
         <appender-ref ref="COMMON-ERROR-APPENDER"/>
     </logger>
 
-    <logger name="com.alipay.sofa.registry.server.data.correction.DatumLeaseManager" level="${LOG_LEVEL}" additivity="false">
+    <logger name="com.alipay.sofa.registry.server.data.renew.DatumLeaseManager" level="${LOG_LEVEL}" additivity="false">
         <appender-ref ref="DATA-DATUM-LEASE-APPENDER"/>
         <appender-ref ref="COMMON-ERROR-APPENDER"/>
     </logger>

@@ -24,7 +24,7 @@ import java.io.Serializable;
  * @author kezhu.wukz
  * @version $Id: RenewRequest.java, v 0.1 2019-05-30 10:58 shangyu.wh Exp $
  */
-public class ReNewDatumRequest implements Serializable {
+public class RenewDatumRequest implements Serializable {
 
     private static final long serialVersionUID = 683097441984338311L;
 
@@ -34,7 +34,7 @@ public class ReNewDatumRequest implements Serializable {
 
     private final String      digestSum;
 
-    public ReNewDatumRequest(String connectId, String dataServerIp, String digestSum) {
+    public RenewDatumRequest(String connectId, String dataServerIp, String digestSum) {
         this.connectId = connectId;
         this.dataServerIp = dataServerIp;
         this.digestSum = digestSum;
@@ -72,7 +72,7 @@ public class ReNewDatumRequest implements Serializable {
      */
     @Override
     public String toString() {
-        final StringBuilder sb = new StringBuilder("ReNewDatumRequest{");
+        final StringBuilder sb = new StringBuilder("RenewDatumRequest{");
         sb.append("connectId='").append(connectId).append('\'');
         sb.append(", dataServerIp='").append(dataServerIp).append('\'');
         sb.append(", digestSum='").append(digestSum).append('\'');

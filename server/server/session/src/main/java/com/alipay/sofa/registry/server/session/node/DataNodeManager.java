@@ -16,6 +16,8 @@
  */
 package com.alipay.sofa.registry.server.session.node;
 
+import org.springframework.beans.factory.annotation.Autowired;
+
 import com.alipay.sofa.registry.common.model.Node.NodeType;
 import com.alipay.sofa.registry.common.model.metaserver.DataNode;
 import com.alipay.sofa.registry.common.model.metaserver.NodeChangeResult;
@@ -23,7 +25,6 @@ import com.alipay.sofa.registry.consistency.hash.ConsistentHash;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
-import org.springframework.beans.factory.annotation.Autowired;
 
 /**
  *
@@ -70,7 +71,7 @@ public class DataNodeManager extends AbstractNodeManager<DataNode> {
     }
 
     @Override
-    public void reNewNode() {
+    public void renewNode() {
 
     }
 

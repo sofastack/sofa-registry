@@ -26,7 +26,7 @@ import java.util.concurrent.TimeUnit;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import com.alipay.sofa.registry.common.model.Node;
-import com.alipay.sofa.registry.common.model.ReNewDatumRequest;
+import com.alipay.sofa.registry.common.model.RenewDatumRequest;
 import com.alipay.sofa.registry.common.model.constants.ValueConstants;
 import com.alipay.sofa.registry.common.model.store.BaseInfo;
 import com.alipay.sofa.registry.common.model.store.Publisher;
@@ -219,7 +219,7 @@ public class SessionRegistry implements Registry {
 
     @Override
     public void cancel(List<String> connectIds) {
-        //update local firstly, data node send error depend on reNew check
+        //update local firstly, data node send error depend on renew check
         List<String> connectIdsWithPub = new ArrayList<>();
         for (String connectId : connectIds) {
             if (sessionDataStore.deleteByConnectId(connectId)) {
@@ -327,20 +327,20 @@ public class SessionRegistry implements Registry {
     }
 
     @Override
-    public void reNewDatum(String connectId) {
+    public void renewDatum(String connectId) {
         if (RENEW_LOGGER.isDebugEnabled()) {
-            RENEW_LOGGER.debug("reNewDatum: connectId={}", connectId);
+            RENEW_LOGGER.debug("renewDatum: connectId={}", connectId);
         }
 
-        List<ReNewDatumRequest> reNewDatumRequests = renewService.getReNewDatumRequests(connectId);
-        if (reNewDatumRequests != null) {
-            for (ReNewDatumRequest reNewDatumRequest : reNewDatumRequests) {
+        List<RenewDatumRequest> renewDatumRequests = renewService.getRenewDatumRequests(connectId);
+        if (renewDatumRequests != null) {
+            for (RenewDatumRequest renewDatumRequest : renewDatumRequests) {
                 // All write operations to DataServer (pub/unpub/clientoff/renew/snapshot)
                 // are handed over to WriteDataAcceptor
                 writeDataAcceptor.accept(new WriteDataRequest() {
                     @Override
                     public Object getRequestBody() {
-                        return reNewDatumRequest;
+                        return renewDatumRequest;
                     }
 
                     @Override

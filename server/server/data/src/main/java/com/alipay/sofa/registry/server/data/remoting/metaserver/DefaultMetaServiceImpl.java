@@ -16,6 +16,19 @@
  */
 package com.alipay.sofa.registry.server.data.remoting.metaserver;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.stream.Collectors;
+
+import org.springframework.beans.factory.annotation.Autowired;
+
 import com.alipay.remoting.Connection;
 import com.alipay.sofa.jraft.entity.PeerId;
 import com.alipay.sofa.registry.common.model.Node.NodeType;
@@ -24,7 +37,7 @@ import com.alipay.sofa.registry.common.model.metaserver.DataNode;
 import com.alipay.sofa.registry.common.model.metaserver.GetNodesRequest;
 import com.alipay.sofa.registry.common.model.metaserver.MetaNode;
 import com.alipay.sofa.registry.common.model.metaserver.NodeChangeResult;
-import com.alipay.sofa.registry.common.model.metaserver.ReNewNodesRequest;
+import com.alipay.sofa.registry.common.model.metaserver.RenewNodesRequest;
 import com.alipay.sofa.registry.common.model.store.URL;
 import com.alipay.sofa.registry.jraft.bootstrap.RaftClient;
 import com.alipay.sofa.registry.log.Logger;
@@ -36,18 +49,6 @@ import com.alipay.sofa.registry.server.data.cache.DataServerChangeItem;
 import com.alipay.sofa.registry.server.data.node.DataServerNode;
 import com.alipay.sofa.registry.server.data.remoting.MetaNodeExchanger;
 import com.alipay.sofa.registry.server.data.remoting.dataserver.DataServerNodeFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Set;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.stream.Collectors;
 
 /**
  *
@@ -208,7 +209,7 @@ public class DefaultMetaServiceImpl implements IMetaServerService {
     }
 
     @Override
-    public void reNewNodeTask() {
+    public void renewNodeTask() {
         Map<String, Connection> connectionMap = metaServerConnectionFactory
             .getConnections(dataServerBootstrapConfig.getLocalDataCenter());
         for (Entry<String, Connection> connectEntry : connectionMap.entrySet()) {
@@ -218,13 +219,13 @@ public class DefaultMetaServiceImpl implements IMetaServerService {
                 Connection connection = connectEntry.getValue();
                 if (connection.isFine()) {
                     try {
-                        ReNewNodesRequest<DataNode> reNewNodesRequest = new ReNewNodesRequest<>(
+                        RenewNodesRequest<DataNode> renewNodesRequest = new RenewNodesRequest<>(
                             new DataNode(new URL(DataServerConfig.IP),
                                 dataServerBootstrapConfig.getLocalDataCenter()));
                         metaNodeExchanger.request(new Request() {
                             @Override
                             public Object getRequestBody() {
-                                return reNewNodesRequest;
+                                return renewNodesRequest;
                             }
 
                             @Override
@@ -233,19 +234,19 @@ public class DefaultMetaServiceImpl implements IMetaServerService {
                             }
                         }).getResult();
                     } catch (Exception e) {
-                        LOGGER.error("[ReNewNodeTask] reNew data node to metaServer error : {}",
+                        LOGGER.error("[RenewNodeTask] renew data node to metaServer error : {}",
                             ip, e);
                         String newip = refreshLeader().getIp();
                         LOGGER
                             .warn(
-                                "[ReNewNodeTask] reNew data node to metaServer error,leader refresh: {}",
+                                "[RenewNodeTask] renew data node to metaServer error,leader refresh: {}",
                                 newip);
                     }
                 } else {
                     String newip = refreshLeader().getIp();
                     LOGGER
                         .warn(
-                            "[ReNewNodeTask] reNew data node to metaServer not fine,leader refresh: {}",
+                            "[RenewNodeTask] renew data node to metaServer not fine,leader refresh: {}",
                             newip);
                 }
             }

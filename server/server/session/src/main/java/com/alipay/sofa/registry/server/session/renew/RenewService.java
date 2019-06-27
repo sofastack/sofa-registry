@@ -19,7 +19,7 @@ package com.alipay.sofa.registry.server.session.renew;
 import java.util.List;
 
 import com.alipay.sofa.registry.common.model.DatumSnapshotRequest;
-import com.alipay.sofa.registry.common.model.ReNewDatumRequest;
+import com.alipay.sofa.registry.common.model.RenewDatumRequest;
 
 /**
  *
@@ -29,12 +29,12 @@ import com.alipay.sofa.registry.common.model.ReNewDatumRequest;
 public interface RenewService {
 
     /**
-     * Get ReNewDatumRequests based on connectId
+     * Get RenewDatumRequests based on connectId
      *
      * @param connectId
      * @return
      */
-    List<ReNewDatumRequest> getReNewDatumRequests(String connectId);
+    List<RenewDatumRequest> getRenewDatumRequests(String connectId);
 
     /**
      * Get DatumSnapshotRequests based on connectId

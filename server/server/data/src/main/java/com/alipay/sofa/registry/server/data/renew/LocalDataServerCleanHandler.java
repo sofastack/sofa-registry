@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alipay.sofa.registry.server.data.correction;
+package com.alipay.sofa.registry.server.data.renew;
 
 import java.util.Map;
 import java.util.Map.Entry;

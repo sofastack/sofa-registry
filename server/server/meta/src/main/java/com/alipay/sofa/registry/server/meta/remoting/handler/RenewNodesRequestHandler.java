@@ -16,42 +16,43 @@
  */
 package com.alipay.sofa.registry.server.meta.remoting.handler;
 
+import org.springframework.beans.factory.annotation.Autowired;
+
 import com.alipay.sofa.registry.common.model.Node;
-import com.alipay.sofa.registry.common.model.metaserver.ReNewNodesRequest;
+import com.alipay.sofa.registry.common.model.metaserver.RenewNodesRequest;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.remoting.Channel;
 import com.alipay.sofa.registry.server.meta.registry.Registry;
-import org.springframework.beans.factory.annotation.Autowired;
 
 /**
  * Handle session/data node's heartbeat request
  * @author shangyu.wh
- * @version $Id: ReNewNodesRequestHandler.java, v 0.1 2018-03-30 19:58 shangyu.wh Exp $
+ * @version $Id: RenewNodesRequestHandler.java, v 0.1 2018-03-30 19:58 shangyu.wh Exp $
  */
-public class ReNewNodesRequestHandler extends AbstractServerHandler<ReNewNodesRequest> {
+public class RenewNodesRequestHandler extends AbstractServerHandler<RenewNodesRequest> {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(ReNewNodesRequestHandler.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(RenewNodesRequestHandler.class);
 
     @Autowired
     private Registry            metaServerRegistry;
 
     @Override
-    public Object reply(Channel channel, ReNewNodesRequest reNewNodesRequest) {
-        Node reNewNode = null;
+    public Object reply(Channel channel, RenewNodesRequest renewNodesRequest) {
+        Node renewNode = null;
         try {
-            reNewNode = reNewNodesRequest.getNode();
-            metaServerRegistry.reNew(reNewNode, reNewNodesRequest.getDuration());
+            renewNode = renewNodesRequest.getNode();
+            metaServerRegistry.renew(renewNode, renewNodesRequest.getDuration());
         } catch (Exception e) {
-            LOGGER.error("Node " + reNewNode + "reNew error!", e);
-            throw new RuntimeException("Node reNew error!", e);
+            LOGGER.error("Node " + renewNode + "renew error!", e);
+            throw new RuntimeException("Node renew error!", e);
         }
         return null;
     }
 
     @Override
     public Class interest() {
-        return ReNewNodesRequest.class;
+        return RenewNodesRequest.class;
     }
 
     @Override

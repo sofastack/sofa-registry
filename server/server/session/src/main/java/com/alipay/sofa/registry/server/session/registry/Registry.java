@@ -65,7 +65,7 @@ public interface Registry {
     /**
      * Regularly send update Datum with same connectID valid time request service
      */
-    void reNewDatum(String connectId);
+    void renewDatum(String connectId);
 
     void sendDatumSnapshot(String connectId);
 }

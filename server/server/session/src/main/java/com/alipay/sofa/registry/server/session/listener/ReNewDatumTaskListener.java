@@ -23,7 +23,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
 import com.alipay.sofa.registry.server.session.node.service.DataNodeService;
 import com.alipay.sofa.registry.server.session.registry.SessionRegistry;
-import com.alipay.sofa.registry.server.session.scheduler.task.ReNewDatumTask;
+import com.alipay.sofa.registry.server.session.scheduler.task.RenewDatumTask;
 import com.alipay.sofa.registry.server.session.scheduler.task.SessionTask;
 import com.alipay.sofa.registry.task.batcher.TaskDispatcher;
 import com.alipay.sofa.registry.task.batcher.TaskDispatchers;
@@ -35,9 +35,9 @@ import com.alipay.sofa.registry.task.listener.TaskListener;
 /**
  *
  * @author kezhu.wukz
- * @version $Id: ReNewDatumTaskListener.java, v 0.1 2019-06-17 12:02 kezhu.wukz Exp $
+ * @version $Id: RenewDatumTaskListener.java, v 0.1 2019-06-17 12:02 kezhu.wukz Exp $
  */
-public class ReNewDatumTaskListener implements TaskListener {
+public class RenewDatumTaskListener implements TaskListener {
 
     @Autowired
     private DataNodeService                     dataNodeService;
@@ -67,13 +67,13 @@ public class ReNewDatumTaskListener implements TaskListener {
 
     @Override
     public void handleEvent(TaskEvent event) {
-        SessionTask reNewDatumTask = new ReNewDatumTask(sessionServerConfig, dataNodeService,
+        SessionTask renewDatumTask = new RenewDatumTask(sessionServerConfig, dataNodeService,
             sessionRegistry);
 
-        reNewDatumTask.setTaskEvent(event);
+        renewDatumTask.setTaskEvent(event);
 
-        singleTaskDispatcher.dispatch(reNewDatumTask.getTaskId(), reNewDatumTask,
-            reNewDatumTask.getExpiryTime());
+        singleTaskDispatcher.dispatch(renewDatumTask.getTaskId(), renewDatumTask,
+            renewDatumTask.getExpiryTime());
     }
 
 }

@@ -21,7 +21,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.alipay.sofa.registry.common.model.DatumSnapshotRequest;
-import com.alipay.sofa.registry.common.model.ReNewDatumRequest;
+import com.alipay.sofa.registry.common.model.RenewDatumRequest;
 import com.alipay.sofa.registry.common.model.dataserver.Datum;
 import com.alipay.sofa.registry.common.model.dataserver.SessionServerRegisterRequest;
 import com.alipay.sofa.registry.common.model.store.Publisher;
@@ -100,9 +100,9 @@ public interface DataNodeService {
                                   URL dataUrl);
 
     /**
-     * check publisher digest same as session current store,and reNew the lastUpdateTime of this connectId
+     * check publisher digest same as session current store,and renew the lastUpdateTime of this connectId
      */
-    Boolean reNewDatum(ReNewDatumRequest reNewDatumRequest);
+    Boolean renewDatum(RenewDatumRequest renewDatumRequest);
 
     /**
      * Correct the publishers information of this connectId on dataServer

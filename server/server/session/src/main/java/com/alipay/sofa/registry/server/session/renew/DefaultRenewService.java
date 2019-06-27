@@ -27,7 +27,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import com.alipay.sofa.registry.common.model.DatumSnapshotRequest;
 import com.alipay.sofa.registry.common.model.Node;
 import com.alipay.sofa.registry.common.model.PublisherDigestUtil;
-import com.alipay.sofa.registry.common.model.ReNewDatumRequest;
+import com.alipay.sofa.registry.common.model.RenewDatumRequest;
 import com.alipay.sofa.registry.common.model.constants.ValueConstants;
 import com.alipay.sofa.registry.common.model.store.Publisher;
 import com.alipay.sofa.registry.log.Logger;
@@ -55,11 +55,11 @@ public class DefaultRenewService implements RenewService {
     private NodeManager         dataNodeManager;
 
     @Override
-    public List<ReNewDatumRequest> getReNewDatumRequests(String connectId) {
+    public List<RenewDatumRequest> getRenewDatumRequests(String connectId) {
         List<DatumSnapshotRequest> datumSnapshotRequests = getDatumSnapshotRequests(connectId);
         if (datumSnapshotRequests != null && !datumSnapshotRequests.isEmpty()) {
             return datumSnapshotRequests.stream()
-                    .map(datumSnapshotRequest -> new ReNewDatumRequest(datumSnapshotRequest.getConnectId(),
+                    .map(datumSnapshotRequest -> new RenewDatumRequest(datumSnapshotRequest.getConnectId(),
                             datumSnapshotRequest.getDataServerIp(), String.valueOf(
                             PublisherDigestUtil.getDigestValueSum(datumSnapshotRequest.getPublishers()))))
                     .collect(Collectors.toList());

@@ -16,16 +16,16 @@
  */
 package com.alipay.sofa.registry.common.model.metaserver;
 
-import com.alipay.sofa.registry.common.model.Node;
-
 import java.io.Serializable;
+
+import com.alipay.sofa.registry.common.model.Node;
 
 /**
  *
  * @author shangyu.wh
  * @version $Id: RenewNodesRequest.java, v 0.1 2018-03-30 19:51 shangyu.wh Exp $
  */
-public class ReNewNodesRequest<T extends Node> implements Serializable {
+public class RenewNodesRequest<T extends Node> implements Serializable {
 
     private int     duration;
 
@@ -35,7 +35,7 @@ public class ReNewNodesRequest<T extends Node> implements Serializable {
      * constructor
      * @param node
      */
-    public ReNewNodesRequest(T node) {
+    public RenewNodesRequest(T node) {
         this.node = node;
     }
 
@@ -68,7 +68,7 @@ public class ReNewNodesRequest<T extends Node> implements Serializable {
 
     @Override
     public String toString() {
-        final StringBuilder sb = new StringBuilder("ReNewNodesRequest{");
+        final StringBuilder sb = new StringBuilder("RenewNodesRequest{");
         sb.append("duration=").append(duration);
         sb.append(", node=").append(node);
         sb.append('}');

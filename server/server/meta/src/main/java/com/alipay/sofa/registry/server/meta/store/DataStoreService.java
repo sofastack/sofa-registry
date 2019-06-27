@@ -16,6 +16,21 @@
  */
 package com.alipay.sofa.registry.server.meta.store;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
+import java.util.stream.Collectors;
+
+import org.springframework.beans.factory.annotation.Autowired;
+
 import com.alipay.sofa.registry.common.model.Node.NodeType;
 import com.alipay.sofa.registry.common.model.metaserver.DataCenterNodes;
 import com.alipay.sofa.registry.common.model.metaserver.DataNode;
@@ -36,20 +51,6 @@ import com.alipay.sofa.registry.store.api.annotation.RaftReference;
 import com.alipay.sofa.registry.task.listener.TaskEvent;
 import com.alipay.sofa.registry.task.listener.TaskEvent.TaskType;
 import com.alipay.sofa.registry.task.listener.TaskListenerManager;
-import org.springframework.beans.factory.annotation.Autowired;
-
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicLong;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
-import java.util.stream.Collectors;
 
 /**
  *
@@ -110,7 +111,7 @@ public class DataStoreService implements StoreService<DataNode> {
             dataRepositoryService.put(ipAddress, new RenewDecorate(dataNode,
                 RenewDecorate.DEFAULT_DURATION_SECS));
 
-            reNew(dataNode, 30);
+            renew(dataNode, 30);
 
             nodeChangeResult = getNodeChangeResult();
 
@@ -170,15 +171,15 @@ public class DataStoreService implements StoreService<DataNode> {
     }
 
     @Override
-    public void reNew(DataNode dataNode, int duration) {
+    public void renew(DataNode dataNode, int duration) {
 
         long startAll = System.currentTimeMillis();
         write.lock();
         try {
             String ipAddress = dataNode.getNodeUrl().getIpAddress();
-            RenewDecorate reNewer = dataRepositoryService.get(ipAddress);
+            RenewDecorate renewer = dataRepositoryService.get(ipAddress);
 
-            if (reNewer == null) {
+            if (renewer == null) {
                 LOGGER.warn("Renew Data node with ipAddress:" + ipAddress
                             + " has not existed!It will be registered again!");
                 addNode(dataNode);
@@ -206,7 +207,7 @@ public class DataStoreService implements StoreService<DataNode> {
      */
     @Override
     public Collection<DataNode> getExpired() {
-        Collection<DataNode> reNewerList = new ArrayList<>();
+        Collection<DataNode> renewerList = new ArrayList<>();
         read.lock();
         try {
             Map<String, RenewDecorate<DataNode>> dataMap = dataRepositoryService.getAllData();
@@ -216,7 +217,7 @@ public class DataStoreService implements StoreService<DataNode> {
                 String dataCenter = dataNode.getRenewal().getDataCenter();
                 if (dataCenter.equals(nodeConfig.getLocalDataCenter())) {
                     if (dataNode.isExpired()) {
-                        reNewerList.add(dataNode.getRenewal());
+                        renewerList.add(dataNode.getRenewal());
                     }
                 }
             });
@@ -224,7 +225,7 @@ public class DataStoreService implements StoreService<DataNode> {
         } finally {
             read.unlock();
         }
-        return reNewerList;
+        return renewerList;
     }
 
     @Override

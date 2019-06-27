@@ -16,7 +16,7 @@
  */
 package com.alipay.sofa.registry.server.session.scheduler.task;
 
-import com.alipay.sofa.registry.common.model.ReNewDatumRequest;
+import com.alipay.sofa.registry.common.model.RenewDatumRequest;
 import com.alipay.sofa.registry.common.model.constants.ValueConstants;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
@@ -28,13 +28,13 @@ import com.alipay.sofa.registry.task.listener.TaskEvent;
 /**
  *
  * @author kezhu.wukz
- * @version $Id: ReNewDatumTask.java, v 0.1 2019-06-14 12:15 kezhu.wukz Exp $
+ * @version $Id: RenewDatumTask.java, v 0.1 2019-06-14 12:15 kezhu.wukz Exp $
  */
-public class ReNewDatumTask extends AbstractSessionTask {
+public class RenewDatumTask extends AbstractSessionTask {
 
     private static final Logger       RENEW_LOGGER = LoggerFactory.getLogger(
                                                        ValueConstants.LOGGER_NAME_RENEW,
-                                                       "[ReNewDatumTask]");
+                                                       "[RenewDatumTask]");
 
     private final DataNodeService     dataNodeService;
 
@@ -42,9 +42,9 @@ public class ReNewDatumTask extends AbstractSessionTask {
 
     private final SessionRegistry     sessionRegistry;
 
-    private ReNewDatumRequest         reNewDatumRequest;
+    private RenewDatumRequest         renewDatumRequest;
 
-    public ReNewDatumTask(SessionServerConfig sessionServerConfig, DataNodeService dataNodeService,
+    public RenewDatumTask(SessionServerConfig sessionServerConfig, DataNodeService dataNodeService,
                           SessionRegistry sessionRegistry) {
         this.sessionServerConfig = sessionServerConfig;
         this.dataNodeService = dataNodeService;
@@ -55,20 +55,20 @@ public class ReNewDatumTask extends AbstractSessionTask {
     public void execute() {
 
         try {
-            Boolean result = dataNodeService.reNewDatum(reNewDatumRequest);
+            Boolean result = dataNodeService.renewDatum(renewDatumRequest);
             if (!result) {
                 RENEW_LOGGER
                     .info(
-                        "ReNew datum request to dataNode got sub digest different! reNewDatumRequest={}",
-                        reNewDatumRequest);
+                        "Renew datum request to dataNode got sub digest different! renewDatumRequest={}",
+                        renewDatumRequest);
 
                 // send snapshot datum for the corresponding connId
-                sessionRegistry.sendDatumSnapshot(reNewDatumRequest.getConnectId());
+                sessionRegistry.sendDatumSnapshot(renewDatumRequest.getConnectId());
 
             }
         } catch (Exception e) {
-            RENEW_LOGGER.error("ReNew datum request to dataNode error!  reNewDatumRequest={}",
-                reNewDatumRequest, e);
+            RENEW_LOGGER.error("Renew datum request to dataNode error!  renewDatumRequest={}",
+                renewDatumRequest, e);
         }
     }
 
@@ -80,8 +80,8 @@ public class ReNewDatumTask extends AbstractSessionTask {
         }
 
         Object obj = taskEvent.getEventObj();
-        if (obj instanceof ReNewDatumRequest) {
-            this.reNewDatumRequest = (ReNewDatumRequest) obj;
+        if (obj instanceof RenewDatumRequest) {
+            this.renewDatumRequest = (RenewDatumRequest) obj;
         } else {
             throw new IllegalArgumentException("Input task event object error!");
         }
@@ -89,13 +89,13 @@ public class ReNewDatumTask extends AbstractSessionTask {
 
     @Override
     public String toString() {
-        return "RENEW_DATUM_TASK{" + "taskId='" + getTaskId() + '\'' + ", reNewDatumRequest="
-               + reNewDatumRequest + ", retry='"
+        return "RENEW_DATUM_TASK{" + "taskId='" + getTaskId() + '\'' + ", renewDatumRequest="
+               + renewDatumRequest + ", retry='"
                + sessionServerConfig.getPublishDataTaskRetryTimes() + '\'' + '}';
     }
 
     @Override
     public boolean checkRetryTimes() {
-        return checkRetryTimes(sessionServerConfig.getReNewDatumTaskRetryTimes());
+        return checkRetryTimes(sessionServerConfig.getRenewDatumTaskRetryTimes());
     }
 }

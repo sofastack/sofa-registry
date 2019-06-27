@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alipay.sofa.registry.server.data.correction;
+package com.alipay.sofa.registry.server.data.renew;
 
 import java.util.Map;
 import java.util.TimeZone;
@@ -53,7 +53,7 @@ public class DatumLeaseManager {
                                                                                   "[DatumLeaseManager]");
 
     /** record the latest heartbeat time for each connectId, format: connectId -> lastRenewTimestamp */
-    private final Map<String, Long>            connectIdReNewTimestampMap = new ConcurrentHashMap<>();
+    private final Map<String, Long>            connectIdRenewTimestampMap = new ConcurrentHashMap<>();
 
     /** lock for connectId , format: connectId -> true */
     private ConcurrentHashMap<String, Boolean> locksForConnectId          = new ConcurrentHashMap();
@@ -93,15 +93,15 @@ public class DatumLeaseManager {
     }
 
     /**
-     * record the reNew timestamp
+     * record the renew timestamp
      */
-    public void reNew(String connectId) {
+    public void renew(String connectId) {
         if (RENEW_LOGGER.isDebugEnabled()) {
-            RENEW_LOGGER.debug("reNew: connectId={}", connectId);
+            RENEW_LOGGER.debug("renew: connectId={}", connectId);
         }
 
-        // record the reNew timestamp
-        connectIdReNewTimestampMap.put(connectId, System.currentTimeMillis());
+        // record the renew timestamp
+        connectIdRenewTimestampMap.put(connectId, System.currentTimeMillis());
         // try to trigger evict task
         scheduleEvictTask(connectId, 0);
     }
@@ -126,31 +126,31 @@ public class DatumLeaseManager {
                 // release lock
                 locksForConnectId.remove(connectId);
 
-                // get lastReNewTime of this connectId
-                long lastReNewTime = connectIdReNewTimestampMap.get(connectId);
+                // get lastRenewTime of this connectId
+                long lastRenewTime = connectIdRenewTimestampMap.get(connectId);
 
                 if (RENEW_LOGGER.isDebugEnabled()) {
-                    RENEW_LOGGER.debug("EvictTask: connectId={}, lastReNewTime={}", connectId, format(lastReNewTime));
+                    RENEW_LOGGER.debug("EvictTask: connectId={}, lastRenewTime={}", connectId, format(lastRenewTime));
                 }
 
                 /*
-                 * 1. lastReNewTime expires, then:
+                 * 1. lastRenewTime expires, then:
                  *   - build ClientOffEvent and hand it to DataChangeEventCenter.
                  *   - It will not be scheduled next time, so terminated.
-                 * 2. lastReNewTime not expires, then:
+                 * 2. lastRenewTime not expires, then:
                  *   - trigger the next schedule
                  */
                 boolean isExpired =
-                        System.currentTimeMillis() - lastReNewTime > dataServerConfig.getDatumTimeToLiveSec() * 1000L;
+                        System.currentTimeMillis() - lastRenewTime > dataServerConfig.getDatumTimeToLiveSec() * 1000L;
                 if (isExpired) {
-                    LOGGER.info("ConnectId({}) expired, lastReNewTime is {}", connectId, format(lastReNewTime));
-                    connectIdReNewTimestampMap.remove(connectId, lastReNewTime);
+                    LOGGER.info("ConnectId({}) expired, lastRenewTime is {}", connectId, format(lastRenewTime));
+                    connectIdRenewTimestampMap.remove(connectId, lastRenewTime);
                     disconnectEventHandler.receive(new ClientDisconnectEvent(connectId, System.currentTimeMillis(),
                             dataServerConfig.getClientOffDelayMs() * 10));
                     continued = false;
                 } else {
                     nextDelaySec = dataServerConfig.getDatumTimeToLiveSec()
-                                   - (System.currentTimeMillis() - lastReNewTime) / 1000L;
+                                   - (System.currentTimeMillis() - lastRenewTime) / 1000L;
                     nextDelaySec = nextDelaySec <= 0 ? 1 : nextDelaySec;
                 }
 
@@ -168,7 +168,7 @@ public class DatumLeaseManager {
 
     }
 
-    private String format(long lastReNewTime) {
-        return DateFormatUtils.format(lastReNewTime, "yyyy-MM-dd HH:mm:ss", TIME_ZONE);
+    private String format(long lastRenewTime) {
+        return DateFormatUtils.format(lastRenewTime, "yyyy-MM-dd HH:mm:ss", TIME_ZONE);
     }
 }

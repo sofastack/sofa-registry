@@ -44,9 +44,9 @@ import com.alipay.sofa.registry.server.session.listener.DataPushTaskListener;
 import com.alipay.sofa.registry.server.session.listener.DatumSnapshotTaskListener;
 import com.alipay.sofa.registry.server.session.listener.ProvideDataChangeFetchTaskListener;
 import com.alipay.sofa.registry.server.session.listener.PublishDataTaskListener;
-import com.alipay.sofa.registry.server.session.listener.ReNewDatumTaskListener;
 import com.alipay.sofa.registry.server.session.listener.ReceivedConfigDataPushTaskListener;
 import com.alipay.sofa.registry.server.session.listener.ReceivedDataMultiPushTaskListener;
+import com.alipay.sofa.registry.server.session.listener.RenewDatumTaskListener;
 import com.alipay.sofa.registry.server.session.listener.SessionRegisterDataTaskListener;
 import com.alipay.sofa.registry.server.session.listener.SubscriberMultiFetchTaskListener;
 import com.alipay.sofa.registry.server.session.listener.SubscriberRegisterFetchTaskListener;
@@ -87,6 +87,8 @@ import com.alipay.sofa.registry.server.session.remoting.handler.PublisherHandler
 import com.alipay.sofa.registry.server.session.remoting.handler.SubscriberHandler;
 import com.alipay.sofa.registry.server.session.remoting.handler.SyncConfigHandler;
 import com.alipay.sofa.registry.server.session.remoting.handler.WatcherHandler;
+import com.alipay.sofa.registry.server.session.renew.DefaultRenewService;
+import com.alipay.sofa.registry.server.session.renew.RenewService;
 import com.alipay.sofa.registry.server.session.resource.ClientsOpenResource;
 import com.alipay.sofa.registry.server.session.resource.HealthResource;
 import com.alipay.sofa.registry.server.session.resource.SessionDigestResource;
@@ -428,40 +430,35 @@ public class SessionServerConfiguration {
 
         @Bean
         public TaskListener subscriberRegisterFetchTaskListener(TaskListenerManager taskListenerManager) {
-            TaskListener taskListener = new SubscriberRegisterFetchTaskListener(
-                dataNodeSingleTaskProcessor());
+            TaskListener taskListener = new SubscriberRegisterFetchTaskListener(dataNodeSingleTaskProcessor());
             taskListenerManager.addTaskListener(taskListener);
             return taskListener;
         }
 
         @Bean
         public TaskListener subscriberMultiFetchTaskListener(TaskListenerManager taskListenerManager) {
-            TaskListener taskListener = new SubscriberMultiFetchTaskListener(
-                dataNodeSingleTaskProcessor());
+            TaskListener taskListener = new SubscriberMultiFetchTaskListener(dataNodeSingleTaskProcessor());
             taskListenerManager.addTaskListener(taskListener);
             return taskListener;
         }
 
         @Bean
         public TaskListener watcherRegisterFetchTaskListener(TaskListenerManager taskListenerManager) {
-            TaskListener taskListener = new WatcherRegisterFetchTaskListener(
-                metaNodeSingleTaskProcessor());
+            TaskListener taskListener = new WatcherRegisterFetchTaskListener(metaNodeSingleTaskProcessor());
             taskListenerManager.addTaskListener(taskListener);
             return taskListener;
         }
 
         @Bean
         public TaskListener provideDataChangeFetchTaskListener(TaskListenerManager taskListenerManager) {
-            TaskListener taskListener = new ProvideDataChangeFetchTaskListener(
-                metaNodeSingleTaskProcessor());
+            TaskListener taskListener = new ProvideDataChangeFetchTaskListener(metaNodeSingleTaskProcessor());
             taskListenerManager.addTaskListener(taskListener);
             return taskListener;
         }
 
         @Bean
         public TaskListener dataChangeFetchTaskListener(TaskListenerManager taskListenerManager) {
-            TaskListener taskListener = new DataChangeFetchTaskListener(
-                dataNodeSingleTaskProcessor());
+            TaskListener taskListener = new DataChangeFetchTaskListener(dataNodeSingleTaskProcessor());
             taskListenerManager.addTaskListener(taskListener);
             return taskListener;
         }
@@ -475,16 +472,14 @@ public class SessionServerConfiguration {
 
         @Bean
         public TaskListener dataChangeFetchCloudTaskListener(TaskListenerManager taskListenerManager) {
-            TaskListener taskListener = new DataChangeFetchCloudTaskListener(
-                dataNodeSingleTaskProcessor());
+            TaskListener taskListener = new DataChangeFetchCloudTaskListener(dataNodeSingleTaskProcessor());
             taskListenerManager.addTaskListener(taskListener);
             return taskListener;
         }
 
         @Bean
         public TaskListener sessionRegisterDataTaskListener(TaskListenerManager taskListenerManager) {
-            TaskListener taskListener = new SessionRegisterDataTaskListener(
-                dataNodeSingleTaskProcessor());
+            TaskListener taskListener = new SessionRegisterDataTaskListener(dataNodeSingleTaskProcessor());
             taskListenerManager.addTaskListener(taskListener);
             return taskListener;
         }
@@ -493,17 +488,15 @@ public class SessionServerConfiguration {
         public TaskListener receivedDataMultiPushTaskListener(TaskListenerManager taskListenerManager,
                                                               TaskMergeProcessorStrategy receiveDataTaskMergeProcessorStrategy,
                                                               SessionServerConfig sessionServerConfig) {
-            TaskListener taskListener = new ReceivedDataMultiPushTaskListener(
-                clientNodeSingleTaskProcessor(), receiveDataTaskMergeProcessorStrategy,
-                sessionServerConfig);
+            TaskListener taskListener = new ReceivedDataMultiPushTaskListener(clientNodeSingleTaskProcessor(),
+                    receiveDataTaskMergeProcessorStrategy, sessionServerConfig);
             taskListenerManager.addTaskListener(taskListener);
             return taskListener;
         }
 
         @Bean
         public TaskListener receivedConfigDataPushTaskListener(TaskListenerManager taskListenerManager) {
-            TaskListener taskListener = new ReceivedConfigDataPushTaskListener(
-                clientNodeSingleTaskProcessor());
+            TaskListener taskListener = new ReceivedConfigDataPushTaskListener(clientNodeSingleTaskProcessor());
             taskListenerManager.addTaskListener(taskListener);
             return taskListener;
         }
@@ -530,8 +523,8 @@ public class SessionServerConfiguration {
         }
 
         @Bean
-        public TaskListener reNewDatumTaskListener(TaskListenerManager taskListenerManager) {
-            TaskListener taskListener = new ReNewDatumTaskListener();
+        public TaskListener renewDatumTaskListener(TaskListenerManager taskListenerManager) {
+            TaskListener taskListener = new RenewDatumTaskListener();
             taskListenerManager.addTaskListener(taskListener);
             return taskListener;
         }
@@ -639,11 +632,16 @@ public class SessionServerConfiguration {
     }
 
     @Configuration
-    public static class SessionReNewDatumConfiguration {
+    public static class SessionRenewDatumConfiguration {
 
         @Bean
         public WriteDataAcceptor writeDataAcceptor() {
             return new WriteDataAcceptorImpl();
+        }
+
+        @Bean
+        public RenewService renewService() {
+            return new DefaultRenewService();
         }
     }
 }

@@ -41,8 +41,8 @@ import com.alipay.sofa.registry.server.data.change.notify.BackUpNotifier;
 import com.alipay.sofa.registry.server.data.change.notify.IDataChangeNotifier;
 import com.alipay.sofa.registry.server.data.change.notify.SessionServerNotifier;
 import com.alipay.sofa.registry.server.data.change.notify.TempPublisherNotifier;
-import com.alipay.sofa.registry.server.data.correction.DatumLeaseManager;
-import com.alipay.sofa.registry.server.data.correction.LocalDataServerCleanHandler;
+import com.alipay.sofa.registry.server.data.renew.DatumLeaseManager;
+import com.alipay.sofa.registry.server.data.renew.LocalDataServerCleanHandler;
 import com.alipay.sofa.registry.server.data.datasync.AcceptorStore;
 import com.alipay.sofa.registry.server.data.datasync.SyncDataService;
 import com.alipay.sofa.registry.server.data.datasync.sync.LocalAcceptorStore;
@@ -69,7 +69,7 @@ import com.alipay.sofa.registry.server.data.remoting.dataserver.handler.NotifyOn
 import com.alipay.sofa.registry.server.data.remoting.dataserver.handler.SyncDataHandler;
 import com.alipay.sofa.registry.server.data.remoting.dataserver.task.AbstractTask;
 import com.alipay.sofa.registry.server.data.remoting.dataserver.task.ConnectionRefreshTask;
-import com.alipay.sofa.registry.server.data.remoting.dataserver.task.ReNewNodeTask;
+import com.alipay.sofa.registry.server.data.remoting.dataserver.task.RenewNodeTask;
 import com.alipay.sofa.registry.server.data.remoting.handler.AbstractClientHandler;
 import com.alipay.sofa.registry.server.data.remoting.handler.AbstractServerHandler;
 import com.alipay.sofa.registry.server.data.remoting.metaserver.DefaultMetaServiceImpl;
@@ -88,7 +88,7 @@ import com.alipay.sofa.registry.server.data.remoting.sessionserver.handler.Datum
 import com.alipay.sofa.registry.server.data.remoting.sessionserver.handler.GetDataHandler;
 import com.alipay.sofa.registry.server.data.remoting.sessionserver.handler.GetDataVersionsHandler;
 import com.alipay.sofa.registry.server.data.remoting.sessionserver.handler.PublishDataHandler;
-import com.alipay.sofa.registry.server.data.remoting.sessionserver.handler.ReNewDatumHandler;
+import com.alipay.sofa.registry.server.data.remoting.sessionserver.handler.RenewDatumHandler;
 import com.alipay.sofa.registry.server.data.remoting.sessionserver.handler.SessionServerRegisterHandler;
 import com.alipay.sofa.registry.server.data.remoting.sessionserver.handler.UnPublishDataHandler;
 import com.alipay.sofa.registry.server.data.resource.DataDigestResource;
@@ -208,7 +208,7 @@ public class DataServerBeanConfiguration {
             list.add(sessionServerRegisterHandler());
             list.add(unPublishDataHandler());
             list.add(dataServerConnectionHandler());
-            list.add(reNewDatumHandler());
+            list.add(renewDatumHandler());
             list.add(datumSnapshotHandler());
             return list;
         }
@@ -273,8 +273,8 @@ public class DataServerBeanConfiguration {
         }
 
         @Bean
-        public AbstractServerHandler reNewDatumHandler() {
-            return new ReNewDatumHandler();
+        public AbstractServerHandler renewDatumHandler() {
+            return new RenewDatumHandler();
         }
 
         @Bean
@@ -452,8 +452,8 @@ public class DataServerBeanConfiguration {
         }
 
         @Bean
-        public ReNewNodeTask reNewNodeTask() {
-            return new ReNewNodeTask();
+        public RenewNodeTask renewNodeTask() {
+            return new RenewNodeTask();
         }
 
         @Bean(name = "tasks")
@@ -461,7 +461,7 @@ public class DataServerBeanConfiguration {
             List<AbstractTask> list = new ArrayList<>();
             list.add(connectionRefreshTask());
             list.add(connectionRefreshMetaTask());
-            list.add(reNewNodeTask());
+            list.add(renewNodeTask());
             return list;
         }
 

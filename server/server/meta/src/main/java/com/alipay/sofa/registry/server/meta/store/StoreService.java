@@ -41,7 +41,7 @@ public interface StoreService<T extends Node> {
     NodeChangeResult setNodes(List<T> nodes);
 
     /**
-     * add new node,when reNew request not found node will be add again
+     * add new node,when renew request not found node will be add again
      * @param node
      * @return
      */
@@ -72,7 +72,7 @@ public interface StoreService<T extends Node> {
      * @param node
      * @return
      */
-    void reNew(T node, int duration);
+    void renew(T node, int duration);
 
     /**
      * get expired node list

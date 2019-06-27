@@ -32,7 +32,7 @@ import com.alipay.sofa.registry.server.data.bootstrap.DataServerConfig;
 import com.alipay.sofa.registry.server.data.cache.DatumCache;
 import com.alipay.sofa.registry.server.data.cache.UnPublisher;
 import com.alipay.sofa.registry.server.data.change.event.DataChangeEventCenter;
-import com.alipay.sofa.registry.server.data.correction.DatumLeaseManager;
+import com.alipay.sofa.registry.server.data.renew.DatumLeaseManager;
 import com.alipay.sofa.registry.server.data.remoting.handler.AbstractServerHandler;
 import com.alipay.sofa.registry.server.data.remoting.sessionserver.forward.ForwardService;
 import com.alipay.sofa.registry.util.ParaCheckUtil;
@@ -83,10 +83,10 @@ public class UnPublishDataHandler extends AbstractServerHandler<UnPublishDataReq
             new UnPublisher(request.getDataInfoId(), request.getRegisterId(), request
                 .getRegisterTimestamp()), dataServerConfig.getLocalDataCenter());
 
-        // Attempt to get connectId from datumCache (Datum may not exist), and record the reNew timestamp
+        // Attempt to get connectId from datumCache (Datum may not exist), and record the renew timestamp
         String connectId = getConnectId(request);
         if (connectId != null) {
-            datumLeaseManager.reNew(connectId);
+            datumLeaseManager.renew(connectId);
         }
 
         return CommonResponse.buildSuccessResponse();

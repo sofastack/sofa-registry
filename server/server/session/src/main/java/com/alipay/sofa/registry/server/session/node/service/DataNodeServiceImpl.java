@@ -29,7 +29,7 @@ import com.alipay.sofa.registry.common.model.CommonResponse;
 import com.alipay.sofa.registry.common.model.DatumSnapshotRequest;
 import com.alipay.sofa.registry.common.model.GenericResponse;
 import com.alipay.sofa.registry.common.model.Node;
-import com.alipay.sofa.registry.common.model.ReNewDatumRequest;
+import com.alipay.sofa.registry.common.model.RenewDatumRequest;
 import com.alipay.sofa.registry.common.model.dataserver.ClientOffRequest;
 import com.alipay.sofa.registry.common.model.dataserver.Datum;
 import com.alipay.sofa.registry.common.model.dataserver.GetDataRequest;
@@ -468,17 +468,17 @@ public class DataNodeServiceImpl implements DataNodeService {
         return null;
     }
 
-    public Boolean reNewDatum(ReNewDatumRequest reNewDatumRequest) {
+    public Boolean renewDatum(RenewDatumRequest renewDatumRequest) {
         try {
-            Request<ReNewDatumRequest> request = new Request<ReNewDatumRequest>() {
+            Request<RenewDatumRequest> request = new Request<RenewDatumRequest>() {
                 @Override
-                public ReNewDatumRequest getRequestBody() {
-                    return reNewDatumRequest;
+                public RenewDatumRequest getRequestBody() {
+                    return renewDatumRequest;
                 }
 
                 @Override
                 public URL getRequestUrl() {
-                    return new URL(reNewDatumRequest.getDataServerIp(),
+                    return new URL(renewDatumRequest.getDataServerIp(),
                         sessionServerConfig.getDataServerPort());
                 }
             };
@@ -492,20 +492,20 @@ public class DataNodeServiceImpl implements DataNodeService {
                     return (Boolean) genericResponse.getData();
 
                 } else {
-                    LOGGER.error("reNewDatum has not get fail response!msg:{}",
+                    LOGGER.error("renewDatum has not get fail response!msg:{}",
                         genericResponse.getMessage());
-                    throw new RuntimeException("reNewDatum has not get fail response! msg:"
+                    throw new RuntimeException("renewDatum has not get fail response! msg:"
                                                + genericResponse.getMessage());
                 }
             } else {
-                LOGGER.error("reNewDatum has not get response or response type illegal!");
+                LOGGER.error("renewDatum has not get response or response type illegal!");
                 throw new RuntimeException(
-                    "reNewDatum has not get response or response type illegal!");
+                    "renewDatum has not get response or response type illegal!");
             }
 
         } catch (RequestException e) {
-            LOGGER.error("ReNewDatum request error! " + e.getRequestMessage(), e);
-            throw new RuntimeException("ReNewDatum request error! " + e.getRequestMessage(), e);
+            LOGGER.error("RenewDatum request error! " + e.getRequestMessage(), e);
+            throw new RuntimeException("RenewDatum request error! " + e.getRequestMessage(), e);
         }
     }
 

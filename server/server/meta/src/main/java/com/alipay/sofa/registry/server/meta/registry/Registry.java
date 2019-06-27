@@ -59,10 +59,10 @@ public interface Registry<T extends Node> {
     void evict();
 
     /**
-     * reNew node expire time
+     * renew node expire time
      * @param node
      */
-    void reNew(T node, int duration);
+    void renew(T node, int duration);
 
     /**
      * get other dataCenter Nodes change scheduled
