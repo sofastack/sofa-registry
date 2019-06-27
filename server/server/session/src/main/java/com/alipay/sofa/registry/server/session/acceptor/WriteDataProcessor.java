@@ -19,6 +19,7 @@ package com.alipay.sofa.registry.server.session.acceptor;
 import java.util.List;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
 import com.alipay.sofa.registry.common.model.DatumSnapshotRequest;
@@ -67,6 +68,8 @@ public class WriteDataProcessor {
 
     private ConcurrentLinkedQueue<WriteDataRequest> acceptorQueue       = new ConcurrentLinkedQueue();
 
+    private AtomicInteger                           acceptorQueueSize   = new AtomicInteger(0);
+
     public WriteDataProcessor(String connectId, TaskListenerManager taskListenerManager,
                               SessionServerConfig sessionServerConfig, RenewService renewService) {
         this.connectId = connectId;
@@ -100,20 +103,37 @@ public class WriteDataProcessor {
                 request.getRequestType(), request.getRequestBody());
         }
         if (request.getRequestType() == WriteDataRequestType.DATUM_SNAPSHOT) {
+            // snapshot has high priority, so handle directly
             doHandle(request);
         } else {
+            // If locked, insert the queue;
+            // otherwise, try emptying the queue (to avoid residue) before processing the request.
             if (writeDataLock.get()) {
-                acceptorQueue.add(request);
+                addQueue(request);
             } else {
                 flushQueue();
                 doHandle(request);
             }
         }
 
+        // record the last update time
         if (isWriteRequest(request)) {
             refreshUpdateTime();
         }
 
+    }
+
+    private void addQueue(WriteDataRequest request) {
+        if (acceptorQueueSize.incrementAndGet() <= sessionServerConfig
+            .getWriteDataAcceptorQueueSize()) {
+            acceptorQueue.add(request);
+        } else {
+            RENEW_LOGGER
+                .error(
+                    "acceptorQueueSize({}) reached the limit : connectId={}, requestType={}, requestBody={}",
+                    acceptorQueue.size(), connectId, request.getRequestType(),
+                    request.getRequestBody());
+        }
     }
 
     /**
@@ -138,6 +158,7 @@ public class WriteDataProcessor {
             if (writeDataRequest == null) {
                 break;
             }
+            acceptorQueueSize.decrementAndGet();
             doHandle(writeDataRequest);
         }
     }

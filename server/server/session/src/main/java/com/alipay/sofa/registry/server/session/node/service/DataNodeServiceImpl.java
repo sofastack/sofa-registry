@@ -23,6 +23,8 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import javax.annotation.PostConstruct;
+
 import org.springframework.beans.factory.annotation.Autowired;
 
 import com.alipay.sofa.registry.common.model.CommonResponse;
@@ -72,12 +74,15 @@ public class DataNodeServiceImpl implements DataNodeService {
 
     private AsyncHashedWheelTimer asyncHashedWheelTimer;
 
-    public DataNodeServiceImpl() {
+    @PostConstruct
+    public void init() {
         ThreadFactoryBuilder threadFactoryBuilder = new ThreadFactoryBuilder();
         threadFactoryBuilder.setDaemon(true);
         asyncHashedWheelTimer = new AsyncHashedWheelTimer(threadFactoryBuilder.setNameFormat(
-            "Registry-DataNodeServiceImpl-WheelTimer").build(), 100, TimeUnit.MILLISECONDS, 1024,
-            threadFactoryBuilder.setNameFormat("Registry-DataNodeServiceImpl-WheelExecutor-%d")
+            "Registry-DataNodeServiceImpl-ClientOffRetry-WheelTimer").build(), 100,
+            TimeUnit.MILLISECONDS, 1024, sessionServerConfig.getClientOffRetryExecutorThreadSize(),
+            sessionServerConfig.getClientOffRetryExecutorQueueSize(), threadFactoryBuilder
+                .setNameFormat("Registry-DataNodeServiceImpl-ClientOffRetry-WheelExecutor-%d")
                 .build(), new TaskFailedCallback() {
                 @Override
                 public void executionRejected(Throwable e) {

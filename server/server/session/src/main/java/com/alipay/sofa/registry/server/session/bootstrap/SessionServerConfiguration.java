@@ -430,35 +430,40 @@ public class SessionServerConfiguration {
 
         @Bean
         public TaskListener subscriberRegisterFetchTaskListener(TaskListenerManager taskListenerManager) {
-            TaskListener taskListener = new SubscriberRegisterFetchTaskListener(dataNodeSingleTaskProcessor());
+            TaskListener taskListener = new SubscriberRegisterFetchTaskListener(
+                dataNodeSingleTaskProcessor());
             taskListenerManager.addTaskListener(taskListener);
             return taskListener;
         }
 
         @Bean
         public TaskListener subscriberMultiFetchTaskListener(TaskListenerManager taskListenerManager) {
-            TaskListener taskListener = new SubscriberMultiFetchTaskListener(dataNodeSingleTaskProcessor());
+            TaskListener taskListener = new SubscriberMultiFetchTaskListener(
+                dataNodeSingleTaskProcessor());
             taskListenerManager.addTaskListener(taskListener);
             return taskListener;
         }
 
         @Bean
         public TaskListener watcherRegisterFetchTaskListener(TaskListenerManager taskListenerManager) {
-            TaskListener taskListener = new WatcherRegisterFetchTaskListener(metaNodeSingleTaskProcessor());
+            TaskListener taskListener = new WatcherRegisterFetchTaskListener(
+                metaNodeSingleTaskProcessor());
             taskListenerManager.addTaskListener(taskListener);
             return taskListener;
         }
 
         @Bean
         public TaskListener provideDataChangeFetchTaskListener(TaskListenerManager taskListenerManager) {
-            TaskListener taskListener = new ProvideDataChangeFetchTaskListener(metaNodeSingleTaskProcessor());
+            TaskListener taskListener = new ProvideDataChangeFetchTaskListener(
+                metaNodeSingleTaskProcessor());
             taskListenerManager.addTaskListener(taskListener);
             return taskListener;
         }
 
         @Bean
         public TaskListener dataChangeFetchTaskListener(TaskListenerManager taskListenerManager) {
-            TaskListener taskListener = new DataChangeFetchTaskListener(dataNodeSingleTaskProcessor());
+            TaskListener taskListener = new DataChangeFetchTaskListener(
+                dataNodeSingleTaskProcessor());
             taskListenerManager.addTaskListener(taskListener);
             return taskListener;
         }
@@ -472,14 +477,16 @@ public class SessionServerConfiguration {
 
         @Bean
         public TaskListener dataChangeFetchCloudTaskListener(TaskListenerManager taskListenerManager) {
-            TaskListener taskListener = new DataChangeFetchCloudTaskListener(dataNodeSingleTaskProcessor());
+            TaskListener taskListener = new DataChangeFetchCloudTaskListener(
+                dataNodeSingleTaskProcessor());
             taskListenerManager.addTaskListener(taskListener);
             return taskListener;
         }
 
         @Bean
         public TaskListener sessionRegisterDataTaskListener(TaskListenerManager taskListenerManager) {
-            TaskListener taskListener = new SessionRegisterDataTaskListener(dataNodeSingleTaskProcessor());
+            TaskListener taskListener = new SessionRegisterDataTaskListener(
+                dataNodeSingleTaskProcessor());
             taskListenerManager.addTaskListener(taskListener);
             return taskListener;
         }
@@ -488,15 +495,17 @@ public class SessionServerConfiguration {
         public TaskListener receivedDataMultiPushTaskListener(TaskListenerManager taskListenerManager,
                                                               TaskMergeProcessorStrategy receiveDataTaskMergeProcessorStrategy,
                                                               SessionServerConfig sessionServerConfig) {
-            TaskListener taskListener = new ReceivedDataMultiPushTaskListener(clientNodeSingleTaskProcessor(),
-                    receiveDataTaskMergeProcessorStrategy, sessionServerConfig);
+            TaskListener taskListener = new ReceivedDataMultiPushTaskListener(
+                clientNodeSingleTaskProcessor(), receiveDataTaskMergeProcessorStrategy,
+                sessionServerConfig);
             taskListenerManager.addTaskListener(taskListener);
             return taskListener;
         }
 
         @Bean
         public TaskListener receivedConfigDataPushTaskListener(TaskListenerManager taskListenerManager) {
-            TaskListener taskListener = new ReceivedConfigDataPushTaskListener(clientNodeSingleTaskProcessor());
+            TaskListener taskListener = new ReceivedConfigDataPushTaskListener(
+                clientNodeSingleTaskProcessor());
             taskListenerManager.addTaskListener(taskListener);
             return taskListener;
         }

@@ -21,6 +21,8 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
+import javax.annotation.PostConstruct;
+
 import org.springframework.beans.factory.annotation.Autowired;
 
 import com.alipay.remoting.Connection;
@@ -55,7 +57,7 @@ public class SessionServerNotifier implements IDataChangeNotifier {
     private AsyncHashedWheelTimer          asyncHashedWheelTimer;
 
     @Autowired
-    private DataServerConfig               dataServerBootstrapConfig;
+    private DataServerConfig               dataServerConfig;
 
     @Autowired
     private Exchange                       boltExchange;
@@ -66,13 +68,16 @@ public class SessionServerNotifier implements IDataChangeNotifier {
     @Autowired
     private DatumCache                     datumCache;
 
-    public SessionServerNotifier() {
+    @PostConstruct
+    public void init() {
         ThreadFactoryBuilder threadFactoryBuilder = new ThreadFactoryBuilder();
         threadFactoryBuilder.setDaemon(true);
         asyncHashedWheelTimer = new AsyncHashedWheelTimer(threadFactoryBuilder.setNameFormat(
             "Registry-SessionServerNotifier-WheelTimer").build(), 100, TimeUnit.MILLISECONDS, 1024,
-            threadFactoryBuilder.setNameFormat("Registry-SessionServerNotifier-WheelExecutor-%d")
-                .build(), new TaskFailedCallback() {
+            dataServerConfig.getSessionServerNotifierRetryExecutorThreadSize(),
+            dataServerConfig.getSessionServerNotifierRetryExecutorQueueSize(), threadFactoryBuilder
+                .setNameFormat("Registry-SessionServerNotifier-WheelExecutor-%d").build(),
+            new TaskFailedCallback() {
                 @Override
                 public void executionRejected(Throwable e) {
                     LOGGER.error("executionRejected: " + e.getMessage(), e);
@@ -113,17 +118,17 @@ public class SessionServerNotifier implements IDataChangeNotifier {
                     LOGGER
                         .info(String
                             .format(
-                                "connection from sessionserver(%s) is not fine, so ignore notify, retryTimes=%s,request=%s",
+                                "connection from sessionServer(%s) is not fine, so ignore notify, retryTimes=%s,request=%s",
                                 connection.getRemoteAddress(), notifyCallback.retryTimes, request));
                 }
                 return;
             }
-            Server sessionServer = boltExchange.getServer(dataServerBootstrapConfig.getPort());
+            Server sessionServer = boltExchange.getServer(dataServerConfig.getPort());
             sessionServer.sendCallback(sessionServer.getChannel(connection.getRemoteAddress()),
-                request, notifyCallback, dataServerBootstrapConfig.getRpcTimeout());
+                request, notifyCallback, dataServerConfig.getRpcTimeout());
         } catch (Exception e) {
             LOGGER.error(String.format(
-                "invokeWithCallback failed: sessionserver(%s),retryTimes=%s, request=%s",
+                "invokeWithCallback failed: sessionServer(%s),retryTimes=%s, request=%s",
                 connection.getRemoteAddress(), notifyCallback.retryTimes, request), e);
             onFailed(notifyCallback);
         }
@@ -137,10 +142,10 @@ public class SessionServerNotifier implements IDataChangeNotifier {
         Connection connection = notifyCallback.connection;
         notifyCallback.retryTimes++;
 
-        if (notifyCallback.retryTimes <= dataServerBootstrapConfig.getNotifySessionRetryTimes()) {
+        if (notifyCallback.retryTimes <= dataServerConfig.getNotifySessionRetryTimes()) {
             this.asyncHashedWheelTimer.newTimeout(timeout -> {
                 if (LOGGER.isInfoEnabled()) {
-                    LOGGER.info(String.format("retrying notify sessionserver(%s), retryTimes=%s, request=%s",
+                    LOGGER.info(String.format("retrying notify sessionServer(%s), retryTimes=%s, request=%s",
                             connection.getRemoteAddress(), notifyCallback.retryTimes, request));
                 }
                 //check version, if it's fall behind, stop retry
@@ -163,9 +168,9 @@ public class SessionServerNotifier implements IDataChangeNotifier {
     }
 
     private long getDelayTimeForRetry(int retryTimes) {
-        long initialSleepTime = TimeUnit.MILLISECONDS.toMillis(dataServerBootstrapConfig
+        long initialSleepTime = TimeUnit.MILLISECONDS.toMillis(dataServerConfig
             .getNotifySessionRetryFirstDelay());
-        long increment = TimeUnit.MILLISECONDS.toMillis(dataServerBootstrapConfig
+        long increment = TimeUnit.MILLISECONDS.toMillis(dataServerConfig
             .getNotifySessionRetryIncrementDelay());
         long result = initialSleepTime + (increment * (retryTimes - 1));
         return result >= 0L ? result : 0L;
@@ -189,7 +194,7 @@ public class SessionServerNotifier implements IDataChangeNotifier {
                 LOGGER
                     .error(String
                         .format(
-                            "response not success when notify sessionserver(%s), retryTimes=%s, request=%s, response=%s",
+                            "response not success when notify sessionServer(%s), retryTimes=%s, request=%s, response=%s",
                             connection.getRemoteAddress(), retryTimes, request, result));
                 onFailed(this);
             }
@@ -198,7 +203,7 @@ public class SessionServerNotifier implements IDataChangeNotifier {
         @Override
         public void onException(Channel channel, Throwable e) {
             LOGGER.error(String.format(
-                "exception when notify sessionserver(%s), retryTimes=%s, request=%s",
+                "exception when notify sessionServer(%s), retryTimes=%s, request=%s",
                 connection.getRemoteAddress(), retryTimes, request), e);
             onFailed(this);
         }

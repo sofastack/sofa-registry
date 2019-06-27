@@ -131,6 +131,10 @@ public interface SessionServerConfig {
 
     int getUserDataPushRetryWheelTicksDuration();
 
+    int getUserDataPushRetryExecutorQueueSize();
+
+    int getUserDataPushRetryExecutorThreadSize();
+
     int getPushDataTaskRetryFirstDelay();
 
     long getPushDataTaskRetryIncrementDelay();
@@ -156,4 +160,10 @@ public interface SessionServerConfig {
     boolean isInvalidIgnored(String dataId);
 
     int getRenewAndSnapshotSilentPeriodSec();
+
+    int getWriteDataAcceptorQueueSize();
+
+    int getClientOffRetryExecutorQueueSize();
+
+    int getClientOffRetryExecutorThreadSize();
 }

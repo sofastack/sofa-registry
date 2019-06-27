@@ -16,6 +16,12 @@
  */
 package com.alipay.sofa.registry.server.session.scheduler.task;
 
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.concurrent.TimeUnit;
+
 import com.alipay.sofa.registry.common.model.PushDataRetryRequest;
 import com.alipay.sofa.registry.common.model.store.Subscriber;
 import com.alipay.sofa.registry.common.model.store.URL;
@@ -36,12 +42,6 @@ import com.alipay.sofa.registry.task.TaskClosure;
 import com.alipay.sofa.registry.task.batcher.TaskProcessor.ProcessingResult;
 import com.alipay.sofa.registry.task.listener.TaskEvent;
 import com.alipay.sofa.registry.timer.AsyncHashedWheelTimer;
-
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.concurrent.TimeUnit;
 
 /**
  *
@@ -156,36 +156,46 @@ public class ReceivedDataMultiPushTask extends AbstractSessionTask implements Ta
 
                 if (channel != null && channel.isConnected()) {
 
-                    asyncHashedWheelTimer.newTimeout(timeout ->  {
+                    asyncHashedWheelTimer.newTimeout(timeout -> {
                         try {
                             clientNodeService.pushWithCallback(infoPackage, targetUrl, new CallbackHandler() {
                                 @Override
                                 public void onCallback(Channel channel, Object message) {
-                                    LOGGER.info("Retry Push ReceivedData success! dataId:{}, group:{},url:{},taskId:{},dataPush:{},retryTimes:{}",
-                                            receivedData.getDataId(), receivedData.getGroup(), targetUrl,getTaskId(),dataPush,retryTimes);
+                                    LOGGER.info(
+                                            "Retry Push ReceivedData success! dataId:{}, group:{},url:{},taskId:{},dataPush:{},retryTimes:{}",
+                                            receivedData.getDataId(), receivedData.getGroup(), targetUrl, getTaskId(),
+                                            dataPush, retryTimes);
                                 }
 
                                 @Override
                                 public void onException(Channel channel, Throwable exception) {
-                                    LOGGER.error("Retry Push ReceivedData callback error! url:{}, dataId:{}, group:{},taskId:{},dataPush:{},retryTimes:{}", targetUrl,
-                                            receivedData.getDataId(), receivedData.getGroup(),getTaskId(),dataPush,retryTimes);
+                                    LOGGER.error(
+                                            "Retry Push ReceivedData callback error! url:{}, dataId:{}, group:{},taskId:{},dataPush:{},retryTimes:{}",
+                                            targetUrl, receivedData.getDataId(), receivedData.getGroup(), getTaskId(),
+                                            dataPush, retryTimes);
                                     retrySendReceiveData(pushDataRetryRequest);
                                 }
                             });
 
                         } catch (Exception e) {
-                            LOGGER.error("Retry Push ReceivedData error! url:{}, dataId:{}, group:{},taskId:{},dataPush:{},retryTimes:{}", targetUrl,
-                                    receivedData.getDataId(), receivedData.getGroup(),getTaskId(),dataPush,retryTimes);
+                            LOGGER.error(
+                                    "Retry Push ReceivedData error! url:{}, dataId:{}, group:{},taskId:{},dataPush:{},retryTimes:{}",
+                                    targetUrl, receivedData.getDataId(), receivedData.getGroup(), getTaskId(), dataPush,
+                                    retryTimes);
                             retrySendReceiveData(pushDataRetryRequest);
                         }
-                    },getBlockTime(retryTimes),TimeUnit.MILLISECONDS);
+                    }, getBlockTime(retryTimes), TimeUnit.MILLISECONDS);
                 } else {
-                    LOGGER.error("Retry Push ReceivedData error, connect be null or disconnected,stop retry!dataId:{}, group:{},url:{},taskId:{},dataPush:{},retryTimes:{}",
-                            receivedData.getDataId(), receivedData.getGroup(), targetUrl,getTaskId(),dataPush,retryTimes);
+                    LOGGER.error(
+                            "Retry Push ReceivedData error, connect be null or disconnected,stop retry!dataId:{}, group:{},url:{},taskId:{},dataPush:{},retryTimes:{}",
+                            receivedData.getDataId(), receivedData.getGroup(), targetUrl, getTaskId(), dataPush,
+                            retryTimes);
                 }
             } else {
-                LOGGER.error("Retry Push ReceivedData times have exceeded!dataId:{}, group:{},url:{},taskId:{},dataPush:{},retryTimes:{}",
-                        receivedData.getDataId(), receivedData.getGroup(), targetUrl,getTaskId(),dataPush,retryTimes);
+                LOGGER.error(
+                        "Retry Push ReceivedData times have exceeded!dataId:{}, group:{},url:{},taskId:{},dataPush:{},retryTimes:{}",
+                        receivedData.getDataId(), receivedData.getGroup(), targetUrl, getTaskId(), dataPush,
+                        retryTimes);
             }
         }
     }

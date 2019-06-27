@@ -148,6 +148,10 @@ public class SessionServerConfigBean implements SessionServerConfig {
 
     private int                userDataPushRetryWheelTicksDuration     = 100;
 
+    private int                userDataPushRetryExecutorQueueSize      = 1000000;
+
+    private int                userDataPushRetryExecutorThreadSize     = 10;
+
     private int                renewDatumWheelTicksSize                = 2048;
 
     private int                renewDatumWheelTicksDuration            = 500;
@@ -183,6 +187,12 @@ public class SessionServerConfigBean implements SessionServerConfig {
 
     private int                renewAndSnapshotSilentPeriodSec         = 20;
 
+    private int                writeDataAcceptorQueueSize              = 10000;
+
+    private int                clientOffRetryExecutorQueueSize         = 100000;
+
+    private int                clientOffRetryExecutorThreadSize        = 100;
+
     //end config for enterprise version
 
     private CommonConfig       commonConfig;
@@ -193,6 +203,100 @@ public class SessionServerConfigBean implements SessionServerConfig {
      */
     public SessionServerConfigBean(CommonConfig commonConfig) {
         this.commonConfig = commonConfig;
+    }
+
+    /**
+     * Getter method for property <tt>userDataPushRetryExecutorQueueSize</tt>.
+     *
+     * @return property value of userDataPushRetryExecutorQueueSize
+     */
+    @Override
+    public int getUserDataPushRetryExecutorQueueSize() {
+        return userDataPushRetryExecutorQueueSize;
+    }
+
+    /**
+     * Setter method for property <tt>userDataPushRetryExecutorQueueSize </tt>.
+     *
+     * @param userDataPushRetryExecutorQueueSize  value to be assigned to property userDataPushRetryExecutorQueueSize
+     */
+    public void setUserDataPushRetryExecutorQueueSize(int userDataPushRetryExecutorQueueSize) {
+        this.userDataPushRetryExecutorQueueSize = userDataPushRetryExecutorQueueSize;
+    }
+
+    /**
+     * Getter method for property <tt>userDataPushRetryExecutorThreadSize</tt>.
+     *
+     * @return property value of userDataPushRetryExecutorThreadSize
+     */
+    @Override
+    public int getUserDataPushRetryExecutorThreadSize() {
+        return userDataPushRetryExecutorThreadSize;
+    }
+
+    /**
+     * Setter method for property <tt>userDataPushRetryExecutorThreadSize </tt>.
+     *
+     * @param userDataPushRetryExecutorThreadSize  value to be assigned to property userDataPushRetryExecutorThreadSize
+     */
+    public void setUserDataPushRetryExecutorThreadSize(int userDataPushRetryExecutorThreadSize) {
+        this.userDataPushRetryExecutorThreadSize = userDataPushRetryExecutorThreadSize;
+    }
+
+    /**
+     * Getter method for property <tt>clientOffRetryExecutorThreadSize</tt>.
+     *
+     * @return property value of clientOffRetryExecutorThreadSize
+     */
+    @Override
+    public int getClientOffRetryExecutorThreadSize() {
+        return clientOffRetryExecutorThreadSize;
+    }
+
+    /**
+     * Setter method for property <tt>clientOffRetryExecutorThreadSize </tt>.
+     *
+     * @param clientOffRetryExecutorThreadSize  value to be assigned to property clientOffRetryExecutorThreadSize
+     */
+    public void setClientOffRetryExecutorThreadSize(int clientOffRetryExecutorThreadSize) {
+        this.clientOffRetryExecutorThreadSize = clientOffRetryExecutorThreadSize;
+    }
+
+    /**
+     * Getter method for property <tt>clientOffRetryExecutorQueueSize</tt>.
+     *
+     * @return property value of clientOffRetryExecutorQueueSize
+     */
+    @Override
+    public int getClientOffRetryExecutorQueueSize() {
+        return clientOffRetryExecutorQueueSize;
+    }
+
+    /**
+     * Setter method for property <tt>clientOffRetryExecutorQueueSize </tt>.
+     *
+     * @param clientOffRetryExecutorQueueSize  value to be assigned to property clientOffRetryExecutorQueueSize
+     */
+    public void setClientOffRetryExecutorQueueSize(int clientOffRetryExecutorQueueSize) {
+        this.clientOffRetryExecutorQueueSize = clientOffRetryExecutorQueueSize;
+    }
+
+    /**
+     * Getter method for property <tt>writeDataAcceptorQueueSize</tt>.
+     *
+     * @return property value of writeDataAcceptorQueueSize
+     */
+    public int getWriteDataAcceptorQueueSize() {
+        return writeDataAcceptorQueueSize;
+    }
+
+    /**
+     * Setter method for property <tt>writeDataAcceptorQueueSize </tt>.
+     *
+     * @param writeDataAcceptorQueueSize  value to be assigned to property writeDataAcceptorQueueSize
+     */
+    public void setWriteDataAcceptorQueueSize(int writeDataAcceptorQueueSize) {
+        this.writeDataAcceptorQueueSize = writeDataAcceptorQueueSize;
     }
 
     /**

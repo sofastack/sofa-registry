@@ -19,9 +19,9 @@ package com.alipay.sofa.registry.server.data.renew;
 import java.util.Map;
 import java.util.TimeZone;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+
+import javax.annotation.PostConstruct;
 
 import org.apache.commons.lang.time.DateFormatUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -34,7 +34,6 @@ import com.alipay.sofa.registry.server.data.remoting.sessionserver.disconnect.Cl
 import com.alipay.sofa.registry.server.data.remoting.sessionserver.disconnect.DisconnectEventHandler;
 import com.alipay.sofa.registry.timer.AsyncHashedWheelTimer;
 import com.alipay.sofa.registry.timer.AsyncHashedWheelTimer.TaskFailedCallback;
-import com.alipay.sofa.registry.util.NamedThreadFactory;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 
 /**
@@ -58,9 +57,7 @@ public class DatumLeaseManager {
     /** lock for connectId , format: connectId -> true */
     private ConcurrentHashMap<String, Boolean> locksForConnectId          = new ConcurrentHashMap();
 
-    private final AsyncHashedWheelTimer        datumAsyncHashedWheelTimer;
-
-    private final ThreadPoolExecutor           datumExpiredCheckExecutor;
+    private AsyncHashedWheelTimer              datumAsyncHashedWheelTimer;
 
     @Autowired
     private DataServerConfig                   dataServerConfig;
@@ -71,15 +68,16 @@ public class DatumLeaseManager {
     /**
      * constructor
      */
-    public DatumLeaseManager() {
-        datumExpiredCheckExecutor = new ThreadPoolExecutor(1, 1, 0, TimeUnit.SECONDS,
-            new LinkedBlockingQueue<>(), new NamedThreadFactory(
-                "Scheduler-DatumExpiredCheckExecutor"));
+    @PostConstruct
+    public void init() {
         ThreadFactoryBuilder threadFactoryBuilder = new ThreadFactoryBuilder();
         threadFactoryBuilder.setDaemon(true);
         datumAsyncHashedWheelTimer = new AsyncHashedWheelTimer(threadFactoryBuilder.setNameFormat(
-            "Scheduler-WheelTimer").build(), 100, TimeUnit.MILLISECONDS, 1024,
-            datumExpiredCheckExecutor, new TaskFailedCallback() {
+            "Registry-DatumLeaseManager-WheelTimer").build(), 100, TimeUnit.MILLISECONDS, 1024,
+            dataServerConfig.getDatumLeaseManagerExecutorThreadSize(),
+            dataServerConfig.getDatumLeaseManagerExecutorQueueSize(), threadFactoryBuilder
+                .setNameFormat("Registry-DatumLeaseManager-WheelExecutor-%d").build(),
+            new TaskFailedCallback() {
                 @Override
                 public void executionRejected(Throwable e) {
                     LOGGER.error("executionRejected: " + e.getMessage(), e);
