@@ -117,6 +117,9 @@ public class BlacklistTest extends BaseIntegrationTest {
 
         assertTrue(response.isSuccess());
 
+        //wait for new list meta dispatch to session
+        Thread.sleep(1000L);
+
         String dataId = "test-dataId-blacklist";
         String value = "test blacklist";
 
@@ -156,75 +159,78 @@ public class BlacklistTest extends BaseIntegrationTest {
 
     }
 
-    //@Test
-    //public void testBlacklistUpdateSub() throws Exception {
-    //
-    //    Map<String, Map<String, Set<String>>> map = new HashMap<>();
-    //    Set<String> set1 = new HashSet<>();
-    //    Set<String> set2 = new HashSet<>();
-    //    String local = NetUtil.getLocalAddress().getHostAddress();
-    //    set1.add(local);
-    //    set2.add(local);
-    //
-    //    Map<String, Set<String>> map1 = Maps.newHashMap();
-    //    map1.put(BlacklistConstants.IP_FULL, set1);
-    //
-    //    Map<String, Set<String>> map2 = Maps.newHashMap();
-    //    map2.put(BlacklistConstants.IP_FULL, set2);
-    //
-    //    map.put(BlacklistConstants.FORBIDDEN_SUB_BY_PREFIX, map2);
-    //
-    //    ObjectMapper mapper = new ObjectMapper();
-    //
-    //    Result response = metaChannel
-    //        .getWebTarget()
-    //        .path("blacklist/update")
-    //        .request()
-    //        .post(Entity.entity(mapper.writeValueAsString(map), MediaType.APPLICATION_JSON),
-    //            Result.class);
-    //
-    //    assertTrue(response.isSuccess());
-    //
-    //    String dataId = "test-dataId-blacklist2";
-    //    String value = "test blacklist2";
-    //
-    //    PublisherRegistration registration = new PublisherRegistration(dataId);
-    //    registryClient1.register(registration, value);
-    //    Thread.sleep(500L);
-    //
-    //    SubscriberRegistration subReg = new SubscriberRegistration(dataId,
-    //        new MySubscriberDataObserver());
-    //    subReg.setScopeEnum(ScopeEnum.dataCenter);
-    //
-    //    registryClient1.register(subReg);
-    //
-    //    Thread.sleep(1000L);
-    //    assertEquals(dataId, this.dataId);
-    //    assertEquals(LOCAL_REGION, userData.getLocalZone());
-    //
-    //    Map<String, List<Publisher>> publisherMap = sessionChannel
-    //        .getWebTarget()
-    //        .path("digest/pub/data/query")
-    //        .queryParam("dataInfoId",
-    //            DataInfo.toDataInfoId(dataId, DEFAULT_INSTANCE_ID, DEFAULT_GROUP))
-    //        .request(APPLICATION_JSON).get(new GenericType<Map<String, List<Publisher>>>() {
-    //        });
-    //    assertEquals(1, publisherMap.size());
-    //    assertEquals(1, publisherMap.get("PUB").size());
-    //    assertEquals(dataId, publisherMap.get("PUB").get(0).getDataId());
-    //    assertEquals(value, bytes2Object(publisherMap.get("PUB").get(0).getDataList().get(0)
-    //        .getBytes()));
-    //
-    //    Map<String, List<Subscriber>> subscriberMap = sessionChannel
-    //        .getWebTarget()
-    //        .path("digest/sub/data/query")
-    //        .queryParam("dataInfoId",
-    //            DataInfo.toDataInfoId(dataId, DEFAULT_INSTANCE_ID, DEFAULT_GROUP))
-    //        .request(APPLICATION_JSON).get(new GenericType<Map<String, List<Subscriber>>>() {
-    //        });
-    //    assertEquals(0, subscriberMap.size());
-    //
-    //}
+    @Test
+    public void testBlacklistUpdateSub() throws Exception {
+
+        Map<String, Map<String, Set<String>>> map = new HashMap<>();
+        Set<String> set1 = new HashSet<>();
+        Set<String> set2 = new HashSet<>();
+        String local = NetUtil.getLocalAddress().getHostAddress();
+        set1.add(local);
+        set2.add(local);
+
+        Map<String, Set<String>> map1 = Maps.newHashMap();
+        map1.put(BlacklistConstants.IP_FULL, set1);
+
+        Map<String, Set<String>> map2 = Maps.newHashMap();
+        map2.put(BlacklistConstants.IP_FULL, set2);
+
+        map.put(BlacklistConstants.FORBIDDEN_SUB_BY_PREFIX, map2);
+
+        ObjectMapper mapper = new ObjectMapper();
+
+        Result response = metaChannel
+            .getWebTarget()
+            .path("blacklist/update")
+            .request()
+            .post(Entity.entity(mapper.writeValueAsString(map), MediaType.APPLICATION_JSON),
+                Result.class);
+
+        assertTrue(response.isSuccess());
+
+        //wait for new list meta dispatch to session
+        Thread.sleep(1000L);
+
+        String dataId = "test-dataId-blacklist2";
+        String value = "test blacklist2";
+
+        PublisherRegistration registration = new PublisherRegistration(dataId);
+        registryClient1.register(registration, value);
+        Thread.sleep(500L);
+
+        SubscriberRegistration subReg = new SubscriberRegistration(dataId,
+            new MySubscriberDataObserver());
+        subReg.setScopeEnum(ScopeEnum.dataCenter);
+
+        registryClient1.register(subReg);
+
+        Thread.sleep(1000L);
+        assertEquals(dataId, this.dataId);
+        assertEquals(LOCAL_REGION, userData.getLocalZone());
+
+        Map<String, List<Publisher>> publisherMap = sessionChannel
+            .getWebTarget()
+            .path("digest/pub/data/query")
+            .queryParam("dataInfoId",
+                DataInfo.toDataInfoId(dataId, DEFAULT_INSTANCE_ID, DEFAULT_GROUP))
+            .request(APPLICATION_JSON).get(new GenericType<Map<String, List<Publisher>>>() {
+            });
+        assertEquals(1, publisherMap.size());
+        assertEquals(1, publisherMap.get("PUB").size());
+        assertEquals(dataId, publisherMap.get("PUB").get(0).getDataId());
+        assertEquals(value, bytes2Object(publisherMap.get("PUB").get(0).getDataList().get(0)
+            .getBytes()));
+
+        Map<String, List<Subscriber>> subscriberMap = sessionChannel
+            .getWebTarget()
+            .path("digest/sub/data/query")
+            .queryParam("dataInfoId",
+                DataInfo.toDataInfoId(dataId, DEFAULT_INSTANCE_ID, DEFAULT_GROUP))
+            .request(APPLICATION_JSON).get(new GenericType<Map<String, List<Subscriber>>>() {
+            });
+        assertEquals(0, subscriberMap.size());
+
+    }
 
     @AfterClass
     public static void afterClass() {
