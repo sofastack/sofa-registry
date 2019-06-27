@@ -69,7 +69,7 @@ public interface SessionServerConfig {
 
     int getPublishDataTaskRetryTimes();
 
-    int getUnpublishDataTaskRetryTimes();
+    int getUnPublishDataTaskRetryTimes();
 
     int getDatumSnapshotTaskRetryTimes();
 

@@ -50,7 +50,7 @@ import com.alipay.sofa.registry.server.session.listener.RenewDatumTaskListener;
 import com.alipay.sofa.registry.server.session.listener.SessionRegisterDataTaskListener;
 import com.alipay.sofa.registry.server.session.listener.SubscriberMultiFetchTaskListener;
 import com.alipay.sofa.registry.server.session.listener.SubscriberRegisterFetchTaskListener;
-import com.alipay.sofa.registry.server.session.listener.UnpublishDataTaskListener;
+import com.alipay.sofa.registry.server.session.listener.UnPublishDataTaskListener;
 import com.alipay.sofa.registry.server.session.listener.WatcherRegisterFetchTaskListener;
 import com.alipay.sofa.registry.server.session.node.DataNodeManager;
 import com.alipay.sofa.registry.server.session.node.MetaNodeManager;
@@ -530,8 +530,8 @@ public class SessionServerConfiguration {
         }
 
         @Bean
-        public TaskListener unpublishDataTaskListener(TaskListenerManager taskListenerManager) {
-            TaskListener taskListener = new UnpublishDataTaskListener();
+        public TaskListener unPublishDataTaskListener(TaskListenerManager taskListenerManager) {
+            TaskListener taskListener = new UnPublishDataTaskListener();
             taskListenerManager.addTaskListener(taskListener);
             return taskListener;
         }

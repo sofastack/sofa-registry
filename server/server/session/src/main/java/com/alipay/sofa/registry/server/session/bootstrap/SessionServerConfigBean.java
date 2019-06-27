@@ -82,7 +82,7 @@ public class SessionServerConfigBean implements SessionServerConfig {
 
     private int                publishDataTaskRetryTimes               = 3;
 
-    private int                unpublishDataTaskRetryTimes             = 3;
+    private int                unPublishDataTaskRetryTimes             = 3;
 
     private int                datumSnapshotTaskRetryTimes             = 3;
 
@@ -233,22 +233,22 @@ public class SessionServerConfigBean implements SessionServerConfig {
     }
 
     /**
-     * Getter method for property <tt>unpublishDataTaskRetryTimes</tt>.
+     * Getter method for property <tt>unPublishDataTaskRetryTimes</tt>.
      *
-     * @return property value of unpublishDataTaskRetryTimes
+     * @return property value of unPublishDataTaskRetryTimes
      */
     @Override
-    public int getUnpublishDataTaskRetryTimes() {
-        return unpublishDataTaskRetryTimes;
+    public int getUnPublishDataTaskRetryTimes() {
+        return unPublishDataTaskRetryTimes;
     }
 
     /**
-     * Setter method for property <tt>unpublishDataTaskRetryTimes </tt>.
+     * Setter method for property <tt>unPublishDataTaskRetryTimes </tt>.
      *
-     * @param unpublishDataTaskRetryTimes  value to be assigned to property unpublishDataTaskRetryTimes
+     * @param unPublishDataTaskRetryTimes  value to be assigned to property unPublishDataTaskRetryTimes
      */
-    public void setUnpublishDataTaskRetryTimes(int unpublishDataTaskRetryTimes) {
-        this.unpublishDataTaskRetryTimes = unpublishDataTaskRetryTimes;
+    public void setUnPublishDataTaskRetryTimes(int unPublishDataTaskRetryTimes) {
+        this.unPublishDataTaskRetryTimes = unPublishDataTaskRetryTimes;
     }
 
     /**

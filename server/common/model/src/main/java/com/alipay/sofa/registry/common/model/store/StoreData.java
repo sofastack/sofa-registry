@@ -27,7 +27,7 @@ public interface StoreData<ID> {
      * DataType enum
      */
     enum DataType {
-        SUBSCRIBER, PUBLISHER, WATCHER, UNPUBLISHER
+        SUBSCRIBER, PUBLISHER, WATCHER, UN_PUBLISHER
     }
 
     /**

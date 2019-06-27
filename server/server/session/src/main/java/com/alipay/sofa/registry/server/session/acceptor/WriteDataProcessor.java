@@ -214,7 +214,7 @@ public class WriteDataProcessor {
         }
 
         Publisher unPublisher = (Publisher) request.getRequestBody();
-        TaskEvent taskEvent = new TaskEvent(unPublisher, TaskType.UNPUBLISH_DATA_TASK);
+        TaskEvent taskEvent = new TaskEvent(unPublisher, TaskType.UN_PUBLISH_DATA_TASK);
         taskListenerManager.sendTaskEvent(taskEvent);
     }
 

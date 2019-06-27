@@ -24,17 +24,17 @@ import com.alipay.sofa.registry.task.listener.TaskEvent;
 /**
  *
  * @author kezhu.wukz
- * @version $Id: UnpublishDataTask.java, v 0.1 2019-06-14 12:15 kezhu.wukz Exp $
+ * @version $Id: UnPublishDataTask.java, v 0.1 2019-06-14 12:15 kezhu.wukz Exp $
  */
-public class UnpublishDataTask extends AbstractSessionTask {
+public class UnPublishDataTask extends AbstractSessionTask {
 
     private final DataNodeService     dataNodeService;
 
     private final SessionServerConfig sessionServerConfig;
 
-    private Publisher                 unpublisher;
+    private Publisher                 unPublisher;
 
-    public UnpublishDataTask(SessionServerConfig sessionServerConfig,
+    public UnPublishDataTask(SessionServerConfig sessionServerConfig,
                              DataNodeService dataNodeService) {
         this.sessionServerConfig = sessionServerConfig;
         this.dataNodeService = dataNodeService;
@@ -42,7 +42,7 @@ public class UnpublishDataTask extends AbstractSessionTask {
 
     @Override
     public void execute() {
-        dataNodeService.unregister(unpublisher);
+        dataNodeService.unregister(unPublisher);
     }
 
     @Override
@@ -54,7 +54,7 @@ public class UnpublishDataTask extends AbstractSessionTask {
 
         Object obj = taskEvent.getEventObj();
         if (obj instanceof Publisher) {
-            this.unpublisher = (Publisher) obj;
+            this.unPublisher = (Publisher) obj;
         } else {
             throw new IllegalArgumentException("Input task event object error!");
         }
@@ -62,13 +62,13 @@ public class UnpublishDataTask extends AbstractSessionTask {
 
     @Override
     public String toString() {
-        return "UNPUBLISH_DATA_TASK{" + "taskId='" + getTaskId() + '\'' + ", unpublisher="
-               + unpublisher + ", retry='" + sessionServerConfig.getUnpublishDataTaskRetryTimes()
+        return "UN_PUBLISH_DATA_TASK{" + "taskId='" + getTaskId() + '\'' + ", unPublisher="
+               + unPublisher + ", retry='" + sessionServerConfig.getUnPublishDataTaskRetryTimes()
                + '\'' + '}';
     }
 
     @Override
     public boolean checkRetryTimes() {
-        return checkRetryTimes(sessionServerConfig.getUnpublishDataTaskRetryTimes());
+        return checkRetryTimes(sessionServerConfig.getUnPublishDataTaskRetryTimes());
     }
 }

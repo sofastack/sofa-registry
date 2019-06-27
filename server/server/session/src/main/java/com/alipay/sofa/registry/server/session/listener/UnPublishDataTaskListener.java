@@ -37,9 +37,9 @@ import com.alipay.sofa.registry.task.listener.TaskListener;
 /**
  *
  * @author kezhu.wukz
- * @version $Id: UnpublishDataTaskListener.java, v 0.1 2019-06-17 12:02 kezhu.wukz Exp $
+ * @version $Id: UnPublishDataTaskListener.java, v 0.1 2019-06-17 12:02 kezhu.wukz Exp $
  */
-public class UnpublishDataTaskListener implements TaskListener {
+public class UnPublishDataTaskListener implements TaskListener {
 
     /**
      * store subscribers
@@ -73,13 +73,13 @@ public class UnpublishDataTaskListener implements TaskListener {
     @PostConstruct
     public void init() {
         singleTaskDispatcher = TaskDispatchers.createSingleTaskDispatcher(
-            TaskDispatchers.getDispatcherName(TaskType.UNPUBLISH_DATA_TASK.getName()), 100000, 32,
+            TaskDispatchers.getDispatcherName(TaskType.UN_PUBLISH_DATA_TASK.getName()), 100000, 32,
             1000, 1000, dataNodeSingleTaskProcessor);
     }
 
     @Override
     public boolean support(TaskEvent event) {
-        return TaskType.UNPUBLISH_DATA_TASK.equals(event.getTaskType());
+        return TaskType.UN_PUBLISH_DATA_TASK.equals(event.getTaskType());
     }
 
     @Override

@@ -124,7 +124,7 @@ public class SessionRegistry implements Registry {
 
                 sessionDataStore.add(publisher);
 
-                // All write operations to DataServer (pub/unpub/clientoff/renew/snapshot)
+                // All write operations to DataServer (pub/unPub/clientoff/renew/snapshot)
                 // are handed over to WriteDataAcceptor
                 writeDataAcceptor.accept(new WriteDataRequest() {
                     @Override
@@ -176,7 +176,7 @@ public class SessionRegistry implements Registry {
 
                 //                dataNodeService.unregister(publisher);
 
-                // All write operations to DataServer (pub/unpub/clientoff/renew/snapshot)
+                // All write operations to DataServer (pub/unPub/clientoff/renew/snapshot)
                 // are handed over to WriteDataAcceptor
                 writeDataAcceptor.accept(new WriteDataRequest() {
                     @Override
@@ -229,7 +229,7 @@ public class SessionRegistry implements Registry {
             sessionWatchers.deleteByConnectId(connectId);
         }
 
-        // All write operations to DataServer (pub/unpub/clientoff/renew/snapshot)
+        // All write operations to DataServer (pub/unPub/clientoff/renew/snapshot)
         // are handed over to WriteDataAcceptor
         for (String connectId : connectIdsWithPub) {
             writeDataAcceptor.accept(new WriteDataRequest() {
@@ -335,7 +335,7 @@ public class SessionRegistry implements Registry {
         List<RenewDatumRequest> renewDatumRequests = renewService.getRenewDatumRequests(connectId);
         if (renewDatumRequests != null) {
             for (RenewDatumRequest renewDatumRequest : renewDatumRequests) {
-                // All write operations to DataServer (pub/unpub/clientoff/renew/snapshot)
+                // All write operations to DataServer (pub/unPub/clientoff/renew/snapshot)
                 // are handed over to WriteDataAcceptor
                 writeDataAcceptor.accept(new WriteDataRequest() {
                     @Override
@@ -363,7 +363,7 @@ public class SessionRegistry implements Registry {
             RENEW_LOGGER.debug("sendDatumSnapshot: connectId={}", connectId);
         }
 
-        // All write operations to DataServer (pub/unpub/clientoff/renew/snapshot)
+        // All write operations to DataServer (pub/unPub/clientoff/renew/snapshot)
         // are handed over to WriteDataAcceptor
         writeDataAcceptor.accept(new WriteDataRequest() {
             @Override

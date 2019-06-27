@@ -295,7 +295,7 @@ public class DataChangeEventQueue {
             Map<String, Publisher> pubMap = datumCache.getByConnectId(connectId);
             LOGGER.info("[{}] snapshot begin, connectId={}, old pubSize={}, snapshot pubSize={}",
                 getName(), connectId, pubMap != null ? pubMap.size() : null, snapshotPubMap.size());
-            int unpubSize = 0;
+            int unPubSize = 0;
             if (pubMap != null) {
                 for (Publisher publisher : pubMap.values()) {
                     // Only care dataInfoIds which belong to this queue
@@ -309,7 +309,7 @@ public class DataChangeEventQueue {
                         continue;
                     }
 
-                    //If snapshot.pubMap does not contain this pub: then build the reverse operation as unpub
+                    //If snapshot.pubMap does not contain this pub: then build the reverse operation as unPub
                     if (!snapshotPubMap.containsKey(publisher.getRegisterId())) {
                         long currentTimeStamp = System.currentTimeMillis();
                         Datum datum = new Datum(new UnPublisher(publisher.getDataInfoId(),
@@ -317,7 +317,7 @@ public class DataChangeEventQueue {
                             currentTimeStamp);
                         datum.setContainsUnPub(true);
                         handleDatum(DataChangeTypeEnum.MERGE, DataSourceTypeEnum.PUB, datum);
-                        unpubSize++;
+                        unPubSize++;
                     }
                 }
             }
@@ -327,8 +327,8 @@ public class DataChangeEventQueue {
                 handleDatum(DataChangeTypeEnum.MERGE, DataSourceTypeEnum.PUB, datum);
             }
             LOGGER.info(
-                "[{}] snapshot handle, connectId={}, handle unpubSize={}, handle pubSize={}",
-                getName(), connectId, unpubSize, snapshotPubMap.size());
+                "[{}] snapshot handle, connectId={}, handle unPubSize={}, handle pubSize={}",
+                getName(), connectId, unPubSize, snapshotPubMap.size());
         }
     }
 
