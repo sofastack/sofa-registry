@@ -21,15 +21,11 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 
-import com.alipay.sofa.registry.common.model.DatumSnapshotRequest;
 import com.alipay.sofa.registry.common.model.Node;
-import com.alipay.sofa.registry.common.model.PublisherDigestUtil;
 import com.alipay.sofa.registry.common.model.ReNewDatumRequest;
 import com.alipay.sofa.registry.common.model.constants.ValueConstants;
 import com.alipay.sofa.registry.common.model.store.BaseInfo;
@@ -48,6 +44,7 @@ import com.alipay.sofa.registry.server.session.acceptor.WriteDataRequest;
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
 import com.alipay.sofa.registry.server.session.node.NodeManager;
 import com.alipay.sofa.registry.server.session.node.service.DataNodeService;
+import com.alipay.sofa.registry.server.session.renew.RenewService;
 import com.alipay.sofa.registry.server.session.store.DataStore;
 import com.alipay.sofa.registry.server.session.store.Interests;
 import com.alipay.sofa.registry.server.session.store.Watchers;
@@ -108,6 +105,9 @@ public class SessionRegistry implements Registry {
 
     @Autowired
     private SessionRegistryStrategy sessionRegistryStrategy;
+
+    @Autowired
+    private RenewService            renewService;
 
     @Autowired
     private WriteDataAcceptor       writeDataAcceptor;
@@ -332,7 +332,7 @@ public class SessionRegistry implements Registry {
             RENEW_LOGGER.debug("reNewDatum: connectId={}", connectId);
         }
 
-        List<ReNewDatumRequest> reNewDatumRequests = getReNewDatumRequests(connectId);
+        List<ReNewDatumRequest> reNewDatumRequests = renewService.getReNewDatumRequests(connectId);
         if (reNewDatumRequests != null) {
             for (ReNewDatumRequest reNewDatumRequest : reNewDatumRequests) {
                 // All write operations to DataServer (pub/unpub/clientoff/renew/snapshot)
@@ -363,66 +363,24 @@ public class SessionRegistry implements Registry {
             RENEW_LOGGER.debug("sendDatumSnapshot: connectId={}", connectId);
         }
 
-        List<DatumSnapshotRequest> datumSnapshotRequests = getDatumSnapshotRequests(connectId);
-        if (datumSnapshotRequests != null) {
-            for (DatumSnapshotRequest datumSnapshotRequest : datumSnapshotRequests) {
-                // All write operations to DataServer (pub/unpub/clientoff/renew/snapshot)
-                // are handed over to WriteDataAcceptor
-                writeDataAcceptor.accept(new WriteDataRequest() {
-                    @Override
-                    public Object getRequestBody() {
-                        return datumSnapshotRequest;
-                    }
-
-                    @Override
-                    public WriteDataRequestType getRequestType() {
-                        return WriteDataRequestType.DATUM_SNAPSHOT;
-                    }
-
-                    @Override
-                    public String getConnectId() {
-                        return connectId;
-                    }
-                });
+        // All write operations to DataServer (pub/unpub/clientoff/renew/snapshot)
+        // are handed over to WriteDataAcceptor
+        writeDataAcceptor.accept(new WriteDataRequest() {
+            @Override
+            public Object getRequestBody() {
+                return connectId;
             }
-        }
-    }
 
-    private List<ReNewDatumRequest> getReNewDatumRequests(String connectId) {
-        List<DatumSnapshotRequest> datumSnapshotRequests = getDatumSnapshotRequests(connectId);
-        if (datumSnapshotRequests != null && !datumSnapshotRequests.isEmpty()) {
-            return datumSnapshotRequests.stream()
-                    .map(datumSnapshotRequest -> new ReNewDatumRequest(datumSnapshotRequest.getConnectId(),
-                            datumSnapshotRequest.getDataServerIp(), String.valueOf(
-                            PublisherDigestUtil.getDigestValueSum(datumSnapshotRequest.getPublishers()))))
-                    .collect(Collectors.toList());
-        }
-        return null;
-    }
-
-    private List<DatumSnapshotRequest> getDatumSnapshotRequests(String connectId) {
-        Map<String, Publisher> pubMap = sessionDataStore.queryByConnectId(connectId);
-        if (pubMap != null && !pubMap.isEmpty()) {
-            Map<String, List<Publisher>> dataServerIpToPubs = new ConcurrentHashMap<>();
-            List<DatumSnapshotRequest> list = new ArrayList<>();
-            pubMap.values().forEach(publisher -> {
-                Node dataNode = dataNodeManager.getNode(publisher.getDataInfoId());
-                List<Publisher> publishers = dataServerIpToPubs
-                        .computeIfAbsent(dataNode.getNodeUrl().getIpAddress(), k -> new ArrayList<>());
-                publishers.add(publisher);
-            });
-            for (Map.Entry<String, List<Publisher>> entry : dataServerIpToPubs.entrySet()) {
-                List<Publisher> publishers = entry.getValue();
-                if (!publishers.isEmpty()) {
-                    DatumSnapshotRequest datumSnapshotRequest = new DatumSnapshotRequest(connectId, entry.getKey(),
-                            publishers);
-                    list.add(datumSnapshotRequest);
-                }
+            @Override
+            public WriteDataRequestType getRequestType() {
+                return WriteDataRequestType.DATUM_SNAPSHOT;
             }
-            return list;
-        } else {
-            LOGGER.warn("No publishers of connectId:{}!", connectId);
-        }
-        return null;
+
+            @Override
+            public String getConnectId() {
+                return connectId;
+            }
+        });
     }
+
 }

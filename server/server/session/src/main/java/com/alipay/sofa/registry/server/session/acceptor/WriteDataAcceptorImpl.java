@@ -22,6 +22,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
+import com.alipay.sofa.registry.server.session.renew.RenewService;
 import com.alipay.sofa.registry.task.listener.TaskListenerManager;
 
 /**
@@ -38,6 +39,9 @@ public class WriteDataAcceptorImpl implements WriteDataAcceptor {
     @Autowired
     private SessionServerConfig             sessionServerConfig;
 
+    @Autowired
+    private RenewService                    renewService;
+
     /**
      * acceptor for all write data request
      * key:connectId
@@ -49,7 +53,7 @@ public class WriteDataAcceptorImpl implements WriteDataAcceptor {
     public void accept(WriteDataRequest request) {
         String connectId = request.getConnectId();
         WriteDataProcessor writeDataProcessor = writeDataProcessors.computeIfAbsent(connectId,
-                key -> new WriteDataProcessor(connectId, taskListenerManager, sessionServerConfig));
+                key -> new WriteDataProcessor(connectId, taskListenerManager, sessionServerConfig, renewService));
 
         writeDataProcessor.process(request);
     }

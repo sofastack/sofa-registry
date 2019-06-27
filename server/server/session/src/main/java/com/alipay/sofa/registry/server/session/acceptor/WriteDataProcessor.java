@@ -16,6 +16,7 @@
  */
 package com.alipay.sofa.registry.server.session.acceptor;
 
+import java.util.List;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
@@ -28,6 +29,7 @@ import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.server.session.acceptor.WriteDataRequest.WriteDataRequestType;
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
+import com.alipay.sofa.registry.server.session.renew.RenewService;
 import com.alipay.sofa.registry.task.listener.TaskEvent;
 import com.alipay.sofa.registry.task.listener.TaskEvent.TaskType;
 import com.alipay.sofa.registry.task.listener.TaskListenerManager;
@@ -53,6 +55,10 @@ public class WriteDataProcessor {
 
     private final SessionServerConfig               sessionServerConfig;
 
+    private final RenewService                      renewService;
+
+    private final String                            connectId;
+
     private long                                    beginTimestamp;
 
     private AtomicLong                              lastUpdateTimestamp = new AtomicLong(0);
@@ -61,13 +67,12 @@ public class WriteDataProcessor {
 
     private ConcurrentLinkedQueue<WriteDataRequest> acceptorQueue       = new ConcurrentLinkedQueue();
 
-    private final String                            connectId;
-
     public WriteDataProcessor(String connectId, TaskListenerManager taskListenerManager,
-                              SessionServerConfig sessionServerConfig) {
+                              SessionServerConfig sessionServerConfig, RenewService renewService) {
         this.connectId = connectId;
         this.taskListenerManager = taskListenerManager;
         this.sessionServerConfig = sessionServerConfig;
+        this.renewService = renewService;
 
         this.beginTimestamp = System.currentTimeMillis();
         this.lastUpdateTimestamp.set(beginTimestamp);
@@ -145,29 +150,26 @@ public class WriteDataProcessor {
 
         switch (request.getRequestType()) {
             case PUBLISHER: {
-                //                refreshUpdateTime();
                 doPublishAsync(request);
             }
                 break;
             case UN_PUBLISHER: {
-                //                refreshUpdateTime();
                 doUnPublishAsync(request);
             }
                 break;
             case CLIENT_OFF: {
-                //                refreshUpdateTime();
                 doClientOffAsync(request);
             }
                 break;
             case RENEW_DATUM: {
-                if (inRenewAndSnapshotSilentPeriod()) {
+                if (renewAndSnapshotInSilence()) {
                     return;
                 }
                 doReNewAsync(request);
             }
                 break;
             case DATUM_SNAPSHOT: {
-                if (inRenewAndSnapshotSilentPeriod()) {
+                if (renewAndSnapshotInSilence()) {
                     return;
                 }
                 halt();
@@ -233,24 +235,32 @@ public class WriteDataProcessor {
                 connectId, request.getRequestType(), request.getRequestBody());
         }
 
-        DatumSnapshotRequest datumSnapshotRequest = (DatumSnapshotRequest) request.getRequestBody();
-        TaskEvent taskEvent = new TaskEvent(datumSnapshotRequest, TaskType.DATUM_SNAPSHOT_TASK);
-        taskListenerManager.sendTaskEvent(taskEvent);
+        String connectId = (String) request.getRequestBody();
+        List<DatumSnapshotRequest> datumSnapshotRequests = renewService
+            .getDatumSnapshotRequests(connectId);
+        if (datumSnapshotRequests != null) {
+            for (DatumSnapshotRequest datumSnapshotRequest : datumSnapshotRequests) {
+                TaskEvent taskEvent = new TaskEvent(datumSnapshotRequest,
+                    TaskType.DATUM_SNAPSHOT_TASK);
+                taskListenerManager.sendTaskEvent(taskEvent);
+            }
+        }
+
     }
 
     /**
      * In silence, do not renew and snapshot
      */
-    private boolean inRenewAndSnapshotSilentPeriod() {
-        boolean inRenewAndSnapshotSilentPeriod = System.currentTimeMillis()
-                                                 - this.lastUpdateTimestamp.get() < this.sessionServerConfig
+    private boolean renewAndSnapshotInSilence() {
+        boolean renewAndSnapshotInSilence = System.currentTimeMillis()
+                                            - this.lastUpdateTimestamp.get() < this.sessionServerConfig
             .getRenewAndSnapshotSilentPeriodSec() * 1000L;
         if (RENEW_LOGGER.isDebugEnabled()) {
             RENEW_LOGGER.debug(
-                "inRenewAndSnapshotSilentPeriod: connectId={}, inRenewAndSnapshotSilentPeriod={}",
-                connectId, inRenewAndSnapshotSilentPeriod);
+                "renewAndSnapshotInSilence: connectId={}, renewAndSnapshotInSilence={}", connectId,
+                renewAndSnapshotInSilence);
         }
-        return inRenewAndSnapshotSilentPeriod;
+        return renewAndSnapshotInSilence;
     }
 
     private void refreshUpdateTime() {
