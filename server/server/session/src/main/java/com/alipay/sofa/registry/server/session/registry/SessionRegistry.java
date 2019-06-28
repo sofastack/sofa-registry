@@ -49,6 +49,7 @@ import com.alipay.sofa.registry.server.session.store.DataStore;
 import com.alipay.sofa.registry.server.session.store.Interests;
 import com.alipay.sofa.registry.server.session.store.Watchers;
 import com.alipay.sofa.registry.server.session.strategy.SessionRegistryStrategy;
+import com.alipay.sofa.registry.task.listener.TaskListenerManager;
 
 /**
  *
@@ -90,6 +91,12 @@ public class SessionRegistry implements Registry {
      */
     @Autowired
     private DataNodeService         dataNodeService;
+
+    /**
+     * trigger task com.alipay.sofa.registry.server.meta.listener process
+     */
+    @Autowired
+    private TaskListenerManager     taskListenerManager;
 
     /**
      * calculate data node url
@@ -381,6 +388,33 @@ public class SessionRegistry implements Registry {
                 return connectId;
             }
         });
+    }
+
+    /**
+     * Getter method for property <tt>sessionInterests</tt>.
+     *
+     * @return property value of sessionInterests
+     */
+    protected Interests getSessionInterests() {
+        return sessionInterests;
+    }
+
+    /**
+     * Getter method for property <tt>sessionDataStore</tt>.
+     *
+     * @return property value of sessionDataStore
+     */
+    protected DataStore getSessionDataStore() {
+        return sessionDataStore;
+    }
+
+    /**
+     * Getter method for property <tt>taskListenerManager</tt>.
+     *
+     * @return property value of taskListenerManager
+     */
+    protected TaskListenerManager getTaskListenerManager() {
+        return taskListenerManager;
     }
 
 }
