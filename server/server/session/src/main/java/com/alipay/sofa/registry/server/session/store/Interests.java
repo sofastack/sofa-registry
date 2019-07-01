@@ -63,6 +63,14 @@ public interface Interests extends DataManager<Subscriber, String, String> {
     boolean checkAndUpdateInterestVersions(String dataCenter, String dataInfoId, Long version);
 
     /**
+     * set subscribers interest dataInfoId version zero
+     * @param dataCenter
+     * @param dataInfoId
+     * @return
+     */
+    boolean checkAndUpdateInterestVersionZero(String dataCenter, String dataInfoId);
+
+    /**
      * get all subscriber dataInfoIds
      *
      * @return

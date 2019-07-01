@@ -25,6 +25,7 @@ import com.alipay.sofa.registry.server.session.scheduler.ExecutorManager;
 import com.alipay.sofa.registry.server.session.scheduler.task.PushTaskClosure;
 import com.alipay.sofa.registry.server.session.scheduler.task.ReceivedDataMultiPushTask;
 import com.alipay.sofa.registry.server.session.scheduler.task.SessionTask;
+import com.alipay.sofa.registry.server.session.store.Interests;
 import com.alipay.sofa.registry.server.session.strategy.ReceivedDataMultiPushTaskStrategy;
 import com.alipay.sofa.registry.server.session.strategy.TaskMergeProcessorStrategy;
 import com.alipay.sofa.registry.task.TaskClosure;
@@ -63,6 +64,9 @@ public class ReceivedDataMultiPushTaskListener implements TaskListener, PushTask
 
     @Autowired
     private ReceivedDataMultiPushTaskStrategy receivedDataMultiPushTaskStrategy;
+
+    @Autowired
+    private Interests                         sessionInterests;
 
     private TaskMergeProcessorStrategy        receiveDataTaskMergeProcessorStrategy;
 
@@ -117,7 +121,7 @@ public class ReceivedDataMultiPushTaskListener implements TaskListener, PushTask
     public void executePushAsync(TaskEvent event) {
 
         SessionTask receivedDataMultiPushTask = new ReceivedDataMultiPushTask(sessionServerConfig, clientNodeService,
-                executorManager, boltExchange, receivedDataMultiPushTaskStrategy,asyncHashedWheelTimer);
+                executorManager, boltExchange, receivedDataMultiPushTaskStrategy,asyncHashedWheelTimer,sessionInterests);
         receivedDataMultiPushTask.setTaskEvent(event);
 
         executorManager.getPushTaskExecutor()

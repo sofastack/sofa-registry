@@ -257,6 +257,10 @@ public class SessionInterests implements Interests, ReSubscribers {
         }
     }
 
+    public boolean checkAndUpdateInterestVersionZero(String dataCenter, String dataInfoId) {
+        return checkAndUpdateInterestVersions(dataCenter, dataInfoId, 0l);
+    }
+
     @Override
     public Collection<String> getInterestDataInfoIds() {
         return interests.keySet();
