@@ -252,4 +252,8 @@ public class SessionDataStore implements DataStore {
         connectIndex.remove(connectId);
     }
 
+    @Override
+    public Map<String, Map<String, Publisher>> getConnectPublishers() {
+        return connectIndex;
+    }
 }

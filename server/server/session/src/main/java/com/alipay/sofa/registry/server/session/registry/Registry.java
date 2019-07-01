@@ -70,4 +70,9 @@ public interface Registry {
      * for fetchChangData first invoke
      */
     void fetchChangDataProcess();
+
+    /**
+     * for scheduler clean no connect client
+     */
+    void cleanClientConnect();
 }

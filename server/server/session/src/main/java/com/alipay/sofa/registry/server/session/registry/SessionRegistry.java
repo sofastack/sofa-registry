@@ -24,6 +24,8 @@ import com.alipay.sofa.registry.common.model.store.URL;
 import com.alipay.sofa.registry.common.model.store.Watcher;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
+import com.alipay.sofa.registry.remoting.Channel;
+import com.alipay.sofa.registry.remoting.Server;
 import com.alipay.sofa.registry.remoting.exchange.Exchange;
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
 import com.alipay.sofa.registry.server.session.filter.DataIdMatchStrategy;
@@ -39,6 +41,8 @@ import com.alipay.sofa.registry.server.session.wrapper.WrapperInvocation;
 import com.alipay.sofa.registry.task.listener.TaskEvent;
 import com.alipay.sofa.registry.task.listener.TaskEvent.TaskType;
 import com.alipay.sofa.registry.task.listener.TaskListenerManager;
+import com.google.common.collect.Sets;
+import com.google.common.collect.Sets.SetView;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.ArrayList;
@@ -299,6 +303,25 @@ public class SessionRegistry implements Registry {
             TaskEvent.TaskType.SUBSCRIBER_PUSH_EMPTY_TASK);
         TASK_LOGGER.info("send " + taskEvent.getTaskType() + " taskEvent:{}", taskEvent);
         getTaskListenerManager().sendTaskEvent(taskEvent);
+    }
+
+    public void cleanClientConnect() {
+
+        SetView<String> intersection = Sets.union(sessionDataStore.getConnectPublishers().keySet(),
+            sessionInterests.getConnectSubscribers().keySet());
+
+        Server sessionServer = boltExchange.getServer(sessionServerConfig.getServerPort());
+
+        List<String> connectIds = new ArrayList<>();
+        for (String connectId : intersection) {
+            Channel channel = sessionServer.getChannel(URL.valueOf(connectId));
+            if (channel == null) {
+                connectIds.add(connectId);
+                LOGGER.warn("Client connect has not existed!it must be remove!connectId:{}",
+                    connectId);
+            }
+        }
+        cancel(connectIds);
     }
 
     /**

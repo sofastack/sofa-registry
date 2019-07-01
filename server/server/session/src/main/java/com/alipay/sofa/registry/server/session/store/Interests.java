@@ -93,4 +93,10 @@ public interface Interests extends DataManager<Subscriber, String, String> {
      * @return
      */
     Subscriber queryById(String registerId, String dataInfoId);
+
+    /**
+     * get all subscribers group by connectId
+     * @return
+     */
+    Map<String/*connectId*/, Map<String/*registerId*/, Subscriber>> getConnectSubscribers();
 }

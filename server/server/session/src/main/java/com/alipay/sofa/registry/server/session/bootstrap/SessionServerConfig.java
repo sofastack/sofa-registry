@@ -85,6 +85,12 @@ public interface SessionServerConfig {
 
     int getSchedulerConnectDataExpBackOffBound();
 
+    int getSchedulerCleanInvalidClientTimeOut();
+
+    int getSchedulerCleanInvalidClientFirstDelay();
+
+    int getSchedulerCleanInvalidClientBackOffBound();
+
     int getAccessDataExecutorMinPoolSize();
 
     int getAccessDataExecutorMaxPoolSize();

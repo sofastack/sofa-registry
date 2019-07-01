@@ -73,6 +73,12 @@ public class SessionServerConfigBean implements SessionServerConfig {
 
     private int                schedulerConnectDataExpBackOffBound     = 10;
 
+    private int                schedulerCleanInvalidClientTimeOut      = 3;
+
+    private int                schedulerCleanInvalidClientFirstDelay   = 10;
+
+    private int                schedulerCleanInvalidClientBackOffBound = 5;
+
     private int                cancelDataTaskRetryTimes                = 5;
 
     private int                cancelDataTaskRetryFirstDelay           = 100;
@@ -779,6 +785,60 @@ public class SessionServerConfigBean implements SessionServerConfig {
      */
     public void setSchedulerConnectDataExpBackOffBound(int schedulerConnectDataExpBackOffBound) {
         this.schedulerConnectDataExpBackOffBound = schedulerConnectDataExpBackOffBound;
+    }
+
+    /**
+     * Getter method for property <tt>schedulerCleanInvolidClientTimeOut</tt>.
+     *
+     * @return property value of schedulerCleanInvolidClientTimeOut
+     */
+    public int getSchedulerCleanInvalidClientTimeOut() {
+        return schedulerCleanInvalidClientTimeOut;
+    }
+
+    /**
+     * Getter method for property <tt>schedulerCleanInvolidClientFirstDelay</tt>.
+     *
+     * @return property value of schedulerCleanInvolidClientFirstDelay
+     */
+    public int getSchedulerCleanInvalidClientFirstDelay() {
+        return schedulerCleanInvalidClientFirstDelay;
+    }
+
+    /**
+     * Getter method for property <tt>schedulerCleanInvolidClientBackOffBound</tt>.
+     *
+     * @return property value of schedulerCleanInvolidClientBackOffBound
+     */
+    public int getSchedulerCleanInvalidClientBackOffBound() {
+        return schedulerCleanInvalidClientBackOffBound;
+    }
+
+    /**
+     * Setter method for property <tt>schedulerCleanInvolidClientTimeOut</tt>.
+     *
+     * @param schedulerCleanInvalidClientTimeOut  value to be assigned to property schedulerCleanInvolidClientTimeOut
+     */
+    public void setSchedulerCleanInvalidClientTimeOut(int schedulerCleanInvalidClientTimeOut) {
+        this.schedulerCleanInvalidClientTimeOut = schedulerCleanInvalidClientTimeOut;
+    }
+
+    /**
+     * Setter method for property <tt>schedulerCleanInvolidClientFirstDelay</tt>.
+     *
+     * @param schedulerCleanInvalidClientFirstDelay  value to be assigned to property schedulerCleanInvolidClientFirstDelay
+     */
+    public void setSchedulerCleanInvalidClientFirstDelay(int schedulerCleanInvalidClientFirstDelay) {
+        this.schedulerCleanInvalidClientFirstDelay = schedulerCleanInvalidClientFirstDelay;
+    }
+
+    /**
+     * Setter method for property <tt>schedulerCleanInvolidClientBackOffBound</tt>.
+     *
+     * @param schedulerCleanInvalidClientBackOffBound  value to be assigned to property schedulerCleanInvolidClientBackOffBound
+     */
+    public void setSchedulerCleanInvalidClientBackOffBound(int schedulerCleanInvalidClientBackOffBound) {
+        this.schedulerCleanInvalidClientBackOffBound = schedulerCleanInvalidClientBackOffBound;
     }
 
     /**

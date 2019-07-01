@@ -432,6 +432,11 @@ public class SessionInterests implements Interests, ReSubscribers {
         stopPushInterests.clear();
     }
 
+    @Override
+    public Map<String, Map<String, Subscriber>> getConnectSubscribers() {
+        return connectIndex;
+    }
+
     public SessionServerConfig getSessionServerConfig() {
         return sessionServerConfig;
     }

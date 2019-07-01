@@ -51,6 +51,7 @@ public class ExecutorManager {
     private final ThreadPoolExecutor        getSessionNodeExecutor;
     private final ThreadPoolExecutor        connectMetaExecutor;
     private final ThreadPoolExecutor        connectDataExecutor;
+    private final ThreadPoolExecutor        cleanInvalidClientExecutor;
 
     private final ExecutorService           checkPushExecutor;
     private final ExecutorService           pushTaskClosureExecutor;
@@ -97,7 +98,7 @@ public class ExecutorManager {
 
         this.sessionServerConfig = sessionServerConfig;
 
-        scheduler = new ScheduledThreadPoolExecutor(7, new NamedThreadFactory("SessionScheduler"));
+        scheduler = new ScheduledThreadPoolExecutor(8, new NamedThreadFactory("SessionScheduler"));
 
         fetchDataExecutor = new ThreadPoolExecutor(1, 2/*CONFIG*/, 0, TimeUnit.SECONDS,
                 new SynchronousQueue<>(), new NamedThreadFactory("SessionScheduler-fetchData"));
@@ -116,6 +117,9 @@ public class ExecutorManager {
 
         connectDataExecutor = new ThreadPoolExecutor(1, 2/*CONFIG*/, 0, TimeUnit.SECONDS,
                 new SynchronousQueue<>(), new NamedThreadFactory("SessionScheduler-connectDataServer"));
+
+        cleanInvalidClientExecutor = new ThreadPoolExecutor(1, 2/*CONFIG*/, 0, TimeUnit.SECONDS,
+                new SynchronousQueue<>(), new NamedThreadFactory("SessionScheduler-cleanInvalidClient"));
 
         accessDataExecutor = reportExecutors
                 .computeIfAbsent(ACCESS_DATA_EXECUTOR, k -> new SessionThreadPoolExecutor(ACCESS_DATA_EXECUTOR,
@@ -207,6 +211,13 @@ public class ExecutorManager {
                         sessionServerConfig.getSchedulerConnectDataExpBackOffBound(),
                         () -> dataNodeExchanger.connectServer()),
                 sessionServerConfig.getSchedulerConnectDataFirstDelay(), TimeUnit.SECONDS);
+
+        scheduler.schedule(
+                new TimedSupervisorTask("CleanInvalidClient", scheduler, cleanInvalidClientExecutor,
+                        sessionServerConfig.getSchedulerCleanInvalidClientTimeOut(), TimeUnit.MINUTES,
+                        sessionServerConfig.getSchedulerCleanInvalidClientBackOffBound(),
+                        () -> sessionRegistry.cleanClientConnect()),
+                sessionServerConfig.getSchedulerCleanInvalidClientFirstDelay(), TimeUnit.MINUTES);
     }
 
     public void stopScheduler() {
