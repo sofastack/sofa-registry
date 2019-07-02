@@ -68,7 +68,7 @@ public class NotifyFetchDatumHandler extends AbstractServerHandler<NotifyFetchDa
     private Exchange                    boltExchange;
 
     @Autowired
-    private DataServerConfig            dataServerBootstrapConfig;
+    private DataServerConfig            dataServerConfig;
 
     @Autowired
     private DatumCache                  datumCache;
@@ -135,20 +135,19 @@ public class NotifyFetchDatumHandler extends AbstractServerHandler<NotifyFetchDa
      * @param dataInfoId
      */
     private void fetchDatum(String targetIp, String dataCenter, String dataInfoId) {
-        while ((dataServerCache.getDataServers(dataServerBootstrapConfig.getLocalDataCenter())
-            .keySet()).contains(targetIp)) {
+        while ((dataServerCache.getDataServers(dataServerConfig.getLocalDataCenter()).keySet())
+            .contains(targetIp)) {
             Connection connection = dataServerConnectionFactory.getConnection(targetIp);
             if (connection == null || !connection.isFine()) {
                 throw new RuntimeException(String.format("connection of %s is not available",
                     targetIp));
             }
             try {
-                Server syncServer = boltExchange.getServer(dataServerBootstrapConfig
-                    .getSyncDataPort());
+                Server syncServer = boltExchange.getServer(dataServerConfig.getSyncDataPort());
                 GenericResponse<Map<String, Datum>> response = (GenericResponse<Map<String, Datum>>) syncServer
                     .sendSync(syncServer.getChannel(connection.getRemoteAddress()),
                         new GetDataRequest(dataInfoId, dataCenter),
-                        dataServerBootstrapConfig.getRpcTimeout());
+                        dataServerConfig.getRpcTimeout());
                 if (response.isSuccess()) {
                     Datum datum = response.getData().get(dataCenter);
                     if (datum != null) {

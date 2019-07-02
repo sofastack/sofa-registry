@@ -52,7 +52,7 @@ public class LocalDataServerCleanHandler {
                                                                          .getLogger("DATA-START-LOGS");
 
     @Autowired
-    private DataServerConfig                            dataServerBootstrapConfig;
+    private DataServerConfig                            dataServerConfig;
 
     @Autowired
     private DataServerCache                             dataServerCache;
@@ -99,7 +99,7 @@ public class LocalDataServerCleanHandler {
                 EVENT_QUEUE.clear();
             }
         }
-        EVENT_QUEUE.add(new DelayItem<>(new LocalCleanTask(), dataServerBootstrapConfig
+        EVENT_QUEUE.add(new DelayItem<>(new LocalCleanTask(), dataServerConfig
             .getLocalDataServerCleanDelay()));
     }
 
@@ -115,14 +115,14 @@ public class LocalDataServerCleanHandler {
                 try {
 
                     Map<String, DataNode> dataNodeMap = dataServerCache
-                        .getDataServers(dataServerBootstrapConfig.getLocalDataCenter());
+                        .getDataServers(dataServerConfig.getLocalDataCenter());
                     if (dataNodeMap == null || dataNodeMap.isEmpty()) {
                         LOGGER.warn("Calculate Old BackupTriad,old dataServer list is empty!");
                         return;
                     }
 
                     ConsistentHash<DataNode> consistentHash = new ConsistentHash<>(
-                        dataServerBootstrapConfig.getNumberOfReplicas(), dataNodeMap.values());
+                        dataServerConfig.getNumberOfReplicas(), dataNodeMap.values());
 
                     Map<String, Map<String, Datum>> dataMapAll = datumCache.getAll();
 
@@ -142,7 +142,7 @@ public class LocalDataServerCleanHandler {
 
                             BackupTriad backupTriad = new BackupTriad(dataInfoId,
                                 consistentHash.getNUniqueNodesFor(dataInfoId,
-                                    dataServerBootstrapConfig.getStoreNodes()));
+                                    dataServerConfig.getStoreNodes()));
                             if (!backupTriad.containsSelf()) {
                                 if (datum != null) {
                                     int size = datum.getPubMap() != null ? datum.getPubMap().size()
@@ -159,7 +159,7 @@ public class LocalDataServerCleanHandler {
                 } catch (Throwable e) {
                     LOGGER.error("[LocalDataServerCleanHandler] clean local datum task error!", e);
                 } finally {
-                    EVENT_QUEUE.add(new DelayItem<>(new LocalCleanTask(), dataServerBootstrapConfig
+                    EVENT_QUEUE.add(new DelayItem<>(new LocalCleanTask(), dataServerConfig
                         .getLocalDataServerCleanDelay()));
                 }
             }

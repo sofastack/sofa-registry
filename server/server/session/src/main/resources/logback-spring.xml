@@ -74,7 +74,7 @@
     <appender name="RENEW-APPENDER" class="ch.qos.logback.core.rolling.RollingFileAppender">
         <append>true</append>
         <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
-            <level>DEBUG</level>
+            <level>${LOG_LEVEL}</level>
         </filter>
         <filter class="ch.qos.logback.classic.filter.LevelFilter">
             <level>ERROR</level>
@@ -293,7 +293,7 @@
         <appender-ref ref="COMMON-ERROR-APPENDER"/>
     </logger>
 
-    <logger name="RENEW-LOGGER" level="DEBUG" additivity="false">
+    <logger name="RENEW-LOGGER" level="${LOG_LEVEL}" additivity="false">
         <appender-ref ref="RENEW-APPENDER"/>
         <appender-ref ref="COMMON-ERROR-APPENDER"/>
     </logger>

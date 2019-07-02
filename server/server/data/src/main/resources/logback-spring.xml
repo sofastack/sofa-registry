@@ -285,7 +285,7 @@
         <appender-ref ref="COMMON-ERROR-APPENDER"/>
     </logger>
 
-    <logger name="RENEW-LOGGER" level="DEBUG" additivity="false">
+    <logger name="RENEW-LOGGER" level="${LOG_LEVEL}" additivity="false">
         <appender-ref ref="RENEW-APPENDER"/>
         <appender-ref ref="COMMON-ERROR-APPENDER"/>
     </logger>

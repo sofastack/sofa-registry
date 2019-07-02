@@ -54,7 +54,7 @@ public class GetDataHandler extends AbstractServerHandler<GetDataRequest> {
     private ForwardService      forwardService;
 
     @Autowired
-    private DataServerConfig    dataServerBootstrapConfig;
+    private DataServerConfig    dataServerConfig;
 
     @Autowired
     private DatumCache          datumCache;
@@ -110,10 +110,10 @@ public class GetDataHandler extends AbstractServerHandler<GetDataRequest> {
     public Executor getExecutor() {
         if (getDataProcessorExecutor == null) {
             getDataProcessorExecutor = new ThreadPoolExecutorDataServer("GetDataProcessorExecutor",
-                dataServerBootstrapConfig.getGetDataExecutorMinPoolSize(),
-                dataServerBootstrapConfig.getGetDataExecutorMaxPoolSize(),
-                dataServerBootstrapConfig.getGetDataExecutorKeepAliveTime(), TimeUnit.SECONDS,
-                new ArrayBlockingQueue<>(dataServerBootstrapConfig.getGetDataExecutorQueueSize()),
+                dataServerConfig.getGetDataExecutorMinPoolSize(),
+                dataServerConfig.getGetDataExecutorMaxPoolSize(),
+                dataServerConfig.getGetDataExecutorKeepAliveTime(), TimeUnit.SECONDS,
+                new ArrayBlockingQueue<>(dataServerConfig.getGetDataExecutorQueueSize()),
                 new NamedThreadFactory("DataServer-GetDataProcessor-executor", true));
         }
         return getDataProcessorExecutor;

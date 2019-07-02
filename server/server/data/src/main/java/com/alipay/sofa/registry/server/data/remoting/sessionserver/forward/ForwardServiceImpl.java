@@ -44,7 +44,7 @@ public class ForwardServiceImpl implements ForwardService {
     private static final Logger LOGGER = LoggerFactory.getLogger(ForwardServiceImpl.class);
 
     @Autowired
-    private DataServerConfig    dataServerBootstrapConfig;
+    private DataServerConfig    dataServerConfig;
 
     @Autowired
     private DataNodeStatus      dataNodeStatus;
@@ -67,9 +67,9 @@ public class ForwardServiceImpl implements ForwardService {
     public Object forwardRequest(String dataInfoId, Object request) throws RemotingException {
         try {
             // 1. get store nodes
-            List<DataServerNode> dataServerNodes = DataServerNodeFactory.computeDataServerNodes(
-                dataServerBootstrapConfig.getLocalDataCenter(), dataInfoId,
-                dataServerBootstrapConfig.getStoreNodes());
+            List<DataServerNode> dataServerNodes = DataServerNodeFactory
+                .computeDataServerNodes(dataServerConfig.getLocalDataCenter(), dataInfoId,
+                    dataServerConfig.getStoreNodes());
 
             // 2. find next node
             if (null == dataServerNodes || dataServerNodes.size() <= 0) {

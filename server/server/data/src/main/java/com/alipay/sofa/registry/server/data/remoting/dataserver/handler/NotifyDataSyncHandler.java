@@ -61,7 +61,7 @@ public class NotifyDataSyncHandler extends AbstractClientHandler<NotifyDataSyncR
                                                                                   .getLogger(NotifyDataSyncHandler.class);
 
     @Autowired
-    private DataServerConfig                                      dataServerBootstrapConfig;
+    private DataServerConfig                                      dataServerConfig;
 
     @Autowired
     private GetSyncDataHandler                                    getSyncDataHandler;
@@ -154,11 +154,10 @@ public class NotifyDataSyncHandler extends AbstractClientHandler<NotifyDataSyncR
     public Executor getExecutor() {
         if (notifyExecutor == null) {
             notifyExecutor = new ThreadPoolExecutorDataServer("NotifyDataSyncProcessorExecutor",
-                dataServerBootstrapConfig.getNotifyDataSyncExecutorMinPoolSize(),
-                dataServerBootstrapConfig.getNotifyDataSyncExecutorMaxPoolSize(),
-                dataServerBootstrapConfig.getNotifyDataSyncExecutorKeepAliveTime(),
-                TimeUnit.SECONDS, new ArrayBlockingQueue<>(
-                    dataServerBootstrapConfig.getNotifyDataSyncExecutorQueueSize()),
+                dataServerConfig.getNotifyDataSyncExecutorMinPoolSize(),
+                dataServerConfig.getNotifyDataSyncExecutorMaxPoolSize(),
+                dataServerConfig.getNotifyDataSyncExecutorKeepAliveTime(), TimeUnit.SECONDS,
+                new ArrayBlockingQueue<>(dataServerConfig.getNotifyDataSyncExecutorQueueSize()),
                 new NamedThreadFactory("DataServer-NotifyDataSyncProcessor-executor", true));
         }
         return notifyExecutor;

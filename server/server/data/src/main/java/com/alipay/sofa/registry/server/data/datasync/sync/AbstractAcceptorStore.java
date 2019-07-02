@@ -63,7 +63,7 @@ public abstract class AbstractAcceptorStore implements AcceptorStore {
     private Exchange                                                         boltExchange;
 
     @Autowired
-    private DataServerConfig                                                 dataServerBootstrapConfig;
+    private DataServerConfig                                                 dataServerConfig;
 
     @Autowired
     private DataServerConnectionFactory                                      dataServerConnectionFactory;
@@ -198,7 +198,7 @@ public abstract class AbstractAcceptorStore implements AcceptorStore {
                 continue;
             }
 
-            Server syncServer = boltExchange.getServer(dataServerBootstrapConfig.getSyncDataPort());
+            Server syncServer = boltExchange.getServer(dataServerConfig.getSyncDataPort());
 
             for (int tryCount = 0; tryCount < NOTIFY_RETRY; tryCount++) {
                 try {
@@ -278,11 +278,11 @@ public abstract class AbstractAcceptorStore implements AcceptorStore {
     }
 
     /**
-     * Getter method for property <tt>dataServerBootstrapConfig</tt>.
+     * Getter method for property <tt>dataServerConfig</tt>.
      *
-     * @return property value of dataServerBootstrapConfig
+     * @return property value of dataServerConfig
      */
     public DataServerConfig getDataServerConfig() {
-        return dataServerBootstrapConfig;
+        return dataServerConfig;
     }
 }

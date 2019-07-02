@@ -50,7 +50,7 @@ public class DataChangeEventCenter {
     private DataChangeEventQueue[] dataChangeEventQueues;
 
     @Autowired
-    private DataServerConfig       dataServerBootstrapConfig;
+    private DataServerConfig       dataServerConfig;
 
     @Autowired
     private DatumCache             datumCache;
@@ -58,11 +58,11 @@ public class DataChangeEventCenter {
     @PostConstruct
     public void init() {
         if (isInited.compareAndSet(false, true)) {
-            queueCount = dataServerBootstrapConfig.getQueueCount();
+            queueCount = dataServerConfig.getQueueCount();
             dataChangeEventQueues = new DataChangeEventQueue[queueCount];
             for (int idx = 0; idx < queueCount; idx++) {
-                dataChangeEventQueues[idx] = new DataChangeEventQueue(idx,
-                    dataServerBootstrapConfig, this, datumCache);
+                dataChangeEventQueues[idx] = new DataChangeEventQueue(idx, dataServerConfig, this,
+                    datumCache);
                 dataChangeEventQueues[idx].start();
             }
         }

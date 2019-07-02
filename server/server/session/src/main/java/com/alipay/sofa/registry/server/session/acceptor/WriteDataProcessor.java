@@ -251,10 +251,8 @@ public class WriteDataProcessor {
     }
 
     private void doSnapshotAsync(WriteDataRequest request) {
-        if (RENEW_LOGGER.isDebugEnabled()) {
-            RENEW_LOGGER.debug("doSnapshotAsync: connectId={}, requestType={}, requestBody={}",
-                connectId, request.getRequestType(), request.getRequestBody());
-        }
+        RENEW_LOGGER.info("doSnapshotAsync: connectId={}, requestType={}, requestBody={}",
+            connectId, request.getRequestType(), request.getRequestBody());
 
         String connectId = (String) request.getRequestBody();
         List<DatumSnapshotRequest> datumSnapshotRequests = renewService

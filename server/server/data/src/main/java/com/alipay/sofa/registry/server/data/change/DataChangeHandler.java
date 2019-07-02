@@ -51,7 +51,7 @@ public class DataChangeHandler {
     private static final Logger       LOGGER_START = LoggerFactory.getLogger("DATA-START-LOGS");
 
     @Autowired
-    private DataServerConfig          dataServerBootstrapConfig;
+    private DataServerConfig          dataServerConfig;
 
     @Autowired
     private DataChangeEventCenter     dataChangeEventCenter;
@@ -68,7 +68,7 @@ public class DataChangeHandler {
         int queueCount = queues.length;
         Executor executor = ExecutorFactory.newFixedThreadPool(queueCount, DataChangeHandler.class.getSimpleName());
         Executor notifyExecutor = ExecutorFactory
-                .newFixedThreadPool(dataServerBootstrapConfig.getQueueCount() * 5, this.getClass().getSimpleName());
+                .newFixedThreadPool(dataServerConfig.getQueueCount() * 5, this.getClass().getSimpleName());
         for (int idx = 0; idx < queueCount; idx++) {
             final DataChangeEventQueue dataChangeEventQueue = queues[idx];
             final String name = dataChangeEventQueue.getName();

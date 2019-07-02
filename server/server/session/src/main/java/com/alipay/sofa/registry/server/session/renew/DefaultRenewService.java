@@ -88,8 +88,6 @@ public class DefaultRenewService implements RenewService {
                 }
             }
             return list;
-        } else {
-            RENEW_LOGGER.warn("No publishers of connectId:{}!", connectId);
         }
         return null;
     }

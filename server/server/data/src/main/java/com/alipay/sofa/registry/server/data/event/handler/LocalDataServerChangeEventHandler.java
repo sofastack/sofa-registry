@@ -67,7 +67,7 @@ public class LocalDataServerChangeEventHandler extends
                                                                     .getLogger(LocalDataServerChangeEventHandler.class);
 
     @Autowired
-    private DataServerConfig                          dataServerBootstrapConfig;
+    private DataServerConfig                          dataServerConfig;
 
     @Autowired
     private LocalDataServerCleanHandler               localDataServerCleanHandler;
@@ -147,7 +147,7 @@ public class LocalDataServerChangeEventHandler extends
 
                         dataServerCache.updateItem(event.getLocalDataServerMap(),
                             event.getLocalDataCenterversion(),
-                            dataServerBootstrapConfig.getLocalDataCenter());
+                            dataServerConfig.getLocalDataCenter());
                     }
                 } catch (Throwable t) {
                     LOGGER.error("sync local data error", t);
@@ -166,7 +166,7 @@ public class LocalDataServerChangeEventHandler extends
             Map<String, DataNode> dataServerMapIn = event.getLocalDataServerMap();
             List<DataNode> dataServerNodeList = Lists.newArrayList(dataServerMapIn.values());
             ConsistentHash<DataNode> consistentHash = new ConsistentHash<>(
-                dataServerBootstrapConfig.getNumberOfReplicas(), dataServerNodeList);
+                dataServerConfig.getNumberOfReplicas(), dataServerNodeList);
             Map<String, DataNode> dataServerMap = new ConcurrentHashMap<>(dataServerMapIn);
 
             Map<String, Map<String, Map<String, BackupTriad>>> toBeSyncMap = getToBeSyncMap(consistentHash);
@@ -216,7 +216,7 @@ public class LocalDataServerChangeEventHandler extends
                 if (!isChanged.get()) {
                     //update server list
                     dataServerCache.updateItem(dataServerMapIn, event.getLocalDataCenterversion(),
-                        dataServerBootstrapConfig.getLocalDataCenter());
+                        dataServerConfig.getLocalDataCenter());
                 }
             }
         }
@@ -233,7 +233,7 @@ public class LocalDataServerChangeEventHandler extends
             Map<String, List<DataNode>> triadCache = new HashMap<>();
 
             ConsistentHash<DataNode> consistentHashOld = dataServerCache
-                .calculateOldConsistentHash(dataServerBootstrapConfig.getLocalDataCenter());
+                .calculateOldConsistentHash(dataServerConfig.getLocalDataCenter());
             if (consistentHash == null) {
                 LOGGER.error("Calculate Old ConsistentHash error!");
                 throw new RuntimeException("Calculate Old ConsistentHash error!");
@@ -255,12 +255,12 @@ public class LocalDataServerChangeEventHandler extends
                         backupNodes = triadCache.get(dataInfoId);
                     } else {
                         backupNodes = consistentHash.getNUniqueNodesFor(dataInfoId,
-                            dataServerBootstrapConfig.getStoreNodes());
+                            dataServerConfig.getStoreNodes());
                         triadCache.put(dataInfoId, backupNodes);
                     }
                     BackupTriad backupTriad = new BackupTriad(dataInfoId,
                         consistentHashOld.getNUniqueNodesFor(dataInfoId,
-                            dataServerBootstrapConfig.getStoreNodes()));
+                            dataServerConfig.getStoreNodes()));
                     if (backupTriad != null) {
                         List<DataNode> newJoinedNodes = backupTriad.getNewJoined(backupNodes,
                             dataServerCache.getNotWorking());
@@ -300,7 +300,7 @@ public class LocalDataServerChangeEventHandler extends
                                  long version) {
             while (!isChanged.get()) {
                 DataServerNode targetNode = DataServerNodeFactory.getDataServerNode(
-                    dataServerBootstrapConfig.getLocalDataCenter(), targetIp);
+                    dataServerConfig.getLocalDataCenter(), targetIp);
                 if (targetNode == null || targetNode.getConnection() == null) {
                     LOGGER.info(
                         "notify version change to sync has not connect,targetNode={}, map={}",
@@ -347,7 +347,7 @@ public class LocalDataServerChangeEventHandler extends
          */
         private void notifyOnline(long changeVersion) {
             Map<String, DataServerNode> dataServerNodeMap = DataServerNodeFactory
-                .getDataServerNodes(dataServerBootstrapConfig.getLocalDataCenter());
+                .getDataServerNodes(dataServerConfig.getLocalDataCenter());
             for (Entry<String, DataServerNode> serverEntry : dataServerNodeMap.entrySet()) {
                 while (true) {
                     String ip = serverEntry.getKey();

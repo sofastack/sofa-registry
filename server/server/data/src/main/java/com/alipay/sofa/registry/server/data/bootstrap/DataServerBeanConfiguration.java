@@ -120,7 +120,8 @@ public class DataServerBeanConfiguration {
         }
 
         @Bean
-        public DataServerConfig dataServerBootstrapConfig(CommonConfig commonConfig) {
+        @ConditionalOnMissingBean(name = "dataServerConfig")
+        public DataServerConfig dataServerConfig(CommonConfig commonConfig) {
             return new DataServerConfig(commonConfig);
         }
 
@@ -199,12 +200,12 @@ public class DataServerBeanConfiguration {
         }
 
         @Bean(name = "serverHandlers")
-        public Collection<AbstractServerHandler> serverHandlers(DataServerConfig dataServerBootstrapConfig) {
+        public Collection<AbstractServerHandler> serverHandlers(DataServerConfig dataServerConfig) {
             Collection<AbstractServerHandler> list = new ArrayList<>();
             list.add(getDataHandler());
             list.add(clientOffHandler());
             list.add(getDataVersionsHandler());
-            list.add(publishDataProcessor(dataServerBootstrapConfig));
+            list.add(publishDataProcessor(dataServerConfig));
             list.add(sessionServerRegisterHandler());
             list.add(unPublishDataHandler());
             list.add(dataServerConnectionHandler());
@@ -214,10 +215,10 @@ public class DataServerBeanConfiguration {
         }
 
         @Bean(name = "serverSyncHandlers")
-        public Collection<AbstractServerHandler> serverSyncHandlers(DataServerConfig dataServerBootstrapConfig) {
+        public Collection<AbstractServerHandler> serverSyncHandlers(DataServerConfig dataServerConfig) {
             Collection<AbstractServerHandler> list = new ArrayList<>();
             list.add(getDataHandler());
-            list.add(publishDataProcessor(dataServerBootstrapConfig));
+            list.add(publishDataProcessor(dataServerConfig));
             list.add(unPublishDataHandler());
             list.add(notifyFetchDatumHandler());
             list.add(notifyOnlineHandler());
@@ -278,8 +279,8 @@ public class DataServerBeanConfiguration {
         }
 
         @Bean
-        public AbstractServerHandler publishDataProcessor(DataServerConfig dataServerBootstrapConfig) {
-            return new PublishDataHandler(dataServerBootstrapConfig);
+        public AbstractServerHandler publishDataProcessor(DataServerConfig dataServerConfig) {
+            return new PublishDataHandler(dataServerConfig);
         }
 
         @Bean
@@ -351,7 +352,7 @@ public class DataServerBeanConfiguration {
         }
 
         @Bean(name = "dataChangeNotifiers")
-        public List<IDataChangeNotifier> dataChangeNotifiers(DataServerConfig dataServerBootstrapConfig) {
+        public List<IDataChangeNotifier> dataChangeNotifiers() {
             List<IDataChangeNotifier> list = new ArrayList<>();
             list.add(sessionServerNotifier());
             list.add(tempPublisherNotifier());

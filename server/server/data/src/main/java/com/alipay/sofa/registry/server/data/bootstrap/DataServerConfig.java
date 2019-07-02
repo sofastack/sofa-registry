@@ -22,6 +22,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import org.apache.commons.lang.builder.ToStringBuilder;
+import org.apache.commons.lang.builder.ToStringStyle;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 import com.alipay.sofa.registry.net.NetUtil;
@@ -720,5 +722,10 @@ public class DataServerConfig {
      */
     public void setSessionServerNotifierRetryExecutorQueueSize(int sessionServerNotifierRetryExecutorQueueSize) {
         this.sessionServerNotifierRetryExecutorQueueSize = sessionServerNotifierRetryExecutorQueueSize;
+    }
+
+    @Override
+    public String toString() {
+        return ToStringBuilder.reflectionToString(this, ToStringStyle.MULTI_LINE_STYLE);
     }
 }
