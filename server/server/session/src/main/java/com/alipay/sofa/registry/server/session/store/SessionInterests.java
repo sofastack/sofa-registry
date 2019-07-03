@@ -250,7 +250,10 @@ public class SessionInterests implements Interests, ReSubscribers {
                     dataInfoVersions = newDataInfoVersions;
                 }
             }
-
+            //set zero
+            if (version.longValue() == 0l) {
+                return dataInfoVersions.put(dataInfoId, version) != null;
+            }
             return VersionsMapUtils.checkAndUpdateVersions(dataInfoVersions, dataInfoId, version);
         } finally {
             read.unlock();

@@ -189,17 +189,19 @@ public class ReceivedDataMultiPushTask extends AbstractSessionTask implements Ta
                             receivedData.getDataId(), receivedData.getGroup(), targetUrl,getTaskId(),dataPush,retryTimes);
                 }
             } else {
-                LOGGER.error("Retry Push ReceivedData times have exceeded!dataId:{}, group:{},url:{},taskId:{},dataPush:{},retryTimes:{}",
-                        receivedData.getDataId(), receivedData.getGroup(), targetUrl,getTaskId(),dataPush,retryTimes);
                 //set sessionInterests dataInfoId version zero
                 DataInfo dataInfo = new DataInfo(receivedData.getInstanceId(), receivedData.getDataId(),
                         receivedData.getGroup());
                 boolean result = sessionInterests.checkAndUpdateInterestVersionZero(receivedData.getSegment(), dataInfo.getDataInfoId());
                 if (result) {
-                    LOGGER.info("Retry Push ReceivedData times have exceeded,set sessionInterests dataInfoId version zero! dataCenter:{} dataInfoId:{}!", receivedData.getSegment(),
+                    LOGGER.warn("Retry Push ReceivedData times have exceeded,set sessionInterests dataInfoId version zero! url:{},taskId:{},dataPush:{},retryTimes:{},dataCenter:{},dataInfoId:{}!",
+                            targetUrl,getTaskId(),dataPush,retryTimes,
+                            receivedData.getSegment(),
                             dataInfo.getDataInfoId());
                 } else {
-                    LOGGER.info("Retry Push ReceivedData times have exceeded,but set sessionInterests dataInfoId version zero fail! dataCenter:{} dataInfoId:{}!", receivedData.getSegment(),
+                    LOGGER.warn("Retry Push ReceivedData times have exceeded,but set sessionInterests dataInfoId version zero fail!url:{},taskId:{},dataPush:{},retryTimes:{},dataCenter:{},dataInfoId:{}!",
+                            targetUrl,getTaskId(),dataPush,retryTimes,
+                            receivedData.getSegment(),
                             dataInfo.getDataInfoId());
                 }
             }

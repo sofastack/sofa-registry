@@ -321,7 +321,9 @@ public class SessionRegistry implements Registry {
                     connectId);
             }
         }
-        cancel(connectIds);
+        if (!connectIds.isEmpty()) {
+            cancel(connectIds);
+        }
     }
 
     /**
