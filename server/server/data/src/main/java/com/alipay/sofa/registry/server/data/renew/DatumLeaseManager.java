@@ -143,8 +143,7 @@ public class DatumLeaseManager {
                 if (isExpired) {
                     LOGGER.info("ConnectId({}) expired, lastRenewTime is {}", connectId, format(lastRenewTime));
                     connectIdRenewTimestampMap.remove(connectId, lastRenewTime);
-                    disconnectEventHandler.receive(new ClientDisconnectEvent(connectId, System.currentTimeMillis(),
-                            dataServerConfig.getClientOffDelayMs() * 10));
+                    disconnectEventHandler.receive(new ClientDisconnectEvent(connectId, System.currentTimeMillis(), 0));
                     continued = false;
                 } else {
                     nextDelaySec = dataServerConfig.getDatumTimeToLiveSec()

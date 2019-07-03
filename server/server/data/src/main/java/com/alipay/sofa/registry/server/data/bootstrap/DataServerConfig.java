@@ -57,7 +57,7 @@ public class DataServerConfig {
 
     private int                notifyIntervalMs;
 
-    private int                clientOffDelayMs;
+    private int                clientOffDelayMs                             = 1000;
 
     private int                notifyTempDataIntervalMs;
 

@@ -54,7 +54,7 @@ public class ClientOffHandler extends AbstractServerHandler<ClientOffRequest> {
         List<String> hosts = request.getHosts();
         for (String host : hosts) {
             disconnectEventHandler.receive(new ClientDisconnectEvent(host, request.getGmtOccur(),
-                dataServerConfig.getClientOffDelayMs() * 10));
+                dataServerConfig.getClientOffDelayMs()));
         }
         return CommonResponse.buildSuccessResponse();
     }
