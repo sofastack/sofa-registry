@@ -57,10 +57,9 @@ public class RenewDatumTask extends AbstractSessionTask {
         try {
             Boolean result = dataNodeService.renewDatum(renewDatumRequest);
             if (!result) {
-                RENEW_LOGGER
-                    .info(
-                        "Renew datum request to dataNode got sub digest different! renewDatumRequest={}",
-                        renewDatumRequest);
+                RENEW_LOGGER.info(
+                    "Renew datum request to dataNode got digest different! renewDatumRequest={}",
+                    renewDatumRequest);
 
                 // send snapshot datum for the corresponding connId
                 sessionRegistry.sendDatumSnapshot(renewDatumRequest.getConnectId());

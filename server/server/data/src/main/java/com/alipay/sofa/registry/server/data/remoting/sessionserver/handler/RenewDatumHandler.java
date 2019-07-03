@@ -32,9 +32,9 @@ import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.remoting.Channel;
 import com.alipay.sofa.registry.server.data.cache.DatumCache;
-import com.alipay.sofa.registry.server.data.renew.DatumLeaseManager;
 import com.alipay.sofa.registry.server.data.remoting.handler.AbstractServerHandler;
 import com.alipay.sofa.registry.server.data.remoting.sessionserver.forward.ForwardService;
+import com.alipay.sofa.registry.server.data.renew.DatumLeaseManager;
 import com.alipay.sofa.registry.util.ParaCheckUtil;
 
 /**
@@ -125,6 +125,11 @@ public class RenewDatumHandler extends AbstractServerHandler<RenewDatumRequest> 
         // record the renew timestamp
         datumLeaseManager.renew(connectId);
 
-        return StringUtils.equals(renewDigest, cacheDigest);
+        boolean result = StringUtils.equals(renewDigest, cacheDigest);
+
+        if (!result) {
+            RENEW_LOGGER.info("Digest different! renewDatumRequest={}", request);
+        }
+        return result;
     }
 }

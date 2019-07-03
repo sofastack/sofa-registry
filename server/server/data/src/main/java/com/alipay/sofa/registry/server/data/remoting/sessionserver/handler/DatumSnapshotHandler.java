@@ -32,9 +32,9 @@ import com.alipay.sofa.registry.remoting.Channel;
 import com.alipay.sofa.registry.server.data.bootstrap.DataServerConfig;
 import com.alipay.sofa.registry.server.data.change.event.DataChangeEventCenter;
 import com.alipay.sofa.registry.server.data.change.event.DatumSnapshotEvent;
-import com.alipay.sofa.registry.server.data.renew.DatumLeaseManager;
 import com.alipay.sofa.registry.server.data.remoting.handler.AbstractServerHandler;
 import com.alipay.sofa.registry.server.data.remoting.sessionserver.forward.ForwardService;
+import com.alipay.sofa.registry.server.data.renew.DatumLeaseManager;
 import com.alipay.sofa.registry.util.ParaCheckUtil;
 
 /**
@@ -73,9 +73,7 @@ public class DatumSnapshotHandler extends AbstractServerHandler<DatumSnapshotReq
 
     @Override
     public Object doHandle(Channel channel, DatumSnapshotRequest request) {
-        if (RENEW_LOGGER.isDebugEnabled()) {
-            RENEW_LOGGER.debug("doHandle: request={}", request);
-        }
+        RENEW_LOGGER.info("Received datumSnapshotRequest: {}", request);
 
         if (forwardService.needForward()) {
             LOGGER.warn("[forward] Snapshot request refused, request: {}", request);
