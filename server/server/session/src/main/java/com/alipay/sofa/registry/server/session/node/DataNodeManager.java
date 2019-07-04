@@ -45,7 +45,6 @@ public class DataNodeManager extends AbstractNodeManager<DataNode> {
     public DataNode getNode(String dataInfoId) {
         DataNode dataNode = consistentHash.getNodeFor(dataInfoId);
         if (dataNode == null) {
-            LOGGER.error("calculate data node error!,dataInfoId={}", dataInfoId);
             throw new RuntimeException("DataNodeManager calculate data node error!,dataInfoId="
                                        + dataInfoId);
         }

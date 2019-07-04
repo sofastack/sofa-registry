@@ -17,7 +17,6 @@
 package com.alipay.sofa.registry.server.session.scheduler.task;
 
 import com.alipay.sofa.registry.common.model.DatumSnapshotRequest;
-import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
 import com.alipay.sofa.registry.server.session.node.service.DataNodeService;
 import com.alipay.sofa.registry.task.listener.TaskEvent;
 
@@ -30,15 +29,11 @@ public class DatumSnapshotTask extends AbstractSessionTask {
     /**
      * transfer data to DataNode
      */
-    private final DataNodeService     dataNodeService;
+    private final DataNodeService dataNodeService;
 
-    private final SessionServerConfig sessionServerConfig;
+    private DatumSnapshotRequest  datumSnapshotRequest;
 
-    private DatumSnapshotRequest      datumSnapshotRequest;
-
-    public DatumSnapshotTask(SessionServerConfig sessionServerConfig,
-                             DataNodeService dataNodeService) {
-        this.sessionServerConfig = sessionServerConfig;
+    public DatumSnapshotTask(DataNodeService dataNodeService) {
         this.dataNodeService = dataNodeService;
     }
 
@@ -64,13 +59,13 @@ public class DatumSnapshotTask extends AbstractSessionTask {
 
     @Override
     public String toString() {
-        return "DATUM_SNAPSHOT_TASK{" + "taskId='" + getTaskId() + '\'' + ", datumSnapshotRequest="
-               + datumSnapshotRequest + ", retry='"
-               + sessionServerConfig.getPublishDataTaskRetryTimes() + '\'' + '}';
+        return String.format("DATUM_SNAPSHOT_TASK{ taskId=%s, datumSnapshotRequest=%s }",
+            getTaskId(), datumSnapshotRequest);
     }
 
     @Override
     public boolean checkRetryTimes() {
-        return checkRetryTimes(sessionServerConfig.getDatumSnapshotTaskRetryTimes());
+        //dataNodeService.sendDatumSnapshot will be retry all the failed
+        return false;
     }
 }

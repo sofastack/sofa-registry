@@ -88,9 +88,8 @@ public class RenewDatumTask extends AbstractSessionTask {
 
     @Override
     public String toString() {
-        return "RENEW_DATUM_TASK{" + "taskId='" + getTaskId() + '\'' + ", renewDatumRequest="
-               + renewDatumRequest + ", retry='"
-               + sessionServerConfig.getPublishDataTaskRetryTimes() + '\'' + '}';
+        return String.format("RENEW_DATUM_TASK{ taskId=%s, renewDatumRequest=%s }", getTaskId(),
+            renewDatumRequest);
     }
 
     @Override

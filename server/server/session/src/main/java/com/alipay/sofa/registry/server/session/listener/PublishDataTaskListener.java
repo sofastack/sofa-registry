@@ -20,7 +20,6 @@ import javax.annotation.PostConstruct;
 
 import org.springframework.beans.factory.annotation.Autowired;
 
-import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
 import com.alipay.sofa.registry.server.session.node.service.DataNodeService;
 import com.alipay.sofa.registry.server.session.scheduler.task.PublishDataTask;
 import com.alipay.sofa.registry.server.session.scheduler.task.SessionTask;
@@ -41,9 +40,6 @@ public class PublishDataTaskListener implements TaskListener {
     @Autowired
     private DataNodeService                     dataNodeService;
 
-    @Autowired
-    private SessionServerConfig                 sessionServerConfig;
-
     private TaskDispatcher<String, SessionTask> singleTaskDispatcher;
 
     @Autowired
@@ -63,7 +59,7 @@ public class PublishDataTaskListener implements TaskListener {
 
     @Override
     public void handleEvent(TaskEvent event) {
-        SessionTask publishDataTask = new PublishDataTask(sessionServerConfig, dataNodeService);
+        SessionTask publishDataTask = new PublishDataTask(dataNodeService);
 
         publishDataTask.setTaskEvent(event);
 

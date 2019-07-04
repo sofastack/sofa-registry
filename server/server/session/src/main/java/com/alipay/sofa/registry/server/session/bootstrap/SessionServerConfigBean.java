@@ -78,15 +78,27 @@ public class SessionServerConfigBean implements SessionServerConfig {
 
     private int                cancelDataTaskRetryTimes                = 5;
 
-    private int                cancelDataTaskRetryFirstDelay           = 100;
+    private long               cancelDataTaskRetryFirstDelay           = 500;
 
-    private long               cancelDataTaskRetryIncrementDelay       = 200;
+    private long               cancelDataTaskRetryIncrementDelay       = 500;
 
-    private int                publishDataTaskRetryTimes               = 3;
+    private int                publishDataTaskRetryTimes               = 5;
 
-    private int                unPublishDataTaskRetryTimes             = 3;
+    private long               publishDataTaskRetryFirstDelay          = 500;
 
-    private int                datumSnapshotTaskRetryTimes             = 3;
+    private long               publishDataTaskRetryIncrementDelay      = 500;
+
+    private int                unPublishDataTaskRetryTimes             = 5;
+
+    private long               unPublishDataTaskRetryFirstDelay        = 500;
+
+    private long               unPublishDataTaskRetryIncrementDelay    = 500;
+
+    private int                datumSnapshotTaskRetryTimes             = 5;
+
+    private long               datumSnapshotTaskRetryFirstDelay        = 1000;
+
+    private long               datumSnapshotTaskRetryIncrementDelay    = 1000;
 
     private int                renewDatumTaskRetryTimes                = 3;
 
@@ -191,9 +203,9 @@ public class SessionServerConfigBean implements SessionServerConfig {
 
     private int                writeDataAcceptorQueueSize              = 10000;
 
-    private int                clientOffRetryExecutorQueueSize         = 100000;
+    private int                dataNodeRetryExecutorQueueSize          = 1000000;
 
-    private int                clientOffRetryExecutorThreadSize        = 100;
+    private int                dataNodeRetryExecutorThreadSize         = 100;
 
     //end config for enterprise version
 
@@ -246,41 +258,41 @@ public class SessionServerConfigBean implements SessionServerConfig {
     }
 
     /**
-     * Getter method for property <tt>clientOffRetryExecutorThreadSize</tt>.
+     * Getter method for property <tt>dataNodeRetryExecutorThreadSize</tt>.
      *
-     * @return property value of clientOffRetryExecutorThreadSize
+     * @return property value of dataNodeRetryExecutorThreadSize
      */
     @Override
-    public int getClientOffRetryExecutorThreadSize() {
-        return clientOffRetryExecutorThreadSize;
+    public int getDataNodeRetryExecutorThreadSize() {
+        return dataNodeRetryExecutorThreadSize;
     }
 
     /**
-     * Setter method for property <tt>clientOffRetryExecutorThreadSize </tt>.
+     * Setter method for property <tt>dataNodeRetryExecutorThreadSize </tt>.
      *
-     * @param clientOffRetryExecutorThreadSize  value to be assigned to property clientOffRetryExecutorThreadSize
+     * @param dataNodeRetryExecutorThreadSize  value to be assigned to property dataNodeRetryExecutorThreadSize
      */
-    public void setClientOffRetryExecutorThreadSize(int clientOffRetryExecutorThreadSize) {
-        this.clientOffRetryExecutorThreadSize = clientOffRetryExecutorThreadSize;
+    public void setDataNodeRetryExecutorThreadSize(int dataNodeRetryExecutorThreadSize) {
+        this.dataNodeRetryExecutorThreadSize = dataNodeRetryExecutorThreadSize;
     }
 
     /**
-     * Getter method for property <tt>clientOffRetryExecutorQueueSize</tt>.
+     * Getter method for property <tt>dataNodeRetryExecutorQueueSize</tt>.
      *
-     * @return property value of clientOffRetryExecutorQueueSize
+     * @return property value of dataNodeRetryExecutorQueueSize
      */
     @Override
-    public int getClientOffRetryExecutorQueueSize() {
-        return clientOffRetryExecutorQueueSize;
+    public int getDataNodeRetryExecutorQueueSize() {
+        return dataNodeRetryExecutorQueueSize;
     }
 
     /**
-     * Setter method for property <tt>clientOffRetryExecutorQueueSize </tt>.
+     * Setter method for property <tt>dataNodeRetryExecutorQueueSize </tt>.
      *
-     * @param clientOffRetryExecutorQueueSize  value to be assigned to property clientOffRetryExecutorQueueSize
+     * @param dataNodeRetryExecutorQueueSize  value to be assigned to property dataNodeRetryExecutorQueueSize
      */
-    public void setClientOffRetryExecutorQueueSize(int clientOffRetryExecutorQueueSize) {
-        this.clientOffRetryExecutorQueueSize = clientOffRetryExecutorQueueSize;
+    public void setDataNodeRetryExecutorQueueSize(int dataNodeRetryExecutorQueueSize) {
+        this.dataNodeRetryExecutorQueueSize = dataNodeRetryExecutorQueueSize;
     }
 
     /**
@@ -553,17 +565,8 @@ public class SessionServerConfigBean implements SessionServerConfig {
      * @return property value of cancelDataTaskRetryFirstDelay
      */
     @Override
-    public int getCancelDataTaskRetryFirstDelay() {
+    public long getCancelDataTaskRetryFirstDelay() {
         return cancelDataTaskRetryFirstDelay;
-    }
-
-    /**
-     * Setter method for property <tt>cancelDataTaskRetryFirstDelay</tt>.
-     *
-     * @param cancelDataTaskRetryFirstDelay  value to be assigned to property cancelDataTaskRetryFirstDelay
-     */
-    public void setCancelDataTaskRetryFirstDelay(int cancelDataTaskRetryFirstDelay) {
-        this.cancelDataTaskRetryFirstDelay = cancelDataTaskRetryFirstDelay;
     }
 
     /**
@@ -583,6 +586,129 @@ public class SessionServerConfigBean implements SessionServerConfig {
      */
     public void setCancelDataTaskRetryIncrementDelay(long cancelDataTaskRetryIncrementDelay) {
         this.cancelDataTaskRetryIncrementDelay = cancelDataTaskRetryIncrementDelay;
+    }
+
+    /**
+     * Setter method for property <tt>cancelDataTaskRetryFirstDelay </tt>.
+     *
+     * @param cancelDataTaskRetryFirstDelay  value to be assigned to property cancelDataTaskRetryFirstDelay
+     */
+    public void setCancelDataTaskRetryFirstDelay(long cancelDataTaskRetryFirstDelay) {
+        this.cancelDataTaskRetryFirstDelay = cancelDataTaskRetryFirstDelay;
+    }
+
+    /**
+     * Getter method for property <tt>publishDataTaskRetryFirstDelay</tt>.
+     *
+     * @return property value of publishDataTaskRetryFirstDelay
+     */
+    @Override
+    public long getPublishDataTaskRetryFirstDelay() {
+        return publishDataTaskRetryFirstDelay;
+    }
+
+    /**
+     * Setter method for property <tt>publishDataTaskRetryFirstDelay </tt>.
+     *
+     * @param publishDataTaskRetryFirstDelay  value to be assigned to property publishDataTaskRetryFirstDelay
+     */
+    public void setPublishDataTaskRetryFirstDelay(long publishDataTaskRetryFirstDelay) {
+        this.publishDataTaskRetryFirstDelay = publishDataTaskRetryFirstDelay;
+    }
+
+    /**
+     * Getter method for property <tt>publishDataTaskRetryIncrementDelay</tt>.
+     *
+     * @return property value of publishDataTaskRetryIncrementDelay
+     */
+    @Override
+    public long getPublishDataTaskRetryIncrementDelay() {
+        return publishDataTaskRetryIncrementDelay;
+    }
+
+    /**
+     * Setter method for property <tt>publishDataTaskRetryIncrementDelay </tt>.
+     *
+     * @param publishDataTaskRetryIncrementDelay  value to be assigned to property publishDataTaskRetryIncrementDelay
+     */
+    public void setPublishDataTaskRetryIncrementDelay(long publishDataTaskRetryIncrementDelay) {
+        this.publishDataTaskRetryIncrementDelay = publishDataTaskRetryIncrementDelay;
+    }
+
+    /**
+     * Getter method for property <tt>unPublishDataTaskRetryFirstDelay</tt>.
+     *
+     * @return property value of unPublishDataTaskRetryFirstDelay
+     */
+    @Override
+    public long getUnPublishDataTaskRetryFirstDelay() {
+        return unPublishDataTaskRetryFirstDelay;
+    }
+
+    /**
+     * Setter method for property <tt>unPublishDataTaskRetryFirstDelay </tt>.
+     *
+     * @param unPublishDataTaskRetryFirstDelay  value to be assigned to property unPublishDataTaskRetryFirstDelay
+     */
+    public void setUnPublishDataTaskRetryFirstDelay(long unPublishDataTaskRetryFirstDelay) {
+        this.unPublishDataTaskRetryFirstDelay = unPublishDataTaskRetryFirstDelay;
+    }
+
+    /**
+     * Getter method for property <tt>unPublishDataTaskRetryIncrementDelay</tt>.
+     *
+     * @return property value of unPublishDataTaskRetryIncrementDelay
+     */
+    @Override
+    public long getUnPublishDataTaskRetryIncrementDelay() {
+        return unPublishDataTaskRetryIncrementDelay;
+    }
+
+    /**
+     * Setter method for property <tt>unPublishDataTaskRetryIncrementDelay </tt>.
+     *
+     * @param unPublishDataTaskRetryIncrementDelay  value to be assigned to property unPublishDataTaskRetryIncrementDelay
+     */
+    public void setUnPublishDataTaskRetryIncrementDelay(long unPublishDataTaskRetryIncrementDelay) {
+        this.unPublishDataTaskRetryIncrementDelay = unPublishDataTaskRetryIncrementDelay;
+    }
+
+    /**
+     * Getter method for property <tt>datumSnapshotTaskRetryFirstDelay</tt>.
+     *
+     * @return property value of datumSnapshotTaskRetryFirstDelay
+     */
+    @Override
+    public long getDatumSnapshotTaskRetryFirstDelay() {
+        return datumSnapshotTaskRetryFirstDelay;
+    }
+
+    /**
+     * Setter method for property <tt>datumSnapshotTaskRetryFirstDelay </tt>.
+     *
+     * @param datumSnapshotTaskRetryFirstDelay  value to be assigned to property datumSnapshotTaskRetryFirstDelay
+     */
+    public void setDatumSnapshotTaskRetryFirstDelay(long datumSnapshotTaskRetryFirstDelay) {
+        this.datumSnapshotTaskRetryFirstDelay = datumSnapshotTaskRetryFirstDelay;
+    }
+
+    /**
+     * Getter method for property <tt>datumSnapshotTaskRetryIncrementDelay</tt>.
+     *
+     * @return property value of datumSnapshotTaskRetryIncrementDelay
+     */
+    @Override
+    public long getDatumSnapshotTaskRetryIncrementDelay() {
+        return datumSnapshotTaskRetryIncrementDelay;
+    }
+
+    /**
+     * Setter method for property <tt>datumSnapshotTaskRetryIncrementDelay </tt>.
+     *
+     * @param datumSnapshotTaskRetryIncrementDelay  value to be assigned to property datumSnapshotTaskRetryIncrementDelay
+     */
+    public void setDatumSnapshotTaskRetryIncrementDelay(long datumSnapshotTaskRetryIncrementDelay) {
+        this.datumSnapshotTaskRetryIncrementDelay = datumSnapshotTaskRetryIncrementDelay;
     }
 
     /**

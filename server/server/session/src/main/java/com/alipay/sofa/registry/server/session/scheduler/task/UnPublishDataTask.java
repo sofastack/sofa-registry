@@ -17,7 +17,6 @@
 package com.alipay.sofa.registry.server.session.scheduler.task;
 
 import com.alipay.sofa.registry.common.model.store.Publisher;
-import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
 import com.alipay.sofa.registry.server.session.node.service.DataNodeService;
 import com.alipay.sofa.registry.task.listener.TaskEvent;
 
@@ -28,15 +27,11 @@ import com.alipay.sofa.registry.task.listener.TaskEvent;
  */
 public class UnPublishDataTask extends AbstractSessionTask {
 
-    private final DataNodeService     dataNodeService;
+    private final DataNodeService dataNodeService;
 
-    private final SessionServerConfig sessionServerConfig;
+    private Publisher             unPublisher;
 
-    private Publisher                 unPublisher;
-
-    public UnPublishDataTask(SessionServerConfig sessionServerConfig,
-                             DataNodeService dataNodeService) {
-        this.sessionServerConfig = sessionServerConfig;
+    public UnPublishDataTask(DataNodeService dataNodeService) {
         this.dataNodeService = dataNodeService;
     }
 
@@ -62,13 +57,13 @@ public class UnPublishDataTask extends AbstractSessionTask {
 
     @Override
     public String toString() {
-        return "UN_PUBLISH_DATA_TASK{" + "taskId='" + getTaskId() + '\'' + ", unPublisher="
-               + unPublisher + ", retry='" + sessionServerConfig.getUnPublishDataTaskRetryTimes()
-               + '\'' + '}';
+        return String.format("UN_PUBLISH_DATA_TASK{ taskId=%s, unPublisher=%s }", getTaskId(),
+            unPublisher);
     }
 
     @Override
     public boolean checkRetryTimes() {
-        return checkRetryTimes(sessionServerConfig.getUnPublishDataTaskRetryTimes());
+        //dataNodeService.unregister will be retry all the failed
+        return false;
     }
 }

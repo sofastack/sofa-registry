@@ -23,7 +23,7 @@ import com.alipay.sofa.registry.remoting.exchange.message.Request;
  * @author shangyu.wh
  * @version $Id: RequestException.java, v 0.1 2018-01-15 18:16 shangyu.wh Exp $
  */
-public class RequestException extends Exception {
+public class RequestException extends RuntimeException {
 
     private Request request;
 
@@ -77,14 +77,14 @@ public class RequestException extends Exception {
      * get requestInfo from Request
      * @return
      */
-    public String getRequestMessage() {
+    @Override
+    public String getMessage() {
         StringBuilder sb = new StringBuilder();
         if (request != null) {
-            sb.append("Request url:").append(request.getRequestUrl()).append(" body:")
-                .append(request.getRequestBody());
-        } else {
-            sb.append("Request data can not be null!");
+            sb.append("request url: ").append(request.getRequestUrl()).append(", body: ")
+                .append(request.getRequestBody()).append(", ");
         }
+        sb.append("message: ").append(super.getMessage());
         return sb.toString();
     }
 }

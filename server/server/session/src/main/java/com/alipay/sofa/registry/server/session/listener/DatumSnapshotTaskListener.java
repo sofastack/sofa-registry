@@ -20,7 +20,6 @@ import javax.annotation.PostConstruct;
 
 import org.springframework.beans.factory.annotation.Autowired;
 
-import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
 import com.alipay.sofa.registry.server.session.node.service.DataNodeService;
 import com.alipay.sofa.registry.server.session.scheduler.task.DatumSnapshotTask;
 import com.alipay.sofa.registry.server.session.scheduler.task.SessionTask;
@@ -41,9 +40,6 @@ public class DatumSnapshotTaskListener implements TaskListener {
     @Autowired
     private DataNodeService                     dataNodeService;
 
-    @Autowired
-    private SessionServerConfig                 sessionServerConfig;
-
     private TaskDispatcher<String, SessionTask> singleTaskDispatcher;
 
     @Autowired
@@ -63,7 +59,7 @@ public class DatumSnapshotTaskListener implements TaskListener {
 
     @Override
     public void handleEvent(TaskEvent event) {
-        SessionTask datumSnapshotTask = new DatumSnapshotTask(sessionServerConfig, dataNodeService);
+        SessionTask datumSnapshotTask = new DatumSnapshotTask(dataNodeService);
 
         datumSnapshotTask.setTaskEvent(event);
 

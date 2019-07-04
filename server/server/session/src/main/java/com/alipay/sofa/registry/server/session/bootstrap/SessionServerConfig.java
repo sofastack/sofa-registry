@@ -63,15 +63,27 @@ public interface SessionServerConfig {
 
     int getCancelDataTaskRetryTimes();
 
-    int getCancelDataTaskRetryFirstDelay();
+    long getCancelDataTaskRetryFirstDelay();
 
     long getCancelDataTaskRetryIncrementDelay();
 
     int getPublishDataTaskRetryTimes();
 
+    long getPublishDataTaskRetryFirstDelay();
+
+    long getPublishDataTaskRetryIncrementDelay();
+
     int getUnPublishDataTaskRetryTimes();
 
+    long getUnPublishDataTaskRetryFirstDelay();
+
+    long getUnPublishDataTaskRetryIncrementDelay();
+
     int getDatumSnapshotTaskRetryTimes();
+
+    long getDatumSnapshotTaskRetryFirstDelay();
+
+    long getDatumSnapshotTaskRetryIncrementDelay();
 
     int getRenewDatumTaskRetryTimes();
 
@@ -163,7 +175,7 @@ public interface SessionServerConfig {
 
     int getWriteDataAcceptorQueueSize();
 
-    int getClientOffRetryExecutorQueueSize();
+    int getDataNodeRetryExecutorQueueSize();
 
-    int getClientOffRetryExecutorThreadSize();
+    int getDataNodeRetryExecutorThreadSize();
 }

@@ -22,8 +22,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
 import com.alipay.sofa.registry.server.session.node.service.DataNodeService;
-import com.alipay.sofa.registry.server.session.scheduler.task.PublishDataTask;
 import com.alipay.sofa.registry.server.session.scheduler.task.SessionTask;
+import com.alipay.sofa.registry.server.session.scheduler.task.UnPublishDataTask;
 import com.alipay.sofa.registry.server.session.store.DataStore;
 import com.alipay.sofa.registry.server.session.store.Interests;
 import com.alipay.sofa.registry.server.session.store.Watchers;
@@ -84,12 +84,12 @@ public class UnPublishDataTaskListener implements TaskListener {
 
     @Override
     public void handleEvent(TaskEvent event) {
-        SessionTask publishDataTask = new PublishDataTask(sessionServerConfig, dataNodeService);
+        SessionTask unPublishDataTask = new UnPublishDataTask(dataNodeService);
 
-        publishDataTask.setTaskEvent(event);
+        unPublishDataTask.setTaskEvent(event);
 
-        singleTaskDispatcher.dispatch(publishDataTask.getTaskId(), publishDataTask,
-            publishDataTask.getExpiryTime());
+        singleTaskDispatcher.dispatch(unPublishDataTask.getTaskId(), unPublishDataTask,
+            unPublishDataTask.getExpiryTime());
     }
 
 }

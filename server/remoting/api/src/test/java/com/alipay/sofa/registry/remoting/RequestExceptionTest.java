@@ -16,11 +16,12 @@
  */
 package com.alipay.sofa.registry.remoting;
 
+import org.junit.Assert;
+import org.junit.Test;
+
 import com.alipay.sofa.registry.common.model.store.URL;
 import com.alipay.sofa.registry.remoting.exchange.RequestException;
 import com.alipay.sofa.registry.remoting.exchange.message.Request;
-import org.junit.Assert;
-import org.junit.Test;
 
 /**
  * @author xuanbei
@@ -31,18 +32,18 @@ public class RequestExceptionTest {
     public void doTest() {
         RequestException exception = new RequestException("error message");
         Assert.assertEquals("error message", exception.getMessage());
-        Assert.assertEquals("Request data can not be null!", exception.getRequestMessage());
+        Assert.assertEquals("Request data can not be null!", exception.getMessage());
 
         RuntimeException runtimeException = new RuntimeException("error message");
         exception = new RequestException(runtimeException);
         Assert.assertEquals("java.lang.RuntimeException: error message", exception.getMessage());
         Assert.assertEquals(runtimeException, exception.getCause());
-        Assert.assertEquals("Request data can not be null!", exception.getRequestMessage());
+        Assert.assertEquals("Request data can not be null!", exception.getMessage());
 
         exception = new RequestException("error message", runtimeException);
         Assert.assertEquals("error message", exception.getMessage());
         Assert.assertEquals(runtimeException, exception.getCause());
-        Assert.assertEquals("Request data can not be null!", exception.getRequestMessage());
+        Assert.assertEquals("Request data can not be null!", exception.getMessage());
 
         Request request = new Request() {
             @Override
@@ -57,10 +58,10 @@ public class RequestExceptionTest {
         };
         exception = new RequestException("error message", request);
         Assert.assertEquals("error message", exception.getMessage());
-        Assert.assertEquals("Request url:null body:request body", exception.getRequestMessage());
+        Assert.assertEquals("Request url:null body:request body", exception.getMessage());
 
         exception = new RequestException("error message", request, runtimeException);
         Assert.assertEquals("error message", exception.getMessage());
-        Assert.assertEquals("Request url:null body:request body", exception.getRequestMessage());
+        Assert.assertEquals("Request url:null body:request body", exception.getMessage());
     }
 }

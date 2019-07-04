@@ -94,9 +94,7 @@ public class SessionNodeManager extends AbstractNodeManager<SessionNode> {
 
             metaNodeExchanger.request(renewNodesRequestRequest);
         } catch (RequestException e) {
-            LOGGER.error("SessionNodeManager renew node error! " + e.getRequestMessage(), e);
-            throw new RuntimeException("SessionNodeManager renew node error! "
-                                       + e.getRequestMessage(), e);
+            throw new RuntimeException("SessionNodeManager renew node error! " + e.getMessage(), e);
         }
     }
 
