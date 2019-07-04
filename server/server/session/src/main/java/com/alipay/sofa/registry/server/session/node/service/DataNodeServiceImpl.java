@@ -22,7 +22,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.function.Consumer;
 
 import javax.annotation.PostConstruct;
 
@@ -103,10 +102,10 @@ public class DataNodeServiceImpl implements DataNodeService {
         try {
             sendRequest(request);
         } catch (RequestException e) {
-            Consumer<Request<PublishDataRequest>> bizConsumer = _request -> sendRequest(_request);
-            doRetryAsync("PublishData", request, bizConsumer, e, sessionServerConfig.getPublishDataTaskRetryTimes(),
-                    sessionServerConfig.getPublishDataTaskRetryFirstDelay(),
-                    sessionServerConfig.getPublishDataTaskRetryIncrementDelay());
+            doRetryAsync("PublishData", request, e,
+                sessionServerConfig.getPublishDataTaskRetryTimes(),
+                sessionServerConfig.getPublishDataTaskRetryFirstDelay(),
+                sessionServerConfig.getPublishDataTaskRetryIncrementDelay());
         }
     }
 
@@ -141,10 +140,10 @@ public class DataNodeServiceImpl implements DataNodeService {
         try {
             sendRequest(request);
         } catch (RequestException e) {
-            Consumer<Request<UnPublishDataRequest>> bizConsumer = _request -> sendRequest(_request);
-            doRetryAsync("UnPublishData", request, bizConsumer, e, sessionServerConfig.getUnPublishDataTaskRetryTimes(),
-                    sessionServerConfig.getUnPublishDataTaskRetryFirstDelay(),
-                    sessionServerConfig.getUnPublishDataTaskRetryIncrementDelay());
+            doRetryAsync("UnPublishData", request, e,
+                sessionServerConfig.getUnPublishDataTaskRetryTimes(),
+                sessionServerConfig.getUnPublishDataTaskRetryFirstDelay(),
+                sessionServerConfig.getUnPublishDataTaskRetryIncrementDelay());
         }
     }
 
@@ -186,12 +185,11 @@ public class DataNodeServiceImpl implements DataNodeService {
                 Request<ClientOffRequest> request = buildClientOffRequest(connectIds, node);
                 try {
                     sendRequest(request);
-                } catch (Exception e) {
-                    Consumer<Request<ClientOffRequest>> bizConsumer = _request -> sendRequest(_request);
-                    doRetryAsync("ClientOff", request, bizConsumer, e,
-                            sessionServerConfig.getCancelDataTaskRetryTimes(),
-                            sessionServerConfig.getCancelDataTaskRetryFirstDelay(),
-                            sessionServerConfig.getCancelDataTaskRetryIncrementDelay());
+                } catch (RequestException e) {
+                    doRetryAsync("ClientOff", request, e,
+                        sessionServerConfig.getCancelDataTaskRetryTimes(),
+                        sessionServerConfig.getCancelDataTaskRetryFirstDelay(),
+                        sessionServerConfig.getCancelDataTaskRetryIncrementDelay());
 
                 }
             }
@@ -359,14 +357,19 @@ public class DataNodeServiceImpl implements DataNodeService {
     @Override
     public Boolean renewDatum(RenewDatumRequest renewDatumRequest) {
         Request<RenewDatumRequest> request = buildRenewDatumRequest(renewDatumRequest);
-        Response response = dataNodeExchanger.request(request);
-        GenericResponse genericResponse = (GenericResponse) response.getResult();
-        if (genericResponse.isSuccess()) {
-            return (Boolean) genericResponse.getData();
-        } else {
-            throw new RuntimeException(String.format(
-                "RenewDatum get response not success, target url: %s, message: %s",
-                request.getRequestUrl(), genericResponse.getMessage()));
+        String msgFormat = "RenewDatum get response not success, target url: %s, message: %s";
+        try {
+            Response response = dataNodeExchanger.request(request);
+            GenericResponse genericResponse = (GenericResponse) response.getResult();
+            if (genericResponse.isSuccess()) {
+                return (Boolean) genericResponse.getData();
+            } else {
+                throw new RuntimeException(String.format(msgFormat, request.getRequestUrl(),
+                    genericResponse.getMessage()));
+            }
+        } catch (RequestException e) {
+            throw new RuntimeException(String.format(msgFormat, request.getRequestUrl(),
+                e.getMessage()));
         }
     }
 
@@ -398,10 +401,10 @@ public class DataNodeServiceImpl implements DataNodeService {
         try {
             sendRequest(request);
         } catch (RequestException e) {
-            Consumer<Request<DatumSnapshotRequest>> bizConsumer = _request -> sendRequest(_request);
-            doRetryAsync("DatumSnapshot", request, bizConsumer, e, sessionServerConfig.getDatumSnapshotTaskRetryTimes(),
-                    sessionServerConfig.getDatumSnapshotTaskRetryFirstDelay(),
-                    sessionServerConfig.getDatumSnapshotTaskRetryIncrementDelay());
+            doRetryAsync("DatumSnapshot", request, e,
+                sessionServerConfig.getDatumSnapshotTaskRetryTimes(),
+                sessionServerConfig.getDatumSnapshotTaskRetryFirstDelay(),
+                sessionServerConfig.getDatumSnapshotTaskRetryIncrementDelay());
         }
 
     }
@@ -436,22 +439,19 @@ public class DataNodeServiceImpl implements DataNodeService {
             throw new RuntimeException(String.format(
                 "response not success, failed! target url: %s, message: %s",
                 request.getRequestUrl(), commonResponse.getMessage()));
-        } else {
-            throw new RuntimeException("type of response.result is illegal: "
-                                       + response.getResult());
         }
     }
 
-    private void doRetryAsync(String bizName, Request request, Consumer bizConsumer, Exception e, int maxRetryTimes,
-                              long firstDelay, long incrementDelay) {
+    private void doRetryAsync(String bizName, Request request, Exception e, int maxRetryTimes, long firstDelay,
+                              long incrementDelay) {
         int retryTimes = request.getRetryTimes().incrementAndGet();
         if (retryTimes <= maxRetryTimes) {
             LOGGER.warn("{} failed, will retry again, retryTimes: {}, msg: {}", bizName, retryTimes, e.getMessage());
             asyncHashedWheelTimer.newTimeout(timeout -> {
                 try {
-                    bizConsumer.accept(request);
-                } catch (Exception ex) {
-                    doRetryAsync(bizName, request, bizConsumer, ex, maxRetryTimes, firstDelay, incrementDelay);
+                    sendRequest(request);
+                } catch (RequestException ex) {
+                    doRetryAsync(bizName, request, ex, maxRetryTimes, firstDelay, incrementDelay);
                 }
             }, getDelayTime(retryTimes, firstDelay, incrementDelay), TimeUnit.MILLISECONDS);
         } else {
@@ -474,4 +474,5 @@ public class DataNodeServiceImpl implements DataNodeService {
         String dataIp = dataNode.getNodeUrl().getIpAddress();
         return new URL(dataIp, sessionServerConfig.getDataServerPort());
     }
+
 }

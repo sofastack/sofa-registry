@@ -91,7 +91,6 @@ public class DataNodeExchanger implements NodeExchanger {
             final Object result = sessionClient.sendSync(channel, request.getRequestBody(),
                     sessionServerConfig.getDataNodeExchangeTimeOut());
             if (result == null) {
-                LOGGER.error("DataNode Exchanger request data get null result!Request url:" + url);
                 throw new RequestException("DataNode Exchanger request data get null result!",
                         request);
             }

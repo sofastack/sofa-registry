@@ -511,6 +511,7 @@ public class SessionServerConfiguration {
         }
 
         @Bean
+        @ConditionalOnMissingBean(name = "cancelDataTaskListener")
         public TaskListener cancelDataTaskListener(TaskListenerManager taskListenerManager) {
             TaskListener taskListener = new CancelDataTaskListener();
             taskListenerManager.addTaskListener(taskListener);
