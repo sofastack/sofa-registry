@@ -16,6 +16,12 @@
  */
 package com.alipay.sofa.registry.server.session.remoting;
 
+import java.util.Collection;
+
+import javax.annotation.Resource;
+
+import org.springframework.beans.factory.annotation.Autowired;
+
 import com.alipay.sofa.registry.common.model.Node;
 import com.alipay.sofa.registry.common.model.store.URL;
 import com.alipay.sofa.registry.log.Logger;
@@ -31,10 +37,6 @@ import com.alipay.sofa.registry.remoting.exchange.message.Response;
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
 import com.alipay.sofa.registry.server.session.node.NodeManager;
 import com.alipay.sofa.registry.server.session.remoting.handler.AbstractClientHandler;
-import org.springframework.beans.factory.annotation.Autowired;
-
-import javax.annotation.Resource;
-import java.util.Collection;
 
 /**
  * The type Data node exchanger.
@@ -95,7 +97,6 @@ public class DataNodeExchanger implements NodeExchanger {
             }
             response = () -> result;
         } catch (Exception e) {
-            LOGGER.error("DataNode Exchanger request data error!request={},url={}", request.getRequestBody(), url, e);
             throw new RequestException("DataNode Exchanger request data error!Request url:" + url,
                     request, e);
         }

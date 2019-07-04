@@ -112,6 +112,8 @@ public class DataNodeServiceImpl implements DataNodeService {
 
     private Request<PublishDataRequest> buildPublishDataRequest(Publisher publisher) {
         return new Request<PublishDataRequest>() {
+            private AtomicInteger retryTimes = new AtomicInteger();
+
             @Override
             public PublishDataRequest getRequestBody() {
                 PublishDataRequest publishDataRequest = new PublishDataRequest();
@@ -124,6 +126,11 @@ public class DataNodeServiceImpl implements DataNodeService {
             @Override
             public URL getRequestUrl() {
                 return getUrl(publisher.getDataInfoId());
+            }
+
+            @Override
+            public AtomicInteger getRetryTimes() {
+                return retryTimes;
             }
         };
     }
@@ -144,6 +151,8 @@ public class DataNodeServiceImpl implements DataNodeService {
     private Request<UnPublishDataRequest> buildUnPublishDataRequest(Publisher publisher) {
         return new Request<UnPublishDataRequest>() {
 
+            private AtomicInteger retryTimes = new AtomicInteger();
+
             @Override
             public UnPublishDataRequest getRequestBody() {
                 UnPublishDataRequest unPublishDataRequest = new UnPublishDataRequest();
@@ -156,6 +165,11 @@ public class DataNodeServiceImpl implements DataNodeService {
             @Override
             public URL getRequestUrl() {
                 return getUrl(publisher.getDataInfoId());
+            }
+
+            @Override
+            public AtomicInteger getRetryTimes() {
+                return retryTimes;
             }
         };
     }
@@ -358,6 +372,8 @@ public class DataNodeServiceImpl implements DataNodeService {
 
     private Request<RenewDatumRequest> buildRenewDatumRequest(RenewDatumRequest renewDatumRequest) {
         return new Request<RenewDatumRequest>() {
+            private AtomicInteger retryTimes = new AtomicInteger();
+
             @Override
             public RenewDatumRequest getRequestBody() {
                 return renewDatumRequest;
@@ -367,6 +383,11 @@ public class DataNodeServiceImpl implements DataNodeService {
             public URL getRequestUrl() {
                 return new URL(renewDatumRequest.getDataServerIp(),
                     sessionServerConfig.getDataServerPort());
+            }
+
+            @Override
+            public AtomicInteger getRetryTimes() {
+                return retryTimes;
             }
         };
     }
@@ -387,6 +408,8 @@ public class DataNodeServiceImpl implements DataNodeService {
 
     private Request<DatumSnapshotRequest> buildDatumSnapshotRequest(DatumSnapshotRequest datumSnapshotRequest) {
         return new Request<DatumSnapshotRequest>() {
+            private AtomicInteger retryTimes = new AtomicInteger();
+
             @Override
             public DatumSnapshotRequest getRequestBody() {
                 return datumSnapshotRequest;
@@ -396,6 +419,11 @@ public class DataNodeServiceImpl implements DataNodeService {
             public URL getRequestUrl() {
                 return new URL(datumSnapshotRequest.getDataServerIp(),
                     sessionServerConfig.getDataServerPort());
+            }
+
+            @Override
+            public AtomicInteger getRetryTimes() {
+                return retryTimes;
             }
         };
     }
@@ -418,7 +446,7 @@ public class DataNodeServiceImpl implements DataNodeService {
                               long firstDelay, long incrementDelay) {
         int retryTimes = request.getRetryTimes().incrementAndGet();
         if (retryTimes <= maxRetryTimes) {
-            LOGGER.warn("%s failed, will retry again, retryTimes: {}, msg: {}", bizName, retryTimes, e.getMessage());
+            LOGGER.warn("{} failed, will retry again, retryTimes: {}, msg: {}", bizName, retryTimes, e.getMessage());
             asyncHashedWheelTimer.newTimeout(timeout -> {
                 try {
                     bizConsumer.accept(request);
