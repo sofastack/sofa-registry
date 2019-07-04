@@ -16,6 +16,8 @@
  */
 package com.alipay.sofa.registry.server.data.change.event;
 
+import com.alipay.sofa.registry.util.DatumVersionUtil;
+
 /**
  *
  * @author qian.lqlq
@@ -41,7 +43,7 @@ public class ClientChangeEvent implements IDataChangeEvent {
         this.host = host;
         this.dataCenter = dataCenter;
         this.occurredTimestamp = occurredTimestamp;
-        this.version = System.currentTimeMillis();
+        this.version = DatumVersionUtil.nextId();
     }
 
     @Override

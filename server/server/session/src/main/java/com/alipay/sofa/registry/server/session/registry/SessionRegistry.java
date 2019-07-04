@@ -59,63 +59,65 @@ import com.alipay.sofa.registry.task.listener.TaskListenerManager;
  */
 public class SessionRegistry implements Registry {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(SessionRegistry.class);
+    private static final Logger     LOGGER       = LoggerFactory.getLogger(SessionRegistry.class);
 
-    private static final Logger TASK_LOGGER = LoggerFactory.getLogger(SessionRegistry.class, "[Task]");
+    private static final Logger     TASK_LOGGER  = LoggerFactory.getLogger(SessionRegistry.class,
+                                                     "[Task]");
 
-    private static final Logger RENEW_LOGGER = LoggerFactory
-            .getLogger(ValueConstants.LOGGER_NAME_RENEW, "[SessionRegistry]");
+    private static final Logger     RENEW_LOGGER = LoggerFactory.getLogger(
+                                                     ValueConstants.LOGGER_NAME_RENEW,
+                                                     "[SessionRegistry]");
 
     /**
      * store subscribers
      */
     @Autowired
-    private Interests sessionInterests;
+    private Interests               sessionInterests;
 
     /**
      * store watchers
      */
     @Autowired
-    private Watchers sessionWatchers;
+    private Watchers                sessionWatchers;
 
     /**
      * store publishers
      */
     @Autowired
-    private DataStore sessionDataStore;
+    private DataStore               sessionDataStore;
 
     /**
      * transfer data to DataNode
      */
     @Autowired
-    private DataNodeService dataNodeService;
+    private DataNodeService         dataNodeService;
 
     /**
      * trigger task com.alipay.sofa.registry.server.meta.listener process
      */
     @Autowired
-    private TaskListenerManager taskListenerManager;
+    private TaskListenerManager     taskListenerManager;
 
     /**
      * calculate data node url
      */
     @Autowired
-    private NodeManager dataNodeManager;
+    private NodeManager             dataNodeManager;
 
     @Autowired
-    private SessionServerConfig sessionServerConfig;
+    private SessionServerConfig     sessionServerConfig;
 
     @Autowired
-    private Exchange boltExchange;
+    private Exchange                boltExchange;
 
     @Autowired
     private SessionRegistryStrategy sessionRegistryStrategy;
 
     @Autowired
-    private RenewService renewService;
+    private RenewService            renewService;
 
     @Autowired
-    private WriteDataAcceptor writeDataAcceptor;
+    private WriteDataAcceptor       writeDataAcceptor;
 
     @Override
     public void register(StoreData storeData) {
@@ -333,8 +335,9 @@ public class SessionRegistry implements Registry {
         Channel channel = sessionServer.getChannel(baseInfo.getSourceAddress());
 
         if (channel == null) {
-            throw new RuntimeException(String.format("Register address %s  has not connected session server!",
-                    baseInfo.getSourceAddress()));
+            throw new RuntimeException(String.format(
+                "Register address %s  has not connected session server!",
+                baseInfo.getSourceAddress()));
         }
 
     }

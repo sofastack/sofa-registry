@@ -37,6 +37,7 @@ import com.alipay.sofa.registry.server.data.change.DataSourceTypeEnum;
 import com.alipay.sofa.registry.server.data.executor.ExecutorFactory;
 import com.alipay.sofa.registry.server.data.node.DataServerNode;
 import com.alipay.sofa.registry.server.data.remoting.dataserver.DataServerNodeFactory;
+import com.alipay.sofa.registry.util.DatumVersionUtil;
 import com.google.common.collect.Interners;
 
 /**
@@ -181,12 +182,12 @@ public class DataChangeEventQueue {
      *
      */
     public void start() {
-        Executor executor = ExecutorFactory.newSingleThreadExecutor(
-                String.format("%s_%s", DataChangeEventQueue.class.getSimpleName(), getName()));
+        Executor executor = ExecutorFactory
+                .newSingleThreadExecutor(String.format("%s_%s", DataChangeEventQueue.class.getSimpleName(), getName()));
         executor.execute(() -> {
             while (true) {
                 try {
-                    IDataChangeEvent    event = eventQueue.take();
+                    IDataChangeEvent event = eventQueue.take();
                     DataChangeScopeEnum scope = event.getScope();
                     if (scope == DataChangeScopeEnum.DATUM) {
                         DataChangeEvent dataChangeEvent = (DataChangeEvent) event;
@@ -195,8 +196,8 @@ public class DataChangeEventQueue {
                             addTempChangeData(dataChangeEvent.getDatum(), dataChangeEvent.getChangeType(),
                                     dataChangeEvent.getSourceType());
                         } else {
-                            handleDatum(dataChangeEvent.getChangeType(),
-                                    dataChangeEvent.getSourceType(), dataChangeEvent.getDatum());
+                            handleDatum(dataChangeEvent.getChangeType(), dataChangeEvent.getSourceType(),
+                                    dataChangeEvent.getDatum());
                         }
                     } else if (scope == DataChangeScopeEnum.CLIENT) {
                         handleClientOff((ClientChangeEvent) event);
@@ -314,7 +315,7 @@ public class DataChangeEventQueue {
                         long currentTimeStamp = System.currentTimeMillis();
                         Datum datum = new Datum(new UnPublisher(publisher.getDataInfoId(),
                             publisher.getRegisterId(), currentTimeStamp), event.getDataCenter(),
-                            currentTimeStamp);
+                            DatumVersionUtil.nextId());
                         datum.setContainsUnPub(true);
                         handleDatum(DataChangeTypeEnum.MERGE, DataSourceTypeEnum.PUB, datum);
                         unPubSize++;
@@ -322,8 +323,7 @@ public class DataChangeEventQueue {
                 }
             }
             for (Publisher publisher : snapshotPubMap.values()) {
-                long currentTimeStamp = System.currentTimeMillis();
-                Datum datum = new Datum(publisher, event.getDataCenter(), currentTimeStamp);
+                Datum datum = new Datum(publisher, event.getDataCenter(), DatumVersionUtil.nextId());
                 handleDatum(DataChangeTypeEnum.MERGE, DataSourceTypeEnum.PUB, datum);
             }
             LOGGER.info(

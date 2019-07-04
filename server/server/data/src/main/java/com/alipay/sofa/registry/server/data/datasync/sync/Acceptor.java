@@ -35,6 +35,7 @@ import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.server.data.cache.DatumCache;
 import com.alipay.sofa.registry.server.data.datasync.Operator;
+import com.alipay.sofa.registry.util.DatumVersionUtil;
 
 /**
  *
@@ -253,7 +254,8 @@ public class Acceptor {
 
     private boolean isExpired(int durationSECS, long peekVersion) {
         durationSECS = (durationSECS > 0) ? durationSECS * 1000 : DEFAULT_DURATION_SECS * 1000;
-        boolean ret = System.currentTimeMillis() > peekVersion + durationSECS;
+        boolean ret = System.currentTimeMillis() > DatumVersionUtil.getRealTimestamp(peekVersion)
+                                                   + durationSECS;
         if (LOGGER.isDebugEnabled()) {
             LOGGER.debug("now:" + System.currentTimeMillis() + " peek:" + peekVersion + " du:"
                          + durationSECS + " result:" + ret);
