@@ -457,7 +457,7 @@ public class DataNodeServiceImpl implements DataNodeService {
         } else {
             LOGGER.error(String.format(
                     "%s failed, retryTimes have exceeded! stop retry! retryTimes: %s, url: %s, request: %s, msg: %s",
-                    bizName, retryTimes, request.getRequestUrl(), request.getRequestBody(), e.getMessage()), e);
+                    bizName, (retryTimes - 1), request.getRequestUrl(), request.getRequestBody(), e.getMessage()), e);
         }
     }
 
