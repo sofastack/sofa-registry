@@ -77,7 +77,7 @@ public class DatumSnapshotRequest implements Serializable {
         final StringBuilder sb = new StringBuilder("DatumSnapshotRequest{");
         sb.append("connectId='").append(connectId).append('\'');
         sb.append(", dataServerIp='").append(dataServerIp).append('\'');
-        sb.append(", publishers=").append(publishers);
+        sb.append(", publishers.size=").append(publishers.size());
         sb.append('}');
         return sb.toString();
     }

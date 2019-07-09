@@ -16,9 +16,11 @@
  */
 package com.alipay.sofa.registry.server.data.remoting.sessionserver.handler;
 
+import java.util.Collection;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import org.apache.commons.collections.CollectionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import com.alipay.sofa.registry.common.model.CommonResponse;
@@ -30,6 +32,7 @@ import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.remoting.Channel;
 import com.alipay.sofa.registry.server.data.bootstrap.DataServerConfig;
+import com.alipay.sofa.registry.server.data.cache.DatumCache;
 import com.alipay.sofa.registry.server.data.change.event.DataChangeEventCenter;
 import com.alipay.sofa.registry.server.data.change.event.DatumSnapshotEvent;
 import com.alipay.sofa.registry.server.data.remoting.handler.AbstractServerHandler;
@@ -65,6 +68,9 @@ public class DatumSnapshotHandler extends AbstractServerHandler<DatumSnapshotReq
     @Autowired
     private DatumLeaseManager     datumLeaseManager;
 
+    @Autowired
+    private DatumCache            datumCache;
+
     @Override
     public void checkParam(DatumSnapshotRequest request) throws RuntimeException {
         ParaCheckUtil.checkNotBlank(request.getConnectId(), "DatumSnapshotRequest.connectId");
@@ -85,6 +91,18 @@ public class DatumSnapshotHandler extends AbstractServerHandler<DatumSnapshotReq
 
         Map<String, Publisher> pubMap = request.getPublishers().stream()
                 .collect(Collectors.toMap(p -> p.getRegisterId(), p -> p));
+
+        // diff the cache and snapshot
+        Map<String, Publisher> cachePubMap = datumCache.getOwnByConnectId(request.getConnectId());
+        if (cachePubMap == null) {
+            RENEW_LOGGER.info(">>>>>>> connectId={}, cachePubMap.size=0, pubMap.size={}, the diff is: pubMap={}",
+                    request.getConnectId(), pubMap.size(), pubMap);
+        } else {
+            Collection disjunction = CollectionUtils.disjunction(pubMap.values(), cachePubMap.values());
+            RENEW_LOGGER.info(">>>>>>> connectId={}, cachePubMap.size={}, pubMap.size={}, the diff is: disjunction={}",
+                    request.getConnectId(), cachePubMap.size(), pubMap.size(), disjunction);
+        }
+
         dataChangeEventCenter.onChange(
                 new DatumSnapshotEvent(request.getConnectId(), dataServerConfig.getLocalDataCenter(), pubMap));
 

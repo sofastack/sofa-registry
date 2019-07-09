@@ -43,13 +43,14 @@ import com.alipay.sofa.registry.server.data.bootstrap.DataServerConfig;
 import com.alipay.sofa.registry.server.data.cache.BackupTriad;
 import com.alipay.sofa.registry.server.data.cache.DataServerCache;
 import com.alipay.sofa.registry.server.data.cache.DatumCache;
-import com.alipay.sofa.registry.server.data.renew.LocalDataServerCleanHandler;
 import com.alipay.sofa.registry.server.data.event.LocalDataServerChangeEvent;
 import com.alipay.sofa.registry.server.data.executor.ExecutorFactory;
 import com.alipay.sofa.registry.server.data.node.DataNodeStatus;
 import com.alipay.sofa.registry.server.data.node.DataServerNode;
 import com.alipay.sofa.registry.server.data.remoting.DataNodeExchanger;
 import com.alipay.sofa.registry.server.data.remoting.dataserver.DataServerNodeFactory;
+import com.alipay.sofa.registry.server.data.renew.DatumLeaseManager;
+import com.alipay.sofa.registry.server.data.renew.LocalDataServerCleanHandler;
 import com.alipay.sofa.registry.server.data.util.LocalServerStatusEnum;
 import com.alipay.sofa.registry.server.data.util.TimeUtil;
 import com.google.common.collect.Lists;
@@ -84,6 +85,9 @@ public class LocalDataServerChangeEventHandler extends
     @Autowired
     private DatumCache                                datumCache;
 
+    @Autowired
+    private DatumLeaseManager                         datumLeaseManager;
+
     private BlockingQueue<LocalDataServerChangeEvent> events    = new LinkedBlockingDeque<>();
 
     private AtomicBoolean                             isChanged = new AtomicBoolean(false);
@@ -96,7 +100,11 @@ public class LocalDataServerChangeEventHandler extends
     @Override
     public void doHandle(LocalDataServerChangeEvent localDataServerChangeEvent) {
         isChanged.set(true);
+
+        // Better change to Listener pattern
         localDataServerCleanHandler.reset();
+        datumLeaseManager.reset();
+
         events.offer(localDataServerChangeEvent);
     }
 

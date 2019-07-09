@@ -59,15 +59,6 @@ public class DatumCache {
      */
     private final Map<String, Map<String, Publisher>> ALL_CONNECT_ID_INDEX = new ConcurrentHashMap<>();
 
-    /**
-     * datum index, which only own by this dataServer
-     *
-     * row:     ip:port
-     * column:  registerId
-     * value:   publisher
-     */
-    private final Map<String, Map<String, Publisher>> OWN_CONNECT_ID_INDEX = new ConcurrentHashMap<>();
-
     @Autowired
     private DataServerConfig                          dataServerConfig;
 
@@ -145,13 +136,23 @@ public class DatumCache {
     }
 
     /**
-     *
-     *
-     * @param connectId
-     * @return
+     * get own publishers by connectId
      */
     public Map<String, Publisher> getOwnByConnectId(String connectId) {
-        return OWN_CONNECT_ID_INDEX.getOrDefault(connectId, null);
+        Map<String, Publisher> ownPubMap = new HashMap<>();
+        Map<String, Publisher> allPubMap = ALL_CONNECT_ID_INDEX.getOrDefault(connectId, null);
+        if (allPubMap != null) {
+            for (Map.Entry<String, Publisher> entry : allPubMap.entrySet()) {
+                String registerId = entry.getKey();
+                Publisher publisher = entry.getValue();
+                DataServerNode dataServerNode = DataServerNodeFactory.computeDataServerNode(
+                    dataServerConfig.getLocalDataCenter(), publisher.getDataInfoId());
+                if (DataServerConfig.IP.equals(dataServerNode.getIp())) {
+                    ownPubMap.put(registerId, publisher);
+                }
+            }
+        }
+        return ownPubMap;
     }
 
     /**
@@ -333,12 +334,6 @@ public class DatumCache {
         if (publisherMap != null) {
             publisherMap.remove(publisher.getRegisterId());
         }
-
-        // remove from OWN_CONNECT_ID_INDEX
-        Map<String, Publisher> ownPublisherMap = OWN_CONNECT_ID_INDEX.get(connectId);
-        if (ownPublisherMap != null) {
-            ownPublisherMap.remove(publisher.getRegisterId());
-        }
     }
 
     private void addToConnectIndex(Publisher publisher) {
@@ -352,18 +347,18 @@ public class DatumCache {
                 .computeIfAbsent(connectId, s -> new ConcurrentHashMap<>());
         publisherMap.put(publisher.getRegisterId(), publisher);
 
-        // add to OWN_CONNECT_ID_INDEX
-        DataServerNode dataServerNode = DataServerNodeFactory
-                .computeDataServerNode(dataServerConfig.getLocalDataCenter(), publisher.getDataInfoId());
-        if (DataServerConfig.IP.equals(dataServerNode.getIp())) {
-            Map<String, Publisher> ownPublisherMap = OWN_CONNECT_ID_INDEX
-                    .computeIfAbsent(connectId, s -> new ConcurrentHashMap<>());
-            ownPublisherMap.put(publisher.getRegisterId(), publisher);
-        }
     }
 
     private String getConnectId(Publisher cachePub) {
         return cachePub.getSourceAddress().getAddressString();
     }
 
+    /**
+     * Getter method for property <tt>OWN_CONNECT_ID_INDEX</tt>.
+     *
+     * @return property value of OWN_CONNECT_ID_INDEX
+     */
+    public Set<String> getAllConnectIds() {
+        return ALL_CONNECT_ID_INDEX.keySet();
+    }
 }

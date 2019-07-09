@@ -17,8 +17,11 @@
 package com.alipay.sofa.registry.server.data.renew;
 
 import java.util.Map;
+import java.util.Set;
 import java.util.TimeZone;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 import javax.annotation.PostConstruct;
@@ -27,9 +30,11 @@ import org.apache.commons.lang.time.DateFormatUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import com.alipay.sofa.registry.common.model.constants.ValueConstants;
+import com.alipay.sofa.registry.common.model.store.Publisher;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.server.data.bootstrap.DataServerConfig;
+import com.alipay.sofa.registry.server.data.cache.DatumCache;
 import com.alipay.sofa.registry.server.data.remoting.sessionserver.disconnect.ClientDisconnectEvent;
 import com.alipay.sofa.registry.server.data.remoting.sessionserver.disconnect.DisconnectEventHandler;
 import com.alipay.sofa.registry.timer.AsyncHashedWheelTimer;
@@ -65,6 +70,13 @@ public class DatumLeaseManager {
     @Autowired
     private DisconnectEventHandler             disconnectEventHandler;
 
+    @Autowired
+    private DatumCache                         datumCache;
+
+    private ScheduledThreadPoolExecutor        executorForHeartbeatLess;
+
+    private ScheduledFuture<?>                 futureForHeartbeatLess;
+
     /**
      * constructor
      */
@@ -88,6 +100,28 @@ public class DatumLeaseManager {
                     LOGGER.error("executionFailed: " + e.getMessage(), e);
                 }
             });
+
+        executorForHeartbeatLess = new ScheduledThreadPoolExecutor(1, threadFactoryBuilder
+            .setNameFormat("Registry-DatumLeaseManager-ExecutorForHeartbeatLess").build());
+        scheduleEvictTaskForHeartbeatLess();
+    }
+
+    /**
+     * reset EvictTaskForHeartbeatLess
+     */
+    public synchronized void reset() {
+        LOGGER.info("reset is called, EvictTaskForHeartbeatLess will delay {}s",
+            dataServerConfig.getDatumTimeToLiveSec());
+        if (futureForHeartbeatLess != null) {
+            futureForHeartbeatLess.cancel(false);
+        }
+        scheduleEvictTaskForHeartbeatLess();
+    }
+
+    private void scheduleEvictTaskForHeartbeatLess() {
+        futureForHeartbeatLess = executorForHeartbeatLess.scheduleWithFixedDelay(
+            new EvictTaskForHeartbeatLess(), dataServerConfig.getDatumTimeToLiveSec(),
+            dataServerConfig.getDatumTimeToLiveSec(), TimeUnit.SECONDS);
     }
 
     /**
@@ -143,7 +177,7 @@ public class DatumLeaseManager {
                 if (isExpired) {
                     LOGGER.info("ConnectId({}) expired, lastRenewTime is {}", connectId, format(lastRenewTime));
                     connectIdRenewTimestampMap.remove(connectId, lastRenewTime);
-                    disconnectEventHandler.receive(new ClientDisconnectEvent(connectId, System.currentTimeMillis(), 0));
+                    evict(connectId);
                     continued = false;
                 } else {
                     nextDelaySec = dataServerConfig.getDatumTimeToLiveSec()
@@ -165,7 +199,42 @@ public class DatumLeaseManager {
 
     }
 
+    private void evict(String connectId) {
+        disconnectEventHandler.receive(new ClientDisconnectEvent(connectId, System
+            .currentTimeMillis(), 0));
+    }
+
     private String format(long lastRenewTime) {
         return DateFormatUtils.format(lastRenewTime, "yyyy-MM-dd HH:mm:ss", TIME_ZONE);
+    }
+
+    /**
+     * evict own connectIds with heartbeat less
+     */
+    private class EvictTaskForHeartbeatLess implements Runnable {
+
+        @Override
+        public void run() {
+            LOGGER.info("EvictTaskForHeartbeatLess started.");
+            long startTime = System.currentTimeMillis();
+
+            Set<String> allConnectIds = datumCache.getAllConnectIds();
+            for (String connectId : allConnectIds) {
+                Long timestamp = connectIdRenewTimestampMap.get(connectId);
+                // no heartbeat
+                if (timestamp == null) {
+                    Map<String, Publisher> ownPubs = datumCache.getOwnByConnectId(connectId);
+                    if (ownPubs != null && ownPubs.size() > 0) {
+                        LOGGER.info(
+                            "ConnectId({}) expired cause it has no heartbeat, pub.size is {}",
+                            connectId, ownPubs.size());
+                        evict(connectId);
+                    }
+                }
+            }
+
+            LOGGER.info("EvictTaskForHeartbeatLess end, elapsed time is {}ms.",
+                (System.currentTimeMillis() - startTime));
+        }
     }
 }
