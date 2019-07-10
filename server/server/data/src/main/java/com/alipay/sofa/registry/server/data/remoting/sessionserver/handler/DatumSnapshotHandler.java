@@ -16,16 +16,17 @@
  */
 package com.alipay.sofa.registry.server.data.remoting.sessionserver.handler;
 
-import java.util.Collection;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import org.apache.commons.collections.CollectionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import com.alipay.sofa.registry.common.model.CommonResponse;
 import com.alipay.sofa.registry.common.model.DatumSnapshotRequest;
 import com.alipay.sofa.registry.common.model.Node;
+import com.alipay.sofa.registry.common.model.PublisherDigestUtil;
 import com.alipay.sofa.registry.common.model.constants.ValueConstants;
 import com.alipay.sofa.registry.common.model.store.Publisher;
 import com.alipay.sofa.registry.log.Logger;
@@ -98,9 +99,11 @@ public class DatumSnapshotHandler extends AbstractServerHandler<DatumSnapshotReq
             RENEW_LOGGER.info(">>>>>>> connectId={}, cachePubMap.size=0, pubMap.size={}, the diff is: pubMap={}",
                     request.getConnectId(), pubMap.size(), pubMap);
         } else {
-            Collection disjunction = CollectionUtils.disjunction(pubMap.values(), cachePubMap.values());
-            RENEW_LOGGER.info(">>>>>>> connectId={}, cachePubMap.size={}, pubMap.size={}, the diff is: disjunction={}",
-                    request.getConnectId(), cachePubMap.size(), pubMap.size(), disjunction);
+            List diffPub1 = subtract(pubMap, cachePubMap);
+            List diffPub2 = subtract(cachePubMap, pubMap);
+            RENEW_LOGGER
+                    .info(">>>>>>> connectId={}, cachePubMap.size={}, pubMap.size={}, the diff is: pubMap-cachePubMap={}, cachePubMap-pubMap={}",
+                            request.getConnectId(), cachePubMap.size(), pubMap.size(), diffPub1, diffPub2);
         }
 
         dataChangeEventCenter.onChange(
@@ -110,6 +113,21 @@ public class DatumSnapshotHandler extends AbstractServerHandler<DatumSnapshotReq
         datumLeaseManager.renew(request.getConnectId());
 
         return CommonResponse.buildSuccessResponse();
+    }
+
+    private List subtract(Map<String, Publisher> pubMap1, Map<String, Publisher> pubMap2) {
+        List list = new ArrayList();
+        for (Map.Entry<String, Publisher> entry : pubMap1.entrySet()) {
+            String registerId = entry.getKey();
+            Publisher publisher1 = entry.getValue();
+            Publisher publisher2 = pubMap2.get(registerId);
+            if (publisher2 == null
+                || PublisherDigestUtil.getDigestValue(publisher1) != PublisherDigestUtil
+                    .getDigestValue(publisher2)) {
+                list.add(publisher1);
+            }
+        }
+        return list;
     }
 
     @Override

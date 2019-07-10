@@ -24,6 +24,7 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.locks.ReentrantLock;
 
+import com.alipay.sofa.registry.common.model.constants.ValueConstants;
 import com.alipay.sofa.registry.common.model.dataserver.Datum;
 import com.alipay.sofa.registry.common.model.store.Publisher;
 import com.alipay.sofa.registry.log.Logger;
@@ -53,6 +54,11 @@ public class DataChangeEventQueue {
 
     private static final Logger                        LOGGER_START    = LoggerFactory
                                                                            .getLogger("DATA-START-LOGS");
+
+    private static final Logger                        RENEW_LOGGER    = LoggerFactory
+                                                                           .getLogger(
+                                                                               ValueConstants.LOGGER_NAME_RENEW,
+                                                                               "[DataChangeEventQueue]");
 
     /**
      *
@@ -294,7 +300,8 @@ public class DataChangeEventQueue {
         Map<String, Publisher> snapshotPubMap = event.getPubMap();
         synchronized (Interners.newWeakInterner().intern(connectId)) {
             Map<String, Publisher> pubMap = datumCache.getByConnectId(connectId);
-            LOGGER.info("[{}] snapshot begin, connectId={}, old pubSize={}, snapshot pubSize={}",
+            RENEW_LOGGER.info(
+                "[{}] snapshot begin, connectId={}, old pubSize={}, snapshot pubSize={}",
                 getName(), connectId, pubMap != null ? pubMap.size() : null, snapshotPubMap.size());
             int unPubSize = 0;
             if (pubMap != null) {
@@ -326,7 +333,7 @@ public class DataChangeEventQueue {
                 Datum datum = new Datum(publisher, event.getDataCenter(), DatumVersionUtil.nextId());
                 handleDatum(DataChangeTypeEnum.MERGE, DataSourceTypeEnum.PUB, datum);
             }
-            LOGGER.info(
+            RENEW_LOGGER.info(
                 "[{}] snapshot handle, connectId={}, handle unPubSize={}, handle pubSize={}",
                 getName(), connectId, unPubSize, snapshotPubMap.size());
         }

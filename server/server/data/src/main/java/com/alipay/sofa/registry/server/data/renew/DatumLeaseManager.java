@@ -175,7 +175,9 @@ public class DatumLeaseManager {
                 boolean isExpired =
                         System.currentTimeMillis() - lastRenewTime > dataServerConfig.getDatumTimeToLiveSec() * 1000L;
                 if (isExpired) {
-                    LOGGER.info("ConnectId({}) expired, lastRenewTime is {}", connectId, format(lastRenewTime));
+                    int ownPubSize = getOwnPubSize(connectId);
+                    LOGGER.info("ConnectId({}) expired, lastRenewTime is {}, pub.size is {}", connectId,
+                            format(lastRenewTime), ownPubSize);
                     connectIdRenewTimestampMap.remove(connectId, lastRenewTime);
                     evict(connectId);
                     continued = false;
@@ -197,6 +199,11 @@ public class DatumLeaseManager {
             RENEW_LOGGER.debug("scheduleEvictTask: connectId={}, delaySec={}", connectId, delaySec);
         }
 
+    }
+
+    private int getOwnPubSize(String connectId) {
+        Map<String, Publisher> ownPubs = datumCache.getOwnByConnectId(connectId);
+        return ownPubs != null ? ownPubs.size() : 0;
     }
 
     private void evict(String connectId) {
@@ -223,11 +230,11 @@ public class DatumLeaseManager {
                 Long timestamp = connectIdRenewTimestampMap.get(connectId);
                 // no heartbeat
                 if (timestamp == null) {
-                    Map<String, Publisher> ownPubs = datumCache.getOwnByConnectId(connectId);
-                    if (ownPubs != null && ownPubs.size() > 0) {
+                    int ownPubSize = getOwnPubSize(connectId);
+                    if (ownPubSize > 0) {
                         LOGGER.info(
                             "ConnectId({}) expired cause it has no heartbeat, pub.size is {}",
-                            connectId, ownPubs.size());
+                            connectId, ownPubSize);
                         evict(connectId);
                     }
                 }
