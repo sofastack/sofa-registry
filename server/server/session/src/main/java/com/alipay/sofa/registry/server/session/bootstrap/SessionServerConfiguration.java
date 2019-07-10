@@ -24,12 +24,12 @@ import com.alipay.sofa.registry.server.session.cache.CacheGenerator;
 import com.alipay.sofa.registry.server.session.cache.CacheService;
 import com.alipay.sofa.registry.server.session.cache.DatumCacheGenerator;
 import com.alipay.sofa.registry.server.session.cache.SessionCacheService;
-import com.alipay.sofa.registry.server.session.filter.blacklist.BlacklistMatchProcessFilter;
 import com.alipay.sofa.registry.server.session.filter.DataIdMatchStrategy;
 import com.alipay.sofa.registry.server.session.filter.IPMatchStrategy;
 import com.alipay.sofa.registry.server.session.filter.ProcessFilter;
 import com.alipay.sofa.registry.server.session.filter.blacklist.BlacklistManager;
 import com.alipay.sofa.registry.server.session.filter.blacklist.BlacklistManagerImpl;
+import com.alipay.sofa.registry.server.session.filter.blacklist.BlacklistMatchProcessFilter;
 import com.alipay.sofa.registry.server.session.filter.blacklist.DefaultDataIdMatchStrategy;
 import com.alipay.sofa.registry.server.session.filter.blacklist.DefaultIPMatchStrategy;
 import com.alipay.sofa.registry.server.session.listener.CancelDataTaskListener;
@@ -83,6 +83,7 @@ import com.alipay.sofa.registry.server.session.resource.ClientsOpenResource;
 import com.alipay.sofa.registry.server.session.resource.HealthResource;
 import com.alipay.sofa.registry.server.session.resource.SessionDigestResource;
 import com.alipay.sofa.registry.server.session.resource.SessionOpenResource;
+import com.alipay.sofa.registry.server.session.resource.SessionSerialFilterResource;
 import com.alipay.sofa.registry.server.session.scheduler.ExecutorManager;
 import com.alipay.sofa.registry.server.session.scheduler.timertask.SyncClientsHeartbeatTask;
 import com.alipay.sofa.registry.server.session.store.DataStore;
@@ -319,6 +320,11 @@ public class SessionServerConfiguration {
         @Bean
         public ClientsOpenResource clientsOpenResource() {
             return new ClientsOpenResource();
+        }
+
+        @Bean
+        public SessionSerialFilterResource sessionSerialFilterResource() {
+            return new SessionSerialFilterResource();
         }
     }
 
