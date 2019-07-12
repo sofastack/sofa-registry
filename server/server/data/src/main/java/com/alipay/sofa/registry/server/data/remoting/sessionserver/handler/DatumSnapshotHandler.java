@@ -106,8 +106,8 @@ public class DatumSnapshotHandler extends AbstractServerHandler<DatumSnapshotReq
                             request.getConnectId(), cachePubMap.size(), pubMap.size(), diffPub1, diffPub2);
         }
 
-        dataChangeEventCenter.onChange(
-                new DatumSnapshotEvent(request.getConnectId(), dataServerConfig.getLocalDataCenter(), pubMap));
+        // build DatumSnapshotEvent and send to eventCenter
+        dataChangeEventCenter.onChange(new DatumSnapshotEvent(request.getConnectId(), cachePubMap, pubMap));
 
         // record the renew timestamp
         datumLeaseManager.renew(request.getConnectId());

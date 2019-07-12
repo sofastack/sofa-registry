@@ -263,7 +263,7 @@ public class Acceptor {
         return ret;
     }
 
-    private void clearBefore() {
+    public void clearBefore() {
         write.lock();
         try {
 

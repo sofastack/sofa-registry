@@ -28,34 +28,26 @@ import com.alipay.sofa.registry.common.model.store.Publisher;
 public class DatumSnapshotEvent implements IDataChangeEvent {
 
     /** connId, format is ip:port */
-    private String                                host;
-
-    private String                                dataCenter;
+    private String                                connectId;
 
     private Map<String/*registerId*/, Publisher> pubMap;
 
-    public DatumSnapshotEvent(String host, String dataCenter, Map<String, Publisher> pubMap) {
-        this.host = host;
-        this.dataCenter = dataCenter;
+    private Map<String/*registerId*/, Publisher> cachePubMap;
+
+    public DatumSnapshotEvent(String connectId, Map<String, Publisher> cachePubMap,
+                              Map<String, Publisher> pubMap) {
+        this.connectId = connectId;
+        this.cachePubMap = cachePubMap;
         this.pubMap = pubMap;
     }
 
     /**
-     * Getter method for property <tt>host</tt>.
+     * Getter method for property <tt>connectId</tt>.
      *
-     * @return property value of host
+     * @return property value of connectId
      */
-    public String getHost() {
-        return host;
-    }
-
-    /**
-     * Getter method for property <tt>dataCenter</tt>.
-     *
-     * @return property value of dataCenter
-     */
-    public String getDataCenter() {
-        return dataCenter;
+    public String getConnectId() {
+        return connectId;
     }
 
     /**
@@ -65,6 +57,15 @@ public class DatumSnapshotEvent implements IDataChangeEvent {
      */
     public Map<String, Publisher> getPubMap() {
         return pubMap;
+    }
+
+    /**
+     * Getter method for property <tt>cachePubMap</tt>.
+     *
+     * @return property value of cachePubMap
+     */
+    public Map<String, Publisher> getCachePubMap() {
+        return cachePubMap;
     }
 
     @Override

@@ -36,6 +36,7 @@ import com.alipay.sofa.registry.server.data.bootstrap.DataServerConfig;
 import com.alipay.sofa.registry.server.data.cache.DatumCache;
 import com.alipay.sofa.registry.server.data.datasync.AcceptorStore;
 import com.alipay.sofa.registry.server.data.datasync.Operator;
+import com.alipay.sofa.registry.server.data.datasync.SnapshotOperator;
 import com.alipay.sofa.registry.server.data.remoting.dataserver.DataServerConnectionFactory;
 import com.alipay.sofa.registry.server.data.remoting.metaserver.IMetaServerService;
 import com.alipay.sofa.registry.server.data.util.DelayItem;
@@ -117,7 +118,14 @@ public abstract class AbstractAcceptorStore implements AcceptorStore {
                     existAcceptor = newAcceptor;
                 }
             }
-            existAcceptor.appendOperator(operator);
+
+            if (operator instanceof SnapshotOperator) {
+                //snapshot: clear the queue, Make other data retrieve the latest memory data
+                existAcceptor.clearBefore();
+            } else {
+                existAcceptor.appendOperator(operator);
+            }
+
             //put cache
             putCache(existAcceptor);
         } catch (Exception e) {

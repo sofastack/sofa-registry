@@ -166,14 +166,7 @@ public class DatumCache {
         MergeResult mergeResult;
         String dataCenter = datum.getDataCenter();
         String dataInfoId = datum.getDataInfoId();
-        Map<String, Datum> map = DATUM_MAP.get(dataCenter);
-        if (map == null) {
-            map = new ConcurrentHashMap<>();
-            Map<String, Datum> ret = DATUM_MAP.putIfAbsent(dataCenter, map);
-            if (ret != null) {
-                map = ret;
-            }
-        }
+        Map<String, Datum> map = getDatumMapByDataCenter(dataCenter);
 
         //first put UnPublisher datum(dataId group instanceId is null),can not add to cache
         if (datum.getDataId() == null && map.get(dataInfoId) == null) {
@@ -189,7 +182,7 @@ public class DatumCache {
                 Entry<String, Publisher> entry = iterator.next();
                 Publisher publisher = entry.getValue();
                 if (!(publisher instanceof UnPublisher)) {
-                    addToConnectIndex(publisher);
+                    addToIndex(publisher);
                 } else {
                     //first put to cache,UnPublisher data must remove,not so got error pub data exist
                     iterator.remove();
@@ -205,6 +198,18 @@ public class DatumCache {
             }
         }
         return mergeResult;
+    }
+
+    private Map<String, Datum> getDatumMapByDataCenter(String dataCenter) {
+        Map<String, Datum> map = DATUM_MAP.get(dataCenter);
+        if (map == null) {
+            map = new ConcurrentHashMap<>();
+            Map<String, Datum> ret = DATUM_MAP.putIfAbsent(dataCenter, map);
+            if (ret != null) {
+                map = ret;
+            }
+        }
+        return map;
     }
 
     /**
@@ -262,6 +267,117 @@ public class DatumCache {
         return new MergeResult(lastVersion, isChanged);
     }
 
+    //    /**
+    //     * cover datum by connectId
+    //     */
+    //    public void putSnapshot(Map<String, Publisher> toBeDeletedPubMap, Map<String, Publisher> snapshotPubMap) {
+    //
+    //        //remove all old pub
+    //        for (Entry<String, Publisher> toBeDeletedPubEntry : toBeDeletedPubMap.entrySet()) {
+    //            String registerId = toBeDeletedPubEntry.getKey();
+    //            Publisher toBeDeletedPub = toBeDeletedPubEntry.getValue();
+    //            Datum cacheDatum = DATUM_MAP.get(dataServerConfig.getLocalDataCenter()).get(toBeDeletedPub.getDataInfoId());
+    //            if (cacheDatum != null) {
+    //                Map<String, Publisher> cachePubMap = cacheDatum.getPubMap();
+    //                cachePubMap.remove(registerId);
+    //                removeFromIndex(toBeDeletedPub);
+    //            }
+    //        }
+    //        // add all snapshot pub
+    //        for (Entry<String, Publisher> pubEntry : snapshotPubMap.entrySet()) {
+    //            String registerId = pubEntry.getKey();
+    //            Publisher snapshotPub = pubEntry.getValue();
+    //            Map<String, Datum> datumMap = getDatumMapByDataCenter(dataServerConfig.getLocalDataCenter());
+    //            String dataInfoId = snapshotPub.getDataInfoId();
+    //            Datum cacheDatum = datumMap.get(dataInfoId);
+    //            if (cacheDatum == null) {
+    //                cacheDatum = new Datum(dataInfoId, dataServerConfig.getLocalDataCenter());
+    //                Datum datum = datumMap.putIfAbsent(dataInfoId, cacheDatum);
+    //                if (datum != null) {
+    //                    cacheDatum = datum;
+    //                }
+    //            }
+    //            cacheDatum.getPubMap().put(registerId, snapshotPub);
+    //        }
+    //
+    //    }
+
+    //    /**
+    //     * cover datum by connectId
+    //     */
+    //    public void putSnapshot(String dataInfoId, Map<String, Publisher> toBeDeletedPubMap,
+    //                               Map<String, Publisher> snapshotPubMap) {
+    //        // get cache datum
+    //        Map<String, Datum> datumMap = getDatumMapByDataCenter(dataServerConfig.getLocalDataCenter());
+    //        Datum cacheDatum = datumMap.get(dataInfoId);
+    //        if (cacheDatum == null) {
+    //            cacheDatum = new Datum(dataInfoId, dataServerConfig.getLocalDataCenter());
+    //            Datum datum = datumMap.putIfAbsent(dataInfoId, cacheDatum);
+    //            if (datum != null) {
+    //                cacheDatum = datum;
+    //            }
+    //        }
+    //        //remove toBeDeletedPubMap from cacheDatum
+    //        for (Entry<String, Publisher> toBeDeletedPubEntry : toBeDeletedPubMap.entrySet()) {
+    //            String registerId = toBeDeletedPubEntry.getKey();
+    //            Publisher toBeDeletedPub = toBeDeletedPubEntry.getValue();
+    //            if (cacheDatum != null) {
+    //                Map<String, Publisher> cachePubMap = cacheDatum.getPubMap();
+    //                cachePubMap.remove(registerId);
+    //                removeFromIndex(toBeDeletedPub);
+    //            }
+    //        }
+    //        // add snapshotPubMap to cacheDatum
+    //        for (Entry<String, Publisher> pubEntry : snapshotPubMap.entrySet()) {
+    //            String registerId = pubEntry.getKey();
+    //            Publisher snapshotPub = pubEntry.getValue();
+    //            cacheDatum.getPubMap().put(registerId, snapshotPub);
+    //            addToIndex(snapshotPub);
+    //        }
+    //
+    //    }
+
+    /**
+     * cover datum by snapshot
+     */
+    public Datum putSnapshot(String dataInfoId, Map<String, Publisher> toBeDeletedPubMap,
+                             Map<String, Publisher> snapshotPubMap) {
+        // get cache datum
+        Map<String, Datum> datumMap = getDatumMapByDataCenter(dataServerConfig.getLocalDataCenter());
+        Datum cacheDatum = datumMap.get(dataInfoId);
+        if (cacheDatum == null) {
+            cacheDatum = new Datum(dataInfoId, dataServerConfig.getLocalDataCenter());
+            Publisher publisher = snapshotPubMap.values().iterator().next();
+            cacheDatum.setInstanceId(publisher.getInstanceId());
+            cacheDatum.setDataId(publisher.getDataId());
+            cacheDatum.setGroup(publisher.getGroup());
+            Datum datum = datumMap.putIfAbsent(dataInfoId, cacheDatum);
+            if (datum != null) {
+                cacheDatum = datum;
+            }
+        }
+        //remove toBeDeletedPubMap from cacheDatum
+        for (Entry<String, Publisher> toBeDeletedPubEntry : toBeDeletedPubMap.entrySet()) {
+            String registerId = toBeDeletedPubEntry.getKey();
+            Publisher toBeDeletedPub = toBeDeletedPubEntry.getValue();
+            if (cacheDatum != null) {
+                cacheDatum.getPubMap().remove(registerId);
+                removeFromIndex(toBeDeletedPub);
+            }
+        }
+        // add snapshotPubMap to cacheDatum
+        for (Entry<String, Publisher> pubEntry : snapshotPubMap.entrySet()) {
+            String registerId = pubEntry.getKey();
+            Publisher snapshotPub = pubEntry.getValue();
+            cacheDatum.getPubMap().put(registerId, snapshotPub);
+            addToIndex(snapshotPub);
+        }
+
+        cacheDatum.updateVersion();
+
+        return cacheDatum;
+    }
+
     private boolean mergePublisher(Publisher pub, Map<String, Publisher> cachePubMap,
                                    Publisher cachePub) {
         boolean isChanged = false;
@@ -284,7 +400,7 @@ public class DatumCache {
                 // eg: sessionserver crash, client(RegistryClient but not ConfregClient) reconnect to other sessionserver, sourceAddress changed, version not changed
                 if (!connectId.equals(cacheConnectId) || cacheVersion < version) {
                     removeFromIndex(cachePub);
-                    addToConnectIndex(pub);
+                    addToIndex(pub);
                     isChanged = true;
                 }
             }
@@ -308,7 +424,7 @@ public class DatumCache {
             for (Entry<String, Publisher> pubEntry : pubMap.entrySet()) {
                 String registerId = pubEntry.getKey();
                 Publisher pub = pubEntry.getValue();
-                addToConnectIndex(pub);
+                addToIndex(pub);
                 Publisher cachePub = cachePubMap.get(registerId);
                 if (cachePub != null && getConnectId(pub).equals(getConnectId(cachePub))) {
                     cachePubMap.remove(registerId);
@@ -336,7 +452,7 @@ public class DatumCache {
         }
     }
 
-    private void addToConnectIndex(Publisher publisher) {
+    private void addToIndex(Publisher publisher) {
         if (publisher == null) {
             return;
         }

@@ -14,42 +14,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alipay.sofa.registry.server.data.change;
+package com.alipay.sofa.registry.server.data.datasync;
+
+import com.alipay.sofa.registry.common.model.dataserver.Datum;
+import com.alipay.sofa.registry.server.data.change.DataSourceTypeEnum;
 
 /**
  *
- * @author qian.lqlq
- * @version $Id: DataSourceTypeEnum.java, v 0.1 2018-03-12 18:01 qian.lqlq Exp $
+ * @author kezhu.wukz
+ * @version $Id: SnapshotOperator.java, v 0.1 2019-07-12 20:33 kezhu.wukz Exp $
  */
-public enum DataSourceTypeEnum {
+public class SnapshotOperator extends Operator {
 
-    /**
-     * pub by client
-     */
-    PUB,
-
-    /**
-     * pub temporary data
-     */
-    PUB_TEMP,
-
-    /**
-     * sync from dataservers in other datacenter
-     */
-    SYNC,
-
-    /**
-     * from dataservers in the same datacenter
-     */
-    BACKUP,
-
-    /**
-     * local dataInfo check,not belong this node schedule remove
-     */
-    CLEAN,
-
-    /**
-     * Snapshot data, after renew finds data inconsistent
-     */
-    SNAPSHOT,
+    public SnapshotOperator(Long version, Long sourceVersion, Datum datum,
+                            DataSourceTypeEnum sourceType) {
+        super(version, sourceVersion, datum, sourceType);
+    }
 }

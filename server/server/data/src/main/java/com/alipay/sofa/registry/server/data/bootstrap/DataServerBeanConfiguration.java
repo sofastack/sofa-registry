@@ -40,9 +40,8 @@ import com.alipay.sofa.registry.server.data.change.event.DataChangeEventCenter;
 import com.alipay.sofa.registry.server.data.change.notify.BackUpNotifier;
 import com.alipay.sofa.registry.server.data.change.notify.IDataChangeNotifier;
 import com.alipay.sofa.registry.server.data.change.notify.SessionServerNotifier;
+import com.alipay.sofa.registry.server.data.change.notify.SnapshotBackUpNotifier;
 import com.alipay.sofa.registry.server.data.change.notify.TempPublisherNotifier;
-import com.alipay.sofa.registry.server.data.renew.DatumLeaseManager;
-import com.alipay.sofa.registry.server.data.renew.LocalDataServerCleanHandler;
 import com.alipay.sofa.registry.server.data.datasync.AcceptorStore;
 import com.alipay.sofa.registry.server.data.datasync.SyncDataService;
 import com.alipay.sofa.registry.server.data.datasync.sync.LocalAcceptorStore;
@@ -91,6 +90,8 @@ import com.alipay.sofa.registry.server.data.remoting.sessionserver.handler.Publi
 import com.alipay.sofa.registry.server.data.remoting.sessionserver.handler.RenewDatumHandler;
 import com.alipay.sofa.registry.server.data.remoting.sessionserver.handler.SessionServerRegisterHandler;
 import com.alipay.sofa.registry.server.data.remoting.sessionserver.handler.UnPublishDataHandler;
+import com.alipay.sofa.registry.server.data.renew.DatumLeaseManager;
+import com.alipay.sofa.registry.server.data.renew.LocalDataServerCleanHandler;
 import com.alipay.sofa.registry.server.data.resource.DataDigestResource;
 import com.alipay.sofa.registry.server.data.resource.HealthResource;
 import com.alipay.sofa.registry.util.PropertySplitter;
@@ -351,12 +352,18 @@ public class DataServerBeanConfiguration {
             return new BackUpNotifier();
         }
 
+        @Bean
+        public SnapshotBackUpNotifier snapshotBackUpNotifier() {
+            return new SnapshotBackUpNotifier();
+        }
+
         @Bean(name = "dataChangeNotifiers")
         public List<IDataChangeNotifier> dataChangeNotifiers() {
             List<IDataChangeNotifier> list = new ArrayList<>();
             list.add(sessionServerNotifier());
             list.add(tempPublisherNotifier());
             list.add(backUpNotifier());
+            list.add(snapshotBackUpNotifier());
             return list;
         }
     }
