@@ -45,6 +45,6 @@ public class UnPublisher extends Publisher {
 
     @Override
     public DataType getDataType() {
-        return DataType.UNPUBLISHER;
+        return DataType.UN_PUBLISHER;
     }
 }

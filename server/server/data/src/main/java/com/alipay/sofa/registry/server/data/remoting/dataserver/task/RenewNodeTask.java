@@ -16,25 +16,26 @@
  */
 package com.alipay.sofa.registry.server.data.remoting.dataserver.task;
 
-import com.alipay.sofa.registry.server.data.event.StartTaskTypeEnum;
-import com.alipay.sofa.registry.server.data.remoting.metaserver.IMetaServerService;
+import java.util.concurrent.TimeUnit;
+
 import org.springframework.beans.factory.annotation.Autowired;
 
-import java.util.concurrent.TimeUnit;
+import com.alipay.sofa.registry.server.data.event.StartTaskTypeEnum;
+import com.alipay.sofa.registry.server.data.remoting.metaserver.IMetaServerService;
 
 /**
  *
  * @author shangyu.wh
- * @version $Id: ReNewNodeTask.java, v 0.1 2018-04-02 20:56 shangyu.wh Exp $
+ * @version $Id: RenewNodeTask.java, v 0.1 2018-04-02 20:56 shangyu.wh Exp $
  */
-public class ReNewNodeTask extends AbstractTask {
+public class RenewNodeTask extends AbstractTask {
 
     @Autowired
     private IMetaServerService metaServerService;
 
     @Override
     public void handle() {
-        metaServerService.reNewNodeTask();
+        metaServerService.renewNodeTask();
     }
 
     @Override

@@ -16,6 +16,10 @@
  */
 package com.alipay.sofa.registry.server.data.remoting.sessionserver.handler;
 
+import java.util.List;
+
+import org.springframework.beans.factory.annotation.Autowired;
+
 import com.alipay.sofa.registry.common.model.CommonResponse;
 import com.alipay.sofa.registry.common.model.Node;
 import com.alipay.sofa.registry.common.model.dataserver.ClientOffRequest;
@@ -25,9 +29,6 @@ import com.alipay.sofa.registry.server.data.remoting.handler.AbstractServerHandl
 import com.alipay.sofa.registry.server.data.remoting.sessionserver.disconnect.ClientDisconnectEvent;
 import com.alipay.sofa.registry.server.data.remoting.sessionserver.disconnect.DisconnectEventHandler;
 import com.alipay.sofa.registry.util.ParaCheckUtil;
-import org.springframework.beans.factory.annotation.Autowired;
-
-import java.util.List;
 
 /**
  * processor to remove data of specific clients immediately
@@ -38,7 +39,7 @@ import java.util.List;
 public class ClientOffHandler extends AbstractServerHandler<ClientOffRequest> {
 
     @Autowired
-    private DataServerConfig       dataServerBootstrapConfig;
+    private DataServerConfig       dataServerConfig;
 
     @Autowired
     private DisconnectEventHandler disconnectEventHandler;
@@ -53,7 +54,7 @@ public class ClientOffHandler extends AbstractServerHandler<ClientOffRequest> {
         List<String> hosts = request.getHosts();
         for (String host : hosts) {
             disconnectEventHandler.receive(new ClientDisconnectEvent(host, request.getGmtOccur(),
-                dataServerBootstrapConfig.getClientOffDelayMs()));
+                dataServerConfig.getClientOffDelayMs()));
         }
         return CommonResponse.buildSuccessResponse();
     }

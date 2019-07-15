@@ -17,6 +17,8 @@
 package com.alipay.sofa.registry.server.session.registry;
 
 import com.alipay.sofa.registry.common.model.Node;
+import com.alipay.sofa.registry.common.model.RenewDatumRequest;
+import com.alipay.sofa.registry.common.model.constants.ValueConstants;
 import com.alipay.sofa.registry.common.model.store.Publisher;
 import com.alipay.sofa.registry.common.model.store.StoreData;
 import com.alipay.sofa.registry.common.model.store.Subscriber;
@@ -27,10 +29,13 @@ import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.remoting.Channel;
 import com.alipay.sofa.registry.remoting.Server;
 import com.alipay.sofa.registry.remoting.exchange.Exchange;
+import com.alipay.sofa.registry.server.session.acceptor.WriteDataAcceptor;
+import com.alipay.sofa.registry.server.session.acceptor.WriteDataRequest;
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
 import com.alipay.sofa.registry.server.session.filter.DataIdMatchStrategy;
 import com.alipay.sofa.registry.server.session.node.NodeManager;
 import com.alipay.sofa.registry.server.session.node.service.DataNodeService;
+import com.alipay.sofa.registry.server.session.renew.RenewService;
 import com.alipay.sofa.registry.server.session.store.DataStore;
 import com.alipay.sofa.registry.server.session.store.Interests;
 import com.alipay.sofa.registry.server.session.store.Watchers;
@@ -39,7 +44,6 @@ import com.alipay.sofa.registry.server.session.wrapper.Wrapper;
 import com.alipay.sofa.registry.server.session.wrapper.WrapperInterceptorManager;
 import com.alipay.sofa.registry.server.session.wrapper.WrapperInvocation;
 import com.alipay.sofa.registry.task.listener.TaskEvent;
-import com.alipay.sofa.registry.task.listener.TaskEvent.TaskType;
 import com.alipay.sofa.registry.task.listener.TaskListenerManager;
 import com.google.common.collect.Sets;
 import com.google.common.collect.Sets.SetView;
@@ -60,10 +64,14 @@ import java.util.function.Supplier;
  */
 public class SessionRegistry implements Registry {
 
-    private static final Logger       LOGGER      = LoggerFactory.getLogger(SessionRegistry.class);
+    private static final Logger       LOGGER       = LoggerFactory.getLogger(SessionRegistry.class);
 
-    private static final Logger       TASK_LOGGER = LoggerFactory.getLogger(SessionRegistry.class,
-                                                      "[Task]");
+    private static final Logger       TASK_LOGGER  = LoggerFactory.getLogger(SessionRegistry.class,
+                                                       "[Task]");
+
+    private static final Logger       RENEW_LOGGER = LoggerFactory.getLogger(
+                                                       ValueConstants.LOGGER_NAME_RENEW,
+                                                       "[SessionRegistry]");
 
     /**
      * store subscribers
@@ -116,6 +124,12 @@ public class SessionRegistry implements Registry {
     @Autowired
     private DataIdMatchStrategy       dataIdMatchStrategy;
 
+    @Autowired
+    private RenewService              renewService;
+
+    @Autowired
+    private WriteDataAcceptor         writeDataAcceptor;
+
     @Override
     public void register(StoreData storeData) {
 
@@ -128,9 +142,26 @@ public class SessionRegistry implements Registry {
                     case PUBLISHER:
                         Publisher publisher = (Publisher) storeData;
 
-                        dataNodeService.register(publisher);
-
                         sessionDataStore.add(publisher);
+
+                        // All write operations to DataServer (pub/unPub/clientoff/renew/snapshot)
+                        // are handed over to WriteDataAcceptor
+                        writeDataAcceptor.accept(new WriteDataRequest() {
+                            @Override
+                            public Object getRequestBody() {
+                                return publisher;
+                            }
+
+                            @Override
+                            public WriteDataRequestType getRequestType() {
+                                return WriteDataRequestType.PUBLISHER;
+                            }
+
+                            @Override
+                            public String getConnectId() {
+                                return publisher.getSourceAddress().getAddressString();
+                            }
+                        });
 
                         sessionRegistryStrategy.afterPublisherRegister(publisher);
                         break;
@@ -166,6 +197,7 @@ public class SessionRegistry implements Registry {
         } catch (Exception e) {
             throw new RuntimeException("Proceed register error!",e);
         }
+
     }
 
     @Override
@@ -177,7 +209,24 @@ public class SessionRegistry implements Registry {
 
                 sessionDataStore.deleteById(storeData.getId(), publisher.getDataInfoId());
 
-                dataNodeService.unregister(publisher);
+                // All write operations to DataServer (pub/unPub/clientoff/renew/snapshot)
+                // are handed over to WriteDataAcceptor
+                writeDataAcceptor.accept(new WriteDataRequest() {
+                    @Override
+                    public Object getRequestBody() {
+                        return publisher;
+                    }
+
+                    @Override
+                    public WriteDataRequestType getRequestType() {
+                        return WriteDataRequestType.UN_PUBLISHER;
+                    }
+
+                    @Override
+                    public String getConnectId() {
+                        return publisher.getSourceAddress().getAddressString();
+                    }
+                });
 
                 sessionRegistryStrategy.afterPublisherUnRegister(publisher);
                 break;
@@ -203,9 +252,47 @@ public class SessionRegistry implements Registry {
 
     @Override
     public void cancel(List<String> connectIds) {
-        TaskEvent taskEvent = new TaskEvent(connectIds, TaskType.CANCEL_DATA_TASK);
-        TASK_LOGGER.info("send " + taskEvent.getTaskType() + " taskEvent:{}", taskEvent);
-        taskListenerManager.sendTaskEvent(taskEvent);
+        //update local firstly, data node send error depend on renew check
+        List<String> connectIdsWithPub = new ArrayList<>();
+        removeFromSession(connectIds, connectIdsWithPub);
+
+        // clientOff to dataNode async
+        clientOffToDataNode(connectIdsWithPub);
+
+    }
+
+    private void removeFromSession(List<String> connectIds, List<String> connectIdsWithPub) {
+        for (String connectId : connectIds) {
+            if (sessionDataStore.deleteByConnectId(connectId)) {
+                connectIdsWithPub.add(connectId);
+            }
+            sessionInterests.deleteByConnectId(connectId);
+            sessionWatchers.deleteByConnectId(connectId);
+        }
+    }
+
+    private void clientOffToDataNode(List<String> connectIdsWithPub) {
+        // All write operations to DataServer (pub/unPub/clientoff/renew/snapshot)
+        // are handed over to WriteDataAcceptor
+        for (String connectId : connectIdsWithPub) {
+            writeDataAcceptor.accept(new WriteDataRequest() {
+                @Override
+                public Object getRequestBody() {
+                    return connectId;
+                }
+
+                @Override
+                public WriteDataRequestType getRequestType() {
+                    return WriteDataRequestType.CLIENT_OFF;
+                }
+
+                @Override
+                public String getConnectId() {
+                    return connectId;
+                }
+            });
+            writeDataAcceptor.remove(connectId);
+        }
     }
 
     @Override
@@ -326,12 +413,69 @@ public class SessionRegistry implements Registry {
         }
     }
 
+    @Override
+    public void renewDatum(String connectId) {
+        if (RENEW_LOGGER.isDebugEnabled()) {
+            RENEW_LOGGER.debug("renewDatum: connectId={}", connectId);
+        }
+
+        List<RenewDatumRequest> renewDatumRequests = renewService.getRenewDatumRequests(connectId);
+        if (renewDatumRequests != null) {
+            for (RenewDatumRequest renewDatumRequest : renewDatumRequests) {
+                // All write operations to DataServer (pub/unPub/clientoff/renew/snapshot)
+                // are handed over to WriteDataAcceptor
+                writeDataAcceptor.accept(new WriteDataRequest() {
+                    @Override
+                    public Object getRequestBody() {
+                        return renewDatumRequest;
+                    }
+
+                    @Override
+                    public WriteDataRequestType getRequestType() {
+                        return WriteDataRequestType.RENEW_DATUM;
+                    }
+
+                    @Override
+                    public String getConnectId() {
+                        return connectId;
+                    }
+                });
+            }
+        }
+    }
+
+    @Override
+    public void sendDatumSnapshot(String connectId) {
+        if (RENEW_LOGGER.isDebugEnabled()) {
+            RENEW_LOGGER.debug("sendDatumSnapshot: connectId={}", connectId);
+        }
+
+        // All write operations to DataServer (pub/unPub/clientoff/renew/snapshot)
+        // are handed over to WriteDataAcceptor
+        writeDataAcceptor.accept(new WriteDataRequest() {
+            @Override
+            public Object getRequestBody() {
+                return connectId;
+            }
+
+            @Override
+            public WriteDataRequestType getRequestType() {
+                return WriteDataRequestType.DATUM_SNAPSHOT;
+            }
+
+            @Override
+            public String getConnectId() {
+                return connectId;
+            }
+        });
+    }
+
     /**
      * Getter method for property <tt>sessionInterests</tt>.
      *
      * @return property value of sessionInterests
      */
-    public Interests getSessionInterests() {
+    protected Interests getSessionInterests() {
         return sessionInterests;
     }
 
@@ -340,7 +484,7 @@ public class SessionRegistry implements Registry {
      *
      * @return property value of sessionDataStore
      */
-    public DataStore getSessionDataStore() {
+    protected DataStore getSessionDataStore() {
         return sessionDataStore;
     }
 
@@ -349,7 +493,7 @@ public class SessionRegistry implements Registry {
      *
      * @return property value of taskListenerManager
      */
-    public TaskListenerManager getTaskListenerManager() {
+    protected TaskListenerManager getTaskListenerManager() {
         return taskListenerManager;
     }
 }

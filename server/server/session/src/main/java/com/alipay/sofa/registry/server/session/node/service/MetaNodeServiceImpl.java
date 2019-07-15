@@ -16,6 +16,8 @@
  */
 package com.alipay.sofa.registry.server.session.node.service;
 
+import org.springframework.beans.factory.annotation.Autowired;
+
 import com.alipay.sofa.registry.common.model.metaserver.FetchProvideDataRequest;
 import com.alipay.sofa.registry.common.model.metaserver.ProvideData;
 import com.alipay.sofa.registry.common.model.store.URL;
@@ -28,7 +30,6 @@ import com.alipay.sofa.registry.remoting.exchange.message.Response;
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
 import com.alipay.sofa.registry.server.session.node.RaftClientManager;
 import com.alipay.sofa.registry.server.session.node.SessionNodeManager;
-import org.springframework.beans.factory.annotation.Autowired;
 
 /**
  *
@@ -78,8 +79,8 @@ public class MetaNodeServiceImpl implements MetaNodeService {
                 throw new RuntimeException("MetaNodeService fetch null provider data!");
             }
         } catch (RequestException e) {
-            LOGGER.error("fetch provider data error! " + e.getRequestMessage(), e);
-            throw new RuntimeException("fetch provider data error! " + e.getRequestMessage(), e);
+            LOGGER.error("fetch provider data error! " + e.getMessage(), e);
+            throw new RuntimeException("fetch provider data error! " + e.getMessage(), e);
         }
     }
 }

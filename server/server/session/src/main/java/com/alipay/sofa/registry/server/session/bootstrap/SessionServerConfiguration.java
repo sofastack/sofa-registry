@@ -16,10 +16,23 @@
  */
 package com.alipay.sofa.registry.server.session.bootstrap;
 
+import java.util.ArrayList;
+import java.util.Collection;
+
+import org.glassfish.jersey.jackson.JacksonFeature;
+import org.glassfish.jersey.server.ResourceConfig;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Import;
+
 import com.alipay.sofa.registry.remoting.bolt.exchange.BoltExchange;
 import com.alipay.sofa.registry.remoting.exchange.Exchange;
 import com.alipay.sofa.registry.remoting.exchange.NodeExchanger;
 import com.alipay.sofa.registry.remoting.jersey.exchange.JerseyExchange;
+import com.alipay.sofa.registry.server.session.acceptor.WriteDataAcceptor;
+import com.alipay.sofa.registry.server.session.acceptor.WriteDataAcceptorImpl;
 import com.alipay.sofa.registry.server.session.cache.CacheGenerator;
 import com.alipay.sofa.registry.server.session.cache.CacheService;
 import com.alipay.sofa.registry.server.session.cache.DatumCacheGenerator;
@@ -36,13 +49,17 @@ import com.alipay.sofa.registry.server.session.listener.CancelDataTaskListener;
 import com.alipay.sofa.registry.server.session.listener.DataChangeFetchCloudTaskListener;
 import com.alipay.sofa.registry.server.session.listener.DataChangeFetchTaskListener;
 import com.alipay.sofa.registry.server.session.listener.DataPushTaskListener;
+import com.alipay.sofa.registry.server.session.listener.DatumSnapshotTaskListener;
 import com.alipay.sofa.registry.server.session.listener.ProvideDataChangeFetchTaskListener;
+import com.alipay.sofa.registry.server.session.listener.PublishDataTaskListener;
 import com.alipay.sofa.registry.server.session.listener.ReceivedConfigDataPushTaskListener;
 import com.alipay.sofa.registry.server.session.listener.ReceivedDataMultiPushTaskListener;
+import com.alipay.sofa.registry.server.session.listener.RenewDatumTaskListener;
 import com.alipay.sofa.registry.server.session.listener.SessionRegisterDataTaskListener;
 import com.alipay.sofa.registry.server.session.listener.SubscriberMultiFetchTaskListener;
 import com.alipay.sofa.registry.server.session.listener.SubscriberPushEmptyTaskListener;
 import com.alipay.sofa.registry.server.session.listener.SubscriberRegisterFetchTaskListener;
+import com.alipay.sofa.registry.server.session.listener.UnPublishDataTaskListener;
 import com.alipay.sofa.registry.server.session.listener.WatcherRegisterFetchTaskListener;
 import com.alipay.sofa.registry.server.session.node.DataNodeManager;
 import com.alipay.sofa.registry.server.session.node.MetaNodeManager;
@@ -79,6 +96,8 @@ import com.alipay.sofa.registry.server.session.remoting.handler.PublisherHandler
 import com.alipay.sofa.registry.server.session.remoting.handler.SubscriberHandler;
 import com.alipay.sofa.registry.server.session.remoting.handler.SyncConfigHandler;
 import com.alipay.sofa.registry.server.session.remoting.handler.WatcherHandler;
+import com.alipay.sofa.registry.server.session.renew.DefaultRenewService;
+import com.alipay.sofa.registry.server.session.renew.RenewService;
 import com.alipay.sofa.registry.server.session.resource.ClientsOpenResource;
 import com.alipay.sofa.registry.server.session.resource.HealthResource;
 import com.alipay.sofa.registry.server.session.resource.SessionDigestResource;
@@ -123,16 +142,6 @@ import com.alipay.sofa.registry.task.listener.DefaultTaskListenerManager;
 import com.alipay.sofa.registry.task.listener.TaskListener;
 import com.alipay.sofa.registry.task.listener.TaskListenerManager;
 import com.alipay.sofa.registry.util.PropertySplitter;
-import org.glassfish.jersey.jackson.JacksonFeature;
-import org.glassfish.jersey.server.ResourceConfig;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
-import org.springframework.boot.context.properties.EnableConfigurationProperties;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Import;
-
-import java.util.ArrayList;
-import java.util.Collection;
 
 /**
  *
@@ -521,8 +530,37 @@ public class SessionServerConfiguration {
         }
 
         @Bean
+        @ConditionalOnMissingBean(name = "cancelDataTaskListener")
         public TaskListener cancelDataTaskListener(TaskListenerManager taskListenerManager) {
             TaskListener taskListener = new CancelDataTaskListener();
+            taskListenerManager.addTaskListener(taskListener);
+            return taskListener;
+        }
+
+        @Bean
+        public TaskListener datumSnapshotTaskListener(TaskListenerManager taskListenerManager) {
+            TaskListener taskListener = new DatumSnapshotTaskListener();
+            taskListenerManager.addTaskListener(taskListener);
+            return taskListener;
+        }
+
+        @Bean
+        public TaskListener publishDataTaskListener(TaskListenerManager taskListenerManager) {
+            TaskListener taskListener = new PublishDataTaskListener();
+            taskListenerManager.addTaskListener(taskListener);
+            return taskListener;
+        }
+
+        @Bean
+        public TaskListener renewDatumTaskListener(TaskListenerManager taskListenerManager) {
+            TaskListener taskListener = new RenewDatumTaskListener();
+            taskListenerManager.addTaskListener(taskListener);
+            return taskListener;
+        }
+
+        @Bean
+        public TaskListener unPublishDataTaskListener(TaskListenerManager taskListenerManager) {
+            TaskListener taskListener = new UnPublishDataTaskListener();
             taskListenerManager.addTaskListener(taskListener);
             return taskListener;
         }
@@ -670,6 +708,20 @@ public class SessionServerConfiguration {
             BlacklistWrapperInterceptor blacklistWrapperInterceptor = new BlacklistWrapperInterceptor();
             wrapperInterceptorManager.addInterceptor(blacklistWrapperInterceptor);
             return blacklistWrapperInterceptor;
+        }
+    }
+
+    @Configuration
+    public static class SessionRenewDatumConfiguration {
+
+        @Bean
+        public WriteDataAcceptor writeDataAcceptor() {
+            return new WriteDataAcceptorImpl();
+        }
+
+        @Bean
+        public RenewService renewService() {
+            return new DefaultRenewService();
         }
     }
 }

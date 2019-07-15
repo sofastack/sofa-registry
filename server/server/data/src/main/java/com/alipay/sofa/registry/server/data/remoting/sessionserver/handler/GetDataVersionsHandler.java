@@ -16,6 +16,14 @@
  */
 package com.alipay.sofa.registry.server.data.remoting.sessionserver.handler;
 
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
+
+import org.springframework.beans.factory.annotation.Autowired;
+
 import com.alipay.sofa.registry.common.model.GenericResponse;
 import com.alipay.sofa.registry.common.model.Node;
 import com.alipay.sofa.registry.common.model.dataserver.Datum;
@@ -25,12 +33,6 @@ import com.alipay.sofa.registry.server.data.cache.DatumCache;
 import com.alipay.sofa.registry.server.data.remoting.handler.AbstractServerHandler;
 import com.alipay.sofa.registry.util.ParaCheckUtil;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Set;
-
 /**
  * processor to get versions of specific dataInfoIds
  *
@@ -38,6 +40,10 @@ import java.util.Set;
  * @version $Id: GetDataVersionsProcessor.java, v 0.1 2017-12-06 19:56 qian.lqlq Exp $
  */
 public class GetDataVersionsHandler extends AbstractServerHandler<GetDataVersionRequest> {
+
+    @Autowired
+    private DatumCache datumCache;
+
     @Override
     protected void logRequest(Channel channel, GetDataVersionRequest request) {
     }
@@ -52,7 +58,7 @@ public class GetDataVersionsHandler extends AbstractServerHandler<GetDataVersion
         Map<String/*datacenter*/, Map<String/*dataInfoId*/, Long/*version*/>> map = new HashMap<>();
         List<String> dataInfoIds = request.getDataInfoIds();
         for (String dataInfoId : dataInfoIds) {
-            Map<String, Datum> datumMap = DatumCache.get(dataInfoId);
+            Map<String, Datum> datumMap = datumCache.get(dataInfoId);
             Set<Entry<String, Datum>> entrySet = datumMap.entrySet();
             for (Entry<String, Datum> entry : entrySet) {
                 String dataCenter = entry.getKey();

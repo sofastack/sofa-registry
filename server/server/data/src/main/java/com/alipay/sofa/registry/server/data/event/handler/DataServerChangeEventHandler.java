@@ -16,6 +16,16 @@
  */
 package com.alipay.sofa.registry.server.data.event.handler;
 
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+
+import org.apache.commons.lang.StringUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.util.CollectionUtils;
+
 import com.alipay.remoting.Connection;
 import com.alipay.sofa.registry.common.model.metaserver.DataNode;
 import com.alipay.sofa.registry.common.model.store.URL;
@@ -32,15 +42,6 @@ import com.alipay.sofa.registry.server.data.node.DataServerNode;
 import com.alipay.sofa.registry.server.data.remoting.DataNodeExchanger;
 import com.alipay.sofa.registry.server.data.remoting.dataserver.DataServerNodeFactory;
 import com.alipay.sofa.registry.server.data.util.TimeUtil;
-import org.apache.commons.lang.StringUtils;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.util.CollectionUtils;
-
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
 
 /**
  *
@@ -55,7 +56,7 @@ public class DataServerChangeEventHandler extends AbstractEventHandler<DataServe
     private static final int    TRY_COUNT = 5;
 
     @Autowired
-    private DataServerConfig    dataServerBootstrapConfig;
+    private DataServerConfig    dataServerConfig;
 
     @Autowired
     private DataServerCache     dataServerCache;
@@ -75,11 +76,11 @@ public class DataServerChangeEventHandler extends AbstractEventHandler<DataServe
     public void doHandle(DataServerChangeEvent event) {
         synchronized (this) {
             //register self first,execute once
-            DataServerNodeFactory.initConsistent(dataServerBootstrapConfig);
+            DataServerNodeFactory.initConsistent(dataServerConfig);
 
             DataServerChangeItem dataServerChangeItem = event.getDataServerChangeItem();
             Set<String> localDataServers = dataServerCache.getDataServers(
-                dataServerBootstrapConfig.getLocalDataCenter()).keySet();
+                dataServerConfig.getLocalDataCenter()).keySet();
             //get changed dataservers
             Map<String, Set<String>> changedMap = dataServerCache
                 .compareAndSet(dataServerChangeItem);
@@ -102,7 +103,7 @@ public class DataServerChangeEventHandler extends AbstractEventHandler<DataServe
                         Set<String> ipSet = DataServerNodeFactory.getIps(dataCenter);
                         for (String ip : ipSet) {
                             if (!ips.contains(ip)) {
-                                DataServerNodeFactory.remove(dataCenter, ip, dataServerBootstrapConfig);
+                                DataServerNodeFactory.remove(dataCenter, ip, dataServerConfig);
                                 LOGGER.info(
                                         "[DataServerChangeEventHandler] remove connection, datacenter:{}, ip:{}",
                                         dataCenter, ip);
@@ -112,7 +113,7 @@ public class DataServerChangeEventHandler extends AbstractEventHandler<DataServe
                         Long newVersion = dataServerCache.getDataCenterNewVersion(dataCenter);
                         Map<String, DataNode> newDataNodes = dataServerCache.getNewDataServerMap(dataCenter);
                         //if the datacenter is self, post LocalDataServerChangeEvent
-                        if (dataServerBootstrapConfig.getLocalDataCenter().equals(dataCenter)) {
+                        if (dataServerConfig.getLocalDataCenter().equals(dataCenter)) {
                             Set<String> newjoined = new HashSet<>(ips);
                             newjoined.removeAll(localDataServers);
                             //avoid input map reference operation DataServerNodeFactory MAP
@@ -122,14 +123,14 @@ public class DataServerChangeEventHandler extends AbstractEventHandler<DataServe
                                     map.keySet(), newVersion);
                             eventCenter.post(new LocalDataServerChangeEvent(map, newjoined,
                                     dataServerChangeItem.getVersionMap()
-                                            .get(dataServerBootstrapConfig.getLocalDataCenter()),
+                                            .get(dataServerConfig.getLocalDataCenter()),
                                     newVersion));
                         } else {
                             dataServerCache.updateItem(newDataNodes, newVersion, dataCenter);
                         }
                     } else {
                         //if the datacenter which has no dataservers is not self, remove it
-                        if (!dataServerBootstrapConfig.getLocalDataCenter().equals(dataCenter)) {
+                        if (!dataServerConfig.getLocalDataCenter().equals(dataCenter)) {
                             removeDataCenter(dataCenter);
                         }
                         Long newVersion = dataServerCache.getDataCenterNewVersion(dataCenter);
@@ -170,8 +171,8 @@ public class DataServerChangeEventHandler extends AbstractEventHandler<DataServe
         Connection conn = null;
         for (int tryCount = 0; tryCount < TRY_COUNT; tryCount++) {
             try {
-                conn = ((BoltChannel) dataNodeExchanger.connect(new URL(ip,
-                    dataServerBootstrapConfig.getSyncDataPort()))).getConnection();
+                conn = ((BoltChannel) dataNodeExchanger.connect(new URL(ip, dataServerConfig
+                    .getSyncDataPort()))).getConnection();
                 break;
             } catch (Exception e) {
                 LOGGER.error("[DataServerChangeEventHandler] connect dataServer {} in {} error",
@@ -190,8 +191,7 @@ public class DataServerChangeEventHandler extends AbstractEventHandler<DataServe
                         ip, dataCenter));
         }
         //maybe get dataNode from metaServer,current has not start! register dataNode info to factory,wait for connect task next execute
-        DataServerNodeFactory.register(new DataServerNode(ip, dataCenter, conn),
-            dataServerBootstrapConfig);
+        DataServerNodeFactory.register(new DataServerNode(ip, dataCenter, conn), dataServerConfig);
     }
 
     /**

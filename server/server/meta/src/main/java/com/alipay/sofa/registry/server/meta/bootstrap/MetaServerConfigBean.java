@@ -16,10 +16,13 @@
  */
 package com.alipay.sofa.registry.server.meta.bootstrap;
 
-import com.alipay.sofa.registry.common.model.constants.ValueConstants;
+import java.io.File;
+
+import org.apache.commons.lang.builder.ToStringBuilder;
+import org.apache.commons.lang.builder.ToStringStyle;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
-import java.io.File;
+import com.alipay.sofa.registry.common.model.constants.ValueConstants;
 
 /**
  *
@@ -598,5 +601,10 @@ public class MetaServerConfigBean implements MetaServerConfig {
      */
     public void setEnableMetrics(boolean enableMetrics) {
         this.enableMetrics = enableMetrics;
+    }
+
+    @Override
+    public String toString() {
+        return ToStringBuilder.reflectionToString(this, ToStringStyle.MULTI_LINE_STYLE);
     }
 }

@@ -72,6 +72,13 @@ public interface Registry {
     void fetchChangDataProcess();
 
     /**
+     * Regularly send update Datum with same connectID valid time request service
+     */
+    void renewDatum(String connectId);
+
+    void sendDatumSnapshot(String connectId);
+
+    /**
      * for scheduler clean no connect client
      */
     void cleanClientConnect();

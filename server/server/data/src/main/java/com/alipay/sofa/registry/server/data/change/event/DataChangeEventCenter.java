@@ -16,15 +16,20 @@
  */
 package com.alipay.sofa.registry.server.data.change.event;
 
+import java.util.concurrent.atomic.AtomicBoolean;
+
+import javax.annotation.PostConstruct;
+
+import org.springframework.beans.factory.annotation.Autowired;
+
 import com.alipay.sofa.registry.common.model.PublishType;
 import com.alipay.sofa.registry.common.model.dataserver.Datum;
 import com.alipay.sofa.registry.common.model.store.Publisher;
 import com.alipay.sofa.registry.server.data.bootstrap.DataServerConfig;
+import com.alipay.sofa.registry.server.data.cache.DatumCache;
 import com.alipay.sofa.registry.server.data.cache.UnPublisher;
 import com.alipay.sofa.registry.server.data.change.DataChangeTypeEnum;
 import com.alipay.sofa.registry.server.data.change.DataSourceTypeEnum;
-
-import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  *
@@ -44,16 +49,20 @@ public class DataChangeEventCenter {
      */
     private DataChangeEventQueue[] dataChangeEventQueues;
 
-    /**
-     *
-     * @param config
-     */
-    public void init(DataServerConfig config) {
+    @Autowired
+    private DataServerConfig       dataServerConfig;
+
+    @Autowired
+    private DatumCache             datumCache;
+
+    @PostConstruct
+    public void init() {
         if (isInited.compareAndSet(false, true)) {
-            queueCount = config.getQueueCount();
+            queueCount = dataServerConfig.getQueueCount();
             dataChangeEventQueues = new DataChangeEventQueue[queueCount];
             for (int idx = 0; idx < queueCount; idx++) {
-                dataChangeEventQueues[idx] = new DataChangeEventQueue(idx, config);
+                dataChangeEventQueues[idx] = new DataChangeEventQueue(idx, dataServerConfig, this,
+                    datumCache);
                 dataChangeEventQueues[idx].start();
             }
         }
@@ -103,6 +112,16 @@ public class DataChangeEventCenter {
 
     /**
      *
+     * @param event
+     */
+    public void onChange(DatumSnapshotEvent event) {
+        for (DataChangeEventQueue dataChangeEventQueue : dataChangeEventQueues) {
+            dataChangeEventQueue.onChange(event);
+        }
+    }
+
+    /**
+     *
      * @param changeType
      * @param datum
      */
@@ -118,7 +137,7 @@ public class DataChangeEventCenter {
      * @param key
      * @return
      */
-    private int hash(String key) {
+    public int hash(String key) {
         if (queueCount > 1) {
             return Math.abs(key.hashCode() % queueCount);
         } else {

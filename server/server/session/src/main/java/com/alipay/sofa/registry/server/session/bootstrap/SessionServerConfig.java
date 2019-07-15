@@ -63,9 +63,29 @@ public interface SessionServerConfig {
 
     int getCancelDataTaskRetryTimes();
 
-    int getCancelDataTaskRetryFirstDelay();
+    long getCancelDataTaskRetryFirstDelay();
 
     long getCancelDataTaskRetryIncrementDelay();
+
+    int getPublishDataTaskRetryTimes();
+
+    long getPublishDataTaskRetryFirstDelay();
+
+    long getPublishDataTaskRetryIncrementDelay();
+
+    int getUnPublishDataTaskRetryTimes();
+
+    long getUnPublishDataTaskRetryFirstDelay();
+
+    long getUnPublishDataTaskRetryIncrementDelay();
+
+    int getDatumSnapshotTaskRetryTimes();
+
+    long getDatumSnapshotTaskRetryFirstDelay();
+
+    long getDatumSnapshotTaskRetryIncrementDelay();
+
+    int getRenewDatumTaskRetryTimes();
 
     int getDataChangeFetchTaskRetryTimes();
 
@@ -115,11 +135,11 @@ public interface SessionServerConfig {
 
     long getPushTaskExecutorKeepAliveTime();
 
-    int getDisconnectClientExecutorMinPoolSize();
+    int getConnectClientExecutorMinPoolSize();
 
-    int getDisconnectClientExecutorMaxPoolSize();
+    int getConnectClientExecutorMaxPoolSize();
 
-    int getDisconnectClientExecutorQueueSize();
+    int getConnectClientExecutorQueueSize();
 
     int getDataChangeFetchTaskMaxBufferSize();
 
@@ -129,9 +149,19 @@ public interface SessionServerConfig {
 
     int getUserDataPushRetryWheelTicksDuration();
 
+    int getUserDataPushRetryExecutorQueueSize();
+
+    int getUserDataPushRetryExecutorThreadSize();
+
     int getPushDataTaskRetryFirstDelay();
 
     long getPushDataTaskRetryIncrementDelay();
+
+    int getRenewDatumWheelTicksSize();
+
+    int getRenewDatumWheelTicksDuration();
+
+    long getRenewDatumWheelTaskDelay();
 
     String getBlacklistPubDataIdRegex();
 
@@ -150,4 +180,12 @@ public interface SessionServerConfig {
     boolean isInvalidForeverZone(String zoneId);
 
     boolean isInvalidIgnored(String dataId);
+
+    int getRenewAndSnapshotSilentPeriodSec();
+
+    int getWriteDataAcceptorQueueSize();
+
+    int getDataNodeRetryExecutorQueueSize();
+
+    int getDataNodeRetryExecutorThreadSize();
 }

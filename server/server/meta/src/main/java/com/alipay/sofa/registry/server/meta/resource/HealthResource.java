@@ -16,16 +16,24 @@
  */
 package com.alipay.sofa.registry.server.meta.resource;
 
-import com.alipay.sofa.registry.common.model.CommonResponse;
-import com.alipay.sofa.registry.jraft.bootstrap.ServiceStateMachine;
-import com.alipay.sofa.registry.server.meta.bootstrap.MetaServerBootstrap;
-import com.alipay.sofa.registry.server.meta.remoting.RaftExchanger;
-import org.springframework.beans.factory.annotation.Autowired;
-
+import javax.annotation.PostConstruct;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.core.Response.ResponseBuilder;
+import javax.ws.rs.core.Response.Status;
+
+import org.springframework.beans.factory.annotation.Autowired;
+
+import com.alipay.sofa.registry.common.model.CommonResponse;
+import com.alipay.sofa.registry.jraft.bootstrap.ServiceStateMachine;
+import com.alipay.sofa.registry.metrics.ReporterUtils;
+import com.alipay.sofa.registry.server.meta.bootstrap.MetaServerBootstrap;
+import com.alipay.sofa.registry.server.meta.remoting.RaftExchanger;
+import com.codahale.metrics.Gauge;
+import com.codahale.metrics.MetricRegistry;
 
 /**
  *
@@ -41,11 +49,28 @@ public class HealthResource {
     @Autowired
     private RaftExchanger       raftExchanger;
 
+    @PostConstruct
+    public void init() {
+        MetricRegistry metrics = new MetricRegistry();
+        metrics.register("healthCheck", (Gauge<CommonResponse>) () -> getHealthCheckResult());
+        ReporterUtils.startSlf4jReporter(60, metrics);
+    }
+
     @GET
     @Path("check")
     @Produces(MediaType.APPLICATION_JSON)
-    public CommonResponse checkHealth() {
+    public Response checkHealth() {
+        ResponseBuilder builder = Response.status(Response.Status.OK);
+        CommonResponse response = getHealthCheckResult();
+        builder.entity(response);
+        if (!response.isSuccess()) {
+            builder.status(Status.INTERNAL_SERVER_ERROR);
+        }
 
+        return builder.build();
+    }
+
+    private CommonResponse getHealthCheckResult() {
         CommonResponse response;
 
         StringBuilder sb = new StringBuilder("MetaServerBoot ");
@@ -96,7 +121,6 @@ public class HealthResource {
         } else {
             response = CommonResponse.buildFailedResponse(sb.toString());
         }
-
         return response;
     }
 }

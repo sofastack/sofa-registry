@@ -46,11 +46,11 @@ public class SessionDataStore implements DataStore {
      */
     private Map<String/*dataInfoId*/, Map<String/*registerId*/, Publisher>> registry      = new ConcurrentHashMap<>();
 
+    /*** index */
     private Map<String/*connectId*/, Map<String/*registerId*/, Publisher>>  connectIndex  = new ConcurrentHashMap<>();
 
     @Override
     public void add(Publisher publisher) {
-
         write.lock();
         try {
             Map<String, Publisher> publishers = registry.get(publisher.getDataInfoId());
@@ -103,7 +103,7 @@ public class SessionDataStore implements DataStore {
             }
             publishers.put(publisher.getRegisterId(), publisher);
 
-            addIndex(publisher);
+            addToConnectIndex(publisher);
 
         } finally {
             write.unlock();
@@ -132,7 +132,7 @@ public class SessionDataStore implements DataStore {
                     return false;
 
                 } else {
-                    removeIndex(publisherTodelete);
+                    removeFromConnectIndex(publisherTodelete);
                     return true;
                 }
             }
@@ -148,7 +148,6 @@ public class SessionDataStore implements DataStore {
 
     @Override
     public boolean deleteByConnectId(String connectId) {
-
         write.lock();
         try {
             for (Map<String, Publisher> map : registry.values()) {
@@ -157,10 +156,10 @@ public class SessionDataStore implements DataStore {
                     if (publisher != null
                         && connectId.equals(publisher.getSourceAddress().getAddressString())) {
                         it.remove();
-                        invalidateIndex(publisher);
                     }
                 }
             }
+            connectIndex.remove(connectId);
             return true;
         } catch (Exception e) {
             LOGGER.error("Delete publisher by connectId {} error!", connectId, e);
@@ -209,12 +208,7 @@ public class SessionDataStore implements DataStore {
         return count.get();
     }
 
-    private void addIndex(Publisher publisher) {
-
-        addConnectIndex(publisher);
-    }
-
-    private void addConnectIndex(Publisher publisher) {
+    private void addToConnectIndex(Publisher publisher) {
 
         String connectId = publisher.getSourceAddress().getAddressString();
         Map<String/*registerId*/, Publisher> publisherMap = connectIndex.get(connectId);
@@ -229,11 +223,7 @@ public class SessionDataStore implements DataStore {
         publisherMap.put(publisher.getRegisterId(), publisher);
     }
 
-    private void removeIndex(Publisher publisher) {
-        removeConnectIndex(publisher);
-    }
-
-    private void removeConnectIndex(Publisher publisher) {
+    private void removeFromConnectIndex(Publisher publisher) {
         String connectId = publisher.getSourceAddress().getAddressString();
         Map<String/*registerId*/, Publisher> publisherMap = connectIndex.get(connectId);
         if (publisherMap != null) {

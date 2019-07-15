@@ -16,6 +16,18 @@
  */
 package com.alipay.sofa.registry.test.sync;
 
+import static com.alipay.sofa.registry.client.constants.ValueConstants.DEFAULT_GROUP;
+import static com.alipay.sofa.registry.common.model.constants.ValueConstants.DEFAULT_INSTANCE_ID;
+import static com.alipay.sofa.registry.test.BaseIntegrationTest.LOCAL_ADDRESS;
+import static com.alipay.sofa.registry.test.BaseIntegrationTest.LOCAL_DATACENTER;
+import static com.alipay.sofa.registry.test.BaseIntegrationTest.LOCAL_REGION;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Map;
+import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
+
 import com.alipay.sofa.registry.common.model.GenericResponse;
 import com.alipay.sofa.registry.common.model.Node;
 import com.alipay.sofa.registry.common.model.ServerDataBox;
@@ -28,19 +40,8 @@ import com.alipay.sofa.registry.common.model.store.Publisher;
 import com.alipay.sofa.registry.common.model.store.URL;
 import com.alipay.sofa.registry.remoting.Channel;
 import com.alipay.sofa.registry.server.data.remoting.handler.AbstractServerHandler;
+import com.alipay.sofa.registry.util.DatumVersionUtil;
 import com.alipay.sofa.registry.util.ParaCheckUtil;
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Map;
-import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
-
-import static com.alipay.sofa.registry.client.constants.ValueConstants.DEFAULT_GROUP;
-import static com.alipay.sofa.registry.common.model.constants.ValueConstants.DEFAULT_INSTANCE_ID;
-import static com.alipay.sofa.registry.test.BaseIntegrationTest.LOCAL_ADDRESS;
-import static com.alipay.sofa.registry.test.BaseIntegrationTest.LOCAL_DATACENTER;
-import static com.alipay.sofa.registry.test.BaseIntegrationTest.LOCAL_REGION;
 
 /**
  * mock SyncDataHandler, it will return fixed Datum.
@@ -51,7 +52,7 @@ import static com.alipay.sofa.registry.test.BaseIntegrationTest.LOCAL_REGION;
 public class MockSyncDataHandler extends AbstractServerHandler<SyncDataRequest> {
     public static String dataId  = "test-dataId-" + System.currentTimeMillis();
     public static String value   = "MockSyncDataHandler";
-    public static long   version = System.currentTimeMillis();
+    public static long   version = DatumVersionUtil.nextId();
 
     @Override
     public void checkParam(SyncDataRequest request) throws RuntimeException {

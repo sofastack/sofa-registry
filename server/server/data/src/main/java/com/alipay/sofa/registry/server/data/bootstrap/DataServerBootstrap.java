@@ -16,6 +16,23 @@
  */
 package com.alipay.sofa.registry.server.data.bootstrap;
 
+import java.lang.annotation.Annotation;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Date;
+import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.stream.Collectors;
+
+import javax.annotation.Resource;
+import javax.ws.rs.Path;
+import javax.ws.rs.ext.Provider;
+
+import org.glassfish.jersey.server.ResourceConfig;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.context.ApplicationContext;
+
 import com.alipay.sofa.registry.common.model.store.URL;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
@@ -31,21 +48,6 @@ import com.alipay.sofa.registry.server.data.event.StartTaskEvent;
 import com.alipay.sofa.registry.server.data.event.StartTaskTypeEnum;
 import com.alipay.sofa.registry.server.data.remoting.handler.AbstractServerHandler;
 import com.alipay.sofa.registry.server.data.remoting.metaserver.IMetaServerService;
-import org.glassfish.jersey.server.ResourceConfig;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.context.properties.EnableConfigurationProperties;
-import org.springframework.context.ApplicationContext;
-
-import javax.annotation.Resource;
-import javax.ws.rs.Path;
-import javax.ws.rs.ext.Provider;
-import java.lang.annotation.Annotation;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Date;
-import java.util.Map;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.stream.Collectors;
 
 /**
  *
@@ -59,7 +61,7 @@ public class DataServerBootstrap {
                                                                            .getLogger(DataServerBootstrap.class);
 
     @Autowired
-    private DataServerConfig                  dataServerBootstrapConfig;
+    private DataServerConfig                  dataServerConfig;
 
     @Autowired
     private IMetaServerService                metaServerService;
@@ -81,6 +83,9 @@ public class DataServerBootstrap {
 
     @Autowired
     private EventCenter                       eventCenter;
+
+    @Autowired
+    private CacheDigestTask                   cacheDigestTask;
 
     @Resource(name = "serverHandlers")
     private Collection<AbstractServerHandler> serverHandlers;
@@ -107,7 +112,9 @@ public class DataServerBootstrap {
      */
     public void start() {
         try {
-            LOGGER.info("[DataServerBootstrap] begin start server");
+            LOGGER.info("begin start server");
+
+            LOGGER.info("the configuration items are as follows: " + dataServerConfig.toString());
 
             openDataServer();
 
@@ -121,9 +128,9 @@ public class DataServerBootstrap {
 
             Runtime.getRuntime().addShutdownHook(new Thread(this::doStop));
 
-            LOGGER.info("[DataServerBootstrap] start server success");
+            LOGGER.info("start server success");
         } catch (Exception e) {
-            throw new RuntimeException("[DataServerBootstrap] start server error", e);
+            throw new RuntimeException("start server error", e);
         }
     }
 
@@ -131,15 +138,13 @@ public class DataServerBootstrap {
         try {
             if (serverForSessionStarted.compareAndSet(false, true)) {
                 server = boltExchange.open(new URL(NetUtil.getLocalAddress().getHostAddress(),
-                    dataServerBootstrapConfig.getPort()), serverHandlers
+                    dataServerConfig.getPort()), serverHandlers
                     .toArray(new ChannelHandler[serverHandlers.size()]));
-                LOGGER.info("Data server for session started! port:{}",
-                    dataServerBootstrapConfig.getPort());
+                LOGGER.info("Data server for session started! port:{}", dataServerConfig.getPort());
             }
         } catch (Exception e) {
             serverForSessionStarted.set(false);
-            LOGGER
-                .error("Data server start error! port:{}", dataServerBootstrapConfig.getPort(), e);
+            LOGGER.error("Data server start error! port:{}", dataServerConfig.getPort(), e);
             throw new RuntimeException("Data server start error!", e);
         }
     }
@@ -148,15 +153,15 @@ public class DataServerBootstrap {
         try {
             if (serverForDataSyncStarted.compareAndSet(false, true)) {
                 dataSyncServer = boltExchange.open(new URL(NetUtil.getLocalAddress()
-                    .getHostAddress(), dataServerBootstrapConfig.getSyncDataPort()),
-                    serverSyncHandlers.toArray(new ChannelHandler[serverSyncHandlers.size()]));
+                    .getHostAddress(), dataServerConfig.getSyncDataPort()), serverSyncHandlers
+                    .toArray(new ChannelHandler[serverSyncHandlers.size()]));
                 LOGGER.info("Data server for sync started! port:{}",
-                    dataServerBootstrapConfig.getSyncDataPort());
+                    dataServerConfig.getSyncDataPort());
             }
         } catch (Exception e) {
             serverForDataSyncStarted.set(false);
             LOGGER.error("Data sync server start error! port:{}",
-                dataServerBootstrapConfig.getSyncDataPort(), e);
+                dataServerConfig.getSyncDataPort(), e);
             throw new RuntimeException("Data sync server start error!", e);
         }
     }
@@ -166,15 +171,15 @@ public class DataServerBootstrap {
             if (httpServerStarted.compareAndSet(false, true)) {
                 bindResourceConfig();
                 httpServer = jerseyExchange.open(
-                    new URL(NetUtil.getLocalAddress().getHostAddress(), dataServerBootstrapConfig
+                    new URL(NetUtil.getLocalAddress().getHostAddress(), dataServerConfig
                         .getHttpServerPort()), new ResourceConfig[] { jerseyResourceConfig });
                 LOGGER.info("Open http server port {} success!",
-                    dataServerBootstrapConfig.getHttpServerPort());
+                    dataServerConfig.getHttpServerPort());
             }
         } catch (Exception e) {
             httpServerStarted.set(false);
-            LOGGER.error("Open http server port {} error!",
-                dataServerBootstrapConfig.getHttpServerPort(), e);
+            LOGGER
+                .error("Open http server port {} error!", dataServerConfig.getHttpServerPort(), e);
             throw new RuntimeException("Open http server  error!", e);
         }
     }
@@ -182,21 +187,20 @@ public class DataServerBootstrap {
     private void startRaftClient() {
         metaServerService.startRaftClient();
         eventCenter.post(new MetaServerChangeEvent(metaServerService.getMetaServerMap()));
-        LOGGER.info("[DataServerBootstrap] raft client started!Leader is {}",
-            metaServerService.getLeader());
+        LOGGER.info("raft client started!Leader is {}", metaServerService.getLeader());
     }
 
     private void startScheduler() {
         try {
             if (schedulerStarted.compareAndSet(false, true)) {
                 syncDataScheduler.startScheduler();
-                // start all startTask except renew task
+                // start all startTask except correction task
                 eventCenter.post(new StartTaskEvent(
-                        Arrays.stream(StartTaskTypeEnum.values()).filter(type->type != StartTaskTypeEnum.RENEW).collect(
-                                Collectors.toSet())));
+                        Arrays.stream(StartTaskTypeEnum.values()).filter(type -> type != StartTaskTypeEnum.RENEW)
+                                .collect(Collectors.toSet())));
 
                 //start dump log
-                new CacheDigestTask().start();
+                cacheDigestTask.start();
             }
         } catch (Exception e) {
             schedulerStarted.set(false);

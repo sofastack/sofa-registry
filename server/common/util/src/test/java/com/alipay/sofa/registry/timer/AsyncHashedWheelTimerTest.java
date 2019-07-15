@@ -16,13 +16,15 @@
  */
 package com.alipay.sofa.registry.timer;
 
-import com.google.common.util.concurrent.ThreadFactoryBuilder;
-import io.netty.util.Timer;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
+
 import org.junit.Assert;
 import org.junit.Test;
 
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
+
+import io.netty.util.Timer;
 
 /**
  * @author xuanbei
@@ -40,7 +42,7 @@ public class AsyncHashedWheelTimerTest {
         ThreadFactoryBuilder threadFactoryBuilder = new ThreadFactoryBuilder();
         threadFactoryBuilder.setDaemon(true);
         final Timer timer = new AsyncHashedWheelTimer(threadFactoryBuilder.setNameFormat(
-                "AsyncHashedWheelTimerTest").build(), 50, TimeUnit.MILLISECONDS, 10,
+                "AsyncHashedWheelTimerTest").build(), 50, TimeUnit.MILLISECONDS, 10, 5, 10,
                 threadFactoryBuilder.setNameFormat("Registry-DataNodeServiceImpl-WheelExecutor-%d")
                         .build(), new AsyncHashedWheelTimer.TaskFailedCallback() {
             @Override

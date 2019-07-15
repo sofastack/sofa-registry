@@ -16,6 +16,15 @@
  */
 package com.alipay.sofa.registry.server.session.scheduler.task;
 
+import java.net.InetSocketAddress;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.function.Predicate;
+
 import com.alipay.sofa.registry.common.model.dataserver.Datum;
 import com.alipay.sofa.registry.common.model.sessionserver.DataChangeRequest;
 import com.alipay.sofa.registry.common.model.store.BaseInfo.ClientVersion;
@@ -39,15 +48,7 @@ import com.alipay.sofa.registry.task.batcher.TaskProcessor.ProcessingResult;
 import com.alipay.sofa.registry.task.listener.TaskEvent;
 import com.alipay.sofa.registry.task.listener.TaskEvent.TaskType;
 import com.alipay.sofa.registry.task.listener.TaskListenerManager;
-
-import java.net.InetSocketAddress;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.function.Predicate;
+import com.alipay.sofa.registry.util.DatumVersionUtil;
 
 /**
  *
@@ -212,8 +213,7 @@ public class DataChangeFetchTask extends AbstractSessionTask {
                             dataInfoId, version);
                 } else {
                     LOGGER.info("Push all tasks success,but dataCenter:{} dataInfoId:{} version:{} need not update!",
-                            dataCenter,
-                            dataInfoId, version);
+                            dataCenter, dataInfoId, version);
                 }
             } else {
                 LOGGER.warn(
@@ -232,9 +232,8 @@ public class DataChangeFetchTask extends AbstractSessionTask {
     }
 
     private void fireReceivedDataMultiPushTask(Datum datum, List<String> subscriberRegisterIdList,
-                                               Collection<Subscriber> subscribers,
-                                               ScopeEnum scopeEnum, Subscriber subscriber,
-                                               PushTaskClosure pushTaskClosure) {
+                                               Collection<Subscriber> subscribers, ScopeEnum scopeEnum,
+                                               Subscriber subscriber, PushTaskClosure pushTaskClosure) {
         String dataId = datum.getDataId();
         Predicate<String> zonePredicate = (zone) -> {
             if (!sessionServerConfig.getSessionServerRegion().equals(zone)) {
@@ -244,14 +243,15 @@ public class DataChangeFetchTask extends AbstractSessionTask {
 
                 } else if (ScopeEnum.dataCenter == scopeEnum) {
                     // disable zone config
-                    return sessionServerConfig.isInvalidForeverZone(zone)
-                            && !sessionServerConfig.isInvalidIgnored(dataId);
+                    return sessionServerConfig.isInvalidForeverZone(zone) && !sessionServerConfig
+                            .isInvalidIgnored(dataId);
                 }
             }
             return false;
         };
-        ReceivedData receivedData = ReceivedDataConverter.getReceivedDataMulti(datum, scopeEnum,
-                subscriberRegisterIdList, sessionServerConfig.getSessionServerRegion(), zonePredicate);
+        ReceivedData receivedData = ReceivedDataConverter
+                .getReceivedDataMulti(datum, scopeEnum, subscriberRegisterIdList,
+                        sessionServerConfig.getSessionServerRegion(), zonePredicate);
 
         //trigger push to client node
         Map<ReceivedData, URL> parameter = new HashMap<>();
@@ -259,8 +259,8 @@ public class DataChangeFetchTask extends AbstractSessionTask {
         TaskEvent taskEvent = new TaskEvent(parameter, TaskType.RECEIVED_DATA_MULTI_PUSH_TASK);
         taskEvent.setTaskClosure(pushTaskClosure);
         taskEvent.setAttribute(Constant.PUSH_CLIENT_SUBSCRIBERS, subscribers);
-        taskLogger.info("send {} taskURL:{},taskScope:{},,taskId={}", taskEvent.getTaskType(), subscriber.getSourceAddress(),
-                scopeEnum,taskEvent.getTaskId());
+        taskLogger.info("send {} taskURL:{},taskScope:{},,taskId={}", taskEvent.getTaskType(),
+                subscriber.getSourceAddress(), scopeEnum, taskEvent.getTaskId());
         taskListenerManager.sendTaskEvent(taskEvent);
     }
 
@@ -282,7 +282,7 @@ public class DataChangeFetchTask extends AbstractSessionTask {
 
         TaskEvent taskEvent = new TaskEvent(TaskType.USER_DATA_ELEMENT_PUSH_TASK);
         taskEvent.setTaskClosure(pushTaskClosure);
-        taskEvent.setSendTimeStamp(datum.getVersion());
+        taskEvent.setSendTimeStamp(DatumVersionUtil.getRealTimestamp(datum.getVersion()));
         taskEvent.setAttribute(Constant.PUSH_CLIENT_SUBSCRIBERS, subscribers);
         taskEvent.setAttribute(Constant.PUSH_CLIENT_DATUM, datum);
         taskEvent.setAttribute(Constant.PUSH_CLIENT_URL, new URL(address));
@@ -302,7 +302,7 @@ public class DataChangeFetchTask extends AbstractSessionTask {
 
         TaskEvent taskEvent = new TaskEvent(TaskType.USER_DATA_ELEMENT_MULTI_PUSH_TASK);
         taskEvent.setTaskClosure(pushTaskClosure);
-        taskEvent.setSendTimeStamp(datum.getVersion());
+        taskEvent.setSendTimeStamp(DatumVersionUtil.getRealTimestamp(datum.getVersion()));
         taskEvent.setAttribute(Constant.PUSH_CLIENT_SUBSCRIBERS, subscribers);
         taskEvent.setAttribute(Constant.PUSH_CLIENT_DATUM, datum);
         taskEvent.setAttribute(Constant.PUSH_CLIENT_URL, new URL(address));

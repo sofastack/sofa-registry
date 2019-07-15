@@ -16,6 +16,10 @@
  */
 package com.alipay.sofa.registry.server.data.remoting.dataserver.handler;
 
+import java.util.Map;
+
+import org.springframework.beans.factory.annotation.Autowired;
+
 import com.alipay.sofa.registry.common.model.GenericResponse;
 import com.alipay.sofa.registry.common.model.Node;
 import com.alipay.sofa.registry.common.model.dataserver.Datum;
@@ -25,8 +29,6 @@ import com.alipay.sofa.registry.server.data.cache.DatumCache;
 import com.alipay.sofa.registry.server.data.remoting.handler.AbstractClientHandler;
 import com.alipay.sofa.registry.util.ParaCheckUtil;
 
-import java.util.Map;
-
 /**
  * processor to get specific data
  *
@@ -35,6 +37,9 @@ import java.util.Map;
  */
 public class FetchDataHandler extends AbstractClientHandler<GetDataRequest> {
 
+    @Autowired
+    private DatumCache datumCache;
+
     @Override
     public void checkParam(GetDataRequest request) throws RuntimeException {
         ParaCheckUtil.checkNotBlank(request.getDataInfoId(), "GetDataRequest.dataInfoId");
@@ -42,7 +47,7 @@ public class FetchDataHandler extends AbstractClientHandler<GetDataRequest> {
 
     @Override
     public Object doHandle(Channel channel, GetDataRequest request) {
-        return new GenericResponse<Map<String, Datum>>().fillSucceed(DatumCache
+        return new GenericResponse<Map<String, Datum>>().fillSucceed(datumCache
             .getDatumGroupByDataCenter(request.getDataCenter(), request.getDataInfoId()));
     }
 

@@ -16,6 +16,10 @@
  */
 package com.alipay.sofa.registry.server.session.listener;
 
+import java.util.concurrent.TimeUnit;
+
+import org.springframework.beans.factory.annotation.Autowired;
+
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.remoting.exchange.Exchange;
@@ -36,9 +40,6 @@ import com.alipay.sofa.registry.task.listener.TaskListener;
 import com.alipay.sofa.registry.timer.AsyncHashedWheelTimer;
 import com.alipay.sofa.registry.timer.AsyncHashedWheelTimer.TaskFailedCallback;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
-import org.springframework.beans.factory.annotation.Autowired;
-
-import java.util.concurrent.TimeUnit;
 
 /**
  *
@@ -84,7 +85,9 @@ public class ReceivedDataMultiPushTaskListener implements TaskListener, PushTask
         asyncHashedWheelTimer = new AsyncHashedWheelTimer(threadFactoryBuilder.setNameFormat(
             "Registry-ReceivedDataPushTask-WheelTimer").build(),
             sessionServerConfig.getUserDataPushRetryWheelTicksDuration(), TimeUnit.MILLISECONDS,
-            sessionServerConfig.getUserDataPushRetryWheelTicksSize(), threadFactoryBuilder
+            sessionServerConfig.getUserDataPushRetryWheelTicksSize(),
+            sessionServerConfig.getUserDataPushRetryExecutorThreadSize(),
+            sessionServerConfig.getUserDataPushRetryExecutorQueueSize(), threadFactoryBuilder
                 .setNameFormat("Registry-ReceivedDataPushTask-WheelExecutor-%d").build(),
             new TaskFailedCallback() {
                 @Override

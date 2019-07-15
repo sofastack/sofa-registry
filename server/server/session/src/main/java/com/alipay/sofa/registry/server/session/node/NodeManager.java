@@ -16,12 +16,12 @@
  */
 package com.alipay.sofa.registry.server.session.node;
 
+import java.util.Collection;
+import java.util.concurrent.ConcurrentHashMap;
+
 import com.alipay.sofa.registry.common.model.Node;
 import com.alipay.sofa.registry.common.model.Node.NodeType;
 import com.alipay.sofa.registry.common.model.metaserver.NodeChangeResult;
-
-import java.util.Collection;
-import java.util.concurrent.ConcurrentHashMap;
 
 /**
  *
@@ -40,7 +40,7 @@ public interface NodeManager<T extends Node> {
 
     Collection<String> getDataCenters();
 
-    void reNewNode();
+    void renewNode();
 
     NodeChangeResult getAllDataCenterNodes();
 
