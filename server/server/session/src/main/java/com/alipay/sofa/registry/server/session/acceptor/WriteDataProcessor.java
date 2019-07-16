@@ -23,9 +23,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
 import com.alipay.sofa.registry.common.model.DatumSnapshotRequest;
-import com.alipay.sofa.registry.common.model.RenewDatumRequest;
 import com.alipay.sofa.registry.common.model.constants.ValueConstants;
-import com.alipay.sofa.registry.common.model.store.Publisher;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.server.session.acceptor.WriteDataRequest.WriteDataRequestType;
@@ -51,6 +49,11 @@ public class WriteDataProcessor {
                                                                             .getLogger(
                                                                                 ValueConstants.LOGGER_NAME_RENEW,
                                                                                 "[WriteDataProcessor]");
+
+    private static final Logger                     taskLogger          = LoggerFactory
+                                                                            .getLogger(
+                                                                                WriteDataProcessor.class,
+                                                                                "[Task]");
 
     private final TaskListenerManager               taskListenerManager;
 
@@ -211,9 +214,7 @@ public class WriteDataProcessor {
                 connectId, request.getRequestType(), request.getRequestBody());
         }
 
-        RenewDatumRequest renewDatumRequest = (RenewDatumRequest) request.getRequestBody();
-        TaskEvent taskEvent = new TaskEvent(renewDatumRequest, TaskType.RENEW_DATUM_TASK);
-        taskListenerManager.sendTaskEvent(taskEvent);
+        sendEvent(request.getRequestBody(), TaskType.RENEW_DATUM_TASK);
     }
 
     private void doClientOffAsync(WriteDataRequest request) {
@@ -223,9 +224,7 @@ public class WriteDataProcessor {
         }
 
         String connectId = request.getConnectId();
-        TaskEvent taskEvent = new TaskEvent(Lists.newArrayList(connectId),
-            TaskType.CANCEL_DATA_TASK);
-        taskListenerManager.sendTaskEvent(taskEvent);
+        sendEvent(Lists.newArrayList(connectId), TaskType.CANCEL_DATA_TASK);
     }
 
     private void doUnPublishAsync(WriteDataRequest request) {
@@ -234,9 +233,7 @@ public class WriteDataProcessor {
                 connectId, request.getRequestType(), request.getRequestBody());
         }
 
-        Publisher unPublisher = (Publisher) request.getRequestBody();
-        TaskEvent taskEvent = new TaskEvent(unPublisher, TaskType.UN_PUBLISH_DATA_TASK);
-        taskListenerManager.sendTaskEvent(taskEvent);
+        sendEvent(request.getRequestBody(), TaskType.UN_PUBLISH_DATA_TASK);
     }
 
     private void doPublishAsync(WriteDataRequest request) {
@@ -245,8 +242,12 @@ public class WriteDataProcessor {
                 connectId, request.getRequestType(), request.getRequestBody());
         }
 
-        Publisher publisher = (Publisher) request.getRequestBody();
-        TaskEvent taskEvent = new TaskEvent(publisher, TaskType.PUBLISH_DATA_TASK);
+        sendEvent(request.getRequestBody(), TaskType.PUBLISH_DATA_TASK);
+    }
+
+    private void sendEvent(Object eventObj, TaskType taskType) {
+        TaskEvent taskEvent = new TaskEvent(eventObj, taskType);
+        taskLogger.info("send " + taskType + " taskEvent:{}", taskEvent);
         taskListenerManager.sendTaskEvent(taskEvent);
     }
 
