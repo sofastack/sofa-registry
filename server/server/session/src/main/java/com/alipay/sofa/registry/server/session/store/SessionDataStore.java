@@ -16,6 +16,10 @@
  */
 package com.alipay.sofa.registry.server.session.store;
 
+import com.alipay.sofa.registry.common.model.store.Publisher;
+import com.alipay.sofa.registry.log.Logger;
+import com.alipay.sofa.registry.log.LoggerFactory;
+
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.Map;
@@ -23,10 +27,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
-
-import com.alipay.sofa.registry.common.model.store.Publisher;
-import com.alipay.sofa.registry.log.Logger;
-import com.alipay.sofa.registry.log.LoggerFactory;
 
 /**
  *
@@ -41,7 +41,9 @@ public class SessionDataStore implements DataStore {
     private final Lock                                                        write         = readWriteLock
                                                                                                 .writeLock();
 
-    /*** publisher store */
+    /**
+     * publisher store
+     */
     private Map<String/*dataInfoId*/, Map<String/*registerId*/, Publisher>> registry      = new ConcurrentHashMap<>();
 
     /*** index */
@@ -110,6 +112,7 @@ public class SessionDataStore implements DataStore {
 
     @Override
     public boolean deleteById(String registerId, String dataInfoId) {
+
         write.lock();
         try {
             Map<String, Publisher> publishers = registry.get(dataInfoId);
@@ -230,4 +233,17 @@ public class SessionDataStore implements DataStore {
         }
     }
 
+    private void invalidateIndex(Publisher publisher) {
+        String connectId = publisher.getSourceAddress().getAddressString();
+        invalidateConnectIndex(connectId);
+    }
+
+    private void invalidateConnectIndex(String connectId) {
+        connectIndex.remove(connectId);
+    }
+
+    @Override
+    public Map<String, Map<String, Publisher>> getConnectPublishers() {
+        return connectIndex;
+    }
 }

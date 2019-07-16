@@ -218,8 +218,6 @@ public class ExecutorManager {
                         sessionServerConfig.getSchedulerConnectDataExpBackOffBound(),
                         () -> dataNodeExchanger.connectServer()),
                 sessionServerConfig.getSchedulerConnectDataFirstDelay(), TimeUnit.SECONDS);
-
-
     }
 
     public void stopScheduler() {

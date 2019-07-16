@@ -17,6 +17,8 @@
 package com.alipay.sofa.registry.server.session.bootstrap;
 
 import java.util.Collections;
+import org.springframework.boot.context.properties.ConfigurationProperties;
+
 import java.util.HashSet;
 import java.util.Set;
 import java.util.regex.Pattern;
@@ -75,6 +77,12 @@ public class SessionServerConfigBean implements SessionServerConfig {
     private int                schedulerConnectDataFirstDelay          = 3;
 
     private int                schedulerConnectDataExpBackOffBound     = 10;
+
+    private int                schedulerCleanInvalidClientTimeOut      = 3;
+
+    private int                schedulerCleanInvalidClientFirstDelay   = 10;
+
+    private int                schedulerCleanInvalidClientBackOffBound = 5;
 
     private int                cancelDataTaskRetryTimes                = 5;
 
@@ -195,9 +203,9 @@ public class SessionServerConfigBean implements SessionServerConfig {
 
     private Pattern            invalidIgnoreDataIdPattern              = null;
 
-    private String             pushEmptyDataDataIdPrefixes             = "";
+    private String             blacklistPubDataIdRegex                 = "";
 
-    private Set<String>        pushEmptyDataDataIdPrefixesSet;
+    private String             blacklistSubDataIdRegex                 = "";
 
     private int                renewAndSnapshotSilentPeriodSec         = 20;
 
@@ -1125,6 +1133,60 @@ public class SessionServerConfigBean implements SessionServerConfig {
     }
 
     /**
+     * Getter method for property <tt>schedulerCleanInvolidClientTimeOut</tt>.
+     *
+     * @return property value of schedulerCleanInvolidClientTimeOut
+     */
+    public int getSchedulerCleanInvalidClientTimeOut() {
+        return schedulerCleanInvalidClientTimeOut;
+    }
+
+    /**
+     * Getter method for property <tt>schedulerCleanInvolidClientFirstDelay</tt>.
+     *
+     * @return property value of schedulerCleanInvolidClientFirstDelay
+     */
+    public int getSchedulerCleanInvalidClientFirstDelay() {
+        return schedulerCleanInvalidClientFirstDelay;
+    }
+
+    /**
+     * Getter method for property <tt>schedulerCleanInvolidClientBackOffBound</tt>.
+     *
+     * @return property value of schedulerCleanInvolidClientBackOffBound
+     */
+    public int getSchedulerCleanInvalidClientBackOffBound() {
+        return schedulerCleanInvalidClientBackOffBound;
+    }
+
+    /**
+     * Setter method for property <tt>schedulerCleanInvolidClientTimeOut</tt>.
+     *
+     * @param schedulerCleanInvalidClientTimeOut  value to be assigned to property schedulerCleanInvolidClientTimeOut
+     */
+    public void setSchedulerCleanInvalidClientTimeOut(int schedulerCleanInvalidClientTimeOut) {
+        this.schedulerCleanInvalidClientTimeOut = schedulerCleanInvalidClientTimeOut;
+    }
+
+    /**
+     * Setter method for property <tt>schedulerCleanInvolidClientFirstDelay</tt>.
+     *
+     * @param schedulerCleanInvalidClientFirstDelay  value to be assigned to property schedulerCleanInvolidClientFirstDelay
+     */
+    public void setSchedulerCleanInvalidClientFirstDelay(int schedulerCleanInvalidClientFirstDelay) {
+        this.schedulerCleanInvalidClientFirstDelay = schedulerCleanInvalidClientFirstDelay;
+    }
+
+    /**
+     * Setter method for property <tt>schedulerCleanInvolidClientBackOffBound</tt>.
+     *
+     * @param schedulerCleanInvalidClientBackOffBound  value to be assigned to property schedulerCleanInvolidClientBackOffBound
+     */
+    public void setSchedulerCleanInvalidClientBackOffBound(int schedulerCleanInvalidClientBackOffBound) {
+        this.schedulerCleanInvalidClientBackOffBound = schedulerCleanInvalidClientBackOffBound;
+    }
+
+    /**
      * Getter method for property <tt>stopPushSwitch</tt>.
      *
      * @return property value of stopPushSwitch
@@ -1246,10 +1308,6 @@ public class SessionServerConfigBean implements SessionServerConfig {
         this.accessDataExecutorKeepAliveTime = accessDataExecutorKeepAliveTime;
     }
 
-    public String getPushEmptyDataDataIdPrefixes() {
-        return pushEmptyDataDataIdPrefixes;
-    }
-
     /**
      * Getter method for property <tt>dataChangeExecutorMinPoolSize</tt>.
      *
@@ -1327,15 +1385,6 @@ public class SessionServerConfigBean implements SessionServerConfig {
     }
 
     /**
-     * Setter method for property <tt>pushEmptyDataDataIdPrefixes</tt>.
-     *
-     * @param pushEmptyDataDataIdPrefixes  value to be assigned to property pushEmptyDataDataIdPrefixes
-     */
-    public void setPushEmptyDataDataIdPrefixes(String pushEmptyDataDataIdPrefixes) {
-        this.pushEmptyDataDataIdPrefixes = pushEmptyDataDataIdPrefixes;
-    }
-
-    /**
      * Getter method for property <tt>pushTaskExecutorMinPoolSize</tt>.
      *
      * @return property value of pushTaskExecutorMinPoolSize
@@ -1409,29 +1458,6 @@ public class SessionServerConfigBean implements SessionServerConfig {
      */
     public void setPushTaskExecutorKeepAliveTime(long pushTaskExecutorKeepAliveTime) {
         this.pushTaskExecutorKeepAliveTime = pushTaskExecutorKeepAliveTime;
-    }
-
-    public Set<String> getPushEmptyDataDataIdPrefixesSet() {
-        if (pushEmptyDataDataIdPrefixesSet == null || pushEmptyDataDataIdPrefixesSet.isEmpty()) {
-            Set<String> s = new HashSet<>();
-            String[] arr = pushEmptyDataDataIdPrefixes.split(";");
-            for (String str : arr) {
-                if (str.trim().length() > 0) {
-                    s.add(str);
-                }
-            }
-            pushEmptyDataDataIdPrefixesSet = Collections.unmodifiableSet(s);
-        }
-        return pushEmptyDataDataIdPrefixesSet;
-    }
-
-    /**
-     * Setter method for property <tt>pushEmptyDataDataIdPrefixesSet</tt>.
-     *
-     * @param pushEmptyDataDataIdPrefixesSet  value to be assigned to property pushEmptyDataDataIdPrefixesSet
-     */
-    public void setPushEmptyDataDataIdPrefixesSet(Set<String> pushEmptyDataDataIdPrefixesSet) {
-        this.pushEmptyDataDataIdPrefixesSet = pushEmptyDataDataIdPrefixesSet;
     }
 
     /**
@@ -1708,6 +1734,42 @@ public class SessionServerConfigBean implements SessionServerConfig {
      */
     public void setPushDataTaskRetryIncrementDelay(long pushDataTaskRetryIncrementDelay) {
         this.pushDataTaskRetryIncrementDelay = pushDataTaskRetryIncrementDelay;
+    }
+
+    /**
+     * Getter method for property <tt>blacklistPubDataIdRegex</tt>.
+     *
+     * @return property value of blacklistPubDataIdRegex
+     */
+    public String getBlacklistPubDataIdRegex() {
+        return blacklistPubDataIdRegex;
+    }
+
+    /**
+     * Getter method for property <tt>blacklistSubDataIdRegex</tt>.
+     *
+     * @return property value of blacklistSubDataIdRegex
+     */
+    public String getBlacklistSubDataIdRegex() {
+        return blacklistSubDataIdRegex;
+    }
+
+    /**
+     * Setter method for property <tt>blacklistPubDataIdRegex</tt>.
+     *
+     * @param blacklistPubDataIdRegex  value to be assigned to property blacklistPubDataIdRegex
+     */
+    public void setBlacklistPubDataIdRegex(String blacklistPubDataIdRegex) {
+        this.blacklistPubDataIdRegex = blacklistPubDataIdRegex;
+    }
+
+    /**
+     * Setter method for property <tt>blacklistSubDataIdRegex</tt>.
+     *
+     * @param blacklistSubDataIdRegex  value to be assigned to property blacklistSubDataIdRegex
+     */
+    public void setBlacklistSubDataIdRegex(String blacklistSubDataIdRegex) {
+        this.blacklistSubDataIdRegex = blacklistSubDataIdRegex;
     }
 
     @Override

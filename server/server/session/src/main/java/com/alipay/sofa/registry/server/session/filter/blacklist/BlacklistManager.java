@@ -14,46 +14,42 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alipay.sofa.registry.server.session.store;
+package com.alipay.sofa.registry.server.session.filter.blacklist;
 
-import com.alipay.sofa.registry.common.model.store.Publisher;
-
-import java.util.Collection;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  *
  * @author shangyu.wh
- * @version $Id: DataStore.java, v 0.1 2017-12-01 18:13 shangyu.wh Exp $
+ * @version 1.0: BlacklistManager.java, v 0.1 2019-06-19 18:27 shangyu.wh Exp $
  */
-public interface DataStore extends DataManager<Publisher, String, String> {
+public interface BlacklistManager {
+    /**
+     * load list first
+     */
+    void load();
 
     /**
-     * get all publishers by dataInfoId
-     * @param dataInfoId
+     * get list
      * @return
      */
-    Collection<Publisher> getStoreDataByDataInfoId(String dataInfoId);
-
-    /***
-     * get Publiser by registerId and dataInfoId
-     * @param registerId
-     * @param dataInfoId
-     * @return
-     */
-    Publisher queryById(String registerId, String dataInfoId);
+    List<BlacklistConfig> getBlacklistConfigList();
 
     /**
-     * get all publisher dataInfoIds
-     *
-     * @return
+     * set list
+     * @param blacklistConfigList
      */
-    Collection<String> getStoreDataInfoIds();
+    void setBlacklistConfigList(List<BlacklistConfig> blacklistConfigList);
 
     /**
-     * get all publishers group by connectId
+     * convert blacklist map to blacklist config list
+     * @param config
      * @return
+     * blacklistConfigMap key:blacklist type
+     * Map<String, Set<String>> key:MatchType
+     * set:match patterns
      */
-    Map<String/*connectId*/, Map<String/*registerId*/, Publisher>> getConnectPublishers();
-
+    Map<String, Map<String, Set<String>>> convertBlacklistConfig(String config);
 }

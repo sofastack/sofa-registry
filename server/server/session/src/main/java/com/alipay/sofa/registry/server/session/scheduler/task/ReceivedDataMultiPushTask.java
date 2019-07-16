@@ -24,6 +24,7 @@ import java.util.concurrent.TimeUnit;
 
 import com.alipay.sofa.registry.common.model.PushDataRetryRequest;
 import com.alipay.sofa.registry.common.model.store.Subscriber;
+import com.alipay.sofa.registry.common.model.store.DataInfo;
 import com.alipay.sofa.registry.common.model.store.URL;
 import com.alipay.sofa.registry.core.model.DataBox;
 import com.alipay.sofa.registry.core.model.ReceivedData;
@@ -42,6 +43,7 @@ import com.alipay.sofa.registry.task.TaskClosure;
 import com.alipay.sofa.registry.task.batcher.TaskProcessor.ProcessingResult;
 import com.alipay.sofa.registry.task.listener.TaskEvent;
 import com.alipay.sofa.registry.timer.AsyncHashedWheelTimer;
+import com.alipay.sofa.registry.server.session.store.Interests;
 
 /**
  *
@@ -63,6 +65,7 @@ public class ReceivedDataMultiPushTask extends AbstractSessionTask implements Ta
     private Collection<Subscriber>            subscribers;
     private ReceivedDataMultiPushTaskStrategy receivedDataMultiPushTaskStrategy;
     private AsyncHashedWheelTimer             asyncHashedWheelTimer;
+    private Interests                         sessionInterests;
 
     private String                            dataPush;
 
@@ -71,13 +74,15 @@ public class ReceivedDataMultiPushTask extends AbstractSessionTask implements Ta
                                      ExecutorManager executorManager,
                                      Exchange boltExchange,
                                      ReceivedDataMultiPushTaskStrategy receivedDataMultiPushTaskStrategy,
-                                     AsyncHashedWheelTimer asyncHashedWheelTimer) {
+                                     AsyncHashedWheelTimer asyncHashedWheelTimer,
+                                     Interests sessionInterests) {
         this.sessionServerConfig = sessionServerConfig;
         this.clientNodeService = clientNodeService;
         this.executorManager = executorManager;
         this.boltExchange = boltExchange;
         this.receivedDataMultiPushTaskStrategy = receivedDataMultiPushTaskStrategy;
         this.asyncHashedWheelTimer = asyncHashedWheelTimer;
+        this.sessionInterests = sessionInterests;
     }
 
     @Override
@@ -184,7 +189,7 @@ public class ReceivedDataMultiPushTask extends AbstractSessionTask implements Ta
                                     retryTimes);
                             retrySendReceiveData(pushDataRetryRequest);
                         }
-                    }, getBlockTime(retryTimes), TimeUnit.MILLISECONDS);
+                    },getBlockTime(retryTimes),TimeUnit.MILLISECONDS);
                 } else {
                     LOGGER.error(
                             "Retry Push ReceivedData error, connect be null or disconnected,stop retry!dataId:{}, group:{},url:{},taskId:{},dataPush:{},retryTimes:{}",
@@ -192,10 +197,21 @@ public class ReceivedDataMultiPushTask extends AbstractSessionTask implements Ta
                             retryTimes);
                 }
             } else {
-                LOGGER.error(
-                        "Retry Push ReceivedData times have exceeded!dataId:{}, group:{},url:{},taskId:{},dataPush:{},retryTimes:{}",
-                        receivedData.getDataId(), receivedData.getGroup(), targetUrl, getTaskId(), dataPush,
-                        retryTimes);
+                //set sessionInterests dataInfoId version zero
+                DataInfo dataInfo = new DataInfo(receivedData.getInstanceId(), receivedData.getDataId(),
+                        receivedData.getGroup());
+                boolean result = sessionInterests.checkAndUpdateInterestVersionZero(receivedData.getSegment(), dataInfo.getDataInfoId());
+                if (result) {
+                    LOGGER.warn("Retry Push ReceivedData times have exceeded,set sessionInterests dataInfoId version zero! url:{},taskId:{},dataPush:{},retryTimes:{},dataCenter:{},dataInfoId:{}!",
+                            targetUrl,getTaskId(),dataPush,retryTimes,
+                            receivedData.getSegment(),
+                            dataInfo.getDataInfoId());
+                } else {
+                    LOGGER.warn("Retry Push ReceivedData times have exceeded,but set sessionInterests dataInfoId version zero fail!url:{},taskId:{},dataPush:{},retryTimes:{},dataCenter:{},dataInfoId:{}!",
+                            targetUrl,getTaskId(),dataPush,retryTimes,
+                            receivedData.getSegment(),
+                            dataInfo.getDataInfoId());
+                }
             }
         }
     }

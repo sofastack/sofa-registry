@@ -105,6 +105,12 @@ public interface SessionServerConfig {
 
     int getSchedulerConnectDataExpBackOffBound();
 
+    int getSchedulerCleanInvalidClientTimeOut();
+
+    int getSchedulerCleanInvalidClientFirstDelay();
+
+    int getSchedulerCleanInvalidClientBackOffBound();
+
     int getAccessDataExecutorMinPoolSize();
 
     int getAccessDataExecutorMaxPoolSize();
@@ -156,6 +162,10 @@ public interface SessionServerConfig {
     int getRenewDatumWheelTicksDuration();
 
     long getRenewDatumWheelTaskDelay();
+
+    String getBlacklistPubDataIdRegex();
+
+    String getBlacklistSubDataIdRegex();
 
     int getNumberOfReplicas();
 

@@ -16,15 +16,9 @@
  */
 package com.alipay.sofa.registry.server.session.listener;
 
-import com.alipay.sofa.registry.remoting.exchange.Exchange;
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
-import com.alipay.sofa.registry.server.session.filter.blacklist.BlacklistManager;
-import com.alipay.sofa.registry.server.session.node.service.MetaNodeService;
-import com.alipay.sofa.registry.server.session.registry.Registry;
-import com.alipay.sofa.registry.server.session.scheduler.task.ProvideDataChangeFetchTask;
 import com.alipay.sofa.registry.server.session.scheduler.task.SessionTask;
-import com.alipay.sofa.registry.server.session.store.Interests;
-import com.alipay.sofa.registry.server.session.store.Watchers;
+import com.alipay.sofa.registry.server.session.scheduler.task.SubscriberPushEmptyTask;
 import com.alipay.sofa.registry.task.batcher.TaskDispatcher;
 import com.alipay.sofa.registry.task.batcher.TaskDispatchers;
 import com.alipay.sofa.registry.task.batcher.TaskProcessor;
@@ -39,70 +33,45 @@ import org.springframework.beans.factory.annotation.Autowired;
  * @author shangyu.wh
  * @version $Id: SubscriberRegisterFetchTaskListener.java, v 0.1 2017-12-07 19:53 shangyu.wh Exp $
  */
-public class ProvideDataChangeFetchTaskListener implements TaskListener {
+public class SubscriberPushEmptyTaskListener implements TaskListener {
 
     @Autowired
     private SessionServerConfig                 sessionServerConfig;
 
     /**
-     * trigger push client process
+     * trigger task com.alipay.sofa.registry.server.meta.listener process
      */
     @Autowired
     private TaskListenerManager                 taskListenerManager;
 
-    /**
-     * MetaNode service
-     */
-    @Autowired
-    private MetaNodeService                     metaNodeService;
-
-    @Autowired
-    private Exchange                            boltExchange;
-
-    @Autowired
-    private Interests                           sessionInterests;
-
-    @Autowired
-    private Watchers                            sessionWatchers;
-
-    @Autowired
-    private Registry                            sessionRegistry;
-
-    @Autowired
-    private BlacklistManager                    blacklistManager;
-
     private TaskDispatcher<String, SessionTask> singleTaskDispatcher;
 
+    @Autowired
     private TaskProcessor                       dataNodeSingleTaskProcessor;
-
-    public ProvideDataChangeFetchTaskListener(TaskProcessor dataNodeSingleTaskProcessor) {
-        this.dataNodeSingleTaskProcessor = dataNodeSingleTaskProcessor;
-    }
 
     public TaskDispatcher<String, SessionTask> getSingleTaskDispatcher() {
         if (singleTaskDispatcher == null) {
             singleTaskDispatcher = TaskDispatchers.createDefaultSingleTaskDispatcher(
-                TaskType.PROVIDE_DATA_CHANGE_FETCH_TASK.getName(), dataNodeSingleTaskProcessor);
+                TaskType.SUBSCRIBER_PUSH_EMPTY_TASK.getName(), dataNodeSingleTaskProcessor);
         }
         return singleTaskDispatcher;
     }
 
     @Override
     public boolean support(TaskEvent event) {
-        return TaskType.PROVIDE_DATA_CHANGE_FETCH_TASK.equals(event.getTaskType());
+        return TaskType.SUBSCRIBER_PUSH_EMPTY_TASK.equals(event.getTaskType());
     }
 
     @Override
     public void handleEvent(TaskEvent event) {
 
-        SessionTask provideDataChangeFetchTask = new ProvideDataChangeFetchTask(
-            sessionServerConfig, taskListenerManager, metaNodeService, sessionWatchers,
-            boltExchange, sessionInterests, sessionRegistry, blacklistManager);
+        SessionTask subscriberPushEmptyTask = new SubscriberPushEmptyTask(sessionServerConfig,
+            taskListenerManager);
 
-        provideDataChangeFetchTask.setTaskEvent(event);
+        subscriberPushEmptyTask.setTaskEvent(event);
 
-        getSingleTaskDispatcher().dispatch(provideDataChangeFetchTask.getTaskId(),
-            provideDataChangeFetchTask, provideDataChangeFetchTask.getExpiryTime());
+        getSingleTaskDispatcher().dispatch(subscriberPushEmptyTask.getTaskId(),
+            subscriberPushEmptyTask, subscriberPushEmptyTask.getExpiryTime());
     }
 
 }

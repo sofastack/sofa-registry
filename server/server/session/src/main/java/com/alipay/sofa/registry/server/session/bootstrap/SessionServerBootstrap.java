@@ -46,6 +46,7 @@ import com.alipay.sofa.registry.remoting.Client;
 import com.alipay.sofa.registry.remoting.Server;
 import com.alipay.sofa.registry.remoting.exchange.Exchange;
 import com.alipay.sofa.registry.remoting.exchange.NodeExchanger;
+import com.alipay.sofa.registry.server.session.filter.blacklist.BlacklistManager;
 import com.alipay.sofa.registry.server.session.node.NodeManager;
 import com.alipay.sofa.registry.server.session.node.NodeManagerFactory;
 import com.alipay.sofa.registry.server.session.node.RaftClientManager;
@@ -100,6 +101,9 @@ public class SessionServerBootstrap {
 
     @Autowired
     private RaftClientManager                 raftClientManager;
+
+    @Autowired
+    private BlacklistManager                  blacklistManager;
 
     private Server                            server;
 
@@ -264,6 +268,8 @@ public class SessionServerBootstrap {
 
                 fetchStopPushSwitch(leaderUrl);
 
+                fetchBlackList();
+
                 LOGGER.info("MetaServer connected {} server! Port:{}", size,
                     sessionServerConfig.getMetaServerPort());
             }
@@ -314,6 +320,10 @@ public class SessionServerBootstrap {
         } else {
             LOGGER.info("Fetch session stop push switch data null,config not change!");
         }
+    }
+
+    private void fetchBlackList() {
+        blacklistManager.load();
     }
 
     private Object sendMetaRequest(Object request, URL leaderUrl) {

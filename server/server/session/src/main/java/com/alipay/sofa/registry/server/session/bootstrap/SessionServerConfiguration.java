@@ -37,6 +37,14 @@ import com.alipay.sofa.registry.server.session.cache.CacheGenerator;
 import com.alipay.sofa.registry.server.session.cache.CacheService;
 import com.alipay.sofa.registry.server.session.cache.DatumCacheGenerator;
 import com.alipay.sofa.registry.server.session.cache.SessionCacheService;
+import com.alipay.sofa.registry.server.session.filter.DataIdMatchStrategy;
+import com.alipay.sofa.registry.server.session.filter.IPMatchStrategy;
+import com.alipay.sofa.registry.server.session.filter.ProcessFilter;
+import com.alipay.sofa.registry.server.session.filter.blacklist.BlacklistManager;
+import com.alipay.sofa.registry.server.session.filter.blacklist.BlacklistManagerImpl;
+import com.alipay.sofa.registry.server.session.filter.blacklist.BlacklistMatchProcessFilter;
+import com.alipay.sofa.registry.server.session.filter.blacklist.DefaultDataIdMatchStrategy;
+import com.alipay.sofa.registry.server.session.filter.blacklist.DefaultIPMatchStrategy;
 import com.alipay.sofa.registry.server.session.listener.CancelDataTaskListener;
 import com.alipay.sofa.registry.server.session.listener.DataChangeFetchCloudTaskListener;
 import com.alipay.sofa.registry.server.session.listener.DataChangeFetchTaskListener;
@@ -49,6 +57,7 @@ import com.alipay.sofa.registry.server.session.listener.ReceivedDataMultiPushTas
 import com.alipay.sofa.registry.server.session.listener.RenewDatumTaskListener;
 import com.alipay.sofa.registry.server.session.listener.SessionRegisterDataTaskListener;
 import com.alipay.sofa.registry.server.session.listener.SubscriberMultiFetchTaskListener;
+import com.alipay.sofa.registry.server.session.listener.SubscriberPushEmptyTaskListener;
 import com.alipay.sofa.registry.server.session.listener.SubscriberRegisterFetchTaskListener;
 import com.alipay.sofa.registry.server.session.listener.UnPublishDataTaskListener;
 import com.alipay.sofa.registry.server.session.listener.WatcherRegisterFetchTaskListener;
@@ -93,6 +102,7 @@ import com.alipay.sofa.registry.server.session.resource.ClientsOpenResource;
 import com.alipay.sofa.registry.server.session.resource.HealthResource;
 import com.alipay.sofa.registry.server.session.resource.SessionDigestResource;
 import com.alipay.sofa.registry.server.session.resource.SessionOpenResource;
+import com.alipay.sofa.registry.server.session.resource.SessionSerialFilterResource;
 import com.alipay.sofa.registry.server.session.scheduler.ExecutorManager;
 import com.alipay.sofa.registry.server.session.scheduler.timertask.SyncClientsHeartbeatTask;
 import com.alipay.sofa.registry.server.session.store.DataStore;
@@ -123,6 +133,10 @@ import com.alipay.sofa.registry.server.session.strategy.impl.DefaultSubscriberMu
 import com.alipay.sofa.registry.server.session.strategy.impl.DefaultSubscriberRegisterFetchTaskStrategy;
 import com.alipay.sofa.registry.server.session.strategy.impl.DefaultSyncConfigHandlerStrategy;
 import com.alipay.sofa.registry.server.session.strategy.impl.DefaultWatcherHandlerStrategy;
+import com.alipay.sofa.registry.server.session.wrapper.BlacklistWrapperInterceptor;
+import com.alipay.sofa.registry.server.session.wrapper.ClientCheckWrapperInterceptor;
+import com.alipay.sofa.registry.server.session.wrapper.WrapperInterceptor;
+import com.alipay.sofa.registry.server.session.wrapper.WrapperInterceptorManager;
 import com.alipay.sofa.registry.task.batcher.TaskProcessor;
 import com.alipay.sofa.registry.task.listener.DefaultTaskListenerManager;
 import com.alipay.sofa.registry.task.listener.TaskListener;
@@ -315,6 +329,11 @@ public class SessionServerConfiguration {
         @Bean
         public ClientsOpenResource clientsOpenResource() {
             return new ClientsOpenResource();
+        }
+
+        @Bean
+        public SessionSerialFilterResource sessionSerialFilterResource() {
+            return new SessionSerialFilterResource();
         }
     }
 
@@ -547,6 +566,13 @@ public class SessionServerConfiguration {
         }
 
         @Bean
+        public TaskListener subscriberPushEmptyTaskListener(TaskListenerManager taskListenerManager) {
+            TaskListener taskListener = new SubscriberPushEmptyTaskListener();
+            taskListenerManager.addTaskListener(taskListener);
+            return taskListener;
+        }
+
+        @Bean
         public TaskListenerManager taskListenerManager() {
             return new DefaultTaskListenerManager();
         }
@@ -638,6 +664,50 @@ public class SessionServerConfiguration {
         @ConditionalOnMissingBean
         public ReceivedConfigDataPushTaskStrategy receivedConfigDataPushTaskStrategy() {
             return new DefaultReceivedConfigDataPushTaskStrategy();
+        }
+    }
+
+    @Configuration
+    public static class SessionFilterConfiguration {
+
+        @Bean
+        public IPMatchStrategy ipMatchStrategy() {
+            return new DefaultIPMatchStrategy();
+        }
+
+        @Bean
+        public DataIdMatchStrategy dataIdMatchStrategy() {
+            return new DefaultDataIdMatchStrategy();
+        }
+
+        @Bean
+        @ConditionalOnMissingBean
+        public ProcessFilter processFilter() {
+            return new BlacklistMatchProcessFilter();
+        }
+
+        @Bean
+        public BlacklistManager blacklistManager() {
+            return new BlacklistManagerImpl();
+        }
+
+        @Bean
+        public WrapperInterceptorManager wrapperInterceptorManager() {
+            return new WrapperInterceptorManager();
+        }
+
+        @Bean
+        public WrapperInterceptor clientCheckWrapperInterceptor(WrapperInterceptorManager wrapperInterceptorManager) {
+            ClientCheckWrapperInterceptor clientCheckWrapperInterceptor = new ClientCheckWrapperInterceptor();
+            wrapperInterceptorManager.addInterceptor(clientCheckWrapperInterceptor);
+            return clientCheckWrapperInterceptor;
+        }
+
+        @Bean
+        public WrapperInterceptor blacklistWrapperInterceptor(WrapperInterceptorManager wrapperInterceptorManager) {
+            BlacklistWrapperInterceptor blacklistWrapperInterceptor = new BlacklistWrapperInterceptor();
+            wrapperInterceptorManager.addInterceptor(blacklistWrapperInterceptor);
+            return blacklistWrapperInterceptor;
         }
     }
 

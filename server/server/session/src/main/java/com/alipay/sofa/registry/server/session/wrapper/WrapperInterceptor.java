@@ -14,46 +14,27 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alipay.sofa.registry.server.session.store;
-
-import com.alipay.sofa.registry.common.model.store.Publisher;
-
-import java.util.Collection;
-import java.util.Map;
+package com.alipay.sofa.registry.server.session.wrapper;
 
 /**
  *
  * @author shangyu.wh
- * @version $Id: DataStore.java, v 0.1 2017-12-01 18:13 shangyu.wh Exp $
+ * @version 1.0: WrapperInterceptor.java, v 0.1 2019-06-18 11:45 shangyu.wh Exp $
  */
-public interface DataStore extends DataManager<Publisher, String, String> {
+public interface WrapperInterceptor<T, R> {
 
     /**
-     * get all publishers by dataInfoId
-     * @param dataInfoId
-     * @return
-     */
-    Collection<Publisher> getStoreDataByDataInfoId(String dataInfoId);
-
-    /***
-     * get Publiser by registerId and dataInfoId
-     * @param registerId
-     * @param dataInfoId
-     * @return
-     */
-    Publisher queryById(String registerId, String dataInfoId);
-
-    /**
-     * get all publisher dataInfoIds
+     * invoke inside function
      *
+     * @param invocation
      * @return
+     * @throws Exception
      */
-    Collection<String> getStoreDataInfoIds();
+    R invokeCodeWrapper(WrapperInvocation<T, R> invocation) throws Exception;
 
     /**
-     * get all publishers group by connectId
+     * Interceptor order
      * @return
      */
-    Map<String/*connectId*/, Map<String/*registerId*/, Publisher>> getConnectPublishers();
-
+    int getOrder();
 }
