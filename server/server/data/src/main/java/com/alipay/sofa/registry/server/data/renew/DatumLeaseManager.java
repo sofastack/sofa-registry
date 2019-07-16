@@ -35,8 +35,10 @@ import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.server.data.bootstrap.DataServerConfig;
 import com.alipay.sofa.registry.server.data.cache.DatumCache;
+import com.alipay.sofa.registry.server.data.node.DataNodeStatus;
 import com.alipay.sofa.registry.server.data.remoting.sessionserver.disconnect.ClientDisconnectEvent;
 import com.alipay.sofa.registry.server.data.remoting.sessionserver.disconnect.DisconnectEventHandler;
+import com.alipay.sofa.registry.server.data.util.LocalServerStatusEnum;
 import com.alipay.sofa.registry.timer.AsyncHashedWheelTimer;
 import com.alipay.sofa.registry.timer.AsyncHashedWheelTimer.TaskFailedCallback;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
@@ -72,6 +74,9 @@ public class DatumLeaseManager {
 
     @Autowired
     private DatumCache                         datumCache;
+
+    @Autowired
+    private DataNodeStatus                     dataNodeStatus;
 
     private ScheduledThreadPoolExecutor        executorForHeartbeatLess;
 
@@ -222,8 +227,14 @@ public class DatumLeaseManager {
 
         @Override
         public void run() {
-            LOGGER.info("EvictTaskForHeartbeatLess started.");
-            long startTime = System.currentTimeMillis();
+            // If in a non-working state, cannot clean up because the renew request cannot be received at this time.
+            if (dataNodeStatus.getStatus() != LocalServerStatusEnum.WORKING) {
+                LOGGER
+                    .info(
+                        "EvictTaskForHeartbeatLess skipped cause DataNodeStatus is {}, will retry after {}s",
+                        dataNodeStatus.getStatus(), dataServerConfig.getDatumTimeToLiveSec());
+                return;
+            }
 
             Set<String> allConnectIds = datumCache.getAllConnectIds();
             for (String connectId : allConnectIds) {
@@ -239,9 +250,6 @@ public class DatumLeaseManager {
                     }
                 }
             }
-
-            LOGGER.info("EvictTaskForHeartbeatLess end, elapsed time is {}ms.",
-                (System.currentTimeMillis() - startTime));
         }
     }
 }
