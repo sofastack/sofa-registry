@@ -560,6 +560,7 @@ public class SessionServerConfiguration {
         }
 
         @Bean
+        @ConditionalOnMissingBean(name = "subscriberPushEmptyTaskListener")
         public TaskListener subscriberPushEmptyTaskListener(TaskListenerManager taskListenerManager) {
             TaskListener taskListener = new SubscriberPushEmptyTaskListener();
             taskListenerManager.addTaskListener(taskListener);
