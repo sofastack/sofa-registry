@@ -45,15 +45,15 @@ import java.util.Map;
  */
 public class SubscriberPushEmptyTask extends AbstractSessionTask {
 
-    private static final Logger       taskLogger = LoggerFactory.getLogger(
-                                                     SubscriberPushEmptyTask.class, "[Task]");
+    private static final Logger         taskLogger = LoggerFactory.getLogger(
+                                                       SubscriberPushEmptyTask.class, "[Task]");
 
-    private final SessionServerConfig sessionServerConfig;
+    protected final SessionServerConfig sessionServerConfig;
     /**
      * trigger task com.alipay.sofa.registry.server.meta.listener process
      */
-    private final TaskListenerManager taskListenerManager;
-    private Subscriber                subscriber;
+    protected final TaskListenerManager taskListenerManager;
+    protected Subscriber                subscriber;
 
     public SubscriberPushEmptyTask(SessionServerConfig sessionServerConfig,
                                    TaskListenerManager taskListenerManager) {
