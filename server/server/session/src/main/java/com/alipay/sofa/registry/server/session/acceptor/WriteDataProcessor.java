@@ -247,7 +247,12 @@ public class WriteDataProcessor {
 
     private void sendEvent(Object eventObj, TaskType taskType) {
         TaskEvent taskEvent = new TaskEvent(eventObj, taskType);
-        taskLogger.info("send " + taskType + " taskEvent:{}", taskEvent);
+
+        //print but ignore if from renew module, cause renew request is too much
+        if (taskType != TaskType.RENEW_DATUM_TASK) {
+            taskLogger.info("send " + taskType + " taskEvent:{}", taskEvent);
+        }
+
         taskListenerManager.sendTaskEvent(taskEvent);
     }
 
