@@ -89,8 +89,9 @@ public class CacheDigestTask {
         if (publisher != null) {
             URL url = publisher.getSourceAddress();
             String urlStr = url != null ? url.getAddressString() : "null";
-            return String.format("registerId=%s, registerTimestamp=%s, host=%s, version=%s", publisher.getRegisterId(),
-                    publisher.getRegisterTimestamp(),urlStr, publisher.getVersion());
+            return String.format("registerId=%s, registerTimestamp=%s, host=%s, version=%s",
+                publisher.getRegisterId(), publisher.getRegisterTimestamp(), urlStr,
+                publisher.getVersion());
         }
         return "";
     }
