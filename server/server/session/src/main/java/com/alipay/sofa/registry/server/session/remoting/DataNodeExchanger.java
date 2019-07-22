@@ -23,6 +23,7 @@ import javax.annotation.Resource;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import com.alipay.sofa.registry.common.model.Node;
+import com.alipay.sofa.registry.common.model.RenewDatumRequest;
 import com.alipay.sofa.registry.common.model.store.URL;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
@@ -86,18 +87,20 @@ public class DataNodeExchanger implements NodeExchanger {
             if (channel == null) {
                 channel = sessionClient.connect(url);
             }
-            EXCHANGE_LOGGER.info("DataNode Exchanger request={},url={}", request.getRequestBody(), url);
 
-            final Object result = sessionClient.sendSync(channel, request.getRequestBody(),
-                    sessionServerConfig.getDataNodeExchangeTimeOut());
+            // print but ignore if from renew module, cause renew request is too much
+            if (!(request.getRequestBody() instanceof RenewDatumRequest)) {
+                EXCHANGE_LOGGER.info("DataNode Exchanger request={},url={}", request.getRequestBody(), url);
+            }
+
+            final Object result = sessionClient
+                    .sendSync(channel, request.getRequestBody(), sessionServerConfig.getDataNodeExchangeTimeOut());
             if (result == null) {
-                throw new RequestException("DataNode Exchanger request data get null result!",
-                        request);
+                throw new RequestException("DataNode Exchanger request data get null result!", request);
             }
             response = () -> result;
         } catch (Exception e) {
-            throw new RequestException("DataNode Exchanger request data error!Request url:" + url,
-                    request, e);
+            throw new RequestException("DataNode Exchanger request data error!Request url:" + url, request, e);
         }
 
         return response;
