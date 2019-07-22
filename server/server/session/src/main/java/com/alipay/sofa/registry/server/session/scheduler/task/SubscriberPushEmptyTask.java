@@ -45,15 +45,15 @@ import java.util.Map;
  */
 public class SubscriberPushEmptyTask extends AbstractSessionTask {
 
-    private static final Logger       taskLogger = LoggerFactory.getLogger(
-                                                     SubscriberPushEmptyTask.class, "[Task]");
+    private static final Logger         taskLogger = LoggerFactory.getLogger(
+                                                       SubscriberPushEmptyTask.class, "[Task]");
 
-    private final SessionServerConfig sessionServerConfig;
+    protected final SessionServerConfig sessionServerConfig;
     /**
      * trigger task com.alipay.sofa.registry.server.meta.listener process
      */
-    private final TaskListenerManager taskListenerManager;
-    private Subscriber                subscriber;
+    protected final TaskListenerManager taskListenerManager;
+    protected Subscriber                subscriber;
 
     public SubscriberPushEmptyTask(SessionServerConfig sessionServerConfig,
                                    TaskListenerManager taskListenerManager) {
@@ -87,7 +87,7 @@ public class SubscriberPushEmptyTask extends AbstractSessionTask {
         executeTask();
     }
 
-    private void executeTask() {
+    protected void executeTask() {
 
         if (subscriber == null) {
             throw new IllegalArgumentException("Subscriber can not be null!");
@@ -126,17 +126,18 @@ public class SubscriberPushEmptyTask extends AbstractSessionTask {
 
     }
 
-    private void fireReceivedDataPushTask(List<String> subscriberRegisterIdList, ScopeEnum scopeEnum) {
+    protected void fireReceivedDataPushTask(List<String> subscriberRegisterIdList,
+                                            ScopeEnum scopeEnum) {
         ReceivedData receivedData = ReceivedDataConverter.getReceivedDataMulti(
             subscriber.getDataId(), subscriber.getGroup(), subscriber.getInstanceId(),
-            sessionServerConfig.getSessionServerDataCenter(), scopeEnum, subscriberRegisterIdList,
-            sessionServerConfig.getSessionServerRegion());
+            ValueConstants.DEFAULT_DATA_CENTER, scopeEnum, subscriberRegisterIdList,
+            subscriber.getCell());
         //no datum set version current timestamp
         receivedData.setVersion(System.currentTimeMillis());
         firePush(receivedData);
     }
 
-    private void firePush(ReceivedData receivedData) {
+    protected void firePush(ReceivedData receivedData) {
         //trigger push to client node
         Map<ReceivedData, URL> parameter = new HashMap<>();
         parameter.put(receivedData, subscriber.getSourceAddress());
@@ -146,7 +147,7 @@ public class SubscriberPushEmptyTask extends AbstractSessionTask {
         taskListenerManager.sendTaskEvent(taskEvent);
     }
 
-    private void fireUserDataElementPushTask() {
+    protected void fireUserDataElementPushTask() {
 
         //no datum
         Datum datum = new Datum();
@@ -172,7 +173,7 @@ public class SubscriberPushEmptyTask extends AbstractSessionTask {
         taskListenerManager.sendTaskEvent(taskEvent);
     }
 
-    private void fireUserDataElementMultiPushTask() {
+    protected void fireUserDataElementMultiPushTask() {
 
         //no datum
         Datum datum = new Datum();
