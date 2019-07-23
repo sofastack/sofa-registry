@@ -287,7 +287,7 @@ public class DataChangeEventQueue {
                         // and version of cachePub is greater than version of pub, should be ignored
                         if (!(pub instanceof UnPublisher) && !(cachePub instanceof UnPublisher)
                             && pub.getSourceAddress().equals(cachePub.getSourceAddress())
-                            && cachePub.getVersion() >= pub.getVersion()) {
+                            && cachePub.getVersion() > pub.getVersion()) {
                             continue;
                         }
                     }

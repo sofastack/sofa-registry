@@ -320,19 +320,16 @@ public class DatumCache {
                 isChanged = true;
             }
         } else {
-            String connectId = getConnectId(pub);
             long version = pub.getVersion();
             long cacheVersion = cachePub == null ? 0L : cachePub.getVersion();
-            String cacheConnectId = cachePub == null ? "" : getConnectId(cachePub);
             if (cacheVersion <= version) {
                 cachePubMap.put(registerId, pub);
-                // if version of both pub and cachePub are not equal, or sourceAddress of both are not equal, update
+                // connectId and cacheConnectId may not be equal, so indexes need to be deleted and added, rather than overwritten directly.
+                // why connectId and cacheConnectId may not be equal?
                 // eg: sessionserver crash, client(RegistryClient but not ConfregClient) reconnect to other sessionserver, sourceAddress changed, version not changed
-                if (!connectId.equals(cacheConnectId) || cacheVersion < version) {
-                    removeFromIndex(cachePub);
-                    addToIndex(pub);
-                    isChanged = true;
-                }
+                removeFromIndex(cachePub);
+                addToIndex(pub);
+                isChanged = true;
             }
         }
         return isChanged;
