@@ -154,10 +154,9 @@ public class DataNodeServiceImpl implements DataNodeService {
 
             @Override
             public UnPublishDataRequest getRequestBody() {
-                UnPublishDataRequest unPublishDataRequest = new UnPublishDataRequest();
-                unPublishDataRequest.setDataInfoId(publisher.getDataInfoId());
-                unPublishDataRequest.setRegisterId(publisher.getRegisterId());
-                unPublishDataRequest.setRegisterTimestamp(publisher.getRegisterTimestamp());
+                UnPublishDataRequest unPublishDataRequest = new UnPublishDataRequest(
+                    publisher.getDataInfoId(), publisher.getRegisterId(),
+                    publisher.getRegisterTimestamp());
                 return unPublishDataRequest;
             }
 
