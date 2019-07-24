@@ -59,7 +59,7 @@ public class DatumSnapshotHandler extends AbstractServerHandler<DatumSnapshotReq
                                                                   "[DatumSnapshotHandler]");
 
     /** Limited List Printing */
-    private static final int      LIMITED_LIST_SIZE_FOR_PRINT = 100;
+    private static final int      LIMITED_LIST_SIZE_FOR_PRINT = 30;
 
     @Autowired
     private ForwardService        forwardService;

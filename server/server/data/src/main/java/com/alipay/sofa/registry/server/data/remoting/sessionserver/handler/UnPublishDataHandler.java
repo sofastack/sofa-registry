@@ -32,9 +32,9 @@ import com.alipay.sofa.registry.server.data.bootstrap.DataServerConfig;
 import com.alipay.sofa.registry.server.data.cache.DatumCache;
 import com.alipay.sofa.registry.server.data.cache.UnPublisher;
 import com.alipay.sofa.registry.server.data.change.event.DataChangeEventCenter;
-import com.alipay.sofa.registry.server.data.renew.DatumLeaseManager;
 import com.alipay.sofa.registry.server.data.remoting.handler.AbstractServerHandler;
 import com.alipay.sofa.registry.server.data.remoting.sessionserver.forward.ForwardService;
+import com.alipay.sofa.registry.server.data.renew.DatumLeaseManager;
 import com.alipay.sofa.registry.util.ParaCheckUtil;
 
 /**
@@ -102,7 +102,9 @@ public class UnPublishDataHandler extends AbstractServerHandler<UnPublishDataReq
         Map<String, Publisher> pubMap = datum.getPubMap();
         if (pubMap != null) {
             Publisher publisher = pubMap.get(request.getRegisterId());
-            return publisher.getSourceAddress().getAddressString();
+            if (publisher != null) {
+                return publisher.getSourceAddress().getAddressString();
+            }
         }
         return null;
     }
