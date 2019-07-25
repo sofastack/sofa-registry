@@ -17,6 +17,8 @@
 package com.alipay.sofa.registry.server.data.remoting.sessionserver.handler;
 
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -32,7 +34,6 @@ import com.alipay.sofa.registry.common.model.store.Publisher;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.remoting.Channel;
-import com.alipay.sofa.registry.server.data.bootstrap.DataServerConfig;
 import com.alipay.sofa.registry.server.data.cache.DatumCache;
 import com.alipay.sofa.registry.server.data.change.event.DataChangeEventCenter;
 import com.alipay.sofa.registry.server.data.change.event.DatumSnapshotEvent;
@@ -50,21 +51,21 @@ import com.alipay.sofa.registry.util.ParaCheckUtil;
 public class DatumSnapshotHandler extends AbstractServerHandler<DatumSnapshotRequest> {
 
     /** LOGGER */
-    private static final Logger   LOGGER       = LoggerFactory
-                                                   .getLogger(DatumSnapshotHandler.class);
+    private static final Logger   LOGGER                      = LoggerFactory
+                                                                  .getLogger(DatumSnapshotHandler.class);
 
-    private static final Logger   RENEW_LOGGER = LoggerFactory.getLogger(
-                                                   ValueConstants.LOGGER_NAME_RENEW,
-                                                   "[DatumSnapshotHandler]");
+    private static final Logger   RENEW_LOGGER                = LoggerFactory.getLogger(
+                                                                  ValueConstants.LOGGER_NAME_RENEW,
+                                                                  "[DatumSnapshotHandler]");
+
+    /** Limited List Printing */
+    private static final int      LIMITED_LIST_SIZE_FOR_PRINT = 30;
 
     @Autowired
     private ForwardService        forwardService;
 
     @Autowired
     private DataChangeEventCenter dataChangeEventCenter;
-
-    @Autowired
-    private DataServerConfig      dataServerConfig;
 
     @Autowired
     private DatumLeaseManager     datumLeaseManager;
@@ -94,25 +95,53 @@ public class DatumSnapshotHandler extends AbstractServerHandler<DatumSnapshotReq
                 .collect(Collectors.toMap(p -> p.getRegisterId(), p -> p));
 
         // diff the cache and snapshot
+        boolean isDiff = true;
         Map<String, Publisher> cachePubMap = datumCache.getOwnByConnectId(request.getConnectId());
         if (cachePubMap == null) {
-            RENEW_LOGGER.info(">>>>>>> connectId={}, cachePubMap.size=0, pubMap.size={}, the diff is: pubMap={}",
-                    request.getConnectId(), pubMap.size(), pubMap);
+            RENEW_LOGGER
+                    .info(">>>>>>> connectId={}, cachePubMap.size=0, pubMap.size={}, isDiff={}, the diff is: pubMap={}",
+                            request.getConnectId(), pubMap.size(), isDiff, limitedToString(pubMap.values()));
         } else {
             List diffPub1 = subtract(pubMap, cachePubMap);
             List diffPub2 = subtract(cachePubMap, pubMap);
+            if (diffPub1.size() == 0 && diffPub2.size() == 0) {
+                isDiff = false;
+            }
             RENEW_LOGGER
-                    .info(">>>>>>> connectId={}, cachePubMap.size={}, pubMap.size={}, the diff is: pubMap-cachePubMap={}, cachePubMap-pubMap={}",
-                            request.getConnectId(), cachePubMap.size(), pubMap.size(), diffPub1, diffPub2);
+                    .info(">>>>>>> connectId={}, cachePubMap.size={}, pubMap.size={}, isDiff={}, the diff is: pubMap-cachePubMap=(size:{}){}, cachePubMap-pubMap=(size:{}){}",
+                            request.getConnectId(), cachePubMap.size(), pubMap.size(), isDiff, diffPub1.size(),
+                            limitedToString(diffPub1), diffPub2.size(), limitedToString(diffPub2));
         }
 
-        // build DatumSnapshotEvent and send to eventCenter
-        dataChangeEventCenter.onChange(new DatumSnapshotEvent(request.getConnectId(), cachePubMap, pubMap));
+        if (isDiff) {
+            // build DatumSnapshotEvent and send to eventCenter
+            dataChangeEventCenter.onChange(new DatumSnapshotEvent(request.getConnectId(), cachePubMap, pubMap));
+        }
 
         // record the renew timestamp
         datumLeaseManager.renew(request.getConnectId());
 
         return CommonResponse.buildSuccessResponse();
+    }
+
+    /**
+     * Limited List Printing
+     */
+    private String limitedToString(Collection<Publisher> publishers) {
+        Iterator<Publisher> it = publishers.iterator();
+        if (!it.hasNext())
+            return "[]";
+
+        StringBuilder sb = new StringBuilder();
+        sb.append('[');
+        int i = 1;
+        for (;;) {
+            Publisher e = it.next();
+            sb.append(e);
+            if (!it.hasNext() || i++ >= LIMITED_LIST_SIZE_FOR_PRINT)
+                return sb.append(']').toString();
+            sb.append(',').append(' ');
+        }
     }
 
     private List subtract(Map<String, Publisher> pubMap1, Map<String, Publisher> pubMap2) {

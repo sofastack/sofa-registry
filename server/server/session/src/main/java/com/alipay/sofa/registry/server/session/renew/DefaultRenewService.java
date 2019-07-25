@@ -28,10 +28,7 @@ import com.alipay.sofa.registry.common.model.DatumSnapshotRequest;
 import com.alipay.sofa.registry.common.model.Node;
 import com.alipay.sofa.registry.common.model.PublisherDigestUtil;
 import com.alipay.sofa.registry.common.model.RenewDatumRequest;
-import com.alipay.sofa.registry.common.model.constants.ValueConstants;
 import com.alipay.sofa.registry.common.model.store.Publisher;
-import com.alipay.sofa.registry.log.Logger;
-import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.server.session.node.NodeManager;
 import com.alipay.sofa.registry.server.session.store.DataStore;
 
@@ -42,17 +39,13 @@ import com.alipay.sofa.registry.server.session.store.DataStore;
  */
 public class DefaultRenewService implements RenewService {
 
-    private static final Logger RENEW_LOGGER = LoggerFactory.getLogger(
-                                                 ValueConstants.LOGGER_NAME_RENEW,
-                                                 "[WriteDataProcessor]");
-
     /*** store publishers */
     @Autowired
-    private DataStore           sessionDataStore;
+    private DataStore   sessionDataStore;
 
     /*** calculate data node url */
     @Autowired
-    private NodeManager         dataNodeManager;
+    private NodeManager dataNodeManager;
 
     @Override
     public List<RenewDatumRequest> getRenewDatumRequests(String connectId) {

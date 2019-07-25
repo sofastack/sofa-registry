@@ -33,10 +33,10 @@ import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.remoting.Channel;
 import com.alipay.sofa.registry.server.data.bootstrap.DataServerConfig;
 import com.alipay.sofa.registry.server.data.change.event.DataChangeEventCenter;
-import com.alipay.sofa.registry.server.data.renew.DatumLeaseManager;
 import com.alipay.sofa.registry.server.data.remoting.handler.AbstractServerHandler;
 import com.alipay.sofa.registry.server.data.remoting.sessionserver.SessionServerConnectionFactory;
 import com.alipay.sofa.registry.server.data.remoting.sessionserver.forward.ForwardService;
+import com.alipay.sofa.registry.server.data.renew.DatumLeaseManager;
 import com.alipay.sofa.registry.server.data.util.ThreadPoolExecutorDataServer;
 import com.alipay.sofa.registry.util.NamedThreadFactory;
 import com.alipay.sofa.registry.util.ParaCheckUtil;
@@ -108,6 +108,7 @@ public class PublishDataHandler extends AbstractServerHandler<PublishDataRequest
         }
 
         dataChangeEventCenter.onChange(publisher, dataServerConfig.getLocalDataCenter());
+
         if (publisher.getPublishType() != PublishType.TEMPORARY) {
             String connectId = publisher.getSourceAddress().getAddressString();
             sessionServerConnectionFactory.registerConnectId(request.getSessionServerProcessId(),
