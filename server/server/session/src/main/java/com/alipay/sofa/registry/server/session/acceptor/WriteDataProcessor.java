@@ -105,6 +105,13 @@ public class WriteDataProcessor {
             RENEW_LOGGER.debug("process: connectId={}, requestType={}, requestBody={}", connectId,
                 request.getRequestType(), request.getRequestBody());
         }
+
+        // record the last update time
+        // RefreshUpdateTime is at the top, otherwise multiple snapshot can be issued concurrently
+        if (isWriteRequest(request)) {
+            refreshUpdateTime();
+        }
+
         if (request.getRequestType() == WriteDataRequestType.DATUM_SNAPSHOT) {
             // snapshot has high priority, so handle directly
             doHandle(request);
@@ -117,11 +124,6 @@ public class WriteDataProcessor {
                 flushQueue();
                 doHandle(request);
             }
-        }
-
-        // record the last update time
-        if (isWriteRequest(request)) {
-            refreshUpdateTime();
         }
 
     }
