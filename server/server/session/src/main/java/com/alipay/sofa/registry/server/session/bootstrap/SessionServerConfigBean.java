@@ -175,7 +175,7 @@ public class SessionServerConfigBean implements SessionServerConfig {
 
     private int                renewDatumWheelTicksDuration            = 500;
 
-    private long               renewDatumWheelTaskDelay                = 30;
+    private long               renewDatumWheelTaskDelay                = 180;
 
     private int                pushDataTaskRetryFirstDelay             = 500;
 

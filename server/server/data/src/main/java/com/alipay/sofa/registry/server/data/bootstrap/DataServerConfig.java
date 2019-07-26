@@ -101,7 +101,7 @@ public class DataServerConfig {
 
     private int                publishExecutorQueueSize                     = 10000;
 
-    private int                datumTimeToLiveSec                           = 300;
+    private int                datumTimeToLiveSec                           = 900;
 
     private int                datumLeaseManagerExecutorThreadSize          = 1;
 
