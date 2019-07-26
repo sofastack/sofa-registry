@@ -21,6 +21,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
+import org.apache.commons.lang.math.RandomUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import com.alipay.sofa.registry.common.model.constants.ValueConstants;
@@ -132,7 +133,7 @@ public class ClientNodeConnectionHandler extends AbstractServerHandler {
             RENEW_LOGGER.info("Renew task is started: {}", connectId);
             executorManager.getAsyncHashedWheelTimerTask()
                     .newTimeout(connectId, timerOut -> sessionRegistry.renewDatum(connectId),
-                            sessionServerConfig.getRenewDatumWheelTaskDelay(), TimeUnit.SECONDS, () -> {
+                            randomDelay() + sessionServerConfig.getRenewDatumWheelTaskDelaySec(), TimeUnit.SECONDS, () -> {
                                 Server sessionServer = boltExchange.getServer(sessionServerConfig.getServerPort());
                                 Channel channelClient = sessionServer.getChannel(URL.valueOf(connectId));
                                 boolean shouldContinue = channelClient != null && channel.isConnected();
@@ -143,4 +144,9 @@ public class ClientNodeConnectionHandler extends AbstractServerHandler {
                             });
         });
     }
+
+    private long randomDelay() {
+        return RandomUtils.nextInt(sessionServerConfig.getRenewDatumWheelTaskRandomFirstDelaySec());
+    }
+
 }

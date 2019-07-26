@@ -175,7 +175,9 @@ public class SessionServerConfigBean implements SessionServerConfig {
 
     private int                renewDatumWheelTicksDuration            = 500;
 
-    private long               renewDatumWheelTaskDelay                = 180;
+    private int                renewDatumWheelTaskDelaySec             = 180;
+
+    private int                renewDatumWheelTaskRandomFirstDelaySec  = 60;
 
     private int                pushDataTaskRetryFirstDelay             = 500;
 
@@ -1689,21 +1691,39 @@ public class SessionServerConfigBean implements SessionServerConfig {
     }
 
     /**
-     * Getter method for property <tt>renewDatumWheelTaskDelay</tt>.
+     * Getter method for property <tt>renewDatumWheelTaskDelaySec</tt>.
      *
-     * @return property value of renewDatumWheelTaskDelay
+     * @return property value of renewDatumWheelTaskDelaySec
      */
-    public long getRenewDatumWheelTaskDelay() {
-        return renewDatumWheelTaskDelay;
+    public int getRenewDatumWheelTaskDelaySec() {
+        return renewDatumWheelTaskDelaySec;
     }
 
     /**
-     * Setter method for property <tt>renewDatumWheelTaskDelay</tt>.
+     * Setter method for property <tt>renewDatumWheelTaskDelaySec </tt>.
      *
-     * @param renewDatumWheelTaskDelay  value to be assigned to property renewDatumWheelTaskDelay
+     * @param renewDatumWheelTaskDelaySec  value to be assigned to property renewDatumWheelTaskDelaySec
      */
-    public void setRenewDatumWheelTaskDelay(long renewDatumWheelTaskDelay) {
-        this.renewDatumWheelTaskDelay = renewDatumWheelTaskDelay;
+    public void setRenewDatumWheelTaskDelaySec(int renewDatumWheelTaskDelaySec) {
+        this.renewDatumWheelTaskDelaySec = renewDatumWheelTaskDelaySec;
+    }
+
+    /**
+     * Getter method for property <tt>renewDatumWheelTaskRandomFirstDelaySec</tt>.
+     *
+     * @return property value of renewDatumWheelTaskRandomFirstDelaySec
+     */
+    public int getRenewDatumWheelTaskRandomFirstDelaySec() {
+        return renewDatumWheelTaskRandomFirstDelaySec;
+    }
+
+    /**
+     * Setter method for property <tt>renewDatumWheelTaskRandomFirstDelaySec </tt>.
+     *
+     * @param renewDatumWheelTaskRandomFirstDelaySec  value to be assigned to property renewDatumWheelTaskRandomFirstDelaySec
+     */
+    public void setRenewDatumWheelTaskRandomFirstDelaySec(int renewDatumWheelTaskRandomFirstDelaySec) {
+        this.renewDatumWheelTaskRandomFirstDelaySec = renewDatumWheelTaskRandomFirstDelaySec;
     }
 
     /**
