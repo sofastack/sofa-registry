@@ -199,8 +199,11 @@ public class WriteDataProcessor {
                     return;
                 }
                 halt();
-                doSnapshotAsync(request);
-                resume();
+                try {
+                    doSnapshotAsync(request);
+                } finally {
+                    resume();
+                }
             }
                 break;
             default:
