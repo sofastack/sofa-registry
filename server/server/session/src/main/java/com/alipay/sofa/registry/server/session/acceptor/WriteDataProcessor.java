@@ -145,11 +145,7 @@ public class WriteDataProcessor {
      * @return
      */
     private boolean isWriteRequest(WriteDataRequest request) {
-        // UN_PUBLISHER is not guaranteed to find the corresponding connectId on the data side (because of expired cleaning or bugs, etc. ),
-        // so don't block the renew, don't consider it as a write request
-        return request.getRequestType() == WriteDataRequestType.DATUM_SNAPSHOT
-               || request.getRequestType() == WriteDataRequestType.PUBLISHER
-               || request.getRequestType() == WriteDataRequestType.CLIENT_OFF;
+        return request.getRequestType() != WriteDataRequestType.RENEW_DATUM;
     }
 
     /**
