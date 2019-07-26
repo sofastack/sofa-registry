@@ -24,6 +24,7 @@ import com.alipay.sofa.registry.common.model.metaserver.NodeChangeResult;
 import com.alipay.sofa.registry.remoting.Channel;
 import com.alipay.sofa.registry.server.data.bootstrap.DataServerConfig;
 import com.alipay.sofa.registry.server.data.event.DataServerChangeEvent;
+import com.alipay.sofa.registry.server.data.event.DataServerChangeEvent.FromType;
 import com.alipay.sofa.registry.server.data.event.EventCenter;
 import com.alipay.sofa.registry.server.data.event.MetaServerChangeEvent;
 import com.alipay.sofa.registry.server.data.executor.ExecutorFactory;
@@ -57,7 +58,7 @@ public class ServerChangeHandler extends AbstractClientHandler<NodeChangeResult>
         ExecutorFactory.getCommonExecutor().execute(() -> {
             if (request.getNodeType() == NodeType.DATA) {
                 eventCenter.post(new DataServerChangeEvent(request.getNodes(),
-                        request.getDataCenterListVersions()));
+                        request.getDataCenterListVersions(), FromType.META_NOTIFY));
             } else if (request.getNodeType() == NodeType.META) {
                 Map<String, Map<String, MetaNode>> metaNodesMap = request.getNodes();
                 if (metaNodesMap != null && !metaNodesMap.isEmpty()) {

@@ -16,16 +16,6 @@
  */
 package com.alipay.sofa.registry.server.data.event.handler;
 
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
-
-import org.apache.commons.lang.StringUtils;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.util.CollectionUtils;
-
 import com.alipay.remoting.Connection;
 import com.alipay.sofa.registry.common.model.metaserver.DataNode;
 import com.alipay.sofa.registry.common.model.store.URL;
@@ -42,6 +32,15 @@ import com.alipay.sofa.registry.server.data.node.DataServerNode;
 import com.alipay.sofa.registry.server.data.remoting.DataNodeExchanger;
 import com.alipay.sofa.registry.server.data.remoting.dataserver.DataServerNodeFactory;
 import com.alipay.sofa.registry.server.data.util.TimeUtil;
+import org.apache.commons.lang.StringUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.util.CollectionUtils;
+
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  *
@@ -83,7 +82,7 @@ public class DataServerChangeEventHandler extends AbstractEventHandler<DataServe
                 dataServerConfig.getLocalDataCenter()).keySet();
             //get changed dataservers
             Map<String, Set<String>> changedMap = dataServerCache
-                .compareAndSet(dataServerChangeItem);
+                .compareAndSet(dataServerChangeItem,event.getFromType());
             if(!changedMap.isEmpty()) {
                 for (Entry<String, Set<String>> changeEntry : changedMap.entrySet()) {
                     String dataCenter = changeEntry.getKey();
@@ -105,8 +104,8 @@ public class DataServerChangeEventHandler extends AbstractEventHandler<DataServe
                             if (!ips.contains(ip)) {
                                 DataServerNodeFactory.remove(dataCenter, ip, dataServerConfig);
                                 LOGGER.info(
-                                        "[DataServerChangeEventHandler] remove connection, datacenter:{}, ip:{}",
-                                        dataCenter, ip);
+                                        "[DataServerChangeEventHandler] remove connection, datacenter:{}, ip:{},from:{}",
+                                        dataCenter, ip,event.getFromType());
                             }
                         }
 
@@ -119,8 +118,8 @@ public class DataServerChangeEventHandler extends AbstractEventHandler<DataServe
                             //avoid input map reference operation DataServerNodeFactory MAP
                             Map<String, DataNode> map = new ConcurrentHashMap<>(newDataNodes);
 
-                            LOGGER.info("Node list change fire LocalDataServerChangeEvent,current node list={},version={}",
-                                    map.keySet(), newVersion);
+                            LOGGER.info("Node list change fire LocalDataServerChangeEvent,current node list={},version={},from:{}",
+                                    map.keySet(), newVersion,event.getFromType());
                             eventCenter.post(new LocalDataServerChangeEvent(map, newjoined,
                                     dataServerChangeItem.getVersionMap()
                                             .get(dataServerConfig.getLocalDataCenter()),
@@ -149,8 +148,8 @@ public class DataServerChangeEventHandler extends AbstractEventHandler<DataServe
                             if (!StringUtils.equals(ip, DataServerConfig.IP)) {
                                 Connection connection = dataServerNode.getConnection();
                                 if (connection != null && !connection.isFine()) {
-                                    LOGGER.warn("[DataServerChangeEventHandler] dataServer connections is not fine,try to reconnect it,old connection={},dataCenter={}",
-                                                    connection.getRemoteAddress(), dataCenter);
+                                    LOGGER.warn("[DataServerChangeEventHandler] dataServer connections is not fine,try to reconnect it,old connection={},dataCenter={},from:{}",
+                                                    connection.getRemoteAddress(), dataCenter,event.getFromType());
                                     connectDataServer(dataCenter, ip);
                                 }
                             }

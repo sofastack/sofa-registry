@@ -16,19 +16,6 @@
  */
 package com.alipay.sofa.registry.server.data.event.handler;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Set;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.Executor;
-import java.util.concurrent.LinkedBlockingDeque;
-import java.util.concurrent.atomic.AtomicBoolean;
-
-import org.springframework.beans.factory.annotation.Autowired;
-
 import com.alipay.sofa.registry.common.model.CommonResponse;
 import com.alipay.sofa.registry.common.model.dataserver.Datum;
 import com.alipay.sofa.registry.common.model.dataserver.NotifyFetchDatumRequest;
@@ -54,6 +41,18 @@ import com.alipay.sofa.registry.server.data.renew.LocalDataServerCleanHandler;
 import com.alipay.sofa.registry.server.data.util.LocalServerStatusEnum;
 import com.alipay.sofa.registry.server.data.util.TimeUtil;
 import com.google.common.collect.Lists;
+import org.springframework.beans.factory.annotation.Autowired;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Executor;
+import java.util.concurrent.LinkedBlockingDeque;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  *
@@ -132,10 +131,10 @@ public class LocalDataServerChangeEventHandler extends
                     LocalDataServerChangeEvent event = events.take();
                     //if the new joined servers contains self, set status as INITIAL
                     Set<String> newJoined = event.getNewJoined();
-                    if (newJoined.contains(DataServerConfig.IP)
-                        && dataNodeStatus.getStatus() != LocalServerStatusEnum.INITIAL) {
-                        dataNodeStatus.setStatus(LocalServerStatusEnum.INITIAL);
-                    }
+                    //if (newJoined.contains(DataServerConfig.IP)
+                    //    && dataNodeStatus.getStatus() != LocalServerStatusEnum.INITIAL) {
+                    //    dataNodeStatus.setStatus(LocalServerStatusEnum.INITIAL);
+                    //}
                     //if size of events is greater than 0, not handle and continue, only handle the last one in the queue
                     if (events.size() > 0) {
                         continue;
