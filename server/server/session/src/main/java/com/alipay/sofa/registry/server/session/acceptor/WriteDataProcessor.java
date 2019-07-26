@@ -105,6 +105,13 @@ public class WriteDataProcessor {
             RENEW_LOGGER.debug("process: connectId={}, requestType={}, requestBody={}", connectId,
                 request.getRequestType(), request.getRequestBody());
         }
+
+        // record the last update time
+        // RefreshUpdateTime is at the top, otherwise multiple snapshot can be issued concurrently
+        if (isWriteRequest(request)) {
+            refreshUpdateTime();
+        }
+
         if (request.getRequestType() == WriteDataRequestType.DATUM_SNAPSHOT) {
             // snapshot has high priority, so handle directly
             doHandle(request);
@@ -117,11 +124,6 @@ public class WriteDataProcessor {
                 flushQueue();
                 doHandle(request);
             }
-        }
-
-        // record the last update time
-        if (isWriteRequest(request)) {
-            refreshUpdateTime();
         }
 
     }
@@ -145,11 +147,7 @@ public class WriteDataProcessor {
      * @return
      */
     private boolean isWriteRequest(WriteDataRequest request) {
-        // UN_PUBLISHER is not guaranteed to find the corresponding connectId on the data side (because of expired cleaning or bugs, etc. ),
-        // so don't block the renew, don't consider it as a write request
-        return request.getRequestType() == WriteDataRequestType.DATUM_SNAPSHOT
-               || request.getRequestType() == WriteDataRequestType.PUBLISHER
-               || request.getRequestType() == WriteDataRequestType.CLIENT_OFF;
+        return request.getRequestType() != WriteDataRequestType.RENEW_DATUM;
     }
 
     /**
@@ -201,8 +199,11 @@ public class WriteDataProcessor {
                     return;
                 }
                 halt();
-                doSnapshotAsync(request);
-                resume();
+                try {
+                    doSnapshotAsync(request);
+                } finally {
+                    resume();
+                }
             }
                 break;
             default:

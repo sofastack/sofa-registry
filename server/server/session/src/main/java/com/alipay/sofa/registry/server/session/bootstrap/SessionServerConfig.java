@@ -161,7 +161,9 @@ public interface SessionServerConfig {
 
     int getRenewDatumWheelTicksDuration();
 
-    long getRenewDatumWheelTaskDelay();
+    int getRenewDatumWheelTaskDelaySec();
+
+    int getRenewDatumWheelTaskRandomFirstDelaySec();
 
     String getBlacklistPubDataIdRegex();
 
