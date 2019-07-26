@@ -16,9 +16,6 @@
  */
 package com.alipay.sofa.registry.server.session.bootstrap;
 
-import java.util.Collections;
-import org.springframework.boot.context.properties.ConfigurationProperties;
-
 import java.util.HashSet;
 import java.util.Set;
 import java.util.regex.Pattern;
@@ -84,31 +81,31 @@ public class SessionServerConfigBean implements SessionServerConfig {
 
     private int                schedulerCleanInvalidClientBackOffBound = 5;
 
-    private int                cancelDataTaskRetryTimes                = 5;
+    private int                cancelDataTaskRetryTimes                = 2;
 
     private long               cancelDataTaskRetryFirstDelay           = 500;
 
     private long               cancelDataTaskRetryIncrementDelay       = 500;
 
-    private int                publishDataTaskRetryTimes               = 5;
+    private int                publishDataTaskRetryTimes               = 2;
 
-    private long               publishDataTaskRetryFirstDelay          = 500;
+    private long               publishDataTaskRetryFirstDelay          = 3000;
 
-    private long               publishDataTaskRetryIncrementDelay      = 500;
+    private long               publishDataTaskRetryIncrementDelay      = 5000;
 
-    private int                unPublishDataTaskRetryTimes             = 5;
+    private int                unPublishDataTaskRetryTimes             = 2;
 
-    private long               unPublishDataTaskRetryFirstDelay        = 500;
+    private long               unPublishDataTaskRetryFirstDelay        = 3000;
 
-    private long               unPublishDataTaskRetryIncrementDelay    = 500;
+    private long               unPublishDataTaskRetryIncrementDelay    = 5000;
 
-    private int                datumSnapshotTaskRetryTimes             = 5;
+    private int                datumSnapshotTaskRetryTimes             = 1;
 
-    private long               datumSnapshotTaskRetryFirstDelay        = 1000;
+    private long               datumSnapshotTaskRetryFirstDelay        = 5000;
 
-    private long               datumSnapshotTaskRetryIncrementDelay    = 1000;
+    private long               datumSnapshotTaskRetryIncrementDelay    = 5000;
 
-    private int                renewDatumTaskRetryTimes                = 3;
+    private int                renewDatumTaskRetryTimes                = 1;
 
     private int                dataChangeFetchTaskRetryTimes           = 3;
 
