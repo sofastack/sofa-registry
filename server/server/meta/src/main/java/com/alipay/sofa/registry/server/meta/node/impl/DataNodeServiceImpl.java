@@ -16,6 +16,14 @@
  */
 package com.alipay.sofa.registry.server.meta.node.impl;
 
+import java.net.InetSocketAddress;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
+
+import org.springframework.beans.factory.annotation.Autowired;
+
 import com.alipay.sofa.registry.common.model.CommonResponse;
 import com.alipay.sofa.registry.common.model.Node.NodeType;
 import com.alipay.sofa.registry.common.model.metaserver.DataCenterNodes;
@@ -34,13 +42,6 @@ import com.alipay.sofa.registry.server.meta.node.DataNodeService;
 import com.alipay.sofa.registry.server.meta.remoting.connection.NodeConnectManager;
 import com.alipay.sofa.registry.server.meta.remoting.handler.AbstractServerHandler;
 import com.alipay.sofa.registry.server.meta.store.StoreService;
-import org.springframework.beans.factory.annotation.Autowired;
-
-import java.net.InetSocketAddress;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
 
 /**
  *
@@ -134,7 +135,7 @@ public class DataNodeServiceImpl implements DataNodeService {
                     }
 
                 } catch (RequestException e) {
-                    LOGGER.error("Push dataNode list error! " + e.getRequestMessage(), e);
+                    LOGGER.error("Push dataNode list error! " + e.getMessage(), e);
                     exceptions.add(e);
                 } catch (RuntimeException e) {
                     LOGGER.error("Push dataNode list runtime error! ", e);
@@ -178,8 +179,7 @@ public class DataNodeServiceImpl implements DataNodeService {
             }
 
         } catch (RequestException e) {
-            LOGGER.error("Notify status confirm error! " + e.getRequestMessage(), e);
-            throw new RuntimeException("Notify status confirm error! ", e);
+            throw new RuntimeException("Notify status confirm error: " + e.getMessage(), e);
         }
     }
 

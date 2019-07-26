@@ -16,15 +16,17 @@
  */
 package com.alipay.sofa.registry.server.data;
 
-import com.alipay.sofa.registry.common.model.dataserver.Datum;
-import com.alipay.sofa.registry.server.data.change.DataSourceTypeEnum;
-import com.alipay.sofa.registry.server.data.datasync.Operator;
-import com.alipay.sofa.registry.server.data.datasync.sync.Acceptor;
+import java.util.Collection;
+
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
-import java.util.Collection;
+import com.alipay.sofa.registry.common.model.dataserver.Datum;
+import com.alipay.sofa.registry.server.data.cache.DatumCache;
+import com.alipay.sofa.registry.server.data.change.DataSourceTypeEnum;
+import com.alipay.sofa.registry.server.data.datasync.Operator;
+import com.alipay.sofa.registry.server.data.datasync.sync.Acceptor;
 
 /**
  *
@@ -75,7 +77,7 @@ public class TestSyncData {
 
     @Test
     public void testAcceptExpired() throws InterruptedException {
-        Acceptor acceptor = new Acceptor(30, "11", "DefaultDataCenter");
+        Acceptor acceptor = new Acceptor(30, "11", "DefaultDataCenter", new DatumCache());
 
         Operator operator1 = new Operator(System.currentTimeMillis(), 0L, datum1,
             DataSourceTypeEnum.SYNC);

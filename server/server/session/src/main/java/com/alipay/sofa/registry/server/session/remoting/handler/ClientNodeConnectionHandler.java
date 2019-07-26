@@ -16,21 +16,28 @@
  */
 package com.alipay.sofa.registry.server.session.remoting.handler;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.TimeUnit;
+
+import org.springframework.beans.factory.annotation.Autowired;
+
+import com.alipay.sofa.registry.common.model.constants.ValueConstants;
+import com.alipay.sofa.registry.common.model.store.URL;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.net.NetUtil;
 import com.alipay.sofa.registry.remoting.Channel;
 import com.alipay.sofa.registry.remoting.RemotingException;
+import com.alipay.sofa.registry.remoting.Server;
+import com.alipay.sofa.registry.remoting.exchange.Exchange;
+import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
 import com.alipay.sofa.registry.server.session.registry.Registry;
 import com.alipay.sofa.registry.server.session.scheduler.ExecutorManager;
 import com.alipay.sofa.registry.server.session.store.DataStore;
 import com.alipay.sofa.registry.server.session.store.Interests;
 import com.alipay.sofa.registry.server.session.store.Watchers;
-import org.springframework.beans.factory.annotation.Autowired;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
 
 /**
  *
@@ -39,7 +46,10 @@ import java.util.Map;
  */
 public class ClientNodeConnectionHandler extends AbstractServerHandler {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger("SESSION-CONNECT");
+    private static final Logger LOGGER       = LoggerFactory.getLogger("SESSION-CONNECT");
+    private static final Logger RENEW_LOGGER = LoggerFactory.getLogger(
+                                                 ValueConstants.LOGGER_NAME_RENEW,
+                                                 "[ClientNodeConnectionHandler]");
 
     @Autowired
     private Registry            sessionRegistry;
@@ -56,9 +66,21 @@ public class ClientNodeConnectionHandler extends AbstractServerHandler {
     @Autowired
     private ExecutorManager     executorManager;
 
+    @Autowired
+    private SessionServerConfig sessionServerConfig;
+
+    @Autowired
+    private Exchange            boltExchange;
+
     @Override
     public HandlerType getType() {
         return HandlerType.LISENTER;
+    }
+
+    @Override
+    public void connected(Channel channel) throws RemotingException {
+        super.connected(channel);
+        fireRenewDatum(channel);
     }
 
     @Override
@@ -67,12 +89,12 @@ public class ClientNodeConnectionHandler extends AbstractServerHandler {
         fireCancelClient(channel);
     }
 
-    public void fireCancelClient(Channel channel) {
+    private void fireCancelClient(Channel channel) {
         //avoid block connect ConnectionEventExecutor thread pool
-        executorManager.getDisconnectClientExecutor().execute(()->{
+        executorManager.getConnectClientExecutor().execute(() -> {
 
             String connectId = NetUtil.toAddressString(channel.getRemoteAddress());
-            if(checkCache(connectId)) {
+            if (checkCache(connectId)) {
                 List<String> connectIds = new ArrayList<>();
                 connectIds.add(connectId);
                 sessionRegistry.cancel(connectIds);
@@ -102,5 +124,23 @@ public class ClientNodeConnectionHandler extends AbstractServerHandler {
     private boolean checkWatcher(String connectId) {
         Map subMap = sessionWatchers.queryByConnectId(connectId);
         return subMap != null && !subMap.isEmpty();
+    }
+
+    private void fireRenewDatum(Channel channel) {
+        executorManager.getConnectClientExecutor().execute(() -> {
+            String connectId = NetUtil.toAddressString(channel.getRemoteAddress());
+            RENEW_LOGGER.info("Renew task is started: {}", connectId);
+            executorManager.getAsyncHashedWheelTimerTask()
+                    .newTimeout(connectId, timerOut -> sessionRegistry.renewDatum(connectId),
+                            sessionServerConfig.getRenewDatumWheelTaskDelay(), TimeUnit.SECONDS, () -> {
+                                Server sessionServer = boltExchange.getServer(sessionServerConfig.getServerPort());
+                                Channel channelClient = sessionServer.getChannel(URL.valueOf(connectId));
+                                boolean shouldContinue = channelClient != null && channel.isConnected();
+                                if (!shouldContinue) {
+                                    RENEW_LOGGER.info("Renew task is stop: {}", connectId);
+                                }
+                                return shouldContinue;
+                            });
+        });
     }
 }

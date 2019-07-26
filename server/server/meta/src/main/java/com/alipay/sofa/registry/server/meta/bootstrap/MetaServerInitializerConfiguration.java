@@ -16,12 +16,13 @@
  */
 package com.alipay.sofa.registry.server.meta.bootstrap;
 
-import com.alipay.sofa.registry.log.Logger;
-import com.alipay.sofa.registry.log.LoggerFactory;
+import java.util.concurrent.atomic.AtomicBoolean;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.SmartLifecycle;
 
-import java.util.concurrent.atomic.AtomicBoolean;
+import com.alipay.sofa.registry.log.Logger;
+import com.alipay.sofa.registry.log.LoggerFactory;
 
 /**
  *
@@ -47,7 +48,7 @@ public class MetaServerInitializerConfiguration implements SmartLifecycle {
     public void start() {
 
         try {
-            metaServerBootstrap.doInitialized();
+            metaServerBootstrap.start();
             LOGGER.info("Started MetaServer");
 
             MetaServerInitializerConfiguration.this.running.set(true);

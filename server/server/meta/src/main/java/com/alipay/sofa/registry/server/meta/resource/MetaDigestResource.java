@@ -16,26 +16,32 @@
  */
 package com.alipay.sofa.registry.server.meta.resource;
 
+import java.util.HashMap;
+import java.util.Map;
+
+import javax.annotation.PostConstruct;
+import javax.ws.rs.GET;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
+import javax.ws.rs.core.MediaType;
+
+import org.springframework.beans.factory.annotation.Autowired;
+
 import com.alipay.sofa.registry.common.model.Node.NodeType;
 import com.alipay.sofa.registry.common.model.console.PersistenceData;
 import com.alipay.sofa.registry.common.model.constants.ValueConstants;
 import com.alipay.sofa.registry.common.model.metaserver.NodeChangeResult;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
+import com.alipay.sofa.registry.metrics.ReporterUtils;
 import com.alipay.sofa.registry.server.meta.registry.Registry;
 import com.alipay.sofa.registry.store.api.DBResponse;
 import com.alipay.sofa.registry.store.api.DBService;
 import com.alipay.sofa.registry.store.api.OperationStatus;
 import com.alipay.sofa.registry.store.api.annotation.RaftReference;
-import org.springframework.beans.factory.annotation.Autowired;
-
-import javax.ws.rs.GET;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
-import javax.ws.rs.core.MediaType;
-import java.util.HashMap;
-import java.util.Map;
+import com.codahale.metrics.Gauge;
+import com.codahale.metrics.MetricRegistry;
 
 /**
  *
@@ -56,6 +62,16 @@ public class MetaDigestResource {
 
     @RaftReference
     private DBService           persistenceDataDBService;
+
+    @PostConstruct
+    public void init() {
+        MetricRegistry metrics = new MetricRegistry();
+        metrics.register("metaNodeList", (Gauge<Map>) () -> getRegisterNodeByType("meta"));
+        metrics.register("dataNodeList", (Gauge<Map>) () -> getRegisterNodeByType("data"));
+        metrics.register("sessionNodeList", (Gauge<Map>) () -> getRegisterNodeByType("session"));
+        metrics.register("pushSwitch", (Gauge<Map>) () -> getPushSwitch());
+        ReporterUtils.startSlf4jReporter(60, metrics);
+    }
 
     @GET
     @Path("{type}/node/query")

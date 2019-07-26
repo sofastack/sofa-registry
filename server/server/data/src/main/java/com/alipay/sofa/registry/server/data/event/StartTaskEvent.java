@@ -16,6 +16,8 @@
  */
 package com.alipay.sofa.registry.server.data.event;
 
+import java.util.Set;
+
 /**
  *
  * @author qian.lqlq
@@ -23,17 +25,19 @@ package com.alipay.sofa.registry.server.data.event;
  */
 public class StartTaskEvent {
 
-    private static final StartTaskEvent INSTANCE = new StartTaskEvent();
+    private final Set<StartTaskTypeEnum> suitableTypes;
 
-    private StartTaskEvent() {
+    public StartTaskEvent(Set<StartTaskTypeEnum> suitableTypes) {
+        this.suitableTypes = suitableTypes;
     }
 
     /**
-     * get instance of StartTaskEvent
-     * @return
+     * Getter method for property <tt>suitableTypes</tt>.
+     *
+     * @return property value of suitableTypes
      */
-    public static StartTaskEvent getInstance() {
-        return INSTANCE;
+    public Set<StartTaskTypeEnum> getSuitableTypes() {
+        return suitableTypes;
     }
 
 }

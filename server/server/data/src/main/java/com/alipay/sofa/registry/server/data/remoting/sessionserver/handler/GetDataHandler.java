@@ -16,6 +16,14 @@
  */
 package com.alipay.sofa.registry.server.data.remoting.sessionserver.handler;
 
+import java.util.Map;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.Executor;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
+
+import org.springframework.beans.factory.annotation.Autowired;
+
 import com.alipay.sofa.registry.common.model.GenericResponse;
 import com.alipay.sofa.registry.common.model.Node;
 import com.alipay.sofa.registry.common.model.dataserver.Datum;
@@ -30,13 +38,6 @@ import com.alipay.sofa.registry.server.data.remoting.sessionserver.forward.Forwa
 import com.alipay.sofa.registry.server.data.util.ThreadPoolExecutorDataServer;
 import com.alipay.sofa.registry.util.NamedThreadFactory;
 import com.alipay.sofa.registry.util.ParaCheckUtil;
-import org.springframework.beans.factory.annotation.Autowired;
-
-import java.util.Map;
-import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.Executor;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
 
 /**
  * processor to get specific data
@@ -48,11 +49,15 @@ public class GetDataHandler extends AbstractServerHandler<GetDataRequest> {
 
     /** LOGGER */
     private static final Logger LOGGER = LoggerFactory.getLogger(GetDataHandler.class);
+
     @Autowired
     private ForwardService      forwardService;
 
     @Autowired
-    private DataServerConfig    dataServerBootstrapConfig;
+    private DataServerConfig    dataServerConfig;
+
+    @Autowired
+    private DatumCache          datumCache;
 
     private ThreadPoolExecutor  getDataProcessorExecutor;
 
@@ -64,7 +69,7 @@ public class GetDataHandler extends AbstractServerHandler<GetDataRequest> {
     @Override
     public Object doHandle(Channel channel, GetDataRequest request) {
         String dataInfoId = request.getDataInfoId();
-        if (forwardService.needForward(dataInfoId)) {
+        if (forwardService.needForward()) {
             try {
                 LOGGER.warn("[forward] Get data request forward, request: {}", request);
                 return forwardService.forwardRequest(dataInfoId, request);
@@ -77,7 +82,7 @@ public class GetDataHandler extends AbstractServerHandler<GetDataRequest> {
             }
         }
 
-        return new GenericResponse<Map<String, Datum>>().fillSucceed(DatumCache
+        return new GenericResponse<Map<String, Datum>>().fillSucceed(datumCache
             .getDatumGroupByDataCenter(request.getDataCenter(), dataInfoId));
     }
 
@@ -105,10 +110,10 @@ public class GetDataHandler extends AbstractServerHandler<GetDataRequest> {
     public Executor getExecutor() {
         if (getDataProcessorExecutor == null) {
             getDataProcessorExecutor = new ThreadPoolExecutorDataServer("GetDataProcessorExecutor",
-                dataServerBootstrapConfig.getGetDataExecutorMinPoolSize(),
-                dataServerBootstrapConfig.getGetDataExecutorMaxPoolSize(),
-                dataServerBootstrapConfig.getGetDataExecutorKeepAliveTime(), TimeUnit.SECONDS,
-                new ArrayBlockingQueue<>(dataServerBootstrapConfig.getGetDataExecutorQueueSize()),
+                dataServerConfig.getGetDataExecutorMinPoolSize(),
+                dataServerConfig.getGetDataExecutorMaxPoolSize(),
+                dataServerConfig.getGetDataExecutorKeepAliveTime(), TimeUnit.SECONDS,
+                new ArrayBlockingQueue<>(dataServerConfig.getGetDataExecutorQueueSize()),
                 new NamedThreadFactory("DataServer-GetDataProcessor-executor", true));
         }
         return getDataProcessorExecutor;

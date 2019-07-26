@@ -14,40 +14,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alipay.sofa.registry.server.data.remoting.dataserver.task;
-
-import com.alipay.sofa.registry.server.data.remoting.metaserver.IMetaServerService;
-import org.springframework.beans.factory.annotation.Autowired;
-
-import java.util.concurrent.TimeUnit;
+package com.alipay.sofa.registry.server.session.filter;
 
 /**
  *
  * @author shangyu.wh
- * @version $Id: ReNewNodeTask.java, v 0.1 2018-04-02 20:56 shangyu.wh Exp $
+ * @version 1.0: ProcessFilter.java, v 0.1 2019-06-19 17:01 shangyu.wh Exp $
  */
-public class ReNewNodeTask extends AbstractTask {
+public interface ProcessFilter<T> {
 
-    @Autowired
-    private IMetaServerService metaServerService;
-
-    @Override
-    public void handle() {
-        metaServerService.reNewNodeTask();
-    }
-
-    @Override
-    public int getDelay() {
-        return 3;
-    }
-
-    @Override
-    public int getInitialDelay() {
-        return 0;
-    }
-
-    @Override
-    public TimeUnit getTimeUnit() {
-        return TimeUnit.SECONDS;
-    }
+    boolean match(T input);
 }

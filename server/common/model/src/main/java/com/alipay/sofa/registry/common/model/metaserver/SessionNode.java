@@ -55,6 +55,14 @@ public class SessionNode implements Node {
         return nodeUrl;
     }
 
+    /**
+     * get ip address from nodeUrl
+     * @return
+     */
+    public String getIp() {
+        return nodeUrl == null ? "" : nodeUrl.getIpAddress();
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) {
@@ -167,10 +175,7 @@ public class SessionNode implements Node {
     @Override
     public String toString() {
         final StringBuilder sb = new StringBuilder("SessionNode{");
-        sb.append("nodeUrl=").append(nodeUrl);
-        sb.append(", regionId='").append(regionId).append('\'');
-        sb.append(", name='").append(name).append('\'');
-        sb.append(", nodeStatus=").append(nodeStatus);
+        sb.append("ip=").append(getIp());
         sb.append('}');
         return sb.toString();
     }

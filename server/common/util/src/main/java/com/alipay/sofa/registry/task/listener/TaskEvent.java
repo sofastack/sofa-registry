@@ -16,10 +16,11 @@
  */
 package com.alipay.sofa.registry.task.listener;
 
-import com.alipay.sofa.registry.task.TaskClosure;
-
 import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+
+import com.alipay.sofa.registry.task.TaskClosure;
 
 /**
  *
@@ -42,9 +43,12 @@ public class TaskEvent {
                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   "SyncPublisherTask"), SYNC_SUBSCRIBER_TASK(
                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              "SyncSubscriberTask"), SESSION_REGISTER_DATA_TASK(
                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                "SessionRegisterDataTask"), PROVIDE_DATA_CHANGE_FETCH_TASK(
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          "ProvideDataChangeFetchTask"),
-
-        SUBSCRIBER_MULTI_FETCH_TASK("SubscriberMultiFetchTask"),
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          "ProvideDataChangeFetchTask"), SUBSCRIBER_MULTI_FETCH_TASK(
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     "SubscriberMultiFetchTask"), PUBLISH_DATA_TASK(
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    "PublishDataTask"), UN_PUBLISH_DATA_TASK(
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             "UnPublishDataTask"), RENEW_DATUM_TASK(
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    "RenewDatumTask"), DATUM_SNAPSHOT_TASK(
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           "DatumSnapshotTask"),
 
         //Session Adapter task
         USER_DATA_ELEMENT_PUSH_TASK("UserDataElementPushTask"), USER_DATA_ELEMENT_MULTI_PUSH_TASK(
@@ -54,7 +58,7 @@ public class TaskEvent {
         SESSION_NODE_CHANGE_PUSH_TASK("SessionNodeChangePushTask"), DATA_NODE_CHANGE_PUSH_TASK(
                                                                                                "DataNodeChangePushTask"), RECEIVE_STATUS_CONFIRM_NOTIFY_TASK(
                                                                                                                                                              "ReceiveStatusConfirmNotifyTask"), PERSISTENCE_DATA_CHANGE_NOTIFY_TASK(
-                                                                                                                                                                                                                                    "PersistenceDataChangeNotifyTask");
+                                                                                                                                                                                                                                    "PersistenceDataChangeNotifyTask"), ;
 
         private String name;
 
@@ -75,6 +79,10 @@ public class TaskEvent {
 
     private long                      createTime;
 
+    private TaskClosure               taskClosure;
+
+    private final String              taskId;
+
     private final Map<String, Object> attributes = new ConcurrentHashMap<String, Object>();
 
     /**
@@ -84,9 +92,8 @@ public class TaskEvent {
     public TaskEvent(TaskType taskType) {
         this.taskType = taskType;
         this.createTime = System.currentTimeMillis();
+        taskId = UUID.randomUUID().toString();
     }
-
-    private TaskClosure taskClosure;
 
     /**
      * constructor
@@ -96,6 +103,17 @@ public class TaskEvent {
     public TaskEvent(Object eventObj, TaskType taskType) {
         this.eventObj = eventObj;
         this.taskType = taskType;
+        this.createTime = System.currentTimeMillis();
+        taskId = UUID.randomUUID().toString();
+    }
+
+    /**
+     * Getter method for property <tt>taskId</tt>.
+     *
+     * @return property value of taskId
+     */
+    public String getTaskId() {
+        return taskId;
     }
 
     /**
@@ -195,7 +213,12 @@ public class TaskEvent {
 
     @Override
     public String toString() {
-        return "TaskEvent{" + "eventObj=" + eventObj + ", sendTimeStamp=" + sendTimeStamp
-               + ", attributes=" + attributes + '}';
+        final StringBuilder sb = new StringBuilder("TaskEvent{");
+        sb.append("eventObj=").append(eventObj);
+        sb.append(", sendTimeStamp=").append(sendTimeStamp);
+        sb.append(", attributes=").append(attributes);
+        sb.append(", taskId='").append(taskId).append('\'');
+        sb.append('}');
+        return sb.toString();
     }
 }

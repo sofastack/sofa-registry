@@ -16,42 +16,59 @@
  */
 package com.alipay.sofa.registry.server.data.remoting.sessionserver.disconnect;
 
+import java.util.Set;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.DelayQueue;
+import java.util.concurrent.Executor;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.TimeUnit;
+
+import org.springframework.beans.factory.InitializingBean;
+import org.springframework.beans.factory.annotation.Autowired;
+
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.server.data.bootstrap.DataServerConfig;
 import com.alipay.sofa.registry.server.data.change.event.ClientChangeEvent;
 import com.alipay.sofa.registry.server.data.change.event.DataChangeEventCenter;
+import com.alipay.sofa.registry.server.data.event.AfterWorkingProcess;
 import com.alipay.sofa.registry.server.data.executor.ExecutorFactory;
+import com.alipay.sofa.registry.server.data.node.DataNodeStatus;
 import com.alipay.sofa.registry.server.data.remoting.sessionserver.SessionServerConnectionFactory;
-import org.springframework.beans.factory.InitializingBean;
-import org.springframework.beans.factory.annotation.Autowired;
-
-import java.util.Set;
-import java.util.concurrent.DelayQueue;
-import java.util.concurrent.Executor;
+import com.alipay.sofa.registry.server.data.util.LocalServerStatusEnum;
 
 /**
  * @author qian.lqlq
  * @version $Id: ClientDisconnectEventHandler.java, v 0.1 2017-12-07 15:32 qian.lqlq Exp $
  */
-public class DisconnectEventHandler implements InitializingBean {
+public class DisconnectEventHandler implements InitializingBean, AfterWorkingProcess {
 
-    private static final Logger               LOGGER      = LoggerFactory
-                                                              .getLogger(DisconnectEventHandler.class);
+    private static final Logger                         LOGGER             = LoggerFactory
+                                                                               .getLogger(DisconnectEventHandler.class);
+
+    private static final Logger                         LOGGER_START       = LoggerFactory
+                                                                               .getLogger("DATA-START-LOGS");
 
     /**
      * a DelayQueue that contains client disconnect events
      */
-    private final DelayQueue<DisconnectEvent> EVENT_QUEUE = new DelayQueue<>();
+    private final DelayQueue<DisconnectEvent>           EVENT_QUEUE        = new DelayQueue<>();
 
     @Autowired
-    private SessionServerConnectionFactory    sessionServerConnectionFactory;
+    private SessionServerConnectionFactory              sessionServerConnectionFactory;
 
     @Autowired
-    private DataChangeEventCenter             dataChangeEventCenter;
+    private DataChangeEventCenter                       dataChangeEventCenter;
 
     @Autowired
-    private DataServerConfig                  dataServerConfig;
+    private DataServerConfig                            dataServerConfig;
+
+    @Autowired
+    private DataNodeStatus                              dataNodeStatus;
+
+    private static final int                            BLOCK_FOR_ALL_SYNC = 5000;
+
+    private static final BlockingQueue<DisconnectEvent> noWorkQueue        = new LinkedBlockingQueue<>();
 
     /**
      * receive disconnect event of client
@@ -64,13 +81,47 @@ public class DisconnectEventHandler implements InitializingBean {
             LOGGER.info("receive session off event: sessionServerHost={}, processId={}",
                 sessionServerDisconnectEvent.getSessionServerHost(),
                 sessionServerDisconnectEvent.getProcessId());
+        } else if (event.getType() == DisconnectTypeEnum.CLIENT) {
+            ClientDisconnectEvent clientDisconnectEvent = (ClientDisconnectEvent) event;
+            LOGGER.info("receive client off event: connectId={}",
+                clientDisconnectEvent.getConnectId());
+        }
+
+        if (dataNodeStatus.getStatus() != LocalServerStatusEnum.WORKING) {
+            LOGGER.info("receive disconnect event,but data server not working!");
+            noWorkQueue.add(event);
+            return;
         }
         EVENT_QUEUE.add(event);
     }
 
+    public void afterWorkingProcess() {
+        try {
+            /*
+             * After the snapshot data is synchronized during startup, it is queued and then placed asynchronously into
+             * DatumCache. When the notification becomes WORKING, there may be data in the queue that is not executed
+             * to DatumCache. So it need to sleep for a while.
+             */
+            TimeUnit.MILLISECONDS.sleep(BLOCK_FOR_ALL_SYNC);
+
+            while (!noWorkQueue.isEmpty()) {
+                DisconnectEvent event = noWorkQueue.poll(1, TimeUnit.SECONDS);
+                if (event != null) {
+                    receive(event);
+                }
+            }
+        } catch (InterruptedException e) {
+            LOGGER.error("receive disconnect event after working interrupted!", e);
+        }
+    }
+
+    @Override
+    public int getOrder() {
+        return 0;
+    }
+
     @Override
     public void afterPropertiesSet() {
-        LOGGER.info("begin start DisconnectEventHandler");
         Executor executor = ExecutorFactory
                 .newSingleThreadExecutor(DisconnectEventHandler.class.getSimpleName());
         executor.execute(() -> {
@@ -78,22 +129,22 @@ public class DisconnectEventHandler implements InitializingBean {
                 try {
                     DisconnectEvent disconnectEvent = EVENT_QUEUE.take();
                     if (disconnectEvent.getType() == DisconnectTypeEnum.SESSION_SERVER) {
-                        SessionServerDisconnectEvent event = (SessionServerDisconnectEvent) disconnectEvent;
-                        String processId = event.getProcessId();
+                        SessionServerDisconnectEvent event     = (SessionServerDisconnectEvent) disconnectEvent;
+                        String                       processId = event.getProcessId();
                         //check processId confirm remove,and not be registered again when delay time
                         String sessionServerHost = event.getSessionServerHost();
                         if (sessionServerConnectionFactory
                                 .removeProcessIfMatch(processId, sessionServerHost)) {
-                            Set<String> clientHosts = sessionServerConnectionFactory
-                                    .removeClients(processId);
+                            Set<String> connectIds = sessionServerConnectionFactory
+                                    .removeConnectIds(processId);
 
-                            LOGGER.info("session off is triggered: sessionServerHost={}, clientHost={}, processId={}",
+                            LOGGER.info("session off is triggered: sessionServerHost={}, connectId={}, processId={}",
                                     sessionServerHost,
-                                    clientHosts, processId);
+                                    connectIds, processId);
 
-                            if (clientHosts != null && !clientHosts.isEmpty()) {
-                                for (String host : clientHosts) {
-                                    unPub(host, event.getRegisterTimestamp());
+                            if (connectIds != null && !connectIds.isEmpty()) {
+                                for (String connectId : connectIds) {
+                                    unPub(connectId, event.getRegisterTimestamp());
                                 }
                             }
                         } else {
@@ -102,23 +153,23 @@ public class DisconnectEventHandler implements InitializingBean {
                         }
                     } else {
                         ClientDisconnectEvent event = (ClientDisconnectEvent) disconnectEvent;
-                        unPub(event.getHost(), event.getRegisterTimestamp());
+                        unPub(event.getConnectId(), event.getRegisterTimestamp());
                     }
                 } catch (Throwable e) {
                     LOGGER.error("handle client disconnect event failed", e);
                 }
             }
         });
-        LOGGER.info("start DisconnectEventHandler success");
+        LOGGER_START.info("start DisconnectEventHandler success");
     }
 
     /**
      *
-     * @param host
+     * @param connectId
      * @param registerTimestamp
      */
-    private void unPub(String host, long registerTimestamp) {
-        dataChangeEventCenter.onChange(new ClientChangeEvent(host, dataServerConfig
+    private void unPub(String connectId, long registerTimestamp) {
+        dataChangeEventCenter.onChange(new ClientChangeEvent(connectId, dataServerConfig
             .getLocalDataCenter(), registerTimestamp));
     }
 }

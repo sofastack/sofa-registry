@@ -108,4 +108,16 @@ public class CommonResponse implements Serializable {
     public void setMessage(String message) {
         this.message = message;
     }
+
+    /**
+     * @see Object#toString()
+     */
+    @Override
+    public String toString() {
+        final StringBuilder sb = new StringBuilder("CommonResponse{");
+        sb.append("success=").append(success);
+        sb.append(", message='").append(message).append('\'');
+        sb.append('}');
+        return sb.toString();
+    }
 }

@@ -16,6 +16,17 @@
  */
 package com.alipay.sofa.registry.server.meta.bootstrap;
 
+import java.util.ArrayList;
+import java.util.Collection;
+
+import org.glassfish.jersey.jackson.JacksonFeature;
+import org.glassfish.jersey.server.ResourceConfig;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Import;
+
 import com.alipay.sofa.registry.jraft.service.PersistenceDataDBService;
 import com.alipay.sofa.registry.remoting.bolt.exchange.BoltExchange;
 import com.alipay.sofa.registry.remoting.exchange.Exchange;
@@ -45,7 +56,7 @@ import com.alipay.sofa.registry.server.meta.remoting.handler.DataNodeHandler;
 import com.alipay.sofa.registry.server.meta.remoting.handler.FetchProvideDataRequestHandler;
 import com.alipay.sofa.registry.server.meta.remoting.handler.GetChangeListRequestHandler;
 import com.alipay.sofa.registry.server.meta.remoting.handler.GetNodesRequestHandler;
-import com.alipay.sofa.registry.server.meta.remoting.handler.ReNewNodesRequestHandler;
+import com.alipay.sofa.registry.server.meta.remoting.handler.RenewNodesRequestHandler;
 import com.alipay.sofa.registry.server.meta.remoting.handler.SessionNodeHandler;
 import com.alipay.sofa.registry.server.meta.repository.NodeConfirmStatusService;
 import com.alipay.sofa.registry.server.meta.repository.RepositoryService;
@@ -57,6 +68,7 @@ import com.alipay.sofa.registry.server.meta.repository.service.MetaRepositorySer
 import com.alipay.sofa.registry.server.meta.repository.service.SessionConfirmStatusService;
 import com.alipay.sofa.registry.server.meta.repository.service.SessionRepositoryService;
 import com.alipay.sofa.registry.server.meta.repository.service.SessionVersionRepositoryService;
+import com.alipay.sofa.registry.server.meta.resource.BlacklistDataResource;
 import com.alipay.sofa.registry.server.meta.resource.DecisionModeResource;
 import com.alipay.sofa.registry.server.meta.resource.HealthResource;
 import com.alipay.sofa.registry.server.meta.resource.MetaDigestResource;
@@ -76,16 +88,6 @@ import com.alipay.sofa.registry.task.listener.DefaultTaskListenerManager;
 import com.alipay.sofa.registry.task.listener.TaskListener;
 import com.alipay.sofa.registry.task.listener.TaskListenerManager;
 import com.alipay.sofa.registry.util.PropertySplitter;
-import org.glassfish.jersey.jackson.JacksonFeature;
-import org.glassfish.jersey.server.ResourceConfig;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
-import org.springframework.boot.context.properties.EnableConfigurationProperties;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Import;
-
-import java.util.ArrayList;
-import java.util.Collection;
 
 /**
  *
@@ -228,7 +230,7 @@ public class MetaServerConfiguration {
             Collection<AbstractServerHandler> list = new ArrayList<>();
             list.add(sessionConnectionHandler());
             list.add(sessionNodeHandler());
-            list.add(reNewNodesRequestHandler());
+            list.add(renewNodesRequestHandler());
             list.add(getNodesRequestHandler());
             list.add(fetchProvideDataRequestHandler());
             return list;
@@ -240,7 +242,7 @@ public class MetaServerConfiguration {
             list.add(dataConnectionHandler());
             list.add(getNodesRequestHandler());
             list.add(dataNodeHandler());
-            list.add(reNewNodesRequestHandler());
+            list.add(renewNodesRequestHandler());
             return list;
         }
 
@@ -284,8 +286,8 @@ public class MetaServerConfiguration {
         }
 
         @Bean
-        public AbstractServerHandler reNewNodesRequestHandler() {
-            return new ReNewNodesRequestHandler();
+        public AbstractServerHandler renewNodesRequestHandler() {
+            return new RenewNodesRequestHandler();
         }
 
         @Bean
@@ -357,6 +359,11 @@ public class MetaServerConfiguration {
         @Bean
         public StopPushDataResource stopPushDataResource() {
             return new StopPushDataResource();
+        }
+
+        @Bean
+        public BlacklistDataResource blacklistDataResource() {
+            return new BlacklistDataResource();
         }
     }
 

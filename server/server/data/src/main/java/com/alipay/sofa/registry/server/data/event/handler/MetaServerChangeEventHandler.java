@@ -16,6 +16,14 @@
  */
 package com.alipay.sofa.registry.server.data.event.handler;
 
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.util.CollectionUtils;
+
 import com.alipay.remoting.Connection;
 import com.alipay.sofa.jraft.entity.PeerId;
 import com.alipay.sofa.registry.common.model.metaserver.DataNode;
@@ -30,16 +38,12 @@ import com.alipay.sofa.registry.server.data.bootstrap.DataServerConfig;
 import com.alipay.sofa.registry.server.data.event.DataServerChangeEvent;
 import com.alipay.sofa.registry.server.data.event.EventCenter;
 import com.alipay.sofa.registry.server.data.event.MetaServerChangeEvent;
+import com.alipay.sofa.registry.server.data.event.StartTaskEvent;
+import com.alipay.sofa.registry.server.data.event.StartTaskTypeEnum;
 import com.alipay.sofa.registry.server.data.remoting.MetaNodeExchanger;
 import com.alipay.sofa.registry.server.data.remoting.metaserver.IMetaServerService;
 import com.alipay.sofa.registry.server.data.remoting.metaserver.MetaServerConnectionFactory;
 import com.alipay.sofa.registry.server.data.util.TimeUtil;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.util.CollectionUtils;
-
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Set;
 
 /**
  *
@@ -53,7 +57,7 @@ public class MetaServerChangeEventHandler extends AbstractEventHandler<MetaServe
     private static final int            TRY_COUNT = 3;
 
     @Autowired
-    private DataServerConfig            dataServerBootstrapConfig;
+    private DataServerConfig            dataServerConfig;
 
     @Autowired
     private IMetaServerService          metaServerService;
@@ -116,7 +120,7 @@ public class MetaServerChangeEventHandler extends AbstractEventHandler<MetaServe
 
         for (int tryCount = 0; tryCount < TRY_COUNT; tryCount++) {
             try {
-                Channel channel = metaNodeExchanger.connect(new URL(ip, dataServerBootstrapConfig
+                Channel channel = metaNodeExchanger.connect(new URL(ip, dataServerConfig
                     .getMetaServerPort()));
                 //connect all meta server
                 if (channel != null && channel.isConnected()) {
@@ -130,13 +134,13 @@ public class MetaServerChangeEventHandler extends AbstractEventHandler<MetaServe
                         obj = metaNodeExchanger.request(new Request() {
                             @Override
                             public Object getRequestBody() {
-                                return new DataNode(new URL(DataServerConfig.IP),
-                                    dataServerBootstrapConfig.getLocalDataCenter());
+                                return new DataNode(new URL(DataServerConfig.IP), dataServerConfig
+                                    .getLocalDataCenter());
                             }
 
                             @Override
                             public URL getRequestUrl() {
-                                return new URL(ip, dataServerBootstrapConfig.getMetaServerPort());
+                                return new URL(ip, dataServerConfig.getMetaServerPort());
                             }
                         }).getResult();
                     } catch (Exception e) {
@@ -150,6 +154,12 @@ public class MetaServerChangeEventHandler extends AbstractEventHandler<MetaServe
                     if (obj instanceof NodeChangeResult) {
                         NodeChangeResult<DataNode> result = (NodeChangeResult<DataNode>) obj;
                         Map<String, Long> versionMap = result.getDataCenterListVersions();
+
+                        //send renew after first register dataNode
+                        Set<StartTaskTypeEnum> set = new HashSet<>();
+                        set.add(StartTaskTypeEnum.RENEW);
+                        eventCenter.post(new StartTaskEvent(set));
+
                         eventCenter.post(new DataServerChangeEvent(result.getNodes(), versionMap));
                         break;
                     }

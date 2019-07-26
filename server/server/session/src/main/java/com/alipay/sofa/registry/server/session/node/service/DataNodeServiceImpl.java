@@ -16,9 +16,22 @@
  */
 package com.alipay.sofa.registry.server.session.node.service;
 
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
+
+import javax.annotation.PostConstruct;
+
+import org.springframework.beans.factory.annotation.Autowired;
+
 import com.alipay.sofa.registry.common.model.CommonResponse;
+import com.alipay.sofa.registry.common.model.DatumSnapshotRequest;
 import com.alipay.sofa.registry.common.model.GenericResponse;
 import com.alipay.sofa.registry.common.model.Node;
+import com.alipay.sofa.registry.common.model.RenewDatumRequest;
 import com.alipay.sofa.registry.common.model.dataserver.ClientOffRequest;
 import com.alipay.sofa.registry.common.model.dataserver.Datum;
 import com.alipay.sofa.registry.common.model.dataserver.GetDataRequest;
@@ -40,14 +53,6 @@ import com.alipay.sofa.registry.server.session.node.SessionProcessIdGenerator;
 import com.alipay.sofa.registry.timer.AsyncHashedWheelTimer;
 import com.alipay.sofa.registry.timer.AsyncHashedWheelTimer.TaskFailedCallback;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
-import org.springframework.beans.factory.annotation.Autowired;
-
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  *
@@ -69,13 +74,16 @@ public class DataNodeServiceImpl implements DataNodeService {
 
     private AsyncHashedWheelTimer asyncHashedWheelTimer;
 
-    public DataNodeServiceImpl() {
+    @PostConstruct
+    public void init() {
         ThreadFactoryBuilder threadFactoryBuilder = new ThreadFactoryBuilder();
         threadFactoryBuilder.setDaemon(true);
         asyncHashedWheelTimer = new AsyncHashedWheelTimer(threadFactoryBuilder.setNameFormat(
-            "Registry-DataNodeServiceImpl-WheelTimer").build(), 100, TimeUnit.MILLISECONDS, 1024,
-            threadFactoryBuilder.setNameFormat("Registry-DataNodeServiceImpl-WheelExecutor-%d")
-                .build(), new TaskFailedCallback() {
+            "Registry-DataNodeServiceImpl-Retry-WheelTimer").build(), 100, TimeUnit.MILLISECONDS,
+            1024, sessionServerConfig.getDataNodeRetryExecutorThreadSize(),
+            sessionServerConfig.getDataNodeRetryExecutorQueueSize(), threadFactoryBuilder
+                .setNameFormat("Registry-DataNodeServiceImpl-Retry-WheelExecutor-%d").build(),
+            new TaskFailedCallback() {
                 @Override
                 public void executionRejected(Throwable e) {
                     LOGGER.error("executionRejected: " + e.getMessage(), e);
@@ -90,98 +98,78 @@ public class DataNodeServiceImpl implements DataNodeService {
 
     @Override
     public void register(final Publisher publisher) {
-
+        Request<PublishDataRequest> request = buildPublishDataRequest(publisher);
         try {
-
-            Request<PublishDataRequest> publisherRequest = new Request<PublishDataRequest>() {
-
-                private URL url;
-
-                @Override
-                public PublishDataRequest getRequestBody() {
-                    PublishDataRequest publishDataRequest = new PublishDataRequest();
-                    publishDataRequest.setPublisher(publisher);
-                    publishDataRequest.setSessionServerProcessId(SessionProcessIdGenerator
-                        .getSessionProcessId());
-                    return publishDataRequest;
-                }
-
-                @Override
-                public URL getRequestUrl() {
-                    if (url == null) {
-                        url = getUrl(publisher.getDataInfoId());
-                    }
-                    return url;
-                }
-            };
-
-            Response response = dataNodeExchanger.request(publisherRequest);
-
-            Object result = response.getResult();
-            if (result instanceof CommonResponse) {
-                CommonResponse commonResponse = (CommonResponse) result;
-                if (!commonResponse.isSuccess()) {
-                    LOGGER.error(
-                        "PublishDataRequest get server response failed!target url:{},message:{}",
-                        publisherRequest.getRequestUrl(), commonResponse.getMessage());
-                    throw new RuntimeException(
-                        "PublishDataRequest get server response failed! msg:"
-                                + commonResponse.getMessage());
-                }
-            }
+            sendRequest(request);
         } catch (RequestException e) {
-            LOGGER.error("DataNodeService register new publisher error! " + e.getRequestMessage(),
-                e);
-            throw new RuntimeException("DataNodeService register new publisher error! "
-                                       + e.getRequestMessage(), e);
+            doRetryAsync("PublishData", request, e,
+                sessionServerConfig.getPublishDataTaskRetryTimes(),
+                sessionServerConfig.getPublishDataTaskRetryFirstDelay(),
+                sessionServerConfig.getPublishDataTaskRetryIncrementDelay());
         }
+    }
+
+    private Request<PublishDataRequest> buildPublishDataRequest(Publisher publisher) {
+        return new Request<PublishDataRequest>() {
+            private AtomicInteger retryTimes = new AtomicInteger();
+
+            @Override
+            public PublishDataRequest getRequestBody() {
+                PublishDataRequest publishDataRequest = new PublishDataRequest();
+                publishDataRequest.setPublisher(publisher);
+                publishDataRequest.setSessionServerProcessId(SessionProcessIdGenerator
+                    .getSessionProcessId());
+                return publishDataRequest;
+            }
+
+            @Override
+            public URL getRequestUrl() {
+                return getUrl(publisher.getDataInfoId());
+            }
+
+            @Override
+            public AtomicInteger getRetryTimes() {
+                return retryTimes;
+            }
+        };
     }
 
     @Override
     public void unregister(final Publisher publisher) {
+        Request<UnPublishDataRequest> request = buildUnPublishDataRequest(publisher);
         try {
-            Request<UnPublishDataRequest> unPublishRequest = new Request<UnPublishDataRequest>() {
+            sendRequest(request);
+        } catch (RequestException e) {
+            doRetryAsync("UnPublishData", request, e,
+                sessionServerConfig.getUnPublishDataTaskRetryTimes(),
+                sessionServerConfig.getUnPublishDataTaskRetryFirstDelay(),
+                sessionServerConfig.getUnPublishDataTaskRetryIncrementDelay());
+        }
+    }
 
-                private URL url;
+    private Request<UnPublishDataRequest> buildUnPublishDataRequest(Publisher publisher) {
+        return new Request<UnPublishDataRequest>() {
 
-                @Override
-                public UnPublishDataRequest getRequestBody() {
-                    UnPublishDataRequest unPublishDataRequest = new UnPublishDataRequest();
-                    unPublishDataRequest.setDataInfoId(publisher.getDataInfoId());
-                    unPublishDataRequest.setRegisterId(publisher.getRegisterId());
-                    unPublishDataRequest.setRegisterTimestamp(publisher.getRegisterTimestamp());
-                    return unPublishDataRequest;
-                }
+            private AtomicInteger retryTimes = new AtomicInteger();
 
-                @Override
-                public URL getRequestUrl() {
-                    if (url == null) {
-                        url = getUrl(publisher.getDataInfoId());
-                    }
-                    return url;
-                }
-            };
-
-            Response response = dataNodeExchanger.request(unPublishRequest);
-
-            Object result = response.getResult();
-            if (result instanceof CommonResponse) {
-                CommonResponse commonResponse = (CommonResponse) result;
-                if (!commonResponse.isSuccess()) {
-                    LOGGER.error(
-                        "UnPublishRequest get server response failed!target url:{},message:{}",
-                        unPublishRequest.getRequestUrl(), commonResponse.getMessage());
-                    throw new RuntimeException("UnPublishRequest get server response failed! msg:"
-                                               + commonResponse.getMessage());
-                }
+            @Override
+            public UnPublishDataRequest getRequestBody() {
+                UnPublishDataRequest unPublishDataRequest = new UnPublishDataRequest(
+                    publisher.getDataInfoId(), publisher.getRegisterId(),
+                    publisher.getRegisterTimestamp());
+                return unPublishDataRequest;
             }
 
-        } catch (RequestException e) {
-            LOGGER.error("Unregister publisher to data node error! " + e.getRequestMessage(), e);
-            throw new RuntimeException("Unregister publisher to data node error! "
-                                       + e.getRequestMessage(), e);
-        }
+            @Override
+            public URL getRequestUrl() {
+                return getUrl(publisher.getDataInfoId());
+            }
 
+            @Override
+            public AtomicInteger getRetryTimes() {
+                return retryTimes;
+            }
+        };
     }
 
     @Override
@@ -192,119 +180,52 @@ public class DataNodeServiceImpl implements DataNodeService {
         //get all local dataCenter data node
         Collection<Node> nodes = dataNodeManager.getDataCenterNodes();
         if (nodes != null && nodes.size() > 0) {
-
             for (Node node : nodes) {
-                Request<ClientOffRequest> clientOffRequestRequest = new Request<ClientOffRequest>() {
-
-                    private AtomicInteger retryTimes = new AtomicInteger();
-
-                    @Override
-                    public ClientOffRequest getRequestBody() {
-                        ClientOffRequest clientOffRequest = new ClientOffRequest();
-                        clientOffRequest.setHosts(connectIds);
-                        clientOffRequest.setGmtOccur(System.currentTimeMillis());
-                        return clientOffRequest;
-                    }
-
-                    @Override
-                    public URL getRequestUrl() {
-                        return new URL(node.getNodeUrl().getIpAddress(),
-                            sessionServerConfig.getDataServerPort());
-                    }
-
-                    @Override
-                    public AtomicInteger getRetryTimes() {
-                        return retryTimes;
-                    }
-                };
+                Request<ClientOffRequest> request = buildClientOffRequest(connectIds, node);
                 try {
+                    sendRequest(request);
+                } catch (RequestException e) {
+                    doRetryAsync("ClientOff", request, e,
+                        sessionServerConfig.getCancelDataTaskRetryTimes(),
+                        sessionServerConfig.getCancelDataTaskRetryFirstDelay(),
+                        sessionServerConfig.getCancelDataTaskRetryIncrementDelay());
 
-                    Response response = dataNodeExchanger.request(clientOffRequestRequest);
-                    Object result = response.getResult();
-                    if (result instanceof CommonResponse) {
-                        CommonResponse commonResponse = (CommonResponse) result;
-                        if (!commonResponse.isSuccess()) {
-                            LOGGER
-                                .error(
-                                    "ClientOff RequestRequest get response failed!target url:{},message:{}",
-                                    node.getNodeUrl(), commonResponse.getMessage());
-                            throw new RuntimeException(
-                                "ClientOff RequestRequest get response failed! msg:"
-                                        + commonResponse.getMessage());
-                        }
-                    } else {
-                        LOGGER
-                            .error(
-                                "ClientOff Request has not get response or response type illegal!url:{}",
-                                node.getNodeUrl());
-                        throw new RuntimeException(
-                            "ClientOff Request has not get response or response type illegal!");
-                    }
-                } catch (Exception e) {
-                    LOGGER.error("Client Off request error! ", e);
-                    clientOffRetry(clientOffRequestRequest);
                 }
-
             }
         }
     }
 
-    private void clientOffRetry(Request<ClientOffRequest> clientOffRequestRequest) {
+    private Request<ClientOffRequest> buildClientOffRequest(List<String> connectIds, Node node) {
+        return new Request<ClientOffRequest>() {
 
-        URL url = clientOffRequestRequest.getRequestUrl();
+            private AtomicInteger retryTimes = new AtomicInteger();
 
-        int retryTimes = clientOffRequestRequest.getRetryTimes().incrementAndGet();
+            @Override
+            public ClientOffRequest getRequestBody() {
+                ClientOffRequest clientOffRequest = new ClientOffRequest();
+                clientOffRequest.setHosts(connectIds);
+                clientOffRequest.setGmtOccur(System.currentTimeMillis());
+                return clientOffRequest;
+            }
 
-        if (retryTimes <= sessionServerConfig.getCancelDataTaskRetryTimes()) {
-            asyncHashedWheelTimer.newTimeout(timeout -> {
-                try {
-                    Response response = dataNodeExchanger.request(clientOffRequestRequest);
-                    Object result = response.getResult();
-                    if (result instanceof CommonResponse) {
-                        CommonResponse commonResponse = (CommonResponse) result;
-                        if (!commonResponse.isSuccess()) {
-                            LOGGER.error(
-                                    "ClientOff retry RequestRequest get response failed!retryTimes={},target url:{},message:{}",
-                                    retryTimes,
-                                    url, commonResponse.getMessage());
-                            throw new RuntimeException(
-                                    "ClientOff retry RequestRequest get response failed! msg:" +
-                                            commonResponse.getMessage());
-                        }
-                    } else {
-                        LOGGER.error(
-                                "ClientOff retry Request has not get response or response type illegal!retryTimes={},url:{}",
-                                retryTimes, url);
-                        throw new RuntimeException(
-                                "ClientOff retry Request has not get response or response type illegal!");
-                    }
-                } catch (Exception e) {
-                    clientOffRetry(clientOffRequestRequest);
-                }
-            }, getBlockTime(retryTimes), TimeUnit.MILLISECONDS);
-        } else {
-            LOGGER.error("ClientOff retryTimes have exceeded! stop retry! retryTimes={}, url={}, request={}",
-                    retryTimes, url, clientOffRequestRequest.getRequestBody());
-        }
-    }
+            @Override
+            public URL getRequestUrl() {
+                return new URL(node.getNodeUrl().getIpAddress(),
+                    sessionServerConfig.getDataServerPort());
+            }
 
-    private long getBlockTime(int retry) {
-        long initialSleepTime = TimeUnit.MILLISECONDS.toMillis(sessionServerConfig
-            .getCancelDataTaskRetryFirstDelay());
-        long increment = TimeUnit.MILLISECONDS.toMillis(sessionServerConfig
-            .getCancelDataTaskRetryIncrementDelay());
-        long result = initialSleepTime + (increment * (retry - 1));
-        return result >= 0L ? result : 0L;
+            @Override
+            public AtomicInteger getRetryTimes() {
+                return retryTimes;
+            }
+        };
     }
 
     @Override
     public void registerSessionProcessId(final SessionServerRegisterRequest sessionServerRegisterRequest,
                                          final URL dataUrl) {
-
         try {
-
             Request<SessionServerRegisterRequest> request = new Request<SessionServerRegisterRequest>() {
-
                 @Override
                 public SessionServerRegisterRequest getRequestBody() {
                     return sessionServerRegisterRequest;
@@ -315,22 +236,18 @@ public class DataNodeServiceImpl implements DataNodeService {
                     return dataUrl;
                 }
             };
-
             dataNodeExchanger.request(request);
         } catch (RequestException e) {
-            LOGGER.error("DataNodeService register processId error! " + e.getRequestMessage(), e);
             throw new RuntimeException("DataNodeService register processId error! "
-                                       + e.getRequestMessage(), e);
+                                       + e.getMessage(), e);
         }
     }
 
     @Override
     public Map<String/*datacenter*/, Map<String/*datainfoid*/, Long>> fetchDataVersion(URL dataNodeUrl,
                                                                                          Collection<String> dataInfoIdList) {
-
         Map<String, Map<String, Long>> map = new HashMap<>();
         try {
-
             Request<GetDataVersionRequest> getDataVersionRequestRequest = new Request<GetDataVersionRequest>() {
                 @Override
                 public GetDataVersionRequest getRequestBody() {
@@ -346,33 +263,22 @@ public class DataNodeServiceImpl implements DataNodeService {
             };
 
             Response response = dataNodeExchanger.request(getDataVersionRequestRequest);
-
             Object result = response.getResult();
-            if (result instanceof GenericResponse) {
-                GenericResponse genericResponse = (GenericResponse) result;
-                if (genericResponse.isSuccess()) {
-                    map = (Map<String, Map<String, Long>>) genericResponse.getData();
-                    if (map.isEmpty()) {
-                        LOGGER
-                            .warn(
-                                "GetDataVersionRequestRequest get response contains no data!target data Node url:{} about dataInfoIds size:{}",
-                                dataNodeUrl.getAddressString(), dataInfoIdList.size());
-                    }
-                } else {
-                    LOGGER.error("fetchDataVersion has not get fail response!msg:{}",
-                        genericResponse.getMessage());
-                    throw new RuntimeException("fetchDataVersion has not get fail response! msg:"
-                                               + genericResponse.getMessage());
+            GenericResponse genericResponse = (GenericResponse) result;
+            if (genericResponse.isSuccess()) {
+                map = (Map<String, Map<String, Long>>) genericResponse.getData();
+                if (map.isEmpty()) {
+                    LOGGER
+                        .warn(
+                            "GetDataVersionRequestRequest get response contains no data!target data Node url:{} about dataInfoIds size:{}",
+                            dataNodeUrl.getAddressString(), dataInfoIdList.size());
                 }
             } else {
-                LOGGER
-                    .error("GetDataVersionRequestRequest has not get response or response type illegal!");
+                throw new RuntimeException("fetchDataVersion has not get fail response! msg:"
+                                           + genericResponse.getMessage());
             }
-
         } catch (RequestException e) {
-            LOGGER.error("Fetch data Version request error! " + e.getRequestMessage(), e);
-            throw new RuntimeException(
-                "Fetch data Version request error! " + e.getRequestMessage(), e);
+            throw new RuntimeException("Fetch data Version request error! " + e.getMessage(), e);
         }
 
         return map;
@@ -398,12 +304,12 @@ public class DataNodeServiceImpl implements DataNodeService {
         return getDatumMap(dataInfoId, null);
     }
 
-    @Override public Map<String, Datum> getDatumMap(String dataInfoId, String dataCenterId) {
+    @Override
+    public Map<String, Datum> getDatumMap(String dataInfoId, String dataCenterId) {
 
         Map<String/*datacenter*/, Datum> map;
 
         try {
-
             GetDataRequest getDataRequest = new GetDataRequest();
 
             //dataCenter null means all dataCenters
@@ -428,42 +334,144 @@ public class DataNodeServiceImpl implements DataNodeService {
 
             Response response = dataNodeExchanger.request(getDataRequestStringRequest);
             Object result = response.getResult();
-            if (result instanceof GenericResponse) {
-                GenericResponse genericResponse = (GenericResponse) result;
-                if (genericResponse.isSuccess()) {
-                    map = (Map<String, Datum>) genericResponse.getData();
-                    if (map == null || map.isEmpty()) {
-                        LOGGER.warn("GetDataRequest get response contains no datum!");
-                    } else {
-                        map.forEach((dataCenter, datum) -> Datum.processDatum(datum));
-                    }
+            GenericResponse genericResponse = (GenericResponse) result;
+            if (genericResponse.isSuccess()) {
+                map = (Map<String, Datum>) genericResponse.getData();
+                if (map == null || map.isEmpty()) {
+                    LOGGER.warn("GetDataRequest get response contains no datum!");
                 } else {
-                    LOGGER.error("GetDataRequest has not get fail response!msg:{}", genericResponse.getMessage());
-                    throw new RuntimeException("GetDataRequest has not get fail response! msg:" +
-                            genericResponse.getMessage());
+                    map.forEach((dataCenter, datum) -> Datum.processDatum(datum));
                 }
             } else {
-                LOGGER.error("GetDataRequest has not get response or response type illegal!");
-                throw new RuntimeException("GetDataRequest has not get response or response type illegal!");
+                throw new RuntimeException(
+                        "GetDataRequest has not get fail response! msg:" + genericResponse.getMessage());
             }
         } catch (RequestException e) {
-            LOGGER.error("Get data request to data node error! " + e.getRequestMessage(), e);
-            throw new RuntimeException(
-                    "Get data request to data node error! " + e.getRequestMessage(), e);
+            throw new RuntimeException("Get data request to data node error! " + e.getMessage(), e);
         }
 
         return map;
     }
 
-    private URL getUrl(String dataInfoId) {
-
-        Node dataNode = dataNodeManager.getNode(dataInfoId);
-        if (dataNode != null) {
-            //meta push data node has not port
-            String dataIp = dataNode.getNodeUrl().getIpAddress();
-            return new URL(dataIp, sessionServerConfig.getDataServerPort());
+    @Override
+    public Boolean renewDatum(RenewDatumRequest renewDatumRequest) {
+        Request<RenewDatumRequest> request = buildRenewDatumRequest(renewDatumRequest);
+        String msgFormat = "RenewDatum get response not success, target url: %s, message: %s";
+        try {
+            Response response = dataNodeExchanger.request(request);
+            GenericResponse genericResponse = (GenericResponse) response.getResult();
+            if (genericResponse.isSuccess()) {
+                return (Boolean) genericResponse.getData();
+            } else {
+                throw new RuntimeException(String.format(msgFormat, request.getRequestUrl(),
+                    genericResponse.getMessage()));
+            }
+        } catch (RequestException e) {
+            throw new RuntimeException(String.format(msgFormat, request.getRequestUrl(),
+                e.getMessage()));
         }
-        return null;
+    }
+
+    private Request<RenewDatumRequest> buildRenewDatumRequest(RenewDatumRequest renewDatumRequest) {
+        return new Request<RenewDatumRequest>() {
+            private AtomicInteger retryTimes = new AtomicInteger();
+
+            @Override
+            public RenewDatumRequest getRequestBody() {
+                return renewDatumRequest;
+            }
+
+            @Override
+            public URL getRequestUrl() {
+                return new URL(renewDatumRequest.getDataServerIp(),
+                    sessionServerConfig.getDataServerPort());
+            }
+
+            @Override
+            public AtomicInteger getRetryTimes() {
+                return retryTimes;
+            }
+        };
+    }
+
+    @Override
+    public void sendDatumSnapshot(DatumSnapshotRequest datumSnapshotRequest) {
+        Request<DatumSnapshotRequest> request = buildDatumSnapshotRequest(datumSnapshotRequest);
+        try {
+            sendRequest(request);
+        } catch (RequestException e) {
+            doRetryAsync("DatumSnapshot", request, e,
+                sessionServerConfig.getDatumSnapshotTaskRetryTimes(),
+                sessionServerConfig.getDatumSnapshotTaskRetryFirstDelay(),
+                sessionServerConfig.getDatumSnapshotTaskRetryIncrementDelay());
+        }
+
+    }
+
+    private Request<DatumSnapshotRequest> buildDatumSnapshotRequest(DatumSnapshotRequest datumSnapshotRequest) {
+        return new Request<DatumSnapshotRequest>() {
+            private AtomicInteger retryTimes = new AtomicInteger();
+
+            @Override
+            public DatumSnapshotRequest getRequestBody() {
+                return datumSnapshotRequest;
+            }
+
+            @Override
+            public URL getRequestUrl() {
+                return new URL(datumSnapshotRequest.getDataServerIp(),
+                    sessionServerConfig.getDataServerPort());
+            }
+
+            @Override
+            public AtomicInteger getRetryTimes() {
+                return retryTimes;
+            }
+        };
+    }
+
+    private void sendRequest(Request request) throws RequestException {
+        Response response = dataNodeExchanger.request(request);
+        Object result = response.getResult();
+        CommonResponse commonResponse = (CommonResponse) result;
+        if (!commonResponse.isSuccess()) {
+            throw new RuntimeException(String.format(
+                "response not success, failed! target url: %s, message: %s",
+                request.getRequestUrl(), commonResponse.getMessage()));
+        }
+    }
+
+    private void doRetryAsync(String bizName, Request request, Exception e, int maxRetryTimes, long firstDelay,
+                              long incrementDelay) {
+        int retryTimes = request.getRetryTimes().incrementAndGet();
+        if (retryTimes <= maxRetryTimes) {
+            LOGGER.warn("{} failed, will retry again, retryTimes: {}, msg: {}", bizName, retryTimes, e.getMessage());
+            asyncHashedWheelTimer.newTimeout(timeout -> {
+                try {
+                    sendRequest(request);
+                } catch (RequestException ex) {
+                    doRetryAsync(bizName, request, ex, maxRetryTimes, firstDelay, incrementDelay);
+                }
+            }, getDelayTime(retryTimes, firstDelay, incrementDelay), TimeUnit.MILLISECONDS);
+        } else {
+            LOGGER.error(String.format(
+                    "%s failed, retryTimes have exceeded! stop retry! retryTimes: %s, url: %s, request: %s, msg: %s",
+                    bizName, (retryTimes - 1), request.getRequestUrl(), request.getRequestBody(), e.getMessage()), e);
+        }
+    }
+
+    private long getDelayTime(int retry, long firstDelay, long incrementDelay) {
+        long initialSleepTime = TimeUnit.MILLISECONDS.toMillis(firstDelay);
+        long increment = TimeUnit.MILLISECONDS.toMillis(incrementDelay);
+        long result = initialSleepTime + (increment * (retry - 1));
+        return result >= 0L ? result : 0L;
+    }
+
+    private URL getUrl(String dataInfoId) {
+        Node dataNode = dataNodeManager.getNode(dataInfoId);
+        //meta push data node has not port
+        String dataIp = dataNode.getNodeUrl().getIpAddress();
+        return new URL(dataIp, sessionServerConfig.getDataServerPort());
     }
 
 }

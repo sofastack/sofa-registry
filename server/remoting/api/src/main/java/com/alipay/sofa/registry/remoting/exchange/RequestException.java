@@ -77,14 +77,14 @@ public class RequestException extends Exception {
      * get requestInfo from Request
      * @return
      */
-    public String getRequestMessage() {
+    @Override
+    public String getMessage() {
         StringBuilder sb = new StringBuilder();
         if (request != null) {
-            sb.append("Request url:").append(request.getRequestUrl()).append(" body:")
-                .append(request.getRequestBody());
-        } else {
-            sb.append("Request data can not be null!");
+            sb.append("request url: ").append(request.getRequestUrl()).append(", body: ")
+                .append(request.getRequestBody()).append(", ");
         }
+        sb.append("message: ").append(super.getMessage());
         return sb.toString();
     }
 }

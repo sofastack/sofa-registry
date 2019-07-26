@@ -16,11 +16,12 @@
  */
 package com.alipay.sofa.registry.metrics;
 
+import java.util.concurrent.TimeUnit;
+
 import com.alipay.sofa.registry.log.Logger;
+import com.alipay.sofa.registry.log.LoggerFactory;
 import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.Slf4jReporter;
-
-import java.util.concurrent.TimeUnit;
 
 /**
  *
@@ -28,6 +29,8 @@ import java.util.concurrent.TimeUnit;
  * @version $Id: ReporterUtils.java, v 0.1 2018-08-23 13:25 shangyu.wh Exp $
  */
 public class ReporterUtils {
+
+    private static final Logger METRIC_LOGGER = LoggerFactory.getLogger("REGISTRY-METRICS");
 
     /**
      * start slf4j reporter
@@ -45,5 +48,14 @@ public class ReporterUtils {
             reporter.start(30, TimeUnit.SECONDS);
         }
 
+    }
+
+    /**
+     * start slf4j reporter
+     * @param period
+     * @param registry
+     */
+    public static void startSlf4jReporter(long period, MetricRegistry registry) {
+        startSlf4jReporter(period, registry, METRIC_LOGGER);
     }
 }

@@ -30,23 +30,28 @@ import com.alipay.sofa.registry.remoting.RemotingException;
  */
 public abstract class AbstractServerHandler<T> implements ChannelHandler<T> {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(AbstractServerHandler.class);
+    private static final Logger LOGGER          = LoggerFactory
+                                                    .getLogger(AbstractServerHandler.class);
+
+    private static final Logger LOGGER_CONNECT  = LoggerFactory.getLogger("DATA-CONNECT");
+
+    private static final Logger LOGGER_EXCHANGE = LoggerFactory.getLogger("DATA-EXCHANGE");
 
     @Override
     public void connected(Channel channel) throws RemotingException {
         if (channel != null && channel.isConnected()) {
-            LOGGER
-                .info(getConnectNodeType() + " node connected,remote address:"
-                      + channel.getRemoteAddress() + " localAddress:" + channel.getLocalAddress());
+            LOGGER_CONNECT.info(getConnectNodeType() + " node connected,remote address:"
+                                + channel.getRemoteAddress() + " localAddress:"
+                                + channel.getLocalAddress());
         }
     }
 
     @Override
     public void disconnected(Channel channel) throws RemotingException {
         if (channel != null && !channel.isConnected()) {
-            LOGGER
-                .info(getConnectNodeType() + " node disconnected,remote address:"
-                      + channel.getRemoteAddress() + " localAddress:" + channel.getLocalAddress());
+            LOGGER_CONNECT.info(getConnectNodeType() + " node disconnected,remote address:"
+                                + channel.getRemoteAddress() + " localAddress:"
+                                + channel.getLocalAddress());
         }
     }
 
@@ -112,7 +117,6 @@ public abstract class AbstractServerHandler<T> implements ChannelHandler<T> {
      * @param request
      */
     protected void logRequest(Channel channel, T request) {
-        log(request.toString());
         if (channel != null) {
             log(new StringBuilder("Remote:").append(channel.getRemoteAddress()).append(" Request:")
                 .append(request).toString());
@@ -127,7 +131,7 @@ public abstract class AbstractServerHandler<T> implements ChannelHandler<T> {
      * @param log
      */
     protected void log(String log) {
-        LOGGER.info(new StringBuilder("[").append(getClassName()).append("] ").append(log)
+        LOGGER_EXCHANGE.info(new StringBuilder("[").append(getClassName()).append("] ").append(log)
             .toString());
     }
 

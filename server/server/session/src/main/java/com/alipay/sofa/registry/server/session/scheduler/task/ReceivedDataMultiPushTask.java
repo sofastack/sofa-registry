@@ -16,9 +16,17 @@
  */
 package com.alipay.sofa.registry.server.session.scheduler.task;
 
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.concurrent.TimeUnit;
+
 import com.alipay.sofa.registry.common.model.PushDataRetryRequest;
 import com.alipay.sofa.registry.common.model.store.Subscriber;
+import com.alipay.sofa.registry.common.model.store.DataInfo;
 import com.alipay.sofa.registry.common.model.store.URL;
+import com.alipay.sofa.registry.core.model.DataBox;
 import com.alipay.sofa.registry.core.model.ReceivedData;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
@@ -35,11 +43,7 @@ import com.alipay.sofa.registry.task.TaskClosure;
 import com.alipay.sofa.registry.task.batcher.TaskProcessor.ProcessingResult;
 import com.alipay.sofa.registry.task.listener.TaskEvent;
 import com.alipay.sofa.registry.timer.AsyncHashedWheelTimer;
-
-import java.util.Collection;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.concurrent.TimeUnit;
+import com.alipay.sofa.registry.server.session.store.Interests;
 
 /**
  *
@@ -61,19 +65,24 @@ public class ReceivedDataMultiPushTask extends AbstractSessionTask implements Ta
     private Collection<Subscriber>            subscribers;
     private ReceivedDataMultiPushTaskStrategy receivedDataMultiPushTaskStrategy;
     private AsyncHashedWheelTimer             asyncHashedWheelTimer;
+    private Interests                         sessionInterests;
+
+    private String                            dataPush;
 
     public ReceivedDataMultiPushTask(SessionServerConfig sessionServerConfig,
                                      ClientNodeService clientNodeService,
                                      ExecutorManager executorManager,
                                      Exchange boltExchange,
                                      ReceivedDataMultiPushTaskStrategy receivedDataMultiPushTaskStrategy,
-                                     AsyncHashedWheelTimer asyncHashedWheelTimer) {
+                                     AsyncHashedWheelTimer asyncHashedWheelTimer,
+                                     Interests sessionInterests) {
         this.sessionServerConfig = sessionServerConfig;
         this.clientNodeService = clientNodeService;
         this.executorManager = executorManager;
         this.boltExchange = boltExchange;
         this.receivedDataMultiPushTaskStrategy = receivedDataMultiPushTaskStrategy;
         this.asyncHashedWheelTimer = asyncHashedWheelTimer;
+        this.sessionInterests = sessionInterests;
     }
 
     @Override
@@ -94,10 +103,11 @@ public class ReceivedDataMultiPushTask extends AbstractSessionTask implements Ta
         CallbackHandler callbackHandler = new CallbackHandler() {
             @Override
             public void onCallback(Channel channel, Object message) {
-                LOGGER.info(
-                    "Push ReceivedData success! dataId:{},group:{},Instance:{},version:{},url: {}",
-                    receivedData.getDataId(), receivedData.getGroup(),
-                    receivedData.getInstanceId(), receivedData.getVersion(), url);
+                LOGGER
+                    .info(
+                        "Push ReceivedData success! dataId:{},group:{},Instance:{},version:{},url: {},dataPush:{}",
+                        receivedData.getDataId(), receivedData.getGroup(),
+                        receivedData.getInstanceId(), receivedData.getVersion(), url, dataPush);
 
                 if (taskClosure != null) {
                     confirmCallBack(true);
@@ -106,10 +116,12 @@ public class ReceivedDataMultiPushTask extends AbstractSessionTask implements Ta
 
             @Override
             public void onException(Channel channel, Throwable exception) {
-                LOGGER.error(
-                    "Push ReceivedData error! dataId:{},group:{},Instance:{},version:{},url: {}",
-                    receivedData.getDataId(), receivedData.getGroup(),
-                    receivedData.getInstanceId(), receivedData.getVersion(), url, exception);
+                LOGGER
+                    .error(
+                        "Push ReceivedData error! dataId:{},group:{},Instance:{},version:{},url: {},dataPush:{}",
+                        receivedData.getDataId(), receivedData.getGroup(),
+                        receivedData.getInstanceId(), receivedData.getVersion(), url, dataPush,
+                        exception);
 
                 if (taskClosure != null) {
                     confirmCallBack(false);
@@ -149,36 +161,57 @@ public class ReceivedDataMultiPushTask extends AbstractSessionTask implements Ta
 
                 if (channel != null && channel.isConnected()) {
 
-                    asyncHashedWheelTimer.newTimeout(timeout ->  {
+                    asyncHashedWheelTimer.newTimeout(timeout -> {
                         try {
                             clientNodeService.pushWithCallback(infoPackage, targetUrl, new CallbackHandler() {
                                 @Override
                                 public void onCallback(Channel channel, Object message) {
-                                    LOGGER.info("Retry Push ReceivedData success! dataId:{}, group:{},url:{},retryTimes:{}",
-                                            receivedData.getDataId(), receivedData.getGroup(), targetUrl,retryTimes);
+                                    LOGGER.info(
+                                            "Retry Push ReceivedData success! dataId:{}, group:{},url:{},taskId:{},dataPush:{},retryTimes:{}",
+                                            receivedData.getDataId(), receivedData.getGroup(), targetUrl, getTaskId(),
+                                            dataPush, retryTimes);
                                 }
 
                                 @Override
                                 public void onException(Channel channel, Throwable exception) {
-                                    LOGGER.error("Retry Push ReceivedData callback error! url:{}, dataId:{}, group:{},taskId:{},retryTimes:{}", targetUrl,
-                                            receivedData.getDataId(), receivedData.getGroup(),getTaskId(),retryTimes);
+                                    LOGGER.error(
+                                            "Retry Push ReceivedData callback error! url:{}, dataId:{}, group:{},taskId:{},dataPush:{},retryTimes:{}",
+                                            targetUrl, receivedData.getDataId(), receivedData.getGroup(), getTaskId(),
+                                            dataPush, retryTimes);
                                     retrySendReceiveData(pushDataRetryRequest);
                                 }
                             });
 
                         } catch (Exception e) {
-                            LOGGER.error("Retry Push ReceivedData error! url:{}, dataId:{}, group:{},taskId:{},retryTimes:{}", targetUrl,
-                                    receivedData.getDataId(), receivedData.getGroup(),getTaskId(),retryTimes);
+                            LOGGER.error(
+                                    "Retry Push ReceivedData error! url:{}, dataId:{}, group:{},taskId:{},dataPush:{},retryTimes:{}",
+                                    targetUrl, receivedData.getDataId(), receivedData.getGroup(), getTaskId(), dataPush,
+                                    retryTimes);
                             retrySendReceiveData(pushDataRetryRequest);
                         }
                     },getBlockTime(retryTimes),TimeUnit.MILLISECONDS);
                 } else {
-                    LOGGER.error("Retry Push ReceivedData error, connect be null or disconnected,stop retry!dataId:{}, group:{},url:{},taskId:{},retryTimes:{}",
-                            receivedData.getDataId(), receivedData.getGroup(), targetUrl,getTaskId(),retryTimes);
+                    LOGGER.error(
+                            "Retry Push ReceivedData error, connect be null or disconnected,stop retry!dataId:{}, group:{},url:{},taskId:{},dataPush:{},retryTimes:{}",
+                            receivedData.getDataId(), receivedData.getGroup(), targetUrl, getTaskId(), dataPush,
+                            retryTimes);
                 }
             } else {
-                LOGGER.error("Retry Push ReceivedData times have exceeded!dataId:{}, group:{},url:{},taskId:{},retryTimes:{}",
-                        receivedData.getDataId(), receivedData.getGroup(), targetUrl,getTaskId(),retryTimes);
+                //set sessionInterests dataInfoId version zero
+                DataInfo dataInfo = new DataInfo(receivedData.getInstanceId(), receivedData.getDataId(),
+                        receivedData.getGroup());
+                boolean result = sessionInterests.checkAndUpdateInterestVersionZero(receivedData.getSegment(), dataInfo.getDataInfoId());
+                if (result) {
+                    LOGGER.warn("Retry Push ReceivedData times have exceeded,set sessionInterests dataInfoId version zero! url:{},taskId:{},dataPush:{},retryTimes:{},dataCenter:{},dataInfoId:{}!",
+                            targetUrl,getTaskId(),dataPush,retryTimes,
+                            receivedData.getSegment(),
+                            dataInfo.getDataInfoId());
+                } else {
+                    LOGGER.warn("Retry Push ReceivedData times have exceeded,but set sessionInterests dataInfoId version zero fail!url:{},taskId:{},dataPush:{},retryTimes:{},dataCenter:{},dataInfoId:{}!",
+                            targetUrl,getTaskId(),dataPush,retryTimes,
+                            receivedData.getSegment(),
+                            dataInfo.getDataInfoId());
+                }
             }
         }
     }
@@ -191,6 +224,11 @@ public class ReceivedDataMultiPushTask extends AbstractSessionTask implements Ta
 
     @Override
     public void setTaskEvent(TaskEvent taskEvent) {
+        //taskId create from event
+        if (taskEvent.getTaskId() != null) {
+            setTaskId(taskEvent.getTaskId());
+        }
+
         Object obj = taskEvent.getEventObj();
 
         if (obj instanceof Map) {
@@ -210,11 +248,23 @@ public class ReceivedDataMultiPushTask extends AbstractSessionTask implements Ta
             }
         }
 
-        taskClosure = taskEvent.getTaskClosure();
+        if (receivedData != null && receivedData.getData() != null) {
+            StringBuilder sb = new StringBuilder();
+            sb.append("[");
+            Map<String, List<DataBox>> map = receivedData.getData();
+            if (!map.isEmpty()) {
 
-        if (taskClosure instanceof PushTaskClosure) {
-            ((PushTaskClosure) taskClosure).addTask(this);
+                for (Map.Entry<String, List<DataBox>> entry1 : map.entrySet()) {
+                    sb.append(entry1.getKey()).append("=");
+                    int size = entry1.getValue() != null ? entry1.getValue().size() : 0;
+                    sb.append(size).append(",");
+                }
+            }
+            sb.append("]");
+            dataPush = sb.toString();
         }
+
+        taskClosure = taskEvent.getTaskClosure();
 
         subscribers = (Collection<Subscriber>) taskEvent
             .getAttribute(Constant.PUSH_CLIENT_SUBSCRIBERS);

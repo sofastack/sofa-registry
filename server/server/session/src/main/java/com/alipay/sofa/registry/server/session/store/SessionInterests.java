@@ -180,6 +180,16 @@ public class SessionInterests implements Interests, ReSubscribers {
         return connectIndex.get(connectId);
     }
 
+    public Subscriber queryById(String registerId, String dataInfoId) {
+
+        Map<String, Subscriber> subscribers = interests.get(dataInfoId);
+
+        if (subscribers == null) {
+            return null;
+        }
+        return subscribers.get(registerId);
+    }
+
     @Override
     public Collection<Subscriber> getInterests(String dataInfoId) {
         Map<String, Subscriber> subscribers = interests.get(dataInfoId);
@@ -240,11 +250,18 @@ public class SessionInterests implements Interests, ReSubscribers {
                     dataInfoVersions = newDataInfoVersions;
                 }
             }
-
+            //set zero
+            if (version.longValue() == 0l) {
+                return dataInfoVersions.put(dataInfoId, version) != null;
+            }
             return VersionsMapUtils.checkAndUpdateVersions(dataInfoVersions, dataInfoId, version);
         } finally {
             read.unlock();
         }
+    }
+
+    public boolean checkAndUpdateInterestVersionZero(String dataCenter, String dataInfoId) {
+        return checkAndUpdateInterestVersions(dataCenter, dataInfoId, 0l);
     }
 
     @Override
@@ -416,6 +433,11 @@ public class SessionInterests implements Interests, ReSubscribers {
     @Override
     public void clearReSubscribers() {
         stopPushInterests.clear();
+    }
+
+    @Override
+    public Map<String, Map<String, Subscriber>> getConnectSubscribers() {
+        return connectIndex;
     }
 
     public SessionServerConfig getSessionServerConfig() {

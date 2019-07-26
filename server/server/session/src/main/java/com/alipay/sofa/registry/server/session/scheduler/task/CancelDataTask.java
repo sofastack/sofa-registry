@@ -16,15 +16,14 @@
  */
 package com.alipay.sofa.registry.server.session.scheduler.task;
 
+import java.util.List;
+
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
 import com.alipay.sofa.registry.server.session.node.service.DataNodeService;
 import com.alipay.sofa.registry.server.session.store.DataStore;
 import com.alipay.sofa.registry.server.session.store.Interests;
 import com.alipay.sofa.registry.server.session.store.Watchers;
 import com.alipay.sofa.registry.task.listener.TaskEvent;
-
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  *
@@ -61,31 +60,23 @@ public class CancelDataTask extends AbstractSessionTask {
 
     @Override
     public void execute() {
-        if (connectIds.isEmpty()) {
-            throw new IllegalArgumentException("Input clientOff connectIds error!");
-        }
-
-        //remove local first,data node send error depend on other task check
-        List<String> connectIdsPub = new ArrayList<>();
-        for (String connectId : connectIds) {
-
-            if (sessionDataStore.deleteByConnectId(connectId)) {
-                connectIdsPub.add(connectId);
-            }
-            sessionInterests.deleteByConnectId(connectId);
-
-            sessionWatchers.deleteByConnectId(connectId);
-        }
-
-        dataNodeService.clientOff(connectIdsPub);
+        dataNodeService.clientOff(connectIds);
     }
 
     @Override
     public void setTaskEvent(TaskEvent taskEvent) {
-        Object obj = taskEvent.getEventObj();
 
+        //taskId create from event
+        if (taskEvent.getTaskId() != null) {
+            setTaskId(taskEvent.getTaskId());
+        }
+
+        Object obj = taskEvent.getEventObj();
         if (obj instanceof List) {
             this.connectIds = (List<String>) obj;
+            if (connectIds.isEmpty()) {
+                throw new IllegalArgumentException("Input clientOff connectIds error!");
+            }
         } else {
             throw new IllegalArgumentException("Input task event object error!");
         }

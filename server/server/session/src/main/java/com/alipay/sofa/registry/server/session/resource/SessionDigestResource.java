@@ -16,17 +16,14 @@
  */
 package com.alipay.sofa.registry.server.session.resource;
 
-import com.alipay.sofa.registry.common.model.store.Publisher;
-import com.alipay.sofa.registry.common.model.store.StoreData;
-import com.alipay.sofa.registry.common.model.store.Subscriber;
-import com.alipay.sofa.registry.common.model.store.Watcher;
-import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
-import com.alipay.sofa.registry.server.session.store.DataStore;
-import com.alipay.sofa.registry.server.session.store.Interests;
-import com.alipay.sofa.registry.server.session.store.Watchers;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.util.CollectionUtils;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
 
+import javax.annotation.PostConstruct;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
@@ -34,12 +31,26 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.util.CollectionUtils;
+
+import com.alipay.sofa.registry.common.model.Node;
+import com.alipay.sofa.registry.common.model.Node.NodeType;
+import com.alipay.sofa.registry.common.model.store.Publisher;
+import com.alipay.sofa.registry.common.model.store.StoreData;
+import com.alipay.sofa.registry.common.model.store.Subscriber;
+import com.alipay.sofa.registry.common.model.store.Watcher;
+import com.alipay.sofa.registry.metrics.ReporterUtils;
+import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
+import com.alipay.sofa.registry.server.session.node.NodeManager;
+import com.alipay.sofa.registry.server.session.node.NodeManagerFactory;
+import com.alipay.sofa.registry.server.session.node.SessionNodeManager;
+import com.alipay.sofa.registry.server.session.store.DataStore;
+import com.alipay.sofa.registry.server.session.store.Interests;
+import com.alipay.sofa.registry.server.session.store.Watchers;
+import com.codahale.metrics.Gauge;
+import com.codahale.metrics.MetricRegistry;
 
 /**
  *
@@ -70,11 +81,24 @@ public class SessionDigestResource {
     @Autowired
     private SessionServerConfig sessionServerConfig;
 
-    private final static String SUB = "SUB";
+    private final static String SUB     = "SUB";
 
-    private final static String PUB = "PUB";
+    private final static String PUB     = "PUB";
 
-    private final static String WAT = "WAT";
+    private final static String WAT     = "WAT";
+
+    private final static String SESSION = "SESSION";
+
+    private final static String DATA    = "DATA";
+
+    private final static String META    = "META";
+
+    @PostConstruct
+    public void init() {
+        MetricRegistry metrics = new MetricRegistry();
+        metrics.register("pushSwitch", (Gauge<Map>) () -> getPushSwitch());
+        ReporterUtils.startSlf4jReporter(60, metrics);
+    }
 
     @GET
     @Path("{type}/data/query")
@@ -207,5 +231,79 @@ public class SessionDigestResource {
                 serverList.put(WAT, watchers);
             }
         }
+    }
+
+    @GET
+    @Path("{type}/serverList/query")
+    @Produces(MediaType.APPLICATION_JSON)
+    public List<String> getServerListAll(@PathParam("type") String type) {
+        List<String> serverList = new ArrayList<>();
+        if (type != null && !type.isEmpty()) {
+            String inputType = type.toUpperCase();
+
+            switch (inputType) {
+                case SESSION:
+                    serverList = getSessionServerList();
+                    break;
+                case DATA:
+                    serverList = getDataServerList();
+                    break;
+                case META:
+                    serverList = getMetaServerList();
+                    break;
+                default:
+                    serverList = new ArrayList<>();
+                    break;
+            }
+
+        }
+        return serverList;
+    }
+
+    public List<String> getSessionServerList() {
+
+        List<String> serverList = new ArrayList<>();
+        NodeManager nodeManager = NodeManagerFactory.getNodeManager(NodeType.SESSION);
+
+        if (nodeManager instanceof SessionNodeManager) {
+            SessionNodeManager sessionNodeManager = (SessionNodeManager) nodeManager;
+            serverList = sessionNodeManager.getZoneServerList(sessionServerConfig
+                .getSessionServerRegion());
+        }
+        return serverList;
+    }
+
+    public List<String> getDataServerList() {
+        List<String> serverList = new ArrayList<>();
+        NodeManager dataNodeManager = NodeManagerFactory.getNodeManager(NodeType.DATA);
+
+        Collection<Node> dataNodes = dataNodeManager.getDataCenterNodes();
+
+        if (!CollectionUtils.isEmpty(dataNodes)) {
+            for (Node dataNode : dataNodes) {
+                if (dataNode.getNodeUrl() == null || dataNode.getNodeUrl().getIpAddress() == null) {
+                    continue;
+                }
+                serverList.add(dataNode.getNodeUrl().getIpAddress());
+            }
+        }
+        return serverList;
+    }
+
+    public List<String> getMetaServerList() {
+        List<String> serverList = new ArrayList<>();
+        NodeManager metaNodeManager = NodeManagerFactory.getNodeManager(NodeType.META);
+
+        Collection<Node> metaNodes = metaNodeManager.getDataCenterNodes();
+
+        if (!CollectionUtils.isEmpty(metaNodes)) {
+            for (Node metaNode : metaNodes) {
+                if (metaNode.getNodeUrl() == null || metaNode.getNodeUrl().getIpAddress() == null) {
+                    continue;
+                }
+                serverList.add(metaNode.getNodeUrl().getIpAddress());
+            }
+        }
+        return serverList;
     }
 }

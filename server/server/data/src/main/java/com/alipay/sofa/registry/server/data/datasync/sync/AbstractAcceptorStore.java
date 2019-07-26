@@ -16,6 +16,13 @@
  */
 package com.alipay.sofa.registry.server.data.datasync.sync;
 
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.DelayQueue;
+
+import org.springframework.beans.factory.annotation.Autowired;
+
 import com.alipay.remoting.Connection;
 import com.alipay.sofa.registry.common.model.dataserver.Datum;
 import com.alipay.sofa.registry.common.model.dataserver.NotifyDataSyncRequest;
@@ -26,17 +33,14 @@ import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.remoting.Server;
 import com.alipay.sofa.registry.remoting.exchange.Exchange;
 import com.alipay.sofa.registry.server.data.bootstrap.DataServerConfig;
+import com.alipay.sofa.registry.server.data.cache.DatumCache;
 import com.alipay.sofa.registry.server.data.datasync.AcceptorStore;
 import com.alipay.sofa.registry.server.data.datasync.Operator;
+import com.alipay.sofa.registry.server.data.datasync.SnapshotOperator;
 import com.alipay.sofa.registry.server.data.remoting.dataserver.DataServerConnectionFactory;
 import com.alipay.sofa.registry.server.data.remoting.metaserver.IMetaServerService;
 import com.alipay.sofa.registry.server.data.util.DelayItem;
-import org.springframework.beans.factory.annotation.Autowired;
-
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.DelayQueue;
+import com.alipay.sofa.registry.server.data.util.TimeUtil;
 
 /**
  *
@@ -60,10 +64,13 @@ public abstract class AbstractAcceptorStore implements AcceptorStore {
     private Exchange                                                         boltExchange;
 
     @Autowired
-    private DataServerConfig                                                 dataServerBootstrapConfig;
+    private DataServerConfig                                                 dataServerConfig;
 
     @Autowired
     private DataServerConnectionFactory                                      dataServerConnectionFactory;
+
+    @Autowired
+    private DatumCache                                                       datumCache;
 
     private Map<String/*dataCenter*/, Map<String/*dataInfoId*/, Acceptor>> acceptors               = new ConcurrentHashMap<>();
 
@@ -104,13 +111,21 @@ public abstract class AbstractAcceptorStore implements AcceptorStore {
 
             Acceptor existAcceptor = acceptorMap.get(dataInfoId);
             if (existAcceptor == null) {
-                Acceptor newAcceptor = new Acceptor(DEFAULT_MAX_BUFFER_SIZE, dataInfoId, dataCenter);
+                Acceptor newAcceptor = new Acceptor(DEFAULT_MAX_BUFFER_SIZE, dataInfoId,
+                    dataCenter, datumCache);
                 existAcceptor = acceptorMap.putIfAbsent(dataInfoId, newAcceptor);
                 if (existAcceptor == null) {
                     existAcceptor = newAcceptor;
                 }
             }
-            existAcceptor.appendOperator(operator);
+
+            if (operator instanceof SnapshotOperator) {
+                //snapshot: clear the queue, Make other data retrieve the latest memory data
+                existAcceptor.clearBefore();
+            } else {
+                existAcceptor.appendOperator(operator);
+            }
+
             //put cache
             putCache(existAcceptor);
         } catch (Exception e) {
@@ -191,25 +206,31 @@ public abstract class AbstractAcceptorStore implements AcceptorStore {
                 continue;
             }
 
-            Connection connection = dataServerConnectionFactory.getConnection(targetDataIp);
-            if (connection == null) {
-                LOGGER.error(getLogByClass(String.format(
-                    "Can not get notify data server connection!ip: %s", targetDataIp)));
-                continue;
-            }
-            LOGGER.info(getLogByClass("Notify data server {} change data {} to sync"),
-                connection.getRemoteIP(), request);
+            Server syncServer = boltExchange.getServer(dataServerConfig.getSyncDataPort());
+
             for (int tryCount = 0; tryCount < NOTIFY_RETRY; tryCount++) {
                 try {
-                    Server syncServer = boltExchange.getServer(dataServerBootstrapConfig
-                        .getSyncDataPort());
+
+                    Connection connection = dataServerConnectionFactory.getConnection(targetDataIp);
+                    if (connection == null) {
+                        LOGGER.error(getLogByClass(String.format(
+                            "Can not get notify data server connection!ip: %s,retry=%s",
+                            targetDataIp, tryCount)));
+                        TimeUtil.randomDelay(1000);
+                        continue;
+                    }
+                    LOGGER.info(
+                        getLogByClass("Notify data server {} change data {} to sync,retry={}"),
+                        connection.getRemoteIP(), request, tryCount);
+
                     syncServer.sendSync(syncServer.getChannel(connection.getRemoteAddress()),
                         request, 1000);
                     break;
                 } catch (Exception e) {
                     LOGGER.error(getLogByClass(String.format(
-                        "Notify data server %s failed, NotifyDataSyncRequest:%s", targetDataIp,
-                        request)), e);
+                        "Notify data server %s failed, NotifyDataSyncRequest:%s,retry=%s",
+                        targetDataIp, request, tryCount)), e);
+                    TimeUtil.randomDelay(1000);
                 }
             }
         }
@@ -227,6 +248,8 @@ public abstract class AbstractAcceptorStore implements AcceptorStore {
                 removeCache(acceptor); // compare and remove
             } catch (InterruptedException e) {
                 break;
+            } catch (Throwable e) {
+                LOGGER.error(e.getMessage(), e);
             }
         }
 
@@ -263,11 +286,11 @@ public abstract class AbstractAcceptorStore implements AcceptorStore {
     }
 
     /**
-     * Getter method for property <tt>dataServerBootstrapConfig</tt>.
+     * Getter method for property <tt>dataServerConfig</tt>.
      *
-     * @return property value of dataServerBootstrapConfig
+     * @return property value of dataServerConfig
      */
     public DataServerConfig getDataServerConfig() {
-        return dataServerBootstrapConfig;
+        return dataServerConfig;
     }
 }

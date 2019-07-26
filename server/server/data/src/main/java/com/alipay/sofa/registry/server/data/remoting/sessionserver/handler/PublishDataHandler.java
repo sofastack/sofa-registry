@@ -16,6 +16,13 @@
  */
 package com.alipay.sofa.registry.server.data.remoting.sessionserver.handler;
 
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.Executor;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
+
+import org.springframework.beans.factory.annotation.Autowired;
+
 import com.alipay.sofa.registry.common.model.CommonResponse;
 import com.alipay.sofa.registry.common.model.Node;
 import com.alipay.sofa.registry.common.model.PublishType;
@@ -29,15 +36,10 @@ import com.alipay.sofa.registry.server.data.change.event.DataChangeEventCenter;
 import com.alipay.sofa.registry.server.data.remoting.handler.AbstractServerHandler;
 import com.alipay.sofa.registry.server.data.remoting.sessionserver.SessionServerConnectionFactory;
 import com.alipay.sofa.registry.server.data.remoting.sessionserver.forward.ForwardService;
+import com.alipay.sofa.registry.server.data.renew.DatumLeaseManager;
 import com.alipay.sofa.registry.server.data.util.ThreadPoolExecutorDataServer;
 import com.alipay.sofa.registry.util.NamedThreadFactory;
 import com.alipay.sofa.registry.util.ParaCheckUtil;
-import org.springframework.beans.factory.annotation.Autowired;
-
-import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.Executor;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
 
 /**
  * processor to publish data
@@ -62,6 +64,9 @@ public class PublishDataHandler extends AbstractServerHandler<PublishDataRequest
 
     @Autowired
     private DataServerConfig               dataServerConfig;
+
+    @Autowired
+    private DatumLeaseManager              datumLeaseManager;
 
     private ThreadPoolExecutor             publishExecutor;
 
@@ -94,7 +99,7 @@ public class PublishDataHandler extends AbstractServerHandler<PublishDataRequest
     @Override
     public Object doHandle(Channel channel, PublishDataRequest request) {
         Publisher publisher = Publisher.processPublisher(request.getPublisher());
-        if (forwardService.needForward(publisher.getDataInfoId())) {
+        if (forwardService.needForward()) {
             LOGGER.warn("[forward] Publish request refused, request: {}", request);
             CommonResponse response = new CommonResponse();
             response.setSuccess(false);
@@ -103,9 +108,13 @@ public class PublishDataHandler extends AbstractServerHandler<PublishDataRequest
         }
 
         dataChangeEventCenter.onChange(publisher, dataServerConfig.getLocalDataCenter());
+
         if (publisher.getPublishType() != PublishType.TEMPORARY) {
-            sessionServerConnectionFactory.registerClient(request.getSessionServerProcessId(),
-                publisher.getSourceAddress().getAddressString());
+            String connectId = publisher.getSourceAddress().getAddressString();
+            sessionServerConnectionFactory.registerConnectId(request.getSessionServerProcessId(),
+                connectId);
+            // record the renew timestamp
+            datumLeaseManager.renew(connectId);
         }
 
         return CommonResponse.buildSuccessResponse();

@@ -16,14 +16,17 @@
  */
 package com.alipay.sofa.registry.server.data.bootstrap;
 
-import com.alipay.sofa.registry.net.NetUtil;
-import org.springframework.boot.context.properties.ConfigurationProperties;
-
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
+
+import org.apache.commons.lang.builder.ToStringBuilder;
+import org.apache.commons.lang.builder.ToStringStyle;
+import org.springframework.boot.context.properties.ConfigurationProperties;
+
+import com.alipay.sofa.registry.net.NetUtil;
 
 /**
  *
@@ -34,10 +37,11 @@ import java.util.stream.Collectors;
 @ConfigurationProperties(prefix = DataServerConfig.PRE_FIX)
 public class DataServerConfig {
 
-    public static final String PRE_FIX                             = "data.server";
+    public static final String PRE_FIX                                      = "data.server";
 
-    public static final String IP                                  = NetUtil.getLocalAddress()
-                                                                       .getHostAddress();
+    public static final String IP                                           = NetUtil
+                                                                                .getLocalAddress()
+                                                                                .getHostAddress();
 
     private int                port;
 
@@ -51,9 +55,9 @@ public class DataServerConfig {
 
     private int                queueSize;
 
-    private int                notifyIntervalMs;
+    private int                notifyIntervalMs                             = 500;
 
-    private int                clientOffDelayMs;
+    private int                clientOffDelayMs                             = 1000;
 
     private int                notifyTempDataIntervalMs;
 
@@ -61,41 +65,51 @@ public class DataServerConfig {
 
     private CommonConfig       commonConfig;
 
-    private Set<String>        metaIps                             = null;
+    private Set<String>        metaIps                                      = null;
 
-    private int                storeNodes                          = 3;
+    private int                storeNodes                                   = 3;
 
-    private int                numberOfReplicas                    = 1000;
+    private int                numberOfReplicas                             = 1000;
 
-    private long               localDataServerCleanDelay           = 1000 * 60 * 30;
+    private long               localDataServerCleanDelay                    = 1000 * 60 * 30;
 
-    private int                getDataExecutorMinPoolSize          = 80;
+    private int                getDataExecutorMinPoolSize                   = 80;
 
-    private int                getDataExecutorMaxPoolSize          = 400;
+    private int                getDataExecutorMaxPoolSize                   = 400;
 
-    private int                getDataExecutorQueueSize            = 10000;
+    private int                getDataExecutorQueueSize                     = 10000;
 
-    private long               getDataExecutorKeepAliveTime        = 60;
+    private long               getDataExecutorKeepAliveTime                 = 60;
 
-    private int                notifyDataSyncExecutorMinPoolSize   = 80;
+    private int                notifyDataSyncExecutorMinPoolSize            = 80;
 
-    private int                notifyDataSyncExecutorMaxPoolSize   = 400;
+    private int                notifyDataSyncExecutorMaxPoolSize            = 400;
 
-    private int                notifyDataSyncExecutorQueueSize     = 700;
+    private int                notifyDataSyncExecutorQueueSize              = 700;
 
-    private long               notifyDataSyncExecutorKeepAliveTime = 60;
+    private long               notifyDataSyncExecutorKeepAliveTime          = 60;
 
-    private long               notifySessionRetryFirstDelay        = 1000;
+    private long               notifySessionRetryFirstDelay                 = 1000;
 
-    private long               notifySessionRetryIncrementDelay    = 1000;
+    private long               notifySessionRetryIncrementDelay             = 1000;
 
-    private int                notifySessionRetryTimes             = 10;
+    private int                notifySessionRetryTimes                      = 10;
 
-    private int                publishExecutorMinPoolSize          = 80;
+    private int                publishExecutorMinPoolSize                   = 80;
 
-    private int                publishExecutorMaxPoolSize          = 400;
+    private int                publishExecutorMaxPoolSize                   = 400;
 
-    private int                publishExecutorQueueSize            = 10000;
+    private int                publishExecutorQueueSize                     = 10000;
+
+    private int                datumTimeToLiveSec                           = 300;
+
+    private int                datumLeaseManagerExecutorThreadSize          = 1;
+
+    private int                datumLeaseManagerExecutorQueueSize           = 1000000;
+
+    private int                sessionServerNotifierRetryExecutorThreadSize = 10;
+
+    private int                sessionServerNotifierRetryExecutorQueueSize  = 1000000;
 
     /**
      * constructor
@@ -618,5 +632,100 @@ public class DataServerConfig {
      */
     public void setNotifySessionRetryTimes(int notifySessionRetryTimes) {
         this.notifySessionRetryTimes = notifySessionRetryTimes;
+    }
+
+    /**
+     * Getter method for property <tt>datumTimeToLiveSec</tt>.
+     *
+     * @return property value of datumTimeToLiveSec
+     */
+    public int getDatumTimeToLiveSec() {
+        return datumTimeToLiveSec;
+    }
+
+    /**
+     * Setter method for property <tt>datumTimeToLiveSec </tt>.
+     *
+     * @param datumTimeToLiveSec  value to be assigned to property datumTimeToLiveSec
+     */
+    public void setDatumTimeToLiveSec(int datumTimeToLiveSec) {
+        this.datumTimeToLiveSec = datumTimeToLiveSec;
+    }
+
+    /**
+     * Getter method for property <tt>datumLeaseManagerExecutorQueueSize</tt>.
+     *
+     * @return property value of datumLeaseManagerExecutorQueueSize
+     */
+    public int getDatumLeaseManagerExecutorQueueSize() {
+        return datumLeaseManagerExecutorQueueSize;
+    }
+
+    /**
+     * Setter method for property <tt>datumLeaseManagerExecutorQueueSize </tt>.
+     *
+     * @param datumLeaseManagerExecutorQueueSize  value to be assigned to property datumLeaseManagerExecutorQueueSize
+     */
+    public void setDatumLeaseManagerExecutorQueueSize(int datumLeaseManagerExecutorQueueSize) {
+        this.datumLeaseManagerExecutorQueueSize = datumLeaseManagerExecutorQueueSize;
+    }
+
+    /**
+     * Getter method for property <tt>datumLeaseManagerExecutorThreadSize</tt>.
+     *
+     * @return property value of datumLeaseManagerExecutorThreadSize
+     */
+    public int getDatumLeaseManagerExecutorThreadSize() {
+        return datumLeaseManagerExecutorThreadSize;
+    }
+
+    /**
+     * Setter method for property <tt>datumLeaseManagerExecutorThreadSize </tt>.
+     *
+     * @param datumLeaseManagerExecutorThreadSize  value to be assigned to property datumLeaseManagerExecutorThreadSize
+     */
+    public void setDatumLeaseManagerExecutorThreadSize(int datumLeaseManagerExecutorThreadSize) {
+        this.datumLeaseManagerExecutorThreadSize = datumLeaseManagerExecutorThreadSize;
+    }
+
+    /**
+     * Getter method for property <tt>sessionServerNotifierRetryExecutorThreadSize</tt>.
+     *
+     * @return property value of sessionServerNotifierRetryExecutorThreadSize
+     */
+    public int getSessionServerNotifierRetryExecutorThreadSize() {
+        return sessionServerNotifierRetryExecutorThreadSize;
+    }
+
+    /**
+     * Setter method for property <tt>sessionServerNotifierRetryExecutorThreadSize </tt>.
+     *
+     * @param sessionServerNotifierRetryExecutorThreadSize  value to be assigned to property sessionServerNotifierRetryExecutorThreadSize
+     */
+    public void setSessionServerNotifierRetryExecutorThreadSize(int sessionServerNotifierRetryExecutorThreadSize) {
+        this.sessionServerNotifierRetryExecutorThreadSize = sessionServerNotifierRetryExecutorThreadSize;
+    }
+
+    /**
+     * Getter method for property <tt>sessionServerNotifierRetryExecutorQueueSize</tt>.
+     *
+     * @return property value of sessionServerNotifierRetryExecutorQueueSize
+     */
+    public int getSessionServerNotifierRetryExecutorQueueSize() {
+        return sessionServerNotifierRetryExecutorQueueSize;
+    }
+
+    /**
+     * Setter method for property <tt>sessionServerNotifierRetryExecutorQueueSize </tt>.
+     *
+     * @param sessionServerNotifierRetryExecutorQueueSize  value to be assigned to property sessionServerNotifierRetryExecutorQueueSize
+     */
+    public void setSessionServerNotifierRetryExecutorQueueSize(int sessionServerNotifierRetryExecutorQueueSize) {
+        this.sessionServerNotifierRetryExecutorQueueSize = sessionServerNotifierRetryExecutorQueueSize;
+    }
+
+    @Override
+    public String toString() {
+        return ToStringBuilder.reflectionToString(this, ToStringStyle.MULTI_LINE_STYLE);
     }
 }

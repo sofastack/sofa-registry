@@ -16,6 +16,10 @@
  */
 package com.alipay.sofa.registry.server.session.scheduler.task;
 
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Set;
+
 import com.alipay.sofa.registry.common.model.dataserver.SessionServerRegisterRequest;
 import com.alipay.sofa.registry.common.model.store.URL;
 import com.alipay.sofa.registry.log.Logger;
@@ -28,10 +32,6 @@ import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
 import com.alipay.sofa.registry.server.session.node.SessionProcessIdGenerator;
 import com.alipay.sofa.registry.server.session.node.service.DataNodeService;
 import com.alipay.sofa.registry.task.listener.TaskEvent;
-
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Set;
 
 /**
  *
@@ -64,6 +64,12 @@ public class SessionRegisterDataTask extends AbstractSessionTask {
 
     @Override
     public void setTaskEvent(TaskEvent taskEvent) {
+
+        //taskId create from event
+        if (taskEvent.getTaskId() != null) {
+            setTaskId(taskEvent.getTaskId());
+        }
+
         Object obj = taskEvent.getEventObj();
 
         if (obj instanceof URL) {
@@ -78,11 +84,11 @@ public class SessionRegisterDataTask extends AbstractSessionTask {
         if (sessionServer != null) {
 
             Collection<Channel> chs = sessionServer.getChannels();
-            Set<String> clientHosts = new HashSet<>();
-            chs.forEach(channel -> clientHosts.add(NetUtil.toAddressString(channel.getRemoteAddress())));
+            Set<String> connectIds = new HashSet<>();
+            chs.forEach(channel -> connectIds.add(NetUtil.toAddressString(channel.getRemoteAddress())));
 
             sessionServerRegisterRequest = new SessionServerRegisterRequest(
-                    SessionProcessIdGenerator.getSessionProcessId(), clientHosts);
+                    SessionProcessIdGenerator.getSessionProcessId(), connectIds);
         } else {
             LOGGER.error("get null session server,please check server started before register!port {}",
                     sessionServerConfig.getServerPort());
@@ -100,7 +106,7 @@ public class SessionRegisterDataTask extends AbstractSessionTask {
     public String toString() {
         return "SESSION_REGISTER_DATA_TASK{" + "taskId='" + taskId + '\''
                + ", sessionServerRegisterRequest=" + sessionServerRegisterRequest.getProcessId()
-               + ", clientList=" + sessionServerRegisterRequest.getClientHosts().size()
+               + ", clientList=" + sessionServerRegisterRequest.getConnectIds().size()
                + ", dataUrl=" + dataUrl + '}';
     }
 }
