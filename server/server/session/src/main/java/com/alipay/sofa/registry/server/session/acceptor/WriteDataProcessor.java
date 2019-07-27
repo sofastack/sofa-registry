@@ -106,8 +106,7 @@ public class WriteDataProcessor {
                 request.getRequestType(), request.getRequestBody());
         }
 
-        // record the last update time
-        // RefreshUpdateTime is at the top, otherwise multiple snapshot can be issued concurrently
+        // record the last update time by pub/unpub/clientoff
         if (isWriteRequest(request)) {
             refreshUpdateTime();
         }
@@ -147,7 +146,9 @@ public class WriteDataProcessor {
      * @return
      */
     private boolean isWriteRequest(WriteDataRequest request) {
-        return request.getRequestType() != WriteDataRequestType.RENEW_DATUM;
+        return request.getRequestType() == WriteDataRequestType.PUBLISHER
+               || request.getRequestType() == WriteDataRequestType.UN_PUBLISHER
+               || request.getRequestType() == WriteDataRequestType.CLIENT_OFF;
     }
 
     /**
@@ -188,14 +189,14 @@ public class WriteDataProcessor {
             }
                 break;
             case RENEW_DATUM: {
-                if (renewAndSnapshotInSilence()) {
+                if (renewAndSnapshotInSilenceAndRefreshUpdateTime()) {
                     return;
                 }
                 doRenewAsync(request);
             }
                 break;
             case DATUM_SNAPSHOT: {
-                if (renewAndSnapshotInSilence()) {
+                if (renewAndSnapshotInSilenceAndRefreshUpdateTime()) {
                     return;
                 }
                 halt();
@@ -281,9 +282,8 @@ public class WriteDataProcessor {
     /**
      * In silence, do not renew and snapshot
      */
-    private boolean renewAndSnapshotInSilence() {
-        boolean renewAndSnapshotInSilence = System.currentTimeMillis()
-                                            - this.lastUpdateTimestamp.get() < this.sessionServerConfig
+    private boolean renewAndSnapshotInSilenceAndRefreshUpdateTime() {
+        boolean renewAndSnapshotInSilence = System.currentTimeMillis() - refreshUpdateTime() < this.sessionServerConfig
             .getRenewAndSnapshotSilentPeriodSec() * 1000L;
         if (RENEW_LOGGER.isDebugEnabled()) {
             RENEW_LOGGER.debug(
@@ -293,10 +293,7 @@ public class WriteDataProcessor {
         return renewAndSnapshotInSilence;
     }
 
-    private void refreshUpdateTime() {
-        if (RENEW_LOGGER.isDebugEnabled()) {
-            RENEW_LOGGER.debug("refreshUpdateTime: connectId={}", connectId);
-        }
-        lastUpdateTimestamp.set(System.currentTimeMillis());
+    private long refreshUpdateTime() {
+        return lastUpdateTimestamp.getAndSet(System.currentTimeMillis());
     }
 }

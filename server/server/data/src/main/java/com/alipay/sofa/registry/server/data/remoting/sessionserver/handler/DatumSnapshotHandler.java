@@ -21,6 +21,8 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Executor;
+import java.util.concurrent.ThreadPoolExecutor;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -72,6 +74,14 @@ public class DatumSnapshotHandler extends AbstractServerHandler<DatumSnapshotReq
 
     @Autowired
     private DatumCache            datumCache;
+
+    @Autowired
+    private ThreadPoolExecutor    renewDatumProcessorExecutor;
+
+    @Override
+    public Executor getExecutor() {
+        return renewDatumProcessorExecutor;
+    }
 
     @Override
     public void checkParam(DatumSnapshotRequest request) throws RuntimeException {

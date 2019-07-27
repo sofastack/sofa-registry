@@ -17,6 +17,8 @@
 package com.alipay.sofa.registry.server.data.remoting.sessionserver.handler;
 
 import java.util.Map;
+import java.util.concurrent.Executor;
+import java.util.concurrent.ThreadPoolExecutor;
 
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -62,6 +64,14 @@ public class UnPublishDataHandler extends AbstractServerHandler<UnPublishDataReq
 
     @Autowired
     private DatumCache            datumCache;
+
+    @Autowired
+    private ThreadPoolExecutor    publishProcessorExecutor;
+
+    @Override
+    public Executor getExecutor() {
+        return publishProcessorExecutor;
+    }
 
     @Override
     public void checkParam(UnPublishDataRequest request) throws RuntimeException {

@@ -17,6 +17,8 @@
 package com.alipay.sofa.registry.server.data.remoting.sessionserver.handler;
 
 import java.util.Map;
+import java.util.concurrent.Executor;
+import java.util.concurrent.ThreadPoolExecutor;
 
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -41,7 +43,7 @@ import com.alipay.sofa.registry.util.ParaCheckUtil;
  * handling snapshot request
  *
  * @author kezhu.wukz
- * @version $Id: ClientOffProcessor.java, v 0.1 2019-05-30 15:48 kezhu.wukz Exp $
+ * @version $Id: RenewDatumHandler.java, v 0.1 2019-05-30 15:48 kezhu.wukz Exp $
  */
 public class RenewDatumHandler extends AbstractServerHandler<RenewDatumRequest> {
 
@@ -60,6 +62,14 @@ public class RenewDatumHandler extends AbstractServerHandler<RenewDatumRequest> 
 
     @Autowired
     private DatumCache          datumCache;
+
+    @Autowired
+    private ThreadPoolExecutor  renewDatumProcessorExecutor;
+
+    @Override
+    public Executor getExecutor() {
+        return renewDatumProcessorExecutor;
+    }
 
     @Override
     public void checkParam(RenewDatumRequest request) throws RuntimeException {

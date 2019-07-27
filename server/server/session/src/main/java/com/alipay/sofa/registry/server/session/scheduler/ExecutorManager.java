@@ -34,9 +34,7 @@ import com.alipay.sofa.registry.remoting.exchange.NodeExchanger;
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
 import com.alipay.sofa.registry.server.session.node.NodeManager;
 import com.alipay.sofa.registry.server.session.registry.Registry;
-import com.alipay.sofa.registry.task.scheduler.AsyncHashedWheelTimerTask;
 import com.alipay.sofa.registry.task.scheduler.TimedSupervisorTask;
-import com.alipay.sofa.registry.timer.AsyncHashedWheelTimer;
 import com.alipay.sofa.registry.util.NamedThreadFactory;
 
 /**
@@ -62,8 +60,6 @@ public class ExecutorManager {
     private final ThreadPoolExecutor        pushTaskExecutor;
     private final ThreadPoolExecutor        connectClientExecutor;
 
-    private AsyncHashedWheelTimer           asyncHashedWheelTimer;
-
     private SessionServerConfig             sessionServerConfig;
 
     @Autowired
@@ -83,8 +79,6 @@ public class ExecutorManager {
 
     @Autowired
     private NodeExchanger                   dataNodeExchanger;
-
-    private AsyncHashedWheelTimerTask       asyncHashedWheelTimerTask;
 
     private Map<String, ThreadPoolExecutor> reportExecutors                            = new HashMap<>();
 
@@ -173,10 +167,6 @@ public class ExecutorManager {
                 new LinkedBlockingQueue(sessionServerConfig.getConnectClientExecutorQueueSize()),
                 new NamedThreadFactory("DisconnectClientExecutor", true)));
 
-
-        asyncHashedWheelTimerTask = new AsyncHashedWheelTimerTask("Registry-RenewDatumTask-WheelTimer",
-                sessionServerConfig.getRenewDatumWheelTicksDuration(),TimeUnit.MILLISECONDS,
-                sessionServerConfig.getRenewDatumWheelTicksSize());
     }
 
     public void startScheduler() {
@@ -299,10 +289,6 @@ public class ExecutorManager {
 
     public ThreadPoolExecutor getConnectClientExecutor() {
         return connectClientExecutor;
-    }
-
-    public AsyncHashedWheelTimerTask getAsyncHashedWheelTimerTask() {
-        return asyncHashedWheelTimerTask;
     }
 
 }

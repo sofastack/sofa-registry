@@ -190,4 +190,8 @@ public interface SessionServerConfig {
     int getDataNodeRetryExecutorQueueSize();
 
     int getDataNodeRetryExecutorThreadSize();
+
+    int getRenewDatumWheelThreadSize();
+
+    int getRenewDatumWheelQueueSize();
 }

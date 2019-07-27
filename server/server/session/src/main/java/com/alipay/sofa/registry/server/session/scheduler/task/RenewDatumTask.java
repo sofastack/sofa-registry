@@ -66,8 +66,9 @@ public class RenewDatumTask extends AbstractSessionTask {
 
             }
         } catch (Exception e) {
-            RENEW_LOGGER.error("Renew datum request to dataNode error!  renewDatumRequest={}",
-                renewDatumRequest, e);
+            RENEW_LOGGER.error(String.format(
+                "Renew datum request to dataNode error! renewDatumRequest=%s", renewDatumRequest),
+                e);
         }
     }
 
