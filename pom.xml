@@ -6,7 +6,7 @@
 
     <groupId>com.alipay.sofa</groupId>
     <artifactId>registry-parent</artifactId>
-    <version>5.2.1-SNAPSHOT</version>
+    <version>5.2.1</version>
     <packaging>pom</packaging>
 
     <name>${project.groupId}:${project.artifactId}</name>
@@ -78,7 +78,7 @@
         <jraft.version>1.2.4</jraft.version>
         <metrics.version>4.0.2</metrics.version>
         <commons-io.version>2.4</commons-io.version>
-        <jetty.version>[9.4.17.v20190418,)</jetty.version>
+        <jetty.version>[9.4.17.v20190418,9.4.19.v20190610]</jetty.version>
         <main.user.dir>${user.dir}</main.user.dir>
         <argLine>-Dnetwork_interface_denylist=docker0</argLine>
     </properties>
