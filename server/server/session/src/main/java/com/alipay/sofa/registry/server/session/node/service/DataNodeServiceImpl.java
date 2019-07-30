@@ -368,7 +368,7 @@ public class DataNodeServiceImpl implements DataNodeService {
             }
         } catch (RequestException e) {
             throw new RuntimeException(String.format(msgFormat, request.getRequestUrl(),
-                e.getMessage()));
+                e.getMessage()), e);
         }
     }
 
@@ -383,7 +383,7 @@ public class DataNodeServiceImpl implements DataNodeService {
 
             @Override
             public URL getRequestUrl() {
-                return new URL(renewDatumRequest.getDataServerIp(),
+                return new URL(renewDatumRequest.getDataServerIP(),
                     sessionServerConfig.getDataServerPort());
             }
 

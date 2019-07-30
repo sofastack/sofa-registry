@@ -91,9 +91,9 @@ public class RenewDatumHandler extends AbstractServerHandler<RenewDatumRequest> 
             return response;
         }
 
-        boolean isDiff = renewDatum(request);
+        boolean theSame = renewDatum(request);
 
-        return new GenericResponse<Boolean>().fillSucceed(isDiff);
+        return new GenericResponse<Boolean>().fillSucceed(theSame);
     }
 
     @Override

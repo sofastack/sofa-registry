@@ -41,4 +41,6 @@ public interface WriteDataRequest<T> {
     WriteDataRequestType getRequestType();
 
     String getConnectId();
+
+    String getDataServerIP();
 }

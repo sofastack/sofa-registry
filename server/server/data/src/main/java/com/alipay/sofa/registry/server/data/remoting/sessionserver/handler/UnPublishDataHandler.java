@@ -109,11 +109,13 @@ public class UnPublishDataHandler extends AbstractServerHandler<UnPublishDataReq
         String dataInfoId = request.getDataInfoId();
         String dataCenter = dataServerConfig.getLocalDataCenter();
         Datum datum = datumCache.get(dataCenter, dataInfoId);
-        Map<String, Publisher> pubMap = datum.getPubMap();
-        if (pubMap != null) {
-            Publisher publisher = pubMap.get(request.getRegisterId());
-            if (publisher != null) {
-                return publisher.getSourceAddress().getAddressString();
+        if (datum != null) {
+            Map<String, Publisher> pubMap = datum.getPubMap();
+            if (pubMap != null) {
+                Publisher publisher = pubMap.get(request.getRegisterId());
+                if (publisher != null) {
+                    return publisher.getSourceAddress().getAddressString();
+                }
             }
         }
         return null;

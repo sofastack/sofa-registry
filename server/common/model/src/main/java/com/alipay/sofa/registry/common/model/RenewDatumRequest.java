@@ -30,13 +30,13 @@ public class RenewDatumRequest implements Serializable {
 
     private final String      connectId;
 
-    private final String      dataServerIp;
+    private final String      dataServerIP;
 
     private final String      digestSum;
 
-    public RenewDatumRequest(String connectId, String dataServerIp, String digestSum) {
+    public RenewDatumRequest(String connectId, String dataServerIP, String digestSum) {
         this.connectId = connectId;
-        this.dataServerIp = dataServerIp;
+        this.dataServerIP = dataServerIP;
         this.digestSum = digestSum;
     }
 
@@ -50,12 +50,12 @@ public class RenewDatumRequest implements Serializable {
     }
 
     /**
-     * Getter method for property <tt>dataServerIp</tt>.
+     * Getter method for property <tt>dataServerIP</tt>.
      *
-     * @return property value of dataServerIp
+     * @return property value of dataServerIP
      */
-    public String getDataServerIp() {
-        return dataServerIp;
+    public String getDataServerIP() {
+        return dataServerIP;
     }
 
     /**
@@ -74,7 +74,7 @@ public class RenewDatumRequest implements Serializable {
     public String toString() {
         final StringBuilder sb = new StringBuilder("RenewDatumRequest{");
         sb.append("connectId='").append(connectId).append('\'');
-        sb.append(", dataServerIp='").append(dataServerIp).append('\'');
+        sb.append(", dataServerIP='").append(dataServerIP).append('\'');
         sb.append(", digestSum='").append(digestSum).append('\'');
         sb.append('}');
         return sb.toString();
