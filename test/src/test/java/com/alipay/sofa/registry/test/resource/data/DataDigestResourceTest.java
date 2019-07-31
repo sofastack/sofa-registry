@@ -56,7 +56,7 @@ public class DataDigestResourceTest extends BaseIntegrationTest {
 
         PublisherRegistration registration = new PublisherRegistration(dataId);
         registryClient1.register(registration, value);
-        Thread.sleep(500L);
+        Thread.sleep(1000L);
 
         SubscriberRegistration subReg = new SubscriberRegistration(dataId,
             new MySubscriberDataObserver());
