@@ -189,6 +189,8 @@ public class DataServerChangeEventHandler extends AbstractEventHandler<DataServe
                         "[DataServerChangeEventHandler] connect dataserver %s in %s failed five times,dataServer will not work,please check connect!",
                         ip, dataCenter));
         }
+        LOGGER.info("[DataServerChangeEventHandler] connect dataserver {} in {} success", ip,
+            dataCenter);
         //maybe get dataNode from metaServer,current has not start! register dataNode info to factory,wait for connect task next execute
         DataServerNodeFactory.register(new DataServerNode(ip, dataCenter, conn),
             dataServerBootstrapConfig);

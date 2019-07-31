@@ -24,6 +24,7 @@ import com.alipay.sofa.registry.server.data.bootstrap.DataServerConfig;
 import com.alipay.sofa.registry.server.data.event.handler.AfterWorkingProcessHandler;
 import com.alipay.sofa.registry.server.data.node.DataNodeStatus;
 import com.alipay.sofa.registry.server.data.util.LocalServerStatusEnum;
+import com.google.common.collect.Sets;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.Collection;
@@ -247,13 +248,14 @@ public class DataServerCache {
             Map<String, LocalServerStatusEnum> map = nodeStatusMap.get(curVersion.get());
             if (map != null) {
                 Set<String> ips = map.keySet();
-                if (!ips.containsAll(newDataServerChangeItem.getServerMap()
-                    .get(dataServerConfig.getLocalDataCenter()).keySet())) {
-                    LOGGER.info(
-                        "nodeStatusMap not contains all push list,nodeStatusMap {} push {}",
-                        nodeStatusMap,
-                        newDataServerChangeItem.getServerMap()
-                            .get(dataServerConfig.getLocalDataCenter()).keySet());
+                Set<String> itemIps = newDataServerChangeItem.getServerMap()
+                    .get(dataServerConfig.getLocalDataCenter()).keySet();
+                if (!ips.containsAll(itemIps)) {
+
+                    LOGGER
+                        .info(
+                            "nodeStatusMap not contains all push list,nodeStatusMap {},push {},diff {}",
+                            nodeStatusMap, itemIps, Sets.difference(ips, itemIps));
                     return;
                 }
             } else {
