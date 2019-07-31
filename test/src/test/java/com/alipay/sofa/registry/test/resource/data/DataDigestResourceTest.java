@@ -53,6 +53,7 @@ public class DataDigestResourceTest extends BaseIntegrationTest {
         clientOff();
         dataId = "test-dataId-" + System.currentTimeMillis();
         value = "DataDigestResourceTest";
+        Thread.sleep(1000L);
 
         PublisherRegistration registration = new PublisherRegistration(dataId);
         registryClient1.register(registration, value);
