@@ -291,6 +291,12 @@
         <appender-ref ref="COMMON-ERROR-APPENDER"/>
     </logger>
 
+    <logger name="com.alipay.sofa.registry.server.session.SessionApplication" level="${LOG_LEVEL}" additivity="false">
+        <appender-ref ref="SESSION-STARTUP-APPENDER"/>
+        <appender-ref ref="STDOUT-APPENDER"/>
+        <appender-ref ref="COMMON-ERROR-APPENDER"/>
+    </logger>
+
     <!-- root loggers -->
 
     <root level="${LOG_LEVEL}">

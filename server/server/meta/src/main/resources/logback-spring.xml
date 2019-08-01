@@ -213,6 +213,24 @@
         <appender-ref ref="COMMON-ERROR-APPENDER"/>
     </logger>
 
+
+    <logger name="META-START-LOGS" level="${LOG_LEVEL}" additivity="false">
+        <appender-ref ref="META-STARTUP-APPENDER"/>
+        <appender-ref ref="STDOUT-APPENDER"/>
+        <appender-ref ref="COMMON-ERROR-APPENDER"/>
+    </logger>
+
+    <logger name="org.springframework.boot.SpringApplication" level="${LOG_LEVEL}" additivity="false">
+        <appender-ref ref="META-STARTUP-APPENDER"/>
+        <appender-ref ref="STDOUT-APPENDER"/>
+        <appender-ref ref="COMMON-ERROR-APPENDER"/>
+    </logger>
+
+    <logger name="com.alipay.sofa.registry.server.meta.MetaApplication" level="${LOG_LEVEL}" additivity="false">
+        <appender-ref ref="META-STARTUP-APPENDER"/>
+        <appender-ref ref="STDOUT-APPENDER"/>
+        <appender-ref ref="COMMON-ERROR-APPENDER"/>
+    </logger>
     <!-- root loggers -->
 
     <root level="${LOG_LEVEL}">

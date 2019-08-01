@@ -16,7 +16,6 @@
  */
 package com.alipay.sofa.registry.server.data.change.event;
 
-import com.alipay.sofa.registry.common.model.PublishType;
 import com.alipay.sofa.registry.common.model.dataserver.Datum;
 import com.alipay.sofa.registry.common.model.store.Publisher;
 import com.alipay.sofa.registry.log.Logger;
@@ -50,6 +49,9 @@ public class DataChangeEventQueue {
 
     private static final Logger                        LOGGER          = LoggerFactory
                                                                            .getLogger(DataChangeEventQueue.class);
+
+    private static final Logger                        LOGGER_START    = LoggerFactory
+                                                                           .getLogger("DATA-START-LOGS");
 
     /**
      *
@@ -170,7 +172,6 @@ public class DataChangeEventQueue {
      *
      */
     public void start() {
-        LOGGER.info("[{}] begin start DataChangeEventQueue", getName());
         Executor executor = ExecutorFactory.newSingleThreadExecutor(
                 String.format("%s_%s", DataChangeEventQueue.class.getSimpleName(), getName()));
         executor.execute(() -> {
@@ -197,7 +198,7 @@ public class DataChangeEventQueue {
                 }
             }
         });
-        LOGGER.info("[{}] start DataChangeEventQueue success", getName());
+        LOGGER_START.info("[{}] start DataChangeEventQueue success", getName());
     }
 
     private void handleHost(ClientChangeEvent event) {
@@ -205,6 +206,8 @@ public class DataChangeEventQueue {
         synchronized (Interners.newWeakInterner().intern(clientHost)) {
             Map<String, Publisher> pubMap = DatumCache.getByHost(clientHost);
             if (pubMap != null && !pubMap.isEmpty()) {
+                LOGGER.info("[{}] client off begin, host={}, occurTimestamp={},all pub size={}",
+                    getName(), clientHost, event.getOccurredTimestamp(), pubMap.size());
                 int count = 0;
                 for (Publisher publisher : pubMap.values()) {
                     DataServerNode dataServerNode = DataServerNodeFactory.computeDataServerNode(
