@@ -49,7 +49,7 @@ public class DefaultRenewService implements RenewService {
 
     @Override
     public List<RenewDatumRequest> getRenewDatumRequests(String connectId) {
-        List<DatumSnapshotRequest> datumSnapshotRequests = getDatumSnapshotRequests(connectId);
+        List<DatumSnapshotRequest> datumSnapshotRequests = getDatumSnapshotRequest(connectId);
         if (datumSnapshotRequests != null && !datumSnapshotRequests.isEmpty()) {
             return datumSnapshotRequests.stream()
                     .map(datumSnapshotRequest -> new RenewDatumRequest(datumSnapshotRequest.getConnectId(),
@@ -61,7 +61,7 @@ public class DefaultRenewService implements RenewService {
     }
 
     @Override
-    public List<DatumSnapshotRequest> getDatumSnapshotRequests(String connectId) {
+    public List<DatumSnapshotRequest> getDatumSnapshotRequest(String connectId) {
         Map<String, Publisher> pubMap = sessionDataStore.queryByConnectId(connectId);
         if (pubMap != null && !pubMap.isEmpty()) {
             Map<String, List<Publisher>> dataServerIpToPubs = new ConcurrentHashMap<>();
@@ -81,6 +81,24 @@ public class DefaultRenewService implements RenewService {
                 }
             }
             return list;
+        }
+        return null;
+    }
+
+    @Override
+    public DatumSnapshotRequest getDatumSnapshotRequest(String connectId, String dataServerIP) {
+        List<Publisher> publishers = new ArrayList<>();
+        Map<String, Publisher> pubMap = sessionDataStore.queryByConnectId(connectId);
+        if (pubMap != null && !pubMap.isEmpty()) {
+            pubMap.values().forEach(publisher -> {
+                Node dataNode = dataNodeManager.getNode(publisher.getDataInfoId());
+                if (dataServerIP.equalsIgnoreCase(dataNode.getNodeUrl().getIpAddress())) {
+                    publishers.add(publisher);
+                }
+            });
+        }
+        if (!publishers.isEmpty()) {
+            return new DatumSnapshotRequest(connectId, dataServerIP, publishers);
         }
         return null;
     }

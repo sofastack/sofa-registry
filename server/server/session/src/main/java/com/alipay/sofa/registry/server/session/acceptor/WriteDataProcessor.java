@@ -16,7 +16,6 @@
  */
 package com.alipay.sofa.registry.server.session.acceptor;
 
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
@@ -186,7 +185,7 @@ public class WriteDataProcessor {
             }
                 break;
             case RENEW_DATUM: {
-                if (renewAndSnapshotInSilenceAndRefreshUpdateTime(request.getDataServerIP())) {
+                if (renewAndSnapshotInSilence(request.getDataServerIP())) {
                     return;
                 }
                 doRenewAsync(request);
@@ -260,20 +259,39 @@ public class WriteDataProcessor {
     }
 
     private void doSnapshotAsync(WriteDataRequest request) {
-        RENEW_LOGGER.info("doSnapshotAsync: connectId={}, requestType={}, requestBody={}",
-            connectId, request.getRequestType(), request.getRequestBody());
+        RENEW_LOGGER.info(
+            "doSnapshotAsync: connectId={}, dataServerIP={}, requestType={}, requestBody={}",
+            connectId, request.getDataServerIP(), request.getRequestType(),
+            request.getRequestBody());
 
         String connectId = (String) request.getRequestBody();
-        List<DatumSnapshotRequest> datumSnapshotRequests = renewService
-            .getDatumSnapshotRequests(connectId);
-        if (datumSnapshotRequests != null) {
-            for (DatumSnapshotRequest datumSnapshotRequest : datumSnapshotRequests) {
-                TaskEvent taskEvent = new TaskEvent(datumSnapshotRequest,
-                    TaskType.DATUM_SNAPSHOT_TASK);
-                taskListenerManager.sendTaskEvent(taskEvent);
-            }
+        DatumSnapshotRequest datumSnapshotRequest = renewService.getDatumSnapshotRequest(connectId,
+            request.getDataServerIP());
+        if (datumSnapshotRequest != null) {
+            TaskEvent taskEvent = new TaskEvent(datumSnapshotRequest, TaskType.DATUM_SNAPSHOT_TASK);
+            taskListenerManager.sendTaskEvent(taskEvent);
+        } else {
+            RENEW_LOGGER
+                .info(
+                    "datumSnapshotRequest is null when doSnapshotAsync: connectId={}, dataServerIP={}, requestType={}",
+                    connectId, request.getDataServerIP(), request.getRequestType());
         }
 
+    }
+
+    /**
+     * In silence, do not renew and snapshot
+     */
+    private boolean renewAndSnapshotInSilence(String dataServerIP) {
+        boolean renewAndSnapshotInSilence = System.currentTimeMillis()
+                                            - getLastUpdateTime(dataServerIP).get() < this.sessionServerConfig
+            .getRenewAndSnapshotSilentPeriodSec() * 1000L;
+        if (RENEW_LOGGER.isDebugEnabled()) {
+            RENEW_LOGGER.debug(
+                "renewAndSnapshotInSilence: connectId={}, renewAndSnapshotInSilence={}", connectId,
+                renewAndSnapshotInSilence);
+        }
+        return renewAndSnapshotInSilence;
     }
 
     /**
@@ -284,14 +302,20 @@ public class WriteDataProcessor {
                                             - refreshUpdateTime(dataServerIP) < this.sessionServerConfig
             .getRenewAndSnapshotSilentPeriodSec() * 1000L;
         if (RENEW_LOGGER.isDebugEnabled()) {
-            RENEW_LOGGER.debug(
-                "renewAndSnapshotInSilence: connectId={}, renewAndSnapshotInSilence={}", connectId,
-                renewAndSnapshotInSilence);
+            RENEW_LOGGER
+                .debug(
+                    "renewAndSnapshotInSilenceAndRefreshUpdateTime: connectId={}, renewAndSnapshotInSilence={}",
+                    connectId, renewAndSnapshotInSilence);
         }
         return renewAndSnapshotInSilence;
     }
 
     private long refreshUpdateTime(String dataServerIP) {
+        AtomicLong lastUpdateTimestamp = getLastUpdateTime(dataServerIP);
+        return lastUpdateTimestamp.getAndSet(System.currentTimeMillis());
+    }
+
+    private AtomicLong getLastUpdateTime(String dataServerIP) {
         AtomicLong lastUpdateTimestamp = lastUpdateTimestampMap.get(dataServerIP);
         if (lastUpdateTimestamp == null) {
             lastUpdateTimestamp = new AtomicLong(0);
@@ -301,6 +325,6 @@ public class WriteDataProcessor {
                 lastUpdateTimestamp = _lastUpdateTimestamp;
             }
         }
-        return lastUpdateTimestamp.getAndSet(System.currentTimeMillis());
+        return lastUpdateTimestamp;
     }
 }

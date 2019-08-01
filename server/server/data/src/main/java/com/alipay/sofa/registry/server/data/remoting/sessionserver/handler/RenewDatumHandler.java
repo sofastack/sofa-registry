@@ -85,7 +85,7 @@ public class RenewDatumHandler extends AbstractServerHandler<RenewDatumRequest> 
 
         if (forwardService.needForward()) {
             LOGGER.warn("[forward] Renew request refused, request: {}", request);
-            CommonResponse response = new CommonResponse();
+            GenericResponse response = new GenericResponse();
             response.setSuccess(false);
             response.setMessage("Renew request refused, Server status is not working");
             return response;
