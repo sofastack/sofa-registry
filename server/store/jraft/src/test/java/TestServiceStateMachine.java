@@ -204,8 +204,7 @@ public class TestServiceStateMachine {
             }
         });
 
-        Assert.assertEquals(TestServiceStateMachine.class.getSimpleName(),
-            ((ProcessResponse) leaderTaskClosure.getResponse()).getEntity());
+
     }
 
     @Test
