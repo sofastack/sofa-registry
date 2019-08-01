@@ -105,9 +105,7 @@ public abstract class AbstractNodeConfigBean implements NodeConfig {
                 }
             });
 
-            if (ret.get() == null) {
-                LOGGER.error("node ipAddress:" + metaIpAddress + " cannot be found on config list!");
-            }
+
             dataCenterRet = ret.get();
         }
         return dataCenterRet;

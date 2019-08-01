@@ -16,7 +16,6 @@
  */
 package com.alipay.sofa.registry.test.sync;
 
-import com.alipay.remoting.Connection;
 import com.alipay.sofa.registry.client.api.registration.SubscriberRegistration;
 import com.alipay.sofa.registry.common.model.CommonResponse;
 import com.alipay.sofa.registry.common.model.dataserver.NotifyDataSyncRequest;
@@ -53,6 +52,7 @@ public class DataSyncTest extends BaseIntegrationTest {
     private static DataServerConnectionFactory dataServerConnectionFactory;
     private static Server                      dataSyncServer;
     private static String                      remoteIP;
+    private static BoltChannel                 boltChannel;
 
     @BeforeClass
     public static void beforeClass() throws Exception {
@@ -67,20 +67,24 @@ public class DataSyncTest extends BaseIntegrationTest {
         dataSyncServer = boltExchange.open(new URL(NetUtil.getLocalAddress().getHostAddress(),
             TEST_SYNC_PORT), new ChannelHandler[] { new MockSyncDataHandler(),
                 dataApplicationContext.getBean(DataSyncServerConnectionHandler.class) });
-        remoteIP = ((BoltChannel) dataNodeExchanger.connect(new URL(LOCAL_ADDRESS, TEST_SYNC_PORT)))
-            .getConnection().getLocalIP();
+        boltChannel = (BoltChannel) dataNodeExchanger
+            .connect(new URL(LOCAL_ADDRESS, TEST_SYNC_PORT));
+        System.out.println("testsyncserver remote connect remote:"
+                           + boltChannel.getConnection().getRemoteAddress() + " local:"
+                           + boltChannel.getConnection().getLocalAddress());
+        remoteIP = boltChannel.getConnection().getLocalIP();
         Thread.sleep(500);
     }
 
     @Test
     public void doTest() throws Exception {
         // post sync data request
-        Connection connection = dataServerConnectionFactory.getConnection(remoteIP);
         NotifyDataSyncRequest request = new NotifyDataSyncRequest(DataInfo.toDataInfoId(
             MockSyncDataHandler.dataId, DEFAULT_INSTANCE_ID, DEFAULT_GROUP), LOCAL_DATACENTER,
             MockSyncDataHandler.version, DataSourceTypeEnum.SYNC.toString());
-        CommonResponse commonResponse = (CommonResponse) dataSyncServer.sendSync(
-            dataSyncServer.getChannel(connection.getRemoteAddress()), request, 1000);
+        CommonResponse commonResponse = (CommonResponse) dataSyncServer.sendSync(dataSyncServer
+            .getChannel(new URL(remoteIP, boltChannel.getConnection().getLocalPort())), request,
+            1000);
         assertTrue(commonResponse.isSuccess());
 
         // register Subscriber

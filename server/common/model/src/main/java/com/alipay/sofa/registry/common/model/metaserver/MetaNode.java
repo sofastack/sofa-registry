@@ -131,10 +131,7 @@ public class MetaNode implements Node {
     @Override
     public String toString() {
         final StringBuilder sb = new StringBuilder("MetaNode{");
-        sb.append("nodeUrl=").append(getIp());
-        sb.append(", dataCenter='").append(dataCenter).append('\'');
-        sb.append(", regionId='").append(regionId).append('\'');
-        sb.append(", nodeStatus=").append(nodeStatus);
+        sb.append("ip=").append(getIp());
         sb.append('}');
         return sb.toString();
     }

@@ -213,10 +213,6 @@ public class DataNode implements Node, HashNode {
     public String toString() {
         final StringBuilder sb = new StringBuilder("DataNode{");
         sb.append("ip=").append(getIp());
-        sb.append(", dataCenter='").append(dataCenter).append('\'');
-        sb.append(", regionId='").append(regionId).append('\'');
-        sb.append(", nodeStatus=").append(nodeStatus);
-        sb.append(", registrationTimestamp=").append(registrationTimestamp);
         sb.append('}');
         return sb.toString();
     }

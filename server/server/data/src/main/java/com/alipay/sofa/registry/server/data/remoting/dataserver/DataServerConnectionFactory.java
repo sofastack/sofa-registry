@@ -31,7 +31,7 @@ public class DataServerConnectionFactory {
 
     /**
      * collection of connections
-     * key:ip
+     * key:connectId ip:port
      */
     private final Map<String, Connection> MAP = new ConcurrentHashMap<>();
 
@@ -41,16 +41,16 @@ public class DataServerConnectionFactory {
      * @param connection
      */
     public void register(Connection connection) {
-        MAP.put(connection.getRemoteIP(), connection);
+        MAP.put(getConnectId(connection), connection);
     }
 
     /**
-     * remove connection by specific ip
+     * remove connection by specific ip+port
      *
      * @param connection
      */
     public void remove(Connection connection) {
-        MAP.remove(connection.getRemoteIP());
+        MAP.remove(getConnectId(connection));
     }
 
     /**
@@ -60,6 +60,10 @@ public class DataServerConnectionFactory {
      * @return
      */
     public Connection getConnection(String ip) {
-        return MAP.get(ip);
+        return MAP.values().stream().filter(connection -> ip.equals(connection.getRemoteIP()) && connection.isFine()).findFirst().orElse(null);
+    }
+
+    private String getConnectId(Connection connection) {
+        return connection.getRemoteIP() + ":" + connection.getRemotePort();
     }
 }

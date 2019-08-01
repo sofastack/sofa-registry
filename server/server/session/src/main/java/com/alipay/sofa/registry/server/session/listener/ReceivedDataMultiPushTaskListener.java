@@ -22,10 +22,12 @@ import com.alipay.sofa.registry.remoting.exchange.Exchange;
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
 import com.alipay.sofa.registry.server.session.node.service.ClientNodeService;
 import com.alipay.sofa.registry.server.session.scheduler.ExecutorManager;
+import com.alipay.sofa.registry.server.session.scheduler.task.PushTaskClosure;
 import com.alipay.sofa.registry.server.session.scheduler.task.ReceivedDataMultiPushTask;
 import com.alipay.sofa.registry.server.session.scheduler.task.SessionTask;
 import com.alipay.sofa.registry.server.session.strategy.ReceivedDataMultiPushTaskStrategy;
 import com.alipay.sofa.registry.server.session.strategy.TaskMergeProcessorStrategy;
+import com.alipay.sofa.registry.task.TaskClosure;
 import com.alipay.sofa.registry.task.batcher.TaskProcessor;
 import com.alipay.sofa.registry.task.listener.TaskEvent;
 import com.alipay.sofa.registry.task.listener.TaskEvent.TaskType;
@@ -103,6 +105,11 @@ public class ReceivedDataMultiPushTaskListener implements TaskListener, PushTask
 
     @Override
     public void handleEvent(TaskEvent event) {
+        TaskClosure taskClosure = event.getTaskClosure();
+
+        if (taskClosure != null && taskClosure instanceof PushTaskClosure) {
+            ((PushTaskClosure) taskClosure).addTask(event);
+        }
         receiveDataTaskMergeProcessorStrategy.handleEvent(event);
     }
 
