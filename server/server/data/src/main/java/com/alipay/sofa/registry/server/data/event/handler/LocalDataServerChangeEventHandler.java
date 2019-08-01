@@ -228,6 +228,13 @@ public class LocalDataServerChangeEventHandler extends
             Map<String, Map<String, Map<String, BackupTriad>>> toBeSyncMap = new HashMap<>();
             Map<String, List<DataNode>> triadCache = new HashMap<>();
 
+            ConsistentHash<DataNode> consistentHashOld = dataServerCache
+                .calculateOldConsistentHash(dataServerBootstrapConfig.getLocalDataCenter());
+            if (consistentHash == null) {
+                LOGGER.error("Calculate Old ConsistentHash error!");
+                throw new RuntimeException("Calculate Old ConsistentHash error!");
+            }
+
             //compute new triad for every datum in cache
             Map<String, Map<String, Datum>> allMap = DatumCache.getAll();
             for (Entry<String, Map<String, Datum>> dataCenterEntry : allMap.entrySet()) {
@@ -247,8 +254,9 @@ public class LocalDataServerChangeEventHandler extends
                             dataServerBootstrapConfig.getStoreNodes());
                         triadCache.put(dataInfoId, backupNodes);
                     }
-                    BackupTriad backupTriad = dataServerCache.calculateOldBackupTriad(dataInfoId,
-                        dataServerBootstrapConfig.getLocalDataCenter(), dataServerBootstrapConfig);
+                    BackupTriad backupTriad = new BackupTriad(dataInfoId,
+                        consistentHashOld.getNUniqueNodesFor(dataInfoId,
+                            dataServerBootstrapConfig.getStoreNodes()));
                     if (backupTriad != null) {
                         List<DataNode> newJoinedNodes = backupTriad.getNewJoined(backupNodes,
                             dataServerCache.getNotWorking());
@@ -346,6 +354,20 @@ public class LocalDataServerChangeEventHandler extends
                     try {
                         if (dataServerNode.getConnection() == null
                             || !dataServerNode.getConnection().isFine()) {
+                            LOGGER
+                                .warn(
+                                    "notify Online dataserver connect {} not existed or not fine!version={}",
+                                    ip, changeVersion);
+                            Map<String, DataServerNode> dataServerNodeMapCurrent = DataServerNodeFactory
+                                .getDataServerNodes(dataServerBootstrapConfig.getLocalDataCenter());
+                            DataServerNode dataServerNodeCurrent = dataServerNodeMapCurrent.get(ip);
+                            if (dataServerNodeCurrent == null) {
+                                LOGGER
+                                    .warn(
+                                        "notify Online dataserver {} has not existed in DataServerNodeFactory!version={}",
+                                        ip, changeVersion);
+                                break;
+                            }
                             //maybe get dataNode from metaServer,current has not connected!wait for connect task execute
                             TimeUtil.randomDelay(1000);
                             continue;

@@ -19,6 +19,7 @@ package com.alipay.sofa.registry.server.data.remoting.dataserver.task;
 import com.alipay.sofa.registry.server.data.cache.DataServerChangeItem;
 import com.alipay.sofa.registry.server.data.event.DataServerChangeEvent;
 import com.alipay.sofa.registry.server.data.event.EventCenter;
+import com.alipay.sofa.registry.server.data.event.StartTaskTypeEnum;
 import com.alipay.sofa.registry.server.data.remoting.metaserver.IMetaServerService;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -58,6 +59,11 @@ public class ConnectionRefreshTask extends AbstractTask {
     @Override
     public TimeUnit getTimeUnit() {
         return TimeUnit.SECONDS;
+    }
+
+    @Override
+    public StartTaskTypeEnum getStartTaskTypeEnum() {
+        return StartTaskTypeEnum.CONNECT_DATA;
     }
 
 }

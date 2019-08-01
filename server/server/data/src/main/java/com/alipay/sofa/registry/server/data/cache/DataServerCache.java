@@ -21,14 +21,15 @@ import com.alipay.sofa.registry.consistency.hash.ConsistentHash;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.server.data.bootstrap.DataServerConfig;
+import com.alipay.sofa.registry.server.data.event.handler.AfterWorkingProcessHandler;
 import com.alipay.sofa.registry.server.data.node.DataNodeStatus;
 import com.alipay.sofa.registry.server.data.util.LocalServerStatusEnum;
+import com.google.common.collect.Sets;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
@@ -53,8 +54,13 @@ public class DataServerCache {
     @Autowired
     private DataServerConfig                              dataServerConfig;
 
+    @Autowired
+    private AfterWorkingProcessHandler                    afterWorkingProcessHandler;
+
+    /** current dataServer list and version */
     private volatile DataServerChangeItem                 dataServerChangeItem    = new DataServerChangeItem();
 
+    /** new input dataServer list and version */
     private volatile DataServerChangeItem                 newDataServerChangeItem = new DataServerChangeItem();
 
     private final AtomicBoolean                           HAS_NOTIFY_ALL          = new AtomicBoolean(
@@ -242,13 +248,14 @@ public class DataServerCache {
             Map<String, LocalServerStatusEnum> map = nodeStatusMap.get(curVersion.get());
             if (map != null) {
                 Set<String> ips = map.keySet();
-                if (!ips.containsAll(newDataServerChangeItem.getServerMap()
-                    .get(dataServerConfig.getLocalDataCenter()).keySet())) {
-                    LOGGER.info(
-                        "nodeStatusMap not contains all push list,nodeStatusMap {} push {}",
-                        nodeStatusMap,
-                        newDataServerChangeItem.getServerMap()
-                            .get(dataServerConfig.getLocalDataCenter()).keySet());
+                Set<String> itemIps = newDataServerChangeItem.getServerMap()
+                    .get(dataServerConfig.getLocalDataCenter()).keySet();
+                if (!ips.containsAll(itemIps)) {
+
+                    LOGGER
+                        .info(
+                            "nodeStatusMap not contains all push list,nodeStatusMap {},push {},diff {}",
+                            nodeStatusMap, itemIps, Sets.difference(ips, itemIps));
                     return;
                 }
             } else {
@@ -265,6 +272,9 @@ public class DataServerCache {
 
             //after working status,must clean this map,because calculate backupTriad need add not working node,see LocalDataServerChangeEventHandler getToBeSyncMap
             resetStatusMapToWorking();
+
+            //after working process
+            afterWorkingProcessHandler.afterWorkingProcess();
         }
     }
 
@@ -351,8 +361,12 @@ public class DataServerCache {
         }
     }
 
-    public BackupTriad calculateOldBackupTriad(String dataInfoId, String dataCenter,
-                                               DataServerConfig dataServerBootstrapConfig) {
+    /**
+     * calculate ConsistentHash base current data server list
+     * @param dataCenter
+     * @return
+     */
+    public ConsistentHash<DataNode> calculateOldConsistentHash(String dataCenter) {
         Map<String, Map<String, DataNode>> dataServerMap = dataServerChangeItem.getServerMap();
         Map<String, DataNode> dataNodeMap = dataServerMap.get(dataCenter);
 
@@ -361,12 +375,9 @@ public class DataServerCache {
             Collection<DataNode> dataServerNodes = dataNodeMap.values();
 
             ConsistentHash<DataNode> consistentHash = new ConsistentHash<>(
-                dataServerBootstrapConfig.getNumberOfReplicas(), dataServerNodes);
+                dataServerConfig.getNumberOfReplicas(), dataServerNodes);
 
-            List<DataNode> list = consistentHash.getNUniqueNodesFor(dataInfoId,
-                dataServerBootstrapConfig.getStoreNodes());
-
-            return new BackupTriad(dataInfoId, list);
+            return consistentHash;
         } else {
             LOGGER.warn("Calculate Old BackupTriad,old dataServer list is empty!");
             return null;

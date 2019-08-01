@@ -35,6 +35,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 
 /**
  *
@@ -58,6 +59,8 @@ public class WatcherRegisterFetchTask extends AbstractSessionTask {
 
     private Watcher                   watcher;
 
+    private static final int          TRY_COUNT  = 3;
+
     public WatcherRegisterFetchTask(SessionServerConfig sessionServerConfig,
                                     TaskListenerManager taskListenerManager,
                                     MetaNodeService metaNodeService) {
@@ -68,6 +71,12 @@ public class WatcherRegisterFetchTask extends AbstractSessionTask {
 
     @Override
     public void setTaskEvent(TaskEvent taskEvent) {
+
+        //taskId create from event
+        if (taskEvent.getTaskId() != null) {
+            setTaskId(taskEvent.getTaskId());
+        }
+
         Object obj = taskEvent.getEventObj();
 
         if (!(obj instanceof Watcher)) {
@@ -88,16 +97,29 @@ public class WatcherRegisterFetchTask extends AbstractSessionTask {
 
         boolean isOldVersion = !ClientVersion.StoreData.equals(watcher.getClientVersion());
 
-        ProvideData provideData = metaNodeService.fetchData(watcher.getDataInfoId());
-        if (provideData != null) {
-            if (!isOldVersion) {
-                DataInfo dataInfo = DataInfo.valueOf(provideData.getDataInfoId());
-                ReceivedConfigData receivedConfigData = ReceivedDataConverter
-                    .getReceivedConfigData(provideData.getProvideData(), dataInfo,
-                        provideData.getVersion());
-                receivedConfigData.setConfiguratorRegistIds(subscriberRegisterIdList);
-                firePushTask(receivedConfigData);
+        ProvideData provideData = null;
+
+        for (int tryCount = 0; tryCount < TRY_COUNT; tryCount++) {
+            try {
+                provideData = metaNodeService.fetchData(watcher.getDataInfoId());
+                break;
+            } catch (Exception e) {
+                randomDelay(3000);
             }
+        }
+
+        if (provideData == null) {
+            taskLogger.error("Fetch provider data error,set null value return.dataInfoId={}",
+                watcher.getDataId());
+            provideData = new ProvideData(null, watcher.getDataInfoId(), null);
+        }
+
+        if (!isOldVersion) {
+            DataInfo dataInfo = DataInfo.valueOf(provideData.getDataInfoId());
+            ReceivedConfigData receivedConfigData = ReceivedDataConverter.getReceivedConfigData(
+                provideData.getProvideData(), dataInfo, provideData.getVersion());
+            receivedConfigData.setConfiguratorRegistIds(subscriberRegisterIdList);
+            firePushTask(receivedConfigData);
         }
     }
 
@@ -112,6 +134,16 @@ public class WatcherRegisterFetchTask extends AbstractSessionTask {
     @Override
     public boolean checkRetryTimes() {
         return checkRetryTimes(sessionServerConfig.getSubscriberRegisterFetchRetryTimes());
+    }
+
+    private void randomDelay(int max) {
+        Random random = new Random();
+        int randomNum = random.nextInt(max);
+        try {
+            Thread.sleep(randomNum);
+        } catch (InterruptedException e) {
+            taskLogger.error("[TimeUtil] random delay error", e);
+        }
     }
 
     @Override

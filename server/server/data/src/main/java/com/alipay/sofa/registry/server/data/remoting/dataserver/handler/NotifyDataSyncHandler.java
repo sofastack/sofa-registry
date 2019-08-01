@@ -29,17 +29,22 @@ import com.alipay.sofa.registry.remoting.bolt.BoltChannel;
 import com.alipay.sofa.registry.server.data.bootstrap.DataServerConfig;
 import com.alipay.sofa.registry.server.data.cache.DatumCache;
 import com.alipay.sofa.registry.server.data.change.event.DataChangeEventCenter;
+import com.alipay.sofa.registry.server.data.event.AfterWorkingProcess;
 import com.alipay.sofa.registry.server.data.executor.ExecutorFactory;
+import com.alipay.sofa.registry.server.data.node.DataNodeStatus;
 import com.alipay.sofa.registry.server.data.remoting.dataserver.GetSyncDataHandler;
 import com.alipay.sofa.registry.server.data.remoting.dataserver.SyncDataCallback;
 import com.alipay.sofa.registry.server.data.remoting.handler.AbstractClientHandler;
+import com.alipay.sofa.registry.server.data.util.LocalServerStatusEnum;
 import com.alipay.sofa.registry.server.data.util.ThreadPoolExecutorDataServer;
 import com.alipay.sofa.registry.util.NamedThreadFactory;
 import com.alipay.sofa.registry.util.ParaCheckUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.Executor;
+import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
@@ -48,23 +53,33 @@ import java.util.concurrent.TimeUnit;
  * @author qian.lqlq
  * @version $Id: NotifyDataSyncProcessor.java, v 0.1 2018-03-06 20:04 qian.lqlq Exp $
  */
-public class NotifyDataSyncHandler extends AbstractClientHandler<NotifyDataSyncRequest> {
+public class NotifyDataSyncHandler extends AbstractClientHandler<NotifyDataSyncRequest> implements
+                                                                                       AfterWorkingProcess {
 
-    private static final Logger   LOGGER   = LoggerFactory.getLogger(NotifyDataSyncHandler.class);
-
-    @Autowired
-    private DataServerConfig      dataServerBootstrapConfig;
-
-    @Autowired
-    private GetSyncDataHandler    getSyncDataHandler;
+    private static final Logger                                   LOGGER      = LoggerFactory
+                                                                                  .getLogger(NotifyDataSyncHandler.class);
 
     @Autowired
-    private DataChangeEventCenter dataChangeEventCenter;
+    private DataServerConfig                                      dataServerBootstrapConfig;
 
-    private Executor              executor = ExecutorFactory.newFixedThreadPool(10,
-                                               NotifyDataSyncHandler.class.getSimpleName());
+    @Autowired
+    private GetSyncDataHandler                                    getSyncDataHandler;
 
-    private ThreadPoolExecutor    notifyExecutor;
+    @Autowired
+    private DataChangeEventCenter                                 dataChangeEventCenter;
+
+    private Executor                                              executor    = ExecutorFactory
+                                                                                  .newFixedThreadPool(
+                                                                                      10,
+                                                                                      NotifyDataSyncHandler.class
+                                                                                          .getSimpleName());
+
+    private ThreadPoolExecutor                                    notifyExecutor;
+
+    @Autowired
+    private DataNodeStatus                                        dataNodeStatus;
+
+    private static final BlockingQueue<SyncDataRequestForWorking> noWorkQueue = new LinkedBlockingQueue<>();
 
     @Override
     public void checkParam(NotifyDataSyncRequest request) throws RuntimeException {
@@ -74,6 +89,16 @@ public class NotifyDataSyncHandler extends AbstractClientHandler<NotifyDataSyncR
     @Override
     public Object doHandle(Channel channel, NotifyDataSyncRequest request) {
         final Connection connection = ((BoltChannel) channel).getConnection();
+        if (dataNodeStatus.getStatus() != LocalServerStatusEnum.WORKING) {
+            LOGGER.info("receive notifyDataSync request,but data server not working!");
+            noWorkQueue.add(new SyncDataRequestForWorking(connection, request));
+            return CommonResponse.buildSuccessResponse();
+        }
+        executorRequest(connection, request);
+        return CommonResponse.buildSuccessResponse();
+    }
+
+    private void executorRequest(Connection connection,NotifyDataSyncRequest request){
         executor.execute(() -> {
             String dataInfoId = request.getDataInfoId();
             String dataCenter = request.getDataCenter();
@@ -92,7 +117,25 @@ public class NotifyDataSyncHandler extends AbstractClientHandler<NotifyDataSyncR
                         "[NotifyDataSyncHandler] not need to sync data, version={}", version);
             }
         });
-        return CommonResponse.buildSuccessResponse();
+    }
+
+    @Override
+    public void afterWorkingProcess() {
+        try {
+            while (!noWorkQueue.isEmpty()) {
+                SyncDataRequestForWorking event = noWorkQueue.poll(1, TimeUnit.SECONDS);
+                if (event != null) {
+                    executorRequest(event.getConnection(), event.getRequest());
+                }
+            }
+        } catch (InterruptedException e) {
+            LOGGER.error("receive disconnect event after working interrupted!", e);
+        }
+    }
+
+    @Override
+    public int getOrder() {
+        return 1;
     }
 
     @Override
@@ -127,5 +170,36 @@ public class NotifyDataSyncHandler extends AbstractClientHandler<NotifyDataSyncR
     @Override
     protected Node.NodeType getConnectNodeType() {
         return Node.NodeType.DATA;
+    }
+
+    private class SyncDataRequestForWorking {
+
+        private final Connection            connection;
+
+        private final NotifyDataSyncRequest request;
+
+        public SyncDataRequestForWorking(Connection connection, NotifyDataSyncRequest request) {
+            this.connection = connection;
+            this.request = request;
+        }
+
+        /**
+         * Getter method for property <tt>connection</tt>.
+         *
+         * @return property value of connection
+         */
+        public Connection getConnection() {
+            return connection;
+        }
+
+        /**
+         * Getter method for property <tt>request</tt>.
+         *
+         * @return property value of request
+         */
+        public NotifyDataSyncRequest getRequest() {
+            return request;
+        }
+
     }
 }

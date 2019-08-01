@@ -103,6 +103,11 @@ public class DataChangeFetchTask extends AbstractSessionTask {
             for (ScopeEnum scopeEnum : ScopeEnum.values()) {
                 Map<InetSocketAddress, Map<String, Subscriber>> map = getCache(scopeEnum);
                 if (map != null && !map.isEmpty()) {
+                    LOGGER
+                        .info(
+                            "Get all subscribers to send from cache size:{},which dataInfoId:{} on dataCenter:{},scope:{}",
+                            map.size(), dataChangeRequest.getDataInfoId(),
+                            dataChangeRequest.getDataCenter(), scopeEnum);
                     for (Entry<InetSocketAddress, Map<String, Subscriber>> entry : map.entrySet()) {
                         Map<String, Subscriber> subscriberMap = entry.getValue();
                         if (subscriberMap != null && !subscriberMap.isEmpty()) {
@@ -111,6 +116,12 @@ public class DataChangeFetchTask extends AbstractSessionTask {
                             Collection<Subscriber> subscribersSend = subscribersVersionCheck(subscriberMap
                                 .values());
                             if (subscribersSend.isEmpty()) {
+                                LOGGER
+                                    .warn(
+                                        "Subscribers to send empty,which dataInfoId:{} on dataCenter:{},scope:{},address:{},size:{}",
+                                        dataChangeRequest.getDataInfoId(),
+                                        dataChangeRequest.getDataCenter(), scopeEnum,
+                                        entry.getKey(), subscriberMap.size());
                                 continue;
                             }
 
@@ -248,8 +259,8 @@ public class DataChangeFetchTask extends AbstractSessionTask {
         TaskEvent taskEvent = new TaskEvent(parameter, TaskType.RECEIVED_DATA_MULTI_PUSH_TASK);
         taskEvent.setTaskClosure(pushTaskClosure);
         taskEvent.setAttribute(Constant.PUSH_CLIENT_SUBSCRIBERS, subscribers);
-        taskLogger.info("send {} taskURL:{},taskScope:{}", taskEvent.getTaskType(), subscriber.getSourceAddress(),
-                scopeEnum);
+        taskLogger.info("send {} taskURL:{},taskScope:{},,taskId={}", taskEvent.getTaskType(), subscriber.getSourceAddress(),
+                scopeEnum,taskEvent.getTaskId());
         taskListenerManager.sendTaskEvent(taskEvent);
     }
 
@@ -278,9 +289,10 @@ public class DataChangeFetchTask extends AbstractSessionTask {
 
         int size = datum != null && datum.getPubMap() != null ? datum.getPubMap().size() : 0;
 
-        taskLogger.info("send {} taskURL:{},dataInfoId={},dataCenter={},pubSize={},subSize={}",
+        taskLogger.info(
+            "send {} taskURL:{},dataInfoId={},dataCenter={},pubSize={},subSize={},taskId={}",
             taskEvent.getTaskType(), address, datum.getDataInfoId(), datum.getDataCenter(), size,
-            subscribers.size());
+            subscribers.size(), taskEvent.getTaskId());
         taskListenerManager.sendTaskEvent(taskEvent);
     }
 
@@ -297,9 +309,10 @@ public class DataChangeFetchTask extends AbstractSessionTask {
 
         int size = datum != null && datum.getPubMap() != null ? datum.getPubMap().size() : 0;
 
-        taskLogger.info("send {} taskURL:{},dataInfoId={},dataCenter={},pubSize={},subSize={}",
+        taskLogger.info(
+            "send {} taskURL:{},dataInfoId={},dataCenter={},pubSize={},subSize={},taskId={}",
             taskEvent.getTaskType(), address, datum.getDataInfoId(), datum.getDataCenter(), size,
-            subscribers.size());
+            subscribers.size(), taskEvent.getTaskId());
         taskListenerManager.sendTaskEvent(taskEvent);
     }
 
@@ -310,6 +323,12 @@ public class DataChangeFetchTask extends AbstractSessionTask {
 
     @Override
     public void setTaskEvent(TaskEvent taskEvent) {
+
+        //taskId create from event
+        if (taskEvent.getTaskId() != null) {
+            setTaskId(taskEvent.getTaskId());
+        }
+
         Object obj = taskEvent.getEventObj();
 
         if (!(obj instanceof DataChangeRequest)) {

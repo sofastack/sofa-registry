@@ -43,7 +43,10 @@ import java.util.concurrent.Executor;
  */
 public class DataChangeHandler implements InitializingBean {
 
-    private static final Logger       LOGGER = LoggerFactory.getLogger(DataChangeHandler.class);
+    private static final Logger       LOGGER       = LoggerFactory
+                                                       .getLogger(DataChangeHandler.class);
+
+    private static final Logger       LOGGER_START = LoggerFactory.getLogger("DATA-START-LOGS");
 
     @Autowired
     private DataServerConfig          dataServerBootstrapConfig;
@@ -74,7 +77,6 @@ public class DataChangeHandler implements InitializingBean {
         for (int idx = 0; idx < queueCount; idx++) {
             final DataChangeEventQueue dataChangeEventQueue = queues[idx];
             final String name = dataChangeEventQueue.getName();
-            LOGGER.info("[DataChangeHandler] begin to notify datum in queue:{}", name);
             executor.execute(() -> {
                 while (true) {
                     try {
@@ -85,7 +87,7 @@ public class DataChangeHandler implements InitializingBean {
                     }
                 }
             });
-            LOGGER.info("[DataChangeHandler] notify datum in queue:{} success", name);
+            LOGGER_START.info("[DataChangeHandler] notify datum in queue:{} success", name);
         }
     }
 

@@ -33,6 +33,7 @@ import javax.ws.rs.client.Entity;
 import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.MediaType;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import static com.alipay.sofa.registry.client.constants.ValueConstants.DEFAULT_GROUP;
@@ -53,10 +54,11 @@ public class DataDigestResourceTest extends BaseIntegrationTest {
         clientOff();
         dataId = "test-dataId-" + System.currentTimeMillis();
         value = "DataDigestResourceTest";
+        Thread.sleep(1000L);
 
         PublisherRegistration registration = new PublisherRegistration(dataId);
         registryClient1.register(registration, value);
-        Thread.sleep(500L);
+        Thread.sleep(1000L);
 
         SubscriberRegistration subReg = new SubscriberRegistration(dataId,
             new MySubscriberDataObserver());
@@ -116,5 +118,29 @@ public class DataDigestResourceTest extends BaseIntegrationTest {
         String countResult = dataChannel.getWebTarget().path("digest/datum/count")
             .request(APPLICATION_JSON).get(String.class);
         assertTrue(countResult.contains("[Publisher] size of publisher in DefaultDataCenter is 1"));
+    }
+
+    @Test
+    public void testGetServerListAll() throws Exception {
+
+        Map<String, List<String>> sessionMap = dataChannel.getWebTarget()
+            .path("digest/session/serverList/query").request(APPLICATION_JSON)
+            .get(new GenericType<Map<String, List<String>>>() {
+            });
+        assertEquals(1, sessionMap.size());
+        assertEquals(1, sessionMap.get(LOCAL_DATACENTER).size());
+        assertTrue(sessionMap.get(LOCAL_DATACENTER).get(0).contains(LOCAL_ADDRESS));
+
+        Map<String, List<String>> metaMap = dataChannel.getWebTarget()
+            .path("digest/meta/serverList/query").request(APPLICATION_JSON)
+            .get(new GenericType<Map<String, List<String>>>() {
+            });
+        assertEquals(metaMap.get(LOCAL_DATACENTER).get(0), LOCAL_ADDRESS);
+
+        Map<String, List<String>> dataMap = dataChannel.getWebTarget()
+            .path("digest/data/serverList/query").request(APPLICATION_JSON)
+            .get(new GenericType<Map<String, List<String>>>() {
+            });
+        assertEquals(dataMap.size(), 0);
     }
 }

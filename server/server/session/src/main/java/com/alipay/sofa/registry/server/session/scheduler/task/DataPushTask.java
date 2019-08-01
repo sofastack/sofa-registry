@@ -29,7 +29,6 @@ import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
 import com.alipay.sofa.registry.server.session.converter.ReceivedDataConverter;
 import com.alipay.sofa.registry.server.session.scheduler.ExecutorManager;
 import com.alipay.sofa.registry.server.session.store.Interests;
-import com.alipay.sofa.registry.task.batcher.TaskProcessor.ProcessingResult;
 import com.alipay.sofa.registry.task.listener.TaskEvent;
 import com.alipay.sofa.registry.task.listener.TaskEvent.TaskType;
 import com.alipay.sofa.registry.task.listener.TaskListenerManager;
@@ -225,6 +224,11 @@ public class DataPushTask extends AbstractSessionTask {
 
     @Override
     public void setTaskEvent(TaskEvent taskEvent) {
+        //taskId create from event
+        if (taskEvent.getTaskId() != null) {
+            setTaskId(taskEvent.getTaskId());
+        }
+
         Object obj = taskEvent.getEventObj();
 
         if (!(obj instanceof DataPushRequest)) {
