@@ -204,7 +204,6 @@ public class TestServiceStateMachine {
             }
         });
 
-
     }
 
     @Test
