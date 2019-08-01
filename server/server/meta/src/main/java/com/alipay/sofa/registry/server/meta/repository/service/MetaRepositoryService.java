@@ -347,4 +347,13 @@ public class MetaRepositoryService extends AbstractSnapshotProcess
         snapShotFileNames.add(this.getClass().getSimpleName());
         return snapShotFileNames;
     }
+
+    /**
+     * Setter method for property <tt>nodeConfig</tt>.
+     *
+     * @param nodeConfig  value to be assigned to property nodeConfig
+     */
+    public void setNodeConfig(NodeConfig nodeConfig) {
+        this.nodeConfig = nodeConfig;
+    }
 }
