@@ -100,7 +100,9 @@ public class DataNodeExchanger implements NodeExchanger {
             }
             response = () -> result;
         } catch (Exception e) {
-            throw new RequestException("DataNode Exchanger request data error!Request url:" + url, request, e);
+            LOGGER.error(String.format("DataNode Exchanger request data error! Request url=%s, request=%s, msg=%s", url,
+                    request, e.getMessage()));
+            throw new RequestException("DataNode Exchanger request data error! Request url:" + url, request, e);
         }
 
         return response;

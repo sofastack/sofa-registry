@@ -16,6 +16,17 @@
  */
 package com.alipay.sofa.registry.server.session.node.service;
 
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
+
+import javax.annotation.PostConstruct;
+
+import org.springframework.beans.factory.annotation.Autowired;
+
 import com.alipay.sofa.registry.common.model.CommonResponse;
 import com.alipay.sofa.registry.common.model.DatumSnapshotRequest;
 import com.alipay.sofa.registry.common.model.GenericResponse;
@@ -42,15 +53,6 @@ import com.alipay.sofa.registry.server.session.node.SessionProcessIdGenerator;
 import com.alipay.sofa.registry.timer.AsyncHashedWheelTimer;
 import com.alipay.sofa.registry.timer.AsyncHashedWheelTimer.TaskFailedCallback;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
-import org.springframework.beans.factory.annotation.Autowired;
-
-import javax.annotation.PostConstruct;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  *
@@ -433,8 +435,8 @@ public class DataNodeServiceImpl implements DataNodeService {
         CommonResponse commonResponse = (CommonResponse) result;
         if (!commonResponse.isSuccess()) {
             throw new RuntimeException(String.format(
-                "response not success, failed! target url: %s, message: %s",
-                request.getRequestUrl(), commonResponse.getMessage()));
+                "response not success, failed! target url: %s, request: %s, message: %s",
+                request.getRequestUrl(), request.getRequestBody(), commonResponse.getMessage()));
         }
     }
 
