@@ -61,7 +61,7 @@ public class DatumSnapshotHandler extends AbstractServerHandler<DatumSnapshotReq
                                                                   "[DatumSnapshotHandler]");
 
     /** Limited List Printing */
-    private static final int      LIMITED_LIST_SIZE_FOR_PRINT = 30;
+    private static final int      LIMITED_LIST_SIZE_FOR_PRINT = 10;
 
     @Autowired
     private ForwardService        forwardService;
@@ -147,7 +147,14 @@ public class DatumSnapshotHandler extends AbstractServerHandler<DatumSnapshotReq
         int i = 1;
         for (;;) {
             Publisher e = it.next();
-            sb.append(e);
+            sb.append("Publisher{dataInfoId='").append(e.getDataInfoId()).append('\'');
+            sb.append(", cell='").append(e.getCell()).append('\'');
+            sb.append(", registerId='").append(e.getRegisterId()).append('\'');
+            sb.append(", version=").append(e.getVersion());
+            sb.append(", sourceAddress=").append(e.getSourceAddress());
+            sb.append(", registerTimestamp=").append(e.getRegisterTimestamp());
+            sb.append(", clientRegisterTimestamp=").append(e.getClientRegisterTimestamp());
+            sb.append('}');
             if (!it.hasNext() || i++ >= LIMITED_LIST_SIZE_FOR_PRINT)
                 return sb.append(']').toString();
             sb.append(',').append(' ');

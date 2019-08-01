@@ -338,15 +338,19 @@ public class DataNodeServiceImpl implements DataNodeService {
             if (genericResponse.isSuccess()) {
                 map = (Map<String, Datum>) genericResponse.getData();
                 if (map == null || map.isEmpty()) {
-                    LOGGER.warn("GetDataRequest get response contains no datum!dataInfoId={}",dataCenterId);
+                    LOGGER.warn("GetDataRequest get response contains no datum!dataInfoId={}", dataCenterId);
                 } else {
                     map.forEach((dataCenter, datum) -> Datum.processDatum(datum));
                 }
             } else {
-                throw new RuntimeException(String.format("GetDataRequest has got fail response!dataInfoId:%s msg:%s",dataInfoId,genericResponse.getMessage()));
+                throw new RuntimeException(
+                        String.format("GetDataRequest has got fail response!dataInfoId:%s msg:%s", dataInfoId,
+                                genericResponse.getMessage()));
             }
         } catch (RequestException e) {
-            throw new RuntimeException(String.format("Get data request to data node error!dataInfoId:%s msg:%s ",dataInfoId ,e.getMessage()), e);
+            throw new RuntimeException(
+                    String.format("Get data request to data node error!dataInfoId:%s msg:%s ", dataInfoId,
+                            e.getMessage()), e);
         }
 
         return map;
@@ -355,19 +359,11 @@ public class DataNodeServiceImpl implements DataNodeService {
     @Override
     public Boolean renewDatum(RenewDatumRequest renewDatumRequest) {
         Request<RenewDatumRequest> request = buildRenewDatumRequest(renewDatumRequest);
-        String msgFormat = "RenewDatum get response not success, target url: %s, message: %s";
         try {
-            Response response = dataNodeExchanger.request(request);
-            GenericResponse genericResponse = (GenericResponse) response.getResult();
-            if (genericResponse.isSuccess()) {
-                return (Boolean) genericResponse.getData();
-            } else {
-                throw new RuntimeException(String.format(msgFormat, request.getRequestUrl(),
-                    genericResponse.getMessage()));
-            }
+            GenericResponse genericResponse = (GenericResponse) sendRequest(request);
+            return (Boolean) genericResponse.getData();
         } catch (RequestException e) {
-            throw new RuntimeException(String.format(msgFormat, request.getRequestUrl(),
-                e.getMessage()), e);
+            throw new RuntimeException(e.getMessage(), e);
         }
     }
 
@@ -429,7 +425,7 @@ public class DataNodeServiceImpl implements DataNodeService {
         };
     }
 
-    private void sendRequest(Request request) throws RequestException {
+    private CommonResponse sendRequest(Request request) throws RequestException {
         Response response = dataNodeExchanger.request(request);
         Object result = response.getResult();
         CommonResponse commonResponse = (CommonResponse) result;
@@ -438,6 +434,7 @@ public class DataNodeServiceImpl implements DataNodeService {
                 "response not success, failed! target url: %s, request: %s, message: %s",
                 request.getRequestUrl(), request.getRequestBody(), commonResponse.getMessage()));
         }
+        return commonResponse;
     }
 
     private void doRetryAsync(String bizName, Request request, Exception e, int maxRetryTimes, long firstDelay,
