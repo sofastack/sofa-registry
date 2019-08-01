@@ -517,10 +517,14 @@ public class DataServerBeanConfiguration {
         @Autowired
         RenewDatumHandler      renewDatumHandler;
 
+        @Autowired
+        DatumLeaseManager      datumLeaseManager;
+
         @Bean(name = "afterWorkProcessors")
         public List<AfterWorkingProcess> afterWorkingProcessors() {
             List<AfterWorkingProcess> list = new ArrayList<>();
             list.add(renewDatumHandler);
+            list.add(datumLeaseManager);
             list.add(disconnectEventHandler);
             list.add((NotifyDataSyncHandler) notifyDataSyncHandler);
             return list;

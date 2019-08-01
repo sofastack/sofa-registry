@@ -98,12 +98,12 @@ public class DataNodeServiceImpl implements DataNodeService {
 
     @Override
     public void register(final Publisher publisher) {
+        String bizName = "PublishData";
         Request<PublishDataRequest> request = buildPublishDataRequest(publisher);
         try {
-            sendRequest(request);
+            sendRequest(bizName, request);
         } catch (RequestException e) {
-            doRetryAsync("PublishData", request, e,
-                sessionServerConfig.getPublishDataTaskRetryTimes(),
+            doRetryAsync(bizName, request, e, sessionServerConfig.getPublishDataTaskRetryTimes(),
                 sessionServerConfig.getPublishDataTaskRetryFirstDelay(),
                 sessionServerConfig.getPublishDataTaskRetryIncrementDelay());
         }
@@ -136,12 +136,12 @@ public class DataNodeServiceImpl implements DataNodeService {
 
     @Override
     public void unregister(final Publisher publisher) {
+        String bizName = "UnPublishData";
         Request<UnPublishDataRequest> request = buildUnPublishDataRequest(publisher);
         try {
-            sendRequest(request);
+            sendRequest(bizName, request);
         } catch (RequestException e) {
-            doRetryAsync("UnPublishData", request, e,
-                sessionServerConfig.getUnPublishDataTaskRetryTimes(),
+            doRetryAsync(bizName, request, e, sessionServerConfig.getUnPublishDataTaskRetryTimes(),
                 sessionServerConfig.getUnPublishDataTaskRetryFirstDelay(),
                 sessionServerConfig.getUnPublishDataTaskRetryIncrementDelay());
         }
@@ -178,14 +178,15 @@ public class DataNodeServiceImpl implements DataNodeService {
             return;
         }
         //get all local dataCenter data node
+        String bizName = "ClientOff";
         Collection<Node> nodes = dataNodeManager.getDataCenterNodes();
         if (nodes != null && nodes.size() > 0) {
             for (Node node : nodes) {
                 Request<ClientOffRequest> request = buildClientOffRequest(connectIds, node);
                 try {
-                    sendRequest(request);
+                    sendRequest(bizName, request);
                 } catch (RequestException e) {
-                    doRetryAsync("ClientOff", request, e,
+                    doRetryAsync(bizName, request, e,
                         sessionServerConfig.getCancelDataTaskRetryTimes(),
                         sessionServerConfig.getCancelDataTaskRetryFirstDelay(),
                         sessionServerConfig.getCancelDataTaskRetryIncrementDelay());
@@ -360,7 +361,7 @@ public class DataNodeServiceImpl implements DataNodeService {
     public Boolean renewDatum(RenewDatumRequest renewDatumRequest) {
         Request<RenewDatumRequest> request = buildRenewDatumRequest(renewDatumRequest);
         try {
-            GenericResponse genericResponse = (GenericResponse) sendRequest(request);
+            GenericResponse genericResponse = (GenericResponse) sendRequest("RenewDatum", request);
             return (Boolean) genericResponse.getData();
         } catch (RequestException e) {
             throw new RuntimeException(e.getMessage(), e);
@@ -391,12 +392,12 @@ public class DataNodeServiceImpl implements DataNodeService {
 
     @Override
     public void sendDatumSnapshot(DatumSnapshotRequest datumSnapshotRequest) {
+        String bizName = "DatumSnapshot";
         Request<DatumSnapshotRequest> request = buildDatumSnapshotRequest(datumSnapshotRequest);
         try {
-            sendRequest(request);
+            sendRequest(bizName, request);
         } catch (RequestException e) {
-            doRetryAsync("DatumSnapshot", request, e,
-                sessionServerConfig.getDatumSnapshotTaskRetryTimes(),
+            doRetryAsync(bizName, request, e, sessionServerConfig.getDatumSnapshotTaskRetryTimes(),
                 sessionServerConfig.getDatumSnapshotTaskRetryFirstDelay(),
                 sessionServerConfig.getDatumSnapshotTaskRetryIncrementDelay());
         }
@@ -425,14 +426,15 @@ public class DataNodeServiceImpl implements DataNodeService {
         };
     }
 
-    private CommonResponse sendRequest(Request request) throws RequestException {
+    private CommonResponse sendRequest(String bizName, Request request) throws RequestException {
         Response response = dataNodeExchanger.request(request);
         Object result = response.getResult();
         CommonResponse commonResponse = (CommonResponse) result;
         if (!commonResponse.isSuccess()) {
             throw new RuntimeException(String.format(
-                "response not success, failed! target url: %s, request: %s, message: %s",
-                request.getRequestUrl(), request.getRequestBody(), commonResponse.getMessage()));
+                "[%s] response not success, failed! target url: %s, request: %s, message: %s",
+                bizName, request.getRequestUrl(), request.getRequestBody(),
+                commonResponse.getMessage()));
         }
         return commonResponse;
     }
@@ -444,7 +446,7 @@ public class DataNodeServiceImpl implements DataNodeService {
             LOGGER.warn("{} failed, will retry again, retryTimes: {}, msg: {}", bizName, retryTimes, e.getMessage());
             asyncHashedWheelTimer.newTimeout(timeout -> {
                 try {
-                    sendRequest(request);
+                    sendRequest(bizName, request);
                 } catch (RequestException ex) {
                     doRetryAsync(bizName, request, ex, maxRetryTimes, firstDelay, incrementDelay);
                 }
