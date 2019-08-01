@@ -16,14 +16,6 @@
  */
 package com.alipay.sofa.registry.server.data.event.handler;
 
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Set;
-
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.util.CollectionUtils;
-
 import com.alipay.remoting.Connection;
 import com.alipay.sofa.jraft.entity.PeerId;
 import com.alipay.sofa.registry.common.model.metaserver.DataNode;
@@ -44,6 +36,13 @@ import com.alipay.sofa.registry.server.data.remoting.MetaNodeExchanger;
 import com.alipay.sofa.registry.server.data.remoting.metaserver.IMetaServerService;
 import com.alipay.sofa.registry.server.data.remoting.metaserver.MetaServerConnectionFactory;
 import com.alipay.sofa.registry.server.data.util.TimeUtil;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.util.CollectionUtils;
+
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
 
 /**
  *
@@ -160,7 +159,8 @@ public class MetaServerChangeEventHandler extends AbstractEventHandler<MetaServe
                         set.add(StartTaskTypeEnum.RENEW);
                         eventCenter.post(new StartTaskEvent(set));
 
-                        eventCenter.post(new DataServerChangeEvent(result.getNodes(), versionMap));
+                        eventCenter.post(new DataServerChangeEvent(result.getNodes(), versionMap,
+                            DataServerChangeEvent.FromType.REGISTER_META));
                         break;
                     }
                 }

@@ -16,17 +16,6 @@
  */
 package com.alipay.sofa.registry.server.session.node.service;
 
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
-
-import javax.annotation.PostConstruct;
-
-import org.springframework.beans.factory.annotation.Autowired;
-
 import com.alipay.sofa.registry.common.model.CommonResponse;
 import com.alipay.sofa.registry.common.model.DatumSnapshotRequest;
 import com.alipay.sofa.registry.common.model.GenericResponse;
@@ -53,6 +42,15 @@ import com.alipay.sofa.registry.server.session.node.SessionProcessIdGenerator;
 import com.alipay.sofa.registry.timer.AsyncHashedWheelTimer;
 import com.alipay.sofa.registry.timer.AsyncHashedWheelTimer.TaskFailedCallback;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
+import org.springframework.beans.factory.annotation.Autowired;
+
+import javax.annotation.PostConstruct;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  *
@@ -338,16 +336,15 @@ public class DataNodeServiceImpl implements DataNodeService {
             if (genericResponse.isSuccess()) {
                 map = (Map<String, Datum>) genericResponse.getData();
                 if (map == null || map.isEmpty()) {
-                    LOGGER.warn("GetDataRequest get response contains no datum!");
+                    LOGGER.warn("GetDataRequest get response contains no datum!dataInfoId={}",dataCenterId);
                 } else {
                     map.forEach((dataCenter, datum) -> Datum.processDatum(datum));
                 }
             } else {
-                throw new RuntimeException(
-                        "GetDataRequest has not get fail response! msg:" + genericResponse.getMessage());
+                throw new RuntimeException(String.format("GetDataRequest has got fail response!dataInfoId:%s msg:%s",dataInfoId,genericResponse.getMessage()));
             }
         } catch (RequestException e) {
-            throw new RuntimeException("Get data request to data node error! " + e.getMessage(), e);
+            throw new RuntimeException(String.format("Get data request to data node error!dataInfoId:%s msg:%s ",dataInfoId ,e.getMessage()), e);
         }
 
         return map;

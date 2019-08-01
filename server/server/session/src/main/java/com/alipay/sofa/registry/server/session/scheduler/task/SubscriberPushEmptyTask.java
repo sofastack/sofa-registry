@@ -30,6 +30,7 @@ import com.alipay.sofa.registry.server.session.converter.ReceivedDataConverter;
 import com.alipay.sofa.registry.task.listener.TaskEvent;
 import com.alipay.sofa.registry.task.listener.TaskEvent.TaskType;
 import com.alipay.sofa.registry.task.listener.TaskListenerManager;
+import com.alipay.sofa.registry.util.DatumVersionUtil;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -133,7 +134,7 @@ public class SubscriberPushEmptyTask extends AbstractSessionTask {
             ValueConstants.DEFAULT_DATA_CENTER, scopeEnum, subscriberRegisterIdList,
             subscriber.getCell());
         //no datum set version current timestamp
-        receivedData.setVersion(System.currentTimeMillis());
+        receivedData.setVersion(DatumVersionUtil.nextId());
         firePush(receivedData);
     }
 
@@ -155,7 +156,7 @@ public class SubscriberPushEmptyTask extends AbstractSessionTask {
         datum.setInstanceId(subscriber.getInstanceId());
         datum.setGroup(subscriber.getGroup());
         //no datum set version current timestamp
-        datum.setVersion(System.currentTimeMillis());
+        datum.setVersion(DatumVersionUtil.nextId());
         datum.setPubMap(new HashMap<>());
         datum.setDataCenter(ValueConstants.DEFAULT_DATA_CENTER);
 
@@ -181,7 +182,7 @@ public class SubscriberPushEmptyTask extends AbstractSessionTask {
         datum.setInstanceId(subscriber.getInstanceId());
         datum.setGroup(subscriber.getGroup());
         //no datum set version as mini as
-        datum.setVersion(System.currentTimeMillis());
+        datum.setVersion(DatumVersionUtil.nextId());
         datum.setPubMap(new HashMap<>());
         datum.setDataCenter(ValueConstants.DEFAULT_DATA_CENTER);
 
