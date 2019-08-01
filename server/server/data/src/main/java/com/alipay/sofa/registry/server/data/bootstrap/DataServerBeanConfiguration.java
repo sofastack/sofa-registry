@@ -280,7 +280,7 @@ public class DataServerBeanConfiguration {
         }
 
         @Bean
-        public AbstractServerHandler renewDatumHandler() {
+        public RenewDatumHandler renewDatumHandler() {
             return new RenewDatumHandler();
         }
 
@@ -514,9 +514,13 @@ public class DataServerBeanConfiguration {
         @Autowired
         AbstractClientHandler  notifyDataSyncHandler;
 
+        @Autowired
+        RenewDatumHandler      renewDatumHandler;
+
         @Bean(name = "afterWorkProcessors")
         public List<AfterWorkingProcess> afterWorkingProcessors() {
             List<AfterWorkingProcess> list = new ArrayList<>();
+            list.add(renewDatumHandler);
             list.add(disconnectEventHandler);
             list.add((NotifyDataSyncHandler) notifyDataSyncHandler);
             return list;

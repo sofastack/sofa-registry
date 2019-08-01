@@ -23,6 +23,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.annotation.PostConstruct;
 
@@ -35,10 +36,10 @@ import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.server.data.bootstrap.DataServerConfig;
 import com.alipay.sofa.registry.server.data.cache.DatumCache;
+import com.alipay.sofa.registry.server.data.event.AfterWorkingProcess;
 import com.alipay.sofa.registry.server.data.node.DataNodeStatus;
 import com.alipay.sofa.registry.server.data.remoting.sessionserver.disconnect.ClientDisconnectEvent;
 import com.alipay.sofa.registry.server.data.remoting.sessionserver.disconnect.DisconnectEventHandler;
-import com.alipay.sofa.registry.server.data.util.LocalServerStatusEnum;
 import com.alipay.sofa.registry.timer.AsyncHashedWheelTimer;
 import com.alipay.sofa.registry.timer.AsyncHashedWheelTimer.TaskFailedCallback;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
@@ -48,7 +49,7 @@ import com.google.common.util.concurrent.ThreadFactoryBuilder;
  * @author kezhu.wukz
  * @version $Id: DatumExpiredCleaner.java, v 0.1 2019-06-03 21:08 kezhu.wukz Exp $
  */
-public class DatumLeaseManager {
+public class DatumLeaseManager implements AfterWorkingProcess {
     private static final Logger                LOGGER                     = LoggerFactory
                                                                               .getLogger(DatumLeaseManager.class);
     private static final TimeZone              TIME_ZONE                  = TimeZone
@@ -63,6 +64,8 @@ public class DatumLeaseManager {
 
     /** lock for connectId , format: connectId -> true */
     private ConcurrentHashMap<String, Boolean> locksForConnectId          = new ConcurrentHashMap();
+
+    private final AtomicBoolean                renewEnabled               = new AtomicBoolean(false);
 
     private AsyncHashedWheelTimer              datumAsyncHashedWheelTimer;
 
@@ -179,7 +182,7 @@ public class DatumLeaseManager {
                  */
                 boolean isExpired =
                         System.currentTimeMillis() - lastRenewTime > dataServerConfig.getDatumTimeToLiveSec() * 1000L;
-                if (isExpired) {
+                if (isExpired && renewEnabled.get()) {
                     int ownPubSize = getOwnPubSize(connectId);
                     if (ownPubSize > 0) {
                         LOGGER.info("Evict connectId({}) cause it's expired, lastRenewTime is {}, pub.size is {}",
@@ -222,6 +225,26 @@ public class DatumLeaseManager {
         return DateFormatUtils.format(lastRenewTime, "yyyy-MM-dd HH:mm:ss", TIME_ZONE);
     }
 
+    @Override
+    public void afterWorkingProcess() {
+        /*
+         * After the snapshot data is synchronized during startup, it is queued and then placed asynchronously into
+         * DatumCache. When the notification becomes WORKING, there may be data in the queue that is not executed
+         * to DatumCache. So it need to sleep for a while.
+         */
+        try {
+            TimeUnit.MILLISECONDS.sleep(dataServerConfig.getRenewEnableDelaySec());
+        } catch (InterruptedException e) {
+            LOGGER.error(e.getMessage(), e);
+        }
+        renewEnabled.set(true);
+    }
+
+    @Override
+    public int getOrder() {
+        return 0;
+    }
+
     /**
      * evict own connectIds with heartbeat less
      */
@@ -230,10 +253,10 @@ public class DatumLeaseManager {
         @Override
         public void run() {
             // If in a non-working state, cannot clean up because the renew request cannot be received at this time.
-            if (dataNodeStatus.getStatus() != LocalServerStatusEnum.WORKING) {
+            if (!renewEnabled.get()) {
                 LOGGER
                     .info(
-                        "EvictTaskForHeartbeatLess skipped cause DataNodeStatus is {}, will retry after {}s",
+                        "EvictTaskForHeartbeatLess skipped cause renewEnabled is false, DataNodeStatus is {}, will retry after {}s",
                         dataNodeStatus.getStatus(), dataServerConfig.getDatumTimeToLiveSec());
                 return;
             }

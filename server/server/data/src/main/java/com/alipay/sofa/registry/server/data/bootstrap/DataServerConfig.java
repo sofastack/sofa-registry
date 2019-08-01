@@ -117,12 +117,32 @@ public class DataServerConfig {
 
     private int                sessionServerNotifierRetryExecutorQueueSize  = 1000000;
 
+    private int                renewEnableDelaySec                          = 30;
+
     /**
      * constructor
      * @param commonConfig
      */
     public DataServerConfig(CommonConfig commonConfig) {
         this.commonConfig = commonConfig;
+    }
+
+    /**
+     * Getter method for property <tt>renewEnableDelaySec</tt>.
+     *
+     * @return property value of renewEnableDelaySec
+     */
+    public int getRenewEnableDelaySec() {
+        return renewEnableDelaySec;
+    }
+
+    /**
+     * Setter method for property <tt>renewEnableDelaySec </tt>.
+     *
+     * @param renewEnableDelaySec  value to be assigned to property renewEnableDelaySec
+     */
+    public void setRenewEnableDelaySec(int renewEnableDelaySec) {
+        this.renewEnableDelaySec = renewEnableDelaySec;
     }
 
     public String getLocalDataCenter() {

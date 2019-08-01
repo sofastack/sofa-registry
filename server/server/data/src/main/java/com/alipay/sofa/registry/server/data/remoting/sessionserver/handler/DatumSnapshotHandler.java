@@ -40,7 +40,6 @@ import com.alipay.sofa.registry.server.data.cache.DatumCache;
 import com.alipay.sofa.registry.server.data.change.event.DataChangeEventCenter;
 import com.alipay.sofa.registry.server.data.change.event.DatumSnapshotEvent;
 import com.alipay.sofa.registry.server.data.remoting.handler.AbstractServerHandler;
-import com.alipay.sofa.registry.server.data.remoting.sessionserver.forward.ForwardService;
 import com.alipay.sofa.registry.server.data.renew.DatumLeaseManager;
 import com.alipay.sofa.registry.util.ParaCheckUtil;
 
@@ -52,19 +51,12 @@ import com.alipay.sofa.registry.util.ParaCheckUtil;
  */
 public class DatumSnapshotHandler extends AbstractServerHandler<DatumSnapshotRequest> {
 
-    /** LOGGER */
-    private static final Logger   LOGGER                      = LoggerFactory
-                                                                  .getLogger(DatumSnapshotHandler.class);
-
     private static final Logger   RENEW_LOGGER                = LoggerFactory.getLogger(
                                                                   ValueConstants.LOGGER_NAME_RENEW,
                                                                   "[DatumSnapshotHandler]");
 
     /** Limited List Printing */
     private static final int      LIMITED_LIST_SIZE_FOR_PRINT = 10;
-
-    @Autowired
-    private ForwardService        forwardService;
 
     @Autowired
     private DataChangeEventCenter dataChangeEventCenter;
@@ -92,14 +84,6 @@ public class DatumSnapshotHandler extends AbstractServerHandler<DatumSnapshotReq
     @Override
     public Object doHandle(Channel channel, DatumSnapshotRequest request) {
         RENEW_LOGGER.info("Received datumSnapshotRequest: {}", request);
-
-        if (forwardService.needForward()) {
-            LOGGER.warn("[forward] Snapshot request refused, request: {}", request);
-            CommonResponse response = new CommonResponse();
-            response.setSuccess(false);
-            response.setMessage("Snapshot request refused, Server status is not working");
-            return response;
-        }
 
         Map<String, Publisher> pubMap = request.getPublishers().stream()
                 .collect(Collectors.toMap(p -> p.getRegisterId(), p -> p));
