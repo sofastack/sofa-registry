@@ -84,7 +84,7 @@ public class RequestException extends Exception {
             sb.append("request url: ").append(request.getRequestUrl()).append(", body: ")
                 .append(request.getRequestBody()).append(", ");
         }
-        sb.append("message: ").append(super.getMessage());
+        sb.append(super.getMessage());
         return sb.toString();
     }
 }

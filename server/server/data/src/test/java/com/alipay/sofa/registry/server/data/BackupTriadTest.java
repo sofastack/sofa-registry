@@ -16,20 +16,21 @@
  */
 package com.alipay.sofa.registry.server.data;
 
-import com.alipay.sofa.registry.common.model.metaserver.DataNode;
-import com.alipay.sofa.registry.common.model.store.URL;
-import com.alipay.sofa.registry.server.data.bootstrap.DataServerConfig;
-import com.alipay.sofa.registry.server.data.cache.BackupTriad;
-import org.junit.Test;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import org.junit.Test;
+
+import com.alipay.sofa.registry.common.model.metaserver.DataNode;
+import com.alipay.sofa.registry.common.model.store.URL;
+import com.alipay.sofa.registry.server.data.bootstrap.DataServerConfig;
+import com.alipay.sofa.registry.server.data.cache.BackupTriad;
 
 /**
  * @author xuanbei
@@ -51,12 +52,10 @@ public class BackupTriadTest {
         Set<String> notWorking = new HashSet<>();
         notWorking.add("192.168.0.2");
         assertEquals(2, backupTriad.getNewJoined(newTriad, notWorking).size());
-        assertEquals(
-            "DataNode{ip=192.168.0.2, dataCenter='DefaultDataCenter', regionId='null', nodeStatus=INIT, registrationTimestamp=0}",
-            backupTriad.getNewJoined(newTriad, notWorking).get(0).toString());
-        assertEquals(
-            "DataNode{ip=192.168.0.4, dataCenter='DefaultDataCenter', regionId='null', nodeStatus=INIT, registrationTimestamp=0}",
-            backupTriad.getNewJoined(newTriad, notWorking).get(1).toString());
+        assertEquals("DataNode{ip=192.168.0.2}", backupTriad.getNewJoined(newTriad, notWorking)
+            .get(0).toString());
+        assertEquals("DataNode{ip=192.168.0.4}", backupTriad.getNewJoined(newTriad, notWorking)
+            .get(1).toString());
 
         assertEquals("TestDataInfoId", backupTriad.getDataInfoId());
         backupTriad.setDataInfoId("AnotherTestDataInfoId");
@@ -68,14 +67,9 @@ public class BackupTriadTest {
         backupTriad.setTriad(nodeList);
         assertTrue(backupTriad.containsSelf());
         assertEquals(2, backupTriad.getTriad().size());
-        assertEquals(
-            "DataNode{ip=192.168.0.1, dataCenter='DefaultDataCenter', regionId='null', nodeStatus=INIT, registrationTimestamp=0}",
-            backupTriad.getTriad().get(0).toString());
-        assertEquals(
-            "DataNode{ip="
-                    + DataServerConfig.IP
-                    + ", dataCenter='DefaultDataCenter', regionId='null', nodeStatus=INIT, registrationTimestamp=0}",
-            backupTriad.getTriad().get(1).toString());
+        assertEquals("DataNode{ip=192.168.0.1}", backupTriad.getTriad().get(0).toString());
+        assertEquals("DataNode{ip=" + DataServerConfig.IP + "}", backupTriad.getTriad().get(1)
+            .toString());
         assertTrue(backupTriad.toString().contains(
             "BackupTriad{dataInfoId='AnotherTestDataInfoId', ipSetOfNode=")
                    && backupTriad.toString().contains("192.168.0.1")
