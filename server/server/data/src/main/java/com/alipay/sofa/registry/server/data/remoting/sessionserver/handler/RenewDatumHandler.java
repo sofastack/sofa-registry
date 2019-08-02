@@ -78,6 +78,10 @@ public class RenewDatumHandler extends AbstractServerHandler<RenewDatumRequest> 
     }
 
     @Override
+    protected void logRequest(Channel channel, RenewDatumRequest request) {
+    }
+
+    @Override
     public void checkParam(RenewDatumRequest request) throws RuntimeException {
         ParaCheckUtil.checkNotBlank(request.getConnectId(), "RenewDatumRequest.connectId");
         ParaCheckUtil.checkNotBlank(request.getDigestSum(), "RenewDatumRequest.digestSum");
