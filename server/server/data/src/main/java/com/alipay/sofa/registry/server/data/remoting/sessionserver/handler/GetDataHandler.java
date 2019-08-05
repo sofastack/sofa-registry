@@ -17,10 +17,8 @@
 package com.alipay.sofa.registry.server.data.remoting.sessionserver.handler;
 
 import java.util.Map;
-import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
 
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -31,12 +29,9 @@ import com.alipay.sofa.registry.common.model.dataserver.GetDataRequest;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.remoting.Channel;
-import com.alipay.sofa.registry.server.data.bootstrap.DataServerConfig;
 import com.alipay.sofa.registry.server.data.cache.DatumCache;
 import com.alipay.sofa.registry.server.data.remoting.handler.AbstractServerHandler;
 import com.alipay.sofa.registry.server.data.remoting.sessionserver.forward.ForwardService;
-import com.alipay.sofa.registry.server.data.util.ThreadPoolExecutorDataServer;
-import com.alipay.sofa.registry.util.NamedThreadFactory;
 import com.alipay.sofa.registry.util.ParaCheckUtil;
 
 /**
@@ -54,12 +49,15 @@ public class GetDataHandler extends AbstractServerHandler<GetDataRequest> {
     private ForwardService      forwardService;
 
     @Autowired
-    private DataServerConfig    dataServerConfig;
-
-    @Autowired
     private DatumCache          datumCache;
 
+    @Autowired
     private ThreadPoolExecutor  getDataProcessorExecutor;
+
+    @Override
+    public Executor getExecutor() {
+        return getDataProcessorExecutor;
+    }
 
     @Override
     public void checkParam(GetDataRequest request) throws RuntimeException {
@@ -106,16 +104,4 @@ public class GetDataHandler extends AbstractServerHandler<GetDataRequest> {
         return Node.NodeType.DATA;
     }
 
-    @Override
-    public Executor getExecutor() {
-        if (getDataProcessorExecutor == null) {
-            getDataProcessorExecutor = new ThreadPoolExecutorDataServer("GetDataProcessorExecutor",
-                dataServerConfig.getGetDataExecutorMinPoolSize(),
-                dataServerConfig.getGetDataExecutorMaxPoolSize(),
-                dataServerConfig.getGetDataExecutorKeepAliveTime(), TimeUnit.SECONDS,
-                new ArrayBlockingQueue<>(dataServerConfig.getGetDataExecutorQueueSize()),
-                new NamedThreadFactory("DataServer-GetDataProcessor-executor", true));
-        }
-        return getDataProcessorExecutor;
-    }
 }

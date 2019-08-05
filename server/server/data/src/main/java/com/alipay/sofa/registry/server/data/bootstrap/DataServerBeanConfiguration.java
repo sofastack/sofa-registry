@@ -19,6 +19,9 @@ package com.alipay.sofa.registry.server.data.bootstrap;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 import org.glassfish.jersey.jackson.JacksonFeature;
 import org.glassfish.jersey.server.ResourceConfig;
@@ -94,6 +97,8 @@ import com.alipay.sofa.registry.server.data.renew.DatumLeaseManager;
 import com.alipay.sofa.registry.server.data.renew.LocalDataServerCleanHandler;
 import com.alipay.sofa.registry.server.data.resource.DataDigestResource;
 import com.alipay.sofa.registry.server.data.resource.HealthResource;
+import com.alipay.sofa.registry.server.data.util.ThreadPoolExecutorDataServer;
+import com.alipay.sofa.registry.util.NamedThreadFactory;
 import com.alipay.sofa.registry.util.PropertySplitter;
 
 /**
@@ -206,7 +211,7 @@ public class DataServerBeanConfiguration {
             list.add(getDataHandler());
             list.add(clientOffHandler());
             list.add(getDataVersionsHandler());
-            list.add(publishDataProcessor(dataServerConfig));
+            list.add(publishDataProcessor());
             list.add(sessionServerRegisterHandler());
             list.add(unPublishDataHandler());
             list.add(dataServerConnectionHandler());
@@ -219,7 +224,7 @@ public class DataServerBeanConfiguration {
         public Collection<AbstractServerHandler> serverSyncHandlers(DataServerConfig dataServerConfig) {
             Collection<AbstractServerHandler> list = new ArrayList<>();
             list.add(getDataHandler());
-            list.add(publishDataProcessor(dataServerConfig));
+            list.add(publishDataProcessor());
             list.add(unPublishDataHandler());
             list.add(notifyFetchDatumHandler());
             list.add(notifyOnlineHandler());
@@ -275,13 +280,13 @@ public class DataServerBeanConfiguration {
         }
 
         @Bean
-        public AbstractServerHandler renewDatumHandler() {
+        public RenewDatumHandler renewDatumHandler() {
             return new RenewDatumHandler();
         }
 
         @Bean
-        public AbstractServerHandler publishDataProcessor(DataServerConfig dataServerConfig) {
-            return new PublishDataHandler(dataServerConfig);
+        public AbstractServerHandler publishDataProcessor() {
+            return new PublishDataHandler();
         }
 
         @Bean
@@ -509,9 +514,17 @@ public class DataServerBeanConfiguration {
         @Autowired
         AbstractClientHandler  notifyDataSyncHandler;
 
+        @Autowired
+        RenewDatumHandler      renewDatumHandler;
+
+        @Autowired
+        DatumLeaseManager      datumLeaseManager;
+
         @Bean(name = "afterWorkProcessors")
         public List<AfterWorkingProcess> afterWorkingProcessors() {
             List<AfterWorkingProcess> list = new ArrayList<>();
+            list.add(renewDatumHandler);
+            list.add(datumLeaseManager);
             list.add(disconnectEventHandler);
             list.add((NotifyDataSyncHandler) notifyDataSyncHandler);
             return list;
@@ -520,6 +533,42 @@ public class DataServerBeanConfiguration {
         @Bean
         public AfterWorkingProcessHandler afterWorkingProcessHandler() {
             return new AfterWorkingProcessHandler();
+        }
+
+    }
+
+    @Configuration
+    public static class ExecutorConfiguration {
+
+        @Autowired
+        DataServerConfig dataServerConfig;
+
+        @Bean(name = "publishProcessorExecutor")
+        public ThreadPoolExecutor publishProcessorExecutor() {
+            return new ThreadPoolExecutorDataServer("PublishProcessorExecutor",
+                dataServerConfig.getPublishExecutorMinPoolSize(),
+                dataServerConfig.getPublishExecutorMaxPoolSize(), 300, TimeUnit.SECONDS,
+                new ArrayBlockingQueue<>(dataServerConfig.getPublishExecutorQueueSize()),
+                new NamedThreadFactory("DataServer-PublishProcessor-executor", true));
+        }
+
+        @Bean(name = "renewDatumProcessorExecutor")
+        public ThreadPoolExecutor renewDatumProcessorExecutor() {
+            return new ThreadPoolExecutorDataServer("RenewDatumProcessorExecutor",
+                dataServerConfig.getRenewDatumExecutorMinPoolSize(),
+                dataServerConfig.getRenewDatumExecutorMaxPoolSize(), 300, TimeUnit.SECONDS,
+                new ArrayBlockingQueue<>(dataServerConfig.getRenewDatumExecutorQueueSize()),
+                new NamedThreadFactory("DataServer-RenewDatumProcessor-executor", true));
+        }
+
+        @Bean(name = "getDataProcessorExecutor")
+        public ThreadPoolExecutor getDataProcessorExecutor() {
+            return new ThreadPoolExecutorDataServer("GetDataProcessorExecutor",
+                dataServerConfig.getGetDataExecutorMinPoolSize(),
+                dataServerConfig.getGetDataExecutorMaxPoolSize(),
+                dataServerConfig.getGetDataExecutorKeepAliveTime(), TimeUnit.SECONDS,
+                new ArrayBlockingQueue<>(dataServerConfig.getGetDataExecutorQueueSize()),
+                new NamedThreadFactory("DataServer-GetDataProcessor-executor", true));
         }
 
     }

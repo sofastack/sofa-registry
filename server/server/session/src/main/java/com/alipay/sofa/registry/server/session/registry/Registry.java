@@ -16,9 +16,9 @@
  */
 package com.alipay.sofa.registry.server.session.registry;
 
-import com.alipay.sofa.registry.common.model.store.StoreData;
-
 import java.util.List;
+
+import com.alipay.sofa.registry.common.model.store.StoreData;
 
 /**
  *
@@ -76,7 +76,7 @@ public interface Registry {
      */
     void renewDatum(String connectId);
 
-    void sendDatumSnapshot(String connectId);
+    void sendDatumSnapshot(String connectId, String dataServerIp);
 
     /**
      * for scheduler clean no connect client

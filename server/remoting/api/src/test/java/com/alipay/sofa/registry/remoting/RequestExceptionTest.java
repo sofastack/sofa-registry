@@ -32,18 +32,16 @@ public class RequestExceptionTest {
     public void doTest() {
         RequestException exception = new RequestException("error message");
         Assert.assertEquals("error message", exception.getMessage());
-        Assert.assertEquals("Request data can not be null!", exception.getMessage());
 
         RuntimeException runtimeException = new RuntimeException("error message");
         exception = new RequestException(runtimeException);
         Assert.assertEquals("java.lang.RuntimeException: error message", exception.getMessage());
         Assert.assertEquals(runtimeException, exception.getCause());
-        Assert.assertEquals("Request data can not be null!", exception.getMessage());
+        Assert.assertEquals("java.lang.RuntimeException: error message", exception.getMessage());
 
         exception = new RequestException("error message", runtimeException);
         Assert.assertEquals("error message", exception.getMessage());
         Assert.assertEquals(runtimeException, exception.getCause());
-        Assert.assertEquals("Request data can not be null!", exception.getMessage());
 
         Request request = new Request() {
             @Override
@@ -57,11 +55,11 @@ public class RequestExceptionTest {
             }
         };
         exception = new RequestException("error message", request);
-        Assert.assertEquals("error message", exception.getMessage());
-        Assert.assertEquals("Request url:null body:request body", exception.getMessage());
+        Assert.assertEquals("request url: null, body: request body, error message",
+            exception.getMessage());
 
         exception = new RequestException("error message", request, runtimeException);
-        Assert.assertEquals("error message", exception.getMessage());
-        Assert.assertEquals("Request url:null body:request body", exception.getMessage());
+        Assert.assertEquals("request url: null, body: request body, error message",
+            exception.getMessage());
     }
 }

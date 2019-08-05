@@ -17,6 +17,10 @@
 package com.alipay.sofa.registry.server.data.remoting.sessionserver.handler;
 
 import java.util.Map;
+import java.util.concurrent.Executor;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,9 +35,10 @@ import com.alipay.sofa.registry.common.model.store.Publisher;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.remoting.Channel;
+import com.alipay.sofa.registry.server.data.bootstrap.DataServerConfig;
 import com.alipay.sofa.registry.server.data.cache.DatumCache;
+import com.alipay.sofa.registry.server.data.event.AfterWorkingProcess;
 import com.alipay.sofa.registry.server.data.remoting.handler.AbstractServerHandler;
-import com.alipay.sofa.registry.server.data.remoting.sessionserver.forward.ForwardService;
 import com.alipay.sofa.registry.server.data.renew.DatumLeaseManager;
 import com.alipay.sofa.registry.util.ParaCheckUtil;
 
@@ -41,9 +46,10 @@ import com.alipay.sofa.registry.util.ParaCheckUtil;
  * handling snapshot request
  *
  * @author kezhu.wukz
- * @version $Id: ClientOffProcessor.java, v 0.1 2019-05-30 15:48 kezhu.wukz Exp $
+ * @version $Id: RenewDatumHandler.java, v 0.1 2019-05-30 15:48 kezhu.wukz Exp $
  */
-public class RenewDatumHandler extends AbstractServerHandler<RenewDatumRequest> {
+public class RenewDatumHandler extends AbstractServerHandler<RenewDatumRequest> implements
+                                                                               AfterWorkingProcess {
 
     /** LOGGER */
     private static final Logger LOGGER       = LoggerFactory.getLogger(RenewDatumHandler.class);
@@ -52,14 +58,28 @@ public class RenewDatumHandler extends AbstractServerHandler<RenewDatumRequest> 
                                                  ValueConstants.LOGGER_NAME_RENEW,
                                                  "[RenewDatumHandler]");
 
-    @Autowired
-    private ForwardService      forwardService;
+    private final AtomicBoolean renewEnabled = new AtomicBoolean(false);
 
     @Autowired
     private DatumLeaseManager   datumLeaseManager;
 
     @Autowired
     private DatumCache          datumCache;
+
+    @Autowired
+    private ThreadPoolExecutor  renewDatumProcessorExecutor;
+
+    @Autowired
+    private DataServerConfig    dataServerConfig;
+
+    @Override
+    public Executor getExecutor() {
+        return renewDatumProcessorExecutor;
+    }
+
+    @Override
+    protected void logRequest(Channel channel, RenewDatumRequest request) {
+    }
 
     @Override
     public void checkParam(RenewDatumRequest request) throws RuntimeException {
@@ -73,17 +93,18 @@ public class RenewDatumHandler extends AbstractServerHandler<RenewDatumRequest> 
             RENEW_LOGGER.debug("doHandle: request={}", request);
         }
 
-        if (forwardService.needForward()) {
-            LOGGER.warn("[forward] Renew request refused, request: {}", request);
-            CommonResponse response = new CommonResponse();
+        if (!renewEnabled.get()) {
+            LOGGER.warn("[forward] Renew request refused, renewEnabled is false, request: {}",
+                request);
+            GenericResponse response = new GenericResponse();
             response.setSuccess(false);
-            response.setMessage("Renew request refused, Server status is not working");
+            response.setMessage("Renew request refused, renewEnabled is false yet");
             return response;
         }
 
-        boolean isDiff = renewDatum(request);
+        boolean theSame = renewDatum(request);
 
-        return new GenericResponse<Boolean>().fillSucceed(isDiff);
+        return new GenericResponse<Boolean>().fillSucceed(theSame);
     }
 
     @Override
@@ -131,5 +152,25 @@ public class RenewDatumHandler extends AbstractServerHandler<RenewDatumRequest> 
             RENEW_LOGGER.info("Digest different! renewDatumRequest={}", request);
         }
         return result;
+    }
+
+    @Override
+    public void afterWorkingProcess() {
+        /*
+         * After the snapshot data is synchronized during startup, it is queued and then placed asynchronously into
+         * DatumCache. When the notification becomes WORKING, there may be data in the queue that is not executed
+         * to DatumCache. So it need to sleep for a while.
+         */
+        try {
+            TimeUnit.MILLISECONDS.sleep(dataServerConfig.getRenewEnableDelaySec());
+        } catch (InterruptedException e) {
+            LOGGER.error(e.getMessage(), e);
+        }
+        renewEnabled.set(true);
+    }
+
+    @Override
+    public int getOrder() {
+        return 0;
     }
 }

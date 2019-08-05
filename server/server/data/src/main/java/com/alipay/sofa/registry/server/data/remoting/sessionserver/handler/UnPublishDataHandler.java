@@ -17,6 +17,8 @@
 package com.alipay.sofa.registry.server.data.remoting.sessionserver.handler;
 
 import java.util.Map;
+import java.util.concurrent.Executor;
+import java.util.concurrent.ThreadPoolExecutor;
 
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -63,6 +65,14 @@ public class UnPublishDataHandler extends AbstractServerHandler<UnPublishDataReq
     @Autowired
     private DatumCache            datumCache;
 
+    @Autowired
+    private ThreadPoolExecutor    publishProcessorExecutor;
+
+    @Override
+    public Executor getExecutor() {
+        return publishProcessorExecutor;
+    }
+
     @Override
     public void checkParam(UnPublishDataRequest request) throws RuntimeException {
         ParaCheckUtil.checkNotBlank(request.getDataInfoId(), "UnPublishDataRequest.dataInfoId");
@@ -99,11 +109,13 @@ public class UnPublishDataHandler extends AbstractServerHandler<UnPublishDataReq
         String dataInfoId = request.getDataInfoId();
         String dataCenter = dataServerConfig.getLocalDataCenter();
         Datum datum = datumCache.get(dataCenter, dataInfoId);
-        Map<String, Publisher> pubMap = datum.getPubMap();
-        if (pubMap != null) {
-            Publisher publisher = pubMap.get(request.getRegisterId());
-            if (publisher != null) {
-                return publisher.getSourceAddress().getAddressString();
+        if (datum != null) {
+            Map<String, Publisher> pubMap = datum.getPubMap();
+            if (pubMap != null) {
+                Publisher publisher = pubMap.get(request.getRegisterId());
+                if (publisher != null) {
+                    return publisher.getSourceAddress().getAddressString();
+                }
             }
         }
         return null;

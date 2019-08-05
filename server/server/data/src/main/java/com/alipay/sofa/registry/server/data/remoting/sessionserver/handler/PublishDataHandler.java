@@ -16,10 +16,8 @@
  */
 package com.alipay.sofa.registry.server.data.remoting.sessionserver.handler;
 
-import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
 
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -37,8 +35,6 @@ import com.alipay.sofa.registry.server.data.remoting.handler.AbstractServerHandl
 import com.alipay.sofa.registry.server.data.remoting.sessionserver.SessionServerConnectionFactory;
 import com.alipay.sofa.registry.server.data.remoting.sessionserver.forward.ForwardService;
 import com.alipay.sofa.registry.server.data.renew.DatumLeaseManager;
-import com.alipay.sofa.registry.server.data.util.ThreadPoolExecutorDataServer;
-import com.alipay.sofa.registry.util.NamedThreadFactory;
 import com.alipay.sofa.registry.util.ParaCheckUtil;
 
 /**
@@ -68,17 +64,8 @@ public class PublishDataHandler extends AbstractServerHandler<PublishDataRequest
     @Autowired
     private DatumLeaseManager              datumLeaseManager;
 
-    private ThreadPoolExecutor             publishExecutor;
-
-    public PublishDataHandler(DataServerConfig dataServerConfig) {
-
-        publishExecutor = new ThreadPoolExecutorDataServer("PublishProcessorExecutor",
-            dataServerConfig.getPublishExecutorMinPoolSize(),
-            dataServerConfig.getPublishExecutorMaxPoolSize(),
-            dataServerConfig.getNotifyDataSyncExecutorKeepAliveTime(), TimeUnit.SECONDS,
-            new ArrayBlockingQueue<>(dataServerConfig.getPublishExecutorQueueSize()),
-            new NamedThreadFactory("DataServer-PublishProcessorExecutor-executor", true));
-    }
+    @Autowired
+    private ThreadPoolExecutor             publishProcessorExecutor;
 
     @Override
     public void checkParam(PublishDataRequest request) throws RuntimeException {
@@ -142,6 +129,6 @@ public class PublishDataHandler extends AbstractServerHandler<PublishDataRequest
 
     @Override
     public Executor getExecutor() {
-        return publishExecutor;
+        return publishProcessorExecutor;
     }
 }

@@ -21,6 +21,8 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Executor;
+import java.util.concurrent.ThreadPoolExecutor;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -38,7 +40,6 @@ import com.alipay.sofa.registry.server.data.cache.DatumCache;
 import com.alipay.sofa.registry.server.data.change.event.DataChangeEventCenter;
 import com.alipay.sofa.registry.server.data.change.event.DatumSnapshotEvent;
 import com.alipay.sofa.registry.server.data.remoting.handler.AbstractServerHandler;
-import com.alipay.sofa.registry.server.data.remoting.sessionserver.forward.ForwardService;
 import com.alipay.sofa.registry.server.data.renew.DatumLeaseManager;
 import com.alipay.sofa.registry.util.ParaCheckUtil;
 
@@ -50,19 +51,12 @@ import com.alipay.sofa.registry.util.ParaCheckUtil;
  */
 public class DatumSnapshotHandler extends AbstractServerHandler<DatumSnapshotRequest> {
 
-    /** LOGGER */
-    private static final Logger   LOGGER                      = LoggerFactory
-                                                                  .getLogger(DatumSnapshotHandler.class);
-
     private static final Logger   RENEW_LOGGER                = LoggerFactory.getLogger(
                                                                   ValueConstants.LOGGER_NAME_RENEW,
                                                                   "[DatumSnapshotHandler]");
 
     /** Limited List Printing */
-    private static final int      LIMITED_LIST_SIZE_FOR_PRINT = 30;
-
-    @Autowired
-    private ForwardService        forwardService;
+    private static final int      LIMITED_LIST_SIZE_FOR_PRINT = 10;
 
     @Autowired
     private DataChangeEventCenter dataChangeEventCenter;
@@ -73,6 +67,14 @@ public class DatumSnapshotHandler extends AbstractServerHandler<DatumSnapshotReq
     @Autowired
     private DatumCache            datumCache;
 
+    @Autowired
+    private ThreadPoolExecutor    renewDatumProcessorExecutor;
+
+    @Override
+    public Executor getExecutor() {
+        return renewDatumProcessorExecutor;
+    }
+
     @Override
     public void checkParam(DatumSnapshotRequest request) throws RuntimeException {
         ParaCheckUtil.checkNotBlank(request.getConnectId(), "DatumSnapshotRequest.connectId");
@@ -82,14 +84,6 @@ public class DatumSnapshotHandler extends AbstractServerHandler<DatumSnapshotReq
     @Override
     public Object doHandle(Channel channel, DatumSnapshotRequest request) {
         RENEW_LOGGER.info("Received datumSnapshotRequest: {}", request);
-
-        if (forwardService.needForward()) {
-            LOGGER.warn("[forward] Snapshot request refused, request: {}", request);
-            CommonResponse response = new CommonResponse();
-            response.setSuccess(false);
-            response.setMessage("Snapshot request refused, Server status is not working");
-            return response;
-        }
 
         Map<String, Publisher> pubMap = request.getPublishers().stream()
                 .collect(Collectors.toMap(p -> p.getRegisterId(), p -> p));
@@ -137,7 +131,14 @@ public class DatumSnapshotHandler extends AbstractServerHandler<DatumSnapshotReq
         int i = 1;
         for (;;) {
             Publisher e = it.next();
-            sb.append(e);
+            sb.append("Publisher{dataInfoId='").append(e.getDataInfoId()).append('\'');
+            sb.append(", cell='").append(e.getCell()).append('\'');
+            sb.append(", registerId='").append(e.getRegisterId()).append('\'');
+            sb.append(", version=").append(e.getVersion());
+            sb.append(", sourceAddress=").append(e.getSourceAddress());
+            sb.append(", registerTimestamp=").append(e.getRegisterTimestamp());
+            sb.append(", clientRegisterTimestamp=").append(e.getClientRegisterTimestamp());
+            sb.append('}');
             if (!it.hasNext() || i++ >= LIMITED_LIST_SIZE_FOR_PRINT)
                 return sb.append(']').toString();
             sb.append(',').append(' ');

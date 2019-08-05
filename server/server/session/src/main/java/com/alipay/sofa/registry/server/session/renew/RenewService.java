@@ -42,5 +42,7 @@ public interface RenewService {
      * @param connectId
      * @return
      */
-    List<DatumSnapshotRequest> getDatumSnapshotRequests(String connectId);
+    List<DatumSnapshotRequest> getDatumSnapshotRequest(String connectId);
+
+    DatumSnapshotRequest getDatumSnapshotRequest(String connectId, String dataServerIP);
 }

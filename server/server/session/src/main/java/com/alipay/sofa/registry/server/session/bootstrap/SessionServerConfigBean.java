@@ -177,7 +177,11 @@ public class SessionServerConfigBean implements SessionServerConfig {
 
     private int                renewDatumWheelTaskDelaySec             = 180;
 
-    private int                renewDatumWheelTaskRandomFirstDelaySec  = 60;
+    private int                renewDatumWheelTaskRandomFirstDelaySec  = 200;
+
+    private int                renewDatumWheelThreadSize               = 10;
+
+    private int                renewDatumWheelQueueSize                = 10000;
 
     private int                pushDataTaskRetryFirstDelay             = 500;
 
@@ -224,6 +228,42 @@ public class SessionServerConfigBean implements SessionServerConfig {
      */
     public SessionServerConfigBean(CommonConfig commonConfig) {
         this.commonConfig = commonConfig;
+    }
+
+    /**
+     * Getter method for property <tt>renewDatumWheelThreadSize</tt>.
+     *
+     * @return property value of renewDatumWheelThreadSize
+     */
+    public int getRenewDatumWheelThreadSize() {
+        return renewDatumWheelThreadSize;
+    }
+
+    /**
+     * Setter method for property <tt>renewDatumWheelThreadSize </tt>.
+     *
+     * @param renewDatumWheelThreadSize  value to be assigned to property renewDatumWheelThreadSize
+     */
+    public void setRenewDatumWheelThreadSize(int renewDatumWheelThreadSize) {
+        this.renewDatumWheelThreadSize = renewDatumWheelThreadSize;
+    }
+
+    /**
+     * Getter method for property <tt>renewDatumWheelQueueSize</tt>.
+     *
+     * @return property value of renewDatumWheelQueueSize
+     */
+    public int getRenewDatumWheelQueueSize() {
+        return renewDatumWheelQueueSize;
+    }
+
+    /**
+     * Setter method for property <tt>renewDatumWheelQueueSize </tt>.
+     *
+     * @param renewDatumWheelQueueSize  value to be assigned to property renewDatumWheelQueueSize
+     */
+    public void setRenewDatumWheelQueueSize(int renewDatumWheelQueueSize) {
+        this.renewDatumWheelQueueSize = renewDatumWheelQueueSize;
     }
 
     /**

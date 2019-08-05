@@ -62,12 +62,14 @@ public class RenewDatumTask extends AbstractSessionTask {
                     renewDatumRequest);
 
                 // send snapshot datum for the corresponding connId
-                sessionRegistry.sendDatumSnapshot(renewDatumRequest.getConnectId());
+                sessionRegistry.sendDatumSnapshot(renewDatumRequest.getConnectId(),
+                    renewDatumRequest.getDataServerIP());
 
             }
         } catch (Exception e) {
-            RENEW_LOGGER.error("Renew datum request to dataNode error!  renewDatumRequest={}",
-                renewDatumRequest, e);
+            RENEW_LOGGER.error(String.format(
+                "Renew datum request to dataNode error! renewDatumRequest=%s, errorMsg=%s",
+                renewDatumRequest, e.getMessage()), e);
         }
     }
 

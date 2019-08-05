@@ -35,10 +35,10 @@ import io.netty.util.TimerTask;
  */
 public class AsyncHashedWheelTimer extends HashedWheelTimer {
     /**  */
-    private final Executor           executor;
+    protected final Executor           executor;
 
     /**  */
-    private final TaskFailedCallback taskFailedCallback;
+    protected final TaskFailedCallback taskFailedCallback;
 
     /**
      * @param threadFactory

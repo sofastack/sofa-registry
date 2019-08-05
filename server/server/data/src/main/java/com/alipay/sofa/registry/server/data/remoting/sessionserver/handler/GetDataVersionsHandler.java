@@ -21,6 +21,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.concurrent.Executor;
+import java.util.concurrent.ThreadPoolExecutor;
 
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -42,7 +44,15 @@ import com.alipay.sofa.registry.util.ParaCheckUtil;
 public class GetDataVersionsHandler extends AbstractServerHandler<GetDataVersionRequest> {
 
     @Autowired
-    private DatumCache datumCache;
+    private DatumCache         datumCache;
+
+    @Autowired
+    private ThreadPoolExecutor getDataProcessorExecutor;
+
+    @Override
+    public Executor getExecutor() {
+        return getDataProcessorExecutor;
+    }
 
     @Override
     protected void logRequest(Channel channel, GetDataVersionRequest request) {

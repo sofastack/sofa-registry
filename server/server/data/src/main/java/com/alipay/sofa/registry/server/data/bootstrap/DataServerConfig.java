@@ -101,6 +101,12 @@ public class DataServerConfig {
 
     private int                publishExecutorQueueSize                     = 10000;
 
+    private int                renewDatumExecutorMinPoolSize                = 50;
+
+    private int                renewDatumExecutorMaxPoolSize                = 400;
+
+    private int                renewDatumExecutorQueueSize                  = 100000;
+
     private int                datumTimeToLiveSec                           = 900;
 
     private int                datumLeaseManagerExecutorThreadSize          = 1;
@@ -111,6 +117,8 @@ public class DataServerConfig {
 
     private int                sessionServerNotifierRetryExecutorQueueSize  = 1000000;
 
+    private int                renewEnableDelaySec                          = 30;
+
     /**
      * constructor
      * @param commonConfig
@@ -119,8 +127,80 @@ public class DataServerConfig {
         this.commonConfig = commonConfig;
     }
 
+    /**
+     * Getter method for property <tt>renewEnableDelaySec</tt>.
+     *
+     * @return property value of renewEnableDelaySec
+     */
+    public int getRenewEnableDelaySec() {
+        return renewEnableDelaySec;
+    }
+
+    /**
+     * Setter method for property <tt>renewEnableDelaySec </tt>.
+     *
+     * @param renewEnableDelaySec  value to be assigned to property renewEnableDelaySec
+     */
+    public void setRenewEnableDelaySec(int renewEnableDelaySec) {
+        this.renewEnableDelaySec = renewEnableDelaySec;
+    }
+
     public String getLocalDataCenter() {
         return commonConfig.getLocalDataCenter();
+    }
+
+    /**
+     * Getter method for property <tt>renewDatumExecutorMinPoolSize</tt>.
+     *
+     * @return property value of renewDatumExecutorMinPoolSize
+     */
+    public int getRenewDatumExecutorMinPoolSize() {
+        return renewDatumExecutorMinPoolSize;
+    }
+
+    /**
+     * Setter method for property <tt>renewDatumExecutorMinPoolSize </tt>.
+     *
+     * @param renewDatumExecutorMinPoolSize  value to be assigned to property renewDatumExecutorMinPoolSize
+     */
+    public void setRenewDatumExecutorMinPoolSize(int renewDatumExecutorMinPoolSize) {
+        this.renewDatumExecutorMinPoolSize = renewDatumExecutorMinPoolSize;
+    }
+
+    /**
+     * Getter method for property <tt>renewDatumExecutorMaxPoolSize</tt>.
+     *
+     * @return property value of renewDatumExecutorMaxPoolSize
+     */
+    public int getRenewDatumExecutorMaxPoolSize() {
+        return renewDatumExecutorMaxPoolSize;
+    }
+
+    /**
+     * Setter method for property <tt>renewDatumExecutorMaxPoolSize </tt>.
+     *
+     * @param renewDatumExecutorMaxPoolSize  value to be assigned to property renewDatumExecutorMaxPoolSize
+     */
+    public void setRenewDatumExecutorMaxPoolSize(int renewDatumExecutorMaxPoolSize) {
+        this.renewDatumExecutorMaxPoolSize = renewDatumExecutorMaxPoolSize;
+    }
+
+    /**
+     * Getter method for property <tt>renewDatumExecutorQueueSize</tt>.
+     *
+     * @return property value of renewDatumExecutorQueueSize
+     */
+    public int getRenewDatumExecutorQueueSize() {
+        return renewDatumExecutorQueueSize;
+    }
+
+    /**
+     * Setter method for property <tt>renewDatumExecutorQueueSize </tt>.
+     *
+     * @param renewDatumExecutorQueueSize  value to be assigned to property renewDatumExecutorQueueSize
+     */
+    public void setRenewDatumExecutorQueueSize(int renewDatumExecutorQueueSize) {
+        this.renewDatumExecutorQueueSize = renewDatumExecutorQueueSize;
     }
 
     /**

@@ -16,7 +16,8 @@
  */
 package com.alipay.sofa.registry.server.session.acceptor;
 
-import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -42,18 +43,18 @@ import com.google.common.collect.Lists;
  */
 public class WriteDataProcessor {
 
-    private static final Logger                     LOGGER              = LoggerFactory
-                                                                            .getLogger(WriteDataProcessor.class);
+    private static final Logger                     LOGGER                 = LoggerFactory
+                                                                               .getLogger(WriteDataProcessor.class);
 
-    private static final Logger                     RENEW_LOGGER        = LoggerFactory
-                                                                            .getLogger(
-                                                                                ValueConstants.LOGGER_NAME_RENEW,
-                                                                                "[WriteDataProcessor]");
+    private static final Logger                     RENEW_LOGGER           = LoggerFactory
+                                                                               .getLogger(
+                                                                                   ValueConstants.LOGGER_NAME_RENEW,
+                                                                                   "[WriteDataProcessor]");
 
-    private static final Logger                     taskLogger          = LoggerFactory
-                                                                            .getLogger(
-                                                                                WriteDataProcessor.class,
-                                                                                "[Task]");
+    private static final Logger                     taskLogger             = LoggerFactory
+                                                                               .getLogger(
+                                                                                   WriteDataProcessor.class,
+                                                                                   "[Task]");
 
     private final TaskListenerManager               taskListenerManager;
 
@@ -63,15 +64,14 @@ public class WriteDataProcessor {
 
     private final String                            connectId;
 
-    private long                                    beginTimestamp;
+    private Map<String, AtomicLong>                 lastUpdateTimestampMap = new ConcurrentHashMap<>();
 
-    private AtomicLong                              lastUpdateTimestamp = new AtomicLong(0);
+    private AtomicBoolean                           writeDataLock          = new AtomicBoolean(
+                                                                               false);
 
-    private AtomicBoolean                           writeDataLock       = new AtomicBoolean(false);
+    private ConcurrentLinkedQueue<WriteDataRequest> acceptorQueue          = new ConcurrentLinkedQueue();
 
-    private ConcurrentLinkedQueue<WriteDataRequest> acceptorQueue       = new ConcurrentLinkedQueue();
-
-    private AtomicInteger                           acceptorQueueSize   = new AtomicInteger(0);
+    private AtomicInteger                           acceptorQueueSize      = new AtomicInteger(0);
 
     public WriteDataProcessor(String connectId, TaskListenerManager taskListenerManager,
                               SessionServerConfig sessionServerConfig, RenewService renewService) {
@@ -79,9 +79,6 @@ public class WriteDataProcessor {
         this.taskListenerManager = taskListenerManager;
         this.sessionServerConfig = sessionServerConfig;
         this.renewService = renewService;
-
-        this.beginTimestamp = System.currentTimeMillis();
-        this.lastUpdateTimestamp.set(beginTimestamp);
     }
 
     private boolean halt() {
@@ -106,10 +103,9 @@ public class WriteDataProcessor {
                 request.getRequestType(), request.getRequestBody());
         }
 
-        // record the last update time
-        // RefreshUpdateTime is at the top, otherwise multiple snapshot can be issued concurrently
+        // record the last update time by pub/unpub
         if (isWriteRequest(request)) {
-            refreshUpdateTime();
+            refreshUpdateTime(request.getDataServerIP());
         }
 
         if (request.getRequestType() == WriteDataRequestType.DATUM_SNAPSHOT) {
@@ -147,7 +143,8 @@ public class WriteDataProcessor {
      * @return
      */
     private boolean isWriteRequest(WriteDataRequest request) {
-        return request.getRequestType() != WriteDataRequestType.RENEW_DATUM;
+        return request.getRequestType() == WriteDataRequestType.PUBLISHER
+               || request.getRequestType() == WriteDataRequestType.UN_PUBLISHER;
     }
 
     /**
@@ -188,14 +185,14 @@ public class WriteDataProcessor {
             }
                 break;
             case RENEW_DATUM: {
-                if (renewAndSnapshotInSilence()) {
+                if (renewAndSnapshotInSilence(request.getDataServerIP())) {
                     return;
                 }
                 doRenewAsync(request);
             }
                 break;
             case DATUM_SNAPSHOT: {
-                if (renewAndSnapshotInSilence()) {
+                if (renewAndSnapshotInSilenceAndRefreshUpdateTime(request.getDataServerIP())) {
                     return;
                 }
                 halt();
@@ -262,18 +259,22 @@ public class WriteDataProcessor {
     }
 
     private void doSnapshotAsync(WriteDataRequest request) {
-        RENEW_LOGGER.info("doSnapshotAsync: connectId={}, requestType={}, requestBody={}",
-            connectId, request.getRequestType(), request.getRequestBody());
+        RENEW_LOGGER.info(
+            "doSnapshotAsync: connectId={}, dataServerIP={}, requestType={}, requestBody={}",
+            connectId, request.getDataServerIP(), request.getRequestType(),
+            request.getRequestBody());
 
         String connectId = (String) request.getRequestBody();
-        List<DatumSnapshotRequest> datumSnapshotRequests = renewService
-            .getDatumSnapshotRequests(connectId);
-        if (datumSnapshotRequests != null) {
-            for (DatumSnapshotRequest datumSnapshotRequest : datumSnapshotRequests) {
-                TaskEvent taskEvent = new TaskEvent(datumSnapshotRequest,
-                    TaskType.DATUM_SNAPSHOT_TASK);
-                taskListenerManager.sendTaskEvent(taskEvent);
-            }
+        DatumSnapshotRequest datumSnapshotRequest = renewService.getDatumSnapshotRequest(connectId,
+            request.getDataServerIP());
+        if (datumSnapshotRequest != null) {
+            TaskEvent taskEvent = new TaskEvent(datumSnapshotRequest, TaskType.DATUM_SNAPSHOT_TASK);
+            taskListenerManager.sendTaskEvent(taskEvent);
+        } else {
+            RENEW_LOGGER
+                .info(
+                    "datumSnapshotRequest is null when doSnapshotAsync: connectId={}, dataServerIP={}, requestType={}",
+                    connectId, request.getDataServerIP(), request.getRequestType());
         }
 
     }
@@ -281,9 +282,9 @@ public class WriteDataProcessor {
     /**
      * In silence, do not renew and snapshot
      */
-    private boolean renewAndSnapshotInSilence() {
+    private boolean renewAndSnapshotInSilence(String dataServerIP) {
         boolean renewAndSnapshotInSilence = System.currentTimeMillis()
-                                            - this.lastUpdateTimestamp.get() < this.sessionServerConfig
+                                            - getLastUpdateTime(dataServerIP).get() < this.sessionServerConfig
             .getRenewAndSnapshotSilentPeriodSec() * 1000L;
         if (RENEW_LOGGER.isDebugEnabled()) {
             RENEW_LOGGER.debug(
@@ -293,10 +294,37 @@ public class WriteDataProcessor {
         return renewAndSnapshotInSilence;
     }
 
-    private void refreshUpdateTime() {
+    /**
+     * In silence, do not renew and snapshot
+     */
+    private boolean renewAndSnapshotInSilenceAndRefreshUpdateTime(String dataServerIP) {
+        boolean renewAndSnapshotInSilence = System.currentTimeMillis()
+                                            - refreshUpdateTime(dataServerIP) < this.sessionServerConfig
+            .getRenewAndSnapshotSilentPeriodSec() * 1000L;
         if (RENEW_LOGGER.isDebugEnabled()) {
-            RENEW_LOGGER.debug("refreshUpdateTime: connectId={}", connectId);
+            RENEW_LOGGER
+                .debug(
+                    "renewAndSnapshotInSilenceAndRefreshUpdateTime: connectId={}, renewAndSnapshotInSilence={}",
+                    connectId, renewAndSnapshotInSilence);
         }
-        lastUpdateTimestamp.set(System.currentTimeMillis());
+        return renewAndSnapshotInSilence;
+    }
+
+    private long refreshUpdateTime(String dataServerIP) {
+        AtomicLong lastUpdateTimestamp = getLastUpdateTime(dataServerIP);
+        return lastUpdateTimestamp.getAndSet(System.currentTimeMillis());
+    }
+
+    private AtomicLong getLastUpdateTime(String dataServerIP) {
+        AtomicLong lastUpdateTimestamp = lastUpdateTimestampMap.get(dataServerIP);
+        if (lastUpdateTimestamp == null) {
+            lastUpdateTimestamp = new AtomicLong(0);
+            AtomicLong _lastUpdateTimestamp = lastUpdateTimestampMap.putIfAbsent(dataServerIP,
+                lastUpdateTimestamp);
+            if (_lastUpdateTimestamp != null) {
+                lastUpdateTimestamp = _lastUpdateTimestamp;
+            }
+        }
+        return lastUpdateTimestamp;
     }
 }
