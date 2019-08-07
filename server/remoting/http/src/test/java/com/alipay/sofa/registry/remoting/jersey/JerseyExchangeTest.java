@@ -1,0 +1,123 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package com.alipay.sofa.registry.remoting.jersey;
+
+import com.alipay.sofa.registry.common.model.store.URL;
+import com.alipay.sofa.registry.net.NetUtil;
+import com.alipay.sofa.registry.remoting.CallbackHandler;
+import com.alipay.sofa.registry.remoting.Channel;
+import com.alipay.sofa.registry.remoting.jersey.exchange.JerseyExchange;
+import org.glassfish.jersey.jackson.JacksonFeature;
+import org.glassfish.jersey.server.ResourceConfig;
+import org.junit.Assert;
+import org.junit.Test;
+
+import java.net.InetSocketAddress;
+
+import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
+
+/**
+ * @author xuanbei
+ * @since 2019/3/27
+ */
+public class JerseyExchangeTest {
+    private static final int JERSEY_TEST_PORT = 9662;
+
+    @Test
+    public void doTest() {
+        ResourceConfig resourceConfig = new ResourceConfig();
+        resourceConfig.register(JacksonFeature.class);
+        resourceConfig.registerInstances(new TestHttpResource());
+
+        CallbackHandler callbackHandler = new CallbackHandler() {
+            @Override
+            public void onCallback(Channel channel, Object message) {
+            }
+
+            @Override
+            public void onException(Channel channel, Throwable exception) {
+            }
+        };
+
+        JerseyExchange jerseyExchange = new JerseyExchange();
+        URL url = new URL(NetUtil.getLocalAddress().getHostAddress(), JERSEY_TEST_PORT);
+        JerseyJettyServer jerseyJettyServer = (JerseyJettyServer) jerseyExchange.open(url,
+            new ResourceConfig[] { resourceConfig });
+        testJerseyJettyServer(url, jerseyJettyServer, jerseyExchange, callbackHandler);
+
+        JerseyClient jerseyClient1 = (JerseyClient) jerseyExchange.getClient("jersey");
+        JerseyClient jerseyClient2 = (JerseyClient) jerseyExchange.connect("jersey", url);
+        Assert.assertEquals(jerseyClient1, jerseyClient2);
+        testJerseyClient(url, jerseyClient1, callbackHandler);
+
+        JerseyChannel jerseyChannel = (JerseyChannel) jerseyClient1.connect(url);
+        testJerseyChannel(jerseyChannel);
+        String result = jerseyChannel.getWebTarget().path("test").request(APPLICATION_JSON)
+            .get(String.class);
+        Assert.assertEquals("TestResource", result);
+        jerseyJettyServer.close();
+    }
+
+    private void testJerseyJettyServer(URL url, JerseyJettyServer jerseyJettyServer,
+                                       JerseyExchange jerseyExchange,
+                                       CallbackHandler callbackHandler) {
+        Assert.assertEquals(jerseyJettyServer, jerseyExchange.getServer(JERSEY_TEST_PORT));
+        Assert.assertTrue(jerseyJettyServer.isOpen());
+        Assert.assertNull(jerseyJettyServer.getChannels());
+        Assert.assertNull(jerseyJettyServer.getChannel(new InetSocketAddress(9663)));
+        Assert.assertNull(jerseyJettyServer.getChannel(url));
+        Assert.assertNull(jerseyJettyServer.getChannelHandlers());
+        Assert.assertEquals(new InetSocketAddress(JERSEY_TEST_PORT),
+            jerseyJettyServer.getLocalAddress());
+        Assert.assertFalse(jerseyJettyServer.isClosed());
+
+        boolean isException = false;
+        try {
+            jerseyJettyServer.close(new JerseyChannel());
+        } catch (Throwable t) {
+            isException = true;
+        }
+        Assert.assertTrue(isException);
+        jerseyJettyServer.sendCallback(new JerseyChannel(), new Object(), callbackHandler, 1000);
+        jerseyJettyServer.sendOneway(new JerseyChannel(), new Object());
+        Assert.assertNull(jerseyJettyServer.sendSync(new JerseyChannel(), new Object(), 1000));
+    }
+
+    private void testJerseyClient(URL url, JerseyClient jerseyClient,
+                                  CallbackHandler callbackHandler) {
+        Assert.assertEquals(NetUtil.getLocalSocketAddress(), jerseyClient.getLocalAddress());
+        Assert.assertFalse(jerseyClient.isClosed());
+        Assert.assertNull(jerseyClient.getChannels());
+        Assert.assertNull(jerseyClient.getChannel(new InetSocketAddress(9663)));
+        Assert.assertNull(jerseyClient.getChannel(url));
+        Assert.assertNull(jerseyClient.getChannelHandlers());
+        Assert.assertNull(jerseyClient.sendSync(new JerseyChannel(), new Object(), 1000));
+        jerseyClient.close();
+        jerseyClient.close(new JerseyChannel());
+        jerseyClient.sendOneway(new JerseyChannel(), new Object());
+        jerseyClient.sendCallback(new JerseyChannel(), new Object(), callbackHandler, 1000);
+    }
+
+    private void testJerseyChannel(JerseyChannel jerseyChannel) {
+        Assert.assertEquals(new InetSocketAddress(NetUtil.getLocalAddress(), 9662),
+            jerseyChannel.getRemoteAddress());
+        Assert.assertEquals(NetUtil.getLocalSocketAddress(), jerseyChannel.getLocalAddress());
+        Assert.assertTrue(jerseyChannel.isConnected());
+        jerseyChannel.setAttribute("key", "value");
+        Assert.assertNull(jerseyChannel.getAttribute("key"));
+    }
+}

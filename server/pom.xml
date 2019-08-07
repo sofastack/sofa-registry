@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xmlns="http://maven.apache.org/POM/4.0.0"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>com.alipay.sofa</groupId>
+        <artifactId>registry-parent</artifactId>
+        <version>5.3.0-SNAPSHOT</version>
+        <relativePath>../pom.xml</relativePath>
+    </parent>
+
+    <artifactId>registry-server-parent</artifactId>
+    <packaging>pom</packaging>
+    <url>http://www.antfin.com</url>
+    <description>[SOFA] Registry.</description>
+
+    <organization>
+        <name>The Ant Financial</name>
+        <url>http://www.antfin.com/</url>
+    </organization>
+
+    <modules>
+        <module>remoting</module>
+        <module>common</module>
+        <module>store</module>
+        <module>server</module>
+        <module>consistency</module>
+        <module>distribution</module>
+    </modules>
+    <properties>
+        <!-- Build args -->
+        <maven.compiler.source>1.8</maven.compiler.source>
+        <maven.compiler.target>1.8</maven.compiler.target>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <main.user.dir>../</main.user.dir>
+    </properties>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.7.0</version>
+                <configuration>
+                    <source>${maven.compiler.source}</source>
+                    <target>${maven.compiler.target}</target>
+                    <encoding>${project.build.sourceEncoding}</encoding>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+</project>

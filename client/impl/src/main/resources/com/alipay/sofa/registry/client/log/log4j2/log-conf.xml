@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!-- Log4j 2.x config -->
+<Configuration status="OFF">
+    <properties>
+        <property name="LOG_HOME">${sys:logging.path}/registry</property>
+        <Property name="LOG_LEVEL">${sys:com.alipay.sofa.registry.client.log.level}</Property>
+        <Property name="LOG_ENCODE">${sys:com.alipay.sofa.registry.client.log.encode}</Property>
+    </properties>
+
+    <!-- appenders -->
+    <Appenders>
+        <RollingRandomAccessFile name="ERROR-APPENDER"
+
+                                 immediateFlush="false"
+                                 fileName="${LOG_HOME}/common-error.log"
+                                 append="true"
+                                 filePattern="${LOG_HOME}/common-error.log.%d{yyyy-MM-dd}">
+            <Filters>
+                <ThresholdFilter level="ERROR" onMatch="ACCEPT" onMismatch="DENY"/>
+            </Filters>
+            <PatternLayout charset="${LOG_ENCODE}">
+                <pattern>%d %-5p %C{1}#%L %-32t - %m%n</pattern>
+            </PatternLayout>
+            <Policies>
+                <TimeBasedTriggeringPolicy interval="1" modulate="true"/>
+            </Policies>
+        </RollingRandomAccessFile>
+
+        <RollingRandomAccessFile name="ROOT-APPENDER"
+                                 immediateFlush="false"
+                                 fileName="${LOG_HOME}/common-default.log"
+                                 append="true"
+                                 filePattern="${LOG_HOME}/common-default.log.%d{yyyy-MM-dd}">
+            <Filters>
+                <ThresholdFilter level="ERROR" onMatch="DENY" onMismatch="NEUTRAL"/>
+                <ThresholdFilter level="${LOG_LEVEL}" onMatch="ACCEPT" onMismatch="DENY"/>
+            </Filters>
+            <PatternLayout charset="${LOG_ENCODE}">
+                <pattern>%d %-5p %-32t - %m%n</pattern>
+            </PatternLayout>
+            <Policies>
+                <TimeBasedTriggeringPolicy interval="1" modulate="true"/>
+            </Policies>
+        </RollingRandomAccessFile>
+
+        <RollingRandomAccessFile name="DEFAULT-CLIENT-APPENDER"
+                                 immediateFlush="false"
+                                 fileName="${LOG_HOME}/registry-client.log"
+                                 append="true"
+                                 filePattern="${LOG_HOME}/registry-client.log.%d{yyyy-MM-dd}">
+            <Filters>
+                <ThresholdFilter level="ERROR" onMatch="DENY" onMismatch="NEUTRAL"/>
+                <ThresholdFilter level="${LOG_LEVEL}" onMatch="ACCEPT" onMismatch="DENY"/>
+            </Filters>
+            <PatternLayout charset="${LOG_ENCODE}">
+                <pattern>%d %-5p %-32t - %m%n</pattern>
+            </PatternLayout>
+            <Policies>
+                <TimeBasedTriggeringPolicy interval="1" modulate="true"/>
+            </Policies>
+        </RollingRandomAccessFile>
+
+        <Console name="Console" target="SYSTEM_OUT">
+            <ThresholdFilter level="${LOG_LEVEL}" onMatch="ACCEPT" onMismatch="DENY"/>
+            <PatternLayout charset="${LOG_ENCODE}">
+                <pattern>%d %-5p %-32t - %m%n</pattern>
+            </PatternLayout>
+        </Console>
+
+    </Appenders>
+
+    <!-- loggers -->
+    <Loggers>
+
+        <AsyncLogger name="com.alipay.sofa.registry.client" level="${LOG_LEVEL}" additivity="false">
+            <appender-ref ref="DEFAULT-CLIENT-APPENDER"/>
+            <appender-ref ref="ERROR-APPENDER"/>
+        </AsyncLogger>
+
+        <root level="${LOG_LEVEL}">
+            <appender-ref ref="ROOT-APPENDER"/>
+            <appender-ref ref="ERROR-APPENDER"/>
+        </root>
+    </Loggers>
+</Configuration>
