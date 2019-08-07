@@ -1,0 +1,366 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!-- Logback config -->
+<configuration>
+    <property scope="local" name="LOG_ENCODE" value="UTF-8"/>
+    <springProperty scope="context" name="DATA_LOG_HOME" source="data.server.logging.home"
+                    defaultValue="${user.home}/logs/registry/data"/>
+    <springProperty scope="context" name="LOG_LEVEL" source="data.server.logging.level" defaultValue="INFO"/>
+
+    <!-- common appenders -->
+
+    <appender name="STDOUT-APPENDER" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+            <Pattern>[%d{ISO8601}][%p][%t][%c{0}] - %m%n</Pattern>
+        </encoder>
+    </appender>
+
+    <appender name="COMMON-ERROR-APPENDER" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <append>true</append>
+        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+            <level>ERROR</level>
+        </filter>
+        <file>${DATA_LOG_HOME}/common-error.log</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <FileNamePattern>${DATA_LOG_HOME}/common-error.log.%d{yyyy-MM-dd}</FileNamePattern>
+            <MaxHistory>30</MaxHistory>
+        </rollingPolicy>
+        <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+            <pattern>[%d{ISO8601}][%p][%t][%c{0}] - %m%n</pattern>
+            <charset>${LOG_ENCODE}</charset>
+        </encoder>
+    </appender>
+
+    <appender name="COMMON-DEFAULT-APPENDER" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <append>true</append>
+        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+            <level>${LOG_LEVEL}</level>
+        </filter>
+        <filter class="ch.qos.logback.classic.filter.LevelFilter">
+            <level>ERROR</level>
+            <onMatch>DENY</onMatch>
+        </filter>
+        <file>${DATA_LOG_HOME}/common-default.log</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <FileNamePattern>${DATA_LOG_HOME}/common-default.log.%d{yyyy-MM-dd}</FileNamePattern>
+            <MaxHistory>30</MaxHistory>
+        </rollingPolicy>
+        <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+            <pattern>[%d{ISO8601}][%p][%t][%c{0}] - %m%n</pattern>
+            <charset>${LOG_ENCODE}</charset>
+        </encoder>
+    </appender>
+
+    <appender name="JRAFT-APPENDER" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <append>true</append>
+        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+            <level>${LOG_LEVEL}</level>
+        </filter>
+        <filter class="ch.qos.logback.classic.filter.LevelFilter">
+            <level>ERROR</level>
+            <onMatch>DENY</onMatch>
+        </filter>
+        <file>${DATA_LOG_HOME}/registry-raft.log</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <FileNamePattern>${DATA_LOG_HOME}/registry-raft.log.%d{yyyy-MM-dd}</FileNamePattern>
+            <MaxHistory>30</MaxHistory>
+        </rollingPolicy>
+        <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+            <pattern>[%d{ISO8601}][%p][%t][%c{0}] - %m%n</pattern>
+            <charset>${LOG_ENCODE}</charset>
+        </encoder>
+    </appender>
+
+    <appender name="RENEW-APPENDER" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <append>true</append>
+        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+            <level>${LOG_LEVEL}</level>
+        </filter>
+        <filter class="ch.qos.logback.classic.filter.LevelFilter">
+            <level>ERROR</level>
+            <onMatch>DENY</onMatch>
+        </filter>
+        <file>${DATA_LOG_HOME}/registry-renew.log</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <FileNamePattern>${DATA_LOG_HOME}/registry-renew.log.%d{yyyy-MM-dd}</FileNamePattern>
+            <MaxHistory>30</MaxHistory>
+        </rollingPolicy>
+        <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+            <pattern>[%d{ISO8601}][%p][%t][%c{0}] - %m%n</pattern>
+            <charset>${LOG_ENCODE}</charset>
+        </encoder>
+    </appender>
+
+    <!-- data appenders -->
+
+    <appender name="DATA-DEFAULT-APPENDER" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <append>true</append>
+        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+            <level>${LOG_LEVEL}</level>
+        </filter>
+        <filter class="ch.qos.logback.classic.filter.LevelFilter">
+            <level>ERROR</level>
+            <onMatch>DENY</onMatch>
+        </filter>
+        <file>${DATA_LOG_HOME}/registry-data.log</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <FileNamePattern>${DATA_LOG_HOME}/registry-data.log.%d{yyyy-MM-dd}</FileNamePattern>
+            <MaxHistory>30</MaxHistory>
+        </rollingPolicy>
+        <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+            <pattern>[%d{ISO8601}][%p][%t][%c{0}] - %m%n</pattern>
+            <charset>${LOG_ENCODE}</charset>
+        </encoder>
+    </appender>
+
+    <appender name="DATA-STARTUP-APPENDER" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <append>true</append>
+        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+            <level>${LOG_LEVEL}</level>
+        </filter>
+        <filter class="ch.qos.logback.classic.filter.LevelFilter">
+            <level>ERROR</level>
+            <onMatch>DENY</onMatch>
+        </filter>
+        <file>${DATA_LOG_HOME}/registry-startup.log</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <FileNamePattern>${DATA_LOG_HOME}/registry-startup.log.%d{yyyy-MM-dd}</FileNamePattern>
+            <MaxHistory>30</MaxHistory>
+        </rollingPolicy>
+        <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+            <pattern>[%d{ISO8601}][%p][%t][%c{0}] - %m%n</pattern>
+            <charset>${LOG_ENCODE}</charset>
+        </encoder>
+    </appender>
+
+    <appender name="DATA-DATUM-CHANGE-APPENDER" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <append>true</append>
+        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+            <level>${LOG_LEVEL}</level>
+        </filter>
+        <filter class="ch.qos.logback.classic.filter.LevelFilter">
+            <level>ERROR</level>
+            <onMatch>DENY</onMatch>
+        </filter>
+        <file>${DATA_LOG_HOME}/datum-change.log</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <FileNamePattern>${DATA_LOG_HOME}/datum-change.log.%d{yyyy-MM-dd}</FileNamePattern>
+            <MaxHistory>30</MaxHistory>
+        </rollingPolicy>
+        <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+            <pattern>[%d{ISO8601}][%p][%t][%c{0}] - %m%n</pattern>
+            <charset>${LOG_ENCODE}</charset>
+        </encoder>
+    </appender>
+
+    <appender name="DATA-CACHE-DIGEST-APPENDER" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <append>true</append>
+        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+            <level>${LOG_LEVEL}</level>
+        </filter>
+        <filter class="ch.qos.logback.classic.filter.LevelFilter">
+            <level>ERROR</level>
+            <onMatch>DENY</onMatch>
+        </filter>
+        <file>${DATA_LOG_HOME}/cache-digest.log</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <FileNamePattern>${DATA_LOG_HOME}/cache-digest.log.%d{yyyy-MM-dd}</FileNamePattern>
+            <MaxHistory>30</MaxHistory>
+        </rollingPolicy>
+        <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+            <pattern>[%d{ISO8601}][%p][%t][%c{0}] - %m%n</pattern>
+            <charset>${LOG_ENCODE}</charset>
+        </encoder>
+    </appender>
+
+    <appender name="DATA-HTTP-APPENDER" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <append>true</append>
+        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+            <level>${LOG_LEVEL}</level>
+        </filter>
+        <filter class="ch.qos.logback.classic.filter.LevelFilter">
+            <level>ERROR</level>
+            <onMatch>DENY</onMatch>
+        </filter>
+        <file>${DATA_LOG_HOME}/registry-http.log</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <FileNamePattern>${DATA_LOG_HOME}/registry-http.log.%d{yyyy-MM-dd}</FileNamePattern>
+            <MaxHistory>30</MaxHistory>
+        </rollingPolicy>
+        <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+            <pattern>[%d{ISO8601}][%p][%t][%c{0}] - %m%n</pattern>
+            <charset>${LOG_ENCODE}</charset>
+        </encoder>
+    </appender>
+
+    <appender name="DATA-CONNECT-APPENDER" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <append>true</append>
+        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+            <level>${LOG_LEVEL}</level>
+        </filter>
+        <filter class="ch.qos.logback.classic.filter.LevelFilter">
+            <level>ERROR</level>
+            <onMatch>DENY</onMatch>
+        </filter>
+        <file>${DATA_LOG_HOME}/registry-connect.log</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <FileNamePattern>${DATA_LOG_HOME}/registry-connect.log.%d{yyyy-MM-dd}</FileNamePattern>
+            <MaxHistory>30</MaxHistory>
+        </rollingPolicy>
+        <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+            <pattern>[%d{ISO8601}][%p][%t][%c{0}] - %m%n</pattern>
+            <charset>${LOG_ENCODE}</charset>
+        </encoder>
+    </appender>
+
+    <appender name="DATA-EXCHANGE-APPENDER" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <append>true</append>
+        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+            <level>${LOG_LEVEL}</level>
+        </filter>
+        <filter class="ch.qos.logback.classic.filter.LevelFilter">
+            <level>ERROR</level>
+            <onMatch>DENY</onMatch>
+        </filter>
+        <file>${DATA_LOG_HOME}/registry-exchange.log</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <FileNamePattern>${DATA_LOG_HOME}/registry-exchange.log.%d{yyyy-MM-dd}</FileNamePattern>
+            <MaxHistory>30</MaxHistory>
+        </rollingPolicy>
+        <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+            <pattern>[%d{ISO8601}][%p][%t][%c{0}] - %m%n</pattern>
+            <charset>${LOG_ENCODE}</charset>
+        </encoder>
+    </appender>
+
+    <appender name="REGISTRY-METRICS-APPENDER" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <append>true</append>
+        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+            <level>${LOG_LEVEL}</level>
+        </filter>
+        <filter class="ch.qos.logback.classic.filter.LevelFilter">
+            <level>ERROR</level>
+            <onMatch>DENY</onMatch>
+        </filter>
+        <file>${DATA_LOG_HOME}/registry-metrics.log</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <FileNamePattern>${DATA_LOG_HOME}/registry-metrics.log.%d{yyyy-MM-dd}</FileNamePattern>
+            <MaxHistory>30</MaxHistory>
+        </rollingPolicy>
+        <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+            <pattern>[%d{ISO8601}][%p][%t][%c{0}] - %m%n</pattern>
+            <charset>${LOG_ENCODE}</charset>
+        </encoder>
+    </appender>
+
+    <appender name="DATUM-LEASE-APPENDER" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <append>true</append>
+        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+            <level>${LOG_LEVEL}</level>
+        </filter>
+        <filter class="ch.qos.logback.classic.filter.LevelFilter">
+            <level>ERROR</level>
+            <onMatch>DENY</onMatch>
+        </filter>
+        <file>${DATA_LOG_HOME}/registry-datum-lease.log</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <FileNamePattern>${DATA_LOG_HOME}/registry-datum-lease.log.%d{yyyy-MM-dd}</FileNamePattern>
+            <MaxHistory>30</MaxHistory>
+        </rollingPolicy>
+        <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+            <pattern>[%d{ISO8601}][%p][%t][%c{0}] - %m%n</pattern>
+            <charset>${LOG_ENCODE}</charset>
+        </encoder>
+    </appender>
+
+    <!-- common loggers -->
+
+    <logger name="com.alipay.sofa.registry.jraft" level="${LOG_LEVEL}" additivity="false">
+        <appender-ref ref="JRAFT-APPENDER"/>
+        <appender-ref ref="COMMON-ERROR-APPENDER"/>
+    </logger>
+
+    <logger name="com.alipay.sofa.jraft" level="${LOG_LEVEL}" additivity="false">
+        <appender-ref ref="JRAFT-APPENDER"/>
+        <appender-ref ref="COMMON-ERROR-APPENDER"/>
+    </logger>
+
+    <logger name="RENEW-LOGGER" level="${LOG_LEVEL}" additivity="false">
+        <appender-ref ref="RENEW-APPENDER"/>
+        <appender-ref ref="COMMON-ERROR-APPENDER"/>
+    </logger>
+
+    <!-- data loggers -->
+
+    <logger name="com.alipay.sofa.registry.server.data" level="${LOG_LEVEL}" additivity="false">
+        <appender-ref ref="DATA-DEFAULT-APPENDER"/>
+        <appender-ref ref="COMMON-ERROR-APPENDER"/>
+    </logger>
+
+    <logger name="com.alipay.sofa.registry.server.data.bootstrap" level="${LOG_LEVEL}" additivity="false">
+        <appender-ref ref="DATA-STARTUP-APPENDER"/>
+        <appender-ref ref="STDOUT-APPENDER"/>
+        <appender-ref ref="COMMON-ERROR-APPENDER"/>
+    </logger>
+
+    <logger name="com.alipay.sofa.registry.server.data.change.DataChangeHandler" level="${LOG_LEVEL}"
+            additivity="false">
+        <appender-ref ref="DATA-DATUM-CHANGE-APPENDER"/>
+        <appender-ref ref="COMMON-ERROR-APPENDER"/>
+    </logger>
+
+    <logger name="com.alipay.sofa.registry.server.data.cache.CacheDigestTask" level="${LOG_LEVEL}" additivity="false">
+        <appender-ref ref="DATA-CACHE-DIGEST-APPENDER"/>
+        <appender-ref ref="COMMON-ERROR-APPENDER"/>
+    </logger>
+
+    <logger name="com.alipay.sofa.registry.server.data.resource" level="${LOG_LEVEL}" additivity="false">
+        <appender-ref ref="DATA-HTTP-APPENDER"/>
+        <appender-ref ref="COMMON-ERROR-APPENDER"/>
+    </logger>
+
+    <logger name="DATA-START-LOGS" level="${LOG_LEVEL}" additivity="false">
+        <appender-ref ref="DATA-STARTUP-APPENDER"/>
+        <appender-ref ref="STDOUT-APPENDER"/>
+        <appender-ref ref="COMMON-ERROR-APPENDER"/>
+    </logger>
+
+    <logger name="org.springframework.boot.SpringApplication" level="${LOG_LEVEL}" additivity="false">
+        <appender-ref ref="DATA-STARTUP-APPENDER"/>
+        <appender-ref ref="STDOUT-APPENDER"/>
+        <appender-ref ref="COMMON-ERROR-APPENDER"/>
+    </logger>
+
+    <logger name="com.alipay.sofa.registry.server.data.DataApplication" level="${LOG_LEVEL}" additivity="false">
+        <appender-ref ref="DATA-STARTUP-APPENDER"/>
+        <appender-ref ref="STDOUT-APPENDER"/>
+        <appender-ref ref="COMMON-ERROR-APPENDER"/>
+    </logger>
+
+    <logger name="DATA-CONNECT" level="${LOG_LEVEL}" additivity="false">
+        <appender-ref ref="DATA-CONNECT-APPENDER"/>
+        <appender-ref ref="COMMON-ERROR-APPENDER"/>
+    </logger>
+
+    <logger name="DATA-EXCHANGE" level="${LOG_LEVEL}" additivity="false">
+        <appender-ref ref="DATA-EXCHANGE-APPENDER"/>
+        <appender-ref ref="COMMON-ERROR-APPENDER"/>
+    </logger>
+
+    <logger name="REGISTRY-METRICS" level="${LOG_LEVEL}" additivity="false">
+        <appender-ref ref="REGISTRY-METRICS-APPENDER"/>
+        <appender-ref ref="COMMON-ERROR-APPENDER"/>
+    </logger>
+
+    <logger name="com.alipay.sofa.registry.server.data.renew.DatumLeaseManager" level="${LOG_LEVEL}" additivity="false">
+        <appender-ref ref="DATUM-LEASE-APPENDER"/>
+        <appender-ref ref="COMMON-ERROR-APPENDER"/>
+    </logger>
+
+    <!-- root loggers -->
+
+    <root level="${LOG_LEVEL}">
+        <appender-ref ref="COMMON-DEFAULT-APPENDER"/>
+        <appender-ref ref="COMMON-ERROR-APPENDER"/>
+    </root>
+</configuration>

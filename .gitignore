@@ -1,94 +1,19 @@
-# Compiled source #
-###################
-*.com
-*.class
-*.dll
-*.exe
-*.o
-*.so
-!deploy/nginx/conf/lualib/*.so
-# Packages #
-############
-# it's better to unpack these files and commit the raw source
-# git has its own built in compression methods
-*.7z
-*.dmg
-*.gz
-*.iso
-*.jar
-*.rar
-*.tar
-*.zip
+# Maven (examples)
+target
+dependency-reduced-pom.xml
 
-# Logs and databases #
-######################
-*.log
-
-# OS generated files #
-######################
-.DS_Store*
-ehthumbs.db
-Icon?
-Thumbs.db
-
-# Editor Files #
-################
-*~
-*.swp
-
-# Gradle Files #
-################
-.gradle
-.m2
-
-# Build output directies
-target/
-/target
-*/target
-/build
-*/build
-/bin
-deploy/db/config/*
-deploy/db/templates/*
-#
-# # IntelliJ specific files/directories
-
-# IntelliJ specific files/directories
-out
+# IntelliJ IDEA
 .idea
-*.ipr
-*.iws
 *.iml
-atlassian-ide-plugin.xml
 
-# Eclipse specific files/directories
+# Eclipse
 .classpath
 .project
 .settings
-.metadata
 
-# NetBeans specific files/directories
-.nbattrs
+# OS X
+.DS_Store
 
-# Backup
-bak/
-*.bak
-
-# Temporary
-null/
-tmp/
-
-# Test
-coverage-report
-coverage.ser
-test-output
-*.pmd
-
-# Something dangerous
-*.txt
-!header.txt
-!license.txt
-
-# Logs
-*.log.*
-${zdrmdata_output}
+# log
+logs/
+*.log
