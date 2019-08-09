@@ -16,6 +16,7 @@
  */
 package com.alipay.sofa.registry.server.data.event.handler;
 
+import com.alipay.remoting.Connection;
 import com.alipay.sofa.registry.common.model.CommonResponse;
 import com.alipay.sofa.registry.common.model.dataserver.Datum;
 import com.alipay.sofa.registry.common.model.dataserver.NotifyFetchDatumRequest;
@@ -25,6 +26,7 @@ import com.alipay.sofa.registry.common.model.store.URL;
 import com.alipay.sofa.registry.consistency.hash.ConsistentHash;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
+import com.alipay.sofa.registry.remoting.bolt.BoltChannel;
 import com.alipay.sofa.registry.remoting.exchange.message.Request;
 import com.alipay.sofa.registry.server.data.bootstrap.DataServerConfig;
 import com.alipay.sofa.registry.server.data.cache.BackupTriad;
@@ -90,6 +92,8 @@ public class LocalDataServerChangeEventHandler extends
     private BlockingQueue<LocalDataServerChangeEvent> events    = new LinkedBlockingDeque<>();
 
     private AtomicBoolean                             isChanged = new AtomicBoolean(false);
+
+    private static final int                          TRY_COUNT = 5;
 
     @Override
     public Class interest() {
@@ -358,13 +362,33 @@ public class LocalDataServerChangeEventHandler extends
             for (Entry<String, DataServerNode> serverEntry : dataServerNodeMap.entrySet()) {
                 while (true) {
                     String ip = serverEntry.getKey();
-                    DataServerNode dataServerNode = serverEntry.getValue();
+                    DataServerNode dataServerNode = DataServerNodeFactory.getDataServerNode(
+                        dataServerConfig.getLocalDataCenter(), ip);
+
                     if (dataServerNode == null) {
+                        LOGGER
+                            .warn(
+                                "notify Online dataserver {} has not existed in DataServerNodeFactory!version={}",
+                                ip, changeVersion);
                         break;
                     }
                     try {
-                        if (dataServerNode.getConnection() == null
-                            || !dataServerNode.getConnection().isFine()) {
+                        final Connection connection = dataServerNode.getConnection();
+                        if (connection == null || !connection.isFine()) {
+                            if (connection == null) {
+                                LOGGER
+                                    .warn(
+                                        "notify Online dataserver connect not existed,ip={},version={}",
+                                        ip, changeVersion);
+                            } else {
+                                LOGGER
+                                    .warn(
+                                        "notify Online dataserver connect not fine!remote={},local={},version={}",
+                                        connection.getRemoteAddress(),
+                                        connection.getLocalAddress(), changeVersion);
+                            }
+                            //connect now and registry connect
+                            connectDataServer(dataServerConfig.getLocalDataCenter(), ip);
                             //maybe get dataNode from metaServer,current has not connected!wait for connect task execute
                             TimeUtil.randomDelay(1000);
                             continue;
@@ -380,8 +404,8 @@ public class LocalDataServerChangeEventHandler extends
 
                                 @Override
                                 public URL getRequestUrl() {
-                                    return new URL(dataServerNode.getConnection().getRemoteIP(),
-                                        dataServerNode.getConnection().getRemotePort());
+                                    return new URL(connection.getRemoteIP(), connection
+                                        .getRemotePort());
                                 }
                             }).getResult();
                         if (response.isSuccess()) {
@@ -400,5 +424,44 @@ public class LocalDataServerChangeEventHandler extends
             }
         }
 
+        /**
+         * connect specific dataserver
+         *
+         * @param dataCenter
+         * @param ip
+         */
+        private void connectDataServer(String dataCenter, String ip) {
+            Connection conn = null;
+            for (int tryCount = 0; tryCount < TRY_COUNT; tryCount++) {
+                try {
+                    conn = ((BoltChannel) dataNodeExchanger.connect(new URL(ip, dataServerConfig
+                        .getSyncDataPort()))).getConnection();
+                    break;
+                } catch (Exception e) {
+                    LOGGER.error(
+                        "[LocalDataServerChangeEventHandler] connect dataServer {} in {} error",
+                        ip, dataCenter, e);
+                    TimeUtil.randomDelay(3000);
+                }
+            }
+            if (conn == null || !conn.isFine()) {
+                LOGGER
+                    .error(
+                        "[LocalDataServerChangeEventHandler] connect dataserver {} in {} failed five times",
+                        ip, dataCenter);
+                throw new RuntimeException(
+                    String
+                        .format(
+                            "[LocalDataServerChangeEventHandler] connect dataserver %s in %s failed five times,dataServer will not work,please check connect!",
+                            ip, dataCenter));
+            }
+            LOGGER
+                .info(
+                    "[LocalDataServerChangeEventHandler] connect dataserver in {} success,remote={},local={}",
+                    dataCenter, conn.getRemoteAddress(), conn.getLocalAddress());
+            //maybe get dataNode from metaServer,current has not start! register dataNode info to factory,wait for connect task next execute
+            DataServerNodeFactory.register(new DataServerNode(ip, dataCenter, conn),
+                dataServerConfig);
+        }
     }
 }
