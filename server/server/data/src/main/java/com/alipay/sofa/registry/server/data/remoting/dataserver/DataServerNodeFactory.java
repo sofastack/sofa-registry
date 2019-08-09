@@ -16,6 +16,12 @@
  */
 package com.alipay.sofa.registry.server.data.remoting.dataserver;
 
+import com.alipay.remoting.Connection;
+import com.alipay.sofa.registry.consistency.hash.ConsistentHash;
+import com.alipay.sofa.registry.server.data.bootstrap.DataServerConfig;
+import com.alipay.sofa.registry.server.data.node.DataServerNode;
+import com.google.common.collect.Lists;
+
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -23,12 +29,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
-
-import com.alipay.remoting.Connection;
-import com.alipay.sofa.registry.consistency.hash.ConsistentHash;
-import com.alipay.sofa.registry.server.data.bootstrap.DataServerConfig;
-import com.alipay.sofa.registry.server.data.node.DataServerNode;
-import com.google.common.collect.Lists;
 
 /**
  * the factory to hold other dataservers and connection connected to them
@@ -61,10 +61,15 @@ public class DataServerNodeFactory {
      */
     public static void register(DataServerNode dataServerNode, DataServerConfig dataServerConfig) {
         String dataCenter = dataServerNode.getDataCenter();
-        if (!MAP.containsKey(dataCenter)) {
-            MAP.put(dataCenter, new ConcurrentHashMap<>());
+        Map<String, DataServerNode> dataMap = MAP.get(dataCenter);
+        if (dataMap == null) {
+            Map<String, DataServerNode> newMap = new ConcurrentHashMap<>();
+            dataMap = MAP.putIfAbsent(dataCenter, newMap);
+            if (dataMap == null) {
+                dataMap = newMap;
+            }
         }
-        MAP.get(dataCenter).put(dataServerNode.getIp(), dataServerNode);
+        dataMap.put(dataServerNode.getIp(), dataServerNode);
         refreshConsistent(dataCenter, dataServerConfig);
     }
 
