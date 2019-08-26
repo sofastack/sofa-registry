@@ -18,25 +18,18 @@ package com.alipay.sofa.registry.server.session.wrapper;
 
 import com.alipay.sofa.registry.common.model.store.BaseInfo;
 import com.alipay.sofa.registry.common.model.store.StoreData;
-import com.alipay.sofa.registry.remoting.Channel;
-import com.alipay.sofa.registry.remoting.Server;
-import com.alipay.sofa.registry.remoting.exchange.Exchange;
-import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
+import com.alipay.sofa.registry.server.session.limit.AccessLimitService;
 import org.springframework.beans.factory.annotation.Autowired;
 
 /**
- * check connect already existed
  *
  * @author shangyu.wh
- * @version 1.0: ClientCheckWrapperInterceptor.java, v 0.1 2019-06-18 13:53 shangyu.wh Exp $
+ * @version 1.0: AccessLimitWrapperInterceptor.java, v 0.1 2019-08-26 20:29 shangyu.wh Exp $
  */
-public class ClientCheckWrapperInterceptor implements WrapperInterceptor<StoreData, Boolean> {
+public class AccessLimitWrapperInterceptor implements WrapperInterceptor<StoreData, Boolean> {
 
     @Autowired
-    private SessionServerConfig sessionServerConfig;
-
-    @Autowired
-    private Exchange            boltExchange;
+    private AccessLimitService accessLimitService;
 
     @Override
     public Boolean invokeCodeWrapper(WrapperInvocation<StoreData, Boolean> invocation)
@@ -44,20 +37,17 @@ public class ClientCheckWrapperInterceptor implements WrapperInterceptor<StoreDa
 
         BaseInfo baseInfo = (BaseInfo) invocation.getParameterSupplier().get();
 
-        Server sessionServer = boltExchange.getServer(sessionServerConfig.getServerPort());
-
-        Channel channel = sessionServer.getChannel(baseInfo.getSourceAddress());
-
-        if (channel == null) {
+        if (!accessLimitService.tryAcquire()) {
             throw new RuntimeException(String.format(
-                "Register address %s  has not connected session server!",
-                baseInfo.getSourceAddress()));
+                "Register access limit for session server!dataInfoId=%s,connectId=%s",
+                baseInfo.getDataInfoId(), baseInfo.getSourceAddress()));
         }
+
         return invocation.proceed();
     }
 
     @Override
     public int getOrder() {
-        return 100;
+        return 0;
     }
 }

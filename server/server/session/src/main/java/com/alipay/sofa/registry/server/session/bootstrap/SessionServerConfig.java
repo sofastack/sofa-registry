@@ -204,4 +204,14 @@ public interface SessionServerConfig {
     int getPushTaskConfirmCheckExecutorQueueSize();
 
     int getPushTaskConfirmCheckExecutorThreadSize();
+
+    int getPublishDataExecutorMinPoolSize();
+
+    int getPublishDataExecutorMaxPoolSize();
+
+    int getPublishDataExecutorQueueSize();
+
+    long getPublishDataExecutorKeepAliveTime();
+
+    double getAccessLimitRate();
 }
