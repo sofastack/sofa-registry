@@ -16,15 +16,9 @@
  */
 package com.alipay.sofa.registry.server.session.scheduler.task;
 
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.concurrent.TimeUnit;
-
 import com.alipay.sofa.registry.common.model.PushDataRetryRequest;
-import com.alipay.sofa.registry.common.model.store.Subscriber;
 import com.alipay.sofa.registry.common.model.store.DataInfo;
+import com.alipay.sofa.registry.common.model.store.Subscriber;
 import com.alipay.sofa.registry.common.model.store.URL;
 import com.alipay.sofa.registry.core.model.DataBox;
 import com.alipay.sofa.registry.core.model.ReceivedData;
@@ -37,13 +31,19 @@ import com.alipay.sofa.registry.remoting.exchange.Exchange;
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
 import com.alipay.sofa.registry.server.session.node.service.ClientNodeService;
 import com.alipay.sofa.registry.server.session.scheduler.ExecutorManager;
+import com.alipay.sofa.registry.server.session.store.Interests;
 import com.alipay.sofa.registry.server.session.strategy.ReceivedDataMultiPushTaskStrategy;
 import com.alipay.sofa.registry.task.Task;
 import com.alipay.sofa.registry.task.TaskClosure;
 import com.alipay.sofa.registry.task.batcher.TaskProcessor.ProcessingResult;
 import com.alipay.sofa.registry.task.listener.TaskEvent;
 import com.alipay.sofa.registry.timer.AsyncHashedWheelTimer;
-import com.alipay.sofa.registry.server.session.store.Interests;
+
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.concurrent.TimeUnit;
 
 /**
  *
@@ -87,54 +87,62 @@ public class ReceivedDataMultiPushTask extends AbstractSessionTask implements Ta
 
     @Override
     public void execute() {
-
-        if (sessionServerConfig.isStopPushSwitch()) {
-            LOGGER
-                .info(
-                    "Stop Push ReceivedData with switch on! dataId: {},group: {},Instance: {}, url: {}",
-                    receivedData.getDataId(), receivedData.getGroup(),
-                    receivedData.getInstanceId(), url);
-            return;
-        }
-
-        Object receivedDataPush = receivedDataMultiPushTaskStrategy.convert2PushData(receivedData,
-            url);
-
-        CallbackHandler callbackHandler = new CallbackHandler() {
-            @Override
-            public void onCallback(Channel channel, Object message) {
+        Object receivedDataPush = null;
+        try {
+            if (sessionServerConfig.isStopPushSwitch()) {
                 LOGGER
                     .info(
-                        "Push ReceivedData success! dataId:{},group:{},Instance:{},version:{},url: {},dataPush:{}",
+                        "Stop Push ReceivedData with switch on! dataId: {},group: {},Instance: {}, url: {}",
                         receivedData.getDataId(), receivedData.getGroup(),
-                        receivedData.getInstanceId(), receivedData.getVersion(), url, dataPush);
-
-                if (taskClosure != null) {
-                    confirmCallBack(true);
-                }
+                        receivedData.getInstanceId(), url);
+                return;
             }
 
-            @Override
-            public void onException(Channel channel, Throwable exception) {
-                LOGGER
-                    .error(
-                        "Push ReceivedData error! dataId:{},group:{},Instance:{},version:{},url: {},dataPush:{}",
-                        receivedData.getDataId(), receivedData.getGroup(),
-                        receivedData.getInstanceId(), receivedData.getVersion(), url, dataPush,
-                        exception);
+            receivedDataPush = receivedDataMultiPushTaskStrategy
+                .convert2PushData(receivedData, url);
 
-                if (taskClosure != null) {
-                    confirmCallBack(false);
-                    throw new RuntimeException("Push ReceivedData got exception from callback!");
-                } else {
-                    retrySendReceiveData(new PushDataRetryRequest(receivedDataPush, url));
+            final Object finalReceivedDataPush = receivedDataPush;
+            CallbackHandler callbackHandler = new CallbackHandler() {
+                @Override
+                public void onCallback(Channel channel, Object message) {
+
+                    if (taskClosure != null) {
+                        confirmCallBack(true);
+                    }
+                    LOGGER
+                        .info(
+                            "Push ReceivedData success! dataId:{},group:{},Instance:{},version:{},url: {},dataPush:{}",
+                            receivedData.getDataId(), receivedData.getGroup(),
+                            receivedData.getInstanceId(), receivedData.getVersion(), url, dataPush);
                 }
-            }
-        };
 
-        try {
+                @Override
+                public void onException(Channel channel, Throwable exception) {
+                    try {
+                        LOGGER
+                            .error(
+                                "Push ReceivedData error! dataId:{},group:{},Instance:{},version:{},url: {},dataPush:{}",
+                                receivedData.getDataId(), receivedData.getGroup(),
+                                receivedData.getInstanceId(), receivedData.getVersion(), url,
+                                dataPush, exception);
+
+                        if (taskClosure != null) {
+                            throw new RuntimeException(
+                                "Push ReceivedData got exception from callback!");
+                        } else {
+                            retrySendReceiveData(new PushDataRetryRequest(finalReceivedDataPush,
+                                url));
+                        }
+                    } finally {
+                        if (taskClosure != null) {
+                            confirmCallBack(false);
+                        }
+                    }
+                }
+            };
+
             clientNodeService.pushWithCallback(receivedDataPush, url, callbackHandler);
-        } catch (Exception e) {
+        } catch (Throwable e) {
             if (taskClosure != null) {
                 confirmCallBack(false);
                 throw e;

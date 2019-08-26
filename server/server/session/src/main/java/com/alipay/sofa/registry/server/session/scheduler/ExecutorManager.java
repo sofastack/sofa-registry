@@ -16,6 +16,20 @@
  */
 package com.alipay.sofa.registry.server.session.scheduler;
 
+import com.alipay.sofa.registry.log.Logger;
+import com.alipay.sofa.registry.log.LoggerFactory;
+import com.alipay.sofa.registry.metrics.TaskMetrics;
+import com.alipay.sofa.registry.remoting.exchange.NodeExchanger;
+import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
+import com.alipay.sofa.registry.server.session.node.NodeManager;
+import com.alipay.sofa.registry.server.session.registry.Registry;
+import com.alipay.sofa.registry.task.scheduler.TimedSupervisorTask;
+import com.alipay.sofa.registry.timer.AsyncHashedWheelTimer;
+import com.alipay.sofa.registry.timer.AsyncHashedWheelTimer.TaskFailedCallback;
+import com.alipay.sofa.registry.util.NamedThreadFactory;
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
+import org.springframework.beans.factory.annotation.Autowired;
+
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ArrayBlockingQueue;
@@ -27,22 +41,15 @@ import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
-import org.springframework.beans.factory.annotation.Autowired;
-
-import com.alipay.sofa.registry.metrics.TaskMetrics;
-import com.alipay.sofa.registry.remoting.exchange.NodeExchanger;
-import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
-import com.alipay.sofa.registry.server.session.node.NodeManager;
-import com.alipay.sofa.registry.server.session.registry.Registry;
-import com.alipay.sofa.registry.task.scheduler.TimedSupervisorTask;
-import com.alipay.sofa.registry.util.NamedThreadFactory;
-
 /**
  *
  * @author shangyu.wh
  * @version $Id: ExecutorManager.java, v 0.1 2017-11-28 14:41 shangyu.wh Exp $
  */
 public class ExecutorManager {
+
+    private static final Logger             LOGGER                                     = LoggerFactory
+                                                                                           .getLogger(ExecutorManager.class);
 
     private final ScheduledExecutorService  scheduler;
 
@@ -59,6 +66,8 @@ public class ExecutorManager {
     private final ThreadPoolExecutor        dataChangeRequestExecutor;
     private final ThreadPoolExecutor        pushTaskExecutor;
     private final ThreadPoolExecutor        connectClientExecutor;
+
+    private final AsyncHashedWheelTimer     pushTaskCheckAsyncHashedWheelTimer;
 
     private SessionServerConfig             sessionServerConfig;
 
@@ -167,6 +176,23 @@ public class ExecutorManager {
                 new LinkedBlockingQueue(sessionServerConfig.getConnectClientExecutorQueueSize()),
                 new NamedThreadFactory("DisconnectClientExecutor", true)));
 
+        pushTaskCheckAsyncHashedWheelTimer = new AsyncHashedWheelTimer(new NamedThreadFactory("PushTaskConfirmCheck-executor", true),
+                sessionServerConfig.getPushTaskConfirmCheckWheelTicksDuration(), TimeUnit.MILLISECONDS,
+                sessionServerConfig.getPushTaskConfirmCheckWheelTicksSize(),
+                sessionServerConfig.getPushTaskConfirmCheckExecutorThreadSize(),
+                sessionServerConfig.getPushTaskConfirmCheckExecutorQueueSize(), new ThreadFactoryBuilder()
+                .setNameFormat("PushTaskConfirmCheck-executor-%d").build(),
+                new TaskFailedCallback() {
+                    @Override
+                    public void executionRejected(Throwable e) {
+                        LOGGER.error("executionRejected: " + e.getMessage(), e);
+                    }
+
+                    @Override
+                    public void executionFailed(Throwable e) {
+                        LOGGER.error("executionFailed: " + e.getMessage(), e);
+                    }
+                });
     }
 
     public void startScheduler() {
@@ -291,4 +317,7 @@ public class ExecutorManager {
         return connectClientExecutor;
     }
 
+    public AsyncHashedWheelTimer getPushTaskCheckAsyncHashedWheelTimer() {
+        return pushTaskCheckAsyncHashedWheelTimer;
+    }
 }

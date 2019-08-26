@@ -194,4 +194,14 @@ public interface SessionServerConfig {
     int getRenewDatumWheelThreadSize();
 
     int getRenewDatumWheelQueueSize();
+
+    long getPushTaskConfirmWaitTimeout();
+
+    int getPushTaskConfirmCheckWheelTicksSize();
+
+    int getPushTaskConfirmCheckWheelTicksDuration();
+
+    int getPushTaskConfirmCheckExecutorQueueSize();
+
+    int getPushTaskConfirmCheckExecutorThreadSize();
 }

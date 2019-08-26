@@ -16,20 +16,6 @@
  */
 package com.alipay.sofa.registry.server.meta.store;
 
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicLong;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
-
-import javax.ws.rs.NotSupportedException;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-
 import com.alipay.sofa.registry.common.model.Node.NodeType;
 import com.alipay.sofa.registry.common.model.metaserver.DataCenterNodes;
 import com.alipay.sofa.registry.common.model.metaserver.GetChangeListRequest;
@@ -45,6 +31,18 @@ import com.alipay.sofa.registry.store.api.annotation.RaftReference;
 import com.alipay.sofa.registry.task.listener.TaskEvent;
 import com.alipay.sofa.registry.task.listener.TaskEvent.TaskType;
 import com.alipay.sofa.registry.task.listener.TaskListenerManager;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+
+import javax.ws.rs.NotSupportedException;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 /**
  *
@@ -337,9 +335,8 @@ public class MetaStoreService implements StoreService<MetaNode> {
         taskEvent.setAttribute(Constant.PUSH_TARGET_TYPE, NodeType.DATA);
         taskEvent.setAttribute(Constant.PUSH_TARGET_OPERATOR_TYPE, nodeOperate);
 
-        LOGGER.info("send " + taskEvent.getTaskType() + " NodeType:" + NodeType.DATA + " Operator:"
-                    + nodeOperate);
-
+        LOGGER.info("send {} NodeType:{} Operator:{}", taskEvent.getTaskType(), NodeType.DATA,
+            nodeOperate);
         taskListenerManager.sendTaskEvent(taskEvent);
     }
 
@@ -349,8 +346,8 @@ public class MetaStoreService implements StoreService<MetaNode> {
         TaskEvent taskEvent = new TaskEvent(nodeChangeResult, TaskType.DATA_NODE_CHANGE_PUSH_TASK);
         taskEvent.setAttribute(Constant.PUSH_TARGET_TYPE, NodeType.SESSION);
         taskEvent.setAttribute(Constant.PUSH_TARGET_OPERATOR_TYPE, nodeOperate);
-        LOGGER.info("send " + taskEvent.getTaskType() + " NodeType:" + NodeType.SESSION
-                    + " Operator:" + nodeOperate);
+        LOGGER.info("send {} NodeType:{} Operator:{}", taskEvent.getTaskType(), NodeType.SESSION,
+            nodeOperate);
         taskListenerManager.sendTaskEvent(taskEvent);
     }
 
