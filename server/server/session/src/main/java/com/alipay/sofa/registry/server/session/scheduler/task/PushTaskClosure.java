@@ -51,9 +51,10 @@ public class PushTaskClosure implements TaskClosure {
 
     private CountDownLatch                              latch;
 
-    private SessionServerConfig sessionServerConfig;
+    private SessionServerConfig                         sessionServerConfig;
 
-    public PushTaskClosure(ExecutorService pushTaskClosureExecutor, SessionServerConfig sessionServerConfig) {
+    public PushTaskClosure(ExecutorService pushTaskClosureExecutor,
+                           SessionServerConfig sessionServerConfig) {
         this.pushTaskClosureExecutor = pushTaskClosureExecutor;
         this.sessionServerConfig = sessionServerConfig;
     }
