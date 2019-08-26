@@ -16,13 +16,13 @@
  */
 package com.alipay.sofa.registry.server.session.bootstrap;
 
-import java.util.HashSet;
-import java.util.Set;
-import java.util.regex.Pattern;
-
 import org.apache.commons.lang.builder.ToStringBuilder;
 import org.apache.commons.lang.builder.ToStringStyle;
 import org.springframework.boot.context.properties.ConfigurationProperties;
+
+import java.util.HashSet;
+import java.util.Set;
+import java.util.regex.Pattern;
 
 /**
  * The type Session server config bean.
@@ -186,6 +186,8 @@ public class SessionServerConfigBean implements SessionServerConfig {
     private int                pushDataTaskRetryFirstDelay             = 500;
 
     private long               pushDataTaskRetryIncrementDelay         = 500;
+
+    private long               pushTaskConfirmWaitTimeout              = 6000;
 
     private String             sessionServerRegion;
 
@@ -1827,6 +1829,24 @@ public class SessionServerConfigBean implements SessionServerConfig {
      */
     public void setBlacklistSubDataIdRegex(String blacklistSubDataIdRegex) {
         this.blacklistSubDataIdRegex = blacklistSubDataIdRegex;
+    }
+
+    /**
+     * Getter method for property <tt>pushTaskConfirmWaitTimeout</tt>.
+     *
+     * @return property value of pushTaskConfirmWaitTimeout
+     */
+    public long getPushTaskConfirmWaitTimeout() {
+        return pushTaskConfirmWaitTimeout;
+    }
+
+    /**
+     * Setter method for property <tt>pushTaskConfirmWaitTimeout</tt>.
+     *
+     * @param pushTaskConfirmWaitTimeout  value to be assigned to property pushTaskConfirmWaitTimeout
+     */
+    public void setPushTaskConfirmWaitTimeout(long pushTaskConfirmWaitTimeout) {
+        this.pushTaskConfirmWaitTimeout = pushTaskConfirmWaitTimeout;
     }
 
     @Override

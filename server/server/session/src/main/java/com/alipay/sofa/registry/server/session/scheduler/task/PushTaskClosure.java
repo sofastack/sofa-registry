@@ -18,16 +18,16 @@ package com.alipay.sofa.registry.server.session.scheduler.task;
 
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
+import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
 import com.alipay.sofa.registry.task.Task;
 import com.alipay.sofa.registry.task.TaskClosure;
 import com.alipay.sofa.registry.task.batcher.TaskProcessor.ProcessingResult;
 import com.alipay.sofa.registry.task.listener.TaskEvent;
 
 import java.util.Set;
-import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -37,31 +37,33 @@ import java.util.concurrent.TimeUnit;
  */
 public class PushTaskClosure implements TaskClosure {
 
-    private final static Logger                         LOGGER          = LoggerFactory
-                                                                            .getLogger(PushTaskClosure.class);
+    private final static Logger                         LOGGER        = LoggerFactory
+                                                                          .getLogger(PushTaskClosure.class);
 
-    private Set<String>                                 tasks           = ConcurrentHashMap
-                                                                            .newKeySet();
+    private Set<String>                                 tasks         = ConcurrentHashMap
+                                                                          .newKeySet();
 
-    private ConcurrentHashMap<String, ProcessingResult> taskResultMap   = new ConcurrentHashMap<>();
+    private ConcurrentHashMap<String, ProcessingResult> taskResultMap = new ConcurrentHashMap<>();
 
     private TaskClosure                                 taskClosure;
 
-    private final BlockingQueue<String>                 completionQueue = new LinkedBlockingQueue<>();
-
     private final ExecutorService                       pushTaskClosureExecutor;
 
-    public PushTaskClosure(ExecutorService pushTaskClosureExecutor) {
+    private CountDownLatch                              latch;
+
+    private SessionServerConfig sessionServerConfig;
+
+    public PushTaskClosure(ExecutorService pushTaskClosureExecutor, SessionServerConfig sessionServerConfig) {
         this.pushTaskClosureExecutor = pushTaskClosureExecutor;
+        this.sessionServerConfig = sessionServerConfig;
     }
 
     @Override
     public void run(ProcessingResult processingResult, Task task) {
         if (task != null) {
-            ProcessingResult existed = taskResultMap
-                .putIfAbsent(task.getTaskId(), processingResult);
-            if (existed == null) {
-                completionQueue.add(task.getTaskId());
+            ProcessingResult result = taskResultMap.putIfAbsent(task.getTaskId(), processingResult);
+            if (result == null) {
+                latch.countDown();
             }
         }
     }
@@ -72,34 +74,26 @@ public class PushTaskClosure implements TaskClosure {
 
     public void start() {
         pushTaskClosureExecutor.execute(() -> {
+            int size = tasks.size();
+            latch = new CountDownLatch(size);
+            LOGGER.info("Push task result wait,all task size {}",  size);
+
             try {
-                int size = tasks.size();
-                LOGGER.info("Push task queue size {},all task size {}", completionQueue.size(), size);
-                for (int i = 0; i < size; i++) {
-                    String taskId = completionQueue.poll(6000, TimeUnit.MILLISECONDS);
-                    if(taskId != null) {
-                        ProcessingResult result = taskResultMap.get(taskId);
-                        if (result == ProcessingResult.Success) {
-                            tasks.remove(taskId);
-                        }
+                if (!latch.await(sessionServerConfig.getPushTaskConfirmWaitTimeout(), TimeUnit.MILLISECONDS)) {
+                    LOGGER.warn("wait Push task result timeout,result size {},all task size {}",taskResultMap.size(),size);
+                    if (taskClosure != null) {
+                        taskClosure.run(ProcessingResult.PermanentError, null);
                     }
                 }
-            } catch (InterruptedException e) {
-                LOGGER.error("Push task check InterruptedException!", e);
+            } catch (Exception e) {
+                LOGGER.error("Error when wait result!", e);
             }
 
-            if (tasks.isEmpty()) {
-                LOGGER.info("Push all tasks success");
-                if (taskClosure != null) {
-                    taskClosure.run(ProcessingResult.Success, null);
-                }
-
-            } else {
-                LOGGER.warn("Push tasks found error tasks {} !", tasks.size());
-                if (taskClosure != null) {
-                    taskClosure.run(ProcessingResult.PermanentError, null);
-                }
+            LOGGER.info("Push all tasks success");
+            if (taskClosure != null) {
+                taskClosure.run(ProcessingResult.Success, null);
             }
+
         });
     }
 
