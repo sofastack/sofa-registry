@@ -34,6 +34,8 @@ import com.alipay.sofa.registry.server.session.filter.blacklist.BlacklistManager
 import com.alipay.sofa.registry.server.session.filter.blacklist.BlacklistMatchProcessFilter;
 import com.alipay.sofa.registry.server.session.filter.blacklist.DefaultDataIdMatchStrategy;
 import com.alipay.sofa.registry.server.session.filter.blacklist.DefaultIPMatchStrategy;
+import com.alipay.sofa.registry.server.session.limit.AccessLimitService;
+import com.alipay.sofa.registry.server.session.limit.AccessLimitServiceImpl;
 import com.alipay.sofa.registry.server.session.listener.CancelDataTaskListener;
 import com.alipay.sofa.registry.server.session.listener.DataChangeFetchCloudTaskListener;
 import com.alipay.sofa.registry.server.session.listener.DataChangeFetchTaskListener;
@@ -121,6 +123,7 @@ import com.alipay.sofa.registry.server.session.strategy.impl.DefaultSubscriberMu
 import com.alipay.sofa.registry.server.session.strategy.impl.DefaultSubscriberRegisterFetchTaskStrategy;
 import com.alipay.sofa.registry.server.session.strategy.impl.DefaultSyncConfigHandlerStrategy;
 import com.alipay.sofa.registry.server.session.strategy.impl.DefaultWatcherHandlerStrategy;
+import com.alipay.sofa.registry.server.session.wrapper.AccessLimitWrapperInterceptor;
 import com.alipay.sofa.registry.server.session.wrapper.BlacklistWrapperInterceptor;
 import com.alipay.sofa.registry.server.session.wrapper.ClientCheckWrapperInterceptor;
 import com.alipay.sofa.registry.server.session.wrapper.WrapperInterceptor;
@@ -663,6 +666,14 @@ public class SessionServerConfiguration {
     }
 
     @Configuration
+    public static class AccessLimitServiceConfiguration {
+        @Bean
+        public AccessLimitService accessLimitService(SessionServerConfig sessionServerConfig) {
+            return new AccessLimitServiceImpl(sessionServerConfig);
+        }
+    }
+
+    @Configuration
     public static class SessionFilterConfiguration {
 
         @Bean
@@ -704,6 +715,14 @@ public class SessionServerConfiguration {
             wrapperInterceptorManager.addInterceptor(blacklistWrapperInterceptor);
             return blacklistWrapperInterceptor;
         }
+
+        @Bean
+        public WrapperInterceptor accessLimitWrapperInterceptor(WrapperInterceptorManager wrapperInterceptorManager) {
+            AccessLimitWrapperInterceptor accessLimitWrapperInterceptor = new AccessLimitWrapperInterceptor();
+            wrapperInterceptorManager.addInterceptor(accessLimitWrapperInterceptor);
+            return accessLimitWrapperInterceptor;
+        }
+
     }
 
     @Configuration

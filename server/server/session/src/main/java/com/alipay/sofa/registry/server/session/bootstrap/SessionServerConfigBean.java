@@ -197,6 +197,16 @@ public class SessionServerConfigBean implements SessionServerConfig {
 
     private int                pushTaskConfirmCheckExecutorThreadSize  = 10;
 
+    private int                publishDataExecutorMinPoolSize          = 100;
+
+    private int                publishDataExecutorMaxPoolSize          = 400;
+
+    private int                publishDataExecutorQueueSize            = 10000;
+
+    private long               publishDataExecutorKeepAliveTime        = 60;
+
+    private double             accessLimitRate                         = 1000.0;
+
     private String             sessionServerRegion;
 
     private String             sessionServerDataCenter;
@@ -1927,6 +1937,96 @@ public class SessionServerConfigBean implements SessionServerConfig {
      */
     public void setPushTaskConfirmCheckExecutorThreadSize(int pushTaskConfirmCheckExecutorThreadSize) {
         this.pushTaskConfirmCheckExecutorThreadSize = pushTaskConfirmCheckExecutorThreadSize;
+    }
+
+    /**
+     * Getter method for property <tt>publishDataExecutorMinPoolSize</tt>.
+     *
+     * @return property value of publishDataExecutorMinPoolSize
+     */
+    public int getPublishDataExecutorMinPoolSize() {
+        return publishDataExecutorMinPoolSize;
+    }
+
+    /**
+     * Getter method for property <tt>publishDataExecutorMaxPoolSize</tt>.
+     *
+     * @return property value of publishDataExecutorMaxPoolSize
+     */
+    public int getPublishDataExecutorMaxPoolSize() {
+        return publishDataExecutorMaxPoolSize;
+    }
+
+    /**
+     * Getter method for property <tt>publishDataExecutorQueueSize</tt>.
+     *
+     * @return property value of publishDataExecutorQueueSize
+     */
+    public int getPublishDataExecutorQueueSize() {
+        return publishDataExecutorQueueSize;
+    }
+
+    /**
+     * Getter method for property <tt>publishDataExecutorKeepAliveTime</tt>.
+     *
+     * @return property value of publishDataExecutorKeepAliveTime
+     */
+    public long getPublishDataExecutorKeepAliveTime() {
+        return publishDataExecutorKeepAliveTime;
+    }
+
+    /**
+     * Setter method for property <tt>publishDataExecutorMinPoolSize</tt>.
+     *
+     * @param publishDataExecutorMinPoolSize  value to be assigned to property publishDataExecutorMinPoolSize
+     */
+    public void setPublishDataExecutorMinPoolSize(int publishDataExecutorMinPoolSize) {
+        this.publishDataExecutorMinPoolSize = publishDataExecutorMinPoolSize;
+    }
+
+    /**
+     * Setter method for property <tt>publishDataExecutorMaxPoolSize</tt>.
+     *
+     * @param publishDataExecutorMaxPoolSize  value to be assigned to property publishDataExecutorMaxPoolSize
+     */
+    public void setPublishDataExecutorMaxPoolSize(int publishDataExecutorMaxPoolSize) {
+        this.publishDataExecutorMaxPoolSize = publishDataExecutorMaxPoolSize;
+    }
+
+    /**
+     * Setter method for property <tt>publishDataExecutorQueueSize</tt>.
+     *
+     * @param publishDataExecutorQueueSize  value to be assigned to property publishDataExecutorQueueSize
+     */
+    public void setPublishDataExecutorQueueSize(int publishDataExecutorQueueSize) {
+        this.publishDataExecutorQueueSize = publishDataExecutorQueueSize;
+    }
+
+    /**
+     * Setter method for property <tt>publishDataExecutorKeepAliveTime</tt>.
+     *
+     * @param publishDataExecutorKeepAliveTime  value to be assigned to property publishDataExecutorKeepAliveTime
+     */
+    public void setPublishDataExecutorKeepAliveTime(long publishDataExecutorKeepAliveTime) {
+        this.publishDataExecutorKeepAliveTime = publishDataExecutorKeepAliveTime;
+    }
+
+    /**
+     * Getter method for property <tt>accessLimitRate</tt>.
+     *
+     * @return property value of accessLimitRate
+     */
+    public double getAccessLimitRate() {
+        return accessLimitRate;
+    }
+
+    /**
+     * Setter method for property <tt>accessLimitRate</tt>.
+     *
+     * @param accessLimitRate  value to be assigned to property accessLimitRate
+     */
+    public void setAccessLimitRate(double accessLimitRate) {
+        this.accessLimitRate = accessLimitRate;
     }
 
     @Override

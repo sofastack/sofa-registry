@@ -70,7 +70,7 @@ public class BlacklistWrapperInterceptor implements WrapperInterceptor<StoreData
 
     @Override
     public int getOrder() {
-        return 100;
+        return 200;
     }
 
     private void fireSubscriberPushEmptyTask(Subscriber subscriber) {
