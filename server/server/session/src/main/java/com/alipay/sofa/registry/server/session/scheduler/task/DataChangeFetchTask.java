@@ -197,7 +197,7 @@ public class DataChangeFetchTask extends AbstractSessionTask {
 
     public PushTaskClosure getTaskClosure() {
         //this for all this dataInfoId push result get and call back to change version
-        PushTaskClosure pushTaskClosure = new PushTaskClosure(executorManager.getPushTaskClosureExecutor(),sessionServerConfig);
+        PushTaskClosure pushTaskClosure = new PushTaskClosure(executorManager.getPushTaskCheckAsyncHashedWheelTimer(),sessionServerConfig,dataChangeRequest.getDataInfoId());
         pushTaskClosure.setTaskClosure((status, task) -> {
             String dataCenter = dataChangeRequest.getDataCenter();
             String dataInfoId = dataChangeRequest.getDataInfoId();

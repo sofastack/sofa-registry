@@ -23,11 +23,10 @@ import com.alipay.sofa.registry.task.Task;
 import com.alipay.sofa.registry.task.TaskClosure;
 import com.alipay.sofa.registry.task.batcher.TaskProcessor.ProcessingResult;
 import com.alipay.sofa.registry.task.listener.TaskEvent;
+import com.alipay.sofa.registry.timer.AsyncHashedWheelTimer;
 
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -47,16 +46,17 @@ public class PushTaskClosure implements TaskClosure {
 
     private TaskClosure                                 taskClosure;
 
-    private final ExecutorService                       pushTaskClosureExecutor;
+    private final AsyncHashedWheelTimer                 pushTaskCheckAsyncHashedWheelTimer;
 
-    private CountDownLatch                              latch;
+    private final SessionServerConfig                   sessionServerConfig;
 
-    private SessionServerConfig                         sessionServerConfig;
+    private final String                                dataInfoId;
 
-    public PushTaskClosure(ExecutorService pushTaskClosureExecutor,
-                           SessionServerConfig sessionServerConfig) {
-        this.pushTaskClosureExecutor = pushTaskClosureExecutor;
+    public PushTaskClosure(AsyncHashedWheelTimer pushTaskCheckAsyncHashedWheelTimer,
+                           SessionServerConfig sessionServerConfig, String dataInfoId) {
+        this.pushTaskCheckAsyncHashedWheelTimer = pushTaskCheckAsyncHashedWheelTimer;
         this.sessionServerConfig = sessionServerConfig;
+        this.dataInfoId = dataInfoId;
     }
 
     @Override
@@ -64,7 +64,9 @@ public class PushTaskClosure implements TaskClosure {
         if (task != null) {
             ProcessingResult result = taskResultMap.putIfAbsent(task.getTaskId(), processingResult);
             if (result == null) {
-                latch.countDown();
+                if (processingResult == ProcessingResult.Success) {
+                    tasks.remove(task.getTaskId());
+                }
             }
         }
     }
@@ -74,28 +76,24 @@ public class PushTaskClosure implements TaskClosure {
     }
 
     public void start() {
-        pushTaskClosureExecutor.execute(() -> {
-            int size = tasks.size();
-            latch = new CountDownLatch(size);
-            LOGGER.info("Push task result wait,all task size {}",  size);
+        int size = tasks.size();
+        LOGGER.info("Push task confirm,dataInfoId={},all task size={}", dataInfoId, size);
 
-            try {
-                if (!latch.await(sessionServerConfig.getPushTaskConfirmWaitTimeout(), TimeUnit.MILLISECONDS)) {
-                    LOGGER.warn("wait Push task result timeout,result size {},all task size {}",taskResultMap.size(),size);
-                    if (taskClosure != null) {
-                        taskClosure.run(ProcessingResult.PermanentError, null);
-                    }
+        pushTaskCheckAsyncHashedWheelTimer.newTimeout(timeout -> {
+
+            if (tasks.isEmpty()) {
+                LOGGER.info("Push all tasks success,dataInfoId={}",dataInfoId);
+                if (taskClosure != null) {
+                    taskClosure.run(ProcessingResult.Success, null);
                 }
-            } catch (Exception e) {
-                LOGGER.error("Error when wait result!", e);
+            } else {
+                LOGGER.warn("Push tasks found error tasks {},dataInfoId={}!", tasks.size(),dataInfoId);
+                if (taskClosure != null) {
+                    taskClosure.run(ProcessingResult.PermanentError, null);
+                }
             }
 
-            LOGGER.info("Push all tasks success");
-            if (taskClosure != null) {
-                taskClosure.run(ProcessingResult.Success, null);
-            }
-
-        });
+        },sessionServerConfig.getPushTaskConfirmWaitTimeout(),TimeUnit.MILLISECONDS);
     }
 
     /**

@@ -187,7 +187,15 @@ public class SessionServerConfigBean implements SessionServerConfig {
 
     private long               pushDataTaskRetryIncrementDelay         = 500;
 
-    private long               pushTaskConfirmWaitTimeout              = 6000;
+    private long               pushTaskConfirmWaitTimeout              = 10000;
+
+    private int                pushTaskConfirmCheckWheelTicksSize      = 1024;
+
+    private int                pushTaskConfirmCheckWheelTicksDuration  = 100;
+
+    private int                pushTaskConfirmCheckExecutorQueueSize   = 10000;
+
+    private int                pushTaskConfirmCheckExecutorThreadSize  = 10;
 
     private String             sessionServerRegion;
 
@@ -1847,6 +1855,78 @@ public class SessionServerConfigBean implements SessionServerConfig {
      */
     public void setPushTaskConfirmWaitTimeout(long pushTaskConfirmWaitTimeout) {
         this.pushTaskConfirmWaitTimeout = pushTaskConfirmWaitTimeout;
+    }
+
+    /**
+     * Getter method for property <tt>pushTaskConfirmCheckWheelTicksSize</tt>.
+     *
+     * @return property value of pushTaskConfirmCheckWheelTicksSize
+     */
+    public int getPushTaskConfirmCheckWheelTicksSize() {
+        return pushTaskConfirmCheckWheelTicksSize;
+    }
+
+    /**
+     * Getter method for property <tt>pushTaskConfirmCheckWheelTicksDuration</tt>.
+     *
+     * @return property value of pushTaskConfirmCheckWheelTicksDuration
+     */
+    public int getPushTaskConfirmCheckWheelTicksDuration() {
+        return pushTaskConfirmCheckWheelTicksDuration;
+    }
+
+    /**
+     * Getter method for property <tt>pushTaskConfirmCheckExecutorQueueSize</tt>.
+     *
+     * @return property value of pushTaskConfirmCheckExecutorQueueSize
+     */
+    public int getPushTaskConfirmCheckExecutorQueueSize() {
+        return pushTaskConfirmCheckExecutorQueueSize;
+    }
+
+    /**
+     * Getter method for property <tt>pushTaskConfirmCheckExecutorThreadSize</tt>.
+     *
+     * @return property value of pushTaskConfirmCheckExecutorThreadSize
+     */
+    public int getPushTaskConfirmCheckExecutorThreadSize() {
+        return pushTaskConfirmCheckExecutorThreadSize;
+    }
+
+    /**
+     * Setter method for property <tt>pushTaskConfirmCheckWheelTicksSize</tt>.
+     *
+     * @param pushTaskConfirmCheckWheelTicksSize  value to be assigned to property pushTaskConfirmCheckWheelTicksSize
+     */
+    public void setPushTaskConfirmCheckWheelTicksSize(int pushTaskConfirmCheckWheelTicksSize) {
+        this.pushTaskConfirmCheckWheelTicksSize = pushTaskConfirmCheckWheelTicksSize;
+    }
+
+    /**
+     * Setter method for property <tt>pushTaskConfirmCheckWheelTicksDuration</tt>.
+     *
+     * @param pushTaskConfirmCheckWheelTicksDuration  value to be assigned to property pushTaskConfirmCheckWheelTicksDuration
+     */
+    public void setPushTaskConfirmCheckWheelTicksDuration(int pushTaskConfirmCheckWheelTicksDuration) {
+        this.pushTaskConfirmCheckWheelTicksDuration = pushTaskConfirmCheckWheelTicksDuration;
+    }
+
+    /**
+     * Setter method for property <tt>pushTaskConfirmCheckExecutorQueueSize</tt>.
+     *
+     * @param pushTaskConfirmCheckExecutorQueueSize  value to be assigned to property pushTaskConfirmCheckExecutorQueueSize
+     */
+    public void setPushTaskConfirmCheckExecutorQueueSize(int pushTaskConfirmCheckExecutorQueueSize) {
+        this.pushTaskConfirmCheckExecutorQueueSize = pushTaskConfirmCheckExecutorQueueSize;
+    }
+
+    /**
+     * Setter method for property <tt>pushTaskConfirmCheckExecutorThreadSize</tt>.
+     *
+     * @param pushTaskConfirmCheckExecutorThreadSize  value to be assigned to property pushTaskConfirmCheckExecutorThreadSize
+     */
+    public void setPushTaskConfirmCheckExecutorThreadSize(int pushTaskConfirmCheckExecutorThreadSize) {
+        this.pushTaskConfirmCheckExecutorThreadSize = pushTaskConfirmCheckExecutorThreadSize;
     }
 
     @Override
