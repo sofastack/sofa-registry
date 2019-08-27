@@ -122,15 +122,20 @@ public class DataChangeHandler {
 
             } else {
                 Datum datum = changeData.getDatum();
-                //update version for pub or unPub merge to cache
-                //if the version product before merge to cache,it may be cause small version override big one
-                datum.updateVersion();
 
                 String dataCenter = datum.getDataCenter();
                 String dataInfoId = datum.getDataInfoId();
-                long version = datum.getVersion();
                 DataSourceTypeEnum sourceType = changeData.getSourceType();
                 DataChangeTypeEnum changeType = changeData.getChangeType();
+
+                if (changeType != DataChangeTypeEnum.COVER) {
+                    //update version for pub or unPub merge to cache
+                    //if the version product before merge to cache,it may be cause small version override big one
+                    datum.updateVersion();
+                }
+
+                long version = datum.getVersion();
+
                 try {
                     if (sourceType == DataSourceTypeEnum.CLEAN) {
                         if (datumCache.cleanDatum(dataCenter, dataInfoId)) {
