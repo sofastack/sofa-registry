@@ -28,7 +28,7 @@ public class AccessLimitServiceImpl implements AccessLimitService {
 
     private SessionServerConfig sessionServerConfig;
 
-    private RateLimiter         rateLimiter = RateLimiter.create(5.0);
+    private RateLimiter         rateLimiter;
 
     public AccessLimitServiceImpl(SessionServerConfig sessionServerConfig) {
         this.sessionServerConfig = sessionServerConfig;
