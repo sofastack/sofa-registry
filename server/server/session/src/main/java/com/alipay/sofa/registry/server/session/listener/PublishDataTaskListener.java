@@ -16,19 +16,15 @@
  */
 package com.alipay.sofa.registry.server.session.listener;
 
-import javax.annotation.PostConstruct;
-
-import org.springframework.beans.factory.annotation.Autowired;
-
 import com.alipay.sofa.registry.server.session.node.service.DataNodeService;
+import com.alipay.sofa.registry.server.session.scheduler.ExecutorManager;
 import com.alipay.sofa.registry.server.session.scheduler.task.PublishDataTask;
 import com.alipay.sofa.registry.server.session.scheduler.task.SessionTask;
-import com.alipay.sofa.registry.task.batcher.TaskDispatcher;
-import com.alipay.sofa.registry.task.batcher.TaskDispatchers;
 import com.alipay.sofa.registry.task.batcher.TaskProcessor;
 import com.alipay.sofa.registry.task.listener.TaskEvent;
 import com.alipay.sofa.registry.task.listener.TaskEvent.TaskType;
 import com.alipay.sofa.registry.task.listener.TaskListener;
+import org.springframework.beans.factory.annotation.Autowired;
 
 /**
  *
@@ -38,19 +34,13 @@ import com.alipay.sofa.registry.task.listener.TaskListener;
 public class PublishDataTaskListener implements TaskListener {
 
     @Autowired
-    private DataNodeService                     dataNodeService;
-
-    private TaskDispatcher<String, SessionTask> singleTaskDispatcher;
+    private DataNodeService dataNodeService;
 
     @Autowired
-    private TaskProcessor                       dataNodeSingleTaskProcessor;
+    private TaskProcessor   dataNodeSingleTaskProcessor;
 
-    @PostConstruct
-    public void init() {
-        singleTaskDispatcher = TaskDispatchers.createSingleTaskDispatcher(
-            TaskDispatchers.getDispatcherName(TaskType.PUBLISH_DATA_TASK.getName()), 100000, 32,
-            1000, 1000, dataNodeSingleTaskProcessor);
-    }
+    @Autowired
+    private ExecutorManager executorManager;
 
     @Override
     public boolean support(TaskEvent event) {
@@ -59,12 +49,11 @@ public class PublishDataTaskListener implements TaskListener {
 
     @Override
     public void handleEvent(TaskEvent event) {
+
         SessionTask publishDataTask = new PublishDataTask(dataNodeService);
 
         publishDataTask.setTaskEvent(event);
 
-        singleTaskDispatcher.dispatch(publishDataTask.getTaskId(), publishDataTask,
-            publishDataTask.getExpiryTime());
+        executorManager.getPublishDataExecutor().execute(()-> dataNodeSingleTaskProcessor.process(publishDataTask));
     }
-
 }

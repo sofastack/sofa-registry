@@ -151,7 +151,7 @@ public class DataChangeFetchCloudTask extends AbstractSessionTask {
     }
 
     public PushTaskClosure getTaskClosure(Map<String/*dataCenter*/, Datum> datumMap) {
-        PushTaskClosure pushTaskClosure = new PushTaskClosure(executorManager.getPushTaskClosureExecutor());
+        PushTaskClosure pushTaskClosure = new PushTaskClosure(executorManager.getPushTaskCheckAsyncHashedWheelTimer(),sessionServerConfig,fetchDataInfoId);
         pushTaskClosure.setTaskClosure((status, task) -> {
             if (status == ProcessingResult.Success) {
                 if (sessionServerConfig.isStopPushSwitch()) {
