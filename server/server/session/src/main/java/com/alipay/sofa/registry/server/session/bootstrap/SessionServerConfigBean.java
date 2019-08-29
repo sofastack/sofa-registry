@@ -16,13 +16,13 @@
  */
 package com.alipay.sofa.registry.server.session.bootstrap;
 
-import java.util.HashSet;
-import java.util.Set;
-import java.util.regex.Pattern;
-
 import org.apache.commons.lang.builder.ToStringBuilder;
 import org.apache.commons.lang.builder.ToStringStyle;
 import org.springframework.boot.context.properties.ConfigurationProperties;
+
+import java.util.HashSet;
+import java.util.Set;
+import java.util.regex.Pattern;
 
 /**
  * The type Session server config bean.
@@ -186,6 +186,26 @@ public class SessionServerConfigBean implements SessionServerConfig {
     private int                pushDataTaskRetryFirstDelay             = 500;
 
     private long               pushDataTaskRetryIncrementDelay         = 500;
+
+    private long               pushTaskConfirmWaitTimeout              = 10000;
+
+    private int                pushTaskConfirmCheckWheelTicksSize      = 1024;
+
+    private int                pushTaskConfirmCheckWheelTicksDuration  = 100;
+
+    private int                pushTaskConfirmCheckExecutorQueueSize   = 10000;
+
+    private int                pushTaskConfirmCheckExecutorThreadSize  = 10;
+
+    private int                publishDataExecutorMinPoolSize          = 100;
+
+    private int                publishDataExecutorMaxPoolSize          = 400;
+
+    private int                publishDataExecutorQueueSize            = 10000;
+
+    private long               publishDataExecutorKeepAliveTime        = 60;
+
+    private double             accessLimitRate                         = 100000.0;
 
     private String             sessionServerRegion;
 
@@ -1827,6 +1847,186 @@ public class SessionServerConfigBean implements SessionServerConfig {
      */
     public void setBlacklistSubDataIdRegex(String blacklistSubDataIdRegex) {
         this.blacklistSubDataIdRegex = blacklistSubDataIdRegex;
+    }
+
+    /**
+     * Getter method for property <tt>pushTaskConfirmWaitTimeout</tt>.
+     *
+     * @return property value of pushTaskConfirmWaitTimeout
+     */
+    public long getPushTaskConfirmWaitTimeout() {
+        return pushTaskConfirmWaitTimeout;
+    }
+
+    /**
+     * Setter method for property <tt>pushTaskConfirmWaitTimeout</tt>.
+     *
+     * @param pushTaskConfirmWaitTimeout  value to be assigned to property pushTaskConfirmWaitTimeout
+     */
+    public void setPushTaskConfirmWaitTimeout(long pushTaskConfirmWaitTimeout) {
+        this.pushTaskConfirmWaitTimeout = pushTaskConfirmWaitTimeout;
+    }
+
+    /**
+     * Getter method for property <tt>pushTaskConfirmCheckWheelTicksSize</tt>.
+     *
+     * @return property value of pushTaskConfirmCheckWheelTicksSize
+     */
+    public int getPushTaskConfirmCheckWheelTicksSize() {
+        return pushTaskConfirmCheckWheelTicksSize;
+    }
+
+    /**
+     * Getter method for property <tt>pushTaskConfirmCheckWheelTicksDuration</tt>.
+     *
+     * @return property value of pushTaskConfirmCheckWheelTicksDuration
+     */
+    public int getPushTaskConfirmCheckWheelTicksDuration() {
+        return pushTaskConfirmCheckWheelTicksDuration;
+    }
+
+    /**
+     * Getter method for property <tt>pushTaskConfirmCheckExecutorQueueSize</tt>.
+     *
+     * @return property value of pushTaskConfirmCheckExecutorQueueSize
+     */
+    public int getPushTaskConfirmCheckExecutorQueueSize() {
+        return pushTaskConfirmCheckExecutorQueueSize;
+    }
+
+    /**
+     * Getter method for property <tt>pushTaskConfirmCheckExecutorThreadSize</tt>.
+     *
+     * @return property value of pushTaskConfirmCheckExecutorThreadSize
+     */
+    public int getPushTaskConfirmCheckExecutorThreadSize() {
+        return pushTaskConfirmCheckExecutorThreadSize;
+    }
+
+    /**
+     * Setter method for property <tt>pushTaskConfirmCheckWheelTicksSize</tt>.
+     *
+     * @param pushTaskConfirmCheckWheelTicksSize  value to be assigned to property pushTaskConfirmCheckWheelTicksSize
+     */
+    public void setPushTaskConfirmCheckWheelTicksSize(int pushTaskConfirmCheckWheelTicksSize) {
+        this.pushTaskConfirmCheckWheelTicksSize = pushTaskConfirmCheckWheelTicksSize;
+    }
+
+    /**
+     * Setter method for property <tt>pushTaskConfirmCheckWheelTicksDuration</tt>.
+     *
+     * @param pushTaskConfirmCheckWheelTicksDuration  value to be assigned to property pushTaskConfirmCheckWheelTicksDuration
+     */
+    public void setPushTaskConfirmCheckWheelTicksDuration(int pushTaskConfirmCheckWheelTicksDuration) {
+        this.pushTaskConfirmCheckWheelTicksDuration = pushTaskConfirmCheckWheelTicksDuration;
+    }
+
+    /**
+     * Setter method for property <tt>pushTaskConfirmCheckExecutorQueueSize</tt>.
+     *
+     * @param pushTaskConfirmCheckExecutorQueueSize  value to be assigned to property pushTaskConfirmCheckExecutorQueueSize
+     */
+    public void setPushTaskConfirmCheckExecutorQueueSize(int pushTaskConfirmCheckExecutorQueueSize) {
+        this.pushTaskConfirmCheckExecutorQueueSize = pushTaskConfirmCheckExecutorQueueSize;
+    }
+
+    /**
+     * Setter method for property <tt>pushTaskConfirmCheckExecutorThreadSize</tt>.
+     *
+     * @param pushTaskConfirmCheckExecutorThreadSize  value to be assigned to property pushTaskConfirmCheckExecutorThreadSize
+     */
+    public void setPushTaskConfirmCheckExecutorThreadSize(int pushTaskConfirmCheckExecutorThreadSize) {
+        this.pushTaskConfirmCheckExecutorThreadSize = pushTaskConfirmCheckExecutorThreadSize;
+    }
+
+    /**
+     * Getter method for property <tt>publishDataExecutorMinPoolSize</tt>.
+     *
+     * @return property value of publishDataExecutorMinPoolSize
+     */
+    public int getPublishDataExecutorMinPoolSize() {
+        return publishDataExecutorMinPoolSize;
+    }
+
+    /**
+     * Getter method for property <tt>publishDataExecutorMaxPoolSize</tt>.
+     *
+     * @return property value of publishDataExecutorMaxPoolSize
+     */
+    public int getPublishDataExecutorMaxPoolSize() {
+        return publishDataExecutorMaxPoolSize;
+    }
+
+    /**
+     * Getter method for property <tt>publishDataExecutorQueueSize</tt>.
+     *
+     * @return property value of publishDataExecutorQueueSize
+     */
+    public int getPublishDataExecutorQueueSize() {
+        return publishDataExecutorQueueSize;
+    }
+
+    /**
+     * Getter method for property <tt>publishDataExecutorKeepAliveTime</tt>.
+     *
+     * @return property value of publishDataExecutorKeepAliveTime
+     */
+    public long getPublishDataExecutorKeepAliveTime() {
+        return publishDataExecutorKeepAliveTime;
+    }
+
+    /**
+     * Setter method for property <tt>publishDataExecutorMinPoolSize</tt>.
+     *
+     * @param publishDataExecutorMinPoolSize  value to be assigned to property publishDataExecutorMinPoolSize
+     */
+    public void setPublishDataExecutorMinPoolSize(int publishDataExecutorMinPoolSize) {
+        this.publishDataExecutorMinPoolSize = publishDataExecutorMinPoolSize;
+    }
+
+    /**
+     * Setter method for property <tt>publishDataExecutorMaxPoolSize</tt>.
+     *
+     * @param publishDataExecutorMaxPoolSize  value to be assigned to property publishDataExecutorMaxPoolSize
+     */
+    public void setPublishDataExecutorMaxPoolSize(int publishDataExecutorMaxPoolSize) {
+        this.publishDataExecutorMaxPoolSize = publishDataExecutorMaxPoolSize;
+    }
+
+    /**
+     * Setter method for property <tt>publishDataExecutorQueueSize</tt>.
+     *
+     * @param publishDataExecutorQueueSize  value to be assigned to property publishDataExecutorQueueSize
+     */
+    public void setPublishDataExecutorQueueSize(int publishDataExecutorQueueSize) {
+        this.publishDataExecutorQueueSize = publishDataExecutorQueueSize;
+    }
+
+    /**
+     * Setter method for property <tt>publishDataExecutorKeepAliveTime</tt>.
+     *
+     * @param publishDataExecutorKeepAliveTime  value to be assigned to property publishDataExecutorKeepAliveTime
+     */
+    public void setPublishDataExecutorKeepAliveTime(long publishDataExecutorKeepAliveTime) {
+        this.publishDataExecutorKeepAliveTime = publishDataExecutorKeepAliveTime;
+    }
+
+    /**
+     * Getter method for property <tt>accessLimitRate</tt>.
+     *
+     * @return property value of accessLimitRate
+     */
+    public double getAccessLimitRate() {
+        return accessLimitRate;
+    }
+
+    /**
+     * Setter method for property <tt>accessLimitRate</tt>.
+     *
+     * @param accessLimitRate  value to be assigned to property accessLimitRate
+     */
+    public void setAccessLimitRate(double accessLimitRate) {
+        this.accessLimitRate = accessLimitRate;
     }
 
     @Override

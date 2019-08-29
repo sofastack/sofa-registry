@@ -16,15 +16,6 @@
  */
 package com.alipay.sofa.registry.server.data.change;
 
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.Executor;
-
-import javax.annotation.PostConstruct;
-import javax.annotation.Resource;
-
-import org.springframework.beans.factory.annotation.Autowired;
-
 import com.alipay.sofa.registry.common.model.dataserver.Datum;
 import com.alipay.sofa.registry.common.model.store.Publisher;
 import com.alipay.sofa.registry.log.Logger;
@@ -36,6 +27,13 @@ import com.alipay.sofa.registry.server.data.change.event.DataChangeEventCenter;
 import com.alipay.sofa.registry.server.data.change.event.DataChangeEventQueue;
 import com.alipay.sofa.registry.server.data.change.notify.IDataChangeNotifier;
 import com.alipay.sofa.registry.server.data.executor.ExecutorFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+
+import javax.annotation.PostConstruct;
+import javax.annotation.Resource;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.Executor;
 
 /**
  * notify sessionserver when data changed
@@ -112,16 +110,34 @@ public class DataChangeHandler {
                 String dataInfoId = snapshotData.getDataInfoId();
                 Map<String, Publisher> toBeDeletedPubMap = snapshotData.getToBeDeletedPubMap();
                 Map<String, Publisher> snapshotPubMap = snapshotData.getSnapshotPubMap();
+                Datum oldDatum = datumCache.get(dataServerConfig.getLocalDataCenter(), dataInfoId);
+                long lastVersion = oldDatum != null ? oldDatum.getVersion() : 0l;
                 Datum datum = datumCache.putSnapshot(dataInfoId, toBeDeletedPubMap, snapshotPubMap);
+                long version = datum != null ? datum.getVersion() : 0l;
+                LOGGER
+                    .info(
+                        "[DataChangeHandler][{}] snapshot handle,dataInfoId={}, version={}, lastVersion={}",
+                        name, dataInfoId, version, lastVersion);
                 notify(datum, changeData.getSourceType(), null);
 
             } else {
                 Datum datum = changeData.getDatum();
+
                 String dataCenter = datum.getDataCenter();
                 String dataInfoId = datum.getDataInfoId();
-                long version = datum.getVersion();
                 DataSourceTypeEnum sourceType = changeData.getSourceType();
                 DataChangeTypeEnum changeType = changeData.getChangeType();
+
+                if (changeType == DataChangeTypeEnum.MERGE
+                    && sourceType != DataSourceTypeEnum.BACKUP
+                    && sourceType != DataSourceTypeEnum.SYNC) {
+                    //update version for pub or unPub merge to cache
+                    //if the version product before merge to cache,it may be cause small version override big one
+                    datum.updateVersion();
+                }
+
+                long version = datum.getVersion();
+
                 try {
                     if (sourceType == DataSourceTypeEnum.CLEAN) {
                         if (datumCache.cleanDatum(dataCenter, dataInfoId)) {

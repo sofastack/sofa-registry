@@ -16,15 +16,6 @@
  */
 package com.alipay.sofa.registry.server.session.scheduler.task;
 
-import java.net.InetSocketAddress;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.function.Predicate;
-
 import com.alipay.sofa.registry.common.model.dataserver.Datum;
 import com.alipay.sofa.registry.common.model.sessionserver.DataChangeRequest;
 import com.alipay.sofa.registry.common.model.store.BaseInfo.ClientVersion;
@@ -49,6 +40,15 @@ import com.alipay.sofa.registry.task.listener.TaskEvent;
 import com.alipay.sofa.registry.task.listener.TaskEvent.TaskType;
 import com.alipay.sofa.registry.task.listener.TaskListenerManager;
 import com.alipay.sofa.registry.util.DatumVersionUtil;
+
+import java.net.InetSocketAddress;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.function.Predicate;
 
 /**
  *
@@ -117,12 +117,14 @@ public class DataChangeFetchTask extends AbstractSessionTask {
                             Collection<Subscriber> subscribersSend = subscribersVersionCheck(subscriberMap
                                 .values());
                             if (subscribersSend.isEmpty()) {
-                                LOGGER
-                                    .warn(
-                                        "Subscribers to send empty,which dataInfoId:{} on dataCenter:{},scope:{},address:{},size:{}",
-                                        dataChangeRequest.getDataInfoId(),
-                                        dataChangeRequest.getDataCenter(), scopeEnum,
-                                        entry.getKey(), subscriberMap.size());
+                                if (LOGGER.isDebugEnabled()) {
+                                    LOGGER
+                                        .debug(
+                                            "Subscribers to send empty,which dataInfoId:{} on dataCenter:{},scope:{},address:{},size:{}",
+                                            dataChangeRequest.getDataInfoId(),
+                                            dataChangeRequest.getDataCenter(), scopeEnum,
+                                            entry.getKey(), subscriberMap.size());
+                                }
                                 continue;
                             }
 
@@ -195,7 +197,7 @@ public class DataChangeFetchTask extends AbstractSessionTask {
 
     public PushTaskClosure getTaskClosure() {
         //this for all this dataInfoId push result get and call back to change version
-        PushTaskClosure pushTaskClosure = new PushTaskClosure(executorManager.getPushTaskClosureExecutor());
+        PushTaskClosure pushTaskClosure = new PushTaskClosure(executorManager.getPushTaskCheckAsyncHashedWheelTimer(),sessionServerConfig,dataChangeRequest.getDataInfoId());
         pushTaskClosure.setTaskClosure((status, task) -> {
             String dataCenter = dataChangeRequest.getDataCenter();
             String dataInfoId = dataChangeRequest.getDataInfoId();

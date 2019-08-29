@@ -49,7 +49,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Set;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executor;
@@ -134,7 +133,7 @@ public class LocalDataServerChangeEventHandler extends
                 try {
                     LocalDataServerChangeEvent event = events.take();
                     //if the new joined servers contains self, set status as INITIAL
-                    Set<String> newJoined = event.getNewJoined();
+                    //Set<String> newJoined = event.getNewJoined();
                     //if (newJoined.contains(DataServerConfig.IP)
                     //    && dataNodeStatus.getStatus() != LocalServerStatusEnum.INITIAL) {
                     //    dataNodeStatus.setStatus(LocalServerStatusEnum.INITIAL);
