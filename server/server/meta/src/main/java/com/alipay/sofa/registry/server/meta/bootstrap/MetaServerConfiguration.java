@@ -16,6 +16,17 @@
  */
 package com.alipay.sofa.registry.server.meta.bootstrap;
 
+import java.util.ArrayList;
+import java.util.Collection;
+
+import org.glassfish.jersey.jackson.JacksonFeature;
+import org.glassfish.jersey.server.ResourceConfig;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Import;
+
 import com.alipay.sofa.registry.jraft.service.PersistenceDataDBService;
 import com.alipay.sofa.registry.remoting.bolt.exchange.BoltExchange;
 import com.alipay.sofa.registry.remoting.exchange.Exchange;
@@ -63,6 +74,7 @@ import com.alipay.sofa.registry.server.meta.resource.HealthResource;
 import com.alipay.sofa.registry.server.meta.resource.MetaDigestResource;
 import com.alipay.sofa.registry.server.meta.resource.MetaStoreResource;
 import com.alipay.sofa.registry.server.meta.resource.PersistentDataResource;
+import com.alipay.sofa.registry.server.meta.resource.RenewSwitchResource;
 import com.alipay.sofa.registry.server.meta.resource.StopPushDataResource;
 import com.alipay.sofa.registry.server.meta.store.DataStoreService;
 import com.alipay.sofa.registry.server.meta.store.MetaStoreService;
@@ -77,16 +89,6 @@ import com.alipay.sofa.registry.task.listener.DefaultTaskListenerManager;
 import com.alipay.sofa.registry.task.listener.TaskListener;
 import com.alipay.sofa.registry.task.listener.TaskListenerManager;
 import com.alipay.sofa.registry.util.PropertySplitter;
-import org.glassfish.jersey.jackson.JacksonFeature;
-import org.glassfish.jersey.server.ResourceConfig;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
-import org.springframework.boot.context.properties.EnableConfigurationProperties;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Import;
-
-import java.util.ArrayList;
-import java.util.Collection;
 
 /**
  *
@@ -364,6 +366,11 @@ public class MetaServerConfiguration {
         @Bean
         public BlacklistDataResource blacklistDataResource() {
             return new BlacklistDataResource();
+        }
+
+        @Bean
+        public RenewSwitchResource renewSwitchResource() {
+            return new RenewSwitchResource();
         }
     }
 

@@ -16,6 +16,21 @@
  */
 package com.alipay.sofa.registry.server.session.bootstrap;
 
+import java.lang.annotation.Annotation;
+import java.util.Collection;
+import java.util.Date;
+import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
+
+import javax.annotation.Resource;
+import javax.ws.rs.Path;
+import javax.ws.rs.ext.Provider;
+
+import org.glassfish.jersey.server.ResourceConfig;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationContext;
+import org.springframework.util.CollectionUtils;
+
 import com.alipay.sofa.registry.common.model.Node;
 import com.alipay.sofa.registry.common.model.constants.ValueConstants;
 import com.alipay.sofa.registry.common.model.metaserver.FetchProvideDataRequest;
@@ -36,23 +51,11 @@ import com.alipay.sofa.registry.server.session.node.NodeManager;
 import com.alipay.sofa.registry.server.session.node.NodeManagerFactory;
 import com.alipay.sofa.registry.server.session.node.RaftClientManager;
 import com.alipay.sofa.registry.server.session.node.SessionProcessIdGenerator;
+import com.alipay.sofa.registry.server.session.registry.Registry;
 import com.alipay.sofa.registry.server.session.remoting.handler.AbstractClientHandler;
 import com.alipay.sofa.registry.server.session.remoting.handler.AbstractServerHandler;
 import com.alipay.sofa.registry.server.session.scheduler.ExecutorManager;
 import com.alipay.sofa.registry.task.batcher.TaskDispatchers;
-import org.glassfish.jersey.server.ResourceConfig;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.ApplicationContext;
-import org.springframework.util.CollectionUtils;
-
-import javax.annotation.Resource;
-import javax.ws.rs.Path;
-import javax.ws.rs.ext.Provider;
-import java.lang.annotation.Annotation;
-import java.util.Collection;
-import java.util.Date;
-import java.util.Map;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * The type Session server bootstrap.
@@ -102,6 +105,9 @@ public class SessionServerBootstrap {
 
     @Autowired
     private BlacklistManager                  blacklistManager;
+
+    @Autowired
+    private Registry                          sessionRegistry;
 
     private Server                            server;
 
@@ -266,7 +272,7 @@ public class SessionServerBootstrap {
 
                 fetchStopPushSwitch(leaderUrl);
 
-                fetchStopRenewSwitch(leaderUrl);
+                fetchEnableDataRenewSnapshot(leaderUrl);
 
                 fetchBlackList();
 
@@ -322,24 +328,22 @@ public class SessionServerBootstrap {
         }
     }
 
-    private void fetchStopRenewSwitch(URL leaderUrl) {
+    private void fetchEnableDataRenewSnapshot(URL leaderUrl) {
         FetchProvideDataRequest fetchProvideDataRequest = new FetchProvideDataRequest(
             ValueConstants.ENABLE_DATA_RENEW_SNAPSHOT);
-        Object ret = sendMetaRequest(fetchProvideDataRequest, leaderUrl);
-        if (ret instanceof ProvideData) {
-            ProvideData provideData = (ProvideData) ret;
-            if (provideData.getProvideData() == null
+        Object data = sendMetaRequest(fetchProvideDataRequest, leaderUrl);
+        if (data instanceof ProvideData) {
+            ProvideData provideData = (ProvideData) data;
+            if (provideData == null || provideData.getProvideData() == null
                 || provideData.getProvideData().getObject() == null) {
-                LOGGER.info("Fetch session stop renew switch no data existed,config not change!");
+                LOGGER
+                    .info("Fetch enableDataRenewSnapshot but no data existed, current config not change!");
                 return;
             }
-            String data = (String) provideData.getProvideData().getObject();
-            if (data != null) {
-                //TODO RENEW
-            }
-            LOGGER.info("Fetch session stop renew data switch {} success!", data);
-        } else {
-            LOGGER.info("Fetch session renew push switch data null,config not change!");
+            boolean enableDataRenewSnapshot = Boolean.parseBoolean((String) provideData
+                .getProvideData().getObject());
+            LOGGER.info("Fetch enableDataRenewSnapshot {} success!", enableDataRenewSnapshot);
+            this.sessionRegistry.setEnableDataRenewSnapshot(enableDataRenewSnapshot);
         }
     }
 

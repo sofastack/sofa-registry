@@ -60,7 +60,7 @@ public class ValueConstants {
 
     public static final String   ENABLE_DATA_RENEW_SNAPSHOT    = "session.enable.datum.renew.switch#@#9600#@#CONFIG";
 
-    public static final String   STOP_DATA_DATUM_EXPIRE        = "data.stop.datum.expire.switch#@#9600#@#CONFIG";
+    public static final String   ENABLE_DATA_DATUM_EXPIRE      = "data.enable.datum.expire.switch#@#9600#@#CONFIG";
 
     public static final String   LOGGER_NAME_RENEW             = "RENEW-LOGGER";
 

@@ -16,6 +16,8 @@
  */
 package com.alipay.sofa.registry.server.data.remoting.metaserver.handler;
 
+import org.springframework.beans.factory.annotation.Autowired;
+
 import com.alipay.sofa.registry.common.model.CommonResponse;
 import com.alipay.sofa.registry.common.model.Node.NodeType;
 import com.alipay.sofa.registry.common.model.constants.ValueConstants;
@@ -27,7 +29,7 @@ import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.remoting.Channel;
 import com.alipay.sofa.registry.server.data.remoting.handler.AbstractClientHandler;
 import com.alipay.sofa.registry.server.data.remoting.metaserver.IMetaServerService;
-import org.springframework.beans.factory.annotation.Autowired;
+import com.alipay.sofa.registry.server.data.renew.DatumLeaseManager;
 
 /**
  *
@@ -41,6 +43,9 @@ public class NotifyProvideDataChangeHandler extends AbstractClientHandler {
 
     @Autowired
     private IMetaServerService  metaServerService;
+
+    @Autowired
+    private DatumLeaseManager   datumLeaseManager;
 
     @Override
     public HandlerType getType() {
@@ -71,18 +76,18 @@ public class NotifyProvideDataChangeHandler extends AbstractClientHandler {
         String dataInfoId = notifyProvideDataChange.getDataInfoId();
         if (notifyProvideDataChange.getDataOperator() != DataOperator.REMOVE) {
 
-            if (ValueConstants.STOP_DATA_DATUM_EXPIRE.equals(dataInfoId)) {
+            if (ValueConstants.ENABLE_DATA_DATUM_EXPIRE.equals(dataInfoId)) {
                 ProvideData provideData = metaServerService.fetchData(dataInfoId);
-                if (provideData != null) {
-                    if (provideData.getProvideData() == null
-                        || provideData.getProvideData().getObject() == null) {
-                        LOGGER
-                            .info("Fetch stop datum expire switch no data existed,config not change!");
-                        return;
-                    }
-                    String data = (String) provideData.getProvideData().getObject();
-                    LOGGER.info("Fetch stop datum expire switch {} success!", data);
+                if (provideData == null || provideData.getProvideData() == null
+                    || provideData.getProvideData().getObject() == null) {
+                    LOGGER
+                        .info("Fetch enableDataDatumExpire but no data existed, current config not change!");
+                    return;
                 }
+                boolean enableDataDatumExpire = Boolean.parseBoolean((String) provideData
+                    .getProvideData().getObject());
+                LOGGER.info("Fetch enableDataDatumExpire {} success!", enableDataDatumExpire);
+                datumLeaseManager.setRenewEnable(enableDataDatumExpire);
             }
         }
     }
