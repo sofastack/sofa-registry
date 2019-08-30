@@ -16,13 +16,14 @@
  */
 package com.alipay.sofa.registry.server.data.remoting.metaserver;
 
+import com.alipay.sofa.jraft.entity.PeerId;
+import com.alipay.sofa.registry.common.model.metaserver.ProvideData;
+import com.alipay.sofa.registry.server.data.cache.DataServerChangeItem;
+import com.alipay.sofa.registry.server.data.node.DataServerNode;
+
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
-import com.alipay.sofa.jraft.entity.PeerId;
-import com.alipay.sofa.registry.server.data.cache.DataServerChangeItem;
-import com.alipay.sofa.registry.server.data.node.DataServerNode;
 
 /**
  * The interface Meta server service.
@@ -91,4 +92,11 @@ public interface IMetaServerService {
      * @return
      */
     PeerId refreshLeader();
+
+    /**
+     * get provider data
+     * @param dataInfoId
+     * @return
+     */
+    ProvideData fetchData(String dataInfoId);
 }

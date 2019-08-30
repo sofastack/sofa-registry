@@ -16,21 +16,6 @@
  */
 package com.alipay.sofa.registry.server.session.bootstrap;
 
-import java.lang.annotation.Annotation;
-import java.util.Collection;
-import java.util.Date;
-import java.util.Map;
-import java.util.concurrent.atomic.AtomicBoolean;
-
-import javax.annotation.Resource;
-import javax.ws.rs.Path;
-import javax.ws.rs.ext.Provider;
-
-import org.glassfish.jersey.server.ResourceConfig;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.ApplicationContext;
-import org.springframework.util.CollectionUtils;
-
 import com.alipay.sofa.registry.common.model.Node;
 import com.alipay.sofa.registry.common.model.constants.ValueConstants;
 import com.alipay.sofa.registry.common.model.metaserver.FetchProvideDataRequest;
@@ -55,6 +40,19 @@ import com.alipay.sofa.registry.server.session.remoting.handler.AbstractClientHa
 import com.alipay.sofa.registry.server.session.remoting.handler.AbstractServerHandler;
 import com.alipay.sofa.registry.server.session.scheduler.ExecutorManager;
 import com.alipay.sofa.registry.task.batcher.TaskDispatchers;
+import org.glassfish.jersey.server.ResourceConfig;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationContext;
+import org.springframework.util.CollectionUtils;
+
+import javax.annotation.Resource;
+import javax.ws.rs.Path;
+import javax.ws.rs.ext.Provider;
+import java.lang.annotation.Annotation;
+import java.util.Collection;
+import java.util.Date;
+import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * The type Session server bootstrap.
@@ -268,6 +266,8 @@ public class SessionServerBootstrap {
 
                 fetchStopPushSwitch(leaderUrl);
 
+                fetchStopRenewSwitch(leaderUrl);
+
                 fetchBlackList();
 
                 LOGGER.info("MetaServer connected {} server! Port:{}", size,
@@ -319,6 +319,27 @@ public class SessionServerBootstrap {
             LOGGER.info("Fetch session stop push data switch {} success!", data);
         } else {
             LOGGER.info("Fetch session stop push switch data null,config not change!");
+        }
+    }
+
+    private void fetchStopRenewSwitch(URL leaderUrl) {
+        FetchProvideDataRequest fetchProvideDataRequest = new FetchProvideDataRequest(
+            ValueConstants.ENABLE_DATA_RENEW_SNAPSHOT);
+        Object ret = sendMetaRequest(fetchProvideDataRequest, leaderUrl);
+        if (ret instanceof ProvideData) {
+            ProvideData provideData = (ProvideData) ret;
+            if (provideData.getProvideData() == null
+                || provideData.getProvideData().getObject() == null) {
+                LOGGER.info("Fetch session stop renew switch no data existed,config not change!");
+                return;
+            }
+            String data = (String) provideData.getProvideData().getObject();
+            if (data != null) {
+                //TODO RENEW
+            }
+            LOGGER.info("Fetch session stop renew data switch {} success!", data);
+        } else {
+            LOGGER.info("Fetch session renew push switch data null,config not change!");
         }
     }
 

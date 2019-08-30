@@ -177,7 +177,22 @@ public class ProvideDataChangeFetchTask extends AbstractSessionTask {
                     LOGGER.info("Fetch session blacklist data null,current config not change!");
                 }
                 return;
+            } else if (ValueConstants.ENABLE_DATA_RENEW_SNAPSHOT.equals(dataInfoId)){
+                //stop renew switch
+                if (provideData.getProvideData() == null
+                        || provideData.getProvideData().getObject() == null) {
+                    LOGGER.info("Fetch session stop renew switch no data existed,current config not change!");
+                    return;
+                }
+                String data = (String) provideData.getProvideData().getObject();
+                if (data != null) {
+                    LOGGER.info("Fetch session stop renew switch data switch {} success!", data);
+                }else {
+                    LOGGER.info("Fetch session stop renew switch data null,current config not change!");
+                }
+                return;
             }
+
             if (provideData == null) {
                 LOGGER.warn("Notify provider data Change request {} fetch no provider data!", notifyProvideDataChange);
                 return;
