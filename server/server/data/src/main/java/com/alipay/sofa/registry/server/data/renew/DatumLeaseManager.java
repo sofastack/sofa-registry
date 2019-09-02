@@ -49,38 +49,42 @@ import com.google.common.util.concurrent.ThreadFactoryBuilder;
  * @version $Id: DatumExpiredCleaner.java, v 0.1 2019-06-03 21:08 kezhu.wukz Exp $
  */
 public class DatumLeaseManager implements AfterWorkingProcess {
-    private static final Logger   LOGGER       = LoggerFactory.getLogger(DatumLeaseManager.class);
-    private static final TimeZone TIME_ZONE    = TimeZone.getTimeZone("Asia/Shanghai");
-    private static final Logger   RENEW_LOGGER = LoggerFactory
-            .getLogger(ValueConstants.LOGGER_NAME_RENEW, "[DatumLeaseManager]");
+    private static final Logger                LOGGER                     = LoggerFactory
+                                                                              .getLogger(DatumLeaseManager.class);
+    private static final TimeZone              TIME_ZONE                  = TimeZone
+                                                                              .getTimeZone("Asia/Shanghai");
+    private static final Logger                RENEW_LOGGER               = LoggerFactory
+                                                                              .getLogger(
+                                                                                  ValueConstants.LOGGER_NAME_RENEW,
+                                                                                  "[DatumLeaseManager]");
 
     /** record the latest heartbeat time for each connectId, format: connectId -> lastRenewTimestamp */
-    private final Map<String, Long> connectIdRenewTimestampMap = new ConcurrentHashMap<>();
+    private final Map<String, Long>            connectIdRenewTimestampMap = new ConcurrentHashMap<>();
 
     /** lock for connectId , format: connectId -> true */
-    private ConcurrentHashMap<String, Boolean> locksForConnectId = new ConcurrentHashMap();
+    private ConcurrentHashMap<String, Boolean> locksForConnectId          = new ConcurrentHashMap();
 
-    private volatile boolean serverWorking = false;
+    private volatile boolean                   serverWorking              = false;
 
-    private volatile boolean renewEnable = true;
+    private volatile boolean                   renewEnable                = true;
 
-    private AsyncHashedWheelTimer datumAsyncHashedWheelTimer;
-
-    @Autowired
-    private DataServerConfig dataServerConfig;
+    private AsyncHashedWheelTimer              datumAsyncHashedWheelTimer;
 
     @Autowired
-    private DisconnectEventHandler disconnectEventHandler;
+    private DataServerConfig                   dataServerConfig;
 
     @Autowired
-    private DatumCache datumCache;
+    private DisconnectEventHandler             disconnectEventHandler;
 
     @Autowired
-    private DataNodeStatus dataNodeStatus;
+    private DatumCache                         datumCache;
 
-    private ScheduledThreadPoolExecutor executorForHeartbeatLess;
+    @Autowired
+    private DataNodeStatus                     dataNodeStatus;
 
-    private ScheduledFuture<?> futureForHeartbeatLess;
+    private ScheduledThreadPoolExecutor        executorForHeartbeatLess;
+
+    private ScheduledFuture<?>                 futureForHeartbeatLess;
 
     /**
      * constructor
@@ -89,25 +93,25 @@ public class DatumLeaseManager implements AfterWorkingProcess {
     public void init() {
         ThreadFactoryBuilder threadFactoryBuilder = new ThreadFactoryBuilder();
         threadFactoryBuilder.setDaemon(true);
-        datumAsyncHashedWheelTimer = new AsyncHashedWheelTimer(
-                threadFactoryBuilder.setNameFormat("Registry-DatumLeaseManager-WheelTimer").build(), 100,
-                TimeUnit.MILLISECONDS, 1024, dataServerConfig.getDatumLeaseManagerExecutorThreadSize(),
-                dataServerConfig.getDatumLeaseManagerExecutorQueueSize(),
-                threadFactoryBuilder.setNameFormat("Registry-DatumLeaseManager-WheelExecutor-%d").build(),
-                new TaskFailedCallback() {
-                    @Override
-                    public void executionRejected(Throwable e) {
-                        LOGGER.error("executionRejected: " + e.getMessage(), e);
-                    }
+        datumAsyncHashedWheelTimer = new AsyncHashedWheelTimer(threadFactoryBuilder.setNameFormat(
+            "Registry-DatumLeaseManager-WheelTimer").build(), 100, TimeUnit.MILLISECONDS, 1024,
+            dataServerConfig.getDatumLeaseManagerExecutorThreadSize(),
+            dataServerConfig.getDatumLeaseManagerExecutorQueueSize(), threadFactoryBuilder
+                .setNameFormat("Registry-DatumLeaseManager-WheelExecutor-%d").build(),
+            new TaskFailedCallback() {
+                @Override
+                public void executionRejected(Throwable e) {
+                    LOGGER.error("executionRejected: " + e.getMessage(), e);
+                }
 
-                    @Override
-                    public void executionFailed(Throwable e) {
-                        LOGGER.error("executionFailed: " + e.getMessage(), e);
-                    }
-                });
+                @Override
+                public void executionFailed(Throwable e) {
+                    LOGGER.error("executionFailed: " + e.getMessage(), e);
+                }
+            });
 
-        executorForHeartbeatLess = new ScheduledThreadPoolExecutor(1,
-                threadFactoryBuilder.setNameFormat("Registry-DatumLeaseManager-ExecutorForHeartbeatLess").build());
+        executorForHeartbeatLess = new ScheduledThreadPoolExecutor(1, threadFactoryBuilder
+            .setNameFormat("Registry-DatumLeaseManager-ExecutorForHeartbeatLess").build());
         scheduleEvictTaskForHeartbeatLess();
     }
 
@@ -116,7 +120,7 @@ public class DatumLeaseManager implements AfterWorkingProcess {
      */
     public synchronized void reset() {
         LOGGER.info("reset is called, EvictTaskForHeartbeatLess will delay {}s",
-                dataServerConfig.getDatumTimeToLiveSec());
+            dataServerConfig.getDatumTimeToLiveSec());
         if (futureForHeartbeatLess != null) {
             futureForHeartbeatLess.cancel(false);
         }
@@ -124,9 +128,9 @@ public class DatumLeaseManager implements AfterWorkingProcess {
     }
 
     private void scheduleEvictTaskForHeartbeatLess() {
-        futureForHeartbeatLess = executorForHeartbeatLess
-                .scheduleWithFixedDelay(new EvictTaskForHeartbeatLess(), dataServerConfig.getDatumTimeToLiveSec(),
-                        dataServerConfig.getDatumTimeToLiveSec(), TimeUnit.SECONDS);
+        futureForHeartbeatLess = executorForHeartbeatLess.scheduleWithFixedDelay(
+            new EvictTaskForHeartbeatLess(), dataServerConfig.getDatumTimeToLiveSec(),
+            dataServerConfig.getDatumTimeToLiveSec(), TimeUnit.SECONDS);
     }
 
     /**
@@ -239,7 +243,8 @@ public class DatumLeaseManager implements AfterWorkingProcess {
     }
 
     private void evict(String connectId) {
-        disconnectEventHandler.receive(new ClientDisconnectEvent(connectId, System.currentTimeMillis(), 0));
+        disconnectEventHandler.receive(new ClientDisconnectEvent(connectId, System
+            .currentTimeMillis(), 0));
     }
 
     private String format(long lastRenewTime) {
@@ -275,7 +280,8 @@ public class DatumLeaseManager implements AfterWorkingProcess {
         public void run() {
             // If in a non-working state, cannot clean up because the renew request cannot be received at this time.
             if (!isRenewEnable()) {
-                LOGGER.info(
+                LOGGER
+                    .info(
                         "EvictTaskForHeartbeatLess skipped because isRenewEnable() is false, DataNodeStatus is {}, will retry after {}s",
                         dataNodeStatus.getStatus(), dataServerConfig.getDatumTimeToLiveSec());
                 return;
@@ -288,8 +294,8 @@ public class DatumLeaseManager implements AfterWorkingProcess {
                 if (timestamp == null) {
                     int ownPubSize = getOwnPubSize(connectId);
                     if (ownPubSize > 0) {
-                        LOGGER.info("Evict connectId({}) because no heartbeat, pub.size is {}", connectId,
-                                ownPubSize);
+                        LOGGER.info("Evict connectId({}) because no heartbeat, pub.size is {}",
+                            connectId, ownPubSize);
                         evict(connectId);
                     }
                 }
