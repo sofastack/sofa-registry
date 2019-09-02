@@ -33,6 +33,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.ApplicationContext;
 
+import com.alipay.sofa.registry.common.model.constants.ValueConstants;
+import com.alipay.sofa.registry.common.model.metaserver.ProvideData;
 import com.alipay.sofa.registry.common.model.store.URL;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
@@ -48,6 +50,7 @@ import com.alipay.sofa.registry.server.data.event.StartTaskEvent;
 import com.alipay.sofa.registry.server.data.event.StartTaskTypeEnum;
 import com.alipay.sofa.registry.server.data.remoting.handler.AbstractServerHandler;
 import com.alipay.sofa.registry.server.data.remoting.metaserver.IMetaServerService;
+import com.alipay.sofa.registry.server.data.renew.DatumLeaseManager;
 
 /**
  *
@@ -93,6 +96,9 @@ public class DataServerBootstrap {
     @Resource(name = "serverSyncHandlers")
     private Collection<AbstractServerHandler> serverSyncHandlers;
 
+    @Autowired
+    private DatumLeaseManager                 datumLeaseManager;
+
     private Server                            server;
 
     private Server                            dataSyncServer;
@@ -123,6 +129,8 @@ public class DataServerBootstrap {
             openHttpServer();
 
             startRaftClient();
+
+            fetchProviderData();
 
             startScheduler();
 
@@ -188,6 +196,21 @@ public class DataServerBootstrap {
         metaServerService.startRaftClient();
         eventCenter.post(new MetaServerChangeEvent(metaServerService.getMetaServerMap()));
         LOGGER.info("raft client started!Leader is {}", metaServerService.getLeader());
+    }
+
+    private void fetchProviderData() {
+        ProvideData provideData = metaServerService
+            .fetchData(ValueConstants.ENABLE_DATA_DATUM_EXPIRE);
+        if (provideData == null || provideData.getProvideData() == null
+            || provideData.getProvideData().getObject() == null) {
+            LOGGER
+                .info("Fetch enableDataDatumExpire but no data existed, current config not change!");
+            return;
+        }
+        boolean enableDataDatumExpire = Boolean.parseBoolean((String) provideData.getProvideData()
+            .getObject());
+        LOGGER.info("Fetch enableDataDatumExpire {} success!", enableDataDatumExpire);
+        datumLeaseManager.setRenewEnable(enableDataDatumExpire);
     }
 
     private void startScheduler() {

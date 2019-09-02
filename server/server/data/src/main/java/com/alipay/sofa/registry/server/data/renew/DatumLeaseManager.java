@@ -23,7 +23,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.annotation.PostConstruct;
 
@@ -50,40 +49,38 @@ import com.google.common.util.concurrent.ThreadFactoryBuilder;
  * @version $Id: DatumExpiredCleaner.java, v 0.1 2019-06-03 21:08 kezhu.wukz Exp $
  */
 public class DatumLeaseManager implements AfterWorkingProcess {
-    private static final Logger                LOGGER                     = LoggerFactory
-                                                                              .getLogger(DatumLeaseManager.class);
-    private static final TimeZone              TIME_ZONE                  = TimeZone
-                                                                              .getTimeZone("Asia/Shanghai");
-    private static final Logger                RENEW_LOGGER               = LoggerFactory
-                                                                              .getLogger(
-                                                                                  ValueConstants.LOGGER_NAME_RENEW,
-                                                                                  "[DatumLeaseManager]");
+    private static final Logger   LOGGER       = LoggerFactory.getLogger(DatumLeaseManager.class);
+    private static final TimeZone TIME_ZONE    = TimeZone.getTimeZone("Asia/Shanghai");
+    private static final Logger   RENEW_LOGGER = LoggerFactory
+            .getLogger(ValueConstants.LOGGER_NAME_RENEW, "[DatumLeaseManager]");
 
     /** record the latest heartbeat time for each connectId, format: connectId -> lastRenewTimestamp */
-    private final Map<String, Long>            connectIdRenewTimestampMap = new ConcurrentHashMap<>();
+    private final Map<String, Long> connectIdRenewTimestampMap = new ConcurrentHashMap<>();
 
     /** lock for connectId , format: connectId -> true */
-    private ConcurrentHashMap<String, Boolean> locksForConnectId          = new ConcurrentHashMap();
+    private ConcurrentHashMap<String, Boolean> locksForConnectId = new ConcurrentHashMap();
 
-    private final AtomicBoolean                renewEnabled               = new AtomicBoolean(false);
+    private volatile boolean serverWorking = false;
 
-    private AsyncHashedWheelTimer              datumAsyncHashedWheelTimer;
+    private volatile boolean renewEnable = true;
 
-    @Autowired
-    private DataServerConfig                   dataServerConfig;
-
-    @Autowired
-    private DisconnectEventHandler             disconnectEventHandler;
+    private AsyncHashedWheelTimer datumAsyncHashedWheelTimer;
 
     @Autowired
-    private DatumCache                         datumCache;
+    private DataServerConfig dataServerConfig;
 
     @Autowired
-    private DataNodeStatus                     dataNodeStatus;
+    private DisconnectEventHandler disconnectEventHandler;
 
-    private ScheduledThreadPoolExecutor        executorForHeartbeatLess;
+    @Autowired
+    private DatumCache datumCache;
 
-    private ScheduledFuture<?>                 futureForHeartbeatLess;
+    @Autowired
+    private DataNodeStatus dataNodeStatus;
+
+    private ScheduledThreadPoolExecutor executorForHeartbeatLess;
+
+    private ScheduledFuture<?> futureForHeartbeatLess;
 
     /**
      * constructor
@@ -92,25 +89,25 @@ public class DatumLeaseManager implements AfterWorkingProcess {
     public void init() {
         ThreadFactoryBuilder threadFactoryBuilder = new ThreadFactoryBuilder();
         threadFactoryBuilder.setDaemon(true);
-        datumAsyncHashedWheelTimer = new AsyncHashedWheelTimer(threadFactoryBuilder.setNameFormat(
-            "Registry-DatumLeaseManager-WheelTimer").build(), 100, TimeUnit.MILLISECONDS, 1024,
-            dataServerConfig.getDatumLeaseManagerExecutorThreadSize(),
-            dataServerConfig.getDatumLeaseManagerExecutorQueueSize(), threadFactoryBuilder
-                .setNameFormat("Registry-DatumLeaseManager-WheelExecutor-%d").build(),
-            new TaskFailedCallback() {
-                @Override
-                public void executionRejected(Throwable e) {
-                    LOGGER.error("executionRejected: " + e.getMessage(), e);
-                }
+        datumAsyncHashedWheelTimer = new AsyncHashedWheelTimer(
+                threadFactoryBuilder.setNameFormat("Registry-DatumLeaseManager-WheelTimer").build(), 100,
+                TimeUnit.MILLISECONDS, 1024, dataServerConfig.getDatumLeaseManagerExecutorThreadSize(),
+                dataServerConfig.getDatumLeaseManagerExecutorQueueSize(),
+                threadFactoryBuilder.setNameFormat("Registry-DatumLeaseManager-WheelExecutor-%d").build(),
+                new TaskFailedCallback() {
+                    @Override
+                    public void executionRejected(Throwable e) {
+                        LOGGER.error("executionRejected: " + e.getMessage(), e);
+                    }
 
-                @Override
-                public void executionFailed(Throwable e) {
-                    LOGGER.error("executionFailed: " + e.getMessage(), e);
-                }
-            });
+                    @Override
+                    public void executionFailed(Throwable e) {
+                        LOGGER.error("executionFailed: " + e.getMessage(), e);
+                    }
+                });
 
-        executorForHeartbeatLess = new ScheduledThreadPoolExecutor(1, threadFactoryBuilder
-            .setNameFormat("Registry-DatumLeaseManager-ExecutorForHeartbeatLess").build());
+        executorForHeartbeatLess = new ScheduledThreadPoolExecutor(1,
+                threadFactoryBuilder.setNameFormat("Registry-DatumLeaseManager-ExecutorForHeartbeatLess").build());
         scheduleEvictTaskForHeartbeatLess();
     }
 
@@ -119,7 +116,7 @@ public class DatumLeaseManager implements AfterWorkingProcess {
      */
     public synchronized void reset() {
         LOGGER.info("reset is called, EvictTaskForHeartbeatLess will delay {}s",
-            dataServerConfig.getDatumTimeToLiveSec());
+                dataServerConfig.getDatumTimeToLiveSec());
         if (futureForHeartbeatLess != null) {
             futureForHeartbeatLess.cancel(false);
         }
@@ -127,9 +124,9 @@ public class DatumLeaseManager implements AfterWorkingProcess {
     }
 
     private void scheduleEvictTaskForHeartbeatLess() {
-        futureForHeartbeatLess = executorForHeartbeatLess.scheduleWithFixedDelay(
-            new EvictTaskForHeartbeatLess(), dataServerConfig.getDatumTimeToLiveSec(),
-            dataServerConfig.getDatumTimeToLiveSec(), TimeUnit.SECONDS);
+        futureForHeartbeatLess = executorForHeartbeatLess
+                .scheduleWithFixedDelay(new EvictTaskForHeartbeatLess(), dataServerConfig.getDatumTimeToLiveSec(),
+                        dataServerConfig.getDatumTimeToLiveSec(), TimeUnit.SECONDS);
     }
 
     /**
@@ -144,6 +141,20 @@ public class DatumLeaseManager implements AfterWorkingProcess {
         connectIdRenewTimestampMap.put(connectId, System.currentTimeMillis());
         // try to trigger evict task
         scheduleEvictTask(connectId, 0);
+    }
+
+    /**
+     * remove connectId if clientOff
+     */
+    public void remove(String connectId) {
+        if (RENEW_LOGGER.isDebugEnabled()) {
+            RENEW_LOGGER.debug("remove: connectId={}", connectId);
+        }
+
+        Long removed = connectIdRenewTimestampMap.remove(connectId);
+        if (removed != null) {
+            LOGGER.info("remove connectId({}) because it is clientOff", connectId);
+        }
     }
 
     /**
@@ -167,7 +178,12 @@ public class DatumLeaseManager implements AfterWorkingProcess {
                 locksForConnectId.remove(connectId);
 
                 // get lastRenewTime of this connectId
-                long lastRenewTime = connectIdRenewTimestampMap.get(connectId);
+                Long lastRenewTime = connectIdRenewTimestampMap.get(connectId);
+                if (lastRenewTime == null) {
+                    // connectId is already clientOff
+                    LOGGER.info("EvictTask(connectId={}) stop because already disconnected", connectId);
+                    return;
+                }
 
                 if (RENEW_LOGGER.isDebugEnabled()) {
                     RENEW_LOGGER.debug("EvictTask: connectId={}, lastRenewTime={}", connectId, format(lastRenewTime));
@@ -182,10 +198,16 @@ public class DatumLeaseManager implements AfterWorkingProcess {
                  */
                 boolean isExpired =
                         System.currentTimeMillis() - lastRenewTime > dataServerConfig.getDatumTimeToLiveSec() * 1000L;
-                if (isExpired && renewEnabled.get()) {
+                if (!isRenewEnable()) {
+                    LOGGER.info(
+                            "scheduleEvictTask({}) skipped because isRenewEnable() is false, lastRenewTime is {}, DataNodeStatus is {}, will retry after {}s",
+                            connectId, format(lastRenewTime), dataNodeStatus.getStatus(),
+                            dataServerConfig.getDatumTimeToLiveSec());
+                    nextDelaySec = dataServerConfig.getDatumTimeToLiveSec();
+                } else if (isExpired) {
                     int ownPubSize = getOwnPubSize(connectId);
                     if (ownPubSize > 0) {
-                        LOGGER.info("Evict connectId({}) cause it's expired, lastRenewTime is {}, pub.size is {}",
+                        LOGGER.info("Evict connectId({}) because expired, lastRenewTime is {}, pub.size is {}",
                                 connectId, format(lastRenewTime), ownPubSize);
                         evict(connectId);
                     }
@@ -217,8 +239,7 @@ public class DatumLeaseManager implements AfterWorkingProcess {
     }
 
     private void evict(String connectId) {
-        disconnectEventHandler.receive(new ClientDisconnectEvent(connectId, System
-            .currentTimeMillis(), 0));
+        disconnectEventHandler.receive(new ClientDisconnectEvent(connectId, System.currentTimeMillis(), 0));
     }
 
     private String format(long lastRenewTime) {
@@ -237,7 +258,7 @@ public class DatumLeaseManager implements AfterWorkingProcess {
         } catch (InterruptedException e) {
             LOGGER.error(e.getMessage(), e);
         }
-        renewEnabled.set(true);
+        serverWorking = true;
     }
 
     @Override
@@ -253,10 +274,9 @@ public class DatumLeaseManager implements AfterWorkingProcess {
         @Override
         public void run() {
             // If in a non-working state, cannot clean up because the renew request cannot be received at this time.
-            if (!renewEnabled.get()) {
-                LOGGER
-                    .info(
-                        "EvictTaskForHeartbeatLess skipped cause renewEnabled is false, DataNodeStatus is {}, will retry after {}s",
+            if (!isRenewEnable()) {
+                LOGGER.info(
+                        "EvictTaskForHeartbeatLess skipped because isRenewEnable() is false, DataNodeStatus is {}, will retry after {}s",
                         dataNodeStatus.getStatus(), dataServerConfig.getDatumTimeToLiveSec());
                 return;
             }
@@ -268,9 +288,8 @@ public class DatumLeaseManager implements AfterWorkingProcess {
                 if (timestamp == null) {
                     int ownPubSize = getOwnPubSize(connectId);
                     if (ownPubSize > 0) {
-                        LOGGER.info(
-                            "Evict connectId({}) cause it has no heartbeat, pub.size is {}",
-                            connectId, ownPubSize);
+                        LOGGER.info("Evict connectId({}) because no heartbeat, pub.size is {}", connectId,
+                                ownPubSize);
                         evict(connectId);
                     }
                 }
@@ -279,4 +298,13 @@ public class DatumLeaseManager implements AfterWorkingProcess {
             LOGGER.info("connectIdRenewTimestampMap.size is {}", connectIdRenewTimestampMap.size());
         }
     }
+
+    public void setRenewEnable(boolean renewEnable) {
+        this.renewEnable = renewEnable;
+    }
+
+    private boolean isRenewEnable() {
+        return renewEnable && serverWorking;
+    }
+
 }

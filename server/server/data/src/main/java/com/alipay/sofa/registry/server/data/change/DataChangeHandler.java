@@ -128,7 +128,9 @@ public class DataChangeHandler {
                 DataSourceTypeEnum sourceType = changeData.getSourceType();
                 DataChangeTypeEnum changeType = changeData.getChangeType();
 
-                if (changeType == DataChangeTypeEnum.MERGE && sourceType != DataSourceTypeEnum.BACKUP && sourceType != DataSourceTypeEnum.SYNC) {
+                if (changeType == DataChangeTypeEnum.MERGE
+                    && sourceType != DataSourceTypeEnum.BACKUP
+                    && sourceType != DataSourceTypeEnum.SYNC) {
                     //update version for pub or unPub merge to cache
                     //if the version product before merge to cache,it may be cause small version override big one
                     datum.updateVersion();

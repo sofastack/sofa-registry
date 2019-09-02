@@ -205,7 +205,7 @@ public class SessionServerConfigBean implements SessionServerConfig {
 
     private long               publishDataExecutorKeepAliveTime        = 60;
 
-    private double             accessLimitRate                         = 1000.0;
+    private double             accessLimitRate                         = 100000.0;
 
     private String             sessionServerRegion;
 

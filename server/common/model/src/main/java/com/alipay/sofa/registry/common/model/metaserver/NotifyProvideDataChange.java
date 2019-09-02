@@ -16,6 +16,8 @@
  */
 package com.alipay.sofa.registry.common.model.metaserver;
 
+import com.alipay.sofa.registry.common.model.Node.NodeType;
+
 import java.io.Serializable;
 
 /**
@@ -30,6 +32,8 @@ public class NotifyProvideDataChange implements Serializable {
     private Long         version;
 
     private DataOperator dataOperator;
+
+    private NodeType     nodeType = NodeType.SESSION;
 
     /**
      * constructor
@@ -97,12 +101,31 @@ public class NotifyProvideDataChange implements Serializable {
         this.dataOperator = dataOperator;
     }
 
+    /**
+     * Getter method for property <tt>nodeType</tt>.
+     *
+     * @return property value of nodeType
+     */
+    public NodeType getNodeType() {
+        return nodeType;
+    }
+
+    /**
+     * Setter method for property <tt>nodeType</tt>.
+     *
+     * @param nodeType  value to be assigned to property nodeType
+     */
+    public void setNodeType(NodeType nodeType) {
+        this.nodeType = nodeType;
+    }
+
     @Override
     public String toString() {
         final StringBuilder sb = new StringBuilder("NotifyProvideDataChange{");
         sb.append("dataInfoId='").append(dataInfoId).append('\'');
         sb.append(", version=").append(version);
         sb.append(", dataOperator=").append(dataOperator);
+        sb.append(", nodeType=").append(nodeType);
         sb.append('}');
         return sb.toString();
     }
