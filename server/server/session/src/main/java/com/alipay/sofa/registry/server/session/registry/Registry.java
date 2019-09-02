@@ -82,4 +82,6 @@ public interface Registry {
      * for scheduler clean no connect client
      */
     void cleanClientConnect();
+
+    void setEnableDataRenewSnapshot(boolean enableDataRenewSnapshot);
 }

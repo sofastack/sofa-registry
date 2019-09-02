@@ -16,6 +16,31 @@
  */
 package com.alipay.sofa.registry.server.data.remoting.metaserver;
 
+import com.alipay.remoting.Connection;
+import com.alipay.sofa.jraft.entity.PeerId;
+import com.alipay.sofa.registry.common.model.Node.NodeType;
+import com.alipay.sofa.registry.common.model.constants.ValueConstants;
+import com.alipay.sofa.registry.common.model.metaserver.DataNode;
+import com.alipay.sofa.registry.common.model.metaserver.FetchProvideDataRequest;
+import com.alipay.sofa.registry.common.model.metaserver.GetNodesRequest;
+import com.alipay.sofa.registry.common.model.metaserver.MetaNode;
+import com.alipay.sofa.registry.common.model.metaserver.NodeChangeResult;
+import com.alipay.sofa.registry.common.model.metaserver.ProvideData;
+import com.alipay.sofa.registry.common.model.metaserver.RenewNodesRequest;
+import com.alipay.sofa.registry.common.model.store.URL;
+import com.alipay.sofa.registry.jraft.bootstrap.RaftClient;
+import com.alipay.sofa.registry.log.Logger;
+import com.alipay.sofa.registry.log.LoggerFactory;
+import com.alipay.sofa.registry.remoting.bolt.BoltChannel;
+import com.alipay.sofa.registry.remoting.exchange.message.Request;
+import com.alipay.sofa.registry.remoting.exchange.message.Response;
+import com.alipay.sofa.registry.server.data.bootstrap.DataServerConfig;
+import com.alipay.sofa.registry.server.data.cache.DataServerChangeItem;
+import com.alipay.sofa.registry.server.data.node.DataServerNode;
+import com.alipay.sofa.registry.server.data.remoting.MetaNodeExchanger;
+import com.alipay.sofa.registry.server.data.remoting.dataserver.DataServerNodeFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -26,29 +51,6 @@ import java.util.Map.Entry;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
-
-import org.springframework.beans.factory.annotation.Autowired;
-
-import com.alipay.remoting.Connection;
-import com.alipay.sofa.jraft.entity.PeerId;
-import com.alipay.sofa.registry.common.model.Node.NodeType;
-import com.alipay.sofa.registry.common.model.constants.ValueConstants;
-import com.alipay.sofa.registry.common.model.metaserver.DataNode;
-import com.alipay.sofa.registry.common.model.metaserver.GetNodesRequest;
-import com.alipay.sofa.registry.common.model.metaserver.MetaNode;
-import com.alipay.sofa.registry.common.model.metaserver.NodeChangeResult;
-import com.alipay.sofa.registry.common.model.metaserver.RenewNodesRequest;
-import com.alipay.sofa.registry.common.model.store.URL;
-import com.alipay.sofa.registry.jraft.bootstrap.RaftClient;
-import com.alipay.sofa.registry.log.Logger;
-import com.alipay.sofa.registry.log.LoggerFactory;
-import com.alipay.sofa.registry.remoting.bolt.BoltChannel;
-import com.alipay.sofa.registry.remoting.exchange.message.Request;
-import com.alipay.sofa.registry.server.data.bootstrap.DataServerConfig;
-import com.alipay.sofa.registry.server.data.cache.DataServerChangeItem;
-import com.alipay.sofa.registry.server.data.node.DataServerNode;
-import com.alipay.sofa.registry.server.data.remoting.MetaNodeExchanger;
-import com.alipay.sofa.registry.server.data.remoting.dataserver.DataServerNodeFactory;
 
 /**
  *
@@ -249,6 +251,53 @@ public class DefaultMetaServiceImpl implements IMetaServerService {
                 }
             }
         }
+    }
+
+    @Override
+    public ProvideData fetchData(String dataInfoId) {
+
+        Map<String, Connection> connectionMap = metaServerConnectionFactory
+            .getConnections(dataServerConfig.getLocalDataCenter());
+        String leader = getLeader().getIp();
+        if (connectionMap.containsKey(leader)) {
+            Connection connection = connectionMap.get(leader);
+            if (connection.isFine()) {
+                try {
+                    Request<FetchProvideDataRequest> request = new Request<FetchProvideDataRequest>() {
+
+                        @Override
+                        public FetchProvideDataRequest getRequestBody() {
+
+                            return new FetchProvideDataRequest(dataInfoId);
+                        }
+
+                        @Override
+                        public URL getRequestUrl() {
+                            return new URL(connection.getRemoteIP(), connection.getRemotePort());
+                        }
+                    };
+
+                    Response response = metaNodeExchanger.request(request);
+
+                    Object result = response.getResult();
+                    if (result instanceof ProvideData) {
+                        return (ProvideData) result;
+                    } else {
+                        LOGGER.error("fetch null provider data!");
+                        throw new RuntimeException("MetaNodeService fetch null provider data!");
+                    }
+                } catch (Exception e) {
+                    LOGGER.error("fetch provider data error! " + e.getMessage(), e);
+                    throw new RuntimeException("fetch provider data error! " + e.getMessage(), e);
+                }
+            }
+        }
+        String newip = refreshLeader().getIp();
+        LOGGER.warn(
+            "[ConnectionRefreshTask] refresh connections metaServer not fine,refresh leader : {}",
+            newip);
+        return null;
+
     }
 
     @Override

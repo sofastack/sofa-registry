@@ -65,14 +65,15 @@ import com.google.common.collect.Sets.SetView;
  */
 public class SessionRegistry implements Registry {
 
-    private static final Logger       LOGGER       = LoggerFactory.getLogger(SessionRegistry.class);
+    private static final Logger       LOGGER                  = LoggerFactory
+                                                                  .getLogger(SessionRegistry.class);
 
-    private static final Logger       TASK_LOGGER  = LoggerFactory.getLogger(SessionRegistry.class,
-                                                       "[Task]");
+    private static final Logger       TASK_LOGGER             = LoggerFactory.getLogger(
+                                                                  SessionRegistry.class, "[Task]");
 
-    private static final Logger       RENEW_LOGGER = LoggerFactory.getLogger(
-                                                       ValueConstants.LOGGER_NAME_RENEW,
-                                                       "[SessionRegistry]");
+    private static final Logger       RENEW_LOGGER            = LoggerFactory.getLogger(
+                                                                  ValueConstants.LOGGER_NAME_RENEW,
+                                                                  "[SessionRegistry]");
 
     /**
      * store subscribers
@@ -130,6 +131,8 @@ public class SessionRegistry implements Registry {
 
     @Autowired
     private WriteDataAcceptor         writeDataAcceptor;
+
+    private volatile boolean          enableDataRenewSnapshot = true;
 
     @Override
     public void register(StoreData storeData) {
@@ -435,6 +438,10 @@ public class SessionRegistry implements Registry {
         if (RENEW_LOGGER.isDebugEnabled()) {
             RENEW_LOGGER.debug("renewDatum: connectId={}", connectId);
         }
+        // check the renew switch
+        if (!this.enableDataRenewSnapshot) {
+            return;
+        }
 
         List<RenewDatumRequest> renewDatumRequests = renewService.getRenewDatumRequests(connectId);
         if (renewDatumRequests != null) {
@@ -523,5 +530,15 @@ public class SessionRegistry implements Registry {
      */
     protected TaskListenerManager getTaskListenerManager() {
         return taskListenerManager;
+    }
+
+    /**
+     * Setter method for property <tt>enableDataRenewSnapshot </tt>.
+     *
+     * @param enableDataRenewSnapshot  value to be assigned to property enableDataRenewSnapshot
+     */
+    @Override
+    public void setEnableDataRenewSnapshot(boolean enableDataRenewSnapshot) {
+        this.enableDataRenewSnapshot = enableDataRenewSnapshot;
     }
 }
