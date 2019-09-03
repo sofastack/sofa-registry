@@ -77,6 +77,7 @@ import com.alipay.sofa.registry.server.data.remoting.handler.AbstractServerHandl
 import com.alipay.sofa.registry.server.data.remoting.metaserver.DefaultMetaServiceImpl;
 import com.alipay.sofa.registry.server.data.remoting.metaserver.IMetaServerService;
 import com.alipay.sofa.registry.server.data.remoting.metaserver.MetaServerConnectionFactory;
+import com.alipay.sofa.registry.server.data.remoting.metaserver.handler.NotifyProvideDataChangeHandler;
 import com.alipay.sofa.registry.server.data.remoting.metaserver.handler.ServerChangeHandler;
 import com.alipay.sofa.registry.server.data.remoting.metaserver.handler.StatusConfirmHandler;
 import com.alipay.sofa.registry.server.data.remoting.metaserver.task.ConnectionRefreshMetaTask;
@@ -246,6 +247,7 @@ public class DataServerBeanConfiguration {
             Collection<AbstractClientHandler> list = new ArrayList<>();
             list.add(serverChangeHandler());
             list.add(statusConfirmHandler());
+            list.add(notifyProvideDataChangeHandler());
             return list;
         }
 
@@ -332,6 +334,11 @@ public class DataServerBeanConfiguration {
         @Bean
         public AbstractClientHandler statusConfirmHandler() {
             return new StatusConfirmHandler();
+        }
+
+        @Bean
+        public NotifyProvideDataChangeHandler notifyProvideDataChangeHandler() {
+            return new NotifyProvideDataChangeHandler();
         }
     }
 

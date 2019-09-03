@@ -18,6 +18,7 @@ package com.alipay.sofa.registry.server.meta.node;
 
 import com.alipay.sofa.registry.common.model.metaserver.DataNode;
 import com.alipay.sofa.registry.common.model.metaserver.NodeChangeResult;
+import com.alipay.sofa.registry.common.model.metaserver.NotifyProvideDataChange;
 import com.alipay.sofa.registry.common.model.metaserver.StatusConfirmRequest;
 
 import java.util.Map;
@@ -33,4 +34,6 @@ public interface DataNodeService extends NodeService {
                        boolean confirm, String confirmNodeIp);
 
     void notifyStatusConfirm(StatusConfirmRequest statusConfirmRequest);
+
+    void notifyProvideDataChange(NotifyProvideDataChange notifyProvideDataChange);
 }

@@ -45,10 +45,10 @@ import com.alipay.sofa.registry.task.listener.TaskListenerManager;
 @Path("blacklist")
 public class BlacklistDataResource {
 
-    private static final Logger DB_LOGGER   = LoggerFactory.getLogger(StopPushDataResource.class,
+    private static final Logger DB_LOGGER   = LoggerFactory.getLogger(BlacklistDataResource.class,
                                                 "[DBService]");
 
-    private static final Logger TASK_LOGGER = LoggerFactory.getLogger(StopPushDataResource.class,
+    private static final Logger TASK_LOGGER = LoggerFactory.getLogger(BlacklistDataResource.class,
                                                 "[Task]");
 
     @RaftReference

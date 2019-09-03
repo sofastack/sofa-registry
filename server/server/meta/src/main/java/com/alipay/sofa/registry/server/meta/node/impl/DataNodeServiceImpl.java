@@ -16,19 +16,12 @@
  */
 package com.alipay.sofa.registry.server.meta.node.impl;
 
-import java.net.InetSocketAddress;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
-
-import org.springframework.beans.factory.annotation.Autowired;
-
 import com.alipay.sofa.registry.common.model.CommonResponse;
 import com.alipay.sofa.registry.common.model.Node.NodeType;
 import com.alipay.sofa.registry.common.model.metaserver.DataCenterNodes;
 import com.alipay.sofa.registry.common.model.metaserver.DataNode;
 import com.alipay.sofa.registry.common.model.metaserver.NodeChangeResult;
+import com.alipay.sofa.registry.common.model.metaserver.NotifyProvideDataChange;
 import com.alipay.sofa.registry.common.model.metaserver.StatusConfirmRequest;
 import com.alipay.sofa.registry.common.model.store.URL;
 import com.alipay.sofa.registry.log.Logger;
@@ -42,6 +35,13 @@ import com.alipay.sofa.registry.server.meta.node.DataNodeService;
 import com.alipay.sofa.registry.server.meta.remoting.connection.NodeConnectManager;
 import com.alipay.sofa.registry.server.meta.remoting.handler.AbstractServerHandler;
 import com.alipay.sofa.registry.server.meta.store.StoreService;
+import org.springframework.beans.factory.annotation.Autowired;
+
+import java.net.InetSocketAddress;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
 
 /**
  *
@@ -180,6 +180,55 @@ public class DataNodeServiceImpl implements DataNodeService {
 
         } catch (RequestException e) {
             throw new RuntimeException("Notify status confirm error: " + e.getMessage(), e);
+        }
+    }
+
+    @Override
+    public void notifyProvideDataChange(NotifyProvideDataChange notifyProvideDataChange) {
+
+        NodeConnectManager nodeConnectManager = getNodeConnectManager();
+        Collection<InetSocketAddress> connections = nodeConnectManager.getConnections(null);
+
+        if (connections == null || connections.isEmpty()) {
+            LOGGER.error("Push dataNode list error! No data node connected!");
+            throw new RuntimeException("Push dataNode list error! No data node connected!");
+        }
+
+        // add register confirm
+        StoreService storeService = ServiceFactory.getStoreService(NodeType.DATA);
+        Map<String, DataNode> dataNodes = storeService.getNodes();
+
+        if (dataNodes == null || dataNodes.isEmpty()) {
+            LOGGER.error("Push dataNode list error! No data node registered!");
+            throw new RuntimeException("Push dataNode list error! No data node registered!");
+        }
+
+        for (InetSocketAddress connection : connections) {
+
+            if (!dataNodes.keySet().contains(connection.getAddress().getHostAddress())) {
+                continue;
+            }
+
+            try {
+                Request<NotifyProvideDataChange> request = new Request<NotifyProvideDataChange>() {
+
+                    @Override
+                    public NotifyProvideDataChange getRequestBody() {
+                        return notifyProvideDataChange;
+                    }
+
+                    @Override
+                    public URL getRequestUrl() {
+                        return new URL(connection);
+                    }
+                };
+
+                dataNodeExchanger.request(request);
+
+            } catch (RequestException e) {
+                throw new RuntimeException("Notify provide data change to dataServer error: "
+                                           + e.getMessage(), e);
+            }
         }
     }
 

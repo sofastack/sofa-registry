@@ -51,6 +51,7 @@ import com.alipay.sofa.registry.server.session.node.NodeManager;
 import com.alipay.sofa.registry.server.session.node.NodeManagerFactory;
 import com.alipay.sofa.registry.server.session.node.RaftClientManager;
 import com.alipay.sofa.registry.server.session.node.SessionProcessIdGenerator;
+import com.alipay.sofa.registry.server.session.registry.Registry;
 import com.alipay.sofa.registry.server.session.remoting.handler.AbstractClientHandler;
 import com.alipay.sofa.registry.server.session.remoting.handler.AbstractServerHandler;
 import com.alipay.sofa.registry.server.session.scheduler.ExecutorManager;
@@ -104,6 +105,9 @@ public class SessionServerBootstrap {
 
     @Autowired
     private BlacklistManager                  blacklistManager;
+
+    @Autowired
+    private Registry                          sessionRegistry;
 
     private Server                            server;
 
@@ -268,6 +272,8 @@ public class SessionServerBootstrap {
 
                 fetchStopPushSwitch(leaderUrl);
 
+                fetchEnableDataRenewSnapshot(leaderUrl);
+
                 fetchBlackList();
 
                 LOGGER.info("MetaServer connected {} server! Port:{}", size,
@@ -319,6 +325,25 @@ public class SessionServerBootstrap {
             LOGGER.info("Fetch session stop push data switch {} success!", data);
         } else {
             LOGGER.info("Fetch session stop push switch data null,config not change!");
+        }
+    }
+
+    private void fetchEnableDataRenewSnapshot(URL leaderUrl) {
+        FetchProvideDataRequest fetchProvideDataRequest = new FetchProvideDataRequest(
+            ValueConstants.ENABLE_DATA_RENEW_SNAPSHOT);
+        Object data = sendMetaRequest(fetchProvideDataRequest, leaderUrl);
+        if (data instanceof ProvideData) {
+            ProvideData provideData = (ProvideData) data;
+            if (provideData == null || provideData.getProvideData() == null
+                || provideData.getProvideData().getObject() == null) {
+                LOGGER
+                    .info("Fetch enableDataRenewSnapshot but no data existed, current config not change!");
+                return;
+            }
+            boolean enableDataRenewSnapshot = Boolean.parseBoolean((String) provideData
+                .getProvideData().getObject());
+            LOGGER.info("Fetch enableDataRenewSnapshot {} success!", enableDataRenewSnapshot);
+            this.sessionRegistry.setEnableDataRenewSnapshot(enableDataRenewSnapshot);
         }
     }
 

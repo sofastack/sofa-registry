@@ -74,6 +74,7 @@ import com.alipay.sofa.registry.server.meta.resource.HealthResource;
 import com.alipay.sofa.registry.server.meta.resource.MetaDigestResource;
 import com.alipay.sofa.registry.server.meta.resource.MetaStoreResource;
 import com.alipay.sofa.registry.server.meta.resource.PersistentDataResource;
+import com.alipay.sofa.registry.server.meta.resource.RenewSwitchResource;
 import com.alipay.sofa.registry.server.meta.resource.StopPushDataResource;
 import com.alipay.sofa.registry.server.meta.store.DataStoreService;
 import com.alipay.sofa.registry.server.meta.store.MetaStoreService;
@@ -243,6 +244,7 @@ public class MetaServerConfiguration {
             list.add(getNodesRequestHandler());
             list.add(dataNodeHandler());
             list.add(renewNodesRequestHandler());
+            list.add(fetchProvideDataRequestHandler());
             return list;
         }
 
@@ -364,6 +366,11 @@ public class MetaServerConfiguration {
         @Bean
         public BlacklistDataResource blacklistDataResource() {
             return new BlacklistDataResource();
+        }
+
+        @Bean
+        public RenewSwitchResource renewSwitchResource() {
+            return new RenewSwitchResource();
         }
     }
 
