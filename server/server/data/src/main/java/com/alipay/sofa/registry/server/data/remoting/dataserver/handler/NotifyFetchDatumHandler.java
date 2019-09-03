@@ -16,11 +16,6 @@
  */
 package com.alipay.sofa.registry.server.data.remoting.dataserver.handler;
 
-import java.util.Map;
-import java.util.Map.Entry;
-
-import org.springframework.beans.factory.annotation.Autowired;
-
 import com.alipay.remoting.Connection;
 import com.alipay.sofa.registry.common.model.CommonResponse;
 import com.alipay.sofa.registry.common.model.GenericResponse;
@@ -44,6 +39,10 @@ import com.alipay.sofa.registry.server.data.remoting.dataserver.DataServerConnec
 import com.alipay.sofa.registry.server.data.remoting.handler.AbstractServerHandler;
 import com.alipay.sofa.registry.server.data.util.TimeUtil;
 import com.alipay.sofa.registry.util.ParaCheckUtil;
+import org.springframework.beans.factory.annotation.Autowired;
+
+import java.util.Map;
+import java.util.Map.Entry;
 
 /**
  *
@@ -135,8 +134,7 @@ public class NotifyFetchDatumHandler extends AbstractServerHandler<NotifyFetchDa
      * @param dataInfoId
      */
     private void fetchDatum(String targetIp, String dataCenter, String dataInfoId) {
-        while ((dataServerCache.getDataServers(dataServerConfig.getLocalDataCenter()).keySet())
-            .contains(targetIp)) {
+        while (dataServerConnectionFactory.getConnection(targetIp) != null) {
             Connection connection = dataServerConnectionFactory.getConnection(targetIp);
             if (connection == null || !connection.isFine()) {
                 throw new RuntimeException(String.format("connection of %s is not available",
