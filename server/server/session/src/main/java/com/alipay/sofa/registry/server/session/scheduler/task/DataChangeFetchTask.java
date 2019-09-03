@@ -16,6 +16,15 @@
  */
 package com.alipay.sofa.registry.server.session.scheduler.task;
 
+import java.net.InetSocketAddress;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.function.Predicate;
+
 import com.alipay.sofa.registry.common.model.dataserver.Datum;
 import com.alipay.sofa.registry.common.model.sessionserver.DataChangeRequest;
 import com.alipay.sofa.registry.common.model.store.BaseInfo.ClientVersion;
@@ -26,6 +35,7 @@ import com.alipay.sofa.registry.core.model.ScopeEnum;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
+import com.alipay.sofa.registry.server.session.cache.CacheAccessException;
 import com.alipay.sofa.registry.server.session.cache.CacheService;
 import com.alipay.sofa.registry.server.session.cache.DatumKey;
 import com.alipay.sofa.registry.server.session.cache.Key;
@@ -40,15 +50,6 @@ import com.alipay.sofa.registry.task.listener.TaskEvent;
 import com.alipay.sofa.registry.task.listener.TaskEvent.TaskType;
 import com.alipay.sofa.registry.task.listener.TaskListenerManager;
 import com.alipay.sofa.registry.util.DatumVersionUtil;
-
-import java.net.InetSocketAddress;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.function.Predicate;
 
 /**
  *
@@ -197,7 +198,8 @@ public class DataChangeFetchTask extends AbstractSessionTask {
 
     public PushTaskClosure getTaskClosure() {
         //this for all this dataInfoId push result get and call back to change version
-        PushTaskClosure pushTaskClosure = new PushTaskClosure(executorManager.getPushTaskCheckAsyncHashedWheelTimer(),sessionServerConfig,dataChangeRequest.getDataInfoId());
+        PushTaskClosure pushTaskClosure = new PushTaskClosure(executorManager.getPushTaskCheckAsyncHashedWheelTimer(),
+                sessionServerConfig, dataChangeRequest.getDataInfoId());
         pushTaskClosure.setTaskClosure((status, task) -> {
             String dataCenter = dataChangeRequest.getDataCenter();
             String dataInfoId = dataChangeRequest.getDataInfoId();
@@ -274,7 +276,14 @@ public class DataChangeFetchTask extends AbstractSessionTask {
         DatumKey datumKey = new DatumKey(dataChangeRequest.getDataInfoId(),
             dataChangeRequest.getDataCenter());
         Key key = new Key(KeyType.OBJ, datumKey.getClass().getName(), datumKey);
-        Value<Datum> value = sessionCacheService.getValue(key);
+
+        Value<Datum> value = null;
+        try {
+            value = sessionCacheService.getValue(key);
+        } catch (CacheAccessException e) {
+            LOGGER.error(String.format("error when access cache: %s", e.getMessage()), e);
+        }
+
         return value == null ? null : value.getPayload();
     }
 
