@@ -16,27 +16,24 @@
  */
 package com.alipay.sofa.registry.server.session.cache;
 
-import java.util.Map;
-
 /**
- *
- * @author shangyu.wh
- * @version $Id: CacheService.java, v 0.1 2017-12-06 20:19 shangyu.wh Exp $
+ * exception inner cache, e.g. remote invoke error
+ * @author kezhu.wukz
+ * @version $Id: CacheAccessException.java, v 0.1 2019-09-02 17:55 kezhu.wukz Exp $
  */
-public interface CacheService {
+public class CacheAccessException extends Exception {
+    public CacheAccessException() {
+    }
 
-    /**
-     * get cache by key
-     * @param key
-     * @return
-     */
-    Value getValue(Key key) throws CacheAccessException;
+    public CacheAccessException(String message) {
+        super(message);
+    }
 
-    Map<Key, Value> getValues(final Iterable<Key> keys) throws CacheAccessException;
+    public CacheAccessException(String message, Throwable cause) {
+        super(message, cause);
+    }
 
-    /**
-     * invalidate cache by keys
-     * @param keys
-     */
-    void invalidate(Key... keys);
+    public CacheAccessException(Throwable cause) {
+        super(cause);
+    }
 }

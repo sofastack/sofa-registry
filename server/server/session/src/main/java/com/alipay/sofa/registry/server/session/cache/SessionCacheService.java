@@ -16,17 +16,17 @@
  */
 package com.alipay.sofa.registry.server.session.cache;
 
+import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.TimeUnit;
+
+import org.springframework.beans.factory.annotation.Autowired;
+
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
-import org.springframework.beans.factory.annotation.Autowired;
-
-import java.util.HashMap;
-import java.util.Map;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
 
 /**
  *
@@ -84,23 +84,25 @@ public class SessionCacheService implements CacheService {
     }
 
     @Override
-    public Value getValue(final Key key) {
+    public Value getValue(final Key key) throws CacheAccessException {
         Value payload = null;
         try {
             payload = readWriteCacheMap.get(key);
-        } catch (Throwable t) {
-            LOGGER.error("Cannot get value for key :" + key, t);
+        } catch (Throwable e) {
+            String msg = "Cannot get value for key is:" + key;
+            throw new CacheAccessException(msg, e);
         }
         return payload;
     }
 
     @Override
-    public Map<Key, Value> getValues(final Iterable<Key> keys) {
+    public Map<Key, Value> getValues(final Iterable<Key> keys) throws CacheAccessException {
         Map<Key, Value> valueMap = null;
         try {
             valueMap = readWriteCacheMap.getAll(keys);
-        } catch (ExecutionException e) {
-            LOGGER.error("Cannot get value for keys :" + keys, e);
+        } catch (Throwable e) {
+            String msg = "Cannot get value for keys are:" + keys;
+            throw new CacheAccessException(msg, e);
         }
         return valueMap;
     }
