@@ -37,6 +37,7 @@ import com.alipay.sofa.registry.server.data.change.event.DataChangeEventCenter;
 import com.alipay.sofa.registry.server.data.executor.ExecutorFactory;
 import com.alipay.sofa.registry.server.data.remoting.dataserver.DataServerConnectionFactory;
 import com.alipay.sofa.registry.server.data.remoting.handler.AbstractServerHandler;
+import com.alipay.sofa.registry.server.data.renew.LocalDataServerCleanHandler;
 import com.alipay.sofa.registry.server.data.util.TimeUtil;
 import com.alipay.sofa.registry.util.ParaCheckUtil;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -72,6 +73,9 @@ public class NotifyFetchDatumHandler extends AbstractServerHandler<NotifyFetchDa
     @Autowired
     private DatumCache                  datumCache;
 
+    @Autowired
+    private LocalDataServerCleanHandler localDataServerCleanHandler;
+
     @Override
     public void checkParam(NotifyFetchDatumRequest request) throws RuntimeException {
         ParaCheckUtil.checkNotBlank(request.getIp(), "ip");
@@ -80,6 +84,10 @@ public class NotifyFetchDatumHandler extends AbstractServerHandler<NotifyFetchDa
     @Override
     public Object doHandle(Channel channel, NotifyFetchDatumRequest request) {
         ParaCheckUtil.checkNotBlank(request.getIp(), "ip");
+
+        //receive other data NotifyFetchDatumRequest,must delay clean datum task until fetch all datum
+        localDataServerCleanHandler.reset();
+
         Map<String, Map<String, Long>> versionMap = request.getDataVersionMap();
         long version = request.getChangeVersion();
         String ip = request.getIp();
