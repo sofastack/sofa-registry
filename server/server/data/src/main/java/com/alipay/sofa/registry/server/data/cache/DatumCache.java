@@ -299,7 +299,10 @@ public class DatumCache {
         for (Entry<String, Publisher> pubEntry : snapshotPubMap.entrySet()) {
             String registerId = pubEntry.getKey();
             Publisher snapshotPub = pubEntry.getValue();
-            cacheDatum.getPubMap().put(registerId, snapshotPub);
+            Publisher cachePub = cacheDatum.getPubMap().put(registerId, snapshotPub);
+            if (cachePub != null) {
+                removeFromIndex(cachePub);
+            }
             addToIndex(snapshotPub);
         }
 
