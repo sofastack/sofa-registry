@@ -28,6 +28,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import com.alipay.sofa.registry.common.model.dataserver.Datum;
 import com.alipay.sofa.registry.common.model.store.Publisher;
+import com.alipay.sofa.registry.common.model.store.WordCache;
 import com.alipay.sofa.registry.server.data.bootstrap.DataServerConfig;
 import com.alipay.sofa.registry.server.data.change.DataChangeTypeEnum;
 import com.alipay.sofa.registry.server.data.node.DataServerNode;
@@ -396,7 +397,7 @@ public class DatumCache {
     }
 
     private String getConnectId(Publisher cachePub) {
-        return cachePub.getSourceAddress().getAddressString();
+        return WordCache.getInstance().getWordCache(cachePub.getSourceAddress().getAddressString());
     }
 
     /**

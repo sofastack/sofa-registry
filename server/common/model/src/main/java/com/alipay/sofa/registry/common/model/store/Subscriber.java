@@ -16,12 +16,12 @@
  */
 package com.alipay.sofa.registry.common.model.store;
 
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+
 import com.alipay.sofa.registry.common.model.ElementType;
 import com.alipay.sofa.registry.core.model.ScopeEnum;
 import com.fasterxml.jackson.annotation.JsonIgnore;
-
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 /**
  *
@@ -160,5 +160,24 @@ public class Subscriber extends BaseInfo {
         sb.append(", super=").append(super.toString());
         sb.append('}');
         return sb.toString();
+    }
+
+    /**
+     * change subscriber word cache
+     * @param subscriber
+     * @return
+     */
+    public static Subscriber internSubscriber(Subscriber subscriber) {
+        subscriber.setRegisterId(subscriber.getRegisterId());
+        subscriber.setDataInfoId(subscriber.getDataInfoId());
+        subscriber.setInstanceId(subscriber.getInstanceId());
+        subscriber.setGroup(subscriber.getGroup());
+        subscriber.setDataId(subscriber.getDataId());
+        subscriber.setClientId(subscriber.getClientId());
+        subscriber.setCell(subscriber.getCell());
+        subscriber.setProcessId(subscriber.getProcessId());
+        subscriber.setAppName(subscriber.getAppName());
+
+        return subscriber;
     }
 }
