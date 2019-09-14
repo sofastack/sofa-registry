@@ -95,8 +95,7 @@ public class RenewDatumHandler extends AbstractServerHandler<RenewDatumRequest> 
         }
 
         if (!renewEnabled.get()) {
-            LOGGER.warn("[forward] Renew request refused, renewEnabled is false, request: {}",
-                request);
+            LOGGER.warn("Renew request refused, renewEnabled is false, request: {}", request);
             GenericResponse response = new GenericResponse();
             response.setSuccess(false);
             response.setMessage("Renew request refused, renewEnabled is false yet");

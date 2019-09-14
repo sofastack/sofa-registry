@@ -71,11 +71,9 @@ public class DatumCache {
      * @return
      */
     public Datum get(String dataCenter, String dataInfoId) {
-        if (DATUM_MAP.containsKey(dataCenter)) {
-            Map<String, Datum> map = DATUM_MAP.get(dataCenter);
-            if (map.containsKey(dataInfoId)) {
-                return map.get(dataInfoId);
-            }
+        Map<String, Datum> map = DATUM_MAP.get(dataCenter);
+        if (map != null) {
+            return map.get(dataInfoId);
         }
         return null;
     }
@@ -89,8 +87,9 @@ public class DatumCache {
     public Map<String, Datum> get(String dataInfoId) {
         Map<String, Datum> datumMap = new HashMap<>();
         DATUM_MAP.forEach((dataCenter, datums) -> {
-            if (datums.containsKey(dataInfoId)) {
-                datumMap.put(dataCenter, datums.get(dataInfoId));
+            Datum datum = datums.get(dataInfoId);
+            if (datum != null) {
+                datumMap.put(dataCenter, datum);
             }
         });
 
