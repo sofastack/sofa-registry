@@ -237,7 +237,7 @@ public abstract class BaseInfo implements Serializable, StoreData<String> {
      * @param registerId  value to be assigned to property registerId
      */
     public void setRegisterId(String registerId) {
-        this.registerId = WordCache.getInstance().getWordCache(registerId);
+        this.registerId = registerId;
     }
 
     /**
