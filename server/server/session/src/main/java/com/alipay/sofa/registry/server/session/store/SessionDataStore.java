@@ -16,6 +16,10 @@
  */
 package com.alipay.sofa.registry.server.session.store;
 
+import com.alipay.sofa.registry.common.model.store.Publisher;
+import com.alipay.sofa.registry.log.Logger;
+import com.alipay.sofa.registry.log.LoggerFactory;
+
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.Map;
@@ -23,11 +27,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
-
-import com.alipay.sofa.registry.common.model.store.Publisher;
-import com.alipay.sofa.registry.common.model.store.WordCache;
-import com.alipay.sofa.registry.log.Logger;
-import com.alipay.sofa.registry.log.LoggerFactory;
 
 /**
  *
@@ -52,8 +51,6 @@ public class SessionDataStore implements DataStore {
 
     @Override
     public void add(Publisher publisher) {
-        Publisher.internPublisher(publisher);
-
         write.lock();
         try {
             Map<String, Publisher> publishers = registry.get(publisher.getDataInfoId());
@@ -212,9 +209,8 @@ public class SessionDataStore implements DataStore {
     }
 
     private void addToConnectIndex(Publisher publisher) {
-        String connectId = WordCache.getInstance().getWordCache(
-            publisher.getSourceAddress().getAddressString());
 
+        String connectId = publisher.getSourceAddress().getAddressString();
         Map<String/*registerId*/, Publisher> publisherMap = connectIndex.get(connectId);
         if (publisherMap == null) {
             Map<String/*registerId*/, Publisher> newPublisherMap = new ConcurrentHashMap<>();
@@ -235,6 +231,15 @@ public class SessionDataStore implements DataStore {
         } else {
             LOGGER.warn("ConnectId {} not existed in Index to remove!", connectId);
         }
+    }
+
+    private void invalidateIndex(Publisher publisher) {
+        String connectId = publisher.getSourceAddress().getAddressString();
+        invalidateConnectIndex(connectId);
+    }
+
+    private void invalidateConnectIndex(String connectId) {
+        connectIndex.remove(connectId);
     }
 
     @Override

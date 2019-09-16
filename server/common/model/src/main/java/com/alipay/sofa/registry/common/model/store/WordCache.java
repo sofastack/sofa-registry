@@ -16,8 +16,7 @@
  */
 package com.alipay.sofa.registry.common.model.store;
 
-import com.google.common.collect.Interner;
-import com.google.common.collect.Interners;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  *
@@ -46,7 +45,7 @@ public class WordCache {
     /**
      * word cache map
      */
-    private Interner<String> interners = Interners.newWeakInterner();
+    private ConcurrentHashMap<String, String> map = new ConcurrentHashMap<>();
 
     /**
      *
@@ -57,7 +56,8 @@ public class WordCache {
         if (s == null) {
             return null;
         }
-        return interners.intern(s);
+        String oldValue = map.putIfAbsent(s, s);
+        return oldValue == null ? s : oldValue;
     }
 
 }

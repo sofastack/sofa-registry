@@ -16,6 +16,15 @@
  */
 package com.alipay.sofa.registry.server.session.store;
 
+import com.alipay.sofa.registry.common.model.store.Subscriber;
+import com.alipay.sofa.registry.core.model.ScopeEnum;
+import com.alipay.sofa.registry.log.Logger;
+import com.alipay.sofa.registry.log.LoggerFactory;
+import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
+import com.alipay.sofa.registry.server.session.cache.SubscriberResult;
+import com.alipay.sofa.registry.util.VersionsMapUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+
 import java.net.InetSocketAddress;
 import java.util.Collection;
 import java.util.Iterator;
@@ -24,17 +33,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
-
-import org.springframework.beans.factory.annotation.Autowired;
-
-import com.alipay.sofa.registry.common.model.store.Subscriber;
-import com.alipay.sofa.registry.common.model.store.WordCache;
-import com.alipay.sofa.registry.core.model.ScopeEnum;
-import com.alipay.sofa.registry.log.Logger;
-import com.alipay.sofa.registry.log.LoggerFactory;
-import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
-import com.alipay.sofa.registry.server.session.cache.SubscriberResult;
-import com.alipay.sofa.registry.util.VersionsMapUtils;
 
 /**
  *
@@ -73,7 +71,6 @@ public class SessionInterests implements Interests, ReSubscribers {
 
     @Override
     public void add(Subscriber subscriber) {
-        Subscriber.internSubscriber(subscriber);
 
         write.lock();
         try {
@@ -234,7 +231,6 @@ public class SessionInterests implements Interests, ReSubscribers {
     public boolean checkAndUpdateInterestVersions(String dataCenter, String dataInfoId, Long version) {
         read.lock();
         try {
-            dataInfoId = WordCache.getInstance().getWordCache(dataInfoId);
 
             Map<String, Subscriber> subscribers = interests.get(dataInfoId);
 
@@ -289,9 +285,8 @@ public class SessionInterests implements Interests, ReSubscribers {
     }
 
     private void addConnectIndex(Subscriber subscriber) {
-        String connectId = subscriber.getSourceAddress().getAddressString();
-        connectId = WordCache.getInstance().getWordCache(connectId);
 
+        String connectId = subscriber.getSourceAddress().getAddressString();
         Map<String/*registerId*/, Subscriber> subscriberMap = connectIndex.get(connectId);
         if (subscriberMap == null) {
             Map<String/*registerId*/, Subscriber> newSubscriberMap = new ConcurrentHashMap<>();

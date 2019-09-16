@@ -28,7 +28,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import com.alipay.sofa.registry.common.model.dataserver.Datum;
 import com.alipay.sofa.registry.common.model.store.Publisher;
-import com.alipay.sofa.registry.common.model.store.WordCache;
 import com.alipay.sofa.registry.server.data.bootstrap.DataServerConfig;
 import com.alipay.sofa.registry.server.data.change.DataChangeTypeEnum;
 import com.alipay.sofa.registry.server.data.node.DataServerNode;
@@ -71,9 +70,11 @@ public class DatumCache {
      * @return
      */
     public Datum get(String dataCenter, String dataInfoId) {
-        Map<String, Datum> map = DATUM_MAP.get(dataCenter);
-        if (map != null) {
-            return map.get(dataInfoId);
+        if (DATUM_MAP.containsKey(dataCenter)) {
+            Map<String, Datum> map = DATUM_MAP.get(dataCenter);
+            if (map.containsKey(dataInfoId)) {
+                return map.get(dataInfoId);
+            }
         }
         return null;
     }
@@ -87,9 +88,8 @@ public class DatumCache {
     public Map<String, Datum> get(String dataInfoId) {
         Map<String, Datum> datumMap = new HashMap<>();
         DATUM_MAP.forEach((dataCenter, datums) -> {
-            Datum datum = datums.get(dataInfoId);
-            if (datum != null) {
-                datumMap.put(dataCenter, datum);
+            if (datums.containsKey(dataInfoId)) {
+                datumMap.put(dataCenter, datums.get(dataInfoId));
             }
         });
 
@@ -396,7 +396,7 @@ public class DatumCache {
     }
 
     private String getConnectId(Publisher cachePub) {
-        return WordCache.getInstance().getWordCache(cachePub.getSourceAddress().getAddressString());
+        return cachePub.getSourceAddress().getAddressString();
     }
 
     /**
