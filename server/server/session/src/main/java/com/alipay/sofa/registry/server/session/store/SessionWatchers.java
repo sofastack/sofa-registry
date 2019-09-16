@@ -16,6 +16,11 @@
  */
 package com.alipay.sofa.registry.server.session.store;
 
+import com.alipay.sofa.registry.common.model.store.Watcher;
+import com.alipay.sofa.registry.log.Logger;
+import com.alipay.sofa.registry.log.LoggerFactory;
+import com.alipay.sofa.registry.util.VersionsMapUtils;
+
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -24,12 +29,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
-
-import com.alipay.sofa.registry.common.model.store.Watcher;
-import com.alipay.sofa.registry.common.model.store.WordCache;
-import com.alipay.sofa.registry.log.Logger;
-import com.alipay.sofa.registry.log.LoggerFactory;
-import com.alipay.sofa.registry.util.VersionsMapUtils;
 
 /**
  *
@@ -61,8 +60,6 @@ public class SessionWatchers implements Watchers {
 
     @Override
     public void add(Watcher watcher) {
-        Watcher.internWatcher(watcher);
-
         write.lock();
         try {
             Map<String, Watcher> watcherMap = watchers.get(watcher.getDataInfoId());
@@ -201,9 +198,8 @@ public class SessionWatchers implements Watchers {
     }
 
     private void addConnectIndex(Watcher watcher) {
-        String connectId = watcher.getSourceAddress().getAddressString();
-        connectId = WordCache.getInstance().getWordCache(connectId);
 
+        String connectId = watcher.getSourceAddress().getAddressString();
         Map<String/*registerId*/, Watcher> subscriberMap = connectIndex.get(connectId);
         if (subscriberMap == null) {
             Map<String/*registerId*/, Watcher> newSubscriberMap = new ConcurrentHashMap<>();

@@ -18,12 +18,12 @@ package com.alipay.sofa.registry.server.data.remoting.sessionserver.handler;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ThreadPoolExecutor;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -33,7 +33,6 @@ import com.alipay.sofa.registry.common.model.Node;
 import com.alipay.sofa.registry.common.model.PublisherDigestUtil;
 import com.alipay.sofa.registry.common.model.constants.ValueConstants;
 import com.alipay.sofa.registry.common.model.store.Publisher;
-import com.alipay.sofa.registry.common.model.store.WordCache;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.remoting.Channel;
@@ -86,26 +85,16 @@ public class DatumSnapshotHandler extends AbstractServerHandler<DatumSnapshotReq
     public Object doHandle(Channel channel, DatumSnapshotRequest request) {
         RENEW_LOGGER.info("Received datumSnapshotRequest: {}", request);
 
-        String connectId = WordCache.getInstance().getWordCache(request.getConnectId());
-
-        // convert to pubMap, and wrap it by WordCache
-        Map<String, Publisher> pubMap = new HashMap<>();
-        List<Publisher> publishers = request.getPublishers();
-        if (publishers != null) {
-            for (Publisher publisher : publishers) {
-                Publisher.internPublisher(publisher);
-                pubMap.put(publisher.getRegisterId(), publisher);
-            }
-        }
+        Map<String, Publisher> pubMap = request.getPublishers().stream()
+                .collect(Collectors.toMap(p -> p.getRegisterId(), p -> p));
 
         // diff the cache and snapshot
         boolean isDiff = true;
-        Map<String, Publisher> cachePubMap = datumCache.getOwnByConnectId(connectId);
+        Map<String, Publisher> cachePubMap = datumCache.getOwnByConnectId(request.getConnectId());
         if (cachePubMap == null) {
             RENEW_LOGGER
-                .info(
-                    ">>>>>>> connectId={}, cachePubMap.size=0, pubMap.size={}, isDiff={}, the diff is: pubMap={}",
-                    connectId, pubMap.size(), isDiff, limitedToString(pubMap.values()));
+                    .info(">>>>>>> connectId={}, cachePubMap.size=0, pubMap.size={}, isDiff={}, the diff is: pubMap={}",
+                            request.getConnectId(), pubMap.size(), isDiff, limitedToString(pubMap.values()));
         } else {
             List diffPub1 = subtract(pubMap, cachePubMap);
             List diffPub2 = subtract(cachePubMap, pubMap);
@@ -113,19 +102,18 @@ public class DatumSnapshotHandler extends AbstractServerHandler<DatumSnapshotReq
                 isDiff = false;
             }
             RENEW_LOGGER
-                .info(
-                    ">>>>>>> connectId={}, cachePubMap.size={}, pubMap.size={}, isDiff={}, the diff is: pubMap-cachePubMap=(size:{}){}, cachePubMap-pubMap=(size:{}){}",
-                    connectId, cachePubMap.size(), pubMap.size(), isDiff, diffPub1.size(),
-                    limitedToString(diffPub1), diffPub2.size(), limitedToString(diffPub2));
+                    .info(">>>>>>> connectId={}, cachePubMap.size={}, pubMap.size={}, isDiff={}, the diff is: pubMap-cachePubMap=(size:{}){}, cachePubMap-pubMap=(size:{}){}",
+                            request.getConnectId(), cachePubMap.size(), pubMap.size(), isDiff, diffPub1.size(),
+                            limitedToString(diffPub1), diffPub2.size(), limitedToString(diffPub2));
         }
 
         if (isDiff) {
             // build DatumSnapshotEvent and send to eventCenter
-            dataChangeEventCenter.onChange(new DatumSnapshotEvent(connectId, cachePubMap, pubMap));
+            dataChangeEventCenter.onChange(new DatumSnapshotEvent(request.getConnectId(), cachePubMap, pubMap));
         }
 
         // record the renew timestamp
-        datumLeaseManager.renew(connectId);
+        datumLeaseManager.renew(request.getConnectId());
 
         return CommonResponse.buildSuccessResponse();
     }

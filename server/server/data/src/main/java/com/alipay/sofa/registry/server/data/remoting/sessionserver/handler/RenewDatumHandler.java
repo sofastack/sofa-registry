@@ -32,7 +32,6 @@ import com.alipay.sofa.registry.common.model.PublisherDigestUtil;
 import com.alipay.sofa.registry.common.model.RenewDatumRequest;
 import com.alipay.sofa.registry.common.model.constants.ValueConstants;
 import com.alipay.sofa.registry.common.model.store.Publisher;
-import com.alipay.sofa.registry.common.model.store.WordCache;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.remoting.Channel;
@@ -95,7 +94,8 @@ public class RenewDatumHandler extends AbstractServerHandler<RenewDatumRequest> 
         }
 
         if (!renewEnabled.get()) {
-            LOGGER.warn("Renew request refused, renewEnabled is false, request: {}", request);
+            LOGGER.warn("[forward] Renew request refused, renewEnabled is false, request: {}",
+                request);
             GenericResponse response = new GenericResponse();
             response.setSuccess(false);
             response.setMessage("Renew request refused, renewEnabled is false yet");
@@ -132,7 +132,7 @@ public class RenewDatumHandler extends AbstractServerHandler<RenewDatumRequest> 
      * 2. Compare checksum: Get all pubs corresponding to the connId from datumCache and calculate checksum.
      */
     private boolean renewDatum(RenewDatumRequest request) {
-        String connectId = WordCache.getInstance().getWordCache(request.getConnectId());
+        String connectId = request.getConnectId();
         String renewDigest = request.getDigestSum();
 
         // Get all pubs corresponding to the connectId from datumCache

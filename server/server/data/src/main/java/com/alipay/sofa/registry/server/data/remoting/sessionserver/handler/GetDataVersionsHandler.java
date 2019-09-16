@@ -74,12 +74,10 @@ public class GetDataVersionsHandler extends AbstractServerHandler<GetDataVersion
                 String dataCenter = entry.getKey();
                 Datum datum = entry.getValue();
                 if (datum != null) {
-                    Map<String, Long> dataInfoIdToVersionMap = map.get(dataCenter);
-                    if (dataInfoIdToVersionMap == null) {
-                        dataInfoIdToVersionMap = new HashMap<>(dataInfoIds.size());
-                        map.put(dataCenter, dataInfoIdToVersionMap);
+                    if (!map.containsKey(dataCenter)) {
+                        map.put(dataCenter, new HashMap<>());
                     }
-                    dataInfoIdToVersionMap.put(dataInfoId, datum.getVersion());
+                    map.get(dataCenter).put(dataInfoId, datum.getVersion());
                 }
             }
         }

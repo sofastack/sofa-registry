@@ -95,13 +95,13 @@ public class DataServerConfig {
 
     private int                notifySessionRetryTimes                      = 10;
 
-    private int                publishExecutorMinPoolSize                   = 200;
+    private int                publishExecutorMinPoolSize                   = 80;
 
     private int                publishExecutorMaxPoolSize                   = 400;
 
     private int                publishExecutorQueueSize                     = 10000;
 
-    private int                renewDatumExecutorMinPoolSize                = 100;
+    private int                renewDatumExecutorMinPoolSize                = 50;
 
     private int                renewDatumExecutorMaxPoolSize                = 400;
 

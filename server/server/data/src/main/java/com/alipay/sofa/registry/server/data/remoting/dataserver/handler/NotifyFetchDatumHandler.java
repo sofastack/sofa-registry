@@ -16,11 +16,6 @@
  */
 package com.alipay.sofa.registry.server.data.remoting.dataserver.handler;
 
-import java.util.Map;
-import java.util.Map.Entry;
-
-import org.springframework.beans.factory.annotation.Autowired;
-
 import com.alipay.remoting.Connection;
 import com.alipay.sofa.registry.common.model.CommonResponse;
 import com.alipay.sofa.registry.common.model.GenericResponse;
@@ -28,6 +23,7 @@ import com.alipay.sofa.registry.common.model.Node;
 import com.alipay.sofa.registry.common.model.dataserver.Datum;
 import com.alipay.sofa.registry.common.model.dataserver.GetDataRequest;
 import com.alipay.sofa.registry.common.model.dataserver.NotifyFetchDatumRequest;
+import com.alipay.sofa.registry.common.model.store.Publisher;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.remoting.Channel;
@@ -45,6 +41,10 @@ import com.alipay.sofa.registry.server.data.remoting.handler.AbstractServerHandl
 import com.alipay.sofa.registry.server.data.renew.LocalDataServerCleanHandler;
 import com.alipay.sofa.registry.server.data.util.TimeUtil;
 import com.alipay.sofa.registry.util.ParaCheckUtil;
+import org.springframework.beans.factory.annotation.Autowired;
+
+import java.util.Map;
+import java.util.Map.Entry;
 
 /**
  *
@@ -157,11 +157,8 @@ public class NotifyFetchDatumHandler extends AbstractServerHandler<NotifyFetchDa
                         dataServerConfig.getRpcTimeout());
                 if (response.isSuccess()) {
                     Datum datum = response.getData().get(dataCenter);
-
-                    // wrap by WordCache
-                    datum = Datum.internDatum(datum);
-
                     if (datum != null) {
+                        processDatum(datum);
                         dataChangeEventCenter.sync(DataChangeTypeEnum.COVER,
                             DataSourceTypeEnum.BACKUP, datum);
                         LOGGER
@@ -176,6 +173,16 @@ public class NotifyFetchDatumHandler extends AbstractServerHandler<NotifyFetchDa
             } catch (Exception e) {
                 LOGGER.error("[NotifyFetchDatumHandler] fetch datum error", e);
                 TimeUtil.randomDelay(500);
+            }
+        }
+    }
+
+    private void processDatum(Datum datum) {
+        if (datum != null) {
+            Map<String, Publisher> publisherMap = datum.getPubMap();
+
+            if (publisherMap != null && !publisherMap.isEmpty()) {
+                publisherMap.forEach((registerId, publisher) -> Publisher.processPublisher(publisher));
             }
         }
     }
