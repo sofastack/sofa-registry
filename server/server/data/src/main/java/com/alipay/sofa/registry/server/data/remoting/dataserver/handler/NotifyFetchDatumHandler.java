@@ -16,6 +16,11 @@
  */
 package com.alipay.sofa.registry.server.data.remoting.dataserver.handler;
 
+import java.util.Map;
+import java.util.Map.Entry;
+
+import org.springframework.beans.factory.annotation.Autowired;
+
 import com.alipay.remoting.Connection;
 import com.alipay.sofa.registry.common.model.CommonResponse;
 import com.alipay.sofa.registry.common.model.GenericResponse;
@@ -40,10 +45,6 @@ import com.alipay.sofa.registry.server.data.remoting.handler.AbstractServerHandl
 import com.alipay.sofa.registry.server.data.renew.LocalDataServerCleanHandler;
 import com.alipay.sofa.registry.server.data.util.TimeUtil;
 import com.alipay.sofa.registry.util.ParaCheckUtil;
-import org.springframework.beans.factory.annotation.Autowired;
-
-import java.util.Map;
-import java.util.Map.Entry;
 
 /**
  *
@@ -156,6 +157,10 @@ public class NotifyFetchDatumHandler extends AbstractServerHandler<NotifyFetchDa
                         dataServerConfig.getRpcTimeout());
                 if (response.isSuccess()) {
                     Datum datum = response.getData().get(dataCenter);
+
+                    // wrap by WordCache
+                    datum = Datum.internDatum(datum);
+
                     if (datum != null) {
                         dataChangeEventCenter.sync(DataChangeTypeEnum.COVER,
                             DataSourceTypeEnum.BACKUP, datum);
