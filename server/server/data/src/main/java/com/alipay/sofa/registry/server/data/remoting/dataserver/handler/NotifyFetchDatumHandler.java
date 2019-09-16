@@ -28,6 +28,7 @@ import com.alipay.sofa.registry.common.model.Node;
 import com.alipay.sofa.registry.common.model.dataserver.Datum;
 import com.alipay.sofa.registry.common.model.dataserver.GetDataRequest;
 import com.alipay.sofa.registry.common.model.dataserver.NotifyFetchDatumRequest;
+import com.alipay.sofa.registry.common.model.store.Publisher;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.remoting.Channel;
@@ -162,6 +163,7 @@ public class NotifyFetchDatumHandler extends AbstractServerHandler<NotifyFetchDa
                     datum = Datum.internDatum(datum);
 
                     if (datum != null) {
+                        processDatum(datum);
                         dataChangeEventCenter.sync(DataChangeTypeEnum.COVER,
                             DataSourceTypeEnum.BACKUP, datum);
                         LOGGER
@@ -176,6 +178,16 @@ public class NotifyFetchDatumHandler extends AbstractServerHandler<NotifyFetchDa
             } catch (Exception e) {
                 LOGGER.error("[NotifyFetchDatumHandler] fetch datum error", e);
                 TimeUtil.randomDelay(500);
+            }
+        }
+    }
+
+    private void processDatum(Datum datum) {
+        if (datum != null) {
+            Map<String, Publisher> publisherMap = datum.getPubMap();
+
+            if (publisherMap != null && !publisherMap.isEmpty()) {
+                publisherMap.forEach((registerId, publisher) -> Publisher.processPublisher(publisher));
             }
         }
     }
