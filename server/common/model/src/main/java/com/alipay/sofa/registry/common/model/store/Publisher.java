@@ -16,11 +16,11 @@
  */
 package com.alipay.sofa.registry.common.model.store;
 
+import java.util.List;
+
 import com.alipay.sofa.registry.common.model.PublishType;
 import com.alipay.sofa.registry.common.model.ServerDataBox;
 import com.fasterxml.jackson.annotation.JsonIgnore;
-
-import java.util.List;
 
 /**
  *
@@ -90,8 +90,8 @@ public class Publisher extends BaseInfo {
      * @param publisher
      * @return
      */
-    public static Publisher processPublisher(Publisher publisher) {
-
+    public static Publisher internPublisher(Publisher publisher) {
+        publisher.setRegisterId(publisher.getRegisterId());
         publisher.setDataInfoId(publisher.getDataInfoId());
         publisher.setInstanceId(publisher.getInstanceId());
         publisher.setGroup(publisher.getGroup());
@@ -100,13 +100,6 @@ public class Publisher extends BaseInfo {
         publisher.setCell(publisher.getCell());
         publisher.setProcessId(publisher.getProcessId());
         publisher.setAppName(publisher.getAppName());
-
-        if (publisher.getSourceAddress() != null) {
-            publisher.setSourceAddress(new URL(publisher.getSourceAddress().getIpAddress(),
-                publisher.getSourceAddress().getPort()));
-        }
-
-        publisher.setAttributes(publisher.getAttributes());
 
         return publisher;
     }

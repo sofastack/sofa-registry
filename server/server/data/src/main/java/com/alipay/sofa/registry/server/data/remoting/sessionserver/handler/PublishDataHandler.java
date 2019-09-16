@@ -26,6 +26,7 @@ import com.alipay.sofa.registry.common.model.Node;
 import com.alipay.sofa.registry.common.model.PublishType;
 import com.alipay.sofa.registry.common.model.dataserver.PublishDataRequest;
 import com.alipay.sofa.registry.common.model.store.Publisher;
+import com.alipay.sofa.registry.common.model.store.WordCache;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.remoting.Channel;
@@ -85,7 +86,7 @@ public class PublishDataHandler extends AbstractServerHandler<PublishDataRequest
 
     @Override
     public Object doHandle(Channel channel, PublishDataRequest request) {
-        Publisher publisher = Publisher.processPublisher(request.getPublisher());
+        Publisher publisher = Publisher.internPublisher(request.getPublisher());
         if (forwardService.needForward()) {
             LOGGER.warn("[forward] Publish request refused, request: {}", request);
             CommonResponse response = new CommonResponse();
@@ -97,7 +98,8 @@ public class PublishDataHandler extends AbstractServerHandler<PublishDataRequest
         dataChangeEventCenter.onChange(publisher, dataServerConfig.getLocalDataCenter());
 
         if (publisher.getPublishType() != PublishType.TEMPORARY) {
-            String connectId = publisher.getSourceAddress().getAddressString();
+            String connectId = WordCache.getInstance().getWordCache(
+                publisher.getSourceAddress().getAddressString());
             sessionServerConnectionFactory.registerConnectId(request.getSessionServerProcessId(),
                 connectId);
             // record the renew timestamp
