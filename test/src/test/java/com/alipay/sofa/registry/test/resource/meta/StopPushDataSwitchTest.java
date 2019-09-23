@@ -60,7 +60,7 @@ public class StopPushDataSwitchTest extends BaseIntegrationTest {
         String value = "test stop publish data switch";
         PublisherRegistration registration = new PublisherRegistration(dataId);
         registryClient1.register(registration, value);
-        Thread.sleep(500L);
+        Thread.sleep(1000L);
 
         SubscriberRegistration subReg = new SubscriberRegistration(dataId,
             new MySubscriberDataObserver());
@@ -105,7 +105,7 @@ public class StopPushDataSwitchTest extends BaseIntegrationTest {
         String value = "test stop publish data switch by code";
         PublisherRegistration registration = new PublisherRegistration(dataId);
         registryClient1.register(registration, value);
-        Thread.sleep(500L);
+        Thread.sleep(1000L);
 
         SubscriberRegistration subReg = new SubscriberRegistration(dataId, new MySubscriberDataObserver());
         subReg.setScopeEnum(ScopeEnum.dataCenter);
