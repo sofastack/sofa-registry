@@ -17,6 +17,7 @@
 package com.alipay.sofa.registry.test.resource.meta;
 
 import com.alipay.sofa.registry.client.api.model.RegistryType;
+import com.alipay.sofa.registry.client.api.model.UserData;
 import com.alipay.sofa.registry.client.api.registration.PublisherRegistration;
 import com.alipay.sofa.registry.client.api.registration.SubscriberRegistration;
 import com.alipay.sofa.registry.common.model.store.Subscriber;
@@ -35,6 +36,7 @@ import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.util.CollectionUtils;
 
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicReference;
 
 import static com.alipay.sofa.registry.client.constants.ValueConstants.DEFAULT_GROUP;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
@@ -53,21 +55,25 @@ public class StopPushDataSwitchTest extends BaseIntegrationTest {
         // open stop push switch
         assertTrue(metaChannel.getWebTarget().path("stopPushDataSwitch/open")
             .request(APPLICATION_JSON).get(Result.class).isSuccess());
-        BaseIntegrationTest.dataId = null;
+        AtomicReference<String> dataIdResult = new AtomicReference<>();
+        AtomicReference<UserData> userDataResult = new AtomicReference<>();
 
         // register Publisher & Subscriber, Subscriber get no data
         String dataId = "test-dataId-" + System.currentTimeMillis();
         String value = "test stop publish data switch";
         PublisherRegistration registration = new PublisherRegistration(dataId);
         registryClient1.register(registration, value);
-        Thread.sleep(500L);
+        Thread.sleep(1000L);
 
         SubscriberRegistration subReg = new SubscriberRegistration(dataId,
-            new MySubscriberDataObserver());
+                (dataIdOb, data) -> {
+                    dataIdResult.set(dataIdOb);
+                    userDataResult.set(data);
+                });
         subReg.setScopeEnum(ScopeEnum.dataCenter);
         registryClient1.register(subReg);
         Thread.sleep(1000L);
-        assertNull(BaseIntegrationTest.dataId);
+        assertNull(dataIdResult.get());
 
         // close stop push switch
         assertTrue(metaChannel.getWebTarget().path("stopPushDataSwitch/close")
@@ -75,13 +81,13 @@ public class StopPushDataSwitchTest extends BaseIntegrationTest {
         Thread.sleep(1000L);
 
         // Subscriber get data, test data
-        assertEquals(dataId, this.dataId);
-        assertEquals(LOCAL_REGION, userData.getLocalZone());
-        assertEquals(1, userData.getZoneData().size());
-        assertEquals(1, userData.getZoneData().values().size());
-        assertEquals(true, userData.getZoneData().containsKey(LOCAL_REGION));
-        assertEquals(1, userData.getZoneData().get(LOCAL_REGION).size());
-        assertEquals(value, userData.getZoneData().get(LOCAL_REGION).get(0));
+        assertEquals(dataId, dataIdResult.get());
+        assertEquals(LOCAL_REGION, userDataResult.get().getLocalZone());
+        assertEquals(1, userDataResult.get().getZoneData().size());
+        assertEquals(1, userDataResult.get().getZoneData().values().size());
+        assertEquals(true, userDataResult.get().getZoneData().containsKey(LOCAL_REGION));
+        assertEquals(1, userDataResult.get().getZoneData().get(LOCAL_REGION).size());
+        assertEquals(value, userDataResult.get().getZoneData().get(LOCAL_REGION).get(0));
 
         // unregister Publisher & Subscriber
         registryClient1.unregister(dataId, DEFAULT_GROUP, RegistryType.SUBSCRIBER);
@@ -98,20 +104,25 @@ public class StopPushDataSwitchTest extends BaseIntegrationTest {
         assertTrue(metaChannel.getWebTarget().path("stopPushDataSwitch/open").request(APPLICATION_JSON)
                 .get(Result.class)
                 .isSuccess());
-        BaseIntegrationTest.dataId = null;
+        AtomicReference<String> dataIdResult = new AtomicReference<>();
+        AtomicReference<UserData> userDataResult = new AtomicReference<>();
 
         // register Publisher & Subscriber, Subscriber get no data
         String dataId = "test-dataId-hahhahahahha-" + System.currentTimeMillis();
         String value = "test stop publish data switch by code";
         PublisherRegistration registration = new PublisherRegistration(dataId);
         registryClient1.register(registration, value);
-        Thread.sleep(500L);
+        Thread.sleep(1000L);
 
-        SubscriberRegistration subReg = new SubscriberRegistration(dataId, new MySubscriberDataObserver());
+        SubscriberRegistration subReg = new SubscriberRegistration(dataId,
+                (dataIdOb, data) -> {
+                    dataIdResult.set(dataIdOb);
+                    userDataResult.set(data);
+                });
         subReg.setScopeEnum(ScopeEnum.dataCenter);
         registryClient1.register(subReg);
         Thread.sleep(1000L);
-        assertNull(BaseIntegrationTest.dataId);
+        assertNull(dataIdResult.get());
 
         // invoke code directly
         Interests sessionInterests = sessionApplicationContext.getBean(Interests.class);
@@ -138,13 +149,13 @@ public class StopPushDataSwitchTest extends BaseIntegrationTest {
         Thread.sleep(1000);
 
         // Subscriber get data, test data
-        assertEquals(dataId, this.dataId);
-        assertEquals(LOCAL_REGION, userData.getLocalZone());
-        assertEquals(1, userData.getZoneData().size());
-        assertEquals(1, userData.getZoneData().values().size());
-        assertEquals(true, userData.getZoneData().containsKey(LOCAL_REGION));
-        assertEquals(1, userData.getZoneData().get(LOCAL_REGION).size());
-        assertEquals(value, userData.getZoneData().get(LOCAL_REGION).get(0));
+        assertEquals(dataId, dataIdResult.get());
+        assertEquals(LOCAL_REGION, userDataResult.get().getLocalZone());
+        assertEquals(1, userDataResult.get().getZoneData().size());
+        assertEquals(1, userDataResult.get().getZoneData().values().size());
+        assertEquals(true, userDataResult.get().getZoneData().containsKey(LOCAL_REGION));
+        assertEquals(1, userDataResult.get().getZoneData().get(LOCAL_REGION).size());
+        assertEquals(value, userDataResult.get().getZoneData().get(LOCAL_REGION).get(0));
 
         // unregister Publisher & Subscriber, close stop push switch
         registryClient1.unregister(dataId, DEFAULT_GROUP, RegistryType.SUBSCRIBER);

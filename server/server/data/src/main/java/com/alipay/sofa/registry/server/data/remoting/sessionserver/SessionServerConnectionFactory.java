@@ -16,14 +16,6 @@
  */
 package com.alipay.sofa.registry.server.data.remoting.sessionserver;
 
-import com.alipay.remoting.Connection;
-import com.alipay.sofa.registry.log.Logger;
-import com.alipay.sofa.registry.log.LoggerFactory;
-import com.alipay.sofa.registry.net.NetUtil;
-import com.alipay.sofa.registry.server.data.remoting.sessionserver.disconnect.DisconnectEventHandler;
-import com.alipay.sofa.registry.server.data.remoting.sessionserver.disconnect.SessionServerDisconnectEvent;
-import org.springframework.beans.factory.annotation.Autowired;
-
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
@@ -32,6 +24,15 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
+import org.springframework.beans.factory.annotation.Autowired;
+
+import com.alipay.remoting.Connection;
+import com.alipay.sofa.registry.log.Logger;
+import com.alipay.sofa.registry.log.LoggerFactory;
+import com.alipay.sofa.registry.net.NetUtil;
+import com.alipay.sofa.registry.server.data.remoting.sessionserver.disconnect.DisconnectEventHandler;
+import com.alipay.sofa.registry.server.data.remoting.sessionserver.disconnect.SessionServerDisconnectEvent;
+
 /**
  * the factory to hold sesseionserver connections
  *
@@ -39,29 +40,29 @@ import java.util.stream.Collectors;
  * @version $Id: SessionServerConnectionFactory.java, v 0.1 2017-12-06 15:48 qian.lqlq Exp $
  */
 public class SessionServerConnectionFactory {
-    private static final Logger            LOGGER               = LoggerFactory
-                                                                    .getLogger(SessionServerConnectionFactory.class);
+    private static final Logger            LOGGER                    = LoggerFactory
+                                                                         .getLogger(SessionServerConnectionFactory.class);
 
-    private static final int               DELAY                = 30 * 1000;
+    private static final int               DELAY                     = 30 * 1000;
 
     /**
      * collection of connections
      * key      :   processId
      * value    :   connection
      */
-    private final Map<String, Pair>        MAP                  = new ConcurrentHashMap<>();
+    private final Map<String, Pair>        MAP                       = new ConcurrentHashMap<>();
 
     /**
      * key  :   sessionserver host
      * value:   sesseionserver processId
      */
-    private final Map<String, String>      PROCESSID_MAP        = new ConcurrentHashMap<>();
+    private final Map<String, String>      PROCESS_ID_MAP            = new ConcurrentHashMap<>();
 
     /**
      * key  :   sessionserver processId
      * value:   ip:port of clients
      */
-    private final Map<String, Set<String>> PROCESSID_CLIENT_MAP = new ConcurrentHashMap<>();
+    private final Map<String, Set<String>> PROCESS_ID_CONNECT_ID_MAP = new ConcurrentHashMap<>();
 
     @Autowired
     private DisconnectEventHandler         disconnectEventHandler;
@@ -70,41 +71,41 @@ public class SessionServerConnectionFactory {
      * register connection
      *
      * @param processId
-     * @param clientHosts
+     * @param connectIds
      * @param connection
      */
-    public void register(String processId, Set<String> clientHosts, Connection connection) {
+    public void register(String processId, Set<String> connectIds, Connection connection) {
         String serverHost = NetUtil.toAddressString(connection.getRemoteAddress());
         if (LOGGER.isInfoEnabled()) {
             LOGGER.info("session({}, processId={}) registered", serverHost, processId);
         }
         MAP.put(processId, new Pair(serverHost, connection));
-        Set<String> ret = PROCESSID_CLIENT_MAP.getOrDefault(processId, null);
+        Set<String> ret = PROCESS_ID_CONNECT_ID_MAP.getOrDefault(processId, null);
         if (ret == null) {
-            PROCESSID_CLIENT_MAP.putIfAbsent(processId, new HashSet<>());
+            PROCESS_ID_CONNECT_ID_MAP.putIfAbsent(processId, new HashSet<>());
         }
-        PROCESSID_CLIENT_MAP.get(processId).addAll(clientHosts);
-        PROCESSID_MAP.put(serverHost, processId);
+        PROCESS_ID_CONNECT_ID_MAP.get(processId).addAll(connectIds);
+        PROCESS_ID_MAP.put(serverHost, processId);
     }
 
     /**
      *
      * @param processId
-     * @param clientAddress
+     * @param connectId
      */
-    public void registerClient(String processId, String clientAddress) {
-        Set<String> ret = PROCESSID_CLIENT_MAP.getOrDefault(processId, null);
+    public void registerConnectId(String processId, String connectId) {
+        Set<String> ret = PROCESS_ID_CONNECT_ID_MAP.getOrDefault(processId, null);
         if (ret == null) {
-            PROCESSID_CLIENT_MAP.putIfAbsent(processId, new HashSet<>());
+            PROCESS_ID_CONNECT_ID_MAP.putIfAbsent(processId, new HashSet<>());
         }
-        PROCESSID_CLIENT_MAP.get(processId).add(clientAddress);
+        PROCESS_ID_CONNECT_ID_MAP.get(processId).add(connectId);
     }
 
     /**
      * remove connection by specific host
      */
     public void removeProcess(String sessionServerHost) {
-        String processId = PROCESSID_MAP.remove(sessionServerHost);
+        String processId = PROCESS_ID_MAP.remove(sessionServerHost);
         if (LOGGER.isInfoEnabled()) {
             LOGGER.info("session({}, processId={}) unregistered", sessionServerHost, processId);
         }
@@ -118,8 +119,8 @@ public class SessionServerConnectionFactory {
      *
      * @param processId
      */
-    public Set<String> removeClients(String processId) {
-        return PROCESSID_CLIENT_MAP.remove(processId);
+    public Set<String> removeConnectIds(String processId) {
+        return PROCESS_ID_CONNECT_ID_MAP.remove(processId);
     }
 
     /**

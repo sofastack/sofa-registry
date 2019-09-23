@@ -16,6 +16,13 @@
  */
 package com.alipay.sofa.registry.server.session.converter;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.function.Predicate;
+
 import com.alipay.sofa.registry.common.model.ServerDataBox;
 import com.alipay.sofa.registry.common.model.constants.ValueConstants;
 import com.alipay.sofa.registry.common.model.dataserver.Datum;
@@ -28,13 +35,7 @@ import com.alipay.sofa.registry.core.model.ReceivedData;
 import com.alipay.sofa.registry.core.model.ScopeEnum;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
-
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.function.Predicate;
+import com.alipay.sofa.registry.util.DatumVersionUtil;
 
 /**
  * The type Received data converter.
@@ -173,7 +174,7 @@ public class ReceivedDataConverter {
         String regionLocal = subscriber.getCell();
         receivedData.setLocalZone(regionLocal);
 
-        receivedData.setVersion(System.currentTimeMillis());
+        receivedData.setVersion(DatumVersionUtil.nextId());
 
         Map<String/*zone*/, List<DataBox>> swizzMap = new HashMap<>();
 

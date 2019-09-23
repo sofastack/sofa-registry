@@ -17,6 +17,7 @@
 package com.alipay.sofa.registry.server.data.remoting.metaserver;
 
 import com.alipay.sofa.jraft.entity.PeerId;
+import com.alipay.sofa.registry.common.model.metaserver.ProvideData;
 import com.alipay.sofa.registry.server.data.cache.DataServerChangeItem;
 import com.alipay.sofa.registry.server.data.node.DataServerNode;
 
@@ -73,7 +74,7 @@ public interface IMetaServerService {
     /**
      * scheduler update data server expireTime
      */
-    void reNewNodeTask();
+    void renewNodeTask();
 
     /**
      * start raft client for get leader send request
@@ -91,4 +92,11 @@ public interface IMetaServerService {
      * @return
      */
     PeerId refreshLeader();
+
+    /**
+     * get provider data
+     * @param dataInfoId
+     * @return
+     */
+    ProvideData fetchData(String dataInfoId);
 }

@@ -16,6 +16,21 @@
  */
 package com.alipay.sofa.registry.server.meta.store;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
+import java.util.stream.Collectors;
+
+import javax.ws.rs.NotSupportedException;
+
+import org.springframework.beans.factory.annotation.Autowired;
+
 import com.alipay.sofa.registry.common.model.Node;
 import com.alipay.sofa.registry.common.model.Node.NodeType;
 import com.alipay.sofa.registry.common.model.metaserver.DataCenterNodes;
@@ -34,19 +49,6 @@ import com.alipay.sofa.registry.store.api.annotation.RaftReference;
 import com.alipay.sofa.registry.task.listener.TaskEvent;
 import com.alipay.sofa.registry.task.listener.TaskEvent.TaskType;
 import com.alipay.sofa.registry.task.listener.TaskListenerManager;
-import org.springframework.beans.factory.annotation.Autowired;
-
-import javax.ws.rs.NotSupportedException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
-import java.util.stream.Collectors;
 
 /**
  *
@@ -106,7 +108,7 @@ public class SessionStoreService implements StoreService<SessionNode> {
             sessionVersionRepositoryService.checkAndUpdateVersions(nodeConfig.getLocalDataCenter(),
                 System.currentTimeMillis());
 
-            reNew(sessionNode, 30);
+            renew(sessionNode, 30);
 
             sessionConfirmStatusService.putConfirmNode(sessionNode, DataOperator.ADD);
 
@@ -173,15 +175,15 @@ public class SessionStoreService implements StoreService<SessionNode> {
     }
 
     @Override
-    public void reNew(SessionNode sessionNode, int duration) {
+    public void renew(SessionNode sessionNode, int duration) {
 
         write.lock();
         try {
             String ipAddress = sessionNode.getNodeUrl().getIpAddress();
-            RenewDecorate reNewer = sessionRepositoryService.get(ipAddress);
+            RenewDecorate renewer = sessionRepositoryService.get(ipAddress);
 
-            if (reNewer == null) {
-                LOGGER.warn("ReNew session node with ipAddress:" + ipAddress
+            if (renewer == null) {
+                LOGGER.warn("Renew session node with ipAddress:" + ipAddress
                             + " has not existed!It will be registered again!");
                 addNode(sessionNode);
             } else {
@@ -200,19 +202,19 @@ public class SessionStoreService implements StoreService<SessionNode> {
 
     @Override
     public Collection<SessionNode> getExpired() {
-        Collection<SessionNode> reNewerList = new ArrayList<>();
+        Collection<SessionNode> renewerList = new ArrayList<>();
         read.lock();
         try {
             Map<String, RenewDecorate<SessionNode>> map = sessionRepositoryService.getAllData();
             map.forEach((key, value) -> {
                 if (value.isExpired()) {
-                    reNewerList.add(value.getRenewal());
+                    renewerList.add(value.getRenewal());
                 }
             });
         } finally {
             read.unlock();
         }
-        return reNewerList;
+        return renewerList;
     }
 
     @Override

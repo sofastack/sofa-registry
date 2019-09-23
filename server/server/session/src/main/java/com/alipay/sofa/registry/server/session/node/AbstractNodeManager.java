@@ -16,6 +16,15 @@
  */
 package com.alipay.sofa.registry.server.session.node;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
+
+import org.springframework.beans.factory.annotation.Autowired;
+
 import com.alipay.sofa.registry.common.model.Node;
 import com.alipay.sofa.registry.common.model.metaserver.GetNodesRequest;
 import com.alipay.sofa.registry.common.model.metaserver.NodeChangeResult;
@@ -28,14 +37,6 @@ import com.alipay.sofa.registry.remoting.exchange.message.Request;
 import com.alipay.sofa.registry.remoting.exchange.message.Response;
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
 import com.alipay.sofa.registry.util.VersionsMapUtils;
-import org.springframework.beans.factory.annotation.Autowired;
-
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 /**
  *
@@ -148,9 +149,9 @@ public abstract class AbstractNodeManager<T extends Node> implements NodeManager
             }
 
         } catch (RequestException e) {
-            LOGGER.error("NodeManager get all dataCenter nodes error! " + e.getRequestMessage(), e);
+            LOGGER.error("NodeManager get all dataCenter nodes error! " + e.getMessage(), e);
             throw new RuntimeException("NodeManager get all dataCenter nodes error! "
-                                       + e.getRequestMessage(), e);
+                                       + e.getMessage(), e);
         }
 
         return nodeChangeResult;

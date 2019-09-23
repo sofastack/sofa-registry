@@ -29,7 +29,10 @@ import com.alipay.sofa.registry.remoting.ChannelHandler;
  */
 public abstract class AbstractClientHandler<T> implements ChannelHandler<T> {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(AbstractClientHandler.class);
+    private static final Logger LOGGER          = LoggerFactory
+                                                    .getLogger(AbstractClientHandler.class);
+
+    private static final Logger LOGGER_EXCHANGE = LoggerFactory.getLogger("DATA-EXCHANGE");
 
     @Override
     public void connected(Channel channel) {
@@ -64,7 +67,7 @@ public abstract class AbstractClientHandler<T> implements ChannelHandler<T> {
     @Override
     public Object reply(Channel channel, T request) {
         try {
-            logRequest(request);
+            logRequest(channel, request);
             checkParam(request);
             return doHandle(channel, request);
         } catch (Exception e) {
@@ -102,8 +105,13 @@ public abstract class AbstractClientHandler<T> implements ChannelHandler<T> {
      *
      * @param request
      */
-    protected void logRequest(T request) {
-        log(request.toString());
+    protected void logRequest(Channel channel, T request) {
+        if (channel != null) {
+            log(new StringBuilder("Remote:").append(channel.getRemoteAddress()).append(" Request:")
+                .append(request).toString());
+        } else {
+            log(request.toString());
+        }
     }
 
     /**
@@ -112,7 +120,7 @@ public abstract class AbstractClientHandler<T> implements ChannelHandler<T> {
      * @param log
      */
     protected void log(String log) {
-        LOGGER.info(new StringBuilder("[").append(getClassName()).append("] ").append(log)
+        LOGGER_EXCHANGE.info(new StringBuilder("[").append(getClassName()).append("] ").append(log)
             .toString());
     }
 

@@ -55,7 +55,7 @@ public class DataServerChangeEventHandler extends AbstractEventHandler<DataServe
     private static final int    TRY_COUNT = 5;
 
     @Autowired
-    private DataServerConfig    dataServerBootstrapConfig;
+    private DataServerConfig    dataServerConfig;
 
     @Autowired
     private DataServerCache     dataServerCache;
@@ -75,14 +75,14 @@ public class DataServerChangeEventHandler extends AbstractEventHandler<DataServe
     public void doHandle(DataServerChangeEvent event) {
         synchronized (this) {
             //register self first,execute once
-            DataServerNodeFactory.initConsistent(dataServerBootstrapConfig);
+            DataServerNodeFactory.initConsistent(dataServerConfig);
 
             DataServerChangeItem dataServerChangeItem = event.getDataServerChangeItem();
             Set<String> localDataServers = dataServerCache.getDataServers(
-                dataServerBootstrapConfig.getLocalDataCenter()).keySet();
+                dataServerConfig.getLocalDataCenter()).keySet();
             //get changed dataservers
             Map<String, Set<String>> changedMap = dataServerCache
-                .compareAndSet(dataServerChangeItem);
+                .compareAndSet(dataServerChangeItem,event.getFromType());
             if(!changedMap.isEmpty()) {
                 for (Entry<String, Set<String>> changeEntry : changedMap.entrySet()) {
                     String dataCenter = changeEntry.getKey();
@@ -102,34 +102,34 @@ public class DataServerChangeEventHandler extends AbstractEventHandler<DataServe
                         Set<String> ipSet = DataServerNodeFactory.getIps(dataCenter);
                         for (String ip : ipSet) {
                             if (!ips.contains(ip)) {
-                                DataServerNodeFactory.remove(dataCenter, ip, dataServerBootstrapConfig);
+                                DataServerNodeFactory.remove(dataCenter, ip, dataServerConfig);
                                 LOGGER.info(
-                                        "[DataServerChangeEventHandler] remove connection, datacenter:{}, ip:{}",
-                                        dataCenter, ip);
+                                        "[DataServerChangeEventHandler] remove connection, datacenter:{}, ip:{},from:{}",
+                                        dataCenter, ip,event.getFromType());
                             }
                         }
 
                         Long newVersion = dataServerCache.getDataCenterNewVersion(dataCenter);
                         Map<String, DataNode> newDataNodes = dataServerCache.getNewDataServerMap(dataCenter);
                         //if the datacenter is self, post LocalDataServerChangeEvent
-                        if (dataServerBootstrapConfig.getLocalDataCenter().equals(dataCenter)) {
+                        if (dataServerConfig.getLocalDataCenter().equals(dataCenter)) {
                             Set<String> newjoined = new HashSet<>(ips);
                             newjoined.removeAll(localDataServers);
                             //avoid input map reference operation DataServerNodeFactory MAP
                             Map<String, DataNode> map = new ConcurrentHashMap<>(newDataNodes);
 
-                            LOGGER.info("Node list change fire LocalDataServerChangeEvent,current node list={},version={}",
-                                    map.keySet(), newVersion);
+                            LOGGER.info("Node list change fire LocalDataServerChangeEvent,current node list={},version={},from:{}",
+                                    map.keySet(), newVersion,event.getFromType());
                             eventCenter.post(new LocalDataServerChangeEvent(map, newjoined,
                                     dataServerChangeItem.getVersionMap()
-                                            .get(dataServerBootstrapConfig.getLocalDataCenter()),
+                                            .get(dataServerConfig.getLocalDataCenter()),
                                     newVersion));
                         } else {
                             dataServerCache.updateItem(newDataNodes, newVersion, dataCenter);
                         }
                     } else {
                         //if the datacenter which has no dataservers is not self, remove it
-                        if (!dataServerBootstrapConfig.getLocalDataCenter().equals(dataCenter)) {
+                        if (!dataServerConfig.getLocalDataCenter().equals(dataCenter)) {
                             removeDataCenter(dataCenter);
                         }
                         Long newVersion = dataServerCache.getDataCenterNewVersion(dataCenter);
@@ -148,8 +148,8 @@ public class DataServerChangeEventHandler extends AbstractEventHandler<DataServe
                             if (!StringUtils.equals(ip, DataServerConfig.IP)) {
                                 Connection connection = dataServerNode.getConnection();
                                 if (connection != null && !connection.isFine()) {
-                                    LOGGER.warn("[DataServerChangeEventHandler] dataServer connections is not fine,try to reconnect it,old connection={},dataCenter={}",
-                                                    connection.getRemoteAddress(), dataCenter);
+                                    LOGGER.warn("[DataServerChangeEventHandler] dataServer connections is not fine,try to reconnect it,old connection={},dataCenter={},from:{}",
+                                                    connection.getRemoteAddress(), dataCenter,event.getFromType());
                                     connectDataServer(dataCenter, ip);
                                 }
                             }
@@ -170,8 +170,8 @@ public class DataServerChangeEventHandler extends AbstractEventHandler<DataServe
         Connection conn = null;
         for (int tryCount = 0; tryCount < TRY_COUNT; tryCount++) {
             try {
-                conn = ((BoltChannel) dataNodeExchanger.connect(new URL(ip,
-                    dataServerBootstrapConfig.getSyncDataPort()))).getConnection();
+                conn = ((BoltChannel) dataNodeExchanger.connect(new URL(ip, dataServerConfig
+                    .getSyncDataPort()))).getConnection();
                 break;
             } catch (Exception e) {
                 LOGGER.error("[DataServerChangeEventHandler] connect dataServer {} in {} error",
@@ -189,11 +189,8 @@ public class DataServerChangeEventHandler extends AbstractEventHandler<DataServe
                         "[DataServerChangeEventHandler] connect dataserver %s in %s failed five times,dataServer will not work,please check connect!",
                         ip, dataCenter));
         }
-        LOGGER.info("[DataServerChangeEventHandler] connect dataserver {} in {} success", ip,
-            dataCenter);
         //maybe get dataNode from metaServer,current has not start! register dataNode info to factory,wait for connect task next execute
-        DataServerNodeFactory.register(new DataServerNode(ip, dataCenter, conn),
-            dataServerBootstrapConfig);
+        DataServerNodeFactory.register(new DataServerNode(ip, dataCenter, conn), dataServerConfig);
     }
 
     /**

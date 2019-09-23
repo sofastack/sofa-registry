@@ -16,9 +16,9 @@
  */
 package com.alipay.sofa.registry.server.session.registry;
 
-import com.alipay.sofa.registry.common.model.store.StoreData;
-
 import java.util.List;
+
+import com.alipay.sofa.registry.common.model.store.StoreData;
 
 /**
  *
@@ -44,6 +44,15 @@ public interface Registry {
     void cancel(List<String> connectIds);
 
     /**
+     * remove publisher or subscriber data by client ip address and port(ip:port)
+     * this function always use in rest api Console manage ,the run mode is standard
+     * remove subscriber data will push empty datum to some one who has dataInfoId begin with pushEmptyDataDataIdPrefixes config
+     *
+     * @param connectIds
+     */
+    void remove(List<String> connectIds);
+
+    /**
      * message mode com.alipay.sofa.registry.client.provider for client node to unregister single subscriber or publisher data
      *
      * @param data
@@ -61,4 +70,18 @@ public interface Registry {
      * for fetchChangData first invoke
      */
     void fetchChangDataProcess();
+
+    /**
+     * Regularly send update Datum with same connectID valid time request service
+     */
+    void renewDatum(String connectId);
+
+    void sendDatumSnapshot(String connectId, String dataServerIp);
+
+    /**
+     * for scheduler clean no connect client
+     */
+    void cleanClientConnect();
+
+    void setEnableDataRenewSnapshot(boolean enableDataRenewSnapshot);
 }

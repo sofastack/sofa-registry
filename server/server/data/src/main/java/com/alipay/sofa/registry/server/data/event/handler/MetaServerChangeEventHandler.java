@@ -56,7 +56,7 @@ public class MetaServerChangeEventHandler extends AbstractEventHandler<MetaServe
     private static final int            TRY_COUNT = 3;
 
     @Autowired
-    private DataServerConfig            dataServerBootstrapConfig;
+    private DataServerConfig            dataServerConfig;
 
     @Autowired
     private IMetaServerService          metaServerService;
@@ -119,7 +119,7 @@ public class MetaServerChangeEventHandler extends AbstractEventHandler<MetaServe
 
         for (int tryCount = 0; tryCount < TRY_COUNT; tryCount++) {
             try {
-                Channel channel = metaNodeExchanger.connect(new URL(ip, dataServerBootstrapConfig
+                Channel channel = metaNodeExchanger.connect(new URL(ip, dataServerConfig
                     .getMetaServerPort()));
                 //connect all meta server
                 if (channel != null && channel.isConnected()) {
@@ -133,13 +133,13 @@ public class MetaServerChangeEventHandler extends AbstractEventHandler<MetaServe
                         obj = metaNodeExchanger.request(new Request() {
                             @Override
                             public Object getRequestBody() {
-                                return new DataNode(new URL(DataServerConfig.IP),
-                                    dataServerBootstrapConfig.getLocalDataCenter());
+                                return new DataNode(new URL(DataServerConfig.IP), dataServerConfig
+                                    .getLocalDataCenter());
                             }
 
                             @Override
                             public URL getRequestUrl() {
-                                return new URL(ip, dataServerBootstrapConfig.getMetaServerPort());
+                                return new URL(ip, dataServerConfig.getMetaServerPort());
                             }
                         }).getResult();
                     } catch (Exception e) {
@@ -159,7 +159,8 @@ public class MetaServerChangeEventHandler extends AbstractEventHandler<MetaServe
                         set.add(StartTaskTypeEnum.RENEW);
                         eventCenter.post(new StartTaskEvent(set));
 
-                        eventCenter.post(new DataServerChangeEvent(result.getNodes(), versionMap));
+                        eventCenter.post(new DataServerChangeEvent(result.getNodes(), versionMap,
+                            DataServerChangeEvent.FromType.REGISTER_META));
                         break;
                     }
                 }

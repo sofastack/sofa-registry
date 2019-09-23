@@ -16,6 +16,7 @@
  */
 package com.alipay.sofa.registry.server.data.event.handler;
 
+import com.alipay.remoting.Connection;
 import com.alipay.sofa.registry.common.model.CommonResponse;
 import com.alipay.sofa.registry.common.model.dataserver.Datum;
 import com.alipay.sofa.registry.common.model.dataserver.NotifyFetchDatumRequest;
@@ -25,18 +26,20 @@ import com.alipay.sofa.registry.common.model.store.URL;
 import com.alipay.sofa.registry.consistency.hash.ConsistentHash;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
+import com.alipay.sofa.registry.remoting.bolt.BoltChannel;
 import com.alipay.sofa.registry.remoting.exchange.message.Request;
 import com.alipay.sofa.registry.server.data.bootstrap.DataServerConfig;
 import com.alipay.sofa.registry.server.data.cache.BackupTriad;
 import com.alipay.sofa.registry.server.data.cache.DataServerCache;
 import com.alipay.sofa.registry.server.data.cache.DatumCache;
-import com.alipay.sofa.registry.server.data.correction.LocalDataServerCleanHandler;
 import com.alipay.sofa.registry.server.data.event.LocalDataServerChangeEvent;
 import com.alipay.sofa.registry.server.data.executor.ExecutorFactory;
 import com.alipay.sofa.registry.server.data.node.DataNodeStatus;
 import com.alipay.sofa.registry.server.data.node.DataServerNode;
 import com.alipay.sofa.registry.server.data.remoting.DataNodeExchanger;
 import com.alipay.sofa.registry.server.data.remoting.dataserver.DataServerNodeFactory;
+import com.alipay.sofa.registry.server.data.renew.DatumLeaseManager;
+import com.alipay.sofa.registry.server.data.renew.LocalDataServerCleanHandler;
 import com.alipay.sofa.registry.server.data.util.LocalServerStatusEnum;
 import com.alipay.sofa.registry.server.data.util.TimeUtil;
 import com.google.common.collect.Lists;
@@ -46,7 +49,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Set;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executor;
@@ -66,7 +68,7 @@ public class LocalDataServerChangeEventHandler extends
                                                                     .getLogger(LocalDataServerChangeEventHandler.class);
 
     @Autowired
-    private DataServerConfig                          dataServerBootstrapConfig;
+    private DataServerConfig                          dataServerConfig;
 
     @Autowired
     private LocalDataServerCleanHandler               localDataServerCleanHandler;
@@ -80,9 +82,17 @@ public class LocalDataServerChangeEventHandler extends
     @Autowired
     private DataNodeStatus                            dataNodeStatus;
 
+    @Autowired
+    private DatumCache                                datumCache;
+
+    @Autowired
+    private DatumLeaseManager                         datumLeaseManager;
+
     private BlockingQueue<LocalDataServerChangeEvent> events    = new LinkedBlockingDeque<>();
 
     private AtomicBoolean                             isChanged = new AtomicBoolean(false);
+
+    private static final int                          TRY_COUNT = 5;
 
     @Override
     public Class interest() {
@@ -92,7 +102,11 @@ public class LocalDataServerChangeEventHandler extends
     @Override
     public void doHandle(LocalDataServerChangeEvent localDataServerChangeEvent) {
         isChanged.set(true);
+
+        // Better change to Listener pattern
         localDataServerCleanHandler.reset();
+        datumLeaseManager.reset();
+
         events.offer(localDataServerChangeEvent);
     }
 
@@ -119,11 +133,11 @@ public class LocalDataServerChangeEventHandler extends
                 try {
                     LocalDataServerChangeEvent event = events.take();
                     //if the new joined servers contains self, set status as INITIAL
-                    Set<String> newJoined = event.getNewJoined();
-                    if (newJoined.contains(DataServerConfig.IP)
-                        && dataNodeStatus.getStatus() != LocalServerStatusEnum.INITIAL) {
-                        dataNodeStatus.setStatus(LocalServerStatusEnum.INITIAL);
-                    }
+                    //Set<String> newJoined = event.getNewJoined();
+                    //if (newJoined.contains(DataServerConfig.IP)
+                    //    && dataNodeStatus.getStatus() != LocalServerStatusEnum.INITIAL) {
+                    //    dataNodeStatus.setStatus(LocalServerStatusEnum.INITIAL);
+                    //}
                     //if size of events is greater than 0, not handle and continue, only handle the last one in the queue
                     if (events.size() > 0) {
                         continue;
@@ -143,7 +157,7 @@ public class LocalDataServerChangeEventHandler extends
 
                         dataServerCache.updateItem(event.getLocalDataServerMap(),
                             event.getLocalDataCenterversion(),
-                            dataServerBootstrapConfig.getLocalDataCenter());
+                            dataServerConfig.getLocalDataCenter());
                     }
                 } catch (Throwable t) {
                     LOGGER.error("sync local data error", t);
@@ -162,7 +176,7 @@ public class LocalDataServerChangeEventHandler extends
             Map<String, DataNode> dataServerMapIn = event.getLocalDataServerMap();
             List<DataNode> dataServerNodeList = Lists.newArrayList(dataServerMapIn.values());
             ConsistentHash<DataNode> consistentHash = new ConsistentHash<>(
-                dataServerBootstrapConfig.getNumberOfReplicas(), dataServerNodeList);
+                dataServerConfig.getNumberOfReplicas(), dataServerNodeList);
             Map<String, DataNode> dataServerMap = new ConcurrentHashMap<>(dataServerMapIn);
 
             Map<String, Map<String, Map<String, BackupTriad>>> toBeSyncMap = getToBeSyncMap(consistentHash);
@@ -182,7 +196,7 @@ public class LocalDataServerChangeEventHandler extends
                             for (Entry<String, BackupTriad> dataTriadEntry : dataTriadMap
                                 .entrySet()) {
                                 String dataInfoId = dataTriadEntry.getKey();
-                                Datum datum = DatumCache.get(dataCenter, dataInfoId);
+                                Datum datum = datumCache.get(dataCenter, dataInfoId);
                                 if (datum != null) {
                                     versionMap.put(dataInfoId, datum.getVersion());
                                 }
@@ -212,7 +226,7 @@ public class LocalDataServerChangeEventHandler extends
                 if (!isChanged.get()) {
                     //update server list
                     dataServerCache.updateItem(dataServerMapIn, event.getLocalDataCenterversion(),
-                        dataServerBootstrapConfig.getLocalDataCenter());
+                        dataServerConfig.getLocalDataCenter());
                 }
             }
         }
@@ -229,14 +243,14 @@ public class LocalDataServerChangeEventHandler extends
             Map<String, List<DataNode>> triadCache = new HashMap<>();
 
             ConsistentHash<DataNode> consistentHashOld = dataServerCache
-                .calculateOldConsistentHash(dataServerBootstrapConfig.getLocalDataCenter());
+                .calculateOldConsistentHash(dataServerConfig.getLocalDataCenter());
             if (consistentHash == null) {
                 LOGGER.error("Calculate Old ConsistentHash error!");
                 throw new RuntimeException("Calculate Old ConsistentHash error!");
             }
 
             //compute new triad for every datum in cache
-            Map<String, Map<String, Datum>> allMap = DatumCache.getAll();
+            Map<String, Map<String, Datum>> allMap = datumCache.getAll();
             for (Entry<String, Map<String, Datum>> dataCenterEntry : allMap.entrySet()) {
                 String dataCenter = dataCenterEntry.getKey();
                 Map<String, Datum> datumMap = dataCenterEntry.getValue();
@@ -251,12 +265,12 @@ public class LocalDataServerChangeEventHandler extends
                         backupNodes = triadCache.get(dataInfoId);
                     } else {
                         backupNodes = consistentHash.getNUniqueNodesFor(dataInfoId,
-                            dataServerBootstrapConfig.getStoreNodes());
+                            dataServerConfig.getStoreNodes());
                         triadCache.put(dataInfoId, backupNodes);
                     }
                     BackupTriad backupTriad = new BackupTriad(dataInfoId,
                         consistentHashOld.getNUniqueNodesFor(dataInfoId,
-                            dataServerBootstrapConfig.getStoreNodes()));
+                            dataServerConfig.getStoreNodes()));
                     if (backupTriad != null) {
                         List<DataNode> newJoinedNodes = backupTriad.getNewJoined(backupNodes,
                             dataServerCache.getNotWorking());
@@ -296,7 +310,7 @@ public class LocalDataServerChangeEventHandler extends
                                  long version) {
             while (!isChanged.get()) {
                 DataServerNode targetNode = DataServerNodeFactory.getDataServerNode(
-                    dataServerBootstrapConfig.getLocalDataCenter(), targetIp);
+                    dataServerConfig.getLocalDataCenter(), targetIp);
                 if (targetNode == null || targetNode.getConnection() == null) {
                     LOGGER.info(
                         "notify version change to sync has not connect,targetNode={}, map={}",
@@ -343,31 +357,37 @@ public class LocalDataServerChangeEventHandler extends
          */
         private void notifyOnline(long changeVersion) {
             Map<String, DataServerNode> dataServerNodeMap = DataServerNodeFactory
-                .getDataServerNodes(dataServerBootstrapConfig.getLocalDataCenter());
+                .getDataServerNodes(dataServerConfig.getLocalDataCenter());
             for (Entry<String, DataServerNode> serverEntry : dataServerNodeMap.entrySet()) {
                 while (true) {
                     String ip = serverEntry.getKey();
-                    DataServerNode dataServerNode = serverEntry.getValue();
+                    DataServerNode dataServerNode = DataServerNodeFactory.getDataServerNode(
+                        dataServerConfig.getLocalDataCenter(), ip);
+
                     if (dataServerNode == null) {
+                        LOGGER
+                            .warn(
+                                "notify Online dataserver {} has not existed in DataServerNodeFactory!version={}",
+                                ip, changeVersion);
                         break;
                     }
                     try {
-                        if (dataServerNode.getConnection() == null
-                            || !dataServerNode.getConnection().isFine()) {
-                            LOGGER
-                                .warn(
-                                    "notify Online dataserver connect {} not existed or not fine!version={}",
-                                    ip, changeVersion);
-                            Map<String, DataServerNode> dataServerNodeMapCurrent = DataServerNodeFactory
-                                .getDataServerNodes(dataServerBootstrapConfig.getLocalDataCenter());
-                            DataServerNode dataServerNodeCurrent = dataServerNodeMapCurrent.get(ip);
-                            if (dataServerNodeCurrent == null) {
+                        final Connection connection = dataServerNode.getConnection();
+                        if (connection == null || !connection.isFine()) {
+                            if (connection == null) {
                                 LOGGER
                                     .warn(
-                                        "notify Online dataserver {} has not existed in DataServerNodeFactory!version={}",
+                                        "notify Online dataserver connect not existed,ip={},version={}",
                                         ip, changeVersion);
-                                break;
+                            } else {
+                                LOGGER
+                                    .warn(
+                                        "notify Online dataserver connect not fine!remote={},local={},version={}",
+                                        connection.getRemoteAddress(),
+                                        connection.getLocalAddress(), changeVersion);
                             }
+                            //connect now and registry connect
+                            connectDataServer(dataServerConfig.getLocalDataCenter(), ip);
                             //maybe get dataNode from metaServer,current has not connected!wait for connect task execute
                             TimeUtil.randomDelay(1000);
                             continue;
@@ -383,8 +403,8 @@ public class LocalDataServerChangeEventHandler extends
 
                                 @Override
                                 public URL getRequestUrl() {
-                                    return new URL(dataServerNode.getConnection().getRemoteIP(),
-                                        dataServerNode.getConnection().getRemotePort());
+                                    return new URL(connection.getRemoteIP(), connection
+                                        .getRemotePort());
                                 }
                             }).getResult();
                         if (response.isSuccess()) {
@@ -403,5 +423,44 @@ public class LocalDataServerChangeEventHandler extends
             }
         }
 
+        /**
+         * connect specific dataserver
+         *
+         * @param dataCenter
+         * @param ip
+         */
+        private void connectDataServer(String dataCenter, String ip) {
+            Connection conn = null;
+            for (int tryCount = 0; tryCount < TRY_COUNT; tryCount++) {
+                try {
+                    conn = ((BoltChannel) dataNodeExchanger.connect(new URL(ip, dataServerConfig
+                        .getSyncDataPort()))).getConnection();
+                    break;
+                } catch (Exception e) {
+                    LOGGER.error(
+                        "[LocalDataServerChangeEventHandler] connect dataServer {} in {} error",
+                        ip, dataCenter, e);
+                    TimeUtil.randomDelay(3000);
+                }
+            }
+            if (conn == null || !conn.isFine()) {
+                LOGGER
+                    .error(
+                        "[LocalDataServerChangeEventHandler] connect dataserver {} in {} failed five times",
+                        ip, dataCenter);
+                throw new RuntimeException(
+                    String
+                        .format(
+                            "[LocalDataServerChangeEventHandler] connect dataserver %s in %s failed five times,dataServer will not work,please check connect!",
+                            ip, dataCenter));
+            }
+            LOGGER
+                .info(
+                    "[LocalDataServerChangeEventHandler] connect dataserver in {} success,remote={},local={}",
+                    dataCenter, conn.getRemoteAddress(), conn.getLocalAddress());
+            //maybe get dataNode from metaServer,current has not start! register dataNode info to factory,wait for connect task next execute
+            DataServerNodeFactory.register(new DataServerNode(ip, dataCenter, conn),
+                dataServerConfig);
+        }
     }
 }
