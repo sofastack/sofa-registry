@@ -61,6 +61,13 @@ public class StopPushDataSwitchTest extends BaseIntegrationTest {
         // register Publisher & Subscriber, Subscriber get no data
         String dataId = "test-dataId-" + System.currentTimeMillis();
         String value = "test stop publish data switch";
+
+        System.out.println("dataidIn:"+dataId);
+
+        SessionServerConfig sessionServerConfig = sessionApplicationContext.getBean(SessionServerConfig.class);
+
+        System.out.println("sessionServerConfig.isStopPushSwitch:"+sessionServerConfig.isStopPushSwitch());
+
         PublisherRegistration registration = new PublisherRegistration(dataId);
         registryClient1.register(registration, value);
         Thread.sleep(1000L);
@@ -110,6 +117,12 @@ public class StopPushDataSwitchTest extends BaseIntegrationTest {
         // register Publisher & Subscriber, Subscriber get no data
         String dataId = "test-dataId-hahhahahahha-" + System.currentTimeMillis();
         String value = "test stop publish data switch by code";
+
+        System.out.println("dataidIn2:"+dataId);
+
+        SessionServerConfig sessionServerConfig = sessionApplicationContext.getBean(SessionServerConfig.class);
+
+        System.out.println("sessionServerConfig.isStopPushSwitch2:"+sessionServerConfig.isStopPushSwitch());
         PublisherRegistration registration = new PublisherRegistration(dataId);
         registryClient1.register(registration, value);
         Thread.sleep(1000L);
@@ -127,7 +140,7 @@ public class StopPushDataSwitchTest extends BaseIntegrationTest {
         // invoke code directly
         Interests sessionInterests = sessionApplicationContext.getBean(Interests.class);
         TaskListenerManager taskListenerManager = sessionApplicationContext.getBean(TaskListenerManager.class);
-        SessionServerConfig sessionServerConfig = sessionApplicationContext.getBean(SessionServerConfig.class);
+
         if (sessionInterests instanceof ReSubscribers) {
             ReSubscribers reSubscriber = (ReSubscribers) sessionInterests;
 
