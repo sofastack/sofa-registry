@@ -117,6 +117,8 @@ public class BlacklistTest extends BaseIntegrationTest {
 
         assertTrue(response.isSuccess());
 
+        BaseIntegrationTest.dataId = null;
+
         //wait for new list meta dispatch to session
         Thread.sleep(1000L);
 
@@ -188,6 +190,7 @@ public class BlacklistTest extends BaseIntegrationTest {
 
         assertTrue(response.isSuccess());
 
+        BaseIntegrationTest.dataId = null;
         //wait for new list meta dispatch to session
         Thread.sleep(1000L);
 
