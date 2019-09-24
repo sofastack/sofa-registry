@@ -29,6 +29,7 @@ import com.alipay.sofa.registry.task.listener.TaskEvent;
 
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.concurrent.Executor;
 
 /**
  *
@@ -82,6 +83,11 @@ public class ReceivedConfigDataPushTask extends AbstractSessionTask {
                     "Push receivedConfigData error! dataId: {},group: {},Instance: {}, url: {}",
                     receivedConfigData.getDataId(), receivedConfigData.getGroup(),
                     receivedConfigData.getInstanceId(), url);
+            }
+
+            @Override
+            public Executor getExecutor() {
+                return null;
             }
         };
 

@@ -16,16 +16,6 @@
  */
 package com.alipay.sofa.registry.remoting.bolt;
 
-import java.net.InetSocketAddress;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.Executor;
-import java.util.concurrent.atomic.AtomicBoolean;
-
 import com.alipay.remoting.Connection;
 import com.alipay.remoting.ConnectionEventType;
 import com.alipay.remoting.InvokeCallback;
@@ -42,6 +32,16 @@ import com.alipay.sofa.registry.remoting.ChannelHandler;
 import com.alipay.sofa.registry.remoting.ChannelHandler.HandlerType;
 import com.alipay.sofa.registry.remoting.ChannelHandler.InvokeType;
 import com.alipay.sofa.registry.remoting.Server;
+
+import java.net.InetSocketAddress;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Executor;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  *
@@ -243,20 +243,23 @@ public class BoltServer implements Server {
     @Override
     public void sendOneway(Channel channel, Object message) {
         if (channel != null && channel.isConnected()) {
+            Url boltUrl = null;
             try {
-                Url url = new Url(channel.getRemoteAddress().getAddress().getHostAddress(), channel
+                boltUrl = new Url(channel.getRemoteAddress().getAddress().getHostAddress(), channel
                     .getRemoteAddress().getPort());
 
                 if (LOGGER.isDebugEnabled()) {
-                    LOGGER.debug("Bolt Server one way message:{} , target url:{}", message, url);
+                    LOGGER
+                        .debug("Bolt Server one way message:{} , target url:{}", message, boltUrl);
                 }
-                boltServer.oneway(url, message);
+                boltServer.oneway(boltUrl, message);
             } catch (RemotingException e) {
-                LOGGER.error("Bolt Server one way message RemotingException! target url:" + url, e);
+                LOGGER.error(
+                    "Bolt Server one way message RemotingException! target url:" + boltUrl, e);
                 throw new RuntimeException("Bolt Server one way message RemotingException!", e);
             } catch (InterruptedException e) {
-                LOGGER.error("Bolt Server one way message InterruptedException! target url:" + url,
-                    e);
+                LOGGER.error("Bolt Server one way message InterruptedException! target url:"
+                             + boltUrl, e);
                 throw new RuntimeException("Bolt Server one way message InterruptedException!", e);
             }
         }
@@ -267,22 +270,24 @@ public class BoltServer implements Server {
     @Override
     public Object sendSync(Channel channel, Object message, int timeoutMillis) {
         if (channel != null && channel.isConnected()) {
+            Url boltUrl = null;
             try {
-                Url url = new Url(channel.getRemoteAddress().getAddress().getHostAddress(), channel
+                boltUrl = new Url(channel.getRemoteAddress().getAddress().getHostAddress(), channel
                     .getRemoteAddress().getPort());
 
                 if (LOGGER.isDebugEnabled()) {
-                    LOGGER.debug("Bolt Server sendSync message:{} , target url:{}", message, url);
+                    LOGGER.debug("Bolt Server sendSync message:{} , target url:{}", message,
+                        boltUrl);
                 }
 
-                return boltServer.invokeSync(url, message, timeoutMillis);
+                return boltServer.invokeSync(boltUrl, message, timeoutMillis);
             } catch (RemotingException e) {
-                LOGGER
-                    .error("Bolt Server sendSync message RemotingException! target url:" + url, e);
+                LOGGER.error("Bolt Server sendSync message RemotingException! target url:"
+                             + boltUrl, e);
                 throw new RuntimeException("Bolt Server sendSync message RemotingException!", e);
             } catch (InterruptedException e) {
-                LOGGER.error(
-                    "Bolt Server sendSync message InterruptedException! target url:" + url, e);
+                LOGGER.error("Bolt Server sendSync message InterruptedException! target url:"
+                             + boltUrl, e);
                 throw new RuntimeException("Bolt Server sendSync message InterruptedException!", e);
             }
         }
@@ -294,14 +299,16 @@ public class BoltServer implements Server {
     public void sendCallback(Channel channel, Object message, CallbackHandler callbackHandler,
                              int timeoutMillis) {
         if (channel != null && channel.isConnected()) {
+            Url boltUrl = null;
             try {
-                Url url = new Url(channel.getRemoteAddress().getAddress().getHostAddress(), channel
+                boltUrl = new Url(channel.getRemoteAddress().getAddress().getHostAddress(), channel
                     .getRemoteAddress().getPort());
 
                 if (LOGGER.isDebugEnabled()) {
-                    LOGGER.debug("Bolt Server sendSync message:{} , target url:{}", message, url);
+                    LOGGER.debug("Bolt Server sendSync message:{} , target url:{}", message,
+                        boltUrl);
                 }
-                boltServer.invokeWithCallback(url, message, new InvokeCallback() {
+                boltServer.invokeWithCallback(boltUrl, message, new InvokeCallback() {
                     @Override
                     public void onResponse(Object result) {
                         callbackHandler.onCallback(channel, result);
@@ -322,7 +329,8 @@ public class BoltServer implements Server {
                 throw new RuntimeException("Bolt Server invoke with callback RemotingException!", e);
             } catch (InterruptedException e) {
                 PUSH_LOGGER.error(
-                    "Bolt Server invoke with callback InterruptedException! target url:" + url, e);
+                    "Bolt Server invoke with callback InterruptedException! target url:" + boltUrl,
+                    e);
                 throw new RuntimeException(
                     "Bolt Server invoke with callback InterruptedException!", e);
             }

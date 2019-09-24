@@ -43,6 +43,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.concurrent.Executor;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -139,6 +140,11 @@ public class ReceivedDataMultiPushTask extends AbstractSessionTask implements Ta
                         }
                     }
                 }
+
+                @Override
+                public Executor getExecutor() {
+                    return null;
+                }
             };
 
             clientNodeService.pushWithCallback(receivedDataPush, url, callbackHandler);
@@ -187,6 +193,11 @@ public class ReceivedDataMultiPushTask extends AbstractSessionTask implements Ta
                                             targetUrl, receivedData.getDataId(), receivedData.getGroup(), getTaskId(),
                                             dataPush, retryTimes);
                                     retrySendReceiveData(pushDataRetryRequest);
+                                }
+
+                                @Override
+                                public Executor getExecutor() {
+                                    return null;
                                 }
                             });
 

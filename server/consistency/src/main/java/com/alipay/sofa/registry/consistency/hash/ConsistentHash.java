@@ -148,4 +148,59 @@ public class ConsistentHash<T extends HashNode> {
         }
         return list;
     }
+
+    /**
+     * This returns the closest n unique nodes in order for the object.
+     *
+     * This will return a list that has all nodes if n > number of nodes.
+     *
+     * @param key the key
+     * @param n the n
+     * @param disasterList disaster region name
+     * @return the n unique nodes for
+     */
+    public List<T> getNUniqueNodesFor(Object key, int n, List<String> disasterList) {
+        if (circle.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        if (n > realNodes.size()) {
+            n = realNodes.size();
+        }
+
+        List<String> disasters = disasterList != null && !disasterList.isEmpty() ? disasterList
+            : new ArrayList<>();
+        List<T> list = new ArrayList<>(n);
+        int hash = hashFunction.hash(key);
+        for (int i = 0; i < n; i++) {
+            if (!circle.containsKey(hash)) {
+                // go to next element.
+                SortedMap<Integer, T> tailMap = circle.tailMap(hash);
+                hash = tailMap.isEmpty() ? circle.firstKey() : tailMap.firstKey();
+            }
+            T candidate = circle.get(hash);
+            if (!list.contains(candidate)) {
+
+                while (!disasters.isEmpty() && !disasters.contains(candidate.getNodeName())) {
+                    hash++;
+                    if (!circle.containsKey(hash)) {
+                        // go to next element.
+                        SortedMap<Integer, T> tailMap = circle.tailMap(hash);
+                        hash = tailMap.isEmpty() ? circle.firstKey() : tailMap.firstKey();
+                    }
+                    candidate = circle.get(hash);
+                }
+                list.add(candidate);
+                if (!disasters.isEmpty()) {
+                    disasters.remove(candidate.getNodeName());
+                }
+
+            } else {
+                i--; // try again.
+            }
+            // find the next element in the circle
+            hash++;
+        }
+        return list;
+    }
 }

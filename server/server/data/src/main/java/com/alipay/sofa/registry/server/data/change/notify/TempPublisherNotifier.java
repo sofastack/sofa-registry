@@ -16,13 +16,6 @@
  */
 package com.alipay.sofa.registry.server.data.change.notify;
 
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.concurrent.Executor;
-
-import org.springframework.beans.factory.annotation.Autowired;
-
 import com.alipay.remoting.Connection;
 import com.alipay.remoting.InvokeCallback;
 import com.alipay.sofa.registry.common.model.CommonResponse;
@@ -38,6 +31,12 @@ import com.alipay.sofa.registry.server.data.bootstrap.DataServerConfig;
 import com.alipay.sofa.registry.server.data.change.DataSourceTypeEnum;
 import com.alipay.sofa.registry.server.data.executor.ExecutorFactory;
 import com.alipay.sofa.registry.server.data.remoting.sessionserver.SessionServerConnectionFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.concurrent.Executor;
 
 /**
  *
@@ -96,6 +95,11 @@ public class TempPublisherNotifier implements IDataChangeNotifier {
                     @Override
                     public void onException(Channel channel, Throwable exception) {
                         notifyPushdataCallback.onException(exception);
+                    }
+
+                    @Override
+                    public Executor getExecutor() {
+                        return notifyPushdataCallback.getExecutor();
                     }
                 }, dataServerConfig.getRpcTimeout());
         } catch (Exception e) {

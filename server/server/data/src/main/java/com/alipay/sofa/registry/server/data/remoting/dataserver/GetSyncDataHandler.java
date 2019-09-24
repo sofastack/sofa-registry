@@ -25,6 +25,8 @@ import com.alipay.sofa.registry.remoting.exchange.message.Request;
 import com.alipay.sofa.registry.server.data.remoting.DataNodeExchanger;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import java.util.concurrent.Executor;
+
 /**
  *
  * @author qian.lqlq
@@ -70,6 +72,11 @@ public class GetSyncDataHandler {
                             @Override
                             public void onException(Channel channel, Throwable exception) {
                                 callback.onException(exception);
+                            }
+
+                            @Override
+                            public Executor getExecutor() {
+                                return callback.getExecutor();
                             }
                         };
                     }

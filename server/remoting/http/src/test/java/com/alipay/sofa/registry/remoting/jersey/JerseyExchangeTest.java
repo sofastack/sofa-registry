@@ -27,6 +27,7 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import java.net.InetSocketAddress;
+import java.util.concurrent.Executor;
 
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 
@@ -50,6 +51,11 @@ public class JerseyExchangeTest {
 
             @Override
             public void onException(Channel channel, Throwable exception) {
+            }
+
+            @Override
+            public Executor getExecutor() {
+                return null;
             }
         };
 
