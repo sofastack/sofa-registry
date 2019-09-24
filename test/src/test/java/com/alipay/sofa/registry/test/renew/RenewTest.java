@@ -20,6 +20,9 @@ import static com.alipay.sofa.registry.client.constants.ValueConstants.DEFAULT_G
 import static com.alipay.sofa.registry.common.model.constants.ValueConstants.DEFAULT_INSTANCE_ID;
 import static org.junit.Assert.assertEquals;
 
+import javax.ws.rs.core.MediaType;
+
+import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.test.context.junit4.SpringRunner;
@@ -28,6 +31,7 @@ import com.alipay.sofa.registry.client.api.model.RegistryType;
 import com.alipay.sofa.registry.client.api.registration.PublisherRegistration;
 import com.alipay.sofa.registry.client.api.registration.SubscriberRegistration;
 import com.alipay.sofa.registry.common.model.store.DataInfo;
+import com.alipay.sofa.registry.core.model.Result;
 import com.alipay.sofa.registry.core.model.ScopeEnum;
 import com.alipay.sofa.registry.server.data.cache.DatumCache;
 import com.alipay.sofa.registry.test.BaseIntegrationTest;
@@ -102,6 +106,82 @@ public class RenewTest extends BaseIntegrationTest {
 
         registryClient1.unregister(dataId, DEFAULT_GROUP, RegistryType.SUBSCRIBER);
         registryClient1.unregister(dataId, DEFAULT_GROUP, RegistryType.PUBLISHER);
+    }
+
+    /**
+     * close renew -> clean datum
+     */
+    @Test
+    public void testNoRenewAfterClean() throws InterruptedException {
+        // close renew
+        Assert.assertTrue(metaChannel.getWebTarget().path("renewSwitch/disable")
+            .request(MediaType.APPLICATION_JSON).get(Result.class).isSuccess());
+        Thread.sleep(2000L);
+
+        String dataId = "test-dataId-" + System.currentTimeMillis();
+        String value = "test publish";
+
+        // pub/sub
+        {
+            PublisherRegistration registration = new PublisherRegistration(dataId);
+            registryClient1.register(registration, value);
+
+            SubscriberRegistration subReg = new SubscriberRegistration(dataId,
+                new MySubscriberDataObserver());
+            subReg.setScopeEnum(ScopeEnum.dataCenter);
+
+            registryClient1.register(subReg);
+        }
+
+        Thread.sleep(5000L);
+
+        // check sub
+        {
+            assertEquals(dataId, this.dataId);
+            assertEquals(LOCAL_REGION, userData.getLocalZone());
+            assertEquals(1, userData.getZoneData().size());
+            assertEquals(1, userData.getZoneData().values().size());
+            assertEquals(true, userData.getZoneData().containsKey(LOCAL_REGION));
+            assertEquals(1, userData.getZoneData().get(LOCAL_REGION).size());
+            assertEquals(value, userData.getZoneData().get(LOCAL_REGION).get(0));
+        }
+
+        //clean datum and unsub
+        {
+            //pub again to ignore renew for 10sec
+            PublisherRegistration registration = new PublisherRegistration(dataId);
+            registryClient1.register(registration, value);
+            //un sub, because will new sub below
+            registryClient1.unregister(dataId, DEFAULT_GROUP, RegistryType.SUBSCRIBER);
+            // sleep to sure pub is done
+            Thread.sleep(2000L);
+            // clean all datum
+            DatumCache datumCache = (DatumCache) dataApplicationContext.getBean("datumCache");
+            datumCache.cleanDatum(LOCAL_DATACENTER,
+                DataInfo.toDataInfoId(dataId, DEFAULT_INSTANCE_ID, DEFAULT_GROUP));
+        }
+
+        // new sub, and got empty datum
+        {
+            SubscriberRegistration subReg = new SubscriberRegistration(dataId,
+                new MySubscriberDataObserver());
+            subReg.setScopeEnum(ScopeEnum.dataCenter);
+            registryClient1.register(subReg);
+        }
+        Thread.sleep(3000L);
+        assertEquals(0, userData.getZoneData().size());
+
+        //renew is disable, so it's also 0 in 20sec
+        Thread.sleep(20000L);
+        assertEquals(0, userData.getZoneData().size());
+
+        registryClient1.unregister(dataId, DEFAULT_GROUP, RegistryType.SUBSCRIBER);
+        registryClient1.unregister(dataId, DEFAULT_GROUP, RegistryType.PUBLISHER);
+
+        // open renew
+        Assert.assertTrue(metaChannel.getWebTarget().path("renewSwitch/enable")
+            .request(MediaType.APPLICATION_JSON).get(Result.class).isSuccess());
+        Thread.sleep(2000L);
     }
 
 }
