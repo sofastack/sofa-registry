@@ -16,6 +16,17 @@
  */
 package com.alipay.sofa.registry.client.provider;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.mock;
+
+import org.junit.After;
+import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.alipay.sofa.registry.client.api.ConfigDataObserver;
 import com.alipay.sofa.registry.client.api.Configurator;
 import com.alipay.sofa.registry.client.api.Publisher;
@@ -31,16 +42,6 @@ import com.alipay.sofa.registry.client.base.BaseTest;
 import com.alipay.sofa.registry.core.model.PublisherRegister;
 import com.alipay.sofa.registry.core.model.ScopeEnum;
 import com.alipay.sofa.registry.core.model.SubscriberRegister;
-import org.junit.After;
-import org.junit.Test;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-import static org.mockito.Mockito.mock;
 
 /**
  * The type Default registry client test.
@@ -89,7 +90,7 @@ public class DefaultRegistryClientTest extends BaseTest {
 
         defaultPublisher.republish("republish test");
 
-        Thread.sleep(500L);
+        Thread.sleep(2000L);
         // register success when republish
         assertTrue(defaultPublisher.isRegistered());
     }
@@ -111,7 +112,7 @@ public class DefaultRegistryClientTest extends BaseTest {
         assertNotNull(subscriber);
         assertEquals(dataId, subscriber.getDataId());
 
-        Thread.sleep(500L);
+        Thread.sleep(2000L);
 
         RegisterCache registerCache = registryClient.getRegisterCache();
 
@@ -142,7 +143,7 @@ public class DefaultRegistryClientTest extends BaseTest {
         assertNotNull(configurator);
         assertEquals(dataId, configurator.getDataId());
 
-        Thread.sleep(500L);
+        Thread.sleep(2000L);
 
         RegisterCache registerCache = registryClient.getRegisterCache();
 
@@ -164,7 +165,7 @@ public class DefaultRegistryClientTest extends BaseTest {
         int unregisterCount = registryClient.unregister(dataId, null, RegistryType.PUBLISHER);
         assertEquals(1, unregisterCount);
 
-        Thread.sleep(500L);
+        Thread.sleep(2000L);
 
         Publisher temp = registryClient.getRegisterCache().getPublisherByRegistId(
             publisher.getRegistId());
@@ -185,7 +186,7 @@ public class DefaultRegistryClientTest extends BaseTest {
         int unregisterCount = registryClient.unregister(dataId, null, RegistryType.SUBSCRIBER);
         assertEquals(1, unregisterCount);
 
-        Thread.sleep(500L);
+        Thread.sleep(2000L);
 
         Subscriber temp = registryClient.getRegisterCache().getSubscriberByRegistId(
             subscriber.getRegistId());
@@ -206,7 +207,7 @@ public class DefaultRegistryClientTest extends BaseTest {
         int unregisterCount = registryClient.unregister(dataId, null, RegistryType.CONFIGURATOR);
         assertEquals(1, unregisterCount);
 
-        Thread.sleep(500L);
+        Thread.sleep(2000L);
 
         Subscriber temp = registryClient.getRegisterCache().getSubscriberByRegistId(
             configurator.getRegistId());
@@ -236,13 +237,13 @@ public class DefaultRegistryClientTest extends BaseTest {
 
         Subscriber subscriber2 = registryClient.register(subscriberRegistration2);
 
-        Thread.sleep(500L);
+        Thread.sleep(2000L);
 
         // 2. unregister publisher
         int unregisterCount = registryClient.unregister(dataId, null, RegistryType.PUBLISHER);
         assertEquals(2, unregisterCount);
 
-        Thread.sleep(500L);
+        Thread.sleep(2000L);
 
         // 3. check publisher register cache
         RegisterCache registerCache = registryClient.getRegisterCache();
@@ -256,7 +257,7 @@ public class DefaultRegistryClientTest extends BaseTest {
         unregisterCount = registryClient.unregister(dataId, null, RegistryType.SUBSCRIBER);
         assertEquals(2, unregisterCount);
 
-        Thread.sleep(500L);
+        Thread.sleep(2000L);
 
         // 5. check subscriber register cache
         Subscriber tempSub = registerCache.getSubscriberByRegistId(subscriber1.getRegistId());

@@ -16,6 +16,20 @@
  */
 package com.alipay.sofa.registry.client.provider;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+
+import java.util.List;
+
+import org.junit.After;
+import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.alipay.sofa.registry.client.api.Publisher;
 import com.alipay.sofa.registry.client.api.Subscriber;
 import com.alipay.sofa.registry.client.api.SubscriberDataObserver;
@@ -26,19 +40,6 @@ import com.alipay.sofa.registry.client.base.BaseTest;
 import com.alipay.sofa.registry.core.model.DataBox;
 import com.alipay.sofa.registry.core.model.PublisherRegister;
 import com.alipay.sofa.registry.core.model.SubscriberRegister;
-import org.junit.After;
-import org.junit.Test;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.util.List;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
 
 /**
  *
@@ -126,7 +127,7 @@ public class RegisterOrderTest extends BaseTest {
         // step 1
         Publisher publisher = registryClient.register(new PublisherRegistration(dataId), data);
 
-        Thread.sleep(500L);
+        Thread.sleep(2000L);
 
         String registId = publisher.getRegistId();
         PublisherRegister publisherRegister = mockServer.queryPubliser(registId);
@@ -137,7 +138,7 @@ public class RegisterOrderTest extends BaseTest {
         // step 2
         publisher.unregister();
 
-        Thread.sleep(500L);
+        Thread.sleep(2000L);
 
         assertNull(mockServer.queryPubliser(registId));
 
@@ -151,7 +152,7 @@ public class RegisterOrderTest extends BaseTest {
         // step 1
         Publisher publisher = registryClient.register(new PublisherRegistration(data), data);
 
-        Thread.sleep(500L);
+        Thread.sleep(2000L);
 
         String registId = publisher.getRegistId();
         PublisherRegister publisherRegister = mockServer.queryPubliser(registId);
@@ -182,7 +183,7 @@ public class RegisterOrderTest extends BaseTest {
         Subscriber subscriber = registryClient.register(new SubscriberRegistration(dataId,
             dataObserver));
 
-        Thread.sleep(500L);
+        Thread.sleep(2000L);
 
         String registId = subscriber.getRegistId();
         SubscriberRegister subscriberRegister = mockServer.querySubscriber(registId);
@@ -191,7 +192,7 @@ public class RegisterOrderTest extends BaseTest {
         // step 2
         subscriber.unregister();
 
-        Thread.sleep(500L);
+        Thread.sleep(2000L);
 
         assertNull(mockServer.queryPubliser(registId));
 
@@ -211,7 +212,7 @@ public class RegisterOrderTest extends BaseTest {
         Subscriber subscriber = registryClient.register(new SubscriberRegistration(
             "subscribeAndRefused", dataObserver));
 
-        Thread.sleep(500L);
+        Thread.sleep(2000L);
 
         String registId = subscriber.getRegistId();
         SubscriberRegister subscriberRegister = mockServer.querySubscriber(registId);

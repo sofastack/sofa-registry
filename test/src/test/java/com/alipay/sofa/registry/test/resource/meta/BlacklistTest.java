@@ -120,14 +120,14 @@ public class BlacklistTest extends BaseIntegrationTest {
         BaseIntegrationTest.dataId = null;
 
         //wait for new list meta dispatch to session
-        Thread.sleep(1000L);
+        Thread.sleep(2000L);
 
         String dataId = "test-dataId-blacklist";
         String value = "test blacklist";
 
         PublisherRegistration registration = new PublisherRegistration(dataId);
         registryClient1.register(registration, value);
-        Thread.sleep(500L);
+        Thread.sleep(2000L);
 
         SubscriberRegistration subReg = new SubscriberRegistration(dataId,
             new MySubscriberDataObserver());
@@ -135,7 +135,7 @@ public class BlacklistTest extends BaseIntegrationTest {
 
         registryClient1.register(subReg);
 
-        Thread.sleep(1000L);
+        Thread.sleep(2000L);
         assertEquals(dataId, this.dataId);
         assertEquals(LOCAL_REGION, userData.getLocalZone());
 
@@ -192,14 +192,14 @@ public class BlacklistTest extends BaseIntegrationTest {
 
         BaseIntegrationTest.dataId = null;
         //wait for new list meta dispatch to session
-        Thread.sleep(1000L);
+        Thread.sleep(2000L);
 
         String dataId = "test-dataId-blacklist2";
         String value = "test blacklist2";
 
         PublisherRegistration registration = new PublisherRegistration(dataId);
         registryClient1.register(registration, value);
-        Thread.sleep(500L);
+        Thread.sleep(2000L);
 
         SubscriberRegistration subReg = new SubscriberRegistration(dataId,
             new MySubscriberDataObserver());
@@ -207,7 +207,7 @@ public class BlacklistTest extends BaseIntegrationTest {
 
         registryClient1.register(subReg);
 
-        Thread.sleep(1000L);
+        Thread.sleep(2000L);
         assertEquals(dataId, this.dataId);
         assertEquals(LOCAL_REGION, userData.getLocalZone());
 
