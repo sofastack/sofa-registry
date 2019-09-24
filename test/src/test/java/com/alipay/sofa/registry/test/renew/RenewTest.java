@@ -51,7 +51,8 @@ public class RenewTest extends BaseIntegrationTest {
             PublisherRegistration registration = new PublisherRegistration(dataId);
             registryClient1.register(registration, value);
 
-            SubscriberRegistration subReg = new SubscriberRegistration(dataId, new MySubscriberDataObserver());
+            SubscriberRegistration subReg = new SubscriberRegistration(dataId,
+                new MySubscriberDataObserver());
             subReg.setScopeEnum(ScopeEnum.dataCenter);
 
             registryClient1.register(subReg);
@@ -81,12 +82,14 @@ public class RenewTest extends BaseIntegrationTest {
             Thread.sleep(2000L);
             // clean all datum
             DatumCache datumCache = (DatumCache) dataApplicationContext.getBean("datumCache");
-            datumCache.cleanDatum(LOCAL_DATACENTER, DataInfo.toDataInfoId(dataId, DEFAULT_INSTANCE_ID, DEFAULT_GROUP));
+            datumCache.cleanDatum(LOCAL_DATACENTER,
+                DataInfo.toDataInfoId(dataId, DEFAULT_INSTANCE_ID, DEFAULT_GROUP));
         }
 
         // new sub, and got empty datum
         {
-            SubscriberRegistration subReg = new SubscriberRegistration(dataId, new MySubscriberDataObserver());
+            SubscriberRegistration subReg = new SubscriberRegistration(dataId,
+                new MySubscriberDataObserver());
             subReg.setScopeEnum(ScopeEnum.dataCenter);
             registryClient1.register(subReg);
         }
