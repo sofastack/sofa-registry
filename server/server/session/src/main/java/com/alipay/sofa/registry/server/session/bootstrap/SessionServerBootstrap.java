@@ -16,6 +16,21 @@
  */
 package com.alipay.sofa.registry.server.session.bootstrap;
 
+import java.lang.annotation.Annotation;
+import java.util.Collection;
+import java.util.Date;
+import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
+
+import javax.annotation.Resource;
+import javax.ws.rs.Path;
+import javax.ws.rs.ext.Provider;
+
+import org.glassfish.jersey.server.ResourceConfig;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationContext;
+import org.springframework.util.CollectionUtils;
+
 import com.alipay.sofa.registry.common.model.Node;
 import com.alipay.sofa.registry.common.model.constants.ValueConstants;
 import com.alipay.sofa.registry.common.model.metaserver.FetchProvideDataRequest;
@@ -31,27 +46,16 @@ import com.alipay.sofa.registry.remoting.Client;
 import com.alipay.sofa.registry.remoting.Server;
 import com.alipay.sofa.registry.remoting.exchange.Exchange;
 import com.alipay.sofa.registry.remoting.exchange.NodeExchanger;
+import com.alipay.sofa.registry.server.session.filter.blacklist.BlacklistManager;
 import com.alipay.sofa.registry.server.session.node.NodeManager;
 import com.alipay.sofa.registry.server.session.node.NodeManagerFactory;
 import com.alipay.sofa.registry.server.session.node.RaftClientManager;
 import com.alipay.sofa.registry.server.session.node.SessionProcessIdGenerator;
+import com.alipay.sofa.registry.server.session.registry.Registry;
 import com.alipay.sofa.registry.server.session.remoting.handler.AbstractClientHandler;
 import com.alipay.sofa.registry.server.session.remoting.handler.AbstractServerHandler;
 import com.alipay.sofa.registry.server.session.scheduler.ExecutorManager;
 import com.alipay.sofa.registry.task.batcher.TaskDispatchers;
-import org.glassfish.jersey.server.ResourceConfig;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.ApplicationContext;
-import org.springframework.util.CollectionUtils;
-
-import javax.annotation.Resource;
-import javax.ws.rs.Path;
-import javax.ws.rs.ext.Provider;
-import java.lang.annotation.Annotation;
-import java.util.Collection;
-import java.util.Date;
-import java.util.Map;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * The type Session server bootstrap.
@@ -99,6 +103,12 @@ public class SessionServerBootstrap {
     @Autowired
     private RaftClientManager                 raftClientManager;
 
+    @Autowired
+    private BlacklistManager                  blacklistManager;
+
+    @Autowired
+    private Registry                          sessionRegistry;
+
     private Server                            server;
 
     private Server                            httpServer;
@@ -120,8 +130,10 @@ public class SessionServerBootstrap {
     /**
      * Do initialized.
      */
-    public void doInitialized() {
+    public void start() {
         try {
+            LOGGER.info("the configuration items are as follows: " + sessionServerConfig.toString());
+
             initEnvironment();
 
             startRaftClient();
@@ -260,6 +272,10 @@ public class SessionServerBootstrap {
 
                 fetchStopPushSwitch(leaderUrl);
 
+                fetchEnableDataRenewSnapshot(leaderUrl);
+
+                fetchBlackList();
+
                 LOGGER.info("MetaServer connected {} server! Port:{}", size,
                     sessionServerConfig.getMetaServerPort());
             }
@@ -310,6 +326,29 @@ public class SessionServerBootstrap {
         } else {
             LOGGER.info("Fetch session stop push switch data null,config not change!");
         }
+    }
+
+    private void fetchEnableDataRenewSnapshot(URL leaderUrl) {
+        FetchProvideDataRequest fetchProvideDataRequest = new FetchProvideDataRequest(
+            ValueConstants.ENABLE_DATA_RENEW_SNAPSHOT);
+        Object data = sendMetaRequest(fetchProvideDataRequest, leaderUrl);
+        if (data instanceof ProvideData) {
+            ProvideData provideData = (ProvideData) data;
+            if (provideData == null || provideData.getProvideData() == null
+                || provideData.getProvideData().getObject() == null) {
+                LOGGER
+                    .info("Fetch enableDataRenewSnapshot but no data existed, current config not change!");
+                return;
+            }
+            boolean enableDataRenewSnapshot = Boolean.parseBoolean((String) provideData
+                .getProvideData().getObject());
+            LOGGER.info("Fetch enableDataRenewSnapshot {} success!", enableDataRenewSnapshot);
+            this.sessionRegistry.setEnableDataRenewSnapshot(enableDataRenewSnapshot);
+        }
+    }
+
+    private void fetchBlackList() {
+        blacklistManager.load();
     }
 
     private Object sendMetaRequest(Object request, URL leaderUrl) {

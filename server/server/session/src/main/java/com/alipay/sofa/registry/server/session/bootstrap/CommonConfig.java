@@ -16,10 +16,12 @@
  */
 package com.alipay.sofa.registry.server.session.bootstrap;
 
-import org.springframework.beans.factory.annotation.Value;
-
 import java.util.Collection;
 import java.util.Map;
+
+import org.apache.commons.lang.builder.ToStringBuilder;
+import org.apache.commons.lang.builder.ToStringStyle;
+import org.springframework.beans.factory.annotation.Value;
 
 /**
  *
@@ -83,6 +85,11 @@ public class CommonConfig {
      */
     public String getLocalRegion() {
         return localRegion;
+    }
+
+    @Override
+    public String toString() {
+        return ToStringBuilder.reflectionToString(this, ToStringStyle.MULTI_LINE_STYLE);
     }
 
 }

@@ -59,13 +59,13 @@ public class SessionDigestResourceTest extends BaseIntegrationTest {
 
         PublisherRegistration registration = new PublisherRegistration(dataId);
         registryClient1.register(registration, value);
-        Thread.sleep(500L);
+        Thread.sleep(2000L);
 
         SubscriberRegistration subReg = new SubscriberRegistration(dataId,
             new MySubscriberDataObserver());
         subReg.setScopeEnum(ScopeEnum.dataCenter);
         registryClient1.register(subReg);
-        Thread.sleep(500L);
+        Thread.sleep(2000L);
     }
 
     @AfterClass

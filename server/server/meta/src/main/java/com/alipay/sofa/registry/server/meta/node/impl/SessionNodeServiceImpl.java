@@ -16,6 +16,12 @@
  */
 package com.alipay.sofa.registry.server.meta.node.impl;
 
+import java.net.InetSocketAddress;
+import java.util.Collection;
+import java.util.Map;
+
+import org.springframework.beans.factory.annotation.Autowired;
+
 import com.alipay.sofa.registry.common.model.Node.NodeType;
 import com.alipay.sofa.registry.common.model.metaserver.NodeChangeResult;
 import com.alipay.sofa.registry.common.model.metaserver.NotifyProvideDataChange;
@@ -32,11 +38,6 @@ import com.alipay.sofa.registry.server.meta.node.SessionNodeService;
 import com.alipay.sofa.registry.server.meta.remoting.connection.NodeConnectManager;
 import com.alipay.sofa.registry.server.meta.remoting.handler.AbstractServerHandler;
 import com.alipay.sofa.registry.server.meta.store.StoreService;
-import org.springframework.beans.factory.annotation.Autowired;
-
-import java.net.InetSocketAddress;
-import java.util.Collection;
-import java.util.Map;
 
 /**
  *
@@ -113,8 +114,7 @@ public class SessionNodeServiceImpl implements SessionNodeService {
                     confirmNodeIp);
 
             } catch (RequestException e) {
-                LOGGER.error("Push sessionNode list error! " + e.getRequestMessage(), e);
-                throw new RuntimeException("SessionNodeService push sessionNode list error!");
+                throw new RuntimeException("Push sessionNode list error: " + e.getMessage(), e);
             }
         }
 
@@ -163,8 +163,7 @@ public class SessionNodeServiceImpl implements SessionNodeService {
                 sessionNodeExchanger.request(nodeChangeRequestRequest);
 
             } catch (RequestException e) {
-                LOGGER.error("Push sessionNode list error! " + e.getRequestMessage(), e);
-                throw new RuntimeException("SessionNodeService push dataNode list error!");
+                throw new RuntimeException("Push sessionNode list error: " + e.getMessage(), e);
             }
         }
     }
@@ -212,8 +211,7 @@ public class SessionNodeServiceImpl implements SessionNodeService {
                 sessionNodeExchanger.request(request);
 
             } catch (RequestException e) {
-                LOGGER.error("Notify provide data change error! " + e.getRequestMessage(), e);
-                throw new RuntimeException("Notify provide data change error!");
+                throw new RuntimeException("Notify provide data change error: " + e.getMessage(), e);
             }
         }
     }

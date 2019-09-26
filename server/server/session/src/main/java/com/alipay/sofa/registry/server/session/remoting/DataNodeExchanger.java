@@ -16,7 +16,14 @@
  */
 package com.alipay.sofa.registry.server.session.remoting;
 
+import java.util.Collection;
+
+import javax.annotation.Resource;
+
+import org.springframework.beans.factory.annotation.Autowired;
+
 import com.alipay.sofa.registry.common.model.Node;
+import com.alipay.sofa.registry.common.model.RenewDatumRequest;
 import com.alipay.sofa.registry.common.model.store.URL;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
@@ -31,10 +38,6 @@ import com.alipay.sofa.registry.remoting.exchange.message.Response;
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
 import com.alipay.sofa.registry.server.session.node.NodeManager;
 import com.alipay.sofa.registry.server.session.remoting.handler.AbstractClientHandler;
-import org.springframework.beans.factory.annotation.Autowired;
-
-import javax.annotation.Resource;
-import java.util.Collection;
 
 /**
  * The type Data node exchanger.
@@ -84,20 +87,22 @@ public class DataNodeExchanger implements NodeExchanger {
             if (channel == null) {
                 channel = sessionClient.connect(url);
             }
-            EXCHANGE_LOGGER.info("DataNode Exchanger request={},url={}", request.getRequestBody(), url);
 
-            final Object result = sessionClient.sendSync(channel, request.getRequestBody(),
-                    sessionServerConfig.getDataNodeExchangeTimeOut());
+            // print but ignore if from renew module, cause renew request is too much
+            if (!(request.getRequestBody() instanceof RenewDatumRequest)) {
+                EXCHANGE_LOGGER.info("DataNode Exchanger request={},url={}", request.getRequestBody(), url);
+            }
+
+            final Object result = sessionClient
+                    .sendSync(channel, request.getRequestBody(), sessionServerConfig.getDataNodeExchangeTimeOut());
             if (result == null) {
-                LOGGER.error("DataNode Exchanger request data get null result!Request url:" + url);
-                throw new RequestException("DataNode Exchanger request data get null result!",
-                        request);
+                throw new RequestException("DataNode Exchanger request data get null result!", request);
             }
             response = () -> result;
         } catch (Exception e) {
-            LOGGER.error("DataNode Exchanger request data error!request={},url={}", request.getRequestBody(), url, e);
-            throw new RequestException("DataNode Exchanger request data error!Request url:" + url,
-                    request, e);
+            LOGGER.error(String.format("Error when request DataNode! Request url=%s, request=%s, msg=%s", url,
+                    request.getRequestBody(), e.getMessage()));
+            throw new RequestException("DataNode Exchanger request data error! Request url:" + url, request, e);
         }
 
         return response;

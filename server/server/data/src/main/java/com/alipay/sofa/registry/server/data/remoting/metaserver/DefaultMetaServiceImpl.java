@@ -21,16 +21,19 @@ import com.alipay.sofa.jraft.entity.PeerId;
 import com.alipay.sofa.registry.common.model.Node.NodeType;
 import com.alipay.sofa.registry.common.model.constants.ValueConstants;
 import com.alipay.sofa.registry.common.model.metaserver.DataNode;
+import com.alipay.sofa.registry.common.model.metaserver.FetchProvideDataRequest;
 import com.alipay.sofa.registry.common.model.metaserver.GetNodesRequest;
 import com.alipay.sofa.registry.common.model.metaserver.MetaNode;
 import com.alipay.sofa.registry.common.model.metaserver.NodeChangeResult;
-import com.alipay.sofa.registry.common.model.metaserver.ReNewNodesRequest;
+import com.alipay.sofa.registry.common.model.metaserver.ProvideData;
+import com.alipay.sofa.registry.common.model.metaserver.RenewNodesRequest;
 import com.alipay.sofa.registry.common.model.store.URL;
 import com.alipay.sofa.registry.jraft.bootstrap.RaftClient;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.remoting.bolt.BoltChannel;
 import com.alipay.sofa.registry.remoting.exchange.message.Request;
+import com.alipay.sofa.registry.remoting.exchange.message.Response;
 import com.alipay.sofa.registry.server.data.bootstrap.DataServerConfig;
 import com.alipay.sofa.registry.server.data.cache.DataServerChangeItem;
 import com.alipay.sofa.registry.server.data.node.DataServerNode;
@@ -60,7 +63,7 @@ public class DefaultMetaServiceImpl implements IMetaServerService {
                                                         .getLogger(DefaultMetaServiceImpl.class);
 
     @Autowired
-    private DataServerConfig            dataServerBootstrapConfig;
+    private DataServerConfig            dataServerConfig;
 
     @Autowired
     private MetaNodeExchanger           metaNodeExchanger;
@@ -75,25 +78,24 @@ public class DefaultMetaServiceImpl implements IMetaServerService {
     @Override
     public Map<String, Set<String>> getMetaServerMap() {
         HashMap<String, Set<String>> map = new HashMap<>();
-        Set<String> set = dataServerBootstrapConfig.getMetaServerIpAddresses();
+        Set<String> set = dataServerConfig.getMetaServerIpAddresses();
 
         Map<String, Connection> connectionMap = metaServerConnectionFactory
-            .getConnections(dataServerBootstrapConfig.getLocalDataCenter());
+            .getConnections(dataServerConfig.getLocalDataCenter());
         Connection connection = null;
         try {
             if (connectionMap.isEmpty()) {
                 List<String> list = new ArrayList(set);
                 Collections.shuffle(list);
                 connection = ((BoltChannel) metaNodeExchanger.connect(new URL(list.iterator()
-                    .next(), dataServerBootstrapConfig.getMetaServerPort()))).getConnection();
+                    .next(), dataServerConfig.getMetaServerPort()))).getConnection();
             } else {
                 List<Connection> connections = new ArrayList<>(connectionMap.values());
                 Collections.shuffle(connections);
                 connection = connections.iterator().next();
                 if (!connection.isFine()) {
                     connection = ((BoltChannel) metaNodeExchanger.connect(new URL(connection
-                        .getRemoteIP(), dataServerBootstrapConfig.getMetaServerPort())))
-                        .getConnection();
+                        .getRemoteIP(), dataServerConfig.getMetaServerPort()))).getConnection();
                 }
             }
 
@@ -115,11 +117,10 @@ public class DefaultMetaServiceImpl implements IMetaServerService {
 
                 Map<String, Map<String, MetaNode>> metaNodesMap = result.getNodes();
                 if (metaNodesMap != null && !metaNodesMap.isEmpty()) {
-                    Map<String, MetaNode> metaNodeMap = metaNodesMap.get(dataServerBootstrapConfig
+                    Map<String, MetaNode> metaNodeMap = metaNodesMap.get(dataServerConfig
                         .getLocalDataCenter());
                     if (metaNodeMap != null && !metaNodeMap.isEmpty()) {
-                        map.put(dataServerBootstrapConfig.getLocalDataCenter(),
-                            metaNodeMap.keySet());
+                        map.put(dataServerConfig.getLocalDataCenter(), metaNodeMap.keySet());
                     } else {
                         LOGGER
                             .error(
@@ -150,13 +151,13 @@ public class DefaultMetaServiceImpl implements IMetaServerService {
     @Override
     public List<DataServerNode> getDataServers(String dataCenter, String dataInfoId) {
         return DataServerNodeFactory.computeDataServerNodes(dataCenter, dataInfoId,
-            dataServerBootstrapConfig.getStoreNodes());
+            dataServerConfig.getStoreNodes());
     }
 
     @Override
     public DataServerChangeItem getDateServers() {
         Map<String, Connection> connectionMap = metaServerConnectionFactory
-            .getConnections(dataServerBootstrapConfig.getLocalDataCenter());
+            .getConnections(dataServerConfig.getLocalDataCenter());
         String leader = getLeader().getIp();
         if (connectionMap.containsKey(leader)) {
             Connection connection = connectionMap.get(leader);
@@ -203,14 +204,14 @@ public class DefaultMetaServiceImpl implements IMetaServerService {
     @Override
     public List<String> getOtherDataCenters() {
         Set<String> all = new HashSet<>(DataServerNodeFactory.getAllDataCenters());
-        all.remove(dataServerBootstrapConfig.getLocalDataCenter());
+        all.remove(dataServerConfig.getLocalDataCenter());
         return new ArrayList<>(all);
     }
 
     @Override
-    public void reNewNodeTask() {
+    public void renewNodeTask() {
         Map<String, Connection> connectionMap = metaServerConnectionFactory
-            .getConnections(dataServerBootstrapConfig.getLocalDataCenter());
+            .getConnections(dataServerConfig.getLocalDataCenter());
         for (Entry<String, Connection> connectEntry : connectionMap.entrySet()) {
             String ip = connectEntry.getKey();
             //just send to leader
@@ -218,13 +219,13 @@ public class DefaultMetaServiceImpl implements IMetaServerService {
                 Connection connection = connectEntry.getValue();
                 if (connection.isFine()) {
                     try {
-                        ReNewNodesRequest<DataNode> reNewNodesRequest = new ReNewNodesRequest<>(
+                        RenewNodesRequest<DataNode> renewNodesRequest = new RenewNodesRequest<>(
                             new DataNode(new URL(DataServerConfig.IP),
-                                dataServerBootstrapConfig.getLocalDataCenter()));
+                                dataServerConfig.getLocalDataCenter()));
                         metaNodeExchanger.request(new Request() {
                             @Override
                             public Object getRequestBody() {
-                                return reNewNodesRequest;
+                                return renewNodesRequest;
                             }
 
                             @Override
@@ -233,12 +234,12 @@ public class DefaultMetaServiceImpl implements IMetaServerService {
                             }
                         }).getResult();
                     } catch (Exception e) {
-                        LOGGER.error("[ReNewNodeTask] reNew data node to metaServer error : {}",
+                        LOGGER.error("[RenewNodeTask] renew data node to metaServer error : {}",
                             ip, e);
                         String newip = refreshLeader().getIp();
                         LOGGER
                             .warn(
-                                "[ReNewNodeTask] reNew data node to metaServer error,leader refresh: {}",
+                                "[RenewNodeTask] renew data node to metaServer error,leader refresh: {}",
                                 newip);
                     }
                 } else {
@@ -250,6 +251,53 @@ public class DefaultMetaServiceImpl implements IMetaServerService {
                 }
             }
         }
+    }
+
+    @Override
+    public ProvideData fetchData(String dataInfoId) {
+
+        Map<String, Connection> connectionMap = metaServerConnectionFactory
+            .getConnections(dataServerConfig.getLocalDataCenter());
+        String leader = getLeader().getIp();
+        if (connectionMap.containsKey(leader)) {
+            Connection connection = connectionMap.get(leader);
+            if (connection.isFine()) {
+                try {
+                    Request<FetchProvideDataRequest> request = new Request<FetchProvideDataRequest>() {
+
+                        @Override
+                        public FetchProvideDataRequest getRequestBody() {
+
+                            return new FetchProvideDataRequest(dataInfoId);
+                        }
+
+                        @Override
+                        public URL getRequestUrl() {
+                            return new URL(connection.getRemoteIP(), connection.getRemotePort());
+                        }
+                    };
+
+                    Response response = metaNodeExchanger.request(request);
+
+                    Object result = response.getResult();
+                    if (result instanceof ProvideData) {
+                        return (ProvideData) result;
+                    } else {
+                        LOGGER.error("fetch null provider data!");
+                        throw new RuntimeException("MetaNodeService fetch null provider data!");
+                    }
+                } catch (Exception e) {
+                    LOGGER.error("fetch provider data error! " + e.getMessage(), e);
+                    throw new RuntimeException("fetch provider data error! " + e.getMessage(), e);
+                }
+            }
+        }
+        String newip = refreshLeader().getIp();
+        LOGGER.warn(
+            "[ConnectionRefreshTask] refresh connections metaServer not fine,refresh leader : {}",
+            newip);
+        return null;
+
     }
 
     @Override
@@ -268,7 +316,7 @@ public class DefaultMetaServiceImpl implements IMetaServerService {
 
     private String getServerConfig() {
         String ret = "";
-        Set<String> ips = dataServerBootstrapConfig.getMetaServerIpAddresses();
+        Set<String> ips = dataServerConfig.getMetaServerIpAddresses();
         if (ips != null && !ips.isEmpty()) {
             ret = ips.stream().map(ip -> ip + ":" + ValueConstants.RAFT_SERVER_PORT)
                     .collect(Collectors.joining(","));
@@ -280,8 +328,7 @@ public class DefaultMetaServiceImpl implements IMetaServerService {
     }
 
     private String getGroup() {
-        return ValueConstants.RAFT_SERVER_GROUP + "_"
-               + dataServerBootstrapConfig.getLocalDataCenter();
+        return ValueConstants.RAFT_SERVER_GROUP + "_" + dataServerConfig.getLocalDataCenter();
     }
 
     @Override

@@ -14,7 +14,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alipay.sofa.registry.server.data.correction;
+package com.alipay.sofa.registry.server.data.renew;
+
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.concurrent.DelayQueue;
+import java.util.concurrent.Executor;
+import java.util.concurrent.atomic.AtomicBoolean;
+
+import org.springframework.beans.factory.annotation.Autowired;
 
 import com.alipay.sofa.registry.common.model.dataserver.Datum;
 import com.alipay.sofa.registry.common.model.metaserver.DataNode;
@@ -29,13 +37,6 @@ import com.alipay.sofa.registry.server.data.change.DataSourceTypeEnum;
 import com.alipay.sofa.registry.server.data.change.event.DataChangeEventCenter;
 import com.alipay.sofa.registry.server.data.executor.ExecutorFactory;
 import com.alipay.sofa.registry.server.data.util.DelayItem;
-import org.springframework.beans.factory.annotation.Autowired;
-
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.concurrent.DelayQueue;
-import java.util.concurrent.Executor;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  *
@@ -51,13 +52,16 @@ public class LocalDataServerCleanHandler {
                                                                          .getLogger("DATA-START-LOGS");
 
     @Autowired
-    private DataServerConfig                            dataServerBootstrapConfig;
+    private DataServerConfig                            dataServerConfig;
 
     @Autowired
     private DataServerCache                             dataServerCache;
 
     @Autowired
     private DataChangeEventCenter                       dataChangeEventCenter;
+
+    @Autowired
+    private DatumCache                                  datumCache;
 
     private LocalCleanTask                              task;
 
@@ -70,8 +74,7 @@ public class LocalDataServerCleanHandler {
      * constructor
      */
     public LocalDataServerCleanHandler() {
-        Executor executor = ExecutorFactory
-                .newSingleThreadExecutor(LocalDataServerCleanHandler.class.getSimpleName());
+        Executor executor = ExecutorFactory.newSingleThreadExecutor(LocalDataServerCleanHandler.class.getSimpleName());
         executor.execute(() -> {
             while (true) {
                 try {
@@ -96,7 +99,7 @@ public class LocalDataServerCleanHandler {
                 EVENT_QUEUE.clear();
             }
         }
-        EVENT_QUEUE.add(new DelayItem<>(new LocalCleanTask(), dataServerBootstrapConfig
+        EVENT_QUEUE.add(new DelayItem<>(new LocalCleanTask(), dataServerConfig
             .getLocalDataServerCleanDelay()));
     }
 
@@ -112,16 +115,16 @@ public class LocalDataServerCleanHandler {
                 try {
 
                     Map<String, DataNode> dataNodeMap = dataServerCache
-                        .getDataServers(dataServerBootstrapConfig.getLocalDataCenter());
+                        .getDataServers(dataServerConfig.getLocalDataCenter());
                     if (dataNodeMap == null || dataNodeMap.isEmpty()) {
                         LOGGER.warn("Calculate Old BackupTriad,old dataServer list is empty!");
                         return;
                     }
 
                     ConsistentHash<DataNode> consistentHash = new ConsistentHash<>(
-                        dataServerBootstrapConfig.getNumberOfReplicas(), dataNodeMap.values());
+                        dataServerConfig.getNumberOfReplicas(), dataNodeMap.values());
 
-                    Map<String, Map<String, Datum>> dataMapAll = DatumCache.getAll();
+                    Map<String, Map<String, Datum>> dataMapAll = datumCache.getAll();
 
                     for (Entry<String, Map<String, Datum>> entryAll : dataMapAll.entrySet()) {
                         String dataCenter = entryAll.getKey();
@@ -139,7 +142,7 @@ public class LocalDataServerCleanHandler {
 
                             BackupTriad backupTriad = new BackupTriad(dataInfoId,
                                 consistentHash.getNUniqueNodesFor(dataInfoId,
-                                    dataServerBootstrapConfig.getStoreNodes()));
+                                    dataServerConfig.getStoreNodes()));
                             if (!backupTriad.containsSelf()) {
                                 if (datum != null) {
                                     int size = datum.getPubMap() != null ? datum.getPubMap().size()
@@ -156,7 +159,7 @@ public class LocalDataServerCleanHandler {
                 } catch (Throwable e) {
                     LOGGER.error("[LocalDataServerCleanHandler] clean local datum task error!", e);
                 } finally {
-                    EVENT_QUEUE.add(new DelayItem<>(new LocalCleanTask(), dataServerBootstrapConfig
+                    EVENT_QUEUE.add(new DelayItem<>(new LocalCleanTask(), dataServerConfig
                         .getLocalDataServerCleanDelay()));
                 }
             }

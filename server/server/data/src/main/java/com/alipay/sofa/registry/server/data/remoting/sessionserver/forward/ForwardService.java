@@ -28,10 +28,9 @@ public interface ForwardService {
     /**
      * Need forward boolean.
      *
-     * @param dataInfoId the data info id 
      * @return the boolean
      */
-    boolean needForward(String dataInfoId);
+    boolean needForward();
 
     /**
      * Forward request object.

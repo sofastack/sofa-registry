@@ -16,9 +16,13 @@
  */
 package com.alipay.sofa.registry.server.session.node;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+
 import com.alipay.sofa.registry.common.model.Node.NodeType;
 import com.alipay.sofa.registry.common.model.metaserver.NodeChangeResult;
-import com.alipay.sofa.registry.common.model.metaserver.ReNewNodesRequest;
+import com.alipay.sofa.registry.common.model.metaserver.RenewNodesRequest;
 import com.alipay.sofa.registry.common.model.metaserver.SessionNode;
 import com.alipay.sofa.registry.common.model.store.URL;
 import com.alipay.sofa.registry.log.Logger;
@@ -26,10 +30,6 @@ import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.net.NetUtil;
 import com.alipay.sofa.registry.remoting.exchange.RequestException;
 import com.alipay.sofa.registry.remoting.exchange.message.Request;
-
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
 
 /**
  *
@@ -71,18 +71,18 @@ public class SessionNodeManager extends AbstractNodeManager<SessionNode> {
     }
 
     @Override
-    public void reNewNode() {
+    public void renewNode() {
         try {
 
-            Request<ReNewNodesRequest> reNewNodesRequestRequest = new Request<ReNewNodesRequest>() {
+            Request<RenewNodesRequest> renewNodesRequestRequest = new Request<RenewNodesRequest>() {
 
                 @Override
-                public ReNewNodesRequest getRequestBody() {
+                public RenewNodesRequest getRequestBody() {
                     URL clientUrl = new URL(NetUtil.getLocalAddress().getHostAddress(), 0);
                     SessionNode sessionNode = new SessionNode(clientUrl,
                         sessionServerConfig.getSessionServerRegion());
 
-                    return new ReNewNodesRequest(sessionNode);
+                    return new RenewNodesRequest(sessionNode);
                 }
 
                 @Override
@@ -92,11 +92,9 @@ public class SessionNodeManager extends AbstractNodeManager<SessionNode> {
                 }
             };
 
-            metaNodeExchanger.request(reNewNodesRequestRequest);
+            metaNodeExchanger.request(renewNodesRequestRequest);
         } catch (RequestException e) {
-            LOGGER.error("SessionNodeManager reNew node error! " + e.getRequestMessage(), e);
-            throw new RuntimeException("SessionNodeManager reNew node error! "
-                                       + e.getRequestMessage(), e);
+            throw new RuntimeException("SessionNodeManager renew node error! " + e.getMessage(), e);
         }
     }
 

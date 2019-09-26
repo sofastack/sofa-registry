@@ -46,5 +46,10 @@ public enum DataSourceTypeEnum {
     /**
      * local dataInfo check,not belong this node schedule remove
      */
-    CLEAN
+    CLEAN,
+
+    /**
+     * Snapshot data, after renew finds data inconsistent
+     */
+    SNAPSHOT,
 }

@@ -18,6 +18,7 @@ package com.alipay.sofa.registry.server.data.remoting.dataserver.task;
 
 import com.alipay.sofa.registry.server.data.cache.DataServerChangeItem;
 import com.alipay.sofa.registry.server.data.event.DataServerChangeEvent;
+import com.alipay.sofa.registry.server.data.event.DataServerChangeEvent.FromType;
 import com.alipay.sofa.registry.server.data.event.EventCenter;
 import com.alipay.sofa.registry.server.data.event.StartTaskTypeEnum;
 import com.alipay.sofa.registry.server.data.remoting.metaserver.IMetaServerService;
@@ -42,7 +43,8 @@ public class ConnectionRefreshTask extends AbstractTask {
     public void handle() {
         DataServerChangeItem dataServerChangeItem = metaServerService.getDateServers();
         if (dataServerChangeItem != null) {
-            eventCenter.post(new DataServerChangeEvent(dataServerChangeItem));
+            eventCenter
+                .post(new DataServerChangeEvent(dataServerChangeItem, FromType.CONNECT_TASK));
         }
     }
 

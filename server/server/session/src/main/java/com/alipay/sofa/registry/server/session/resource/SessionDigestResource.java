@@ -16,22 +16,14 @@
  */
 package com.alipay.sofa.registry.server.session.resource;
 
-import com.alipay.sofa.registry.common.model.Node;
-import com.alipay.sofa.registry.common.model.Node.NodeType;
-import com.alipay.sofa.registry.common.model.store.Publisher;
-import com.alipay.sofa.registry.common.model.store.StoreData;
-import com.alipay.sofa.registry.common.model.store.Subscriber;
-import com.alipay.sofa.registry.common.model.store.Watcher;
-import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
-import com.alipay.sofa.registry.server.session.node.NodeManager;
-import com.alipay.sofa.registry.server.session.node.NodeManagerFactory;
-import com.alipay.sofa.registry.server.session.node.SessionNodeManager;
-import com.alipay.sofa.registry.server.session.store.DataStore;
-import com.alipay.sofa.registry.server.session.store.Interests;
-import com.alipay.sofa.registry.server.session.store.Watchers;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.util.CollectionUtils;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
 
+import javax.annotation.PostConstruct;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
@@ -39,12 +31,26 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.util.CollectionUtils;
+
+import com.alipay.sofa.registry.common.model.Node;
+import com.alipay.sofa.registry.common.model.Node.NodeType;
+import com.alipay.sofa.registry.common.model.store.Publisher;
+import com.alipay.sofa.registry.common.model.store.StoreData;
+import com.alipay.sofa.registry.common.model.store.Subscriber;
+import com.alipay.sofa.registry.common.model.store.Watcher;
+import com.alipay.sofa.registry.metrics.ReporterUtils;
+import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
+import com.alipay.sofa.registry.server.session.node.NodeManager;
+import com.alipay.sofa.registry.server.session.node.NodeManagerFactory;
+import com.alipay.sofa.registry.server.session.node.SessionNodeManager;
+import com.alipay.sofa.registry.server.session.store.DataStore;
+import com.alipay.sofa.registry.server.session.store.Interests;
+import com.alipay.sofa.registry.server.session.store.Watchers;
+import com.codahale.metrics.Gauge;
+import com.codahale.metrics.MetricRegistry;
 
 /**
  *
@@ -86,6 +92,13 @@ public class SessionDigestResource {
     private final static String DATA    = "DATA";
 
     private final static String META    = "META";
+
+    @PostConstruct
+    public void init() {
+        MetricRegistry metrics = new MetricRegistry();
+        metrics.register("pushSwitch", (Gauge<Map>) () -> getPushSwitch());
+        ReporterUtils.startSlf4jReporter(60, metrics);
+    }
 
     @GET
     @Path("{type}/data/query")

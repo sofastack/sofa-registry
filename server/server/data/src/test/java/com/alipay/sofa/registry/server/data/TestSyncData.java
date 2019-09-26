@@ -16,15 +16,18 @@
  */
 package com.alipay.sofa.registry.server.data;
 
-import com.alipay.sofa.registry.common.model.dataserver.Datum;
-import com.alipay.sofa.registry.server.data.change.DataSourceTypeEnum;
-import com.alipay.sofa.registry.server.data.datasync.Operator;
-import com.alipay.sofa.registry.server.data.datasync.sync.Acceptor;
+import java.util.Collection;
+
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
-import java.util.Collection;
+import com.alipay.sofa.registry.common.model.dataserver.Datum;
+import com.alipay.sofa.registry.server.data.cache.DatumCache;
+import com.alipay.sofa.registry.server.data.change.DataSourceTypeEnum;
+import com.alipay.sofa.registry.server.data.datasync.Operator;
+import com.alipay.sofa.registry.server.data.datasync.sync.Acceptor;
+import com.alipay.sofa.registry.util.DatumVersionUtil;
 
 /**
  *
@@ -75,15 +78,15 @@ public class TestSyncData {
 
     @Test
     public void testAcceptExpired() throws InterruptedException {
-        Acceptor acceptor = new Acceptor(30, "11", "DefaultDataCenter");
+        Acceptor acceptor = new Acceptor(30, "11", "DefaultDataCenter", new DatumCache());
 
-        Operator operator1 = new Operator(System.currentTimeMillis(), 0L, datum1,
+        Operator operator1 = new Operator(DatumVersionUtil.nextId(), 0L, datum1,
             DataSourceTypeEnum.SYNC);
         Thread.sleep(1000);
-        Operator operator2 = new Operator(System.currentTimeMillis(), operator1.getVersion(),
+        Operator operator2 = new Operator(DatumVersionUtil.nextId(), operator1.getVersion(),
             datum2, DataSourceTypeEnum.SYNC);
         Thread.sleep(2000);
-        Operator operator5 = new Operator(System.currentTimeMillis(), operator2.getVersion(),
+        Operator operator5 = new Operator(DatumVersionUtil.nextId(), operator2.getVersion(),
             datum5, DataSourceTypeEnum.SYNC);
 
         acceptor.appendOperator(operator1);
@@ -100,4 +103,5 @@ public class TestSyncData {
         Assert.assertTrue(ops[0].getVersion().equals(operator2.getVersion()));
         Assert.assertTrue(ops[1].getVersion().equals(operator5.getVersion()));
     }
+
 }

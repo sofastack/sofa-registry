@@ -16,6 +16,8 @@
  */
 package com.alipay.sofa.registry.server.meta.node.impl;
 
+import org.springframework.beans.factory.annotation.Autowired;
+
 import com.alipay.sofa.registry.common.model.Node.NodeType;
 import com.alipay.sofa.registry.common.model.metaserver.DataCenterNodes;
 import com.alipay.sofa.registry.common.model.metaserver.GetChangeListRequest;
@@ -27,7 +29,6 @@ import com.alipay.sofa.registry.remoting.exchange.message.Request;
 import com.alipay.sofa.registry.remoting.exchange.message.Response;
 import com.alipay.sofa.registry.server.meta.node.MetaNodeService;
 import com.alipay.sofa.registry.server.meta.remoting.MetaClientExchanger;
-import org.springframework.beans.factory.annotation.Autowired;
 
 /**
  *
@@ -69,9 +70,8 @@ public class MetaNodeServiceImpl implements MetaNodeService {
             }
 
         } catch (RequestException e) {
-            LOGGER.error("MetaNodeService get DataCenter Nodes error! " + e.getRequestMessage(), e);
             throw new RuntimeException("MetaNodeService get DataCenter Nodes error! "
-                                       + e.getRequestMessage(), e);
+                                       + e.getMessage(), e);
         }
     }
 

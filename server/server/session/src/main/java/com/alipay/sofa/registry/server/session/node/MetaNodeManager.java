@@ -16,10 +16,10 @@
  */
 package com.alipay.sofa.registry.server.session.node;
 
+import java.util.Collection;
+
 import com.alipay.sofa.registry.common.model.Node.NodeType;
 import com.alipay.sofa.registry.common.model.metaserver.MetaNode;
-
-import java.util.Collection;
 
 /**
  *
@@ -44,6 +44,6 @@ public class MetaNodeManager extends AbstractNodeManager<MetaNode> {
     }
 
     @Override
-    public void reNewNode() {
+    public void renewNode() {
     }
 }

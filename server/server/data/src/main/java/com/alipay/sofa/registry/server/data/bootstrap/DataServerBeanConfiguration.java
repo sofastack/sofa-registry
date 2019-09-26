@@ -16,17 +16,35 @@
  */
 package com.alipay.sofa.registry.server.data.bootstrap;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
+
+import org.glassfish.jersey.jackson.JacksonFeature;
+import org.glassfish.jersey.server.ResourceConfig;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Import;
+
 import com.alipay.sofa.registry.remoting.bolt.exchange.BoltExchange;
 import com.alipay.sofa.registry.remoting.exchange.Exchange;
 import com.alipay.sofa.registry.remoting.jersey.exchange.JerseyExchange;
+import com.alipay.sofa.registry.server.data.cache.CacheDigestTask;
 import com.alipay.sofa.registry.server.data.cache.DataServerCache;
+import com.alipay.sofa.registry.server.data.cache.DatumCache;
 import com.alipay.sofa.registry.server.data.change.DataChangeHandler;
 import com.alipay.sofa.registry.server.data.change.event.DataChangeEventCenter;
 import com.alipay.sofa.registry.server.data.change.notify.BackUpNotifier;
 import com.alipay.sofa.registry.server.data.change.notify.IDataChangeNotifier;
 import com.alipay.sofa.registry.server.data.change.notify.SessionServerNotifier;
+import com.alipay.sofa.registry.server.data.change.notify.SnapshotBackUpNotifier;
 import com.alipay.sofa.registry.server.data.change.notify.TempPublisherNotifier;
-import com.alipay.sofa.registry.server.data.correction.LocalDataServerCleanHandler;
 import com.alipay.sofa.registry.server.data.datasync.AcceptorStore;
 import com.alipay.sofa.registry.server.data.datasync.SyncDataService;
 import com.alipay.sofa.registry.server.data.datasync.sync.LocalAcceptorStore;
@@ -53,12 +71,13 @@ import com.alipay.sofa.registry.server.data.remoting.dataserver.handler.NotifyOn
 import com.alipay.sofa.registry.server.data.remoting.dataserver.handler.SyncDataHandler;
 import com.alipay.sofa.registry.server.data.remoting.dataserver.task.AbstractTask;
 import com.alipay.sofa.registry.server.data.remoting.dataserver.task.ConnectionRefreshTask;
-import com.alipay.sofa.registry.server.data.remoting.dataserver.task.ReNewNodeTask;
+import com.alipay.sofa.registry.server.data.remoting.dataserver.task.RenewNodeTask;
 import com.alipay.sofa.registry.server.data.remoting.handler.AbstractClientHandler;
 import com.alipay.sofa.registry.server.data.remoting.handler.AbstractServerHandler;
 import com.alipay.sofa.registry.server.data.remoting.metaserver.DefaultMetaServiceImpl;
 import com.alipay.sofa.registry.server.data.remoting.metaserver.IMetaServerService;
 import com.alipay.sofa.registry.server.data.remoting.metaserver.MetaServerConnectionFactory;
+import com.alipay.sofa.registry.server.data.remoting.metaserver.handler.NotifyProvideDataChangeHandler;
 import com.alipay.sofa.registry.server.data.remoting.metaserver.handler.ServerChangeHandler;
 import com.alipay.sofa.registry.server.data.remoting.metaserver.handler.StatusConfirmHandler;
 import com.alipay.sofa.registry.server.data.remoting.metaserver.task.ConnectionRefreshMetaTask;
@@ -68,26 +87,20 @@ import com.alipay.sofa.registry.server.data.remoting.sessionserver.forward.Forwa
 import com.alipay.sofa.registry.server.data.remoting.sessionserver.forward.ForwardServiceImpl;
 import com.alipay.sofa.registry.server.data.remoting.sessionserver.handler.ClientOffHandler;
 import com.alipay.sofa.registry.server.data.remoting.sessionserver.handler.DataServerConnectionHandler;
+import com.alipay.sofa.registry.server.data.remoting.sessionserver.handler.DatumSnapshotHandler;
 import com.alipay.sofa.registry.server.data.remoting.sessionserver.handler.GetDataHandler;
 import com.alipay.sofa.registry.server.data.remoting.sessionserver.handler.GetDataVersionsHandler;
 import com.alipay.sofa.registry.server.data.remoting.sessionserver.handler.PublishDataHandler;
+import com.alipay.sofa.registry.server.data.remoting.sessionserver.handler.RenewDatumHandler;
 import com.alipay.sofa.registry.server.data.remoting.sessionserver.handler.SessionServerRegisterHandler;
 import com.alipay.sofa.registry.server.data.remoting.sessionserver.handler.UnPublishDataHandler;
+import com.alipay.sofa.registry.server.data.renew.DatumLeaseManager;
+import com.alipay.sofa.registry.server.data.renew.LocalDataServerCleanHandler;
 import com.alipay.sofa.registry.server.data.resource.DataDigestResource;
 import com.alipay.sofa.registry.server.data.resource.HealthResource;
+import com.alipay.sofa.registry.server.data.util.ThreadPoolExecutorDataServer;
+import com.alipay.sofa.registry.util.NamedThreadFactory;
 import com.alipay.sofa.registry.util.PropertySplitter;
-import org.glassfish.jersey.jackson.JacksonFeature;
-import org.glassfish.jersey.server.ResourceConfig;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
-import org.springframework.boot.context.properties.EnableConfigurationProperties;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Import;
-
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
 
 /**
  *
@@ -114,7 +127,8 @@ public class DataServerBeanConfiguration {
         }
 
         @Bean
-        public DataServerConfig dataServerBootstrapConfig(CommonConfig commonConfig) {
+        @ConditionalOnMissingBean(name = "dataServerConfig")
+        public DataServerConfig dataServerConfig(CommonConfig commonConfig) {
             return new DataServerConfig(commonConfig);
         }
 
@@ -123,10 +137,26 @@ public class DataServerBeanConfiguration {
             return new DataNodeStatus();
         }
 
+        @Bean
+        public DatumCache datumCache() {
+            return new DatumCache();
+        }
+
         @Bean(name = "PropertySplitter")
         public PropertySplitter propertySplitter() {
             return new PropertySplitter();
         }
+
+    }
+
+    @Configuration
+    public static class LogTaskConfigConfiguration {
+
+        @Bean
+        public CacheDigestTask cacheDigestTask() {
+            return new CacheDigestTask();
+        }
+
     }
 
     @Configuration
@@ -177,23 +207,25 @@ public class DataServerBeanConfiguration {
         }
 
         @Bean(name = "serverHandlers")
-        public Collection<AbstractServerHandler> serverHandlers(DataServerConfig dataServerBootstrapConfig) {
+        public Collection<AbstractServerHandler> serverHandlers(DataServerConfig dataServerConfig) {
             Collection<AbstractServerHandler> list = new ArrayList<>();
             list.add(getDataHandler());
             list.add(clientOffHandler());
             list.add(getDataVersionsHandler());
-            list.add(publishDataProcessor(dataServerBootstrapConfig));
+            list.add(publishDataProcessor());
             list.add(sessionServerRegisterHandler());
             list.add(unPublishDataHandler());
             list.add(dataServerConnectionHandler());
+            list.add(renewDatumHandler());
+            list.add(datumSnapshotHandler());
             return list;
         }
 
         @Bean(name = "serverSyncHandlers")
-        public Collection<AbstractServerHandler> serverSyncHandlers(DataServerConfig dataServerBootstrapConfig) {
+        public Collection<AbstractServerHandler> serverSyncHandlers(DataServerConfig dataServerConfig) {
             Collection<AbstractServerHandler> list = new ArrayList<>();
             list.add(getDataHandler());
-            list.add(publishDataProcessor(dataServerBootstrapConfig));
+            list.add(publishDataProcessor());
             list.add(unPublishDataHandler());
             list.add(notifyFetchDatumHandler());
             list.add(notifyOnlineHandler());
@@ -215,6 +247,7 @@ public class DataServerBeanConfiguration {
             Collection<AbstractClientHandler> list = new ArrayList<>();
             list.add(serverChangeHandler());
             list.add(statusConfirmHandler());
+            list.add(notifyProvideDataChangeHandler());
             return list;
         }
 
@@ -244,8 +277,18 @@ public class DataServerBeanConfiguration {
         }
 
         @Bean
-        public AbstractServerHandler publishDataProcessor(DataServerConfig dataServerBootstrapConfig) {
-            return new PublishDataHandler(dataServerBootstrapConfig);
+        public AbstractServerHandler datumSnapshotHandler() {
+            return new DatumSnapshotHandler();
+        }
+
+        @Bean
+        public RenewDatumHandler renewDatumHandler() {
+            return new RenewDatumHandler();
+        }
+
+        @Bean
+        public AbstractServerHandler publishDataProcessor() {
+            return new PublishDataHandler();
         }
 
         @Bean
@@ -292,6 +335,11 @@ public class DataServerBeanConfiguration {
         public AbstractClientHandler statusConfirmHandler() {
             return new StatusConfirmHandler();
         }
+
+        @Bean
+        public NotifyProvideDataChangeHandler notifyProvideDataChangeHandler() {
+            return new NotifyProvideDataChangeHandler();
+        }
     }
 
     @Configuration
@@ -314,6 +362,11 @@ public class DataServerBeanConfiguration {
         @Bean
         public BackUpNotifier backUpNotifier() {
             return new BackUpNotifier();
+        }
+
+        @Bean
+        public SnapshotBackUpNotifier snapshotBackUpNotifier() {
+            return new SnapshotBackUpNotifier();
         }
 
         @Bean(name = "dataChangeNotifiers")
@@ -379,6 +432,11 @@ public class DataServerBeanConfiguration {
         }
 
         @Bean
+        public DatumLeaseManager datumLeaseManager() {
+            return new DatumLeaseManager();
+        }
+
+        @Bean
         public GetSyncDataHandler getSyncDataHandler() {
             return new GetSyncDataHandler();
         }
@@ -413,8 +471,8 @@ public class DataServerBeanConfiguration {
         }
 
         @Bean
-        public ReNewNodeTask reNewNodeTask() {
-            return new ReNewNodeTask();
+        public RenewNodeTask renewNodeTask() {
+            return new RenewNodeTask();
         }
 
         @Bean(name = "tasks")
@@ -422,7 +480,7 @@ public class DataServerBeanConfiguration {
             List<AbstractTask> list = new ArrayList<>();
             list.add(connectionRefreshTask());
             list.add(connectionRefreshMetaTask());
-            list.add(reNewNodeTask());
+            list.add(renewNodeTask());
             return list;
         }
 
@@ -462,9 +520,17 @@ public class DataServerBeanConfiguration {
         @Autowired
         AbstractClientHandler  notifyDataSyncHandler;
 
+        @Autowired
+        RenewDatumHandler      renewDatumHandler;
+
+        @Autowired
+        DatumLeaseManager      datumLeaseManager;
+
         @Bean(name = "afterWorkProcessors")
         public List<AfterWorkingProcess> afterWorkingProcessors() {
             List<AfterWorkingProcess> list = new ArrayList<>();
+            list.add(renewDatumHandler);
+            list.add(datumLeaseManager);
             list.add(disconnectEventHandler);
             list.add((NotifyDataSyncHandler) notifyDataSyncHandler);
             return list;
@@ -473,6 +539,42 @@ public class DataServerBeanConfiguration {
         @Bean
         public AfterWorkingProcessHandler afterWorkingProcessHandler() {
             return new AfterWorkingProcessHandler();
+        }
+
+    }
+
+    @Configuration
+    public static class ExecutorConfiguration {
+
+        @Autowired
+        DataServerConfig dataServerConfig;
+
+        @Bean(name = "publishProcessorExecutor")
+        public ThreadPoolExecutor publishProcessorExecutor() {
+            return new ThreadPoolExecutorDataServer("PublishProcessorExecutor",
+                dataServerConfig.getPublishExecutorMinPoolSize(),
+                dataServerConfig.getPublishExecutorMaxPoolSize(), 300, TimeUnit.SECONDS,
+                new ArrayBlockingQueue<>(dataServerConfig.getPublishExecutorQueueSize()),
+                new NamedThreadFactory("DataServer-PublishProcessor-executor", true));
+        }
+
+        @Bean(name = "renewDatumProcessorExecutor")
+        public ThreadPoolExecutor renewDatumProcessorExecutor() {
+            return new ThreadPoolExecutorDataServer("RenewDatumProcessorExecutor",
+                dataServerConfig.getRenewDatumExecutorMinPoolSize(),
+                dataServerConfig.getRenewDatumExecutorMaxPoolSize(), 300, TimeUnit.SECONDS,
+                new ArrayBlockingQueue<>(dataServerConfig.getRenewDatumExecutorQueueSize()),
+                new NamedThreadFactory("DataServer-RenewDatumProcessor-executor", true));
+        }
+
+        @Bean(name = "getDataProcessorExecutor")
+        public ThreadPoolExecutor getDataProcessorExecutor() {
+            return new ThreadPoolExecutorDataServer("GetDataProcessorExecutor",
+                dataServerConfig.getGetDataExecutorMinPoolSize(),
+                dataServerConfig.getGetDataExecutorMaxPoolSize(),
+                dataServerConfig.getGetDataExecutorKeepAliveTime(), TimeUnit.SECONDS,
+                new ArrayBlockingQueue<>(dataServerConfig.getGetDataExecutorQueueSize()),
+                new NamedThreadFactory("DataServer-GetDataProcessor-executor", true));
         }
 
     }

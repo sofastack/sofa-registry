@@ -30,16 +30,16 @@ public class SessionServerRegisterRequest implements Serializable {
 
     private String            processId;
 
-    private Set<String>       clientHosts;
+    private Set<String>       connectIds;
 
     /**
      * constructor
      * @param processId
-     * @param clientHosts
+     * @param connectIds
      */
-    public SessionServerRegisterRequest(String processId, Set<String> clientHosts) {
+    public SessionServerRegisterRequest(String processId, Set<String> connectIds) {
         this.processId = processId;
-        this.clientHosts = clientHosts;
+        this.connectIds = connectIds;
     }
 
     /**
@@ -61,17 +61,17 @@ public class SessionServerRegisterRequest implements Serializable {
     }
 
     /**
-     * Getter method for property <tt>clientHosts</tt>.
+     * Getter method for property <tt>connectIds</tt>.
      *
-     * @return property value of clientHosts
+     * @return property value of connectIds
      */
-    public Set<String> getClientHosts() {
-        return clientHosts;
+    public Set<String> getConnectIds() {
+        return connectIds;
     }
 
     @Override
     public String toString() {
         return new StringBuilder("[SessionServerRegisterRequest] processId=")
-            .append(this.processId).append(", clientHosts=").append(this.clientHosts).toString();
+            .append(this.processId).append(", connectIds=").append(this.connectIds).toString();
     }
 }

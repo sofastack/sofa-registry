@@ -17,6 +17,7 @@
 package com.alipay.sofa.registry.server.session.scheduler.task;
 
 import com.alipay.sofa.registry.common.model.PushDataRetryRequest;
+import com.alipay.sofa.registry.common.model.store.DataInfo;
 import com.alipay.sofa.registry.common.model.store.Subscriber;
 import com.alipay.sofa.registry.common.model.store.URL;
 import com.alipay.sofa.registry.core.model.DataBox;
@@ -30,6 +31,7 @@ import com.alipay.sofa.registry.remoting.exchange.Exchange;
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
 import com.alipay.sofa.registry.server.session.node.service.ClientNodeService;
 import com.alipay.sofa.registry.server.session.scheduler.ExecutorManager;
+import com.alipay.sofa.registry.server.session.store.Interests;
 import com.alipay.sofa.registry.server.session.strategy.ReceivedDataMultiPushTaskStrategy;
 import com.alipay.sofa.registry.task.Task;
 import com.alipay.sofa.registry.task.TaskClosure;
@@ -63,6 +65,7 @@ public class ReceivedDataMultiPushTask extends AbstractSessionTask implements Ta
     private Collection<Subscriber>            subscribers;
     private ReceivedDataMultiPushTaskStrategy receivedDataMultiPushTaskStrategy;
     private AsyncHashedWheelTimer             asyncHashedWheelTimer;
+    private Interests                         sessionInterests;
 
     private String                            dataPush;
 
@@ -71,65 +74,75 @@ public class ReceivedDataMultiPushTask extends AbstractSessionTask implements Ta
                                      ExecutorManager executorManager,
                                      Exchange boltExchange,
                                      ReceivedDataMultiPushTaskStrategy receivedDataMultiPushTaskStrategy,
-                                     AsyncHashedWheelTimer asyncHashedWheelTimer) {
+                                     AsyncHashedWheelTimer asyncHashedWheelTimer,
+                                     Interests sessionInterests) {
         this.sessionServerConfig = sessionServerConfig;
         this.clientNodeService = clientNodeService;
         this.executorManager = executorManager;
         this.boltExchange = boltExchange;
         this.receivedDataMultiPushTaskStrategy = receivedDataMultiPushTaskStrategy;
         this.asyncHashedWheelTimer = asyncHashedWheelTimer;
+        this.sessionInterests = sessionInterests;
     }
 
     @Override
     public void execute() {
-
-        if (sessionServerConfig.isStopPushSwitch()) {
-            LOGGER
-                .info(
-                    "Stop Push ReceivedData with switch on! dataId: {},group: {},Instance: {}, url: {}",
-                    receivedData.getDataId(), receivedData.getGroup(),
-                    receivedData.getInstanceId(), url);
-            return;
-        }
-
-        Object receivedDataPush = receivedDataMultiPushTaskStrategy.convert2PushData(receivedData,
-            url);
-
-        CallbackHandler callbackHandler = new CallbackHandler() {
-            @Override
-            public void onCallback(Channel channel, Object message) {
+        Object receivedDataPush = null;
+        try {
+            if (sessionServerConfig.isStopPushSwitch()) {
                 LOGGER
                     .info(
-                        "Push ReceivedData success! dataId:{},group:{},Instance:{},version:{},url: {},dataPush:{}",
+                        "Stop Push ReceivedData with switch on! dataId: {},group: {},Instance: {}, url: {}",
                         receivedData.getDataId(), receivedData.getGroup(),
-                        receivedData.getInstanceId(), receivedData.getVersion(), url, dataPush);
-
-                if (taskClosure != null) {
-                    confirmCallBack(true);
-                }
+                        receivedData.getInstanceId(), url);
+                return;
             }
 
-            @Override
-            public void onException(Channel channel, Throwable exception) {
-                LOGGER
-                    .error(
-                        "Push ReceivedData error! dataId:{},group:{},Instance:{},version:{},url: {},dataPush:{}",
-                        receivedData.getDataId(), receivedData.getGroup(),
-                        receivedData.getInstanceId(), receivedData.getVersion(), url, dataPush,
-                        exception);
+            receivedDataPush = receivedDataMultiPushTaskStrategy
+                .convert2PushData(receivedData, url);
 
-                if (taskClosure != null) {
-                    confirmCallBack(false);
-                    throw new RuntimeException("Push ReceivedData got exception from callback!");
-                } else {
-                    retrySendReceiveData(new PushDataRetryRequest(receivedDataPush, url));
+            final Object finalReceivedDataPush = receivedDataPush;
+            CallbackHandler callbackHandler = new CallbackHandler() {
+                @Override
+                public void onCallback(Channel channel, Object message) {
+
+                    if (taskClosure != null) {
+                        confirmCallBack(true);
+                    }
+                    LOGGER
+                        .info(
+                            "Push ReceivedData success! dataId:{},group:{},Instance:{},version:{},url: {},dataPush:{}",
+                            receivedData.getDataId(), receivedData.getGroup(),
+                            receivedData.getInstanceId(), receivedData.getVersion(), url, dataPush);
                 }
-            }
-        };
 
-        try {
+                @Override
+                public void onException(Channel channel, Throwable exception) {
+                    try {
+                        LOGGER
+                            .error(
+                                "Push ReceivedData error! dataId:{},group:{},Instance:{},version:{},url: {},dataPush:{}",
+                                receivedData.getDataId(), receivedData.getGroup(),
+                                receivedData.getInstanceId(), receivedData.getVersion(), url,
+                                dataPush, exception);
+
+                        if (taskClosure != null) {
+                            throw new RuntimeException(
+                                "Push ReceivedData got exception from callback!");
+                        } else {
+                            retrySendReceiveData(new PushDataRetryRequest(finalReceivedDataPush,
+                                url));
+                        }
+                    } finally {
+                        if (taskClosure != null) {
+                            confirmCallBack(false);
+                        }
+                    }
+                }
+            };
+
             clientNodeService.pushWithCallback(receivedDataPush, url, callbackHandler);
-        } catch (Exception e) {
+        } catch (Throwable e) {
             if (taskClosure != null) {
                 confirmCallBack(false);
                 throw e;
@@ -156,36 +169,57 @@ public class ReceivedDataMultiPushTask extends AbstractSessionTask implements Ta
 
                 if (channel != null && channel.isConnected()) {
 
-                    asyncHashedWheelTimer.newTimeout(timeout ->  {
+                    asyncHashedWheelTimer.newTimeout(timeout -> {
                         try {
                             clientNodeService.pushWithCallback(infoPackage, targetUrl, new CallbackHandler() {
                                 @Override
                                 public void onCallback(Channel channel, Object message) {
-                                    LOGGER.info("Retry Push ReceivedData success! dataId:{}, group:{},url:{},taskId:{},dataPush:{},retryTimes:{}",
-                                            receivedData.getDataId(), receivedData.getGroup(), targetUrl,getTaskId(),dataPush,retryTimes);
+                                    LOGGER.info(
+                                            "Retry Push ReceivedData success! dataId:{}, group:{},url:{},taskId:{},dataPush:{},retryTimes:{}",
+                                            receivedData.getDataId(), receivedData.getGroup(), targetUrl, getTaskId(),
+                                            dataPush, retryTimes);
                                 }
 
                                 @Override
                                 public void onException(Channel channel, Throwable exception) {
-                                    LOGGER.error("Retry Push ReceivedData callback error! url:{}, dataId:{}, group:{},taskId:{},dataPush:{},retryTimes:{}", targetUrl,
-                                            receivedData.getDataId(), receivedData.getGroup(),getTaskId(),dataPush,retryTimes);
+                                    LOGGER.error(
+                                            "Retry Push ReceivedData callback error! url:{}, dataId:{}, group:{},taskId:{},dataPush:{},retryTimes:{}",
+                                            targetUrl, receivedData.getDataId(), receivedData.getGroup(), getTaskId(),
+                                            dataPush, retryTimes);
                                     retrySendReceiveData(pushDataRetryRequest);
                                 }
                             });
 
                         } catch (Exception e) {
-                            LOGGER.error("Retry Push ReceivedData error! url:{}, dataId:{}, group:{},taskId:{},dataPush:{},retryTimes:{}", targetUrl,
-                                    receivedData.getDataId(), receivedData.getGroup(),getTaskId(),dataPush,retryTimes);
+                            LOGGER.error(
+                                    "Retry Push ReceivedData error! url:{}, dataId:{}, group:{},taskId:{},dataPush:{},retryTimes:{}",
+                                    targetUrl, receivedData.getDataId(), receivedData.getGroup(), getTaskId(), dataPush,
+                                    retryTimes);
                             retrySendReceiveData(pushDataRetryRequest);
                         }
                     },getBlockTime(retryTimes),TimeUnit.MILLISECONDS);
                 } else {
-                    LOGGER.error("Retry Push ReceivedData error, connect be null or disconnected,stop retry!dataId:{}, group:{},url:{},taskId:{},dataPush:{},retryTimes:{}",
-                            receivedData.getDataId(), receivedData.getGroup(), targetUrl,getTaskId(),dataPush,retryTimes);
+                    LOGGER.error(
+                            "Retry Push ReceivedData error, connect be null or disconnected,stop retry!dataId:{}, group:{},url:{},taskId:{},dataPush:{},retryTimes:{}",
+                            receivedData.getDataId(), receivedData.getGroup(), targetUrl, getTaskId(), dataPush,
+                            retryTimes);
                 }
             } else {
-                LOGGER.error("Retry Push ReceivedData times have exceeded!dataId:{}, group:{},url:{},taskId:{},dataPush:{},retryTimes:{}",
-                        receivedData.getDataId(), receivedData.getGroup(), targetUrl,getTaskId(),dataPush,retryTimes);
+                //set sessionInterests dataInfoId version zero
+                DataInfo dataInfo = new DataInfo(receivedData.getInstanceId(), receivedData.getDataId(),
+                        receivedData.getGroup());
+                boolean result = sessionInterests.checkAndUpdateInterestVersionZero(receivedData.getSegment(), dataInfo.getDataInfoId());
+                if (result) {
+                    LOGGER.warn("Retry Push ReceivedData times have exceeded,set sessionInterests dataInfoId version zero! url:{},taskId:{},dataPush:{},retryTimes:{},dataCenter:{},dataInfoId:{}!",
+                            targetUrl,getTaskId(),dataPush,retryTimes,
+                            receivedData.getSegment(),
+                            dataInfo.getDataInfoId());
+                } else {
+                    LOGGER.warn("Retry Push ReceivedData times have exceeded,but set sessionInterests dataInfoId version zero fail!url:{},taskId:{},dataPush:{},retryTimes:{},dataCenter:{},dataInfoId:{}!",
+                            targetUrl,getTaskId(),dataPush,retryTimes,
+                            receivedData.getSegment(),
+                            dataInfo.getDataInfoId());
+                }
             }
         }
     }

@@ -16,6 +16,16 @@
  */
 package com.alipay.sofa.registry.server.session.strategy.impl;
 
+import java.net.InetSocketAddress;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+
+import org.springframework.beans.factory.annotation.Autowired;
+
 import com.alipay.sofa.registry.common.model.Node;
 import com.alipay.sofa.registry.common.model.constants.ValueConstants;
 import com.alipay.sofa.registry.common.model.dataserver.Datum;
@@ -27,6 +37,7 @@ import com.alipay.sofa.registry.core.model.ScopeEnum;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
+import com.alipay.sofa.registry.server.session.cache.CacheAccessException;
 import com.alipay.sofa.registry.server.session.cache.CacheService;
 import com.alipay.sofa.registry.server.session.cache.DatumKey;
 import com.alipay.sofa.registry.server.session.cache.Key;
@@ -35,18 +46,11 @@ import com.alipay.sofa.registry.server.session.converter.ReceivedDataConverter;
 import com.alipay.sofa.registry.server.session.node.NodeManager;
 import com.alipay.sofa.registry.server.session.node.NodeManagerFactory;
 import com.alipay.sofa.registry.server.session.scheduler.task.Constant;
+import com.alipay.sofa.registry.server.session.store.Interests;
 import com.alipay.sofa.registry.server.session.strategy.SubscriberMultiFetchTaskStrategy;
 import com.alipay.sofa.registry.server.session.utils.DatumUtils;
 import com.alipay.sofa.registry.task.listener.TaskEvent;
 import com.alipay.sofa.registry.task.listener.TaskListenerManager;
-
-import java.net.InetSocketAddress;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
 
 /**
  * @author xuanbei
@@ -60,6 +64,9 @@ public class DefaultSubscriberMultiFetchTaskStrategy implements SubscriberMultiF
     private static final Logger LOGGER     = LoggerFactory
                                                .getLogger(DefaultSubscriberMultiFetchTaskStrategy.class);
 
+    @Autowired
+    private Interests           sessionInterests;
+
     @Override
     public void doSubscriberMultiFetchTask(SessionServerConfig sessionServerConfig,
                                            TaskListenerManager taskListenerManager,
@@ -69,39 +76,29 @@ public class DefaultSubscriberMultiFetchTaskStrategy implements SubscriberMultiF
         Map<String/*dataCenter*/, Datum> datumMap = getDatumsCache(fetchDataInfoId,
             sessionCacheService);
 
-        if (datumMap != null) {
+        for (ScopeEnum scopeEnum : ScopeEnum.values()) {
+            Map<InetSocketAddress, Map<String, Subscriber>> map = getPushSubscribers(scopeEnum,
+                subscribers);
 
-            for (ScopeEnum scopeEnum : ScopeEnum.values()) {
-                Map<InetSocketAddress, Map<String, Subscriber>> map = getPushSubscribers(scopeEnum,
-                    subscribers);
+            if (map != null && !map.isEmpty()) {
+                for (Map.Entry<InetSocketAddress, Map<String, Subscriber>> entry : map.entrySet()) {
+                    Map<String, Subscriber> subscriberMap = entry.getValue();
+                    if (subscriberMap != null && !subscriberMap.isEmpty()) {
+                        Subscriber subscriber = subscriberMap.values().iterator().next();
+                        boolean isOldVersion = !BaseInfo.ClientVersion.StoreData.equals(subscriber
+                            .getClientVersion());
 
-                if (map != null && !map.isEmpty()) {
-                    for (Map.Entry<InetSocketAddress, Map<String, Subscriber>> entry : map
-                        .entrySet()) {
-                        Map<String, Subscriber> subscriberMap = entry.getValue();
-                        if (subscriberMap != null && !subscriberMap.isEmpty()) {
-                            Subscriber subscriber = subscriberMap.values().iterator().next();
-                            boolean isOldVersion = !BaseInfo.ClientVersion.StoreData
-                                .equals(subscriber.getClientVersion());
-
-                            if (isOldVersion) {
-                                fireUserDataPushTaskCloud(entry.getKey(), datumMap,
-                                    subscriberMap.values(), subscriber, taskListenerManager);
-                            } else {
-                                fireReceivedDataPushTaskCloud(datumMap,
-                                    new ArrayList(subscriberMap.keySet()), subscriber,
-                                    taskListenerManager);
-                            }
+                        if (isOldVersion) {
+                            fireUserDataPushTaskCloud(entry.getKey(), datumMap,
+                                subscriberMap.values(), subscriber, taskListenerManager);
+                        } else {
+                            fireReceivedDataPushTaskCloud(datumMap,
+                                new ArrayList(subscriberMap.keySet()), subscriber,
+                                taskListenerManager);
                         }
                     }
                 }
             }
-
-        } else {
-            //TODO EMPTY push empty
-            LOGGER.error(
-                "SubscriberMultiFetchTask cloud Get publisher data error,which dataInfoId:{}",
-                fetchDataInfoId);
         }
     }
 
@@ -116,7 +113,18 @@ public class DefaultSubscriberMultiFetchTaskStrategy implements SubscriberMultiF
                             new DatumKey(fetchDataInfoId, dataCenter))).
                     collect(Collectors.toList());
 
-            Map<Key, Value> values = sessionCacheService.getValues(keys);
+            Map<Key, Value> values = null;
+            try {
+                values = sessionCacheService.getValues(keys);
+            } catch (CacheAccessException e) {
+                // The version is set to 0, so that when session checks the datum versions regularly, it will actively re-query the data.
+                for (String dataCenter : dataCenters) {
+                    boolean result = sessionInterests.checkAndUpdateInterestVersionZero(dataCenter, fetchDataInfoId);
+                    LOGGER.error(String.format(
+                            "error when access cache, so checkAndUpdateInterestVersionZero(return %s): %s", result,
+                            e.getMessage()), e);
+                }
+            }
 
             if (values != null) {
                 values.forEach((key, value) -> {
@@ -140,8 +148,7 @@ public class DefaultSubscriberMultiFetchTaskStrategy implements SubscriberMultiF
         subscribers.forEach((subscriber) -> {
 
             if (subscriber.getScope().equals(scopeEnum)) {
-                InetSocketAddress address = new InetSocketAddress(
-                        subscriber.getSourceAddress().getIpAddress(),
+                InetSocketAddress address = new InetSocketAddress(subscriber.getSourceAddress().getIpAddress(),
                         subscriber.getSourceAddress().getPort());
                 Map<String, Subscriber> map = payload.computeIfAbsent(address, k -> new HashMap<>());
                 map.put(subscriber.getRegisterId(), subscriber);

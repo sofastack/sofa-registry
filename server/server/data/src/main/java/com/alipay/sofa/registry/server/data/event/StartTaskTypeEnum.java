@@ -34,7 +34,7 @@ public enum StartTaskTypeEnum {
     CONNECT_DATA,
 
     /**
-     * ReNewNodeTask
+     * RenewNodeTask
      */
     RENEW,
 

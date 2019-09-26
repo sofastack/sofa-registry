@@ -16,6 +16,9 @@
  */
 package com.alipay.sofa.registry.server.meta.registry;
 
+import java.util.Collection;
+import java.util.List;
+
 import com.alipay.sofa.registry.common.model.Node;
 import com.alipay.sofa.registry.common.model.Node.NodeType;
 import com.alipay.sofa.registry.common.model.metaserver.DataCenterNodes;
@@ -24,9 +27,6 @@ import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.server.meta.bootstrap.ServiceFactory;
 import com.alipay.sofa.registry.server.meta.store.StoreService;
-
-import java.util.Collection;
-import java.util.List;
 
 /**
  * factory func to operate StoreService
@@ -73,9 +73,9 @@ public class MetaServerRegistry implements Registry<Node> {
     }
 
     @Override
-    public void reNew(Node node, int duration) {
+    public void renew(Node node, int duration) {
         StoreService storeService = ServiceFactory.getStoreService(node.getNodeType());
-        storeService.reNew(node, duration);
+        storeService.renew(node, duration);
     }
 
     @Override

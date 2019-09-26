@@ -38,7 +38,7 @@ public class ClientsOpenResourceTest extends BaseIntegrationTest {
         String value = "test client off";
         PublisherRegistration registration = new PublisherRegistration(dataId);
         registryClient1.register(registration, value);
-        Thread.sleep(1000L);
+        Thread.sleep(2000L);
 
         String countResult = dataChannel.getWebTarget().path("digest/datum/count")
             .request(APPLICATION_JSON).get(String.class);

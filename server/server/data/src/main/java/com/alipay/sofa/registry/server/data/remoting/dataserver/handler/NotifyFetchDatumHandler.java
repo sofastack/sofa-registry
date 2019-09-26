@@ -23,6 +23,7 @@ import com.alipay.sofa.registry.common.model.Node;
 import com.alipay.sofa.registry.common.model.dataserver.Datum;
 import com.alipay.sofa.registry.common.model.dataserver.GetDataRequest;
 import com.alipay.sofa.registry.common.model.dataserver.NotifyFetchDatumRequest;
+import com.alipay.sofa.registry.common.model.store.Publisher;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.remoting.Channel;
@@ -37,6 +38,7 @@ import com.alipay.sofa.registry.server.data.change.event.DataChangeEventCenter;
 import com.alipay.sofa.registry.server.data.executor.ExecutorFactory;
 import com.alipay.sofa.registry.server.data.remoting.dataserver.DataServerConnectionFactory;
 import com.alipay.sofa.registry.server.data.remoting.handler.AbstractServerHandler;
+import com.alipay.sofa.registry.server.data.renew.LocalDataServerCleanHandler;
 import com.alipay.sofa.registry.server.data.util.TimeUtil;
 import com.alipay.sofa.registry.util.ParaCheckUtil;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -64,13 +66,16 @@ public class NotifyFetchDatumHandler extends AbstractServerHandler<NotifyFetchDa
     private DataChangeEventCenter       dataChangeEventCenter;
 
     @Autowired
-    private DataServerConfig            dataServerConfig;
-
-    @Autowired
     private Exchange                    boltExchange;
 
     @Autowired
-    private DataServerConfig            dataServerBootstrapConfig;
+    private DataServerConfig            dataServerConfig;
+
+    @Autowired
+    private DatumCache                  datumCache;
+
+    @Autowired
+    private LocalDataServerCleanHandler localDataServerCleanHandler;
 
     @Override
     public void checkParam(NotifyFetchDatumRequest request) throws RuntimeException {
@@ -80,15 +85,18 @@ public class NotifyFetchDatumHandler extends AbstractServerHandler<NotifyFetchDa
     @Override
     public Object doHandle(Channel channel, NotifyFetchDatumRequest request) {
         ParaCheckUtil.checkNotBlank(request.getIp(), "ip");
+
+        //receive other data NotifyFetchDatumRequest,must delay clean datum task until fetch all datum
+        localDataServerCleanHandler.reset();
+
         Map<String, Map<String, Long>> versionMap = request.getDataVersionMap();
         long version = request.getChangeVersion();
         String ip = request.getIp();
         if (version >= dataServerCache.getCurVersion()) {
             if (versionMap.isEmpty()) {
-                LOGGER
-                        .info(
-                                "[NotifyFetchDatumHandler] get changeVersion map is empty,change version is {},current version is {},ip is {}",
-                                version, dataServerCache.getCurVersion(), ip);
+                LOGGER.info(
+                        "[NotifyFetchDatumHandler] get changeVersion map is empty,change version is {},current version is {},ip is {}",
+                        version, dataServerCache.getCurVersion(), ip);
                 dataServerCache.synced(version, ip);
             } else {
                 ExecutorFactory.getCommonExecutor().execute(() -> {
@@ -97,7 +105,7 @@ public class NotifyFetchDatumHandler extends AbstractServerHandler<NotifyFetchDa
                         Map<String, Long> map = dataCenterEntry.getValue();
                         for (Entry<String, Long> dataInfoEntry : map.entrySet()) {
                             String dataInfoId = dataInfoEntry.getKey();
-                            Datum datum = DatumCache.get(dataCenter, dataInfoId);
+                            Datum datum = datumCache.get(dataCenter, dataInfoId);
                             if (datum != null) {
                                 long inVersion = dataInfoEntry.getValue();
                                 long currentVersion = datum.getVersion();
@@ -121,8 +129,7 @@ public class NotifyFetchDatumHandler extends AbstractServerHandler<NotifyFetchDa
                 });
             }
         } else {
-            LOGGER.info(
-                    "[NotifyFetchDatumHandler] ignore notify because changeVersion {} is less than {},ip is {}",
+            LOGGER.info("[NotifyFetchDatumHandler] ignore notify because changeVersion {} is less than {},ip is {}",
                     version, dataServerCache.getCurVersion(), ip);
         }
         return CommonResponse.buildSuccessResponse();
@@ -136,23 +143,22 @@ public class NotifyFetchDatumHandler extends AbstractServerHandler<NotifyFetchDa
      * @param dataInfoId
      */
     private void fetchDatum(String targetIp, String dataCenter, String dataInfoId) {
-        while ((dataServerCache.getDataServers(dataServerConfig.getLocalDataCenter()).keySet())
-            .contains(targetIp)) {
+        while (dataServerConnectionFactory.getConnection(targetIp) != null) {
             Connection connection = dataServerConnectionFactory.getConnection(targetIp);
             if (connection == null || !connection.isFine()) {
                 throw new RuntimeException(String.format("connection of %s is not available",
                     targetIp));
             }
             try {
-                Server syncServer = boltExchange.getServer(dataServerBootstrapConfig
-                    .getSyncDataPort());
+                Server syncServer = boltExchange.getServer(dataServerConfig.getSyncDataPort());
                 GenericResponse<Map<String, Datum>> response = (GenericResponse<Map<String, Datum>>) syncServer
                     .sendSync(syncServer.getChannel(connection.getRemoteAddress()),
                         new GetDataRequest(dataInfoId, dataCenter),
-                        dataServerBootstrapConfig.getRpcTimeout());
+                        dataServerConfig.getRpcTimeout());
                 if (response.isSuccess()) {
                     Datum datum = response.getData().get(dataCenter);
                     if (datum != null) {
+                        processDatum(datum);
                         dataChangeEventCenter.sync(DataChangeTypeEnum.COVER,
                             DataSourceTypeEnum.BACKUP, datum);
                         LOGGER
@@ -167,6 +173,16 @@ public class NotifyFetchDatumHandler extends AbstractServerHandler<NotifyFetchDa
             } catch (Exception e) {
                 LOGGER.error("[NotifyFetchDatumHandler] fetch datum error", e);
                 TimeUtil.randomDelay(500);
+            }
+        }
+    }
+
+    private void processDatum(Datum datum) {
+        if (datum != null) {
+            Map<String, Publisher> publisherMap = datum.getPubMap();
+
+            if (publisherMap != null && !publisherMap.isEmpty()) {
+                publisherMap.forEach((registerId, publisher) -> Publisher.processPublisher(publisher));
             }
         }
     }

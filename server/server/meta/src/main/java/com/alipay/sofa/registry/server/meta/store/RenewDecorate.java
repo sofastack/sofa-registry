@@ -21,7 +21,7 @@ import java.io.Serializable;
 /**
  * heartbeat info for node
  * @author shangyu.wh
- * @version $Id: ReNewer.java, v 0.1 2018-01-16 17:10 shangyu.wh Exp $
+ * @version $Id: Renewer.java, v 0.1 2018-01-16 17:10 shangyu.wh Exp $
  */
 public class RenewDecorate<T> implements Serializable {
 
@@ -66,7 +66,7 @@ public class RenewDecorate<T> implements Serializable {
     /**
      * refresh lastUpdateTimestamp
      */
-    public void reNew() {
+    public void renew() {
         lastUpdateTimestamp = System.currentTimeMillis() + duration;
     }
 
@@ -74,7 +74,7 @@ public class RenewDecorate<T> implements Serializable {
      * refresh lastUpdateTimestamp by durationSECS
      * @param durationSECS
      */
-    public void reNew(long durationSECS) {
+    public void renew(long durationSECS) {
         lastUpdateTimestamp = System.currentTimeMillis() + durationSECS * 1000;
     }
 

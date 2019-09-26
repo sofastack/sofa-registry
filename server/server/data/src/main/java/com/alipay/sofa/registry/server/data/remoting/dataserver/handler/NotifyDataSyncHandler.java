@@ -60,7 +60,7 @@ public class NotifyDataSyncHandler extends AbstractClientHandler<NotifyDataSyncR
                                                                                   .getLogger(NotifyDataSyncHandler.class);
 
     @Autowired
-    private DataServerConfig                                      dataServerBootstrapConfig;
+    private DataServerConfig                                      dataServerConfig;
 
     @Autowired
     private GetSyncDataHandler                                    getSyncDataHandler;
@@ -78,6 +78,9 @@ public class NotifyDataSyncHandler extends AbstractClientHandler<NotifyDataSyncR
 
     @Autowired
     private DataNodeStatus                                        dataNodeStatus;
+
+    @Autowired
+    private DatumCache                                            datumCache;
 
     private static final BlockingQueue<SyncDataRequestForWorking> noWorkQueue = new LinkedBlockingQueue<>();
 
@@ -98,23 +101,21 @@ public class NotifyDataSyncHandler extends AbstractClientHandler<NotifyDataSyncR
         return CommonResponse.buildSuccessResponse();
     }
 
-    private void executorRequest(Connection connection,NotifyDataSyncRequest request){
+    private void executorRequest(Connection connection, NotifyDataSyncRequest request) {
         executor.execute(() -> {
             String dataInfoId = request.getDataInfoId();
             String dataCenter = request.getDataCenter();
-            Datum datum = DatumCache.get(dataCenter, dataInfoId);
+            Datum datum = datumCache.get(dataCenter, dataInfoId);
             Long version = (datum == null) ? null : datum.getVersion();
             Long requestVersion = request.getVersion();
             if (version == null || requestVersion == 0L || version < requestVersion) {
-                LOGGER.info(
-                        "[NotifyDataSyncProcessor] begin get sync data, currentVersion={},request={}", version,
+                LOGGER.info("[NotifyDataSyncProcessor] begin get sync data, currentVersion={},request={}", version,
                         request);
-                getSyncDataHandler
-                        .syncData(new SyncDataCallback(getSyncDataHandler, connection, new SyncDataRequest(dataInfoId,
-                                dataCenter, version, request.getDataSourceType()), dataChangeEventCenter));
+                getSyncDataHandler.syncData(new SyncDataCallback(getSyncDataHandler, connection,
+                        new SyncDataRequest(dataInfoId, dataCenter, version, request.getDataSourceType()),
+                        dataChangeEventCenter));
             } else {
-                LOGGER.info(
-                        "[NotifyDataSyncHandler] not need to sync data, version={}", version);
+                LOGGER.info("[NotifyDataSyncHandler] not need to sync data, currentVersion={},request={}", version,request);
             }
         });
     }
@@ -152,11 +153,10 @@ public class NotifyDataSyncHandler extends AbstractClientHandler<NotifyDataSyncR
     public Executor getExecutor() {
         if (notifyExecutor == null) {
             notifyExecutor = new ThreadPoolExecutorDataServer("NotifyDataSyncProcessorExecutor",
-                dataServerBootstrapConfig.getNotifyDataSyncExecutorMinPoolSize(),
-                dataServerBootstrapConfig.getNotifyDataSyncExecutorMaxPoolSize(),
-                dataServerBootstrapConfig.getNotifyDataSyncExecutorKeepAliveTime(),
-                TimeUnit.SECONDS, new ArrayBlockingQueue<>(
-                    dataServerBootstrapConfig.getNotifyDataSyncExecutorQueueSize()),
+                dataServerConfig.getNotifyDataSyncExecutorMinPoolSize(),
+                dataServerConfig.getNotifyDataSyncExecutorMaxPoolSize(),
+                dataServerConfig.getNotifyDataSyncExecutorKeepAliveTime(), TimeUnit.SECONDS,
+                new ArrayBlockingQueue<>(dataServerConfig.getNotifyDataSyncExecutorQueueSize()),
                 new NamedThreadFactory("DataServer-NotifyDataSyncProcessor-executor", true));
         }
         return notifyExecutor;
