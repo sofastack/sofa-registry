@@ -25,16 +25,16 @@ import java.util.concurrent.TimeUnit;
 /**
  *
  * @author shangyu.wh
- * @version $Id: ReNewNodeTask.java, v 0.1 2018-04-02 20:56 shangyu.wh Exp $
+ * @version $Id: RenewNodeTask.java, v 0.1 2018-04-02 20:56 shangyu.wh Exp $
  */
-public class ReNewNodeTask extends AbstractTask {
+public class RenewNodeTask extends AbstractTask {
 
     @Autowired
     private IMetaServerService metaServerService;
 
     @Override
     public void handle() {
-        metaServerService.reNewNodeTask();
+        metaServerService.renewNodeTask();
     }
 
     @Override

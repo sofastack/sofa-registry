@@ -16,19 +16,28 @@
  */
 package com.alipay.sofa.registry.server.data.remoting.sessionserver.handler;
 
+import java.util.Map;
+import java.util.concurrent.Executor;
+import java.util.concurrent.ThreadPoolExecutor;
+
+import org.springframework.beans.factory.annotation.Autowired;
+
 import com.alipay.sofa.registry.common.model.CommonResponse;
 import com.alipay.sofa.registry.common.model.Node;
+import com.alipay.sofa.registry.common.model.dataserver.Datum;
 import com.alipay.sofa.registry.common.model.dataserver.UnPublishDataRequest;
+import com.alipay.sofa.registry.common.model.store.Publisher;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.remoting.Channel;
 import com.alipay.sofa.registry.server.data.bootstrap.DataServerConfig;
+import com.alipay.sofa.registry.server.data.cache.DatumCache;
 import com.alipay.sofa.registry.server.data.cache.UnPublisher;
 import com.alipay.sofa.registry.server.data.change.event.DataChangeEventCenter;
 import com.alipay.sofa.registry.server.data.remoting.handler.AbstractServerHandler;
 import com.alipay.sofa.registry.server.data.remoting.sessionserver.forward.ForwardService;
+import com.alipay.sofa.registry.server.data.renew.DatumLeaseManager;
 import com.alipay.sofa.registry.util.ParaCheckUtil;
-import org.springframework.beans.factory.annotation.Autowired;
 
 /**
  * processor to unPublish specific data
@@ -50,6 +59,20 @@ public class UnPublishDataHandler extends AbstractServerHandler<UnPublishDataReq
     @Autowired
     private DataServerConfig      dataServerConfig;
 
+    @Autowired
+    private DatumLeaseManager     datumLeaseManager;
+
+    @Autowired
+    private DatumCache            datumCache;
+
+    @Autowired
+    private ThreadPoolExecutor    publishProcessorExecutor;
+
+    @Override
+    public Executor getExecutor() {
+        return publishProcessorExecutor;
+    }
+
     @Override
     public void checkParam(UnPublishDataRequest request) throws RuntimeException {
         ParaCheckUtil.checkNotBlank(request.getDataInfoId(), "UnPublishDataRequest.dataInfoId");
@@ -58,7 +81,7 @@ public class UnPublishDataHandler extends AbstractServerHandler<UnPublishDataReq
 
     @Override
     public Object doHandle(Channel channel, UnPublishDataRequest request) {
-        if (forwardService.needForward(request.getDataInfoId())) {
+        if (forwardService.needForward()) {
             LOGGER.warn("[forward] UnPublish request refused, request: {}", request);
             CommonResponse response = new CommonResponse();
             response.setSuccess(false);
@@ -69,7 +92,33 @@ public class UnPublishDataHandler extends AbstractServerHandler<UnPublishDataReq
         dataChangeEventCenter.onChange(
             new UnPublisher(request.getDataInfoId(), request.getRegisterId(), request
                 .getRegisterTimestamp()), dataServerConfig.getLocalDataCenter());
+
+        // Attempt to get connectId from datumCache (Datum may not exist), and record the renew timestamp
+        String connectId = getConnectId(request);
+        if (connectId != null) {
+            datumLeaseManager.renew(connectId);
+        }
+
         return CommonResponse.buildSuccessResponse();
+    }
+
+    /**
+     * get connectId from datumCache
+     */
+    private String getConnectId(UnPublishDataRequest request) {
+        String dataInfoId = request.getDataInfoId();
+        String dataCenter = dataServerConfig.getLocalDataCenter();
+        Datum datum = datumCache.get(dataCenter, dataInfoId);
+        if (datum != null) {
+            Map<String, Publisher> pubMap = datum.getPubMap();
+            if (pubMap != null) {
+                Publisher publisher = pubMap.get(request.getRegisterId());
+                if (publisher != null) {
+                    return publisher.getSourceAddress().getAddressString();
+                }
+            }
+        }
+        return null;
     }
 
     @Override

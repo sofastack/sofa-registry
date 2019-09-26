@@ -30,9 +30,9 @@ public interface CacheService {
      * @param key
      * @return
      */
-    Value getValue(Key key);
+    Value getValue(Key key) throws CacheAccessException;
 
-    Map<Key, Value> getValues(final Iterable<Key> keys);
+    Map<Key, Value> getValues(final Iterable<Key> keys) throws CacheAccessException;
 
     /**
      * invalidate cache by keys

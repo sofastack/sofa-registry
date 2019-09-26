@@ -16,12 +16,13 @@
  */
 package com.alipay.sofa.registry.common.model.dataserver;
 
-import com.alipay.sofa.registry.common.model.store.Publisher;
-import com.alipay.sofa.registry.common.model.store.WordCache;
-
 import java.io.Serializable;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+
+import com.alipay.sofa.registry.common.model.store.Publisher;
+import com.alipay.sofa.registry.common.model.store.WordCache;
+import com.alipay.sofa.registry.util.DatumVersionUtil;
 
 /**
  * datum store in dataserver
@@ -96,7 +97,7 @@ public class Datum implements Serializable {
     }
 
     public void updateVersion() {
-        this.version = System.currentTimeMillis();
+        this.version = DatumVersionUtil.nextId();
     }
 
     /**

@@ -23,16 +23,16 @@ package com.alipay.sofa.registry.server.data.remoting.sessionserver.disconnect;
  */
 public class ClientDisconnectEvent extends DisconnectEvent {
 
-    private String host;
+    private String connectId;
 
     /**
      * constructor
-     * @param host
+     * @param connectId
      * @param registerTimestamp
      * @param timeoutMs
      */
-    public ClientDisconnectEvent(String host, long registerTimestamp, int timeoutMs) {
-        this.host = host;
+    public ClientDisconnectEvent(String connectId, long registerTimestamp, int timeoutMs) {
+        this.connectId = connectId;
         setRegisterTimestamp(registerTimestamp);
         setGmtOccur(System.currentTimeMillis());
         setTimeoutMs(timeoutMs);
@@ -40,12 +40,12 @@ public class ClientDisconnectEvent extends DisconnectEvent {
     }
 
     /**
-     * Getter method for property <tt>host</tt>.
+     * Getter method for property <tt>connectId</tt>.
      *
-     * @return property value of host
+     * @return property value of connectId
      */
-    public String getHost() {
-        return host;
+    public String getConnectId() {
+        return connectId;
     }
 
 }

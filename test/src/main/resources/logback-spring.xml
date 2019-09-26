@@ -4,14 +4,14 @@
 <configuration>
     <property scope="local" name="LOG_HOME" value="${user.home}/logs/registry/temp"/>
     <property scope="local" name="LOG_ENCODE" value="UTF-8"/>
-    <springProperty scope="context" name="LOG_LEVEL" source="data.server.logging.level"/>
+    <springProperty scope="context" name="LOG_LEVEL" source="INFO"/>
 
     <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
         <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
             <Pattern>[%d{ISO8601}][%p][%t][%c{0}] - %m%n</Pattern>
         </encoder>
         <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
-            <level>WARN</level>
+            <level>INFO</level>
         </filter>
     </appender>
     <appender name="DEFAULT-SERVER-APPENDER" class="ch.qos.logback.core.rolling.RollingFileAppender">

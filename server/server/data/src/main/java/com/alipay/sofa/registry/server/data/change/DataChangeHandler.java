@@ -27,9 +27,9 @@ import com.alipay.sofa.registry.server.data.change.event.DataChangeEventCenter;
 import com.alipay.sofa.registry.server.data.change.event.DataChangeEventQueue;
 import com.alipay.sofa.registry.server.data.change.notify.IDataChangeNotifier;
 import com.alipay.sofa.registry.server.data.executor.ExecutorFactory;
-import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
 import java.util.List;
 import java.util.Map;
@@ -41,7 +41,7 @@ import java.util.concurrent.Executor;
  * @author qian.lqlq
  * @version $Id: DataChangeHandler.java, v 0.1 2017-12-07 18:44 qian.lqlq Exp $
  */
-public class DataChangeHandler implements InitializingBean {
+public class DataChangeHandler {
 
     private static final Logger       LOGGER       = LoggerFactory
                                                        .getLogger(DataChangeHandler.class);
@@ -49,31 +49,24 @@ public class DataChangeHandler implements InitializingBean {
     private static final Logger       LOGGER_START = LoggerFactory.getLogger("DATA-START-LOGS");
 
     @Autowired
-    private DataServerConfig          dataServerBootstrapConfig;
+    private DataServerConfig          dataServerConfig;
 
     @Autowired
     private DataChangeEventCenter     dataChangeEventCenter;
 
+    @Autowired
+    private DatumCache                datumCache;
+
     @Resource
     private List<IDataChangeNotifier> dataChangeNotifiers;
 
-    @Override
-    public void afterPropertiesSet() {
-        //init DataChangeEventCenter
-        dataChangeEventCenter.init(dataServerBootstrapConfig);
-        start();
-    }
-
-    /**
-     *
-     */
+    @PostConstruct
     public void start() {
         DataChangeEventQueue[] queues = dataChangeEventCenter.getQueues();
         int queueCount = queues.length;
-        Executor executor = ExecutorFactory.newFixedThreadPool(queueCount,
-                DataChangeHandler.class.getSimpleName());
-        Executor notifyExecutor = ExecutorFactory.newFixedThreadPool(
-                dataServerBootstrapConfig.getQueueCount() * 5, this.getClass().getSimpleName());
+        Executor executor = ExecutorFactory.newFixedThreadPool(queueCount, DataChangeHandler.class.getSimpleName());
+        Executor notifyExecutor = ExecutorFactory
+                .newFixedThreadPool(dataServerConfig.getQueueCount() * 5, this.getClass().getSimpleName());
         for (int idx = 0; idx < queueCount; idx++) {
             final DataChangeEventQueue dataChangeEventQueue = queues[idx];
             final String name = dataChangeEventQueue.getName();
@@ -112,66 +105,85 @@ public class DataChangeHandler implements InitializingBean {
 
         @Override
         public void run() {
-            Datum datum = changeData.getDatum();
-            String dataCenter = datum.getDataCenter();
-            String dataInfoId = datum.getDataInfoId();
-            long version = datum.getVersion();
-            DataSourceTypeEnum sourceType = changeData.getSourceType();
-            DataChangeTypeEnum changeType = changeData.getChangeType();
-            try {
-                if (sourceType == DataSourceTypeEnum.CLEAN) {
-                    if (DatumCache.cleanDatum(dataCenter, dataInfoId)) {
+            if (changeData instanceof SnapshotData) {
+                SnapshotData snapshotData = (SnapshotData) changeData;
+                String dataInfoId = snapshotData.getDataInfoId();
+                Map<String, Publisher> toBeDeletedPubMap = snapshotData.getToBeDeletedPubMap();
+                Map<String, Publisher> snapshotPubMap = snapshotData.getSnapshotPubMap();
+                Datum oldDatum = datumCache.get(dataServerConfig.getLocalDataCenter(), dataInfoId);
+                long lastVersion = oldDatum != null ? oldDatum.getVersion() : 0l;
+                Datum datum = datumCache.putSnapshot(dataInfoId, toBeDeletedPubMap, snapshotPubMap);
+                long version = datum != null ? datum.getVersion() : 0l;
+                LOGGER
+                    .info(
+                        "[DataChangeHandler][{}] snapshot handle,dataInfoId={}, version={}, lastVersion={}",
+                        name, dataInfoId, version, lastVersion);
+                notify(datum, changeData.getSourceType(), null);
+
+            } else {
+                Datum datum = changeData.getDatum();
+
+                String dataCenter = datum.getDataCenter();
+                String dataInfoId = datum.getDataInfoId();
+                DataSourceTypeEnum sourceType = changeData.getSourceType();
+                DataChangeTypeEnum changeType = changeData.getChangeType();
+
+                if (changeType == DataChangeTypeEnum.MERGE
+                    && sourceType != DataSourceTypeEnum.BACKUP
+                    && sourceType != DataSourceTypeEnum.SYNC) {
+                    //update version for pub or unPub merge to cache
+                    //if the version product before merge to cache,it may be cause small version override big one
+                    datum.updateVersion();
+                }
+
+                long version = datum.getVersion();
+
+                try {
+                    if (sourceType == DataSourceTypeEnum.CLEAN) {
+                        if (datumCache.cleanDatum(dataCenter, dataInfoId)) {
+                            LOGGER
+                                .info(
+                                    "[DataChangeHandler][{}] clean datum, dataCenter={}, dataInfoId={}, version={},sourceType={}, changeType={}",
+                                    name, dataCenter, dataInfoId, version, sourceType, changeType);
+                        }
+
+                    } else if (sourceType == DataSourceTypeEnum.PUB_TEMP) {
+                        notifyTempPub(datum, sourceType, changeType);
+
+                    } else {
+                        MergeResult mergeResult = datumCache.putDatum(changeType, datum);
+                        Long lastVersion = mergeResult.getLastVersion();
+
+                        if (lastVersion != null
+                            && lastVersion.longValue() == datumCache.ERROR_DATUM_VERSION) {
+                            LOGGER
+                                .error(
+                                    "[DataChangeHandler][{}] first put unPub datum into cache error, dataCenter={}, dataInfoId={}, version={}, sourceType={},isContainsUnPub={}",
+                                    name, dataCenter, dataInfoId, version, sourceType,
+                                    datum.isContainsUnPub());
+                            return;
+                        }
+
                         LOGGER
                             .info(
-                                "[DataChangeHandler][{}] clean datum, dataCenter={}, dataInfoId={}, version={},sourceType={}, changeType={}",
-                                name, dataCenter, dataInfoId, version, sourceType, changeType);
-                    }
-
-                } else {
-                    Long lastVersion = null;
-
-                    if (sourceType == DataSourceTypeEnum.PUB_TEMP) {
-                        notifyTempPub(datum, sourceType, changeType);
-                        return;
-                    }
-
-                    MergeResult mergeResult = DatumCache.putDatum(changeType, datum);
-                    lastVersion = mergeResult.getLastVersion();
-
-                    if (lastVersion != null
-                        && lastVersion.longValue() == DatumCache.ERROR_DATUM_VERSION) {
-                        LOGGER
-                            .error(
-                                "[DataChangeHandler][{}] first put unPub datum into cache error, dataCenter={}, dataInfoId={}, version={}, sourceType={},isContainsUnPub={}",
-                                name, dataCenter, dataInfoId, version, sourceType,
+                                "[DataChangeHandler][{}] datum handle,datum={},dataCenter={}, dataInfoId={}, version={}, lastVersion={}, sourceType={}, changeType={},changeFlag={},isContainsUnPub={}",
+                                name, datum.hashCode(), dataCenter, dataInfoId, version,
+                                lastVersion, sourceType, changeType, mergeResult.isChangeFlag(),
                                 datum.isContainsUnPub());
-                        return;
-                    }
-
-                    boolean changeFlag = mergeResult.isChangeFlag();
-
-                    LOGGER
-                        .info(
-                            "[DataChangeHandler][{}] datum handle,datum={},dataCenter={}, dataInfoId={}, version={}, lastVersion={}, sourceType={}, changeType={},changeFlag={},isContainsUnPub={}",
-                            name, datum.hashCode(), dataCenter, dataInfoId, version, lastVersion,
-                            sourceType, changeType, changeFlag, datum.isContainsUnPub());
-                    //lastVersion null means first add datum
-                    if (lastVersion == null || version != lastVersion) {
-                        if (changeFlag) {
-                            for (IDataChangeNotifier notifier : dataChangeNotifiers) {
-                                if (notifier.getSuitableSource().contains(sourceType)) {
-                                    notifier.notify(datum, lastVersion);
-                                }
+                        //lastVersion null means first add datum
+                        if (lastVersion == null || version != lastVersion) {
+                            if (mergeResult.isChangeFlag()) {
+                                notify(datum, sourceType, lastVersion);
                             }
                         }
                     }
+                } catch (Exception e) {
+                    LOGGER
+                        .error(
+                            "[DataChangeHandler][{}] put datum into cache error, dataCenter={}, dataInfoId={}, version={}, sourceType={},isContainsUnPub={}",
+                            name, dataCenter, dataInfoId, version, sourceType,
+                            datum.isContainsUnPub(), e);
                 }
-            } catch (Exception e) {
-                LOGGER
-                    .error(
-                        "[DataChangeHandler][{}] put datum into cache error, dataCenter={}, dataInfoId={}, version={}, sourceType={},isContainsUnPub={}",
-                        name, dataCenter, dataInfoId, version, sourceType, datum.isContainsUnPub(),
-                        e);
             }
 
         }
@@ -183,7 +195,7 @@ public class DataChangeHandler implements InitializingBean {
             String dataInfoId = datum.getDataInfoId();
             long version = datum.getVersion();
 
-            Datum existDatum = DatumCache.get(dataCenter, dataInfoId);
+            Datum existDatum = datumCache.get(dataCenter, dataInfoId);
             if (existDatum != null) {
                 Map<String, Publisher> cachePubMap = existDatum.getPubMap();
                 if (cachePubMap != null && !cachePubMap.isEmpty()) {
@@ -196,11 +208,16 @@ public class DataChangeHandler implements InitializingBean {
                     "[DataChangeHandler][{}] datum handle temp pub,datum={},dataCenter={}, dataInfoId={}, version={}, sourceType={}, changeType={}",
                     name, datum.hashCode(), dataCenter, dataInfoId, version, sourceType, changeType);
 
+            notify(datum, sourceType, null);
+        }
+
+        private void notify(Datum datum, DataSourceTypeEnum sourceType, Long lastVersion) {
             for (IDataChangeNotifier notifier : dataChangeNotifiers) {
                 if (notifier.getSuitableSource().contains(sourceType)) {
-                    notifier.notify(datum, null);
+                    notifier.notify(datum, lastVersion);
                 }
             }
         }
     }
+
 }

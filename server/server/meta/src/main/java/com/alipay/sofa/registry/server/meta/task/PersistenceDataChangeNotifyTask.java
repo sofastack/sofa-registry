@@ -20,6 +20,7 @@ import com.alipay.sofa.registry.common.model.Node.NodeType;
 import com.alipay.sofa.registry.common.model.metaserver.NotifyProvideDataChange;
 import com.alipay.sofa.registry.server.meta.bootstrap.MetaServerConfig;
 import com.alipay.sofa.registry.server.meta.bootstrap.ServiceFactory;
+import com.alipay.sofa.registry.server.meta.node.DataNodeService;
 import com.alipay.sofa.registry.server.meta.node.SessionNodeService;
 import com.alipay.sofa.registry.task.listener.TaskEvent;
 
@@ -32,6 +33,8 @@ public class PersistenceDataChangeNotifyTask extends AbstractMetaServerTask {
 
     private final SessionNodeService sessionNodeService;
 
+    private final DataNodeService    dataNodeService;
+
     final private MetaServerConfig   metaServerConfig;
 
     private NotifyProvideDataChange  notifyProvideDataChange;
@@ -40,11 +43,17 @@ public class PersistenceDataChangeNotifyTask extends AbstractMetaServerTask {
         this.metaServerConfig = metaServerConfig;
         this.sessionNodeService = (SessionNodeService) ServiceFactory
             .getNodeService(NodeType.SESSION);
+
+        this.dataNodeService = (DataNodeService) ServiceFactory.getNodeService(NodeType.DATA);
     }
 
     @Override
     public void execute() {
-        sessionNodeService.notifyProvideDataChange(notifyProvideDataChange);
+        if (notifyProvideDataChange.getNodeType() == NodeType.DATA) {
+            dataNodeService.notifyProvideDataChange(notifyProvideDataChange);
+        } else {
+            sessionNodeService.notifyProvideDataChange(notifyProvideDataChange);
+        }
     }
 
     @Override

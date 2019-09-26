@@ -167,7 +167,7 @@ public class MetaStoreService implements StoreService<MetaNode> {
     }
 
     @Override
-    public void reNew(MetaNode node, int duration) {
+    public void renew(MetaNode node, int duration) {
     }
 
     @Override
@@ -335,9 +335,8 @@ public class MetaStoreService implements StoreService<MetaNode> {
         taskEvent.setAttribute(Constant.PUSH_TARGET_TYPE, NodeType.DATA);
         taskEvent.setAttribute(Constant.PUSH_TARGET_OPERATOR_TYPE, nodeOperate);
 
-        LOGGER.info("send " + taskEvent.getTaskType() + " NodeType:" + NodeType.DATA + " Operator:"
-                    + nodeOperate);
-
+        LOGGER.info("send {} NodeType:{} Operator:{}", taskEvent.getTaskType(), NodeType.DATA,
+            nodeOperate);
         taskListenerManager.sendTaskEvent(taskEvent);
     }
 
@@ -347,8 +346,8 @@ public class MetaStoreService implements StoreService<MetaNode> {
         TaskEvent taskEvent = new TaskEvent(nodeChangeResult, TaskType.DATA_NODE_CHANGE_PUSH_TASK);
         taskEvent.setAttribute(Constant.PUSH_TARGET_TYPE, NodeType.SESSION);
         taskEvent.setAttribute(Constant.PUSH_TARGET_OPERATOR_TYPE, nodeOperate);
-        LOGGER.info("send " + taskEvent.getTaskType() + " NodeType:" + NodeType.SESSION
-                    + " Operator:" + nodeOperate);
+        LOGGER.info("send {} NodeType:{} Operator:{}", taskEvent.getTaskType(), NodeType.SESSION,
+            nodeOperate);
         taskListenerManager.sendTaskEvent(taskEvent);
     }
 

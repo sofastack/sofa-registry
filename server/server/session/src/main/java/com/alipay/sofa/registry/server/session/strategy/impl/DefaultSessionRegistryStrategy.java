@@ -40,14 +40,11 @@ import java.util.Set;
  * @since 2019/2/15
  */
 public class DefaultSessionRegistryStrategy implements SessionRegistryStrategy {
-    private static final Logger LOGGER         = LoggerFactory
-                                                   .getLogger(DefaultSessionRegistryStrategy.class);
+    private static final Logger LOGGER     = LoggerFactory
+                                               .getLogger(DefaultSessionRegistryStrategy.class);
 
-    private static final Logger CONSOLE_LOGGER = LoggerFactory.getLogger("SESSION-CONSOLE",
-                                                   "[Task]");
-
-    private static final Logger taskLogger     = LoggerFactory.getLogger(
-                                                   DefaultSessionRegistryStrategy.class, "[Task]");
+    private static final Logger taskLogger = LoggerFactory.getLogger(
+                                               DefaultSessionRegistryStrategy.class, "[Task]");
 
     /**
      * store subscribers
@@ -110,10 +107,7 @@ public class DefaultSessionRegistryStrategy implements SessionRegistryStrategy {
 
     @Override
     public void afterPublisherRegister(Publisher publisher) {
-        TaskEvent syncPublisherTask = new TaskEvent(publisher,
-            TaskEvent.TaskType.SYNC_PUBLISHER_TASK);
-        CONSOLE_LOGGER.info("send " + syncPublisherTask.getTaskType() + " taskEvent:{}", publisher);
-        taskListenerManager.sendTaskEvent(syncPublisherTask);
+
     }
 
     @Override

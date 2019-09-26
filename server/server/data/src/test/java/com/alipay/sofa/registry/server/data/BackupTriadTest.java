@@ -16,20 +16,21 @@
  */
 package com.alipay.sofa.registry.server.data;
 
-import com.alipay.sofa.registry.common.model.metaserver.DataNode;
-import com.alipay.sofa.registry.common.model.store.URL;
-import com.alipay.sofa.registry.server.data.bootstrap.DataServerConfig;
-import com.alipay.sofa.registry.server.data.cache.BackupTriad;
-import org.junit.Test;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import org.junit.Test;
+
+import com.alipay.sofa.registry.common.model.metaserver.DataNode;
+import com.alipay.sofa.registry.common.model.store.URL;
+import com.alipay.sofa.registry.server.data.bootstrap.DataServerConfig;
+import com.alipay.sofa.registry.server.data.cache.BackupTriad;
 
 /**
  * @author xuanbei

@@ -16,9 +16,20 @@
  */
 package com.alipay.sofa.registry.server.session.scheduler.timertask;
 
+import java.util.Iterator;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.concurrent.ThreadPoolExecutor;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.annotation.Scheduled;
+
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.metrics.TaskMetrics;
+import com.alipay.sofa.registry.remoting.Server;
+import com.alipay.sofa.registry.remoting.exchange.Exchange;
+import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
 import com.alipay.sofa.registry.server.session.listener.ReceivedDataMultiPushTaskListener;
 import com.alipay.sofa.registry.server.session.scheduler.ExecutorManager;
 import com.alipay.sofa.registry.server.session.store.DataStore;
@@ -30,13 +41,6 @@ import com.alipay.sofa.registry.task.batcher.TaskDispatchers;
 import com.alipay.sofa.registry.task.listener.TaskListener;
 import com.codahale.metrics.Gauge;
 import com.codahale.metrics.MetricRegistry;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.scheduling.annotation.Scheduled;
-
-import java.util.Iterator;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.concurrent.ThreadPoolExecutor;
 
 /**
  * The type Sync clients heartbeat task.
@@ -56,6 +60,12 @@ public class SyncClientsHeartbeatTask {
 
     public static final String  SYMBOLIC1            = "  ├─ ";
     public static final String  SYMBOLIC2            = "  └─ ";
+
+    @Autowired
+    private Exchange            boltExchange;
+
+    @Autowired
+    private SessionServerConfig sessionServerConfig;
 
     /**
      * store subscribers
@@ -87,8 +97,15 @@ public class SyncClientsHeartbeatTask {
         long countPub = sessionDataStore.count();
         long countSubW = sessionWatchers.count();
 
-        CONSOLE_COUNT_LOGGER.info("Subscriber count: {}, Publisher count: {}, Watcher count: {},",
-            countSub, countPub, countSubW);
+        int channelCount = 0;
+        Server sessionServer = boltExchange.getServer(sessionServerConfig.getServerPort());
+        if (sessionServer != null) {
+            channelCount = sessionServer.getChannelCount();
+        }
+
+        CONSOLE_COUNT_LOGGER.info(
+            "Subscriber count: {}, Publisher count: {}, Watcher count: {}, Connection count: {}",
+            countSub, countPub, countSubW, channelCount);
     }
 
     @Scheduled(initialDelayString = "${session.server.printTask.fixedDelay}", fixedDelayString = "${session.server.printTask.fixedDelay}")

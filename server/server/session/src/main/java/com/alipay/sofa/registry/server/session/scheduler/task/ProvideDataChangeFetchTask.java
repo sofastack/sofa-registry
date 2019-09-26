@@ -16,6 +16,18 @@
  */
 package com.alipay.sofa.registry.server.session.scheduler.task;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
+
+import org.springframework.util.CollectionUtils;
+
 import com.alipay.sofa.registry.common.model.constants.ValueConstants;
 import com.alipay.sofa.registry.common.model.metaserver.DataOperator;
 import com.alipay.sofa.registry.common.model.metaserver.NotifyProvideDataChange;
@@ -33,6 +45,8 @@ import com.alipay.sofa.registry.remoting.Server;
 import com.alipay.sofa.registry.remoting.exchange.Exchange;
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
 import com.alipay.sofa.registry.server.session.converter.ReceivedDataConverter;
+import com.alipay.sofa.registry.server.session.filter.blacklist.BlacklistConstants;
+import com.alipay.sofa.registry.server.session.filter.blacklist.BlacklistManager;
 import com.alipay.sofa.registry.server.session.node.service.MetaNodeService;
 import com.alipay.sofa.registry.server.session.registry.Registry;
 import com.alipay.sofa.registry.server.session.store.Interests;
@@ -41,15 +55,6 @@ import com.alipay.sofa.registry.server.session.store.Watchers;
 import com.alipay.sofa.registry.task.listener.TaskEvent;
 import com.alipay.sofa.registry.task.listener.TaskEvent.TaskType;
 import com.alipay.sofa.registry.task.listener.TaskListenerManager;
-import org.springframework.util.CollectionUtils;
-
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.TimeUnit;
 
 /**
  *
@@ -82,13 +87,15 @@ public class ProvideDataChangeFetchTask extends AbstractSessionTask {
 
     private final Registry            sessionRegistry;
 
+    private final BlacklistManager    blacklistManager;
+
     private NotifyProvideDataChange   notifyProvideDataChange;
 
     public ProvideDataChangeFetchTask(SessionServerConfig sessionServerConfig,
                                       TaskListenerManager taskListenerManager,
                                       MetaNodeService metaNodeService, Watchers sessionWatchers,
                                       Exchange boltExchange, Interests sessionInterests,
-                                      Registry sessionRegistry) {
+                                      Registry sessionRegistry, BlacklistManager blacklistManager) {
         this.sessionServerConfig = sessionServerConfig;
         this.taskListenerManager = taskListenerManager;
         this.metaNodeService = metaNodeService;
@@ -96,6 +103,7 @@ public class ProvideDataChangeFetchTask extends AbstractSessionTask {
         this.boltExchange = boltExchange;
         this.sessionInterests = sessionInterests;
         this.sessionRegistry = sessionRegistry;
+        this.blacklistManager = blacklistManager;
     }
 
     @Override
@@ -123,6 +131,7 @@ public class ProvideDataChangeFetchTask extends AbstractSessionTask {
             provideData = metaNodeService.fetchData(dataInfoId);
 
             if (ValueConstants.STOP_PUSH_DATA_SWITCH_DATA_ID.equals(dataInfoId)) {
+                //push stop switch
                 if (provideData != null) {
                     if (provideData.getProvideData() == null || provideData.getProvideData().getObject() == null) {
                         LOGGER.info("Fetch session stop push switch no data existed,config not change!");
@@ -153,7 +162,35 @@ public class ProvideDataChangeFetchTask extends AbstractSessionTask {
                     LOGGER.info("Fetch session stop push switch data null,config not change!");
                 }
                 return;
+            } else if (ValueConstants.BLACK_LIST_DATA_ID.equals(dataInfoId)) {
+                //black list data
+                if (provideData.getProvideData() == null || provideData.getProvideData().getObject() == null) {
+                    LOGGER.info("Fetch session blacklist no data existed,current config not change!");
+                    return;
+                }
+                String data = (String) provideData.getProvideData().getObject();
+                if (data != null) {
+                    Map<String, Map<String, Set<String>>> blacklistConfigMap = blacklistManager
+                            .convertBlacklistConfig(data);
+                    clientOffBlackIp(blacklistConfigMap);
+                    LOGGER.info("Fetch session blacklist data switch {} success!", data);
+                } else {
+                    LOGGER.info("Fetch session blacklist data null,current config not change!");
+                }
+                return;
+            } else if (ValueConstants.ENABLE_DATA_RENEW_SNAPSHOT.equals(dataInfoId)) {
+                //stop renew switch
+                if (provideData == null || provideData.getProvideData() == null
+                    || provideData.getProvideData().getObject() == null) {
+                    LOGGER.info("Fetch enableDataRenewSnapshot but no data existed, current config not change!");
+                    return;
+                }
+                boolean enableDataRenewSnapshot =  Boolean.parseBoolean((String) provideData.getProvideData().getObject());
+                LOGGER.info("Fetch enableDataRenewSnapshot {} success!", enableDataRenewSnapshot);
+                this.sessionRegistry.setEnableDataRenewSnapshot(enableDataRenewSnapshot);
+                return;
             }
+
             if (provideData == null) {
                 LOGGER.warn("Notify provider data Change request {} fetch no provider data!", notifyProvideDataChange);
                 return;
@@ -177,11 +214,12 @@ public class ProvideDataChangeFetchTask extends AbstractSessionTask {
                 if (!registerIds.isEmpty()) {
                     ReceivedConfigData receivedConfigData;
                     if (notifyProvideDataChange.getDataOperator() == DataOperator.REMOVE) {
-                        receivedConfigData = ReceivedDataConverter.getReceivedConfigData(null, dataInfo,
-                                notifyProvideDataChange.getVersion());
+                        receivedConfigData = ReceivedDataConverter
+                                .getReceivedConfigData(null, dataInfo, notifyProvideDataChange.getVersion());
                     } else {
-                        receivedConfigData = ReceivedDataConverter.getReceivedConfigData(
-                                provideData.getProvideData(), dataInfo, provideData.getVersion());
+                        receivedConfigData = ReceivedDataConverter
+                                .getReceivedConfigData(provideData.getProvideData(), dataInfo,
+                                        provideData.getVersion());
                     }
                     receivedConfigData.setConfiguratorRegistIds(registerIds);
                     firePushTask(receivedConfigData, new URL(channel.getRemoteAddress()));
@@ -200,7 +238,7 @@ public class ProvideDataChangeFetchTask extends AbstractSessionTask {
             //begin push fire data fetch task first,avoid reSubscriber push duplicate
             sessionRegistry.fetchChangDataProcess();
         } catch (Throwable e) {
-            LOGGER.error("Open push switch first fetch task execute error",e);
+            LOGGER.error("Open push switch first fetch task execute error", e);
         }
 
         try {
@@ -245,6 +283,53 @@ public class ProvideDataChangeFetchTask extends AbstractSessionTask {
         TaskEvent taskEvent = new TaskEvent(parameter, TaskType.RECEIVED_DATA_CONFIG_PUSH_TASK);
         TASK_LOGGER.info("send " + taskEvent.getTaskType() + " taskEvent:{}", taskEvent);
         taskListenerManager.sendTaskEvent(taskEvent);
+    }
+
+    private void clientOffBlackIp(Map<String, Map<String, Set<String>>> blacklistConfigMap) {
+
+        if (blacklistConfigMap != null) {
+            Set<String> ipSet = new HashSet();
+
+            for (Map.Entry<String, Map<String, Set<String>>> configEntry : blacklistConfigMap
+                .entrySet()) {
+                if (BlacklistConstants.FORBIDDEN_PUB.equals(configEntry.getKey())
+                    || BlacklistConstants.FORBIDDEN_SUB_BY_PREFIX.equals(configEntry.getKey())) {
+                    Map<String, Set<String>> typeMap = configEntry.getValue();
+                    if (typeMap != null) {
+                        for (Map.Entry<String, Set<String>> typeEntry : typeMap.entrySet()) {
+                            if (BlacklistConstants.IP_FULL.equals(typeEntry.getKey())) {
+                                if (typeEntry.getValue() != null) {
+                                    ipSet.addAll(typeEntry.getValue());
+                                }
+                            }
+                        }
+                    }
+                }
+
+            }
+
+            sessionRegistry.remove(getIpConnects(ipSet));
+        }
+    }
+
+    public List<String> getIpConnects(Set<String> _ipList) {
+
+        Server sessionServer = boltExchange.getServer(sessionServerConfig.getServerPort());
+
+        List<String> connections = new ArrayList<>();
+
+        if (sessionServer != null) {
+            Collection<Channel> channels = sessionServer.getChannels();
+            for (Channel channel : channels) {
+                String key = NetUtil.toAddressString(channel.getRemoteAddress());
+                String ip = key.substring(0, key.indexOf(":"));
+                if (_ipList.contains(ip)) {
+                    connections.add(key);
+                }
+            }
+        }
+
+        return connections;
     }
 
     private Map<String/*registerId*/, Watcher> getCache(String connectId) {

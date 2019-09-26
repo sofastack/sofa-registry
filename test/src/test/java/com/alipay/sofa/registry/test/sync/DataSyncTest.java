@@ -16,6 +16,16 @@
  */
 package com.alipay.sofa.registry.test.sync;
 
+import static com.alipay.sofa.registry.client.constants.ValueConstants.DEFAULT_GROUP;
+import static com.alipay.sofa.registry.common.model.constants.ValueConstants.DEFAULT_INSTANCE_ID;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+
+import org.junit.BeforeClass;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.springframework.test.context.junit4.SpringRunner;
+
 import com.alipay.sofa.registry.client.api.registration.SubscriberRegistration;
 import com.alipay.sofa.registry.common.model.CommonResponse;
 import com.alipay.sofa.registry.common.model.dataserver.NotifyDataSyncRequest;
@@ -32,15 +42,6 @@ import com.alipay.sofa.registry.server.data.remoting.DataNodeExchanger;
 import com.alipay.sofa.registry.server.data.remoting.dataserver.DataServerConnectionFactory;
 import com.alipay.sofa.registry.server.data.remoting.dataserver.handler.DataSyncServerConnectionHandler;
 import com.alipay.sofa.registry.test.BaseIntegrationTest;
-import org.junit.BeforeClass;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.springframework.test.context.junit4.SpringRunner;
-
-import static com.alipay.sofa.registry.client.constants.ValueConstants.DEFAULT_GROUP;
-import static com.alipay.sofa.registry.common.model.constants.ValueConstants.DEFAULT_INSTANCE_ID;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 
 /**
  * @author xuanbei
@@ -94,7 +95,7 @@ public class DataSyncTest extends BaseIntegrationTest {
         registryClient1.register(subReg);
 
         // assert result
-        Thread.sleep(1000L);
+        Thread.sleep(5000L);
         assertEquals(MockSyncDataHandler.dataId, BaseIntegrationTest.dataId);
         assertEquals(LOCAL_REGION, userData.getLocalZone());
         assertEquals(1, userData.getZoneData().size());

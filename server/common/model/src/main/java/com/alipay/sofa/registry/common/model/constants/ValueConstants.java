@@ -56,4 +56,12 @@ public class ValueConstants {
 
     public static final String   STOP_PUSH_DATA_SWITCH_DATA_ID = "session.stop.push.data.switch#@#9600#@#CONFIG";
 
+    public static final String   BLACK_LIST_DATA_ID            = "session.blacklist.data#@#9600#@#CONFIG";
+
+    public static final String   ENABLE_DATA_RENEW_SNAPSHOT    = "session.enable.datum.renew.switch#@#9600#@#CONFIG";
+
+    public static final String   ENABLE_DATA_DATUM_EXPIRE      = "data.enable.datum.expire.switch#@#9600#@#CONFIG";
+
+    public static final String   LOGGER_NAME_RENEW             = "RENEW-LOGGER";
+
 }

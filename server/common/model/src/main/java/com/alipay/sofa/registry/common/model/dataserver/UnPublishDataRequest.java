@@ -35,12 +35,6 @@ public class UnPublishDataRequest implements Serializable {
     private long              registerTimestamp;
 
     /**
-     * constructor
-     */
-    public UnPublishDataRequest() {
-    }
-
-    /**
      * construtor
      * @param dataInfoId
      * @param registerId

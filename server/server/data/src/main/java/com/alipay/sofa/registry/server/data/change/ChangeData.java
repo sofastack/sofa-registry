@@ -16,10 +16,10 @@
  */
 package com.alipay.sofa.registry.server.data.change;
 
-import com.alipay.sofa.registry.common.model.dataserver.Datum;
-
 import java.util.concurrent.Delayed;
 import java.util.concurrent.TimeUnit;
+
+import com.alipay.sofa.registry.common.model.dataserver.Datum;
 
 /**
  * changed data
