@@ -79,7 +79,7 @@ public class StopPushDataSwitchTest extends BaseIntegrationTest {
 
         PublisherRegistration registration = new PublisherRegistration(dataId);
         registryClient1.register(registration, value);
-        Thread.sleep(1000L);
+        Thread.sleep(2000L);
 
         SubscriberRegistration subReg = new SubscriberRegistration(dataId, (dataIdOb, data) -> {
             LOGGER.info("sub:" + data);
@@ -95,7 +95,7 @@ public class StopPushDataSwitchTest extends BaseIntegrationTest {
         assertTrue(
                 metaChannel.getWebTarget().path("stopPushDataSwitch/close").request(APPLICATION_JSON).get(Result.class)
                         .isSuccess());
-        Thread.sleep(1000L);
+        Thread.sleep(2000L);
 
         // Subscriber get data, test data
         assertEquals(dataId, dataIdResult.get());
@@ -146,7 +146,7 @@ public class StopPushDataSwitchTest extends BaseIntegrationTest {
         });
         subReg.setScopeEnum(ScopeEnum.dataCenter);
         registryClient1.register(subReg);
-        Thread.sleep(1000L);
+        Thread.sleep(2000L);
         assertNull(dataIdResult.get());
 
         // invoke code directly

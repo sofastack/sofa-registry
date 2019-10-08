@@ -51,7 +51,7 @@ public class SyncDataHandlerTest extends BaseIntegrationTest {
         String value = "test publish";
         PublisherRegistration registration = new PublisherRegistration(dataId);
         registryClient1.register(registration, value);
-        Thread.sleep(500L);
+        Thread.sleep(2000L);
 
         // request syncData
         DataNodeExchanger dataNodeExchanger = dataApplicationContext.getBean("dataNodeExchanger",
