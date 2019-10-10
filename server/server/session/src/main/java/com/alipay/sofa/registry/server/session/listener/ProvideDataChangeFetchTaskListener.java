@@ -18,12 +18,10 @@ package com.alipay.sofa.registry.server.session.listener;
 
 import com.alipay.sofa.registry.remoting.exchange.Exchange;
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
-import com.alipay.sofa.registry.server.session.filter.blacklist.BlacklistManager;
 import com.alipay.sofa.registry.server.session.node.service.MetaNodeService;
-import com.alipay.sofa.registry.server.session.registry.Registry;
+import com.alipay.sofa.registry.server.session.provideData.ProvideDataProcessor;
 import com.alipay.sofa.registry.server.session.scheduler.task.ProvideDataChangeFetchTask;
 import com.alipay.sofa.registry.server.session.scheduler.task.SessionTask;
-import com.alipay.sofa.registry.server.session.store.Interests;
 import com.alipay.sofa.registry.server.session.store.Watchers;
 import com.alipay.sofa.registry.task.batcher.TaskDispatcher;
 import com.alipay.sofa.registry.task.batcher.TaskDispatchers;
@@ -60,16 +58,10 @@ public class ProvideDataChangeFetchTaskListener implements TaskListener {
     private Exchange                            boltExchange;
 
     @Autowired
-    private Interests                           sessionInterests;
-
-    @Autowired
     private Watchers                            sessionWatchers;
 
     @Autowired
-    private Registry                            sessionRegistry;
-
-    @Autowired
-    private BlacklistManager                    blacklistManager;
+    private ProvideDataProcessor                provideDataProcessorManager;
 
     private TaskDispatcher<String, SessionTask> singleTaskDispatcher;
 
@@ -97,7 +89,7 @@ public class ProvideDataChangeFetchTaskListener implements TaskListener {
 
         SessionTask provideDataChangeFetchTask = new ProvideDataChangeFetchTask(
             sessionServerConfig, taskListenerManager, metaNodeService, sessionWatchers,
-            boltExchange, sessionInterests, sessionRegistry, blacklistManager);
+            boltExchange, provideDataProcessorManager);
 
         provideDataChangeFetchTask.setTaskEvent(event);
 
