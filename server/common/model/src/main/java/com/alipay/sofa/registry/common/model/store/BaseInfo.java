@@ -16,11 +16,11 @@
  */
 package com.alipay.sofa.registry.common.model.store;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-
 import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 /**
  *
@@ -136,7 +136,7 @@ public abstract class BaseInfo implements Serializable, StoreData<String> {
      * @param processId  value to be assigned to property processId
      */
     public void setProcessId(String processId) {
-        this.processId = processId;
+        this.processId = WordCache.getInstance().getWordCache(processId);
     }
 
     /**
@@ -273,7 +273,7 @@ public abstract class BaseInfo implements Serializable, StoreData<String> {
      * @param clientId  value to be assigned to property clientId
      */
     public void setClientId(String clientId) {
-        this.clientId = clientId;
+        this.clientId = WordCache.getInstance().getWordCache(clientId);
     }
 
     /**

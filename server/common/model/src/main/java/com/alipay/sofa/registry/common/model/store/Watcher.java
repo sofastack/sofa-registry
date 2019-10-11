@@ -27,4 +27,23 @@ public class Watcher extends BaseInfo {
     public DataType getDataType() {
         return DataType.WATCHER;
     }
+
+    /**
+     * change watcher word cache
+     * @param watcher
+     * @return
+     */
+    public static Watcher internWatcher(Watcher watcher) {
+        watcher.setRegisterId(watcher.getRegisterId());
+        watcher.setDataInfoId(watcher.getDataInfoId());
+        watcher.setInstanceId(watcher.getInstanceId());
+        watcher.setGroup(watcher.getGroup());
+        watcher.setDataId(watcher.getDataId());
+        watcher.setClientId(watcher.getClientId());
+        watcher.setCell(watcher.getCell());
+        watcher.setProcessId(watcher.getProcessId());
+        watcher.setAppName(watcher.getAppName());
+
+        return watcher;
+    }
 }
