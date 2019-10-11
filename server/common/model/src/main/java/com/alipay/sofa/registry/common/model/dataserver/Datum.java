@@ -253,7 +253,13 @@ public class Datum implements Serializable {
 
         Map<String, Publisher> pubMap = datum.getPubMap();
         if (pubMap != null && !pubMap.isEmpty()) {
-            pubMap.forEach((registerId, publisher) -> Publisher.processPublisher(publisher));
+            pubMap.forEach((registerId, publisher) -> {
+                // let registerId == pub.getRegisterId in every <registerId, pub>, for reducing old gen memory
+                // because this Datum is put into Memory directly, by DatumCache.coverDatum
+                publisher.setRegisterId(registerId);
+                // change publisher word cache
+                Publisher.processPublisher(publisher);
+            });
         }
 
         return datum;
