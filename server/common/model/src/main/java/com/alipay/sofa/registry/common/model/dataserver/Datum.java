@@ -62,7 +62,7 @@ public class Datum implements Serializable {
      * @param dataCenter
      */
     public Datum(String dataInfoId, String dataCenter) {
-        this.dataInfoId = dataInfoId;
+        this.dataInfoId = WordCache.getInstance().getWordCache(dataInfoId);
         this.dataCenter = WordCache.getInstance().getWordCache(dataCenter);
         updateVersion();
     }
@@ -244,7 +244,7 @@ public class Datum implements Serializable {
         this.containsUnPub = containsUnPub;
     }
 
-    public static Datum processDatum(Datum datum) {
+    public static Datum internDatum(Datum datum) {
         datum.setDataCenter(datum.getDataCenter());
         datum.setDataInfoId(datum.getDataInfoId());
         datum.setDataId(datum.getDataId());
