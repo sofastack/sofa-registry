@@ -16,12 +16,13 @@
  */
 package com.alipay.sofa.registry.common.model.store;
 
-import com.alipay.sofa.registry.common.model.ElementType;
-import com.alipay.sofa.registry.core.model.ScopeEnum;
-import com.fasterxml.jackson.annotation.JsonIgnore;
-
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+
+import com.alipay.sofa.registry.common.model.ElementType;
+import com.alipay.sofa.registry.common.model.constants.ValueConstants;
+import com.alipay.sofa.registry.core.model.ScopeEnum;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 /**
  *
@@ -31,16 +32,19 @@ import java.util.concurrent.ConcurrentHashMap;
 public class Subscriber extends BaseInfo {
 
     /** UID */
-    private static final long                serialVersionUID = 98433360274932292L;
+    private static final long                       serialVersionUID               = 98433360274932292L;
     /** */
-    private ScopeEnum                        scope;
+    private ScopeEnum                               scope;
     /** */
-    private ElementType                      elementType;
+    private ElementType                             elementType;
+
+    /** last timestamp of the effective push */
+    private Map<String/*dataCenter*/, Long>        lastTimestampOfPushedNonemptys = new ConcurrentHashMap<>();
 
     /**
-     * all dataCenter push dataInfo version
+     * last push context
      */
-    private Map<String/*dataCenter*/, Long> lastPushVersions = new ConcurrentHashMap<>();
+    private Map<String/*dataCenter*/, PushContext> lastPushContexts               = new ConcurrentHashMap<>();
 
     /**
      * Getter method for property <tt>scope</tt>.
@@ -71,7 +75,11 @@ public class Subscriber extends BaseInfo {
      */
     public boolean checkVersion(String dataCenter, Long version) {
 
-        Long oldVersion = lastPushVersions.get(dataCenter);
+        PushContext pushContext = lastPushContexts.get(dataCenter);
+        if (pushContext == null) {
+            return version != null;
+        }
+        Long oldVersion = pushContext.lastPushVersion;
         if (oldVersion == null) {
             return version != null;
         } else {
@@ -88,15 +96,26 @@ public class Subscriber extends BaseInfo {
      * @return
      */
     public void checkAndUpdateVersion(String dataCenter, Long version) {
+        checkAndUpdateVersion(dataCenter, version, -1);
+    }
+
+    /**
+     * check version input greater or equal to current version
+     * @param version
+     * @return
+     */
+    public void checkAndUpdateVersion(String dataCenter, Long version, int pubCount) {
 
         while (true) {
-            Long oldVersion = lastPushVersions.putIfAbsent(dataCenter, version);
+            PushContext pushContext = new PushContext(version, pubCount);
+            PushContext oldPushContext = lastPushContexts.putIfAbsent(dataCenter, pushContext);
             // Add firstly
-            if (oldVersion == null) {
+            if (oldPushContext == null) {
                 break;
             } else {
-                if (version > oldVersion) {
-                    if (lastPushVersions.replace(dataCenter, oldVersion, version)) {
+                if (oldPushContext.lastPushVersion == null
+                    || (pushContext.lastPushVersion != null && pushContext.lastPushVersion > oldPushContext.lastPushVersion)) {
+                    if (lastPushContexts.replace(dataCenter, oldPushContext, pushContext)) {
                         break;
                     }
                 } else {
@@ -104,6 +123,40 @@ public class Subscriber extends BaseInfo {
                 }
             }
         }
+    }
+
+    /**
+     * returns true if there is a recent push operation.
+     */
+    public boolean isPushLocked(String dataCenter, long pushLockTimeout) {
+        Long lastTimestampOfPushedNonempty = lastTimestampOfPushedNonemptys.get(dataCenter);
+        return lastTimestampOfPushedNonempty != null
+               && (System.currentTimeMillis() - lastTimestampOfPushedNonempty < pushLockTimeout);
+    }
+
+    private void renewPushLockLease(String dataCenter) {
+        lastTimestampOfPushedNonemptys.put(dataCenter, System.currentTimeMillis());
+    }
+
+    /**
+     * If the pushed data is empty, check the last push, for avoid continuous empty datum push
+     */
+    public boolean allowPush(String dataCenter, int pubCount) {
+        boolean allowPush = true;
+        // condition of no push:
+        // 1. last push count is 0 and this time is also 0
+        // 2. last push is a valid push (version > 1)
+        if (pubCount == 0) {
+            PushContext pushContext = lastPushContexts.get(dataCenter);
+            allowPush = !(pushContext != null && pushContext.lastPubCount == 0
+            //last push is a valid push
+                          && pushContext.lastPushVersion != null && pushContext.lastPushVersion > ValueConstants.DEFAULT_NO_DATUM_VERSION);
+        }
+        // renew the lock before a effective push
+        if (allowPush) {
+            renewPushLockLease(dataCenter);
+        }
+        return allowPush;
     }
 
     /**
@@ -126,26 +179,8 @@ public class Subscriber extends BaseInfo {
         final StringBuilder sb = new StringBuilder("scope=");
         sb.append(scope).append(",");
         sb.append("elementType=").append(elementType).append(",");
-        sb.append("lastPushVersion=").append(lastPushVersions);
+        sb.append("lastPushVersion=").append(lastPushContexts);
         return sb.toString();
-    }
-
-    /**
-     * Getter method for property <tt>lastPushVersions</tt>.
-     *
-     * @return property value of lastPushVersions
-     */
-    public Map<String, Long> getLastPushVersions() {
-        return lastPushVersions;
-    }
-
-    /**
-     * Setter method for property <tt>lastPushVersions </tt>.
-     *
-     * @param lastPushVersions  value to be assigned to property lastPushVersions
-     */
-    public void setLastPushVersions(Map<String, Long> lastPushVersions) {
-        this.lastPushVersions = lastPushVersions;
     }
 
     /**
@@ -156,9 +191,39 @@ public class Subscriber extends BaseInfo {
         final StringBuilder sb = new StringBuilder("Subscriber{");
         sb.append("scope=").append(scope);
         sb.append(", elementType=").append(elementType);
-        sb.append(", lastPushVersions=").append(lastPushVersions);
+        sb.append(", lastPushContexts=").append(lastPushContexts);
+        sb.append(", lastTimestampOfPushedNonemptys=").append(lastTimestampOfPushedNonemptys);
         sb.append(", super=").append(super.toString());
         sb.append('}');
         return sb.toString();
+    }
+
+    static class PushContext {
+        /**
+         * last pushed dataInfo version
+         */
+        private Long lastPushVersion;
+
+        /**
+         * push pushed dataInfo pubCount
+         */
+        private int  lastPubCount;
+
+        public PushContext(Long lastPushVersion, int lastPubCount) {
+            this.lastPushVersion = lastPushVersion;
+            this.lastPubCount = lastPubCount;
+        }
+
+        /**
+         * @see Object#toString()
+         */
+        @Override
+        public String toString() {
+            final StringBuilder sb = new StringBuilder("PushContext{");
+            sb.append("lastPushVersion=").append(lastPushVersion);
+            sb.append(", lastPubCount=").append(lastPubCount);
+            sb.append('}');
+            return sb.toString();
+        }
     }
 }
