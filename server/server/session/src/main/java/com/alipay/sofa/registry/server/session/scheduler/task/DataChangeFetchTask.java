@@ -245,7 +245,7 @@ public class DataChangeFetchTask extends AbstractSessionTask {
                     // zone scope subscribe only return zone list
                     return true;
 
-                } else if (ScopeEnum.dataCenter == scopeEnum) {
+                } else if (ScopeEnum.dataCenter == scopeEnum || ScopeEnum.global == scopeEnum) {
                     // disable zone config
                     return sessionServerConfig.isInvalidForeverZone(zone) && !sessionServerConfig
                             .isInvalidIgnored(dataId);
