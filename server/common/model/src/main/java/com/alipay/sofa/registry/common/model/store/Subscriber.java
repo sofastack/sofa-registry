@@ -142,7 +142,7 @@ public class Subscriber extends BaseInfo {
     /**
      * http://gitlab.alipay-inc.com/sofa-open/sofa-registry/issues/189
      */
-    public boolean shouldPush(String dataCenter, int pubCount) {
+    public boolean allowPush(String dataCenter, int pubCount) {
         // condition of no push:
         // 1. last push count is 0 and this time is also 0
         // 2. last push is a valid push
