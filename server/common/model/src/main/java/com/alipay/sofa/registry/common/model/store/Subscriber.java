@@ -32,19 +32,16 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 public class Subscriber extends BaseInfo {
 
     /** UID */
-    private static final long                       serialVersionUID               = 98433360274932292L;
+    private static final long                       serialVersionUID = 98433360274932292L;
     /** */
     private ScopeEnum                               scope;
     /** */
     private ElementType                             elementType;
 
-    /** last timestamp of the effective push */
-    private Map<String/*dataCenter*/, Long>        lastTimestampOfPushedNonemptys = new ConcurrentHashMap<>();
-
     /**
      * last push context
      */
-    private Map<String/*dataCenter*/, PushContext> lastPushContexts               = new ConcurrentHashMap<>();
+    private Map<String/*dataCenter*/, PushContext> lastPushContexts = new ConcurrentHashMap<>();
 
     /**
      * Getter method for property <tt>scope</tt>.
@@ -126,19 +123,6 @@ public class Subscriber extends BaseInfo {
     }
 
     /**
-     * returns true if there is a recent push operation.
-     */
-    public boolean isPushLocked(String dataCenter, long pushLockTimeout) {
-        Long lastTimestampOfPushedNonempty = lastTimestampOfPushedNonemptys.get(dataCenter);
-        return lastTimestampOfPushedNonempty != null
-               && (System.currentTimeMillis() - lastTimestampOfPushedNonempty < pushLockTimeout);
-    }
-
-    private void renewPushLockLease(String dataCenter) {
-        lastTimestampOfPushedNonemptys.put(dataCenter, System.currentTimeMillis());
-    }
-
-    /**
      * If the pushed data is empty, check the last push, for avoid continuous empty datum push
      */
     public boolean allowPush(String dataCenter, int pubCount) {
@@ -151,10 +135,6 @@ public class Subscriber extends BaseInfo {
             allowPush = !(pushContext != null && pushContext.lastPubCount == 0
             //last push is a valid push
                           && pushContext.lastPushVersion != null && pushContext.lastPushVersion > ValueConstants.DEFAULT_NO_DATUM_VERSION);
-        }
-        // renew the lock before a effective push
-        if (allowPush) {
-            renewPushLockLease(dataCenter);
         }
         return allowPush;
     }
@@ -192,7 +172,6 @@ public class Subscriber extends BaseInfo {
         sb.append("scope=").append(scope);
         sb.append(", elementType=").append(elementType);
         sb.append(", lastPushContexts=").append(lastPushContexts);
-        sb.append(", lastTimestampOfPushedNonemptys=").append(lastTimestampOfPushedNonemptys);
         sb.append(", super=").append(super.toString());
         sb.append('}');
         return sb.toString();
