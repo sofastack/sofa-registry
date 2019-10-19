@@ -72,11 +72,11 @@ public class Subscriber extends BaseInfo {
      */
     public boolean checkVersion(String dataCenter, Long version) {
 
-        PushContext pushContext = lastPushContexts.get(dataCenter);
-        if (pushContext == null) {
+        PushContext lastPushContext = lastPushContexts.get(dataCenter);
+        if (lastPushContext == null) {
             return version != null;
         }
-        Long oldVersion = pushContext.lastPushVersion;
+        Long oldVersion = lastPushContext.pushVersion;
         if (oldVersion == null) {
             return version != null;
         } else {
@@ -110,8 +110,8 @@ public class Subscriber extends BaseInfo {
             if (oldPushContext == null) {
                 break;
             } else {
-                if (oldPushContext.lastPushVersion == null
-                    || (pushContext.lastPushVersion != null && pushContext.lastPushVersion > oldPushContext.lastPushVersion)) {
+                if (oldPushContext.pushVersion == null
+                    || (pushContext.pushVersion != null && pushContext.pushVersion > oldPushContext.pushVersion)) {
                     if (lastPushContexts.replace(dataCenter, oldPushContext, pushContext)) {
                         break;
                     }
@@ -132,9 +132,9 @@ public class Subscriber extends BaseInfo {
         // 2. last push is a valid push (version > 1)
         if (pubCount == 0) {
             PushContext pushContext = lastPushContexts.get(dataCenter);
-            allowPush = !(pushContext != null && pushContext.lastPubCount == 0
+            allowPush = !(pushContext != null && pushContext.pushPubCount == 0
             //last push is a valid push
-                          && pushContext.lastPushVersion != null && pushContext.lastPushVersion > ValueConstants.DEFAULT_NO_DATUM_VERSION);
+                          && pushContext.pushVersion != null && pushContext.pushVersion > ValueConstants.DEFAULT_NO_DATUM_VERSION);
         }
         return allowPush;
     }
@@ -159,7 +159,7 @@ public class Subscriber extends BaseInfo {
         final StringBuilder sb = new StringBuilder("scope=");
         sb.append(scope).append(",");
         sb.append("elementType=").append(elementType).append(",");
-        sb.append("lastPushVersion=").append(lastPushContexts);
+        sb.append("pushVersion=").append(lastPushContexts);
         return sb.toString();
     }
 
@@ -181,16 +181,16 @@ public class Subscriber extends BaseInfo {
         /**
          * last pushed dataInfo version
          */
-        private Long lastPushVersion;
+        private Long pushVersion;
 
         /**
          * push pushed dataInfo pubCount
          */
-        private int  lastPubCount;
+        private int  pushPubCount;
 
-        public PushContext(Long lastPushVersion, int lastPubCount) {
-            this.lastPushVersion = lastPushVersion;
-            this.lastPubCount = lastPubCount;
+        public PushContext(Long pushVersion, int pushPubCount) {
+            this.pushVersion = pushVersion;
+            this.pushPubCount = pushPubCount;
         }
 
         /**
@@ -199,8 +199,8 @@ public class Subscriber extends BaseInfo {
         @Override
         public String toString() {
             final StringBuilder sb = new StringBuilder("PushContext{");
-            sb.append("lastPushVersion=").append(lastPushVersion);
-            sb.append(", lastPubCount=").append(lastPubCount);
+            sb.append("pushVersion=").append(pushVersion);
+            sb.append(", pushPubCount=").append(pushPubCount);
             sb.append('}');
             return sb.toString();
         }
