@@ -62,7 +62,7 @@ public class Datum implements Serializable {
      * @param dataCenter
      */
     public Datum(String dataInfoId, String dataCenter) {
-        this.dataInfoId = dataInfoId;
+        this.dataInfoId = WordCache.getInstance().getWordCache(dataInfoId);
         this.dataCenter = WordCache.getInstance().getWordCache(dataCenter);
         updateVersion();
     }
@@ -244,7 +244,7 @@ public class Datum implements Serializable {
         this.containsUnPub = containsUnPub;
     }
 
-    public static Datum processDatum(Datum datum) {
+    public static Datum internDatum(Datum datum) {
         datum.setDataCenter(datum.getDataCenter());
         datum.setDataInfoId(datum.getDataInfoId());
         datum.setDataId(datum.getDataId());
@@ -253,7 +253,13 @@ public class Datum implements Serializable {
 
         Map<String, Publisher> pubMap = datum.getPubMap();
         if (pubMap != null && !pubMap.isEmpty()) {
-            pubMap.forEach((registerId, publisher) -> Publisher.processPublisher(publisher));
+            pubMap.forEach((registerId, publisher) -> {
+                // let registerId == pub.getRegisterId in every <registerId, pub>, for reducing old gen memory
+                // because this Datum is put into Memory directly, by DatumCache.coverDatum
+                publisher.setRegisterId(registerId);
+                // change publisher word cache
+                Publisher.internPublisher(publisher);
+            });
         }
 
         return datum;

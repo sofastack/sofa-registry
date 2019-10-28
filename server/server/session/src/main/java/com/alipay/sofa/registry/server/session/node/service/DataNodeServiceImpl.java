@@ -339,7 +339,7 @@ public class DataNodeServiceImpl implements DataNodeService {
                 if (map == null || map.isEmpty()) {
                     LOGGER.warn("GetDataRequest get response contains no datum!dataInfoId={}", dataInfoId);
                 } else {
-                    map.forEach((dataCenter, datum) -> Datum.processDatum(datum));
+                    map.forEach((dataCenter, datum) -> Datum.internDatum(datum));
                 }
             } else {
                 throw new RuntimeException(
