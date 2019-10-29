@@ -20,6 +20,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import com.alipay.sofa.registry.common.model.ElementType;
+import com.alipay.sofa.registry.common.model.constants.ValueConstants;
 import com.alipay.sofa.registry.core.model.ScopeEnum;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
@@ -31,16 +32,16 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 public class Subscriber extends BaseInfo {
 
     /** UID */
-    private static final long                serialVersionUID = 98433360274932292L;
+    private static final long                       serialVersionUID = 98433360274932292L;
     /** */
-    private ScopeEnum                        scope;
+    private ScopeEnum                               scope;
     /** */
-    private ElementType                      elementType;
+    private ElementType                             elementType;
 
     /**
-     * all dataCenter push dataInfo version
+     * last push context
      */
-    private Map<String/*dataCenter*/, Long> lastPushVersions = new ConcurrentHashMap<>();
+    private Map<String/*dataCenter*/, PushContext> lastPushContexts = new ConcurrentHashMap<>();
 
     /**
      * Getter method for property <tt>scope</tt>.
@@ -71,7 +72,11 @@ public class Subscriber extends BaseInfo {
      */
     public boolean checkVersion(String dataCenter, Long version) {
 
-        Long oldVersion = lastPushVersions.get(dataCenter);
+        PushContext lastPushContext = lastPushContexts.get(dataCenter);
+        if (lastPushContext == null) {
+            return version != null;
+        }
+        Long oldVersion = lastPushContext.pushVersion;
         if (oldVersion == null) {
             return version != null;
         } else {
@@ -88,15 +93,26 @@ public class Subscriber extends BaseInfo {
      * @return
      */
     public void checkAndUpdateVersion(String dataCenter, Long version) {
+        checkAndUpdateVersion(dataCenter, version, -1);
+    }
+
+    /**
+     * check version input greater or equal to current version
+     * @param version
+     * @return
+     */
+    public void checkAndUpdateVersion(String dataCenter, Long version, int pubCount) {
 
         while (true) {
-            Long oldVersion = lastPushVersions.putIfAbsent(dataCenter, version);
+            PushContext pushContext = new PushContext(version, pubCount);
+            PushContext oldPushContext = lastPushContexts.putIfAbsent(dataCenter, pushContext);
             // Add firstly
-            if (oldVersion == null) {
+            if (oldPushContext == null) {
                 break;
             } else {
-                if (version > oldVersion) {
-                    if (lastPushVersions.replace(dataCenter, oldVersion, version)) {
+                if (oldPushContext.pushVersion == null
+                    || (pushContext.pushVersion != null && pushContext.pushVersion > oldPushContext.pushVersion)) {
+                    if (lastPushContexts.replace(dataCenter, oldPushContext, pushContext)) {
                         break;
                     }
                 } else {
@@ -104,6 +120,23 @@ public class Subscriber extends BaseInfo {
                 }
             }
         }
+    }
+
+    /**
+     * If the pushed data is empty, check the last push, for avoid continuous empty datum push
+     */
+    public boolean allowPush(String dataCenter, int pubCount) {
+        boolean allowPush = true;
+        // condition of no push:
+        // 1. last push count is 0 and this time is also 0
+        // 2. last push is a valid push (version > 1)
+        if (pubCount == 0) {
+            PushContext pushContext = lastPushContexts.get(dataCenter);
+            allowPush = !(pushContext != null && pushContext.pushPubCount == 0
+            //last push is a valid push
+                          && pushContext.pushVersion != null && pushContext.pushVersion > ValueConstants.DEFAULT_NO_DATUM_VERSION);
+        }
+        return allowPush;
     }
 
     /**
@@ -126,26 +159,8 @@ public class Subscriber extends BaseInfo {
         final StringBuilder sb = new StringBuilder("scope=");
         sb.append(scope).append(",");
         sb.append("elementType=").append(elementType).append(",");
-        sb.append("lastPushVersion=").append(lastPushVersions);
+        sb.append("pushVersion=").append(lastPushContexts);
         return sb.toString();
-    }
-
-    /**
-     * Getter method for property <tt>lastPushVersions</tt>.
-     *
-     * @return property value of lastPushVersions
-     */
-    public Map<String, Long> getLastPushVersions() {
-        return lastPushVersions;
-    }
-
-    /**
-     * Setter method for property <tt>lastPushVersions </tt>.
-     *
-     * @param lastPushVersions  value to be assigned to property lastPushVersions
-     */
-    public void setLastPushVersions(Map<String, Long> lastPushVersions) {
-        this.lastPushVersions = lastPushVersions;
     }
 
     /**
@@ -156,7 +171,7 @@ public class Subscriber extends BaseInfo {
         final StringBuilder sb = new StringBuilder("Subscriber{");
         sb.append("scope=").append(scope);
         sb.append(", elementType=").append(elementType);
-        sb.append(", lastPushVersions=").append(lastPushVersions);
+        sb.append(", lastPushContexts=").append(lastPushContexts);
         sb.append(", super=").append(super.toString());
         sb.append('}');
         return sb.toString();
@@ -179,5 +194,34 @@ public class Subscriber extends BaseInfo {
         subscriber.setAppName(subscriber.getAppName());
 
         return subscriber;
+    }
+
+    static class PushContext {
+        /**
+         * last pushed dataInfo version
+         */
+        private Long pushVersion;
+
+        /**
+         * push pushed dataInfo pubCount
+         */
+        private int  pushPubCount;
+
+        public PushContext(Long pushVersion, int pushPubCount) {
+            this.pushVersion = pushVersion;
+            this.pushPubCount = pushPubCount;
+        }
+
+        /**
+         * @see Object#toString()
+         */
+        @Override
+        public String toString() {
+            final StringBuilder sb = new StringBuilder("PushContext{");
+            sb.append("pushVersion=").append(pushVersion);
+            sb.append(", pushPubCount=").append(pushPubCount);
+            sb.append('}');
+            return sb.toString();
+        }
     }
 }
