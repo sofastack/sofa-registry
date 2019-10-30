@@ -127,7 +127,7 @@ public class DataServerBeanConfiguration {
         }
 
         @Bean
-        @ConditionalOnMissingBean(name = "dataServerConfig")
+        @ConditionalOnMissingBean
         public DataServerConfig dataServerConfig(CommonConfig commonConfig) {
             return new DataServerConfig(commonConfig);
         }
@@ -207,7 +207,7 @@ public class DataServerBeanConfiguration {
         }
 
         @Bean(name = "serverHandlers")
-        public Collection<AbstractServerHandler> serverHandlers(DataServerConfig dataServerConfig) {
+        public Collection<AbstractServerHandler> serverHandlers() {
             Collection<AbstractServerHandler> list = new ArrayList<>();
             list.add(getDataHandler());
             list.add(clientOffHandler());
@@ -222,7 +222,7 @@ public class DataServerBeanConfiguration {
         }
 
         @Bean(name = "serverSyncHandlers")
-        public Collection<AbstractServerHandler> serverSyncHandlers(DataServerConfig dataServerConfig) {
+        public Collection<AbstractServerHandler> serverSyncHandlers() {
             Collection<AbstractServerHandler> list = new ArrayList<>();
             list.add(getDataHandler());
             list.add(publishDataProcessor());
@@ -370,7 +370,7 @@ public class DataServerBeanConfiguration {
         }
 
         @Bean(name = "dataChangeNotifiers")
-        public List<IDataChangeNotifier> dataChangeNotifiers(DataServerConfig dataServerBootstrapConfig) {
+        public List<IDataChangeNotifier> dataChangeNotifiers() {
             List<IDataChangeNotifier> list = new ArrayList<>();
             list.add(sessionServerNotifier());
             list.add(tempPublisherNotifier());

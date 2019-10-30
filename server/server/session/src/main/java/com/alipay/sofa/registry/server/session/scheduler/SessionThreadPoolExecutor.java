@@ -16,15 +16,16 @@
  */
 package com.alipay.sofa.registry.server.session.scheduler;
 
-import com.alipay.sofa.registry.log.Logger;
-import com.alipay.sofa.registry.log.LoggerFactory;
-import com.alipay.sofa.registry.metrics.TaskMetrics;
-
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.RejectedExecutionException;
+import java.util.concurrent.RejectedExecutionHandler;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+
+import com.alipay.sofa.registry.log.Logger;
+import com.alipay.sofa.registry.log.LoggerFactory;
+import com.alipay.sofa.registry.metrics.TaskMetrics;
 
 /**
  *
@@ -39,34 +40,32 @@ public class SessionThreadPoolExecutor extends ThreadPoolExecutor {
 
     public SessionThreadPoolExecutor(String executorName, int corePoolSize, int maximumPoolSize,
                                      long keepAliveTime, TimeUnit unit,
-                                     BlockingQueue<Runnable> workQueue, ThreadFactory threadFactory) {
+                                     BlockingQueue<Runnable> workQueue,
+                                     ThreadFactory threadFactory, RejectedExecutionHandler handler) {
         super(corePoolSize, maximumPoolSize, keepAliveTime, unit, workQueue, threadFactory);
         this.executorName = executorName;
         registerTaskMetrics();
+        this.setRejectedExecutionHandler(handler);
+    }
+
+    public SessionThreadPoolExecutor(String executorName, int corePoolSize, int maximumPoolSize, long keepAliveTime,
+                                     TimeUnit unit, BlockingQueue<Runnable> workQueue, ThreadFactory threadFactory) {
+        this(executorName, corePoolSize, maximumPoolSize, keepAliveTime, unit, workQueue, threadFactory,
+                (r, executor) -> {
+                    String msg = String.format("Task(%s) %s rejected from %s, throw RejectedExecutionException.",
+                            r.getClass(), r, executor);
+                    LOGGER.error(msg);
+                    throw new RejectedExecutionException(msg);
+                });
     }
 
     private void registerTaskMetrics() {
-
         TaskMetrics.getInstance().registerThreadExecutor(executorName, this);
     }
 
     @Override
     public String toString() {
-
         return (new StringBuilder(executorName).append(" ").append(super.toString())).toString();
     }
 
-    @Override
-    public void execute(Runnable command) {
-
-        try {
-            super.execute(command);
-        } catch (Exception e) {
-            if (e instanceof RejectedExecutionException) {
-                LOGGER.error("Processor session executor {} Rejected Execution!command {}", this,
-                    command.getClass(), e);
-            }
-            throw e;
-        }
-    }
 }

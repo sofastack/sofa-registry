@@ -16,11 +16,15 @@
  */
 package com.alipay.sofa.registry.server.session.remoting.handler;
 
+import java.util.concurrent.Executor;
+
+import org.springframework.beans.factory.annotation.Autowired;
+
 import com.alipay.sofa.registry.core.model.ConfiguratorRegister;
 import com.alipay.sofa.registry.core.model.RegisterResponse;
 import com.alipay.sofa.registry.remoting.Channel;
+import com.alipay.sofa.registry.server.session.scheduler.ExecutorManager;
 import com.alipay.sofa.registry.server.session.strategy.WatcherHandlerStrategy;
-import org.springframework.beans.factory.annotation.Autowired;
 
 /**
  *
@@ -28,6 +32,9 @@ import org.springframework.beans.factory.annotation.Autowired;
  * @version $Id: SubscriberHandler.java, v 0.1 2017-11-30 15:01 shangyu.wh Exp $
  */
 public class WatcherHandler extends AbstractServerHandler {
+    @Autowired
+    private ExecutorManager        executorManager;
+
     @Autowired
     private WatcherHandlerStrategy watcherHandlerStrategy;
 
@@ -47,6 +54,11 @@ public class WatcherHandler extends AbstractServerHandler {
     @Override
     public Class interest() {
         return ConfiguratorRegister.class;
+    }
+
+    @Override
+    public Executor getExecutor() {
+        return executorManager.getAccessDataExecutor();
     }
 
 }
