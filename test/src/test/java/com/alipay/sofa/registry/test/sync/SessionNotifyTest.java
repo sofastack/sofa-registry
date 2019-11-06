@@ -78,32 +78,35 @@ import static com.alipay.sofa.registry.common.model.constants.ValueConstants.DEF
  */
 @RunWith(SpringRunner.class)
 public class SessionNotifyTest extends BaseIntegrationTest {
-    private static final int                   TEST_SYNC_PORT = 9677;
+    private static final int                   TEST_SYNC_PORT    = 9677;
     private static DataServerConnectionFactory dataServerConnectionFactory;
     private static Server                      dataSyncServer;
     private static String                      remoteIP;
     private static BoltChannel                 boltChannel;
 
-    private static Map<String,BoltChannel>      boltChannelMap = new ConcurrentHashMap<>();
+    private static Map<String, BoltChannel>    boltChannelMap    = new ConcurrentHashMap<>();
 
-    private static Map<Integer,BoltChannel>      boltChannelMapInt = new ConcurrentHashMap<>();
+    private static Map<Integer, BoltChannel>   boltChannelMapInt = new ConcurrentHashMap<>();
 
-    private static final int connectNum = 20;
+    private static final int                   connectNum        = 20;
 
-    private static final int threadNum = 20;
+    private static final int                   threadNum         = 20;
 
-    private static final int idNum = 100;
+    private static final int                   idNum             = 100;
 
-    private static SessionCacheService sessionCacheService;
+    private static SessionCacheService         sessionCacheService;
 
-    private static SessionInterests sessionInterests;
+    private static SessionInterests            sessionInterests;
 
-    private static Datum datum;
+    private static Datum                       datum;
 
-    private static BoltClient boltClientFetch = new BoltClient();
+    private static BoltClient                  boltClientFetch   = new BoltClient();
 
-    private static ThreadPoolExecutor executor = new ThreadPoolExecutor(100, 100, 0L, TimeUnit.MILLISECONDS,
-            new LinkedBlockingQueue<>(), new NamedThreadFactory("TestSessionNotifyFetch"));
+    private static ThreadPoolExecutor          executor          = new ThreadPoolExecutor(100, 100,
+                                                                     0L, TimeUnit.MILLISECONDS,
+                                                                     new LinkedBlockingQueue<>(),
+                                                                     new NamedThreadFactory(
+                                                                         "TestSessionNotifyFetch"));
 
     @BeforeClass
     public static void beforeClass() throws Exception {
@@ -112,16 +115,18 @@ public class SessionNotifyTest extends BaseIntegrationTest {
         dataServerConnectionFactory = dataApplicationContext.getBean("dataServerConnectionFactory",
             DataServerConnectionFactory.class);
 
-        sessionCacheService = sessionApplicationContext.getBean("sessionCacheService",SessionCacheService.class);
+        sessionCacheService = sessionApplicationContext.getBean("sessionCacheService",
+            SessionCacheService.class);
 
-        sessionInterests = sessionApplicationContext.getBean("sessionInterests",SessionInterests.class);
+        sessionInterests = sessionApplicationContext.getBean("sessionInterests",
+            SessionInterests.class);
 
         Map<String, Publisher> publisherMap = new HashMap<>();
 
-        for (int i=0;i<10;i++) {
+        for (int i = 0; i < 10; i++) {
             Publisher publisher = new Publisher();
 
-            String connectId = "123.123.123."+i;
+            String connectId = "123.123.123." + i;
             publisher.setAppName("APP");
             //ZONE MUST BE CURRENT SESSION ZONE
             publisher.setCell("CELL");
@@ -142,7 +147,7 @@ public class SessionNotifyTest extends BaseIntegrationTest {
             publisher.setClientVersion(ClientVersion.StoreData);
 
             DataInfo dataInfo = new DataInfo(DEFAULT_INSTANCE_ID, MockSyncDataHandler.dataId,
-                    DEFAULT_GROUP);
+                DEFAULT_GROUP);
             publisher.setDataInfoId(dataInfo.getDataInfoId());
 
             ServerDataBox serverDataBox = new ServerDataBox("");
@@ -150,7 +155,7 @@ public class SessionNotifyTest extends BaseIntegrationTest {
             list.add(serverDataBox);
 
             publisher.setDataList(list);
-            publisherMap.put(publisher.getRegisterId(),publisher);
+            publisherMap.put(publisher.getRegisterId(), publisher);
         }
 
         datum = new Datum();
@@ -162,44 +167,41 @@ public class SessionNotifyTest extends BaseIntegrationTest {
         datum.setPubMap(publisherMap);
         datum.setDataCenter(ValueConstants.DEFAULT_DATA_CENTER);
 
-
         // open sync port and connect it
         dataSyncServer = boltExchange.open(new URL(NetUtil.getLocalAddress().getHostAddress(),
-            TEST_SYNC_PORT), new ChannelHandler[] { new MockGetDataHandler(),dataApplicationContext.getBean(
-                DataSyncServerConnectionHandler.class) });
+            TEST_SYNC_PORT), new ChannelHandler[] { new MockGetDataHandler(),
+                dataApplicationContext.getBean(DataSyncServerConnectionHandler.class) });
 
         for (int i = 0; i < connectNum; i++) {
 
             URL urltemp = new URL(LOCAL_ADDRESS, TEST_SYNC_PORT);
 
-            Client client =  boltExchange.connect(Exchange.DATA_SERVER_TYPE+i, urltemp,new ChannelHandler[]{new MockDataChangeRequestHandler()});
+            Client client = boltExchange.connect(Exchange.DATA_SERVER_TYPE + i, urltemp,
+                new ChannelHandler[] { new MockDataChangeRequestHandler() });
 
+            BoltChannel boltChannel = (BoltChannel) client.getChannel(urltemp);
 
-            BoltChannel boltChannel = (BoltChannel)client.getChannel(urltemp);
-
-
-            String key = boltChannel.getConnection().getLocalIP()+":"+boltChannel.getConnection().getLocalPort();
-            boltChannelMap.put(key,boltChannel);
+            String key = boltChannel.getConnection().getLocalIP() + ":"
+                         + boltChannel.getConnection().getLocalPort();
+            boltChannelMap.put(key, boltChannel);
             System.out.println("testsyncserver remote connect remote:"
-                    + boltChannel.getConnection().getRemoteAddress() + " local:"
-                    + key);
+                               + boltChannel.getConnection().getRemoteAddress() + " local:" + key);
         }
 
         for (int i = 0; i < connectNum; i++) {
 
             URL urltemp = new URL(LOCAL_ADDRESS, TEST_SYNC_PORT);
 
-            Client client =  boltExchange.connect(Exchange.DATA_SERVER_TYPE+i+10, urltemp,new ChannelHandler[]{new MockDataChangeRequestHandler()});
+            Client client = boltExchange.connect(Exchange.DATA_SERVER_TYPE + i + 10, urltemp,
+                new ChannelHandler[] { new MockDataChangeRequestHandler() });
 
+            BoltChannel boltChannel = (BoltChannel) client.getChannel(urltemp);
 
-            BoltChannel boltChannel = (BoltChannel)client.getChannel(urltemp);
-
-
-            String key = boltChannel.getConnection().getLocalIP()+":"+boltChannel.getConnection().getLocalPort();
-            boltChannelMapInt.put(i,boltChannel);
+            String key = boltChannel.getConnection().getLocalIP() + ":"
+                         + boltChannel.getConnection().getLocalPort();
+            boltChannelMapInt.put(i, boltChannel);
             System.out.println("testsyncserver remote connect remote:"
-                    + boltChannel.getConnection().getRemoteAddress() + " local:"
-                    + key);
+                               + boltChannel.getConnection().getRemoteAddress() + " local:" + key);
         }
 
         Thread.sleep(500);
@@ -242,8 +244,8 @@ public class SessionNotifyTest extends BaseIntegrationTest {
 
     }
 
-
-    public static class MockDataChangeRequestHandler extends AbstractServerHandler<DataChangeRequest>{
+    public static class MockDataChangeRequestHandler extends
+                                                    AbstractServerHandler<DataChangeRequest> {
 
         @Override
         public void checkParam(DataChangeRequest request) throws RuntimeException {
@@ -327,7 +329,7 @@ public class SessionNotifyTest extends BaseIntegrationTest {
         }
     }
 
-    private static class MockGetDataHandler extends AbstractServerHandler<GetDataRequest>{
+    private static class MockGetDataHandler extends AbstractServerHandler<GetDataRequest> {
         public void checkParam(GetDataRequest request) throws RuntimeException {
             ParaCheckUtil.checkNotBlank(request.getDataInfoId(), "GetDataRequest.dataInfoId");
         }
@@ -335,7 +337,7 @@ public class SessionNotifyTest extends BaseIntegrationTest {
         @Override
         public Object doHandle(Channel channel, GetDataRequest request) {
             Map<String, Datum> map = new HashMap<>();
-            map.put(DEFAULT_DATA_CENTER,datum);
+            map.put(DEFAULT_DATA_CENTER, datum);
 
             return new GenericResponse<Map<String, Datum>>().fillSucceed(map);
         }
@@ -376,10 +378,11 @@ public class SessionNotifyTest extends BaseIntegrationTest {
         public void onCallback(Channel channel, Object message) {
             CommonResponse result = (CommonResponse) message;
             if (result != null && !result.isSuccess()) {
-                System.out.println(String
-                                .format(
-                                        "response not success when notify sessionServer(%s), retryTimes=%s, request=%s, response=%s",
-                                        connection.getRemoteAddress(), retryTimes, request, result));
+                System.out
+                    .println(String
+                        .format(
+                            "response not success when notify sessionServer(%s), retryTimes=%s, request=%s, response=%s",
+                            connection.getRemoteAddress(), retryTimes, request, result));
                 //onFailed(this);
             }
         }
@@ -387,8 +390,8 @@ public class SessionNotifyTest extends BaseIntegrationTest {
         @Override
         public void onException(Channel channel, Throwable e) {
             System.err.println(String.format(
-                    "exception when notify sessionServer(%s), retryTimes=%s, request=%s,error=%s",
-                    connection.getRemoteAddress(), retryTimes, request,e));
+                "exception when notify sessionServer(%s), retryTimes=%s, request=%s,error=%s",
+                connection.getRemoteAddress(), retryTimes, request, e));
             e.printStackTrace();
             //onFailed(this);
         }

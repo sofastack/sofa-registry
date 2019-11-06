@@ -158,7 +158,6 @@ public class NotifyFetchDatumHandler extends AbstractServerHandler<NotifyFetchDa
                 if (response.isSuccess()) {
                     Datum datum = response.getData().get(dataCenter);
 
-
                     if (datum != null) {
                         // wrap by WordCache
                         datum = Datum.internDatum(datum);
