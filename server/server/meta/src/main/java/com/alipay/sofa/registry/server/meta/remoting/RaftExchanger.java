@@ -140,6 +140,9 @@ public class RaftExchanger {
                 RaftServerConfig raftServerConfig = new RaftServerConfig();
                 raftServerConfig.setMetricsLogger(METRICS_LOGGER);
                 raftServerConfig.setEnableMetrics(metaServerConfig.isEnableMetrics());
+                if (metaServerConfig.getRockDBCacheSize() > 0) {
+                    raftServerConfig.setRockDBCacheSize(metaServerConfig.getRockDBCacheSize());
+                }
 
                 raftServer.start(raftServerConfig);
             }
