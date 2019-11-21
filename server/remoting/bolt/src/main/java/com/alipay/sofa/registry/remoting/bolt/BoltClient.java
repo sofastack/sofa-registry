@@ -307,7 +307,7 @@ public class BoltClient implements Client {
 
                             @Override
                             public Executor getExecutor() {
-                                return null;
+                                return callbackHandler.getExecutor();
                             }
                         }, timeoutMillis);
                     return;

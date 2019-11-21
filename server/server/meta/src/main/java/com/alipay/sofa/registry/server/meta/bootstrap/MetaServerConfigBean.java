@@ -16,13 +16,12 @@
  */
 package com.alipay.sofa.registry.server.meta.bootstrap;
 
-import java.io.File;
-
+import com.alipay.sofa.registry.common.model.constants.ValueConstants;
 import org.apache.commons.lang.builder.ToStringBuilder;
 import org.apache.commons.lang.builder.ToStringStyle;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
-import com.alipay.sofa.registry.common.model.constants.ValueConstants;
+import java.io.File;
 
 /**
  *
@@ -93,6 +92,8 @@ public class MetaServerConfigBean implements MetaServerConfig {
                                                                                    .getProperty("user.home")
                                                                                  + File.separator
                                                                                  + "raftData";
+
+    private int                rockDBCacheSize                                 = 64;           //64M
 
     @Override
     public int getSessionServerPort() {
@@ -601,6 +602,24 @@ public class MetaServerConfigBean implements MetaServerConfig {
      */
     public void setEnableMetrics(boolean enableMetrics) {
         this.enableMetrics = enableMetrics;
+    }
+
+    /**
+     * Getter method for property <tt>RockDBCacheSize</tt>.
+     *
+     * @return property value of RockDBCacheSize
+     */
+    public int getRockDBCacheSize() {
+        return rockDBCacheSize;
+    }
+
+    /**
+     * Setter method for property <tt>RockDBCacheSize</tt>.
+     *
+     * @param rockDBCacheSize  value to be assigned to property RockDBCacheSize
+     */
+    public void setRockDBCacheSize(int rockDBCacheSize) {
+        this.rockDBCacheSize = rockDBCacheSize;
     }
 
     @Override

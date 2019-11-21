@@ -159,4 +159,5 @@ public class RaftServerHandler implements ChannelHandler {
     public InvokeType getInvokeType() {
         return InvokeType.ASYNC;
     }
+
 }
