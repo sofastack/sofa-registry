@@ -42,6 +42,18 @@ public interface Exchange<T> {
     Client connect(String serverType, URL serverUrl, T... channelHandlers);
 
     /**
+     * connect same type server,one server ip one connection
+     * such as different server on data server,serverOne and serverTwo,different type server must match different channelHandlers,
+     * so we must connect by serverType,and get Client instance by serverType
+     * @param serverType
+     * @param connNum connection number per serverUrl
+     * @param serverUrl
+     * @param channelHandlers
+     * @return
+     */
+    Client connect(String serverType, int connNum, URL serverUrl, T... channelHandlers);
+
+    /**
      * bind server by server port in url parameter,one port must by same server type
      * @param url
      * @param channelHandlers

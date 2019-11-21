@@ -16,6 +16,10 @@
  */
 package com.alipay.sofa.registry.remoting.bolt.exchange;
 
+import java.util.Arrays;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+
 import com.alipay.sofa.registry.common.model.store.URL;
 import com.alipay.sofa.registry.remoting.Channel;
 import com.alipay.sofa.registry.remoting.ChannelHandler;
@@ -24,10 +28,6 @@ import com.alipay.sofa.registry.remoting.Server;
 import com.alipay.sofa.registry.remoting.bolt.BoltClient;
 import com.alipay.sofa.registry.remoting.bolt.BoltServer;
 import com.alipay.sofa.registry.remoting.exchange.Exchange;
-
-import java.util.Arrays;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 /**
  *
@@ -42,14 +42,19 @@ public class BoltExchange implements Exchange<ChannelHandler> {
 
     @Override
     public Client connect(String serverType, URL serverUrl, ChannelHandler... channelHandlers) {
+        return this.connect(serverType, 1, serverUrl, channelHandlers);
+    }
 
+    @Override
+    public Client connect(String serverType, int connNum, URL serverUrl,
+                          ChannelHandler... channelHandlers) {
         if (channelHandlers == null) {
             throw new IllegalArgumentException("channelHandlers cannot be null!");
         }
         Client client = clients.get(serverType);
         if (client == null) {
-            BoltClient boltClient = new BoltClient();
-            boltClient.setChannelHandlers(Arrays.asList(channelHandlers));
+            BoltClient boltClient = createBoltClient(connNum);
+            boltClient.initHandlers(Arrays.asList(channelHandlers));
             boltClient.connect(serverUrl);
             client = clients.putIfAbsent(serverType, boltClient);
             if (client == null) {
@@ -59,7 +64,6 @@ public class BoltExchange implements Exchange<ChannelHandler> {
             Channel channel = client.getChannel(serverUrl);
             if (channel == null) {
                 BoltClient boltClient = (BoltClient) client;
-                boltClient.setChannelHandlers(Arrays.asList(channelHandlers));
                 boltClient.connect(serverUrl);
             }
         }
@@ -68,12 +72,11 @@ public class BoltExchange implements Exchange<ChannelHandler> {
 
     @Override
     public Server open(URL url, ChannelHandler... channelHandlers) {
-
         if (channelHandlers == null) {
             throw new IllegalArgumentException("channelHandlers cannot be null!");
         }
 
-        BoltServer server = new BoltServer(url, Arrays.asList(channelHandlers));
+        BoltServer server = createBoltServer(url, channelHandlers);
         setServer(server, url);
         server.startServer();
         return server;
@@ -96,5 +99,13 @@ public class BoltExchange implements Exchange<ChannelHandler> {
      */
     public void setServer(Server server, URL url) {
         serverMap.putIfAbsent(url.getPort(), server);
+    }
+
+    protected BoltClient createBoltClient(int connNum) {
+        return new BoltClient(connNum);
+    }
+
+    protected BoltServer createBoltServer(URL url, ChannelHandler[] channelHandlers) {
+        return new BoltServer(url, Arrays.asList(channelHandlers));
     }
 }

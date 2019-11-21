@@ -58,5 +58,33 @@ public interface Server extends Endpoint {
      */
     Channel getChannel(URL url);
 
+    /**
+     * close the channel.
+     *
+     * @param channel
+     */
+    void close(Channel channel);
+
     int getChannelCount();
+
+    /**
+     * Sync send
+     *
+     * @param channel the channel
+     * @param message the message
+     * @param timeoutMillis the timeout millis
+     * @return object
+     */
+    Object sendSync(final Channel channel, final Object message, final int timeoutMillis);
+
+    /**
+     * send with callback handler
+     *
+     * @param channel the channel
+     * @param message the message
+     * @param callbackHandler the callback handler
+     * @param timeoutMillis the timeout millis
+     */
+    void sendCallback(final Channel channel, final Object message, CallbackHandler callbackHandler,
+                      final int timeoutMillis);
 }

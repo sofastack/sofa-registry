@@ -58,26 +58,21 @@ public class MetaNodeExchanger implements NodeExchanger {
 
     @Override
     public Response request(Request request) {
-        Channel channel = connect(request.getRequestUrl());
         Client client = boltExchange.getClient(Exchange.META_SERVER_TYPE);
         LOGGER.info("MetaNode Exchanger request={},url={},callbackHandler={}", request.getRequestBody(),
                 request.getRequestUrl(), request.getCallBackHandler());
 
         try {
-            final Object result = client.sendSync(channel, request.getRequestBody(),
+            final Object result = client.sendSync(request.getRequestUrl(), request.getRequestBody(),
                     dataServerConfig.getRpcTimeout());
             return () -> result;
         } catch (Exception e) {
             //retry
             URL url = new URL(metaServerService.refreshLeader().getIp(),
                     dataServerConfig.getMetaServerPort());
-            channel = client.getChannel(url);
-            if (channel == null) {
-                channel = client.connect(url);
-            }
             LOGGER.warn("MetaNode Exchanger request send error!It will be retry once!Request url:{}", url);
 
-            final Object result = client.sendSync(channel, request.getRequestBody(),
+            final Object result = client.sendSync(url, request.getRequestBody(),
                     dataServerConfig.getRpcTimeout());
             return () -> result;
         }

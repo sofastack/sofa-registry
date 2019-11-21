@@ -27,7 +27,6 @@ import com.alipay.sofa.registry.common.model.RenewDatumRequest;
 import com.alipay.sofa.registry.common.model.store.URL;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
-import com.alipay.sofa.registry.remoting.Channel;
 import com.alipay.sofa.registry.remoting.ChannelHandler;
 import com.alipay.sofa.registry.remoting.Client;
 import com.alipay.sofa.registry.remoting.exchange.Exchange;
@@ -82,11 +81,6 @@ public class DataNodeExchanger implements NodeExchanger {
                 sessionClient = boltExchange.connect(Exchange.DATA_SERVER_TYPE, url,
                         dataClientHandlers.toArray(new ChannelHandler[dataClientHandlers.size()]));
             }
-            //try to connect data
-            Channel channel = sessionClient.getChannel(url);
-            if (channel == null) {
-                channel = sessionClient.connect(url);
-            }
 
             // print but ignore if from renew module, cause renew request is too much
             if (!(request.getRequestBody() instanceof RenewDatumRequest)) {
@@ -94,7 +88,7 @@ public class DataNodeExchanger implements NodeExchanger {
             }
 
             final Object result = sessionClient
-                    .sendSync(channel, request.getRequestBody(), sessionServerConfig.getDataNodeExchangeTimeOut());
+                    .sendSync(url, request.getRequestBody(), sessionServerConfig.getDataNodeExchangeTimeOut());
             if (result == null) {
                 throw new RequestException("DataNode Exchanger request data get null result!", request);
             }
@@ -138,10 +132,8 @@ public class DataNodeExchanger implements NodeExchanger {
             }
 
             try {
-                Channel channel = dataClient.getChannel(url);
-                if (channel == null) {
-                    dataClient.connect(url);
-                }
+                // make sure there are connections to DataServer
+                dataClient.connect(url);
             } catch (Exception e) {
                 LOGGER.error("DataNode Exchanger connect channel error!url:" + url, e);
             }

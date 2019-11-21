@@ -16,6 +16,16 @@
  */
 package com.alipay.sofa.registry.server.data.change.notify;
 
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.concurrent.Executor;
+import java.util.concurrent.TimeUnit;
+
+import javax.annotation.PostConstruct;
+
+import org.springframework.beans.factory.annotation.Autowired;
+
 import com.alipay.remoting.Connection;
 import com.alipay.sofa.registry.common.model.CommonResponse;
 import com.alipay.sofa.registry.common.model.dataserver.Datum;
@@ -33,14 +43,6 @@ import com.alipay.sofa.registry.server.data.remoting.sessionserver.SessionServer
 import com.alipay.sofa.registry.timer.AsyncHashedWheelTimer;
 import com.alipay.sofa.registry.timer.AsyncHashedWheelTimer.TaskFailedCallback;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
-import org.springframework.beans.factory.annotation.Autowired;
-
-import javax.annotation.PostConstruct;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.concurrent.Executor;
-import java.util.concurrent.TimeUnit;
 
 /**
  * Notify session DataChangeRequest,if fail get result callback retry
@@ -102,7 +104,7 @@ public class SessionServerNotifier implements IDataChangeNotifier {
     public void notify(Datum datum, Long lastVersion) {
         DataChangeRequest request = new DataChangeRequest(datum.getDataInfoId(),
             datum.getDataCenter(), datum.getVersion());
-        List<Connection> connections = sessionServerConnectionFactory.getConnections();
+        List<Connection> connections = sessionServerConnectionFactory.getSessionConnections();
         for (Connection connection : connections) {
             doNotify(new NotifyCallback(connection, request));
         }

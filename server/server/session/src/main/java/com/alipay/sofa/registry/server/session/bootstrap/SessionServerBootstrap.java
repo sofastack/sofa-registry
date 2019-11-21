@@ -235,6 +235,7 @@ public class SessionServerBootstrap {
                         }
                         dataClient = boltExchange.connect(
                             Exchange.DATA_SERVER_TYPE,
+                            sessionServerConfig.getDataClientConnNum(),
                             new URL(dataNode.getNodeUrl().getIpAddress(), sessionServerConfig
                                 .getDataServerPort()), dataClientHandlers
                                 .toArray(new ChannelHandler[dataClientHandlers.size()]));
@@ -261,8 +262,6 @@ public class SessionServerBootstrap {
             if (metaStart.compareAndSet(false, true)) {
                 metaClient = metaNodeExchanger.connectServer();
 
-                int size = metaClient.getChannels().size();
-
                 URL leaderUrl = new URL(raftClientManager.getLeader().getIp(),
                     sessionServerConfig.getMetaServerPort());
 
@@ -276,7 +275,7 @@ public class SessionServerBootstrap {
 
                 fetchBlackList();
 
-                LOGGER.info("MetaServer connected {} server! Port:{}", size,
+                LOGGER.info("MetaServer connected meta server! Port:{}",
                     sessionServerConfig.getMetaServerPort());
             }
         } catch (Exception e) {
@@ -354,13 +353,13 @@ public class SessionServerBootstrap {
     private Object sendMetaRequest(Object request, URL leaderUrl) {
         Object ret;
         try {
-            ret = metaClient.sendSync(metaClient.getChannel(leaderUrl), request,
+            ret = metaClient.sendSync(leaderUrl, request,
                 sessionServerConfig.getMetaNodeExchangeTimeOut());
         } catch (Exception e) {
             URL leaderUrlNew = new URL(raftClientManager.refreshLeader().getIp(),
                 sessionServerConfig.getMetaServerPort());
             LOGGER.warn("request send error!It will be retry once to new leader {}!", leaderUrlNew);
-            ret = metaClient.sendSync(metaClient.getChannel(leaderUrlNew), request,
+            ret = metaClient.sendSync(leaderUrlNew, request,
                 sessionServerConfig.getMetaNodeExchangeTimeOut());
         }
         return ret;

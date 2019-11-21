@@ -16,6 +16,16 @@
  */
 package com.alipay.sofa.registry.remoting.bolt;
 
+import java.net.InetSocketAddress;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Executor;
+import java.util.concurrent.atomic.AtomicBoolean;
+
 import com.alipay.remoting.Connection;
 import com.alipay.remoting.ConnectionEventType;
 import com.alipay.remoting.InvokeCallback;
@@ -32,16 +42,6 @@ import com.alipay.sofa.registry.remoting.ChannelHandler;
 import com.alipay.sofa.registry.remoting.ChannelHandler.HandlerType;
 import com.alipay.sofa.registry.remoting.ChannelHandler.InvokeType;
 import com.alipay.sofa.registry.remoting.Server;
-
-import java.net.InetSocketAddress;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.Executor;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  *
@@ -207,11 +207,6 @@ public class BoltServer implements Server {
     }
 
     @Override
-    public List<ChannelHandler> getChannelHandlers() {
-        return channelHandlers;
-    }
-
-    @Override
     public InetSocketAddress getLocalAddress() {
         return new InetSocketAddress(url.getPort());
     }
@@ -238,33 +233,6 @@ public class BoltServer implements Server {
     @Override
     public boolean isClosed() {
         return !isStarted.get();
-    }
-
-    @Override
-    public void sendOneway(Channel channel, Object message) {
-        if (channel != null && channel.isConnected()) {
-            Url boltUrl = null;
-            try {
-                boltUrl = new Url(channel.getRemoteAddress().getAddress().getHostAddress(), channel
-                    .getRemoteAddress().getPort());
-
-                if (LOGGER.isDebugEnabled()) {
-                    LOGGER
-                        .debug("Bolt Server one way message:{} , target url:{}", message, boltUrl);
-                }
-                boltServer.oneway(boltUrl, message);
-            } catch (RemotingException e) {
-                LOGGER.error(
-                    "Bolt Server one way message RemotingException! target url:" + boltUrl, e);
-                throw new RuntimeException("Bolt Server one way message RemotingException!", e);
-            } catch (InterruptedException e) {
-                LOGGER.error("Bolt Server one way message InterruptedException! target url:"
-                             + boltUrl, e);
-                throw new RuntimeException("Bolt Server one way message InterruptedException!", e);
-            }
-        }
-        throw new IllegalArgumentException(
-            "Send message connection can not be null or connection not be connected!");
     }
 
     @Override

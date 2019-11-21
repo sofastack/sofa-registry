@@ -16,6 +16,12 @@
  */
 package com.alipay.sofa.registry.server.session.remoting;
 
+import java.util.Collection;
+
+import javax.annotation.Resource;
+
+import org.springframework.beans.factory.annotation.Autowired;
+
 import com.alipay.sofa.registry.common.model.metaserver.MetaNode;
 import com.alipay.sofa.registry.common.model.store.URL;
 import com.alipay.sofa.registry.log.Logger;
@@ -32,10 +38,6 @@ import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
 import com.alipay.sofa.registry.server.session.node.NodeManager;
 import com.alipay.sofa.registry.server.session.node.RaftClientManager;
 import com.alipay.sofa.registry.server.session.remoting.handler.AbstractClientHandler;
-import org.springframework.beans.factory.annotation.Autowired;
-
-import javax.annotation.Resource;
-import java.util.Collection;
 
 /**
  * The type Data node exchanger.
@@ -80,14 +82,9 @@ public class MetaNodeExchanger implements NodeExchanger {
                 sessionClient = boltExchange.connect(Exchange.META_SERVER_TYPE, url,
                         metaClientHandlers.toArray(new ChannelHandler[metaClientHandlers.size()]));
             }
-            //try to connect data
-            Channel channel = sessionClient.getChannel(url);
-            if (channel == null) {
-                channel = sessionClient.connect(url);
-            }
             try {
 
-                final Object result = sessionClient.sendSync(channel, request.getRequestBody(),
+                final Object result = sessionClient.sendSync(url, request.getRequestBody(),
                         sessionServerConfig.getDataNodeExchangeTimeOut());
                 response = () -> result;
 
@@ -95,13 +92,9 @@ public class MetaNodeExchanger implements NodeExchanger {
                 //retry
                 url = new URL(raftClientManager.refreshLeader().getIp(),
                         sessionServerConfig.getMetaServerPort());
-                channel = sessionClient.getChannel(url);
-                if (channel == null) {
-                    channel = sessionClient.connect(url);
-                }
                 LOGGER.warn("MetaNode Exchanger request send error!It will be retry once!Request url:{}", url);
 
-                final Object result = sessionClient.sendSync(channel, request.getRequestBody(),
+                final Object result = sessionClient.sendSync(url, request.getRequestBody(),
                         sessionServerConfig.getDataNodeExchangeTimeOut());
                 response = () -> result;
             }

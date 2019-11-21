@@ -18,30 +18,12 @@ package com.alipay.sofa.registry.remoting;
 
 import com.alipay.sofa.registry.common.model.store.URL;
 
-import java.net.InetSocketAddress;
-import java.util.Collection;
-
 /**
  *
  * @author shangyu.wh
  * @version $Id: Client.java, v 0.1 2017-11-20 21:07 shangyu.wh Exp $
  */
 public interface Client extends Endpoint {
-
-    /**
-     * get channels.
-     *
-     * @return channels
-     */
-    Collection<Channel> getChannels();
-
-    /**
-     * get channel.
-     *
-     * @param remoteAddress
-     * @return channel
-     */
-    Channel getChannel(InetSocketAddress remoteAddress);
 
     /**
      * get channel by url.
@@ -57,4 +39,35 @@ public interface Client extends Endpoint {
      * @return
      */
     Channel connect(URL url);
+
+    /**
+     * Sync send
+     *
+     * @param url the url
+     * @param message the message
+     * @param timeoutMillis the timeout millis
+     * @return object
+     */
+    Object sendSync(final URL url, final Object message, final int timeoutMillis);
+
+    /**
+     * Sync send
+     *
+     * @param channel the channel
+     * @param message the message
+     * @param timeoutMillis the timeout millis
+     * @return object
+     */
+    Object sendSync(final Channel channel, final Object message, final int timeoutMillis);
+
+    /**
+     * send with callback handler
+     *
+     * @param url the url
+     * @param message the message
+     * @param callbackHandler the callback handler
+     * @param timeoutMillis the timeout millis
+     */
+    void sendCallback(final URL url, final Object message, CallbackHandler callbackHandler,
+                      final int timeoutMillis);
 }

@@ -16,6 +16,8 @@
  */
 package com.alipay.sofa.registry.server.data.remoting.sessionserver.handler;
 
+import org.springframework.beans.factory.annotation.Autowired;
+
 import com.alipay.sofa.registry.common.model.Node;
 import com.alipay.sofa.registry.common.model.Node.NodeType;
 import com.alipay.sofa.registry.net.NetUtil;
@@ -24,7 +26,6 @@ import com.alipay.sofa.registry.remoting.ChannelHandler;
 import com.alipay.sofa.registry.remoting.RemotingException;
 import com.alipay.sofa.registry.server.data.remoting.handler.AbstractServerHandler;
 import com.alipay.sofa.registry.server.data.remoting.sessionserver.SessionServerConnectionFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 
 /**
  *
@@ -51,7 +52,7 @@ public class DataServerConnectionHandler extends AbstractServerHandler {
     @Override
     public void disconnected(Channel channel) throws RemotingException {
         super.disconnected(channel);
-        sessionServerConnectionFactory.removeProcess(NetUtil.toAddressString(channel
+        sessionServerConnectionFactory.sessionDisconnected(NetUtil.toAddressString(channel
             .getRemoteAddress()));
     }
 

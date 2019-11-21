@@ -16,13 +16,13 @@
  */
 package com.alipay.sofa.registry.server.session.bootstrap;
 
-import org.apache.commons.lang.builder.ToStringBuilder;
-import org.apache.commons.lang.builder.ToStringStyle;
-import org.springframework.boot.context.properties.ConfigurationProperties;
-
 import java.util.HashSet;
 import java.util.Set;
 import java.util.regex.Pattern;
+
+import org.apache.commons.lang.builder.ToStringBuilder;
+import org.apache.commons.lang.builder.ToStringStyle;
+import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**
  * The type Session server config bean.
@@ -237,6 +237,8 @@ public class SessionServerConfigBean implements SessionServerConfig {
     private int                dataNodeRetryExecutorQueueSize          = 1000000;
 
     private int                dataNodeRetryExecutorThreadSize         = 100;
+
+    private int                dataClientConnNum                       = 10;
 
     //end config for enterprise version
 
@@ -2027,6 +2029,25 @@ public class SessionServerConfigBean implements SessionServerConfig {
      */
     public void setAccessLimitRate(double accessLimitRate) {
         this.accessLimitRate = accessLimitRate;
+    }
+
+    /**
+     * Getter method for property <tt>dataClientConnNum</tt>.
+     *
+     * @return property value of dataClientConnNum
+     */
+    @Override
+    public int getDataClientConnNum() {
+        return dataClientConnNum;
+    }
+
+    /**
+     * Setter method for property <tt>dataClientConnNum </tt>.
+     *
+     * @param dataClientConnNum  value to be assigned to property dataClientConnNum
+     */
+    public void setDataClientConnNum(int dataClientConnNum) {
+        this.dataClientConnNum = dataClientConnNum;
     }
 
     @Override
