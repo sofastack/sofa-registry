@@ -22,6 +22,7 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import com.alipay.remoting.Connection;
+import com.alipay.remoting.ConnectionEventProcessor;
 import com.alipay.remoting.ConnectionEventType;
 import com.alipay.remoting.InvokeCallback;
 import com.alipay.remoting.Url;
@@ -86,29 +87,33 @@ public class BoltClient implements Client {
         }
 
         rpcClient.addConnectionEventProcessor(ConnectionEventType.CONNECT,
-            new ConnectionEventAdapter(ConnectionEventType.CONNECT, connectionEventHandler, null));
+            newConnectionEventAdapter(connectionEventHandler, ConnectionEventType.CONNECT));
         rpcClient.addConnectionEventProcessor(ConnectionEventType.CLOSE,
-            new ConnectionEventAdapter(ConnectionEventType.CLOSE, connectionEventHandler, null));
-        rpcClient
-            .addConnectionEventProcessor(ConnectionEventType.EXCEPTION, new ConnectionEventAdapter(
-                ConnectionEventType.EXCEPTION, connectionEventHandler, null));
+            newConnectionEventAdapter(connectionEventHandler, ConnectionEventType.CLOSE));
+        rpcClient.addConnectionEventProcessor(ConnectionEventType.EXCEPTION,
+            newConnectionEventAdapter(connectionEventHandler, ConnectionEventType.EXCEPTION));
 
         for (ChannelHandler channelHandler : channelHandlers) {
             if (HandlerType.PROCESSER.equals(channelHandler.getType())) {
                 if (InvokeType.SYNC.equals(channelHandler.getInvokeType())) {
-                    rpcClient.registerUserProcessor(getSyncProcessor(channelHandler));
+                    rpcClient.registerUserProcessor(newSyncProcessor(channelHandler));
                 } else {
-                    rpcClient.registerUserProcessor(getAsyncProcessor(channelHandler));
+                    rpcClient.registerUserProcessor(newAsyncProcessor(channelHandler));
                 }
             }
         }
     }
 
-    protected AsyncUserProcessorAdapter getAsyncProcessor(ChannelHandler channelHandler) {
+    protected ConnectionEventProcessor newConnectionEventAdapter(ChannelHandler connectionEventHandler,
+                                                                 ConnectionEventType connectEventType) {
+        return new ConnectionEventAdapter(connectEventType, connectionEventHandler, null);
+    }
+
+    protected AsyncUserProcessorAdapter newAsyncProcessor(ChannelHandler channelHandler) {
         return new AsyncUserProcessorAdapter(channelHandler);
     }
 
-    protected SyncUserProcessorAdapter getSyncProcessor(ChannelHandler channelHandler) {
+    protected SyncUserProcessorAdapter newSyncProcessor(ChannelHandler channelHandler) {
         return new SyncUserProcessorAdapter(channelHandler);
     }
 
