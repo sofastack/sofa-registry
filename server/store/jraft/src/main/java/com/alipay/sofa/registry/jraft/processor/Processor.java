@@ -28,6 +28,7 @@ import java.lang.invoke.MethodHandles;
 import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  *
@@ -43,7 +44,7 @@ public class Processor {
 
     private Map<String, Object>              workers              = new HashMap<>();
 
-    private Map<String, MethodHandle>        methodHandleMap      = new HashMap<>();
+    private Map<String, MethodHandle>        methodHandleMap      = new ConcurrentHashMap<>();
 
     private final static String              SERVICE_METHOD_SPLIT = "#@#";
 
@@ -110,10 +111,14 @@ public class Processor {
             }
             Object[] methodArg = request.getMethodArgs();
             String methodHandleKey = getMethodHandleKey(serviceId, methodKey);
+
             MethodHandle methodHandle = methodHandleMap.get(methodHandleKey);
             if (methodHandle == null) {
-                methodHandle = methodHandleMap.put(methodHandleKey, MethodHandles.lookup()
-                    .unreflect(appServiceMethod));
+                MethodHandle methodHandleNew = MethodHandles.lookup().unreflect(appServiceMethod);
+                methodHandle = methodHandleMap.putIfAbsent(methodHandleKey, methodHandleNew);
+                if (methodHandle == null) {
+                    methodHandle = methodHandleNew;
+                }
             }
 
             Object ret = methodHandle.bindTo(target).invokeWithArguments(methodArg);
@@ -154,8 +159,11 @@ public class Processor {
             String methodHandleKey = getMethodHandleKey(serviceId, methodKey);
             MethodHandle methodHandle = methodHandleMap.get(methodHandleKey);
             if (methodHandle == null) {
-                methodHandle = methodHandleMap.put(methodHandleKey, MethodHandles.lookup()
-                    .unreflect(method));
+                MethodHandle methodHandleNew = MethodHandles.lookup().unreflect(method);
+                methodHandle = methodHandleMap.putIfAbsent(methodHandleKey, methodHandleNew);
+                if (methodHandle == null) {
+                    methodHandle = methodHandleNew;
+                }
             }
 
             Object ret = methodHandle.bindTo(target).invokeWithArguments(methodArg);
