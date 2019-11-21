@@ -183,19 +183,19 @@ public class RaftServer {
 
         // See https://github.com/sofastack/sofa-jraft/pull/156
         final BlockBasedTableConfig conf = new BlockBasedTableConfig() //
-                // Begin to use partitioned index filters
-                // https://github.com/facebook/rocksdb/wiki/Partitioned-Index-Filters#how-to-use-it
-                .setIndexType(IndexType.kTwoLevelIndexSearch) //
-                .setFilter(new BloomFilter(16, false)) //
-                .setPartitionFilters(true) //
-                .setMetadataBlockSize(8 * SizeUnit.KB) //
-                .setCacheIndexAndFilterBlocks(false) //
-                .setCacheIndexAndFilterBlocksWithHighPriority(true) //
-                .setPinL0FilterAndIndexBlocksInCache(true) //
-                // End of partitioned index filters settings.
-                .setBlockSize(4 * SizeUnit.KB)//
-                .setBlockCacheSize(raftServerConfig.getRockDBCacheSize() * SizeUnit.MB) //
-                .setCacheNumShardBits(8);
+            // Begin to use partitioned index filters
+            // https://github.com/facebook/rocksdb/wiki/Partitioned-Index-Filters#how-to-use-it
+            .setIndexType(IndexType.kTwoLevelIndexSearch) //
+            .setFilter(new BloomFilter(16, false)) //
+            .setPartitionFilters(true) //
+            .setMetadataBlockSize(8 * SizeUnit.KB) //
+            .setCacheIndexAndFilterBlocks(false) //
+            .setCacheIndexAndFilterBlocksWithHighPriority(true) //
+            .setPinL0FilterAndIndexBlocksInCache(true) //
+            // End of partitioned index filters settings.
+            .setBlockSize(4 * SizeUnit.KB)//
+            .setBlockCacheSize(raftServerConfig.getRockDBCacheSize() * SizeUnit.MB) //
+            .setCacheNumShardBits(8);
 
         StorageOptionsFactory.registerRocksDBTableFormatConfig(RocksDBLogStorage.class, conf);
 
