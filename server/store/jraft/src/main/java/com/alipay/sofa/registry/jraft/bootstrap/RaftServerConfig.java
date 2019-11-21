@@ -50,6 +50,8 @@ public class RaftServerConfig {
      */
     private int     snapshotIntervalSecs        = 3600;
 
+    private int     RockDBCacheSize             = 64;   //64M
+
     private Logger  metricsLogger;
 
     /**
@@ -140,5 +142,23 @@ public class RaftServerConfig {
      */
     public void setMetricsLogger(Logger metricsLogger) {
         this.metricsLogger = metricsLogger;
+    }
+
+    /**
+     * Getter method for property <tt>RockDBCacheSize</tt>.
+     *
+     * @return property value of RockDBCacheSize
+     */
+    public int getRockDBCacheSize() {
+        return RockDBCacheSize;
+    }
+
+    /**
+     * Setter method for property <tt>RockDBCacheSize</tt>.
+     *
+     * @param RockDBCacheSize  value to be assigned to property RockDBCacheSize
+     */
+    public void setRockDBCacheSize(int rockDBCacheSize) {
+        RockDBCacheSize = rockDBCacheSize;
     }
 }

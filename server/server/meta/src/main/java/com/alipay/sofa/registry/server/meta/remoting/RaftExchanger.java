@@ -16,15 +16,6 @@
  */
 package com.alipay.sofa.registry.server.meta.remoting;
 
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.stream.Collectors;
-
-import org.springframework.beans.factory.annotation.Autowired;
-
 import com.alipay.sofa.jraft.CliService;
 import com.alipay.sofa.jraft.Status;
 import com.alipay.sofa.jraft.conf.Configuration;
@@ -47,6 +38,14 @@ import com.alipay.sofa.registry.server.meta.bootstrap.MetaServerConfig;
 import com.alipay.sofa.registry.server.meta.bootstrap.NodeConfig;
 import com.alipay.sofa.registry.server.meta.executor.ExecutorManager;
 import com.alipay.sofa.registry.server.meta.registry.Registry;
+import org.springframework.beans.factory.annotation.Autowired;
+
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.stream.Collectors;
 
 /**
  *
@@ -141,6 +140,9 @@ public class RaftExchanger {
                 RaftServerConfig raftServerConfig = new RaftServerConfig();
                 raftServerConfig.setMetricsLogger(METRICS_LOGGER);
                 raftServerConfig.setEnableMetrics(metaServerConfig.isEnableMetrics());
+                if (metaServerConfig.getRockDBCacheSize() > 0) {
+                    raftServerConfig.setRockDBCacheSize(metaServerConfig.getRockDBCacheSize());
+                }
 
                 raftServer.start(raftServerConfig);
             }
@@ -383,5 +385,14 @@ public class RaftExchanger {
      */
     public AtomicBoolean getClsStart() {
         return clsStart;
+    }
+
+    /**
+     * Getter method for property <tt>raftServer</tt>.
+     *
+     * @return property value of raftServer
+     */
+    public RaftServer getRaftServer() {
+        return raftServer;
     }
 }

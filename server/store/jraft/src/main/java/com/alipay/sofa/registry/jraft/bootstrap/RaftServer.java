@@ -26,6 +26,8 @@ import com.alipay.sofa.jraft.entity.PeerId;
 import com.alipay.sofa.jraft.option.NodeOptions;
 import com.alipay.sofa.jraft.rpc.RaftRpcServerFactory;
 import com.alipay.sofa.jraft.rpc.impl.AbstractBoltClientService;
+import com.alipay.sofa.jraft.storage.impl.RocksDBLogStorage;
+import com.alipay.sofa.jraft.util.StorageOptionsFactory;
 import com.alipay.sofa.registry.common.model.store.URL;
 import com.alipay.sofa.registry.jraft.command.NotifyLeaderChange;
 import com.alipay.sofa.registry.jraft.handler.NotifyLeaderChangeHandler;
@@ -42,6 +44,11 @@ import com.alipay.sofa.registry.remoting.ChannelHandler;
 import com.alipay.sofa.registry.remoting.bolt.BoltServer;
 import com.alipay.sofa.registry.remoting.bolt.SyncUserProcessorAdapter;
 import com.alipay.sofa.registry.util.FileUtils;
+import org.rocksdb.BlockBasedTableConfig;
+import org.rocksdb.BloomFilter;
+import org.rocksdb.IndexType;
+import org.rocksdb.RocksDB;
+import org.rocksdb.util.SizeUnit;
 
 import java.io.File;
 import java.io.IOException;
@@ -55,6 +62,10 @@ import java.util.List;
  * @version $Id: RaftServer.java, v 0.1 2018-05-16 11:39 shangyu.wh Exp $
  */
 public class RaftServer {
+
+    static {
+        RocksDB.loadLibrary();
+    }
 
     private static final Logger     LOGGER         = LoggerFactory.getLogger(RaftServer.class);
 
@@ -170,6 +181,24 @@ public class RaftServer {
             nodeOptions.setEnableMetrics(raftServerConfig.isEnableMetrics());
         }
 
+        // See https://github.com/sofastack/sofa-jraft/pull/156
+        final BlockBasedTableConfig conf = new BlockBasedTableConfig() //
+            // Begin to use partitioned index filters
+            // https://github.com/facebook/rocksdb/wiki/Partitioned-Index-Filters#how-to-use-it
+            .setIndexType(IndexType.kTwoLevelIndexSearch) //
+            .setFilter(new BloomFilter(16, false)) //
+            .setPartitionFilters(true) //
+            .setMetadataBlockSize(8 * SizeUnit.KB) //
+            .setCacheIndexAndFilterBlocks(false) //
+            .setCacheIndexAndFilterBlocksWithHighPriority(true) //
+            .setPinL0FilterAndIndexBlocksInCache(true) //
+            // End of partitioned index filters settings.
+            .setBlockSize(4 * SizeUnit.KB)//
+            .setBlockCacheSize(raftServerConfig.getRockDBCacheSize() * SizeUnit.MB) //
+            .setCacheNumShardBits(8);
+
+        StorageOptionsFactory.registerRocksDBTableFormatConfig(RocksDBLogStorage.class, conf);
+
         return nodeOptions;
     }
 
@@ -255,4 +284,12 @@ public class RaftServer {
         this.followerProcessListener = followerProcessListener;
     }
 
+    /**
+     * Getter method for property <tt>serverHandlers</tt>.
+     *
+     * @return property value of serverHandlers
+     */
+    public List<ChannelHandler> getServerHandlers() {
+        return serverHandlers;
+    }
 }

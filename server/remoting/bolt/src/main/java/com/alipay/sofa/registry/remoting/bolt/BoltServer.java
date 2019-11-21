@@ -289,7 +289,7 @@ public class BoltServer implements Server {
 
                     @Override
                     public Executor getExecutor() {
-                        return null;
+                        return callbackHandler.getExecutor();
                     }
                 }, timeoutMillis);
                 return;
