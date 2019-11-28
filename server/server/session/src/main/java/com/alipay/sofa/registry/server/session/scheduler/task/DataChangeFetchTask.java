@@ -16,6 +16,15 @@
  */
 package com.alipay.sofa.registry.server.session.scheduler.task;
 
+import java.net.InetSocketAddress;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.function.Predicate;
+
 import com.alipay.sofa.registry.common.model.dataserver.Datum;
 import com.alipay.sofa.registry.common.model.sessionserver.DataChangeRequest;
 import com.alipay.sofa.registry.common.model.store.BaseInfo.ClientVersion;
@@ -41,15 +50,6 @@ import com.alipay.sofa.registry.task.listener.TaskEvent;
 import com.alipay.sofa.registry.task.listener.TaskEvent.TaskType;
 import com.alipay.sofa.registry.task.listener.TaskListenerManager;
 import com.alipay.sofa.registry.util.DatumVersionUtil;
-
-import java.net.InetSocketAddress;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.function.Predicate;
 
 /**
  *
@@ -265,10 +265,15 @@ public class DataChangeFetchTask extends AbstractSessionTask {
     }
 
     private Datum getDatumCache() {
+        // build key
         DatumKey datumKey = new DatumKey(dataChangeRequest.getDataInfoId(),
             dataChangeRequest.getDataCenter());
-        Key key = new Key(KeyType.OBJ, datumKey.getClass().getName(), datumKey);
+        Key key = new Key(KeyType.OBJ, DatumKey.class.getName(), datumKey);
 
+        // remove cache
+        sessionCacheService.invalidate(key);
+
+        // get from cache (it will fetch from backend server)
         Value<Datum> value = null;
         try {
             value = sessionCacheService.getValue(key);
@@ -326,7 +331,6 @@ public class DataChangeFetchTask extends AbstractSessionTask {
 
     @Override
     public void setTaskEvent(TaskEvent taskEvent) {
-
         //taskId create from event
         if (taskEvent.getTaskId() != null) {
             setTaskId(taskEvent.getTaskId());

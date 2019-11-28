@@ -16,7 +16,20 @@
  */
 package com.alipay.sofa.registry.server.session.bootstrap;
 
-import com.alipay.sofa.registry.common.model.Node;
+import java.lang.annotation.Annotation;
+import java.util.Collection;
+import java.util.Date;
+import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
+
+import javax.annotation.Resource;
+import javax.ws.rs.Path;
+import javax.ws.rs.ext.Provider;
+
+import org.glassfish.jersey.server.ResourceConfig;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationContext;
+
 import com.alipay.sofa.registry.common.model.constants.ValueConstants;
 import com.alipay.sofa.registry.common.model.metaserver.FetchProvideDataRequest;
 import com.alipay.sofa.registry.common.model.metaserver.NodeChangeResult;
@@ -37,24 +50,9 @@ import com.alipay.sofa.registry.server.session.node.NodeManagerFactory;
 import com.alipay.sofa.registry.server.session.node.RaftClientManager;
 import com.alipay.sofa.registry.server.session.node.SessionProcessIdGenerator;
 import com.alipay.sofa.registry.server.session.provideData.ProvideDataProcessor;
-import com.alipay.sofa.registry.server.session.registry.Registry;
-import com.alipay.sofa.registry.server.session.remoting.handler.AbstractClientHandler;
 import com.alipay.sofa.registry.server.session.remoting.handler.AbstractServerHandler;
 import com.alipay.sofa.registry.server.session.scheduler.ExecutorManager;
 import com.alipay.sofa.registry.task.batcher.TaskDispatchers;
-import org.glassfish.jersey.server.ResourceConfig;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.ApplicationContext;
-import org.springframework.util.CollectionUtils;
-
-import javax.annotation.Resource;
-import javax.ws.rs.Path;
-import javax.ws.rs.ext.Provider;
-import java.lang.annotation.Annotation;
-import java.util.Collection;
-import java.util.Date;
-import java.util.Map;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * The type Session server bootstrap.
@@ -81,17 +79,14 @@ public class SessionServerBootstrap {
     @Resource(name = "serverHandlers")
     private Collection<AbstractServerHandler> serverHandlers;
 
-    @Resource(name = "dataClientHandlers")
-    private Collection<AbstractClientHandler> dataClientHandlers;
-
-    @Autowired
-    private NodeManager                       dataNodeManager;
-
     @Autowired
     private NodeManager                       metaNodeManager;
 
     @Autowired
     protected NodeExchanger                   metaNodeExchanger;
+
+    @Autowired
+    private NodeExchanger                     dataNodeExchanger;
 
     @Autowired
     private ResourceConfig                    jerseyResourceConfig;
@@ -106,16 +101,11 @@ public class SessionServerBootstrap {
     private BlacklistManager                  blacklistManager;
 
     @Autowired
-    private Registry                          sessionRegistry;
-
-    @Autowired
     private ProvideDataProcessor              provideDataProcessorManager;
 
     private Server                            server;
 
     private Server                            httpServer;
-
-    private Client                            dataClient;
 
     private Client                            metaClient;
 
@@ -172,7 +162,6 @@ public class SessionServerBootstrap {
 
             executorManager.stopScheduler();
             TaskDispatchers.stopDefaultSingleTaskDispatcher();
-            closeClients();
             stopHttpServer();
             stopServer();
         } catch (Throwable e) {
@@ -222,29 +211,7 @@ public class SessionServerBootstrap {
     private void connectDataServer() {
         try {
             if (dataStart.compareAndSet(false, true)) {
-                Collection<Node> dataNodes = dataNodeManager.getDataCenterNodes();
-                if (CollectionUtils.isEmpty(dataNodes)) {
-                    dataNodeManager.getAllDataCenterNodes();
-                    dataNodes = dataNodeManager.getDataCenterNodes();
-                }
-                if (!CollectionUtils.isEmpty(dataNodes)) {
-                    for (Node dataNode : dataNodes) {
-                        if (dataNode.getNodeUrl() == null
-                            || dataNode.getNodeUrl().getIpAddress() == null) {
-                            LOGGER
-                                .error("get data node address error!url{}", dataNode.getNodeUrl());
-                            continue;
-                        }
-                        dataClient = boltExchange.connect(
-                            Exchange.DATA_SERVER_TYPE,
-                            sessionServerConfig.getDataClientConnNum(),
-                            new URL(dataNode.getNodeUrl().getIpAddress(), sessionServerConfig
-                                .getDataServerPort()), dataClientHandlers
-                                .toArray(new ChannelHandler[dataClientHandlers.size()]));
-                    }
-                    LOGGER.info("Data server connected {} server! port:{}", dataNodes.size(),
-                        sessionServerConfig.getDataServerPort());
-                }
+                dataNodeExchanger.connectServer();
             }
         } catch (Exception e) {
             dataStart.set(false);
@@ -387,12 +354,6 @@ public class SessionServerBootstrap {
     private void stopServer() {
         if (server != null && server.isOpen()) {
             server.close();
-        }
-    }
-
-    private void closeClients() {
-        if (dataClient != null && !dataClient.isClosed()) {
-            dataClient.close();
         }
     }
 

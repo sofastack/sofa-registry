@@ -209,8 +209,6 @@ public class SessionInterests implements Interests, ReSubscribers {
         Map<String, Subscriber> subscribers = interests.get(dataInfoId);
 
         if (subscribers == null || subscribers.isEmpty()) {
-            LOGGER.info("There are not Subscriber Existed! Who are interest with dataInfoId {} !",
-                dataInfoId);
             return false;
         }
 

@@ -121,15 +121,14 @@ public class SessionDataStore implements DataStore {
             Map<String, Publisher> publishers = registry.get(dataInfoId);
 
             if (publishers == null) {
-                LOGGER.error(
-                    "Delete failed because publisher is not registered for dataInfoId: {}",
+                LOGGER.warn("Delete failed because publisher is not registered for dataInfoId: {}",
                     dataInfoId);
                 return false;
             } else {
                 Publisher publisherTodelete = publishers.remove(registerId);
 
                 if (publisherTodelete == null) {
-                    LOGGER.error(
+                    LOGGER.warn(
                         "Delete failed because publisher is not registered for registerId: {}",
                         registerId);
                     return false;
@@ -191,7 +190,7 @@ public class SessionDataStore implements DataStore {
         Map<String, Publisher> publishers = registry.get(dataInfoId);
 
         if (publishers == null) {
-            LOGGER.error("Publisher is not registered for dataInfoId: {}", dataInfoId);
+            LOGGER.warn("Publisher is not registered for dataInfoId: {}", dataInfoId);
             return null;
         }
         return publishers.get(registerId);

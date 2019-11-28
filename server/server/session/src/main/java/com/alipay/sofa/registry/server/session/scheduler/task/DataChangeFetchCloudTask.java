@@ -206,6 +206,9 @@ public class DataChangeFetchCloudTask extends AbstractSessionTask {
                             new DatumKey(fetchDataInfoId, dataCenter))).
                     collect(Collectors.toList());
 
+            // remove cache
+            keys.stream().forEach(key -> sessionCacheService.invalidate(key));
+
             Map<Key, Value> values = null;
             try {
                 values = sessionCacheService.getValues(keys);

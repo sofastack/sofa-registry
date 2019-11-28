@@ -67,13 +67,13 @@ public class SessionServerConfigBean implements SessionServerConfig {
 
     private int                schedulerConnectMetaFirstDelay          = 5;
 
-    private int                schedulerConnectMetaExpBackOffBound     = 10;
+    private int                schedulerConnectMetaExpBackOffBound     = 5;
 
-    private int                schedulerConnectDataTimeout             = 3;
+    private int                schedulerConnectDataTimeout             = 10;
 
-    private int                schedulerConnectDataFirstDelay          = 3;
+    private int                schedulerConnectDataFirstDelay          = 10;
 
-    private int                schedulerConnectDataExpBackOffBound     = 10;
+    private int                schedulerConnectDataExpBackOffBound     = 5;
 
     private int                schedulerCleanInvalidClientTimeOut      = 3;
 
@@ -137,7 +137,7 @@ public class SessionServerConfigBean implements SessionServerConfig {
 
     private long               pushTaskExecutorKeepAliveTime           = 60;
 
-    private int                dataChangeExecutorMinPoolSize           = 40;
+    private int                dataChangeExecutorMinPoolSize           = 100;
 
     private int                dataChangeExecutorMaxPoolSize           = 400;
 

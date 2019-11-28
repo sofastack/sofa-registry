@@ -17,6 +17,7 @@
 package com.alipay.sofa.registry.server.session.remoting;
 
 import java.util.Collection;
+import java.util.StringJoiner;
 
 import javax.annotation.Resource;
 
@@ -103,13 +104,16 @@ public class DataNodeExchanger implements NodeExchanger {
     }
 
     @Override
-    public Client connectServer() {
+    public synchronized Client connectServer() {
 
         Collection<Node> dataNodes = dataNodeManager.getDataCenterNodes();
         if (dataNodes == null || dataNodes.isEmpty()) {
             dataNodeManager.getAllDataCenterNodes();
             dataNodes = dataNodeManager.getDataCenterNodes();
         }
+
+        boolean connectedAll = true;
+        StringJoiner errorMsg = new StringJoiner(";");
 
         Client dataClient = null;
         for (Node dataNode : dataNodes) {
@@ -123,20 +127,24 @@ public class DataNodeExchanger implements NodeExchanger {
             try {
                 dataClient = boltExchange.getClient(Exchange.DATA_SERVER_TYPE);
                 if (dataClient == null) {
-                    dataClient = boltExchange.connect(Exchange.DATA_SERVER_TYPE, url,
+                    dataClient = boltExchange.connect(Exchange.DATA_SERVER_TYPE,
+                        sessionServerConfig.getDataClientConnNum(), url,
                         dataClientHandlers.toArray(new ChannelHandler[dataClientHandlers.size()]));
+                } else {
+                    // make sure there are connections to DataServer
+                    dataClient.connect(url);
                 }
             } catch (Exception e) {
-                LOGGER.error("DataNode Exchanger connect DataServer error!url:" + url, e);
+                String msg = "DataNode Exchanger connect DataServer error!url:" + url;
+                LOGGER.error(msg, e);
+                connectedAll = false;
+                errorMsg.add(msg);
                 continue;
             }
+        }
 
-            try {
-                // make sure there are connections to DataServer
-                dataClient.connect(url);
-            } catch (Exception e) {
-                LOGGER.error("DataNode Exchanger connect channel error!url:" + url, e);
-            }
+        if (!connectedAll) {
+            throw new RuntimeException("Data server connected server error: " + errorMsg.toString());
         }
         return dataClient;
     }

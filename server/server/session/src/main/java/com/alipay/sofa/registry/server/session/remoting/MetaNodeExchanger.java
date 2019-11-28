@@ -108,7 +108,7 @@ public class MetaNodeExchanger implements NodeExchanger {
     }
 
     @Override
-    public Client connectServer() {
+    public synchronized Client connectServer() {
 
         Collection<MetaNode> nodes = metaNodeManager.getDataCenterNodes();
         if (nodes == null || nodes.isEmpty()) {
