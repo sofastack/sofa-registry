@@ -21,7 +21,6 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import com.alipay.sofa.registry.common.model.store.URL;
-import com.alipay.sofa.registry.remoting.Channel;
 import com.alipay.sofa.registry.remoting.ChannelHandler;
 import com.alipay.sofa.registry.remoting.Client;
 import com.alipay.sofa.registry.remoting.Server;
@@ -46,27 +45,12 @@ public class BoltExchange implements Exchange<ChannelHandler> {
     }
 
     @Override
-    public Client connect(String serverType, int connNum, URL serverUrl,
-                          ChannelHandler... channelHandlers) {
+    public Client connect(String serverType, int connNum, URL serverUrl, ChannelHandler... channelHandlers) {
         if (channelHandlers == null) {
             throw new IllegalArgumentException("channelHandlers cannot be null!");
         }
-        Client client = clients.get(serverType);
-        if (client == null) {
-            BoltClient boltClient = createBoltClient(connNum);
-            boltClient.initHandlers(Arrays.asList(channelHandlers));
-            boltClient.connect(serverUrl);
-            client = clients.putIfAbsent(serverType, boltClient);
-            if (client == null) {
-                client = boltClient;
-            }
-        } else {
-            Channel channel = client.getChannel(serverUrl);
-            if (channel == null) {
-                BoltClient boltClient = (BoltClient) client;
-                boltClient.connect(serverUrl);
-            }
-        }
+        Client client = clients.computeIfAbsent(serverType, key -> newBoltClient(connNum, channelHandlers));
+        client.connect(serverUrl);
         return client;
     }
 
@@ -99,6 +83,12 @@ public class BoltExchange implements Exchange<ChannelHandler> {
      */
     public void setServer(Server server, URL url) {
         serverMap.putIfAbsent(url.getPort(), server);
+    }
+
+    private BoltClient newBoltClient(int connNum, ChannelHandler[] channelHandlers) {
+        BoltClient boltClient = createBoltClient(connNum);
+        boltClient.initHandlers(Arrays.asList(channelHandlers));
+        return boltClient;
     }
 
     protected BoltClient createBoltClient(int connNum) {

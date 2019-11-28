@@ -90,6 +90,7 @@ import com.alipay.sofa.registry.server.data.remoting.sessionserver.handler.DataS
 import com.alipay.sofa.registry.server.data.remoting.sessionserver.handler.DatumSnapshotHandler;
 import com.alipay.sofa.registry.server.data.remoting.sessionserver.handler.GetDataHandler;
 import com.alipay.sofa.registry.server.data.remoting.sessionserver.handler.GetDataVersionsHandler;
+import com.alipay.sofa.registry.server.data.remoting.sessionserver.handler.HeartbeatHandler;
 import com.alipay.sofa.registry.server.data.remoting.sessionserver.handler.PublishDataHandler;
 import com.alipay.sofa.registry.server.data.remoting.sessionserver.handler.RenewDatumHandler;
 import com.alipay.sofa.registry.server.data.remoting.sessionserver.handler.SessionServerRegisterHandler;
@@ -218,6 +219,7 @@ public class DataServerBeanConfiguration {
             list.add(dataServerConnectionHandler());
             list.add(renewDatumHandler());
             list.add(datumSnapshotHandler());
+            list.add(heartbeatHandler());
             return list;
         }
 
@@ -294,6 +296,11 @@ public class DataServerBeanConfiguration {
         @Bean
         public AbstractServerHandler sessionServerRegisterHandler() {
             return new SessionServerRegisterHandler();
+        }
+
+        @Bean
+        public AbstractServerHandler heartbeatHandler() {
+            return new HeartbeatHandler();
         }
 
         @Bean
