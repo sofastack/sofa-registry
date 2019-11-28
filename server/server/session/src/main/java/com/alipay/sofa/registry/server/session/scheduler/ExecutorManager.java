@@ -16,19 +16,6 @@
  */
 package com.alipay.sofa.registry.server.session.scheduler;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ScheduledThreadPoolExecutor;
-import java.util.concurrent.SynchronousQueue;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
-
-import org.springframework.beans.factory.annotation.Autowired;
-
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.metrics.TaskMetrics;
@@ -41,6 +28,18 @@ import com.alipay.sofa.registry.timer.AsyncHashedWheelTimer;
 import com.alipay.sofa.registry.timer.AsyncHashedWheelTimer.TaskFailedCallback;
 import com.alipay.sofa.registry.util.NamedThreadFactory;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
+import org.springframework.beans.factory.annotation.Autowired;
+
+import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
+import java.util.concurrent.SynchronousQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 /**
  *
@@ -67,6 +66,7 @@ public class ExecutorManager {
     private final ThreadPoolExecutor        pushTaskExecutor;
     private final ThreadPoolExecutor        connectClientExecutor;
     private final ThreadPoolExecutor        publishDataExecutor;
+    private final ThreadPoolExecutor        cleanInvalidClientExecutor;
 
     private final AsyncHashedWheelTimer     pushTaskCheckAsyncHashedWheelTimer;
 
@@ -110,7 +110,7 @@ public class ExecutorManager {
 
         this.sessionServerConfig = sessionServerConfig;
 
-        scheduler = new ScheduledThreadPoolExecutor(7, new NamedThreadFactory("SessionScheduler"));
+        scheduler = new ScheduledThreadPoolExecutor(8, new NamedThreadFactory("SessionScheduler"));
 
         fetchDataExecutor = new ThreadPoolExecutor(1, 2/*CONFIG*/, 0, TimeUnit.SECONDS, new SynchronousQueue<>(),
                 new NamedThreadFactory("SessionScheduler-fetchData"));
@@ -129,6 +129,9 @@ public class ExecutorManager {
 
         connectDataExecutor = new ThreadPoolExecutor(1, 2/*CONFIG*/, 0, TimeUnit.SECONDS, new SynchronousQueue<>(),
                 new NamedThreadFactory("SessionScheduler-connectDataServer"));
+
+        cleanInvalidClientExecutor = new ThreadPoolExecutor(1, 2/*CONFIG*/, 0, TimeUnit.SECONDS,
+                new SynchronousQueue<>(), new NamedThreadFactory("SessionScheduler-cleanInvalidClient"));
 
         accessDataExecutor = reportExecutors.computeIfAbsent(ACCESS_DATA_EXECUTOR,
                 k -> new SessionThreadPoolExecutor(ACCESS_DATA_EXECUTOR,
@@ -227,6 +230,13 @@ public class ExecutorManager {
                         sessionServerConfig.getSchedulerConnectDataTimeout(), TimeUnit.SECONDS,
                         sessionServerConfig.getSchedulerConnectDataExpBackOffBound(), () -> dataNodeExchanger.connectServer()),
                 sessionServerConfig.getSchedulerConnectDataFirstDelay(), TimeUnit.SECONDS);
+
+        scheduler.schedule(
+                new TimedSupervisorTask("CleanInvalidClient", scheduler, cleanInvalidClientExecutor,
+                        sessionServerConfig.getSchedulerCleanInvalidClientTimeOut(), TimeUnit.MINUTES,
+                        sessionServerConfig.getSchedulerCleanInvalidClientBackOffBound(),
+                        () -> sessionRegistry.cleanClientConnect()),
+                sessionServerConfig.getSchedulerCleanInvalidClientFirstDelay(), TimeUnit.MINUTES);
     }
 
     public void stopScheduler() {
