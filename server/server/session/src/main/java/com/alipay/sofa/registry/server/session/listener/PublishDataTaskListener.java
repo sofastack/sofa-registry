@@ -16,6 +16,8 @@
  */
 package com.alipay.sofa.registry.server.session.listener;
 
+import org.springframework.beans.factory.annotation.Autowired;
+
 import com.alipay.sofa.registry.server.session.node.service.DataNodeService;
 import com.alipay.sofa.registry.server.session.scheduler.ExecutorManager;
 import com.alipay.sofa.registry.server.session.scheduler.task.PublishDataTask;
@@ -24,7 +26,6 @@ import com.alipay.sofa.registry.task.batcher.TaskProcessor;
 import com.alipay.sofa.registry.task.listener.TaskEvent;
 import com.alipay.sofa.registry.task.listener.TaskEvent.TaskType;
 import com.alipay.sofa.registry.task.listener.TaskListener;
-import org.springframework.beans.factory.annotation.Autowired;
 
 /**
  *
@@ -43,8 +44,8 @@ public class PublishDataTaskListener implements TaskListener {
     private ExecutorManager executorManager;
 
     @Override
-    public boolean support(TaskEvent event) {
-        return TaskType.PUBLISH_DATA_TASK.equals(event.getTaskType());
+    public TaskType support() {
+        return TaskType.PUBLISH_DATA_TASK;
     }
 
     @Override

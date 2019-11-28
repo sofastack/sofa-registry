@@ -16,6 +16,10 @@
  */
 package com.alipay.sofa.registry.server.session.listener;
 
+import javax.annotation.PostConstruct;
+
+import org.springframework.beans.factory.annotation.Autowired;
+
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
 import com.alipay.sofa.registry.server.session.node.service.DataNodeService;
 import com.alipay.sofa.registry.server.session.registry.SessionRegistry;
@@ -27,9 +31,6 @@ import com.alipay.sofa.registry.task.batcher.TaskProcessor;
 import com.alipay.sofa.registry.task.listener.TaskEvent;
 import com.alipay.sofa.registry.task.listener.TaskEvent.TaskType;
 import com.alipay.sofa.registry.task.listener.TaskListener;
-import org.springframework.beans.factory.annotation.Autowired;
-
-import javax.annotation.PostConstruct;
 
 /**
  *
@@ -60,8 +61,8 @@ public class RenewDatumTaskListener implements TaskListener {
     }
 
     @Override
-    public boolean support(TaskEvent event) {
-        return TaskType.RENEW_DATUM_TASK.equals(event.getTaskType());
+    public TaskType support() {
+        return TaskType.RENEW_DATUM_TASK;
     }
 
     @Override

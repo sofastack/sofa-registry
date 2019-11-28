@@ -16,6 +16,8 @@
  */
 package com.alipay.sofa.registry.server.session.listener;
 
+import javax.annotation.PostConstruct;
+
 import org.springframework.beans.factory.annotation.Autowired;
 
 import com.alipay.sofa.registry.remoting.exchange.Exchange;
@@ -51,18 +53,16 @@ public class SessionRegisterDataTaskListener implements TaskListener {
         this.dataNodeSingleTaskProcessor = dataNodeSingleTaskProcessor;
     }
 
-    public TaskDispatcher<String, SessionTask> getSingleTaskDispatcher() {
-        if (singleTaskDispatcher == null) {
-            singleTaskDispatcher = TaskDispatchers.createSingleTaskDispatcher(
-                TaskDispatchers.getDispatcherName(TaskType.SESSION_REGISTER_DATA_TASK.getName()),
-                60, 5, 1000, 100, dataNodeSingleTaskProcessor);
-        }
-        return singleTaskDispatcher;
+    @PostConstruct
+    public void init() {
+        singleTaskDispatcher = TaskDispatchers.createSingleTaskDispatcher(
+            TaskDispatchers.getDispatcherName(TaskType.SESSION_REGISTER_DATA_TASK.getName()), 60,
+            5, 1000, 100, dataNodeSingleTaskProcessor);
     }
 
     @Override
-    public boolean support(TaskEvent event) {
-        return TaskType.SESSION_REGISTER_DATA_TASK.equals(event.getTaskType());
+    public TaskType support() {
+        return TaskType.SESSION_REGISTER_DATA_TASK;
     }
 
     @Override
@@ -70,7 +70,7 @@ public class SessionRegisterDataTaskListener implements TaskListener {
         SessionTask sessionRegisterDataTask = new SessionRegisterDataTask(boltExchange,
             sessionServerConfig);
         sessionRegisterDataTask.setTaskEvent(event);
-        getSingleTaskDispatcher().dispatch(sessionRegisterDataTask.getTaskId(),
-            sessionRegisterDataTask, sessionRegisterDataTask.getExpiryTime());
+        singleTaskDispatcher.dispatch(sessionRegisterDataTask.getTaskId(), sessionRegisterDataTask,
+            sessionRegisterDataTask.getExpiryTime());
     }
 }

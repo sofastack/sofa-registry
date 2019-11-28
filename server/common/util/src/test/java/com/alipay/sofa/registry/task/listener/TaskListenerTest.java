@@ -16,13 +16,15 @@
  */
 package com.alipay.sofa.registry.task.listener;
 
+import static com.alipay.sofa.registry.task.listener.TaskEvent.TaskType.CANCEL_DATA_TASK;
+import static com.alipay.sofa.registry.task.listener.TaskEvent.TaskType.DATA_PUSH_TASK;
+import static com.alipay.sofa.registry.task.listener.TaskEvent.TaskType.WATCHER_REGISTER_FETCH_TASK;
+
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import static com.alipay.sofa.registry.task.listener.TaskEvent.TaskType.CANCEL_DATA_TASK;
-import static com.alipay.sofa.registry.task.listener.TaskEvent.TaskType.DATA_PUSH_TASK;
-import static com.alipay.sofa.registry.task.listener.TaskEvent.TaskType.WATCHER_REGISTER_FETCH_TASK;
+import com.alipay.sofa.registry.task.listener.TaskEvent.TaskType;
 
 /**
  * @author xuanbei
@@ -65,8 +67,8 @@ public class TaskListenerTest {
 
     private static class DataPushTaskListener implements TaskListener {
         @Override
-        public boolean support(TaskEvent event) {
-            return DATA_PUSH_TASK.equals(event.getTaskType());
+        public TaskType support() {
+            return DATA_PUSH_TASK;
         }
 
         @Override
@@ -77,8 +79,8 @@ public class TaskListenerTest {
 
     private static class CancelDataTaskListener implements TaskListener {
         @Override
-        public boolean support(TaskEvent event) {
-            return TaskEvent.TaskType.CANCEL_DATA_TASK.equals(event.getTaskType());
+        public TaskType support() {
+            return TaskType.CANCEL_DATA_TASK;
         }
 
         @Override
@@ -89,8 +91,8 @@ public class TaskListenerTest {
 
     private static class WatcherRegisterFetchTaskListener implements TaskListener {
         @Override
-        public boolean support(TaskEvent event) {
-            return TaskEvent.TaskType.WATCHER_REGISTER_FETCH_TASK.equals(event.getTaskType());
+        public TaskType support() {
+            return TaskType.WATCHER_REGISTER_FETCH_TASK;
         }
 
         @Override

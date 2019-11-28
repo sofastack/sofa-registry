@@ -16,33 +16,35 @@
  */
 package com.alipay.sofa.registry.task.listener;
 
-import java.util.ArrayList;
 import java.util.Collection;
+
+import com.alipay.sofa.registry.task.listener.TaskEvent.TaskType;
+import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.Multimap;
 
 /**
  * @author xuanbei
  * @since 2018/12/28
  */
 public class DefaultTaskListenerManager implements TaskListenerManager {
-    private Collection<TaskListener> taskListeners = new ArrayList<>();
+
+    private Multimap<TaskType, TaskListener> taskListeners = ArrayListMultimap.create();
 
     @Override
-    public Collection<TaskListener> getTaskListeners() {
+    public Multimap<TaskType, TaskListener> getTaskListeners() {
         return taskListeners;
     }
 
     @Override
     public void addTaskListener(TaskListener taskListener) {
-        taskListeners.add(taskListener);
+        taskListeners.put(taskListener.support(), taskListener);
     }
 
     @Override
     public void sendTaskEvent(TaskEvent taskEvent) {
-
+        Collection<TaskListener> taskListeners = this.taskListeners.get(taskEvent.getTaskType());
         for (TaskListener taskListener : taskListeners) {
-            if (taskListener.support(taskEvent)) {
-                taskListener.handleEvent(taskEvent);
-            }
+            taskListener.handleEvent(taskEvent);
         }
     }
 }

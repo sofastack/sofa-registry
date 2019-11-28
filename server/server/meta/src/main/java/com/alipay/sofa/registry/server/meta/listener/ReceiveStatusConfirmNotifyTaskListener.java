@@ -16,6 +16,8 @@
  */
 package com.alipay.sofa.registry.server.meta.listener;
 
+import org.springframework.beans.factory.annotation.Autowired;
+
 import com.alipay.sofa.registry.server.meta.bootstrap.MetaServerConfig;
 import com.alipay.sofa.registry.server.meta.node.DataNodeService;
 import com.alipay.sofa.registry.server.meta.node.NodeService;
@@ -27,7 +29,6 @@ import com.alipay.sofa.registry.task.batcher.TaskProcessor;
 import com.alipay.sofa.registry.task.listener.TaskEvent;
 import com.alipay.sofa.registry.task.listener.TaskEvent.TaskType;
 import com.alipay.sofa.registry.task.listener.TaskListener;
-import org.springframework.beans.factory.annotation.Autowired;
 
 /**
  *
@@ -53,8 +54,8 @@ public class ReceiveStatusConfirmNotifyTaskListener implements TaskListener {
     }
 
     @Override
-    public boolean support(TaskEvent event) {
-        return TaskType.RECEIVE_STATUS_CONFIRM_NOTIFY_TASK.equals(event.getTaskType());
+    public TaskType support() {
+        return TaskType.RECEIVE_STATUS_CONFIRM_NOTIFY_TASK;
     }
 
     @Override

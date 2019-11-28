@@ -16,17 +16,17 @@
  */
 package com.alipay.sofa.registry.server.meta.test.confirm;
 
+import java.util.Collection;
+import java.util.Map;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
 import com.alipay.sofa.registry.common.model.metaserver.SessionNode;
 import com.alipay.sofa.registry.server.meta.store.SessionStoreService;
 import com.alipay.sofa.registry.server.meta.task.Constant;
 import com.alipay.sofa.registry.task.listener.TaskEvent;
 import com.alipay.sofa.registry.task.listener.TaskEvent.TaskType;
 import com.alipay.sofa.registry.task.listener.TaskListener;
-
-import java.util.Collection;
-import java.util.Map;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 /**
  *
@@ -46,8 +46,8 @@ public class SessionNodeChangePushTaskMock implements TaskListener {
     }
 
     @Override
-    public boolean support(TaskEvent event) {
-        return TaskType.SESSION_NODE_CHANGE_PUSH_TASK.equals(event.getTaskType());
+    public TaskType support() {
+        return TaskType.SESSION_NODE_CHANGE_PUSH_TASK;
     }
 
     @Override

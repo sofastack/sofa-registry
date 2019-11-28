@@ -16,6 +16,10 @@
  */
 package com.alipay.sofa.registry.server.session.listener;
 
+import org.springframework.beans.factory.annotation.Autowired;
+
+import com.alipay.sofa.registry.log.Logger;
+import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
 import com.alipay.sofa.registry.server.session.cache.CacheService;
 import com.alipay.sofa.registry.server.session.scheduler.ExecutorManager;
@@ -29,7 +33,6 @@ import com.alipay.sofa.registry.task.listener.TaskEvent;
 import com.alipay.sofa.registry.task.listener.TaskEvent.TaskType;
 import com.alipay.sofa.registry.task.listener.TaskListener;
 import com.alipay.sofa.registry.task.listener.TaskListenerManager;
-import org.springframework.beans.factory.annotation.Autowired;
 
 /**
  *
@@ -38,27 +41,30 @@ import org.springframework.beans.factory.annotation.Autowired;
  */
 public class DataChangeFetchTaskListener implements TaskListener {
 
-    @Autowired
-    private SessionServerConfig                 sessionServerConfig;
+    private final static Logger                          LOGGER = LoggerFactory
+                                                                    .getLogger(DataChangeFetchTaskListener.class);
 
     @Autowired
-    private Interests                           sessionInterests;
+    private SessionServerConfig                          sessionServerConfig;
 
     @Autowired
-    private ExecutorManager                     executorManager;
+    private Interests                                    sessionInterests;
 
     @Autowired
-    private CacheService                        sessionCacheService;
+    private ExecutorManager                              executorManager;
+
+    @Autowired
+    private CacheService                                 sessionCacheService;
 
     /**
      * trigger task com.alipay.sofa.registry.server.meta.listener process
      */
     @Autowired
-    private TaskListenerManager                 taskListenerManager;
+    private TaskListenerManager                          taskListenerManager;
 
-    private TaskDispatcher<String, SessionTask> singleTaskDispatcher;
+    private volatile TaskDispatcher<String, SessionTask> singleTaskDispatcher;
 
-    private TaskProcessor                       dataNodeSingleTaskProcessor;
+    private TaskProcessor                                dataNodeSingleTaskProcessor;
 
     public DataChangeFetchTaskListener(TaskProcessor dataNodeSingleTaskProcessor) {
         this.dataNodeSingleTaskProcessor = dataNodeSingleTaskProcessor;
@@ -66,18 +72,23 @@ public class DataChangeFetchTaskListener implements TaskListener {
 
     public TaskDispatcher<String, SessionTask> getSingleTaskDispatcher() {
         if (singleTaskDispatcher == null) {
-            singleTaskDispatcher = TaskDispatchers.createSingleTaskDispatcher(
-                TaskDispatchers.getDispatcherName(TaskType.DATA_CHANGE_FETCH_TASK.getName()),
-                sessionServerConfig.getDataChangeFetchTaskMaxBufferSize(),
-                sessionServerConfig.getDataChangeFetchTaskWorkerSize(), 1000, 100,
-                dataNodeSingleTaskProcessor);
+            synchronized (this) {
+                if (singleTaskDispatcher == null) {
+                    singleTaskDispatcher = TaskDispatchers
+                        .createSingleTaskDispatcher(TaskDispatchers
+                            .getDispatcherName(TaskType.DATA_CHANGE_FETCH_TASK.getName()),
+                            sessionServerConfig.getDataChangeFetchTaskMaxBufferSize(),
+                            sessionServerConfig.getDataChangeFetchTaskWorkerSize(), 1000, 100,
+                            dataNodeSingleTaskProcessor);
+                }
+            }
         }
         return singleTaskDispatcher;
     }
 
     @Override
-    public boolean support(TaskEvent event) {
-        return TaskType.DATA_CHANGE_FETCH_TASK.equals(event.getTaskType());
+    public TaskType support() {
+        return TaskType.DATA_CHANGE_FETCH_TASK;
     }
 
     @Override
@@ -85,8 +96,10 @@ public class DataChangeFetchTaskListener implements TaskListener {
         SessionTask dataChangeFetchTask = new DataChangeFetchTask(sessionServerConfig,
             taskListenerManager, executorManager, sessionInterests, sessionCacheService);
         dataChangeFetchTask.setTaskEvent(event);
+
         getSingleTaskDispatcher().dispatch(dataChangeFetchTask.getTaskId(), dataChangeFetchTask,
             dataChangeFetchTask.getExpiryTime());
+
     }
 
 }

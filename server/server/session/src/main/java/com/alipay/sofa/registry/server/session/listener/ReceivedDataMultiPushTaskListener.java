@@ -106,8 +106,8 @@ public class ReceivedDataMultiPushTaskListener implements TaskListener, PushTask
     }
 
     @Override
-    public boolean support(TaskEvent event) {
-        return TaskType.RECEIVED_DATA_MULTI_PUSH_TASK.equals(event.getTaskType());
+    public TaskType support() {
+        return TaskType.RECEIVED_DATA_MULTI_PUSH_TASK;
     }
 
     @Override

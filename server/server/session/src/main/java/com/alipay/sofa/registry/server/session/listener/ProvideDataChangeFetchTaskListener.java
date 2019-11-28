@@ -16,6 +16,10 @@
  */
 package com.alipay.sofa.registry.server.session.listener;
 
+import javax.annotation.PostConstruct;
+
+import org.springframework.beans.factory.annotation.Autowired;
+
 import com.alipay.sofa.registry.remoting.exchange.Exchange;
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
 import com.alipay.sofa.registry.server.session.node.service.MetaNodeService;
@@ -30,7 +34,6 @@ import com.alipay.sofa.registry.task.listener.TaskEvent;
 import com.alipay.sofa.registry.task.listener.TaskEvent.TaskType;
 import com.alipay.sofa.registry.task.listener.TaskListener;
 import com.alipay.sofa.registry.task.listener.TaskListenerManager;
-import org.springframework.beans.factory.annotation.Autowired;
 
 /**
  *
@@ -71,17 +74,15 @@ public class ProvideDataChangeFetchTaskListener implements TaskListener {
         this.dataNodeSingleTaskProcessor = dataNodeSingleTaskProcessor;
     }
 
-    public TaskDispatcher<String, SessionTask> getSingleTaskDispatcher() {
-        if (singleTaskDispatcher == null) {
-            singleTaskDispatcher = TaskDispatchers.createDefaultSingleTaskDispatcher(
-                TaskType.PROVIDE_DATA_CHANGE_FETCH_TASK.getName(), dataNodeSingleTaskProcessor);
-        }
-        return singleTaskDispatcher;
+    @PostConstruct
+    public void init() {
+        singleTaskDispatcher = TaskDispatchers.createDefaultSingleTaskDispatcher(
+            TaskType.PROVIDE_DATA_CHANGE_FETCH_TASK.getName(), dataNodeSingleTaskProcessor);
     }
 
     @Override
-    public boolean support(TaskEvent event) {
-        return TaskType.PROVIDE_DATA_CHANGE_FETCH_TASK.equals(event.getTaskType());
+    public TaskType support() {
+        return TaskType.PROVIDE_DATA_CHANGE_FETCH_TASK;
     }
 
     @Override
@@ -93,7 +94,7 @@ public class ProvideDataChangeFetchTaskListener implements TaskListener {
 
         provideDataChangeFetchTask.setTaskEvent(event);
 
-        getSingleTaskDispatcher().dispatch(provideDataChangeFetchTask.getTaskId(),
+        singleTaskDispatcher.dispatch(provideDataChangeFetchTask.getTaskId(),
             provideDataChangeFetchTask, provideDataChangeFetchTask.getExpiryTime());
     }
 

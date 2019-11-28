@@ -34,8 +34,8 @@ public class ReceiveStatusConfirmNotifyTaskMock implements TaskListener {
                                            ReceiveStatusConfirmNotifyTaskMock.class, "[Task]");
 
     @Override
-    public boolean support(TaskEvent event) {
-        return TaskType.RECEIVE_STATUS_CONFIRM_NOTIFY_TASK.equals(event.getTaskType());
+    public TaskType support() {
+        return TaskType.RECEIVE_STATUS_CONFIRM_NOTIFY_TASK;
     }
 
     @Override

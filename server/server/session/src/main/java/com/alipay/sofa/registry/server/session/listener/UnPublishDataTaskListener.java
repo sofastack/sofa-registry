@@ -20,13 +20,9 @@ import javax.annotation.PostConstruct;
 
 import org.springframework.beans.factory.annotation.Autowired;
 
-import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
 import com.alipay.sofa.registry.server.session.node.service.DataNodeService;
 import com.alipay.sofa.registry.server.session.scheduler.task.SessionTask;
 import com.alipay.sofa.registry.server.session.scheduler.task.UnPublishDataTask;
-import com.alipay.sofa.registry.server.session.store.DataStore;
-import com.alipay.sofa.registry.server.session.store.Interests;
-import com.alipay.sofa.registry.server.session.store.Watchers;
 import com.alipay.sofa.registry.task.batcher.TaskDispatcher;
 import com.alipay.sofa.registry.task.batcher.TaskDispatchers;
 import com.alipay.sofa.registry.task.batcher.TaskProcessor;
@@ -40,30 +36,11 @@ import com.alipay.sofa.registry.task.listener.TaskListener;
  * @version $Id: UnPublishDataTaskListener.java, v 0.1 2019-06-17 12:02 kezhu.wukz Exp $
  */
 public class UnPublishDataTaskListener implements TaskListener {
-
-    /**
-     * store subscribers
-     */
-    @Autowired
-    private Interests                           sessionInterests;
-
-    /**
-     * store publishers
-     */
-    @Autowired
-    private DataStore                           sessionDataStore;
-
-    @Autowired
-    private Watchers                            sessionWatchers;
-
     /**
      * transfer data to DataNode
      */
     @Autowired
     private DataNodeService                     dataNodeService;
-
-    @Autowired
-    private SessionServerConfig                 sessionServerConfig;
 
     private TaskDispatcher<String, SessionTask> singleTaskDispatcher;
 
@@ -78,8 +55,8 @@ public class UnPublishDataTaskListener implements TaskListener {
     }
 
     @Override
-    public boolean support(TaskEvent event) {
-        return TaskType.UN_PUBLISH_DATA_TASK.equals(event.getTaskType());
+    public TaskType support() {
+        return TaskType.UN_PUBLISH_DATA_TASK;
     }
 
     @Override
