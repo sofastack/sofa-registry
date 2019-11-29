@@ -72,16 +72,7 @@ public class DataNodeExchanger implements NodeExchanger {
         Response response;
         URL url = request.getRequestUrl();
         try {
-            Client sessionClient = boltExchange.getClient(Exchange.DATA_SERVER_TYPE);
-
-            if (sessionClient == null) {
-                LOGGER.warn(
-                        "DataNode Exchanger get dataServer connection {} error! Connection can not be null or disconnected!",
-                        url);
-                //first start session maybe case sessionClient null,try to auto connect
-                sessionClient = boltExchange.connect(Exchange.DATA_SERVER_TYPE, url,
-                        dataClientHandlers.toArray(new ChannelHandler[dataClientHandlers.size()]));
-            }
+            Client sessionClient = getClient(url);
 
             // print but ignore if from renew module, cause renew request is too much
             if (!(request.getRequestBody() instanceof RenewDatumRequest)) {
@@ -116,6 +107,7 @@ public class DataNodeExchanger implements NodeExchanger {
         StringJoiner errorMsg = new StringJoiner(";");
 
         Client dataClient = null;
+
         for (Node dataNode : dataNodes) {
             if (dataNode.getNodeUrl() == null || dataNode.getNodeUrl().getIpAddress() == null) {
                 LOGGER.error("get data node address error!url{}", dataNode.getNodeUrl());
@@ -125,12 +117,7 @@ public class DataNodeExchanger implements NodeExchanger {
             URL url = new URL(dataNode.getNodeUrl().getIpAddress(),
                 sessionServerConfig.getDataServerPort());
             try {
-                dataClient = boltExchange.getClient(Exchange.DATA_SERVER_TYPE);
-                if (dataClient == null) {
-                    dataClient = boltExchange.connect(Exchange.DATA_SERVER_TYPE,
-                        sessionServerConfig.getDataClientConnNum(), url,
-                        dataClientHandlers.toArray(new ChannelHandler[dataClientHandlers.size()]));
-                }
+                dataClient = getClient(url);
                 // make sure there are connections to DataServer
                 dataClient.heartbeat(url);
             } catch (Exception e) {
@@ -147,4 +134,16 @@ public class DataNodeExchanger implements NodeExchanger {
         }
         return dataClient;
     }
+
+    protected Client getClient(URL url) {
+        Client sessionClient = boltExchange.getClient(Exchange.DATA_SERVER_TYPE);
+        if (sessionClient == null) {
+            //first start session maybe case sessionClient null,try to auto connect
+            sessionClient = boltExchange.connect(Exchange.DATA_SERVER_TYPE,
+                sessionServerConfig.getDataClientConnNum(), url,
+                dataClientHandlers.toArray(new ChannelHandler[dataClientHandlers.size()]));
+        }
+        return sessionClient;
+    }
+
 }
