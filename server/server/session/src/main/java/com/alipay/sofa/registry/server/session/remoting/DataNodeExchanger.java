@@ -130,10 +130,9 @@ public class DataNodeExchanger implements NodeExchanger {
                     dataClient = boltExchange.connect(Exchange.DATA_SERVER_TYPE,
                         sessionServerConfig.getDataClientConnNum(), url,
                         dataClientHandlers.toArray(new ChannelHandler[dataClientHandlers.size()]));
-                } else {
-                    // make sure there are connections to DataServer
-                    dataClient.connect(url);
                 }
+                // make sure there are connections to DataServer
+                dataClient.heartbeat(url);
             } catch (Exception e) {
                 String msg = "DataNode Exchanger connect DataServer error!url:" + url;
                 LOGGER.error(msg, e);

@@ -18,8 +18,6 @@ package com.alipay.sofa.registry.remoting.bolt;
 
 import java.net.InetSocketAddress;
 import java.util.List;
-import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executor;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -54,9 +52,7 @@ import com.alipay.sofa.registry.remoting.Client;
  */
 public class BoltClient implements Client {
 
-    private static final Logger LOGGER                 = LoggerFactory.getLogger(BoltClient.class);
-
-    private static final int    ENSURE_CONN_POOL_INTVL = 15000;
+    private static final Logger LOGGER                  = LoggerFactory.getLogger(BoltClient.class);
 
     /**
      * RpcTaskScanner: remove closed connections every 10 seconds
@@ -64,14 +60,14 @@ public class BoltClient implements Client {
      */
     private RpcClient[]         rpcClients;
 
-    private AtomicBoolean       closed                 = new AtomicBoolean(false);
+    private AtomicBoolean       closed                  = new AtomicBoolean(false);
 
-    private AtomicInteger       roundRobinNextId       = new AtomicInteger(-1);
+    private AtomicInteger       roundRobinNextId        = new AtomicInteger(-1);
 
-    private Set<Url>            connectedUrls          = ConcurrentHashMap.newKeySet();
+    private int                 heartbeatRequestTimeout = 3000;
+    private int                 connectTimeout          = 2000;
 
-    protected final int         connNum;
-    protected int               connectTimeout         = 2000;
+    private final int           connNum;
 
     /**
      * Instantiates a new Bolt client.
@@ -106,11 +102,11 @@ public class BoltClient implements Client {
         for (int i = 0; i < connNum; i++) {
             RpcClient rpcClient = rpcClients[i];
             rpcClient.addConnectionEventProcessor(ConnectionEventType.CONNECT,
-                    newConnectionEventAdapter(connectionEventHandler, ConnectionEventType.CONNECT));
+                newConnectionEventAdapter(connectionEventHandler, ConnectionEventType.CONNECT));
             rpcClient.addConnectionEventProcessor(ConnectionEventType.CLOSE,
-                    newConnectionEventAdapter(connectionEventHandler, ConnectionEventType.CLOSE));
+                newConnectionEventAdapter(connectionEventHandler, ConnectionEventType.CLOSE));
             rpcClient.addConnectionEventProcessor(ConnectionEventType.EXCEPTION,
-                    newConnectionEventAdapter(connectionEventHandler, ConnectionEventType.EXCEPTION));
+                newConnectionEventAdapter(connectionEventHandler, ConnectionEventType.EXCEPTION));
 
             for (ChannelHandler channelHandler : channelHandlers) {
                 if (HandlerType.PROCESSER.equals(channelHandler.getType())) {
@@ -121,37 +117,6 @@ public class BoltClient implements Client {
                     }
                 }
             }
-        }
-
-        // start a thread to ensure connection pool (connNum > 1): bolt does not maintain the number of connection
-        // pools, we need to use heartbeat to make bolt maintain the number of connections
-        if (connNum > 1) {
-            Thread t = new Thread(() -> {
-                while (true) {
-                    try {
-                        Thread.sleep(ENSURE_CONN_POOL_INTVL);
-                    } catch (InterruptedException e) {
-                        LOGGER.error("Interrupted in ConnPoolChecker", e);
-                        break;
-                    }
-
-                    for (RpcClient rpcClient : rpcClients) {
-                        try {
-                            for (Url boltUrl : connectedUrls) {
-                                // send something to make connection active
-                                HeartbeatRequest heartbeatRequest = new HeartbeatRequest();
-                                rpcClient.invokeSync(boltUrl, heartbeatRequest, connectTimeout);
-                            }
-                        } catch (Throwable e) {
-                            LOGGER.error("Error in ConnPoolChecker", e);
-                        }
-                    }
-
-                }
-            });
-            t.setDaemon(true);
-            t.setName("BoltClient-ConnPoolChecker");
-            t.start();
         }
     }
 
@@ -174,9 +139,6 @@ public class BoltClient implements Client {
             throw new IllegalArgumentException("Create connection url can not be null!");
         }
         try {
-            Url boltUrl = getBoltUrl(url);
-            connectedUrls.add(boltUrl);
-
             for (int i = 0; i < connNum; i++) {
                 getBoltConnection(rpcClients[i], url);
             }
@@ -194,7 +156,7 @@ public class BoltClient implements Client {
     }
 
     protected Connection getBoltConnection(RpcClient rpcClient, URL url) throws RemotingException {
-        Url boltUrl = getBoltUrl(url);
+        Url boltUrl = createBoltUrl(url);
         try {
             Connection connection = rpcClient.getConnection(boltUrl, connectTimeout);
             if (connection == null || !connection.isFine()) {
@@ -221,7 +183,7 @@ public class BoltClient implements Client {
         return rpcClients[n];
     }
 
-    protected Url getBoltUrl(URL url) {
+    protected Url createBoltUrl(URL url) {
         Url boltUrl = new Url(url.getIpAddress(), url.getPort());
         boltUrl.setProtocol(RpcProtocol.PROTOCOL_CODE);
         boltUrl.setVersion(RpcProtocolV2.PROTOCOL_VERSION_1);
@@ -269,7 +231,7 @@ public class BoltClient implements Client {
     public Object sendSync(URL url, Object message, int timeoutMillis) {
         try {
             RpcClient rpcClient = getNextRpcClient();
-            return rpcClient.invokeSync(getBoltUrl(url), message, timeoutMillis);
+            return rpcClient.invokeSync(createBoltUrl(url), message, timeoutMillis);
         } catch (RemotingException e) {
             String msg = "Bolt Client sendSync message RemotingException! target url:" + url;
             LOGGER.error(msg, e);
@@ -332,6 +294,19 @@ public class BoltClient implements Client {
             String msg = "Bolt Client sendSync message RemotingException! target url:" + url;
             LOGGER.error(msg, e);
             throw new RuntimeException(msg, e);
+        }
+    }
+
+    @Override
+    public void heartbeat(URL url) {
+        for (RpcClient rpcClient : rpcClients) {
+            try {
+                // send something to make connection active
+                HeartbeatRequest heartbeatRequest = new HeartbeatRequest();
+                rpcClient.invokeSync(createBoltUrl(url), heartbeatRequest, heartbeatRequestTimeout);
+            } catch (Throwable e) {
+                LOGGER.error("Error in heartbeat", e);
+            }
         }
     }
 

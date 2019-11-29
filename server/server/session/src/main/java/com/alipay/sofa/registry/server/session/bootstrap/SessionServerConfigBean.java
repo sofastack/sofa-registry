@@ -67,13 +67,13 @@ public class SessionServerConfigBean implements SessionServerConfig {
 
     private int                schedulerConnectMetaFirstDelay          = 5;
 
-    private int                schedulerConnectMetaExpBackOffBound     = 5;
+    private int                schedulerConnectMetaExpBackOffBound     = 3;
 
     private int                schedulerConnectDataTimeout             = 10;
 
     private int                schedulerConnectDataFirstDelay          = 10;
 
-    private int                schedulerConnectDataExpBackOffBound     = 5;
+    private int                schedulerConnectDataExpBackOffBound     = 3;
 
     private int                schedulerCleanInvalidClientTimeOut      = 3;
 

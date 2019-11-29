@@ -41,6 +41,14 @@ public interface Client extends Endpoint {
     Channel connect(URL url);
 
     /**
+     * send heartbeat, for active the connection to this url
+     *
+     * @param url the url
+     * @return object
+     */
+    void heartbeat(final URL url);
+
+    /**
      * Sync send
      *
      * @param url the url
