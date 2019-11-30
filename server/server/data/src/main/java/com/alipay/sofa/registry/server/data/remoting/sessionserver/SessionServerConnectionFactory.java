@@ -77,10 +77,11 @@ public class SessionServerConnectionFactory {
      * @param connection
      */
     public void registerSession(String processId, Set<String> connectIds, Connection connection) {
-        String sessionConnAddress = NetUtil.toAddressString(connection.getRemoteAddress());
-        if (LOGGER.isInfoEnabled()) {
-            LOGGER.info("session({}, processId={}) registered", sessionConnAddress, processId);
+        if (!connection.isFine()) {
+            return;
         }
+        String sessionConnAddress = NetUtil.toAddressString(connection.getRemoteAddress());
+        LOGGER.info("session({}, processId={}) registered", sessionConnAddress, processId);
 
         SESSION_CONN_PROCESS_ID_MAP.put(sessionConnAddress, processId);
 

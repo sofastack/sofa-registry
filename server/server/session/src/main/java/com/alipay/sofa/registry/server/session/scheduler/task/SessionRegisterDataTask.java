@@ -96,6 +96,10 @@ public class SessionRegisterDataTask extends AbstractSessionTask {
 
     @Override
     public void execute() {
+        if (!channel.isConnected()) {
+            return;
+        }
+
         Client sessionClient = boltExchange.getClient(Exchange.DATA_SERVER_TYPE);
         try {
             sessionClient.sendSync(channel, sessionServerRegisterRequest,

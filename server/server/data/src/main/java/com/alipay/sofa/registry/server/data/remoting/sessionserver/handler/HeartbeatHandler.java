@@ -35,12 +35,12 @@ public class HeartbeatHandler extends AbstractServerHandler<HeartbeatRequest> {
 
     @Override
     public Object doHandle(Channel channel, HeartbeatRequest request) {
-        return CommonResponse.buildSuccessResponse();
+        return null;
     }
 
     @Override
     public CommonResponse buildFailedResponse(String msg) {
-        return CommonResponse.buildFailedResponse(msg);
+        return null;
     }
 
     @Override

@@ -89,11 +89,11 @@ public class DataServerConfig {
 
     private long               notifyDataSyncExecutorKeepAliveTime          = 60;
 
-    private long               notifySessionRetryFirstDelay                 = 1000;
+    private long               notifySessionRetryFirstDelay                 = 2000;
 
-    private long               notifySessionRetryIncrementDelay             = 1000;
+    private long               notifySessionRetryIncrementDelay             = 2000;
 
-    private int                notifySessionRetryTimes                      = 10;
+    private int                notifySessionRetryTimes                      = 5;
 
     private int                publishExecutorMinPoolSize                   = 200;
 
@@ -115,7 +115,7 @@ public class DataServerConfig {
 
     private int                sessionServerNotifierRetryExecutorThreadSize = 10;
 
-    private int                sessionServerNotifierRetryExecutorQueueSize  = 1000000;
+    private int                sessionServerNotifierRetryExecutorQueueSize  = 10000;
 
     private int                renewEnableDelaySec                          = 30;
 

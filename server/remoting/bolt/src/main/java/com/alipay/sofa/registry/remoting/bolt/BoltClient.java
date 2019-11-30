@@ -52,7 +52,7 @@ import com.alipay.sofa.registry.remoting.Client;
  */
 public class BoltClient implements Client {
 
-    private static final Logger LOGGER                  = LoggerFactory.getLogger(BoltClient.class);
+    private static final Logger LOGGER           = LoggerFactory.getLogger(BoltClient.class);
 
     /**
      * RpcTaskScanner: remove closed connections every 10 seconds
@@ -60,12 +60,11 @@ public class BoltClient implements Client {
      */
     private RpcClient[]         rpcClients;
 
-    private AtomicBoolean       closed                  = new AtomicBoolean(false);
+    private AtomicBoolean       closed           = new AtomicBoolean(false);
 
-    private AtomicInteger       roundRobinNextId        = new AtomicInteger(-1);
+    private AtomicInteger       roundRobinNextId = new AtomicInteger(-1);
 
-    private int                 heartbeatRequestTimeout = 3000;
-    private int                 connectTimeout          = 2000;
+    private int                 connectTimeout   = 2000;
 
     private final int           connNum;
 
@@ -174,6 +173,9 @@ public class BoltClient implements Client {
     }
 
     private RpcClient getNextRpcClient() {
+        if (connNum == 1) {
+            return rpcClients[0];
+        }
         int n = roundRobinNextId.incrementAndGet();
         if (n < 0) {
             roundRobinNextId.compareAndSet(n, 0);
@@ -303,7 +305,7 @@ public class BoltClient implements Client {
             try {
                 // send something to make connection active
                 HeartbeatRequest heartbeatRequest = new HeartbeatRequest();
-                rpcClient.invokeSync(createBoltUrl(url), heartbeatRequest, heartbeatRequestTimeout);
+                rpcClient.oneway(createBoltUrl(url), heartbeatRequest);
             } catch (Throwable e) {
                 LOGGER.error("Error in heartbeat", e);
             }

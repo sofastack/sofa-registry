@@ -16,10 +16,6 @@
  */
 package com.alipay.sofa.registry.server.data.executor;
 
-import com.alipay.sofa.registry.log.Logger;
-import com.alipay.sofa.registry.log.LoggerFactory;
-import com.alipay.sofa.registry.util.NamedThreadFactory;
-
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.Executor;
@@ -28,6 +24,10 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+
+import com.alipay.sofa.registry.log.Logger;
+import com.alipay.sofa.registry.log.LoggerFactory;
+import com.alipay.sofa.registry.util.NamedThreadFactory;
 
 /**
  * the factory to create executor
@@ -38,6 +38,7 @@ import java.util.concurrent.TimeUnit;
 public class ExecutorFactory {
 
     public static final ThreadPoolExecutor EXECUTOR;
+    public static final ThreadPoolExecutor NOTIFY_SESSION_CALLBACK_EXECUTOR;
     private static final Logger            LOGGER = LoggerFactory.getLogger(ExecutorFactory.class);
 
     static {
@@ -57,6 +58,10 @@ public class ExecutorFactory {
                 }
             }
         };
+
+        NOTIFY_SESSION_CALLBACK_EXECUTOR = new ThreadPoolExecutor(50, 100, 300, TimeUnit.SECONDS,
+            new LinkedBlockingQueue<>(10000), new NamedThreadFactory(
+                "NotifySessionCallback-executor", true));
     }
 
     /**
