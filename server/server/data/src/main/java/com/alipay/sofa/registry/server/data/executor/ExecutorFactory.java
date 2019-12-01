@@ -59,8 +59,8 @@ public class ExecutorFactory {
             }
         };
 
-        NOTIFY_SESSION_CALLBACK_EXECUTOR = new ThreadPoolExecutor(50, 100, 300, TimeUnit.SECONDS,
-            new LinkedBlockingQueue<>(10000), new NamedThreadFactory(
+        NOTIFY_SESSION_CALLBACK_EXECUTOR = new ThreadPoolExecutor(10, 20, 300, TimeUnit.SECONDS,
+            new LinkedBlockingQueue<>(100000), new NamedThreadFactory(
                 "NotifySessionCallback-executor", true));
     }
 
