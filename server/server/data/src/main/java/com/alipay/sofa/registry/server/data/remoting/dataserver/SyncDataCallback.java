@@ -43,7 +43,7 @@ public class SyncDataCallback implements InvokeCallback {
 
     private static final Logger   LOGGER      = LoggerFactory.getLogger(SyncDataCallback.class);
 
-    private static final Executor EXECUTOR    = ExecutorFactory.newFixedThreadPool(20,
+    private static final Executor EXECUTOR    = ExecutorFactory.newFixedThreadPool(5,
                                                   SyncDataCallback.class.getSimpleName());
 
     private static final int      RETRY_COUNT = 3;
