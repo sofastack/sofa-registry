@@ -20,7 +20,6 @@ import java.net.InetSocketAddress;
 import java.util.List;
 import java.util.concurrent.Executor;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import com.alipay.remoting.Connection;
 import com.alipay.remoting.ConnectionEventProcessor;
@@ -30,8 +29,6 @@ import com.alipay.remoting.Url;
 import com.alipay.remoting.exception.RemotingException;
 import com.alipay.remoting.rpc.RpcClient;
 import com.alipay.remoting.rpc.protocol.RpcProtocol;
-import com.alipay.remoting.rpc.protocol.RpcProtocolV2;
-import com.alipay.sofa.registry.common.model.dataserver.HeartbeatRequest;
 import com.alipay.sofa.registry.common.model.store.URL;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
@@ -52,19 +49,13 @@ import com.alipay.sofa.registry.remoting.Client;
  */
 public class BoltClient implements Client {
 
-    private static final Logger LOGGER           = LoggerFactory.getLogger(BoltClient.class);
+    private static final Logger LOGGER         = LoggerFactory.getLogger(BoltClient.class);
 
-    /**
-     * RpcTaskScanner: remove closed connections every 10 seconds
-     * HealConnectionRunner: Ensure that the number of connections reaches connNum every 1 second
-     */
-    private RpcClient[]         rpcClients;
+    private RpcClient           rpcClient;
 
-    private AtomicBoolean       closed           = new AtomicBoolean(false);
+    private AtomicBoolean       closed         = new AtomicBoolean(false);
 
-    private AtomicInteger       roundRobinNextId = new AtomicInteger(-1);
-
-    private int                 connectTimeout   = 2000;
+    private int                 connectTimeout = 2000;
 
     private final int           connNum;
 
@@ -72,15 +63,9 @@ public class BoltClient implements Client {
      * Instantiates a new Bolt client.
      */
     public BoltClient(int connNum) {
-        rpcClients = new RpcClient[connNum];
-        for (int i = 0; i < connNum; i++) {
-            RpcClient rpcClient = new RpcClient();
-            rpcClient.enableReconnectSwitch();
-            rpcClient.enableConnectionMonitorSwitch();
-            rpcClient.init();
+        rpcClient = new RpcClient();
+        rpcClient.init();
 
-            rpcClients[i] = rpcClient;
-        }
         this.connNum = connNum;
     }
 
@@ -98,22 +83,19 @@ public class BoltClient implements Client {
             }
         }
 
-        for (int i = 0; i < connNum; i++) {
-            RpcClient rpcClient = rpcClients[i];
-            rpcClient.addConnectionEventProcessor(ConnectionEventType.CONNECT,
-                newConnectionEventAdapter(connectionEventHandler, ConnectionEventType.CONNECT));
-            rpcClient.addConnectionEventProcessor(ConnectionEventType.CLOSE,
-                newConnectionEventAdapter(connectionEventHandler, ConnectionEventType.CLOSE));
-            rpcClient.addConnectionEventProcessor(ConnectionEventType.EXCEPTION,
-                newConnectionEventAdapter(connectionEventHandler, ConnectionEventType.EXCEPTION));
+        rpcClient.addConnectionEventProcessor(ConnectionEventType.CONNECT,
+            newConnectionEventAdapter(connectionEventHandler, ConnectionEventType.CONNECT));
+        rpcClient.addConnectionEventProcessor(ConnectionEventType.CLOSE,
+            newConnectionEventAdapter(connectionEventHandler, ConnectionEventType.CLOSE));
+        rpcClient.addConnectionEventProcessor(ConnectionEventType.EXCEPTION,
+            newConnectionEventAdapter(connectionEventHandler, ConnectionEventType.EXCEPTION));
 
-            for (ChannelHandler channelHandler : channelHandlers) {
-                if (HandlerType.PROCESSER.equals(channelHandler.getType())) {
-                    if (InvokeType.SYNC.equals(channelHandler.getInvokeType())) {
-                        rpcClient.registerUserProcessor(newSyncProcessor(channelHandler));
-                    } else {
-                        rpcClient.registerUserProcessor(newAsyncProcessor(channelHandler));
-                    }
+        for (ChannelHandler channelHandler : channelHandlers) {
+            if (HandlerType.PROCESSER.equals(channelHandler.getType())) {
+                if (InvokeType.SYNC.equals(channelHandler.getInvokeType())) {
+                    rpcClient.registerUserProcessor(newSyncProcessor(channelHandler));
+                } else {
+                    rpcClient.registerUserProcessor(newAsyncProcessor(channelHandler));
                 }
             }
         }
@@ -138,10 +120,7 @@ public class BoltClient implements Client {
             throw new IllegalArgumentException("Create connection url can not be null!");
         }
         try {
-            for (int i = 0; i < connNum; i++) {
-                getBoltConnection(rpcClients[i], url);
-            }
-            RpcClient rpcClient = getNextRpcClient();
+            getBoltConnection(rpcClient, url);
             Connection connection = getBoltConnection(rpcClient, url);
             BoltChannel channel = new BoltChannel();
             channel.setConnection(connection);
@@ -172,24 +151,10 @@ public class BoltClient implements Client {
         }
     }
 
-    private RpcClient getNextRpcClient() {
-        if (connNum == 1) {
-            return rpcClients[0];
-        }
-        int n = roundRobinNextId.incrementAndGet();
-        if (n < 0) {
-            roundRobinNextId.compareAndSet(n, 0);
-            n = (n == Integer.MIN_VALUE) ? 0 : Math.abs(n);
-        }
-        n = n % rpcClients.length;
-        return rpcClients[n];
-    }
-
     protected Url createBoltUrl(URL url) {
         Url boltUrl = new Url(url.getIpAddress(), url.getPort());
         boltUrl.setProtocol(RpcProtocol.PROTOCOL_CODE);
-        boltUrl.setVersion(RpcProtocolV2.PROTOCOL_VERSION_1);
-        boltUrl.setConnNum(1);
+        boltUrl.setConnNum(connNum);
         boltUrl.setConnWarmup(true);
         return boltUrl;
     }
@@ -197,7 +162,6 @@ public class BoltClient implements Client {
     @Override
     public Channel getChannel(URL url) {
         try {
-            RpcClient rpcClient = getNextRpcClient();
             Connection connection = getBoltConnection(rpcClient, url);
             BoltChannel channel = new BoltChannel();
             channel.setConnection(connection);
@@ -217,10 +181,7 @@ public class BoltClient implements Client {
     @Override
     public void close() {
         if (closed.compareAndSet(false, true)) {
-            for (int i = 0; i < connNum; i++) {
-                RpcClient rpcClient = rpcClients[i];
-                rpcClient.shutdown();
-            }
+            rpcClient.shutdown();
         }
     }
 
@@ -232,7 +193,6 @@ public class BoltClient implements Client {
     @Override
     public Object sendSync(URL url, Object message, int timeoutMillis) {
         try {
-            RpcClient rpcClient = getNextRpcClient();
             return rpcClient.invokeSync(createBoltUrl(url), message, timeoutMillis);
         } catch (RemotingException e) {
             String msg = "Bolt Client sendSync message RemotingException! target url:" + url;
@@ -249,7 +209,6 @@ public class BoltClient implements Client {
         if (channel != null && channel.isConnected()) {
             BoltChannel boltChannel = (BoltChannel) channel;
             try {
-                RpcClient rpcClient = getNextRpcClient();
                 return rpcClient.invokeSync(boltChannel.getConnection(), message, timeoutMillis);
             } catch (RemotingException e) {
                 LOGGER.error("Bolt Client sendSync message RemotingException! target boltUrl:"
@@ -270,7 +229,6 @@ public class BoltClient implements Client {
     public void sendCallback(URL url, Object message, CallbackHandler callbackHandler,
                              int timeoutMillis) {
         try {
-            RpcClient rpcClient = getNextRpcClient();
             Connection connection = getBoltConnection(rpcClient, url);
             BoltChannel channel = new BoltChannel();
             channel.setConnection(connection);
@@ -296,19 +254,6 @@ public class BoltClient implements Client {
             String msg = "Bolt Client sendSync message RemotingException! target url:" + url;
             LOGGER.error(msg, e);
             throw new RuntimeException(msg, e);
-        }
-    }
-
-    @Override
-    public void heartbeat(URL url) {
-        for (RpcClient rpcClient : rpcClients) {
-            try {
-                // send something to make connection active
-                HeartbeatRequest heartbeatRequest = new HeartbeatRequest();
-                rpcClient.oneway(createBoltUrl(url), heartbeatRequest);
-            } catch (Throwable e) {
-                LOGGER.error("Error in heartbeat", e);
-            }
         }
     }
 

@@ -137,7 +137,7 @@ public class SessionServerConfigBean implements SessionServerConfig {
 
     private long               pushTaskExecutorKeepAliveTime           = 60;
 
-    private int                dataChangeExecutorMinPoolSize           = 100;
+    private int                dataChangeExecutorMinPoolSize           = 40;
 
     private int                dataChangeExecutorMaxPoolSize           = 400;
 

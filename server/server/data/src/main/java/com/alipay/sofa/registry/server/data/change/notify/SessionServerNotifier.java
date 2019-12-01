@@ -75,7 +75,7 @@ public class SessionServerNotifier implements IDataChangeNotifier {
         ThreadFactoryBuilder threadFactoryBuilder = new ThreadFactoryBuilder();
         threadFactoryBuilder.setDaemon(true);
         asyncHashedWheelTimer = new AsyncHashedWheelTimer(threadFactoryBuilder.setNameFormat(
-            "Registry-SessionServerNotifier-WheelTimer").build(), 100, TimeUnit.MILLISECONDS, 1024,
+            "Registry-SessionServerNotifier-WheelTimer").build(), 500, TimeUnit.MILLISECONDS, 1024,
             dataServerConfig.getSessionServerNotifierRetryExecutorThreadSize(),
             dataServerConfig.getSessionServerNotifierRetryExecutorQueueSize(), threadFactoryBuilder
                 .setNameFormat("Registry-SessionServerNotifier-WheelExecutor-%d").build(),

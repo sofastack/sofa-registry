@@ -91,10 +91,6 @@ public class JerseyClient implements Client {
     }
 
     @Override
-    public void heartbeat(URL url) {
-    }
-
-    @Override
     public Object sendSync(URL url, Object message, int timeoutMillis) {
         return null;
     }

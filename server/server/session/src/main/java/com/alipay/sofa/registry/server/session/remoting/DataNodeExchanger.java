@@ -119,7 +119,7 @@ public class DataNodeExchanger implements NodeExchanger {
             try {
                 dataClient = getClient(url);
                 // make sure there are connections to DataServer
-                dataClient.heartbeat(url);
+                dataClient.connect(url);
             } catch (Exception e) {
                 String msg = "DataNode Exchanger connect DataServer error!url:" + url;
                 LOGGER.error(msg, e);

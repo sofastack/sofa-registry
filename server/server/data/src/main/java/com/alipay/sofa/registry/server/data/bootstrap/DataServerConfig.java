@@ -89,9 +89,9 @@ public class DataServerConfig {
 
     private long               notifyDataSyncExecutorKeepAliveTime          = 60;
 
-    private long               notifySessionRetryFirstDelay                 = 2000;
+    private long               notifySessionRetryFirstDelay                 = 3000;
 
-    private long               notifySessionRetryIncrementDelay             = 2000;
+    private long               notifySessionRetryIncrementDelay             = 3000;
 
     private int                notifySessionRetryTimes                      = 5;
 
