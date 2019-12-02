@@ -16,21 +16,6 @@
  */
 package com.alipay.sofa.registry.server.meta.store;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicLong;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
-import java.util.stream.Collectors;
-
-import org.springframework.beans.factory.annotation.Autowired;
-
 import com.alipay.sofa.registry.common.model.Node.NodeType;
 import com.alipay.sofa.registry.common.model.metaserver.DataCenterNodes;
 import com.alipay.sofa.registry.common.model.metaserver.DataNode;
@@ -51,6 +36,20 @@ import com.alipay.sofa.registry.store.api.annotation.RaftReference;
 import com.alipay.sofa.registry.task.listener.TaskEvent;
 import com.alipay.sofa.registry.task.listener.TaskEvent.TaskType;
 import com.alipay.sofa.registry.task.listener.TaskListenerManager;
+import org.springframework.beans.factory.annotation.Autowired;
+
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
+import java.util.stream.Collectors;
 
 /**
  *
@@ -86,8 +85,6 @@ public class DataStoreService implements StoreService<DataNode> {
     private AtomicLong                                         localDataCenterInitVersion = new AtomicLong(
                                                                                               -1L);
 
-    private static final long                                  COMPARE_TIME_COST          = 1000L;
-
     @Override
     public NodeType getNodeType() {
         return NodeType.DATA;
@@ -104,7 +101,6 @@ public class DataStoreService implements StoreService<DataNode> {
 
         String ipAddress = dataNode.getNodeUrl().getIpAddress();
 
-        long startAll = System.currentTimeMillis();
         write.lock();
         try {
 
@@ -119,10 +115,6 @@ public class DataStoreService implements StoreService<DataNode> {
 
         } finally {
             write.unlock();
-        }
-        long cost = System.currentTimeMillis() - startAll;
-        if (cost >= COMPARE_TIME_COST) {
-            LOGGER.info("dataRepositoryService.addNode cost:{} ", cost);
         }
         return nodeChangeResult;
     }
@@ -173,7 +165,6 @@ public class DataStoreService implements StoreService<DataNode> {
     @Override
     public void renew(DataNode dataNode, int duration) {
 
-        long startAll = System.currentTimeMillis();
         write.lock();
         try {
             String ipAddress = dataNode.getNodeUrl().getIpAddress();
@@ -191,10 +182,6 @@ public class DataStoreService implements StoreService<DataNode> {
                         RenewDecorate.DEFAULT_DURATION_SECS));
                 }
 
-            }
-            long cost = System.currentTimeMillis() - startAll;
-            if (cost >= COMPARE_TIME_COST) {
-                LOGGER.info("dataRepositoryService.renew.all cost:{} ", cost);
             }
         } finally {
             write.unlock();
