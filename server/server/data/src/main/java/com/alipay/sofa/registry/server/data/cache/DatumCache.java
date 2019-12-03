@@ -174,30 +174,44 @@ public class DatumCache {
             return mergeResult;
         }
 
-        Datum ret = map.putIfAbsent(dataInfoId, datum);
-        if (ret == null) {
-            Set<Entry<String, Publisher>> entries = datum.getPubMap().entrySet();
-            Iterator<Entry<String, Publisher>> iterator = entries.iterator();
+        // filter out the unPubs of datum when first put.
+        // Otherwise, "syncData" or "fetchData" when get Datum with unPubs, which will result something error
+        boolean[] exists = { true };
+        Datum cacheDatum = map.computeIfAbsent(dataInfoId, k -> filterUnPubs(exists, datum));
+        if (!exists[0]) {
+            Iterator<Entry<String, Publisher>> iterator = datum.getPubMap().entrySet().iterator();
             while (iterator.hasNext()) {
                 Entry<String, Publisher> entry = iterator.next();
                 Publisher publisher = entry.getValue();
-                if (!(publisher instanceof UnPublisher)) {
-                    addToIndex(publisher);
-                } else {
-                    //first put to cache,UnPublisher data must remove,not so got error pub data exist
-                    iterator.remove();
-                }
+                addToIndex(publisher);
             }
             mergeResult = new MergeResult(null, true);
         } else {
             if (changeType == DataChangeTypeEnum.MERGE) {
-                mergeResult = mergeDatum(datum);
+                mergeResult = mergeDatum(cacheDatum, datum);
             } else {
                 Long lastVersion = coverDatum(datum);
                 mergeResult = new MergeResult(lastVersion, true);
             }
         }
         return mergeResult;
+    }
+
+    /**
+     * remove unPubs from datum
+     */
+    private Datum filterUnPubs(boolean[] exists, Datum datum) {
+        Iterator<Entry<String, Publisher>> iterator = datum.getPubMap().entrySet().iterator();
+        while (iterator.hasNext()) {
+            Entry<String, Publisher> entry = iterator.next();
+            Publisher publisher = entry.getValue();
+            if (publisher instanceof UnPublisher) {
+                //first put to cache,UnPublisher data must remove,not so got error pub data exist
+                iterator.remove();
+            }
+        }
+        exists[0] = false;
+        return datum;
     }
 
     private Map<String, Datum> getDatumMapByDataCenter(String dataCenter) {
@@ -247,9 +261,8 @@ public class DatumCache {
      * @param datum
      * @return
      */
-    private MergeResult mergeDatum(Datum datum) {
+    private MergeResult mergeDatum(Datum cacheDatum, Datum datum) {
         boolean isChanged = false;
-        Datum cacheDatum = DATUM_MAP.get(datum.getDataCenter()).get(datum.getDataInfoId());
         Map<String, Publisher> cachePubMap = cacheDatum.getPubMap();
         Map<String, Publisher> pubMap = datum.getPubMap();
         for (Entry<String, Publisher> pubEntry : pubMap.entrySet()) {
