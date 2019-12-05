@@ -16,16 +16,6 @@
  */
 package com.alipay.sofa.registry.server.meta.repository.service;
 
-import java.io.IOException;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
-
-import org.springframework.beans.factory.annotation.Autowired;
-
 import com.alipay.sofa.registry.common.model.metaserver.DataNode;
 import com.alipay.sofa.registry.jraft.processor.AbstractSnapshotProcess;
 import com.alipay.sofa.registry.jraft.processor.SnapshotProcess;
@@ -36,6 +26,15 @@ import com.alipay.sofa.registry.server.meta.repository.NodeRepository;
 import com.alipay.sofa.registry.server.meta.repository.RepositoryService;
 import com.alipay.sofa.registry.server.meta.store.RenewDecorate;
 import com.alipay.sofa.registry.store.api.annotation.RaftService;
+import org.springframework.beans.factory.annotation.Autowired;
+
+import java.io.IOException;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 /**
  *
@@ -85,7 +84,8 @@ public class DataRepositoryService extends AbstractSnapshotProcess
     }
 
     @Override
-    public RenewDecorate<DataNode> put(String ipAddress, RenewDecorate<DataNode> dataNode) {
+    public RenewDecorate<DataNode> put(String ipAddress, RenewDecorate<DataNode> dataNode,
+                                       Long currentTimeMillis) {
 
         write.lock();
         try {
@@ -94,14 +94,14 @@ public class DataRepositoryService extends AbstractSnapshotProcess
             NodeRepository<DataNode> dataNodeRepository = registry.get(dataCenter);
             if (dataNodeRepository == null) {
                 NodeRepository<DataNode> nodeRepository = new NodeRepository<>(dataCenter,
-                    new ConcurrentHashMap<>(), System.currentTimeMillis());
+                    new ConcurrentHashMap<>(), currentTimeMillis);
                 dataNodeRepository = registry.put(dataCenter, nodeRepository);
                 if (dataNodeRepository == null) {
                     dataNodeRepository = nodeRepository;
                 }
             }
 
-            dataNodeRepository.setVersion(System.currentTimeMillis());
+            dataNodeRepository.setVersion(currentTimeMillis);
 
             Map<String/*ipAddress*/, RenewDecorate<DataNode>> dataNodes = dataNodeRepository
                 .getNodeMap();
@@ -123,7 +123,7 @@ public class DataRepositoryService extends AbstractSnapshotProcess
     }
 
     @Override
-    public RenewDecorate<DataNode> remove(Object key) {
+    public RenewDecorate<DataNode> remove(Object key, Long currentTimeMillis) {
 
         write.lock();
         try {
@@ -142,7 +142,7 @@ public class DataRepositoryService extends AbstractSnapshotProcess
                         return null;
                     }
 
-                    dataNodeRepository.setVersion(System.currentTimeMillis());
+                    dataNodeRepository.setVersion(currentTimeMillis);
                     return oldRenewDecorate;
                 }
             }
@@ -156,7 +156,8 @@ public class DataRepositoryService extends AbstractSnapshotProcess
     }
 
     @Override
-    public RenewDecorate<DataNode> replace(String ipAddress, RenewDecorate<DataNode> dataNode) {
+    public RenewDecorate<DataNode> replace(String ipAddress, RenewDecorate<DataNode> dataNode,
+                                           Long currentTimeMillis) {
 
         write.lock();
         try {

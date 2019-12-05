@@ -16,14 +16,6 @@
  */
 package com.alipay.sofa.registry.server.meta.repository.service;
 
-import java.io.IOException;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
-
-import org.springframework.beans.factory.annotation.Autowired;
-
 import com.alipay.sofa.registry.common.model.metaserver.SessionNode;
 import com.alipay.sofa.registry.jraft.processor.AbstractSnapshotProcess;
 import com.alipay.sofa.registry.jraft.processor.SnapshotProcess;
@@ -34,6 +26,13 @@ import com.alipay.sofa.registry.server.meta.repository.NodeRepository;
 import com.alipay.sofa.registry.server.meta.repository.RepositoryService;
 import com.alipay.sofa.registry.server.meta.store.RenewDecorate;
 import com.alipay.sofa.registry.store.api.annotation.RaftService;
+import org.springframework.beans.factory.annotation.Autowired;
+
+import java.io.IOException;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  *
@@ -78,7 +77,8 @@ public class SessionRepositoryService extends AbstractSnapshotProcess
     }
 
     @Override
-    public RenewDecorate<SessionNode> put(String ipAddress, RenewDecorate<SessionNode> sessionNode) {
+    public RenewDecorate<SessionNode> put(String ipAddress, RenewDecorate<SessionNode> sessionNode,
+                                          Long currentTimeMillis) {
         try {
             RenewDecorate oldRenewDecorate = registry.get(ipAddress);
             if (oldRenewDecorate != null && oldRenewDecorate.getRenewal() != null) {
@@ -94,7 +94,7 @@ public class SessionRepositoryService extends AbstractSnapshotProcess
     }
 
     @Override
-    public RenewDecorate<SessionNode> remove(Object key) {
+    public RenewDecorate<SessionNode> remove(Object key, Long currentTimeMillis) {
         try {
             String ipAddress = (String) key;
             RenewDecorate<SessionNode> oldRenewDecorate = registry.remove(ipAddress);
@@ -112,7 +112,8 @@ public class SessionRepositoryService extends AbstractSnapshotProcess
 
     @Override
     public RenewDecorate<SessionNode> replace(String ipAddress,
-                                              RenewDecorate<SessionNode> sessionNode) {
+                                              RenewDecorate<SessionNode> sessionNode,
+                                              Long currentTimeMillis) {
         RenewDecorate<SessionNode> oldRenewDecorate = registry.get(ipAddress);
         if (oldRenewDecorate != null && oldRenewDecorate.getRenewal() != null) {
             oldRenewDecorate.setRenewal(sessionNode.getRenewal());
