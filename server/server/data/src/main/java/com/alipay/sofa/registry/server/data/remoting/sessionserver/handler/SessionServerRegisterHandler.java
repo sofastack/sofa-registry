@@ -52,7 +52,7 @@ public class SessionServerRegisterHandler extends
         if (connectIds == null) {
             connectIds = new HashSet<>();
         }
-        sessionServerConnectionFactory.register(request.getProcessId(), connectIds,
+        sessionServerConnectionFactory.registerSession(request.getProcessId(), connectIds,
             ((BoltChannel) channel).getConnection());
         return CommonResponse.buildSuccessResponse();
     }

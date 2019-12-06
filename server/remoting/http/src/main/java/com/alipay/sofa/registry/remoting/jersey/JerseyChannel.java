@@ -16,13 +16,14 @@
  */
 package com.alipay.sofa.registry.remoting.jersey;
 
-import com.alipay.sofa.registry.net.NetUtil;
-import com.alipay.sofa.registry.remoting.Channel;
+import java.net.InetSocketAddress;
+import java.net.URI;
 
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.WebTarget;
-import java.net.InetSocketAddress;
-import java.net.URI;
+
+import com.alipay.sofa.registry.net.NetUtil;
+import com.alipay.sofa.registry.remoting.Channel;
 
 /**
  *
@@ -75,6 +76,11 @@ public class JerseyChannel implements Channel {
     @Override
     public WebTarget getWebTarget() {
         return webTarget;
+    }
+
+    @Override
+    public void close() {
+        client.close();
     }
 
     /**

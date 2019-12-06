@@ -16,6 +16,8 @@
  */
 package com.alipay.sofa.registry.server.session.listener;
 
+import org.springframework.beans.factory.annotation.Autowired;
+
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
 import com.alipay.sofa.registry.server.session.node.service.MetaNodeService;
 import com.alipay.sofa.registry.server.session.scheduler.task.SessionTask;
@@ -27,7 +29,6 @@ import com.alipay.sofa.registry.task.listener.TaskEvent;
 import com.alipay.sofa.registry.task.listener.TaskEvent.TaskType;
 import com.alipay.sofa.registry.task.listener.TaskListener;
 import com.alipay.sofa.registry.task.listener.TaskListenerManager;
-import org.springframework.beans.factory.annotation.Autowired;
 
 /**
  *
@@ -37,23 +38,23 @@ import org.springframework.beans.factory.annotation.Autowired;
 public class WatcherRegisterFetchTaskListener implements TaskListener {
 
     @Autowired
-    private SessionServerConfig                 sessionServerConfig;
+    private SessionServerConfig                          sessionServerConfig;
 
     /**
      * trigger push client process
      */
     @Autowired
-    private TaskListenerManager                 taskListenerManager;
+    private TaskListenerManager                          taskListenerManager;
 
     /**
      * MetaNode service
      */
     @Autowired
-    private MetaNodeService                     metaNodeService;
+    private MetaNodeService                              metaNodeService;
 
-    private TaskDispatcher<String, SessionTask> singleTaskDispatcher;
+    private volatile TaskDispatcher<String, SessionTask> singleTaskDispatcher;
 
-    private TaskProcessor                       dataNodeSingleTaskProcessor;
+    private TaskProcessor                                dataNodeSingleTaskProcessor;
 
     public WatcherRegisterFetchTaskListener(TaskProcessor dataNodeSingleTaskProcessor) {
         this.dataNodeSingleTaskProcessor = dataNodeSingleTaskProcessor;
@@ -61,15 +62,21 @@ public class WatcherRegisterFetchTaskListener implements TaskListener {
 
     public TaskDispatcher<String, SessionTask> getSingleTaskDispatcher() {
         if (singleTaskDispatcher == null) {
-            singleTaskDispatcher = TaskDispatchers.createDefaultSingleTaskDispatcher(
-                TaskType.WATCHER_REGISTER_FETCH_TASK.getName(), dataNodeSingleTaskProcessor);
+            synchronized (this) {
+                if (singleTaskDispatcher == null) {
+                    singleTaskDispatcher = TaskDispatchers
+                        .createDefaultSingleTaskDispatcher(
+                            TaskType.WATCHER_REGISTER_FETCH_TASK.getName(),
+                            dataNodeSingleTaskProcessor);
+                }
+            }
         }
         return singleTaskDispatcher;
     }
 
     @Override
-    public boolean support(TaskEvent event) {
-        return TaskType.WATCHER_REGISTER_FETCH_TASK.equals(event.getTaskType());
+    public TaskType support() {
+        return TaskType.WATCHER_REGISTER_FETCH_TASK;
     }
 
     @Override

@@ -134,7 +134,7 @@ public class DisconnectEventHandler implements InitializingBean, AfterWorkingPro
                         //check processId confirm remove,and not be registered again when delay time
                         String sessionServerHost = event.getSessionServerHost();
                         if (sessionServerConnectionFactory
-                                .removeProcessIfMatch(processId, sessionServerHost)) {
+                                .removeProcessIfMatch(processId,sessionServerHost)) {
                             Set<String> connectIds = sessionServerConnectionFactory
                                     .removeConnectIds(processId);
 

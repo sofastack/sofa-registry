@@ -16,8 +16,9 @@
  */
 package com.alipay.sofa.registry.server.session.remoting.handler;
 
+import org.springframework.beans.factory.annotation.Autowired;
+
 import com.alipay.sofa.registry.common.model.Node.NodeType;
-import com.alipay.sofa.registry.common.model.store.URL;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.remoting.Channel;
@@ -26,7 +27,6 @@ import com.alipay.sofa.registry.server.session.registry.SessionRegistry;
 import com.alipay.sofa.registry.task.listener.TaskEvent;
 import com.alipay.sofa.registry.task.listener.TaskEvent.TaskType;
 import com.alipay.sofa.registry.task.listener.TaskListenerManager;
-import org.springframework.beans.factory.annotation.Autowired;
 
 /**
  *
@@ -52,7 +52,7 @@ public class DataNodeConnectionHandler extends AbstractClientHandler {
     @Override
     public void connected(Channel channel) throws RemotingException {
         super.connected(channel);
-        fireRegisterProcessIdTask(new URL(channel.getRemoteAddress()));
+        fireRegisterProcessIdTask(channel);
     }
 
     @Override
@@ -60,8 +60,8 @@ public class DataNodeConnectionHandler extends AbstractClientHandler {
         return NodeType.DATA;
     }
 
-    private void fireRegisterProcessIdTask(URL dataURL) {
-        TaskEvent taskEvent = new TaskEvent(dataURL, TaskType.SESSION_REGISTER_DATA_TASK);
+    private void fireRegisterProcessIdTask(Channel boltChannel) {
+        TaskEvent taskEvent = new TaskEvent(boltChannel, TaskType.SESSION_REGISTER_DATA_TASK);
         taskLogger.info("send " + taskEvent.getTaskType() + " taskEvent:{}", taskEvent);
         taskListenerManager.sendTaskEvent(taskEvent);
     }

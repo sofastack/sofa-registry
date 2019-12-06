@@ -214,4 +214,7 @@ public interface SessionServerConfig {
     long getPublishDataExecutorKeepAliveTime();
 
     double getAccessLimitRate();
+
+    int getDataClientConnNum();
+
 }

@@ -54,18 +54,17 @@ public class DataNodeExchanger implements NodeExchanger {
 
     @Override
     public Response request(Request request) {
-        Channel channel = this.connect(request.getRequestUrl());
         Client client = boltExchange.getClient(Exchange.DATA_SERVER_TYPE);
         LOGGER.info("DataNode Exchanger request={},url={},callbackHandler={}", request.getRequestBody(),
                 request.getRequestUrl(), request.getCallBackHandler());
 
         if (null != request.getCallBackHandler()) {
-            client.sendCallback(channel, request.getRequestBody(),
+            client.sendCallback(request.getRequestUrl(), request.getRequestBody(),
                     request.getCallBackHandler(),
                     dataServerConfig.getRpcTimeout());
             return () -> Response.ResultStatus.SUCCESSFUL;
         } else {
-            final Object result = client.sendSync(channel, request.getRequestBody(),
+            final Object result = client.sendSync(request.getRequestUrl(), request.getRequestBody(),
                     dataServerConfig.getRpcTimeout());
             return () -> result;
         }

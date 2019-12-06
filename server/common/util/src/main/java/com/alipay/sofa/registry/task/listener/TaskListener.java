@@ -16,6 +16,8 @@
  */
 package com.alipay.sofa.registry.task.listener;
 
+import com.alipay.sofa.registry.task.listener.TaskEvent.TaskType;
+
 /**
  *
  * @author shangyu.wh
@@ -26,10 +28,9 @@ public interface TaskListener {
     /**
      * com.alipay.sofa.registry.server.meta.listener type check
      *
-     * @param event
-     * @return true or false。
+     * @return type
      */
-    boolean support(TaskEvent event);
+    TaskType support();
 
     /**
      * event execute

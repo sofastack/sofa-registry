@@ -16,6 +16,17 @@
  */
 package com.alipay.sofa.registry.server.session.node.service;
 
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
+
+import javax.annotation.PostConstruct;
+
+import org.springframework.beans.factory.annotation.Autowired;
+
 import com.alipay.sofa.registry.common.model.CommonResponse;
 import com.alipay.sofa.registry.common.model.DatumSnapshotRequest;
 import com.alipay.sofa.registry.common.model.GenericResponse;
@@ -26,7 +37,6 @@ import com.alipay.sofa.registry.common.model.dataserver.Datum;
 import com.alipay.sofa.registry.common.model.dataserver.GetDataRequest;
 import com.alipay.sofa.registry.common.model.dataserver.GetDataVersionRequest;
 import com.alipay.sofa.registry.common.model.dataserver.PublishDataRequest;
-import com.alipay.sofa.registry.common.model.dataserver.SessionServerRegisterRequest;
 import com.alipay.sofa.registry.common.model.dataserver.UnPublishDataRequest;
 import com.alipay.sofa.registry.common.model.store.Publisher;
 import com.alipay.sofa.registry.common.model.store.URL;
@@ -42,15 +52,6 @@ import com.alipay.sofa.registry.server.session.node.SessionProcessIdGenerator;
 import com.alipay.sofa.registry.timer.AsyncHashedWheelTimer;
 import com.alipay.sofa.registry.timer.AsyncHashedWheelTimer.TaskFailedCallback;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
-import org.springframework.beans.factory.annotation.Autowired;
-
-import javax.annotation.PostConstruct;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  *
@@ -218,28 +219,6 @@ public class DataNodeServiceImpl implements DataNodeService {
                 return retryTimes;
             }
         };
-    }
-
-    @Override
-    public void registerSessionProcessId(final SessionServerRegisterRequest sessionServerRegisterRequest,
-                                         final URL dataUrl) {
-        try {
-            Request<SessionServerRegisterRequest> request = new Request<SessionServerRegisterRequest>() {
-                @Override
-                public SessionServerRegisterRequest getRequestBody() {
-                    return sessionServerRegisterRequest;
-                }
-
-                @Override
-                public URL getRequestUrl() {
-                    return dataUrl;
-                }
-            };
-            dataNodeExchanger.request(request);
-        } catch (RequestException e) {
-            throw new RuntimeException("DataNodeService register processId error! "
-                                       + e.getMessage(), e);
-        }
     }
 
     @Override

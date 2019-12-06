@@ -265,10 +265,15 @@ public class DataChangeFetchTask extends AbstractSessionTask {
     }
 
     private Datum getDatumCache() {
+        // build key
         DatumKey datumKey = new DatumKey(dataChangeRequest.getDataInfoId(),
             dataChangeRequest.getDataCenter());
-        Key key = new Key(KeyType.OBJ, datumKey.getClass().getName(), datumKey);
+        Key key = new Key(KeyType.OBJ, DatumKey.class.getName(), datumKey);
 
+        // remove cache
+        sessionCacheService.invalidate(key);
+
+        // get from cache (it will fetch from backend server)
         Value<Datum> value = null;
         try {
             value = sessionCacheService.getValue(key);
@@ -326,7 +331,6 @@ public class DataChangeFetchTask extends AbstractSessionTask {
 
     @Override
     public void setTaskEvent(TaskEvent taskEvent) {
-
         //taskId create from event
         if (taskEvent.getTaskId() != null) {
             setTaskId(taskEvent.getTaskId());

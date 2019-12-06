@@ -16,6 +16,10 @@
  */
 package com.alipay.sofa.registry.server.session.listener;
 
+import javax.annotation.PostConstruct;
+
+import org.springframework.beans.factory.annotation.Autowired;
+
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
 import com.alipay.sofa.registry.server.session.scheduler.task.SessionTask;
 import com.alipay.sofa.registry.server.session.scheduler.task.SubscriberPushEmptyTask;
@@ -26,7 +30,6 @@ import com.alipay.sofa.registry.task.listener.TaskEvent;
 import com.alipay.sofa.registry.task.listener.TaskEvent.TaskType;
 import com.alipay.sofa.registry.task.listener.TaskListener;
 import com.alipay.sofa.registry.task.listener.TaskListenerManager;
-import org.springframework.beans.factory.annotation.Autowired;
 
 /**
  *
@@ -49,17 +52,15 @@ public class SubscriberPushEmptyTaskListener implements TaskListener {
     @Autowired
     private TaskProcessor                       dataNodeSingleTaskProcessor;
 
-    public TaskDispatcher<String, SessionTask> getSingleTaskDispatcher() {
-        if (singleTaskDispatcher == null) {
-            singleTaskDispatcher = TaskDispatchers.createDefaultSingleTaskDispatcher(
-                TaskType.SUBSCRIBER_PUSH_EMPTY_TASK.getName(), dataNodeSingleTaskProcessor);
-        }
-        return singleTaskDispatcher;
+    @PostConstruct
+    public void init() {
+        singleTaskDispatcher = TaskDispatchers.createDefaultSingleTaskDispatcher(
+            TaskType.SUBSCRIBER_PUSH_EMPTY_TASK.getName(), dataNodeSingleTaskProcessor);
     }
 
     @Override
-    public boolean support(TaskEvent event) {
-        return TaskType.SUBSCRIBER_PUSH_EMPTY_TASK.equals(event.getTaskType());
+    public TaskType support() {
+        return TaskType.SUBSCRIBER_PUSH_EMPTY_TASK;
     }
 
     @Override
@@ -70,8 +71,8 @@ public class SubscriberPushEmptyTaskListener implements TaskListener {
 
         subscriberPushEmptyTask.setTaskEvent(event);
 
-        getSingleTaskDispatcher().dispatch(subscriberPushEmptyTask.getTaskId(),
-            subscriberPushEmptyTask, subscriberPushEmptyTask.getExpiryTime());
+        singleTaskDispatcher.dispatch(subscriberPushEmptyTask.getTaskId(), subscriberPushEmptyTask,
+            subscriberPushEmptyTask.getExpiryTime());
     }
 
 }

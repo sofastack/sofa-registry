@@ -16,13 +16,14 @@
  */
 package com.alipay.sofa.registry.remoting.bolt;
 
-import com.alipay.sofa.registry.remoting.Channel;
-import com.alipay.sofa.registry.remoting.bolt.BoltServer;
+import java.net.InetSocketAddress;
+
+import javax.ws.rs.client.WebTarget;
+
 import org.junit.Assert;
 import org.junit.Test;
 
-import javax.ws.rs.client.WebTarget;
-import java.net.InetSocketAddress;
+import com.alipay.sofa.registry.remoting.Channel;
 
 /**
  *
@@ -66,6 +67,11 @@ public class BoltServerTest {
                 @Override
                 public WebTarget getWebTarget() {
                     return null;
+                }
+
+                @Override
+                public void close() {
+
                 }
             });
         }

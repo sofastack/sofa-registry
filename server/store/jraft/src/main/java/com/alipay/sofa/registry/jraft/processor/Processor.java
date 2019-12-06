@@ -16,6 +16,12 @@
  */
 package com.alipay.sofa.registry.jraft.processor;
 
+import java.lang.invoke.MethodHandle;
+import java.lang.invoke.MethodHandles;
+import java.lang.reflect.Method;
+import java.util.HashMap;
+import java.util.Map;
+
 import com.alipay.sofa.registry.jraft.bootstrap.ServiceStateMachine;
 import com.alipay.sofa.registry.jraft.command.ProcessRequest;
 import com.alipay.sofa.registry.jraft.command.ProcessResponse;
@@ -23,11 +29,6 @@ import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.store.api.annotation.ReadOnLeader;
 
-import java.lang.invoke.MethodHandle;
-import java.lang.invoke.MethodHandles;
-import java.lang.reflect.Method;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
