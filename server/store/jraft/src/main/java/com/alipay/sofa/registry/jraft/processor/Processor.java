@@ -16,6 +16,12 @@
  */
 package com.alipay.sofa.registry.jraft.processor;
 
+import java.lang.invoke.MethodHandle;
+import java.lang.invoke.MethodHandles;
+import java.lang.reflect.Method;
+import java.util.HashMap;
+import java.util.Map;
+
 import com.alipay.sofa.registry.jraft.bootstrap.ServiceStateMachine;
 import com.alipay.sofa.registry.jraft.command.ProcessRequest;
 import com.alipay.sofa.registry.jraft.command.ProcessResponse;
@@ -23,11 +29,7 @@ import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.store.api.annotation.ReadOnLeader;
 
-import java.lang.invoke.MethodHandle;
-import java.lang.invoke.MethodHandles;
-import java.lang.reflect.Method;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  *
@@ -36,12 +38,16 @@ import java.util.Map;
  */
 public class Processor {
 
-    private static final Logger              LOG           = LoggerFactory
-                                                               .getLogger(Processor.class);
+    private static final Logger              LOG                  = LoggerFactory
+                                                                      .getLogger(Processor.class);
 
-    private Map<String, Map<String, Method>> workerMethods = new HashMap<>();
+    private Map<String, Map<String, Method>> workerMethods        = new HashMap<>();
 
-    private Map<String, Object>              workers       = new HashMap<>();
+    private Map<String, Object>              workers              = new HashMap<>();
+
+    private Map<String, MethodHandle>        methodHandleMap      = new ConcurrentHashMap<>();
+
+    private final static String              SERVICE_METHOD_SPLIT = "#@#";
 
     private static volatile Processor        instance;
 
@@ -97,15 +103,25 @@ public class Processor {
             for (int i = 0; i < sig.length; i++) {
                 methodKeyBuffer.append(sig[i]);
             }
-            Method appServiceMethod = workerMethods.get(serviceId).get(methodKeyBuffer.toString());
+            String methodKey = methodKeyBuffer.toString();
+            Method appServiceMethod = workerMethods.get(serviceId).get(methodKey);
             if (appServiceMethod == null) {
                 LOG.error("Can not find method {} from processor by serviceId {}", methodName,
                     serviceId);
                 throw new NoSuchMethodException("Can not find method from processor！");
             }
-
             Object[] methodArg = request.getMethodArgs();
-            MethodHandle methodHandle = MethodHandles.lookup().unreflect(appServiceMethod);
+            String methodHandleKey = getMethodHandleKey(serviceId, methodKey);
+
+            MethodHandle methodHandle = methodHandleMap.get(methodHandleKey);
+            if (methodHandle == null) {
+                MethodHandle methodHandleNew = MethodHandles.lookup().unreflect(appServiceMethod);
+                methodHandle = methodHandleMap.putIfAbsent(methodHandleKey, methodHandleNew);
+                if (methodHandle == null) {
+                    methodHandle = methodHandleNew;
+                }
+            }
+
             Object ret = methodHandle.bindTo(target).invokeWithArguments(methodArg);
             if (ret != null) {
                 return ProcessResponse.ok(ret).build();
@@ -133,7 +149,24 @@ public class Processor {
 
         try {
             Object[] methodArg = request.getMethodArgs();
-            MethodHandle methodHandle = MethodHandles.lookup().unreflect(method);
+
+            StringBuilder methodKeyBuffer = new StringBuilder();
+            methodKeyBuffer.append(methodName);
+            String[] sig = request.getMethodArgSigs();
+            for (int i = 0; i < sig.length; i++) {
+                methodKeyBuffer.append(sig[i]);
+            }
+            String methodKey = methodKeyBuffer.toString();
+            String methodHandleKey = getMethodHandleKey(serviceId, methodKey);
+            MethodHandle methodHandle = methodHandleMap.get(methodHandleKey);
+            if (methodHandle == null) {
+                MethodHandle methodHandleNew = MethodHandles.lookup().unreflect(method);
+                methodHandle = methodHandleMap.putIfAbsent(methodHandleKey, methodHandleNew);
+                if (methodHandle == null) {
+                    methodHandle = methodHandleNew;
+                }
+            }
+
             Object ret = methodHandle.bindTo(target).invokeWithArguments(methodArg);
             if (ret != null) {
                 return ProcessResponse.ok(ret).build();
@@ -183,6 +216,10 @@ public class Processor {
             return method != null && method.isAnnotationPresent(ReadOnLeader.class);
         }
         return false;
+    }
+
+    public String getMethodHandleKey(String serviceId, String methodKey) {
+        return serviceId + SERVICE_METHOD_SPLIT + methodKey;
     }
 
 }
