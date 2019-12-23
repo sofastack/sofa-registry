@@ -156,21 +156,23 @@ public class RenewDatumHandler extends AbstractServerHandler<RenewDatumRequest> 
 
     @Override
     public void afterWorkingProcess() {
-        /*
-         * After the snapshot data is synchronized during startup, it is queued and then placed asynchronously into
-         * DatumCache. When the notification becomes WORKING, there may be data in the queue that is not executed
-         * to DatumCache. So it need to sleep for a while.
-         */
-        try {
-            TimeUnit.MILLISECONDS.sleep(dataServerConfig.getRenewEnableDelaySec());
-        } catch (InterruptedException e) {
-            LOGGER.error(e.getMessage(), e);
-        }
-        renewEnabled.set(true);
+        renewDatumProcessorExecutor.submit(() -> {
+            /*
+             * After the snapshot data is synchronized during startup, it is queued and then placed asynchronously into
+             * DatumCache. When the notification becomes WORKING, there may be data in the queue that is not executed
+             * to DatumCache. So it need to sleep for a while.
+             */
+            try {
+                TimeUnit.MILLISECONDS.sleep(dataServerConfig.getRenewEnableDelaySec());
+            } catch (InterruptedException e) {
+                LOGGER.error(e.getMessage(), e);
+            }
+            renewEnabled.set(true);
+        });
     }
 
     @Override
     public int getOrder() {
-        return 0;
+        return 100;
     }
 }

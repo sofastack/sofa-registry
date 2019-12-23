@@ -16,6 +16,20 @@
  */
 package com.alipay.sofa.registry.server.data.remoting.metaserver;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.stream.Collectors;
+
+import org.springframework.beans.factory.annotation.Autowired;
+
 import com.alipay.remoting.Connection;
 import com.alipay.sofa.jraft.entity.PeerId;
 import com.alipay.sofa.registry.common.model.Node.NodeType;
@@ -39,18 +53,6 @@ import com.alipay.sofa.registry.server.data.cache.DataServerChangeItem;
 import com.alipay.sofa.registry.server.data.node.DataServerNode;
 import com.alipay.sofa.registry.server.data.remoting.MetaNodeExchanger;
 import com.alipay.sofa.registry.server.data.remoting.dataserver.DataServerNodeFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Set;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.stream.Collectors;
 
 /**
  *
@@ -152,6 +154,11 @@ public class DefaultMetaServiceImpl implements IMetaServerService {
     public List<DataServerNode> getDataServers(String dataCenter, String dataInfoId) {
         return DataServerNodeFactory.computeDataServerNodes(dataCenter, dataInfoId,
             dataServerConfig.getStoreNodes());
+    }
+
+    @Override
+    public Collection<DataServerNode> getDataServers(String dataCenter) {
+        return DataServerNodeFactory.getDataServerNodes(dataCenter).values();
     }
 
     @Override

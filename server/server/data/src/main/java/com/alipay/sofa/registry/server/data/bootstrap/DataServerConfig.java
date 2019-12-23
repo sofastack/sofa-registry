@@ -127,6 +127,10 @@ public class DataServerConfig {
         this.commonConfig = commonConfig;
     }
 
+    public boolean isLocalDataCenter(String dataCenter) {
+        return commonConfig.getLocalDataCenter().equals(dataCenter);
+    }
+
     /**
      * Getter method for property <tt>renewEnableDelaySec</tt>.
      *
@@ -808,4 +812,5 @@ public class DataServerConfig {
     public String toString() {
         return ToStringBuilder.reflectionToString(this, ToStringStyle.MULTI_LINE_STYLE);
     }
+
 }

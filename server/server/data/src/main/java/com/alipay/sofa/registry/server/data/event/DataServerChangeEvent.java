@@ -16,18 +16,18 @@
  */
 package com.alipay.sofa.registry.server.data.event;
 
-import com.alipay.sofa.registry.common.model.metaserver.DataNode;
-import com.alipay.sofa.registry.server.data.cache.DataServerChangeItem;
-
 import java.util.HashMap;
 import java.util.Map;
+
+import com.alipay.sofa.registry.common.model.metaserver.DataNode;
+import com.alipay.sofa.registry.server.data.cache.DataServerChangeItem;
 
 /**
  *
  * @author qian.lqlq
  * @version $Id: DataServerChangeEvent.java, v 0.1 2018-03-13 14:37 qian.lqlq Exp $
  */
-public class DataServerChangeEvent {
+public class DataServerChangeEvent implements Event {
 
     /**
      * node type enum

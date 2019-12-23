@@ -16,18 +16,21 @@
  */
 package com.alipay.sofa.registry.server.data.event.handler;
 
+import java.util.List;
+
+import org.springframework.beans.factory.InitializingBean;
+import org.springframework.beans.factory.annotation.Autowired;
+
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.server.data.event.EventCenter;
-import org.springframework.beans.factory.InitializingBean;
-import org.springframework.beans.factory.annotation.Autowired;
 
 /**
  *
  * @author qian.lqlq
  * @version $Id: AbstractEventHandler.java, v 0.1 2018-03-13 15:34 qian.lqlq Exp $
  */
-public abstract class AbstractEventHandler<T> implements InitializingBean {
+public abstract class AbstractEventHandler<Event> implements InitializingBean {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(AbstractEventHandler.class);
 
@@ -43,7 +46,7 @@ public abstract class AbstractEventHandler<T> implements InitializingBean {
      * event handle func
      * @param event
      */
-    public void handle(T event) {
+    public void handle(Event event) {
         try {
             doHandle(event);
         } catch (Exception e) {
@@ -51,7 +54,7 @@ public abstract class AbstractEventHandler<T> implements InitializingBean {
         }
     }
 
-    public abstract Class interest();
+    public abstract List<Class<? extends Event>> interest();
 
-    public abstract void doHandle(T event);
+    public abstract void doHandle(Event event);
 }

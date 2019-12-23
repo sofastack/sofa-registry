@@ -16,28 +16,10 @@
  */
 package com.alipay.sofa.registry.server.data.event;
 
-import java.util.Set;
-
 /**
  *
- * @author qian.lqlq
- * @version $Id: StartTaskEvent.java, v 0.1 2018-03-13 15:13 qian.lqlq Exp $
+ * @author kezhu.wukz
+ * @version $Id: Event.java, v 0.1 2019-12-12 15:42 kezhu.wukz Exp $
  */
-public class StartTaskEvent implements Event {
-
-    private final Set<StartTaskTypeEnum> suitableTypes;
-
-    public StartTaskEvent(Set<StartTaskTypeEnum> suitableTypes) {
-        this.suitableTypes = suitableTypes;
-    }
-
-    /**
-     * Getter method for property <tt>suitableTypes</tt>.
-     *
-     * @return property value of suitableTypes
-     */
-    public Set<StartTaskTypeEnum> getSuitableTypes() {
-        return suitableTypes;
-    }
-
+public interface Event {
 }

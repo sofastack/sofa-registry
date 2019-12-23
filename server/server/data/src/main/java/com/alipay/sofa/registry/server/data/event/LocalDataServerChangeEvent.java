@@ -16,17 +16,17 @@
  */
 package com.alipay.sofa.registry.server.data.event;
 
-import com.alipay.sofa.registry.common.model.metaserver.DataNode;
-
 import java.util.Map;
 import java.util.Set;
+
+import com.alipay.sofa.registry.common.model.metaserver.DataNode;
 
 /**
  *
  * @author qian.lqlq
  * @version $Id: LocalDataServerChangeEvent.java, v 0.1 2018-05-07 20:13 qian.lqlq Exp $
  */
-public class LocalDataServerChangeEvent {
+public class LocalDataServerChangeEvent implements Event {
 
     private Map<String, DataNode> localDataServerMap;
 
@@ -86,5 +86,19 @@ public class LocalDataServerChangeEvent {
      */
     public long getLocalDataCenterversion() {
         return localDataCenterversion;
+    }
+
+    /**
+     * @see Object#toString()
+     */
+    @Override
+    public String toString() {
+        final StringBuilder sb = new StringBuilder("LocalDataServerChangeEvent{");
+        sb.append("localDataServerMap=").append(localDataServerMap);
+        sb.append(", localDataCenterversion=").append(localDataCenterversion);
+        sb.append(", newJoined=").append(newJoined);
+        sb.append(", version=").append(version);
+        sb.append('}');
+        return sb.toString();
     }
 }

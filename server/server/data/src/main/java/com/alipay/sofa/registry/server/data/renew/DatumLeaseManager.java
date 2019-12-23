@@ -258,12 +258,9 @@ public class DatumLeaseManager implements AfterWorkingProcess {
          * DatumCache. When the notification becomes WORKING, there may be data in the queue that is not executed
          * to DatumCache. So it need to sleep for a while.
          */
-        try {
-            TimeUnit.MILLISECONDS.sleep(dataServerConfig.getRenewEnableDelaySec());
-        } catch (InterruptedException e) {
-            LOGGER.error(e.getMessage(), e);
-        }
-        serverWorking = true;
+        executorForHeartbeatLess.schedule(() -> {
+            serverWorking = true;
+        }, dataServerConfig.getRenewEnableDelaySec(), TimeUnit.SECONDS);
     }
 
     @Override

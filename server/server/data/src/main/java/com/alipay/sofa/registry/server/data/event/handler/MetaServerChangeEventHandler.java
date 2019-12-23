@@ -16,6 +16,15 @@
  */
 package com.alipay.sofa.registry.server.data.event.handler;
 
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.util.CollectionUtils;
+
 import com.alipay.remoting.Connection;
 import com.alipay.sofa.jraft.entity.PeerId;
 import com.alipay.sofa.registry.common.model.metaserver.DataNode;
@@ -36,13 +45,7 @@ import com.alipay.sofa.registry.server.data.remoting.MetaNodeExchanger;
 import com.alipay.sofa.registry.server.data.remoting.metaserver.IMetaServerService;
 import com.alipay.sofa.registry.server.data.remoting.metaserver.MetaServerConnectionFactory;
 import com.alipay.sofa.registry.server.data.util.TimeUtil;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.util.CollectionUtils;
-
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Set;
+import com.google.common.collect.Lists;
 
 /**
  *
@@ -71,8 +74,8 @@ public class MetaServerChangeEventHandler extends AbstractEventHandler<MetaServe
     private MetaServerConnectionFactory metaServerConnectionFactory;
 
     @Override
-    public Class interest() {
-        return MetaServerChangeEvent.class;
+    public List<Class<? extends MetaServerChangeEvent>> interest() {
+        return Lists.newArrayList(MetaServerChangeEvent.class);
     }
 
     @Override

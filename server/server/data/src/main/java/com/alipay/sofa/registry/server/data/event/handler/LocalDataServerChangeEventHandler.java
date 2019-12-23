@@ -16,6 +16,18 @@
  */
 package com.alipay.sofa.registry.server.data.event.handler;
 
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Executor;
+import java.util.concurrent.LinkedBlockingDeque;
+import java.util.concurrent.atomic.AtomicBoolean;
+
+import org.springframework.beans.factory.annotation.Autowired;
+
 import com.alipay.remoting.Connection;
 import com.alipay.sofa.registry.common.model.CommonResponse;
 import com.alipay.sofa.registry.common.model.dataserver.Datum;
@@ -43,17 +55,6 @@ import com.alipay.sofa.registry.server.data.renew.LocalDataServerCleanHandler;
 import com.alipay.sofa.registry.server.data.util.LocalServerStatusEnum;
 import com.alipay.sofa.registry.server.data.util.TimeUtil;
 import com.google.common.collect.Lists;
-import org.springframework.beans.factory.annotation.Autowired;
-
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.Executor;
-import java.util.concurrent.LinkedBlockingDeque;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  *
@@ -95,8 +96,8 @@ public class LocalDataServerChangeEventHandler extends
     private static final int                          TRY_COUNT = 5;
 
     @Override
-    public Class interest() {
-        return LocalDataServerChangeEvent.class;
+    public List<Class<? extends LocalDataServerChangeEvent>> interest() {
+        return Lists.newArrayList(LocalDataServerChangeEvent.class);
     }
 
     @Override

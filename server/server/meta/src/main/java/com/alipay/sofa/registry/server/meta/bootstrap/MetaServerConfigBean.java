@@ -16,12 +16,13 @@
  */
 package com.alipay.sofa.registry.server.meta.bootstrap;
 
-import com.alipay.sofa.registry.common.model.constants.ValueConstants;
+import java.io.File;
+
 import org.apache.commons.lang.builder.ToStringBuilder;
 import org.apache.commons.lang.builder.ToStringStyle;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
-import java.io.File;
+import com.alipay.sofa.registry.common.model.constants.ValueConstants;
 
 /**
  *
@@ -47,11 +48,11 @@ public class MetaServerConfigBean implements MetaServerConfig {
 
     private int                schedulerHeartbeatExpBackOffBound               = 10;
 
-    private int                schedulerGetDataChangeTimeout                   = 10;
+    private int                schedulerGetDataChangeTimeout                   = 5;
 
-    private int                schedulerGetDataChangeFirstDelay                = 10;
+    private int                schedulerGetDataChangeFirstDelay                = 5;
 
-    private int                schedulerGetDataChangeExpBackOffBound           = 20;
+    private int                schedulerGetDataChangeExpBackOffBound           = 5;
 
     private int                schedulerConnectMetaServerTimeout               = 3;
 

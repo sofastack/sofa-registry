@@ -28,7 +28,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import com.alipay.sofa.registry.common.model.GenericResponse;
 import com.alipay.sofa.registry.common.model.Node;
-import com.alipay.sofa.registry.common.model.dataserver.Datum;
 import com.alipay.sofa.registry.common.model.dataserver.GetDataVersionRequest;
 import com.alipay.sofa.registry.remoting.Channel;
 import com.alipay.sofa.registry.server.data.cache.DatumCache;
@@ -68,19 +67,17 @@ public class GetDataVersionsHandler extends AbstractServerHandler<GetDataVersion
         Map<String/*datacenter*/, Map<String/*dataInfoId*/, Long/*version*/>> map = new HashMap<>();
         List<String> dataInfoIds = request.getDataInfoIds();
         for (String dataInfoId : dataInfoIds) {
-            Map<String, Datum> datumMap = datumCache.get(dataInfoId);
-            Set<Entry<String, Datum>> entrySet = datumMap.entrySet();
-            for (Entry<String, Datum> entry : entrySet) {
+            Map<String, Long> datumMap = datumCache.getVersions(dataInfoId);
+            Set<Entry<String, Long>> entrySet = datumMap.entrySet();
+            for (Entry<String, Long> entry : entrySet) {
                 String dataCenter = entry.getKey();
-                Datum datum = entry.getValue();
-                if (datum != null) {
-                    Map<String, Long> dataInfoIdToVersionMap = map.get(dataCenter);
-                    if (dataInfoIdToVersionMap == null) {
-                        dataInfoIdToVersionMap = new HashMap<>(dataInfoIds.size());
-                        map.put(dataCenter, dataInfoIdToVersionMap);
-                    }
-                    dataInfoIdToVersionMap.put(dataInfoId, datum.getVersion());
+                Long version = entry.getValue();
+                Map<String, Long> dataInfoIdToVersionMap = map.get(dataCenter);
+                if (dataInfoIdToVersionMap == null) {
+                    dataInfoIdToVersionMap = new HashMap<>(dataInfoIds.size());
+                    map.put(dataCenter, dataInfoIdToVersionMap);
                 }
+                dataInfoIdToVersionMap.put(dataInfoId, version);
             }
         }
         return new GenericResponse<Map<String, Map<String, Long>>>().fillSucceed(map);
