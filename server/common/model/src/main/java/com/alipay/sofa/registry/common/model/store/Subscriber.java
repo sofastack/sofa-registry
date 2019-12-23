@@ -32,31 +32,14 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 public class Subscriber extends BaseInfo {
 
     /** UID */
-    private static final long serialVersionUID = 98433360274932292L;
+    private static final long                       serialVersionUID = 98433360274932292L;
     /** */
-    private ScopeEnum         scope;
+    private ScopeEnum                               scope;
     /** */
-    private ElementType       elementType;
-
-    static class PushContext {
-        /**
-         * push dataInfo version
-         */
-        private Long lastPushVersion;
-
-        /**
-         * push dataInfo version
-         */
-        private int  lastPubCount;
-
-        public PushContext(Long lastPushVersion, int lastPubCount) {
-            this.lastPushVersion = lastPushVersion;
-            this.lastPubCount = lastPubCount;
-        }
-    }
+    private ElementType                             elementType;
 
     /**
-     * all dataCenter push dataInfo version
+     * last push context
      */
     private Map<String/*dataCenter*/, PushContext> lastPushContexts = new ConcurrentHashMap<>();
 
@@ -89,11 +72,11 @@ public class Subscriber extends BaseInfo {
      */
     public boolean checkVersion(String dataCenter, Long version) {
 
-        PushContext pushContext = lastPushContexts.get(dataCenter);
-        if (pushContext == null) {
+        PushContext lastPushContext = lastPushContexts.get(dataCenter);
+        if (lastPushContext == null) {
             return version != null;
         }
-        Long oldVersion = pushContext.lastPushVersion;
+        Long oldVersion = lastPushContext.pushVersion;
         if (oldVersion == null) {
             return version != null;
         } else {
@@ -127,8 +110,8 @@ public class Subscriber extends BaseInfo {
             if (oldPushContext == null) {
                 break;
             } else {
-                if (oldPushContext.lastPushVersion == null
-                    || (pushContext.lastPushVersion != null && pushContext.lastPushVersion > oldPushContext.lastPushVersion)) {
+                if (oldPushContext.pushVersion == null
+                    || (pushContext.pushVersion != null && pushContext.pushVersion > oldPushContext.pushVersion)) {
                     if (lastPushContexts.replace(dataCenter, oldPushContext, pushContext)) {
                         break;
                     }
@@ -140,19 +123,20 @@ public class Subscriber extends BaseInfo {
     }
 
     /**
-     * http://gitlab.alipay-inc.com/sofa-open/sofa-registry/issues/189
+     * If the pushed data is empty, check the last push, for avoid continuous empty datum push
      */
     public boolean allowPush(String dataCenter, int pubCount) {
+        boolean allowPush = true;
         // condition of no push:
         // 1. last push count is 0 and this time is also 0
-        // 2. last push is a valid push
+        // 2. last push is a valid push (version > 1)
         if (pubCount == 0) {
             PushContext pushContext = lastPushContexts.get(dataCenter);
-            return !(pushContext != null && pushContext.lastPubCount == 0
+            allowPush = !(pushContext != null && pushContext.pushPubCount == 0
             //last push is a valid push
-                     && pushContext.lastPushVersion != null && pushContext.lastPushVersion > ValueConstants.DEFAULT_NO_DATUM_VERSION);
+                          && pushContext.pushVersion != null && pushContext.pushVersion > ValueConstants.DEFAULT_NO_DATUM_VERSION);
         }
-        return true;
+        return allowPush;
     }
 
     /**
@@ -175,7 +159,7 @@ public class Subscriber extends BaseInfo {
         final StringBuilder sb = new StringBuilder("scope=");
         sb.append(scope).append(",");
         sb.append("elementType=").append(elementType).append(",");
-        sb.append("lastPushVersion=").append(lastPushContexts);
+        sb.append("pushVersion=").append(lastPushContexts);
         return sb.toString();
     }
 
@@ -191,5 +175,34 @@ public class Subscriber extends BaseInfo {
         sb.append(", super=").append(super.toString());
         sb.append('}');
         return sb.toString();
+    }
+
+    static class PushContext {
+        /**
+         * last pushed dataInfo version
+         */
+        private Long pushVersion;
+
+        /**
+         * push pushed dataInfo pubCount
+         */
+        private int  pushPubCount;
+
+        public PushContext(Long pushVersion, int pushPubCount) {
+            this.pushVersion = pushVersion;
+            this.pushPubCount = pushPubCount;
+        }
+
+        /**
+         * @see Object#toString()
+         */
+        @Override
+        public String toString() {
+            final StringBuilder sb = new StringBuilder("PushContext{");
+            sb.append("pushVersion=").append(pushVersion);
+            sb.append(", pushPubCount=").append(pushPubCount);
+            sb.append('}');
+            return sb.toString();
+        }
     }
 }
