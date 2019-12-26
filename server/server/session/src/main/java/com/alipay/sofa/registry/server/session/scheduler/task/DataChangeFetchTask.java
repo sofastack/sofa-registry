@@ -231,8 +231,9 @@ public class DataChangeFetchTask extends AbstractSessionTask {
                                                Collection<Subscriber> subscribers, ScopeEnum scopeEnum,
                                                Subscriber subscriber, PushTaskClosure pushTaskClosure) {
         String dataId = datum.getDataId();
+        String clientCell = sessionServerConfig.getClientCell(subscriber.getCell());
         Predicate<String> zonePredicate = (zone) -> {
-            if (!sessionServerConfig.getSessionServerRegion().equals(zone)) {
+            if (!clientCell.equals(zone)) {
                 if (ScopeEnum.zone == scopeEnum) {
                     // zone scope subscribe only return zone list
                     return true;
@@ -246,8 +247,7 @@ public class DataChangeFetchTask extends AbstractSessionTask {
             return false;
         };
         ReceivedData receivedData = ReceivedDataConverter
-                .getReceivedDataMulti(datum, scopeEnum, subscriberRegisterIdList,
-                        sessionServerConfig.getSessionServerRegion(), zonePredicate);
+                .getReceivedDataMulti(datum, scopeEnum, subscriberRegisterIdList, clientCell, zonePredicate);
 
         //trigger push to client node
         Map<ReceivedData, URL> parameter = new HashMap<>();

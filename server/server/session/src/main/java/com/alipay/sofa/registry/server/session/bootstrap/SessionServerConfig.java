@@ -57,6 +57,8 @@ public interface SessionServerConfig {
 
     String getSessionServerRegion();
 
+    String getClientCell(String clientCell);
+
     String getSessionServerDataCenter();
 
     int getReceivedDataMultiPushTaskRetryTimes();

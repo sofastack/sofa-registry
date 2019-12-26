@@ -928,6 +928,11 @@ public class SessionServerConfigBean implements SessionServerConfig {
         return sessionServerRegion;
     }
 
+    @Override
+    public String getClientCell(String subscriberCell) {
+        return this.getSessionServerRegion();
+    }
+
     /**
      * Setter method for property <tt>sessionServerRegion</tt>.
      *
