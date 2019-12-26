@@ -80,6 +80,9 @@ import com.alipay.sofa.registry.server.data.remoting.metaserver.MetaServerConnec
 import com.alipay.sofa.registry.server.data.remoting.metaserver.handler.NotifyProvideDataChangeHandler;
 import com.alipay.sofa.registry.server.data.remoting.metaserver.handler.ServerChangeHandler;
 import com.alipay.sofa.registry.server.data.remoting.metaserver.handler.StatusConfirmHandler;
+import com.alipay.sofa.registry.server.data.remoting.metaserver.provideData.ProvideDataProcessor;
+import com.alipay.sofa.registry.server.data.remoting.metaserver.provideData.ProvideDataProcessorManager;
+import com.alipay.sofa.registry.server.data.remoting.metaserver.provideData.processor.DatumExpireProvideDataProcessor;
 import com.alipay.sofa.registry.server.data.remoting.metaserver.task.ConnectionRefreshMetaTask;
 import com.alipay.sofa.registry.server.data.remoting.sessionserver.SessionServerConnectionFactory;
 import com.alipay.sofa.registry.server.data.remoting.sessionserver.disconnect.DisconnectEventHandler;
@@ -575,6 +578,24 @@ public class DataServerBeanConfiguration {
                 dataServerConfig.getGetDataExecutorKeepAliveTime(), TimeUnit.SECONDS,
                 new ArrayBlockingQueue<>(dataServerConfig.getGetDataExecutorQueueSize()),
                 new NamedThreadFactory("DataServer-GetDataProcessor-executor", true));
+        }
+
+    }
+
+    @Configuration
+    public static class DataProvideDataConfiguration {
+
+        @Bean
+        public ProvideDataProcessor provideDataProcessorManager() {
+            return new ProvideDataProcessorManager();
+        }
+
+        @Bean
+        public ProvideDataProcessor datumExpireProvideDataProcessor(ProvideDataProcessor provideDataProcessorManager) {
+            ProvideDataProcessor datumExpireProvideDataProcessor = new DatumExpireProvideDataProcessor();
+            ((ProvideDataProcessorManager) provideDataProcessorManager)
+                .addProvideDataProcessor(datumExpireProvideDataProcessor);
+            return datumExpireProvideDataProcessor;
         }
 
     }

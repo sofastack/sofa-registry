@@ -41,6 +41,7 @@ import com.alipay.sofa.registry.store.api.annotation.RaftReference;
 import com.alipay.sofa.registry.task.listener.TaskEvent;
 import com.alipay.sofa.registry.task.listener.TaskEvent.TaskType;
 import com.alipay.sofa.registry.task.listener.TaskListenerManager;
+import com.google.common.collect.Sets;
 
 /**
  *
@@ -223,7 +224,7 @@ public class RenewSwitchResource {
                                       DataOperator dataOperator) {
         NotifyProvideDataChange notifyProvideDataChange = new NotifyProvideDataChange(dataInfoId,
             version, dataOperator);
-        notifyProvideDataChange.setNodeType(nodeType);
+        notifyProvideDataChange.setNodeTypes(Sets.newHashSet(nodeType));
 
         TaskEvent taskEvent = new TaskEvent(notifyProvideDataChange,
             TaskType.PERSISTENCE_DATA_CHANGE_NOTIFY_TASK);
