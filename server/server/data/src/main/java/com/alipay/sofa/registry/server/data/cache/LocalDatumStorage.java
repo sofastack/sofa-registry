@@ -312,7 +312,16 @@ public class LocalDatumStorage implements DatumStorage {
 
     @Override
     public Map<String, Long> getVersions(String dataInfoId) {
-        return null;
+        Map<String, Long> versions = new HashMap<>(1);
+        Map<String, Datum> datumMap = this.get(dataInfoId);
+        if (datumMap != null) {
+            for (Map.Entry<String, Datum> entry : datumMap.entrySet()) {
+                String dataCenter = entry.getKey();
+                Datum datum = entry.getValue();
+                versions.put(dataCenter, datum.getVersion());
+            }
+        }
+        return versions;
     }
 
     private boolean mergePublisher(Publisher pub, Map<String, Publisher> cachePubMap,
