@@ -118,6 +118,10 @@ public class DataDigestResource {
     @Path("datum/count")
     @Produces(MediaType.APPLICATION_JSON)
     public String getDatumCount() {
+        return getLocalDatumCount();
+    }
+
+    protected String getLocalDatumCount() {
         StringBuilder sb = new StringBuilder("CacheDigest");
         try {
 
