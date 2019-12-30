@@ -544,6 +544,7 @@ public class DataServerBeanConfiguration {
         }
 
         @Bean
+        @ConditionalOnMissingBean
         public DataDigestResource dataDigestResource() {
             return new DataDigestResource();
         }
