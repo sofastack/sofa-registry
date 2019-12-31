@@ -16,6 +16,8 @@
  */
 package com.alipay.sofa.registry.common.model.store;
 
+import com.alipay.sofa.registry.common.model.constants.ValueConstants;
+
 import java.io.Serializable;
 
 /**
@@ -61,7 +63,11 @@ public class DataInfo implements Serializable {
         if (dataId == null || dataId.isEmpty()) {
             throw new IllegalArgumentException("error dataId:" + dataId);
         }
-        buf.append(dataId);
+        if (ValueConstants.DATA_ID_CASE_SENSITIVE) {
+            buf.append(dataId);
+        } else {
+            buf.append(dataId.toUpperCase());
+        }
 
         if (instanceId == null || instanceId.isEmpty()) {
             throw new IllegalArgumentException("error instanceId:" + instanceId);

@@ -64,4 +64,14 @@ public class ValueConstants {
 
     public static final String   LOGGER_NAME_RENEW             = "RENEW-LOGGER";
 
+    /**
+     * switch key for dataid is sensitive or not
+     */
+    public static final String   DATA_ID_CASE_SENSITIVE_SWITCH = "DATA_ID_CASE_SENSITIVE";
+
+    /**
+     * switch for dataid is sensitive or not, default value is true
+     */
+    public static final Boolean  DATA_ID_CASE_SENSITIVE = Boolean.valueOf(System.getProperty(DATA_ID_CASE_SENSITIVE_SWITCH, Boolean.TRUE.toString()));
+
 }
