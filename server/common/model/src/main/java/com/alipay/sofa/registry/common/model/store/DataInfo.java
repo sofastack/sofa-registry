@@ -63,10 +63,10 @@ public class DataInfo implements Serializable {
         if (dataId == null || dataId.isEmpty()) {
             throw new IllegalArgumentException("error dataId:" + dataId);
         }
-        if (ValueConstants.DATA_ID_CASE_SENSITIVE) {
-            buf.append(dataId);
-        } else {
+        if (ValueConstants.DISABLE_DATA_ID_CASE_SENSITIVE) {
             buf.append(dataId.toUpperCase());
+        } else {
+            buf.append(dataId);
         }
 
         if (instanceId == null || instanceId.isEmpty()) {
