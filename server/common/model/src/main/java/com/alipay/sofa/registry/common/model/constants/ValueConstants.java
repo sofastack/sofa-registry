@@ -67,7 +67,7 @@ public class ValueConstants {
     /**
      * switch key for dataId sensitive is disable or not
      */
-    public static final String   DISABLE_DATA_ID_CASE_SENSITIVE_SWITCH = "DISABLE_DATA_ID_CASE_SENSITIVE";
+    public static final String   DISABLE_DATA_ID_CASE_SENSITIVE_SWITCH = "disable.dataId.case.sensitive";
 
     /**
      * switch for dataId sensitive is disable or not, default value is false which means dataId is case sensitive
