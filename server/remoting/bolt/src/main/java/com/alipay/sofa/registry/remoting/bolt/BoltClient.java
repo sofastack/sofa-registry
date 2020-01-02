@@ -120,7 +120,6 @@ public class BoltClient implements Client {
             throw new IllegalArgumentException("Create connection url can not be null!");
         }
         try {
-            getBoltConnection(rpcClient, url);
             Connection connection = getBoltConnection(rpcClient, url);
             BoltChannel channel = new BoltChannel();
             channel.setConnection(connection);
