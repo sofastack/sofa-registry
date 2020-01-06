@@ -230,31 +230,37 @@ public class MetaStoreService implements StoreService<MetaNode> {
         if (metaMap != null && metaMap.size() > 0) {
             for (String dataCenter : metaMap.keySet()) {
                 //get other dataCenter meta
-                if (!nodeConfig.getLocalDataCenter().equals(dataCenter)) {
-                    GetChangeListRequest getChangeListRequest = new GetChangeListRequest(
-                        NodeType.META, dataCenter);
-                    //trigger fetch dataCenter meta list change
-                    DataCenterNodes getDataCenterNodes = metaNodeService
-                        .getDataCenterNodes(getChangeListRequest);
-                    if (getDataCenterNodes != null) {
+                try {
+                    if (!nodeConfig.getLocalDataCenter().equals(dataCenter)) {
+                        GetChangeListRequest getChangeListRequest = new GetChangeListRequest(
+                            NodeType.META, dataCenter);
+                        //trigger fetch dataCenter meta list change
+                        DataCenterNodes getDataCenterNodes = metaNodeService
+                            .getDataCenterNodes(getChangeListRequest);
                         String dataCenterGet = getDataCenterNodes.getDataCenterId();
                         Long version = getDataCenterNodes.getVersion();
                         if (version == null) {
-                            LOGGER.error("Request message meta version cant not be null!");
+                            LOGGER
+                                .error(
+                                    "getOtherDataCenterNodeAndUpdate from DataCenter({}), meta list version is null",
+                                    dataCenter);
                             return;
                         }
                         //check for scheduler get other dataCenter meta node
                         boolean result = metaRepositoryService.checkVersion(dataCenterGet, version);
                         if (!result) {
-                            LOGGER.debug("DataCenter {} meta list version {} has not updated!",
-                                dataCenter, version);
+                            LOGGER
+                                .warn(
+                                    "getOtherDataCenterNodeAndUpdate from DataCenter({}), meta list version {} has not updated",
+                                    dataCenter, version);
                             return;
                         }
                         updateOtherDataCenterNodes(getDataCenterNodes);
-                    } else {
-                        LOGGER.error("Get DataCenter meta nodes change error!null");
-                        throw new RuntimeException("Get null DataCenter meta nodes change!");
                     }
+                } catch (Throwable e) {
+                    LOGGER.error(String.format(
+                        "getOtherDataCenterNodeAndUpdate from DataCenter(%s) error: %s",
+                        dataCenter, e.getMessage()), e);
                 }
             }
         }

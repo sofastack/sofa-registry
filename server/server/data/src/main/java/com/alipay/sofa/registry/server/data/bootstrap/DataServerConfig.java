@@ -119,6 +119,10 @@ public class DataServerConfig {
 
     private int                renewEnableDelaySec                          = 30;
 
+    private int                dataSyncDelayTimeout                         = 1000;
+
+    private int                dataSyncNotifyRetry                          = 3;
+
     /**
      * constructor
      * @param commonConfig
@@ -806,6 +810,42 @@ public class DataServerConfig {
      */
     public void setSessionServerNotifierRetryExecutorQueueSize(int sessionServerNotifierRetryExecutorQueueSize) {
         this.sessionServerNotifierRetryExecutorQueueSize = sessionServerNotifierRetryExecutorQueueSize;
+    }
+
+    /**
+     * Getter method for property <tt>dataSyncDelayTimeout</tt>.
+     *
+     * @return property value of dataSyncDelayTimeout
+     */
+    public int getDataSyncDelayTimeout() {
+        return dataSyncDelayTimeout;
+    }
+
+    /**
+     * Setter method for property <tt>dataSyncDelayTimeout </tt>.
+     *
+     * @param dataSyncDelayTimeout  value to be assigned to property dataSyncDelayTimeout
+     */
+    public void setDataSyncDelayTimeout(int dataSyncDelayTimeout) {
+        this.dataSyncDelayTimeout = dataSyncDelayTimeout;
+    }
+
+    /**
+     * Getter method for property <tt>dataSyncNotifyRetry</tt>.
+     *
+     * @return property value of dataSyncNotifyRetry
+     */
+    public int getDataSyncNotifyRetry() {
+        return dataSyncNotifyRetry;
+    }
+
+    /**
+     * Setter method for property <tt>dataSyncNotifyRetry </tt>.
+     *
+     * @param dataSyncNotifyRetry  value to be assigned to property dataSyncNotifyRetry
+     */
+    public void setDataSyncNotifyRetry(int dataSyncNotifyRetry) {
+        this.dataSyncNotifyRetry = dataSyncNotifyRetry;
     }
 
     @Override

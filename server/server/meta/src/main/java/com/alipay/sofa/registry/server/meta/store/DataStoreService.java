@@ -445,33 +445,37 @@ public class DataStoreService implements StoreService<DataNode> {
         if (metaMap != null && metaMap.size() > 0) {
             for (String dataCenter : metaMap.keySet()) {
                 //get other dataCenter dataNodes
-                if (!nodeConfig.getLocalDataCenter().equals(dataCenter)) {
-                    GetChangeListRequest getChangeListRequest = new GetChangeListRequest(
-                        NodeType.DATA, dataCenter);
-                    //trigger fetch dataCenter data list change
-                    DataCenterNodes getDataCenterNodes = metaNodeService
-                        .getDataCenterNodes(getChangeListRequest);
-                    if (getDataCenterNodes != null) {
+                try {
+                    if (!nodeConfig.getLocalDataCenter().equals(dataCenter)) {
+                        GetChangeListRequest getChangeListRequest = new GetChangeListRequest(
+                            NodeType.DATA, dataCenter);
+                        //trigger fetch dataCenter data list change
+                        DataCenterNodes getDataCenterNodes = metaNodeService
+                            .getDataCenterNodes(getChangeListRequest);
                         String dataCenterGet = getDataCenterNodes.getDataCenterId();
                         Long version = getDataCenterNodes.getVersion();
                         if (version == null) {
-                            LOGGER.error("Request message version cant not be null!");
+                            LOGGER
+                                .error(
+                                    "getOtherDataCenterNodeAndUpdate from DataCenter({}), data list version is null",
+                                    dataCenter);
                             return;
                         }
                         //check for scheduler get other dataCenter data node
                         boolean result = dataRepositoryService.checkVersion(dataCenterGet, version);
                         if (!result) {
-                            if (LOGGER.isDebugEnabled()) {
-                                LOGGER.debug("DataCenter {} data list version {} has not updated!",
+                            LOGGER
+                                .warn(
+                                    "getOtherDataCenterNodeAndUpdate from DataCenter({}), data list version {} has not updated",
                                     dataCenter, version);
-                            }
                             return;
                         }
                         updateOtherDataCenterNodes(getDataCenterNodes);
-                    } else {
-                        LOGGER.error("Get DataCenter data nodes change error!null");
-                        throw new RuntimeException("Get null DataCenter data nodes change!");
                     }
+                } catch (Throwable e) {
+                    LOGGER.error(String.format(
+                        "getOtherDataCenterNodeAndUpdate from DataCenter(%s) error: %s",
+                        dataCenter, e.getMessage()), e);
                 }
             }
         }
