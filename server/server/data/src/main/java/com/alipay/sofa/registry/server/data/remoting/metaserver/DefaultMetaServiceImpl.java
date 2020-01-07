@@ -49,6 +49,7 @@ import com.alipay.sofa.registry.remoting.bolt.BoltChannel;
 import com.alipay.sofa.registry.remoting.exchange.message.Request;
 import com.alipay.sofa.registry.remoting.exchange.message.Response;
 import com.alipay.sofa.registry.server.data.bootstrap.DataServerConfig;
+import com.alipay.sofa.registry.server.data.cache.DataServerCache;
 import com.alipay.sofa.registry.server.data.cache.DataServerChangeItem;
 import com.alipay.sofa.registry.server.data.node.DataServerNode;
 import com.alipay.sofa.registry.server.data.remoting.MetaNodeExchanger;
@@ -72,6 +73,9 @@ public class DefaultMetaServiceImpl implements IMetaServerService {
 
     @Autowired
     private MetaServerConnectionFactory metaServerConnectionFactory;
+
+    @Autowired
+    private DataServerCache             dataServerCache;
 
     private RaftClient                  raftClient;
 
@@ -210,7 +214,7 @@ public class DefaultMetaServiceImpl implements IMetaServerService {
 
     @Override
     public List<String> getOtherDataCenters() {
-        Set<String> all = new HashSet<>(DataServerNodeFactory.getAllDataCenters());
+        Set<String> all = new HashSet<>(dataServerCache.getAllDataCenters());
         all.remove(dataServerConfig.getLocalDataCenter());
         return new ArrayList<>(all);
     }

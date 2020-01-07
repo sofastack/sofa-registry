@@ -16,6 +16,18 @@
  */
 package com.alipay.sofa.registry.server.data.cache;
 
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicLong;
+
+import org.springframework.beans.factory.annotation.Autowired;
+
 import com.alipay.sofa.registry.common.model.metaserver.DataNode;
 import com.alipay.sofa.registry.consistency.hash.ConsistentHash;
 import com.alipay.sofa.registry.log.Logger;
@@ -26,17 +38,6 @@ import com.alipay.sofa.registry.server.data.event.handler.AfterWorkingProcessHan
 import com.alipay.sofa.registry.server.data.node.DataNodeStatus;
 import com.alipay.sofa.registry.server.data.util.LocalServerStatusEnum;
 import com.google.common.collect.Sets;
-import org.springframework.beans.factory.annotation.Autowired;
-
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * cache of dataservers
@@ -390,5 +391,14 @@ public class DataServerCache {
             LOGGER.warn("Calculate Old BackupTriad,old dataServer list is empty!");
             return null;
         }
+    }
+
+    /**
+     * get all datacenters
+     *
+     * @return
+     */
+    public Set<String> getAllDataCenters() {
+        return newDataServerChangeItem.getVersionMap().keySet();
     }
 }

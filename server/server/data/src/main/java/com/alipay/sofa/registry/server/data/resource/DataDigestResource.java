@@ -41,6 +41,7 @@ import com.alipay.sofa.registry.common.model.store.DataInfo;
 import com.alipay.sofa.registry.common.model.store.Publisher;
 import com.alipay.sofa.registry.net.NetUtil;
 import com.alipay.sofa.registry.server.data.bootstrap.DataServerConfig;
+import com.alipay.sofa.registry.server.data.cache.DataServerCache;
 import com.alipay.sofa.registry.server.data.cache.DatumCache;
 import com.alipay.sofa.registry.server.data.node.DataServerNode;
 import com.alipay.sofa.registry.server.data.remoting.dataserver.DataServerNodeFactory;
@@ -72,6 +73,9 @@ public class DataDigestResource {
 
     @Autowired
     private DatumCache                     datumCache;
+
+    @Autowired
+    private DataServerCache                dataServerCache;
 
     @GET
     @Path("datum/query")
@@ -189,7 +193,7 @@ public class DataDigestResource {
     public Map<String, List<String>> getDataServerList() {
 
         Map<String, List<String>> map = new HashMap<>();
-        Set<String> allDataCenter = new HashSet<>(DataServerNodeFactory.getAllDataCenters());
+        Set<String> allDataCenter = new HashSet<>(dataServerCache.getAllDataCenters());
         for (String dataCenter : allDataCenter) {
 
             List<String> list = map.computeIfAbsent(dataCenter, k -> new ArrayList<>());
