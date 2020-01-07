@@ -6,7 +6,7 @@
     <parent>
         <groupId>com.alipay.sofa</groupId>
         <artifactId>registry-store</artifactId>
-        <version>5.3.0.20191231</version>
+        <version>5.3.0.20200106</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 

@@ -87,9 +87,7 @@ public class ProxyHandler implements InvocationHandler {
                     serviceId));
             }
 
-            Method method = Processor.getInstance().getWorkMethod(request);
-
-            MethodHandle methodHandle = MethodHandles.lookup().unreflect(method);
+            MethodHandle methodHandle = Processor.getInstance().getWorkMethodHandle(request);
             return methodHandle.bindTo(target).invokeWithArguments(request.getMethodArgs());
         } catch (Throwable e) {
             LOGGER.error("Directly invoke read only service {} method {} error!",
