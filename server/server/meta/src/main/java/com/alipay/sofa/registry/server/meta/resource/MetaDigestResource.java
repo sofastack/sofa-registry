@@ -66,9 +66,9 @@ public class MetaDigestResource {
     @PostConstruct
     public void init() {
         MetricRegistry metrics = new MetricRegistry();
-        metrics.register("metaNodeList", (Gauge<Map>) () -> getRegisterNodeByType("meta"));
-        metrics.register("dataNodeList", (Gauge<Map>) () -> getRegisterNodeByType("data"));
-        metrics.register("sessionNodeList", (Gauge<Map>) () -> getRegisterNodeByType("session"));
+        metrics.register("metaNodeList", (Gauge<Map>) () -> _getRegisterNodeByType("meta"));
+        metrics.register("dataNodeList", (Gauge<Map>) () -> _getRegisterNodeByType("data"));
+        metrics.register("sessionNodeList", (Gauge<Map>) () -> _getRegisterNodeByType("session"));
         metrics.register("pushSwitch", (Gauge<Map>) () -> getPushSwitch());
         ReporterUtils.startSlf4jReporter(60, metrics);
     }
@@ -76,11 +76,11 @@ public class MetaDigestResource {
     @GET
     @Path("{type}/node/query")
     @Produces(MediaType.APPLICATION_JSON)
-    public Map getRegisterNodeByType(@PathParam("type") String type) {
+    public NodeChangeResult getRegisterNodeByType(@PathParam("type") String type) {
         try {
             NodeChangeResult nodeChangeResult = metaServerRegistry.getAllNodes(NodeType
                 .valueOf(type.toUpperCase()));
-            return nodeChangeResult.getNodes();
+            return nodeChangeResult;
         } catch (Exception e) {
             TASK_LOGGER.error("Fail get Register Node By Type {} !", type, e);
             throw new RuntimeException("Fail get Register Node By Type" + type, e);
@@ -130,5 +130,9 @@ public class MetaDigestResource {
         }
 
         return resultMap;
+    }
+
+    private Map _getRegisterNodeByType(String type) {
+        return metaServerRegistry.getAllNodes(NodeType.valueOf(type.toUpperCase())).getNodes();
     }
 }

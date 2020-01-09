@@ -74,7 +74,8 @@ public class ExecutorManager {
 
     public void init() {
 
-        scheduler = new ScheduledThreadPoolExecutor(6, new NamedThreadFactory("MetaScheduler"));
+        scheduler = new ScheduledThreadPoolExecutor(metaServerConfig.getMetaSchedulerPoolSize(),
+            new NamedThreadFactory("MetaScheduler"));
 
         heartbeatCheckExecutor = new ThreadPoolExecutor(
             metaServerConfig.getHeartbeatCheckExecutorMinSize(),

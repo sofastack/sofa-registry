@@ -219,4 +219,5 @@ public interface SessionServerConfig {
 
     int getDataClientConnNum();
 
+    int getSessionSchedulerPoolSize();
 }

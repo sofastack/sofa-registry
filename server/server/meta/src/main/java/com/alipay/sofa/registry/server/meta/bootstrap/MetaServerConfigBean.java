@@ -120,6 +120,8 @@ public class MetaServerConfigBean implements MetaServerConfig {
     private int                raftClientRefreshExecutorMaxSize                = 10;
     private int                raftClientRefreshExecutorQueueSize              = 1024;
 
+    private int                metaSchedulerPoolSize                           = 6;
+
     @Override
     public int getSessionServerPort() {
         return sessionServerPort;
@@ -825,6 +827,20 @@ public class MetaServerConfigBean implements MetaServerConfig {
     @Override
     public int getRaftClientRefreshExecutorQueueSize() {
         return raftClientRefreshExecutorQueueSize;
+    }
+
+    /**
+     * Setter method for property <tt>metaSchedulerPoolSize </tt>.
+     *
+     * @param metaSchedulerPoolSize  value to be assigned to property metaSchedulerPoolSize
+     */
+    public void setMetaSchedulerPoolSize(int metaSchedulerPoolSize) {
+        this.metaSchedulerPoolSize = metaSchedulerPoolSize;
+    }
+
+    @Override
+    public int getMetaSchedulerPoolSize() {
+        return metaSchedulerPoolSize;
     }
 
     @Override

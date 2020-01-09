@@ -118,6 +118,8 @@ public interface MetaServerConfig {
 
     int getRaftClientRefreshExecutorQueueSize();
 
+    int getMetaSchedulerPoolSize();
+
     /**
      * decision mode enum
      */

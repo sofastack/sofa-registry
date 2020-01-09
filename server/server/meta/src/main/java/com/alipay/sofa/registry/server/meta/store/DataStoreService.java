@@ -452,6 +452,8 @@ public class DataStoreService implements StoreService<DataNode> {
                         //trigger fetch dataCenter data list change
                         DataCenterNodes getDataCenterNodes = metaNodeService
                             .getDataCenterNodes(getChangeListRequest);
+                        LOGGER.info("GetOtherDataCenterNode from DataCenter({}): {}", dataCenter,
+                            getDataCenterNodes);
                         String dataCenterGet = getDataCenterNodes.getDataCenterId();
                         Long version = getDataCenterNodes.getVersion();
                         if (version == null) {
@@ -459,7 +461,7 @@ public class DataStoreService implements StoreService<DataNode> {
                                 .error(
                                     "getOtherDataCenterNodeAndUpdate from DataCenter({}), data list version is null",
                                     dataCenter);
-                            return;
+                            continue;
                         }
                         //check for scheduler get other dataCenter data node
                         boolean result = dataRepositoryService.checkVersion(dataCenterGet, version);
@@ -468,7 +470,7 @@ public class DataStoreService implements StoreService<DataNode> {
                                 .warn(
                                     "getOtherDataCenterNodeAndUpdate from DataCenter({}), data list version {} has not updated",
                                     dataCenter, version);
-                            return;
+                            continue;
                         }
                         updateOtherDataCenterNodes(getDataCenterNodes);
                     }

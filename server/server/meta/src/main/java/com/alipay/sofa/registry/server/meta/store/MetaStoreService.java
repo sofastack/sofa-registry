@@ -232,19 +232,24 @@ public class MetaStoreService implements StoreService<MetaNode> {
                 //get other dataCenter meta
                 try {
                     if (!nodeConfig.getLocalDataCenter().equals(dataCenter)) {
+
                         GetChangeListRequest getChangeListRequest = new GetChangeListRequest(
                             NodeType.META, dataCenter);
                         //trigger fetch dataCenter meta list change
                         DataCenterNodes getDataCenterNodes = metaNodeService
                             .getDataCenterNodes(getChangeListRequest);
                         String dataCenterGet = getDataCenterNodes.getDataCenterId();
+
+                        LOGGER.info("GetOtherDataCenterNode from DataCenter({}): {}", dataCenter,
+                            getDataCenterNodes);
+
                         Long version = getDataCenterNodes.getVersion();
                         if (version == null) {
                             LOGGER
                                 .error(
                                     "getOtherDataCenterNodeAndUpdate from DataCenter({}), meta list version is null",
                                     dataCenter);
-                            return;
+                            continue;
                         }
                         //check for scheduler get other dataCenter meta node
                         boolean result = metaRepositoryService.checkVersion(dataCenterGet, version);
@@ -253,7 +258,7 @@ public class MetaStoreService implements StoreService<MetaNode> {
                                 .warn(
                                     "getOtherDataCenterNodeAndUpdate from DataCenter({}), meta list version {} has not updated",
                                     dataCenter, version);
-                            return;
+                            continue;
                         }
                         updateOtherDataCenterNodes(getDataCenterNodes);
                     }
