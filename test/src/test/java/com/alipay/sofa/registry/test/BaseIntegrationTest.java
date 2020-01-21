@@ -16,31 +16,6 @@
  */
 package com.alipay.sofa.registry.test;
 
-import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
-import static org.junit.Assert.assertTrue;
-
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import java.lang.reflect.Field;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.atomic.AtomicBoolean;
-
-import javax.ws.rs.client.Entity;
-import javax.ws.rs.core.MediaType;
-
-import org.junit.Before;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.SpringBootConfiguration;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.context.ConfigurableApplicationContext;
-
 import com.alipay.remoting.Connection;
 import com.alipay.sofa.registry.client.api.RegistryClientConfig;
 import com.alipay.sofa.registry.client.api.SubscriberDataObserver;
@@ -60,6 +35,29 @@ import com.alipay.sofa.registry.remoting.Channel;
 import com.alipay.sofa.registry.remoting.jersey.JerseyClient;
 import com.alipay.sofa.registry.server.data.cache.DatumCache;
 import com.alipay.sofa.registry.server.test.TestRegistryMain;
+import org.junit.Before;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.SpringBootConfiguration;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.ConfigurableApplicationContext;
+
+import javax.ws.rs.client.Entity;
+import javax.ws.rs.core.MediaType;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.lang.reflect.Field;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
+
+import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
+import static org.junit.Assert.assertTrue;
 
 /**
  * @author xuanbei 18/12/1
@@ -130,7 +128,7 @@ public class BaseIntegrationTest {
 
     private static void initRegistryClientAndChannel() {
         if (registryClient1 == null) {
-            RegistryClientConfig config = DefaultRegistryClientConfigBuilder.start()
+            RegistryClientConfig config = DefaultRegistryClientConfigBuilder.start().setSyncConfigRetryInterval(60000)
                 .setAppName("testApp1").setDataCenter(LOCAL_DATACENTER).setZone(LOCAL_REGION)
                 .setRegistryEndpoint(LOCAL_ADDRESS).setRegistryEndpointPort(sessionPort).build();
             registryClient1 = new DefaultRegistryClient(config);
