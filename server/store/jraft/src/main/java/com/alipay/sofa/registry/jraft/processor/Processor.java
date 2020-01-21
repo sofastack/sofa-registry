@@ -16,12 +16,6 @@
  */
 package com.alipay.sofa.registry.jraft.processor;
 
-import java.lang.invoke.MethodHandle;
-import java.lang.invoke.MethodHandles;
-import java.lang.reflect.Method;
-import java.util.HashMap;
-import java.util.Map;
-
 import com.alipay.sofa.registry.jraft.bootstrap.ServiceStateMachine;
 import com.alipay.sofa.registry.jraft.command.ProcessRequest;
 import com.alipay.sofa.registry.jraft.command.ProcessResponse;
@@ -29,6 +23,11 @@ import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.store.api.annotation.ReadOnLeader;
 
+import java.lang.invoke.MethodHandle;
+import java.lang.invoke.MethodHandles;
+import java.lang.reflect.Method;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -113,14 +112,13 @@ public class Processor {
             Object[] methodArg = request.getMethodArgs();
             String methodHandleKey = getMethodHandleKey(serviceId, methodKey);
 
-            MethodHandle methodHandle = methodHandleMap.get(methodHandleKey);
-            if (methodHandle == null) {
-                MethodHandle methodHandleNew = MethodHandles.lookup().unreflect(appServiceMethod);
-                methodHandle = methodHandleMap.putIfAbsent(methodHandleKey, methodHandleNew);
-                if (methodHandle == null) {
-                    methodHandle = methodHandleNew;
+            MethodHandle methodHandle = methodHandleMap.computeIfAbsent(methodHandleKey,k-> {
+                try {
+                    return MethodHandles.lookup().unreflect(appServiceMethod);
+                } catch (IllegalAccessException e) {
+                    throw new RuntimeException("Process service request lookup method error!",e);
                 }
-            }
+            });
 
             Object ret = methodHandle.bindTo(target).invokeWithArguments(methodArg);
             if (ret != null) {
@@ -158,14 +156,13 @@ public class Processor {
             }
             String methodKey = methodKeyBuffer.toString();
             String methodHandleKey = getMethodHandleKey(serviceId, methodKey);
-            MethodHandle methodHandle = methodHandleMap.get(methodHandleKey);
-            if (methodHandle == null) {
-                MethodHandle methodHandleNew = MethodHandles.lookup().unreflect(method);
-                methodHandle = methodHandleMap.putIfAbsent(methodHandleKey, methodHandleNew);
-                if (methodHandle == null) {
-                    methodHandle = methodHandleNew;
+            MethodHandle methodHandle = methodHandleMap.computeIfAbsent(methodHandleKey,k-> {
+                try {
+                    return MethodHandles.lookup().unreflect(method);
+                } catch (IllegalAccessException e) {
+                    throw new RuntimeException("Process service request lookup method error!",e);
                 }
-            }
+            });
 
             Object ret = methodHandle.bindTo(target).invokeWithArguments(methodArg);
             if (ret != null) {
@@ -204,6 +201,42 @@ public class Processor {
             LOG.error("Process request {} get WorkMethod error!", request, e);
             throw new RuntimeException(String.format("Process request %s get WorkMethod error!",
                 request));
+        }
+    }
+
+    public MethodHandle getWorkMethodHandle(ProcessRequest request) {
+        String methodName = request.getMethodName();
+        String serviceId = request.getServiceName();
+        try {
+
+            StringBuilder methodKeyBuffer = new StringBuilder();
+            methodKeyBuffer.append(methodName);
+            String[] sig = request.getMethodArgSigs();
+            for (int i = 0; i < sig.length; i++) {
+                methodKeyBuffer.append(sig[i]);
+            }
+            String methodKey = methodKeyBuffer.toString();
+            Method appServiceMethod = workerMethods.get(serviceId).get(methodKey);
+            if (appServiceMethod == null) {
+                LOG.error("Can not find method {} from processor by serviceId {}", methodName,
+                        serviceId);
+                throw new NoSuchMethodException("Can not find method from processor！");
+            }
+
+            String methodHandleKey = getMethodHandleKey(serviceId, methodKey);
+
+            MethodHandle methodHandle = methodHandleMap.computeIfAbsent(methodHandleKey,k-> {
+                try {
+                    return MethodHandles.lookup().unreflect(appServiceMethod);
+                } catch (IllegalAccessException e) {
+                    throw new RuntimeException("Process service request lookup method error!",e);
+                }
+            });
+            return methodHandle;
+        } catch (Exception e) {
+            LOG.error("Process request {} get WorkMethod error!", request, e);
+            throw new RuntimeException(String.format("Process request %s get WorkMethod error!",
+                    request));
         }
     }
 
