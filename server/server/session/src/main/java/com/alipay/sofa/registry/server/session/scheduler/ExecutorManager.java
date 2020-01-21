@@ -115,8 +115,8 @@ public class ExecutorManager {
         fetchDataExecutor = new ThreadPoolExecutor(1, 2/*CONFIG*/, 0, TimeUnit.SECONDS, new SynchronousQueue<>(),
                 new NamedThreadFactory("SessionScheduler-fetchData"));
 
-        renNewDataExecutor = new ThreadPoolExecutor(1, 2/*CONFIG*/, 0, TimeUnit.SECONDS, new SynchronousQueue<>(),
-                new NamedThreadFactory("SessionScheduler-renewData"));
+        renNewDataExecutor = new ThreadPoolExecutor(1, 2/*CONFIG*/, 0, TimeUnit.SECONDS,
+                new SynchronousQueue<>(), new NamedThreadFactory("SessionScheduler-reNewData"));
 
         getSessionNodeExecutor = new ThreadPoolExecutor(1, 2/*CONFIG*/, 0, TimeUnit.SECONDS, new SynchronousQueue<>(),
                 new NamedThreadFactory("SessionScheduler-getSessionNode"));
