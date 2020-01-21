@@ -128,8 +128,9 @@ public class BaseIntegrationTest {
 
     private static void initRegistryClientAndChannel() {
         if (registryClient1 == null) {
-            RegistryClientConfig config = DefaultRegistryClientConfigBuilder.start().setSyncConfigRetryInterval(60000)
-                .setAppName("testApp1").setDataCenter(LOCAL_DATACENTER).setZone(LOCAL_REGION)
+            RegistryClientConfig config = DefaultRegistryClientConfigBuilder.start()
+                .setSyncConfigRetryInterval(60000).setAppName("testApp1")
+                .setDataCenter(LOCAL_DATACENTER).setZone(LOCAL_REGION)
                 .setRegistryEndpoint(LOCAL_ADDRESS).setRegistryEndpointPort(sessionPort).build();
             registryClient1 = new DefaultRegistryClient(config);
             registryClient1.init();
