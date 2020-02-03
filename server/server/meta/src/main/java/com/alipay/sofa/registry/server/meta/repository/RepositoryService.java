@@ -27,11 +27,23 @@ import java.util.Map;
  */
 public interface RepositoryService<K, V> {
 
-    V put(K key, V value);
+    default V put(K key, V value){
+        return put(key,value,System.currentTimeMillis());
+    }
 
-    V remove(Object key);
+    default V remove(Object key){
+        return remove(key,System.currentTimeMillis());
+    }
 
-    V replace(K key, V value);
+    default V replace(K key, V value){
+        return replace(key,value,System.currentTimeMillis());
+    }
+
+    V put(K key, V value,Long currentTimeMillis);
+
+    V remove(Object key,Long currentTimeMillis);
+
+    V replace(K key, V value,Long currentTimeMillis);
 
     @ReadOnLeader
     V get(Object key);

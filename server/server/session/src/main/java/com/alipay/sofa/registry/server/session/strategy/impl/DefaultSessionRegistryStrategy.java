@@ -16,26 +16,25 @@
  */
 package com.alipay.sofa.registry.server.session.strategy.impl;
 
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
+
+import org.springframework.beans.factory.annotation.Autowired;
+
 import com.alipay.sofa.registry.common.model.store.Publisher;
 import com.alipay.sofa.registry.common.model.store.Subscriber;
 import com.alipay.sofa.registry.common.model.store.Watcher;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
-import com.alipay.sofa.registry.server.session.cache.CacheService;
-import com.alipay.sofa.registry.server.session.cache.DatumKey;
-import com.alipay.sofa.registry.server.session.cache.Key;
 import com.alipay.sofa.registry.server.session.store.Interests;
 import com.alipay.sofa.registry.server.session.strategy.SessionRegistryStrategy;
 import com.alipay.sofa.registry.task.listener.TaskEvent;
 import com.alipay.sofa.registry.task.listener.TaskListenerManager;
-import org.springframework.beans.factory.annotation.Autowired;
-
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
 
 /**
+ * @author kezhu.wukz
  * @author xuanbei
  * @since 2019/2/15
  */
@@ -61,9 +60,6 @@ public class DefaultSessionRegistryStrategy implements SessionRegistryStrategy {
     @Autowired
     private SessionServerConfig sessionServerConfig;
 
-    @Autowired
-    private CacheService        sessionCacheService;
-
     @Override
     public void doFetchChangDataProcess(Map<String/*datacenter*/, Map<String/*datainfoid*/, Long>> dataInfoIdVersions) {
         //diff dataCenter same dataInfoId sent once fetch on cloud mode
@@ -72,11 +68,6 @@ public class DefaultSessionRegistryStrategy implements SessionRegistryStrategy {
             if (dataInfoIdMap != null) {
                 dataInfoIdMap.forEach((dataInfoID, version) -> {
                     if (checkInterestVersions(dataCenter, dataInfoID, version)) {
-
-                        //update cache
-                        sessionCacheService.invalidate(new Key(
-                                Key.KeyType.OBJ, DatumKey.class.getName(), new DatumKey(dataInfoID, dataCenter)));
-
                         changeDataInfoIds.add(dataInfoID);
                     }
                 });

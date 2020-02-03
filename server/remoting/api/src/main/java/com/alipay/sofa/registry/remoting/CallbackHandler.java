@@ -16,6 +16,8 @@
  */
 package com.alipay.sofa.registry.remoting;
 
+import java.util.concurrent.Executor;
+
 /**
  *
  * @author shangyu.wh
@@ -38,4 +40,10 @@ public interface CallbackHandler {
      * @param exception
      */
     void onException(Channel channel, Throwable exception);
+
+    /**
+     * override executor
+     * @return
+     */
+    Executor getExecutor();
 }

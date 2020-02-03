@@ -28,6 +28,17 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import com.alipay.sofa.registry.common.model.dataserver.Datum;
 import com.alipay.sofa.registry.common.model.store.Publisher;
+import com.alipay.sofa.registry.common.model.store.WordCache;
+import com.alipay.sofa.registry.server.data.bootstrap.DataServerConfig;
+import com.alipay.sofa.registry.server.data.change.DataChangeTypeEnum;
+import com.alipay.sofa.registry.server.data.node.DataServerNode;
+import com.alipay.sofa.registry.server.data.remoting.dataserver.DataServerNodeFactory;
+
+import org.apache.commons.lang.StringUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+
+import com.alipay.sofa.registry.common.model.dataserver.Datum;
+import com.alipay.sofa.registry.common.model.store.Publisher;
 import com.alipay.sofa.registry.server.data.bootstrap.DataServerConfig;
 import com.alipay.sofa.registry.server.data.change.DataChangeTypeEnum;
 import com.alipay.sofa.registry.server.data.node.DataServerNode;
@@ -37,7 +48,7 @@ import com.alipay.sofa.registry.server.data.remoting.dataserver.DataServerNodeFa
  * cache of datum, providing query function to the upper module
  *
  * @author qian.lqlq
- * @version $Id: this.java, v 0.1 2017-12-06 20:50 qian.lqlq Exp $
+ * @version $Id: DatumCache.java, v 0.1 2017-12-06 20:50 qian.lqlq Exp $
  */
 public class DatumCache {
 
@@ -70,11 +81,9 @@ public class DatumCache {
      * @return
      */
     public Datum get(String dataCenter, String dataInfoId) {
-        if (DATUM_MAP.containsKey(dataCenter)) {
-            Map<String, Datum> map = DATUM_MAP.get(dataCenter);
-            if (map.containsKey(dataInfoId)) {
-                return map.get(dataInfoId);
-            }
+        Map<String, Datum> map = DATUM_MAP.get(dataCenter);
+        if (map != null) {
+            return map.get(dataInfoId);
         }
         return null;
     }
@@ -88,8 +97,9 @@ public class DatumCache {
     public Map<String, Datum> get(String dataInfoId) {
         Map<String, Datum> datumMap = new HashMap<>();
         DATUM_MAP.forEach((dataCenter, datums) -> {
-            if (datums.containsKey(dataInfoId)) {
-                datumMap.put(dataCenter, datums.get(dataInfoId));
+            Datum datum = datums.get(dataInfoId);
+            if (datum != null) {
+                datumMap.put(dataCenter, datum);
             }
         });
 
@@ -174,30 +184,44 @@ public class DatumCache {
             return mergeResult;
         }
 
-        Datum ret = map.putIfAbsent(dataInfoId, datum);
-        if (ret == null) {
-            Set<Entry<String, Publisher>> entries = datum.getPubMap().entrySet();
-            Iterator<Entry<String, Publisher>> iterator = entries.iterator();
+        // filter out the unPubs of datum when first put.
+        // Otherwise, "syncData" or "fetchData" when get Datum with unPubs, which will result something error
+        boolean[] exists = { true };
+        Datum cacheDatum = map.computeIfAbsent(dataInfoId, k -> filterUnPubs(exists, datum));
+        if (!exists[0]) {
+            Iterator<Entry<String, Publisher>> iterator = datum.getPubMap().entrySet().iterator();
             while (iterator.hasNext()) {
                 Entry<String, Publisher> entry = iterator.next();
                 Publisher publisher = entry.getValue();
-                if (!(publisher instanceof UnPublisher)) {
-                    addToIndex(publisher);
-                } else {
-                    //first put to cache,UnPublisher data must remove,not so got error pub data exist
-                    iterator.remove();
-                }
+                addToIndex(publisher);
             }
             mergeResult = new MergeResult(null, true);
         } else {
             if (changeType == DataChangeTypeEnum.MERGE) {
-                mergeResult = mergeDatum(datum);
+                mergeResult = mergeDatum(cacheDatum, datum);
             } else {
                 Long lastVersion = coverDatum(datum);
                 mergeResult = new MergeResult(lastVersion, true);
             }
         }
         return mergeResult;
+    }
+
+    /**
+     * remove unPubs from datum
+     */
+    private Datum filterUnPubs(boolean[] exists, Datum datum) {
+        Iterator<Entry<String, Publisher>> iterator = datum.getPubMap().entrySet().iterator();
+        while (iterator.hasNext()) {
+            Entry<String, Publisher> entry = iterator.next();
+            Publisher publisher = entry.getValue();
+            if (publisher instanceof UnPublisher) {
+                //first put to cache,UnPublisher data must remove,not so got error pub data exist
+                iterator.remove();
+            }
+        }
+        exists[0] = false;
+        return datum;
     }
 
     private Map<String, Datum> getDatumMapByDataCenter(String dataCenter) {
@@ -247,9 +271,8 @@ public class DatumCache {
      * @param datum
      * @return
      */
-    private MergeResult mergeDatum(Datum datum) {
+    private MergeResult mergeDatum(Datum cacheDatum, Datum datum) {
         boolean isChanged = false;
-        Datum cacheDatum = DATUM_MAP.get(datum.getDataCenter()).get(datum.getDataInfoId());
         Map<String, Publisher> cachePubMap = cacheDatum.getPubMap();
         Map<String, Publisher> pubMap = datum.getPubMap();
         for (Entry<String, Publisher> pubEntry : pubMap.entrySet()) {
@@ -396,7 +419,7 @@ public class DatumCache {
     }
 
     private String getConnectId(Publisher cachePub) {
-        return cachePub.getSourceAddress().getAddressString();
+        return WordCache.getInstance().getWordCache(cachePub.getSourceAddress().getAddressString());
     }
 
     /**

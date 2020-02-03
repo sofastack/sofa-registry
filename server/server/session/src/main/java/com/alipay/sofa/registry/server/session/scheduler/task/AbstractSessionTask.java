@@ -16,16 +16,17 @@
  */
 package com.alipay.sofa.registry.server.session.scheduler.task;
 
+import java.util.UUID;
+import java.util.concurrent.atomic.AtomicInteger;
+
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.task.Retryable;
 
-import java.util.UUID;
-import java.util.concurrent.atomic.AtomicInteger;
-
 /**
  *
  * @author shangyu.wh
+ * @author kezhu.wukz
  * @version $Id: AbstractSessionTask.java, v 0.1 2018-01-15 14:35 shangyu.wh Exp $
  */
 public abstract class AbstractSessionTask implements SessionTask, Retryable {
@@ -60,6 +61,10 @@ public abstract class AbstractSessionTask implements SessionTask, Retryable {
             }
         }
         return false;
+    }
+
+    protected int getExecCount() {
+        return execCount.get();
     }
 
     @Override

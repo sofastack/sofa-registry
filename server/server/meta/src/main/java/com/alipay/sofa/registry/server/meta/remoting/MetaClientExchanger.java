@@ -16,13 +16,22 @@
  */
 package com.alipay.sofa.registry.server.meta.remoting;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
+
+import org.springframework.beans.factory.annotation.Autowired;
+
 import com.alipay.sofa.registry.common.model.Node.NodeType;
 import com.alipay.sofa.registry.common.model.metaserver.MetaNode;
 import com.alipay.sofa.registry.common.model.metaserver.NodeChangeResult;
 import com.alipay.sofa.registry.common.model.store.URL;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
-import com.alipay.sofa.registry.remoting.Channel;
 import com.alipay.sofa.registry.remoting.ChannelHandler;
 import com.alipay.sofa.registry.remoting.Client;
 import com.alipay.sofa.registry.remoting.exchange.Exchange;
@@ -34,15 +43,6 @@ import com.alipay.sofa.registry.server.meta.bootstrap.MetaServerConfig;
 import com.alipay.sofa.registry.server.meta.bootstrap.NodeConfig;
 import com.alipay.sofa.registry.server.meta.bootstrap.ServiceFactory;
 import com.alipay.sofa.registry.server.meta.store.StoreService;
-import org.springframework.beans.factory.annotation.Autowired;
-
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.TimeUnit;
 
 /**
  *
@@ -82,13 +82,7 @@ public class MetaClientExchanger implements NodeExchanger {
                 metaClient = boltExchange.connect(Exchange.META_SERVER_TYPE, url, new ChannelHandler[0]);
             }
 
-            Channel channel = metaClient.getChannel(url);
-            if (channel == null) {
-                LOGGER.warn("MetaClient Exchanger get channel {} error or disconnected!", url);
-                channel = metaClient.connect(url);
-            }
-
-            final Object result = metaClient.sendSync(channel, request.getRequestBody(),
+            final Object result = metaClient.sendSync(url, request.getRequestBody(),
                     metaServerConfig.getMetaNodeExchangeTimeout());
             response = () -> result;
         } catch (Exception e) {

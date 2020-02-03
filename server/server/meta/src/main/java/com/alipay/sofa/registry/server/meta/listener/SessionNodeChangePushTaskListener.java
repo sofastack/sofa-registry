@@ -16,6 +16,8 @@
  */
 package com.alipay.sofa.registry.server.meta.listener;
 
+import org.springframework.beans.factory.annotation.Autowired;
+
 import com.alipay.sofa.registry.server.meta.bootstrap.MetaServerConfig;
 import com.alipay.sofa.registry.server.meta.task.MetaServerTask;
 import com.alipay.sofa.registry.server.meta.task.SessionNodeChangePushTask;
@@ -25,7 +27,6 @@ import com.alipay.sofa.registry.task.batcher.TaskProcessor;
 import com.alipay.sofa.registry.task.listener.TaskEvent;
 import com.alipay.sofa.registry.task.listener.TaskEvent.TaskType;
 import com.alipay.sofa.registry.task.listener.TaskListener;
-import org.springframework.beans.factory.annotation.Autowired;
 
 /**
  *
@@ -49,8 +50,8 @@ public class SessionNodeChangePushTaskListener implements TaskListener {
     }
 
     @Override
-    public boolean support(TaskEvent event) {
-        return TaskType.SESSION_NODE_CHANGE_PUSH_TASK.equals(event.getTaskType());
+    public TaskType support() {
+        return TaskType.SESSION_NODE_CHANGE_PUSH_TASK;
     }
 
     @Override

@@ -16,14 +16,16 @@
  */
 package com.alipay.sofa.registry.server.session.listener;
 
+import javax.annotation.PostConstruct;
+
+import org.springframework.beans.factory.annotation.Autowired;
+
 import com.alipay.sofa.registry.remoting.exchange.Exchange;
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
-import com.alipay.sofa.registry.server.session.filter.blacklist.BlacklistManager;
 import com.alipay.sofa.registry.server.session.node.service.MetaNodeService;
-import com.alipay.sofa.registry.server.session.registry.Registry;
+import com.alipay.sofa.registry.server.session.provideData.ProvideDataProcessor;
 import com.alipay.sofa.registry.server.session.scheduler.task.ProvideDataChangeFetchTask;
 import com.alipay.sofa.registry.server.session.scheduler.task.SessionTask;
-import com.alipay.sofa.registry.server.session.store.Interests;
 import com.alipay.sofa.registry.server.session.store.Watchers;
 import com.alipay.sofa.registry.task.batcher.TaskDispatcher;
 import com.alipay.sofa.registry.task.batcher.TaskDispatchers;
@@ -32,7 +34,6 @@ import com.alipay.sofa.registry.task.listener.TaskEvent;
 import com.alipay.sofa.registry.task.listener.TaskEvent.TaskType;
 import com.alipay.sofa.registry.task.listener.TaskListener;
 import com.alipay.sofa.registry.task.listener.TaskListenerManager;
-import org.springframework.beans.factory.annotation.Autowired;
 
 /**
  *
@@ -60,16 +61,10 @@ public class ProvideDataChangeFetchTaskListener implements TaskListener {
     private Exchange                            boltExchange;
 
     @Autowired
-    private Interests                           sessionInterests;
-
-    @Autowired
     private Watchers                            sessionWatchers;
 
     @Autowired
-    private Registry                            sessionRegistry;
-
-    @Autowired
-    private BlacklistManager                    blacklistManager;
+    private ProvideDataProcessor                provideDataProcessorManager;
 
     private TaskDispatcher<String, SessionTask> singleTaskDispatcher;
 
@@ -79,17 +74,15 @@ public class ProvideDataChangeFetchTaskListener implements TaskListener {
         this.dataNodeSingleTaskProcessor = dataNodeSingleTaskProcessor;
     }
 
-    public TaskDispatcher<String, SessionTask> getSingleTaskDispatcher() {
-        if (singleTaskDispatcher == null) {
-            singleTaskDispatcher = TaskDispatchers.createDefaultSingleTaskDispatcher(
-                TaskType.PROVIDE_DATA_CHANGE_FETCH_TASK.getName(), dataNodeSingleTaskProcessor);
-        }
-        return singleTaskDispatcher;
+    @PostConstruct
+    public void init() {
+        singleTaskDispatcher = TaskDispatchers.createDefaultSingleTaskDispatcher(
+            TaskType.PROVIDE_DATA_CHANGE_FETCH_TASK.getName(), dataNodeSingleTaskProcessor);
     }
 
     @Override
-    public boolean support(TaskEvent event) {
-        return TaskType.PROVIDE_DATA_CHANGE_FETCH_TASK.equals(event.getTaskType());
+    public TaskType support() {
+        return TaskType.PROVIDE_DATA_CHANGE_FETCH_TASK;
     }
 
     @Override
@@ -97,11 +90,11 @@ public class ProvideDataChangeFetchTaskListener implements TaskListener {
 
         SessionTask provideDataChangeFetchTask = new ProvideDataChangeFetchTask(
             sessionServerConfig, taskListenerManager, metaNodeService, sessionWatchers,
-            boltExchange, sessionInterests, sessionRegistry, blacklistManager);
+            boltExchange, provideDataProcessorManager);
 
         provideDataChangeFetchTask.setTaskEvent(event);
 
-        getSingleTaskDispatcher().dispatch(provideDataChangeFetchTask.getTaskId(),
+        singleTaskDispatcher.dispatch(provideDataChangeFetchTask.getTaskId(),
             provideDataChangeFetchTask, provideDataChangeFetchTask.getExpiryTime());
     }
 

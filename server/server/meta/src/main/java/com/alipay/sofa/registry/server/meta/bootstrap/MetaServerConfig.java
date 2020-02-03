@@ -80,6 +80,8 @@ public interface MetaServerConfig {
 
     boolean isEnableMetrics();
 
+    int getRockDBCacheSize();
+
     /**
      * decision mode enum
      */

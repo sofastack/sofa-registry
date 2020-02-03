@@ -16,21 +16,6 @@
  */
 package com.alipay.sofa.registry.server.session.bootstrap;
 
-import java.lang.annotation.Annotation;
-import java.util.Collection;
-import java.util.Date;
-import java.util.Map;
-import java.util.concurrent.atomic.AtomicBoolean;
-
-import javax.annotation.Resource;
-import javax.ws.rs.Path;
-import javax.ws.rs.ext.Provider;
-
-import org.glassfish.jersey.server.ResourceConfig;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.ApplicationContext;
-import org.springframework.util.CollectionUtils;
-
 import com.alipay.sofa.registry.common.model.Node;
 import com.alipay.sofa.registry.common.model.constants.ValueConstants;
 import com.alipay.sofa.registry.common.model.metaserver.FetchProvideDataRequest;
@@ -51,11 +36,23 @@ import com.alipay.sofa.registry.server.session.node.NodeManager;
 import com.alipay.sofa.registry.server.session.node.NodeManagerFactory;
 import com.alipay.sofa.registry.server.session.node.RaftClientManager;
 import com.alipay.sofa.registry.server.session.node.SessionProcessIdGenerator;
-import com.alipay.sofa.registry.server.session.registry.Registry;
-import com.alipay.sofa.registry.server.session.remoting.handler.AbstractClientHandler;
+import com.alipay.sofa.registry.server.session.provideData.ProvideDataProcessor;
 import com.alipay.sofa.registry.server.session.remoting.handler.AbstractServerHandler;
 import com.alipay.sofa.registry.server.session.scheduler.ExecutorManager;
 import com.alipay.sofa.registry.task.batcher.TaskDispatchers;
+import org.glassfish.jersey.server.ResourceConfig;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationContext;
+import org.springframework.util.CollectionUtils;
+
+import javax.annotation.Resource;
+import javax.ws.rs.Path;
+import javax.ws.rs.ext.Provider;
+import java.lang.annotation.Annotation;
+import java.util.Collection;
+import java.util.Date;
+import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * The type Session server bootstrap.
@@ -82,17 +79,14 @@ public class SessionServerBootstrap {
     @Resource(name = "serverHandlers")
     private Collection<AbstractServerHandler> serverHandlers;
 
-    @Resource(name = "dataClientHandlers")
-    private Collection<AbstractClientHandler> dataClientHandlers;
-
-    @Autowired
-    private NodeManager                       dataNodeManager;
-
     @Autowired
     private NodeManager                       metaNodeManager;
 
     @Autowired
     protected NodeExchanger                   metaNodeExchanger;
+
+    @Autowired
+    private NodeExchanger                     dataNodeExchanger;
 
     @Autowired
     private ResourceConfig                    jerseyResourceConfig;
@@ -107,7 +101,7 @@ public class SessionServerBootstrap {
     private BlacklistManager                  blacklistManager;
 
     @Autowired
-    private Registry                          sessionRegistry;
+    private ProvideDataProcessor              provideDataProcessorManager;
 
     private Server                            server;
 
@@ -170,7 +164,6 @@ public class SessionServerBootstrap {
 
             executorManager.stopScheduler();
             TaskDispatchers.stopDefaultSingleTaskDispatcher();
-            closeClients();
             stopHttpServer();
             stopServer();
         } catch (Throwable e) {
@@ -220,28 +213,7 @@ public class SessionServerBootstrap {
     private void connectDataServer() {
         try {
             if (dataStart.compareAndSet(false, true)) {
-                Collection<Node> dataNodes = dataNodeManager.getDataCenterNodes();
-                if (CollectionUtils.isEmpty(dataNodes)) {
-                    dataNodeManager.getAllDataCenterNodes();
-                    dataNodes = dataNodeManager.getDataCenterNodes();
-                }
-                if (!CollectionUtils.isEmpty(dataNodes)) {
-                    for (Node dataNode : dataNodes) {
-                        if (dataNode.getNodeUrl() == null
-                            || dataNode.getNodeUrl().getIpAddress() == null) {
-                            LOGGER
-                                .error("get data node address error!url{}", dataNode.getNodeUrl());
-                            continue;
-                        }
-                        dataClient = boltExchange.connect(
-                            Exchange.DATA_SERVER_TYPE,
-                            new URL(dataNode.getNodeUrl().getIpAddress(), sessionServerConfig
-                                .getDataServerPort()), dataClientHandlers
-                                .toArray(new ChannelHandler[dataClientHandlers.size()]));
-                    }
-                    LOGGER.info("Data server connected {} server! port:{}", dataNodes.size(),
-                        sessionServerConfig.getDataServerPort());
-                }
+                dataNodeExchanger.connectServer();
             }
         } catch (Exception e) {
             dataStart.set(false);
@@ -261,8 +233,6 @@ public class SessionServerBootstrap {
             if (metaStart.compareAndSet(false, true)) {
                 metaClient = metaNodeExchanger.connectServer();
 
-                int size = metaClient.getChannels().size();
-
                 URL leaderUrl = new URL(raftClientManager.getLeader().getIp(),
                     sessionServerConfig.getMetaServerPort());
 
@@ -276,7 +246,7 @@ public class SessionServerBootstrap {
 
                 fetchBlackList();
 
-                LOGGER.info("MetaServer connected {} server! Port:{}", size,
+                LOGGER.info("MetaServer connected meta server! Port:{}",
                     sessionServerConfig.getMetaServerPort());
             }
         } catch (Exception e) {
@@ -309,20 +279,7 @@ public class SessionServerBootstrap {
         Object ret = sendMetaRequest(fetchProvideDataRequest, leaderUrl);
         if (ret instanceof ProvideData) {
             ProvideData provideData = (ProvideData) ret;
-            if (provideData.getProvideData() == null
-                || provideData.getProvideData().getObject() == null) {
-                LOGGER.info("Fetch session stop push switch no data existed,config not change!");
-                return;
-            }
-            String data = (String) provideData.getProvideData().getObject();
-            sessionServerConfig.setStopPushSwitch(Boolean.valueOf(data));
-            if (data != null) {
-                if (!Boolean.valueOf(data)) {
-                    //stop push init on,then begin fetch data schedule task
-                    sessionServerConfig.setBeginDataFetchTask(true);
-                }
-            }
-            LOGGER.info("Fetch session stop push data switch {} success!", data);
+            provideDataProcessorManager.fetchDataProcess(provideData);
         } else {
             LOGGER.info("Fetch session stop push switch data null,config not change!");
         }
@@ -334,16 +291,7 @@ public class SessionServerBootstrap {
         Object data = sendMetaRequest(fetchProvideDataRequest, leaderUrl);
         if (data instanceof ProvideData) {
             ProvideData provideData = (ProvideData) data;
-            if (provideData == null || provideData.getProvideData() == null
-                || provideData.getProvideData().getObject() == null) {
-                LOGGER
-                    .info("Fetch enableDataRenewSnapshot but no data existed, current config not change!");
-                return;
-            }
-            boolean enableDataRenewSnapshot = Boolean.parseBoolean((String) provideData
-                .getProvideData().getObject());
-            LOGGER.info("Fetch enableDataRenewSnapshot {} success!", enableDataRenewSnapshot);
-            this.sessionRegistry.setEnableDataRenewSnapshot(enableDataRenewSnapshot);
+            provideDataProcessorManager.fetchDataProcess(provideData);
         }
     }
 
@@ -354,13 +302,13 @@ public class SessionServerBootstrap {
     private Object sendMetaRequest(Object request, URL leaderUrl) {
         Object ret;
         try {
-            ret = metaClient.sendSync(metaClient.getChannel(leaderUrl), request,
+            ret = metaClient.sendSync(leaderUrl, request,
                 sessionServerConfig.getMetaNodeExchangeTimeOut());
         } catch (Exception e) {
             URL leaderUrlNew = new URL(raftClientManager.refreshLeader().getIp(),
                 sessionServerConfig.getMetaServerPort());
             LOGGER.warn("request send error!It will be retry once to new leader {}!", leaderUrlNew);
-            ret = metaClient.sendSync(metaClient.getChannel(leaderUrlNew), request,
+            ret = metaClient.sendSync(leaderUrlNew, request,
                 sessionServerConfig.getMetaNodeExchangeTimeOut());
         }
         return ret;
@@ -408,12 +356,6 @@ public class SessionServerBootstrap {
     private void stopServer() {
         if (server != null && server.isOpen()) {
             server.close();
-        }
-    }
-
-    private void closeClients() {
-        if (dataClient != null && !dataClient.isClosed()) {
-            dataClient.close();
         }
     }
 

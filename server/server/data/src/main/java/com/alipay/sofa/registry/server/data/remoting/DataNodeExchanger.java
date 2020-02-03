@@ -16,12 +16,6 @@
  */
 package com.alipay.sofa.registry.server.data.remoting;
 
-import java.util.Collection;
-
-import javax.annotation.Resource;
-
-import org.springframework.beans.factory.annotation.Autowired;
-
 import com.alipay.sofa.registry.common.model.store.URL;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
@@ -34,6 +28,10 @@ import com.alipay.sofa.registry.remoting.exchange.message.Request;
 import com.alipay.sofa.registry.remoting.exchange.message.Response;
 import com.alipay.sofa.registry.server.data.bootstrap.DataServerConfig;
 import com.alipay.sofa.registry.server.data.remoting.handler.AbstractClientHandler;
+import org.springframework.beans.factory.annotation.Autowired;
+
+import javax.annotation.Resource;
+import java.util.Collection;
 
 /**
  * @author xuanbei
@@ -54,18 +52,17 @@ public class DataNodeExchanger implements NodeExchanger {
 
     @Override
     public Response request(Request request) {
-        Channel channel = this.connect(request.getRequestUrl());
         Client client = boltExchange.getClient(Exchange.DATA_SERVER_TYPE);
         LOGGER.info("DataNode Exchanger request={},url={},callbackHandler={}", request.getRequestBody(),
                 request.getRequestUrl(), request.getCallBackHandler());
 
         if (null != request.getCallBackHandler()) {
-            client.sendCallback(channel, request.getRequestBody(),
+            client.sendCallback(request.getRequestUrl(), request.getRequestBody(),
                     request.getCallBackHandler(),
                     dataServerConfig.getRpcTimeout());
             return () -> Response.ResultStatus.SUCCESSFUL;
         } else {
-            final Object result = client.sendSync(channel, request.getRequestBody(),
+            final Object result = client.sendSync(request.getRequestUrl(), request.getRequestBody(),
                     dataServerConfig.getRpcTimeout());
             return () -> result;
         }

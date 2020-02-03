@@ -37,7 +37,6 @@ import com.alipay.sofa.registry.common.model.dataserver.Datum;
 import com.alipay.sofa.registry.common.model.dataserver.GetDataRequest;
 import com.alipay.sofa.registry.common.model.dataserver.GetDataVersionRequest;
 import com.alipay.sofa.registry.common.model.dataserver.PublishDataRequest;
-import com.alipay.sofa.registry.common.model.dataserver.SessionServerRegisterRequest;
 import com.alipay.sofa.registry.common.model.dataserver.UnPublishDataRequest;
 import com.alipay.sofa.registry.common.model.store.Publisher;
 import com.alipay.sofa.registry.common.model.store.URL;
@@ -223,28 +222,6 @@ public class DataNodeServiceImpl implements DataNodeService {
     }
 
     @Override
-    public void registerSessionProcessId(final SessionServerRegisterRequest sessionServerRegisterRequest,
-                                         final URL dataUrl) {
-        try {
-            Request<SessionServerRegisterRequest> request = new Request<SessionServerRegisterRequest>() {
-                @Override
-                public SessionServerRegisterRequest getRequestBody() {
-                    return sessionServerRegisterRequest;
-                }
-
-                @Override
-                public URL getRequestUrl() {
-                    return dataUrl;
-                }
-            };
-            dataNodeExchanger.request(request);
-        } catch (RequestException e) {
-            throw new RuntimeException("DataNodeService register processId error! "
-                                       + e.getMessage(), e);
-        }
-    }
-
-    @Override
     public Map<String/*datacenter*/, Map<String/*datainfoid*/, Long>> fetchDataVersion(URL dataNodeUrl,
                                                                                          Collection<String> dataInfoIdList) {
         Map<String, Map<String, Long>> map = new HashMap<>();
@@ -311,6 +288,7 @@ public class DataNodeServiceImpl implements DataNodeService {
         Map<String/*datacenter*/, Datum> map;
 
         try {
+
             GetDataRequest getDataRequest = new GetDataRequest();
 
             //dataCenter null means all dataCenters
@@ -339,9 +317,9 @@ public class DataNodeServiceImpl implements DataNodeService {
             if (genericResponse.isSuccess()) {
                 map = (Map<String, Datum>) genericResponse.getData();
                 if (map == null || map.isEmpty()) {
-                    LOGGER.warn("GetDataRequest get response contains no datum!dataInfoId={}", dataCenterId);
+                    LOGGER.warn("GetDataRequest get response contains no datum!dataInfoId={}", dataInfoId);
                 } else {
-                    map.forEach((dataCenter, datum) -> Datum.processDatum(datum));
+                    map.forEach((dataCenter, datum) -> Datum.internDatum(datum));
                 }
             } else {
                 throw new RuntimeException(

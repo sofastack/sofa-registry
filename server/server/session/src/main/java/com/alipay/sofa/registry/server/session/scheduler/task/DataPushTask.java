@@ -16,6 +16,15 @@
  */
 package com.alipay.sofa.registry.server.session.scheduler.task;
 
+import java.net.InetSocketAddress;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.function.Predicate;
+
 import com.alipay.sofa.registry.common.model.dataserver.Datum;
 import com.alipay.sofa.registry.common.model.sessionserver.DataPushRequest;
 import com.alipay.sofa.registry.common.model.store.BaseInfo.ClientVersion;
@@ -32,15 +41,6 @@ import com.alipay.sofa.registry.server.session.store.Interests;
 import com.alipay.sofa.registry.task.listener.TaskEvent;
 import com.alipay.sofa.registry.task.listener.TaskEvent.TaskType;
 import com.alipay.sofa.registry.task.listener.TaskListenerManager;
-
-import java.net.InetSocketAddress;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.function.Predicate;
 
 /**
  *
@@ -154,7 +154,7 @@ public class DataPushTask extends AbstractSessionTask {
                     // zone scope subscribe only return zone list
                     return true;
 
-                } else if (ScopeEnum.dataCenter == scopeEnum) {
+                } else if (ScopeEnum.dataCenter == scopeEnum || ScopeEnum.global == scopeEnum) {
                     // disable zone config
                     if (sessionServerConfig.isInvalidForeverZone(zone)
                             && !sessionServerConfig.isInvalidIgnored(dataId)) {

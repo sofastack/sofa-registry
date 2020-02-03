@@ -175,7 +175,7 @@ public class DataDigestResource {
     }
 
     public List<String> getSessionServerList() {
-        List<String> connections = sessionServerConnectionFactory.getConnections().stream()
+        List<String> connections = sessionServerConnectionFactory.getSessionConnections().stream()
                 .filter(connection -> connection != null && connection.isFine())
                 .map(connection -> connection.getRemoteIP() + ":" + connection.getRemotePort())
                 .collect(Collectors.toList());

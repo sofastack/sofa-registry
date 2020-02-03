@@ -16,19 +16,21 @@
  */
 package com.alipay.sofa.registry.remoting.bolt;
 
+import java.net.InetSocketAddress;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+
+import javax.ws.rs.client.WebTarget;
+
 import com.alipay.remoting.AsyncContext;
 import com.alipay.remoting.BizContext;
 import com.alipay.remoting.Connection;
 import com.alipay.sofa.registry.remoting.Channel;
 
-import javax.ws.rs.client.WebTarget;
-import java.net.InetSocketAddress;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-
 /**
  *
  * @author shangyu.wh
+ * @author kezhu.wukz
  * @version $Id: BoltChannel.java, v 0.1 2017-11-24 16:46 shangyu.wh Exp $
  */
 public class BoltChannel implements Channel {
@@ -82,6 +84,11 @@ public class BoltChannel implements Channel {
     @Override
     public WebTarget getWebTarget() {
         return null;
+    }
+
+    @Override
+    public void close() {
+        this.connection.close();
     }
 
     /**
