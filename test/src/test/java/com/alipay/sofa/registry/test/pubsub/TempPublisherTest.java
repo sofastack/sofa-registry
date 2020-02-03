@@ -16,19 +16,8 @@
  */
 package com.alipay.sofa.registry.test.pubsub;
 
-import static com.alipay.sofa.registry.client.constants.ValueConstants.DEFAULT_GROUP;
-import static com.alipay.sofa.registry.common.model.constants.ValueConstants.DEFAULT_INSTANCE_ID;
-import static org.junit.Assert.assertEquals;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
-
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.springframework.test.context.junit4.SpringRunner;
-
 import com.alipay.sofa.registry.client.api.model.RegistryType;
+import com.alipay.sofa.registry.client.api.model.UserData;
 import com.alipay.sofa.registry.client.api.registration.PublisherRegistration;
 import com.alipay.sofa.registry.client.api.registration.SubscriberRegistration;
 import com.alipay.sofa.registry.common.model.PublishType;
@@ -38,6 +27,18 @@ import com.alipay.sofa.registry.common.model.store.Publisher;
 import com.alipay.sofa.registry.core.model.ScopeEnum;
 import com.alipay.sofa.registry.server.session.node.service.DataNodeService;
 import com.alipay.sofa.registry.test.BaseIntegrationTest;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.springframework.test.context.junit4.SpringRunner;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
+import java.util.concurrent.atomic.AtomicReference;
+
+import static com.alipay.sofa.registry.client.constants.ValueConstants.DEFAULT_GROUP;
+import static com.alipay.sofa.registry.common.model.constants.ValueConstants.DEFAULT_INSTANCE_ID;
+import static org.junit.Assert.assertEquals;
 
 /**
  * @author xuanbei
@@ -47,17 +48,22 @@ import com.alipay.sofa.registry.test.BaseIntegrationTest;
 public class TempPublisherTest extends BaseIntegrationTest {
     @Test
     public synchronized void doTest() throws Exception {
-        String dataId = "test-dataId-" + System.currentTimeMillis();
+        String dataId = "test-dataId-" +this.getClass().getName()+ System.currentTimeMillis();
         String value = "test publish temp data";
-
+        AtomicReference<String> dataIdRef = new AtomicReference<>();
+        AtomicReference<UserData> userDataRef = new AtomicReference<>();
         // register SubscriberRegistration
         SubscriberRegistration subReg = new SubscriberRegistration(dataId,
-            new MySubscriberDataObserver());
+                (dataIdIn, data) -> {
+                    dataIdRef.set(dataIdIn);
+                    userDataRef.set(data);
+                });
+
         subReg.setScopeEnum(ScopeEnum.zone);
         registryClient1.register(subReg);
-        Thread.sleep(2000L);
-        assertEquals(dataId, this.dataId);
-        assertEquals(0, userData.getZoneData().size());
+        Thread.sleep(5000L);
+        assertEquals(dataId, dataIdRef.get());
+        assertEquals(0, userDataRef.get().getZoneData().size());
 
         // publish temp data
         Publisher tempPublisher = new Publisher();
@@ -78,19 +84,25 @@ public class TempPublisherTest extends BaseIntegrationTest {
         sessionApplicationContext.getBean(DataNodeService.class).register(tempPublisher);
 
         // data size is 1
-        Thread.sleep(2000L);
-        assertEquals(dataId, this.dataId);
-        assertEquals(1, userData.getZoneData().size());
-        userData = null;
+        Thread.sleep(5000L);
+        assertEquals(dataId, dataIdRef.get());
+        assertEquals(1, userDataRef.get().getZoneData().size());
+
+        userDataRef.set(null);
+        dataIdRef.set(null);
         registryClient1.unregister(dataId, DEFAULT_GROUP, RegistryType.SUBSCRIBER);
 
         // register another SubscriberRegistration, data size is 0
-        subReg = new SubscriberRegistration(dataId, new MySubscriberDataObserver());
+        subReg = new SubscriberRegistration(dataId,
+                (dataIdIn, data) -> {
+                    dataIdRef.set(dataIdIn);
+                    userDataRef.set(data);
+                });
         subReg.setScopeEnum(ScopeEnum.zone);
         registryClient1.register(subReg);
-        Thread.sleep(2000L);
-        assertEquals(dataId, this.dataId);
-        assertEquals(0, userData.getZoneData().size());
+        Thread.sleep(5000L);
+        assertEquals(dataId, dataIdRef.get());
+        assertEquals(0, userDataRef.get().getZoneData().size());
         registryClient1.unregister(dataId, DEFAULT_GROUP, RegistryType.SUBSCRIBER);
     }
 
@@ -98,18 +110,23 @@ public class TempPublisherTest extends BaseIntegrationTest {
     public synchronized void doTestPubAndTempPubSameTime() throws Exception {
         String dataId = "test-same-time-pub&tempPub-" + System.currentTimeMillis();
         String value = "test same time publish";
+        AtomicReference<String> dataIdRef = new AtomicReference<>();
+        AtomicReference<UserData> userDataRef = new AtomicReference<>();
 
         SubscriberRegistration subReg = new SubscriberRegistration(dataId,
-            new MySubscriberDataObserver());
+                (dataIdIn, data) -> {
+                    dataIdRef.set(dataIdIn);
+                    userDataRef.set(data);
+                });
         subReg.setScopeEnum(ScopeEnum.zone);
         registryClient1.register(subReg);
-        Thread.sleep(2000L);
+        Thread.sleep(5000L);
 
         // publish data
         PublisherRegistration registration = new PublisherRegistration(dataId);
         registryClient1.register(registration, "test publish");
 
-        Thread.sleep(2000L);
+        Thread.sleep(5000L);
 
         // publish temp data
         Publisher tempPublisher = new Publisher();
@@ -129,10 +146,10 @@ public class TempPublisherTest extends BaseIntegrationTest {
         tempPublisher.setDataList(dataBoxData);
         sessionApplicationContext.getBean(DataNodeService.class).register(tempPublisher);
 
-        Thread.sleep(2000L);
+        Thread.sleep(5000L);
 
-        assertEquals(1, userData.getZoneData().size());
-        assertEquals(2, userData.getZoneData().get(LOCAL_REGION).size());
+        assertEquals(1, userDataRef.get().getZoneData().size());
+        assertEquals(2, userDataRef.get().getZoneData().get(LOCAL_REGION).size());
 
         registryClient1.unregister(dataId, DEFAULT_GROUP, RegistryType.SUBSCRIBER);
         registryClient1.unregister(dataId, DEFAULT_GROUP, RegistryType.PUBLISHER);

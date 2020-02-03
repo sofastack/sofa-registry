@@ -27,6 +27,8 @@ import com.alipay.sofa.registry.common.model.Node;
 import com.alipay.sofa.registry.common.model.dataserver.Datum;
 import com.alipay.sofa.registry.common.model.dataserver.UnPublishDataRequest;
 import com.alipay.sofa.registry.common.model.store.Publisher;
+import com.alipay.sofa.registry.common.model.store.WordCache;
+import com.alipay.sofa.registry.common.model.store.Publisher;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.remoting.Channel;
@@ -94,7 +96,7 @@ public class UnPublishDataHandler extends AbstractServerHandler<UnPublishDataReq
                 .getRegisterTimestamp()), dataServerConfig.getLocalDataCenter());
 
         // Attempt to get connectId from datumCache (Datum may not exist), and record the renew timestamp
-        String connectId = getConnectId(request);
+        String connectId = WordCache.getInstance().getWordCache(getConnectId(request));
         if (connectId != null) {
             datumLeaseManager.renew(connectId);
         }

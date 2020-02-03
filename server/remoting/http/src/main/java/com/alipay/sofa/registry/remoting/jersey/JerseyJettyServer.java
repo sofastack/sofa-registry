@@ -16,15 +16,14 @@
  */
 package com.alipay.sofa.registry.remoting.jersey;
 
-import java.net.InetSocketAddress;
-import java.net.URI;
-import java.util.Collection;
-import java.util.List;
-import java.util.concurrent.ThreadFactory;
-import java.util.concurrent.atomic.AtomicBoolean;
-
-import javax.ws.rs.ProcessingException;
-
+import com.alipay.sofa.registry.common.model.store.URL;
+import com.alipay.sofa.registry.log.Logger;
+import com.alipay.sofa.registry.log.LoggerFactory;
+import com.alipay.sofa.registry.remoting.CallbackHandler;
+import com.alipay.sofa.registry.remoting.Channel;
+import com.alipay.sofa.registry.remoting.ChannelHandler;
+import com.alipay.sofa.registry.remoting.Server;
+import com.alipay.sofa.registry.remoting.jersey.jetty.server.HttpConnectionCustomFactory;
 import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.ServerConnector;
 import org.eclipse.jetty.util.thread.QueuedThreadPool;
@@ -36,14 +35,13 @@ import org.glassfish.jersey.server.ContainerFactory;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.server.spi.Container;
 
-import com.alipay.sofa.registry.common.model.store.URL;
-import com.alipay.sofa.registry.log.Logger;
-import com.alipay.sofa.registry.log.LoggerFactory;
-import com.alipay.sofa.registry.remoting.CallbackHandler;
-import com.alipay.sofa.registry.remoting.Channel;
-import com.alipay.sofa.registry.remoting.ChannelHandler;
-import com.alipay.sofa.registry.remoting.Server;
-import com.alipay.sofa.registry.remoting.jersey.jetty.server.HttpConnectionCustomFactory;
+import javax.ws.rs.ProcessingException;
+import java.net.InetSocketAddress;
+import java.net.URI;
+import java.util.Collection;
+import java.util.List;
+import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  *
@@ -165,8 +163,8 @@ public class JerseyJettyServer implements Server {
     }
 
     @Override
-    public List<ChannelHandler> getChannelHandlers() {
-        return null;
+    public void close(Channel channel) {
+        throw new UnsupportedOperationException("Jersey Server don't support close Channel.");
     }
 
     @Override
@@ -189,21 +187,11 @@ public class JerseyJettyServer implements Server {
     }
 
     @Override
-    public void close(Channel channel) {
-        throw new UnsupportedOperationException("Jersey Server don't support close Channel.");
-    }
-
-    @Override
     public boolean isClosed() {
         if (server != null) {
             return server.isStopped();
         }
         return true;
-    }
-
-    @Override
-    public void sendOneway(Channel channel, Object message) {
-
     }
 
     @Override

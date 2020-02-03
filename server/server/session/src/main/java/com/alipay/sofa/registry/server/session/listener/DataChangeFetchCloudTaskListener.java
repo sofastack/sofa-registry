@@ -16,6 +16,8 @@
  */
 package com.alipay.sofa.registry.server.session.listener;
 
+import org.springframework.beans.factory.annotation.Autowired;
+
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
 import com.alipay.sofa.registry.server.session.cache.CacheService;
 import com.alipay.sofa.registry.server.session.scheduler.ExecutorManager;
@@ -29,7 +31,6 @@ import com.alipay.sofa.registry.task.listener.TaskEvent;
 import com.alipay.sofa.registry.task.listener.TaskEvent.TaskType;
 import com.alipay.sofa.registry.task.listener.TaskListener;
 import com.alipay.sofa.registry.task.listener.TaskListenerManager;
-import org.springframework.beans.factory.annotation.Autowired;
 
 /**
  *
@@ -39,26 +40,26 @@ import org.springframework.beans.factory.annotation.Autowired;
 public class DataChangeFetchCloudTaskListener implements TaskListener {
 
     @Autowired
-    private Interests                           sessionInterests;
+    private Interests                                    sessionInterests;
 
     @Autowired
-    private SessionServerConfig                 sessionServerConfig;
+    private SessionServerConfig                          sessionServerConfig;
 
     /**
      * trigger task com.alipay.sofa.registry.server.meta.listener process
      */
     @Autowired
-    private TaskListenerManager                 taskListenerManager;
+    private TaskListenerManager                          taskListenerManager;
 
     @Autowired
-    private ExecutorManager                     executorManager;
+    private ExecutorManager                              executorManager;
 
     @Autowired
-    private CacheService                        sessionCacheService;
+    private CacheService                                 sessionCacheService;
 
-    private TaskDispatcher<String, SessionTask> singleTaskDispatcher;
+    private volatile TaskDispatcher<String, SessionTask> singleTaskDispatcher;
 
-    private TaskProcessor                       dataNodeSingleTaskProcessor;
+    private TaskProcessor                                dataNodeSingleTaskProcessor;
 
     public DataChangeFetchCloudTaskListener(TaskProcessor dataNodeSingleTaskProcessor) {
         this.dataNodeSingleTaskProcessor = dataNodeSingleTaskProcessor;
@@ -66,18 +67,22 @@ public class DataChangeFetchCloudTaskListener implements TaskListener {
 
     public TaskDispatcher<String, SessionTask> getSingleTaskDispatcher() {
         if (singleTaskDispatcher == null) {
-            singleTaskDispatcher = TaskDispatchers.createSingleTaskDispatcher(
-                TaskDispatchers.getDispatcherName(TaskType.DATA_CHANGE_FETCH_CLOUD_TASK.getName()),
-                sessionServerConfig.getDataChangeFetchTaskMaxBufferSize(),
-                sessionServerConfig.getDataChangeFetchTaskWorkerSize(), 1000, 100,
-                dataNodeSingleTaskProcessor);
+            synchronized (this) {
+                if (singleTaskDispatcher == null) {
+                    singleTaskDispatcher = TaskDispatchers.createSingleTaskDispatcher(
+                        TaskDispatchers.getDispatcherName(TaskType.DATA_CHANGE_FETCH_CLOUD_TASK
+                            .getName()), sessionServerConfig.getDataChangeFetchTaskMaxBufferSize(),
+                        sessionServerConfig.getDataChangeFetchTaskWorkerSize(), 1000, 100,
+                        dataNodeSingleTaskProcessor);
+                }
+            }
         }
         return singleTaskDispatcher;
     }
 
     @Override
-    public boolean support(TaskEvent event) {
-        return TaskType.DATA_CHANGE_FETCH_CLOUD_TASK.equals(event.getTaskType());
+    public TaskType support() {
+        return TaskType.DATA_CHANGE_FETCH_CLOUD_TASK;
     }
 
     @Override
@@ -88,4 +93,5 @@ public class DataChangeFetchCloudTaskListener implements TaskListener {
         getSingleTaskDispatcher().dispatch(dataChangeFetchTask.getTaskId(), dataChangeFetchTask,
             dataChangeFetchTask.getExpiryTime());
     }
+
 }

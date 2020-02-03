@@ -16,8 +16,9 @@
  */
 package com.alipay.sofa.registry.remoting;
 
-import javax.ws.rs.client.WebTarget;
 import java.net.InetSocketAddress;
+
+import javax.ws.rs.client.WebTarget;
 
 /**
  *
@@ -68,4 +69,6 @@ public interface Channel {
      * @return
      */
     WebTarget getWebTarget();
+
+    void close();
 }

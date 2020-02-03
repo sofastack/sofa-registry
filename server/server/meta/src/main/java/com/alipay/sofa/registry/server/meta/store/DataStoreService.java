@@ -86,8 +86,6 @@ public class DataStoreService implements StoreService<DataNode> {
     private AtomicLong                                         localDataCenterInitVersion = new AtomicLong(
                                                                                               -1L);
 
-    private static final long                                  COMPARE_TIME_COST          = 1000L;
-
     @Override
     public NodeType getNodeType() {
         return NodeType.DATA;
@@ -104,7 +102,6 @@ public class DataStoreService implements StoreService<DataNode> {
 
         String ipAddress = dataNode.getNodeUrl().getIpAddress();
 
-        long startAll = System.currentTimeMillis();
         write.lock();
         try {
 
@@ -119,10 +116,6 @@ public class DataStoreService implements StoreService<DataNode> {
 
         } finally {
             write.unlock();
-        }
-        long cost = System.currentTimeMillis() - startAll;
-        if (cost >= COMPARE_TIME_COST) {
-            LOGGER.info("dataRepositoryService.addNode cost:{} ", cost);
         }
         return nodeChangeResult;
     }
@@ -173,7 +166,6 @@ public class DataStoreService implements StoreService<DataNode> {
     @Override
     public void renew(DataNode dataNode, int duration) {
 
-        long startAll = System.currentTimeMillis();
         write.lock();
         try {
             String ipAddress = dataNode.getNodeUrl().getIpAddress();
@@ -191,10 +183,6 @@ public class DataStoreService implements StoreService<DataNode> {
                         RenewDecorate.DEFAULT_DURATION_SECS));
                 }
 
-            }
-            long cost = System.currentTimeMillis() - startAll;
-            if (cost >= COMPARE_TIME_COST) {
-                LOGGER.info("dataRepositoryService.renew.all cost:{} ", cost);
             }
         } finally {
             write.unlock();

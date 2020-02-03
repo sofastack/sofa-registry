@@ -16,6 +16,13 @@
  */
 package com.alipay.sofa.registry.remoting.jersey.exchange;
 
+import java.net.URI;
+import java.util.concurrent.ConcurrentHashMap;
+
+import javax.ws.rs.core.UriBuilder;
+
+import org.glassfish.jersey.server.ResourceConfig;
+
 import com.alipay.sofa.registry.common.model.store.URL;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
@@ -24,11 +31,6 @@ import com.alipay.sofa.registry.remoting.Server;
 import com.alipay.sofa.registry.remoting.exchange.Exchange;
 import com.alipay.sofa.registry.remoting.jersey.JerseyClient;
 import com.alipay.sofa.registry.remoting.jersey.JerseyJettyServer;
-import org.glassfish.jersey.server.ResourceConfig;
-
-import javax.ws.rs.core.UriBuilder;
-import java.net.URI;
-import java.util.concurrent.ConcurrentHashMap;
 
 /**
  *
@@ -49,6 +51,12 @@ public class JerseyExchange implements Exchange<ResourceConfig> {
         JerseyClient jerseyClient = JerseyClient.getInstance();
         setClient(jerseyClient);
         return jerseyClient;
+    }
+
+    @Override
+    public Client connect(String serverType, int connNum, URL serverUrl,
+                          ResourceConfig... channelHandlers) {
+        throw new UnsupportedOperationException();
     }
 
     @Override

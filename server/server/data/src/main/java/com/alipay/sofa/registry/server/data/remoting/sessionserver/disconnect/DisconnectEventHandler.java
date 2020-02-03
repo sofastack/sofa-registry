@@ -16,16 +16,6 @@
  */
 package com.alipay.sofa.registry.server.data.remoting.sessionserver.disconnect;
 
-import java.util.Set;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.DelayQueue;
-import java.util.concurrent.Executor;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.TimeUnit;
-
-import org.springframework.beans.factory.InitializingBean;
-import org.springframework.beans.factory.annotation.Autowired;
-
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.server.data.bootstrap.DataServerConfig;
@@ -36,6 +26,15 @@ import com.alipay.sofa.registry.server.data.executor.ExecutorFactory;
 import com.alipay.sofa.registry.server.data.node.DataNodeStatus;
 import com.alipay.sofa.registry.server.data.remoting.sessionserver.SessionServerConnectionFactory;
 import com.alipay.sofa.registry.server.data.util.LocalServerStatusEnum;
+import org.springframework.beans.factory.InitializingBean;
+import org.springframework.beans.factory.annotation.Autowired;
+
+import java.util.Set;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.DelayQueue;
+import java.util.concurrent.Executor;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.TimeUnit;
 
 /**
  * @author qian.lqlq
@@ -134,7 +133,7 @@ public class DisconnectEventHandler implements InitializingBean, AfterWorkingPro
                         //check processId confirm remove,and not be registered again when delay time
                         String sessionServerHost = event.getSessionServerHost();
                         if (sessionServerConnectionFactory
-                                .removeProcessIfMatch(processId, sessionServerHost)) {
+                                .removeProcessIfMatch(processId,sessionServerHost)) {
                             Set<String> connectIds = sessionServerConnectionFactory
                                     .removeConnectIds(processId);
 

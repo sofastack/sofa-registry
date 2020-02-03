@@ -16,7 +16,8 @@
  */
 package com.alipay.sofa.registry.task.listener;
 
-import java.util.Collection;
+import com.alipay.sofa.registry.task.listener.TaskEvent.TaskType;
+import com.google.common.collect.Multimap;
 
 /**
  *
@@ -29,7 +30,7 @@ public interface TaskListenerManager {
      *
      * @return
      */
-    Collection<TaskListener> getTaskListeners();
+    Multimap<TaskType, TaskListener> getTaskListeners();
 
     /**
      *

@@ -16,28 +16,27 @@
  */
 package com.alipay.sofa.registry.remoting.jersey;
 
+import java.net.InetSocketAddress;
+import java.net.URI;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.atomic.AtomicReference;
+
+import javax.ws.rs.client.ClientBuilder;
+import javax.ws.rs.client.WebTarget;
+import javax.ws.rs.core.UriBuilder;
+
+import org.glassfish.jersey.client.ClientConfig;
+import org.glassfish.jersey.client.HttpUrlConnectorProvider;
+import org.glassfish.jersey.jackson.JacksonFeature;
+
 import com.alipay.sofa.registry.common.model.store.URL;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.net.NetUtil;
 import com.alipay.sofa.registry.remoting.CallbackHandler;
 import com.alipay.sofa.registry.remoting.Channel;
-import com.alipay.sofa.registry.remoting.ChannelHandler;
 import com.alipay.sofa.registry.remoting.Client;
-import org.glassfish.jersey.client.ClientConfig;
-import org.glassfish.jersey.client.HttpUrlConnectorProvider;
-import org.glassfish.jersey.jackson.JacksonFeature;
-
-import javax.ws.rs.client.ClientBuilder;
-import javax.ws.rs.client.WebTarget;
-import javax.ws.rs.core.UriBuilder;
-import java.net.InetSocketAddress;
-import java.net.URI;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.atomic.AtomicReference;
 
 /**
  *
@@ -49,7 +48,9 @@ public class JerseyClient implements Client {
     private static final Logger                              LOGGER   = LoggerFactory
                                                                           .getLogger(JerseyClient.class);
     private volatile static JerseyClient                     instance;
+
     private final AtomicReference<javax.ws.rs.client.Client> client   = new AtomicReference<>(null);
+
     private Map<String, Channel>                             channels = new HashMap<>();
 
     /**
@@ -89,6 +90,22 @@ public class JerseyClient implements Client {
         }
     }
 
+    @Override
+    public Object sendSync(URL url, Object message, int timeoutMillis) {
+        return null;
+    }
+
+    @Override
+    public Object sendSync(Channel channel, Object message, int timeoutMillis) {
+        return null;
+    }
+
+    @Override
+    public void sendCallback(URL url, Object message, CallbackHandler callbackHandler,
+                             int timeoutMillis) {
+
+    }
+
     private WebTarget getTarget(URL targetUrl) {
         return getClient().target(getBaseUri(targetUrl));
     }
@@ -126,24 +143,6 @@ public class JerseyClient implements Client {
     }
 
     @Override
-    public Collection<Channel> getChannels() {
-        return null;
-    }
-
-    @Override
-    public Channel getChannel(InetSocketAddress remoteAddress) {
-        Channel c = channels.get(NetUtil.toAddressString(remoteAddress));
-        if (c == null) {
-            return null;
-        } else {
-            if (!c.isConnected()) {
-                connect(new URL(remoteAddress));
-            }
-        }
-        return c;
-    }
-
-    @Override
     public Channel getChannel(URL url) {
         Channel c = channels.get(url.getAddressString());
         if (c == null) {
@@ -157,11 +156,6 @@ public class JerseyClient implements Client {
     }
 
     @Override
-    public List<ChannelHandler> getChannelHandlers() {
-        return null;
-    }
-
-    @Override
     public InetSocketAddress getLocalAddress() {
         return NetUtil.getLocalSocketAddress();
     }
@@ -172,28 +166,8 @@ public class JerseyClient implements Client {
     }
 
     @Override
-    public void close(Channel channel) {
-
-    }
-
-    @Override
     public boolean isClosed() {
         return false;
     }
 
-    @Override
-    public void sendOneway(Channel channel, Object message) {
-
-    }
-
-    @Override
-    public Object sendSync(Channel channel, Object message, int timeoutMillis) {
-        return null;
-    }
-
-    @Override
-    public void sendCallback(Channel channel, Object message, CallbackHandler callbackHandler,
-                             int timeoutMillis) {
-
-    }
 }

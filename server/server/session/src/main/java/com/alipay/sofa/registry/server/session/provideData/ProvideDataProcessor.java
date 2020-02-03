@@ -14,28 +14,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alipay.sofa.registry.task.listener;
+package com.alipay.sofa.registry.server.session.provideData;
 
-import com.alipay.sofa.registry.task.listener.TaskEvent.TaskType;
+import com.alipay.sofa.registry.common.model.metaserver.ProvideData;
 
 /**
  *
  * @author shangyu.wh
- * @version $Id: TaskListener.java, v 0.1 2017-12-07 18:11 shangyu.wh Exp $
+ * @version 1.0: ProvideDataProcessor.java, v 0.1 2019-10-09 17:26 shangyu.wh Exp $
  */
-public interface TaskListener {
+public interface ProvideDataProcessor {
 
-    /**
-     * com.alipay.sofa.registry.server.meta.listener type check
-     *
-     * @return type
-     */
-    TaskType support();
+    void changeDataProcess(ProvideData provideData);
 
-    /**
-     * event execute
-     *
-     * @param event
-     */
-    void handleEvent(TaskEvent event);
+    void fetchDataProcess(ProvideData provideData);
+
+    boolean support(ProvideData provideData);
 }

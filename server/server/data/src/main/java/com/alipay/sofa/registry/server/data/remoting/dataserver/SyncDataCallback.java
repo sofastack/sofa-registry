@@ -16,24 +16,23 @@
  */
 package com.alipay.sofa.registry.server.data.remoting.dataserver;
 
+import java.util.Collection;
+import java.util.concurrent.Executor;
+
+import org.springframework.util.CollectionUtils;
+
 import com.alipay.remoting.Connection;
 import com.alipay.remoting.InvokeCallback;
 import com.alipay.sofa.registry.common.model.GenericResponse;
 import com.alipay.sofa.registry.common.model.dataserver.Datum;
 import com.alipay.sofa.registry.common.model.dataserver.SyncData;
 import com.alipay.sofa.registry.common.model.dataserver.SyncDataRequest;
-import com.alipay.sofa.registry.common.model.store.Publisher;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.server.data.change.DataChangeTypeEnum;
 import com.alipay.sofa.registry.server.data.change.DataSourceTypeEnum;
 import com.alipay.sofa.registry.server.data.change.event.DataChangeEventCenter;
 import com.alipay.sofa.registry.server.data.executor.ExecutorFactory;
-import org.springframework.util.CollectionUtils;
-
-import java.util.Collection;
-import java.util.Map;
-import java.util.concurrent.Executor;
 
 /**
  *
@@ -44,7 +43,7 @@ public class SyncDataCallback implements InvokeCallback {
 
     private static final Logger   LOGGER      = LoggerFactory.getLogger(SyncDataCallback.class);
 
-    private static final Executor EXECUTOR    = ExecutorFactory.newFixedThreadPool(20,
+    private static final Executor EXECUTOR    = ExecutorFactory.newFixedThreadPool(5,
                                                   SyncDataCallback.class.getSimpleName());
 
     private static final int      RETRY_COUNT = 3;
@@ -96,7 +95,7 @@ public class SyncDataCallback implements InvokeCallback {
                         datum.setDataInfoId(syncData.getDataInfoId());
                         datum.setDataCenter(syncData.getDataCenter());
                     }
-                    processDatum(datum);
+                    Datum.internDatum(datum);
                     dataChangeEventCenter.sync(DataChangeTypeEnum.COVER, dataSourceTypeEnum, datum);
                     break;
                 }
@@ -105,7 +104,7 @@ public class SyncDataCallback implements InvokeCallback {
                 if (!CollectionUtils.isEmpty(datums)) {
                     for (Datum datum : datums) {
                         if (datum != null) {
-                            processDatum(datum);
+                            Datum.internDatum(datum);
                             dataChangeEventCenter.sync(DataChangeTypeEnum.MERGE,
                                 dataSourceTypeEnum, datum);
                         }
@@ -113,16 +112,6 @@ public class SyncDataCallback implements InvokeCallback {
                 } else {
                     LOGGER.info("[SyncDataCallback] get no syncDatas");
                 }
-            }
-        }
-    }
-
-    private void processDatum(Datum datum) {
-        if (datum != null) {
-            Map<String, Publisher> publisherMap = datum.getPubMap();
-
-            if (publisherMap != null && !publisherMap.isEmpty()) {
-                publisherMap.forEach((registerId, publisher) -> Publisher.processPublisher(publisher));
             }
         }
     }

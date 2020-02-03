@@ -16,6 +16,10 @@
  */
 package com.alipay.sofa.registry.server.session.listener;
 
+import javax.annotation.PostConstruct;
+
+import org.springframework.beans.factory.annotation.Autowired;
+
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
 import com.alipay.sofa.registry.server.session.cache.CacheService;
 import com.alipay.sofa.registry.server.session.scheduler.task.SessionTask;
@@ -28,7 +32,6 @@ import com.alipay.sofa.registry.task.listener.TaskEvent;
 import com.alipay.sofa.registry.task.listener.TaskEvent.TaskType;
 import com.alipay.sofa.registry.task.listener.TaskListener;
 import com.alipay.sofa.registry.task.listener.TaskListenerManager;
-import org.springframework.beans.factory.annotation.Autowired;
 
 /**
  *
@@ -61,18 +64,16 @@ public class SubscriberMultiFetchTaskListener implements TaskListener {
         this.dataNodeSingleTaskProcessor = dataNodeSingleTaskProcessor;
     }
 
-    public TaskDispatcher<String, SessionTask> getSingleTaskDispatcher() {
-        if (singleTaskDispatcher == null) {
-            singleTaskDispatcher = TaskDispatchers.createSingleTaskDispatcher(
-                TaskDispatchers.getDispatcherName(TaskType.SUBSCRIBER_MULTI_FETCH_TASK.getName()),
-                100000, 80, 0, 0, dataNodeSingleTaskProcessor);
-        }
-        return singleTaskDispatcher;
+    @PostConstruct
+    public void init() {
+        singleTaskDispatcher = TaskDispatchers.createSingleTaskDispatcher(
+            TaskDispatchers.getDispatcherName(TaskType.SUBSCRIBER_MULTI_FETCH_TASK.getName()),
+            100000, 80, 0, 0, dataNodeSingleTaskProcessor);
     }
 
     @Override
-    public boolean support(TaskEvent event) {
-        return TaskType.SUBSCRIBER_MULTI_FETCH_TASK.equals(event.getTaskType());
+    public TaskType support() {
+        return TaskType.SUBSCRIBER_MULTI_FETCH_TASK;
     }
 
     @Override
@@ -83,7 +84,7 @@ public class SubscriberMultiFetchTaskListener implements TaskListener {
 
         subscriberMultiFetchTask.setTaskEvent(event);
 
-        getSingleTaskDispatcher().dispatch(subscriberMultiFetchTask.getTaskId(),
+        singleTaskDispatcher.dispatch(subscriberMultiFetchTask.getTaskId(),
             subscriberMultiFetchTask, subscriberMultiFetchTask.getExpiryTime());
     }
 

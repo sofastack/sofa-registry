@@ -28,6 +28,7 @@ import java.lang.invoke.MethodHandles;
 import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  *
@@ -36,12 +37,16 @@ import java.util.Map;
  */
 public class Processor {
 
-    private static final Logger              LOG           = LoggerFactory
-                                                               .getLogger(Processor.class);
+    private static final Logger              LOG                  = LoggerFactory
+                                                                      .getLogger(Processor.class);
 
-    private Map<String, Map<String, Method>> workerMethods = new HashMap<>();
+    private Map<String, Map<String, Method>> workerMethods        = new HashMap<>();
 
-    private Map<String, Object>              workers       = new HashMap<>();
+    private Map<String, Object>              workers              = new HashMap<>();
+
+    private Map<String, MethodHandle>        methodHandleMap      = new ConcurrentHashMap<>();
+
+    private final static String              SERVICE_METHOD_SPLIT = "#@#";
 
     private static volatile Processor        instance;
 
@@ -97,15 +102,24 @@ public class Processor {
             for (int i = 0; i < sig.length; i++) {
                 methodKeyBuffer.append(sig[i]);
             }
-            Method appServiceMethod = workerMethods.get(serviceId).get(methodKeyBuffer.toString());
+            String methodKey = methodKeyBuffer.toString();
+            Method appServiceMethod = workerMethods.get(serviceId).get(methodKey);
             if (appServiceMethod == null) {
                 LOG.error("Can not find method {} from processor by serviceId {}", methodName,
                     serviceId);
                 throw new NoSuchMethodException("Can not find method from processor！");
             }
-
             Object[] methodArg = request.getMethodArgs();
-            MethodHandle methodHandle = MethodHandles.lookup().unreflect(appServiceMethod);
+            String methodHandleKey = getMethodHandleKey(serviceId, methodKey);
+
+            MethodHandle methodHandle = methodHandleMap.computeIfAbsent(methodHandleKey,k-> {
+                try {
+                    return MethodHandles.lookup().unreflect(appServiceMethod);
+                } catch (IllegalAccessException e) {
+                    throw new RuntimeException("Process service request lookup method error!",e);
+                }
+            });
+
             Object ret = methodHandle.bindTo(target).invokeWithArguments(methodArg);
             if (ret != null) {
                 return ProcessResponse.ok(ret).build();
@@ -133,7 +147,23 @@ public class Processor {
 
         try {
             Object[] methodArg = request.getMethodArgs();
-            MethodHandle methodHandle = MethodHandles.lookup().unreflect(method);
+
+            StringBuilder methodKeyBuffer = new StringBuilder();
+            methodKeyBuffer.append(methodName);
+            String[] sig = request.getMethodArgSigs();
+            for (int i = 0; i < sig.length; i++) {
+                methodKeyBuffer.append(sig[i]);
+            }
+            String methodKey = methodKeyBuffer.toString();
+            String methodHandleKey = getMethodHandleKey(serviceId, methodKey);
+            MethodHandle methodHandle = methodHandleMap.computeIfAbsent(methodHandleKey,k-> {
+                try {
+                    return MethodHandles.lookup().unreflect(method);
+                } catch (IllegalAccessException e) {
+                    throw new RuntimeException("Process service request lookup method error!",e);
+                }
+            });
+
             Object ret = methodHandle.bindTo(target).invokeWithArguments(methodArg);
             if (ret != null) {
                 return ProcessResponse.ok(ret).build();
@@ -174,6 +204,42 @@ public class Processor {
         }
     }
 
+    public MethodHandle getWorkMethodHandle(ProcessRequest request) {
+        String methodName = request.getMethodName();
+        String serviceId = request.getServiceName();
+        try {
+
+            StringBuilder methodKeyBuffer = new StringBuilder();
+            methodKeyBuffer.append(methodName);
+            String[] sig = request.getMethodArgSigs();
+            for (int i = 0; i < sig.length; i++) {
+                methodKeyBuffer.append(sig[i]);
+            }
+            String methodKey = methodKeyBuffer.toString();
+            Method appServiceMethod = workerMethods.get(serviceId).get(methodKey);
+            if (appServiceMethod == null) {
+                LOG.error("Can not find method {} from processor by serviceId {}", methodName,
+                        serviceId);
+                throw new NoSuchMethodException("Can not find method from processor！");
+            }
+
+            String methodHandleKey = getMethodHandleKey(serviceId, methodKey);
+
+            MethodHandle methodHandle = methodHandleMap.computeIfAbsent(methodHandleKey,k-> {
+                try {
+                    return MethodHandles.lookup().unreflect(appServiceMethod);
+                } catch (IllegalAccessException e) {
+                    throw new RuntimeException("Process service request lookup method error!",e);
+                }
+            });
+            return methodHandle;
+        } catch (Exception e) {
+            LOG.error("Process request {} get WorkMethod error!", request, e);
+            throw new RuntimeException(String.format("Process request %s get WorkMethod error!",
+                    request));
+        }
+    }
+
     public Map<String, Object> getWorkers() {
         return workers;
     }
@@ -183,6 +249,10 @@ public class Processor {
             return method != null && method.isAnnotationPresent(ReadOnLeader.class);
         }
         return false;
+    }
+
+    public String getMethodHandleKey(String serviceId, String methodKey) {
+        return serviceId + SERVICE_METHOD_SPLIT + methodKey;
     }
 
 }

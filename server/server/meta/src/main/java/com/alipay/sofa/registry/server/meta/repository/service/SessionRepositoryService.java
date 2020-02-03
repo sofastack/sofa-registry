@@ -78,7 +78,8 @@ public class SessionRepositoryService extends AbstractSnapshotProcess
     }
 
     @Override
-    public RenewDecorate<SessionNode> put(String ipAddress, RenewDecorate<SessionNode> sessionNode) {
+    public RenewDecorate<SessionNode> put(String ipAddress, RenewDecorate<SessionNode> sessionNode,
+                                          Long currentTimeMillis) {
         try {
             RenewDecorate oldRenewDecorate = registry.get(ipAddress);
             if (oldRenewDecorate != null && oldRenewDecorate.getRenewal() != null) {
@@ -94,7 +95,7 @@ public class SessionRepositoryService extends AbstractSnapshotProcess
     }
 
     @Override
-    public RenewDecorate<SessionNode> remove(Object key) {
+    public RenewDecorate<SessionNode> remove(Object key, Long currentTimeMillis) {
         try {
             String ipAddress = (String) key;
             RenewDecorate<SessionNode> oldRenewDecorate = registry.remove(ipAddress);
@@ -112,7 +113,8 @@ public class SessionRepositoryService extends AbstractSnapshotProcess
 
     @Override
     public RenewDecorate<SessionNode> replace(String ipAddress,
-                                              RenewDecorate<SessionNode> sessionNode) {
+                                              RenewDecorate<SessionNode> sessionNode,
+                                              Long currentTimeMillis) {
         RenewDecorate<SessionNode> oldRenewDecorate = registry.get(ipAddress);
         if (oldRenewDecorate != null && oldRenewDecorate.getRenewal() != null) {
             oldRenewDecorate.setRenewal(sessionNode.getRenewal());

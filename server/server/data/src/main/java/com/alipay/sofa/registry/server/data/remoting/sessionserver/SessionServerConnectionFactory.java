@@ -16,13 +16,14 @@
  */
 package com.alipay.sofa.registry.server.data.remoting.sessionserver;
 
-import java.util.Collections;
-import java.util.HashSet;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.stream.Collectors;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -34,35 +35,36 @@ import com.alipay.sofa.registry.server.data.remoting.sessionserver.disconnect.Di
 import com.alipay.sofa.registry.server.data.remoting.sessionserver.disconnect.SessionServerDisconnectEvent;
 
 /**
- * the factory to hold sesseionserver connections
+ * the factory to hold SessionServer connections
  *
  * @author qian.lqlq
+ * @author kezhu.wukz
  * @version $Id: SessionServerConnectionFactory.java, v 0.1 2017-12-06 15:48 qian.lqlq Exp $
  */
 public class SessionServerConnectionFactory {
-    private static final Logger            LOGGER                    = LoggerFactory
-                                                                         .getLogger(SessionServerConnectionFactory.class);
+    private static final Logger            LOGGER                      = LoggerFactory
+                                                                           .getLogger(SessionServerConnectionFactory.class);
 
-    private static final int               DELAY                     = 30 * 1000;
+    private static final int               DELAY                       = 30 * 1000;
+    private static final Map               EMPTY_MAP                   = new HashMap(0);
 
     /**
-     * collection of connections
-     * key      :   processId
-     * value    :   connection
+     * key  :   SessionServer address
+     * value:   SessionServer processId
      */
-    private final Map<String, Pair>        MAP                       = new ConcurrentHashMap<>();
+    private final Map<String, String>      SESSION_CONN_PROCESS_ID_MAP = new ConcurrentHashMap<>();
 
     /**
-     * key  :   sessionserver host
-     * value:   sesseionserver processId
-     */
-    private final Map<String, String>      PROCESS_ID_MAP            = new ConcurrentHashMap<>();
-
-    /**
-     * key  :   sessionserver processId
+     * key  :   SessionServer processId
      * value:   ip:port of clients
      */
-    private final Map<String, Set<String>> PROCESS_ID_CONNECT_ID_MAP = new ConcurrentHashMap<>();
+    private final Map<String, Set<String>> PROCESS_ID_CONNECT_ID_MAP   = new ConcurrentHashMap<>();
+
+    /**
+     * key  :   SessionServer processId
+     * value:   pair(SessionServer address, SessionServer connection)
+     */
+    private final Map<String, Pair>        PROCESS_ID_SESSION_CONN_MAP = new ConcurrentHashMap<>();
 
     @Autowired
     private DisconnectEventHandler         disconnectEventHandler;
@@ -74,18 +76,22 @@ public class SessionServerConnectionFactory {
      * @param connectIds
      * @param connection
      */
-    public void register(String processId, Set<String> connectIds, Connection connection) {
-        String serverHost = NetUtil.toAddressString(connection.getRemoteAddress());
-        if (LOGGER.isInfoEnabled()) {
-            LOGGER.info("session({}, processId={}) registered", serverHost, processId);
+    public void registerSession(String processId, Set<String> connectIds, Connection connection) {
+        if (!connection.isFine()) {
+            return;
         }
-        MAP.put(processId, new Pair(serverHost, connection));
-        Set<String> ret = PROCESS_ID_CONNECT_ID_MAP.getOrDefault(processId, null);
-        if (ret == null) {
-            PROCESS_ID_CONNECT_ID_MAP.putIfAbsent(processId, new HashSet<>());
-        }
-        PROCESS_ID_CONNECT_ID_MAP.get(processId).addAll(connectIds);
-        PROCESS_ID_MAP.put(serverHost, processId);
+        String sessionConnAddress = NetUtil.toAddressString(connection.getRemoteAddress());
+        LOGGER.info("session({}, processId={}) registered", sessionConnAddress, processId);
+
+        SESSION_CONN_PROCESS_ID_MAP.put(sessionConnAddress, processId);
+
+        Set<String> connectIdSet = PROCESS_ID_CONNECT_ID_MAP
+                .computeIfAbsent(processId, k -> ConcurrentHashMap.newKeySet());
+        connectIdSet.addAll(connectIds);
+
+        Pair pair = PROCESS_ID_SESSION_CONN_MAP.computeIfAbsent(processId, k -> new Pair(new ConcurrentHashMap<>()));
+        pair.getConnections().put(sessionConnAddress, connection);
+
     }
 
     /**
@@ -94,24 +100,33 @@ public class SessionServerConnectionFactory {
      * @param connectId
      */
     public void registerConnectId(String processId, String connectId) {
-        Set<String> ret = PROCESS_ID_CONNECT_ID_MAP.getOrDefault(processId, null);
-        if (ret == null) {
-            PROCESS_ID_CONNECT_ID_MAP.putIfAbsent(processId, new HashSet<>());
-        }
-        PROCESS_ID_CONNECT_ID_MAP.get(processId).add(connectId);
+        Set<String> connectIdSet = PROCESS_ID_CONNECT_ID_MAP
+                .computeIfAbsent(processId, k -> ConcurrentHashMap.newKeySet());
+        connectIdSet.add(connectId);
     }
 
     /**
-     * remove connection by specific host
+     * session disconnected, The SessionServerDisconnectEvent is triggered only when the last connections is removed
      */
-    public void removeProcess(String sessionServerHost) {
-        String processId = PROCESS_ID_MAP.remove(sessionServerHost);
+    public void sessionDisconnected(String sessionConnAddress) {
+        String processId = SESSION_CONN_PROCESS_ID_MAP.remove(sessionConnAddress);
         if (LOGGER.isInfoEnabled()) {
-            LOGGER.info("session({}, processId={}) unregistered", sessionServerHost, processId);
+            LOGGER.info("session({}, processId={}) unregistered", sessionConnAddress, processId);
         }
         if (processId != null) {
-            disconnectEventHandler.receive(new SessionServerDisconnectEvent(processId,
-                sessionServerHost, DELAY));
+            Pair pair = PROCESS_ID_SESSION_CONN_MAP.get(processId);
+
+            // remove connection
+            if (pair != null) {
+                pair.getConnections().remove(sessionConnAddress);
+                pair.lastDisconnectedSession = sessionConnAddress;
+            }
+
+            // The SessionServerDisconnectEvent is triggered only when the last connection is broken
+            if (pair == null || pair.getConnections().isEmpty()) {
+                disconnectEventHandler.receive(new SessionServerDisconnectEvent(processId,
+                    sessionConnAddress, DELAY));
+            }
         }
     }
 
@@ -124,63 +139,62 @@ public class SessionServerConnectionFactory {
     }
 
     /**
-     *
-     * @param processId
-     * @return
+     * If the number of connections is 0, and lastDisconnectedSession matched, he ProcessId can be deleted
      */
-    public boolean removeProcessIfMatch(String processId, String sessionServerHost) {
-        return MAP.remove(processId, new Pair(sessionServerHost, null));
+    public boolean removeProcessIfMatch(String processId, String sessionConnAddress) {
+        Pair emptyPair = new Pair(EMPTY_MAP);
+        emptyPair.lastDisconnectedSession = sessionConnAddress;
+        return PROCESS_ID_SESSION_CONN_MAP.remove(processId, emptyPair);
     }
 
     /**
-     * get all connections
-     *
-     * @return
+     * get connections of SessionServer ( Randomly select a connection for each session )
      */
-    public List<Connection> getConnections() {
-        return MAP.size() <= 0 ?
-                Collections.EMPTY_LIST :
-                MAP.values().stream().map(Pair::getConnection).collect(Collectors.toList());
+    public List<Connection> getSessionConnections() {
+        List<Connection> list = new ArrayList<>(PROCESS_ID_SESSION_CONN_MAP.size());
+        Collection<Pair> pairs = PROCESS_ID_SESSION_CONN_MAP.values();
+        if (pairs != null) {
+            for (Pair pair : pairs) {
+                Object[] conns = pair.getConnections().values().toArray();
+                if (conns.length > 0) {
+                    int n = pair.roundRobin.incrementAndGet();
+                    if (n < 0) {
+                        pair.roundRobin.compareAndSet(n, 0);
+                        n = (n == Integer.MIN_VALUE) ? 0 : Math.abs(n);
+                    }
+                    n = n % conns.length;
+                    list.add((Connection) conns[n]);
+                }
+            }
+        }
+        return list;
     }
 
     /**
-     * convenient class to store sessionServerHost and connection
+     * convenient class to store sessionConnAddress and connection
      */
     private static class Pair {
-        private String     sessionServerHost;
-        private Connection connection;
+        private AtomicInteger           roundRobin = new AtomicInteger(-1);
+        private Map<String, Connection> connections;
+        private String                  lastDisconnectedSession;
 
-        private Pair(String sessionServerHost, Connection connection) {
-            this.sessionServerHost = sessionServerHost;
-            this.connection = connection;
+        private Pair(Map<String, Connection> connections) {
+            this.connections = connections;
         }
 
         @Override
         public boolean equals(Object o) {
-            if (this == o) {
-                return true;
-            }
-            if (o == null || getClass() != o.getClass()) {
-                return false;
-            }
-
-            Pair pair = (Pair) o;
-
-            return sessionServerHost.equals(pair.sessionServerHost);
-        }
-
-        @Override
-        public int hashCode() {
-            return sessionServerHost.hashCode();
+            return connections.equals(((Pair) o).getConnections())
+                   && (((Pair) o).lastDisconnectedSession.equals(lastDisconnectedSession));
         }
 
         /**
-         * Getter method for property <tt>connection</tt>.
+         * Getter method for property <tt>connections</tt>.
          *
-         * @return property value of connection
+         * @return property value of connections
          */
-        private Connection getConnection() {
-            return connection;
+        private Map<String, Connection> getConnections() {
+            return connections;
         }
 
     }

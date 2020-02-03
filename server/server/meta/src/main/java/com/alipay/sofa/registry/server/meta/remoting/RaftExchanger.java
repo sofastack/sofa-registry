@@ -141,6 +141,9 @@ public class RaftExchanger {
                 RaftServerConfig raftServerConfig = new RaftServerConfig();
                 raftServerConfig.setMetricsLogger(METRICS_LOGGER);
                 raftServerConfig.setEnableMetrics(metaServerConfig.isEnableMetrics());
+                if (metaServerConfig.getRockDBCacheSize() > 0) {
+                    raftServerConfig.setRockDBCacheSize(metaServerConfig.getRockDBCacheSize());
+                }
 
                 raftServer.start(raftServerConfig);
             }
@@ -383,5 +386,14 @@ public class RaftExchanger {
      */
     public AtomicBoolean getClsStart() {
         return clsStart;
+    }
+
+    /**
+     * Getter method for property <tt>raftServer</tt>.
+     *
+     * @return property value of raftServer
+     */
+    public RaftServer getRaftServer() {
+        return raftServer;
     }
 }

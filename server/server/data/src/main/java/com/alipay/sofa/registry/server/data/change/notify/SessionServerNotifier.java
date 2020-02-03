@@ -19,6 +19,7 @@ package com.alipay.sofa.registry.server.data.change.notify;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.Executor;
 import java.util.concurrent.TimeUnit;
 
 import javax.annotation.PostConstruct;
@@ -38,6 +39,7 @@ import com.alipay.sofa.registry.remoting.exchange.Exchange;
 import com.alipay.sofa.registry.server.data.bootstrap.DataServerConfig;
 import com.alipay.sofa.registry.server.data.cache.DatumCache;
 import com.alipay.sofa.registry.server.data.change.DataSourceTypeEnum;
+import com.alipay.sofa.registry.server.data.executor.ExecutorFactory;
 import com.alipay.sofa.registry.server.data.remoting.sessionserver.SessionServerConnectionFactory;
 import com.alipay.sofa.registry.timer.AsyncHashedWheelTimer;
 import com.alipay.sofa.registry.timer.AsyncHashedWheelTimer.TaskFailedCallback;
@@ -73,7 +75,7 @@ public class SessionServerNotifier implements IDataChangeNotifier {
         ThreadFactoryBuilder threadFactoryBuilder = new ThreadFactoryBuilder();
         threadFactoryBuilder.setDaemon(true);
         asyncHashedWheelTimer = new AsyncHashedWheelTimer(threadFactoryBuilder.setNameFormat(
-            "Registry-SessionServerNotifier-WheelTimer").build(), 100, TimeUnit.MILLISECONDS, 1024,
+            "Registry-SessionServerNotifier-WheelTimer").build(), 500, TimeUnit.MILLISECONDS, 1024,
             dataServerConfig.getSessionServerNotifierRetryExecutorThreadSize(),
             dataServerConfig.getSessionServerNotifierRetryExecutorQueueSize(), threadFactoryBuilder
                 .setNameFormat("Registry-SessionServerNotifier-WheelExecutor-%d").build(),
@@ -103,7 +105,7 @@ public class SessionServerNotifier implements IDataChangeNotifier {
     public void notify(Datum datum, Long lastVersion) {
         DataChangeRequest request = new DataChangeRequest(datum.getDataInfoId(),
             datum.getDataCenter(), datum.getVersion());
-        List<Connection> connections = sessionServerConnectionFactory.getConnections();
+        List<Connection> connections = sessionServerConnectionFactory.getSessionConnections();
         for (Connection connection : connections) {
             doNotify(new NotifyCallback(connection, request));
         }
@@ -115,13 +117,11 @@ public class SessionServerNotifier implements IDataChangeNotifier {
         try {
             //check connection active
             if (!connection.isFine()) {
-                if (LOGGER.isInfoEnabled()) {
-                    LOGGER
-                        .info(String
-                            .format(
-                                "connection from sessionServer(%s) is not fine, so ignore notify, retryTimes=%s,request=%s",
-                                connection.getRemoteAddress(), notifyCallback.retryTimes, request));
-                }
+                LOGGER
+                    .info(String
+                        .format(
+                            "connection from sessionServer(%s) is not fine, so ignore notify, retryTimes=%s,request=%s",
+                            connection.getRemoteAddress(), notifyCallback.retryTimes, request));
                 return;
             }
             Server sessionServer = boltExchange.getServer(dataServerConfig.getPort());
@@ -139,26 +139,32 @@ public class SessionServerNotifier implements IDataChangeNotifier {
      * on failed, retry if necessary
      */
     private void onFailed(NotifyCallback notifyCallback) {
+
         DataChangeRequest request = notifyCallback.request;
         Connection connection = notifyCallback.connection;
         notifyCallback.retryTimes++;
 
+        //check version, if it's fall behind, stop retry
+        long _currentVersion = datumCache.get(request.getDataCenter(), request.getDataInfoId()).getVersion();
+        if (request.getVersion() != _currentVersion) {
+            LOGGER.info(String.format(
+                    "current version change %s, retry version is %s, stop before retry! retryTimes=%s, request=%s",
+                    _currentVersion, request.getVersion(), notifyCallback.retryTimes, request));
+            return;
+        }
+
         if (notifyCallback.retryTimes <= dataServerConfig.getNotifySessionRetryTimes()) {
             this.asyncHashedWheelTimer.newTimeout(timeout -> {
-                if (LOGGER.isInfoEnabled()) {
-                    LOGGER.info(String.format("retrying notify sessionServer(%s), retryTimes=%s, request=%s",
-                            connection.getRemoteAddress(), notifyCallback.retryTimes, request));
-                }
+                LOGGER.info(String.format("retrying notify sessionServer(%s), retryTimes=%s, request=%s",
+                        connection.getRemoteAddress(), notifyCallback.retryTimes, request));
                 //check version, if it's fall behind, stop retry
                 long currentVersion = datumCache.get(request.getDataCenter(), request.getDataInfoId()).getVersion();
                 if (request.getVersion() == currentVersion) {
                     doNotify(notifyCallback);
                 } else {
-                    if (LOGGER.isInfoEnabled()) {
-                        LOGGER.info(String.format(
-                                "current version change %s, retry version is %s, stop retry! retryTimes=%s, request=%s",
-                                currentVersion, request.getVersion(), notifyCallback.retryTimes, request));
-                    }
+                    LOGGER.info(String.format(
+                            "current version change %s, retry version is %s, stop retry! retryTimes=%s, request=%s",
+                            currentVersion, request.getVersion(), notifyCallback.retryTimes, request));
                 }
             }, getDelayTimeForRetry(notifyCallback.retryTimes), TimeUnit.MILLISECONDS);
         } else {
@@ -207,6 +213,11 @@ public class SessionServerNotifier implements IDataChangeNotifier {
                 "exception when notify sessionServer(%s), retryTimes=%s, request=%s",
                 connection.getRemoteAddress(), retryTimes, request), e);
             onFailed(this);
+        }
+
+        @Override
+        public Executor getExecutor() {
+            return ExecutorFactory.NOTIFY_SESSION_CALLBACK_EXECUTOR;
         }
 
     }

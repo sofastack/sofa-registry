@@ -16,19 +16,21 @@
  */
 package com.alipay.sofa.registry.remoting.jersey;
 
-import com.alipay.sofa.registry.common.model.store.URL;
-import com.alipay.sofa.registry.net.NetUtil;
-import com.alipay.sofa.registry.remoting.CallbackHandler;
-import com.alipay.sofa.registry.remoting.Channel;
-import com.alipay.sofa.registry.remoting.jersey.exchange.JerseyExchange;
+import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
+
+import java.net.InetSocketAddress;
+import java.util.concurrent.Executor;
+
 import org.glassfish.jersey.jackson.JacksonFeature;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.junit.Assert;
 import org.junit.Test;
 
-import java.net.InetSocketAddress;
-
-import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
+import com.alipay.sofa.registry.common.model.store.URL;
+import com.alipay.sofa.registry.net.NetUtil;
+import com.alipay.sofa.registry.remoting.CallbackHandler;
+import com.alipay.sofa.registry.remoting.Channel;
+import com.alipay.sofa.registry.remoting.jersey.exchange.JerseyExchange;
 
 /**
  * @author xuanbei
@@ -50,6 +52,11 @@ public class JerseyExchangeTest {
 
             @Override
             public void onException(Channel channel, Throwable exception) {
+            }
+
+            @Override
+            public Executor getExecutor() {
+                return null;
             }
         };
 
@@ -80,20 +87,11 @@ public class JerseyExchangeTest {
         Assert.assertNull(jerseyJettyServer.getChannels());
         Assert.assertNull(jerseyJettyServer.getChannel(new InetSocketAddress(9663)));
         Assert.assertNull(jerseyJettyServer.getChannel(url));
-        Assert.assertNull(jerseyJettyServer.getChannelHandlers());
         Assert.assertEquals(new InetSocketAddress(JERSEY_TEST_PORT),
             jerseyJettyServer.getLocalAddress());
         Assert.assertFalse(jerseyJettyServer.isClosed());
 
-        boolean isException = false;
-        try {
-            jerseyJettyServer.close(new JerseyChannel());
-        } catch (Throwable t) {
-            isException = true;
-        }
-        Assert.assertTrue(isException);
         jerseyJettyServer.sendCallback(new JerseyChannel(), new Object(), callbackHandler, 1000);
-        jerseyJettyServer.sendOneway(new JerseyChannel(), new Object());
         Assert.assertNull(jerseyJettyServer.sendSync(new JerseyChannel(), new Object(), 1000));
     }
 
@@ -101,15 +99,10 @@ public class JerseyExchangeTest {
                                   CallbackHandler callbackHandler) {
         Assert.assertEquals(NetUtil.getLocalSocketAddress(), jerseyClient.getLocalAddress());
         Assert.assertFalse(jerseyClient.isClosed());
-        Assert.assertNull(jerseyClient.getChannels());
-        Assert.assertNull(jerseyClient.getChannel(new InetSocketAddress(9663)));
         Assert.assertNull(jerseyClient.getChannel(url));
-        Assert.assertNull(jerseyClient.getChannelHandlers());
-        Assert.assertNull(jerseyClient.sendSync(new JerseyChannel(), new Object(), 1000));
+        Assert.assertNull(jerseyClient.sendSync(new URL(), new Object(), 1000));
         jerseyClient.close();
-        jerseyClient.close(new JerseyChannel());
-        jerseyClient.sendOneway(new JerseyChannel(), new Object());
-        jerseyClient.sendCallback(new JerseyChannel(), new Object(), callbackHandler, 1000);
+        jerseyClient.sendCallback(new URL(), new Object(), callbackHandler, 1000);
     }
 
     private void testJerseyChannel(JerseyChannel jerseyChannel) {

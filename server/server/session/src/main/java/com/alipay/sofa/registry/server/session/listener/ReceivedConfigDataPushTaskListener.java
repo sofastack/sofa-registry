@@ -16,6 +16,8 @@
  */
 package com.alipay.sofa.registry.server.session.listener;
 
+import org.springframework.beans.factory.annotation.Autowired;
+
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
 import com.alipay.sofa.registry.server.session.node.service.ClientNodeService;
 import com.alipay.sofa.registry.server.session.scheduler.task.ReceivedConfigDataPushTask;
@@ -27,7 +29,6 @@ import com.alipay.sofa.registry.task.batcher.TaskProcessor;
 import com.alipay.sofa.registry.task.listener.TaskEvent;
 import com.alipay.sofa.registry.task.listener.TaskEvent.TaskType;
 import com.alipay.sofa.registry.task.listener.TaskListener;
-import org.springframework.beans.factory.annotation.Autowired;
 
 /**
  *
@@ -37,17 +38,17 @@ import org.springframework.beans.factory.annotation.Autowired;
 public class ReceivedConfigDataPushTaskListener implements TaskListener {
 
     @Autowired
-    private SessionServerConfig                 sessionServerConfig;
+    private SessionServerConfig                          sessionServerConfig;
 
     @Autowired
-    private ClientNodeService                   clientNodeService;
+    private ClientNodeService                            clientNodeService;
 
     @Autowired
-    private ReceivedConfigDataPushTaskStrategy  receivedConfigDataPushTaskStrategy;
+    private ReceivedConfigDataPushTaskStrategy           receivedConfigDataPushTaskStrategy;
 
-    private TaskDispatcher<String, SessionTask> singleTaskDispatcher;
+    private volatile TaskDispatcher<String, SessionTask> singleTaskDispatcher;
 
-    private TaskProcessor                       clientNodeSingleTaskProcessor;
+    private TaskProcessor                                clientNodeSingleTaskProcessor;
 
     public ReceivedConfigDataPushTaskListener(TaskProcessor clientNodeSingleTaskProcessor) {
 
@@ -56,15 +57,20 @@ public class ReceivedConfigDataPushTaskListener implements TaskListener {
 
     public TaskDispatcher<String, SessionTask> getSingleTaskDispatcher() {
         if (singleTaskDispatcher == null) {
-            singleTaskDispatcher = TaskDispatchers.createDefaultSingleTaskDispatcher(
-                TaskType.RECEIVED_DATA_CONFIG_PUSH_TASK.getName(), clientNodeSingleTaskProcessor);
+            synchronized (this) {
+                if (singleTaskDispatcher == null) {
+                    singleTaskDispatcher = TaskDispatchers.createDefaultSingleTaskDispatcher(
+                        TaskType.RECEIVED_DATA_CONFIG_PUSH_TASK.getName(),
+                        clientNodeSingleTaskProcessor);
+                }
+            }
         }
         return singleTaskDispatcher;
     }
 
     @Override
-    public boolean support(TaskEvent event) {
-        return TaskType.RECEIVED_DATA_CONFIG_PUSH_TASK.equals(event.getTaskType());
+    public TaskType support() {
+        return TaskType.RECEIVED_DATA_CONFIG_PUSH_TASK;
     }
 
     @Override

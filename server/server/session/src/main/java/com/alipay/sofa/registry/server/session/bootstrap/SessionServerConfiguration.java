@@ -16,6 +16,17 @@
  */
 package com.alipay.sofa.registry.server.session.bootstrap;
 
+import java.util.ArrayList;
+import java.util.Collection;
+
+import org.glassfish.jersey.jackson.JacksonFeature;
+import org.glassfish.jersey.server.ResourceConfig;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Import;
+
 import com.alipay.sofa.registry.remoting.bolt.exchange.BoltExchange;
 import com.alipay.sofa.registry.remoting.exchange.Exchange;
 import com.alipay.sofa.registry.remoting.exchange.NodeExchanger;
@@ -68,6 +79,11 @@ import com.alipay.sofa.registry.server.session.node.service.DataNodeService;
 import com.alipay.sofa.registry.server.session.node.service.DataNodeServiceImpl;
 import com.alipay.sofa.registry.server.session.node.service.MetaNodeService;
 import com.alipay.sofa.registry.server.session.node.service.MetaNodeServiceImpl;
+import com.alipay.sofa.registry.server.session.provideData.ProvideDataProcessor;
+import com.alipay.sofa.registry.server.session.provideData.ProvideDataProcessorManager;
+import com.alipay.sofa.registry.server.session.provideData.processor.BlackListProvideDataProcessor;
+import com.alipay.sofa.registry.server.session.provideData.processor.RenewSnapshotProvideDataProcessor;
+import com.alipay.sofa.registry.server.session.provideData.processor.StopPushProvideDataProcessor;
 import com.alipay.sofa.registry.server.session.registry.Registry;
 import com.alipay.sofa.registry.server.session.registry.SessionRegistry;
 import com.alipay.sofa.registry.server.session.remoting.ClientNodeExchanger;
@@ -133,16 +149,6 @@ import com.alipay.sofa.registry.task.listener.DefaultTaskListenerManager;
 import com.alipay.sofa.registry.task.listener.TaskListener;
 import com.alipay.sofa.registry.task.listener.TaskListenerManager;
 import com.alipay.sofa.registry.util.PropertySplitter;
-import org.glassfish.jersey.jackson.JacksonFeature;
-import org.glassfish.jersey.server.ResourceConfig;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
-import org.springframework.boot.context.properties.EnableConfigurationProperties;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Import;
-
-import java.util.ArrayList;
-import java.util.Collection;
 
 /**
  *
@@ -168,7 +174,7 @@ public class SessionServerConfiguration {
         }
 
         @Bean
-        @ConditionalOnMissingBean(name = "sessionServerConfig")
+        @ConditionalOnMissingBean
         public SessionServerConfig sessionServerConfig(CommonConfig commonConfig) {
             return new SessionServerConfigBean(commonConfig);
         }
@@ -736,6 +742,39 @@ public class SessionServerConfiguration {
         @Bean
         public RenewService renewService() {
             return new DefaultRenewService();
+        }
+    }
+
+    @Configuration
+    public static class SessionProvideDataConfiguration {
+
+        @Bean
+        public ProvideDataProcessor provideDataProcessorManager() {
+            return new ProvideDataProcessorManager();
+        }
+
+        @Bean
+        public ProvideDataProcessor blackListProvideDataProcessor(ProvideDataProcessor provideDataProcessorManager) {
+            ProvideDataProcessor blackListProvideDataProcessor = new BlackListProvideDataProcessor();
+            ((ProvideDataProcessorManager) provideDataProcessorManager)
+                .addProvideDataProcessor(blackListProvideDataProcessor);
+            return blackListProvideDataProcessor;
+        }
+
+        @Bean
+        public ProvideDataProcessor renewSnapshotProvideDataProcessor(ProvideDataProcessor provideDataProcessorManager) {
+            ProvideDataProcessor renewSnapshotProvideDataProcessor = new RenewSnapshotProvideDataProcessor();
+            ((ProvideDataProcessorManager) provideDataProcessorManager)
+                .addProvideDataProcessor(renewSnapshotProvideDataProcessor);
+            return renewSnapshotProvideDataProcessor;
+        }
+
+        @Bean
+        public ProvideDataProcessor stopPushProvideDataProcessor(ProvideDataProcessor provideDataProcessorManager) {
+            ProvideDataProcessor stopPushProvideDataProcessor = new StopPushProvideDataProcessor();
+            ((ProvideDataProcessorManager) provideDataProcessorManager)
+                .addProvideDataProcessor(stopPushProvideDataProcessor);
+            return stopPushProvideDataProcessor;
         }
     }
 }

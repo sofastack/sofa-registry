@@ -66,6 +66,12 @@ public class PushTaskClosure implements TaskClosure {
             if (result == null) {
                 if (processingResult == ProcessingResult.Success) {
                     tasks.remove(task.getTaskId());
+                    if (tasks.isEmpty()) {
+                        LOGGER.info("Push all tasks success,dataInfoId={}", dataInfoId);
+                        if (taskClosure != null) {
+                            taskClosure.run(ProcessingResult.Success, null);
+                        }
+                    }
                 }
             }
         }
@@ -81,12 +87,7 @@ public class PushTaskClosure implements TaskClosure {
 
         pushTaskCheckAsyncHashedWheelTimer.newTimeout(timeout -> {
 
-            if (tasks.isEmpty()) {
-                LOGGER.info("Push all tasks success,dataInfoId={}",dataInfoId);
-                if (taskClosure != null) {
-                    taskClosure.run(ProcessingResult.Success, null);
-                }
-            } else {
+            if (!tasks.isEmpty()) {
                 LOGGER.warn("Push tasks found error tasks {},dataInfoId={}!", tasks.size(),dataInfoId);
                 if (taskClosure != null) {
                     taskClosure.run(ProcessingResult.PermanentError, null);

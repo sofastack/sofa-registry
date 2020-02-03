@@ -16,6 +16,13 @@
  */
 package com.alipay.sofa.registry.server.session.scheduler.task;
 
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.concurrent.Executor;
+import java.util.concurrent.TimeUnit;
+
 import com.alipay.sofa.registry.common.model.PushDataRetryRequest;
 import com.alipay.sofa.registry.common.model.store.DataInfo;
 import com.alipay.sofa.registry.common.model.store.Subscriber;
@@ -33,24 +40,17 @@ import com.alipay.sofa.registry.server.session.node.service.ClientNodeService;
 import com.alipay.sofa.registry.server.session.scheduler.ExecutorManager;
 import com.alipay.sofa.registry.server.session.store.Interests;
 import com.alipay.sofa.registry.server.session.strategy.ReceivedDataMultiPushTaskStrategy;
-import com.alipay.sofa.registry.task.Task;
 import com.alipay.sofa.registry.task.TaskClosure;
 import com.alipay.sofa.registry.task.batcher.TaskProcessor.ProcessingResult;
 import com.alipay.sofa.registry.task.listener.TaskEvent;
 import com.alipay.sofa.registry.timer.AsyncHashedWheelTimer;
-
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.concurrent.TimeUnit;
 
 /**
  *
  * @author shangyu.wh
  * @version $Id: SubscriberRegisterPushTask.java, v 0.1 2017-12-11 20:57 shangyu.wh Exp $
  */
-public class ReceivedDataMultiPushTask extends AbstractSessionTask implements TaskClosure {
+public class ReceivedDataMultiPushTask extends AbstractSessionTask {
 
     private static final Logger               LOGGER = LoggerFactory.getLogger("SESSION-PUSH",
                                                          "[Receive]");
@@ -139,6 +139,11 @@ public class ReceivedDataMultiPushTask extends AbstractSessionTask implements Ta
                         }
                     }
                 }
+
+                @Override
+                public Executor getExecutor() {
+                    return null;
+                }
             };
 
             clientNodeService.pushWithCallback(receivedDataPush, url, callbackHandler);
@@ -187,6 +192,11 @@ public class ReceivedDataMultiPushTask extends AbstractSessionTask implements Ta
                                             targetUrl, receivedData.getDataId(), receivedData.getGroup(), getTaskId(),
                                             dataPush, retryTimes);
                                     retrySendReceiveData(pushDataRetryRequest);
+                                }
+
+                                @Override
+                                public Executor getExecutor() {
+                                    return null;
                                 }
                             });
 
@@ -333,10 +343,4 @@ public class ReceivedDataMultiPushTask extends AbstractSessionTask implements Ta
         return checkRetryTimes(sessionServerConfig.getReceivedDataMultiPushTaskRetryTimes());
     }
 
-    @Override
-    public void run(ProcessingResult processingResult, Task task) {
-        if (taskClosure != null) {
-            taskClosure.run(processingResult, task);
-        }
-    }
 }

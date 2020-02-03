@@ -16,6 +16,10 @@
  */
 package com.alipay.sofa.registry.server.session.listener;
 
+import javax.annotation.PostConstruct;
+
+import org.springframework.beans.factory.annotation.Autowired;
+
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
 import com.alipay.sofa.registry.server.session.node.service.DataNodeService;
 import com.alipay.sofa.registry.server.session.scheduler.task.CancelDataTask;
@@ -29,7 +33,6 @@ import com.alipay.sofa.registry.task.batcher.TaskProcessor;
 import com.alipay.sofa.registry.task.listener.TaskEvent;
 import com.alipay.sofa.registry.task.listener.TaskEvent.TaskType;
 import com.alipay.sofa.registry.task.listener.TaskListener;
-import org.springframework.beans.factory.annotation.Autowired;
 
 /**
  *
@@ -67,18 +70,16 @@ public class CancelDataTaskListener implements TaskListener {
     @Autowired
     private TaskProcessor                       dataNodeSingleTaskProcessor;
 
-    public TaskDispatcher<String, SessionTask> getSingleTaskDispatcher() {
-        if (singleTaskDispatcher == null) {
-            singleTaskDispatcher = TaskDispatchers.createSingleTaskDispatcher(
-                TaskDispatchers.getDispatcherName(TaskType.CANCEL_DATA_TASK.getName()), 10000, 80,
-                1000, 100, dataNodeSingleTaskProcessor);
-        }
-        return singleTaskDispatcher;
+    @PostConstruct
+    public void init() {
+        singleTaskDispatcher = TaskDispatchers.createSingleTaskDispatcher(
+            TaskDispatchers.getDispatcherName(TaskType.CANCEL_DATA_TASK.getName()), 10000, 80,
+            1000, 100, dataNodeSingleTaskProcessor);
     }
 
     @Override
-    public boolean support(TaskEvent event) {
-        return TaskType.CANCEL_DATA_TASK.equals(event.getTaskType());
+    public TaskType support() {
+        return TaskType.CANCEL_DATA_TASK;
     }
 
     @Override
@@ -88,7 +89,8 @@ public class CancelDataTaskListener implements TaskListener {
             sessionWatchers, dataNodeService, sessionServerConfig);
 
         cancelDataTask.setTaskEvent(event);
-        getSingleTaskDispatcher().dispatch(cancelDataTask.getTaskId(), cancelDataTask,
+        singleTaskDispatcher.dispatch(cancelDataTask.getTaskId(), cancelDataTask,
             cancelDataTask.getExpiryTime());
     }
+
 }

@@ -16,17 +16,16 @@
  */
 package com.alipay.sofa.registry.server.data.bootstrap;
 
+import com.alipay.sofa.registry.net.NetUtil;
+import org.apache.commons.lang.builder.ToStringBuilder;
+import org.apache.commons.lang.builder.ToStringStyle;
+import org.springframework.boot.context.properties.ConfigurationProperties;
+
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
-
-import org.apache.commons.lang.builder.ToStringBuilder;
-import org.apache.commons.lang.builder.ToStringStyle;
-import org.springframework.boot.context.properties.ConfigurationProperties;
-
-import com.alipay.sofa.registry.net.NetUtil;
 
 /**
  *
@@ -89,19 +88,19 @@ public class DataServerConfig {
 
     private long               notifyDataSyncExecutorKeepAliveTime          = 60;
 
-    private long               notifySessionRetryFirstDelay                 = 1000;
+    private long               notifySessionRetryFirstDelay                 = 3000;
 
-    private long               notifySessionRetryIncrementDelay             = 1000;
+    private long               notifySessionRetryIncrementDelay             = 3000;
 
-    private int                notifySessionRetryTimes                      = 10;
+    private int                notifySessionRetryTimes                      = 5;
 
-    private int                publishExecutorMinPoolSize                   = 80;
+    private int                publishExecutorMinPoolSize                   = 200;
 
     private int                publishExecutorMaxPoolSize                   = 400;
 
     private int                publishExecutorQueueSize                     = 10000;
 
-    private int                renewDatumExecutorMinPoolSize                = 50;
+    private int                renewDatumExecutorMinPoolSize                = 100;
 
     private int                renewDatumExecutorMaxPoolSize                = 400;
 
@@ -115,7 +114,7 @@ public class DataServerConfig {
 
     private int                sessionServerNotifierRetryExecutorThreadSize = 10;
 
-    private int                sessionServerNotifierRetryExecutorQueueSize  = 1000000;
+    private int                sessionServerNotifierRetryExecutorQueueSize  = 10000;
 
     private int                renewEnableDelaySec                          = 30;
 

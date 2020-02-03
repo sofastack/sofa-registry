@@ -94,6 +94,8 @@ public class MetaServerConfigBean implements MetaServerConfig {
                                                                                  + File.separator
                                                                                  + "raftData";
 
+    private int                rockDBCacheSize                                 = 64;           //64M
+
     @Override
     public int getSessionServerPort() {
         return sessionServerPort;
@@ -601,6 +603,24 @@ public class MetaServerConfigBean implements MetaServerConfig {
      */
     public void setEnableMetrics(boolean enableMetrics) {
         this.enableMetrics = enableMetrics;
+    }
+
+    /**
+     * Getter method for property <tt>RockDBCacheSize</tt>.
+     *
+     * @return property value of RockDBCacheSize
+     */
+    public int getRockDBCacheSize() {
+        return rockDBCacheSize;
+    }
+
+    /**
+     * Setter method for property <tt>RockDBCacheSize</tt>.
+     *
+     * @param rockDBCacheSize  value to be assigned to property RockDBCacheSize
+     */
+    public void setRockDBCacheSize(int rockDBCacheSize) {
+        this.rockDBCacheSize = rockDBCacheSize;
     }
 
     @Override

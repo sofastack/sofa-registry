@@ -17,21 +17,15 @@
 package com.alipay.sofa.registry.remoting;
 
 import java.net.InetSocketAddress;
-import java.util.List;
 
 /**
  * The interface Endpoint.
+ *
  * @author shangyu.wh
+ * @author kezhu.wukz
  * @version $Id : Endpoint.java, v 0.1 2017-11-20 20:03 shangyu.wh Exp $
  */
 public interface Endpoint {
-
-    /**
-     * get channel handlers.
-     *
-     * @return channel handlers
-     */
-    List<ChannelHandler> getChannelHandlers();
 
     /**
      * get local address.
@@ -46,44 +40,10 @@ public interface Endpoint {
     void close();
 
     /**
-     * Close.
-     *
-     * @param channel the channel
-     */
-    void close(final Channel channel);
-
-    /**
      * is closed.
      *
      * @return closed boolean
      */
     boolean isClosed();
 
-    /**
-     * oneway send
-     * @param channel the channel 
-     * @param message the message
-     */
-    void sendOneway(final Channel channel, final Object message);
-
-    /**
-     * Sync send
-     *
-     * @param channel the channel 
-     * @param message the message 
-     * @param timeoutMillis the timeout millis 
-     * @return object
-     */
-    Object sendSync(final Channel channel, final Object message, final int timeoutMillis);
-
-    /**
-     * send with callback handler
-     *
-     * @param channel the channel 
-     * @param message the message 
-     * @param callbackHandler the callback handler 
-     * @param timeoutMillis the timeout millis
-     */
-    void sendCallback(final Channel channel, final Object message, CallbackHandler callbackHandler,
-                      final int timeoutMillis);
 }

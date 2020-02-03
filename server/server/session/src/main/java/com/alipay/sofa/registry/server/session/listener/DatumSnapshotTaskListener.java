@@ -53,8 +53,8 @@ public class DatumSnapshotTaskListener implements TaskListener {
     }
 
     @Override
-    public boolean support(TaskEvent event) {
-        return TaskType.DATUM_SNAPSHOT_TASK.equals(event.getTaskType());
+    public TaskType support() {
+        return TaskType.DATUM_SNAPSHOT_TASK;
     }
 
     @Override
