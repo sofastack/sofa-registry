@@ -339,7 +339,6 @@ public class DataServerBeanConfiguration {
         }
 
         @Bean
-        @ConditionalOnMissingBean
         public AbstractClientHandler fetchDataHandler() {
             return new FetchDataHandler();
         }
