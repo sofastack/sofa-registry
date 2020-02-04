@@ -73,7 +73,7 @@ public class MetaNodeExchanger implements NodeExchanger {
             LOGGER.warn("MetaNode Exchanger request send error!It will be retry once!Request url:{}", url);
 
             final Object result = client.sendSync(url, request.getRequestBody(),
-                    dataServerConfig.getRpcTimeout());
+                    request.getTimeout() != null ? request.getTimeout() : dataServerConfig.getRpcTimeout());
             return () -> result;
         }
     }

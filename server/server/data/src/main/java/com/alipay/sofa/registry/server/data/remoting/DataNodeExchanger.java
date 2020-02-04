@@ -61,7 +61,7 @@ public class DataNodeExchanger implements NodeExchanger {
         if (null != request.getCallBackHandler()) {
             client.sendCallback(request.getRequestUrl(), request.getRequestBody(),
                     request.getCallBackHandler(),
-                    dataServerConfig.getRpcTimeout());
+                    request.getTimeout() != null ? request.getTimeout() : dataServerConfig.getRpcTimeout());
             return () -> Response.ResultStatus.SUCCESSFUL;
         } else {
             final Object result = client.sendSync(request.getRequestUrl(), request.getRequestBody(),

@@ -16,6 +16,8 @@
  */
 package com.alipay.sofa.registry.server.meta.remoting;
 
+import org.springframework.beans.factory.annotation.Autowired;
+
 import com.alipay.sofa.registry.common.model.store.URL;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
@@ -28,7 +30,6 @@ import com.alipay.sofa.registry.remoting.exchange.RequestException;
 import com.alipay.sofa.registry.remoting.exchange.message.Request;
 import com.alipay.sofa.registry.remoting.exchange.message.Response;
 import com.alipay.sofa.registry.server.meta.bootstrap.MetaServerConfig;
-import org.springframework.beans.factory.annotation.Autowired;
 
 /**
  *
@@ -59,7 +60,7 @@ public class MetaServerExchanger implements NodeExchanger {
 
                     if (channel != null && channel.isConnected()) {
                         final Object result = metaServer.sendSync(channel, request.getRequestBody(),
-                                metaServerConfig.getDataNodeExchangeTimeout());
+                                request.getTimeout() != null ? request.getTimeout() : metaServerConfig.getDataNodeExchangeTimeout());
                         response = () -> result;
                     } else {
                         LOGGER.error("MetaServer Exchanger get channel error! channel with url:"

@@ -85,7 +85,7 @@ public class MetaNodeExchanger implements NodeExchanger {
             try {
 
                 final Object result = sessionClient.sendSync(url, request.getRequestBody(),
-                        sessionServerConfig.getDataNodeExchangeTimeOut());
+                        request.getTimeout() != null ? request.getTimeout() : sessionServerConfig.getDataNodeExchangeTimeOut());
                 response = () -> result;
 
             } catch (Exception e) {
@@ -95,7 +95,7 @@ public class MetaNodeExchanger implements NodeExchanger {
                 LOGGER.warn("MetaNode Exchanger request send error!It will be retry once!Request url:{}", url);
 
                 final Object result = sessionClient.sendSync(url, request.getRequestBody(),
-                        sessionServerConfig.getDataNodeExchangeTimeOut());
+                        request.getTimeout() != null ? request.getTimeout() : sessionServerConfig.getDataNodeExchangeTimeOut());
                 response = () -> result;
             }
         } catch (Exception e) {
