@@ -100,7 +100,7 @@ public class DataChangeFetchTask extends AbstractSessionTask {
         Datum datum = getDatumCache();
 
         if (datum != null) {
-            PushTaskClosure pushTaskClosure = getTaskClosure();
+            PushTaskClosure pushTaskClosure = getTaskClosure(datum.getVersion());
 
             for (ScopeEnum scopeEnum : ScopeEnum.values()) {
                 Map<InetSocketAddress, Map<String, Subscriber>> map = getCache(scopeEnum);
@@ -188,33 +188,35 @@ public class DataChangeFetchTask extends AbstractSessionTask {
         return subscribersSend;
     }
 
-    public PushTaskClosure getTaskClosure() {
+    public PushTaskClosure getTaskClosure(Long version) {
         //this for all this dataInfoId push result get and call back to change version
         PushTaskClosure pushTaskClosure = new PushTaskClosure(executorManager.getPushTaskCheckAsyncHashedWheelTimer(),
                 sessionServerConfig, dataChangeRequest.getDataInfoId());
         pushTaskClosure.setTaskClosure((status, task) -> {
             String dataCenter = dataChangeRequest.getDataCenter();
             String dataInfoId = dataChangeRequest.getDataInfoId();
-            Long version = dataChangeRequest.getVersion();
+            Long changeVersion = dataChangeRequest.getVersion();
             if (status == ProcessingResult.Success) {
 
                 if (sessionServerConfig.isStopPushSwitch()) {
-                    LOGGER.info("Stop Push switch on,dataCenter {} dataInfoId {} version {} can not be update!",
-                            dataCenter, dataInfoId, version);
+                    LOGGER.info("Stop Push switch on, dataCenter:{}, dataInfoId:{}, changeVersion:{}, pushVersion:{}, can not be update!",
+                            dataCenter, dataInfoId, changeVersion, version);
                     return;
                 }
                 boolean result = sessionInterests.checkAndUpdateInterestVersions(dataCenter, dataInfoId, version);
                 if (result) {
-                    LOGGER.info("Push all tasks success,dataCenter:{} dataInfoId:{} version:{} update!", dataCenter,
-                            dataInfoId, version);
+                    LOGGER.info("Push all tasks success, dataCenter:{}, dataInfoId:{}, changeVersion:{}, pushVersion:{}, update!", dataCenter,
+                            dataInfoId, changeVersion, version);
                 } else {
                     LOGGER.info("Push all tasks success,but dataCenter:{} dataInfoId:{} version:{} need not update!",
                             dataCenter, dataInfoId, version);
+                    LOGGER.info("Push all tasks success, but dataCenter:{}, dataInfoId:{}, changeVersion:{}, pushVersion:{}, need not update!",
+                            dataCenter, dataInfoId, changeVersion, version);
                 }
             } else {
                 LOGGER.warn(
-                        "Push tasks found error,subscribers version can not be update!dataCenter:{} dataInfoId:{} version:{}",
-                        dataCenter, dataInfoId, version);
+                        "Push tasks found error, subscribers version can not be update! dataCenter:{}, dataInfoId:{}, changeVersion:{}, pushVersion:{}",
+                        dataCenter, dataInfoId, changeVersion, version);
             }
         });
         return pushTaskClosure;
@@ -247,7 +249,8 @@ public class DataChangeFetchTask extends AbstractSessionTask {
             return false;
         };
         ReceivedData receivedData = ReceivedDataConverter
-                .getReceivedDataMulti(datum, scopeEnum, subscriberRegisterIdList, clientCell, zonePredicate);
+                .getReceivedDataMulti(datum, scopeEnum, subscriberRegisterIdList,
+                        sessionServerConfig.getSessionServerRegion(), zonePredicate);
 
         //trigger push to client node
         Map<ReceivedData, URL> parameter = new HashMap<>();
