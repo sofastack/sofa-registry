@@ -36,13 +36,6 @@ public class DataServerChangeEvent implements Event {
         CONNECT_TASK, META_NOTIFY, REGISTER_META
     }
 
-    /**
-     * node type enum
-     */
-    public enum FromType {
-        CONNECT_TASK, META_NOTIFY, REGISTER_META
-    }
-
     private DataServerChangeItem dataServerChangeItem;
 
     private FromType             fromType;
