@@ -245,10 +245,6 @@ public class LocalDataServerChangeEventHandler extends
 
             ConsistentHash<DataNode> consistentHashOld = dataServerCache
                 .calculateOldConsistentHash(dataServerConfig.getLocalDataCenter());
-            if (consistentHash == null) {
-                LOGGER.error("Calculate Old ConsistentHash error!");
-                throw new RuntimeException("Calculate Old ConsistentHash error!");
-            }
 
             //compute new triad for every datum in cache
             Map<String, Map<String, Datum>> allMap = datumCache.getAll();

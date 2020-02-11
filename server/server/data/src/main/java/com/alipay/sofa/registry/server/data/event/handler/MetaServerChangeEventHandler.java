@@ -150,8 +150,10 @@ public class MetaServerChangeEventHandler extends AbstractEventHandler<MetaServe
                         LOGGER
                             .error(
 
-                                "[MetaServerChangeEventHandler] register data node send error!retry once leader :{} error",
-                                newLeader.getIp(), e);
+                                String
+                                    .format(
+                                        "[MetaServerChangeEventHandler] register data node send error!retry once leader :%s error",
+                                        newLeader.getIp()), e);
                     }
                     if (obj instanceof NodeChangeResult) {
                         NodeChangeResult<DataNode> result = (NodeChangeResult<DataNode>) obj;

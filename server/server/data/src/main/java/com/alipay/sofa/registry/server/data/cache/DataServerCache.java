@@ -29,6 +29,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import com.alipay.sofa.registry.common.model.metaserver.DataNode;
+import com.alipay.sofa.registry.common.model.store.URL;
 import com.alipay.sofa.registry.consistency.hash.ConsistentHash;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
@@ -37,6 +38,7 @@ import com.alipay.sofa.registry.server.data.event.DataServerChangeEvent.FromType
 import com.alipay.sofa.registry.server.data.event.handler.AfterWorkingProcessHandler;
 import com.alipay.sofa.registry.server.data.node.DataNodeStatus;
 import com.alipay.sofa.registry.server.data.util.LocalServerStatusEnum;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 
 /**
@@ -372,25 +374,27 @@ public class DataServerCache {
 
     /**
      * calculate ConsistentHash base current data server list
-     * @param dataCenter
-     * @return
+     * do not return null, otherwise will lead to unexpected consequences
+     *
+     * 20200211 update: bugfix: empty dataServerList cause NPE because calculateOldConsistentHash return null
      */
     public ConsistentHash<DataNode> calculateOldConsistentHash(String dataCenter) {
         Map<String, Map<String, DataNode>> dataServerMap = dataServerChangeItem.getServerMap();
         Map<String, DataNode> dataNodeMap = dataServerMap.get(dataCenter);
 
+        Collection<DataNode> dataServerNodes;
         if (dataNodeMap != null && !dataNodeMap.isEmpty()) {
-
-            Collection<DataNode> dataServerNodes = dataNodeMap.values();
-
-            ConsistentHash<DataNode> consistentHash = new ConsistentHash<>(
-                dataServerConfig.getNumberOfReplicas(), dataServerNodes);
-
-            return consistentHash;
+            dataServerNodes = dataNodeMap.values();
         } else {
-            LOGGER.warn("Calculate Old BackupTriad,old dataServer list is empty!");
-            return null;
+            dataServerNodes = Lists.newArrayList(new DataNode(new URL(DataServerConfig.IP),
+                dataCenter));
+            LOGGER
+                .error("[calculateOldConsistentHash] Old dataServer list is empty, add on the local IP");
         }
+        ConsistentHash<DataNode> consistentHash = new ConsistentHash<>(
+            dataServerConfig.getNumberOfReplicas(), dataServerNodes);
+
+        return consistentHash;
     }
 
     /**
