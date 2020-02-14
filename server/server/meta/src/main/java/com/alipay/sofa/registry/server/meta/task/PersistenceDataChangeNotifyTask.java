@@ -16,6 +16,8 @@
  */
 package com.alipay.sofa.registry.server.meta.task;
 
+import java.util.Set;
+
 import com.alipay.sofa.registry.common.model.Node.NodeType;
 import com.alipay.sofa.registry.common.model.metaserver.NotifyProvideDataChange;
 import com.alipay.sofa.registry.server.meta.bootstrap.MetaServerConfig;
@@ -49,9 +51,11 @@ public class PersistenceDataChangeNotifyTask extends AbstractMetaServerTask {
 
     @Override
     public void execute() {
-        if (notifyProvideDataChange.getNodeType() == NodeType.DATA) {
+        Set<NodeType> nodeTypes = notifyProvideDataChange.getNodeTypes();
+        if (nodeTypes.contains(NodeType.DATA)) {
             dataNodeService.notifyProvideDataChange(notifyProvideDataChange);
-        } else {
+        }
+        if (nodeTypes.contains(NodeType.SESSION)) {
             sessionNodeService.notifyProvideDataChange(notifyProvideDataChange);
         }
     }

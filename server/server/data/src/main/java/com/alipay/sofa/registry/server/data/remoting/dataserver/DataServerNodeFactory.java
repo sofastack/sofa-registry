@@ -208,13 +208,4 @@ public class DataServerNodeFactory {
         return null;
     }
 
-    /**
-     * get all datacenters
-     *
-     * @return
-     */
-    public static Set<String> getAllDataCenters() {
-        return MAP.keySet();
-    }
-
 }

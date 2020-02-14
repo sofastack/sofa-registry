@@ -48,11 +48,11 @@ public class MetaServerConfigBean implements MetaServerConfig {
 
     private int                schedulerHeartbeatExpBackOffBound               = 10;
 
-    private int                schedulerGetDataChangeTimeout                   = 10;
+    private int                schedulerGetDataChangeTimeout                   = 5;
 
-    private int                schedulerGetDataChangeFirstDelay                = 10;
+    private int                schedulerGetDataChangeFirstDelay                = 5;
 
-    private int                schedulerGetDataChangeExpBackOffBound           = 20;
+    private int                schedulerGetDataChangeExpBackOffBound           = 5;
 
     private int                schedulerConnectMetaServerTimeout               = 3;
 
@@ -95,6 +95,32 @@ public class MetaServerConfigBean implements MetaServerConfig {
                                                                                  + "raftData";
 
     private int                rockDBCacheSize                                 = 64;           //64M
+
+    private int                heartbeatCheckExecutorMinSize                   = 3;
+    private int                heartbeatCheckExecutorMaxSize                   = 10;
+    private int                heartbeatCheckExecutorQueueSize                 = 1024;
+
+    private int                checkDataChangeExecutorMinSize                  = 3;
+    private int                checkDataChangeExecutorMaxSize                  = 10;
+    private int                checkDataChangeExecutorQueueSize                = 1024;
+
+    private int                getOtherDataCenterChangeExecutorMinSize         = 3;
+    private int                getOtherDataCenterChangeExecutorMaxSize         = 10;
+    private int                getOtherDataCenterChangeExecutorQueueSize       = 1024;
+
+    private int                connectMetaServerExecutorMinSize                = 3;
+    private int                connectMetaServerExecutorMaxSize                = 10;
+    private int                connectMetaServerExecutorQueueSize              = 1024;
+
+    private int                checkNodeListChangePushExecutorMinSize          = 3;
+    private int                checkNodeListChangePushExecutorMaxSize          = 10;
+    private int                checkNodeListChangePushExecutorQueueSize        = 1024;
+
+    private int                raftClientRefreshExecutorMinSize                = 3;
+    private int                raftClientRefreshExecutorMaxSize                = 10;
+    private int                raftClientRefreshExecutorQueueSize              = 1024;
+
+    private int                metaSchedulerPoolSize                           = 6;
 
     @Override
     public int getSessionServerPort() {
@@ -621,6 +647,200 @@ public class MetaServerConfigBean implements MetaServerConfig {
      */
     public void setRockDBCacheSize(int rockDBCacheSize) {
         this.rockDBCacheSize = rockDBCacheSize;
+    }
+
+    /**
+     * Getter method for property <tt>heartbeatCheckExecutorMinSize</tt>.
+     *
+     * @return property value of heartbeatCheckExecutorMinSize
+     */
+    @Override
+    public int getHeartbeatCheckExecutorMinSize() {
+        return heartbeatCheckExecutorMinSize;
+    }
+
+    /**
+     * Getter method for property <tt>heartbeatCheckExecutorMaxSize</tt>.
+     *
+     * @return property value of heartbeatCheckExecutorMaxSize
+     */
+    @Override
+    public int getHeartbeatCheckExecutorMaxSize() {
+        return heartbeatCheckExecutorMaxSize;
+    }
+
+    /**
+     * Getter method for property <tt>heartbeatCheckExecutorQueueSize</tt>.
+     *
+     * @return property value of heartbeatCheckExecutorQueueSize
+     */
+    @Override
+    public int getHeartbeatCheckExecutorQueueSize() {
+        return heartbeatCheckExecutorQueueSize;
+    }
+
+    /**
+     * Getter method for property <tt>checkDataChangeExecutorMinSize</tt>.
+     *
+     * @return property value of checkDataChangeExecutorMinSize
+     */
+    @Override
+    public int getCheckDataChangeExecutorMinSize() {
+        return checkDataChangeExecutorMinSize;
+    }
+
+    /**
+     * Getter method for property <tt>checkDataChangeExecutorMaxSize</tt>.
+     *
+     * @return property value of checkDataChangeExecutorMaxSize
+     */
+    @Override
+    public int getCheckDataChangeExecutorMaxSize() {
+        return checkDataChangeExecutorMaxSize;
+    }
+
+    /**
+     * Getter method for property <tt>checkDataChangeExecutorQueueSize</tt>.
+     *
+     * @return property value of checkDataChangeExecutorQueueSize
+     */
+    @Override
+    public int getCheckDataChangeExecutorQueueSize() {
+        return checkDataChangeExecutorQueueSize;
+    }
+
+    /**
+     * Getter method for property <tt>getOtherDataCenterChangeExecutorMinSize</tt>.
+     *
+     * @return property value of getOtherDataCenterChangeExecutorMinSize
+     */
+    @Override
+    public int getGetOtherDataCenterChangeExecutorMinSize() {
+        return getOtherDataCenterChangeExecutorMinSize;
+    }
+
+    /**
+     * Getter method for property <tt>getOtherDataCenterChangeExecutorMaxSize</tt>.
+     *
+     * @return property value of getOtherDataCenterChangeExecutorMaxSize
+     */
+    @Override
+    public int getGetOtherDataCenterChangeExecutorMaxSize() {
+        return getOtherDataCenterChangeExecutorMaxSize;
+    }
+
+    /**
+     * Getter method for property <tt>getOtherDataCenterChangeExecutorQueueSize</tt>.
+     *
+     * @return property value of getOtherDataCenterChangeExecutorQueueSize
+     */
+    @Override
+    public int getGetOtherDataCenterChangeExecutorQueueSize() {
+        return getOtherDataCenterChangeExecutorQueueSize;
+    }
+
+    /**
+     * Getter method for property <tt>connectMetaServerExecutorMinSize</tt>.
+     *
+     * @return property value of connectMetaServerExecutorMinSize
+     */
+    @Override
+    public int getConnectMetaServerExecutorMinSize() {
+        return connectMetaServerExecutorMinSize;
+    }
+
+    /**
+     * Getter method for property <tt>connectMetaServerExecutorMaxSize</tt>.
+     *
+     * @return property value of connectMetaServerExecutorMaxSize
+     */
+    @Override
+    public int getConnectMetaServerExecutorMaxSize() {
+        return connectMetaServerExecutorMaxSize;
+    }
+
+    /**
+     * Getter method for property <tt>connectMetaServerExecutorQueueSize</tt>.
+     *
+     * @return property value of connectMetaServerExecutorQueueSize
+     */
+    @Override
+    public int getConnectMetaServerExecutorQueueSize() {
+        return connectMetaServerExecutorQueueSize;
+    }
+
+    /**
+     * Getter method for property <tt>checkNodeListChangePushExecutorMinSize</tt>.
+     *
+     * @return property value of checkNodeListChangePushExecutorMinSize
+     */
+    @Override
+    public int getCheckNodeListChangePushExecutorMinSize() {
+        return checkNodeListChangePushExecutorMinSize;
+    }
+
+    /**
+     * Getter method for property <tt>checkNodeListChangePushExecutorMaxSize</tt>.
+     *
+     * @return property value of checkNodeListChangePushExecutorMaxSize
+     */
+    @Override
+    public int getCheckNodeListChangePushExecutorMaxSize() {
+        return checkNodeListChangePushExecutorMaxSize;
+    }
+
+    /**
+     * Getter method for property <tt>checkNodeListChangePushExecutorQueueSize</tt>.
+     *
+     * @return property value of checkNodeListChangePushExecutorQueueSize
+     */
+    @Override
+    public int getCheckNodeListChangePushExecutorQueueSize() {
+        return checkNodeListChangePushExecutorQueueSize;
+    }
+
+    /**
+     * Getter method for property <tt>raftClientRefreshExecutorMinSize</tt>.
+     *
+     * @return property value of raftClientRefreshExecutorMinSize
+     */
+    @Override
+    public int getRaftClientRefreshExecutorMinSize() {
+        return raftClientRefreshExecutorMinSize;
+    }
+
+    /**
+     * Getter method for property <tt>raftClientRefreshExecutorMaxSize</tt>.
+     *
+     * @return property value of raftClientRefreshExecutorMaxSize
+     */
+    @Override
+    public int getRaftClientRefreshExecutorMaxSize() {
+        return raftClientRefreshExecutorMaxSize;
+    }
+
+    /**
+     * Getter method for property <tt>raftClientRefreshExecutorQueueSize</tt>.
+     *
+     * @return property value of raftClientRefreshExecutorQueueSize
+     */
+    @Override
+    public int getRaftClientRefreshExecutorQueueSize() {
+        return raftClientRefreshExecutorQueueSize;
+    }
+
+    /**
+     * Setter method for property <tt>metaSchedulerPoolSize </tt>.
+     *
+     * @param metaSchedulerPoolSize  value to be assigned to property metaSchedulerPoolSize
+     */
+    public void setMetaSchedulerPoolSize(int metaSchedulerPoolSize) {
+        this.metaSchedulerPoolSize = metaSchedulerPoolSize;
+    }
+
+    @Override
+    public int getMetaSchedulerPoolSize() {
+        return metaSchedulerPoolSize;
     }
 
     @Override

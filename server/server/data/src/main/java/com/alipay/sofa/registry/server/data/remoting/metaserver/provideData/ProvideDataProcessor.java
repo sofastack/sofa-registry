@@ -14,30 +14,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alipay.sofa.registry.server.data.event;
+package com.alipay.sofa.registry.server.data.remoting.metaserver.provideData;
 
-import java.util.Set;
+import com.alipay.sofa.registry.common.model.metaserver.ProvideData;
 
 /**
  *
- * @author qian.lqlq
- * @version $Id: StartTaskEvent.java, v 0.1 2018-03-13 15:13 qian.lqlq Exp $
+ * @author kezhu.wukz
+ * @version 1.0: ProvideDataProcessor.java, v 0.1 2019-12-25 17:26 kezhu.wukz Exp $
  */
-public class StartTaskEvent implements Event {
+public interface ProvideDataProcessor {
 
-    private final Set<StartTaskTypeEnum> suitableTypes;
+    void changeDataProcess(ProvideData provideData);
 
-    public StartTaskEvent(Set<StartTaskTypeEnum> suitableTypes) {
-        this.suitableTypes = suitableTypes;
-    }
-
-    /**
-     * Getter method for property <tt>suitableTypes</tt>.
-     *
-     * @return property value of suitableTypes
-     */
-    public Set<StartTaskTypeEnum> getSuitableTypes() {
-        return suitableTypes;
-    }
-
+    boolean support(ProvideData provideData);
 }

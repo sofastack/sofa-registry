@@ -16,6 +16,26 @@
  */
 package com.alipay.sofa.registry.test.resource.data;
 
+import static com.alipay.sofa.registry.client.constants.ValueConstants.DEFAULT_GROUP;
+import static com.alipay.sofa.registry.common.model.constants.ValueConstants.DEFAULT_INSTANCE_ID;
+import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import javax.ws.rs.client.Entity;
+import javax.ws.rs.core.GenericType;
+import javax.ws.rs.core.MediaType;
+
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.springframework.test.context.junit4.SpringRunner;
+
 import com.alipay.sofa.registry.client.api.model.RegistryType;
 import com.alipay.sofa.registry.client.api.registration.PublisherRegistration;
 import com.alipay.sofa.registry.client.api.registration.SubscriberRegistration;
@@ -23,24 +43,6 @@ import com.alipay.sofa.registry.common.model.dataserver.Datum;
 import com.alipay.sofa.registry.common.model.store.Publisher;
 import com.alipay.sofa.registry.core.model.ScopeEnum;
 import com.alipay.sofa.registry.test.BaseIntegrationTest;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.springframework.test.context.junit4.SpringRunner;
-
-import javax.ws.rs.client.Entity;
-import javax.ws.rs.core.GenericType;
-import javax.ws.rs.core.MediaType;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
-import static com.alipay.sofa.registry.client.constants.ValueConstants.DEFAULT_GROUP;
-import static com.alipay.sofa.registry.common.model.constants.ValueConstants.DEFAULT_INSTANCE_ID;
-import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 
 /**
  * @author xuanbei
@@ -141,6 +143,7 @@ public class DataDigestResourceTest extends BaseIntegrationTest {
             .path("digest/data/serverList/query").request(APPLICATION_JSON)
             .get(new GenericType<Map<String, List<String>>>() {
             });
-        assertEquals(dataMap.size(), 0);
+        assertEquals(1, dataMap.size());
+        assertEquals(0, dataMap.get(LOCAL_DATACENTER).size());
     }
 }

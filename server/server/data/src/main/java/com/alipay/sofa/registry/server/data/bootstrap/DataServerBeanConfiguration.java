@@ -25,7 +25,6 @@ import java.util.concurrent.TimeUnit;
 
 import org.glassfish.jersey.jackson.JacksonFeature;
 import org.glassfish.jersey.server.ResourceConfig;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
@@ -38,6 +37,7 @@ import com.alipay.sofa.registry.remoting.jersey.exchange.JerseyExchange;
 import com.alipay.sofa.registry.server.data.cache.CacheDigestTask;
 import com.alipay.sofa.registry.server.data.cache.DataServerCache;
 import com.alipay.sofa.registry.server.data.cache.DatumCache;
+import com.alipay.sofa.registry.server.data.cache.LocalDatumStorage;
 import com.alipay.sofa.registry.server.data.change.DataChangeHandler;
 import com.alipay.sofa.registry.server.data.change.event.DataChangeEventCenter;
 import com.alipay.sofa.registry.server.data.change.notify.BackUpNotifier;
@@ -80,6 +80,9 @@ import com.alipay.sofa.registry.server.data.remoting.metaserver.MetaServerConnec
 import com.alipay.sofa.registry.server.data.remoting.metaserver.handler.NotifyProvideDataChangeHandler;
 import com.alipay.sofa.registry.server.data.remoting.metaserver.handler.ServerChangeHandler;
 import com.alipay.sofa.registry.server.data.remoting.metaserver.handler.StatusConfirmHandler;
+import com.alipay.sofa.registry.server.data.remoting.metaserver.provideData.ProvideDataProcessor;
+import com.alipay.sofa.registry.server.data.remoting.metaserver.provideData.ProvideDataProcessorManager;
+import com.alipay.sofa.registry.server.data.remoting.metaserver.provideData.processor.DatumExpireProvideDataProcessor;
 import com.alipay.sofa.registry.server.data.remoting.metaserver.task.ConnectionRefreshMetaTask;
 import com.alipay.sofa.registry.server.data.remoting.sessionserver.SessionServerConnectionFactory;
 import com.alipay.sofa.registry.server.data.remoting.sessionserver.disconnect.DisconnectEventHandler;
@@ -137,14 +140,26 @@ public class DataServerBeanConfiguration {
             return new DataNodeStatus();
         }
 
+        @Bean(name = "PropertySplitter")
+        public PropertySplitter propertySplitter() {
+            return new PropertySplitter();
+        }
+
+    }
+
+    @Configuration
+    public static class DataServerStorageConfiguration {
+
         @Bean
+        @ConditionalOnMissingBean
         public DatumCache datumCache() {
             return new DatumCache();
         }
 
-        @Bean(name = "PropertySplitter")
-        public PropertySplitter propertySplitter() {
-            return new PropertySplitter();
+        @Bean
+        @ConditionalOnMissingBean
+        public LocalDatumStorage localDatumStorage() {
+            return new LocalDatumStorage();
         }
 
     }
@@ -161,6 +176,7 @@ public class DataServerBeanConfiguration {
 
     @Configuration
     public static class SessionRemotingConfiguration {
+
         @Bean
         public Exchange jerseyExchange() {
             return new JerseyExchange();
@@ -317,7 +333,8 @@ public class DataServerBeanConfiguration {
         }
 
         @Bean
-        public AbstractClientHandler notifyDataSyncHandler() {
+        @ConditionalOnMissingBean
+        public NotifyDataSyncHandler notifyDataSyncHandler() {
             return new NotifyDataSyncHandler();
         }
 
@@ -340,6 +357,32 @@ public class DataServerBeanConfiguration {
         public NotifyProvideDataChangeHandler notifyProvideDataChangeHandler() {
             return new NotifyProvideDataChangeHandler();
         }
+
+        @Bean(name = "afterWorkProcessors")
+        public List<AfterWorkingProcess> afterWorkingProcessors() {
+            List<AfterWorkingProcess> list = new ArrayList<>();
+            list.add(renewDatumHandler());
+            list.add(datumLeaseManager());
+            list.add(disconnectEventHandler());
+            list.add(notifyDataSyncHandler());
+            return list;
+        }
+
+        @Bean
+        public AfterWorkingProcessHandler afterWorkingProcessHandler() {
+            return new AfterWorkingProcessHandler();
+        }
+
+        @Bean
+        public DatumLeaseManager datumLeaseManager() {
+            return new DatumLeaseManager();
+        }
+
+        @Bean
+        public DisconnectEventHandler disconnectEventHandler() {
+            return new DisconnectEventHandler();
+        }
+
     }
 
     @Configuration
@@ -377,6 +420,7 @@ public class DataServerBeanConfiguration {
             list.add(backUpNotifier());
             return list;
         }
+
     }
 
     @Configuration
@@ -401,6 +445,7 @@ public class DataServerBeanConfiguration {
         public StoreServiceFactory storeServiceFactory() {
             return new StoreServiceFactory();
         }
+
     }
 
     @Configuration
@@ -432,18 +477,8 @@ public class DataServerBeanConfiguration {
         }
 
         @Bean
-        public DatumLeaseManager datumLeaseManager() {
-            return new DatumLeaseManager();
-        }
-
-        @Bean
         public GetSyncDataHandler getSyncDataHandler() {
             return new GetSyncDataHandler();
-        }
-
-        @Bean
-        public DisconnectEventHandler disconnectEventHandler() {
-            return new DisconnectEventHandler();
         }
 
         @Bean
@@ -455,6 +490,7 @@ public class DataServerBeanConfiguration {
         public DataChangeEventCenter dataChangeEventCenter() {
             return new DataChangeEventCenter();
         }
+
     }
 
     @Configuration
@@ -488,6 +524,7 @@ public class DataServerBeanConfiguration {
         public IMetaServerService metaServerService() {
             return new DefaultMetaServiceImpl();
         }
+
     }
 
     @Configuration
@@ -506,39 +543,9 @@ public class DataServerBeanConfiguration {
         }
 
         @Bean
+        @ConditionalOnMissingBean
         public DataDigestResource dataDigestResource() {
             return new DataDigestResource();
-        }
-    }
-
-    @Configuration
-    public static class AfterWorkingProcessConfiguration {
-
-        @Autowired
-        DisconnectEventHandler disconnectEventHandler;
-
-        @Autowired
-        AbstractClientHandler  notifyDataSyncHandler;
-
-        @Autowired
-        RenewDatumHandler      renewDatumHandler;
-
-        @Autowired
-        DatumLeaseManager      datumLeaseManager;
-
-        @Bean(name = "afterWorkProcessors")
-        public List<AfterWorkingProcess> afterWorkingProcessors() {
-            List<AfterWorkingProcess> list = new ArrayList<>();
-            list.add(renewDatumHandler);
-            list.add(datumLeaseManager);
-            list.add(disconnectEventHandler);
-            list.add((NotifyDataSyncHandler) notifyDataSyncHandler);
-            return list;
-        }
-
-        @Bean
-        public AfterWorkingProcessHandler afterWorkingProcessHandler() {
-            return new AfterWorkingProcessHandler();
         }
 
     }
@@ -546,11 +553,8 @@ public class DataServerBeanConfiguration {
     @Configuration
     public static class ExecutorConfiguration {
 
-        @Autowired
-        DataServerConfig dataServerConfig;
-
         @Bean(name = "publishProcessorExecutor")
-        public ThreadPoolExecutor publishProcessorExecutor() {
+        public ThreadPoolExecutor publishProcessorExecutor(DataServerConfig dataServerConfig) {
             return new ThreadPoolExecutorDataServer("PublishProcessorExecutor",
                 dataServerConfig.getPublishExecutorMinPoolSize(),
                 dataServerConfig.getPublishExecutorMaxPoolSize(), 300, TimeUnit.SECONDS,
@@ -559,7 +563,7 @@ public class DataServerBeanConfiguration {
         }
 
         @Bean(name = "renewDatumProcessorExecutor")
-        public ThreadPoolExecutor renewDatumProcessorExecutor() {
+        public ThreadPoolExecutor renewDatumProcessorExecutor(DataServerConfig dataServerConfig) {
             return new ThreadPoolExecutorDataServer("RenewDatumProcessorExecutor",
                 dataServerConfig.getRenewDatumExecutorMinPoolSize(),
                 dataServerConfig.getRenewDatumExecutorMaxPoolSize(), 300, TimeUnit.SECONDS,
@@ -568,7 +572,7 @@ public class DataServerBeanConfiguration {
         }
 
         @Bean(name = "getDataProcessorExecutor")
-        public ThreadPoolExecutor getDataProcessorExecutor() {
+        public ThreadPoolExecutor getDataProcessorExecutor(DataServerConfig dataServerConfig) {
             return new ThreadPoolExecutorDataServer("GetDataProcessorExecutor",
                 dataServerConfig.getGetDataExecutorMinPoolSize(),
                 dataServerConfig.getGetDataExecutorMaxPoolSize(),
@@ -578,4 +582,23 @@ public class DataServerBeanConfiguration {
         }
 
     }
+
+    @Configuration
+    public static class DataProvideDataConfiguration {
+
+        @Bean
+        public ProvideDataProcessor provideDataProcessorManager() {
+            return new ProvideDataProcessorManager();
+        }
+
+        @Bean
+        public ProvideDataProcessor datumExpireProvideDataProcessor(ProvideDataProcessor provideDataProcessorManager) {
+            ProvideDataProcessor datumExpireProvideDataProcessor = new DatumExpireProvideDataProcessor();
+            ((ProvideDataProcessorManager) provideDataProcessorManager)
+                .addProvideDataProcessor(datumExpireProvideDataProcessor);
+            return datumExpireProvideDataProcessor;
+        }
+
+    }
+
 }

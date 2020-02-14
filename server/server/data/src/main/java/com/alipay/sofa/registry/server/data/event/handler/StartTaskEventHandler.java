@@ -16,15 +16,17 @@
  */
 package com.alipay.sofa.registry.server.data.event.handler;
 
+import java.util.List;
+import java.util.concurrent.ScheduledExecutorService;
+
+import javax.annotation.Resource;
+
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.server.data.event.StartTaskEvent;
 import com.alipay.sofa.registry.server.data.executor.ExecutorFactory;
 import com.alipay.sofa.registry.server.data.remoting.dataserver.task.AbstractTask;
-
-import javax.annotation.Resource;
-import java.util.List;
-import java.util.concurrent.ScheduledExecutorService;
+import com.google.common.collect.Lists;
 
 /**
  *
@@ -44,8 +46,8 @@ public class StartTaskEventHandler extends AbstractEventHandler<StartTaskEvent> 
     private ScheduledExecutorService executor     = null;
 
     @Override
-    public Class interest() {
-        return StartTaskEvent.class;
+    public List<Class<? extends StartTaskEvent>> interest() {
+        return Lists.newArrayList(StartTaskEvent.class);
     }
 
     @Override

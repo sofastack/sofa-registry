@@ -20,7 +20,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import com.alipay.sofa.registry.common.model.CommonResponse;
 import com.alipay.sofa.registry.common.model.Node.NodeType;
-import com.alipay.sofa.registry.common.model.constants.ValueConstants;
 import com.alipay.sofa.registry.common.model.metaserver.DataOperator;
 import com.alipay.sofa.registry.common.model.metaserver.NotifyProvideDataChange;
 import com.alipay.sofa.registry.common.model.metaserver.ProvideData;
@@ -29,7 +28,7 @@ import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.remoting.Channel;
 import com.alipay.sofa.registry.server.data.remoting.handler.AbstractClientHandler;
 import com.alipay.sofa.registry.server.data.remoting.metaserver.IMetaServerService;
-import com.alipay.sofa.registry.server.data.renew.DatumLeaseManager;
+import com.alipay.sofa.registry.server.data.remoting.metaserver.provideData.ProvideDataProcessor;
 
 /**
  *
@@ -38,14 +37,14 @@ import com.alipay.sofa.registry.server.data.renew.DatumLeaseManager;
  */
 public class NotifyProvideDataChangeHandler extends AbstractClientHandler {
 
-    private static final Logger LOGGER = LoggerFactory
-                                           .getLogger(NotifyProvideDataChangeHandler.class);
+    private static final Logger  LOGGER = LoggerFactory
+                                            .getLogger(NotifyProvideDataChangeHandler.class);
 
     @Autowired
-    private IMetaServerService  metaServerService;
+    private IMetaServerService   metaServerService;
 
     @Autowired
-    private DatumLeaseManager   datumLeaseManager;
+    private ProvideDataProcessor provideDataProcessorManager;
 
     @Override
     public HandlerType getType() {
@@ -64,32 +63,15 @@ public class NotifyProvideDataChangeHandler extends AbstractClientHandler {
 
     @Override
     public Object doHandle(Channel channel, Object request) {
+        LOGGER.info("Received notifyProvideDataChange: {}", request);
 
         NotifyProvideDataChange notifyProvideDataChange = (NotifyProvideDataChange) request;
-
-        fireDataChangeFetchTask(notifyProvideDataChange);
-        return null;
-    }
-
-    private void fireDataChangeFetchTask(NotifyProvideDataChange notifyProvideDataChange) {
-
         String dataInfoId = notifyProvideDataChange.getDataInfoId();
         if (notifyProvideDataChange.getDataOperator() != DataOperator.REMOVE) {
-
-            if (ValueConstants.ENABLE_DATA_DATUM_EXPIRE.equals(dataInfoId)) {
-                ProvideData provideData = metaServerService.fetchData(dataInfoId);
-                if (provideData == null || provideData.getProvideData() == null
-                    || provideData.getProvideData().getObject() == null) {
-                    LOGGER
-                        .info("Fetch enableDataDatumExpire but no data existed, current config not change!");
-                    return;
-                }
-                boolean enableDataDatumExpire = Boolean.parseBoolean((String) provideData
-                    .getProvideData().getObject());
-                LOGGER.info("Fetch enableDataDatumExpire {} success!", enableDataDatumExpire);
-                datumLeaseManager.setRenewEnable(enableDataDatumExpire);
-            }
+            ProvideData provideData = metaServerService.fetchData(dataInfoId);
+            provideDataProcessorManager.changeDataProcess(provideData);
         }
+        return null;
     }
 
     @Override

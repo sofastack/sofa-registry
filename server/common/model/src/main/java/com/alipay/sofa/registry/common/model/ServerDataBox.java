@@ -16,14 +16,14 @@
  */
 package com.alipay.sofa.registry.common.model;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 /**
  *
@@ -93,7 +93,7 @@ public class ServerDataBox implements Serializable {
      * @throws ClassNotFoundException the class not found exception
      */
     public Object extract() throws IOException, ClassNotFoundException {
-        if (isInBytes()) {
+        if (object == null && isInBytes()) {
             ByteArrayInputStream bis = new ByteArrayInputStream(bytes);
             if (serialization != SERIALIZED_BY_JAVA) {
                 throw new IOException("Unsupported serialization type: " + serialization);

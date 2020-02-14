@@ -16,10 +16,10 @@
  */
 package com.alipay.sofa.registry.remoting;
 
-import com.alipay.sofa.registry.common.model.store.URL;
-
 import java.net.InetSocketAddress;
 import java.util.Collection;
+
+import com.alipay.sofa.registry.common.model.store.URL;
 
 /**
  *

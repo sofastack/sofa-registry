@@ -288,7 +288,6 @@ public class DataNodeServiceImpl implements DataNodeService {
         Map<String/*datacenter*/, Datum> map;
 
         try {
-
             GetDataRequest getDataRequest = new GetDataRequest();
 
             //dataCenter null means all dataCenters

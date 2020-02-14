@@ -16,14 +16,15 @@
  */
 package com.alipay.sofa.registry.server.data.change.notify;
 
+import java.util.HashSet;
+import java.util.Set;
+
+import org.springframework.beans.factory.annotation.Autowired;
+
 import com.alipay.sofa.registry.common.model.dataserver.Datum;
 import com.alipay.sofa.registry.server.data.change.DataSourceTypeEnum;
 import com.alipay.sofa.registry.server.data.datasync.Operator;
 import com.alipay.sofa.registry.server.data.datasync.SyncDataService;
-import org.springframework.beans.factory.annotation.Autowired;
-
-import java.util.HashSet;
-import java.util.Set;
 
 /**
  *
@@ -39,7 +40,6 @@ public class BackUpNotifier implements IDataChangeNotifier {
     public Set<DataSourceTypeEnum> getSuitableSource() {
         Set<DataSourceTypeEnum> set = new HashSet<>();
         set.add(DataSourceTypeEnum.PUB);
-        set.add(DataSourceTypeEnum.SYNC);
         return set;
     }
 

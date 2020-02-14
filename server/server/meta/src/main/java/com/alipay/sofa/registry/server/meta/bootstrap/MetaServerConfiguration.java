@@ -54,7 +54,6 @@ import com.alipay.sofa.registry.server.meta.remoting.connection.SessionConnectio
 import com.alipay.sofa.registry.server.meta.remoting.handler.AbstractServerHandler;
 import com.alipay.sofa.registry.server.meta.remoting.handler.DataNodeHandler;
 import com.alipay.sofa.registry.server.meta.remoting.handler.FetchProvideDataRequestHandler;
-import com.alipay.sofa.registry.server.meta.remoting.handler.GetChangeListRequestHandler;
 import com.alipay.sofa.registry.server.meta.remoting.handler.GetNodesRequestHandler;
 import com.alipay.sofa.registry.server.meta.remoting.handler.RenewNodesRequestHandler;
 import com.alipay.sofa.registry.server.meta.remoting.handler.SessionNodeHandler;
@@ -252,7 +251,6 @@ public class MetaServerConfiguration {
         public Collection<AbstractServerHandler> metaServerHandlers() {
             Collection<AbstractServerHandler> list = new ArrayList<>();
             list.add(metaConnectionHandler());
-            list.add(getChangeListRequestHandler());
             list.add(getNodesRequestHandler());
             return list;
         }
@@ -270,11 +268,6 @@ public class MetaServerConfiguration {
         @Bean
         public AbstractServerHandler metaConnectionHandler() {
             return new MetaConnectionHandler();
-        }
-
-        @Bean
-        public AbstractServerHandler getChangeListRequestHandler() {
-            return new GetChangeListRequestHandler();
         }
 
         @Bean
@@ -359,6 +352,7 @@ public class MetaServerConfiguration {
         }
 
         @Bean
+        @ConditionalOnMissingBean
         public StopPushDataResource stopPushDataResource() {
             return new StopPushDataResource();
         }

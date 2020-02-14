@@ -240,6 +240,8 @@ public class SessionServerConfigBean implements SessionServerConfig {
 
     private int                dataClientConnNum                       = 10;
 
+    private int                sessionSchedulerPoolSize                = 6;
+
     //end config for enterprise version
 
     private CommonConfig       commonConfig;
@@ -926,6 +928,11 @@ public class SessionServerConfigBean implements SessionServerConfig {
             sessionServerRegion = sessionServerRegion.toUpperCase();
         }
         return sessionServerRegion;
+    }
+
+    @Override
+    public String getClientCell(String subscriberCell) {
+        return this.getSessionServerRegion();
     }
 
     /**
@@ -2076,6 +2083,25 @@ public class SessionServerConfigBean implements SessionServerConfig {
 
         return null != invalidIgnoreDataIdPattern
                && invalidIgnoreDataIdPattern.matcher(dataId).find();
+    }
+
+    /**
+     * Getter method for property <tt>sessionSchedulerPoolSize</tt>.
+     *
+     * @return property value of sessionSchedulerPoolSize
+     */
+    @Override
+    public int getSessionSchedulerPoolSize() {
+        return sessionSchedulerPoolSize;
+    }
+
+    /**
+     * Setter method for property <tt>sessionSchedulerPoolSize </tt>.
+     *
+     * @param sessionSchedulerPoolSize  value to be assigned to property sessionSchedulerPoolSize
+     */
+    public void setSessionSchedulerPoolSize(int sessionSchedulerPoolSize) {
+        this.sessionSchedulerPoolSize = sessionSchedulerPoolSize;
     }
 
     public static int cpus() {

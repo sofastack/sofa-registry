@@ -83,7 +83,7 @@ public class MetaClientExchanger implements NodeExchanger {
             }
 
             final Object result = metaClient.sendSync(url, request.getRequestBody(),
-                    metaServerConfig.getMetaNodeExchangeTimeout());
+                    request.getTimeout() != null ? request.getTimeout() : metaServerConfig.getMetaNodeExchangeTimeout());
             response = () -> result;
         } catch (Exception e) {
             LOGGER.error("MetaClient Exchanger request data error!", e);

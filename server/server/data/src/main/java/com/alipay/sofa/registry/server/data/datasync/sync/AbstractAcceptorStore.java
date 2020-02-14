@@ -54,8 +54,6 @@ public abstract class AbstractAcceptorStore implements AcceptorStore {
                                                                                                              "[SyncDataService]");
 
     private static final int                                                 DEFAULT_MAX_BUFFER_SIZE = 30;
-    private static final int                                                 DEFAULT_DELAY_TIMEOUT   = 3000;
-    private static final int                                                 NOTIFY_RETRY            = 3;
 
     @Autowired
     protected IMetaServerService                                             metaServerService;
@@ -178,7 +176,7 @@ public abstract class AbstractAcceptorStore implements AcceptorStore {
     }
 
     private void addQueue(Acceptor acceptor) {
-        delayQueue.put(new DelayItem(acceptor, DEFAULT_DELAY_TIMEOUT));
+        delayQueue.put(new DelayItem(acceptor, dataServerConfig.getDataSyncDelayTimeout()));
     }
 
     private void notifyChange(Acceptor acceptor) {
@@ -208,7 +206,7 @@ public abstract class AbstractAcceptorStore implements AcceptorStore {
 
             Server syncServer = boltExchange.getServer(dataServerConfig.getSyncDataPort());
 
-            for (int tryCount = 0; tryCount < NOTIFY_RETRY; tryCount++) {
+            for (int tryCount = 0; tryCount < dataServerConfig.getDataSyncNotifyRetry(); tryCount++) {
                 try {
 
                     Connection connection = dataServerConnectionFactory.getConnection(targetDataIp);
