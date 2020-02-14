@@ -16,7 +16,20 @@
  */
 package com.alipay.sofa.registry.server.session.bootstrap;
 
-import com.alipay.sofa.registry.common.model.Node;
+import java.lang.annotation.Annotation;
+import java.util.Collection;
+import java.util.Date;
+import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
+
+import javax.annotation.Resource;
+import javax.ws.rs.Path;
+import javax.ws.rs.ext.Provider;
+
+import org.glassfish.jersey.server.ResourceConfig;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationContext;
+
 import com.alipay.sofa.registry.common.model.constants.ValueConstants;
 import com.alipay.sofa.registry.common.model.metaserver.FetchProvideDataRequest;
 import com.alipay.sofa.registry.common.model.metaserver.NodeChangeResult;
@@ -40,19 +53,6 @@ import com.alipay.sofa.registry.server.session.provideData.ProvideDataProcessor;
 import com.alipay.sofa.registry.server.session.remoting.handler.AbstractServerHandler;
 import com.alipay.sofa.registry.server.session.scheduler.ExecutorManager;
 import com.alipay.sofa.registry.task.batcher.TaskDispatchers;
-import org.glassfish.jersey.server.ResourceConfig;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.ApplicationContext;
-import org.springframework.util.CollectionUtils;
-
-import javax.annotation.Resource;
-import javax.ws.rs.Path;
-import javax.ws.rs.ext.Provider;
-import java.lang.annotation.Annotation;
-import java.util.Collection;
-import java.util.Date;
-import java.util.Map;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * The type Session server bootstrap.
@@ -106,8 +106,6 @@ public class SessionServerBootstrap {
     private Server                            server;
 
     private Server                            httpServer;
-
-    private Client                            dataClient;
 
     private Client                            metaClient;
 

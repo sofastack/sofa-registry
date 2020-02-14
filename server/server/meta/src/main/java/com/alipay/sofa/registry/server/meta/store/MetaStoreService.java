@@ -16,6 +16,20 @@
  */
 package com.alipay.sofa.registry.server.meta.store;
 
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
+
+import javax.ws.rs.NotSupportedException;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+
 import com.alipay.sofa.registry.common.model.Node.NodeType;
 import com.alipay.sofa.registry.common.model.metaserver.DataCenterNodes;
 import com.alipay.sofa.registry.common.model.metaserver.GetChangeListRequest;
@@ -31,18 +45,6 @@ import com.alipay.sofa.registry.store.api.annotation.RaftReference;
 import com.alipay.sofa.registry.task.listener.TaskEvent;
 import com.alipay.sofa.registry.task.listener.TaskEvent.TaskType;
 import com.alipay.sofa.registry.task.listener.TaskListenerManager;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-
-import javax.ws.rs.NotSupportedException;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicLong;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 /**
  *
@@ -216,6 +218,7 @@ public class MetaStoreService implements StoreService<MetaNode> {
         return nodeChangeResult;
     }
 
+    //TODO move this code to enterprise version
     @Override
     public void getOtherDataCenterNodeAndUpdate() {
 
@@ -227,36 +230,48 @@ public class MetaStoreService implements StoreService<MetaNode> {
         if (metaMap != null && metaMap.size() > 0) {
             for (String dataCenter : metaMap.keySet()) {
                 //get other dataCenter meta
-                if (!nodeConfig.getLocalDataCenter().equals(dataCenter)) {
-                    GetChangeListRequest getChangeListRequest = new GetChangeListRequest(
-                        NodeType.META, dataCenter);
-                    //trigger fetch dataCenter meta list change
-                    DataCenterNodes getDataCenterNodes = metaNodeService
-                        .getDataCenterNodes(getChangeListRequest);
-                    if (getDataCenterNodes != null) {
+                try {
+                    if (!nodeConfig.getLocalDataCenter().equals(dataCenter)) {
+
+                        GetChangeListRequest getChangeListRequest = new GetChangeListRequest(
+                            NodeType.META, dataCenter);
+                        //trigger fetch dataCenter meta list change
+                        DataCenterNodes getDataCenterNodes = metaNodeService
+                            .getDataCenterNodes(getChangeListRequest);
                         String dataCenterGet = getDataCenterNodes.getDataCenterId();
+
+                        LOGGER.info("GetOtherDataCenterNode from DataCenter({}): {}", dataCenter,
+                            getDataCenterNodes);
+
                         Long version = getDataCenterNodes.getVersion();
                         if (version == null) {
-                            LOGGER.error("Request message meta version cant not be null!");
-                            return;
+                            LOGGER
+                                .error(
+                                    "getOtherDataCenterNodeAndUpdate from DataCenter({}), meta list version is null",
+                                    dataCenter);
+                            continue;
                         }
                         //check for scheduler get other dataCenter meta node
                         boolean result = metaRepositoryService.checkVersion(dataCenterGet, version);
                         if (!result) {
-                            LOGGER.debug("DataCenter {} meta list version {} has not updated!",
-                                dataCenter, version);
-                            return;
+                            LOGGER
+                                .warn(
+                                    "getOtherDataCenterNodeAndUpdate from DataCenter({}), meta list version {} has not updated",
+                                    dataCenter, version);
+                            continue;
                         }
                         updateOtherDataCenterNodes(getDataCenterNodes);
-                    } else {
-                        LOGGER.error("Get DataCenter meta nodes change error!null");
-                        throw new RuntimeException("Get null DataCenter meta nodes change!");
                     }
+                } catch (Throwable e) {
+                    LOGGER.error(String.format(
+                        "getOtherDataCenterNodeAndUpdate from DataCenter(%s) error: %s",
+                        dataCenter, e.getMessage()), e);
                 }
             }
         }
     }
 
+    //TODO move this to enterprise version
     @Override
     public void updateOtherDataCenterNodes(DataCenterNodes<MetaNode> dataCenterNodes) {
         write.lock();

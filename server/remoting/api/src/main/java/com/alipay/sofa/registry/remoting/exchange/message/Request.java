@@ -16,10 +16,10 @@
  */
 package com.alipay.sofa.registry.remoting.exchange.message;
 
+import java.util.concurrent.atomic.AtomicInteger;
+
 import com.alipay.sofa.registry.common.model.store.URL;
 import com.alipay.sofa.registry.remoting.CallbackHandler;
-
-import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * The interface Request.
@@ -59,5 +59,9 @@ public interface Request<T> {
      */
     default AtomicInteger getRetryTimes() {
         return new AtomicInteger();
+    }
+
+    default Integer getTimeout() {
+        return null;
     }
 }

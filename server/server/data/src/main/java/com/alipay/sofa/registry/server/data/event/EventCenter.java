@@ -16,10 +16,12 @@
  */
 package com.alipay.sofa.registry.server.data.event;
 
-import com.alipay.sofa.registry.server.data.event.handler.AbstractEventHandler;
+import java.util.Collection;
+import java.util.List;
 
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
+import com.alipay.sofa.registry.server.data.event.handler.AbstractEventHandler;
+import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.Multimap;
 
 /**
  *
@@ -28,24 +30,32 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public class EventCenter {
 
-    private final Map<Class, AbstractEventHandler> MAP = new ConcurrentHashMap<>();
+    private Multimap<Class<? extends Event>, AbstractEventHandler> MAP = ArrayListMultimap.create();
 
     /**
      * eventHandler register
      * @param handler
      */
     public void register(AbstractEventHandler handler) {
-        MAP.put(handler.interest(), handler);
+        List<Class<? extends Event>> interests = handler.interest();
+        for (Class<? extends Event> interest : interests) {
+            MAP.put(interest, handler);
+        }
     }
 
     /**
      * event handler handle process
      * @param event
      */
-    public void post(Object event) {
+    public void post(Event event) {
         Class clazz = event.getClass();
         if (MAP.containsKey(clazz)) {
-            MAP.get(clazz).handle(event);
+            Collection<AbstractEventHandler> handlers = MAP.get(clazz);
+            if (handlers != null) {
+                for (AbstractEventHandler handler : handlers) {
+                    handler.handle(event);
+                }
+            }
         } else {
             throw new RuntimeException("no suitable handler was found:" + clazz);
         }

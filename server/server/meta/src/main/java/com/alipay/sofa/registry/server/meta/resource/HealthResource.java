@@ -120,7 +120,6 @@ public class HealthResource {
         } else {
             response = CommonResponse.buildFailedResponse(sb.toString());
         }
-
         return response;
     }
 }

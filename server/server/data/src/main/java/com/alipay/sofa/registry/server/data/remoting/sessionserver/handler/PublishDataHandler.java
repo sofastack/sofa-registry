@@ -16,6 +16,11 @@
  */
 package com.alipay.sofa.registry.server.data.remoting.sessionserver.handler;
 
+import java.util.concurrent.Executor;
+import java.util.concurrent.ThreadPoolExecutor;
+
+import org.springframework.beans.factory.annotation.Autowired;
+
 import com.alipay.sofa.registry.common.model.CommonResponse;
 import com.alipay.sofa.registry.common.model.Node;
 import com.alipay.sofa.registry.common.model.PublishType;
@@ -32,12 +37,6 @@ import com.alipay.sofa.registry.server.data.remoting.sessionserver.SessionServer
 import com.alipay.sofa.registry.server.data.remoting.sessionserver.forward.ForwardService;
 import com.alipay.sofa.registry.server.data.renew.DatumLeaseManager;
 import com.alipay.sofa.registry.util.ParaCheckUtil;
-import org.springframework.beans.factory.annotation.Autowired;
-
-import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.Executor;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
 
 /**
  * processor to publish data

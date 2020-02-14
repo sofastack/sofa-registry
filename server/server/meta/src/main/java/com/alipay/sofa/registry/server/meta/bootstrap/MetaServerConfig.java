@@ -82,6 +82,44 @@ public interface MetaServerConfig {
 
     int getRockDBCacheSize();
 
+    int getHeartbeatCheckExecutorMinSize();
+
+    int getHeartbeatCheckExecutorMaxSize();
+
+    int getHeartbeatCheckExecutorQueueSize();
+
+    int getCheckDataChangeExecutorMinSize();
+
+    int getCheckDataChangeExecutorMaxSize();
+
+    int getCheckDataChangeExecutorQueueSize();
+
+    int getGetOtherDataCenterChangeExecutorMinSize();
+
+    int getGetOtherDataCenterChangeExecutorMaxSize();
+
+    int getGetOtherDataCenterChangeExecutorQueueSize();
+
+    int getConnectMetaServerExecutorMinSize();
+
+    int getConnectMetaServerExecutorMaxSize();
+
+    int getConnectMetaServerExecutorQueueSize();
+
+    int getCheckNodeListChangePushExecutorMinSize();
+
+    int getCheckNodeListChangePushExecutorMaxSize();
+
+    int getCheckNodeListChangePushExecutorQueueSize();
+
+    int getRaftClientRefreshExecutorMinSize();
+
+    int getRaftClientRefreshExecutorMaxSize();
+
+    int getRaftClientRefreshExecutorQueueSize();
+
+    int getMetaSchedulerPoolSize();
+
     /**
      * decision mode enum
      */

@@ -148,8 +148,9 @@ public class DataPushTask extends AbstractSessionTask {
                                                ScopeEnum scopeEnum, Subscriber subscriber, Map<String, Subscriber> subscriberMap) {
         Collection<Subscriber> subscribers = new ArrayList<>(subscriberMap.values());
         String dataId = datum.getDataId();
+        String clientCell = sessionServerConfig.getClientCell(subscriber.getCell());
         Predicate<String> zonePredicate = (zone) -> {
-            if (!sessionServerConfig.getSessionServerRegion().equals(zone)) {
+            if (!clientCell.equals(zone)) {
                 if (ScopeEnum.zone == scopeEnum) {
                     // zone scope subscribe only return zone list
                     return true;
@@ -166,7 +167,7 @@ public class DataPushTask extends AbstractSessionTask {
         };
         LOGGER.info("Datum push={}",datum);
         ReceivedData receivedData = ReceivedDataConverter.getReceivedDataMulti(datum, scopeEnum,
-                subscriberRegisterIdList, sessionServerConfig.getSessionServerRegion(), zonePredicate);
+                subscriberRegisterIdList, clientCell, zonePredicate);
 
         //trigger push to client node
         Map<ReceivedData, URL> parameter = new HashMap<>();

@@ -16,12 +16,22 @@
  */
 package com.alipay.sofa.registry.server.data.change;
 
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.Executor;
+
+import javax.annotation.PostConstruct;
+import javax.annotation.Resource;
+
+import org.springframework.beans.factory.annotation.Autowired;
+
 import com.alipay.sofa.registry.common.model.dataserver.Datum;
 import com.alipay.sofa.registry.common.model.store.Publisher;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.server.data.bootstrap.DataServerConfig;
 import com.alipay.sofa.registry.server.data.cache.DatumCache;
+import com.alipay.sofa.registry.server.data.cache.LocalDatumStorage;
 import com.alipay.sofa.registry.server.data.cache.MergeResult;
 import com.alipay.sofa.registry.server.data.change.event.DataChangeEventCenter;
 import com.alipay.sofa.registry.server.data.change.event.DataChangeEventQueue;
@@ -155,7 +165,7 @@ public class DataChangeHandler {
                         Long lastVersion = mergeResult.getLastVersion();
 
                         if (lastVersion != null
-                            && lastVersion.longValue() == datumCache.ERROR_DATUM_VERSION) {
+                            && lastVersion.longValue() == LocalDatumStorage.ERROR_DATUM_VERSION) {
                             LOGGER
                                 .error(
                                     "[DataChangeHandler][{}] first put unPub datum into cache error, dataCenter={}, dataInfoId={}, version={}, sourceType={},isContainsUnPub={}",

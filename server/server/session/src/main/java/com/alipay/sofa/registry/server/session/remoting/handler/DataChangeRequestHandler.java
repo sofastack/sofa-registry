@@ -26,6 +26,10 @@ import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.remoting.Channel;
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
+import com.alipay.sofa.registry.server.session.cache.CacheService;
+import com.alipay.sofa.registry.server.session.cache.DatumKey;
+import com.alipay.sofa.registry.server.session.cache.Key;
+import com.alipay.sofa.registry.server.session.cache.Key.KeyType;
 import com.alipay.sofa.registry.server.session.scheduler.ExecutorManager;
 import com.alipay.sofa.registry.server.session.store.Interests;
 import com.alipay.sofa.registry.server.session.strategy.DataChangeRequestHandlerStrategy;
@@ -57,6 +61,9 @@ public class DataChangeRequestHandler extends AbstractClientHandler {
     private ExecutorManager                  executorManager;
 
     @Autowired
+    private CacheService                     sessionCacheService;
+
+    @Autowired
     private DataChangeRequestHandlerStrategy dataChangeRequestHandlerStrategy;
 
     @Override
@@ -76,11 +83,18 @@ public class DataChangeRequestHandler extends AbstractClientHandler {
 
     @Override
     public Object reply(Channel channel, Object message) {
+        DataChangeRequest dataChangeRequest = (DataChangeRequest) message;
+
+        dataChangeRequest.setDataCenter(dataChangeRequest.getDataCenter());
+        dataChangeRequest.setDataInfoId(dataChangeRequest.getDataInfoId());
+
+        //update cache when change
+        sessionCacheService.invalidate(new Key(KeyType.OBJ, DatumKey.class.getName(), new DatumKey(
+            dataChangeRequest.getDataInfoId(), dataChangeRequest.getDataCenter())));
+
         if (sessionServerConfig.isStopPushSwitch()) {
             return null;
         }
-
-        DataChangeRequest dataChangeRequest = (DataChangeRequest) message;
 
         try {
             boolean result = sessionInterests.checkInterestVersions(

@@ -80,7 +80,7 @@ public class DataNodeExchanger implements NodeExchanger {
             }
 
             final Object result = sessionClient
-                    .sendSync(url, request.getRequestBody(), sessionServerConfig.getDataNodeExchangeTimeOut());
+                    .sendSync(url, request.getRequestBody(), request.getTimeout() != null ? request.getTimeout() : sessionServerConfig.getDataNodeExchangeTimeOut());
             if (result == null) {
                 throw new RequestException("DataNode Exchanger request data get null result!", request);
             }

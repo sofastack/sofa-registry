@@ -23,7 +23,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import com.alipay.sofa.registry.server.session.node.service.DataNodeService;
 import com.alipay.sofa.registry.server.session.scheduler.task.SessionTask;
 import com.alipay.sofa.registry.server.session.scheduler.task.UnPublishDataTask;
-
 import com.alipay.sofa.registry.task.batcher.TaskDispatcher;
 import com.alipay.sofa.registry.task.batcher.TaskDispatchers;
 import com.alipay.sofa.registry.task.batcher.TaskProcessor;

@@ -16,16 +16,17 @@
  */
 package com.alipay.sofa.registry.server.data.bootstrap;
 
-import com.alipay.sofa.registry.net.NetUtil;
-import org.apache.commons.lang.builder.ToStringBuilder;
-import org.apache.commons.lang.builder.ToStringStyle;
-import org.springframework.boot.context.properties.ConfigurationProperties;
-
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
+
+import org.apache.commons.lang.builder.ToStringBuilder;
+import org.apache.commons.lang.builder.ToStringStyle;
+import org.springframework.boot.context.properties.ConfigurationProperties;
+
+import com.alipay.sofa.registry.net.NetUtil;
 
 /**
  *
@@ -118,12 +119,20 @@ public class DataServerConfig {
 
     private int                renewEnableDelaySec                          = 30;
 
+    private int                dataSyncDelayTimeout                         = 1000;
+
+    private int                dataSyncNotifyRetry                          = 3;
+
     /**
      * constructor
      * @param commonConfig
      */
     public DataServerConfig(CommonConfig commonConfig) {
         this.commonConfig = commonConfig;
+    }
+
+    public boolean isLocalDataCenter(String dataCenter) {
+        return commonConfig.getLocalDataCenter().equals(dataCenter);
     }
 
     /**
@@ -803,8 +812,45 @@ public class DataServerConfig {
         this.sessionServerNotifierRetryExecutorQueueSize = sessionServerNotifierRetryExecutorQueueSize;
     }
 
+    /**
+     * Getter method for property <tt>dataSyncDelayTimeout</tt>.
+     *
+     * @return property value of dataSyncDelayTimeout
+     */
+    public int getDataSyncDelayTimeout() {
+        return dataSyncDelayTimeout;
+    }
+
+    /**
+     * Setter method for property <tt>dataSyncDelayTimeout </tt>.
+     *
+     * @param dataSyncDelayTimeout  value to be assigned to property dataSyncDelayTimeout
+     */
+    public void setDataSyncDelayTimeout(int dataSyncDelayTimeout) {
+        this.dataSyncDelayTimeout = dataSyncDelayTimeout;
+    }
+
+    /**
+     * Getter method for property <tt>dataSyncNotifyRetry</tt>.
+     *
+     * @return property value of dataSyncNotifyRetry
+     */
+    public int getDataSyncNotifyRetry() {
+        return dataSyncNotifyRetry;
+    }
+
+    /**
+     * Setter method for property <tt>dataSyncNotifyRetry </tt>.
+     *
+     * @param dataSyncNotifyRetry  value to be assigned to property dataSyncNotifyRetry
+     */
+    public void setDataSyncNotifyRetry(int dataSyncNotifyRetry) {
+        this.dataSyncNotifyRetry = dataSyncNotifyRetry;
+    }
+
     @Override
     public String toString() {
         return ToStringBuilder.reflectionToString(this, ToStringStyle.MULTI_LINE_STYLE);
     }
+
 }

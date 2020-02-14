@@ -16,6 +16,14 @@
  */
 package com.alipay.sofa.registry.server.meta.executor;
 
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
+
+import org.springframework.beans.factory.annotation.Autowired;
+
 import com.alipay.sofa.registry.common.model.Node.NodeType;
 import com.alipay.sofa.registry.server.meta.bootstrap.MetaServerConfig;
 import com.alipay.sofa.registry.server.meta.registry.Registry;
@@ -23,13 +31,6 @@ import com.alipay.sofa.registry.server.meta.remoting.MetaClientExchanger;
 import com.alipay.sofa.registry.server.meta.remoting.RaftExchanger;
 import com.alipay.sofa.registry.task.scheduler.TimedSupervisorTask;
 import com.alipay.sofa.registry.util.NamedThreadFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ScheduledThreadPoolExecutor;
-import java.util.concurrent.SynchronousQueue;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
 
 /**
  *
@@ -73,75 +74,91 @@ public class ExecutorManager {
 
     public void init() {
 
-        scheduler = new ScheduledThreadPoolExecutor(6, new NamedThreadFactory("MetaScheduler"));
+        scheduler = new ScheduledThreadPoolExecutor(metaServerConfig.getMetaSchedulerPoolSize(),
+            new NamedThreadFactory("MetaScheduler"));
 
-        heartbeatCheckExecutor = new ThreadPoolExecutor(1, 2, 0, TimeUnit.SECONDS,
-            new SynchronousQueue<>(), new NamedThreadFactory("MetaScheduler-HeartbeatCheck"));
+        heartbeatCheckExecutor = new ThreadPoolExecutor(
+            metaServerConfig.getHeartbeatCheckExecutorMinSize(),
+            metaServerConfig.getHeartbeatCheckExecutorMaxSize(), 300, TimeUnit.SECONDS,
+            new LinkedBlockingQueue<>(metaServerConfig.getHeartbeatCheckExecutorQueueSize()),
+            new NamedThreadFactory("MetaScheduler-HeartbeatCheck"));
+        heartbeatCheckExecutor.allowCoreThreadTimeOut(true);
 
-        checkDataChangeExecutor = new ThreadPoolExecutor(1, 2, 0, TimeUnit.SECONDS,
-            new SynchronousQueue<>(), new NamedThreadFactory("MetaScheduler-CheckDataChange"));
+        checkDataChangeExecutor = new ThreadPoolExecutor(
+            metaServerConfig.getCheckDataChangeExecutorMinSize(),
+            metaServerConfig.getCheckDataChangeExecutorMaxSize(), 300, TimeUnit.SECONDS,
+            new LinkedBlockingQueue<>(metaServerConfig.getCheckDataChangeExecutorQueueSize()),
+            new NamedThreadFactory("MetaScheduler-CheckDataChange"));
+        checkDataChangeExecutor.allowCoreThreadTimeOut(true);
 
-        getOtherDataCenterChangeExecutor = new ThreadPoolExecutor(1, 2, 0, TimeUnit.SECONDS,
-            new SynchronousQueue<>(), new NamedThreadFactory(
+        getOtherDataCenterChangeExecutor = new ThreadPoolExecutor(
+            metaServerConfig.getGetOtherDataCenterChangeExecutorMinSize(),
+            metaServerConfig.getGetOtherDataCenterChangeExecutorMaxSize(), 300, TimeUnit.SECONDS,
+            new LinkedBlockingQueue<>(metaServerConfig
+                .getGetOtherDataCenterChangeExecutorQueueSize()), new NamedThreadFactory(
                 "MetaScheduler-GetOtherDataCenterChange"));
+        getOtherDataCenterChangeExecutor.allowCoreThreadTimeOut(true);
 
-        connectMetaServerExecutor = new ThreadPoolExecutor(1, 2, 0, TimeUnit.SECONDS,
-            new SynchronousQueue<>(), new NamedThreadFactory("MetaScheduler-ConnectMetaServer"));
+        connectMetaServerExecutor = new ThreadPoolExecutor(
+            metaServerConfig.getConnectMetaServerExecutorMinSize(),
+            metaServerConfig.getConnectMetaServerExecutorMaxSize(), 300, TimeUnit.SECONDS,
+            new LinkedBlockingQueue<>(metaServerConfig.getConnectMetaServerExecutorQueueSize()),
+            new NamedThreadFactory("MetaScheduler-ConnectMetaServer"));
+        connectMetaServerExecutor.allowCoreThreadTimeOut(true);
 
-        checkNodeListChangePushExecutor = new ThreadPoolExecutor(1, 4, 0, TimeUnit.SECONDS,
-            new SynchronousQueue<>(), new NamedThreadFactory(
-                "MetaScheduler-CheckNodeListChangePush"));
+        checkNodeListChangePushExecutor = new ThreadPoolExecutor(
+            metaServerConfig.getCheckNodeListChangePushExecutorMinSize(),
+            metaServerConfig.getCheckNodeListChangePushExecutorMaxSize(), 300, TimeUnit.SECONDS,
+            new LinkedBlockingQueue<>(metaServerConfig.getCheckDataChangeExecutorQueueSize()),
+            new NamedThreadFactory("MetaScheduler-CheckNodeListChangePush"));
+        checkNodeListChangePushExecutor.allowCoreThreadTimeOut(true);
 
-        raftClientRefreshExecutor = new ThreadPoolExecutor(1, 1, 0, TimeUnit.SECONDS,
-            new SynchronousQueue<>(), new NamedThreadFactory("MetaScheduler-RaftClientRefresh"));
+        raftClientRefreshExecutor = new ThreadPoolExecutor(
+            metaServerConfig.getRaftClientRefreshExecutorMinSize(),
+            metaServerConfig.getRaftClientRefreshExecutorMaxSize(), 300, TimeUnit.SECONDS,
+            new LinkedBlockingQueue<>(metaServerConfig.getRaftClientRefreshExecutorQueueSize()),
+            new NamedThreadFactory("MetaScheduler-RaftClientRefresh"));
+        raftClientRefreshExecutor.allowCoreThreadTimeOut(true);
     }
 
     public void startScheduler() {
 
         init();
 
-        scheduler.schedule(
-                new TimedSupervisorTask("HeartbeatCheck", scheduler, heartbeatCheckExecutor,
+        scheduler.schedule(new TimedSupervisorTask("HeartbeatCheck", scheduler, heartbeatCheckExecutor,
                         metaServerConfig.getSchedulerHeartbeatTimeout(), TimeUnit.SECONDS,
-                        metaServerConfig.getSchedulerHeartbeatExpBackOffBound(),
-                        () -> metaServerRegistry.evict()),
+                        metaServerConfig.getSchedulerHeartbeatExpBackOffBound(), () -> metaServerRegistry.evict()),
                 metaServerConfig.getSchedulerHeartbeatFirstDelay(), TimeUnit.SECONDS);
 
-        scheduler.schedule(new TimedSupervisorTask("GetOtherDataCenterChange", scheduler,
-                        getOtherDataCenterChangeExecutor, metaServerConfig.getSchedulerGetDataChangeTimeout(),
-                        TimeUnit.SECONDS, metaServerConfig.getSchedulerGetDataChangeExpBackOffBound(),
-                        () -> {
-                            metaServerRegistry.getOtherDataCenterNodeAndUpdate(NodeType.DATA);
-                            metaServerRegistry.getOtherDataCenterNodeAndUpdate(NodeType.META);
-                        }),
-                metaServerConfig.getSchedulerGetDataChangeFirstDelay(), TimeUnit.SECONDS);
-
         scheduler.schedule(
-                new TimedSupervisorTask("ConnectMetaServer", scheduler, connectMetaServerExecutor,
+                new TimedSupervisorTask("GetOtherDataCenterChange", scheduler, getOtherDataCenterChangeExecutor,
+                        metaServerConfig.getSchedulerGetDataChangeTimeout(), TimeUnit.SECONDS,
+                        metaServerConfig.getSchedulerGetDataChangeExpBackOffBound(), () -> {
+                    metaServerRegistry.getOtherDataCenterNodeAndUpdate(NodeType.DATA);
+                    metaServerRegistry.getOtherDataCenterNodeAndUpdate(NodeType.META);
+                }), metaServerConfig.getSchedulerGetDataChangeFirstDelay(), TimeUnit.SECONDS);
+
+        scheduler.schedule(new TimedSupervisorTask("ConnectMetaServer", scheduler, connectMetaServerExecutor,
                         metaServerConfig.getSchedulerConnectMetaServerTimeout(), TimeUnit.SECONDS,
                         metaServerConfig.getSchedulerConnectMetaServerExpBackOffBound(),
-                        () -> metaClientExchanger.connectServer()),
-                metaServerConfig.getSchedulerConnectMetaServerFirstDelay(), TimeUnit.SECONDS);
+                        () -> metaClientExchanger.connectServer()), metaServerConfig.getSchedulerConnectMetaServerFirstDelay(),
+                TimeUnit.SECONDS);
 
         scheduler.schedule(
-                new TimedSupervisorTask("CheckSessionNodeListChangePush", scheduler,
-                        checkNodeListChangePushExecutor,
+                new TimedSupervisorTask("CheckSessionNodeListChangePush", scheduler, checkNodeListChangePushExecutor,
                         metaServerConfig.getSchedulerCheckNodeListChangePushTimeout(), TimeUnit.SECONDS,
                         metaServerConfig.getSchedulerCheckNodeListChangePushExpBackOffBound(),
                         () -> metaServerRegistry.pushNodeListChange(NodeType.SESSION)),
                 metaServerConfig.getSchedulerCheckNodeListChangePushFirstDelay(), TimeUnit.SECONDS);
 
         scheduler.schedule(
-                new TimedSupervisorTask("CheckDataNodeListChangePush", scheduler,
-                        checkNodeListChangePushExecutor,
+                new TimedSupervisorTask("CheckDataNodeListChangePush", scheduler, checkNodeListChangePushExecutor,
                         metaServerConfig.getSchedulerCheckNodeListChangePushTimeout(), TimeUnit.SECONDS,
                         metaServerConfig.getSchedulerCheckNodeListChangePushExpBackOffBound(),
                         () -> metaServerRegistry.pushNodeListChange(NodeType.DATA)),
                 metaServerConfig.getSchedulerCheckNodeListChangePushFirstDelay(), TimeUnit.SECONDS);
 
-        scheduler.schedule(
-                new TimedSupervisorTask("RaftClientRefresh", scheduler,
-                        raftClientRefreshExecutor,
+        scheduler.schedule(new TimedSupervisorTask("RaftClientRefresh", scheduler, raftClientRefreshExecutor,
                         metaServerConfig.getSchedulerCheckNodeListChangePushTimeout(), TimeUnit.SECONDS,
                         metaServerConfig.getSchedulerCheckNodeListChangePushExpBackOffBound(),
                         () -> raftExchanger.refreshRaftClient()),

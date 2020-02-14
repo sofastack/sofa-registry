@@ -16,14 +16,14 @@
  */
 package com.alipay.sofa.registry.remoting.jersey;
 
-import com.alipay.sofa.registry.common.model.store.URL;
-import com.alipay.sofa.registry.log.Logger;
-import com.alipay.sofa.registry.log.LoggerFactory;
-import com.alipay.sofa.registry.remoting.CallbackHandler;
-import com.alipay.sofa.registry.remoting.Channel;
-import com.alipay.sofa.registry.remoting.ChannelHandler;
-import com.alipay.sofa.registry.remoting.Server;
-import com.alipay.sofa.registry.remoting.jersey.jetty.server.HttpConnectionCustomFactory;
+import java.net.InetSocketAddress;
+import java.net.URI;
+import java.util.Collection;
+import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.atomic.AtomicBoolean;
+
+import javax.ws.rs.ProcessingException;
+
 import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.ServerConnector;
 import org.eclipse.jetty.util.thread.QueuedThreadPool;
@@ -35,13 +35,13 @@ import org.glassfish.jersey.server.ContainerFactory;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.server.spi.Container;
 
-import javax.ws.rs.ProcessingException;
-import java.net.InetSocketAddress;
-import java.net.URI;
-import java.util.Collection;
-import java.util.List;
-import java.util.concurrent.ThreadFactory;
-import java.util.concurrent.atomic.AtomicBoolean;
+import com.alipay.sofa.registry.common.model.store.URL;
+import com.alipay.sofa.registry.log.Logger;
+import com.alipay.sofa.registry.log.LoggerFactory;
+import com.alipay.sofa.registry.remoting.CallbackHandler;
+import com.alipay.sofa.registry.remoting.Channel;
+import com.alipay.sofa.registry.remoting.Server;
+import com.alipay.sofa.registry.remoting.jersey.jetty.server.HttpConnectionCustomFactory;
 
 /**
  *

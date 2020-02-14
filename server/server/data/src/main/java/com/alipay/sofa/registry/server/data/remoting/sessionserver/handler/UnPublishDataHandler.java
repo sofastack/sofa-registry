@@ -28,7 +28,6 @@ import com.alipay.sofa.registry.common.model.dataserver.Datum;
 import com.alipay.sofa.registry.common.model.dataserver.UnPublishDataRequest;
 import com.alipay.sofa.registry.common.model.store.Publisher;
 import com.alipay.sofa.registry.common.model.store.WordCache;
-import com.alipay.sofa.registry.common.model.store.Publisher;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.remoting.Channel;

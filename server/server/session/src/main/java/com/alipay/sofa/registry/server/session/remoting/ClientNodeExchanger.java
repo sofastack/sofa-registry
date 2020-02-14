@@ -16,6 +16,8 @@
  */
 package com.alipay.sofa.registry.server.session.remoting;
 
+import org.springframework.beans.factory.annotation.Autowired;
+
 import com.alipay.sofa.registry.common.model.store.URL;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
@@ -29,7 +31,6 @@ import com.alipay.sofa.registry.remoting.exchange.message.Request;
 import com.alipay.sofa.registry.remoting.exchange.message.Response;
 import com.alipay.sofa.registry.remoting.exchange.message.Response.ResultStatus;
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
-import org.springframework.beans.factory.annotation.Autowired;
 
 /**
  *
@@ -62,12 +63,12 @@ public class ClientNodeExchanger implements NodeExchanger {
                             //TODO log ASYNC
                             sessionServer.sendCallback(channel, request.getRequestBody(),
                                     request.getCallBackHandler(),
-                                    sessionServerConfig.getClientNodeExchangeTimeOut());
+                                    request.getTimeout() != null ? request.getTimeout() : sessionServerConfig.getClientNodeExchangeTimeOut());
                             response = () -> ResultStatus.SUCCESSFUL;
                         } else {
                             final Object result = sessionServer.sendSync(channel,
                                     request.getRequestBody(),
-                                    sessionServerConfig.getClientNodeExchangeTimeOut());
+                                    request.getTimeout() != null ? request.getTimeout() : sessionServerConfig.getClientNodeExchangeTimeOut());
                             response = () -> result;
                         }
                     } else {

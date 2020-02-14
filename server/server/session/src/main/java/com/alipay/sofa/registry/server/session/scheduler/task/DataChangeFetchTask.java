@@ -208,6 +208,8 @@ public class DataChangeFetchTask extends AbstractSessionTask {
                     LOGGER.info("Push all tasks success, dataCenter:{}, dataInfoId:{}, changeVersion:{}, pushVersion:{}, update!", dataCenter,
                             dataInfoId, changeVersion, version);
                 } else {
+                    LOGGER.info("Push all tasks success,but dataCenter:{} dataInfoId:{} version:{} need not update!",
+                            dataCenter, dataInfoId, version);
                     LOGGER.info("Push all tasks success, but dataCenter:{}, dataInfoId:{}, changeVersion:{}, pushVersion:{}, need not update!",
                             dataCenter, dataInfoId, changeVersion, version);
                 }
@@ -231,8 +233,9 @@ public class DataChangeFetchTask extends AbstractSessionTask {
                                                Collection<Subscriber> subscribers, ScopeEnum scopeEnum,
                                                Subscriber subscriber, PushTaskClosure pushTaskClosure) {
         String dataId = datum.getDataId();
+        String clientCell = sessionServerConfig.getClientCell(subscriber.getCell());
         Predicate<String> zonePredicate = (zone) -> {
-            if (!sessionServerConfig.getSessionServerRegion().equals(zone)) {
+            if (!clientCell.equals(zone)) {
                 if (ScopeEnum.zone == scopeEnum) {
                     // zone scope subscribe only return zone list
                     return true;
@@ -269,9 +272,6 @@ public class DataChangeFetchTask extends AbstractSessionTask {
         DatumKey datumKey = new DatumKey(dataChangeRequest.getDataInfoId(),
             dataChangeRequest.getDataCenter());
         Key key = new Key(KeyType.OBJ, DatumKey.class.getName(), datumKey);
-
-        // remove cache
-        sessionCacheService.invalidate(key);
 
         // get from cache (it will fetch from backend server)
         Value<Datum> value = null;

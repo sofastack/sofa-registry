@@ -24,7 +24,7 @@ import java.util.Set;
  * @author qian.lqlq
  * @version $Id: MetaServerChangeEvent.java, v 0.1 2018-03-13 15:31 qian.lqlq Exp $
  */
-public class MetaServerChangeEvent {
+public class MetaServerChangeEvent implements Event {
 
     private Map<String, Set<String>> ipMap;
 
