@@ -68,7 +68,7 @@ public class CacheDigestTask {
                                     pubStr.append(logPublisher(publisher)).append(";");
                                 }
                             }
-                            LOGGER.info("[Datum] dataInfoId={}, version={}, dataCenter={}, publishers=[{}]", dataInfoId,
+                            LOGGER.info("[Datum]{},{},{},[{}]", dataInfoId,
                                     data.getVersion(), dataCenter, pubStr.toString());
                         }
                         int pubCount = datumMap.values().stream().map(Datum::getPubMap)
@@ -82,16 +82,15 @@ public class CacheDigestTask {
             } catch (Throwable t) {
                 LOGGER.error("[CacheDigestTask] cache digest error", t);
             }
-        }, 30, 300, TimeUnit.SECONDS);
+        }, 30, 600, TimeUnit.SECONDS);
     }
 
     private String logPublisher(Publisher publisher) {
         if (publisher != null) {
             URL url = publisher.getSourceAddress();
             String urlStr = url != null ? url.getAddressString() : "null";
-            return String.format("registerId=%s, registerTimestamp=%s, host=%s, version=%s",
-                publisher.getRegisterId(), publisher.getRegisterTimestamp(), urlStr,
-                publisher.getVersion());
+            return String.format("%s,%s,%s,%s", publisher.getRegisterId(),
+                publisher.getRegisterTimestamp(), urlStr, publisher.getVersion());
         }
         return "";
     }
