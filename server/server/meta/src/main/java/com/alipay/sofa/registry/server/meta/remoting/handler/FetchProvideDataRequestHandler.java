@@ -53,10 +53,8 @@ public class FetchProvideDataRequestHandler extends AbstractServerHandler<FetchP
 
             if (ret.getOperationStatus() == OperationStatus.SUCCESS) {
                 PersistenceData data = (PersistenceData) ret.getEntity();
-                String dataInfoId = DataInfo.toDataInfoId(data.getDataId(), data.getInstanceId(),
-                    data.getGroup());
                 ProvideData provideData = new ProvideData(new ServerDataBox(data.getData()),
-                    dataInfoId, data.getVersion());
+                    fetchProvideDataRequest.getDataInfoId(), data.getVersion());
                 DB_LOGGER.info("get ProvideData {} from DB success!", provideData);
                 return provideData;
             } else if (ret.getOperationStatus() == OperationStatus.NOTFOUND) {
