@@ -308,6 +308,11 @@ public class DataNodeServiceImpl implements DataNodeService {
                 public URL getRequestUrl() {
                     return getUrl(dataInfoId);
                 }
+
+                @Override
+                public Integer getTimeout() {
+                    return sessionServerConfig.getDataNodeExchangeForFetchDatumTimeOut();
+                }
             };
 
             Response response = dataNodeExchanger.request(getDataRequestStringRequest);
