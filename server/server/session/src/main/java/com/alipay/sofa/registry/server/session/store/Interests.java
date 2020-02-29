@@ -16,12 +16,13 @@
  */
 package com.alipay.sofa.registry.server.session.store;
 
-import com.alipay.sofa.registry.common.model.store.Subscriber;
-import com.alipay.sofa.registry.core.model.ScopeEnum;
-
 import java.net.InetSocketAddress;
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
+
+import com.alipay.sofa.registry.common.model.store.Subscriber;
+import com.alipay.sofa.registry.core.model.ScopeEnum;
 
 /**
  *
@@ -99,4 +100,6 @@ public interface Interests extends DataManager<Subscriber, String, String> {
      * @return
      */
     Map<String/*connectId*/, Map<String/*registerId*/, Subscriber>> getConnectSubscribers();
+
+    List<String> getDataCenters();
 }
