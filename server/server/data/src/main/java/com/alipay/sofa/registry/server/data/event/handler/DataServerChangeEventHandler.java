@@ -162,7 +162,8 @@ public class DataServerChangeEventHandler extends AbstractEventHandler<DataServe
                             if (!StringUtils.equals(dataNode.getIp(), DataServerConfig.IP)) {
                                 DataServerNode dataServerNode = DataServerNodeFactory
                                     .getDataServerNode(dataCenter, dataNode.getIp());
-                                Connection connection = dataServerNode.getConnection();
+                                Connection connection = dataServerNode != null ? dataServerNode
+                                    .getConnection() : null;
                                 if (connection == null || !connection.isFine()) {
                                     LOGGER
                                         .warn(

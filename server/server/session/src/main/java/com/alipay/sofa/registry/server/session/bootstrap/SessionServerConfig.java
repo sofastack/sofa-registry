@@ -53,6 +53,8 @@ public interface SessionServerConfig {
 
     int getDataNodeExchangeTimeOut();
 
+    int getDataNodeExchangeForFetchDatumTimeOut();
+
     int getMetaNodeExchangeTimeOut();
 
     String getSessionServerRegion();
