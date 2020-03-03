@@ -332,7 +332,6 @@ public class SessionRegistry implements Registry {
 
     @Override
     public void fetchChangDataProcess() {
-
         //check dataInfoId's sub list is not empty
         List<String> checkDataInfoIds = new ArrayList<>();
         sessionInterests.getInterestDataInfoIds().forEach((dataInfoId) -> {
@@ -341,6 +340,9 @@ public class SessionRegistry implements Registry {
                 checkDataInfoIds.add(dataInfoId);
             }
         });
+
+        LOGGER.info("[fetchChangDataProcess] Fetch data versions for {} dataInfoIds", checkDataInfoIds.size());
+
         Map<String/*address*/, Collection<String>/*dataInfoIds*/> map = calculateDataNode(checkDataInfoIds);
 
         map.forEach((address, dataInfoIds) -> {

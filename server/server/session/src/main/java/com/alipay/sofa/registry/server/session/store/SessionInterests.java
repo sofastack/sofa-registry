@@ -19,11 +19,13 @@ package com.alipay.sofa.registry.server.session.store;
 import java.net.InetSocketAddress;
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -35,6 +37,7 @@ import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
 import com.alipay.sofa.registry.server.session.cache.SubscriberResult;
 import com.alipay.sofa.registry.util.VersionsMapUtils;
+import com.google.common.collect.Lists;
 
 /**
  *
@@ -455,4 +458,14 @@ public class SessionInterests implements Interests, ReSubscribers {
     public void setSessionServerConfig(SessionServerConfig sessionServerConfig) {
         this.sessionServerConfig = sessionServerConfig;
     }
+
+    @Override
+    public List<String> getDataCenters() {
+        if (interestVersions != null) {
+            return interestVersions.keySet().stream().collect(Collectors.toList());
+        } else {
+            return Lists.newArrayList();
+        }
+    }
+
 }

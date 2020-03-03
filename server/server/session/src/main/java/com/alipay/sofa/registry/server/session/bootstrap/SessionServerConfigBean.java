@@ -159,6 +159,8 @@ public class SessionServerConfigBean implements SessionServerConfig {
 
     private int                dataNodeExchangeTimeOut                 = 3000;
 
+    private int                dataNodeExchangeForFetchDatumTimeOut    = 5000;
+
     private int                metaNodeExchangeTimeOut                 = 3000;
 
     private int                numberOfReplicas                        = 1000;
@@ -2102,6 +2104,24 @@ public class SessionServerConfigBean implements SessionServerConfig {
      */
     public void setSessionSchedulerPoolSize(int sessionSchedulerPoolSize) {
         this.sessionSchedulerPoolSize = sessionSchedulerPoolSize;
+    }
+
+    /**
+     * Getter method for property <tt>dataNodeExchangeForFetchDatumTimeOut</tt>.
+     *
+     * @return property value of dataNodeExchangeForFetchDatumTimeOut
+     */
+    public int getDataNodeExchangeForFetchDatumTimeOut() {
+        return dataNodeExchangeForFetchDatumTimeOut;
+    }
+
+    /**
+     * Setter method for property <tt>dataNodeExchangeForFetchDatumTimeOut </tt>.
+     *
+     * @param dataNodeExchangeForFetchDatumTimeOut  value to be assigned to property dataNodeExchangeForFetchDatumTimeOut
+     */
+    public void setDataNodeExchangeForFetchDatumTimeOut(int dataNodeExchangeForFetchDatumTimeOut) {
+        this.dataNodeExchangeForFetchDatumTimeOut = dataNodeExchangeForFetchDatumTimeOut;
     }
 
     public static int cpus() {
