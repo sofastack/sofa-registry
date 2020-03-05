@@ -459,13 +459,4 @@ public class SessionInterests implements Interests, ReSubscribers {
         this.sessionServerConfig = sessionServerConfig;
     }
 
-    @Override
-    public List<String> getDataCenters() {
-        if (interestVersions != null) {
-            return interestVersions.keySet().stream().collect(Collectors.toList());
-        } else {
-            return Lists.newArrayList();
-        }
-    }
-
 }

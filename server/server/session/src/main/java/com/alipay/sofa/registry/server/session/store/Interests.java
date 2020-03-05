@@ -18,7 +18,6 @@ package com.alipay.sofa.registry.server.session.store;
 
 import java.net.InetSocketAddress;
 import java.util.Collection;
-import java.util.List;
 import java.util.Map;
 
 import com.alipay.sofa.registry.common.model.store.Subscriber;
@@ -101,5 +100,4 @@ public interface Interests extends DataManager<Subscriber, String, String> {
      */
     Map<String/*connectId*/, Map<String/*registerId*/, Subscriber>> getConnectSubscribers();
 
-    List<String> getDataCenters();
 }

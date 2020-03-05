@@ -161,9 +161,10 @@ public class DataChangeFetchCloudTask extends AbstractSessionTask {
                     LOGGER.info("Stop Push switch on,dataInfoId {} version can not be update!", fetchDataInfoId);
                     return;
                 }
-                List<String> dataCenters = sessionInterests.getDataCenters();
+                NodeManager nodeManager = NodeManagerFactory.getNodeManager(NodeType.META);
+                List<String> remoteDataCentersWhichMissDatum = new ArrayList<>(nodeManager.getDataCenters());
                 datumMap.forEach((dataCenter, datum) -> {
-                    dataCenters.remove(dataCenter);
+                    remoteDataCentersWhichMissDatum.remove(dataCenter);
 
                     String dataInfoId = fetchDataInfoId;
                     Long version = datum.getVersion();
@@ -181,7 +182,7 @@ public class DataChangeFetchCloudTask extends AbstractSessionTask {
                 // now, elements left in dataCenters, means that datum of the dataCenter,
                 // cannot be obtained from DataServer this time, it may cause pushing empty datum wrongly,
                 // so it is necessary to ensure that it can be checked later
-                dataCenters.forEach(dataCenter -> {
+                remoteDataCentersWhichMissDatum.forEach(dataCenter -> {
                     boolean result = sessionInterests.checkAndUpdateInterestVersionZero(dataCenter, fetchDataInfoId);
                     LOGGER.warn(
                             "Obtained datum from DataServer({}) failed, set sessionInterests dataInfoId({}) version zero, return {}",

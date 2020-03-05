@@ -52,7 +52,9 @@ import com.alipay.sofa.registry.test.BaseIntegrationTest;
  * @since 2020/03/03
  */
 @RunWith(SpringRunner.class)
-public class DataChangeFetchCloudTaskTest extends BaseIntegrationTest {
+public class
+
+Test extends BaseIntegrationTest {
 
     private static String testDataInfoId;
     private static String testDataId;
