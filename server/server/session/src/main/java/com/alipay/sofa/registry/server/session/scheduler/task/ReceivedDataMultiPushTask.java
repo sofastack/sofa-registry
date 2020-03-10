@@ -19,6 +19,7 @@ package com.alipay.sofa.registry.server.session.scheduler.task;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.concurrent.Executor;
 import java.util.concurrent.TimeUnit;
 
@@ -45,34 +46,36 @@ import com.alipay.sofa.registry.task.listener.TaskEvent;
 import com.alipay.sofa.registry.timer.AsyncHashedWheelTimer;
 
 /**
- * TODO bugfix （1）push error：set version zero of realDC; （1）push success：set version zero of missRealDC
  *
  * @author shangyu.wh
  * @version $Id: SubscriberRegisterPushTask.java, v 0.1 2017-12-11 20:57 shangyu.wh Exp $
  */
 public class ReceivedDataMultiPushTask extends AbstractSessionTask {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger("SESSION-PUSH", "[Receive]");
+    private static final Logger               LOGGER = LoggerFactory.getLogger("SESSION-PUSH",
+            "[Receive]");
 
-    private final SessionServerConfig               sessionServerConfig;
-    private final ClientNodeService                 clientNodeService;
-    private final ExecutorManager                   executorManager;
-    private final Exchange                          boltExchange;
-    private       ReceivedData                      receivedData;
-    private       URL                               url;
-    private       TaskClosure                       taskClosure;
-    private       Collection<Subscriber>            subscribers;
-    private       ReceivedDataMultiPushTaskStrategy receivedDataMultiPushTaskStrategy;
-    private       AsyncHashedWheelTimer             asyncHashedWheelTimer;
-    private       Interests                         sessionInterests;
+    private final SessionServerConfig         sessionServerConfig;
+    private final ClientNodeService           clientNodeService;
+    private final ExecutorManager             executorManager;
+    private final Exchange                    boltExchange;
+    private ReceivedData                      receivedData;
+    private URL                               url;
+    private TaskClosure                       taskClosure;
+    private Collection<Subscriber>            subscribers;
+    private ReceivedDataMultiPushTaskStrategy receivedDataMultiPushTaskStrategy;
+    private AsyncHashedWheelTimer             asyncHashedWheelTimer;
+    private Interests                         sessionInterests;
 
-    private String       dataPush;
-    private List<String> remoteDataCentersWhichMissDatum;
+    private String                            dataPush;
 
-    public ReceivedDataMultiPushTask(SessionServerConfig sessionServerConfig, ClientNodeService clientNodeService,
-                                     ExecutorManager executorManager, Exchange boltExchange,
+    public ReceivedDataMultiPushTask(SessionServerConfig sessionServerConfig,
+                                     ClientNodeService clientNodeService,
+                                     ExecutorManager executorManager,
+                                     Exchange boltExchange,
                                      ReceivedDataMultiPushTaskStrategy receivedDataMultiPushTaskStrategy,
-                                     AsyncHashedWheelTimer asyncHashedWheelTimer, Interests sessionInterests) {
+                                     AsyncHashedWheelTimer asyncHashedWheelTimer,
+                                     Interests sessionInterests) {
         this.sessionServerConfig = sessionServerConfig;
         this.clientNodeService = clientNodeService;
         this.executorManager = executorManager;
@@ -87,12 +90,16 @@ public class ReceivedDataMultiPushTask extends AbstractSessionTask {
         Object receivedDataPush = null;
         try {
             if (sessionServerConfig.isStopPushSwitch()) {
-                LOGGER.info("Stop Push ReceivedData with switch on! dataId: {},group: {},Instance: {}, url: {}",
-                        receivedData.getDataId(), receivedData.getGroup(), receivedData.getInstanceId(), url);
+                LOGGER
+                        .info(
+                                "Stop Push ReceivedData with switch on! dataId: {},group: {},Instance: {}, url: {}",
+                                receivedData.getDataId(), receivedData.getGroup(),
+                                receivedData.getInstanceId(), url);
                 return;
             }
 
-            receivedDataPush = receivedDataMultiPushTaskStrategy.convert2PushData(receivedData, url);
+            receivedDataPush = receivedDataMultiPushTaskStrategy
+                    .convert2PushData(receivedData, url);
 
             final Object finalReceivedDataPush = receivedDataPush;
             CallbackHandler callbackHandler = new CallbackHandler() {
@@ -102,24 +109,29 @@ public class ReceivedDataMultiPushTask extends AbstractSessionTask {
                     if (taskClosure != null) {
                         confirmCallBack(true);
                     }
-                    LOGGER.info(
-                            "Push ReceivedData success! dataId:{},group:{},Instance:{},version:{},url: {},dataPush:{}",
-                            receivedData.getDataId(), receivedData.getGroup(), receivedData.getInstanceId(),
-                            receivedData.getVersion(), url, dataPush);
+                    LOGGER
+                            .info(
+                                    "Push ReceivedData success! dataId:{},group:{},Instance:{},version:{},url: {},dataPush:{}",
+                                    receivedData.getDataId(), receivedData.getGroup(),
+                                    receivedData.getInstanceId(), receivedData.getVersion(), url, dataPush);
                 }
 
                 @Override
                 public void onException(Channel channel, Throwable exception) {
                     try {
-                        LOGGER.error(
-                                "Push ReceivedData error! dataId:{},group:{},Instance:{},version:{},url: {},dataPush:{}",
-                                receivedData.getDataId(), receivedData.getGroup(), receivedData.getInstanceId(),
-                                receivedData.getVersion(), url, dataPush, exception);
+                        LOGGER
+                                .error(
+                                        "Push ReceivedData error! dataId:{},group:{},Instance:{},version:{},url: {},dataPush:{}",
+                                        receivedData.getDataId(), receivedData.getGroup(),
+                                        receivedData.getInstanceId(), receivedData.getVersion(), url,
+                                        dataPush, exception);
 
                         if (taskClosure != null) {
-                            throw new RuntimeException("Push ReceivedData got exception from callback!");
+                            throw new RuntimeException(
+                                    "Push ReceivedData got exception from callback!");
                         } else {
-                            retrySendReceiveData(new PushDataRetryRequest(finalReceivedDataPush, url));
+                            retrySendReceiveData(new PushDataRetryRequest(finalReceivedDataPush,
+                                    url));
                         }
                     } finally {
                         if (taskClosure != null) {
@@ -195,7 +207,7 @@ public class ReceivedDataMultiPushTask extends AbstractSessionTask {
                                     retryTimes);
                             retrySendReceiveData(pushDataRetryRequest);
                         }
-                    }, getBlockTime(retryTimes), TimeUnit.MILLISECONDS);
+                    },getBlockTime(retryTimes),TimeUnit.MILLISECONDS);
                 } else {
                     LOGGER.error(
                             "Retry Push ReceivedData error, connect be null or disconnected,stop retry!dataId:{}, group:{},url:{},taskId:{},dataPush:{},retryTimes:{}",
@@ -206,17 +218,16 @@ public class ReceivedDataMultiPushTask extends AbstractSessionTask {
                 //set sessionInterests dataInfoId version zero
                 DataInfo dataInfo = new DataInfo(receivedData.getInstanceId(), receivedData.getDataId(),
                         receivedData.getGroup());
-                boolean result = sessionInterests
-                        .checkAndUpdateInterestVersionZero(receivedData.getSegment(), dataInfo.getDataInfoId());
+                boolean result = sessionInterests.checkAndUpdateInterestVersionZero(receivedData.getSegment(), dataInfo.getDataInfoId());
                 if (result) {
-                    LOGGER.warn(
-                            "Retry Push ReceivedData times have exceeded,set sessionInterests dataInfoId version zero! url:{},taskId:{},dataPush:{},retryTimes:{},dataCenter:{},dataInfoId:{}!",
-                            targetUrl, getTaskId(), dataPush, retryTimes, receivedData.getSegment(),
+                    LOGGER.warn("Retry Push ReceivedData times have exceeded,set sessionInterests dataInfoId version zero! url:{},taskId:{},dataPush:{},retryTimes:{},dataCenter:{},dataInfoId:{}!",
+                            targetUrl,getTaskId(),dataPush,retryTimes,
+                            receivedData.getSegment(),
                             dataInfo.getDataInfoId());
                 } else {
-                    LOGGER.warn(
-                            "Retry Push ReceivedData times have exceeded,but set sessionInterests dataInfoId version zero fail!url:{},taskId:{},dataPush:{},retryTimes:{},dataCenter:{},dataInfoId:{}!",
-                            targetUrl, getTaskId(), dataPush, retryTimes, receivedData.getSegment(),
+                    LOGGER.warn("Retry Push ReceivedData times have exceeded,but set sessionInterests dataInfoId version zero fail!url:{},taskId:{},dataPush:{},retryTimes:{},dataCenter:{},dataInfoId:{}!",
+                            targetUrl,getTaskId(),dataPush,retryTimes,
+                            receivedData.getSegment(),
                             dataInfo.getDataInfoId());
                 }
             }
@@ -233,14 +244,27 @@ public class ReceivedDataMultiPushTask extends AbstractSessionTask {
     public void setTaskEvent(TaskEvent taskEvent) {
         //taskId create from event
         if (taskEvent.getTaskId() != null) {
-
             setTaskId(taskEvent.getTaskId());
         }
-        this.url = (URL) taskEvent.getAttribute(Constant.PUSH_CLIENT_URL);
-        this.receivedData = (ReceivedData) taskEvent.getAttribute(Constant.PUSH_CLIENT_RECEIVED_DATA);
-        this.subscribers = (Collection<Subscriber>) taskEvent.getAttribute(Constant.PUSH_CLIENT_SUBSCRIBERS);
-        this.remoteDataCentersWhichMissDatum = (List<String>) taskEvent
-                .getAttribute(Constant.PUSH_CLIENT_REMOTE_DATACENTERS_WHICH_MISS_DATUM);
+
+        Object obj = taskEvent.getEventObj();
+
+        if (obj instanceof Map) {
+
+            Map<ReceivedData, URL> parameter = (Map<ReceivedData, URL>) obj;
+
+            if (parameter.size() == 1) {
+
+                Entry<ReceivedData, URL> entry = (parameter.entrySet()).iterator().next();
+                ReceivedData receivedData = entry.getKey();
+                URL url = entry.getValue();
+
+                this.receivedData = receivedData;
+                this.url = url;
+            } else {
+                throw new IllegalArgumentException("Input task event object error!");
+            }
+        }
 
         if (receivedData != null && receivedData.getData() != null) {
             StringBuilder sb = new StringBuilder();
@@ -260,6 +284,8 @@ public class ReceivedDataMultiPushTask extends AbstractSessionTask {
 
         taskClosure = taskEvent.getTaskClosure();
 
+        subscribers = (Collection<Subscriber>) taskEvent
+                .getAttribute(Constant.PUSH_CLIENT_SUBSCRIBERS);
         //taskClosure must confirm all subscriber push success
         if (taskClosure != null && subscribers.isEmpty()) {
             LOGGER.error("send Receive data subscribers is empty!");
@@ -289,8 +315,9 @@ public class ReceivedDataMultiPushTask extends AbstractSessionTask {
 
     @Override
     public String toString() {
-        return "RECEIVED_DATA_MULTI_PUSH_TASK{" + "taskId='" + getTaskId() + '\'' + ", receivedData=" + receivedData
-               + ", url=" + url + ", expiryTime='" + getExpiryTime() + '\'' + '}';
+        return "RECEIVED_DATA_MULTI_PUSH_TASK{" + "taskId='" + getTaskId() + '\''
+               + ", receivedData=" + receivedData + ", url=" + url + ", expiryTime='"
+               + getExpiryTime() + '\'' + '}';
     }
 
     @Override
@@ -303,8 +330,10 @@ public class ReceivedDataMultiPushTask extends AbstractSessionTask {
     }
 
     private long getBlockTime(int retry) {
-        long initialSleepTime = TimeUnit.MILLISECONDS.toMillis(sessionServerConfig.getPushDataTaskRetryFirstDelay());
-        long increment = TimeUnit.MILLISECONDS.toMillis(sessionServerConfig.getPushDataTaskRetryIncrementDelay());
+        long initialSleepTime = TimeUnit.MILLISECONDS.toMillis(sessionServerConfig
+                .getPushDataTaskRetryFirstDelay());
+        long increment = TimeUnit.MILLISECONDS.toMillis(sessionServerConfig
+                .getPushDataTaskRetryIncrementDelay());
         long result = initialSleepTime + (increment * (retry - 1));
         return result >= 0L ? result : 0L;
     }
