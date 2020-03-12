@@ -181,11 +181,12 @@ public class DataChangeFetchCloudTask extends AbstractSessionTask {
 
                 // now, elements left in dataCenters, means that datum of the dataCenter,
                 // cannot be obtained from DataServer this time, it may cause pushing empty datum wrongly,
-                // so it is necessary to ensure that it can be checked later
+                // so it is necessary to ensure that it can be checked later.
+                // If the data does not exist in the dataCenter exactly, there will be no additional impact, just more memory
                 remoteDataCentersWhichMissDatum.forEach(dataCenter -> {
                     boolean result = sessionInterests.checkAndUpdateInterestVersionZero(dataCenter, fetchDataInfoId);
                     LOGGER.warn(
-                            "Obtained datum from DataServer({}) failed, set sessionInterests dataInfoId({}) version zero, return {}",
+                            "Push done, but datum from DataServer({}) not obtained, so set sessionInterests dataInfoId({}) version zero, return {}",
                             dataCenter, fetchDataInfoId, result);
                 });
 
@@ -323,6 +324,7 @@ public class DataChangeFetchCloudTask extends AbstractSessionTask {
         taskListenerManager.sendTaskEvent(taskEvent);
     }
 
+    //no used, see ClientNodeSingleTaskProcessor
     @Override
     public boolean checkRetryTimes() {
         return checkRetryTimes(sessionServerConfig.getDataChangeFetchTaskRetryTimes());

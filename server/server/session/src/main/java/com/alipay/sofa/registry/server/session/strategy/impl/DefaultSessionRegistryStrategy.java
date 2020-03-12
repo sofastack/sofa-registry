@@ -28,10 +28,13 @@ import com.alipay.sofa.registry.common.model.store.Watcher;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
+import com.alipay.sofa.registry.server.session.scheduler.task.Constant;
 import com.alipay.sofa.registry.server.session.store.Interests;
 import com.alipay.sofa.registry.server.session.strategy.SessionRegistryStrategy;
 import com.alipay.sofa.registry.task.listener.TaskEvent;
+import com.alipay.sofa.registry.task.listener.TaskEvent.TaskType;
 import com.alipay.sofa.registry.task.listener.TaskListenerManager;
+import com.google.common.collect.Lists;
 
 /**
  * @author kezhu.wukz
@@ -105,8 +108,10 @@ public class DefaultSessionRegistryStrategy implements SessionRegistryStrategy {
     public void afterSubscriberRegister(Subscriber subscriber) {
         if (!sessionServerConfig.isStopPushSwitch()) {
             //trigger fetch data for subscriber,and push to client node
-            TaskEvent taskEvent = new TaskEvent(subscriber,
-                TaskEvent.TaskType.SUBSCRIBER_REGISTER_FETCH_TASK);
+            TaskEvent taskEvent = new TaskEvent(subscriber.getDataInfoId(),
+                TaskType.SUBSCRIBER_MULTI_FETCH_TASK);
+            taskEvent
+                .setAttribute(Constant.PUSH_CLIENT_SUBSCRIBERS, Lists.newArrayList(subscriber));
             taskLogger.info("send " + taskEvent.getTaskType() + " taskEvent:{}", taskEvent);
             taskListenerManager.sendTaskEvent(taskEvent);
         }

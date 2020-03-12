@@ -23,13 +23,10 @@ package com.alipay.sofa.registry.server.session.scheduler.task;
  */
 public class Constant {
 
-    public final static String PUSH_CLIENT_SUBSCRIBERS                         = "PUSH_CLIENT_SUBSCRIBERS";
+    public final static String PUSH_CLIENT_SUBSCRIBERS = "PUSH_CLIENT_SUBSCRIBERS";
 
-    public final static String PUSH_CLIENT_DATUM                               = "PUSH_CLIENT_DATUM";
+    public final static String PUSH_CLIENT_DATUM       = "PUSH_CLIENT_DATUM";
 
-    public final static String PUSH_CLIENT_URL                                 = "PUSH_CLIENT_URL";
+    public final static String PUSH_CLIENT_URL         = "PUSH_CLIENT_URL";
 
-    public final static String PUSH_CLIENT_RECEIVED_DATA                       = "PUSH_CLIENT_RECEIVED_DATA";
-
-    public final static String PUSH_CLIENT_REMOTE_DATACENTERS_WHICH_MISS_DATUM = "PUSH_CLIENT_REMOTE_DATACENTERS_WHICH_MISS_DATUM";
 }

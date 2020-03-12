@@ -16,9 +16,17 @@
  */
 package com.alipay.sofa.registry.server.session.scheduler.task;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 import com.alipay.sofa.registry.common.model.constants.ValueConstants;
 import com.alipay.sofa.registry.common.model.dataserver.Datum;
 import com.alipay.sofa.registry.common.model.store.BaseInfo.ClientVersion;
+import com.alipay.sofa.registry.common.model.store.DataInfo;
 import com.alipay.sofa.registry.common.model.store.Subscriber;
 import com.alipay.sofa.registry.common.model.store.URL;
 import com.alipay.sofa.registry.core.model.ReceivedData;
@@ -31,13 +39,6 @@ import com.alipay.sofa.registry.task.listener.TaskEvent;
 import com.alipay.sofa.registry.task.listener.TaskEvent.TaskType;
 import com.alipay.sofa.registry.task.listener.TaskListenerManager;
 import com.alipay.sofa.registry.util.DatumVersionUtil;
-
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
 /**
  *
@@ -155,6 +156,8 @@ public class SubscriberPushEmptyTask extends AbstractSessionTask {
         datum.setDataId(subscriber.getDataId());
         datum.setInstanceId(subscriber.getInstanceId());
         datum.setGroup(subscriber.getGroup());
+        datum.setDataInfoId(new DataInfo(subscriber.getInstanceId(), subscriber.getDataId(),
+            subscriber.getGroup()).getDataInfoId());
         //no datum set version current timestamp
         datum.setVersion(DatumVersionUtil.nextId());
         datum.setPubMap(new HashMap<>());
@@ -181,6 +184,8 @@ public class SubscriberPushEmptyTask extends AbstractSessionTask {
         datum.setDataId(subscriber.getDataId());
         datum.setInstanceId(subscriber.getInstanceId());
         datum.setGroup(subscriber.getGroup());
+        datum.setDataInfoId(new DataInfo(subscriber.getInstanceId(), subscriber.getDataId(),
+            subscriber.getGroup()).getDataInfoId());
         //no datum set version as mini as
         datum.setVersion(DatumVersionUtil.nextId());
         datum.setPubMap(new HashMap<>());

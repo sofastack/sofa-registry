@@ -60,7 +60,6 @@ import com.alipay.sofa.registry.server.session.listener.RenewDatumTaskListener;
 import com.alipay.sofa.registry.server.session.listener.SessionRegisterDataTaskListener;
 import com.alipay.sofa.registry.server.session.listener.SubscriberMultiFetchTaskListener;
 import com.alipay.sofa.registry.server.session.listener.SubscriberPushEmptyTaskListener;
-import com.alipay.sofa.registry.server.session.listener.SubscriberRegisterFetchTaskListener;
 import com.alipay.sofa.registry.server.session.listener.UnPublishDataTaskListener;
 import com.alipay.sofa.registry.server.session.listener.WatcherRegisterFetchTaskListener;
 import com.alipay.sofa.registry.server.session.node.DataNodeManager;
@@ -124,7 +123,6 @@ import com.alipay.sofa.registry.server.session.strategy.ReceivedDataMultiPushTas
 import com.alipay.sofa.registry.server.session.strategy.SessionRegistryStrategy;
 import com.alipay.sofa.registry.server.session.strategy.SubscriberHandlerStrategy;
 import com.alipay.sofa.registry.server.session.strategy.SubscriberMultiFetchTaskStrategy;
-import com.alipay.sofa.registry.server.session.strategy.SubscriberRegisterFetchTaskStrategy;
 import com.alipay.sofa.registry.server.session.strategy.SyncConfigHandlerStrategy;
 import com.alipay.sofa.registry.server.session.strategy.TaskMergeProcessorStrategy;
 import com.alipay.sofa.registry.server.session.strategy.WatcherHandlerStrategy;
@@ -136,7 +134,6 @@ import com.alipay.sofa.registry.server.session.strategy.impl.DefaultReceivedData
 import com.alipay.sofa.registry.server.session.strategy.impl.DefaultSessionRegistryStrategy;
 import com.alipay.sofa.registry.server.session.strategy.impl.DefaultSubscriberHandlerStrategy;
 import com.alipay.sofa.registry.server.session.strategy.impl.DefaultSubscriberMultiFetchTaskStrategy;
-import com.alipay.sofa.registry.server.session.strategy.impl.DefaultSubscriberRegisterFetchTaskStrategy;
 import com.alipay.sofa.registry.server.session.strategy.impl.DefaultSyncConfigHandlerStrategy;
 import com.alipay.sofa.registry.server.session.strategy.impl.DefaultWatcherHandlerStrategy;
 import com.alipay.sofa.registry.server.session.wrapper.AccessLimitWrapperInterceptor;
@@ -451,14 +448,6 @@ public class SessionServerConfiguration {
         }
 
         @Bean
-        public TaskListener subscriberRegisterFetchTaskListener(TaskListenerManager taskListenerManager) {
-            TaskListener taskListener = new SubscriberRegisterFetchTaskListener(
-                dataNodeSingleTaskProcessor());
-            taskListenerManager.addTaskListener(taskListener);
-            return taskListener;
-        }
-
-        @Bean
         public TaskListener subscriberMultiFetchTaskListener(TaskListenerManager taskListenerManager) {
             TaskListener taskListener = new SubscriberMultiFetchTaskListener(
                 dataNodeSingleTaskProcessor());
@@ -620,12 +609,6 @@ public class SessionServerConfiguration {
         @ConditionalOnMissingBean
         public SyncConfigHandlerStrategy syncConfigHandlerStrategy() {
             return new DefaultSyncConfigHandlerStrategy();
-        }
-
-        @Bean
-        @ConditionalOnMissingBean
-        public SubscriberRegisterFetchTaskStrategy subscriberRegisterFetchTaskStrategy() {
-            return new DefaultSubscriberRegisterFetchTaskStrategy();
         }
 
         @Bean

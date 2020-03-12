@@ -18,9 +18,11 @@ package com.alipay.sofa.registry.test.task;
 
 import static org.junit.Assert.assertTrue;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.junit.After;
 import org.junit.Before;
@@ -31,12 +33,18 @@ import org.springframework.test.context.junit4.SpringRunner;
 import com.alipay.sofa.registry.client.api.model.RegistryType;
 import com.alipay.sofa.registry.client.api.registration.PublisherRegistration;
 import com.alipay.sofa.registry.client.api.registration.SubscriberRegistration;
+import com.alipay.sofa.registry.common.model.Node.NodeType;
 import com.alipay.sofa.registry.common.model.constants.ValueConstants;
 import com.alipay.sofa.registry.common.model.dataserver.Datum;
+import com.alipay.sofa.registry.common.model.metaserver.MetaNode;
+import com.alipay.sofa.registry.common.model.metaserver.NodeChangeResult;
 import com.alipay.sofa.registry.common.model.store.DataInfo;
+import com.alipay.sofa.registry.common.model.store.URL;
 import com.alipay.sofa.registry.core.model.ScopeEnum;
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
 import com.alipay.sofa.registry.server.session.cache.CacheService;
+import com.alipay.sofa.registry.server.session.node.NodeManager;
+import com.alipay.sofa.registry.server.session.node.NodeManagerFactory;
 import com.alipay.sofa.registry.server.session.scheduler.ExecutorManager;
 import com.alipay.sofa.registry.server.session.scheduler.task.DataChangeFetchCloudTask;
 import com.alipay.sofa.registry.server.session.scheduler.task.PushTaskClosure;
@@ -52,9 +60,7 @@ import com.alipay.sofa.registry.test.BaseIntegrationTest;
  * @since 2020/03/03
  */
 @RunWith(SpringRunner.class)
-public class
-
-Test extends BaseIntegrationTest {
+public class DataChangeFetchCloudTaskTest extends BaseIntegrationTest {
 
     private static String testDataInfoId;
     private static String testDataId;
@@ -76,6 +82,31 @@ Test extends BaseIntegrationTest {
         registryClient1.register(subReg);
 
         Thread.sleep(5000L);
+
+
+        // add testDataCenter
+        SessionServerConfig sessionServerConfig = (SessionServerConfig) sessionApplicationContext
+                .getBean("sessionServerConfig");
+        NodeManager nodeManager = NodeManagerFactory.getNodeManager(NodeType.META);
+        List<MetaNode> dataCenterNodes = new ArrayList<>(nodeManager.getDataCenterNodes());
+        NodeChangeResult nodeChangeResult = new NodeChangeResult(NodeType.META);
+        nodeChangeResult.setLocalDataCenter(sessionServerConfig.getSessionServerDataCenter());
+        nodeChangeResult.setVersion(System.currentTimeMillis());
+
+        ConcurrentHashMap<String/*dataCenter*/, Map<String/*ipAddress*/, MetaNode>> pushNodes = new ConcurrentHashMap<>();
+        dataCenterNodes.forEach((metaNode) -> {
+            Map<String, MetaNode> newMap = new ConcurrentHashMap<>();
+            newMap.put(metaNode.getIp(), metaNode);
+            pushNodes.put(metaNode.getDataCenter(), newMap);
+        });
+        {
+            MetaNode testMetaNode = new MetaNode(new URL("127.0.0.1", 33452), "TestDataCenter");
+            Map<String, MetaNode> newMap = new ConcurrentHashMap<>();
+            newMap.put(testMetaNode.getIp(), testMetaNode);
+            pushNodes.put(testMetaNode.getDataCenter(), newMap);
+        }
+        nodeChangeResult.setNodes(pushNodes);
+        nodeManager.updateNodes(nodeChangeResult);
     }
 
     @After
@@ -85,6 +116,10 @@ Test extends BaseIntegrationTest {
             RegistryType.SUBSCRIBER);
         registryClient1
             .unregister(testDataId, ValueConstants.DEFAULT_GROUP, RegistryType.PUBLISHER);
+
+        // recover dataCenters (remove testDataCenter)
+        NodeManager nodeManager = NodeManagerFactory.getNodeManager(NodeType.META);
+        nodeManager.getAllDataCenterNodes();
     }
 
     @Test
@@ -107,13 +142,6 @@ Test extends BaseIntegrationTest {
         SessionTask dataChangeFetchTask = new DataChangeFetchCloudTask(sessionServerConfig,
             taskListenerManager, sessionInterests, executorManager, sessionCacheService);
         dataChangeFetchTask.setTaskEvent(event);
-
-        //put a new dataCenter, version set 1
-
-        sessionInterests.checkAndUpdateInterestVersions(dataCenter, testDataInfoId, 1L);
-        List<String> dataCenters = sessionInterests.getDataCenters();
-        assertTrue(dataCenters.size() > 0);
-        assertTrue(dataCenters.contains(dataCenter));
 
         // version will uodate to 0
         Map<String, Datum> datumMap = new HashMap<>();

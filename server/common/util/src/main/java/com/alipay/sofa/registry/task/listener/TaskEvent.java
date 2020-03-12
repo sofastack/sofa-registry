@@ -31,7 +31,6 @@ public class TaskEvent {
 
     public enum TaskType {
         //Session task
-        SUBSCRIBER_REGISTER_FETCH_TASK("SubscriberRegisterFetchTask"), //
         SUBSCRIBER_PUSH_EMPTY_TASK("SubscriberPushEmptyTask"), //
         WATCHER_REGISTER_FETCH_TASK("WatcherRegisterFetchTask"), //
         DATA_CHANGE_FETCH_TASK("DataChangeFetchTask"), //

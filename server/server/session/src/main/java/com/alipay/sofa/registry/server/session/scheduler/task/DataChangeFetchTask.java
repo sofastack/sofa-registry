@@ -354,6 +354,7 @@ public class DataChangeFetchTask extends AbstractSessionTask {
         this.dataChangeRequest = dataChangeRequest;
     }
 
+    //no used, see ClientNodeSingleTaskProcessor
     @Override
     public boolean checkRetryTimes() {
         return checkRetryTimes(sessionServerConfig.getDataChangeFetchTaskRetryTimes());

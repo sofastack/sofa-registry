@@ -27,9 +27,11 @@ import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import com.alipay.sofa.registry.common.model.Node;
+import com.alipay.sofa.registry.common.model.Node.NodeType;
 import com.alipay.sofa.registry.common.model.constants.ValueConstants;
 import com.alipay.sofa.registry.common.model.dataserver.Datum;
 import com.alipay.sofa.registry.common.model.store.BaseInfo;
+import com.alipay.sofa.registry.common.model.store.DataInfo;
 import com.alipay.sofa.registry.common.model.store.Subscriber;
 import com.alipay.sofa.registry.common.model.store.URL;
 import com.alipay.sofa.registry.core.model.ReceivedData;
@@ -45,11 +47,14 @@ import com.alipay.sofa.registry.server.session.cache.Value;
 import com.alipay.sofa.registry.server.session.converter.ReceivedDataConverter;
 import com.alipay.sofa.registry.server.session.node.NodeManager;
 import com.alipay.sofa.registry.server.session.node.NodeManagerFactory;
+import com.alipay.sofa.registry.server.session.scheduler.ExecutorManager;
 import com.alipay.sofa.registry.server.session.scheduler.task.Constant;
+import com.alipay.sofa.registry.server.session.scheduler.task.PushTaskClosure;
 import com.alipay.sofa.registry.server.session.store.Interests;
 import com.alipay.sofa.registry.server.session.strategy.SubscriberMultiFetchTaskStrategy;
-import com.alipay.sofa.registry.server.session.utils.DatumUtils;
+import com.alipay.sofa.registry.task.batcher.TaskProcessor.ProcessingResult;
 import com.alipay.sofa.registry.task.listener.TaskEvent;
+import com.alipay.sofa.registry.task.listener.TaskEvent.TaskType;
 import com.alipay.sofa.registry.task.listener.TaskListenerManager;
 
 /**
@@ -57,24 +62,43 @@ import com.alipay.sofa.registry.task.listener.TaskListenerManager;
  * @since 2019/2/15
  */
 public class DefaultSubscriberMultiFetchTaskStrategy implements SubscriberMultiFetchTaskStrategy {
-    private static final Logger taskLogger = LoggerFactory.getLogger(
-                                               DefaultSubscriberMultiFetchTaskStrategy.class,
-                                               "[Task]");
+    private static final Logger   taskLogger = LoggerFactory.getLogger(
+                                                 DefaultSubscriberMultiFetchTaskStrategy.class,
+                                                 "[Task]");
 
-    private static final Logger LOGGER     = LoggerFactory
-                                               .getLogger(DefaultSubscriberMultiFetchTaskStrategy.class);
+    private static final Logger   LOGGER     = LoggerFactory
+                                                 .getLogger(DefaultSubscriberMultiFetchTaskStrategy.class);
 
     @Autowired
-    private Interests           sessionInterests;
+    protected SessionServerConfig sessionServerConfig;
 
+    @Autowired
+    protected ExecutorManager     executorManager;
+
+    @Autowired
+    protected Interests           sessionInterests;
+
+    /**
+     *
+     * @param sessionServerConfig
+     * @param taskListenerManager
+     * @param sessionCacheService
+     * @param fetchDataInfoId
+     * @param subscribers must not empty
+     */
     @Override
     public void doSubscriberMultiFetchTask(SessionServerConfig sessionServerConfig,
                                            TaskListenerManager taskListenerManager,
                                            CacheService sessionCacheService,
                                            String fetchDataInfoId,
                                            Collection<Subscriber> subscribers) {
-        Map<String/*dataCenter*/, Datum> datumMap = getDatumsCache(fetchDataInfoId,
-            sessionCacheService);
+        Subscriber _subscriber = subscribers.iterator().next();
+        String dataId = _subscriber.getDataId();
+        String instanceId = _subscriber.getInstanceId();
+        String group = _subscriber.getGroup();
+
+        Map<String/*dataCenter*/, Datum> datumMap = getDatumsCache(fetchDataInfoId, dataId,
+            instanceId, group, sessionCacheService);
 
         for (ScopeEnum scopeEnum : ScopeEnum.values()) {
             Map<InetSocketAddress, Map<String, Subscriber>> map = getPushSubscribers(scopeEnum,
@@ -85,16 +109,15 @@ public class DefaultSubscriberMultiFetchTaskStrategy implements SubscriberMultiF
                     Map<String, Subscriber> subscriberMap = entry.getValue();
                     if (subscriberMap != null && !subscriberMap.isEmpty()) {
                         Subscriber subscriber = subscriberMap.values().iterator().next();
-                        boolean isOldVersion = !BaseInfo.ClientVersion.StoreData.equals(subscriber
-                            .getClientVersion());
+                        boolean isOldClientVersion = !BaseInfo.ClientVersion.StoreData
+                            .equals(subscriber.getClientVersion());
 
-                        if (isOldVersion) {
-                            fireUserDataPushTaskCloud(entry.getKey(), datumMap,
+                        if (isOldClientVersion) {
+                            fireUserDataPushTaskCloud(fetchDataInfoId, datumMap,
                                 subscriberMap.values(), subscriber, taskListenerManager);
                         } else {
-                            fireReceivedDataPushTaskCloud(datumMap,
-                                new ArrayList(subscriberMap.keySet()), subscriber,
-                                taskListenerManager);
+                            fireReceivedDataPushTaskCloud(fetchDataInfoId, datumMap, new ArrayList(
+                                subscriberMap.keySet()), subscriber, taskListenerManager);
                         }
                     }
                 }
@@ -102,7 +125,8 @@ public class DefaultSubscriberMultiFetchTaskStrategy implements SubscriberMultiF
         }
     }
 
-    private Map<String, Datum> getDatumsCache(String fetchDataInfoId, CacheService sessionCacheService) {
+    protected Map<String, Datum> getDatumsCache(String dataInfoId, String dataId, String instanceId, String group,
+                                                CacheService sessionCacheService) {
 
         Map<String, Datum> map = new HashMap<>();
         NodeManager nodeManager = NodeManagerFactory.getNodeManager(Node.NodeType.META);
@@ -110,7 +134,7 @@ public class DefaultSubscriberMultiFetchTaskStrategy implements SubscriberMultiF
         if (dataCenters != null) {
             Collection<Key> keys = dataCenters.stream().
                     map(dataCenter -> new Key(Key.KeyType.OBJ, DatumKey.class.getName(),
-                            new DatumKey(fetchDataInfoId, dataCenter))).
+                            new DatumKey(dataInfoId, dataCenter))).
                     collect(Collectors.toList());
 
             Map<Key, Value> values = null;
@@ -119,10 +143,10 @@ public class DefaultSubscriberMultiFetchTaskStrategy implements SubscriberMultiF
             } catch (CacheAccessException e) {
                 // The version is set to 0, so that when session checks the datum versions regularly, it will actively re-query the data.
                 for (String dataCenter : dataCenters) {
-                    boolean result = sessionInterests.checkAndUpdateInterestVersionZero(dataCenter, fetchDataInfoId);
+                    boolean result = sessionInterests.checkAndUpdateInterestVersionZero(dataCenter, dataInfoId);
                     LOGGER.error(String.format(
-                            "error when access cache, so checkAndUpdateInterestVersionZero(return %s): %s", result,
-                            e.getMessage()), e);
+                            "error when access cache of dataCenter(%s) fetchDataInfoId(%s), so checkAndUpdateInterestVersionZero(return %s): %s",
+                            dataCenter, dataInfoId, result, e.getMessage()), e);
                 }
             }
 
@@ -135,9 +159,30 @@ public class DefaultSubscriberMultiFetchTaskStrategy implements SubscriberMultiF
                     }
                 });
             }
-
         }
+        // New subscribers register come up, must push datum to them, even empty data
+        if (map.isEmpty()) {
+            String localDataCenter = sessionServerConfig.getSessionServerDataCenter();
+            Datum datum = createEmptyDatum(localDataCenter, dataId, instanceId, group);
+            map.put(localDataCenter, datum);
+        }
+
         return map;
+    }
+
+    protected Datum createEmptyDatum(String dataCenter, String dataId, String instanceId,
+                                     String group) {
+        Datum datum;
+        datum = new Datum();
+        datum.setDataInfoId(new DataInfo(instanceId, dataId, group).getDataInfoId());
+        datum.setDataId(dataId);
+        datum.setInstanceId(instanceId);
+        datum.setGroup(group);
+        //no datum set version as mini as
+        datum.setVersion(ValueConstants.DEFAULT_NO_DATUM_VERSION);
+        datum.setPubMap(new HashMap<>());
+        datum.setDataCenter(dataCenter);
+        return datum;
     }
 
     private Map<InetSocketAddress, Map<String, Subscriber>> getPushSubscribers(ScopeEnum scopeEnum,
@@ -159,93 +204,131 @@ public class DefaultSubscriberMultiFetchTaskStrategy implements SubscriberMultiF
         return payload;
     }
 
-    private void fireUserDataPushTaskCloud(InetSocketAddress address,
+    private void fireUserDataPushTaskCloud(String dataInfoId,
                                            Map<String/*dataCenter*/, Datum> datumMap,
                                            Collection<Subscriber> subscribers,
                                            Subscriber subscriber,
                                            TaskListenerManager taskListenerManager) {
-        Datum merge = null;
-        if (datumMap != null && !datumMap.isEmpty()) {
-            merge = ReceivedDataConverter.getMergeDatum(datumMap);
-        }
+        Datum merge = ReceivedDataConverter.getMergeDatum(datumMap);
 
-        ScopeEnum scopeEnum = subscriber.getScope();
-
-        if (scopeEnum == ScopeEnum.zone) {
-            fireUserDataElementPushTask(address, merge, subscribers, subscriber,
+        if (subscriber.getScope() == ScopeEnum.zone) {
+            fireUserDataElementPushTaskCloud(dataInfoId, datumMap, merge, subscribers, subscriber,
                 taskListenerManager);
         } else {
-            fireUserDataElementMultiPushTask(address, merge, subscribers, subscriber,
-                taskListenerManager);
+            fireUserDataElementMultiPushTaskCloud(dataInfoId, datumMap, merge, subscribers,
+                subscriber, taskListenerManager);
         }
     }
 
-    private void fireUserDataElementPushTask(InetSocketAddress address, Datum datum,
-                                             Collection<Subscriber> subscribers,
-                                             Subscriber subscriber,
-                                             TaskListenerManager taskListenerManager) {
-        datum = DatumUtils.newDatumIfNull(datum, subscriber);
-        TaskEvent taskEvent = new TaskEvent(TaskEvent.TaskType.USER_DATA_ELEMENT_PUSH_TASK);
-
-        taskEvent.setAttribute(Constant.PUSH_CLIENT_SUBSCRIBERS, subscribers);
-        taskEvent.setAttribute(Constant.PUSH_CLIENT_DATUM, datum);
-        taskEvent.setAttribute(Constant.PUSH_CLIENT_URL, new URL(address));
-
-        int size = datum.getPubMap() != null ? datum.getPubMap().size() : 0;
-
-        taskLogger.info("send {} taskURL:{},dataInfoId={},dataCenter={},pubSize={},subSize={}",
-            taskEvent.getTaskType(), address, datum.getDataInfoId(), datum.getDataCenter(), size,
-            subscribers.size());
-        taskListenerManager.sendTaskEvent(taskEvent);
-    }
-
-    private void fireUserDataElementMultiPushTask(InetSocketAddress address, Datum datum,
-                                                  Collection<Subscriber> subscribers,
+    private void fireUserDataElementPushTaskCloud(String dataInfoId, Map<String, Datum> datumMap,
+                                                  Datum datum, Collection<Subscriber> subscribers,
                                                   Subscriber subscriber,
                                                   TaskListenerManager taskListenerManager) {
-        datum = DatumUtils.newDatumIfNull(datum, subscriber);
-        TaskEvent taskEvent = new TaskEvent(TaskEvent.TaskType.USER_DATA_ELEMENT_MULTI_PUSH_TASK);
+        TaskEvent taskEvent = new TaskEvent(TaskEvent.TaskType.USER_DATA_ELEMENT_PUSH_TASK);
 
-        taskEvent.setAttribute(Constant.PUSH_CLIENT_SUBSCRIBERS, subscribers);
-        taskEvent.setAttribute(Constant.PUSH_CLIENT_DATUM, datum);
-        taskEvent.setAttribute(Constant.PUSH_CLIENT_URL, new URL(address));
+        setupTaskEventForOldClientVersion(dataInfoId, datumMap, datum, subscriber, subscribers,
+            taskEvent);
 
         int size = datum.getPubMap() != null ? datum.getPubMap().size() : 0;
-
-        taskLogger.info("send {} taskURL:{},dataInfoId={},dataCenter={},pubSize={},subSize={}",
-            taskEvent.getTaskType(), address, datum.getDataInfoId(), datum.getDataCenter(), size,
-            subscribers.size());
+        taskLogger.info("send {} taskURL:{}, dataInfoId={}, dataCenter={}, pubSize={}, subSize={}",
+            taskEvent.getTaskType(), subscriber.getSourceAddress(), datum.getDataInfoId(),
+            datum.getDataCenter(), size, subscribers.size());
         taskListenerManager.sendTaskEvent(taskEvent);
     }
 
-    private void fireReceivedDataPushTaskCloud(Map<String/*datacenter*/, Datum> datumMap,
+    private void fireUserDataElementMultiPushTaskCloud(String dataInfoId,
+                                                       Map<String, Datum> datumMap, Datum datum,
+                                                       Collection<Subscriber> subscribers,
+                                                       Subscriber subscriber,
+                                                       TaskListenerManager taskListenerManager) {
+        TaskEvent taskEvent = new TaskEvent(TaskEvent.TaskType.USER_DATA_ELEMENT_MULTI_PUSH_TASK);
+
+        setupTaskEventForOldClientVersion(dataInfoId, datumMap, datum, subscriber, subscribers,
+            taskEvent);
+
+        int size = datum.getPubMap() != null ? datum.getPubMap().size() : 0;
+        taskLogger.info("send {} taskURL:{}, dataInfoId={}, dataCenter={}, pubSize={}, subSize={}",
+            taskEvent.getTaskType(), subscriber.getSourceAddress(), datum.getDataInfoId(),
+            datum.getDataCenter(), size, subscribers.size());
+        taskListenerManager.sendTaskEvent(taskEvent);
+    }
+
+    private void fireReceivedDataPushTaskCloud(String dataInfoId,
+                                               Map<String/*datacenter*/, Datum> datumMap,
                                                List<String> subscriberRegisterIdList,
                                                Subscriber subscriber,
                                                TaskListenerManager taskListenerManager) {
 
-        ReceivedData receivedData;
-        if (datumMap != null && !datumMap.isEmpty()) {
-
-            receivedData = ReceivedDataConverter.getReceivedDataMulti(datumMap,
-                subscriber.getScope(), subscriberRegisterIdList, subscriber);
-
-        }
-        //no datum
-        else {
-            receivedData = ReceivedDataConverter.getReceivedDataMulti(subscriber.getDataId(),
-                subscriber.getGroup(), subscriber.getInstanceId(),
-                ValueConstants.DEFAULT_DATA_CENTER, subscriber.getScope(),
-                subscriberRegisterIdList, subscriber.getCell());
-
-        }
+        ReceivedData receivedData = ReceivedDataConverter.getReceivedDataMulti(datumMap,
+            subscriber.getScope(), subscriberRegisterIdList, subscriber);
 
         //trigger push to client node
+        TaskEvent taskEvent = createTaskEvent(dataInfoId, datumMap, subscriber, receivedData);
+        taskLogger.info("send {} taskURL:{}, taskScope:{}, taskId:{}", taskEvent.getTaskType(),
+            subscriber.getSourceAddress(), subscriber.getScope(), taskEvent.getTaskId());
+        taskListenerManager.sendTaskEvent(taskEvent);
+    }
+
+    private TaskEvent createTaskEvent(String dataInfoId, Map<String, Datum> datumMap,
+                                      Subscriber subscriber, ReceivedData receivedData) {
         Map<ReceivedData, URL> parameter = new HashMap<>();
         parameter.put(receivedData, subscriber.getSourceAddress());
-        TaskEvent taskEvent = new TaskEvent(parameter,
-            TaskEvent.TaskType.RECEIVED_DATA_MULTI_PUSH_TASK);
-        taskLogger.info("send {} taskURL:{},taskScope:{}", taskEvent.getTaskType(),
-            subscriber.getSourceAddress(), subscriber.getScope());
-        taskListenerManager.sendTaskEvent(taskEvent);
+        TaskEvent taskEvent = new TaskEvent(parameter, TaskType.RECEIVED_DATA_MULTI_PUSH_TASK);
+        taskEvent.setTaskClosure(getTaskClosureForCloud(dataInfoId, datumMap));
+        return taskEvent;
+    }
+
+    private void setupTaskEventForOldClientVersion(String dataInfoId, Map<String, Datum> datumMap,
+                                                   Datum datum, Subscriber subscriber,
+                                                   Collection<Subscriber> subscribers,
+                                                   TaskEvent taskEvent) {
+        taskEvent.setTaskClosure(getTaskClosureForCloud(dataInfoId, datumMap));
+        taskEvent.setAttribute(Constant.PUSH_CLIENT_SUBSCRIBERS, subscribers);
+        taskEvent.setAttribute(Constant.PUSH_CLIENT_DATUM, datum);
+        taskEvent.setAttribute(Constant.PUSH_CLIENT_URL, subscriber.getSourceAddress());
+    }
+
+    /**
+     * （1）push success：set version zero of remoteDataCentersWhichMissDatum
+     * （2）push error：set version zero of allDataCenters;
+     */
+    public PushTaskClosure getTaskClosureForCloud(String dataInfoId, Map<String/*dataCenter*/, Datum> datumMap) {
+
+        NodeManager nodeManager = NodeManagerFactory.getNodeManager(NodeType.META);
+        List<String> allDataCenters = new ArrayList<>(nodeManager.getDataCenters());
+        List<String> remoteDataCentersWhichMissDatum = new ArrayList<>(allDataCenters);
+        if (datumMap != null && !datumMap.isEmpty()) {
+            remoteDataCentersWhichMissDatum.removeAll(datumMap.keySet());
+        }
+
+        PushTaskClosure pushTaskClosure = new PushTaskClosure(executorManager.getPushTaskCheckAsyncHashedWheelTimer(),
+                sessionServerConfig, dataInfoId);
+        pushTaskClosure.setTaskClosure((status, task) -> {
+
+            if (status == ProcessingResult.Success) {
+                //（1）push success：if remoteDataCentersWhichMissDatum exists, set version zero of remoteDataCentersWhichMissDatum
+                /**
+                 * If there are elements left in remoteDataCentersWhichMissDatum, means that datum of the dataCenter,
+                 * cannot be obtained from remote dataServer this time, it may cause pushing empty datum wrongly,
+                 * so it is necessary to ensure that it can be checked later。
+                 * If the data does not exist in the dataCenter exactly, there will be no additional impact, just more memory
+                 */
+                remoteDataCentersWhichMissDatum.forEach(dataCenter -> {
+                    boolean result = sessionInterests.checkAndUpdateInterestVersionZero(dataCenter, dataInfoId);
+                    LOGGER.warn(
+                            "Push done, but datum from DataServer({}) not obtained, so set sessionInterests dataInfoId({}) version zero, return {}",
+                            dataCenter, dataInfoId, result);
+                });
+            } else {
+                //（2）push error：set version zero of allDataCenters;
+                allDataCenters.forEach(dataCenter -> {
+                    boolean result = sessionInterests.checkAndUpdateInterestVersionZero(dataCenter, dataInfoId);
+                    LOGGER.warn(
+                            "Push error, so set sessionInterests dataInfoId({}) of dataServer({}) version zero, return {}",
+                            dataInfoId, dataCenter, result);
+                });
+            }
+        });
+        return pushTaskClosure;
     }
 }

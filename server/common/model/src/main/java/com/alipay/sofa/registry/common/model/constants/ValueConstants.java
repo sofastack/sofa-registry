@@ -75,4 +75,5 @@ public class ValueConstants {
                                                                            .valueOf(System
                                                                                .getProperty(DISABLE_DATA_ID_CASE_SENSITIVE_SWITCH));
 
+    public static final String   DATUM_INFO_FORMAT                     = "dataCenter:%s, dataInfoId:%s, version:%s, url:%s, publisherSize:%s, taskId:%s";
 }

@@ -224,8 +224,8 @@ public class ReceivedDataConverter {
         long version = 0;
         for (Datum datum : datumMap.values()) {
             if (datum.getDataId() == null) {
-                LOGGER.error("ReceivedData convert error,datum dataId is null,datum={}", datum);
-                continue;
+                throw new IllegalArgumentException(String.format(
+                    "ReceivedData convert error, datum dataId is null, datum=%s", datum));
             }
             if (null == merge) {
                 //new Datum avoid to change datumMap

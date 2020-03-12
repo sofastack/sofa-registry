@@ -163,6 +163,8 @@ public class SessionNotifyTest extends BaseIntegrationTest {
         datum.setDataId(MockSyncDataHandler.dataId);
         datum.setInstanceId(DEFAULT_INSTANCE_ID);
         datum.setGroup(DEFAULT_GROUP);
+        datum.setDataInfoId(new DataInfo(DEFAULT_INSTANCE_ID, MockSyncDataHandler.dataId,
+            DEFAULT_GROUP).getDataInfoId());
         //no datum set version current timestamp
         datum.setVersion(DatumVersionUtil.nextId());
         datum.setPubMap(publisherMap);
