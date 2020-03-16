@@ -250,7 +250,7 @@ public class DataChangeFetchTask extends AbstractSessionTask {
         };
         ReceivedData receivedData = ReceivedDataConverter
                 .getReceivedDataMulti(datum, scopeEnum, subscriberRegisterIdList,
-                        sessionServerConfig.getSessionServerRegion(), zonePredicate);
+                        clientCell, zonePredicate);
 
         //trigger push to client node
         Map<ReceivedData, URL> parameter = new HashMap<>();
