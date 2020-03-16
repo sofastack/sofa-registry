@@ -56,6 +56,9 @@ public class ReceivedDataMultiPushTask extends AbstractSessionTask {
                                                                           "SESSION-PUSH",
                                                                           "[Receive]");
 
+    private static final String               DATUM_INFO_FORMAT       = ValueConstants.DATUM_INFO_FORMAT
+                                                                        + ", scope:%s";
+
     private static final String               RETRY_DATUM_INFO_FORMAT = ValueConstants.DATUM_INFO_FORMAT
                                                                         + ", retryTimes:%s";
 
@@ -92,9 +95,9 @@ public class ReceivedDataMultiPushTask extends AbstractSessionTask {
         Object receivedDataPush = null;
         try {
             String msgFormat = "Push ReceivedData %s! "
-                               + String.format(ValueConstants.DATUM_INFO_FORMAT,
-                                   receivedData.getSegment(), dataInfoId,
-                                   receivedData.getVersion(), url, dataPush, getTaskId());
+                               + String.format(DATUM_INFO_FORMAT, receivedData.getSegment(),
+                                   dataInfoId, receivedData.getVersion(), url, dataPush,
+                                   getTaskId(), receivedData.getScope());
 
             if (sessionServerConfig.isStopPushSwitch()) {
                 LOGGER.info(String.format(msgFormat, "but StopPushSwitch is on"));
@@ -140,7 +143,7 @@ public class ReceivedDataMultiPushTask extends AbstractSessionTask {
 
         String msgFormat = "Retry push ReceivedData %s! " + String
                 .format(RETRY_DATUM_INFO_FORMAT, receivedData.getSegment(), dataInfoId, receivedData.getVersion(), url,
-                        dataPush, getTaskId(), retryTimes);
+                        dataPush, getTaskId(), receivedData.getScope(), retryTimes);
 
         if (checkRetryTimes(retryTimes)) {
             Server sessionServer = boltExchange.getServer(sessionServerConfig.getServerPort());
