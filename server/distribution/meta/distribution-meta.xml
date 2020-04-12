@@ -22,17 +22,17 @@
     <files>
         <file>
             <source>../../server/meta/target/registry-server-meta-executable.jar</source>
-            <outputDirectory>/</outputDirectory>
+            <outputDirectory>./</outputDirectory>
             <destName>registry-meta.jar</destName>
         </file>
         <file>
             <source>../../server/meta/src/main/resources/logback-spring.xml</source>
-            <outputDirectory>/conf</outputDirectory>
+            <outputDirectory>./conf</outputDirectory>
             <destName>logback-spring.xml</destName>
         </file>
         <file>
             <source>../version</source>
-            <outputDirectory>/</outputDirectory>
+            <outputDirectory>./</outputDirectory>
             <destName>version_${project.version}</destName>
         </file>
     </files>
