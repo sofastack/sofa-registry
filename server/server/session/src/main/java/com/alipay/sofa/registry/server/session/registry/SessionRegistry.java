@@ -163,7 +163,8 @@ public class SessionRegistry implements Registry {
 
                                     @Override
                                     public String getConnectId() {
-                                        return publisher.getSourceAddress().getAddressString();
+                                        return publisher.getSourceAddress().getAddressString() + ValueConstants.CONNECT_ID_SPLIT
+                                                + publisher.getTargetAddress().getAddressString();
                                     }
 
                                     @Override
@@ -234,7 +235,8 @@ public class SessionRegistry implements Registry {
 
                     @Override
                     public String getConnectId() {
-                        return publisher.getSourceAddress().getAddressString();
+                        return publisher.getSourceAddress().getAddressString() + ValueConstants.CONNECT_ID_SPLIT
+                                + publisher.getTargetAddress().getAddressString();
                     }
 
                     @Override

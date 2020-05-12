@@ -51,6 +51,8 @@ public abstract class BaseInfo implements Serializable, StoreData<String> {
 
     private URL                 sourceAddress;
 
+    private URL                 targetAddress;
+
     private ClientVersion       clientVersion;
 
     private String              group;
@@ -173,6 +175,24 @@ public abstract class BaseInfo implements Serializable, StoreData<String> {
      */
     public void setSourceAddress(URL sourceAddress) {
         this.sourceAddress = sourceAddress;
+    }
+
+    /**
+     * Getter method for property <tt>targetAddress</tt>.
+     *
+     * @return property value of targetAddress
+     */
+    public URL getTargetAddress() {
+        return targetAddress;
+    }
+
+    /**
+     * Setter method for property <tt>targetAddress</tt>.
+     *
+     * @param targetAddress  value to be assigned to property targetAddress
+     */
+    public void setTargetAddress(URL targetAddress) {
+        this.targetAddress = targetAddress;
     }
 
     /**
