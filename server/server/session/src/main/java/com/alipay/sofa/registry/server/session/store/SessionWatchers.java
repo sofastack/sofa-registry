@@ -80,6 +80,7 @@ public class SessionWatchers implements Watchers {
             if (existingWatcher != null) {
                 LOGGER.warn("There is watcher already exists,it will be overwrite! {}",
                     existingWatcher);
+                invalidateConnectIndex(existingWatcher.getSourceAddress().getAddressString());
             }
 
             watcherMap.put(watcher.getRegisterId(), watcher);

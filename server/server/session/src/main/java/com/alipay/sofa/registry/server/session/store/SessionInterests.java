@@ -95,6 +95,10 @@ public class SessionInterests implements Interests, ReSubscribers {
             if (existingSubscriber != null) {
                 LOGGER.warn("There is subscriber already exists,it will be overwrite! {}",
                     existingSubscriber);
+                if (sessionServerConfig.isStopPushSwitch()) {
+                    deleteReSubscriber(existingSubscriber);
+                }
+                invalidateIndex(existingSubscriber);
             }
 
             subscribers.put(subscriber.getRegisterId(), subscriber);
