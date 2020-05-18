@@ -215,7 +215,7 @@ public class SessionServerConfigBean implements SessionServerConfig {
 
     private boolean            stopPushSwitch                          = false;
 
-    private boolean            beginDataFetchTask                      = false;
+    private boolean            beginDataFetchTask                      = true;
 
     //begin config for enterprise version
 

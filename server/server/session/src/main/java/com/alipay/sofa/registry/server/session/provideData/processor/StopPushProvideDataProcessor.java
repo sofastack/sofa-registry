@@ -16,6 +16,13 @@
  */
 package com.alipay.sofa.registry.server.session.provideData.processor;
 
+import java.util.Collection;
+import java.util.Map;
+import java.util.concurrent.TimeUnit;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.util.CollectionUtils;
+
 import com.alipay.sofa.registry.common.model.constants.ValueConstants;
 import com.alipay.sofa.registry.common.model.metaserver.ProvideData;
 import com.alipay.sofa.registry.common.model.store.Subscriber;
@@ -30,12 +37,6 @@ import com.alipay.sofa.registry.server.session.store.ReSubscribers;
 import com.alipay.sofa.registry.task.listener.TaskEvent;
 import com.alipay.sofa.registry.task.listener.TaskEvent.TaskType;
 import com.alipay.sofa.registry.task.listener.TaskListenerManager;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.util.CollectionUtils;
-
-import java.util.Collection;
-import java.util.Map;
-import java.util.concurrent.TimeUnit;
 
 /**
  *
@@ -157,8 +158,11 @@ public class StopPushProvideDataProcessor implements ProvideDataProcessor {
         sessionServerConfig.setStopPushSwitch(Boolean.valueOf(data));
         if (data != null) {
             if (!Boolean.valueOf(data)) {
-                //stop push init on,then begin fetch data schedule task
+                // pushSwitch is on, then begin fetch data schedule task
                 sessionServerConfig.setBeginDataFetchTask(true);
+            } else {
+                // pushSwitch is off
+                sessionServerConfig.setBeginDataFetchTask(false);
             }
         }
         LOGGER.info("Fetch session stop push data switch {} success!", data);
