@@ -67,7 +67,7 @@
         <junit.jupiter.version>5.0.2</junit.jupiter.version>
         <junit.vintage.version>${junit.version}.2</junit.vintage.version>
         <junit.platform.version>1.0.2</junit.platform.version>
-        <sofa.hessian.version>3.3.6</sofa.hessian.version>
+        <sofa.hessian.version>3.3.8</sofa.hessian.version>
         <netty.version>4.1.25.Final</netty.version>
         <jersey.version>2.26</jersey.version>
         <protobuf.version>3.5.1</protobuf.version>
