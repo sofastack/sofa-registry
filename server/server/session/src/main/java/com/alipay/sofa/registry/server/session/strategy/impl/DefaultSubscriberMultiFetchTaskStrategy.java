@@ -56,6 +56,7 @@ import com.alipay.sofa.registry.task.batcher.TaskProcessor.ProcessingResult;
 import com.alipay.sofa.registry.task.listener.TaskEvent;
 import com.alipay.sofa.registry.task.listener.TaskEvent.TaskType;
 import com.alipay.sofa.registry.task.listener.TaskListenerManager;
+import com.google.common.collect.Lists;
 
 /**
  * @author xuanbei
@@ -274,6 +275,8 @@ public class DefaultSubscriberMultiFetchTaskStrategy implements SubscriberMultiF
         Map<ReceivedData, URL> parameter = new HashMap<>();
         parameter.put(receivedData, subscriber.getSourceAddress());
         TaskEvent taskEvent = new TaskEvent(parameter, TaskType.RECEIVED_DATA_MULTI_PUSH_TASK);
+        // setup PUSH_CLIENT_SUBSCRIBERS, which is used in AlipayPushTaskMergeProcessor
+        taskEvent.setAttribute(Constant.PUSH_CLIENT_SUBSCRIBERS, Lists.newArrayList(subscriber));
         taskEvent.setTaskClosure(getTaskClosureForCloud(dataInfoId, datumMap));
         return taskEvent;
     }
