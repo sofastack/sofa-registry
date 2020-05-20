@@ -27,6 +27,7 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.stream.Collectors;
 
+import com.alipay.sofa.registry.common.model.constants.ValueConstants;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import com.alipay.sofa.registry.common.model.store.Subscriber;
@@ -156,7 +157,10 @@ public class SessionInterests implements Interests, ReSubscribers {
             for (Map<String, Subscriber> map : interests.values()) {
                 for (Iterator it = map.values().iterator(); it.hasNext();) {
                     Subscriber subscriber = (Subscriber) it.next();
-                    if (connectId.equals(subscriber.getSourceAddress().getAddressString())) {
+                    if (connectId.equals(WordCache.getInstance().getWordCache(
+                        subscriber.getSourceAddress().getAddressString()
+                                + ValueConstants.CONNECT_ID_SPLIT
+                                + subscriber.getTargetAddress().getAddressString()))) {
 
                         it.remove();
                         if (sessionServerConfig.isStopPushSwitch()) {
@@ -291,12 +295,15 @@ public class SessionInterests implements Interests, ReSubscribers {
     }
 
     private void invalidateIndex(Subscriber subscriber) {
-        invalidateConnectIndex(subscriber.getSourceAddress().getAddressString());
+        invalidateConnectIndex(subscriber.getSourceAddress().getAddressString()
+                               + ValueConstants.CONNECT_ID_SPLIT + subscriber.getTargetAddress());
         invalidateResultIndex(subscriber);
     }
 
     private void addConnectIndex(Subscriber subscriber) {
-        String connectId = subscriber.getSourceAddress().getAddressString();
+        String connectId = subscriber.getSourceAddress().getAddressString()
+                           + ValueConstants.CONNECT_ID_SPLIT
+                           + subscriber.getTargetAddress().getAddressString();
         connectId = WordCache.getInstance().getWordCache(connectId);
 
         Map<String/*registerId*/, Subscriber> subscriberMap = connectIndex.get(connectId);
@@ -340,7 +347,9 @@ public class SessionInterests implements Interests, ReSubscribers {
     }
 
     private void removeConnectIndex(Subscriber subscriber) {
-        String connectId = subscriber.getSourceAddress().getAddressString();
+        String connectId = subscriber.getSourceAddress().getAddressString()
+                           + ValueConstants.CONNECT_ID_SPLIT
+                           + subscriber.getTargetAddress().getAddressString();
         Map<String/*registerId*/, Subscriber> subscriberMap = connectIndex.get(connectId);
         if (subscriberMap != null) {
             subscriberMap.remove(subscriber.getRegisterId());

@@ -410,8 +410,9 @@ public class LocalDatumStorage implements DatumStorage {
     }
 
     private String getConnectId(Publisher cachePub) {
-        return WordCache.getInstance().getWordCache(cachePub.getSourceAddress().getAddressString() + ValueConstants.CONNECT_ID_SPLIT
-                + cachePub.getTargetAddress().getAddressString());
+        return WordCache.getInstance().getWordCache(
+            cachePub.getSourceAddress().getAddressString() + ValueConstants.CONNECT_ID_SPLIT
+                    + cachePub.getTargetAddress().getAddressString());
     }
 
     /**

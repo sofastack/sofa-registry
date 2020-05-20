@@ -26,7 +26,7 @@ public class ValueConstants {
     /**
      * connectId: sourceAddress_targetAddress
      */
-    public static final String CONNECT_ID_SPLIT = "_";
+    public static final String   CONNECT_ID_SPLIT                      = "_";
 
     /**
      * The constant DEFAULT_GROUP.

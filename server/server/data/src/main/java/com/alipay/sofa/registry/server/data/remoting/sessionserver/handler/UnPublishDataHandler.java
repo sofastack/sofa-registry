@@ -116,7 +116,9 @@ public class UnPublishDataHandler extends AbstractServerHandler<UnPublishDataReq
             if (pubMap != null) {
                 Publisher publisher = pubMap.get(request.getRegisterId());
                 if (publisher != null) {
-                    return publisher.getSourceAddress().getAddressString() + ValueConstants.CONNECT_ID_SPLIT + publisher.getTargetAddress().getAddressString();
+                    return publisher.getSourceAddress().getAddressString()
+                           + ValueConstants.CONNECT_ID_SPLIT
+                           + publisher.getTargetAddress().getAddressString();
                 }
             }
         }
