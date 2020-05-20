@@ -54,7 +54,7 @@ public class DataCacheTest extends BaseTest {
         sessionInterests.setSessionServerConfig(new SessionServerConfigBean(null));
 
         String dataId = "dataid";
-        String connectId = "192.168.1.2:9000";
+        String connectId = "192.168.1.2:9000_127.0.0.1:34567";
 
         for (int i = 0; i < 100; i++) {
             sessionInterests.add(getSub(dataId, ScopeEnum.zone, null, null));
@@ -100,7 +100,7 @@ public class DataCacheTest extends BaseTest {
 
         Map<InetSocketAddress, Map<String, Subscriber>> map = getCacheSub(
             DataInfo.toDataInfoId(dataId, "instance2", "rpc"), ScopeEnum.zone, sessionInterests);
-        Assert.assertTrue(getCacheSub(sessionInterests, "192.168.1.9:8000"));
+        Assert.assertTrue(getCacheSub(sessionInterests, "192.168.1.9:8000_127.0.0.1:34567"));
 
         sessionInterests.deleteById("xxregist123",
             DataInfo.toDataInfoId(dataId, "instance2", "rpc"));
@@ -108,7 +108,7 @@ public class DataCacheTest extends BaseTest {
         Map<InetSocketAddress, Map<String, Subscriber>> map2 = getCacheSub(
             DataInfo.toDataInfoId(dataId, "instance2", "rpc"), ScopeEnum.zone, sessionInterests);
 
-        Assert.assertFalse(getCacheSub(sessionInterests, "192.168.1.9:8000"));
+        Assert.assertFalse(getCacheSub(sessionInterests, "192.168.1.9:8000_127.0.0.1:34567"));
         //map no change
         Assert.assertEquals(2, map.size());
 
@@ -134,7 +134,7 @@ public class DataCacheTest extends BaseTest {
         ((SessionCacheService) cacheService).setCacheGenerators(cacheGenerators);
 
         String dataId = "dataid";
-        String connectId = "192.168.1.2:9000";
+        String connectId = "192.168.1.2:9000_127.0.0.1:34567";
         for (int i = 0; i < 10; i++) {
 
             sessionDataStore.add(getPub(dataId, null, null));
@@ -178,7 +178,7 @@ public class DataCacheTest extends BaseTest {
         ((SessionCacheService) cacheService).setCacheGenerators(cacheGenerators);
 
         String dataId = "dataid";
-        String connectId = "192.168.1.2:9000";
+        String connectId = "192.168.1.2:9000_127.0.0.1:34567";
         for (int i = 0; i < 10; i++) {
 
             sessionDataStore.add(getPub(dataId, null, null));
@@ -187,10 +187,10 @@ public class DataCacheTest extends BaseTest {
         sessionDataStore.add(getPub(dataId, "XXXX", new URL("192.168.1.9", 8000)));
 
         Assert.assertTrue(getCachePub(sessionDataStore, connectId));
-        Assert.assertTrue(getCachePub(sessionDataStore, "192.168.1.9:8000"));
+        Assert.assertTrue(getCachePub(sessionDataStore, "192.168.1.9:8000_127.0.0.1:34567"));
         sessionDataStore.deleteById("XXXX", DataInfo.toDataInfoId(dataId, "instance2", "rpc"));
         Assert.assertTrue(getCachePub(sessionDataStore, connectId));
-        Assert.assertFalse(getCachePub(sessionDataStore, "192.168.1.9:8000"));
+        Assert.assertFalse(getCachePub(sessionDataStore, "192.168.1.9:8000_127.0.0.1:34567"));
     }
 
     private boolean getCachePub(SessionDataStore sessionDataStore, String connectId) {
@@ -230,6 +230,7 @@ public class DataCacheTest extends BaseTest {
         subscriberRegister.setDataInfoId(DataInfo.toDataInfoId(dataId, "instance2", "rpc"));
 
         subscriberRegister.setSourceAddress(url == null ? new URL("192.168.1.2", 9000) : url);
+        subscriberRegister.setTargetAddress(new URL("127.0.0.1", 34567));
 
         return subscriberRegister;
     }
@@ -253,6 +254,7 @@ public class DataCacheTest extends BaseTest {
         publisher.setDataInfoId(DataInfo.toDataInfoId(dataId, "instance2", "rpc"));
 
         publisher.setSourceAddress(url == null ? new URL("192.168.1.2", 9000) : url);
+        publisher.setTargetAddress(new URL("127.0.0.1", 34567));
 
         return publisher;
     }
