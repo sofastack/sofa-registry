@@ -24,6 +24,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
+import com.alipay.sofa.registry.common.model.constants.ValueConstants;
 import com.alipay.sofa.registry.common.model.store.Publisher;
 import com.alipay.sofa.registry.common.model.store.WordCache;
 import com.alipay.sofa.registry.log.Logger;
@@ -156,7 +157,10 @@ public class SessionDataStore implements DataStore {
                 for (Iterator it = map.values().iterator(); it.hasNext();) {
                     Publisher publisher = (Publisher) it.next();
                     if (publisher != null
-                        && connectId.equals(publisher.getSourceAddress().getAddressString())) {
+                        && connectId.equals(WordCache.getInstance().getWordCache(
+                            publisher.getSourceAddress().getAddressString()
+                                    + ValueConstants.CONNECT_ID_SPLIT
+                                    + publisher.getTargetAddress().getAddressString()))) {
                         it.remove();
                     }
                 }
@@ -212,7 +216,8 @@ public class SessionDataStore implements DataStore {
 
     private void addToConnectIndex(Publisher publisher) {
         String connectId = WordCache.getInstance().getWordCache(
-            publisher.getSourceAddress().getAddressString());
+            publisher.getSourceAddress().getAddressString() + ValueConstants.CONNECT_ID_SPLIT
+                    + publisher.getTargetAddress().getAddressString());
 
         Map<String/*registerId*/, Publisher> publisherMap = connectIndex.get(connectId);
         if (publisherMap == null) {
@@ -227,7 +232,9 @@ public class SessionDataStore implements DataStore {
     }
 
     private void removeFromConnectIndex(Publisher publisher) {
-        String connectId = publisher.getSourceAddress().getAddressString();
+        String connectId = WordCache.getInstance().getWordCache(
+            publisher.getSourceAddress().getAddressString() + ValueConstants.CONNECT_ID_SPLIT
+                    + publisher.getTargetAddress().getAddressString());
         Map<String/*registerId*/, Publisher> publisherMap = connectIndex.get(connectId);
         if (publisherMap != null) {
             publisherMap.remove(publisher.getRegisterId());
