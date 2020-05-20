@@ -296,7 +296,8 @@ public class SessionInterests implements Interests, ReSubscribers {
 
     private void invalidateIndex(Subscriber subscriber) {
         invalidateConnectIndex(subscriber.getSourceAddress().getAddressString()
-                               + ValueConstants.CONNECT_ID_SPLIT + subscriber.getTargetAddress());
+                               + ValueConstants.CONNECT_ID_SPLIT
+                               + subscriber.getTargetAddress().getAddressString());
         invalidateResultIndex(subscriber);
     }
 
