@@ -34,7 +34,6 @@ public class ValueConstants {
      */
     public static final String   DEFAULT_GROUP                         = "DEFAULT_GROUP";
 
-
     /**
      * The constant DEFAULT_ZONE.
      */
