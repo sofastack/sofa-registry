@@ -33,6 +33,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 
+import com.alipay.sofa.registry.common.model.constants.ValueConstants;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import com.alipay.remoting.Connection;
@@ -105,8 +106,8 @@ public class DataDigestResource {
     public Map<String, Map<String, Publisher>> getPublishersByConnectId(Map<String, String> map) {
         Map<String, Map<String, Publisher>> ret = new HashMap<>();
         if (map != null && !map.isEmpty()) {
-            map.forEach((ip, port) -> {
-                String connectId = NetUtil.genHost(ip, Integer.valueOf(port));
+            map.forEach((clientConnectId, sessionConnectId) -> {
+                String connectId = clientConnectId + ValueConstants.CONNECT_ID_SPLIT + sessionConnectId;
                 if (!connectId.isEmpty()) {
                     Map<String, Publisher> publisherMap = datumCache.getByConnectId(connectId);
                     if (publisherMap != null && !publisherMap.isEmpty()) {
