@@ -61,6 +61,7 @@ public class DefaultWatcherHandlerStrategy implements WatcherHandlerStrategy {
                                  + channel.getRemoteAddress().getPort());
             watcher.setSourceAddress(new URL(channel.getRemoteAddress(), BoltChannelUtil
                 .getBoltCustomSerializer(channel)));
+            watcher.setTargetAddress(new URL(channel.getLocalAddress()));
 
             if (EventTypeConstants.REGISTER.equals(configuratorRegister.getEventType())) {
                 sessionRegistry.register(watcher);
