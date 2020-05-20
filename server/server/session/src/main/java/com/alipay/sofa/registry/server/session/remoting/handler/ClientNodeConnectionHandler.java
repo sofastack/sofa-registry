@@ -166,7 +166,7 @@ public class ClientNodeConnectionHandler extends AbstractServerHandler {
             recycleAsyncHashedWheelTimer.newTimeout(timerOut -> sessionRegistry.renewDatum(connectId), randomDelay(),
                     sessionServerConfig.getRenewDatumWheelTaskDelaySec(), TimeUnit.SECONDS, () -> {
                         Server sessionServer = boltExchange.getServer(sessionServerConfig.getServerPort());
-                        Channel channelClient = sessionServer.getChannel(URL.valueOf(connectId));
+                        Channel channelClient = sessionServer.getChannel(URL.valueOf(connectId.split(ValueConstants.CONNECT_ID_SPLIT)[0]));
                         boolean shouldContinue = channelClient != null && channel.isConnected();
                         if (!shouldContinue) {
                             RENEW_LOGGER.info("Renew task is stop: {}", connectId);

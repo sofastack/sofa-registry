@@ -98,6 +98,7 @@ public class MockSyncDataHandler extends AbstractServerHandler<SyncDataRequest> 
         publisher.setInstanceId(DEFAULT_INSTANCE_ID);
         publisher.setVersion(version);
         publisher.setSourceAddress(new URL(LOCAL_ADDRESS, 65343));
+        publisher.setTargetAddress(new URL(LOCAL_ADDRESS, 9600));
         publisher.setDataInfoId(DataInfo.toDataInfoId(MockSyncDataHandler.dataId,
             DEFAULT_INSTANCE_ID, DEFAULT_GROUP));
         return publisher;
