@@ -138,6 +138,7 @@ public class MetaServerConfigBean implements MetaServerConfig {
     private int                raftFsmExecutorQueueSize                        = 100;
 
     private int                metaSchedulerPoolSize                           = 6;
+    private double             sessionLoadbalanceThresholdRatio                = 1.1;
 
     @Override
     public int getSessionServerPort() {
@@ -970,5 +971,14 @@ public class MetaServerConfigBean implements MetaServerConfig {
 
     public void setRaftElectionTimeout(int raftElectionTimeout) {
         this.raftElectionTimeout = raftElectionTimeout;
+    }
+
+    @Override
+    public double getSessionLoadbalanceThresholdRatio() {
+        return sessionLoadbalanceThresholdRatio;
+    }
+
+    public void setSessionLoadbalanceThresholdRatio(double sessionLoadbalanceThresholdRatio) {
+        this.sessionLoadbalanceThresholdRatio = sessionLoadbalanceThresholdRatio;
     }
 }

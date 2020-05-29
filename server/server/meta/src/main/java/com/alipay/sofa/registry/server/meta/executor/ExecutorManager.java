@@ -16,11 +16,7 @@
  */
 package com.alipay.sofa.registry.server.meta.executor;
 
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ScheduledThreadPoolExecutor;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -164,8 +160,7 @@ public class ExecutorManager {
                         metaServerConfig.getSchedulerCheckNodeListChangePushExpBackOffBound(),
                         () -> raftExchanger.refreshRaftClient()),
                 metaServerConfig.getSchedulerCheckNodeListChangePushFirstDelay(), TimeUnit.SECONDS);
-
-    }
+   }
 
     public void stopScheduler() {
         if (scheduler != null && !scheduler.isShutdown()) {
