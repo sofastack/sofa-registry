@@ -62,6 +62,8 @@ public class ValueConstants {
 
     public static final String   ENABLE_DATA_DATUM_EXPIRE              = "data.enable.datum.expire.switch#@#9600#@#CONFIG";
 
+    public static final String   ENABLE_SESSION_LOAD_BALANCE           = "meta.enable.session.loadbalance.switch#@#9600#@#CONFIG";
+
     public static final String   LOGGER_NAME_RENEW                     = "RENEW-LOGGER";
 
     /**

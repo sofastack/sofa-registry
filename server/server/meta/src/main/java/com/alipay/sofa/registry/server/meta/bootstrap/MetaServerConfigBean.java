@@ -66,6 +66,12 @@ public class MetaServerConfigBean implements MetaServerConfig {
 
     private int                schedulerCheckNodeListChangePushExpBackOffBound = 10;
 
+    private int                schedulerSessionLoadbalanceTimeout              = 10;
+
+    private int                schedulerSessionLoadbalanceFirstDelay           = 10;
+
+    private int                schedulerSessionLoadbalanceExpBackOffBound      = 10;
+
     private int                dataNodeExchangeTimeout                         = 3000;
 
     private int                sessionNodeExchangeTimeout                      = 3000;
@@ -120,7 +126,15 @@ public class MetaServerConfigBean implements MetaServerConfig {
     private int                raftClientRefreshExecutorMaxSize                = 10;
     private int                raftClientRefreshExecutorQueueSize              = 1024;
 
+    private int                sessionLoadblanaceExecutorMinSize               = 3;
+    private int                sessionLoadbalanceExecutorMaxSize               = 10;
+    private int                sessionLoadbalanceExecutorQueueSize             = 1024;
+
     private int                metaSchedulerPoolSize                           = 6;
+
+    private int                sessionLoadbalanceMaxDisconnect                 = 10;
+    private double             sessionLoadbalanceThresholdRatio                = 1.1;
+    private String             sessionLoadbalanceEnabledZones                  = "ALL";
 
     @Override
     public int getSessionServerPort() {
@@ -846,5 +860,90 @@ public class MetaServerConfigBean implements MetaServerConfig {
     @Override
     public String toString() {
         return ToStringBuilder.reflectionToString(this, ToStringStyle.MULTI_LINE_STYLE);
+    }
+
+    @Override
+    public int getSchedulerSessionLoadbalanceTimeout() {
+        return schedulerSessionLoadbalanceTimeout;
+    }
+
+    public void setSchedulerSessionLoadbalanceTimeout(int schedulerSessionLoadbalanceTimeout) {
+        this.schedulerSessionLoadbalanceTimeout = schedulerSessionLoadbalanceTimeout;
+    }
+
+    @Override
+    public int getSchedulerSessionLoadbalanceFirstDelay() {
+        return schedulerSessionLoadbalanceFirstDelay;
+    }
+
+    @Override
+    public int getSessionLoadbalanceExecutorMinSize() {
+        return 0;
+    }
+
+    public void setSchedulerSessionLoadbalanceFirstDelay(int schedulerSessionLoadbalanceFirstDelay) {
+        this.schedulerSessionLoadbalanceFirstDelay = schedulerSessionLoadbalanceFirstDelay;
+    }
+
+    @Override
+    public int getSchedulerSessionLoadbalanceExpBackOffBound() {
+        return schedulerSessionLoadbalanceExpBackOffBound;
+    }
+
+    public void setSchedulerSessionLoadbalanceExpBackOffBound(int schedulerSessionLoadbalanceExpBackOffBound) {
+        this.schedulerSessionLoadbalanceExpBackOffBound = schedulerSessionLoadbalanceExpBackOffBound;
+    }
+
+    public int getSessionLoadblanaceExecutorMinSize() {
+        return sessionLoadblanaceExecutorMinSize;
+    }
+
+    public void setSessionLoadblanaceExecutorMinSize(int sessionLoadblanaceExecutorMinSize) {
+        this.sessionLoadblanaceExecutorMinSize = sessionLoadblanaceExecutorMinSize;
+    }
+
+    @Override
+    public int getSessionLoadbalanceExecutorMaxSize() {
+        return sessionLoadbalanceExecutorMaxSize;
+    }
+
+    public void setSessionLoadbalanceExecutorMaxSize(int sessionLoadbalanceExecutorMaxSize) {
+        this.sessionLoadbalanceExecutorMaxSize = sessionLoadbalanceExecutorMaxSize;
+    }
+
+    @Override
+    public int getSessionLoadbalanceExecutorQueueSize() {
+        return sessionLoadbalanceExecutorQueueSize;
+    }
+
+    public void setSessionLoadbalanceExecutorQueueSize(int sessionLoadbalanceExecutorQueueSize) {
+        this.sessionLoadbalanceExecutorQueueSize = sessionLoadbalanceExecutorQueueSize;
+    }
+
+    @Override
+    public int getSessionLoadbalanceMaxDisconnect() {
+        return sessionLoadbalanceMaxDisconnect;
+    }
+
+    public void setSessionLoadbalanceMaxDisconnect(int sessionLoadbalanceMaxDisconnect) {
+        this.sessionLoadbalanceMaxDisconnect = sessionLoadbalanceMaxDisconnect;
+    }
+
+    @Override
+    public double getSessionLoadbalanceThresholdRatio() {
+        return sessionLoadbalanceThresholdRatio;
+    }
+
+    public void setSessionLoadbalanceThresholdRatio(double sessionLoadbalanceThresholdRatio) {
+        this.sessionLoadbalanceThresholdRatio = sessionLoadbalanceThresholdRatio;
+    }
+
+    @Override
+    public String getSessionLoadbalanceEnabledZones() {
+        return sessionLoadbalanceEnabledZones;
+    }
+
+    public void setSessionLoadbalanceEnabledZones(String sessionLoadbalanceEnabledZones) {
+        this.sessionLoadbalanceEnabledZones = sessionLoadbalanceEnabledZones;
     }
 }

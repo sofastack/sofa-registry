@@ -26,10 +26,12 @@ import com.alipay.sofa.registry.common.model.metaserver.NodeChangeResult;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.server.meta.bootstrap.ServiceFactory;
+import com.alipay.sofa.registry.server.meta.store.SessionStoreService;
 import com.alipay.sofa.registry.server.meta.store.StoreService;
 
 /**
  * factory func to operate StoreService
+ *
  * @author shangyu.wh
  * @version $Id: MetaServerRegistry.java, v 0.1 2018-01-11 21:38 shangyu.wh Exp $
  */
@@ -102,5 +104,12 @@ public class MetaServerRegistry implements Registry<Node> {
         if (storeService != null) {
             storeService.pushNodeListChange();
         }
+    }
+
+    @Override
+    public void sessionLoadbalance() {
+        SessionStoreService storeService = (SessionStoreService) ServiceFactory
+            .getStoreService(NodeType.SESSION);
+        storeService.sessionLoadbalance();
     }
 }

@@ -16,11 +16,11 @@
  */
 package com.alipay.sofa.registry.server.session.node;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
+import java.util.*;
+import java.util.stream.Collectors;
 
 import com.alipay.sofa.registry.common.model.Node.NodeType;
+import com.alipay.sofa.registry.common.model.WeightedServer;
 import com.alipay.sofa.registry.common.model.metaserver.NodeChangeResult;
 import com.alipay.sofa.registry.common.model.metaserver.RenewNodesRequest;
 import com.alipay.sofa.registry.common.model.metaserver.SessionNode;
@@ -38,7 +38,9 @@ import com.alipay.sofa.registry.remoting.exchange.message.Request;
  */
 public class SessionNodeManager extends AbstractNodeManager<SessionNode> {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(SessionNodeManager.class);
+    private static final Logger  LOGGER  = LoggerFactory.getLogger(SessionNodeManager.class);
+
+    private Map<String, Integer> weights = new HashMap<>();
 
     @Override
     public SessionNode getNode(String dataInfoId) {
@@ -115,5 +117,25 @@ public class SessionNodeManager extends AbstractNodeManager<SessionNode> {
         } finally {
             write.unlock();
         }
+    }
+
+    public List<WeightedServer> getZoneWeightedServerList(String zoneName) {
+        List<WeightedServer> weightedServerLists = new ArrayList<>();
+        List<String> serverList = getZoneServerList(zoneName);
+        int avgWeight = (int) Math.max(1,
+            this.weights.entrySet().stream().collect(Collectors.averagingInt(Map.Entry::getValue)));
+        for (String address : serverList) {
+            int weight = avgWeight;
+            if (weights.containsKey(address)) {
+                weight = weights.get(address);
+            }
+            weightedServerLists.add(new WeightedServer(address, weight));
+
+        }
+        return weightedServerLists;
+    }
+
+    public void setWeights(Map<String, Integer> weights) {
+        this.weights = weights;
     }
 }

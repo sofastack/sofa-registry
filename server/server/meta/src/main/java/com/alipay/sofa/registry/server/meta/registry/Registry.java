@@ -88,4 +88,9 @@ public interface Registry<T extends Node> {
      * push node change result
      */
     void pushNodeListChange(NodeType nodeType);
+
+    /**
+     *  fetch session metrics and config load balancer
+     */
+    void sessionLoadbalance();
 }

@@ -33,7 +33,6 @@ import com.alipay.sofa.registry.task.scheduler.TimedSupervisorTask;
 import com.alipay.sofa.registry.util.NamedThreadFactory;
 
 /**
- *
  * @author shangyu.wh
  * @version $Id: ExecutorManager.java, v 0.1 2018-01-16 15:51 shangyu.wh Exp $
  */
@@ -53,6 +52,8 @@ public class ExecutorManager {
 
     private ThreadPoolExecutor       raftClientRefreshExecutor;
 
+    private ThreadPoolExecutor       sessionLoadbalanceExecutor;
+
     private MetaServerConfig         metaServerConfig;
 
     @Autowired
@@ -66,6 +67,7 @@ public class ExecutorManager {
 
     /**
      * constructor
+     *
      * @param metaServerConfig
      */
     public ExecutorManager(MetaServerConfig metaServerConfig) {
@@ -119,6 +121,13 @@ public class ExecutorManager {
             new LinkedBlockingQueue<>(metaServerConfig.getRaftClientRefreshExecutorQueueSize()),
             new NamedThreadFactory("MetaScheduler-RaftClientRefresh"));
         raftClientRefreshExecutor.allowCoreThreadTimeOut(true);
+
+        sessionLoadbalanceExecutor = new ThreadPoolExecutor(
+            metaServerConfig.getSessionLoadbalanceExecutorMinSize(),
+            metaServerConfig.getSessionLoadbalanceExecutorMaxSize(), 300, TimeUnit.SECONDS,
+            new LinkedBlockingQueue<>(metaServerConfig.getSessionLoadbalanceExecutorQueueSize()),
+            new NamedThreadFactory("MetaScheduler-SessionLoadbalance"));
+        sessionLoadbalanceExecutor.allowCoreThreadTimeOut(true);
     }
 
     public void startScheduler() {
@@ -164,6 +173,11 @@ public class ExecutorManager {
                         () -> raftExchanger.refreshRaftClient()),
                 metaServerConfig.getSchedulerCheckNodeListChangePushFirstDelay(), TimeUnit.SECONDS);
 
+        scheduler.schedule(new TimedSupervisorTask("SessionLoadbalance", scheduler, sessionLoadbalanceExecutor,
+                        metaServerConfig.getSchedulerSessionLoadbalanceTimeout(), TimeUnit.SECONDS,
+                        metaServerConfig.getSchedulerSessionLoadbalanceExpBackOffBound(),
+                        () -> metaServerRegistry.sessionLoadbalance()),
+                metaServerConfig.getSchedulerSessionLoadbalanceFirstDelay(), TimeUnit.SECONDS);
     }
 
     public void stopScheduler() {

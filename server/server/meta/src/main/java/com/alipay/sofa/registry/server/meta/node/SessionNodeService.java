@@ -16,6 +16,7 @@
  */
 package com.alipay.sofa.registry.server.meta.node;
 
+import com.alipay.sofa.registry.common.model.metaserver.LoadbalanceMetrics;
 import com.alipay.sofa.registry.common.model.metaserver.NodeChangeResult;
 import com.alipay.sofa.registry.common.model.metaserver.NotifyProvideDataChange;
 import com.alipay.sofa.registry.common.model.metaserver.SessionNode;
@@ -35,4 +36,9 @@ public interface SessionNodeService extends NodeService {
     void pushDataNodes(NodeChangeResult nodeChangeResult);
 
     void notifyProvideDataChange(NotifyProvideDataChange notifyProvideDataChange);
+
+    Map<String, Map<String, LoadbalanceMetrics>> fetchLoadbalanceMetrics(String[] enabledZones);
+
+    void configureLoadbalance(Map<String, Map<String, Integer>> maxConnectionsMap,
+                              Map<String, Map<String, Integer>> weights);
 }

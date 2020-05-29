@@ -19,6 +19,7 @@ package com.alipay.sofa.registry.server.meta.bootstrap;
 import java.util.ArrayList;
 import java.util.Collection;
 
+import com.alipay.sofa.registry.server.meta.resource.*;
 import org.glassfish.jersey.jackson.JacksonFeature;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -67,14 +68,6 @@ import com.alipay.sofa.registry.server.meta.repository.service.MetaRepositorySer
 import com.alipay.sofa.registry.server.meta.repository.service.SessionConfirmStatusService;
 import com.alipay.sofa.registry.server.meta.repository.service.SessionRepositoryService;
 import com.alipay.sofa.registry.server.meta.repository.service.SessionVersionRepositoryService;
-import com.alipay.sofa.registry.server.meta.resource.BlacklistDataResource;
-import com.alipay.sofa.registry.server.meta.resource.DecisionModeResource;
-import com.alipay.sofa.registry.server.meta.resource.HealthResource;
-import com.alipay.sofa.registry.server.meta.resource.MetaDigestResource;
-import com.alipay.sofa.registry.server.meta.resource.MetaStoreResource;
-import com.alipay.sofa.registry.server.meta.resource.PersistentDataResource;
-import com.alipay.sofa.registry.server.meta.resource.RenewSwitchResource;
-import com.alipay.sofa.registry.server.meta.resource.StopPushDataResource;
 import com.alipay.sofa.registry.server.meta.store.DataStoreService;
 import com.alipay.sofa.registry.server.meta.store.MetaStoreService;
 import com.alipay.sofa.registry.server.meta.store.SessionStoreService;
@@ -365,6 +358,11 @@ public class MetaServerConfiguration {
         @Bean
         public RenewSwitchResource renewSwitchResource() {
             return new RenewSwitchResource();
+        }
+
+        @Bean
+        public SessionLoadbalanceSwitchResource sessionLoadbalanceSwitchResource() {
+            return new SessionLoadbalanceSwitchResource();
         }
     }
 

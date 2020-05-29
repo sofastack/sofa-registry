@@ -17,6 +17,7 @@
 package com.alipay.sofa.registry.server.session.resource;
 
 import com.alipay.sofa.registry.common.model.Node.NodeType;
+import com.alipay.sofa.registry.common.model.WeightedServer;
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
 import com.alipay.sofa.registry.server.session.node.NodeManager;
 import com.alipay.sofa.registry.server.session.node.NodeManagerFactory;
@@ -66,8 +67,8 @@ public class SessionOpenResource {
             serverList = sessionNodeManager.getZoneServerList(zone);
 
             serverList = serverList.stream()
-                    .map(server -> server + ":" + sessionServerConfig.getServerPort())
-                    .collect(Collectors.toList());
+                .map(server -> server + ":" + sessionServerConfig.getServerPort())
+                .collect(Collectors.toList());
         }
 
         return serverList;
@@ -78,6 +79,15 @@ public class SessionOpenResource {
     @Produces(MediaType.TEXT_PLAIN)
     public String getSessionServerList(@QueryParam("zone") String zone) {
         return Joiner.on(";").join(getSessionServerListJson(zone));
+    }
+
+    @GET
+    @Path("weightedList")
+    @Produces(MediaType.APPLICATION_JSON)
+    public List<WeightedServer> getWeightedSessionServerList(@QueryParam("zone") String zone) {
+        SessionNodeManager nodeManager = (SessionNodeManager) NodeManagerFactory
+            .getNodeManager(NodeType.SESSION);
+        return nodeManager.getZoneWeightedServerList(zone);
     }
 
     @GET
