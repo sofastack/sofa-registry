@@ -123,7 +123,12 @@ public class DataChangeEventQueue {
      * @param event
      */
     public void onChange(IDataChangeEvent event) {
-        eventQueue.add(event);
+        try {
+            eventQueue.add(event);
+        } catch (Throwable e) {
+            LOGGER.error("Error onChange: " + e.getMessage(), e);
+            throw e;
+        }
     }
 
     /**
