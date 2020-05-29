@@ -167,6 +167,8 @@ public class SessionInterests implements Interests, ReSubscribers {
                     }
                 }
             }
+            //force remove connectId
+            invalidateConnectIndex(connectId);
             return true;
         } catch (Exception e) {
             LOGGER.error("Delete subscriber by connectId {} error!", connectId, e);
