@@ -28,7 +28,6 @@ public class ValueConstants {
      */
     public static final String   CONNECT_ID_SPLIT                      = "_";
 
-
     /**
      * The constant DEFAULT_GROUP.
      */

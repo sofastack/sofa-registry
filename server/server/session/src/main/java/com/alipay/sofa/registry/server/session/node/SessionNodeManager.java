@@ -16,9 +16,8 @@
  */
 package com.alipay.sofa.registry.server.session.node;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
+import java.util.*;
+import java.util.stream.Collectors;
 
 import com.alipay.sofa.registry.common.model.Node.NodeType;
 import com.alipay.sofa.registry.common.model.metaserver.NodeChangeResult;
