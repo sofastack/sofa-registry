@@ -19,6 +19,7 @@ package com.alipay.sofa.registry.jraft.bootstrap;
 import com.alipay.sofa.jraft.Closure;
 import com.alipay.sofa.jraft.Iterator;
 import com.alipay.sofa.jraft.Status;
+import com.alipay.sofa.jraft.conf.Configuration;
 import com.alipay.sofa.jraft.core.StateMachineAdapter;
 import com.alipay.sofa.jraft.entity.LeaderChangeContext;
 import com.alipay.sofa.jraft.error.RaftError;
@@ -27,11 +28,7 @@ import com.alipay.sofa.jraft.storage.snapshot.SnapshotWriter;
 import com.alipay.sofa.jraft.util.Utils;
 import com.alipay.sofa.registry.jraft.command.ProcessRequest;
 import com.alipay.sofa.registry.jraft.command.ProcessResponse;
-import com.alipay.sofa.registry.jraft.processor.FollowerProcessListener;
-import com.alipay.sofa.registry.jraft.processor.LeaderProcessListener;
-import com.alipay.sofa.registry.jraft.processor.LeaderTaskClosure;
-import com.alipay.sofa.registry.jraft.processor.Processor;
-import com.alipay.sofa.registry.jraft.processor.SnapshotProcess;
+import com.alipay.sofa.registry.jraft.processor.*;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.caucho.hessian.io.Hessian2Input;
@@ -61,6 +58,8 @@ public class ServiceStateMachine extends StateMachineAdapter {
     private LeaderProcessListener               leaderProcessListener;
 
     private FollowerProcessListener             followerProcessListener;
+
+    private ConfigurationCommittedListener      configurationCommittedListener;
 
     private static volatile ServiceStateMachine instance;
 
@@ -155,8 +154,7 @@ public class ServiceStateMachine extends StateMachineAdapter {
         }
         Utils.runInThread(() -> {
             String errors = null;
-            outer:
-            for (Map.Entry<String, SnapshotProcess> entry : snapshotProcessors.entrySet()) {
+            outer: for (Map.Entry<String, SnapshotProcess> entry : snapshotProcessors.entrySet()) {
                 String serviceId = entry.getKey();
                 SnapshotProcess snapshotProcessor = entry.getValue();
                 Set<String> fileNames = snapshotProcessor.getSnapshotFileNames();
@@ -170,7 +168,8 @@ public class ServiceStateMachine extends StateMachineAdapter {
                             break outer;
                         }
                     } else {
-                        errors = String.format("Fail to save service:%s snapshot %s", serviceId, savePath);
+                        errors = String.format("Fail to save service:%s snapshot %s", serviceId,
+                            savePath);
                         break outer;
                     }
                 }
@@ -265,6 +264,14 @@ public class ServiceStateMachine extends StateMachineAdapter {
         super.onStartFollowing(ctx);
     }
 
+    @Override
+    public void onConfigurationCommitted(Configuration conf) {
+        if (configurationCommittedListener != null) {
+            Utils.runInThread(() -> configurationCommittedListener.onConfigurationCommitted(conf));
+        }
+        super.onConfigurationCommitted(conf);
+    }
+
     /**
      * Setter method for property <tt>leaderProcessListener</tt>.
      *
@@ -281,5 +288,9 @@ public class ServiceStateMachine extends StateMachineAdapter {
      */
     public void setFollowerProcessListener(FollowerProcessListener followerProcessListener) {
         this.followerProcessListener = followerProcessListener;
+    }
+
+    public void setConfigurationCommittedListener(ConfigurationCommittedListener listener) {
+        this.configurationCommittedListener = listener;
     }
 }

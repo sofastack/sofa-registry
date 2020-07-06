@@ -23,6 +23,14 @@ import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
+import com.alipay.remoting.rpc.RpcClient;
+import com.alipay.sofa.jraft.rpc.CliClientService;
+import com.alipay.sofa.jraft.rpc.impl.cli.BoltCliClientService;
+import com.alipay.sofa.registry.jraft.handler.ConfigurationCommittedHandler;
+import com.alipay.sofa.registry.jraft.processor.ConfigurationCommittedListener;
+import com.alipay.sofa.registry.remoting.Channel;
+import com.alipay.sofa.registry.remoting.RemotingException;
+import com.alipay.sofa.registry.remoting.bolt.SyncUserProcessorAdapter;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import com.alipay.sofa.jraft.CliService;
@@ -103,7 +111,7 @@ public class RaftExchanger {
                             metaServerConfig.getRaftServerPort());
                         // refer: https://github.com/sofastack/sofa-registry/issues/30
                         registerCurrentNode();
-                        raftServer.sendNotify(leader, "leader");
+                        raftServer.sendLeaderChangeNotify(leader, "leader");
                     }
 
                     @Override
@@ -113,7 +121,7 @@ public class RaftExchanger {
                         LOGGER_START.info("Stop server scheduler success!");
                         PeerId leader = new PeerId(NetUtil.getLocalAddress().getHostAddress(),
                             metaServerConfig.getRaftServerPort());
-                        raftServer.sendNotify(leader, "leader");
+                        raftServer.sendLeaderChangeNotify(leader, "leader");
                     }
                 });
 
@@ -128,14 +136,19 @@ public class RaftExchanger {
                             LOGGER_START.error(e.getMessage(), e);
                         }
                         registerCurrentNode();
-                        raftServer.sendNotify(leader, "follower");
+                        raftServer.sendLeaderChangeNotify(leader, "follower");
                     }
 
                     @Override
                     public void stopProcess(PeerId leader) {
                         LOGGER_START.info("Stop follower process leader {}...", leader);
-                        raftServer.sendNotify(leader, "follower");
+                        raftServer.sendLeaderChangeNotify(leader, "follower");
                     }
+                });
+
+                raftServer.setConfigurationCommittedListener(conf -> {
+                    LOGGER.info("onConfigurationCommitted: {}", conf);
+                    raftServer.sendConfigurationCommittedNotify(conf);
                 });
 
                 RaftServerConfig raftServerConfig = new RaftServerConfig();
@@ -186,6 +199,11 @@ public class RaftExchanger {
             try {
                 cliService = new CliServiceImpl();
                 cliService.init(new CliOptions());
+
+                CliClientService cliClientService = ((CliServiceImpl) cliService)
+                    .getCliClientService();
+                RpcClient rpcClient = ((BoltCliClientService) cliClientService).getRpcClient();
+                ConfigurationCommittedHandler.registerMockHandler(rpcClient);
             } catch (Exception e) {
                 LOGGER_START.error("Start raft cliService error!", e);
                 throw new RuntimeException("Start raft cliService error!", e);
@@ -340,7 +358,7 @@ public class RaftExchanger {
         Set<String> ips = nodeConfig.getDataCenterMetaServers(nodeConfig.getLocalDataCenter());
         if (ips != null && !ips.isEmpty()) {
             ret = ips.stream().map(ip -> ip + ":" + metaServerConfig.getRaftServerPort())
-                    .collect(Collectors.joining(","));
+                .collect(Collectors.joining(","));
         }
         if (ret.isEmpty()) {
             throw new IllegalArgumentException("Init raft server config error!");

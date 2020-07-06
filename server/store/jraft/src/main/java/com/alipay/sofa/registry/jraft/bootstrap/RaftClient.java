@@ -28,6 +28,7 @@ import com.alipay.sofa.jraft.rpc.impl.AbstractBoltClientService;
 import com.alipay.sofa.jraft.rpc.impl.cli.BoltCliClientService;
 import com.alipay.sofa.registry.jraft.command.ProcessRequest;
 import com.alipay.sofa.registry.jraft.command.ProcessResponse;
+import com.alipay.sofa.registry.jraft.handler.ConfigurationCommittedHandler;
 import com.alipay.sofa.registry.jraft.handler.NotifyLeaderChangeHandler;
 import com.alipay.sofa.registry.jraft.handler.RaftClientConnectionHandler;
 import com.alipay.sofa.registry.log.Logger;
@@ -117,6 +118,10 @@ public class RaftClient {
             rpcClient
                 .registerUserProcessor(new SyncUserProcessorAdapter(notifyLeaderChangeHandler));
 
+            ConfigurationCommittedHandler configurationCommittedHandler = new ConfigurationCommittedHandler(
+                groupId, cliClientService);
+            rpcClient.registerUserProcessor(new SyncUserProcessorAdapter(
+                configurationCommittedHandler));
         }
     }
 
@@ -161,6 +166,28 @@ public class RaftClient {
         } catch (Exception e) {
             LOGGER.error("Refresh leader failed", e);
             throw new IllegalStateException("Refresh leader failed", e);
+        }
+    }
+
+    public static void refreshConfiguration(CliClientService clientService, String groupId,
+                                            Configuration configuration, int timeout) {
+        try {
+            Configuration oldConf = RouteTable.getInstance().getConfiguration(groupId);
+            Configuration adding = new Configuration();
+            Configuration removing = new Configuration();
+            configuration.diff(oldConf, adding, removing);
+            if (adding.size() + removing.size() > 0) {
+                Status status = RouteTable.getInstance().refreshConfiguration(clientService,
+                    groupId, timeout);
+                if (!status.isOk()) {
+                    throw new IllegalStateException(String.format(
+                        "Refresh configuration failed, error=%s", status.getErrorMsg()));
+                }
+            }
+
+        } catch (Exception e) {
+            LOGGER.error("Update configuration failed", e);
+            throw new IllegalStateException("Update configuration failed", e);
         }
     }
 

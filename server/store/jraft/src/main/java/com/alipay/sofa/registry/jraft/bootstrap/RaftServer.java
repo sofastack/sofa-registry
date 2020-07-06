@@ -29,10 +29,13 @@ import com.alipay.sofa.jraft.rpc.impl.AbstractBoltClientService;
 import com.alipay.sofa.jraft.storage.impl.RocksDBLogStorage;
 import com.alipay.sofa.jraft.util.StorageOptionsFactory;
 import com.alipay.sofa.registry.common.model.store.URL;
+import com.alipay.sofa.registry.jraft.command.ConfigurationCommitted;
 import com.alipay.sofa.registry.jraft.command.NotifyLeaderChange;
+import com.alipay.sofa.registry.jraft.handler.ConfigurationCommittedHandler;
 import com.alipay.sofa.registry.jraft.handler.NotifyLeaderChangeHandler;
 import com.alipay.sofa.registry.jraft.handler.RaftServerConnectionHandler;
 import com.alipay.sofa.registry.jraft.handler.RaftServerHandler;
+import com.alipay.sofa.registry.jraft.processor.ConfigurationCommittedListener;
 import com.alipay.sofa.registry.jraft.processor.FollowerProcessListener;
 import com.alipay.sofa.registry.jraft.processor.LeaderProcessListener;
 import com.alipay.sofa.registry.log.Logger;
@@ -41,6 +44,7 @@ import com.alipay.sofa.registry.metrics.ReporterUtils;
 import com.alipay.sofa.registry.net.NetUtil;
 import com.alipay.sofa.registry.remoting.Channel;
 import com.alipay.sofa.registry.remoting.ChannelHandler;
+import com.alipay.sofa.registry.remoting.RemotingException;
 import com.alipay.sofa.registry.remoting.bolt.BoltServer;
 import com.alipay.sofa.registry.remoting.bolt.SyncUserProcessorAdapter;
 import com.alipay.sofa.registry.util.FileUtils;
@@ -67,22 +71,25 @@ public class RaftServer {
         RocksDB.loadLibrary();
     }
 
-    private static final Logger     LOGGER         = LoggerFactory.getLogger(RaftServer.class);
+    private static final Logger            LOGGER         = LoggerFactory
+                                                              .getLogger(RaftServer.class);
 
-    private RaftGroupService        raftGroupService;
-    private Node                    node;
-    private ServiceStateMachine     fsm;
-    private PeerId                  serverId;
-    private Configuration           initConf;
-    private String                  groupId;
-    private String                  dataPath;
-    private List<ChannelHandler>    serverHandlers = new ArrayList<>();
+    private RaftGroupService               raftGroupService;
+    private Node                           node;
+    private ServiceStateMachine            fsm;
+    private PeerId                         serverId;
+    private Configuration                  initConf;
+    private String                         groupId;
+    private String                         dataPath;
+    private List<ChannelHandler>           serverHandlers = new ArrayList<>();
 
-    private LeaderProcessListener   leaderProcessListener;
+    private LeaderProcessListener          leaderProcessListener;
 
-    private FollowerProcessListener followerProcessListener;
+    private FollowerProcessListener        followerProcessListener;
 
-    private BoltServer              boltServer;
+    private ConfigurationCommittedListener configurationCommittedListener;
+
+    private BoltServer                     boltServer;
 
     /**
      *
@@ -130,6 +137,7 @@ public class RaftServer {
         this.fsm = ServiceStateMachine.getInstance();
         this.fsm.setLeaderProcessListener(leaderProcessListener);
         this.fsm.setFollowerProcessListener(followerProcessListener);
+        this.fsm.setConfigurationCommittedListener(configurationCommittedListener);
 
         NodeOptions nodeOptions = initNodeOptions(raftServerConfig);
 
@@ -148,6 +156,8 @@ public class RaftServer {
         NotifyLeaderChangeHandler notifyLeaderChangeHandler = new NotifyLeaderChangeHandler(
             groupId, null);
         raftClient.registerUserProcessor(new SyncUserProcessorAdapter(notifyLeaderChangeHandler));
+
+        ConfigurationCommittedHandler.registerMockHandler(raftClient);
     }
 
     /**
@@ -221,11 +231,12 @@ public class RaftServer {
      * @param leader
      * @param sender
      */
-    public void sendNotify(PeerId leader, String sender) {
+    public void sendLeaderChangeNotify(PeerId leader, String sender) {
 
         if (boltServer == null) {
             LOGGER.error("Send notify leader change error!server must be started!");
-            throw new IllegalStateException("Send notify leader change error!server must be started!");
+            throw new IllegalStateException(
+                "Send notify leader change error!server must be started!");
         }
         NotifyLeaderChange notifyLeaderChange = new NotifyLeaderChange(leader);
         notifyLeaderChange.setSender(sender);
@@ -234,10 +245,10 @@ public class RaftServer {
         List<Throwable> throwables = new ArrayList<>();
         channels.forEach(channel -> {
             try {
-                boltServer.sendSync(channel, notifyLeaderChange,
-                        1000);
+                boltServer.sendSync(channel, notifyLeaderChange, 1000);
             } catch (Exception e) {
-                LOGGER.error("Send notify leader change error!url:{}", channel.getRemoteAddress(), e);
+                LOGGER.error("Send notify leader change error!url:{}", channel.getRemoteAddress(),
+                    e);
                 throwables.add(e);
             }
         });
@@ -245,6 +256,32 @@ public class RaftServer {
         if (!throwables.isEmpty()) {
             LOGGER.error("Send notify leader change error!");
             throw new RuntimeException("Send notify leader change error!");
+        }
+    }
+
+    public void sendConfigurationCommittedNotify(Configuration configuration) {
+        if (boltServer == null) {
+            LOGGER.error("Send notify configuration committed error!server must be started!");
+            throw new IllegalStateException(
+                "Send configuration committed error!server must be started!");
+        }
+
+        ConfigurationCommitted configurationCommitted = new ConfigurationCommitted(
+            configuration.toString());
+        Collection<Channel> channels = boltServer.getChannels();
+        List<Throwable> throwables = new ArrayList<>();
+        channels.forEach(channel -> {
+            try {
+                boltServer.sendSync(channel, configurationCommitted, 1000);
+            } catch (Exception e) {
+                LOGGER.error("Send notify configuration commited error!url:{}",
+                    channel.getRemoteAddress(), e);
+                throwables.add(e);
+            }
+        });
+        if (!throwables.isEmpty()) {
+            LOGGER.error("Send configuration committed error!");
+            throw new RuntimeException("Send configuration committed error!");
         }
     }
 
@@ -291,5 +328,9 @@ public class RaftServer {
      */
     public List<ChannelHandler> getServerHandlers() {
         return serverHandlers;
+    }
+
+    public void setConfigurationCommittedListener(ConfigurationCommittedListener listener) {
+        this.configurationCommittedListener = listener;
     }
 }
