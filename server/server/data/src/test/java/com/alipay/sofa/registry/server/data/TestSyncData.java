@@ -85,7 +85,7 @@ public class TestSyncData {
         Thread.sleep(1000);
         Operator operator2 = new Operator(DatumVersionUtil.nextId(), operator1.getVersion(),
             datum2, DataSourceTypeEnum.SYNC);
-        Thread.sleep(2000);
+        Thread.sleep(2500);
         Operator operator5 = new Operator(DatumVersionUtil.nextId(), operator2.getVersion(),
             datum5, DataSourceTypeEnum.SYNC);
 

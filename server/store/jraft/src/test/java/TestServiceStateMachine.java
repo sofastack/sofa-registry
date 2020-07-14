@@ -16,6 +16,7 @@
  */
 import com.alipay.sofa.jraft.Closure;
 import com.alipay.sofa.jraft.Iterator;
+import com.alipay.sofa.jraft.JRaftUtils;
 import com.alipay.sofa.jraft.Status;
 import com.alipay.sofa.jraft.entity.LeaderChangeContext;
 import com.alipay.sofa.jraft.entity.PeerId;
@@ -25,11 +26,7 @@ import com.alipay.sofa.jraft.storage.snapshot.SnapshotWriter;
 import com.alipay.sofa.registry.jraft.bootstrap.ServiceStateMachine;
 import com.alipay.sofa.registry.jraft.command.ProcessRequest;
 import com.alipay.sofa.registry.jraft.command.ProcessResponse;
-import com.alipay.sofa.registry.jraft.processor.FollowerProcessListener;
-import com.alipay.sofa.registry.jraft.processor.LeaderProcessListener;
-import com.alipay.sofa.registry.jraft.processor.LeaderTaskClosure;
-import com.alipay.sofa.registry.jraft.processor.Processor;
-import com.alipay.sofa.registry.jraft.processor.SnapshotProcess;
+import com.alipay.sofa.registry.jraft.processor.*;
 import com.caucho.hessian.io.Hessian2Output;
 import com.caucho.hessian.io.SerializerFactory;
 import com.google.protobuf.ByteString;
@@ -216,7 +213,7 @@ public class TestServiceStateMachine {
             status.set(statusIn);
         });
 
-        SnapshotProcess process = new SnapshotProcess(){
+        SnapshotProcess process = new SnapshotProcess() {
 
             @Override
             public boolean save(String path) {
@@ -235,12 +232,12 @@ public class TestServiceStateMachine {
 
             @Override
             public Set<String> getSnapshotFileNames() {
-                return new HashSet<>(Arrays.asList(new String[]{"aaa","sss"}));
+                return new HashSet<>(Arrays.asList(new String[] { "aaa", "sss" }));
             }
         };
-        processor.addWorker(process.getClass().getSimpleName(),process.getClass(),process);
+        processor.addWorker(process.getClass().getSimpleName(), process.getClass(), process);
 
-        serviceStateMachine.onSnapshotSave(new SnapshotWriter(){
+        serviceStateMachine.onSnapshotSave(new SnapshotWriter() {
 
             @Override
             public void close() throws IOException {
@@ -277,7 +274,7 @@ public class TestServiceStateMachine {
                 return false;
             }
 
-            public boolean addFile(String fileName){
+            public boolean addFile(String fileName) {
                 return true;
             }
 
@@ -295,7 +292,7 @@ public class TestServiceStateMachine {
             public void close(boolean keepDataOnError) throws IOException {
 
             }
-        },leaderTaskClosure);
+        }, leaderTaskClosure);
 
         TimeUnit.MILLISECONDS.sleep(1000);
 
@@ -554,5 +551,16 @@ public class TestServiceStateMachine {
 
     public String testMethod(String ss) {
         return ss;
+    }
+
+    @Test
+    public void TestOnConfChange() throws InterruptedException {
+        ServiceStateMachine serviceStateMachine = ServiceStateMachine.getInstance();
+        AtomicInteger confChanged = new AtomicInteger();
+        serviceStateMachine
+            .setConfigurationCommittedListener(conf -> confChanged.getAndIncrement());
+        serviceStateMachine.onConfigurationCommitted(JRaftUtils.getConfiguration("127.0.0.1"));
+        TimeUnit.MILLISECONDS.sleep(500);
+        Assert.assertEquals(confChanged.get(), 1);
     }
 }
