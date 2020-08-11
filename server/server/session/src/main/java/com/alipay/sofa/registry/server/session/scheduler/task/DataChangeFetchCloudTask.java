@@ -275,6 +275,7 @@ public class DataChangeFetchCloudTask extends AbstractSessionTask {
         TaskEvent taskEvent = new TaskEvent(parameter, TaskType.RECEIVED_DATA_MULTI_PUSH_TASK);
         taskEvent.setTaskClosure(pushTaskClosure);
         taskEvent.setAttribute(Constant.PUSH_CLIENT_SUBSCRIBERS, subscribers);
+
         taskLogger.info("send {} taskURL:{},taskScope:{},version:{},taskId={}",
             taskEvent.getTaskType(), subscriber.getSourceAddress(), scopeEnum,
             receivedData.getVersion(), taskEvent.getTaskId());
