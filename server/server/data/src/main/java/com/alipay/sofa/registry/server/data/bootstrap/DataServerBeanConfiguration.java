@@ -418,6 +418,7 @@ public class DataServerBeanConfiguration {
             list.add(sessionServerNotifier());
             list.add(tempPublisherNotifier());
             list.add(backUpNotifier());
+            list.add(snapshotBackUpNotifier());
             return list;
         }
 
