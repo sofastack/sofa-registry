@@ -64,4 +64,5 @@ public class ClientsOpenResource {
         sessionRegistry.cancel(connectIds);
         return CommonResponse.buildSuccessResponse();
     }
+
 }
