@@ -455,6 +455,26 @@
         <appender-ref ref="COMMON-ERROR-APPENDER"/>
     </appender>
 
+    <appender name="SESSION-CACHE-DIGEST-APPENDER" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <append>true</append>
+        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+            <level>${LOG_LEVEL}</level>
+        </filter>
+        <filter class="ch.qos.logback.classic.filter.LevelFilter">
+            <level>ERROR</level>
+            <onMatch>DENY</onMatch>
+        </filter>
+        <file>${SESSION_LOG_HOME}/cache-digest.log</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <FileNamePattern>${SESSION_LOG_HOME}/cache-digest.log.%d{yyyy-MM-dd}</FileNamePattern>
+            <MaxHistory>30</MaxHistory>
+        </rollingPolicy>
+        <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+            <pattern>[%d{ISO8601}][%p][%t][%c{0}] - %m%n</pattern>
+            <charset>${LOG_ENCODE}</charset>
+        </encoder>
+    </appender>
+
     <!-- common loggers -->
 
     <logger name="com.alipay.sofa.registry.jraft" level="${LOG_LEVEL}" additivity="false">
@@ -578,6 +598,10 @@
         <appender-ref ref="COMMON-ERROR-APPENDER"/>
     </logger>
 
+    <logger name="com.alipay.sofa.registry.server.session.cache.SessionCacheDigestTask" level="${LOG_LEVEL}" additivity="false">
+        <appender-ref ref="SESSION-CACHE-DIGEST-APPENDER"/>
+        <appender-ref ref="COMMON-ERROR-APPENDER"/>
+    </logger>
     <!-- root loggers -->
 
     <root level="${LOG_LEVEL}">

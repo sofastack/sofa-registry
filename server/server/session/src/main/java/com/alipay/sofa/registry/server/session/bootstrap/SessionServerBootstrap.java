@@ -26,6 +26,7 @@ import javax.annotation.Resource;
 import javax.ws.rs.Path;
 import javax.ws.rs.ext.Provider;
 
+import com.alipay.sofa.registry.server.session.cache.SessionCacheDigestTask;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
@@ -102,6 +103,9 @@ public class SessionServerBootstrap {
 
     @Autowired
     private ProvideDataProcessor              provideDataProcessorManager;
+
+    @Autowired
+    private SessionCacheDigestTask            sessionCacheDigestTask;
 
     private Server                            server;
 
@@ -182,6 +186,9 @@ public class SessionServerBootstrap {
         try {
             if (schedulerStart.compareAndSet(false, true)) {
                 executorManager.startScheduler();
+
+                //start dump session store
+                sessionCacheDigestTask.start();
                 LOGGER.info("Session Scheduler started!");
             }
         } catch (Exception e) {

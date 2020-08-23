@@ -19,6 +19,7 @@ package com.alipay.sofa.registry.server.session.bootstrap;
 import java.util.ArrayList;
 import java.util.Collection;
 
+import com.alipay.sofa.registry.server.session.cache.SessionCacheDigestTask;
 import org.glassfish.jersey.jackson.JacksonFeature;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -776,5 +777,15 @@ public class SessionServerConfiguration {
                 .addProvideDataProcessor(stopPushProvideDataProcessor);
             return stopPushProvideDataProcessor;
         }
+    }
+
+    @Configuration
+    public static class LogTaskConfigConfiguration {
+
+        @Bean
+        public SessionCacheDigestTask sessionCacheDigestTask() {
+            return new SessionCacheDigestTask();
+        }
+
     }
 }
