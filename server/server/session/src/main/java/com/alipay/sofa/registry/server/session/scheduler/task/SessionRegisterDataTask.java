@@ -20,6 +20,7 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 
+import com.alipay.sofa.registry.common.model.constants.ValueConstants;
 import com.alipay.sofa.registry.common.model.dataserver.SessionServerRegisterRequest;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
@@ -82,7 +83,8 @@ public class SessionRegisterDataTask extends AbstractSessionTask {
 
             Collection<Channel> chs = sessionServer.getChannels();
             Set<String> connectIds = new HashSet<>();
-            chs.forEach(channel -> connectIds.add(NetUtil.toAddressString(channel.getRemoteAddress())));
+            chs.forEach(channel -> connectIds.add(NetUtil.toAddressString(channel.getRemoteAddress())
+                    + ValueConstants.CONNECT_ID_SPLIT + NetUtil.toAddressString(channel.getLocalAddress())));
 
             sessionServerRegisterRequest = new SessionServerRegisterRequest(
                     SessionProcessIdGenerator.getSessionProcessId(), connectIds);

@@ -64,6 +64,7 @@ public class DefaultPublisherHandlerStrategy implements PublisherHandlerStrategy
             Publisher publisher = PublisherConverter.convert(publisherRegister);
             publisher.setProcessId(ip + ":" + port);
             publisher.setSourceAddress(new URL(channel.getRemoteAddress()));
+            publisher.setTargetAddress(new URL(channel.getLocalAddress()));
             if (EventTypeConstants.REGISTER.equals(publisherRegister.getEventType())) {
                 sessionRegistry.register(publisher);
             } else if (EventTypeConstants.UNREGISTER.equals(publisherRegister.getEventType())) {

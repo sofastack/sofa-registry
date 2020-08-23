@@ -27,6 +27,7 @@ import com.alipay.sofa.registry.client.remoting.ClientConnection;
 import com.alipay.sofa.registry.client.task.AbstractWorkerThread;
 import com.alipay.sofa.registry.client.task.WorkerThread;
 import com.alipay.sofa.registry.common.model.CommonResponse;
+import com.alipay.sofa.registry.common.model.constants.ValueConstants;
 import com.alipay.sofa.registry.common.model.sessionserver.CancelAddressRequest;
 import com.alipay.sofa.registry.common.model.store.Publisher;
 import com.alipay.sofa.registry.common.model.store.URL;
@@ -164,8 +165,10 @@ public class BaseIntegrationTest {
     protected static void clientOff() throws Exception {
         startServerIfNecessary();
         List<String> connectIds = new ArrayList<>();
-        connectIds.add(LOCAL_ADDRESS + ":" + getSourcePort(registryClient1));
-        connectIds.add(LOCAL_ADDRESS + ":" + getSourcePort(registryClient2));
+        connectIds.add(LOCAL_ADDRESS + ":" + getSourcePort(registryClient1)
+                       + ValueConstants.CONNECT_ID_SPLIT + LOCAL_ADDRESS + ":9600");
+        connectIds.add(LOCAL_ADDRESS + ":" + getSourcePort(registryClient2)
+                       + ValueConstants.CONNECT_ID_SPLIT + LOCAL_ADDRESS + ":9600");
         CommonResponse response = sessionChannel
             .getWebTarget()
             .path("api/clients/off")

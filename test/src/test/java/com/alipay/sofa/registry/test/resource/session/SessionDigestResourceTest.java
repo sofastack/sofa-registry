@@ -19,6 +19,7 @@ package com.alipay.sofa.registry.test.resource.session;
 import com.alipay.sofa.registry.client.api.model.RegistryType;
 import com.alipay.sofa.registry.client.api.registration.PublisherRegistration;
 import com.alipay.sofa.registry.client.api.registration.SubscriberRegistration;
+import com.alipay.sofa.registry.common.model.constants.ValueConstants;
 import com.alipay.sofa.registry.common.model.store.DataInfo;
 import com.alipay.sofa.registry.common.model.store.Publisher;
 import com.alipay.sofa.registry.common.model.store.Subscriber;
@@ -118,7 +119,8 @@ public class SessionDigestResourceTest extends BaseIntegrationTest {
     @Test
     public void testetSessionDataByConnectId() throws Exception {
         List<String> connectIds = new ArrayList<>();
-        connectIds.add(NetUtil.genHost(LOCAL_ADDRESS, getSourcePort(registryClient1)));
+        connectIds.add(NetUtil.genHost(LOCAL_ADDRESS, getSourcePort(registryClient1))
+                       + ValueConstants.CONNECT_ID_SPLIT + NetUtil.genHost(LOCAL_ADDRESS, 9600));
         Map<String, List<Publisher>> publisherMap = sessionChannel
             .getWebTarget()
             .path("digest/pub/connect/query")
