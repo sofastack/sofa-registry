@@ -59,7 +59,6 @@ import com.google.common.collect.Sets;
 import com.google.common.collect.Sets.SetView;
 
 /**
- *
  * @author shangyu.wh
  * @version $Id: AbstractSessionRegistry.java, v 0.1 2017-11-30 18:13 shangyu.wh Exp $
  */
@@ -426,7 +425,8 @@ public class SessionRegistry implements Registry {
 
         List<String> connectIds = new ArrayList<>();
         for (String connectId : intersection) {
-            Channel channel = sessionServer.getChannel(URL.valueOf(connectId));
+            String[] parts = connectId.split(ValueConstants.CONNECT_ID_SPLIT);
+            Channel channel = sessionServer.getChannel(URL.valueOf(parts[0]));
             if (channel == null) {
                 connectIds.add(connectId);
                 LOGGER.warn("Client connect has not existed!it must be remove!connectId:{}",
@@ -540,7 +540,7 @@ public class SessionRegistry implements Registry {
     /**
      * Setter method for property <tt>enableDataRenewSnapshot </tt>.
      *
-     * @param enableDataRenewSnapshot  value to be assigned to property enableDataRenewSnapshot
+     * @param enableDataRenewSnapshot value to be assigned to property enableDataRenewSnapshot
      */
     @Override
     public void setEnableDataRenewSnapshot(boolean enableDataRenewSnapshot) {
