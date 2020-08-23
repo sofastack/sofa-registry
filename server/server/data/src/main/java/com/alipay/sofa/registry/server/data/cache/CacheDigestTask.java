@@ -22,6 +22,8 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
+import com.alipay.sofa.registry.server.data.constants.Constant;
+import com.alipay.sofa.registry.util.SchedulerCornUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.CollectionUtils;
 
@@ -82,7 +84,7 @@ public class CacheDigestTask {
             } catch (Throwable t) {
                 LOGGER.error("[CacheDigestTask] cache digest error", t);
             }
-        }, 30, 600, TimeUnit.SECONDS);
+        }, SchedulerCornUtil.calculateInitialDelay(Constant.CACHE_PRINTER_CRON)/1000, 600, TimeUnit.SECONDS);
     }
 
     private String logPublisher(Publisher publisher) {

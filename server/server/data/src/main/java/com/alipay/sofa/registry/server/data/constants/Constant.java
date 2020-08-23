@@ -14,23 +14,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alipay.sofa.registry.server.session.scheduler.task;
+package com.alipay.sofa.registry.server.data.constants;
 
 /**
  *
- * @author shangyu.wh
- * @version $Id: Constant.java, v 0.1 2018-08-17 17:07 shangyu.wh Exp $
+ * @author xiaojian.xj
+ * @version $Id: Constant.java, v 0.1 2020年08月03日 19:38 xiaojian.xj Exp $
  */
 public class Constant {
-
-    public final static String PUSH_CLIENT_SUBSCRIBERS = "PUSH_CLIENT_SUBSCRIBERS";
-
-    public final static String PUSH_CLIENT_DATUM       = "PUSH_CLIENT_DATUM";
-
-    public final static String PUSH_CLIENT_URL         = "PUSH_CLIENT_URL";
 
     /**
      * execute at 05:10, 15:10, 25:10, 35:10, 45:10, 55:10
      */
-    public final static String CACHE_PRINTER_CRON      = "10 5,15,25,35,45,55 * * * ?";
+    public final static String CACHE_PRINTER_CRON = "10 5,15,25,35,45,55 * * * ?";
 }
