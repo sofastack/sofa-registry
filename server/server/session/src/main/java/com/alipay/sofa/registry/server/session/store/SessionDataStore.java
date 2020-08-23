@@ -103,6 +103,7 @@ public class SessionDataStore implements DataStore {
                     .warn(
                         "There is publisher already exists,version:{},it will be overwrite!Input version:{},info:{}",
                         existingPublisher.getVersion(), publisher.getVersion(), existingPublisher);
+                connectIndex.remove(existingPublisher.getSourceAddress().getAddressString());
             }
             publishers.put(publisher.getRegisterId(), publisher);
 
