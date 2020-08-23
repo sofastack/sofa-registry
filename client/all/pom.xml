@@ -56,7 +56,7 @@
         <hessian.version>3.3.6</hessian.version>
         <lookout.version>1.5.2</lookout.version>
         <sofa.common.tools.version>1.0.12</sofa.common.tools.version>
-        <netty.version>4.1.25.Final</netty.version>
+        <netty.version>4.1.42.Final</netty.version>
         <slf4j.version>1.7.21</slf4j.version>
         <main.user.dir>../../</main.user.dir>
     </properties>
