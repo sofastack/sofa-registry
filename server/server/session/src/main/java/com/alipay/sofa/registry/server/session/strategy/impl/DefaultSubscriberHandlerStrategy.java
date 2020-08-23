@@ -66,6 +66,7 @@ public class DefaultSubscriberHandlerStrategy implements SubscriberHandlerStrate
             subscriber.setProcessId(ip + ":" + port);
             subscriber.setSourceAddress(new URL(channel.getRemoteAddress(), BoltChannelUtil
                 .getBoltCustomSerializer(channel)));
+            subscriber.setTargetAddress(new URL(channel.getLocalAddress()));
 
             if (EventTypeConstants.REGISTER.equals(subscriberRegister.getEventType())) {
                 sessionRegistry.register(subscriber);

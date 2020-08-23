@@ -20,6 +20,7 @@ import java.util.Map;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ThreadPoolExecutor;
 
+import com.alipay.sofa.registry.common.model.constants.ValueConstants;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import com.alipay.sofa.registry.common.model.CommonResponse;
@@ -115,7 +116,9 @@ public class UnPublishDataHandler extends AbstractServerHandler<UnPublishDataReq
             if (pubMap != null) {
                 Publisher publisher = pubMap.get(request.getRegisterId());
                 if (publisher != null) {
-                    return publisher.getSourceAddress().getAddressString();
+                    return publisher.getSourceAddress().getAddressString()
+                           + ValueConstants.CONNECT_ID_SPLIT
+                           + publisher.getTargetAddress().getAddressString();
                 }
             }
         }

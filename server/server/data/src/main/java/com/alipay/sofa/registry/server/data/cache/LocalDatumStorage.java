@@ -23,6 +23,7 @@ import java.util.Map.Entry;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
+import com.alipay.sofa.registry.common.model.constants.ValueConstants;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import com.alipay.sofa.registry.common.model.dataserver.Datum;
@@ -409,7 +410,9 @@ public class LocalDatumStorage implements DatumStorage {
     }
 
     private String getConnectId(Publisher cachePub) {
-        return WordCache.getInstance().getWordCache(cachePub.getSourceAddress().getAddressString());
+        return WordCache.getInstance().getWordCache(
+            cachePub.getSourceAddress().getAddressString() + ValueConstants.CONNECT_ID_SPLIT
+                    + cachePub.getTargetAddress().getAddressString());
     }
 
     /**
