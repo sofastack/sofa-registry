@@ -260,8 +260,6 @@ public class DataChangeEventQueue {
                         "[{}] client off handle, connectId={}, occurTimestamp={}, version={}, handle pubSize={}",
                         getName(), connectId, event.getOccurredTimestamp(), event.getVersion(),
                         count);
-            } else {
-                LOGGER.info("[{}] no datum to handle, connectId={}", getName(), connectId);
             }
         }
     }
