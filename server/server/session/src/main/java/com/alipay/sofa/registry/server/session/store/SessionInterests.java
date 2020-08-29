@@ -40,7 +40,6 @@ import com.alipay.sofa.registry.util.VersionsMapUtils;
 import com.google.common.collect.Lists;
 
 /**
- *
  * @author shangyu.wh
  * @version $Id: AbstractSessionInterests.java, v 0.1 2017-11-30 20:42 shangyu.wh Exp $
  */
@@ -291,7 +290,7 @@ public class SessionInterests implements Interests, ReSubscribers {
     }
 
     private void invalidateIndex(Subscriber subscriber) {
-        invalidateConnectIndex(subscriber.getSourceAddress().getAddressString());
+        removeConnectIndex(subscriber);
         invalidateResultIndex(subscriber);
     }
 
@@ -459,7 +458,7 @@ public class SessionInterests implements Interests, ReSubscribers {
     /**
      * Setter method for property <tt>sessionServerConfig</tt>.
      *
-     * @param sessionServerConfig  value to be assigned to property sessionServerConfig
+     * @param sessionServerConfig value to be assigned to property sessionServerConfig
      */
     public void setSessionServerConfig(SessionServerConfig sessionServerConfig) {
         this.sessionServerConfig = sessionServerConfig;

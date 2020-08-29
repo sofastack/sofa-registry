@@ -32,7 +32,6 @@ import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.util.VersionsMapUtils;
 
 /**
- *
  * @author shangyu.wh
  * @version $Id: SessionWatchers.java, v 0.1 2018-04-17 19:00 shangyu.wh Exp $
  */
@@ -80,7 +79,7 @@ public class SessionWatchers implements Watchers {
             if (existingWatcher != null) {
                 LOGGER.warn("There is watcher already exists,it will be overwrite! {}",
                     existingWatcher);
-                invalidateConnectIndex(existingWatcher.getSourceAddress().getAddressString());
+                removeConnectIndex(existingWatcher);
             }
 
             watcherMap.put(watcher.getRegisterId(), watcher);
@@ -229,6 +228,10 @@ public class SessionWatchers implements Watchers {
 
     private void invalidateConnectIndex(String connectId) {
         connectIndex.remove(connectId);
+    }
+
+    public Map<String /*connectId*/, Map<String /*registerId*/, Watcher>> getConnectWatchers() {
+        return connectIndex;
     }
 
 }

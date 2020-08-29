@@ -30,7 +30,6 @@ import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 
 /**
- *
  * @author shangyu.wh
  * @version $Id: SessionDataStore.java, v 0.1 2017-12-01 18:14 shangyu.wh Exp $
  */
@@ -69,7 +68,6 @@ public class SessionDataStore implements DataStore {
             Publisher existingPublisher = publishers.get(publisher.getRegisterId());
 
             if (existingPublisher != null) {
-
                 if (existingPublisher.getVersion() != null) {
                     long oldVersion = existingPublisher.getVersion();
                     Long newVersion = publisher.getVersion();
@@ -103,10 +101,9 @@ public class SessionDataStore implements DataStore {
                     .warn(
                         "There is publisher already exists,version:{},it will be overwrite!Input version:{},info:{}",
                         existingPublisher.getVersion(), publisher.getVersion(), existingPublisher);
-                connectIndex.remove(existingPublisher.getSourceAddress().getAddressString());
+                removeFromConnectIndex(existingPublisher);
             }
             publishers.put(publisher.getRegisterId(), publisher);
-
             addToConnectIndex(publisher);
 
         } finally {

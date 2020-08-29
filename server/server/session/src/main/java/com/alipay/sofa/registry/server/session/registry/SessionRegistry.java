@@ -418,6 +418,7 @@ public class SessionRegistry implements Registry {
 
         SetView<String> intersection = Sets.union(sessionDataStore.getConnectPublishers().keySet(),
             sessionInterests.getConnectSubscribers().keySet());
+        intersection.addAll(sessionWatchers.getConnectWatchers().keySet());
 
         Server sessionServer = boltExchange.getServer(sessionServerConfig.getServerPort());
 
