@@ -448,15 +448,26 @@ public class DataCacheTest extends BaseTest {
         subscriber2.setTargetAddress(new URL("192.168.1.2", 9600));
 
         sessionInterests.add(subscriber2);
-        sessionInterests.deleteByConnectId(subscriber1.getSourceAddress().getAddressString()+"_"+subscriber1.getTargetAddress().getAddressString());
 
+        sessionInterests.deleteByConnectId(subscriber1.getSourceAddress().getAddressString() + "_"
+                                           + subscriber1.getTargetAddress().getAddressString());
 
-        Assert.assertEquals(sessionInterests.getConnectSubscribers().get("192.168.1.1:12345_192.168.1.2:9600"), null);
-        Assert.assertEquals(sessionInterests.getConnectSubscribers().get("192.168.1.1:12346_192.168.1.2:9600").size(), 1);
+        Assert.assertEquals(
+            sessionInterests.getConnectSubscribers().get("192.168.1.1:12345_192.168.1.2:9600"),
+            null);
+        Assert.assertEquals(
+            sessionInterests.getConnectSubscribers().get("192.168.1.1:12346_192.168.1.2:9600")
+                .size(), 1);
 
-        Assert.assertEquals(sessionInterests.querySubscriberIndex(subscriber1.getDataInfoId(), subscriber1.getScope()).get(new InetSocketAddress("192.168.1.1", 12345)), null);
-        Assert.assertEquals(sessionInterests.querySubscriberIndex(subscriber1.getDataInfoId(), subscriber1.getScope()).get(new InetSocketAddress("192.168.1.1", 12346)).size(), 1);
+        Assert.assertEquals(
+            sessionInterests.querySubscriberIndex(subscriber1.getDataInfoId(),
+                subscriber1.getScope()).get(new InetSocketAddress("192.168.1.1", 12345)), null);
+        Assert.assertEquals(
+            sessionInterests
+                .querySubscriberIndex(subscriber1.getDataInfoId(), subscriber1.getScope())
+                .get(new InetSocketAddress("192.168.1.1", 12346)).size(), 1);
         Assert.assertEquals(sessionInterests.getInterests(subscriber1.getDataInfoId()).size(), 1);
-        Assert.assertTrue(sessionInterests.getInterests(subscriber1.getDataInfoId()).contains(subscriber2));
+        Assert.assertTrue(sessionInterests.getInterests(subscriber1.getDataInfoId()).contains(
+            subscriber2));
     }
 }
