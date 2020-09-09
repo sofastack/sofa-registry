@@ -38,7 +38,7 @@ import com.alipay.sofa.jraft.core.CliServiceImpl;
 import com.alipay.sofa.jraft.core.NodeImpl;
 import com.alipay.sofa.jraft.entity.PeerId;
 import com.alipay.sofa.jraft.option.CliOptions;
-import com.alipay.sofa.jraft.rpc.impl.AbstractBoltClientService;
+import com.alipay.sofa.jraft.rpc.impl.AbstractClientService;
 import com.alipay.sofa.registry.common.model.metaserver.MetaNode;
 import com.alipay.sofa.registry.common.model.store.URL;
 import com.alipay.sofa.registry.jraft.bootstrap.RaftClient;
@@ -233,8 +233,7 @@ public class RaftExchanger {
                 if (raftServer != null && raftServer.getNode() != null) {
                     //TODO this cannot be invoke,because RaftAnnotationBeanPostProcessor.getProxy will start first
                     raftClient = new RaftClient(getGroup(), serverConf,
-                        (AbstractBoltClientService) (((NodeImpl) raftServer.getNode())
-                            .getRpcService()));
+                        (AbstractClientService) (((NodeImpl) raftServer.getNode()).getRpcService()));
                 } else {
                     raftClient = new RaftClient(getGroup(), serverConf);
                 }

@@ -16,12 +16,7 @@
  */
 package com.alipay.sofa.registry.jraft.bootstrap;
 
-import com.alipay.remoting.ProtocolCode;
-import com.alipay.remoting.ProtocolManager;
 import com.alipay.remoting.rpc.RpcClient;
-import com.alipay.remoting.rpc.RpcServer;
-import com.alipay.remoting.rpc.protocol.RpcProtocol;
-import com.alipay.remoting.rpc.protocol.RpcProtocolV2;
 import com.alipay.sofa.jraft.Node;
 import com.alipay.sofa.jraft.RaftGroupService;
 import com.alipay.sofa.jraft.conf.Configuration;
@@ -29,11 +24,12 @@ import com.alipay.sofa.jraft.core.NodeImpl;
 import com.alipay.sofa.jraft.entity.PeerId;
 import com.alipay.sofa.jraft.option.NodeOptions;
 import com.alipay.sofa.jraft.rpc.RaftRpcServerFactory;
-import com.alipay.sofa.jraft.rpc.impl.AbstractBoltClientService;
+import com.alipay.sofa.jraft.rpc.RpcServer;
+import com.alipay.sofa.jraft.rpc.impl.AbstractClientService;
+import com.alipay.sofa.jraft.rpc.impl.BoltRpcClient;
+import com.alipay.sofa.jraft.rpc.impl.BoltRpcServer;
 import com.alipay.sofa.jraft.storage.impl.RocksDBLogStorage;
 import com.alipay.sofa.jraft.util.StorageOptionsFactory;
-import com.alipay.sofa.jraft.util.ThreadPoolMetricSet;
-import com.alipay.sofa.jraft.util.ThreadPoolUtil;
 import com.alipay.sofa.registry.common.model.store.URL;
 import com.alipay.sofa.registry.jraft.command.NotifyLeaderChange;
 import com.alipay.sofa.registry.jraft.handler.NotifyLeaderChangeHandler;
@@ -50,8 +46,6 @@ import com.alipay.sofa.registry.remoting.ChannelHandler;
 import com.alipay.sofa.registry.remoting.bolt.BoltServer;
 import com.alipay.sofa.registry.remoting.bolt.SyncUserProcessorAdapter;
 import com.alipay.sofa.registry.util.FileUtils;
-import com.alipay.sofa.registry.util.NamedThreadFactory;
-import com.codahale.metrics.MetricRegistry;
 import org.rocksdb.BlockBasedTableConfig;
 import org.rocksdb.BloomFilter;
 import org.rocksdb.IndexType;
@@ -123,6 +117,7 @@ public class RaftServer {
      * @throws IOException
      */
     public void start(RaftServerConfig raftServerConfig) throws IOException {
+
         FileUtils.forceMkdir(new File(dataPath));
 
         serverHandlers.add(new RaftServerHandler(this, raftServerExecutor));
@@ -133,8 +128,7 @@ public class RaftServer {
 
         boltServer.initServer();
 
-        RpcServer rpcServer = boltServer.getRpcServer();
-
+        RpcServer rpcServer = new BoltRpcServer(boltServer.getRpcServer());
         RaftRpcServerFactory.addRaftRequestProcessors(rpcServer, raftExecutor, raftExecutor);
 
         this.fsm = ServiceStateMachine.getInstance();
@@ -153,8 +147,8 @@ public class RaftServer {
                 node.getNodeMetrics().getMetricRegistry(), raftServerConfig.getMetricsLogger());
         }
 
-        RpcClient raftClient = ((AbstractBoltClientService) (((NodeImpl) node).getRpcService()))
-            .getRpcClient();
+        RpcClient raftClient = ((BoltRpcClient) ((AbstractClientService) (((NodeImpl) node)
+            .getRpcService())).getRpcClient()).getRpcClient();
 
         NotifyLeaderChangeHandler notifyLeaderChangeHandler = new NotifyLeaderChangeHandler(
             groupId, null);
