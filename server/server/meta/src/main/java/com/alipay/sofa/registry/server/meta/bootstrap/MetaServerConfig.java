@@ -120,6 +120,30 @@ public interface MetaServerConfig {
 
     int getMetaSchedulerPoolSize();
 
+    int getDefaultRequestExecutorMinSize();
+
+    int getDefaultRequestExecutorMaxSize();
+
+    int getDefaultRequestExecutorQueueSize();
+
+    int getRaftExecutorMinSize();
+
+    int getRaftExecutorQueueSize();
+
+    int getRaftExecutorMaxSize();
+
+    int getRaftServerExecutorMinSize();
+
+    int getRaftServerExecutorMaxSize();
+
+    int getRaftServerExecutorQueueSize();
+
+    int getRaftFsmExecutorMinSize();
+
+    int getRaftFsmExecutorMaxSize();
+
+    int getRaftFsmExecutorQueueSize();
+
     /**
      * decision mode enum
      */
