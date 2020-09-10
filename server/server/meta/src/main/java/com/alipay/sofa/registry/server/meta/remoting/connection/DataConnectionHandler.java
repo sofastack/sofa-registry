@@ -20,12 +20,15 @@ import com.alipay.sofa.registry.common.model.Node.NodeType;
 import com.alipay.sofa.registry.net.NetUtil;
 import com.alipay.sofa.registry.remoting.Channel;
 import com.alipay.sofa.registry.remoting.RemotingException;
+import com.alipay.sofa.registry.server.meta.executor.ExecutorManager;
 import com.alipay.sofa.registry.server.meta.remoting.handler.AbstractServerHandler;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import java.net.InetSocketAddress;
 import java.util.Collection;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Executor;
 
 /**
  * Handle data node's connect request
@@ -34,6 +37,9 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public class DataConnectionHandler extends AbstractServerHandler implements NodeConnectManager {
     private Map<String/*connectId*/, InetSocketAddress> connections = new ConcurrentHashMap<>();
+
+    @Autowired
+    private ExecutorManager                              executorManager;
 
     @Override
     public void connected(Channel channel) throws RemotingException {
@@ -77,4 +83,8 @@ public class DataConnectionHandler extends AbstractServerHandler implements Node
         return NodeType.DATA;
     }
 
+    @Override
+    public Executor getExecutor() {
+        return executorManager.getRequestExecutor();
+    }
 }

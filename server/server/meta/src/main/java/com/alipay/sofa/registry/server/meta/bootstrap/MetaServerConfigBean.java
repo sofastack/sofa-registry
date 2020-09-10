@@ -44,7 +44,7 @@ public class MetaServerConfigBean implements MetaServerConfig {
 
     private int                schedulerHeartbeatTimeout                       = 3;
 
-    private int                schedulerHeartbeatFirstDelay                    = 3;
+    private int                schedulerHeartbeatFirstDelay                    = 30;
 
     private int                schedulerHeartbeatExpBackOffBound               = 10;
 

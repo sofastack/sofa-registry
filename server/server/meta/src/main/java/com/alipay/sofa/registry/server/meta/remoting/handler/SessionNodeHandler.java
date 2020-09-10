@@ -21,8 +21,11 @@ import com.alipay.sofa.registry.common.model.metaserver.SessionNode;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.remoting.Channel;
+import com.alipay.sofa.registry.server.meta.executor.ExecutorManager;
 import com.alipay.sofa.registry.server.meta.registry.Registry;
 import org.springframework.beans.factory.annotation.Autowired;
+
+import java.util.concurrent.Executor;
 
 /**
  * Handle session node's register request
@@ -32,6 +35,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 public class SessionNodeHandler extends AbstractServerHandler<SessionNode> {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(SessionNodeHandler.class);
+
+    @Autowired
+    private ExecutorManager     executorManager;
 
     @Autowired
     private Registry            metaServerRegistry;
@@ -57,5 +63,10 @@ public class SessionNodeHandler extends AbstractServerHandler<SessionNode> {
     @Override
     public HandlerType getType() {
         return HandlerType.PROCESSER;
+    }
+
+    @Override
+    public Executor getExecutor() {
+        return executorManager.getRequestExecutor();
     }
 }

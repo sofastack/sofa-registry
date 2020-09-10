@@ -21,8 +21,11 @@ import com.alipay.sofa.registry.common.model.metaserver.NodeChangeResult;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.remoting.Channel;
+import com.alipay.sofa.registry.server.meta.executor.ExecutorManager;
 import com.alipay.sofa.registry.server.meta.registry.Registry;
 import org.springframework.beans.factory.annotation.Autowired;
+
+import java.util.concurrent.Executor;
 
 /**
  * Handle session/data node's query request, such as getAllNodes request
@@ -34,6 +37,8 @@ public class GetNodesRequestHandler extends AbstractServerHandler<GetNodesReques
 
     private static final Logger LOGGER = LoggerFactory.getLogger("META-CONNECT");
 
+    @Autowired
+    private ExecutorManager     executorManager;
     @Autowired
     private Registry            metaServerRegistry;
 
@@ -59,5 +64,10 @@ public class GetNodesRequestHandler extends AbstractServerHandler<GetNodesReques
     @Override
     public Class interest() {
         return GetNodesRequest.class;
+    }
+
+    @Override
+    public Executor getExecutor() {
+        return executorManager.getRequestExecutor();
     }
 }

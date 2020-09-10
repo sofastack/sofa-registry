@@ -23,6 +23,7 @@ import com.alipay.sofa.registry.net.NetUtil;
 import com.alipay.sofa.registry.remoting.Channel;
 import com.alipay.sofa.registry.remoting.RemotingException;
 import com.alipay.sofa.registry.server.meta.bootstrap.NodeConfig;
+import com.alipay.sofa.registry.server.meta.executor.ExecutorManager;
 import com.alipay.sofa.registry.server.meta.remoting.handler.AbstractServerHandler;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -30,6 +31,7 @@ import java.net.InetSocketAddress;
 import java.util.Collection;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Executor;
 
 /**
  * Handle meta node's connect request
@@ -41,6 +43,8 @@ public class MetaConnectionHandler extends AbstractServerHandler implements Node
     private static final Logger                                                      LOGGER      = LoggerFactory
                                                                                                      .getLogger(MetaConnectionHandler.class);
 
+    @Autowired
+    private ExecutorManager                                                          executorManager;
     @Autowired
     private NodeConfig                                                               nodeConfig;
 
@@ -113,5 +117,10 @@ public class MetaConnectionHandler extends AbstractServerHandler implements Node
     @Override
     public NodeType getNodeType() {
         return NodeType.META;
+    }
+
+    @Override
+    public Executor getExecutor() {
+        return executorManager.getRequestExecutor();
     }
 }

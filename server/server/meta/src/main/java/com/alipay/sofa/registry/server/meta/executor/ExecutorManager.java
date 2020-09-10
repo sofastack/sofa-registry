@@ -33,7 +33,6 @@ import com.alipay.sofa.registry.task.scheduler.TimedSupervisorTask;
 import com.alipay.sofa.registry.util.NamedThreadFactory;
 
 /**
- *
  * @author shangyu.wh
  * @version $Id: ExecutorManager.java, v 0.1 2018-01-16 15:51 shangyu.wh Exp $
  */
@@ -53,6 +52,8 @@ public class ExecutorManager {
 
     private ThreadPoolExecutor       raftClientRefreshExecutor;
 
+    private ThreadPoolExecutor       requestExecutor;
+
     private MetaServerConfig         metaServerConfig;
 
     @Autowired
@@ -66,6 +67,7 @@ public class ExecutorManager {
 
     /**
      * constructor
+     *
      * @param metaServerConfig
      */
     public ExecutorManager(MetaServerConfig metaServerConfig) {
@@ -119,6 +121,10 @@ public class ExecutorManager {
             new LinkedBlockingQueue<>(metaServerConfig.getRaftClientRefreshExecutorQueueSize()),
             new NamedThreadFactory("MetaScheduler-RaftClientRefresh"));
         raftClientRefreshExecutor.allowCoreThreadTimeOut(true);
+
+        requestExecutor = new ThreadPoolExecutor(20, 600, 300, TimeUnit.SECONDS,
+            new LinkedBlockingQueue<>(500), new NamedThreadFactory("MetaHandler-SessionRegister"));
+        requestExecutor.allowCoreThreadTimeOut(true);
     }
 
     public void startScheduler() {
@@ -195,5 +201,9 @@ public class ExecutorManager {
         if (raftClientRefreshExecutor != null) {
             raftClientRefreshExecutor.isShutdown();
         }
+    }
+
+    public ThreadPoolExecutor getRequestExecutor() {
+        return requestExecutor;
     }
 }

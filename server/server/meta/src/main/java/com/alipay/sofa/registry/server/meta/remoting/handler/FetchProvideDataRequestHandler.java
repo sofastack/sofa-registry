@@ -20,17 +20,21 @@ import com.alipay.sofa.registry.common.model.ServerDataBox;
 import com.alipay.sofa.registry.common.model.console.PersistenceData;
 import com.alipay.sofa.registry.common.model.metaserver.FetchProvideDataRequest;
 import com.alipay.sofa.registry.common.model.metaserver.ProvideData;
-import com.alipay.sofa.registry.common.model.store.DataInfo;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.remoting.Channel;
+import com.alipay.sofa.registry.server.meta.executor.ExecutorManager;
 import com.alipay.sofa.registry.store.api.DBResponse;
 import com.alipay.sofa.registry.store.api.DBService;
 import com.alipay.sofa.registry.store.api.OperationStatus;
 import com.alipay.sofa.registry.store.api.annotation.RaftReference;
+import org.springframework.beans.factory.annotation.Autowired;
+
+import java.util.concurrent.Executor;
 
 /**
  * Handle session node's query request, such as get ProvideData by dataInfoId
+ *
  * @author shangyu.wh
  * @version $Id: GetNodesRequestHandler.java, v 0.1 2018-03-02 15:12 shangyu.wh Exp $
  */
@@ -41,6 +45,9 @@ public class FetchProvideDataRequestHandler extends AbstractServerHandler<FetchP
 
     @RaftReference
     private DBService           persistenceDataDBService;
+
+    @Autowired
+    private ExecutorManager     executorManager;
 
     @Override
     public Object reply(Channel channel, FetchProvideDataRequest fetchProvideDataRequest) {
@@ -84,5 +91,10 @@ public class FetchProvideDataRequestHandler extends AbstractServerHandler<FetchP
     @Override
     public Class interest() {
         return FetchProvideDataRequest.class;
+    }
+
+    @Override
+    public Executor getExecutor() {
+        return executorManager.getRequestExecutor();
     }
 }

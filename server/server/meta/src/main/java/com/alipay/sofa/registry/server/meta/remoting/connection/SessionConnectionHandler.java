@@ -20,12 +20,15 @@ import com.alipay.sofa.registry.common.model.Node.NodeType;
 import com.alipay.sofa.registry.net.NetUtil;
 import com.alipay.sofa.registry.remoting.Channel;
 import com.alipay.sofa.registry.remoting.RemotingException;
+import com.alipay.sofa.registry.server.meta.executor.ExecutorManager;
 import com.alipay.sofa.registry.server.meta.remoting.handler.AbstractServerHandler;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import java.net.InetSocketAddress;
 import java.util.Collection;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Executor;
 
 /**
  * Handle session node's connect request
@@ -34,6 +37,8 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public class SessionConnectionHandler extends AbstractServerHandler implements NodeConnectManager {
 
+    @Autowired
+    private ExecutorManager                              executorManager;
     private Map<String/*connectId*/, InetSocketAddress> connections = new ConcurrentHashMap<>();
 
     @Override
@@ -76,4 +81,8 @@ public class SessionConnectionHandler extends AbstractServerHandler implements N
         return NodeType.SESSION;
     }
 
+    @Override
+    public Executor getExecutor() {
+        return executorManager.getRequestExecutor();
+    }
 }
