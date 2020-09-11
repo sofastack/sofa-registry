@@ -37,8 +37,6 @@ import java.util.concurrent.Executor;
  */
 public class SessionConnectionHandler extends AbstractServerHandler implements NodeConnectManager {
 
-    @Autowired
-    private ExecutorManager                              executorManager;
     private Map<String/*connectId*/, InetSocketAddress> connections = new ConcurrentHashMap<>();
 
     @Override
@@ -79,10 +77,5 @@ public class SessionConnectionHandler extends AbstractServerHandler implements N
     @Override
     public NodeType getNodeType() {
         return NodeType.SESSION;
-    }
-
-    @Override
-    public Executor getExecutor() {
-        return executorManager.getRequestExecutor();
     }
 }

@@ -38,8 +38,6 @@ public class GetNodesRequestHandler extends AbstractServerHandler<GetNodesReques
     private static final Logger LOGGER = LoggerFactory.getLogger("META-CONNECT");
 
     @Autowired
-    private ExecutorManager     executorManager;
-    @Autowired
     private Registry            metaServerRegistry;
 
     @Override
@@ -66,8 +64,4 @@ public class GetNodesRequestHandler extends AbstractServerHandler<GetNodesReques
         return GetNodesRequest.class;
     }
 
-    @Override
-    public Executor getExecutor() {
-        return executorManager.getRequestExecutor();
-    }
 }

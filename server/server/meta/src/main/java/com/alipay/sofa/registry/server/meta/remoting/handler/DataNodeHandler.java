@@ -37,8 +37,6 @@ public class DataNodeHandler extends AbstractServerHandler<DataNode> {
     private static final Logger LOGGER = LoggerFactory.getLogger(DataNodeHandler.class);
 
     @Autowired
-    private ExecutorManager     executorManager;
-    @Autowired
     private Registry            metaServerRegistry;
 
     @Override
@@ -64,8 +62,4 @@ public class DataNodeHandler extends AbstractServerHandler<DataNode> {
         return HandlerType.PROCESSER;
     }
 
-    @Override
-    public Executor getExecutor() {
-        return executorManager.getRequestExecutor();
-    }
 }

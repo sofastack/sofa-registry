@@ -37,9 +37,6 @@ public class SessionNodeHandler extends AbstractServerHandler<SessionNode> {
     private static final Logger LOGGER = LoggerFactory.getLogger(SessionNodeHandler.class);
 
     @Autowired
-    private ExecutorManager     executorManager;
-
-    @Autowired
     private Registry            metaServerRegistry;
 
     @Override
@@ -65,8 +62,4 @@ public class SessionNodeHandler extends AbstractServerHandler<SessionNode> {
         return HandlerType.PROCESSER;
     }
 
-    @Override
-    public Executor getExecutor() {
-        return executorManager.getRequestExecutor();
-    }
 }

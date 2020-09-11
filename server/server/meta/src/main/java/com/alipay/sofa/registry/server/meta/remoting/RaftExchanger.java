@@ -20,9 +20,13 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
+import com.alipay.sofa.jraft.util.ThreadPoolUtil;
+import com.alipay.sofa.registry.util.NamedThreadFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import com.alipay.sofa.jraft.CliService;
@@ -49,7 +53,6 @@ import com.alipay.sofa.registry.server.meta.executor.ExecutorManager;
 import com.alipay.sofa.registry.server.meta.registry.Registry;
 
 /**
- *
  * @author shangyu.wh
  * @version $Id: RaftExchanger.java, v 0.1 2018-05-22 15:13 shangyu.wh Exp $
  */
@@ -68,6 +71,9 @@ public class RaftExchanger {
     private NodeConfig          nodeConfig;
 
     @Autowired
+    private ThreadPoolExecutor  defaultRequestExecutor;
+
+    @Autowired
     private Registry            metaServerRegistry;
 
     private RaftServer          raftServer;
@@ -82,6 +88,7 @@ public class RaftExchanger {
 
     /**
      * Start Raft server
+     *
      * @param executorManager
      */
     public void startRaftServer(final ExecutorManager executorManager) {
@@ -137,6 +144,19 @@ public class RaftExchanger {
                         raftServer.sendNotify(leader, "follower");
                     }
                 });
+                raftServer.setRaftExecutor(ThreadPoolUtil
+                    .newBuilder()
+                    .poolName("Raft-Executor")
+                    .enableMetric(true)
+                    .coreThreads(metaServerConfig.getRaftExecutorMinSize())
+                    .maximumThreads(metaServerConfig.getRaftExecutorMaxSize())
+                    .keepAliveSeconds(60L)
+                    .workQueue(
+                        new LinkedBlockingQueue<>(metaServerConfig.getRaftExecutorQueueSize()))
+                    .rejectedHandler(new ThreadPoolExecutor.AbortPolicy())//
+                    .threadFactory(new NamedThreadFactory("Raft-Processor", true)) //
+                    .build());
+                raftServer.setRaftServerExecutor(defaultRequestExecutor);
 
                 RaftServerConfig raftServerConfig = new RaftServerConfig();
                 raftServerConfig.setMetricsLogger(METRICS_LOGGER);
@@ -275,6 +295,7 @@ public class RaftExchanger {
 
     /**
      * api for remove meta node
+     *
      * @param ipAddress
      */
     public void removePeer(String ipAddress) {

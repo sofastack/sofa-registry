@@ -51,6 +51,7 @@ import com.alipay.sofa.registry.remoting.bolt.BoltServer;
 import com.alipay.sofa.registry.remoting.bolt.SyncUserProcessorAdapter;
 import com.alipay.sofa.registry.util.FileUtils;
 import com.alipay.sofa.registry.util.NamedThreadFactory;
+import com.codahale.metrics.MetricRegistry;
 import org.rocksdb.BlockBasedTableConfig;
 import org.rocksdb.BloomFilter;
 import org.rocksdb.IndexType;
@@ -91,6 +92,7 @@ public class RaftServer {
 
     private BoltServer              boltServer;
     private ThreadPoolExecutor      raftExecutor;
+    private ThreadPoolExecutor      raftServerExecutor;
 
     /**
      * @param dataPath    Example: /tmp/server1
@@ -120,16 +122,9 @@ public class RaftServer {
      * @throws IOException
      */
     public void start(RaftServerConfig raftServerConfig) throws IOException {
-        raftExecutor = ThreadPoolUtil.newBuilder().poolName("Raft-Processor").enableMetric(true)
-            .coreThreads(20).maximumThreads(400).keepAliveSeconds(60L)
-            .workQueue(new LinkedBlockingQueue<>(100))
-            .rejectedHandler(new ThreadPoolExecutor.AbortPolicy())//
-            .threadFactory(new NamedThreadFactory("Raft-Processor", true)) //
-            .build();
-
         FileUtils.forceMkdir(new File(dataPath));
 
-        serverHandlers.add(new RaftServerHandler(this));
+        serverHandlers.add(new RaftServerHandler(this, null));
         serverHandlers.add(new RaftServerConnectionHandler());
 
         boltServer = new BoltServer(new URL(NetUtil.getLocalAddress().getHostAddress(),
@@ -152,16 +147,7 @@ public class RaftServer {
         this.node = this.raftGroupService.start();
 
         if (raftServerConfig.isEnableMetrics()) {
-            node.getNodeMetrics().getMetricRegistry()
-                .register("Raft-Processor", new ThreadPoolMetricSet(raftExecutor));
-            node.getNodeMetrics()
-                .getMetricRegistry()
-                .register(
-                    "Bolt-default-executor",
-                    new ThreadPoolMetricSet((ThreadPoolExecutor) ProtocolManager
-                        .getProtocol(ProtocolCode.fromBytes(RpcProtocol.PROTOCOL_CODE))
-                        .getCommandHandler().getDefaultExecutor()));
-
+            metricExecutors();
             ReporterUtils.startSlf4jReporter(raftServerConfig.getEnableMetricsReporterPeriod(),
                 node.getNodeMetrics().getMetricRegistry(), raftServerConfig.getMetricsLogger());
         }
@@ -318,5 +304,25 @@ public class RaftServer {
      */
     public List<ChannelHandler> getServerHandlers() {
         return serverHandlers;
+    }
+
+    public void setRaftExecutor(ThreadPoolExecutor executor) {
+        this.raftExecutor = executor;
+    }
+
+    public void setRaftServerExecutor(ThreadPoolExecutor executor) {
+        this.raftServerExecutor = executor;
+    }
+
+    private void metricExecutors() {
+        ThreadPoolExecutor boltDefaultExecutor = (ThreadPoolExecutor) ProtocolManager
+            .getProtocol(ProtocolCode.fromBytes(RpcProtocol.PROTOCOL_CODE)).getCommandHandler()
+            .getDefaultExecutor();
+        MetricRegistry metricRegistry = node.getNodeMetrics().getMetricRegistry();
+        metricRegistry.register("Raft-Processor", new ThreadPoolMetricSet(raftExecutor));
+        metricRegistry
+            .register("RaftServer-Processor", new ThreadPoolMetricSet(raftServerExecutor));
+        metricRegistry.register("Bolt-default-executor", new ThreadPoolMetricSet(
+            boltDefaultExecutor));
     }
 }

@@ -52,8 +52,6 @@ public class ExecutorManager {
 
     private ThreadPoolExecutor       raftClientRefreshExecutor;
 
-    private ThreadPoolExecutor       requestExecutor;
-
     private MetaServerConfig         metaServerConfig;
 
     @Autowired
@@ -122,9 +120,6 @@ public class ExecutorManager {
             new NamedThreadFactory("MetaScheduler-RaftClientRefresh"));
         raftClientRefreshExecutor.allowCoreThreadTimeOut(true);
 
-        requestExecutor = new ThreadPoolExecutor(20, 600, 300, TimeUnit.SECONDS,
-            new LinkedBlockingQueue<>(500), new NamedThreadFactory("MetaHandler-SessionRegister"));
-        requestExecutor.allowCoreThreadTimeOut(true);
     }
 
     public void startScheduler() {
@@ -201,9 +196,5 @@ public class ExecutorManager {
         if (raftClientRefreshExecutor != null) {
             raftClientRefreshExecutor.isShutdown();
         }
-    }
-
-    public ThreadPoolExecutor getRequestExecutor() {
-        return requestExecutor;
     }
 }

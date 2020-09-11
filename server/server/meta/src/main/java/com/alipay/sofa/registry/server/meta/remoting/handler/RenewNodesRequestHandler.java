@@ -40,9 +40,6 @@ public class RenewNodesRequestHandler extends AbstractServerHandler<RenewNodesRe
     @Autowired
     private Registry            metaServerRegistry;
 
-    @Autowired
-    private ExecutorManager     executorManager;
-
     @Override
     public Object reply(Channel channel, RenewNodesRequest renewNodesRequest) {
         Node renewNode = null;
@@ -66,8 +63,4 @@ public class RenewNodesRequestHandler extends AbstractServerHandler<RenewNodesRe
         return HandlerType.PROCESSER;
     }
 
-    @Override
-    public Executor getExecutor() {
-        return executorManager.getRequestExecutor();
-    }
 }

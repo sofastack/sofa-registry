@@ -44,8 +44,6 @@ public class MetaConnectionHandler extends AbstractServerHandler implements Node
                                                                                                      .getLogger(MetaConnectionHandler.class);
 
     @Autowired
-    private ExecutorManager                                                          executorManager;
-    @Autowired
     private NodeConfig                                                               nodeConfig;
 
     private Map<String/*dataCenter*/, Map<String/*connectId*/, InetSocketAddress>> connections = new ConcurrentHashMap<>();
@@ -119,8 +117,4 @@ public class MetaConnectionHandler extends AbstractServerHandler implements Node
         return NodeType.META;
     }
 
-    @Override
-    public Executor getExecutor() {
-        return executorManager.getRequestExecutor();
-    }
 }

@@ -38,9 +38,6 @@ import java.util.concurrent.Executor;
 public class DataConnectionHandler extends AbstractServerHandler implements NodeConnectManager {
     private Map<String/*connectId*/, InetSocketAddress> connections = new ConcurrentHashMap<>();
 
-    @Autowired
-    private ExecutorManager                              executorManager;
-
     @Override
     public void connected(Channel channel) throws RemotingException {
         super.connected(channel);
@@ -81,10 +78,5 @@ public class DataConnectionHandler extends AbstractServerHandler implements Node
     @Override
     public NodeType getNodeType() {
         return NodeType.DATA;
-    }
-
-    @Override
-    public Executor getExecutor() {
-        return executorManager.getRequestExecutor();
     }
 }

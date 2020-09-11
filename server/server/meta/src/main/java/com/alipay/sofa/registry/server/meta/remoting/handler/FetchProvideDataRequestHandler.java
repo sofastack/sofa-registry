@@ -46,9 +46,6 @@ public class FetchProvideDataRequestHandler extends AbstractServerHandler<FetchP
     @RaftReference
     private DBService           persistenceDataDBService;
 
-    @Autowired
-    private ExecutorManager     executorManager;
-
     @Override
     public Object reply(Channel channel, FetchProvideDataRequest fetchProvideDataRequest) {
         try {
@@ -93,8 +90,4 @@ public class FetchProvideDataRequestHandler extends AbstractServerHandler<FetchP
         return FetchProvideDataRequest.class;
     }
 
-    @Override
-    public Executor getExecutor() {
-        return executorManager.getRequestExecutor();
-    }
 }

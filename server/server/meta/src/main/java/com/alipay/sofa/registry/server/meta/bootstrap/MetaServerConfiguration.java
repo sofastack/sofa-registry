@@ -18,8 +18,12 @@ package com.alipay.sofa.registry.server.meta.bootstrap;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 import com.alipay.sofa.registry.server.meta.remoting.handler.*;
+import com.alipay.sofa.registry.util.NamedThreadFactory;
 import org.glassfish.jersey.jackson.JacksonFeature;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -425,6 +429,17 @@ public class MetaServerConfiguration {
         @Bean
         public ExecutorManager executorManager(MetaServerConfig metaServerConfig) {
             return new ExecutorManager(metaServerConfig);
+        }
+
+        @Bean
+        public ThreadPoolExecutor defaultRequestExecutor(MetaServerConfig metaServerConfig) {
+            ThreadPoolExecutor defaultRequestExecutor = new ThreadPoolExecutor(
+                metaServerConfig.getDefaultRequestExecutorMinSize(),
+                metaServerConfig.getDefaultRequestExecutorMaxSize(), 300, TimeUnit.SECONDS,
+                new LinkedBlockingQueue<>(metaServerConfig.getDefaultRequestExecutorQueueSize()),
+                new NamedThreadFactory("MetaHandler-DefaultRequest"));
+            defaultRequestExecutor.allowCoreThreadTimeOut(true);
+            return defaultRequestExecutor;
         }
 
     }
