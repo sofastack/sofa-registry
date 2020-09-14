@@ -61,13 +61,14 @@ import java.util.stream.Collectors;
 @Path("stopPush")
 public class SessionStopPushResource {
 
-    private final static Logger LOGGER = LoggerFactory.getLogger(SessionStopPushResource.class);
+    private final static Logger          LOGGER = LoggerFactory
+                                                    .getLogger(SessionStopPushResource.class);
 
     @Autowired
     private StopPushProvideDataProcessor stopPushProvideDataProcessor;
 
     @Autowired
-    protected SessionServerConfig sessionServerConfig;
+    protected SessionServerConfig        sessionServerConfig;
 
     /**
      * api use to close or open all session's push switch when all meta were down
@@ -121,7 +122,8 @@ public class SessionStopPushResource {
 
     private CommonResponse operatePushSwitch(String type) {
         try {
-            ProvideData provideData = new ProvideData(new ServerDataBox(Boolean.valueOf(type)), null, null);
+            ProvideData provideData = new ProvideData(new ServerDataBox(Boolean.valueOf(type)),
+                null, null);
             stopPushProvideDataProcessor.changeDataProcess(provideData);
 
             return CommonResponse.buildSuccessResponse();
@@ -196,5 +198,4 @@ public class SessionStopPushResource {
         }
         return success;
     }
-
 }
