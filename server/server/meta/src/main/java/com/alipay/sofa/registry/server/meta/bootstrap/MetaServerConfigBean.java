@@ -127,6 +127,14 @@ public class MetaServerConfigBean implements MetaServerConfig {
     private int                raftExecutorMaxSize                             = 400;
     private int                raftExecutorQueueSize                           = 100;
 
+    private int                raftServerExecutorMinSize                       = 20;
+    private int                raftServerExecutorMaxSize                       = 100;
+    private int                raftServerExecutorQueueSize                     = 100;
+
+    private int                raftFsmExecutorMinSize                          = 3;
+    private int                raftFsmExecutorMaxSize                          = 10;
+    private int                raftFsmExecutorQueueSize                        = 100;
+
     private int                metaSchedulerPoolSize                           = 6;
 
     @Override
@@ -901,5 +909,56 @@ public class MetaServerConfigBean implements MetaServerConfig {
 
     public void setRaftExecutorQueueSize(int raftExecutorQueueSize) {
         this.raftExecutorQueueSize = raftExecutorQueueSize;
+    }
+
+    public int getRaftServerExecutorMinSize() {
+        return raftServerExecutorMinSize;
+    }
+
+    public void setRaftServerExecutorMinSize(int raftServerExecutorMinSize) {
+        this.raftServerExecutorMinSize = raftServerExecutorMinSize;
+    }
+
+    public int getRaftServerExecutorMaxSize() {
+        return raftServerExecutorMaxSize;
+    }
+
+    public void setRaftServerExecutorMaxSize(int raftServerExecutorMaxSize) {
+        this.raftServerExecutorMaxSize = raftServerExecutorMaxSize;
+    }
+
+    public int getRaftServerExecutorQueueSize() {
+        return raftServerExecutorQueueSize;
+    }
+
+    public void setRaftServerExecutorQueueSize(int raftServerExecutorQueueSize) {
+        this.raftServerExecutorQueueSize = raftServerExecutorQueueSize;
+    }
+
+    @Override
+    public int getRaftFsmExecutorMinSize() {
+        return raftFsmExecutorMinSize;
+    }
+
+    public void setRaftFsmExecutorMinSize(int raftFsmExecutorMinSize) {
+        this.raftFsmExecutorMinSize = raftFsmExecutorMinSize;
+    }
+
+    @Override
+    public int getRaftFsmExecutorMaxSize() {
+        return raftFsmExecutorMaxSize;
+    }
+
+    public void setRaftFsmExecutorMaxSize(int raftFsmExecutorMaxSize) {
+        this.raftFsmExecutorMaxSize = raftFsmExecutorMaxSize;
+    }
+
+    @Override
+    public int getRaftFsmExecutorQueueSize() {
+        return raftFsmExecutorQueueSize;
+    }
+
+    public void setRaftFsmExecutorQueueSize(int raftFsmExecutorQueueSize) {
+        this.raftFsmExecutorQueueSize = raftFsmExecutorQueueSize;
     }
 }

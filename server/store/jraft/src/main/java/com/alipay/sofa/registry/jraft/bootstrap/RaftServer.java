@@ -93,6 +93,7 @@ public class RaftServer {
     private BoltServer              boltServer;
     private ThreadPoolExecutor      raftExecutor;
     private ThreadPoolExecutor      raftServerExecutor;
+    private ThreadPoolExecutor      fsmExecutor;
 
     /**
      * @param dataPath    Example: /tmp/server1
@@ -124,7 +125,7 @@ public class RaftServer {
     public void start(RaftServerConfig raftServerConfig) throws IOException {
         FileUtils.forceMkdir(new File(dataPath));
 
-        serverHandlers.add(new RaftServerHandler(this, null));
+        serverHandlers.add(new RaftServerHandler(this, raftServerExecutor));
         serverHandlers.add(new RaftServerConnectionHandler());
 
         boltServer = new BoltServer(new URL(NetUtil.getLocalAddress().getHostAddress(),
@@ -137,6 +138,7 @@ public class RaftServer {
         RaftRpcServerFactory.addRaftRequestProcessors(rpcServer, raftExecutor, raftExecutor);
 
         this.fsm = ServiceStateMachine.getInstance();
+        this.fsm.setExecutor(this.fsmExecutor);
         this.fsm.setLeaderProcessListener(leaderProcessListener);
         this.fsm.setFollowerProcessListener(followerProcessListener);
 
@@ -147,7 +149,6 @@ public class RaftServer {
         this.node = this.raftGroupService.start();
 
         if (raftServerConfig.isEnableMetrics()) {
-            metricExecutors();
             ReporterUtils.startSlf4jReporter(raftServerConfig.getEnableMetricsReporterPeriod(),
                 node.getNodeMetrics().getMetricRegistry(), raftServerConfig.getMetricsLogger());
         }
@@ -314,15 +315,7 @@ public class RaftServer {
         this.raftServerExecutor = executor;
     }
 
-    private void metricExecutors() {
-        ThreadPoolExecutor boltDefaultExecutor = (ThreadPoolExecutor) ProtocolManager
-            .getProtocol(ProtocolCode.fromBytes(RpcProtocol.PROTOCOL_CODE)).getCommandHandler()
-            .getDefaultExecutor();
-        MetricRegistry metricRegistry = node.getNodeMetrics().getMetricRegistry();
-        metricRegistry.register("Raft-Processor", new ThreadPoolMetricSet(raftExecutor));
-        metricRegistry
-            .register("RaftServer-Processor", new ThreadPoolMetricSet(raftServerExecutor));
-        metricRegistry.register("Bolt-default-executor", new ThreadPoolMetricSet(
-            boltDefaultExecutor));
+    public void setFsmExecutor(ThreadPoolExecutor executor) {
+        this.fsmExecutor = executor;
     }
 }

@@ -132,6 +132,18 @@ public interface MetaServerConfig {
 
     int getRaftExecutorMaxSize();
 
+    int getRaftServerExecutorMinSize();
+
+    int getRaftServerExecutorMaxSize();
+
+    int getRaftServerExecutorQueueSize();
+
+    int getRaftFsmExecutorMinSize();
+
+    int getRaftFsmExecutorMaxSize();
+
+    int getRaftFsmExecutorQueueSize();
+
     /**
      * decision mode enum
      */
