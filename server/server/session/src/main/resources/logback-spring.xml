@@ -292,8 +292,8 @@
         </filter>
         <file>${SESSION_LOG_HOME}/cache-digest.log</file>
         <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-            <FileNamePattern>${SESSION_LOG_HOME}/cache-digest.log.%d{yyyy-MM-dd}</FileNamePattern>
-            <MaxHistory>30</MaxHistory>
+            <FileNamePattern>${SESSION_LOG_HOME}/cache-digest.log.%d{yyyy-MM-dd_HH}</FileNamePattern>
+            <MaxHistory>72</MaxHistory>
         </rollingPolicy>
         <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
             <pattern>[%d{ISO8601}][%p][%t][%c{0}] - %m%n</pattern>
