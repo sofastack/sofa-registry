@@ -144,6 +144,8 @@ public interface MetaServerConfig {
 
     int getRaftFsmExecutorQueueSize();
 
+    int getRaftElectionTimeout();
+
     /**
      * decision mode enum
      */

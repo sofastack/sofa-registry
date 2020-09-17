@@ -81,6 +81,8 @@ public class MetaServerConfigBean implements MetaServerConfig {
 
     private int                sessionNodeChangePushTaskRetryTimes             = 3;
 
+    private int                raftElectionTimeout                             = 1000;
+
     /**
      * Whether to enable metrics for node.
      */
@@ -960,5 +962,13 @@ public class MetaServerConfigBean implements MetaServerConfig {
 
     public void setRaftFsmExecutorQueueSize(int raftFsmExecutorQueueSize) {
         this.raftFsmExecutorQueueSize = raftFsmExecutorQueueSize;
+    }
+
+    public int getRaftElectionTimeout() {
+        return raftElectionTimeout;
+    }
+
+    public void setRaftElectionTimeout(int raftElectionTimeout) {
+        this.raftElectionTimeout = raftElectionTimeout;
     }
 }
