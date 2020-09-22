@@ -49,7 +49,7 @@ public class SessionServerConfigBean implements SessionServerConfig {
 
     private int                schedulerHeartbeatFirstDelay            = 3;
 
-    private int                schedulerHeartbeatExpBackOffBound       = 10;
+    private int                schedulerHeartbeatExpBackOffBound       = 1;
 
     private int                schedulerGetSessionNodeTimeout          = 3;
 

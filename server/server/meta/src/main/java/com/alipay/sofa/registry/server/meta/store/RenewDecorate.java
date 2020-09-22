@@ -25,7 +25,7 @@ import java.io.Serializable;
  */
 public class RenewDecorate<T> implements Serializable {
 
-    public static final int DEFAULT_DURATION_SECS = 15;
+    public static final int DEFAULT_DURATION_SECS = 30;
 
     private T               renewal;
 

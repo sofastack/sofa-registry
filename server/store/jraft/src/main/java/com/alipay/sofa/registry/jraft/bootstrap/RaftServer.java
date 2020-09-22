@@ -169,6 +169,8 @@ public class RaftServer {
             this.raftGroupService.shutdown();
         }
         raftExecutor.shutdown();
+        raftServerExecutor.shutdown();
+        fsmExecutor.shutdown();
     }
 
     private NodeOptions initNodeOptions(RaftServerConfig raftServerConfig) {
