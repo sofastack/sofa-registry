@@ -57,11 +57,16 @@ public class ConnectionsService {
     private SessionServerConfig sessionServerConfig;
 
     public List<String> getConnections() {
-        Set<String> connectionIds = new HashSet<>();
-        connectionIds.addAll(sessionDataStore.getConnectPublishers().keySet());
-        connectionIds.addAll(sessionInterests.getConnectSubscribers().keySet());
-        connectionIds.addAll(sessionWatchers.getConnectWatchers().keySet());
-        return new ArrayList<>(connectionIds);
+        Server server = boltExchange.getServer(sessionServerConfig.getServerPort());
+        Set<String> boltConnectIds = server.getChannels().stream().map(
+                channel -> channel.getRemoteAddress().getAddress().getHostAddress() + ":" + channel.getRemoteAddress().getPort()
+        ).collect(Collectors.toSet());
+        Set<String> connectIds = new HashSet<>();
+        connectIds.addAll(sessionDataStore.getConnectPublishers().keySet().stream().map(connectId -> connectId.split(CONNECT_ID_SPLIT)[0]).collect(Collectors.toList()));
+        connectIds.addAll(sessionInterests.getConnectSubscribers().keySet().stream().map(connectId -> connectId.split(CONNECT_ID_SPLIT)[0]).collect(Collectors.toList()));
+        connectIds.addAll(sessionWatchers.getConnectWatchers().keySet().stream().map(connectId -> connectId.split(CONNECT_ID_SPLIT)[0]).collect(Collectors.toList()));
+        connectIds.retainAll(boltConnectIds);
+        return new ArrayList<>(connectIds);
     }
 
     public void setMaxConnections(int connections) {
@@ -74,7 +79,6 @@ public class ConnectionsService {
         Collections.shuffle(connectionIds);
         connectionIds = connectionIds.subList(0, needDropped);
         for (String ipAddress : connectionIds) {
-            ipAddress = ipAddress.split(CONNECT_ID_SPLIT)[0];
             Server server = boltExchange.getServer(sessionServerConfig.getServerPort());
             String[] parts = ipAddress.split(":");
             String host = parts[0];
