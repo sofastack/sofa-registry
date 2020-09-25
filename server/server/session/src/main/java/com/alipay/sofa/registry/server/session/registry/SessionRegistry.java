@@ -16,11 +16,7 @@
  */
 package com.alipay.sofa.registry.server.session.registry;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 
@@ -416,14 +412,18 @@ public class SessionRegistry implements Registry {
 
     public void cleanClientConnect() {
 
-        SetView<String> intersection = Sets.union(sessionDataStore.getConnectPublishers().keySet(),
-            sessionInterests.getConnectSubscribers().keySet());
-        intersection.addAll(sessionWatchers.getConnectWatchers().keySet());
+        Set<String> connectIndexes = new HashSet<>();
+        Set<String> pubIndexes = sessionDataStore.getConnectPublishers().keySet();
+        Set<String> subIndexes = sessionInterests.getConnectSubscribers().keySet();
+        Set<String> watchIndexes = sessionWatchers.getConnectWatchers().keySet();
+        connectIndexes.addAll(pubIndexes);
+        connectIndexes.addAll(subIndexes);
+        connectIndexes.addAll(watchIndexes);
 
         Server sessionServer = boltExchange.getServer(sessionServerConfig.getServerPort());
 
         List<String> connectIds = new ArrayList<>();
-        for (String connectId : intersection) {
+        for (String connectId : connectIndexes) {
             Channel channel = sessionServer.getChannel(URL.valueOf(connectId));
             if (channel == null) {
                 connectIds.add(connectId);
