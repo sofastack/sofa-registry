@@ -25,6 +25,7 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import com.alipay.sofa.registry.server.data.bootstrap.DataServerConfig;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import com.alipay.remoting.Connection;
@@ -45,7 +46,6 @@ public class SessionServerConnectionFactory {
     private static final Logger            LOGGER                      = LoggerFactory
                                                                            .getLogger(SessionServerConnectionFactory.class);
 
-    private static final int               DELAY                       = 30 * 1000;
     private static final Map               EMPTY_MAP                   = new HashMap(0);
 
     /**
@@ -68,6 +68,9 @@ public class SessionServerConnectionFactory {
 
     @Autowired
     private DisconnectEventHandler         disconnectEventHandler;
+
+    @Autowired
+    private DataServerConfig               dataServerConfig;
 
     /**
      * register connection
@@ -125,7 +128,7 @@ public class SessionServerConnectionFactory {
             // The SessionServerDisconnectEvent is triggered only when the last connection is broken
             if (pair == null || pair.getConnections().isEmpty()) {
                 disconnectEventHandler.receive(new SessionServerDisconnectEvent(processId,
-                    sessionConnAddress, DELAY));
+                    sessionConnAddress, dataServerConfig.getSessionDisconnectDelayMs()));
             }
         }
     }
