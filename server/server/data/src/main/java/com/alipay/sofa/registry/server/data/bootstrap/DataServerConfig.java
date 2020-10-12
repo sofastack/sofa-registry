@@ -123,6 +123,8 @@ public class DataServerConfig {
 
     private int                dataSyncNotifyRetry                          = 3;
 
+    private int                sessionDisconnectDelayMs                     = 30000;
+
     /**
      * constructor
      * @param commonConfig
@@ -846,6 +848,24 @@ public class DataServerConfig {
      */
     public void setDataSyncNotifyRetry(int dataSyncNotifyRetry) {
         this.dataSyncNotifyRetry = dataSyncNotifyRetry;
+    }
+
+    /**
+     * Getter method for property <tt>sessionDisconnectDelayMs</tt>.
+     *
+     * @return property value of sessionDisconnectDelayMs
+     */
+    public int getSessionDisconnectDelayMs() {
+        return sessionDisconnectDelayMs;
+    }
+
+    /**
+     * Setter method for property <tt>sessionDisconnectDelayMs</tt>.
+     *
+     * @param sessionDisconnectDelayMs value to be assigned to property sessionDisconnectDelayMs
+     */
+    public void setSessionDisconnectDelayMs(int sessionDisconnectDelayMs) {
+        this.sessionDisconnectDelayMs = sessionDisconnectDelayMs;
     }
 
     @Override
