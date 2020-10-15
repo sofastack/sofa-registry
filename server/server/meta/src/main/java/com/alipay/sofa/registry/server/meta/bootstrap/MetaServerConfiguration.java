@@ -18,7 +18,13 @@ package com.alipay.sofa.registry.server.meta.bootstrap;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
+import com.alipay.sofa.registry.server.meta.remoting.handler.*;
+import com.alipay.sofa.registry.util.NamedThreadFactory;
+import com.alipay.sofa.registry.server.meta.resource.*;
 import org.glassfish.jersey.jackson.JacksonFeature;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -51,12 +57,6 @@ import com.alipay.sofa.registry.server.meta.remoting.SessionNodeExchanger;
 import com.alipay.sofa.registry.server.meta.remoting.connection.DataConnectionHandler;
 import com.alipay.sofa.registry.server.meta.remoting.connection.MetaConnectionHandler;
 import com.alipay.sofa.registry.server.meta.remoting.connection.SessionConnectionHandler;
-import com.alipay.sofa.registry.server.meta.remoting.handler.AbstractServerHandler;
-import com.alipay.sofa.registry.server.meta.remoting.handler.DataNodeHandler;
-import com.alipay.sofa.registry.server.meta.remoting.handler.FetchProvideDataRequestHandler;
-import com.alipay.sofa.registry.server.meta.remoting.handler.GetNodesRequestHandler;
-import com.alipay.sofa.registry.server.meta.remoting.handler.RenewNodesRequestHandler;
-import com.alipay.sofa.registry.server.meta.remoting.handler.SessionNodeHandler;
 import com.alipay.sofa.registry.server.meta.repository.NodeConfirmStatusService;
 import com.alipay.sofa.registry.server.meta.repository.RepositoryService;
 import com.alipay.sofa.registry.server.meta.repository.VersionRepositoryService;
@@ -67,14 +67,6 @@ import com.alipay.sofa.registry.server.meta.repository.service.MetaRepositorySer
 import com.alipay.sofa.registry.server.meta.repository.service.SessionConfirmStatusService;
 import com.alipay.sofa.registry.server.meta.repository.service.SessionRepositoryService;
 import com.alipay.sofa.registry.server.meta.repository.service.SessionVersionRepositoryService;
-import com.alipay.sofa.registry.server.meta.resource.BlacklistDataResource;
-import com.alipay.sofa.registry.server.meta.resource.DecisionModeResource;
-import com.alipay.sofa.registry.server.meta.resource.HealthResource;
-import com.alipay.sofa.registry.server.meta.resource.MetaDigestResource;
-import com.alipay.sofa.registry.server.meta.resource.MetaStoreResource;
-import com.alipay.sofa.registry.server.meta.resource.PersistentDataResource;
-import com.alipay.sofa.registry.server.meta.resource.RenewSwitchResource;
-import com.alipay.sofa.registry.server.meta.resource.StopPushDataResource;
 import com.alipay.sofa.registry.server.meta.store.DataStoreService;
 import com.alipay.sofa.registry.server.meta.store.MetaStoreService;
 import com.alipay.sofa.registry.server.meta.store.SessionStoreService;
@@ -366,6 +358,11 @@ public class MetaServerConfiguration {
         public RenewSwitchResource renewSwitchResource() {
             return new RenewSwitchResource();
         }
+
+        @Bean
+        public SessionLoadbalanceResource sessionLoadbalanceSwitchResource() {
+            return new SessionLoadbalanceResource();
+        }
     }
 
     @Configuration
@@ -430,6 +427,17 @@ public class MetaServerConfiguration {
         @Bean
         public ExecutorManager executorManager(MetaServerConfig metaServerConfig) {
             return new ExecutorManager(metaServerConfig);
+        }
+
+        @Bean
+        public ThreadPoolExecutor defaultRequestExecutor(MetaServerConfig metaServerConfig) {
+            ThreadPoolExecutor defaultRequestExecutor = new ThreadPoolExecutor(
+                metaServerConfig.getDefaultRequestExecutorMinSize(),
+                metaServerConfig.getDefaultRequestExecutorMaxSize(), 300, TimeUnit.SECONDS,
+                new LinkedBlockingQueue<>(metaServerConfig.getDefaultRequestExecutorQueueSize()),
+                new NamedThreadFactory("MetaHandler-DefaultRequest"));
+            defaultRequestExecutor.allowCoreThreadTimeOut(true);
+            return defaultRequestExecutor;
         }
 
     }

@@ -66,8 +66,8 @@ public class SessionOpenResource {
             serverList = sessionNodeManager.getZoneServerList(zone);
 
             serverList = serverList.stream()
-                    .map(server -> server + ":" + sessionServerConfig.getServerPort())
-                    .collect(Collectors.toList());
+                .map(server -> server + ":" + sessionServerConfig.getServerPort())
+                .collect(Collectors.toList());
         }
 
         return serverList;

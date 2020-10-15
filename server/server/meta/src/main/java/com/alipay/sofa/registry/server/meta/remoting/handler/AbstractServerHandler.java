@@ -21,15 +21,22 @@ import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.remoting.Channel;
 import com.alipay.sofa.registry.remoting.ChannelHandler;
 import com.alipay.sofa.registry.remoting.RemotingException;
+import com.alipay.sofa.registry.server.meta.executor.ExecutorManager;
+import org.springframework.beans.factory.annotation.Autowired;
+
+import java.util.concurrent.Executor;
+import java.util.concurrent.ThreadPoolExecutor;
 
 /**
- *
  * @author shangyu.wh
  * @version $Id: ServerHandler.java, v 0.1 2017-11-28 18:06 shangyu.wh Exp $
  */
 public abstract class AbstractServerHandler<T> implements ChannelHandler<T> {
 
     private static final Logger LOGGER = LoggerFactory.getLogger("META-CONNECT");
+
+    @Autowired
+    private ThreadPoolExecutor  defaultRequestExecutor;
 
     @Override
     public void connected(Channel channel) throws RemotingException {
@@ -67,4 +74,8 @@ public abstract class AbstractServerHandler<T> implements ChannelHandler<T> {
         return null;
     }
 
+    @Override
+    public Executor getExecutor() {
+        return defaultRequestExecutor;
+    }
 }

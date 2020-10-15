@@ -19,6 +19,9 @@ package com.alipay.sofa.registry.server.session.bootstrap;
 import java.util.ArrayList;
 import java.util.Collection;
 
+import com.alipay.sofa.registry.server.session.connections.ConnectionsService;
+import com.alipay.sofa.registry.server.session.remoting.handler.*;
+import com.alipay.sofa.registry.server.session.resource.*;
 import org.glassfish.jersey.jackson.JacksonFeature;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -89,26 +92,8 @@ import com.alipay.sofa.registry.server.session.registry.SessionRegistry;
 import com.alipay.sofa.registry.server.session.remoting.ClientNodeExchanger;
 import com.alipay.sofa.registry.server.session.remoting.DataNodeExchanger;
 import com.alipay.sofa.registry.server.session.remoting.MetaNodeExchanger;
-import com.alipay.sofa.registry.server.session.remoting.handler.AbstractClientHandler;
-import com.alipay.sofa.registry.server.session.remoting.handler.AbstractServerHandler;
-import com.alipay.sofa.registry.server.session.remoting.handler.CancelAddressRequestHandler;
-import com.alipay.sofa.registry.server.session.remoting.handler.ClientNodeConnectionHandler;
-import com.alipay.sofa.registry.server.session.remoting.handler.DataChangeRequestHandler;
-import com.alipay.sofa.registry.server.session.remoting.handler.DataNodeConnectionHandler;
-import com.alipay.sofa.registry.server.session.remoting.handler.DataPushRequestHandler;
-import com.alipay.sofa.registry.server.session.remoting.handler.MetaNodeConnectionHandler;
-import com.alipay.sofa.registry.server.session.remoting.handler.NodeChangeResultHandler;
-import com.alipay.sofa.registry.server.session.remoting.handler.NotifyProvideDataChangeHandler;
-import com.alipay.sofa.registry.server.session.remoting.handler.PublisherHandler;
-import com.alipay.sofa.registry.server.session.remoting.handler.SubscriberHandler;
-import com.alipay.sofa.registry.server.session.remoting.handler.SyncConfigHandler;
-import com.alipay.sofa.registry.server.session.remoting.handler.WatcherHandler;
 import com.alipay.sofa.registry.server.session.renew.DefaultRenewService;
 import com.alipay.sofa.registry.server.session.renew.RenewService;
-import com.alipay.sofa.registry.server.session.resource.ClientsOpenResource;
-import com.alipay.sofa.registry.server.session.resource.HealthResource;
-import com.alipay.sofa.registry.server.session.resource.SessionDigestResource;
-import com.alipay.sofa.registry.server.session.resource.SessionOpenResource;
 import com.alipay.sofa.registry.server.session.scheduler.ExecutorManager;
 import com.alipay.sofa.registry.server.session.scheduler.timertask.SyncClientsHeartbeatTask;
 import com.alipay.sofa.registry.server.session.store.DataStore;
@@ -272,6 +257,8 @@ public class SessionServerConfiguration {
             list.add(metaNodeConnectionHandler());
             list.add(nodeChangeResultHandler());
             list.add(notifyProvideDataChangeHandler());
+            list.add(loadbalanceMetricsHandler());
+            list.add(configureLoadbalanceHandler());
             return list;
         }
 
@@ -303,6 +290,16 @@ public class SessionServerConfiguration {
         @Bean
         public AbstractClientHandler notifyProvideDataChangeHandler() {
             return new NotifyProvideDataChangeHandler();
+        }
+
+        @Bean
+        public AbstractClientHandler loadbalanceMetricsHandler() {
+            return new LoadbalanceMetricsHandler();
+        }
+
+        @Bean
+        public AbstractClientHandler configureLoadbalanceHandler() {
+            return new ConfigureLoadbalanceHandler();
         }
     }
 
@@ -338,6 +335,10 @@ public class SessionServerConfiguration {
             return new ClientsOpenResource();
         }
 
+        @Bean
+        public ConnectionsResource connectionsResource() {
+            return new ConnectionsResource();
+        }
     }
 
     @Configuration
@@ -742,6 +743,14 @@ public class SessionServerConfiguration {
         @Bean
         public RenewService renewService() {
             return new DefaultRenewService();
+        }
+    }
+
+    @Configuration
+    public static class SessionConnectionsConfiguration {
+        @Bean
+        public ConnectionsService connectionsService() {
+            return new ConnectionsService();
         }
     }
 

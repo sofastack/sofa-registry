@@ -29,6 +29,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Handle data node's connect request
+ *
  * @author shangyu.wh
  * @version $Id: DataConnectionHandler.java, v 0.1 2018-01-24 16:04 shangyu.wh Exp $
  */
@@ -76,5 +77,4 @@ public class DataConnectionHandler extends AbstractServerHandler implements Node
     public NodeType getNodeType() {
         return NodeType.DATA;
     }
-
 }

@@ -52,6 +52,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
@@ -212,6 +214,7 @@ public class TestServiceStateMachine {
         Processor processor = Processor.getInstance();
         LeaderTaskClosure leaderTaskClosure = new LeaderTaskClosure();
         AtomicReference<Status> status = new AtomicReference<>();
+        serviceStateMachine.setExecutor(new ThreadPoolExecutor(1, 2, 0, TimeUnit.SECONDS, new LinkedBlockingQueue<>(20)));
         leaderTaskClosure.setDone(statusIn -> {
             status.set(statusIn);
         });
@@ -305,6 +308,8 @@ public class TestServiceStateMachine {
     @Test
     public void testOnSnapshotLoad() throws InterruptedException {
         ServiceStateMachine serviceStateMachine = ServiceStateMachine.getInstance();
+        serviceStateMachine.setExecutor(new ThreadPoolExecutor(1, 2, 0, TimeUnit.SECONDS,
+            new LinkedBlockingQueue<>(20)));
         Processor processor = Processor.getInstance();
         SnapshotProcess process = new SnapshotProcess() {
 
@@ -506,6 +511,8 @@ public class TestServiceStateMachine {
     @Test
     public void testRemain() throws InterruptedException {
         ServiceStateMachine serviceStateMachine = ServiceStateMachine.getInstance();
+        serviceStateMachine.setExecutor(new ThreadPoolExecutor(1, 2, 0, TimeUnit.SECONDS,
+            new LinkedBlockingQueue<>(20)));
 
         AtomicInteger leaderstart = new AtomicInteger();
         AtomicInteger leaderstop = new AtomicInteger();

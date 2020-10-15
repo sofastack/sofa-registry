@@ -14,38 +14,28 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alipay.sofa.registry.server.session.store;
+package com.alipay.sofa.registry.common.model.metaserver;
 
-import com.alipay.sofa.registry.common.model.store.Watcher;
-
-import java.util.Collection;
+import java.io.Serializable;
 import java.util.Map;
 
 /**
- *
- * @author shangyu.wh
- * @version $Id: SessionInterests.java, v 0.1 2017-11-30 15:53 shangyu.wh Exp $
+ * @author xiangxu
+ * @version : LoadbalanceConfig.java, v 0.1 2020年05月29日 10:19 上午 xiangxu Exp $
  */
-public interface Watchers extends DataManager<Watcher, String, String> {
+public class ConfigureLoadbalanceRequest implements Serializable {
+    private int maxConnections;
 
-    /**
-     * query watcher by dataInfoID
-     *
-     * @param dataInfoId
-     * @return
-     */
-    Collection<Watcher> getWatchers(String dataInfoId);
+    public ConfigureLoadbalanceRequest(int maxConnections) {
+        this.maxConnections = maxConnections;
+    }
 
-    /**
-     * check watchers interest dataInfoId version
-     * if not exist add
-     * else check and update bigger one
-     *
-     * @param dataInfoId
-     * @param version
-     * @return
-     */
-    boolean checkWatcherVersions(String dataInfoId, Long version);
+    public int getMaxConnections() {
+        return maxConnections;
+    }
 
-    Map<String, Map<String, Watcher>> getConnectWatchers();
+    public void setMaxConnections(int maxConnections) {
+        this.maxConnections = maxConnections;
+    }
+
 }
