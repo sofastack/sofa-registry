@@ -17,7 +17,6 @@
 package com.alipay.sofa.registry.jraft.bootstrap;
 
 import com.alipay.remoting.rpc.RpcClient;
-import com.alipay.remoting.rpc.RpcServer;
 import com.alipay.sofa.jraft.Node;
 import com.alipay.sofa.jraft.RaftGroupService;
 import com.alipay.sofa.jraft.conf.Configuration;
@@ -25,7 +24,10 @@ import com.alipay.sofa.jraft.core.NodeImpl;
 import com.alipay.sofa.jraft.entity.PeerId;
 import com.alipay.sofa.jraft.option.NodeOptions;
 import com.alipay.sofa.jraft.rpc.RaftRpcServerFactory;
-import com.alipay.sofa.jraft.rpc.impl.AbstractBoltClientService;
+import com.alipay.sofa.jraft.rpc.RpcServer;
+import com.alipay.sofa.jraft.rpc.impl.AbstractClientService;
+import com.alipay.sofa.jraft.rpc.impl.BoltRpcClient;
+import com.alipay.sofa.jraft.rpc.impl.BoltRpcServer;
 import com.alipay.sofa.jraft.storage.impl.RocksDBLogStorage;
 import com.alipay.sofa.jraft.util.StorageOptionsFactory;
 import com.alipay.sofa.registry.common.model.store.URL;
@@ -55,9 +57,9 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.concurrent.*;
 
 /**
- *
  * @author shangyu.wh
  * @version $Id: RaftServer.java, v 0.1 2018-05-16 11:39 shangyu.wh Exp $
  */
@@ -83,9 +85,11 @@ public class RaftServer {
     private FollowerProcessListener followerProcessListener;
 
     private BoltServer              boltServer;
+    private ThreadPoolExecutor      raftExecutor;
+    private ThreadPoolExecutor      raftServerExecutor;
+    private ThreadPoolExecutor      fsmExecutor;
 
     /**
-     *
      * @param dataPath    Example: /tmp/server1
      * @param groupId
      * @param serverIdStr Example: 127.0.0.1:8081
@@ -108,6 +112,7 @@ public class RaftServer {
 
     /**
      * start raft server
+     *
      * @param raftServerConfig
      * @throws IOException
      */
@@ -115,7 +120,7 @@ public class RaftServer {
 
         FileUtils.forceMkdir(new File(dataPath));
 
-        serverHandlers.add(new RaftServerHandler(this));
+        serverHandlers.add(new RaftServerHandler(this, raftServerExecutor));
         serverHandlers.add(new RaftServerConnectionHandler());
 
         boltServer = new BoltServer(new URL(NetUtil.getLocalAddress().getHostAddress(),
@@ -123,11 +128,11 @@ public class RaftServer {
 
         boltServer.initServer();
 
-        RpcServer rpcServer = boltServer.getRpcServer();
-
-        RaftRpcServerFactory.addRaftRequestProcessors(rpcServer);
+        RpcServer rpcServer = new BoltRpcServer(boltServer.getRpcServer());
+        RaftRpcServerFactory.addRaftRequestProcessors(rpcServer, raftExecutor, raftExecutor);
 
         this.fsm = ServiceStateMachine.getInstance();
+        this.fsm.setExecutor(this.fsmExecutor);
         this.fsm.setLeaderProcessListener(leaderProcessListener);
         this.fsm.setFollowerProcessListener(followerProcessListener);
 
@@ -142,8 +147,8 @@ public class RaftServer {
                 node.getNodeMetrics().getMetricRegistry(), raftServerConfig.getMetricsLogger());
         }
 
-        RpcClient raftClient = ((AbstractBoltClientService) (((NodeImpl) node).getRpcService()))
-            .getRpcClient();
+        RpcClient raftClient = ((BoltRpcClient) ((AbstractClientService) (((NodeImpl) node)
+            .getRpcService())).getRpcClient()).getRpcClient();
 
         NotifyLeaderChangeHandler notifyLeaderChangeHandler = new NotifyLeaderChangeHandler(
             groupId, null);
@@ -157,6 +162,9 @@ public class RaftServer {
         if (raftGroupService != null) {
             this.raftGroupService.shutdown();
         }
+        raftExecutor.shutdown();
+        raftServerExecutor.shutdown();
+        fsmExecutor.shutdown();
     }
 
     private NodeOptions initNodeOptions(RaftServerConfig raftServerConfig) {
@@ -204,6 +212,7 @@ public class RaftServer {
 
     /**
      * Redirect request to new leader
+     *
      * @return
      */
     public String redirect() {
@@ -218,6 +227,7 @@ public class RaftServer {
 
     /**
      * send notify
+     *
      * @param leader
      * @param sender
      */
@@ -269,7 +279,7 @@ public class RaftServer {
     /**
      * Setter method for property <tt>leaderProcessListener</tt>.
      *
-     * @param leaderProcessListener  value to be assigned to property leaderProcessListener
+     * @param leaderProcessListener value to be assigned to property leaderProcessListener
      */
     public void setLeaderProcessListener(LeaderProcessListener leaderProcessListener) {
         this.leaderProcessListener = leaderProcessListener;
@@ -278,7 +288,7 @@ public class RaftServer {
     /**
      * Setter method for property <tt>followerProcessListener</tt>.
      *
-     * @param followerProcessListener  value to be assigned to property followerProcessListener
+     * @param followerProcessListener value to be assigned to property followerProcessListener
      */
     public void setFollowerProcessListener(FollowerProcessListener followerProcessListener) {
         this.followerProcessListener = followerProcessListener;
@@ -291,5 +301,17 @@ public class RaftServer {
      */
     public List<ChannelHandler> getServerHandlers() {
         return serverHandlers;
+    }
+
+    public void setRaftExecutor(ThreadPoolExecutor executor) {
+        this.raftExecutor = executor;
+    }
+
+    public void setRaftServerExecutor(ThreadPoolExecutor executor) {
+        this.raftServerExecutor = executor;
+    }
+
+    public void setFsmExecutor(ThreadPoolExecutor executor) {
+        this.fsmExecutor = executor;
     }
 }

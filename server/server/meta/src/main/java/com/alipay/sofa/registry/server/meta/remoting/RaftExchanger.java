@@ -16,13 +16,19 @@
  */
 package com.alipay.sofa.registry.server.meta.remoting;
 
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
+import com.alipay.remoting.ProtocolCode;
+import com.alipay.remoting.ProtocolManager;
+import com.alipay.remoting.rpc.protocol.RpcProtocol;
+import com.alipay.sofa.jraft.util.ThreadPoolMetricSet;
+import com.alipay.sofa.jraft.util.ThreadPoolUtil;
+import com.alipay.sofa.registry.util.NamedThreadFactory;
+import com.codahale.metrics.MetricRegistry;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import com.alipay.sofa.jraft.CliService;
@@ -32,7 +38,7 @@ import com.alipay.sofa.jraft.core.CliServiceImpl;
 import com.alipay.sofa.jraft.core.NodeImpl;
 import com.alipay.sofa.jraft.entity.PeerId;
 import com.alipay.sofa.jraft.option.CliOptions;
-import com.alipay.sofa.jraft.rpc.impl.AbstractBoltClientService;
+import com.alipay.sofa.jraft.rpc.impl.AbstractClientService;
 import com.alipay.sofa.registry.common.model.metaserver.MetaNode;
 import com.alipay.sofa.registry.common.model.store.URL;
 import com.alipay.sofa.registry.jraft.bootstrap.RaftClient;
@@ -49,7 +55,6 @@ import com.alipay.sofa.registry.server.meta.executor.ExecutorManager;
 import com.alipay.sofa.registry.server.meta.registry.Registry;
 
 /**
- *
  * @author shangyu.wh
  * @version $Id: RaftExchanger.java, v 0.1 2018-05-22 15:13 shangyu.wh Exp $
  */
@@ -68,6 +73,9 @@ public class RaftExchanger {
     private NodeConfig          nodeConfig;
 
     @Autowired
+    private ThreadPoolExecutor  defaultRequestExecutor;
+
+    @Autowired
     private Registry            metaServerRegistry;
 
     private RaftServer          raftServer;
@@ -82,6 +90,7 @@ public class RaftExchanger {
 
     /**
      * Start Raft server
+     *
      * @param executorManager
      */
     public void startRaftServer(final ExecutorManager executorManager) {
@@ -137,20 +146,80 @@ public class RaftExchanger {
                         raftServer.sendNotify(leader, "follower");
                     }
                 });
+                ThreadPoolExecutor raftExecutor = ThreadPoolUtil
+                    .newBuilder()
+                    .poolName("Raft-Executor")
+                    .enableMetric(true)
+                    .coreThreads(metaServerConfig.getRaftExecutorMinSize())
+                    .maximumThreads(metaServerConfig.getRaftExecutorMaxSize())
+                    .keepAliveSeconds(60L)
+                    .workQueue(
+                        new LinkedBlockingQueue<>(metaServerConfig.getRaftExecutorQueueSize()))
+                    .rejectedHandler(new ThreadPoolExecutor.AbortPolicy())//
+                    .threadFactory(new NamedThreadFactory("Raft-Processor", true)) //
+                    .build();
 
+                ThreadPoolExecutor raftServerExecutor = ThreadPoolUtil
+                    .newBuilder()
+                    .poolName("RaftServer-Executor")
+                    .enableMetric(true)
+                    .coreThreads(metaServerConfig.getRaftServerExecutorMinSize())
+                    .maximumThreads(metaServerConfig.getRaftServerExecutorMaxSize())
+                    .keepAliveSeconds(60L)
+                    .workQueue(
+                        new LinkedBlockingQueue<>(metaServerConfig.getRaftServerExecutorQueueSize()))
+                    .rejectedHandler(new ThreadPoolExecutor.AbortPolicy())//
+                    .threadFactory(new NamedThreadFactory("RaftServer-Processor", true)) //
+                    .build();
+
+                ThreadPoolExecutor fsmExecutor = ThreadPoolUtil
+                    .newBuilder()
+                    .poolName("RaftFsm-Executor")
+                    .enableMetric(true)
+                    .coreThreads(metaServerConfig.getRaftFsmExecutorMinSize())
+                    .maximumThreads(metaServerConfig.getRaftFsmExecutorMaxSize())
+                    .keepAliveSeconds(60L)
+                    .workQueue(
+                        new LinkedBlockingQueue<>(metaServerConfig.getRaftFsmExecutorQueueSize()))
+                    .rejectedHandler(new ThreadPoolExecutor.AbortPolicy())//
+                    .threadFactory(new NamedThreadFactory("RaftFsm-Processor", true)) //
+                    .build();
+
+                raftServer.setRaftExecutor(raftExecutor);
+                raftServer.setRaftServerExecutor(raftServerExecutor);
+                raftServer.setFsmExecutor(fsmExecutor);
                 RaftServerConfig raftServerConfig = new RaftServerConfig();
                 raftServerConfig.setMetricsLogger(METRICS_LOGGER);
                 raftServerConfig.setEnableMetrics(metaServerConfig.isEnableMetrics());
+                raftServerConfig.setElectionTimeoutMs(metaServerConfig.getRaftElectionTimeout());
                 if (metaServerConfig.getRockDBCacheSize() > 0) {
                     raftServerConfig.setRockDBCacheSize(metaServerConfig.getRockDBCacheSize());
                 }
-
                 raftServer.start(raftServerConfig);
+
+                ThreadPoolExecutor boltDefaultExecutor = (ThreadPoolExecutor) ProtocolManager
+                    .getProtocol(ProtocolCode.fromBytes(RpcProtocol.PROTOCOL_CODE))
+                    .getCommandHandler().getDefaultExecutor();
+
+                Map<String, ThreadPoolExecutor> executorMap = new HashMap<>();
+                executorMap.put("Raft-Executor", raftExecutor);
+                executorMap.put("RaftServer-Executor", raftServerExecutor);
+                executorMap.put("RaftFsm-Executor", fsmExecutor);
+                executorMap.put("Bolt-default-executor", boltDefaultExecutor);
+                metricExecutors(raftServer.getNode().getNodeMetrics().getMetricRegistry(),
+                    executorMap);
             }
         } catch (Exception e) {
             serverStart.set(false);
             LOGGER_START.error("Start raft server error!", e);
             throw new RuntimeException("Start raft server error!", e);
+        }
+    }
+
+    private void metricExecutors(MetricRegistry metricRegistry,
+                                 Map<String, ThreadPoolExecutor> executorMap) {
+        for (String name : executorMap.keySet()) {
+            metricRegistry.register(name, new ThreadPoolMetricSet(executorMap.get(name)));
         }
     }
 
@@ -164,8 +233,7 @@ public class RaftExchanger {
                 if (raftServer != null && raftServer.getNode() != null) {
                     //TODO this cannot be invoke,because RaftAnnotationBeanPostProcessor.getProxy will start first
                     raftClient = new RaftClient(getGroup(), serverConf,
-                        (AbstractBoltClientService) (((NodeImpl) raftServer.getNode())
-                            .getRpcService()));
+                        (AbstractClientService) (((NodeImpl) raftServer.getNode()).getRpcService()));
                 } else {
                     raftClient = new RaftClient(getGroup(), serverConf);
                 }
@@ -275,6 +343,7 @@ public class RaftExchanger {
 
     /**
      * api for remove meta node
+     *
      * @param ipAddress
      */
     public void removePeer(String ipAddress) {

@@ -16,6 +16,7 @@
  */
 package com.alipay.sofa.registry.server.meta.remoting.handler;
 
+import com.alipay.sofa.registry.server.meta.executor.ExecutorManager;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import com.alipay.sofa.registry.common.model.Node;
@@ -24,6 +25,8 @@ import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.remoting.Channel;
 import com.alipay.sofa.registry.server.meta.registry.Registry;
+
+import java.util.concurrent.Executor;
 
 /**
  * Handle session/data node's heartbeat request
@@ -59,4 +62,5 @@ public class RenewNodesRequestHandler extends AbstractServerHandler<RenewNodesRe
     public HandlerType getType() {
         return HandlerType.PROCESSER;
     }
+
 }

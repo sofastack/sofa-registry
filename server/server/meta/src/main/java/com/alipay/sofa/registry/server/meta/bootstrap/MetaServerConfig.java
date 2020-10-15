@@ -17,7 +17,6 @@
 package com.alipay.sofa.registry.server.meta.bootstrap;
 
 /**
- *
  * @author shangyu.wh
  * @version $Id: MetaServerConfig.java, v 0.1 2018-01-16 10:58 shangyu.wh Exp $
  */
@@ -119,6 +118,34 @@ public interface MetaServerConfig {
     int getRaftClientRefreshExecutorQueueSize();
 
     int getMetaSchedulerPoolSize();
+
+    int getDefaultRequestExecutorMinSize();
+
+    int getDefaultRequestExecutorMaxSize();
+
+    int getDefaultRequestExecutorQueueSize();
+
+    int getRaftExecutorMinSize();
+
+    int getRaftExecutorQueueSize();
+
+    int getRaftExecutorMaxSize();
+
+    int getRaftServerExecutorMinSize();
+
+    int getRaftServerExecutorMaxSize();
+
+    int getRaftServerExecutorQueueSize();
+
+    int getRaftFsmExecutorMinSize();
+
+    int getRaftFsmExecutorMaxSize();
+
+    int getRaftFsmExecutorQueueSize();
+
+    int getRaftElectionTimeout();
+
+    double getSessionLoadbalanceThresholdRatio();
 
     /**
      * decision mode enum
