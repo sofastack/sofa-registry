@@ -155,6 +155,11 @@ public class SessionServerConfigBean implements SessionServerConfig {
     private int                  renewDatumWheelQueueSize                = 10000;
 
     private int                  pushDataTaskRetryFirstDelay             = 500;
+    private int                newRevisionTaskMaxBufferSize            = 1000000;
+
+    private int                newRevisionTaskWorkerSize               = 100;
+
+    private int                clientNodeExchangeTimeOut               = 1000;            //time out cause netty HashedWheelTimer occupy a lot of mem
 
     private long                 pushDataTaskRetryIncrementDelay         = 500;
 

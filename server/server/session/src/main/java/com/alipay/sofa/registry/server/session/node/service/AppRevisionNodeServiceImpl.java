@@ -19,7 +19,6 @@ package com.alipay.sofa.registry.server.session.node.service;
 import com.alipay.sofa.registry.common.model.metaserver.CheckRevisionsRequest;
 import com.alipay.sofa.registry.common.model.metaserver.FetchRevisionsRequest;
 import com.alipay.sofa.registry.common.model.store.URL;
-import com.alipay.sofa.registry.core.model.AppRevisionKey;
 import com.alipay.sofa.registry.core.model.AppRevisionRegister;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
@@ -68,7 +67,7 @@ public class AppRevisionNodeServiceImpl implements AppRevisionNodeService {
         }
     }
 
-    public List<AppRevisionKey> checkRevisions(String keysDigest) {
+    public List<String> checkRevisions(String keysDigest) {
         Request<CheckRevisionsRequest> request = new Request<CheckRevisionsRequest>() {
             @Override
             public CheckRevisionsRequest getRequestBody() {
@@ -83,7 +82,7 @@ public class AppRevisionNodeServiceImpl implements AppRevisionNodeService {
         };
         try {
             Response response = metaNodeExchanger.request(request);
-            return (List<AppRevisionKey>) response.getResult();
+            return (List<String>) response.getResult();
         } catch (RequestException e) {
             LOGGER.error("check app revisions error! " + e.getMessage(), e);
             throw new RuntimeException("check app revisions error! " + e.getMessage(), e);
@@ -91,7 +90,7 @@ public class AppRevisionNodeServiceImpl implements AppRevisionNodeService {
 
     }
 
-    public List<AppRevisionRegister> fetchMulti(List<AppRevisionKey> keys) {
+    public List<AppRevisionRegister> fetchMulti(List<String> keys) {
         Request<FetchRevisionsRequest> request = new Request<FetchRevisionsRequest>() {
             @Override
             public FetchRevisionsRequest getRequestBody() {

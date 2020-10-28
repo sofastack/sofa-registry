@@ -19,9 +19,17 @@ package com.alipay.sofa.registry.server.session.bootstrap;
 import java.util.ArrayList;
 import java.util.Collection;
 
+import com.alipay.sofa.registry.server.session.assemble.AppAssembleService;
+import com.alipay.sofa.registry.server.session.assemble.AppInterfaceAssembleService;
+import com.alipay.sofa.registry.server.session.assemble.AssembleService;
+import com.alipay.sofa.registry.server.session.assemble.DefaultSubscriberAssembleStrategy;
+import com.alipay.sofa.registry.server.session.assemble.InterfaceAssembleService;
+import com.alipay.sofa.registry.server.session.assemble.SubscriberAssembleStrategy;
 import com.alipay.sofa.registry.server.session.cache.*;
 import com.alipay.sofa.registry.server.session.connections.ConnectionsService;
 import com.alipay.sofa.registry.server.session.node.service.*;
+import com.alipay.sofa.registry.server.session.predicate.RevisionPredicate;
+import com.alipay.sofa.registry.server.session.push.FirePushService;
 import com.alipay.sofa.registry.server.session.remoting.handler.*;
 import com.alipay.sofa.registry.server.session.resource.*;
 import com.alipay.sofa.registry.server.session.strategy.*;
@@ -398,6 +406,12 @@ public class SessionServerConfiguration {
         public AppRevisionNodeService appRevisionNodeService() {
             return new AppRevisionNodeServiceImpl();
         }
+
+        @Bean
+        @ConditionalOnMissingBean
+        public FirePushService firePushService() {
+            return new FirePushService();
+        }
     }
 
     @Configuration
@@ -644,6 +658,43 @@ public class SessionServerConfiguration {
         public AppRevisionHandlerStrategy appRevisionHandlerStrategy() {
             return new DefaultAppRevisionHandlerStrategy();
         }
+
+        @Bean
+        public RevisionPredicate revisionPredicate() {
+            return new RevisionPredicate();
+        }
+
+        @Bean
+        public SessionDatumCacheDecorator sessionDatumCacheDecorator() {
+            return new SessionDatumCacheDecorator();
+        }
+
+        //        @Bean
+        //        public AssembleService appAssembleService(SubscriberAssembleStrategy subscriberAssembleStrategy) {
+        //            AppAssembleService appAssembleService = new AppAssembleService();
+        //            subscriberAssembleStrategy.add(appAssembleService);
+        //            return appAssembleService;
+        //        }
+        //
+        //        @Bean
+        //        public AssembleService interfaceAssembleService(SubscriberAssembleStrategy subscriberAssembleStrategy) {
+        //            InterfaceAssembleService interfaceAssembleService = new InterfaceAssembleService();
+        //            subscriberAssembleStrategy.add(interfaceAssembleService);
+        //            return interfaceAssembleService;
+        //        }
+
+        @Bean
+        public AssembleService appInterfaceAssembleService(SubscriberAssembleStrategy subscriberAssembleStrategy) {
+            AppInterfaceAssembleService appInterfaceAssembleService = new AppInterfaceAssembleService();
+            subscriberAssembleStrategy.add(appInterfaceAssembleService);
+            return appInterfaceAssembleService;
+        }
+
+        @Bean
+        public SubscriberAssembleStrategy subscriberAssembleStrategy() {
+            return new DefaultSubscriberAssembleStrategy();
+        }
+
     }
 
     @Configuration

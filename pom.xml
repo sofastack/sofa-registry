@@ -82,9 +82,13 @@
         <rocksdbjni.version>6.4.6</rocksdbjni.version>
         <main.user.dir>${user.dir}</main.user.dir>
         <argLine>-Dnetwork_interface_denylist=docker0</argLine>
+<<<<<<< HEAD
         <!-- for linke 添加isSkipUT, isSkipIT参数声明，防止编译时产生错误 -->
         <isSkipUT>false</isSkipUT>
         <isSkipIT>false</isSkipIT>
+=======
+        <fastjson.version>1.2.51.sec09_noneautotype</fastjson.version>
+>>>>>>> [app_discovery] support subscribe app and interface publisher
     </properties>
 
     <dependencyManagement>
@@ -322,6 +326,7 @@
                 <version>3.2.2</version>
             </dependency>
 
+
             <!-- junit -->
             <dependency>
                 <groupId>junit</groupId>
@@ -351,6 +356,11 @@
                 <groupId>org.rocksdb</groupId>
                 <artifactId>rocksdbjni</artifactId>
                 <version>${rocksdbjni.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.alibaba</groupId>
+                <artifactId>fastjson</artifactId>
+                <version>${fastjson.version}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>

@@ -27,6 +27,13 @@ public class SubscriberRegister extends BaseRegister {
     private String            scope;
 
     /**
+     * interface: only sub interface
+     * app: only sub app
+     * app_and_interface: sub app and interface
+     */
+    private String            assembleType;
+
+    /**
      * Getter method for property <tt>scope</tt>.
      *
      * @return property value of scope
@@ -42,6 +49,24 @@ public class SubscriberRegister extends BaseRegister {
      */
     public void setScope(String scope) {
         this.scope = scope;
+    }
+
+    /**
+     * Getter method for property <tt>assembleType</tt>.
+     *
+     * @return property value of assembleType
+     */
+    public String getAssembleType() {
+        return assembleType;
+    }
+
+    /**
+     * Setter method for property <tt>assembleType</tt>.
+     *
+     * @param assembleType value to be assigned to property assembleType
+     */
+    public void setAssembleType(String assembleType) {
+        this.assembleType = assembleType;
     }
 
     /**

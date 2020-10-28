@@ -16,6 +16,10 @@
  */
 package com.alipay.sofa.registry.server.session.listener;
 
+import com.alipay.sofa.registry.server.session.assemble.SubscriberAssembleStrategy;
+import com.alipay.sofa.registry.server.session.cache.AppRevisionCacheRegistry;
+import com.alipay.sofa.registry.server.session.cache.SessionDatumCacheDecorator;
+import com.alipay.sofa.registry.server.session.push.FirePushService;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import com.alipay.sofa.registry.log.Logger;
@@ -54,13 +58,22 @@ public class DataChangeFetchTaskListener implements TaskListener {
     private ExecutorManager                              executorManager;
 
     @Autowired
-    private CacheService                                 sessionCacheService;
+    private SubscriberAssembleStrategy                   subscriberAssembleStrategy;
+
+    @Autowired
+    private AppRevisionCacheRegistry                     appRevisionCacheRegistry;
 
     /**
      * trigger task com.alipay.sofa.registry.server.meta.listener process
      */
     @Autowired
     private TaskListenerManager                          taskListenerManager;
+
+    @Autowired
+    private SessionDatumCacheDecorator                   sessionDatumCacheDecorator;
+
+    @Autowired
+    private FirePushService                              firePushService;
 
     private volatile TaskDispatcher<String, SessionTask> singleTaskDispatcher;
 
@@ -94,7 +107,8 @@ public class DataChangeFetchTaskListener implements TaskListener {
     @Override
     public void handleEvent(TaskEvent event) {
         SessionTask dataChangeFetchTask = new DataChangeFetchTask(sessionServerConfig,
-            taskListenerManager, executorManager, sessionInterests, sessionCacheService);
+            taskListenerManager, executorManager, sessionInterests, subscriberAssembleStrategy,
+            sessionDatumCacheDecorator, appRevisionCacheRegistry, firePushService);
         dataChangeFetchTask.setTaskEvent(event);
 
         getSingleTaskDispatcher().dispatch(dataChangeFetchTask.getTaskId(), dataChangeFetchTask,

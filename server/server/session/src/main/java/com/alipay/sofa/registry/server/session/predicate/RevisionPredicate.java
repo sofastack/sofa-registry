@@ -14,31 +14,36 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alipay.sofa.registry.server.session.strategy;
+package com.alipay.sofa.registry.server.session.predicate;
 
 import com.alipay.sofa.registry.core.model.AppRevisionRegister;
-import com.alipay.sofa.registry.core.model.RegisterResponse;
-import com.alipay.sofa.registry.remoting.Channel;
 import com.alipay.sofa.registry.server.session.cache.AppRevisionCacheRegistry;
-import com.alipay.sofa.registry.task.listener.TaskEvent;
-import com.alipay.sofa.registry.task.listener.TaskListenerManager;
 import org.springframework.beans.factory.annotation.Autowired;
 
-public class DefaultAppRevisionHandlerStrategy implements AppRevisionHandlerStrategy {
+import java.util.function.Predicate;
+
+/**
+ *
+ * @author xiaojian.xj
+ * @version $Id: RevisionPredicate.java, v 0.1 2020年11月13日 15:02 xiaojian.xj Exp $
+ */
+public class RevisionPredicate {
+
     @Autowired
-    private AppRevisionCacheRegistry appRevisionCacheService;
+    private AppRevisionCacheRegistry appRevisionCacheRegistry;
 
-    @Override
-    public void handleAppRevisionRegister(AppRevisionRegister appRevisionRegister,
-                                          RegisterResponse response) {
-        try {
-            appRevisionCacheService.register(appRevisionRegister);
-            response.setSuccess(true);
-            response.setMessage("app revision register success!");
-        } catch (Throwable e) {
-            response.setSuccess(false);
-            response.setMessage("app revision register failed!");
-        }
+    public Predicate<String> revisionPredicate(String dataInfoId) {
+        Predicate<String> predicate = (revision) -> {
+
+            AppRevisionRegister revisionRegister = appRevisionCacheRegistry.getRevision(revision);
+            if (revisionRegister == null) {
+                return false;
+            }
+            if (!revisionRegister.interfaces.containsKey(dataInfoId)) {
+                return false;
+            }
+            return true;
+        };
+        return predicate;
     }
-
 }

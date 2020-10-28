@@ -17,7 +17,6 @@
 package com.alipay.sofa.registry.common.model.constants;
 
 /**
- *
  * @author zhuoyu.sjw
  * @version $Id: ValueConstants.java, v 0.1 2018-03-28 23:07 zhuoyu.sjw Exp $$
  */
@@ -71,6 +70,8 @@ public class ValueConstants {
     public static final String   DATA_DATUM_SYNC_SESSION_INTERVAL_SEC  = "data.datum.sync.session.interval.sec#@#9600#@#CONFIG";
 
     public static final String   DATA_SESSION_LEASE_SEC                = "data.session.lease.sec#@#9600#@#CONFIG";
+
+    public static final String   SOFA_APP                              = "SOFA_APP";
 
     /**
      * switch key for dataId sensitive is disable or not
