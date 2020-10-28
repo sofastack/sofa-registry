@@ -14,17 +14,30 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alipay.sofa.registry.server.session.node.service;
+package com.alipay.sofa.registry.core.model;
 
-import com.alipay.sofa.registry.core.model.AppRevisionRegister;
+/**
+ *
+ * @author xiaojian.xj
+ * @version $Id: AssembleType.java, v 0.1 2020年10月27日 01:51 xiaojian.xj Exp $
+ */
+public enum AssembleType {
 
-import java.util.List;
+    /** sub app: only sub data where dataId = app  */
+    sub_app,
 
-public interface AppRevisionNodeService {
+    /** sub interface: only sub data where dataId = interface  */
+    sub_interface,
 
-    void register(AppRevisionRegister appRevision);
+    /** sub app and interface: sub data from app and interface  */
+    sub_app_and_interface, ;
 
-    List<AppRevisionRegister> fetchMulti(List<String> keys);
-
-    List<String> checkRevisions(String keysDigest);
+    public static boolean contains(String name) {
+        for (AssembleType subDataType : values()) {
+            if (subDataType.name().equals(name)) {
+                return true;
+            }
+        }
+        return false;
+    }
 }

@@ -43,4 +43,5 @@ public class DefaultDataChangeRequestHandlerStrategy implements DataChangeReques
         taskLogger.info("send " + taskEvent.getTaskType() + " taskEvent:{}", taskEvent);
         taskListenerManager.sendTaskEvent(taskEvent);
     }
+
 }

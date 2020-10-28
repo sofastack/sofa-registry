@@ -14,26 +14,36 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alipay.sofa.registry.server.session.node.service;
+package com.alipay.sofa.registry.common.model.store;
 
-import com.alipay.sofa.registry.common.model.store.URL;
-import com.alipay.sofa.registry.remoting.CallbackHandler;
-import com.alipay.sofa.registry.core.model.AppRevisionRegister;
-import com.alipay.sofa.registry.core.model.AppRevisionKey;
-import com.alipay.sofa.registry.common.model.metaserver.ProvideData;
+import com.alipay.sofa.registry.common.model.AppRegisterServerDataBox;
+
+import java.util.List;
 
 /**
- * @author shangyu.wh
- * @version $Id: ClientNodeService.java, v 0.1 2017-12-01 11:16 shangyu.wh Exp $
+ *
+ * @author xiaojian.xj
+ * @version $Id: AppPublisher.java, v 0.1 2020年11月10日 23:15 xiaojian.xj Exp $
  */
-public interface ClientNodeService {
+public class AppPublisher extends Publisher {
 
-    void pushWithCallback(Object object, URL url, CallbackHandler callbackHandler);
+    private List<AppRegisterServerDataBox> appDataList;
+
     /**
-     * fetch persistence data from meta server
+     * Getter method for property <tt>appDataList</tt>.
      *
-     * @param dataInfoId
-     * @return
+     * @return property value of appDataList
      */
-    ProvideData fetchData(String dataInfoId);
+    public List<AppRegisterServerDataBox> getAppDataList() {
+        return appDataList;
+    }
+
+    /**
+     * Setter method for property <tt>appDataList</tt>.
+     *
+     * @param appDataList value to be assigned to property appDataList
+     */
+    public void setAppDataList(List<AppRegisterServerDataBox> appDataList) {
+        this.appDataList = appDataList;
+    }
 }

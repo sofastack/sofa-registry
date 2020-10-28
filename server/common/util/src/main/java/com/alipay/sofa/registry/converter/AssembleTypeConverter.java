@@ -14,17 +14,26 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alipay.sofa.registry.server.session.node.service;
+package com.alipay.sofa.registry.converter;
 
-import com.alipay.sofa.registry.core.model.AppRevisionRegister;
+import com.alipay.sofa.registry.core.model.AssembleType;
 
-import java.util.List;
+/**
+ *
+ * @author xiaojian.xj
+ * @version $Id: AssembleTypeConverter.java, v 0.1 2020年10月27日 02:06 xiaojian.xj Exp $
+ */
+public class AssembleTypeConverter {
 
-public interface AppRevisionNodeService {
-
-    void register(AppRevisionRegister appRevision);
-
-    List<AppRevisionRegister> fetchMulti(List<String> keys);
-
-    List<String> checkRevisions(String keysDigest);
+    /**
+     * subType convert func
+     * @param subType
+     * @return
+     */
+    public static AssembleType convertToSubType(String subType) {
+        if (AssembleType.contains(subType)) {
+            return AssembleType.valueOf(subType);
+        }
+        return AssembleType.sub_app_and_interface;
+    }
 }

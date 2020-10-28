@@ -22,6 +22,12 @@ import com.alipay.sofa.registry.common.model.*;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.google.common.collect.Collections2;
 import org.apache.commons.collections.CollectionUtils;
+import com.alipay.sofa.registry.common.model.AppRegisterServerDataBox;
+import com.alipay.sofa.registry.common.model.AppRegisterServerDataBox.ParamInfo;
+import com.alipay.sofa.registry.common.model.AppRegisterServerDataBox.ServiceParamInfo;
+import com.alipay.sofa.registry.common.model.PublishType;
+import com.alipay.sofa.registry.common.model.ServerDataBox;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 /**
  *

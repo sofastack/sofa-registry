@@ -16,17 +16,16 @@
  */
 package com.alipay.sofa.registry.util;
 
-import com.alipay.sofa.registry.core.model.AppRevisionKey;
 import org.springframework.util.DigestUtils;
 
 import java.util.Collections;
 import java.util.List;
 
 public class RevisionUtils {
-    public static String revisionsDigest(List<AppRevisionKey> keys) {
+    public static String revisionsDigest(List<String> keys) {
         Collections.sort(keys);
         StringBuffer sb = new StringBuffer();
-        for (AppRevisionKey key : keys) {
+        for (String key : keys) {
             sb.append(key.toString());
         }
         return DigestUtils.md5DigestAsHex(sb.toString().getBytes());

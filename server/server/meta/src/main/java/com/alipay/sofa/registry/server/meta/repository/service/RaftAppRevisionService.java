@@ -17,7 +17,6 @@
 package com.alipay.sofa.registry.server.meta.repository.service;
 
 import com.alipay.sofa.registry.core.model.AppRevisionRegister;
-import com.alipay.sofa.registry.core.model.AppRevisionKey;
 import com.alipay.sofa.registry.jraft.processor.AbstractSnapshotProcess;
 import com.alipay.sofa.registry.jraft.processor.SnapshotProcess;
 import com.alipay.sofa.registry.log.Logger;
@@ -34,21 +33,21 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 @RaftService
 public class RaftAppRevisionService extends AbstractSnapshotProcess implements AppRevisionService {
-    private static final Logger                      LOGGER            = LoggerFactory
-                                                                           .getLogger(RaftAppRevisionService.class);
+    private static final Logger              LOGGER            = LoggerFactory
+                                                                   .getLogger(RaftAppRevisionService.class);
 
-    private Set<String>                              snapShotFileNames = new HashSet<>();
+    private Set<String>                      snapShotFileNames = new HashSet<>();
 
-    private Map<AppRevisionKey, AppRevisionRegister> registry          = new ConcurrentHashMap<>();
-    private String                                   keysDigest        = "";
+    private Map<String, AppRevisionRegister> registry          = new ConcurrentHashMap<>();
+    private String                           keysDigest        = "";
 
-    private static final String                      REVISIONS_NAME    = "revisions";
-    private ReadWriteLock                            rwLock            = new ReentrantReadWriteLock();
+    private static final String              REVISIONS_NAME    = "revisions";
+    private ReadWriteLock                    rwLock            = new ReentrantReadWriteLock();
 
     public RaftAppRevisionService() {
     }
 
-    public RaftAppRevisionService(Map<AppRevisionKey, AppRevisionRegister> registry) {
+    public RaftAppRevisionService(Map<String, AppRevisionRegister> registry) {
         this.registry = registry;
     }
 
@@ -64,7 +63,7 @@ public class RaftAppRevisionService extends AbstractSnapshotProcess implements A
     public boolean load(String path) {
         try {
             if (path.endsWith(REVISIONS_NAME)) {
-                Map<AppRevisionKey, AppRevisionRegister> reg = load(path, registry.getClass());
+                Map<String, AppRevisionRegister> reg = load(path, registry.getClass());
                 if (reg == null) {
                     reg = new HashMap<>();
                 }
@@ -95,34 +94,31 @@ public class RaftAppRevisionService extends AbstractSnapshotProcess implements A
     }
 
     public void add(AppRevisionRegister appRevision) {
-        AppRevisionKey key = new AppRevisionKey(appRevision.appname, appRevision.revision);
         rwLock.writeLock().lock();
-        if (registry.putIfAbsent(key, appRevision) == null) {
+        if (registry.putIfAbsent(appRevision.revision, appRevision) == null) {
             keysDigest = generateKeysDigest();
         }
         rwLock.writeLock().unlock();
     }
 
-    public boolean existed(String appname, String revision) {
-        AppRevisionKey key = new AppRevisionKey(appname, revision);
-        return registry.containsKey(key);
+    public boolean existed(String revision) {
+        return registry.containsKey(revision);
     }
 
-    public AppRevisionRegister get(String appname, String revision) {
-        AppRevisionKey key = new AppRevisionKey(appname, revision);
-        return registry.get(key);
+    public AppRevisionRegister get(String revision) {
+        return registry.get(revision);
     }
 
     public String getKeysDigest() {
         return keysDigest;
     }
 
-    public List<AppRevisionRegister> getMulti(List<AppRevisionKey> keys) {
+    public List<AppRevisionRegister> getMulti(List<String> keys) {
         if (keys == null) {
             return new ArrayList<>();
         }
         List<AppRevisionRegister> ret = new ArrayList<>(keys.size());
-        for (AppRevisionKey key : keys) {
+        for (String key : keys) {
             AppRevisionRegister rev = registry.get(key);
             if (rev != null) {
                 ret.add(rev);
@@ -131,7 +127,7 @@ public class RaftAppRevisionService extends AbstractSnapshotProcess implements A
         return ret;
     }
 
-    public List<AppRevisionKey> getKeys() {
+    public List<String> getKeys() {
         return new ArrayList<>(registry.keySet());
     }
 

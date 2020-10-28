@@ -16,15 +16,13 @@
  */
 package com.alipay.sofa.registry.common.model.metaserver;
 
-import com.alipay.sofa.registry.core.model.AppRevisionKey;
-
 import java.io.Serializable;
 import java.util.List;
 
 public class FetchRevisionsRequest implements Serializable {
-    public List<AppRevisionKey> keys;
+    public List<String> keys;
 
-    public FetchRevisionsRequest(List<AppRevisionKey> keys) {
+    public FetchRevisionsRequest(List<String> keys) {
         this.keys = keys;
     }
 }

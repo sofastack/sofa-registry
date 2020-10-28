@@ -22,7 +22,7 @@ import com.alipay.sofa.registry.client.api.model.Event;
 
 /**
  * The type Subscriber process event.
- * @author zhuoyu.sjw
+ * @auThor zhuoyu.sjw
  * @version $Id : SubscriberProcessEvent.java, v 0.1 2018-07-13 18:40 zhuoyu.sjw Exp $$
  */
 public class SubscriberProcessEvent implements Event {

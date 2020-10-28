@@ -16,10 +16,10 @@
  */
 package com.alipay.sofa.registry.server.session.cache;
 
+import com.alipay.sofa.registry.common.model.constants.ValueConstants;
 import com.alipay.sofa.registry.common.model.store.DataInfo;
 import com.alipay.sofa.registry.core.model.AppRevisionRegister;
 import com.alipay.sofa.registry.core.model.AppRevisionInterface;
-import com.alipay.sofa.registry.core.model.AppRevisionKey;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.server.session.node.service.AppRevisionNodeService;
@@ -29,7 +29,6 @@ import com.google.common.collect.Sets;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.*;
-import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class AppRevisionCacheRegistry {
@@ -40,70 +39,84 @@ public class AppRevisionCacheRegistry {
     @Autowired
     private AppRevisionNodeService                                                  appRevisionNodeService;
 
-    final private Map<AppRevisionKey, AppRevisionRegister>                          registry           = new ConcurrentHashMap<>();
+    final private Map<String /*revision*/, AppRevisionRegister>                    registry           = new ConcurrentHashMap<>();
     private String                                                                  keysDigest         = "";
     final private Map<String /*interface*/, Map<String /*appname*/, Set<String>>> interfaceRevisions = new ConcurrentHashMap<>();
+    final private Map<String /*appname*/, Set<String /*interfaces*/>>             appInterfaces      = new ConcurrentHashMap<>();
     private SingleFlight                                                            singleFlight       = new SingleFlight();
 
     public AppRevisionCacheRegistry() {
     }
 
     public void register(AppRevisionRegister appRevision) throws Exception {
-        AppRevisionKey key = new AppRevisionKey(appRevision.appname, appRevision.revision);
-        if (this.registry.containsKey(key)) {
+        if (this.registry.containsKey(appRevision.revision)) {
             return;
         }
-        singleFlight.execute(key, new AppRevisionRegisterTask(appRevision));
+        singleFlight.execute("revisionRegister" + appRevision.revision, () -> {
+            appRevisionNodeService.register(appRevision);
+            return null;
+        });
     }
 
-    public Map<String, Set<String>> search(String dataInfoId) {
-        return interfaceRevisions.get(dataInfoId);
+    public Set<String> getApps(String dataInfoId) {
+        if (!interfaceRevisions.containsKey(dataInfoId)) {
+            return new HashSet<>();
+        }
+        return interfaceRevisions.get(dataInfoId).keySet();
+    }
+
+    public AppRevisionRegister getRevision(String revision) {
+        AppRevisionRegister revisionRegister = registry.get(revision);
+        if (revisionRegister != null) {
+            return revisionRegister;
+        }
+        refreshAll();
+        return registry.get(revision);
+    }
+
+    public Set<String> getInterfaces(String appname) {
+        return appInterfaces.get(appname);
     }
 
     public void refreshAll() {
-        List<AppRevisionRegister> revisions = appRevisionNodeService
-            .fetchMulti(appRevisionNodeService.checkRevisions(keysDigest));
-        for (AppRevisionRegister rev : revisions) {
-            onNewRevision(rev);
-        }
-        if (revisions.size() > 0) {
-            keysDigest = generateKeysDigest();
+        try {
+            singleFlight.execute("refreshAll", () -> {
+                List<AppRevisionRegister> revisions = appRevisionNodeService
+                        .fetchMulti(appRevisionNodeService.checkRevisions(keysDigest));
+                for (AppRevisionRegister rev : revisions) {
+                    onNewRevision(rev);
+                }
+                if (revisions.size() > 0) {
+                    keysDigest = generateKeysDigest();
+                }
+                return null;
+            });
+        } catch (Exception e) {
+            LOG.error("refresh revisions failed ", e);
+            throw new RuntimeException("refresh revision failed", e);
         }
     }
 
     private void onNewRevision(AppRevisionRegister rev) {
-        AppRevisionKey key = new AppRevisionKey(rev.appname, rev.revision);
-        if (registry.putIfAbsent(key, rev) != null) {
-            return;
-        }
-        for (AppRevisionInterface inf : rev.interfaces) {
-            Map<String, Set<String>> apps = interfaceRevisions.computeIfAbsent(
-                DataInfo.toDataInfoId(inf.dataId, inf.instanceId, inf.group),
-                k -> new ConcurrentHashMap<>());
+        for (AppRevisionInterface inf : rev.interfaces.values()) {
+            String dataInfoId = DataInfo.toDataInfoId(inf.dataId, inf.instanceId, inf.group);
+            Map<String, Set<String>> apps = interfaceRevisions.computeIfAbsent(dataInfoId,
+                    k -> new ConcurrentHashMap<>());
             Set<String> infRevisions = apps.computeIfAbsent(rev.appname,
-                k -> Sets.newConcurrentHashSet());
+                    k -> Sets.newConcurrentHashSet());
             infRevisions.add(rev.revision);
+
+            appInterfaces.computeIfAbsent(rev.appname, k -> Sets.newConcurrentHashSet())
+                    .add(dataInfoId);
         }
+        registry.put(rev.revision, rev);
     }
 
     private String generateKeysDigest() {
-        return RevisionUtils.revisionsDigest(new ArrayList<>(registry.keySet()));
-    }
-
-    private void onInterfaceChanged(String dataInfoId) {
-    }
-
-    private class AppRevisionRegisterTask implements Callable {
-        private AppRevisionRegister revision;
-
-        public AppRevisionRegisterTask(AppRevisionRegister revision) {
-            this.revision = revision;
+        List<String> keys = new ArrayList<>();
+        for (Map.Entry<String, AppRevisionRegister> entry : registry.entrySet()) {
+            keys.add(entry.getKey());
         }
-
-        @Override
-        public Object call() throws Exception {
-            appRevisionNodeService.register(revision);
-            return null;
-        }
+        return RevisionUtils.revisionsDigest(keys);
     }
 }

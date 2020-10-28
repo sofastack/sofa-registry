@@ -16,6 +16,19 @@
  */
 package com.alipay.sofa.registry.server.session.remoting.handler;
 
+import java.util.Collection;
+import java.util.Set;
+import java.util.concurrent.Executor;
+
+import com.alipay.sofa.registry.common.model.dataserver.Datum;
+import com.alipay.sofa.registry.server.session.cache.Value;
+import com.alipay.remoting.util.StringUtils;
+import com.alipay.sofa.registry.common.model.constants.ValueConstants;
+import com.alipay.sofa.registry.common.model.store.DataInfo;
+import com.alipay.sofa.registry.server.session.cache.AppRevisionCacheRegistry;
+import com.alipay.sofa.registry.server.session.cache.SessionDatumCacheDecorator;
+import org.springframework.beans.factory.annotation.Autowired;
+
 import com.alipay.sofa.registry.common.model.Node.NodeType;
 import com.alipay.sofa.registry.common.model.sessionserver.DataChangeRequest;
 import com.alipay.sofa.registry.log.Logger;
@@ -35,7 +48,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import java.util.concurrent.Executor;
 
 /**
- *
  * @author kezhu.wukz
  * @author shangyu.wh
  * @version $Id: DataChangeRequestHandler.java, v 0.1 2017-12-12 15:09 shangyu.wh Exp $
@@ -66,6 +78,12 @@ public class DataChangeRequestHandler extends AbstractClientHandler<DataChangeRe
     @Autowired
     private DataChangeRequestHandlerStrategy dataChangeRequestHandlerStrategy;
 
+    @Autowired
+    private SessionDatumCacheDecorator       sessionDatumCacheDecorator;
+
+    @Autowired
+    private AppRevisionCacheRegistry         appRevisionCacheRegistry;
+
     @Override
     protected NodeType getConnectNodeType() {
         return NodeType.DATA;
@@ -90,19 +108,29 @@ public class DataChangeRequestHandler extends AbstractClientHandler<DataChangeRe
         }
 
         try {
-            boolean result = sessionInterests.checkInterestVersions(
-                dataChangeRequest.getDataCenter(), dataChangeRequest.getDataInfoId(),
-                dataChangeRequest.getVersion());
+            DataInfo dataInfo = DataInfo.valueOf(dataChangeRequest.getDataInfoId());
+            refreshMeta(dataChangeRequest.getRevisions());
 
-            if (!result) {
-                return null;
+            if (StringUtils.equals(ValueConstants.SOFA_APP, dataInfo.getDataType())) {
+
+                //dataInfoId is app, get relate interfaces dataInfoId from cache
+                Set<String> interfaces = appRevisionCacheRegistry.getInterfaces(dataInfo
+                    .getDataId());
+                for (String interfaceDataInfoId : interfaces) {
+                    DataChangeRequest request = new DataChangeRequest();
+                    request.setDataInfoId(interfaceDataInfoId);
+                    request.setChangedDataInfoId(dataChangeRequest.getDataInfoId());
+                    request.setDataCenter(dataChangeRequest.getDataCenter());
+                    request.setVersion(dataChangeRequest.getVersion());
+                    fireChangFetch(request);
+                }
+            } else {
+                dataChangeRequest.setChangedDataInfoId(dataChangeRequest.getDataInfoId());
+                fireChangFetch(dataChangeRequest);
             }
-
             EXCHANGE_LOGGER.info(
                 "Data version has change,and will fetch to update!Request={},URL={}",
                 dataChangeRequest, channel.getRemoteAddress());
-
-            fireChangFetch(dataChangeRequest);
         } catch (Exception e) {
             LOGGER.error("DataChange Request error!", e);
             throw new RuntimeException("DataChangeRequest Request error!", e);
@@ -111,11 +139,22 @@ public class DataChangeRequestHandler extends AbstractClientHandler<DataChangeRe
         return null;
     }
 
+    private void refreshMeta(Collection<String> revisions) {
+        for (String revision : revisions) {
+            appRevisionCacheRegistry.getRevision(revision);
+        }
+    }
+
     /**
-     *
      * @param dataChangeRequest
      */
     private void fireChangFetch(DataChangeRequest dataChangeRequest) {
+        boolean result = sessionInterests.checkInterestVersions(dataChangeRequest.getDataCenter(),
+            dataChangeRequest.getDataInfoId(), dataChangeRequest.getVersion());
+
+        if (!result) {
+            return;
+        }
         dataChangeRequestHandlerStrategy.doFireChangFetch(dataChangeRequest);
     }
 

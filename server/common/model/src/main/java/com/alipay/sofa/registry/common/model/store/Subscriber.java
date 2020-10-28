@@ -21,6 +21,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import com.alipay.sofa.registry.common.model.ElementType;
 import com.alipay.sofa.registry.common.model.constants.ValueConstants;
+import com.alipay.sofa.registry.core.model.AssembleType;
 import com.alipay.sofa.registry.core.model.ScopeEnum;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
@@ -37,6 +38,8 @@ public class Subscriber extends BaseInfo {
     private ScopeEnum                               scope;
     /** */
     private ElementType                             elementType;
+    /** */
+    private AssembleType                            assembleType;
 
     /**
      * last push context
@@ -63,6 +66,24 @@ public class Subscriber extends BaseInfo {
 
     public ElementType getElementType() {
         return elementType;
+    }
+
+    /**
+     * Getter method for property <tt>assembleType</tt>.
+     *
+     * @return property value of assembleType
+     */
+    public AssembleType getAssembleType() {
+        return assembleType;
+    }
+
+    /**
+     * Setter method for property <tt>assembleType</tt>.
+     *
+     * @param assembleType value to be assigned to property assembleType
+     */
+    public void setAssembleType(AssembleType assembleType) {
+        this.assembleType = assembleType;
     }
 
     /**

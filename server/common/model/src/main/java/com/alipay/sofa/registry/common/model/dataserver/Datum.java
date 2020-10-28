@@ -20,6 +20,7 @@ import java.io.Serializable;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+import com.alipay.sofa.registry.common.model.PublisherInternUtil;
 import com.alipay.sofa.registry.common.model.store.Publisher;
 import com.alipay.sofa.registry.common.model.store.WordCache;
 import com.alipay.sofa.registry.util.DatumVersionUtil;
@@ -239,7 +240,7 @@ public class Datum implements Serializable {
                 // because this Datum is put into Memory directly, by DatumCache.coverDatum
                 publisher.setRegisterId(registerId);
                 // change publisher word cache
-                Publisher.internPublisher(publisher);
+                PublisherInternUtil.internPublisher(publisher);
             });
         }
 

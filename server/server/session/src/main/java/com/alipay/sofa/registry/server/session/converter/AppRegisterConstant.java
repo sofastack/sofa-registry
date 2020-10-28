@@ -14,17 +14,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alipay.sofa.registry.server.session.node.service;
+package com.alipay.sofa.registry.server.session.converter;
 
-import com.alipay.sofa.registry.core.model.AppRevisionRegister;
+/**
+ *
+ * @author xiaojian.xj
+ * @version $Id: AppRegisterConstant.java, v 0.1 2020年11月12日 15:47 xiaojian.xj Exp $
+ */
+public class AppRegisterConstant {
 
-import java.util.List;
+    public static final String URL_KEY              = "url";
 
-public interface AppRevisionNodeService {
+    public static final String REVISION_KEY         = "revision";
 
-    void register(AppRevisionRegister appRevision);
+    public static final String BASE_PARAMS_KEY      = "baseParams";
 
-    List<AppRevisionRegister> fetchMulti(List<String> keys);
+    public static final String INTERFACE_PARAMS_KEY = "interfaceParams";
 
-    List<String> checkRevisions(String keysDigest);
 }

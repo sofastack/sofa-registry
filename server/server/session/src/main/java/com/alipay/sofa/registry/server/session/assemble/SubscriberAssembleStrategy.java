@@ -14,17 +14,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alipay.sofa.registry.server.session.node.service;
+package com.alipay.sofa.registry.server.session.assemble;
 
-import com.alipay.sofa.registry.core.model.AppRevisionRegister;
+import com.alipay.sofa.registry.common.model.dataserver.Datum;
+import com.alipay.sofa.registry.common.model.store.Subscriber;
+import com.alipay.sofa.registry.core.model.AssembleType;
 
-import java.util.List;
+import java.util.Map;
 
-public interface AppRevisionNodeService {
+/**
+ *
+ * @author xiaojian.xj
+ * @version $Id: SubscriberAssembleStrategy.java, v 0.1 2020年10月29日 21:59 xiaojian.xj Exp $
+ */
+public interface SubscriberAssembleStrategy {
+    void add(AssembleService assembleService);
 
-    void register(AppRevisionRegister appRevision);
+    Map<String/*datacenter*/, Datum> assembleDatum(AssembleType assembleType, Subscriber subscriber);
 
-    List<AppRevisionRegister> fetchMulti(List<String> keys);
-
-    List<String> checkRevisions(String keysDigest);
+    Datum assembleDatum(AssembleType assembleType, String datacenter, Subscriber subscriber);
 }
