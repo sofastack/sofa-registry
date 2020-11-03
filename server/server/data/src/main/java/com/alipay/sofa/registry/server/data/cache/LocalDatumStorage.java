@@ -61,7 +61,7 @@ public class LocalDatumStorage implements DatumStorage {
     protected final Map<String, Map<String, Publisher>> ALL_CONNECT_ID_INDEX = new ConcurrentHashMap<>();
 
     @Autowired
-    private DataServerConfig                            dataServerConfig;
+    protected DataServerConfig                            dataServerConfig;
 
     /**
      * get datum by specific dataCenter and dataInfoId
