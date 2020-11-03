@@ -14,28 +14,33 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alipay.sofa.registry.server.session.node.service;
+package com.alipay.sofa.registry.server.meta.revision;
 
-import com.alipay.sofa.registry.common.model.store.URL;
-import com.alipay.sofa.registry.remoting.CallbackHandler;
 import com.alipay.sofa.registry.core.model.AppRevisionRegister;
 import com.alipay.sofa.registry.core.model.AppRevisionKey;
-import com.alipay.sofa.registry.common.model.metaserver.ProvideData;
+import com.alipay.sofa.registry.store.api.annotation.RaftReference;
 
 import java.util.List;
 
-/**
- * @author shangyu.wh
- * @version $Id: ClientNodeService.java, v 0.1 2017-12-01 11:16 shangyu.wh Exp $
- */
-public interface ClientNodeService {
+public class AppRevisionRegistry {
+    @RaftReference
+    private AppRevisionService appRevisionService;
 
-    void pushWithCallback(Object object, URL url, CallbackHandler callbackHandler);
-    /**
-     * fetch persistence data from meta server
-     *
-     * @param dataInfoId
-     * @return
-     */
-    ProvideData fetchData(String dataInfoId);
+    public void register(AppRevisionRegister appRevision) {
+        if (appRevisionService.existed(appRevision.appname, appRevision.revision)) {
+            return;
+        }
+        appRevisionService.add(appRevision);
+    }
+
+    public List<AppRevisionKey> checkRevisions(String keysDigest) {
+        if (keysDigest.equals(appRevisionService.getKeysDigest())) {
+            return null;
+        }
+        return appRevisionService.getKeys();
+    }
+
+    public List<AppRevisionRegister> fetchRevisions(List<AppRevisionKey> keys) {
+        return appRevisionService.getMulti(keys);
+    }
 }

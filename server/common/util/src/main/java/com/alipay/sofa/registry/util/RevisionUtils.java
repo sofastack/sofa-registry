@@ -14,28 +14,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alipay.sofa.registry.server.session.node.service;
+package com.alipay.sofa.registry.util;
 
-import com.alipay.sofa.registry.common.model.store.URL;
-import com.alipay.sofa.registry.remoting.CallbackHandler;
-import com.alipay.sofa.registry.core.model.AppRevisionRegister;
 import com.alipay.sofa.registry.core.model.AppRevisionKey;
-import com.alipay.sofa.registry.common.model.metaserver.ProvideData;
+import org.springframework.util.DigestUtils;
 
+import java.util.Collections;
 import java.util.List;
 
-/**
- * @author shangyu.wh
- * @version $Id: ClientNodeService.java, v 0.1 2017-12-01 11:16 shangyu.wh Exp $
- */
-public interface ClientNodeService {
-
-    void pushWithCallback(Object object, URL url, CallbackHandler callbackHandler);
-    /**
-     * fetch persistence data from meta server
-     *
-     * @param dataInfoId
-     * @return
-     */
-    ProvideData fetchData(String dataInfoId);
+public class RevisionUtils {
+    public static String revisionsDigest(List<AppRevisionKey> keys) {
+        Collections.sort(keys);
+        StringBuffer sb = new StringBuffer();
+        for (AppRevisionKey key : keys) {
+            sb.append(key.toString());
+        }
+        return DigestUtils.md5DigestAsHex(sb.toString().getBytes());
+    }
 }

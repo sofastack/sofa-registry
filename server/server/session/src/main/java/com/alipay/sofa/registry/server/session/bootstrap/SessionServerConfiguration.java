@@ -16,6 +16,23 @@
  */
 package com.alipay.sofa.registry.server.session.bootstrap;
 
+import java.util.ArrayList;
+import java.util.Collection;
+
+import com.alipay.sofa.registry.server.session.cache.*;
+import com.alipay.sofa.registry.server.session.connections.ConnectionsService;
+import com.alipay.sofa.registry.server.session.node.service.*;
+import com.alipay.sofa.registry.server.session.remoting.handler.*;
+import com.alipay.sofa.registry.server.session.resource.*;
+import com.alipay.sofa.registry.server.session.strategy.*;
+import org.glassfish.jersey.jackson.JacksonFeature;
+import org.glassfish.jersey.server.ResourceConfig;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Import;
+
 import com.alipay.sofa.registry.remoting.bolt.exchange.BoltExchange;
 import com.alipay.sofa.registry.remoting.exchange.Exchange;
 import com.alipay.sofa.registry.remoting.exchange.NodeExchanger;
@@ -62,6 +79,28 @@ import com.alipay.sofa.registry.server.session.wrapper.*;
 import com.alipay.sofa.registry.server.shared.meta.MetaServerService;
 import com.alipay.sofa.registry.server.shared.remoting.AbstractClientHandler;
 import com.alipay.sofa.registry.server.shared.remoting.AbstractServerHandler;
+import com.alipay.sofa.registry.server.session.store.DataStore;
+import com.alipay.sofa.registry.server.session.store.Interests;
+import com.alipay.sofa.registry.server.session.store.SessionDataStore;
+import com.alipay.sofa.registry.server.session.store.SessionInterests;
+import com.alipay.sofa.registry.server.session.store.SessionWatchers;
+import com.alipay.sofa.registry.server.session.store.Watchers;
+import com.alipay.sofa.registry.server.session.strategy.impl.DefaultDataChangeRequestHandlerStrategy;
+import com.alipay.sofa.registry.server.session.strategy.impl.DefaultPublisherHandlerStrategy;
+import com.alipay.sofa.registry.server.session.strategy.impl.DefaultPushTaskMergeProcessor;
+import com.alipay.sofa.registry.server.session.strategy.impl.DefaultReceivedConfigDataPushTaskStrategy;
+import com.alipay.sofa.registry.server.session.strategy.impl.DefaultReceivedDataMultiPushTaskStrategy;
+import com.alipay.sofa.registry.server.session.strategy.impl.DefaultSessionRegistryStrategy;
+import com.alipay.sofa.registry.server.session.strategy.impl.DefaultSubscriberHandlerStrategy;
+import com.alipay.sofa.registry.server.session.strategy.impl.DefaultSubscriberMultiFetchTaskStrategy;
+import com.alipay.sofa.registry.server.session.strategy.impl.DefaultSubscriberRegisterFetchTaskStrategy;
+import com.alipay.sofa.registry.server.session.strategy.impl.DefaultSyncConfigHandlerStrategy;
+import com.alipay.sofa.registry.server.session.strategy.impl.DefaultWatcherHandlerStrategy;
+import com.alipay.sofa.registry.server.session.wrapper.AccessLimitWrapperInterceptor;
+import com.alipay.sofa.registry.server.session.wrapper.BlacklistWrapperInterceptor;
+import com.alipay.sofa.registry.server.session.wrapper.ClientCheckWrapperInterceptor;
+import com.alipay.sofa.registry.server.session.wrapper.WrapperInterceptor;
+import com.alipay.sofa.registry.server.session.wrapper.WrapperInterceptorManager;
 import com.alipay.sofa.registry.task.batcher.TaskProcessor;
 import com.alipay.sofa.registry.task.listener.DefaultTaskListenerManager;
 import com.alipay.sofa.registry.task.listener.TaskListener;
@@ -79,7 +118,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 
 /**
- *
  * @author shangyu.wh
  * @version $Id: SessionServerConfiguration.java, v 0.1 2017-11-14 11:39 synex Exp $
  */
@@ -162,6 +200,7 @@ public class SessionServerConfiguration {
             list.add(clientNodeConnectionHandler());
             list.add(cancelAddressRequestHandler());
             list.add(syncConfigHandler());
+            list.add(appRevisionRegisterHandler());
             return list;
         }
 
@@ -211,6 +250,9 @@ public class SessionServerConfiguration {
         @Bean
         public AbstractServerHandler dataSlotDiffPublisherRequestHandler() {
             return new DataSlotDiffPublisherRequestHandler();
+        }
+        public AbstractServerHandler appRevisionRegisterHandler() {
+            return new AppRevisionRegisterHandler();
         }
 
         @Bean(name = "dataClientHandlers")
@@ -347,6 +389,15 @@ public class SessionServerConfiguration {
         public ClientNodeService clientNodeService() {
             return new ClientNodeServiceImpl();
         }
+       @Bean
+        public RaftClientManager raftClientManager() {
+            return new RaftClientManager();
+        }
+
+       @Bean
+        public AppRevisionNodeService appRevisionNodeService() {
+            return new AppRevisionNodeServiceImpl();
+        }
     }
 
     @Configuration
@@ -360,6 +411,11 @@ public class SessionServerConfiguration {
         @Bean(name = "com.alipay.sofa.registry.server.session.cache.DatumKey")
         public CacheGenerator datumCacheGenerator() {
             return new DatumCacheGenerator();
+        }
+
+        @Bean
+        public AppRevisionCacheRegistry appRevisionCacheRegistry() {
+            return new AppRevisionCacheRegistry();
         }
     }
 
@@ -582,6 +638,11 @@ public class SessionServerConfiguration {
         @ConditionalOnMissingBean
         public ReceivedConfigDataPushTaskStrategy receivedConfigDataPushTaskStrategy() {
             return new DefaultReceivedConfigDataPushTaskStrategy();
+        }
+
+        @Bean
+        public AppRevisionHandlerStrategy appRevisionHandlerStrategy() {
+            return new DefaultAppRevisionHandlerStrategy();
         }
     }
 
