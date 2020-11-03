@@ -16,6 +16,25 @@
  */
 package com.alipay.sofa.registry.server.meta.bootstrap;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
+
+import com.alipay.sofa.registry.server.meta.remoting.handler.*;
+import com.alipay.sofa.registry.server.meta.revision.*;
+import com.alipay.sofa.registry.server.meta.repository.service.*;
+import com.alipay.sofa.registry.util.NamedThreadFactory;
+import com.alipay.sofa.registry.server.meta.resource.*;
+import org.glassfish.jersey.jackson.JacksonFeature;
+import org.glassfish.jersey.server.ResourceConfig;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Import;
+
 import com.alipay.sofa.registry.jraft.service.PersistenceDataDBService;
 import com.alipay.sofa.registry.remoting.bolt.exchange.BoltExchange;
 import com.alipay.sofa.registry.remoting.exchange.Exchange;
@@ -51,6 +70,17 @@ import com.alipay.sofa.registry.server.meta.remoting.handler.HeartbeatRequestHan
 import com.alipay.sofa.registry.server.meta.resource.*;
 import com.alipay.sofa.registry.server.meta.slot.impl.*;
 import com.alipay.sofa.registry.server.shared.remoting.AbstractServerHandler;
+import com.alipay.sofa.registry.server.meta.repository.NodeConfirmStatusService;
+import com.alipay.sofa.registry.server.meta.repository.RepositoryService;
+import com.alipay.sofa.registry.server.meta.repository.VersionRepositoryService;
+import com.alipay.sofa.registry.server.meta.repository.annotation.RaftAnnotationBeanPostProcessor;
+import com.alipay.sofa.registry.server.meta.store.DataStoreService;
+import com.alipay.sofa.registry.server.meta.store.MetaStoreService;
+import com.alipay.sofa.registry.server.meta.store.SessionStoreService;
+import com.alipay.sofa.registry.server.meta.store.StoreService;
+import com.alipay.sofa.registry.server.meta.task.processor.DataNodeSingleTaskProcessor;
+import com.alipay.sofa.registry.server.meta.task.processor.MetaNodeSingleTaskProcessor;
+import com.alipay.sofa.registry.server.meta.task.processor.SessionNodeSingleTaskProcessor;
 import com.alipay.sofa.registry.store.api.DBService;
 import com.alipay.sofa.registry.util.DefaultExecutorFactory;
 import com.alipay.sofa.registry.util.NamedThreadFactory;
@@ -69,7 +99,6 @@ import java.util.Collection;
 import java.util.concurrent.*;
 
 /**
- *
  * @author shangyu.wh
  * @version $Id: MetaServerConfiguration.java, v 0.1 2018-01-12 14:53 shangyu.wh Exp $
  */
@@ -241,6 +270,19 @@ public class MetaServerConfiguration {
     }
 
     @Configuration
+    public static class AppRevisionConfiguration {
+        @Bean
+        public AppRevisionService appRevisionService() {
+            return new RaftAppRevisionService();
+        }
+
+        @Bean
+        public AppRevisionRegistry appRevisionRegistry() {
+            return new AppRevisionRegistry();
+        }
+    }
+
+    @Configuration
     public static class MetaServerRemotingConfiguration {
 
         @Bean
@@ -259,6 +301,9 @@ public class MetaServerConfiguration {
             list.add(sessionConnectionHandler());
             list.add(renewNodesRequestHandler());
             list.add(fetchProvideDataRequestHandler());
+            list.add(addAppRevisionHandler());
+            list.add(checkRevisionsHandler());
+            list.add(fetchRevisionsHandler());
             return list;
         }
 
@@ -301,6 +346,21 @@ public class MetaServerConfiguration {
         @Bean
         public AbstractServerHandler fetchProvideDataRequestHandler() {
             return new FetchProvideDataRequestHandler();
+        }
+
+        @Bean
+        public AbstractServerHandler addAppRevisionHandler() {
+            return new AddAppRevisionHandler();
+        }
+
+        @Bean
+        public AbstractServerHandler checkRevisionsHandler() {
+            return new CheckRevisionsHandler();
+        }
+
+        @Bean
+        public AbstractServerHandler fetchRevisionsHandler() {
+            return new FetchRevisionsHandler();
         }
 
         @Bean
