@@ -53,7 +53,7 @@ public class PubSubTest extends BaseIntegrationTest {
 
         registryClient1.register(subReg);
 
-        Thread.sleep(2000L);
+        Thread.sleep(2000000L);
         assertEquals(dataId, this.dataId);
         assertEquals(LOCAL_REGION, userData.getLocalZone());
         assertEquals(1, userData.getZoneData().size());

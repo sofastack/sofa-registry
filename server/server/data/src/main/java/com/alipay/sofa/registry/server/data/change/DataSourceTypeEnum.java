@@ -32,24 +32,4 @@ public enum DataSourceTypeEnum {
      * pub temporary data
      */
     PUB_TEMP,
-
-    /**
-     * sync from dataservers in other datacenter
-     */
-    SYNC,
-
-    /**
-     * from dataservers in the same datacenter
-     */
-    BACKUP,
-
-    /**
-     * local dataInfo check,not belong this node schedule remove
-     */
-    CLEAN,
-
-    /**
-     * Snapshot data, after renew finds data inconsistent
-     */
-    SNAPSHOT,
 }

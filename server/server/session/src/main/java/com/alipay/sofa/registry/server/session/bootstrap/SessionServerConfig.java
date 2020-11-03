@@ -37,12 +37,6 @@ public interface SessionServerConfig {
 
     int getSchedulerHeartbeatExpBackOffBound();
 
-    int getSchedulerGetSessionNodeTimeout();
-
-    int getSchedulerGetSessionNodeFirstDelay();
-
-    int getSchedulerGetSessionNodeExpBackOffBound();
-
     int getSchedulerFetchDataTimeout();
 
     int getSchedulerFetchDataFirstDelay();
@@ -82,14 +76,6 @@ public interface SessionServerConfig {
     long getUnPublishDataTaskRetryFirstDelay();
 
     long getUnPublishDataTaskRetryIncrementDelay();
-
-    int getDatumSnapshotTaskRetryTimes();
-
-    long getDatumSnapshotTaskRetryFirstDelay();
-
-    long getDatumSnapshotTaskRetryIncrementDelay();
-
-    int getRenewDatumTaskRetryTimes();
 
     int getDataChangeFetchTaskRetryTimes();
 
@@ -161,19 +147,9 @@ public interface SessionServerConfig {
 
     long getPushDataTaskRetryIncrementDelay();
 
-    int getRenewDatumWheelTicksSize();
-
-    int getRenewDatumWheelTicksDuration();
-
-    int getRenewDatumWheelTaskDelaySec();
-
-    int getRenewDatumWheelTaskRandomFirstDelaySec();
-
     String getBlacklistPubDataIdRegex();
 
     String getBlacklistSubDataIdRegex();
-
-    int getNumberOfReplicas();
 
     boolean isStopPushSwitch();
 
@@ -186,10 +162,6 @@ public interface SessionServerConfig {
     boolean isInvalidForeverZone(String zoneId);
 
     boolean isInvalidIgnored(String dataId);
-
-    int getRenewAndSnapshotSilentPeriodSec();
-
-    int getWriteDataAcceptorQueueSize();
 
     int getDataNodeRetryExecutorQueueSize();
 

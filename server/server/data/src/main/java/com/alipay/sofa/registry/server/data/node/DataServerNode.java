@@ -17,14 +17,13 @@
 package com.alipay.sofa.registry.server.data.node;
 
 import com.alipay.remoting.Connection;
-import com.alipay.sofa.registry.consistency.hash.HashNode;
 
 /**
  *
  * @author qian.lqlq
  * @version $Id: DataServerNode.java, v 0.1 2018-03-13 18:29 qian.lqlq Exp $
  */
-public class DataServerNode implements HashNode {
+public class DataServerNode {
 
     private String     ip;
 
@@ -44,7 +43,6 @@ public class DataServerNode implements HashNode {
         this.connection = connection;
     }
 
-    @Override
     public String getNodeName() {
         return ip;
     }

@@ -112,7 +112,7 @@ public class MetaRepositoryService extends AbstractSnapshotProcess
 
             metaNodes.put(ipAddress, metaNode);
 
-        } catch (Exception e) {
+        } catch (Throwable e) {
             LOGGER.error("Meta node add error!", e);
             throw new RuntimeException("Meta node add error!", e);
         } finally {
@@ -146,7 +146,7 @@ public class MetaRepositoryService extends AbstractSnapshotProcess
                 }
             }
             return null;
-        } catch (Exception e) {
+        } catch (Throwable e) {
             LOGGER.error("Meta node remove error!", e);
             throw new RuntimeException("Meta node remove error!", e);
         } finally {
@@ -191,7 +191,7 @@ public class MetaRepositoryService extends AbstractSnapshotProcess
             }
 
             return metaNode;
-        } catch (Exception e) {
+        } catch (Throwable e) {
             LOGGER.error("Data node replace error!", e);
             throw new RuntimeException("Data node replace error!", e);
         } finally {
@@ -238,9 +238,8 @@ public class MetaRepositoryService extends AbstractSnapshotProcess
                 Map<String/*ipAddress*/, RenewDecorate<MetaNode>> metaNodes = dataNodeRepository
                     .getNodeMap();
                 if (metaNodes == null) {
-                    LOGGER.error("Meta node in dataCenter: {} has not existed!", dataCenter);
-                    throw new RuntimeException(String.format(
-                        "Meta node in dataCenter: %s has not existed!", dataCenter));
+                    LOGGER.warn("Meta node in dataCenter: {} has not existed!", dataCenter);
+                    return null;
                 }
                 RenewDecorate<MetaNode> oldRenewDecorate = metaNodes.get(ipAddress);
                 if (oldRenewDecorate != null && oldRenewDecorate.getRenewal() != null) {
@@ -253,10 +252,9 @@ public class MetaRepositoryService extends AbstractSnapshotProcess
                 }
             } else {
                 LOGGER.error("Meta node in dataCenter: {} has not existed!", dataCenter);
-                throw new RuntimeException(String.format(
-                    "Meta node in dataCenter: %s has not existed!", dataCenter));
+                return null;
             }
-        } catch (Exception e) {
+        } catch (Throwable e) {
             LOGGER.error("Get meta node error!", e);
             throw new RuntimeException("Get meta node error!", e);
         } finally {

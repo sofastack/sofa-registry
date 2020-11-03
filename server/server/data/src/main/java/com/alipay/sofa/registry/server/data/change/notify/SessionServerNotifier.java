@@ -96,8 +96,6 @@ public class SessionServerNotifier implements IDataChangeNotifier {
     public Set<DataSourceTypeEnum> getSuitableSource() {
         Set<DataSourceTypeEnum> set = new HashSet<>();
         set.add(DataSourceTypeEnum.PUB);
-        set.add(DataSourceTypeEnum.SYNC);
-        set.add(DataSourceTypeEnum.SNAPSHOT);
         return set;
     }
 

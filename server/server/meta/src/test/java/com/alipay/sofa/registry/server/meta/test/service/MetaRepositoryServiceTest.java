@@ -16,7 +16,6 @@
  */
 package com.alipay.sofa.registry.server.meta.test.service;
 
-import com.alipay.sofa.registry.common.model.Node.NodeStatus;
 import com.alipay.sofa.registry.common.model.metaserver.MetaNode;
 import com.alipay.sofa.registry.common.model.store.URL;
 import com.alipay.sofa.registry.server.meta.bootstrap.NodeConfig;
@@ -165,19 +164,18 @@ public class MetaRepositoryServiceTest {
             dataCenter));
 
         MetaNode metaNodeFix = new MetaNode(new URL(ip, 0), dataCenter);
-        metaNodeFix.setNodeStatus(NodeStatus.WORKING);
 
         RenewDecorate<MetaNode> metaNode2 = new RenewDecorate(metaNodeFix);
 
         metaRepositoryService.put(ip, metaNode);
 
-        Assert.assertEquals(metaRepositoryService.get(ip).getRenewal().getNodeStatus(),
-            NodeStatus.INIT);
+        //        Assert.assertEquals(metaRepositoryService.get(ip).getRenewal().getNodeStatus(),
+        //            NodeStatus.INIT);
 
         metaRepositoryService.replace(ip, metaNode2);
 
-        Assert.assertEquals(metaRepositoryService.get(ip).getRenewal().getNodeStatus(),
-            NodeStatus.WORKING);
+        //        Assert.assertEquals(metaRepositoryService.get(ip).getRenewal().getNodeStatus(),
+        //            NodeStatus.WORKING);
         Assert.assertEquals(metaRepositoryService.getAllData().size(), 1);
     }
 
@@ -220,22 +218,21 @@ public class MetaRepositoryServiceTest {
             dataCenter));
 
         MetaNode metaNodeFix = new MetaNode(new URL(ip, 0), dataCenter);
-        metaNodeFix.setNodeStatus(NodeStatus.WORKING);
 
         RenewDecorate<MetaNode> metaNode2 = new RenewDecorate(metaNodeFix);
 
         metaRepositoryService.put(ip, metaNode);
-
-        Assert.assertEquals(metaRepositoryService.get(ip).getRenewal().getNodeStatus(),
-            NodeStatus.INIT);
+        //
+        //        Assert.assertEquals(metaRepositoryService.get(ip).getRenewal().getNodeStatus(),
+        //            NodeStatus.INIT);
 
         Map<String, RenewDecorate<MetaNode>> map = new HashMap<>();
         map.put(ip, metaNode2);
 
         metaRepositoryService.replaceAll(dataCenter, map, 1234l);
 
-        Assert.assertEquals(metaRepositoryService.get(ip).getRenewal().getNodeStatus(),
-            NodeStatus.WORKING);
+        //        Assert.assertEquals(metaRepositoryService.get(ip).getRenewal().getNodeStatus(),
+        //            NodeStatus.WORKING);
         Assert.assertEquals(metaRepositoryService.getAllDataMap().get(dataCenter).size(), 1);
     }
 }

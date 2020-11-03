@@ -65,7 +65,6 @@ public class HealthResource {
         if (!response.isSuccess()) {
             builder.status(Status.INTERNAL_SERVER_ERROR);
         }
-
         return builder.build();
     }
 
@@ -107,7 +106,6 @@ public class HealthResource {
         ret = ret && start;
 
         if (ServiceStateMachine.getInstance().isLeader()) {
-
             sb.append(", raftStatus:").append("Leader");
         } else if (ServiceStateMachine.getInstance().isfollower()) {
             sb.append(", raftStatus:").append("Follower");

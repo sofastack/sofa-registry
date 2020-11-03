@@ -28,7 +28,7 @@ public interface WriteDataRequest<T> {
      * The enum for request type
      */
     enum WriteDataRequestType {
-        PUBLISHER, UN_PUBLISHER, CLIENT_OFF, RENEW_DATUM, DATUM_SNAPSHOT
+        PUBLISHER, UN_PUBLISHER, CLIENT_OFF
     }
 
     /**

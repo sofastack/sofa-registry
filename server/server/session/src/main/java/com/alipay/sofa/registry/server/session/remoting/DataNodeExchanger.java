@@ -16,15 +16,7 @@
  */
 package com.alipay.sofa.registry.server.session.remoting;
 
-import java.util.Collection;
-import java.util.StringJoiner;
-
-import javax.annotation.Resource;
-
-import org.springframework.beans.factory.annotation.Autowired;
-
 import com.alipay.sofa.registry.common.model.Node;
-import com.alipay.sofa.registry.common.model.RenewDatumRequest;
 import com.alipay.sofa.registry.common.model.store.URL;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
@@ -38,6 +30,11 @@ import com.alipay.sofa.registry.remoting.exchange.message.Response;
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
 import com.alipay.sofa.registry.server.session.node.NodeManager;
 import com.alipay.sofa.registry.server.session.remoting.handler.AbstractClientHandler;
+import org.springframework.beans.factory.annotation.Autowired;
+
+import javax.annotation.Resource;
+import java.util.Collection;
+import java.util.StringJoiner;
 
 /**
  * The type Data node exchanger.
@@ -74,10 +71,7 @@ public class DataNodeExchanger implements NodeExchanger {
         try {
             Client sessionClient = getClient(url);
 
-            // print but ignore if from renew module, cause renew request is too much
-            if (!(request.getRequestBody() instanceof RenewDatumRequest)) {
-                EXCHANGE_LOGGER.info("DataNode Exchanger request={},url={}", request.getRequestBody(), url);
-            }
+            EXCHANGE_LOGGER.info("DataNode Exchanger request={},url={}", request.getRequestBody(), url);
 
             final Object result = sessionClient
                     .sendSync(url, request.getRequestBody(), request.getTimeout() != null ? request.getTimeout() : sessionServerConfig.getDataNodeExchangeTimeOut());

@@ -16,28 +16,11 @@
  */
 package com.alipay.sofa.registry.server.session.node.service;
 
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
-
-import javax.annotation.PostConstruct;
-
-import org.springframework.beans.factory.annotation.Autowired;
-
 import com.alipay.sofa.registry.common.model.CommonResponse;
-import com.alipay.sofa.registry.common.model.DatumSnapshotRequest;
 import com.alipay.sofa.registry.common.model.GenericResponse;
 import com.alipay.sofa.registry.common.model.Node;
-import com.alipay.sofa.registry.common.model.RenewDatumRequest;
-import com.alipay.sofa.registry.common.model.dataserver.ClientOffRequest;
-import com.alipay.sofa.registry.common.model.dataserver.Datum;
-import com.alipay.sofa.registry.common.model.dataserver.GetDataRequest;
-import com.alipay.sofa.registry.common.model.dataserver.GetDataVersionRequest;
-import com.alipay.sofa.registry.common.model.dataserver.PublishDataRequest;
-import com.alipay.sofa.registry.common.model.dataserver.UnPublishDataRequest;
+import com.alipay.sofa.registry.common.model.dataserver.*;
+import com.alipay.sofa.registry.common.model.slot.SlotAccessGenericResponse;
 import com.alipay.sofa.registry.common.model.store.Publisher;
 import com.alipay.sofa.registry.common.model.store.URL;
 import com.alipay.sofa.registry.log.Logger;
@@ -52,6 +35,15 @@ import com.alipay.sofa.registry.server.session.node.SessionProcessIdGenerator;
 import com.alipay.sofa.registry.timer.AsyncHashedWheelTimer;
 import com.alipay.sofa.registry.timer.AsyncHashedWheelTimer.TaskFailedCallback;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
+import org.springframework.beans.factory.annotation.Autowired;
+
+import javax.annotation.PostConstruct;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  *
@@ -317,7 +309,7 @@ public class DataNodeServiceImpl implements DataNodeService {
 
             Response response = dataNodeExchanger.request(getDataRequestStringRequest);
             Object result = response.getResult();
-            GenericResponse genericResponse = (GenericResponse) result;
+            SlotAccessGenericResponse genericResponse = (SlotAccessGenericResponse) result;
             if (genericResponse.isSuccess()) {
                 map = (Map<String, Datum>) genericResponse.getData();
                 if (map == null || map.isEmpty()) {
@@ -337,75 +329,6 @@ public class DataNodeServiceImpl implements DataNodeService {
         }
 
         return map;
-    }
-
-    @Override
-    public Boolean renewDatum(RenewDatumRequest renewDatumRequest) {
-        Request<RenewDatumRequest> request = buildRenewDatumRequest(renewDatumRequest);
-        try {
-            GenericResponse genericResponse = (GenericResponse) sendRequest("RenewDatum", request);
-            return (Boolean) genericResponse.getData();
-        } catch (RequestException e) {
-            throw new RuntimeException(e.getMessage(), e);
-        }
-    }
-
-    private Request<RenewDatumRequest> buildRenewDatumRequest(RenewDatumRequest renewDatumRequest) {
-        return new Request<RenewDatumRequest>() {
-            private AtomicInteger retryTimes = new AtomicInteger();
-
-            @Override
-            public RenewDatumRequest getRequestBody() {
-                return renewDatumRequest;
-            }
-
-            @Override
-            public URL getRequestUrl() {
-                return new URL(renewDatumRequest.getDataServerIP(),
-                    sessionServerConfig.getDataServerPort());
-            }
-
-            @Override
-            public AtomicInteger getRetryTimes() {
-                return retryTimes;
-            }
-        };
-    }
-
-    @Override
-    public void sendDatumSnapshot(DatumSnapshotRequest datumSnapshotRequest) {
-        String bizName = "DatumSnapshot";
-        Request<DatumSnapshotRequest> request = buildDatumSnapshotRequest(datumSnapshotRequest);
-        try {
-            sendRequest(bizName, request);
-        } catch (RequestException e) {
-            doRetryAsync(bizName, request, e, sessionServerConfig.getDatumSnapshotTaskRetryTimes(),
-                sessionServerConfig.getDatumSnapshotTaskRetryFirstDelay(),
-                sessionServerConfig.getDatumSnapshotTaskRetryIncrementDelay());
-        }
-
-    }
-
-    private Request<DatumSnapshotRequest> buildDatumSnapshotRequest(DatumSnapshotRequest datumSnapshotRequest) {
-        return new Request<DatumSnapshotRequest>() {
-            private AtomicInteger retryTimes = new AtomicInteger();
-
-            @Override
-            public DatumSnapshotRequest getRequestBody() {
-                return datumSnapshotRequest;
-            }
-
-            @Override
-            public URL getRequestUrl() {
-                return new URL(datumSnapshotRequest.getDataServerIp(),
-                    sessionServerConfig.getDataServerPort());
-            }
-
-            @Override
-            public AtomicInteger getRetryTimes() {
-                return retryTimes;
-            }
-        };
     }
 
     private CommonResponse sendRequest(String bizName, Request request) throws RequestException {

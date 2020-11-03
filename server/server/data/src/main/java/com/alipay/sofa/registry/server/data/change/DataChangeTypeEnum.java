@@ -26,7 +26,4 @@ public enum DataChangeTypeEnum {
 
     /** */
     MERGE,
-
-    /** */
-    COVER
 }

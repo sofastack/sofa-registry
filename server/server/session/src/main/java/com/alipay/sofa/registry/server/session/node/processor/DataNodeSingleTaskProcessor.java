@@ -16,14 +16,13 @@
  */
 package com.alipay.sofa.registry.server.session.node.processor;
 
-import java.util.List;
-
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
-import com.alipay.sofa.registry.server.session.scheduler.task.RenewDatumTask;
 import com.alipay.sofa.registry.server.session.scheduler.task.SessionTask;
 import com.alipay.sofa.registry.task.Retryable;
 import com.alipay.sofa.registry.task.batcher.TaskProcessor;
+
+import java.util.List;
 
 /**
  *
@@ -38,15 +37,9 @@ public class DataNodeSingleTaskProcessor implements TaskProcessor<SessionTask> {
     @Override
     public ProcessingResult process(SessionTask task) {
         try {
-            if (!(task instanceof RenewDatumTask)) {
-                LOGGER.info("execute " + task);
-            }
-
+            LOGGER.info("execute " + task);
             task.execute();
-
-            if (!(task instanceof RenewDatumTask)) {
-                LOGGER.info("end " + task);
-            }
+            LOGGER.info("end " + task);
             return ProcessingResult.Success;
         } catch (Throwable throwable) {
             LOGGER.error("Data node SingleTask Process error! Task:" + task, throwable);

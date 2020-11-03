@@ -35,6 +35,8 @@ public class GetDataRequest implements Serializable {
      */
     private String            dataCenter;
 
+    private long              slotEpoch;
+
     /**
      * constructor
      */
@@ -87,9 +89,26 @@ public class GetDataRequest implements Serializable {
         this.dataCenter = dataCenter;
     }
 
+    /**
+     * Getter method for property <tt>slotEpoch</tt>.
+     * @return property value of slotEpoch
+     */
+    public long getSlotEpoch() {
+        return slotEpoch;
+    }
+
+    /**
+     * Setter method for property <tt>slotEpoch</tt>.
+     * @param slotEpoch value to be assigned to property slotEpoch
+     */
+    public void setSlotEpoch(long slotEpoch) {
+        this.slotEpoch = slotEpoch;
+    }
+
     @Override
     public String toString() {
         return new StringBuilder("[GetDataRequest] dataCenter=").append(this.dataCenter)
-            .append(", dataInfoId=").append(this.dataInfoId).toString();
+            .append(", dataInfoId=").append(this.dataInfoId).append(", slotEpoch=")
+            .append(slotEpoch).toString();
     }
 }

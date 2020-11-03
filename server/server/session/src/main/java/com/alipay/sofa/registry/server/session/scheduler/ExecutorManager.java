@@ -63,6 +63,7 @@ public class ExecutorManager {
     private final ExecutorService             checkPushExecutor;
     private final ThreadPoolExecutor          accessDataExecutor;
     private final ThreadPoolExecutor          dataChangeRequestExecutor;
+    private final ThreadPoolExecutor          dataSlotMigrateRequestExecutor;
     private final ThreadPoolExecutor          pushTaskExecutor;
     private final ThreadPoolExecutor          connectClientExecutor;
     private final ThreadPoolExecutor          publishDataExecutor;
@@ -97,6 +98,8 @@ public class ExecutorManager {
     private static final String               ACCESS_DATA_EXECUTOR                       = "AccessDataExecutor";
 
     private static final String               DATA_CHANGE_REQUEST_EXECUTOR               = "DataChangeRequestExecutor";
+
+    private static final String               DATA_SLOT_MIGRATE_REQUEST_EXECUTOR         = "DataSlotMigrateRequestExecutor";
 
     private static final String               USER_DATA_ELEMENT_PUSH_TASK_CHECK_EXECUTOR = "UserDataElementPushCheckExecutor";
 
@@ -161,6 +164,14 @@ public class ExecutorManager {
                         sessionServerConfig.getDataChangeExecutorMinPoolSize(),
                         sessionServerConfig.getDataChangeExecutorMaxPoolSize(),
                         sessionServerConfig.getDataChangeExecutorKeepAliveTime(), TimeUnit.SECONDS,
+                        new ArrayBlockingQueue<>(100000),
+                        new NamedThreadFactory("DataSlotMigrateRequestHandler-executor", true)));
+
+        dataSlotMigrateRequestExecutor = reportExecutors.computeIfAbsent(DATA_SLOT_MIGRATE_REQUEST_EXECUTOR,
+                k -> new SessionThreadPoolExecutor(DATA_SLOT_MIGRATE_REQUEST_EXECUTOR,
+                        12,
+                        24,
+                        60, TimeUnit.SECONDS,
                         new ArrayBlockingQueue<>(sessionServerConfig.getDataChangeExecutorQueueSize()),
                         new NamedThreadFactory("DataChangeRequestHandler-executor", true)));
 
@@ -209,18 +220,10 @@ public class ExecutorManager {
                         sessionServerConfig.getSchedulerFetchDataExpBackOffBound(), () -> sessionRegistry.fetchChangData()),
                 sessionServerConfig.getSchedulerFetchDataFirstDelay(), TimeUnit.SECONDS);
 
-        scheduler.schedule(new TimedSupervisorTask("RenewData", scheduler, renNewDataExecutor,
+        scheduler.schedule(new TimedSupervisorTask("RenewSession", scheduler, renNewDataExecutor,
                         sessionServerConfig.getSchedulerHeartbeatTimeout(), TimeUnit.SECONDS,
                         sessionServerConfig.getSchedulerHeartbeatExpBackOffBound(), () -> sessionNodeManager.renewNode()),
                 sessionServerConfig.getSchedulerHeartbeatFirstDelay(), TimeUnit.SECONDS);
-
-        scheduler.schedule(new TimedSupervisorTask("GetSessionNode", scheduler, getSessionNodeExecutor,
-                sessionServerConfig.getSchedulerGetSessionNodeTimeout(), TimeUnit.SECONDS,
-                sessionServerConfig.getSchedulerGetSessionNodeExpBackOffBound(), () -> {
-            sessionNodeManager.getAllDataCenterNodes();
-            dataNodeManager.getAllDataCenterNodes();
-            metaNodeManager.getAllDataCenterNodes();
-        }), sessionServerConfig.getSchedulerGetSessionNodeFirstDelay(), TimeUnit.SECONDS);
 
         scheduler.schedule(new TimedSupervisorTask("ConnectMetaServer", scheduler, connectMetaExecutor,
                         sessionServerConfig.getSchedulerConnectMetaTimeout(), TimeUnit.SECONDS,
@@ -283,6 +286,10 @@ public class ExecutorManager {
             dataChangeRequestExecutor.shutdown();
         }
 
+        if (dataSlotMigrateRequestExecutor != null && !dataSlotMigrateRequestExecutor.isShutdown()) {
+            dataSlotMigrateRequestExecutor.shutdown();
+        }
+
         if (connectClientExecutor != null && !connectClientExecutor.isShutdown()) {
             connectClientExecutor.shutdown();
         }
@@ -310,6 +317,10 @@ public class ExecutorManager {
 
     public ThreadPoolExecutor getDataChangeRequestExecutor() {
         return dataChangeRequestExecutor;
+    }
+
+    public ThreadPoolExecutor getDataSlotMigrateRequestExecutor() {
+        return dataSlotMigrateRequestExecutor;
     }
 
     public ThreadPoolExecutor getConnectClientExecutor() {

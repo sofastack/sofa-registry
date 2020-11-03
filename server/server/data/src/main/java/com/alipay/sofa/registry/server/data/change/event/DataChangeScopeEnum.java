@@ -22,5 +22,5 @@ package com.alipay.sofa.registry.server.data.change.event;
  * @version $Id: DataChangeScopeEnum.java, v 0.1 2018-05-10 16:51 qian.lqlq Exp $
  */
 public enum DataChangeScopeEnum {
-    CLIENT, DATUM, SNAPSHOT
+    CLIENT, DATUM
 }

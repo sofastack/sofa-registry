@@ -20,6 +20,9 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.ThreadPoolExecutor;
 
 import com.alipay.sofa.registry.common.model.constants.ValueConstants;
+import com.alipay.sofa.registry.common.model.slot.SlotAccess;
+import com.alipay.sofa.registry.common.model.slot.SlotAccessGenericResponse;
+import com.alipay.sofa.registry.server.data.cache.SlotManager;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import com.alipay.sofa.registry.common.model.CommonResponse;
@@ -35,8 +38,6 @@ import com.alipay.sofa.registry.server.data.bootstrap.DataServerConfig;
 import com.alipay.sofa.registry.server.data.change.event.DataChangeEventCenter;
 import com.alipay.sofa.registry.server.data.remoting.handler.AbstractServerHandler;
 import com.alipay.sofa.registry.server.data.remoting.sessionserver.SessionServerConnectionFactory;
-import com.alipay.sofa.registry.server.data.remoting.sessionserver.forward.ForwardService;
-import com.alipay.sofa.registry.server.data.renew.DatumLeaseManager;
 import com.alipay.sofa.registry.util.ParaCheckUtil;
 
 /**
@@ -52,9 +53,6 @@ public class PublishDataHandler extends AbstractServerHandler<PublishDataRequest
                                                       .getLogger(PublishDataHandler.class);
 
     @Autowired
-    private ForwardService                 forwardService;
-
-    @Autowired
     private SessionServerConnectionFactory sessionServerConnectionFactory;
 
     @Autowired
@@ -64,10 +62,10 @@ public class PublishDataHandler extends AbstractServerHandler<PublishDataRequest
     private DataServerConfig               dataServerConfig;
 
     @Autowired
-    private DatumLeaseManager              datumLeaseManager;
+    private ThreadPoolExecutor             publishProcessorExecutor;
 
     @Autowired
-    private ThreadPoolExecutor             publishProcessorExecutor;
+    private SlotManager                    slotManager;
 
     @Override
     public void checkParam(PublishDataRequest request) throws RuntimeException {
@@ -88,14 +86,19 @@ public class PublishDataHandler extends AbstractServerHandler<PublishDataRequest
     @Override
     public Object doHandle(Channel channel, PublishDataRequest request) {
         Publisher publisher = Publisher.internPublisher(request.getPublisher());
-        if (forwardService.needForward()) {
-            LOGGER.warn("[forward] Publish request refused, request: {}", request);
-            CommonResponse response = new CommonResponse();
-            response.setSuccess(false);
-            response.setMessage("Request refused, Server status is not working");
-            return response;
+
+        final SlotAccess slotAccess = slotManager.checkSlotAccess(publisher.getDataInfoId(),
+            request.getSlotEpoch());
+        if (slotAccess.isMoved()) {
+            LOGGER.warn("[moved] Slot has moved, access: {}, request: {}", slotAccess, request);
+            return SlotAccessGenericResponse.buildFailedResponse(slotAccess);
         }
 
+        if (slotAccess.isMigrating()) {
+            LOGGER.warn("[migrating] Slot is migrating, access: {}, request: {}", slotAccess,
+                request);
+            return SlotAccessGenericResponse.buildFailedResponse(slotAccess);
+        }
         dataChangeEventCenter.onChange(publisher, dataServerConfig.getLocalDataCenter());
 
         if (publisher.getPublishType() != PublishType.TEMPORARY) {
@@ -104,11 +107,8 @@ public class PublishDataHandler extends AbstractServerHandler<PublishDataRequest
                         + publisher.getTargetAddress().getAddressString());
             sessionServerConnectionFactory.registerConnectId(request.getSessionServerProcessId(),
                 connectId);
-            // record the renew timestamp
-            datumLeaseManager.renew(connectId);
         }
-
-        return CommonResponse.buildSuccessResponse();
+        return SlotAccessGenericResponse.buildSuccessResponse(slotAccess);
     }
 
     @Override
