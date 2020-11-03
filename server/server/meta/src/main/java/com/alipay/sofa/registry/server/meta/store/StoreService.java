@@ -48,13 +48,6 @@ public interface StoreService<T extends Node> {
     NodeChangeResult addNode(T node);
 
     /**
-     * node change info push must be confirm received,
-     * @param ipAddress received Node ipAddress
-     * @param confirmNodeIp will be confirmed node ip
-     */
-    void confirmNodeStatus(String ipAddress, String confirmNodeIp);
-
-    /**
      * remove current dataCenter dataNode by ipAddress
      * @param ipAddress
      * @return
@@ -109,10 +102,5 @@ public interface StoreService<T extends Node> {
      * @return
      */
     DataCenterNodes getDataCenterNodes();
-
-    /**
-     * push node change result
-     */
-    void pushNodeListChange();
 
 }

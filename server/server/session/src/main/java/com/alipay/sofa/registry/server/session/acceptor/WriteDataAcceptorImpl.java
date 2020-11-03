@@ -16,14 +16,12 @@
  */
 package com.alipay.sofa.registry.server.session.acceptor;
 
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-
+import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
+import com.alipay.sofa.registry.task.listener.TaskListenerManager;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
-import com.alipay.sofa.registry.server.session.renew.RenewService;
-import com.alipay.sofa.registry.task.listener.TaskListenerManager;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  *
@@ -39,9 +37,6 @@ public class WriteDataAcceptorImpl implements WriteDataAcceptor {
     @Autowired
     private SessionServerConfig             sessionServerConfig;
 
-    @Autowired
-    private RenewService                    renewService;
-
     /**
      * acceptor for all write data request
      * key:connectId
@@ -53,7 +48,7 @@ public class WriteDataAcceptorImpl implements WriteDataAcceptor {
     public void accept(WriteDataRequest request) {
         String connectId = request.getConnectId();
         WriteDataProcessor writeDataProcessor = writeDataProcessors.computeIfAbsent(connectId,
-                key -> new WriteDataProcessor(connectId, taskListenerManager, sessionServerConfig, renewService));
+                key -> new WriteDataProcessor(connectId, taskListenerManager, sessionServerConfig));
 
         writeDataProcessor.process(request);
     }

@@ -18,14 +18,13 @@ package com.alipay.sofa.registry.common.model.metaserver;
 
 import com.alipay.sofa.registry.common.model.Node;
 import com.alipay.sofa.registry.common.model.store.URL;
-import com.alipay.sofa.registry.consistency.hash.HashNode;
 
 /**
  *
  * @author shangyu.wh
  * @version $Id: DataNode.java, v 0.1 2018-01-18 18:06 shangyu.wh Exp $
  */
-public class DataNode implements Node, HashNode {
+public class DataNode implements Node {
 
     private final URL    nodeUrl;
 
@@ -34,8 +33,6 @@ public class DataNode implements Node, HashNode {
     private final String dataCenter;
 
     private String       regionId;
-
-    private NodeStatus   nodeStatus;
 
     private long         registrationTimestamp;
 
@@ -48,18 +45,6 @@ public class DataNode implements Node, HashNode {
         this.nodeUrl = nodeUrl;
         this.nodeName = nodeUrl.getIpAddress();
         this.dataCenter = dataCenter;
-        this.nodeStatus = NodeStatus.INIT;
-    }
-
-    /**
-     * constructor
-     * @param nodeUrl
-     * @param dataCenter
-     * @param status
-     */
-    public DataNode(URL nodeUrl, String dataCenter, NodeStatus status) {
-        this(nodeUrl, dataCenter);
-        this.nodeStatus = status;
     }
 
     @Override
@@ -73,9 +58,6 @@ public class DataNode implements Node, HashNode {
 
         DataNode that = (DataNode) o;
 
-        if (nodeStatus != null ? !nodeStatus.equals(that.nodeStatus) : that.nodeStatus != null) {
-            return false;
-        }
         if (nodeName != null ? !nodeName.equals(that.nodeName) : that.nodeName != null) {
             return false;
         }
@@ -107,7 +89,6 @@ public class DataNode implements Node, HashNode {
         int result = nodeName != null ? nodeName.hashCode() : 0;
         result = 31 * result + (dataCenter != null ? dataCenter.hashCode() : 0);
         result = 31 * result + (regionId != null ? regionId.hashCode() : 0);
-        result = 31 * result + (nodeStatus != null ? nodeStatus.hashCode() : 0);
         result = 31 * result + (int) (registrationTimestamp ^ (registrationTimestamp >>> 32));
         result = 31
                  * result
@@ -139,7 +120,6 @@ public class DataNode implements Node, HashNode {
      *
      * @return property value of nodeName
      */
-    @Override
     public String getNodeName() {
         return nodeName;
     }
@@ -169,26 +149,6 @@ public class DataNode implements Node, HashNode {
      */
     public String getDataCenter() {
         return dataCenter;
-    }
-
-    /**
-     * Getter method for property <tt>nodeStatus</tt>.
-     *
-     * @return property value of nodeStatus
-     */
-    @Override
-    public NodeStatus getNodeStatus() {
-        return nodeStatus;
-    }
-
-    /**
-     * Setter method for property <tt>nodeStatus</tt>.
-     *
-     * @param nodeStatus  value to be assigned to property nodeStatus
-     */
-    @Override
-    public void setNodeStatus(NodeStatus nodeStatus) {
-        this.nodeStatus = nodeStatus;
     }
 
     /**

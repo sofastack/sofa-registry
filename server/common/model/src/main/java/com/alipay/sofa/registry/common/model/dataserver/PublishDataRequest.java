@@ -34,6 +34,8 @@ public class PublishDataRequest implements Serializable {
 
     private String            sessionServerProcessId;
 
+    private long              slotEpoch;
+
     /**
      * Getter method for property <tt>publisher</tt>.
      *
@@ -70,10 +72,35 @@ public class PublishDataRequest implements Serializable {
         this.sessionServerProcessId = sessionServerProcessId;
     }
 
+    /**
+     * Gets the value of serialVersionUID
+     * @return the value of serialVersionUID
+     */
+    public static long getSerialVersionUID() {
+        return serialVersionUID;
+    }
+
+    /**
+     * Getter method for property <tt>slotEpoch</tt>.
+     * @return property value of slotEpoch
+     */
+    public long getSlotEpoch() {
+        return slotEpoch;
+    }
+
+    /**
+     * Setter method for property <tt>slotEpoch</tt>.
+     * @param slotEpoch value to be assigned to property slotEpoch
+     */
+    public void setSlotEpoch(long slotEpoch) {
+        this.slotEpoch = slotEpoch;
+    }
+
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder("[PublishDataRequest] sessionServerProcessId=")
             .append(sessionServerProcessId);
+        sb.append(", epoch=").append(slotEpoch);
         sb.append(", dataInfoId=");
         if (publisher != null) {
             sb.append(publisher.getDataInfoId());

@@ -51,12 +51,6 @@ public class SessionServerConfigBean implements SessionServerConfig {
 
     private int                schedulerHeartbeatExpBackOffBound       = 1;
 
-    private int                schedulerGetSessionNodeTimeout          = 3;
-
-    private int                schedulerGetSessionNodeFirstDelay       = 5;
-
-    private int                schedulerGetSessionNodeExpBackOffBound  = 10;
-
     private int                schedulerFetchDataTimeout               = 1;               //MINUTES
 
     private int                schedulerFetchDataFirstDelay            = 30;
@@ -98,14 +92,6 @@ public class SessionServerConfigBean implements SessionServerConfig {
     private long               unPublishDataTaskRetryFirstDelay        = 3000;
 
     private long               unPublishDataTaskRetryIncrementDelay    = 5000;
-
-    private int                datumSnapshotTaskRetryTimes             = 1;
-
-    private long               datumSnapshotTaskRetryFirstDelay        = 5000;
-
-    private long               datumSnapshotTaskRetryIncrementDelay    = 5000;
-
-    private int                renewDatumTaskRetryTimes                = 1;
 
     private int                dataChangeFetchTaskRetryTimes           = 3;
 
@@ -162,8 +148,6 @@ public class SessionServerConfigBean implements SessionServerConfig {
     private int                dataNodeExchangeForFetchDatumTimeOut    = 5000;
 
     private int                metaNodeExchangeTimeOut                 = 3000;
-
-    private int                numberOfReplicas                        = 1000;
 
     private int                userDataPushRetryWheelTicksSize         = 5120;
 
@@ -443,44 +427,6 @@ public class SessionServerConfigBean implements SessionServerConfig {
     }
 
     /**
-     * Getter method for property <tt>datumSnapshotTaskRetryTimes</tt>.
-     *
-     * @return property value of datumSnapshotTaskRetryTimes
-     */
-    @Override
-    public int getDatumSnapshotTaskRetryTimes() {
-        return datumSnapshotTaskRetryTimes;
-    }
-
-    /**
-     * Setter method for property <tt>datumSnapshotTaskRetryTimes </tt>.
-     *
-     * @param datumSnapshotTaskRetryTimes  value to be assigned to property datumSnapshotTaskRetryTimes
-     */
-    public void setDatumSnapshotTaskRetryTimes(int datumSnapshotTaskRetryTimes) {
-        this.datumSnapshotTaskRetryTimes = datumSnapshotTaskRetryTimes;
-    }
-
-    /**
-     * Getter method for property <tt>renewDatumTaskRetryTimes</tt>.
-     *
-     * @return property value of renewDatumTaskRetryTimes
-     */
-    @Override
-    public int getRenewDatumTaskRetryTimes() {
-        return renewDatumTaskRetryTimes;
-    }
-
-    /**
-     * Setter method for property <tt>renewDatumTaskRetryTimes </tt>.
-     *
-     * @param renewDatumTaskRetryTimes  value to be assigned to property renewDatumTaskRetryTimes
-     */
-    public void setRenewDatumTaskRetryTimes(int renewDatumTaskRetryTimes) {
-        this.renewDatumTaskRetryTimes = renewDatumTaskRetryTimes;
-    }
-
-    /**
      * Getter method for property <tt>serverPort</tt>.
      *
      * @return property value of serverPort
@@ -747,44 +693,6 @@ public class SessionServerConfigBean implements SessionServerConfig {
     }
 
     /**
-     * Getter method for property <tt>datumSnapshotTaskRetryFirstDelay</tt>.
-     *
-     * @return property value of datumSnapshotTaskRetryFirstDelay
-     */
-    @Override
-    public long getDatumSnapshotTaskRetryFirstDelay() {
-        return datumSnapshotTaskRetryFirstDelay;
-    }
-
-    /**
-     * Setter method for property <tt>datumSnapshotTaskRetryFirstDelay </tt>.
-     *
-     * @param datumSnapshotTaskRetryFirstDelay  value to be assigned to property datumSnapshotTaskRetryFirstDelay
-     */
-    public void setDatumSnapshotTaskRetryFirstDelay(long datumSnapshotTaskRetryFirstDelay) {
-        this.datumSnapshotTaskRetryFirstDelay = datumSnapshotTaskRetryFirstDelay;
-    }
-
-    /**
-     * Getter method for property <tt>datumSnapshotTaskRetryIncrementDelay</tt>.
-     *
-     * @return property value of datumSnapshotTaskRetryIncrementDelay
-     */
-    @Override
-    public long getDatumSnapshotTaskRetryIncrementDelay() {
-        return datumSnapshotTaskRetryIncrementDelay;
-    }
-
-    /**
-     * Setter method for property <tt>datumSnapshotTaskRetryIncrementDelay </tt>.
-     *
-     * @param datumSnapshotTaskRetryIncrementDelay  value to be assigned to property datumSnapshotTaskRetryIncrementDelay
-     */
-    public void setDatumSnapshotTaskRetryIncrementDelay(long datumSnapshotTaskRetryIncrementDelay) {
-        this.datumSnapshotTaskRetryIncrementDelay = datumSnapshotTaskRetryIncrementDelay;
-    }
-
-    /**
      * Getter method for property <tt>receivedDataMultiPushTaskRetryTimes</tt>.
      *
      * @return property value of receivedDataMultiPushTaskRetryTimes
@@ -1025,82 +933,6 @@ public class SessionServerConfigBean implements SessionServerConfig {
      */
     public void setHttpServerPort(int httpServerPort) {
         this.httpServerPort = httpServerPort;
-    }
-
-    /**
-     * Getter method for property <tt>numberOfReplicas</tt>.
-     *
-     * @return property value of numberOfReplicas
-     */
-    @Override
-    public int getNumberOfReplicas() {
-        return numberOfReplicas;
-    }
-
-    /**
-     * Setter method for property <tt>numberOfReplicas</tt>.
-     *
-     * @param numberOfReplicas value to be assigned to property numberOfReplicas
-     */
-    public void setNumberOfReplicas(int numberOfReplicas) {
-        this.numberOfReplicas = numberOfReplicas;
-    }
-
-    /**
-     * Getter method for property <tt>schedulerGetSessionNodeTimeout</tt>.
-     *
-     * @return property value of schedulerGetSessionNodeTimeout
-     */
-    @Override
-    public int getSchedulerGetSessionNodeTimeout() {
-        return schedulerGetSessionNodeTimeout;
-    }
-
-    /**
-     * Setter method for property <tt>schedulerGetSessionNodeTimeout</tt>.
-     *
-     * @param schedulerGetSessionNodeTimeout value to be assigned to property schedulerGetSessionNodeTimeout
-     */
-    public void setSchedulerGetSessionNodeTimeout(int schedulerGetSessionNodeTimeout) {
-        this.schedulerGetSessionNodeTimeout = schedulerGetSessionNodeTimeout;
-    }
-
-    /**
-     * Getter method for property <tt>schedulerGetSessionNodeFirstDelay</tt>.
-     *
-     * @return property value of schedulerGetSessionNodeFirstDelay
-     */
-    @Override
-    public int getSchedulerGetSessionNodeFirstDelay() {
-        return schedulerGetSessionNodeFirstDelay;
-    }
-
-    /**
-     * Setter method for property <tt>schedulerGetSessionNodeFirstDelay</tt>.
-     *
-     * @param schedulerGetSessionNodeFirstDelay value to be assigned to property schedulerGetSessionNodeFirstDelay
-     */
-    public void setSchedulerGetSessionNodeFirstDelay(int schedulerGetSessionNodeFirstDelay) {
-        this.schedulerGetSessionNodeFirstDelay = schedulerGetSessionNodeFirstDelay;
-    }
-
-    /**
-     * Getter method for property <tt>schedulerGetSessionNodeExpBackOffBound</tt>.
-     *
-     * @return property value of schedulerGetSessionNodeExpBackOffBound
-     */
-    @Override
-    public int getSchedulerGetSessionNodeExpBackOffBound() {
-        return schedulerGetSessionNodeExpBackOffBound;
-    }
-
-    /**
-     * Setter method for property <tt>schedulerGetSessionNodeExpBackOffBound</tt>.
-     *
-     * @param schedulerGetSessionNodeExpBackOffBound value to be assigned to property schedulerGetSessionNodeExpBackOffBound
-     */
-    public void setSchedulerGetSessionNodeExpBackOffBound(int schedulerGetSessionNodeExpBackOffBound) {
-        this.schedulerGetSessionNodeExpBackOffBound = schedulerGetSessionNodeExpBackOffBound;
     }
 
     /**

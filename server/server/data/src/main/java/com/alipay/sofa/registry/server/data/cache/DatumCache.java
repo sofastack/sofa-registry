@@ -122,13 +122,6 @@ public class DatumCache {
     }
 
     /**
-     * get own publishers by connectId
-     */
-    public Map<String, Publisher> getOwnByConnectId(String connectId) {
-        return localDatumStorage.getOwnByConnectId(connectId);
-    }
-
-    /**
      * put datum into cache
      *
      * @param changeType

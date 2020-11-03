@@ -90,31 +90,10 @@ public class DataChangeEventCenter {
     }
 
     /**
-     * for local dataInfo datum schedule remove,config source type to avoid clean fire notify
-     * @param datum
-     * @param dataSourceTypeEnum
-     */
-    public void clean(Datum datum, DataSourceTypeEnum dataSourceTypeEnum) {
-        int idx = hash(datum.getDataInfoId());
-        dataChangeEventQueues[idx].onChange(new DataChangeEvent(DataChangeTypeEnum.COVER,
-            dataSourceTypeEnum, datum));
-    }
-
-    /**
      *
      * @param event
      */
     public void onChange(ClientChangeEvent event) {
-        for (DataChangeEventQueue dataChangeEventQueue : dataChangeEventQueues) {
-            dataChangeEventQueue.onChange(event);
-        }
-    }
-
-    /**
-     *
-     * @param event
-     */
-    public void onChange(DatumSnapshotEvent event) {
         for (DataChangeEventQueue dataChangeEventQueue : dataChangeEventQueues) {
             dataChangeEventQueue.onChange(event);
         }

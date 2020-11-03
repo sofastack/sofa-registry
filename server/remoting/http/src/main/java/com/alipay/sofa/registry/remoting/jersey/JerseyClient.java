@@ -27,6 +27,7 @@ import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.UriBuilder;
 
 import org.glassfish.jersey.client.ClientConfig;
+import org.glassfish.jersey.client.ClientProperties;
 import org.glassfish.jersey.client.HttpUrlConnectorProvider;
 import org.glassfish.jersey.jackson.JacksonFeature;
 
@@ -113,6 +114,8 @@ public class JerseyClient implements Client {
     private javax.ws.rs.client.Client getClient(ClientConfig clientConfig) {
         if (clientConfig == null) {
             clientConfig = new ClientConfig();
+            clientConfig.property(ClientProperties.CONNECT_TIMEOUT, 3000);
+            clientConfig.property(ClientProperties.READ_TIMEOUT, 5000);
         }
 
         clientConfig.connectorProvider(new HttpUrlConnectorProvider());

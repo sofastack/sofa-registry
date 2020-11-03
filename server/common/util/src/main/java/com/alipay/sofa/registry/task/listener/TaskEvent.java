@@ -49,17 +49,12 @@ public class TaskEvent {
         SUBSCRIBER_MULTI_FETCH_TASK("SubscriberMultiFetchTask"), //
         PUBLISH_DATA_TASK("PublishDataTask"), //
         UN_PUBLISH_DATA_TASK("UnPublishDataTask"), //
-        RENEW_DATUM_TASK("RenewDatumTask"), //
-        DATUM_SNAPSHOT_TASK("DatumSnapshotTask"), //
 
         //Session Adapter task
         USER_DATA_ELEMENT_PUSH_TASK("UserDataElementPushTask"), //
         USER_DATA_ELEMENT_MULTI_PUSH_TASK("UserDataElementMultiPushTask"), //
 
         //MetaServer task
-        SESSION_NODE_CHANGE_PUSH_TASK("SessionNodeChangePushTask"), //
-        DATA_NODE_CHANGE_PUSH_TASK("DataNodeChangePushTask"), //
-        RECEIVE_STATUS_CONFIRM_NOTIFY_TASK("ReceiveStatusConfirmNotifyTask"), //
         PERSISTENCE_DATA_CHANGE_NOTIFY_TASK("PersistenceDataChangeNotifyTask"), //
         ;
 

@@ -20,6 +20,9 @@ import java.util.Map;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ThreadPoolExecutor;
 
+import com.alipay.sofa.registry.common.model.slot.SlotAccess;
+import com.alipay.sofa.registry.common.model.slot.SlotAccessGenericResponse;
+import com.alipay.sofa.registry.server.data.cache.SlotManager;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import com.alipay.sofa.registry.common.model.GenericResponse;
@@ -31,7 +34,6 @@ import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.remoting.Channel;
 import com.alipay.sofa.registry.server.data.cache.DatumCache;
 import com.alipay.sofa.registry.server.data.remoting.handler.AbstractServerHandler;
-import com.alipay.sofa.registry.server.data.remoting.sessionserver.forward.ForwardService;
 import com.alipay.sofa.registry.util.ParaCheckUtil;
 
 /**
@@ -46,13 +48,13 @@ public class GetDataHandler extends AbstractServerHandler<GetDataRequest> {
     private static final Logger LOGGER = LoggerFactory.getLogger(GetDataHandler.class);
 
     @Autowired
-    private ForwardService      forwardService;
-
-    @Autowired
     private DatumCache          datumCache;
 
     @Autowired
     private ThreadPoolExecutor  getDataProcessorExecutor;
+
+    @Autowired
+    private SlotManager         slotManager;
 
     @Override
     public Executor getExecutor() {
@@ -67,17 +69,18 @@ public class GetDataHandler extends AbstractServerHandler<GetDataRequest> {
     @Override
     public Object doHandle(Channel channel, GetDataRequest request) {
         String dataInfoId = request.getDataInfoId();
-        if (forwardService.needForward()) {
-            try {
-                LOGGER.warn("[forward] Get data request forward, request: {}", request);
-                return forwardService.forwardRequest(dataInfoId, request);
-            } catch (Exception e) {
-                LOGGER.error("[forward] getData request error, request: {}", request, e);
-                GenericResponse response = new GenericResponse();
-                response.setSuccess(false);
-                response.setMessage(e.getMessage());
-                return response;
-            }
+        final SlotAccess slotAccess = slotManager.checkSlotAccess(dataInfoId,
+            request.getSlotEpoch());
+        LOGGER.info("#### {}", slotAccess);
+        if (slotAccess.isMoved()) {
+            LOGGER.warn("[moved] Slot has moved, access: {}, request: {}", slotAccess, request);
+            return SlotAccessGenericResponse.buildFailedResponse(slotAccess);
+        }
+
+        if (slotAccess.isMigrating()) {
+            LOGGER.warn("[migrating] Slot is migrating, access: {}, request: {}", slotAccess,
+                request);
+            return SlotAccessGenericResponse.buildFailedResponse(slotAccess);
         }
 
         return new GenericResponse<Map<String, Datum>>().fillSucceed(datumCache

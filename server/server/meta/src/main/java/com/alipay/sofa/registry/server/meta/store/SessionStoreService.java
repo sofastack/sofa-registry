@@ -42,7 +42,6 @@ import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.server.meta.bootstrap.NodeConfig;
 import com.alipay.sofa.registry.server.meta.node.NodeOperator;
-import com.alipay.sofa.registry.server.meta.repository.NodeConfirmStatusService;
 import com.alipay.sofa.registry.server.meta.repository.RepositoryService;
 import com.alipay.sofa.registry.server.meta.repository.VersionRepositoryService;
 import com.alipay.sofa.registry.server.meta.task.Constant;
@@ -84,9 +83,6 @@ public class SessionStoreService implements StoreService<SessionNode> {
     @RaftReference(uniqueId = "sessionServer")
     private VersionRepositoryService<String>                      sessionVersionRepositoryService;
 
-    @RaftReference(uniqueId = "sessionServer")
-    private NodeConfirmStatusService<SessionNode>                 sessionConfirmStatusService;
-
     @RaftReference
     private DBService                                             dbService;
 
@@ -114,9 +110,6 @@ public class SessionStoreService implements StoreService<SessionNode> {
                 System.currentTimeMillis());
 
             renew(sessionNode, 30);
-
-            sessionConfirmStatusService.putConfirmNode(sessionNode, DataOperator.ADD);
-
         } finally {
             write.unlock();
         }
@@ -139,9 +132,6 @@ public class SessionStoreService implements StoreService<SessionNode> {
 
             sessionVersionRepositoryService.checkAndUpdateVersions(nodeConfig.getLocalDataCenter(),
                 System.currentTimeMillis());
-
-            sessionConfirmStatusService.putConfirmNode(oldRenewDecorate.getRenewal(),
-                DataOperator.REMOVE);
         } finally {
             write.unlock();
         }
@@ -167,11 +157,6 @@ public class SessionStoreService implements StoreService<SessionNode> {
 
                     sessionVersionRepositoryService.checkAndUpdateVersions(
                         nodeConfig.getLocalDataCenter(), System.currentTimeMillis());
-
-                    sessionConfirmStatusService.putConfirmNode(oldRenewDecorate.getRenewal(),
-                        DataOperator.REMOVE);
-
-                    //confirmNodeStatus(ipAddress, DataOperator.REMOVE);
                 }
             } finally {
                 write.unlock();
@@ -237,119 +222,6 @@ public class SessionStoreService implements StoreService<SessionNode> {
     }
 
     @Override
-    public void pushNodeListChange() {
-        NodeOperator<SessionNode> fireNode;
-        if ((fireNode = sessionConfirmStatusService.peekConfirmNode()) != null) {
-            //if (LOGGER.isDebugEnabled()) {
-            LOGGER.info("Now:type {},node {},Push queue:{}", fireNode.getNodeOperate(), fireNode
-                .getNode().getNodeUrl().getIpAddress(),
-                sessionConfirmStatusService.getAllConfirmNodes());
-            //}
-            NodeChangeResult nodeChangeResult = getNodeChangeResult();
-            Map<String, Map<String, SessionNode>> map = nodeChangeResult.getNodes();
-            Map<String, SessionNode> addNodes = map.get(nodeConfig.getLocalDataCenter());
-            if (addNodes != null) {
-                LOGGER.info("addNodes:{}", addNodes.keySet());
-                Map<String, SessionNode> previousNodes = sessionConfirmStatusService
-                    .putExpectNodes(fireNode.getNode(), addNodes);
-
-                if (!previousNodes.isEmpty()) {
-                    if (LOGGER.isDebugEnabled()) {
-                        LOGGER.debug("push Type:{},peek:{},list{}", fireNode.getNodeOperate(),
-                            fireNode.getNode().getNodeUrl().getIpAddress(), previousNodes.keySet());
-                    }
-                    firePushSessionListTask(fireNode, previousNodes, nodeChangeResult);
-                }
-            }
-        }
-    }
-
-    @Override
-    public void confirmNodeStatus(String ipAddress, String confirmNodeIp) {
-        NodeOperator<SessionNode> fireNode = sessionConfirmStatusService.peekConfirmNode();
-        if (fireNode != null) {
-            String fireNodeIp = fireNode.getNode().getNodeUrl().getIpAddress();
-            if (fireNodeIp != null && !fireNodeIp.equals(confirmNodeIp)) {
-                LOGGER
-                    .info(
-                        "Confirm node already be remove from queue!Receive ip:{},expect confirm ip:{},now peek ip:{}",
-                        ipAddress, confirmNodeIp, fireNodeIp);
-                return;
-            }
-            Map<String/*ipAddress*/, SessionNode> waitNotifyNodes = sessionConfirmStatusService
-                .getExpectNodes(fireNode.getNode());
-            if (waitNotifyNodes != null) {
-                LOGGER.info("Peek node:{} oper:{},waitNotifyNodes:{},confirm ip:{}", fireNode
-                    .getNode().getNodeUrl().getIpAddress(), fireNode.getNodeOperate(),
-                    waitNotifyNodes.keySet(), ipAddress);
-
-                Set<String> removeIp = getRemoveIp(waitNotifyNodes.keySet());
-                removeIp.add(ipAddress);
-
-                waitNotifyNodes = sessionConfirmStatusService.removeExpectConfirmNodes(
-                    fireNode.getNode(), removeIp);
-
-                if (waitNotifyNodes.isEmpty()) {
-                    //all node be notified,or some disconnect node be evict
-                    try {
-                        if (null != sessionConfirmStatusService
-                            .removeExpectNodes(sessionConfirmStatusService.pollConfirmNode()
-                                .getNode())) {
-                            //add init status must notify
-                            LOGGER.info("Session node {} operator {} confirm!", fireNode.getNode()
-                                .getNodeUrl().getIpAddress(), fireNode.getNodeOperate());
-                        }
-                    } catch (InterruptedException e) {
-                        LOGGER.error("Notify expect confirm status node " + fireNode.getNode()
-                                     + " interrupted!", e);
-                    }
-                }
-            } else {
-                try {
-                    //wait node not exist,
-                    sessionConfirmStatusService.pollConfirmNode();
-                    LOGGER
-                        .info(
-                            "Session node {} operator {} poll!not other node need be notify!Confirm ip {}",
-                            fireNode.getNode().getNodeUrl().getIpAddress(),
-                            fireNode.getNodeOperate(), ipAddress);
-                } catch (InterruptedException e) {
-                    LOGGER.error("Notify expect confirm status node " + fireNode.getNode()
-                                 + " interrupted!", e);
-                }
-            }
-        }
-
-    }
-
-    private Set<String> getRemoveIp(Set<String> waitNotifyNodes) {
-
-        NodeChangeResult nodeChangeResult = getNodeChangeResult();
-        Map<String, Map<String, SessionNode>> map = nodeChangeResult.getNodes();
-        Map<String, SessionNode> addNodes = map.get(nodeConfig.getLocalDataCenter());
-        if (addNodes != null && !addNodes.isEmpty()) {
-            return waitNotifyNodes.stream().filter(ip -> !addNodes.keySet().contains(ip))
-                    .collect(Collectors.toSet());
-        }
-        return new HashSet<>();
-    }
-
-    private void firePushSessionListTask(NodeOperator<SessionNode> fireNode,
-                                         Map<String, SessionNode> sessionNodeMap,
-                                         NodeChangeResult nodeChangeResult) {
-
-        //notify target session node registry
-        TaskEvent taskEvent = new TaskEvent(TaskType.SESSION_NODE_CHANGE_PUSH_TASK);
-        taskEvent.setAttribute(Constant.PUSH_TARGET_OPERATOR_TYPE, fireNode.getNodeOperate());
-        taskEvent.setAttribute(Constant.PUSH_TARGET_SESSION_NODE, sessionNodeMap);
-        taskEvent.setAttribute(Constant.PUSH_TARGET_CONFIRM_NODE, fireNode.getNode().getNodeUrl()
-            .getIpAddress());
-        taskEvent.setEventObj(nodeChangeResult);
-        TASK_LOGGER.info("send " + taskEvent.getTaskType() + " taskEvent:" + taskEvent);
-        taskListenerManager.sendTaskEvent(taskEvent);
-    }
-
-    @Override
     public NodeChangeResult getNodeChangeResult() {
 
         NodeChangeResult nodeChangeResult = new NodeChangeResult(NodeType.SESSION);
@@ -377,7 +249,7 @@ public class SessionStoreService implements StoreService<SessionNode> {
 
     @Override
     public void getOtherDataCenterNodeAndUpdate() {
-
+        throw new UnsupportedOperationException("Node type SESSION not support function");
     }
 
     @Override
@@ -391,7 +263,7 @@ public class SessionStoreService implements StoreService<SessionNode> {
 
     @Override
     public void updateOtherDataCenterNodes(DataCenterNodes dataCenterNodes) {
-        throw new NotSupportedException("Node type SESSION not support function");
+        throw new UnsupportedOperationException("Node type SESSION not support function");
     }
 
     private Map<String, Integer> zoneMaxConnections(Map<String, LoadbalanceMetrics> nodes, int maxDisconnect) {
@@ -477,23 +349,5 @@ public class SessionStoreService implements StoreService<SessionNode> {
      */
     public void setSessionVersionRepositoryService(VersionRepositoryService<String> sessionVersionRepositoryService) {
         this.sessionVersionRepositoryService = sessionVersionRepositoryService;
-    }
-
-    /**
-     * Getter method for property <tt>sessionConfirmStatusService</tt>.
-     *
-     * @return property value of sessionConfirmStatusService
-     */
-    public NodeConfirmStatusService<SessionNode> getSessionConfirmStatusService() {
-        return sessionConfirmStatusService;
-    }
-
-    /**
-     * Setter method for property <tt>sessionConfirmStatusService</tt>.
-     *
-     * @param sessionConfirmStatusService value to be assigned to property sessionConfirmStatusService
-     */
-    public void setSessionConfirmStatusService(NodeConfirmStatusService<SessionNode> sessionConfirmStatusService) {
-        this.sessionConfirmStatusService = sessionConfirmStatusService;
     }
 }

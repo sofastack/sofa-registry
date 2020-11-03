@@ -115,85 +115,58 @@ public class DataChangeHandler {
 
         @Override
         public void run() {
-            if (changeData instanceof SnapshotData) {
-                SnapshotData snapshotData = (SnapshotData) changeData;
-                String dataInfoId = snapshotData.getDataInfoId();
-                Map<String, Publisher> toBeDeletedPubMap = snapshotData.getToBeDeletedPubMap();
-                Map<String, Publisher> snapshotPubMap = snapshotData.getSnapshotPubMap();
-                Datum oldDatum = datumCache.get(dataServerConfig.getLocalDataCenter(), dataInfoId);
-                long lastVersion = oldDatum != null ? oldDatum.getVersion() : 0l;
-                Datum datum = datumCache.putSnapshot(dataInfoId, toBeDeletedPubMap, snapshotPubMap);
-                long version = datum != null ? datum.getVersion() : 0l;
-                LOGGER
-                    .info(
-                        "[DataChangeHandler][{}] snapshot handle,dataInfoId={}, version={}, lastVersion={}",
-                        name, dataInfoId, version, lastVersion);
-                notify(datum, changeData.getSourceType(), null);
+            Datum datum = changeData.getDatum();
 
-            } else {
-                Datum datum = changeData.getDatum();
+            String dataCenter = datum.getDataCenter();
+            String dataInfoId = datum.getDataInfoId();
+            DataSourceTypeEnum sourceType = changeData.getSourceType();
+            DataChangeTypeEnum changeType = changeData.getChangeType();
 
-                String dataCenter = datum.getDataCenter();
-                String dataInfoId = datum.getDataInfoId();
-                DataSourceTypeEnum sourceType = changeData.getSourceType();
-                DataChangeTypeEnum changeType = changeData.getChangeType();
+            if (changeType == DataChangeTypeEnum.MERGE) {
+                //update version for pub or unPub merge to cache
+                //if the version product before merge to cache,it may be cause small version override big one
+                datum.updateVersion();
+            }
 
-                if (changeType == DataChangeTypeEnum.MERGE
-                    && sourceType != DataSourceTypeEnum.BACKUP
-                    && sourceType != DataSourceTypeEnum.SYNC) {
-                    //update version for pub or unPub merge to cache
-                    //if the version product before merge to cache,it may be cause small version override big one
-                    datum.updateVersion();
-                }
+            long version = datum.getVersion();
 
-                long version = datum.getVersion();
+            try {
+                if (sourceType == DataSourceTypeEnum.PUB_TEMP) {
+                    notifyTempPub(datum, sourceType, changeType);
 
-                try {
-                    if (sourceType == DataSourceTypeEnum.CLEAN) {
-                        if (datumCache.cleanDatum(dataCenter, dataInfoId)) {
-                            LOGGER
-                                .info(
-                                    "[DataChangeHandler][{}] clean datum, dataCenter={}, dataInfoId={}, version={},sourceType={}, changeType={}",
-                                    name, dataCenter, dataInfoId, version, sourceType, changeType);
-                        }
+                } else {
+                    MergeResult mergeResult = datumCache.putDatum(changeType, datum);
+                    Long lastVersion = mergeResult.getLastVersion();
 
-                    } else if (sourceType == DataSourceTypeEnum.PUB_TEMP) {
-                        notifyTempPub(datum, sourceType, changeType);
-
-                    } else {
-                        MergeResult mergeResult = datumCache.putDatum(changeType, datum);
-                        Long lastVersion = mergeResult.getLastVersion();
-
-                        if (lastVersion != null
-                            && lastVersion.longValue() == LocalDatumStorage.ERROR_DATUM_VERSION) {
-                            LOGGER
-                                .error(
-                                    "[DataChangeHandler][{}] first put unPub datum into cache error, dataCenter={}, dataInfoId={}, version={}, sourceType={},isContainsUnPub={}",
-                                    name, dataCenter, dataInfoId, version, sourceType,
-                                    datum.isContainsUnPub());
-                            return;
-                        }
-
+                    if (lastVersion != null
+                        && lastVersion.longValue() == LocalDatumStorage.ERROR_DATUM_VERSION) {
                         LOGGER
-                            .info(
-                                "[DataChangeHandler][{}] datum handle,datum={},dataCenter={}, dataInfoId={}, version={}, lastVersion={}, sourceType={}, changeType={},changeFlag={},isContainsUnPub={}",
-                                name, datum.hashCode(), dataCenter, dataInfoId, version,
-                                lastVersion, sourceType, changeType, mergeResult.isChangeFlag(),
+                            .error(
+                                "[DataChangeHandler][{}] first put unPub datum into cache error, dataCenter={}, dataInfoId={}, version={}, sourceType={},isContainsUnPub={}",
+                                name, dataCenter, dataInfoId, version, sourceType,
                                 datum.isContainsUnPub());
-                        //lastVersion null means first add datum
-                        if (lastVersion == null || version != lastVersion) {
-                            if (mergeResult.isChangeFlag()) {
-                                notify(datum, sourceType, lastVersion);
-                            }
+                        return;
+                    }
+
+                    LOGGER
+                        .info(
+                            "[DataChangeHandler][{}] datum handle,datum={},dataCenter={}, dataInfoId={}, version={}, lastVersion={}, sourceType={}, changeType={},changeFlag={},isContainsUnPub={}",
+                            name, datum.hashCode(), dataCenter, dataInfoId, version, lastVersion,
+                            sourceType, changeType, mergeResult.isChangeFlag(),
+                            datum.isContainsUnPub());
+                    //lastVersion null means first add datum
+                    if (lastVersion == null || version != lastVersion) {
+                        if (mergeResult.isChangeFlag()) {
+                            notify(datum, sourceType, lastVersion);
                         }
                     }
-                } catch (Exception e) {
-                    LOGGER
-                        .error(
-                            "[DataChangeHandler][{}] put datum into cache error, dataCenter={}, dataInfoId={}, version={}, sourceType={},isContainsUnPub={}",
-                            name, dataCenter, dataInfoId, version, sourceType,
-                            datum.isContainsUnPub(), e);
                 }
+            } catch (Exception e) {
+                LOGGER
+                    .error(
+                        "[DataChangeHandler][{}] put datum into cache error, dataCenter={}, dataInfoId={}, version={}, sourceType={},isContainsUnPub={}",
+                        name, dataCenter, dataInfoId, version, sourceType, datum.isContainsUnPub(),
+                        e);
             }
 
         }

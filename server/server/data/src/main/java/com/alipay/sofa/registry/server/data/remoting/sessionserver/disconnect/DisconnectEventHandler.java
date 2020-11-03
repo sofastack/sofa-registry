@@ -21,7 +21,6 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.DelayQueue;
 import java.util.concurrent.Executor;
 import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.TimeUnit;
 
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,28 +30,25 @@ import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.server.data.bootstrap.DataServerConfig;
 import com.alipay.sofa.registry.server.data.change.event.ClientChangeEvent;
 import com.alipay.sofa.registry.server.data.change.event.DataChangeEventCenter;
-import com.alipay.sofa.registry.server.data.event.AfterWorkingProcess;
 import com.alipay.sofa.registry.server.data.executor.ExecutorFactory;
-import com.alipay.sofa.registry.server.data.node.DataNodeStatus;
 import com.alipay.sofa.registry.server.data.remoting.sessionserver.SessionServerConnectionFactory;
-import com.alipay.sofa.registry.server.data.util.LocalServerStatusEnum;
 
 /**
  * @author qian.lqlq
  * @version $Id: ClientDisconnectEventHandler.java, v 0.1 2017-12-07 15:32 qian.lqlq Exp $
  */
-public class DisconnectEventHandler implements InitializingBean, AfterWorkingProcess {
+public class DisconnectEventHandler implements InitializingBean {
 
-    private static final Logger                         LOGGER             = LoggerFactory
-                                                                               .getLogger(DisconnectEventHandler.class);
+    private static final Logger                         LOGGER       = LoggerFactory
+                                                                         .getLogger(DisconnectEventHandler.class);
 
-    private static final Logger                         LOGGER_START       = LoggerFactory
-                                                                               .getLogger("DATA-START-LOGS");
+    private static final Logger                         LOGGER_START = LoggerFactory
+                                                                         .getLogger("DATA-START-LOGS");
 
     /**
      * a DelayQueue that contains client disconnect events
      */
-    private final DelayQueue<DisconnectEvent>           EVENT_QUEUE        = new DelayQueue<>();
+    private final DelayQueue<DisconnectEvent>           EVENT_QUEUE  = new DelayQueue<>();
 
     @Autowired
     private SessionServerConnectionFactory              sessionServerConnectionFactory;
@@ -63,12 +59,7 @@ public class DisconnectEventHandler implements InitializingBean, AfterWorkingPro
     @Autowired
     private DataServerConfig                            dataServerConfig;
 
-    @Autowired
-    private DataNodeStatus                              dataNodeStatus;
-
-    private static final int                            BLOCK_FOR_ALL_SYNC = 5000;
-
-    private static final BlockingQueue<DisconnectEvent> noWorkQueue        = new LinkedBlockingQueue<>();
+    private static final BlockingQueue<DisconnectEvent> noWorkQueue  = new LinkedBlockingQueue<>();
 
     /**
      * receive disconnect event of client
@@ -86,38 +77,7 @@ public class DisconnectEventHandler implements InitializingBean, AfterWorkingPro
             LOGGER.info("receive client off event: connectId={}",
                 clientDisconnectEvent.getConnectId());
         }
-
-        if (dataNodeStatus.getStatus() != LocalServerStatusEnum.WORKING) {
-            LOGGER.info("receive disconnect event,but data server not working!");
-            noWorkQueue.add(event);
-            return;
-        }
         EVENT_QUEUE.add(event);
-    }
-
-    public void afterWorkingProcess() {
-        try {
-            /*
-             * After the snapshot data is synchronized during startup, it is queued and then placed asynchronously into
-             * DatumCache. When the notification becomes WORKING, there may be data in the queue that is not executed
-             * to DatumCache. So it need to sleep for a while.
-             */
-            TimeUnit.MILLISECONDS.sleep(BLOCK_FOR_ALL_SYNC);
-
-            while (!noWorkQueue.isEmpty()) {
-                DisconnectEvent event = noWorkQueue.poll(1, TimeUnit.SECONDS);
-                if (event != null) {
-                    receive(event);
-                }
-            }
-        } catch (InterruptedException e) {
-            LOGGER.error("receive disconnect event after working interrupted!", e);
-        }
-    }
-
-    @Override
-    public int getOrder() {
-        return 0;
     }
 
     @Override

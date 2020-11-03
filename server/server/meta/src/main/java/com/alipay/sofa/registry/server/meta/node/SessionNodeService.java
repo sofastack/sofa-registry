@@ -30,11 +30,6 @@ import java.util.Map;
  */
 public interface SessionNodeService extends NodeService {
 
-    void pushSessions(NodeChangeResult nodeChangeResult, Map<String, SessionNode> targetNodes,
-                      String confirmNodeIp);
-
-    void pushDataNodes(NodeChangeResult nodeChangeResult);
-
     void notifyProvideDataChange(NotifyProvideDataChange notifyProvideDataChange);
 
     Map<String, Map<String, LoadbalanceMetrics>> fetchLoadbalanceMetrics();

@@ -17,6 +17,7 @@
 package com.alipay.sofa.registry.server.session.store;
 
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -205,11 +206,11 @@ public class SessionDataStore implements DataStore {
 
     @Override
     public long count() {
-        AtomicLong count = new AtomicLong(0);
+        long count = 0;
         for (Map<String, Publisher> map : registry.values()) {
-            count.addAndGet(map.size());
+            count += map.size();
         }
-        return count.get();
+        return count;
     }
 
     private void addToConnectIndex(Publisher publisher) {
@@ -244,5 +245,14 @@ public class SessionDataStore implements DataStore {
     @Override
     public Map<String, Map<String, Publisher>> getConnectPublishers() {
         return connectIndex;
+    }
+
+    @Override
+    public Map<String, Map<String, Publisher>> getDataInfoIdPublishers() {
+        Map<String, Map<String, Publisher>> ret = new HashMap<>(registry.size());
+        for (Map.Entry<String, Map<String, Publisher>> e : registry.entrySet()) {
+            ret.put(e.getKey(), new HashMap<>(e.getValue()));
+        }
+        return ret;
     }
 }

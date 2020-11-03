@@ -39,10 +39,7 @@ import com.alipay.sofa.registry.remoting.exchange.Exchange;
 import com.alipay.sofa.registry.remoting.exchange.NodeExchanger;
 import com.alipay.sofa.registry.remoting.jersey.exchange.JerseyExchange;
 import com.alipay.sofa.registry.server.meta.executor.ExecutorManager;
-import com.alipay.sofa.registry.server.meta.listener.DataNodeChangePushTaskListener;
 import com.alipay.sofa.registry.server.meta.listener.PersistenceDataChangeNotifyTaskListener;
-import com.alipay.sofa.registry.server.meta.listener.ReceiveStatusConfirmNotifyTaskListener;
-import com.alipay.sofa.registry.server.meta.listener.SessionNodeChangePushTaskListener;
 import com.alipay.sofa.registry.server.meta.node.NodeService;
 import com.alipay.sofa.registry.server.meta.node.impl.DataNodeServiceImpl;
 import com.alipay.sofa.registry.server.meta.node.impl.MetaNodeServiceImpl;
@@ -57,14 +54,11 @@ import com.alipay.sofa.registry.server.meta.remoting.SessionNodeExchanger;
 import com.alipay.sofa.registry.server.meta.remoting.connection.DataConnectionHandler;
 import com.alipay.sofa.registry.server.meta.remoting.connection.MetaConnectionHandler;
 import com.alipay.sofa.registry.server.meta.remoting.connection.SessionConnectionHandler;
-import com.alipay.sofa.registry.server.meta.repository.NodeConfirmStatusService;
 import com.alipay.sofa.registry.server.meta.repository.RepositoryService;
 import com.alipay.sofa.registry.server.meta.repository.VersionRepositoryService;
 import com.alipay.sofa.registry.server.meta.repository.annotation.RaftAnnotationBeanPostProcessor;
-import com.alipay.sofa.registry.server.meta.repository.service.DataConfirmStatusService;
 import com.alipay.sofa.registry.server.meta.repository.service.DataRepositoryService;
 import com.alipay.sofa.registry.server.meta.repository.service.MetaRepositoryService;
-import com.alipay.sofa.registry.server.meta.repository.service.SessionConfirmStatusService;
 import com.alipay.sofa.registry.server.meta.repository.service.SessionRepositoryService;
 import com.alipay.sofa.registry.server.meta.repository.service.SessionVersionRepositoryService;
 import com.alipay.sofa.registry.server.meta.store.DataStoreService;
@@ -174,11 +168,6 @@ public class MetaServerConfiguration {
         }
 
         @Bean
-        public NodeConfirmStatusService dataConfirmStatusService() {
-            return new DataConfirmStatusService();
-        }
-
-        @Bean
         public RepositoryService sessionRepositoryService() {
             return new SessionRepositoryService();
         }
@@ -186,11 +175,6 @@ public class MetaServerConfiguration {
         @Bean
         public VersionRepositoryService sessionVersionRepositoryService() {
             return new SessionVersionRepositoryService();
-        }
-
-        @Bean
-        public NodeConfirmStatusService sessionConfirmStatusService() {
-            return new SessionConfirmStatusService();
         }
 
         @Bean
@@ -221,9 +205,7 @@ public class MetaServerConfiguration {
         public Collection<AbstractServerHandler> sessionServerHandlers() {
             Collection<AbstractServerHandler> list = new ArrayList<>();
             list.add(sessionConnectionHandler());
-            list.add(sessionNodeHandler());
             list.add(renewNodesRequestHandler());
-            list.add(getNodesRequestHandler());
             list.add(fetchProvideDataRequestHandler());
             return list;
         }
@@ -232,8 +214,6 @@ public class MetaServerConfiguration {
         public Collection<AbstractServerHandler> dataServerHandlers() {
             Collection<AbstractServerHandler> list = new ArrayList<>();
             list.add(dataConnectionHandler());
-            list.add(getNodesRequestHandler());
-            list.add(dataNodeHandler());
             list.add(renewNodesRequestHandler());
             list.add(fetchProvideDataRequestHandler());
             return list;
@@ -243,7 +223,6 @@ public class MetaServerConfiguration {
         public Collection<AbstractServerHandler> metaServerHandlers() {
             Collection<AbstractServerHandler> list = new ArrayList<>();
             list.add(metaConnectionHandler());
-            list.add(getNodesRequestHandler());
             return list;
         }
 
@@ -263,23 +242,8 @@ public class MetaServerConfiguration {
         }
 
         @Bean
-        public AbstractServerHandler getNodesRequestHandler() {
-            return new GetNodesRequestHandler();
-        }
-
-        @Bean
-        public AbstractServerHandler sessionNodeHandler() {
-            return new SessionNodeHandler();
-        }
-
-        @Bean
         public AbstractServerHandler renewNodesRequestHandler() {
             return new RenewNodesRequestHandler();
-        }
-
-        @Bean
-        public AbstractServerHandler dataNodeHandler() {
-            return new DataNodeHandler();
         }
 
         @Bean
@@ -381,30 +345,6 @@ public class MetaServerConfiguration {
         @Bean
         public TaskProcessor sessionNodeSingleTaskProcessor() {
             return new SessionNodeSingleTaskProcessor();
-        }
-
-        @Bean
-        public TaskListener sessionNodeChangePushTaskListener(TaskListenerManager taskListenerManager) {
-            TaskListener taskListener = new SessionNodeChangePushTaskListener(
-                sessionNodeSingleTaskProcessor());
-            taskListenerManager.addTaskListener(taskListener);
-            return taskListener;
-        }
-
-        @Bean
-        public TaskListener dataNodeChangePushTaskListener(TaskListenerManager taskListenerManager) {
-            TaskListener taskListener = new DataNodeChangePushTaskListener(
-                dataNodeSingleTaskProcessor());
-            taskListenerManager.addTaskListener(taskListener);
-            return taskListener;
-        }
-
-        @Bean
-        public TaskListener receiveStatusConfirmNotifyTaskListener(TaskListenerManager taskListenerManager) {
-            TaskListener taskListener = new ReceiveStatusConfirmNotifyTaskListener(
-                dataNodeSingleTaskProcessor());
-            taskListenerManager.addTaskListener(taskListener);
-            return taskListener;
         }
 
         @Bean
