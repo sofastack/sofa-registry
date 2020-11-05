@@ -125,6 +125,8 @@ public class DataServerConfig {
 
     private int                sessionDisconnectDelayMs                     = 30000;
 
+    private int                slotMigratingExecutorThreadSize              = 12;
+
     /**
      * constructor
      * @param commonConfig
@@ -866,6 +868,22 @@ public class DataServerConfig {
      */
     public void setSessionDisconnectDelayMs(int sessionDisconnectDelayMs) {
         this.sessionDisconnectDelayMs = sessionDisconnectDelayMs;
+    }
+
+    /**
+     * Getter method for property <tt>slotMigratingExecutorThreadSize</tt>.
+     * @return property value of slotMigratingExecutorThreadSize
+     */
+    public int getSlotMigratingExecutorThreadSize() {
+        return slotMigratingExecutorThreadSize;
+    }
+
+    /**
+     * Setter method for property <tt>slotMigratingExecutorThreadSize</tt>.
+     * @param slotMigratingExecutorThreadSize value to be assigned to property slotMigratingExecutorThreadSize
+     */
+    public void setSlotMigratingExecutorThreadSize(int slotMigratingExecutorThreadSize) {
+        this.slotMigratingExecutorThreadSize = slotMigratingExecutorThreadSize;
     }
 
     @Override

@@ -22,4 +22,10 @@ package com.alipay.sofa.registry.server.data.event;
  * @version $Id: Event.java, v 0.1 2019-12-12 15:42 kezhu.wukz Exp $
  */
 public interface Event {
+    /**
+     * node type enum
+     */
+    public enum FromType {
+        CONNECT_TASK, META_NOTIFY, REGISTER_META
+    }
 }

@@ -16,14 +16,14 @@
  */
 package com.alipay.sofa.registry.server.data.cache;
 
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
+import java.util.*;
 import java.util.Map.Entry;
-import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
+import com.alipay.sofa.registry.common.model.PublisherDigestUtil;
 import com.alipay.sofa.registry.common.model.constants.ValueConstants;
+import com.alipay.sofa.registry.common.model.dataserver.DatumSummary;
+import com.sun.org.apache.bcel.internal.generic.RET;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import com.alipay.sofa.registry.common.model.dataserver.Datum;
@@ -42,14 +42,15 @@ import com.alipay.sofa.registry.server.data.remoting.dataserver.DataServerNodeFa
  */
 public class LocalDatumStorage implements DatumStorage {
 
-    public static final long                            ERROR_DATUM_VERSION  = -2L;
+    public static final long ERROR_DATUM_VERSION = -2L;
+    public static final long ERROR_DATUM_SLOT    = -3L;
 
     /**
      * row:     dataCenter
      * column:  dataInfoId
      * value:   datum
      */
-    protected final Map<String, Map<String, Datum>>     DATUM_MAP            = new ConcurrentHashMap<>();
+    protected final Map<String, Map<String, Datum>> DATUM_MAP = new ConcurrentHashMap<>();
 
     /**
      * all datum index
@@ -61,7 +62,7 @@ public class LocalDatumStorage implements DatumStorage {
     protected final Map<String, Map<String, Publisher>> ALL_CONNECT_ID_INDEX = new ConcurrentHashMap<>();
 
     @Autowired
-    protected DataServerConfig                            dataServerConfig;
+    protected DataServerConfig dataServerConfig;
 
     /**
      * get datum by specific dataCenter and dataInfoId
@@ -113,33 +114,6 @@ public class LocalDatumStorage implements DatumStorage {
      */
     public Map<String, Publisher> getByConnectId(String connectId) {
         return ALL_CONNECT_ID_INDEX.getOrDefault(connectId, null);
-    }
-
-    /**
-     * get own publishers by connectId
-     */
-    public Map<String, Publisher> getOwnByConnectId(String connectId) {
-        Map<String, Publisher> ownPubMap = new HashMap<>();
-        Map<String, Publisher> allPubMap = ALL_CONNECT_ID_INDEX.getOrDefault(connectId, null);
-        if (allPubMap != null) {
-            for (Entry<String, Publisher> entry : allPubMap.entrySet()) {
-                String registerId = entry.getKey();
-                Publisher publisher = entry.getValue();
-                if (isOwnByMyself(publisher.getDataInfoId())) {
-                    ownPubMap.put(registerId, publisher);
-                }
-            }
-        }
-        return ownPubMap;
-    }
-
-    /**
-     * whether dataInfoId own by self
-     */
-    protected boolean isOwnByMyself(String dataInfoId) {
-        DataServerNode dataServerNode = DataServerNodeFactory.computeDataServerNode(
-            dataServerConfig.getLocalDataCenter(), dataInfoId);
-        return DataServerConfig.IP.equals(dataServerNode.getIp());
     }
 
     /**
@@ -411,8 +385,8 @@ public class LocalDatumStorage implements DatumStorage {
 
     private String getConnectId(Publisher cachePub) {
         return WordCache.getInstance().getWordCache(
-            cachePub.getSourceAddress().getAddressString() + ValueConstants.CONNECT_ID_SPLIT
-                    + cachePub.getTargetAddress().getAddressString());
+                cachePub.getSourceAddress().getAddressString() + ValueConstants.CONNECT_ID_SPLIT
+                        + cachePub.getTargetAddress().getAddressString());
     }
 
     /**
@@ -422,6 +396,18 @@ public class LocalDatumStorage implements DatumStorage {
      */
     public Set<String> getAllConnectIds() {
         return ALL_CONNECT_ID_INDEX.keySet();
+    }
+
+    public Map<String, DatumSummary> getDatumSummary(String dataCenter, String targetIpAddress) {
+        Map<String, Datum> datums = DATUM_MAP.get(dataCenter);
+        if (datums == null) {
+            return Collections.emptyMap();
+        }
+        Map<String, DatumSummary> summarys = new HashMap<>(datums.size());
+        datums.forEach((k, datum) -> {
+            summarys.put(k, PublisherDigestUtil.getDatumSummary(datum, targetIpAddress));
+        });
+        return summarys;
     }
 
 }

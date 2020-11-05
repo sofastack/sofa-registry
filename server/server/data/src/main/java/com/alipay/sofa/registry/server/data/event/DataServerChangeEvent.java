@@ -29,13 +29,6 @@ import com.alipay.sofa.registry.server.data.cache.DataServerChangeItem;
  */
 public class DataServerChangeEvent implements Event {
 
-    /**
-     * node type enum
-     */
-    public enum FromType {
-        CONNECT_TASK, META_NOTIFY, REGISTER_META
-    }
-
     private DataServerChangeItem dataServerChangeItem;
 
     private FromType             fromType;

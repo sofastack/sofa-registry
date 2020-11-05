@@ -24,6 +24,7 @@ import java.util.Set;
 import com.alipay.sofa.jraft.entity.PeerId;
 import com.alipay.sofa.registry.common.model.metaserver.ProvideData;
 import com.alipay.sofa.registry.server.data.cache.DataServerChangeItem;
+import com.alipay.sofa.registry.server.data.cache.SessionServerChangeItem;
 import com.alipay.sofa.registry.server.data.node.DataServerNode;
 
 /**
@@ -73,6 +74,12 @@ public interface IMetaServerService {
      */
     DataServerChangeItem getDateServers();
 
+    /**
+     * Gets session servers.
+     *
+     * @return session servers
+     */
+    SessionServerChangeItem getSessionServers();
     /**
      * Gets other data centers.
      *

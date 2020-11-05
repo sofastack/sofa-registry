@@ -30,10 +30,10 @@ public final class SlotAccess implements Serializable {
     }
 
     private final Status status;
-    private final short  slotId;
+    private final int  slotId;
     private final long   slotEpoch;
 
-    public SlotAccess(short slotId, long slotEpoch, Status status) {
+    public SlotAccess(int slotId, long slotEpoch, Status status) {
         this.slotEpoch = slotEpoch;
         this.slotId = slotId;
         this.status = status;
@@ -55,7 +55,7 @@ public final class SlotAccess implements Serializable {
         return status;
     }
 
-    public short getSlotId() {
+    public int getSlotId() {
         return slotId;
     }
 

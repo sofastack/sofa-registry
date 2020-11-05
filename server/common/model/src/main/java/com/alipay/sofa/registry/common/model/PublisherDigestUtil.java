@@ -17,7 +17,11 @@
 package com.alipay.sofa.registry.common.model;
 
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
 
+import com.alipay.sofa.registry.common.model.dataserver.Datum;
+import com.alipay.sofa.registry.common.model.dataserver.DatumSummary;
 import com.alipay.sofa.registry.common.model.store.Publisher;
 
 /**
@@ -46,5 +50,17 @@ public class PublisherDigestUtil {
         result = 31 * result + (version != null ? version.hashCode() : 0);
         result = 31 * result + (int) (registerTimestamp ^ (registerTimestamp >>> 32));
         return result;
+    }
+
+    public static DatumSummary getDatumSummary(Datum datum, String targetIpAddress) {
+        DatumSummary summary = new DatumSummary(datum.getDataInfoId());
+        Map<String, Long> digests = new HashMap<>(datum.getPubMap().size());
+        datum.getPubMap().forEach((registerId, pub) -> {
+            if (targetIpAddress == null || pub.getTargetAddress().getIpAddress().equals(targetIpAddress)) {
+                digests.put(registerId, getDigestValue(pub));
+            }
+        });
+        summary.setPublisherDigests(digests);
+        return summary;
     }
 }

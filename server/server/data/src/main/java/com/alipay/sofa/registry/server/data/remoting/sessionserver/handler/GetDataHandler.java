@@ -22,7 +22,7 @@ import java.util.concurrent.ThreadPoolExecutor;
 
 import com.alipay.sofa.registry.common.model.slot.SlotAccess;
 import com.alipay.sofa.registry.common.model.slot.SlotAccessGenericResponse;
-import com.alipay.sofa.registry.server.data.slot.DataSlotManager;
+import com.alipay.sofa.registry.server.data.cache.SlotManager;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import com.alipay.sofa.registry.common.model.GenericResponse;
@@ -34,7 +34,6 @@ import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.remoting.Channel;
 import com.alipay.sofa.registry.server.data.cache.DatumCache;
 import com.alipay.sofa.registry.server.data.remoting.handler.AbstractServerHandler;
-import com.alipay.sofa.registry.server.data.remoting.sessionserver.forward.ForwardService;
 import com.alipay.sofa.registry.util.ParaCheckUtil;
 
 /**
@@ -55,7 +54,7 @@ public class GetDataHandler extends AbstractServerHandler<GetDataRequest> {
     private ThreadPoolExecutor  getDataProcessorExecutor;
 
     @Autowired
-    private DataSlotManager dataSlotManager;
+    private SlotManager slotManager;
 
     @Override
     public Executor getExecutor() {
@@ -70,7 +69,7 @@ public class GetDataHandler extends AbstractServerHandler<GetDataRequest> {
     @Override
     public Object doHandle(Channel channel, GetDataRequest request) {
         String dataInfoId = request.getDataInfoId();
-        final SlotAccess slotAccess = dataSlotManager.checkSlotAccess(dataInfoId, request.getSlotEpoch());
+        final SlotAccess slotAccess = slotManager.checkSlotAccess(dataInfoId, request.getSlotEpoch());
         if (slotAccess.isMoved()) {
             LOGGER.warn("[moved] Slot has moved, access: {}, request: {}", slotAccess, request);
             return SlotAccessGenericResponse.buildFailedResponse(slotAccess);
