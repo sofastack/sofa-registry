@@ -17,14 +17,17 @@
 package com.alipay.sofa.registry.server.data.cache;
 
 import com.alipay.sofa.registry.common.model.dataserver.Datum;
+import com.alipay.sofa.registry.common.model.dataserver.DatumSummary;
+import com.alipay.sofa.registry.common.model.slot.Slot;
 import com.alipay.sofa.registry.common.model.store.Publisher;
+import com.alipay.sofa.registry.log.Logger;
+import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.server.data.bootstrap.DataServerConfig;
 import com.alipay.sofa.registry.server.data.change.DataChangeTypeEnum;
-import com.alipay.sofa.registry.server.data.slot.DataSlotManager;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import java.util.Map;
-import java.util.Set;
+import javax.annotation.PostConstruct;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -32,62 +35,159 @@ import java.util.concurrent.ConcurrentHashMap;
  * @author yuzhi.lyz
  * @version v 0.1 2020-11-03 16:55 yuzhi.lyz Exp $
  */
-public final class LocalSlotDatumStorage implements DatumStorage {
+public final class LocalSlotDatumStorage implements DatumStorage, SlotManager.SlotDatumStorageProvider {
+    private static final Logger           LOGGER = LoggerFactory.getLogger(LocalSlotDatumStorage.class);
     @Autowired
-    private DataSlotManager  dataSlotManager;
+    private              SlotManager      slotManager;
     @Autowired
-    private DataServerConfig dataServerConfig;
+    private              DataServerConfig dataServerConfig;
 
-    private final Map<Short, DatumStorage> localDatumStorage = new ConcurrentHashMap<>();
+    private final Map<Integer, DatumStorage> localDatumStorages = new ConcurrentHashMap<>();
+
+    @PostConstruct
+    public void init() {
+        slotManager.addSlotChangeListener(new SlotListener());
+        slotManager.setSlotDatumStorageProvider(this);
+    }
 
     @Override
     public Datum get(String dataCenter, String dataInfoId) {
-        return null;
+        final DatumStorage ds = getDatumStorage(dataInfoId);
+        if (ds == null) {
+            return null;
+        }
+        return ds.get(dataCenter, dataInfoId);
     }
 
     @Override
     public Map<String, Datum> get(String dataInfoId) {
-        return null;
+        final DatumStorage ds = getDatumStorage(dataInfoId);
+        if (ds == null) {
+            return null;
+        }
+        return ds.get(dataInfoId);
     }
 
     @Override
     public Map<String, Map<String, Datum>> getAll() {
-        return null;
+        Map<String, Map<String, Datum>> m = new HashMap<>();
+        localDatumStorages.values().forEach(ds -> {
+                    Map<String, Map<String, Datum>> dsm = ds.getAll();
+                    m.forEach((dataCenter, datumMap) -> {
+                        Map<String, Datum> existing = m.computeIfAbsent(dataCenter, k -> {
+                            return new HashMap<>();
+                        });
+                        existing.putAll(datumMap);
+                    });
+                }
+        );
+        return m;
     }
 
     @Override
     public Map<String, Publisher> getByConnectId(String connectId) {
-        return null;
-    }
-
-    @Override
-    public Map<String, Publisher> getOwnByConnectId(String connectId) {
-        return null;
+        Map<String, Publisher> m = new HashMap<>();
+        localDatumStorages.values().forEach(ds -> {
+                    Map<String, Publisher> publishers = ds.getByConnectId(connectId);
+                    if (publishers != null) {
+                        m.putAll(publishers);
+                    }
+                }
+        );
+        return m;
     }
 
     @Override
     public Set<String> getAllConnectIds() {
-        return null;
+        Set<String> set = new HashSet<>();
+        localDatumStorages.values().forEach(ds -> {
+                    Set<String> ids = ds.getAllConnectIds();
+                    if (ids != null) {
+                        set.addAll(ids);
+                    }
+                }
+        );
+        return set;
     }
 
     @Override
     public MergeResult putDatum(DataChangeTypeEnum changeType, Datum datum) {
-        return null;
+        final DatumStorage ds = getDatumStorage(datum.getDataInfoId());
+        if (ds == null) {
+            return new MergeResult(LocalDatumStorage.ERROR_DATUM_SLOT, false);
+        }
+        return ds.putDatum(changeType, datum);
     }
 
     @Override
     public boolean cleanDatum(String dataCenter, String dataInfoId) {
-        return false;
+        final DatumStorage ds = getDatumStorage(dataInfoId);
+        if (ds == null) {
+            return false;
+        }
+        return ds.cleanDatum(dataCenter, dataInfoId);
     }
 
     @Override
     public Datum putSnapshot(String dataInfoId, Map<String, Publisher> toBeDeletedPubMap,
                              Map<String, Publisher> snapshotPubMap) {
-        return null;
+        final DatumStorage ds = getDatumStorage(dataInfoId);
+        if (ds == null) {
+            return null;
+        }
+        return ds.putSnapshot(dataInfoId, toBeDeletedPubMap, snapshotPubMap);
     }
 
     @Override
     public Map<String, Long> getVersions(String dataInfoId) {
-        return null;
+        final DatumStorage ds = getDatumStorage(dataInfoId);
+        if (ds == null) {
+            return null;
+        }
+        return ds.getVersions(dataInfoId);
     }
+
+    @Override
+    public Map<String, DatumSummary> getDatumSummary(String dataCenter, String targetIpAddress) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public Map<String, DatumSummary> getDatumSummary(int slotId, String dataCenter, String targetIpAddress) {
+        final DatumStorage ds = localDatumStorages.get(slotId);
+        if (ds == null) {
+            return Collections.emptyMap();
+        }
+        return ds.getDatumSummary(dataCenter, targetIpAddress);
+    }
+
+    @Override
+    public void merge(String dataCenter, Map<String, List<Publisher>> puts, Map<String, List<String>> remove) {
+
+    }
+
+    private final class SlotListener implements SlotManager.SlotChangeListener {
+
+        @Override
+        public void onSlotAdd(int slotId, Slot.Role role) {
+            localDatumStorages.computeIfAbsent(slotId, k -> {
+                LocalDatumStorage lds = new LocalDatumStorage();
+                lds.dataServerConfig = dataServerConfig;
+                LOGGER.info("add DatumStore {}", slotId);
+                return lds;
+            });
+        }
+
+        @Override
+        public void onSlotRemove(int slotId, Slot.Role role) {
+            boolean removed = localDatumStorages.remove(slotId) != null;
+            LOGGER.info("remove DatumStore {}, removed={}", slotId, removed);
+        }
+    }
+
+    private DatumStorage getDatumStorage(String dataInfoId) {
+        final Integer slotId = slotManager.slotOf(dataInfoId);
+        return localDatumStorages.get(slotId);
+    }
+
 }

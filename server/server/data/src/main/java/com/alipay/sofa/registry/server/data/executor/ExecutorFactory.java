@@ -39,6 +39,7 @@ public class ExecutorFactory {
 
     public static final ThreadPoolExecutor EXECUTOR;
     public static final ThreadPoolExecutor NOTIFY_SESSION_CALLBACK_EXECUTOR;
+    public static final ThreadPoolExecutor MIGRATING_SESSION_CALLBACK_EXECUTOR;
     private static final Logger            LOGGER = LoggerFactory.getLogger(ExecutorFactory.class);
 
     static {
@@ -62,6 +63,10 @@ public class ExecutorFactory {
         NOTIFY_SESSION_CALLBACK_EXECUTOR = new ThreadPoolExecutor(10, 20, 300, TimeUnit.SECONDS,
             new LinkedBlockingQueue<>(100000), new NamedThreadFactory(
                 "NotifySessionCallback-executor", true));
+
+        MIGRATING_SESSION_CALLBACK_EXECUTOR = new ThreadPoolExecutor(10, 20, 300, TimeUnit.SECONDS,
+                new LinkedBlockingQueue<>(100000), new NamedThreadFactory(
+                "MigratingSessionCallback-executor", true));
     }
 
     /**

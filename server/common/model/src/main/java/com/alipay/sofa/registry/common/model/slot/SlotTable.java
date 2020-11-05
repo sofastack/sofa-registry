@@ -26,31 +26,31 @@ import java.util.*;
  */
 public final class SlotTable implements Serializable {
     private final long             epoch;
-    private final Map<Short, Slot> slots;
+    private final Map<Integer, Slot> slots;
 
-    public SlotTable(long epoch, Map<Short, Slot> slots) {
+    public SlotTable(long epoch, Map<Integer, Slot> slots) {
         this.epoch = epoch;
         this.slots = Collections.unmodifiableSortedMap(new TreeMap<>(slots));
     }
 
-    public static Map<Short, Slot> getSlotsAdded(SlotTable from, SlotTable to) {
-        Map<Short, Slot> m = new TreeMap<>(to.slots);
+    public static Map<Integer, Slot> getSlotsAdded(SlotTable from, SlotTable to) {
+        Map<Integer, Slot> m = new TreeMap<>(to.slots);
         from.slots.keySet().forEach(slotId -> {
             m.remove(slotId);
         });
         return m;
     }
 
-    public static Map<Short, Slot> getSlotsDeled(SlotTable from, SlotTable to) {
-        Map<Short, Slot> m = new TreeMap<>(from.slots);
+    public static Map<Integer, Slot> getSlotsDeleted(SlotTable from, SlotTable to) {
+        Map<Integer, Slot> m = new TreeMap<>(from.slots);
         to.slots.keySet().forEach(slotId -> {
             m.remove(slotId);
         });
         return m;
     }
 
-    public static Map<Short, Slot> getSlotUpdated(SlotTable from, SlotTable to) {
-        Map<Short, Slot> m = new TreeMap<>();
+    public static Map<Integer, Slot> getSlotUpdated(SlotTable from, SlotTable to) {
+        Map<Integer, Slot> m = new TreeMap<>();
         from.slots.forEach((slotId, fromSlot) -> {
             final Slot toSlot = to.slots.get(slotId);
             if (toSlot != null && !fromSlot.equals(toSlot)) {
@@ -60,11 +60,11 @@ public final class SlotTable implements Serializable {
         return m;
     }
 
-    public Set<Short> getSlotIds() {
+    public Set<Integer> getSlotIds() {
         return new TreeSet<>(slots.keySet());
     }
 
-    public Slot getSlot(short slotId) {
+    public Slot getSlot(int slotId) {
         return slots.get(slotId);
     }
 

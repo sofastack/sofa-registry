@@ -34,7 +34,7 @@ import com.alipay.sofa.registry.consistency.hash.ConsistentHash;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.server.data.bootstrap.DataServerConfig;
-import com.alipay.sofa.registry.server.data.event.DataServerChangeEvent.FromType;
+import com.alipay.sofa.registry.server.data.event.Event.FromType;
 import com.alipay.sofa.registry.server.data.event.handler.AfterWorkingProcessHandler;
 import com.alipay.sofa.registry.server.data.node.DataNodeStatus;
 import com.alipay.sofa.registry.server.data.util.LocalServerStatusEnum;

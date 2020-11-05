@@ -28,19 +28,14 @@ import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
+import com.alipay.sofa.registry.common.model.metaserver.*;
+import com.alipay.sofa.registry.server.data.cache.SessionServerChangeItem;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import com.alipay.remoting.Connection;
 import com.alipay.sofa.jraft.entity.PeerId;
 import com.alipay.sofa.registry.common.model.Node.NodeType;
 import com.alipay.sofa.registry.common.model.constants.ValueConstants;
-import com.alipay.sofa.registry.common.model.metaserver.DataNode;
-import com.alipay.sofa.registry.common.model.metaserver.FetchProvideDataRequest;
-import com.alipay.sofa.registry.common.model.metaserver.GetNodesRequest;
-import com.alipay.sofa.registry.common.model.metaserver.MetaNode;
-import com.alipay.sofa.registry.common.model.metaserver.NodeChangeResult;
-import com.alipay.sofa.registry.common.model.metaserver.ProvideData;
-import com.alipay.sofa.registry.common.model.metaserver.RenewNodesRequest;
 import com.alipay.sofa.registry.common.model.store.URL;
 import com.alipay.sofa.registry.jraft.bootstrap.RaftClient;
 import com.alipay.sofa.registry.log.Logger;
@@ -209,6 +204,53 @@ public class DefaultMetaServiceImpl implements IMetaServerService {
         LOGGER.warn(
             "[ConnectionRefreshTask] refresh connections metaServer not fine,refresh leader : {}",
             newip);
+        return null;
+    }
+
+    @Override
+    public SessionServerChangeItem getSessionServers() {
+        Map<String, Connection> connectionMap = metaServerConnectionFactory
+                .getConnections(dataServerConfig.getLocalDataCenter());
+        String leader = getLeader().getIp();
+        if (connectionMap.containsKey(leader)) {
+            Connection connection = connectionMap.get(leader);
+            if (connection.isFine()) {
+                try {
+                    GetNodesRequest request = new GetNodesRequest(NodeType.SESSION);
+                    Object obj = metaNodeExchanger.request(new Request() {
+                        @Override
+                        public Object getRequestBody() {
+                            return request;
+                        }
+
+                        @Override
+                        public URL getRequestUrl() {
+                            return new URL(connection.getRemoteIP(), connection.getRemotePort());
+                        }
+                    }).getResult();
+                    if (obj instanceof NodeChangeResult) {
+                        NodeChangeResult<SessionNode> result = (NodeChangeResult<SessionNode>) obj;
+                        Map<String, Long> versionMap = result.getDataCenterListVersions();
+                        versionMap.put(result.getLocalDataCenter(), result.getVersion());
+                        return new SessionServerChangeItem(result.getNodes(), versionMap);
+                    }
+                } catch (Exception e) {
+                    LOGGER.error(
+                            "[ConnectionRefreshTask] refresh connections from metaServer error : {}",
+                            leader, e);
+                    String newip = refreshLeader().getIp();
+                    LOGGER
+                            .warn(
+                                    "[ConnectionRefreshTask] refresh connections from metaServer error,refresh leader : {}",
+                                    newip);
+
+                }
+            }
+        }
+        String newip = refreshLeader().getIp();
+        LOGGER.warn(
+                "[ConnectionRefreshTask] refresh connections metaServer not fine,refresh leader : {}",
+                newip);
         return null;
     }
 

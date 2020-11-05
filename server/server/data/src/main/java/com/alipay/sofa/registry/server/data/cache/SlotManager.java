@@ -14,17 +14,43 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alipay.sofa.registry.server.data.slot;
+package com.alipay.sofa.registry.server.data.cache;
 
+import com.alipay.sofa.registry.common.model.dataserver.DatumSummary;
+import com.alipay.sofa.registry.common.model.slot.Slot;
 import com.alipay.sofa.registry.common.model.slot.SlotAccess;
 import com.alipay.sofa.registry.common.model.slot.SlotTable;
+import com.alipay.sofa.registry.common.model.store.Publisher;
+
+import java.util.List;
+import java.util.Map;
 
 /**
  * @author yuzhi.lyz
  * @version v 0.1 2020-10-30 10:46 yuzhi.lyz Exp $
  */
-public interface DataSlotManager {
+public interface SlotManager {
     SlotAccess checkSlotAccess(String dataInfoId, long srcSlotEpoch);
 
+    int slotOf(String dataInfoId);
+
     boolean updateSlotTable(SlotTable slotTable);
+
+    void addSlotChangeListener(SlotChangeListener listener);
+
+    interface SlotChangeListener {
+        void onSlotAdd(int slotId, Slot.Role role);
+
+        void onSlotRemove(int slotId, Slot.Role role);
+    }
+
+    void setSlotDatumStorageProvider(SlotDatumStorageProvider provider);
+
+    interface SlotDatumStorageProvider {
+        Map<String, DatumSummary> getDatumSummary(int slotId, String dataCenter, String targetIpAddress);
+
+        void merge(String dataCenter, Map<String, List<Publisher>> puts, Map<String, List<String>> remove);
+
+    }
+
 }

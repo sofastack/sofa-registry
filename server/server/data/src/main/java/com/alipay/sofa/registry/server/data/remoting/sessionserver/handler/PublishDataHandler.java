@@ -22,7 +22,7 @@ import java.util.concurrent.ThreadPoolExecutor;
 import com.alipay.sofa.registry.common.model.constants.ValueConstants;
 import com.alipay.sofa.registry.common.model.slot.SlotAccess;
 import com.alipay.sofa.registry.common.model.slot.SlotAccessGenericResponse;
-import com.alipay.sofa.registry.server.data.slot.DataSlotManager;
+import com.alipay.sofa.registry.server.data.cache.SlotManager;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import com.alipay.sofa.registry.common.model.CommonResponse;
@@ -38,7 +38,6 @@ import com.alipay.sofa.registry.server.data.bootstrap.DataServerConfig;
 import com.alipay.sofa.registry.server.data.change.event.DataChangeEventCenter;
 import com.alipay.sofa.registry.server.data.remoting.handler.AbstractServerHandler;
 import com.alipay.sofa.registry.server.data.remoting.sessionserver.SessionServerConnectionFactory;
-import com.alipay.sofa.registry.server.data.remoting.sessionserver.forward.ForwardService;
 import com.alipay.sofa.registry.server.data.renew.DatumLeaseManager;
 import com.alipay.sofa.registry.util.ParaCheckUtil;
 
@@ -70,7 +69,7 @@ public class PublishDataHandler extends AbstractServerHandler<PublishDataRequest
     private ThreadPoolExecutor publishProcessorExecutor;
 
     @Autowired
-    private DataSlotManager dataSlotManager;
+    private SlotManager slotManager;
 
     @Override
     public void checkParam(PublishDataRequest request) throws RuntimeException {
@@ -92,7 +91,7 @@ public class PublishDataHandler extends AbstractServerHandler<PublishDataRequest
     public Object doHandle(Channel channel, PublishDataRequest request) {
         Publisher publisher = Publisher.internPublisher(request.getPublisher());
 
-        final SlotAccess slotAccess = dataSlotManager.checkSlotAccess(publisher.getDataInfoId(), request.getSlotEpoch());
+        final SlotAccess slotAccess = slotManager.checkSlotAccess(publisher.getDataInfoId(), request.getSlotEpoch());
         if (slotAccess.isMoved()) {
             LOGGER.warn("[moved] Slot has moved, access: {}, request: {}", slotAccess, request);
             return SlotAccessGenericResponse.buildFailedResponse(slotAccess);

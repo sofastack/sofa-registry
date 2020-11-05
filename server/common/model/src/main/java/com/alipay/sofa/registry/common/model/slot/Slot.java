@@ -24,12 +24,17 @@ import java.util.*;
  * @version v 0.1 2020-10-30 10:12 yuzhi.lyz Exp $
  */
 public final class Slot implements Serializable {
-    private final short       id;
+    public enum Role {
+        Leader,
+        Follower,
+    }
+
+    private final int       id;
     private final String      leader;
     private final long        leaderEpoch;
     private final Set<String> followers;
 
-    public Slot(short id, String leader, long leaderEpoch, Collection<String> followers) {
+    public Slot(int id, String leader, long leaderEpoch, Collection<String> followers) {
         this.id = id;
         this.leader = leader;
         this.leaderEpoch = leaderEpoch;
@@ -40,7 +45,7 @@ public final class Slot implements Serializable {
      * Getter method for property <tt>id</tt>.
      * @return property value of id
      */
-    public short getId() {
+    public int getId() {
         return id;
     }
 

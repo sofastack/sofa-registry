@@ -23,7 +23,7 @@ import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.remoting.Channel;
 import com.alipay.sofa.registry.server.data.remoting.handler.AbstractClientHandler;
-import com.alipay.sofa.registry.server.data.slot.DataSlotManager;
+import com.alipay.sofa.registry.server.data.cache.SlotManager;
 import com.alipay.sofa.registry.util.ParaCheckUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -36,7 +36,7 @@ public final class SlotTableChangeHandler extends AbstractClientHandler<SlotTabl
     private static final Logger LOGGER = LoggerFactory.getLogger(SlotTableChangeHandler.class);
 
     @Autowired
-    private DataSlotManager dataSlotManager;
+    private SlotManager slotManager;
 
     @Override
     public void checkParam(SlotTableChangeRequest request) throws RuntimeException {

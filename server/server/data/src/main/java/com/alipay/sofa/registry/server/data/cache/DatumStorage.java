@@ -20,6 +20,7 @@ import java.util.Map;
 import java.util.Set;
 
 import com.alipay.sofa.registry.common.model.dataserver.Datum;
+import com.alipay.sofa.registry.common.model.dataserver.DatumSummary;
 import com.alipay.sofa.registry.common.model.store.Publisher;
 import com.alipay.sofa.registry.server.data.change.DataChangeTypeEnum;
 
@@ -63,11 +64,6 @@ public interface DatumStorage {
     Map<String, Publisher> getByConnectId(String connectId);
 
     /**
-     * get own publishers by connectId
-     */
-    Map<String, Publisher> getOwnByConnectId(String connectId);
-
-    /**
      * Getter method for property <tt>OWN_CONNECT_ID_INDEX</tt>.
      *
      * @return property value of OWN_CONNECT_ID_INDEX
@@ -98,5 +94,7 @@ public interface DatumStorage {
                       Map<String, Publisher> snapshotPubMap);
 
     Map<String, Long> getVersions(String dataInfoId);
+
+    Map<String, DatumSummary> getDatumSummary(String dataCenter, String targetIpAddress);
 
 }
