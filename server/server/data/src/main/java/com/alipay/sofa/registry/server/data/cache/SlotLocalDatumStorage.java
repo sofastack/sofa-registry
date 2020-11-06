@@ -35,8 +35,8 @@ import java.util.concurrent.ConcurrentHashMap;
  * @author yuzhi.lyz
  * @version v 0.1 2020-11-03 16:55 yuzhi.lyz Exp $
  */
-public final class LocalSlotDatumStorage implements DatumStorage, SlotManager.SlotDatumStorageProvider {
-    private static final Logger           LOGGER = LoggerFactory.getLogger(LocalSlotDatumStorage.class);
+public final class SlotLocalDatumStorage implements DatumStorage, SlotManager.SlotDatumStorageProvider {
+    private static final Logger           LOGGER = LoggerFactory.getLogger(SlotLocalDatumStorage.class);
     @Autowired
     private              SlotManager      slotManager;
     @Autowired
@@ -129,6 +129,11 @@ public final class LocalSlotDatumStorage implements DatumStorage, SlotManager.Sl
     }
 
     @Override
+    public boolean removePublisher(String dataCenter, String dataInfoId, String registerId) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
     public Datum putSnapshot(String dataInfoId, Map<String, Publisher> toBeDeletedPubMap,
                              Map<String, Publisher> snapshotPubMap) {
         final DatumStorage ds = getDatumStorage(dataInfoId);
@@ -162,8 +167,19 @@ public final class LocalSlotDatumStorage implements DatumStorage, SlotManager.Sl
     }
 
     @Override
-    public void merge(String dataCenter, Map<String, List<Publisher>> puts, Map<String, List<String>> remove) {
-
+    public void merge(int slotId, String dataCenter, Map<String, Datum> puts, Map<String, List<String>> remove) {
+        final DatumStorage ds = localDatumStorages.get(slotId);
+        if (ds == null) {
+            return;
+        }
+        for (Map.Entry<String, List<String>> e : remove.entrySet()) {
+            for (String registerId : e.getValue()) {
+                ds.removePublisher(dataCenter, e.getKey(), registerId);
+            }
+        }
+        for (Datum datum : puts.values()) {
+            ds.putDatum(DataChangeTypeEnum.MERGE, datum);
+        }
     }
 
     private final class SlotListener implements SlotManager.SlotChangeListener {

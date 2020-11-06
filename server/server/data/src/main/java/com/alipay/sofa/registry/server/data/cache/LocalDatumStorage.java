@@ -216,6 +216,24 @@ public class LocalDatumStorage implements DatumStorage {
         return false;
     }
 
+    @Override
+    public boolean removePublisher(String dataCenter, String dataInfoId, String registerId) {
+        Map<String, Datum> datumMap = DATUM_MAP.get(dataCenter);
+        if (datumMap != null) {
+            return false;
+        }
+        Datum datum = datumMap.get(dataInfoId);
+        if (datum == null) {
+            return false;
+        }
+        Publisher publisher = datum.getPubMap().remove(registerId);
+        if (publisher == null) {
+            return false;
+        }
+        removeFromIndex(publisher);
+        return true;
+    }
+
     /**
      * merge datum in cache
      *

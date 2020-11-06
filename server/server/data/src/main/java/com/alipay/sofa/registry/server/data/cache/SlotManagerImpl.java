@@ -37,6 +37,7 @@ import com.alipay.sofa.registry.server.data.change.notify.SessionServerNotifier;
 import com.alipay.sofa.registry.server.data.executor.ExecutorFactory;
 import com.alipay.sofa.registry.server.data.remoting.MetaNodeExchanger;
 import com.alipay.sofa.registry.server.data.remoting.sessionserver.SessionServerConnectionFactory;
+import com.alipay.sofa.registry.task.Task;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -192,19 +193,25 @@ public final class SlotManagerImpl implements SlotManager {
         LOGGER.info("new migratingTask, slot={}", slot);
     }
 
+    private void cancelMigratingTask(Slot slot) {
+        MigratingTask t = migratingTasks.remove(slot.getId());
+        if (t != null) {
+            t.cancel = true;
+        }
+    }
+
     private void handleNewFollower(Slot slot) {
+        // if leader -> follower, cancel the migrating task
+        cancelMigratingTask(slot);
         // TODO sync leader slot
     }
 
     private void handleSlotsDeleted(SlotState state, Map<Integer, Slot> slots) {
         slots.forEach((slotId, slot) -> {
+            cancelMigratingTask(slot);
             changeListeners.forEach(listener -> {
                 listener.onSlotRemove(slotId, isLeader(slot) ? Slot.Role.Leader : Slot.Role.Follower);
             });
-            MigratingTask t = migratingTasks.remove(slotId);
-            if (t != null) {
-                t.cancel = true;
-            }
         });
     }
 
@@ -227,6 +234,58 @@ public final class SlotManagerImpl implements SlotManager {
     private enum TaskStatus {
         DOING,
         DONE,
+    }
+
+    private final class MigratingTaskCallback implements CallbackHandler {
+        final String        sessionIp;
+        final MigratingTask task;
+
+        MigratingTaskCallback(MigratingTask task, String sessionIp) {
+            this.sessionIp = sessionIp;
+            this.task = task;
+        }
+
+        @Override
+        public void onCallback(Channel channel, Object message) {
+            try {
+                GenericResponse<DataSlotMigrateResult> resp = (GenericResponse<DataSlotMigrateResult>) message;
+                if (resp == null || !resp.isSuccess()) {
+                    task.sessionsSyncs.remove(sessionIp);
+                    LOGGER.error(
+                            "response not success when migrating sessionServer({}), slot={}, resp={}",
+                            sessionIp, task.slot, resp);
+                    return;
+                }
+                DataSlotMigrateResult result = resp.getData();
+                if (result != null) {
+                    slotDatumStorageProvider
+                            .merge(task.slot.getId(), dataServerConfig.getLocalDataCenter(), result.getPublishers(),
+                                    result.getRemovePublishers());
+                    LOGGER.info("migratingTask merge publishers from sessionServer({}), slot={}, update={}, removed={}",
+                            sessionIp, task.slot, result.getPublishers().size(), result.getRemovePublishers().size());
+                }
+                task.sessionsSyncs.put(sessionIp, TaskStatus.DONE);
+                LOGGER.info("migratingTask finished from sessionServer({}), slot={}", sessionIp, task.slot);
+            } catch (Throwable e) {
+                task.sessionsSyncs.remove(sessionIp);
+                LOGGER.error(
+                        "response callback failed when migrating sessionServer({}), slot={}, resp={}",
+                        channel, task.slot);
+            }
+        }
+
+        @Override
+        public void onException(Channel channel, Throwable exception) {
+            final String remoteIp = channel.getRemoteAddress().getAddress().getHostAddress();
+            task.sessionsSyncs.remove(remoteIp);
+            LOGGER.error("migrating failed: sessionServer({}), slot={}",
+                    remoteIp, task.slot, exception);
+        }
+
+        @Override
+        public Executor getExecutor() {
+            return ExecutorFactory.MIGRATING_SESSION_CALLBACK_EXECUTOR;
+        }
     }
 
     private final class MigratingTask implements Runnable {
@@ -266,34 +325,7 @@ public final class SlotManagerImpl implements SlotManager {
                     Server sessionServer = boltExchange.getServer(dataServerConfig.getPort());
                     sessionsSyncs.put(sessionIp, TaskStatus.DOING);
                     sessionServer.sendCallback(sessionServer.getChannel(conn.getRemoteAddress()), request,
-                            new CallbackHandler() {
-                                @Override
-                                public void onCallback(Channel channel, Object message) {
-                                    final String remoteIp = channel.getRemoteAddress().getAddress().getHostAddress();
-                                    GenericResponse<DataSlotMigrateResult> resp = (GenericResponse<DataSlotMigrateResult>) message;
-                                    if (resp != null && !resp.isSuccess()) {
-                                        sessionsSyncs.remove(remoteIp);
-                                        LOGGER.error("response not success when migrating sessionServer({}), slot={}",
-                                                remoteIp, slot.getId());
-                                        return;
-                                    }
-                                    sessionsSyncs.put(remoteIp, TaskStatus.DOING);
-                                }
-
-                                @Override
-                                public void onException(Channel channel, Throwable exception) {
-                                    final String remoteIp = channel.getRemoteAddress().getAddress().getHostAddress();
-                                    sessionsSyncs.remove(remoteIp);
-                                    LOGGER.error("migrating failed: sessionServer({}), slot={}",
-                                            remoteIp, slot.getId(), exception);
-                                }
-
-                                @Override
-                                public Executor getExecutor() {
-                                    return ExecutorFactory.MIGRATING_SESSION_CALLBACK_EXECUTOR;
-                                }
-                            }, dataServerConfig.getRpcTimeout());
-
+                            new MigratingTaskCallback(MigratingTask.this, sessionIp), dataServerConfig.getRpcTimeout());
                 } catch (Throwable e) {
                     if (sessionIp != null) {
                         sessionsSyncs.remove(sessionIp);
@@ -310,24 +342,30 @@ public final class SlotManagerImpl implements SlotManager {
                     // all finish, check the slotstate
                     lock.lock();
                     try {
-                        final SlotState cur = slotState;
-                        final Slot now = cur.table.getSlot(slot.getId());
+                        final SlotState curState = slotState;
+                        final Slot now = curState.table.getSlot(slot.getId());
                         // if now not contains the slot, it must be removed
-                        // if the slot leader not modify, clean the migrating flag
-                        if (now == null || now.getLeaderEpoch() == slot.getLeaderEpoch()) {
-                            cur.migrating.remove(slot.getId());
+                        if (now == null) {
+                            LOGGER.info("slot remove when migrating finish, {}", slot);
+                            return;
+                        }
+                        if (now.getLeaderEpoch() == slot.getLeaderEpoch()) {
                             migratingTasks.remove(slot.getId());
+                            // clean migrating.flag at last step
+                            curState.migrating.remove(slot.getId());
                         } else {
                             // the slot leader has modified, ignore the task, another task is own the flag
-                            LOGGER.info("the slotLeaderEpoch has modified in migrating, task={}, now={}", slot, now);
+                            LOGGER.info("the slotLeaderEpoch has modified in migrating, task={}, now={}", slot,
+                                    now);
                         }
+                        return;
                     } finally {
                         lock.unlock();
                     }
-                    return;
                 }
             }
-            LOGGER.info("migratingTask {}, sessions={}, status={}", slot, sessions.keySet(), sessionsSyncs.keySet());
+            LOGGER.info("migratingTask {}, sessions={}, status={}", slot, sessions.keySet(),
+                    sessionsSyncs.keySet());
             // wait next sched
             if (!cancel) {
                 migratingScheduler.schedule(this, 1, TimeUnit.SECONDS);
