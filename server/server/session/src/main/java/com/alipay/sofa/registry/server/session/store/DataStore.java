@@ -56,4 +56,6 @@ public interface DataStore extends DataManager<Publisher, String, String> {
      */
     Map<String/*connectId*/, Map<String/*registerId*/, Publisher>> getConnectPublishers();
 
+    Map<String/*dataInfoId*/, Map<String/*registerId*/, Publisher>> getDataInfoIdPublishers();
+
 }
