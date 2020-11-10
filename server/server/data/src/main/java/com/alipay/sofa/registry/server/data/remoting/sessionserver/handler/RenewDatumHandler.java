@@ -136,7 +136,7 @@ public class RenewDatumHandler extends AbstractServerHandler<RenewDatumRequest> 
         String renewDigest = request.getDigestSum();
 
         // Get all pubs corresponding to the connectId from datumCache
-        Map<String, Publisher> publisherMap = datumCache.getOwnByConnectId(connectId);
+        Map<String, Publisher> publisherMap = datumCache.getByConnectId(connectId);
         String cacheDigest = null;
         if (publisherMap != null && publisherMap.values().size() > 0) {
             cacheDigest = String.valueOf(PublisherDigestUtil.getDigestValueSum(publisherMap

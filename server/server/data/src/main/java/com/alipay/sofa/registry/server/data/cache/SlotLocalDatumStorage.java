@@ -116,7 +116,9 @@ public final class SlotLocalDatumStorage implements DatumStorage, SlotManager.Sl
         if (ds == null) {
             return new MergeResult(LocalDatumStorage.ERROR_DATUM_SLOT, false);
         }
-        return ds.putDatum(changeType, datum);
+        synchronized (ds) {
+            return ds.putDatum(changeType, datum);
+        }
     }
 
     @Override
@@ -125,7 +127,9 @@ public final class SlotLocalDatumStorage implements DatumStorage, SlotManager.Sl
         if (ds == null) {
             return false;
         }
-        return ds.cleanDatum(dataCenter, dataInfoId);
+        synchronized (ds) {
+            return ds.cleanDatum(dataCenter, dataInfoId);
+        }
     }
 
     @Override
@@ -140,7 +144,9 @@ public final class SlotLocalDatumStorage implements DatumStorage, SlotManager.Sl
         if (ds == null) {
             return null;
         }
-        return ds.putSnapshot(dataInfoId, toBeDeletedPubMap, snapshotPubMap);
+        synchronized (ds) {
+            return ds.putSnapshot(dataInfoId, toBeDeletedPubMap, snapshotPubMap);
+        }
     }
 
     @Override
@@ -167,18 +173,31 @@ public final class SlotLocalDatumStorage implements DatumStorage, SlotManager.Sl
     }
 
     @Override
-    public void merge(int slotId, String dataCenter, Map<String, Datum> puts, Map<String, List<String>> remove) {
+    public void merge(int slotId, String dataCenter, Map<String, List<Publisher>> updateds,
+                      Map<String, List<String>> removeds) {
         final DatumStorage ds = localDatumStorages.get(slotId);
         if (ds == null) {
             return;
         }
-        for (Map.Entry<String, List<String>> e : remove.entrySet()) {
-            for (String registerId : e.getValue()) {
-                ds.removePublisher(dataCenter, e.getKey(), registerId);
+        synchronized (ds) {
+            for (Map.Entry<String, List<String>> e : removeds.entrySet()) {
+                final String dataInfoId = e.getKey();
+                if (e.getValue().isEmpty()) {
+                    // empty means remove the dataInfoId
+                    ds.cleanDatum(dataCenter, dataInfoId);
+                } else {
+                    for (String registerId : e.getValue()) {
+                        ds.removePublisher(dataCenter, dataInfoId, registerId);
+                    }
+                }
             }
-        }
-        for (Datum datum : puts.values()) {
-            ds.putDatum(DataChangeTypeEnum.MERGE, datum);
+            for (Map.Entry<String, List<Publisher>> updatedPublishers : updateds.entrySet()) {
+                Datum datum = new Datum(updatedPublishers.getValue().get(0), dataCenter);
+                updatedPublishers.getValue().forEach(p -> {
+                    datum.getPubMap().put(p.getRegisterId(), p);
+                });
+                ds.putDatum(DataChangeTypeEnum.MERGE, datum);
+            }
         }
     }
 

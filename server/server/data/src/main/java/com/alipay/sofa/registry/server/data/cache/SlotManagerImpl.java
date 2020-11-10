@@ -259,10 +259,10 @@ public final class SlotManagerImpl implements SlotManager {
                 DataSlotMigrateResult result = resp.getData();
                 if (result != null) {
                     slotDatumStorageProvider
-                            .merge(task.slot.getId(), dataServerConfig.getLocalDataCenter(), result.getPublishers(),
-                                    result.getRemovePublishers());
+                            .merge(task.slot.getId(), dataServerConfig.getLocalDataCenter(), result.getUpdatedPublishers(),
+                                    result.getRemovedPublishers());
                     LOGGER.info("migratingTask merge publishers from sessionServer({}), slot={}, update={}, removed={}",
-                            sessionIp, task.slot, result.getPublishers().size(), result.getRemovePublishers().size());
+                            sessionIp, task.slot, result.getUpdatedPublishers().size(), result.getRemovedPublishers().size());
                 }
                 task.sessionsSyncs.put(sessionIp, TaskStatus.DONE);
                 LOGGER.info("migratingTask finished from sessionServer({}), slot={}", sessionIp, task.slot);

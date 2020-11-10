@@ -16,22 +16,23 @@
  */
 package com.alipay.sofa.registry.server.session.remoting.handler;
 
+import com.alipay.sofa.registry.common.model.GenericResponse;
 import com.alipay.sofa.registry.common.model.Node;
-import com.alipay.sofa.registry.common.model.sessionserver.DataChangeRequest;
+import com.alipay.sofa.registry.common.model.PublisherDigestUtil;
+import com.alipay.sofa.registry.common.model.dataserver.DatumSummary;
 import com.alipay.sofa.registry.common.model.sessionserver.DataSlotMigrateRequest;
+import com.alipay.sofa.registry.common.model.sessionserver.DataSlotMigrateResult;
+import com.alipay.sofa.registry.common.model.store.Publisher;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.remoting.Channel;
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
-import com.alipay.sofa.registry.server.session.cache.CacheService;
-import com.alipay.sofa.registry.server.session.cache.DatumKey;
-import com.alipay.sofa.registry.server.session.cache.Key;
-import com.alipay.sofa.registry.server.session.registry.Registry;
 import com.alipay.sofa.registry.server.session.scheduler.ExecutorManager;
 import com.alipay.sofa.registry.server.session.store.DataStore;
-import com.alipay.sofa.registry.server.session.store.SlotSessionDataStore;
+import com.alipay.sofa.registry.server.session.store.SlotTableCache;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import java.util.*;
 import java.util.concurrent.Executor;
 
 /**
@@ -51,44 +52,86 @@ public class DataSlotMigrateRequestHandler extends AbstractClientHandler {
     private ExecutorManager executorManager;
 
     @Autowired
-    private SlotSessionDataStore sessionDataStore;
+    private DataStore sessionDataStore;
+
+    @Autowired
+    private SlotTableCache slotTableCache;
 
     @Override
     public Object reply(Channel channel, Object message) {
         DataSlotMigrateRequest dataChangeRequest = (DataSlotMigrateRequest) message;
-        final
-        dataChangeRequest.setDataCenter(dataChangeRequest.getDataCenter());
-        dataChangeRequest.setDataInfoId(dataChangeRequest.getDataInfoId());
-
-        //update cache when change
-        sessionCacheService.invalidate(new Key(Key.KeyType.OBJ, DatumKey.class.getName(), new DatumKey(
-                dataChangeRequest.getDataInfoId(), dataChangeRequest.getDataCenter())));
-
-        if (sessionServerConfig.isStopPushSwitch()) {
-            return null;
-        }
-
         try {
-            boolean result = sessionInterests.checkInterestVersions(
-                    dataChangeRequest.getDataCenter(), dataChangeRequest.getDataInfoId(),
-                    dataChangeRequest.getVersion());
+            slotTableCache.triggerUpdateSlotTable(dataChangeRequest.getSlotTableEpoch());
+            DataSlotMigrateResult result = calcMigrateResult(dataChangeRequest.getSlotId(),
+                    dataChangeRequest.getDatumSummarys(), sessionDataStore.getDataInfoIdPublishers());
+            result.setSlotTableEpoch(slotTableCache.getEpoch());
+            return new GenericResponse().fillSucceed(result);
+        } catch (Throwable e) {
+            LOGGER.error("Migrate Request error for slot {}", dataChangeRequest.getSlotId(), e);
+            throw new RuntimeException("Migrate Request error!", e);
+        }
+    }
 
-            if (!result) {
-                return null;
+    private DataSlotMigrateResult calcMigrateResult(int targetSlot, Map<String, DatumSummary> datumSummarys,
+                                                    Map<String, Map<String, Publisher>> existingPublishers) {
+        Map<String, List<Publisher>> updateds = new HashMap<>(existingPublishers.size());
+        for (Map.Entry<String, Map<String, Publisher>> e : existingPublishers.entrySet()) {
+            final String dataInfoId = e.getKey();
+            final long slot = slotTableCache.slotOf(dataInfoId);
+            if (slot != targetSlot) {
+                continue;
             }
-
-            EXCHANGE_LOGGER.info(
-                    "Data version has change,and will fetch to update!Request={},URL={}",
-                    dataChangeRequest, channel.getRemoteAddress());
-
-            fireChangFetch(dataChangeRequest);
-
-        } catch (Exception e) {
-            LOGGER.error("DataChange Request error!", e);
-            throw new RuntimeException("DataChangeRequest Request error!", e);
+            final DatumSummary summary = datumSummarys.get(dataInfoId);
+            if (summary == null) {
+                updateds.put(dataInfoId, new ArrayList<>(e.getValue().values()));
+                LOGGER.info("Migrating, add new dataInfoId for slot={}, {}", targetSlot, dataInfoId);
+                continue;
+            }
+            List<Publisher> publishers = new ArrayList<>(e.getValue().size());
+            updateds.put(dataInfoId, publishers);
+            Map<String, Long> digests = summary.getPublisherDigests();
+            for (Map.Entry<String, Publisher> p : e.getValue().entrySet()) {
+                final String registerId = p.getKey();
+                if (!digests.containsKey(registerId)) {
+                    publishers.add(p.getValue());
+                    LOGGER.info("Migrating, add new registerId for slot={}, dataInfoId={}, {}", targetSlot, dataInfoId,
+                            registerId);
+                    continue;
+                }
+                // compare digest
+                final long digest = PublisherDigestUtil.getDigestValue(p.getValue());
+                if (digest == digests.get(registerId)) {
+                    // the same
+                    continue;
+                }
+                publishers.add(p.getValue());
+                LOGGER.info("Migrating, add updated registerId for slot={}, dataInfoId={}, {}", targetSlot, dataInfoId,
+                        registerId);
+            }
         }
 
-        return null;
+        // find the removed publisher
+        Map<String, List<String>> removeds = new HashMap<>();
+        for (Map.Entry<String, DatumSummary> summarys : datumSummarys.entrySet()) {
+            final String dataInfoId = summarys.getKey();
+            Map<String, Publisher> publisherMap = existingPublishers.get(dataInfoId);
+            if (publisherMap == null) {
+                // empty list means remove all
+                removeds.put(dataInfoId, Collections.emptyList());
+                LOGGER.info("Migrating, remove dataInfoId for slot={}, {}", targetSlot, dataInfoId);
+                continue;
+            }
+            Set<String> registerIds = summarys.getValue().getPublisherDigests().keySet();
+            for (String registerId : registerIds) {
+                if (!publisherMap.containsKey(registerId)) {
+                    List<String> list = removeds.computeIfAbsent(registerId, k -> new ArrayList<>());
+                    list.add(registerId);
+                }
+            }
+            LOGGER.info("Migrating, remove registerId for slot={}, dataInfoId={}, {}", targetSlot, dataInfoId,
+                    removeds.get(dataInfoId));
+        }
+        return new DataSlotMigrateResult(updateds, removeds);
     }
 
     @Override
@@ -105,7 +148,6 @@ public class DataSlotMigrateRequestHandler extends AbstractClientHandler {
     public Executor getExecutor() {
         return executorManager.getDataSlotMigrateRequestExecutor();
     }
-
 
     @Override
     public Class interest() {
