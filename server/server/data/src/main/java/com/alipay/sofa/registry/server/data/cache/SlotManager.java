@@ -50,7 +50,7 @@ public interface SlotManager {
     interface SlotDatumStorageProvider {
         Map<String, DatumSummary> getDatumSummary(int slotId, String dataCenter, String targetIpAddress);
 
-        void merge(int slotId, String dataCenter, Map<String, Datum> puts, Map<String, List<String>> remove);
+        void merge(int slotId, String dataCenter, Map<String, List<Publisher>> updateds, Map<String, List<String>> removeds);
 
     }
 

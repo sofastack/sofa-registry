@@ -238,7 +238,7 @@ public class DatumLeaseManager implements AfterWorkingProcess {
     }
 
     private int getOwnPubSize(String connectId) {
-        Map<String, Publisher> ownPubs = datumCache.getOwnByConnectId(connectId);
+        Map<String, Publisher> ownPubs = datumCache.getByConnectId(connectId);
         return ownPubs != null ? ownPubs.size() : 0;
     }
 

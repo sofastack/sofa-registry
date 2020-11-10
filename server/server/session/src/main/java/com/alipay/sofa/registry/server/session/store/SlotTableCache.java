@@ -23,4 +23,6 @@ package com.alipay.sofa.registry.server.session.store;
  */
 public interface SlotTableCache {
     int slotOf(String dataInfoId);
+    void triggerUpdateSlotTable(long epoch);
+    long getEpoch();
 }

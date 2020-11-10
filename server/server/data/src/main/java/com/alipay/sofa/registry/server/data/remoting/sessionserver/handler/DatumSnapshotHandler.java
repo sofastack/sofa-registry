@@ -100,7 +100,7 @@ public class DatumSnapshotHandler extends AbstractServerHandler<DatumSnapshotReq
 
         // diff the cache and snapshot
         boolean isDiff = true;
-        Map<String, Publisher> cachePubMap = datumCache.getOwnByConnectId(connectId);
+        Map<String, Publisher> cachePubMap = datumCache.getByConnectId(connectId);
         if (cachePubMap == null) {
             RENEW_LOGGER
                 .info(

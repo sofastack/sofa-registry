@@ -29,8 +29,13 @@ import java.util.Map;
 public class DataSlotMigrateResult {
     private long                         slotTableEpoch;
     private boolean                      hasRemain;
-    private Map<String, List<Publisher>> publishers;
-    private Map<String, List<String>>    removePublishers;
+    private Map<String, List<Publisher>> updatedPublishers;
+    private Map<String, List<String>>    removedPublishers;
+
+    public DataSlotMigrateResult(Map<String, List<Publisher>> updated, Map<String, List<String>> removed) {
+        this.updatedPublishers = updated;
+        this.removedPublishers = removed;
+    }
 
     public boolean isHasRemain() {
         return hasRemain;
@@ -57,35 +62,35 @@ public class DataSlotMigrateResult {
     }
 
     /**
-     * Getter method for property <tt>publishers</tt>.
-     * @return property value of publishers
+     * Getter method for property <tt>updatedPublishers</tt>.
+     * @return property value of updatedPublishers
      */
-    public Map<String, List<Publisher>> getPublishers() {
-        return publishers;
+    public Map<String, List<Publisher>> getUpdatedPublishers() {
+        return updatedPublishers;
     }
 
     /**
-     * Setter method for property <tt>publishers</tt>.
-     * @param publishers value to be assigned to property publishers
+     * Setter method for property <tt>updatedPublishers</tt>.
+     * @param updatedPublishers value to be assigned to property updatedPublishers
      */
-    public void setPublishers(
-            Map<String, List<Publisher>> publishers) {
-        this.publishers = publishers;
+    public void setUpdatedPublishers(
+            Map<String, List<Publisher>> updatedPublishers) {
+        this.updatedPublishers = updatedPublishers;
     }
 
     /**
-     * Getter method for property <tt>removePublishers</tt>.
-     * @return property value of removePublishers
+     * Getter method for property <tt>removedPublishers</tt>.
+     * @return property value of removedPublishers
      */
-    public Map<String, List<String>> getRemovePublishers() {
-        return removePublishers;
+    public Map<String, List<String>> getRemovedPublishers() {
+        return removedPublishers;
     }
 
     /**
-     * Setter method for property <tt>removePublishers</tt>.
-     * @param removePublishers value to be assigned to property removePublishers
+     * Setter method for property <tt>removedPublishers</tt>.
+     * @param removedPublishers value to be assigned to property removedPublishers
      */
-    public void setRemovePublishers(Map<String, List<String>> removePublishers) {
-        this.removePublishers = removePublishers;
+    public void setRemovedPublishers(Map<String, List<String>> removedPublishers) {
+        this.removedPublishers = removedPublishers;
     }
 }
