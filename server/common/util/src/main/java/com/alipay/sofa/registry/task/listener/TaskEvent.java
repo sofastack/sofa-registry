@@ -58,8 +58,6 @@ public class TaskEvent {
 
         //MetaServer task
         SESSION_NODE_CHANGE_PUSH_TASK("SessionNodeChangePushTask"), //
-        DATA_NODE_CHANGE_PUSH_TASK("DataNodeChangePushTask"), //
-        RECEIVE_STATUS_CONFIRM_NOTIFY_TASK("ReceiveStatusConfirmNotifyTask"), //
         PERSISTENCE_DATA_CHANGE_NOTIFY_TASK("PersistenceDataChangeNotifyTask"), //
         ;
 

@@ -29,7 +29,7 @@ import com.alipay.sofa.registry.remoting.Channel;
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
 import com.alipay.sofa.registry.server.session.scheduler.ExecutorManager;
 import com.alipay.sofa.registry.server.session.store.DataStore;
-import com.alipay.sofa.registry.server.session.store.SlotTableCache;
+import com.alipay.sofa.registry.server.session.slot.SlotTableCache;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.*;
@@ -43,19 +43,19 @@ import java.util.concurrent.Executor;
 public class DataSlotMigrateRequestHandler extends AbstractClientHandler {
 
     private static final Logger LOGGER = LoggerFactory
-            .getLogger(DataSlotMigrateRequestHandler.class);
+                                           .getLogger(DataSlotMigrateRequestHandler.class);
 
     @Autowired
     private SessionServerConfig sessionServerConfig;
 
     @Autowired
-    private ExecutorManager executorManager;
+    private ExecutorManager     executorManager;
 
     @Autowired
-    private DataStore sessionDataStore;
+    private DataStore           sessionDataStore;
 
     @Autowired
-    private SlotTableCache slotTableCache;
+    private SlotTableCache      slotTableCache;
 
     @Override
     public Object reply(Channel channel, Object message) {
@@ -63,7 +63,7 @@ public class DataSlotMigrateRequestHandler extends AbstractClientHandler {
         try {
             slotTableCache.triggerUpdateSlotTable(dataChangeRequest.getSlotTableEpoch());
             DataSlotMigrateResult result = calcMigrateResult(dataChangeRequest.getSlotId(),
-                    dataChangeRequest.getDatumSummarys(), sessionDataStore.getDataInfoIdPublishers());
+                dataChangeRequest.getDatumSummarys(), sessionDataStore.getDataInfoIdPublishers());
             result.setSlotTableEpoch(slotTableCache.getEpoch());
             return new GenericResponse().fillSucceed(result);
         } catch (Throwable e) {

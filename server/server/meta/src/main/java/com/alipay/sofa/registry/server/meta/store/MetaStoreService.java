@@ -98,9 +98,6 @@ public class MetaStoreService implements StoreService<MetaNode> {
 
             //触发通知(需要通知data/session)
             nodeChangeResult = getNodeChangeResult();
-            firePushDataListTask(nodeChangeResult, "addMetaNode");
-            firePushSessionListTask(nodeChangeResult, "addMetaNode");
-
             LOGGER.info("Set meta node list {} success!", metaNodes);
 
         } finally {
@@ -124,9 +121,6 @@ public class MetaStoreService implements StoreService<MetaNode> {
 
             //触发通知(需要通知data/session)
             nodeChangeResult = getNodeChangeResult();
-            firePushDataListTask(nodeChangeResult, "addMetaNode");
-            firePushSessionListTask(nodeChangeResult, "addMetaNode");
-
             LOGGER.info("Add single meta node {} success!", metaNode);
 
         } finally {
@@ -146,9 +140,6 @@ public class MetaStoreService implements StoreService<MetaNode> {
 
             //触发通知(需要通知data/session)
             if (dataNode != null) {
-                NodeChangeResult nodeChangeResult = getNodeChangeResult();
-                firePushDataListTask(nodeChangeResult, "removeMetaNode");
-                firePushSessionListTask(nodeChangeResult, "removeMetaNode");
                 LOGGER.info("Remove single meta node {} success!", dataNode.getRenewal());
                 return true;
             }
@@ -161,11 +152,6 @@ public class MetaStoreService implements StoreService<MetaNode> {
     @Override
     public void removeNodes(Collection<MetaNode> nodes) {
 
-    }
-
-    @Override
-    public void confirmNodeStatus(String connectId, String ip) {
-        throw new NotSupportedException("Node type META not support function");
     }
 
     @Override
@@ -301,10 +287,6 @@ public class MetaStoreService implements StoreService<MetaNode> {
             }
 
             NodeChangeResult nodeChangeResult = getNodeChangeResult();
-
-            firePushDataListTask(nodeChangeResult, "OtherDataCenterMetaUpdate");
-
-            firePushSessionListTask(nodeChangeResult, "OtherDataCenterMetaUpdate");
         } finally {
             write.unlock();
         }
@@ -341,33 +323,5 @@ public class MetaStoreService implements StoreService<MetaNode> {
         } finally {
             read.unlock();
         }
-    }
-
-    private void firePushDataListTask(NodeChangeResult nodeChangeResult, String nodeOperate) {
-
-        TaskEvent taskEvent = new TaskEvent(nodeChangeResult, TaskType.DATA_NODE_CHANGE_PUSH_TASK);
-        taskEvent.setAttribute(Constant.PUSH_NEED_CONFIRM_KEY, false);
-        taskEvent.setAttribute(Constant.PUSH_TARGET_TYPE, NodeType.DATA);
-        taskEvent.setAttribute(Constant.PUSH_TARGET_OPERATOR_TYPE, nodeOperate);
-
-        LOGGER.info("send {} NodeType:{} Operator:{}", taskEvent.getTaskType(), NodeType.DATA,
-            nodeOperate);
-        taskListenerManager.sendTaskEvent(taskEvent);
-    }
-
-    private void firePushSessionListTask(NodeChangeResult nodeChangeResult, String nodeOperate) {
-
-        //notify all session node
-        TaskEvent taskEvent = new TaskEvent(nodeChangeResult, TaskType.DATA_NODE_CHANGE_PUSH_TASK);
-        taskEvent.setAttribute(Constant.PUSH_TARGET_TYPE, NodeType.SESSION);
-        taskEvent.setAttribute(Constant.PUSH_TARGET_OPERATOR_TYPE, nodeOperate);
-        LOGGER.info("send {} NodeType:{} Operator:{}", taskEvent.getTaskType(), NodeType.SESSION,
-            nodeOperate);
-        taskListenerManager.sendTaskEvent(taskEvent);
-    }
-
-    @Override
-    public void pushNodeListChange() {
-
     }
 }

@@ -37,7 +37,6 @@ import com.alipay.sofa.registry.server.data.cache.DatumCache;
 import com.alipay.sofa.registry.server.data.cache.UnPublisher;
 import com.alipay.sofa.registry.server.data.change.event.DataChangeEventCenter;
 import com.alipay.sofa.registry.server.data.remoting.handler.AbstractServerHandler;
-import com.alipay.sofa.registry.server.data.remoting.sessionserver.forward.ForwardService;
 import com.alipay.sofa.registry.server.data.renew.DatumLeaseManager;
 import com.alipay.sofa.registry.util.ParaCheckUtil;
 
@@ -51,9 +50,6 @@ public class UnPublishDataHandler extends AbstractServerHandler<UnPublishDataReq
 
     /** LOGGER */
     private static final Logger   LOGGER = LoggerFactory.getLogger(UnPublishDataHandler.class);
-
-    @Autowired
-    private ForwardService        forwardService;
 
     @Autowired
     private DataChangeEventCenter dataChangeEventCenter;
@@ -83,14 +79,6 @@ public class UnPublishDataHandler extends AbstractServerHandler<UnPublishDataReq
 
     @Override
     public Object doHandle(Channel channel, UnPublishDataRequest request) {
-        if (forwardService.needForward()) {
-            LOGGER.warn("[forward] UnPublish request refused, request: {}", request);
-            CommonResponse response = new CommonResponse();
-            response.setSuccess(false);
-            response.setMessage("Request refused, Server status is not working");
-            return response;
-        }
-
         dataChangeEventCenter.onChange(
             new UnPublisher(request.getDataInfoId(), request.getRegisterId(), request
                 .getRegisterTimestamp()), dataServerConfig.getLocalDataCenter());

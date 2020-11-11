@@ -138,9 +138,7 @@ public class DataChangeHandler {
                 DataSourceTypeEnum sourceType = changeData.getSourceType();
                 DataChangeTypeEnum changeType = changeData.getChangeType();
 
-                if (changeType == DataChangeTypeEnum.MERGE
-                    && sourceType != DataSourceTypeEnum.BACKUP
-                    && sourceType != DataSourceTypeEnum.SYNC) {
+                if (changeType == DataChangeTypeEnum.MERGE && sourceType != DataSourceTypeEnum.SYNC) {
                     //update version for pub or unPub merge to cache
                     //if the version product before merge to cache,it may be cause small version override big one
                     datum.updateVersion();
@@ -149,15 +147,7 @@ public class DataChangeHandler {
                 long version = datum.getVersion();
 
                 try {
-                    if (sourceType == DataSourceTypeEnum.CLEAN) {
-                        if (datumCache.cleanDatum(dataCenter, dataInfoId)) {
-                            LOGGER
-                                .info(
-                                    "[DataChangeHandler][{}] clean datum, dataCenter={}, dataInfoId={}, version={},sourceType={}, changeType={}",
-                                    name, dataCenter, dataInfoId, version, sourceType, changeType);
-                        }
-
-                    } else if (sourceType == DataSourceTypeEnum.PUB_TEMP) {
+                    if (sourceType == DataSourceTypeEnum.PUB_TEMP) {
                         notifyTempPub(datum, sourceType, changeType);
 
                     } else {

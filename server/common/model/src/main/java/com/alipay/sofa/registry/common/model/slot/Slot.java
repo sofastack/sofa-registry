@@ -25,11 +25,10 @@ import java.util.*;
  */
 public final class Slot implements Serializable {
     public enum Role {
-        Leader,
-        Follower,
+        Leader, Follower,
     }
 
-    private final int       id;
+    private final int         id;
     private final String      leader;
     private final long        leaderEpoch;
     private final Set<String> followers;
@@ -80,10 +79,8 @@ public final class Slot implements Serializable {
         if (!(o instanceof Slot))
             return false;
         Slot slot = (Slot) o;
-        return id == slot.id &&
-                leaderEpoch == slot.leaderEpoch &&
-                Objects.equals(leader, slot.leader) &&
-                Objects.equals(followers, slot.followers);
+        return id == slot.id && leaderEpoch == slot.leaderEpoch
+               && Objects.equals(leader, slot.leader) && Objects.equals(followers, slot.followers);
     }
 
     @Override
@@ -93,11 +90,7 @@ public final class Slot implements Serializable {
 
     @Override
     public String toString() {
-        return "Slot{" +
-                "id=" + id +
-                ", leader='" + leader + '\'' +
-                ", leaderEpoch=" + leaderEpoch +
-                ", followers=" + followers +
-                '}';
+        return "Slot{" + "id=" + id + ", leader='" + leader + '\'' + ", leaderEpoch=" + leaderEpoch
+               + ", followers=" + followers + '}';
     }
 }

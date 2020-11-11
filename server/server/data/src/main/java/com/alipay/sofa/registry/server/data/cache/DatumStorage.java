@@ -88,6 +88,7 @@ public interface DatumStorage {
     boolean cleanDatum(String dataCenter, String dataInfoId);
 
     boolean removePublisher(String dataCenter, String dataInfoId, String registerId);
+
     /**
      * cover datum by snapshot
      */

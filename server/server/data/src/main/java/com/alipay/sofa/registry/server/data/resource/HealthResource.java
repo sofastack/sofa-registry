@@ -30,8 +30,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import com.alipay.sofa.registry.common.model.CommonResponse;
 import com.alipay.sofa.registry.metrics.ReporterUtils;
 import com.alipay.sofa.registry.server.data.bootstrap.DataServerBootstrap;
-import com.alipay.sofa.registry.server.data.node.DataNodeStatus;
-import com.alipay.sofa.registry.server.data.util.LocalServerStatusEnum;
 import com.codahale.metrics.Gauge;
 import com.codahale.metrics.MetricRegistry;
 
@@ -45,9 +43,6 @@ public class HealthResource {
 
     @Autowired
     private DataServerBootstrap dataServerBootstrap;
-
-    @Autowired
-    private DataNodeStatus      dataNodeStatus;
 
     @PostConstruct
     public void init() {
@@ -92,9 +87,7 @@ public class HealthResource {
         ret = ret && start;
         sb.append(", schedulerStarted:").append(start);
 
-        start = dataNodeStatus.getStatus() == LocalServerStatusEnum.WORKING;
-        ret = ret && start;
-        sb.append(", status:").append(dataNodeStatus.getStatus());
+        sb.append(", status:").append("Working");
 
         if (ret) {
             response = CommonResponse.buildSuccessResponse(sb.toString());

@@ -50,26 +50,26 @@ import com.alipay.sofa.registry.util.ParaCheckUtil;
 public class PublishDataHandler extends AbstractServerHandler<PublishDataRequest> {
 
     /** LOGGER */
-    private static final Logger LOGGER = LoggerFactory
-            .getLogger(PublishDataHandler.class);
+    private static final Logger            LOGGER = LoggerFactory
+                                                      .getLogger(PublishDataHandler.class);
 
     @Autowired
     private SessionServerConnectionFactory sessionServerConnectionFactory;
 
     @Autowired
-    private DataChangeEventCenter dataChangeEventCenter;
+    private DataChangeEventCenter          dataChangeEventCenter;
 
     @Autowired
-    private DataServerConfig dataServerConfig;
+    private DataServerConfig               dataServerConfig;
 
     @Autowired
-    private DatumLeaseManager datumLeaseManager;
+    private DatumLeaseManager              datumLeaseManager;
 
     @Autowired
-    private ThreadPoolExecutor publishProcessorExecutor;
+    private ThreadPoolExecutor             publishProcessorExecutor;
 
     @Autowired
-    private SlotManager slotManager;
+    private SlotManager                    slotManager;
 
     @Override
     public void checkParam(PublishDataRequest request) throws RuntimeException {
@@ -91,24 +91,26 @@ public class PublishDataHandler extends AbstractServerHandler<PublishDataRequest
     public Object doHandle(Channel channel, PublishDataRequest request) {
         Publisher publisher = Publisher.internPublisher(request.getPublisher());
 
-        final SlotAccess slotAccess = slotManager.checkSlotAccess(publisher.getDataInfoId(), request.getSlotEpoch());
+        final SlotAccess slotAccess = slotManager.checkSlotAccess(publisher.getDataInfoId(),
+            request.getSlotEpoch());
         if (slotAccess.isMoved()) {
             LOGGER.warn("[moved] Slot has moved, access: {}, request: {}", slotAccess, request);
             return SlotAccessGenericResponse.buildFailedResponse(slotAccess);
         }
 
         if (slotAccess.isMigrating()) {
-            LOGGER.warn("[migrating] Slot is migrating, access: {}, request: {}", slotAccess, request);
+            LOGGER.warn("[migrating] Slot is migrating, access: {}, request: {}", slotAccess,
+                request);
             return SlotAccessGenericResponse.buildFailedResponse(slotAccess);
         }
         dataChangeEventCenter.onChange(publisher, dataServerConfig.getLocalDataCenter());
 
         if (publisher.getPublishType() != PublishType.TEMPORARY) {
             String connectId = WordCache.getInstance().getWordCache(
-                    publisher.getSourceAddress().getAddressString() + ValueConstants.CONNECT_ID_SPLIT
-                            + publisher.getTargetAddress().getAddressString());
+                publisher.getSourceAddress().getAddressString() + ValueConstants.CONNECT_ID_SPLIT
+                        + publisher.getTargetAddress().getAddressString());
             sessionServerConnectionFactory.registerConnectId(request.getSessionServerProcessId(),
-                    connectId);
+                connectId);
             // record the renew timestamp
             datumLeaseManager.renew(connectId);
         }

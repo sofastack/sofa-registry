@@ -17,10 +17,8 @@
 package com.alipay.sofa.registry.server.data.remoting.metaserver;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -44,11 +42,7 @@ import com.alipay.sofa.registry.remoting.bolt.BoltChannel;
 import com.alipay.sofa.registry.remoting.exchange.message.Request;
 import com.alipay.sofa.registry.remoting.exchange.message.Response;
 import com.alipay.sofa.registry.server.data.bootstrap.DataServerConfig;
-import com.alipay.sofa.registry.server.data.cache.DataServerCache;
-import com.alipay.sofa.registry.server.data.cache.DataServerChangeItem;
-import com.alipay.sofa.registry.server.data.node.DataServerNode;
 import com.alipay.sofa.registry.server.data.remoting.MetaNodeExchanger;
-import com.alipay.sofa.registry.server.data.remoting.dataserver.DataServerNodeFactory;
 
 /**
  *
@@ -68,9 +62,6 @@ public class DefaultMetaServiceImpl implements IMetaServerService {
 
     @Autowired
     private MetaServerConnectionFactory metaServerConnectionFactory;
-
-    @Autowired
-    private DataServerCache             dataServerCache;
 
     private RaftClient                  raftClient;
 
@@ -145,72 +136,9 @@ public class DefaultMetaServiceImpl implements IMetaServerService {
     }
 
     @Override
-    public DataServerNode getDataServer(String dataCenter, String dataInfoId) {
-        return DataServerNodeFactory.computeDataServerNode(dataCenter, dataInfoId);
-    }
-
-    @Override
-    public List<DataServerNode> getDataServers(String dataCenter, String dataInfoId) {
-        return DataServerNodeFactory.computeDataServerNodes(dataCenter, dataInfoId,
-            dataServerConfig.getStoreNodes());
-    }
-
-    @Override
-    public Collection<DataServerNode> getDataServers(String dataCenter) {
-        return DataServerNodeFactory.getDataServerNodes(dataCenter).values();
-    }
-
-    @Override
-    public DataServerChangeItem getDateServers() {
-        Map<String, Connection> connectionMap = metaServerConnectionFactory
-            .getConnections(dataServerConfig.getLocalDataCenter());
-        String leader = getLeader().getIp();
-        if (connectionMap.containsKey(leader)) {
-            Connection connection = connectionMap.get(leader);
-            if (connection.isFine()) {
-                try {
-                    GetNodesRequest request = new GetNodesRequest(NodeType.DATA);
-                    Object obj = metaNodeExchanger.request(new Request() {
-                        @Override
-                        public Object getRequestBody() {
-                            return request;
-                        }
-
-                        @Override
-                        public URL getRequestUrl() {
-                            return new URL(connection.getRemoteIP(), connection.getRemotePort());
-                        }
-                    }).getResult();
-                    if (obj instanceof NodeChangeResult) {
-                        NodeChangeResult<DataNode> result = (NodeChangeResult<DataNode>) obj;
-                        Map<String, Long> versionMap = result.getDataCenterListVersions();
-                        versionMap.put(result.getLocalDataCenter(), result.getVersion());
-                        return new DataServerChangeItem(result.getNodes(), versionMap);
-                    }
-                } catch (Exception e) {
-                    LOGGER.error(
-                        "[ConnectionRefreshTask] refresh connections from metaServer error : {}",
-                        leader, e);
-                    String newip = refreshLeader().getIp();
-                    LOGGER
-                        .warn(
-                            "[ConnectionRefreshTask] refresh connections from metaServer error,refresh leader : {}",
-                            newip);
-
-                }
-            }
-        }
-        String newip = refreshLeader().getIp();
-        LOGGER.warn(
-            "[ConnectionRefreshTask] refresh connections metaServer not fine,refresh leader : {}",
-            newip);
-        return null;
-    }
-
-    @Override
     public SessionServerChangeItem getSessionServers() {
         Map<String, Connection> connectionMap = metaServerConnectionFactory
-                .getConnections(dataServerConfig.getLocalDataCenter());
+            .getConnections(dataServerConfig.getLocalDataCenter());
         String leader = getLeader().getIp();
         if (connectionMap.containsKey(leader)) {
             Connection connection = connectionMap.get(leader);
@@ -236,29 +164,30 @@ public class DefaultMetaServiceImpl implements IMetaServerService {
                     }
                 } catch (Exception e) {
                     LOGGER.error(
-                            "[ConnectionRefreshTask] refresh connections from metaServer error : {}",
-                            leader, e);
+                        "[ConnectionRefreshTask] refresh connections from metaServer error : {}",
+                        leader, e);
                     String newip = refreshLeader().getIp();
                     LOGGER
-                            .warn(
-                                    "[ConnectionRefreshTask] refresh connections from metaServer error,refresh leader : {}",
-                                    newip);
+                        .warn(
+                            "[ConnectionRefreshTask] refresh connections from metaServer error,refresh leader : {}",
+                            newip);
 
                 }
             }
         }
         String newip = refreshLeader().getIp();
         LOGGER.warn(
-                "[ConnectionRefreshTask] refresh connections metaServer not fine,refresh leader : {}",
-                newip);
+            "[ConnectionRefreshTask] refresh connections metaServer not fine,refresh leader : {}",
+            newip);
         return null;
     }
 
     @Override
     public List<String> getOtherDataCenters() {
-        Set<String> all = new HashSet<>(dataServerCache.getAllDataCenters());
-        all.remove(dataServerConfig.getLocalDataCenter());
-        return new ArrayList<>(all);
+        throw new UnsupportedOperationException();
+        //        Set<String> all = new HashSet<>(dataServerCache.getAllDataCenters());
+        //        all.remove(dataServerConfig.getLocalDataCenter());
+        //        return new ArrayList<>(all);
     }
 
     @Override

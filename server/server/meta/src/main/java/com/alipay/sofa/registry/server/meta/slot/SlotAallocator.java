@@ -14,29 +14,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alipay.sofa.registry.server.data.datasync;
+package com.alipay.sofa.registry.server.meta.slot;
 
-import com.alipay.sofa.registry.common.model.dataserver.SyncData;
-import com.alipay.sofa.registry.common.model.dataserver.SyncDataRequest;
+import com.alipay.sofa.registry.common.model.slot.SlotTable;
 
 /**
  *
- * @author shangyu.wh
- * @version $Id: SyncDataService.java, v 0.1 2018-03-09 17:10 shangyu.wh Exp $
+ * @author yuzhi.lyz
+ * @version v 0.1 2020-11-11 11:31 yuzhi.lyz Exp $
  */
-public interface SyncDataService {
-
-    /**
-     *
-     * @param operator
-     */
-    void appendOperator(Operator operator);
-
-    /**
-     *
-     * @param syncDataRequest
-     * @return
-     */
-    SyncData getSyncDataChange(SyncDataRequest syncDataRequest);
-
+public interface SlotAallocator {
+    SlotTable getSlotTable();
 }

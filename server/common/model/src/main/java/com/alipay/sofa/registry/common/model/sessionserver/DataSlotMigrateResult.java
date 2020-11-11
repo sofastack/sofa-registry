@@ -32,7 +32,8 @@ public class DataSlotMigrateResult {
     private Map<String, List<Publisher>> updatedPublishers;
     private Map<String, List<String>>    removedPublishers;
 
-    public DataSlotMigrateResult(Map<String, List<Publisher>> updated, Map<String, List<String>> removed) {
+    public DataSlotMigrateResult(Map<String, List<Publisher>> updated,
+                                 Map<String, List<String>> removed) {
         this.updatedPublishers = updated;
         this.removedPublishers = removed;
     }
@@ -73,8 +74,7 @@ public class DataSlotMigrateResult {
      * Setter method for property <tt>updatedPublishers</tt>.
      * @param updatedPublishers value to be assigned to property updatedPublishers
      */
-    public void setUpdatedPublishers(
-            Map<String, List<Publisher>> updatedPublishers) {
+    public void setUpdatedPublishers(Map<String, List<Publisher>> updatedPublishers) {
         this.updatedPublishers = updatedPublishers;
     }
 

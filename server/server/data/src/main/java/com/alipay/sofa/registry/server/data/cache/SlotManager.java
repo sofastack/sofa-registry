@@ -48,9 +48,11 @@ public interface SlotManager {
     void setSlotDatumStorageProvider(SlotDatumStorageProvider provider);
 
     interface SlotDatumStorageProvider {
-        Map<String, DatumSummary> getDatumSummary(int slotId, String dataCenter, String targetIpAddress);
+        Map<String, DatumSummary> getDatumSummary(int slotId, String dataCenter,
+                                                  String targetIpAddress);
 
-        void merge(int slotId, String dataCenter, Map<String, List<Publisher>> updateds, Map<String, List<String>> removeds);
+        void merge(int slotId, String dataCenter, Map<String, List<Publisher>> updateds,
+                   Map<String, List<String>> removeds);
 
     }
 

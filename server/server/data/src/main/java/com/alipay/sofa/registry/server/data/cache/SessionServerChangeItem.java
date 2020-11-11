@@ -34,7 +34,7 @@ public class SessionServerChangeItem {
     private Map<String, Map<String, SessionNode>> serverMap;
 
     /** datacenter -> version */
-    private Map<String, Long>                  versionMap;
+    private Map<String, Long>                     versionMap;
 
     /**
      * constructor
@@ -54,9 +54,10 @@ public class SessionServerChangeItem {
         this.versionMap = versionMap;
     }
 
-    public Map<String, SessionNode> getServerMap(String dataCenter){
+    public Map<String, SessionNode> getServerMap(String dataCenter) {
         return serverMap.get(dataCenter);
     }
+
     /**
      * Getter method for property <tt>serverMap</tt>.
      *

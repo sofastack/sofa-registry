@@ -53,34 +53,36 @@ import java.util.concurrent.locks.ReentrantLock;
  * @version v 0.1 2020-11-02 15:25 yuzhi.lyz Exp $
  */
 public final class SlotManagerImpl implements SlotManager {
-    private static final Logger LOGGER = LoggerFactory.getLogger(SlotManagerImpl.class);
+    private static final Logger                  LOGGER          = LoggerFactory
+                                                                     .getLogger(SlotManagerImpl.class);
 
-    private final SlotFunction slotFunction = new MD5SlotFunction();
-
-    @Autowired
-    private SessionServerCache sessionServerCache;
+    private final SlotFunction                   slotFunction    = new MD5SlotFunction();
 
     @Autowired
-    private SessionServerConnectionFactory sessionServerConnectionFactory;
+    private SessionServerCache                   sessionServerCache;
 
     @Autowired
-    private Exchange boltExchange;
+    private SessionServerConnectionFactory       sessionServerConnectionFactory;
 
     @Autowired
-    private DataServerConfig dataServerConfig;
+    private Exchange                             boltExchange;
 
-    private          SlotManager.SlotDatumStorageProvider slotDatumStorageProvider;
-    private final    Lock                                 lock            = new ReentrantLock();
-    private volatile SlotState                            slotState       = SlotState.INIT;
-    private final    List<SlotChangeListener>             changeListeners = new CopyOnWriteArrayList<>();
+    @Autowired
+    private DataServerConfig                     dataServerConfig;
 
-    private ScheduledExecutorService migratingScheduler;
+    private SlotManager.SlotDatumStorageProvider slotDatumStorageProvider;
+    private final Lock                           lock            = new ReentrantLock();
+    private volatile SlotState                   slotState       = SlotState.INIT;
+    private final List<SlotChangeListener>       changeListeners = new CopyOnWriteArrayList<>();
 
-    private final Map<Integer, MigratingTask> migratingTasks = new TreeMap<>();
+    private ScheduledExecutorService             migratingScheduler;
+
+    private final Map<Integer, MigratingTask>    migratingTasks  = new TreeMap<>();
 
     @PostConstruct
     public void init() {
-        this.migratingScheduler = createMigratingScheduler(dataServerConfig.getSlotMigratingExecutorThreadSize());
+        this.migratingScheduler = createMigratingScheduler(dataServerConfig
+            .getSlotMigratingExecutorThreadSize());
     }
 
     private ScheduledExecutorService createMigratingScheduler(int corePoolSize) {
@@ -232,8 +234,7 @@ public final class SlotManagerImpl implements SlotManager {
     }
 
     private enum TaskStatus {
-        DOING,
-        DONE,
+        DOING, DONE,
     }
 
     private final class MigratingTaskCallback implements CallbackHandler {
@@ -252,25 +253,29 @@ public final class SlotManagerImpl implements SlotManager {
                 if (resp == null || !resp.isSuccess()) {
                     task.sessionsSyncs.remove(sessionIp);
                     LOGGER.error(
-                            "response not success when migrating sessionServer({}), slot={}, resp={}",
-                            sessionIp, task.slot, resp);
+                        "response not success when migrating sessionServer({}), slot={}, resp={}",
+                        sessionIp, task.slot, resp);
                     return;
                 }
                 DataSlotMigrateResult result = resp.getData();
                 if (result != null) {
-                    slotDatumStorageProvider
-                            .merge(task.slot.getId(), dataServerConfig.getLocalDataCenter(), result.getUpdatedPublishers(),
-                                    result.getRemovedPublishers());
-                    LOGGER.info("migratingTask merge publishers from sessionServer({}), slot={}, update={}, removed={}",
-                            sessionIp, task.slot, result.getUpdatedPublishers().size(), result.getRemovedPublishers().size());
+                    slotDatumStorageProvider.merge(task.slot.getId(),
+                        dataServerConfig.getLocalDataCenter(), result.getUpdatedPublishers(),
+                        result.getRemovedPublishers());
+                    LOGGER
+                        .info(
+                            "migratingTask merge publishers from sessionServer({}), slot={}, update={}, removed={}",
+                            sessionIp, task.slot, result.getUpdatedPublishers().size(), result
+                                .getRemovedPublishers().size());
                 }
                 task.sessionsSyncs.put(sessionIp, TaskStatus.DONE);
-                LOGGER.info("migratingTask finished from sessionServer({}), slot={}", sessionIp, task.slot);
+                LOGGER.info("migratingTask finished from sessionServer({}), slot={}", sessionIp,
+                    task.slot);
             } catch (Throwable e) {
                 task.sessionsSyncs.remove(sessionIp);
                 LOGGER.error(
-                        "response callback failed when migrating sessionServer({}), slot={}, resp={}",
-                        channel, task.slot);
+                    "response callback failed when migrating sessionServer({}), slot={}, resp={}",
+                    channel, task.slot);
             }
         }
 
@@ -278,8 +283,8 @@ public final class SlotManagerImpl implements SlotManager {
         public void onException(Channel channel, Throwable exception) {
             final String remoteIp = channel.getRemoteAddress().getAddress().getHostAddress();
             task.sessionsSyncs.remove(remoteIp);
-            LOGGER.error("migrating failed: sessionServer({}), slot={}",
-                    remoteIp, task.slot, exception);
+            LOGGER.error("migrating failed: sessionServer({}), slot={}", remoteIp, task.slot,
+                exception);
         }
 
         @Override
@@ -289,9 +294,9 @@ public final class SlotManagerImpl implements SlotManager {
     }
 
     private final class MigratingTask implements Runnable {
-        final    Slot                    slot;
-        final    Map<String, TaskStatus> sessionsSyncs = new ConcurrentHashMap<>();
-        volatile boolean                 cancel;
+        final Slot                    slot;
+        final Map<String, TaskStatus> sessionsSyncs = new ConcurrentHashMap<>();
+        volatile boolean              cancel;
 
         MigratingTask(Slot slot) {
             this.slot = slot;
@@ -374,10 +379,10 @@ public final class SlotManagerImpl implements SlotManager {
     }
 
     private static final class SlotState {
-        static final SlotState    INIT      = new SlotState(new SlotTable(-1, Collections.emptyMap()),
-                Collections.emptySet());
-        final        SlotTable    table;
-        final        Set<Integer> migrating = new ConcurrentHashSet<>();
+        static final SlotState INIT      = new SlotState(new SlotTable(-1, Collections.emptyMap()),
+                                             Collections.emptySet());
+        final SlotTable        table;
+        final Set<Integer>     migrating = new ConcurrentHashSet<>();
 
         SlotState(SlotTable table, Set<Integer> migratingSlots) {
             this.table = table;

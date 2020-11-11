@@ -18,6 +18,7 @@ package com.alipay.sofa.registry.common.model.slot;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
@@ -27,10 +28,10 @@ import java.util.Set;
  * @version v 0.1 2020-11-03 11:27 yuzhi.lyz Exp $
  */
 public final class DataNodeSlot implements Serializable {
-    private static final long        serialVersionUID = -4418378966762753298L;
-    private final        String      dataNode;
-    private final        List<Short> leaders          = new ArrayList<>();
-    private final        List<Short> followers        = new ArrayList<>();
+    private static final long   serialVersionUID = -4418378966762753298L;
+    private final String        dataNode;
+    private final List<Integer> leaders          = new ArrayList<>();
+    private final List<Integer> followers        = new ArrayList<>();
 
     public DataNodeSlot(String dataNode) {
         this.dataNode = dataNode;
@@ -48,7 +49,7 @@ public final class DataNodeSlot implements Serializable {
      * Getter method for property <tt>leaders</tt>.
      * @return property value of leaders
      */
-    public List<Short> getLeaders() {
+    public List<Integer> getLeaders() {
         return leaders;
     }
 
@@ -56,7 +57,8 @@ public final class DataNodeSlot implements Serializable {
      * Getter method for property <tt>followers</tt>.
      * @return property value of followers
      */
-    public List<Short> getFollowers() {
+    public List<Integer> getFollowers() {
         return followers;
     }
+
 }

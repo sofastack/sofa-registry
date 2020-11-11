@@ -26,13 +26,11 @@ import com.alipay.sofa.registry.common.model.store.URL;
  */
 public class SessionNode implements Node {
 
-    private URL        nodeUrl;
+    private URL    nodeUrl;
 
-    private String     regionId;
+    private String regionId;
 
-    private String     name;
-
-    private NodeStatus nodeStatus;
+    private String name;
 
     /**
      * constructor
@@ -42,7 +40,6 @@ public class SessionNode implements Node {
     public SessionNode(URL nodeUrl, String regionId) {
         this.nodeUrl = nodeUrl;
         this.regionId = regionId;
-        this.nodeStatus = NodeStatus.INIT;
     }
 
     @Override
@@ -74,9 +71,6 @@ public class SessionNode implements Node {
 
         SessionNode that = (SessionNode) o;
 
-        if (nodeStatus != null ? !nodeStatus.equals(that.nodeStatus) : that.nodeStatus != null) {
-            return false;
-        }
         if (name != null ? !name.equals(that.name) : that.name != null) {
             return false;
         }
@@ -99,7 +93,6 @@ public class SessionNode implements Node {
     public int hashCode() {
         int result = name != null ? name.hashCode() : 0;
         result = 31 * result + (regionId != null ? regionId.hashCode() : 0);
-        result = 31 * result + (nodeStatus != null ? nodeStatus.hashCode() : 0);
         result = 31
                  * result
                  + (nodeUrl != null ? (nodeUrl.getAddressString() != null ? nodeUrl
@@ -150,26 +143,6 @@ public class SessionNode implements Node {
      */
     public void setName(String name) {
         this.name = name;
-    }
-
-    /**
-     * Getter method for property <tt>nodeStatus</tt>.
-     *
-     * @return property value of nodeStatus
-     */
-    @Override
-    public NodeStatus getNodeStatus() {
-        return nodeStatus;
-    }
-
-    /**
-     * Setter method for property <tt>nodeStatus</tt>.
-     *
-     * @param nodeStatus  value to be assigned to property nodeStatus
-     */
-    @Override
-    public void setNodeStatus(NodeStatus nodeStatus) {
-        this.nodeStatus = nodeStatus;
     }
 
     @Override

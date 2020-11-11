@@ -26,9 +26,9 @@ import java.util.Map;
  * @version v 0.1 2020-11-05 14:27 yuzhi.lyz Exp $
  */
 public class DatumSummary implements Serializable {
-    private String                          dataInfoId;
+    private String                           dataInfoId;
     private Map<String/*registerId*/, Long> publisherDigests;
-    private String                          targetAddress;
+    private String                           targetAddress;
 
     public DatumSummary(String dataInfoId) {
         this.dataInfoId = dataInfoId;
@@ -66,10 +66,9 @@ public class DatumSummary implements Serializable {
         this.publisherDigests = publisherDigests;
     }
 
-    @Override public String toString() {
-        return "DatumSummary{" +
-                "dataInfoId='" + dataInfoId + '\'' +
-                ", publisherDigests=" + publisherDigests +
-                '}';
+    @Override
+    public String toString() {
+        return "DatumSummary{" + "dataInfoId='" + dataInfoId + '\'' + ", publisherDigests="
+               + publisherDigests + '}';
     }
 }

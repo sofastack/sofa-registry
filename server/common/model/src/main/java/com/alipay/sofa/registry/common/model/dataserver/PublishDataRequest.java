@@ -34,7 +34,7 @@ public class PublishDataRequest implements Serializable {
 
     private String            sessionServerProcessId;
 
-    private long slotEpoch;
+    private long              slotEpoch;
 
     /**
      * Getter method for property <tt>publisher</tt>.

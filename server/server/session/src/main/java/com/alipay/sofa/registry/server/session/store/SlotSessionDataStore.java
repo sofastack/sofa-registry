@@ -20,6 +20,7 @@ import com.alipay.sofa.registry.common.model.store.Publisher;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
+import com.alipay.sofa.registry.server.session.slot.SlotTableCache;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.*;
@@ -31,16 +32,16 @@ import java.util.concurrent.ConcurrentHashMap;
  * @version v 0.1 2020-11-06 16:24 yuzhi.lyz Exp $
  */
 public class SlotSessionDataStore implements DataStore {
-    private static final Logger LOGGER = LoggerFactory.getLogger(SlotSessionDataStore.class);
+    private static final Logger           LOGGER          = LoggerFactory
+                                                              .getLogger(SlotSessionDataStore.class);
 
     @Autowired
-    private SessionServerConfig sessionServerConfig;
+    private SessionServerConfig           sessionServerConfig;
 
     @Autowired
-    private SlotTableCache slotTableCache;
+    private SlotTableCache                slotTableCache;
 
     private final Map<Integer, DataStore> slot2DataStores = new ConcurrentHashMap<>();
-
 
     private DataStore getOrCreateDataStore(String dataInfoId) {
         int slotId = slotTableCache.slotOf(dataInfoId);

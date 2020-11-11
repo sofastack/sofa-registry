@@ -35,29 +35,10 @@ public interface Node extends Serializable {
     }
 
     /**
-     * node status enum
-     */
-    enum NodeStatus {
-        INIT, PREPARE, WORKING
-    }
-
-    /**
      * get node type
      * @return
      */
     NodeType getNodeType();
-
-    /**
-     * get node status
-     * @return
-     */
-    NodeStatus getNodeStatus();
-
-    /**
-     * set node status
-     * @param nodeStatus
-     */
-    void setNodeStatus(NodeStatus nodeStatus);
 
     /**
      * get node url

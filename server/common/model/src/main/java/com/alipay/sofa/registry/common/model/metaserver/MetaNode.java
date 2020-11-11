@@ -36,8 +36,6 @@ public class MetaNode implements Node {
 
     private String         regionId;
 
-    private NodeStatus     nodeStatus;
-
     /**
      * constructor
      * @param nodeUrl
@@ -47,17 +45,11 @@ public class MetaNode implements Node {
         this.nodeUrl = nodeUrl;
         this.name = getIp();
         this.dataCenter = dataCenter;
-        this.nodeStatus = NodeStatus.INIT;
     }
 
     @Override
     public NodeType getNodeType() {
         return nodeType;
-    }
-
-    @Override
-    public NodeStatus getNodeStatus() {
-        return nodeStatus;
     }
 
     @Override
@@ -80,16 +72,6 @@ public class MetaNode implements Node {
      */
     public String getIp() {
         return nodeUrl == null ? "" : nodeUrl.getIpAddress();
-    }
-
-    /**
-     * Setter method for property <tt>nodeStatus</tt>.
-     *
-     * @param nodeStatus  value to be assigned to property nodeStatus
-     */
-    @Override
-    public void setNodeStatus(NodeStatus nodeStatus) {
-        this.nodeStatus = nodeStatus;
     }
 
     /**

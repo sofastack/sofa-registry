@@ -36,7 +36,7 @@ public final class SlotTableChangeHandler extends AbstractClientHandler<SlotTabl
     private static final Logger LOGGER = LoggerFactory.getLogger(SlotTableChangeHandler.class);
 
     @Autowired
-    private SlotManager slotManager;
+    private SlotManager         slotManager;
 
     @Override
     public void checkParam(SlotTableChangeRequest request) throws RuntimeException {

@@ -54,10 +54,9 @@ public class SessionServerNode {
         return connection;
     }
 
-    @Override public String toString() {
-        return "SessionServerNode{" +
-                "ip='" + ip + '\'' +
-                ", dataCenter='" + dataCenter + '\'' +
-                '}';
+    @Override
+    public String toString() {
+        return "SessionServerNode{" + "ip='" + ip + '\'' + ", dataCenter='" + dataCenter + '\''
+               + '}';
     }
 }

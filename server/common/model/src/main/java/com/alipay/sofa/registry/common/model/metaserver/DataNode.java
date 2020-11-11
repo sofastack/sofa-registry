@@ -35,8 +35,6 @@ public class DataNode implements Node, HashNode {
 
     private String       regionId;
 
-    private NodeStatus   nodeStatus;
-
     private long         registrationTimestamp;
 
     /**
@@ -48,18 +46,6 @@ public class DataNode implements Node, HashNode {
         this.nodeUrl = nodeUrl;
         this.nodeName = nodeUrl.getIpAddress();
         this.dataCenter = dataCenter;
-        this.nodeStatus = NodeStatus.INIT;
-    }
-
-    /**
-     * constructor
-     * @param nodeUrl
-     * @param dataCenter
-     * @param status
-     */
-    public DataNode(URL nodeUrl, String dataCenter, NodeStatus status) {
-        this(nodeUrl, dataCenter);
-        this.nodeStatus = status;
     }
 
     @Override
@@ -73,9 +59,6 @@ public class DataNode implements Node, HashNode {
 
         DataNode that = (DataNode) o;
 
-        if (nodeStatus != null ? !nodeStatus.equals(that.nodeStatus) : that.nodeStatus != null) {
-            return false;
-        }
         if (nodeName != null ? !nodeName.equals(that.nodeName) : that.nodeName != null) {
             return false;
         }
@@ -107,7 +90,6 @@ public class DataNode implements Node, HashNode {
         int result = nodeName != null ? nodeName.hashCode() : 0;
         result = 31 * result + (dataCenter != null ? dataCenter.hashCode() : 0);
         result = 31 * result + (regionId != null ? regionId.hashCode() : 0);
-        result = 31 * result + (nodeStatus != null ? nodeStatus.hashCode() : 0);
         result = 31 * result + (int) (registrationTimestamp ^ (registrationTimestamp >>> 32));
         result = 31
                  * result
@@ -169,26 +151,6 @@ public class DataNode implements Node, HashNode {
      */
     public String getDataCenter() {
         return dataCenter;
-    }
-
-    /**
-     * Getter method for property <tt>nodeStatus</tt>.
-     *
-     * @return property value of nodeStatus
-     */
-    @Override
-    public NodeStatus getNodeStatus() {
-        return nodeStatus;
-    }
-
-    /**
-     * Setter method for property <tt>nodeStatus</tt>.
-     *
-     * @param nodeStatus  value to be assigned to property nodeStatus
-     */
-    @Override
-    public void setNodeStatus(NodeStatus nodeStatus) {
-        this.nodeStatus = nodeStatus;
     }
 
     /**

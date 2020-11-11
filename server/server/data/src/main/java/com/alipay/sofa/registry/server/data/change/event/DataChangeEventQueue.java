@@ -243,17 +243,14 @@ public class DataChangeEventQueue {
                         continue;
                     }
 
-                    DataServerNode dataServerNode = DataServerNodeFactory.computeDataServerNode(
-                        dataServerConfig.getLocalDataCenter(), publisher.getDataInfoId());
                     //current dataCenter backup data need not unPub,it will be unPub by backup sync event
-                    if (DataServerConfig.IP.equals(dataServerNode.getIp())) {
-                        Datum datum = new Datum(new UnPublisher(publisher.getDataInfoId(),
-                            publisher.getRegisterId(), event.getOccurredTimestamp()),
-                            event.getDataCenter(), event.getVersion());
-                        datum.setContainsUnPub(true);
-                        handleDatum(DataChangeTypeEnum.MERGE, DataSourceTypeEnum.PUB, datum);
-                        count++;
-                    }
+                    Datum datum = new Datum(new UnPublisher(publisher.getDataInfoId(),
+                        publisher.getRegisterId(), event.getOccurredTimestamp()),
+                        event.getDataCenter(), event.getVersion());
+                    datum.setContainsUnPub(true);
+                    handleDatum(DataChangeTypeEnum.MERGE, DataSourceTypeEnum.PUB, datum);
+                    count++;
+
                 }
                 LOGGER
                     .info(

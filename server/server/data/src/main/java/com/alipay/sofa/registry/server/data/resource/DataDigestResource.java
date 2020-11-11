@@ -40,9 +40,7 @@ import com.alipay.remoting.Connection;
 import com.alipay.sofa.registry.common.model.dataserver.Datum;
 import com.alipay.sofa.registry.common.model.store.DataInfo;
 import com.alipay.sofa.registry.common.model.store.Publisher;
-import com.alipay.sofa.registry.net.NetUtil;
 import com.alipay.sofa.registry.server.data.bootstrap.DataServerConfig;
-import com.alipay.sofa.registry.server.data.cache.DataServerCache;
 import com.alipay.sofa.registry.server.data.cache.DatumCache;
 import com.alipay.sofa.registry.server.data.node.DataServerNode;
 import com.alipay.sofa.registry.server.data.remoting.dataserver.DataServerNodeFactory;
@@ -59,8 +57,6 @@ public class DataDigestResource {
 
     private final static String            SESSION = "SESSION";
 
-    private final static String            DATA    = "DATA";
-
     private final static String            META    = "META";
 
     @Autowired
@@ -74,9 +70,6 @@ public class DataDigestResource {
 
     @Autowired
     private DatumCache                     datumCache;
-
-    @Autowired
-    private DataServerCache                dataServerCache;
 
     @GET
     @Path("datum/query")
@@ -168,9 +161,6 @@ public class DataDigestResource {
                         map.put(dataServerConfig.getLocalDataCenter(), sessionList);
                     }
                     break;
-                case DATA:
-                    map = getDataServerList();
-                    break;
                 case META:
                     map = getMetaServerList();
                     break;
@@ -189,30 +179,6 @@ public class DataDigestResource {
                 .map(connection -> connection.getRemoteIP() + ":" + connection.getRemotePort())
                 .collect(Collectors.toList());
         return connections;
-    }
-
-    public Map<String, List<String>> getDataServerList() {
-
-        Map<String, List<String>> map = new HashMap<>();
-        Set<String> allDataCenter = new HashSet<>(dataServerCache.getAllDataCenters());
-        for (String dataCenter : allDataCenter) {
-
-            List<String> list = map.computeIfAbsent(dataCenter, k -> new ArrayList<>());
-
-            Map<String, DataServerNode> dataNodes = DataServerNodeFactory.getDataServerNodes(dataCenter);
-            if (dataNodes != null && !dataNodes.isEmpty()) {
-
-                dataNodes.forEach((ip, dataServerNode) -> {
-                    if (ip != null && !ip.equals(DataServerConfig.IP)) {
-                        Connection connection = dataServerNode.getConnection();
-                        if (connection != null && connection.isFine()) {
-                            list.add(connection.getRemoteIP());
-                        }
-                    }
-                });
-            }
-        }
-        return map;
     }
 
     public Map<String, List<String>> getMetaServerList() {

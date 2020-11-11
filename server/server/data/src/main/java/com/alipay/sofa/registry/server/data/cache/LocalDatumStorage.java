@@ -42,15 +42,15 @@ import com.alipay.sofa.registry.server.data.remoting.dataserver.DataServerNodeFa
  */
 public class LocalDatumStorage implements DatumStorage {
 
-    public static final long ERROR_DATUM_VERSION = -2L;
-    public static final long ERROR_DATUM_SLOT    = -3L;
+    public static final long                            ERROR_DATUM_VERSION  = -2L;
+    public static final long                            ERROR_DATUM_SLOT     = -3L;
 
     /**
      * row:     dataCenter
      * column:  dataInfoId
      * value:   datum
      */
-    protected final Map<String, Map<String, Datum>> DATUM_MAP = new ConcurrentHashMap<>();
+    protected final Map<String, Map<String, Datum>>     DATUM_MAP            = new ConcurrentHashMap<>();
 
     /**
      * all datum index
@@ -62,7 +62,7 @@ public class LocalDatumStorage implements DatumStorage {
     protected final Map<String, Map<String, Publisher>> ALL_CONNECT_ID_INDEX = new ConcurrentHashMap<>();
 
     @Autowired
-    protected DataServerConfig dataServerConfig;
+    protected DataServerConfig                          dataServerConfig;
 
     /**
      * get datum by specific dataCenter and dataInfoId
@@ -403,8 +403,8 @@ public class LocalDatumStorage implements DatumStorage {
 
     private String getConnectId(Publisher cachePub) {
         return WordCache.getInstance().getWordCache(
-                cachePub.getSourceAddress().getAddressString() + ValueConstants.CONNECT_ID_SPLIT
-                        + cachePub.getTargetAddress().getAddressString());
+            cachePub.getSourceAddress().getAddressString() + ValueConstants.CONNECT_ID_SPLIT
+                    + cachePub.getTargetAddress().getAddressString());
     }
 
     /**
@@ -427,5 +427,4 @@ public class LocalDatumStorage implements DatumStorage {
         });
         return summarys;
     }
-
 }
