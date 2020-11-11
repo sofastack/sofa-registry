@@ -36,7 +36,6 @@ import com.alipay.sofa.registry.remoting.Channel;
 import com.alipay.sofa.registry.remoting.bolt.BoltChannel;
 import com.alipay.sofa.registry.remoting.exchange.message.Request;
 import com.alipay.sofa.registry.server.data.bootstrap.DataServerConfig;
-import com.alipay.sofa.registry.server.data.event.DataServerChangeEvent;
 import com.alipay.sofa.registry.server.data.event.EventCenter;
 import com.alipay.sofa.registry.server.data.event.MetaServerChangeEvent;
 import com.alipay.sofa.registry.server.data.event.StartTaskEvent;
@@ -163,9 +162,6 @@ public class MetaServerChangeEventHandler extends AbstractEventHandler<MetaServe
                         Set<StartTaskTypeEnum> set = new HashSet<>();
                         set.add(StartTaskTypeEnum.RENEW);
                         eventCenter.post(new StartTaskEvent(set));
-
-                        eventCenter.post(new DataServerChangeEvent(result.getNodes(), versionMap,
-                            DataServerChangeEvent.FromType.REGISTER_META));
                         break;
                     }
                 }

@@ -14,16 +14,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alipay.sofa.registry.server.data.util;
+package com.alipay.sofa.registry.server.session.slot;
+
+import com.alipay.sofa.registry.common.model.slot.Slot;
+import com.alipay.sofa.registry.common.model.slot.SlotTable;
 
 /**
  *
- * @author qian.lqlq
- * @version $Id: LocalServerStatusEnum.java, v 0.1 2018-04-29 13:49 qian.lqlq Exp $
+ * @author yuzhi.lyz
+ * @version v 0.1 2020-11-06 16:21 yuzhi.lyz Exp $
  */
-public enum LocalServerStatusEnum {
-    /** */
-    INITIAL,
-    /** */
-    WORKING
+public interface SlotTableCache {
+    int slotOf(String dataInfoId);
+
+    Slot getSlot(String dataInfoId);
+
+    void triggerUpdateSlotTable(long epoch);
+
+    long getEpoch();
 }

@@ -16,7 +16,6 @@
  */
 package com.alipay.sofa.registry.server.meta.test.service;
 
-import com.alipay.sofa.registry.common.model.Node.NodeStatus;
 import com.alipay.sofa.registry.common.model.metaserver.SessionNode;
 import com.alipay.sofa.registry.common.model.store.URL;
 import com.alipay.sofa.registry.server.meta.bootstrap.NodeConfig;
@@ -162,19 +161,18 @@ public class SessionRepositoryServiceTest {
             dataCenter));
 
         SessionNode metaNodeFix = new SessionNode(new URL(ip, 0), dataCenter);
-        metaNodeFix.setNodeStatus(NodeStatus.WORKING);
 
         RenewDecorate<SessionNode> metaNode2 = new RenewDecorate(metaNodeFix);
 
         sessionRepositoryService.put(ip, sessionNod);
 
-        Assert.assertEquals(sessionRepositoryService.get(ip).getRenewal().getNodeStatus(),
-            NodeStatus.INIT);
+        //        Assert.assertEquals(sessionRepositoryService.get(ip).getRenewal().getNodeStatus(),
+        //            NodeStatus.INIT);
 
         sessionRepositoryService.replace(ip, metaNode2);
 
-        Assert.assertEquals(sessionRepositoryService.get(ip).getRenewal().getNodeStatus(),
-            NodeStatus.WORKING);
+        //        Assert.assertEquals(sessionRepositoryService.get(ip).getRenewal().getNodeStatus(),
+        //            NodeStatus.WORKING);
         Assert.assertEquals(sessionRepositoryService.getAllData().size(), 1);
         Assert.assertEquals(sessionRepositoryService.getAllDataMap().get(dataCenter).size(), 1);
     }

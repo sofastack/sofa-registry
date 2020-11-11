@@ -35,7 +35,8 @@ public class GetDataRequest implements Serializable {
      */
     private String            dataCenter;
 
-    private long slotEpoch;
+    private long              slotEpoch;
+
     /**
      * constructor
      */
@@ -107,6 +108,7 @@ public class GetDataRequest implements Serializable {
     @Override
     public String toString() {
         return new StringBuilder("[GetDataRequest] dataCenter=").append(this.dataCenter)
-            .append(", dataInfoId=").append(this.dataInfoId).append(", slotEpoch=").append(slotEpoch).toString();
+            .append(", dataInfoId=").append(this.dataInfoId).append(", slotEpoch=")
+            .append(slotEpoch).toString();
     }
 }

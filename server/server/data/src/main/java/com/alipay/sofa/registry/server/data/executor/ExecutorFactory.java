@@ -65,7 +65,7 @@ public class ExecutorFactory {
                 "NotifySessionCallback-executor", true));
 
         MIGRATING_SESSION_CALLBACK_EXECUTOR = new ThreadPoolExecutor(10, 20, 300, TimeUnit.SECONDS,
-                new LinkedBlockingQueue<>(100000), new NamedThreadFactory(
+            new LinkedBlockingQueue<>(100000), new NamedThreadFactory(
                 "MigratingSessionCallback-executor", true));
     }
 

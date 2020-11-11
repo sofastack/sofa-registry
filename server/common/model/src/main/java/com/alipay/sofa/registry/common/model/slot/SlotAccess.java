@@ -24,13 +24,11 @@ import java.io.Serializable;
  */
 public final class SlotAccess implements Serializable {
     public enum Status {
-        Accept,
-        Migrating,
-        Moved,
+        Accept, Migrating, Moved,
     }
 
     private final Status status;
-    private final int  slotId;
+    private final int    slotId;
     private final long   slotEpoch;
 
     public SlotAccess(int slotId, long slotEpoch, Status status) {
@@ -63,11 +61,9 @@ public final class SlotAccess implements Serializable {
         return slotEpoch;
     }
 
-    @Override public String toString() {
-        return "SlotAccess{" +
-                "status=" + status +
-                ", slotId=" + slotId +
-                ", slotEpoch=" + slotEpoch +
-                '}';
+    @Override
+    public String toString() {
+        return "SlotAccess{" + "status=" + status + ", slotId=" + slotId + ", slotEpoch="
+               + slotEpoch + '}';
     }
 }

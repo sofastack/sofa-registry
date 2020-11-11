@@ -16,6 +16,8 @@
  */
 package com.alipay.sofa.registry.server.session.node;
 
+import com.alipay.sofa.registry.common.model.slot.Slot;
+import com.alipay.sofa.registry.server.session.slot.SlotTableCache;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import com.alipay.sofa.registry.common.model.Node.NodeType;
@@ -26,6 +28,8 @@ import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
 
+import java.util.Map;
+
 /**
  *
  * @author shangyu.wh
@@ -33,17 +37,24 @@ import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
  */
 public class DataNodeManager extends AbstractNodeManager<DataNode> {
 
-    private static final Logger      LOGGER = LoggerFactory.getLogger(DataNodeManager.class,
-                                                "[DataNodeManager]");
+    private static final Logger LOGGER = LoggerFactory.getLogger(DataNodeManager.class,
+                                           "[DataNodeManager]");
+    @Autowired
+    private SlotTableCache      slotTableCache;
 
     @Autowired
-    private SessionServerConfig      sessionServerConfig;
-
-    private ConsistentHash<DataNode> consistentHash;
+    private SessionServerConfig sessionServerConfig;
 
     @Override
     public DataNode getNode(String dataInfoId) {
-        DataNode dataNode = consistentHash.getNodeFor(dataInfoId);
+        Slot slot = slotTableCache.getSlot(dataInfoId);
+        Map<String, DataNode> dataNodeMap = nodes.get(sessionServerConfig
+            .getSessionServerDataCenter());
+        if (dataNodeMap == null) {
+            throw new RuntimeException("DataNodeManager calculate data node error!,dataInfoId="
+                                       + dataInfoId);
+        }
+        DataNode dataNode = dataNodeMap.get(slot.getLeader());
         if (dataNode == null) {
             throw new RuntimeException("DataNodeManager calculate data node error!,dataInfoId="
                                        + dataInfoId);
@@ -56,9 +67,6 @@ public class DataNodeManager extends AbstractNodeManager<DataNode> {
         write.lock();
         try {
             super.updateNodes(nodeChangeResult);
-            consistentHash = new ConsistentHash(sessionServerConfig.getNumberOfReplicas(),
-                getDataCenterNodes());
-
         } finally {
             write.unlock();
         }

@@ -25,7 +25,7 @@ import com.alipay.sofa.registry.common.model.CommonResponse;
  */
 public final class SlotAccessGenericResponse<T> extends CommonResponse {
     private final SlotAccess slotAccess;
-    private       T          data;
+    private T                data;
 
     private SlotAccessGenericResponse(boolean success, String message, SlotAccess slotAccess) {
         super(success, message);

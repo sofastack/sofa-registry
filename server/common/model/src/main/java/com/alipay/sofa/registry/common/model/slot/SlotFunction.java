@@ -23,5 +23,6 @@ package com.alipay.sofa.registry.common.model.slot;
  */
 public interface SlotFunction {
     int maxSlots();
+
     int slotOf(Object o);
 }

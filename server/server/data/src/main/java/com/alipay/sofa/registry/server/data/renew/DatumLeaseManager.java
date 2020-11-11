@@ -35,8 +35,6 @@ import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.server.data.bootstrap.DataServerConfig;
 import com.alipay.sofa.registry.server.data.cache.DatumCache;
-import com.alipay.sofa.registry.server.data.event.AfterWorkingProcess;
-import com.alipay.sofa.registry.server.data.node.DataNodeStatus;
 import com.alipay.sofa.registry.server.data.remoting.sessionserver.disconnect.ClientDisconnectEvent;
 import com.alipay.sofa.registry.server.data.remoting.sessionserver.disconnect.DisconnectEventHandler;
 import com.alipay.sofa.registry.timer.AsyncHashedWheelTimer;
@@ -48,7 +46,7 @@ import com.google.common.util.concurrent.ThreadFactoryBuilder;
  * @author kezhu.wukz
  * @version $Id: DatumExpiredCleaner.java, v 0.1 2019-06-03 21:08 kezhu.wukz Exp $
  */
-public class DatumLeaseManager implements AfterWorkingProcess {
+public class DatumLeaseManager {
     private static final Logger                LOGGER                     = LoggerFactory
                                                                               .getLogger(DatumLeaseManager.class);
     private static final TimeZone              TIME_ZONE                  = TimeZone
@@ -64,8 +62,6 @@ public class DatumLeaseManager implements AfterWorkingProcess {
     /** lock for connectId , format: connectId -> true */
     private ConcurrentHashMap<String, Boolean> locksForConnectId          = new ConcurrentHashMap();
 
-    private volatile boolean                   serverWorking              = false;
-
     private volatile boolean                   renewEnable                = true;
 
     private AsyncHashedWheelTimer              datumAsyncHashedWheelTimer;
@@ -78,9 +74,6 @@ public class DatumLeaseManager implements AfterWorkingProcess {
 
     @Autowired
     private DatumCache                         datumCache;
-
-    @Autowired
-    private DataNodeStatus                     dataNodeStatus;
 
     private ScheduledThreadPoolExecutor        executorForHeartbeatLess;
 
@@ -112,18 +105,6 @@ public class DatumLeaseManager implements AfterWorkingProcess {
 
         executorForHeartbeatLess = new ScheduledThreadPoolExecutor(1, threadFactoryBuilder
             .setNameFormat("Registry-DatumLeaseManager-ExecutorForHeartbeatLess").build());
-        scheduleEvictTaskForHeartbeatLess();
-    }
-
-    /**
-     * reset EvictTaskForHeartbeatLess
-     */
-    public synchronized void reset() {
-        LOGGER.info("reset is called, EvictTaskForHeartbeatLess will delay {}s",
-            dataServerConfig.getDatumTimeToLiveSec());
-        if (futureForHeartbeatLess != null) {
-            futureForHeartbeatLess.cancel(false);
-        }
         scheduleEvictTaskForHeartbeatLess();
     }
 
@@ -204,9 +185,8 @@ public class DatumLeaseManager implements AfterWorkingProcess {
                         System.currentTimeMillis() - lastRenewTime > dataServerConfig.getDatumTimeToLiveSec() * 1000L;
                 if (!isRenewEnable()) {
                     LOGGER.info(
-                            "scheduleEvictTask({}) skipped because isRenewEnable() is false, lastRenewTime is {}, DataNodeStatus is {}, will retry after {}s",
-                            connectId, format(lastRenewTime), dataNodeStatus.getStatus(),
-                            dataServerConfig.getDatumTimeToLiveSec());
+                            "scheduleEvictTask({}) skipped because isRenewEnable() is false, lastRenewTime is {}, will retry after {}s",
+                            connectId, format(lastRenewTime), dataServerConfig.getDatumTimeToLiveSec());
                     nextDelaySec = dataServerConfig.getDatumTimeToLiveSec();
                 } else if (isExpired) {
                     int ownPubSize = getOwnPubSize(connectId);
@@ -251,23 +231,6 @@ public class DatumLeaseManager implements AfterWorkingProcess {
         return DateFormatUtils.format(lastRenewTime, "yyyy-MM-dd HH:mm:ss", TIME_ZONE);
     }
 
-    @Override
-    public void afterWorkingProcess() {
-        /*
-         * After the snapshot data is synchronized during startup, it is queued and then placed asynchronously into
-         * DatumCache. When the notification becomes WORKING, there may be data in the queue that is not executed
-         * to DatumCache. So it need to sleep for a while.
-         */
-        executorForHeartbeatLess.schedule(() -> {
-            serverWorking = true;
-        }, dataServerConfig.getRenewEnableDelaySec(), TimeUnit.SECONDS);
-    }
-
-    @Override
-    public int getOrder() {
-        return 0;
-    }
-
     /**
      * evict own connectIds with heartbeat less
      */
@@ -279,8 +242,8 @@ public class DatumLeaseManager implements AfterWorkingProcess {
             if (!isRenewEnable()) {
                 LOGGER
                     .info(
-                        "EvictTaskForHeartbeatLess skipped because isRenewEnable() is false, DataNodeStatus is {}, will retry after {}s",
-                        dataNodeStatus.getStatus(), dataServerConfig.getDatumTimeToLiveSec());
+                        "EvictTaskForHeartbeatLess skipped because isRenewEnable() is false, will retry after {}s",
+                        dataServerConfig.getDatumTimeToLiveSec());
                 return;
             }
 
@@ -307,7 +270,7 @@ public class DatumLeaseManager implements AfterWorkingProcess {
     }
 
     private boolean isRenewEnable() {
-        return renewEnable && serverWorking;
+        return renewEnable;
     }
 
 }

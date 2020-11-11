@@ -30,15 +30,14 @@ import java.util.Map;
  */
 public class SessionServerCache {
     @Autowired
-    private          DataServerConfig        dataServerConfig;
+    private DataServerConfig                 dataServerConfig;
     private volatile SessionServerChangeItem sessionServerChangeItem;
 
     /**
      * Setter method for property <tt>sessionServerChangeItem</tt>.
      * @param sessionServerChangeItem value to be assigned to property sessionServerChangeItem
      */
-    public void setSessionServerChangeItem(
-            SessionServerChangeItem sessionServerChangeItem) {
+    public void setSessionServerChangeItem(SessionServerChangeItem sessionServerChangeItem) {
         this.sessionServerChangeItem = sessionServerChangeItem;
     }
 

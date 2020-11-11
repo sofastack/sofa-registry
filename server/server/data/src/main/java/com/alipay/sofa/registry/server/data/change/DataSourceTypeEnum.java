@@ -39,16 +39,6 @@ public enum DataSourceTypeEnum {
     SYNC,
 
     /**
-     * from dataservers in the same datacenter
-     */
-    BACKUP,
-
-    /**
-     * local dataInfo check,not belong this node schedule remove
-     */
-    CLEAN,
-
-    /**
      * Snapshot data, after renew finds data inconsistent
      */
     SNAPSHOT,

@@ -25,10 +25,17 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import com.alipay.remoting.Connection;
+import com.alipay.sofa.registry.common.model.store.URL;
 import com.alipay.sofa.registry.consistency.hash.ConsistentHash;
+import com.alipay.sofa.registry.log.Logger;
+import com.alipay.sofa.registry.log.LoggerFactory;
+import com.alipay.sofa.registry.remoting.bolt.BoltChannel;
 import com.alipay.sofa.registry.server.data.bootstrap.DataServerConfig;
 import com.alipay.sofa.registry.server.data.node.DataServerNode;
+import com.alipay.sofa.registry.server.data.remoting.DataNodeExchanger;
+import com.alipay.sofa.registry.server.data.util.TimeUtil;
 import com.google.common.collect.Lists;
+import org.springframework.beans.factory.annotation.Autowired;
 
 /**
  * the factory to hold other dataservers and connection connected to them
@@ -37,22 +44,21 @@ import com.google.common.collect.Lists;
  * @version $Id: DataServerNodeFactory.java, v 0.1 2018-03-13 18:45 qian.lqlq Exp $
  */
 public class DataServerNodeFactory {
+    private static final int                                      TRY_COUNT = 5;
 
+    private static final Logger                                   LOGGER    = LoggerFactory
+                                                                                .getLogger(DataServerNodeFactory.class);
+    @Autowired
+    private DataNodeExchanger                                     dataNodeExchanger;
+
+    @Autowired
+    private DataServerConfig                                      dataServerConfig;
     /**
      * row:     dataCenter
      * column:  ip
      * value    dataServerNode
      */
-    private static final Map<String, Map<String, DataServerNode>>    MAP                 = new ConcurrentHashMap<>();
-
-    /**
-     * key:     dataCenter
-     * value:   consistentHash
-     */
-    private static final Map<String, ConsistentHash<DataServerNode>> CONSISTENT_HASH_MAP = new ConcurrentHashMap<>();
-
-    private static AtomicBoolean                                     init                = new AtomicBoolean(
-                                                                                             false);
+    private static final Map<String, Map<String, DataServerNode>> MAP       = new ConcurrentHashMap<>();
 
     /**
      * add a dataserver to cache
@@ -70,38 +76,6 @@ public class DataServerNodeFactory {
             }
         }
         dataMap.put(dataServerNode.getIp(), dataServerNode);
-        refreshConsistent(dataCenter, dataServerConfig);
-    }
-
-    /**
-     * refresh instance of consistentHash
-     *
-     * @param dataCenter
-     */
-    public static void refreshConsistent(String dataCenter, DataServerConfig dataServerConfig) {
-        List<DataServerNode> dataServerNodes = Lists.newArrayList(MAP.get(dataCenter).values());
-        if (dataServerConfig.getLocalDataCenter().equals(dataCenter)) {
-            if (!MAP.get(dataCenter).keySet().contains(DataServerConfig.IP)) {
-                dataServerNodes.add(new DataServerNode(DataServerConfig.IP, dataServerConfig
-                    .getLocalDataCenter(), null));
-            }
-        }
-        CONSISTENT_HASH_MAP.put(dataCenter,
-            new ConsistentHash<>(dataServerConfig.getNumberOfReplicas(), dataServerNodes));
-    }
-
-    /**
-     * for single node consistentHash
-     * @param dataServerConfig
-     */
-    public static void initConsistent(DataServerConfig dataServerConfig) {
-        if (init.compareAndSet(false, true)) {
-            List<DataServerNode> dataServerNodes = Lists.newArrayList();
-            dataServerNodes.add(new DataServerNode(DataServerConfig.IP, dataServerConfig
-                .getLocalDataCenter(), null));
-            CONSISTENT_HASH_MAP.put(dataServerConfig.getLocalDataCenter(), new ConsistentHash<>(
-                dataServerConfig.getNumberOfReplicas(), dataServerNodes));
-        }
     }
 
     /**
@@ -169,7 +143,6 @@ public class DataServerNodeFactory {
                 map.remove(ip);
             }
         }
-        refreshConsistent(dataCenter, dataServerConfig);
     }
 
     /**
@@ -181,31 +154,30 @@ public class DataServerNodeFactory {
         getDataServerNodes(dataCenter).values().stream().map(DataServerNode::getConnection)
                 .filter(connection -> connection != null && connection.isFine()).forEach(Connection::close);
         MAP.remove(dataCenter);
-        CONSISTENT_HASH_MAP.remove(dataCenter);
     }
 
-    /**
-     * get dataserver by specific datacenter and dataInfoId
-     *
-     * @param dataCenter
-     * @param dataInfoId
-     * @return
-     */
-    public static DataServerNode computeDataServerNode(String dataCenter, String dataInfoId) {
-        ConsistentHash<DataServerNode> consistentHash = CONSISTENT_HASH_MAP.get(dataCenter);
-        if (consistentHash != null) {
-            return consistentHash.getNodeFor(dataInfoId);
+    public void connectDataServer(String dataCenter, String ip) {
+        Connection conn = null;
+        for (int tryCount = 0; tryCount < TRY_COUNT; tryCount++) {
+            try {
+                conn = ((BoltChannel) dataNodeExchanger.connect(new URL(ip, dataServerConfig
+                    .getSyncDataPort()))).getConnection();
+                break;
+            } catch (Exception e) {
+                LOGGER.error("[DataServerChangeEventHandler] connect dataServer {} in {} error",
+                    ip, dataCenter, e);
+                TimeUtil.randomDelay(3000);
+            }
         }
-        return null;
-    }
-
-    public static List<DataServerNode> computeDataServerNodes(String dataCenter, String dataInfoId,
-                                                              int backupNodes) {
-        ConsistentHash<DataServerNode> consistentHash = CONSISTENT_HASH_MAP.get(dataCenter);
-        if (consistentHash != null) {
-            return consistentHash.getNUniqueNodesFor(dataInfoId, backupNodes);
+        if (conn == null || !conn.isFine()) {
+            LOGGER.error(
+                "[DataServerChangeEventHandler] connect dataServer {} in {} failed five times", ip,
+                dataCenter);
+            throw new RuntimeException(
+                String
+                    .format(
+                        "[DataServerChangeEventHandler] connect dataServer %s in %s failed five times,dataServer will not work,please check connect!",
+                        ip, dataCenter));
         }
-        return null;
     }
-
 }

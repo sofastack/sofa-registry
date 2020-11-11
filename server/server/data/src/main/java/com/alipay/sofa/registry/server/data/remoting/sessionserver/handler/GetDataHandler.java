@@ -54,7 +54,7 @@ public class GetDataHandler extends AbstractServerHandler<GetDataRequest> {
     private ThreadPoolExecutor  getDataProcessorExecutor;
 
     @Autowired
-    private SlotManager slotManager;
+    private SlotManager         slotManager;
 
     @Override
     public Executor getExecutor() {
@@ -69,14 +69,16 @@ public class GetDataHandler extends AbstractServerHandler<GetDataRequest> {
     @Override
     public Object doHandle(Channel channel, GetDataRequest request) {
         String dataInfoId = request.getDataInfoId();
-        final SlotAccess slotAccess = slotManager.checkSlotAccess(dataInfoId, request.getSlotEpoch());
+        final SlotAccess slotAccess = slotManager.checkSlotAccess(dataInfoId,
+            request.getSlotEpoch());
         if (slotAccess.isMoved()) {
             LOGGER.warn("[moved] Slot has moved, access: {}, request: {}", slotAccess, request);
             return SlotAccessGenericResponse.buildFailedResponse(slotAccess);
         }
 
         if (slotAccess.isMigrating()) {
-            LOGGER.warn("[migrating] Slot is migrating, access: {}, request: {}", slotAccess, request);
+            LOGGER.warn("[migrating] Slot is migrating, access: {}, request: {}", slotAccess,
+                request);
             return SlotAccessGenericResponse.buildFailedResponse(slotAccess);
         }
 

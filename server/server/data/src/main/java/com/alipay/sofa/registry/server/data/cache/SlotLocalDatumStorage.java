@@ -35,12 +35,14 @@ import java.util.concurrent.ConcurrentHashMap;
  * @author yuzhi.lyz
  * @version v 0.1 2020-11-03 16:55 yuzhi.lyz Exp $
  */
-public final class SlotLocalDatumStorage implements DatumStorage, SlotManager.SlotDatumStorageProvider {
-    private static final Logger           LOGGER = LoggerFactory.getLogger(SlotLocalDatumStorage.class);
+public final class SlotLocalDatumStorage implements DatumStorage,
+                                        SlotManager.SlotDatumStorageProvider {
+    private static final Logger              LOGGER             = LoggerFactory
+                                                                    .getLogger(SlotLocalDatumStorage.class);
     @Autowired
-    private              SlotManager      slotManager;
+    private SlotManager                      slotManager;
     @Autowired
-    private              DataServerConfig dataServerConfig;
+    private DataServerConfig                 dataServerConfig;
 
     private final Map<Integer, DatumStorage> localDatumStorages = new ConcurrentHashMap<>();
 
@@ -164,7 +166,8 @@ public final class SlotLocalDatumStorage implements DatumStorage, SlotManager.Sl
     }
 
     @Override
-    public Map<String, DatumSummary> getDatumSummary(int slotId, String dataCenter, String targetIpAddress) {
+    public Map<String, DatumSummary> getDatumSummary(int slotId, String dataCenter,
+                                                     String targetIpAddress) {
         final DatumStorage ds = localDatumStorages.get(slotId);
         if (ds == null) {
             return Collections.emptyMap();

@@ -37,35 +37,18 @@ import com.alipay.sofa.registry.remoting.exchange.Exchange;
 import com.alipay.sofa.registry.remoting.jersey.exchange.JerseyExchange;
 import com.alipay.sofa.registry.server.data.change.DataChangeHandler;
 import com.alipay.sofa.registry.server.data.change.event.DataChangeEventCenter;
-import com.alipay.sofa.registry.server.data.change.notify.BackUpNotifier;
 import com.alipay.sofa.registry.server.data.change.notify.IDataChangeNotifier;
 import com.alipay.sofa.registry.server.data.change.notify.SessionServerNotifier;
-import com.alipay.sofa.registry.server.data.change.notify.SnapshotBackUpNotifier;
 import com.alipay.sofa.registry.server.data.change.notify.TempPublisherNotifier;
-import com.alipay.sofa.registry.server.data.datasync.AcceptorStore;
-import com.alipay.sofa.registry.server.data.datasync.SyncDataService;
-import com.alipay.sofa.registry.server.data.datasync.sync.LocalAcceptorStore;
-import com.alipay.sofa.registry.server.data.datasync.sync.Scheduler;
-import com.alipay.sofa.registry.server.data.datasync.sync.StoreServiceFactory;
-import com.alipay.sofa.registry.server.data.datasync.sync.SyncDataServiceImpl;
-import com.alipay.sofa.registry.server.data.event.AfterWorkingProcess;
 import com.alipay.sofa.registry.server.data.event.EventCenter;
-import com.alipay.sofa.registry.server.data.event.handler.AfterWorkingProcessHandler;
-import com.alipay.sofa.registry.server.data.event.handler.DataServerChangeEventHandler;
-import com.alipay.sofa.registry.server.data.event.handler.LocalDataServerChangeEventHandler;
 import com.alipay.sofa.registry.server.data.event.handler.MetaServerChangeEventHandler;
 import com.alipay.sofa.registry.server.data.event.handler.StartTaskEventHandler;
-import com.alipay.sofa.registry.server.data.node.DataNodeStatus;
 import com.alipay.sofa.registry.server.data.remoting.DataNodeExchanger;
 import com.alipay.sofa.registry.server.data.remoting.MetaNodeExchanger;
 import com.alipay.sofa.registry.server.data.remoting.dataserver.DataServerConnectionFactory;
 import com.alipay.sofa.registry.server.data.remoting.dataserver.GetSyncDataHandler;
 import com.alipay.sofa.registry.server.data.remoting.dataserver.handler.DataSyncServerConnectionHandler;
 import com.alipay.sofa.registry.server.data.remoting.dataserver.handler.FetchDataHandler;
-import com.alipay.sofa.registry.server.data.remoting.dataserver.handler.NotifyDataSyncHandler;
-import com.alipay.sofa.registry.server.data.remoting.dataserver.handler.NotifyFetchDatumHandler;
-import com.alipay.sofa.registry.server.data.remoting.dataserver.handler.NotifyOnlineHandler;
-import com.alipay.sofa.registry.server.data.remoting.dataserver.handler.SyncDataHandler;
 import com.alipay.sofa.registry.server.data.remoting.dataserver.task.AbstractTask;
 import com.alipay.sofa.registry.server.data.remoting.dataserver.task.ConnectionRefreshTask;
 import com.alipay.sofa.registry.server.data.remoting.dataserver.task.RenewNodeTask;
@@ -75,16 +58,12 @@ import com.alipay.sofa.registry.server.data.remoting.metaserver.DefaultMetaServi
 import com.alipay.sofa.registry.server.data.remoting.metaserver.IMetaServerService;
 import com.alipay.sofa.registry.server.data.remoting.metaserver.MetaServerConnectionFactory;
 import com.alipay.sofa.registry.server.data.remoting.metaserver.handler.NotifyProvideDataChangeHandler;
-import com.alipay.sofa.registry.server.data.remoting.metaserver.handler.ServerChangeHandler;
-import com.alipay.sofa.registry.server.data.remoting.metaserver.handler.StatusConfirmHandler;
 import com.alipay.sofa.registry.server.data.remoting.metaserver.provideData.ProvideDataProcessor;
 import com.alipay.sofa.registry.server.data.remoting.metaserver.provideData.ProvideDataProcessorManager;
 import com.alipay.sofa.registry.server.data.remoting.metaserver.provideData.processor.DatumExpireProvideDataProcessor;
 import com.alipay.sofa.registry.server.data.remoting.metaserver.task.ConnectionRefreshMetaTask;
 import com.alipay.sofa.registry.server.data.remoting.sessionserver.SessionServerConnectionFactory;
 import com.alipay.sofa.registry.server.data.remoting.sessionserver.disconnect.DisconnectEventHandler;
-import com.alipay.sofa.registry.server.data.remoting.sessionserver.forward.ForwardService;
-import com.alipay.sofa.registry.server.data.remoting.sessionserver.forward.ForwardServiceImpl;
 import com.alipay.sofa.registry.server.data.remoting.sessionserver.handler.ClientOffHandler;
 import com.alipay.sofa.registry.server.data.remoting.sessionserver.handler.DataServerConnectionHandler;
 import com.alipay.sofa.registry.server.data.remoting.sessionserver.handler.DatumSnapshotHandler;
@@ -95,7 +74,6 @@ import com.alipay.sofa.registry.server.data.remoting.sessionserver.handler.Renew
 import com.alipay.sofa.registry.server.data.remoting.sessionserver.handler.SessionServerRegisterHandler;
 import com.alipay.sofa.registry.server.data.remoting.sessionserver.handler.UnPublishDataHandler;
 import com.alipay.sofa.registry.server.data.renew.DatumLeaseManager;
-import com.alipay.sofa.registry.server.data.renew.LocalDataServerCleanHandler;
 import com.alipay.sofa.registry.server.data.resource.DataDigestResource;
 import com.alipay.sofa.registry.server.data.resource.HealthResource;
 import com.alipay.sofa.registry.server.data.util.ThreadPoolExecutorDataServer;
@@ -130,11 +108,6 @@ public class DataServerBeanConfiguration {
         @ConditionalOnMissingBean
         public DataServerConfig dataServerConfig(CommonConfig commonConfig) {
             return new DataServerConfig(commonConfig);
-        }
-
-        @Bean
-        public DataNodeStatus dataNodeStatus() {
-            return new DataNodeStatus();
         }
 
         @Bean(name = "PropertySplitter")
@@ -195,16 +168,6 @@ public class DataServerBeanConfiguration {
         }
 
         @Bean
-        public DataServerCache dataServerCache() {
-            return new DataServerCache();
-        }
-
-        @Bean
-        public ForwardService forwardService() {
-            return new ForwardServiceImpl();
-        }
-
-        @Bean
         public SessionServerConnectionFactory sessionServerConnectionFactory() {
             return new SessionServerConnectionFactory();
         }
@@ -240,9 +203,6 @@ public class DataServerBeanConfiguration {
             list.add(getDataHandler());
             list.add(publishDataProcessor());
             list.add(unPublishDataHandler());
-            list.add(notifyFetchDatumHandler());
-            list.add(notifyOnlineHandler());
-            list.add(syncDataHandler());
             list.add(dataSyncServerConnectionHandler());
             return list;
         }
@@ -250,7 +210,6 @@ public class DataServerBeanConfiguration {
         @Bean(name = "dataClientHandlers")
         public Collection<AbstractClientHandler> dataClientHandlers() {
             Collection<AbstractClientHandler> list = new ArrayList<>();
-            list.add(notifyDataSyncHandler());
             list.add(fetchDataHandler());
             return list;
         }
@@ -258,8 +217,6 @@ public class DataServerBeanConfiguration {
         @Bean(name = "metaClientHandlers")
         public Collection<AbstractClientHandler> metaClientHandlers() {
             Collection<AbstractClientHandler> list = new ArrayList<>();
-            list.add(serverChangeHandler());
-            list.add(statusConfirmHandler());
             list.add(notifyProvideDataChangeHandler());
             return list;
         }
@@ -315,59 +272,13 @@ public class DataServerBeanConfiguration {
         }
 
         @Bean
-        public AbstractServerHandler notifyFetchDatumHandler() {
-            return new NotifyFetchDatumHandler();
-        }
-
-        @Bean
-        public AbstractServerHandler notifyOnlineHandler() {
-            return new NotifyOnlineHandler();
-        }
-
-        @Bean
-        public AbstractServerHandler syncDataHandler() {
-            return new SyncDataHandler();
-        }
-
-        @Bean
-        @ConditionalOnMissingBean
-        public NotifyDataSyncHandler notifyDataSyncHandler() {
-            return new NotifyDataSyncHandler();
-        }
-
-        @Bean
         public AbstractClientHandler fetchDataHandler() {
             return new FetchDataHandler();
         }
 
         @Bean
-        public AbstractClientHandler serverChangeHandler() {
-            return new ServerChangeHandler();
-        }
-
-        @Bean
-        public AbstractClientHandler statusConfirmHandler() {
-            return new StatusConfirmHandler();
-        }
-
-        @Bean
         public NotifyProvideDataChangeHandler notifyProvideDataChangeHandler() {
             return new NotifyProvideDataChangeHandler();
-        }
-
-        @Bean(name = "afterWorkProcessors")
-        public List<AfterWorkingProcess> afterWorkingProcessors() {
-            List<AfterWorkingProcess> list = new ArrayList<>();
-            list.add(renewDatumHandler());
-            list.add(datumLeaseManager());
-            list.add(disconnectEventHandler());
-            list.add(notifyDataSyncHandler());
-            return list;
-        }
-
-        @Bean
-        public AfterWorkingProcessHandler afterWorkingProcessHandler() {
-            return new AfterWorkingProcessHandler();
         }
 
         @Bean
@@ -399,65 +310,18 @@ public class DataServerBeanConfiguration {
             return new TempPublisherNotifier();
         }
 
-        @Bean
-        public BackUpNotifier backUpNotifier() {
-            return new BackUpNotifier();
-        }
-
-        @Bean
-        public SnapshotBackUpNotifier snapshotBackUpNotifier() {
-            return new SnapshotBackUpNotifier();
-        }
-
         @Bean(name = "dataChangeNotifiers")
         public List<IDataChangeNotifier> dataChangeNotifiers() {
             List<IDataChangeNotifier> list = new ArrayList<>();
             list.add(sessionServerNotifier());
             list.add(tempPublisherNotifier());
-            list.add(backUpNotifier());
-            list.add(snapshotBackUpNotifier());
             return list;
         }
 
     }
 
     @Configuration
-    public static class DataServerSyncBeanConfiguration {
-
-        @Bean
-        public SyncDataService syncDataService() {
-            return new SyncDataServiceImpl();
-        }
-
-        @Bean
-        public AcceptorStore localAcceptorStore() {
-            return new LocalAcceptorStore();
-        }
-
-        @Bean
-        public Scheduler syncDataScheduler() {
-            return new Scheduler();
-        }
-
-        @Bean
-        public StoreServiceFactory storeServiceFactory() {
-            return new StoreServiceFactory();
-        }
-
-    }
-
-    @Configuration
     public static class DataServerEventBeanConfiguration {
-
-        @Bean
-        public DataServerChangeEventHandler dataServerChangeEventHandler() {
-            return new DataServerChangeEventHandler();
-        }
-
-        @Bean
-        public LocalDataServerChangeEventHandler localDataServerChangeEventHandler() {
-            return new LocalDataServerChangeEventHandler();
-        }
 
         @Bean
         public MetaServerChangeEventHandler metaServerChangeEventHandler() {
@@ -467,11 +331,6 @@ public class DataServerBeanConfiguration {
         @Bean
         public StartTaskEventHandler startTaskEventHandler() {
             return new StartTaskEventHandler();
-        }
-
-        @Bean
-        public LocalDataServerCleanHandler localDataServerCleanHandler() {
-            return new LocalDataServerCleanHandler();
         }
 
         @Bean

@@ -32,13 +32,14 @@ import java.util.List;
  * @version v 0.1 2020-11-04 18:00 yuzhi.lyz Exp $
  */
 public class SessionServerChangeEventHandler extends AbstractEventHandler<SessionServerChangeEvent> {
-    private static final Logger LOGGER = LoggerFactory.getLogger(DataServerChangeEventHandler.class);
+    private static final Logger LOGGER = LoggerFactory
+                                           .getLogger(SessionServerChangeEventHandler.class);
 
     @Autowired
-    private DataServerConfig dataServerConfig;
+    private DataServerConfig    dataServerConfig;
 
     @Autowired
-    private SessionServerCache sessionServerCache;
+    private SessionServerCache  sessionServerCache;
 
     @Override
     public List<Class<? extends SessionServerChangeEvent>> interest() {

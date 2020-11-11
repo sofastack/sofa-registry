@@ -18,7 +18,6 @@ package com.alipay.sofa.registry.server.data.event;
 
 import com.alipay.sofa.registry.server.data.cache.SessionServerChangeItem;
 
-
 /**
  *
  * @author yuzhi.lyz
@@ -28,9 +27,10 @@ public class SessionServerChangeEvent implements Event {
 
     private SessionServerChangeItem sessionServerChangeItem;
 
-    private FromType fromType;
+    private FromType                fromType;
 
-    public SessionServerChangeEvent(SessionServerChangeItem sessionServerChangeItem, FromType fromType) {
+    public SessionServerChangeEvent(SessionServerChangeItem sessionServerChangeItem,
+                                    FromType fromType) {
         this.sessionServerChangeItem = sessionServerChangeItem;
         this.fromType = fromType;
     }

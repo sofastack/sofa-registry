@@ -43,7 +43,6 @@ import com.alipay.sofa.registry.remoting.ChannelHandler;
 import com.alipay.sofa.registry.remoting.Server;
 import com.alipay.sofa.registry.remoting.exchange.Exchange;
 import com.alipay.sofa.registry.server.data.cache.CacheDigestTask;
-import com.alipay.sofa.registry.server.data.datasync.sync.Scheduler;
 import com.alipay.sofa.registry.server.data.event.EventCenter;
 import com.alipay.sofa.registry.server.data.event.MetaServerChangeEvent;
 import com.alipay.sofa.registry.server.data.event.StartTaskEvent;
@@ -68,9 +67,6 @@ public class DataServerBootstrap {
 
     @Autowired
     private IMetaServerService                metaServerService;
-
-    @Autowired
-    private Scheduler                         syncDataScheduler;
 
     @Autowired
     private ApplicationContext                applicationContext;
@@ -216,7 +212,6 @@ public class DataServerBootstrap {
     private void startScheduler() {
         try {
             if (schedulerStarted.compareAndSet(false, true)) {
-                syncDataScheduler.startScheduler();
                 // start all startTask except correction task
                 eventCenter.post(new StartTaskEvent(
                         Arrays.stream(StartTaskTypeEnum.values()).filter(type -> type != StartTaskTypeEnum.RENEW)
@@ -250,10 +245,6 @@ public class DataServerBootstrap {
 
             if (dataSyncServer != null && dataSyncServer.isOpen()) {
                 dataSyncServer.close();
-            }
-
-            if (syncDataScheduler != null) {
-                syncDataScheduler.stopScheduler();
             }
         } catch (Throwable e) {
             LOGGER.error("Shutting down Data Server error!", e);

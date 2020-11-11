@@ -57,14 +57,11 @@ import com.alipay.sofa.registry.server.meta.remoting.SessionNodeExchanger;
 import com.alipay.sofa.registry.server.meta.remoting.connection.DataConnectionHandler;
 import com.alipay.sofa.registry.server.meta.remoting.connection.MetaConnectionHandler;
 import com.alipay.sofa.registry.server.meta.remoting.connection.SessionConnectionHandler;
-import com.alipay.sofa.registry.server.meta.repository.NodeConfirmStatusService;
 import com.alipay.sofa.registry.server.meta.repository.RepositoryService;
 import com.alipay.sofa.registry.server.meta.repository.VersionRepositoryService;
 import com.alipay.sofa.registry.server.meta.repository.annotation.RaftAnnotationBeanPostProcessor;
-import com.alipay.sofa.registry.server.meta.repository.service.DataConfirmStatusService;
 import com.alipay.sofa.registry.server.meta.repository.service.DataRepositoryService;
 import com.alipay.sofa.registry.server.meta.repository.service.MetaRepositoryService;
-import com.alipay.sofa.registry.server.meta.repository.service.SessionConfirmStatusService;
 import com.alipay.sofa.registry.server.meta.repository.service.SessionRepositoryService;
 import com.alipay.sofa.registry.server.meta.repository.service.SessionVersionRepositoryService;
 import com.alipay.sofa.registry.server.meta.store.DataStoreService;
@@ -174,11 +171,6 @@ public class MetaServerConfiguration {
         }
 
         @Bean
-        public NodeConfirmStatusService dataConfirmStatusService() {
-            return new DataConfirmStatusService();
-        }
-
-        @Bean
         public RepositoryService sessionRepositoryService() {
             return new SessionRepositoryService();
         }
@@ -186,11 +178,6 @@ public class MetaServerConfiguration {
         @Bean
         public VersionRepositoryService sessionVersionRepositoryService() {
             return new SessionVersionRepositoryService();
-        }
-
-        @Bean
-        public NodeConfirmStatusService sessionConfirmStatusService() {
-            return new SessionConfirmStatusService();
         }
 
         @Bean

@@ -19,7 +19,6 @@ package com.alipay.sofa.registry.server.data.remoting.sessionserver.handler;
 import java.util.Map;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.commons.lang.StringUtils;
@@ -38,7 +37,6 @@ import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.remoting.Channel;
 import com.alipay.sofa.registry.server.data.bootstrap.DataServerConfig;
 import com.alipay.sofa.registry.server.data.cache.DatumCache;
-import com.alipay.sofa.registry.server.data.event.AfterWorkingProcess;
 import com.alipay.sofa.registry.server.data.remoting.handler.AbstractServerHandler;
 import com.alipay.sofa.registry.server.data.renew.DatumLeaseManager;
 import com.alipay.sofa.registry.util.ParaCheckUtil;
@@ -49,8 +47,7 @@ import com.alipay.sofa.registry.util.ParaCheckUtil;
  * @author kezhu.wukz
  * @version $Id: RenewDatumHandler.java, v 0.1 2019-05-30 15:48 kezhu.wukz Exp $
  */
-public class RenewDatumHandler extends AbstractServerHandler<RenewDatumRequest> implements
-                                                                               AfterWorkingProcess {
+public class RenewDatumHandler extends AbstractServerHandler<RenewDatumRequest> {
 
     /** LOGGER */
     private static final Logger LOGGER       = LoggerFactory.getLogger(RenewDatumHandler.class);
@@ -152,27 +149,5 @@ public class RenewDatumHandler extends AbstractServerHandler<RenewDatumRequest> 
             RENEW_LOGGER.info("Digest different! renewDatumRequest={}", request);
         }
         return result;
-    }
-
-    @Override
-    public void afterWorkingProcess() {
-        renewDatumProcessorExecutor.submit(() -> {
-            /*
-             * After the snapshot data is synchronized during startup, it is queued and then placed asynchronously into
-             * DatumCache. When the notification becomes WORKING, there may be data in the queue that is not executed
-             * to DatumCache. So it need to sleep for a while.
-             */
-            try {
-                TimeUnit.MILLISECONDS.sleep(dataServerConfig.getRenewEnableDelaySec());
-            } catch (InterruptedException e) {
-                LOGGER.error(e.getMessage(), e);
-            }
-            renewEnabled.set(true);
-        });
-    }
-
-    @Override
-    public int getOrder() {
-        return 100;
     }
 }

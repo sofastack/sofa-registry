@@ -33,7 +33,8 @@ public class DataSlotMigrateRequest implements Serializable {
     private int                       slotId;
     private Map<String, DatumSummary> datumSummarys;
 
-    public DataSlotMigrateRequest(long slotTableEpoch, int slotId, Map<String, DatumSummary> datumSummarys) {
+    public DataSlotMigrateRequest(long slotTableEpoch, int slotId,
+                                  Map<String, DatumSummary> datumSummarys) {
         this.slotTableEpoch = slotTableEpoch;
         this.slotId = slotId;
         this.datumSummarys = datumSummarys;
@@ -83,8 +84,7 @@ public class DataSlotMigrateRequest implements Serializable {
      * Setter method for property <tt>datumSummarys</tt>.
      * @param datumSummarys value to be assigned to property datumSummarys
      */
-    public void setDatumSummarys(
-            Map<String, DatumSummary> datumSummarys) {
+    public void setDatumSummarys(Map<String, DatumSummary> datumSummarys) {
         this.datumSummarys = datumSummarys;
     }
 }

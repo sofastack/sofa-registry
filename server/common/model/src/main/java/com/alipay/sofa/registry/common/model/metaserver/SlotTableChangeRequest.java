@@ -46,8 +46,6 @@ public final class SlotTableChangeRequest implements Serializable {
 
     @Override
     public String toString() {
-        return "SlotTableChangeRequest{" +
-                "slotTable=" + slotTable +
-                '}';
+        return "SlotTableChangeRequest{" + "slotTable=" + slotTable + '}';
     }
 }
