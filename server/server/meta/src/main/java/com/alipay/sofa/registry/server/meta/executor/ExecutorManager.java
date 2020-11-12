@@ -141,20 +141,6 @@ public class ExecutorManager {
                         () -> metaClientExchanger.connectServer()), metaServerConfig.getSchedulerConnectMetaServerFirstDelay(),
                 TimeUnit.SECONDS);
 
-        scheduler.schedule(
-                new TimedSupervisorTask("CheckSessionNodeListChangePush", scheduler, checkNodeListChangePushExecutor,
-                        metaServerConfig.getSchedulerCheckNodeListChangePushTimeout(), TimeUnit.SECONDS,
-                        metaServerConfig.getSchedulerCheckNodeListChangePushExpBackOffBound(),
-                        () -> metaServerRegistry.pushNodeListChange(NodeType.SESSION)),
-                metaServerConfig.getSchedulerCheckNodeListChangePushFirstDelay(), TimeUnit.SECONDS);
-
-        scheduler.schedule(
-                new TimedSupervisorTask("CheckDataNodeListChangePush", scheduler, checkNodeListChangePushExecutor,
-                        metaServerConfig.getSchedulerCheckNodeListChangePushTimeout(), TimeUnit.SECONDS,
-                        metaServerConfig.getSchedulerCheckNodeListChangePushExpBackOffBound(),
-                        () -> metaServerRegistry.pushNodeListChange(NodeType.DATA)),
-                metaServerConfig.getSchedulerCheckNodeListChangePushFirstDelay(), TimeUnit.SECONDS);
-
         scheduler.schedule(new TimedSupervisorTask("RaftClientRefresh", scheduler, raftClientRefreshExecutor,
                         metaServerConfig.getSchedulerCheckNodeListChangePushTimeout(), TimeUnit.SECONDS,
                         metaServerConfig.getSchedulerCheckNodeListChangePushExpBackOffBound(),
