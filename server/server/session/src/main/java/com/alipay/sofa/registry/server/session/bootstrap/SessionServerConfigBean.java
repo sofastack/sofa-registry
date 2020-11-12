@@ -186,6 +186,7 @@ public class SessionServerConfigBean implements SessionServerConfig {
 
     private boolean              beginDataFetchTask                      = false;
 
+
     //begin config for enterprise version
 
     /** forever close push zone，such as:RZBETA */
@@ -214,6 +215,8 @@ public class SessionServerConfigBean implements SessionServerConfig {
     private int                  sessionSchedulerPoolSize                = 6;
 
     private int                  slotSyncPublisherMaxNum                 = 512;
+
+    private boolean            enableSessionLoadbalancePolicy          = false;
 
     //end config for enterprise version
 
@@ -1829,5 +1832,13 @@ public class SessionServerConfigBean implements SessionServerConfig {
     @Override
     public String toString() {
         return ToStringBuilder.reflectionToString(this, ToStringStyle.MULTI_LINE_STYLE);
+    }
+
+    public boolean isEnableSessionLoadbalancePolicy() {
+        return enableSessionLoadbalancePolicy;
+    }
+
+    public void setEnableSessionLoadbalancePolicy(boolean enableSessionLoadbalancePolicy) {
+        this.enableSessionLoadbalancePolicy = enableSessionLoadbalancePolicy;
     }
 }

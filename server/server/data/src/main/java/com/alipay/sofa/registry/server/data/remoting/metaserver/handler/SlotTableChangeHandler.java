@@ -16,6 +16,8 @@
  */
 package com.alipay.sofa.registry.server.data.remoting.metaserver.handler;
 
+import org.springframework.beans.factory.annotation.Autowired;
+
 import com.alipay.sofa.registry.common.model.CommonResponse;
 import com.alipay.sofa.registry.common.model.Node;
 import com.alipay.sofa.registry.common.model.metaserver.SlotTableChangeRequest;
@@ -26,6 +28,7 @@ import com.alipay.sofa.registry.server.data.slot.SlotManager;
 import com.alipay.sofa.registry.server.shared.remoting.AbstractClientHandler;
 import com.alipay.sofa.registry.util.ParaCheckUtil;
 import org.springframework.beans.factory.annotation.Autowired;
+import com.alipay.sofa.registry.server.meta.registry.Registry;
 
 /**
  *
