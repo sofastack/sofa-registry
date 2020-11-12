@@ -42,10 +42,10 @@ public class RenewNodeTask {
                 new NamedThreadFactory("RenewNodeTask"));
         executor.scheduleAtFixedRate(() -> {
             try {
-                metaServerService.renewNodeTask();
+                metaServerService.renewNode();
             } catch (Throwable t) {
                 LOGGER.error("[RenewNodeTask] renew node error", t);
             }
-        }, 3, 3, TimeUnit.SECONDS);
+        }, 0, 3, TimeUnit.SECONDS);
     }
 }

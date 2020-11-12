@@ -83,6 +83,9 @@ public class SessionServerBootstrap {
     private NodeManager                       metaNodeManager;
 
     @Autowired
+    private NodeManager                       sessionNodeManager;
+
+    @Autowired
     protected NodeExchanger                   metaNodeExchanger;
 
     @Autowired
@@ -229,14 +232,13 @@ public class SessionServerBootstrap {
     private void connectMetaServer() {
         try {
             if (metaStart.compareAndSet(false, true)) {
-                metaClient = metaNodeExchanger.connectServer();
-
                 URL leaderUrl = new URL(raftClientManager.getLeader().getIp(),
                     sessionServerConfig.getMetaServerPort());
 
-                registerSessionNode(leaderUrl);
+                // register node as renew node
+                sessionNodeManager.renewNode();
 
-                getAllDataCenter();
+                metaClient = metaNodeExchanger.connectServer();
 
                 fetchStopPushSwitch(leaderUrl);
 
@@ -252,22 +254,6 @@ public class SessionServerBootstrap {
             LOGGER.error("MetaServer connected server error! Port:{}",
                 sessionServerConfig.getMetaServerPort(), e);
             throw new RuntimeException("MetaServer connected server error!", e);
-        }
-    }
-
-    private void registerSessionNode(URL leaderUrl) {
-        URL clientUrl = new URL(NetUtil.getLocalAddress().getHostAddress(), 0);
-        SessionNode sessionNode = new SessionNode(clientUrl,
-            sessionServerConfig.getSessionServerRegion());
-        Object ret = sendMetaRequest(sessionNode, leaderUrl);
-        if (ret instanceof NodeChangeResult) {
-            NodeChangeResult nodeChangeResult = (NodeChangeResult) ret;
-            NodeManager nodeManager = NodeManagerFactory.getNodeManager(nodeChangeResult
-                .getNodeType());
-            //update data node info
-            nodeManager.updateNodes(nodeChangeResult);
-            LOGGER.info("Register MetaServer Session Node success!get data node list {}",
-                nodeChangeResult.getNodes());
         }
     }
 
@@ -310,12 +296,6 @@ public class SessionServerBootstrap {
                 sessionServerConfig.getMetaNodeExchangeTimeOut());
         }
         return ret;
-    }
-
-    private void getAllDataCenter() {
-        //get meta node info
-        metaNodeManager.getAllDataCenterNodes();
-        LOGGER.info("Get all dataCenter from meta Server success!");
     }
 
     private void openHttpServer() {

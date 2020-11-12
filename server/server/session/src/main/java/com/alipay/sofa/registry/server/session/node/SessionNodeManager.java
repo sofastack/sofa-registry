@@ -103,12 +103,13 @@ public class SessionNodeManager extends AbstractNodeManager<SessionNode> {
             };
 
             GenericResponse<RenewNodesResult> resp = (GenericResponse<RenewNodesResult>) metaNodeExchanger
-                .request(renewNodesRequestRequest);
+                .request(renewNodesRequestRequest).getResult();
             if (resp != null && resp.isSuccess()) {
                 handleRenewResult(resp.getData());
             } else {
-                LOGGER.error("[RenewNodeTask] renew data node to metaServer error : {}, {}",
-                    leaderIp, resp);
+                LOGGER.error("[RenewNodeTask] renew node to metaServer error : {}, {}", leaderIp,
+                    resp);
+                throw new RuntimeException("renew node failed, " + resp);
             }
         } catch (Throwable e) {
             throw new RuntimeException("SessionNodeManager renew node error! " + e.getMessage(), e);
