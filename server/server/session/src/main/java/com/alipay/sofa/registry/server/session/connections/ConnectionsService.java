@@ -65,6 +65,9 @@ public class ConnectionsService {
     }
 
     public void setMaxConnections(int connections) {
+        if (!sessionServerConfig.isEnableSessionLoadbalancePolicy()) {
+            throw new RuntimeException("drop connections is not allowed");
+        }
         List<String> connectionIds = getConnections();
 
         int needDropped = connectionIds.size() - connections;

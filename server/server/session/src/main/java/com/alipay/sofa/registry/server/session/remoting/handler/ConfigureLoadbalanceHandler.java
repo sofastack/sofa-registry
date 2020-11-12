@@ -48,6 +48,7 @@ public class ConfigureLoadbalanceHandler extends AbstractClientHandler<Configure
         ParaCheckUtil.checkNonNegative(request.getMaxConnections(), "request.maxConnections");
     }
 
+
     @Override
     public Object doHandle(Channel channel, ConfigureLoadbalanceRequest request) {
         connectionsService.setMaxConnections(request.getMaxConnections());

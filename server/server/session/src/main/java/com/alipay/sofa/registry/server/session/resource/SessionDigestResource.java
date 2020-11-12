@@ -17,6 +17,28 @@
 package com.alipay.sofa.registry.server.session.resource;
 
 import com.alipay.sofa.registry.common.model.ConnectId;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+
+import javax.annotation.PostConstruct;
+import javax.ws.rs.GET;
+import javax.ws.rs.POST;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
+import javax.ws.rs.core.MediaType;
+
+import com.alipay.sofa.registry.net.NetUtil;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.util.CollectionUtils;
+
+import com.alipay.sofa.registry.common.model.Node;
+import com.alipay.sofa.registry.common.model.Node.NodeType;
 import com.alipay.sofa.registry.common.model.store.Publisher;
 import com.alipay.sofa.registry.common.model.store.StoreData;
 import com.alipay.sofa.registry.common.model.store.Subscriber;
@@ -37,6 +59,8 @@ import javax.annotation.PostConstruct;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import java.util.*;
+import static com.alipay.sofa.registry.common.model.constants.ValueConstants.CONNECT_ID_SPLIT;
+
 import static com.alipay.sofa.registry.common.model.constants.ValueConstants.CONNECT_ID_SPLIT;
 
 /**
@@ -132,12 +156,15 @@ public class SessionDigestResource {
                 Map subMap = sessionInterests.queryByConnectId(connectId);
                 Map watcherMap = sessionWatchers.queryByConnectId(connectId);
 
-                Collection<Publisher> publishers =
-                        pubMap != null && !pubMap.isEmpty() ? pubMap.values() : new ArrayList<>();
-                Collection<Subscriber> subscribers =
-                        subMap != null && !subMap.isEmpty() ? subMap.values() : new ArrayList<>();
-                Collection<Watcher> watchers =
-                        watcherMap != null && !watcherMap.isEmpty() ? watcherMap.values() : new ArrayList<>();
+                Collection<Publisher> publishers = pubMap != null && !pubMap.isEmpty()
+                    ? pubMap.values()
+                    : new ArrayList<>();
+                Collection<Subscriber> subscribers = subMap != null && !subMap.isEmpty()
+                    ? subMap.values()
+                    : new ArrayList<>();
+                Collection<Watcher> watchers = watcherMap != null && !watcherMap.isEmpty()
+                    ? watcherMap.values()
+                    : new ArrayList<>();
                 fillServerList(type, serverList, publishers, subscribers, watchers);
             });
         }

@@ -180,4 +180,5 @@ public interface SessionServerConfig {
     int getSlotSyncPublisherMaxNum();
 
     Set<String> getMetaServerIpAddresses();
+    boolean isEnableSessionLoadbalancePolicy();
 }
