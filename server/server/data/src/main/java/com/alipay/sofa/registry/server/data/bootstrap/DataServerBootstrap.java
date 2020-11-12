@@ -125,6 +125,8 @@ public class DataServerBootstrap {
 
             fetchProviderData();
 
+            renewNode();
+
             startScheduler();
 
             Runtime.getRuntime().addShutdownHook(new Thread(this::doStop));
@@ -188,6 +190,10 @@ public class DataServerBootstrap {
     private void startRaftClient() {
         metaServerService.startRaftClient();
         LOGGER.info("raft client started!Leader is {}", metaServerService.getLeader());
+    }
+
+    private void renewNode() {
+        metaServerService.renewNode();
     }
 
     private void fetchProviderData() {

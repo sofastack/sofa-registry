@@ -205,7 +205,6 @@ public class MetaServerConfiguration {
         public Collection<AbstractServerHandler> sessionServerHandlers() {
             Collection<AbstractServerHandler> list = new ArrayList<>();
             list.add(sessionConnectionHandler());
-            list.add(sessionNodeHandler());
             list.add(renewNodesRequestHandler());
             list.add(fetchProvideDataRequestHandler());
             return list;
@@ -215,7 +214,6 @@ public class MetaServerConfiguration {
         public Collection<AbstractServerHandler> dataServerHandlers() {
             Collection<AbstractServerHandler> list = new ArrayList<>();
             list.add(dataConnectionHandler());
-            list.add(dataNodeHandler());
             list.add(renewNodesRequestHandler());
             list.add(fetchProvideDataRequestHandler());
             return list;
@@ -244,18 +242,8 @@ public class MetaServerConfiguration {
         }
 
         @Bean
-        public AbstractServerHandler sessionNodeHandler() {
-            return new SessionNodeHandler();
-        }
-
-        @Bean
         public AbstractServerHandler renewNodesRequestHandler() {
             return new RenewNodesRequestHandler();
-        }
-
-        @Bean
-        public AbstractServerHandler dataNodeHandler() {
-            return new DataNodeHandler();
         }
 
         @Bean

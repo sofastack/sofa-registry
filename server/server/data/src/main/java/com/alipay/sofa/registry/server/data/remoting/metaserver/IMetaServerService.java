@@ -16,13 +16,8 @@
  */
 package com.alipay.sofa.registry.server.data.remoting.metaserver;
 
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
 import com.alipay.sofa.jraft.entity.PeerId;
 import com.alipay.sofa.registry.common.model.metaserver.ProvideData;
-import com.alipay.sofa.registry.server.data.cache.SessionServerChangeItem;
 
 /**
  * The interface Meta server service.
@@ -32,9 +27,9 @@ import com.alipay.sofa.registry.server.data.cache.SessionServerChangeItem;
 public interface IMetaServerService {
 
     /**
-     * scheduler update data server expireTime
+     * update data server expireTime
      */
-    void renewNodeTask();
+    void renewNode();
 
     /**
      * start raft client for get leader send request

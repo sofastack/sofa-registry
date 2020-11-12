@@ -51,60 +51,59 @@ import java.util.stream.Collectors;
  */
 public class DefaultMetaServiceImpl implements IMetaServerService {
 
-    private static final Logger         LOGGER      = LoggerFactory
-                                                        .getLogger(DefaultMetaServiceImpl.class);
+    private static final Logger LOGGER = LoggerFactory
+            .getLogger(DefaultMetaServiceImpl.class);
 
-    private static final int            TRY_COUNT   = 3;
-
-    @Autowired
-    private DataServerConfig            dataServerConfig;
+    private static final int TRY_COUNT = 3;
 
     @Autowired
-    private MetaNodeExchanger           metaNodeExchanger;
+    private DataServerConfig dataServerConfig;
+
+    @Autowired
+    private MetaNodeExchanger metaNodeExchanger;
 
     @Autowired
     private MetaServerConnectionFactory metaServerConnectionFactory;
 
-    private RaftClient                  raftClient;
+    private RaftClient raftClient;
 
-    private AtomicBoolean               clientStart = new AtomicBoolean(false);
+    private AtomicBoolean clientStart = new AtomicBoolean(false);
 
     @Autowired
-    private SessionServerCache          sessionServerCache;
+    private SessionServerCache sessionServerCache;
 
     @Override
-    public void renewNodeTask() {
+    public void renewNode() {
         final String leaderIp = getLeader().getIp();
         try {
+            registerMetaServer(dataServerConfig.getLocalDataCenter(), leaderIp);
             RenewNodesRequest<DataNode> renewNodesRequest = new RenewNodesRequest<>(new DataNode(
-                new URL(DataServerConfig.IP), dataServerConfig.getLocalDataCenter()));
+                    new URL(DataServerConfig.IP), dataServerConfig.getLocalDataCenter()));
             // datanode need the meta and session nodes info
             renewNodesRequest.setTargetNodeTypes(Sets.newHashSet(NodeType.META, NodeType.SESSION));
             GenericResponse<RenewNodesResult> resp = (GenericResponse<RenewNodesResult>) metaNodeExchanger
-                .request(new Request() {
-                    @Override
-                    public Object getRequestBody() {
-                        return renewNodesRequest;
-                    }
+                    .request(new Request() {
+                        @Override
+                        public Object getRequestBody() {
+                            return renewNodesRequest;
+                        }
 
-                    @Override
-                    public URL getRequestUrl() {
-                        return new URL(leaderIp, dataServerConfig.getMetaServerPort());
-                    }
-                }).getResult();
+                        @Override
+                        public URL getRequestUrl() {
+                            return new URL(leaderIp, dataServerConfig.getMetaServerPort());
+                        }
+                    }).getResult();
             if (resp != null && resp.isSuccess()) {
                 handleRenewResult(resp.getData());
             } else {
                 LOGGER.error("[RenewNodeTask] renew data node to metaServer error : {}, {}",
-                    leaderIp, resp);
+                        leaderIp, resp);
+                throw new RuntimeException("[RenewNodeTask] renew data node to metaServer error : " + leaderIp);
             }
-        } catch (Exception e) {
-            LOGGER.error("[RenewNodeTask] renew data node to metaServer error : {}", leaderIp, e);
-            String newip = refreshLeader().getIp();
-            LOGGER.warn("[RenewNodeTask] renew data node to metaServer error,leader refresh: {}",
-                newip);
+        } catch (Throwable e) {
+            LOGGER.error("renew node error! " + e.getMessage(), e);
+            throw new RuntimeException("renew node error! " + e.getMessage(), e);
         }
-
     }
 
     private void handleRenewResult(RenewNodesResult result) {
@@ -137,16 +136,14 @@ public class DefaultMetaServiceImpl implements IMetaServerService {
     }
 
     private void registerMetaServer(String dataCenter, String ip) {
-        PeerId leader = getLeader();
-
         for (int tryCount = 0; tryCount < TRY_COUNT; tryCount++) {
             try {
                 Channel channel = metaNodeExchanger.connect(new URL(ip, dataServerConfig
-                    .getMetaServerPort()));
+                        .getMetaServerPort()));
                 //connect all meta server
                 if (channel != null && channel.isConnected()) {
                     metaServerConnectionFactory.register(dataCenter, ip,
-                        ((BoltChannel) channel).getConnection());
+                            ((BoltChannel) channel).getConnection());
                 }
             } catch (Exception e) {
                 LOGGER.error("[MetaServerChangeEventHandler] connect metaServer:{} error", ip, e);
@@ -157,48 +154,34 @@ public class DefaultMetaServiceImpl implements IMetaServerService {
 
     @Override
     public ProvideData fetchData(String dataInfoId) {
-
-        Map<String, Connection> connectionMap = metaServerConnectionFactory
-            .getConnections(dataServerConfig.getLocalDataCenter());
-        String leader = getLeader().getIp();
-        if (connectionMap.containsKey(leader)) {
-            Connection connection = connectionMap.get(leader);
-            if (connection.isFine()) {
-                try {
-                    Request<FetchProvideDataRequest> request = new Request<FetchProvideDataRequest>() {
-
-                        @Override
-                        public FetchProvideDataRequest getRequestBody() {
-
-                            return new FetchProvideDataRequest(dataInfoId);
-                        }
-
-                        @Override
-                        public URL getRequestUrl() {
-                            return new URL(connection.getRemoteIP(), connection.getRemotePort());
-                        }
-                    };
-
-                    Response response = metaNodeExchanger.request(request);
-
-                    Object result = response.getResult();
-                    if (result instanceof ProvideData) {
-                        return (ProvideData) result;
-                    } else {
-                        LOGGER.error("fetch null provider data!");
-                        throw new RuntimeException("MetaNodeService fetch null provider data!");
-                    }
-                } catch (Exception e) {
-                    LOGGER.error("fetch provider data error! " + e.getMessage(), e);
-                    throw new RuntimeException("fetch provider data error! " + e.getMessage(), e);
+        final String leaderIp = getLeader().getIp();
+        try {
+            registerMetaServer(dataServerConfig.getLocalDataCenter(), leaderIp);
+            Request<FetchProvideDataRequest> request = new Request<FetchProvideDataRequest>() {
+                @Override
+                public FetchProvideDataRequest getRequestBody() {
+                    return new FetchProvideDataRequest(dataInfoId);
                 }
+
+                @Override
+                public URL getRequestUrl() {
+                    return new URL(leaderIp, dataServerConfig.getMetaServerPort());
+                }
+            };
+
+            Response response = metaNodeExchanger.request(request);
+
+            Object result = response.getResult();
+            if (result instanceof ProvideData) {
+                return (ProvideData) result;
+            } else {
+                LOGGER.error("fetch null provider data!");
+                throw new RuntimeException("MetaNodeService fetch null provider data!");
             }
+        } catch (Exception e) {
+            LOGGER.error("fetch provider data error! " + e.getMessage(), e);
+            throw new RuntimeException("fetch provider data error! " + e.getMessage(), e);
         }
-        String newip = refreshLeader().getIp();
-        LOGGER.warn(
-            "[ConnectionRefreshTask] refresh connections metaServer not fine,refresh leader : {}",
-            newip);
-        return null;
 
     }
 
@@ -242,7 +225,7 @@ public class DefaultMetaServiceImpl implements IMetaServerService {
         if (leader == null) {
             LOGGER.error("[DefaultMetaServiceImpl] register MetaServer get no leader!");
             throw new RuntimeException(
-                "[DefaultMetaServiceImpl] register MetaServer get no leader!");
+                    "[DefaultMetaServiceImpl] register MetaServer get no leader!");
         }
         return leader;
     }

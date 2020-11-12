@@ -16,13 +16,11 @@
  */
 package com.alipay.sofa.registry.server.data.bootstrap;
 
+import com.alipay.sofa.registry.common.model.slot.Slot;
 import com.alipay.sofa.registry.remoting.bolt.exchange.BoltExchange;
 import com.alipay.sofa.registry.remoting.exchange.Exchange;
 import com.alipay.sofa.registry.remoting.jersey.exchange.JerseyExchange;
-import com.alipay.sofa.registry.server.data.cache.CacheDigestTask;
-import com.alipay.sofa.registry.server.data.cache.DatumCache;
-import com.alipay.sofa.registry.server.data.cache.DatumStorage;
-import com.alipay.sofa.registry.server.data.cache.LocalDatumStorage;
+import com.alipay.sofa.registry.server.data.cache.*;
 import com.alipay.sofa.registry.server.data.change.DataChangeHandler;
 import com.alipay.sofa.registry.server.data.change.event.DataChangeEventCenter;
 import com.alipay.sofa.registry.server.data.change.notify.IDataChangeNotifier;
@@ -32,7 +30,6 @@ import com.alipay.sofa.registry.server.data.event.EventCenter;
 import com.alipay.sofa.registry.server.data.remoting.DataNodeExchanger;
 import com.alipay.sofa.registry.server.data.remoting.MetaNodeExchanger;
 import com.alipay.sofa.registry.server.data.remoting.dataserver.DataServerConnectionFactory;
-import com.alipay.sofa.registry.server.data.remoting.dataserver.GetSyncDataHandler;
 import com.alipay.sofa.registry.server.data.remoting.dataserver.handler.DataSyncServerConnectionHandler;
 import com.alipay.sofa.registry.server.data.remoting.dataserver.handler.FetchDataHandler;
 import com.alipay.sofa.registry.server.data.remoting.dataserver.task.RenewNodeTask;
@@ -121,6 +118,17 @@ public class DataServerBeanConfiguration {
             return new LocalDatumStorage();
         }
 
+        @Bean
+        @ConditionalOnMissingBean
+        public SessionServerCache sessionServerCache() {
+            return new SessionServerCache();
+        }
+
+        @Bean
+        @ConditionalOnMissingBean
+        public SlotManager slotManager() {
+            return new SlotManagerImpl();
+        }
     }
 
     @Configuration
@@ -313,11 +321,6 @@ public class DataServerBeanConfiguration {
     public static class DataServerEventBeanConfiguration {
 
         @Bean
-        public GetSyncDataHandler getSyncDataHandler() {
-            return new GetSyncDataHandler();
-        }
-
-        @Bean
         public EventCenter eventCenter() {
             return new EventCenter();
         }
@@ -331,15 +334,17 @@ public class DataServerBeanConfiguration {
 
     @Configuration
     public static class DataServerRemotingBeanConfiguration {
-
-        @Bean
-        public RenewNodeTask renewNodeTask() {
-            return new RenewNodeTask();
-        }
-
         @Bean
         public IMetaServerService metaServerService() {
             return new DefaultMetaServiceImpl();
+        }
+    }
+
+    @Configuration
+    public static class RenewTaskConfigConfiguration {
+        @Bean
+        public RenewNodeTask renewNodeTask() {
+            return new RenewNodeTask();
         }
 
     }

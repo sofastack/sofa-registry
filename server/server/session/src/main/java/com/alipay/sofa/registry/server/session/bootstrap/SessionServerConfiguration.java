@@ -22,6 +22,8 @@ import java.util.Collection;
 import com.alipay.sofa.registry.server.session.connections.ConnectionsService;
 import com.alipay.sofa.registry.server.session.remoting.handler.*;
 import com.alipay.sofa.registry.server.session.resource.*;
+import com.alipay.sofa.registry.server.session.slot.SlotTableCache;
+import com.alipay.sofa.registry.server.session.slot.SlotTableCacheImpl;
 import org.glassfish.jersey.jackson.JacksonFeature;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -198,6 +200,11 @@ public class SessionServerConfiguration {
         @Bean
         public NodeExchanger metaNodeExchanger() {
             return new MetaNodeExchanger();
+        }
+
+        @Bean
+        public SlotTableCache slotTableCache() {
+            return new SlotTableCacheImpl();
         }
 
         @Bean(name = "serverHandlers")
@@ -388,13 +395,13 @@ public class SessionServerConfiguration {
         }
 
         @Bean
-        public NodeManager sessionNodeManager() {
-            return new SessionNodeManager();
+        public NodeManager metaNodeManager() {
+            return new MetaNodeManager();
         }
 
         @Bean
-        public NodeManager metaNodeManager() {
-            return new MetaNodeManager();
+        public NodeManager sessionNodeManager() {
+            return new SessionNodeManager();
         }
 
         @Bean
