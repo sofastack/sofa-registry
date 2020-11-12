@@ -90,11 +90,6 @@ public interface Registry<T extends Node> {
     NodeChangeResult getAllNodes(NodeType nodeType);
 
     /**
-     * push node change result
-     */
-    void pushNodeListChange(NodeType nodeType);
-
-    /**
      * fetch session metrics and config load balancer
      */
     Map<String /*category*/, Map<String /*zone*/, Map<String /*address*/, Integer /*connections*/>>> sessionLoadbalance(int maxDisconnect);

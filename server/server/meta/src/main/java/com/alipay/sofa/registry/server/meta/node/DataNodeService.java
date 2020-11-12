@@ -16,12 +16,7 @@
  */
 package com.alipay.sofa.registry.server.meta.node;
 
-import com.alipay.sofa.registry.common.model.metaserver.DataNode;
-import com.alipay.sofa.registry.common.model.metaserver.NodeChangeResult;
 import com.alipay.sofa.registry.common.model.metaserver.NotifyProvideDataChange;
-import com.alipay.sofa.registry.common.model.metaserver.StatusConfirmRequest;
-
-import java.util.Map;
 
 /**
  *
@@ -29,11 +24,5 @@ import java.util.Map;
  * @version $Id: DataNodeService.java, v 0.1 2018-01-23 19:09 shangyu.wh Exp $
  */
 public interface DataNodeService extends NodeService {
-
-    void pushDataNodes(NodeChangeResult nodeChangeResult, Map<String, DataNode> targetNodes,
-                       boolean confirm, String confirmNodeIp);
-
-    void notifyStatusConfirm(StatusConfirmRequest statusConfirmRequest);
-
     void notifyProvideDataChange(NotifyProvideDataChange notifyProvideDataChange);
 }

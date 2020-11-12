@@ -100,14 +100,6 @@ public class MetaServerRegistry implements Registry<Node> {
     }
 
     @Override
-    public void pushNodeListChange(NodeType nodeType) {
-        StoreService storeService = ServiceFactory.getStoreService(nodeType);
-        if (storeService != null) {
-            storeService.pushNodeListChange();
-        }
-    }
-
-    @Override
     public Map<String, Map<String, Map<String, Integer>>> sessionLoadbalance(int maxDisconnect) {
         SessionStoreService storeService = (SessionStoreService) ServiceFactory
             .getStoreService(NodeType.SESSION);

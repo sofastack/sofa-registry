@@ -39,10 +39,7 @@ import com.alipay.sofa.registry.remoting.exchange.Exchange;
 import com.alipay.sofa.registry.remoting.exchange.NodeExchanger;
 import com.alipay.sofa.registry.remoting.jersey.exchange.JerseyExchange;
 import com.alipay.sofa.registry.server.meta.executor.ExecutorManager;
-import com.alipay.sofa.registry.server.meta.listener.DataNodeChangePushTaskListener;
 import com.alipay.sofa.registry.server.meta.listener.PersistenceDataChangeNotifyTaskListener;
-import com.alipay.sofa.registry.server.meta.listener.ReceiveStatusConfirmNotifyTaskListener;
-import com.alipay.sofa.registry.server.meta.listener.SessionNodeChangePushTaskListener;
 import com.alipay.sofa.registry.server.meta.node.NodeService;
 import com.alipay.sofa.registry.server.meta.node.impl.DataNodeServiceImpl;
 import com.alipay.sofa.registry.server.meta.node.impl.MetaNodeServiceImpl;
@@ -368,30 +365,6 @@ public class MetaServerConfiguration {
         @Bean
         public TaskProcessor sessionNodeSingleTaskProcessor() {
             return new SessionNodeSingleTaskProcessor();
-        }
-
-        @Bean
-        public TaskListener sessionNodeChangePushTaskListener(TaskListenerManager taskListenerManager) {
-            TaskListener taskListener = new SessionNodeChangePushTaskListener(
-                sessionNodeSingleTaskProcessor());
-            taskListenerManager.addTaskListener(taskListener);
-            return taskListener;
-        }
-
-        @Bean
-        public TaskListener dataNodeChangePushTaskListener(TaskListenerManager taskListenerManager) {
-            TaskListener taskListener = new DataNodeChangePushTaskListener(
-                dataNodeSingleTaskProcessor());
-            taskListenerManager.addTaskListener(taskListener);
-            return taskListener;
-        }
-
-        @Bean
-        public TaskListener receiveStatusConfirmNotifyTaskListener(TaskListenerManager taskListenerManager) {
-            TaskListener taskListener = new ReceiveStatusConfirmNotifyTaskListener(
-                dataNodeSingleTaskProcessor());
-            taskListenerManager.addTaskListener(taskListener);
-            return taskListener;
         }
 
         @Bean
