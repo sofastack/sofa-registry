@@ -32,27 +32,6 @@ import com.alipay.sofa.registry.server.data.cache.SessionServerChangeItem;
 public interface IMetaServerService {
 
     /**
-     * Gets meta server map.
-     *
-     * @return meta server map
-     */
-    Map<String, Set<String>> getMetaServerMap();
-
-    /**
-     * Gets session servers.
-     *
-     * @return session servers
-     */
-    SessionServerChangeItem getSessionServers();
-
-    /**
-     * Gets other data centers.
-     *
-     * @return other data centers
-     */
-    List<String> getOtherDataCenters();
-
-    /**
      * scheduler update data server expireTime
      */
     void renewNodeTask();

@@ -221,33 +221,6 @@ public class SessionStoreService implements StoreService<SessionNode> {
         return tmpMap;
     }
 
-    private Set<String> getRemoveIp(Set<String> waitNotifyNodes) {
-
-        NodeChangeResult nodeChangeResult = getNodeChangeResult();
-        Map<String, Map<String, SessionNode>> map = nodeChangeResult.getNodes();
-        Map<String, SessionNode> addNodes = map.get(nodeConfig.getLocalDataCenter());
-        if (addNodes != null && !addNodes.isEmpty()) {
-            return waitNotifyNodes.stream().filter(ip -> !addNodes.keySet().contains(ip))
-                    .collect(Collectors.toSet());
-        }
-        return new HashSet<>();
-    }
-
-    private void firePushSessionListTask(NodeOperator<SessionNode> fireNode,
-                                         Map<String, SessionNode> sessionNodeMap,
-                                         NodeChangeResult nodeChangeResult) {
-
-        //notify target session node registry
-        TaskEvent taskEvent = new TaskEvent(TaskType.SESSION_NODE_CHANGE_PUSH_TASK);
-        taskEvent.setAttribute(Constant.PUSH_TARGET_OPERATOR_TYPE, fireNode.getNodeOperate());
-        taskEvent.setAttribute(Constant.PUSH_TARGET_SESSION_NODE, sessionNodeMap);
-        taskEvent.setAttribute(Constant.PUSH_TARGET_CONFIRM_NODE, fireNode.getNode().getNodeUrl()
-            .getIpAddress());
-        taskEvent.setEventObj(nodeChangeResult);
-        TASK_LOGGER.info("send " + taskEvent.getTaskType() + " taskEvent:" + taskEvent);
-        taskListenerManager.sendTaskEvent(taskEvent);
-    }
-
     @Override
     public NodeChangeResult getNodeChangeResult() {
 
@@ -276,7 +249,7 @@ public class SessionStoreService implements StoreService<SessionNode> {
 
     @Override
     public void getOtherDataCenterNodeAndUpdate() {
-
+        throw new UnsupportedOperationException("Node type SESSION not support function");
     }
 
     @Override
@@ -290,7 +263,7 @@ public class SessionStoreService implements StoreService<SessionNode> {
 
     @Override
     public void updateOtherDataCenterNodes(DataCenterNodes dataCenterNodes) {
-        throw new NotSupportedException("Node type SESSION not support function");
+        throw new UnsupportedOperationException("Node type SESSION not support function");
     }
 
     private Map<String, Integer> zoneMaxConnections(Map<String, LoadbalanceMetrics> nodes, int maxDisconnect) {

@@ -51,12 +51,6 @@ public class SessionServerConfigBean implements SessionServerConfig {
 
     private int                schedulerHeartbeatExpBackOffBound       = 1;
 
-    private int                schedulerGetSessionNodeTimeout          = 3;
-
-    private int                schedulerGetSessionNodeFirstDelay       = 5;
-
-    private int                schedulerGetSessionNodeExpBackOffBound  = 10;
-
     private int                schedulerFetchDataTimeout               = 1;               //MINUTES
 
     private int                schedulerFetchDataFirstDelay            = 30;
@@ -1044,63 +1038,6 @@ public class SessionServerConfigBean implements SessionServerConfig {
      */
     public void setNumberOfReplicas(int numberOfReplicas) {
         this.numberOfReplicas = numberOfReplicas;
-    }
-
-    /**
-     * Getter method for property <tt>schedulerGetSessionNodeTimeout</tt>.
-     *
-     * @return property value of schedulerGetSessionNodeTimeout
-     */
-    @Override
-    public int getSchedulerGetSessionNodeTimeout() {
-        return schedulerGetSessionNodeTimeout;
-    }
-
-    /**
-     * Setter method for property <tt>schedulerGetSessionNodeTimeout</tt>.
-     *
-     * @param schedulerGetSessionNodeTimeout value to be assigned to property schedulerGetSessionNodeTimeout
-     */
-    public void setSchedulerGetSessionNodeTimeout(int schedulerGetSessionNodeTimeout) {
-        this.schedulerGetSessionNodeTimeout = schedulerGetSessionNodeTimeout;
-    }
-
-    /**
-     * Getter method for property <tt>schedulerGetSessionNodeFirstDelay</tt>.
-     *
-     * @return property value of schedulerGetSessionNodeFirstDelay
-     */
-    @Override
-    public int getSchedulerGetSessionNodeFirstDelay() {
-        return schedulerGetSessionNodeFirstDelay;
-    }
-
-    /**
-     * Setter method for property <tt>schedulerGetSessionNodeFirstDelay</tt>.
-     *
-     * @param schedulerGetSessionNodeFirstDelay value to be assigned to property schedulerGetSessionNodeFirstDelay
-     */
-    public void setSchedulerGetSessionNodeFirstDelay(int schedulerGetSessionNodeFirstDelay) {
-        this.schedulerGetSessionNodeFirstDelay = schedulerGetSessionNodeFirstDelay;
-    }
-
-    /**
-     * Getter method for property <tt>schedulerGetSessionNodeExpBackOffBound</tt>.
-     *
-     * @return property value of schedulerGetSessionNodeExpBackOffBound
-     */
-    @Override
-    public int getSchedulerGetSessionNodeExpBackOffBound() {
-        return schedulerGetSessionNodeExpBackOffBound;
-    }
-
-    /**
-     * Setter method for property <tt>schedulerGetSessionNodeExpBackOffBound</tt>.
-     *
-     * @param schedulerGetSessionNodeExpBackOffBound value to be assigned to property schedulerGetSessionNodeExpBackOffBound
-     */
-    public void setSchedulerGetSessionNodeExpBackOffBound(int schedulerGetSessionNodeExpBackOffBound) {
-        this.schedulerGetSessionNodeExpBackOffBound = schedulerGetSessionNodeExpBackOffBound;
     }
 
     /**

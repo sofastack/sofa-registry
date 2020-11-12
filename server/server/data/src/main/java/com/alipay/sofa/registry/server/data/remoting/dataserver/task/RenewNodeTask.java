@@ -16,10 +16,14 @@
  */
 package com.alipay.sofa.registry.server.data.remoting.dataserver.task;
 
-import com.alipay.sofa.registry.server.data.event.StartTaskTypeEnum;
+import com.alipay.sofa.registry.log.Logger;
+import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.server.data.remoting.metaserver.IMetaServerService;
+import com.alipay.sofa.registry.util.NamedThreadFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -27,33 +31,21 @@ import java.util.concurrent.TimeUnit;
  * @author shangyu.wh
  * @version $Id: RenewNodeTask.java, v 0.1 2018-04-02 20:56 shangyu.wh Exp $
  */
-public class RenewNodeTask extends AbstractTask {
+public class RenewNodeTask {
+    private static final Logger LOGGER = LoggerFactory.getLogger(RenewNodeTask.class);
 
     @Autowired
-    private IMetaServerService metaServerService;
+    private IMetaServerService  metaServerService;
 
-    @Override
-    public void handle() {
-        metaServerService.renewNodeTask();
-    }
-
-    @Override
-    public int getDelay() {
-        return 3;
-    }
-
-    @Override
-    public int getInitialDelay() {
-        return 0;
-    }
-
-    @Override
-    public TimeUnit getTimeUnit() {
-        return TimeUnit.SECONDS;
-    }
-
-    @Override
-    public StartTaskTypeEnum getStartTaskTypeEnum() {
-        return StartTaskTypeEnum.RENEW;
+    public void start() {
+        ScheduledExecutorService executor = new ScheduledThreadPoolExecutor(1,
+                new NamedThreadFactory("RenewNodeTask"));
+        executor.scheduleAtFixedRate(() -> {
+            try {
+                metaServerService.renewNodeTask();
+            } catch (Throwable t) {
+                LOGGER.error("[RenewNodeTask] renew node error", t);
+            }
+        }, 3, 3, TimeUnit.SECONDS);
     }
 }

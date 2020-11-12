@@ -16,33 +16,33 @@
  */
 package com.alipay.sofa.registry.server.data.remoting.metaserver;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Set;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.stream.Collectors;
-
-import com.alipay.sofa.registry.common.model.metaserver.*;
-import com.alipay.sofa.registry.server.data.cache.SessionServerChangeItem;
-import org.springframework.beans.factory.annotation.Autowired;
-
 import com.alipay.remoting.Connection;
 import com.alipay.sofa.jraft.entity.PeerId;
+import com.alipay.sofa.registry.common.model.GenericResponse;
+import com.alipay.sofa.registry.common.model.Node;
 import com.alipay.sofa.registry.common.model.Node.NodeType;
 import com.alipay.sofa.registry.common.model.constants.ValueConstants;
+import com.alipay.sofa.registry.common.model.metaserver.*;
 import com.alipay.sofa.registry.common.model.store.URL;
 import com.alipay.sofa.registry.jraft.bootstrap.RaftClient;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
+import com.alipay.sofa.registry.remoting.Channel;
 import com.alipay.sofa.registry.remoting.bolt.BoltChannel;
 import com.alipay.sofa.registry.remoting.exchange.message.Request;
 import com.alipay.sofa.registry.remoting.exchange.message.Response;
 import com.alipay.sofa.registry.server.data.bootstrap.DataServerConfig;
+import com.alipay.sofa.registry.server.data.cache.SessionServerCache;
+import com.alipay.sofa.registry.server.data.cache.SessionServerChangeItem;
 import com.alipay.sofa.registry.server.data.remoting.MetaNodeExchanger;
+import com.alipay.sofa.registry.server.data.util.TimeUtil;
+import com.google.common.collect.Sets;
+import org.springframework.beans.factory.annotation.Autowired;
+
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.stream.Collectors;
 
 /**
  *
@@ -53,6 +53,8 @@ public class DefaultMetaServiceImpl implements IMetaServerService {
 
     private static final Logger         LOGGER      = LoggerFactory
                                                         .getLogger(DefaultMetaServiceImpl.class);
+
+    private static final int            TRY_COUNT   = 3;
 
     @Autowired
     private DataServerConfig            dataServerConfig;
@@ -67,170 +69,88 @@ public class DefaultMetaServiceImpl implements IMetaServerService {
 
     private AtomicBoolean               clientStart = new AtomicBoolean(false);
 
-    @Override
-    public Map<String, Set<String>> getMetaServerMap() {
-        HashMap<String, Set<String>> map = new HashMap<>();
-        Set<String> set = dataServerConfig.getMetaServerIpAddresses();
-
-        Map<String, Connection> connectionMap = metaServerConnectionFactory
-            .getConnections(dataServerConfig.getLocalDataCenter());
-        Connection connection = null;
-        try {
-            if (connectionMap.isEmpty()) {
-                List<String> list = new ArrayList(set);
-                Collections.shuffle(list);
-                connection = ((BoltChannel) metaNodeExchanger.connect(new URL(list.iterator()
-                    .next(), dataServerConfig.getMetaServerPort()))).getConnection();
-            } else {
-                List<Connection> connections = new ArrayList<>(connectionMap.values());
-                Collections.shuffle(connections);
-                connection = connections.iterator().next();
-                if (!connection.isFine()) {
-                    connection = ((BoltChannel) metaNodeExchanger.connect(new URL(connection
-                        .getRemoteIP(), dataServerConfig.getMetaServerPort()))).getConnection();
-                }
-            }
-
-            GetNodesRequest request = new GetNodesRequest(NodeType.META);
-            final Connection finalConnection = connection;
-            Object obj = metaNodeExchanger.request(new Request() {
-                @Override
-                public Object getRequestBody() {
-                    return request;
-                }
-
-                @Override
-                public URL getRequestUrl() {
-                    return new URL(finalConnection.getRemoteIP(), finalConnection.getRemotePort());
-                }
-            }).getResult();
-            if (obj instanceof NodeChangeResult) {
-                NodeChangeResult<MetaNode> result = (NodeChangeResult<MetaNode>) obj;
-
-                Map<String, Map<String, MetaNode>> metaNodesMap = result.getNodes();
-                if (metaNodesMap != null && !metaNodesMap.isEmpty()) {
-                    Map<String, MetaNode> metaNodeMap = metaNodesMap.get(dataServerConfig
-                        .getLocalDataCenter());
-                    if (metaNodeMap != null && !metaNodeMap.isEmpty()) {
-                        map.put(dataServerConfig.getLocalDataCenter(), metaNodeMap.keySet());
-                    } else {
-                        LOGGER
-                            .error(
-                                "[DefaultMetaServiceImpl] refresh connections from metaServer {} has no result!",
-                                connection.getRemoteIP());
-                    }
-                }
-            }
-        } catch (Exception e) {
-            String con = connection != null ? connection.getRemoteIP() : "null";
-            LOGGER.error("[DefaultMetaServiceImpl] refresh connections from metaServer error : {}",
-                con, e);
-            LOGGER
-                .warn(
-                    "[DefaultMetaServiceImpl] refresh connections from metaServer error,refresh leader : {}",
-                    con);
-            throw new RuntimeException(
-                "[DefaultMetaServiceImpl] refresh connections from metaServer error!", e);
-        }
-        return map;
-    }
-
-    @Override
-    public SessionServerChangeItem getSessionServers() {
-        Map<String, Connection> connectionMap = metaServerConnectionFactory
-            .getConnections(dataServerConfig.getLocalDataCenter());
-        String leader = getLeader().getIp();
-        if (connectionMap.containsKey(leader)) {
-            Connection connection = connectionMap.get(leader);
-            if (connection.isFine()) {
-                try {
-                    GetNodesRequest request = new GetNodesRequest(NodeType.SESSION);
-                    Object obj = metaNodeExchanger.request(new Request() {
-                        @Override
-                        public Object getRequestBody() {
-                            return request;
-                        }
-
-                        @Override
-                        public URL getRequestUrl() {
-                            return new URL(connection.getRemoteIP(), connection.getRemotePort());
-                        }
-                    }).getResult();
-                    if (obj instanceof NodeChangeResult) {
-                        NodeChangeResult<SessionNode> result = (NodeChangeResult<SessionNode>) obj;
-                        Map<String, Long> versionMap = result.getDataCenterListVersions();
-                        versionMap.put(result.getLocalDataCenter(), result.getVersion());
-                        return new SessionServerChangeItem(result.getNodes(), versionMap);
-                    }
-                } catch (Exception e) {
-                    LOGGER.error(
-                        "[ConnectionRefreshTask] refresh connections from metaServer error : {}",
-                        leader, e);
-                    String newip = refreshLeader().getIp();
-                    LOGGER
-                        .warn(
-                            "[ConnectionRefreshTask] refresh connections from metaServer error,refresh leader : {}",
-                            newip);
-
-                }
-            }
-        }
-        String newip = refreshLeader().getIp();
-        LOGGER.warn(
-            "[ConnectionRefreshTask] refresh connections metaServer not fine,refresh leader : {}",
-            newip);
-        return null;
-    }
-
-    @Override
-    public List<String> getOtherDataCenters() {
-        throw new UnsupportedOperationException();
-        //        Set<String> all = new HashSet<>(dataServerCache.getAllDataCenters());
-        //        all.remove(dataServerConfig.getLocalDataCenter());
-        //        return new ArrayList<>(all);
-    }
+    @Autowired
+    private SessionServerCache          sessionServerCache;
 
     @Override
     public void renewNodeTask() {
-        Map<String, Connection> connectionMap = metaServerConnectionFactory
-            .getConnections(dataServerConfig.getLocalDataCenter());
-        for (Entry<String, Connection> connectEntry : connectionMap.entrySet()) {
-            String ip = connectEntry.getKey();
-            //just send to leader
-            if (ip.equals(getLeader().getIp())) {
-                Connection connection = connectEntry.getValue();
-                if (connection.isFine()) {
-                    try {
-                        RenewNodesRequest<DataNode> renewNodesRequest = new RenewNodesRequest<>(
-                            new DataNode(new URL(DataServerConfig.IP),
-                                dataServerConfig.getLocalDataCenter()));
-                        metaNodeExchanger.request(new Request() {
-                            @Override
-                            public Object getRequestBody() {
-                                return renewNodesRequest;
-                            }
-
-                            @Override
-                            public URL getRequestUrl() {
-                                return new URL(connection.getRemoteIP(), connection.getRemotePort());
-                            }
-                        }).getResult();
-                    } catch (Exception e) {
-                        LOGGER.error("[RenewNodeTask] renew data node to metaServer error : {}",
-                            ip, e);
-                        String newip = refreshLeader().getIp();
-                        LOGGER
-                            .warn(
-                                "[RenewNodeTask] renew data node to metaServer error,leader refresh: {}",
-                                newip);
+        final String leaderIp = getLeader().getIp();
+        try {
+            RenewNodesRequest<DataNode> renewNodesRequest = new RenewNodesRequest<>(new DataNode(
+                new URL(DataServerConfig.IP), dataServerConfig.getLocalDataCenter()));
+            // datanode need the meta and session nodes info
+            renewNodesRequest.setTargetNodeTypes(Sets.newHashSet(NodeType.META, NodeType.SESSION));
+            GenericResponse<RenewNodesResult> resp = (GenericResponse<RenewNodesResult>) metaNodeExchanger
+                .request(new Request() {
+                    @Override
+                    public Object getRequestBody() {
+                        return renewNodesRequest;
                     }
-                } else {
-                    String newip = refreshLeader().getIp();
-                    LOGGER
-                        .warn(
-                            "[ReNewNodeTask] reNew data node to metaServer not fine,leader refresh: {}",
-                            newip);
+
+                    @Override
+                    public URL getRequestUrl() {
+                        return new URL(leaderIp, dataServerConfig.getMetaServerPort());
+                    }
+                }).getResult();
+            if (resp != null && resp.isSuccess()) {
+                handleRenewResult(resp.getData());
+            } else {
+                LOGGER.error("[RenewNodeTask] renew data node to metaServer error : {}, {}",
+                    leaderIp, resp);
+            }
+        } catch (Exception e) {
+            LOGGER.error("[RenewNodeTask] renew data node to metaServer error : {}", leaderIp, e);
+            String newip = refreshLeader().getIp();
+            LOGGER.warn("[RenewNodeTask] renew data node to metaServer error,leader refresh: {}",
+                newip);
+        }
+
+    }
+
+    private void handleRenewResult(RenewNodesResult result) {
+        Map<Node.NodeType, NodeChangeResult> resultMap = result.getResults();
+        if (resultMap == null) {
+            return;
+        }
+        NodeChangeResult<SessionNode> sessions = resultMap.get(NodeType.SESSION);
+        Map<String, Long> versionMap = sessions.getDataCenterListVersions();
+        versionMap.put(sessions.getLocalDataCenter(), sessions.getVersion());
+        sessionServerCache.setSessionServerChangeItem(new SessionServerChangeItem(sessions.getNodes(), versionMap));
+
+        NodeChangeResult<MetaNode> metas = resultMap.get(NodeType.META);
+        metas.getNodes().forEach((dataCenter, metaNodes) -> {
+            for (String metaNode : metaNodes.keySet()) {
+                Connection connection = metaServerConnectionFactory.getConnection(dataCenter, metaNode);
+                if (connection == null || !connection.isFine()) {
+                    registerMetaServer(dataCenter, metaNode);
+                    LOGGER.info("[Renew] adds meta connection, datacenter:{}, ip:{}", dataCenter, metaNode);
                 }
+            }
+            Set<String> ipSet = metaServerConnectionFactory.getIps(dataCenter);
+            for (String ip : ipSet) {
+                if (!metaNodes.containsKey(ip)) {
+                    metaServerConnectionFactory.remove(dataCenter, ip);
+                    LOGGER.info("[Renew] remove meta connection, datacenter:{}, ip:{}", dataCenter, ip);
+                }
+            }
+        });
+    }
+
+    private void registerMetaServer(String dataCenter, String ip) {
+        PeerId leader = getLeader();
+
+        for (int tryCount = 0; tryCount < TRY_COUNT; tryCount++) {
+            try {
+                Channel channel = metaNodeExchanger.connect(new URL(ip, dataServerConfig
+                    .getMetaServerPort()));
+                //connect all meta server
+                if (channel != null && channel.isConnected()) {
+                    metaServerConnectionFactory.register(dataCenter, ip,
+                        ((BoltChannel) channel).getConnection());
+                }
+            } catch (Exception e) {
+                LOGGER.error("[MetaServerChangeEventHandler] connect metaServer:{} error", ip, e);
+                TimeUtil.randomDelay(1000);
             }
         }
     }

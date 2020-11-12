@@ -255,7 +255,6 @@ public class SessionServerConfiguration {
         public Collection<AbstractClientHandler> metaClientHandlers() {
             Collection<AbstractClientHandler> list = new ArrayList<>();
             list.add(metaNodeConnectionHandler());
-            list.add(nodeChangeResultHandler());
             list.add(notifyProvideDataChangeHandler());
             list.add(loadbalanceMetricsHandler());
             list.add(configureLoadbalanceHandler());
@@ -280,11 +279,6 @@ public class SessionServerConfiguration {
         @Bean
         public AbstractClientHandler dataPushRequestHandler() {
             return new DataPushRequestHandler();
-        }
-
-        @Bean
-        public AbstractClientHandler nodeChangeResultHandler() {
-            return new NodeChangeResultHandler();
         }
 
         @Bean

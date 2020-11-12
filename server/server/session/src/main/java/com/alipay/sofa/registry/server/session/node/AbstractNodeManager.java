@@ -16,27 +16,21 @@
  */
 package com.alipay.sofa.registry.server.session.node;
 
+import com.alipay.sofa.registry.common.model.Node;
+import com.alipay.sofa.registry.common.model.metaserver.NodeChangeResult;
+import com.alipay.sofa.registry.log.Logger;
+import com.alipay.sofa.registry.log.LoggerFactory;
+import com.alipay.sofa.registry.remoting.exchange.NodeExchanger;
+import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
+import com.alipay.sofa.registry.util.VersionsMapUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
-
-import org.springframework.beans.factory.annotation.Autowired;
-
-import com.alipay.sofa.registry.common.model.Node;
-import com.alipay.sofa.registry.common.model.metaserver.GetNodesRequest;
-import com.alipay.sofa.registry.common.model.metaserver.NodeChangeResult;
-import com.alipay.sofa.registry.common.model.store.URL;
-import com.alipay.sofa.registry.log.Logger;
-import com.alipay.sofa.registry.log.LoggerFactory;
-import com.alipay.sofa.registry.remoting.exchange.NodeExchanger;
-import com.alipay.sofa.registry.remoting.exchange.RequestException;
-import com.alipay.sofa.registry.remoting.exchange.message.Request;
-import com.alipay.sofa.registry.remoting.exchange.message.Response;
-import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
-import com.alipay.sofa.registry.util.VersionsMapUtils;
 
 /**
  *
@@ -56,6 +50,7 @@ public abstract class AbstractNodeManager<T extends Node> implements NodeManager
     protected final Lock                                                   write                   = readWriteLock
                                                                                                        .writeLock();
     protected Map<String/*dataCenter id*/, Map<String /*ipAddress*/, T>> nodes                   = new ConcurrentHashMap<>();
+    private NodeChangeResult                                               nodeChangeResult;
     @Autowired
     protected SessionServerConfig                                          sessionServerConfig;
 
@@ -99,6 +94,7 @@ public abstract class AbstractNodeManager<T extends Node> implements NodeManager
     public void updateNodes(NodeChangeResult nodeChangeResult) {
         write.lock();
         try {
+            this.nodeChangeResult = nodeChangeResult;
             nodes = nodeChangeResult.getNodes();
             dataCenterNodesVersions.putIfAbsent(nodeChangeResult.getLocalDataCenter(),
                 nodeChangeResult.getVersion());
@@ -114,47 +110,12 @@ public abstract class AbstractNodeManager<T extends Node> implements NodeManager
 
     @Override
     public NodeChangeResult getAllDataCenterNodes() {
-        NodeChangeResult nodeChangeResult;
+        read.lock();
         try {
-
-            Request<GetNodesRequest> getNodesRequestRequest = new Request<GetNodesRequest>() {
-
-                @Override
-                public GetNodesRequest getRequestBody() {
-                    return new GetNodesRequest(getNodeType());
-                }
-
-                @Override
-                public URL getRequestUrl() {
-                    return new URL(raftClientManager.getLeader().getIp(),
-                        sessionServerConfig.getMetaServerPort());
-                }
-            };
-
-            Response<NodeChangeResult> response = metaNodeExchanger.request(getNodesRequestRequest);
-
-            if (response != null && response.getResult() != null) {
-
-                nodeChangeResult = response.getResult();
-                updateNodes(nodeChangeResult);
-
-                EXCHANGE_LOGGER.info("Update node type {} success!info:{}", getNodeType(),
-                    nodeChangeResult.getNodes());
-            } else {
-                LOGGER.error(
-                    "NodeManager get all dataCenter nodes type {} error!No response receive!",
-                    getNodeType());
-                throw new RuntimeException(
-                    "NodeManager get all dataCenter nodes error!No response receive!");
-            }
-
-        } catch (RequestException e) {
-            LOGGER.error("NodeManager get all dataCenter nodes error! " + e.getMessage(), e);
-            throw new RuntimeException("NodeManager get all dataCenter nodes error! "
-                                       + e.getMessage(), e);
+            return nodeChangeResult;
+        } finally {
+            read.unlock();
         }
-
-        return nodeChangeResult;
     }
 
     /**

@@ -57,7 +57,6 @@ public class TaskEvent {
         USER_DATA_ELEMENT_MULTI_PUSH_TASK("UserDataElementMultiPushTask"), //
 
         //MetaServer task
-        SESSION_NODE_CHANGE_PUSH_TASK("SessionNodeChangePushTask"), //
         PERSISTENCE_DATA_CHANGE_NOTIFY_TASK("PersistenceDataChangeNotifyTask"), //
         ;
 
