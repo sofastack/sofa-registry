@@ -16,7 +16,11 @@
  */
 package com.alipay.sofa.registry.server.meta.remoting.handler;
 
+import com.alipay.sofa.registry.common.model.GenericResponse;
+import com.alipay.sofa.registry.common.model.metaserver.RenewNodesResult;
+import com.alipay.sofa.registry.server.meta.bootstrap.ServiceFactory;
 import com.alipay.sofa.registry.server.meta.executor.ExecutorManager;
+import com.alipay.sofa.registry.server.meta.store.StoreService;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import com.alipay.sofa.registry.common.model.Node;
@@ -26,6 +30,7 @@ import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.remoting.Channel;
 import com.alipay.sofa.registry.server.meta.registry.Registry;
 
+import java.util.Set;
 import java.util.concurrent.Executor;
 
 /**
@@ -46,11 +51,20 @@ public class RenewNodesRequestHandler extends AbstractServerHandler<RenewNodesRe
         try {
             renewNode = renewNodesRequest.getNode();
             metaServerRegistry.renew(renewNode, renewNodesRequest.getDuration());
-        } catch (Exception e) {
+            RenewNodesResult result = new RenewNodesResult();
+            Set<Node.NodeType> targetTypes = renewNodesRequest.getTargetNodeTypes();
+            if (targetTypes != null) {
+                for (Node.NodeType type : targetTypes) {
+                    StoreService storeService = ServiceFactory.getStoreService(type);
+                    result.getResults().put(type, storeService.getNodeChangeResult());
+                }
+            }
+            return new GenericResponse<RenewNodesResult>().fillSucceed(result);
+        } catch (Throwable e) {
             LOGGER.error("Node " + renewNode + "renew error!", e);
-            throw new RuntimeException("Node renew error!", e);
+            return new GenericResponse<RenewNodesResult>().fillFailed("Node " + renewNode
+                                                                      + "renew error!");
         }
-        return null;
     }
 
     @Override

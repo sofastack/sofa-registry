@@ -131,7 +131,6 @@ public class ExecutorManager {
                 new TimedSupervisorTask("GetOtherDataCenterChange", scheduler, getOtherDataCenterChangeExecutor,
                         metaServerConfig.getSchedulerGetDataChangeTimeout(), TimeUnit.SECONDS,
                         metaServerConfig.getSchedulerGetDataChangeExpBackOffBound(), () -> {
-                    metaServerRegistry.getOtherDataCenterNodeAndUpdate(NodeType.DATA);
                     metaServerRegistry.getOtherDataCenterNodeAndUpdate(NodeType.META);
                 }), metaServerConfig.getSchedulerGetDataChangeFirstDelay(), TimeUnit.SECONDS);
 

@@ -19,16 +19,19 @@ package com.alipay.sofa.registry.server.session.node;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import com.alipay.remoting.Connection;
+import com.alipay.sofa.registry.common.model.GenericResponse;
+import com.alipay.sofa.registry.common.model.Node;
 import com.alipay.sofa.registry.common.model.Node.NodeType;
-import com.alipay.sofa.registry.common.model.metaserver.NodeChangeResult;
-import com.alipay.sofa.registry.common.model.metaserver.RenewNodesRequest;
-import com.alipay.sofa.registry.common.model.metaserver.SessionNode;
+import com.alipay.sofa.registry.common.model.metaserver.*;
 import com.alipay.sofa.registry.common.model.store.URL;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.net.NetUtil;
 import com.alipay.sofa.registry.remoting.exchange.RequestException;
 import com.alipay.sofa.registry.remoting.exchange.message.Request;
+import com.google.common.collect.Sets;
+import org.springframework.beans.factory.annotation.Autowired;
 
 /**
  *
@@ -38,6 +41,12 @@ import com.alipay.sofa.registry.remoting.exchange.message.Request;
 public class SessionNodeManager extends AbstractNodeManager<SessionNode> {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(SessionNodeManager.class);
+
+    @Autowired
+    private NodeManager         metaNodeManager;
+
+    @Autowired
+    private NodeManager         dataNodeManager;
 
     @Override
     public SessionNode getNode(String dataInfoId) {
@@ -71,8 +80,8 @@ public class SessionNodeManager extends AbstractNodeManager<SessionNode> {
 
     @Override
     public void renewNode() {
+        final String leaderIp = raftClientManager.getLeader().getIp();
         try {
-
             Request<RenewNodesRequest> renewNodesRequestRequest = new Request<RenewNodesRequest>() {
 
                 @Override
@@ -80,21 +89,45 @@ public class SessionNodeManager extends AbstractNodeManager<SessionNode> {
                     URL clientUrl = new URL(NetUtil.getLocalAddress().getHostAddress(), 0);
                     SessionNode sessionNode = new SessionNode(clientUrl,
                         sessionServerConfig.getSessionServerRegion());
-
-                    return new RenewNodesRequest(sessionNode);
+                    RenewNodesRequest request = new RenewNodesRequest(sessionNode);
+                    // session node need the meta/session/data
+                    request.setTargetNodeTypes(Sets.newHashSet(NodeType.META, NodeType.SESSION,
+                        NodeType.DATA));
+                    return request;
                 }
 
                 @Override
                 public URL getRequestUrl() {
-                    return new URL(raftClientManager.getLeader().getIp(),
-                        sessionServerConfig.getMetaServerPort());
+                    return new URL(leaderIp, sessionServerConfig.getMetaServerPort());
                 }
             };
 
-            metaNodeExchanger.request(renewNodesRequestRequest);
-        } catch (RequestException e) {
+            GenericResponse<RenewNodesResult> resp = (GenericResponse<RenewNodesResult>) metaNodeExchanger
+                .request(renewNodesRequestRequest);
+            if (resp != null && resp.isSuccess()) {
+                handleRenewResult(resp.getData());
+            } else {
+                LOGGER.error("[RenewNodeTask] renew data node to metaServer error : {}, {}",
+                    leaderIp, resp);
+            }
+        } catch (Throwable e) {
             throw new RuntimeException("SessionNodeManager renew node error! " + e.getMessage(), e);
         }
+    }
+
+    private void handleRenewResult(RenewNodesResult result) {
+        Map<Node.NodeType, NodeChangeResult> resultMap = result.getResults();
+        if (resultMap == null) {
+            return;
+        }
+        NodeChangeResult<SessionNode> sessions = resultMap.get(NodeType.SESSION);
+        updateNodes(sessions);
+
+        NodeChangeResult<MetaNode> metas = resultMap.get(NodeType.META);
+        metaNodeManager.updateNodes(metas);
+
+        NodeChangeResult<MetaNode> datas = resultMap.get(NodeType.DATA);
+        dataNodeManager.updateNodes(datas);
     }
 
     @Override

@@ -16,23 +16,6 @@
  */
 package com.alipay.sofa.registry.server.data.bootstrap;
 
-import java.lang.annotation.Annotation;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Date;
-import java.util.Map;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.stream.Collectors;
-
-import javax.annotation.Resource;
-import javax.ws.rs.Path;
-import javax.ws.rs.ext.Provider;
-
-import org.glassfish.jersey.server.ResourceConfig;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.context.properties.EnableConfigurationProperties;
-import org.springframework.context.ApplicationContext;
-
 import com.alipay.sofa.registry.common.model.constants.ValueConstants;
 import com.alipay.sofa.registry.common.model.metaserver.ProvideData;
 import com.alipay.sofa.registry.common.model.store.URL;
@@ -44,12 +27,23 @@ import com.alipay.sofa.registry.remoting.Server;
 import com.alipay.sofa.registry.remoting.exchange.Exchange;
 import com.alipay.sofa.registry.server.data.cache.CacheDigestTask;
 import com.alipay.sofa.registry.server.data.event.EventCenter;
-import com.alipay.sofa.registry.server.data.event.MetaServerChangeEvent;
-import com.alipay.sofa.registry.server.data.event.StartTaskEvent;
-import com.alipay.sofa.registry.server.data.event.StartTaskTypeEnum;
+import com.alipay.sofa.registry.server.data.remoting.dataserver.task.RenewNodeTask;
 import com.alipay.sofa.registry.server.data.remoting.handler.AbstractServerHandler;
 import com.alipay.sofa.registry.server.data.remoting.metaserver.IMetaServerService;
 import com.alipay.sofa.registry.server.data.renew.DatumLeaseManager;
+import org.glassfish.jersey.server.ResourceConfig;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.context.ApplicationContext;
+
+import javax.annotation.Resource;
+import javax.ws.rs.Path;
+import javax.ws.rs.ext.Provider;
+import java.lang.annotation.Annotation;
+import java.util.Collection;
+import java.util.Date;
+import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  *
@@ -85,6 +79,9 @@ public class DataServerBootstrap {
 
     @Autowired
     private CacheDigestTask                   cacheDigestTask;
+
+    @Autowired
+    private RenewNodeTask                     renewNodeTask;
 
     @Resource(name = "serverHandlers")
     private Collection<AbstractServerHandler> serverHandlers;
@@ -190,7 +187,6 @@ public class DataServerBootstrap {
 
     private void startRaftClient() {
         metaServerService.startRaftClient();
-        eventCenter.post(new MetaServerChangeEvent(metaServerService.getMetaServerMap()));
         LOGGER.info("raft client started!Leader is {}", metaServerService.getLeader());
     }
 
@@ -212,11 +208,7 @@ public class DataServerBootstrap {
     private void startScheduler() {
         try {
             if (schedulerStarted.compareAndSet(false, true)) {
-                // start all startTask except correction task
-                eventCenter.post(new StartTaskEvent(
-                        Arrays.stream(StartTaskTypeEnum.values()).filter(type -> type != StartTaskTypeEnum.RENEW)
-                                .collect(Collectors.toSet())));
-
+                renewNodeTask.start();
                 //start dump log
                 cacheDigestTask.start();
             }

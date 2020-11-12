@@ -220,18 +220,10 @@ public class ExecutorManager {
                         sessionServerConfig.getSchedulerFetchDataExpBackOffBound(), () -> sessionRegistry.fetchChangData()),
                 sessionServerConfig.getSchedulerFetchDataFirstDelay(), TimeUnit.SECONDS);
 
-        scheduler.schedule(new TimedSupervisorTask("RenewData", scheduler, renNewDataExecutor,
+        scheduler.schedule(new TimedSupervisorTask("RenewSession", scheduler, renNewDataExecutor,
                         sessionServerConfig.getSchedulerHeartbeatTimeout(), TimeUnit.SECONDS,
                         sessionServerConfig.getSchedulerHeartbeatExpBackOffBound(), () -> sessionNodeManager.renewNode()),
                 sessionServerConfig.getSchedulerHeartbeatFirstDelay(), TimeUnit.SECONDS);
-
-        scheduler.schedule(new TimedSupervisorTask("GetSessionNode", scheduler, getSessionNodeExecutor,
-                sessionServerConfig.getSchedulerGetSessionNodeTimeout(), TimeUnit.SECONDS,
-                sessionServerConfig.getSchedulerGetSessionNodeExpBackOffBound(), () -> {
-            sessionNodeManager.getAllDataCenterNodes();
-            dataNodeManager.getAllDataCenterNodes();
-            metaNodeManager.getAllDataCenterNodes();
-        }), sessionServerConfig.getSchedulerGetSessionNodeFirstDelay(), TimeUnit.SECONDS);
 
         scheduler.schedule(new TimedSupervisorTask("ConnectMetaServer", scheduler, connectMetaExecutor,
                         sessionServerConfig.getSchedulerConnectMetaTimeout(), TimeUnit.SECONDS,

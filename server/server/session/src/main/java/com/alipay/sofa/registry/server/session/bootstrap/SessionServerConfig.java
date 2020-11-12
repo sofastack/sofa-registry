@@ -37,12 +37,6 @@ public interface SessionServerConfig {
 
     int getSchedulerHeartbeatExpBackOffBound();
 
-    int getSchedulerGetSessionNodeTimeout();
-
-    int getSchedulerGetSessionNodeFirstDelay();
-
-    int getSchedulerGetSessionNodeExpBackOffBound();
-
     int getSchedulerFetchDataTimeout();
 
     int getSchedulerFetchDataFirstDelay();

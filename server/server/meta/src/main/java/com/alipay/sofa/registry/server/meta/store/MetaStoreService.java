@@ -16,20 +16,6 @@
  */
 package com.alipay.sofa.registry.server.meta.store;
 
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicLong;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
-
-import javax.ws.rs.NotSupportedException;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-
 import com.alipay.sofa.registry.common.model.Node.NodeType;
 import com.alipay.sofa.registry.common.model.metaserver.DataCenterNodes;
 import com.alipay.sofa.registry.common.model.metaserver.GetChangeListRequest;
@@ -40,11 +26,19 @@ import com.alipay.sofa.registry.server.meta.bootstrap.ServiceFactory;
 import com.alipay.sofa.registry.server.meta.node.MetaNodeService;
 import com.alipay.sofa.registry.server.meta.repository.NodeRepository;
 import com.alipay.sofa.registry.server.meta.repository.RepositoryService;
-import com.alipay.sofa.registry.server.meta.task.Constant;
 import com.alipay.sofa.registry.store.api.annotation.RaftReference;
-import com.alipay.sofa.registry.task.listener.TaskEvent;
-import com.alipay.sofa.registry.task.listener.TaskEvent.TaskType;
 import com.alipay.sofa.registry.task.listener.TaskListenerManager;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 /**
  *
@@ -285,8 +279,6 @@ public class MetaStoreService implements StoreService<MetaNode> {
                         version);
                 return;
             }
-
-            NodeChangeResult nodeChangeResult = getNodeChangeResult();
         } finally {
             write.unlock();
         }

@@ -16,17 +16,15 @@
  */
 package com.alipay.sofa.registry.server.session.node;
 
-import com.alipay.sofa.registry.common.model.slot.Slot;
-import com.alipay.sofa.registry.server.session.slot.SlotTableCache;
-import org.springframework.beans.factory.annotation.Autowired;
-
 import com.alipay.sofa.registry.common.model.Node.NodeType;
 import com.alipay.sofa.registry.common.model.metaserver.DataNode;
 import com.alipay.sofa.registry.common.model.metaserver.NodeChangeResult;
-import com.alipay.sofa.registry.consistency.hash.ConsistentHash;
+import com.alipay.sofa.registry.common.model.slot.Slot;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
+import com.alipay.sofa.registry.server.session.slot.SlotTableCache;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.Map;
 

@@ -16,41 +16,25 @@
  */
 package com.alipay.sofa.registry.server.data.bootstrap;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
-
-import com.alipay.sofa.registry.server.data.cache.*;
-import org.glassfish.jersey.jackson.JacksonFeature;
-import org.glassfish.jersey.server.ResourceConfig;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
-import org.springframework.boot.context.properties.EnableConfigurationProperties;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Import;
-
 import com.alipay.sofa.registry.remoting.bolt.exchange.BoltExchange;
 import com.alipay.sofa.registry.remoting.exchange.Exchange;
 import com.alipay.sofa.registry.remoting.jersey.exchange.JerseyExchange;
+import com.alipay.sofa.registry.server.data.cache.CacheDigestTask;
+import com.alipay.sofa.registry.server.data.cache.DatumCache;
+import com.alipay.sofa.registry.server.data.cache.DatumStorage;
+import com.alipay.sofa.registry.server.data.cache.LocalDatumStorage;
 import com.alipay.sofa.registry.server.data.change.DataChangeHandler;
 import com.alipay.sofa.registry.server.data.change.event.DataChangeEventCenter;
 import com.alipay.sofa.registry.server.data.change.notify.IDataChangeNotifier;
 import com.alipay.sofa.registry.server.data.change.notify.SessionServerNotifier;
 import com.alipay.sofa.registry.server.data.change.notify.TempPublisherNotifier;
 import com.alipay.sofa.registry.server.data.event.EventCenter;
-import com.alipay.sofa.registry.server.data.event.handler.MetaServerChangeEventHandler;
-import com.alipay.sofa.registry.server.data.event.handler.StartTaskEventHandler;
 import com.alipay.sofa.registry.server.data.remoting.DataNodeExchanger;
 import com.alipay.sofa.registry.server.data.remoting.MetaNodeExchanger;
 import com.alipay.sofa.registry.server.data.remoting.dataserver.DataServerConnectionFactory;
 import com.alipay.sofa.registry.server.data.remoting.dataserver.GetSyncDataHandler;
 import com.alipay.sofa.registry.server.data.remoting.dataserver.handler.DataSyncServerConnectionHandler;
 import com.alipay.sofa.registry.server.data.remoting.dataserver.handler.FetchDataHandler;
-import com.alipay.sofa.registry.server.data.remoting.dataserver.task.AbstractTask;
-import com.alipay.sofa.registry.server.data.remoting.dataserver.task.ConnectionRefreshTask;
 import com.alipay.sofa.registry.server.data.remoting.dataserver.task.RenewNodeTask;
 import com.alipay.sofa.registry.server.data.remoting.handler.AbstractClientHandler;
 import com.alipay.sofa.registry.server.data.remoting.handler.AbstractServerHandler;
@@ -61,24 +45,29 @@ import com.alipay.sofa.registry.server.data.remoting.metaserver.handler.NotifyPr
 import com.alipay.sofa.registry.server.data.remoting.metaserver.provideData.ProvideDataProcessor;
 import com.alipay.sofa.registry.server.data.remoting.metaserver.provideData.ProvideDataProcessorManager;
 import com.alipay.sofa.registry.server.data.remoting.metaserver.provideData.processor.DatumExpireProvideDataProcessor;
-import com.alipay.sofa.registry.server.data.remoting.metaserver.task.ConnectionRefreshMetaTask;
 import com.alipay.sofa.registry.server.data.remoting.sessionserver.SessionServerConnectionFactory;
 import com.alipay.sofa.registry.server.data.remoting.sessionserver.disconnect.DisconnectEventHandler;
-import com.alipay.sofa.registry.server.data.remoting.sessionserver.handler.ClientOffHandler;
-import com.alipay.sofa.registry.server.data.remoting.sessionserver.handler.DataServerConnectionHandler;
-import com.alipay.sofa.registry.server.data.remoting.sessionserver.handler.DatumSnapshotHandler;
-import com.alipay.sofa.registry.server.data.remoting.sessionserver.handler.GetDataHandler;
-import com.alipay.sofa.registry.server.data.remoting.sessionserver.handler.GetDataVersionsHandler;
-import com.alipay.sofa.registry.server.data.remoting.sessionserver.handler.PublishDataHandler;
-import com.alipay.sofa.registry.server.data.remoting.sessionserver.handler.RenewDatumHandler;
-import com.alipay.sofa.registry.server.data.remoting.sessionserver.handler.SessionServerRegisterHandler;
-import com.alipay.sofa.registry.server.data.remoting.sessionserver.handler.UnPublishDataHandler;
+import com.alipay.sofa.registry.server.data.remoting.sessionserver.handler.*;
 import com.alipay.sofa.registry.server.data.renew.DatumLeaseManager;
 import com.alipay.sofa.registry.server.data.resource.DataDigestResource;
 import com.alipay.sofa.registry.server.data.resource.HealthResource;
 import com.alipay.sofa.registry.server.data.util.ThreadPoolExecutorDataServer;
 import com.alipay.sofa.registry.util.NamedThreadFactory;
 import com.alipay.sofa.registry.util.PropertySplitter;
+import org.glassfish.jersey.jackson.JacksonFeature;
+import org.glassfish.jersey.server.ResourceConfig;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Import;
+
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 /**
  *
@@ -324,16 +313,6 @@ public class DataServerBeanConfiguration {
     public static class DataServerEventBeanConfiguration {
 
         @Bean
-        public MetaServerChangeEventHandler metaServerChangeEventHandler() {
-            return new MetaServerChangeEventHandler();
-        }
-
-        @Bean
-        public StartTaskEventHandler startTaskEventHandler() {
-            return new StartTaskEventHandler();
-        }
-
-        @Bean
         public GetSyncDataHandler getSyncDataHandler() {
             return new GetSyncDataHandler();
         }
@@ -354,27 +333,8 @@ public class DataServerBeanConfiguration {
     public static class DataServerRemotingBeanConfiguration {
 
         @Bean
-        public ConnectionRefreshTask connectionRefreshTask() {
-            return new ConnectionRefreshTask();
-        }
-
-        @Bean
-        public ConnectionRefreshMetaTask connectionRefreshMetaTask() {
-            return new ConnectionRefreshMetaTask();
-        }
-
-        @Bean
         public RenewNodeTask renewNodeTask() {
             return new RenewNodeTask();
-        }
-
-        @Bean(name = "tasks")
-        public List<AbstractTask> tasks() {
-            List<AbstractTask> list = new ArrayList<>();
-            list.add(connectionRefreshTask());
-            list.add(connectionRefreshMetaTask());
-            list.add(renewNodeTask());
-            return list;
         }
 
         @Bean

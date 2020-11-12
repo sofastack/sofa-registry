@@ -14,30 +14,35 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alipay.sofa.registry.server.data.event;
+package com.alipay.sofa.registry.common.model.metaserver;
 
-import java.util.Set;
+import com.alipay.sofa.registry.common.model.Node;
+
+import java.io.Serializable;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  *
- * @author qian.lqlq
- * @version $Id: StartTaskEvent.java, v 0.1 2018-03-13 15:13 qian.lqlq Exp $
+ * @author yuzhi.lyz
+ * @version v 0.1 2020-11-12 10:48 yuzhi.lyz Exp $
  */
-public class StartTaskEvent implements Event {
+public class RenewNodesResult implements Serializable {
+    private Map<Node.NodeType, NodeChangeResult> results = new HashMap<>();
 
-    private final Set<StartTaskTypeEnum> suitableTypes;
-
-    public StartTaskEvent(Set<StartTaskTypeEnum> suitableTypes) {
-        this.suitableTypes = suitableTypes;
+    /**
+     * Getter method for property <tt>results</tt>.
+     * @return property value of results
+     */
+    public Map<Node.NodeType, NodeChangeResult> getResults() {
+        return results;
     }
 
     /**
-     * Getter method for property <tt>suitableTypes</tt>.
-     *
-     * @return property value of suitableTypes
+     * Setter method for property <tt>results</tt>.
+     * @param results value to be assigned to property results
      */
-    public Set<StartTaskTypeEnum> getSuitableTypes() {
-        return suitableTypes;
+    public void setResults(Map<Node.NodeType, NodeChangeResult> results) {
+        this.results = results;
     }
-
 }

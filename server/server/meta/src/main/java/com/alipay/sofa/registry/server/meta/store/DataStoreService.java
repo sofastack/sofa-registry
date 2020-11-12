@@ -16,32 +16,24 @@
  */
 package com.alipay.sofa.registry.server.meta.store;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicLong;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
-
-import org.springframework.beans.factory.annotation.Autowired;
-
 import com.alipay.sofa.registry.common.model.Node.NodeType;
 import com.alipay.sofa.registry.common.model.metaserver.DataCenterNodes;
 import com.alipay.sofa.registry.common.model.metaserver.DataNode;
-import com.alipay.sofa.registry.common.model.metaserver.GetChangeListRequest;
 import com.alipay.sofa.registry.common.model.metaserver.NodeChangeResult;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.server.meta.bootstrap.NodeConfig;
-import com.alipay.sofa.registry.server.meta.bootstrap.ServiceFactory;
-import com.alipay.sofa.registry.server.meta.node.MetaNodeService;
 import com.alipay.sofa.registry.server.meta.repository.NodeRepository;
 import com.alipay.sofa.registry.server.meta.repository.RepositoryService;
 import com.alipay.sofa.registry.store.api.annotation.RaftReference;
 import com.alipay.sofa.registry.task.listener.TaskListenerManager;
+import org.springframework.beans.factory.annotation.Autowired;
+
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 /**
  *
@@ -269,118 +261,18 @@ public class DataStoreService implements StoreService<DataNode> {
     //TODO move this code to enterprise version
     @Override
     public void getOtherDataCenterNodeAndUpdate() {
-
-        MetaNodeService metaNodeService = (MetaNodeService) ServiceFactory
-            .getNodeService(NodeType.META);
-
-        Map<String, Collection<String>> metaMap = nodeConfig.getMetaNodeIP();
-
-        if (metaMap != null && metaMap.size() > 0) {
-            for (String dataCenter : metaMap.keySet()) {
-                //get other dataCenter dataNodes
-                try {
-                    if (!nodeConfig.getLocalDataCenter().equals(dataCenter)) {
-                        GetChangeListRequest getChangeListRequest = new GetChangeListRequest(
-                            NodeType.DATA, dataCenter);
-                        //trigger fetch dataCenter data list change
-                        DataCenterNodes getDataCenterNodes = metaNodeService
-                            .getDataCenterNodes(getChangeListRequest);
-                        LOGGER.info("GetOtherDataCenterNode from DataCenter({}): {}", dataCenter,
-                            getDataCenterNodes);
-                        String dataCenterGet = getDataCenterNodes.getDataCenterId();
-                        Long version = getDataCenterNodes.getVersion();
-                        if (version == null) {
-                            LOGGER
-                                .error(
-                                    "getOtherDataCenterNodeAndUpdate from DataCenter({}), data list version is null",
-                                    dataCenter);
-                            continue;
-                        }
-                        //check for scheduler get other dataCenter data node
-                        boolean result = dataRepositoryService.checkVersion(dataCenterGet, version);
-                        if (!result) {
-                            LOGGER
-                                .warn(
-                                    "getOtherDataCenterNodeAndUpdate from DataCenter({}), data list version {} has not updated",
-                                    dataCenter, version);
-                            continue;
-                        }
-                        updateOtherDataCenterNodes(getDataCenterNodes);
-                    }
-                } catch (Throwable e) {
-                    LOGGER.error(String.format(
-                        "getOtherDataCenterNodeAndUpdate from DataCenter(%s) error: %s",
-                        dataCenter, e.getMessage()), e);
-                }
-            }
-        }
+        throw new UnsupportedOperationException();
     }
 
     //TODO move this to enterprise version
     @Override
     public void updateOtherDataCenterNodes(DataCenterNodes<DataNode> dataCenterNodes) {
-        write.lock();
-        try {
-            String dataCenter = dataCenterNodes.getDataCenterId();
-            Long version = dataCenterNodes.getVersion();
-
-            if (version == null) {
-                LOGGER.error("Request message version cant not be null!");
-                return;
-            }
-
-            Map<String/*ipAddress*/, DataNode> dataCenterNodesMap = dataCenterNodes.getNodes();
-
-            LOGGER.info("update version {} Other DataCenter {} Nodes {}", version, dataCenter, dataCenterNodesMap);
-
-            Map<String/*ipAddress*/, RenewDecorate<DataNode>> dataCenterNodesMapTemp = new ConcurrentHashMap<>();
-            dataCenterNodesMap.forEach((ipAddress, dataNode) -> dataCenterNodesMapTemp
-                    .put(ipAddress, new RenewDecorate(dataNode, RenewDecorate.DEFAULT_DURATION_SECS)));
-            dataRepositoryService.replaceAll(dataCenter, dataCenterNodesMapTemp, version);
-
-            if (version == localDataCenterInitVersion.get()) {
-                //first dataCenter has init version,need not notify local data node
-                LOGGER.info("DataCenter {} first start up,No data node change to notify!Init version {}", dataCenter,
-                        version);
-                return;
-            }
-        } finally {
-            write.unlock();
-        }
+        throw new UnsupportedOperationException("Node type SESSION not support function");
     }
 
     @Override
     public DataCenterNodes getDataCenterNodes() {
-        read.lock();
-        try {
-            String localDataCenter = nodeConfig.getLocalDataCenter();
-
-            Map<String/*dataCenter*/, NodeRepository> dataNodeRepositoryMap = dataRepositoryService
-                    .getNodeRepositories();
-
-            NodeRepository<DataNode> dataNodeRepository = dataNodeRepositoryMap.get(localDataCenter);
-
-            if (dataNodeRepository == null) {
-                //first just dataCenter exist but no data node register
-                DataCenterNodes dataCenterNodes = new DataCenterNodes(NodeType.DATA, localDataCenterInitVersion.get(),
-                        localDataCenter);
-                dataCenterNodes.setNodes(new ConcurrentHashMap<>());
-                return dataCenterNodes;
-            }
-
-            DataCenterNodes dataCenterNodes = new DataCenterNodes(NodeType.DATA, dataNodeRepository.getVersion(),
-                    localDataCenter);
-
-            Map<String, RenewDecorate<DataNode>> dataMap = dataNodeRepository.getNodeMap();
-            Map<String, DataNode> newMap = new ConcurrentHashMap<>();
-            dataMap.forEach((ip, dataNode) -> newMap.put(ip, dataNode.getRenewal()));
-
-            dataCenterNodes.setNodes(newMap);
-
-            return dataCenterNodes;
-        } finally {
-            read.unlock();
-        }
+        throw new UnsupportedOperationException("Node type SESSION not support function");
     }
 
     /**
