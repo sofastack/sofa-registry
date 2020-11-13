@@ -87,14 +87,6 @@ public class HealthResource {
         ret = ret && start;
         sb.append(", schedulerStarted:").append(start);
 
-        sb.append(", status:").append("Working");
-
-        if (ret) {
-            response = CommonResponse.buildSuccessResponse(sb.toString());
-        } else {
-            response = CommonResponse.buildFailedResponse(sb.toString());
-        }
-
         if (ret) {
             response = CommonResponse.buildSuccessResponse(sb.toString());
         } else {

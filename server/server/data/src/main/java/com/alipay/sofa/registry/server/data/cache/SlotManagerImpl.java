@@ -341,31 +341,35 @@ public final class SlotManagerImpl implements SlotManager {
             }
             // check request finish?
             Map<String, SessionNode> sessions = sessionServerCache.getServerMap(dataServerConfig.getLocalDataCenter());
-            if (new ArrayList<>(sessionsSyncs.values()).stream().anyMatch(s -> s != TaskStatus.DOING)) {
-                // all done, now check all the session, may be some session is newly
-                if (new HashSet<>(sessionsSyncs.keySet()).containsAll(sessions.keySet())) {
-                    // all finish, check the slotstate
-                    lock.lock();
-                    try {
-                        final SlotState curState = slotState;
-                        final Slot now = curState.table.getSlot(slot.getId());
-                        // if now not contains the slot, it must be removed
-                        if (now == null) {
-                            LOGGER.info("slot remove when migrating finish, {}", slot);
+            if (sessions == null || sessions.isEmpty()) {
+                LOGGER.warn("sessions is empty when migrating, {}", slot);
+            }else {
+                if (new ArrayList<>(sessionsSyncs.values()).stream().anyMatch(s -> s != TaskStatus.DOING)) {
+                    // all done, now check all the session, may be some session is newly
+                    if (new HashSet<>(sessionsSyncs.keySet()).containsAll(sessions.keySet())) {
+                        // all finish, check the slotstate
+                        lock.lock();
+                        try {
+                            final SlotState curState = slotState;
+                            final Slot now = curState.table.getSlot(slot.getId());
+                            // if now not contains the slot, it must be removed
+                            if (now == null) {
+                                LOGGER.info("slot remove when migrating finish, {}", slot);
+                                return;
+                            }
+                            if (now.getLeaderEpoch() == slot.getLeaderEpoch()) {
+                                migratingTasks.remove(slot.getId());
+                                // clean migrating.flag at last step
+                                curState.migrating.remove(slot.getId());
+                            } else {
+                                // the slot leader has modified, ignore the task, another task is own the flag
+                                LOGGER.info("the slotLeaderEpoch has modified in migrating, task={}, now={}", slot,
+                                        now);
+                            }
                             return;
+                        } finally {
+                            lock.unlock();
                         }
-                        if (now.getLeaderEpoch() == slot.getLeaderEpoch()) {
-                            migratingTasks.remove(slot.getId());
-                            // clean migrating.flag at last step
-                            curState.migrating.remove(slot.getId());
-                        } else {
-                            // the slot leader has modified, ignore the task, another task is own the flag
-                            LOGGER.info("the slotLeaderEpoch has modified in migrating, task={}, now={}", slot,
-                                    now);
-                        }
-                        return;
-                    } finally {
-                        lock.unlock();
                     }
                 }
             }
@@ -393,7 +397,6 @@ public final class SlotManagerImpl implements SlotManager {
 
     private void triggerUpdateSlotTable(long expectEpoch) {
         // TODO
-        throw new UnsupportedOperationException();
     }
 
     public void setSlotDatumStorageProvider(SlotDatumStorageProvider slotDatumStorageProvider) {

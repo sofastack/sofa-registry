@@ -113,7 +113,7 @@ public class DataRepositoryService extends AbstractSnapshotProcess
 
             dataNodes.put(ipAddress, dataNode);
 
-        } catch (Exception e) {
+        } catch (Throwable e) {
             LOGGER.error("Data node add error!", e);
             throw new RuntimeException("Data node add error!", e);
         } finally {
@@ -148,7 +148,7 @@ public class DataRepositoryService extends AbstractSnapshotProcess
                 }
             }
             return null;
-        } catch (Exception e) {
+        } catch (Throwable e) {
             LOGGER.error("Data node remove error!", e);
             throw new RuntimeException("Data node remove error!", e);
         } finally {
@@ -186,7 +186,7 @@ public class DataRepositoryService extends AbstractSnapshotProcess
             }
 
             return dataNode;
-        } catch (Exception e) {
+        } catch (Throwable e) {
             LOGGER.error("Data node replace error!", e);
             throw new RuntimeException("Data node replace error!", e);
         } finally {
@@ -228,7 +228,6 @@ public class DataRepositoryService extends AbstractSnapshotProcess
 
     @Override
     public RenewDecorate<DataNode> get(Object key) {
-
         read.lock();
         try {
             String ipAddress = (String) key;
@@ -254,11 +253,10 @@ public class DataRepositoryService extends AbstractSnapshotProcess
                     return null;
                 }
             } else {
-                LOGGER.error("Data node in dataCenter: {} has not existed!", dataCenter);
-                throw new RuntimeException(String.format(
-                    "Data node in dataCenter: %s has not existed!", dataCenter));
+                LOGGER.warn("Data node in dataCenter: {} has not existed!", dataCenter);
+                return null;
             }
-        } catch (Exception e) {
+        } catch (Throwable e) {
             LOGGER.error("Get Data node error!", e);
             throw new RuntimeException("Get Data node error!", e);
         } finally {

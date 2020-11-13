@@ -32,16 +32,18 @@ import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
 import com.alipay.sofa.registry.server.session.node.RaftClientManager;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import java.util.Collections;
+
 /**
  *
  * @author yuzhi.lyz
  * @version v 0.1 2020-11-11 10:07 yuzhi.lyz Exp $
  */
 public final class SlotTableCacheImpl implements SlotTableCache {
-    private static final Logger LOGGER       = LoggerFactory.getLogger(SlotTableCacheImpl.class);
-    private final SlotFunction  slotFunction = new MD5SlotFunction();
+    private static final Logger        LOGGER       = LoggerFactory.getLogger(SlotTableCacheImpl.class);
+    private final        SlotFunction  slotFunction = new MD5SlotFunction();
     @Autowired
-    protected NodeExchanger     metaNodeExchanger;
+    protected            NodeExchanger metaNodeExchanger;
 
     @Autowired
     private SessionServerConfig sessionServerConfig;
@@ -49,7 +51,7 @@ public final class SlotTableCacheImpl implements SlotTableCache {
     @Autowired
     protected RaftClientManager raftClientManager;
 
-    private volatile SlotTable  slotTable;
+    private volatile SlotTable slotTable;
 
     @Override
     public int slotOf(String dataInfoId) {
@@ -59,7 +61,9 @@ public final class SlotTableCacheImpl implements SlotTableCache {
     @Override
     public Slot getSlot(String dataInfoId) {
         int slotId = slotOf(dataInfoId);
-        return slotTable.getSlot(slotId);
+//        return slotTable.getSlot(slotId);
+        // TODO mocks
+        return new Slot(1,"10.15.233.13",1, Collections.emptySet());
     }
 
     @Override
@@ -69,7 +73,8 @@ public final class SlotTableCacheImpl implements SlotTableCache {
 
     @Override
     public long getEpoch() {
-        return 0;
+        final SlotTable table = slotTable;
+        return table == null ? -1 : table.getEpoch();
     }
 
     private GetSlotTableResult sendGetSlotTableRequest(long epoch) {
@@ -84,18 +89,18 @@ public final class SlotTableCacheImpl implements SlotTableCache {
                 @Override
                 public URL getRequestUrl() {
                     return new URL(raftClientManager.getLeader().getIp(),
-                        sessionServerConfig.getMetaServerPort());
+                            sessionServerConfig.getMetaServerPort());
                 }
             };
 
             GenericResponse<GetSlotTableResult> response = (GenericResponse<GetSlotTableResult>) metaNodeExchanger
-                .request(request).getResult();
+                    .request(request).getResult();
 
             if (response != null && response.isSuccess()) {
                 return response.getData();
             } else {
                 LOGGER.error("Get slot table error! No response receive, epoch={}, {}", epoch,
-                    response);
+                        response);
                 throw new RuntimeException("Get slot table error! No response receive");
             }
         } catch (Throwable e) {

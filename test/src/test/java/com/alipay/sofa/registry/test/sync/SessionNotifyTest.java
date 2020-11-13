@@ -79,6 +79,8 @@ import com.alipay.sofa.registry.util.ParaCheckUtil;
  */
 @RunWith(SpringRunner.class)
 public class SessionNotifyTest extends BaseIntegrationTest {
+    public static String DATA_ID  = "test-dataId-" + System.currentTimeMillis();
+
     private static final int                   TEST_SYNC_PORT    = 9677;
     private static DataServerConnectionFactory dataServerConnectionFactory;
     private static Server                      dataSyncServer;
@@ -132,7 +134,7 @@ public class SessionNotifyTest extends BaseIntegrationTest {
             //ZONE MUST BE CURRENT SESSION ZONE
             publisher.setCell("CELL");
             publisher.setClientId(connectId);
-            publisher.setDataId(MockSyncDataHandler.dataId);
+            publisher.setDataId(DATA_ID);
             publisher.setGroup(DEFAULT_GROUP);
             publisher.setInstanceId(DEFAULT_INSTANCE_ID);
             publisher.setRegisterId(UUID.randomUUID().toString());
@@ -147,7 +149,7 @@ public class SessionNotifyTest extends BaseIntegrationTest {
 
             publisher.setClientVersion(ClientVersion.StoreData);
 
-            DataInfo dataInfo = new DataInfo(DEFAULT_INSTANCE_ID, MockSyncDataHandler.dataId,
+            DataInfo dataInfo = new DataInfo(DEFAULT_INSTANCE_ID, DATA_ID,
                 DEFAULT_GROUP);
             publisher.setDataInfoId(dataInfo.getDataInfoId());
 
@@ -160,7 +162,7 @@ public class SessionNotifyTest extends BaseIntegrationTest {
         }
 
         datum = new Datum();
-        datum.setDataId(MockSyncDataHandler.dataId);
+        datum.setDataId(DATA_ID);
         datum.setInstanceId(DEFAULT_INSTANCE_ID);
         datum.setGroup(DEFAULT_GROUP);
         //no datum set version current timestamp
@@ -221,7 +223,7 @@ public class SessionNotifyTest extends BaseIntegrationTest {
 
                 // post sync data request
                 DataChangeRequest request = new DataChangeRequest(DataInfo.toDataInfoId(
-                        MockSyncDataHandler.dataId, DEFAULT_INSTANCE_ID, DEFAULT_GROUP), LOCAL_DATACENTER,
+                        DATA_ID, DEFAULT_INSTANCE_ID, DEFAULT_GROUP), LOCAL_DATACENTER,
                         finalI);
 
                 boltChannelMap.forEach((connect,boltChannel)->{
@@ -285,21 +287,21 @@ public class SessionNotifyTest extends BaseIntegrationTest {
                 //if(version%3==0) {
                     executor.submit(() -> {
 
-                        Object result = boltClientFetch.sendSync(boltChannelMapInt.get(Math.abs((MockSyncDataHandler.dataId+version).hashCode() % connectNum)),
-                                new GetDataRequest(MockSyncDataHandler.dataId, DEFAULT_DATA_CENTER), 1000);
+                        Object result = boltClientFetch.sendSync(boltChannelMapInt.get(Math.abs((DATA_ID+version).hashCode() % connectNum)),
+                                new GetDataRequest(DATA_ID, DEFAULT_DATA_CENTER), 1000);
                         GenericResponse genericResponse = (GenericResponse) result;
                         if (genericResponse.isSuccess()) {
                             Map<String, Datum> map = (Map<String, Datum>) genericResponse.getData();
                             if (map == null || map.isEmpty()) {
                                 System.out.println(String.format("GetDataRequest get response contains no datum!dataInfoId=%s",
-                                        MockSyncDataHandler.dataId));
+                                        DATA_ID));
                             } else {
                                 System.out.println(String.format("GetDataRequest get response contains datum!dataInfoId=%s,size=%s",
-                                        MockSyncDataHandler.dataId, map.get(DEFAULT_DATA_CENTER).getPubMap().size()));
+                                        DATA_ID, map.get(DEFAULT_DATA_CENTER).getPubMap().size()));
                             }
                         } else {
                             throw new RuntimeException(
-                                    String.format("GetDataRequest has got fail response!dataInfoId:%s msg:%s", MockSyncDataHandler.dataId,
+                                    String.format("GetDataRequest has got fail response!dataInfoId:%s msg:%s", DATA_ID,
                                             genericResponse.getMessage()));
                         }
                     });

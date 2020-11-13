@@ -18,14 +18,13 @@ package com.alipay.sofa.registry.common.model.metaserver;
 
 import com.alipay.sofa.registry.common.model.Node;
 import com.alipay.sofa.registry.common.model.store.URL;
-import com.alipay.sofa.registry.consistency.hash.HashNode;
 
 /**
  *
  * @author shangyu.wh
  * @version $Id: DataNode.java, v 0.1 2018-01-18 18:06 shangyu.wh Exp $
  */
-public class DataNode implements Node, HashNode {
+public class DataNode implements Node{
 
     private final URL    nodeUrl;
 
@@ -121,7 +120,6 @@ public class DataNode implements Node, HashNode {
      *
      * @return property value of nodeName
      */
-    @Override
     public String getNodeName() {
         return nodeName;
     }
