@@ -127,13 +127,16 @@ public class RegistryApplication {
     }
 
     private static boolean nodeHealthCheck(String serverAddress, int httpPort) {
+        CommonResponse resp = null;
         try {
             JerseyClient jerseyClient = JerseyClient.getInstance();
             Channel channel = jerseyClient.connect(new URL(serverAddress, httpPort));
-            return channel.getWebTarget().path("health/check").request(APPLICATION_JSON)
-                .get(CommonResponse.class).isSuccess();
+            LOGGER.info("{}:{} health check", serverAddress, httpPort);
+            resp =  channel.getWebTarget().path("health/check").request(APPLICATION_JSON)
+                .get(CommonResponse.class);
+            return resp.isSuccess();
         } catch (Throwable t) {
-            LOGGER.error("{}:{} health check failed.", serverAddress, httpPort, t);
+            LOGGER.error("{}:{} health check failed. {}", serverAddress, httpPort, resp, t);
             return false;
         }
     }

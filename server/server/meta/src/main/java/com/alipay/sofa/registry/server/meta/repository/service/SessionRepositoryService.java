@@ -87,7 +87,7 @@ public class SessionRepositoryService extends AbstractSnapshotProcess
             }
             registry.put(ipAddress, sessionNode);
             LOGGER.info("Put session node {} ok", ipAddress);
-        } catch (Exception e) {
+        } catch (Throwable e) {
             LOGGER.error("Session node add error!", e);
             throw new RuntimeException("Session node add error!", e);
         }
@@ -105,7 +105,7 @@ public class SessionRepositoryService extends AbstractSnapshotProcess
                 return null;
             }
             return oldRenewDecorate;
-        } catch (Exception e) {
+        } catch (Throwable e) {
             LOGGER.error("Data Session remove error!", e);
             throw new RuntimeException("Session node remove error!", e);
         }
@@ -139,7 +139,7 @@ public class SessionRepositoryService extends AbstractSnapshotProcess
                     ipAddress);
                 return null;
             }
-        } catch (Exception e) {
+        } catch (Throwable e) {
             LOGGER.error("Get Session node error!", e);
             throw new RuntimeException("Get Session node error!", e);
         }

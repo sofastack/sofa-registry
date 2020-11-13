@@ -39,6 +39,7 @@ import com.alipay.sofa.registry.server.data.util.TimeUtil;
 import com.google.common.collect.Sets;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -112,9 +113,16 @@ public class DefaultMetaServiceImpl implements IMetaServerService {
             return;
         }
         NodeChangeResult<SessionNode> sessions = resultMap.get(NodeType.SESSION);
-        Map<String, Long> versionMap = sessions.getDataCenterListVersions();
-        versionMap.put(sessions.getLocalDataCenter(), sessions.getVersion());
-        sessionServerCache.setSessionServerChangeItem(new SessionServerChangeItem(sessions.getNodes(), versionMap));
+        if (sessions.getVersion() != null) {
+            if (sessions.getNodes() == null) {
+                sessionServerCache.setSessionServerChangeItem(null);
+            } else {
+                Map<String, Long> versionMap = new HashMap<>();
+                versionMap.put(sessions.getLocalDataCenter(), sessions.getVersion());
+                sessionServerCache
+                        .setSessionServerChangeItem(new SessionServerChangeItem(sessions.getNodes(), versionMap));
+            }
+        }
 
         NodeChangeResult<MetaNode> metas = resultMap.get(NodeType.META);
         metas.getNodes().forEach((dataCenter, metaNodes) -> {

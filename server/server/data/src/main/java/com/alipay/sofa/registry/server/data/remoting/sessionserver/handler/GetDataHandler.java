@@ -71,6 +71,7 @@ public class GetDataHandler extends AbstractServerHandler<GetDataRequest> {
         String dataInfoId = request.getDataInfoId();
         final SlotAccess slotAccess = slotManager.checkSlotAccess(dataInfoId,
             request.getSlotEpoch());
+        LOGGER.info("#### {}", slotAccess);
         if (slotAccess.isMoved()) {
             LOGGER.warn("[moved] Slot has moved, access: {}, request: {}", slotAccess, request);
             return SlotAccessGenericResponse.buildFailedResponse(slotAccess);

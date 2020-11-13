@@ -107,7 +107,8 @@ public class BaseIntegrationTest {
 
     @Before
     public void before() throws Exception {
-        startServerIfNecessary();
+//        startServerIfNecessary();
+        initRegistryClientAndChannel();
     }
 
     public static void startServerIfNecessary() throws Exception {

@@ -25,6 +25,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.annotation.PostConstruct;
 
+import com.alipay.sofa.registry.common.model.slot.SlotAccessGenericResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import com.alipay.sofa.registry.common.model.CommonResponse;
@@ -317,7 +318,7 @@ public class DataNodeServiceImpl implements DataNodeService {
 
             Response response = dataNodeExchanger.request(getDataRequestStringRequest);
             Object result = response.getResult();
-            GenericResponse genericResponse = (GenericResponse) result;
+            SlotAccessGenericResponse genericResponse = (SlotAccessGenericResponse) result;
             if (genericResponse.isSuccess()) {
                 map = (Map<String, Datum>) genericResponse.getData();
                 if (map == null || map.isEmpty()) {
