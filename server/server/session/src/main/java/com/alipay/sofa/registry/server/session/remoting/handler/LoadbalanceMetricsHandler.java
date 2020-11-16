@@ -23,9 +23,6 @@ import com.alipay.sofa.registry.remoting.Channel;
 import com.alipay.sofa.registry.server.session.connections.ConnectionsService;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import java.util.HashSet;
-import java.util.Set;
-
 /**
  * @author xiangxu
  * @version : LoadbalanceMetricsHandler.java, v 0.1 2020年05月27日 2:56 下午 xiangxu Exp $

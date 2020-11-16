@@ -24,7 +24,6 @@ import com.alipay.sofa.jraft.conf.Configuration;
 import com.alipay.sofa.jraft.entity.PeerId;
 import com.alipay.sofa.jraft.option.CliOptions;
 import com.alipay.sofa.jraft.rpc.CliClientService;
-import com.alipay.sofa.jraft.rpc.ClientService;
 import com.alipay.sofa.jraft.rpc.impl.AbstractClientService;
 import com.alipay.sofa.jraft.rpc.impl.BoltRpcClient;
 import com.alipay.sofa.jraft.rpc.impl.cli.CliClientServiceImpl;
