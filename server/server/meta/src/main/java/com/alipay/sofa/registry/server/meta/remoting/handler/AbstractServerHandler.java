@@ -21,7 +21,6 @@ import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.remoting.Channel;
 import com.alipay.sofa.registry.remoting.ChannelHandler;
 import com.alipay.sofa.registry.remoting.RemotingException;
-import com.alipay.sofa.registry.server.meta.executor.ExecutorManager;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.concurrent.Executor;

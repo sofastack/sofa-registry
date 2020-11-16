@@ -51,8 +51,6 @@ import com.alipay.sofa.registry.server.session.wrapper.WrapperInterceptorManager
 import com.alipay.sofa.registry.server.session.wrapper.WrapperInvocation;
 import com.alipay.sofa.registry.task.listener.TaskEvent;
 import com.alipay.sofa.registry.task.listener.TaskListenerManager;
-import com.google.common.collect.Sets;
-import com.google.common.collect.Sets.SetView;
 
 /**
  * @author shangyu.wh
