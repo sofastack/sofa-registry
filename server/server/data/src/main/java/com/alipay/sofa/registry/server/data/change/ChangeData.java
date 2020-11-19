@@ -40,22 +40,17 @@ public class ChangeData implements Delayed {
 
     private DataSourceTypeEnum sourceType;
 
-    private DataChangeTypeEnum changeType;
-
     /**
      * constructor
      * @param datum
      * @param timeout
      * @param sourceType
-     * @param changeType
      */
-    public ChangeData(Datum datum, long timeout, DataSourceTypeEnum sourceType,
-                      DataChangeTypeEnum changeType) {
+    public ChangeData(Datum datum, long timeout, DataSourceTypeEnum sourceType) {
         this.datum = datum;
         this.gmtCreate = System.currentTimeMillis();
         this.timeout = timeout;
         this.sourceType = sourceType;
-        this.changeType = changeType;
     }
 
     /**
@@ -83,15 +78,6 @@ public class ChangeData implements Delayed {
      */
     public DataSourceTypeEnum getSourceType() {
         return sourceType;
-    }
-
-    /**
-     * Getter method for property <tt>changeType</tt>.
-     *
-     * @return property value of changeType
-     */
-    public DataChangeTypeEnum getChangeType() {
-        return changeType;
     }
 
     @Override

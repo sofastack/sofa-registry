@@ -16,23 +16,21 @@
  */
 package com.alipay.sofa.registry.server.data.cache;
 
-import java.util.*;
-import java.util.Map.Entry;
-import java.util.concurrent.ConcurrentHashMap;
-
 import com.alipay.sofa.registry.common.model.PublisherDigestUtil;
 import com.alipay.sofa.registry.common.model.constants.ValueConstants;
-import com.alipay.sofa.registry.common.model.dataserver.DatumSummary;
-import com.sun.org.apache.bcel.internal.generic.RET;
-import org.springframework.beans.factory.annotation.Autowired;
-
 import com.alipay.sofa.registry.common.model.dataserver.Datum;
+import com.alipay.sofa.registry.common.model.dataserver.DatumSummary;
 import com.alipay.sofa.registry.common.model.store.Publisher;
 import com.alipay.sofa.registry.common.model.store.WordCache;
 import com.alipay.sofa.registry.server.data.bootstrap.DataServerConfig;
-import com.alipay.sofa.registry.server.data.change.DataChangeTypeEnum;
-import com.alipay.sofa.registry.server.data.node.DataServerNode;
-import com.alipay.sofa.registry.server.data.remoting.dataserver.DataServerNodeFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * datum storage of local dataCenter
@@ -50,7 +48,7 @@ public class LocalDatumStorage implements DatumStorage {
      * column:  dataInfoId
      * value:   datum
      */
-    protected final Map<String, Map<String, Datum>>     DATUM_MAP            = new ConcurrentHashMap<>();
+    protected final Map<String, Datum>                  DATUM_MAP            = new ConcurrentHashMap<>();
 
     /**
      * all datum index
@@ -65,36 +63,13 @@ public class LocalDatumStorage implements DatumStorage {
     protected DataServerConfig                          dataServerConfig;
 
     /**
-     * get datum by specific dataCenter and dataInfoId
-     *
-     * @param dataCenter
-     * @param dataInfoId
-     * @return
-     */
-    public Datum get(String dataCenter, String dataInfoId) {
-        Map<String, Datum> map = DATUM_MAP.get(dataCenter);
-        if (map != null) {
-            return map.get(dataInfoId);
-        }
-        return null;
-    }
-
-    /**
-     * get datum of all datercenters by dataInfoId
+     * get datum by specific dataInfoId
      *
      * @param dataInfoId
      * @return
      */
-    public Map<String, Datum> get(String dataInfoId) {
-        Map<String, Datum> datumMap = new HashMap<>();
-        DATUM_MAP.forEach((dataCenter, datums) -> {
-            Datum datum = datums.get(dataInfoId);
-            if (datum != null) {
-                datumMap.put(dataCenter, datum);
-            }
-        });
-
-        return datumMap;
+    public Datum get(String dataInfoId) {
+        return DATUM_MAP.get(dataInfoId);
     }
 
     /**
@@ -102,7 +77,7 @@ public class LocalDatumStorage implements DatumStorage {
      *
      * @return
      */
-    public Map<String, Map<String, Datum>> getAll() {
+    public Map<String, Datum> getAll() {
         return DATUM_MAP;
     }
 
@@ -119,18 +94,15 @@ public class LocalDatumStorage implements DatumStorage {
     /**
      * put datum into cache
      *
-     * @param changeType
      * @param datum
      * @return the last version before datum changed, if datum is not exist, return null
      */
-    public MergeResult putDatum(DataChangeTypeEnum changeType, Datum datum) {
+    public MergeResult putDatum(Datum datum) {
         MergeResult mergeResult;
-        String dataCenter = datum.getDataCenter();
         String dataInfoId = datum.getDataInfoId();
-        Map<String, Datum> map = getDatumMapByDataCenter(dataCenter);
 
         //first put UnPublisher datum(dataId group instanceId is null),can not add to cache
-        if (datum.getDataId() == null && map.get(dataInfoId) == null) {
+        if (datum.getDataId() == null && DATUM_MAP.get(dataInfoId) == null) {
             mergeResult = new MergeResult(ERROR_DATUM_VERSION, false);
             return mergeResult;
         }
@@ -138,7 +110,7 @@ public class LocalDatumStorage implements DatumStorage {
         // filter out the unPubs of datum when first put.
         // Otherwise, "syncData" or "fetchData" when get Datum with unPubs, which will result something error
         boolean[] exists = { true };
-        Datum cacheDatum = map.computeIfAbsent(dataInfoId, k -> filterUnPubs(exists, datum));
+        Datum cacheDatum = DATUM_MAP.computeIfAbsent(dataInfoId, k -> filterUnPubs(exists, datum));
         if (!exists[0]) {
             Iterator<Entry<String, Publisher>> iterator = datum.getPubMap().entrySet().iterator();
             while (iterator.hasNext()) {
@@ -148,12 +120,7 @@ public class LocalDatumStorage implements DatumStorage {
             }
             mergeResult = new MergeResult(null, true);
         } else {
-            if (changeType == DataChangeTypeEnum.MERGE) {
-                mergeResult = mergeDatum(cacheDatum, datum);
-            } else {
-                Long lastVersion = coverDatum(datum);
-                mergeResult = new MergeResult(lastVersion, true);
-            }
+            mergeResult = mergeDatum(cacheDatum, datum);
         }
         return mergeResult;
     }
@@ -175,54 +142,34 @@ public class LocalDatumStorage implements DatumStorage {
         return datum;
     }
 
-    private Map<String, Datum> getDatumMapByDataCenter(String dataCenter) {
-        Map<String, Datum> map = DATUM_MAP.get(dataCenter);
-        if (map == null) {
-            map = new ConcurrentHashMap<>();
-            Map<String, Datum> ret = DATUM_MAP.putIfAbsent(dataCenter, map);
-            if (ret != null) {
-                map = ret;
-            }
-        }
-        return map;
-    }
-
     /**
      * remove datum ant contains all pub data,and clean all the client map reference
-     * @param dataCenter
      * @param dataInfoId
      * @return
      */
-    public boolean cleanDatum(String dataCenter, String dataInfoId) {
-
-        Map<String, Datum> datumMap = DATUM_MAP.get(dataCenter);
-        if (datumMap != null) {
-            Datum cacheDatum = datumMap.remove(dataInfoId);
-            if (cacheDatum != null) {
-                Map<String, Publisher> cachePubMap = cacheDatum.getPubMap();
-
-                for (Entry<String, Publisher> cachePubEntry : cachePubMap.entrySet()) {
-                    String registerId = cachePubEntry.getKey();
-                    Publisher cachePub = cachePubEntry.getValue();
-                    //remove from cache
-                    if (cachePub != null) {
-                        cachePubMap.remove(registerId);
-                        removeFromIndex(cachePub);
-                    }
+    @Override
+    public boolean cleanDatum(String dataInfoId) {
+        Datum cacheDatum = DATUM_MAP.remove(dataInfoId);
+        if (cacheDatum != null) {
+            Map<String, Publisher> cachePubMap = cacheDatum.getPubMap();
+            for (Entry<String, Publisher> cachePubEntry : cachePubMap.entrySet()) {
+                String registerId = cachePubEntry.getKey();
+                Publisher cachePub = cachePubEntry.getValue();
+                //remove from cache
+                if (cachePub != null) {
+                    cachePubMap.remove(registerId);
+                    removeFromIndex(cachePub);
                 }
-                return true;
             }
+            return true;
+
         }
         return false;
     }
 
     @Override
-    public boolean removePublisher(String dataCenter, String dataInfoId, String registerId) {
-        Map<String, Datum> datumMap = DATUM_MAP.get(dataCenter);
-        if (datumMap != null) {
-            return false;
-        }
-        Datum datum = datumMap.get(dataInfoId);
+    public boolean removePublisher(String dataInfoId, String registerId) {
+        Datum datum = DATUM_MAP.get(dataInfoId);
         if (datum == null) {
             return false;
         }
@@ -265,15 +212,14 @@ public class LocalDatumStorage implements DatumStorage {
     public Datum putSnapshot(String dataInfoId, Map<String, Publisher> toBeDeletedPubMap,
                              Map<String, Publisher> snapshotPubMap) {
         // get cache datum
-        Map<String, Datum> datumMap = getDatumMapByDataCenter(dataServerConfig.getLocalDataCenter());
-        Datum cacheDatum = datumMap.get(dataInfoId);
+        Datum cacheDatum = DATUM_MAP.get(dataInfoId);
         if (cacheDatum == null) {
             cacheDatum = new Datum(dataInfoId, dataServerConfig.getLocalDataCenter());
             Publisher publisher = snapshotPubMap.values().iterator().next();
             cacheDatum.setInstanceId(publisher.getInstanceId());
             cacheDatum.setDataId(publisher.getDataId());
             cacheDatum.setGroup(publisher.getGroup());
-            Datum datum = datumMap.putIfAbsent(dataInfoId, cacheDatum);
+            Datum datum = DATUM_MAP.putIfAbsent(dataInfoId, cacheDatum);
             if (datum != null) {
                 cacheDatum = datum;
             }
@@ -304,17 +250,9 @@ public class LocalDatumStorage implements DatumStorage {
     }
 
     @Override
-    public Map<String, Long> getVersions(String dataInfoId) {
-        Map<String, Long> versions = new HashMap<>(1);
-        Map<String, Datum> datumMap = this.get(dataInfoId);
-        if (datumMap != null) {
-            for (Map.Entry<String, Datum> entry : datumMap.entrySet()) {
-                String dataCenter = entry.getKey();
-                Datum datum = entry.getValue();
-                versions.put(dataCenter, datum.getVersion());
-            }
-        }
-        return versions;
+    public Long getVersions(String dataInfoId) {
+        Datum datum = this.get(dataInfoId);
+        return datum != null ? datum.getVersion() : null;
     }
 
     private boolean mergePublisher(Publisher pub, Map<String, Publisher> cachePubMap,
@@ -342,37 +280,6 @@ public class LocalDatumStorage implements DatumStorage {
             }
         }
         return isChanged;
-    }
-
-    /**
-     *
-     * @param datum
-     * @return
-     */
-    private Long coverDatum(Datum datum) {
-        String dataCenter = datum.getDataCenter();
-        String dataInfoId = datum.getDataInfoId();
-        Datum cacheDatum = DATUM_MAP.get(dataCenter).get(dataInfoId);
-        if (datum.getVersion() != cacheDatum.getVersion()) {
-            DATUM_MAP.get(dataCenter).put(dataInfoId, datum);
-            Map<String, Publisher> pubMap = datum.getPubMap();
-            Map<String, Publisher> cachePubMap = new HashMap<>(cacheDatum.getPubMap());
-            for (Entry<String, Publisher> pubEntry : pubMap.entrySet()) {
-                String registerId = pubEntry.getKey();
-                Publisher pub = pubEntry.getValue();
-                addToIndex(pub);
-                Publisher cachePub = cachePubMap.get(registerId);
-                if (cachePub != null && getConnectId(pub).equals(getConnectId(cachePub))) {
-                    cachePubMap.remove(registerId);
-                }
-            }
-            if (!cachePubMap.isEmpty()) {
-                for (Publisher cachePub : cachePubMap.values()) {
-                    removeFromIndex(cachePub);
-                }
-            }
-        }
-        return cacheDatum.getVersion();
     }
 
     private void removeFromIndex(Publisher publisher) {
@@ -416,13 +323,10 @@ public class LocalDatumStorage implements DatumStorage {
         return ALL_CONNECT_ID_INDEX.keySet();
     }
 
-    public Map<String, DatumSummary> getDatumSummary(String dataCenter, String targetIpAddress) {
-        Map<String, Datum> datums = DATUM_MAP.get(dataCenter);
-        if (datums == null) {
-            return Collections.emptyMap();
-        }
-        Map<String, DatumSummary> summarys = new HashMap<>(datums.size());
-        datums.forEach((k, datum) -> {
+    @Override
+    public Map<String, DatumSummary> getDatumSummary(String targetIpAddress) {
+        Map<String, DatumSummary> summarys = new HashMap<>();
+        DATUM_MAP.forEach((k, datum) -> {
             summarys.put(k, PublisherDigestUtil.getDatumSummary(datum, targetIpAddress));
         });
         return summarys;

@@ -17,7 +17,6 @@
 package com.alipay.sofa.registry.server.data.change.event;
 
 import com.alipay.sofa.registry.common.model.dataserver.Datum;
-import com.alipay.sofa.registry.server.data.change.DataChangeTypeEnum;
 import com.alipay.sofa.registry.server.data.change.DataSourceTypeEnum;
 
 /**
@@ -27,11 +26,6 @@ import com.alipay.sofa.registry.server.data.change.DataSourceTypeEnum;
  * @version $Id: DataChangeEvent.java, v 0.1 2017-12-07 18:44 qian.lqlq Exp $
  */
 public class DataChangeEvent implements IDataChangeEvent {
-
-    /**
-     * type of changed data, MERGE or COVER
-     */
-    private DataChangeTypeEnum changeType;
 
     /**
      *
@@ -45,23 +39,12 @@ public class DataChangeEvent implements IDataChangeEvent {
 
     /**
      * constructor
-     * @param changeType
      * @param sourceType
      * @param datum
      */
-    public DataChangeEvent(DataChangeTypeEnum changeType, DataSourceTypeEnum sourceType, Datum datum) {
-        this.changeType = changeType;
+    public DataChangeEvent(DataSourceTypeEnum sourceType, Datum datum) {
         this.sourceType = sourceType;
         this.datum = datum;
-    }
-
-    /**
-     * Getter method for property <tt>changeType</tt>.
-     *
-     * @return property value of changeType
-     */
-    public DataChangeTypeEnum getChangeType() {
-        return changeType;
     }
 
     /**

@@ -16,7 +16,6 @@
  */
 package com.alipay.sofa.registry.server.data.cache;
 
-import com.alipay.sofa.registry.common.model.dataserver.Datum;
 import com.alipay.sofa.registry.common.model.dataserver.DatumSummary;
 import com.alipay.sofa.registry.common.model.slot.Slot;
 import com.alipay.sofa.registry.common.model.slot.SlotAccess;
@@ -48,12 +47,10 @@ public interface SlotManager {
     void setSlotDatumStorageProvider(SlotDatumStorageProvider provider);
 
     interface SlotDatumStorageProvider {
-        Map<String, DatumSummary> getDatumSummary(int slotId, String dataCenter,
-                                                  String targetIpAddress);
+        Map<String, DatumSummary> getDatumSummary(int slotId, String targetIpAddress);
 
-        void merge(int slotId, String dataCenter, Map<String, List<Publisher>> updateds,
+        void merge(int slotId, Map<String, List<Publisher>> updateds,
                    Map<String, List<String>> removeds);
-
     }
 
 }

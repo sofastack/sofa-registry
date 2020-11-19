@@ -16,20 +16,17 @@
  */
 package com.alipay.sofa.registry.server.data.change.event;
 
-import java.util.concurrent.atomic.AtomicBoolean;
-
-import javax.annotation.PostConstruct;
-
-import org.springframework.beans.factory.annotation.Autowired;
-
 import com.alipay.sofa.registry.common.model.PublishType;
 import com.alipay.sofa.registry.common.model.dataserver.Datum;
 import com.alipay.sofa.registry.common.model.store.Publisher;
 import com.alipay.sofa.registry.server.data.bootstrap.DataServerConfig;
 import com.alipay.sofa.registry.server.data.cache.DatumCache;
 import com.alipay.sofa.registry.server.data.cache.UnPublisher;
-import com.alipay.sofa.registry.server.data.change.DataChangeTypeEnum;
 import com.alipay.sofa.registry.server.data.change.DataSourceTypeEnum;
+import org.springframework.beans.factory.annotation.Autowired;
+
+import javax.annotation.PostConstruct;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  *
@@ -81,11 +78,10 @@ public class DataChangeEventCenter {
             datum.setContainsUnPub(true);
         }
         if (publisher.getPublishType() != PublishType.TEMPORARY) {
-            dataChangeEventQueues[idx].onChange(new DataChangeEvent(DataChangeTypeEnum.MERGE,
-                DataSourceTypeEnum.PUB, datum));
+            dataChangeEventQueues[idx].onChange(new DataChangeEvent(DataSourceTypeEnum.PUB, datum));
         } else {
-            dataChangeEventQueues[idx].onChange(new DataChangeEvent(DataChangeTypeEnum.MERGE,
-                DataSourceTypeEnum.PUB_TEMP, datum));
+            dataChangeEventQueues[idx].onChange(new DataChangeEvent(DataSourceTypeEnum.PUB_TEMP,
+                datum));
         }
     }
 
@@ -97,17 +93,6 @@ public class DataChangeEventCenter {
         for (DataChangeEventQueue dataChangeEventQueue : dataChangeEventQueues) {
             dataChangeEventQueue.onChange(event);
         }
-    }
-
-    /**
-     *
-     * @param changeType
-     * @param datum
-     */
-    public void sync(DataChangeTypeEnum changeType, DataSourceTypeEnum sourceType, Datum datum) {
-        int idx = hash(datum.getDataInfoId());
-        DataChangeEvent event = new DataChangeEvent(changeType, sourceType, datum);
-        dataChangeEventQueues[idx].onChange(event);
     }
 
     /**

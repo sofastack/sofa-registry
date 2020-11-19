@@ -16,16 +16,15 @@
  */
 package com.alipay.sofa.registry.server.data.cache;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
-
+import com.alipay.sofa.registry.common.model.dataserver.Datum;
+import com.alipay.sofa.registry.common.model.store.Publisher;
+import com.alipay.sofa.registry.server.data.bootstrap.DataServerConfig;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import com.alipay.sofa.registry.common.model.dataserver.Datum;
-import com.alipay.sofa.registry.common.model.store.Publisher;
-import com.alipay.sofa.registry.server.data.change.DataChangeTypeEnum;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * cache of datum, providing query function to the upper module
@@ -37,7 +36,10 @@ import com.alipay.sofa.registry.server.data.change.DataChangeTypeEnum;
 public class DatumCache {
 
     @Autowired
-    private DatumStorage localDatumStorage;
+    private DatumStorage     localDatumStorage;
+
+    @Autowired
+    private DataServerConfig dataServerConfig;
 
     /**
      * get datum by specific dataCenter and dataInfoId
@@ -47,7 +49,7 @@ public class DatumCache {
      * @return
      */
     public Datum get(String dataCenter, String dataInfoId) {
-        return localDatumStorage.get(dataCenter, dataInfoId);
+        return localDatumStorage.get(dataInfoId);
     }
 
     /**
@@ -60,8 +62,8 @@ public class DatumCache {
         Map<String, Datum> datumMap = new HashMap<>();
 
         //local
-        Map<String, Datum> localDataCenterToMap = localDatumStorage.get(dataInfoId);
-        datumMap.putAll(localDataCenterToMap);
+        Datum localDatum = localDatumStorage.get(dataInfoId);
+        datumMap.put(dataServerConfig.getLocalDataCenter(), localDatum);
 
         return datumMap;
     }
@@ -76,8 +78,10 @@ public class DatumCache {
         Map<String, Long> datumMap = new HashMap<>();
 
         //local
-        Map<String, Long> localVersions = localDatumStorage.getVersions(dataInfoId);
-        datumMap.putAll(localVersions);
+        Long localVersions = localDatumStorage.getVersions(dataInfoId);
+        if (localVersions != null) {
+            datumMap.put(dataServerConfig.getLocalDataCenter(), localVersions);
+        }
 
         return datumMap;
     }
@@ -108,7 +112,9 @@ public class DatumCache {
      * @return
      */
     public Map<String, Map<String, Datum>> getAll() {
-        return localDatumStorage.getAll();
+        Map<String, Map<String, Datum>> datumMap = new HashMap<>();
+        datumMap.put(dataServerConfig.getLocalDataCenter(), localDatumStorage.getAll());
+        return datumMap;
     }
 
     /**
@@ -124,12 +130,11 @@ public class DatumCache {
     /**
      * put datum into cache
      *
-     * @param changeType
      * @param datum
      * @return the last version before datum changed, if datum is not exist, return null
      */
-    public MergeResult putDatum(DataChangeTypeEnum changeType, Datum datum) {
-        return localDatumStorage.putDatum(changeType, datum);
+    public MergeResult putDatum(Datum datum) {
+        return localDatumStorage.putDatum(datum);
     }
 
     /**
@@ -139,7 +144,7 @@ public class DatumCache {
      * @return
      */
     public boolean cleanDatum(String dataCenter, String dataInfoId) {
-        return localDatumStorage.cleanDatum(dataCenter, dataInfoId);
+        return localDatumStorage.cleanDatum(dataInfoId);
     }
 
     /**

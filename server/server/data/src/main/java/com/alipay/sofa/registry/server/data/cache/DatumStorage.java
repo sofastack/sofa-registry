@@ -22,7 +22,6 @@ import java.util.Set;
 import com.alipay.sofa.registry.common.model.dataserver.Datum;
 import com.alipay.sofa.registry.common.model.dataserver.DatumSummary;
 import com.alipay.sofa.registry.common.model.store.Publisher;
-import com.alipay.sofa.registry.server.data.change.DataChangeTypeEnum;
 
 /**
  *
@@ -32,28 +31,19 @@ import com.alipay.sofa.registry.server.data.change.DataChangeTypeEnum;
 public interface DatumStorage {
 
     /**
-     * get datum by specific dataCenter and dataInfoId
-     *
-     * @param dataCenter
-     * @param dataInfoId
-     * @return
-     */
-    Datum get(String dataCenter, String dataInfoId);
-
-    /**
-     * get datum of all datercenters by dataInfoId
+     * get datum by specific dataInfoId
      *
      * @param dataInfoId
      * @return
      */
-    Map<String, Datum> get(String dataInfoId);
+    Datum get(String dataInfoId);
 
     /**
      * get all datum
      *
      * @return
      */
-    Map<String, Map<String, Datum>> getAll();
+    Map<String, Datum> getAll();
 
     /**
      *
@@ -73,21 +63,19 @@ public interface DatumStorage {
     /**
      * put datum into cache
      *
-     * @param changeType
      * @param datum
      * @return the last version before datum changed, if datum is not exist, return null
      */
-    MergeResult putDatum(DataChangeTypeEnum changeType, Datum datum);
+    MergeResult putDatum(Datum datum);
 
     /**
      * remove datum ant contains all pub data,and clean all the client map reference
-     * @param dataCenter
      * @param dataInfoId
      * @return
      */
-    boolean cleanDatum(String dataCenter, String dataInfoId);
+    boolean cleanDatum(String dataInfoId);
 
-    boolean removePublisher(String dataCenter, String dataInfoId, String registerId);
+    boolean removePublisher(String dataInfoId, String registerId);
 
     /**
      * cover datum by snapshot
@@ -95,8 +83,8 @@ public interface DatumStorage {
     Datum putSnapshot(String dataInfoId, Map<String, Publisher> toBeDeletedPubMap,
                       Map<String, Publisher> snapshotPubMap);
 
-    Map<String, Long> getVersions(String dataInfoId);
+    Long getVersions(String dataInfoId);
 
-    Map<String, DatumSummary> getDatumSummary(String dataCenter, String targetIpAddress);
+    Map<String, DatumSummary> getDatumSummary(String targetIpAddress);
 
 }
