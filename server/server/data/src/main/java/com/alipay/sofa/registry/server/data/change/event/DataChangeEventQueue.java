@@ -24,7 +24,6 @@ import com.alipay.sofa.registry.server.data.bootstrap.DataServerConfig;
 import com.alipay.sofa.registry.server.data.cache.DatumCache;
 import com.alipay.sofa.registry.server.data.cache.UnPublisher;
 import com.alipay.sofa.registry.server.data.change.ChangeData;
-import com.alipay.sofa.registry.server.data.change.DataChangeTypeEnum;
 import com.alipay.sofa.registry.server.data.change.DataSourceTypeEnum;
 import com.alipay.sofa.registry.server.data.executor.ExecutorFactory;
 import com.google.common.collect.Interners;
@@ -153,11 +152,10 @@ public class DataChangeEventQueue {
      * @param dataCenter
      * @param dataInfoId
      * @param sourceType
-     * @param changeType
      * @return
      */
     private ChangeData getChangeData(String dataCenter, String dataInfoId,
-                                     DataSourceTypeEnum sourceType, DataChangeTypeEnum changeType) {
+                                     DataSourceTypeEnum sourceType) {
         Map<String, ChangeData> map = CHANGE_DATA_MAP_FOR_MERGE.get(dataCenter);
         if (map == null) {
             Map<String, ChangeData> newMap = new ConcurrentHashMap<>();
@@ -169,8 +167,7 @@ public class DataChangeEventQueue {
 
         ChangeData changeData = map.get(dataInfoId);
         if (changeData == null) {
-            ChangeData newChangeData = new ChangeData(null, this.notifyIntervalMs, sourceType,
-                changeType);
+            ChangeData newChangeData = new ChangeData(null, this.notifyIntervalMs, sourceType);
             changeData = map.putIfAbsent(dataInfoId, newChangeData);
             if (changeData == null) {
                 changeData = newChangeData;
@@ -195,11 +192,9 @@ public class DataChangeEventQueue {
                         DataChangeEvent dataChangeEvent = (DataChangeEvent) event;
                         //Temporary push data will be notify as soon as,and not merge to normal pub data;
                         if (dataChangeEvent.getSourceType() == DataSourceTypeEnum.PUB_TEMP) {
-                            addTempChangeData(dataChangeEvent.getDatum(), dataChangeEvent.getChangeType(),
-                                    dataChangeEvent.getSourceType());
+                            addTempChangeData(dataChangeEvent.getDatum(), dataChangeEvent.getSourceType());
                         } else {
-                            handleDatum(dataChangeEvent.getChangeType(), dataChangeEvent.getSourceType(),
-                                    dataChangeEvent.getDatum());
+                            handleDatum(dataChangeEvent.getSourceType(), dataChangeEvent.getDatum());
                         }
                     } else if (scope == DataChangeScopeEnum.CLIENT) {
                         handleClientOff((ClientChangeEvent) event);
@@ -232,7 +227,7 @@ public class DataChangeEventQueue {
                         publisher.getRegisterId(), event.getOccurredTimestamp()),
                         event.getDataCenter(), event.getVersion());
                     datum.setContainsUnPub(true);
-                    handleDatum(DataChangeTypeEnum.MERGE, DataSourceTypeEnum.PUB, datum);
+                    handleDatum(DataSourceTypeEnum.PUB, datum);
                     count++;
 
                 }
@@ -245,13 +240,12 @@ public class DataChangeEventQueue {
         }
     }
 
-    private void handleDatum(DataChangeTypeEnum changeType, DataSourceTypeEnum sourceType,
-                             Datum targetDatum) {
+    private void handleDatum(DataSourceTypeEnum sourceType, Datum targetDatum) {
         lock.lock();
         try {
             //get changed datum
             ChangeData changeData = getChangeData(targetDatum.getDataCenter(),
-                targetDatum.getDataInfoId(), sourceType, changeType);
+                targetDatum.getDataInfoId(), sourceType);
             Datum cacheDatum = changeData.getDatum();
             if (cacheDatum == null) {
                 changeData.setDatum(targetDatum);
@@ -284,10 +278,9 @@ public class DataChangeEventQueue {
         }
     }
 
-    private void addTempChangeData(Datum targetDatum, DataChangeTypeEnum changeType,
-                                   DataSourceTypeEnum sourceType) {
+    private void addTempChangeData(Datum targetDatum, DataSourceTypeEnum sourceType) {
         ChangeData tempChangeData = new ChangeData(targetDatum, this.notifyTempDataIntervalMs,
-            sourceType, changeType);
+            sourceType);
         CHANGE_QUEUE.put(tempChangeData);
     }
 

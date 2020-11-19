@@ -18,11 +18,9 @@ package com.alipay.sofa.registry.server.data.cache;
 
 import com.alipay.remoting.Connection;
 import com.alipay.remoting.util.ConcurrentHashSet;
-import com.alipay.sofa.registry.common.model.CommonResponse;
 import com.alipay.sofa.registry.common.model.GenericResponse;
 import com.alipay.sofa.registry.common.model.dataserver.DatumSummary;
 import com.alipay.sofa.registry.common.model.metaserver.SessionNode;
-import com.alipay.sofa.registry.common.model.sessionserver.DataChangeRequest;
 import com.alipay.sofa.registry.common.model.sessionserver.DataSlotMigrateRequest;
 import com.alipay.sofa.registry.common.model.sessionserver.DataSlotMigrateResult;
 import com.alipay.sofa.registry.common.model.slot.*;
@@ -33,11 +31,8 @@ import com.alipay.sofa.registry.remoting.Channel;
 import com.alipay.sofa.registry.remoting.Server;
 import com.alipay.sofa.registry.remoting.exchange.Exchange;
 import com.alipay.sofa.registry.server.data.bootstrap.DataServerConfig;
-import com.alipay.sofa.registry.server.data.change.notify.SessionServerNotifier;
 import com.alipay.sofa.registry.server.data.executor.ExecutorFactory;
-import com.alipay.sofa.registry.server.data.remoting.MetaNodeExchanger;
 import com.alipay.sofa.registry.server.data.remoting.sessionserver.SessionServerConnectionFactory;
-import com.alipay.sofa.registry.task.Task;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -260,8 +255,7 @@ public final class SlotManagerImpl implements SlotManager {
                 DataSlotMigrateResult result = resp.getData();
                 if (result != null) {
                     slotDatumStorageProvider.merge(task.slot.getId(),
-                        dataServerConfig.getLocalDataCenter(), result.getUpdatedPublishers(),
-                        result.getRemovedPublishers());
+                        result.getUpdatedPublishers(), result.getRemovedPublishers());
                     LOGGER
                         .info(
                             "migratingTask merge publishers from sessionServer({}), slot={}, update={}, removed={}",
@@ -323,8 +317,7 @@ public final class SlotManagerImpl implements SlotManager {
                         // the task in doing or done
                         continue;
                     }
-                    Map<String, DatumSummary> summarys = slotDatumStorageProvider
-                            .getDatumSummary(slot.getId(), dataServerConfig.getLocalDataCenter(), sessionIp);
+                    Map<String, DatumSummary> summarys = slotDatumStorageProvider.getDatumSummary(slot.getId(),  sessionIp);
                     DataSlotMigrateRequest request = new DataSlotMigrateRequest(slot.getLeaderEpoch(), slot.getId(),
                             summarys);
                     Server sessionServer = boltExchange.getServer(dataServerConfig.getPort());

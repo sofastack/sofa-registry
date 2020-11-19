@@ -16,15 +16,6 @@
  */
 package com.alipay.sofa.registry.server.data.change;
 
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.Executor;
-
-import javax.annotation.PostConstruct;
-import javax.annotation.Resource;
-
-import org.springframework.beans.factory.annotation.Autowired;
-
 import com.alipay.sofa.registry.common.model.dataserver.Datum;
 import com.alipay.sofa.registry.common.model.store.Publisher;
 import com.alipay.sofa.registry.log.Logger;
@@ -120,22 +111,19 @@ public class DataChangeHandler {
             String dataCenter = datum.getDataCenter();
             String dataInfoId = datum.getDataInfoId();
             DataSourceTypeEnum sourceType = changeData.getSourceType();
-            DataChangeTypeEnum changeType = changeData.getChangeType();
 
-            if (changeType == DataChangeTypeEnum.MERGE) {
-                //update version for pub or unPub merge to cache
-                //if the version product before merge to cache,it may be cause small version override big one
-                datum.updateVersion();
-            }
+            //update version for pub or unPub merge to cache
+            //if the version product before merge to cache,it may be cause small version override big one
+            datum.updateVersion();
 
             long version = datum.getVersion();
 
             try {
                 if (sourceType == DataSourceTypeEnum.PUB_TEMP) {
-                    notifyTempPub(datum, sourceType, changeType);
+                    notifyTempPub(datum, sourceType);
 
                 } else {
-                    MergeResult mergeResult = datumCache.putDatum(changeType, datum);
+                    MergeResult mergeResult = datumCache.putDatum(datum);
                     Long lastVersion = mergeResult.getLastVersion();
 
                     if (lastVersion != null
@@ -150,10 +138,9 @@ public class DataChangeHandler {
 
                     LOGGER
                         .info(
-                            "[DataChangeHandler][{}] datum handle,datum={},dataCenter={}, dataInfoId={}, version={}, lastVersion={}, sourceType={}, changeType={},changeFlag={},isContainsUnPub={}",
+                            "[DataChangeHandler][{}] datum handle,datum={},dataCenter={}, dataInfoId={}, version={}, lastVersion={}, sourceType={},changeFlag={},isContainsUnPub={}",
                             name, datum.hashCode(), dataCenter, dataInfoId, version, lastVersion,
-                            sourceType, changeType, mergeResult.isChangeFlag(),
-                            datum.isContainsUnPub());
+                            sourceType, mergeResult.isChangeFlag(), datum.isContainsUnPub());
                     //lastVersion null means first add datum
                     if (lastVersion == null || version != lastVersion) {
                         if (mergeResult.isChangeFlag()) {
@@ -171,8 +158,7 @@ public class DataChangeHandler {
 
         }
 
-        private void notifyTempPub(Datum datum, DataSourceTypeEnum sourceType,
-                                   DataChangeTypeEnum changeType) {
+        private void notifyTempPub(Datum datum, DataSourceTypeEnum sourceType) {
 
             String dataCenter = datum.getDataCenter();
             String dataInfoId = datum.getDataInfoId();
@@ -188,8 +174,8 @@ public class DataChangeHandler {
 
             LOGGER
                 .info(
-                    "[DataChangeHandler][{}] datum handle temp pub,datum={},dataCenter={}, dataInfoId={}, version={}, sourceType={}, changeType={}",
-                    name, datum.hashCode(), dataCenter, dataInfoId, version, sourceType, changeType);
+                    "[DataChangeHandler][{}] datum handle temp pub,datum={},dataCenter={}, dataInfoId={}, version={}, sourceType={}",
+                    name, datum.hashCode(), dataCenter, dataInfoId, version, sourceType);
 
             notify(datum, sourceType, null);
         }
