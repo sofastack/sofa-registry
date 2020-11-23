@@ -153,6 +153,15 @@ public final class SlotLocalDatumStorage implements DatumStorage,
     }
 
     @Override
+    public Map<String, Map<String, Publisher>> getPublishers(int slotId) {
+        final DatumStorage ds = localDatumStorages.get(slotId);
+        if (ds == null) {
+            return Collections.emptyMap();
+        }
+        return ds.getPublishers(slotId);
+    }
+
+    @Override
     public Map<String, DatumSummary> getDatumSummary(int slotId, String targetIpAddress) {
         final DatumStorage ds = localDatumStorages.get(slotId);
         if (ds == null) {
@@ -162,26 +171,27 @@ public final class SlotLocalDatumStorage implements DatumStorage,
     }
 
     @Override
-    public void merge(int slotId, Map<String, List<Publisher>> updateds, Map<String, List<String>> removeds) {
+    public void merge(int slotId, Map<String, List<Publisher>> updatedPublishers, List<String> removedDataInfoIds,
+                      Map<String, List<String>> removedPublishers) {
         final DatumStorage ds = localDatumStorages.get(slotId);
         if (ds == null) {
             return;
         }
         synchronized (ds) {
-            for (Map.Entry<String, List<String>> e : removeds.entrySet()) {
+            for (String dataInfoId : removedDataInfoIds) {
+                ds.cleanDatum(dataInfoId);
+            }
+
+            for (Map.Entry<String, List<String>> e : removedPublishers.entrySet()) {
                 final String dataInfoId = e.getKey();
-                if (e.getValue().isEmpty()) {
-                    // empty means remove the dataInfoId
-                    ds.cleanDatum(dataInfoId);
-                } else {
-                    for (String registerId : e.getValue()) {
-                        ds.removePublisher(dataInfoId, registerId);
-                    }
+                for (String registerId : e.getValue()) {
+                    ds.removePublisher(dataInfoId, registerId);
                 }
             }
-            for (Map.Entry<String, List<Publisher>> updatedPublishers : updateds.entrySet()) {
-                Datum datum = new Datum(updatedPublishers.getValue().get(0), dataServerConfig.getLocalDataCenter());
-                updatedPublishers.getValue().forEach(p -> {
+
+            for (Map.Entry<String, List<Publisher>> updateds : updatedPublishers.entrySet()) {
+                Datum datum = new Datum(updateds.getValue().get(0), dataServerConfig.getLocalDataCenter());
+                updateds.getValue().forEach(p -> {
                     datum.getPubMap().put(p.getRegisterId(), p);
                 });
                 ds.putDatum(datum);

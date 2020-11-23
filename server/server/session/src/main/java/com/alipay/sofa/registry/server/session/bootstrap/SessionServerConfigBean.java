@@ -228,6 +228,8 @@ public class SessionServerConfigBean implements SessionServerConfig {
 
     private int                sessionSchedulerPoolSize                = 6;
 
+    private int                slotSyncPublisherMaxNum                 = 512;
+
     //end config for enterprise version
 
     private CommonConfig       commonConfig;
@@ -1954,6 +1956,23 @@ public class SessionServerConfigBean implements SessionServerConfig {
      */
     public void setDataNodeExchangeForFetchDatumTimeOut(int dataNodeExchangeForFetchDatumTimeOut) {
         this.dataNodeExchangeForFetchDatumTimeOut = dataNodeExchangeForFetchDatumTimeOut;
+    }
+
+    /**
+     * Getter method for property <tt>slotSyncPublisherMaxNum</tt>.
+     * @return property value of slotSyncPublisherMaxNum
+     */
+    @Override
+    public int getSlotSyncPublisherMaxNum() {
+        return slotSyncPublisherMaxNum;
+    }
+
+    /**
+     * Setter method for property <tt>slotSyncPublisherMaxNum</tt>.
+     * @param slotSyncPublisherMaxNum value to be assigned to property slotSyncPublisherMaxNum
+     */
+    public void setSlotSyncPublisherMaxNum(int slotSyncPublisherMaxNum) {
+        this.slotSyncPublisherMaxNum = slotSyncPublisherMaxNum;
     }
 
     public static int cpus() {

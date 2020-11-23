@@ -44,7 +44,6 @@ public class LocalDatumStorage implements DatumStorage {
     public static final long                            ERROR_DATUM_SLOT     = -3L;
 
     /**
-     * row:     dataCenter
      * column:  dataInfoId
      * value:   datum
      */
@@ -330,5 +329,14 @@ public class LocalDatumStorage implements DatumStorage {
             summarys.put(k, PublisherDigestUtil.getDatumSummary(datum, targetIpAddress));
         });
         return summarys;
+    }
+
+    @Override
+    public Map<String, Map<String, Publisher>> getPublishers(int slotId) {
+        Map<String, Map<String, Publisher>> m = new HashMap<>(DATUM_MAP.size());
+        DATUM_MAP.forEach((k, v) -> {
+            m.put(k, new HashMap<>(v.getPubMap()));
+        });
+        return m;
     }
 }

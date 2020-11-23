@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alipay.sofa.registry.common.model.sessionserver;
+package com.alipay.sofa.registry.common.model.slot;
 
 import com.alipay.sofa.registry.common.model.store.Publisher;
 
@@ -26,23 +26,30 @@ import java.util.Map;
  * @author yuzhi.lyz
  * @version v 0.1 2020-11-05 17:04 yuzhi.lyz Exp $
  */
-public class DataSlotMigrateResult {
+public class DataSlotDiffSyncResult {
     private long                         slotTableEpoch;
+    // contains all the updated/added publishers
     private boolean                      hasRemain;
     private Map<String, List<Publisher>> updatedPublishers;
+    private List<String>                 removedDataInfoIds;
     private Map<String, List<String>>    removedPublishers;
 
-    public DataSlotMigrateResult(Map<String, List<Publisher>> updated,
-                                 Map<String, List<String>> removed) {
-        this.updatedPublishers = updated;
-        this.removedPublishers = removed;
+    // if from session, return the sessionProcessId for lease
+    private String                       sessionProcessId;
+
+    public DataSlotDiffSyncResult(Map<String, List<Publisher>> updatedPublishers,
+                                  List<String> removedDataInfoIds,
+                                  Map<String, List<String>> removedPublishers) {
+        this.updatedPublishers = updatedPublishers;
+        this.removedDataInfoIds = removedDataInfoIds;
+        this.removedPublishers = removedPublishers;
     }
 
     public boolean isHasRemain() {
         return hasRemain;
     }
 
-    public void setHasRemain() {
+    public void setHasRemain(boolean hasRemain) {
         this.hasRemain = hasRemain;
     }
 
@@ -92,5 +99,37 @@ public class DataSlotMigrateResult {
      */
     public void setRemovedPublishers(Map<String, List<String>> removedPublishers) {
         this.removedPublishers = removedPublishers;
+    }
+
+    /**
+     * Getter method for property <tt>removedDataInfoIds</tt>.
+     * @return property value of removedDataInfoIds
+     */
+    public List<String> getRemovedDataInfoIds() {
+        return removedDataInfoIds;
+    }
+
+    /**
+     * Setter method for property <tt>removedDataInfoIds</tt>.
+     * @param removedDataInfoIds value to be assigned to property removedDataInfoIds
+     */
+    public void setRemovedDataInfoIds(List<String> removedDataInfoIds) {
+        this.removedDataInfoIds = removedDataInfoIds;
+    }
+
+    public int getRemovedPublishersCount() {
+        int count = 0;
+        for (List<String> list : removedPublishers.values()) {
+            count += list.size();
+        }
+        return count;
+    }
+
+    public int getUpdatedPublishersCount() {
+        int count = 0;
+        for (List<Publisher> list : updatedPublishers.values()) {
+            count += list.size();
+        }
+        return count;
     }
 }

@@ -14,19 +14,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alipay.sofa.registry.server.session.acceptor;
+package com.alipay.sofa.registry.remoting;
 
 /**
  *
- * @author kezhu.wukz
- * @author shangyu.wh
- * @version 1.0: WriteDataAcceptor.java, v 0.1 2019-06-11 15:08 shangyu.wh Exp $
+ * @author yuzhi.lyz
+ * @version v 0.1 2020-11-20 16:10 yuzhi.lyz Exp $
  */
-public interface WriteDataAcceptor {
-
+public interface Sender {
     /**
-     * accept all write data request
-     * @param request
+     * Sync send
+     *
+     * @param channel the channel
+     * @param message the message
+     * @param timeoutMillis the timeout millis
+     * @return object
      */
-    void accept(WriteDataRequest request);
+    Object sendSync(final Channel channel, final Object message, final int timeoutMillis);
 }

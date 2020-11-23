@@ -31,6 +31,8 @@ import com.alipay.sofa.registry.server.data.remoting.MetaNodeExchanger;
 import com.alipay.sofa.registry.server.data.remoting.dataserver.DataServerConnectionFactory;
 import com.alipay.sofa.registry.server.data.remoting.dataserver.handler.DataSyncServerConnectionHandler;
 import com.alipay.sofa.registry.server.data.remoting.dataserver.handler.FetchDataHandler;
+import com.alipay.sofa.registry.server.data.remoting.dataserver.handler.SlotFollowerDiffDataInfoIdRequestHandler;
+import com.alipay.sofa.registry.server.data.remoting.dataserver.handler.SlotFollowerDiffPublisherRequestHandler;
 import com.alipay.sofa.registry.server.data.remoting.dataserver.task.RenewNodeTask;
 import com.alipay.sofa.registry.server.data.remoting.handler.AbstractClientHandler;
 import com.alipay.sofa.registry.server.data.remoting.handler.AbstractServerHandler;
@@ -113,7 +115,7 @@ public class DataServerBeanConfiguration {
         @Bean
         @ConditionalOnMissingBean
         public DatumStorage localDatumStorage() {
-            return new LocalDatumStorage();
+            return new SlotLocalDatumStorage();
         }
 
         @Bean
@@ -197,6 +199,8 @@ public class DataServerBeanConfiguration {
             list.add(publishDataProcessor());
             list.add(unPublishDataHandler());
             list.add(dataSyncServerConnectionHandler());
+            list.add(slotFollowerDiffDataInfoIdRequestHandler());
+            list.add(slotFollowerDiffPublisherRequestHandler());
             return list;
         }
 
@@ -227,6 +231,16 @@ public class DataServerBeanConfiguration {
         @Bean
         public AbstractServerHandler getDataHandler() {
             return new GetDataHandler();
+        }
+
+        @Bean
+        public AbstractServerHandler slotFollowerDiffDataInfoIdRequestHandler() {
+            return new SlotFollowerDiffDataInfoIdRequestHandler();
+        }
+
+        @Bean
+        public AbstractServerHandler slotFollowerDiffPublisherRequestHandler() {
+            return new SlotFollowerDiffPublisherRequestHandler();
         }
 
         @Bean
@@ -373,6 +387,15 @@ public class DataServerBeanConfiguration {
                 dataServerConfig.getGetDataExecutorKeepAliveTime(), TimeUnit.SECONDS,
                 new ArrayBlockingQueue<>(dataServerConfig.getGetDataExecutorQueueSize()),
                 new NamedThreadFactory("DataServer-GetDataProcessor-executor", true));
+        }
+
+        @Bean(name = "slotSyncRequestProcessorExecutor")
+        public ThreadPoolExecutor slotSyncRequestProcessorExecutor(DataServerConfig dataServerConfig) {
+            return new ThreadPoolExecutorDataServer("SlotSyncRequestProcessorExecutor",
+                dataServerConfig.getSlotSyncRequestExecutorMinPoolSize(),
+                dataServerConfig.getSlotSyncRequestExecutorMaxPoolSize(), 300, TimeUnit.SECONDS,
+                new ArrayBlockingQueue<>(dataServerConfig.getSlotSyncRequestExecutorQueueSize()),
+                new NamedThreadFactory("DataServer-SlotSyncRequestProcessor-executor", true));
         }
 
     }

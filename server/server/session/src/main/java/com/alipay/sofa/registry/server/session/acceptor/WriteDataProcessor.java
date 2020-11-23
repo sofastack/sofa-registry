@@ -74,8 +74,8 @@ public class WriteDataProcessor {
             }
                 break;
             default:
-                LOGGER.warn("Unknown request type, requestType={}, requestBody={}", connectId,
-                    request.getRequestType(), request.getRequestBody());
+                LOGGER.warn("Unknown request type, connectId={}, requestType={}, requestBody={}",
+                    connectId, request.getRequestType(), request.getRequestBody());
 
         }
     }
@@ -110,7 +110,8 @@ public class WriteDataProcessor {
 
     private void sendEvent(Object eventObj, TaskType taskType) {
         TaskEvent taskEvent = new TaskEvent(eventObj, taskType);
-        taskLogger.info("send " + taskType + " taskEvent:{}", taskEvent);
+        taskLogger.info("send connectId:{}, taskType:{}, taskEvent:{}", connectId, taskType,
+            taskEvent);
         taskListenerManager.sendTaskEvent(taskEvent);
     }
 

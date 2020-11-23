@@ -38,6 +38,10 @@ public interface SlotManager {
 
     void addSlotChangeListener(SlotChangeListener listener);
 
+    long getSlotTableEpoch();
+
+    void triggerUpdateSlotTable(long epoch);
+
     interface SlotChangeListener {
         void onSlotAdd(int slotId, Slot.Role role);
 
@@ -49,8 +53,8 @@ public interface SlotManager {
     interface SlotDatumStorageProvider {
         Map<String, DatumSummary> getDatumSummary(int slotId, String targetIpAddress);
 
-        void merge(int slotId, Map<String, List<Publisher>> updateds,
-                   Map<String, List<String>> removeds);
+        void merge(int slotId, Map<String, List<Publisher>> updatedPublishers,
+                   List<String> removedDataInfoIds, Map<String, List<String>> removedPublishers);
     }
 
 }

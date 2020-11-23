@@ -294,7 +294,6 @@ public class SessionRegistry implements Registry {
                     return null;
                 }
             });
-            writeDataAcceptor.remove(connectId);
         }
     }
 

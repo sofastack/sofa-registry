@@ -38,7 +38,7 @@ public class MigrateTest {
     public void testBody() throws Exception {
         HessianSerializer s = new HessianSerializer();
         DataSlotMigrateRequest request = new DataSlotMigrateRequest(100, 200, new HashMap<>());
-        for (int i = 0; i < 200; i++) {
+        for (int i = 0; i < 5; i++) {
             DatumSummary summary = new DatumSummary("app" + System.currentTimeMillis());
             summary.setPublisherDigests(new HashMap<>());
             for (int j = 0; j < 1000; j++) {

@@ -151,6 +151,14 @@ public class SessionServerConnectionFactory {
     }
 
     /**
+     * get the map of sessionIp -> connection
+     */
+    public Map<String, Connection> getSessonConnectionMap() {
+        // TODO
+        throw new UnsupportedOperationException();
+    }
+
+    /**
      * get connections of SessionServer ( Randomly select a connection for each session )
      */
     public List<Connection> getSessionConnections() {
