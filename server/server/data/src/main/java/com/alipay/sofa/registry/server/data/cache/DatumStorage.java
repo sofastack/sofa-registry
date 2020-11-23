@@ -87,4 +87,6 @@ public interface DatumStorage {
 
     Map<String, DatumSummary> getDatumSummary(String targetIpAddress);
 
+    Map<String, Map<String, Publisher>> getPublishers(int slotId);
+
 }

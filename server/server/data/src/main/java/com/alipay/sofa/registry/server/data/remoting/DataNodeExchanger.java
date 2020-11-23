@@ -70,6 +70,10 @@ public class DataNodeExchanger implements NodeExchanger {
         }
     }
 
+    public Client getClient() {
+        return boltExchange.getClient(Exchange.DATA_SERVER_TYPE);
+    }
+
     public Channel connect(URL url) {
         Client client = boltExchange.getClient(Exchange.DATA_SERVER_TYPE);
         if (client == null) {

@@ -60,4 +60,11 @@ public class ParaCheckUtil {
         }
     }
 
+    public static void checkNonNegative(long v, String paraName) {
+        if (v < 0) {
+            throw new RuntimeException(String.format("%s is not allowed to be negative, %d",
+                paraName, v));
+        }
+    }
+
 }

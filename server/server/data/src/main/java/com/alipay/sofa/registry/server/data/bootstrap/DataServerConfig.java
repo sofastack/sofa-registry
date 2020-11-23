@@ -117,7 +117,26 @@ public class DataServerConfig {
 
     private int                sessionDisconnectDelayMs                     = 30000;
 
-    private int                slotMigratingExecutorThreadSize              = 12;
+    private int                slotMigratingExecutorThreadSize              = 8;
+
+    private int                slotLeaderSyncSessionExecutorThreadSize      = 12;
+    private int                slotLeaderSyncSessionExecutorQueueSize       = 30000;
+    private int                slotLeaderSyncSessionIntervalMs              = 10000;
+
+    private int                slotFollowerSyncLeaderExecutorThreadSize     = 4;
+    private int                slotFollowerSyncLeaderExecutorQueueSize      = 10000;
+    private int                slotFollowerSyncLeaderIntervalMs             = 60000;
+
+    // the publisher.digest if len(registerId+long), 100bytes
+    private int                slotSyncPublisherDigestMaxNum                = 1024 * 4;
+
+    private int                slotSyncPublisherMaxNum                      = 512;
+
+    private int                slotSyncRequestExecutorMinPoolSize           = 32;
+
+    private int                slotSyncRequestExecutorMaxPoolSize           = 32;
+
+    private int                slotSyncRequestExecutorQueueSize             = 1000;
 
     /**
      * constructor
@@ -804,6 +823,182 @@ public class DataServerConfig {
      */
     public void setSlotMigratingExecutorThreadSize(int slotMigratingExecutorThreadSize) {
         this.slotMigratingExecutorThreadSize = slotMigratingExecutorThreadSize;
+    }
+
+    /**
+     * Getter method for property <tt>slotSyncPublisherDigestMaxNum</tt>.
+     * @return property value of slotSyncPublisherDigestMaxNum
+     */
+    public int getSlotSyncPublisherDigestMaxNum() {
+        return slotSyncPublisherDigestMaxNum;
+    }
+
+    /**
+     * Setter method for property <tt>slotSyncPublisherDigestMaxNum</tt>.
+     * @param slotSyncPublisherDigestMaxNum value to be assigned to property slotSyncPublisherDigestMaxNum
+     */
+    public void setSlotSyncPublisherDigestMaxNum(int slotSyncPublisherDigestMaxNum) {
+        this.slotSyncPublisherDigestMaxNum = slotSyncPublisherDigestMaxNum;
+    }
+
+    /**
+     * Getter method for property <tt>slotSyncPublisherMaxNum</tt>.
+     * @return property value of slotSyncPublisherMaxNum
+     */
+    public int getSlotSyncPublisherMaxNum() {
+        return slotSyncPublisherMaxNum;
+    }
+
+    /**
+     * Setter method for property <tt>slotSyncPublisherMaxNum</tt>.
+     * @param slotSyncPublisherMaxNum value to be assigned to property slotSyncPublisherMaxNum
+     */
+    public void setSlotSyncPublisherMaxNum(int slotSyncPublisherMaxNum) {
+        this.slotSyncPublisherMaxNum = slotSyncPublisherMaxNum;
+    }
+
+    /**
+     * Getter method for property <tt>slotLeaderSyncSessionExecutorThreadSize</tt>.
+     * @return property value of slotLeaderSyncSessionExecutorThreadSize
+     */
+    public int getSlotLeaderSyncSessionExecutorThreadSize() {
+        return slotLeaderSyncSessionExecutorThreadSize;
+    }
+
+    /**
+     * Setter method for property <tt>slotLeaderSyncSessionExecutorThreadSize</tt>.
+     * @param slotLeaderSyncSessionExecutorThreadSize value to be assigned to property slotLeaderSyncSessionExecutorThreadSize
+     */
+    public void setSlotLeaderSyncSessionExecutorThreadSize(int slotLeaderSyncSessionExecutorThreadSize) {
+        this.slotLeaderSyncSessionExecutorThreadSize = slotLeaderSyncSessionExecutorThreadSize;
+    }
+
+    /**
+     * Getter method for property <tt>slotLeaderSyncSessionIntervalMs</tt>.
+     * @return property value of slotLeaderSyncSessionIntervalMs
+     */
+    public int getSlotLeaderSyncSessionIntervalMs() {
+        return slotLeaderSyncSessionIntervalMs;
+    }
+
+    /**
+     * Setter method for property <tt>slotLeaderSyncSessionIntervalMs</tt>.
+     * @param slotLeaderSyncSessionIntervalMs value to be assigned to property slotLeaderSyncSessionIntervalMs
+     */
+    public void setSlotLeaderSyncSessionIntervalMs(int slotLeaderSyncSessionIntervalMs) {
+        this.slotLeaderSyncSessionIntervalMs = slotLeaderSyncSessionIntervalMs;
+    }
+
+    /**
+     * Getter method for property <tt>slotFollowerSyncLeaderExecutorThreadSize</tt>.
+     * @return property value of slotFollowerSyncLeaderExecutorThreadSize
+     */
+    public int getSlotFollowerSyncLeaderExecutorThreadSize() {
+        return slotFollowerSyncLeaderExecutorThreadSize;
+    }
+
+    /**
+     * Setter method for property <tt>slotFollowerSyncLeaderExecutorThreadSize</tt>.
+     * @param slotFollowerSyncLeaderExecutorThreadSize value to be assigned to property slotFollowerSyncLeaderExecutorThreadSize
+     */
+    public void setSlotFollowerSyncLeaderExecutorThreadSize(int slotFollowerSyncLeaderExecutorThreadSize) {
+        this.slotFollowerSyncLeaderExecutorThreadSize = slotFollowerSyncLeaderExecutorThreadSize;
+    }
+
+    /**
+     * Getter method for property <tt>slotFollowerSyncLeaderIntervalMs</tt>.
+     * @return property value of slotFollowerSyncLeaderIntervalMs
+     */
+    public int getSlotFollowerSyncLeaderIntervalMs() {
+        return slotFollowerSyncLeaderIntervalMs;
+    }
+
+    /**
+     * Setter method for property <tt>slotFollowerSyncLeaderIntervalMs</tt>.
+     * @param slotFollowerSyncLeaderIntervalMs value to be assigned to property slotFollowerSyncLeaderIntervalMs
+     */
+    public void setSlotFollowerSyncLeaderIntervalMs(int slotFollowerSyncLeaderIntervalMs) {
+        this.slotFollowerSyncLeaderIntervalMs = slotFollowerSyncLeaderIntervalMs;
+    }
+
+    /**
+     * Getter method for property <tt>slotLeaderSyncSessionExecutorQueueSize</tt>.
+     * @return property value of slotLeaderSyncSessionExecutorQueueSize
+     */
+    public int getSlotLeaderSyncSessionExecutorQueueSize() {
+        return slotLeaderSyncSessionExecutorQueueSize;
+    }
+
+    /**
+     * Setter method for property <tt>slotLeaderSyncSessionExecutorQueueSize</tt>.
+     * @param slotLeaderSyncSessionExecutorQueueSize value to be assigned to property slotLeaderSyncSessionExecutorQueueSize
+     */
+    public void setSlotLeaderSyncSessionExecutorQueueSize(int slotLeaderSyncSessionExecutorQueueSize) {
+        this.slotLeaderSyncSessionExecutorQueueSize = slotLeaderSyncSessionExecutorQueueSize;
+    }
+
+    /**
+     * Getter method for property <tt>slotFollowerSyncLeaderExecutorQueueSize</tt>.
+     * @return property value of slotFollowerSyncLeaderExecutorQueueSize
+     */
+    public int getSlotFollowerSyncLeaderExecutorQueueSize() {
+        return slotFollowerSyncLeaderExecutorQueueSize;
+    }
+
+    /**
+     * Setter method for property <tt>slotFollowerSyncLeaderExecutorQueueSize</tt>.
+     * @param slotFollowerSyncLeaderExecutorQueueSize value to be assigned to property slotFollowerSyncLeaderExecutorQueueSize
+     */
+    public void setSlotFollowerSyncLeaderExecutorQueueSize(int slotFollowerSyncLeaderExecutorQueueSize) {
+        this.slotFollowerSyncLeaderExecutorQueueSize = slotFollowerSyncLeaderExecutorQueueSize;
+    }
+
+    /**
+     * Getter method for property <tt>slotSyncRequestExecutorMinPoolSize</tt>.
+     * @return property value of slotSyncRequestExecutorMinPoolSize
+     */
+    public int getSlotSyncRequestExecutorMinPoolSize() {
+        return slotSyncRequestExecutorMinPoolSize;
+    }
+
+    /**
+     * Setter method for property <tt>slotSyncRequestExecutorMinPoolSize</tt>.
+     * @param slotSyncRequestExecutorMinPoolSize value to be assigned to property slotSyncRequestExecutorMinPoolSize
+     */
+    public void setSlotSyncRequestExecutorMinPoolSize(int slotSyncRequestExecutorMinPoolSize) {
+        this.slotSyncRequestExecutorMinPoolSize = slotSyncRequestExecutorMinPoolSize;
+    }
+
+    /**
+     * Getter method for property <tt>slotSyncRequestExecutorMaxPoolSize</tt>.
+     * @return property value of slotSyncRequestExecutorMaxPoolSize
+     */
+    public int getSlotSyncRequestExecutorMaxPoolSize() {
+        return slotSyncRequestExecutorMaxPoolSize;
+    }
+
+    /**
+     * Setter method for property <tt>slotSyncRequestExecutorMaxPoolSize</tt>.
+     * @param slotSyncRequestExecutorMaxPoolSize value to be assigned to property slotSyncRequestExecutorMaxPoolSize
+     */
+    public void setSlotSyncRequestExecutorMaxPoolSize(int slotSyncRequestExecutorMaxPoolSize) {
+        this.slotSyncRequestExecutorMaxPoolSize = slotSyncRequestExecutorMaxPoolSize;
+    }
+
+    /**
+     * Getter method for property <tt>slotSyncRequestExecutorQueueSize</tt>.
+     * @return property value of slotSyncRequestExecutorQueueSize
+     */
+    public int getSlotSyncRequestExecutorQueueSize() {
+        return slotSyncRequestExecutorQueueSize;
+    }
+
+    /**
+     * Setter method for property <tt>slotSyncRequestExecutorQueueSize</tt>.
+     * @param slotSyncRequestExecutorQueueSize value to be assigned to property slotSyncRequestExecutorQueueSize
+     */
+    public void setSlotSyncRequestExecutorQueueSize(int slotSyncRequestExecutorQueueSize) {
+        this.slotSyncRequestExecutorQueueSize = slotSyncRequestExecutorQueueSize;
     }
 
     @Override

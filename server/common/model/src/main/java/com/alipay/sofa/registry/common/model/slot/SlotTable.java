@@ -34,6 +34,10 @@ public final class SlotTable implements Serializable {
         this.slots = Collections.unmodifiableSortedMap(new TreeMap<>(slots));
     }
 
+    public List<Slot> getSlots() {
+        return new ArrayList<>(slots.values());
+    }
+
     public static Map<Integer, Slot> getSlotsAdded(SlotTable from, SlotTable to) {
         Map<Integer, Slot> m = new TreeMap<>(to.slots);
         from.slots.keySet().forEach(slotId -> {

@@ -32,28 +32,15 @@ import java.util.concurrent.ConcurrentHashMap;
 public class WriteDataAcceptorImpl implements WriteDataAcceptor {
 
     @Autowired
-    private TaskListenerManager             taskListenerManager;
+    private TaskListenerManager taskListenerManager;
 
     @Autowired
-    private SessionServerConfig             sessionServerConfig;
-
-    /**
-     * acceptor for all write data request
-     * key:connectId
-     * value:writeRequest processor
-     *
-     */
-    private Map<String, WriteDataProcessor> writeDataProcessors = new ConcurrentHashMap();
+    private SessionServerConfig sessionServerConfig;
 
     public void accept(WriteDataRequest request) {
         String connectId = request.getConnectId();
-        WriteDataProcessor writeDataProcessor = writeDataProcessors.computeIfAbsent(connectId,
-                key -> new WriteDataProcessor(connectId, taskListenerManager, sessionServerConfig));
-
+        WriteDataProcessor writeDataProcessor = new WriteDataProcessor(connectId,
+            taskListenerManager, sessionServerConfig);
         writeDataProcessor.process(request);
-    }
-
-    public void remove(String connectId) {
-        writeDataProcessors.remove(connectId);
     }
 }

@@ -14,27 +14,27 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alipay.sofa.registry.common.model.sessionserver;
+package com.alipay.sofa.registry.common.model.slot;
 
 import com.alipay.sofa.registry.common.model.dataserver.DatumSummary;
 
 import java.io.Serializable;
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 
 /**
  *
  * @author yuzhi.lyz
  * @version v 0.1 2020-11-05 14:24 yuzhi.lyz Exp $
  */
-public class DataSlotMigrateRequest implements Serializable {
+public class DataSlotDiffPublisherRequest implements Serializable {
     private long                      slotTableEpoch;
     private int                       slotId;
+    // parts of the summary to diff sync
     private Map<String, DatumSummary> datumSummarys;
 
-    public DataSlotMigrateRequest(long slotTableEpoch, int slotId,
-                                  Map<String, DatumSummary> datumSummarys) {
+    public DataSlotDiffPublisherRequest(long slotTableEpoch, int slotId,
+                                        Map<String, DatumSummary> datumSummarys) {
         this.slotTableEpoch = slotTableEpoch;
         this.slotId = slotId;
         this.datumSummarys = datumSummarys;

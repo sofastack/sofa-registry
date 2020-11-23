@@ -167,10 +167,6 @@ public interface SessionServerConfig {
 
     int getDataNodeRetryExecutorThreadSize();
 
-    int getRenewDatumWheelThreadSize();
-
-    int getRenewDatumWheelQueueSize();
-
     long getPushTaskConfirmWaitTimeout();
 
     int getPushTaskConfirmCheckWheelTicksSize();
@@ -194,4 +190,6 @@ public interface SessionServerConfig {
     int getDataClientConnNum();
 
     int getSessionSchedulerPoolSize();
+
+    int getSlotSyncPublisherMaxNum();
 }
