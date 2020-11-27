@@ -121,16 +121,17 @@ public class DataServerConfig {
 
     private int                slotLeaderSyncSessionExecutorThreadSize      = 12;
     private int                slotLeaderSyncSessionExecutorQueueSize       = 30000;
-    private int                slotLeaderSyncSessionIntervalMs              = 10000;
+    private volatile int       slotLeaderSyncSessionIntervalSec             = 10;
+    private volatile int       slotLeaderDatumExpireSec                     = 30;
 
     private int                slotFollowerSyncLeaderExecutorThreadSize     = 4;
     private int                slotFollowerSyncLeaderExecutorQueueSize      = 10000;
-    private int                slotFollowerSyncLeaderIntervalMs             = 60000;
+    private volatile int       slotFollowerSyncLeaderIntervalMs             = 60000;
 
     // the publisher.digest if len(registerId/uuid+long), 50bytes
-    private int                slotSyncPublisherDigestMaxNum                = 10000;
+    private volatile int       slotSyncPublisherDigestMaxNum                = 10000;
 
-    private int                slotSyncPublisherMaxNum                      = 512;
+    private volatile int       slotSyncPublisherMaxNum                      = 512;
 
     private int                slotSyncRequestExecutorMinPoolSize           = 32;
 
@@ -877,16 +878,16 @@ public class DataServerConfig {
      * Getter method for property <tt>slotLeaderSyncSessionIntervalMs</tt>.
      * @return property value of slotLeaderSyncSessionIntervalMs
      */
-    public int getSlotLeaderSyncSessionIntervalMs() {
-        return slotLeaderSyncSessionIntervalMs;
+    public int getSlotLeaderSyncSessionIntervalSec() {
+        return slotLeaderSyncSessionIntervalSec;
     }
 
     /**
-     * Setter method for property <tt>slotLeaderSyncSessionIntervalMs</tt>.
-     * @param slotLeaderSyncSessionIntervalMs value to be assigned to property slotLeaderSyncSessionIntervalMs
+     * Setter method for property <tt>slotLeaderSyncSessionIntervalSec</tt>.
+     * @param slotLeaderSyncSessionIntervalSec value to be assigned to property slotLeaderSyncSessionIntervalSec
      */
-    public void setSlotLeaderSyncSessionIntervalMs(int slotLeaderSyncSessionIntervalMs) {
-        this.slotLeaderSyncSessionIntervalMs = slotLeaderSyncSessionIntervalMs;
+    public void setSlotLeaderSyncSessionIntervalSec(int slotLeaderSyncSessionIntervalSec) {
+        this.slotLeaderSyncSessionIntervalSec = slotLeaderSyncSessionIntervalSec;
     }
 
     /**
@@ -999,6 +1000,22 @@ public class DataServerConfig {
      */
     public void setSlotSyncRequestExecutorQueueSize(int slotSyncRequestExecutorQueueSize) {
         this.slotSyncRequestExecutorQueueSize = slotSyncRequestExecutorQueueSize;
+    }
+
+    /**
+     * Getter method for property <tt>slotLeaderDatumExpireSec</tt>.
+     * @return property value of slotLeaderDatumExpireSec
+     */
+    public int getSlotLeaderDatumExpireSec() {
+        return slotLeaderDatumExpireSec;
+    }
+
+    /**
+     * Setter method for property <tt>slotLeaderDatumExpireSec</tt>.
+     * @param slotLeaderDatumExpireSec value to be assigned to property slotLeaderDatumExpireSec
+     */
+    public void setSlotLeaderDatumExpireSec(int slotLeaderDatumExpireSec) {
+        this.slotLeaderDatumExpireSec = slotLeaderDatumExpireSec;
     }
 
     @Override

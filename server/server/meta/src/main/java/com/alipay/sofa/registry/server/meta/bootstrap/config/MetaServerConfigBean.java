@@ -76,8 +76,6 @@ public class MetaServerConfigBean implements MetaServerConfig {
 
     private int                getDataCenterChangeListTaskRetryTimes           = 3;
 
-    private int                receiveStatusConfirmNotifyTaskRetryTimes        = 3;
-
     private int                sessionNodeChangePushTaskRetryTimes             = 3;
 
     private int                raftElectionTimeout                             = 1000;
@@ -86,8 +84,6 @@ public class MetaServerConfigBean implements MetaServerConfig {
      * Whether to enable metrics for node.
      */
     private boolean            enableMetrics                                   = true;
-
-    private DecisionMode       decisionMode;
 
     private String             raftDataPath                                    = System
                                                                                    .getProperty("user.home")
@@ -226,20 +222,6 @@ public class MetaServerConfigBean implements MetaServerConfig {
      */
     public void setSchedulerHeartbeatExpBackOffBound(int schedulerHeartbeatExpBackOffBound) {
         this.schedulerHeartbeatExpBackOffBound = schedulerHeartbeatExpBackOffBound;
-    }
-
-    @Override
-    public DecisionMode getDecisionMode() {
-        return decisionMode;
-    }
-
-    /**
-     * Setter method for property <tt>decisionMode</tt>.
-     *
-     * @param decisionMode value to be assigned to property decisionMode
-     */
-    public void setDecisionMode(DecisionMode decisionMode) {
-        this.decisionMode = decisionMode;
     }
 
     /**
@@ -410,25 +392,6 @@ public class MetaServerConfigBean implements MetaServerConfig {
      */
     public void setGetDataCenterChangeListTaskRetryTimes(int getDataCenterChangeListTaskRetryTimes) {
         this.getDataCenterChangeListTaskRetryTimes = getDataCenterChangeListTaskRetryTimes;
-    }
-
-    /**
-     * Getter method for property <tt>receiveStatusConfirmNotifyTaskRetryTimes</tt>.
-     *
-     * @return property value of receiveStatusConfirmNotifyTaskRetryTimes
-     */
-    @Override
-    public int getReceiveStatusConfirmNotifyTaskRetryTimes() {
-        return receiveStatusConfirmNotifyTaskRetryTimes;
-    }
-
-    /**
-     * Setter method for property <tt>receiveStatusConfirmNotifyTaskRetryTimes</tt>.
-     *
-     * @param receiveStatusConfirmNotifyTaskRetryTimes value to be assigned to property receiveStatusConfirmNotifyTaskRetryTimes
-     */
-    public void setReceiveStatusConfirmNotifyTaskRetryTimes(int receiveStatusConfirmNotifyTaskRetryTimes) {
-        this.receiveStatusConfirmNotifyTaskRetryTimes = receiveStatusConfirmNotifyTaskRetryTimes;
     }
 
     /**

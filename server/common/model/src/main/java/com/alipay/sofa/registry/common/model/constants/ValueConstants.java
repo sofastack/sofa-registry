@@ -68,9 +68,9 @@ public class ValueConstants {
 
     public static final String   BLACK_LIST_DATA_ID                    = "session.blacklist.data#@#9600#@#CONFIG";
 
-    public static final String   ENABLE_DATA_RENEW_SNAPSHOT            = "session.enable.datum.renew.switch#@#9600#@#CONFIG";
+    public static final String   DATA_DATUM_SYNC_SESSION_INTERVAL_SEC  = "data.datum.sync.session.interval.sec#@#9600#@#CONFIG";
 
-    public static final String   ENABLE_DATA_DATUM_EXPIRE              = "data.enable.datum.expire.switch#@#9600#@#CONFIG";
+    public static final String   DATA_DATUM_EXPIRE_SEC                 = "data.datum.expire.sec#@#9600#@#CONFIG";
 
     /**
      * switch key for dataId sensitive is disable or not
