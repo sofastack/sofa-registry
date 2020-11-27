@@ -51,11 +51,10 @@ import java.util.function.Supplier;
  */
 public class SessionRegistry implements Registry {
 
-    private static final Logger       LOGGER                  = LoggerFactory
-                                                                  .getLogger(SessionRegistry.class);
+    private static final Logger       LOGGER      = LoggerFactory.getLogger(SessionRegistry.class);
 
-    private static final Logger       TASK_LOGGER             = LoggerFactory.getLogger(
-                                                                  SessionRegistry.class, "[Task]");
+    private static final Logger       TASK_LOGGER = LoggerFactory.getLogger(SessionRegistry.class,
+                                                      "[Task]");
 
     /**
      * store subscribers
@@ -110,8 +109,6 @@ public class SessionRegistry implements Registry {
 
     @Autowired
     private WriteDataAcceptor         writeDataAcceptor;
-
-    private volatile boolean          enableDataRenewSnapshot = true;
 
     @Override
     public void register(StoreData storeData) {
@@ -447,15 +444,5 @@ public class SessionRegistry implements Registry {
      */
     protected TaskListenerManager getTaskListenerManager() {
         return taskListenerManager;
-    }
-
-    /**
-     * Setter method for property <tt>enableDataRenewSnapshot </tt>.
-     *
-     * @param enableDataRenewSnapshot value to be assigned to property enableDataRenewSnapshot
-     */
-    @Override
-    public void setEnableDataRenewSnapshot(boolean enableDataRenewSnapshot) {
-        this.enableDataRenewSnapshot = enableDataRenewSnapshot;
     }
 }

@@ -7,8 +7,8 @@ stages: # 定义了一条pipeline
 PMD扫描: # 定义了一个job
   stage: 代码检测 # 绑定到stage
   plugin: PMD # 指定使用的插件
-  checkRule: # 校验结果
-    - pmd1 = 0 && pmd2 = 0
+#  checkRule: # 校验结果
+#    - pmd1 = 0 && pmd2 = 0
 
 STC扫描:
   stage: 代码检测
