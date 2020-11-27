@@ -18,7 +18,7 @@ package com.alipay.sofa.registry.server.data.event;
 
 import java.util.Map;
 
-import com.alipay.sofa.registry.common.model.metaserver.DataNode;
+import com.alipay.sofa.registry.common.model.metaserver.nodes.DataNode;
 
 /**
  *

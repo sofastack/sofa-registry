@@ -16,15 +16,37 @@
  */
 package com.alipay.sofa.registry.server.meta.bootstrap;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
-
-import com.alipay.sofa.registry.server.meta.remoting.handler.*;
-import com.alipay.sofa.registry.util.NamedThreadFactory;
+import com.alipay.sofa.registry.jraft.service.PersistenceDataDBService;
+import com.alipay.sofa.registry.remoting.bolt.exchange.BoltExchange;
+import com.alipay.sofa.registry.remoting.exchange.Exchange;
+import com.alipay.sofa.registry.remoting.exchange.NodeExchanger;
+import com.alipay.sofa.registry.remoting.jersey.exchange.JerseyExchange;
+import com.alipay.sofa.registry.server.meta.bootstrap.bean.lifecycle.RaftAnnotationBeanPostProcessor;
+import com.alipay.sofa.registry.server.meta.bootstrap.config.MetaServerConfig;
+import com.alipay.sofa.registry.server.meta.bootstrap.config.MetaServerConfigBean;
+import com.alipay.sofa.registry.server.meta.bootstrap.config.NodeConfig;
+import com.alipay.sofa.registry.server.meta.bootstrap.config.NodeConfigBeanProperty;
+import com.alipay.sofa.registry.server.meta.executor.ExecutorManager;
+import com.alipay.sofa.registry.server.meta.remoting.DataNodeExchanger;
+import com.alipay.sofa.registry.server.meta.remoting.MetaServerExchanger;
+import com.alipay.sofa.registry.server.meta.remoting.RaftExchanger;
+import com.alipay.sofa.registry.server.meta.remoting.SessionNodeExchanger;
+import com.alipay.sofa.registry.server.meta.remoting.connection.DataConnectionHandler;
+import com.alipay.sofa.registry.server.meta.remoting.connection.MetaConnectionHandler;
+import com.alipay.sofa.registry.server.meta.remoting.connection.SessionConnectionHandler;
+import com.alipay.sofa.registry.server.meta.remoting.handler.AbstractServerHandler;
+import com.alipay.sofa.registry.server.meta.remoting.handler.FetchProvideDataRequestHandler;
+import com.alipay.sofa.registry.server.meta.remoting.handler.HeartbeatRequestHandler;
 import com.alipay.sofa.registry.server.meta.resource.*;
+import com.alipay.sofa.registry.store.api.DBService;
+import com.alipay.sofa.registry.task.batcher.TaskProcessor;
+import com.alipay.sofa.registry.task.listener.DefaultTaskListenerManager;
+import com.alipay.sofa.registry.task.listener.TaskListener;
+import com.alipay.sofa.registry.task.listener.TaskListenerManager;
+import com.alipay.sofa.registry.util.DefaultExecutorFactory;
+import com.alipay.sofa.registry.util.NamedThreadFactory;
+import com.alipay.sofa.registry.util.OsUtils;
+import com.alipay.sofa.registry.util.PropertySplitter;
 import org.glassfish.jersey.jackson.JacksonFeature;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -33,47 +55,9 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 
-import com.alipay.sofa.registry.jraft.service.PersistenceDataDBService;
-import com.alipay.sofa.registry.remoting.bolt.exchange.BoltExchange;
-import com.alipay.sofa.registry.remoting.exchange.Exchange;
-import com.alipay.sofa.registry.remoting.exchange.NodeExchanger;
-import com.alipay.sofa.registry.remoting.jersey.exchange.JerseyExchange;
-import com.alipay.sofa.registry.server.meta.executor.ExecutorManager;
-import com.alipay.sofa.registry.server.meta.listener.PersistenceDataChangeNotifyTaskListener;
-import com.alipay.sofa.registry.server.meta.node.NodeService;
-import com.alipay.sofa.registry.server.meta.node.impl.DataNodeServiceImpl;
-import com.alipay.sofa.registry.server.meta.node.impl.MetaNodeServiceImpl;
-import com.alipay.sofa.registry.server.meta.node.impl.SessionNodeServiceImpl;
-import com.alipay.sofa.registry.server.meta.registry.MetaServerRegistry;
-import com.alipay.sofa.registry.server.meta.registry.Registry;
-import com.alipay.sofa.registry.server.meta.remoting.DataNodeExchanger;
-import com.alipay.sofa.registry.server.meta.remoting.MetaClientExchanger;
-import com.alipay.sofa.registry.server.meta.remoting.MetaServerExchanger;
-import com.alipay.sofa.registry.server.meta.remoting.RaftExchanger;
-import com.alipay.sofa.registry.server.meta.remoting.SessionNodeExchanger;
-import com.alipay.sofa.registry.server.meta.remoting.connection.DataConnectionHandler;
-import com.alipay.sofa.registry.server.meta.remoting.connection.MetaConnectionHandler;
-import com.alipay.sofa.registry.server.meta.remoting.connection.SessionConnectionHandler;
-import com.alipay.sofa.registry.server.meta.repository.RepositoryService;
-import com.alipay.sofa.registry.server.meta.repository.VersionRepositoryService;
-import com.alipay.sofa.registry.server.meta.repository.annotation.RaftAnnotationBeanPostProcessor;
-import com.alipay.sofa.registry.server.meta.repository.service.DataRepositoryService;
-import com.alipay.sofa.registry.server.meta.repository.service.MetaRepositoryService;
-import com.alipay.sofa.registry.server.meta.repository.service.SessionRepositoryService;
-import com.alipay.sofa.registry.server.meta.repository.service.SessionVersionRepositoryService;
-import com.alipay.sofa.registry.server.meta.store.DataStoreService;
-import com.alipay.sofa.registry.server.meta.store.MetaStoreService;
-import com.alipay.sofa.registry.server.meta.store.SessionStoreService;
-import com.alipay.sofa.registry.server.meta.store.StoreService;
-import com.alipay.sofa.registry.server.meta.task.processor.DataNodeSingleTaskProcessor;
-import com.alipay.sofa.registry.server.meta.task.processor.MetaNodeSingleTaskProcessor;
-import com.alipay.sofa.registry.server.meta.task.processor.SessionNodeSingleTaskProcessor;
-import com.alipay.sofa.registry.store.api.DBService;
-import com.alipay.sofa.registry.task.batcher.TaskProcessor;
-import com.alipay.sofa.registry.task.listener.DefaultTaskListenerManager;
-import com.alipay.sofa.registry.task.listener.TaskListener;
-import com.alipay.sofa.registry.task.listener.TaskListenerManager;
-import com.alipay.sofa.registry.util.PropertySplitter;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.concurrent.*;
 
 /**
  *
@@ -84,6 +68,13 @@ import com.alipay.sofa.registry.util.PropertySplitter;
 @Import(MetaServerInitializerConfiguration.class)
 @EnableConfigurationProperties
 public class MetaServerConfiguration {
+
+    public static final String SCHEDULED_EXECUTOR = "scheduledExecutor";
+    public static final String GLOBAL_EXECUTOR = "globalExecutor";
+    public static final int maxScheduledCorePoolSize = 8;
+    public static final int THREAD_POOL_TIME_OUT = 5;
+    public static final int GLOBAL_THREAD_MULTI_CORE = 100;
+    public static final int GLOBAL_THREAD_MAX = 100;
 
     @Bean
     @ConditionalOnMissingBean
@@ -111,71 +102,7 @@ public class MetaServerConfiguration {
     }
 
     @Configuration
-    public static class MetaServerServiceConfiguration {
-
-        @Bean
-        public Registry metaServerRegistry() {
-            return new MetaServerRegistry();
-        }
-
-        @Bean
-        public NodeService sessionNodeService() {
-            return new SessionNodeServiceImpl();
-        }
-
-        @Bean
-        public NodeService dataNodeService() {
-            return new DataNodeServiceImpl();
-        }
-
-        @Bean
-        public NodeService metaNodeService() {
-            return new MetaNodeServiceImpl();
-        }
-
-        @Bean
-        public ServiceFactory storeServiceFactory() {
-            return new ServiceFactory();
-        }
-
-        @Bean
-        public StoreService sessionStoreService() {
-            return new SessionStoreService();
-        }
-
-        @Bean
-        public StoreService dataStoreService() {
-            return new DataStoreService();
-        }
-
-        @Bean
-        public StoreService metaStoreService() {
-            return new MetaStoreService();
-        }
-
-    }
-
-    @Configuration
     public static class MetaServerRepositoryConfiguration {
-        @Bean
-        public RepositoryService dataRepositoryService() {
-            return new DataRepositoryService();
-        }
-
-        @Bean
-        public RepositoryService metaRepositoryService() {
-            return new MetaRepositoryService();
-        }
-
-        @Bean
-        public RepositoryService sessionRepositoryService() {
-            return new SessionRepositoryService();
-        }
-
-        @Bean
-        public VersionRepositoryService sessionVersionRepositoryService() {
-            return new SessionVersionRepositoryService();
-        }
 
         @Bean
         public RaftExchanger raftExchanger() {
@@ -186,6 +113,29 @@ public class MetaServerConfiguration {
         public RaftAnnotationBeanPostProcessor raftAnnotationBeanPostProcessor() {
             return new RaftAnnotationBeanPostProcessor();
         }
+    }
+
+    @Configuration
+    public static class ThreadPoolResourceConfiguration {
+        @Bean(name = GLOBAL_EXECUTOR)
+        public ExecutorService getGlobalExecutorService() {
+            int corePoolSize = Math.min(OsUtils.getCpuCount() * 2, 8);
+            int maxPoolSize =  50 * OsUtils.getCpuCount();
+            DefaultExecutorFactory executorFactory = new DefaultExecutorFactory(GLOBAL_EXECUTOR, corePoolSize, maxPoolSize,
+                    new ThreadPoolExecutor.AbortPolicy());
+            return executorFactory.create();
+        }
+
+        @Bean(name = SCHEDULED_EXECUTOR)
+        public ScheduledExecutorService getScheduledService() {
+            return new ScheduledThreadPoolExecutor(Math.min(OsUtils.getCpuCount() * 2, 12),
+                    new NamedThreadFactory("MetaServerGlobalScheduler"));
+        }
+    }
+
+    @Configuration
+    public static class MetaServerClusterConfiguration {
+
     }
 
     @Configuration
@@ -243,7 +193,7 @@ public class MetaServerConfiguration {
 
         @Bean
         public AbstractServerHandler renewNodesRequestHandler() {
-            return new RenewNodesRequestHandler();
+            return new HeartbeatRequestHandler();
         }
 
         @Bean
@@ -266,10 +216,6 @@ public class MetaServerConfiguration {
             return new MetaServerExchanger();
         }
 
-        @Bean
-        public MetaClientExchanger metaClientExchanger() {
-            return new MetaClientExchanger();
-        }
     }
 
     @Configuration
@@ -326,38 +272,6 @@ public class MetaServerConfiguration {
         @Bean
         public SessionLoadbalanceResource sessionLoadbalanceSwitchResource() {
             return new SessionLoadbalanceResource();
-        }
-    }
-
-    @Configuration
-    public static class MetaServerTaskConfiguration {
-
-        @Bean
-        public TaskProcessor dataNodeSingleTaskProcessor() {
-            return new DataNodeSingleTaskProcessor();
-        }
-
-        @Bean
-        public TaskProcessor metaNodeSingleTaskProcessor() {
-            return new MetaNodeSingleTaskProcessor();
-        }
-
-        @Bean
-        public TaskProcessor sessionNodeSingleTaskProcessor() {
-            return new SessionNodeSingleTaskProcessor();
-        }
-
-        @Bean
-        public TaskListener persistenceDataChangeNotifyTaskListener(TaskListenerManager taskListenerManager) {
-            TaskListener taskListener = new PersistenceDataChangeNotifyTaskListener(
-                sessionNodeSingleTaskProcessor());
-            taskListenerManager.addTaskListener(taskListener);
-            return taskListener;
-        }
-
-        @Bean
-        public TaskListenerManager taskListenerManager() {
-            return new DefaultTaskListenerManager();
         }
     }
 

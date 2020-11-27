@@ -27,8 +27,12 @@ import com.alipay.remoting.ProtocolManager;
 import com.alipay.remoting.rpc.protocol.RpcProtocol;
 import com.alipay.sofa.jraft.util.ThreadPoolMetricSet;
 import com.alipay.sofa.jraft.util.ThreadPoolUtil;
+import com.alipay.sofa.registry.jraft.LeaderAware;
+import com.alipay.sofa.registry.server.meta.metaserver.CurrentDcMetaServer;
+import com.alipay.sofa.registry.util.ConcurrentUtils;
 import com.alipay.sofa.registry.util.NamedThreadFactory;
 import com.codahale.metrics.MetricRegistry;
+import com.google.common.annotations.VisibleForTesting;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import com.alipay.sofa.jraft.CliService;
@@ -39,7 +43,7 @@ import com.alipay.sofa.jraft.core.NodeImpl;
 import com.alipay.sofa.jraft.entity.PeerId;
 import com.alipay.sofa.jraft.option.CliOptions;
 import com.alipay.sofa.jraft.rpc.impl.AbstractClientService;
-import com.alipay.sofa.registry.common.model.metaserver.MetaNode;
+import com.alipay.sofa.registry.common.model.metaserver.nodes.MetaNode;
 import com.alipay.sofa.registry.common.model.store.URL;
 import com.alipay.sofa.registry.jraft.bootstrap.RaftClient;
 import com.alipay.sofa.registry.jraft.bootstrap.RaftServer;
@@ -49,10 +53,9 @@ import com.alipay.sofa.registry.jraft.processor.LeaderProcessListener;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.net.NetUtil;
-import com.alipay.sofa.registry.server.meta.bootstrap.MetaServerConfig;
-import com.alipay.sofa.registry.server.meta.bootstrap.NodeConfig;
+import com.alipay.sofa.registry.server.meta.bootstrap.config.MetaServerConfig;
+import com.alipay.sofa.registry.server.meta.bootstrap.config.NodeConfig;
 import com.alipay.sofa.registry.server.meta.executor.ExecutorManager;
-import com.alipay.sofa.registry.server.meta.registry.Registry;
 
 /**
  * @author shangyu.wh
@@ -76,7 +79,10 @@ public class RaftExchanger {
     private ThreadPoolExecutor  defaultRequestExecutor;
 
     @Autowired
-    private Registry            metaServerRegistry;
+    private CurrentDcMetaServer currentDcMetaServer;
+
+    @Autowired
+    private List<LeaderAware>   leaderAwares;
 
     private RaftServer          raftServer;
 
@@ -107,6 +113,12 @@ public class RaftExchanger {
                     public void startProcess() {
                         LOGGER_START.info("Start leader process...");
                         executorManager.startScheduler();
+                        new ConcurrentUtils.SafeParaLoop<LeaderAware>(defaultRequestExecutor, leaderAwares) {
+                            @Override
+                            protected void doRun0(LeaderAware leaderAware) throws Exception {
+                                leaderAware.isLeader();
+                            }
+                        }.run();
                         LOGGER_START.info("Initialize server scheduler success!");
                         PeerId leader = new PeerId(NetUtil.getLocalAddress().getHostAddress(),
                             metaServerConfig.getRaftServerPort());
@@ -119,6 +131,12 @@ public class RaftExchanger {
                     public void stopProcess() {
                         LOGGER_START.info("Stop leader process...");
                         executorManager.stopScheduler();
+                        new ConcurrentUtils.SafeParaLoop<LeaderAware>(defaultRequestExecutor, leaderAwares) {
+                            @Override
+                            protected void doRun0(LeaderAware leaderAware) throws Exception {
+                                leaderAware.notLeader();
+                            }
+                        }.run();
                         LOGGER_START.info("Stop server scheduler success!");
                         PeerId leader = new PeerId(NetUtil.getLocalAddress().getHostAddress(),
                             metaServerConfig.getRaftServerPort());
@@ -268,8 +286,7 @@ public class RaftExchanger {
             Collection<String> metas = metaMap.get(nodeConfig.getLocalDataCenter());
             String ip = NetUtil.getLocalAddress().getHostAddress();
             if (metas != null && metas.contains(ip)) {
-                metaServerRegistry.register(new MetaNode(new URL(ip, 0), nodeConfig
-                    .getLocalDataCenter()));
+                currentDcMetaServer.renew(new MetaNode(new URL(ip, 0), nodeConfig.getLocalDataCenter()), 0);
             } else {
                 LOGGER_START.error(
                     "Register CurrentNode fail!meta node list config not contains current ip {}",
@@ -427,6 +444,12 @@ public class RaftExchanger {
      * @return property value of raftClient
      */
     public RaftClient getRaftClient() {
+        if (raftClient == null) {
+            startRaftClient();
+            if(LOGGER.isInfoEnabled()) {
+                LOGGER.info("[getRaftClient]Raft client before started!");
+            }
+        }
         return raftClient;
     }
 
@@ -464,5 +487,29 @@ public class RaftExchanger {
      */
     public RaftServer getRaftServer() {
         return raftServer;
+    }
+
+    @VisibleForTesting
+    public RaftExchanger setMetaServerConfig(MetaServerConfig metaServerConfig) {
+        this.metaServerConfig = metaServerConfig;
+        return this;
+    }
+
+    @VisibleForTesting
+    public RaftExchanger setNodeConfig(NodeConfig nodeConfig) {
+        this.nodeConfig = nodeConfig;
+        return this;
+    }
+
+    @VisibleForTesting
+    public RaftExchanger setCurrentDcMetaServer(CurrentDcMetaServer currentDcMetaServer) {
+        this.currentDcMetaServer = currentDcMetaServer;
+        return this;
+    }
+
+    @VisibleForTesting
+    public RaftExchanger setLeaderAwares(List<LeaderAware> leaderAwares) {
+        this.leaderAwares = leaderAwares;
+        return this;
     }
 }

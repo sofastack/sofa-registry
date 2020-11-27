@@ -17,9 +17,9 @@
 package com.alipay.sofa.registry.server.meta.resource;
 
 import com.alipay.sofa.registry.core.model.Result;
-import com.alipay.sofa.registry.server.meta.bootstrap.MetaServerConfig;
-import com.alipay.sofa.registry.server.meta.bootstrap.MetaServerConfig.DecisionMode;
-import com.alipay.sofa.registry.server.meta.bootstrap.MetaServerConfigBean;
+import com.alipay.sofa.registry.server.meta.bootstrap.config.MetaServerConfig;
+import com.alipay.sofa.registry.server.meta.bootstrap.config.MetaServerConfig.DecisionMode;
+import com.alipay.sofa.registry.server.meta.bootstrap.config.MetaServerConfigBean;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import javax.ws.rs.POST;

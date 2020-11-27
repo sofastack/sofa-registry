@@ -19,7 +19,7 @@ package com.alipay.sofa.registry.server.session.node;
 import java.util.Collection;
 
 import com.alipay.sofa.registry.common.model.Node.NodeType;
-import com.alipay.sofa.registry.common.model.metaserver.MetaNode;
+import com.alipay.sofa.registry.common.model.metaserver.nodes.MetaNode;
 
 /**
  *

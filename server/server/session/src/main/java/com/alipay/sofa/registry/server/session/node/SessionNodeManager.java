@@ -17,18 +17,17 @@
 package com.alipay.sofa.registry.server.session.node;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
-import com.alipay.remoting.Connection;
 import com.alipay.sofa.registry.common.model.GenericResponse;
 import com.alipay.sofa.registry.common.model.Node;
 import com.alipay.sofa.registry.common.model.Node.NodeType;
 import com.alipay.sofa.registry.common.model.metaserver.*;
+import com.alipay.sofa.registry.common.model.metaserver.nodes.MetaNode;
+import com.alipay.sofa.registry.common.model.metaserver.nodes.SessionNode;
 import com.alipay.sofa.registry.common.model.store.URL;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.net.NetUtil;
-import com.alipay.sofa.registry.remoting.exchange.RequestException;
 import com.alipay.sofa.registry.remoting.exchange.message.Request;
 import com.google.common.collect.Sets;
 import org.springframework.beans.factory.annotation.Autowired;

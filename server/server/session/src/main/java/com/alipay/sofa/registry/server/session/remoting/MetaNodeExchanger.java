@@ -22,7 +22,7 @@ import javax.annotation.Resource;
 
 import org.springframework.beans.factory.annotation.Autowired;
 
-import com.alipay.sofa.registry.common.model.metaserver.MetaNode;
+import com.alipay.sofa.registry.common.model.metaserver.nodes.MetaNode;
 import com.alipay.sofa.registry.common.model.store.URL;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
