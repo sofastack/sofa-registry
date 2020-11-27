@@ -113,7 +113,8 @@ public class RaftExchanger {
                     public void startProcess() {
                         LOGGER_START.info("Start leader process...");
                         executorManager.startScheduler();
-                        new ConcurrentUtils.SafeParaLoop<LeaderAware>(defaultRequestExecutor, leaderAwares) {
+                        new ConcurrentUtils.SafeParaLoop<LeaderAware>(defaultRequestExecutor,
+                            leaderAwares) {
                             @Override
                             protected void doRun0(LeaderAware leaderAware) throws Exception {
                                 leaderAware.isLeader();
@@ -131,7 +132,8 @@ public class RaftExchanger {
                     public void stopProcess() {
                         LOGGER_START.info("Stop leader process...");
                         executorManager.stopScheduler();
-                        new ConcurrentUtils.SafeParaLoop<LeaderAware>(defaultRequestExecutor, leaderAwares) {
+                        new ConcurrentUtils.SafeParaLoop<LeaderAware>(defaultRequestExecutor,
+                            leaderAwares) {
                             @Override
                             protected void doRun0(LeaderAware leaderAware) throws Exception {
                                 leaderAware.notLeader();
@@ -286,7 +288,8 @@ public class RaftExchanger {
             Collection<String> metas = metaMap.get(nodeConfig.getLocalDataCenter());
             String ip = NetUtil.getLocalAddress().getHostAddress();
             if (metas != null && metas.contains(ip)) {
-                currentDcMetaServer.renew(new MetaNode(new URL(ip, 0), nodeConfig.getLocalDataCenter()), 0);
+                currentDcMetaServer.renew(
+                    new MetaNode(new URL(ip, 0), nodeConfig.getLocalDataCenter()), 0);
             } else {
                 LOGGER_START.error(
                     "Register CurrentNode fail!meta node list config not contains current ip {}",
@@ -446,7 +449,7 @@ public class RaftExchanger {
     public RaftClient getRaftClient() {
         if (raftClient == null) {
             startRaftClient();
-            if(LOGGER.isInfoEnabled()) {
+            if (LOGGER.isInfoEnabled()) {
                 LOGGER.info("[getRaftClient]Raft client before started!");
             }
         }

@@ -37,7 +37,8 @@ public class MigrateTest {
     @Test
     public void testBody() throws Exception {
         HessianSerializer s = new HessianSerializer();
-        DataSlotDiffPublisherRequest request = new DataSlotDiffPublisherRequest(100, 200, new HashMap<>());
+        DataSlotDiffPublisherRequest request = new DataSlotDiffPublisherRequest(100, 200,
+            new HashMap<>());
         for (int i = 0; i < 10; i++) {
             DatumSummary summary = new DatumSummary("app" + System.currentTimeMillis());
             summary.setPublisherDigests(new HashMap<>());

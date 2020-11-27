@@ -64,7 +64,7 @@ public abstract class AbstractLifecycle implements Lifecycle, LifecycleStateAwar
         }
     }
 
-    protected void doInitialize() throws InitializeException{
+    protected void doInitialize() throws InitializeException {
     }
 
     @Override
