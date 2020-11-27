@@ -66,7 +66,7 @@ public class ServerDeadRebalanceWork implements RebalanceTask {
 
     private SlotTable promoteFollowers(SlotTable slotTable, List<Integer> slotNums) {
         long newSlotTableEpoch = slotTable.getEpoch();
-        Map<Integer, Slot> slotMap = Maps.newHashMap(slotTable.getSlots());
+        Map<Integer, Slot> slotMap = slotTable.getSlotMap();
         for(Integer slotNum : slotNums) {
             Slot slot = slotMap.get(slotNum);
             // select one candidate from followers as new leader
@@ -83,7 +83,7 @@ public class ServerDeadRebalanceWork implements RebalanceTask {
 
     private SlotTable reassignFollowers(SlotTable slotTable, List<Integer> slotNums) {
         long newSlotTableEpoch = slotTable.getEpoch();
-        Map<Integer, Slot> slotMap = Maps.newHashMap(slotTable.getSlots());
+        Map<Integer, Slot> slotMap = slotTable.getSlotMap();
         for(Integer slotNum : slotNums) {
             Slot slot = slotMap.get(slotNum);
             // select new follower from alive data servers
