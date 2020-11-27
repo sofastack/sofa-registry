@@ -39,10 +39,6 @@ import com.alipay.sofa.registry.server.meta.remoting.handler.FetchProvideDataReq
 import com.alipay.sofa.registry.server.meta.remoting.handler.HeartbeatRequestHandler;
 import com.alipay.sofa.registry.server.meta.resource.*;
 import com.alipay.sofa.registry.store.api.DBService;
-import com.alipay.sofa.registry.task.batcher.TaskProcessor;
-import com.alipay.sofa.registry.task.listener.DefaultTaskListenerManager;
-import com.alipay.sofa.registry.task.listener.TaskListener;
-import com.alipay.sofa.registry.task.listener.TaskListenerManager;
 import com.alipay.sofa.registry.util.DefaultExecutorFactory;
 import com.alipay.sofa.registry.util.NamedThreadFactory;
 import com.alipay.sofa.registry.util.OsUtils;
@@ -229,11 +225,6 @@ public class MetaServerConfiguration {
         }
 
         @Bean
-        public DecisionModeResource decisionModeResource() {
-            return new DecisionModeResource();
-        }
-
-        @Bean
         public PersistentDataResource persistentDataResource() {
             return new PersistentDataResource();
         }
@@ -261,12 +252,13 @@ public class MetaServerConfiguration {
 
         @Bean
         public BlacklistDataResource blacklistDataResource() {
+
             return new BlacklistDataResource();
         }
 
         @Bean
-        public RenewSwitchResource renewSwitchResource() {
-            return new RenewSwitchResource();
+        public SlotSyncResource renewSwitchResource() {
+            return new SlotSyncResource();
         }
 
         @Bean

@@ -239,8 +239,6 @@ public class SessionServerBootstrap {
 
                 fetchStopPushSwitch(leaderUrl);
 
-                fetchEnableDataRenewSnapshot(leaderUrl);
-
                 fetchBlackList();
 
                 LOGGER.info("MetaServer connected meta server! Port:{}",
@@ -263,16 +261,6 @@ public class SessionServerBootstrap {
             provideDataProcessorManager.fetchDataProcess(provideData);
         } else {
             LOGGER.info("Fetch session stop push switch data null,config not change!");
-        }
-    }
-
-    private void fetchEnableDataRenewSnapshot(URL leaderUrl) {
-        FetchProvideDataRequest fetchProvideDataRequest = new FetchProvideDataRequest(
-            ValueConstants.ENABLE_DATA_RENEW_SNAPSHOT);
-        Object data = sendMetaRequest(fetchProvideDataRequest, leaderUrl);
-        if (data instanceof ProvideData) {
-            ProvideData provideData = (ProvideData) data;
-            provideDataProcessorManager.fetchDataProcess(provideData);
         }
     }
 

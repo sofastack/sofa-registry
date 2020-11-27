@@ -51,15 +51,11 @@ public interface MetaServerConfig {
 
     int getMetaNodeExchangeTimeout();
 
-    DecisionMode getDecisionMode();
-
     int getDataCenterChangeNotifyTaskRetryTimes();
 
     int getDataNodeChangePushTaskRetryTimes();
 
     int getGetDataCenterChangeListTaskRetryTimes();
-
-    int getReceiveStatusConfirmNotifyTaskRetryTimes();
 
     int getSessionNodeChangePushTaskRetryTimes();
 
@@ -122,12 +118,5 @@ public interface MetaServerConfig {
     int getRaftElectionTimeout();
 
     double getSessionLoadbalanceThresholdRatio();
-
-    /**
-     * decision mode enum
-     */
-    enum DecisionMode {
-        RUNTIME, OFF
-    }
 
 }

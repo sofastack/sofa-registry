@@ -472,10 +472,15 @@ public final class SlotManagerImpl implements SlotManager {
                         final Map<String, Connection> sessions = sessionServerConnectionFactory
                                 .getSessonConnectionMap();
                         if (isLeader(slot)) {
+                            final int syncIntervalMs = dataServerConfig.getSlotLeaderSyncSessionIntervalSec() * 1000;
+                            // means unable sync from session
+                            if (syncIntervalMs <= 0) {
+                                LOGGER.info("slot leader sync from session unable");
+                                continue;
+                            }
                             for (Map.Entry<String, Connection> session : sessions.entrySet()) {
                                 SyncSessionTask task = state.syncSessionTasks.get(session.getKey());
-                                if (task != null &&
-                                        !task.isScheduleable(dataServerConfig.getSlotLeaderSyncSessionIntervalMs())) {
+                                if (task != null && !task.isScheduleable(syncIntervalMs)) {
                                     continue;
                                 } else {
                                     task = new SyncSessionTask(slot, session.getKey(), session.getValue());

@@ -193,17 +193,22 @@ public class DataServerBootstrap {
     }
 
     private void fetchProviderData() {
-        ProvideData provideData = metaServerService
-            .fetchData(ValueConstants.ENABLE_DATA_DATUM_EXPIRE);
-        if (provideData == null || provideData.getProvideData() == null
-            || provideData.getProvideData().getObject() == null) {
-            LOGGER
-                .info("Fetch enableDataDatumExpire but no data existed, current config not change!");
-            return;
+        ProvideData provideData = metaServerService.fetchData(ValueConstants.DATA_DATUM_EXPIRE_SEC);
+        Integer expireSec = ProvideData.toInteger(provideData);
+        if (expireSec != null) {
+            dataServerConfig.setSlotLeaderDatumExpireSec(expireSec);
+            LOGGER.info("Fetch {}={}, update current config", ValueConstants.DATA_DATUM_EXPIRE_SEC,
+                expireSec);
         }
-        boolean enableDataDatumExpire = Boolean.parseBoolean((String) provideData.getProvideData()
-            .getObject());
-        LOGGER.info("Fetch enableDataDatumExpire {} success!", enableDataDatumExpire);
+
+        provideData = metaServerService
+            .fetchData(ValueConstants.DATA_DATUM_SYNC_SESSION_INTERVAL_SEC);
+        Integer syncSessionIntervalSec = ProvideData.toInteger(provideData);
+        if (syncSessionIntervalSec != null) {
+            dataServerConfig.setSlotLeaderSyncSessionIntervalSec(syncSessionIntervalSec);
+            LOGGER.info("Fetch {}={}, update current config",
+                ValueConstants.DATA_DATUM_SYNC_SESSION_INTERVAL_SEC, syncSessionIntervalSec);
+        }
     }
 
     private void startScheduler() {

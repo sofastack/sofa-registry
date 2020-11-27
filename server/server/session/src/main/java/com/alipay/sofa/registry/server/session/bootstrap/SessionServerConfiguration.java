@@ -43,7 +43,6 @@ import com.alipay.sofa.registry.server.session.node.service.*;
 import com.alipay.sofa.registry.server.session.provideData.ProvideDataProcessor;
 import com.alipay.sofa.registry.server.session.provideData.ProvideDataProcessorManager;
 import com.alipay.sofa.registry.server.session.provideData.processor.BlackListProvideDataProcessor;
-import com.alipay.sofa.registry.server.session.provideData.processor.RenewSnapshotProvideDataProcessor;
 import com.alipay.sofa.registry.server.session.provideData.processor.StopPushProvideDataProcessor;
 import com.alipay.sofa.registry.server.session.registry.Registry;
 import com.alipay.sofa.registry.server.session.registry.SessionRegistry;
@@ -701,14 +700,6 @@ public class SessionServerConfiguration {
             ((ProvideDataProcessorManager) provideDataProcessorManager)
                 .addProvideDataProcessor(blackListProvideDataProcessor);
             return blackListProvideDataProcessor;
-        }
-
-        @Bean
-        public ProvideDataProcessor renewSnapshotProvideDataProcessor(ProvideDataProcessor provideDataProcessorManager) {
-            ProvideDataProcessor renewSnapshotProvideDataProcessor = new RenewSnapshotProvideDataProcessor();
-            ((ProvideDataProcessorManager) provideDataProcessorManager)
-                .addProvideDataProcessor(renewSnapshotProvideDataProcessor);
-            return renewSnapshotProvideDataProcessor;
         }
 
         @Bean
