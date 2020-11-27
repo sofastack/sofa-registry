@@ -18,7 +18,7 @@ package com.alipay.sofa.registry.server.data;
 
 import com.alipay.remoting.serialization.HessianSerializer;
 import com.alipay.sofa.registry.common.model.dataserver.DatumSummary;
-import com.alipay.sofa.registry.common.model.sessionserver.DataSlotMigrateRequest;
+import com.alipay.sofa.registry.common.model.slot.DataSlotDiffPublisherRequest;
 import org.junit.Test;
 
 import java.io.BufferedOutputStream;
@@ -37,8 +37,8 @@ public class MigrateTest {
     @Test
     public void testBody() throws Exception {
         HessianSerializer s = new HessianSerializer();
-        DataSlotMigrateRequest request = new DataSlotMigrateRequest(100, 200, new HashMap<>());
-        for (int i = 0; i < 5; i++) {
+        DataSlotDiffPublisherRequest request = new DataSlotDiffPublisherRequest(100, 200, new HashMap<>());
+        for (int i = 0; i < 10; i++) {
             DatumSummary summary = new DatumSummary("app" + System.currentTimeMillis());
             summary.setPublisherDigests(new HashMap<>());
             for (int j = 0; j < 1000; j++) {
