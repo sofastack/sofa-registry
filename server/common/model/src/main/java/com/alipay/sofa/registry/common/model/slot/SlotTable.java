@@ -16,6 +16,8 @@
  */
 package com.alipay.sofa.registry.common.model.slot;
 
+import com.google.common.collect.Maps;
+
 import java.io.Serializable;
 import java.util.*;
 
@@ -34,6 +36,10 @@ public final class SlotTable implements Serializable {
 
     public List<Slot> getSlots() {
         return new ArrayList<>(slots.values());
+    }
+
+    public Map<Integer, Slot> getSlotMap() {
+        return Maps.newHashMap(slots);
     }
 
     public static Map<Integer, Slot> getSlotsAdded(SlotTable from, SlotTable to) {
