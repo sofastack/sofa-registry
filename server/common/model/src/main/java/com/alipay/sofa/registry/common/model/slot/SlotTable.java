@@ -16,8 +16,6 @@
  */
 package com.alipay.sofa.registry.common.model.slot;
 
-import com.alipay.sofa.registry.common.model.metaserver.DataNode;
-
 import java.io.Serializable;
 import java.util.*;
 

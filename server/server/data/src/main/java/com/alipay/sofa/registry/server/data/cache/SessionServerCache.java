@@ -16,7 +16,7 @@
  */
 package com.alipay.sofa.registry.server.data.cache;
 
-import com.alipay.sofa.registry.common.model.metaserver.SessionNode;
+import com.alipay.sofa.registry.common.model.metaserver.nodes.SessionNode;
 import com.alipay.sofa.registry.server.data.bootstrap.DataServerConfig;
 import org.springframework.beans.factory.annotation.Autowired;
 

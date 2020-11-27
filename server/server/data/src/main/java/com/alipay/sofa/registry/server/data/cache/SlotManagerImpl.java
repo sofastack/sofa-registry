@@ -17,7 +17,7 @@
 package com.alipay.sofa.registry.server.data.cache;
 
 import com.alipay.remoting.Connection;
-import com.alipay.sofa.registry.common.model.metaserver.SessionNode;
+import com.alipay.sofa.registry.common.model.metaserver.nodes.SessionNode;
 import com.alipay.sofa.registry.common.model.slot.*;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;

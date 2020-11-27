@@ -17,13 +17,12 @@
 package com.alipay.sofa.registry.server.meta.resource;
 
 import com.alipay.sofa.jraft.entity.PeerId;
-import com.alipay.sofa.registry.common.model.Node.NodeType;
-import com.alipay.sofa.registry.common.model.metaserver.MetaNode;
+import com.alipay.sofa.registry.common.model.metaserver.nodes.MetaNode;
 import com.alipay.sofa.registry.common.model.store.URL;
 import com.alipay.sofa.registry.core.model.Result;
 import com.alipay.sofa.registry.net.NetUtil;
-import com.alipay.sofa.registry.server.meta.bootstrap.NodeConfig;
-import com.alipay.sofa.registry.server.meta.registry.Registry;
+import com.alipay.sofa.registry.server.meta.bootstrap.config.NodeConfig;
+import com.alipay.sofa.registry.server.meta.metaserver.CurrentDcMetaServer;
 import com.alipay.sofa.registry.server.meta.remoting.RaftExchanger;
 import com.google.common.collect.Lists;
 import org.apache.commons.lang.StringUtils;
@@ -53,7 +52,7 @@ public class MetaStoreResource {
     private static final Logger LOGGER = LoggerFactory.getLogger(MetaStoreResource.class);
 
     @Autowired
-    private Registry            metaServerRegistry;
+    private CurrentDcMetaServer metaServer;
 
     @Autowired
     private NodeConfig          nodeConfig;
@@ -102,7 +101,7 @@ public class MetaStoreResource {
                 metaNodes.add(metaNode);
             }
 
-            metaServerRegistry.setNodes(metaNodes);
+//            metaServer.updateClusterMembers(metaNodes);
 
             result.setSuccess(true);
 
@@ -150,7 +149,7 @@ public class MetaStoreResource {
                 MetaNode metaNode = new MetaNode(new URL(ipAddress, 0), nodeConfig.getLocalDataCenter());
                 metaNodes.add(metaNode);
             }
-            metaServerRegistry.setNodes(metaNodes);
+//            metaServer.updateClusterMembers(metaNodes);
 
             result.setSuccess(true);
 
@@ -185,7 +184,8 @@ public class MetaStoreResource {
                     ipAddress = NetUtil.getIPAddressFromDomain(ipAddress);
 
                     raftExchanger.removePeer(ipAddress);
-                    metaServerRegistry.cancel(ipAddress, NodeType.META);
+                    metaServer.cancel(new MetaNode(new URL(ipAddress), dataCenter));
+//                    metaServerRegistry.cancel(ipAddress, NodeType.META);
                     LOGGER.info("Remove peer ipAddress {} to store!", ipAddress);
                 } catch (Exception e) {
                     LOGGER.error("Error remove peer ipAddress {} to store!", ipAddress, e);

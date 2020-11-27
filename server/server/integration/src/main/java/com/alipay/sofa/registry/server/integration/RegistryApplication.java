@@ -67,7 +67,9 @@ public class RegistryApplication {
         Collection<String> serverList = getServerList(commonContext);
 
         // start meta
-        metaApplicationContext = new SpringApplicationBuilder(MetaApplication.class).parent(commonContext).run();
+        SpringApplicationBuilder springApplicationBuilder = new SpringApplicationBuilder(MetaApplication.class);
+        springApplicationBuilder.parent(commonContext);
+        metaApplicationContext = springApplicationBuilder.run();
 
         // wait meta cluster start
         waitClusterStart(serverList,

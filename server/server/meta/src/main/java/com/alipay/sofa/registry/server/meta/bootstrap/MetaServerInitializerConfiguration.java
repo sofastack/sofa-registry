@@ -16,13 +16,12 @@
  */
 package com.alipay.sofa.registry.server.meta.bootstrap;
 
-import java.util.concurrent.atomic.AtomicBoolean;
-
+import com.alipay.sofa.registry.log.Logger;
+import com.alipay.sofa.registry.log.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.SmartLifecycle;
 
-import com.alipay.sofa.registry.log.Logger;
-import com.alipay.sofa.registry.log.LoggerFactory;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  *

@@ -29,7 +29,7 @@ import com.alipay.sofa.registry.remoting.exchange.NodeExchanger;
 import com.alipay.sofa.registry.remoting.exchange.RequestException;
 import com.alipay.sofa.registry.remoting.exchange.message.Request;
 import com.alipay.sofa.registry.remoting.exchange.message.Response;
-import com.alipay.sofa.registry.server.meta.bootstrap.MetaServerConfig;
+import com.alipay.sofa.registry.server.meta.bootstrap.config.MetaServerConfig;
 
 /**
  *

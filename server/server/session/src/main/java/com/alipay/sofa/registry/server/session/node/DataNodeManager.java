@@ -17,7 +17,7 @@
 package com.alipay.sofa.registry.server.session.node;
 
 import com.alipay.sofa.registry.common.model.Node.NodeType;
-import com.alipay.sofa.registry.common.model.metaserver.DataNode;
+import com.alipay.sofa.registry.common.model.metaserver.nodes.DataNode;
 import com.alipay.sofa.registry.common.model.metaserver.NodeChangeResult;
 import com.alipay.sofa.registry.common.model.slot.Slot;
 import com.alipay.sofa.registry.log.Logger;

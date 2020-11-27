@@ -22,6 +22,7 @@ import com.alipay.sofa.registry.jraft.command.ProcessResponse;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.store.api.annotation.ReadOnLeader;
+import com.google.common.collect.Maps;
 
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
@@ -55,9 +56,11 @@ public class Processor {
      * @return
      */
     public static Processor getInstance() {
-        if (instance == null) {
+        Processor processor = instance;
+        if (processor == null) {
             synchronized (Processor.class) {
-                if (instance == null) {
+                processor = instance;
+                if (processor == null) {
                     instance = new Processor();
                 }
             }
@@ -73,16 +76,48 @@ public class Processor {
 
         Map<String, Method> publicMethods = new HashMap();
         for (Method m : interfaceClazz.getMethods()) {
-            StringBuilder mSigs = new StringBuilder();
-            mSigs.append(m.getName());
-            for (Class<?> paramType : m.getParameterTypes()) {
-                mSigs.append(paramType.getName());
-            }
-            publicMethods.put(mSigs.toString(), m);
+            publicMethods.put(getSignificantMethodName(m), m);
         }
 
         workerMethods.put(serviceId, publicMethods);
         workers.put(serviceId, target);
+    }
+
+    @SuppressWarnings("uncheked")
+    public void addWorker(String serviceId, Method method, Object target) {
+        Map<String, Method> publicMethods = workerMethods.get(serviceId);
+        if(publicMethods == null) {
+            synchronized (this) {
+                publicMethods = workerMethods.get(serviceId);
+                if(publicMethods == null) {
+                    publicMethods = Maps.newHashMap();
+                    workers.put(serviceId, publicMethods);
+                }
+            }
+        }
+        String methodName = getSignificantMethodName(method);
+        publicMethods.put(methodName, method);
+        workers.put(serviceId, target);
+    }
+
+    public static String getSignificantMethodName(Method method) {
+        StringBuilder mSigs = new StringBuilder();
+        mSigs.append(method.getName());
+        for (Class<?> paramType : method.getParameterTypes()) {
+            mSigs.append(paramType.getName());
+        }
+        return mSigs.toString();
+    }
+
+    public void removeWorker(String serviceId) {
+        if (workers.get(serviceId) != null) {
+            if(LOG.isWarnEnabled()) {
+                LOG.warn("Service {} has bean existed!", serviceId);
+            }
+            return;
+        }
+        workerMethods.remove(serviceId);
+        workers.remove(serviceId);
     }
 
     public ProcessResponse process(ProcessRequest request) {
