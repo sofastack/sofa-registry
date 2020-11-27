@@ -40,6 +40,11 @@ public final class Slot implements Serializable {
         this.followers = Collections.unmodifiableSet(new HashSet<>(followers));
     }
 
+    @Override
+    protected Slot clone() throws CloneNotSupportedException {
+        return new Slot(this.id, this.leader, this.leaderEpoch, this.followers);
+    }
+
     /**
      * Getter method for property <tt>id</tt>.
      * @return property value of id

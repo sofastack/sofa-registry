@@ -24,7 +24,7 @@ import com.alipay.sofa.registry.common.model.slot.SlotTable;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.remoting.Channel;
-import com.alipay.sofa.registry.server.meta.slot.SlotAallocator;
+import com.alipay.sofa.registry.server.meta.MetaServer;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.List;
@@ -39,13 +39,13 @@ public final class GetSlotTableRequestHandler extends AbstractServerHandler<GetS
     private static final Logger LOGGER = LoggerFactory.getLogger("META-SLOT");
 
     @Autowired
-    private SlotAallocator      slotAallocator;
+    private MetaServer metaServer;
 
     @Override
     public Object reply(Channel channel, GetSlotTableRequest getNodesRequest) {
         // TODO
         final long epochOfNode = getNodesRequest.getEpochOfNode();
-        final SlotTable currentTable = slotAallocator.getSlotTable();
+        final SlotTable currentTable = metaServer.getSlotTable();
         if (epochOfNode == currentTable.getEpoch()) {
             // not change, return null
             return new GenericResponse().fillSucceed(null);
@@ -56,6 +56,9 @@ public final class GetSlotTableRequestHandler extends AbstractServerHandler<GetS
                 currentTable.getEpoch(), epochOfNode, channel.getRemoteAddress().getAddress()
                     .getHostAddress());
             return new GenericResponse().fillFailed("illegal epoch of node");
+        }
+        if(getNodesRequest.getTargetDataNode() == null) {
+            return new GenericResponse<SlotTable>().fillSucceed(currentTable);
         }
         List<DataNodeSlot> dataNodeSlots = currentTable.transfer(
             getNodesRequest.getTargetDataNode(), getNodesRequest.isIgnoredFollowers());

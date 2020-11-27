@@ -16,8 +16,7 @@
  */
 package com.alipay.sofa.registry.server.data.cache;
 
-import com.alipay.sofa.registry.common.model.metaserver.DataNode;
-import com.alipay.sofa.registry.common.model.metaserver.SessionNode;
+import com.alipay.sofa.registry.common.model.metaserver.nodes.SessionNode;
 
 import java.util.HashMap;
 import java.util.Map;
