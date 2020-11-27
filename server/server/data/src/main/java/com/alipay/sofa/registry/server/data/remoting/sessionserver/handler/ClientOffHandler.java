@@ -16,10 +16,6 @@
  */
 package com.alipay.sofa.registry.server.data.remoting.sessionserver.handler;
 
-import java.util.List;
-
-import org.springframework.beans.factory.annotation.Autowired;
-
 import com.alipay.sofa.registry.common.model.CommonResponse;
 import com.alipay.sofa.registry.common.model.Node;
 import com.alipay.sofa.registry.common.model.dataserver.ClientOffRequest;
@@ -28,8 +24,10 @@ import com.alipay.sofa.registry.server.data.bootstrap.DataServerConfig;
 import com.alipay.sofa.registry.server.data.remoting.handler.AbstractServerHandler;
 import com.alipay.sofa.registry.server.data.remoting.sessionserver.disconnect.ClientDisconnectEvent;
 import com.alipay.sofa.registry.server.data.remoting.sessionserver.disconnect.DisconnectEventHandler;
-import com.alipay.sofa.registry.server.data.renew.DatumLeaseManager;
 import com.alipay.sofa.registry.util.ParaCheckUtil;
+import org.springframework.beans.factory.annotation.Autowired;
+
+import java.util.List;
 
 /**
  * processor to remove data of specific clients immediately
@@ -45,9 +43,6 @@ public class ClientOffHandler extends AbstractServerHandler<ClientOffRequest> {
     @Autowired
     private DisconnectEventHandler disconnectEventHandler;
 
-    @Autowired
-    private DatumLeaseManager      datumLeaseManager;
-
     @Override
     public void checkParam(ClientOffRequest request) throws RuntimeException {
         ParaCheckUtil.checkNotEmpty(request.getHosts(), "ClientOffRequest.hosts");
@@ -57,9 +52,6 @@ public class ClientOffHandler extends AbstractServerHandler<ClientOffRequest> {
     public Object doHandle(Channel channel, ClientOffRequest request) {
         List<String> hosts = request.getHosts();
         for (String host : hosts) {
-            // stop task of this connectId
-            datumLeaseManager.remove(host);
-
             disconnectEventHandler.receive(new ClientDisconnectEvent(host, request.getGmtOccur(),
                 dataServerConfig.getClientOffDelayMs()));
         }

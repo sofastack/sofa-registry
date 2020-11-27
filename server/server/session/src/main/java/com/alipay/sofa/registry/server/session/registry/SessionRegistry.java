@@ -16,20 +16,9 @@
  */
 package com.alipay.sofa.registry.server.session.registry;
 
-import java.util.*;
-import java.util.concurrent.TimeUnit;
-import java.util.function.Supplier;
-
-import org.springframework.beans.factory.annotation.Autowired;
-
 import com.alipay.sofa.registry.common.model.Node;
-import com.alipay.sofa.registry.common.model.RenewDatumRequest;
 import com.alipay.sofa.registry.common.model.constants.ValueConstants;
-import com.alipay.sofa.registry.common.model.store.Publisher;
-import com.alipay.sofa.registry.common.model.store.StoreData;
-import com.alipay.sofa.registry.common.model.store.Subscriber;
-import com.alipay.sofa.registry.common.model.store.URL;
-import com.alipay.sofa.registry.common.model.store.Watcher;
+import com.alipay.sofa.registry.common.model.store.*;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.remoting.Channel;
@@ -41,7 +30,6 @@ import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
 import com.alipay.sofa.registry.server.session.filter.DataIdMatchStrategy;
 import com.alipay.sofa.registry.server.session.node.NodeManager;
 import com.alipay.sofa.registry.server.session.node.service.DataNodeService;
-import com.alipay.sofa.registry.server.session.renew.RenewService;
 import com.alipay.sofa.registry.server.session.store.DataStore;
 import com.alipay.sofa.registry.server.session.store.Interests;
 import com.alipay.sofa.registry.server.session.store.Watchers;
@@ -51,8 +39,11 @@ import com.alipay.sofa.registry.server.session.wrapper.WrapperInterceptorManager
 import com.alipay.sofa.registry.server.session.wrapper.WrapperInvocation;
 import com.alipay.sofa.registry.task.listener.TaskEvent;
 import com.alipay.sofa.registry.task.listener.TaskListenerManager;
-import com.google.common.collect.Sets;
-import com.google.common.collect.Sets.SetView;
+import org.springframework.beans.factory.annotation.Autowired;
+
+import java.util.*;
+import java.util.concurrent.TimeUnit;
+import java.util.function.Supplier;
 
 /**
  * @author shangyu.wh
@@ -65,10 +56,6 @@ public class SessionRegistry implements Registry {
 
     private static final Logger       TASK_LOGGER             = LoggerFactory.getLogger(
                                                                   SessionRegistry.class, "[Task]");
-
-    private static final Logger       RENEW_LOGGER            = LoggerFactory.getLogger(
-                                                                  ValueConstants.LOGGER_NAME_RENEW,
-                                                                  "[SessionRegistry]");
 
     /**
      * store subscribers
@@ -120,9 +107,6 @@ public class SessionRegistry implements Registry {
 
     @Autowired
     private DataIdMatchStrategy       dataIdMatchStrategy;
-
-    @Autowired
-    private RenewService              renewService;
 
     @Autowired
     private WriteDataAcceptor         writeDataAcceptor;
@@ -310,7 +294,6 @@ public class SessionRegistry implements Registry {
                     return null;
                 }
             });
-            writeDataAcceptor.remove(connectId);
         }
     }
 
@@ -437,78 +420,6 @@ public class SessionRegistry implements Registry {
         if (!connectIds.isEmpty()) {
             cancel(connectIds);
         }
-    }
-
-    @Override
-    public void renewDatum(String connectId) {
-        if (RENEW_LOGGER.isDebugEnabled()) {
-            RENEW_LOGGER.debug("renewDatum: connectId={}", connectId);
-        }
-        // check the renew switch
-        if (!this.enableDataRenewSnapshot) {
-            return;
-        }
-
-        List<RenewDatumRequest> renewDatumRequests = renewService.getRenewDatumRequests(connectId);
-        if (renewDatumRequests != null) {
-            for (RenewDatumRequest renewDatumRequest : renewDatumRequests) {
-                // All write operations to DataServer (pub/unPub/clientoff/renew/snapshot)
-                // are handed over to WriteDataAcceptor
-                writeDataAcceptor.accept(new WriteDataRequest() {
-                    @Override
-                    public Object getRequestBody() {
-                        return renewDatumRequest;
-                    }
-
-                    @Override
-                    public WriteDataRequestType getRequestType() {
-                        return WriteDataRequestType.RENEW_DATUM;
-                    }
-
-                    @Override
-                    public String getConnectId() {
-                        return connectId;
-                    }
-
-                    @Override
-                    public String getDataServerIP() {
-                        return renewDatumRequest.getDataServerIP();
-                    }
-                });
-            }
-        }
-    }
-
-    @Override
-    public void sendDatumSnapshot(String connectId, String dataServerIP) {
-        if (RENEW_LOGGER.isDebugEnabled()) {
-            RENEW_LOGGER.debug("sendDatumSnapshot: connectId={}, dataServerIP={}", connectId,
-                dataServerIP);
-        }
-
-        // All write operations to DataServer (pub/unPub/clientoff/renew/snapshot)
-        // are handed over to WriteDataAcceptor
-        writeDataAcceptor.accept(new WriteDataRequest() {
-            @Override
-            public Object getRequestBody() {
-                return connectId;
-            }
-
-            @Override
-            public WriteDataRequestType getRequestType() {
-                return WriteDataRequestType.DATUM_SNAPSHOT;
-            }
-
-            @Override
-            public String getConnectId() {
-                return connectId;
-            }
-
-            @Override
-            public String getDataServerIP() {
-                return dataServerIP;
-            }
-        });
     }
 
     /**

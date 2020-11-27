@@ -30,7 +30,6 @@ import com.alipay.sofa.registry.server.data.event.EventCenter;
 import com.alipay.sofa.registry.server.data.remoting.dataserver.task.RenewNodeTask;
 import com.alipay.sofa.registry.server.data.remoting.handler.AbstractServerHandler;
 import com.alipay.sofa.registry.server.data.remoting.metaserver.IMetaServerService;
-import com.alipay.sofa.registry.server.data.renew.DatumLeaseManager;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -88,9 +87,6 @@ public class DataServerBootstrap {
 
     @Resource(name = "serverSyncHandlers")
     private Collection<AbstractServerHandler> serverSyncHandlers;
-
-    @Autowired
-    private DatumLeaseManager                 datumLeaseManager;
 
     private Server                            server;
 
@@ -208,7 +204,6 @@ public class DataServerBootstrap {
         boolean enableDataDatumExpire = Boolean.parseBoolean((String) provideData.getProvideData()
             .getObject());
         LOGGER.info("Fetch enableDataDatumExpire {} success!", enableDataDatumExpire);
-        datumLeaseManager.setRenewEnable(enableDataDatumExpire);
     }
 
     private void startScheduler() {

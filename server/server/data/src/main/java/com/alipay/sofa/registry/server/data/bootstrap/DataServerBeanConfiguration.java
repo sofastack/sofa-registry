@@ -16,7 +16,6 @@
  */
 package com.alipay.sofa.registry.server.data.bootstrap;
 
-import com.alipay.sofa.registry.common.model.slot.Slot;
 import com.alipay.sofa.registry.remoting.bolt.exchange.BoltExchange;
 import com.alipay.sofa.registry.remoting.exchange.Exchange;
 import com.alipay.sofa.registry.remoting.jersey.exchange.JerseyExchange;
@@ -32,6 +31,8 @@ import com.alipay.sofa.registry.server.data.remoting.MetaNodeExchanger;
 import com.alipay.sofa.registry.server.data.remoting.dataserver.DataServerConnectionFactory;
 import com.alipay.sofa.registry.server.data.remoting.dataserver.handler.DataSyncServerConnectionHandler;
 import com.alipay.sofa.registry.server.data.remoting.dataserver.handler.FetchDataHandler;
+import com.alipay.sofa.registry.server.data.remoting.dataserver.handler.SlotFollowerDiffDataInfoIdRequestHandler;
+import com.alipay.sofa.registry.server.data.remoting.dataserver.handler.SlotFollowerDiffPublisherRequestHandler;
 import com.alipay.sofa.registry.server.data.remoting.dataserver.task.RenewNodeTask;
 import com.alipay.sofa.registry.server.data.remoting.handler.AbstractClientHandler;
 import com.alipay.sofa.registry.server.data.remoting.handler.AbstractServerHandler;
@@ -45,7 +46,6 @@ import com.alipay.sofa.registry.server.data.remoting.metaserver.provideData.proc
 import com.alipay.sofa.registry.server.data.remoting.sessionserver.SessionServerConnectionFactory;
 import com.alipay.sofa.registry.server.data.remoting.sessionserver.disconnect.DisconnectEventHandler;
 import com.alipay.sofa.registry.server.data.remoting.sessionserver.handler.*;
-import com.alipay.sofa.registry.server.data.renew.DatumLeaseManager;
 import com.alipay.sofa.registry.server.data.resource.DataDigestResource;
 import com.alipay.sofa.registry.server.data.resource.HealthResource;
 import com.alipay.sofa.registry.server.data.util.ThreadPoolExecutorDataServer;
@@ -115,7 +115,7 @@ public class DataServerBeanConfiguration {
         @Bean
         @ConditionalOnMissingBean
         public DatumStorage localDatumStorage() {
-            return new LocalDatumStorage();
+            return new SlotLocalDatumStorage();
         }
 
         @Bean
@@ -189,8 +189,6 @@ public class DataServerBeanConfiguration {
             list.add(sessionServerRegisterHandler());
             list.add(unPublishDataHandler());
             list.add(dataServerConnectionHandler());
-            list.add(renewDatumHandler());
-            list.add(datumSnapshotHandler());
             return list;
         }
 
@@ -201,6 +199,8 @@ public class DataServerBeanConfiguration {
             list.add(publishDataProcessor());
             list.add(unPublishDataHandler());
             list.add(dataSyncServerConnectionHandler());
+            list.add(slotFollowerDiffDataInfoIdRequestHandler());
+            list.add(slotFollowerDiffPublisherRequestHandler());
             return list;
         }
 
@@ -234,6 +234,16 @@ public class DataServerBeanConfiguration {
         }
 
         @Bean
+        public AbstractServerHandler slotFollowerDiffDataInfoIdRequestHandler() {
+            return new SlotFollowerDiffDataInfoIdRequestHandler();
+        }
+
+        @Bean
+        public AbstractServerHandler slotFollowerDiffPublisherRequestHandler() {
+            return new SlotFollowerDiffPublisherRequestHandler();
+        }
+
+        @Bean
         public AbstractServerHandler getDataVersionsHandler() {
             return new GetDataVersionsHandler();
         }
@@ -241,16 +251,6 @@ public class DataServerBeanConfiguration {
         @Bean
         public AbstractServerHandler clientOffHandler() {
             return new ClientOffHandler();
-        }
-
-        @Bean
-        public AbstractServerHandler datumSnapshotHandler() {
-            return new DatumSnapshotHandler();
-        }
-
-        @Bean
-        public RenewDatumHandler renewDatumHandler() {
-            return new RenewDatumHandler();
         }
 
         @Bean
@@ -276,11 +276,6 @@ public class DataServerBeanConfiguration {
         @Bean
         public NotifyProvideDataChangeHandler notifyProvideDataChangeHandler() {
             return new NotifyProvideDataChangeHandler();
-        }
-
-        @Bean
-        public DatumLeaseManager datumLeaseManager() {
-            return new DatumLeaseManager();
         }
 
         @Bean
@@ -384,15 +379,6 @@ public class DataServerBeanConfiguration {
                 new NamedThreadFactory("DataServer-PublishProcessor-executor", true));
         }
 
-        @Bean(name = "renewDatumProcessorExecutor")
-        public ThreadPoolExecutor renewDatumProcessorExecutor(DataServerConfig dataServerConfig) {
-            return new ThreadPoolExecutorDataServer("RenewDatumProcessorExecutor",
-                dataServerConfig.getRenewDatumExecutorMinPoolSize(),
-                dataServerConfig.getRenewDatumExecutorMaxPoolSize(), 300, TimeUnit.SECONDS,
-                new ArrayBlockingQueue<>(dataServerConfig.getRenewDatumExecutorQueueSize()),
-                new NamedThreadFactory("DataServer-RenewDatumProcessor-executor", true));
-        }
-
         @Bean(name = "getDataProcessorExecutor")
         public ThreadPoolExecutor getDataProcessorExecutor(DataServerConfig dataServerConfig) {
             return new ThreadPoolExecutorDataServer("GetDataProcessorExecutor",
@@ -401,6 +387,15 @@ public class DataServerBeanConfiguration {
                 dataServerConfig.getGetDataExecutorKeepAliveTime(), TimeUnit.SECONDS,
                 new ArrayBlockingQueue<>(dataServerConfig.getGetDataExecutorQueueSize()),
                 new NamedThreadFactory("DataServer-GetDataProcessor-executor", true));
+        }
+
+        @Bean(name = "slotSyncRequestProcessorExecutor")
+        public ThreadPoolExecutor slotSyncRequestProcessorExecutor(DataServerConfig dataServerConfig) {
+            return new ThreadPoolExecutorDataServer("SlotSyncRequestProcessorExecutor",
+                dataServerConfig.getSlotSyncRequestExecutorMinPoolSize(),
+                dataServerConfig.getSlotSyncRequestExecutorMaxPoolSize(), 300, TimeUnit.SECONDS,
+                new ArrayBlockingQueue<>(dataServerConfig.getSlotSyncRequestExecutorQueueSize()),
+                new NamedThreadFactory("DataServer-SlotSyncRequestProcessor-executor", true));
         }
 
     }

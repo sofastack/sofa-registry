@@ -16,15 +16,9 @@
  */
 package com.alipay.sofa.registry.server.data.remoting.sessionserver.handler;
 
-import java.util.Map;
-import java.util.concurrent.Executor;
-import java.util.concurrent.ThreadPoolExecutor;
-
-import com.alipay.sofa.registry.common.model.constants.ValueConstants;
-import org.springframework.beans.factory.annotation.Autowired;
-
 import com.alipay.sofa.registry.common.model.CommonResponse;
 import com.alipay.sofa.registry.common.model.Node;
+import com.alipay.sofa.registry.common.model.constants.ValueConstants;
 import com.alipay.sofa.registry.common.model.dataserver.Datum;
 import com.alipay.sofa.registry.common.model.dataserver.UnPublishDataRequest;
 import com.alipay.sofa.registry.common.model.store.Publisher;
@@ -37,8 +31,12 @@ import com.alipay.sofa.registry.server.data.cache.DatumCache;
 import com.alipay.sofa.registry.server.data.cache.UnPublisher;
 import com.alipay.sofa.registry.server.data.change.event.DataChangeEventCenter;
 import com.alipay.sofa.registry.server.data.remoting.handler.AbstractServerHandler;
-import com.alipay.sofa.registry.server.data.renew.DatumLeaseManager;
 import com.alipay.sofa.registry.util.ParaCheckUtil;
+import org.springframework.beans.factory.annotation.Autowired;
+
+import java.util.Map;
+import java.util.concurrent.Executor;
+import java.util.concurrent.ThreadPoolExecutor;
 
 /**
  * processor to unPublish specific data
@@ -56,9 +54,6 @@ public class UnPublishDataHandler extends AbstractServerHandler<UnPublishDataReq
 
     @Autowired
     private DataServerConfig      dataServerConfig;
-
-    @Autowired
-    private DatumLeaseManager     datumLeaseManager;
 
     @Autowired
     private DatumCache            datumCache;
@@ -83,12 +78,8 @@ public class UnPublishDataHandler extends AbstractServerHandler<UnPublishDataReq
             new UnPublisher(request.getDataInfoId(), request.getRegisterId(), request
                 .getRegisterTimestamp()), dataServerConfig.getLocalDataCenter());
 
-        // Attempt to get connectId from datumCache (Datum may not exist), and record the renew timestamp
+        //TODO Attempt to get connectId from datumCache (Datum may not exist), and record the renew timestamp
         String connectId = WordCache.getInstance().getWordCache(getConnectId(request));
-        if (connectId != null) {
-            datumLeaseManager.renew(connectId);
-        }
-
         return CommonResponse.buildSuccessResponse();
     }
 

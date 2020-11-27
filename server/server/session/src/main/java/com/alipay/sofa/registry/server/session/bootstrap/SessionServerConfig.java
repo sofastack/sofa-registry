@@ -77,14 +77,6 @@ public interface SessionServerConfig {
 
     long getUnPublishDataTaskRetryIncrementDelay();
 
-    int getDatumSnapshotTaskRetryTimes();
-
-    long getDatumSnapshotTaskRetryFirstDelay();
-
-    long getDatumSnapshotTaskRetryIncrementDelay();
-
-    int getRenewDatumTaskRetryTimes();
-
     int getDataChangeFetchTaskRetryTimes();
 
     int getSubscriberRegisterFetchRetryTimes();
@@ -155,19 +147,9 @@ public interface SessionServerConfig {
 
     long getPushDataTaskRetryIncrementDelay();
 
-    int getRenewDatumWheelTicksSize();
-
-    int getRenewDatumWheelTicksDuration();
-
-    int getRenewDatumWheelTaskDelaySec();
-
-    int getRenewDatumWheelTaskRandomFirstDelaySec();
-
     String getBlacklistPubDataIdRegex();
 
     String getBlacklistSubDataIdRegex();
-
-    int getNumberOfReplicas();
 
     boolean isStopPushSwitch();
 
@@ -181,17 +163,9 @@ public interface SessionServerConfig {
 
     boolean isInvalidIgnored(String dataId);
 
-    int getRenewAndSnapshotSilentPeriodSec();
-
-    int getWriteDataAcceptorQueueSize();
-
     int getDataNodeRetryExecutorQueueSize();
 
     int getDataNodeRetryExecutorThreadSize();
-
-    int getRenewDatumWheelThreadSize();
-
-    int getRenewDatumWheelQueueSize();
 
     long getPushTaskConfirmWaitTimeout();
 
@@ -216,4 +190,6 @@ public interface SessionServerConfig {
     int getDataClientConnNum();
 
     int getSessionSchedulerPoolSize();
+
+    int getSlotSyncPublisherMaxNum();
 }

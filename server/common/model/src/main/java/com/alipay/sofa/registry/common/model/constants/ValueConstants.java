@@ -67,8 +67,6 @@ public class ValueConstants {
 
     public static final String   ENABLE_DATA_DATUM_EXPIRE              = "data.enable.datum.expire.switch#@#9600#@#CONFIG";
 
-    public static final String   LOGGER_NAME_RENEW                     = "RENEW-LOGGER";
-
     /**
      * switch key for dataId sensitive is disable or not
      */

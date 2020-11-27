@@ -16,14 +16,11 @@
  */
 package com.alipay.sofa.registry.server.data.remoting.metaserver.provideData.processor;
 
-import org.springframework.beans.factory.annotation.Autowired;
-
 import com.alipay.sofa.registry.common.model.constants.ValueConstants;
 import com.alipay.sofa.registry.common.model.metaserver.ProvideData;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.server.data.remoting.metaserver.provideData.ProvideDataProcessor;
-import com.alipay.sofa.registry.server.data.renew.DatumLeaseManager;
 
 /**
  *
@@ -35,18 +32,15 @@ public class DatumExpireProvideDataProcessor implements ProvideDataProcessor {
     private static final Logger LOGGER = LoggerFactory
                                            .getLogger(DatumExpireProvideDataProcessor.class);
 
-    @Autowired
-    private DatumLeaseManager   datumLeaseManager;
-
     @Override
     public void changeDataProcess(ProvideData provideData) {
         if (checkInvalid(provideData)) {
             return;
         }
+        //TODO enable datum expire
         boolean enableDataDatumExpire = Boolean.parseBoolean((String) provideData.getProvideData()
             .getObject());
         LOGGER.info("Fetch enableDataDatumExpire {} success!", enableDataDatumExpire);
-        datumLeaseManager.setRenewEnable(enableDataDatumExpire);
     }
 
     private boolean checkInvalid(ProvideData provideData) {

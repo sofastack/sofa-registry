@@ -16,14 +16,12 @@
  */
 package com.alipay.sofa.registry.server.session.acceptor;
 
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-
+import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
+import com.alipay.sofa.registry.task.listener.TaskListenerManager;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
-import com.alipay.sofa.registry.server.session.renew.RenewService;
-import com.alipay.sofa.registry.task.listener.TaskListenerManager;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  *
@@ -34,31 +32,15 @@ import com.alipay.sofa.registry.task.listener.TaskListenerManager;
 public class WriteDataAcceptorImpl implements WriteDataAcceptor {
 
     @Autowired
-    private TaskListenerManager             taskListenerManager;
+    private TaskListenerManager taskListenerManager;
 
     @Autowired
-    private SessionServerConfig             sessionServerConfig;
-
-    @Autowired
-    private RenewService                    renewService;
-
-    /**
-     * acceptor for all write data request
-     * key:connectId
-     * value:writeRequest processor
-     *
-     */
-    private Map<String, WriteDataProcessor> writeDataProcessors = new ConcurrentHashMap();
+    private SessionServerConfig sessionServerConfig;
 
     public void accept(WriteDataRequest request) {
         String connectId = request.getConnectId();
-        WriteDataProcessor writeDataProcessor = writeDataProcessors.computeIfAbsent(connectId,
-                key -> new WriteDataProcessor(connectId, taskListenerManager, sessionServerConfig, renewService));
-
+        WriteDataProcessor writeDataProcessor = new WriteDataProcessor(connectId,
+            taskListenerManager, sessionServerConfig);
         writeDataProcessor.process(request);
-    }
-
-    public void remove(String connectId) {
-        writeDataProcessors.remove(connectId);
     }
 }

@@ -24,7 +24,7 @@ import com.alipay.sofa.registry.common.model.store.URL;
  * @author shangyu.wh
  * @version $Id: DataNode.java, v 0.1 2018-01-18 18:06 shangyu.wh Exp $
  */
-public class DataNode implements Node{
+public class DataNode implements Node {
 
     private final URL    nodeUrl;
 

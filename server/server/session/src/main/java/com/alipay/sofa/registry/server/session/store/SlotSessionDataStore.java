@@ -96,6 +96,12 @@ public class SlotSessionDataStore implements DataStore {
     }
 
     @Override
+    public Map<String, Map<String, Publisher>> getDataInfoIdPublishers(int slotId) {
+        DataStore ds = slot2DataStores.computeIfAbsent(slotId, k -> new SessionDataStore());
+        return ds.getDataInfoIdPublishers();
+    }
+
+    @Override
     public void add(Publisher publisher) {
         DataStore ds = getOrCreateDataStore(publisher.getDataInfoId());
         ds.add(publisher);

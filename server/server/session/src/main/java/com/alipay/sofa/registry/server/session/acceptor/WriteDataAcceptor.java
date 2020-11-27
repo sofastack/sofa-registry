@@ -29,10 +29,4 @@ public interface WriteDataAcceptor {
      * @param request
      */
     void accept(WriteDataRequest request);
-
-    /**
-     * remove processor of connectId
-     * @param connectId
-     */
-    void remove(String connectId);
 }

@@ -52,8 +52,8 @@
         <maven.compiler.source>1.6</maven.compiler.source>
         <maven.compiler.target>1.6</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <bolt.version>1.4.6</bolt.version>
-        <hessian.version>3.3.6</hessian.version>
+        <bolt.version>1.6.2</bolt.version>
+        <hessian.version>3.3.8</hessian.version>
         <lookout.version>1.5.2</lookout.version>
         <sofa.common.tools.version>1.0.12</sofa.common.tools.version>
         <netty.version>4.1.42.Final</netty.version>
