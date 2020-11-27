@@ -244,15 +244,6 @@ public class DefaultCrossDcMetaServer extends AbstractMetaServer implements Cros
         return getRemotes().get(requestMetaNodeIndex.get());
     }
 
-    @VisibleForTesting
-    protected DefaultCrossDcMetaServer setMetaServer(SlotAllocator allocator) {
-        if(getLifecycleState().isStarted()) {
-            throw new IllegalStateException("cannot reset meta-server instance while started");
-        }
-        this.allocator = allocator;
-        return this;
-    }
-
     private String getServiceId() {
         return String.format("%s-%s", RaftMetaServerListStorage.SERVICE_ID_PREFIX, dcName);
     }
@@ -294,10 +285,6 @@ public class DefaultCrossDcMetaServer extends AbstractMetaServer implements Cros
                     .addWorker(getServiceId(), MetaServerListStorage.class, RaftMetaServerListStorage.this);
         }
 
-        private final void unregisterAsRaftService() {
-            Processor.getInstance()
-                    .removeWorker(getServiceId());
-        }
     }
 
     public interface MetaServerListStorage {
@@ -305,8 +292,17 @@ public class DefaultCrossDcMetaServer extends AbstractMetaServer implements Cros
     }
 
     @VisibleForTesting
-    public DefaultCrossDcMetaServer setRaftStorage(MetaServerListStorage raftStorage) {
+    DefaultCrossDcMetaServer setRaftStorage(MetaServerListStorage raftStorage) {
         this.raftStorage = raftStorage;
         return this;
+    }
+
+    @Override
+    public String toString() {
+        return "DefaultCrossDcMetaServer{" +
+                "dcName='" + dcName + '\'' +
+                ", initMetaAddresses=" + initMetaAddresses +
+                ", lastRefreshTime=" + timestamp +
+                '}';
     }
 }

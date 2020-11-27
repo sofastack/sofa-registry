@@ -16,6 +16,7 @@ import com.alipay.sofa.registry.server.meta.lease.EpochAware;
 import com.alipay.sofa.registry.server.meta.lease.Lease;
 import com.alipay.sofa.registry.server.meta.lease.LeaseManager;
 import com.alipay.sofa.registry.server.meta.remoting.RaftExchanger;
+import com.alipay.sofa.registry.store.api.annotation.ReadOnLeader;
 import com.alipay.sofa.registry.util.DatumVersionUtil;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Maps;
@@ -160,6 +161,11 @@ public abstract class AbstractRaftEnabledLeaseManager<T extends Node> extends Ab
         return this;
     }
 
+    @VisibleForTesting
+    Map<String, Lease<T>> getLeaseStore() {
+        return Maps.newHashMap(raftLeaseManager.getLeaseStore());
+    }
+
     public class DefaultRaftLeaseManager<T extends Node> extends DefaultLeaseManager<T> implements RaftLeaseManager<String, T> {
 
         @Override
@@ -179,6 +185,7 @@ public abstract class AbstractRaftEnabledLeaseManager<T extends Node> extends Ab
 
     public interface RaftLeaseManager<K, T extends Node> extends LeaseManager<T>, EpochAware {
 
+        @ReadOnLeader
         Map<K, Lease<T>> getLeaseStore();
     }
 }

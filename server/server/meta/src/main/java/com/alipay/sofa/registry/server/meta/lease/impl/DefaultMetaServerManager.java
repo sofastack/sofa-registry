@@ -60,7 +60,6 @@ public class DefaultMetaServerManager {
         Map<String, Long> epochMap = Maps.newHashMap();
         for(String dcName : nodeConfig.getMetaNodeIP().keySet()) {
             List<MetaNode> metaNodeList = crossDcMetaServerManager.getOrCreate(dcName).getClusterMembers();
-            Map<String, MetaNode> map = Maps.newHashMap();
             nodeMap.put(dcName, transform(metaNodeList));
             epochMap.put(dcName, crossDcMetaServerManager.getOrCreate(dcName).getEpoch());
         }

@@ -23,6 +23,7 @@ package com.alipay.sofa.registry;
  */
 
 import com.alipay.sofa.registry.common.model.slot.CRC32SlotFunctionTest;
+import com.alipay.sofa.registry.server.meta.lease.impl.CrossDcMetaServerManagerTest;
 import com.alipay.sofa.registry.server.meta.lease.impl.DefaultDataServerManagerTest;
 import com.alipay.sofa.registry.server.meta.lease.impl.DefaultLeaseManagerTest;
 import com.alipay.sofa.registry.server.meta.lease.impl.DefaultSessionManagerTest;
@@ -40,7 +41,8 @@ import org.junit.runners.Suite;
         DefaultCurrentDcMetaServerTest.class,
         DefaultSessionManagerTest.class,
         DefaultDataServerManagerTest.class,
-        DefaultLeaseManagerTest.class
+        DefaultLeaseManagerTest.class,
+        CrossDcMetaServerManagerTest.class
 })
 public class AllTests {
 }
