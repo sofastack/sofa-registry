@@ -99,6 +99,22 @@ public class ProvideData implements Serializable {
         this.version = version;
     }
 
+    public static Boolean toBool(ProvideData provideData) {
+        if (provideData == null || provideData.getProvideData() == null
+            || provideData.getProvideData().getObject() == null) {
+            return null;
+        }
+        return Boolean.parseBoolean((String) provideData.getProvideData().getObject());
+    }
+
+    public static Integer toInteger(ProvideData provideData) {
+        if (provideData == null || provideData.getProvideData() == null
+            || provideData.getProvideData().getObject() == null) {
+            return null;
+        }
+        return Integer.valueOf((String) provideData.getProvideData().getObject());
+    }
+
     @Override
     public String toString() {
         final StringBuilder sb = new StringBuilder("ProvideData{");
