@@ -39,7 +39,7 @@ public final class GetSlotTableRequestHandler extends AbstractServerHandler<GetS
     private static final Logger LOGGER = LoggerFactory.getLogger("META-SLOT");
 
     @Autowired
-    private MetaServer metaServer;
+    private MetaServer          metaServer;
 
     @Override
     public Object reply(Channel channel, GetSlotTableRequest getNodesRequest) {
@@ -57,7 +57,7 @@ public final class GetSlotTableRequestHandler extends AbstractServerHandler<GetS
                     .getHostAddress());
             return new GenericResponse().fillFailed("illegal epoch of node");
         }
-        if(getNodesRequest.getTargetDataNode() == null) {
+        if (getNodesRequest.getTargetDataNode() == null) {
             return new GenericResponse<SlotTable>().fillSucceed(currentTable);
         }
         List<DataNodeSlot> dataNodeSlots = currentTable.transfer(

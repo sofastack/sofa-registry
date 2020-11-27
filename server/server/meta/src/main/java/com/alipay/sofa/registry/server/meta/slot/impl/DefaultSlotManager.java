@@ -48,27 +48,27 @@ import static com.alipay.sofa.registry.server.meta.bootstrap.MetaServerConfigura
 @Component
 public class DefaultSlotManager extends AbstractLifecycle implements SlotManager, LeaderAware {
 
-//    private LocalStorageSlotManager raftSlotTableManager;
+    //    private LocalStorageSlotManager raftSlotTableManager;
 
     @Autowired
-    private RaftExchanger raftExchanger;
+    private RaftExchanger              raftExchanger;
 
     @Resource(name = SCHEDULED_EXECUTOR)
-    private ScheduledExecutorService scheduled;
+    private ScheduledExecutorService   scheduled;
 
-    private ScheduledFuture<?> future;
+    private ScheduledFuture<?>         future;
 
     private AtomicReference<SlotTable> currentSlotTable = new AtomicReference<>();
 
     @Override
     protected void doInitialize() throws InitializeException {
         super.doInitialize();
-//        LocalStorageSlotManager localRepo = new LocalStorageSlotManager();
-//        localRepo.registerAsRaftService();
-//        raftSlotTableManager = (LocalStorageSlotManager) Proxy.newProxyInstance(
-//                Thread.currentThread().getContextClassLoader(),
-//                new Class<?>[] {LocalStorageSlotManager.class },
-//                new ProxyHandler(LocalStorageSlotManager.class, getServiceId(), raftExchanger.getRaftClient()));
+        //        LocalStorageSlotManager localRepo = new LocalStorageSlotManager();
+        //        localRepo.registerAsRaftService();
+        //        raftSlotTableManager = (LocalStorageSlotManager) Proxy.newProxyInstance(
+        //                Thread.currentThread().getContextClassLoader(),
+        //                new Class<?>[] {LocalStorageSlotManager.class },
+        //                new ProxyHandler(LocalStorageSlotManager.class, getServiceId(), raftExchanger.getRaftClient()));
     }
 
     @Override
@@ -88,13 +88,13 @@ public class DefaultSlotManager extends AbstractLifecycle implements SlotManager
 
     @Override
     public SlotTable getSlotTable() {
-//        return raftSlotTableManager.getSlotTable();
+        //        return raftSlotTableManager.getSlotTable();
         return currentSlotTable.get();
     }
 
     @Override
     public void rebalance() {
-//        raftSlotTableManager.rebalance();
+        //        raftSlotTableManager.rebalance();
     }
 
     @Override
@@ -131,7 +131,7 @@ public class DefaultSlotManager extends AbstractLifecycle implements SlotManager
         future = scheduled.scheduleWithFixedDelay(new Runnable() {
             @Override
             public void run() {
-                if(ServiceStateMachine.getInstance().isLeader()) {
+                if (ServiceStateMachine.getInstance().isLeader()) {
                     peroidCheck();
                 }
             }
@@ -140,7 +140,7 @@ public class DefaultSlotManager extends AbstractLifecycle implements SlotManager
 
     @Override
     public void notLeader() {
-        if(future != null) {
+        if (future != null) {
             future.cancel(true);
             future = null;
         }
@@ -157,6 +157,5 @@ public class DefaultSlotManager extends AbstractLifecycle implements SlotManager
     private int getIntervalMilli() {
         return 60 * 1000;
     }
-
 
 }

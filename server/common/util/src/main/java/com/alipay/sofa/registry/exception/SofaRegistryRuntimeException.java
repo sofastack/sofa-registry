@@ -35,7 +35,8 @@ public class SofaRegistryRuntimeException extends RuntimeException {
         super(cause);
     }
 
-    public SofaRegistryRuntimeException(String message, Throwable cause, boolean enableSuppression, boolean writableStackTrace) {
+    public SofaRegistryRuntimeException(String message, Throwable cause, boolean enableSuppression,
+                                        boolean writableStackTrace) {
         super(message, cause, enableSuppression, writableStackTrace);
     }
 }

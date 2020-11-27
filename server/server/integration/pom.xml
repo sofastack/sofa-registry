@@ -40,19 +40,19 @@
         <dependency>
             <groupId>com.alipay.sofa</groupId>
             <artifactId>registry-client-api</artifactId>
-            <version>5.4.5</version>
+            <version>6.0.1</version>
             <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>com.alipay.sofa</groupId>
             <artifactId>registry-client-api</artifactId>
-            <version>5.4.5</version>
+            <version>6.0.1</version>
             <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>com.alipay.sofa</groupId>
             <artifactId>registry-client-impl</artifactId>
-            <version>5.4.5</version>
+            <version>6.0.1</version>
             <scope>compile</scope>
         </dependency>
     </dependencies>

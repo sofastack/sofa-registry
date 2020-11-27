@@ -63,7 +63,7 @@ public class MockServer {
         rpcServer.registerUserProcessor(new MockSubscriberRegisterProcessor());
         rpcServer.registerUserProcessor(new MockPublisherRegisterProcessor());
         rpcServer.registerUserProcessor(new MockConfiguratorRegisterProcesor());
-        rpcServer.start(ip);
+        rpcServer.start();
     }
 
     /**

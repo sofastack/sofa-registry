@@ -29,21 +29,22 @@ import java.util.concurrent.atomic.AtomicReference;
  */
 public class DefaultLifecycleState implements LifecycleState {
 
-    private final Logger            logger;
+    private final Logger                    logger;
 
     private AtomicReference<LifecyclePhase> phase         = new AtomicReference<>();
 
     private AtomicReference<LifecyclePhase> previoisPhase = new AtomicReference<>();
 
-    private Lifecycle               lifecycle;
+    private Lifecycle                       lifecycle;
 
-    private LifecycleController     lifecycleController;
+    private LifecycleController             lifecycleController;
 
     public DefaultLifecycleState(Lifecycle lifecycle, LifecycleController lifecycleController) {
         this(lifecycle, lifecycleController, LoggerFactory.getLogger(lifecycle.getClass()));
     }
 
-    public DefaultLifecycleState(Lifecycle lifecycle, LifecycleController lifecycleController, Logger logger) {
+    public DefaultLifecycleState(Lifecycle lifecycle, LifecycleController lifecycleController,
+                                 Logger logger) {
         this.lifecycle = lifecycle;
         this.lifecycleController = lifecycleController;
         this.logger = logger;
@@ -147,9 +148,9 @@ public class DefaultLifecycleState implements LifecycleState {
 
     @Override
     public void setPhase(LifecyclePhase currentPhase) {
-        if(logger.isInfoEnabled()) {
-            logger.info("[setPhaseName]{}({}) --> {}", lifecycle, lifecycle.getClass().getSimpleName(),
-                    currentPhase);
+        if (logger.isInfoEnabled()) {
+            logger.info("[setPhaseName]{}({}) --> {}", lifecycle, lifecycle.getClass()
+                .getSimpleName(), currentPhase);
         }
         previoisPhase.set(phase.get());
         phase.set(currentPhase);
@@ -165,9 +166,9 @@ public class DefaultLifecycleState implements LifecycleState {
      */
     @Override
     public void rollback(Exception e) {
-        if(logger.isInfoEnabled()) {
+        if (logger.isInfoEnabled()) {
             logger.info("[rollback]{},{} -> {}, reason:{}", this, phase.get(), previoisPhase.get(),
-                    e.getMessage());
+                e.getMessage());
         }
         phase.set(previoisPhase.get());
     }

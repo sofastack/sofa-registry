@@ -1,3 +1,19 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package com.alipay.sofa.registry.observer.impl;
 
 import com.alipay.sofa.registry.lifecycle.Lifecycle;
@@ -19,10 +35,10 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
  */
 public class AbstractLifecycleObservable extends AbstractLifecycle implements Observable, Lifecycle {
 
-    private ReadWriteLock lock = new ReentrantReadWriteLock();
+    private ReadWriteLock  lock      = new ReentrantReadWriteLock();
     private List<Observer> observers = new ArrayList<>();
 
-    private Executor executors = MoreExecutors.directExecutor();
+    private Executor       executors = MoreExecutors.directExecutor();
 
     public AbstractLifecycleObservable() {
     }
@@ -37,10 +53,10 @@ public class AbstractLifecycleObservable extends AbstractLifecycle implements Ob
 
     @Override
     public void addObserver(Observer observer) {
-        try{
+        try {
             lock.writeLock().lock();
             observers.add(observer);
-        }finally {
+        } finally {
             lock.writeLock().unlock();
         }
     }
@@ -50,29 +66,29 @@ public class AbstractLifecycleObservable extends AbstractLifecycle implements Ob
         try {
             lock.writeLock().lock();
             observers.remove(observer);
-        }finally {
+        } finally {
             lock.writeLock().unlock();
         }
     }
 
     protected void notifyObservers(final Object message) {
-        Object []tmpObservers;
+        Object[] tmpObservers;
 
         try {
             lock.readLock().lock();
             tmpObservers = observers.toArray();
-        }finally {
+        } finally {
             lock.readLock().unlock();
         }
 
-        for(final Object observer : tmpObservers){
+        for (final Object observer : tmpObservers) {
 
             executors.execute(new Runnable() {
                 @Override
                 public void run() {
-                    try{
-                        ((Observer)observer).update(AbstractLifecycleObservable.this, message);
-                    }catch(Exception e){
+                    try {
+                        ((Observer) observer).update(AbstractLifecycleObservable.this, message);
+                    } catch (Exception e) {
                         logger.error("[notifyObservers][{}]", observer, e);
                     }
                 }

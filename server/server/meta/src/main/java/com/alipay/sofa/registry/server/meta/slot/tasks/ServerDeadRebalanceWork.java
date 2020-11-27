@@ -1,3 +1,19 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package com.alipay.sofa.registry.server.meta.slot.tasks;
 
 import com.alipay.sofa.registry.common.model.metaserver.nodes.DataNode;
@@ -22,19 +38,20 @@ import java.util.Set;
  */
 public class ServerDeadRebalanceWork implements RebalanceTask {
 
-    private SlotManager slotManager;
+    private SlotManager       slotManager;
 
     private DataServerManager dataServerManager;
 
-    private DataNode deadServer;
+    private DataNode          deadServer;
 
     private PromotionStrategy promotionStrategy;
 
-    private FollowerSelector selector;
+    private FollowerSelector  selector;
 
-    private SlotTable nextSlotTable;
+    private SlotTable         nextSlotTable;
 
-    public ServerDeadRebalanceWork(SlotManager slotManager, DataServerManager dataServerManager, DataNode deadServer) {
+    public ServerDeadRebalanceWork(SlotManager slotManager, DataServerManager dataServerManager,
+                                   DataNode deadServer) {
         this.slotManager = slotManager;
         this.dataServerManager = dataServerManager;
         this.deadServer = deadServer;
@@ -57,7 +74,7 @@ public class ServerDeadRebalanceWork implements RebalanceTask {
         slots.addAll(dataNodeSlot.getLeaders());
         nextSlotTable = reassignFollowers(nextSlotTable, slots);
 
-        if(slotManager instanceof DefaultSlotManager) {
+        if (slotManager instanceof DefaultSlotManager) {
             ((DefaultSlotManager) slotManager).setSlotTable(nextSlotTable);
         } else {
             throw new IllegalStateException("slot manager need to be able to set slot-table");
@@ -67,14 +84,15 @@ public class ServerDeadRebalanceWork implements RebalanceTask {
     private SlotTable promoteFollowers(SlotTable slotTable, List<Integer> slotNums) {
         long newSlotTableEpoch = slotTable.getEpoch();
         Map<Integer, Slot> slotMap = slotTable.getSlotMap();
-        for(Integer slotNum : slotNums) {
+        for (Integer slotNum : slotNums) {
             Slot slot = slotMap.get(slotNum);
             // select one candidate from followers as new leader
             String newLeader = promotionStrategy.promotes(slot.getFollowers());
             Set<String> newFollowers = slot.getFollowers();
             newFollowers.remove(newLeader);
             // replace the slot info
-            Slot newSlot = new Slot(slot.getId(), newLeader, DatumVersionUtil.nextId(), newFollowers);
+            Slot newSlot = new Slot(slot.getId(), newLeader, DatumVersionUtil.nextId(),
+                newFollowers);
             slotMap.put(slotNum, newSlot);
             newSlotTableEpoch = newSlot.getLeaderEpoch();
         }
@@ -84,13 +102,14 @@ public class ServerDeadRebalanceWork implements RebalanceTask {
     private SlotTable reassignFollowers(SlotTable slotTable, List<Integer> slotNums) {
         long newSlotTableEpoch = slotTable.getEpoch();
         Map<Integer, Slot> slotMap = slotTable.getSlotMap();
-        for(Integer slotNum : slotNums) {
+        for (Integer slotNum : slotNums) {
             Slot slot = slotMap.get(slotNum);
             // select new follower from alive data servers
             String newFollower = selector.select(slotNum);
             slot.getFollowers().add(newFollower);
             // generate new slot, as epoch has been changed
-            Slot newSlot = new Slot(slot.getId(), slot.getLeader(), DatumVersionUtil.nextId(), slot.getFollowers());
+            Slot newSlot = new Slot(slot.getId(), slot.getLeader(), DatumVersionUtil.nextId(),
+                slot.getFollowers());
             slotMap.put(slotNum, newSlot);
 
             newSlotTableEpoch = newSlot.getLeaderEpoch();

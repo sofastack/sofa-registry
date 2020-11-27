@@ -33,14 +33,9 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
 
 @RunWith(Suite.class)
-@Suite.SuiteClasses({
-        CRC32SlotFunctionTest.class,
-        DefaultCrossDcMetaServerTest.class,
-        CrossDcSlotAllocatorTest.class,
-        DefaultCurrentDcMetaServerTest.class,
-        DefaultSessionManagerTest.class,
-        DefaultDataServerManagerTest.class,
-        DefaultLeaseManagerTest.class
-})
+@Suite.SuiteClasses({ CRC32SlotFunctionTest.class, DefaultCrossDcMetaServerTest.class,
+                     CrossDcSlotAllocatorTest.class, DefaultCurrentDcMetaServerTest.class,
+                     DefaultSessionManagerTest.class, DefaultDataServerManagerTest.class,
+                     DefaultLeaseManagerTest.class })
 public class AllTests {
 }
