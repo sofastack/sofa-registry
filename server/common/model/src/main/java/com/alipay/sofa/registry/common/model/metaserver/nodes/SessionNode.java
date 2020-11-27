@@ -32,7 +32,7 @@ public class SessionNode implements Node {
 
     private String name;
 
-    private long processId;
+    private long   processId;
 
     /**
      * constructor

@@ -28,15 +28,15 @@ import javax.ws.rs.core.MediaType;
 
 @Path("sessionLoadbalance")
 public class SessionLoadbalanceResource {
-//    @Autowired
-//    private Registry metaServerRegistry;
+    //    @Autowired
+    //    private Registry metaServerRegistry;
 
     // todo: rebalance
     @POST
     @Path("run")
     @Produces(MediaType.APPLICATION_JSON)
     public Object run(@FormParam("maxDisconnect") @DefaultValue("0") String maxDisconnect) {
-//        return metaServerRegistry.sessionLoadbalance(Integer.parseInt(maxDisconnect));
+        //        return metaServerRegistry.sessionLoadbalance(Integer.parseInt(maxDisconnect));
         return null;
     }
 }

@@ -1,3 +1,19 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package com.alipay.sofa.registry.server.meta.lease.impl;
 
 import com.alipay.sofa.registry.exception.*;
@@ -41,7 +57,8 @@ import static com.alipay.sofa.registry.server.meta.bootstrap.MetaServerConfigura
  * */
 @Component
 @SmartSpringLifecycle
-public class CrossDcMetaServerManager extends AbstractLifecycle implements MetaServerManager, LeaderAware {
+public class CrossDcMetaServerManager extends AbstractLifecycle implements MetaServerManager,
+                                                               LeaderAware {
 
     /**
      * Map[DataCenter(String), CrossDcMetaServer]
@@ -49,36 +66,40 @@ public class CrossDcMetaServerManager extends AbstractLifecycle implements MetaS
     private ConcurrentMap<String, CrossDcMetaServer> crossDcMetaServers = Maps.newConcurrentMap();
 
     @Autowired
-    private NodeConfig nodeConfig;
+    private NodeConfig                               nodeConfig;
 
     @Autowired
-    private MetaServerConfig metaServerConfig;
+    private MetaServerConfig                         metaServerConfig;
 
     @Autowired
-    private RaftExchanger raftExchanger;
+    private RaftExchanger                            raftExchanger;
 
     @Resource(name = SCHEDULED_EXECUTOR)
-    private ScheduledExecutorService scheduled;
+    private ScheduledExecutorService                 scheduled;
 
     @Resource(name = GLOBAL_EXECUTOR)
-    private ExecutorService executors;
+    private ExecutorService                          executors;
 
     @Resource(type = BoltExchange.class)
-    private Exchange boltExchange;
+    private Exchange                                 boltExchange;
 
     @Override
     public CrossDcMetaServer getOrCreate(String dcName) {
         CrossDcMetaServer metaServer = crossDcMetaServers.get(dcName);
-        if(metaServer == null) {
+        if (metaServer == null) {
             synchronized (this) {
                 metaServer = crossDcMetaServers.get(dcName);
-                if(metaServer == null) {
-                    metaServer = new DefaultCrossDcMetaServer(dcName, nodeConfig.getDataCenterMetaServers(dcName),
-                            scheduled, boltExchange, raftExchanger, metaServerConfig);
+                if (metaServer == null) {
+                    metaServer = new DefaultCrossDcMetaServer(dcName,
+                        nodeConfig.getDataCenterMetaServers(dcName), scheduled, boltExchange,
+                        raftExchanger, metaServerConfig);
                     try {
                         LifecycleHelper.initializeIfPossible(metaServer);
                     } catch (Exception e) {
-                        logger.error("[getOrCreate][{}]Cross-Dc-MetaServer create err, stop register to map", dcName, e);
+                        logger
+                            .error(
+                                "[getOrCreate][{}]Cross-Dc-MetaServer create err, stop register to map",
+                                dcName, e);
                         throw new SofaRegistryRuntimeException(e);
                     }
                     crossDcMetaServers.put(dcName, metaServer);
@@ -89,9 +110,26 @@ public class CrossDcMetaServerManager extends AbstractLifecycle implements MetaS
     }
 
     @Override
+<<<<<<< HEAD
+=======
+    public void remove(String dc) {
+        CrossDcMetaServer metaServer = crossDcMetaServers.remove(dc);
+        if (metaServer == null) {
+            return;
+        }
+        try {
+            LifecycleHelper.stopIfPossible(metaServer);
+            LifecycleHelper.disposeIfPossible(metaServer);
+        } catch (Exception e) {
+            logger.error("[remove][{}]", dc, e);
+        }
+    }
+
+    @Override
+>>>>>>> origin/feat/datastore
     protected void doInitialize() throws InitializeException {
         super.doInitialize();
-        for(Map.Entry<String, Collection<String>> entry : nodeConfig.getMetaNodeIP().entrySet()) {
+        for (Map.Entry<String, Collection<String>> entry : nodeConfig.getMetaNodeIP().entrySet()) {
             getOrCreate(entry.getKey());
         }
     }
@@ -142,6 +180,7 @@ public class CrossDcMetaServerManager extends AbstractLifecycle implements MetaS
         }
     }
 
+<<<<<<< HEAD
     @VisibleForTesting
     CrossDcMetaServerManager setNodeConfig(NodeConfig nodeConfig) {
         this.nodeConfig = nodeConfig;
@@ -182,4 +221,6 @@ public class CrossDcMetaServerManager extends AbstractLifecycle implements MetaS
     ConcurrentMap<String, CrossDcMetaServer> getCrossDcMetaServers() {
         return crossDcMetaServers;
     }
+=======
+>>>>>>> origin/feat/datastore
 }
