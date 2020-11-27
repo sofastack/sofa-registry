@@ -255,4 +255,9 @@ public class SessionDataStore implements DataStore {
         }
         return ret;
     }
+
+    @Override
+    public Map<String, Map<String, Publisher>> getDataInfoIdPublishers(int slotId) {
+        throw new UnsupportedOperationException();
+    }
 }

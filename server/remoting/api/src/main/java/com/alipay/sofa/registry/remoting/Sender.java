@@ -14,35 +14,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alipay.sofa.registry.server.session.renew;
-
-import java.util.List;
-
-import com.alipay.sofa.registry.common.model.DatumSnapshotRequest;
-import com.alipay.sofa.registry.common.model.RenewDatumRequest;
+package com.alipay.sofa.registry.remoting;
 
 /**
  *
- * @author kezhu.wukz
- * @version $Id: RenewService.java, v 0.1 2019-06-27 11:06 kezhu.wukz Exp $
+ * @author yuzhi.lyz
+ * @version v 0.1 2020-11-20 16:10 yuzhi.lyz Exp $
  */
-public interface RenewService {
-
+public interface Sender {
     /**
-     * Get RenewDatumRequests based on connectId
+     * Sync send
      *
-     * @param connectId
-     * @return
+     * @param channel the channel
+     * @param message the message
+     * @param timeoutMillis the timeout millis
+     * @return object
      */
-    List<RenewDatumRequest> getRenewDatumRequests(String connectId);
-
-    /**
-     * Get DatumSnapshotRequests based on connectId
-     *
-     * @param connectId
-     * @return
-     */
-    List<DatumSnapshotRequest> getDatumSnapshotRequest(String connectId);
-
-    DatumSnapshotRequest getDatumSnapshotRequest(String connectId, String dataServerIP);
+    Object sendSync(final Channel channel, final Object message, final int timeoutMillis);
 }

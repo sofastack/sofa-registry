@@ -38,7 +38,6 @@ import com.alipay.sofa.registry.server.data.bootstrap.DataServerConfig;
 import com.alipay.sofa.registry.server.data.change.event.DataChangeEventCenter;
 import com.alipay.sofa.registry.server.data.remoting.handler.AbstractServerHandler;
 import com.alipay.sofa.registry.server.data.remoting.sessionserver.SessionServerConnectionFactory;
-import com.alipay.sofa.registry.server.data.renew.DatumLeaseManager;
 import com.alipay.sofa.registry.util.ParaCheckUtil;
 
 /**
@@ -61,9 +60,6 @@ public class PublishDataHandler extends AbstractServerHandler<PublishDataRequest
 
     @Autowired
     private DataServerConfig               dataServerConfig;
-
-    @Autowired
-    private DatumLeaseManager              datumLeaseManager;
 
     @Autowired
     private ThreadPoolExecutor             publishProcessorExecutor;
@@ -111,8 +107,6 @@ public class PublishDataHandler extends AbstractServerHandler<PublishDataRequest
                         + publisher.getTargetAddress().getAddressString());
             sessionServerConnectionFactory.registerConnectId(request.getSessionServerProcessId(),
                 connectId);
-            // record the renew timestamp
-            datumLeaseManager.renew(connectId);
         }
         return SlotAccessGenericResponse.buildSuccessResponse(slotAccess);
     }

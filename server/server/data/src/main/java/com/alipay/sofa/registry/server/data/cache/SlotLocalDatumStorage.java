@@ -23,7 +23,6 @@ import com.alipay.sofa.registry.common.model.store.Publisher;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.server.data.bootstrap.DataServerConfig;
-import com.alipay.sofa.registry.server.data.change.DataChangeTypeEnum;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import javax.annotation.PostConstruct;
@@ -53,16 +52,7 @@ public final class SlotLocalDatumStorage implements DatumStorage,
     }
 
     @Override
-    public Datum get(String dataCenter, String dataInfoId) {
-        final DatumStorage ds = getDatumStorage(dataInfoId);
-        if (ds == null) {
-            return null;
-        }
-        return ds.get(dataCenter, dataInfoId);
-    }
-
-    @Override
-    public Map<String, Datum> get(String dataInfoId) {
+    public Datum get(String dataInfoId) {
         final DatumStorage ds = getDatumStorage(dataInfoId);
         if (ds == null) {
             return null;
@@ -71,18 +61,9 @@ public final class SlotLocalDatumStorage implements DatumStorage,
     }
 
     @Override
-    public Map<String, Map<String, Datum>> getAll() {
-        Map<String, Map<String, Datum>> m = new HashMap<>();
-        localDatumStorages.values().forEach(ds -> {
-                    Map<String, Map<String, Datum>> dsm = ds.getAll();
-                    m.forEach((dataCenter, datumMap) -> {
-                        Map<String, Datum> existing = m.computeIfAbsent(dataCenter, k -> {
-                            return new HashMap<>();
-                        });
-                        existing.putAll(datumMap);
-                    });
-                }
-        );
+    public Map<String, Datum> getAll() {
+        Map<String, Datum> m = new HashMap<>();
+        localDatumStorages.values().forEach(ds -> m.putAll(ds.getAll()));
         return m;
     }
 
@@ -113,30 +94,36 @@ public final class SlotLocalDatumStorage implements DatumStorage,
     }
 
     @Override
-    public MergeResult putDatum(DataChangeTypeEnum changeType, Datum datum) {
+    public MergeResult putDatum(Datum datum) {
         final DatumStorage ds = getDatumStorage(datum.getDataInfoId());
         if (ds == null) {
             return new MergeResult(LocalDatumStorage.ERROR_DATUM_SLOT, false);
         }
         synchronized (ds) {
-            return ds.putDatum(changeType, datum);
+            return ds.putDatum(datum);
         }
     }
 
     @Override
-    public boolean cleanDatum(String dataCenter, String dataInfoId) {
+    public boolean cleanDatum(String dataInfoId) {
         final DatumStorage ds = getDatumStorage(dataInfoId);
         if (ds == null) {
             return false;
         }
         synchronized (ds) {
-            return ds.cleanDatum(dataCenter, dataInfoId);
+            return ds.cleanDatum(dataInfoId);
         }
     }
 
     @Override
-    public boolean removePublisher(String dataCenter, String dataInfoId, String registerId) {
-        throw new UnsupportedOperationException();
+    public boolean removePublisher(String dataInfoId, String registerId) {
+        final DatumStorage ds = getDatumStorage(dataInfoId);
+        if (ds == null) {
+            return false;
+        }
+        synchronized (ds) {
+            return ds.removePublisher(dataInfoId, registerId);
+        }
     }
 
     @Override
@@ -152,7 +139,7 @@ public final class SlotLocalDatumStorage implements DatumStorage,
     }
 
     @Override
-    public Map<String, Long> getVersions(String dataInfoId) {
+    public Long getVersions(String dataInfoId) {
         final DatumStorage ds = getDatumStorage(dataInfoId);
         if (ds == null) {
             return null;
@@ -161,45 +148,53 @@ public final class SlotLocalDatumStorage implements DatumStorage,
     }
 
     @Override
-    public Map<String, DatumSummary> getDatumSummary(String dataCenter, String targetIpAddress) {
+    public Map<String, DatumSummary> getDatumSummary(String targetIpAddress) {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public Map<String, DatumSummary> getDatumSummary(int slotId, String dataCenter,
-                                                     String targetIpAddress) {
+    public Map<String, Map<String, Publisher>> getPublishers(int slotId) {
         final DatumStorage ds = localDatumStorages.get(slotId);
         if (ds == null) {
             return Collections.emptyMap();
         }
-        return ds.getDatumSummary(dataCenter, targetIpAddress);
+        return ds.getPublishers(slotId);
     }
 
     @Override
-    public void merge(int slotId, String dataCenter, Map<String, List<Publisher>> updateds,
-                      Map<String, List<String>> removeds) {
+    public Map<String, DatumSummary> getDatumSummary(int slotId, String targetIpAddress) {
+        final DatumStorage ds = localDatumStorages.get(slotId);
+        if (ds == null) {
+            return Collections.emptyMap();
+        }
+        return ds.getDatumSummary(targetIpAddress);
+    }
+
+    @Override
+    public void merge(int slotId, Map<String, List<Publisher>> updatedPublishers, List<String> removedDataInfoIds,
+                      Map<String, List<String>> removedPublishers) {
         final DatumStorage ds = localDatumStorages.get(slotId);
         if (ds == null) {
             return;
         }
         synchronized (ds) {
-            for (Map.Entry<String, List<String>> e : removeds.entrySet()) {
+            for (String dataInfoId : removedDataInfoIds) {
+                ds.cleanDatum(dataInfoId);
+            }
+
+            for (Map.Entry<String, List<String>> e : removedPublishers.entrySet()) {
                 final String dataInfoId = e.getKey();
-                if (e.getValue().isEmpty()) {
-                    // empty means remove the dataInfoId
-                    ds.cleanDatum(dataCenter, dataInfoId);
-                } else {
-                    for (String registerId : e.getValue()) {
-                        ds.removePublisher(dataCenter, dataInfoId, registerId);
-                    }
+                for (String registerId : e.getValue()) {
+                    ds.removePublisher(dataInfoId, registerId);
                 }
             }
-            for (Map.Entry<String, List<Publisher>> updatedPublishers : updateds.entrySet()) {
-                Datum datum = new Datum(updatedPublishers.getValue().get(0), dataCenter);
-                updatedPublishers.getValue().forEach(p -> {
+
+            for (Map.Entry<String, List<Publisher>> updateds : updatedPublishers.entrySet()) {
+                Datum datum = new Datum(updateds.getValue().get(0), dataServerConfig.getLocalDataCenter());
+                updateds.getValue().forEach(p -> {
                     datum.getPubMap().put(p.getRegisterId(), p);
                 });
-                ds.putDatum(DataChangeTypeEnum.MERGE, datum);
+                ds.putDatum(datum);
             }
         }
     }

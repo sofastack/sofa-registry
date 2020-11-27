@@ -132,7 +132,7 @@ public class RegistryApplication {
             JerseyClient jerseyClient = JerseyClient.getInstance();
             Channel channel = jerseyClient.connect(new URL(serverAddress, httpPort));
             LOGGER.info("{}:{} health check", serverAddress, httpPort);
-            resp =  channel.getWebTarget().path("health/check").request(APPLICATION_JSON)
+            resp = channel.getWebTarget().path("health/check").request(APPLICATION_JSON)
                 .get(CommonResponse.class);
             return resp.isSuccess();
         } catch (Throwable t) {

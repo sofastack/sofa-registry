@@ -92,7 +92,7 @@ public class DefaultSessionRegistryStrategy implements SessionRegistryStrategy {
         //trigger fetch data for subscriber,and push to client node
         TaskEvent taskEvent = new TaskEvent(dataInfoId,
             TaskEvent.TaskType.DATA_CHANGE_FETCH_CLOUD_TASK);
-        taskLogger.info("send " + taskEvent.getTaskType() + " taskEvent:{}", taskEvent);
+        taskLogger.info("send {} taskEvent:{}", taskEvent.getTaskType(), taskEvent);
         taskListenerManager.sendTaskEvent(taskEvent);
     }
 
@@ -107,7 +107,7 @@ public class DefaultSessionRegistryStrategy implements SessionRegistryStrategy {
             //trigger fetch data for subscriber,and push to client node
             TaskEvent taskEvent = new TaskEvent(subscriber,
                 TaskEvent.TaskType.SUBSCRIBER_REGISTER_FETCH_TASK);
-            taskLogger.info("send " + taskEvent.getTaskType() + " taskEvent:{}", taskEvent);
+            taskLogger.info("send {} taskEvent:{}", taskEvent.getTaskType(), taskEvent);
             taskListenerManager.sendTaskEvent(taskEvent);
         }
     }

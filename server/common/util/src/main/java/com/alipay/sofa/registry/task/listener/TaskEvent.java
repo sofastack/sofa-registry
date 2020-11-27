@@ -49,8 +49,6 @@ public class TaskEvent {
         SUBSCRIBER_MULTI_FETCH_TASK("SubscriberMultiFetchTask"), //
         PUBLISH_DATA_TASK("PublishDataTask"), //
         UN_PUBLISH_DATA_TASK("UnPublishDataTask"), //
-        RENEW_DATUM_TASK("RenewDatumTask"), //
-        DATUM_SNAPSHOT_TASK("DatumSnapshotTask"), //
 
         //Session Adapter task
         USER_DATA_ELEMENT_PUSH_TASK("UserDataElementPushTask"), //

@@ -16,16 +16,6 @@
  */
 package com.alipay.sofa.registry.server.data.change.event;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.DelayQueue;
-import java.util.concurrent.Executor;
-import java.util.concurrent.LinkedBlockingDeque;
-import java.util.concurrent.locks.ReentrantLock;
-
-import com.alipay.sofa.registry.common.model.constants.ValueConstants;
 import com.alipay.sofa.registry.common.model.dataserver.Datum;
 import com.alipay.sofa.registry.common.model.store.Publisher;
 import com.alipay.sofa.registry.log.Logger;
@@ -34,13 +24,13 @@ import com.alipay.sofa.registry.server.data.bootstrap.DataServerConfig;
 import com.alipay.sofa.registry.server.data.cache.DatumCache;
 import com.alipay.sofa.registry.server.data.cache.UnPublisher;
 import com.alipay.sofa.registry.server.data.change.ChangeData;
-import com.alipay.sofa.registry.server.data.change.DataChangeTypeEnum;
 import com.alipay.sofa.registry.server.data.change.DataSourceTypeEnum;
-import com.alipay.sofa.registry.server.data.change.SnapshotData;
 import com.alipay.sofa.registry.server.data.executor.ExecutorFactory;
-import com.alipay.sofa.registry.server.data.node.DataServerNode;
-import com.alipay.sofa.registry.server.data.remoting.dataserver.DataServerNodeFactory;
 import com.google.common.collect.Interners;
+
+import java.util.Map;
+import java.util.concurrent.*;
+import java.util.concurrent.locks.ReentrantLock;
 
 /**
  * a queue of DataChangeEvent
@@ -55,11 +45,6 @@ public class DataChangeEventQueue {
 
     private static final Logger                        LOGGER_START              = LoggerFactory
                                                                                      .getLogger("DATA-START-LOGS");
-
-    private static final Logger                        RENEW_LOGGER              = LoggerFactory
-                                                                                     .getLogger(
-                                                                                         ValueConstants.LOGGER_NAME_RENEW,
-                                                                                         "[DataChangeEventQueue]");
 
     /**
      *
@@ -167,11 +152,10 @@ public class DataChangeEventQueue {
      * @param dataCenter
      * @param dataInfoId
      * @param sourceType
-     * @param changeType
      * @return
      */
     private ChangeData getChangeData(String dataCenter, String dataInfoId,
-                                     DataSourceTypeEnum sourceType, DataChangeTypeEnum changeType) {
+                                     DataSourceTypeEnum sourceType) {
         Map<String, ChangeData> map = CHANGE_DATA_MAP_FOR_MERGE.get(dataCenter);
         if (map == null) {
             Map<String, ChangeData> newMap = new ConcurrentHashMap<>();
@@ -183,8 +167,7 @@ public class DataChangeEventQueue {
 
         ChangeData changeData = map.get(dataInfoId);
         if (changeData == null) {
-            ChangeData newChangeData = new ChangeData(null, this.notifyIntervalMs, sourceType,
-                changeType);
+            ChangeData newChangeData = new ChangeData(null, this.notifyIntervalMs, sourceType);
             changeData = map.putIfAbsent(dataInfoId, newChangeData);
             if (changeData == null) {
                 changeData = newChangeData;
@@ -209,16 +192,12 @@ public class DataChangeEventQueue {
                         DataChangeEvent dataChangeEvent = (DataChangeEvent) event;
                         //Temporary push data will be notify as soon as,and not merge to normal pub data;
                         if (dataChangeEvent.getSourceType() == DataSourceTypeEnum.PUB_TEMP) {
-                            addTempChangeData(dataChangeEvent.getDatum(), dataChangeEvent.getChangeType(),
-                                    dataChangeEvent.getSourceType());
+                            addTempChangeData(dataChangeEvent.getDatum(), dataChangeEvent.getSourceType());
                         } else {
-                            handleDatum(dataChangeEvent.getChangeType(), dataChangeEvent.getSourceType(),
-                                    dataChangeEvent.getDatum());
+                            handleDatum(dataChangeEvent.getSourceType(), dataChangeEvent.getDatum());
                         }
                     } else if (scope == DataChangeScopeEnum.CLIENT) {
                         handleClientOff((ClientChangeEvent) event);
-                    } else if (scope == DataChangeScopeEnum.SNAPSHOT) {
-                        handleSnapshot((DatumSnapshotEvent) event);
                     }
                 } catch (Throwable e) {
                     LOGGER.error("[{}] handle change event failed", getName(), e);
@@ -248,7 +227,7 @@ public class DataChangeEventQueue {
                         publisher.getRegisterId(), event.getOccurredTimestamp()),
                         event.getDataCenter(), event.getVersion());
                     datum.setContainsUnPub(true);
-                    handleDatum(DataChangeTypeEnum.MERGE, DataSourceTypeEnum.PUB, datum);
+                    handleDatum(DataSourceTypeEnum.PUB, datum);
                     count++;
 
                 }
@@ -261,15 +240,14 @@ public class DataChangeEventQueue {
         }
     }
 
-    private void handleDatum(DataChangeTypeEnum changeType, DataSourceTypeEnum sourceType,
-                             Datum targetDatum) {
+    private void handleDatum(DataSourceTypeEnum sourceType, Datum targetDatum) {
         lock.lock();
         try {
             //get changed datum
             ChangeData changeData = getChangeData(targetDatum.getDataCenter(),
-                targetDatum.getDataInfoId(), sourceType, changeType);
+                targetDatum.getDataInfoId(), sourceType);
             Datum cacheDatum = changeData.getDatum();
-            if (changeType == DataChangeTypeEnum.COVER || cacheDatum == null) {
+            if (cacheDatum == null) {
                 changeData.setDatum(targetDatum);
             } else {
                 Map<String, Publisher> targetPubMap = targetDatum.getPubMap();
@@ -300,69 +278,9 @@ public class DataChangeEventQueue {
         }
     }
 
-    private void handleSnapshot(DatumSnapshotEvent event) {
-        String connectId = event.getConnectId();
-        Map<String, Publisher> cachePubMap = event.getCachePubMap();
-        Map<String, Publisher> snapshotPubMap = event.getPubMap();
-
-        // build SnapshotData
-        Map<String, SnapshotData> dataInfoId2SnapshotData = new HashMap<>();
-        synchronized (Interners.newWeakInterner().intern(connectId)) {
-            for (Map.Entry<String, Publisher> entry : snapshotPubMap.entrySet()) {
-                String registerId = entry.getKey();
-                Publisher publisher = entry.getValue();
-                String dataInfoId = publisher.getDataInfoId();
-
-                // Only care dataInfoIds which belong to this queue
-                if (!belongTo(dataInfoId)) {
-                    continue;
-                }
-
-                SnapshotData snapshotData = getOrCreateSnapshotData(dataInfoId2SnapshotData,
-                    dataInfoId);
-                snapshotData.getSnapshotPubMap().put(registerId, publisher);
-            }
-            for (Map.Entry<String, Publisher> entry : cachePubMap.entrySet()) {
-                String registerId = entry.getKey();
-                Publisher publisher = entry.getValue();
-                String dataInfoId = publisher.getDataInfoId();
-
-                // Only care dataInfoIds which belong to this queue
-                if (!belongTo(dataInfoId)) {
-                    continue;
-                }
-
-                SnapshotData snapshotData = getOrCreateSnapshotData(dataInfoId2SnapshotData,
-                    dataInfoId);
-                snapshotData.getToBeDeletedPubMap().put(registerId, publisher);
-            }
-        }
-
-        // put all SnapshotDatas to queue
-        for (SnapshotData snapshotData : dataInfoId2SnapshotData.values()) {
-            RENEW_LOGGER
-                .info(
-                    "SnapshotData: connectId={}, dataInfoId={}, cachePubSize={}, snapshotPubSize={}",
-                    connectId, snapshotData.getDataInfoId(), snapshotData.getToBeDeletedPubMap()
-                        .size(), snapshotData.getSnapshotPubMap().size());
-            CHANGE_QUEUE.put(snapshotData);
-        }
-    }
-
-    private SnapshotData getOrCreateSnapshotData(Map<String, SnapshotData> dataInfoId2SnapshotData,
-                                                 String dataInfoId) {
-        SnapshotData snapshotData = dataInfoId2SnapshotData.get(dataInfoId);
-        if (snapshotData == null) {
-            snapshotData = new SnapshotData(dataInfoId, new HashMap<>(), new HashMap<>());
-            dataInfoId2SnapshotData.put(dataInfoId, snapshotData);
-        }
-        return snapshotData;
-    }
-
-    private void addTempChangeData(Datum targetDatum, DataChangeTypeEnum changeType,
-                                   DataSourceTypeEnum sourceType) {
+    private void addTempChangeData(Datum targetDatum, DataSourceTypeEnum sourceType) {
         ChangeData tempChangeData = new ChangeData(targetDatum, this.notifyTempDataIntervalMs,
-            sourceType, changeType);
+            sourceType);
         CHANGE_QUEUE.put(tempChangeData);
     }
 

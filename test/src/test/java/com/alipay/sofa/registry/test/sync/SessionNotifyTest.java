@@ -79,7 +79,8 @@ import com.alipay.sofa.registry.util.ParaCheckUtil;
  */
 @RunWith(SpringRunner.class)
 public class SessionNotifyTest extends BaseIntegrationTest {
-    public static String DATA_ID  = "test-dataId-" + System.currentTimeMillis();
+    public static String                       DATA_ID           = "test-dataId-"
+                                                                   + System.currentTimeMillis();
 
     private static final int                   TEST_SYNC_PORT    = 9677;
     private static DataServerConnectionFactory dataServerConnectionFactory;
@@ -149,8 +150,7 @@ public class SessionNotifyTest extends BaseIntegrationTest {
 
             publisher.setClientVersion(ClientVersion.StoreData);
 
-            DataInfo dataInfo = new DataInfo(DEFAULT_INSTANCE_ID, DATA_ID,
-                DEFAULT_GROUP);
+            DataInfo dataInfo = new DataInfo(DEFAULT_INSTANCE_ID, DATA_ID, DEFAULT_GROUP);
             publisher.setDataInfoId(dataInfo.getDataInfoId());
 
             ServerDataBox serverDataBox = new ServerDataBox("");
