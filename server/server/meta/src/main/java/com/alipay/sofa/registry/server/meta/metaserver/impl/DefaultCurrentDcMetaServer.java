@@ -1,3 +1,19 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package com.alipay.sofa.registry.server.meta.metaserver.impl;
 
 import com.alipay.sofa.registry.common.model.Node;
@@ -25,7 +41,6 @@ import java.lang.reflect.Proxy;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
 
-
 /**
  * @author chen.zhu
  * <p>
@@ -36,18 +51,18 @@ import java.util.concurrent.atomic.AtomicLong;
 public class DefaultCurrentDcMetaServer extends AbstractMetaServer implements CurrentDcMetaServer {
 
     @Autowired
-    private SlotManager slotManager;
+    private SlotManager                  slotManager;
 
     @Autowired
-    private SessionManager sessionManager;
+    private SessionManager               sessionManager;
 
     @Autowired
-    private DataServerManager dataServerManager;
+    private DataServerManager            dataServerManager;
 
     @Autowired
-    private RaftExchanger raftExchanger;
+    private RaftExchanger                raftExchanger;
 
-    private AtomicLong currentEpoch = new AtomicLong();
+    private AtomicLong                   currentEpoch = new AtomicLong();
 
     private CurrentMetaServerRaftStorage raftStorage;
 
@@ -56,9 +71,11 @@ public class DefaultCurrentDcMetaServer extends AbstractMetaServer implements Cu
         super.doInitialize();
         MetaServersRaftStorage storage = new MetaServersRaftStorage();
         storage.registerAsRaftService();
-        raftStorage = (CurrentMetaServerRaftStorage) Proxy.newProxyInstance(Thread.currentThread().getContextClassLoader(),
-                new Class[]{CurrentMetaServerRaftStorage.class},
-                new ProxyHandler(CurrentMetaServerRaftStorage.class, getServiceId(), raftExchanger.getRaftClient()));
+        raftStorage = (CurrentMetaServerRaftStorage) Proxy.newProxyInstance(
+            Thread.currentThread().getContextClassLoader(),
+            new Class[] { CurrentMetaServerRaftStorage.class },
+            new ProxyHandler(CurrentMetaServerRaftStorage.class, getServiceId(), raftExchanger
+                .getRaftClient()));
     }
 
     @Override
@@ -92,7 +109,7 @@ public class DefaultCurrentDcMetaServer extends AbstractMetaServer implements Cu
     @SuppressWarnings("unchecked")
     public boolean renew(Node renewal, int leaseDuration) {
         return true;
-//        return getLeaseManager(renewal.getNodeType()).renew(renewal, leaseDuration);
+        //        return getLeaseManager(renewal.getNodeType()).renew(renewal, leaseDuration);
     }
 
     @Override
@@ -103,16 +120,16 @@ public class DefaultCurrentDcMetaServer extends AbstractMetaServer implements Cu
     @VisibleForTesting
     @SuppressWarnings("rawUse")
     protected LeaseManager getLeaseManager(Node.NodeType nodeType) {
-        if(nodeType == Node.NodeType.SESSION) {
+        if (nodeType == Node.NodeType.SESSION) {
             return sessionManager;
         } else if (nodeType == Node.NodeType.DATA) {
             return dataServerManager;
         } else if (nodeType == Node.NodeType.META) {
             return raftStorage;
         }
-        throw new IllegalArgumentException(String.format("NodeType [%s] is not supported", nodeType));
+        throw new IllegalArgumentException(
+            String.format("NodeType [%s] is not supported", nodeType));
     }
-
 
     @ReadOnLeader
     public long getEpoch() {
@@ -137,13 +154,15 @@ public class DefaultCurrentDcMetaServer extends AbstractMetaServer implements Cu
 
         @Override
         public void updateClusterMembers(List<MetaNode> newMembers, long epoch) {
-            if(epoch <= currentEpoch.get()) {
+            if (epoch <= currentEpoch.get()) {
                 logger.warn("[updateClusterMembers]Epoch[{}] is less than current[{}], ignore: {}",
-                        currentEpoch.get(), epoch, newMembers);
+                    currentEpoch.get(), epoch, newMembers);
             }
             lock.writeLock().lock();
             try {
-                logger.warn("[updateClusterMembers] update meta-servers, \nprevious[{}]: {} \ncurrent[{}]: {}",
+                logger
+                    .warn(
+                        "[updateClusterMembers] update meta-servers, \nprevious[{}]: {} \ncurrent[{}]: {}",
                         currentEpoch.get(), getClusterMembers(), epoch, newMembers);
                 currentEpoch.set(epoch);
                 DefaultCurrentDcMetaServer.this.metaServers = Lists.newArrayList(newMembers);
@@ -153,10 +172,8 @@ public class DefaultCurrentDcMetaServer extends AbstractMetaServer implements Cu
         }
 
         private final void registerAsRaftService() {
-            Processor.getInstance()
-                    .addWorker(getServiceId(),
-                            CurrentMetaServerRaftStorage.class,
-                            MetaServersRaftStorage.this);
+            Processor.getInstance().addWorker(getServiceId(), CurrentMetaServerRaftStorage.class,
+                MetaServersRaftStorage.this);
         }
 
         @Override
@@ -178,8 +195,10 @@ public class DefaultCurrentDcMetaServer extends AbstractMetaServer implements Cu
     public interface CurrentMetaServerRaftStorage extends LeaseManager<MetaNode> {
 
         void updateClusterMembers(List<MetaNode> newMembers, long epoch);
+
         @ReadOnLeader
         List<MetaNode> getClusterMembers();
+
         @ReadOnLeader
         long getEpoch();
     }

@@ -122,13 +122,14 @@ public class MetaNode implements Node {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o)
+            return true;
+        if (o == null || getClass() != o.getClass())
+            return false;
         MetaNode metaNode = (MetaNode) o;
-        return nodeType == metaNode.nodeType &&
-                nodeUrl.equals(metaNode.nodeUrl) &&
-                Objects.equals(dataCenter, metaNode.dataCenter) &&
-                Objects.equals(name, metaNode.name);
+        return nodeType == metaNode.nodeType && nodeUrl.equals(metaNode.nodeUrl)
+               && Objects.equals(dataCenter, metaNode.dataCenter)
+               && Objects.equals(name, metaNode.name);
     }
 
     @Override

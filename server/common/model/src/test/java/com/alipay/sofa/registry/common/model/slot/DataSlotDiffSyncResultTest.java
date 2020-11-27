@@ -47,7 +47,8 @@ public class DataSlotDiffSyncResultTest {
         m.put("b", 200);
         Map<String, Map<String, Publisher>> publishers = randPublishers(m);
         // 400 more than 100+200
-        DataSlotDiffSyncResult result = DataSlotDiffUtils.diffDataInfoIdsResult(Sets.newHashSet(), publishers, 400);
+        DataSlotDiffSyncResult result = DataSlotDiffUtils.diffDataInfoIdsResult(Sets.newHashSet(),
+            publishers, 400);
         Assert.assertFalse(result.isHasRemain());
         Assert.assertEquals(result.getUpdatedPublishers().keySet(), m.keySet());
         Assert.assertTrue(result.getRemovedPublishers().isEmpty());
@@ -84,20 +85,20 @@ public class DataSlotDiffSyncResultTest {
         m.put("b", 200);
         Map<String, Map<String, Publisher>> publishers = randPublishers(m);
 
-        DataSlotDiffSyncResult result = DataSlotDiffUtils
-                .diffDataInfoIdsResult(Sets.newHashSet("a", "b"), publishers, 400);
+        DataSlotDiffSyncResult result = DataSlotDiffUtils.diffDataInfoIdsResult(
+            Sets.newHashSet("a", "b"), publishers, 400);
+        Assert.assertFalse(result.isHasRemain());
+        Assert.assertTrue(result.getUpdatedPublishers().isEmpty());
+        Assert.assertTrue(result.getRemovedPublishers().isEmpty());
+
+        result = DataSlotDiffUtils.diffDataInfoIdsResult(Sets.newHashSet("a", "b", "c"),
+            publishers, 400);
         Assert.assertFalse(result.isHasRemain());
         Assert.assertTrue(result.getUpdatedPublishers().isEmpty());
         Assert.assertTrue(result.getRemovedPublishers().isEmpty());
 
         result = DataSlotDiffUtils
-                .diffDataInfoIdsResult(Sets.newHashSet("a", "b", "c"), publishers, 400);
-        Assert.assertFalse(result.isHasRemain());
-        Assert.assertTrue(result.getUpdatedPublishers().isEmpty());
-        Assert.assertTrue(result.getRemovedPublishers().isEmpty());
-
-        result = DataSlotDiffUtils
-                .diffDataInfoIdsResult(Sets.newHashSet("a", "c"), publishers, 100);
+            .diffDataInfoIdsResult(Sets.newHashSet("a", "c"), publishers, 100);
         Assert.assertFalse(result.isHasRemain());
         Assert.assertTrue(result.getRemovedPublishers().isEmpty());
         // add "b"
@@ -122,7 +123,8 @@ public class DataSlotDiffSyncResultTest {
 
         // the same
         Map<String, DatumSummary> summaryMap = createSummary(publishers);
-        DataSlotDiffSyncResult result = DataSlotDiffUtils.diffPublishersResult(summaryMap, publishers, 400);
+        DataSlotDiffSyncResult result = DataSlotDiffUtils.diffPublishersResult(summaryMap,
+            publishers, 400);
         Assert.assertFalse(result.isHasRemain());
         Assert.assertTrue(result.getUpdatedPublishers().isEmpty());
         Assert.assertTrue(result.getRemovedPublishers().isEmpty());
@@ -155,8 +157,8 @@ public class DataSlotDiffSyncResultTest {
         Assert.assertTrue(result.getRemovedDataInfoIds().isEmpty());
 
         Assert.assertEquals(result.getUpdatedPublishers().size(), 1);
-        Assert.assertTrue(result.getUpdatedPublishers().keySet().contains("c") ||
-                result.getUpdatedPublishers().keySet().contains("d"));
+        Assert.assertTrue(result.getUpdatedPublishers().keySet().contains("c")
+                          || result.getUpdatedPublishers().keySet().contains("d"));
 
         checkUpdatedSize(m, result);
         checkAddedPublisher(publishers, result);
@@ -184,7 +186,8 @@ public class DataSlotDiffSyncResultTest {
         Assert.assertEquals(result.getRemovedDataInfoIds().size(), 1);
         Assert.assertEquals(result.getRemovedDataInfoIds().get(0), "a");
         Assert.assertTrue(result.getRemovedPublishers().get("b").size() == 1);
-        Assert.assertEquals(result.getRemovedPublishers().get("b").get(0), removedB.getRegisterId());
+        Assert
+            .assertEquals(result.getRemovedPublishers().get("b").get(0), removedB.getRegisterId());
 
         Assert.assertEquals(result.getUpdatedPublishers().keySet(), Sets.newHashSet("c", "d"));
         Assert.assertEquals(result.getUpdatedPublishers().get("c").size(), 1);
@@ -200,10 +203,11 @@ public class DataSlotDiffSyncResultTest {
         Assert.assertEquals(result.getRemovedDataInfoIds().size(), 1);
         Assert.assertEquals(result.getRemovedDataInfoIds().get(0), "a");
         Assert.assertTrue(result.getRemovedPublishers().get("b").size() == 1);
-        Assert.assertEquals(result.getRemovedPublishers().get("b").get(0), removedB.getRegisterId());
+        Assert
+            .assertEquals(result.getRemovedPublishers().get("b").get(0), removedB.getRegisterId());
 
-        Assert.assertTrue(
-                result.getUpdatedPublishers().containsKey("c") || result.getUpdatedPublishers().containsKey("d"));
+        Assert.assertTrue(result.getUpdatedPublishers().containsKey("c")
+                          || result.getUpdatedPublishers().containsKey("d"));
 
         Assert.assertEquals(result.getUpdatedPublishers().size(), 1);
 

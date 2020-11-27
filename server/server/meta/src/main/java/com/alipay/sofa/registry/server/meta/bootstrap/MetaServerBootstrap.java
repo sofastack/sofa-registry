@@ -52,7 +52,7 @@ public class MetaServerBootstrap {
                                                                .getLogger(MetaServerBootstrap.class);
 
     @Autowired
-    private MetaServerConfig metaServerConfig;
+    private MetaServerConfig                  metaServerConfig;
 
     @Autowired
     private Exchange                          boltExchange;

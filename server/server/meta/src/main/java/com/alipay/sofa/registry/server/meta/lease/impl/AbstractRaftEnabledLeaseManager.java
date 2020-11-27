@@ -1,3 +1,19 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package com.alipay.sofa.registry.server.meta.lease.impl;
 
 import com.alipay.sofa.registry.common.model.Node;
@@ -37,17 +53,20 @@ import static com.alipay.sofa.registry.server.meta.bootstrap.MetaServerConfigura
  * Nov 24, 2020
  */
 
-public abstract class AbstractRaftEnabledLeaseManager<T extends Node> extends AbstractLifecycleObservable implements LeaseManager<T> {
+public abstract class AbstractRaftEnabledLeaseManager<T extends Node> extends
+                                                                      AbstractLifecycleObservable
+                                                                                                 implements
+                                                                                                 LeaseManager<T> {
 
     protected RaftLeaseManager<String, T> raftLeaseManager;
 
     @Autowired
-    private RaftExchanger raftExchanger;
+    private RaftExchanger                 raftExchanger;
 
     @Resource(name = SCHEDULED_EXECUTOR)
-    private ScheduledExecutorService scheduled;
+    private ScheduledExecutorService      scheduled;
 
-    private ScheduledFuture<?> future;
+    private ScheduledFuture<?>            future;
 
     @Override
     protected void doInitialize() throws InitializeException {
@@ -61,7 +80,7 @@ public abstract class AbstractRaftEnabledLeaseManager<T extends Node> extends Ab
         future = scheduled.scheduleWithFixedDelay(new Runnable() {
             @Override
             public void run() {
-                if(ServiceStateMachine.getInstance().isLeader()) {
+                if (ServiceStateMachine.getInstance().isLeader()) {
                     raftLeaseManager.evict();
                 }
             }
@@ -74,7 +93,7 @@ public abstract class AbstractRaftEnabledLeaseManager<T extends Node> extends Ab
 
     @Override
     protected void doStop() throws StopException {
-        if(future != null) {
+        if (future != null) {
             future.cancel(true);
             future = null;
         }
@@ -97,7 +116,7 @@ public abstract class AbstractRaftEnabledLeaseManager<T extends Node> extends Ab
     public boolean cancel(T renewal) {
         updateRepoVersion();
         boolean result = this.raftLeaseManager.cancel(renewal);
-        if(result) {
+        if (result) {
             notifyObservers(new NodeRemoved<T>(renewal));
         }
         return result;
@@ -115,7 +134,7 @@ public abstract class AbstractRaftEnabledLeaseManager<T extends Node> extends Ab
     @Override
     public boolean evict() {
         boolean nodeEvicted = this.raftLeaseManager.evict();
-        if(nodeEvicted) {
+        if (nodeEvicted) {
             updateRepoVersion();
         }
         return nodeEvicted;
@@ -136,10 +155,9 @@ public abstract class AbstractRaftEnabledLeaseManager<T extends Node> extends Ab
         Processor.getInstance().addWorker(serviceId, DefaultLeaseManager.class, localRepo);
         // make field "raftLeaseManager" raft-enabled, by wrap DefaultLeaseManager being a local-repository
         // and expose wrapper as a raft service
-        this.raftLeaseManager = (RaftLeaseManager) Proxy.newProxyInstance(
-                Thread.currentThread().getContextClassLoader(),
-                new Class<?>[] {RaftLeaseManager.class},
-                new ProxyHandler(RaftLeaseManager.class, serviceId, raftExchanger.getRaftClient()));
+        this.raftLeaseManager = (RaftLeaseManager) Proxy.newProxyInstance(Thread.currentThread()
+            .getContextClassLoader(), new Class<?>[] { RaftLeaseManager.class }, new ProxyHandler(
+            RaftLeaseManager.class, serviceId, raftExchanger.getRaftClient()));
     }
 
     @VisibleForTesting
@@ -160,7 +178,9 @@ public abstract class AbstractRaftEnabledLeaseManager<T extends Node> extends Ab
         return this;
     }
 
-    public class DefaultRaftLeaseManager<T extends Node> extends DefaultLeaseManager<T> implements RaftLeaseManager<String, T> {
+    public class DefaultRaftLeaseManager<T extends Node> extends DefaultLeaseManager<T>
+                                                                                       implements
+                                                                                       RaftLeaseManager<String, T> {
 
         @Override
         public Map<String, Lease<T>> getLeaseStore() {
