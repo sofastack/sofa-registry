@@ -4,6 +4,7 @@ import com.alipay.sofa.registry.common.model.metaserver.nodes.MetaNode;
 import com.alipay.sofa.registry.common.model.metaserver.nodes.SessionNode;
 import com.alipay.sofa.registry.common.model.slot.SlotTable;
 
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -18,7 +19,7 @@ public class DataHeartBeatResponse extends BaseHeartBeatResponse {
     public DataHeartBeatResponse(long metaServerEpoch, SlotTable slotTable, List<MetaNode> metaNodes,
                                  List<SessionNode> sessionNodes) {
         super(metaServerEpoch, slotTable, metaNodes);
-        this.sessionNodes = sessionNodes;
+        this.sessionNodes = Collections.unmodifiableList(sessionNodes);
     }
 
     public List<SessionNode> getSessionNodes() {
