@@ -2,7 +2,9 @@ package com.alipay.sofa.registry.common.model.metaserver.inter.communicate;
 
 import com.alipay.sofa.registry.common.model.metaserver.nodes.MetaNode;
 import com.alipay.sofa.registry.common.model.slot.SlotTable;
+import com.google.common.collect.ImmutableList;
 
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -21,7 +23,7 @@ public class BaseHeartBeatResponse {
     public BaseHeartBeatResponse(long metaServerEpoch, SlotTable slotTable, List<MetaNode> metaNodes) {
         this.metaServerEpoch = metaServerEpoch;
         this.slotTable = slotTable;
-        this.metaNodes = metaNodes;
+        this.metaNodes = Collections.unmodifiableList(metaNodes);
     }
 
     public SlotTable getSlotTable() {
