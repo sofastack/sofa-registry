@@ -77,8 +77,6 @@ public interface DatumStorage {
 
     boolean removePublisher(String dataInfoId, String registerId);
 
-    boolean removePublisher(String dataCenter, String dataInfoId, String registerId);
-
     /**
      * cover datum by snapshot
      */
@@ -90,7 +88,4 @@ public interface DatumStorage {
     Map<String, DatumSummary> getDatumSummary(String targetIpAddress);
 
     Map<String, Map<String, Publisher>> getPublishers(int slotId);
-
-    Map<String, DatumSummary> getDatumSummary(String dataCenter, String targetIpAddress);
-
 }

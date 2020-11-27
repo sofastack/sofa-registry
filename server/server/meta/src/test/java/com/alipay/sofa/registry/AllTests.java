@@ -34,6 +34,7 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
 
 @RunWith(Suite.class)
+<<<<<<< HEAD
 @Suite.SuiteClasses({
         CRC32SlotFunctionTest.class,
         DefaultCrossDcMetaServerTest.class,
@@ -44,5 +45,11 @@ import org.junit.runners.Suite;
         DefaultLeaseManagerTest.class,
         CrossDcMetaServerManagerTest.class
 })
+=======
+@Suite.SuiteClasses({ CRC32SlotFunctionTest.class, DefaultCrossDcMetaServerTest.class,
+                     CrossDcSlotAllocatorTest.class, DefaultCurrentDcMetaServerTest.class,
+                     DefaultSessionManagerTest.class, DefaultDataServerManagerTest.class,
+                     DefaultLeaseManagerTest.class })
+>>>>>>> origin/feat/datastore
 public class AllTests {
 }

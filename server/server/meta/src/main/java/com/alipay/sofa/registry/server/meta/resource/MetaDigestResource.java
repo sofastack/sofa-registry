@@ -50,17 +50,17 @@ import com.codahale.metrics.MetricRegistry;
 @Path("digest")
 public class MetaDigestResource {
 
-    private static final Logger TASK_LOGGER = LoggerFactory.getLogger(MetaDigestResource.class,
-                                                "[Resource]");
+    private static final Logger      TASK_LOGGER = LoggerFactory.getLogger(
+                                                     MetaDigestResource.class, "[Resource]");
 
-    private static final Logger DB_LOGGER   = LoggerFactory.getLogger(MetaDigestResource.class,
-                                                "[DBService]");
+    private static final Logger      DB_LOGGER   = LoggerFactory.getLogger(
+                                                     MetaDigestResource.class, "[DBService]");
 
     @Autowired
     private DefaultMetaServerManager metaServerManager;
 
     @RaftReference
-    private DBService           persistenceDataDBService;
+    private DBService                persistenceDataDBService;
 
     @PostConstruct
     public void init() {
