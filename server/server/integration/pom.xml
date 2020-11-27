@@ -37,6 +37,24 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter</artifactId>
         </dependency>
+        <dependency>
+            <groupId>com.alipay.sofa</groupId>
+            <artifactId>registry-client-api</artifactId>
+            <version>5.4.5</version>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.alipay.sofa</groupId>
+            <artifactId>registry-client-api</artifactId>
+            <version>5.4.5</version>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.alipay.sofa</groupId>
+            <artifactId>registry-client-impl</artifactId>
+            <version>5.4.5</version>
+            <scope>compile</scope>
+        </dependency>
     </dependencies>
 
     <build>

@@ -26,16 +26,15 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
+import com.alipay.sofa.registry.server.meta.lease.impl.DefaultMetaServerManager;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import com.alipay.sofa.registry.common.model.Node.NodeType;
 import com.alipay.sofa.registry.common.model.console.PersistenceData;
 import com.alipay.sofa.registry.common.model.constants.ValueConstants;
-import com.alipay.sofa.registry.common.model.metaserver.NodeChangeResult;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.metrics.ReporterUtils;
-import com.alipay.sofa.registry.server.meta.registry.Registry;
 import com.alipay.sofa.registry.store.api.DBResponse;
 import com.alipay.sofa.registry.store.api.DBService;
 import com.alipay.sofa.registry.store.api.OperationStatus;
@@ -58,7 +57,7 @@ public class MetaDigestResource {
                                                 "[DBService]");
 
     @Autowired
-    private Registry            metaServerRegistry;
+    private DefaultMetaServerManager metaServerManager;
 
     @RaftReference
     private DBService           persistenceDataDBService;
@@ -78,9 +77,7 @@ public class MetaDigestResource {
     @Produces(MediaType.APPLICATION_JSON)
     public Map getRegisterNodeByType(@PathParam("type") String type) {
         try {
-            NodeChangeResult nodeChangeResult = metaServerRegistry.getAllNodes(NodeType
-                .valueOf(type.toUpperCase()));
-            return nodeChangeResult.getNodes();
+            return metaServerManager.getSummary(NodeType.valueOf(type)).getNodes();
         } catch (Exception e) {
             TASK_LOGGER.error("Fail get Register Node By Type {} !", type, e);
             throw new RuntimeException("Fail get Register Node By Type" + type, e);
