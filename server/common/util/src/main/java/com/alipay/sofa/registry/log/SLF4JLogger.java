@@ -71,7 +71,11 @@ public class SLF4JLogger implements Logger, Serializable {
      * @param clazz
      */
     public SLF4JLogger(Class clazz) {
-        this.name = clazz.getCanonicalName();
+        String loggerName = clazz.getCanonicalName();
+        if(loggerName == null) {
+            loggerName = clazz.getName();
+        }
+        this.name = loggerName;
         this.msgPrefix = "";
         this.logger = getLoggerBySpace(name);
     }

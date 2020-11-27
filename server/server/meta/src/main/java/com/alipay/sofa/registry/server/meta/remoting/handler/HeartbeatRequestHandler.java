@@ -18,6 +18,9 @@ package com.alipay.sofa.registry.server.meta.remoting.handler;
 
 import com.alipay.sofa.registry.common.model.GenericResponse;
 import com.alipay.sofa.registry.common.model.metaserver.RenewNodesResult;
+import com.alipay.sofa.registry.common.model.metaserver.inter.communicate.BaseHeartBeatResponse;
+import com.alipay.sofa.registry.common.model.metaserver.inter.communicate.DataHeartBeatResponse;
+import com.alipay.sofa.registry.common.model.metaserver.inter.communicate.SessionHeartBeatResponse;
 import com.alipay.sofa.registry.server.meta.metaserver.CurrentDcMetaServer;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -48,11 +51,22 @@ public class HeartbeatRequestHandler extends AbstractServerHandler<RenewNodesReq
             renewNode = renewNodesRequest.getNode();
             metaServer.renew(renewNode, renewNodesRequest.getDuration());
 
-            RenewNodesResult result = new RenewNodesResult();
-            Set<Node.NodeType> targetTypes = renewNodesRequest.getTargetNodeTypes();
+            BaseHeartBeatResponse response = null;
+            switch (renewNode.getNodeType()) {
+                case SESSION:
+                    response = new SessionHeartBeatResponse(metaServer.getEpoch(), metaServer.getSlotTable(),
+                            metaServer.getClusterMembers());
+                case DATA:
+                    response = new DataHeartBeatResponse(metaServer.getEpoch(), metaServer.getSlotTable(),
+                            metaServer.getClusterMembers(), metaServer.getSessionServers());
+                case META:
+                    response = new BaseHeartBeatResponse(metaServer.getEpoch(), metaServer.getSlotTable(),
+                            metaServer.getClusterMembers());
+                default:
+                    break;
+            }
 
-            //todo: heart beat response
-            return new GenericResponse<RenewNodesResult>().fillSucceed(result);
+            return new GenericResponse<BaseHeartBeatResponse>().fillSucceed(response);
         } catch (Throwable e) {
             LOGGER.error("Node " + renewNode + "renew error!", e);
             return new GenericResponse<RenewNodesResult>().fillFailed("Node " + renewNode

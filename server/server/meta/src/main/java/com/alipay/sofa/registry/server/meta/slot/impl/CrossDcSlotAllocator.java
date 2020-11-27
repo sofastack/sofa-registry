@@ -271,8 +271,17 @@ public class CrossDcSlotAllocator extends AbstractLifecycle implements SlotAlloc
         void setSlotTable(SlotTable slotTable);
     }
 
-    public CrossDcSlotAllocator setRaftStorage(RaftSlotTableStorage raftStorage) {
+    @VisibleForTesting
+    CrossDcSlotAllocator setRaftStorage(RaftSlotTableStorage raftStorage) {
         this.raftStorage = raftStorage;
         return this;
+    }
+
+    @Override
+    public String toString() {
+        return "CrossDcSlotAllocator{" +
+                "dcName='" + dcName + '\'' +
+                ", metaServer=" + metaServer +
+                '}';
     }
 }

@@ -34,10 +34,4 @@ public interface MetaServerManager extends Lifecycle {
      */
     MetaServer getOrCreate(String dc);
 
-    /**
-     * Remove.
-     *
-     * @param dc the dc
-     */
-    void remove(String dc);
 }
