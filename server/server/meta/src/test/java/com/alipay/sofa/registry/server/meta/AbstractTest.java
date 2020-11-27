@@ -64,16 +64,17 @@ import static org.mockito.Mockito.mock;
  */
 public class AbstractTest {
 
-    protected Logger                   logger = LoggerFactory.getLogger(AbstractTest.class);
+    protected Logger                       logger           = LoggerFactory
+                                                                .getLogger(AbstractTest.class);
 
-    protected ExecutorService          executors;
+    protected ExecutorService              executors;
 
-    protected ScheduledExecutorService scheduled;
+    protected ScheduledExecutorService     scheduled;
 
     @Rule
-    public TestName                    name   = new TestName();
+    public TestName                        name             = new TestName();
 
-    public static final Random random = new Random();
+    public static final Random             random           = new Random();
 
     private AtomicReference<RaftExchanger> raftExchangerRef = new AtomicReference<>();
 
@@ -86,24 +87,26 @@ public class AbstractTest {
         executors = Executors.newCachedThreadPool(new NamedThreadFactory(name.getMethodName()));
         scheduled = Executors.newScheduledThreadPool(Runtime.getRuntime().availableProcessors(),
             new NamedThreadFactory("sched-" + name.getMethodName()));
-        FileUtils.cleanDirectory(new File(System.getProperty("user.home") + File.separator + "raftData"));
+        FileUtils.cleanDirectory(new File(System.getProperty("user.home") + File.separator
+                                          + "raftData"));
         logger.info(remarkableMessage("[begin test][{}]"), name.getMethodName());
     }
 
     @After
     public void afterAbstractTest() throws IOException {
-        if(raftExchangerRef.get() != null) {
+        if (raftExchangerRef.get() != null) {
             raftExchangerRef.get().shutdown();
         }
         executors.shutdownNow();
         scheduled.shutdownNow();
-        FileUtils.cleanDirectory(new File(System.getProperty("user.home") + File.separator + "raftData"));
+        FileUtils.cleanDirectory(new File(System.getProperty("user.home") + File.separator
+                                          + "raftData"));
 
         logger.info(remarkableMessage("[end test][{}]"), name.getMethodName());
     }
 
     public RaftExchanger startRaftExchanger() {
-        if(!raftExchangerRef.compareAndSet(null, new RaftExchanger())) {
+        if (!raftExchangerRef.compareAndSet(null, new RaftExchanger())) {
             return raftExchangerRef.get();
         }
         RaftExchanger raftExchanger = raftExchangerRef.get();
@@ -137,7 +140,8 @@ public class AbstractTest {
             }
         };
         CurrentDcMetaServer metaServer = mock(CurrentDcMetaServer.class);
-        raftExchanger.setMetaServerConfig(config).setNodeConfig(nodeConfig).setCurrentDcMetaServer(metaServer);
+        raftExchanger.setMetaServerConfig(config).setNodeConfig(nodeConfig)
+            .setCurrentDcMetaServer(metaServer);
         ExecutorManager executorManager = mock(ExecutorManager.class);
         raftExchanger.startRaftClient();
         raftExchanger.startRaftServer(executorManager);
@@ -218,8 +222,9 @@ public class AbstractTest {
     public static int netmask = (1 << 8) - 1;
 
     public static String randomIp() {
-        return String.format("%d.%d.%d.%d", (Math.abs(random.nextInt()) % netmask + 1), (Math.abs(random.nextInt()) % netmask + 1),
-                (Math.abs(random.nextInt()) % netmask + 1), (Math.abs(random.nextInt()) % netmask + 1));
+        return String.format("%d.%d.%d.%d", (Math.abs(random.nextInt()) % netmask + 1),
+            (Math.abs(random.nextInt()) % netmask + 1), (Math.abs(random.nextInt()) % netmask + 1),
+            (Math.abs(random.nextInt()) % netmask + 1));
     }
 
     protected static boolean isUsable(int port) {
@@ -251,33 +256,36 @@ public class AbstractTest {
         return sb.toString();
     }
 
-    public static Client getRpcClient(ScheduledExecutorService scheduled, int responseDelayMilli, Object responseObj) {
-        return new MockRpcClient().setScheduled(scheduled).setResponseDelayMilli(responseDelayMilli).setResponseObj(responseObj);
+    public static Client getRpcClient(ScheduledExecutorService scheduled, int responseDelayMilli,
+                                      Object responseObj) {
+        return new MockRpcClient().setScheduled(scheduled)
+            .setResponseDelayMilli(responseDelayMilli).setResponseObj(responseObj);
     }
 
-    public static Client getRpcClient(ScheduledExecutorService scheduled, int responseDelayMilli, Throwable th) {
+    public static Client getRpcClient(ScheduledExecutorService scheduled, int responseDelayMilli,
+                                      Throwable th) {
         return new MockRpcClient().setScheduled(scheduled)
-                .setResponseDelayMilli(responseDelayMilli).setPositive(false).setThrowable(th);
+            .setResponseDelayMilli(responseDelayMilli).setPositive(false).setThrowable(th);
     }
 
     public static Client getRpcClient(Object response, int responseDelayMilli) {
-        return new MockRpcClient().setResponseObj(response)
-                .setResponseDelayMilli(responseDelayMilli);
+        return new MockRpcClient().setResponseObj(response).setResponseDelayMilli(
+            responseDelayMilli);
     }
 
     public static class MockRpcClient implements Client {
 
-        private ObjectFactory<Object> response;
+        private ObjectFactory<Object>    response;
 
-        private int responseDelayMilli;
+        private int                      responseDelayMilli;
 
         private ScheduledExecutorService scheduled;
 
-        private Channel channel;
+        private Channel                  channel;
 
-        private boolean isPositive = true;
+        private boolean                  isPositive = true;
 
-        private Throwable throwable;
+        private Throwable                throwable;
 
         @Override
         public Channel getChannel(URL url) {
@@ -336,8 +344,8 @@ public class AbstractTest {
         }
 
         private void throwIfNegative() throws Throwable {
-            if(!isPositive) {
-                if(throwable != null) {
+            if (!isPositive) {
+                if (throwable != null) {
                     throw throwable;
                 } else {
                     throw new SofaRegistryRuntimeException("expected exception");

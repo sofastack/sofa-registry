@@ -76,7 +76,7 @@ public final class DataSlotDiffUtils {
             }
         }
         DataSlotDiffSyncResult result = new DataSlotDiffSyncResult(updateds, removeds,
-                new HashMap<>());
+            new HashMap<>());
         result.setHasRemain(hasRemain);
         return result;
     }
@@ -141,17 +141,17 @@ public final class DataSlotDiffUtils {
     public static void logDiffResult(DataSlotDiffSyncResult result, int slotId, Logger log) {
         if (!result.getUpdatedPublishers().isEmpty()) {
             log.info("DiffSync, update dataInfoIds for slot={}, remain={}, dataInfoIds={}/{}, {}",
-                    slotId, result.isHasRemain(), result.getUpdatedPublishers().size(),
-                    result.getUpdatedPublishersCount(), result.getUpdatedPublishers().keySet());
+                slotId, result.isHasRemain(), result.getUpdatedPublishers().size(),
+                result.getUpdatedPublishersCount(), result.getUpdatedPublishers().keySet());
         }
         if (!result.getRemovedPublishers().isEmpty()) {
             log.info("DiffSync, remove publishers for slot={}, dataInfoId={}/{}, {}", slotId,
-                    result.getRemovedPublishers().size(), result.getRemovedPublishersCount(), result
-                            .getRemovedPublishers().keySet());
+                result.getRemovedPublishers().size(), result.getRemovedPublishersCount(), result
+                    .getRemovedPublishers().keySet());
         }
         if (!result.getRemovedDataInfoIds().isEmpty()) {
             log.info("DiffSync, remove dataInfoIds for slot={}, dataInfoId={}, {}", slotId, result
-                    .getRemovedDataInfoIds().size(), result.getRemovedDataInfoIds());
+                .getRemovedDataInfoIds().size(), result.getRemovedDataInfoIds());
         }
     }
 }

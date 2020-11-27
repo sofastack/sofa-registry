@@ -1,3 +1,19 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package com.alipay.sofa.registry.server.meta.slot.impl;
 
 import com.alipay.sofa.registry.common.model.metaserver.GetSlotTableRequest;
@@ -34,28 +50,29 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
  * <p>
  * Nov 20, 2020
  */
-public class CrossDcSlotAllocator extends AbstractLifecycle implements SlotAllocator, DataCenterAware, SlotTableAware {
+public class CrossDcSlotAllocator extends AbstractLifecycle implements SlotAllocator,
+                                                           DataCenterAware, SlotTableAware {
 
-    private final String dcName;
+    private final String                     dcName;
 
-    private final ScheduledExecutorService scheduled;
+    private final ScheduledExecutorService   scheduled;
 
-    private final CrossDcMetaServer metaServer;
+    private final CrossDcMetaServer          metaServer;
 
-    private volatile ScheduledFuture<?> future;
+    private volatile ScheduledFuture<?>      future;
 
     private final AtomicReference<SlotTable> currentSlotTable = new AtomicReference<>();
 
-    private final Exchange exchange;
+    private final Exchange                   exchange;
 
-    private final RaftExchanger raftExchanger;
+    private final RaftExchanger              raftExchanger;
 
-    private final AtomicInteger index = new AtomicInteger(0);
+    private final AtomicInteger              index            = new AtomicInteger(0);
 
-    private final ReadWriteLock lock = new ReentrantReadWriteLock();
+    private final ReadWriteLock              lock             = new ReentrantReadWriteLock();
 
     /** inner class for exposing less interfaces, see class desc */
-    private RaftSlotTableStorage raftStorage;
+    private RaftSlotTableStorage             raftStorage;
 
     /**
      * Constructor.
@@ -67,7 +84,8 @@ public class CrossDcSlotAllocator extends AbstractLifecycle implements SlotAlloc
      * @param raftExchanger the raft exchanger
      */
     public CrossDcSlotAllocator(String dcName, ScheduledExecutorService scheduled,
-                                Exchange exchange, CrossDcMetaServer metaServer, RaftExchanger raftExchanger) {
+                                Exchange exchange, CrossDcMetaServer metaServer,
+                                RaftExchanger raftExchanger) {
         this.dcName = dcName;
         this.scheduled = scheduled;
         this.exchange = exchange;
@@ -82,7 +100,7 @@ public class CrossDcSlotAllocator extends AbstractLifecycle implements SlotAlloc
      */
     @Override
     public SlotTable getSlotTable() {
-        if(!getLifecycleState().isStarted() && !getLifecycleState().isStarting()) {
+        if (!getLifecycleState().isStarted() && !getLifecycleState().isStarting()) {
             throw new IllegalStateException("[RemoteDcSlotAllocator]not available not");
         }
         return raftStorage.getSlotTable();
@@ -103,9 +121,11 @@ public class CrossDcSlotAllocator extends AbstractLifecycle implements SlotAlloc
         super.doInitialize();
         LocalRaftSlotTableStorage localStorage = new LocalRaftSlotTableStorage();
         localStorage.registerAsRaftService();
-        raftStorage = (RaftSlotTableStorage) Proxy.newProxyInstance(Thread.currentThread().getContextClassLoader(),
-                new Class<?>[] { RaftSlotTableStorage.class },
-                new ProxyHandler(RaftSlotTableStorage.class, getServiceId(), raftExchanger.getRaftClient()));
+        raftStorage = (RaftSlotTableStorage) Proxy.newProxyInstance(
+            Thread.currentThread().getContextClassLoader(),
+            new Class<?>[] { RaftSlotTableStorage.class },
+            new ProxyHandler(RaftSlotTableStorage.class, getServiceId(), raftExchanger
+                .getRaftClient()));
     }
 
     @Override
@@ -113,7 +133,7 @@ public class CrossDcSlotAllocator extends AbstractLifecycle implements SlotAlloc
         future = scheduled.scheduleWithFixedDelay(new Runnable() {
             @Override
             public void run() {
-                if(ServiceStateMachine.getInstance().isLeader()) {
+                if (ServiceStateMachine.getInstance().isLeader()) {
                     refreshSlotTable(0);
                 }
             }
@@ -122,7 +142,7 @@ public class CrossDcSlotAllocator extends AbstractLifecycle implements SlotAlloc
 
     @Override
     protected void doStop() throws StopException {
-        if(future != null) {
+        if (future != null) {
             future.cancel(true);
             future = null;
         }
@@ -150,53 +170,61 @@ public class CrossDcSlotAllocator extends AbstractLifecycle implements SlotAlloc
 
     @VisibleForTesting
     protected void refreshSlotTable(int retryTimes) {
-        if(retryTimes > 3) {
+        if (retryTimes > 3) {
             logger.warn("[refreshSlotTable]try timeout, more than {} times", 3);
             return;
         }
-        final long currentEpoch = currentSlotTable.get() == null ? -1 : currentSlotTable.get().getEpoch();
+        final long currentEpoch = currentSlotTable.get() == null ? -1 : currentSlotTable.get()
+            .getEpoch();
         GetSlotTableRequest request = new GetSlotTableRequest(currentEpoch, null, false);
         MetaNode metaNode = getRemoteMetaServer();
-        exchange.getClient(Exchange.META_SERVER_TYPE).sendCallback(metaNode.getNodeUrl(), request, new CallbackHandler() {
-            @Override
-            @SuppressWarnings("unchecked")
-            public void onCallback(Channel channel, Object message) {
-                if(!(message instanceof SlotTable)) {
-                    logger.error("[refreshSlotTable]wanted SlotTable, but receive: [{}]{}", message.getClass(), message);
-                    return;
-                }
-                SlotTable slotTable = (SlotTable) message;
-                lock.writeLock().lock();
-                try {
-                    if(currentEpoch < slotTable.getEpoch()) {
-                        if(logger.isWarnEnabled()) {
-                            logger.warn("[refreshSlotTable] remote slot table changed, \n prev: {} \n change to: {}",
-                                    currentSlotTable.get(), slotTable);
-                        }
-                        raftStorage.setSlotTable(slotTable);
+        exchange.getClient(Exchange.META_SERVER_TYPE).sendCallback(metaNode.getNodeUrl(), request,
+            new CallbackHandler() {
+                @Override
+                @SuppressWarnings("unchecked")
+                public void onCallback(Channel channel, Object message) {
+                    if (!(message instanceof SlotTable)) {
+                        logger.error("[refreshSlotTable]wanted SlotTable, but receive: [{}]{}",
+                            message.getClass(), message);
+                        return;
                     }
-                } finally {
-                    lock.writeLock().unlock();
+                    SlotTable slotTable = (SlotTable) message;
+                    lock.writeLock().lock();
+                    try {
+                        if (currentEpoch < slotTable.getEpoch()) {
+                            if (logger.isWarnEnabled()) {
+                                logger
+                                    .warn(
+                                        "[refreshSlotTable] remote slot table changed, \n prev: {} \n change to: {}",
+                                        currentSlotTable.get(), slotTable);
+                            }
+                            raftStorage.setSlotTable(slotTable);
+                        }
+                    } finally {
+                        lock.writeLock().unlock();
+                    }
                 }
-            }
 
-            @Override
-            public void onException(Channel channel, Throwable exception) {
-                if(logger.isErrorEnabled()) {
-                    logger.error("[refreshSlotTable][{}]Bolt Request Failure, remote: {}, will try other meta-server",
-                            getDc(), channel == null ? "unknown" : channel.getRemoteAddress().getHostName(), exception);
+                @Override
+                public void onException(Channel channel, Throwable exception) {
+                    if (logger.isErrorEnabled()) {
+                        logger
+                            .error(
+                                "[refreshSlotTable][{}]Bolt Request Failure, remote: {}, will try other meta-server",
+                                getDc(), channel == null ? "unknown" : channel.getRemoteAddress()
+                                    .getHostName(), exception);
+                    }
+                    index.set(index.incrementAndGet() % metaServer.getClusterMembers().size());
+                    // if failure, try again with another meta server.
+                    // good luck with that. :)
+                    refreshSlotTable(retryTimes + 1);
                 }
-                index.set(index.incrementAndGet() % metaServer.getClusterMembers().size());
-                // if failure, try again with another meta server.
-                // good luck with that. :)
-                refreshSlotTable(retryTimes + 1);
-            }
 
-            @Override
-            public Executor getExecutor() {
-                return scheduled;
-            }
-        }, 5000);
+                @Override
+                public Executor getExecutor() {
+                    return scheduled;
+                }
+            }, 5000);
     }
 
     private MetaNode getRemoteMetaServer() {
@@ -224,16 +252,13 @@ public class CrossDcSlotAllocator extends AbstractLifecycle implements SlotAlloc
             CrossDcSlotAllocator.this.setSlotTable(slotTable);
         }
 
-
-
         private final void registerAsRaftService() {
-            Processor.getInstance()
-                    .addWorker(getServiceId(), RaftSlotTableStorage.class, LocalRaftSlotTableStorage.this);
+            Processor.getInstance().addWorker(getServiceId(), RaftSlotTableStorage.class,
+                LocalRaftSlotTableStorage.this);
         }
 
         private final void unregisterAsRaftService() {
-            Processor.getInstance()
-                    .removeWorker(getServiceId());
+            Processor.getInstance().removeWorker(getServiceId());
         }
 
         @Override
@@ -242,7 +267,7 @@ public class CrossDcSlotAllocator extends AbstractLifecycle implements SlotAlloc
         }
     }
 
-    public interface RaftSlotTableStorage extends SlotTableAware{
+    public interface RaftSlotTableStorage extends SlotTableAware {
         void setSlotTable(SlotTable slotTable);
     }
 
