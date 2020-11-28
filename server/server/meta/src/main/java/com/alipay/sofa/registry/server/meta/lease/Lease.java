@@ -17,6 +17,7 @@
 package com.alipay.sofa.registry.server.meta.lease;
 
 import java.io.Serializable;
+import java.util.concurrent.TimeUnit;
 
 /**
  * heartbeat info for node
@@ -36,14 +37,6 @@ public class Lease<T> implements Serializable {
     private long            duration;
 
     /**
-     * use for task parameter
-     * @param renewal
-     */
-    public Lease(T renewal) {
-        this.renewal = renewal;
-    }
-
-    /**
      * constructor
      * @param renewal
      * @param durationSECS
@@ -53,6 +46,13 @@ public class Lease<T> implements Serializable {
         this.beginTimestamp = System.currentTimeMillis();
         this.lastUpdateTimestamp = beginTimestamp;
         this.duration = durationSECS * 1000;
+    }
+
+    public Lease(T renewal, long duration, TimeUnit unit) {
+        this.renewal = renewal;
+        this.beginTimestamp = System.currentTimeMillis();
+        this.lastUpdateTimestamp = beginTimestamp;
+        this.duration = unit.toMillis(duration);
     }
 
     /**

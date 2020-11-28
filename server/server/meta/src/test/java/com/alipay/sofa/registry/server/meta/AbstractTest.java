@@ -16,6 +16,8 @@
  */
 package com.alipay.sofa.registry.server.meta;
 
+import com.alipay.sofa.jraft.storage.impl.RocksDBLogStorage;
+import com.alipay.sofa.jraft.util.StorageOptionsFactory;
 import com.alipay.sofa.registry.common.model.store.URL;
 import com.alipay.sofa.registry.exception.SofaRegistryRuntimeException;
 import com.alipay.sofa.registry.log.Logger;
@@ -36,15 +38,22 @@ import com.alipay.sofa.registry.util.ObjectFactory;
 import com.google.common.collect.Maps;
 import io.netty.util.ResourceLeakDetector;
 import org.apache.commons.lang.reflect.FieldUtils;
+import org.apache.commons.lang.reflect.MethodUtils;
 import org.assertj.core.util.Lists;
 import org.assertj.core.util.Sets;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.rules.TestName;
+import org.rocksdb.RocksDB;
+import sun.reflect.misc.ReflectUtil;
 
 import java.io.File;
 import java.io.IOException;
+import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.util.Collection;
@@ -55,7 +64,7 @@ import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.BooleanSupplier;
 
-import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.*;
 
 /**
  * @author chen.zhu
@@ -77,6 +86,8 @@ public class AbstractTest {
 
     private AtomicReference<RaftExchanger> raftExchangerRef = new AtomicReference<>();
 
+    private String raftMiddlePath;
+
     @Before
     public void beforeAbstractTest() throws Exception {
 
@@ -86,28 +97,54 @@ public class AbstractTest {
         executors = Executors.newCachedThreadPool(new NamedThreadFactory(name.getMethodName()));
         scheduled = Executors.newScheduledThreadPool(Runtime.getRuntime().availableProcessors(),
             new NamedThreadFactory("sched-" + name.getMethodName()));
-        FileUtils.cleanDirectory(new File(System.getProperty("user.home") + File.separator + "raftData"));
         logger.info(remarkableMessage("[begin test][{}]"), name.getMethodName());
     }
 
     @After
-    public void afterAbstractTest() throws IOException {
+    public void afterAbstractTest() throws IOException, NoSuchMethodException, InvocationTargetException, IllegalAccessException {
         if(raftExchangerRef.get() != null) {
+            raftExchangerRef.get().getRaftServer().shutdown();
+            raftExchangerRef.get().getRaftClient().shutdown();
             raftExchangerRef.get().shutdown();
+            com.alipay.sofa.jraft.Node node = raftExchangerRef.get().getRaftServer().getNode();
+            Field field = FieldUtils.getDeclaredField(node.getClass(), "logStorage", true);
+            RocksDBLogStorage storage = (RocksDBLogStorage) field.get(node);
+            storage.reset(Math.abs(random.nextInt()));
+            node.shutdown();
+            Method method = node.getClass().getDeclaredMethod("afterShutdown");
+            method.setAccessible(true);
+            method.invoke(node);
+
+            FileUtils.forceDelete(new File(System.getProperty("user.home") + File.separator + "raftData"));
         }
         executors.shutdownNow();
         scheduled.shutdownNow();
-        FileUtils.cleanDirectory(new File(System.getProperty("user.home") + File.separator + "raftData"));
 
         logger.info(remarkableMessage("[end test][{}]"), name.getMethodName());
     }
 
-    public RaftExchanger startRaftExchanger() {
-        if(!raftExchangerRef.compareAndSet(null, new RaftExchanger())) {
-            return raftExchangerRef.get();
-        }
+    public static void setFinalStatic(Field field, Object newValue) throws Exception {
+        field.setAccessible(true);
+
+        Field modifiersField = Field.class.getDeclaredField("modifiers");
+        modifiersField.setAccessible(true);
+        modifiersField.setInt(field, field.getModifiers() & ~Modifier.FINAL);
+
+        field.set(null, newValue);
+    }
+
+    public RaftExchanger startRaftExchanger() throws Exception {
+
+        FileUtils.deleteDirectory(new File(System.getProperty("user.home") + File.separator + "raftData"));
+        Field field = FieldUtils.getField(StorageOptionsFactory.class, "tableFormatConfigTable", true);
+        field.setAccessible(true);
+        setFinalStatic(field, Maps.newConcurrentMap());
+
+        raftExchangerRef.set(new RaftExchanger());
+
         RaftExchanger raftExchanger = raftExchangerRef.get();
         MetaServerConfig config = new MetaServerConfigBean();
+
         Map<String, Collection<String>> metaServers = Maps.newHashMap();
         metaServers.put(getDc(), Lists.newArrayList(NetUtil.getLocalAddress().getHostAddress()));
         NodeConfig nodeConfig = new NodeConfig() {

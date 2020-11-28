@@ -9,10 +9,16 @@ import com.alipay.sofa.registry.lifecycle.impl.LifecycleHelper;
 import com.alipay.sofa.registry.server.meta.AbstractTest;
 import com.alipay.sofa.registry.server.meta.lease.Lease;
 import com.alipay.sofa.registry.server.meta.remoting.RaftExchanger;
-import org.junit.After;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
+import com.alipay.sofa.registry.util.FileUtils;
+import org.apache.commons.lang.reflect.FieldUtils;
+import org.junit.*;
+import org.rocksdb.DBOptions;
+import org.rocksdb.Options;
+import org.rocksdb.RocksDB;
+
+import java.io.File;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.CyclicBarrier;
 
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.mock;
@@ -47,8 +53,65 @@ public class TestAbstractRaftEnabledLeaseManager extends AbstractTest {
     }
 
     @Test
-    public void raftWholeProcess() {
+    public void raftWholeProcess() throws Exception {
+        manager = new AbstractRaftEnabledLeaseManager<MetaNode>() {
 
+            @Override
+            protected String getServiceId() {
+                return serviceId;
+            }
+        };
+        manager.setScheduled(scheduled).setExecutors(executors);
+        RaftExchanger raftExchanger = startRaftExchanger();
+        manager.setRaftExchanger(raftExchanger);
+        LifecycleHelper.initializeIfPossible(manager);
+        LifecycleHelper.startIfPossible(manager);
+        int size = manager.getLeaseStore().size();
+
+        MetaNode node = new MetaNode(randomURL(randomIp()), getDc());
+        manager.renew(node, 10);
+        waitConditionUntilTimeOut(()->manager.getLeaseStore().get(node.getIp()) != null, 1000);
+        Assert.assertEquals(node, manager.getLeaseStore().get(node.getIp()).getRenewal());
+        Assert.assertFalse(manager.getLeaseStore().get(node.getIp()).isExpired());
+        Assert.assertTrue(manager.getLeaseStore().size() > size);
+        manager.cancel(node);
+        waitConditionUntilTimeOut(()->manager.getLeaseStore().size() == size, 1000);
+        Assert.assertEquals(size, manager.getLeaseStore().size());
+    }
+
+    @Test
+//    @Ignore
+    public void manuallyTestRaftMechanism() throws Exception {
+        manager = new AbstractRaftEnabledLeaseManager<MetaNode>() {
+
+            @Override
+            protected String getServiceId() {
+                return serviceId;
+            }
+        };
+        manager.setScheduled(scheduled).setExecutors(executors);
+        RaftExchanger raftExchanger = startRaftExchanger();
+        manager.setRaftExchanger(raftExchanger);
+        LifecycleHelper.initializeIfPossible(manager);
+        LifecycleHelper.startIfPossible(manager);
+
+        int tasks = 1000;
+        CyclicBarrier barrier = new CyclicBarrier(tasks / 10);
+        CountDownLatch latch = new CountDownLatch(tasks);
+        for(int i = 0; i < tasks; i++) {
+            executors.execute(new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        barrier.await();
+                    } catch (Exception ignore) {}
+                    manager.renew(new MetaNode(randomURL(randomIp()), getDc()), 10);
+                    latch.countDown();
+                }
+            });
+        }
+        latch.await();
+        Assert.assertEquals(tasks, manager.getLeaseStore().size());
     }
 
     @Test
@@ -86,7 +149,7 @@ public class TestAbstractRaftEnabledLeaseManager extends AbstractTest {
 
     @Test
     public void testEvict() {
-
+        manager.evict();
     }
 
     @Test

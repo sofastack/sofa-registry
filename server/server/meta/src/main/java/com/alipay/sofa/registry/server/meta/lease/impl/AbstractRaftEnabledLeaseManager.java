@@ -115,11 +115,13 @@ public abstract class AbstractRaftEnabledLeaseManager<T extends Node> extends Ab
      * */
     @Override
     public boolean evict() {
-        boolean nodeEvicted = this.raftLeaseManager.evict();
-        if(nodeEvicted) {
-            updateRepoVersion();
-        }
-        return nodeEvicted;
+        //todo: evict? how to make it consistent across clusters
+//        boolean nodeEvicted = this.raftLeaseManager.evict();
+//        if(nodeEvicted) {
+//            updateRepoVersion();
+//        }
+//        return nodeEvicted;
+        return false;
     }
 
     private void updateRepoVersion() {
@@ -131,10 +133,10 @@ public abstract class AbstractRaftEnabledLeaseManager<T extends Node> extends Ab
     @SuppressWarnings("unchecked")
     private void initRaftLeaseManager() {
         String serviceId = getServiceId();
-        DefaultLeaseManager<SessionNode> localRepo = new DefaultLeaseManager<>();
+        DefaultRaftLeaseManager<T> localRepo = new DefaultRaftLeaseManager<>();
         localRepo.setLogger(logger);
         // register as raft service
-        Processor.getInstance().addWorker(serviceId, DefaultLeaseManager.class, localRepo);
+        Processor.getInstance().addWorker(serviceId, RaftLeaseManager.class, localRepo);
         // make field "raftLeaseManager" raft-enabled, by wrap DefaultLeaseManager being a local-repository
         // and expose wrapper as a raft service
         this.raftLeaseManager = (RaftLeaseManager) Proxy.newProxyInstance(
@@ -163,12 +165,13 @@ public abstract class AbstractRaftEnabledLeaseManager<T extends Node> extends Ab
 
     @VisibleForTesting
     Map<String, Lease<T>> getLeaseStore() {
-        return Maps.newHashMap(raftLeaseManager.getLeaseStore());
+        return raftLeaseManager.getLeaseStore();
     }
 
     public class DefaultRaftLeaseManager<T extends Node> extends DefaultLeaseManager<T> implements RaftLeaseManager<String, T> {
 
         @Override
+        @ReadOnLeader
         public Map<String, Lease<T>> getLeaseStore() {
             lock.readLock().lock();
             try {
