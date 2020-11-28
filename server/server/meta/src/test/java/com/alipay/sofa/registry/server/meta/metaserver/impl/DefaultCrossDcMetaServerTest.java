@@ -149,8 +149,8 @@ public class DefaultCrossDcMetaServerTest extends AbstractTest {
     public void testRaftMechanismWorks() throws Exception {
         RaftExchanger raftExchanger = startRaftExchanger();
 
-        server = spy(new DefaultCrossDcMetaServer(getDc(), Lists.newArrayList(NetUtil.getLocalAddress().getHostAddress()),
-                scheduled, exchange, raftExchanger, metaServerConfig));
+        server = new DefaultCrossDcMetaServer(getDc(), Lists.newArrayList(NetUtil.getLocalAddress().getHostAddress()),
+                scheduled, exchange, raftExchanger, metaServerConfig);
         DataCenterNodes<MetaNode> message = new DataCenterNodes<MetaNode>(Node.NodeType.META, System.currentTimeMillis(), getDc());
         Map<String,MetaNode> nodes = ImmutableMap.of(
                 "10.0.0.1", new MetaNode(randomURL("10.0.0.1"), getDc()),
@@ -161,14 +161,13 @@ public class DefaultCrossDcMetaServerTest extends AbstractTest {
                 );
         message.setNodes(nodes);
         when(exchange.getClient(Exchange.META_SERVER_TYPE))
-                .thenReturn(getRpcClient(scheduled, 3, new TimeoutException()))
+//                .thenReturn(getRpcClient(scheduled, 3, new TimeoutException()))
                 .thenReturn(getRpcClient(scheduled, 1, message));
         LifecycleHelper.initializeIfPossible(server);
         LifecycleHelper.startIfPossible(server);
 
         server.doRefresh(0);
-
-        waitConditionUntilTimeOut(()->server.getClusterMembers().size() > 4, 1000);
+        waitConditionUntilTimeOut(()->server.getClusterMembers().size() > 4, 30000);
         List<MetaNode> expected = Lists.newArrayList(message.getNodes().values());
         Collections.sort(expected, new Comparator<MetaNode>() {
             @Override
@@ -186,7 +185,6 @@ public class DefaultCrossDcMetaServerTest extends AbstractTest {
         Assert.assertEquals(expected.size(), real.size());
         // wait for rpc safe quit
         Thread.sleep(100);
-        raftExchanger.shutdown();
     }
 
     @Test
@@ -211,4 +209,33 @@ public class DefaultCrossDcMetaServerTest extends AbstractTest {
     @Test
     public void testGetLastRefreshTime() {
     }
+
+    @Test
+    public void testGetSlotTable2() throws Exception {
+        LifecycleHelper.initializeIfPossible(server);
+        LifecycleHelper.startIfPossible(server);
+        SlotAllocator allocator = mock(SlotAllocator.class);
+        server.setRaftStorage(server.new RaftMetaServerListStorage())
+                .setAllocator(allocator);
+        server.getSlotTable();
+        verify(allocator, times(1)).getSlotTable();
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void testRaftMetaServerListStorage() {
+        DefaultCrossDcMetaServer.RaftMetaServerListStorage storage = server.new RaftMetaServerListStorage();
+        storage.tryUpdateRemoteDcMetaServerList(new DataCenterNodes<>(Node.NodeType.META, System.currentTimeMillis(),
+                "unknown"));
+    }
+
+    @Test
+    public void testRaftMetaServerListStorageWithLowerEpoch() {
+        DefaultCrossDcMetaServer.RaftMetaServerListStorage storage = server.new RaftMetaServerListStorage();
+        storage.tryUpdateRemoteDcMetaServerList(new DataCenterNodes<>(Node.NodeType.META, 20L,
+                getDc()));
+        storage.tryUpdateRemoteDcMetaServerList(new DataCenterNodes<>(Node.NodeType.META, 1L,
+                getDc()));
+        Assert.assertEquals(20L, server.getEpoch());
+    }
+
 }

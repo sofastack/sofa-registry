@@ -59,7 +59,13 @@ public class DefaultLeaseManager<T extends Node> implements LeaseManager<T>, Epo
         // read lock for concurrent modification, and mutext for renew/register operations
         lock.readLock().lock();
         try {
+            if(logger.isInfoEnabled()) {
+                logger.info("[cancel][begin] {}", renewal);
+            }
             Lease<T> lease = repo.remove(renewal.getNodeUrl().getIpAddress());
+            if(lease != null && logger.isInfoEnabled()) {
+                logger.info("[cancel][end] {} {} {}", lease.getRenewal(), lease.getBeginTimestamp(), lease.getLastUpdateTimestamp());
+            }
             return lease != null;
         } finally {
             lock.readLock().unlock();

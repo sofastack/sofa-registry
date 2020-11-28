@@ -19,6 +19,7 @@ import com.alipay.sofa.registry.server.meta.metaserver.CrossDcMetaServer;
 import com.alipay.sofa.registry.server.meta.remoting.RaftExchanger;
 import com.alipay.sofa.registry.server.meta.slot.SlotAllocator;
 import com.alipay.sofa.registry.server.meta.slot.impl.CrossDcSlotAllocator;
+import com.alipay.sofa.registry.store.api.annotation.ReadOnLeader;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import org.springframework.aop.target.dynamic.Refreshable;
@@ -102,7 +103,7 @@ public class DefaultCrossDcMetaServer extends AbstractMetaServer implements Cros
         for(String ip : initMetaAddresses) {
             metaNodes.add(new MetaNode(new URL(ip), dcName));
         }
-        this.metaServers = metaNodes;
+        this.metaServers.set(metaNodes);
     }
 
     private void initSlotAllocator() throws InitializeException {
@@ -136,11 +137,7 @@ public class DefaultCrossDcMetaServer extends AbstractMetaServer implements Cros
     @Override
     protected void doStop() throws StopException {
         // stop allocator for slot purpose
-        try {
-            LifecycleHelper.stopIfPossible(allocator);
-        } catch (StopException e) {
-            logger.error("[stop][stop allocator error]", e);
-        }
+        LifecycleHelper.stopIfPossible(allocator);
         if(future != null) {
             future.cancel(true);
             future = null;
@@ -152,6 +149,11 @@ public class DefaultCrossDcMetaServer extends AbstractMetaServer implements Cros
     protected void doDispose() throws DisposeException {
         LifecycleHelper.disposeIfPossible(allocator);
         super.doDispose();
+    }
+
+    @Override
+    public List<MetaNode> getClusterMembers() {
+        return metaServers.get();
     }
 
     @Override
@@ -256,7 +258,7 @@ public class DefaultCrossDcMetaServer extends AbstractMetaServer implements Cros
         public void tryUpdateRemoteDcMetaServerList(DataCenterNodes<MetaNode> response) {
             String remoteDc = response.getDataCenterId();
             if(!getDc().equalsIgnoreCase(remoteDc)) {
-                throw new IllegalStateException(String.format("MetaServer List Response not correct, ask [%s], received [%s]",
+                throw new IllegalArgumentException(String.format("MetaServer List Response not correct, ask [%s], received [%s]",
                         getDc(), remoteDc));
             }
             DefaultCrossDcMetaServer.this.lock.writeLock().lock();
@@ -271,10 +273,14 @@ public class DefaultCrossDcMetaServer extends AbstractMetaServer implements Cros
                 }
                 if(logger.isWarnEnabled()) {
                     logger.warn("[tryUpdateRemoteDcMetaServerList][{}] remote meta server changed, \nbefore: {}, \nafter: {}",
-                            getDc(), DefaultCrossDcMetaServer.this.metaServers, response.getNodes().values());
+                            getDc(), DefaultCrossDcMetaServer.this.metaServers.get(), response.getNodes() != null ? response.getNodes().values() : "None");
                 }
-                DefaultCrossDcMetaServer.this.metaServers = Lists.newArrayList(response.getNodes().values());
+                currentVersion.set(remoteVersion);
+                if(response.getNodes() != null) {
+                    metaServers.set(Lists.newArrayList(response.getNodes().values()));
+                }
             } finally {
+                logger.warn("[tryUpdateRemoteDcMetaServerList] {}", DefaultCrossDcMetaServer.this.metaServers.get());
                 DefaultCrossDcMetaServer.this.lock.writeLock().unlock();
             }
 
@@ -294,6 +300,12 @@ public class DefaultCrossDcMetaServer extends AbstractMetaServer implements Cros
     @VisibleForTesting
     DefaultCrossDcMetaServer setRaftStorage(MetaServerListStorage raftStorage) {
         this.raftStorage = raftStorage;
+        return this;
+    }
+
+    @VisibleForTesting
+    DefaultCrossDcMetaServer setAllocator(SlotAllocator allocator) {
+        this.allocator = allocator;
         return this;
     }
 

@@ -7,6 +7,7 @@ import com.alipay.sofa.registry.store.api.annotation.ReadOnLeader;
 import com.google.common.collect.Lists;
 
 import java.util.List;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
@@ -17,19 +18,8 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
  */
 public abstract class AbstractMetaServer extends AbstractLifecycleObservable implements MetaServer {
 
-    protected List<MetaNode> metaServers = Lists.newCopyOnWriteArrayList();
+    protected volatile AtomicReference<List<MetaNode>> metaServers = new AtomicReference<>(Lists.newCopyOnWriteArrayList());
 
     protected final ReadWriteLock lock = new ReentrantReadWriteLock();
-
-
-    @ReadOnLeader
-    public List<MetaNode> getClusterMembers() {
-        lock.readLock().lock();
-        try {
-            return Lists.newArrayList(metaServers);
-        } finally {
-            lock.readLock().unlock();
-        }
-    }
 
 }

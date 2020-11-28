@@ -9,6 +9,7 @@ import com.alipay.sofa.registry.server.meta.bootstrap.config.NodeConfig;
 import com.alipay.sofa.registry.server.meta.lease.DataServerManager;
 import com.alipay.sofa.registry.server.meta.lease.SessionManager;
 import com.alipay.sofa.registry.server.meta.metaserver.CurrentDcMetaServer;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Maps;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -102,5 +103,35 @@ public class DefaultMetaServerManager {
             map.put(node.getNodeUrl().getIpAddress(), node);
         }
         return map;
+    }
+
+    @VisibleForTesting
+    DefaultMetaServerManager setCrossDcMetaServerManager(CrossDcMetaServerManager crossDcMetaServerManager) {
+        this.crossDcMetaServerManager = crossDcMetaServerManager;
+        return this;
+    }
+
+    @VisibleForTesting
+    DefaultMetaServerManager setCurrentDcMetaServer(CurrentDcMetaServer currentDcMetaServer) {
+        this.currentDcMetaServer = currentDcMetaServer;
+        return this;
+    }
+
+    @VisibleForTesting
+    DefaultMetaServerManager setSessionManager(SessionManager sessionManager) {
+        this.sessionManager = sessionManager;
+        return this;
+    }
+
+    @VisibleForTesting
+    DefaultMetaServerManager setDataServerManager(DataServerManager dataServerManager) {
+        this.dataServerManager = dataServerManager;
+        return this;
+    }
+
+    @VisibleForTesting
+    DefaultMetaServerManager setNodeConfig(NodeConfig nodeConfig) {
+        this.nodeConfig = nodeConfig;
+        return this;
     }
 }
