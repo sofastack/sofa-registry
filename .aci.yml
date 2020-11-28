@@ -1,7 +1,8 @@
 stages: # 定义了一条pipeline
   - 代码检测 # 定义了stage
-  - 单元测试
   - 编译
+  - 单元测试
+
   #- 发布JAR包
 
 PMD扫描: # 定义了一个job

@@ -14,28 +14,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alipay.sofa.registry.server.data.remoting;
+package com.alipay.sofa.registry.server.shared.env;
 
-import com.alipay.sofa.registry.server.data.bootstrap.DataServerConfig;
-import com.alipay.sofa.registry.server.shared.meta.AbstractMetaNodeExchanger;
-import org.springframework.beans.factory.annotation.Autowired;
+import com.alipay.sofa.registry.net.NetUtil;
 
 /**
- * @author xuanbei
- * @since 2019/2/15
+ *
+ * @author yuzhi.lyz
+ * @version v 0.1 2020-11-28 15:25 yuzhi.lyz Exp $
  */
-public class MetaNodeExchanger extends AbstractMetaNodeExchanger {
-
-    @Autowired
-    private DataServerConfig dataServerConfig;
-
-    @Override
-    public int getMetaServerPort() {
-        return dataServerConfig.getMetaServerPort();
+public final class ServerEnv {
+    private ServerEnv() {
     }
 
-    @Override
-    public int getRpcTimeout() {
-        return dataServerConfig.getRpcTimeout();
+    public static final String IP = NetUtil.getLocalAddress().getHostAddress();
+
+    public static boolean isLocalServer(String ip) {
+        return IP.equals(ip);
     }
 }

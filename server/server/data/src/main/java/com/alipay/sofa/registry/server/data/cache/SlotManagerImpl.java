@@ -24,7 +24,9 @@ import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.remoting.exchange.Exchange;
 import com.alipay.sofa.registry.server.data.bootstrap.DataServerConfig;
 import com.alipay.sofa.registry.server.data.remoting.DataNodeExchanger;
+import com.alipay.sofa.registry.server.data.remoting.metaserver.DefaultMetaServiceImpl;
 import com.alipay.sofa.registry.server.data.remoting.sessionserver.SessionServerConnectionFactory;
+import com.alipay.sofa.registry.server.shared.env.ServerEnv;
 import com.alipay.sofa.registry.util.NamedThreadFactory;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -44,11 +46,7 @@ public final class SlotManagerImpl implements SlotManager {
     private static final Logger                  LOGGER          = LoggerFactory
                                                                      .getLogger(SlotManagerImpl.class);
 
-    private final SlotFunction                   slotFunction    = new MD5SlotFunction();
-
-    @Autowired
-    private SessionServerCache                   sessionServerCache;
-
+    private final SlotFunction                   slotFunction    = SlotFunctionRegistry.getFunc();
     @Autowired
     private SessionServerConnectionFactory       sessionServerConnectionFactory;
 
@@ -57,6 +55,9 @@ public final class SlotManagerImpl implements SlotManager {
 
     @Autowired
     private DataNodeExchanger                    dataNodeExchanger;
+
+    @Autowired
+    private DefaultMetaServiceImpl               metaServerService;
 
     @Autowired
     private DataServerConfig                     dataServerConfig;
@@ -108,7 +109,7 @@ public final class SlotManagerImpl implements SlotManager {
 
         final int slotId = slotFunction.slotOf(dataInfoId);
         final Slot targetSlot = curState.table.getSlot(slotId);
-        if (targetSlot == null || !DataServerConfig.IP.equals(targetSlot.getLeader())) {
+        if (targetSlot == null || !isLeader(targetSlot)) {
             return new SlotAccess(slotId, currentEpoch, SlotAccess.Status.Moved);
         }
         if (curState.migrating.contains(slotId)) {
@@ -123,7 +124,7 @@ public final class SlotManagerImpl implements SlotManager {
     }
 
     private boolean isLeader(Slot slot) {
-        return DataServerConfig.IP.equals(slot.getLeader());
+        return ServerEnv.isLocalServer(slot.getLeader());
     }
 
     @Override
@@ -293,7 +294,7 @@ public final class SlotManagerImpl implements SlotManager {
                 }
             }
             // check request finish?
-            Map<String, SessionNode> sessions = sessionServerCache.getServerMap(dataServerConfig.getLocalDataCenter());
+            Map<String, SessionNode> sessions = metaServerService.getSessionNodes();
             if (sessions == null || sessions.isEmpty()) {
                 LOGGER.warn("sessions is empty when migrating, {}", slot);
             } else {

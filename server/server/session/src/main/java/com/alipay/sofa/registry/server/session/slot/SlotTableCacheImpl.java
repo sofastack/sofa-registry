@@ -19,10 +19,7 @@ package com.alipay.sofa.registry.server.session.slot;
 import com.alipay.sofa.registry.common.model.GenericResponse;
 import com.alipay.sofa.registry.common.model.metaserver.GetSlotTableRequest;
 import com.alipay.sofa.registry.common.model.metaserver.GetSlotTableResult;
-import com.alipay.sofa.registry.common.model.slot.MD5SlotFunction;
-import com.alipay.sofa.registry.common.model.slot.Slot;
-import com.alipay.sofa.registry.common.model.slot.SlotFunction;
-import com.alipay.sofa.registry.common.model.slot.SlotTable;
+import com.alipay.sofa.registry.common.model.slot.*;
 import com.alipay.sofa.registry.common.model.store.URL;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
@@ -41,7 +38,6 @@ import java.util.Collections;
  */
 public final class SlotTableCacheImpl implements SlotTableCache {
     private static final Logger LOGGER       = LoggerFactory.getLogger(SlotTableCacheImpl.class);
-    private final SlotFunction  slotFunction = new MD5SlotFunction();
     @Autowired
     protected NodeExchanger     metaNodeExchanger;
 
@@ -51,6 +47,7 @@ public final class SlotTableCacheImpl implements SlotTableCache {
     @Autowired
     protected RaftClientManager raftClientManager;
 
+    private final SlotFunction  slotFunction = SlotFunctionRegistry.getFunc();
     private volatile SlotTable  slotTable;
 
     @Override

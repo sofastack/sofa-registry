@@ -22,6 +22,7 @@ import com.alipay.sofa.registry.common.model.GenericResponse;
 import com.alipay.sofa.registry.common.model.Node;
 import com.alipay.sofa.registry.common.model.Node.NodeType;
 import com.alipay.sofa.registry.common.model.metaserver.*;
+import com.alipay.sofa.registry.common.model.metaserver.inter.communicate.SessionHeartBeatResponse;
 import com.alipay.sofa.registry.common.model.metaserver.nodes.MetaNode;
 import com.alipay.sofa.registry.common.model.metaserver.nodes.SessionNode;
 import com.alipay.sofa.registry.common.model.store.URL;
@@ -89,9 +90,6 @@ public class SessionNodeManager extends AbstractNodeManager<SessionNode> {
                     SessionNode sessionNode = new SessionNode(clientUrl,
                         sessionServerConfig.getSessionServerRegion());
                     RenewNodesRequest request = new RenewNodesRequest(sessionNode);
-                    // session node need the meta/session/data
-                    request.setTargetNodeTypes(Sets.newHashSet(NodeType.META, NodeType.SESSION,
-                        NodeType.DATA));
                     return request;
                 }
 
@@ -101,7 +99,7 @@ public class SessionNodeManager extends AbstractNodeManager<SessionNode> {
                 }
             };
 
-            GenericResponse<RenewNodesResult> resp = (GenericResponse<RenewNodesResult>) metaNodeExchanger
+            GenericResponse<SessionHeartBeatResponse> resp = (GenericResponse<SessionHeartBeatResponse>) metaNodeExchanger
                 .request(renewNodesRequestRequest).getResult();
             if (resp != null && resp.isSuccess()) {
                 handleRenewResult(resp.getData());
@@ -115,19 +113,8 @@ public class SessionNodeManager extends AbstractNodeManager<SessionNode> {
         }
     }
 
-    private void handleRenewResult(RenewNodesResult result) {
-        Map<Node.NodeType, NodeChangeResult> resultMap = result.getResults();
-        if (resultMap == null) {
-            return;
-        }
-        NodeChangeResult<SessionNode> sessions = resultMap.get(NodeType.SESSION);
-        updateNodes(sessions);
-
-        NodeChangeResult<MetaNode> metas = resultMap.get(NodeType.META);
-        metaNodeManager.updateNodes(metas);
-
-        NodeChangeResult<MetaNode> datas = resultMap.get(NodeType.DATA);
-        dataNodeManager.updateNodes(datas);
+    private void handleRenewResult(SessionHeartBeatResponse result) {
+        // TODO
     }
 
     @Override

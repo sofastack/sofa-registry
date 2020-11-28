@@ -18,7 +18,7 @@ package com.alipay.sofa.registry.server.data.remoting.dataserver.task;
 
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
-import com.alipay.sofa.registry.server.data.remoting.metaserver.IMetaServerService;
+import com.alipay.sofa.registry.server.shared.meta.MetaServerService;
 import com.alipay.sofa.registry.util.NamedThreadFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -35,7 +35,7 @@ public class RenewNodeTask {
     private static final Logger LOGGER = LoggerFactory.getLogger(RenewNodeTask.class);
 
     @Autowired
-    private IMetaServerService  metaServerService;
+    private MetaServerService   metaServerService;
 
     public void start() {
         ScheduledExecutorService executor = new ScheduledThreadPoolExecutor(1,

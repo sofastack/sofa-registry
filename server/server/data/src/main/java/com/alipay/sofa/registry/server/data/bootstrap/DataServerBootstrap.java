@@ -29,7 +29,7 @@ import com.alipay.sofa.registry.server.data.cache.CacheDigestTask;
 import com.alipay.sofa.registry.server.data.event.EventCenter;
 import com.alipay.sofa.registry.server.data.remoting.dataserver.task.RenewNodeTask;
 import com.alipay.sofa.registry.server.data.remoting.handler.AbstractServerHandler;
-import com.alipay.sofa.registry.server.data.remoting.metaserver.IMetaServerService;
+import com.alipay.sofa.registry.server.shared.meta.MetaServerService;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -59,7 +59,7 @@ public class DataServerBootstrap {
     private DataServerConfig                  dataServerConfig;
 
     @Autowired
-    private IMetaServerService                metaServerService;
+    private MetaServerService                 metaServerService;
 
     @Autowired
     private ApplicationContext                applicationContext;

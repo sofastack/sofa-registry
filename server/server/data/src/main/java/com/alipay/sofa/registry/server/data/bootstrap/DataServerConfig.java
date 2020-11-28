@@ -39,10 +39,6 @@ public class DataServerConfig {
 
     public static final String PRE_FIX                                      = "data.server";
 
-    public static final String IP                                           = NetUtil
-                                                                                .getLocalAddress()
-                                                                                .getHostAddress();
-
     private int                port;
 
     private int                syncDataPort;
