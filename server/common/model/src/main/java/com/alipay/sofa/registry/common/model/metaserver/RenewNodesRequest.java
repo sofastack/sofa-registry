@@ -16,11 +16,9 @@
  */
 package com.alipay.sofa.registry.common.model.metaserver;
 
-import java.io.Serializable;
-import java.util.HashSet;
-import java.util.Set;
-
 import com.alipay.sofa.registry.common.model.Node;
+
+import java.io.Serializable;
 
 /**
  *
@@ -29,11 +27,9 @@ import com.alipay.sofa.registry.common.model.Node;
  */
 public class RenewNodesRequest<T extends Node> implements Serializable {
 
-    private int                duration;
+    private int     duration;
 
-    private final T            node;
-
-    private Set<Node.NodeType> targetNodeTypes;
+    private final T node;
 
     /**
      * constructor
@@ -70,28 +66,11 @@ public class RenewNodesRequest<T extends Node> implements Serializable {
         return node;
     }
 
-    /**
-     * Getter method for property <tt>targetNodeTypes</tt>.
-     * @return property value of targetNodeTypes
-     */
-    public Set<Node.NodeType> getTargetNodeTypes() {
-        return targetNodeTypes;
-    }
-
-    /**
-     * Setter method for property <tt>targetNodeTypes</tt>.
-     * @param targetNodeTypes value to be assigned to property targetNodeTypes
-     */
-    public void setTargetNodeTypes(Set<Node.NodeType> targetNodeTypes) {
-        this.targetNodeTypes = targetNodeTypes;
-    }
-
     @Override
     public String toString() {
         final StringBuilder sb = new StringBuilder("RenewNodesRequest{");
         sb.append("duration=").append(duration);
         sb.append(", node=").append(node);
-        sb.append(", targetNodeTypes=").append(targetNodeTypes);
         sb.append('}');
         return sb.toString();
     }

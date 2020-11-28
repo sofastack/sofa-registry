@@ -108,22 +108,18 @@ public class DefaultCurrentDcMetaServer extends AbstractMetaServer implements Cu
     @Override
     @SuppressWarnings("unchecked")
     public boolean renew(Node renewal, int leaseDuration) {
-<<<<<<< HEAD
         return getLeaseManager(renewal.getNodeType()).renew(renewal, leaseDuration);
     }
 
     @Override
     public List<MetaNode> getClusterMembers() {
         return raftStorage.getClusterMembers();
-=======
-        return true;
-        //        return getLeaseManager(renewal.getNodeType()).renew(renewal, leaseDuration);
->>>>>>> origin/feat/datastore
     }
 
     @Override
     public boolean evict() {
-        throw new UnsupportedOperationException("CurrentDcMetaServer uses raft to keeper heart beat");
+        throw new UnsupportedOperationException(
+            "CurrentDcMetaServer uses raft to keeper heart beat");
     }
 
     @VisibleForTesting
@@ -151,10 +147,8 @@ public class DefaultCurrentDcMetaServer extends AbstractMetaServer implements Cu
 
     @Override
     public String toString() {
-        return "DefaultCurrentDcMetaServer{" +
-                "currentEpoch=" + currentEpoch.get() +
-                ", metaServers=" + metaServers +
-                '}';
+        return "DefaultCurrentDcMetaServer{" + "currentEpoch=" + currentEpoch.get()
+               + ", metaServers=" + metaServers + '}';
     }
 
     public class MetaServersRaftStorage implements CurrentMetaServerRaftStorage {

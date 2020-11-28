@@ -14,28 +14,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alipay.sofa.registry.server.data.remoting;
+package com.alipay.sofa.registry.server.session.remoting.metaserver;
 
-import com.alipay.sofa.registry.server.data.bootstrap.DataServerConfig;
-import com.alipay.sofa.registry.server.shared.meta.AbstractMetaNodeExchanger;
-import org.springframework.beans.factory.annotation.Autowired;
+import com.alipay.sofa.registry.common.model.metaserver.inter.communicate.BaseHeartBeatResponse;
+import com.alipay.sofa.registry.common.model.metaserver.inter.communicate.SessionHeartBeatResponse;
+import com.alipay.sofa.registry.server.shared.meta.AbstractMetaServerService;
 
 /**
- * @author xuanbei
- * @since 2019/2/15
+ *
+ * @author yuzhi.lyz
+ * @version v 0.1 2020-11-28 20:05 yuzhi.lyz Exp $
  */
-public class MetaNodeExchanger extends AbstractMetaNodeExchanger {
-
-    @Autowired
-    private DataServerConfig dataServerConfig;
-
+public final class DefaultMetaServiceImpl extends AbstractMetaServerService {
     @Override
-    public int getMetaServerPort() {
-        return dataServerConfig.getMetaServerPort();
-    }
+    protected void handleRenewResult(BaseHeartBeatResponse response) {
+        SessionHeartBeatResponse result = (SessionHeartBeatResponse) response;
 
-    @Override
-    public int getRpcTimeout() {
-        return dataServerConfig.getRpcTimeout();
     }
 }

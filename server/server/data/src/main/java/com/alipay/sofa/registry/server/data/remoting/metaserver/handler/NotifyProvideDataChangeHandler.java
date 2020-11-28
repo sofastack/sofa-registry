@@ -16,8 +16,6 @@
  */
 package com.alipay.sofa.registry.server.data.remoting.metaserver.handler;
 
-import org.springframework.beans.factory.annotation.Autowired;
-
 import com.alipay.sofa.registry.common.model.CommonResponse;
 import com.alipay.sofa.registry.common.model.Node.NodeType;
 import com.alipay.sofa.registry.common.model.metaserver.DataOperator;
@@ -27,8 +25,9 @@ import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.remoting.Channel;
 import com.alipay.sofa.registry.server.data.remoting.handler.AbstractClientHandler;
-import com.alipay.sofa.registry.server.data.remoting.metaserver.IMetaServerService;
 import com.alipay.sofa.registry.server.data.remoting.metaserver.provideData.ProvideDataProcessor;
+import com.alipay.sofa.registry.server.shared.meta.MetaServerService;
+import org.springframework.beans.factory.annotation.Autowired;
 
 /**
  *
@@ -41,7 +40,7 @@ public class NotifyProvideDataChangeHandler extends AbstractClientHandler {
                                             .getLogger(NotifyProvideDataChangeHandler.class);
 
     @Autowired
-    private IMetaServerService   metaServerService;
+    private MetaServerService    metaServerService;
 
     @Autowired
     private ProvideDataProcessor provideDataProcessorManager;

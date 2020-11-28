@@ -16,36 +16,24 @@
  */
 package com.alipay.sofa.registry.server.data.resource;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Set;
-import java.util.stream.Collectors;
-
-import javax.ws.rs.GET;
-import javax.ws.rs.POST;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
-import javax.ws.rs.core.MediaType;
-
 import com.alipay.sofa.registry.common.model.constants.ValueConstants;
-import org.springframework.beans.factory.annotation.Autowired;
-
-import com.alipay.remoting.Connection;
 import com.alipay.sofa.registry.common.model.dataserver.Datum;
 import com.alipay.sofa.registry.common.model.store.DataInfo;
 import com.alipay.sofa.registry.common.model.store.Publisher;
 import com.alipay.sofa.registry.server.data.bootstrap.DataServerConfig;
 import com.alipay.sofa.registry.server.data.cache.DatumCache;
-import com.alipay.sofa.registry.server.data.node.DataServerNode;
-import com.alipay.sofa.registry.server.data.remoting.dataserver.DataServerNodeFactory;
-import com.alipay.sofa.registry.server.data.remoting.metaserver.MetaServerConnectionFactory;
+import com.alipay.sofa.registry.server.data.remoting.metaserver.DefaultMetaServiceImpl;
 import com.alipay.sofa.registry.server.data.remoting.sessionserver.SessionServerConnectionFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+
+import javax.ws.rs.*;
+import javax.ws.rs.core.MediaType;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.stream.Collectors;
 
 /**
  *
@@ -63,7 +51,7 @@ public class DataDigestResource {
     private SessionServerConnectionFactory sessionServerConnectionFactory;
 
     @Autowired
-    private MetaServerConnectionFactory    metaServerConnectionFactory;
+    private DefaultMetaServiceImpl         metaServerService;
 
     @Autowired
     private DataServerConfig               dataServerConfig;
@@ -148,7 +136,6 @@ public class DataDigestResource {
     @Path("{type}/serverList/query")
     @Produces(MediaType.APPLICATION_JSON)
     public Map<String, List<String>> getServerListAll(@PathParam("type") String type) {
-
         Map<String, List<String>> map = new HashMap<>();
         if (type != null && !type.isEmpty()) {
             String inputType = type.toUpperCase();
@@ -157,15 +144,16 @@ public class DataDigestResource {
                 case SESSION:
                     List<String> sessionList = getSessionServerList();
                     if (sessionList != null) {
-                        map = new HashMap<>();
                         map.put(dataServerConfig.getLocalDataCenter(), sessionList);
                     }
                     break;
                 case META:
-                    map = getMetaServerList();
+                    List<String> metaList = getMetaServerList();
+                    if (metaList != null) {
+                        map.put(dataServerConfig.getLocalDataCenter(), metaList);
+                    }
                     break;
                 default:
-                    map = new HashMap<>();
                     break;
             }
 
@@ -181,25 +169,14 @@ public class DataDigestResource {
         return connections;
     }
 
-    public Map<String, List<String>> getMetaServerList() {
-
-        Map<String, List<String>> map = new HashMap<>();
-        Set<String> allDataCenter = new HashSet<>(metaServerConnectionFactory.getAllDataCenters());
-        for (String dataCenter : allDataCenter) {
-
-            List<String> list = map.computeIfAbsent(dataCenter, k -> new ArrayList<>());
-
-            Map<String, Connection> metaConnections = metaServerConnectionFactory.getConnections(dataCenter);
-            if (metaConnections != null && !metaConnections.isEmpty()) {
-
-                metaConnections.forEach((ip, connection) -> {
-                    if (connection != null && connection.isFine()) {
-                        list.add(connection.getRemoteIP());
-                    }
-                });
-            }
-        }
-        return map;
+    public List<String> getMetaServerList() {
+        final List<String> connections = new ArrayList<>();
+        metaServerService.getConnections().forEach((k, conns) -> {
+            connections.addAll(conns.stream().filter(connection -> connection != null && connection.isFine())
+                    .map(connection -> connection.getRemoteIP() + ":" + connection.getRemotePort())
+                    .collect(Collectors.toList()));
+        });
+        return connections;
     }
 
     private boolean isBlank(String dataInfoId) {

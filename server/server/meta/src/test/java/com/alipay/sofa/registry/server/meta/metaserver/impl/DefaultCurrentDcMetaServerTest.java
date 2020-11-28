@@ -49,23 +49,23 @@ public class DefaultCurrentDcMetaServerTest extends AbstractTest {
     private DefaultCurrentDcMetaServer metaServer;
 
     @Mock
-    private RaftExchanger raftExchanger;
+    private RaftExchanger              raftExchanger;
 
     @Mock
-    private SessionManager sessionManager;
+    private SessionManager             sessionManager;
 
     @Mock
-    private DataServerManager dataServerManager;
+    private DataServerManager          dataServerManager;
 
     @Mock
-    private SlotManager slotManager;
+    private SlotManager                slotManager;
 
     @Before
     public void beforeDefaultCurrentDcMetaServerTest() throws Exception {
         MockitoAnnotations.initMocks(this);
         metaServer = new DefaultCurrentDcMetaServer().setRaftExchanger(raftExchanger)
-                .setDataServerManager(dataServerManager).setSessionManager(sessionManager)
-                .setSlotManager(slotManager);
+            .setDataServerManager(dataServerManager).setSessionManager(sessionManager)
+            .setSlotManager(slotManager);
         LifecycleHelper.initializeIfPossible(metaServer);
         LifecycleHelper.startIfPossible(metaServer);
         metaServer.setRaftStorage(metaServer.new MetaServersRaftStorage());
@@ -79,15 +79,16 @@ public class DefaultCurrentDcMetaServerTest extends AbstractTest {
 
     @Test
     public void testGetSessionServers() {
-        when(sessionManager.getClusterMembers())
-                .thenReturn(Lists.newArrayList(new SessionNode(randomURL(), getDc()), new SessionNode(randomURL(), getDc())));
+        when(sessionManager.getClusterMembers()).thenReturn(
+            Lists.newArrayList(new SessionNode(randomURL(), getDc()), new SessionNode(randomURL(),
+                getDc())));
         Assert.assertEquals(2, metaServer.getSessionServers().size());
         verify(sessionManager, times(1)).getClusterMembers();
     }
 
     //manually test
     @Test
-//    @Ignore
+    //    @Ignore
     public void testUpdateClusterMembers() throws Exception {
         RaftExchanger raftExchanger = startRaftExchanger();
         metaServer = new DefaultCurrentDcMetaServer().setRaftExchanger(raftExchanger);
@@ -116,8 +117,9 @@ public class DefaultCurrentDcMetaServerTest extends AbstractTest {
 
     @Test
     public void testGetSlotTable() {
-        when(slotManager.getSlotTable()).thenReturn(new SlotTable(DatumVersionUtil.nextId(),
-                ImmutableMap.of(1, new Slot(1, randomIp(), 2, Lists.newArrayList(randomIp())))));
+        when(slotManager.getSlotTable()).thenReturn(
+            new SlotTable(DatumVersionUtil.nextId(), ImmutableMap.of(1, new Slot(1, randomIp(), 2,
+                Lists.newArrayList(randomIp())))));
         SlotTable slotTable = metaServer.getSlotTable();
         verify(slotManager, times(1)).getSlotTable();
         Assert.assertEquals(1, slotTable.getSlotIds().size());
@@ -133,7 +135,7 @@ public class DefaultCurrentDcMetaServerTest extends AbstractTest {
             @Override
             public Node answer(InvocationOnMock invocationOnMock) throws Throwable {
                 Node node = invocationOnMock.getArgumentAt(0, Node.class);
-                if(invocationOnMock.getMethod().getName().contains("cancel")) {
+                if (invocationOnMock.getMethod().getName().contains("cancel")) {
                     map.remove(node.getNodeUrl().getIpAddress());
                 } else {
                     map.put(node.getNodeUrl().getIpAddress(), node);
@@ -166,7 +168,7 @@ public class DefaultCurrentDcMetaServerTest extends AbstractTest {
             @Override
             public Node answer(InvocationOnMock invocationOnMock) throws Throwable {
                 Node node = invocationOnMock.getArgumentAt(0, Node.class);
-                if(invocationOnMock.getMethod().getName().contains("cancel")) {
+                if (invocationOnMock.getMethod().getName().contains("cancel")) {
                     map.remove(node.getNodeUrl().getIpAddress());
                 } else {
                     map.put(node.getNodeUrl().getIpAddress(), node);
@@ -198,9 +200,12 @@ public class DefaultCurrentDcMetaServerTest extends AbstractTest {
 
     @Test
     public void testGetLeaseManagerPositive() {
-        Assert.assertTrue(metaServer.getLeaseManager(Node.NodeType.META) instanceof DefaultCurrentDcMetaServer.CurrentMetaServerRaftStorage);
-        Assert.assertTrue(metaServer.getLeaseManager(Node.NodeType.DATA) instanceof DataServerManager);
-        Assert.assertTrue(metaServer.getLeaseManager(Node.NodeType.SESSION) instanceof SessionManager);
+        Assert
+            .assertTrue(metaServer.getLeaseManager(Node.NodeType.META) instanceof DefaultCurrentDcMetaServer.CurrentMetaServerRaftStorage);
+        Assert
+            .assertTrue(metaServer.getLeaseManager(Node.NodeType.DATA) instanceof DataServerManager);
+        Assert
+            .assertTrue(metaServer.getLeaseManager(Node.NodeType.SESSION) instanceof SessionManager);
     }
 
     @Test

@@ -179,18 +179,13 @@ public abstract class AbstractRaftEnabledLeaseManager<T extends Node> extends
         return this;
     }
 
-<<<<<<< HEAD
-    @VisibleForTesting
     Map<String, Lease<T>> getLeaseStore() {
         return Maps.newHashMap(raftLeaseManager.getLeaseStore());
     }
 
-    public class DefaultRaftLeaseManager<T extends Node> extends DefaultLeaseManager<T> implements RaftLeaseManager<String, T> {
-=======
     public class DefaultRaftLeaseManager<T extends Node> extends DefaultLeaseManager<T>
                                                                                        implements
                                                                                        RaftLeaseManager<String, T> {
->>>>>>> origin/feat/datastore
 
         @Override
         public Map<String, Lease<T>> getLeaseStore() {
