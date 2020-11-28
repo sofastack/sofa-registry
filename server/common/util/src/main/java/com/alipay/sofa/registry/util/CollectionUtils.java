@@ -17,6 +17,7 @@
 package com.alipay.sofa.registry.util;
 
 import java.util.Collection;
+import java.util.Map;
 import java.util.Optional;
 
 /**
@@ -35,6 +36,14 @@ public class CollectionUtils {
      */
     public static <E> Optional<E> getRandom(Collection<E> e) {
         return e.stream().skip((int) (e.size() * Math.random())).findFirst();
+    }
+
+    public static boolean isEmpty(Collection c) {
+        return c == null || c.isEmpty();
+    }
+
+    public static boolean isEmpty(Map m) {
+        return m == null || m.isEmpty();
     }
 
 }

@@ -1,3 +1,19 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package com.alipay.sofa.registry.observer.impl;
 
 import com.alipay.sofa.registry.observer.Observable;
@@ -10,17 +26,16 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
-
 /**
  * @author zhuchen
  * @date Nov 25, 2020, 11:16:06 AM
  */
 public abstract class AbstractObservable implements Observable {
 
-    private ReadWriteLock lock = new ReentrantReadWriteLock();
+    private ReadWriteLock  lock      = new ReentrantReadWriteLock();
     private List<Observer> observers = new ArrayList<>();
 
-    private Executor executors = MoreExecutors.directExecutor();
+    private Executor       executors = MoreExecutors.directExecutor();
 
     public AbstractObservable() {
     }
@@ -38,7 +53,7 @@ public abstract class AbstractObservable implements Observable {
         try {
             lock.writeLock().lock();
             observers.add(observer);
-        }finally {
+        } finally {
             lock.writeLock().unlock();
         }
     }
@@ -48,7 +63,7 @@ public abstract class AbstractObservable implements Observable {
         try {
             lock.writeLock().lock();
             observers.remove(observer);
-        }finally {
+        } finally {
             lock.writeLock().unlock();
         }
     }

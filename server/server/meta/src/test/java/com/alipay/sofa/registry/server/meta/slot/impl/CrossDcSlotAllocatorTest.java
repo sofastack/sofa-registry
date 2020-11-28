@@ -1,3 +1,19 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package com.alipay.sofa.registry.server.meta.slot.impl;
 
 import com.alipay.sofa.registry.common.model.metaserver.nodes.MetaNode;
@@ -42,24 +58,27 @@ public class CrossDcSlotAllocatorTest extends AbstractTest {
     private CrossDcSlotAllocator allocator;
 
     @Mock
-    private CrossDcMetaServer crossDcMetaServer;
+    private CrossDcMetaServer    crossDcMetaServer;
 
     @Mock
-    private Exchange exchange;
+    private Exchange             exchange;
 
     @Mock
-    private RaftExchanger raft;
+    private RaftExchanger        raft;
 
-    private ServiceStateMachine machine;
+    private ServiceStateMachine  machine;
 
     @Before
     public void beforeCrossDcSlotAllocatorTest() throws Exception {
         MockitoAnnotations.initMocks(this);
         machine = spy(ServiceStateMachine.getInstance());
         when(machine.isLeader()).thenReturn(false);
-        when(crossDcMetaServer.getClusterMembers()).thenReturn(Lists.newArrayList(new MetaNode(randomURL(), getDc())));
-        when(crossDcMetaServer.getRemotes()).thenReturn(Lists.newArrayList(new MetaNode(randomURL(), getDc())));
-        allocator = spy(new CrossDcSlotAllocator(getDc(), scheduled, exchange, crossDcMetaServer, raft));
+        when(crossDcMetaServer.getClusterMembers()).thenReturn(
+            Lists.newArrayList(new MetaNode(randomURL(), getDc())));
+        when(crossDcMetaServer.getRemotes()).thenReturn(
+            Lists.newArrayList(new MetaNode(randomURL(), getDc())));
+        allocator = spy(new CrossDcSlotAllocator(getDc(), scheduled, exchange, crossDcMetaServer,
+            raft));
     }
 
     @After
@@ -114,15 +133,16 @@ public class CrossDcSlotAllocatorTest extends AbstractTest {
     }
 
     @Test
-    public void testRefreshSlotTableRetryOverTimes() throws TimeoutException, InterruptedException, StartException, InitializeException {
+    public void testRefreshSlotTableRetryOverTimes() throws TimeoutException, InterruptedException,
+                                                    StartException, InitializeException {
         LifecycleHelper.initializeIfPossible(allocator);
         LifecycleHelper.startIfPossible(allocator);
         allocator.setRaftStorage(allocator.new LocalRaftSlotTableStorage());
 
         Assert.assertNull(allocator.getSlotTable());
 
-        when(exchange.getClient(Exchange.META_SERVER_TYPE))
-                .thenReturn(getRpcClient(scheduled, 3, new TimeoutException("expected timeout")));
+        when(exchange.getClient(Exchange.META_SERVER_TYPE)).thenReturn(
+            getRpcClient(scheduled, 3, new TimeoutException("expected timeout")));
 
         allocator.refreshSlotTable(0);
         Thread.sleep(20);
@@ -164,14 +184,16 @@ public class CrossDcSlotAllocatorTest extends AbstractTest {
     @Test
     public void testDoInitialize() throws InitializeException {
         LifecycleHelper.initializeIfPossible(allocator);
-        Assert.assertEquals(LifecycleState.LifecyclePhase.INITIALIZED, allocator.getLifecycleState().getPhase());
+        Assert.assertEquals(LifecycleState.LifecyclePhase.INITIALIZED, allocator
+            .getLifecycleState().getPhase());
     }
 
     @Test
     public void testDoStart() throws InitializeException, StopException, StartException {
         LifecycleHelper.initializeIfPossible(allocator);
         LifecycleHelper.startIfPossible(allocator);
-        Assert.assertEquals(LifecycleState.LifecyclePhase.STARTED, allocator.getLifecycleState().getPhase());
+        Assert.assertEquals(LifecycleState.LifecyclePhase.STARTED, allocator.getLifecycleState()
+            .getPhase());
         verify(allocator, never()).refreshSlotTable(anyInt());
         verify(allocator, times(1)).doStart();
     }

@@ -69,12 +69,12 @@ import java.util.concurrent.*;
 @EnableConfigurationProperties
 public class MetaServerConfiguration {
 
-    public static final String SCHEDULED_EXECUTOR = "scheduledExecutor";
-    public static final String GLOBAL_EXECUTOR = "globalExecutor";
-    public static final int maxScheduledCorePoolSize = 8;
-    public static final int THREAD_POOL_TIME_OUT = 5;
-    public static final int GLOBAL_THREAD_MULTI_CORE = 100;
-    public static final int GLOBAL_THREAD_MAX = 100;
+    public static final String SCHEDULED_EXECUTOR       = "scheduledExecutor";
+    public static final String GLOBAL_EXECUTOR          = "globalExecutor";
+    public static final int    maxScheduledCorePoolSize = 8;
+    public static final int    THREAD_POOL_TIME_OUT     = 5;
+    public static final int    GLOBAL_THREAD_MULTI_CORE = 100;
+    public static final int    GLOBAL_THREAD_MAX        = 100;
 
     @Bean
     @ConditionalOnMissingBean
@@ -120,16 +120,16 @@ public class MetaServerConfiguration {
         @Bean(name = GLOBAL_EXECUTOR)
         public ExecutorService getGlobalExecutorService() {
             int corePoolSize = Math.min(OsUtils.getCpuCount() * 2, 8);
-            int maxPoolSize =  50 * OsUtils.getCpuCount();
-            DefaultExecutorFactory executorFactory = new DefaultExecutorFactory(GLOBAL_EXECUTOR, corePoolSize, maxPoolSize,
-                    new ThreadPoolExecutor.AbortPolicy());
+            int maxPoolSize = 50 * OsUtils.getCpuCount();
+            DefaultExecutorFactory executorFactory = new DefaultExecutorFactory(GLOBAL_EXECUTOR,
+                corePoolSize, maxPoolSize, new ThreadPoolExecutor.AbortPolicy());
             return executorFactory.create();
         }
 
         @Bean(name = SCHEDULED_EXECUTOR)
         public ScheduledExecutorService getScheduledService() {
             return new ScheduledThreadPoolExecutor(Math.min(OsUtils.getCpuCount() * 2, 12),
-                    new NamedThreadFactory("MetaServerGlobalScheduler"));
+                new NamedThreadFactory("MetaServerGlobalScheduler"));
         }
     }
 

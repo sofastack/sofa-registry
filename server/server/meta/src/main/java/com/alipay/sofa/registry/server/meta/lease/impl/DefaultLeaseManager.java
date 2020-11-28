@@ -1,3 +1,19 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package com.alipay.sofa.registry.server.meta.lease.impl;
 
 import com.alipay.sofa.registry.common.model.Node;
@@ -24,28 +40,33 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
  */
 public class DefaultLeaseManager<T extends Node> implements LeaseManager<T>, EpochAware {
 
-    private Logger logger = LoggerFactory.getLogger(getClass());
+    private Logger                            logger              = LoggerFactory
+                                                                      .getLogger(getClass());
 
-    private static final String EVICT_BETWEEN_MILLI = "evict.between.milli";
+    private static final String               EVICT_BETWEEN_MILLI = "evict.between.milli";
 
-    private int evictBetweenMilli = Integer.parseInt(System.getProperty(EVICT_BETWEEN_MILLI, "60000"));
+    private int                               evictBetweenMilli   = Integer.parseInt(System
+                                                                      .getProperty(
+                                                                          EVICT_BETWEEN_MILLI,
+                                                                          "60000"));
 
-    protected AtomicLong currentEpoch = new AtomicLong();
+    protected AtomicLong                      currentEpoch        = new AtomicLong();
 
     //Map[ip-address, Lease{node, duration, timestamp}]
-    protected ConcurrentMap<String, Lease<T>> repo = Maps.newConcurrentMap();
+    protected ConcurrentMap<String, Lease<T>> repo                = Maps.newConcurrentMap();
 
-    protected final ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
+    protected final ReentrantReadWriteLock    lock                = new ReentrantReadWriteLock();
 
-    private AtomicLong lastEvictTime = new AtomicLong();
+    private AtomicLong                        lastEvictTime       = new AtomicLong();
 
     public void register(T renewal, int leaseDuration) {
-        if(renewal == null) {
+        if (renewal == null) {
             throw new IllegalArgumentException("[register]NullPointer of renewal");
         }
         lock.writeLock().lock();
         try {
-            repo.putIfAbsent(renewal.getNodeUrl().getIpAddress(), new Lease<>(renewal, leaseDuration));
+            repo.putIfAbsent(renewal.getNodeUrl().getIpAddress(), new Lease<>(renewal,
+                leaseDuration));
         } finally {
             lock.writeLock().unlock();
         }
@@ -53,7 +74,7 @@ public class DefaultLeaseManager<T extends Node> implements LeaseManager<T>, Epo
 
     @Override
     public boolean cancel(T renewal) {
-        if(renewal == null) {
+        if (renewal == null) {
             throw new IllegalArgumentException("[cancel]NullPointer of renewal");
         }
         // read lock for concurrent modification, and mutext for renew/register operations
@@ -74,7 +95,7 @@ public class DefaultLeaseManager<T extends Node> implements LeaseManager<T>, Epo
 
     @Override
     public boolean renew(T renewal, int leaseDuration) {
-        if(renewal == null) {
+        if (renewal == null) {
             throw new IllegalArgumentException("[renew]NullPointer of renewal");
         }
         lock.writeLock().lock();
@@ -87,7 +108,8 @@ public class DefaultLeaseManager<T extends Node> implements LeaseManager<T>, Epo
                 register(renewal, leaseDuration);
                 return false;
             }
-            int validLeaseDuration = leaseDuration > 0 ? leaseDuration : Lease.DEFAULT_DURATION_SECS;
+            int validLeaseDuration = leaseDuration > 0 ? leaseDuration
+                : Lease.DEFAULT_DURATION_SECS;
             lease.renew(validLeaseDuration);
             return true;
         } finally {
@@ -103,30 +125,30 @@ public class DefaultLeaseManager<T extends Node> implements LeaseManager<T>, Epo
     @Override
     @ReadOnLeader
     public boolean evict() {
-        if(Math.abs(System.currentTimeMillis() - lastEvictTime.get()) < evictBetweenMilli) {
+        if (Math.abs(System.currentTimeMillis() - lastEvictTime.get()) < evictBetweenMilli) {
             logger.warn("[evict][too quick] last evict time: {}", lastEvictTime.get());
             return false;
         }
         long lastTime = lastEvictTime.get();
-        if(!lastEvictTime.compareAndSet(lastTime, System.currentTimeMillis())) {
-            if(logger.isWarnEnabled()) {
+        if (!lastEvictTime.compareAndSet(lastTime, System.currentTimeMillis())) {
+            if (logger.isWarnEnabled()) {
                 logger.warn("[evict][concurrent evict, quit] last evict time: {}", lastTime);
             }
             return false;
         }
         List<Lease<T>> expires = getExpiredLeases();
-        if(expires.isEmpty()) {
+        if (expires.isEmpty()) {
             return false;
         }
         lock.writeLock().lock();
         try {
-            for(Lease<T> lease : expires) {
+            for (Lease<T> lease : expires) {
                 Lease<T> doubleCheck = repo.get(lease.getRenewal().getNodeUrl().getIpAddress());
                 // at this point of view, entry might be deleted through cancel method
-                if(doubleCheck == null) {
+                if (doubleCheck == null) {
                     continue;
                 }
-                if(doubleCheck.isExpired()) {
+                if (doubleCheck.isExpired()) {
                     repo.remove(doubleCheck.getRenewal().getNodeUrl().getIpAddress());
                 }
             }
@@ -138,9 +160,9 @@ public class DefaultLeaseManager<T extends Node> implements LeaseManager<T>, Epo
 
     private List<Lease<T>> getExpiredLeases() {
         List<Lease<T>> expires = Lists.newLinkedList();
-        for(Map.Entry<String, Lease<T>> entry : repo.entrySet()) {
+        for (Map.Entry<String, Lease<T>> entry : repo.entrySet()) {
             Lease<T> lease = entry.getValue();
-            if(lease.isExpired()) {
+            if (lease.isExpired()) {
                 expires.add(lease);
             }
         }

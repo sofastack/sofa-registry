@@ -517,7 +517,6 @@ public class MetaServerConfigBean implements MetaServerConfig {
         this.schedulerGetDataChangeTimeout = schedulerGetDataChangeTimeout;
     }
 
-
     /**
      * Setter method for property <tt>schedulerGetDataChangeFirstDelay</tt>.
      *

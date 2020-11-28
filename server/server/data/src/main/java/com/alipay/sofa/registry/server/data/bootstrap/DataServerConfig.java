@@ -127,8 +127,8 @@ public class DataServerConfig {
     private int                slotFollowerSyncLeaderExecutorQueueSize      = 10000;
     private int                slotFollowerSyncLeaderIntervalMs             = 60000;
 
-    // the publisher.digest if len(registerId+long), 100bytes
-    private int                slotSyncPublisherDigestMaxNum                = 1024 * 4;
+    // the publisher.digest if len(registerId/uuid+long), 50bytes
+    private int                slotSyncPublisherDigestMaxNum                = 10000;
 
     private int                slotSyncPublisherMaxNum                      = 512;
 
