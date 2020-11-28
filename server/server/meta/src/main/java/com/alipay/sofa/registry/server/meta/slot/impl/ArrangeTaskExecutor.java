@@ -1,3 +1,19 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package com.alipay.sofa.registry.server.meta.slot.impl;
 
 import com.alipay.sofa.registry.lifecycle.impl.AbstractLifecycle;
@@ -18,36 +34,34 @@ import java.util.concurrent.atomic.AtomicLong;
 @Component
 public class ArrangeTaskExecutor extends AbstractLifecycle {
 
-    private ExecutorService executors;
+    private ExecutorService              executors;
 
-    private BlockingQueue<RebalanceTask> tasks = new LinkedBlockingQueue<>();
+    private BlockingQueue<RebalanceTask> tasks      = new LinkedBlockingQueue<>();
 
-    private final AtomicLong totalTasks = new AtomicLong();
+    private final AtomicLong             totalTasks = new AtomicLong();
 
-    private volatile RebalanceTask currentTask;
+    private volatile RebalanceTask       currentTask;
 
-    private AtomicBoolean isRunning = new AtomicBoolean(false);
+    private AtomicBoolean                isRunning  = new AtomicBoolean(false);
 
     public void offer(RebalanceTask task) {
         logger.info("[offer]{}", task);
-        if(tasks.offer(task)){
+        if (tasks.offer(task)) {
             totalTasks.incrementAndGet();
-        }else{
+        } else {
             logger.error("[offset][fail]{}", task);
         }
 
         startTaskThread();
     }
 
-
     private void startTaskThread() {
-        if(isRunning.get()) {
+        if (isRunning.get()) {
             return;
         }
-        if(executors == null) {
-            executors = DefaultExecutorFactory
-                    .createAllowCoreTimeout(getClass().getSimpleName(), Math.max(2, OsUtils.getCpuCount()))
-                    .create();
+        if (executors == null) {
+            executors = DefaultExecutorFactory.createAllowCoreTimeout(getClass().getSimpleName(),
+                Math.max(2, OsUtils.getCpuCount())).create();
             doExecute();
         }
     }
@@ -67,7 +81,7 @@ public class ArrangeTaskExecutor extends AbstractLifecycle {
             }
             try {
                 task = tasks.poll();
-                if(task == null) {
+                if (task == null) {
                     isRunning.compareAndSet(true, false);
                     return;
                 }

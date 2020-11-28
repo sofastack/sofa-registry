@@ -1,3 +1,19 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package com.alipay.sofa.registry.server.meta.metaserver.impl;
 
 import com.alipay.sofa.registry.common.model.Node;
@@ -31,15 +47,15 @@ public class DefaultCrossDcMetaServerTest extends AbstractTest {
     private DefaultCrossDcMetaServer server;
 
     @Mock
-    private Exchange<MetaNode> exchange;
+    private Exchange<MetaNode>       exchange;
 
     @Mock
-    private RaftExchanger raftExchanger;
+    private RaftExchanger            raftExchanger;
 
     @Mock
-    private MetaServerConfig metaServerConfig;
+    private MetaServerConfig         metaServerConfig;
 
-    private ServiceStateMachine machine;
+    private ServiceStateMachine      machine;
 
     @Before
     public void beforeDefaultCrossDcMetaServerTest() {
@@ -47,7 +63,8 @@ public class DefaultCrossDcMetaServerTest extends AbstractTest {
         when(metaServerConfig.getCrossDcMetaSyncIntervalMilli()).thenReturn(60 * 1000);
         Collection<String> collection = Lists.newArrayList("10.0.0.1", "10.0.0.2");
         machine = spy(ServiceStateMachine.getInstance());
-        server = spy(new DefaultCrossDcMetaServer(getDc(), collection, scheduled, exchange, raftExchanger, metaServerConfig));
+        server = spy(new DefaultCrossDcMetaServer(getDc(), collection, scheduled, exchange,
+            raftExchanger, metaServerConfig));
     }
 
     @After
@@ -135,8 +152,8 @@ public class DefaultCrossDcMetaServerTest extends AbstractTest {
         LifecycleHelper.startIfPossible(server);
         Assert.assertEquals(2, server.getClusterMembers().size());
 
-        when(exchange.getClient(Exchange.META_SERVER_TYPE))
-                .thenReturn(getRpcClient(scheduled, 1, new TimeoutException()));
+        when(exchange.getClient(Exchange.META_SERVER_TYPE)).thenReturn(
+            getRpcClient(scheduled, 1, new TimeoutException()));
         server.setRaftStorage(server.new RaftMetaServerListStorage());
         server.doRefresh(0);
         Thread.sleep(20);
@@ -198,8 +215,8 @@ public class DefaultCrossDcMetaServerTest extends AbstractTest {
         LifecycleHelper.initializeIfPossible(server);
         LifecycleHelper.startIfPossible(server);
         when(machine.isLeader()).thenReturn(false);
-        when(exchange.getClient(Exchange.META_SERVER_TYPE))
-                .thenReturn(getRpcClient(scheduled, 1, new TimeoutException()));
+        when(exchange.getClient(Exchange.META_SERVER_TYPE)).thenReturn(
+            getRpcClient(scheduled, 1, new TimeoutException()));
         server.refresh();
         server.refresh();
         server.refresh();

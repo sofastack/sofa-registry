@@ -64,27 +64,27 @@ public class ExecutorManager {
         scheduler = new ScheduledThreadPoolExecutor(metaServerConfig.getMetaSchedulerPoolSize(),
             new NamedThreadFactory("MetaScheduler"));
 
-//        heartbeatCheckExecutor = new ThreadPoolExecutor(
-//            metaServerConfig.getHeartbeatCheckExecutorMinSize(),
-//            metaServerConfig.getHeartbeatCheckExecutorMaxSize(), 300, TimeUnit.SECONDS,
-//            new LinkedBlockingQueue<>(metaServerConfig.getHeartbeatCheckExecutorQueueSize()),
-//            new NamedThreadFactory("MetaScheduler-HeartbeatCheck"));
-//        heartbeatCheckExecutor.allowCoreThreadTimeOut(true);
-//
-//        checkDataChangeExecutor = new ThreadPoolExecutor(
-//            metaServerConfig.getCheckDataChangeExecutorMinSize(),
-//            metaServerConfig.getCheckDataChangeExecutorMaxSize(), 300, TimeUnit.SECONDS,
-//            new LinkedBlockingQueue<>(metaServerConfig.getCheckDataChangeExecutorQueueSize()),
-//            new NamedThreadFactory("MetaScheduler-CheckDataChange"));
-//        checkDataChangeExecutor.allowCoreThreadTimeOut(true);
-//
-//        getOtherDataCenterChangeExecutor = new ThreadPoolExecutor(
-//            metaServerConfig.getGetOtherDataCenterChangeExecutorMinSize(),
-//            metaServerConfig.getGetOtherDataCenterChangeExecutorMaxSize(), 300, TimeUnit.SECONDS,
-//            new LinkedBlockingQueue<>(metaServerConfig
-//                .getGetOtherDataCenterChangeExecutorQueueSize()), new NamedThreadFactory(
-//                "MetaScheduler-GetOtherDataCenterChange"));
-//        getOtherDataCenterChangeExecutor.allowCoreThreadTimeOut(true);
+        //        heartbeatCheckExecutor = new ThreadPoolExecutor(
+        //            metaServerConfig.getHeartbeatCheckExecutorMinSize(),
+        //            metaServerConfig.getHeartbeatCheckExecutorMaxSize(), 300, TimeUnit.SECONDS,
+        //            new LinkedBlockingQueue<>(metaServerConfig.getHeartbeatCheckExecutorQueueSize()),
+        //            new NamedThreadFactory("MetaScheduler-HeartbeatCheck"));
+        //        heartbeatCheckExecutor.allowCoreThreadTimeOut(true);
+        //
+        //        checkDataChangeExecutor = new ThreadPoolExecutor(
+        //            metaServerConfig.getCheckDataChangeExecutorMinSize(),
+        //            metaServerConfig.getCheckDataChangeExecutorMaxSize(), 300, TimeUnit.SECONDS,
+        //            new LinkedBlockingQueue<>(metaServerConfig.getCheckDataChangeExecutorQueueSize()),
+        //            new NamedThreadFactory("MetaScheduler-CheckDataChange"));
+        //        checkDataChangeExecutor.allowCoreThreadTimeOut(true);
+        //
+        //        getOtherDataCenterChangeExecutor = new ThreadPoolExecutor(
+        //            metaServerConfig.getGetOtherDataCenterChangeExecutorMinSize(),
+        //            metaServerConfig.getGetOtherDataCenterChangeExecutorMaxSize(), 300, TimeUnit.SECONDS,
+        //            new LinkedBlockingQueue<>(metaServerConfig
+        //                .getGetOtherDataCenterChangeExecutorQueueSize()), new NamedThreadFactory(
+        //                "MetaScheduler-GetOtherDataCenterChange"));
+        //        getOtherDataCenterChangeExecutor.allowCoreThreadTimeOut(true);
 
         connectMetaServerExecutor = new ThreadPoolExecutor(
             metaServerConfig.getConnectMetaServerExecutorMinSize(),

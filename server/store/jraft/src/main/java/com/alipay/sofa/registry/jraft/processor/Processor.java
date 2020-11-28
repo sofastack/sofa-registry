@@ -86,10 +86,10 @@ public class Processor {
     @SuppressWarnings("uncheked")
     public void addWorker(String serviceId, Method method, Object target) {
         Map<String, Method> publicMethods = workerMethods.get(serviceId);
-        if(publicMethods == null) {
+        if (publicMethods == null) {
             synchronized (this) {
                 publicMethods = workerMethods.get(serviceId);
-                if(publicMethods == null) {
+                if (publicMethods == null) {
                     publicMethods = Maps.newHashMap();
                     workers.put(serviceId, publicMethods);
                 }
@@ -111,7 +111,7 @@ public class Processor {
 
     public void removeWorker(String serviceId) {
         if (workers.get(serviceId) != null) {
-            if(LOG.isWarnEnabled()) {
+            if (LOG.isWarnEnabled()) {
                 LOG.warn("Service {} has bean existed!", serviceId);
             }
             return;

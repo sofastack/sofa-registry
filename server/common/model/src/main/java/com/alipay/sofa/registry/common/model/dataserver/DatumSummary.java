@@ -27,7 +27,7 @@ import java.util.Map;
  */
 public class DatumSummary implements Serializable {
     private String                           dataInfoId;
-    private Map<String/*registerId*/, Long> publisherDigests;
+    private Map<String/*registerId*/, Long> publisherDigests = new HashMap<>();
 
     public DatumSummary(String dataInfoId) {
         this.dataInfoId = dataInfoId;
