@@ -20,6 +20,7 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.regex.Pattern;
 
+import com.alipay.sofa.registry.server.shared.env.ServerEnv;
 import org.apache.commons.lang.builder.ToStringBuilder;
 import org.apache.commons.lang.builder.ToStringStyle;
 import org.springframework.boot.context.properties.ConfigurationProperties;
@@ -35,204 +36,206 @@ public class SessionServerConfigBean implements SessionServerConfig {
     /**
      * The constant PREFIX.
      */
-    public static final String PREFIX                                  = "session.server";
+    public static final String   PREFIX                                  = "session.server";
 
-    private int                serverPort                              = 9600;
+    private int                  serverPort                              = 9600;
 
-    private int                metaServerPort                          = 9610;
+    private int                  metaServerPort                          = 9610;
 
-    private int                dataServerPort                          = 9620;
+    private int                  dataServerPort                          = 9620;
 
-    private int                httpServerPort;
+    private int                  httpServerPort;
 
-    private int                schedulerHeartbeatTimeout               = 3;
+    private int                  schedulerHeartbeatTimeout               = 3;
 
-    private int                schedulerHeartbeatFirstDelay            = 3;
+    private int                  schedulerHeartbeatFirstDelay            = 3;
 
-    private int                schedulerHeartbeatExpBackOffBound       = 1;
+    private int                  schedulerHeartbeatExpBackOffBound       = 1;
 
-    private int                schedulerFetchDataTimeout               = 1;               //MINUTES
+    private int                  schedulerFetchDataTimeout               = 1;               //MINUTES
 
-    private int                schedulerFetchDataFirstDelay            = 30;
+    private int                  schedulerFetchDataFirstDelay            = 30;
 
-    private int                schedulerFetchDataExpBackOffBound       = 10;
+    private int                  schedulerFetchDataExpBackOffBound       = 10;
 
-    private int                schedulerConnectMetaTimeout             = 5;
+    private int                  schedulerConnectMetaTimeout             = 5;
 
-    private int                schedulerConnectMetaFirstDelay          = 5;
+    private int                  schedulerConnectMetaFirstDelay          = 5;
 
-    private int                schedulerConnectMetaExpBackOffBound     = 3;
+    private int                  schedulerConnectMetaExpBackOffBound     = 3;
 
-    private int                schedulerConnectDataTimeout             = 10;
+    private int                  schedulerConnectDataTimeout             = 10;
 
-    private int                schedulerConnectDataFirstDelay          = 10;
+    private int                  schedulerConnectDataFirstDelay          = 10;
 
-    private int                schedulerConnectDataExpBackOffBound     = 3;
+    private int                  schedulerConnectDataExpBackOffBound     = 3;
 
-    private int                schedulerCleanInvalidClientTimeOut      = 3;
+    private int                  schedulerCleanInvalidClientTimeOut      = 3;
 
-    private int                schedulerCleanInvalidClientFirstDelay   = 10;
+    private int                  schedulerCleanInvalidClientFirstDelay   = 10;
 
-    private int                schedulerCleanInvalidClientBackOffBound = 5;
+    private int                  schedulerCleanInvalidClientBackOffBound = 5;
 
-    private int                cancelDataTaskRetryTimes                = 2;
+    private int                  cancelDataTaskRetryTimes                = 2;
 
-    private long               cancelDataTaskRetryFirstDelay           = 500;
+    private long                 cancelDataTaskRetryFirstDelay           = 500;
 
-    private long               cancelDataTaskRetryIncrementDelay       = 500;
+    private long                 cancelDataTaskRetryIncrementDelay       = 500;
 
-    private int                publishDataTaskRetryTimes               = 2;
+    private int                  publishDataTaskRetryTimes               = 2;
 
-    private long               publishDataTaskRetryFirstDelay          = 3000;
+    private long                 publishDataTaskRetryFirstDelay          = 3000;
 
-    private long               publishDataTaskRetryIncrementDelay      = 5000;
+    private long                 publishDataTaskRetryIncrementDelay      = 5000;
 
-    private int                unPublishDataTaskRetryTimes             = 2;
+    private int                  unPublishDataTaskRetryTimes             = 2;
 
-    private long               unPublishDataTaskRetryFirstDelay        = 3000;
+    private long                 unPublishDataTaskRetryFirstDelay        = 3000;
 
-    private long               unPublishDataTaskRetryIncrementDelay    = 5000;
+    private long                 unPublishDataTaskRetryIncrementDelay    = 5000;
 
-    private int                dataChangeFetchTaskRetryTimes           = 3;
+    private int                  dataChangeFetchTaskRetryTimes           = 3;
 
-    private int                subscriberRegisterFetchRetryTimes       = 3;
+    private int                  subscriberRegisterFetchRetryTimes       = 3;
 
-    private int                receivedDataMultiPushTaskRetryTimes     = 3;
+    private int                  receivedDataMultiPushTaskRetryTimes     = 3;
 
-    private int                sessionRegisterDataServerTaskRetryTimes = 5;
+    private int                  sessionRegisterDataServerTaskRetryTimes = 5;
 
-    private int                defaultSessionExecutorMinPoolSize       = cpus();
+    private int                  defaultSessionExecutorMinPoolSize       = cpus();
 
-    private int                defaultSessionExecutorMaxPoolSize       = cpus() * 5;      //5*CPUs by default
+    private int                  defaultSessionExecutorMaxPoolSize       = cpus() * 5;      //5*CPUs by default
 
-    private long               defaultSessionExecutorKeepAliveTime     = 60;
+    private long                 defaultSessionExecutorKeepAliveTime     = 60;
 
-    private int                accessDataExecutorMinPoolSize           = 100;
+    private int                  accessDataExecutorMinPoolSize           = 100;
 
-    private int                accessDataExecutorMaxPoolSize           = 400;
+    private int                  accessDataExecutorMaxPoolSize           = 400;
 
-    private int                accessDataExecutorQueueSize             = 10000;
+    private int                  accessDataExecutorQueueSize             = 10000;
 
-    private long               accessDataExecutorKeepAliveTime         = 60;
+    private long                 accessDataExecutorKeepAliveTime         = 60;
 
-    private int                pushTaskExecutorMinPoolSize             = 40;
+    private int                  pushTaskExecutorMinPoolSize             = 40;
 
-    private int                pushTaskExecutorMaxPoolSize             = 400;
+    private int                  pushTaskExecutorMaxPoolSize             = 400;
 
-    private int                pushTaskExecutorQueueSize               = 100000;
+    private int                  pushTaskExecutorQueueSize               = 100000;
 
-    private long               pushTaskExecutorKeepAliveTime           = 60;
+    private long                 pushTaskExecutorKeepAliveTime           = 60;
 
-    private int                dataChangeExecutorMinPoolSize           = 40;
+    private int                  dataChangeExecutorMinPoolSize           = 40;
 
-    private int                dataChangeExecutorMaxPoolSize           = 400;
+    private int                  dataChangeExecutorMaxPoolSize           = 400;
 
-    private int                dataChangeExecutorQueueSize             = 100000;
+    private int                  dataChangeExecutorQueueSize             = 100000;
 
-    private long               dataChangeExecutorKeepAliveTime         = 60;
+    private long                 dataChangeExecutorKeepAliveTime         = 60;
 
-    private int                connectClientExecutorMinPoolSize        = 60;
+    private int                  connectClientExecutorMinPoolSize        = 60;
 
-    private int                connectClientExecutorMaxPoolSize        = 400;
+    private int                  connectClientExecutorMaxPoolSize        = 400;
 
-    private int                connectClientExecutorQueueSize          = 10000;
+    private int                  connectClientExecutorQueueSize          = 10000;
 
-    private int                dataChangeFetchTaskMaxBufferSize        = 1000000;
+    private int                  dataChangeFetchTaskMaxBufferSize        = 1000000;
 
-    private int                dataChangeFetchTaskWorkerSize           = 100;
+    private int                  dataChangeFetchTaskWorkerSize           = 100;
 
-    private int                clientNodeExchangeTimeOut               = 1000;            //time out cause netty HashedWheelTimer occupy a lot of mem
+    private int                  clientNodeExchangeTimeOut               = 1000;            //time out cause netty HashedWheelTimer occupy a lot of mem
 
-    private int                dataNodeExchangeTimeOut                 = 3000;
+    private int                  dataNodeExchangeTimeOut                 = 3000;
 
-    private int                dataNodeExchangeForFetchDatumTimeOut    = 5000;
+    private int                  dataNodeExchangeForFetchDatumTimeOut    = 5000;
 
-    private int                metaNodeExchangeTimeOut                 = 3000;
+    private int                  metaNodeExchangeTimeOut                 = 3000;
 
-    private int                userDataPushRetryWheelTicksSize         = 5120;
+    private int                  userDataPushRetryWheelTicksSize         = 5120;
 
-    private int                userDataPushRetryWheelTicksDuration     = 100;
+    private int                  userDataPushRetryWheelTicksDuration     = 100;
 
-    private int                userDataPushRetryExecutorQueueSize      = 1000000;
+    private int                  userDataPushRetryExecutorQueueSize      = 1000000;
 
-    private int                userDataPushRetryExecutorThreadSize     = 10;
+    private int                  userDataPushRetryExecutorThreadSize     = 10;
 
-    private int                renewDatumWheelTicksSize                = 2048;
+    private int                  renewDatumWheelTicksSize                = 2048;
 
-    private int                renewDatumWheelTicksDuration            = 500;
+    private int                  renewDatumWheelTicksDuration            = 500;
 
-    private int                renewDatumWheelTaskDelaySec             = 180;
+    private int                  renewDatumWheelTaskDelaySec             = 180;
 
-    private int                renewDatumWheelTaskRandomFirstDelaySec  = 200;
+    private int                  renewDatumWheelTaskRandomFirstDelaySec  = 200;
 
-    private int                renewDatumWheelThreadSize               = 10;
+    private int                  renewDatumWheelThreadSize               = 10;
 
-    private int                renewDatumWheelQueueSize                = 10000;
+    private int                  renewDatumWheelQueueSize                = 10000;
 
-    private int                pushDataTaskRetryFirstDelay             = 500;
+    private int                  pushDataTaskRetryFirstDelay             = 500;
 
-    private long               pushDataTaskRetryIncrementDelay         = 500;
+    private long                 pushDataTaskRetryIncrementDelay         = 500;
 
-    private long               pushTaskConfirmWaitTimeout              = 10000;
+    private long                 pushTaskConfirmWaitTimeout              = 10000;
 
-    private int                pushTaskConfirmCheckWheelTicksSize      = 1024;
+    private int                  pushTaskConfirmCheckWheelTicksSize      = 1024;
 
-    private int                pushTaskConfirmCheckWheelTicksDuration  = 100;
+    private int                  pushTaskConfirmCheckWheelTicksDuration  = 100;
 
-    private int                pushTaskConfirmCheckExecutorQueueSize   = 10000;
+    private int                  pushTaskConfirmCheckExecutorQueueSize   = 10000;
 
-    private int                pushTaskConfirmCheckExecutorThreadSize  = 10;
+    private int                  pushTaskConfirmCheckExecutorThreadSize  = 10;
 
-    private int                publishDataExecutorMinPoolSize          = 100;
+    private int                  publishDataExecutorMinPoolSize          = 100;
 
-    private int                publishDataExecutorMaxPoolSize          = 400;
+    private int                  publishDataExecutorMaxPoolSize          = 400;
 
-    private int                publishDataExecutorQueueSize            = 10000;
+    private int                  publishDataExecutorQueueSize            = 10000;
 
-    private long               publishDataExecutorKeepAliveTime        = 60;
+    private long                 publishDataExecutorKeepAliveTime        = 60;
 
-    private double             accessLimitRate                         = 100000.0;
+    private double               accessLimitRate                         = 100000.0;
 
-    private String             sessionServerRegion;
+    private String               sessionServerRegion;
 
-    private String             sessionServerDataCenter;
+    private String               sessionServerDataCenter;
 
-    private boolean            stopPushSwitch                          = false;
+    private boolean              stopPushSwitch                          = false;
 
-    private boolean            beginDataFetchTask                      = false;
+    private boolean              beginDataFetchTask                      = false;
 
     //begin config for enterprise version
 
     /** forever close push zone，such as:RZBETA */
-    private String             invalidForeverZones                     = "";
+    private String               invalidForeverZones                     = "";
     /** config regex,exception to the rule of forever close push zone*/
-    private String             invalidIgnoreDataidRegex                = "";
+    private String               invalidIgnoreDataidRegex                = "";
 
-    private Set<String>        invalidForeverZonesSet;
+    private Set<String>          invalidForeverZonesSet;
 
-    private Pattern            invalidIgnoreDataIdPattern              = null;
+    private Pattern              invalidIgnoreDataIdPattern              = null;
 
-    private String             blacklistPubDataIdRegex                 = "";
+    private String               blacklistPubDataIdRegex                 = "";
 
-    private String             blacklistSubDataIdRegex                 = "";
+    private String               blacklistSubDataIdRegex                 = "";
 
-    private int                renewAndSnapshotSilentPeriodSec         = 20;
+    private int                  renewAndSnapshotSilentPeriodSec         = 20;
 
-    private int                writeDataAcceptorQueueSize              = 10000;
+    private int                  writeDataAcceptorQueueSize              = 10000;
 
-    private int                dataNodeRetryExecutorQueueSize          = 1000000;
+    private int                  dataNodeRetryExecutorQueueSize          = 1000000;
 
-    private int                dataNodeRetryExecutorThreadSize         = 100;
+    private int                  dataNodeRetryExecutorThreadSize         = 100;
 
-    private int                dataClientConnNum                       = 10;
+    private int                  dataClientConnNum                       = 10;
 
-    private int                sessionSchedulerPoolSize                = 6;
+    private int                  sessionSchedulerPoolSize                = 6;
 
-    private int                slotSyncPublisherMaxNum                 = 512;
+    private int                  slotSyncPublisherMaxNum                 = 512;
 
     //end config for enterprise version
 
-    private CommonConfig       commonConfig;
+    private CommonConfig         commonConfig;
+
+    private volatile Set<String> metaIps;
 
     /**
      * constructor
@@ -1965,6 +1968,17 @@ public class SessionServerConfigBean implements SessionServerConfig {
     @Override
     public int getSlotSyncPublisherMaxNum() {
         return slotSyncPublisherMaxNum;
+    }
+
+    @Override
+    public Set<String> getMetaServerIpAddresses() {
+        final Set<String> ips = metaIps;
+        if (ips != null && !ips.isEmpty()) {
+            return ips;
+        }
+        metaIps = ServerEnv.transferMetaIps(commonConfig.getMetaNode(),
+            commonConfig.getLocalDataCenter());
+        return metaIps;
     }
 
     /**

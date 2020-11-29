@@ -16,7 +16,6 @@
  */
 package com.alipay.sofa.registry.server.session.registry;
 
-import com.alipay.sofa.registry.common.model.Node;
 import com.alipay.sofa.registry.common.model.constants.ValueConstants;
 import com.alipay.sofa.registry.common.model.store.*;
 import com.alipay.sofa.registry.log.Logger;
@@ -28,8 +27,8 @@ import com.alipay.sofa.registry.server.session.acceptor.WriteDataAcceptor;
 import com.alipay.sofa.registry.server.session.acceptor.WriteDataRequest;
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
 import com.alipay.sofa.registry.server.session.filter.DataIdMatchStrategy;
-import com.alipay.sofa.registry.server.session.node.NodeManager;
 import com.alipay.sofa.registry.server.session.node.service.DataNodeService;
+import com.alipay.sofa.registry.server.session.slot.SlotTableCache;
 import com.alipay.sofa.registry.server.session.store.DataStore;
 import com.alipay.sofa.registry.server.session.store.Interests;
 import com.alipay.sofa.registry.server.session.store.Watchers;
@@ -86,12 +85,6 @@ public class SessionRegistry implements Registry {
     @Autowired
     private TaskListenerManager       taskListenerManager;
 
-    /**
-     * calculate data node url
-     */
-    @Autowired
-    private NodeManager               dataNodeManager;
-
     @Autowired
     private SessionServerConfig       sessionServerConfig;
 
@@ -109,6 +102,9 @@ public class SessionRegistry implements Registry {
 
     @Autowired
     private WriteDataAcceptor         writeDataAcceptor;
+
+    @Autowired
+    private SlotTableCache            slotTableCache;
 
     @Override
     public void register(StoreData storeData) {
@@ -145,8 +141,7 @@ public class SessionRegistry implements Registry {
 
                                     @Override
                                     public String getDataServerIP() {
-                                        Node dataNode = dataNodeManager.getNode(publisher.getDataInfoId());
-                                        return dataNode.getNodeUrl().getIpAddress();
+                                        return slotTableCache.getLeader(publisher.getDataInfoId());
                                     }
                                 });
 
@@ -218,8 +213,7 @@ public class SessionRegistry implements Registry {
 
                     @Override
                     public String getDataServerIP() {
-                        Node dataNode = dataNodeManager.getNode(publisher.getDataInfoId());
-                        return dataNode.getNodeUrl().getIpAddress();
+                        return slotTableCache.getLeader(publisher.getDataInfoId());
                     }
                 });
 
@@ -343,8 +337,7 @@ public class SessionRegistry implements Registry {
         Map<String, Collection<String>> map = new HashMap<>();
         if (dataInfoIds != null) {
             dataInfoIds.forEach(dataInfoId -> {
-                Node dataNode = dataNodeManager.getNode(dataInfoId);
-                URL url = new URL(dataNode.getNodeUrl().getIpAddress(), sessionServerConfig.getDataServerPort());
+                URL url = new URL(slotTableCache.getLeader(dataInfoId), sessionServerConfig.getDataServerPort());
                 Collection<String> list = map.computeIfAbsent(url.getAddressString(), k -> new ArrayList<>());
                 list.add(dataInfoId);
             });

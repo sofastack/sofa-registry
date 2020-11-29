@@ -36,7 +36,8 @@ import com.alipay.sofa.registry.server.data.remoting.dataserver.handler.SlotFoll
 import com.alipay.sofa.registry.server.data.remoting.dataserver.task.RenewNodeTask;
 import com.alipay.sofa.registry.server.data.remoting.handler.AbstractClientHandler;
 import com.alipay.sofa.registry.server.data.remoting.handler.AbstractServerHandler;
-import com.alipay.sofa.registry.server.data.remoting.metaserver.DefaultMetaServiceImpl;
+import com.alipay.sofa.registry.server.data.remoting.metaserver.MetaServerServiceImpl;
+import com.alipay.sofa.registry.server.data.remoting.metaserver.RaftClientManager;
 import com.alipay.sofa.registry.server.data.remoting.metaserver.handler.NotifyProvideDataChangeHandler;
 import com.alipay.sofa.registry.server.data.remoting.metaserver.provideData.ProvideDataProcessor;
 import com.alipay.sofa.registry.server.data.remoting.metaserver.provideData.ProvideDataProcessorManager;
@@ -144,11 +145,6 @@ public class DataServerBeanConfiguration {
         @Bean
         public Exchange boltExchange() {
             return new BoltExchange();
-        }
-
-        @Bean
-        public MetaNodeExchanger metaNodeExchanger() {
-            return new MetaNodeExchanger();
         }
 
         @Bean
@@ -317,8 +313,18 @@ public class DataServerBeanConfiguration {
     @Configuration
     public static class DataServerRemotingBeanConfiguration {
         @Bean
-        public DefaultMetaServiceImpl metaServerService() {
-            return new DefaultMetaServiceImpl();
+        public RaftClientManager raftClientManager() {
+            return new RaftClientManager();
+        }
+
+        @Bean
+        public MetaNodeExchanger metaNodeExchanger() {
+            return new MetaNodeExchanger();
+        }
+
+        @Bean
+        public MetaServerServiceImpl metaServerService() {
+            return new MetaServerServiceImpl();
         }
     }
 

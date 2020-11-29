@@ -19,12 +19,9 @@ package com.alipay.sofa.registry.common.model.metaserver.inter.communicate;
 import com.alipay.sofa.registry.common.model.metaserver.nodes.MetaNode;
 import com.alipay.sofa.registry.common.model.metaserver.nodes.SessionNode;
 import com.alipay.sofa.registry.common.model.slot.SlotTable;
-import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Sets;
 
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * @author chen.zhu
@@ -33,16 +30,24 @@ import java.util.Map;
  */
 public class BaseHeartBeatResponse {
 
-    private final long           metaServerEpoch;
+    private final long              metaServerEpoch;
 
-    private final SlotTable      slotTable;
+    private final SlotTable         slotTable;
 
-    private final List<MetaNode> metaNodes;
+    private final List<MetaNode>    metaNodes;
+
+    private final List<SessionNode> sessionNodes;
 
     public BaseHeartBeatResponse(long metaServerEpoch, SlotTable slotTable, List<MetaNode> metaNodes) {
+        this(metaServerEpoch, slotTable, metaNodes, Collections.emptyList());
+    }
+
+    public BaseHeartBeatResponse(long metaServerEpoch, SlotTable slotTable,
+                                 List<MetaNode> metaNodes, List<SessionNode> sessionNodes) {
         this.metaServerEpoch = metaServerEpoch;
         this.slotTable = slotTable;
         this.metaNodes = Collections.unmodifiableList(metaNodes);
+        this.sessionNodes = Collections.unmodifiableList(sessionNodes);
     }
 
     public SlotTable getSlotTable() {
@@ -56,6 +61,22 @@ public class BaseHeartBeatResponse {
     public Map<String, MetaNode> getMetaNodesMap() {
         final Map<String, MetaNode> m = new HashMap<>(metaNodes.size());
         metaNodes.forEach(s -> m.put(s.getIp(), s));
+        return m;
+    }
+
+    public Set<String> getDataCentersFromMetaNodes() {
+        Set<String> dcs = Sets.newHashSet();
+        metaNodes.forEach(m -> dcs.add(m.getDataCenter()));
+        return dcs;
+    }
+
+    public List<SessionNode> getSessionNodes() {
+        return sessionNodes;
+    }
+
+    public Map<String, SessionNode> getSessionNodesMap() {
+        final Map<String, SessionNode> m = new HashMap<>(sessionNodes.size());
+        sessionNodes.forEach(s -> m.put(s.getIp(), s));
         return m;
     }
 }

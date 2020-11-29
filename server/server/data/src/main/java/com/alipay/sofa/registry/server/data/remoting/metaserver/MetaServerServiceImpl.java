@@ -16,48 +16,32 @@
  */
 package com.alipay.sofa.registry.server.data.remoting.metaserver;
 
-import com.alipay.sofa.registry.common.model.metaserver.inter.communicate.BaseHeartBeatResponse;
 import com.alipay.sofa.registry.common.model.metaserver.inter.communicate.DataHeartBeatResponse;
-import com.alipay.sofa.registry.common.model.metaserver.nodes.SessionNode;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.server.data.bootstrap.DataServerConfig;
 import com.alipay.sofa.registry.server.data.cache.SlotManager;
 import com.alipay.sofa.registry.server.shared.meta.AbstractMetaServerService;
-import com.google.common.collect.Maps;
 import org.springframework.beans.factory.annotation.Autowired;
-
-import java.util.Collections;
-import java.util.Map;
 
 /**
  *
  * @author qian.lqlq
- * @version $Id: DefaultMetaServiceImpl.java, v 0.1 2018－03－07 20:41 qian.lqlq Exp $
+ * @version $Id: MetaServiceImpl.java, v 0.1 2018－03－07 20:41 qian.lqlq Exp $
  */
-public class DefaultMetaServiceImpl extends AbstractMetaServerService {
+public class MetaServerServiceImpl extends AbstractMetaServerService<DataHeartBeatResponse> {
 
-    private static final Logger               LOGGER       = LoggerFactory
-                                                               .getLogger(DefaultMetaServiceImpl.class);
-
-    @Autowired
-    private DataServerConfig                  dataServerConfig;
+    private static final Logger LOGGER = LoggerFactory.getLogger(MetaServerServiceImpl.class);
 
     @Autowired
-    private SlotManager                       slotManager;
+    private DataServerConfig    dataServerConfig;
 
-    private volatile Map<String, SessionNode> sessionNodes = Collections.EMPTY_MAP;
+    @Autowired
+    private SlotManager         slotManager;
 
     @Override
-    protected void handleRenewResult(BaseHeartBeatResponse response) {
-        DataHeartBeatResponse result = (DataHeartBeatResponse) response;
-        this.sessionNodes = result.getSessionNodesMap();
+    protected void handleRenewResult(DataHeartBeatResponse result) {
         updateMetaIps(result.getMetaNodesMap().keySet());
         slotManager.updateSlotTable(result.getSlotTable());
     }
-
-    public Map<String, SessionNode> getSessionNodes() {
-        return Maps.newHashMap(sessionNodes);
-    }
-
 }

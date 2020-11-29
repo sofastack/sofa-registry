@@ -19,6 +19,9 @@ package com.alipay.sofa.registry.server.shared.meta;
 import com.alipay.sofa.jraft.entity.PeerId;
 import com.alipay.sofa.registry.common.model.metaserver.ProvideData;
 
+import java.util.List;
+import java.util.Set;
+
 /**
  *
  * @author yuzhi.lyz
@@ -43,4 +46,18 @@ public interface MetaServerService {
     void startRaftClient();
 
     PeerId getLeader();
+
+    /**
+     * get all datacenters
+     * @return
+     */
+    Set<String> getDataCenters();
+
+    public List<String> getZoneSessionServerList(String zonename);
+
+    public Set<String> getDataServerList();
+
+    public Set<String> getMetaServerList();
+
+    void connectServer();
 }

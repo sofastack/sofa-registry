@@ -17,6 +17,12 @@
 package com.alipay.sofa.registry.server.shared.env;
 
 import com.alipay.sofa.registry.net.NetUtil;
+import com.google.common.collect.Maps;
+import org.glassfish.jersey.internal.guava.Sets;
+
+import java.util.Collection;
+import java.util.Map;
+import java.util.Set;
 
 /**
  *
@@ -31,5 +37,24 @@ public final class ServerEnv {
 
     public static boolean isLocalServer(String ip) {
         return IP.equals(ip);
+    }
+
+    public static Set<String> transferMetaIps(Map<String, Collection<String>> metaMap, String localDataCenter) {
+        Set<String> metaIps = Sets.newHashSet();
+        if (metaMap != null && !metaMap.isEmpty()) {
+            if (localDataCenter != null && !localDataCenter.isEmpty()) {
+                Collection<String> metas = metaMap.get(localDataCenter);
+                if (metas != null && !metas.isEmpty()) {
+                    metas.forEach(domain -> {
+                        String ip = NetUtil.getIPAddressFromDomain(domain);
+                        if (ip == null) {
+                            throw new RuntimeException("Meta convert domain {" + domain + "} error!");
+                        }
+                        metaIps.add(ip);
+                    });
+                }
+            }
+        }
+        return metaIps;
     }
 }

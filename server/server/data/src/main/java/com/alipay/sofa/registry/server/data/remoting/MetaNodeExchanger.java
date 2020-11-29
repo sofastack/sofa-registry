@@ -30,12 +30,12 @@ public class MetaNodeExchanger extends AbstractMetaNodeExchanger {
     private DataServerConfig dataServerConfig;
 
     @Override
-    public int getMetaServerPort() {
-        return dataServerConfig.getMetaServerPort();
+    public int getRpcTimeout() {
+        return dataServerConfig.getRpcTimeout();
     }
 
     @Override
-    public int getRpcTimeout() {
-        return dataServerConfig.getRpcTimeout();
+    public int getServerPort() {
+        return dataServerConfig.getMetaServerPort();
     }
 }

@@ -16,8 +16,6 @@
  */
 package com.alipay.sofa.registry.server.session.remoting;
 
-import com.alipay.sofa.registry.log.Logger;
-import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
 import com.alipay.sofa.registry.server.shared.meta.AbstractMetaNodeExchanger;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,17 +27,14 @@ import org.springframework.beans.factory.annotation.Autowired;
  */
 public class MetaNodeExchanger extends AbstractMetaNodeExchanger {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(MetaNodeExchanger.class);
-
     @Autowired
     private SessionServerConfig sessionServerConfig;
 
     @Override
-    public int getMetaServerPort() {
+    public int getServerPort() {
         return sessionServerConfig.getMetaServerPort();
     }
 
-    @Override
     public int getRpcTimeout() {
         return sessionServerConfig.getMetaNodeExchangeTimeOut();
     }
