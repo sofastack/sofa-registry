@@ -16,17 +16,13 @@
  */
 package com.alipay.sofa.registry.server.session.listener;
 
-import javax.annotation.PostConstruct;
-
-import org.springframework.beans.factory.annotation.Autowired;
-
 import com.alipay.sofa.registry.remoting.exchange.Exchange;
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
-import com.alipay.sofa.registry.server.session.node.service.MetaNodeService;
 import com.alipay.sofa.registry.server.session.provideData.ProvideDataProcessor;
 import com.alipay.sofa.registry.server.session.scheduler.task.ProvideDataChangeFetchTask;
 import com.alipay.sofa.registry.server.session.scheduler.task.SessionTask;
 import com.alipay.sofa.registry.server.session.store.Watchers;
+import com.alipay.sofa.registry.server.shared.meta.MetaServerService;
 import com.alipay.sofa.registry.task.batcher.TaskDispatcher;
 import com.alipay.sofa.registry.task.batcher.TaskDispatchers;
 import com.alipay.sofa.registry.task.batcher.TaskProcessor;
@@ -34,6 +30,9 @@ import com.alipay.sofa.registry.task.listener.TaskEvent;
 import com.alipay.sofa.registry.task.listener.TaskEvent.TaskType;
 import com.alipay.sofa.registry.task.listener.TaskListener;
 import com.alipay.sofa.registry.task.listener.TaskListenerManager;
+import org.springframework.beans.factory.annotation.Autowired;
+
+import javax.annotation.PostConstruct;
 
 /**
  *
@@ -55,7 +54,7 @@ public class ProvideDataChangeFetchTaskListener implements TaskListener {
      * MetaNode service
      */
     @Autowired
-    private MetaNodeService                     metaNodeService;
+    private MetaServerService                   metaServerService;
 
     @Autowired
     private Exchange                            boltExchange;
@@ -89,7 +88,7 @@ public class ProvideDataChangeFetchTaskListener implements TaskListener {
     public void handleEvent(TaskEvent event) {
 
         SessionTask provideDataChangeFetchTask = new ProvideDataChangeFetchTask(
-            sessionServerConfig, taskListenerManager, metaNodeService, sessionWatchers,
+            sessionServerConfig, taskListenerManager, metaServerService, sessionWatchers,
             boltExchange, provideDataProcessorManager);
 
         provideDataChangeFetchTask.setTaskEvent(event);

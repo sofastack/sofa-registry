@@ -29,7 +29,11 @@ public interface SlotTableCache {
 
     Slot getSlot(String dataInfoId);
 
+    String getLeader(String dataInfoId);
+
     void triggerUpdateSlotTable(long epoch);
 
     long getEpoch();
+
+    boolean updateSlotTable(SlotTable slotTable);
 }

@@ -16,40 +16,35 @@
  */
 package com.alipay.sofa.registry.server.session.bootstrap;
 
-import java.lang.annotation.Annotation;
-import java.util.Collection;
-import java.util.Date;
-import java.util.Map;
-import java.util.concurrent.atomic.AtomicBoolean;
-
-import javax.annotation.Resource;
-import javax.ws.rs.Path;
-import javax.ws.rs.ext.Provider;
-
-import org.glassfish.jersey.server.ResourceConfig;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.ApplicationContext;
-
 import com.alipay.sofa.registry.common.model.constants.ValueConstants;
-import com.alipay.sofa.registry.common.model.metaserver.FetchProvideDataRequest;
 import com.alipay.sofa.registry.common.model.metaserver.ProvideData;
 import com.alipay.sofa.registry.common.model.store.URL;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.net.NetUtil;
 import com.alipay.sofa.registry.remoting.ChannelHandler;
-import com.alipay.sofa.registry.remoting.Client;
 import com.alipay.sofa.registry.remoting.Server;
 import com.alipay.sofa.registry.remoting.exchange.Exchange;
 import com.alipay.sofa.registry.remoting.exchange.NodeExchanger;
 import com.alipay.sofa.registry.server.session.filter.blacklist.BlacklistManager;
-import com.alipay.sofa.registry.server.session.node.NodeManager;
-import com.alipay.sofa.registry.server.session.node.RaftClientManager;
 import com.alipay.sofa.registry.server.session.node.SessionProcessIdGenerator;
 import com.alipay.sofa.registry.server.session.provideData.ProvideDataProcessor;
 import com.alipay.sofa.registry.server.session.remoting.handler.AbstractServerHandler;
 import com.alipay.sofa.registry.server.session.scheduler.ExecutorManager;
+import com.alipay.sofa.registry.server.shared.meta.MetaServerService;
 import com.alipay.sofa.registry.task.batcher.TaskDispatchers;
+import org.glassfish.jersey.server.ResourceConfig;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationContext;
+
+import javax.annotation.Resource;
+import javax.ws.rs.Path;
+import javax.ws.rs.ext.Provider;
+import java.lang.annotation.Annotation;
+import java.util.Collection;
+import java.util.Date;
+import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * The type Session server bootstrap.
@@ -77,14 +72,7 @@ public class SessionServerBootstrap {
     private Collection<AbstractServerHandler> serverHandlers;
 
     @Autowired
-    private NodeManager                       metaNodeManager;
-
-    @Autowired
-    private NodeManager                       sessionNodeManager;
-
-    @Autowired
-    protected NodeExchanger                   metaNodeExchanger;
-
+    protected MetaServerService               mataNodeService;
     @Autowired
     private NodeExchanger                     dataNodeExchanger;
 
@@ -95,9 +83,6 @@ public class SessionServerBootstrap {
     private ApplicationContext                applicationContext;
 
     @Autowired
-    private RaftClientManager                 raftClientManager;
-
-    @Autowired
     private BlacklistManager                  blacklistManager;
 
     @Autowired
@@ -106,8 +91,6 @@ public class SessionServerBootstrap {
     private Server                            server;
 
     private Server                            httpServer;
-
-    private Client                            metaClient;
 
     private AtomicBoolean                     metaStart      = new AtomicBoolean(false);
 
@@ -127,8 +110,6 @@ public class SessionServerBootstrap {
             LOGGER.info("the configuration items are as follows: " + sessionServerConfig.toString());
 
             initEnvironment();
-
-            startRaftClient();
 
             connectMetaServer();
 
@@ -221,23 +202,14 @@ public class SessionServerBootstrap {
         }
     }
 
-    private void startRaftClient() {
-        raftClientManager.startRaftClient();
-        LOGGER.info("Raft Client started! Leader:{}", raftClientManager.getLeader());
-    }
-
     private void connectMetaServer() {
         try {
             if (metaStart.compareAndSet(false, true)) {
-                URL leaderUrl = new URL(raftClientManager.getLeader().getIp(),
-                    sessionServerConfig.getMetaServerPort());
-
+                mataNodeService.startRaftClient();
                 // register node as renew node
-                sessionNodeManager.renewNode();
+                mataNodeService.renewNode();
 
-                metaClient = metaNodeExchanger.connectServer();
-
-                fetchStopPushSwitch(leaderUrl);
+                fetchStopPushSwitch();
 
                 fetchBlackList();
 
@@ -252,13 +224,10 @@ public class SessionServerBootstrap {
         }
     }
 
-    private void fetchStopPushSwitch(URL leaderUrl) {
-        FetchProvideDataRequest fetchProvideDataRequest = new FetchProvideDataRequest(
-            ValueConstants.STOP_PUSH_DATA_SWITCH_DATA_ID);
-        Object ret = sendMetaRequest(fetchProvideDataRequest, leaderUrl);
-        if (ret instanceof ProvideData) {
-            ProvideData provideData = (ProvideData) ret;
-            provideDataProcessorManager.fetchDataProcess(provideData);
+    private void fetchStopPushSwitch() {
+        ProvideData data = mataNodeService.fetchData(ValueConstants.STOP_PUSH_DATA_SWITCH_DATA_ID);
+        if (data != null) {
+            provideDataProcessorManager.fetchDataProcess(data);
         } else {
             LOGGER.info("Fetch session stop push switch data null,config not change!");
         }
@@ -266,21 +235,6 @@ public class SessionServerBootstrap {
 
     private void fetchBlackList() {
         blacklistManager.load();
-    }
-
-    private Object sendMetaRequest(Object request, URL leaderUrl) {
-        Object ret;
-        try {
-            ret = metaClient.sendSync(leaderUrl, request,
-                sessionServerConfig.getMetaNodeExchangeTimeOut());
-        } catch (Exception e) {
-            URL leaderUrlNew = new URL(raftClientManager.refreshLeader().getIp(),
-                sessionServerConfig.getMetaServerPort());
-            LOGGER.warn("request send error!It will be retry once to new leader {}!", leaderUrlNew);
-            ret = metaClient.sendSync(leaderUrlNew, request,
-                sessionServerConfig.getMetaNodeExchangeTimeOut());
-        }
-        return ret;
     }
 
     private void openHttpServer() {

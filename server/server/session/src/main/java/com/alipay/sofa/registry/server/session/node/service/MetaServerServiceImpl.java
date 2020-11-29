@@ -14,21 +14,42 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alipay.sofa.registry.server.session.remoting.metaserver;
+package com.alipay.sofa.registry.server.session.node.service;
 
 import com.alipay.sofa.registry.common.model.metaserver.inter.communicate.BaseHeartBeatResponse;
 import com.alipay.sofa.registry.common.model.metaserver.inter.communicate.SessionHeartBeatResponse;
+import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
+import com.alipay.sofa.registry.server.session.slot.SlotTableCache;
 import com.alipay.sofa.registry.server.shared.meta.AbstractMetaServerService;
+import org.apache.commons.lang.StringUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+
+import java.util.List;
 
 /**
  *
  * @author yuzhi.lyz
  * @version v 0.1 2020-11-28 20:05 yuzhi.lyz Exp $
  */
-public final class DefaultMetaServiceImpl extends AbstractMetaServerService {
-    @Override
-    protected void handleRenewResult(BaseHeartBeatResponse response) {
-        SessionHeartBeatResponse result = (SessionHeartBeatResponse) response;
+public final class MetaServerServiceImpl extends
+                                        AbstractMetaServerService<SessionHeartBeatResponse> {
 
+    @Autowired
+    private SessionServerConfig sessionServerConfig;
+
+    @Autowired
+    private SlotTableCache      slotTableCache;
+
+    @Override
+    protected void handleRenewResult(SessionHeartBeatResponse result) {
+        slotTableCache.updateSlotTable(result.getSlotTable());
+    }
+
+    @Override
+    public List<String> getZoneSessionServerList(String zonename) {
+        if (StringUtils.isBlank(zonename)) {
+            zonename = sessionServerConfig.getSessionServerRegion();
+        }
+        return super.getZoneSessionServerList(zonename);
     }
 }

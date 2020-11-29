@@ -16,30 +16,23 @@
  */
 package com.alipay.sofa.registry.server.session.scheduler;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.ScheduledThreadPoolExecutor;
-import java.util.concurrent.SynchronousQueue;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
-
-import org.springframework.beans.factory.annotation.Autowired;
-
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.metrics.TaskMetrics;
 import com.alipay.sofa.registry.remoting.exchange.NodeExchanger;
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
-import com.alipay.sofa.registry.server.session.node.NodeManager;
 import com.alipay.sofa.registry.server.session.registry.Registry;
+import com.alipay.sofa.registry.server.shared.meta.MetaServerService;
 import com.alipay.sofa.registry.task.scheduler.TimedSupervisorTask;
 import com.alipay.sofa.registry.timer.AsyncHashedWheelTimer;
 import com.alipay.sofa.registry.timer.AsyncHashedWheelTimer.TaskFailedCallback;
 import com.alipay.sofa.registry.util.NamedThreadFactory;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
+import org.springframework.beans.factory.annotation.Autowired;
+
+import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.*;
 
 /**
  *
@@ -77,16 +70,7 @@ public class ExecutorManager {
     private Registry                          sessionRegistry;
 
     @Autowired
-    private NodeManager                       sessionNodeManager;
-
-    @Autowired
-    private NodeManager                       dataNodeManager;
-
-    @Autowired
-    private NodeManager                       metaNodeManager;
-
-    @Autowired
-    protected NodeExchanger                   metaNodeExchanger;
+    protected MetaServerService               metaServerService;
 
     @Autowired
     private NodeExchanger                     dataNodeExchanger;
@@ -222,12 +206,12 @@ public class ExecutorManager {
 
         scheduler.schedule(new TimedSupervisorTask("RenewSession", scheduler, renNewDataExecutor,
                         sessionServerConfig.getSchedulerHeartbeatTimeout(), TimeUnit.SECONDS,
-                        sessionServerConfig.getSchedulerHeartbeatExpBackOffBound(), () -> sessionNodeManager.renewNode()),
+                        sessionServerConfig.getSchedulerHeartbeatExpBackOffBound(), () -> metaServerService.renewNode()),
                 sessionServerConfig.getSchedulerHeartbeatFirstDelay(), TimeUnit.SECONDS);
 
         scheduler.schedule(new TimedSupervisorTask("ConnectMetaServer", scheduler, connectMetaExecutor,
                         sessionServerConfig.getSchedulerConnectMetaTimeout(), TimeUnit.SECONDS,
-                        sessionServerConfig.getSchedulerConnectMetaExpBackOffBound(), () -> metaNodeExchanger.connectServer()),
+                        sessionServerConfig.getSchedulerConnectMetaExpBackOffBound(), () -> metaServerService.connectServer()),
                 sessionServerConfig.getSchedulerConnectMetaFirstDelay(), TimeUnit.SECONDS);
 
         scheduler.schedule(new TimedSupervisorTask("ConnectDataServer", scheduler, connectDataExecutor,

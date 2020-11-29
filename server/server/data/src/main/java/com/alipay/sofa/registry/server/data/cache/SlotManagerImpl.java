@@ -24,7 +24,7 @@ import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.remoting.exchange.Exchange;
 import com.alipay.sofa.registry.server.data.bootstrap.DataServerConfig;
 import com.alipay.sofa.registry.server.data.remoting.DataNodeExchanger;
-import com.alipay.sofa.registry.server.data.remoting.metaserver.DefaultMetaServiceImpl;
+import com.alipay.sofa.registry.server.data.remoting.metaserver.MetaServerServiceImpl;
 import com.alipay.sofa.registry.server.data.remoting.sessionserver.SessionServerConnectionFactory;
 import com.alipay.sofa.registry.server.shared.env.ServerEnv;
 import com.alipay.sofa.registry.util.NamedThreadFactory;
@@ -57,7 +57,7 @@ public final class SlotManagerImpl implements SlotManager {
     private DataNodeExchanger                    dataNodeExchanger;
 
     @Autowired
-    private DefaultMetaServiceImpl               metaServerService;
+    private MetaServerServiceImpl                metaServerService;
 
     @Autowired
     private DataServerConfig                     dataServerConfig;

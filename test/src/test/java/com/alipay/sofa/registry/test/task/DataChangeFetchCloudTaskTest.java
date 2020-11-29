@@ -22,6 +22,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.alipay.sofa.registry.server.shared.meta.MetaServerService;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -99,11 +100,14 @@ public class DataChangeFetchCloudTaskTest extends BaseIntegrationTest {
             .getBean("executorManager");
         CacheService sessionCacheService = (CacheService) sessionApplicationContext
             .getBean("sessionCacheService");
+        MetaServerService metaServerService = (MetaServerService) sessionApplicationContext
+            .getBean("metaServerService");
         TaskEvent event = new TaskEvent(testDataInfoId,
             TaskEvent.TaskType.DATA_CHANGE_FETCH_CLOUD_TASK);
 
         SessionTask dataChangeFetchTask = new DataChangeFetchCloudTask(sessionServerConfig,
-            taskListenerManager, sessionInterests, executorManager, sessionCacheService);
+            taskListenerManager, sessionInterests, executorManager, sessionCacheService,
+            metaServerService);
         dataChangeFetchTask.setTaskEvent(event);
 
         //put a new dataCenter, version set 1

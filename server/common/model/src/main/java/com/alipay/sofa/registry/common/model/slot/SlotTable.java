@@ -131,4 +131,13 @@ public final class SlotTable implements Serializable {
         }
         return new ArrayList<>(dataNodeSlotMap.values());
     }
+
+    public Set<String> getDataServers() {
+        final Set<String> servers = new HashSet<>(64);
+        slots.values().forEach(s -> {
+            servers.add(s.getLeader());
+            servers.addAll(s.getFollowers());
+        });
+        return servers;
+    }
 }

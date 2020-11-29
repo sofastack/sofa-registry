@@ -17,28 +17,17 @@
 package com.alipay.sofa.registry.server.session.filter.blacklist;
 
 import com.alipay.sofa.registry.common.model.constants.ValueConstants;
-import com.alipay.sofa.registry.common.model.metaserver.FetchProvideDataRequest;
 import com.alipay.sofa.registry.common.model.metaserver.ProvideData;
-import com.alipay.sofa.registry.common.model.store.URL;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
-import com.alipay.sofa.registry.remoting.exchange.NodeExchanger;
-import com.alipay.sofa.registry.remoting.exchange.message.Request;
-import com.alipay.sofa.registry.remoting.exchange.message.Response;
-import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
-import com.alipay.sofa.registry.server.session.node.RaftClientManager;
+import com.alipay.sofa.registry.server.shared.meta.MetaServerService;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.Map.Entry;
-import java.util.Set;
 
 /**
  *
@@ -53,13 +42,7 @@ public class BlacklistManagerImpl implements BlacklistManager {
     private static final Logger   EXCHANGE_LOGGER     = LoggerFactory.getLogger("SESSION-EXCHANGE");
 
     @Autowired
-    private SessionServerConfig   sessionServerConfig;
-
-    @Autowired
-    protected NodeExchanger       metaNodeExchanger;
-
-    @Autowired
-    protected RaftClientManager   raftClientManager;
+    protected MetaServerService   mataNodeService;
 
     private List<BlacklistConfig> blacklistConfigList = new ArrayList();
 
@@ -79,10 +62,8 @@ public class BlacklistManagerImpl implements BlacklistManager {
     }
 
     private void fetchStopPushSwitch() {
-
-        Object ret = sendMetaRequest();
-        if (ret instanceof ProvideData) {
-            ProvideData provideData = (ProvideData) ret;
+        ProvideData provideData = mataNodeService.fetchData(ValueConstants.BLACK_LIST_DATA_ID);
+        if (provideData != null) {
             if (provideData.getProvideData() == null
                 || provideData.getProvideData().getObject() == null) {
                 LOGGER.info("Fetch session blacklist no data existed,current config not change!");
@@ -97,36 +78,6 @@ public class BlacklistManagerImpl implements BlacklistManager {
             }
         } else {
             LOGGER.info("Fetch session blacklist data null,config not change!");
-        }
-    }
-
-    private Object sendMetaRequest() {
-        try {
-            Request<FetchProvideDataRequest> request = new Request<FetchProvideDataRequest>() {
-                @Override
-                public FetchProvideDataRequest getRequestBody() {
-                    return new FetchProvideDataRequest(ValueConstants.BLACK_LIST_DATA_ID);
-                }
-
-                @Override
-                public URL getRequestUrl() {
-                    return new URL(raftClientManager.getLeader().getIp(),
-                        sessionServerConfig.getMetaServerPort());
-                }
-            };
-
-            Response<FetchProvideDataRequest> response = metaNodeExchanger.request(request);
-
-            if (response != null && response.getResult() != null) {
-                EXCHANGE_LOGGER.info("Update blacklist info success!");
-                return response.getResult();
-            } else {
-                LOGGER.error("Get blacklist info error!No response receive!");
-                throw new RuntimeException("Get blacklist info error!No response receive!");
-            }
-        } catch (Exception e) {
-            LOGGER.error("Get blacklist info error!", e);
-            throw new RuntimeException("Get blacklist info error! ", e);
         }
     }
 

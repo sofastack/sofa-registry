@@ -22,7 +22,7 @@ import com.alipay.sofa.registry.common.model.store.DataInfo;
 import com.alipay.sofa.registry.common.model.store.Publisher;
 import com.alipay.sofa.registry.server.data.bootstrap.DataServerConfig;
 import com.alipay.sofa.registry.server.data.cache.DatumCache;
-import com.alipay.sofa.registry.server.data.remoting.metaserver.DefaultMetaServiceImpl;
+import com.alipay.sofa.registry.server.data.remoting.metaserver.MetaServerServiceImpl;
 import com.alipay.sofa.registry.server.data.remoting.sessionserver.SessionServerConnectionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -51,7 +51,7 @@ public class DataDigestResource {
     private SessionServerConnectionFactory sessionServerConnectionFactory;
 
     @Autowired
-    private DefaultMetaServiceImpl         metaServerService;
+    private MetaServerServiceImpl          metaServerService;
 
     @Autowired
     private DataServerConfig               dataServerConfig;

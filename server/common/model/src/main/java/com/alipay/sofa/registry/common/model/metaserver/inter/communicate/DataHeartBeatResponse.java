@@ -31,22 +31,8 @@ import java.util.Map;
  * Nov 27, 2020
  */
 public class DataHeartBeatResponse extends BaseHeartBeatResponse {
-
-    private final List<SessionNode> sessionNodes;
-
     public DataHeartBeatResponse(long metaServerEpoch, SlotTable slotTable,
                                  List<MetaNode> metaNodes, List<SessionNode> sessionNodes) {
-        super(metaServerEpoch, slotTable, metaNodes);
-        this.sessionNodes = Collections.unmodifiableList(sessionNodes);
-    }
-
-    public List<SessionNode> getSessionNodes() {
-        return sessionNodes;
-    }
-
-    public Map<String, SessionNode> getSessionNodesMap() {
-        final Map<String, SessionNode> m = new HashMap<>(sessionNodes.size());
-        sessionNodes.forEach(s -> m.put(s.getIp(), s));
-        return m;
+        super(metaServerEpoch, slotTable, metaNodes, sessionNodes);
     }
 }

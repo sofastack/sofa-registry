@@ -55,7 +55,8 @@ public class HeartbeatRequestHandler extends AbstractServerHandler<RenewNodesReq
             switch (renewNode.getNodeType()) {
                 case SESSION:
                     response = new SessionHeartBeatResponse(metaServer.getEpoch(),
-                        metaServer.getSlotTable(), metaServer.getClusterMembers());
+                        metaServer.getSlotTable(), metaServer.getClusterMembers(),
+                        metaServer.getSessionServers());
                 case DATA:
                     response = new DataHeartBeatResponse(metaServer.getEpoch(),
                         metaServer.getSlotTable(), metaServer.getClusterMembers(),

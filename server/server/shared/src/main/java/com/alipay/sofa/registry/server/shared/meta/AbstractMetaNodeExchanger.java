@@ -16,36 +16,31 @@
  */
 package com.alipay.sofa.registry.server.shared.meta;
 
-import com.alipay.remoting.BoltClient;
-import com.alipay.remoting.Connection;
 import com.alipay.sofa.jraft.entity.PeerId;
 import com.alipay.sofa.registry.common.model.store.URL;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
-import com.alipay.sofa.registry.remoting.Channel;
 import com.alipay.sofa.registry.remoting.ChannelHandler;
-import com.alipay.sofa.registry.remoting.Client;
 import com.alipay.sofa.registry.remoting.exchange.Exchange;
-import com.alipay.sofa.registry.remoting.exchange.NodeExchanger;
 import com.alipay.sofa.registry.remoting.exchange.RequestException;
 import com.alipay.sofa.registry.remoting.exchange.message.Request;
 import com.alipay.sofa.registry.remoting.exchange.message.Response;
-import com.google.common.collect.Maps;
+import com.alipay.sofa.registry.server.shared.remoting.ClientExchanger;
 import com.google.common.collect.Sets;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import javax.annotation.Resource;
-import java.util.*;
-import java.util.concurrent.ConcurrentSkipListSet;
+import java.util.Collection;
+import java.util.Set;
 
 /**
  *
  * @author yuzhi.lyz
  * @version v 0.1 2020-11-28 15:36 yuzhi.lyz Exp $
  */
-public abstract class AbstractMetaNodeExchanger implements NodeExchanger {
-    private static final Logger        LOGGER  = LoggerFactory
-                                                   .getLogger(AbstractMetaNodeExchanger.class);
+public abstract class AbstractMetaNodeExchanger extends ClientExchanger {
+    private static final Logger        LOGGER = LoggerFactory
+                                                  .getLogger(AbstractMetaNodeExchanger.class);
 
     @Resource(name = "metaClientHandlers")
     private Collection<ChannelHandler> metaClientHandlers;
@@ -53,71 +48,29 @@ public abstract class AbstractMetaNodeExchanger implements NodeExchanger {
     @Autowired
     private AbstractRaftClientManager  raftClientManager;
 
-    @Autowired
-    private Exchange                   boltExchange;
-
-    private volatile Set<String>       metaIps = Sets.newHashSet();
+    protected AbstractMetaNodeExchanger() {
+        super(Exchange.META_SERVER_TYPE);
+    }
 
     public void startRaftClient() {
-        this.metaIps = Sets.newHashSet(raftClientManager.getConfigMetaIp());
+        this.serverIps = Sets.newHashSet(raftClientManager.getConfigMetaIp());
         raftClientManager.startRaftClient();
+        connectServer();
     }
 
     @Override
     public Response request(Request request) throws RequestException {
-        Client client = boltExchange.getClient(Exchange.META_SERVER_TYPE);
-        final int timeout = request.getTimeout() != null ? request.getTimeout() : getRpcTimeout();
-        LOGGER.info("MetaNode Exchanger request={},timeout={},url={},callbackHandler={}", request.getRequestBody(),
-                timeout, request.getRequestUrl(), request.getCallBackHandler());
-
+        LOGGER.info("MetaNode Exchanger request={},url={},callbackHandler={}",
+            request.getRequestBody(), request.getRequestUrl(), request.getCallBackHandler());
         try {
-            final Object result = client.sendSync(request.getRequestUrl(), request.getRequestBody(), timeout);
-            return () -> result;
+            return super.request(request);
         } catch (Throwable e) {
             //retry
-            URL url = new URL(raftClientManager.refreshLeader().getIp(), getMetaServerPort());
-            LOGGER.warn("MetaNode Exchanger request send error!It will be retry once!Request url:{}", url);
-
-            final Object result = client.sendSync(url, request.getRequestBody(), timeout);
-            return () -> result;
+            URL url = new URL(raftClientManager.refreshLeader().getIp(), getServerPort());
+            LOGGER.warn(
+                "MetaNode Exchanger request send error!It will be retry once!Request url:{}", url);
+            return super.request(request);
         }
-    }
-
-    @Override
-    public Client connectServer() {
-        for (String node : metaIps) {
-            URL url = new URL(node, getMetaServerPort());
-            try {
-                connect(url);
-            } catch (Exception e) {
-                LOGGER.error("MetaNode Exchanger connect MetaServer error!url:" + url, e);
-                continue;
-            }
-        }
-        return boltExchange.getClient(Exchange.META_SERVER_TYPE);
-    }
-
-    public Channel connect(URL url) {
-        Client client = boltExchange.getClient(Exchange.META_SERVER_TYPE);
-        if (client == null) {
-            synchronized (this) {
-                client = boltExchange.getClient(Exchange.META_SERVER_TYPE);
-                if (client == null) {
-                    client = boltExchange.connect(Exchange.META_SERVER_TYPE, url,
-                        metaClientHandlers.toArray(new ChannelHandler[metaClientHandlers.size()]));
-                }
-            }
-        }
-        Channel channel = client.getChannel(url);
-        if (channel == null) {
-            synchronized (this) {
-                channel = client.getChannel(url);
-                if (channel == null) {
-                    channel = client.connect(url);
-                }
-            }
-        }
-        return channel;
     }
 
     public PeerId getLeader() {
@@ -128,19 +81,8 @@ public abstract class AbstractMetaNodeExchanger implements NodeExchanger {
         return raftClientManager.getLocalDataCenter();
     }
 
-    public Map<String, List<Connection>> getConnections() {
-        Client client = boltExchange.getClient(Exchange.META_SERVER_TYPE);
-        if (client == null) {
-            return Collections.emptyMap();
-        }
-        return ((BoltClient) client).getAllManagedConnections();
+    @Override
+    protected Collection<ChannelHandler> getClientHandlers() {
+        return metaClientHandlers;
     }
-
-    public void updateMetaIps(Collection<String> ips) {
-        this.metaIps = Sets.newHashSet(ips);
-    }
-
-    public abstract int getMetaServerPort();
-
-    public abstract int getRpcTimeout();
 }

@@ -16,6 +16,7 @@
  */
 package com.alipay.sofa.registry.server.session.listener;
 
+import com.alipay.sofa.registry.server.shared.meta.MetaServerService;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
@@ -57,6 +58,9 @@ public class DataChangeFetchCloudTaskListener implements TaskListener {
     @Autowired
     private CacheService                                 sessionCacheService;
 
+    @Autowired
+    private MetaServerService                            metaServerService;
+
     private volatile TaskDispatcher<String, SessionTask> singleTaskDispatcher;
 
     private TaskProcessor                                dataNodeSingleTaskProcessor;
@@ -88,7 +92,8 @@ public class DataChangeFetchCloudTaskListener implements TaskListener {
     @Override
     public void handleEvent(TaskEvent event) {
         SessionTask dataChangeFetchTask = new DataChangeFetchCloudTask(sessionServerConfig,
-            taskListenerManager, sessionInterests, executorManager, sessionCacheService);
+            taskListenerManager, sessionInterests, executorManager, sessionCacheService,
+            metaServerService);
         dataChangeFetchTask.setTaskEvent(event);
         getSingleTaskDispatcher().dispatch(dataChangeFetchTask.getTaskId(), dataChangeFetchTask,
             dataChangeFetchTask.getExpiryTime());
