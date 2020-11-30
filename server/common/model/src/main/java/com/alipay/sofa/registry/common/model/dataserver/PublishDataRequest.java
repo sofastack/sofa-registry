@@ -16,6 +16,7 @@
  */
 package com.alipay.sofa.registry.common.model.dataserver;
 
+import com.alipay.sofa.registry.common.model.ProcessId;
 import com.alipay.sofa.registry.common.model.store.Publisher;
 
 import java.io.Serializable;
@@ -30,11 +31,16 @@ public class PublishDataRequest implements Serializable {
 
     private static final long serialVersionUID = 3900211443485220361L;
 
-    private Publisher         publisher;
+    private final Publisher   publisher;
 
-    private String            sessionServerProcessId;
+    private long              slotTableEpoch;
 
-    private long              slotEpoch;
+    private final ProcessId   sessionProcessId;
+
+    public PublishDataRequest(Publisher publisher, ProcessId sessionProcessId) {
+        this.publisher = publisher;
+        this.sessionProcessId = sessionProcessId;
+    }
 
     /**
      * Getter method for property <tt>publisher</tt>.
@@ -46,61 +52,34 @@ public class PublishDataRequest implements Serializable {
     }
 
     /**
-     * Setter method for property <tt>publisher</tt>.
-     *
-     * @param publisher  value to be assigned to property publisher
+     * Getter method for property <tt>slotTableEpoch</tt>.
+     * @return property value of slotTableEpoch
      */
-    public void setPublisher(Publisher publisher) {
-        this.publisher = publisher;
+    public long getSlotTableEpoch() {
+        return slotTableEpoch;
     }
 
     /**
-     * Getter method for property <tt>sessionServerProcessId</tt>.
-     *
-     * @return property value of sessionServerProcessId
+     * Setter method for property <tt>slotTableEpoch</tt>.
+     * @param slotTableEpoch value to be assigned to property slotEpoch
      */
-    public String getSessionServerProcessId() {
-        return sessionServerProcessId;
+    public void setSlotTableEpoch(long slotTableEpoch) {
+        this.slotTableEpoch = slotTableEpoch;
     }
 
     /**
-     * Setter method for property <tt>sessionServerProcessId</tt>.
-     *
-     * @param sessionServerProcessId  value to be assigned to property sessionServerProcessId
+     * Getter method for property <tt>sessionProcessId</tt>.
+     * @return property value of sessionProcessId
      */
-    public void setSessionServerProcessId(String sessionServerProcessId) {
-        this.sessionServerProcessId = sessionServerProcessId;
-    }
-
-    /**
-     * Gets the value of serialVersionUID
-     * @return the value of serialVersionUID
-     */
-    public static long getSerialVersionUID() {
-        return serialVersionUID;
-    }
-
-    /**
-     * Getter method for property <tt>slotEpoch</tt>.
-     * @return property value of slotEpoch
-     */
-    public long getSlotEpoch() {
-        return slotEpoch;
-    }
-
-    /**
-     * Setter method for property <tt>slotEpoch</tt>.
-     * @param slotEpoch value to be assigned to property slotEpoch
-     */
-    public void setSlotEpoch(long slotEpoch) {
-        this.slotEpoch = slotEpoch;
+    public ProcessId getSessionProcessId() {
+        return sessionProcessId;
     }
 
     @Override
     public String toString() {
-        StringBuilder sb = new StringBuilder("[PublishDataRequest] sessionServerProcessId=")
-            .append(sessionServerProcessId);
-        sb.append(", epoch=").append(slotEpoch);
+        StringBuilder sb = new StringBuilder("[PublishDataRequest] processId=")
+            .append(sessionProcessId);
+        sb.append(", epoch=").append(slotTableEpoch);
         sb.append(", dataInfoId=");
         if (publisher != null) {
             sb.append(publisher.getDataInfoId());

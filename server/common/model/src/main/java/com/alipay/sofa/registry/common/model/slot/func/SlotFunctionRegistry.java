@@ -14,10 +14,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alipay.sofa.registry.common.model.slot;
+package com.alipay.sofa.registry.common.model.slot.func;
 
-import com.alipay.sofa.registry.log.Logger;
-import com.alipay.sofa.registry.log.LoggerFactory;
 import com.google.common.collect.Maps;
 
 import java.util.Map;
@@ -28,7 +26,7 @@ import java.util.Map;
  * @version v 0.1 2020-11-28 12:24 yuzhi.lyz Exp $
  */
 public final class SlotFunctionRegistry {
-    public static final int                        MAX_SLOTS = 1024;
+    public static final int                        MAX_SLOTS = 128;
     private static final String                    DEF_FUNC  = "crc16";
     private static final Map<String, SlotFunction> funcs     = Maps.newConcurrentMap();
 

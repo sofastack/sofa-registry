@@ -204,21 +204,6 @@ public class ExecutorManager {
                         sessionServerConfig.getSchedulerFetchDataExpBackOffBound(), () -> sessionRegistry.fetchChangData()),
                 sessionServerConfig.getSchedulerFetchDataFirstDelay(), TimeUnit.SECONDS);
 
-        scheduler.schedule(new TimedSupervisorTask("RenewSession", scheduler, renNewDataExecutor,
-                        sessionServerConfig.getSchedulerHeartbeatTimeout(), TimeUnit.SECONDS,
-                        sessionServerConfig.getSchedulerHeartbeatExpBackOffBound(), () -> metaServerService.renewNode()),
-                sessionServerConfig.getSchedulerHeartbeatFirstDelay(), TimeUnit.SECONDS);
-
-        scheduler.schedule(new TimedSupervisorTask("ConnectMetaServer", scheduler, connectMetaExecutor,
-                        sessionServerConfig.getSchedulerConnectMetaTimeout(), TimeUnit.SECONDS,
-                        sessionServerConfig.getSchedulerConnectMetaExpBackOffBound(), () -> metaServerService.connectServer()),
-                sessionServerConfig.getSchedulerConnectMetaFirstDelay(), TimeUnit.SECONDS);
-
-        scheduler.schedule(new TimedSupervisorTask("ConnectDataServer", scheduler, connectDataExecutor,
-                        sessionServerConfig.getSchedulerConnectDataTimeout(), TimeUnit.SECONDS,
-                        sessionServerConfig.getSchedulerConnectDataExpBackOffBound(), () -> dataNodeExchanger.connectServer()),
-                sessionServerConfig.getSchedulerConnectDataFirstDelay(), TimeUnit.SECONDS);
-
         scheduler.schedule(new TimedSupervisorTask("CleanInvalidClient", scheduler, cleanInvalidClientExecutor,
                         sessionServerConfig.getSchedulerCleanInvalidClientTimeOut(), TimeUnit.MINUTES,
                         sessionServerConfig.getSchedulerCleanInvalidClientBackOffBound(),

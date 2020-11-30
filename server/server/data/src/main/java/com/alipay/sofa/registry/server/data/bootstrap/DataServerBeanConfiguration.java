@@ -33,7 +33,6 @@ import com.alipay.sofa.registry.server.data.remoting.dataserver.handler.DataSync
 import com.alipay.sofa.registry.server.data.remoting.dataserver.handler.FetchDataHandler;
 import com.alipay.sofa.registry.server.data.remoting.dataserver.handler.SlotFollowerDiffDataInfoIdRequestHandler;
 import com.alipay.sofa.registry.server.data.remoting.dataserver.handler.SlotFollowerDiffPublisherRequestHandler;
-import com.alipay.sofa.registry.server.data.remoting.dataserver.task.RenewNodeTask;
 import com.alipay.sofa.registry.server.data.remoting.handler.AbstractClientHandler;
 import com.alipay.sofa.registry.server.data.remoting.handler.AbstractServerHandler;
 import com.alipay.sofa.registry.server.data.remoting.metaserver.MetaServerServiceImpl;
@@ -326,15 +325,6 @@ public class DataServerBeanConfiguration {
         public MetaServerServiceImpl metaServerService() {
             return new MetaServerServiceImpl();
         }
-    }
-
-    @Configuration
-    public static class RenewTaskConfigConfiguration {
-        @Bean
-        public RenewNodeTask renewNodeTask() {
-            return new RenewNodeTask();
-        }
-
     }
 
     @Configuration

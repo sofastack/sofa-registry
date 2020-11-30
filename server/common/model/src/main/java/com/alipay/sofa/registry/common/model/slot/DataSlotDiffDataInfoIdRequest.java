@@ -25,10 +25,10 @@ import java.util.Set;
  * @version v 0.1 2020-11-05 14:24 yuzhi.lyz Exp $
  */
 public class DataSlotDiffDataInfoIdRequest implements Serializable {
-    private long        slotTableEpoch;
-    private int         slotId;
+    private final long        slotTableEpoch;
     // all dataInfoIds, diff which was removed
-    private Set<String> allDataInfoIds;
+    private final Set<String> allDataInfoIds;
+    private final int         slotId;
 
     public DataSlotDiffDataInfoIdRequest(long slotTableEpoch, int slotId, Set<String> allDataInfoIds) {
         this.slotTableEpoch = slotTableEpoch;
@@ -45,14 +45,6 @@ public class DataSlotDiffDataInfoIdRequest implements Serializable {
     }
 
     /**
-     * Setter method for property <tt>slotId</tt>.
-     * @param slotId value to be assigned to property slotId
-     */
-    public void setSlotId(int slotId) {
-        this.slotId = slotId;
-    }
-
-    /**
      * Getter method for property <tt>slotTableEpoch</tt>.
      * @return property value of slotTableEpoch
      */
@@ -61,26 +53,10 @@ public class DataSlotDiffDataInfoIdRequest implements Serializable {
     }
 
     /**
-     * Setter method for property <tt>slotTableEpoch</tt>.
-     * @param slotTableEpoch value to be assigned to property slotTableEpoch
-     */
-    public void setSlotTableEpoch(long slotTableEpoch) {
-        this.slotTableEpoch = slotTableEpoch;
-    }
-
-    /**
      * Getter method for property <tt>allDataInfoIds</tt>.
      * @return property value of allDataInfoIds
      */
     public Set<String> getAllDataInfoIds() {
         return allDataInfoIds;
-    }
-
-    /**
-     * Setter method for property <tt>allDataInfoIds</tt>.
-     * @param allDataInfoIds value to be assigned to property allDataInfoIds
-     */
-    public void setAllDataInfoIds(Set<String> allDataInfoIds) {
-        this.allDataInfoIds = allDataInfoIds;
     }
 }

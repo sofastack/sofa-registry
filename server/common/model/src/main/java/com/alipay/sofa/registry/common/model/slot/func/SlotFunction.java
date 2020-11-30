@@ -14,12 +14,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alipay.sofa.registry;
+package com.alipay.sofa.registry.common.model.slot.func;
 
 /**
-* @author chen.zhu
-* <p>
-* Nov 30, 2020 
-*/
-public class TestScheduler {
+ *
+ * @author yuzhi.lyz
+ * @version v 0.1 2020-11-02 15:35 yuzhi.lyz Exp $
+ */
+public interface SlotFunction {
+    String name();
+
+    int maxSlots();
+
+    int slotOf(Object o);
 }

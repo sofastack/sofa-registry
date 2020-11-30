@@ -36,9 +36,9 @@ public class ConcurrentUtils {
 
         private static final Logger logger = LoggerFactory.getLogger(SafeParaLoop.class);
 
-        private List<T>             list;
+        private List<T> list;
 
-        private Executor            executors;
+        private Executor executors;
 
         public SafeParaLoop(Collection<T> list) {
             this(MoreExecutors.directExecutor(), list);
@@ -72,6 +72,19 @@ public class ConcurrentUtils {
 
         String getInfo(T t) {
             return t.toString();
+        }
+    }
+
+    public static Thread createDaemonThread(String name, Runnable r) {
+        Thread t = new Thread(r, name);
+        t.setDaemon(true);
+        return t;
+    }
+
+    public static void objectWaitUninterruptibly(Object o, int timeoutMs) {
+        try {
+            o.wait(timeoutMs);
+        } catch (InterruptedException ignored) {
         }
     }
 }

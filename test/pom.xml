@@ -55,10 +55,6 @@
         </dependency>
         <dependency>
             <groupId>com.alipay.sofa</groupId>
-            <artifactId>registry-consistency</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.alipay.sofa</groupId>
             <artifactId>registry-common-model</artifactId>
         </dependency>
         <dependency>

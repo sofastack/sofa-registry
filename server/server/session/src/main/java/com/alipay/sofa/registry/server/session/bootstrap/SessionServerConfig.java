@@ -33,11 +33,7 @@ public interface SessionServerConfig {
 
     int getHttpServerPort();
 
-    int getSchedulerHeartbeatTimeout();
-
-    int getSchedulerHeartbeatFirstDelay();
-
-    int getSchedulerHeartbeatExpBackOffBound();
+    int getSchedulerHeartbeatIntervalSec();
 
     int getSchedulerFetchDataTimeout();
 
@@ -84,18 +80,6 @@ public interface SessionServerConfig {
     int getSubscriberRegisterFetchRetryTimes();
 
     int getSessionRegisterDataServerTaskRetryTimes();
-
-    int getSchedulerConnectMetaTimeout();
-
-    int getSchedulerConnectMetaFirstDelay();
-
-    int getSchedulerConnectMetaExpBackOffBound();
-
-    int getSchedulerConnectDataTimeout();
-
-    int getSchedulerConnectDataFirstDelay();
-
-    int getSchedulerConnectDataExpBackOffBound();
 
     int getSchedulerCleanInvalidClientTimeOut();
 

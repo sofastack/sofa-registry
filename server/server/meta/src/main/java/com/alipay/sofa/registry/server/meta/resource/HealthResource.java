@@ -73,31 +73,31 @@ public class HealthResource {
 
         StringBuilder sb = new StringBuilder("MetaServerBoot ");
 
-        boolean start = metaServerBootstrap.getSessionStart().get();
+        boolean start = metaServerBootstrap.getSessionStart();
         boolean ret = start;
         sb.append("sessionRegisterServer:").append(start);
 
-        start = metaServerBootstrap.getDataStart().get();
+        start = metaServerBootstrap.getDataStart();
         ret = ret && start;
         sb.append(", dataRegisterServerStart:").append(start);
 
-        start = metaServerBootstrap.getMetaStart().get();
+        start = metaServerBootstrap.getMetaStart();
         ret = ret && start;
         sb.append(", otherMetaRegisterServerStart:").append(start);
 
-        start = metaServerBootstrap.getHttpStart().get();
+        start = metaServerBootstrap.getHttpStart();
         ret = ret && start;
         sb.append(", httpServerStart:").append(start);
 
-        start = raftExchanger.getServerStart().get();
+        start = raftExchanger.getServerStart();
         ret = ret && start;
         sb.append(", raftServerStart:").append(start);
 
-        start = raftExchanger.getClientStart().get();
+        start = raftExchanger.getClientStart();
         ret = ret && start;
         sb.append(", raftClientStart:").append(start);
 
-        start = raftExchanger.getClsStart().get();
+        start = raftExchanger.getClsStart();
         ret = ret && start;
         sb.append(", raftManagerStart:").append(start);
 

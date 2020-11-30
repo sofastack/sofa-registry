@@ -136,6 +136,8 @@ public class DataServerConfig {
 
     private int                  slotSyncRequestExecutorQueueSize             = 1000;
 
+    private int                  schedulerHeartbeatIntervalSec                = 3;
+
     /**
      * constructor
      * @param commonConfig
@@ -1003,6 +1005,22 @@ public class DataServerConfig {
      */
     public void setSlotLeaderDatumExpireSec(int slotLeaderDatumExpireSec) {
         this.slotLeaderDatumExpireSec = slotLeaderDatumExpireSec;
+    }
+
+    /**
+     * Getter method for property <tt>schedulerHeartbeatIntervalSec</tt>.
+     * @return property value of schedulerHeartbeatIntervalSec
+     */
+    public int getSchedulerHeartbeatIntervalSec() {
+        return schedulerHeartbeatIntervalSec;
+    }
+
+    /**
+     * Setter method for property <tt>schedulerHeartbeatIntervalSec</tt>.
+     * @param schedulerHeartbeatIntervalSec value to be assigned to property schedulerHeartbeatIntervalSec
+     */
+    public void setSchedulerHeartbeatIntervalSec(int schedulerHeartbeatIntervalSec) {
+        this.schedulerHeartbeatIntervalSec = schedulerHeartbeatIntervalSec;
     }
 
     @Override

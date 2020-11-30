@@ -16,6 +16,8 @@
  */
 package com.alipay.sofa.registry.common.model.dataserver;
 
+import com.alipay.sofa.registry.common.model.ProcessId;
+
 import java.io.Serializable;
 
 /**
@@ -28,11 +30,13 @@ public class UnPublishDataRequest implements Serializable {
 
     private static final long serialVersionUID = 4344115202203415801L;
 
-    private String            dataInfoId;
+    private final String      dataInfoId;
 
-    private String            registerId;
+    private final String      registerId;
 
-    private long              registerTimestamp;
+    private final long        registerTimestamp;
+
+    private final ProcessId   processId;
 
     /**
      * construtor
@@ -40,10 +44,12 @@ public class UnPublishDataRequest implements Serializable {
      * @param registerId
      * @param registerTimestamp
      */
-    public UnPublishDataRequest(String dataInfoId, String registerId, long registerTimestamp) {
+    public UnPublishDataRequest(String dataInfoId, String registerId, long registerTimestamp,
+                                ProcessId processId) {
         this.dataInfoId = dataInfoId;
         this.registerId = registerId;
         this.registerTimestamp = registerTimestamp;
+        this.processId = processId;
     }
 
     /**
@@ -56,30 +62,12 @@ public class UnPublishDataRequest implements Serializable {
     }
 
     /**
-     * Setter method for property <tt>dataInfoId</tt>.
-     *
-     * @param dataInfoId  value to be assigned to property dataInfoId
-     */
-    public void setDataInfoId(String dataInfoId) {
-        this.dataInfoId = dataInfoId;
-    }
-
-    /**
      * Getter method for property <tt>registerId</tt>.
      *
      * @return property value of registerId
      */
     public String getRegisterId() {
         return registerId;
-    }
-
-    /**
-     * Setter method for property <tt>registerId</tt>.
-     *
-     * @param registerId  value to be assigned to property registerId
-     */
-    public void setRegisterId(String registerId) {
-        this.registerId = registerId;
     }
 
     /**
@@ -92,12 +80,11 @@ public class UnPublishDataRequest implements Serializable {
     }
 
     /**
-     * Setter method for property <tt>registerTimestamp</tt>.
-     *
-     * @param registerTimestamp  value to be assigned to property registerTimestamp
+     * Getter method for property <tt>processId</tt>.
+     * @return property value of processId
      */
-    public void setRegisterTimestamp(long registerTimestamp) {
-        this.registerTimestamp = registerTimestamp;
+    public ProcessId getProcessId() {
+        return processId;
     }
 
     @Override

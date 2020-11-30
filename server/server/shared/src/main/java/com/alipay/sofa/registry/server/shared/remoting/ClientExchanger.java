@@ -29,6 +29,8 @@ import com.alipay.sofa.registry.remoting.exchange.NodeExchanger;
 import com.alipay.sofa.registry.remoting.exchange.RequestException;
 import com.alipay.sofa.registry.remoting.exchange.message.Request;
 import com.alipay.sofa.registry.remoting.exchange.message.Response;
+import com.alipay.sofa.registry.util.ConcurrentUtils;
+import com.alipay.sofa.registry.util.LoopRunnable;
 import com.google.common.collect.Sets;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -40,16 +42,19 @@ import java.util.*;
  * @version v 0.1 2020-11-29 12:08 yuzhi.lyz Exp $
  */
 public abstract class ClientExchanger implements NodeExchanger {
-    private static final Logger    LOGGER = LoggerFactory.getLogger(ClientExchanger.class);
-    private final String           serverType;
+    private static final Logger LOGGER = LoggerFactory.getLogger(ClientExchanger.class);
+    private final        String serverType;
 
     @Autowired
-    protected Exchange             boltExchange;
+    protected Exchange boltExchange;
 
-    protected volatile Set<String> serverIps;
+    protected volatile Set<String> serverIps = Sets.newHashSet();
+    private final      Connector   connector;
 
     protected ClientExchanger(String serverType) {
         this.serverType = serverType;
+        this.connector = new Connector();
+        ConcurrentUtils.createDaemonThread(serverType + "-async-connector", connector).start();
     }
 
     @Override
@@ -68,9 +73,11 @@ public abstract class ClientExchanger implements NodeExchanger {
     @Override
     public Client connectServer() {
         Set<String> ips = serverIps;
-        int count = tryConnectAllServer(ips);
-        if (count == 0) {
-            throw new RuntimeException("failed to connect any servers, " + ips);
+        if (!ips.isEmpty()) {
+            int count = tryConnectAllServer(ips);
+            if (count == 0) {
+                throw new RuntimeException("failed to connect any servers, " + ips);
+            }
         }
         return getClient();
     }
@@ -100,7 +107,7 @@ public abstract class ClientExchanger implements NodeExchanger {
                 client = getClient();
                 if (client == null) {
                     client = boltExchange.connect(serverType, getConnNum(), url,
-                        getClientHandlers().toArray(new ChannelHandler[0]));
+                            getClientHandlers().toArray(new ChannelHandler[0]));
                 }
             }
         }
@@ -122,6 +129,33 @@ public abstract class ClientExchanger implements NodeExchanger {
             return Collections.emptyMap();
         }
         return ((BoltClient) client).getAllManagedConnections();
+    }
+
+    public void notifyConnectServerAsync() {
+        connector.wakeup();
+    }
+
+    private final class Connector extends LoopRunnable {
+
+        synchronized void wakeup() {
+            this.notify();
+        }
+
+        @Override
+        public void runUnThrowable() {
+            Set<String> ips = serverIps;
+            try {
+                tryConnectAllServer(ips);
+            } catch (Throwable e) {
+                LOGGER.error("failded to connect {}", ips, e);
+            }
+        }
+
+        public void waitingUnThrowable() {
+            synchronized (this) {
+                ConcurrentUtils.objectWaitUninterruptibly(this, 3000);
+            }
+        }
     }
 
     public abstract int getRpcTimeout();

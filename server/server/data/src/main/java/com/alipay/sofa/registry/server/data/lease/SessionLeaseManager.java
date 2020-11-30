@@ -14,19 +14,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alipay.sofa.registry.consistency.hash;
+package com.alipay.sofa.registry.server.data.lease;
+
+import com.alipay.sofa.registry.log.Logger;
+import com.alipay.sofa.registry.log.LoggerFactory;
+
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * Hash Function
- * @author zhuoyu.sjw
- * @version $Id: HashFunction.java, v 0.1 2016-11-01 15:19 zhuoyu.sjw Exp $$
+ *
+ * @author yuzhi.lyz
+ * @version v 0.1 2020-11-30 10:30 yuzhi.lyz Exp $
  */
-public interface HashFunction {
+public final class SessionLeaseManager {
+    private static final Logger     LOGGER                     = LoggerFactory
+                                                                   .getLogger(SessionLeaseManager.class);
 
-    /**
-     * return object's int hashCode
-     * @param o object
-     * @return int hashCode
-     */
-    int hash(Object o);
+    private final Map<String, Long> connectIdRenewTimestampMap = new ConcurrentHashMap<>();
+
 }

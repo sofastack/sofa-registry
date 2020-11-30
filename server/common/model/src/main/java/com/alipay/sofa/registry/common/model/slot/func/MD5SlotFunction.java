@@ -14,35 +14,36 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alipay.sofa.registry.common.model.metaserver;
-
-import com.alipay.sofa.registry.common.model.Node;
-
-import java.io.Serializable;
-import java.util.HashMap;
-import java.util.Map;
+package com.alipay.sofa.registry.common.model.slot.func;
 
 /**
  *
  * @author yuzhi.lyz
- * @version v 0.1 2020-11-12 10:48 yuzhi.lyz Exp $
+ * @version v 0.1 2020-11-02 15:43 yuzhi.lyz Exp $
  */
-public class RenewNodesResult implements Serializable {
-    private Map<Node.NodeType, NodeChangeResult> results = new HashMap<>();
+public final class MD5SlotFunction implements SlotFunction {
+    public static final MD5SlotFunction INSTANCE        = new MD5SlotFunction();
+    private final int                   maxSlots;
+    private final MD5HashFunction       md5HashFunction = new MD5HashFunction();
 
-    /**
-     * Getter method for property <tt>results</tt>.
-     * @return property value of results
-     */
-    public Map<Node.NodeType, NodeChangeResult> getResults() {
-        return results;
+    private MD5SlotFunction() {
+        this.maxSlots = SlotFunctionRegistry.MAX_SLOTS;
     }
 
-    /**
-     * Setter method for property <tt>results</tt>.
-     * @param results value to be assigned to property results
-     */
-    public void setResults(Map<Node.NodeType, NodeChangeResult> results) {
-        this.results = results;
+    @Override
+    public String name() {
+        return "md5";
+    }
+
+    @Override
+    public int maxSlots() {
+        return maxSlots;
+    }
+
+    @Override
+    public int slotOf(Object o) {
+        // make sure >=0
+        final int hash = Math.abs(md5HashFunction.hash(o));
+        return hash % maxSlots;
     }
 }

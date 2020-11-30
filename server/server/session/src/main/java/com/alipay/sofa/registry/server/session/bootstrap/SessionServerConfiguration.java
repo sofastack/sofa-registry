@@ -59,6 +59,7 @@ import com.alipay.sofa.registry.server.session.store.*;
 import com.alipay.sofa.registry.server.session.strategy.*;
 import com.alipay.sofa.registry.server.session.strategy.impl.*;
 import com.alipay.sofa.registry.server.session.wrapper.*;
+import com.alipay.sofa.registry.server.shared.meta.AbstractMetaNodeExchanger;
 import com.alipay.sofa.registry.server.shared.meta.MetaServerService;
 import com.alipay.sofa.registry.task.batcher.TaskProcessor;
 import com.alipay.sofa.registry.task.listener.DefaultTaskListenerManager;
@@ -132,7 +133,7 @@ public class SessionServerConfiguration {
         }
 
         @Bean
-        public NodeExchanger dataNodeExchanger() {
+        public DataNodeExchanger dataNodeExchanger() {
             return new DataNodeExchanger();
         }
 
@@ -142,7 +143,7 @@ public class SessionServerConfiguration {
         }
 
         @Bean
-        public NodeExchanger metaNodeExchanger() {
+        public MetaNodeExchanger metaNodeExchanger() {
             return new MetaNodeExchanger();
         }
 
@@ -335,6 +336,7 @@ public class SessionServerConfiguration {
         }
 
         @Bean
+        @ConditionalOnMissingBean
         public MetaServerService metaServerService() {
             return new MetaServerServiceImpl();
         }
