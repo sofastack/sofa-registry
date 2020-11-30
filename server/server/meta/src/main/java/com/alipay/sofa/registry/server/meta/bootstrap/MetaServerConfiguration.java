@@ -17,6 +17,7 @@
 package com.alipay.sofa.registry.server.meta.bootstrap;
 
 import com.alipay.sofa.registry.jraft.service.PersistenceDataDBService;
+import com.alipay.sofa.registry.lifecycle.impl.LifecycleHelper;
 import com.alipay.sofa.registry.remoting.bolt.exchange.BoltExchange;
 import com.alipay.sofa.registry.remoting.exchange.Exchange;
 import com.alipay.sofa.registry.remoting.exchange.NodeExchanger;
@@ -32,6 +33,7 @@ import com.alipay.sofa.registry.server.meta.lease.impl.CrossDcMetaServerManager;
 import com.alipay.sofa.registry.server.meta.lease.impl.DefaultDataServerManager;
 import com.alipay.sofa.registry.server.meta.lease.impl.DefaultMetaServerManager;
 import com.alipay.sofa.registry.server.meta.lease.impl.DefaultSessionManager;
+import com.alipay.sofa.registry.server.meta.metaserver.CurrentDcMetaServer;
 import com.alipay.sofa.registry.server.meta.metaserver.impl.DefaultCurrentDcMetaServer;
 import com.alipay.sofa.registry.server.meta.remoting.DataNodeExchanger;
 import com.alipay.sofa.registry.server.meta.remoting.MetaServerExchanger;
@@ -170,8 +172,9 @@ public class MetaServerConfiguration {
         }
 
         @Bean
-        public DefaultCurrentDcMetaServer currentDcMetaServer() {
-            return new DefaultCurrentDcMetaServer();
+        public CurrentDcMetaServer currentDcMetaServer() throws Exception {
+            CurrentDcMetaServer currentDcMetaServer = new DefaultCurrentDcMetaServer();
+            return currentDcMetaServer;
         }
 
     }

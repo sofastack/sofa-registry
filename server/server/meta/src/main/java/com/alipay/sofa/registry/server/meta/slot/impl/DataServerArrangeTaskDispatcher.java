@@ -20,6 +20,7 @@ import com.alipay.sofa.registry.common.model.metaserver.nodes.DataNode;
 import com.alipay.sofa.registry.exception.DisposeException;
 import com.alipay.sofa.registry.exception.InitializeException;
 import com.alipay.sofa.registry.lifecycle.SmartSpringLifecycle;
+import com.alipay.sofa.registry.lifecycle.impl.LifecycleHelper;
 import com.alipay.sofa.registry.observer.impl.AbstractLifecycleObservable;
 import com.alipay.sofa.registry.server.meta.lease.DataServerManager;
 import com.alipay.sofa.registry.server.meta.slot.ArrangeTaskDispatcher;
@@ -31,6 +32,8 @@ import com.google.common.collect.Maps;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import javax.annotation.PostConstruct;
+import javax.annotation.PreDestroy;
 import java.util.concurrent.*;
 
 /**
@@ -38,7 +41,7 @@ import java.util.concurrent.*;
  * <p>
  * Nov 25, 2020
  */
-@SmartSpringLifecycle
+
 public class DataServerArrangeTaskDispatcher extends AbstractLifecycleObservable
                                                                                 implements
                                                                                 ArrangeTaskDispatcher<DataNode> {
@@ -56,6 +59,18 @@ public class DataServerArrangeTaskDispatcher extends AbstractLifecycleObservable
     private DefaultSlotManager                              slotManager;
 
     private ScheduledExecutorService                        scheduled;
+
+    @PostConstruct
+    public void postConstruct() throws Exception {
+        LifecycleHelper.initializeIfPossible(this);
+        LifecycleHelper.startIfPossible(this);
+    }
+
+    @PreDestroy
+    public void preDestory() throws Exception {
+        LifecycleHelper.stopIfPossible(this);
+        LifecycleHelper.disposeIfPossible(this);
+    }
 
     @Override
     protected void doInitialize() throws InitializeException {

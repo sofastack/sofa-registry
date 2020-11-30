@@ -19,10 +19,13 @@ package com.alipay.sofa.registry.server.meta.lease.impl;
 import com.alipay.sofa.registry.common.model.metaserver.nodes.DataNode;
 import com.alipay.sofa.registry.common.model.metaserver.nodes.SessionNode;
 import com.alipay.sofa.registry.lifecycle.SmartSpringLifecycle;
+import com.alipay.sofa.registry.lifecycle.impl.LifecycleHelper;
 import com.alipay.sofa.registry.server.meta.lease.SessionManager;
 import com.google.common.collect.Lists;
 import org.springframework.stereotype.Component;
 
+import javax.annotation.PostConstruct;
+import javax.annotation.PreDestroy;
 import java.util.List;
 
 /**
@@ -30,11 +33,23 @@ import java.util.List;
  * <p>
  * Nov 24, 2020
  */
-@SmartSpringLifecycle
+
 public class DefaultSessionManager extends AbstractRaftEnabledLeaseManager<SessionNode> implements
                                                                                        SessionManager {
 
     private static final String DEFAULT_SESSION_MANAGER_SERVICE_ID = "DefaultSessionManager.LeaseManager";
+
+    @PostConstruct
+    public void postConstruct() throws Exception {
+        LifecycleHelper.initializeIfPossible(this);
+        LifecycleHelper.startIfPossible(this);
+    }
+
+    @PreDestroy
+    public void preDestory() throws Exception {
+        LifecycleHelper.stopIfPossible(this);
+        LifecycleHelper.disposeIfPossible(this);
+    }
 
     @Override
     protected String getServiceId() {

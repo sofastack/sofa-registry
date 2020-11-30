@@ -291,26 +291,32 @@ public class DefaultCrossDcMetaServer extends AbstractMetaServer implements Cros
 
         public void tryUpdateRemoteDcMetaServerList(DataCenterNodes<MetaNode> response) {
             String remoteDc = response.getDataCenterId();
-            if(!getDc().equalsIgnoreCase(remoteDc)) {
-                throw new IllegalArgumentException(String.format("MetaServer List Response not correct, ask [%s], received [%s]",
-                        getDc(), remoteDc));
+            if (!getDc().equalsIgnoreCase(remoteDc)) {
+                throw new IllegalArgumentException(String.format(
+                    "MetaServer List Response not correct, ask [%s], received [%s]", getDc(),
+                    remoteDc));
             }
             DefaultCrossDcMetaServer.this.lock.writeLock().lock();
             try {
                 Long remoteVersion = response.getVersion();
-                if(remoteVersion <= currentVersion.get()) {
-                    if(logger.isDebugEnabled()) {
-                        logger.debug("[tryUpdateRemoteDcMetaServerList]shall ignore as version is left behind, " +
-                                "remote[{}], current[{}]", remoteVersion, currentVersion.get());
+                if (remoteVersion <= currentVersion.get()) {
+                    if (logger.isDebugEnabled()) {
+                        logger.debug(
+                            "[tryUpdateRemoteDcMetaServerList]shall ignore as version is left behind, "
+                                    + "remote[{}], current[{}]", remoteVersion,
+                            currentVersion.get());
                     }
                     return;
                 }
-                if(logger.isWarnEnabled()) {
-                    logger.warn("[tryUpdateRemoteDcMetaServerList][{}] remote meta server changed, \nbefore: {}, \nafter: {}",
-                            getDc(), DefaultCrossDcMetaServer.this.metaServers.get(), response.getNodes() != null ? response.getNodes().values() : "None");
+                if (logger.isWarnEnabled()) {
+                    logger
+                        .warn(
+                            "[tryUpdateRemoteDcMetaServerList][{}] remote meta server changed, \nbefore: {}, \nafter: {}",
+                            getDc(), DefaultCrossDcMetaServer.this.metaServers.get(),
+                            response.getNodes() != null ? response.getNodes().values() : "None");
                 }
                 currentVersion.set(remoteVersion);
-                if(response.getNodes() != null) {
+                if (response.getNodes() != null) {
                     metaServers.set(Lists.newArrayList(response.getNodes().values()));
                 }
             } finally {
@@ -344,10 +350,7 @@ public class DefaultCrossDcMetaServer extends AbstractMetaServer implements Cros
 
     @Override
     public String toString() {
-        return "DefaultCrossDcMetaServer{" +
-                "dcName='" + dcName + '\'' +
-                ", initMetaAddresses=" + initMetaAddresses +
-                ", lastRefreshTime=" + timestamp +
-                '}';
+        return "DefaultCrossDcMetaServer{" + "dcName='" + dcName + '\'' + ", initMetaAddresses="
+               + initMetaAddresses + ", lastRefreshTime=" + timestamp + '}';
     }
 }

@@ -35,6 +35,8 @@ import com.google.common.collect.Maps;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import javax.annotation.PostConstruct;
+import javax.annotation.PreDestroy;
 import javax.annotation.Resource;
 import java.util.Collection;
 import java.util.Map;
@@ -55,7 +57,7 @@ import static com.alipay.sofa.registry.server.meta.bootstrap.MetaServerConfigura
  * As while as a LeaderAware object, which watches leader event and trigger cross-dc-metaservers' refresh job when leader term
  * and stop all of them when it's not a raft-cluster leader
  * */
-@SmartSpringLifecycle
+
 public class CrossDcMetaServerManager extends AbstractLifecycle implements MetaServerManager,
                                                                LeaderAware {
 
@@ -81,6 +83,18 @@ public class CrossDcMetaServerManager extends AbstractLifecycle implements MetaS
 
     @Resource(type = BoltExchange.class)
     private Exchange                                 boltExchange;
+
+    @PostConstruct
+    public void postConstruct() throws Exception {
+        LifecycleHelper.initializeIfPossible(this);
+        LifecycleHelper.startIfPossible(this);
+    }
+
+    @PreDestroy
+    public void preDestory() throws Exception {
+        LifecycleHelper.stopIfPossible(this);
+        LifecycleHelper.disposeIfPossible(this);
+    }
 
     @Override
     public CrossDcMetaServer getOrCreate(String dcName) {
