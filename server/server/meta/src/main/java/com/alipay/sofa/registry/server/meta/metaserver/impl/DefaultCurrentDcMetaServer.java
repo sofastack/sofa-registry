@@ -46,7 +46,7 @@ import java.util.concurrent.atomic.AtomicLong;
  * <p>
  * Nov 23, 2020
  */
-@Component
+
 @SmartSpringLifecycle
 public class DefaultCurrentDcMetaServer extends AbstractMetaServer implements CurrentDcMetaServer {
 

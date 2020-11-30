@@ -38,7 +38,6 @@ import java.util.Map;
  * <p>
  * Nov 25, 2020
  */
-@Component
 public class DefaultMetaServerManager {
 
     @Autowired

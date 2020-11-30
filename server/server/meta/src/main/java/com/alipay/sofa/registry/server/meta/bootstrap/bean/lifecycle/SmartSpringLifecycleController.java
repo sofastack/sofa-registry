@@ -31,7 +31,6 @@ import org.springframework.stereotype.Component;
  * <p>
  * Nov 24, 2020
  */
-@Component
 public class SmartSpringLifecycleController implements BeanPostProcessor,
                                            DestructionAwareBeanPostProcessor, Ordered {
 
