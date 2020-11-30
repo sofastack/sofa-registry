@@ -36,7 +36,7 @@ import javax.annotation.PreDestroy;
  * <p>
  * Nov 24, 2020
  */
-@Component
+
 public class DefaultSlotArranger implements SlotArranger, Observer {
 
     @Autowired

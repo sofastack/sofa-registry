@@ -38,7 +38,6 @@ import java.util.concurrent.*;
  * <p>
  * Nov 25, 2020
  */
-@Component
 @SmartSpringLifecycle
 public class DataServerArrangeTaskDispatcher extends AbstractLifecycleObservable
                                                                                 implements

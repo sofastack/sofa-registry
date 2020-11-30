@@ -25,14 +25,7 @@ import com.alipay.sofa.registry.lifecycle.impl.LifecycleHelper;
 import com.alipay.sofa.registry.server.meta.AbstractTest;
 import com.alipay.sofa.registry.server.meta.lease.Lease;
 import com.alipay.sofa.registry.server.meta.remoting.RaftExchanger;
-import com.alipay.sofa.registry.util.FileUtils;
-import org.apache.commons.lang.reflect.FieldUtils;
 import org.junit.*;
-import org.rocksdb.DBOptions;
-import org.rocksdb.Options;
-import org.rocksdb.RocksDB;
-
-import java.io.File;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.CyclicBarrier;
 

@@ -45,7 +45,7 @@ import static com.alipay.sofa.registry.server.meta.bootstrap.MetaServerConfigura
  * <p>
  * Nov 13, 2020
  */
-@Component
+
 public class DefaultSlotManager extends AbstractLifecycle implements SlotManager, LeaderAware {
 
     //    private LocalStorageSlotManager raftSlotTableManager;

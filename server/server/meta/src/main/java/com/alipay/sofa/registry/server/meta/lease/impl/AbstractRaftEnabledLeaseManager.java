@@ -152,10 +152,10 @@ public abstract class AbstractRaftEnabledLeaseManager<T extends Node> extends
     @SuppressWarnings("unchecked")
     private void initRaftLeaseManager() {
         String serviceId = getServiceId();
-        DefaultLeaseManager<SessionNode> localRepo = new DefaultLeaseManager<>();
+        DefaultRaftLeaseManager<T> localRepo = new DefaultRaftLeaseManager<>();
         localRepo.setLogger(logger);
         // register as raft service
-        Processor.getInstance().addWorker(serviceId, DefaultLeaseManager.class, localRepo);
+        Processor.getInstance().addWorker(serviceId, RaftLeaseManager.class, localRepo);
         // make field "raftLeaseManager" raft-enabled, by wrap DefaultLeaseManager being a local-repository
         // and expose wrapper as a raft service
         this.raftLeaseManager = (RaftLeaseManager) Proxy.newProxyInstance(Thread.currentThread()
