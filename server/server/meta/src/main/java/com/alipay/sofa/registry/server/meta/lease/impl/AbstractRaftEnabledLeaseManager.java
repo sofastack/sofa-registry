@@ -135,11 +135,11 @@ public abstract class AbstractRaftEnabledLeaseManager<T extends Node> extends
     @Override
     public boolean evict() {
         //todo: evict? how to make it consistent across clusters
-//        boolean nodeEvicted = this.raftLeaseManager.evict();
-//        if(nodeEvicted) {
-//            updateRepoVersion();
-//        }
-//        return nodeEvicted;
+        //        boolean nodeEvicted = this.raftLeaseManager.evict();
+        //        if(nodeEvicted) {
+        //            updateRepoVersion();
+        //        }
+        //        return nodeEvicted;
         return false;
     }
 

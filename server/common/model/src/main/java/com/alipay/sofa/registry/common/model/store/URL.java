@@ -258,16 +258,15 @@ public final class URL implements Serializable {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o)
+            return true;
+        if (o == null || getClass() != o.getClass())
+            return false;
         URL url = (URL) o;
-        return port == url.port &&
-                protocol == url.protocol &&
-                Objects.equals(host, url.host) &&
-                Objects.equals(ipAddress, url.ipAddress) &&
-                Objects.equals(path, url.path) &&
-                Objects.equals(parameters, url.parameters) &&
-                Objects.equals(addressString, url.addressString);
+        return port == url.port && protocol == url.protocol && Objects.equals(host, url.host)
+               && Objects.equals(ipAddress, url.ipAddress) && Objects.equals(path, url.path)
+               && Objects.equals(parameters, url.parameters)
+               && Objects.equals(addressString, url.addressString);
     }
 
     @Override

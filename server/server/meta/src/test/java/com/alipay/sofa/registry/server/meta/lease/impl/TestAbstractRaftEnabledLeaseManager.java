@@ -90,7 +90,7 @@ public class TestAbstractRaftEnabledLeaseManager extends AbstractTest {
     }
 
     @Test
-//    @Ignore
+    //    @Ignore
     public void manuallyTestRaftMechanism() throws Exception {
         manager = new AbstractRaftEnabledLeaseManager<MetaNode>() {
 
@@ -108,13 +108,14 @@ public class TestAbstractRaftEnabledLeaseManager extends AbstractTest {
         int tasks = 1000;
         CyclicBarrier barrier = new CyclicBarrier(tasks / 10);
         CountDownLatch latch = new CountDownLatch(tasks);
-        for(int i = 0; i < tasks; i++) {
+        for (int i = 0; i < tasks; i++) {
             executors.execute(new Runnable() {
                 @Override
                 public void run() {
                     try {
                         barrier.await();
-                    } catch (Exception ignore) {}
+                    } catch (Exception ignore) {
+                    }
                     manager.renew(new MetaNode(randomURL(randomIp()), getDc()), 10);
                     latch.countDown();
                 }

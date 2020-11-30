@@ -25,6 +25,7 @@ import com.alipay.sofa.registry.exception.InitializeException;
 import com.alipay.sofa.registry.jraft.processor.Processor;
 import com.alipay.sofa.registry.jraft.processor.ProxyHandler;
 import com.alipay.sofa.registry.lifecycle.SmartSpringLifecycle;
+import com.alipay.sofa.registry.lifecycle.impl.LifecycleHelper;
 import com.alipay.sofa.registry.server.meta.lease.DataServerManager;
 import com.alipay.sofa.registry.server.meta.lease.LeaseManager;
 import com.alipay.sofa.registry.server.meta.lease.SessionManager;
@@ -37,6 +38,9 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+
+import javax.annotation.PostConstruct;
+import javax.annotation.PreDestroy;
 import java.lang.reflect.Proxy;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
@@ -46,8 +50,6 @@ import java.util.concurrent.atomic.AtomicLong;
  * <p>
  * Nov 23, 2020
  */
-
-@SmartSpringLifecycle
 public class DefaultCurrentDcMetaServer extends AbstractMetaServer implements CurrentDcMetaServer {
 
     @Autowired
@@ -65,6 +67,18 @@ public class DefaultCurrentDcMetaServer extends AbstractMetaServer implements Cu
     private AtomicLong                   currentEpoch = new AtomicLong();
 
     private CurrentMetaServerRaftStorage raftStorage;
+
+    @PostConstruct
+    public void postConstruct() throws Exception {
+        LifecycleHelper.initializeIfPossible(this);
+        LifecycleHelper.startIfPossible(this);
+    }
+
+    @PreDestroy
+    public void preDestory() throws Exception {
+        LifecycleHelper.stopIfPossible(this);
+        LifecycleHelper.disposeIfPossible(this);
+    }
 
     @Override
     protected void doInitialize() throws InitializeException {

@@ -232,8 +232,7 @@ public class DefaultCrossDcMetaServerTest extends AbstractTest {
         LifecycleHelper.initializeIfPossible(server);
         LifecycleHelper.startIfPossible(server);
         SlotAllocator allocator = mock(SlotAllocator.class);
-        server.setRaftStorage(server.new RaftMetaServerListStorage())
-                .setAllocator(allocator);
+        server.setRaftStorage(server.new RaftMetaServerListStorage()).setAllocator(allocator);
         server.getSlotTable();
         verify(allocator, times(1)).getSlotTable();
     }
@@ -241,17 +240,17 @@ public class DefaultCrossDcMetaServerTest extends AbstractTest {
     @Test(expected = IllegalArgumentException.class)
     public void testRaftMetaServerListStorage() {
         DefaultCrossDcMetaServer.RaftMetaServerListStorage storage = server.new RaftMetaServerListStorage();
-        storage.tryUpdateRemoteDcMetaServerList(new DataCenterNodes<>(Node.NodeType.META, System.currentTimeMillis(),
-                "unknown"));
+        storage.tryUpdateRemoteDcMetaServerList(new DataCenterNodes<>(Node.NodeType.META, System
+            .currentTimeMillis(), "unknown"));
     }
 
     @Test
     public void testRaftMetaServerListStorageWithLowerEpoch() {
         DefaultCrossDcMetaServer.RaftMetaServerListStorage storage = server.new RaftMetaServerListStorage();
         storage.tryUpdateRemoteDcMetaServerList(new DataCenterNodes<>(Node.NodeType.META, 20L,
-                getDc()));
+            getDc()));
         storage.tryUpdateRemoteDcMetaServerList(new DataCenterNodes<>(Node.NodeType.META, 1L,
-                getDc()));
+            getDc()));
         Assert.assertEquals(20L, server.getEpoch());
     }
 
