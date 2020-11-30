@@ -16,11 +16,8 @@
  */
 package com.alipay.sofa.registry.server.session.resource;
 
-import com.alipay.sofa.registry.common.model.Node.NodeType;
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
-import com.alipay.sofa.registry.server.session.node.NodeManager;
-import com.alipay.sofa.registry.server.session.node.NodeManagerFactory;
-import com.alipay.sofa.registry.server.session.node.SessionNodeManager;
+import com.alipay.sofa.registry.server.shared.meta.MetaServerService;
 import com.google.common.base.Joiner;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,7 +27,6 @@ import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -45,14 +41,13 @@ public class SessionOpenResource {
     @Autowired
     private SessionServerConfig sessionServerConfig;
 
+    @Autowired
+    private MetaServerService   mataNodeService;
+
     @GET
     @Path("query.json")
     @Produces(MediaType.APPLICATION_JSON)
     public List<String> getSessionServerListJson(@QueryParam("zone") String zone) {
-
-        List<String> serverList = new ArrayList<>();
-        NodeManager nodeManager = NodeManagerFactory.getNodeManager(NodeType.SESSION);
-
         if (StringUtils.isEmpty(zone)) {
             zone = sessionServerConfig.getSessionServerRegion();
         }
@@ -61,14 +56,11 @@ public class SessionOpenResource {
             zone = zone.toUpperCase();
         }
 
-        if (nodeManager instanceof SessionNodeManager) {
-            SessionNodeManager sessionNodeManager = (SessionNodeManager) nodeManager;
-            serverList = sessionNodeManager.getZoneServerList(zone);
+        List<String> serverList = mataNodeService.getZoneSessionServerList(zone);
 
-            serverList = serverList.stream()
+        serverList = serverList.stream()
                 .map(server -> server + ":" + sessionServerConfig.getServerPort())
                 .collect(Collectors.toList());
-        }
 
         return serverList;
     }

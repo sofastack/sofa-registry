@@ -18,6 +18,7 @@ package com.alipay.sofa.registry.remoting.bolt;
 
 import java.net.InetSocketAddress;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.Executor;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -67,6 +68,10 @@ public class BoltClient implements Client {
         rpcClient.init();
 
         this.connNum = connNum;
+    }
+
+    public Map<String, List<Connection>> getConnections() {
+        return rpcClient.getAllManagedConnections();
     }
 
     /**

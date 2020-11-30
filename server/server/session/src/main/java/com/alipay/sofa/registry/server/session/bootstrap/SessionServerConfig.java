@@ -16,6 +16,8 @@
  */
 package com.alipay.sofa.registry.server.session.bootstrap;
 
+import java.util.Set;
+
 /**
  * SessionServerConfig Interface
  * @author shangyu.wh
@@ -192,4 +194,6 @@ public interface SessionServerConfig {
     int getSessionSchedulerPoolSize();
 
     int getSlotSyncPublisherMaxNum();
+
+    Set<String> getMetaServerIpAddresses();
 }

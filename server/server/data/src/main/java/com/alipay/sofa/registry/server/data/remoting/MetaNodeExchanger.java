@@ -16,95 +16,26 @@
  */
 package com.alipay.sofa.registry.server.data.remoting;
 
-import java.util.Collection;
-
-import javax.annotation.Resource;
-
-import org.springframework.beans.factory.annotation.Autowired;
-
-import com.alipay.sofa.registry.common.model.store.URL;
-import com.alipay.sofa.registry.log.Logger;
-import com.alipay.sofa.registry.log.LoggerFactory;
-import com.alipay.sofa.registry.remoting.Channel;
-import com.alipay.sofa.registry.remoting.ChannelHandler;
-import com.alipay.sofa.registry.remoting.Client;
-import com.alipay.sofa.registry.remoting.exchange.Exchange;
-import com.alipay.sofa.registry.remoting.exchange.NodeExchanger;
-import com.alipay.sofa.registry.remoting.exchange.message.Request;
-import com.alipay.sofa.registry.remoting.exchange.message.Response;
 import com.alipay.sofa.registry.server.data.bootstrap.DataServerConfig;
-import com.alipay.sofa.registry.server.data.remoting.handler.AbstractClientHandler;
-import com.alipay.sofa.registry.server.data.remoting.metaserver.IMetaServerService;
+import com.alipay.sofa.registry.server.shared.meta.AbstractMetaNodeExchanger;
+import org.springframework.beans.factory.annotation.Autowired;
 
 /**
  * @author xuanbei
  * @since 2019/2/15
  */
-public class MetaNodeExchanger implements NodeExchanger {
-    private static final Logger               LOGGER = LoggerFactory
-                                                         .getLogger(MetaNodeExchanger.class);
+public class MetaNodeExchanger extends AbstractMetaNodeExchanger {
 
     @Autowired
-    private Exchange                          boltExchange;
-
-    @Autowired
-    private IMetaServerService                metaServerService;
-
-    @Autowired
-    private DataServerConfig                  dataServerConfig;
-
-    @Resource(name = "metaClientHandlers")
-    private Collection<AbstractClientHandler> metaClientHandlers;
+    private DataServerConfig dataServerConfig;
 
     @Override
-    public Response request(Request request) {
-        Client client = boltExchange.getClient(Exchange.META_SERVER_TYPE);
-        LOGGER.info("MetaNode Exchanger request={},url={},callbackHandler={}", request.getRequestBody(),
-                request.getRequestUrl(), request.getCallBackHandler());
-
-        try {
-            final Object result = client.sendSync(request.getRequestUrl(), request.getRequestBody(),
-                    dataServerConfig.getRpcTimeout());
-            return () -> result;
-        } catch (Exception e) {
-            //retry
-            URL url = new URL(metaServerService.refreshLeader().getIp(),
-                    dataServerConfig.getMetaServerPort());
-            LOGGER.warn("MetaNode Exchanger request send error!It will be retry once!Request url:{}", url);
-
-            final Object result = client.sendSync(url, request.getRequestBody(),
-                    request.getTimeout() != null ? request.getTimeout() : dataServerConfig.getRpcTimeout());
-            return () -> result;
-        }
-    }
-
-    public Channel connect(URL url) {
-        Client client = boltExchange.getClient(Exchange.META_SERVER_TYPE);
-        if (client == null) {
-            synchronized (this) {
-                client = boltExchange.getClient(Exchange.META_SERVER_TYPE);
-                if (client == null) {
-                    client = boltExchange.connect(Exchange.META_SERVER_TYPE, url,
-                        metaClientHandlers.toArray(new ChannelHandler[metaClientHandlers.size()]));
-                }
-            }
-        }
-        //try to connect data
-        Channel channel = client.getChannel(url);
-        if (channel == null) {
-            synchronized (this) {
-                channel = client.getChannel(url);
-                if (channel == null) {
-                    channel = client.connect(url);
-                }
-            }
-        }
-
-        return channel;
+    public int getRpcTimeout() {
+        return dataServerConfig.getRpcTimeout();
     }
 
     @Override
-    public Client connectServer() {
-        throw new UnsupportedOperationException();
+    public int getServerPort() {
+        return dataServerConfig.getMetaServerPort();
     }
 }

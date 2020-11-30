@@ -279,9 +279,7 @@ public class CrossDcSlotAllocator extends AbstractLifecycle implements SlotAlloc
 
     @Override
     public String toString() {
-        return "CrossDcSlotAllocator{" +
-                "dcName='" + dcName + '\'' +
-                ", metaServer=" + metaServer +
-                '}';
+        return "CrossDcSlotAllocator{" + "dcName='" + dcName + '\'' + ", metaServer=" + metaServer
+               + '}';
     }
 }

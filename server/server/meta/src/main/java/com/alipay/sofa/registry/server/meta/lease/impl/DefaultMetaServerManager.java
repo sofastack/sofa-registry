@@ -75,15 +75,9 @@ public class DefaultMetaServerManager {
         result.setLocalDataCenter(nodeConfig.getLocalDataCenter());
         Map<String, Map<String, MetaNode>> nodeMap = Maps.newHashMap();
         Map<String, Long> epochMap = Maps.newHashMap();
-<<<<<<< HEAD
-        for(String dcName : nodeConfig.getMetaNodeIP().keySet()) {
-            List<MetaNode> metaNodeList = crossDcMetaServerManager.getOrCreate(dcName).getClusterMembers();
-=======
         for (String dcName : nodeConfig.getMetaNodeIP().keySet()) {
             List<MetaNode> metaNodeList = crossDcMetaServerManager.getOrCreate(dcName)
                 .getClusterMembers();
-            Map<String, MetaNode> map = Maps.newHashMap();
->>>>>>> origin/feat/datastore
             nodeMap.put(dcName, transform(metaNodeList));
             epochMap.put(dcName, crossDcMetaServerManager.getOrCreate(dcName).getEpoch());
         }

@@ -55,6 +55,6 @@ public class DatumExpireProvideDataProcessor implements ProvideDataProcessor {
 
     @Override
     public boolean support(ProvideData provideData) {
-        return ValueConstants.ENABLE_DATA_DATUM_EXPIRE.equals(provideData.getDataInfoId());
+        return ValueConstants.DATA_DATUM_EXPIRE_SEC.equals(provideData.getDataInfoId());
     }
 }

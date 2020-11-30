@@ -34,7 +34,7 @@ import com.alipay.sofa.registry.server.session.filter.blacklist.*;
 import com.alipay.sofa.registry.server.session.limit.AccessLimitService;
 import com.alipay.sofa.registry.server.session.limit.AccessLimitServiceImpl;
 import com.alipay.sofa.registry.server.session.listener.*;
-import com.alipay.sofa.registry.server.session.node.*;
+import com.alipay.sofa.registry.server.session.node.RaftClientManager;
 import com.alipay.sofa.registry.server.session.node.processor.ClientNodeSingleTaskProcessor;
 import com.alipay.sofa.registry.server.session.node.processor.ConsoleSyncSingleTaskProcessor;
 import com.alipay.sofa.registry.server.session.node.processor.DataNodeSingleTaskProcessor;
@@ -43,7 +43,6 @@ import com.alipay.sofa.registry.server.session.node.service.*;
 import com.alipay.sofa.registry.server.session.provideData.ProvideDataProcessor;
 import com.alipay.sofa.registry.server.session.provideData.ProvideDataProcessorManager;
 import com.alipay.sofa.registry.server.session.provideData.processor.BlackListProvideDataProcessor;
-import com.alipay.sofa.registry.server.session.provideData.processor.RenewSnapshotProvideDataProcessor;
 import com.alipay.sofa.registry.server.session.provideData.processor.StopPushProvideDataProcessor;
 import com.alipay.sofa.registry.server.session.registry.Registry;
 import com.alipay.sofa.registry.server.session.registry.SessionRegistry;
@@ -60,6 +59,7 @@ import com.alipay.sofa.registry.server.session.store.*;
 import com.alipay.sofa.registry.server.session.strategy.*;
 import com.alipay.sofa.registry.server.session.strategy.impl.*;
 import com.alipay.sofa.registry.server.session.wrapper.*;
+import com.alipay.sofa.registry.server.shared.meta.MetaServerService;
 import com.alipay.sofa.registry.task.batcher.TaskProcessor;
 import com.alipay.sofa.registry.task.listener.DefaultTaskListenerManager;
 import com.alipay.sofa.registry.task.listener.TaskListener;
@@ -134,6 +134,11 @@ public class SessionServerConfiguration {
         @Bean
         public NodeExchanger dataNodeExchanger() {
             return new DataNodeExchanger();
+        }
+
+        @Bean
+        public RaftClientManager raftClientManager() {
+            return new RaftClientManager();
         }
 
         @Bean
@@ -330,39 +335,14 @@ public class SessionServerConfiguration {
         }
 
         @Bean
-        public MetaNodeService mataNodeService() {
-            return new MetaNodeServiceImpl();
+        public MetaServerService metaServerService() {
+            return new MetaServerServiceImpl();
         }
 
         @Bean
         @ConditionalOnMissingBean
         public ClientNodeService clientNodeService() {
             return new ClientNodeServiceImpl();
-        }
-
-        @Bean
-        public NodeManager dataNodeManager() {
-            return new DataNodeManager();
-        }
-
-        @Bean
-        public NodeManager metaNodeManager() {
-            return new MetaNodeManager();
-        }
-
-        @Bean
-        public NodeManager sessionNodeManager() {
-            return new SessionNodeManager();
-        }
-
-        @Bean
-        public RaftClientManager raftClientManager() {
-            return new RaftClientManager();
-        }
-
-        @Bean
-        public NodeManagerFactory nodeManagerFactory() {
-            return new NodeManagerFactory();
         }
     }
 
@@ -701,14 +681,6 @@ public class SessionServerConfiguration {
             ((ProvideDataProcessorManager) provideDataProcessorManager)
                 .addProvideDataProcessor(blackListProvideDataProcessor);
             return blackListProvideDataProcessor;
-        }
-
-        @Bean
-        public ProvideDataProcessor renewSnapshotProvideDataProcessor(ProvideDataProcessor provideDataProcessorManager) {
-            ProvideDataProcessor renewSnapshotProvideDataProcessor = new RenewSnapshotProvideDataProcessor();
-            ((ProvideDataProcessorManager) provideDataProcessorManager)
-                .addProvideDataProcessor(renewSnapshotProvideDataProcessor);
-            return renewSnapshotProvideDataProcessor;
         }
 
         @Bean

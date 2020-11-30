@@ -22,6 +22,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import com.alipay.sofa.registry.server.shared.env.ServerEnv;
 import org.apache.commons.lang.builder.ToStringBuilder;
 import org.apache.commons.lang.builder.ToStringStyle;
 import org.springframework.boot.context.properties.ConfigurationProperties;
@@ -37,106 +38,103 @@ import com.alipay.sofa.registry.net.NetUtil;
 @ConfigurationProperties(prefix = DataServerConfig.PRE_FIX)
 public class DataServerConfig {
 
-    public static final String PRE_FIX                                      = "data.server";
+    public static final String   PRE_FIX                                      = "data.server";
 
-    public static final String IP                                           = NetUtil
-                                                                                .getLocalAddress()
-                                                                                .getHostAddress();
+    private int                  port;
 
-    private int                port;
+    private int                  syncDataPort;
 
-    private int                syncDataPort;
+    private int                  metaServerPort;
 
-    private int                metaServerPort;
+    private int                  httpServerPort;
 
-    private int                httpServerPort;
+    private int                  queueCount;
 
-    private int                queueCount;
+    private int                  queueSize;
 
-    private int                queueSize;
+    private int                  notifyIntervalMs;
 
-    private int                notifyIntervalMs;
+    private int                  clientOffDelayMs;
 
-    private int                clientOffDelayMs;
+    private int                  notifyTempDataIntervalMs;
 
-    private int                notifyTempDataIntervalMs;
+    private int                  rpcTimeout;
 
-    private int                rpcTimeout;
+    private CommonConfig         commonConfig;
 
-    private CommonConfig       commonConfig;
+    private volatile Set<String> metaIps                                      = null;
 
-    private Set<String>        metaIps                                      = null;
+    private int                  storeNodes                                   = 3;
 
-    private int                storeNodes                                   = 3;
+    private int                  numberOfReplicas                             = 1000;
 
-    private int                numberOfReplicas                             = 1000;
+    private long                 localDataServerCleanDelay                    = 1000 * 60 * 30;
 
-    private long               localDataServerCleanDelay                    = 1000 * 60 * 30;
+    private int                  getDataExecutorMinPoolSize                   = 80;
 
-    private int                getDataExecutorMinPoolSize                   = 80;
+    private int                  getDataExecutorMaxPoolSize                   = 400;
 
-    private int                getDataExecutorMaxPoolSize                   = 400;
+    private int                  getDataExecutorQueueSize                     = 10000;
 
-    private int                getDataExecutorQueueSize                     = 10000;
+    private long                 getDataExecutorKeepAliveTime                 = 60;
 
-    private long               getDataExecutorKeepAliveTime                 = 60;
+    private int                  notifyDataSyncExecutorMinPoolSize            = 80;
 
-    private int                notifyDataSyncExecutorMinPoolSize            = 80;
+    private int                  notifyDataSyncExecutorMaxPoolSize            = 400;
 
-    private int                notifyDataSyncExecutorMaxPoolSize            = 400;
+    private int                  notifyDataSyncExecutorQueueSize              = 700;
 
-    private int                notifyDataSyncExecutorQueueSize              = 700;
+    private long                 notifyDataSyncExecutorKeepAliveTime          = 60;
 
-    private long               notifyDataSyncExecutorKeepAliveTime          = 60;
+    private long                 notifySessionRetryFirstDelay                 = 3000;
 
-    private long               notifySessionRetryFirstDelay                 = 3000;
+    private long                 notifySessionRetryIncrementDelay             = 3000;
 
-    private long               notifySessionRetryIncrementDelay             = 3000;
+    private int                  notifySessionRetryTimes                      = 5;
 
-    private int                notifySessionRetryTimes                      = 5;
+    private int                  publishExecutorMinPoolSize                   = 200;
 
-    private int                publishExecutorMinPoolSize                   = 200;
+    private int                  publishExecutorMaxPoolSize                   = 400;
 
-    private int                publishExecutorMaxPoolSize                   = 400;
+    private int                  publishExecutorQueueSize                     = 10000;
 
-    private int                publishExecutorQueueSize                     = 10000;
+    private int                  datumTimeToLiveSec                           = 900;
 
-    private int                datumTimeToLiveSec                           = 900;
+    private int                  datumLeaseManagerExecutorThreadSize          = 1;
 
-    private int                datumLeaseManagerExecutorThreadSize          = 1;
+    private int                  datumLeaseManagerExecutorQueueSize           = 1000000;
 
-    private int                datumLeaseManagerExecutorQueueSize           = 1000000;
+    private int                  sessionServerNotifierRetryExecutorThreadSize = 10;
 
-    private int                sessionServerNotifierRetryExecutorThreadSize = 10;
+    private int                  sessionServerNotifierRetryExecutorQueueSize  = 10000;
 
-    private int                sessionServerNotifierRetryExecutorQueueSize  = 10000;
+    private int                  dataSyncDelayTimeout                         = 1000;
 
-    private int                dataSyncDelayTimeout                         = 1000;
+    private int                  dataSyncNotifyRetry                          = 3;
 
-    private int                dataSyncNotifyRetry                          = 3;
+    private int                  sessionDisconnectDelayMs                     = 30000;
 
-    private int                sessionDisconnectDelayMs                     = 30000;
+    private int                  slotMigratingExecutorThreadSize              = 8;
 
-    private int                slotMigratingExecutorThreadSize              = 8;
+    private int                  slotLeaderSyncSessionExecutorThreadSize      = 12;
+    private int                  slotLeaderSyncSessionExecutorQueueSize       = 30000;
+    private volatile int         slotLeaderSyncSessionIntervalSec             = 10;
+    private volatile int         slotLeaderDatumExpireSec                     = 30;
 
-    private int                slotLeaderSyncSessionExecutorThreadSize      = 12;
-    private int                slotLeaderSyncSessionExecutorQueueSize       = 30000;
-    private int                slotLeaderSyncSessionIntervalMs              = 10000;
-
-    private int                slotFollowerSyncLeaderExecutorThreadSize     = 4;
-    private int                slotFollowerSyncLeaderExecutorQueueSize      = 10000;
-    private int                slotFollowerSyncLeaderIntervalMs             = 60000;
+    private int                  slotFollowerSyncLeaderExecutorThreadSize     = 4;
+    private int                  slotFollowerSyncLeaderExecutorQueueSize      = 10000;
+    private volatile int         slotFollowerSyncLeaderIntervalMs             = 60000;
 
     // the publisher.digest if len(registerId/uuid+long), 50bytes
-    private int                slotSyncPublisherDigestMaxNum                = 10000;
+    private volatile int         slotSyncPublisherDigestMaxNum                = 10000;
 
-    private int                slotSyncPublisherMaxNum                      = 512;
+    private volatile int         slotSyncPublisherMaxNum                      = 512;
 
-    private int                slotSyncRequestExecutorMinPoolSize           = 32;
+    private int                  slotSyncRequestExecutorMinPoolSize           = 32;
 
-    private int                slotSyncRequestExecutorMaxPoolSize           = 32;
+    private int                  slotSyncRequestExecutorMaxPoolSize           = 32;
 
-    private int                slotSyncRequestExecutorQueueSize             = 1000;
+    private int                  slotSyncRequestExecutorQueueSize             = 1000;
 
     /**
      * constructor
@@ -628,22 +626,12 @@ public class DataServerConfig {
      * @return property value of metaServerIpAddress
      */
     public Set<String> getMetaServerIpAddresses() {
-        if (metaIps != null && !metaIps.isEmpty()) {
-            return metaIps;
+        final Set<String> ips = metaIps;
+        if (ips != null && !ips.isEmpty()) {
+            return ips;
         }
-        metaIps = new HashSet<>();
-        if (commonConfig != null) {
-            Map<String, Collection<String>> metaMap = commonConfig.getMetaNode();
-            if (metaMap != null && !metaMap.isEmpty()) {
-                String localDataCenter = commonConfig.getLocalDataCenter();
-                if (localDataCenter != null && !localDataCenter.isEmpty()) {
-                    Collection<String> metas = metaMap.get(localDataCenter);
-                    if (metas != null && !metas.isEmpty()) {
-                        metaIps = metas.stream().map(NetUtil::getIPAddressFromDomain).collect(Collectors.toSet());
-                    }
-                }
-            }
-        }
+        metaIps = ServerEnv.transferMetaIps(commonConfig.getMetaNode(),
+            commonConfig.getLocalDataCenter());
         return metaIps;
     }
 
@@ -877,16 +865,16 @@ public class DataServerConfig {
      * Getter method for property <tt>slotLeaderSyncSessionIntervalMs</tt>.
      * @return property value of slotLeaderSyncSessionIntervalMs
      */
-    public int getSlotLeaderSyncSessionIntervalMs() {
-        return slotLeaderSyncSessionIntervalMs;
+    public int getSlotLeaderSyncSessionIntervalSec() {
+        return slotLeaderSyncSessionIntervalSec;
     }
 
     /**
-     * Setter method for property <tt>slotLeaderSyncSessionIntervalMs</tt>.
-     * @param slotLeaderSyncSessionIntervalMs value to be assigned to property slotLeaderSyncSessionIntervalMs
+     * Setter method for property <tt>slotLeaderSyncSessionIntervalSec</tt>.
+     * @param slotLeaderSyncSessionIntervalSec value to be assigned to property slotLeaderSyncSessionIntervalSec
      */
-    public void setSlotLeaderSyncSessionIntervalMs(int slotLeaderSyncSessionIntervalMs) {
-        this.slotLeaderSyncSessionIntervalMs = slotLeaderSyncSessionIntervalMs;
+    public void setSlotLeaderSyncSessionIntervalSec(int slotLeaderSyncSessionIntervalSec) {
+        this.slotLeaderSyncSessionIntervalSec = slotLeaderSyncSessionIntervalSec;
     }
 
     /**
@@ -999,6 +987,22 @@ public class DataServerConfig {
      */
     public void setSlotSyncRequestExecutorQueueSize(int slotSyncRequestExecutorQueueSize) {
         this.slotSyncRequestExecutorQueueSize = slotSyncRequestExecutorQueueSize;
+    }
+
+    /**
+     * Getter method for property <tt>slotLeaderDatumExpireSec</tt>.
+     * @return property value of slotLeaderDatumExpireSec
+     */
+    public int getSlotLeaderDatumExpireSec() {
+        return slotLeaderDatumExpireSec;
+    }
+
+    /**
+     * Setter method for property <tt>slotLeaderDatumExpireSec</tt>.
+     * @param slotLeaderDatumExpireSec value to be assigned to property slotLeaderDatumExpireSec
+     */
+    public void setSlotLeaderDatumExpireSec(int slotLeaderDatumExpireSec) {
+        this.slotLeaderDatumExpireSec = slotLeaderDatumExpireSec;
     }
 
     @Override

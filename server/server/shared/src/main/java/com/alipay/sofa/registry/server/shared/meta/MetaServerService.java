@@ -14,39 +14,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alipay.sofa.registry.server.data.remoting.metaserver;
+package com.alipay.sofa.registry.server.shared.meta;
 
 import com.alipay.sofa.jraft.entity.PeerId;
 import com.alipay.sofa.registry.common.model.metaserver.ProvideData;
 
-/**
- * The interface Meta server service.
- * @author qian.lqlq
- * @version $Id : IMetaServerService.java, v 0.1 2018-03-07 20:41 qian.lqlq Exp $
- */
-public interface IMetaServerService {
+import java.util.List;
+import java.util.Set;
 
+/**
+ *
+ * @author yuzhi.lyz
+ * @version v 0.1 2020-11-28 15:19 yuzhi.lyz Exp $
+ */
+public interface MetaServerService {
     /**
      * update data server expireTime
      */
     void renewNode();
-
-    /**
-     * start raft client for get leader send request
-     */
-    void startRaftClient();
-
-    /**
-     * get raft leader
-     * @return
-     */
-    PeerId getLeader();
-
-    /**
-     * renew a leader
-     * @return
-     */
-    PeerId refreshLeader();
 
     /**
      * get provider data
@@ -54,4 +39,25 @@ public interface IMetaServerService {
      * @return
      */
     ProvideData fetchData(String dataInfoId);
+
+    /**
+     * start raft client for get leader send request
+     */
+    void startRaftClient();
+
+    PeerId getLeader();
+
+    /**
+     * get all datacenters
+     * @return
+     */
+    Set<String> getDataCenters();
+
+    public List<String> getZoneSessionServerList(String zonename);
+
+    public Set<String> getDataServerList();
+
+    public Set<String> getMetaServerList();
+
+    void connectServer();
 }

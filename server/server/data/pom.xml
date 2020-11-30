@@ -30,6 +30,10 @@
             <groupId>com.alipay.sofa</groupId>
         </dependency>
         <dependency>
+            <groupId>com.alipay.sofa</groupId>
+            <artifactId>registry-server-shared</artifactId>
+        </dependency>
+        <dependency>
             <artifactId>registry-consistency</artifactId>
             <groupId>com.alipay.sofa</groupId>
         </dependency>

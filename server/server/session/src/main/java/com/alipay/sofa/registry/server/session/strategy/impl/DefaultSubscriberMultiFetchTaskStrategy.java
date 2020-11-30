@@ -16,17 +16,6 @@
  */
 package com.alipay.sofa.registry.server.session.strategy.impl;
 
-import java.net.InetSocketAddress;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
-
-import org.springframework.beans.factory.annotation.Autowired;
-
-import com.alipay.sofa.registry.common.model.Node;
 import com.alipay.sofa.registry.common.model.constants.ValueConstants;
 import com.alipay.sofa.registry.common.model.dataserver.Datum;
 import com.alipay.sofa.registry.common.model.store.BaseInfo;
@@ -37,20 +26,20 @@ import com.alipay.sofa.registry.core.model.ScopeEnum;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
-import com.alipay.sofa.registry.server.session.cache.CacheAccessException;
-import com.alipay.sofa.registry.server.session.cache.CacheService;
-import com.alipay.sofa.registry.server.session.cache.DatumKey;
-import com.alipay.sofa.registry.server.session.cache.Key;
-import com.alipay.sofa.registry.server.session.cache.Value;
+import com.alipay.sofa.registry.server.session.cache.*;
 import com.alipay.sofa.registry.server.session.converter.ReceivedDataConverter;
-import com.alipay.sofa.registry.server.session.node.NodeManager;
-import com.alipay.sofa.registry.server.session.node.NodeManagerFactory;
 import com.alipay.sofa.registry.server.session.scheduler.task.Constant;
 import com.alipay.sofa.registry.server.session.store.Interests;
 import com.alipay.sofa.registry.server.session.strategy.SubscriberMultiFetchTaskStrategy;
 import com.alipay.sofa.registry.server.session.utils.DatumUtils;
+import com.alipay.sofa.registry.server.shared.meta.MetaServerService;
 import com.alipay.sofa.registry.task.listener.TaskEvent;
 import com.alipay.sofa.registry.task.listener.TaskListenerManager;
+import org.springframework.beans.factory.annotation.Autowired;
+
+import java.net.InetSocketAddress;
+import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * @author xuanbei
@@ -66,6 +55,9 @@ public class DefaultSubscriberMultiFetchTaskStrategy implements SubscriberMultiF
 
     @Autowired
     private Interests           sessionInterests;
+
+    @Autowired
+    private MetaServerService   metaServerService;
 
     @Override
     public void doSubscriberMultiFetchTask(SessionServerConfig sessionServerConfig,
@@ -105,8 +97,7 @@ public class DefaultSubscriberMultiFetchTaskStrategy implements SubscriberMultiF
     private Map<String, Datum> getDatumsCache(String fetchDataInfoId, CacheService sessionCacheService) {
 
         Map<String, Datum> map = new HashMap<>();
-        NodeManager nodeManager = NodeManagerFactory.getNodeManager(Node.NodeType.META);
-        Collection<String> dataCenters = nodeManager.getDataCenters();
+        Collection<String> dataCenters = metaServerService.getDataCenters();
         if (dataCenters != null) {
             Collection<Key> keys = dataCenters.stream().
                     map(dataCenter -> new Key(Key.KeyType.OBJ, DatumKey.class.getName(),

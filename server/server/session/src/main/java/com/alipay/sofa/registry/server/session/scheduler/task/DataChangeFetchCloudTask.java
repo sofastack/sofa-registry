@@ -16,16 +16,6 @@
  */
 package com.alipay.sofa.registry.server.session.scheduler.task;
 
-import java.net.InetSocketAddress;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.stream.Collectors;
-
-import com.alipay.sofa.registry.common.model.Node.NodeType;
 import com.alipay.sofa.registry.common.model.dataserver.Datum;
 import com.alipay.sofa.registry.common.model.store.BaseInfo.ClientVersion;
 import com.alipay.sofa.registry.common.model.store.Subscriber;
@@ -35,22 +25,22 @@ import com.alipay.sofa.registry.core.model.ScopeEnum;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
-import com.alipay.sofa.registry.server.session.cache.CacheAccessException;
-import com.alipay.sofa.registry.server.session.cache.CacheService;
-import com.alipay.sofa.registry.server.session.cache.DatumKey;
-import com.alipay.sofa.registry.server.session.cache.Key;
+import com.alipay.sofa.registry.server.session.cache.*;
 import com.alipay.sofa.registry.server.session.cache.Key.KeyType;
-import com.alipay.sofa.registry.server.session.cache.Value;
 import com.alipay.sofa.registry.server.session.converter.ReceivedDataConverter;
-import com.alipay.sofa.registry.server.session.node.NodeManager;
-import com.alipay.sofa.registry.server.session.node.NodeManagerFactory;
 import com.alipay.sofa.registry.server.session.scheduler.ExecutorManager;
 import com.alipay.sofa.registry.server.session.store.Interests;
 import com.alipay.sofa.registry.server.session.store.ReSubscribers;
+import com.alipay.sofa.registry.server.shared.meta.MetaServerService;
 import com.alipay.sofa.registry.task.batcher.TaskProcessor.ProcessingResult;
 import com.alipay.sofa.registry.task.listener.TaskEvent;
 import com.alipay.sofa.registry.task.listener.TaskEvent.TaskType;
 import com.alipay.sofa.registry.task.listener.TaskListenerManager;
+
+import java.net.InetSocketAddress;
+import java.util.*;
+import java.util.Map.Entry;
+import java.util.stream.Collectors;
 
 /**
  *
@@ -80,15 +70,19 @@ public class DataChangeFetchCloudTask extends AbstractSessionTask {
 
     private final CacheService        sessionCacheService;
 
+    private final MetaServerService   metaServerService;
+
     public DataChangeFetchCloudTask(SessionServerConfig sessionServerConfig,
                                     TaskListenerManager taskListenerManager,
                                     Interests sessionInterests, ExecutorManager executorManager,
-                                    CacheService sessionCacheService) {
+                                    CacheService sessionCacheService,
+                                    MetaServerService metaServerService) {
         this.sessionServerConfig = sessionServerConfig;
         this.taskListenerManager = taskListenerManager;
         this.sessionInterests = sessionInterests;
         this.executorManager = executorManager;
         this.sessionCacheService = sessionCacheService;
+        this.metaServerService = metaServerService;
     }
 
     @Override
@@ -212,8 +206,7 @@ public class DataChangeFetchCloudTask extends AbstractSessionTask {
     private Map<String, Datum> getDatumsCache() {
 
         Map<String, Datum> map = new HashMap<>();
-        NodeManager nodeManager = NodeManagerFactory.getNodeManager(NodeType.META);
-        Collection<String> dataCenters = nodeManager.getDataCenters();
+        Collection<String> dataCenters = metaServerService.getDataCenters();
         if (dataCenters != null) {
             Collection<Key> keys = dataCenters.stream().
                     map(dataCenter -> new Key(KeyType.OBJ, DatumKey.class.getName(),

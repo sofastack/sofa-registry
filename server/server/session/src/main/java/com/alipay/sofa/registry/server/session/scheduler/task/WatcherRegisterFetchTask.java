@@ -26,16 +26,12 @@ import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
 import com.alipay.sofa.registry.server.session.converter.ReceivedDataConverter;
-import com.alipay.sofa.registry.server.session.node.service.MetaNodeService;
+import com.alipay.sofa.registry.server.shared.meta.MetaServerService;
 import com.alipay.sofa.registry.task.listener.TaskEvent;
 import com.alipay.sofa.registry.task.listener.TaskEvent.TaskType;
 import com.alipay.sofa.registry.task.listener.TaskListenerManager;
 
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Random;
+import java.util.*;
 
 /**
  *
@@ -55,7 +51,7 @@ public class WatcherRegisterFetchTask extends AbstractSessionTask {
     /**
      * Meta Node service
      */
-    private final MetaNodeService     metaNodeService;
+    private final MetaServerService   metaServerService;
 
     private Watcher                   watcher;
 
@@ -63,10 +59,10 @@ public class WatcherRegisterFetchTask extends AbstractSessionTask {
 
     public WatcherRegisterFetchTask(SessionServerConfig sessionServerConfig,
                                     TaskListenerManager taskListenerManager,
-                                    MetaNodeService metaNodeService) {
+                                    MetaServerService metaServerService) {
         this.sessionServerConfig = sessionServerConfig;
         this.taskListenerManager = taskListenerManager;
-        this.metaNodeService = metaNodeService;
+        this.metaServerService = metaServerService;
     }
 
     @Override
@@ -101,7 +97,7 @@ public class WatcherRegisterFetchTask extends AbstractSessionTask {
 
         for (int tryCount = 0; tryCount < TRY_COUNT; tryCount++) {
             try {
-                provideData = metaNodeService.fetchData(watcher.getDataInfoId());
+                provideData = metaServerService.fetchData(watcher.getDataInfoId());
                 break;
             } catch (Exception e) {
                 randomDelay(3000);

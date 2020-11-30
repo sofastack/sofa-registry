@@ -148,20 +148,17 @@ public class StopPushProvideDataProcessor implements ProvideDataProcessor {
 
     @Override
     public void fetchDataProcess(ProvideData provideData) {
-        if (provideData.getProvideData() == null
-            || provideData.getProvideData().getObject() == null) {
+        Boolean v = ProvideData.toBool(provideData);
+        if (v == null) {
             LOGGER.info("Fetch session stop push switch no data existed,config not change!");
             return;
         }
-        String data = (String) provideData.getProvideData().getObject();
-        sessionServerConfig.setStopPushSwitch(Boolean.valueOf(data));
-        if (data != null) {
-            if (!Boolean.valueOf(data)) {
-                //stop push init on,then begin fetch data schedule task
-                sessionServerConfig.setBeginDataFetchTask(true);
-            }
+        sessionServerConfig.setStopPushSwitch(v.booleanValue());
+        if (!v) {
+            //stop push init on,then begin fetch data schedule task
+            sessionServerConfig.setBeginDataFetchTask(true);
         }
-        LOGGER.info("Fetch session stop push data switch {} success!", data);
+        LOGGER.info("Fetch session stop push data switch {} success!", v);
     }
 
     @Override

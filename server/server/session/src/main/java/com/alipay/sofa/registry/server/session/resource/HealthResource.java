@@ -74,7 +74,7 @@ public class HealthResource {
 
         StringBuilder sb = new StringBuilder("SessionServerBoot ");
 
-        boolean start = raftClientManager.getClientStart().get();
+        boolean start = raftClientManager.getClientStart();
         boolean ret = start;
         sb.append("RaftClientManager:").append(start);
 

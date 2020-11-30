@@ -22,6 +22,8 @@ package com.alipay.sofa.registry.common.model.slot;
  * @version v 0.1 2020-11-02 15:35 yuzhi.lyz Exp $
  */
 public interface SlotFunction {
+    String name();
+
     int maxSlots();
 
     int slotOf(Object o);
