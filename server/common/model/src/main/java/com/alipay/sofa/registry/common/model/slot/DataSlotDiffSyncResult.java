@@ -19,6 +19,7 @@ package com.alipay.sofa.registry.common.model.slot;
 import com.alipay.sofa.registry.common.model.ProcessId;
 import com.alipay.sofa.registry.common.model.store.Publisher;
 
+import java.io.Serializable;
 import java.util.List;
 import java.util.Map;
 
@@ -27,7 +28,7 @@ import java.util.Map;
  * @author yuzhi.lyz
  * @version v 0.1 2020-11-05 17:04 yuzhi.lyz Exp $
  */
-public class DataSlotDiffSyncResult {
+public class DataSlotDiffSyncResult implements Serializable {
     private long                               slotTableEpoch;
     private final Map<String, List<Publisher>> updatedPublishers;
     private final List<String>                 removedDataInfoIds;

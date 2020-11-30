@@ -33,6 +33,7 @@ import com.alipay.sofa.registry.remoting.exchange.message.Response;
 import com.alipay.sofa.registry.util.ConcurrentUtils;
 import com.alipay.sofa.registry.util.LoopRunnable;
 import com.google.common.util.concurrent.Uninterruptibles;
+import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.*;
@@ -70,7 +71,7 @@ public abstract class AbstractMetaServerService<T extends BaseHeartBeatResponse>
         }
 
         @Override
-        public void runUnThrowable() {
+        public void runUnthrowable() {
             try {
                 renewNode();
             } catch (Throwable e) {
@@ -79,7 +80,7 @@ public abstract class AbstractMetaServerService<T extends BaseHeartBeatResponse>
         }
 
         @Override
-        public void waitingUnThrowable() {
+        public void waitingUnthrowable() {
             Uninterruptibles.sleepUninterruptibly(intervalMs, TimeUnit.MILLISECONDS);
         }
     }
@@ -172,10 +173,6 @@ public abstract class AbstractMetaServerService<T extends BaseHeartBeatResponse>
         return metaNodeExchanger.getConnections();
     }
 
-    public void updateMetaIps(Collection<String> ips) {
-        this.metaNodeExchanger.setServerIps(ips);
-    }
-
     public void startRaftClient() {
         metaNodeExchanger.startRaftClient();
     }
@@ -203,7 +200,7 @@ public abstract class AbstractMetaServerService<T extends BaseHeartBeatResponse>
     public List<String> getZoneSessionServerList(String zonename) {
         List<String> serverList = new ArrayList<>();
         for (SessionNode sessionNode : getSessionNodes().values()) {
-            if (zonename.equals(sessionNode.getRegionId())) {
+            if (StringUtils.isBlank(zonename) || zonename.equals(sessionNode.getRegionId())) {
                 URL url = sessionNode.getNodeUrl();
                 if (url != null) {
                     serverList.add(url.getIpAddress());

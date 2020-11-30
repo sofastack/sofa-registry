@@ -37,7 +37,7 @@ public final class SlotTableCacheImpl implements SlotTableCache {
     private SessionServerConfig sessionServerConfig;
 
     private final SlotFunction  slotFunction = SlotFunctionRegistry.getFunc();
-    private volatile SlotTable  slotTable;
+    private volatile SlotTable  slotTable    = SlotTable.INIT;
 
     @Override
     public int slotOf(String dataInfoId) {
@@ -63,8 +63,7 @@ public final class SlotTableCacheImpl implements SlotTableCache {
 
     @Override
     public long getEpoch() {
-        final SlotTable table = slotTable;
-        return table == null ? -1 : table.getEpoch();
+        return slotTable.getEpoch();
     }
 
     @Override

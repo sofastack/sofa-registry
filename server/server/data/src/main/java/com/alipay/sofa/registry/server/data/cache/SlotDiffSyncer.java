@@ -16,29 +16,22 @@
  */
 package com.alipay.sofa.registry.server.data.cache;
 
-import com.alipay.remoting.Connection;
 import com.alipay.sofa.registry.common.model.GenericResponse;
 import com.alipay.sofa.registry.common.model.dataserver.DatumSummary;
 import com.alipay.sofa.registry.common.model.slot.DataSlotDiffDataInfoIdRequest;
 import com.alipay.sofa.registry.common.model.slot.DataSlotDiffPublisherRequest;
 import com.alipay.sofa.registry.common.model.slot.DataSlotDiffSyncResult;
-import com.alipay.sofa.registry.common.model.store.URL;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
-import com.alipay.sofa.registry.remoting.Channel;
-import com.alipay.sofa.registry.remoting.Client;
-import com.alipay.sofa.registry.remoting.Sender;
-import com.alipay.sofa.registry.remoting.Server;
-import com.alipay.sofa.registry.remoting.exchange.Exchange;
+import com.alipay.sofa.registry.remoting.exchange.RequestException;
 import com.alipay.sofa.registry.server.data.bootstrap.DataServerConfig;
 import com.alipay.sofa.registry.server.data.remoting.DataNodeExchanger;
-import com.google.common.util.concurrent.ThreadFactoryBuilder;
+import com.alipay.sofa.registry.server.data.remoting.SessionNodeExchanger;
+import com.alipay.sofa.registry.server.shared.remoting.ClientExchanger;
 
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ScheduledThreadPoolExecutor;
 
 /**
  *
@@ -48,28 +41,20 @@ import java.util.concurrent.ScheduledThreadPoolExecutor;
 public final class SlotDiffSyncer {
     private static final Logger                        LOGGER = LoggerFactory
                                                                   .getLogger(SlotManagerImpl.class);
-
-    private final Exchange                             boltExchange;
-
-    private final DataNodeExchanger                    dataNodeExchanger;
-
     private final DataServerConfig                     dataServerConfig;
 
     private final SlotManager.SlotDatumStorageProvider storageProvider;
 
-    SlotDiffSyncer(Exchange boltExchange, DataNodeExchanger dataNodeExchanger,
-                   DataServerConfig dataServerConfig, SlotManager.SlotDatumStorageProvider provider) {
-        this.boltExchange = boltExchange;
-        this.dataNodeExchanger = dataNodeExchanger;
+    SlotDiffSyncer(DataServerConfig dataServerConfig, SlotManager.SlotDatumStorageProvider provider) {
         this.dataServerConfig = dataServerConfig;
         this.storageProvider = provider;
     }
 
     private DataSlotDiffSyncResult processSyncResp(int slotId,
                                                    GenericResponse<DataSlotDiffSyncResult> resp,
-                                                   String channelAddress) {
+                                                   String targetAddress) {
         if (resp == null || !resp.isSuccess()) {
-            LOGGER.error("response failed when sync from {}, slot={}, resp={}", channelAddress,
+            LOGGER.error("response failed when sync from {}, slot={}, resp={}", targetAddress,
                 slotId, resp);
             return null;
         }
@@ -80,24 +65,24 @@ public final class SlotDiffSyncer {
         LOGGER
             .info(
                 "sync slot={} from {}, updatedP {}:{}, removedD {}, removedP {}:{}, updatedD {}, removedD {}",
-                slotId, channelAddress, result.getUpdatedPublishers().size(), result
+                slotId, targetAddress, result.getUpdatedPublishers().size(), result
                     .getUpdatedPublishersCount(), result.getRemovedDataInfoIds().size(), result
                     .getRemovedPublishersCount(), result.getRemovedPublishers().size(), result
                     .getUpdatedPublishers().keySet(), result.getRemovedDataInfoIds());
         return result;
     }
 
-    public boolean syncDataInfoIds(int slotId, Sender sender, Channel channel, long slotTableEpoch,
-                                   String summaryTargetIp) {
-        final String channelAddress = channel.getRemoteAddress().getAddress().getHostAddress();
+    public boolean syncDataInfoIds(int slotId, String targetAddress, ClientExchanger exchanger,
+                                   long slotTableEpoch, String summaryTargetIp)
+                                                                               throws RequestException {
         for (;;) {
             Map<String, DatumSummary> summaryMap = storageProvider.getDatumSummary(slotId,
                 summaryTargetIp);
             DataSlotDiffDataInfoIdRequest request = new DataSlotDiffDataInfoIdRequest(
                 slotTableEpoch, slotId, new HashSet<>(summaryMap.keySet()));
-            GenericResponse<DataSlotDiffSyncResult> resp = (GenericResponse<DataSlotDiffSyncResult>) sender
-                .sendSync(channel, request, dataServerConfig.getRpcTimeout());
-            DataSlotDiffSyncResult result = processSyncResp(slotId, resp, channelAddress);
+            GenericResponse<DataSlotDiffSyncResult> resp = (GenericResponse<DataSlotDiffSyncResult>) exchanger
+                .requestRaw(targetAddress, request).getResult();
+            DataSlotDiffSyncResult result = processSyncResp(slotId, resp, targetAddress);
             if (result == null) {
                 return false;
             }
@@ -109,18 +94,18 @@ public final class SlotDiffSyncer {
         }
     }
 
-    public boolean syncPublishers(int slotId, Sender sender, Channel channel, long slotTableEpoch,
-                                  String summaryTargetIp, int maxPublishers) {
-        final String channelAddress = channel.getRemoteAddress().getAddress().getHostAddress();
+    public boolean syncPublishers(int slotId, String targetAddress, ClientExchanger exchanger, long slotTableEpoch,
+                                  String summaryTargetIp, int maxPublishers) throws RequestException {
         Map<String, DatumSummary> summaryMap = storageProvider.getDatumSummary(slotId, summaryTargetIp);
         Map<String, DatumSummary> round = pickSummarys(summaryMap, maxPublishers);
         // sync for the existing dataInfoIds.publisher
         while (!summaryMap.isEmpty()) {
             // maybe to many publishers
             DataSlotDiffPublisherRequest request = new DataSlotDiffPublisherRequest(slotTableEpoch, slotId, round);
-            GenericResponse<DataSlotDiffSyncResult> resp = (GenericResponse<DataSlotDiffSyncResult>) sender
-                    .sendSync(channel, request, dataServerConfig.getRpcTimeout());
-            DataSlotDiffSyncResult result = processSyncResp(slotId, resp, channelAddress);
+
+            GenericResponse<DataSlotDiffSyncResult> resp = (GenericResponse<DataSlotDiffSyncResult>) exchanger
+                    .requestRaw(targetAddress, request).getResult();
+            DataSlotDiffSyncResult result = processSyncResp(slotId, resp, targetAddress);
             if (result == null) {
                 return false;
             }
@@ -134,24 +119,21 @@ public final class SlotDiffSyncer {
         return true;
     }
 
-    public boolean syncSession(int slotId, Connection conn, long slotTableEpoch) {
-        final String sessionIp = conn.getRemoteAddress().getAddress().getHostAddress();
-        Server sessionServer = boltExchange.getServer(dataServerConfig.getPort());
-        Channel channel = sessionServer.getChannel(conn.getRemoteAddress());
-        boolean syncDataInfoIds = syncDataInfoIds(slotId, sessionServer, channel, slotTableEpoch,
+    public boolean syncSession(int slotId, String sessionIp, SessionNodeExchanger exchanger,
+                               long slotTableEpoch) throws RequestException {
+        boolean syncDataInfoIds = syncDataInfoIds(slotId, sessionIp, exchanger, slotTableEpoch,
             sessionIp);
-        boolean syncPublishers = syncPublishers(slotId, sessionServer, channel, slotTableEpoch,
+        boolean syncPublishers = syncPublishers(slotId, sessionIp, exchanger, slotTableEpoch,
             sessionIp, dataServerConfig.getSlotSyncPublisherDigestMaxNum());
         return syncDataInfoIds && syncPublishers;
     }
 
-    public boolean syncSlotLeader(int slotId, String slotLeaderIp, long slotTableEpoch) {
-        Channel channel = dataNodeExchanger.connect(new URL(slotLeaderIp, dataServerConfig
-            .getPort()));
-        Client client = dataNodeExchanger.getClient();
-        boolean syncDataInfoIds = syncDataInfoIds(slotId, client, channel, slotTableEpoch, null);
-        boolean syncPublishers = syncPublishers(slotId, client, channel, slotTableEpoch, null,
-            dataServerConfig.getSlotSyncPublisherDigestMaxNum());
+    public boolean syncSlotLeader(int slotId, String slotLeaderIp, DataNodeExchanger exchanger,
+                                  long slotTableEpoch) throws RequestException {
+        boolean syncDataInfoIds = syncDataInfoIds(slotId, slotLeaderIp, exchanger, slotTableEpoch,
+            null);
+        boolean syncPublishers = syncPublishers(slotId, slotLeaderIp, exchanger, slotTableEpoch,
+            null, dataServerConfig.getSlotSyncPublisherDigestMaxNum());
         return syncDataInfoIds && syncPublishers;
     }
 

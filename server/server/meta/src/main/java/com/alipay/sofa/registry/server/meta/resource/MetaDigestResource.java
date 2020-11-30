@@ -65,9 +65,9 @@ public class MetaDigestResource {
     @PostConstruct
     public void init() {
         MetricRegistry metrics = new MetricRegistry();
-        metrics.register("metaNodeList", (Gauge<Map>) () -> getRegisterNodeByType("meta"));
-        metrics.register("dataNodeList", (Gauge<Map>) () -> getRegisterNodeByType("data"));
-        metrics.register("sessionNodeList", (Gauge<Map>) () -> getRegisterNodeByType("session"));
+        metrics.register("metaNodeList", (Gauge<Map>) () -> getRegisterNodeByType(NodeType.META.name()));
+        metrics.register("dataNodeList", (Gauge<Map>) () -> getRegisterNodeByType(NodeType.DATA.name()));
+        metrics.register("sessionNodeList", (Gauge<Map>) () -> getRegisterNodeByType(NodeType.SESSION.name()));
         metrics.register("pushSwitch", (Gauge<Map>) () -> getPushSwitch());
         ReporterUtils.startSlf4jReporter(60, metrics);
     }

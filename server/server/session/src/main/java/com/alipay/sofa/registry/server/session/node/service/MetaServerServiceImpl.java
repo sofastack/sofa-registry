@@ -51,8 +51,10 @@ public final class MetaServerServiceImpl extends
 
     @Override
     protected void handleRenewResult(SessionHeartBeatResponse result) {
-        slotTableCache.updateSlotTable(result.getSlotTable());
         dataNodeExchanger.setServerIps(getDataServerList());
+        dataNodeExchanger.notifyConnectServerAsync();
+
+        slotTableCache.updateSlotTable(result.getSlotTable());
     }
 
     @Override

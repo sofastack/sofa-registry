@@ -28,9 +28,7 @@ import com.alipay.sofa.registry.server.data.change.notify.TempPublisherNotifier;
 import com.alipay.sofa.registry.server.data.event.EventCenter;
 import com.alipay.sofa.registry.server.data.remoting.DataNodeExchanger;
 import com.alipay.sofa.registry.server.data.remoting.MetaNodeExchanger;
-import com.alipay.sofa.registry.server.data.remoting.dataserver.DataServerConnectionFactory;
-import com.alipay.sofa.registry.server.data.remoting.dataserver.handler.DataSyncServerConnectionHandler;
-import com.alipay.sofa.registry.server.data.remoting.dataserver.handler.FetchDataHandler;
+import com.alipay.sofa.registry.server.data.remoting.SessionNodeExchanger;
 import com.alipay.sofa.registry.server.data.remoting.dataserver.handler.SlotFollowerDiffDataInfoIdRequestHandler;
 import com.alipay.sofa.registry.server.data.remoting.dataserver.handler.SlotFollowerDiffPublisherRequestHandler;
 import com.alipay.sofa.registry.server.data.remoting.handler.AbstractClientHandler;
@@ -152,13 +150,13 @@ public class DataServerBeanConfiguration {
         }
 
         @Bean
-        public SessionServerConnectionFactory sessionServerConnectionFactory() {
-            return new SessionServerConnectionFactory();
+        public SessionNodeExchanger sessionNodeExchanger() {
+            return new SessionNodeExchanger();
         }
 
         @Bean
-        public DataServerConnectionFactory dataServerConnectionFactory() {
-            return new DataServerConnectionFactory();
+        public SessionServerConnectionFactory sessionServerConnectionFactory() {
+            return new SessionServerConnectionFactory();
         }
 
         @Bean(name = "serverHandlers")
@@ -177,19 +175,8 @@ public class DataServerBeanConfiguration {
         @Bean(name = "serverSyncHandlers")
         public Collection<AbstractServerHandler> serverSyncHandlers() {
             Collection<AbstractServerHandler> list = new ArrayList<>();
-            list.add(getDataHandler());
-            list.add(publishDataProcessor());
-            list.add(unPublishDataHandler());
-            list.add(dataSyncServerConnectionHandler());
             list.add(slotFollowerDiffDataInfoIdRequestHandler());
             list.add(slotFollowerDiffPublisherRequestHandler());
-            return list;
-        }
-
-        @Bean(name = "dataClientHandlers")
-        public Collection<AbstractClientHandler> dataClientHandlers() {
-            Collection<AbstractClientHandler> list = new ArrayList<>();
-            list.add(fetchDataHandler());
             return list;
         }
 
@@ -203,11 +190,6 @@ public class DataServerBeanConfiguration {
         @Bean
         public AbstractServerHandler dataServerConnectionHandler() {
             return new DataServerConnectionHandler();
-        }
-
-        @Bean
-        public AbstractServerHandler dataSyncServerConnectionHandler() {
-            return new DataSyncServerConnectionHandler();
         }
 
         @Bean
@@ -248,11 +230,6 @@ public class DataServerBeanConfiguration {
         @Bean
         public AbstractServerHandler unPublishDataHandler() {
             return new UnPublishDataHandler();
-        }
-
-        @Bean
-        public AbstractClientHandler fetchDataHandler() {
-            return new FetchDataHandler();
         }
 
         @Bean

@@ -164,6 +164,14 @@ public class SessionServerConfiguration {
             return list;
         }
 
+        @Bean(name = "serverSyncHandlers")
+        public Collection<AbstractServerHandler> serverSyncHandlers() {
+            Collection<AbstractServerHandler> list = new ArrayList<>();
+            list.add(dataSlotDiffDataInfoIdRequestHandler());
+            list.add(dataSlotDiffPublisherRequestHandler());
+            return list;
+        }
+
         @Bean
         public AbstractServerHandler publisherHandler() {
             return new PublisherHandler();
@@ -194,14 +202,22 @@ public class SessionServerConfiguration {
             return new CancelAddressRequestHandler();
         }
 
+        @Bean
+        public AbstractServerHandler dataSlotDiffDataInfoIdRequestHandler() {
+            return new DataSlotDiffDataInfoIdRequestHandler();
+        }
+
+        @Bean
+        public AbstractServerHandler dataSlotDiffPublisherRequestHandler() {
+            return new DataSlotDiffPublisherRequestHandler();
+        }
+
         @Bean(name = "dataClientHandlers")
         public Collection<AbstractClientHandler> dataClientHandlers() {
             Collection<AbstractClientHandler> list = new ArrayList<>();
             list.add(dataNodeConnectionHandler());
             list.add(dataChangeRequestHandler());
             list.add(dataPushRequestHandler());
-            list.add(dataSlotDiffDataInfoIdRequestHandler());
-            list.add(dataSlotDiffPublisherRequestHandler());
             return list;
         }
 
@@ -233,16 +249,6 @@ public class SessionServerConfiguration {
         @Bean
         public AbstractClientHandler dataPushRequestHandler() {
             return new DataPushRequestHandler();
-        }
-
-        @Bean
-        public AbstractClientHandler dataSlotDiffDataInfoIdRequestHandler() {
-            return new DataSlotDiffDataInfoIdRequestHandler();
-        }
-
-        @Bean
-        public AbstractClientHandler dataSlotDiffPublisherRequestHandler() {
-            return new DataSlotDiffPublisherRequestHandler();
         }
 
         @Bean
@@ -322,7 +328,7 @@ public class SessionServerConfiguration {
         @Bean
         @ConditionalOnMissingBean
         public DataStore sessionDataStore() {
-            return new SessionDataStore();
+            return new SlotSessionDataStore();
         }
     }
 
