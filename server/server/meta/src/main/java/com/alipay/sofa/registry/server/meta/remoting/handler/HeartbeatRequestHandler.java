@@ -42,28 +42,31 @@ public class HeartbeatRequestHandler extends AbstractServerHandler<RenewNodesReq
     private static final Logger LOGGER = LoggerFactory.getLogger(HeartbeatRequestHandler.class);
 
     @Autowired
-    private CurrentDcMetaServer metaServer;
+    private CurrentDcMetaServer      currentDcMetaServer;
 
     @Override
     public Object reply(Channel channel, RenewNodesRequest renewNodesRequest) {
         Node renewNode = null;
         try {
             renewNode = renewNodesRequest.getNode();
-            metaServer.renew(renewNode, renewNodesRequest.getDuration());
+            currentDcMetaServer.renew(renewNode, renewNodesRequest.getDuration());
 
             BaseHeartBeatResponse response = null;
             switch (renewNode.getNodeType()) {
                 case SESSION:
-                    response = new SessionHeartBeatResponse(metaServer.getEpoch(),
-                        metaServer.getSlotTable(), metaServer.getClusterMembers(),
-                        metaServer.getSessionServers());
+                    response = new SessionHeartBeatResponse(currentDcMetaServer.getEpoch(),
+                            currentDcMetaServer.getSlotTable(), currentDcMetaServer.getClusterMembers(),
+                            currentDcMetaServer.getSessionServers());
+                    break;
                 case DATA:
-                    response = new DataHeartBeatResponse(metaServer.getEpoch(),
-                        metaServer.getSlotTable(), metaServer.getClusterMembers(),
-                        metaServer.getSessionServers());
+                    response = new DataHeartBeatResponse(currentDcMetaServer.getEpoch(),
+                            currentDcMetaServer.getSlotTable(), currentDcMetaServer.getClusterMembers(),
+                            currentDcMetaServer.getSessionServers());
+                    break;
                 case META:
-                    response = new BaseHeartBeatResponse(metaServer.getEpoch(),
-                        metaServer.getSlotTable(), metaServer.getClusterMembers());
+                    response = new BaseHeartBeatResponse(currentDcMetaServer.getEpoch(),
+                            currentDcMetaServer.getSlotTable(), currentDcMetaServer.getClusterMembers());
+                    break;
                 default:
                     break;
             }

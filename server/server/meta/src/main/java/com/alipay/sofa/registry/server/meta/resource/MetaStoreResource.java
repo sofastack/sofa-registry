@@ -52,7 +52,7 @@ public class MetaStoreResource {
     private static final Logger LOGGER = LoggerFactory.getLogger(MetaStoreResource.class);
 
     @Autowired
-    private CurrentDcMetaServer metaServer;
+    private CurrentDcMetaServer currentDcMetaServer;
 
     @Autowired
     private NodeConfig          nodeConfig;
@@ -184,7 +184,7 @@ public class MetaStoreResource {
                     ipAddress = NetUtil.getIPAddressFromDomain(ipAddress);
 
                     raftExchanger.removePeer(ipAddress);
-                    metaServer.cancel(new MetaNode(new URL(ipAddress), dataCenter));
+                    currentDcMetaServer.cancel(new MetaNode(new URL(ipAddress), dataCenter));
 //                    metaServerRegistry.cancel(ipAddress, NodeType.META);
                     LOGGER.info("Remove peer ipAddress {} to store!", ipAddress);
                 } catch (Exception e) {
