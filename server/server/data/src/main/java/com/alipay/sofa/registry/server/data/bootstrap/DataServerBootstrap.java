@@ -27,7 +27,6 @@ import com.alipay.sofa.registry.remoting.Server;
 import com.alipay.sofa.registry.remoting.exchange.Exchange;
 import com.alipay.sofa.registry.server.data.cache.CacheDigestTask;
 import com.alipay.sofa.registry.server.data.event.EventCenter;
-import com.alipay.sofa.registry.server.data.remoting.dataserver.task.RenewNodeTask;
 import com.alipay.sofa.registry.server.data.remoting.handler.AbstractServerHandler;
 import com.alipay.sofa.registry.server.shared.meta.MetaServerService;
 import org.glassfish.jersey.server.ResourceConfig;
@@ -79,9 +78,6 @@ public class DataServerBootstrap {
     @Autowired
     private CacheDigestTask                   cacheDigestTask;
 
-    @Autowired
-    private RenewNodeTask                     renewNodeTask;
-
     @Resource(name = "serverHandlers")
     private Collection<AbstractServerHandler> serverHandlers;
 
@@ -111,6 +107,7 @@ public class DataServerBootstrap {
 
             LOGGER.info("the configuration items are as follows: " + dataServerConfig.toString());
 
+
             openDataServer();
 
             openDataSyncServer();
@@ -119,9 +116,9 @@ public class DataServerBootstrap {
 
             startRaftClient();
 
-            fetchProviderData();
-
             renewNode();
+
+            fetchProviderData();
 
             startScheduler();
 
@@ -190,6 +187,8 @@ public class DataServerBootstrap {
 
     private void renewNode() {
         metaServerService.renewNode();
+        metaServerService.startRenewer(dataServerConfig.getSchedulerHeartbeatIntervalSec() * 1000);
+
     }
 
     private void fetchProviderData() {
@@ -214,7 +213,6 @@ public class DataServerBootstrap {
     private void startScheduler() {
         try {
             if (schedulerStarted.compareAndSet(false, true)) {
-                renewNodeTask.start();
                 //start dump log
                 cacheDigestTask.start();
             }

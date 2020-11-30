@@ -27,10 +27,10 @@ import com.alipay.sofa.registry.remoting.Server;
 import com.alipay.sofa.registry.remoting.exchange.Exchange;
 import com.alipay.sofa.registry.remoting.exchange.NodeExchanger;
 import com.alipay.sofa.registry.server.session.filter.blacklist.BlacklistManager;
-import com.alipay.sofa.registry.server.session.node.SessionProcessIdGenerator;
 import com.alipay.sofa.registry.server.session.provideData.ProvideDataProcessor;
 import com.alipay.sofa.registry.server.session.remoting.handler.AbstractServerHandler;
 import com.alipay.sofa.registry.server.session.scheduler.ExecutorManager;
+import com.alipay.sofa.registry.server.shared.env.ServerEnv;
 import com.alipay.sofa.registry.server.shared.meta.MetaServerService;
 import com.alipay.sofa.registry.task.batcher.TaskDispatchers;
 import org.glassfish.jersey.server.ResourceConfig;
@@ -117,9 +117,9 @@ public class SessionServerBootstrap {
 
             openHttpServer();
 
-            openSessionServer();
-
             connectDataServer();
+
+            openSessionServer();
 
             LOGGER.info("Initialized Session Server...");
 
@@ -154,8 +154,7 @@ public class SessionServerBootstrap {
     private void initEnvironment() {
         LOGGER.info("Session server Environment: DataCenter {},Region {},ProcessId {}",
             sessionServerConfig.getSessionServerDataCenter(),
-            sessionServerConfig.getSessionServerRegion(),
-            SessionProcessIdGenerator.getSessionProcessId());
+            sessionServerConfig.getSessionServerRegion(), ServerEnv.PROCESS_ID);
     }
 
     private void startScheduler() {
@@ -208,7 +207,9 @@ public class SessionServerBootstrap {
                 mataNodeService.startRaftClient();
                 // register node as renew node
                 mataNodeService.renewNode();
-
+                // start sched renew
+                mataNodeService
+                    .startRenewer(sessionServerConfig.getSchedulerHeartbeatIntervalSec() * 1000);
                 fetchStopPushSwitch();
 
                 fetchBlackList();

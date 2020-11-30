@@ -20,7 +20,6 @@ import com.alipay.sofa.registry.common.model.dataserver.DatumSummary;
 
 import java.io.Serializable;
 import java.util.Map;
-import java.util.Set;
 
 /**
  *
@@ -28,10 +27,10 @@ import java.util.Set;
  * @version v 0.1 2020-11-05 14:24 yuzhi.lyz Exp $
  */
 public class DataSlotDiffPublisherRequest implements Serializable {
-    private long                      slotTableEpoch;
-    private int                       slotId;
+    private final long                      slotTableEpoch;
     // parts of the summary to diff sync
-    private Map<String, DatumSummary> datumSummarys;
+    private final Map<String, DatumSummary> datumSummarys;
+    private final int                       slotId;
 
     public DataSlotDiffPublisherRequest(long slotTableEpoch, int slotId,
                                         Map<String, DatumSummary> datumSummarys) {
@@ -49,27 +48,11 @@ public class DataSlotDiffPublisherRequest implements Serializable {
     }
 
     /**
-     * Setter method for property <tt>slotId</tt>.
-     * @param slotId value to be assigned to property slotId
-     */
-    public void setSlotId(int slotId) {
-        this.slotId = slotId;
-    }
-
-    /**
      * Getter method for property <tt>slotTableEpoch</tt>.
      * @return property value of slotTableEpoch
      */
     public long getSlotTableEpoch() {
         return slotTableEpoch;
-    }
-
-    /**
-     * Setter method for property <tt>slotTableEpoch</tt>.
-     * @param slotTableEpoch value to be assigned to property slotTableEpoch
-     */
-    public void setSlotTableEpoch(long slotTableEpoch) {
-        this.slotTableEpoch = slotTableEpoch;
     }
 
     /**
@@ -80,11 +63,4 @@ public class DataSlotDiffPublisherRequest implements Serializable {
         return datumSummarys;
     }
 
-    /**
-     * Setter method for property <tt>datumSummarys</tt>.
-     * @param datumSummarys value to be assigned to property datumSummarys
-     */
-    public void setDatumSummarys(Map<String, DatumSummary> datumSummarys) {
-        this.datumSummarys = datumSummarys;
-    }
 }

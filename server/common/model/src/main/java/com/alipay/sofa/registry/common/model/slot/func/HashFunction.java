@@ -14,17 +14,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alipay.sofa.registry.common.model.slot;
+package com.alipay.sofa.registry.common.model.slot.func;
 
 /**
- *
- * @author yuzhi.lyz
- * @version v 0.1 2020-11-02 15:35 yuzhi.lyz Exp $
+ * Hash Function
+ * @author zhuoyu.sjw
+ * @version $Id: HashFunction.java, v 0.1 2016-11-01 15:19 zhuoyu.sjw Exp $$
  */
-public interface SlotFunction {
-    String name();
+public interface HashFunction {
 
-    int maxSlots();
-
-    int slotOf(Object o);
+    /**
+     * return object's int hashCode
+     * @param o object
+     * @return int hashCode
+     */
+    int hash(Object o);
 }

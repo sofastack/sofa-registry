@@ -19,21 +19,24 @@ package com.alipay.sofa.registry.server.shared.meta;
 import com.alipay.remoting.Connection;
 import com.alipay.sofa.jraft.entity.PeerId;
 import com.alipay.sofa.registry.common.model.GenericResponse;
+import com.alipay.sofa.registry.common.model.Node;
 import com.alipay.sofa.registry.common.model.metaserver.FetchProvideDataRequest;
 import com.alipay.sofa.registry.common.model.metaserver.ProvideData;
 import com.alipay.sofa.registry.common.model.metaserver.RenewNodesRequest;
 import com.alipay.sofa.registry.common.model.metaserver.inter.communicate.BaseHeartBeatResponse;
-import com.alipay.sofa.registry.common.model.metaserver.nodes.DataNode;
 import com.alipay.sofa.registry.common.model.metaserver.nodes.SessionNode;
 import com.alipay.sofa.registry.common.model.store.URL;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.remoting.exchange.message.Request;
 import com.alipay.sofa.registry.remoting.exchange.message.Response;
-import com.alipay.sofa.registry.server.shared.env.ServerEnv;
+import com.alipay.sofa.registry.util.ConcurrentUtils;
+import com.alipay.sofa.registry.util.LoopRunnable;
+import com.google.common.util.concurrent.Uninterruptibles;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 
 /**
  *
@@ -48,13 +51,44 @@ public abstract class AbstractMetaServerService<T extends BaseHeartBeatResponse>
     @Autowired
     protected AbstractMetaNodeExchanger metaNodeExchanger;
     protected volatile State            state  = State.NULL;
+    private Renewer                     renewer;
+
+    @Override
+    public synchronized void startRenewer(int intervalMs) {
+        if (renewer != null) {
+            throw new IllegalStateException("has started renewer");
+        }
+        this.renewer = new Renewer(intervalMs);
+        ConcurrentUtils.createDaemonThread("meta-renewer", this.renewer).start();
+    }
+
+    private final class Renewer extends LoopRunnable {
+        final int intervalMs;
+
+        Renewer(int intervalMs) {
+            this.intervalMs = intervalMs;
+        }
+
+        @Override
+        public void runUnThrowable() {
+            try {
+                renewNode();
+            } catch (Throwable e) {
+                LOGGER.error("failed to renewNode", e);
+            }
+        }
+
+        @Override
+        public void waitingUnThrowable() {
+            Uninterruptibles.sleepUninterruptibly(intervalMs, TimeUnit.MILLISECONDS);
+        }
+    }
 
     @Override
     public void renewNode() {
         final String leaderIp = getLeader().getIp();
         try {
-            RenewNodesRequest<DataNode> renewNodesRequest = new RenewNodesRequest<>(new DataNode(
-                new URL(ServerEnv.IP), metaNodeExchanger.getLocalDataCenter()));
+            RenewNodesRequest renewNodesRequest = new RenewNodesRequest(createNode());
             GenericResponse<T> resp = (GenericResponse<T>) metaNodeExchanger.request(new Request() {
                 @Override
                 public Object getRequestBody() {
@@ -98,7 +132,7 @@ public abstract class AbstractMetaServerService<T extends BaseHeartBeatResponse>
               Set<String> dataServers) {
             this.dataCenters = Collections.unmodifiableSet(dataCenters);
             this.sessionNodes = Collections.unmodifiableMap(sessionNodes);
-            this.dataServers = Collections.unmodifiableSet(dataCenters);
+            this.dataServers = Collections.unmodifiableSet(dataServers);
         }
     }
 
@@ -184,4 +218,6 @@ public abstract class AbstractMetaServerService<T extends BaseHeartBeatResponse>
     }
 
     protected abstract void handleRenewResult(T result);
+
+    protected abstract Node createNode();
 }

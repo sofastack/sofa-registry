@@ -29,8 +29,8 @@ import com.alipay.sofa.registry.remoting.exchange.RequestException;
 import com.alipay.sofa.registry.remoting.exchange.message.Request;
 import com.alipay.sofa.registry.remoting.exchange.message.Response;
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
-import com.alipay.sofa.registry.server.session.node.SessionProcessIdGenerator;
 import com.alipay.sofa.registry.server.session.slot.SlotTableCache;
+import com.alipay.sofa.registry.server.shared.env.ServerEnv;
 import com.alipay.sofa.registry.server.shared.meta.MetaServerService;
 import com.alipay.sofa.registry.timer.AsyncHashedWheelTimer;
 import com.alipay.sofa.registry.timer.AsyncHashedWheelTimer.TaskFailedCallback;
@@ -108,10 +108,8 @@ public class DataNodeServiceImpl implements DataNodeService {
 
             @Override
             public PublishDataRequest getRequestBody() {
-                PublishDataRequest publishDataRequest = new PublishDataRequest();
-                publishDataRequest.setPublisher(publisher);
-                publishDataRequest.setSessionServerProcessId(SessionProcessIdGenerator
-                    .getSessionProcessId());
+                PublishDataRequest publishDataRequest = new PublishDataRequest(publisher,
+                    ServerEnv.PROCESS_ID);
                 return publishDataRequest;
             }
 
@@ -149,7 +147,7 @@ public class DataNodeServiceImpl implements DataNodeService {
             public UnPublishDataRequest getRequestBody() {
                 UnPublishDataRequest unPublishDataRequest = new UnPublishDataRequest(
                     publisher.getDataInfoId(), publisher.getRegisterId(),
-                    publisher.getRegisterTimestamp());
+                    publisher.getRegisterTimestamp(), ServerEnv.PROCESS_ID);
                 return unPublishDataRequest;
             }
 

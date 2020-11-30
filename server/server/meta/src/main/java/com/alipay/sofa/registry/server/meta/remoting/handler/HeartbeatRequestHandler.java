@@ -17,20 +17,23 @@
 package com.alipay.sofa.registry.server.meta.remoting.handler;
 
 import com.alipay.sofa.registry.common.model.GenericResponse;
-import com.alipay.sofa.registry.common.model.metaserver.RenewNodesResult;
+import com.alipay.sofa.registry.common.model.Node;
+import com.alipay.sofa.registry.common.model.metaserver.RenewNodesRequest;
 import com.alipay.sofa.registry.common.model.metaserver.inter.communicate.BaseHeartBeatResponse;
 import com.alipay.sofa.registry.common.model.metaserver.inter.communicate.DataHeartBeatResponse;
 import com.alipay.sofa.registry.common.model.metaserver.inter.communicate.SessionHeartBeatResponse;
-import com.alipay.sofa.registry.server.meta.metaserver.CurrentDcMetaServer;
-import org.springframework.beans.factory.annotation.Autowired;
-
-import com.alipay.sofa.registry.common.model.Node;
-import com.alipay.sofa.registry.common.model.metaserver.RenewNodesRequest;
+import com.alipay.sofa.registry.common.model.slot.Slot;
+import com.alipay.sofa.registry.common.model.slot.func.SlotFunctionRegistry;
+import com.alipay.sofa.registry.common.model.slot.SlotTable;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.remoting.Channel;
+import com.alipay.sofa.registry.server.meta.metaserver.CurrentDcMetaServer;
+import com.google.common.collect.Maps;
+import org.springframework.beans.factory.annotation.Autowired;
 
-import java.util.Set;
+import java.util.Collections;
+import java.util.Map;
 
 /**
  * Handle session/data node's heartbeat request
@@ -42,7 +45,16 @@ public class HeartbeatRequestHandler extends AbstractServerHandler<RenewNodesReq
     private static final Logger LOGGER = LoggerFactory.getLogger(HeartbeatRequestHandler.class);
 
     @Autowired
-    private CurrentDcMetaServer      currentDcMetaServer;
+    private CurrentDcMetaServer currentDcMetaServer;
+
+    private SlotTable mockSlotTable(String address) {
+        Map<Integer, Slot> slots = Maps.newHashMap();
+        for (int i = 0; i < SlotFunctionRegistry.MAX_SLOTS; i++) {
+            Slot s = new Slot(i, address, i, Collections.emptySet());
+            slots.put(i, s);
+        }
+        return new SlotTable(SlotFunctionRegistry.MAX_SLOTS, slots);
+    }
 
     @Override
     public Object reply(Channel channel, RenewNodesRequest renewNodesRequest) {
@@ -50,22 +62,24 @@ public class HeartbeatRequestHandler extends AbstractServerHandler<RenewNodesReq
         try {
             renewNode = renewNodesRequest.getNode();
             currentDcMetaServer.renew(renewNode, renewNodesRequest.getDuration());
-
+            SlotTable slotTable = currentDcMetaServer.getSlotTable();
+            // TODO now we mock a slottable for test
+            slotTable = mockSlotTable(channel.getRemoteAddress().getAddress().getHostAddress());
             BaseHeartBeatResponse response = null;
             switch (renewNode.getNodeType()) {
                 case SESSION:
                     response = new SessionHeartBeatResponse(currentDcMetaServer.getEpoch(),
-                            currentDcMetaServer.getSlotTable(), currentDcMetaServer.getClusterMembers(),
-                            currentDcMetaServer.getSessionServers());
+                        slotTable, currentDcMetaServer.getClusterMembers(),
+                        currentDcMetaServer.getSessionServers());
                     break;
                 case DATA:
-                    response = new DataHeartBeatResponse(currentDcMetaServer.getEpoch(),
-                            currentDcMetaServer.getSlotTable(), currentDcMetaServer.getClusterMembers(),
-                            currentDcMetaServer.getSessionServers());
+                    response = new DataHeartBeatResponse(currentDcMetaServer.getEpoch(), slotTable,
+                        currentDcMetaServer.getClusterMembers(),
+                        currentDcMetaServer.getSessionServers());
                     break;
                 case META:
-                    response = new BaseHeartBeatResponse(currentDcMetaServer.getEpoch(),
-                            currentDcMetaServer.getSlotTable(), currentDcMetaServer.getClusterMembers());
+                    response = new BaseHeartBeatResponse(currentDcMetaServer.getEpoch(), slotTable,
+                        currentDcMetaServer.getClusterMembers());
                     break;
                 default:
                     break;

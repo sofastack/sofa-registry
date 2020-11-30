@@ -16,11 +16,15 @@
  */
 package com.alipay.sofa.registry.server.data.remoting.metaserver;
 
+import com.alipay.sofa.registry.common.model.Node;
 import com.alipay.sofa.registry.common.model.metaserver.inter.communicate.DataHeartBeatResponse;
+import com.alipay.sofa.registry.common.model.metaserver.nodes.DataNode;
+import com.alipay.sofa.registry.common.model.store.URL;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.server.data.bootstrap.DataServerConfig;
 import com.alipay.sofa.registry.server.data.cache.SlotManager;
+import com.alipay.sofa.registry.server.shared.env.ServerEnv;
 import com.alipay.sofa.registry.server.shared.meta.AbstractMetaServerService;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -43,5 +47,10 @@ public class MetaServerServiceImpl extends AbstractMetaServerService<DataHeartBe
     protected void handleRenewResult(DataHeartBeatResponse result) {
         updateMetaIps(result.getMetaNodesMap().keySet());
         slotManager.updateSlotTable(result.getSlotTable());
+    }
+
+    @Override
+    protected Node createNode() {
+        return new DataNode(new URL(ServerEnv.IP), metaNodeExchanger.getLocalDataCenter());
     }
 }

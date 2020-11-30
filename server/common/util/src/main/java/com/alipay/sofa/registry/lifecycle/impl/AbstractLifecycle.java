@@ -31,10 +31,10 @@ import com.alipay.sofa.registry.log.LoggerFactory;
  */
 public abstract class AbstractLifecycle implements Lifecycle, LifecycleStateAware {
 
-    protected Logger            logger = LoggerFactory.getLogger(getClass());
+    protected Logger                  logger = LoggerFactory.getLogger(getClass());
 
-    private LifecycleState      lifecycleState;
-    private LifecycleController lifecycleController;
+    private final LifecycleState      lifecycleState;
+    private final LifecycleController lifecycleController;
 
     public AbstractLifecycle() {
         this.lifecycleController = new DefaultLifecycleController();
