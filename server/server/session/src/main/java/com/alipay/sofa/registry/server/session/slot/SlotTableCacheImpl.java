@@ -16,20 +16,13 @@
  */
 package com.alipay.sofa.registry.server.session.slot;
 
-import com.alipay.sofa.registry.common.model.GenericResponse;
-import com.alipay.sofa.registry.common.model.metaserver.GetSlotTableRequest;
-import com.alipay.sofa.registry.common.model.metaserver.GetSlotTableResult;
-import com.alipay.sofa.registry.common.model.slot.MD5SlotFunction;
 import com.alipay.sofa.registry.common.model.slot.Slot;
 import com.alipay.sofa.registry.common.model.slot.SlotFunction;
+import com.alipay.sofa.registry.common.model.slot.SlotFunctionRegistry;
 import com.alipay.sofa.registry.common.model.slot.SlotTable;
-import com.alipay.sofa.registry.common.model.store.URL;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
-import com.alipay.sofa.registry.remoting.exchange.NodeExchanger;
-import com.alipay.sofa.registry.remoting.exchange.message.Request;
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
-import com.alipay.sofa.registry.server.session.node.RaftClientManager;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.Collections;
@@ -41,16 +34,11 @@ import java.util.Collections;
  */
 public final class SlotTableCacheImpl implements SlotTableCache {
     private static final Logger LOGGER       = LoggerFactory.getLogger(SlotTableCacheImpl.class);
-    private final SlotFunction  slotFunction = new MD5SlotFunction();
-    @Autowired
-    protected NodeExchanger     metaNodeExchanger;
 
     @Autowired
     private SessionServerConfig sessionServerConfig;
 
-    @Autowired
-    protected RaftClientManager raftClientManager;
-
+    private final SlotFunction  slotFunction = SlotFunctionRegistry.getFunc();
     private volatile SlotTable  slotTable;
 
     @Override
@@ -61,9 +49,13 @@ public final class SlotTableCacheImpl implements SlotTableCache {
     @Override
     public Slot getSlot(String dataInfoId) {
         int slotId = slotOf(dataInfoId);
-        //        return slotTable.getSlot(slotId);
-        // TODO mocks
-        return new Slot(1, "10.15.233.13", 1, Collections.emptySet());
+        return slotTable.getSlot(slotId);
+    }
+
+    @Override
+    public String getLeader(String dataInfoId) {
+        final Slot slot = getSlot(dataInfoId);
+        return slot == null ? null : slot.getLeader();
     }
 
     @Override
@@ -77,36 +69,14 @@ public final class SlotTableCacheImpl implements SlotTableCache {
         return table == null ? -1 : table.getEpoch();
     }
 
-    private GetSlotTableResult sendGetSlotTableRequest(long epoch) {
-        try {
-            Request<GetSlotTableRequest> request = new Request<GetSlotTableRequest>() {
-                @Override
-                public GetSlotTableRequest getRequestBody() {
-                    // session not need the followers
-                    return new GetSlotTableRequest(epoch, null, true);
-                }
-
-                @Override
-                public URL getRequestUrl() {
-                    return new URL(raftClientManager.getLeader().getIp(),
-                        sessionServerConfig.getMetaServerPort());
-                }
-            };
-
-            GenericResponse<GetSlotTableResult> response = (GenericResponse<GetSlotTableResult>) metaNodeExchanger
-                .request(request).getResult();
-
-            if (response != null && response.isSuccess()) {
-                return response.getData();
-            } else {
-                LOGGER.error("Get slot table error! No response receive, epoch={}, {}", epoch,
-                    response);
-                throw new RuntimeException("Get slot table error! No response receive");
-            }
-        } catch (Throwable e) {
-            LOGGER.error("Get slot table error!", e);
-            throw new RuntimeException("Get slot table error!", e);
+    @Override
+    public synchronized boolean updateSlotTable(SlotTable slotTable) {
+        final long curEpoch = this.slotTable.getEpoch();
+        if (curEpoch >= slotTable.getEpoch()) {
+            return false;
         }
+        this.slotTable = slotTable;
+        LOGGER.info("updating slot table, expect={}, current={}", slotTable.getEpoch(), curEpoch);
+        return true;
     }
-
 }

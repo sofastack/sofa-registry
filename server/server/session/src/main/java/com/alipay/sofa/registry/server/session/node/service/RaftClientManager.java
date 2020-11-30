@@ -14,35 +14,30 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alipay.sofa.registry.server.session.node;
+package com.alipay.sofa.registry.server.session.node.service;
+
+import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
+import com.alipay.sofa.registry.server.shared.meta.AbstractRaftClientManager;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.Collection;
-import java.util.concurrent.ConcurrentHashMap;
-
-import com.alipay.sofa.registry.common.model.Node;
-import com.alipay.sofa.registry.common.model.Node.NodeType;
-import com.alipay.sofa.registry.common.model.metaserver.NodeChangeResult;
 
 /**
  *
- * @author shangyu.wh
- * @version $Id: NodeManager.java, v 0.1 2017-11-28 11:56 shangyu.wh Exp $
+ * @author yuzhi.lyz
+ * @version v 0.1 2020-11-29 17:09 yuzhi.lyz Exp $
  */
-public interface NodeManager<T extends Node> {
+public final class RaftClientManager extends AbstractRaftClientManager {
+    @Autowired
+    private SessionServerConfig sessionServerConfig;
 
-    Collection<T> getDataCenterNodes();
+    @Override
+    protected String getLocalDataCenter() {
+        return sessionServerConfig.getSessionServerDataCenter();
+    }
 
-    T getNode(String dataInfoId);
-
-    NodeType getNodeType();
-
-    void updateNodes(NodeChangeResult nodeChangeResult);
-
-    Collection<String> getDataCenters();
-
-    void renewNode();
-
-    NodeChangeResult getAllDataCenterNodes();
-
-    ConcurrentHashMap<String, Long> getDataCenterNodesVersions();
+    @Override
+    protected Collection<String> getMetaNodeDomains() {
+        return sessionServerConfig.getMetaServerIpAddresses();
+    }
 }

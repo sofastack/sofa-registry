@@ -36,9 +36,8 @@ import com.alipay.sofa.registry.server.data.remoting.dataserver.handler.SlotFoll
 import com.alipay.sofa.registry.server.data.remoting.dataserver.task.RenewNodeTask;
 import com.alipay.sofa.registry.server.data.remoting.handler.AbstractClientHandler;
 import com.alipay.sofa.registry.server.data.remoting.handler.AbstractServerHandler;
-import com.alipay.sofa.registry.server.data.remoting.metaserver.DefaultMetaServiceImpl;
-import com.alipay.sofa.registry.server.data.remoting.metaserver.IMetaServerService;
-import com.alipay.sofa.registry.server.data.remoting.metaserver.MetaServerConnectionFactory;
+import com.alipay.sofa.registry.server.data.remoting.metaserver.MetaServerServiceImpl;
+import com.alipay.sofa.registry.server.data.remoting.metaserver.RaftClientManager;
 import com.alipay.sofa.registry.server.data.remoting.metaserver.handler.NotifyProvideDataChangeHandler;
 import com.alipay.sofa.registry.server.data.remoting.metaserver.provideData.ProvideDataProcessor;
 import com.alipay.sofa.registry.server.data.remoting.metaserver.provideData.ProvideDataProcessorManager;
@@ -120,12 +119,6 @@ public class DataServerBeanConfiguration {
 
         @Bean
         @ConditionalOnMissingBean
-        public SessionServerCache sessionServerCache() {
-            return new SessionServerCache();
-        }
-
-        @Bean
-        @ConditionalOnMissingBean
         public SlotManager slotManager() {
             return new SlotManagerImpl();
         }
@@ -155,11 +148,6 @@ public class DataServerBeanConfiguration {
         }
 
         @Bean
-        public MetaNodeExchanger metaNodeExchanger() {
-            return new MetaNodeExchanger();
-        }
-
-        @Bean
         public DataNodeExchanger dataNodeExchanger() {
             return new DataNodeExchanger();
         }
@@ -172,11 +160,6 @@ public class DataServerBeanConfiguration {
         @Bean
         public DataServerConnectionFactory dataServerConnectionFactory() {
             return new DataServerConnectionFactory();
-        }
-
-        @Bean
-        public MetaServerConnectionFactory metaServerConnectionFactory() {
-            return new MetaServerConnectionFactory();
         }
 
         @Bean(name = "serverHandlers")
@@ -330,8 +313,18 @@ public class DataServerBeanConfiguration {
     @Configuration
     public static class DataServerRemotingBeanConfiguration {
         @Bean
-        public IMetaServerService metaServerService() {
-            return new DefaultMetaServiceImpl();
+        public RaftClientManager raftClientManager() {
+            return new RaftClientManager();
+        }
+
+        @Bean
+        public MetaNodeExchanger metaNodeExchanger() {
+            return new MetaNodeExchanger();
+        }
+
+        @Bean
+        public MetaServerServiceImpl metaServerService() {
+            return new MetaServerServiceImpl();
         }
     }
 

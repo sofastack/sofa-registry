@@ -1,3 +1,19 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package com.alipay.sofa.registry.server.meta.metaserver.impl;
 
 import com.alipay.sofa.registry.common.model.Node;
@@ -19,7 +35,6 @@ import com.alipay.sofa.registry.server.meta.metaserver.CrossDcMetaServer;
 import com.alipay.sofa.registry.server.meta.remoting.RaftExchanger;
 import com.alipay.sofa.registry.server.meta.slot.SlotAllocator;
 import com.alipay.sofa.registry.server.meta.slot.impl.CrossDcSlotAllocator;
-import com.alipay.sofa.registry.store.api.annotation.ReadOnLeader;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import org.springframework.aop.target.dynamic.Refreshable;
@@ -51,37 +66,38 @@ import java.util.concurrent.atomic.AtomicLong;
  * See @doRefresh for meta server list update
  * See @refreshSlotTable for slot table update
  * */
-public class DefaultCrossDcMetaServer extends AbstractMetaServer implements CrossDcMetaServer, Refreshable {
+public class DefaultCrossDcMetaServer extends AbstractMetaServer implements CrossDcMetaServer,
+                                                                Refreshable {
 
-    private final String dcName;
+    private final String                   dcName;
 
-    private final List<String> initMetaAddresses;
+    private final List<String>             initMetaAddresses;
 
-    private final AtomicLong currentVersion = new AtomicLong();
+    private final AtomicLong               currentVersion       = new AtomicLong();
 
     private final ScheduledExecutorService scheduled;
 
-    private volatile ScheduledFuture<?> future;
+    private volatile ScheduledFuture<?>    future;
 
-    private final AtomicLong counter = new AtomicLong();
+    private final AtomicLong               counter              = new AtomicLong();
 
-    private final AtomicLong timestamp = new AtomicLong();
+    private final AtomicLong               timestamp            = new AtomicLong();
 
-    private SlotAllocator allocator;
+    private SlotAllocator                  allocator;
 
-    private final Exchange exchange;
+    private final Exchange                 exchange;
 
-    private final RaftExchanger raftExchanger;
+    private final RaftExchanger            raftExchanger;
 
-    private final AtomicInteger requestMetaNodeIndex = new AtomicInteger(0);
+    private final AtomicInteger            requestMetaNodeIndex = new AtomicInteger(0);
 
-    private final MetaServerConfig metaServerConfig;
+    private final MetaServerConfig         metaServerConfig;
 
-    private MetaServerListStorage raftStorage;
+    private MetaServerListStorage          raftStorage;
 
     public DefaultCrossDcMetaServer(String dcName, Collection<String> metaServerIpAddresses,
-                                    ScheduledExecutorService scheduled, Exchange exchange, RaftExchanger raftExchanger,
-                                    MetaServerConfig metaServerConfig) {
+                                    ScheduledExecutorService scheduled, Exchange exchange,
+                                    RaftExchanger raftExchanger, MetaServerConfig metaServerConfig) {
         this.dcName = dcName;
         this.initMetaAddresses = Lists.newArrayList(metaServerIpAddresses);
         this.scheduled = scheduled;
@@ -100,7 +116,7 @@ public class DefaultCrossDcMetaServer extends AbstractMetaServer implements Cros
 
     private void initMetaNodes() {
         List<MetaNode> metaNodes = Lists.newArrayList();
-        for(String ip : initMetaAddresses) {
+        for (String ip : initMetaAddresses) {
             metaNodes.add(new MetaNode(new URL(ip), dcName));
         }
         this.metaServers.set(metaNodes);
@@ -114,9 +130,11 @@ public class DefaultCrossDcMetaServer extends AbstractMetaServer implements Cros
     private void initRaftStorage() {
         RaftMetaServerListStorage storage = new RaftMetaServerListStorage();
         storage.registerAsRaftService();
-        raftStorage = (MetaServerListStorage) Proxy.newProxyInstance(Thread.currentThread().getContextClassLoader(),
-                new Class[]{MetaServerListStorage.class},
-                new ProxyHandler(MetaServerListStorage.class, getServiceId(), raftExchanger.getRaftClient()));
+        raftStorage = (MetaServerListStorage) Proxy.newProxyInstance(
+            Thread.currentThread().getContextClassLoader(),
+            new Class[] { MetaServerListStorage.class },
+            new ProxyHandler(MetaServerListStorage.class, getServiceId(), raftExchanger
+                .getRaftClient()));
     }
 
     @Override
@@ -125,7 +143,7 @@ public class DefaultCrossDcMetaServer extends AbstractMetaServer implements Cros
         future = scheduled.scheduleWithFixedDelay(new Runnable() {
             @Override
             public void run() {
-                if(ServiceStateMachine.getInstance().isLeader()) {
+                if (ServiceStateMachine.getInstance().isLeader()) {
                     refresh();
                 }
             }
@@ -137,8 +155,12 @@ public class DefaultCrossDcMetaServer extends AbstractMetaServer implements Cros
     @Override
     protected void doStop() throws StopException {
         // stop allocator for slot purpose
-        LifecycleHelper.stopIfPossible(allocator);
-        if(future != null) {
+        try {
+            LifecycleHelper.stopIfPossible(allocator);
+        } catch (StopException e) {
+            logger.error("[stop][stop allocator error]", e);
+        }
+        if (future != null) {
             future.cancel(true);
             future = null;
         }
@@ -152,18 +174,13 @@ public class DefaultCrossDcMetaServer extends AbstractMetaServer implements Cros
     }
 
     @Override
-    public List<MetaNode> getClusterMembers() {
-        return metaServers.get();
-    }
-
-    @Override
     public String getDc() {
         return dcName;
     }
 
     @Override
     public SlotTable getSlotTable() {
-        if(!getLifecycleState().isStarted()) {
+        if (!getLifecycleState().isStarted()) {
             throw new IllegalStateException("[DefaultCrossDcMetaServer] not started yet");
         }
         return allocator.getSlotTable();
@@ -173,61 +190,70 @@ public class DefaultCrossDcMetaServer extends AbstractMetaServer implements Cros
         return currentVersion.get();
     }
 
+    @Override
+    public List<MetaNode> getClusterMembers() {
+        return metaServers.get();
+    }
+
     private int getIntervalMilli() {
         return metaServerConfig.getCrossDcMetaSyncIntervalMilli();
     }
 
     @VisibleForTesting
     protected void doRefresh(int retryTimes) {
-        if(retryTimes >= 3) {
+        if (retryTimes >= 3) {
             logger.warn("[doRefresh]retries more than {} times, stop", 3);
             return;
         }
         NodeClusterViewRequest request = new NodeClusterViewRequest(Node.NodeType.META, getDc());
         MetaNode metaServer = getRemoteMetaServer();
-        exchange.getClient(Exchange.META_SERVER_TYPE).sendCallback(metaServer.getNodeUrl(), request, new CallbackHandler() {
-            @Override
-            @SuppressWarnings("unchecked")
-            public void onCallback(Channel channel, Object message) {
-                raftStorage.tryUpdateRemoteDcMetaServerList((DataCenterNodes<MetaNode>) message);
-            }
-
-            @Override
-            public void onException(Channel channel, Throwable exception) {
-                if(logger.isErrorEnabled()) {
-                    logger.error("[doRefresh][{}]Bolt Request Failure, remote: {}, will try other meta-server",
-                            getDc(), channel != null ? channel.getRemoteAddress().getHostName() : "unknown", exception);
+        exchange.getClient(Exchange.META_SERVER_TYPE).sendCallback(metaServer.getNodeUrl(),
+            request, new CallbackHandler() {
+                @Override
+                @SuppressWarnings("unchecked")
+                public void onCallback(Channel channel, Object message) {
+                    raftStorage
+                        .tryUpdateRemoteDcMetaServerList((DataCenterNodes<MetaNode>) message);
                 }
-                requestMetaNodeIndex.set(requestMetaNodeIndex.incrementAndGet() % getRemotes().size());
-                // if failure, try again with another meta server.
-                // good luck with that. :)
-                doRefresh(retryTimes + 1);
-            }
 
-            @Override
-            public Executor getExecutor() {
-                return scheduled;
-            }
-        }, 5000);
+                @Override
+                public void onException(Channel channel, Throwable exception) {
+                    if (logger.isErrorEnabled()) {
+                        logger
+                            .error(
+                                "[doRefresh][{}]Bolt Request Failure, remote: {}, will try other meta-server",
+                                getDc(), channel != null ? channel.getRemoteAddress().getHostName()
+                                    : "unknown", exception);
+                    }
+                    requestMetaNodeIndex.set(requestMetaNodeIndex.incrementAndGet()
+                                             % getRemotes().size());
+                    // if failure, try again with another meta server.
+                    // good luck with that. :)
+                    doRefresh(retryTimes + 1);
+                }
+
+                @Override
+                public Executor getExecutor() {
+                    return scheduled;
+                }
+            }, 5000);
     }
-
-
 
     @Override
     public void refresh() {
         if (!(getLifecycleState().isStarting() || getLifecycleState().isStarted())) {
-            if(logger.isWarnEnabled()) {
+            if (logger.isWarnEnabled()) {
                 logger.warn("[refresh][not started yet]{}", getDc());
             }
             return;
         }
         counter.incrementAndGet();
         timestamp.set(System.currentTimeMillis());
-        if(logger.isInfoEnabled()) {
+        if (logger.isInfoEnabled()) {
             logger.info("[refresh][{}][times-{}] start", getDc(), getRefreshCount());
         }
         doRefresh(0);
-        if(logger.isInfoEnabled()) {
+        if (logger.isInfoEnabled()) {
             logger.info("[refresh][{}][times-{}] end", getDc(), getRefreshCount());
         }
     }
@@ -246,6 +272,15 @@ public class DefaultCrossDcMetaServer extends AbstractMetaServer implements Cros
         return getRemotes().get(requestMetaNodeIndex.get());
     }
 
+    @VisibleForTesting
+    protected DefaultCrossDcMetaServer setMetaServer(SlotAllocator allocator) {
+        if (getLifecycleState().isStarted()) {
+            throw new IllegalStateException("cannot reset meta-server instance while started");
+        }
+        this.allocator = allocator;
+        return this;
+    }
+
     private String getServiceId() {
         return String.format("%s-%s", RaftMetaServerListStorage.SERVICE_ID_PREFIX, dcName);
     }
@@ -253,7 +288,6 @@ public class DefaultCrossDcMetaServer extends AbstractMetaServer implements Cros
     public class RaftMetaServerListStorage implements MetaServerListStorage {
 
         private static final String SERVICE_ID_PREFIX = "DefaultCrossDcMetaServer.RaftMetaServerListStorage";
-
 
         public void tryUpdateRemoteDcMetaServerList(DataCenterNodes<MetaNode> response) {
             String remoteDc = response.getDataCenterId();
@@ -280,15 +314,14 @@ public class DefaultCrossDcMetaServer extends AbstractMetaServer implements Cros
                     metaServers.set(Lists.newArrayList(response.getNodes().values()));
                 }
             } finally {
-                logger.warn("[tryUpdateRemoteDcMetaServerList] {}", DefaultCrossDcMetaServer.this.metaServers.get());
                 DefaultCrossDcMetaServer.this.lock.writeLock().unlock();
             }
 
         }
 
         private final void registerAsRaftService() {
-            Processor.getInstance()
-                    .addWorker(getServiceId(), MetaServerListStorage.class, RaftMetaServerListStorage.this);
+            Processor.getInstance().addWorker(getServiceId(), MetaServerListStorage.class,
+                RaftMetaServerListStorage.this);
         }
 
     }

@@ -24,18 +24,18 @@ import org.junit.Test;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.CyclicBarrier;
 
-public class CRC32SlotFunctionTest extends AbstractTest {
+public class CRC16SlotFunctionTest extends AbstractTest {
 
-    private CRC32SlotFunction slotFunction;
+    private CRC16SlotFunction slotFunction;
 
     @Before
     public void beforeCRC32SlotFunctionTest() {
-        slotFunction = new CRC32SlotFunction();
+        slotFunction = new CRC16SlotFunction();
     }
 
     @Test
     public void testMaxSlots() {
-        Assert.assertEquals(CRC32SlotFunction.MAX_SLOTS, slotFunction.maxSlots());
+        Assert.assertEquals(SlotFunctionRegistry.MAX_SLOTS, slotFunction.maxSlots());
     }
 
     @Test

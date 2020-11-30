@@ -24,12 +24,17 @@ import com.alipay.sofa.registry.consistency.hash.MD5HashFunction;
  * @version v 0.1 2020-11-02 15:43 yuzhi.lyz Exp $
  */
 public final class MD5SlotFunction implements SlotFunction {
-    public final int              MAX_SLOTS       = 16384;
-    private final int             maxSlots;
-    private final MD5HashFunction md5HashFunction = new MD5HashFunction();
+    public static final MD5SlotFunction INSTANCE        = new MD5SlotFunction();
+    private final int                   maxSlots;
+    private final MD5HashFunction       md5HashFunction = new MD5HashFunction();
 
-    public MD5SlotFunction() {
-        this.maxSlots = MAX_SLOTS;
+    private MD5SlotFunction() {
+        this.maxSlots = SlotFunctionRegistry.MAX_SLOTS;
+    }
+
+    @Override
+    public String name() {
+        return "md5";
     }
 
     @Override

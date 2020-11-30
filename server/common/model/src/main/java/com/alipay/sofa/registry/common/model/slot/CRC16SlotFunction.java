@@ -24,18 +24,21 @@ import java.nio.charset.StandardCharsets;
  * <p>
  * Nov 13, 2020
  */
-public class CRC32SlotFunction implements SlotFunction {
+public class CRC16SlotFunction implements SlotFunction {
+    public static final CRC16SlotFunction INSTANCE = new CRC16SlotFunction();
+    private final int                     slotMask;
 
-    public static final int MAX_SLOTS = 0x4000;
-
-    private final int       slotMask;
-
-    public CRC32SlotFunction() {
-        this(MAX_SLOTS);
+    public CRC16SlotFunction() {
+        this(SlotFunctionRegistry.MAX_SLOTS);
     }
 
-    public CRC32SlotFunction(int slotNums) {
+    public CRC16SlotFunction(int slotNums) {
         this.slotMask = slotNums - 1;
+    }
+
+    @Override
+    public String name() {
+        return "crc16";
     }
 
     @Override

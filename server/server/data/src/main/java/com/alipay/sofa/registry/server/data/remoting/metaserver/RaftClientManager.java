@@ -14,36 +14,30 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alipay.sofa.registry.server.session.node;
+package com.alipay.sofa.registry.server.data.remoting.metaserver;
+
+import com.alipay.sofa.registry.server.data.bootstrap.DataServerConfig;
+import com.alipay.sofa.registry.server.shared.meta.AbstractRaftClientManager;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.Collection;
 
-import com.alipay.sofa.registry.common.model.Node.NodeType;
-import com.alipay.sofa.registry.common.model.metaserver.nodes.MetaNode;
-
 /**
  *
- * @author shangyu.wh
- * @version $Id: MetaNodeManager.java, v 0.1 2018-03-05 10:58 shangyu.wh Exp $
+ * @author yuzhi.lyz
+ * @version v 0.1 2020-11-29 17:09 yuzhi.lyz Exp $
  */
-public class MetaNodeManager extends AbstractNodeManager<MetaNode> {
+public final class RaftClientManager extends AbstractRaftClientManager {
+    @Autowired
+    private DataServerConfig dataServerConfig;
 
     @Override
-    public MetaNode getNode(String dataInfoId) {
-        return null;
+    protected String getLocalDataCenter() {
+        return dataServerConfig.getLocalDataCenter();
     }
 
     @Override
-    public NodeType getNodeType() {
-        return NodeType.META;
-    }
-
-    @Override
-    public Collection<String> getDataCenters() {
-        return nodes.keySet();
-    }
-
-    @Override
-    public void renewNode() {
+    protected Collection<String> getMetaNodeDomains() {
+        return dataServerConfig.getMetaServerIpAddresses();
     }
 }

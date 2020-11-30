@@ -18,7 +18,6 @@ package com.alipay.sofa.registry.server.session.node.service;
 
 import com.alipay.sofa.registry.common.model.CommonResponse;
 import com.alipay.sofa.registry.common.model.GenericResponse;
-import com.alipay.sofa.registry.common.model.Node;
 import com.alipay.sofa.registry.common.model.dataserver.*;
 import com.alipay.sofa.registry.common.model.slot.SlotAccessGenericResponse;
 import com.alipay.sofa.registry.common.model.store.Publisher;
@@ -30,8 +29,9 @@ import com.alipay.sofa.registry.remoting.exchange.RequestException;
 import com.alipay.sofa.registry.remoting.exchange.message.Request;
 import com.alipay.sofa.registry.remoting.exchange.message.Response;
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
-import com.alipay.sofa.registry.server.session.node.NodeManager;
 import com.alipay.sofa.registry.server.session.node.SessionProcessIdGenerator;
+import com.alipay.sofa.registry.server.session.slot.SlotTableCache;
+import com.alipay.sofa.registry.server.shared.meta.MetaServerService;
 import com.alipay.sofa.registry.timer.AsyncHashedWheelTimer;
 import com.alipay.sofa.registry.timer.AsyncHashedWheelTimer.TaskFailedCallback;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
@@ -58,7 +58,9 @@ public class DataNodeServiceImpl implements DataNodeService {
     private NodeExchanger         dataNodeExchanger;
 
     @Autowired
-    private NodeManager           dataNodeManager;
+    private SlotTableCache        slotTableCache;
+
+    private MetaServerService     metaServerService;
 
     @Autowired
     private SessionServerConfig   sessionServerConfig;
@@ -170,24 +172,21 @@ public class DataNodeServiceImpl implements DataNodeService {
         }
         //get all local dataCenter data node
         String bizName = "ClientOff";
-        Collection<Node> nodes = dataNodeManager.getDataCenterNodes();
-        if (nodes != null && nodes.size() > 0) {
-            for (Node node : nodes) {
-                Request<ClientOffRequest> request = buildClientOffRequest(connectIds, node);
-                try {
-                    sendRequest(bizName, request);
-                } catch (RequestException e) {
-                    doRetryAsync(bizName, request, e,
-                        sessionServerConfig.getCancelDataTaskRetryTimes(),
-                        sessionServerConfig.getCancelDataTaskRetryFirstDelay(),
-                        sessionServerConfig.getCancelDataTaskRetryIncrementDelay());
+        for (String dataNode : metaServerService.getDataServerList()) {
+            Request<ClientOffRequest> request = buildClientOffRequest(connectIds, dataNode);
+            try {
+                sendRequest(bizName, request);
+            } catch (RequestException e) {
+                doRetryAsync(bizName, request, e,
+                    sessionServerConfig.getCancelDataTaskRetryTimes(),
+                    sessionServerConfig.getCancelDataTaskRetryFirstDelay(),
+                    sessionServerConfig.getCancelDataTaskRetryIncrementDelay());
 
-                }
             }
         }
     }
 
-    private Request<ClientOffRequest> buildClientOffRequest(List<String> connectIds, Node node) {
+    private Request<ClientOffRequest> buildClientOffRequest(List<String> connectIds, String address) {
         return new Request<ClientOffRequest>() {
 
             private AtomicInteger retryTimes = new AtomicInteger();
@@ -202,8 +201,7 @@ public class DataNodeServiceImpl implements DataNodeService {
 
             @Override
             public URL getRequestUrl() {
-                return new URL(node.getNodeUrl().getIpAddress(),
-                    sessionServerConfig.getDataServerPort());
+                return new URL(address, sessionServerConfig.getDataServerPort());
             }
 
             @Override
@@ -371,9 +369,8 @@ public class DataNodeServiceImpl implements DataNodeService {
     }
 
     private URL getUrl(String dataInfoId) {
-        Node dataNode = dataNodeManager.getNode(dataInfoId);
         //meta push data node has not port
-        String dataIp = dataNode.getNodeUrl().getIpAddress();
+        String dataIp = slotTableCache.getLeader(dataInfoId);
         return new URL(dataIp, sessionServerConfig.getDataServerPort());
     }
 

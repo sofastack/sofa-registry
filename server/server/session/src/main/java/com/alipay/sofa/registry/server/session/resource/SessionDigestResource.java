@@ -16,41 +16,25 @@
  */
 package com.alipay.sofa.registry.server.session.resource;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-
-import javax.annotation.PostConstruct;
-import javax.ws.rs.GET;
-import javax.ws.rs.POST;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
-import javax.ws.rs.core.MediaType;
-
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.util.CollectionUtils;
-
-import com.alipay.sofa.registry.common.model.Node;
-import com.alipay.sofa.registry.common.model.Node.NodeType;
 import com.alipay.sofa.registry.common.model.store.Publisher;
 import com.alipay.sofa.registry.common.model.store.StoreData;
 import com.alipay.sofa.registry.common.model.store.Subscriber;
 import com.alipay.sofa.registry.common.model.store.Watcher;
 import com.alipay.sofa.registry.metrics.ReporterUtils;
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
-import com.alipay.sofa.registry.server.session.node.NodeManager;
-import com.alipay.sofa.registry.server.session.node.NodeManagerFactory;
-import com.alipay.sofa.registry.server.session.node.SessionNodeManager;
 import com.alipay.sofa.registry.server.session.store.DataStore;
 import com.alipay.sofa.registry.server.session.store.Interests;
 import com.alipay.sofa.registry.server.session.store.Watchers;
+import com.alipay.sofa.registry.server.shared.meta.MetaServerService;
 import com.codahale.metrics.Gauge;
 import com.codahale.metrics.MetricRegistry;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.util.CollectionUtils;
+
+import javax.annotation.PostConstruct;
+import javax.ws.rs.*;
+import javax.ws.rs.core.MediaType;
+import java.util.*;
 
 /**
  *
@@ -80,6 +64,9 @@ public class SessionDigestResource {
 
     @Autowired
     private SessionServerConfig sessionServerConfig;
+
+    @Autowired
+    private MetaServerService   mataNodeService;
 
     private final static String SUB     = "SUB";
 
@@ -261,49 +248,15 @@ public class SessionDigestResource {
     }
 
     public List<String> getSessionServerList() {
-
-        List<String> serverList = new ArrayList<>();
-        NodeManager nodeManager = NodeManagerFactory.getNodeManager(NodeType.SESSION);
-
-        if (nodeManager instanceof SessionNodeManager) {
-            SessionNodeManager sessionNodeManager = (SessionNodeManager) nodeManager;
-            serverList = sessionNodeManager.getZoneServerList(sessionServerConfig
-                .getSessionServerRegion());
-        }
-        return serverList;
+        return mataNodeService.getZoneSessionServerList(sessionServerConfig
+            .getSessionServerRegion());
     }
 
     public List<String> getDataServerList() {
-        List<String> serverList = new ArrayList<>();
-        NodeManager dataNodeManager = NodeManagerFactory.getNodeManager(NodeType.DATA);
-
-        Collection<Node> dataNodes = dataNodeManager.getDataCenterNodes();
-
-        if (!CollectionUtils.isEmpty(dataNodes)) {
-            for (Node dataNode : dataNodes) {
-                if (dataNode.getNodeUrl() == null || dataNode.getNodeUrl().getIpAddress() == null) {
-                    continue;
-                }
-                serverList.add(dataNode.getNodeUrl().getIpAddress());
-            }
-        }
-        return serverList;
+        return new ArrayList<>(mataNodeService.getDataServerList());
     }
 
     public List<String> getMetaServerList() {
-        List<String> serverList = new ArrayList<>();
-        NodeManager metaNodeManager = NodeManagerFactory.getNodeManager(NodeType.META);
-
-        Collection<Node> metaNodes = metaNodeManager.getDataCenterNodes();
-
-        if (!CollectionUtils.isEmpty(metaNodes)) {
-            for (Node metaNode : metaNodes) {
-                if (metaNode.getNodeUrl() == null || metaNode.getNodeUrl().getIpAddress() == null) {
-                    continue;
-                }
-                serverList.add(metaNode.getNodeUrl().getIpAddress());
-            }
-        }
-        return serverList;
+        return new ArrayList<>(mataNodeService.getMetaServerList());
     }
 }

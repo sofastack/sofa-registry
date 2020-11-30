@@ -32,9 +32,9 @@ import com.alipay.sofa.registry.remoting.Server;
 import com.alipay.sofa.registry.remoting.exchange.Exchange;
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
 import com.alipay.sofa.registry.server.session.converter.ReceivedDataConverter;
-import com.alipay.sofa.registry.server.session.node.service.MetaNodeService;
 import com.alipay.sofa.registry.server.session.provideData.ProvideDataProcessor;
 import com.alipay.sofa.registry.server.session.store.Watchers;
+import com.alipay.sofa.registry.server.shared.meta.MetaServerService;
 import com.alipay.sofa.registry.task.listener.TaskEvent;
 import com.alipay.sofa.registry.task.listener.TaskEvent.TaskType;
 import com.alipay.sofa.registry.task.listener.TaskListenerManager;
@@ -66,7 +66,7 @@ public class ProvideDataChangeFetchTask extends AbstractSessionTask {
     /**
      * Meta Node service
      */
-    private final MetaNodeService     metaNodeService;
+    private final MetaServerService   metaServerService;
 
     private final Watchers            sessionWatchers;
 
@@ -78,12 +78,12 @@ public class ProvideDataChangeFetchTask extends AbstractSessionTask {
 
     public ProvideDataChangeFetchTask(SessionServerConfig sessionServerConfig,
                                       TaskListenerManager taskListenerManager,
-                                      MetaNodeService metaNodeService, Watchers sessionWatchers,
-                                      Exchange boltExchange,
+                                      MetaServerService metaServerService,
+                                      Watchers sessionWatchers, Exchange boltExchange,
                                       ProvideDataProcessor provideDataProcessorManager) {
         this.sessionServerConfig = sessionServerConfig;
         this.taskListenerManager = taskListenerManager;
-        this.metaNodeService = metaNodeService;
+        this.metaServerService = metaServerService;
         this.sessionWatchers = sessionWatchers;
         this.boltExchange = boltExchange;
         this.provideDataProcessorManager = provideDataProcessorManager;
@@ -111,7 +111,7 @@ public class ProvideDataChangeFetchTask extends AbstractSessionTask {
         ProvideData provideData = null;
         String dataInfoId = notifyProvideDataChange.getDataInfoId();
         if (notifyProvideDataChange.getDataOperator() != DataOperator.REMOVE) {
-            provideData = metaNodeService.fetchData(dataInfoId);
+            provideData = metaServerService.fetchData(dataInfoId);
 
             if (provideData == null) {
                 LOGGER.warn("Notify provider data Change request {} fetch no provider data!", notifyProvideDataChange);

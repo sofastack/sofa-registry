@@ -109,9 +109,6 @@ public class CrossDcMetaServerManager extends AbstractLifecycle implements MetaS
         return metaServer;
     }
 
-    @Override
-<<<<<<< HEAD
-=======
     public void remove(String dc) {
         CrossDcMetaServer metaServer = crossDcMetaServers.remove(dc);
         if (metaServer == null) {
@@ -126,7 +123,6 @@ public class CrossDcMetaServerManager extends AbstractLifecycle implements MetaS
     }
 
     @Override
->>>>>>> origin/feat/datastore
     protected void doInitialize() throws InitializeException {
         super.doInitialize();
         for (Map.Entry<String, Collection<String>> entry : nodeConfig.getMetaNodeIP().entrySet()) {
@@ -180,7 +176,6 @@ public class CrossDcMetaServerManager extends AbstractLifecycle implements MetaS
         }
     }
 
-<<<<<<< HEAD
     @VisibleForTesting
     CrossDcMetaServerManager setNodeConfig(NodeConfig nodeConfig) {
         this.nodeConfig = nodeConfig;
@@ -221,6 +216,4 @@ public class CrossDcMetaServerManager extends AbstractLifecycle implements MetaS
     ConcurrentMap<String, CrossDcMetaServer> getCrossDcMetaServers() {
         return crossDcMetaServers;
     }
-=======
->>>>>>> origin/feat/datastore
 }

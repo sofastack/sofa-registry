@@ -20,8 +20,6 @@ import com.alipay.sofa.registry.common.model.Node;
 import com.alipay.sofa.registry.common.model.metaserver.ConfigureLoadbalanceRequest;
 import com.alipay.sofa.registry.remoting.Channel;
 import com.alipay.sofa.registry.server.session.connections.ConnectionsService;
-import com.alipay.sofa.registry.server.session.node.NodeManagerFactory;
-import com.alipay.sofa.registry.server.session.node.SessionNodeManager;
 import org.springframework.beans.factory.annotation.Autowired;
 
 /**
@@ -50,9 +48,6 @@ public class ConfigureLoadbalanceHandler extends AbstractClientHandler {
 
     @Override
     public Object reply(Channel channel, Object message) {
-        SessionNodeManager nodeManager = (SessionNodeManager) NodeManagerFactory
-            .getNodeManager(Node.NodeType.SESSION);
-
         ConfigureLoadbalanceRequest configureLoadbalanceRequest = (ConfigureLoadbalanceRequest) message;
 
         connectionsService.setMaxConnections(configureLoadbalanceRequest.getMaxConnections());

@@ -22,5 +22,6 @@
         <module>data</module>
         <module>meta</module>
         <module>integration</module>
+        <module>shared</module>
     </modules>
 </project>

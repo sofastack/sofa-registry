@@ -54,14 +54,16 @@ public class HeartbeatRequestHandler extends AbstractServerHandler<RenewNodesReq
             BaseHeartBeatResponse response = null;
             switch (renewNode.getNodeType()) {
                 case SESSION:
-                    response = new SessionHeartBeatResponse(metaServer.getEpoch(), metaServer.getSlotTable(),
-                            metaServer.getClusterMembers());
+                    response = new SessionHeartBeatResponse(metaServer.getEpoch(),
+                        metaServer.getSlotTable(), metaServer.getClusterMembers(),
+                        metaServer.getSessionServers());
                 case DATA:
-                    response = new DataHeartBeatResponse(metaServer.getEpoch(), metaServer.getSlotTable(),
-                            metaServer.getClusterMembers(), metaServer.getSessionServers());
+                    response = new DataHeartBeatResponse(metaServer.getEpoch(),
+                        metaServer.getSlotTable(), metaServer.getClusterMembers(),
+                        metaServer.getSessionServers());
                 case META:
-                    response = new BaseHeartBeatResponse(metaServer.getEpoch(), metaServer.getSlotTable(),
-                            metaServer.getClusterMembers());
+                    response = new BaseHeartBeatResponse(metaServer.getEpoch(),
+                        metaServer.getSlotTable(), metaServer.getClusterMembers());
                 default:
                     break;
             }
@@ -69,8 +71,8 @@ public class HeartbeatRequestHandler extends AbstractServerHandler<RenewNodesReq
             return new GenericResponse<BaseHeartBeatResponse>().fillSucceed(response);
         } catch (Throwable e) {
             LOGGER.error("Node " + renewNode + "renew error!", e);
-            return new GenericResponse<RenewNodesResult>().fillFailed("Node " + renewNode
-                                                                      + "renew error!");
+            return new GenericResponse<BaseHeartBeatResponse>().fillFailed("Node " + renewNode
+                                                                           + "renew error!");
         }
     }
 

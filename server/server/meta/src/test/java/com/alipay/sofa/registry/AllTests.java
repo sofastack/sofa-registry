@@ -22,7 +22,7 @@ package com.alipay.sofa.registry;
  * Nov 13, 2020
  */
 
-import com.alipay.sofa.registry.common.model.slot.CRC32SlotFunctionTest;
+import com.alipay.sofa.registry.common.model.slot.CRC16SlotFunctionTest;
 import com.alipay.sofa.registry.server.meta.lease.LeaseTest;
 import com.alipay.sofa.registry.server.meta.lease.impl.*;
 import com.alipay.sofa.registry.server.meta.metaserver.impl.DefaultCrossDcMetaServerTest;
@@ -32,9 +32,8 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
 
 @RunWith(Suite.class)
-<<<<<<< HEAD
 @Suite.SuiteClasses({
-        CRC32SlotFunctionTest.class,
+        CRC16SlotFunctionTest.class,
         DefaultCrossDcMetaServerTest.class,
         CrossDcSlotAllocatorTest.class,
         DefaultCurrentDcMetaServerTest.class,
@@ -46,11 +45,5 @@ import org.junit.runners.Suite;
         LeaseTest.class,
         DefaultMetaServerManagerTest.class
 })
-=======
-@Suite.SuiteClasses({ CRC32SlotFunctionTest.class, DefaultCrossDcMetaServerTest.class,
-                     CrossDcSlotAllocatorTest.class, DefaultCurrentDcMetaServerTest.class,
-                     DefaultSessionManagerTest.class, DefaultDataServerManagerTest.class,
-                     DefaultLeaseManagerTest.class })
->>>>>>> origin/feat/datastore
 public class AllTests {
 }

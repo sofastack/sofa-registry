@@ -66,12 +66,11 @@ public class NotifyProvideDataChangeHandler extends AbstractClientHandler {
     public Object reply(Channel channel, Object message) {
 
         NotifyProvideDataChange notifyProvideDataChange = (NotifyProvideDataChange) message;
-
-        if (!ValueConstants.STOP_PUSH_DATA_SWITCH_DATA_ID.equals(notifyProvideDataChange
-            .getDataInfoId())
-            && !ValueConstants.BLACK_LIST_DATA_ID.equals(notifyProvideDataChange.getDataInfoId())
-            && !ValueConstants.ENABLE_DATA_RENEW_SNAPSHOT.equals(notifyProvideDataChange
-                .getDataInfoId())) {
+        final String notifyDataInfoId = notifyProvideDataChange.getDataInfoId();
+        if (!ValueConstants.STOP_PUSH_DATA_SWITCH_DATA_ID.equals(notifyDataInfoId)
+            && !ValueConstants.BLACK_LIST_DATA_ID.equals(notifyDataInfoId)
+            && !ValueConstants.DATA_DATUM_SYNC_SESSION_INTERVAL_SEC.equals(notifyDataInfoId)
+            && !ValueConstants.DATA_DATUM_EXPIRE_SEC.equals(notifyDataInfoId)) {
             boolean result = sessionWatchers.checkWatcherVersions(
                 notifyProvideDataChange.getDataInfoId(), notifyProvideDataChange.getVersion());
             if (!result) {
