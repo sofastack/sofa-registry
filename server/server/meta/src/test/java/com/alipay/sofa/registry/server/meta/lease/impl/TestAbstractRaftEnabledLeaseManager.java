@@ -25,7 +25,11 @@ import com.alipay.sofa.registry.lifecycle.impl.LifecycleHelper;
 import com.alipay.sofa.registry.server.meta.AbstractTest;
 import com.alipay.sofa.registry.server.meta.lease.Lease;
 import com.alipay.sofa.registry.server.meta.remoting.RaftExchanger;
-import org.junit.*;
+import org.junit.After;
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Test;
+
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.CyclicBarrier;
 
@@ -160,7 +164,7 @@ public class TestAbstractRaftEnabledLeaseManager extends AbstractTest {
 
     @Test
     public void testEvict() {
-        manager.evict();
+
     }
 
     @Test
