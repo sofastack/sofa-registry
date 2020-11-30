@@ -29,7 +29,6 @@ import java.util.List;
  * <p>
  * Nov 24, 2020
  */
-@Component
 @SmartSpringLifecycle
 public class DefaultDataServerManager extends AbstractRaftEnabledLeaseManager<DataNode> implements
                                                                                        DataServerManager {

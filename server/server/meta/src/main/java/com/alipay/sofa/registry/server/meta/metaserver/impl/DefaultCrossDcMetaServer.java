@@ -119,7 +119,7 @@ public class DefaultCrossDcMetaServer extends AbstractMetaServer implements Cros
         for (String ip : initMetaAddresses) {
             metaNodes.add(new MetaNode(new URL(ip), dcName));
         }
-        this.metaServers = metaNodes;
+        this.metaServers.set(metaNodes);
     }
 
     private void initSlotAllocator() throws InitializeException {
@@ -188,6 +188,11 @@ public class DefaultCrossDcMetaServer extends AbstractMetaServer implements Cros
 
     public long getEpoch() {
         return currentVersion.get();
+    }
+
+    @Override
+    public List<MetaNode> getClusterMembers() {
+        return metaServers.get();
     }
 
     private int getIntervalMilli() {
@@ -286,32 +291,28 @@ public class DefaultCrossDcMetaServer extends AbstractMetaServer implements Cros
 
         public void tryUpdateRemoteDcMetaServerList(DataCenterNodes<MetaNode> response) {
             String remoteDc = response.getDataCenterId();
-            if (!getDc().equalsIgnoreCase(remoteDc)) {
-                throw new IllegalStateException(String.format(
-                    "MetaServer List Response not correct, ask [%s], received [%s]", getDc(),
-                    remoteDc));
+            if(!getDc().equalsIgnoreCase(remoteDc)) {
+                throw new IllegalArgumentException(String.format("MetaServer List Response not correct, ask [%s], received [%s]",
+                        getDc(), remoteDc));
             }
             DefaultCrossDcMetaServer.this.lock.writeLock().lock();
             try {
                 Long remoteVersion = response.getVersion();
-                if (remoteVersion <= currentVersion.get()) {
-                    if (logger.isDebugEnabled()) {
-                        logger.debug(
-                            "[tryUpdateRemoteDcMetaServerList]shall ignore as version is left behind, "
-                                    + "remote[{}], current[{}]", remoteVersion,
-                            currentVersion.get());
+                if(remoteVersion <= currentVersion.get()) {
+                    if(logger.isDebugEnabled()) {
+                        logger.debug("[tryUpdateRemoteDcMetaServerList]shall ignore as version is left behind, " +
+                                "remote[{}], current[{}]", remoteVersion, currentVersion.get());
                     }
                     return;
                 }
-                if (logger.isWarnEnabled()) {
-                    logger
-                        .warn(
-                            "[tryUpdateRemoteDcMetaServerList][{}] remote meta server changed, \nbefore: {}, \nafter: {}",
-                            getDc(), DefaultCrossDcMetaServer.this.metaServers, response.getNodes()
-                                .values());
+                if(logger.isWarnEnabled()) {
+                    logger.warn("[tryUpdateRemoteDcMetaServerList][{}] remote meta server changed, \nbefore: {}, \nafter: {}",
+                            getDc(), DefaultCrossDcMetaServer.this.metaServers.get(), response.getNodes() != null ? response.getNodes().values() : "None");
                 }
-                DefaultCrossDcMetaServer.this.metaServers = Lists.newArrayList(response.getNodes()
-                    .values());
+                currentVersion.set(remoteVersion);
+                if(response.getNodes() != null) {
+                    metaServers.set(Lists.newArrayList(response.getNodes().values()));
+                }
             } finally {
                 DefaultCrossDcMetaServer.this.lock.writeLock().unlock();
             }
@@ -321,10 +322,6 @@ public class DefaultCrossDcMetaServer extends AbstractMetaServer implements Cros
         private final void registerAsRaftService() {
             Processor.getInstance().addWorker(getServiceId(), MetaServerListStorage.class,
                 RaftMetaServerListStorage.this);
-        }
-
-        private final void unregisterAsRaftService() {
-            Processor.getInstance().removeWorker(getServiceId());
         }
 
     }
@@ -339,9 +336,18 @@ public class DefaultCrossDcMetaServer extends AbstractMetaServer implements Cros
         return this;
     }
 
+    @VisibleForTesting
+    DefaultCrossDcMetaServer setAllocator(SlotAllocator allocator) {
+        this.allocator = allocator;
+        return this;
+    }
+
     @Override
     public String toString() {
-        return "DefaultCrossDcMetaServer{" + "dcName='" + dcName + '\'' + ", initMetaAddresses="
-               + initMetaAddresses + ", lastRefreshTime=" + timestamp + '}';
+        return "DefaultCrossDcMetaServer{" +
+                "dcName='" + dcName + '\'' +
+                ", initMetaAddresses=" + initMetaAddresses +
+                ", lastRefreshTime=" + timestamp +
+                '}';
     }
 }

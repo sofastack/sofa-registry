@@ -24,6 +24,7 @@ import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
 import java.util.Map;
+import java.util.Objects;
 
 /**
  *
@@ -253,6 +254,25 @@ public final class URL implements Serializable {
         }
 
         return new URL(protocol, ipAddress, port, "", path, HESSIAN_2, parameters);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        URL url = (URL) o;
+        return port == url.port &&
+                protocol == url.protocol &&
+                Objects.equals(host, url.host) &&
+                Objects.equals(ipAddress, url.ipAddress) &&
+                Objects.equals(path, url.path) &&
+                Objects.equals(parameters, url.parameters) &&
+                Objects.equals(addressString, url.addressString);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(protocol, host, ipAddress, port, path, parameters, addressString);
     }
 
     @Override
