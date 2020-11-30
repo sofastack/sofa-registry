@@ -25,6 +25,9 @@ import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.remoting.Channel;
 import com.alipay.sofa.registry.remoting.ChannelHandler;
 
+import java.util.concurrent.Executor;
+import java.util.concurrent.ThreadPoolExecutor;
+
 /**
  *
  * @author shangyu.wh
@@ -38,13 +41,17 @@ public class NotifyLeaderChangeHandler implements ChannelHandler {
 
     private CliClientService    clientService;
 
+    private ThreadPoolExecutor  executor;
+
     /**
      * constructor
      * @param groupId
      */
-    public NotifyLeaderChangeHandler(String groupId, CliClientService clientService) {
+    public NotifyLeaderChangeHandler(String groupId, CliClientService clientService,
+                                     ThreadPoolExecutor executor) {
         this.groupId = groupId;
         this.clientService = clientService;
+        this.executor = executor;
     }
 
     @Override
@@ -93,5 +100,10 @@ public class NotifyLeaderChangeHandler implements ChannelHandler {
     @Override
     public Class interest() {
         return NotifyLeaderChange.class;
+    }
+
+    @Override
+    public Executor getExecutor() {
+        return executor;
     }
 }
