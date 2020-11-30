@@ -26,7 +26,7 @@ import java.util.Map;
  * @version v 0.1 2020-11-28 12:24 yuzhi.lyz Exp $
  */
 public final class SlotFunctionRegistry {
-    public static final int                        MAX_SLOTS = 128;
+    public static final int                        MAX_SLOTS = 2;
     private static final String                    DEF_FUNC  = "crc16";
     private static final Map<String, SlotFunction> funcs     = Maps.newConcurrentMap();
 

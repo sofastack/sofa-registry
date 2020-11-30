@@ -27,9 +27,9 @@ import com.alipay.sofa.registry.log.LoggerFactory;
 public abstract class LoopRunnable implements Runnable {
     private static final Logger LOGGER = LoggerFactory.getLogger(LoopRunnable.class);
 
-    public abstract void runUnThrowable();
+    public abstract void runUnthrowable();
 
-    public abstract void waitingUnThrowable();
+    public abstract void waitingUnthrowable();
 
     public void unexpectExit(Throwable e) {
         LOGGER.error("expect exit in LoopRunnable {}", Thread.currentThread().getName(), e);
@@ -39,12 +39,12 @@ public abstract class LoopRunnable implements Runnable {
         try {
             for (;;) {
                 try {
-                    runUnThrowable();
+                    runUnthrowable();
                 } catch (Throwable ignored) {
                     // ignored that
                 }
                 try {
-                    waitingUnThrowable();
+                    waitingUnthrowable();
                 } catch (Throwable ignored) {
                 }
             }

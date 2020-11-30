@@ -21,6 +21,7 @@ import com.alipay.remoting.Connection;
 import com.alipay.sofa.registry.common.model.store.URL;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
+import com.alipay.sofa.registry.remoting.CallbackHandler;
 import com.alipay.sofa.registry.remoting.Channel;
 import com.alipay.sofa.registry.remoting.ChannelHandler;
 import com.alipay.sofa.registry.remoting.Client;
@@ -42,14 +43,14 @@ import java.util.*;
  * @version v 0.1 2020-11-29 12:08 yuzhi.lyz Exp $
  */
 public abstract class ClientExchanger implements NodeExchanger {
-    private static final Logger LOGGER = LoggerFactory.getLogger(ClientExchanger.class);
-    private final        String serverType;
+    private static final Logger    LOGGER    = LoggerFactory.getLogger(ClientExchanger.class);
+    private final String           serverType;
 
     @Autowired
-    protected Exchange boltExchange;
+    protected Exchange             boltExchange;
 
     protected volatile Set<String> serverIps = Sets.newHashSet();
-    private final      Connector   connector;
+    private final Connector        connector;
 
     protected ClientExchanger(String serverType) {
         this.serverType = serverType;
@@ -62,12 +63,33 @@ public abstract class ClientExchanger implements NodeExchanger {
         Client client = boltExchange.getClient(serverType);
         final int timeout = request.getTimeout() != null ? request.getTimeout() : getRpcTimeout();
         try {
-            final Object result = client.sendSync(request.getRequestUrl(), request.getRequestBody(), timeout);
-            return () -> result;
+            CallbackHandler callback = request.getCallBackHandler();
+            if (callback == null) {
+                final Object result = client.sendSync(request.getRequestUrl(), request.getRequestBody(), timeout);
+                return () -> result;
+            } else {
+                client.sendCallback(request.getRequestUrl(), request.getRequestBody(), callback, timeout);
+                return () -> Response.ResultStatus.SUCCESSFUL;
+            }
         } catch (Throwable e) {
             throw new RequestException(serverType + "Exchanger request error! Request url:" + request.getRequestUrl(),
                     request, e);
         }
+    }
+
+    public Response requestRaw(String ip, Object raw) throws RequestException {
+        Request req = new Request() {
+            @Override
+            public Object getRequestBody() {
+                return raw;
+            }
+
+            @Override
+            public URL getRequestUrl() {
+                return new URL(ip, getServerPort());
+            }
+        };
+        return request(req);
     }
 
     @Override
@@ -82,7 +104,7 @@ public abstract class ClientExchanger implements NodeExchanger {
         return getClient();
     }
 
-    protected Client getClient() {
+    public Client getClient() {
         return boltExchange.getClient(serverType);
     }
 
@@ -107,7 +129,7 @@ public abstract class ClientExchanger implements NodeExchanger {
                 client = getClient();
                 if (client == null) {
                     client = boltExchange.connect(serverType, getConnNum(), url,
-                            getClientHandlers().toArray(new ChannelHandler[0]));
+                        getClientHandlers().toArray(new ChannelHandler[0]));
                 }
             }
         }
@@ -142,7 +164,7 @@ public abstract class ClientExchanger implements NodeExchanger {
         }
 
         @Override
-        public void runUnThrowable() {
+        public void runUnthrowable() {
             Set<String> ips = serverIps;
             try {
                 tryConnectAllServer(ips);
@@ -151,7 +173,7 @@ public abstract class ClientExchanger implements NodeExchanger {
             }
         }
 
-        public void waitingUnThrowable() {
+        public void waitingUnthrowable() {
             synchronized (this) {
                 ConcurrentUtils.objectWaitUninterruptibly(this, 3000);
             }

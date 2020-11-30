@@ -36,9 +36,9 @@ public class ConcurrentUtils {
 
         private static final Logger logger = LoggerFactory.getLogger(SafeParaLoop.class);
 
-        private List<T> list;
+        private List<T>             list;
 
-        private Executor executors;
+        private Executor            executors;
 
         public SafeParaLoop(Collection<T> list) {
             this(MoreExecutors.directExecutor(), list);

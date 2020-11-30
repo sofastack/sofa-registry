@@ -90,13 +90,13 @@ public class DataServerBootstrap {
 
     private Server                            httpServer;
 
-    private AtomicBoolean                     httpServerStarted        = new AtomicBoolean(false);
+    private final AtomicBoolean               httpServerStarted        = new AtomicBoolean(false);
 
-    private AtomicBoolean                     schedulerStarted         = new AtomicBoolean(false);
+    private final AtomicBoolean               schedulerStarted         = new AtomicBoolean(false);
 
-    private AtomicBoolean                     serverForSessionStarted  = new AtomicBoolean(false);
+    private final AtomicBoolean               serverForSessionStarted  = new AtomicBoolean(false);
 
-    private AtomicBoolean                     serverForDataSyncStarted = new AtomicBoolean(false);
+    private final AtomicBoolean               serverForDataSyncStarted = new AtomicBoolean(false);
 
     /**
      * start dataserver
@@ -260,19 +260,19 @@ public class DataServerBootstrap {
         }
     }
 
-    public AtomicBoolean getHttpServerStarted() {
-        return httpServerStarted;
+    public boolean getHttpServerStarted() {
+        return httpServerStarted.get();
     }
 
-    public AtomicBoolean getSchedulerStarted() {
-        return schedulerStarted;
+    public boolean getSchedulerStarted() {
+        return schedulerStarted.get();
     }
 
-    public AtomicBoolean getServerForSessionStarted() {
-        return serverForSessionStarted;
+    public boolean getServerForSessionStarted() {
+        return serverForSessionStarted.get();
     }
 
-    public AtomicBoolean getServerForDataSyncStarted() {
-        return serverForDataSyncStarted;
+    public boolean getServerForDataSyncStarted() {
+        return serverForDataSyncStarted.get();
     }
 }

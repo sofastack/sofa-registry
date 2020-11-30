@@ -44,6 +44,8 @@ public class DataServerConfig {
 
     private int                  syncDataPort;
 
+    private int                  syncSessionPort;
+
     private int                  metaServerPort;
 
     private int                  httpServerPort;
@@ -107,10 +109,6 @@ public class DataServerConfig {
     private int                  sessionServerNotifierRetryExecutorThreadSize = 10;
 
     private int                  sessionServerNotifierRetryExecutorQueueSize  = 10000;
-
-    private int                  dataSyncDelayTimeout                         = 1000;
-
-    private int                  dataSyncNotifyRetry                          = 3;
 
     private int                  sessionDisconnectDelayMs                     = 30000;
 
@@ -746,42 +744,6 @@ public class DataServerConfig {
     }
 
     /**
-     * Getter method for property <tt>dataSyncDelayTimeout</tt>.
-     *
-     * @return property value of dataSyncDelayTimeout
-     */
-    public int getDataSyncDelayTimeout() {
-        return dataSyncDelayTimeout;
-    }
-
-    /**
-     * Setter method for property <tt>dataSyncDelayTimeout </tt>.
-     *
-     * @param dataSyncDelayTimeout  value to be assigned to property dataSyncDelayTimeout
-     */
-    public void setDataSyncDelayTimeout(int dataSyncDelayTimeout) {
-        this.dataSyncDelayTimeout = dataSyncDelayTimeout;
-    }
-
-    /**
-     * Getter method for property <tt>dataSyncNotifyRetry</tt>.
-     *
-     * @return property value of dataSyncNotifyRetry
-     */
-    public int getDataSyncNotifyRetry() {
-        return dataSyncNotifyRetry;
-    }
-
-    /**
-     * Setter method for property <tt>dataSyncNotifyRetry </tt>.
-     *
-     * @param dataSyncNotifyRetry  value to be assigned to property dataSyncNotifyRetry
-     */
-    public void setDataSyncNotifyRetry(int dataSyncNotifyRetry) {
-        this.dataSyncNotifyRetry = dataSyncNotifyRetry;
-    }
-
-    /**
      * Getter method for property <tt>sessionDisconnectDelayMs</tt>.
      *
      * @return property value of sessionDisconnectDelayMs
@@ -1021,6 +983,22 @@ public class DataServerConfig {
      */
     public void setSchedulerHeartbeatIntervalSec(int schedulerHeartbeatIntervalSec) {
         this.schedulerHeartbeatIntervalSec = schedulerHeartbeatIntervalSec;
+    }
+
+    /**
+     * Getter method for property <tt>syncSessionPort</tt>.
+     * @return property value of syncSessionPort
+     */
+    public int getSyncSessionPort() {
+        return syncSessionPort;
+    }
+
+    /**
+     * Setter method for property <tt>syncSessionPort</tt>.
+     * @param syncSessionPort value to be assigned to property syncSessionPort
+     */
+    public void setSyncSessionPort(int syncSessionPort) {
+        this.syncSessionPort = syncSessionPort;
     }
 
     @Override

@@ -40,6 +40,8 @@ public class SessionServerConfigBean implements SessionServerConfig {
 
     private int                  serverPort                              = 9600;
 
+    private int                  syncSessionPort                         = 9630;
+
     private int                  metaServerPort                          = 9610;
 
     private int                  dataServerPort                          = 9620;
@@ -423,6 +425,11 @@ public class SessionServerConfigBean implements SessionServerConfig {
     @Override
     public int getServerPort() {
         return serverPort;
+    }
+
+    @Override
+    public int getSyncSessionPort() {
+        return syncSessionPort;
     }
 
     /**

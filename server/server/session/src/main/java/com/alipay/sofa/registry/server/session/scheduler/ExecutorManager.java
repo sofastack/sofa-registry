@@ -56,7 +56,7 @@ public class ExecutorManager {
     private final ExecutorService             checkPushExecutor;
     private final ThreadPoolExecutor          accessDataExecutor;
     private final ThreadPoolExecutor          dataChangeRequestExecutor;
-    private final ThreadPoolExecutor          dataSlotMigrateRequestExecutor;
+    private final ThreadPoolExecutor          dataSlotSyncRequestExecutor;
     private final ThreadPoolExecutor          pushTaskExecutor;
     private final ThreadPoolExecutor          connectClientExecutor;
     private final ThreadPoolExecutor          publishDataExecutor;
@@ -151,7 +151,7 @@ public class ExecutorManager {
                         new ArrayBlockingQueue<>(100000),
                         new NamedThreadFactory("DataSlotMigrateRequestHandler-executor", true)));
 
-        dataSlotMigrateRequestExecutor = reportExecutors.computeIfAbsent(DATA_SLOT_MIGRATE_REQUEST_EXECUTOR,
+        dataSlotSyncRequestExecutor = reportExecutors.computeIfAbsent(DATA_SLOT_MIGRATE_REQUEST_EXECUTOR,
                 k -> new SessionThreadPoolExecutor(DATA_SLOT_MIGRATE_REQUEST_EXECUTOR,
                         12,
                         24,
@@ -255,8 +255,8 @@ public class ExecutorManager {
             dataChangeRequestExecutor.shutdown();
         }
 
-        if (dataSlotMigrateRequestExecutor != null && !dataSlotMigrateRequestExecutor.isShutdown()) {
-            dataSlotMigrateRequestExecutor.shutdown();
+        if (dataSlotSyncRequestExecutor != null && !dataSlotSyncRequestExecutor.isShutdown()) {
+            dataSlotSyncRequestExecutor.shutdown();
         }
 
         if (connectClientExecutor != null && !connectClientExecutor.isShutdown()) {
@@ -288,8 +288,8 @@ public class ExecutorManager {
         return dataChangeRequestExecutor;
     }
 
-    public ThreadPoolExecutor getDataSlotMigrateRequestExecutor() {
-        return dataSlotMigrateRequestExecutor;
+    public ThreadPoolExecutor getDataSlotSyncRequestExecutor() {
+        return dataSlotSyncRequestExecutor;
     }
 
     public ThreadPoolExecutor getConnectClientExecutor() {

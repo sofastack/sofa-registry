@@ -78,23 +78,27 @@ public class HealthResource {
         boolean ret = start;
         sb.append("RaftClientManager:").append(start);
 
-        start = sessionServerBootstrap.getMetaStart().get();
+        start = sessionServerBootstrap.getMetaStart();
         ret = ret && start;
         sb.append(", MetaServerStart:").append(start);
 
-        start = sessionServerBootstrap.getSchedulerStart().get();
+        start = sessionServerBootstrap.getSchedulerStart();
         ret = ret && start;
         sb.append(", SchedulerStart:").append(start);
 
-        start = sessionServerBootstrap.getHttpStart().get();
+        start = sessionServerBootstrap.getHttpStart();
         ret = ret && start;
         sb.append(", HttpServerStart:").append(start);
 
-        start = sessionServerBootstrap.getServerStart().get();
+        start = sessionServerBootstrap.getServerStart();
         ret = ret && start;
         sb.append(", SessionServerStart:").append(start);
 
-        start = sessionServerBootstrap.getDataStart().get();
+        start = sessionServerBootstrap.getServerForDataSyncStart();
+        ret = ret && start;
+        sb.append(", ServerForDataSyncStart:").append(start);
+
+        start = sessionServerBootstrap.getDataStart();
         ret = ret && start;
         sb.append(", ConnectDataServer:").append(start);
 

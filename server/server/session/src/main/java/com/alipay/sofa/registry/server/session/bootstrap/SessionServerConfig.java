@@ -27,6 +27,8 @@ public interface SessionServerConfig {
 
     int getServerPort();
 
+    int getSyncSessionPort();
+
     int getMetaServerPort();
 
     int getDataServerPort();
