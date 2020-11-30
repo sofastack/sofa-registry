@@ -20,12 +20,14 @@ import com.alipay.sofa.registry.common.model.Node;
 import com.alipay.sofa.registry.common.model.metaserver.nodes.MetaNode;
 import com.alipay.sofa.registry.common.model.metaserver.nodes.SessionNode;
 import com.alipay.sofa.registry.common.model.slot.SlotTable;
+import com.alipay.sofa.registry.common.model.store.URL;
 import com.alipay.sofa.registry.exception.DisposeException;
 import com.alipay.sofa.registry.exception.InitializeException;
 import com.alipay.sofa.registry.jraft.processor.Processor;
 import com.alipay.sofa.registry.jraft.processor.ProxyHandler;
 import com.alipay.sofa.registry.lifecycle.SmartSpringLifecycle;
 import com.alipay.sofa.registry.lifecycle.impl.LifecycleHelper;
+import com.alipay.sofa.registry.server.meta.bootstrap.config.NodeConfig;
 import com.alipay.sofa.registry.server.meta.lease.DataServerManager;
 import com.alipay.sofa.registry.server.meta.lease.LeaseManager;
 import com.alipay.sofa.registry.server.meta.lease.SessionManager;
@@ -42,6 +44,7 @@ import org.springframework.stereotype.Component;
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 import java.lang.reflect.Proxy;
+import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -64,6 +67,9 @@ public class DefaultCurrentDcMetaServer extends AbstractMetaServer implements Cu
     @Autowired
     private RaftExchanger                raftExchanger;
 
+    @Autowired
+    private NodeConfig                   nodeConfig;
+
     private AtomicLong                   currentEpoch = new AtomicLong();
 
     private CurrentMetaServerRaftStorage raftStorage;
@@ -83,13 +89,27 @@ public class DefaultCurrentDcMetaServer extends AbstractMetaServer implements Cu
     @Override
     protected void doInitialize() throws InitializeException {
         super.doInitialize();
+        initMetaServers();
+        initRaftService();
+    }
+
+    private void initMetaServers() {
+        Collection<String> metaIpAddresses = nodeConfig.getMetaNodeIP().get(nodeConfig.getLocalDataCenter());
+        List<MetaNode> metaNodes = Lists.newArrayList();
+        for(String ip : metaIpAddresses) {
+            metaNodes.add(new MetaNode(new URL(ip), nodeConfig.getLocalDataCenter()));
+        }
+        this.metaServers.set(metaNodes);
+    }
+
+    private void initRaftService() {
         MetaServersRaftStorage storage = new MetaServersRaftStorage();
         storage.registerAsRaftService();
         raftStorage = (CurrentMetaServerRaftStorage) Proxy.newProxyInstance(
-            Thread.currentThread().getContextClassLoader(),
-            new Class[] { CurrentMetaServerRaftStorage.class },
-            new ProxyHandler(CurrentMetaServerRaftStorage.class, getServiceId(), raftExchanger
-                .getRaftClient()));
+                Thread.currentThread().getContextClassLoader(),
+                new Class[] { CurrentMetaServerRaftStorage.class },
+                new ProxyHandler(CurrentMetaServerRaftStorage.class, getServiceId(), raftExchanger
+                        .getRaftClient()));
     }
 
     @Override
