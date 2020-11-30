@@ -57,7 +57,7 @@ import static com.alipay.sofa.registry.server.meta.bootstrap.MetaServerConfigura
  * As while as a LeaderAware object, which watches leader event and trigger cross-dc-metaservers' refresh job when leader term
  * and stop all of them when it's not a raft-cluster leader
  * */
-
+@Component
 public class CrossDcMetaServerManager extends AbstractLifecycle implements MetaServerManager,
                                                                LeaderAware {
 
