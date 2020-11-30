@@ -153,7 +153,7 @@ public class CrossDcSlotAllocatorTest extends AbstractTest {
 
     //run manually
     @Test
-    @Ignore
+//    @Ignore
     public void testRaftMechanismWorks() throws Exception {
         RaftExchanger raftExchanger = startRaftExchanger();
 

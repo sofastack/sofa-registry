@@ -22,11 +22,17 @@ import com.alipay.sofa.registry.remoting.exchange.Exchange;
 import com.alipay.sofa.registry.remoting.exchange.NodeExchanger;
 import com.alipay.sofa.registry.remoting.jersey.exchange.JerseyExchange;
 import com.alipay.sofa.registry.server.meta.bootstrap.bean.lifecycle.RaftAnnotationBeanPostProcessor;
+import com.alipay.sofa.registry.server.meta.bootstrap.bean.lifecycle.SmartSpringLifecycleController;
 import com.alipay.sofa.registry.server.meta.bootstrap.config.MetaServerConfig;
 import com.alipay.sofa.registry.server.meta.bootstrap.config.MetaServerConfigBean;
 import com.alipay.sofa.registry.server.meta.bootstrap.config.NodeConfig;
 import com.alipay.sofa.registry.server.meta.bootstrap.config.NodeConfigBeanProperty;
 import com.alipay.sofa.registry.server.meta.executor.ExecutorManager;
+import com.alipay.sofa.registry.server.meta.lease.impl.CrossDcMetaServerManager;
+import com.alipay.sofa.registry.server.meta.lease.impl.DefaultDataServerManager;
+import com.alipay.sofa.registry.server.meta.lease.impl.DefaultMetaServerManager;
+import com.alipay.sofa.registry.server.meta.lease.impl.DefaultSessionManager;
+import com.alipay.sofa.registry.server.meta.metaserver.impl.DefaultCurrentDcMetaServer;
 import com.alipay.sofa.registry.server.meta.remoting.DataNodeExchanger;
 import com.alipay.sofa.registry.server.meta.remoting.MetaServerExchanger;
 import com.alipay.sofa.registry.server.meta.remoting.RaftExchanger;
@@ -38,7 +44,14 @@ import com.alipay.sofa.registry.server.meta.remoting.handler.AbstractServerHandl
 import com.alipay.sofa.registry.server.meta.remoting.handler.FetchProvideDataRequestHandler;
 import com.alipay.sofa.registry.server.meta.remoting.handler.HeartbeatRequestHandler;
 import com.alipay.sofa.registry.server.meta.resource.*;
+import com.alipay.sofa.registry.server.meta.slot.SlotManager;
+import com.alipay.sofa.registry.server.meta.slot.impl.ArrangeTaskExecutor;
+import com.alipay.sofa.registry.server.meta.slot.impl.DataServerArrangeTaskDispatcher;
+import com.alipay.sofa.registry.server.meta.slot.impl.DefaultSlotArranger;
+import com.alipay.sofa.registry.server.meta.slot.impl.DefaultSlotManager;
 import com.alipay.sofa.registry.store.api.DBService;
+import com.alipay.sofa.registry.task.listener.DefaultTaskListenerManager;
+import com.alipay.sofa.registry.task.listener.TaskListenerManager;
 import com.alipay.sofa.registry.util.DefaultExecutorFactory;
 import com.alipay.sofa.registry.util.NamedThreadFactory;
 import com.alipay.sofa.registry.util.OsUtils;
@@ -109,6 +122,11 @@ public class MetaServerConfiguration {
         public RaftAnnotationBeanPostProcessor raftAnnotationBeanPostProcessor() {
             return new RaftAnnotationBeanPostProcessor();
         }
+
+        @Bean
+        public SmartSpringLifecycleController smartSpringLifecycleController() {
+            return new SmartSpringLifecycleController();
+        }
     }
 
     @Configuration
@@ -131,7 +149,63 @@ public class MetaServerConfiguration {
 
     @Configuration
     public static class MetaServerClusterConfiguration {
+        @Bean
+        public CrossDcMetaServerManager crossDcMetaServerManager() {
+            return new CrossDcMetaServerManager();
+        }
 
+        @Bean
+        public DefaultMetaServerManager defaultMetaServerManager() {
+            return new DefaultMetaServerManager();
+        }
+
+        @Bean
+        public DefaultDataServerManager dataDataServerManager() {
+            return new DefaultDataServerManager();
+        }
+
+        @Bean
+        public DefaultSessionManager defaultSessionManager() {
+            return new DefaultSessionManager();
+        }
+
+        @Bean
+        public DefaultCurrentDcMetaServer currentDcMetaServer() {
+            return new DefaultCurrentDcMetaServer();
+        }
+
+    }
+
+    @Configuration
+    public static class SlotManagementConfiguration {
+
+        @Bean
+        public ArrangeTaskExecutor arrangeTaskExecutor() {
+            return new ArrangeTaskExecutor();
+        }
+
+        @Bean
+        public DataServerArrangeTaskDispatcher dataArrangeTaskDispathcher() {
+            return new DataServerArrangeTaskDispatcher();
+        }
+
+        @Bean
+        public DefaultSlotArranger slotArranger() {
+            return new DefaultSlotArranger();
+        }
+
+        @Bean
+        public DefaultSlotManager slotManager() {
+            return new DefaultSlotManager();
+        }
+    }
+
+    @Configuration
+    public static class MetaServerTaskConfiguration {
+        @Bean
+        public TaskListenerManager taskListenerManager() {
+            return new DefaultTaskListenerManager();
+        }
     }
 
     @Configuration

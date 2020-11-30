@@ -31,7 +31,7 @@ import java.util.concurrent.atomic.AtomicLong;
  * <p>
  * Nov 25, 2020
  */
-@Component
+
 public class ArrangeTaskExecutor extends AbstractLifecycle {
 
     private ExecutorService              executors;

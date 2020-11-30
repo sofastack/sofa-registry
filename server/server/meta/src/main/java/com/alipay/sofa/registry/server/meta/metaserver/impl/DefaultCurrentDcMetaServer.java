@@ -46,7 +46,7 @@ import java.util.concurrent.atomic.AtomicLong;
  * <p>
  * Nov 23, 2020
  */
-@Component
+
 @SmartSpringLifecycle
 public class DefaultCurrentDcMetaServer extends AbstractMetaServer implements CurrentDcMetaServer {
 
@@ -160,7 +160,7 @@ public class DefaultCurrentDcMetaServer extends AbstractMetaServer implements Cu
 
         @Override
         public List<MetaNode> getClusterMembers() {
-            return Lists.newArrayList(DefaultCurrentDcMetaServer.this.metaServers);
+            return Lists.newArrayList(DefaultCurrentDcMetaServer.this.metaServers.get());
         }
 
         @Override
@@ -176,7 +176,7 @@ public class DefaultCurrentDcMetaServer extends AbstractMetaServer implements Cu
                         "[updateClusterMembers] update meta-servers, \nprevious[{}]: {} \ncurrent[{}]: {}",
                         currentEpoch.get(), getClusterMembers(), epoch, newMembers);
                 currentEpoch.set(epoch);
-                DefaultCurrentDcMetaServer.this.metaServers = Lists.newArrayList(newMembers);
+                DefaultCurrentDcMetaServer.this.metaServers.set(Lists.newArrayList(newMembers));
             } finally {
                 lock.writeLock().unlock();
             }
@@ -189,7 +189,7 @@ public class DefaultCurrentDcMetaServer extends AbstractMetaServer implements Cu
 
         @Override
         public boolean cancel(MetaNode renewal) {
-            return metaServers.remove(renewal);
+            return metaServers.get().remove(renewal);
         }
 
         @Override
