@@ -18,6 +18,8 @@ package com.alipay.sofa.registry.common.model.slot;
 
 import com.alipay.sofa.registry.common.model.ProcessId;
 import com.alipay.sofa.registry.common.model.store.Publisher;
+import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.collections.MapUtils;
 
 import java.io.Serializable;
 import java.util.List;
@@ -122,5 +124,10 @@ public class DataSlotDiffSyncResult implements Serializable {
      */
     public void setSessionProcessId(ProcessId sessionProcessId) {
         this.sessionProcessId = sessionProcessId;
+    }
+
+    public boolean isEmpty() {
+        return MapUtils.isEmpty(updatedPublishers) && CollectionUtils.isEmpty(removedDataInfoIds)
+               && MapUtils.isEmpty(removedPublishers);
     }
 }

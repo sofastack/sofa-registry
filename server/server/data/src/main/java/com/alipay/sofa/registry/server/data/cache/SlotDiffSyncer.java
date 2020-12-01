@@ -39,9 +39,9 @@ import java.util.Map;
  * @version v 0.1 2020-11-20 13:56 yuzhi.lyz Exp $
  */
 public final class SlotDiffSyncer {
-    private static final Logger                        LOGGER = LoggerFactory
-                                                                  .getLogger(SlotManagerImpl.class);
-    private final DataServerConfig                     dataServerConfig;
+    private static final Logger           LOGGER = LoggerFactory
+            .getLogger(SlotManagerImpl.class);
+    private final        DataServerConfig dataServerConfig;
 
     private final SlotManager.SlotDatumStorageProvider storageProvider;
 
@@ -55,33 +55,37 @@ public final class SlotDiffSyncer {
                                                    String targetAddress) {
         if (resp == null || !resp.isSuccess()) {
             LOGGER.error("response failed when sync from {}, slot={}, resp={}", targetAddress,
-                slotId, resp);
+                    slotId, resp);
             return null;
         }
         DataSlotDiffSyncResult result = resp.getData();
+        if (result.isEmpty()) {
+            LOGGER.info("sync slot={} from {}, empty", targetAddress, slotId);
+            return result;
+        }
         // TODO need to renew the session ProcessId
         storageProvider.merge(slotId, result.getUpdatedPublishers(),
-            result.getRemovedDataInfoIds(), result.getRemovedPublishers());
+                result.getRemovedDataInfoIds(), result.getRemovedPublishers());
         LOGGER
-            .info(
-                "sync slot={} from {}, updatedP {}:{}, removedD {}, removedP {}:{}, updatedD {}, removedD {}",
-                slotId, targetAddress, result.getUpdatedPublishers().size(), result
-                    .getUpdatedPublishersCount(), result.getRemovedDataInfoIds().size(), result
-                    .getRemovedPublishersCount(), result.getRemovedPublishers().size(), result
-                    .getUpdatedPublishers().keySet(), result.getRemovedDataInfoIds());
+                .info(
+                        "sync slot={} from {}, updatedP {}:{}, removedD {}, removedP {}:{}, updatedD {}, removedD {}",
+                        slotId, targetAddress, result.getUpdatedPublishers().size(), result
+                                .getUpdatedPublishersCount(), result.getRemovedDataInfoIds().size(), result
+                                .getRemovedPublishersCount(), result.getRemovedPublishers().size(), result
+                                .getUpdatedPublishers().keySet(), result.getRemovedDataInfoIds());
         return result;
     }
 
     public boolean syncDataInfoIds(int slotId, String targetAddress, ClientExchanger exchanger,
                                    long slotTableEpoch, String summaryTargetIp)
-                                                                               throws RequestException {
-        for (;;) {
+            throws RequestException {
+        for (; ; ) {
             Map<String, DatumSummary> summaryMap = storageProvider.getDatumSummary(slotId,
-                summaryTargetIp);
+                    summaryTargetIp);
             DataSlotDiffDataInfoIdRequest request = new DataSlotDiffDataInfoIdRequest(
-                slotTableEpoch, slotId, new HashSet<>(summaryMap.keySet()));
+                    slotTableEpoch, slotId, new HashSet<>(summaryMap.keySet()));
             GenericResponse<DataSlotDiffSyncResult> resp = (GenericResponse<DataSlotDiffSyncResult>) exchanger
-                .requestRaw(targetAddress, request).getResult();
+                    .requestRaw(targetAddress, request).getResult();
             DataSlotDiffSyncResult result = processSyncResp(slotId, resp, targetAddress);
             if (result == null) {
                 return false;
@@ -122,18 +126,18 @@ public final class SlotDiffSyncer {
     public boolean syncSession(int slotId, String sessionIp, SessionNodeExchanger exchanger,
                                long slotTableEpoch) throws RequestException {
         boolean syncDataInfoIds = syncDataInfoIds(slotId, sessionIp, exchanger, slotTableEpoch,
-            sessionIp);
+                sessionIp);
         boolean syncPublishers = syncPublishers(slotId, sessionIp, exchanger, slotTableEpoch,
-            sessionIp, dataServerConfig.getSlotSyncPublisherDigestMaxNum());
+                sessionIp, dataServerConfig.getSlotSyncPublisherDigestMaxNum());
         return syncDataInfoIds && syncPublishers;
     }
 
     public boolean syncSlotLeader(int slotId, String slotLeaderIp, DataNodeExchanger exchanger,
                                   long slotTableEpoch) throws RequestException {
         boolean syncDataInfoIds = syncDataInfoIds(slotId, slotLeaderIp, exchanger, slotTableEpoch,
-            null);
+                null);
         boolean syncPublishers = syncPublishers(slotId, slotLeaderIp, exchanger, slotTableEpoch,
-            null, dataServerConfig.getSlotSyncPublisherDigestMaxNum());
+                null, dataServerConfig.getSlotSyncPublisherDigestMaxNum());
         return syncDataInfoIds && syncPublishers;
     }
 

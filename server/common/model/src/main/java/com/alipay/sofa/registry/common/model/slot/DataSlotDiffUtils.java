@@ -20,7 +20,7 @@ import com.alipay.sofa.registry.common.model.PublisherDigestUtil;
 import com.alipay.sofa.registry.common.model.dataserver.DatumSummary;
 import com.alipay.sofa.registry.common.model.store.Publisher;
 import com.alipay.sofa.registry.log.Logger;
-import com.alipay.sofa.registry.util.CollectionUtils;
+import org.apache.commons.collections.MapUtils;
 
 import java.util.*;
 
@@ -42,7 +42,7 @@ public final class DataSlotDiffUtils {
             if (targetDataInfoIds.contains(dataInfoId)) {
                 continue;
             }
-            if (CollectionUtils.isEmpty(e.getValue())) {
+            if (MapUtils.isEmpty(e.getValue())) {
                 continue;
             }
             adds.put(dataInfoId, new ArrayList<>(e.getValue().values()));

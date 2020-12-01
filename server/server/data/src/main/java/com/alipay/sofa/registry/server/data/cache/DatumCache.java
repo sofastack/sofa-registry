@@ -63,7 +63,9 @@ public class DatumCache {
 
         //local
         Datum localDatum = localDatumStorage.get(dataInfoId);
-        datumMap.put(dataServerConfig.getLocalDataCenter(), localDatum);
+        if (localDatum != null) {
+            datumMap.put(dataServerConfig.getLocalDataCenter(), localDatum);
+        }
 
         return datumMap;
     }

@@ -554,12 +554,12 @@ public final class SlotManagerImpl implements SlotManager {
             LOGGER.error("unexpect exception task in thread {}, err={}", t.getName(), err);
         });
         return new ScheduledThreadPoolExecutor(corePoolSize, threadFactoryBuilder
-                .setNameFormat("Registry-SlotManager-Sched-" + name).build());
+                .setNameFormat("Slot-Sched-" + name).build());
     }
 
     private ExecutorService createExecutor(String name, int corePoolSize, int queueSize) {
         return new ThreadPoolExecutor(corePoolSize, corePoolSize, 300, TimeUnit.SECONDS,
-            new ArrayBlockingQueue<>(queueSize), new NamedThreadFactory(
-                "Registry-SlotManager-Executor-" + name, true));
+            new ArrayBlockingQueue<>(queueSize), new NamedThreadFactory("Slot-Executor-" + name,
+                true));
     }
 }

@@ -16,20 +16,21 @@
  */
 package com.alipay.sofa.registry.common.model.slot;
 
-import com.alipay.sofa.registry.common.model.CommonResponse;
+import com.alipay.sofa.registry.common.model.GenericResponse;
 
 /**
  *
  * @author yuzhi.lyz
  * @version v 0.1 2020-10-30 11:05 yuzhi.lyz Exp $
  */
-public final class SlotAccessGenericResponse<T> extends CommonResponse {
+public final class SlotAccessGenericResponse<T> extends GenericResponse<T> {
     private final SlotAccess slotAccess;
-    private T                data;
 
-    private SlotAccessGenericResponse(boolean success, String message, SlotAccess slotAccess) {
-        super(success, message);
+    private SlotAccessGenericResponse(boolean success, String message, SlotAccess slotAccess, T data) {
         this.slotAccess = slotAccess;
+        this.setData(data);
+        this.setSuccess(success);
+        this.setMessage(message);
     }
 
     /**
@@ -40,20 +41,15 @@ public final class SlotAccessGenericResponse<T> extends CommonResponse {
         return slotAccess;
     }
 
-    public static <T> SlotAccessGenericResponse<T> buildSuccessResponse(SlotAccess access) {
-        return new SlotAccessGenericResponse(true, null, access);
+    public static <T> SlotAccessGenericResponse<T> successResponse(SlotAccess access, T data) {
+        return new SlotAccessGenericResponse(true, null, access, data);
     }
 
-    public static <T> SlotAccessGenericResponse<T> buildFailedResponse(SlotAccess access) {
-        return new SlotAccessGenericResponse(false, access.toString(), access);
+    public static <T> SlotAccessGenericResponse<T> failedResponse(SlotAccess access) {
+        return new SlotAccessGenericResponse(false, access.toString(), access, null);
     }
 
-    public T getData() {
-        return data;
+    public static <T> SlotAccessGenericResponse<T> failedResponse(String msg) {
+        return new SlotAccessGenericResponse(false, msg, null, null);
     }
-
-    public void setData(T data) {
-        this.data = data;
-    }
-
 }

@@ -77,7 +77,7 @@ public class MetaDigestResource {
     @Produces(MediaType.APPLICATION_JSON)
     public Map getRegisterNodeByType(@PathParam("type") String type) {
         try {
-            return metaServerManager.getSummary(NodeType.valueOf(type)).getNodes();
+            return metaServerManager.getSummary(NodeType.valueOf(type.toUpperCase())).getNodes();
         } catch (Exception e) {
             TASK_LOGGER.error("Fail get Register Node By Type {} !", type, e);
             throw new RuntimeException("Fail get Register Node By Type" + type, e);
