@@ -269,8 +269,7 @@ public class DataChangeFetchTask extends AbstractSessionTask {
 
     private Datum getDatumCache() {
         // build key
-        DatumKey datumKey = new DatumKey(dataChangeRequest.getDataInfoId(),
-            dataChangeRequest.getDataCenter());
+        DatumKey datumKey = new DatumKey(dataChangeRequest.getDataInfoId(), dataChangeRequest.getDataCenter());
         Key key = new Key(KeyType.OBJ, DatumKey.class.getName(), datumKey);
 
         // get from cache (it will fetch from backend server)
@@ -278,7 +277,7 @@ public class DataChangeFetchTask extends AbstractSessionTask {
         try {
             value = sessionCacheService.getValue(key);
         } catch (CacheAccessException e) {
-            LOGGER.error(String.format("error when access cache: %s", e.getMessage()), e);
+            LOGGER.error("error when access cache: {}", datumKey, e);
         }
 
         return value == null ? null : value.getPayload();

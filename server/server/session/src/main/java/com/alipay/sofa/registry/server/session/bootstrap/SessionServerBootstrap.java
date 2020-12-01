@@ -118,6 +118,8 @@ public class SessionServerBootstrap {
 
             initEnvironment();
 
+            openDataSyncServer();
+
             connectMetaServer();
 
             startScheduler();
@@ -125,8 +127,6 @@ public class SessionServerBootstrap {
             openHttpServer();
 
             connectDataServer();
-
-            openDataSyncServer();
 
             openSessionServer();
 

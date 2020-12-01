@@ -59,7 +59,7 @@ public final class MetaServerServiceImpl extends
 
     @Override
     protected Node createNode() {
-        return new SessionNode(new URL(ServerEnv.IP), metaNodeExchanger.getLocalDataCenter());
+        return new SessionNode(new URL(ServerEnv.IP), sessionServerConfig.getSessionServerRegion());
     }
 
     @Override

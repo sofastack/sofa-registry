@@ -40,7 +40,7 @@ import com.alipay.sofa.registry.server.session.strategy.DataChangeRequestHandler
  * @author shangyu.wh
  * @version $Id: DataChangeRequestHandler.java, v 0.1 2017-12-12 15:09 shangyu.wh Exp $
  */
-public class DataChangeRequestHandler extends AbstractClientHandler {
+public class DataChangeRequestHandler extends AbstractClientHandler<DataChangeRequest> {
 
     private static final Logger              LOGGER          = LoggerFactory
                                                                  .getLogger(DataChangeRequestHandler.class);
@@ -82,12 +82,9 @@ public class DataChangeRequestHandler extends AbstractClientHandler {
     }
 
     @Override
-    public Object reply(Channel channel, Object message) {
-        DataChangeRequest dataChangeRequest = (DataChangeRequest) message;
-
+    public Object reply(Channel channel, DataChangeRequest dataChangeRequest) {
         dataChangeRequest.setDataCenter(dataChangeRequest.getDataCenter());
         dataChangeRequest.setDataInfoId(dataChangeRequest.getDataInfoId());
-
         //update cache when change
         sessionCacheService.invalidate(new Key(KeyType.OBJ, DatumKey.class.getName(), new DatumKey(
             dataChangeRequest.getDataInfoId(), dataChangeRequest.getDataCenter())));

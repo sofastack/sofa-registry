@@ -45,7 +45,8 @@ public final class SessionNodeExchanger extends ClientExchanger {
 
     @Override
     public int getServerPort() {
-        return dataServerConfig.getSyncDataPort();
+        // the Exchanger only for sync session
+        return dataServerConfig.getSyncSessionPort();
     }
 
     @Override

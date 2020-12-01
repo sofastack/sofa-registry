@@ -93,13 +93,13 @@ public class PublishDataHandler extends AbstractServerHandler<PublishDataRequest
             request.getSlotTableEpoch());
         if (slotAccess.isMoved()) {
             LOGGER.warn("[moved] Slot has moved, access: {}, request: {}", slotAccess, request);
-            return SlotAccessGenericResponse.buildFailedResponse(slotAccess);
+            return SlotAccessGenericResponse.failedResponse(slotAccess);
         }
 
         if (slotAccess.isMigrating()) {
             LOGGER.warn("[migrating] Slot is migrating, access: {}, request: {}", slotAccess,
                 request);
-            return SlotAccessGenericResponse.buildFailedResponse(slotAccess);
+            return SlotAccessGenericResponse.failedResponse(slotAccess);
         }
         dataChangeEventCenter.onChange(publisher, dataServerConfig.getLocalDataCenter());
 
@@ -110,12 +110,12 @@ public class PublishDataHandler extends AbstractServerHandler<PublishDataRequest
             sessionServerConnectionFactory.registerConnectId(request.getSessionProcessId()
                 .toString(), connectId);
         }
-        return SlotAccessGenericResponse.buildSuccessResponse(slotAccess);
+        return SlotAccessGenericResponse.successResponse(slotAccess, null);
     }
 
     @Override
     public CommonResponse buildFailedResponse(String msg) {
-        return new CommonResponse(false, msg);
+        return SlotAccessGenericResponse.failedResponse(msg);
     }
 
     @Override
