@@ -22,7 +22,6 @@ import com.alipay.sofa.registry.remoting.exchange.Exchange;
 import com.alipay.sofa.registry.remoting.exchange.NodeExchanger;
 import com.alipay.sofa.registry.remoting.jersey.exchange.JerseyExchange;
 import com.alipay.sofa.registry.server.meta.bootstrap.bean.lifecycle.RaftAnnotationBeanPostProcessor;
-import com.alipay.sofa.registry.server.meta.bootstrap.bean.lifecycle.SmartSpringLifecycleController;
 import com.alipay.sofa.registry.server.meta.bootstrap.config.MetaServerConfig;
 import com.alipay.sofa.registry.server.meta.bootstrap.config.MetaServerConfigBean;
 import com.alipay.sofa.registry.server.meta.bootstrap.config.NodeConfig;
@@ -119,10 +118,6 @@ public class MetaServerConfiguration {
             return new RaftAnnotationBeanPostProcessor();
         }
 
-        @Bean
-        public SmartSpringLifecycleController smartSpringLifecycleController() {
-            return new SmartSpringLifecycleController();
-        }
     }
 
     @Configuration
@@ -156,7 +151,7 @@ public class MetaServerConfiguration {
         }
 
         @Bean
-        public DefaultDataServerManager dataDataServerManager() {
+        public DefaultDataServerManager dataServerManager() {
             return new DefaultDataServerManager();
         }
 
@@ -166,9 +161,8 @@ public class MetaServerConfiguration {
         }
 
         @Bean
-        public CurrentDcMetaServer currentDcMetaServer() throws Exception {
-            CurrentDcMetaServer currentDcMetaServer = new DefaultCurrentDcMetaServer();
-            return currentDcMetaServer;
+        public CurrentDcMetaServer currentDcMetaServer() {
+            return new DefaultCurrentDcMetaServer();
         }
 
     }

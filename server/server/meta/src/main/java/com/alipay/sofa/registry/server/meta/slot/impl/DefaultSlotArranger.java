@@ -17,6 +17,8 @@
 package com.alipay.sofa.registry.server.meta.slot.impl;
 
 import com.alipay.sofa.registry.common.model.metaserver.nodes.DataNode;
+import com.alipay.sofa.registry.log.Logger;
+import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.observer.Observable;
 import com.alipay.sofa.registry.observer.Observer;
 import com.alipay.sofa.registry.server.meta.cluster.node.NodeAdded;
@@ -39,6 +41,8 @@ import javax.annotation.PreDestroy;
 
 public class DefaultSlotArranger implements SlotArranger, Observer {
 
+    private static final Logger logger = LoggerFactory.getLogger(DefaultSlotArranger.class);
+
     @Autowired
     private DataServerManager               dataServerManager;
 
@@ -57,6 +61,9 @@ public class DefaultSlotArranger implements SlotArranger, Observer {
 
     @Override
     public void update(Observable source, Object message) {
+        if(logger.isInfoEnabled()) {
+            logger.info("[update] source: {}, message: {}", source, message);
+        }
         if (message instanceof NodeAdded) {
             onServerAdded(((NodeAdded<DataNode>) message).getNode());
         }

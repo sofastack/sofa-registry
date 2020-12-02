@@ -25,6 +25,7 @@ import com.alipay.sofa.registry.exception.StopException;
 import com.alipay.sofa.registry.jraft.bootstrap.ServiceStateMachine;
 import com.alipay.sofa.registry.jraft.processor.Processor;
 import com.alipay.sofa.registry.jraft.processor.ProxyHandler;
+import com.alipay.sofa.registry.lifecycle.impl.LifecycleHelper;
 import com.alipay.sofa.registry.observer.impl.AbstractLifecycleObservable;
 import com.alipay.sofa.registry.server.meta.cluster.node.NodeAdded;
 import com.alipay.sofa.registry.server.meta.cluster.node.NodeRemoved;
@@ -60,6 +61,8 @@ public abstract class AbstractRaftEnabledLeaseManager<T extends Node> extends
                                                                                                  LeaseManager<T> {
 
     protected RaftLeaseManager<String, T> raftLeaseManager;
+
+    protected DefaultRaftLeaseManager<T> localLeaseManager;
 
     @Autowired
     private RaftExchanger                 raftExchanger;
@@ -110,17 +113,12 @@ public abstract class AbstractRaftEnabledLeaseManager<T extends Node> extends
     protected void register(T renewal, int leaseDuration) {
         updateRepoVersion();
         this.raftLeaseManager.renew(renewal, leaseDuration);
-        notifyObservers(new NodeAdded<T>(renewal));
     }
 
     @Override
     public boolean cancel(T renewal) {
         updateRepoVersion();
-        boolean result = this.raftLeaseManager.cancel(renewal);
-        if (result) {
-            notifyObservers(new NodeRemoved<T>(renewal));
-        }
-        return result;
+        return this.raftLeaseManager.cancel(renewal);
     }
 
     @Override
@@ -150,10 +148,10 @@ public abstract class AbstractRaftEnabledLeaseManager<T extends Node> extends
     @SuppressWarnings("unchecked")
     private void initRaftLeaseManager() {
         String serviceId = getServiceId();
-        DefaultRaftLeaseManager<T> localRepo = new DefaultRaftLeaseManager<>();
-        localRepo.setLogger(logger);
+        localLeaseManager = new DefaultRaftLeaseManager<>();
+        localLeaseManager.setLogger(logger);
         // register as raft service
-        Processor.getInstance().addWorker(serviceId, RaftLeaseManager.class, localRepo);
+        Processor.getInstance().addWorker(serviceId, RaftLeaseManager.class, localLeaseManager);
         // make field "raftLeaseManager" raft-enabled, by wrap DefaultLeaseManager being a local-repository
         // and expose wrapper as a raft service
         this.raftLeaseManager = (RaftLeaseManager) Proxy.newProxyInstance(Thread.currentThread()

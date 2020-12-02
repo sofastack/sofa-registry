@@ -28,5 +28,4 @@ import java.util.List;
  */
 public interface RemoteServers<T extends Node> {
 
-    List<T> getRemotes();
 }

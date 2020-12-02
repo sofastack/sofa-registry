@@ -10,10 +10,13 @@ import com.alipay.sofa.registry.exception.StopException;
 import com.alipay.sofa.registry.jraft.processor.Processor;
 import com.alipay.sofa.registry.jraft.processor.ProxyHandler;
 import com.alipay.sofa.registry.lifecycle.impl.AbstractLifecycle;
+import com.alipay.sofa.registry.lifecycle.impl.LifecycleHelper;
 import com.alipay.sofa.registry.server.meta.remoting.RaftExchanger;
 import com.alipay.sofa.registry.server.meta.slot.SlotManager;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import javax.annotation.PostConstruct;
+import javax.annotation.PreDestroy;
 import java.lang.reflect.Proxy;
 
 /**
@@ -30,6 +33,18 @@ public class DefaultSlotManager extends AbstractLifecycle implements SlotManager
     private LocalSlotManager localSlotManager;
 
     private SlotManager raftSlotManager;
+
+    @PostConstruct
+    public void postConstruct() throws Exception {
+        LifecycleHelper.initializeIfPossible(this);
+        LifecycleHelper.startIfPossible(this);
+    }
+
+    @PreDestroy
+    public void preDestroy() throws Exception {
+        LifecycleHelper.stopIfPossible(this);
+        LifecycleHelper.disposeIfPossible(this);
+    }
 
     @Override
     protected void doInitialize() throws InitializeException {
@@ -82,7 +97,6 @@ public class DefaultSlotManager extends AbstractLifecycle implements SlotManager
     }
 
     private void initRaftService() {
-        localSlotManager = new LocalSlotManager();
         Processor.getInstance().addWorker(getServiceId(), SlotManager.class, localSlotManager);
         raftSlotManager = (SlotManager) Proxy.newProxyInstance(
                 Thread.currentThread().getContextClassLoader(),

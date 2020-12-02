@@ -24,6 +24,7 @@ import com.alipay.sofa.registry.jraft.bootstrap.ServiceStateMachine;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.server.meta.lease.DataServerManager;
+import com.alipay.sofa.registry.server.meta.lease.impl.DefaultDataServerManager;
 import com.alipay.sofa.registry.server.meta.slot.RebalanceTask;
 import com.alipay.sofa.registry.server.meta.slot.SlotManager;
 import com.alipay.sofa.registry.server.meta.slot.impl.LocalSlotManager;
@@ -47,12 +48,12 @@ public abstract class AbstractRebalanceTask implements RebalanceTask {
 
     protected final SlotManager raftSlotManager;
 
-    protected final DataServerManager dataServerManager;
+    protected final DefaultDataServerManager dataServerManager;
 
     protected long nextEpoch;
 
     public AbstractRebalanceTask(LocalSlotManager localSlotManager, SlotManager raftSlotManager,
-                                 DataServerManager dataServerManager) {
+                                 DefaultDataServerManager dataServerManager) {
         this.localSlotManager = localSlotManager;
         this.raftSlotManager = raftSlotManager;
         this.dataServerManager = dataServerManager;
@@ -67,7 +68,7 @@ public abstract class AbstractRebalanceTask implements RebalanceTask {
             return;
         }
         long totalSlots = getTotalSlots();
-        List<DataNode> aliveDataServers = dataServerManager.getClusterMembers();
+        List<DataNode> aliveDataServers = dataServerManager.getLocalClusterMembers();
         int averageSlots = (int) (totalSlots / aliveDataServers.size());
 
         Set<DataNode> candidates = findCandidates(averageSlots, aliveDataServers);

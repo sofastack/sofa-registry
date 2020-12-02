@@ -23,6 +23,7 @@ import com.alipay.sofa.registry.common.model.metaserver.inter.communicate.BaseHe
 import com.alipay.sofa.registry.common.model.metaserver.inter.communicate.DataHeartBeatResponse;
 import com.alipay.sofa.registry.common.model.metaserver.inter.communicate.SessionHeartBeatResponse;
 import com.alipay.sofa.registry.common.model.metaserver.nodes.DataNode;
+import com.alipay.sofa.registry.common.model.slot.DataNodeSlot;
 import com.alipay.sofa.registry.common.model.slot.Slot;
 import com.alipay.sofa.registry.common.model.slot.func.SlotFunctionRegistry;
 import com.alipay.sofa.registry.common.model.slot.SlotTable;
@@ -30,6 +31,7 @@ import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.remoting.Channel;
 import com.alipay.sofa.registry.server.meta.metaserver.CurrentDcMetaServer;
+import com.alipay.sofa.registry.server.meta.slot.impl.DefaultSlotManager;
 import com.alipay.sofa.registry.server.meta.slot.impl.LocalSlotManager;
 import com.google.common.collect.Maps;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -50,7 +52,7 @@ public class HeartbeatRequestHandler extends AbstractServerHandler<RenewNodesReq
     private CurrentDcMetaServer currentDcMetaServer;
 
     @Autowired
-    private LocalSlotManager slotManager;
+    private DefaultSlotManager defaultSlotManager;
 
     private SlotTable mockSlotTable(String address) {
         Map<Integer, Slot> slots = Maps.newHashMap();
@@ -68,8 +70,6 @@ public class HeartbeatRequestHandler extends AbstractServerHandler<RenewNodesReq
             renewNode = renewNodesRequest.getNode();
             currentDcMetaServer.renew(renewNode, renewNodesRequest.getDuration());
             SlotTable slotTable = currentDcMetaServer.getSlotTable();
-            // TODO now we mock a slottable for test
-            slotTable = mockSlotTable(channel.getRemoteAddress().getAddress().getHostAddress());
             BaseHeartBeatResponse response = null;
             switch (renewNode.getNodeType()) {
                 case SESSION:
@@ -78,10 +78,10 @@ public class HeartbeatRequestHandler extends AbstractServerHandler<RenewNodesReq
                         currentDcMetaServer.getSessionServers());
                     break;
                 case DATA:
-                    response = new DataHeartBeatResponse(currentDcMetaServer.getEpoch(),
+                    slotTable = transferDataNodeSlotToSlotTable((DataNode) renewNode, slotTable);
+                    response = new DataHeartBeatResponse(currentDcMetaServer.getEpoch(), slotTable,
                             currentDcMetaServer.getClusterMembers(),
-                            currentDcMetaServer.getSessionServers(),
-                            slotManager.getDataNodeManagedSlot((DataNode) renewNode, false));
+                            currentDcMetaServer.getSessionServers());
                     break;
                 case META:
                     response = new BaseHeartBeatResponse(currentDcMetaServer.getEpoch(), slotTable,
@@ -93,10 +93,18 @@ public class HeartbeatRequestHandler extends AbstractServerHandler<RenewNodesReq
 
             return new GenericResponse<BaseHeartBeatResponse>().fillSucceed(response);
         } catch (Throwable e) {
-            LOGGER.error("Node " + renewNode + "renew error!", e);
+            LOGGER.error("Node {} renew error!", renewNode, e);
             return new GenericResponse<BaseHeartBeatResponse>().fillFailed("Node " + renewNode
                                                                            + "renew error!");
         }
+    }
+
+    private SlotTable transferDataNodeSlotToSlotTable(DataNode node, SlotTable slotTable) {
+        DataNodeSlot dataNodeSlot = defaultSlotManager.getDataNodeManagedSlot(node, false);
+        Map<Integer, Slot> result = Maps.newHashMap();
+        dataNodeSlot.getLeaders().forEach(leaderSlotId->result.put(leaderSlotId, slotTable.getSlot(leaderSlotId)));
+        dataNodeSlot.getFollowers().forEach(followerSlotId->result.put(followerSlotId, slotTable.getSlot(followerSlotId)));
+        return new SlotTable(slotTable.getEpoch(), result);
     }
 
     @Override

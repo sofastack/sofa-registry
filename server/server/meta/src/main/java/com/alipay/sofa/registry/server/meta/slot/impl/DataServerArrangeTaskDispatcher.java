@@ -19,13 +19,16 @@ package com.alipay.sofa.registry.server.meta.slot.impl;
 import com.alipay.sofa.jraft.util.MetricReporter;
 import com.alipay.sofa.jraft.util.ThreadPoolUtil;
 import com.alipay.sofa.registry.common.model.metaserver.nodes.DataNode;
+import com.alipay.sofa.registry.common.model.slot.SlotTable;
 import com.alipay.sofa.registry.exception.DisposeException;
 import com.alipay.sofa.registry.exception.InitializeException;
 import com.alipay.sofa.registry.lifecycle.impl.LifecycleHelper;
 import com.alipay.sofa.registry.observer.impl.AbstractLifecycleObservable;
 import com.alipay.sofa.registry.server.meta.lease.DataServerManager;
+import com.alipay.sofa.registry.server.meta.lease.impl.DefaultDataServerManager;
 import com.alipay.sofa.registry.server.meta.slot.ArrangeTaskDispatcher;
 import com.alipay.sofa.registry.server.meta.slot.SlotManager;
+import com.alipay.sofa.registry.server.meta.slot.tasks.InitReshardingTask;
 import com.alipay.sofa.registry.server.meta.slot.tasks.ServerDeadRebalanceWork;
 import com.alipay.sofa.registry.server.meta.slot.tasks.SlotReassignTask;
 import com.alipay.sofa.registry.util.NamedThreadFactory;
@@ -36,6 +39,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * @author chen.zhu
@@ -54,13 +58,17 @@ public class DataServerArrangeTaskDispatcher extends AbstractLifecycleObservable
     private ArrangeTaskExecutor                             arrangeTaskExecutor;
 
     @Autowired
-    private DataServerManager                               dataServerManager;
+    private DefaultDataServerManager                        dataServerManager;
 
     @Autowired
     private LocalSlotManager slotManager;
 
     @Autowired
-    private SlotManager      defaultSlotManager;
+    private DefaultSlotManager defaultSlotManager;
+
+    private AtomicBoolean inited = new AtomicBoolean(false);
+
+    private AtomicBoolean lock = new AtomicBoolean(false);
 
     private ScheduledExecutorService                        scheduled;
 
@@ -102,6 +110,14 @@ public class DataServerArrangeTaskDispatcher extends AbstractLifecycleObservable
         if (logger.isInfoEnabled()) {
             logger.info("[serverAlive]{}", dataNode);
         }
+        initSlotTableIfNeeded();
+
+        if(lock.get()) {
+            if(logger.isInfoEnabled()) {
+                logger.info("[serverAlive] stop work until init slot table");
+            }
+            return;
+        }
         DeadServerAction deadServerAction = deadServerActions.get(dataNode);
         if (deadServerAction == null) {
             arrangeTaskExecutor.offer(new SlotReassignTask(slotManager, defaultSlotManager, dataServerManager));
@@ -110,6 +126,27 @@ public class DataServerArrangeTaskDispatcher extends AbstractLifecycleObservable
                 logger.info("[serverAlive][dead server alive]{}", dataNode);
             }
             deadServerAction.serverAlive();
+        }
+    }
+
+    private void initSlotTableIfNeeded() {
+        if(inited.compareAndSet(false, true)
+                && slotManager.getSlotTable().getEpoch() == SlotTable.INIT.getEpoch()) {
+            logger.info("[first init] generate slot table after 1s");
+            lock.set(true);
+            scheduled.schedule(new Runnable() {
+                @Override
+                public void run() {
+                    arrangeTaskExecutor.offer(new InitReshardingTask(slotManager, defaultSlotManager, dataServerManager));
+                }
+            }, 1000, TimeUnit.MILLISECONDS);
+            // release the lock
+            scheduled.schedule(new Runnable() {
+                @Override
+                public void run() {
+                    lock.set(false);
+                }
+            }, 1010, TimeUnit.MILLISECONDS);
         }
     }
 

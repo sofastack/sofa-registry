@@ -19,6 +19,9 @@ package com.alipay.sofa.registry.server.meta.lease.impl;
 import com.alipay.sofa.registry.common.model.Node;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
+import com.alipay.sofa.registry.observer.impl.AbstractObservable;
+import com.alipay.sofa.registry.server.meta.cluster.node.NodeAdded;
+import com.alipay.sofa.registry.server.meta.cluster.node.NodeRemoved;
 import com.alipay.sofa.registry.server.meta.lease.EpochAware;
 import com.alipay.sofa.registry.server.meta.lease.Lease;
 import com.alipay.sofa.registry.server.meta.lease.LeaseManager;
@@ -38,10 +41,7 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
  * <p>
  * Nov 24, 2020
  */
-public class DefaultLeaseManager<T extends Node> implements LeaseManager<T>, EpochAware {
-
-    private Logger                                  logger              = LoggerFactory
-                                                                            .getLogger(getClass());
+public class DefaultLeaseManager<T extends Node> extends AbstractObservable implements LeaseManager<T>, EpochAware {
 
     private static final String                     EVICT_BETWEEN_MILLI = "evict.between.milli";
 
@@ -71,6 +71,7 @@ public class DefaultLeaseManager<T extends Node> implements LeaseManager<T>, Epo
         } finally {
             lock.writeLock().unlock();
         }
+        notifyObservers(new NodeAdded<T>(renewal));
     }
 
     @Override
@@ -80,6 +81,7 @@ public class DefaultLeaseManager<T extends Node> implements LeaseManager<T>, Epo
         }
         // read lock for concurrent modification, and mutext for renew/register operations
         lock.readLock().lock();
+        boolean result = true;
         try {
             if (logger.isInfoEnabled()) {
                 logger.info("[cancel][begin] {}", renewal);
@@ -89,10 +91,14 @@ public class DefaultLeaseManager<T extends Node> implements LeaseManager<T>, Epo
                 logger.info("[cancel][end] {} {} {}", lease.getRenewal(),
                     lease.getBeginTimestamp(), lease.getLastUpdateTimestamp());
             }
-            return lease != null;
+            result = lease != null;
         } finally {
             lock.readLock().unlock();
         }
+        if(result) {
+            notifyObservers(new NodeRemoved<>(renewal));
+        }
+        return result;
     }
 
     @Override
@@ -105,13 +111,18 @@ public class DefaultLeaseManager<T extends Node> implements LeaseManager<T>, Epo
             Lease<T> lease = repo.get(renewal.getNodeUrl().getIpAddress());
             if (lease == null) {
                 if (logger.isWarnEnabled()) {
-                    logger.warn("[renew][node not exist: {}]", renewal.getNodeUrl().getIpAddress());
+                    logger.warn("[renew][node not exist, register: {}-{}]", renewal.getNodeType(),
+                            renewal.getNodeUrl().getIpAddress());
                 }
                 register(renewal, leaseDuration);
                 return false;
             }
             int validLeaseDuration = leaseDuration > 0 ? leaseDuration
                 : Lease.DEFAULT_DURATION_SECS;
+            if(logger.isInfoEnabled()) {
+                logger.info("[renew][renew lease] node: {}-{}, extends: {}s",
+                        renewal.getNodeType(), renewal.getNodeUrl().getIpAddress(), validLeaseDuration);
+            }
             lease.renew(validLeaseDuration);
             return true;
         } finally {
@@ -175,13 +186,6 @@ public class DefaultLeaseManager<T extends Node> implements LeaseManager<T>, Epo
     @ReadOnLeader
     public long getEpoch() {
         return currentEpoch.get();
-    }
-
-    /**
-     * package private for not enable to reset logger outside scope
-     * */
-    void setLogger(Logger logger) {
-        this.logger = logger;
     }
 
     @Override
