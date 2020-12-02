@@ -44,10 +44,7 @@ import com.alipay.sofa.registry.server.meta.remoting.handler.AbstractServerHandl
 import com.alipay.sofa.registry.server.meta.remoting.handler.FetchProvideDataRequestHandler;
 import com.alipay.sofa.registry.server.meta.remoting.handler.HeartbeatRequestHandler;
 import com.alipay.sofa.registry.server.meta.resource.*;
-import com.alipay.sofa.registry.server.meta.slot.impl.ArrangeTaskExecutor;
-import com.alipay.sofa.registry.server.meta.slot.impl.DataServerArrangeTaskDispatcher;
-import com.alipay.sofa.registry.server.meta.slot.impl.DefaultSlotArranger;
-import com.alipay.sofa.registry.server.meta.slot.impl.DefaultSlotManager;
+import com.alipay.sofa.registry.server.meta.slot.impl.*;
 import com.alipay.sofa.registry.store.api.DBService;
 import com.alipay.sofa.registry.task.listener.DefaultTaskListenerManager;
 import com.alipay.sofa.registry.task.listener.TaskListenerManager;
@@ -284,11 +281,6 @@ public class MetaServerConfiguration {
         @Bean
         public NodeExchanger dataNodeExchanger() {
             return new DataNodeExchanger();
-        }
-
-        @Bean
-        public NodeExchanger metaServerExchanger() {
-            return new MetaServerExchanger();
         }
 
     }

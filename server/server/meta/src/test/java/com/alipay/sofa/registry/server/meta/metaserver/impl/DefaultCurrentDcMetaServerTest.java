@@ -24,6 +24,7 @@ import com.alipay.sofa.registry.common.model.slot.Slot;
 import com.alipay.sofa.registry.common.model.slot.SlotTable;
 import com.alipay.sofa.registry.lifecycle.impl.LifecycleHelper;
 import com.alipay.sofa.registry.server.meta.AbstractTest;
+import com.alipay.sofa.registry.server.meta.bootstrap.config.NodeConfig;
 import com.alipay.sofa.registry.server.meta.lease.DataServerManager;
 import com.alipay.sofa.registry.server.meta.lease.SessionManager;
 import com.alipay.sofa.registry.server.meta.remoting.RaftExchanger;
@@ -60,12 +61,17 @@ public class DefaultCurrentDcMetaServerTest extends AbstractTest {
     @Mock
     private SlotManager                slotManager;
 
+    @Mock
+    private NodeConfig nodeConfig;
+
     @Before
     public void beforeDefaultCurrentDcMetaServerTest() throws Exception {
         MockitoAnnotations.initMocks(this);
         metaServer = new DefaultCurrentDcMetaServer().setRaftExchanger(raftExchanger)
             .setDataServerManager(dataServerManager).setSessionManager(sessionManager)
-            .setSlotManager(slotManager);
+            .setSlotManager(slotManager).setNodeConfig(nodeConfig);
+        when(nodeConfig.getLocalDataCenter()).thenReturn(getDc());
+        when(nodeConfig.getMetaNodeIP()).thenReturn(ImmutableMap.of(getDc(), Lists.newArrayList(randomIp(), randomIp(), randomIp())));
         LifecycleHelper.initializeIfPossible(metaServer);
         LifecycleHelper.startIfPossible(metaServer);
         metaServer.setRaftStorage(metaServer.new MetaServersRaftStorage());
@@ -91,7 +97,7 @@ public class DefaultCurrentDcMetaServerTest extends AbstractTest {
     //    @Ignore
     public void testUpdateClusterMembers() throws Exception {
         RaftExchanger raftExchanger = startRaftExchanger();
-        metaServer = new DefaultCurrentDcMetaServer().setRaftExchanger(raftExchanger);
+        metaServer = new DefaultCurrentDcMetaServer().setRaftExchanger(raftExchanger).setNodeConfig(nodeConfig);
 
         LifecycleHelper.initializeIfPossible(metaServer);
         LifecycleHelper.startIfPossible(metaServer);

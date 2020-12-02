@@ -22,6 +22,7 @@ import com.alipay.sofa.registry.common.model.metaserver.RenewNodesRequest;
 import com.alipay.sofa.registry.common.model.metaserver.inter.communicate.BaseHeartBeatResponse;
 import com.alipay.sofa.registry.common.model.metaserver.inter.communicate.DataHeartBeatResponse;
 import com.alipay.sofa.registry.common.model.metaserver.inter.communicate.SessionHeartBeatResponse;
+import com.alipay.sofa.registry.common.model.metaserver.nodes.DataNode;
 import com.alipay.sofa.registry.common.model.slot.Slot;
 import com.alipay.sofa.registry.common.model.slot.func.SlotFunctionRegistry;
 import com.alipay.sofa.registry.common.model.slot.SlotTable;
@@ -29,6 +30,7 @@ import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.remoting.Channel;
 import com.alipay.sofa.registry.server.meta.metaserver.CurrentDcMetaServer;
+import com.alipay.sofa.registry.server.meta.slot.impl.LocalSlotManager;
 import com.google.common.collect.Maps;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -40,12 +42,15 @@ import java.util.Map;
  * @author shangyu.wh
  * @version $Id: RenewNodesRequestHandler.java, v 0.1 2018-03-30 19:58 shangyu.wh Exp $
  */
-public class HeartbeatRequestHandler extends AbstractServerHandler<RenewNodesRequest> {
+public class HeartbeatRequestHandler extends AbstractServerHandler<RenewNodesRequest<Node>> {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(HeartbeatRequestHandler.class);
 
     @Autowired
     private CurrentDcMetaServer currentDcMetaServer;
+
+    @Autowired
+    private LocalSlotManager slotManager;
 
     private SlotTable mockSlotTable(String address) {
         Map<Integer, Slot> slots = Maps.newHashMap();
@@ -57,7 +62,7 @@ public class HeartbeatRequestHandler extends AbstractServerHandler<RenewNodesReq
     }
 
     @Override
-    public Object reply(Channel channel, RenewNodesRequest renewNodesRequest) {
+    public Object reply(Channel channel, RenewNodesRequest<Node> renewNodesRequest) {
         Node renewNode = null;
         try {
             renewNode = renewNodesRequest.getNode();
@@ -73,9 +78,10 @@ public class HeartbeatRequestHandler extends AbstractServerHandler<RenewNodesReq
                         currentDcMetaServer.getSessionServers());
                     break;
                 case DATA:
-                    response = new DataHeartBeatResponse(currentDcMetaServer.getEpoch(), slotTable,
-                        currentDcMetaServer.getClusterMembers(),
-                        currentDcMetaServer.getSessionServers());
+                    response = new DataHeartBeatResponse(currentDcMetaServer.getEpoch(),
+                            currentDcMetaServer.getClusterMembers(),
+                            currentDcMetaServer.getSessionServers(),
+                            slotManager.getDataNodeManagedSlot((DataNode) renewNode, false));
                     break;
                 case META:
                     response = new BaseHeartBeatResponse(currentDcMetaServer.getEpoch(), slotTable,
