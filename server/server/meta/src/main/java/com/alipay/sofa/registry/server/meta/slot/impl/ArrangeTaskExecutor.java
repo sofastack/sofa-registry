@@ -16,12 +16,19 @@
  */
 package com.alipay.sofa.registry.server.meta.slot.impl;
 
+import com.alipay.sofa.registry.exception.DisposeException;
+import com.alipay.sofa.registry.exception.InitializeException;
+import com.alipay.sofa.registry.exception.SofaRegistryRuntimeException;
 import com.alipay.sofa.registry.lifecycle.impl.AbstractLifecycle;
+import com.alipay.sofa.registry.lifecycle.impl.LifecycleHelper;
 import com.alipay.sofa.registry.server.meta.slot.RebalanceTask;
 import com.alipay.sofa.registry.util.DefaultExecutorFactory;
 import com.alipay.sofa.registry.util.OsUtils;
 import org.springframework.stereotype.Component;
 
+import javax.annotation.PostConstruct;
+import javax.annotation.PreDestroy;
+import java.util.Queue;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
@@ -34,7 +41,7 @@ import java.util.concurrent.atomic.AtomicLong;
 
 public class ArrangeTaskExecutor extends AbstractLifecycle {
 
-    private ExecutorService              executors;
+    private volatile ExecutorService              executors;
 
     private BlockingQueue<RebalanceTask> tasks      = new LinkedBlockingQueue<>();
 
@@ -44,12 +51,49 @@ public class ArrangeTaskExecutor extends AbstractLifecycle {
 
     private AtomicBoolean                isRunning  = new AtomicBoolean(false);
 
+    @PostConstruct
+    public void postConstruct() throws Exception {
+        LifecycleHelper.initializeIfPossible(this);
+        LifecycleHelper.startIfPossible(this);
+    }
+
+    @PreDestroy
+    public void preDestroy() throws Exception {
+        LifecycleHelper.stopIfPossible(this);
+        LifecycleHelper.disposeIfPossible(this);
+    }
+
+    @Override
+    protected void doInitialize() throws InitializeException {
+        super.doInitialize();
+    }
+
+    @Override
+    protected void doDispose() throws DisposeException {
+        Queue<RebalanceTask> taskQueue = null;
+        synchronized (this) {
+            taskQueue = tasks;
+            tasks = new LinkedBlockingQueue<>();
+        }
+        if(taskQueue != null) {
+            taskQueue.forEach(task->logger.warn("[dispose][wont execute] {}", task));
+        }
+        super.doDispose();
+    }
+
     public void offer(RebalanceTask task) {
         logger.info("[offer]{}", task);
-        if (tasks.offer(task)) {
+        boolean offered = false;
+        synchronized (this) {
+            if(getLifecycleState().isDisposing() || getLifecycleState().isDisposed()) {
+                throw new SofaRegistryRuntimeException("new input tasks are not accepted");
+            }
+            offered = tasks.offer(task);
+        }
+        if (offered) {
             totalTasks.incrementAndGet();
         } else {
-            logger.error("[offset][fail]{}", task);
+            logger.error("[offer][fail]{}", task);
         }
 
         startTaskThread();
@@ -59,10 +103,16 @@ public class ArrangeTaskExecutor extends AbstractLifecycle {
         if (isRunning.get()) {
             return;
         }
-        if (executors == null) {
-            executors = DefaultExecutorFactory.createAllowCoreTimeout(getClass().getSimpleName(),
-                Math.max(2, OsUtils.getCpuCount())).create();
-            doExecute();
+        ExecutorService executorService = executors;
+        if (executorService == null) {
+            synchronized (this) {
+                executorService = executors;
+                if (executorService == null) {
+                    executors = DefaultExecutorFactory.createAllowCoreTimeout(getClass().getSimpleName(),
+                            Math.max(2, OsUtils.getCpuCount())).create();
+                    doExecute();
+                }
+            }
         }
     }
 
@@ -80,7 +130,7 @@ public class ArrangeTaskExecutor extends AbstractLifecycle {
                 return;
             }
             try {
-                task = tasks.poll();
+                task = tasks.poll(10, TimeUnit.MILLISECONDS);
                 if (task == null) {
                     isRunning.compareAndSet(true, false);
                     return;
@@ -94,15 +144,16 @@ public class ArrangeTaskExecutor extends AbstractLifecycle {
                         currentTask = null;
                         if (!isRunning.compareAndSet(true, false)) {
                             logger.error("[doRun][already exit]");
+                            return;
                         }
 
                         doExecute();
                     }
                 }, executors);
+            } catch (InterruptedException e) {
+                logger.debug("[Task]", e);
             } catch (Exception e) {
                 logger.error("[Task]", e);
-            } finally {
-                currentTask = null;
             }
         }
 

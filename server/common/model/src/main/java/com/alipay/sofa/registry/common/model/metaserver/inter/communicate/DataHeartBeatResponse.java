@@ -18,12 +18,10 @@ package com.alipay.sofa.registry.common.model.metaserver.inter.communicate;
 
 import com.alipay.sofa.registry.common.model.metaserver.nodes.MetaNode;
 import com.alipay.sofa.registry.common.model.metaserver.nodes.SessionNode;
+import com.alipay.sofa.registry.common.model.slot.DataNodeSlot;
 import com.alipay.sofa.registry.common.model.slot.SlotTable;
 
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 /**
  * @author chen.zhu
@@ -31,8 +29,12 @@ import java.util.Map;
  * Nov 27, 2020
  */
 public class DataHeartBeatResponse extends BaseHeartBeatResponse {
-    public DataHeartBeatResponse(long metaServerEpoch, SlotTable slotTable,
-                                 List<MetaNode> metaNodes, List<SessionNode> sessionNodes) {
-        super(metaServerEpoch, slotTable, metaNodes, sessionNodes);
+
+    private final DataNodeSlot dataNodeSlot;
+
+    public DataHeartBeatResponse(long metaServerEpoch, List<MetaNode> metaNodes,
+                                 List<SessionNode> sessionNodes, DataNodeSlot dataNodeSlot) {
+        super(metaServerEpoch, null, metaNodes, sessionNodes);
+        this.dataNodeSlot = dataNodeSlot;
     }
 }

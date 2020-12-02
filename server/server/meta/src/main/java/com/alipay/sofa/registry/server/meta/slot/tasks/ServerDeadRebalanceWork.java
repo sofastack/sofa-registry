@@ -20,16 +20,15 @@ import com.alipay.sofa.registry.common.model.metaserver.nodes.DataNode;
 import com.alipay.sofa.registry.common.model.slot.DataNodeSlot;
 import com.alipay.sofa.registry.common.model.slot.Slot;
 import com.alipay.sofa.registry.common.model.slot.SlotTable;
+import com.alipay.sofa.registry.common.model.store.URL;
 import com.alipay.sofa.registry.server.meta.lease.DataServerManager;
 import com.alipay.sofa.registry.server.meta.slot.RebalanceTask;
 import com.alipay.sofa.registry.server.meta.slot.SlotManager;
-import com.alipay.sofa.registry.server.meta.slot.impl.DefaultSlotManager;
 import com.alipay.sofa.registry.util.DatumVersionUtil;
 import com.google.common.collect.Maps;
+import org.glassfish.jersey.internal.guava.Sets;
 
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 /**
  * @author chen.zhu
@@ -44,11 +43,7 @@ public class ServerDeadRebalanceWork implements RebalanceTask {
 
     private DataNode          deadServer;
 
-    private PromotionStrategy promotionStrategy;
-
-    private FollowerSelector  selector;
-
-    private SlotTable         nextSlotTable;
+    private long              nextEpoch;
 
     public ServerDeadRebalanceWork(SlotManager slotManager, DataServerManager dataServerManager,
                                    DataNode deadServer) {
@@ -65,55 +60,86 @@ public class ServerDeadRebalanceWork implements RebalanceTask {
     @Override
     public void run() {
         DataNodeSlot dataNodeSlot = slotManager.getDataNodeManagedSlot(deadServer, false);
-        SlotTable slotTable = slotManager.getSlotTable();
+        Map<Integer, Slot> slotMap = slotManager.getSlotTable().getSlotMap();
         // first step, select one from previous followers and promote to be slot leader
         // second step, add followers for the slot as previous has been removed
-        nextSlotTable = promoteFollowers(slotTable, dataNodeSlot.getLeaders());
+        promoteFollowers(slotMap, dataNodeSlot.getLeaders());
 
         List<Integer> slots = dataNodeSlot.getFollowers();
         slots.addAll(dataNodeSlot.getLeaders());
-        nextSlotTable = reassignFollowers(nextSlotTable, slots);
+        reassignFollowers(slotMap, slots);
 
-        if (slotManager instanceof DefaultSlotManager) {
-            ((DefaultSlotManager) slotManager).setSlotTable(nextSlotTable);
-        } else {
-            throw new IllegalStateException("slot manager need to be able to set slot-table");
-        }
+        slotManager.refresh(new SlotTable(nextEpoch, slotMap));
     }
 
-    private SlotTable promoteFollowers(SlotTable slotTable, List<Integer> slotNums) {
-        long newSlotTableEpoch = slotTable.getEpoch();
-        Map<Integer, Slot> slotMap = slotTable.getSlotMap();
+    private void promoteFollowers(Map<Integer, Slot> slotMap, List<Integer> slotNums) {
+        Set<String> selectedFollowers = Sets.newHashSet();
         for (Integer slotNum : slotNums) {
             Slot slot = slotMap.get(slotNum);
             // select one candidate from followers as new leader
-            String newLeader = promotionStrategy.promotes(slot.getFollowers());
+            String newLeader = promotesFollower(slot.getFollowers(), selectedFollowers);
             Set<String> newFollowers = slot.getFollowers();
             newFollowers.remove(newLeader);
             // replace the slot info
-            Slot newSlot = new Slot(slot.getId(), newLeader, DatumVersionUtil.nextId(),
+            nextEpoch = DatumVersionUtil.nextId();
+            Slot newSlot = new Slot(slot.getId(), newLeader, nextEpoch,
                 newFollowers);
             slotMap.put(slotNum, newSlot);
-            newSlotTableEpoch = newSlot.getLeaderEpoch();
         }
-        return new SlotTable(newSlotTableEpoch, slotMap);
     }
 
-    private SlotTable reassignFollowers(SlotTable slotTable, List<Integer> slotNums) {
-        long newSlotTableEpoch = slotTable.getEpoch();
-        Map<Integer, Slot> slotMap = slotTable.getSlotMap();
+    private String promotesFollower(Set<String> followers, Set<String> selectedFollowers) {
+        String result = followers.iterator().next();
+        int minLeaderSlots = slotManager
+                .getDataNodeManagedSlot(new DataNode(new URL(result), deadServer.getDataCenter()), true)
+                .getLeaders().size();
+        for(String follower : followers) {
+            if(follower.equals(result)) {
+                continue;
+            }
+            DataNodeSlot slot = slotManager.getDataNodeManagedSlot(new DataNode(new URL(follower), deadServer.getDataCenter()), true);
+            if(slot.getLeaders().size() < minLeaderSlots && !selectedFollowers.contains(follower)) {
+                result = follower;
+                minLeaderSlots = slot.getLeaders().size();
+            }
+        }
+        selectedFollowers.add(result);
+        return result;
+    }
+
+    private void reassignFollowers(Map<Integer, Slot> slotMap, List<Integer> slotNums) {
+        Map<Integer, Integer> counter = Maps.newHashMap();
         for (Integer slotNum : slotNums) {
             Slot slot = slotMap.get(slotNum);
             // select new follower from alive data servers
-            String newFollower = selector.select(slotNum);
+            String newFollower = findNewFollower(slotMap, slot.getId());
             slot.getFollowers().add(newFollower);
             // generate new slot, as epoch has been changed
-            Slot newSlot = new Slot(slot.getId(), slot.getLeader(), DatumVersionUtil.nextId(),
+            nextEpoch = DatumVersionUtil.nextId();
+            Slot newSlot = new Slot(slot.getId(), slot.getLeader(), nextEpoch,
                 slot.getFollowers());
             slotMap.put(slotNum, newSlot);
-
-            newSlotTableEpoch = newSlot.getLeaderEpoch();
         }
-        return new SlotTable(newSlotTableEpoch, slotMap);
+    }
+
+    private String findNewFollower(Map<Integer, Slot> slotMap, int targetSlotId) {
+        List<DataNode> dataNodes = dataServerManager.getClusterMembers();
+        Slot targetSlot = slotMap.get(targetSlotId);
+        Set<String> candidates = Sets.newHashSet();
+        dataNodes.forEach(dataNode -> {candidates.add(dataNode.getIp());});
+        candidates.removeAll(targetSlot.getFollowers());
+        candidates.remove(targetSlot.getLeader());
+
+        return randomSelect(candidates);
+    }
+
+    private String randomSelect(Set<String> candidates) {
+        int randomIndex = Math.abs(new Random().nextInt(candidates.size())) & candidates.size();
+        Iterator<String> iterator = candidates.iterator();
+        String result = null;
+        while(iterator.hasNext() && randomIndex-- > 0) {
+            result = iterator.next();
+        }
+        return result;
     }
 }

@@ -17,11 +17,12 @@
 package com.alipay.sofa.registry.server.meta.remoting.handler;
 
 import com.alipay.sofa.registry.common.model.GenericResponse;
-import com.alipay.sofa.registry.common.model.metaserver.RenewNodesResult;
 import com.alipay.sofa.registry.common.model.metaserver.inter.communicate.BaseHeartBeatResponse;
 import com.alipay.sofa.registry.common.model.metaserver.inter.communicate.DataHeartBeatResponse;
 import com.alipay.sofa.registry.common.model.metaserver.inter.communicate.SessionHeartBeatResponse;
+import com.alipay.sofa.registry.common.model.metaserver.nodes.DataNode;
 import com.alipay.sofa.registry.server.meta.metaserver.CurrentDcMetaServer;
+import com.alipay.sofa.registry.server.meta.slot.SlotManager;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import com.alipay.sofa.registry.common.model.Node;
@@ -29,8 +30,6 @@ import com.alipay.sofa.registry.common.model.metaserver.RenewNodesRequest;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.remoting.Channel;
-
-import java.util.Set;
 
 /**
  * Handle session/data node's heartbeat request
@@ -43,6 +42,9 @@ public class HeartbeatRequestHandler extends AbstractServerHandler<RenewNodesReq
 
     @Autowired
     private CurrentDcMetaServer      currentDcMetaServer;
+
+    @Autowired
+    private SlotManager              slotManager;
 
     @Override
     public Object reply(Channel channel, RenewNodesRequest renewNodesRequest) {
@@ -59,9 +61,8 @@ public class HeartbeatRequestHandler extends AbstractServerHandler<RenewNodesReq
                             currentDcMetaServer.getSessionServers());
                     break;
                 case DATA:
-                    response = new DataHeartBeatResponse(currentDcMetaServer.getEpoch(),
-                            currentDcMetaServer.getSlotTable(), currentDcMetaServer.getClusterMembers(),
-                            currentDcMetaServer.getSessionServers());
+                    response = new DataHeartBeatResponse(currentDcMetaServer.getEpoch(), currentDcMetaServer.getClusterMembers(),
+                            currentDcMetaServer.getSessionServers(), slotManager.getDataNodeManagedSlot((DataNode) renewNode, false));
                     break;
                 case META:
                     response = new BaseHeartBeatResponse(currentDcMetaServer.getEpoch(),
