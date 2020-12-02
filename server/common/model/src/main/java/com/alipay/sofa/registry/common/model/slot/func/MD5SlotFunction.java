@@ -14,9 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alipay.sofa.registry.common.model.slot;
-
-import com.alipay.sofa.registry.consistency.hash.MD5HashFunction;
+package com.alipay.sofa.registry.common.model.slot.func;
 
 /**
  *

@@ -74,4 +74,17 @@ public class ConcurrentUtils {
             return t.toString();
         }
     }
+
+    public static Thread createDaemonThread(String name, Runnable r) {
+        Thread t = new Thread(r, name);
+        t.setDaemon(true);
+        return t;
+    }
+
+    public static void objectWaitUninterruptibly(Object o, int timeoutMs) {
+        try {
+            o.wait(timeoutMs);
+        } catch (InterruptedException ignored) {
+        }
+    }
 }

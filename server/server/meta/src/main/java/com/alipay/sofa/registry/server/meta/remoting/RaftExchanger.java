@@ -90,9 +90,9 @@ public class RaftExchanger {
 
     private CliService          cliService;
 
-    private AtomicBoolean       clientStart    = new AtomicBoolean(false);
-    private AtomicBoolean       serverStart    = new AtomicBoolean(false);
-    private AtomicBoolean       clsStart       = new AtomicBoolean(false);
+    private final AtomicBoolean clientStart    = new AtomicBoolean(false);
+    private final AtomicBoolean serverStart    = new AtomicBoolean(false);
+    private final AtomicBoolean clsStart       = new AtomicBoolean(false);
 
     /**
      * Start Raft server
@@ -461,8 +461,8 @@ public class RaftExchanger {
      *
      * @return property value of clientStart
      */
-    public AtomicBoolean getClientStart() {
-        return clientStart;
+    public boolean getClientStart() {
+        return clientStart.get();
     }
 
     /**
@@ -470,8 +470,8 @@ public class RaftExchanger {
      *
      * @return property value of serverStart
      */
-    public AtomicBoolean getServerStart() {
-        return serverStart;
+    public boolean getServerStart() {
+        return serverStart.get();
     }
 
     /**
@@ -479,8 +479,8 @@ public class RaftExchanger {
      *
      * @return property value of clsStart
      */
-    public AtomicBoolean getClsStart() {
-        return clsStart;
+    public boolean getClsStart() {
+        return clsStart.get();
     }
 
     /**

@@ -28,20 +28,14 @@ public class GetDataRequest implements Serializable {
 
     private static final long serialVersionUID = 8133437572926931258L;
 
-    private String            dataInfoId;
+    private final String            dataInfoId;
 
     /**
      * if datacenter is null, means all datacenters
      */
-    private String            dataCenter;
+    private final String            dataCenter;
 
     private long              slotEpoch;
-
-    /**
-     * constructor
-     */
-    public GetDataRequest() {
-    }
 
     /**
      * constructor
@@ -63,30 +57,12 @@ public class GetDataRequest implements Serializable {
     }
 
     /**
-     * Setter method for property <tt>dataInfoId</tt>.
-     *
-     * @param dataInfoId  value to be assigned to property dataInfoId
-     */
-    public void setDataInfoId(String dataInfoId) {
-        this.dataInfoId = dataInfoId;
-    }
-
-    /**
      * Getter method for property <tt>dataCenter</tt>.
      *
      * @return property value of dataCenter
      */
     public String getDataCenter() {
         return dataCenter;
-    }
-
-    /**
-     * Setter method for property <tt>dataCenter</tt>.
-     *
-     * @param dataCenter  value to be assigned to property dataCenter
-     */
-    public void setDataCenter(String dataCenter) {
-        this.dataCenter = dataCenter;
     }
 
     /**

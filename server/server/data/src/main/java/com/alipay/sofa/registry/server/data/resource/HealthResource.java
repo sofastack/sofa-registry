@@ -71,19 +71,19 @@ public class HealthResource {
 
         StringBuilder sb = new StringBuilder("DataServerBoot ");
 
-        boolean start = dataServerBootstrap.getServerForSessionStarted().get();
+        boolean start = dataServerBootstrap.getServerForSessionStarted();
         boolean ret = start;
         sb.append("severForSession:").append(start);
 
-        start = dataServerBootstrap.getServerForDataSyncStarted().get();
+        start = dataServerBootstrap.getServerForDataSyncStarted();
         ret = ret && start;
         sb.append(", severForDataSync:").append(start);
 
-        start = dataServerBootstrap.getHttpServerStarted().get();
+        start = dataServerBootstrap.getHttpServerStarted();
         ret = ret && start;
         sb.append(", httpServer:").append(start);
 
-        start = dataServerBootstrap.getSchedulerStarted().get();
+        start = dataServerBootstrap.getSchedulerStarted();
         ret = ret && start;
         sb.append(", schedulerStarted:").append(start);
 

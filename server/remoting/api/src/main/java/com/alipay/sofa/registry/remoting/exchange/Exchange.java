@@ -26,9 +26,9 @@ import com.alipay.sofa.registry.remoting.Server;
  * @version $Id: Exchanger.java, v 0.1 2017-11-20 21:25 shangyu.wh Exp $
  */
 public interface Exchange<T> {
-
-    String DATA_SERVER_TYPE = "dataServer";
-    String META_SERVER_TYPE = "metaServer";
+    String SESSION_SERVER_TYPE = "sessionServer";
+    String DATA_SERVER_TYPE    = "dataServer";
+    String META_SERVER_TYPE    = "metaServer";
 
     /**
      * connect same type server,one server ip one connection

@@ -27,10 +27,10 @@ import com.alipay.sofa.registry.remoting.Server;
 import com.alipay.sofa.registry.remoting.exchange.Exchange;
 import com.alipay.sofa.registry.remoting.exchange.NodeExchanger;
 import com.alipay.sofa.registry.server.session.filter.blacklist.BlacklistManager;
-import com.alipay.sofa.registry.server.session.node.SessionProcessIdGenerator;
 import com.alipay.sofa.registry.server.session.provideData.ProvideDataProcessor;
 import com.alipay.sofa.registry.server.session.remoting.handler.AbstractServerHandler;
 import com.alipay.sofa.registry.server.session.scheduler.ExecutorManager;
+import com.alipay.sofa.registry.server.shared.env.ServerEnv;
 import com.alipay.sofa.registry.server.shared.meta.MetaServerService;
 import com.alipay.sofa.registry.task.batcher.TaskDispatchers;
 import org.glassfish.jersey.server.ResourceConfig;
@@ -53,8 +53,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
  */
 public class SessionServerBootstrap {
 
-    private static final Logger               LOGGER         = LoggerFactory
-                                                                 .getLogger(SessionServerBootstrap.class);
+    private static final Logger               LOGGER                 = LoggerFactory
+                                                                         .getLogger(SessionServerBootstrap.class);
 
     @Autowired
     private SessionServerConfig               sessionServerConfig;
@@ -90,17 +90,24 @@ public class SessionServerBootstrap {
 
     private Server                            server;
 
+    private Server                            dataSyncServer;
+
+    @Resource(name = "serverSyncHandlers")
+    private Collection<AbstractServerHandler> serverSyncHandlers;
+
     private Server                            httpServer;
 
-    private AtomicBoolean                     metaStart      = new AtomicBoolean(false);
+    private final AtomicBoolean               metaStart              = new AtomicBoolean(false);
 
-    private AtomicBoolean                     schedulerStart = new AtomicBoolean(false);
+    private final AtomicBoolean               schedulerStart         = new AtomicBoolean(false);
 
-    private AtomicBoolean                     httpStart      = new AtomicBoolean(false);
+    private final AtomicBoolean               httpStart              = new AtomicBoolean(false);
 
-    private AtomicBoolean                     serverStart    = new AtomicBoolean(false);
+    private final AtomicBoolean               serverStart            = new AtomicBoolean(false);
 
-    private AtomicBoolean                     dataStart      = new AtomicBoolean(false);
+    private final AtomicBoolean               dataStart              = new AtomicBoolean(false);
+
+    private final AtomicBoolean               serverForDataSyncStart = new AtomicBoolean(false);
 
     /**
      * Do initialized.
@@ -111,15 +118,17 @@ public class SessionServerBootstrap {
 
             initEnvironment();
 
+            openDataSyncServer();
+
             connectMetaServer();
 
             startScheduler();
 
             openHttpServer();
 
-            openSessionServer();
-
             connectDataServer();
+
+            openSessionServer();
 
             LOGGER.info("Initialized Session Server...");
 
@@ -145,6 +154,7 @@ public class SessionServerBootstrap {
             TaskDispatchers.stopDefaultSingleTaskDispatcher();
             stopHttpServer();
             stopServer();
+            stopDataSyncServer();
         } catch (Throwable e) {
             LOGGER.error("Shutting down Session Server error!", e);
         }
@@ -154,8 +164,7 @@ public class SessionServerBootstrap {
     private void initEnvironment() {
         LOGGER.info("Session server Environment: DataCenter {},Region {},ProcessId {}",
             sessionServerConfig.getSessionServerDataCenter(),
-            sessionServerConfig.getSessionServerRegion(),
-            SessionProcessIdGenerator.getSessionProcessId());
+            sessionServerConfig.getSessionServerRegion(), ServerEnv.PROCESS_ID);
     }
 
     private void startScheduler() {
@@ -178,7 +187,6 @@ public class SessionServerBootstrap {
                 server = boltExchange.open(new URL(NetUtil.getLocalAddress().getHostAddress(),
                     sessionServerConfig.getServerPort()), serverHandlers
                     .toArray(new ChannelHandler[serverHandlers.size()]));
-
                 LOGGER.info("Session server started! port:{}", sessionServerConfig.getServerPort());
             }
         } catch (Exception e) {
@@ -186,6 +194,23 @@ public class SessionServerBootstrap {
             LOGGER.error("Session server start error! port:{}",
                 sessionServerConfig.getServerPort(), e);
             throw new RuntimeException("Session server start error!", e);
+        }
+    }
+
+    private void openDataSyncServer() {
+        try {
+            if (serverForDataSyncStart.compareAndSet(false, true)) {
+                dataSyncServer = boltExchange.open(new URL(NetUtil.getLocalAddress()
+                    .getHostAddress(), sessionServerConfig.getSyncSessionPort()),
+                    serverSyncHandlers.toArray(new ChannelHandler[serverSyncHandlers.size()]));
+                LOGGER.info("Data server for sync started! port:{}",
+                    sessionServerConfig.getSyncSessionPort());
+            }
+        } catch (Exception e) {
+            serverForDataSyncStart.set(false);
+            LOGGER.error("Data sync server start error! port:{}",
+                sessionServerConfig.getSyncSessionPort(), e);
+            throw new RuntimeException("Data sync server start error!", e);
         }
     }
 
@@ -208,7 +233,9 @@ public class SessionServerBootstrap {
                 mataNodeService.startRaftClient();
                 // register node as renew node
                 mataNodeService.renewNode();
-
+                // start sched renew
+                mataNodeService
+                    .startRenewer(sessionServerConfig.getSchedulerHeartbeatIntervalSec() * 1000);
                 fetchStopPushSwitch();
 
                 fetchBlackList();
@@ -276,6 +303,12 @@ public class SessionServerBootstrap {
         }
     }
 
+    private void stopDataSyncServer() {
+        if (dataSyncServer != null && dataSyncServer.isOpen()) {
+            dataSyncServer.close();
+        }
+    }
+
     private void stopHttpServer() {
         if (httpServer != null && httpServer.isOpen()) {
             httpServer.close();
@@ -287,8 +320,8 @@ public class SessionServerBootstrap {
      *
      * @return property value of metaStart
      */
-    public AtomicBoolean getMetaStart() {
-        return metaStart;
+    public boolean getMetaStart() {
+        return metaStart.get();
     }
 
     /**
@@ -296,8 +329,8 @@ public class SessionServerBootstrap {
      *
      * @return property value of schedulerStart
      */
-    public AtomicBoolean getSchedulerStart() {
-        return schedulerStart;
+    public boolean getSchedulerStart() {
+        return schedulerStart.get();
     }
 
     /**
@@ -305,8 +338,8 @@ public class SessionServerBootstrap {
      *
      * @return property value of httpStart
      */
-    public AtomicBoolean getHttpStart() {
-        return httpStart;
+    public boolean getHttpStart() {
+        return httpStart.get();
     }
 
     /**
@@ -314,8 +347,8 @@ public class SessionServerBootstrap {
      *
      * @return property value of serverStart
      */
-    public AtomicBoolean getServerStart() {
-        return serverStart;
+    public boolean getServerStart() {
+        return serverStart.get();
     }
 
     /**
@@ -323,7 +356,11 @@ public class SessionServerBootstrap {
      *
      * @return property value of dataStart
      */
-    public AtomicBoolean getDataStart() {
-        return dataStart;
+    public boolean getDataStart() {
+        return dataStart.get();
+    }
+
+    public boolean getServerForDataSyncStart() {
+        return serverForDataSyncStart.get();
     }
 }

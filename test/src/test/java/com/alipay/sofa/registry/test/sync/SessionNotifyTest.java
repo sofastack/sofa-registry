@@ -16,27 +16,6 @@
  */
 package com.alipay.sofa.registry.test.sync;
 
-import static com.alipay.sofa.registry.client.constants.ValueConstants.DEFAULT_DATA_CENTER;
-import static com.alipay.sofa.registry.client.constants.ValueConstants.DEFAULT_GROUP;
-import static com.alipay.sofa.registry.common.model.constants.ValueConstants.DEFAULT_INSTANCE_ID;
-
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.Executor;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
-
-import org.junit.BeforeClass;
-import org.junit.Ignore;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.springframework.test.context.junit4.SpringRunner;
-
 import com.alipay.remoting.Connection;
 import com.alipay.sofa.registry.common.model.CommonResponse;
 import com.alipay.sofa.registry.common.model.GenericResponse;
@@ -51,17 +30,11 @@ import com.alipay.sofa.registry.common.model.store.DataInfo;
 import com.alipay.sofa.registry.common.model.store.Publisher;
 import com.alipay.sofa.registry.common.model.store.URL;
 import com.alipay.sofa.registry.net.NetUtil;
-import com.alipay.sofa.registry.remoting.CallbackHandler;
-import com.alipay.sofa.registry.remoting.Channel;
-import com.alipay.sofa.registry.remoting.ChannelHandler;
-import com.alipay.sofa.registry.remoting.Client;
-import com.alipay.sofa.registry.remoting.Server;
+import com.alipay.sofa.registry.remoting.*;
 import com.alipay.sofa.registry.remoting.bolt.BoltChannel;
 import com.alipay.sofa.registry.remoting.bolt.BoltClient;
 import com.alipay.sofa.registry.remoting.bolt.exchange.BoltExchange;
 import com.alipay.sofa.registry.remoting.exchange.Exchange;
-import com.alipay.sofa.registry.server.data.remoting.dataserver.DataServerConnectionFactory;
-import com.alipay.sofa.registry.server.data.remoting.dataserver.handler.DataSyncServerConnectionHandler;
 import com.alipay.sofa.registry.server.data.remoting.handler.AbstractServerHandler;
 import com.alipay.sofa.registry.server.session.cache.DatumKey;
 import com.alipay.sofa.registry.server.session.cache.Key;
@@ -72,6 +45,18 @@ import com.alipay.sofa.registry.test.BaseIntegrationTest;
 import com.alipay.sofa.registry.util.DatumVersionUtil;
 import com.alipay.sofa.registry.util.NamedThreadFactory;
 import com.alipay.sofa.registry.util.ParaCheckUtil;
+import org.junit.BeforeClass;
+import org.junit.Ignore;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.springframework.test.context.junit4.SpringRunner;
+
+import java.util.*;
+import java.util.concurrent.*;
+
+import static com.alipay.sofa.registry.client.constants.ValueConstants.DEFAULT_DATA_CENTER;
+import static com.alipay.sofa.registry.client.constants.ValueConstants.DEFAULT_GROUP;
+import static com.alipay.sofa.registry.common.model.constants.ValueConstants.DEFAULT_INSTANCE_ID;
 
 /**
  * @author xuanbei
@@ -79,45 +64,42 @@ import com.alipay.sofa.registry.util.ParaCheckUtil;
  */
 @RunWith(SpringRunner.class)
 public class SessionNotifyTest extends BaseIntegrationTest {
-    public static String                       DATA_ID           = "test-dataId-"
-                                                                   + System.currentTimeMillis();
+    public static String                     DATA_ID           = "test-dataId-"
+                                                                 + System.currentTimeMillis();
 
-    private static final int                   TEST_SYNC_PORT    = 9677;
-    private static DataServerConnectionFactory dataServerConnectionFactory;
-    private static Server                      dataSyncServer;
-    private static String                      remoteIP;
-    private static BoltChannel                 boltChannel;
+    private static final int                 TEST_SYNC_PORT    = 9677;
+    private static Server                    dataSyncServer;
+    private static String                    remoteIP;
+    private static BoltChannel               boltChannel;
 
-    private static Map<String, BoltChannel>    boltChannelMap    = new ConcurrentHashMap<>();
+    private static Map<String, BoltChannel>  boltChannelMap    = new ConcurrentHashMap<>();
 
-    private static Map<Integer, BoltChannel>   boltChannelMapInt = new ConcurrentHashMap<>();
+    private static Map<Integer, BoltChannel> boltChannelMapInt = new ConcurrentHashMap<>();
 
-    private static final int                   connectNum        = 20;
+    private static final int                 connectNum        = 20;
 
-    private static final int                   threadNum         = 20;
+    private static final int                 threadNum         = 20;
 
-    private static final int                   idNum             = 100;
+    private static final int                 idNum             = 100;
 
-    private static SessionCacheService         sessionCacheService;
+    private static SessionCacheService       sessionCacheService;
 
-    private static SessionInterests            sessionInterests;
+    private static SessionInterests          sessionInterests;
 
-    private static Datum                       datum;
+    private static Datum                     datum;
 
-    private static BoltClient                  boltClientFetch   = new BoltClient(1);
+    private static BoltClient                boltClientFetch   = new BoltClient(1);
 
-    private static ThreadPoolExecutor          executor          = new ThreadPoolExecutor(100, 100,
-                                                                     0L, TimeUnit.MILLISECONDS,
-                                                                     new LinkedBlockingQueue<>(),
-                                                                     new NamedThreadFactory(
-                                                                         "TestSessionNotifyFetch"));
+    private static ThreadPoolExecutor        executor          = new ThreadPoolExecutor(100, 100,
+                                                                   0L, TimeUnit.MILLISECONDS,
+                                                                   new LinkedBlockingQueue<>(),
+                                                                   new NamedThreadFactory(
+                                                                       "TestSessionNotifyFetch"));
 
     @BeforeClass
     public static void beforeClass() throws Exception {
         startServerIfNecessary();
         BoltExchange boltExchange = (BoltExchange) dataApplicationContext.getBean("boltExchange");
-        dataServerConnectionFactory = dataApplicationContext.getBean("dataServerConnectionFactory",
-            DataServerConnectionFactory.class);
 
         sessionCacheService = sessionApplicationContext.getBean("sessionCacheService",
             SessionCacheService.class);
@@ -172,8 +154,7 @@ public class SessionNotifyTest extends BaseIntegrationTest {
 
         // open sync port and connect it
         dataSyncServer = boltExchange.open(new URL(NetUtil.getLocalAddress().getHostAddress(),
-            TEST_SYNC_PORT), new ChannelHandler[] { new MockGetDataHandler(),
-                dataApplicationContext.getBean(DataSyncServerConnectionHandler.class) });
+            TEST_SYNC_PORT), new ChannelHandler[] { new MockGetDataHandler() });
 
         for (int i = 0; i < connectNum; i++) {
 

@@ -41,8 +41,7 @@ import java.util.concurrent.Executor;
  */
 public class DataSlotDiffDataInfoIdRequestHandler
                                                  extends
-                                                 AbstractClientHandler<DataSlotDiffDataInfoIdRequest> {
-
+                                                 AbstractServerHandler<DataSlotDiffDataInfoIdRequest> {
     private static final Logger LOGGER = LoggerFactory
                                            .getLogger(DataSlotDiffDataInfoIdRequestHandler.class);
 
@@ -94,7 +93,7 @@ public class DataSlotDiffDataInfoIdRequestHandler
 
     @Override
     public Executor getExecutor() {
-        return executorManager.getDataSlotMigrateRequestExecutor();
+        return executorManager.getDataSlotSyncRequestExecutor();
     }
 
     @Override

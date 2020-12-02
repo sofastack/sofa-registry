@@ -16,8 +16,12 @@
  */
 package com.alipay.sofa.registry.common.model.slot;
 
+import com.alipay.sofa.registry.common.model.ProcessId;
 import com.alipay.sofa.registry.common.model.store.Publisher;
+import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.collections.MapUtils;
 
+import java.io.Serializable;
 import java.util.List;
 import java.util.Map;
 
@@ -26,31 +30,28 @@ import java.util.Map;
  * @author yuzhi.lyz
  * @version v 0.1 2020-11-05 17:04 yuzhi.lyz Exp $
  */
-public class DataSlotDiffSyncResult {
-    private long                         slotTableEpoch;
-    // contains all the updated/added publishers
-    private boolean                      hasRemain;
-    private Map<String, List<Publisher>> updatedPublishers;
-    private List<String>                 removedDataInfoIds;
-    private Map<String, List<String>>    removedPublishers;
-
+public class DataSlotDiffSyncResult implements Serializable {
+    private long                               slotTableEpoch;
+    private final Map<String, List<Publisher>> updatedPublishers;
+    private final List<String>                 removedDataInfoIds;
+    private final Map<String, List<String>>    removedPublishers;
     // if from session, return the sessionProcessId for lease
-    private String                       sessionProcessId;
+    private ProcessId                          sessionProcessId;
+    // contains all the updated/added publishers
+    private final boolean                      hasRemain;
 
-    public DataSlotDiffSyncResult(Map<String, List<Publisher>> updatedPublishers,
+    public DataSlotDiffSyncResult(boolean hasRemain,
+                                  Map<String, List<Publisher>> updatedPublishers,
                                   List<String> removedDataInfoIds,
                                   Map<String, List<String>> removedPublishers) {
         this.updatedPublishers = updatedPublishers;
         this.removedDataInfoIds = removedDataInfoIds;
         this.removedPublishers = removedPublishers;
+        this.hasRemain = hasRemain;
     }
 
     public boolean isHasRemain() {
         return hasRemain;
-    }
-
-    public void setHasRemain(boolean hasRemain) {
-        this.hasRemain = hasRemain;
     }
 
     /**
@@ -78,14 +79,6 @@ public class DataSlotDiffSyncResult {
     }
 
     /**
-     * Setter method for property <tt>updatedPublishers</tt>.
-     * @param updatedPublishers value to be assigned to property updatedPublishers
-     */
-    public void setUpdatedPublishers(Map<String, List<Publisher>> updatedPublishers) {
-        this.updatedPublishers = updatedPublishers;
-    }
-
-    /**
      * Getter method for property <tt>removedPublishers</tt>.
      * @return property value of removedPublishers
      */
@@ -94,27 +87,11 @@ public class DataSlotDiffSyncResult {
     }
 
     /**
-     * Setter method for property <tt>removedPublishers</tt>.
-     * @param removedPublishers value to be assigned to property removedPublishers
-     */
-    public void setRemovedPublishers(Map<String, List<String>> removedPublishers) {
-        this.removedPublishers = removedPublishers;
-    }
-
-    /**
      * Getter method for property <tt>removedDataInfoIds</tt>.
      * @return property value of removedDataInfoIds
      */
     public List<String> getRemovedDataInfoIds() {
         return removedDataInfoIds;
-    }
-
-    /**
-     * Setter method for property <tt>removedDataInfoIds</tt>.
-     * @param removedDataInfoIds value to be assigned to property removedDataInfoIds
-     */
-    public void setRemovedDataInfoIds(List<String> removedDataInfoIds) {
-        this.removedDataInfoIds = removedDataInfoIds;
     }
 
     public int getRemovedPublishersCount() {
@@ -131,5 +108,26 @@ public class DataSlotDiffSyncResult {
             count += list.size();
         }
         return count;
+    }
+
+    /**
+     * Getter method for property <tt>sessionProcessId</tt>.
+     * @return property value of sessionProcessId
+     */
+    public ProcessId getSessionProcessId() {
+        return sessionProcessId;
+    }
+
+    /**
+     * Setter method for property <tt>sessionProcessId</tt>.
+     * @param sessionProcessId value to be assigned to property sessionProcessId
+     */
+    public void setSessionProcessId(ProcessId sessionProcessId) {
+        this.sessionProcessId = sessionProcessId;
+    }
+
+    public boolean isEmpty() {
+        return MapUtils.isEmpty(updatedPublishers) && CollectionUtils.isEmpty(removedDataInfoIds)
+               && MapUtils.isEmpty(removedPublishers);
     }
 }

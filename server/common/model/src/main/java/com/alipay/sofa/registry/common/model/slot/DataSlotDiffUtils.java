@@ -20,8 +20,7 @@ import com.alipay.sofa.registry.common.model.PublisherDigestUtil;
 import com.alipay.sofa.registry.common.model.dataserver.DatumSummary;
 import com.alipay.sofa.registry.common.model.store.Publisher;
 import com.alipay.sofa.registry.log.Logger;
-import com.alipay.sofa.registry.util.CollectionUtils;
-import com.google.common.collect.Collections2;
+import org.apache.commons.collections.MapUtils;
 
 import java.util.*;
 
@@ -43,7 +42,7 @@ public final class DataSlotDiffUtils {
             if (targetDataInfoIds.contains(dataInfoId)) {
                 continue;
             }
-            if (CollectionUtils.isEmpty(e.getValue())) {
+            if (MapUtils.isEmpty(e.getValue())) {
                 continue;
             }
             adds.put(dataInfoId, new ArrayList<>(e.getValue().values()));
@@ -75,9 +74,8 @@ public final class DataSlotDiffUtils {
                 removeds.add(dataInfoId);
             }
         }
-        DataSlotDiffSyncResult result = new DataSlotDiffSyncResult(updateds, removeds,
-            new HashMap<>());
-        result.setHasRemain(hasRemain);
+        DataSlotDiffSyncResult result = new DataSlotDiffSyncResult(hasRemain, updateds, removeds,
+            Collections.emptyMap());
         return result;
     }
 
@@ -133,8 +131,8 @@ public final class DataSlotDiffUtils {
         }
         // the iter has break
         final boolean hasRemian = checkRound != targetDatumSummarys.size();
-        DataSlotDiffSyncResult result = new DataSlotDiffSyncResult(updateds, removedDataInfoIds, removedPublishers);
-        result.setHasRemain(hasRemian);
+        DataSlotDiffSyncResult result = new DataSlotDiffSyncResult(hasRemian, updateds, removedDataInfoIds,
+                removedPublishers);
         return result;
     }
 

@@ -22,6 +22,7 @@ import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
 import com.alipay.sofa.registry.server.session.slot.SlotTableCache;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.util.CollectionUtils;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -117,7 +118,10 @@ public class SlotSessionDataStore implements DataStore {
     public Map<String, Publisher> queryByConnectId(String connectId) {
         Map<String, Publisher> ret = new HashMap<>(128);
         slot2DataStores.values().forEach(ds -> {
-            ret.putAll(ds.queryByConnectId(connectId));
+            Map<String, Publisher> m = ds.queryByConnectId(connectId);
+            if (!CollectionUtils.isEmpty(m)) {
+                ret.putAll(m);
+            }
         });
         return ret;
     }

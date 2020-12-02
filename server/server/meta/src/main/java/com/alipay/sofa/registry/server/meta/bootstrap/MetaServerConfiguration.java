@@ -35,7 +35,6 @@ import com.alipay.sofa.registry.server.meta.lease.impl.DefaultSessionManager;
 import com.alipay.sofa.registry.server.meta.metaserver.CurrentDcMetaServer;
 import com.alipay.sofa.registry.server.meta.metaserver.impl.DefaultCurrentDcMetaServer;
 import com.alipay.sofa.registry.server.meta.remoting.DataNodeExchanger;
-import com.alipay.sofa.registry.server.meta.remoting.MetaServerExchanger;
 import com.alipay.sofa.registry.server.meta.remoting.RaftExchanger;
 import com.alipay.sofa.registry.server.meta.remoting.SessionNodeExchanger;
 import com.alipay.sofa.registry.server.meta.remoting.connection.DataConnectionHandler;
@@ -45,7 +44,10 @@ import com.alipay.sofa.registry.server.meta.remoting.handler.AbstractServerHandl
 import com.alipay.sofa.registry.server.meta.remoting.handler.FetchProvideDataRequestHandler;
 import com.alipay.sofa.registry.server.meta.remoting.handler.HeartbeatRequestHandler;
 import com.alipay.sofa.registry.server.meta.resource.*;
-import com.alipay.sofa.registry.server.meta.slot.impl.*;
+import com.alipay.sofa.registry.server.meta.slot.impl.ArrangeTaskExecutor;
+import com.alipay.sofa.registry.server.meta.slot.impl.DataServerArrangeTaskDispatcher;
+import com.alipay.sofa.registry.server.meta.slot.impl.DefaultSlotArranger;
+import com.alipay.sofa.registry.server.meta.slot.impl.DefaultSlotManager;
 import com.alipay.sofa.registry.store.api.DBService;
 import com.alipay.sofa.registry.task.listener.DefaultTaskListenerManager;
 import com.alipay.sofa.registry.task.listener.TaskListenerManager;
@@ -228,7 +230,7 @@ public class MetaServerConfiguration {
         public Collection<AbstractServerHandler> sessionServerHandlers() {
             Collection<AbstractServerHandler> list = new ArrayList<>();
             list.add(sessionConnectionHandler());
-            list.add(heartbeatRequestHandler());
+            list.add(renewNodesRequestHandler());
             list.add(fetchProvideDataRequestHandler());
             return list;
         }
@@ -237,7 +239,7 @@ public class MetaServerConfiguration {
         public Collection<AbstractServerHandler> dataServerHandlers() {
             Collection<AbstractServerHandler> list = new ArrayList<>();
             list.add(dataConnectionHandler());
-            list.add(heartbeatRequestHandler());
+            list.add(renewNodesRequestHandler());
             list.add(fetchProvideDataRequestHandler());
             return list;
         }
@@ -265,7 +267,7 @@ public class MetaServerConfiguration {
         }
 
         @Bean
-        public AbstractServerHandler heartbeatRequestHandler() {
+        public AbstractServerHandler renewNodesRequestHandler() {
             return new HeartbeatRequestHandler();
         }
 

@@ -81,7 +81,7 @@ public class DataPushTask extends AbstractSessionTask {
         String localDataCenterID = sessionServerConfig.getSessionServerDataCenter();
 
         Datum datum = dataPushRequest.getDatum();
-
+        System.out.println("");
         if (datum != null) {
 
             boolean ifLocalDataCenter = localDataCenterID.equals(datum.getDataCenter());

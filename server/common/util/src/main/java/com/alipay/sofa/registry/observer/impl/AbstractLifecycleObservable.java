@@ -35,10 +35,10 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
  */
 public class AbstractLifecycleObservable extends AbstractLifecycle implements Observable, Lifecycle {
 
-    private ReadWriteLock  lock      = new ReentrantReadWriteLock();
-    private List<Observer> observers = new ArrayList<>();
+    private final ReadWriteLock  lock      = new ReentrantReadWriteLock();
+    private final List<Observer> observers = new ArrayList<>();
 
-    private Executor       executors = MoreExecutors.directExecutor();
+    private Executor             executors = MoreExecutors.directExecutor();
 
     public AbstractLifecycleObservable() {
     }

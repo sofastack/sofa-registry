@@ -69,6 +69,9 @@ public class PublishDataHandler extends AbstractServerHandler<PublishDataRequest
 
     @Override
     public void checkParam(PublishDataRequest request) throws RuntimeException {
+        ParaCheckUtil.checkNotNull(request.getSessionProcessId(),
+            "PublishDataRequest.sessionProcessId");
+
         Publisher publisher = request.getPublisher();
         ParaCheckUtil.checkNotNull(publisher, "PublishDataRequest.publisher");
         ParaCheckUtil.checkNotBlank(publisher.getDataId(), "publisher.dataId");
@@ -77,7 +80,6 @@ public class PublishDataHandler extends AbstractServerHandler<PublishDataRequest
         ParaCheckUtil.checkNotBlank(publisher.getDataInfoId(), "publisher.dataInfoId");
         ParaCheckUtil.checkNotNull(publisher.getVersion(), "publisher.version");
         ParaCheckUtil.checkNotBlank(publisher.getRegisterId(), "publisher.registerId");
-
         if (publisher.getPublishType() != PublishType.TEMPORARY) {
             ParaCheckUtil.checkNotNull(publisher.getSourceAddress(), "publisher.sourceAddress");
         }
@@ -88,16 +90,16 @@ public class PublishDataHandler extends AbstractServerHandler<PublishDataRequest
         Publisher publisher = Publisher.internPublisher(request.getPublisher());
 
         final SlotAccess slotAccess = slotManager.checkSlotAccess(publisher.getDataInfoId(),
-            request.getSlotEpoch());
+            request.getSlotTableEpoch());
         if (slotAccess.isMoved()) {
             LOGGER.warn("[moved] Slot has moved, access: {}, request: {}", slotAccess, request);
-            return SlotAccessGenericResponse.buildFailedResponse(slotAccess);
+            return SlotAccessGenericResponse.failedResponse(slotAccess);
         }
 
         if (slotAccess.isMigrating()) {
             LOGGER.warn("[migrating] Slot is migrating, access: {}, request: {}", slotAccess,
                 request);
-            return SlotAccessGenericResponse.buildFailedResponse(slotAccess);
+            return SlotAccessGenericResponse.failedResponse(slotAccess);
         }
         dataChangeEventCenter.onChange(publisher, dataServerConfig.getLocalDataCenter());
 
@@ -105,15 +107,15 @@ public class PublishDataHandler extends AbstractServerHandler<PublishDataRequest
             String connectId = WordCache.getInstance().getWordCache(
                 publisher.getSourceAddress().getAddressString() + ValueConstants.CONNECT_ID_SPLIT
                         + publisher.getTargetAddress().getAddressString());
-            sessionServerConnectionFactory.registerConnectId(request.getSessionServerProcessId(),
-                connectId);
+            sessionServerConnectionFactory.registerConnectId(request.getSessionProcessId()
+                .toString(), connectId);
         }
-        return SlotAccessGenericResponse.buildSuccessResponse(slotAccess);
+        return SlotAccessGenericResponse.successResponse(slotAccess, null);
     }
 
     @Override
     public CommonResponse buildFailedResponse(String msg) {
-        return new CommonResponse(false, msg);
+        return SlotAccessGenericResponse.failedResponse(msg);
     }
 
     @Override

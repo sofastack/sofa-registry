@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alipay.sofa.registry.consistency.hash;
+package com.alipay.sofa.registry.common.model.slot.func;
 
 import org.junit.Test;
 

@@ -16,12 +16,14 @@
  */
 package com.alipay.sofa.registry.server.shared.env;
 
+import com.alipay.sofa.registry.common.model.ProcessId;
 import com.alipay.sofa.registry.net.NetUtil;
-import com.google.common.collect.Maps;
+import org.apache.commons.lang.StringUtils;
 import org.glassfish.jersey.internal.guava.Sets;
 
 import java.util.Collection;
 import java.util.Map;
+import java.util.Random;
 import java.util.Set;
 
 /**
@@ -33,7 +35,28 @@ public final class ServerEnv {
     private ServerEnv() {
     }
 
-    public static final String IP = NetUtil.getLocalAddress().getHostAddress();
+    public static final String    IP         = NetUtil.getLocalAddress().getHostAddress();
+    public static final int       PID        = getPID();
+    public static final ProcessId PROCESS_ID = createProcessId();
+
+    static ProcessId createProcessId() {
+        Random random = new Random();
+        return new ProcessId(IP, System.currentTimeMillis(), PID, random.nextInt());
+    }
+
+    static int getPID() {
+        String processName = java.lang.management.ManagementFactory.getRuntimeMXBean().getName();
+        if (StringUtils.isBlank(processName)) {
+            throw new RuntimeException("failed to get processName");
+        }
+
+        String[] processSplitName = processName.split("@");
+        if (processSplitName.length == 0) {
+            throw new RuntimeException("failed to get processName");
+        }
+        String pid = processSplitName[0];
+        return Integer.parseInt(pid);
+    }
 
     public static boolean isLocalServer(String ip) {
         return IP.equals(ip);

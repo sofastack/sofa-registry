@@ -21,6 +21,7 @@ import com.alipay.remoting.Connection;
 import com.alipay.sofa.registry.common.model.store.URL;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
+import com.alipay.sofa.registry.remoting.CallbackHandler;
 import com.alipay.sofa.registry.remoting.Channel;
 import com.alipay.sofa.registry.remoting.ChannelHandler;
 import com.alipay.sofa.registry.remoting.Client;
@@ -29,6 +30,8 @@ import com.alipay.sofa.registry.remoting.exchange.NodeExchanger;
 import com.alipay.sofa.registry.remoting.exchange.RequestException;
 import com.alipay.sofa.registry.remoting.exchange.message.Request;
 import com.alipay.sofa.registry.remoting.exchange.message.Response;
+import com.alipay.sofa.registry.util.ConcurrentUtils;
+import com.alipay.sofa.registry.util.LoopRunnable;
 import com.google.common.collect.Sets;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -40,16 +43,19 @@ import java.util.*;
  * @version v 0.1 2020-11-29 12:08 yuzhi.lyz Exp $
  */
 public abstract class ClientExchanger implements NodeExchanger {
-    private static final Logger    LOGGER = LoggerFactory.getLogger(ClientExchanger.class);
+    private static final Logger    LOGGER    = LoggerFactory.getLogger(ClientExchanger.class);
     private final String           serverType;
 
     @Autowired
     protected Exchange             boltExchange;
 
-    protected volatile Set<String> serverIps;
+    protected volatile Set<String> serverIps = Sets.newHashSet();
+    private final Connector        connector;
 
     protected ClientExchanger(String serverType) {
         this.serverType = serverType;
+        this.connector = new Connector();
+        ConcurrentUtils.createDaemonThread(serverType + "-async-connector", connector).start();
     }
 
     @Override
@@ -57,25 +63,48 @@ public abstract class ClientExchanger implements NodeExchanger {
         Client client = boltExchange.getClient(serverType);
         final int timeout = request.getTimeout() != null ? request.getTimeout() : getRpcTimeout();
         try {
-            final Object result = client.sendSync(request.getRequestUrl(), request.getRequestBody(), timeout);
-            return () -> result;
+            CallbackHandler callback = request.getCallBackHandler();
+            if (callback == null) {
+                final Object result = client.sendSync(request.getRequestUrl(), request.getRequestBody(), timeout);
+                return () -> result;
+            } else {
+                client.sendCallback(request.getRequestUrl(), request.getRequestBody(), callback, timeout);
+                return () -> Response.ResultStatus.SUCCESSFUL;
+            }
         } catch (Throwable e) {
             throw new RequestException(serverType + "Exchanger request error! Request url:" + request.getRequestUrl(),
                     request, e);
         }
     }
 
+    public Response requestRaw(String ip, Object raw) throws RequestException {
+        Request req = new Request() {
+            @Override
+            public Object getRequestBody() {
+                return raw;
+            }
+
+            @Override
+            public URL getRequestUrl() {
+                return new URL(ip, getServerPort());
+            }
+        };
+        return request(req);
+    }
+
     @Override
     public Client connectServer() {
         Set<String> ips = serverIps;
-        int count = tryConnectAllServer(ips);
-        if (count == 0) {
-            throw new RuntimeException("failed to connect any servers, " + ips);
+        if (!ips.isEmpty()) {
+            int count = tryConnectAllServer(ips);
+            if (count == 0) {
+                throw new RuntimeException("failed to connect any servers, " + ips);
+            }
         }
         return getClient();
     }
 
-    protected Client getClient() {
+    public Client getClient() {
         return boltExchange.getClient(serverType);
     }
 
@@ -122,6 +151,33 @@ public abstract class ClientExchanger implements NodeExchanger {
             return Collections.emptyMap();
         }
         return ((BoltClient) client).getAllManagedConnections();
+    }
+
+    public void notifyConnectServerAsync() {
+        connector.wakeup();
+    }
+
+    private final class Connector extends LoopRunnable {
+
+        synchronized void wakeup() {
+            this.notify();
+        }
+
+        @Override
+        public void runUnthrowable() {
+            Set<String> ips = serverIps;
+            try {
+                tryConnectAllServer(ips);
+            } catch (Throwable e) {
+                LOGGER.error("failded to connect {}", ips, e);
+            }
+        }
+
+        public void waitingUnthrowable() {
+            synchronized (this) {
+                ConcurrentUtils.objectWaitUninterruptibly(this, 3000);
+            }
+        }
     }
 
     public abstract int getRpcTimeout();

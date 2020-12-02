@@ -26,7 +26,6 @@
         <module>common</module>
         <module>store</module>
         <module>server</module>
-        <module>consistency</module>
         <module>distribution</module>
     </modules>
     <properties>

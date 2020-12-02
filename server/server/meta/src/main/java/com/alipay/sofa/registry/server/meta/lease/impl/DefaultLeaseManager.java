@@ -40,24 +40,25 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
  */
 public class DefaultLeaseManager<T extends Node> implements LeaseManager<T>, EpochAware {
 
-    private Logger                            logger              = LoggerFactory
-                                                                      .getLogger(getClass());
+    private Logger                                  logger              = LoggerFactory
+                                                                            .getLogger(getClass());
 
-    private static final String               EVICT_BETWEEN_MILLI = "evict.between.milli";
+    private static final String                     EVICT_BETWEEN_MILLI = "evict.between.milli";
 
-    private int                               evictBetweenMilli   = Integer.parseInt(System
-                                                                      .getProperty(
-                                                                          EVICT_BETWEEN_MILLI,
-                                                                          "60000"));
+    private final int                               evictBetweenMilli   = Integer
+                                                                            .parseInt(System
+                                                                                .getProperty(
+                                                                                    EVICT_BETWEEN_MILLI,
+                                                                                    "60000"));
 
-    protected AtomicLong                      currentEpoch        = new AtomicLong();
+    protected final AtomicLong                      currentEpoch        = new AtomicLong();
 
     //Map[ip-address, Lease{node, duration, timestamp}]
-    protected ConcurrentMap<String, Lease<T>> repo                = Maps.newConcurrentMap();
+    protected final ConcurrentMap<String, Lease<T>> repo                = Maps.newConcurrentMap();
 
-    protected final ReentrantReadWriteLock    lock                = new ReentrantReadWriteLock();
+    protected final ReentrantReadWriteLock          lock                = new ReentrantReadWriteLock();
 
-    private AtomicLong                        lastEvictTime       = new AtomicLong();
+    private final AtomicLong                        lastEvictTime       = new AtomicLong();
 
     public void register(T renewal, int leaseDuration) {
         if (renewal == null) {

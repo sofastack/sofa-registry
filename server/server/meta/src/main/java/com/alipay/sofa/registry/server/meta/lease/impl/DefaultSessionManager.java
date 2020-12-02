@@ -20,6 +20,7 @@ import com.alipay.sofa.registry.common.model.metaserver.nodes.DataNode;
 import com.alipay.sofa.registry.common.model.metaserver.nodes.SessionNode;
 import com.alipay.sofa.registry.lifecycle.SmartSpringLifecycle;
 import com.alipay.sofa.registry.lifecycle.impl.LifecycleHelper;
+import com.alipay.sofa.registry.server.meta.lease.Lease;
 import com.alipay.sofa.registry.server.meta.lease.SessionManager;
 import com.google.common.collect.Lists;
 import org.springframework.stereotype.Component;
@@ -27,6 +28,7 @@ import org.springframework.stereotype.Component;
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 import java.util.List;
+import java.util.Map;
 
 /**
  * @author chen.zhu
@@ -64,7 +66,8 @@ public class DefaultSessionManager extends AbstractRaftEnabledLeaseManager<Sessi
     @Override
     public List<SessionNode> getClusterMembers() {
         List<SessionNode> result = Lists.newLinkedList();
-        raftLeaseManager.getLeaseStore().forEach((ip,lease)->{result.add(lease.getRenewal());});
+        Map<String, Lease<SessionNode>> m = raftLeaseManager.getLeaseStore();
+        m.forEach((ip, lease)->{result.add(lease.getRenewal());});
         return result;
     }
 }

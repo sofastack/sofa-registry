@@ -44,6 +44,8 @@ public class DataServerConfig {
 
     private int                  syncDataPort;
 
+    private int                  syncSessionPort;
+
     private int                  metaServerPort;
 
     private int                  httpServerPort;
@@ -108,10 +110,6 @@ public class DataServerConfig {
 
     private int                  sessionServerNotifierRetryExecutorQueueSize  = 10000;
 
-    private int                  dataSyncDelayTimeout                         = 1000;
-
-    private int                  dataSyncNotifyRetry                          = 3;
-
     private int                  sessionDisconnectDelayMs                     = 30000;
 
     private int                  slotMigratingExecutorThreadSize              = 8;
@@ -135,6 +133,8 @@ public class DataServerConfig {
     private int                  slotSyncRequestExecutorMaxPoolSize           = 32;
 
     private int                  slotSyncRequestExecutorQueueSize             = 1000;
+
+    private int                  schedulerHeartbeatIntervalSec                = 3;
 
     /**
      * constructor
@@ -744,42 +744,6 @@ public class DataServerConfig {
     }
 
     /**
-     * Getter method for property <tt>dataSyncDelayTimeout</tt>.
-     *
-     * @return property value of dataSyncDelayTimeout
-     */
-    public int getDataSyncDelayTimeout() {
-        return dataSyncDelayTimeout;
-    }
-
-    /**
-     * Setter method for property <tt>dataSyncDelayTimeout </tt>.
-     *
-     * @param dataSyncDelayTimeout  value to be assigned to property dataSyncDelayTimeout
-     */
-    public void setDataSyncDelayTimeout(int dataSyncDelayTimeout) {
-        this.dataSyncDelayTimeout = dataSyncDelayTimeout;
-    }
-
-    /**
-     * Getter method for property <tt>dataSyncNotifyRetry</tt>.
-     *
-     * @return property value of dataSyncNotifyRetry
-     */
-    public int getDataSyncNotifyRetry() {
-        return dataSyncNotifyRetry;
-    }
-
-    /**
-     * Setter method for property <tt>dataSyncNotifyRetry </tt>.
-     *
-     * @param dataSyncNotifyRetry  value to be assigned to property dataSyncNotifyRetry
-     */
-    public void setDataSyncNotifyRetry(int dataSyncNotifyRetry) {
-        this.dataSyncNotifyRetry = dataSyncNotifyRetry;
-    }
-
-    /**
      * Getter method for property <tt>sessionDisconnectDelayMs</tt>.
      *
      * @return property value of sessionDisconnectDelayMs
@@ -1003,6 +967,38 @@ public class DataServerConfig {
      */
     public void setSlotLeaderDatumExpireSec(int slotLeaderDatumExpireSec) {
         this.slotLeaderDatumExpireSec = slotLeaderDatumExpireSec;
+    }
+
+    /**
+     * Getter method for property <tt>schedulerHeartbeatIntervalSec</tt>.
+     * @return property value of schedulerHeartbeatIntervalSec
+     */
+    public int getSchedulerHeartbeatIntervalSec() {
+        return schedulerHeartbeatIntervalSec;
+    }
+
+    /**
+     * Setter method for property <tt>schedulerHeartbeatIntervalSec</tt>.
+     * @param schedulerHeartbeatIntervalSec value to be assigned to property schedulerHeartbeatIntervalSec
+     */
+    public void setSchedulerHeartbeatIntervalSec(int schedulerHeartbeatIntervalSec) {
+        this.schedulerHeartbeatIntervalSec = schedulerHeartbeatIntervalSec;
+    }
+
+    /**
+     * Getter method for property <tt>syncSessionPort</tt>.
+     * @return property value of syncSessionPort
+     */
+    public int getSyncSessionPort() {
+        return syncSessionPort;
+    }
+
+    /**
+     * Setter method for property <tt>syncSessionPort</tt>.
+     * @param syncSessionPort value to be assigned to property syncSessionPort
+     */
+    public void setSyncSessionPort(int syncSessionPort) {
+        this.syncSessionPort = syncSessionPort;
     }
 
     @Override

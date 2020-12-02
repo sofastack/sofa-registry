@@ -16,11 +16,17 @@
  */
 package com.alipay.sofa.registry.server.data.remoting.metaserver;
 
+import com.alipay.sofa.registry.common.model.Node;
 import com.alipay.sofa.registry.common.model.metaserver.inter.communicate.DataHeartBeatResponse;
+import com.alipay.sofa.registry.common.model.metaserver.nodes.DataNode;
+import com.alipay.sofa.registry.common.model.store.URL;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.server.data.bootstrap.DataServerConfig;
 import com.alipay.sofa.registry.server.data.cache.SlotManager;
+import com.alipay.sofa.registry.server.data.remoting.DataNodeExchanger;
+import com.alipay.sofa.registry.server.data.remoting.SessionNodeExchanger;
+import com.alipay.sofa.registry.server.shared.env.ServerEnv;
 import com.alipay.sofa.registry.server.shared.meta.AbstractMetaServerService;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -31,17 +37,36 @@ import org.springframework.beans.factory.annotation.Autowired;
  */
 public class MetaServerServiceImpl extends AbstractMetaServerService<DataHeartBeatResponse> {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(MetaServerServiceImpl.class);
+    private static final Logger  LOGGER = LoggerFactory.getLogger(MetaServerServiceImpl.class);
 
     @Autowired
-    private DataServerConfig    dataServerConfig;
+    private DataServerConfig     dataServerConfig;
 
     @Autowired
-    private SlotManager         slotManager;
+    private SlotManager          slotManager;
+
+    @Autowired
+    private DataNodeExchanger    dataNodeExchanger;
+
+    @Autowired
+    private SessionNodeExchanger sessionNodeExchanger;
 
     @Override
     protected void handleRenewResult(DataHeartBeatResponse result) {
-        updateMetaIps(result.getMetaNodesMap().keySet());
+        metaNodeExchanger.setServerIps(result.getMetaNodesMap().keySet());
+        metaNodeExchanger.notifyConnectServerAsync();
+
+        dataNodeExchanger.setServerIps(getDataServerList());
+        dataNodeExchanger.notifyConnectServerAsync();
+
+        sessionNodeExchanger.setServerIps(getSessionNodes().keySet());
+        sessionNodeExchanger.notifyConnectServerAsync();
+
         slotManager.updateSlotTable(result.getSlotTable());
+    }
+
+    @Override
+    protected Node createNode() {
+        return new DataNode(new URL(ServerEnv.IP), metaNodeExchanger.getLocalDataCenter());
     }
 }

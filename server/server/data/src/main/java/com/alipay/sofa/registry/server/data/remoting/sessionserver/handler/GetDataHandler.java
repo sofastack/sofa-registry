@@ -71,25 +71,24 @@ public class GetDataHandler extends AbstractServerHandler<GetDataRequest> {
         String dataInfoId = request.getDataInfoId();
         final SlotAccess slotAccess = slotManager.checkSlotAccess(dataInfoId,
             request.getSlotEpoch());
-        LOGGER.info("#### {}", slotAccess);
         if (slotAccess.isMoved()) {
             LOGGER.warn("[moved] Slot has moved, access: {}, request: {}", slotAccess, request);
-            return SlotAccessGenericResponse.buildFailedResponse(slotAccess);
+            return SlotAccessGenericResponse.failedResponse(slotAccess);
         }
 
         if (slotAccess.isMigrating()) {
             LOGGER.warn("[migrating] Slot is migrating, access: {}, request: {}", slotAccess,
                 request);
-            return SlotAccessGenericResponse.buildFailedResponse(slotAccess);
+            return SlotAccessGenericResponse.failedResponse(slotAccess);
         }
 
-        return new GenericResponse<Map<String, Datum>>().fillSucceed(datumCache
-            .getDatumGroupByDataCenter(request.getDataCenter(), dataInfoId));
+        return SlotAccessGenericResponse.successResponse(slotAccess,
+            datumCache.getDatumGroupByDataCenter(request.getDataCenter(), dataInfoId));
     }
 
     @Override
     public GenericResponse<Map<String, Datum>> buildFailedResponse(String msg) {
-        return new GenericResponse<Map<String, Datum>>().fillFailed(msg);
+        return SlotAccessGenericResponse.failedResponse(msg);
     }
 
     @Override

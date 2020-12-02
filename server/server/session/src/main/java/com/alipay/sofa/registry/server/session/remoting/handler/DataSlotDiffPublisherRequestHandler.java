@@ -41,7 +41,7 @@ import java.util.concurrent.Executor;
  * @version v 0.1 2020-11-06 15:41 yuzhi.lyz Exp $
  */
 public class DataSlotDiffPublisherRequestHandler extends
-                                                AbstractClientHandler<DataSlotDiffPublisherRequest> {
+                                                AbstractServerHandler<DataSlotDiffPublisherRequest> {
 
     private static final Logger LOGGER = LoggerFactory
                                            .getLogger(DataSlotDiffPublisherRequestHandler.class);
@@ -94,11 +94,11 @@ public class DataSlotDiffPublisherRequestHandler extends
 
     @Override
     public Executor getExecutor() {
-        return executorManager.getDataSlotMigrateRequestExecutor();
+        return executorManager.getDataSlotSyncRequestExecutor();
     }
 
     @Override
     public Class interest() {
-        return DataSlotDiffPublisherRequestHandler.class;
+        return DataSlotDiffPublisherRequest.class;
     }
 }

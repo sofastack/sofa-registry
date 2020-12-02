@@ -14,35 +14,44 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alipay.sofa.registry.common.model.slot;
+package com.alipay.sofa.registry.util;
 
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
-import com.google.common.collect.Maps;
-
-import java.util.Map;
 
 /**
  *
  * @author yuzhi.lyz
- * @version v 0.1 2020-11-28 12:24 yuzhi.lyz Exp $
+ * @version v 0.1 2020-11-30 16:51 yuzhi.lyz Exp $
  */
-public final class SlotFunctionRegistry {
-    public static final int                        MAX_SLOTS = 1024;
-    private static final String                    DEF_FUNC  = "crc16";
-    private static final Map<String, SlotFunction> funcs     = Maps.newConcurrentMap();
+public abstract class LoopRunnable implements Runnable {
+    private static final Logger LOGGER = LoggerFactory.getLogger(LoopRunnable.class);
 
-    static {
-        register(CRC16SlotFunction.INSTANCE.name(), CRC16SlotFunction.INSTANCE);
-        register(MD5SlotFunction.INSTANCE.name(), MD5SlotFunction.INSTANCE);
+    public abstract void runUnthrowable();
+
+    public abstract void waitingUnthrowable();
+
+    public void unexpectExit(Throwable e) {
+        LOGGER.error("expect exit in LoopRunnable {}", Thread.currentThread().getName(), e);
     }
 
-    public static void register(String name, SlotFunction func) {
-        funcs.put(name, func);
-    }
+    public void run() {
+        try {
+            for (;;) {
+                try {
+                    runUnthrowable();
+                } catch (Throwable ignored) {
+                    // ignored that
+                }
+                try {
+                    waitingUnthrowable();
+                } catch (Throwable ignored) {
+                }
+            }
+        } catch (Throwable e) {
+            // in oom, this may be happen
+            unexpectExit(e);
+        }
 
-    public static SlotFunction getFunc() {
-        // TODO need config by env?
-        return funcs.get(DEF_FUNC);
     }
 }
