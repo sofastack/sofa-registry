@@ -14,35 +14,27 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alipay.sofa.registry.server.data.util;
+package com.alipay.sofa.registry.server.meta.executor;
 
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
+import com.alipay.sofa.registry.metrics.TaskMetrics;
 
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.RejectedExecutionException;
-import java.util.concurrent.ThreadFactory;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 
-/**
- *
- * @author shangyu.wh
- * @version $Id: ThreadPoolExecutorDataServer.java, v 0.1 2018-10-25 20:40 shangyu.wh Exp $
- */
-public class ThreadPoolExecutorDataServer extends ThreadPoolExecutor {
+public class MetaMetricsThreadPoolExecutor extends ThreadPoolExecutor {
 
     private static final Logger LOGGER = LoggerFactory
-                                           .getLogger(ThreadPoolExecutorDataServer.class);
-
+                                           .getLogger(MetaMetricsThreadPoolExecutor.class);
     private String              executorName;
 
-    public ThreadPoolExecutorDataServer(String executorName, int corePoolSize, int maximumPoolSize,
-                                        long keepAliveTime, TimeUnit unit,
-                                        BlockingQueue<Runnable> workQueue,
-                                        ThreadFactory threadFactory) {
+    public MetaMetricsThreadPoolExecutor(String executorName, int corePoolSize,
+                                         int maximumPoolSize, long keepAliveTime, TimeUnit unit,
+                                         BlockingQueue<Runnable> workQueue,
+                                         ThreadFactory threadFactory) {
         super(corePoolSize, maximumPoolSize, keepAliveTime, unit, workQueue, threadFactory);
-        this.executorName = executorName;
+        this.executorName = "Meta-" + executorName;
+        registerTaskMetrics();
     }
 
     @Override
@@ -50,12 +42,16 @@ public class ThreadPoolExecutorDataServer extends ThreadPoolExecutor {
         return super.toString() + executorName;
     }
 
+    private void registerTaskMetrics() {
+        TaskMetrics.getInstance().registerThreadExecutor(executorName, this);
+    }
+
     @Override
     public void execute(Runnable command) {
         try {
             super.execute(command);
         } catch (RejectedExecutionException e) {
-            LOGGER.error("Processor session executor {} Rejected Execution!command {}", this,
+            LOGGER.error("Processor meta executor {} Rejected Execution!command {}", this,
                 command.getClass(), e);
         }
     }

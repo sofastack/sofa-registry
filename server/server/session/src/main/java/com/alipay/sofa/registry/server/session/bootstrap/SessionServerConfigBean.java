@@ -207,6 +207,14 @@ public class SessionServerConfigBean implements SessionServerConfig {
 
     private long               publishDataExecutorKeepAliveTime        = 60;
 
+    private int                defaultRequestExecutorMinPoolSize       = 20;
+
+    private int                defaultRequestExecutorMaxPoolSize       = 400;
+
+    private int                defaultRequestExecutorQueueSize         = 600;
+
+    private long               defaultRequestExecutorKeepAliveTime     = 60;
+
     private double             accessLimitRate                         = 100000.0;
 
     private String             sessionServerRegion;
@@ -2141,5 +2149,37 @@ public class SessionServerConfigBean implements SessionServerConfig {
 
     public void setEnableSessionLoadbalancePolicy(boolean enableSessionLoadbalancePolicy) {
         this.enableSessionLoadbalancePolicy = enableSessionLoadbalancePolicy;
+    }
+
+    public int getDefaultRequestExecutorMinPoolSize() {
+        return defaultRequestExecutorMinPoolSize;
+    }
+
+    public void setDefaultRequestExecutorMinPoolSize(int defaultRequestExecutorMinPoolSize) {
+        this.defaultRequestExecutorMinPoolSize = defaultRequestExecutorMinPoolSize;
+    }
+
+    public int getDefaultRequestExecutorMaxPoolSize() {
+        return defaultRequestExecutorMaxPoolSize;
+    }
+
+    public void setDefaultRequestExecutorMaxPoolSize(int defaultRequestExecutorMaxPoolSize) {
+        this.defaultRequestExecutorMaxPoolSize = defaultRequestExecutorMaxPoolSize;
+    }
+
+    public int getDefaultRequestExecutorQueueSize() {
+        return defaultRequestExecutorQueueSize;
+    }
+
+    public void setDefaultRequestExecutorQueueSize(int defaultRequestExecutorQueueSize) {
+        this.defaultRequestExecutorQueueSize = defaultRequestExecutorQueueSize;
+    }
+
+    public long getDefaultRequestExecutorKeepAliveTime() {
+        return defaultRequestExecutorKeepAliveTime;
+    }
+
+    public void setDefaultRequestExecutorKeepAliveTime(long defaultRequestExecutorKeepAliveTime) {
+        this.defaultRequestExecutorKeepAliveTime = defaultRequestExecutorKeepAliveTime;
     }
 }
