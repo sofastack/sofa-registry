@@ -21,6 +21,9 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.ThreadPoolExecutor;
 
+import com.alipay.remoting.ProtocolCode;
+import com.alipay.remoting.ProtocolManager;
+import com.alipay.remoting.rpc.protocol.RpcProtocol;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 
@@ -58,8 +61,7 @@ public class SyncClientsHeartbeatTask {
                                                          "SESSION-PROFILE-DIGEST",
                                                          "[ExecutorMetrics]");
 
-    public static final String  SYMBOLIC1            = "  ├─ ";
-    public static final String  SYMBOLIC2            = "  └─ ";
+    public static final String  SYMBOLIC             = "  └─ ";
 
     @Autowired
     private Exchange            boltExchange;
@@ -86,10 +88,16 @@ public class SyncClientsHeartbeatTask {
     private DataStore           sessionDataStore;
 
     @Autowired
-    private ExecutorManager     executorManager;
-
-    @Autowired
     private TaskListener        receivedDataMultiPushTaskListener;
+    private final TaskMetrics   taskMetrics          = TaskMetrics.getInstance();
+
+    public SyncClientsHeartbeatTask() {
+
+        ThreadPoolExecutor boltDefaultExecutor = (ThreadPoolExecutor) ProtocolManager
+            .getProtocol(ProtocolCode.fromBytes(RpcProtocol.PROTOCOL_CODE)).getCommandHandler()
+            .getDefaultExecutor();
+        taskMetrics.registerThreadExecutor("Session-BoltDefaultExecutor", boltDefaultExecutor);
+    }
 
     @Scheduled(initialDelayString = "${session.server.syncHeartbeat.fixedDelay}", fixedDelayString = "${session.server.syncHeartbeat.fixedDelay}")
     public void syncCounte() {
@@ -129,11 +137,7 @@ public class SyncClientsHeartbeatTask {
             .hasNext();) {
             Entry<String, TaskDispatcher> entry = i.next();
             AcceptorExecutor acceptorExecutor = entry.getValue().getAcceptorExecutor();
-            String outterTreeSymbol = SYMBOLIC1;
-            if (!i.hasNext()) {
-                outterTreeSymbol = SYMBOLIC2;
-            }
-            sb.append(outterTreeSymbol).append(entry.getKey());
+            sb.append(SYMBOLIC).append(entry.getKey());
             sb.append(", AcceptedTasks:").append(acceptorExecutor.getAcceptedTasks());
             sb.append(", ReplayedTasks:").append(acceptorExecutor.getReplayedTasks());
             sb.append(", QueueOverflows:").append(acceptorExecutor.getQueueOverflows());
@@ -147,39 +151,7 @@ public class SyncClientsHeartbeatTask {
 
     @Scheduled(initialDelayString = "${session.server.printTask.fixedDelay}", fixedDelayString = "${session.server.printTask.fixedDelay}")
     public void printExecutorTaskExecute() {
-
-        Map<String, ThreadPoolExecutor> reportExecutors = executorManager.getReportExecutors();
-        if (reportExecutors != null) {
-
-            StringBuilder sb = new StringBuilder();
-            logInfoExecutor(sb, reportExecutors, "ExecutorMetrics");
-            EXE_LOGGER.info(sb.toString());
-        }
-
-    }
-
-    protected void logInfoExecutor(StringBuilder sb0, Map<String, ThreadPoolExecutor> reportExecutors, String info) {
-        sb0.append("\n").append(info).append(" >>>>>>>");
-        StringBuilder sb = new StringBuilder();
-        for (Iterator<Entry<String, ThreadPoolExecutor>> i = reportExecutors.entrySet().iterator(); i.hasNext(); ) {
-            Entry<String, ThreadPoolExecutor> entry = i.next();
-            String executorName = entry.getKey();
-
-            MetricRegistry metricRegistry = TaskMetrics.getInstance().getMetricRegistry();
-            Map<String, Gauge> map = metricRegistry.getGauges((name, value) -> name.startsWith(executorName));
-
-            String outterTreeSymbol = SYMBOLIC1;
-            if (!i.hasNext()) {
-                outterTreeSymbol = SYMBOLIC2;
-            }
-            sb.append(outterTreeSymbol).append(executorName);
-            map.forEach((key, gauge) -> {
-                String name = key.substring(executorName.length() + 1);
-                sb.append(", ").append(name).append(":").append(gauge.getValue());
-            });
-            sb.append("\n");
-        }
-        sb0.append("\n").append(sb);
+        EXE_LOGGER.info(TaskMetrics.getInstance().metricsString());
     }
 
     @Scheduled(initialDelayString = "${session.server.printTask.fixedDelay}", fixedDelayString = "${session.server.printTask.fixedDelay}")

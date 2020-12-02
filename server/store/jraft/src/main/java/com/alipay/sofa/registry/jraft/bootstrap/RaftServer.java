@@ -116,12 +116,13 @@ public class RaftServer {
      * @param raftServerConfig
      * @throws IOException
      */
-    public void start(RaftServerConfig raftServerConfig) throws IOException {
+    public void start(RaftServerConfig raftServerConfig, ThreadPoolExecutor executor)
+                                                                                     throws IOException {
 
         FileUtils.forceMkdir(new File(dataPath));
 
         serverHandlers.add(new RaftServerHandler(this, raftServerExecutor));
-        serverHandlers.add(new RaftServerConnectionHandler());
+        serverHandlers.add(new RaftServerConnectionHandler(executor));
 
         boltServer = new BoltServer(new URL(NetUtil.getLocalAddress().getHostAddress(),
             serverId.getPort()), serverHandlers);
@@ -151,7 +152,7 @@ public class RaftServer {
             .getRpcService())).getRpcClient()).getRpcClient();
 
         NotifyLeaderChangeHandler notifyLeaderChangeHandler = new NotifyLeaderChangeHandler(
-            groupId, null);
+            groupId, null, executor);
         raftClient.registerUserProcessor(new SyncUserProcessorAdapter(notifyLeaderChangeHandler));
     }
 
