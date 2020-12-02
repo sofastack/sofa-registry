@@ -284,4 +284,10 @@ public class DefaultCurrentDcMetaServer extends AbstractMetaServer implements Cu
         this.raftStorage = raftStorage;
         return this;
     }
+
+    @VisibleForTesting
+    DefaultCurrentDcMetaServer setNodeConfig(NodeConfig nodeConfig) {
+        this.nodeConfig = nodeConfig;
+        return this;
+    }
 }
