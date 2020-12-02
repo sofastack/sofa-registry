@@ -22,7 +22,9 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
+import com.alipay.sofa.registry.server.meta.executor.MetaMetricsThreadPoolExecutor;
 import com.alipay.sofa.registry.server.meta.remoting.handler.*;
+import com.alipay.sofa.registry.server.meta.timertask.LogMetricsTask;
 import com.alipay.sofa.registry.util.NamedThreadFactory;
 import com.alipay.sofa.registry.server.meta.resource.*;
 import org.glassfish.jersey.jackson.JacksonFeature;
@@ -431,11 +433,11 @@ public class MetaServerConfiguration {
 
         @Bean
         public ThreadPoolExecutor defaultRequestExecutor(MetaServerConfig metaServerConfig) {
-            ThreadPoolExecutor defaultRequestExecutor = new ThreadPoolExecutor(
-                metaServerConfig.getDefaultRequestExecutorMinSize(),
+            ThreadPoolExecutor defaultRequestExecutor = new MetaMetricsThreadPoolExecutor(
+                "DefaultRequestExecutor", metaServerConfig.getDefaultRequestExecutorMinSize(),
                 metaServerConfig.getDefaultRequestExecutorMaxSize(), 300, TimeUnit.SECONDS,
                 new LinkedBlockingQueue<>(metaServerConfig.getDefaultRequestExecutorQueueSize()),
-                new NamedThreadFactory("MetaHandler-DefaultRequest"));
+                new NamedThreadFactory("DefaultRequestExecutor"));
             defaultRequestExecutor.allowCoreThreadTimeOut(true);
             return defaultRequestExecutor;
         }
@@ -447,6 +449,16 @@ public class MetaServerConfiguration {
         @Bean
         public DBService persistenceDataDBService() {
             return new PersistenceDataDBService();
+        }
+    }
+
+    @Configuration
+    public static class TimerTask {
+
+        @Bean
+        public LogMetricsTask logMetricsTask() {
+            return new LogMetricsTask();
+
         }
     }
 }

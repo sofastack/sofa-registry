@@ -23,14 +23,10 @@ import com.alipay.sofa.registry.common.model.metaserver.ProvideData;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.remoting.Channel;
-import com.alipay.sofa.registry.server.meta.executor.ExecutorManager;
 import com.alipay.sofa.registry.store.api.DBResponse;
 import com.alipay.sofa.registry.store.api.DBService;
 import com.alipay.sofa.registry.store.api.OperationStatus;
 import com.alipay.sofa.registry.store.api.annotation.RaftReference;
-import org.springframework.beans.factory.annotation.Autowired;
-
-import java.util.concurrent.Executor;
 
 /**
  * Handle session node's query request, such as get ProvideData by dataInfoId

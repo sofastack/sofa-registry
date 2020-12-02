@@ -24,12 +24,15 @@ import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.net.NetUtil;
 import com.alipay.sofa.registry.server.session.bootstrap.CommonConfig;
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
+import com.alipay.sofa.registry.server.session.scheduler.ExecutorManager;
 import org.springframework.beans.factory.annotation.Autowired;
+import sun.nio.ch.ThreadPool;
 
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
@@ -48,6 +51,9 @@ public class RaftClientManager {
     @Autowired
     private CommonConfig        commonConfig;
 
+    @Autowired
+    private ExecutorManager     executorManager;
+
     private RaftClient          raftClient;
 
     private AtomicBoolean       clientStart = new AtomicBoolean(false);
@@ -58,7 +64,8 @@ public class RaftClientManager {
         try {
             if (clientStart.compareAndSet(false, true)) {
                 String serverConf = getServerConfig();
-                raftClient = new RaftClient(getGroup(), serverConf);
+                raftClient = new RaftClient(getGroup(), serverConf,
+                    executorManager.getDefaultRequestExecutor());
                 raftClient.start();
             }
         } catch (Exception e) {
@@ -72,7 +79,8 @@ public class RaftClientManager {
         String ret = "";
         Set<String> ips = getMetaIp();
         if (ips != null && !ips.isEmpty()) {
-            ret = ips.stream().map(ip -> ip + ":" + ValueConstants.RAFT_SERVER_PORT).collect(Collectors.joining(","));
+            ret = ips.stream().map(ip -> ip + ":" + ValueConstants.RAFT_SERVER_PORT)
+                .collect(Collectors.joining(","));
         }
         if (ret.isEmpty()) {
             throw new IllegalArgumentException("Init raft server config error!");
@@ -94,7 +102,8 @@ public class RaftClientManager {
                     metas.forEach(domain -> {
                         String ip = NetUtil.getIPAddressFromDomain(domain);
                         if (ip == null) {
-                            throw new RuntimeException("Node config convert domain {" + domain + "} error!");
+                            throw new RuntimeException(
+                                "Node config convert domain {" + domain + "} error!");
                         }
                         metaIps.add(ip);
                     });
