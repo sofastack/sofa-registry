@@ -14,35 +14,33 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alipay.sofa.registry.common.model.metaserver;
+package com.alipay.sofa.registry.common.model.slot.func;
 
-import com.alipay.sofa.registry.common.model.Node;
+import com.google.common.collect.Maps;
 
-import java.io.Serializable;
-import java.util.HashMap;
 import java.util.Map;
 
 /**
  *
  * @author yuzhi.lyz
- * @version v 0.1 2020-11-12 10:48 yuzhi.lyz Exp $
+ * @version v 0.1 2020-11-28 12:24 yuzhi.lyz Exp $
  */
-public class RenewNodesResult implements Serializable {
-    private Map<Node.NodeType, NodeChangeResult> results = new HashMap<>();
+public final class SlotFunctionRegistry {
+    public static final int                        MAX_SLOTS = 2;
+    private static final String                    DEF_FUNC  = "crc16";
+    private static final Map<String, SlotFunction> funcs     = Maps.newConcurrentMap();
 
-    /**
-     * Getter method for property <tt>results</tt>.
-     * @return property value of results
-     */
-    public Map<Node.NodeType, NodeChangeResult> getResults() {
-        return results;
+    static {
+        register(CRC16SlotFunction.INSTANCE.name(), CRC16SlotFunction.INSTANCE);
+        register(MD5SlotFunction.INSTANCE.name(), MD5SlotFunction.INSTANCE);
     }
 
-    /**
-     * Setter method for property <tt>results</tt>.
-     * @param results value to be assigned to property results
-     */
-    public void setResults(Map<Node.NodeType, NodeChangeResult> results) {
-        this.results = results;
+    public static void register(String name, SlotFunction func) {
+        funcs.put(name, func);
+    }
+
+    public static SlotFunction getFunc() {
+        // TODO need config by env?
+        return funcs.get(DEF_FUNC);
     }
 }

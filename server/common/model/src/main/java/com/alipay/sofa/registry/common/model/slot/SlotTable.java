@@ -26,6 +26,7 @@ import java.util.*;
  * @version v 0.1 2020-10-30 10:08 yuzhi.lyz Exp $
  */
 public final class SlotTable implements Serializable {
+    public static final SlotTable    INIT = new SlotTable(-1, Collections.emptyMap());
     private final long               epoch;
     private final Map<Integer, Slot> slots;
 
@@ -139,5 +140,18 @@ public final class SlotTable implements Serializable {
             servers.addAll(s.getFollowers());
         });
         return servers;
+    }
+
+    public SlotTable filter(String ip) {
+        if (slots.isEmpty()) {
+            return this;
+        }
+        final Map<Integer, Slot> slotMap = new HashMap<>(slots.size());
+        slots.forEach((k, v) -> {
+            if (v.getLeader().equals(ip) || v.getFollowers().contains(v)) {
+                slotMap.put(k, v);
+            }
+        });
+        return new SlotTable(epoch, slotMap);
     }
 }

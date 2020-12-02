@@ -28,6 +28,8 @@ import java.util.Set;
  * @version v 0.1 2020-11-28 15:19 yuzhi.lyz Exp $
  */
 public interface MetaServerService {
+    void startRenewer(int intervalMs);
+
     /**
      * update data server expireTime
      */

@@ -16,10 +16,6 @@
  */
 package com.alipay.sofa.registry.server.session.scheduler.task;
 
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Set;
-
 import com.alipay.sofa.registry.common.model.constants.ValueConstants;
 import com.alipay.sofa.registry.common.model.dataserver.SessionServerRegisterRequest;
 import com.alipay.sofa.registry.log.Logger;
@@ -31,8 +27,12 @@ import com.alipay.sofa.registry.remoting.Server;
 import com.alipay.sofa.registry.remoting.bolt.BoltChannel;
 import com.alipay.sofa.registry.remoting.exchange.Exchange;
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
-import com.alipay.sofa.registry.server.session.node.SessionProcessIdGenerator;
+import com.alipay.sofa.registry.server.shared.env.ServerEnv;
 import com.alipay.sofa.registry.task.listener.TaskEvent;
+
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  *
@@ -87,12 +87,12 @@ public class SessionRegisterDataTask extends AbstractSessionTask {
                     + ValueConstants.CONNECT_ID_SPLIT + NetUtil.toAddressString(channel.getLocalAddress())));
 
             sessionServerRegisterRequest = new SessionServerRegisterRequest(
-                    SessionProcessIdGenerator.getSessionProcessId(), connectIds);
+                    ServerEnv.PROCESS_ID.toString(), connectIds);
         } else {
             LOGGER.error("get null session server,please check server started before register!port {}",
                     sessionServerConfig.getServerPort());
             sessionServerRegisterRequest = new SessionServerRegisterRequest(
-                    SessionProcessIdGenerator.getSessionProcessId(), new HashSet<>());
+                    ServerEnv.PROCESS_ID.toString(), new HashSet<>());
         }
     }
 

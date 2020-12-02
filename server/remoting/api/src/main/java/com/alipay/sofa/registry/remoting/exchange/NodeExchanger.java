@@ -35,9 +35,5 @@ public interface NodeExchanger {
      */
     Response request(Request request) throws RequestException;
 
-    /**
-     *
-     * @return
-     */
     Client connectServer();
 }

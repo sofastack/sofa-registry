@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alipay.sofa.registry.common.model.slot;
+package com.alipay.sofa.registry.common.model.slot.func;
 
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;

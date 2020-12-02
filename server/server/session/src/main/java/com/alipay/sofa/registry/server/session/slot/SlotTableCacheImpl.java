@@ -17,15 +17,13 @@
 package com.alipay.sofa.registry.server.session.slot;
 
 import com.alipay.sofa.registry.common.model.slot.Slot;
-import com.alipay.sofa.registry.common.model.slot.SlotFunction;
-import com.alipay.sofa.registry.common.model.slot.SlotFunctionRegistry;
+import com.alipay.sofa.registry.common.model.slot.func.SlotFunction;
+import com.alipay.sofa.registry.common.model.slot.func.SlotFunctionRegistry;
 import com.alipay.sofa.registry.common.model.slot.SlotTable;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
 import org.springframework.beans.factory.annotation.Autowired;
-
-import java.util.Collections;
 
 /**
  *
@@ -39,7 +37,7 @@ public final class SlotTableCacheImpl implements SlotTableCache {
     private SessionServerConfig sessionServerConfig;
 
     private final SlotFunction  slotFunction = SlotFunctionRegistry.getFunc();
-    private volatile SlotTable  slotTable;
+    private volatile SlotTable  slotTable    = SlotTable.INIT;
 
     @Override
     public int slotOf(String dataInfoId) {
@@ -65,8 +63,7 @@ public final class SlotTableCacheImpl implements SlotTableCache {
 
     @Override
     public long getEpoch() {
-        final SlotTable table = slotTable;
-        return table == null ? -1 : table.getEpoch();
+        return slotTable.getEpoch();
     }
 
     @Override

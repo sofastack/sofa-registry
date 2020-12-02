@@ -16,6 +16,8 @@
  */
 package com.alipay.sofa.registry.common.model.slot;
 
+import com.alipay.sofa.registry.common.model.slot.func.CRC16SlotFunction;
+import com.alipay.sofa.registry.common.model.slot.func.SlotFunctionRegistry;
 import com.alipay.sofa.registry.server.meta.AbstractTest;
 import org.junit.Assert;
 import org.junit.Before;

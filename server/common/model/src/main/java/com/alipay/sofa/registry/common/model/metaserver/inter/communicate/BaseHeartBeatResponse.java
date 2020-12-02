@@ -21,6 +21,7 @@ import com.alipay.sofa.registry.common.model.metaserver.nodes.SessionNode;
 import com.alipay.sofa.registry.common.model.slot.SlotTable;
 import com.google.common.collect.Sets;
 
+import java.io.Serializable;
 import java.util.*;
 
 /**
@@ -28,7 +29,7 @@ import java.util.*;
  * <p>
  * Nov 27, 2020
  */
-public class BaseHeartBeatResponse {
+public class BaseHeartBeatResponse implements Serializable {
 
     private final long              metaServerEpoch;
 

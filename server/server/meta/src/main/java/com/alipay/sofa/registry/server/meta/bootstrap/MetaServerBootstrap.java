@@ -89,13 +89,13 @@ public class MetaServerBootstrap {
 
     private Server                            httpServer;
 
-    private AtomicBoolean                     sessionStart = new AtomicBoolean(false);
+    private final AtomicBoolean               sessionStart = new AtomicBoolean(false);
 
-    private AtomicBoolean                     dataStart    = new AtomicBoolean(false);
+    private final AtomicBoolean               dataStart    = new AtomicBoolean(false);
 
-    private AtomicBoolean                     metaStart    = new AtomicBoolean(false);
+    private final AtomicBoolean               metaStart    = new AtomicBoolean(false);
 
-    private AtomicBoolean                     httpStart    = new AtomicBoolean(false);
+    private final AtomicBoolean               httpStart    = new AtomicBoolean(false);
 
     /**
      * Do initialized.
@@ -263,8 +263,8 @@ public class MetaServerBootstrap {
      *
      * @return property value of sessionStart
      */
-    public AtomicBoolean getSessionStart() {
-        return sessionStart;
+    public boolean getSessionStart() {
+        return sessionStart.get();
     }
 
     /**
@@ -272,8 +272,8 @@ public class MetaServerBootstrap {
      *
      * @return property value of dataStart
      */
-    public AtomicBoolean getDataStart() {
-        return dataStart;
+    public boolean getDataStart() {
+        return dataStart.get();
     }
 
     /**
@@ -281,8 +281,8 @@ public class MetaServerBootstrap {
      *
      * @return property value of metaStart
      */
-    public AtomicBoolean getMetaStart() {
-        return metaStart;
+    public boolean getMetaStart() {
+        return metaStart.get();
     }
 
     /**
@@ -290,7 +290,7 @@ public class MetaServerBootstrap {
      *
      * @return property value of httpStart
      */
-    public AtomicBoolean getHttpStart() {
-        return httpStart;
+    public boolean getHttpStart() {
+        return httpStart.get();
     }
 }

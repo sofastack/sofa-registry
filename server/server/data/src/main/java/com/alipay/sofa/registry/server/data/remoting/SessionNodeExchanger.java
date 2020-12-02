@@ -16,38 +16,26 @@
  */
 package com.alipay.sofa.registry.server.data.remoting;
 
-import java.util.Collection;
-import java.util.Collections;
-
-import javax.annotation.Resource;
-
+import com.alipay.sofa.registry.remoting.ChannelHandler;
+import com.alipay.sofa.registry.remoting.exchange.Exchange;
+import com.alipay.sofa.registry.server.data.bootstrap.DataServerConfig;
 import com.alipay.sofa.registry.server.shared.remoting.ClientExchanger;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import com.alipay.sofa.registry.common.model.store.URL;
-import com.alipay.sofa.registry.log.Logger;
-import com.alipay.sofa.registry.log.LoggerFactory;
-import com.alipay.sofa.registry.remoting.Channel;
-import com.alipay.sofa.registry.remoting.ChannelHandler;
-import com.alipay.sofa.registry.remoting.Client;
-import com.alipay.sofa.registry.remoting.exchange.Exchange;
-import com.alipay.sofa.registry.remoting.exchange.NodeExchanger;
-import com.alipay.sofa.registry.remoting.exchange.message.Request;
-import com.alipay.sofa.registry.remoting.exchange.message.Response;
-import com.alipay.sofa.registry.server.data.bootstrap.DataServerConfig;
-import com.alipay.sofa.registry.server.data.remoting.handler.AbstractClientHandler;
+import java.util.Collection;
+import java.util.Collections;
 
 /**
- * @author xuanbei
- * @since 2019/2/15
+ *
+ * @author yuzhi.lyz
+ * @version v 0.1 2020-11-30 21:28 yuzhi.lyz Exp $
  */
-public class DataNodeExchanger extends ClientExchanger {
-
+public final class SessionNodeExchanger extends ClientExchanger {
     @Autowired
     private DataServerConfig dataServerConfig;
 
-    public DataNodeExchanger() {
-        super(Exchange.DATA_SERVER_TYPE);
+    public SessionNodeExchanger() {
+        super(Exchange.SESSION_SERVER_TYPE);
     }
 
     @Override
@@ -57,8 +45,8 @@ public class DataNodeExchanger extends ClientExchanger {
 
     @Override
     public int getServerPort() {
-        // the Exchanger only for sync data
-        return dataServerConfig.getSyncDataPort();
+        // the Exchanger only for sync session
+        return dataServerConfig.getSyncSessionPort();
     }
 
     @Override

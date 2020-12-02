@@ -70,7 +70,7 @@ public class DefaultCurrentDcMetaServer extends AbstractMetaServer implements Cu
     @Autowired
     private NodeConfig                   nodeConfig;
 
-    private AtomicLong                   currentEpoch = new AtomicLong();
+    private final AtomicLong             currentEpoch = new AtomicLong();
 
     private CurrentMetaServerRaftStorage raftStorage;
 
@@ -94,9 +94,10 @@ public class DefaultCurrentDcMetaServer extends AbstractMetaServer implements Cu
     }
 
     private void initMetaServers() {
-        Collection<String> metaIpAddresses = nodeConfig.getMetaNodeIP().get(nodeConfig.getLocalDataCenter());
+        Collection<String> metaIpAddresses = nodeConfig.getMetaNodeIP().get(
+            nodeConfig.getLocalDataCenter());
         List<MetaNode> metaNodes = Lists.newArrayList();
-        for(String ip : metaIpAddresses) {
+        for (String ip : metaIpAddresses) {
             metaNodes.add(new MetaNode(new URL(ip), nodeConfig.getLocalDataCenter()));
         }
         this.metaServers.set(metaNodes);
@@ -106,10 +107,10 @@ public class DefaultCurrentDcMetaServer extends AbstractMetaServer implements Cu
         MetaServersRaftStorage storage = new MetaServersRaftStorage();
         storage.registerAsRaftService();
         raftStorage = (CurrentMetaServerRaftStorage) Proxy.newProxyInstance(
-                Thread.currentThread().getContextClassLoader(),
-                new Class[] { CurrentMetaServerRaftStorage.class },
-                new ProxyHandler(CurrentMetaServerRaftStorage.class, getServiceId(), raftExchanger
-                        .getRaftClient()));
+            Thread.currentThread().getContextClassLoader(),
+            new Class[] { CurrentMetaServerRaftStorage.class },
+            new ProxyHandler(CurrentMetaServerRaftStorage.class, getServiceId(), raftExchanger
+                .getRaftClient()));
     }
 
     @Override
@@ -273,8 +274,8 @@ public class DefaultCurrentDcMetaServer extends AbstractMetaServer implements Cu
     }
 
     @VisibleForTesting
-    DefaultCurrentDcMetaServer setCurrentEpoch(AtomicLong currentEpoch) {
-        this.currentEpoch = currentEpoch;
+    DefaultCurrentDcMetaServer setCurrentEpoch(long currentEpoch) {
+        this.currentEpoch.set(currentEpoch);
         return this;
     }
 

@@ -38,12 +38,6 @@ public class DataChangeRequest implements Serializable {
 
     /**
      * constructor
-     */
-    public DataChangeRequest() {
-    }
-
-    /**
-     * constructor
      * @param dataInfoId
      * @param dataCenter
      * @param version

@@ -40,35 +40,21 @@ public class SessionServerConfigBean implements SessionServerConfig {
 
     private int                  serverPort                              = 9600;
 
+    private int                  syncSessionPort                         = 9630;
+
     private int                  metaServerPort                          = 9610;
 
     private int                  dataServerPort                          = 9620;
 
     private int                  httpServerPort;
 
-    private int                  schedulerHeartbeatTimeout               = 3;
-
-    private int                  schedulerHeartbeatFirstDelay            = 3;
-
-    private int                  schedulerHeartbeatExpBackOffBound       = 1;
+    private int                  schedulerHeartbeatIntervalSec           = 3;
 
     private int                  schedulerFetchDataTimeout               = 1;               //MINUTES
 
     private int                  schedulerFetchDataFirstDelay            = 30;
 
     private int                  schedulerFetchDataExpBackOffBound       = 10;
-
-    private int                  schedulerConnectMetaTimeout             = 5;
-
-    private int                  schedulerConnectMetaFirstDelay          = 5;
-
-    private int                  schedulerConnectMetaExpBackOffBound     = 3;
-
-    private int                  schedulerConnectDataTimeout             = 10;
-
-    private int                  schedulerConnectDataFirstDelay          = 10;
-
-    private int                  schedulerConnectDataExpBackOffBound     = 3;
 
     private int                  schedulerCleanInvalidClientTimeOut      = 3;
 
@@ -441,6 +427,11 @@ public class SessionServerConfigBean implements SessionServerConfig {
         return serverPort;
     }
 
+    @Override
+    public int getSyncSessionPort() {
+        return syncSessionPort;
+    }
+
     /**
      * Setter method for property <tt>serverPort</tt>.
      *
@@ -451,60 +442,22 @@ public class SessionServerConfigBean implements SessionServerConfig {
     }
 
     /**
-     * Getter method for property <tt>schedulerHeartbeatTimeout</tt>.
+     * Getter method for property <tt>schedulerHeartbeatIntervalSec</tt>.
      *
-     * @return property value of schedulerHeartbeatTimeout
+     * @return property value of schedulerHeartbeatIntervalSec
      */
     @Override
-    public int getSchedulerHeartbeatTimeout() {
-        return schedulerHeartbeatTimeout;
+    public int getSchedulerHeartbeatIntervalSec() {
+        return schedulerHeartbeatIntervalSec;
     }
 
     /**
-     * Setter method for property <tt>schedulerHeartbeatTimeout</tt>.
+     * Setter method for property <tt>schedulerHeartbeatIntervalSec</tt>.
      *
-     * @param schedulerHeartbeatTimeout value to be assigned to property schedulerHeartbeatTimeout
+     * @param schedulerHeartbeatIntervalSec value to be assigned to property schedulerHeartbeatIntervalSec
      */
-    public void setSchedulerHeartbeatTimeout(int schedulerHeartbeatTimeout) {
-        this.schedulerHeartbeatTimeout = schedulerHeartbeatTimeout;
-    }
-
-    /**
-     * Getter method for property <tt>schedulerHeartbeatFirstDelay</tt>.
-     *
-     * @return property value of schedulerHeartbeatFirstDelay
-     */
-    @Override
-    public int getSchedulerHeartbeatFirstDelay() {
-        return schedulerHeartbeatFirstDelay;
-    }
-
-    /**
-     * Setter method for property <tt>schedulerHeartbeatFirstDelay</tt>.
-     *
-     * @param schedulerHeartbeatFirstDelay value to be assigned to property schedulerHeartbeatFirstDelay
-     */
-    public void setSchedulerHeartbeatFirstDelay(int schedulerHeartbeatFirstDelay) {
-        this.schedulerHeartbeatFirstDelay = schedulerHeartbeatFirstDelay;
-    }
-
-    /**
-     * Getter method for property <tt>schedulerHeartbeatExpBackOffBound</tt>.
-     *
-     * @return property value of schedulerHeartbeatExpBackOffBound
-     */
-    @Override
-    public int getSchedulerHeartbeatExpBackOffBound() {
-        return schedulerHeartbeatExpBackOffBound;
-    }
-
-    /**
-     * Setter method for property <tt>schedulerHeartbeatExpBackOffBound</tt>.
-     *
-     * @param schedulerHeartbeatExpBackOffBound value to be assigned to property schedulerHeartbeatExpBackOffBound
-     */
-    public void setSchedulerHeartbeatExpBackOffBound(int schedulerHeartbeatExpBackOffBound) {
-        this.schedulerHeartbeatExpBackOffBound = schedulerHeartbeatExpBackOffBound;
+    public void setSchedulerHeartbeatTimeout(int schedulerHeartbeatIntervalSec) {
+        this.schedulerHeartbeatIntervalSec = schedulerHeartbeatIntervalSec;
     }
 
     /**
@@ -938,105 +891,6 @@ public class SessionServerConfigBean implements SessionServerConfig {
      */
     public void setHttpServerPort(int httpServerPort) {
         this.httpServerPort = httpServerPort;
-    }
-
-    /**
-     * Getter method for property <tt>schedulerConnectMetaTimeout</tt>.
-     *
-     * @return property value of schedulerConnectMetaTimeout
-     */
-    @Override
-    public int getSchedulerConnectMetaTimeout() {
-        return schedulerConnectMetaTimeout;
-    }
-
-    /**
-     * Getter method for property <tt>schedulerConnectMetaFirstDelay</tt>.
-     *
-     * @return property value of schedulerConnectMetaFirstDelay
-     */
-    @Override
-    public int getSchedulerConnectMetaFirstDelay() {
-        return schedulerConnectMetaFirstDelay;
-    }
-
-    /**
-     * Getter method for property <tt>schedulerConnectMetaExpBackOffBound</tt>.
-     *
-     * @return property value of schedulerConnectMetaExpBackOffBound
-     */
-    @Override
-    public int getSchedulerConnectMetaExpBackOffBound() {
-        return schedulerConnectMetaExpBackOffBound;
-    }
-
-    /**
-     * Setter method for property <tt>schedulerConnectMetaTimeout</tt>.
-     *
-     * @param schedulerConnectMetaTimeout  value to be assigned to property schedulerConnectMetaTimeout
-     */
-    public void setSchedulerConnectMetaTimeout(int schedulerConnectMetaTimeout) {
-        this.schedulerConnectMetaTimeout = schedulerConnectMetaTimeout;
-    }
-
-    /**
-     * Setter method for property <tt>schedulerConnectMetaFirstDelay</tt>.
-     *
-     * @param schedulerConnectMetaFirstDelay  value to be assigned to property schedulerConnectMetaFirstDelay
-     */
-    public void setSchedulerConnectMetaFirstDelay(int schedulerConnectMetaFirstDelay) {
-        this.schedulerConnectMetaFirstDelay = schedulerConnectMetaFirstDelay;
-    }
-
-    /**
-     * Setter method for property <tt>schedulerConnectMetaExpBackOffBound</tt>.
-     *
-     * @param schedulerConnectMetaExpBackOffBound  value to be assigned to property schedulerConnectMetaExpBackOffBound
-     */
-    public void setSchedulerConnectMetaExpBackOffBound(int schedulerConnectMetaExpBackOffBound) {
-        this.schedulerConnectMetaExpBackOffBound = schedulerConnectMetaExpBackOffBound;
-    }
-
-    @Override
-    public int getSchedulerConnectDataTimeout() {
-        return schedulerConnectDataTimeout;
-    }
-
-    /**
-     * Setter method for property <tt>schedulerConnectDataTimeout</tt>.
-     *
-     * @param schedulerConnectDataTimeout  value to be assigned to property schedulerConnectDataTimeout
-     */
-    public void setSchedulerConnectDataTimeout(int schedulerConnectDataTimeout) {
-        this.schedulerConnectDataTimeout = schedulerConnectDataTimeout;
-    }
-
-    @Override
-    public int getSchedulerConnectDataFirstDelay() {
-        return schedulerConnectDataFirstDelay;
-    }
-
-    /**
-     * Setter method for property <tt>schedulerConnectDataFirstDelay</tt>.
-     *
-     * @param schedulerConnectDataFirstDelay  value to be assigned to property schedulerConnectDataFirstDelay
-     */
-    public void setSchedulerConnectDataFirstDelay(int schedulerConnectDataFirstDelay) {
-        this.schedulerConnectDataFirstDelay = schedulerConnectDataFirstDelay;
-    }
-
-    @Override
-    public int getSchedulerConnectDataExpBackOffBound() {
-        return schedulerConnectDataExpBackOffBound;
-    }
-
-    /**
-     * Setter method for property <tt>schedulerConnectDataExpBackOffBound</tt>.
-     *
-     * @param schedulerConnectDataExpBackOffBound  value to be assigned to property schedulerConnectDataExpBackOffBound
-     */
-    public void setSchedulerConnectDataExpBackOffBound(int schedulerConnectDataExpBackOffBound) {
-        this.schedulerConnectDataExpBackOffBound = schedulerConnectDataExpBackOffBound;
     }
 
     /**

@@ -59,6 +59,7 @@ import com.alipay.sofa.registry.server.session.store.*;
 import com.alipay.sofa.registry.server.session.strategy.*;
 import com.alipay.sofa.registry.server.session.strategy.impl.*;
 import com.alipay.sofa.registry.server.session.wrapper.*;
+import com.alipay.sofa.registry.server.shared.meta.AbstractMetaNodeExchanger;
 import com.alipay.sofa.registry.server.shared.meta.MetaServerService;
 import com.alipay.sofa.registry.task.batcher.TaskProcessor;
 import com.alipay.sofa.registry.task.listener.DefaultTaskListenerManager;
@@ -132,7 +133,7 @@ public class SessionServerConfiguration {
         }
 
         @Bean
-        public NodeExchanger dataNodeExchanger() {
+        public DataNodeExchanger dataNodeExchanger() {
             return new DataNodeExchanger();
         }
 
@@ -142,7 +143,7 @@ public class SessionServerConfiguration {
         }
 
         @Bean
-        public NodeExchanger metaNodeExchanger() {
+        public MetaNodeExchanger metaNodeExchanger() {
             return new MetaNodeExchanger();
         }
 
@@ -160,6 +161,14 @@ public class SessionServerConfiguration {
             list.add(clientNodeConnectionHandler());
             list.add(cancelAddressRequestHandler());
             list.add(syncConfigHandler());
+            return list;
+        }
+
+        @Bean(name = "serverSyncHandlers")
+        public Collection<AbstractServerHandler> serverSyncHandlers() {
+            Collection<AbstractServerHandler> list = new ArrayList<>();
+            list.add(dataSlotDiffDataInfoIdRequestHandler());
+            list.add(dataSlotDiffPublisherRequestHandler());
             return list;
         }
 
@@ -193,14 +202,22 @@ public class SessionServerConfiguration {
             return new CancelAddressRequestHandler();
         }
 
+        @Bean
+        public AbstractServerHandler dataSlotDiffDataInfoIdRequestHandler() {
+            return new DataSlotDiffDataInfoIdRequestHandler();
+        }
+
+        @Bean
+        public AbstractServerHandler dataSlotDiffPublisherRequestHandler() {
+            return new DataSlotDiffPublisherRequestHandler();
+        }
+
         @Bean(name = "dataClientHandlers")
         public Collection<AbstractClientHandler> dataClientHandlers() {
             Collection<AbstractClientHandler> list = new ArrayList<>();
             list.add(dataNodeConnectionHandler());
             list.add(dataChangeRequestHandler());
             list.add(dataPushRequestHandler());
-            list.add(dataSlotDiffDataInfoIdRequestHandler());
-            list.add(dataSlotDiffPublisherRequestHandler());
             return list;
         }
 
@@ -232,16 +249,6 @@ public class SessionServerConfiguration {
         @Bean
         public AbstractClientHandler dataPushRequestHandler() {
             return new DataPushRequestHandler();
-        }
-
-        @Bean
-        public AbstractClientHandler dataSlotDiffDataInfoIdRequestHandler() {
-            return new DataSlotDiffDataInfoIdRequestHandler();
-        }
-
-        @Bean
-        public AbstractClientHandler dataSlotDiffPublisherRequestHandler() {
-            return new DataSlotDiffPublisherRequestHandler();
         }
 
         @Bean
@@ -321,7 +328,7 @@ public class SessionServerConfiguration {
         @Bean
         @ConditionalOnMissingBean
         public DataStore sessionDataStore() {
-            return new SessionDataStore();
+            return new SlotSessionDataStore();
         }
     }
 
@@ -335,6 +342,7 @@ public class SessionServerConfiguration {
         }
 
         @Bean
+        @ConditionalOnMissingBean
         public MetaServerService metaServerService() {
             return new MetaServerServiceImpl();
         }
