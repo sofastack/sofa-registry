@@ -31,14 +31,6 @@ public class LogMetricsTask {
                                                 "[ExecutorMetrics]");
     private final TaskMetrics   taskMetrics = TaskMetrics.getInstance();
 
-    public LogMetricsTask() {
-        ThreadPoolExecutor boltDefaultExecutor = (ThreadPoolExecutor) ProtocolManager
-            .getProtocol(ProtocolCode.fromBytes(RpcProtocol.PROTOCOL_CODE)).getCommandHandler()
-            .getDefaultExecutor();
-        taskMetrics.registerThreadExecutor("Meta-BoltDefaultExecutor", boltDefaultExecutor);
-
-    }
-
     @Scheduled(initialDelayString = "${meta.server.metricsExecutor.fixedDelay}", fixedDelayString = "${meta.server.metricsExecutor.fixedDelay}")
     public void printExecutorMetrics() {
         EXE_LOGGER.info(TaskMetrics.getInstance().metricsString());

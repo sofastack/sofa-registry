@@ -30,7 +30,9 @@ import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
 import com.alipay.sofa.registry.server.session.node.NodeManager;
 import com.alipay.sofa.registry.server.session.node.NodeManagerFactory;
 import com.alipay.sofa.registry.server.session.node.SessionNodeManager;
+import com.alipay.sofa.registry.server.session.provideData.ProvideDataProcessor;
 import com.alipay.sofa.registry.server.session.provideData.processor.StopPushProvideDataProcessor;
+import com.alipay.sofa.registry.task.batcher.TaskProcessor;
 import org.apache.commons.lang.StringUtils;
 import org.glassfish.jersey.client.ClientProperties;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -61,14 +63,13 @@ import java.util.stream.Collectors;
 @Path("stopPush")
 public class SessionStopPushResource {
 
-    private final static Logger          LOGGER = LoggerFactory
-                                                    .getLogger(SessionStopPushResource.class);
+    private final static Logger   LOGGER = LoggerFactory.getLogger(SessionStopPushResource.class);
 
     @Autowired
-    private StopPushProvideDataProcessor stopPushProvideDataProcessor;
+    private ProvideDataProcessor  stopPushProvideDataProcessor;
 
     @Autowired
-    protected SessionServerConfig        sessionServerConfig;
+    protected SessionServerConfig sessionServerConfig;
 
     /**
      * api use to close or open all session's push switch when all meta were down

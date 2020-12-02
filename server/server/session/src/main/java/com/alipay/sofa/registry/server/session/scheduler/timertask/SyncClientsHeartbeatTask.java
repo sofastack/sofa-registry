@@ -89,15 +89,6 @@ public class SyncClientsHeartbeatTask {
 
     @Autowired
     private TaskListener        receivedDataMultiPushTaskListener;
-    private final TaskMetrics   taskMetrics          = TaskMetrics.getInstance();
-
-    public SyncClientsHeartbeatTask() {
-
-        ThreadPoolExecutor boltDefaultExecutor = (ThreadPoolExecutor) ProtocolManager
-            .getProtocol(ProtocolCode.fromBytes(RpcProtocol.PROTOCOL_CODE)).getCommandHandler()
-            .getDefaultExecutor();
-        taskMetrics.registerThreadExecutor("Session-BoltDefaultExecutor", boltDefaultExecutor);
-    }
 
     @Scheduled(initialDelayString = "${session.server.syncHeartbeat.fixedDelay}", fixedDelayString = "${session.server.syncHeartbeat.fixedDelay}")
     public void syncCounte() {

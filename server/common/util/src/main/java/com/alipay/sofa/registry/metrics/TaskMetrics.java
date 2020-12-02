@@ -19,12 +19,9 @@ package com.alipay.sofa.registry.metrics;
 import com.codahale.metrics.Gauge;
 import com.codahale.metrics.MetricRegistry;
 import com.google.common.collect.Sets;
-import io.netty.util.internal.ConcurrentSet;
 
-import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ThreadPoolExecutor;
 
 /**
@@ -60,22 +57,26 @@ public class TaskMetrics {
     }
 
     public void registerThreadExecutor(String executorName, ThreadPoolExecutor executor) {
-        executorNames.add(executorName);
+        synchronized (TaskMetrics.class) {
+            if (executorNames.contains(executorName)) {
+                return;
+            }
+            executorNames.add(executorName);
+            metrics.register(MetricRegistry.name(executorName, "queue"),
+                (Gauge<Integer>) () -> executor.getQueue().size());
 
-        metrics.register(MetricRegistry.name(executorName, "queue"),
-            (Gauge<Integer>) () -> executor.getQueue().size());
+            metrics.register(MetricRegistry.name(executorName, "current"),
+                (Gauge<Integer>) executor::getPoolSize);
 
-        metrics.register(MetricRegistry.name(executorName, "current"),
-            (Gauge<Integer>) executor::getPoolSize);
+            metrics.register(MetricRegistry.name(executorName, "active"),
+                (Gauge<Integer>) executor::getActiveCount);
 
-        metrics.register(MetricRegistry.name(executorName, "active"),
-            (Gauge<Integer>) executor::getActiveCount);
+            metrics.register(MetricRegistry.name(executorName, "completed"),
+                (Gauge<Long>) executor::getCompletedTaskCount);
 
-        metrics.register(MetricRegistry.name(executorName, "completed"),
-            (Gauge<Long>) executor::getCompletedTaskCount);
-
-        metrics.register(MetricRegistry.name(executorName, "task"),
-            (Gauge<Long>) executor::getTaskCount);
+            metrics.register(MetricRegistry.name(executorName, "task"),
+                (Gauge<Long>) executor::getTaskCount);
+        }
     }
 
     public Set<String> getExecutorNames() {

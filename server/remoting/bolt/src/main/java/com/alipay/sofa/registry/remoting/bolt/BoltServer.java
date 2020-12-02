@@ -24,17 +24,17 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executor;
+import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import com.alipay.remoting.Connection;
-import com.alipay.remoting.ConnectionEventType;
-import com.alipay.remoting.InvokeCallback;
-import com.alipay.remoting.Url;
+import com.alipay.remoting.*;
 import com.alipay.remoting.exception.RemotingException;
 import com.alipay.remoting.rpc.RpcServer;
+import com.alipay.remoting.rpc.protocol.RpcProtocol;
 import com.alipay.sofa.registry.common.model.store.URL;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
+import com.alipay.sofa.registry.metrics.TaskMetrics;
 import com.alipay.sofa.registry.net.NetUtil;
 import com.alipay.sofa.registry.remoting.CallbackHandler;
 import com.alipay.sofa.registry.remoting.Channel;
@@ -91,13 +91,21 @@ public class BoltServer implements Server {
                 boltServer = new RpcServer(url.getPort(), true);
                 initHandler();
                 boltServer.start();
-
+                metricsBoltDefaultExecutor();
             } catch (Exception e) {
                 isStarted.set(false);
                 LOGGER.error("Start bolt server error!", e);
                 throw new RuntimeException("Start bolt server error!", e);
             }
         }
+    }
+
+    private void metricsBoltDefaultExecutor() {
+        ThreadPoolExecutor boltDefaultExecutor = (ThreadPoolExecutor) ProtocolManager
+            .getProtocol(ProtocolCode.fromBytes(RpcProtocol.PROTOCOL_CODE)).getCommandHandler()
+            .getDefaultExecutor();
+        TaskMetrics.getInstance()
+            .registerThreadExecutor("boltDefaultExecutor", boltDefaultExecutor);
     }
 
     private void stopServer() {

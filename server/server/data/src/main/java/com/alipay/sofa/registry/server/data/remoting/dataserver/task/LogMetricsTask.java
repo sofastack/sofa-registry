@@ -38,13 +38,6 @@ public class LogMetricsTask extends AbstractTask {
     private static final Logger EXE_LOGGER  = LoggerFactory.getLogger("DATA-PROFILE-DIGEST",
                                                 "[ExecutorMetrics]");
 
-    public LogMetricsTask() {
-        ThreadPoolExecutor boltDefaultExecutor = (ThreadPoolExecutor) ProtocolManager
-            .getProtocol(ProtocolCode.fromBytes(RpcProtocol.PROTOCOL_CODE)).getCommandHandler()
-            .getDefaultExecutor();
-        taskMetrics.registerThreadExecutor("Data-BoltDefaultExecutor", boltDefaultExecutor);
-    }
-
     public void printExecutorMetrics() {
         EXE_LOGGER.info(taskMetrics.metricsString());
     }
