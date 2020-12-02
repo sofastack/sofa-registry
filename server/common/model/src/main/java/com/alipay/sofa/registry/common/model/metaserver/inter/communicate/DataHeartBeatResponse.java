@@ -30,11 +30,7 @@ import java.util.List;
  */
 public class DataHeartBeatResponse extends BaseHeartBeatResponse {
 
-    private final DataNodeSlot dataNodeSlot;
-
-    public DataHeartBeatResponse(long metaServerEpoch, List<MetaNode> metaNodes,
-                                 List<SessionNode> sessionNodes, DataNodeSlot dataNodeSlot) {
-        super(metaServerEpoch, null, metaNodes, sessionNodes);
-        this.dataNodeSlot = dataNodeSlot;
+    public DataHeartBeatResponse(long metaServerEpoch, SlotTable slotTable, List<MetaNode> metaNodes, List<SessionNode> sessionNodes) {
+        super(metaServerEpoch, slotTable, metaNodes, sessionNodes);
     }
 }

@@ -102,4 +102,65 @@ public class ArrangeTaskExecutorTest extends AbstractTest {
             });
         }
     }
+
+    @Test
+    public void testWaitLong() throws InterruptedException {
+        int count = 3;
+        Queue<Integer> list = new ConcurrentLinkedQueue<>();
+        CountDownLatch latch = new CountDownLatch(count);
+        for (int i = 0; i < count; i++) {
+            int finalI = i;
+            Thread.sleep(100);
+            executor.offer(new RebalanceTask() {
+                @Override
+                public void run() {
+                    try{
+                        logger.debug("{}", this);
+                        list.offer(finalI);
+                    }finally {
+                        latch.countDown();
+                    }
+                }
+            });
+        }
+
+        Assert.assertTrue(latch.await(5, TimeUnit.SECONDS));
+        Assert.assertEquals(count, list.size());
+        int previous = -1;
+        while (true){
+            Integer current = list.poll();
+            if(current == null){
+                break;
+            }
+
+            Assert.assertTrue(current > previous);
+            previous = current;
+        }
+    }
+
+    @Test
+    public void testThrowException() throws InterruptedException {
+        int count = 3;
+        Queue<Integer> list = new ConcurrentLinkedQueue<>();
+        CountDownLatch latch = new CountDownLatch(count);
+        for (int i = 0; i < count; i++) {
+            int finalI = i;
+            Thread.sleep(10);
+            executor.offer(new RebalanceTask() {
+                @Override
+                public void run() {
+                    try{
+                        logger.debug("{}", this);
+                        list.offer(finalI);
+                        throw new SofaRegistryRuntimeException("expected exception");
+                    }finally {
+                        latch.countDown();
+                    }
+                }
+            });
+        }
+
+        Assert.assertTrue(latch.await(5, TimeUnit.SECONDS));
+        Assert.assertEquals(count, list.size());
+    }
 }

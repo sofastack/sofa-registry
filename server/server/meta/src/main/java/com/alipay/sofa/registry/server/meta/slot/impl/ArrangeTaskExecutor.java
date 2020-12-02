@@ -32,6 +32,7 @@ import java.util.Queue;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.function.BiConsumer;
 
 /**
  * @author chen.zhu
@@ -66,6 +67,8 @@ public class ArrangeTaskExecutor extends AbstractLifecycle {
     @Override
     protected void doInitialize() throws InitializeException {
         super.doInitialize();
+        executors = DefaultExecutorFactory.createAllowCoreTimeout(getClass().getSimpleName(),
+                Math.max(4, OsUtils.getCpuCount())).create();
     }
 
     @Override
@@ -78,6 +81,7 @@ public class ArrangeTaskExecutor extends AbstractLifecycle {
         if(taskQueue != null) {
             taskQueue.forEach(task->logger.warn("[dispose][wont execute] {}", task));
         }
+        executors.shutdownNow();
         super.doDispose();
     }
 
@@ -96,24 +100,7 @@ public class ArrangeTaskExecutor extends AbstractLifecycle {
             logger.error("[offer][fail]{}", task);
         }
 
-        startTaskThread();
-    }
-
-    private void startTaskThread() {
-        if (isRunning.get()) {
-            return;
-        }
-        ExecutorService executorService = executors;
-        if (executorService == null) {
-            synchronized (this) {
-                executorService = executors;
-                if (executorService == null) {
-                    executors = DefaultExecutorFactory.createAllowCoreTimeout(getClass().getSimpleName(),
-                            Math.max(2, OsUtils.getCpuCount())).create();
-                    doExecute();
-                }
-            }
-        }
+        doExecute();
     }
 
     private void doExecute() {
@@ -130,7 +117,7 @@ public class ArrangeTaskExecutor extends AbstractLifecycle {
                 return;
             }
             try {
-                task = tasks.poll(10, TimeUnit.MILLISECONDS);
+                task = tasks.poll();
                 if (task == null) {
                     isRunning.compareAndSet(true, false);
                     return;
@@ -138,20 +125,20 @@ public class ArrangeTaskExecutor extends AbstractLifecycle {
                 currentTask = task;
 
                 CompletableFuture<?> future = CompletableFuture.runAsync(currentTask, executors);
-                future.thenRunAsync(new Runnable() {
+                future.whenCompleteAsync(new BiConsumer<Object, Throwable>() {
                     @Override
-                    public void run() {
+                    public void accept(Object o, Throwable throwable) {
+                        if(throwable != null) {
+                            logger.error("[task error]{}", currentTask, throwable);
+                        }
                         currentTask = null;
                         if (!isRunning.compareAndSet(true, false)) {
                             logger.error("[doRun][already exit]");
                             return;
                         }
-
                         doExecute();
                     }
                 }, executors);
-            } catch (InterruptedException e) {
-                logger.debug("[Task]", e);
             } catch (Exception e) {
                 logger.error("[Task]", e);
             }

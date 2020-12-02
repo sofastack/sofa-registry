@@ -34,6 +34,7 @@ import com.alipay.sofa.registry.server.meta.lease.SessionManager;
 import com.alipay.sofa.registry.server.meta.metaserver.CurrentDcMetaServer;
 import com.alipay.sofa.registry.server.meta.remoting.RaftExchanger;
 import com.alipay.sofa.registry.server.meta.slot.SlotManager;
+import com.alipay.sofa.registry.server.meta.slot.impl.DefaultSlotManager;
 import com.alipay.sofa.registry.store.api.annotation.ReadOnLeader;
 import com.alipay.sofa.registry.util.DatumVersionUtil;
 import com.google.common.annotations.VisibleForTesting;
@@ -56,7 +57,7 @@ import java.util.concurrent.atomic.AtomicLong;
 public class DefaultCurrentDcMetaServer extends AbstractMetaServer implements CurrentDcMetaServer {
 
     @Autowired
-    private SlotManager                  slotManager;
+    private SlotManager           defaultSlotManager;
 
     @Autowired
     private SessionManager               sessionManager;
@@ -101,6 +102,7 @@ public class DefaultCurrentDcMetaServer extends AbstractMetaServer implements Cu
             metaNodes.add(new MetaNode(new URL(ip), nodeConfig.getLocalDataCenter()));
         }
         this.metaServers.set(metaNodes);
+        this.currentEpoch.set(DatumVersionUtil.nextId());
     }
 
     private void initRaftService() {
@@ -131,7 +133,7 @@ public class DefaultCurrentDcMetaServer extends AbstractMetaServer implements Cu
 
     @Override
     public SlotTable getSlotTable() {
-        return slotManager.getSlotTable();
+        return defaultSlotManager.getSlotTable();
     }
 
     @Override
@@ -251,7 +253,7 @@ public class DefaultCurrentDcMetaServer extends AbstractMetaServer implements Cu
 
     @VisibleForTesting
     DefaultCurrentDcMetaServer setSlotManager(SlotManager slotManager) {
-        this.slotManager = slotManager;
+        this.defaultSlotManager = slotManager;
         return this;
     }
 

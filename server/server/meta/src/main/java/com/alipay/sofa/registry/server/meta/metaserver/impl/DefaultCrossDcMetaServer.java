@@ -226,7 +226,7 @@ public class DefaultCrossDcMetaServer extends AbstractMetaServer implements Cros
                                     : "unknown", exception);
                     }
                     requestMetaNodeIndex.set(requestMetaNodeIndex.incrementAndGet()
-                                             % getRemotes().size());
+                                             % getClusterMembers().size());
                     // if failure, try again with another meta server.
                     // good luck with that. :)
                     doRefresh(retryTimes + 1);
@@ -269,7 +269,7 @@ public class DefaultCrossDcMetaServer extends AbstractMetaServer implements Cros
     }
 
     private MetaNode getRemoteMetaServer() {
-        return getRemotes().get(requestMetaNodeIndex.get());
+        return getClusterMembers().get(requestMetaNodeIndex.get());
     }
 
     @VisibleForTesting

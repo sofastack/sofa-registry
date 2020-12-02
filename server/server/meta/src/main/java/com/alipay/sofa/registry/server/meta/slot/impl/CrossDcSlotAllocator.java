@@ -228,7 +228,7 @@ public class CrossDcSlotAllocator extends AbstractLifecycle implements SlotAlloc
     }
 
     private MetaNode getRemoteMetaServer() {
-        return metaServer.getRemotes().get(index.get());
+        return metaServer.getClusterMembers().get(index.get());
     }
 
     private final String getServiceId() {

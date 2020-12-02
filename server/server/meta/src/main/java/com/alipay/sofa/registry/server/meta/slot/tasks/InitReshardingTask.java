@@ -3,7 +3,11 @@ package com.alipay.sofa.registry.server.meta.slot.tasks;
 import com.alipay.sofa.registry.common.model.metaserver.nodes.DataNode;
 import com.alipay.sofa.registry.common.model.slot.Slot;
 import com.alipay.sofa.registry.common.model.slot.SlotTable;
+import com.alipay.sofa.registry.jraft.bootstrap.ServiceStateMachine;
+import com.alipay.sofa.registry.log.Logger;
+import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.server.meta.lease.DataServerManager;
+import com.alipay.sofa.registry.server.meta.lease.impl.DefaultDataServerManager;
 import com.alipay.sofa.registry.server.meta.slot.RebalanceTask;
 import com.alipay.sofa.registry.server.meta.slot.SlotManager;
 import com.alipay.sofa.registry.server.meta.slot.impl.LocalSlotManager;
@@ -24,18 +28,20 @@ import java.util.Set;
  */
 public class InitReshardingTask implements RebalanceTask {
 
+    private static final Logger logger = LoggerFactory.getLogger(InitReshardingTask.class);
+
     private final LocalSlotManager localSlotManager;
 
     private final SlotManager raftSlotManager;
 
-    private final DataServerManager dataServerManager;
+    private final DefaultDataServerManager dataServerManager;
 
     private final Random random = new Random();
 
     private long nextEpoch;
 
     public InitReshardingTask(LocalSlotManager localSlotManager, SlotManager raftSlotManager,
-                              DataServerManager dataServerManager) {
+                              DefaultDataServerManager dataServerManager) {
         this.localSlotManager = localSlotManager;
         this.raftSlotManager = raftSlotManager;
         this.dataServerManager = dataServerManager;
@@ -44,8 +50,27 @@ public class InitReshardingTask implements RebalanceTask {
 
     @Override
     public void run() {
-        List<DataNode> dataNodes = dataServerManager.getClusterMembers();
+        if(!ServiceStateMachine.getInstance().isLeader()) {
+            if(logger.isInfoEnabled()) {
+                logger.info("[run] not leader now, quit");
+            }
+            return;
+        } else {
+            if(logger.isInfoEnabled()) {
+                logger.info("[run] start to init slot table");
+            }
+        }
+        List<DataNode> dataNodes = dataServerManager.getLocalClusterMembers();
+        if(dataNodes.isEmpty()) {
+            if(logger.isInfoEnabled()) {
+                logger.info("[run] empty candidate, quit");
+            }
+            return;
+        }
         List<String> candidates = Lists.newArrayListWithCapacity(dataNodes.size());
+        if(logger.isInfoEnabled()) {
+            logger.info("[run] candidates({}): {}", dataNodes.size(), dataNodes);
+        }
         dataNodes.forEach(dataNode -> candidates.add(dataNode.getIp()));
         Map<Integer, Slot> slotMap = Maps.newHashMap();
         for(int slotId = 0; slotId < localSlotManager.getSlotNums(); slotId++) {
@@ -53,19 +78,28 @@ public class InitReshardingTask implements RebalanceTask {
             nextEpoch = DatumVersionUtil.nextId();
             String leader = randomSelect(candidates, selected);
             List<String> followers = Lists.newArrayListWithCapacity(localSlotManager.getSlotReplicaNums());
-            for(int replica = 0; replica < localSlotManager.getSlotReplicaNums(); replica++) {
+            for(int replica = 0; replica < localSlotManager.getSlotReplicaNums() - 1; replica++) {
                 followers.add(randomSelect(candidates, selected));
             }
             slotMap.put(slotId, new Slot(slotId, leader, nextEpoch, followers));
+        }
+        if(!ServiceStateMachine.getInstance().isLeader()) {
+            if(logger.isWarnEnabled()) {
+                logger.warn("[run] not leader, won't update slot table");
+            }
+            return;
+        }
+        if(logger.isInfoEnabled()) {
+            logger.info("[run] end to init slot table");
         }
         raftSlotManager.refresh(new SlotTable(nextEpoch, slotMap));
     }
 
     private String randomSelect(List<String> candidates, Set<String> selected) {
-        int randomIndex = Math.abs(random.nextInt()) & candidates.size();
+        int randomIndex = Math.abs(random.nextInt()) % candidates.size();
         String result = candidates.get(randomIndex);
         while(selected.contains(result)) {
-            randomIndex = Math.abs(random.nextInt()) & candidates.size();
+            randomIndex = Math.abs(random.nextInt()) % candidates.size();
             result = candidates.get(randomIndex);
         }
         return result;

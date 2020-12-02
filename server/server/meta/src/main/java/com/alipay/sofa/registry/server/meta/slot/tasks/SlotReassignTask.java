@@ -4,6 +4,7 @@ import com.alipay.sofa.registry.common.model.metaserver.nodes.DataNode;
 import com.alipay.sofa.registry.common.model.slot.DataNodeSlot;
 import com.alipay.sofa.registry.common.model.slot.Slot;
 import com.alipay.sofa.registry.server.meta.lease.DataServerManager;
+import com.alipay.sofa.registry.server.meta.lease.impl.DefaultDataServerManager;
 import com.alipay.sofa.registry.server.meta.slot.RebalanceTask;
 import com.alipay.sofa.registry.server.meta.slot.SlotManager;
 import com.alipay.sofa.registry.server.meta.slot.impl.LocalSlotManager;
@@ -22,7 +23,7 @@ import java.util.Set;
 public class SlotReassignTask extends AbstractRebalanceTask implements RebalanceTask {
 
     public SlotReassignTask(LocalSlotManager localSlotManager, SlotManager raftSlotManager,
-                            DataServerManager dataServerManager) {
+                            DefaultDataServerManager dataServerManager) {
         super(localSlotManager, raftSlotManager, dataServerManager);
     }
 

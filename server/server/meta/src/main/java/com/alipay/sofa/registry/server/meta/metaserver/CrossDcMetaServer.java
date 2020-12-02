@@ -31,7 +31,4 @@ import java.util.List;
  */
 public interface CrossDcMetaServer extends DataCenterAware, RemoteServers<MetaNode>, MetaServer, ActionOnLeaderOnly {
 
-    default List<MetaNode> getRemotes() {
-        return getClusterMembers();
-    }
 }

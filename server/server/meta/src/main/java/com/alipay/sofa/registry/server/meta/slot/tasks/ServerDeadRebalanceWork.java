@@ -22,6 +22,7 @@ import com.alipay.sofa.registry.common.model.slot.Slot;
 import com.alipay.sofa.registry.common.model.slot.SlotTable;
 import com.alipay.sofa.registry.common.model.store.URL;
 import com.alipay.sofa.registry.server.meta.lease.DataServerManager;
+import com.alipay.sofa.registry.server.meta.lease.impl.DefaultDataServerManager;
 import com.alipay.sofa.registry.server.meta.slot.RebalanceTask;
 import com.alipay.sofa.registry.server.meta.slot.SlotManager;
 import com.alipay.sofa.registry.util.DatumVersionUtil;
@@ -39,13 +40,13 @@ public class ServerDeadRebalanceWork implements RebalanceTask {
 
     private SlotManager       slotManager;
 
-    private DataServerManager dataServerManager;
+    private DefaultDataServerManager dataServerManager;
 
     private DataNode          deadServer;
 
     private long              nextEpoch;
 
-    public ServerDeadRebalanceWork(SlotManager slotManager, DataServerManager dataServerManager,
+    public ServerDeadRebalanceWork(SlotManager slotManager, DefaultDataServerManager dataServerManager,
                                    DataNode deadServer) {
         this.slotManager = slotManager;
         this.dataServerManager = dataServerManager;
@@ -108,7 +109,6 @@ public class ServerDeadRebalanceWork implements RebalanceTask {
     }
 
     private void reassignFollowers(Map<Integer, Slot> slotMap, List<Integer> slotNums) {
-        Map<Integer, Integer> counter = Maps.newHashMap();
         for (Integer slotNum : slotNums) {
             Slot slot = slotMap.get(slotNum);
             // select new follower from alive data servers
@@ -123,7 +123,7 @@ public class ServerDeadRebalanceWork implements RebalanceTask {
     }
 
     private String findNewFollower(Map<Integer, Slot> slotMap, int targetSlotId) {
-        List<DataNode> dataNodes = dataServerManager.getClusterMembers();
+        List<DataNode> dataNodes = dataServerManager.getLocalClusterMembers();
         Slot targetSlot = slotMap.get(targetSlotId);
         Set<String> candidates = Sets.newHashSet();
         dataNodes.forEach(dataNode -> {candidates.add(dataNode.getIp());});

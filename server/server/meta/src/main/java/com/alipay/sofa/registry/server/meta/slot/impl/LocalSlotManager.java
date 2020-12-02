@@ -28,9 +28,11 @@ import com.alipay.sofa.registry.exception.StopException;
 import com.alipay.sofa.registry.jraft.LeaderAware;
 import com.alipay.sofa.registry.jraft.bootstrap.ServiceStateMachine;
 import com.alipay.sofa.registry.lifecycle.impl.AbstractLifecycle;
+import com.alipay.sofa.registry.lifecycle.impl.LifecycleHelper;
 import com.alipay.sofa.registry.server.meta.bootstrap.config.MetaServerConfig;
 import com.alipay.sofa.registry.server.meta.bootstrap.config.NodeConfig;
 import com.alipay.sofa.registry.server.meta.lease.DataServerManager;
+import com.alipay.sofa.registry.server.meta.lease.impl.DefaultDataServerManager;
 import com.alipay.sofa.registry.server.meta.remoting.RaftExchanger;
 import com.alipay.sofa.registry.server.meta.slot.SlotArranger;
 import com.alipay.sofa.registry.server.meta.slot.SlotManager;
@@ -44,6 +46,8 @@ import com.google.common.collect.Maps;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import javax.annotation.PostConstruct;
+import javax.annotation.PreDestroy;
 import javax.annotation.Resource;
 import java.util.List;
 import java.util.Map;
@@ -65,7 +69,7 @@ import static com.alipay.sofa.registry.server.meta.bootstrap.MetaServerConfigura
 public class LocalSlotManager extends AbstractLifecycle implements SlotManager, LeaderAware {
 
     @Autowired
-    private DataServerManager          dataServerManager;
+    private DefaultDataServerManager   dataServerManager;
 
     @Autowired
     private MetaServerConfig           metaServerConfig;
@@ -85,11 +89,23 @@ public class LocalSlotManager extends AbstractLifecycle implements SlotManager, 
 
     private final ReadWriteLock              lock = new ReentrantReadWriteLock();
 
-    private final AtomicReference<SlotTable> currentSlotTable = new AtomicReference<>();
+    private final AtomicReference<SlotTable> currentSlotTable = new AtomicReference<>(SlotTable.INIT);
 
     private Map<DataNode, DataNodeSlot> reverseMap = ImmutableMap.of();
 
     private final AtomicReference<SlotPeriodCheckType> currentCheck = new AtomicReference<>(SlotPeriodCheckType.CHECK_SLOT_ASSIGNMENT_BALANCE);
+
+    @PostConstruct
+    public void postConstruct() throws Exception {
+        LifecycleHelper.initializeIfPossible(this);
+        LifecycleHelper.startIfPossible(this);
+    }
+
+    @PreDestroy
+    public void preDestroy() throws Exception {
+        LifecycleHelper.stopIfPossible(this);
+        LifecycleHelper.disposeIfPossible(this);
+    }
 
     @Override
     protected void doInitialize() throws InitializeException {
@@ -125,6 +141,12 @@ public class LocalSlotManager extends AbstractLifecycle implements SlotManager, 
     public void refresh(SlotTable slotTable) {
         lock.writeLock().lock();
         try {
+            if(slotTable.getEpoch() <= currentSlotTable.get().getEpoch()) {
+                if(logger.isWarnEnabled()) {
+                    logger.warn("[refresh]receive slot table,but epoch({}) is smaller than current({})",
+                            slotTable.getEpoch(), currentSlotTable.get().getEpoch());
+                }
+            }
             setSlotTable(slotTable);
             refreshReverseMap();
         } finally {
@@ -193,7 +215,7 @@ public class LocalSlotManager extends AbstractLifecycle implements SlotManager, 
     }
 
     private void initCheck() {
-        if(currentSlotTable.get() != null) {
+        if(currentSlotTable.get().getEpoch() != SlotTable.INIT.getEpoch()) {
             if (logger.isInfoEnabled()) {
                 logger.info("[initCheck] slot table(version: {}) not empty, quit init slot table",
                         currentSlotTable.get().getEpoch());
@@ -216,7 +238,7 @@ public class LocalSlotManager extends AbstractLifecycle implements SlotManager, 
 
             @Override
             SlotPeriodCheckType action(ArrangeTaskExecutor arrangeTaskExecutor, LocalSlotManager localSlotManager,
-                                       SlotManager raftSlotManager, DataServerManager dataServerManager) {
+                                       SlotManager raftSlotManager, DefaultDataServerManager dataServerManager) {
                 arrangeTaskExecutor.offer(new SlotReassignTask(localSlotManager, raftSlotManager, dataServerManager));
                 return this;
             }
@@ -229,7 +251,7 @@ public class LocalSlotManager extends AbstractLifecycle implements SlotManager, 
 
             @Override
             SlotPeriodCheckType action(ArrangeTaskExecutor arrangeTaskExecutor, LocalSlotManager localSlotManager,
-                                       SlotManager raftSlotManager, DataServerManager dataServerManager) {
+                                       SlotManager raftSlotManager, DefaultDataServerManager dataServerManager) {
                 arrangeTaskExecutor.offer(new SlotLeaderRebalanceTask(localSlotManager, raftSlotManager, dataServerManager));
                 return this;
             }
@@ -237,7 +259,7 @@ public class LocalSlotManager extends AbstractLifecycle implements SlotManager, 
 
         abstract SlotPeriodCheckType next();
         abstract SlotPeriodCheckType action(ArrangeTaskExecutor arrangeTaskExecutor, LocalSlotManager localSlotManager,
-                                            SlotManager raftSlotManager, DataServerManager dataServerManager);
+                                            SlotManager raftSlotManager, DefaultDataServerManager dataServerManager);
     }
 
 }

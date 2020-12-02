@@ -75,7 +75,7 @@ public class CrossDcSlotAllocatorTest extends AbstractTest {
         when(machine.isLeader()).thenReturn(false);
         when(crossDcMetaServer.getClusterMembers()).thenReturn(
             Lists.newArrayList(new MetaNode(randomURL(), getDc())));
-        when(crossDcMetaServer.getRemotes()).thenReturn(
+        when(crossDcMetaServer.getClusterMembers()).thenReturn(
             Lists.newArrayList(new MetaNode(randomURL(), getDc())));
         allocator = spy(new CrossDcSlotAllocator(getDc(), scheduled, exchange, crossDcMetaServer,
             raft));
