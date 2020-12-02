@@ -42,6 +42,9 @@ public class MetaServerConfigBean implements MetaServerConfig {
 
     private int                schedulerHeartbeatTimeout                       = 3;
 
+    private int totalSlotNumber = 1024;
+    private int slotReplicas = 3;
+
     private int                schedulerHeartbeatFirstDelay                    = 30;
 
     private int                schedulerHeartbeatExpBackOffBound               = 10;
@@ -185,6 +188,16 @@ public class MetaServerConfigBean implements MetaServerConfig {
     @Override
     public int getSchedulerHeartbeatTimeout() {
         return schedulerHeartbeatTimeout;
+    }
+
+    @Override
+    public int getTotalSlotNumber() {
+        return totalSlotNumber;
+    }
+
+    @Override
+    public int getSlotReplicas() {
+        return slotReplicas;
     }
 
     /**

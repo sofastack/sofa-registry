@@ -35,6 +35,10 @@ public interface MetaServerConfig {
 
     int getSchedulerHeartbeatTimeout();
 
+    int getTotalSlotNumber();
+
+    int getSlotReplicas();
+
     int getSchedulerHeartbeatExpBackOffBound();
 
     int getSchedulerConnectMetaServerFirstDelay();

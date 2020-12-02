@@ -16,21 +16,22 @@
  */
 package com.alipay.sofa.registry.server.meta.slot.impl;
 
+import com.alipay.sofa.jraft.util.MetricReporter;
+import com.alipay.sofa.jraft.util.ThreadPoolUtil;
 import com.alipay.sofa.registry.common.model.metaserver.nodes.DataNode;
 import com.alipay.sofa.registry.exception.DisposeException;
 import com.alipay.sofa.registry.exception.InitializeException;
-import com.alipay.sofa.registry.lifecycle.SmartSpringLifecycle;
 import com.alipay.sofa.registry.lifecycle.impl.LifecycleHelper;
 import com.alipay.sofa.registry.observer.impl.AbstractLifecycleObservable;
 import com.alipay.sofa.registry.server.meta.lease.DataServerManager;
 import com.alipay.sofa.registry.server.meta.slot.ArrangeTaskDispatcher;
-import com.alipay.sofa.registry.server.meta.slot.tasks.ServerAddRebalanceWork;
+import com.alipay.sofa.registry.server.meta.slot.SlotManager;
 import com.alipay.sofa.registry.server.meta.slot.tasks.ServerDeadRebalanceWork;
+import com.alipay.sofa.registry.server.meta.slot.tasks.SlotReassignTask;
 import com.alipay.sofa.registry.util.NamedThreadFactory;
 import com.alipay.sofa.registry.util.OsUtils;
 import com.google.common.collect.Maps;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
@@ -56,7 +57,10 @@ public class DataServerArrangeTaskDispatcher extends AbstractLifecycleObservable
     private DataServerManager                               dataServerManager;
 
     @Autowired
-    private DefaultSlotManager                              slotManager;
+    private LocalSlotManager slotManager;
+
+    @Autowired
+    private SlotManager      defaultSlotManager;
 
     private ScheduledExecutorService                        scheduled;
 
@@ -75,13 +79,21 @@ public class DataServerArrangeTaskDispatcher extends AbstractLifecycleObservable
     @Override
     protected void doInitialize() throws InitializeException {
         super.doInitialize();
-        scheduled = new ScheduledThreadPoolExecutor(Math.min(OsUtils.getCpuCount(), 8),
-            new NamedThreadFactory("DataServerArrangeTaskDispatcher"));
+        scheduled = ThreadPoolUtil.newScheduledBuilder()
+                .coreThreads(Math.min(OsUtils.getCpuCount(), 2))
+                .poolName(getClass().getSimpleName())
+                .enableMetric(true)
+                .threadFactory(new NamedThreadFactory(getClass().getSimpleName()))
+                .build();
+
     }
 
     @Override
     protected void doDispose() throws DisposeException {
-        scheduled.shutdownNow();
+        if(scheduled != null) {
+            scheduled.shutdownNow();
+            scheduled = null;
+        }
         super.doDispose();
     }
 
@@ -92,7 +104,7 @@ public class DataServerArrangeTaskDispatcher extends AbstractLifecycleObservable
         }
         DeadServerAction deadServerAction = deadServerActions.get(dataNode);
         if (deadServerAction == null) {
-            arrangeTaskExecutor.offer(new ServerAddRebalanceWork());
+            arrangeTaskExecutor.offer(new SlotReassignTask(slotManager, defaultSlotManager, dataServerManager));
         } else {
             if (logger.isInfoEnabled()) {
                 logger.info("[serverAlive][dead server alive]{}", dataNode);

@@ -18,6 +18,7 @@ package com.alipay.sofa.registry.server.meta.slot;
 
 import com.alipay.sofa.registry.common.model.metaserver.nodes.DataNode;
 import com.alipay.sofa.registry.common.model.slot.DataNodeSlot;
+import com.alipay.sofa.registry.common.model.slot.SlotTable;
 
 import java.util.List;
 
@@ -28,13 +29,11 @@ import java.util.List;
  */
 public interface SlotManager extends SlotTableAware {
 
-    void rebalance();
+    void refresh(SlotTable slotTable);
 
-    long getSlotNums();
+    int getSlotNums();
 
     int getSlotReplicaNums();
-
-    List<DataNodeSlot> getDataNodeManagedSlots(boolean ignoreFollowers);
 
     DataNodeSlot getDataNodeManagedSlot(DataNode dataNode, boolean ignoreFollowers);
 

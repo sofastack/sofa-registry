@@ -16,6 +16,8 @@
  */
 package com.alipay.sofa.registry.common.model.slot;
 
+import com.alipay.sofa.registry.common.model.metaserver.nodes.DataNode;
+
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -35,6 +37,15 @@ public final class DataNodeSlot implements Serializable {
 
     public DataNodeSlot(String dataNode) {
         this.dataNode = dataNode;
+    }
+
+    public DataNodeSlot fork(boolean ignoreFollowers) {
+        DataNodeSlot clone = new DataNodeSlot(dataNode);
+        clone.getLeaders().addAll(leaders);
+        if (!ignoreFollowers) {
+            clone.getFollowers().addAll(followers);
+        }
+        return clone;
     }
 
     /**
