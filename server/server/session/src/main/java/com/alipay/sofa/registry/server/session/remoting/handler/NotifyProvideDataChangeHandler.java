@@ -18,7 +18,7 @@ package com.alipay.sofa.registry.server.session.remoting.handler;
 
 import com.alipay.sofa.registry.common.model.Node.NodeType;
 import com.alipay.sofa.registry.common.model.constants.ValueConstants;
-import com.alipay.sofa.registry.common.model.metaserver.NotifyProvideDataChange;
+import com.alipay.sofa.registry.common.model.metaserver.ProvideDataChangeEvent;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.remoting.Channel;
@@ -65,31 +65,31 @@ public class NotifyProvideDataChangeHandler extends AbstractClientHandler {
     @Override
     public Object reply(Channel channel, Object message) {
 
-        NotifyProvideDataChange notifyProvideDataChange = (NotifyProvideDataChange) message;
-        final String notifyDataInfoId = notifyProvideDataChange.getDataInfoId();
+        ProvideDataChangeEvent provideDataChangeEvent = (ProvideDataChangeEvent) message;
+        final String notifyDataInfoId = provideDataChangeEvent.getDataInfoId();
         if (!ValueConstants.STOP_PUSH_DATA_SWITCH_DATA_ID.equals(notifyDataInfoId)
             && !ValueConstants.BLACK_LIST_DATA_ID.equals(notifyDataInfoId)
             && !ValueConstants.DATA_DATUM_SYNC_SESSION_INTERVAL_SEC.equals(notifyDataInfoId)
             && !ValueConstants.DATA_DATUM_EXPIRE_SEC.equals(notifyDataInfoId)) {
             boolean result = sessionWatchers.checkWatcherVersions(
-                notifyProvideDataChange.getDataInfoId(), notifyProvideDataChange.getVersion());
+                provideDataChangeEvent.getDataInfoId(), provideDataChangeEvent.getVersion());
             if (!result) {
                 LOGGER
                     .info(
                         "Request message dataInfo {}, version {} not be interested or lower than current version!",
-                        notifyProvideDataChange.getDataInfoId(),
-                        notifyProvideDataChange.getVersion());
+                        provideDataChangeEvent.getDataInfoId(),
+                        provideDataChangeEvent.getVersion());
                 return null;
             }
 
         }
-        fireDataChangeFetchTask(notifyProvideDataChange);
+        fireDataChangeFetchTask(provideDataChangeEvent);
         return null;
     }
 
-    private void fireDataChangeFetchTask(NotifyProvideDataChange notifyProvideDataChange) {
+    private void fireDataChangeFetchTask(ProvideDataChangeEvent provideDataChangeEvent) {
 
-        TaskEvent taskEvent = new TaskEvent(notifyProvideDataChange,
+        TaskEvent taskEvent = new TaskEvent(provideDataChangeEvent,
             TaskType.PROVIDE_DATA_CHANGE_FETCH_TASK);
         TASK_LOGGER.info("send " + taskEvent.getTaskType() + " taskEvent:{}", taskEvent);
         taskListenerManager.sendTaskEvent(taskEvent);
@@ -97,6 +97,6 @@ public class NotifyProvideDataChangeHandler extends AbstractClientHandler {
 
     @Override
     public Class interest() {
-        return NotifyProvideDataChange.class;
+        return ProvideDataChangeEvent.class;
     }
 }

@@ -33,6 +33,9 @@ import com.alipay.sofa.registry.server.meta.lease.impl.DefaultMetaServerManager;
 import com.alipay.sofa.registry.server.meta.lease.impl.DefaultSessionManager;
 import com.alipay.sofa.registry.server.meta.metaserver.CurrentDcMetaServer;
 import com.alipay.sofa.registry.server.meta.metaserver.impl.DefaultCurrentDcMetaServer;
+import com.alipay.sofa.registry.server.meta.provide.data.DataServerProvideDataNotifier;
+import com.alipay.sofa.registry.server.meta.provide.data.DefaultProvideDataNotifier;
+import com.alipay.sofa.registry.server.meta.provide.data.SessionServerProvideDataNotifier;
 import com.alipay.sofa.registry.server.meta.remoting.DataNodeExchanger;
 import com.alipay.sofa.registry.server.meta.remoting.RaftExchanger;
 import com.alipay.sofa.registry.server.meta.remoting.SessionNodeExchanger;
@@ -197,10 +200,21 @@ public class MetaServerConfiguration {
     }
 
     @Configuration
-    public static class MetaServerTaskConfiguration {
+    public static class MetaServerProvideDataConfiguration {
+
         @Bean
-        public TaskListenerManager taskListenerManager() {
-            return new DefaultTaskListenerManager();
+        public DefaultProvideDataNotifier provideDataNotifier() {
+            return new DefaultProvideDataNotifier();
+        }
+
+        @Bean
+        public DataServerProvideDataNotifier dataServerProvideDataNotifier() {
+            return new DataServerProvideDataNotifier();
+        }
+
+        @Bean
+        public SessionServerProvideDataNotifier sessionServerProvideDataNotifier() {
+            return new SessionServerProvideDataNotifier();
         }
     }
 

@@ -23,8 +23,10 @@ import com.alipay.sofa.registry.common.model.slot.SlotTable;
 import com.alipay.sofa.registry.common.model.store.URL;
 import com.alipay.sofa.registry.exception.DisposeException;
 import com.alipay.sofa.registry.exception.InitializeException;
+import com.alipay.sofa.registry.jraft.processor.AbstractSnapshotProcess;
 import com.alipay.sofa.registry.jraft.processor.Processor;
 import com.alipay.sofa.registry.jraft.processor.ProxyHandler;
+import com.alipay.sofa.registry.jraft.processor.SnapshotProcess;
 import com.alipay.sofa.registry.lifecycle.SmartSpringLifecycle;
 import com.alipay.sofa.registry.lifecycle.impl.LifecycleHelper;
 import com.alipay.sofa.registry.server.meta.bootstrap.config.NodeConfig;
@@ -39,15 +41,20 @@ import com.alipay.sofa.registry.store.api.annotation.ReadOnLeader;
 import com.alipay.sofa.registry.util.DatumVersionUtil;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
+import org.glassfish.jersey.internal.guava.Sets;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
+import java.io.IOException;
 import java.lang.reflect.Proxy;
 import java.util.Collection;
 import java.util.List;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * @author chen.zhu
@@ -188,7 +195,7 @@ public class DefaultCurrentDcMetaServer extends AbstractMetaServer implements Cu
                + ", metaServers=" + metaServers + '}';
     }
 
-    public class MetaServersRaftStorage implements CurrentMetaServerRaftStorage {
+    public class MetaServersRaftStorage extends AbstractSnapshotProcess implements CurrentMetaServerRaftStorage {
 
         @Override
         public long getEpoch() {
@@ -237,6 +244,40 @@ public class DefaultCurrentDcMetaServer extends AbstractMetaServer implements Cu
         @Override
         public boolean evict() {
             return false;
+        }
+
+        @Override
+        public boolean save(String path) {
+            return save(path, metaServers.get());
+        }
+
+        @Override
+        public boolean load(String path) {
+            try {
+                List<MetaNode> metaNodes = load(path, metaServers.get().getClass());
+                metaServers.get().clear();
+                metaServers.get().addAll(metaNodes);
+                return true;
+            } catch (IOException e) {
+                logger.error("Load meta servers data error!", e);
+                return false;
+            }
+        }
+
+        @Override
+        public SnapshotProcess copy() {
+            DefaultCurrentDcMetaServer currentDcMetaServer = new DefaultCurrentDcMetaServer();
+            MetaServersRaftStorage storage = currentDcMetaServer.new MetaServersRaftStorage();
+            currentDcMetaServer.setRaftStorage(storage).setCurrentEpoch(currentEpoch.get());
+            currentDcMetaServer.metaServers = new AtomicReference<>(Lists.newArrayList(metaServers.get()));
+            return storage;
+        }
+
+        @Override
+        public Set<String> getSnapshotFileNames() {
+            Set<String> set = Sets.newHashSet();
+            set.add(DefaultCurrentDcMetaServer.class.getSimpleName());
+            return set;
         }
     }
 

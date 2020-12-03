@@ -27,6 +27,7 @@ import com.alipay.sofa.registry.server.meta.lease.LeaseTest;
 import com.alipay.sofa.registry.server.meta.lease.impl.*;
 import com.alipay.sofa.registry.server.meta.metaserver.impl.DefaultCrossDcMetaServerTest;
 import com.alipay.sofa.registry.server.meta.metaserver.impl.DefaultCurrentDcMetaServerTest;
+import com.alipay.sofa.registry.server.meta.provide.data.DataServerProvideDataNotifierTest;
 import com.alipay.sofa.registry.server.meta.slot.impl.ArrangeTaskExecutorTest;
 import com.alipay.sofa.registry.server.meta.slot.impl.CrossDcSlotAllocatorTest;
 import org.junit.runner.RunWith;
@@ -38,6 +39,7 @@ import org.junit.runners.Suite;
                      DefaultSessionManagerTest.class, DefaultDataServerManagerTest.class,
                      DefaultLeaseManagerTest.class, CrossDcMetaServerManagerTest.class,
                      TestAbstractRaftEnabledLeaseManager.class, LeaseTest.class,
-                     DefaultMetaServerManagerTest.class, ArrangeTaskExecutorTest.class })
+                     DefaultMetaServerManagerTest.class, ArrangeTaskExecutorTest.class,
+                     DataServerProvideDataNotifierTest.class })
 public class AllTests {
 }

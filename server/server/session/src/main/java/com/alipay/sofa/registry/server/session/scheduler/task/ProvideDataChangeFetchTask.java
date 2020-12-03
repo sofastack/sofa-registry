@@ -18,7 +18,7 @@ package com.alipay.sofa.registry.server.session.scheduler.task;
 
 import com.alipay.sofa.registry.common.model.constants.ValueConstants;
 import com.alipay.sofa.registry.common.model.metaserver.DataOperator;
-import com.alipay.sofa.registry.common.model.metaserver.NotifyProvideDataChange;
+import com.alipay.sofa.registry.common.model.metaserver.ProvideDataChangeEvent;
 import com.alipay.sofa.registry.common.model.metaserver.ProvideData;
 import com.alipay.sofa.registry.common.model.store.DataInfo;
 import com.alipay.sofa.registry.common.model.store.URL;
@@ -72,7 +72,7 @@ public class ProvideDataChangeFetchTask extends AbstractSessionTask {
 
     private final Exchange            boltExchange;
 
-    private NotifyProvideDataChange   notifyProvideDataChange;
+    private ProvideDataChangeEvent provideDataChangeEvent;
 
     private ProvideDataProcessor      provideDataProcessorManager;
 
@@ -98,23 +98,23 @@ public class ProvideDataChangeFetchTask extends AbstractSessionTask {
 
         Object obj = taskEvent.getEventObj();
 
-        if (!(obj instanceof NotifyProvideDataChange)) {
+        if (!(obj instanceof ProvideDataChangeEvent)) {
             throw new IllegalArgumentException("Input task event object error!");
         }
 
-        this.notifyProvideDataChange = (NotifyProvideDataChange) obj;
+        this.provideDataChangeEvent = (ProvideDataChangeEvent) obj;
     }
 
     @Override
     public void execute() {
 
         ProvideData provideData = null;
-        String dataInfoId = notifyProvideDataChange.getDataInfoId();
-        if (notifyProvideDataChange.getDataOperator() != DataOperator.REMOVE) {
+        String dataInfoId = provideDataChangeEvent.getDataInfoId();
+        if (provideDataChangeEvent.getDataOperator() != DataOperator.REMOVE) {
             provideData = metaServerService.fetchData(dataInfoId);
 
             if (provideData == null) {
-                LOGGER.warn("Notify provider data Change request {} fetch no provider data!", notifyProvideDataChange);
+                LOGGER.warn("Notify provider data Change request {} fetch no provider data!", provideDataChangeEvent);
                 return;
             }
             provideDataProcessorManager.changeDataProcess(provideData);
@@ -137,9 +137,9 @@ public class ProvideDataChangeFetchTask extends AbstractSessionTask {
                 });
                 if (!registerIds.isEmpty()) {
                     ReceivedConfigData receivedConfigData;
-                    if (notifyProvideDataChange.getDataOperator() == DataOperator.REMOVE) {
+                    if (provideDataChangeEvent.getDataOperator() == DataOperator.REMOVE) {
                         receivedConfigData = ReceivedDataConverter
-                                .getReceivedConfigData(null, dataInfo, notifyProvideDataChange.getVersion());
+                                .getReceivedConfigData(null, dataInfo, provideDataChangeEvent.getVersion());
                     } else {
                         receivedConfigData = ReceivedDataConverter
                                 .getReceivedConfigData(provideData.getProvideData(), dataInfo,
@@ -174,7 +174,7 @@ public class ProvideDataChangeFetchTask extends AbstractSessionTask {
     @Override
     public String toString() {
         return "PROVIDE_DATA_CHANGE_FETCH_TASK{" + "taskId='" + getTaskId() + '\''
-               + ", notifyProvideDataChange=" + notifyProvideDataChange + ", retryTimes='"
+               + ", notifyProvideDataChange=" + provideDataChangeEvent + ", retryTimes='"
                + sessionServerConfig.getSubscriberRegisterFetchRetryTimes() + '\'' + '}';
     }
 }

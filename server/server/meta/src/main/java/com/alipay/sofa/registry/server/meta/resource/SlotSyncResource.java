@@ -50,9 +50,6 @@ public class SlotSyncResource {
     @RaftReference
     private DBService           persistenceDataDBService;
 
-    @Autowired
-    private TaskListenerManager taskListenerManager;
-
     /**
      * get
      */
