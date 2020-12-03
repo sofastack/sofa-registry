@@ -61,14 +61,16 @@ public class DataServerArrangeTaskDispatcher extends AbstractLifecycleObservable
     private DefaultDataServerManager                        dataServerManager;
 
     @Autowired
-    private LocalSlotManager slotManager;
+    private LocalSlotManager                                slotManager;
 
     @Autowired
-    private DefaultSlotManager defaultSlotManager;
+    private DefaultSlotManager                              defaultSlotManager;
 
-    private AtomicBoolean inited = new AtomicBoolean(false);
+    private AtomicBoolean                                   inited            = new AtomicBoolean(
+                                                                                  false);
 
-    private AtomicBoolean lock = new AtomicBoolean(false);
+    private AtomicBoolean                                   lock              = new AtomicBoolean(
+                                                                                  false);
 
     private ScheduledExecutorService                        scheduled;
 
@@ -88,17 +90,15 @@ public class DataServerArrangeTaskDispatcher extends AbstractLifecycleObservable
     protected void doInitialize() throws InitializeException {
         super.doInitialize();
         scheduled = ThreadPoolUtil.newScheduledBuilder()
-                .coreThreads(Math.min(OsUtils.getCpuCount(), 2))
-                .poolName(getClass().getSimpleName())
-                .enableMetric(true)
-                .threadFactory(new NamedThreadFactory(getClass().getSimpleName()))
-                .build();
+            .coreThreads(Math.min(OsUtils.getCpuCount(), 2)).poolName(getClass().getSimpleName())
+            .enableMetric(true).threadFactory(new NamedThreadFactory(getClass().getSimpleName()))
+            .build();
 
     }
 
     @Override
     protected void doDispose() throws DisposeException {
-        if(scheduled != null) {
+        if (scheduled != null) {
             scheduled.shutdownNow();
             scheduled = null;
         }
@@ -112,15 +112,16 @@ public class DataServerArrangeTaskDispatcher extends AbstractLifecycleObservable
         }
         initSlotTableIfNeeded();
 
-        if(lock.get()) {
-            if(logger.isInfoEnabled()) {
+        if (lock.get()) {
+            if (logger.isInfoEnabled()) {
                 logger.info("[serverAlive] stop work until init slot table");
             }
             return;
         }
         DeadServerAction deadServerAction = deadServerActions.get(dataNode);
         if (deadServerAction == null) {
-            arrangeTaskExecutor.offer(new SlotReassignTask(slotManager, defaultSlotManager, dataServerManager));
+            arrangeTaskExecutor.offer(new SlotReassignTask(slotManager, defaultSlotManager,
+                dataServerManager));
         } else {
             if (logger.isInfoEnabled()) {
                 logger.info("[serverAlive][dead server alive]{}", dataNode);
@@ -130,14 +131,15 @@ public class DataServerArrangeTaskDispatcher extends AbstractLifecycleObservable
     }
 
     private void initSlotTableIfNeeded() {
-        if(inited.compareAndSet(false, true)
-                && slotManager.getSlotTable().getEpoch() == SlotTable.INIT.getEpoch()) {
+        if (inited.compareAndSet(false, true)
+            && slotManager.getSlotTable().getEpoch() == SlotTable.INIT.getEpoch()) {
             logger.info("[first init] generate slot table after 1s");
             lock.set(true);
             scheduled.schedule(new Runnable() {
                 @Override
                 public void run() {
-                    arrangeTaskExecutor.offer(new InitReshardingTask(slotManager, defaultSlotManager, dataServerManager));
+                    arrangeTaskExecutor.offer(new InitReshardingTask(slotManager,
+                        defaultSlotManager, dataServerManager));
                 }
             }, 1000, TimeUnit.MILLISECONDS);
             // release the lock

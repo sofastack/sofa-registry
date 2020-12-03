@@ -83,23 +83,6 @@ public class Processor {
         workers.put(serviceId, target);
     }
 
-    @SuppressWarnings("uncheked")
-    public void addWorker(String serviceId, Method method, Object target) {
-        Map<String, Method> publicMethods = workerMethods.get(serviceId);
-        if (publicMethods == null) {
-            synchronized (this) {
-                publicMethods = workerMethods.get(serviceId);
-                if (publicMethods == null) {
-                    publicMethods = Maps.newHashMap();
-                    workers.put(serviceId, publicMethods);
-                }
-            }
-        }
-        String methodName = getSignificantMethodName(method);
-        publicMethods.put(methodName, method);
-        workers.put(serviceId, target);
-    }
-
     public static String getSignificantMethodName(Method method) {
         StringBuilder mSigs = new StringBuilder();
         mSigs.append(method.getName());
@@ -107,17 +90,6 @@ public class Processor {
             mSigs.append(paramType.getName());
         }
         return mSigs.toString();
-    }
-
-    public void removeWorker(String serviceId) {
-        if (workers.get(serviceId) != null) {
-            if (LOG.isWarnEnabled()) {
-                LOG.warn("Service {} has bean existed!", serviceId);
-            }
-            return;
-        }
-        workerMethods.remove(serviceId);
-        workers.remove(serviceId);
     }
 
     public ProcessResponse process(ProcessRequest request) {

@@ -72,7 +72,7 @@ public class ProvideDataChangeFetchTask extends AbstractSessionTask {
 
     private final Exchange            boltExchange;
 
-    private ProvideDataChangeEvent provideDataChangeEvent;
+    private ProvideDataChangeEvent    provideDataChangeEvent;
 
     private ProvideDataProcessor      provideDataProcessorManager;
 

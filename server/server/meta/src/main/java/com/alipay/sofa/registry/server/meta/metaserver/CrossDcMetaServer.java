@@ -29,6 +29,7 @@ import java.util.List;
  * <p>
  * Nov 20, 2020
  */
-public interface CrossDcMetaServer extends DataCenterAware, RemoteServers<MetaNode>, MetaServer, ActionOnLeaderOnly {
+public interface CrossDcMetaServer extends DataCenterAware, RemoteServers<MetaNode>, MetaServer,
+                                  ActionOnLeaderOnly {
 
 }

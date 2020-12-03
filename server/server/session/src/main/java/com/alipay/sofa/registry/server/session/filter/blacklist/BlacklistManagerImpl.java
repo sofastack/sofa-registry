@@ -50,19 +50,20 @@ import java.util.concurrent.TimeUnit;
  */
 public class BlacklistManagerImpl extends AbstractLifecycle implements BlacklistManager {
 
-    private static final Logger   LOGGER              = LoggerFactory
-                                                          .getLogger(BlacklistManagerImpl.class);
+    private static final Logger      LOGGER              = LoggerFactory
+                                                             .getLogger(BlacklistManagerImpl.class);
 
-    private static final Logger   EXCHANGE_LOGGER     = LoggerFactory.getLogger("SESSION-EXCHANGE");
+    private static final Logger      EXCHANGE_LOGGER     = LoggerFactory
+                                                             .getLogger("SESSION-EXCHANGE");
 
     @Autowired
-    protected MetaServerService   mataNodeService;
+    protected MetaServerService      mataNodeService;
 
-    private List<BlacklistConfig> blacklistConfigList = new ArrayList();
+    private List<BlacklistConfig>    blacklistConfigList = new ArrayList();
 
     private ScheduledExecutorService scheduled;
 
-    private ScheduledFuture<?> future;
+    private ScheduledFuture<?>       future;
 
     @PostConstruct
     public void postConstruct() throws Exception {
@@ -80,11 +81,9 @@ public class BlacklistManagerImpl extends AbstractLifecycle implements Blacklist
     protected void doInitialize() throws InitializeException {
         super.doInitialize();
         scheduled = ThreadPoolUtil.newScheduledBuilder()
-                .coreThreads(Math.min(2, OsUtils.getCpuCount()))
-                .enableMetric(true)
-                .poolName(BlacklistManager.class.getSimpleName())
-                .threadFactory(new NamedThreadFactory(BlacklistManager.class.getSimpleName()))
-                .build();
+            .coreThreads(Math.min(2, OsUtils.getCpuCount())).enableMetric(true)
+            .poolName(BlacklistManager.class.getSimpleName())
+            .threadFactory(new NamedThreadFactory(BlacklistManager.class.getSimpleName())).build();
     }
 
     @Override
@@ -100,7 +99,7 @@ public class BlacklistManagerImpl extends AbstractLifecycle implements Blacklist
 
     @Override
     protected void doStop() throws StopException {
-        if(future != null) {
+        if (future != null) {
             future.cancel(true);
             future = null;
         }
@@ -109,7 +108,7 @@ public class BlacklistManagerImpl extends AbstractLifecycle implements Blacklist
 
     @Override
     protected void doDispose() throws DisposeException {
-        if(scheduled != null) {
+        if (scheduled != null) {
             scheduled.shutdownNow();
             scheduled = null;
         }

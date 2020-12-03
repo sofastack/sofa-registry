@@ -269,7 +269,8 @@ public class DataChangeFetchTask extends AbstractSessionTask {
 
     private Datum getDatumCache() {
         // build key
-        DatumKey datumKey = new DatumKey(dataChangeRequest.getDataInfoId(), dataChangeRequest.getDataCenter());
+        DatumKey datumKey = new DatumKey(dataChangeRequest.getDataInfoId(),
+            dataChangeRequest.getDataCenter());
         Key key = new Key(KeyType.OBJ, DatumKey.class.getName(), datumKey);
 
         // get from cache (it will fetch from backend server)

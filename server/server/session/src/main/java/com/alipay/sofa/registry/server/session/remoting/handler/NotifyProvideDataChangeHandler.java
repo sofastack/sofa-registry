@@ -77,8 +77,7 @@ public class NotifyProvideDataChangeHandler extends AbstractClientHandler {
                 LOGGER
                     .info(
                         "Request message dataInfo {}, version {} not be interested or lower than current version!",
-                        provideDataChangeEvent.getDataInfoId(),
-                        provideDataChangeEvent.getVersion());
+                        provideDataChangeEvent.getDataInfoId(), provideDataChangeEvent.getVersion());
                 return null;
             }
 

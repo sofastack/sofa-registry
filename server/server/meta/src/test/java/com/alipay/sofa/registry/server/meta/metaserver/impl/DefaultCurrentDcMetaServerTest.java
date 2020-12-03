@@ -62,7 +62,7 @@ public class DefaultCurrentDcMetaServerTest extends AbstractTest {
     private SlotManager                slotManager;
 
     @Mock
-    private NodeConfig nodeConfig;
+    private NodeConfig                 nodeConfig;
 
     @Before
     public void beforeDefaultCurrentDcMetaServerTest() throws Exception {
@@ -71,7 +71,8 @@ public class DefaultCurrentDcMetaServerTest extends AbstractTest {
             .setDataServerManager(dataServerManager).setSessionManager(sessionManager)
             .setSlotManager(slotManager).setNodeConfig(nodeConfig);
         when(nodeConfig.getLocalDataCenter()).thenReturn(getDc());
-        when(nodeConfig.getMetaNodeIP()).thenReturn(ImmutableMap.of(getDc(), Lists.newArrayList(randomIp(), randomIp(), randomIp())));
+        when(nodeConfig.getMetaNodeIP()).thenReturn(
+            ImmutableMap.of(getDc(), Lists.newArrayList(randomIp(), randomIp(), randomIp())));
         LifecycleHelper.initializeIfPossible(metaServer);
         LifecycleHelper.startIfPossible(metaServer);
         metaServer.setRaftStorage(metaServer.new MetaServersRaftStorage());
@@ -97,7 +98,8 @@ public class DefaultCurrentDcMetaServerTest extends AbstractTest {
     //    @Ignore
     public void testUpdateClusterMembers() throws Exception {
         RaftExchanger raftExchanger = startRaftExchanger();
-        metaServer = new DefaultCurrentDcMetaServer().setRaftExchanger(raftExchanger).setNodeConfig(nodeConfig);
+        metaServer = new DefaultCurrentDcMetaServer().setRaftExchanger(raftExchanger)
+            .setNodeConfig(nodeConfig);
 
         LifecycleHelper.initializeIfPossible(metaServer);
         LifecycleHelper.startIfPossible(metaServer);

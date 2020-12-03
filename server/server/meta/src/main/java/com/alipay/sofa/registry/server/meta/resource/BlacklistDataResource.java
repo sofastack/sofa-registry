@@ -46,14 +46,14 @@ import com.alipay.sofa.registry.task.listener.TaskListenerManager;
 @Path("blacklist")
 public class BlacklistDataResource {
 
-    private static final Logger DB_LOGGER   = LoggerFactory.getLogger(BlacklistDataResource.class,
-                                                "[DBService]");
+    private static final Logger        DB_LOGGER   = LoggerFactory.getLogger(
+                                                       BlacklistDataResource.class, "[DBService]");
 
-    private static final Logger TASK_LOGGER = LoggerFactory.getLogger(BlacklistDataResource.class,
-                                                "[Task]");
+    private static final Logger        TASK_LOGGER = LoggerFactory.getLogger(
+                                                       BlacklistDataResource.class, "[Task]");
 
     @RaftReference
-    private DBService           persistenceDataDBService;
+    private DBService                  persistenceDataDBService;
 
     @Autowired
     private DefaultProvideDataNotifier provideDataNotifier;
@@ -99,9 +99,10 @@ public class BlacklistDataResource {
 
         ProvideDataChangeEvent provideDataChangeEvent = new ProvideDataChangeEvent(dataInfoId,
             version, dataOperator);
-        if(TASK_LOGGER.isInfoEnabled()) {
-            TASK_LOGGER.info("send PERSISTENCE_DATA_CHANGE_NOTIFY_TASK notifyProvideDataChange: {}",
-                    provideDataChangeEvent);
+        if (TASK_LOGGER.isInfoEnabled()) {
+            TASK_LOGGER.info(
+                "send PERSISTENCE_DATA_CHANGE_NOTIFY_TASK notifyProvideDataChange: {}",
+                provideDataChangeEvent);
         }
         provideDataNotifier.notifyProvideDataChange(provideDataChangeEvent);
     }

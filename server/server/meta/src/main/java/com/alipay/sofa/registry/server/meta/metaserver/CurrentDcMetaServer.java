@@ -17,6 +17,7 @@
 package com.alipay.sofa.registry.server.meta.metaserver;
 
 import com.alipay.sofa.registry.common.model.Node;
+import com.alipay.sofa.registry.common.model.metaserver.nodes.DataNode;
 import com.alipay.sofa.registry.common.model.metaserver.nodes.MetaNode;
 import com.alipay.sofa.registry.common.model.metaserver.nodes.SessionNode;
 import com.alipay.sofa.registry.observer.Observable;
@@ -33,6 +34,8 @@ import java.util.List;
 public interface CurrentDcMetaServer extends MetaServer, LeaseManager<Node>, Observable {
 
     List<SessionNode> getSessionServers();
+
+    List<DataNode> getDataServers();
 
     void updateClusterMembers(List<MetaNode> newMembers);
 

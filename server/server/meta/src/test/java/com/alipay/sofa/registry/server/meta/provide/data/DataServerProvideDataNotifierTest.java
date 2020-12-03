@@ -1,3 +1,19 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package com.alipay.sofa.registry.server.meta.provide.data;
 
 import com.alipay.sofa.registry.common.model.Node;
@@ -29,37 +45,37 @@ public class DataServerProvideDataNotifierTest extends AbstractTest {
     private DataServerProvideDataNotifier notifier = new DataServerProvideDataNotifier();
 
     @Mock
-    private DataServerManager dataServerManager;
+    private DataServerManager             dataServerManager;
 
     @Mock
-    private DataNodeExchanger dataNodeExchanger;
+    private DataNodeExchanger             dataNodeExchanger;
 
     @Mock
-    private DataConnectionHandler dataConnectionHandler;
+    private DataConnectionHandler         dataConnectionHandler;
 
     @Before
     public void beforeDataServerProvideDataNotifierTest() {
         MockitoAnnotations.initMocks(this);
         notifier.setDataConnectionHandler(dataConnectionHandler)
-                .setDataNodeExchanger(dataNodeExchanger)
-                .setDataServerManager(dataServerManager);
+            .setDataNodeExchanger(dataNodeExchanger).setDataServerManager(dataServerManager);
     }
 
     @Test
     public void testNotify() throws RequestException {
-        notifier.notifyProvideDataChange(new ProvideDataChangeEvent(ValueConstants.BLACK_LIST_DATA_ID,
-                System.currentTimeMillis(), DataOperator.ADD));
+        notifier.notifyProvideDataChange(new ProvideDataChangeEvent(
+            ValueConstants.BLACK_LIST_DATA_ID, System.currentTimeMillis(), DataOperator.ADD));
         verify(dataServerManager, never()).getClusterMembers();
         verify(dataNodeExchanger, never()).request(any(Request.class));
     }
 
     @Test
     public void testNotifyWithNoDataNodes() throws RequestException {
-        when(dataConnectionHandler.getConnections(anyString()))
-                .thenReturn(Lists.newArrayList(new InetSocketAddress(randomIp(), Math.abs(random.nextInt(65535)) % 65535),
-                        new InetSocketAddress(randomIp(), Math.abs(random.nextInt(65535)) % 65535 ) ));
-        notifier.notifyProvideDataChange(new ProvideDataChangeEvent(ValueConstants.BLACK_LIST_DATA_ID,
-                System.currentTimeMillis(), DataOperator.ADD));
+        when(dataConnectionHandler.getConnections(anyString())).thenReturn(
+            Lists.newArrayList(new InetSocketAddress(randomIp(),
+                Math.abs(random.nextInt(65535)) % 65535),
+                new InetSocketAddress(randomIp(), Math.abs(random.nextInt(65535)) % 65535)));
+        notifier.notifyProvideDataChange(new ProvideDataChangeEvent(
+            ValueConstants.BLACK_LIST_DATA_ID, System.currentTimeMillis(), DataOperator.ADD));
         verify(dataServerManager, times(1)).getClusterMembers();
         verify(dataNodeExchanger, never()).request(any(Request.class));
     }

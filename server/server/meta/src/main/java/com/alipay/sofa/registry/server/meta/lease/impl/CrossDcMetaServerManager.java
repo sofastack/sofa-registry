@@ -139,7 +139,7 @@ public class CrossDcMetaServerManager extends AbstractLifecycle implements MetaS
     protected void doInitialize() throws InitializeException {
         super.doInitialize();
         for (Map.Entry<String, Collection<String>> entry : nodeConfig.getMetaNodeIP().entrySet()) {
-            if(entry.getKey().equalsIgnoreCase(nodeConfig.getLocalDataCenter())) {
+            if (entry.getKey().equalsIgnoreCase(nodeConfig.getLocalDataCenter())) {
                 continue;
             }
             getOrCreate(entry.getKey());

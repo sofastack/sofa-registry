@@ -257,10 +257,6 @@ public class CrossDcSlotAllocator extends AbstractLifecycle implements SlotAlloc
                 LocalRaftSlotTableStorage.this);
         }
 
-        private final void unregisterAsRaftService() {
-            Processor.getInstance().removeWorker(getServiceId());
-        }
-
         @Override
         public SlotTable getSlotTable() {
             return CrossDcSlotAllocator.this.currentSlotTable.get();

@@ -28,12 +28,12 @@ public class GetDataRequest implements Serializable {
 
     private static final long serialVersionUID = 8133437572926931258L;
 
-    private final String            dataInfoId;
+    private final String      dataInfoId;
 
     /**
      * if datacenter is null, means all datacenters
      */
-    private final String            dataCenter;
+    private final String      dataCenter;
 
     private long              slotEpoch;
 

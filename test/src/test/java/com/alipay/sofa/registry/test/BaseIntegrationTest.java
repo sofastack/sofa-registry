@@ -66,45 +66,45 @@ import static org.junit.Assert.assertTrue;
 @SpringBootConfiguration
 @SpringBootTest
 public class BaseIntegrationTest {
-    private static final AtomicBoolean STARTED = new AtomicBoolean(
-            false);
+    private static final AtomicBoolean              STARTED                  = new AtomicBoolean(
+                                                                                 false);
 
-    public static final  String                         LOCAL_ADDRESS            = NetUtil
-            .getLocalAddress()
-            .getHostAddress();
-    public static final  String                         LOCAL_DATACENTER         = "DefaultDataCenter";
-    public static final  String                         LOCAL_REGION             = "DEFAULT_ZONE";
-    private static final int                            CLIENT_OFF_MAX_WAIT_TIME = 30;
-    protected static     ConfigurableApplicationContext metaApplicationContext;
-    protected static     ConfigurableApplicationContext sessionApplicationContext;
-    protected static     ConfigurableApplicationContext dataApplicationContext;
+    public static final String                      LOCAL_ADDRESS            = NetUtil
+                                                                                 .getLocalAddress()
+                                                                                 .getHostAddress();
+    public static final String                      LOCAL_DATACENTER         = "DefaultDataCenter";
+    public static final String                      LOCAL_REGION             = "DEFAULT_ZONE";
+    private static final int                        CLIENT_OFF_MAX_WAIT_TIME = 30;
+    protected static ConfigurableApplicationContext metaApplicationContext;
+    protected static ConfigurableApplicationContext sessionApplicationContext;
+    protected static ConfigurableApplicationContext dataApplicationContext;
 
-    protected static DefaultRegistryClient registryClient1;
+    protected static DefaultRegistryClient          registryClient1;
 
-    protected static DefaultRegistryClient registryClient2;
+    protected static DefaultRegistryClient          registryClient2;
 
-    protected static Channel sessionChannel;
+    protected static Channel                        sessionChannel;
 
-    protected static Channel dataChannel;
+    protected static Channel                        dataChannel;
 
-    protected static Channel metaChannel;
+    protected static Channel                        metaChannel;
 
-    protected static volatile String   dataId;
-    protected static volatile String   value;
-    protected static volatile UserData userData;
+    protected static volatile String                dataId;
+    protected static volatile String                value;
+    protected static volatile UserData              userData;
 
-    protected static int sessionPort = 9603;
-    protected static int metaPort    = 9615;
-    protected static int dataPort    = 9622;
+    protected static int                            sessionPort              = 9603;
+    protected static int                            metaPort                 = 9615;
+    protected static int                            dataPort                 = 9622;
 
     @Value("${meta.server.raftServerPort}")
-    protected int raftPort;
+    protected int                                   raftPort;
 
     @Value("${session.server.serverPort}")
-    protected int sessionServerPort;
+    protected int                                   sessionServerPort;
 
     @Value("${data.server.syncDataPort}")
-    protected int syncDataPort;
+    protected int                                   syncDataPort;
 
     @Before
     public void before() throws Exception {
@@ -132,25 +132,25 @@ public class BaseIntegrationTest {
     private static void initRegistryClientAndChannel() {
         if (registryClient1 == null) {
             RegistryClientConfig config = DefaultRegistryClientConfigBuilder.start()
-                    .setSyncConfigRetryInterval(60000).setAppName("testApp1")
-                    .setDataCenter(LOCAL_DATACENTER).setZone(LOCAL_REGION)
-                    .setRegistryEndpoint(LOCAL_ADDRESS).setRegistryEndpointPort(sessionPort).build();
+                .setSyncConfigRetryInterval(60000).setAppName("testApp1")
+                .setDataCenter(LOCAL_DATACENTER).setZone(LOCAL_REGION)
+                .setRegistryEndpoint(LOCAL_ADDRESS).setRegistryEndpointPort(sessionPort).build();
             registryClient1 = new DefaultRegistryClient(config);
             registryClient1.init();
         }
 
         if (registryClient2 == null) {
             RegistryClientConfig config = DefaultRegistryClientConfigBuilder.start()
-                    .setAppName("testApp2").setDataCenter(LOCAL_DATACENTER)
-                    .setRegistryEndpoint(LOCAL_ADDRESS).setZone(LOCAL_REGION)
-                    .setRegistryEndpointPort(sessionPort).build();
+                .setAppName("testApp2").setDataCenter(LOCAL_DATACENTER)
+                .setRegistryEndpoint(LOCAL_ADDRESS).setZone(LOCAL_REGION)
+                .setRegistryEndpointPort(sessionPort).build();
             registryClient2 = new DefaultRegistryClient(config);
             registryClient2.init();
         }
 
         if (sessionChannel == null || dataChannel == null || metaChannel == null) {
             sessionChannel = JerseyClient.getInstance()
-                    .connect(new URL(LOCAL_ADDRESS, sessionPort));
+                .connect(new URL(LOCAL_ADDRESS, sessionPort));
             dataChannel = JerseyClient.getInstance().connect(new URL(LOCAL_ADDRESS, dataPort));
             metaChannel = JerseyClient.getInstance().connect(new URL(LOCAL_ADDRESS, metaPort));
         }
@@ -170,15 +170,15 @@ public class BaseIntegrationTest {
         startServerIfNecessary();
         List<String> connectIds = new ArrayList<>();
         connectIds.add(LOCAL_ADDRESS + ":" + getSourcePort(registryClient1)
-                + ValueConstants.CONNECT_ID_SPLIT + LOCAL_ADDRESS + ":9600");
+                       + ValueConstants.CONNECT_ID_SPLIT + LOCAL_ADDRESS + ":9600");
         connectIds.add(LOCAL_ADDRESS + ":" + getSourcePort(registryClient2)
-                + ValueConstants.CONNECT_ID_SPLIT + LOCAL_ADDRESS + ":9600");
+                       + ValueConstants.CONNECT_ID_SPLIT + LOCAL_ADDRESS + ":9600");
         CommonResponse response = sessionChannel
-                .getWebTarget()
-                .path("api/clients/off")
-                .request()
-                .post(Entity.entity(new CancelAddressRequest(connectIds), MediaType.APPLICATION_JSON),
-                        CommonResponse.class);
+            .getWebTarget()
+            .path("api/clients/off")
+            .request()
+            .post(Entity.entity(new CancelAddressRequest(connectIds), MediaType.APPLICATION_JSON),
+                CommonResponse.class);
         assertTrue(response.isSuccess());
         int times = 0;
         while (times++ < CLIENT_OFF_MAX_WAIT_TIME) {
@@ -194,8 +194,8 @@ public class BaseIntegrationTest {
         DatumCache datumCache = (DatumCache) dataApplicationContext.getBean("datumCache");
         datumCache.getAll().clear();
         List<String> connectIds = new ArrayList<>(Arrays.asList(
-                NetUtil.genHost(LOCAL_ADDRESS, getSourcePort(registryClient1)),
-                NetUtil.genHost(LOCAL_ADDRESS, getSourcePort(registryClient2))));
+            NetUtil.genHost(LOCAL_ADDRESS, getSourcePort(registryClient1)),
+            NetUtil.genHost(LOCAL_ADDRESS, getSourcePort(registryClient2))));
         for (String connectId : connectIds) {
             Map<String, Publisher> publisherMap = datumCache.getByConnectId(connectId);
             if (publisherMap != null) {
@@ -206,13 +206,13 @@ public class BaseIntegrationTest {
 
     private static boolean clientOffSuccess() {
         String sessionDigestCount = sessionChannel.getWebTarget().path("digest/data/count")
-                .request(APPLICATION_JSON).get(String.class);
+            .request(APPLICATION_JSON).get(String.class);
         String dataDigestCount = dataChannel.getWebTarget().path("digest/datum/count")
-                .request(APPLICATION_JSON).get(String.class);
+            .request(APPLICATION_JSON).get(String.class);
         return sessionDigestCount
-                .equals("Subscriber count: 0, Publisher count: 0, Watcher count: 0")
-                && (dataDigestCount.equals("CacheDigest datum cache is empty") || dataDigestCount
-                .contains("[Publisher] size of publisher in DefaultDataCenter is 0"));
+            .equals("Subscriber count: 0, Publisher count: 0, Watcher count: 0")
+               && (dataDigestCount.equals("CacheDigest datum cache is empty") || dataDigestCount
+                   .contains("[Publisher] size of publisher in DefaultDataCenter is 0"));
     }
 
     protected static int getSourcePort(DefaultRegistryClient registryClient) throws Exception {

@@ -34,12 +34,12 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
  */
 public abstract class AbstractObservable implements Observable {
 
-    protected Logger logger = LoggerFactory.getLogger(AbstractObservable.class);
+    protected Logger       logger    = LoggerFactory.getLogger(AbstractObservable.class);
 
     private ReadWriteLock  lock      = new ReentrantReadWriteLock();
     private List<Observer> observers = new ArrayList<>();
 
-    protected Executor       executors = MoreExecutors.directExecutor();
+    protected Executor     executors = MoreExecutors.directExecutor();
 
     public AbstractObservable() {
     }
