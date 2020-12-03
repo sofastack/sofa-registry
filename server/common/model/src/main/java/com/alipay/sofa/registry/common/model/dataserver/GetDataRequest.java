@@ -16,7 +16,7 @@
  */
 package com.alipay.sofa.registry.common.model.dataserver;
 
-import java.io.Serializable;
+import com.alipay.sofa.registry.common.model.ProcessId;
 
 /**
  * request to get specific data
@@ -24,7 +24,7 @@ import java.io.Serializable;
  * @author qian.lqlq
  * @version $Id: GetDataRequest.java, v 0.1 2017-12-01 15:48 qian.lqlq Exp $
  */
-public class GetDataRequest implements Serializable {
+public class GetDataRequest extends AbstractSlotRequest {
 
     private static final long serialVersionUID = 8133437572926931258L;
 
@@ -35,14 +35,8 @@ public class GetDataRequest implements Serializable {
      */
     private final String      dataCenter;
 
-    private long              slotEpoch;
-
-    /**
-     * constructor
-     * @param dataInfoId
-     * @param dataCenter
-     */
-    public GetDataRequest(String dataInfoId, String dataCenter) {
+    public GetDataRequest(ProcessId sessionProcessId, String dataInfoId, String dataCenter) {
+        super(sessionProcessId);
         this.dataInfoId = dataInfoId;
         this.dataCenter = dataCenter;
     }
@@ -65,26 +59,10 @@ public class GetDataRequest implements Serializable {
         return dataCenter;
     }
 
-    /**
-     * Getter method for property <tt>slotEpoch</tt>.
-     * @return property value of slotEpoch
-     */
-    public long getSlotEpoch() {
-        return slotEpoch;
-    }
-
-    /**
-     * Setter method for property <tt>slotEpoch</tt>.
-     * @param slotEpoch value to be assigned to property slotEpoch
-     */
-    public void setSlotEpoch(long slotEpoch) {
-        this.slotEpoch = slotEpoch;
-    }
-
     @Override
     public String toString() {
-        return new StringBuilder("[GetDataRequest] dataCenter=").append(this.dataCenter)
-            .append(", dataInfoId=").append(this.dataInfoId).append(", slotEpoch=")
-            .append(slotEpoch).toString();
+        return "GetDataRequest{" + "dataInfoId='" + dataInfoId + '\'' + ", dataCenter='"
+               + dataCenter + '\'' + ", sessionProcessId=" + sessionProcessId + ", slotTableEpoch="
+               + slotTableEpoch + '}';
     }
 }

@@ -27,14 +27,15 @@ import com.alipay.sofa.registry.client.remoting.ClientConnection;
 import com.alipay.sofa.registry.client.task.AbstractWorkerThread;
 import com.alipay.sofa.registry.client.task.WorkerThread;
 import com.alipay.sofa.registry.common.model.CommonResponse;
+import com.alipay.sofa.registry.common.model.ConnectId;
 import com.alipay.sofa.registry.common.model.constants.ValueConstants;
 import com.alipay.sofa.registry.common.model.sessionserver.CancelAddressRequest;
-import com.alipay.sofa.registry.common.model.store.Publisher;
 import com.alipay.sofa.registry.common.model.store.URL;
+import com.alipay.sofa.registry.log.Logger;
+import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.net.NetUtil;
 import com.alipay.sofa.registry.remoting.Channel;
 import com.alipay.sofa.registry.remoting.jersey.JerseyClient;
-import com.alipay.sofa.registry.server.data.cache.DatumCache;
 import com.alipay.sofa.registry.server.test.TestRegistryMain;
 import org.junit.Before;
 import org.springframework.beans.factory.annotation.Value;
@@ -44,14 +45,9 @@ import org.springframework.context.ConfigurableApplicationContext;
 
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.core.MediaType;
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
+import java.io.*;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -66,6 +62,8 @@ import static org.junit.Assert.assertTrue;
 @SpringBootConfiguration
 @SpringBootTest
 public class BaseIntegrationTest {
+    protected static final Logger                   LOGGER                   = LoggerFactory
+                                                                                 .getLogger(BaseIntegrationTest.class);
     private static final AtomicBoolean              STARTED                  = new AtomicBoolean(
                                                                                  false);
 
@@ -168,17 +166,20 @@ public class BaseIntegrationTest {
 
     protected static void clientOff() throws Exception {
         startServerIfNecessary();
-        List<String> connectIds = new ArrayList<>();
-        connectIds.add(LOCAL_ADDRESS + ":" + getSourcePort(registryClient1)
-                       + ValueConstants.CONNECT_ID_SPLIT + LOCAL_ADDRESS + ":9600");
-        connectIds.add(LOCAL_ADDRESS + ":" + getSourcePort(registryClient2)
-                       + ValueConstants.CONNECT_ID_SPLIT + LOCAL_ADDRESS + ":9600");
+        List<ConnectId> connectIds = new ArrayList<>();
+        connectIds
+            .add(ConnectId.parse(LOCAL_ADDRESS + ":" + getSourcePort(registryClient1)
+                                 + ValueConstants.CONNECT_ID_SPLIT + LOCAL_ADDRESS + ":9600"));
+        connectIds
+            .add(ConnectId.parse(LOCAL_ADDRESS + ":" + getSourcePort(registryClient2)
+                                 + ValueConstants.CONNECT_ID_SPLIT + LOCAL_ADDRESS + ":9600"));
         CommonResponse response = sessionChannel
             .getWebTarget()
             .path("api/clients/off")
             .request()
             .post(Entity.entity(new CancelAddressRequest(connectIds), MediaType.APPLICATION_JSON),
                 CommonResponse.class);
+        LOGGER.info("client of {}", connectIds);
         assertTrue(response.isSuccess());
         int times = 0;
         while (times++ < CLIENT_OFF_MAX_WAIT_TIME) {
@@ -188,20 +189,6 @@ public class BaseIntegrationTest {
             Thread.sleep(500);
         }
         throw new RuntimeException("clientOff failed.");
-    }
-
-    protected static void clearData() throws Exception {
-        DatumCache datumCache = (DatumCache) dataApplicationContext.getBean("datumCache");
-        datumCache.getAll().clear();
-        List<String> connectIds = new ArrayList<>(Arrays.asList(
-            NetUtil.genHost(LOCAL_ADDRESS, getSourcePort(registryClient1)),
-            NetUtil.genHost(LOCAL_ADDRESS, getSourcePort(registryClient2))));
-        for (String connectId : connectIds) {
-            Map<String, Publisher> publisherMap = datumCache.getByConnectId(connectId);
-            if (publisherMap != null) {
-                publisherMap.clear();
-            }
-        }
     }
 
     private static boolean clientOffSuccess() {

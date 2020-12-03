@@ -23,6 +23,7 @@ import com.alipay.sofa.registry.common.model.store.Publisher;
 import com.alipay.sofa.registry.common.model.store.URL;
 import com.alipay.sofa.registry.core.model.DataBox;
 import com.alipay.sofa.registry.core.model.PublisherRegister;
+import com.alipay.sofa.registry.server.shared.env.ServerEnv;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -69,6 +70,8 @@ public class PublisherConverter {
             publisher.setDataInfoId(dataInfo.getDataInfoId());
 
             publisher.setDataList(convert(source.getDataList()));
+
+            publisher.setSessionProcessId(ServerEnv.PROCESS_ID);
 
             return publisher;
         };

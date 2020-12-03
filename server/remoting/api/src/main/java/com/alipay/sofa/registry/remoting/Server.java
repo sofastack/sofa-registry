@@ -26,7 +26,7 @@ import com.alipay.sofa.registry.common.model.store.URL;
  * @author shangyu.wh
  * @version $Id: Server.java, v 0.1 2017-11-20 21:05 shangyu.wh Exp $
  */
-public interface Server extends Endpoint, Sender {
+public interface Server extends Endpoint {
 
     /**
      * get Server status
@@ -77,4 +77,14 @@ public interface Server extends Endpoint, Sender {
      */
     void sendCallback(final Channel channel, final Object message, CallbackHandler callbackHandler,
                       final int timeoutMillis);
+
+    /**
+     * Sync send
+     *
+     * @param channel the channel
+     * @param message the message
+     * @param timeoutMillis the timeout millis
+     * @return object
+     */
+    Object sendSync(final Channel channel, final Object message, final int timeoutMillis);
 }

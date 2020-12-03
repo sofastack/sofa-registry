@@ -16,6 +16,7 @@
  */
 package com.alipay.sofa.registry.server.session.store;
 
+import com.alipay.sofa.registry.common.model.ConnectId;
 import com.alipay.sofa.registry.common.model.store.*;
 import com.alipay.sofa.registry.core.model.ScopeEnum;
 import com.alipay.sofa.registry.net.NetUtil;
@@ -65,7 +66,7 @@ public class DataCacheTest extends BaseTest {
             DataInfo.toDataInfoId(dataId, "instance2", "rpc"), ScopeEnum.zone, sessionInterests);
         Assert.assertTrue(getCacheSub(sessionInterests, connectId));
 
-        sessionInterests.deleteByConnectId(connectId);
+        sessionInterests.deleteByConnectId(ConnectId.parse(connectId));
 
         Map<InetSocketAddress, Map<String, Subscriber>> map2 = getCacheSub(
             DataInfo.toDataInfoId(dataId, "instance2", "rpc"), ScopeEnum.zone, sessionInterests);
@@ -140,7 +141,7 @@ public class DataCacheTest extends BaseTest {
         }
 
         Assert.assertTrue(getCachePub(sessionDataStore, connectId));
-        sessionDataStore.deleteByConnectId(connectId);
+        sessionDataStore.deleteByConnectId(ConnectId.parse(connectId));
         Assert.assertFalse(getCachePub(sessionDataStore, connectId));
     }
 
@@ -193,12 +194,12 @@ public class DataCacheTest extends BaseTest {
     }
 
     private boolean getCachePub(SessionDataStore sessionDataStore, String connectId) {
-        Map map = sessionDataStore.queryByConnectId(connectId);
+        Map map = sessionDataStore.queryByConnectId(ConnectId.parse(connectId));
         return map != null && !map.isEmpty();
     }
 
     private boolean getCacheSub(SessionInterests sessionInterests, String connectId) {
-        Map map = sessionInterests.queryByConnectId(connectId);
+        Map map = sessionInterests.queryByConnectId(ConnectId.parse(connectId));
         return map != null && !map.isEmpty();
     }
 
@@ -396,12 +397,14 @@ public class DataCacheTest extends BaseTest {
         sessionWatchers.add(watcher1);
         sessionWatchers.add(watcher2);
 
-        Assert.assertEquals(sessionWatchers.queryByConnectId("192.168.1.1:12345_192.168.1.2:9600")
-            .size(), 2);
+        Assert.assertEquals(
+            sessionWatchers.queryByConnectId(ConnectId.parse("192.168.1.1:12345_192.168.1.2:9600"))
+                .size(), 2);
         sessionWatchers.add(watcher2);
 
-        Assert.assertEquals(sessionWatchers.queryByConnectId("192.168.1.1:12345_192.168.1.2:9600")
-            .size(), 2);
+        Assert.assertEquals(
+            sessionWatchers.queryByConnectId(ConnectId.parse("192.168.1.1:12345_192.168.1.2:9600"))
+                .size(), 2);
 
         Watcher watcher3 = new Watcher();
         watcher3.setDataInfoId(watcher1.getDataInfoId());
@@ -420,10 +423,12 @@ public class DataCacheTest extends BaseTest {
         sessionWatchers.add(watcher3);
         sessionWatchers.add(watcher4);
 
-        Assert.assertEquals(sessionWatchers.queryByConnectId("192.168.1.1:12345_192.168.1.2:9600")
-            .size(), 0);
-        Assert.assertEquals(sessionWatchers.queryByConnectId("192.168.1.1:12346_192.168.1.2:9600")
-            .size(), 2);
+        Assert.assertEquals(
+            sessionWatchers.queryByConnectId(ConnectId.parse("192.168.1.1:12345_192.168.1.2:9600"))
+                .size(), 0);
+        Assert.assertEquals(
+            sessionWatchers.queryByConnectId(ConnectId.parse("192.168.1.1:12346_192.168.1.2:9600"))
+                .size(), 2);
     }
 
     @Test
@@ -449,8 +454,8 @@ public class DataCacheTest extends BaseTest {
 
         sessionInterests.add(subscriber2);
 
-        sessionInterests.deleteByConnectId(subscriber1.getSourceAddress().getAddressString() + "_"
-                                           + subscriber1.getTargetAddress().getAddressString());
+        sessionInterests.deleteByConnectId(ConnectId.parse(subscriber1.getSourceAddress()
+            .getAddressString() + "_" + subscriber1.getTargetAddress().getAddressString()));
 
         Assert.assertEquals(
             sessionInterests.getConnectSubscribers().get("192.168.1.1:12345_192.168.1.2:9600"),

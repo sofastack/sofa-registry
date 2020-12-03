@@ -16,23 +16,15 @@
  */
 package com.alipay.sofa.registry.server.session.scheduler.task;
 
-import com.alipay.sofa.registry.common.model.constants.ValueConstants;
 import com.alipay.sofa.registry.common.model.dataserver.SessionServerRegisterRequest;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
-import com.alipay.sofa.registry.net.NetUtil;
-import com.alipay.sofa.registry.remoting.Channel;
 import com.alipay.sofa.registry.remoting.Client;
-import com.alipay.sofa.registry.remoting.Server;
 import com.alipay.sofa.registry.remoting.bolt.BoltChannel;
 import com.alipay.sofa.registry.remoting.exchange.Exchange;
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
 import com.alipay.sofa.registry.server.shared.env.ServerEnv;
 import com.alipay.sofa.registry.task.listener.TaskEvent;
-
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Set;
 
 /**
  *
@@ -77,23 +69,7 @@ public class SessionRegisterDataTask extends AbstractSessionTask {
         } else {
             throw new IllegalArgumentException("Input task event object error!");
         }
-        Server sessionServer = boltExchange.getServer(sessionServerConfig.getServerPort());
-
-        if (sessionServer != null) {
-
-            Collection<Channel> chs = sessionServer.getChannels();
-            Set<String> connectIds = new HashSet<>();
-            chs.forEach(channel -> connectIds.add(NetUtil.toAddressString(channel.getRemoteAddress())
-                    + ValueConstants.CONNECT_ID_SPLIT + NetUtil.toAddressString(channel.getLocalAddress())));
-
-            sessionServerRegisterRequest = new SessionServerRegisterRequest(
-                    ServerEnv.PROCESS_ID.toString(), connectIds);
-        } else {
-            LOGGER.error("get null session server,please check server started before register!port {}",
-                    sessionServerConfig.getServerPort());
-            sessionServerRegisterRequest = new SessionServerRegisterRequest(
-                    ServerEnv.PROCESS_ID.toString(), new HashSet<>());
-        }
+        sessionServerRegisterRequest = new SessionServerRegisterRequest(ServerEnv.PROCESS_ID);
     }
 
     @Override
@@ -128,7 +104,6 @@ public class SessionRegisterDataTask extends AbstractSessionTask {
     public String toString() {
         return "SESSION_REGISTER_DATA_TASK{" + "taskId='" + taskId + '\''
                + ", sessionServerRegisterRequest=" + sessionServerRegisterRequest.getProcessId()
-               + ", clientList=" + sessionServerRegisterRequest.getConnectIds().size()
                + ", channel=" + channel.getLocalAddress() + "/"
                + channel.getRemoteAddress().getHostString() + ':'
                + channel.getRemoteAddress().getPort() + '}';

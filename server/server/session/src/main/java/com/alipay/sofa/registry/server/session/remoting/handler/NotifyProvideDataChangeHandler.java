@@ -70,7 +70,7 @@ public class NotifyProvideDataChangeHandler extends AbstractClientHandler {
         if (!ValueConstants.STOP_PUSH_DATA_SWITCH_DATA_ID.equals(notifyDataInfoId)
             && !ValueConstants.BLACK_LIST_DATA_ID.equals(notifyDataInfoId)
             && !ValueConstants.DATA_DATUM_SYNC_SESSION_INTERVAL_SEC.equals(notifyDataInfoId)
-            && !ValueConstants.DATA_DATUM_EXPIRE_SEC.equals(notifyDataInfoId)) {
+            && !ValueConstants.DATA_SESSION_LEASE_SEC.equals(notifyDataInfoId)) {
             boolean result = sessionWatchers.checkWatcherVersions(
                 provideDataChangeEvent.getDataInfoId(), provideDataChangeEvent.getVersion());
             if (!result) {

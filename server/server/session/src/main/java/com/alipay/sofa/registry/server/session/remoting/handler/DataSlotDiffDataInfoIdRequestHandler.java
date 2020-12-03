@@ -29,6 +29,7 @@ import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
 import com.alipay.sofa.registry.server.session.scheduler.ExecutorManager;
 import com.alipay.sofa.registry.server.session.slot.SlotTableCache;
 import com.alipay.sofa.registry.server.session.store.DataStore;
+import com.alipay.sofa.registry.server.shared.env.ServerEnv;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.*;
@@ -65,6 +66,7 @@ public class DataSlotDiffDataInfoIdRequestHandler
                 request.getAllDataInfoIds(),
                 sessionDataStore.getDataInfoIdPublishers(request.getSlotId()));
             result.setSlotTableEpoch(slotTableCache.getEpoch());
+            result.setSessionProcessId(ServerEnv.PROCESS_ID);
             return new GenericResponse().fillSucceed(result);
         } catch (Throwable e) {
             LOGGER.error("DiffSync dataInfoIds Request error for slot {}", request.getSlotId(), e);

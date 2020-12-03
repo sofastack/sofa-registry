@@ -32,8 +32,6 @@ import java.net.InetSocketAddress;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static com.alipay.sofa.registry.common.model.constants.ValueConstants.CONNECT_ID_SPLIT;
-
 public class ConnectionsService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ConnectionsResource.class);
@@ -59,9 +57,9 @@ public class ConnectionsService {
                 channel -> channel.getRemoteAddress().getAddress().getHostAddress() + ":" + channel.getRemoteAddress().getPort()
         ).collect(Collectors.toSet());
         Set<String> connectIds = new HashSet<>();
-        connectIds.addAll(sessionDataStore.getConnectPublishers().keySet().stream().map(connectId -> connectId.split(CONNECT_ID_SPLIT)[0]).collect(Collectors.toList()));
-        connectIds.addAll(sessionInterests.getConnectSubscribers().keySet().stream().map(connectId -> connectId.split(CONNECT_ID_SPLIT)[0]).collect(Collectors.toList()));
-        connectIds.addAll(sessionWatchers.getConnectWatchers().keySet().stream().map(connectId -> connectId.split(CONNECT_ID_SPLIT)[0]).collect(Collectors.toList()));
+        connectIds.addAll(sessionDataStore.getConnectPublishers().keySet().stream().map(connectId -> connectId.clientAddress()).collect(Collectors.toList()));
+        connectIds.addAll(sessionInterests.getConnectSubscribers().keySet().stream().map(connectId -> connectId.clientAddress()).collect(Collectors.toList()));
+        connectIds.addAll(sessionWatchers.getConnectWatchers().keySet().stream().map(connectId -> connectId.clientAddress()).collect(Collectors.toList()));
         connectIds.retainAll(boltConnectIds);
         return new ArrayList<>(connectIds);
     }

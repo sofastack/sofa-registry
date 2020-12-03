@@ -40,7 +40,7 @@ public class SessionServerConfigBean implements SessionServerConfig {
 
     private int                  serverPort                              = 9600;
 
-    private int                  syncSessionPort                         = 9630;
+    private int                  syncSessionPort                         = 9602;
 
     private int                  metaServerPort                          = 9610;
 

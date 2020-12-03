@@ -212,9 +212,9 @@ public class DefaultCrossDcMetaServer extends AbstractMetaServer implements Cros
                 @Override
                 @SuppressWarnings("unchecked")
                 public void onCallback(Channel channel, Object message) {
-                    if(message instanceof DataCenterNodes) {
+                    if (message instanceof DataCenterNodes) {
                         raftStorage
-                                .tryUpdateRemoteDcMetaServerList((DataCenterNodes<MetaNode>) message);
+                            .tryUpdateRemoteDcMetaServerList((DataCenterNodes<MetaNode>) message);
                     } else {
                         logger.error("[onCallback]unknown type from response: {}", message);
                     }

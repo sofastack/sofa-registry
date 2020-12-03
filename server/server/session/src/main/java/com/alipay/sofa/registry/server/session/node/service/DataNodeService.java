@@ -16,6 +16,7 @@
  */
 package com.alipay.sofa.registry.server.session.node.service;
 
+import com.alipay.sofa.registry.common.model.ConnectId;
 import com.alipay.sofa.registry.common.model.dataserver.Datum;
 import com.alipay.sofa.registry.common.model.store.Publisher;
 import com.alipay.sofa.registry.common.model.store.URL;
@@ -51,7 +52,7 @@ public interface DataNodeService {
      *
      * @param connectIds
      */
-    void clientOff(List<String> connectIds);
+    void clientOff(List<ConnectId> connectIds, long gmtOccur);
 
     /**
      * Get some dataInfoId version from one data server

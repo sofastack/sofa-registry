@@ -16,25 +16,18 @@
  */
 package com.alipay.sofa.registry.server.data.remoting.sessionserver.handler;
 
-import com.alipay.sofa.registry.common.model.CommonResponse;
-import com.alipay.sofa.registry.common.model.Node;
-import com.alipay.sofa.registry.common.model.constants.ValueConstants;
-import com.alipay.sofa.registry.common.model.dataserver.Datum;
+import com.alipay.sofa.registry.common.model.dataserver.DatumVersion;
 import com.alipay.sofa.registry.common.model.dataserver.UnPublishDataRequest;
+import com.alipay.sofa.registry.common.model.slot.SlotAccess;
+import com.alipay.sofa.registry.common.model.slot.SlotAccessGenericResponse;
 import com.alipay.sofa.registry.common.model.store.Publisher;
-import com.alipay.sofa.registry.common.model.store.WordCache;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.remoting.Channel;
-import com.alipay.sofa.registry.server.data.bootstrap.DataServerConfig;
-import com.alipay.sofa.registry.server.data.cache.DatumCache;
 import com.alipay.sofa.registry.server.data.cache.UnPublisher;
-import com.alipay.sofa.registry.server.data.change.event.DataChangeEventCenter;
-import com.alipay.sofa.registry.server.data.remoting.handler.AbstractServerHandler;
 import com.alipay.sofa.registry.util.ParaCheckUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import java.util.Map;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ThreadPoolExecutor;
 
@@ -44,22 +37,12 @@ import java.util.concurrent.ThreadPoolExecutor;
  * @author qian.lqlq
  * @version $Id: UnPublishDataProcessor.java, v 0.1 2017-12-01 15:48 qian.lqlq Exp $
  */
-public class UnPublishDataHandler extends AbstractServerHandler<UnPublishDataRequest> {
+public class UnPublishDataHandler extends AbstractDataHandler<UnPublishDataRequest> {
 
-    /** LOGGER */
-    private static final Logger   LOGGER = LoggerFactory.getLogger(UnPublishDataHandler.class);
-
-    @Autowired
-    private DataChangeEventCenter dataChangeEventCenter;
+    private static final Logger LOGGER = LoggerFactory.getLogger(UnPublishDataHandler.class);
 
     @Autowired
-    private DataServerConfig      dataServerConfig;
-
-    @Autowired
-    private DatumCache            datumCache;
-
-    @Autowired
-    private ThreadPoolExecutor    publishProcessorExecutor;
+    private ThreadPoolExecutor  publishProcessorExecutor;
 
     @Override
     public Executor getExecutor() {
@@ -70,48 +53,30 @@ public class UnPublishDataHandler extends AbstractServerHandler<UnPublishDataReq
     public void checkParam(UnPublishDataRequest request) throws RuntimeException {
         ParaCheckUtil.checkNotBlank(request.getDataInfoId(), "UnPublishDataRequest.dataInfoId");
         ParaCheckUtil.checkNotBlank(request.getRegisterId(), "UnPublishDataRequest.registerId");
+        checkSessionProcessId(request.getSessionProcessId());
     }
 
     @Override
     public Object doHandle(Channel channel, UnPublishDataRequest request) {
-        dataChangeEventCenter.onChange(
-            new UnPublisher(request.getDataInfoId(), request.getRegisterId(), request
-                .getRegisterTimestamp()), dataServerConfig.getLocalDataCenter());
+        sessionLeaseManager.renewSession(request.getSessionProcessId());
+        UnPublisher publisher = new UnPublisher(request.getDataInfoId(),
+            request.getSessionProcessId(), request.getRegisterId(), request.getRegisterTimestamp(),
+            request.getVersion());
 
-        //TODO Attempt to get connectId from datumCache (Datum may not exist), and record the renew timestamp
-        String connectId = WordCache.getInstance().getWordCache(getConnectId(request));
-        return CommonResponse.buildSuccessResponse();
-    }
+        Publisher.internPublisher(publisher);
 
-    /**
-     * get connectId from datumCache
-     */
-    private String getConnectId(UnPublishDataRequest request) {
-        String dataInfoId = request.getDataInfoId();
-        String dataCenter = dataServerConfig.getLocalDataCenter();
-        Datum datum = datumCache.get(dataCenter, dataInfoId);
-        if (datum != null) {
-            Map<String, Publisher> pubMap = datum.getPubMap();
-            if (pubMap != null) {
-                Publisher publisher = pubMap.get(request.getRegisterId());
-                if (publisher != null) {
-                    return publisher.getSourceAddress().getAddressString()
-                           + ValueConstants.CONNECT_ID_SPLIT
-                           + publisher.getTargetAddress().getAddressString();
-                }
-            }
+        final SlotAccess slotAccess = checkAccess(publisher.getDataInfoId(),
+            request.getSlotTableEpoch());
+        if (!slotAccess.isAccept()) {
+            return SlotAccessGenericResponse.failedResponse(slotAccess);
         }
-        return null;
-    }
-
-    @Override
-    public CommonResponse buildFailedResponse(String msg) {
-        return CommonResponse.buildFailedResponse(msg);
-    }
-
-    @Override
-    public HandlerType getType() {
-        return HandlerType.PROCESSER;
+        DatumVersion version = localDatumStorage.putPublisher(publisher,
+            request.getSessionProcessId());
+        if (version != null) {
+            dataChangeEventCenter.onChange(publisher.getDataInfoId(),
+                dataServerConfig.getLocalDataCenter());
+        }
+        return SlotAccessGenericResponse.successResponse(slotAccess, null);
     }
 
     @Override
@@ -119,8 +84,4 @@ public class UnPublishDataHandler extends AbstractServerHandler<UnPublishDataReq
         return UnPublishDataRequest.class;
     }
 
-    @Override
-    protected Node.NodeType getConnectNodeType() {
-        return Node.NodeType.DATA;
-    }
 }

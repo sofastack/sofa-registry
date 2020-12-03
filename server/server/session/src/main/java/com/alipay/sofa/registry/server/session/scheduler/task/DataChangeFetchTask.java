@@ -295,7 +295,7 @@ public class DataChangeFetchTask extends AbstractSessionTask {
         taskEvent.setAttribute(Constant.PUSH_CLIENT_DATUM, datum);
         taskEvent.setAttribute(Constant.PUSH_CLIENT_URL, new URL(address));
 
-        int size = datum != null && datum.getPubMap() != null ? datum.getPubMap().size() : 0;
+        int size = datum != null ? datum.publisherSize() : 0;
 
         taskLogger.info(
             "send {} taskURL:{},dataInfoId={},dataCenter={},pubSize={},subSize={},taskId={}",
@@ -315,7 +315,7 @@ public class DataChangeFetchTask extends AbstractSessionTask {
         taskEvent.setAttribute(Constant.PUSH_CLIENT_DATUM, datum);
         taskEvent.setAttribute(Constant.PUSH_CLIENT_URL, new URL(address));
 
-        int size = datum != null && datum.getPubMap() != null ? datum.getPubMap().size() : 0;
+        int size = datum != null ? datum.publisherSize() : 0;
 
         taskLogger.info(
             "send {} taskURL:{},dataInfoId={},dataCenter={},pubSize={},subSize={},taskId={}",

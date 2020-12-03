@@ -16,6 +16,8 @@
  */
 package com.alipay.sofa.registry.common.model.sessionserver;
 
+import com.alipay.sofa.registry.common.model.ConnectId;
+
 import java.io.Serializable;
 import java.util.List;
 
@@ -28,7 +30,7 @@ public class CancelAddressRequest implements Serializable {
 
     private static final long serialVersionUID = -4398310292728124256L;
 
-    private List<String>      connectIds;
+    private List<ConnectId>   connectIds;
 
     public CancelAddressRequest() {
     }
@@ -38,7 +40,7 @@ public class CancelAddressRequest implements Serializable {
      *
      * @param connectIds the connect ids
      */
-    public CancelAddressRequest(List<String> connectIds) {
+    public CancelAddressRequest(List<ConnectId> connectIds) {
         this.connectIds = connectIds;
     }
 
@@ -47,11 +49,11 @@ public class CancelAddressRequest implements Serializable {
      *
      * @return property value of connectIds
      */
-    public List<String> getConnectIds() {
+    public List<ConnectId> getConnectIds() {
         return connectIds;
     }
 
-    public void setConnectIds(List<String> connectIds) {
+    public void setConnectIds(List<ConnectId> connectIds) {
         this.connectIds = connectIds;
     }
 

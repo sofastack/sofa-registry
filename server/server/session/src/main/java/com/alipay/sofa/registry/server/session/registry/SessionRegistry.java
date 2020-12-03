@@ -16,7 +16,7 @@
  */
 package com.alipay.sofa.registry.server.session.registry;
 
-import com.alipay.sofa.registry.common.model.constants.ValueConstants;
+import com.alipay.sofa.registry.common.model.ConnectId;
 import com.alipay.sofa.registry.common.model.store.*;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
@@ -134,9 +134,8 @@ public class SessionRegistry implements Registry {
                                     }
 
                                     @Override
-                                    public String getConnectId() {
-                                        return publisher.getSourceAddress().getAddressString() + ValueConstants.CONNECT_ID_SPLIT
-                                                + publisher.getTargetAddress().getAddressString();
+                                    public ConnectId getConnectId() {
+                                        return publisher.connectId();
                                     }
 
                                     @Override
@@ -205,10 +204,8 @@ public class SessionRegistry implements Registry {
                     }
 
                     @Override
-                    public String getConnectId() {
-                        return publisher.getSourceAddress().getAddressString()
-                               + ValueConstants.CONNECT_ID_SPLIT
-                               + publisher.getTargetAddress().getAddressString();
+                    public ConnectId getConnectId() {
+                        return publisher.connectId();
                     }
 
                     @Override
@@ -240,9 +237,9 @@ public class SessionRegistry implements Registry {
     }
 
     @Override
-    public void cancel(List<String> connectIds) {
+    public void cancel(List<ConnectId> connectIds) {
         //update local firstly, data node send error depend on renew check
-        List<String> connectIdsWithPub = new ArrayList<>();
+        List<ConnectId> connectIdsWithPub = new ArrayList<>();
         removeFromSession(connectIds, connectIdsWithPub);
 
         // clientOff to dataNode async
@@ -250,8 +247,8 @@ public class SessionRegistry implements Registry {
 
     }
 
-    private void removeFromSession(List<String> connectIds, List<String> connectIdsWithPub) {
-        for (String connectId : connectIds) {
+    private void removeFromSession(List<ConnectId> connectIds, List<ConnectId> connectIdsWithPub) {
+        for (ConnectId connectId : connectIds) {
             if (sessionDataStore.deleteByConnectId(connectId)) {
                 connectIdsWithPub.add(connectId);
             }
@@ -260,10 +257,10 @@ public class SessionRegistry implements Registry {
         }
     }
 
-    private void clientOffToDataNode(List<String> connectIdsWithPub) {
+    private void clientOffToDataNode(List<ConnectId> connectIdsWithPub) {
         // All write operations to DataServer (pub/unPub/clientoff/renew/snapshot)
         // are handed over to WriteDataAcceptor
-        for (String connectId : connectIdsWithPub) {
+        for (ConnectId connectId : connectIdsWithPub) {
             writeDataAcceptor.accept(new WriteDataRequest() {
                 @Override
                 public Object getRequestBody() {
@@ -276,7 +273,7 @@ public class SessionRegistry implements Registry {
                 }
 
                 @Override
-                public String getConnectId() {
+                public ConnectId getConnectId() {
                     return connectId;
                 }
 
@@ -346,9 +343,9 @@ public class SessionRegistry implements Registry {
         return map;
     }
 
-    public void remove(List<String> connectIds) {
+    public void remove(List<ConnectId> connectIds) {
 
-        List<String> connectIdsAll = new ArrayList<>();
+        List<ConnectId> connectIdsAll = new ArrayList<>();
         connectIds.forEach(connectId -> {
             Map pubMap = getSessionDataStore().queryByConnectId(connectId);
             boolean pubExisted = pubMap != null && !pubMap.isEmpty();
@@ -387,20 +384,20 @@ public class SessionRegistry implements Registry {
 
     public void cleanClientConnect() {
 
-        Set<String> connectIndexes = new HashSet<>();
-        Set<String> pubIndexes = sessionDataStore.getConnectPublishers().keySet();
-        Set<String> subIndexes = sessionInterests.getConnectSubscribers().keySet();
-        Set<String> watchIndexes = sessionWatchers.getConnectWatchers().keySet();
+        Set<ConnectId> connectIndexes = new HashSet<>();
+        Set<ConnectId> pubIndexes = sessionDataStore.getConnectPublishers().keySet();
+        Set<ConnectId> subIndexes = sessionInterests.getConnectSubscribers().keySet();
+        Set<ConnectId> watchIndexes = sessionWatchers.getConnectWatchers().keySet();
         connectIndexes.addAll(pubIndexes);
         connectIndexes.addAll(subIndexes);
         connectIndexes.addAll(watchIndexes);
 
         Server sessionServer = boltExchange.getServer(sessionServerConfig.getServerPort());
 
-        List<String> connectIds = new ArrayList<>();
-        for (String connectId : connectIndexes) {
-            String[] parts = connectId.split(ValueConstants.CONNECT_ID_SPLIT);
-            Channel channel = sessionServer.getChannel(URL.valueOf(parts[0]));
+        List<ConnectId> connectIds = new ArrayList<>();
+        for (ConnectId connectId : connectIndexes) {
+            Channel channel = sessionServer.getChannel(new URL(connectId.getClientHostAddress(),
+                connectId.getClientPort()));
             if (channel == null) {
                 connectIds.add(connectId);
                 LOGGER.warn("Client connect has not existed!it must be remove!connectId:{}",

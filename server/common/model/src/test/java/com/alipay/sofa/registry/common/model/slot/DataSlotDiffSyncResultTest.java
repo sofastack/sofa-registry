@@ -16,7 +16,6 @@
  */
 package com.alipay.sofa.registry.common.model.slot;
 
-import com.alipay.sofa.registry.common.model.PublisherDigestUtil;
 import com.alipay.sofa.registry.common.model.dataserver.DatumSummary;
 import com.alipay.sofa.registry.common.model.store.Publisher;
 import com.alipay.sofa.registry.log.Logger;
@@ -248,9 +247,8 @@ public class DataSlotDiffSyncResultTest {
         Map<String, DatumSummary> summaryMap = Maps.newHashMap();
         for (Map.Entry<String, Map<String, Publisher>> e : publishers.entrySet()) {
             final DatumSummary summary = new DatumSummary(e.getKey());
-            summary.setPublisherDigests(Maps.newHashMap());
             e.getValue().forEach((k, p) -> {
-                summary.getPublisherDigests().put(p.getRegisterId(), PublisherDigestUtil.getDigestValue(p));
+                summary.addPublisherVersion(p.getRegisterId(), p.publisherVersion());
             });
             summaryMap.put(e.getKey(), summary);
         }

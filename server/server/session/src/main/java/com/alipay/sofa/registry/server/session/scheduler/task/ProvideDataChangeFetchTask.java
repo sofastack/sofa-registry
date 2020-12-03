@@ -16,6 +16,7 @@
  */
 package com.alipay.sofa.registry.server.session.scheduler.task;
 
+import com.alipay.sofa.registry.common.model.ConnectId;
 import com.alipay.sofa.registry.common.model.constants.ValueConstants;
 import com.alipay.sofa.registry.common.model.metaserver.DataOperator;
 import com.alipay.sofa.registry.common.model.metaserver.ProvideDataChangeEvent;
@@ -127,7 +128,7 @@ public class ProvideDataChangeFetchTask extends AbstractSessionTask {
             for (Channel channel : sessionServer.getChannels()) {
 
                 //filter all connect client has watcher registerId
-                String connectId = NetUtil.toAddressString(channel.getRemoteAddress()) + ValueConstants.CONNECT_ID_SPLIT + NetUtil.toAddressString(channel.getLocalAddress());
+                ConnectId connectId = ConnectId.of(channel.getRemoteAddress(), channel.getLocalAddress());
                 Map<String, Watcher> map = getCache(connectId);
                 List<String> registerIds = new ArrayList<>();
                 map.forEach((registerId, watchers) -> {
@@ -161,7 +162,7 @@ public class ProvideDataChangeFetchTask extends AbstractSessionTask {
         taskListenerManager.sendTaskEvent(taskEvent);
     }
 
-    private Map<String/*registerId*/, Watcher> getCache(String connectId) {
+    private Map<String/*registerId*/, Watcher> getCache(ConnectId connectId) {
         Map<String/*registerId*/, Watcher> map = sessionWatchers.queryByConnectId(connectId);
         return map == null ? new ConcurrentHashMap<>() : map;
     }

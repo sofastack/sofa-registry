@@ -16,11 +16,13 @@
  */
 package com.alipay.sofa.registry.server.session.resource;
 
+import com.alipay.sofa.registry.common.model.ConnectId;
 import com.alipay.sofa.registry.common.model.store.Publisher;
 import com.alipay.sofa.registry.common.model.store.StoreData;
 import com.alipay.sofa.registry.common.model.store.Subscriber;
 import com.alipay.sofa.registry.common.model.store.Watcher;
 import com.alipay.sofa.registry.metrics.ReporterUtils;
+import com.alipay.sofa.registry.net.NetUtil;
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
 import com.alipay.sofa.registry.server.session.store.DataStore;
 import com.alipay.sofa.registry.server.session.store.Interests;
@@ -35,6 +37,7 @@ import javax.annotation.PostConstruct;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import java.util.*;
+import static com.alipay.sofa.registry.common.model.constants.ValueConstants.CONNECT_ID_SPLIT;
 
 /**
  *
@@ -65,20 +68,22 @@ public class SessionDigestResource {
     @Autowired
     private SessionServerConfig sessionServerConfig;
 
+    private static final String LOCAL_ADDRESS = NetUtil.getLocalAddress().getHostAddress();
+
     @Autowired
     private MetaServerService   mataNodeService;
 
-    private final static String SUB     = "SUB";
+    private final static String SUB           = "SUB";
 
-    private final static String PUB     = "PUB";
+    private final static String PUB           = "PUB";
 
-    private final static String WAT     = "WAT";
+    private final static String WAT           = "WAT";
 
-    private final static String SESSION = "SESSION";
+    private final static String SESSION       = "SESSION";
 
-    private final static String DATA    = "DATA";
+    private final static String DATA          = "DATA";
 
-    private final static String META    = "META";
+    private final static String META          = "META";
 
     @PostConstruct
     public void init() {
@@ -107,8 +112,18 @@ public class SessionDigestResource {
     @POST
     @Path("{type}/connect/query")
     @Produces(MediaType.APPLICATION_JSON)
-    public Map<String, Collection<? extends StoreData>> getSessionDataByConnectId(List<String> connectIds,
+    public Map<String, Collection<? extends StoreData>> getSessionDataByConnectId(List<String> queryConnectIds,
                                                                                   final @PathParam("type") String type) {
+        List<ConnectId> connectIds = new ArrayList<>(queryConnectIds.size());
+        for (String queryConnectId : queryConnectIds) {
+            String connectId = queryConnectId;
+            if (!queryConnectId.contains(CONNECT_ID_SPLIT)) {
+                connectId = connectId + CONNECT_ID_SPLIT + LOCAL_ADDRESS + ":"
+                        + sessionServerConfig.getServerPort();
+            }
+            connectIds.add(ConnectId.parse(connectId));
+        }
+
         Map<String, Collection<? extends StoreData>> serverList = new HashMap<>();
 
         if (connectIds != null) {

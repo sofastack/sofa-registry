@@ -17,6 +17,7 @@
 package com.alipay.sofa.registry.server.session.node.service;
 
 import com.alipay.sofa.registry.common.model.CommonResponse;
+import com.alipay.sofa.registry.common.model.ConnectId;
 import com.alipay.sofa.registry.common.model.GenericResponse;
 import com.alipay.sofa.registry.common.model.dataserver.*;
 import com.alipay.sofa.registry.common.model.slot.SlotAccessGenericResponse;
@@ -149,7 +150,7 @@ public class DataNodeServiceImpl implements DataNodeService {
             public UnPublishDataRequest getRequestBody() {
                 UnPublishDataRequest unPublishDataRequest = new UnPublishDataRequest(
                     publisher.getDataInfoId(), publisher.getRegisterId(),
-                    publisher.getRegisterTimestamp(), ServerEnv.PROCESS_ID);
+                    publisher.getRegisterTimestamp(), ServerEnv.PROCESS_ID, publisher.getVersion());
                 return unPublishDataRequest;
             }
 
@@ -166,14 +167,15 @@ public class DataNodeServiceImpl implements DataNodeService {
     }
 
     @Override
-    public void clientOff(List<String> connectIds) {
-        if (connectIds == null || connectIds.isEmpty()) {
+    public void clientOff(List<ConnectId> connectIds, long gmtOccur) {
+        if (CollectionUtils.isEmpty(connectIds)) {
             return;
         }
         //get all local dataCenter data node
         String bizName = "ClientOff";
         for (String dataNode : metaServerService.getDataServerList()) {
-            Request<ClientOffRequest> request = buildClientOffRequest(connectIds, dataNode);
+            Request<ClientOffRequest> request = buildClientOffRequest(connectIds, dataNode,
+                gmtOccur);
             try {
                 sendRequest(bizName, request);
             } catch (RequestException e) {
@@ -186,16 +188,16 @@ public class DataNodeServiceImpl implements DataNodeService {
         }
     }
 
-    private Request<ClientOffRequest> buildClientOffRequest(List<String> connectIds, String address) {
+    private Request<ClientOffRequest> buildClientOffRequest(List<ConnectId> connectIds,
+                                                            String address, long gmtOccur) {
         return new Request<ClientOffRequest>() {
 
             private AtomicInteger retryTimes = new AtomicInteger();
 
             @Override
             public ClientOffRequest getRequestBody() {
-                ClientOffRequest clientOffRequest = new ClientOffRequest();
-                clientOffRequest.setHosts(connectIds);
-                clientOffRequest.setGmtOccur(System.currentTimeMillis());
+                ClientOffRequest clientOffRequest = new ClientOffRequest(ServerEnv.PROCESS_ID,
+                    connectIds, gmtOccur);
                 return clientOffRequest;
             }
 
@@ -265,10 +267,6 @@ public class DataNodeServiceImpl implements DataNodeService {
     @Override
     public Map<String/*datacenter*/, Datum> fetchGlobal(String dataInfoId) {
         //get all dataCenter data
-        return getDatumMap(dataInfoId);
-    }
-
-    private Map<String, Datum> getDatumMap(String dataInfoId) {
         return getDatumMap(dataInfoId, null);
     }
 
@@ -277,7 +275,7 @@ public class DataNodeServiceImpl implements DataNodeService {
         Map<String/*datacenter*/, Datum> map;
         try {
             //dataCenter null means all dataCenters
-            GetDataRequest getDataRequest = new GetDataRequest(dataInfoId, dataCenterId);
+            GetDataRequest getDataRequest = new GetDataRequest(ServerEnv.PROCESS_ID, dataInfoId, dataCenterId);
             Request<GetDataRequest> getDataRequestStringRequest = new Request<GetDataRequest>() {
 
                 @Override

@@ -16,8 +16,11 @@
  */
 package com.alipay.sofa.registry.server.data.cache;
 
+import com.alipay.sofa.registry.common.model.ConnectId;
 import com.alipay.sofa.registry.common.model.dataserver.Datum;
 import com.alipay.sofa.registry.common.model.store.Publisher;
+import com.alipay.sofa.registry.log.Logger;
+import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.server.data.bootstrap.DataServerConfig;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -34,12 +37,12 @@ import java.util.Set;
  * @version $Id: DatumCache.java, v 0.1 2017-12-06 20:50 qian.lqlq Exp $
  */
 public class DatumCache {
+    private static final Logger LOGGER = LoggerFactory.getLogger(DatumCache.class);
+    @Autowired
+    private DatumStorage        localDatumStorage;
 
     @Autowired
-    private DatumStorage     localDatumStorage;
-
-    @Autowired
-    private DataServerConfig dataServerConfig;
+    private DataServerConfig    dataServerConfig;
 
     /**
      * get datum by specific dataCenter and dataInfoId
@@ -66,7 +69,6 @@ public class DatumCache {
         if (localDatum != null) {
             datumMap.put(dataServerConfig.getLocalDataCenter(), localDatum);
         }
-
         return datumMap;
     }
 
@@ -80,9 +82,9 @@ public class DatumCache {
         Map<String, Long> datumMap = new HashMap<>();
 
         //local
-        Long localVersions = localDatumStorage.getVersions(dataInfoId);
-        if (localVersions != null) {
-            datumMap.put(dataServerConfig.getLocalDataCenter(), localVersions);
+        Datum localDatum = localDatumStorage.get(dataInfoId);
+        if (localDatum != null) {
+            datumMap.put(dataServerConfig.getLocalDataCenter(), localDatum.getVersion());
         }
 
         return datumMap;
@@ -119,51 +121,7 @@ public class DatumCache {
         return datumMap;
     }
 
-    /**
-     *
-     *
-     * @param connectId
-     * @return
-     */
-    public Map<String, Publisher> getByConnectId(String connectId) {
+    public Map<String, Publisher> getByConnectId(ConnectId connectId) {
         return localDatumStorage.getByConnectId(connectId);
     }
-
-    /**
-     * put datum into cache
-     *
-     * @param datum
-     * @return the last version before datum changed, if datum is not exist, return null
-     */
-    public MergeResult putDatum(Datum datum) {
-        return localDatumStorage.putDatum(datum);
-    }
-
-    /**
-     * remove datum ant contains all pub data,and clean all the client map reference
-     * @param dataCenter
-     * @param dataInfoId
-     * @return
-     */
-    public boolean cleanDatum(String dataCenter, String dataInfoId) {
-        return localDatumStorage.cleanDatum(dataInfoId);
-    }
-
-    /**
-     * cover datum by snapshot
-     */
-    public Datum putSnapshot(String dataInfoId, Map<String, Publisher> toBeDeletedPubMap,
-                             Map<String, Publisher> snapshotPubMap) {
-        return localDatumStorage.putSnapshot(dataInfoId, toBeDeletedPubMap, snapshotPubMap);
-    }
-
-    /**
-     * Getter method for property <tt>OWN_CONNECT_ID_INDEX</tt>.
-     *
-     * @return property value of OWN_CONNECT_ID_INDEX
-     */
-    public Set<String> getAllConnectIds() {
-        return localDatumStorage.getAllConnectIds();
-    }
-
 }

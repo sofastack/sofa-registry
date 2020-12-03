@@ -18,6 +18,7 @@ package com.alipay.sofa.registry.server.session.scheduler.task;
 
 import java.util.List;
 
+import com.alipay.sofa.registry.common.model.ConnectId;
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
 import com.alipay.sofa.registry.server.session.node.service.DataNodeService;
 import com.alipay.sofa.registry.server.session.store.DataStore;
@@ -46,7 +47,8 @@ public class CancelDataTask extends AbstractSessionTask {
      */
     private final DataNodeService     dataNodeService;
     private final SessionServerConfig sessionServerConfig;
-    private List<String>              connectIds;
+    private List<ConnectId>           connectIds;
+    private final long                gmtOccur = System.currentTimeMillis();
 
     public CancelDataTask(Interests sessionInterests, DataStore sessionDataStore,
                           Watchers sessionWatchers, DataNodeService dataNodeService,
@@ -60,7 +62,7 @@ public class CancelDataTask extends AbstractSessionTask {
 
     @Override
     public void execute() {
-        dataNodeService.clientOff(connectIds);
+        dataNodeService.clientOff(connectIds, gmtOccur);
     }
 
     @Override
@@ -73,7 +75,7 @@ public class CancelDataTask extends AbstractSessionTask {
 
         Object obj = taskEvent.getEventObj();
         if (obj instanceof List) {
-            this.connectIds = (List<String>) obj;
+            this.connectIds = (List<ConnectId>) obj;
             if (connectIds.isEmpty()) {
                 throw new IllegalArgumentException("Input clientOff connectIds error!");
             }

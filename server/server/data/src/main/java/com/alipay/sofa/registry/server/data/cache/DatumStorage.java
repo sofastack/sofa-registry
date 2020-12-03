@@ -16,20 +16,25 @@
  */
 package com.alipay.sofa.registry.server.data.cache;
 
+import com.alipay.sofa.registry.common.model.ConnectId;
+import com.alipay.sofa.registry.common.model.ProcessId;
+import com.alipay.sofa.registry.common.model.PublisherVersion;
+import com.alipay.sofa.registry.common.model.dataserver.Datum;
+import com.alipay.sofa.registry.common.model.dataserver.DatumSummary;
+import com.alipay.sofa.registry.common.model.dataserver.DatumVersion;
+import com.alipay.sofa.registry.common.model.store.Publisher;
+import com.alipay.sofa.registry.server.data.slot.SlotChangeListener;
+
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import com.alipay.sofa.registry.common.model.dataserver.Datum;
-import com.alipay.sofa.registry.common.model.dataserver.DatumSummary;
-import com.alipay.sofa.registry.common.model.store.Publisher;
-
 /**
  *
- * @author kezhu.wukz
- * @version $Id: DatumAccessService.java, v 0.1 2019-12-05 11:51 kezhu.wukz Exp $
+ * @author yuzhi.lyz
+ * @version v 0.1 2020-12-02 19:52 yuzhi.lyz Exp $
  */
 public interface DatumStorage {
-
     /**
      * get datum by specific dataInfoId
      *
@@ -38,6 +43,10 @@ public interface DatumStorage {
      */
     Datum get(String dataInfoId);
 
+    Map<String, Publisher> getByConnectId(ConnectId connectId);
+
+    Map<String, Map<String, Publisher>> getPublishers(int slot);
+
     /**
      * get all datum
      *
@@ -45,47 +54,26 @@ public interface DatumStorage {
      */
     Map<String, Datum> getAll();
 
-    /**
-     *
-     *
-     * @param connectId
-     * @return
-     */
-    Map<String, Publisher> getByConnectId(String connectId);
+    DatumVersion putPublisher(Publisher publisher, ProcessId seesionProcessId);
 
-    /**
-     * Getter method for property <tt>OWN_CONNECT_ID_INDEX</tt>.
-     *
-     * @return property value of OWN_CONNECT_ID_INDEX
-     */
-    Set<String> getAllConnectIds();
+    Map<String, DatumVersion> clean(ProcessId sessionProcessId);
 
-    /**
-     * put datum into cache
-     *
-     * @param datum
-     * @return the last version before datum changed, if datum is not exist, return null
-     */
-    MergeResult putDatum(Datum datum);
+    Map<String, DatumVersion> remove(ConnectId connectId, ProcessId sessionProcessId,
+                                     long registerTimestamp);
 
-    /**
-     * remove datum ant contains all pub data,and clean all the client map reference
-     * @param dataInfoId
-     * @return
-     */
-    boolean cleanDatum(String dataInfoId);
+    DatumVersion remove(String dataInfoId, ProcessId sessionProcessId);
 
-    boolean removePublisher(String dataInfoId, String registerId);
+    DatumVersion remove(String dataInfoId, ProcessId sessionProcessId,
+                        Map<String, PublisherVersion> removedPublishers);
 
-    /**
-     * cover datum by snapshot
-     */
-    Datum putSnapshot(String dataInfoId, Map<String, Publisher> toBeDeletedPubMap,
-                      Map<String, Publisher> snapshotPubMap);
+    DatumVersion update(String dataInfoId, List<Publisher> updatedPublishers);
 
-    Long getVersions(String dataInfoId);
+    Map<String, DatumSummary> getDatumSummary(int slotId, String sessionIpAddress);
 
-    Map<String, DatumSummary> getDatumSummary(String targetIpAddress);
+    SlotChangeListener getSlotChanngeListener();
 
-    Map<String, Map<String, Publisher>> getPublishers(int slotId);
+    Set<ProcessId> getSessionProcessIds();
+
+    Map<String, Integer> compact(long tombstoneTimestamp);
+
 }

@@ -25,9 +25,8 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
-import com.alipay.sofa.registry.common.model.constants.ValueConstants;
+import com.alipay.sofa.registry.common.model.ConnectId;
 import com.alipay.sofa.registry.common.model.store.Watcher;
-import com.alipay.sofa.registry.common.model.store.WordCache;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.util.VersionsMapUtils;
@@ -52,7 +51,7 @@ public class SessionWatchers implements Watchers {
      */
     private ConcurrentHashMap<String/*dataInfoId*/, Map<String/*registerId*/, Watcher>> watchers        = new ConcurrentHashMap<>();
 
-    private Map<String/*connectId*/, Map<String/*registerId*/, Watcher>>                connectIndex    = new ConcurrentHashMap<>();
+    private Map<ConnectId/*connectId*/, Map<String/*registerId*/, Watcher>>             connectIndex    = new ConcurrentHashMap<>();
 
     /**
      * store watcher dataInfo version
@@ -93,20 +92,15 @@ public class SessionWatchers implements Watchers {
     }
 
     @Override
-    public boolean deleteByConnectId(String connectId) {
+    public boolean deleteByConnectId(ConnectId connectId) {
         write.lock();
         try {
             for (Map<String, Watcher> map : watchers.values()) {
                 for (Iterator it = map.values().iterator(); it.hasNext();) {
                     Watcher watcher = (Watcher) it.next();
-                    if (watcher != null
-                        && connectId.equals(watcher.getSourceAddress().getAddressString()
-                                            + ValueConstants.CONNECT_ID_SPLIT
-                                            + watcher.getTargetAddress().getAddressString())) {
+                    if (watcher != null && connectId.equals(watcher.connectId())) {
                         it.remove();
-                        invalidateConnectIndex(watcher.getSourceAddress().getAddressString()
-                                               + ValueConstants.CONNECT_ID_SPLIT
-                                               + watcher.getTargetAddress().getAddressString());
+                        invalidateConnectIndex(connectId);
                     }
                 }
             }
@@ -187,7 +181,7 @@ public class SessionWatchers implements Watchers {
     }
 
     @Override
-    public Map<String, Watcher> queryByConnectId(String connectId) {
+    public Map<String, Watcher> queryByConnectId(ConnectId connectId) {
         read.lock();
         try {
             return connectIndex.get(connectId);
@@ -206,11 +200,7 @@ public class SessionWatchers implements Watchers {
     }
 
     private void addConnectIndex(Watcher watcher) {
-        String connectId = watcher.getSourceAddress().getAddressString()
-                           + ValueConstants.CONNECT_ID_SPLIT
-                           + watcher.getTargetAddress().getAddressString();
-        connectId = WordCache.getInstance().getWordCache(connectId);
-
+        ConnectId connectId = watcher.connectId();
         Map<String/*registerId*/, Watcher> subscriberMap = connectIndex.get(connectId);
         if (subscriberMap == null) {
             Map<String/*registerId*/, Watcher> newSubscriberMap = new ConcurrentHashMap<>();
@@ -224,9 +214,7 @@ public class SessionWatchers implements Watchers {
     }
 
     private void removeConnectIndex(Watcher watcher) {
-        String connectId = watcher.getSourceAddress().getAddressString()
-                           + ValueConstants.CONNECT_ID_SPLIT
-                           + watcher.getTargetAddress().getAddressString();
+        ConnectId connectId = watcher.connectId();
         Map<String/*registerId*/, Watcher> subscriberMap = connectIndex.get(connectId);
         if (subscriberMap != null) {
             subscriberMap.remove(watcher.getRegisterId());
@@ -235,11 +223,11 @@ public class SessionWatchers implements Watchers {
         }
     }
 
-    private void invalidateConnectIndex(String connectId) {
+    private void invalidateConnectIndex(ConnectId connectId) {
         connectIndex.remove(connectId);
     }
 
-    public Map<String /*connectId*/, Map<String /*registerId*/, Watcher>> getConnectWatchers() {
+    public Map<ConnectId /*connectId*/, Map<String /*registerId*/, Watcher>> getConnectWatchers() {
         return connectIndex;
     }
 

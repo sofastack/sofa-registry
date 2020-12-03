@@ -38,9 +38,8 @@ public class DatumExpireProvideDataProcessor implements ProvideDataProcessor {
             return;
         }
         //TODO enable datum expire
-        boolean enableDataDatumExpire = Boolean.parseBoolean((String) provideData.getProvideData()
-            .getObject());
-        LOGGER.info("Fetch enableDataDatumExpire {} success!", enableDataDatumExpire);
+        int sessionLeaseSec = ProvideData.toInteger(provideData);
+        LOGGER.info("Fetch sessionLeaseSec {} success!", sessionLeaseSec);
     }
 
     private boolean checkInvalid(ProvideData provideData) {
@@ -55,6 +54,6 @@ public class DatumExpireProvideDataProcessor implements ProvideDataProcessor {
 
     @Override
     public boolean support(ProvideData provideData) {
-        return ValueConstants.DATA_DATUM_EXPIRE_SEC.equals(provideData.getDataInfoId());
+        return ValueConstants.DATA_SESSION_LEASE_SEC.equals(provideData.getDataInfoId());
     }
 }

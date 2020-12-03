@@ -23,7 +23,7 @@ import com.alipay.sofa.registry.common.model.store.URL;
  * @author shangyu.wh
  * @version $Id: Client.java, v 0.1 2017-11-20 21:07 shangyu.wh Exp $
  */
-public interface Client extends Endpoint, Sender {
+public interface Client extends Endpoint {
 
     /**
      * get channel by url.
@@ -60,4 +60,14 @@ public interface Client extends Endpoint, Sender {
      */
     void sendCallback(final URL url, final Object message, CallbackHandler callbackHandler,
                       final int timeoutMillis);
+
+    /**
+     * Sync send
+     *
+     * @param channel the channel
+     * @param message the message
+     * @param timeoutMillis the timeout millis
+     * @return object
+     */
+    Object sendSync(final Channel channel, final Object message, final int timeoutMillis);
 }

@@ -17,6 +17,7 @@
 package com.alipay.sofa.registry.util;
 
 import java.util.Collection;
+import java.util.Set;
 
 /**
  * @author qian.lqlq
@@ -64,6 +65,14 @@ public class ParaCheckUtil {
         if (v < 0) {
             throw new RuntimeException(String.format("%s is not allowed to be negative, %d",
                 paraName, v));
+        }
+    }
+
+    public static void checkContains(Set sets, Object param, String paraName)
+                                                                             throws RuntimeException {
+        if (!sets.contains(param)) {
+            throw new RuntimeException(String.format("%s is not contain in %s, %s", paraName, sets,
+                param));
         }
     }
 

@@ -87,7 +87,7 @@ public class DataDigestResourceTest extends BaseIntegrationTest {
             });
         assertTrue(datumMap.size() == 1);
         assertEquals(dataId, datumMap.get(LOCAL_DATACENTER).getDataId());
-        assertEquals(1, datumMap.get(LOCAL_DATACENTER).getPubMap().size());
+        assertEquals(1, datumMap.get(LOCAL_DATACENTER).publisherSize());
         assertEquals(value, bytes2Object(datumMap.get(LOCAL_DATACENTER).getPubMap().values()
             .iterator().next().getDataList().get(0).getBytes()));
     }
@@ -152,12 +152,5 @@ public class DataDigestResourceTest extends BaseIntegrationTest {
             .get(new GenericType<Map<String, List<String>>>() {
             });
         assertEquals(metaMap.get(LOCAL_DATACENTER).get(0), LOCAL_ADDRESS);
-
-        Map<String, List<String>> dataMap = dataChannel.getWebTarget()
-            .path("digest/data/serverList/query").request(APPLICATION_JSON)
-            .get(new GenericType<Map<String, List<String>>>() {
-            });
-        assertEquals(1, dataMap.size());
-        assertEquals(0, dataMap.get(LOCAL_DATACENTER).size());
     }
 }

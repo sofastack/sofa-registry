@@ -16,7 +16,6 @@
  */
 package com.alipay.sofa.registry.server.shared.remoting;
 
-import com.alipay.remoting.BoltClient;
 import com.alipay.remoting.Connection;
 import com.alipay.sofa.registry.common.model.store.URL;
 import com.alipay.sofa.registry.log.Logger;
@@ -25,6 +24,7 @@ import com.alipay.sofa.registry.remoting.CallbackHandler;
 import com.alipay.sofa.registry.remoting.Channel;
 import com.alipay.sofa.registry.remoting.ChannelHandler;
 import com.alipay.sofa.registry.remoting.Client;
+import com.alipay.sofa.registry.remoting.bolt.BoltClient;
 import com.alipay.sofa.registry.remoting.exchange.Exchange;
 import com.alipay.sofa.registry.remoting.exchange.NodeExchanger;
 import com.alipay.sofa.registry.remoting.exchange.RequestException;
@@ -150,7 +150,7 @@ public abstract class ClientExchanger implements NodeExchanger {
         if (client == null) {
             return Collections.emptyMap();
         }
-        return ((BoltClient) client).getAllManagedConnections();
+        return ((BoltClient) client).getConnections();
     }
 
     public void notifyConnectServerAsync() {

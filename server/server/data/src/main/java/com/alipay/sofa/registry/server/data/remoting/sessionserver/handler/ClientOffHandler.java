@@ -17,17 +17,20 @@
 package com.alipay.sofa.registry.server.data.remoting.sessionserver.handler;
 
 import com.alipay.sofa.registry.common.model.CommonResponse;
+import com.alipay.sofa.registry.common.model.ConnectId;
 import com.alipay.sofa.registry.common.model.Node;
 import com.alipay.sofa.registry.common.model.dataserver.ClientOffRequest;
+import com.alipay.sofa.registry.common.model.dataserver.DatumVersion;
 import com.alipay.sofa.registry.remoting.Channel;
 import com.alipay.sofa.registry.server.data.bootstrap.DataServerConfig;
-import com.alipay.sofa.registry.server.data.remoting.handler.AbstractServerHandler;
-import com.alipay.sofa.registry.server.data.remoting.sessionserver.disconnect.ClientDisconnectEvent;
-import com.alipay.sofa.registry.server.data.remoting.sessionserver.disconnect.DisconnectEventHandler;
+import com.alipay.sofa.registry.server.data.cache.DatumStorage;
+import com.alipay.sofa.registry.server.data.change.event.DataChangeEventCenter;
+import com.alipay.sofa.registry.server.data.lease.SessionLeaseManager;
 import com.alipay.sofa.registry.util.ParaCheckUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * processor to remove data of specific clients immediately
@@ -35,25 +38,35 @@ import java.util.List;
  * @author qian.lqlq
  * @version $Id: ClientOffProcessor.java, v 0.1 2017-12-01 15:48 qian.lqlq Exp $
  */
-public class ClientOffHandler extends AbstractServerHandler<ClientOffRequest> {
+public class ClientOffHandler extends AbstractDataHandler<ClientOffRequest> {
 
     @Autowired
-    private DataServerConfig       dataServerConfig;
+    private DataServerConfig        dataServerConfig;
 
     @Autowired
-    private DisconnectEventHandler disconnectEventHandler;
+    protected DataChangeEventCenter dataChangeEventCenter;
+
+    @Autowired
+    protected DatumStorage          localDatumStorage;
+
+    @Autowired
+    protected SessionLeaseManager   sessionLeaseManager;
 
     @Override
     public void checkParam(ClientOffRequest request) throws RuntimeException {
-        ParaCheckUtil.checkNotEmpty(request.getHosts(), "ClientOffRequest.hosts");
+        ParaCheckUtil.checkNotEmpty(request.getConnectIds(), "ClientOffRequest.connectIds");
+        ParaCheckUtil.checkNotNull(request.getSessionProcessId(), "request.sessionProcessId");
     }
 
     @Override
     public Object doHandle(Channel channel, ClientOffRequest request) {
-        List<String> hosts = request.getHosts();
-        for (String host : hosts) {
-            disconnectEventHandler.receive(new ClientDisconnectEvent(host, request.getGmtOccur(),
-                dataServerConfig.getClientOffDelayMs()));
+        sessionLeaseManager.renewSession(request.getSessionProcessId());
+        List<ConnectId> connectIds = request.getConnectIds();
+        for (ConnectId connectId : connectIds) {
+            Map<String, DatumVersion> modifieds = localDatumStorage.remove(connectId,
+                request.getSessionProcessId(), request.getGmtOccur());
+            dataChangeEventCenter.onChange(modifieds.keySet(),
+                dataServerConfig.getLocalDataCenter());
         }
         return CommonResponse.buildSuccessResponse();
     }

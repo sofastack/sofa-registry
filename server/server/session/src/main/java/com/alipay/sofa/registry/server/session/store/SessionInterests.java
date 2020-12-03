@@ -27,7 +27,7 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.stream.Collectors;
 
-import com.alipay.sofa.registry.common.model.constants.ValueConstants;
+import com.alipay.sofa.registry.common.model.ConnectId;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import com.alipay.sofa.registry.common.model.store.Subscriber;
@@ -63,7 +63,7 @@ public class SessionInterests implements Interests, ReSubscribers {
      */
     private ConcurrentHashMap<String/*dataInfoId*/, Map<String/*registerId*/, Subscriber>>                interests         = new ConcurrentHashMap<>();
 
-    private Map<String/*connectId*/, Map<String/*registerId*/, Subscriber>>                               connectIndex      = new ConcurrentHashMap<>();
+    private Map<ConnectId/*connectId*/, Map<String/*registerId*/, Subscriber>>                            connectIndex      = new ConcurrentHashMap<>();
 
     private Map<SubscriberResult, Map<InetSocketAddress, Map<String, Subscriber>>>                          resultIndex       = new ConcurrentHashMap<>();
 
@@ -150,17 +150,13 @@ public class SessionInterests implements Interests, ReSubscribers {
     }
 
     @Override
-    public boolean deleteByConnectId(String connectId) {
+    public boolean deleteByConnectId(ConnectId connectId) {
         write.lock();
         try {
             for (Map<String, Subscriber> map : interests.values()) {
                 for (Iterator it = map.values().iterator(); it.hasNext();) {
                     Subscriber subscriber = (Subscriber) it.next();
-                    if (connectId.equals(WordCache.getInstance().getWordCache(
-                        subscriber.getSourceAddress().getAddressString()
-                                + ValueConstants.CONNECT_ID_SPLIT
-                                + subscriber.getTargetAddress().getAddressString()))) {
-
+                    if (connectId.equals(subscriber.connectId())) {
                         it.remove();
                         if (sessionServerConfig.isStopPushSwitch()) {
                             deleteReSubscriber(subscriber);
@@ -191,7 +187,7 @@ public class SessionInterests implements Interests, ReSubscribers {
     }
 
     @Override
-    public Map<String, Subscriber> queryByConnectId(String connectId) {
+    public Map<String, Subscriber> queryByConnectId(ConnectId connectId) {
         return connectIndex.get(connectId);
     }
 
@@ -299,10 +295,7 @@ public class SessionInterests implements Interests, ReSubscribers {
     }
 
     private void addConnectIndex(Subscriber subscriber) {
-        String connectId = subscriber.getSourceAddress().getAddressString()
-                           + ValueConstants.CONNECT_ID_SPLIT
-                           + subscriber.getTargetAddress().getAddressString();
-        connectId = WordCache.getInstance().getWordCache(connectId);
+        ConnectId connectId = subscriber.connectId();
 
         Map<String/*registerId*/, Subscriber> subscriberMap = connectIndex.get(connectId);
         if (subscriberMap == null) {
@@ -345,9 +338,7 @@ public class SessionInterests implements Interests, ReSubscribers {
     }
 
     private void removeConnectIndex(Subscriber subscriber) {
-        String connectId = subscriber.getSourceAddress().getAddressString()
-                           + ValueConstants.CONNECT_ID_SPLIT
-                           + subscriber.getTargetAddress().getAddressString();
+        ConnectId connectId = subscriber.connectId();
         Map<String/*registerId*/, Subscriber> subscriberMap = connectIndex.get(connectId);
         if (subscriberMap != null) {
             subscriberMap.remove(subscriber.getRegisterId());
@@ -375,7 +366,7 @@ public class SessionInterests implements Interests, ReSubscribers {
         }
     }
 
-    private void invalidateConnectIndex(String connectId) {
+    private void invalidateConnectIndex(ConnectId connectId) {
         connectIndex.remove(connectId);
     }
 
@@ -455,7 +446,7 @@ public class SessionInterests implements Interests, ReSubscribers {
     }
 
     @Override
-    public Map<String, Map<String, Subscriber>> getConnectSubscribers() {
+    public Map<ConnectId, Map<String, Subscriber>> getConnectSubscribers() {
         return connectIndex;
     }
 

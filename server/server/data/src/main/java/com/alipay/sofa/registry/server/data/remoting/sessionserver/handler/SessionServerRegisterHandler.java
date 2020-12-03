@@ -43,16 +43,12 @@ public class SessionServerRegisterHandler extends
 
     @Override
     public void checkParam(SessionServerRegisterRequest request) throws RuntimeException {
-        ParaCheckUtil.checkNotBlank(request.getProcessId(), "processId");
+        ParaCheckUtil.checkNotNull(request.getProcessId(), "request.processId");
     }
 
     @Override
     public Object doHandle(Channel channel, SessionServerRegisterRequest request) {
-        Set<String> connectIds = request.getConnectIds();
-        if (connectIds == null) {
-            connectIds = new HashSet<>();
-        }
-        sessionServerConnectionFactory.registerSession(request.getProcessId(), connectIds,
+        sessionServerConnectionFactory.registerSession(request.getProcessId(),
             ((BoltChannel) channel).getConnection());
         return CommonResponse.buildSuccessResponse();
     }

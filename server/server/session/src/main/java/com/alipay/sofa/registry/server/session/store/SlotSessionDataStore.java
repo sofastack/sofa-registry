@@ -16,6 +16,7 @@
  */
 package com.alipay.sofa.registry.server.session.store;
 
+import com.alipay.sofa.registry.common.model.ConnectId;
 import com.alipay.sofa.registry.common.model.store.Publisher;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
@@ -71,11 +72,11 @@ public class SlotSessionDataStore implements DataStore {
     }
 
     @Override
-    public Map<String, Map<String, Publisher>> getConnectPublishers() {
-        Map<String, Map<String, Publisher>> ret = new HashMap<>(512);
+    public Map<ConnectId, Map<String, Publisher>> getConnectPublishers() {
+        Map<ConnectId, Map<String, Publisher>> ret = new HashMap<>(512);
         for (DataStore ds : slot2DataStores.values()) {
-            Map<String, Map<String, Publisher>> m = ds.getConnectPublishers();
-            for (Map.Entry<String, Map<String, Publisher>> e : m.entrySet()) {
+            Map<ConnectId, Map<String, Publisher>> m = ds.getConnectPublishers();
+            for (Map.Entry<ConnectId, Map<String, Publisher>> e : m.entrySet()) {
                 Map<String, Publisher> publisherMap = ret.computeIfAbsent(e.getKey(), k -> new HashMap<>(128));
                 publisherMap.putAll(e.getValue());
             }
@@ -115,7 +116,7 @@ public class SlotSessionDataStore implements DataStore {
     }
 
     @Override
-    public Map<String, Publisher> queryByConnectId(String connectId) {
+    public Map<String, Publisher> queryByConnectId(ConnectId connectId) {
         Map<String, Publisher> ret = new HashMap<>(128);
         slot2DataStores.values().forEach(ds -> {
             Map<String, Publisher> m = ds.queryByConnectId(connectId);
@@ -127,10 +128,12 @@ public class SlotSessionDataStore implements DataStore {
     }
 
     @Override
-    public boolean deleteByConnectId(String connectId) {
+    public boolean deleteByConnectId(ConnectId connectId) {
         boolean deleted = false;
         for (DataStore ds : slot2DataStores.values()) {
-            deleted = (deleted || ds.deleteByConnectId(connectId));
+            if (ds.deleteByConnectId(connectId)) {
+                deleted = true;
+            }
         }
         return deleted;
     }

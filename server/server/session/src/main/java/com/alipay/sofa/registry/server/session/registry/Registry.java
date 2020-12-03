@@ -18,6 +18,7 @@ package com.alipay.sofa.registry.server.session.registry;
 
 import java.util.List;
 
+import com.alipay.sofa.registry.common.model.ConnectId;
 import com.alipay.sofa.registry.common.model.store.StoreData;
 
 /**
@@ -41,7 +42,7 @@ public interface Registry {
      *
      * @param connectIds
      */
-    void cancel(List<String> connectIds);
+    void cancel(List<ConnectId> connectIds);
 
     /**
      * remove publisher or subscriber data by client ip address and port(ip:port)
@@ -50,7 +51,7 @@ public interface Registry {
      *
      * @param connectIds
      */
-    void remove(List<String> connectIds);
+    void remove(List<ConnectId> connectIds);
 
     /**
      * message mode com.alipay.sofa.registry.client.provider for client node to unregister single subscriber or publisher data

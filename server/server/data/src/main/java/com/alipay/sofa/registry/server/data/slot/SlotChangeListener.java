@@ -14,21 +14,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alipay.sofa.registry.remoting;
+package com.alipay.sofa.registry.server.data.slot;
+
+import com.alipay.sofa.registry.common.model.slot.Slot;
 
 /**
- *
  * @author yuzhi.lyz
- * @version v 0.1 2020-11-20 16:10 yuzhi.lyz Exp $
+ * @version v 0.1 2020-10-30 10:46 yuzhi.lyz Exp $
  */
-public interface Sender {
-    /**
-     * Sync send
-     *
-     * @param channel the channel
-     * @param message the message
-     * @param timeoutMillis the timeout millis
-     * @return object
-     */
-    Object sendSync(final Channel channel, final Object message, final int timeoutMillis);
+public interface SlotChangeListener {
+    void onSlotAdd(int slotId, Slot.Role role);
+
+    void onSlotRemove(int slotId, Slot.Role role);
 }

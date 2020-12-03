@@ -52,8 +52,7 @@ public class DataServerConnectionHandler extends AbstractServerHandler {
     @Override
     public void disconnected(Channel channel) throws RemotingException {
         super.disconnected(channel);
-        sessionServerConnectionFactory.sessionDisconnected(NetUtil.toAddressString(channel
-            .getRemoteAddress()));
+        sessionServerConnectionFactory.sessionDisconnected(channel.getRemoteAddress());
     }
 
     @Override

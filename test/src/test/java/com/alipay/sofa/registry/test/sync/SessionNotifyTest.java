@@ -17,10 +17,7 @@
 package com.alipay.sofa.registry.test.sync;
 
 import com.alipay.remoting.Connection;
-import com.alipay.sofa.registry.common.model.CommonResponse;
-import com.alipay.sofa.registry.common.model.GenericResponse;
-import com.alipay.sofa.registry.common.model.Node;
-import com.alipay.sofa.registry.common.model.ServerDataBox;
+import com.alipay.sofa.registry.common.model.*;
 import com.alipay.sofa.registry.common.model.constants.ValueConstants;
 import com.alipay.sofa.registry.common.model.dataserver.Datum;
 import com.alipay.sofa.registry.common.model.dataserver.GetDataRequest;
@@ -41,6 +38,7 @@ import com.alipay.sofa.registry.server.session.cache.Key;
 import com.alipay.sofa.registry.server.session.cache.Key.KeyType;
 import com.alipay.sofa.registry.server.session.cache.SessionCacheService;
 import com.alipay.sofa.registry.server.session.store.SessionInterests;
+import com.alipay.sofa.registry.server.shared.env.ServerEnv;
 import com.alipay.sofa.registry.test.BaseIntegrationTest;
 import com.alipay.sofa.registry.util.DatumVersionUtil;
 import com.alipay.sofa.registry.util.NamedThreadFactory;
@@ -269,7 +267,7 @@ public class SessionNotifyTest extends BaseIntegrationTest {
                     executor.submit(() -> {
 
                         Object result = boltClientFetch.sendSync(boltChannelMapInt.get(Math.abs((DATA_ID+version).hashCode() % connectNum)),
-                                new GetDataRequest(DATA_ID, DEFAULT_DATA_CENTER), 1000);
+                                new GetDataRequest(ServerEnv.PROCESS_ID, DATA_ID, DEFAULT_DATA_CENTER), 1000);
                         GenericResponse genericResponse = (GenericResponse) result;
                         if (genericResponse.isSuccess()) {
                             Map<String, Datum> map = (Map<String, Datum>) genericResponse.getData();
@@ -278,7 +276,7 @@ public class SessionNotifyTest extends BaseIntegrationTest {
                                         DATA_ID));
                             } else {
                                 System.out.println(String.format("GetDataRequest get response contains datum!dataInfoId=%s,size=%s",
-                                        DATA_ID, map.get(DEFAULT_DATA_CENTER).getPubMap().size()));
+                                        DATA_ID, map.get(DEFAULT_DATA_CENTER).publisherSize()));
                             }
                         } else {
                             throw new RuntimeException(

@@ -30,6 +30,7 @@ import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
 import com.alipay.sofa.registry.server.session.scheduler.ExecutorManager;
 import com.alipay.sofa.registry.server.session.slot.SlotTableCache;
 import com.alipay.sofa.registry.server.session.store.DataStore;
+import com.alipay.sofa.registry.server.shared.env.ServerEnv;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.Map;
@@ -62,10 +63,11 @@ public class DataSlotDiffPublisherRequestHandler extends
     public Object reply(Channel channel, DataSlotDiffPublisherRequest request) {
         try {
             slotTableCache.triggerUpdateSlotTable(request.getSlotTableEpoch());
-            DataSlotDiffSyncResult result = calcDiffResult(request.getSlotId(),
-                request.getDatumSummarys(),
-                sessionDataStore.getDataInfoIdPublishers(request.getSlotId()));
+            final int slotId = request.getSlotId();
+            DataSlotDiffSyncResult result = calcDiffResult(slotId, request.getDatumSummarys(),
+                sessionDataStore.getDataInfoIdPublishers(slotId));
             result.setSlotTableEpoch(slotTableCache.getEpoch());
+            result.setSessionProcessId(ServerEnv.PROCESS_ID);
             return new GenericResponse().fillSucceed(result);
         } catch (Throwable e) {
             LOGGER.error("DiffSync publisher Request error for slot {}", request.getSlotId(), e);

@@ -16,6 +16,8 @@
  */
 package com.alipay.sofa.registry.server.session.store;
 
+import com.alipay.sofa.registry.common.model.ConnectId;
+
 import java.util.Map;
 
 /**
@@ -55,14 +57,14 @@ public interface DataManager<DATA, ID, DATAINFOID> {
      * @param connectId
      * @return
      */
-    Map<String, DATA> queryByConnectId(String connectId);
+    Map<String, DATA> queryByConnectId(ConnectId connectId);
 
     /**
      * remove data by client node connectId
      *
      * @param connectId
      */
-    boolean deleteByConnectId(String connectId);
+    boolean deleteByConnectId(ConnectId connectId);
 
     /**
      * count pub and sub number

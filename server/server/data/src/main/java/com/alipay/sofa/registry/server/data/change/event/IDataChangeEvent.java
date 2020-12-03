@@ -16,16 +16,13 @@
  */
 package com.alipay.sofa.registry.server.data.change.event;
 
+import com.alipay.sofa.registry.server.data.change.DataSourceTypeEnum;
+
 /**
  *
  * @author qian.lqlq
  * @version $Id: IDataChangeEvent.java, v 0.1 2018-05-10 17:11 qian.lqlq Exp $
  */
 public interface IDataChangeEvent {
-
-    /**
-     *
-     * @return
-     */
-    DataChangeScopeEnum getScope();
+    DataSourceTypeEnum getSourceType();
 }

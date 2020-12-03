@@ -21,13 +21,11 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
-import com.alipay.sofa.registry.common.model.constants.ValueConstants;
+import com.alipay.sofa.registry.common.model.ConnectId;
 import com.alipay.sofa.registry.common.model.store.Publisher;
-import com.alipay.sofa.registry.common.model.store.WordCache;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 
@@ -37,19 +35,19 @@ import com.alipay.sofa.registry.log.LoggerFactory;
  */
 public class SessionDataStore implements DataStore {
 
-    private static final Logger                                               LOGGER        = LoggerFactory
-                                                                                                .getLogger(SessionDataStore.class);
-    private final ReentrantReadWriteLock                                      readWriteLock = new ReentrantReadWriteLock();
-    private final Lock                                                        write         = readWriteLock
-                                                                                                .writeLock();
+    private static final Logger                                                 LOGGER        = LoggerFactory
+                                                                                                  .getLogger(SessionDataStore.class);
+    private final ReentrantReadWriteLock                                        readWriteLock = new ReentrantReadWriteLock();
+    private final Lock                                                          write         = readWriteLock
+                                                                                                  .writeLock();
 
     /**
      * publisher store
      */
-    private Map<String/*dataInfoId*/, Map<String/*registerId*/, Publisher>> registry      = new ConcurrentHashMap<>();
+    private Map<String/*dataInfoId*/, Map<String/*registerId*/, Publisher>>   registry      = new ConcurrentHashMap<>();
 
     /*** index */
-    private Map<String/*connectId*/, Map<String/*registerId*/, Publisher>>  connectIndex  = new ConcurrentHashMap<>();
+    private Map<ConnectId/*connectId*/, Map<String/*registerId*/, Publisher>> connectIndex  = new ConcurrentHashMap<>();
 
     @Override
     public void add(Publisher publisher) {
@@ -144,31 +142,25 @@ public class SessionDataStore implements DataStore {
     }
 
     @Override
-    public Map<String, Publisher> queryByConnectId(String connectId) {
+    public Map<String, Publisher> queryByConnectId(ConnectId connectId) {
         return connectIndex.get(connectId);
     }
 
     @Override
-    public boolean deleteByConnectId(String connectId) {
+    public boolean deleteByConnectId(ConnectId connectId) {
         write.lock();
         try {
             for (Map<String, Publisher> map : registry.values()) {
                 for (Iterator it = map.values().iterator(); it.hasNext();) {
                     Publisher publisher = (Publisher) it.next();
-                    if (publisher != null
-                        && connectId.equals(WordCache.getInstance().getWordCache(
-                            publisher.getSourceAddress().getAddressString()
-                                    + ValueConstants.CONNECT_ID_SPLIT
-                                    + publisher.getTargetAddress().getAddressString()))) {
+                    if (publisher != null && connectId.equals(publisher.connectId())) {
                         it.remove();
+                        LOGGER.info("remove publisher by connectId={}, {}", connectId, publisher);
                     }
                 }
             }
             connectIndex.remove(connectId);
             return true;
-        } catch (Exception e) {
-            LOGGER.error("Delete publisher by connectId {} error!", connectId, e);
-            return false;
         } finally {
             write.unlock();
         }
@@ -214,10 +206,7 @@ public class SessionDataStore implements DataStore {
     }
 
     private void addToConnectIndex(Publisher publisher) {
-        String connectId = WordCache.getInstance().getWordCache(
-            publisher.getSourceAddress().getAddressString() + ValueConstants.CONNECT_ID_SPLIT
-                    + publisher.getTargetAddress().getAddressString());
-
+        ConnectId connectId = publisher.connectId();
         Map<String/*registerId*/, Publisher> publisherMap = connectIndex.get(connectId);
         if (publisherMap == null) {
             Map<String/*registerId*/, Publisher> newPublisherMap = new ConcurrentHashMap<>();
@@ -231,9 +220,7 @@ public class SessionDataStore implements DataStore {
     }
 
     private void removeFromConnectIndex(Publisher publisher) {
-        String connectId = WordCache.getInstance().getWordCache(
-            publisher.getSourceAddress().getAddressString() + ValueConstants.CONNECT_ID_SPLIT
-                    + publisher.getTargetAddress().getAddressString());
+        ConnectId connectId = publisher.connectId();
         Map<String/*registerId*/, Publisher> publisherMap = connectIndex.get(connectId);
         if (publisherMap != null) {
             publisherMap.remove(publisher.getRegisterId());
@@ -243,7 +230,7 @@ public class SessionDataStore implements DataStore {
     }
 
     @Override
-    public Map<String, Map<String, Publisher>> getConnectPublishers() {
+    public Map<ConnectId, Map<String, Publisher>> getConnectPublishers() {
         return connectIndex;
     }
 

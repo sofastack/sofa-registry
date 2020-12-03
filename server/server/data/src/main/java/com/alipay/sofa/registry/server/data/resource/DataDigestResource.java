@@ -16,10 +16,12 @@
  */
 package com.alipay.sofa.registry.server.data.resource;
 
-import com.alipay.sofa.registry.common.model.constants.ValueConstants;
+import com.alipay.sofa.registry.common.model.ConnectId;
 import com.alipay.sofa.registry.common.model.dataserver.Datum;
 import com.alipay.sofa.registry.common.model.store.DataInfo;
 import com.alipay.sofa.registry.common.model.store.Publisher;
+import com.alipay.sofa.registry.log.Logger;
+import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.server.data.bootstrap.DataServerConfig;
 import com.alipay.sofa.registry.server.data.cache.DatumCache;
 import com.alipay.sofa.registry.server.data.remoting.metaserver.MetaServerServiceImpl;
@@ -42,6 +44,8 @@ import java.util.stream.Collectors;
  */
 @Path("digest")
 public class DataDigestResource {
+    private static final Logger            LOGGER  = LoggerFactory
+                                                       .getLogger(DataDigestResource.class);
 
     private final static String            SESSION = "SESSION";
 
@@ -88,12 +92,10 @@ public class DataDigestResource {
         Map<String, Map<String, Publisher>> ret = new HashMap<>();
         if (map != null && !map.isEmpty()) {
             map.forEach((clientConnectId, sessionConnectId) -> {
-                String connectId = clientConnectId + ValueConstants.CONNECT_ID_SPLIT + sessionConnectId;
-                if (!connectId.isEmpty()) {
-                    Map<String, Publisher> publisherMap = datumCache.getByConnectId(connectId);
-                    if (publisherMap != null && !publisherMap.isEmpty()) {
-                        ret.put(connectId, publisherMap);
-                    }
+                ConnectId connectId = ConnectId.of(clientConnectId, sessionConnectId);
+                Map<String, Publisher> publisherMap = datumCache.getByConnectId(connectId);
+                if (publisherMap != null && !publisherMap.isEmpty()) {
+                    ret.put(connectId.toString(), publisherMap);
                 }
             });
         }
@@ -117,8 +119,7 @@ public class DataDigestResource {
                     String dataCenter = dataCenterEntry.getKey();
                     Map<String, Datum> datumMap = dataCenterEntry.getValue();
                     sb.append(String.format(" [Datum] size of datum in %s is %s", dataCenter, datumMap.size()));
-                    int pubCount = datumMap.values().stream().map(Datum::getPubMap)
-                            .filter(map -> map != null && !map.isEmpty()).mapToInt(Map::size).sum();
+                    int pubCount = datumMap.values().stream().mapToInt(Datum::publisherSize).sum();
                     sb.append(String.format(",[Publisher] size of publisher in %s is %s", dataCenter, pubCount));
                 }
             } else {
@@ -154,10 +155,11 @@ public class DataDigestResource {
                     }
                     break;
                 default:
-                    break;
+                    throw new IllegalArgumentException("unsupported server type:" + type);
             }
 
         }
+
         return map;
     }
 
@@ -173,7 +175,7 @@ public class DataDigestResource {
         final List<String> connections = new ArrayList<>();
         metaServerService.getConnections().forEach((k, conns) -> {
             connections.addAll(conns.stream().filter(connection -> connection != null && connection.isFine())
-                    .map(connection -> connection.getRemoteIP() + ":" + connection.getRemotePort())
+                    .map(connection -> connection.getRemoteIP())
                     .collect(Collectors.toList()));
         });
         return connections;

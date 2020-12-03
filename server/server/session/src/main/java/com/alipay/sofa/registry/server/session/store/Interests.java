@@ -21,6 +21,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
+import com.alipay.sofa.registry.common.model.ConnectId;
 import com.alipay.sofa.registry.common.model.store.Subscriber;
 import com.alipay.sofa.registry.core.model.ScopeEnum;
 
@@ -99,7 +100,7 @@ public interface Interests extends DataManager<Subscriber, String, String> {
      * get all subscribers group by connectId
      * @return
      */
-    Map<String/*connectId*/, Map<String/*registerId*/, Subscriber>> getConnectSubscribers();
+    Map<ConnectId/*connectId*/, Map<String/*registerId*/, Subscriber>> getConnectSubscribers();
 
     List<String> getDataCenters();
 }

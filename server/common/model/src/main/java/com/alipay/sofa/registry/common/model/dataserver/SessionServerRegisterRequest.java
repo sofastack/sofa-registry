@@ -16,6 +16,8 @@
  */
 package com.alipay.sofa.registry.common.model.dataserver;
 
+import com.alipay.sofa.registry.common.model.ProcessId;
+
 import java.io.Serializable;
 import java.util.Set;
 
@@ -28,50 +30,26 @@ public class SessionServerRegisterRequest implements Serializable {
 
     private static final long serialVersionUID = 4872633119038341583L;
 
-    private String            processId;
-
-    private Set<String>       connectIds;
+    private final ProcessId   processId;
 
     /**
      * constructor
      * @param processId
-     * @param connectIds
      */
-    public SessionServerRegisterRequest(String processId, Set<String> connectIds) {
+    public SessionServerRegisterRequest(ProcessId processId) {
         this.processId = processId;
-        this.connectIds = connectIds;
     }
 
     /**
      * Getter method for property <tt>processId</tt>.
-     *
      * @return property value of processId
      */
-    public String getProcessId() {
+    public ProcessId getProcessId() {
         return processId;
-    }
-
-    /**
-     * Setter method for property <tt>processId</tt>.
-     *
-     * @param processId  value to be assigned to property processId
-     */
-    public void setProcessId(String processId) {
-        this.processId = processId;
-    }
-
-    /**
-     * Getter method for property <tt>connectIds</tt>.
-     *
-     * @return property value of connectIds
-     */
-    public Set<String> getConnectIds() {
-        return connectIds;
     }
 
     @Override
     public String toString() {
-        return new StringBuilder("[SessionServerRegisterRequest] processId=")
-            .append(this.processId).append(", connectIds=").append(this.connectIds).toString();
+        return "SessionServerRegisterRequest{" + "processId=" + processId + '}';
     }
 }

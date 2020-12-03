@@ -36,6 +36,7 @@ public abstract class LoopRunnable implements Runnable {
     }
 
     public void run() {
+        LOGGER.info("loop-run started {}", this.getClass().getSimpleName());
         try {
             for (;;) {
                 try {
