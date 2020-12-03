@@ -18,11 +18,12 @@ package com.alipay.sofa.registry.server.meta.resource;
 
 import com.alipay.sofa.registry.common.model.console.PersistenceData;
 import com.alipay.sofa.registry.common.model.metaserver.DataOperator;
-import com.alipay.sofa.registry.common.model.metaserver.NotifyProvideDataChange;
+import com.alipay.sofa.registry.common.model.metaserver.ProvideDataChangeEvent;
 import com.alipay.sofa.registry.common.model.store.DataInfo;
 import com.alipay.sofa.registry.core.model.Result;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
+import com.alipay.sofa.registry.server.meta.provide.data.DefaultProvideDataNotifier;
 import com.alipay.sofa.registry.store.api.DBService;
 import com.alipay.sofa.registry.store.api.annotation.RaftReference;
 import com.alipay.sofa.registry.task.listener.TaskEvent;
@@ -53,7 +54,7 @@ public class PersistentDataResource {
     private DBService           persistenceDataDBService;
 
     @Autowired
-    private TaskListenerManager taskListenerManager;
+    private DefaultProvideDataNotifier provideDataNotifier;
 
     @POST
     @Path("put")
@@ -110,14 +111,14 @@ public class PersistentDataResource {
 
     private void fireDataChangeNotify(Long version, String dataInfoId, DataOperator dataOperator) {
 
-        NotifyProvideDataChange notifyProvideDataChange = new NotifyProvideDataChange(dataInfoId,
+        ProvideDataChangeEvent provideDataChangeEvent = new ProvideDataChangeEvent(dataInfoId,
             version, dataOperator);
 
-        TaskEvent taskEvent = new TaskEvent(notifyProvideDataChange,
-            TaskType.PERSISTENCE_DATA_CHANGE_NOTIFY_TASK);
-        taskLogger.info("send PERSISTENCE_DATA_CHANGE_NOTIFY_TASK notifyProvideDataChange:"
-                        + notifyProvideDataChange);
-        taskListenerManager.sendTaskEvent(taskEvent);
+        if(taskLogger.isInfoEnabled()) {
+            taskLogger.info("send PERSISTENCE_DATA_CHANGE_NOTIFY_TASK notifyProvideDataChange: {}",
+                    provideDataChangeEvent);
+        }
+        provideDataNotifier.notifyProvideDataChange(provideDataChangeEvent);
     }
 
     private void checkString(String input) {

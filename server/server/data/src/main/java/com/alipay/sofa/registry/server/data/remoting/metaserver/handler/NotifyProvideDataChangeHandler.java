@@ -19,7 +19,7 @@ package com.alipay.sofa.registry.server.data.remoting.metaserver.handler;
 import com.alipay.sofa.registry.common.model.CommonResponse;
 import com.alipay.sofa.registry.common.model.Node.NodeType;
 import com.alipay.sofa.registry.common.model.metaserver.DataOperator;
-import com.alipay.sofa.registry.common.model.metaserver.NotifyProvideDataChange;
+import com.alipay.sofa.registry.common.model.metaserver.ProvideDataChangeEvent;
 import com.alipay.sofa.registry.common.model.metaserver.ProvideData;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
@@ -64,9 +64,9 @@ public class NotifyProvideDataChangeHandler extends AbstractClientHandler {
     public Object doHandle(Channel channel, Object request) {
         LOGGER.info("Received notifyProvideDataChange: {}", request);
 
-        NotifyProvideDataChange notifyProvideDataChange = (NotifyProvideDataChange) request;
-        String dataInfoId = notifyProvideDataChange.getDataInfoId();
-        if (notifyProvideDataChange.getDataOperator() != DataOperator.REMOVE) {
+        ProvideDataChangeEvent provideDataChangeEvent = (ProvideDataChangeEvent) request;
+        String dataInfoId = provideDataChangeEvent.getDataInfoId();
+        if (provideDataChangeEvent.getDataOperator() != DataOperator.REMOVE) {
             ProvideData provideData = metaServerService.fetchData(dataInfoId);
             provideDataProcessorManager.changeDataProcess(provideData);
         }
@@ -75,7 +75,7 @@ public class NotifyProvideDataChangeHandler extends AbstractClientHandler {
 
     @Override
     public Class interest() {
-        return NotifyProvideDataChange.class;
+        return ProvideDataChangeEvent.class;
     }
 
     @Override

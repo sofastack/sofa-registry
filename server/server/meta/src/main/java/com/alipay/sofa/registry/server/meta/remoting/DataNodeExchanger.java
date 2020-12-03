@@ -59,9 +59,14 @@ public class DataNodeExchanger implements NodeExchanger {
                     Channel channel = dataServer.getChannel(url);
 
                     if (channel != null && channel.isConnected()) {
-                        final Object result = dataServer.sendSync(channel, request.getRequestBody(),
-                                request.getTimeout() != null ? request.getTimeout() : metaServerConfig.getDataNodeExchangeTimeout());
-                        response = () -> result;
+                        if(request.getCallBackHandler() != null) {
+                            dataServer.sendCallback(channel, request.getRequestBody(), request.getCallBackHandler(),
+                                    request.getTimeout() != null ? request.getTimeout() : metaServerConfig.getDataNodeExchangeTimeout());
+                        } else {
+                            final Object result = dataServer.sendSync(channel, request.getRequestBody(),
+                                    request.getTimeout() != null ? request.getTimeout() : metaServerConfig.getDataNodeExchangeTimeout());
+                            response = () -> result;
+                        }
                     } else {
                         LOGGER.error("DataNode Exchanger get channel error! channel with url:" + url
                                 + " can not be null or disconnected!");

@@ -27,7 +27,7 @@ import com.google.common.collect.Sets;
  * @author shangyu.wh
  * @version $Id: NotifyProvideDataChange.java, v 0.1 2018-04-18 15:18 shangyu.wh Exp $
  */
-public class NotifyProvideDataChange implements Serializable {
+public class ProvideDataChangeEvent implements Serializable {
 
     private String        dataInfoId;
 
@@ -43,12 +43,12 @@ public class NotifyProvideDataChange implements Serializable {
      * @param version
      * @param dataOperator
      */
-    public NotifyProvideDataChange(String dataInfoId, Long version, DataOperator dataOperator) {
+    public ProvideDataChangeEvent(String dataInfoId, Long version, DataOperator dataOperator) {
         this(dataInfoId, version, dataOperator, Sets.newHashSet(NodeType.SESSION));
     }
 
-    public NotifyProvideDataChange(String dataInfoId, Long version, DataOperator dataOperator,
-                                   Set<NodeType> nodeTypes) {
+    public ProvideDataChangeEvent(String dataInfoId, Long version, DataOperator dataOperator,
+                                  Set<NodeType> nodeTypes) {
         this.dataInfoId = dataInfoId;
         this.version = version;
         this.dataOperator = dataOperator;

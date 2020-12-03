@@ -101,8 +101,7 @@ public class MetaStoreResource {
                 metaNodes.add(metaNode);
             }
 
-//            metaServer.updateClusterMembers(metaNodes);
-
+            currentDcMetaServer.updateClusterMembers(metaNodes);
             result.setSuccess(true);
 
             LOGGER.info("Change peer ipAddressList {} to store!", ipAddressList0);
@@ -149,7 +148,7 @@ public class MetaStoreResource {
                 MetaNode metaNode = new MetaNode(new URL(ipAddress, 0), nodeConfig.getLocalDataCenter());
                 metaNodes.add(metaNode);
             }
-//            metaServer.updateClusterMembers(metaNodes);
+            currentDcMetaServer.updateClusterMembers(metaNodes);
 
             result.setSuccess(true);
 

@@ -21,12 +21,13 @@ import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
+import com.alipay.sofa.registry.server.meta.provide.data.DefaultProvideDataNotifier;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import com.alipay.sofa.registry.common.model.console.PersistenceData;
 import com.alipay.sofa.registry.common.model.constants.ValueConstants;
 import com.alipay.sofa.registry.common.model.metaserver.DataOperator;
-import com.alipay.sofa.registry.common.model.metaserver.NotifyProvideDataChange;
+import com.alipay.sofa.registry.common.model.metaserver.ProvideDataChangeEvent;
 import com.alipay.sofa.registry.common.model.store.DataInfo;
 import com.alipay.sofa.registry.core.model.Result;
 import com.alipay.sofa.registry.log.Logger;
@@ -55,7 +56,7 @@ public class BlacklistDataResource {
     private DBService           persistenceDataDBService;
 
     @Autowired
-    private TaskListenerManager taskListenerManager;
+    private DefaultProvideDataNotifier provideDataNotifier;
 
     /**
      * update blacklist
@@ -96,14 +97,13 @@ public class BlacklistDataResource {
 
     private void fireDataChangeNotify(Long version, String dataInfoId, DataOperator dataOperator) {
 
-        NotifyProvideDataChange notifyProvideDataChange = new NotifyProvideDataChange(dataInfoId,
+        ProvideDataChangeEvent provideDataChangeEvent = new ProvideDataChangeEvent(dataInfoId,
             version, dataOperator);
-
-        TaskEvent taskEvent = new TaskEvent(notifyProvideDataChange,
-            TaskType.PERSISTENCE_DATA_CHANGE_NOTIFY_TASK);
-        TASK_LOGGER.info("send PERSISTENCE_DATA_CHANGE_NOTIFY_TASK notifyProvideDataChange:"
-                         + notifyProvideDataChange);
-        taskListenerManager.sendTaskEvent(taskEvent);
+        if(TASK_LOGGER.isInfoEnabled()) {
+            TASK_LOGGER.info("send PERSISTENCE_DATA_CHANGE_NOTIFY_TASK notifyProvideDataChange: {}",
+                    provideDataChangeEvent);
+        }
+        provideDataNotifier.notifyProvideDataChange(provideDataChangeEvent);
     }
 
 }
