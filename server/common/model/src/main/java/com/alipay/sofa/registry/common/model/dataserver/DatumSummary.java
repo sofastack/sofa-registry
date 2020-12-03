@@ -16,7 +16,12 @@
  */
 package com.alipay.sofa.registry.common.model.dataserver;
 
+import com.alipay.sofa.registry.common.model.PublisherVersion;
+import com.google.common.collect.Maps;
+
 import java.io.Serializable;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -26,11 +31,17 @@ import java.util.Map;
  * @version v 0.1 2020-11-05 14:27 yuzhi.lyz Exp $
  */
 public class DatumSummary implements Serializable {
-    private String                           dataInfoId;
-    private Map<String/*registerId*/, Long> publisherDigests = new HashMap<>();
+    private final String                                 dataInfoId;
+    private Map<String/*registerId*/, PublisherVersion> publisherVersions = Maps.newHashMap();
 
     public DatumSummary(String dataInfoId) {
         this.dataInfoId = dataInfoId;
+    }
+
+    public DatumSummary(String dataInfoId,
+                        Map<String/*registerId*/, PublisherVersion> publisherVersions) {
+        this.dataInfoId = dataInfoId;
+        this.publisherVersions = Collections.unmodifiableMap(Maps.newHashMap(publisherVersions));
     }
 
     /**
@@ -42,32 +53,33 @@ public class DatumSummary implements Serializable {
     }
 
     /**
-     * Setter method for property <tt>dataInfoId</tt>.
-     * @param dataInfoId value to be assigned to property dataInfoId
+     * Getter method for property <tt>publisherVersions</tt>.
+     * @return property value of publisherVersions
      */
-    public void setDataInfoId(String dataInfoId) {
-        this.dataInfoId = dataInfoId;
+    public Map<String, PublisherVersion> getPublisherVersions() {
+        return publisherVersions;
     }
 
-    /**
-     * Getter method for property <tt>publisherDigests</tt>.
-     * @return property value of publisherDigests
-     */
-    public Map<String, Long> getPublisherDigests() {
-        return publisherDigests;
+    public void addPublisherVersion(String registerId, PublisherVersion version) {
+        publisherVersions.put(registerId, version);
     }
 
-    /**
-     * Setter method for property <tt>publisherDigests</tt>.
-     * @param publisherDigests value to be assigned to property publisherDigests
-     */
-    public void setPublisherDigests(Map<String, Long> publisherDigests) {
-        this.publisherDigests = publisherDigests;
+    public Map<String, PublisherVersion> getPublisherVersions(Collection<String> registerIds) {
+        Map<String, PublisherVersion> m = new HashMap<>(registerIds.size());
+        registerIds.forEach(k -> {
+                    PublisherVersion v = publisherVersions.get(k);
+                    if (v == null) {
+                        throw new IllegalArgumentException("not contains registerId:" + k);
+                    }
+                    m.put(k, v);
+                }
+        );
+        return m;
     }
 
     @Override
     public String toString() {
-        return "DatumSummary{" + "dataInfoId='" + dataInfoId + '\'' + ", publisherDigests="
-               + publisherDigests + '}';
+        return "DatumSummary{" + "dataInfoId='" + dataInfoId + '\'' + ", publisherVersions="
+               + publisherVersions + '}';
     }
 }

@@ -25,13 +25,13 @@ import java.util.Objects;
  * @version v 0.1 2020-11-30 10:44 yuzhi.lyz Exp $
  */
 public final class ProcessId implements Serializable {
-    private final String address;
+    private final String hostAddress;
     private final long   timestamp;
     private final int    pid;
     private final int    rand;
 
-    public ProcessId(String address, long timestamp, int pid, int rand) {
-        this.address = address;
+    public ProcessId(String hostAddress, long timestamp, int pid, int rand) {
+        this.hostAddress = hostAddress;
         this.timestamp = timestamp;
         this.pid = pid;
         this.rand = rand;
@@ -41,8 +41,8 @@ public final class ProcessId implements Serializable {
      * Getter method for property <tt>address</tt>.
      * @return property value of address
      */
-    public String getAddress() {
-        return address;
+    public String getHostAddress() {
+        return hostAddress;
     }
 
     /**
@@ -77,18 +77,18 @@ public final class ProcessId implements Serializable {
             return false;
         ProcessId processId = (ProcessId) o;
         return timestamp == processId.timestamp && pid == processId.pid && rand == processId.rand
-               && Objects.equals(address, processId.address);
+               && Objects.equals(hostAddress, processId.hostAddress);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(address, timestamp, pid, rand);
+        return Objects.hash(hostAddress, timestamp, pid, rand);
     }
 
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder(64);
-        return sb.append(address).append('-').append(pid).append('-').append(timestamp).append('-')
-            .append(rand).toString();
+        return sb.append(hostAddress).append('-').append(pid).append('-').append(timestamp)
+            .append('-').append(rand).toString();
     }
 }

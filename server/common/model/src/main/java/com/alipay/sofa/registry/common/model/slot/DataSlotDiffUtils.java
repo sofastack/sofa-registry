@@ -16,7 +16,7 @@
  */
 package com.alipay.sofa.registry.common.model.slot;
 
-import com.alipay.sofa.registry.common.model.PublisherDigestUtil;
+import com.alipay.sofa.registry.common.model.PublisherVersion;
 import com.alipay.sofa.registry.common.model.dataserver.DatumSummary;
 import com.alipay.sofa.registry.common.model.store.Publisher;
 import com.alipay.sofa.registry.log.Logger;
@@ -97,7 +97,7 @@ public final class DataSlotDiffUtils {
                 removedDataInfoIds.add(dataInfoId);
                 continue;
             }
-            Set<String> registerIds = summary.getValue().getPublisherDigests().keySet();
+            Set<String> registerIds = summary.getValue().getPublisherVersions().keySet();
             for (String registerId : registerIds) {
                 if (!publisherMap.containsKey(registerId)) {
                     List<String> list = removedPublishers.computeIfAbsent(dataInfoId, k -> new ArrayList<>());
@@ -105,16 +105,15 @@ public final class DataSlotDiffUtils {
                 }
             }
             List<Publisher> publishers = new ArrayList<>();
-            Map<String, Long> digests = summary.getValue().getPublisherDigests();
+            Map<String, PublisherVersion> versions = summary.getValue().getPublisherVersions();
             for (Map.Entry<String, Publisher> p : publisherMap.entrySet()) {
                 final String registerId = p.getKey();
-                if (!digests.containsKey(registerId)) {
+                if (!versions.containsKey(registerId)) {
                     publishers.add(p.getValue());
                     continue;
                 }
-                // compare digest
-                final long digest = PublisherDigestUtil.getDigestValue(p.getValue());
-                if (digest == digests.get(registerId)) {
+                // compare version
+                if (p.getValue().publisherVersion().equals(versions.get(registerId))) {
                     // the same
                     continue;
                 }

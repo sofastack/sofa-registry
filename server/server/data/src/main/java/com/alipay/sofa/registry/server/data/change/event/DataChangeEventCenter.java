@@ -16,91 +16,198 @@
  */
 package com.alipay.sofa.registry.server.data.change.event;
 
-import com.alipay.sofa.registry.common.model.PublishType;
 import com.alipay.sofa.registry.common.model.dataserver.Datum;
 import com.alipay.sofa.registry.common.model.store.Publisher;
+import com.alipay.sofa.registry.log.Logger;
+import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.server.data.bootstrap.DataServerConfig;
 import com.alipay.sofa.registry.server.data.cache.DatumCache;
-import com.alipay.sofa.registry.server.data.cache.UnPublisher;
 import com.alipay.sofa.registry.server.data.change.DataSourceTypeEnum;
+import com.alipay.sofa.registry.server.data.change.notify.SessionServerNotifier;
+import com.alipay.sofa.registry.server.data.change.notify.TempPublisherNotifier;
+import com.alipay.sofa.registry.util.ConcurrentUtils;
+import com.alipay.sofa.registry.util.LoopRunnable;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
+import com.google.common.util.concurrent.Uninterruptibles;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import javax.annotation.PostConstruct;
-import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 /**
  *
  * @author qian.lqlq
  * @version $Id: DataChangeEventCenter.java, v 0.1 2018-03-09 14:25 qian.lqlq Exp $
  */
-public class DataChangeEventCenter {
-    private AtomicBoolean          isInited = new AtomicBoolean(false);
+public final class DataChangeEventCenter {
+    private static final Logger                   LOGGER                 = LoggerFactory
+                                                                             .getLogger(DataChangeEventCenter.class);
 
     /**
      * count of DataChangeEventQueue
      */
-    private int                    queueCount;
+    private int                                   queueCount;
 
     /**
      * queues of DataChangeEvent
      */
-    private DataChangeEventQueue[] dataChangeEventQueues;
+    private DataChangeEventQueue[]                dataChangeEventQueues;
 
     @Autowired
-    private DataServerConfig       dataServerConfig;
+    private DataServerConfig                      dataServerConfig;
 
     @Autowired
-    private DatumCache             datumCache;
+    private DatumCache                            datumCache;
+
+    private final Map<String, Set<String>>        dataCenter2Changes     = Maps.newConcurrentMap();
+    private final ReadWriteLock                   lock                   = new ReentrantReadWriteLock();
+
+    private final Map<String, Map<String, Datum>> dataCenter2TempChanges = Maps.newConcurrentMap();
+    private final ReadWriteLock                   tempLock               = new ReentrantReadWriteLock();
+
+    private TempChangeMerger                      tempChangeMerger;
+    private ChangeMerger                          changeMerger;
 
     @PostConstruct
     public void init() {
-        if (isInited.compareAndSet(false, true)) {
-            queueCount = dataServerConfig.getQueueCount();
-            dataChangeEventQueues = new DataChangeEventQueue[queueCount];
-            for (int idx = 0; idx < queueCount; idx++) {
-                dataChangeEventQueues[idx] = new DataChangeEventQueue(idx, dataServerConfig, this,
-                    datumCache);
-                dataChangeEventQueues[idx].start();
+        queueCount = dataServerConfig.getQueueCount();
+        dataChangeEventQueues = new DataChangeEventQueue[queueCount];
+        for (int idx = 0; idx < queueCount; idx++) {
+            dataChangeEventQueues[idx] = new DataChangeEventQueue(idx,
+                dataServerConfig.getQueueSize());
+        }
+        this.changeMerger = new ChangeMerger();
+        this.tempChangeMerger = new TempChangeMerger();
+
+        ConcurrentUtils.createDaemonThread("changeMerger", changeMerger).start();
+        ConcurrentUtils.createDaemonThread("tempChangeMerger", tempChangeMerger).start();
+    }
+
+    public void onTempPubChange(Publisher publisher, String dataCenter) {
+        Map<String, Datum> changes = dataCenter2TempChanges
+                .computeIfAbsent(dataCenter, k -> Maps.newConcurrentMap());
+        tempLock.readLock().lock();
+        try {
+            Datum existing = changes
+                    .computeIfAbsent(publisher.getRegisterId(), k -> new Datum(publisher, dataCenter));
+            existing.addPublisher(publisher);
+        } finally {
+            tempLock.readLock().unlock();
+        }
+    }
+
+    public void onChange(Set<String> dataInfoIds, String dataCenter) {
+        Set<String> changes = dataCenter2Changes.computeIfAbsent(dataCenter, k -> Sets.newHashSet());
+        lock.readLock().lock();
+        try {
+            changes.addAll(dataInfoIds);
+        } finally {
+            lock.readLock().unlock();
+        }
+    }
+
+    public void onChange(String dataInfoId, String dataCenter) {
+        Set<String> changes = dataCenter2Changes.computeIfAbsent(dataCenter, k -> Sets.newHashSet());
+        lock.readLock().lock();
+        try {
+            changes.add(dataInfoId);
+        } finally {
+            lock.readLock().unlock();
+        }
+    }
+
+    private abstract class Merger extends LoopRunnable {
+        final int  intervalMs;
+        final Lock lock;
+
+        Merger(int intervalMs, Lock lock) {
+            this.intervalMs = intervalMs;
+            this.lock = lock;
+        }
+
+        @Override
+        public void waitingUnthrowable() {
+            Uninterruptibles.sleepUninterruptibly(intervalMs, TimeUnit.MILLISECONDS);
+        }
+
+        // dataInfoId -> events of datacenter
+        void commit(Map<String, List<IDataChangeEvent>> events) {
+            // TODO Needs optimization, merge the dataInfoIds as one notify
+            for (Map.Entry<String, List<IDataChangeEvent>> e : events.entrySet()) {
+                DataChangeEventQueue queue = getQueue(e.getKey());
+                for (IDataChangeEvent event : e.getValue()) {
+                    if (!queue.onChange(event)) {
+                        LOGGER.error("failed to commit change event, {}, {}", e.getKey(), e);
+                    }
+                }
             }
         }
     }
 
-    /**
-     * receive changed publisher, then wrap it into the DataChangeEvent and put it into dataChangeEventQueue
-     *
-     * @param publisher
-     * @param dataCenter
-     */
-    public void onChange(Publisher publisher, String dataCenter) {
-        int idx = hash(publisher.getDataInfoId());
-        Datum datum = new Datum(publisher, dataCenter);
-        if (publisher instanceof UnPublisher) {
-            datum.setContainsUnPub(true);
+    private final class TempChangeMerger extends Merger {
+        TempChangeMerger() {
+            super(dataServerConfig.getNotifyTempDataIntervalMs(), tempLock.writeLock());
         }
-        if (publisher.getPublishType() != PublishType.TEMPORARY) {
-            dataChangeEventQueues[idx].onChange(new DataChangeEvent(DataSourceTypeEnum.PUB, datum));
-        } else {
-            dataChangeEventQueues[idx].onChange(new DataChangeEvent(DataSourceTypeEnum.PUB_TEMP,
-                datum));
+
+        @Override
+        public void runUnthrowable() {
+            final Map<String, List<IDataChangeEvent>> events = Maps.newHashMap();
+            lock.lock();
+            try {
+                for (Map<String, Datum> change : dataCenter2TempChanges.values()) {
+                    change.values().forEach(d -> {
+                        List<IDataChangeEvent> list = events
+                                .computeIfAbsent(d.getDataInfoId(), k -> Lists.newArrayList());
+                        list.add(new DataTempChangeEvent(d));
+                    });
+                    change.clear();
+                }
+            } finally {
+                lock.unlock();
+            }
+            commit(events);
         }
     }
 
-    /**
-     *
-     * @param event
-     */
-    public void onChange(ClientChangeEvent event) {
-        for (DataChangeEventQueue dataChangeEventQueue : dataChangeEventQueues) {
-            dataChangeEventQueue.onChange(event);
+    private final class ChangeMerger extends Merger {
+        ChangeMerger() {
+            super(dataServerConfig.getNotifyIntervalMs(), tempLock.writeLock());
+        }
+
+        @Override
+        public void runUnthrowable() {
+            final Map<String, List<IDataChangeEvent>> events = Maps.newHashMap();
+            lock.lock();
+            try {
+                for (Map.Entry<String, Set<String>> change : dataCenter2Changes.entrySet()) {
+                    final String dataCenter = change.getKey();
+                    Set<String> dataInfoIds = change.getValue();
+                    for (String dataInfoId : dataInfoIds) {
+                        List<IDataChangeEvent> list = events
+                                .computeIfAbsent(dataInfoId, k -> Lists.newArrayList());
+                        list.add(new DataChangeEvent(dataCenter, dataInfoId));
+                    }
+                    dataInfoIds.clear();
+                }
+            } finally {
+                lock.unlock();
+            }
+            commit(events);
         }
     }
 
-    /**
-     * compute target DataChangeEventQueue
-     *
-     * @param key
-     * @return
-     */
+    private DataChangeEventQueue getQueue(String dataInfoId) {
+        return dataChangeEventQueues[hash(dataInfoId)];
+    }
+
     public int hash(String key) {
         if (queueCount > 1) {
             return Math.abs(key.hashCode() % queueCount);
@@ -109,12 +216,7 @@ public class DataChangeEventCenter {
         }
     }
 
-    /**
-     *
-     * @return
-     */
     public DataChangeEventQueue[] getQueues() {
         return dataChangeEventQueues;
     }
-
 }

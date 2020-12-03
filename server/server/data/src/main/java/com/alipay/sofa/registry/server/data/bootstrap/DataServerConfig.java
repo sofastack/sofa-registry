@@ -16,18 +16,12 @@
  */
 package com.alipay.sofa.registry.server.data.bootstrap;
 
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
-import java.util.stream.Collectors;
-
 import com.alipay.sofa.registry.server.shared.env.ServerEnv;
 import org.apache.commons.lang.builder.ToStringBuilder;
 import org.apache.commons.lang.builder.ToStringStyle;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
-import com.alipay.sofa.registry.net.NetUtil;
+import java.util.Set;
 
 /**
  *
@@ -55,8 +49,6 @@ public class DataServerConfig {
     private int                  queueSize;
 
     private int                  notifyIntervalMs;
-
-    private int                  clientOffDelayMs;
 
     private int                  notifyTempDataIntervalMs;
 
@@ -100,30 +92,25 @@ public class DataServerConfig {
 
     private int                  publishExecutorQueueSize                     = 10000;
 
-    private int                  datumTimeToLiveSec                           = 900;
-
-    private int                  datumLeaseManagerExecutorThreadSize          = 1;
-
-    private int                  datumLeaseManagerExecutorQueueSize           = 1000000;
-
     private int                  sessionServerNotifierRetryExecutorThreadSize = 10;
 
     private int                  sessionServerNotifierRetryExecutorQueueSize  = 10000;
 
-    private int                  sessionDisconnectDelayMs                     = 30000;
+    private volatile int         sessionLeaseSec                              = 30;
+
+    private int                  datumCompactDelayMs                          = 1000 * 60 * 3;
 
     private int                  slotMigratingExecutorThreadSize              = 8;
 
     private int                  slotLeaderSyncSessionExecutorThreadSize      = 12;
     private int                  slotLeaderSyncSessionExecutorQueueSize       = 30000;
     private volatile int         slotLeaderSyncSessionIntervalSec             = 10;
-    private volatile int         slotLeaderDatumExpireSec                     = 30;
 
     private int                  slotFollowerSyncLeaderExecutorThreadSize     = 4;
     private int                  slotFollowerSyncLeaderExecutorQueueSize      = 10000;
     private volatile int         slotFollowerSyncLeaderIntervalMs             = 60000;
 
-    // the publisher.digest if len(registerId/uuid+long), 50bytes
+    // the publisher.digest if len(registerId/uuid+long+long), 50bytes
     private volatile int         slotSyncPublisherDigestMaxNum                = 10000;
 
     private volatile int         slotSyncPublisherMaxNum                      = 512;
@@ -549,24 +536,6 @@ public class DataServerConfig {
     }
 
     /**
-     * Getter method for property <tt>clientOffDelayMs</tt>.
-     *
-     * @return property value of clientOffDelayMs
-     */
-    public int getClientOffDelayMs() {
-        return clientOffDelayMs;
-    }
-
-    /**
-     * Setter method for property <tt>clientOffDelayMs</tt>.
-     *
-     * @param clientOffDelayMs  value to be assigned to property clientOffDelayMs
-     */
-    public void setClientOffDelayMs(int clientOffDelayMs) {
-        this.clientOffDelayMs = clientOffDelayMs;
-    }
-
-    /**
      * Getter method for property <tt>publishExecutorMinPoolSize</tt>.
      *
      * @return property value of publishExecutorMinPoolSize
@@ -654,60 +623,6 @@ public class DataServerConfig {
     }
 
     /**
-     * Getter method for property <tt>datumTimeToLiveSec</tt>.
-     *
-     * @return property value of datumTimeToLiveSec
-     */
-    public int getDatumTimeToLiveSec() {
-        return datumTimeToLiveSec;
-    }
-
-    /**
-     * Setter method for property <tt>datumTimeToLiveSec </tt>.
-     *
-     * @param datumTimeToLiveSec  value to be assigned to property datumTimeToLiveSec
-     */
-    public void setDatumTimeToLiveSec(int datumTimeToLiveSec) {
-        this.datumTimeToLiveSec = datumTimeToLiveSec;
-    }
-
-    /**
-     * Getter method for property <tt>datumLeaseManagerExecutorQueueSize</tt>.
-     *
-     * @return property value of datumLeaseManagerExecutorQueueSize
-     */
-    public int getDatumLeaseManagerExecutorQueueSize() {
-        return datumLeaseManagerExecutorQueueSize;
-    }
-
-    /**
-     * Setter method for property <tt>datumLeaseManagerExecutorQueueSize </tt>.
-     *
-     * @param datumLeaseManagerExecutorQueueSize  value to be assigned to property datumLeaseManagerExecutorQueueSize
-     */
-    public void setDatumLeaseManagerExecutorQueueSize(int datumLeaseManagerExecutorQueueSize) {
-        this.datumLeaseManagerExecutorQueueSize = datumLeaseManagerExecutorQueueSize;
-    }
-
-    /**
-     * Getter method for property <tt>datumLeaseManagerExecutorThreadSize</tt>.
-     *
-     * @return property value of datumLeaseManagerExecutorThreadSize
-     */
-    public int getDatumLeaseManagerExecutorThreadSize() {
-        return datumLeaseManagerExecutorThreadSize;
-    }
-
-    /**
-     * Setter method for property <tt>datumLeaseManagerExecutorThreadSize </tt>.
-     *
-     * @param datumLeaseManagerExecutorThreadSize  value to be assigned to property datumLeaseManagerExecutorThreadSize
-     */
-    public void setDatumLeaseManagerExecutorThreadSize(int datumLeaseManagerExecutorThreadSize) {
-        this.datumLeaseManagerExecutorThreadSize = datumLeaseManagerExecutorThreadSize;
-    }
-
-    /**
      * Getter method for property <tt>sessionServerNotifierRetryExecutorThreadSize</tt>.
      *
      * @return property value of sessionServerNotifierRetryExecutorThreadSize
@@ -744,21 +659,35 @@ public class DataServerConfig {
     }
 
     /**
-     * Getter method for property <tt>sessionDisconnectDelayMs</tt>.
-     *
-     * @return property value of sessionDisconnectDelayMs
+     * Getter method for property <tt>sessionLeaseSec</tt>.
+     * @return property value of sessionLeaseSec
      */
-    public int getSessionDisconnectDelayMs() {
-        return sessionDisconnectDelayMs;
+    public int getSessionLeaseSec() {
+        return sessionLeaseSec;
     }
 
     /**
-     * Setter method for property <tt>sessionDisconnectDelayMs</tt>.
-     *
-     * @param sessionDisconnectDelayMs value to be assigned to property sessionDisconnectDelayMs
+     * Setter method for property <tt>sessionLeaseSec</tt>.
+     * @param sessionLeaseSec value to be assigned to property sessionLeaseSec
      */
-    public void setSessionDisconnectDelayMs(int sessionDisconnectDelayMs) {
-        this.sessionDisconnectDelayMs = sessionDisconnectDelayMs;
+    public void setSessionLeaseSec(int sessionLeaseSec) {
+        this.sessionLeaseSec = sessionLeaseSec;
+    }
+
+    /**
+     * Getter method for property <tt>datumCompactDelayMs</tt>.
+     * @return property value of datumCompactDelayMs
+     */
+    public int getDatumCompactDelayMs() {
+        return datumCompactDelayMs;
+    }
+
+    /**
+     * Setter method for property <tt>datumCompactDelayMs</tt>.
+     * @param datumCompactDelayMs value to be assigned to property datumCompactDelayMs
+     */
+    public void setDatumCompactDelayMs(int datumCompactDelayMs) {
+        this.datumCompactDelayMs = datumCompactDelayMs;
     }
 
     /**
@@ -951,22 +880,6 @@ public class DataServerConfig {
      */
     public void setSlotSyncRequestExecutorQueueSize(int slotSyncRequestExecutorQueueSize) {
         this.slotSyncRequestExecutorQueueSize = slotSyncRequestExecutorQueueSize;
-    }
-
-    /**
-     * Getter method for property <tt>slotLeaderDatumExpireSec</tt>.
-     * @return property value of slotLeaderDatumExpireSec
-     */
-    public int getSlotLeaderDatumExpireSec() {
-        return slotLeaderDatumExpireSec;
-    }
-
-    /**
-     * Setter method for property <tt>slotLeaderDatumExpireSec</tt>.
-     * @param slotLeaderDatumExpireSec value to be assigned to property slotLeaderDatumExpireSec
-     */
-    public void setSlotLeaderDatumExpireSec(int slotLeaderDatumExpireSec) {
-        this.slotLeaderDatumExpireSec = slotLeaderDatumExpireSec;
     }
 
     /**

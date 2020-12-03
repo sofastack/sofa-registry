@@ -14,16 +14,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alipay.sofa.registry.server.data.cache;
+package com.alipay.sofa.registry.server.data.slot;
 
-import com.alipay.sofa.registry.common.model.dataserver.DatumSummary;
-import com.alipay.sofa.registry.common.model.slot.Slot;
 import com.alipay.sofa.registry.common.model.slot.SlotAccess;
 import com.alipay.sofa.registry.common.model.slot.SlotTable;
-import com.alipay.sofa.registry.common.model.store.Publisher;
-
-import java.util.List;
-import java.util.Map;
 
 /**
  * @author yuzhi.lyz
@@ -32,29 +26,11 @@ import java.util.Map;
 public interface SlotManager {
     SlotAccess checkSlotAccess(String dataInfoId, long srcSlotEpoch);
 
-    int slotOf(String dataInfoId);
+    boolean isLeader(int slotId);
 
     boolean updateSlotTable(SlotTable slotTable);
-
-    void addSlotChangeListener(SlotChangeListener listener);
 
     long getSlotTableEpoch();
 
     void triggerUpdateSlotTable(long epoch);
-
-    interface SlotChangeListener {
-        void onSlotAdd(int slotId, Slot.Role role);
-
-        void onSlotRemove(int slotId, Slot.Role role);
-    }
-
-    void setSlotDatumStorageProvider(SlotDatumStorageProvider provider);
-
-    interface SlotDatumStorageProvider {
-        Map<String, DatumSummary> getDatumSummary(int slotId, String targetIpAddress);
-
-        void merge(int slotId, Map<String, List<Publisher>> updatedPublishers,
-                   List<String> removedDataInfoIds, Map<String, List<String>> removedPublishers);
-    }
-
 }

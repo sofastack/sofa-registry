@@ -16,8 +16,12 @@
  */
 package com.alipay.sofa.registry.common.model.dataserver;
 
-import java.io.Serializable;
+import com.alipay.sofa.registry.common.model.ConnectId;
+import com.alipay.sofa.registry.common.model.ProcessId;
+
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -26,48 +30,31 @@ import java.util.List;
  * @author qian.lqlq
  * @version $Id: ClientOffRequest.java, v 0.1 2017-12-01 15:48 qian.lqlq Exp $
  */
-public class ClientOffRequest implements Serializable {
+public class ClientOffRequest extends AbstractSlotRequest {
 
-    private static final long serialVersionUID = -3547806571058756207L;
+    private static final long     serialVersionUID = -3547806571058756207L;
 
-    /**
-     * hosts of clients
-     */
-    private List<String>      hosts;
+    private final List<ConnectId> connectIds;
 
-    private long              gmtOccur;
+    private final long            gmtOccur;
 
     /**
      * constructor
      */
-    public ClientOffRequest() {
+    public ClientOffRequest(ProcessId sessionProcessId, Collection<ConnectId> connectIds,
+                            long gmtOccur) {
+        super(sessionProcessId);
+        this.connectIds = Collections.unmodifiableList(new ArrayList<>(connectIds));
+        this.gmtOccur = gmtOccur;
     }
 
     /**
-     * constructor
-     * @param host
-     */
-    public ClientOffRequest(String host) {
-        this.hosts = new ArrayList<>();
-        this.hosts.add(host);
-    }
-
-    /**
-     * Getter method for property <tt>hosts</tt>.
+     * Getter method for property <tt>connectIds</tt>.
      *
-     * @return property value of hosts
+     * @return property value of connectIds
      */
-    public List<String> getHosts() {
-        return hosts;
-    }
-
-    /**
-     * Setter method for property <tt>hosts</tt>.
-     *
-     * @param hosts  value to be assigned to property hosts
-     */
-    public void setHosts(List<String> hosts) {
-        this.hosts = hosts;
+    public List<ConnectId> getConnectIds() {
+        return connectIds;
     }
 
     /**
@@ -79,18 +66,9 @@ public class ClientOffRequest implements Serializable {
         return gmtOccur;
     }
 
-    /**
-     * Setter method for property <tt>gmtOccur</tt>.
-     *
-     * @param gmtOccur  value to be assigned to property gmtOccur
-     */
-    public void setGmtOccur(long gmtOccur) {
-        this.gmtOccur = gmtOccur;
-    }
-
     @Override
     public String toString() {
-        return new StringBuilder("[ClientOffRequest] ips=").append(this.hosts)
+        return new StringBuilder("[ClientOffRequest] connectIds=").append(this.connectIds)
             .append(", gmtOccur=").append(gmtOccur).toString();
     }
 }

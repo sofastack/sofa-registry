@@ -16,25 +16,16 @@
  */
 package com.alipay.sofa.registry.server.data.remoting.sessionserver.handler;
 
-import java.util.Map;
-import java.util.concurrent.Executor;
-import java.util.concurrent.ThreadPoolExecutor;
-
+import com.alipay.sofa.registry.common.model.dataserver.GetDataRequest;
 import com.alipay.sofa.registry.common.model.slot.SlotAccess;
 import com.alipay.sofa.registry.common.model.slot.SlotAccessGenericResponse;
-import com.alipay.sofa.registry.server.data.cache.SlotManager;
-import org.springframework.beans.factory.annotation.Autowired;
-
-import com.alipay.sofa.registry.common.model.GenericResponse;
-import com.alipay.sofa.registry.common.model.Node;
-import com.alipay.sofa.registry.common.model.dataserver.Datum;
-import com.alipay.sofa.registry.common.model.dataserver.GetDataRequest;
-import com.alipay.sofa.registry.log.Logger;
-import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.remoting.Channel;
 import com.alipay.sofa.registry.server.data.cache.DatumCache;
-import com.alipay.sofa.registry.server.data.remoting.handler.AbstractServerHandler;
 import com.alipay.sofa.registry.util.ParaCheckUtil;
+import org.springframework.beans.factory.annotation.Autowired;
+
+import java.util.concurrent.Executor;
+import java.util.concurrent.ThreadPoolExecutor;
 
 /**
  * processor to get specific data
@@ -42,19 +33,13 @@ import com.alipay.sofa.registry.util.ParaCheckUtil;
  * @author qian.lqlq
  * @version $Id: GetDataProcessor.java, v 0.1 2017-12-01 15:48 qian.lqlq Exp $
  */
-public class GetDataHandler extends AbstractServerHandler<GetDataRequest> {
-
-    /** LOGGER */
-    private static final Logger LOGGER = LoggerFactory.getLogger(GetDataHandler.class);
+public class GetDataHandler extends AbstractDataHandler<GetDataRequest> {
 
     @Autowired
-    private DatumCache          datumCache;
+    private DatumCache         datumCache;
 
     @Autowired
-    private ThreadPoolExecutor  getDataProcessorExecutor;
-
-    @Autowired
-    private SlotManager         slotManager;
+    private ThreadPoolExecutor getDataProcessorExecutor;
 
     @Override
     public Executor getExecutor() {
@@ -64,21 +49,14 @@ public class GetDataHandler extends AbstractServerHandler<GetDataRequest> {
     @Override
     public void checkParam(GetDataRequest request) throws RuntimeException {
         ParaCheckUtil.checkNotBlank(request.getDataInfoId(), "GetDataRequest.dataInfoId");
+        checkSessionProcessId(request.getSessionProcessId());
     }
 
     @Override
     public Object doHandle(Channel channel, GetDataRequest request) {
         String dataInfoId = request.getDataInfoId();
-        final SlotAccess slotAccess = slotManager.checkSlotAccess(dataInfoId,
-            request.getSlotEpoch());
-        if (slotAccess.isMoved()) {
-            LOGGER.warn("[moved] Slot has moved, access: {}, request: {}", slotAccess, request);
-            return SlotAccessGenericResponse.failedResponse(slotAccess);
-        }
-
-        if (slotAccess.isMigrating()) {
-            LOGGER.warn("[migrating] Slot is migrating, access: {}, request: {}", slotAccess,
-                request);
+        final SlotAccess slotAccess = checkAccess(dataInfoId, request.getSlotTableEpoch());
+        if (!slotAccess.isAccept()) {
             return SlotAccessGenericResponse.failedResponse(slotAccess);
         }
 
@@ -87,23 +65,7 @@ public class GetDataHandler extends AbstractServerHandler<GetDataRequest> {
     }
 
     @Override
-    public GenericResponse<Map<String, Datum>> buildFailedResponse(String msg) {
-        return SlotAccessGenericResponse.failedResponse(msg);
-    }
-
-    @Override
-    public HandlerType getType() {
-        return HandlerType.PROCESSER;
-    }
-
-    @Override
     public Class interest() {
         return GetDataRequest.class;
     }
-
-    @Override
-    protected Node.NodeType getConnectNodeType() {
-        return Node.NodeType.DATA;
-    }
-
 }

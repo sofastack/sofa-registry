@@ -23,6 +23,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import com.alipay.sofa.registry.common.model.store.Publisher;
 import com.alipay.sofa.registry.common.model.store.WordCache;
 import com.alipay.sofa.registry.util.DatumVersionUtil;
+import com.google.common.collect.Maps;
 
 /**
  * datum store in dataserver
@@ -47,8 +48,6 @@ public class Datum implements Serializable {
     private Map<String/*registerId*/, Publisher> pubMap           = new ConcurrentHashMap<>();
 
     private long                                  version;
-
-    private boolean                               containsUnPub    = false;
 
     /**
      * constructor
@@ -226,24 +225,6 @@ public class Datum implements Serializable {
         this.version = version;
     }
 
-    /**
-     * Getter method for property <tt>containsUnPub</tt>.
-     *
-     * @return property value of containsUnPub
-     */
-    public boolean isContainsUnPub() {
-        return containsUnPub;
-    }
-
-    /**
-     * Setter method for property <tt>containsUnPub</tt>.
-     *
-     * @param containsUnPub  value to be assigned to property containsUnPub
-     */
-    public void setContainsUnPub(boolean containsUnPub) {
-        this.containsUnPub = containsUnPub;
-    }
-
     public static Datum internDatum(Datum datum) {
         datum.setDataCenter(datum.getDataCenter());
         datum.setDataInfoId(datum.getDataInfoId());
@@ -251,7 +232,7 @@ public class Datum implements Serializable {
         datum.setGroup(datum.getGroup());
         datum.setInstanceId(datum.getInstanceId());
 
-        Map<String, Publisher> pubMap = datum.getPubMap();
+        Map<String, Publisher> pubMap = datum.pubMap;
         if (pubMap != null && !pubMap.isEmpty()) {
             pubMap.forEach((registerId, publisher) -> {
                 // let registerId == pub.getRegisterId in every <registerId, pub>, for reducing old gen memory
@@ -272,5 +253,35 @@ public class Datum implements Serializable {
             .append(", instanceId=").append(instanceId).append(", version=").append(version)
             .append(", pubMap=").append(pubMap);
         return sb.toString();
+    }
+
+    public boolean addPublisher(Publisher publisher) {
+        for (; ; ) {
+            Publisher existing = pubMap.computeIfAbsent(publisher.getRegisterId(), k -> publisher);
+            if (existing == publisher) {
+                return true;
+            }
+            if (!existing.publisherVersion().lessThan(publisher.publisherVersion())) {
+                return false;
+            }
+            if (pubMap.replace(publisher.getRegisterId(), existing, publisher)) {
+                return true;
+            }
+        }
+    }
+
+    public int publisherSize() {
+        final Map<String, Publisher> m = pubMap;
+        return m == null ? 0 : m.size();
+    }
+
+    public void addPublishers(Map<String, Publisher> publisherMap) {
+        if (publisherMap != null) {
+            pubMap.putAll(publisherMap);
+        }
+    }
+
+    public Map<String, Publisher> publisherSnapshot() {
+        return Maps.newHashMap(pubMap);
     }
 }

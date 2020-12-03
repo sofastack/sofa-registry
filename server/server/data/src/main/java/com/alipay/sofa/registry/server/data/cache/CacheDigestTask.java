@@ -71,8 +71,7 @@ public class CacheDigestTask {
                             LOGGER.info("[Datum]{},{},{},[{}]", dataInfoId,
                                     data.getVersion(), dataCenter, pubStr.toString());
                         }
-                        int pubCount = datumMap.values().stream().map(Datum::getPubMap)
-                                .filter(map -> map != null && !map.isEmpty()).mapToInt(Map::size).sum();
+                        int pubCount = datumMap.values().stream().mapToInt(Datum::publisherSize).sum();
                         LOGGER.info("[CacheDigestTask] size of publisher in {} is {}", dataCenter, pubCount);
                     }
                 } else {

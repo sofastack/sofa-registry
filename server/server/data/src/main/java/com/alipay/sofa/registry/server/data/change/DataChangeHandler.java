@@ -17,15 +17,11 @@
 package com.alipay.sofa.registry.server.data.change;
 
 import com.alipay.sofa.registry.common.model.dataserver.Datum;
-import com.alipay.sofa.registry.common.model.store.Publisher;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.server.data.bootstrap.DataServerConfig;
 import com.alipay.sofa.registry.server.data.cache.DatumCache;
-import com.alipay.sofa.registry.server.data.cache.LocalDatumStorage;
-import com.alipay.sofa.registry.server.data.cache.MergeResult;
-import com.alipay.sofa.registry.server.data.change.event.DataChangeEventCenter;
-import com.alipay.sofa.registry.server.data.change.event.DataChangeEventQueue;
+import com.alipay.sofa.registry.server.data.change.event.*;
 import com.alipay.sofa.registry.server.data.change.notify.IDataChangeNotifier;
 import com.alipay.sofa.registry.server.data.executor.ExecutorFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,7 +29,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.Executor;
 
 /**
@@ -74,8 +69,8 @@ public class DataChangeHandler {
             executor.execute(() -> {
                 while (true) {
                     try {
-                        final ChangeData changeData = dataChangeEventQueue.take();
-                        notifyExecutor.execute(new ChangeNotifier(changeData, name));
+                        final IDataChangeEvent event = dataChangeEventQueue.take();
+                        notifyExecutor.execute(new ChangeNotifier(event, name));
                     } catch (Throwable e) {
                         LOGGER.error("[DataChangeHandler][{}] notify scheduler error", name, e);
                     }
@@ -90,103 +85,67 @@ public class DataChangeHandler {
      */
     private class ChangeNotifier implements Runnable {
 
-        private ChangeData changeData;
+        private IDataChangeEvent event;
 
-        private String     name;
+        private String           name;
 
-        /**
-         * constructor
-         * @param changeData
-         * @param name
-         */
-        public ChangeNotifier(ChangeData changeData, String name) {
-            this.changeData = changeData;
+        public ChangeNotifier(IDataChangeEvent event, String name) {
+            this.event = event;
             this.name = name;
         }
 
         @Override
         public void run() {
-            Datum datum = changeData.getDatum();
-
-            String dataCenter = datum.getDataCenter();
-            String dataInfoId = datum.getDataInfoId();
-            DataSourceTypeEnum sourceType = changeData.getSourceType();
-
-            //update version for pub or unPub merge to cache
-            //if the version product before merge to cache,it may be cause small version override big one
-            datum.updateVersion();
-
-            long version = datum.getVersion();
-
+            final DataSourceTypeEnum sourceType = event.getSourceType();
             try {
-                if (sourceType == DataSourceTypeEnum.PUB_TEMP) {
-                    notifyTempPub(datum, sourceType);
+                switch (sourceType) {
+                    case PUB_TEMP:
+                        DataTempChangeEvent temp = (DataTempChangeEvent) event;
+                        notifyTempPub(temp.getDatum());
+                        break;
 
-                } else {
-                    MergeResult mergeResult = datumCache.putDatum(datum);
-                    Long lastVersion = mergeResult.getLastVersion();
+                    case PUB:
+                        DataChangeEvent pub = (DataChangeEvent) event;
+                        notify(pub.getDataCenter(), pub.getDataInfoId());
+                        break;
 
-                    if (lastVersion != null
-                        && lastVersion.longValue() == LocalDatumStorage.ERROR_DATUM_VERSION) {
-                        LOGGER
-                            .error(
-                                "[DataChangeHandler][{}] first put unPub datum into cache error, dataCenter={}, dataInfoId={}, version={}, sourceType={},isContainsUnPub={}",
-                                name, dataCenter, dataInfoId, version, sourceType,
-                                datum.isContainsUnPub());
-                        return;
-                    }
+                    default:
+                        throw new IllegalArgumentException("unknow SourceType of event:"
+                                                           + event.getSourceType());
 
-                    LOGGER
-                        .info(
-                            "[DataChangeHandler][{}] datum handle,datum={},dataCenter={}, dataInfoId={}, version={}, lastVersion={}, sourceType={},changeFlag={},isContainsUnPub={}",
-                            name, datum.hashCode(), dataCenter, dataInfoId, version, lastVersion,
-                            sourceType, mergeResult.isChangeFlag(), datum.isContainsUnPub());
-                    //lastVersion null means first add datum
-                    if (lastVersion == null || version != lastVersion) {
-                        if (mergeResult.isChangeFlag()) {
-                            notify(datum, sourceType, lastVersion);
-                        }
-                    }
                 }
-            } catch (Exception e) {
-                LOGGER
-                    .error(
-                        "[DataChangeHandler][{}] put datum into cache error, dataCenter={}, dataInfoId={}, version={}, sourceType={},isContainsUnPub={}",
-                        name, dataCenter, dataInfoId, version, sourceType, datum.isContainsUnPub(),
-                        e);
+            } catch (Throwable e) {
+                LOGGER.error("[DataChangeHandler][{}] failed to notify, event={}", name, event, e);
             }
-
         }
 
-        private void notifyTempPub(Datum datum, DataSourceTypeEnum sourceType) {
-
-            String dataCenter = datum.getDataCenter();
-            String dataInfoId = datum.getDataInfoId();
-            long version = datum.getVersion();
-
-            Datum existDatum = datumCache.get(dataCenter, dataInfoId);
+        private void notifyTempPub(Datum datum) {
+            Datum existDatum = datumCache.get(datum.getDataCenter(), datum.getDataInfoId());
             if (existDatum != null) {
-                Map<String, Publisher> cachePubMap = existDatum.getPubMap();
-                if (cachePubMap != null && !cachePubMap.isEmpty()) {
-                    datum.getPubMap().putAll(cachePubMap);
-                }
+                datum.addPublishers(existDatum.getPubMap());
             }
 
-            LOGGER
-                .info(
-                    "[DataChangeHandler][{}] datum handle temp pub,datum={},dataCenter={}, dataInfoId={}, version={}, sourceType={}",
-                    name, datum.hashCode(), dataCenter, dataInfoId, version, sourceType);
-
-            notify(datum, sourceType, null);
+            LOGGER.info("[DataChangeHandler][{}] temp pub, {}, dataCenter={}, size={}, ver={}",
+                name, datum.getDataInfoId(), datum.getDataCenter(), datum.publisherSize(),
+                datum.getVersion());
+            notify(datum, null, DataSourceTypeEnum.PUB_TEMP);
         }
 
-        private void notify(Datum datum, DataSourceTypeEnum sourceType, Long lastVersion) {
+        private void notify(String dataCenter, String dataInfoId) {
+            final Datum datum = datumCache.get(dataCenter, dataInfoId);
+            if (datum != null) {
+                notify(datum, datum.getVersion(), DataSourceTypeEnum.PUB);
+            }
+        }
+
+        private void notify(Datum datum, Long version, DataSourceTypeEnum sourceType) {
             for (IDataChangeNotifier notifier : dataChangeNotifiers) {
                 if (notifier.getSuitableSource().contains(sourceType)) {
-                    notifier.notify(datum, lastVersion);
+                    notifier.notify(datum, version);
                 }
             }
         }
+
     }
 
 }

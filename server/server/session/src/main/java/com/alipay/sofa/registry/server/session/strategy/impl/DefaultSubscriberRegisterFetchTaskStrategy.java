@@ -140,7 +140,7 @@ public class DefaultSubscriberRegisterFetchTaskStrategy implements
         taskEvent.setAttribute(Constant.PUSH_CLIENT_DATUM, datum);
         taskEvent.setAttribute(Constant.PUSH_CLIENT_URL, subscriber.getSourceAddress());
 
-        int size = datum.getPubMap() != null ? datum.getPubMap().size() : 0;
+        int size = datum.publisherSize();
         taskLogger.info("send {} taskURL:{},dataInfoId={},dataCenter={},pubSize={},taskId={}",
             taskEvent.getTaskType(), subscriber.getSourceAddress(), datum.getDataInfoId(),
             datum.getDataCenter(), size, taskEvent.getTaskId());
@@ -159,7 +159,7 @@ public class DefaultSubscriberRegisterFetchTaskStrategy implements
         taskEvent.setAttribute(Constant.PUSH_CLIENT_DATUM, datum);
         taskEvent.setAttribute(Constant.PUSH_CLIENT_URL, subscriber.getSourceAddress());
 
-        int size = datum.getPubMap() != null ? datum.getPubMap().size() : 0;
+        int size = datum.publisherSize();
 
         taskLogger.info("send {} taskURL:{},dataInfoId={},dataCenter={},pubSize={},taskId={}",
             taskEvent.getTaskType(), subscriber.getSourceAddress(), datum.getDataInfoId(),

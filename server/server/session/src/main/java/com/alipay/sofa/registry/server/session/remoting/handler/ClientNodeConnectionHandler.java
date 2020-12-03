@@ -16,6 +16,7 @@
  */
 package com.alipay.sofa.registry.server.session.remoting.handler;
 
+import com.alipay.sofa.registry.common.model.ConnectId;
 import com.alipay.sofa.registry.common.model.constants.ValueConstants;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
@@ -32,6 +33,7 @@ import com.alipay.sofa.registry.server.session.store.Watchers;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -84,18 +86,14 @@ public class ClientNodeConnectionHandler extends AbstractServerHandler {
     private void fireCancelClient(Channel channel) {
         //avoid block connect ConnectionEventExecutor thread pool
         executorManager.getConnectClientExecutor().execute(() -> {
-
-            String connectId = NetUtil.toAddressString(channel.getRemoteAddress()) + ValueConstants.CONNECT_ID_SPLIT +
-                    NetUtil.toAddressString(channel.getLocalAddress());
+            ConnectId connectId = ConnectId.of(channel.getRemoteAddress(), channel.getLocalAddress());
             if (checkCache(connectId)) {
-                List<String> connectIds = new ArrayList<>();
-                connectIds.add(connectId);
-                sessionRegistry.cancel(connectIds);
+                sessionRegistry.cancel(Collections.singletonList(connectId));
             }
         });
     }
 
-    private boolean checkCache(String connectId) {
+    private boolean checkCache(ConnectId connectId) {
         boolean checkSub = checkSub(connectId);
         boolean checkPub = checkPub(connectId);
         boolean checkWatcher = checkWatcher(connectId);
@@ -104,17 +102,17 @@ public class ClientNodeConnectionHandler extends AbstractServerHandler {
         return checkPub || checkSub || checkWatcher;
     }
 
-    private boolean checkPub(String connectId) {
+    private boolean checkPub(ConnectId connectId) {
         Map pubMap = sessionDataStore.queryByConnectId(connectId);
         return pubMap != null && !pubMap.isEmpty();
     }
 
-    private boolean checkSub(String connectId) {
+    private boolean checkSub(ConnectId connectId) {
         Map subMap = sessionInterests.queryByConnectId(connectId);
         return subMap != null && !subMap.isEmpty();
     }
 
-    private boolean checkWatcher(String connectId) {
+    private boolean checkWatcher(ConnectId connectId) {
         Map subMap = sessionWatchers.queryByConnectId(connectId);
         return subMap != null && !subMap.isEmpty();
     }

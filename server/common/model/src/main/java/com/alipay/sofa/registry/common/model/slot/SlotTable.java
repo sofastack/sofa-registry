@@ -154,4 +154,16 @@ public final class SlotTable implements Serializable {
         });
         return new SlotTable(epoch, slotMap);
     }
+
+    public void assertSlotLessThan(SlotTable slotTable) {
+        slots.values().forEach(s -> {
+            Slot after = slotTable.getSlot(s.getId());
+            if (after == null) {
+                return;
+            }
+            if (s.getLeaderEpoch() > after.getLeaderEpoch()) {
+                throw new RuntimeException(String.format("not expect Slot.LeaderEpoch, %s, %s", s, after));
+            }
+        });
+    }
 }

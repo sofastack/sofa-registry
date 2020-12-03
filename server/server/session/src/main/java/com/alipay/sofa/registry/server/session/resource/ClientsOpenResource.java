@@ -17,6 +17,7 @@
 package com.alipay.sofa.registry.server.session.resource;
 
 import com.alipay.sofa.registry.common.model.CommonResponse;
+import com.alipay.sofa.registry.common.model.ConnectId;
 import com.alipay.sofa.registry.common.model.sessionserver.CancelAddressRequest;
 import com.alipay.sofa.registry.server.session.registry.Registry;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -60,7 +61,7 @@ public class ClientsOpenResource {
             return CommonResponse.buildFailedResponse("ConnectIds can not be null.");
         }
 
-        final List<String> connectIds = request.getConnectIds();
+        final List<ConnectId> connectIds = request.getConnectIds();
         sessionRegistry.cancel(connectIds);
         return CommonResponse.buildSuccessResponse();
     }

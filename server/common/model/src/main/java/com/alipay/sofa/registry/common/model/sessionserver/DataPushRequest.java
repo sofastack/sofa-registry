@@ -61,9 +61,7 @@ public class DataPushRequest implements Serializable {
         sb.append("dataInfoId=").append(datum.getDataInfoId());
         sb.append(", dataCenter=").append(datum.getDataCenter());
         sb.append(", version=").append(datum.getVersion());
-        if (datum.getPubMap() != null) {
-            sb.append(", pubsize=").append(datum.getPubMap().size());
-        }
+        sb.append(", pubsize=").append(datum.publisherSize());
         sb.append('}');
         return sb.toString();
     }

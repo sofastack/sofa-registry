@@ -16,6 +16,7 @@
  */
 package com.alipay.sofa.registry.server.data.cache;
 
+import com.alipay.sofa.registry.common.model.ProcessId;
 import com.alipay.sofa.registry.common.model.store.DataInfo;
 import com.alipay.sofa.registry.common.model.store.Publisher;
 
@@ -32,15 +33,20 @@ public class UnPublisher extends Publisher {
      * @param registerId
      * @param registerTimeStamp
      */
-    public UnPublisher(String dataInfoId, String registerId, long registerTimeStamp) {
+    public UnPublisher(String dataInfoId, ProcessId sessionProcessId, String registerId,
+                       long registerTimeStamp, long version) {
         setDataInfoId(dataInfoId);
         setRegisterId(registerId);
         setRegisterTimestamp(registerTimeStamp);
+        setVersion(version);
         //avoid new datum dataId is null
         DataInfo dataInfo = DataInfo.valueOf(dataInfoId);
         setDataId(dataInfo.getDataId());
         setGroup(dataInfo.getDataType());
         setInstanceId(dataInfo.getInstanceId());
+
+        setSessionProcessId(sessionProcessId);
+
     }
 
     @Override

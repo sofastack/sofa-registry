@@ -193,7 +193,7 @@ public class DataPushTask extends AbstractSessionTask {
         taskEvent.setAttribute(Constant.PUSH_CLIENT_DATUM, datum);
         taskEvent.setAttribute(Constant.PUSH_CLIENT_URL, new URL(address));
 
-        int size = datum.getPubMap() != null ? datum.getPubMap().size() : 0;
+        int size = datum.publisherSize();
 
         taskLogger.info("send {} taskURL:{},dataInfoId={},dataCenter={},pubSize={},subSize={}",
             taskEvent.getTaskType(), address, datum.getDataInfoId(), datum.getDataCenter(), size,
@@ -210,7 +210,7 @@ public class DataPushTask extends AbstractSessionTask {
         taskEvent.setAttribute(Constant.PUSH_CLIENT_DATUM, datum);
         taskEvent.setAttribute(Constant.PUSH_CLIENT_URL, new URL(address));
 
-        int size = datum.getPubMap() != null ? datum.getPubMap().size() : 0;
+        int size = datum.publisherSize();
 
         taskLogger.info("send {} taskURL:{},dataInfoId={},dataCenter={},pubSize={},subSize={}",
             taskEvent.getTaskType(), address, datum.getDataInfoId(), datum.getDataCenter(), size,

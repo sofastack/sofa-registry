@@ -14,16 +14,33 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alipay.sofa.registry.server.data.remoting.sessionserver.disconnect;
+package com.alipay.sofa.registry.server.data.change.event;
+
+import com.alipay.sofa.registry.common.model.dataserver.Datum;
+import com.alipay.sofa.registry.server.data.change.DataSourceTypeEnum;
 
 /**
  *
- * @author qian.lqlq
- * @version $Id: DisconnectTypeEnum.java, v 0.1 2018-04-15 14:58 qian.lqlq Exp $
+ * @author yuzhi.lyz
+ * @version v 0.1 2020-12-08 19:54 yuzhi.lyz Exp $
  */
-public enum DisconnectTypeEnum {
-    /** */
-    CLIENT,
-    /** */
-    SESSION_SERVER
+public final class DataTempChangeEvent implements IDataChangeEvent {
+    private final Datum datum;
+
+    public DataTempChangeEvent(Datum datum) {
+        this.datum = datum;
+    }
+
+    /**
+     * Getter method for property <tt>datum</tt>.
+     * @return property value of datum
+     */
+    public Datum getDatum() {
+        return datum;
+    }
+
+    @Override
+    public DataSourceTypeEnum getSourceType() {
+        return DataSourceTypeEnum.PUB_TEMP;
+    }
 }

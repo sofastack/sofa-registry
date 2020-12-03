@@ -29,8 +29,8 @@ import com.alipay.sofa.registry.remoting.Channel;
 import com.alipay.sofa.registry.remoting.ChannelHandler;
 import com.alipay.sofa.registry.server.data.bootstrap.DataServerConfig;
 import com.alipay.sofa.registry.server.data.cache.DatumStorage;
-import com.alipay.sofa.registry.server.data.cache.SlotManager;
 import com.alipay.sofa.registry.server.data.remoting.handler.AbstractServerHandler;
+import com.alipay.sofa.registry.server.data.slot.SlotManager;
 import com.alipay.sofa.registry.util.ParaCheckUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -71,8 +71,13 @@ public class SlotFollowerDiffPublisherRequestHandler
     public Object doHandle(Channel channel, DataSlotDiffPublisherRequest request) {
         try {
             slotManager.triggerUpdateSlotTable(request.getSlotTableEpoch());
-            DataSlotDiffSyncResult result = calcDiffResult(request.getSlotId(),
-                request.getDatumSummarys(), localDatumStorage.getPublishers(request.getSlotId()));
+            final int slotId = request.getSlotId();
+            if (!slotManager.isLeader(slotId)) {
+                LOGGER.warn("not leader of {}", slotId);
+                return new GenericResponse().fillFailed("not leader of " + slotId);
+            }
+            DataSlotDiffSyncResult result = calcDiffResult(slotId, request.getDatumSummarys(),
+                localDatumStorage.getPublishers(request.getSlotId()));
             result.setSlotTableEpoch(slotManager.getSlotTableEpoch());
             return new GenericResponse().fillSucceed(result);
         } catch (Throwable e) {

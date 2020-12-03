@@ -23,7 +23,7 @@ import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.remoting.Channel;
 import com.alipay.sofa.registry.server.data.remoting.handler.AbstractClientHandler;
-import com.alipay.sofa.registry.server.data.cache.SlotManager;
+import com.alipay.sofa.registry.server.data.slot.SlotManager;
 import com.alipay.sofa.registry.util.ParaCheckUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 

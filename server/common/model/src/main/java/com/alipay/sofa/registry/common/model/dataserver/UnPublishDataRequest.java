@@ -26,7 +26,7 @@ import java.io.Serializable;
  * @author qian.lqlq
  * @version $Id: UnPublishDataRequest.java, v 0.1 2017-12-01 15:48 qian.lqlq Exp $
  */
-public class UnPublishDataRequest implements Serializable {
+public class UnPublishDataRequest extends AbstractSlotRequest {
 
     private static final long serialVersionUID = 4344115202203415801L;
 
@@ -36,7 +36,7 @@ public class UnPublishDataRequest implements Serializable {
 
     private final long        registerTimestamp;
 
-    private final ProcessId   processId;
+    private final long        version;
 
     /**
      * construtor
@@ -45,11 +45,12 @@ public class UnPublishDataRequest implements Serializable {
      * @param registerTimestamp
      */
     public UnPublishDataRequest(String dataInfoId, String registerId, long registerTimestamp,
-                                ProcessId processId) {
+                                ProcessId sessionProcessId, long version) {
+        super(sessionProcessId);
         this.dataInfoId = dataInfoId;
         this.registerId = registerId;
         this.registerTimestamp = registerTimestamp;
-        this.processId = processId;
+        this.version = version;
     }
 
     /**
@@ -80,17 +81,18 @@ public class UnPublishDataRequest implements Serializable {
     }
 
     /**
-     * Getter method for property <tt>processId</tt>.
-     * @return property value of processId
+     * Getter method for property <tt>version</tt>.
+     * @return property value of version
      */
-    public ProcessId getProcessId() {
-        return processId;
+    public long getVersion() {
+        return version;
     }
 
     @Override
     public String toString() {
-        return new StringBuilder("[UnPublishDataRequest] dataInfoId=").append(this.dataInfoId)
-            .append(", registerId=").append(this.registerId).append(", registerTimestamp=")
-            .append(this.registerTimestamp).toString();
+        return "UnPublishDataRequest{" + "dataInfoId='" + dataInfoId + '\'' + ", registerId='"
+               + registerId + '\'' + ", registerTimestamp=" + registerTimestamp + ", version="
+               + version + ", sessionProcessId=" + sessionProcessId + ", slotTableEpoch="
+               + slotTableEpoch + '}';
     }
 }

@@ -18,9 +18,10 @@ package com.alipay.sofa.registry.common.model.store;
 
 import java.util.List;
 
-import com.alipay.sofa.registry.common.model.PublishType;
-import com.alipay.sofa.registry.common.model.ServerDataBox;
+import com.alipay.sofa.registry.common.model.*;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.google.common.collect.Collections2;
+import org.apache.commons.collections.CollectionUtils;
 
 /**
  *
@@ -35,6 +36,28 @@ public class Publisher extends BaseInfo {
     private List<ServerDataBox> dataList;
 
     private PublishType         publishType      = PublishType.NORMAL;
+
+    @JsonIgnore
+    private ProcessId           sessionProcessId;
+
+    public Publisher() {
+    }
+
+    /**
+     * Getter method for property <tt>sessionProcessId</tt>.
+     * @return property value of sessionProcessId
+     */
+    public ProcessId getSessionProcessId() {
+        return sessionProcessId;
+    }
+
+    /**
+     * Setter method for property <tt>sessionProcessId</tt>.
+     * @param sessionProcessId value to be assigned to property sessionProcessId
+     */
+    public void setSessionProcessId(ProcessId sessionProcessId) {
+        this.sessionProcessId = sessionProcessId;
+    }
 
     /**
      * Getter method for property <tt>dataList</tt>.
@@ -102,6 +125,10 @@ public class Publisher extends BaseInfo {
         publisher.setAppName(publisher.getAppName());
 
         return publisher;
+    }
+
+    public PublisherVersion publisherVersion() {
+        return PublisherVersion.of(getVersion(), getRegisterTimestamp());
     }
 
 }

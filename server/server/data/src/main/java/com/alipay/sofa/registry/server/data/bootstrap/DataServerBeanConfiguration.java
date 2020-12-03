@@ -19,13 +19,17 @@ package com.alipay.sofa.registry.server.data.bootstrap;
 import com.alipay.sofa.registry.remoting.bolt.exchange.BoltExchange;
 import com.alipay.sofa.registry.remoting.exchange.Exchange;
 import com.alipay.sofa.registry.remoting.jersey.exchange.JerseyExchange;
-import com.alipay.sofa.registry.server.data.cache.*;
+import com.alipay.sofa.registry.server.data.cache.CacheDigestTask;
+import com.alipay.sofa.registry.server.data.cache.DatumCache;
+import com.alipay.sofa.registry.server.data.cache.DatumStorage;
+import com.alipay.sofa.registry.server.data.cache.LocalDatumStorage;
 import com.alipay.sofa.registry.server.data.change.DataChangeHandler;
 import com.alipay.sofa.registry.server.data.change.event.DataChangeEventCenter;
 import com.alipay.sofa.registry.server.data.change.notify.IDataChangeNotifier;
 import com.alipay.sofa.registry.server.data.change.notify.SessionServerNotifier;
 import com.alipay.sofa.registry.server.data.change.notify.TempPublisherNotifier;
 import com.alipay.sofa.registry.server.data.event.EventCenter;
+import com.alipay.sofa.registry.server.data.lease.SessionLeaseManager;
 import com.alipay.sofa.registry.server.data.remoting.DataNodeExchanger;
 import com.alipay.sofa.registry.server.data.remoting.MetaNodeExchanger;
 import com.alipay.sofa.registry.server.data.remoting.SessionNodeExchanger;
@@ -40,10 +44,11 @@ import com.alipay.sofa.registry.server.data.remoting.metaserver.provideData.Prov
 import com.alipay.sofa.registry.server.data.remoting.metaserver.provideData.ProvideDataProcessorManager;
 import com.alipay.sofa.registry.server.data.remoting.metaserver.provideData.processor.DatumExpireProvideDataProcessor;
 import com.alipay.sofa.registry.server.data.remoting.sessionserver.SessionServerConnectionFactory;
-import com.alipay.sofa.registry.server.data.remoting.sessionserver.disconnect.DisconnectEventHandler;
 import com.alipay.sofa.registry.server.data.remoting.sessionserver.handler.*;
 import com.alipay.sofa.registry.server.data.resource.DataDigestResource;
 import com.alipay.sofa.registry.server.data.resource.HealthResource;
+import com.alipay.sofa.registry.server.data.slot.SlotManager;
+import com.alipay.sofa.registry.server.data.slot.SlotManagerImpl;
 import com.alipay.sofa.registry.server.data.util.ThreadPoolExecutorDataServer;
 import com.alipay.sofa.registry.util.NamedThreadFactory;
 import com.alipay.sofa.registry.util.PropertySplitter;
@@ -111,13 +116,19 @@ public class DataServerBeanConfiguration {
         @Bean
         @ConditionalOnMissingBean
         public DatumStorage localDatumStorage() {
-            return new SlotLocalDatumStorage();
+            return new LocalDatumStorage();
         }
 
         @Bean
         @ConditionalOnMissingBean
         public SlotManager slotManager() {
             return new SlotManagerImpl();
+        }
+
+        @Bean
+        @ConditionalOnMissingBean
+        public SessionLeaseManager sessionLeaseManager() {
+            return new SessionLeaseManager();
         }
     }
 
@@ -236,12 +247,6 @@ public class DataServerBeanConfiguration {
         public NotifyProvideDataChangeHandler notifyProvideDataChangeHandler() {
             return new NotifyProvideDataChangeHandler();
         }
-
-        @Bean
-        public DisconnectEventHandler disconnectEventHandler() {
-            return new DisconnectEventHandler();
-        }
-
     }
 
     @Configuration

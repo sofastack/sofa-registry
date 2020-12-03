@@ -26,43 +26,28 @@ import com.alipay.sofa.registry.server.data.change.DataSourceTypeEnum;
  * @version $Id: DataChangeEvent.java, v 0.1 2017-12-07 18:44 qian.lqlq Exp $
  */
 public class DataChangeEvent implements IDataChangeEvent {
+    private final String dataCenter;
+    private final String dataInfoId;
 
-    /**
-     *
-     */
-    private DataSourceTypeEnum sourceType;
-
-    /**
-     * data changed
-     */
-    private Datum              datum;
-
-    /**
-     * constructor
-     * @param sourceType
-     * @param datum
-     */
-    public DataChangeEvent(DataSourceTypeEnum sourceType, Datum datum) {
-        this.sourceType = sourceType;
-        this.datum = datum;
+    public DataChangeEvent(String dataCenter, String dataInfoId) {
+        this.dataCenter = dataCenter;
+        this.dataInfoId = dataInfoId;
     }
 
     /**
-     * Getter method for property <tt>datum</tt>.
-     *
-     * @return property value of datum
+     * Getter method for property <tt>dataCenter</tt>.
+     * @return property value of dataCenter
      */
-    public Datum getDatum() {
-        return datum;
+    public String getDataCenter() {
+        return dataCenter;
     }
 
     /**
-     * Setter method for property <tt>datum</tt>.
-     *
-     * @param datum  value to be assigned to property datum
+     * Getter method for property <tt>dataInfoId</tt>.
+     * @return property value of dataInfoId
      */
-    public void setDatum(Datum datum) {
-        this.datum = datum;
+    public String getDataInfoId() {
+        return dataInfoId;
     }
 
     /**
@@ -71,12 +56,6 @@ public class DataChangeEvent implements IDataChangeEvent {
      * @return property value of sourceType
      */
     public DataSourceTypeEnum getSourceType() {
-        return sourceType;
+        return DataSourceTypeEnum.PUB;
     }
-
-    @Override
-    public DataChangeScopeEnum getScope() {
-        return DataChangeScopeEnum.DATUM;
-    }
-
 }

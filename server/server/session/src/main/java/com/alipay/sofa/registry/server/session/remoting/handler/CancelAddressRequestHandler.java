@@ -16,6 +16,7 @@
  */
 package com.alipay.sofa.registry.server.session.remoting.handler;
 
+import com.alipay.sofa.registry.common.model.ConnectId;
 import com.alipay.sofa.registry.common.model.Node.NodeType;
 import com.alipay.sofa.registry.common.model.sessionserver.CancelAddressRequest;
 import com.alipay.sofa.registry.core.model.Result;
@@ -65,7 +66,7 @@ public class CancelAddressRequestHandler extends AbstractServerHandler<CancelAdd
 
         try {
             EXCHANGE_LOGGER.info("request={}", cancelProcessRequest);
-            List<String> connectIds = cancelProcessRequest.getConnectIds();
+            List<ConnectId> connectIds = cancelProcessRequest.getConnectIds();
             if (connectIds == null || connectIds.isEmpty()) {
                 LOGGER.error("Request connectIds cannot be null or empty!");
                 result.setMessage("Request connectIds cannot be null or empty!");

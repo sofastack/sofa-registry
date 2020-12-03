@@ -16,6 +16,7 @@
  */
 package com.alipay.sofa.registry.server.session.acceptor;
 
+import com.alipay.sofa.registry.common.model.ConnectId;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
@@ -42,9 +43,9 @@ public class WriteDataProcessor {
 
     private final SessionServerConfig sessionServerConfig;
 
-    private final String              connectId;
+    private final ConnectId           connectId;
 
-    public WriteDataProcessor(String connectId, TaskListenerManager taskListenerManager,
+    public WriteDataProcessor(ConnectId connectId, TaskListenerManager taskListenerManager,
                               SessionServerConfig sessionServerConfig) {
         this.connectId = connectId;
         this.taskListenerManager = taskListenerManager;
@@ -86,7 +87,7 @@ public class WriteDataProcessor {
                 connectId, request.getRequestType(), request.getRequestBody());
         }
 
-        String connectId = request.getConnectId();
+        ConnectId connectId = request.getConnectId();
         sendEvent(Lists.newArrayList(connectId), TaskType.CANCEL_DATA_TASK);
     }
 

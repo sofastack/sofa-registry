@@ -16,6 +16,8 @@
  */
 package com.alipay.sofa.registry.server.session.acceptor;
 
+import com.alipay.sofa.registry.common.model.ConnectId;
+
 /**
  *
  * @author kezhu.wukz
@@ -40,7 +42,7 @@ public interface WriteDataRequest<T> {
 
     WriteDataRequestType getRequestType();
 
-    String getConnectId();
+    ConnectId getConnectId();
 
     String getDataServerIP();
 }

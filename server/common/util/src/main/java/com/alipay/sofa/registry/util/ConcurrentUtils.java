@@ -30,7 +30,11 @@ import java.util.concurrent.Executor;
  * <p>
  * Nov 23, 2020
  */
-public class ConcurrentUtils {
+public final class ConcurrentUtils {
+    private static final Logger LOGGER = LoggerFactory.getLogger(ConcurrentUtils.class);
+
+    private ConcurrentUtils() {
+    }
 
     public static abstract class SafeParaLoop<T> {
 
@@ -85,6 +89,7 @@ public class ConcurrentUtils {
         try {
             o.wait(timeoutMs);
         } catch (InterruptedException ignored) {
+            LOGGER.warn("Interrupted waiting", ignored);
         }
     }
 }

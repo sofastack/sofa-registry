@@ -27,19 +27,15 @@ import java.io.Serializable;
  * @author qian.lqlq
  * @version $Id: PublishDataRequest.java, v 0.1 2017-12-06 15:56 qian.lqlq Exp $
  */
-public class PublishDataRequest implements Serializable {
+public class PublishDataRequest extends AbstractSlotRequest {
 
     private static final long serialVersionUID = 3900211443485220361L;
 
     private final Publisher   publisher;
 
-    private long              slotTableEpoch;
-
-    private final ProcessId   sessionProcessId;
-
     public PublishDataRequest(Publisher publisher, ProcessId sessionProcessId) {
+        super(sessionProcessId);
         this.publisher = publisher;
-        this.sessionProcessId = sessionProcessId;
     }
 
     /**
@@ -49,30 +45,6 @@ public class PublishDataRequest implements Serializable {
      */
     public Publisher getPublisher() {
         return publisher;
-    }
-
-    /**
-     * Getter method for property <tt>slotTableEpoch</tt>.
-     * @return property value of slotTableEpoch
-     */
-    public long getSlotTableEpoch() {
-        return slotTableEpoch;
-    }
-
-    /**
-     * Setter method for property <tt>slotTableEpoch</tt>.
-     * @param slotTableEpoch value to be assigned to property slotEpoch
-     */
-    public void setSlotTableEpoch(long slotTableEpoch) {
-        this.slotTableEpoch = slotTableEpoch;
-    }
-
-    /**
-     * Getter method for property <tt>sessionProcessId</tt>.
-     * @return property value of sessionProcessId
-     */
-    public ProcessId getSessionProcessId() {
-        return sessionProcessId;
     }
 
     @Override

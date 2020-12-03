@@ -18,10 +18,14 @@ package com.alipay.sofa.registry.common.model.slot;
 
 import com.alipay.sofa.registry.common.model.ProcessId;
 import com.alipay.sofa.registry.common.model.store.Publisher;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
 
 import java.io.Serializable;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -44,9 +48,10 @@ public class DataSlotDiffSyncResult implements Serializable {
                                   Map<String, List<Publisher>> updatedPublishers,
                                   List<String> removedDataInfoIds,
                                   Map<String, List<String>> removedPublishers) {
-        this.updatedPublishers = updatedPublishers;
-        this.removedDataInfoIds = removedDataInfoIds;
-        this.removedPublishers = removedPublishers;
+        this.updatedPublishers = Collections.unmodifiableMap(Maps.newHashMap(updatedPublishers));
+        this.removedDataInfoIds = Collections.unmodifiableList(Lists
+            .newArrayList(removedDataInfoIds));
+        this.removedPublishers = Collections.unmodifiableMap(Maps.newHashMap(removedPublishers));
         this.hasRemain = hasRemain;
     }
 

@@ -43,4 +43,5 @@ public final class SlotFunctionRegistry {
         // TODO need config by env?
         return funcs.get(DEF_FUNC);
     }
+
 }

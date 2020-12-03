@@ -192,12 +192,13 @@ public class DataServerBootstrap {
     }
 
     private void fetchProviderData() {
-        ProvideData provideData = metaServerService.fetchData(ValueConstants.DATA_DATUM_EXPIRE_SEC);
+        ProvideData provideData = metaServerService
+            .fetchData(ValueConstants.DATA_SESSION_LEASE_SEC);
         Integer expireSec = ProvideData.toInteger(provideData);
         if (expireSec != null) {
-            dataServerConfig.setSlotLeaderDatumExpireSec(expireSec);
-            LOGGER.info("Fetch {}={}, update current config", ValueConstants.DATA_DATUM_EXPIRE_SEC,
-                expireSec);
+            dataServerConfig.setSessionLeaseSec(expireSec);
+            LOGGER.info("Fetch {}={}, update current config",
+                ValueConstants.DATA_SESSION_LEASE_SEC, expireSec);
         }
 
         provideData = metaServerService

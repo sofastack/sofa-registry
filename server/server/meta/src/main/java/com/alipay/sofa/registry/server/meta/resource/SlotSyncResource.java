@@ -61,7 +61,7 @@ public class SlotSyncResource {
         DBResponse syncSessionIntervalSec = persistenceDataDBService
             .get(ValueConstants.DATA_DATUM_SYNC_SESSION_INTERVAL_SEC);
         DBResponse dataDatumExpire = persistenceDataDBService
-            .get(ValueConstants.DATA_DATUM_EXPIRE_SEC);
+            .get(ValueConstants.DATA_SESSION_LEASE_SEC);
 
         resultMap.put("syncSessionIntervalSec", getEntityData(syncSessionIntervalSec));
         resultMap.put("dataDatumExpire", getEntityData(dataDatumExpire));

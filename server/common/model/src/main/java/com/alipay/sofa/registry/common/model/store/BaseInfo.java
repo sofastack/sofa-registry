@@ -20,6 +20,7 @@ import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.alipay.sofa.registry.common.model.ConnectId;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
 /**
@@ -403,6 +404,11 @@ public abstract class BaseInfo implements Serializable, StoreData<String> {
         sb.append(", attributes=").append(attributes);
         sb.append('}');
         return sb.toString();
+    }
+
+    public ConnectId connectId() {
+        return new ConnectId(getSourceAddress().getIpAddress(), getSourceAddress().getPort(),
+            getTargetAddress().getIpAddress(), getTargetAddress().getPort());
     }
 
 }
