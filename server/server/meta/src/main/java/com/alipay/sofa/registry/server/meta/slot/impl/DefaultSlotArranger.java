@@ -41,7 +41,8 @@ import javax.annotation.PreDestroy;
 
 public class DefaultSlotArranger implements SlotArranger, Observer {
 
-    private static final Logger logger = LoggerFactory.getLogger(DefaultSlotArranger.class);
+    private static final Logger             logger = LoggerFactory
+                                                       .getLogger(DefaultSlotArranger.class);
 
     @Autowired
     private DataServerManager               dataServerManager;
@@ -61,7 +62,7 @@ public class DefaultSlotArranger implements SlotArranger, Observer {
 
     @Override
     public void update(Observable source, Object message) {
-        if(logger.isInfoEnabled()) {
+        if (logger.isInfoEnabled()) {
             logger.info("[update] source: {}, message: {}", source, message);
         }
         if (message instanceof NodeAdded) {

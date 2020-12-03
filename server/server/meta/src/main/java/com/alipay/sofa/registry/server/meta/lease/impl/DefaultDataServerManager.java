@@ -44,7 +44,7 @@ public class DefaultDataServerManager extends AbstractRaftEnabledLeaseManager<Da
 
     private static final String DEFAULT_DATA_MANAGER_SERVICE_ID = "DefaultDataServerManager.LeaseManager";
 
-    private ExecutorService executors;
+    private ExecutorService     executors;
 
     @PostConstruct
     public void postConstruct() throws Exception {
@@ -61,9 +61,8 @@ public class DefaultDataServerManager extends AbstractRaftEnabledLeaseManager<Da
     @Override
     protected void doInitialize() throws InitializeException {
         super.doInitialize();
-        executors = DefaultExecutorFactory
-                .createAllowCoreTimeout(getClass().getSimpleName(), Math.min(8, OsUtils.getCpuCount()))
-                .create();
+        executors = DefaultExecutorFactory.createAllowCoreTimeout(getClass().getSimpleName(),
+            Math.min(8, OsUtils.getCpuCount())).create();
         localLeaseManager.setExecutors(executors);
         localLeaseManager.setLogger(logger);
     }

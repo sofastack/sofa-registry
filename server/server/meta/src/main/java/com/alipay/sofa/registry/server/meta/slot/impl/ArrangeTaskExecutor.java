@@ -42,7 +42,7 @@ import java.util.function.BiConsumer;
 
 public class ArrangeTaskExecutor extends AbstractLifecycle {
 
-    private volatile ExecutorService              executors;
+    private volatile ExecutorService     executors;
 
     private BlockingQueue<RebalanceTask> tasks      = new LinkedBlockingQueue<>();
 
@@ -68,7 +68,7 @@ public class ArrangeTaskExecutor extends AbstractLifecycle {
     protected void doInitialize() throws InitializeException {
         super.doInitialize();
         executors = DefaultExecutorFactory.createAllowCoreTimeout(getClass().getSimpleName(),
-                Math.max(4, OsUtils.getCpuCount())).create();
+            Math.max(4, OsUtils.getCpuCount())).create();
     }
 
     @Override
@@ -89,7 +89,7 @@ public class ArrangeTaskExecutor extends AbstractLifecycle {
         logger.info("[offer]{}", task);
         boolean offered = false;
         synchronized (this) {
-            if(getLifecycleState().isDisposing() || getLifecycleState().isDisposed()) {
+            if (getLifecycleState().isDisposing() || getLifecycleState().isDisposed()) {
                 throw new SofaRegistryRuntimeException("new input tasks are not accepted");
             }
             offered = tasks.offer(task);
@@ -128,7 +128,7 @@ public class ArrangeTaskExecutor extends AbstractLifecycle {
                 future.whenCompleteAsync(new BiConsumer<Object, Throwable>() {
                     @Override
                     public void accept(Object o, Throwable throwable) {
-                        if(throwable != null) {
+                        if (throwable != null) {
                             logger.error("[task error]{}", currentTask, throwable);
                         }
                         currentTask = null;

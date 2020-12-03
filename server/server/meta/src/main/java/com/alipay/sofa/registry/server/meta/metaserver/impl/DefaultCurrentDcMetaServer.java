@@ -17,6 +17,7 @@
 package com.alipay.sofa.registry.server.meta.metaserver.impl;
 
 import com.alipay.sofa.registry.common.model.Node;
+import com.alipay.sofa.registry.common.model.metaserver.nodes.DataNode;
 import com.alipay.sofa.registry.common.model.metaserver.nodes.MetaNode;
 import com.alipay.sofa.registry.common.model.metaserver.nodes.SessionNode;
 import com.alipay.sofa.registry.common.model.slot.SlotTable;
@@ -64,7 +65,7 @@ import java.util.concurrent.atomic.AtomicReference;
 public class DefaultCurrentDcMetaServer extends AbstractMetaServer implements CurrentDcMetaServer {
 
     @Autowired
-    private SlotManager           defaultSlotManager;
+    private SlotManager                  defaultSlotManager;
 
     @Autowired
     private SessionManager               sessionManager;
@@ -134,6 +135,11 @@ public class DefaultCurrentDcMetaServer extends AbstractMetaServer implements Cu
     }
 
     @Override
+    public List<DataNode> getDataServers() {
+        return dataServerManager.getClusterMembers();
+    }
+
+    @Override
     public void updateClusterMembers(List<MetaNode> newMembers) {
         raftStorage.updateClusterMembers(newMembers, DatumVersionUtil.nextId());
     }
@@ -195,7 +201,8 @@ public class DefaultCurrentDcMetaServer extends AbstractMetaServer implements Cu
                + ", metaServers=" + metaServers + '}';
     }
 
-    public class MetaServersRaftStorage extends AbstractSnapshotProcess implements CurrentMetaServerRaftStorage {
+    public class MetaServersRaftStorage extends AbstractSnapshotProcess implements
+                                                                       CurrentMetaServerRaftStorage {
 
         @Override
         public long getEpoch() {
@@ -269,7 +276,8 @@ public class DefaultCurrentDcMetaServer extends AbstractMetaServer implements Cu
             DefaultCurrentDcMetaServer currentDcMetaServer = new DefaultCurrentDcMetaServer();
             MetaServersRaftStorage storage = currentDcMetaServer.new MetaServersRaftStorage();
             currentDcMetaServer.setRaftStorage(storage).setCurrentEpoch(currentEpoch.get());
-            currentDcMetaServer.metaServers = new AtomicReference<>(Lists.newArrayList(metaServers.get()));
+            currentDcMetaServer.metaServers = new AtomicReference<>(Lists.newArrayList(metaServers
+                .get()));
             return storage;
         }
 

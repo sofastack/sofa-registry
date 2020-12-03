@@ -38,16 +38,16 @@ import java.util.*;
  */
 public class ServerDeadRebalanceWork implements RebalanceTask {
 
-    private SlotManager       slotManager;
+    private SlotManager              slotManager;
 
     private DefaultDataServerManager dataServerManager;
 
-    private DataNode          deadServer;
+    private DataNode                 deadServer;
 
-    private long              nextEpoch;
+    private long                     nextEpoch;
 
-    public ServerDeadRebalanceWork(SlotManager slotManager, DefaultDataServerManager dataServerManager,
-                                   DataNode deadServer) {
+    public ServerDeadRebalanceWork(SlotManager slotManager,
+                                   DefaultDataServerManager dataServerManager, DataNode deadServer) {
         this.slotManager = slotManager;
         this.dataServerManager = dataServerManager;
         this.deadServer = deadServer;
@@ -83,8 +83,7 @@ public class ServerDeadRebalanceWork implements RebalanceTask {
             newFollowers.remove(newLeader);
             // replace the slot info
             nextEpoch = DatumVersionUtil.nextId();
-            Slot newSlot = new Slot(slot.getId(), newLeader, nextEpoch,
-                newFollowers);
+            Slot newSlot = new Slot(slot.getId(), newLeader, nextEpoch, newFollowers);
             slotMap.put(slotNum, newSlot);
         }
     }
@@ -92,14 +91,15 @@ public class ServerDeadRebalanceWork implements RebalanceTask {
     private String promotesFollower(Set<String> followers, Set<String> selectedFollowers) {
         String result = followers.iterator().next();
         int minLeaderSlots = slotManager
-                .getDataNodeManagedSlot(new DataNode(new URL(result), deadServer.getDataCenter()), true)
-                .getLeaders().size();
-        for(String follower : followers) {
-            if(follower.equals(result)) {
+            .getDataNodeManagedSlot(new DataNode(new URL(result), deadServer.getDataCenter()), true)
+            .getLeaders().size();
+        for (String follower : followers) {
+            if (follower.equals(result)) {
                 continue;
             }
-            DataNodeSlot slot = slotManager.getDataNodeManagedSlot(new DataNode(new URL(follower), deadServer.getDataCenter()), true);
-            if(slot.getLeaders().size() < minLeaderSlots && !selectedFollowers.contains(follower)) {
+            DataNodeSlot slot = slotManager.getDataNodeManagedSlot(new DataNode(new URL(follower),
+                deadServer.getDataCenter()), true);
+            if (slot.getLeaders().size() < minLeaderSlots && !selectedFollowers.contains(follower)) {
                 result = follower;
                 minLeaderSlots = slot.getLeaders().size();
             }
@@ -116,8 +116,7 @@ public class ServerDeadRebalanceWork implements RebalanceTask {
             slot.getFollowers().add(newFollower);
             // generate new slot, as epoch has been changed
             nextEpoch = DatumVersionUtil.nextId();
-            Slot newSlot = new Slot(slot.getId(), slot.getLeader(), nextEpoch,
-                slot.getFollowers());
+            Slot newSlot = new Slot(slot.getId(), slot.getLeader(), nextEpoch, slot.getFollowers());
             slotMap.put(slotNum, newSlot);
         }
     }
@@ -137,7 +136,7 @@ public class ServerDeadRebalanceWork implements RebalanceTask {
         int randomIndex = Math.abs(new Random().nextInt(candidates.size())) & candidates.size();
         Iterator<String> iterator = candidates.iterator();
         String result = null;
-        while(iterator.hasNext() && randomIndex-- > 0) {
+        while (iterator.hasNext() && randomIndex-- > 0) {
             result = iterator.next();
         }
         return result;

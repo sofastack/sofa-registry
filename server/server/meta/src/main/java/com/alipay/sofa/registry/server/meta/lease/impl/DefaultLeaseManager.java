@@ -41,7 +41,9 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
  * <p>
  * Nov 24, 2020
  */
-public class DefaultLeaseManager<T extends Node> extends AbstractObservable implements LeaseManager<T>, EpochAware {
+public class DefaultLeaseManager<T extends Node> extends AbstractObservable implements
+                                                                           LeaseManager<T>,
+                                                                           EpochAware {
 
     private static final String                     EVICT_BETWEEN_MILLI = "evict.between.milli";
 
@@ -95,7 +97,7 @@ public class DefaultLeaseManager<T extends Node> extends AbstractObservable impl
         } finally {
             lock.readLock().unlock();
         }
-        if(result) {
+        if (result) {
             notifyObservers(new NodeRemoved<>(renewal));
         }
         return result;
@@ -112,16 +114,16 @@ public class DefaultLeaseManager<T extends Node> extends AbstractObservable impl
             if (lease == null) {
                 if (logger.isWarnEnabled()) {
                     logger.warn("[renew][node not exist, register: {}-{}]", renewal.getNodeType(),
-                            renewal.getNodeUrl().getIpAddress());
+                        renewal.getNodeUrl().getIpAddress());
                 }
                 register(renewal, leaseDuration);
                 return false;
             }
             int validLeaseDuration = leaseDuration > 0 ? leaseDuration
                 : Lease.DEFAULT_DURATION_SECS;
-            if(logger.isInfoEnabled()) {
+            if (logger.isInfoEnabled()) {
                 logger.info("[renew][renew lease] node: {}-{}, extends: {}s",
-                        renewal.getNodeType(), renewal.getNodeUrl().getIpAddress(), validLeaseDuration);
+                    renewal.getNodeType(), renewal.getNodeUrl().getIpAddress(), validLeaseDuration);
             }
             lease.renew(validLeaseDuration);
             return true;

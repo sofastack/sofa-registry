@@ -52,7 +52,7 @@ public class HeartbeatRequestHandler extends AbstractServerHandler<RenewNodesReq
     private CurrentDcMetaServer currentDcMetaServer;
 
     @Autowired
-    private DefaultSlotManager defaultSlotManager;
+    private DefaultSlotManager  defaultSlotManager;
 
     private SlotTable mockSlotTable(String address) {
         Map<Integer, Slot> slots = Maps.newHashMap();
@@ -80,8 +80,8 @@ public class HeartbeatRequestHandler extends AbstractServerHandler<RenewNodesReq
                 case DATA:
                     slotTable = transferDataNodeSlotToSlotTable((DataNode) renewNode, slotTable);
                     response = new DataHeartBeatResponse(currentDcMetaServer.getEpoch(), slotTable,
-                            currentDcMetaServer.getClusterMembers(),
-                            currentDcMetaServer.getSessionServers());
+                        currentDcMetaServer.getClusterMembers(),
+                        currentDcMetaServer.getSessionServers());
                     break;
                 case META:
                     response = new BaseHeartBeatResponse(currentDcMetaServer.getEpoch(), slotTable,

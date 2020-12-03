@@ -25,6 +25,7 @@ import com.alipay.sofa.registry.exception.StopException;
 import com.alipay.sofa.registry.jraft.bootstrap.ServiceStateMachine;
 import com.alipay.sofa.registry.jraft.processor.Processor;
 import com.alipay.sofa.registry.jraft.processor.ProxyHandler;
+import com.alipay.sofa.registry.jraft.processor.SnapshotProcess;
 import com.alipay.sofa.registry.lifecycle.impl.LifecycleHelper;
 import com.alipay.sofa.registry.observer.impl.AbstractLifecycleObservable;
 import com.alipay.sofa.registry.server.meta.cluster.node.NodeAdded;
@@ -43,6 +44,7 @@ import javax.annotation.Resource;
 import java.lang.reflect.Proxy;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
@@ -62,7 +64,7 @@ public abstract class AbstractRaftEnabledLeaseManager<T extends Node> extends
 
     protected RaftLeaseManager<String, T> raftLeaseManager;
 
-    protected DefaultRaftLeaseManager<T> localLeaseManager;
+    protected DefaultRaftLeaseManager<T>  localLeaseManager;
 
     @Autowired
     private RaftExchanger                 raftExchanger;
@@ -199,9 +201,30 @@ public abstract class AbstractRaftEnabledLeaseManager<T extends Node> extends
         public void replace(T renewal) {
             repo.get(renewal.getNodeUrl().getIpAddress()).setRenewal(renewal);
         }
+
+        @Override
+        public boolean save(String path) {
+            return false;
+        }
+
+        @Override
+        public boolean load(String path) {
+            return false;
+        }
+
+        @Override
+        public SnapshotProcess copy() {
+            return null;
+        }
+
+        @Override
+        public Set<String> getSnapshotFileNames() {
+            return null;
+        }
     }
 
-    public interface RaftLeaseManager<K, T extends Node> extends LeaseManager<T>, EpochAware {
+    public interface RaftLeaseManager<K, T extends Node> extends LeaseManager<T>, EpochAware,
+                                                         SnapshotProcess {
 
         @ReadOnLeader
         Map<K, Lease<T>> getLeaseStore();

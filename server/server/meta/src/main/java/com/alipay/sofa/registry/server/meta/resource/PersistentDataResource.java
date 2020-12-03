@@ -44,14 +44,14 @@ import javax.ws.rs.core.MediaType;
 @Path("persistentData")
 public class PersistentDataResource {
 
-    private static final Logger DB_LOGGER  = LoggerFactory.getLogger(PersistentDataResource.class,
-                                               "[DBService]");
+    private static final Logger        DB_LOGGER  = LoggerFactory.getLogger(
+                                                      PersistentDataResource.class, "[DBService]");
 
-    private static final Logger taskLogger = LoggerFactory.getLogger(PersistentDataResource.class,
-                                               "[Task]");
+    private static final Logger        taskLogger = LoggerFactory.getLogger(
+                                                      PersistentDataResource.class, "[Task]");
 
     @RaftReference
-    private DBService           persistenceDataDBService;
+    private DBService                  persistenceDataDBService;
 
     @Autowired
     private DefaultProvideDataNotifier provideDataNotifier;
@@ -114,9 +114,9 @@ public class PersistentDataResource {
         ProvideDataChangeEvent provideDataChangeEvent = new ProvideDataChangeEvent(dataInfoId,
             version, dataOperator);
 
-        if(taskLogger.isInfoEnabled()) {
+        if (taskLogger.isInfoEnabled()) {
             taskLogger.info("send PERSISTENCE_DATA_CHANGE_NOTIFY_TASK notifyProvideDataChange: {}",
-                    provideDataChangeEvent);
+                provideDataChangeEvent);
         }
         provideDataNotifier.notifyProvideDataChange(provideDataChangeEvent);
     }

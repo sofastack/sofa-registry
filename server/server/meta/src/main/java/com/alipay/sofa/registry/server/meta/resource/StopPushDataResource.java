@@ -50,14 +50,14 @@ import com.google.common.collect.Sets;
 @Path("stopPushDataSwitch")
 public class StopPushDataResource {
 
-    private static final Logger DB_LOGGER   = LoggerFactory.getLogger(StopPushDataResource.class,
-                                                "[DBService]");
+    private static final Logger        DB_LOGGER   = LoggerFactory.getLogger(
+                                                       StopPushDataResource.class, "[DBService]");
 
-    private static final Logger TASK_LOGGER = LoggerFactory.getLogger(StopPushDataResource.class,
-                                                "[Task]");
+    private static final Logger        TASK_LOGGER = LoggerFactory.getLogger(
+                                                       StopPushDataResource.class, "[Task]");
 
     @RaftReference
-    private DBService           persistenceDataDBService;
+    private DBService                  persistenceDataDBService;
 
     @Autowired
     private DefaultProvideDataNotifier provideDataNotifier;
@@ -129,8 +129,10 @@ public class StopPushDataResource {
 
         ProvideDataChangeEvent provideDataChangeEvent = new ProvideDataChangeEvent(dataInfoId,
             version, dataOperator, getNodeTypes());
-        if(TASK_LOGGER.isInfoEnabled()) {
-            TASK_LOGGER.info("send PERSISTENCE_DATA_CHANGE_NOTIFY_TASK notifyProvideDataChange: {}", provideDataChangeEvent);
+        if (TASK_LOGGER.isInfoEnabled()) {
+            TASK_LOGGER.info(
+                "send PERSISTENCE_DATA_CHANGE_NOTIFY_TASK notifyProvideDataChange: {}",
+                provideDataChangeEvent);
         }
         provideDataNotifier.notifyProvideDataChange(provideDataChangeEvent);
     }

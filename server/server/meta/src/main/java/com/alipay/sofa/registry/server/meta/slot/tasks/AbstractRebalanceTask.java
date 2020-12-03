@@ -42,15 +42,15 @@ import java.util.Set;
  */
 public abstract class AbstractRebalanceTask implements RebalanceTask {
 
-    protected Logger logger = LoggerFactory.getLogger(getClass());
+    protected Logger                         logger = LoggerFactory.getLogger(getClass());
 
-    protected final LocalSlotManager localSlotManager;
+    protected final LocalSlotManager         localSlotManager;
 
-    protected final SlotManager raftSlotManager;
+    protected final SlotManager              raftSlotManager;
 
     protected final DefaultDataServerManager dataServerManager;
 
-    protected long nextEpoch;
+    protected long                           nextEpoch;
 
     public AbstractRebalanceTask(LocalSlotManager localSlotManager, SlotManager raftSlotManager,
                                  DefaultDataServerManager dataServerManager) {
@@ -61,8 +61,8 @@ public abstract class AbstractRebalanceTask implements RebalanceTask {
 
     @Override
     public void run() {
-        if(!ServiceStateMachine.getInstance().isLeader()) {
-            if(logger.isInfoEnabled()) {
+        if (!ServiceStateMachine.getInstance().isLeader()) {
+            if (logger.isInfoEnabled()) {
                 logger.info("[run] not leader, quit task");
             }
             return;
@@ -72,8 +72,8 @@ public abstract class AbstractRebalanceTask implements RebalanceTask {
         int averageSlots = (int) (totalSlots / aliveDataServers.size());
 
         Set<DataNode> candidates = findCandidates(averageSlots, aliveDataServers);
-        if(candidates.isEmpty()) {
-            if(logger.isInfoEnabled()) {
+        if (candidates.isEmpty()) {
+            if (logger.isInfoEnabled()) {
                 logger.info("[run]no candidates available, quit");
             }
             return;
@@ -83,17 +83,17 @@ public abstract class AbstractRebalanceTask implements RebalanceTask {
         potentialSource.removeAll(candidates);
 
         Map<Integer, Slot> slotMap = localSlotManager.getSlotTable().getSlotMap();
-        for(DataNode target : candidates) {
+        for (DataNode target : candidates) {
             migrate(potentialSource, target, averageSlots, slotMap);
         }
 
-        if(ServiceStateMachine.getInstance().isLeader()) {
-            if(logger.isInfoEnabled()) {
+        if (ServiceStateMachine.getInstance().isLeader()) {
+            if (logger.isInfoEnabled()) {
                 logger.info("[run] update slot table through raft cluster");
             }
             raftSlotManager.refresh(new SlotTable(nextEpoch, slotMap));
         } else {
-            if(logger.isInfoEnabled()) {
+            if (logger.isInfoEnabled()) {
                 logger.info("[run] not leader, won't update slot table through raft cluster");
             }
         }
@@ -103,10 +103,10 @@ public abstract class AbstractRebalanceTask implements RebalanceTask {
 
     private Set<DataNode> findCandidates(long averageSlots, List<DataNode> dataNodes) {
         Set<DataNode> candidates = Sets.newHashSet();
-        for(DataNode dataNode : dataNodes) {
+        for (DataNode dataNode : dataNodes) {
             DataNodeSlot dataNodeSlot = localSlotManager.getDataNodeManagedSlot(dataNode, false);
             int wholeSlots = getManagedSlots(dataNodeSlot);
-            if(wholeSlots <= averageSlots / 2) {
+            if (wholeSlots <= averageSlots / 2) {
                 candidates.add(dataNode);
             }
         }
@@ -115,24 +115,26 @@ public abstract class AbstractRebalanceTask implements RebalanceTask {
 
     protected abstract int getManagedSlots(DataNodeSlot dataNodeSlot);
 
-    private void migrate(Set<DataNode> srcDataServers, DataNode target, int averageSlot, Map<Integer, Slot> slotMap) {
+    private void migrate(Set<DataNode> srcDataServers, DataNode target, int averageSlot,
+                         Map<Integer, Slot> slotMap) {
         Set<DataNode> removeFromSources = Sets.newHashSet();
         DataNodeSlot targetSlot = localSlotManager.getDataNodeManagedSlot(target, false);
         int maxMove = getMaxSlotsToMov(averageSlot, targetSlot);
         int totalMove = 0;
-        for(DataNode dataServer : srcDataServers) {
+        for (DataNode dataServer : srcDataServers) {
             DataNodeSlot dataNodeSlot = localSlotManager.getDataNodeManagedSlot(dataServer, false);
             int currentSlotsSize = getCurrentSlotSize(dataNodeSlot);
             int toMove = Math.min(currentSlotsSize - averageSlot, maxMove - totalMove);
-            if(toMove > 0){
+            if (toMove > 0) {
                 int movedSlots = migrateSlots(dataServer, target, toMove, slotMap);
                 totalMove += movedSlots;
-                if(logger.isInfoEnabled()) {
-                    logger.info("[migrate][move slots from server to dst]{}->{} ({} slots)", dataServer, target, movedSlots);
+                if (logger.isInfoEnabled()) {
+                    logger.info("[migrate][move slots from server to dst]{}->{} ({} slots)",
+                        dataServer, target, movedSlots);
                 }
             }
-            if(totalMove >= maxMove){
-                if(logger.isInfoEnabled()) {
+            if (totalMove >= maxMove) {
+                if (logger.isInfoEnabled()) {
                     logger.info("[migrate][totalMove > maxMove]{} > {}", totalMove, maxMove);
                 }
                 break;
@@ -162,15 +164,16 @@ public abstract class AbstractRebalanceTask implements RebalanceTask {
 
             // replace slot and increase moved slots
             slotMap.put(slotNum, newSlot);
-            movedSlots ++;
-            if(toMove == movedSlots) {
+            movedSlots++;
+            if (toMove == movedSlots) {
                 break;
             }
         }
         return movedSlots;
     }
 
-    protected abstract Set<Integer> getMigrateSlots(DataNodeSlot fromSlotTable, DataNodeSlot toSlotTable);
+    protected abstract Set<Integer> getMigrateSlots(DataNodeSlot fromSlotTable,
+                                                    DataNodeSlot toSlotTable);
 
     protected abstract Slot createMigratedSlot(Slot prevSlot, long epoch, DataNode from, DataNode to);
 
