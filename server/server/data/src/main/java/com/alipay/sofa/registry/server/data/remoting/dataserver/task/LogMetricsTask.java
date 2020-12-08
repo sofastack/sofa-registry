@@ -16,45 +16,64 @@
  */
 package com.alipay.sofa.registry.server.data.remoting.dataserver.task;
 
-import com.alipay.remoting.ProtocolCode;
-import com.alipay.remoting.ProtocolManager;
-import com.alipay.remoting.rpc.protocol.RpcProtocol;
+import com.alipay.sofa.registry.common.model.dataserver.Datum;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.metrics.TaskMetrics;
 import com.alipay.sofa.registry.server.data.bootstrap.DataServerConfig;
+import com.alipay.sofa.registry.server.data.cache.DatumCache;
 import com.alipay.sofa.registry.server.data.event.StartTaskTypeEnum;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import java.util.concurrent.ThreadPoolExecutor;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 public class LogMetricsTask extends AbstractTask {
-    private TaskMetrics         taskMetrics = TaskMetrics.getInstance();
+    private TaskMetrics         taskMetrics   = TaskMetrics.getInstance();
 
     @Autowired
     private DataServerConfig    dataServerConfig;
 
-    private static final Logger EXE_LOGGER  = LoggerFactory.getLogger("DATA-PROFILE-DIGEST",
-                                                "[ExecutorMetrics]");
+    @Autowired
+    private DatumCache          datumCache;
 
-    public void printExecutorMetrics() {
-        EXE_LOGGER.info(taskMetrics.metricsString());
+    private static final Logger EXE_LOGGER    = LoggerFactory.getLogger("DATA-PROFILE-DIGEST",
+                                                  "[ExecutorMetrics]");
+    private static final Logger DIGEST_LOGGER = LoggerFactory.getLogger("DATA-PROFILE-DIGEST",
+                                                  "[DigestMetrics]");
+
+    private void printExecutorMetrics() {
+        taskMetrics.loggingMetrics(EXE_LOGGER);
+    }
+
+    private void printLocalDigest() {
+        Map<String, Datum> datumMap = datumCache.getAll()
+            .get(dataServerConfig.getLocalDataCenter());
+        int datumCount = 0;
+        int pubCount = 0;
+        if (datumMap != null) {
+            datumCount = datumMap.size();
+            pubCount = datumMap.values().stream().map(Datum::getPubMap)
+                .filter(map -> map != null && !map.isEmpty()).mapToInt(Map::size).sum();
+        }
+        DIGEST_LOGGER
+            .info(String.format("[CountMonitor] datum: %d, pub: %d", datumCount, pubCount));
     }
 
     @Override
     public void handle() {
         printExecutorMetrics();
+        printLocalDigest();
     }
 
     @Override
     public int getDelay() {
-        return dataServerConfig.getLogMetricsFixedDelay();
+        return 60;
     }
 
     @Override
     public int getInitialDelay() {
-        return dataServerConfig.getLogMetricsFixedDelay();
+        return 60;
     }
 
     @Override

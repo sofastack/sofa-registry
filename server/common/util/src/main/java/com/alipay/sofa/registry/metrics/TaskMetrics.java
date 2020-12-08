@@ -16,6 +16,7 @@
  */
 package com.alipay.sofa.registry.metrics;
 
+import com.alipay.sofa.registry.log.Logger;
 import com.codahale.metrics.Gauge;
 import com.codahale.metrics.MetricRegistry;
 import com.google.common.collect.Sets;
@@ -83,23 +84,19 @@ public class TaskMetrics {
         return executorNames;
     }
 
-    public String metricsString() {
-        final String SYMBOLIC = "  └─ ";
-        StringBuilder sb = new StringBuilder();
-        sb.append("\n").append("ExecutorMetrics").append(" >>>>>>>>");
-        sb.append("\n");
+    public void loggingMetrics(Logger logger) {
         for (String executorName : getExecutorNames()) {
+            StringBuilder sb = new StringBuilder();
             MetricRegistry metricRegistry = getMetricRegistry();
             Map<String, Gauge> map = metricRegistry
                 .getGauges((name, value) -> name.startsWith(executorName));
 
-            sb.append(SYMBOLIC).append(executorName);
+            sb.append(executorName);
             map.forEach((key, gauge) -> {
                 String name = key.substring(executorName.length() + 1);
                 sb.append(", ").append(name).append(":").append(gauge.getValue());
             });
-            sb.append("\n");
+            logger.info(sb.toString());
         }
-        return sb.toString();
     }
 }

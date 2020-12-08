@@ -24,6 +24,7 @@ import com.alipay.sofa.registry.server.session.remoting.handler.*;
 import com.alipay.sofa.registry.server.session.resource.*;
 import com.alipay.sofa.registry.server.session.cache.SessionCacheDigestTask;
 import com.alipay.sofa.registry.server.session.resource.SessionStopPushResource;
+import com.alipay.sofa.registry.server.session.scheduler.timertask.LogMetricsTask;
 import org.glassfish.jersey.jackson.JacksonFeature;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -608,6 +609,11 @@ public class SessionServerConfiguration {
         @Bean
         public SyncClientsHeartbeatTask syncClientsHeartbeatTask() {
             return new SyncClientsHeartbeatTask();
+        }
+
+        @Bean
+        public LogMetricsTask logMetricsTask() {
+            return new LogMetricsTask();
         }
     }
 

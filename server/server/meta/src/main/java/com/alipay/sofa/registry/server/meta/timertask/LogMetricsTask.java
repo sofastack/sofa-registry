@@ -16,23 +16,18 @@
  */
 package com.alipay.sofa.registry.server.meta.timertask;
 
-import com.alipay.remoting.ProtocolCode;
-import com.alipay.remoting.ProtocolManager;
-import com.alipay.remoting.rpc.protocol.RpcProtocol;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.metrics.TaskMetrics;
 import org.springframework.scheduling.annotation.Scheduled;
-
-import java.util.concurrent.ThreadPoolExecutor;
 
 public class LogMetricsTask {
     private static final Logger EXE_LOGGER  = LoggerFactory.getLogger("META-PROFILE-DIGEST",
                                                 "[ExecutorMetrics]");
     private final TaskMetrics   taskMetrics = TaskMetrics.getInstance();
 
-    @Scheduled(initialDelayString = "${meta.server.metricsExecutor.fixedDelay}", fixedDelayString = "${meta.server.metricsExecutor.fixedDelay}")
+    @Scheduled(initialDelay = 60000L, fixedDelay = 60000L)
     public void printExecutorMetrics() {
-        EXE_LOGGER.info(TaskMetrics.getInstance().metricsString());
+        taskMetrics.loggingMetrics(EXE_LOGGER);
     }
 }

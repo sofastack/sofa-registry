@@ -19,22 +19,16 @@ package com.alipay.sofa.registry.server.session.scheduler.timertask;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.concurrent.ThreadPoolExecutor;
 
-import com.alipay.remoting.ProtocolCode;
-import com.alipay.remoting.ProtocolManager;
-import com.alipay.remoting.rpc.protocol.RpcProtocol;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
-import com.alipay.sofa.registry.metrics.TaskMetrics;
 import com.alipay.sofa.registry.remoting.Server;
 import com.alipay.sofa.registry.remoting.exchange.Exchange;
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
 import com.alipay.sofa.registry.server.session.listener.ReceivedDataMultiPushTaskListener;
-import com.alipay.sofa.registry.server.session.scheduler.ExecutorManager;
 import com.alipay.sofa.registry.server.session.store.DataStore;
 import com.alipay.sofa.registry.server.session.store.Interests;
 import com.alipay.sofa.registry.server.session.store.Watchers;
@@ -42,8 +36,6 @@ import com.alipay.sofa.registry.task.batcher.AcceptorExecutor;
 import com.alipay.sofa.registry.task.batcher.TaskDispatcher;
 import com.alipay.sofa.registry.task.batcher.TaskDispatchers;
 import com.alipay.sofa.registry.task.listener.TaskListener;
-import com.codahale.metrics.Gauge;
-import com.codahale.metrics.MetricRegistry;
 
 /**
  * The type Sync clients heartbeat task.
@@ -56,10 +48,6 @@ public class SyncClientsHeartbeatTask {
 
     private static final Logger PRO_LOGGER           = LoggerFactory.getLogger(
                                                          "SESSION-PROFILE-DIGEST", "[TaskExecute]");
-
-    private static final Logger EXE_LOGGER           = LoggerFactory.getLogger(
-                                                         "SESSION-PROFILE-DIGEST",
-                                                         "[ExecutorMetrics]");
 
     public static final String  SYMBOLIC             = "  └─ ";
 
@@ -138,11 +126,6 @@ public class SyncClientsHeartbeatTask {
             sb.append(", MaxBuffer:").append(acceptorExecutor.getMaxBufferSize()).append("\n");
         }
         sb0.append("\n").append(sb);
-    }
-
-    @Scheduled(initialDelayString = "${session.server.printTask.fixedDelay}", fixedDelayString = "${session.server.printTask.fixedDelay}")
-    public void printExecutorTaskExecute() {
-        EXE_LOGGER.info(TaskMetrics.getInstance().metricsString());
     }
 
     @Scheduled(initialDelayString = "${session.server.printTask.fixedDelay}", fixedDelayString = "${session.server.printTask.fixedDelay}")

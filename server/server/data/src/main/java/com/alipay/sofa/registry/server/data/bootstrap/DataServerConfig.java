@@ -124,8 +124,6 @@ public class DataServerConfig {
     private int                defaultRequestExecutorQueueSize              = 600;
     private long               defaultRequestExecutorKeepAliveTime          = 60;
 
-    private int                logMetricsFixedDelay                         = 30;
-
     private int                renewEnableDelaySec                          = 30;
 
     private int                dataSyncDelayTimeout                         = 1000;
@@ -913,14 +911,6 @@ public class DataServerConfig {
 
     public void setDefaultRequestExecutorKeepAliveTime(long defaultRequestExecutorKeepAliveTime) {
         this.defaultRequestExecutorKeepAliveTime = defaultRequestExecutorKeepAliveTime;
-    }
-
-    public int getLogMetricsFixedDelay() {
-        return logMetricsFixedDelay;
-    }
-
-    public void setLogMetricsFixedDelay(int logMetricsFixedDelay) {
-        this.logMetricsFixedDelay = logMetricsFixedDelay;
     }
 
 }
