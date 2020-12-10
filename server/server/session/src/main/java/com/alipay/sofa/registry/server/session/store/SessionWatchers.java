@@ -16,10 +16,7 @@
  */
 package com.alipay.sofa.registry.server.session.store;
 
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.Lock;
@@ -30,6 +27,7 @@ import com.alipay.sofa.registry.common.model.store.Watcher;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.util.VersionsMapUtils;
+import com.google.common.collect.Sets;
 
 /**
  * @author shangyu.wh
@@ -227,8 +225,9 @@ public class SessionWatchers implements Watchers {
         connectIndex.remove(connectId);
     }
 
-    public Map<ConnectId /*connectId*/, Map<String /*registerId*/, Watcher>> getConnectWatchers() {
-        return connectIndex;
+    @Override
+    public Set<ConnectId> getConnectIds() {
+        return Sets.newHashSet(connectIndex.keySet());
     }
 
 }

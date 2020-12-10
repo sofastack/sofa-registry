@@ -20,7 +20,7 @@ import com.alipay.sofa.registry.common.model.ConnectId;
 import com.alipay.sofa.registry.common.model.store.Watcher;
 
 import java.util.Collection;
-import java.util.Map;
+import java.util.Set;
 
 /**
  *
@@ -48,5 +48,5 @@ public interface Watchers extends DataManager<Watcher, String, String> {
      */
     boolean checkWatcherVersions(String dataInfoId, Long version);
 
-    Map<ConnectId, Map<String, Watcher>> getConnectWatchers();
+    Set<ConnectId> getConnectIds();
 }

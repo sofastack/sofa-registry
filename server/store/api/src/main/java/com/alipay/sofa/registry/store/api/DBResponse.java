@@ -98,20 +98,16 @@ public class DBResponse implements Serializable {
      * DBResponseBuilder
      */
     public static class DBResponseBuilder {
-        private static volatile DBResponseBuilder instance;
+        private static final DBResponseBuilder instance = new DBResponseBuilder();
+
+        private DBResponseBuilder() {
+        }
 
         /**
          * get DBResponseBuilder instance
          * @return
          */
         public static DBResponseBuilder getInstance() {
-            if (instance == null) {
-                synchronized (DBResponseBuilder.class) {
-                    if (instance == null) {
-                        instance = new DBResponseBuilder();
-                    }
-                }
-            }
             return instance;
         }
 

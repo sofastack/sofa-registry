@@ -57,9 +57,9 @@ public class ConnectionsService {
                 channel -> channel.getRemoteAddress().getAddress().getHostAddress() + ":" + channel.getRemoteAddress().getPort()
         ).collect(Collectors.toSet());
         Set<String> connectIds = new HashSet<>();
-        connectIds.addAll(sessionDataStore.getConnectPublishers().keySet().stream().map(connectId -> connectId.clientAddress()).collect(Collectors.toList()));
-        connectIds.addAll(sessionInterests.getConnectSubscribers().keySet().stream().map(connectId -> connectId.clientAddress()).collect(Collectors.toList()));
-        connectIds.addAll(sessionWatchers.getConnectWatchers().keySet().stream().map(connectId -> connectId.clientAddress()).collect(Collectors.toList()));
+        connectIds.addAll(sessionDataStore.getConnectIds().stream().map(connectId -> connectId.clientAddress()).collect(Collectors.toList()));
+        connectIds.addAll(sessionInterests.getConnectIds().stream().map(connectId -> connectId.clientAddress()).collect(Collectors.toList()));
+        connectIds.addAll(sessionWatchers.getConnectIds().stream().map(connectId -> connectId.clientAddress()).collect(Collectors.toList()));
         connectIds.retainAll(boltConnectIds);
         return new ArrayList<>(connectIds);
     }

@@ -17,6 +17,7 @@
 package com.alipay.sofa.registry.server.session.store;
 
 import com.alipay.sofa.registry.common.model.ConnectId;
+import com.alipay.sofa.registry.common.model.constants.ValueConstants;
 import com.alipay.sofa.registry.common.model.store.*;
 import com.alipay.sofa.registry.core.model.ScopeEnum;
 import com.alipay.sofa.registry.net.NetUtil;
@@ -26,14 +27,18 @@ import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfigBean
 import com.alipay.sofa.registry.server.session.cache.CacheGenerator;
 import com.alipay.sofa.registry.server.session.cache.CacheService;
 import com.alipay.sofa.registry.server.session.cache.SessionCacheService;
+import com.google.common.collect.Lists;
+import com.google.common.util.concurrent.Uninterruptibles;
 import org.junit.Assert;
 import org.junit.Test;
 
 import java.net.InetSocketAddress;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 
 /**
@@ -157,16 +162,21 @@ public class DataCacheTest extends BaseTest {
         String connectId = "192.168.1.2:9000";
         int number = 1000;
         ExecutorService executorService = Executors.newFixedThreadPool(number);
-
+        List<Publisher> publisherList = Lists.newArrayList();
         for (int i = 0; i < number; i++) {
             String connectIdss = "192.111.0.1:" + (8000 + i);
             executorService.submit(() -> {
-                sessionDataStore.add(getPub(dataId, null, URL.valueOf(connectIdss)));
+                Publisher p = getPub(dataId, null, URL.valueOf(connectIdss));
+                sessionDataStore.add(p);
+                publisherList.add(p);
                 Assert.assertTrue(getCachePub(sessionDataStore, connectIdss));
             });
         }
-
-        Assert.assertFalse(getCachePub(sessionDataStore, connectId));
+        Uninterruptibles.sleepUninterruptibly(1, TimeUnit.SECONDS);
+        for (Publisher p : publisherList) {
+            String c = connectId + ValueConstants.CONNECT_ID_SPLIT + p.getTargetAddress().buildAddressString();
+            Assert.assertFalse(getCachePub(sessionDataStore, c));
+        }
     }
 
     @Test
@@ -282,13 +292,13 @@ public class DataCacheTest extends BaseTest {
         sessionDataStore.add(publisher2);
 
         Assert.assertEquals(
-            sessionDataStore.getConnectPublishers().get("192.168.1.1:12345_192.168.1.2:9600")
-                .size(), 2);
+            sessionDataStore
+                .queryByConnectId(ConnectId.parse("192.168.1.1:12345_192.168.1.2:9600")).size(), 2);
         sessionDataStore.add(publisher2);
 
         Assert.assertEquals(
-            sessionDataStore.getConnectPublishers().get("192.168.1.1:12345_192.168.1.2:9600")
-                .size(), 2);
+            sessionDataStore
+                .queryByConnectId(ConnectId.parse("192.168.1.1:12345_192.168.1.2:9600")).size(), 2);
 
         Publisher publisher3 = new Publisher();
         publisher3.setDataInfoId(publisher1.getDataInfoId());
@@ -308,11 +318,11 @@ public class DataCacheTest extends BaseTest {
         sessionDataStore.add(publisher4);
 
         Assert.assertEquals(
-            sessionDataStore.getConnectPublishers().get("192.168.1.1:12345_192.168.1.2:9600")
-                .size(), 0);
+            sessionDataStore
+                .queryByConnectId(ConnectId.parse("192.168.1.1:12345_192.168.1.2:9600")).size(), 0);
         Assert.assertEquals(
-            sessionDataStore.getConnectPublishers().get("192.168.1.1:12346_192.168.1.2:9600")
-                .size(), 2);
+            sessionDataStore
+                .queryByConnectId(ConnectId.parse("192.168.1.1:12346_192.168.1.2:9600")).size(), 2);
 
     }
 
@@ -342,13 +352,13 @@ public class DataCacheTest extends BaseTest {
         sessionInterests.add(subscriber2);
 
         Assert.assertEquals(
-            sessionInterests.getConnectSubscribers().get("192.168.1.1:12345_192.168.1.2:9600")
-                .size(), 2);
+            sessionInterests
+                .queryByConnectId(ConnectId.parse("192.168.1.1:12345_192.168.1.2:9600")).size(), 2);
         sessionInterests.add(subscriber2);
 
         Assert.assertEquals(
-            sessionInterests.getConnectSubscribers().get("192.168.1.1:12345_192.168.1.2:9600")
-                .size(), 2);
+            sessionInterests
+                .queryByConnectId(ConnectId.parse("192.168.1.1:12345_192.168.1.2:9600")).size(), 2);
 
         Subscriber subscriber3 = new Subscriber();
         subscriber3.setDataInfoId(subscriber1.getDataInfoId());
@@ -368,11 +378,11 @@ public class DataCacheTest extends BaseTest {
         sessionInterests.add(subscriber4);
 
         Assert.assertEquals(
-            sessionInterests.getConnectSubscribers().get("192.168.1.1:12345_192.168.1.2:9600")
-                .size(), 0);
+            sessionInterests
+                .queryByConnectId(ConnectId.parse("192.168.1.1:12345_192.168.1.2:9600")).size(), 0);
         Assert.assertEquals(
-            sessionInterests.getConnectSubscribers().get("192.168.1.1:12346_192.168.1.2:9600")
-                .size(), 2);
+            sessionInterests
+                .queryByConnectId(ConnectId.parse("192.168.1.1:12346_192.168.1.2:9600")).size(), 2);
     }
 
     @Test
@@ -457,12 +467,11 @@ public class DataCacheTest extends BaseTest {
         sessionInterests.deleteByConnectId(ConnectId.parse(subscriber1.getSourceAddress()
             .getAddressString() + "_" + subscriber1.getTargetAddress().getAddressString()));
 
+        Assert.assertEquals(sessionInterests.queryByConnectId(ConnectId
+            .parse("192.168.1.1:12345_192.168.1.2:9600")), null);
         Assert.assertEquals(
-            sessionInterests.getConnectSubscribers().get("192.168.1.1:12345_192.168.1.2:9600"),
-            null);
-        Assert.assertEquals(
-            sessionInterests.getConnectSubscribers().get("192.168.1.1:12346_192.168.1.2:9600")
-                .size(), 1);
+            sessionInterests
+                .queryByConnectId(ConnectId.parse("192.168.1.1:12346_192.168.1.2:9600")).size(), 1);
 
         Assert.assertEquals(
             sessionInterests.querySubscriberIndex(subscriber1.getDataInfoId(),

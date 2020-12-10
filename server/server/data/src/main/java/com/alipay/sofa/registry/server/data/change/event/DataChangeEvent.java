@@ -16,7 +16,6 @@
  */
 package com.alipay.sofa.registry.server.data.change.event;
 
-import com.alipay.sofa.registry.common.model.dataserver.Datum;
 import com.alipay.sofa.registry.server.data.change.DataSourceTypeEnum;
 
 /**

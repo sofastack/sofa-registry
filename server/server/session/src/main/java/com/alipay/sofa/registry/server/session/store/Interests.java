@@ -20,6 +20,7 @@ import java.net.InetSocketAddress;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import com.alipay.sofa.registry.common.model.ConnectId;
 import com.alipay.sofa.registry.common.model.store.Subscriber;
@@ -96,11 +97,7 @@ public interface Interests extends DataManager<Subscriber, String, String> {
      */
     Subscriber queryById(String registerId, String dataInfoId);
 
-    /**
-     * get all subscribers group by connectId
-     * @return
-     */
-    Map<ConnectId/*connectId*/, Map<String/*registerId*/, Subscriber>> getConnectSubscribers();
+    Set<ConnectId> getConnectIds();
 
     List<String> getDataCenters();
 }

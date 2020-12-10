@@ -59,7 +59,6 @@ import com.alipay.sofa.registry.server.session.store.*;
 import com.alipay.sofa.registry.server.session.strategy.*;
 import com.alipay.sofa.registry.server.session.strategy.impl.*;
 import com.alipay.sofa.registry.server.session.wrapper.*;
-import com.alipay.sofa.registry.server.shared.meta.AbstractMetaNodeExchanger;
 import com.alipay.sofa.registry.server.shared.meta.MetaServerService;
 import com.alipay.sofa.registry.task.batcher.TaskProcessor;
 import com.alipay.sofa.registry.task.listener.DefaultTaskListenerManager;

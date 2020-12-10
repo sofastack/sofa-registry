@@ -28,23 +28,14 @@ import java.util.concurrent.ThreadPoolExecutor;
  */
 public class TaskMetrics {
 
-    private final MetricRegistry metrics;
+    private final MetricRegistry metrics = new MetricRegistry();
 
     private TaskMetrics() {
-        this.metrics = new MetricRegistry();
     }
 
-    private volatile static TaskMetrics instance;
+    private final static TaskMetrics instance = new TaskMetrics();
 
     public static TaskMetrics getInstance() {
-        if (instance == null) {
-            synchronized (TaskMetrics.class) {
-                if (instance == null) {
-                    instance = new TaskMetrics();
-                }
-            }
-        }
-
         return instance;
     }
 

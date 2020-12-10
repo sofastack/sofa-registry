@@ -31,7 +31,6 @@ import com.alipay.sofa.registry.remoting.RemotingException;
 import com.alipay.sofa.registry.remoting.bolt.BoltChannel;
 import com.caucho.hessian.io.Hessian2Output;
 import com.caucho.hessian.io.SerializerFactory;
-import sun.nio.ch.ThreadPool;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;

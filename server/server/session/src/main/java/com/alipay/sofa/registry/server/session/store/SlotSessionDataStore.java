@@ -22,6 +22,7 @@ import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
 import com.alipay.sofa.registry.server.session.slot.SlotTableCache;
+import org.glassfish.jersey.internal.guava.Sets;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.CollectionUtils;
 
@@ -72,15 +73,9 @@ public class SlotSessionDataStore implements DataStore {
     }
 
     @Override
-    public Map<ConnectId, Map<String, Publisher>> getConnectPublishers() {
-        Map<ConnectId, Map<String, Publisher>> ret = new HashMap<>(512);
-        for (DataStore ds : slot2DataStores.values()) {
-            Map<ConnectId, Map<String, Publisher>> m = ds.getConnectPublishers();
-            for (Map.Entry<ConnectId, Map<String, Publisher>> e : m.entrySet()) {
-                Map<String, Publisher> publisherMap = ret.computeIfAbsent(e.getKey(), k -> new HashMap<>(128));
-                publisherMap.putAll(e.getValue());
-            }
-        }
+    public Set<ConnectId> getConnectIds() {
+        Set<ConnectId> ret = Sets.newHashSet();
+        slot2DataStores.values().forEach(d -> ret.addAll(d.getConnectIds()));
         return ret;
     }
 
