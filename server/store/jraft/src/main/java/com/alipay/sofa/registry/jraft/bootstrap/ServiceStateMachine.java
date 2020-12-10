@@ -24,14 +24,9 @@ import com.alipay.sofa.jraft.entity.LeaderChangeContext;
 import com.alipay.sofa.jraft.error.RaftError;
 import com.alipay.sofa.jraft.storage.snapshot.SnapshotReader;
 import com.alipay.sofa.jraft.storage.snapshot.SnapshotWriter;
-import com.alipay.sofa.jraft.util.Utils;
 import com.alipay.sofa.registry.jraft.command.ProcessRequest;
 import com.alipay.sofa.registry.jraft.command.ProcessResponse;
-import com.alipay.sofa.registry.jraft.processor.FollowerProcessListener;
-import com.alipay.sofa.registry.jraft.processor.LeaderProcessListener;
-import com.alipay.sofa.registry.jraft.processor.LeaderTaskClosure;
-import com.alipay.sofa.registry.jraft.processor.Processor;
-import com.alipay.sofa.registry.jraft.processor.SnapshotProcess;
+import com.alipay.sofa.registry.jraft.processor.*;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.caucho.hessian.io.Hessian2Input;
@@ -41,11 +36,7 @@ import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -56,29 +47,25 @@ import java.util.concurrent.atomic.AtomicLong;
  */
 public class ServiceStateMachine extends StateMachineAdapter {
 
-    private static final Logger                 LOG = LoggerFactory
-                                                        .getLogger(ServiceStateMachine.class);
+    private static final Logger              LOG      = LoggerFactory
+                                                          .getLogger(ServiceStateMachine.class);
 
-    private LeaderProcessListener               leaderProcessListener;
+    private LeaderProcessListener            leaderProcessListener;
 
-    private FollowerProcessListener             followerProcessListener;
+    private FollowerProcessListener          followerProcessListener;
 
-    private static volatile ServiceStateMachine instance;
+    private static final ServiceStateMachine instance = new ServiceStateMachine();
 
-    private ThreadPoolExecutor                  executor;
+    private ThreadPoolExecutor               executor;
+
+    private ServiceStateMachine() {
+    }
 
     /**
      * get instance of ServiceStateMachine
      * @return
      */
     public static ServiceStateMachine getInstance() {
-        if (instance == null) {
-            synchronized (ServiceStateMachine.class) {
-                if (instance == null) {
-                    instance = new ServiceStateMachine();
-                }
-            }
-        }
         return instance;
     }
 

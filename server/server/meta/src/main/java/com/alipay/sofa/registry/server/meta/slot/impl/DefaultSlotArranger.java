@@ -28,7 +28,6 @@ import com.alipay.sofa.registry.server.meta.lease.DataServerManager;
 import com.alipay.sofa.registry.server.meta.slot.ArrangeTaskDispatcher;
 import com.alipay.sofa.registry.server.meta.slot.SlotArranger;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;

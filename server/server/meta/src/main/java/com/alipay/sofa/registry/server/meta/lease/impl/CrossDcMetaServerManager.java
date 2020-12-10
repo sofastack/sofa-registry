@@ -18,7 +18,6 @@ package com.alipay.sofa.registry.server.meta.lease.impl;
 
 import com.alipay.sofa.registry.exception.*;
 import com.alipay.sofa.registry.jraft.LeaderAware;
-import com.alipay.sofa.registry.lifecycle.SmartSpringLifecycle;
 import com.alipay.sofa.registry.lifecycle.impl.AbstractLifecycle;
 import com.alipay.sofa.registry.lifecycle.impl.LifecycleHelper;
 import com.alipay.sofa.registry.remoting.bolt.exchange.BoltExchange;

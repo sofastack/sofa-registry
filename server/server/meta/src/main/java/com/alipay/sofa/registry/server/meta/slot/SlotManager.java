@@ -20,8 +20,6 @@ import com.alipay.sofa.registry.common.model.metaserver.nodes.DataNode;
 import com.alipay.sofa.registry.common.model.slot.DataNodeSlot;
 import com.alipay.sofa.registry.common.model.slot.SlotTable;
 
-import java.util.List;
-
 /**
  * @author chen.zhu
  * <p>

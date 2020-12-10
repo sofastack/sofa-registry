@@ -16,7 +16,6 @@
  */
 package com.alipay.sofa.registry.util;
 
-import java.util.Map;
 import java.util.concurrent.ConcurrentMap;
 
 /**

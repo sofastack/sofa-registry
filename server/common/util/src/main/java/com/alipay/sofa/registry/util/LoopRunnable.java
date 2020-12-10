@@ -32,7 +32,7 @@ public abstract class LoopRunnable implements Runnable {
     public abstract void waitingUnthrowable();
 
     public void unexpectExit(Throwable e) {
-        LOGGER.error("expect exit in LoopRunnable {}", Thread.currentThread().getName(), e);
+        LOGGER.error("unexpect exit in LoopRunnable {}", this.getClass().getSimpleName(), e);
     }
 
     public void run() {
@@ -41,12 +41,13 @@ public abstract class LoopRunnable implements Runnable {
             for (;;) {
                 try {
                     runUnthrowable();
-                } catch (Throwable ignored) {
-                    // ignored that
+                } catch (Throwable unexpect) {
+                    LOGGER.error("run unexpect error", unexpect);
                 }
                 try {
                     waitingUnthrowable();
-                } catch (Throwable ignored) {
+                } catch (Throwable unexpect) {
+                    LOGGER.error("waiting unexpect error", unexpect);
                 }
             }
         } catch (Throwable e) {

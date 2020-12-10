@@ -16,10 +16,7 @@
  */
 package com.alipay.sofa.registry.server.session.store;
 
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
@@ -28,6 +25,7 @@ import com.alipay.sofa.registry.common.model.ConnectId;
 import com.alipay.sofa.registry.common.model.store.Publisher;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
+import com.google.common.collect.Sets;
 
 /**
  * @author shangyu.wh
@@ -230,8 +228,8 @@ public class SessionDataStore implements DataStore {
     }
 
     @Override
-    public Map<ConnectId, Map<String, Publisher>> getConnectPublishers() {
-        return connectIndex;
+    public Set<ConnectId> getConnectIds() {
+        return Sets.newHashSet(connectIndex.keySet());
     }
 
     @Override

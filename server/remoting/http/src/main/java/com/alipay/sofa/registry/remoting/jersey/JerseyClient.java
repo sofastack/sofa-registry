@@ -48,7 +48,7 @@ public class JerseyClient implements Client {
 
     private static final Logger                              LOGGER   = LoggerFactory
                                                                           .getLogger(JerseyClient.class);
-    private volatile static JerseyClient                     instance;
+    private static final JerseyClient                        instance = new JerseyClient();
 
     private final AtomicReference<javax.ws.rs.client.Client> client   = new AtomicReference<>(null);
 
@@ -66,13 +66,6 @@ public class JerseyClient implements Client {
      * @return
      */
     public static JerseyClient getInstance() {
-        if (instance == null) {
-            synchronized (JerseyClient.class) {
-                if (instance == null) {
-                    instance = new JerseyClient();
-                }
-            }
-        }
         return instance;
     }
 

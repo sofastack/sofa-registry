@@ -16,8 +16,6 @@
  */
 package com.alipay.sofa.registry.server.meta.resource;
 
-import org.springframework.beans.factory.annotation.Autowired;
-
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 

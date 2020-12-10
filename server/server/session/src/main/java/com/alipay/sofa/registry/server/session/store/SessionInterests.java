@@ -17,10 +17,7 @@
 package com.alipay.sofa.registry.server.session.store;
 
 import java.net.InetSocketAddress;
-import java.util.Collection;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.Lock;
@@ -28,6 +25,7 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.stream.Collectors;
 
 import com.alipay.sofa.registry.common.model.ConnectId;
+import com.google.common.collect.Sets;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import com.alipay.sofa.registry.common.model.store.Subscriber;
@@ -446,8 +444,8 @@ public class SessionInterests implements Interests, ReSubscribers {
     }
 
     @Override
-    public Map<ConnectId, Map<String, Subscriber>> getConnectSubscribers() {
-        return connectIndex;
+    public Set<ConnectId> getConnectIds() {
+        return Sets.newHashSet(connectIndex.keySet());
     }
 
     public SessionServerConfig getSessionServerConfig() {

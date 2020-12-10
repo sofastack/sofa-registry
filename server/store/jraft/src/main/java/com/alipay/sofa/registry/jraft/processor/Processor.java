@@ -22,7 +22,6 @@ import com.alipay.sofa.registry.jraft.command.ProcessResponse;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.store.api.annotation.ReadOnLeader;
-import com.google.common.collect.Maps;
 
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;

@@ -17,7 +17,6 @@
 package com.alipay.sofa.registry.server.meta.slot;
 
 import com.alipay.sofa.registry.common.model.slot.SlotTable;
-import com.alipay.sofa.registry.lifecycle.LiteLifecycle;
 
 /**
  *

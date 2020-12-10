@@ -17,7 +17,6 @@
 package com.alipay.sofa.registry.server.meta.lease.impl;
 
 import com.alipay.sofa.registry.common.model.Node;
-import com.alipay.sofa.registry.common.model.metaserver.nodes.SessionNode;
 import com.alipay.sofa.registry.exception.DisposeException;
 import com.alipay.sofa.registry.exception.InitializeException;
 import com.alipay.sofa.registry.exception.StartException;
@@ -26,10 +25,7 @@ import com.alipay.sofa.registry.jraft.bootstrap.ServiceStateMachine;
 import com.alipay.sofa.registry.jraft.processor.Processor;
 import com.alipay.sofa.registry.jraft.processor.ProxyHandler;
 import com.alipay.sofa.registry.jraft.processor.SnapshotProcess;
-import com.alipay.sofa.registry.lifecycle.impl.LifecycleHelper;
 import com.alipay.sofa.registry.observer.impl.AbstractLifecycleObservable;
-import com.alipay.sofa.registry.server.meta.cluster.node.NodeAdded;
-import com.alipay.sofa.registry.server.meta.cluster.node.NodeRemoved;
 import com.alipay.sofa.registry.server.meta.lease.EpochAware;
 import com.alipay.sofa.registry.server.meta.lease.Lease;
 import com.alipay.sofa.registry.server.meta.lease.LeaseManager;
@@ -42,7 +38,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import javax.annotation.Resource;
 import java.lang.reflect.Proxy;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ScheduledExecutorService;

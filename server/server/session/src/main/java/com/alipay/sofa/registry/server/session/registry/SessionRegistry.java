@@ -385,9 +385,9 @@ public class SessionRegistry implements Registry {
     public void cleanClientConnect() {
 
         Set<ConnectId> connectIndexes = new HashSet<>();
-        Set<ConnectId> pubIndexes = sessionDataStore.getConnectPublishers().keySet();
-        Set<ConnectId> subIndexes = sessionInterests.getConnectSubscribers().keySet();
-        Set<ConnectId> watchIndexes = sessionWatchers.getConnectWatchers().keySet();
+        Set<ConnectId> pubIndexes = sessionDataStore.getConnectIds();
+        Set<ConnectId> subIndexes = sessionInterests.getConnectIds();
+        Set<ConnectId> watchIndexes = sessionWatchers.getConnectIds();
         connectIndexes.addAll(pubIndexes);
         connectIndexes.addAll(subIndexes);
         connectIndexes.addAll(watchIndexes);

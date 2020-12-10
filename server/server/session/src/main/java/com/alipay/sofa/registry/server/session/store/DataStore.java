@@ -21,6 +21,7 @@ import com.alipay.sofa.registry.common.model.store.Publisher;
 
 import java.util.Collection;
 import java.util.Map;
+import java.util.Set;
 
 /**
  *
@@ -51,11 +52,7 @@ public interface DataStore extends DataManager<Publisher, String, String> {
      */
     Collection<String> getStoreDataInfoIds();
 
-    /**
-     * get all publishers group by connectId
-     * @return
-     */
-    Map<ConnectId/*connectId*/, Map<String/*registerId*/, Publisher>> getConnectPublishers();
+    Set<ConnectId> getConnectIds();
 
     Map<String/*dataInfoId*/, Map<String/*registerId*/, Publisher>> getDataInfoIdPublishers();
 
