@@ -16,6 +16,7 @@
  */
 package com.alipay.sofa.registry.test.task;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import java.util.HashMap;
@@ -55,35 +56,42 @@ import com.alipay.sofa.registry.test.BaseIntegrationTest;
 @RunWith(SpringRunner.class)
 public class DataChangeFetchCloudTaskTest extends BaseIntegrationTest {
 
-    private static String testDataInfoId;
-    private static String testDataId;
+    private String testDataInfoId;
+    private String dataId;
+    private String value;
 
     @Before
     public void beforeDataChangeFetchCloudTaskTest() throws InterruptedException {
-        testDataId = "DataChangeFetchCloudTaskTest-" + System.currentTimeMillis();
-        testDataInfoId = DataInfo.toDataInfoId(testDataId, ValueConstants.DEFAULT_INSTANCE_ID,
+        dataId = "DataChangeFetchCloudTaskTest-" + System.currentTimeMillis();
+        testDataInfoId = DataInfo.toDataInfoId(dataId, ValueConstants.DEFAULT_INSTANCE_ID,
             ValueConstants.DEFAULT_GROUP);
+        value = dataId;
 
-        PublisherRegistration registration = new PublisherRegistration(testDataId);
+        PublisherRegistration registration = new PublisherRegistration(dataId);
         registryClient1.register(registration, value);
         Thread.sleep(2000L);
-
-        SubscriberRegistration subReg = new SubscriberRegistration(testDataId,
-            new MySubscriberDataObserver());
+        MySubscriberDataObserver observer = new MySubscriberDataObserver();
+        SubscriberRegistration subReg = new SubscriberRegistration(dataId, observer);
         subReg.setScopeEnum(ScopeEnum.dataCenter);
 
         registryClient1.register(subReg);
 
-        Thread.sleep(5000L);
+        Thread.sleep(2000L);
+
+        assertEquals(dataId, observer.dataId);
+        assertEquals(LOCAL_REGION, observer.userData.getLocalZone());
+        assertEquals(1, observer.userData.getZoneData().size());
+        assertEquals(1, observer.userData.getZoneData().values().size());
+        assertEquals(true, observer.userData.getZoneData().containsKey(LOCAL_REGION));
+        assertEquals(1, observer.userData.getZoneData().get(LOCAL_REGION).size());
+        assertEquals(value, observer.userData.getZoneData().get(LOCAL_REGION).get(0));
     }
 
     @After
     public void afterDataChangeFetchCloudTaskTest() {
         //remove sub
-        registryClient1.unregister(testDataId, ValueConstants.DEFAULT_GROUP,
-            RegistryType.SUBSCRIBER);
-        registryClient1
-            .unregister(testDataId, ValueConstants.DEFAULT_GROUP, RegistryType.PUBLISHER);
+        registryClient1.unregister(dataId, ValueConstants.DEFAULT_GROUP, RegistryType.SUBSCRIBER);
+        registryClient1.unregister(dataId, ValueConstants.DEFAULT_GROUP, RegistryType.PUBLISHER);
     }
 
     @Test

@@ -263,8 +263,7 @@ public class SessionDigestResource {
     }
 
     public List<String> getSessionServerList() {
-        return mataNodeService.getZoneSessionServerList(sessionServerConfig
-            .getSessionServerRegion());
+        return mataNodeService.getSessionServerList(sessionServerConfig.getSessionServerRegion());
     }
 
     public List<String> getDataServerList() {

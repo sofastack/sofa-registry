@@ -193,8 +193,9 @@ public class SessionNotifyTest extends BaseIntegrationTest {
     public void fakeTest() {
         //todo: make it work
     }
-//    @Ignore
-//    @Test
+
+    //    @Ignore
+    //    @Test
     public void doTest() throws Exception {
 
         ThreadPoolExecutor executor = new ThreadPoolExecutor(threadNum, threadNum, 0L, TimeUnit.MILLISECONDS,

@@ -80,6 +80,13 @@ public class SlotSessionDataStore implements DataStore {
     }
 
     @Override
+    public Set<String> getPublisherProcessIds() {
+        Set<String> ret = Sets.newHashSet();
+        slot2DataStores.values().forEach(d -> ret.addAll(d.getPublisherProcessIds()));
+        return ret;
+    }
+
+    @Override
     public Map<String, Map<String, Publisher>> getDataInfoIdPublishers() {
         Map<String, Map<String, Publisher>> ret = new HashMap<>(512);
         for (DataStore ds : slot2DataStores.values()) {

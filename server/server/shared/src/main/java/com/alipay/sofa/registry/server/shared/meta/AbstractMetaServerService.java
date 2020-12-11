@@ -197,7 +197,7 @@ public abstract class AbstractMetaServerService<T extends BaseHeartBeatResponse>
         return metaNodeExchanger.getServerIps();
     }
 
-    public List<String> getZoneSessionServerList(String zonename) {
+    public List<String> getSessionServerList(String zonename) {
         List<String> serverList = new ArrayList<>();
         for (SessionNode sessionNode : getSessionNodes().values()) {
             if (StringUtils.isBlank(zonename) || zonename.equals(sessionNode.getRegionId())) {

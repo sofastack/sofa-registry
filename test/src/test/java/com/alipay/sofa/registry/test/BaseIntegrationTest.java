@@ -87,10 +87,6 @@ public class BaseIntegrationTest {
 
     protected static Channel                        metaChannel;
 
-    protected static volatile String                dataId;
-    protected static volatile String                value;
-    protected static volatile UserData              userData;
-
     protected static int                            sessionPort              = 9603;
     protected static int                            metaPort                 = 9615;
     protected static int                            dataPort                 = 9622;
@@ -155,12 +151,14 @@ public class BaseIntegrationTest {
     }
 
     public static class MySubscriberDataObserver implements SubscriberDataObserver {
+        public volatile String   dataId;
+        public volatile UserData userData;
+
         @Override
         public void handleData(String dataId, UserData data) {
-
-            BaseIntegrationTest.dataId = dataId;
-            BaseIntegrationTest.userData = data;
-            System.out.println("handleData:" + dataId + ":" + data);
+            this.dataId = dataId;
+            this.userData = data;
+            LOGGER.info("handleData: {}, {}", dataId, data);
         }
     }
 

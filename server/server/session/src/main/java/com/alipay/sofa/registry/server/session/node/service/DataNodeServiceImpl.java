@@ -111,8 +111,7 @@ public class DataNodeServiceImpl implements DataNodeService {
 
             @Override
             public PublishDataRequest getRequestBody() {
-                PublishDataRequest publishDataRequest = new PublishDataRequest(publisher,
-                    ServerEnv.PROCESS_ID);
+                PublishDataRequest publishDataRequest = new PublishDataRequest(publisher);
                 return publishDataRequest;
             }
 

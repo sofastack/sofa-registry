@@ -25,6 +25,7 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.ResponseBuilder;
 import javax.ws.rs.core.Response.Status;
 
+import com.alipay.sofa.registry.util.Bool;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import com.alipay.sofa.registry.common.model.CommonResponse;
@@ -69,11 +70,8 @@ public class HealthResource {
         return builder.build();
     }
 
-    private CommonResponse getHealthCheckResult() {
-        CommonResponse response;
-
+    protected StringBuilder getStatus(Bool result) {
         StringBuilder sb = new StringBuilder("SessionServerBoot ");
-
         boolean start = raftClientManager.getClientStart();
         boolean ret = start;
         sb.append("RaftClientManager:").append(start);
@@ -102,11 +100,15 @@ public class HealthResource {
         ret = ret && start;
         sb.append(", ConnectDataServer:").append(start);
 
-        if (ret) {
-            response = CommonResponse.buildSuccessResponse(sb.toString());
-        } else {
-            response = CommonResponse.buildFailedResponse(sb.toString());
-        }
-        return response;
+        result.setBool(ret);
+        return sb;
+    }
+
+    private CommonResponse getHealthCheckResult() {
+        Bool ret = Bool.newFalse();
+        String desc = getStatus(ret).toString();
+
+        return ret.isTrue() ? CommonResponse.buildSuccessResponse(desc) : CommonResponse
+            .buildFailedResponse(desc);
     }
 }

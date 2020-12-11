@@ -44,6 +44,8 @@ public final class SessionLeaseManager {
     private static final Logger            LOGGER                     = LoggerFactory
                                                                           .getLogger(SessionLeaseManager.class);
 
+    public static final int                MIN_LEASE_SEC              = 5;
+
     @Autowired
     private DataServerConfig               dataServerConfig;
     @Autowired
@@ -55,7 +57,15 @@ public final class SessionLeaseManager {
 
     @PostConstruct
     public void init() {
+        validateSessionLeaseSec(dataServerConfig.getSessionLeaseSec());
         ConcurrentUtils.createDaemonThread("session-lease-cleaner", new LeaseCleaner()).start();
+    }
+
+    public static void validateSessionLeaseSec(int sec) {
+        if (sec < MIN_LEASE_SEC) {
+            throw new IllegalArgumentException(String.format("min sessionLeaseSec(%d): %d",
+                MIN_LEASE_SEC, sec));
+        }
     }
 
     public void renewSession(ProcessId sessionProcessId) {

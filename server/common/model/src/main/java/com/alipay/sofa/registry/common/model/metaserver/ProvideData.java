@@ -99,20 +99,21 @@ public class ProvideData implements Serializable {
         this.version = version;
     }
 
-    public static Boolean toBool(ProvideData provideData) {
-        if (provideData == null || provideData.getProvideData() == null
-            || provideData.getProvideData().getObject() == null) {
+    public static String toString(ProvideData provideData) {
+        if (provideData == null || provideData.getProvideData() == null) {
             return null;
         }
-        return Boolean.parseBoolean((String) provideData.getProvideData().getObject());
+        return (String) provideData.getProvideData().getObject();
+    }
+
+    public static Boolean toBool(ProvideData provideData) {
+        String obj = ProvideData.toString(provideData);
+        return obj != null ? Boolean.parseBoolean(obj) : null;
     }
 
     public static Integer toInteger(ProvideData provideData) {
-        if (provideData == null || provideData.getProvideData() == null
-            || provideData.getProvideData().getObject() == null) {
-            return null;
-        }
-        return Integer.valueOf((String) provideData.getProvideData().getObject());
+        String obj = ProvideData.toString(provideData);
+        return obj != null ? Integer.valueOf(obj) : null;
     }
 
     @Override

@@ -1,7 +1,7 @@
 stages: # 定义了一条pipeline
   - 代码检测 # 定义了stage
   - 单元测试
-  - 编译
+#  - 编译
 
 
   #- 发布JAR包
@@ -36,9 +36,6 @@ STC扫描:
       - java -version
       - mvn -version
       - mvn clean package -Dmaven.test.skip=true -Pdev
-    outputs:
-      - name: registry.tgz
-        paths: ["./distribution-enterprise/alipay/target/registry.tgz"]
 
 发布JAR包:
   stage: 发布JAR包

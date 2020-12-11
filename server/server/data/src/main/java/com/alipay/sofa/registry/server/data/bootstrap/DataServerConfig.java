@@ -58,12 +58,6 @@ public class DataServerConfig {
 
     private volatile Set<String> metaIps                                      = null;
 
-    private int                  storeNodes                                   = 3;
-
-    private int                  numberOfReplicas                             = 1000;
-
-    private long                 localDataServerCleanDelay                    = 1000 * 60 * 30;
-
     private int                  getDataExecutorMinPoolSize                   = 80;
 
     private int                  getDataExecutorMaxPoolSize                   = 400;
@@ -299,60 +293,6 @@ public class DataServerConfig {
      */
     public void setRpcTimeout(int rpcTimeout) {
         this.rpcTimeout = rpcTimeout;
-    }
-
-    /**
-     * Getter method for property <tt>storeNodes</tt>.
-     *
-     * @return property value of storeNodes
-     */
-    public int getStoreNodes() {
-        return storeNodes;
-    }
-
-    /**
-     * Setter method for property <tt>storeNodes</tt>.
-     *
-     * @param storeNodes value to be assigned to property storeNodes
-     */
-    public void setStoreNodes(int storeNodes) {
-        this.storeNodes = storeNodes;
-    }
-
-    /**
-     * Getter method for property <tt>numberOfReplicas</tt>.
-     *
-     * @return property value of numberOfReplicas
-     */
-    public int getNumberOfReplicas() {
-        return numberOfReplicas;
-    }
-
-    /**
-     * Setter method for property <tt>numberOfReplicas</tt>.
-     *
-     * @param numberOfReplicas  value to be assigned to property numberOfReplicas
-     */
-    public void setNumberOfReplicas(int numberOfReplicas) {
-        this.numberOfReplicas = numberOfReplicas;
-    }
-
-    /**
-     * Getter method for property <tt>localDataServerCleanDelay</tt>.
-     *
-     * @return property value of localDataServerCleanDelay
-     */
-    public long getLocalDataServerCleanDelay() {
-        return localDataServerCleanDelay;
-    }
-
-    /**
-     * Setter method for property <tt>localDataServerCleanDelay</tt>.
-     *
-     * @param localDataServerCleanDelay  value to be assigned to property localDataServerCleanDelay
-     */
-    public void setLocalDataServerCleanDelay(long localDataServerCleanDelay) {
-        this.localDataServerCleanDelay = localDataServerCleanDelay;
     }
 
     /**

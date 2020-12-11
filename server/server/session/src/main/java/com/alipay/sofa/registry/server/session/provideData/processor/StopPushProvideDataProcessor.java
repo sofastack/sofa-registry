@@ -64,38 +64,30 @@ public class StopPushProvideDataProcessor implements ProvideDataProcessor {
 
     @Override
     public void changeDataProcess(ProvideData provideData) {
-        //push stop switch
-        if (provideData != null) {
-            if (provideData.getProvideData() == null
-                || provideData.getProvideData().getObject() == null) {
-                LOGGER.info("Fetch session stop push switch no data existed,config not change!");
-                return;
-            }
-            String data = (String) provideData.getProvideData().getObject();
-            LOGGER.info("Fetch session stop push data switch {} success!", data);
-
-            //receive stop push switch off
-            if (data != null) {
-                boolean switchData = Boolean.valueOf(data);
-                boolean ifChange = sessionServerConfig.isStopPushSwitch() != switchData;
-                sessionServerConfig.setStopPushSwitch(switchData);
-                if (!switchData) {
-                    //avoid duplicate false receive
-                    if (ifChange) {
-                        fireReSubscriber();
-                    }
-                } else {
-                    //stop push and stop fetch data task
-                    sessionServerConfig.setBeginDataFetchTask(false);
-                }
-            } else {
-                LOGGER.error("Fetch session stop push data switch is null!");
-            }
+        if (provideData == null) {
+            LOGGER.info("Fetch session stopPushSwitch null");
             return;
-        } else {
-            LOGGER.info("Fetch session stop push switch data null,config not change!");
         }
-        return;
+
+        //push stop switch
+        final Boolean switchData = ProvideData.toBool(provideData);
+        if (switchData == null) {
+            LOGGER.info("Fetch session stopPushSwitch content null");
+            return;
+        }
+        LOGGER.info("Fetch session stopPushSwitch={}, current={}", switchData,
+            sessionServerConfig.isStopPushSwitch());
+        boolean ifChange = sessionServerConfig.isStopPushSwitch() != switchData;
+        sessionServerConfig.setStopPushSwitch(switchData);
+        if (!switchData) {
+            //avoid duplicate false receive
+            if (ifChange) {
+                fireReSubscriber();
+            }
+        } else {
+            //stop push and stop fetch data task
+            sessionServerConfig.setBeginDataFetchTask(false);
+        }
     }
 
     /**

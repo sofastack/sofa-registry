@@ -26,7 +26,6 @@ import com.alipay.sofa.registry.remoting.ChannelHandler;
 import com.alipay.sofa.registry.remoting.Server;
 import com.alipay.sofa.registry.remoting.exchange.Exchange;
 import com.alipay.sofa.registry.server.data.cache.CacheDigestTask;
-import com.alipay.sofa.registry.server.data.event.EventCenter;
 import com.alipay.sofa.registry.server.data.remoting.handler.AbstractServerHandler;
 import com.alipay.sofa.registry.server.shared.meta.MetaServerService;
 import org.glassfish.jersey.server.ResourceConfig;
@@ -71,9 +70,6 @@ public class DataServerBootstrap {
 
     @Autowired
     private Exchange                          boltExchange;
-
-    @Autowired
-    private EventCenter                       eventCenter;
 
     @Autowired
     private CacheDigestTask                   cacheDigestTask;

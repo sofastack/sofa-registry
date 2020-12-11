@@ -20,36 +20,39 @@ import com.alipay.sofa.registry.common.model.constants.ValueConstants;
 import com.alipay.sofa.registry.common.model.metaserver.ProvideData;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
+import com.alipay.sofa.registry.server.data.bootstrap.DataServerConfig;
+import com.alipay.sofa.registry.server.data.lease.SessionLeaseManager;
 import com.alipay.sofa.registry.server.data.remoting.metaserver.provideData.ProvideDataProcessor;
+import org.springframework.beans.factory.annotation.Autowired;
 
 /**
  *
  * @author kezhu.wukz
  * @version 1.0: DatumExpireProvideDataProcessor.java, v 0.1 2019-12-26 20:30 kezhu.wukz Exp $
  */
-public class DatumExpireProvideDataProcessor implements ProvideDataProcessor {
-
+public class SessionLeaseProvideDataProcessor implements ProvideDataProcessor {
     private static final Logger LOGGER = LoggerFactory
-                                           .getLogger(DatumExpireProvideDataProcessor.class);
+                                           .getLogger(SessionLeaseProvideDataProcessor.class);
+
+    @Autowired
+    private DataServerConfig    dataServerConfig;
 
     @Override
     public void changeDataProcess(ProvideData provideData) {
-        if (checkInvalid(provideData)) {
+        if (provideData == null) {
+            LOGGER.info("Fetch data sessionLease null");
             return;
         }
-        //TODO enable datum expire
-        int sessionLeaseSec = ProvideData.toInteger(provideData);
-        LOGGER.info("Fetch sessionLeaseSec {} success!", sessionLeaseSec);
-    }
 
-    private boolean checkInvalid(ProvideData provideData) {
-        boolean invalid = provideData == null || provideData.getProvideData() == null
-                          || provideData.getProvideData().getObject() == null;
-        if (invalid) {
-            LOGGER.warn("Fetch enableDataDatumExpire return invalid data, provideData: {}",
-                provideData);
+        final Integer data = ProvideData.toInteger(provideData);
+        if (data == null) {
+            LOGGER.info("Fetch data sessionLease content null");
+            return;
         }
-        return invalid;
+
+        LOGGER.info("Fetch sessionLeaseSec {}", data);
+        SessionLeaseManager.validateSessionLeaseSec(data);
+        dataServerConfig.setSessionLeaseSec(data);
     }
 
     @Override

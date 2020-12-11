@@ -26,11 +26,12 @@ import com.alipay.sofa.registry.server.data.bootstrap.DataServerConfig;
 import com.alipay.sofa.registry.server.data.cache.DatumCache;
 import com.alipay.sofa.registry.server.data.remoting.metaserver.MetaServerServiceImpl;
 import com.alipay.sofa.registry.server.data.remoting.sessionserver.SessionServerConnectionFactory;
+import com.google.common.collect.Lists;
+import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -72,10 +73,10 @@ public class DataDigestResource {
                                                    @QueryParam("dataCenter") String dataCenter) {
         Map<String, Datum> retList = new HashMap<>();
 
-        if (!isBlank(dataId) && !isBlank(instanceId) && !isBlank(group)) {
-
+        if (!StringUtils.isBlank(dataId) && !StringUtils.isBlank(instanceId)
+            && !StringUtils.isBlank(group)) {
             String dataInfoId = DataInfo.toDataInfoId(dataId, instanceId, group);
-            if (isBlank(dataCenter)) {
+            if (StringUtils.isBlank(dataCenter)) {
                 retList = datumCache.get(dataInfoId);
             } else {
                 retList.put(dataCenter, datumCache.get(dataCenter, dataInfoId));
@@ -172,16 +173,7 @@ public class DataDigestResource {
     }
 
     public List<String> getMetaServerList() {
-        final List<String> connections = new ArrayList<>();
-        metaServerService.getConnections().forEach((k, conns) -> {
-            connections.addAll(conns.stream().filter(connection -> connection != null && connection.isFine())
-                    .map(connection -> connection.getRemoteIP())
-                    .collect(Collectors.toList()));
-        });
-        return connections;
+        return Lists.newArrayList(metaServerService.getMetaServerList());
     }
 
-    private boolean isBlank(String dataInfoId) {
-        return dataInfoId == null || dataInfoId.isEmpty();
-    }
 }

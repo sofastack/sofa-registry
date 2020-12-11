@@ -71,6 +71,10 @@ public class DatumCache {
         return datumMap;
     }
 
+    public void clean(String dataCenter, String dataInfoId) {
+        localDatumStorage.remove(dataInfoId, null);
+    }
+
     /**
      * get datum of all data centers by dataInfoId
      *

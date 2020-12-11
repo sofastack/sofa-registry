@@ -16,18 +16,7 @@
  */
 package com.alipay.sofa.registry.server.session.store;
 
-import java.net.InetSocketAddress;
-import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicLong;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
-import java.util.stream.Collectors;
-
 import com.alipay.sofa.registry.common.model.ConnectId;
-import com.google.common.collect.Sets;
-import org.springframework.beans.factory.annotation.Autowired;
-
 import com.alipay.sofa.registry.common.model.store.Subscriber;
 import com.alipay.sofa.registry.common.model.store.WordCache;
 import com.alipay.sofa.registry.core.model.ScopeEnum;
@@ -37,6 +26,15 @@ import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
 import com.alipay.sofa.registry.server.session.cache.SubscriberResult;
 import com.alipay.sofa.registry.util.VersionsMapUtils;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
+import org.springframework.beans.factory.annotation.Autowired;
+
+import java.net.InetSocketAddress;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 /**
  * @author shangyu.wh
@@ -44,33 +42,33 @@ import com.google.common.collect.Lists;
  */
 public class SessionInterests implements Interests, ReSubscribers {
 
-    private static final Logger                                                                             LOGGER            = LoggerFactory
-                                                                                                                                  .getLogger(SessionInterests.class);
+    private static final Logger                                                                                   LOGGER            = LoggerFactory
+                                                                                                                                        .getLogger(SessionInterests.class);
 
-    private final ReentrantReadWriteLock                                                                    readWriteLock     = new ReentrantReadWriteLock();
-    private final Lock                                                                                      read              = readWriteLock
-                                                                                                                                  .readLock();
-    private final Lock                                                                                      write             = readWriteLock
-                                                                                                                                  .writeLock();
+    private final ReentrantReadWriteLock                                                                          readWriteLock     = new ReentrantReadWriteLock();
+    private final Lock                                                                                            read              = readWriteLock
+                                                                                                                                        .readLock();
+    private final Lock                                                                                            write             = readWriteLock
+                                                                                                                                        .writeLock();
 
     @Autowired
-    private SessionServerConfig                                                                             sessionServerConfig;
+    private SessionServerConfig                                                                                   sessionServerConfig;
 
     /**
      * store all register subscriber
      */
-    private ConcurrentHashMap<String/*dataInfoId*/, Map<String/*registerId*/, Subscriber>>                interests         = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<String/*dataInfoId*/, Map<String/*registerId*/, Subscriber>>                interests         = new ConcurrentHashMap<>();
 
-    private Map<ConnectId/*connectId*/, Map<String/*registerId*/, Subscriber>>                            connectIndex      = new ConcurrentHashMap<>();
+    private final Map<ConnectId/*connectId*/, Map<String/*registerId*/, Subscriber>>                            connectIndex      = new ConcurrentHashMap<>();
 
-    private Map<SubscriberResult, Map<InetSocketAddress, Map<String, Subscriber>>>                          resultIndex       = new ConcurrentHashMap<>();
+    private final Map<SubscriberResult, Map<InetSocketAddress, Map<String, Subscriber>>>                          resultIndex       = new ConcurrentHashMap<>();
 
     /**
      * store subscriber interest dataInfo version belong one dataCenter
      */
-    private ConcurrentHashMap<String/*dataCenter*/, Map<String/*dataInfoId*/, Long /*dataInfoVersion*/>> interestVersions  = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<String/*dataCenter*/, Map<String/*dataInfoId*/, Long /*dataInfoVersion*/>> interestVersions  = new ConcurrentHashMap<>();
 
-    private Map<String/*dataInfoId*/, Map<String/*registerId*/, Subscriber>>                              stopPushInterests = new ConcurrentHashMap<>();
+    private final Map<String/*dataInfoId*/, Map<String/*registerId*/, Subscriber>>                              stopPushInterests = new ConcurrentHashMap<>();
 
     @Override
     public void add(Subscriber subscriber) {
@@ -463,11 +461,20 @@ public class SessionInterests implements Interests, ReSubscribers {
 
     @Override
     public List<String> getDataCenters() {
-        if (interestVersions != null) {
-            return interestVersions.keySet().stream().collect(Collectors.toList());
-        } else {
-            return Lists.newArrayList();
+        return Lists.newArrayList(interestVersions.keySet());
+    }
+
+    @Override
+    public Set<String> getSubscriberProcessIds() {
+        HashSet<String> processIds = Sets.newHashSet();
+        for (Map<String, Subscriber> subscribers : interests.values()) {
+            for (Subscriber subscriber : subscribers.values()) {
+                if (subscriber.getProcessId() != null) {
+                    processIds.add(subscriber.getProcessId());
+                }
+            }
         }
+        return processIds;
     }
 
 }

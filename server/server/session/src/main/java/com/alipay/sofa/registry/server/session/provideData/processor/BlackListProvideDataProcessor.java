@@ -57,22 +57,22 @@ public class BlackListProvideDataProcessor implements ProvideDataProcessor {
 
     @Override
     public void changeDataProcess(ProvideData provideData) {
-        //black list data
-        if (provideData.getProvideData() == null
-            || provideData.getProvideData().getObject() == null) {
-            LOGGER.info("Fetch session blacklist no data existed,current config not change!");
+        if (provideData == null) {
+            LOGGER.warn("Fetch session blacklist data null");
             return;
         }
-        String data = (String) provideData.getProvideData().getObject();
-        if (data != null) {
-            Map<String, Map<String, Set<String>>> blacklistConfigMap = blacklistManager
-                .convertBlacklistConfig(data);
-            clientOffBlackIp(blacklistConfigMap);
-            LOGGER.info("Fetch session blacklist data switch {} success!", data);
-        } else {
-            LOGGER.info("Fetch session blacklist data null,current config not change!");
+        //black list data
+        final String data = ProvideData.toString(provideData);
+        if (data == null) {
+            LOGGER.warn("Fetch session blacklist content null");
+            return;
         }
-        return;
+        LOGGER.info("Fetch session blacklist {}", data);
+
+        Map<String, Map<String, Set<String>>> blacklistConfigMap = blacklistManager
+            .convertBlacklistConfig(data);
+        clientOffBlackIp(blacklistConfigMap);
+        LOGGER.info("update BlacklistConfig", blacklistConfigMap);
     }
 
     private void clientOffBlackIp(Map<String, Map<String, Set<String>>> blacklistConfigMap) {
