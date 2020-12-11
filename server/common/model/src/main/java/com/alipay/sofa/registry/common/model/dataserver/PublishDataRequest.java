@@ -16,10 +16,7 @@
  */
 package com.alipay.sofa.registry.common.model.dataserver;
 
-import com.alipay.sofa.registry.common.model.ProcessId;
 import com.alipay.sofa.registry.common.model.store.Publisher;
-
-import java.io.Serializable;
 
 /**
  * request to register publish data
@@ -33,8 +30,8 @@ public class PublishDataRequest extends AbstractSlotRequest {
 
     private final Publisher   publisher;
 
-    public PublishDataRequest(Publisher publisher, ProcessId sessionProcessId) {
-        super(sessionProcessId);
+    public PublishDataRequest(Publisher publisher) {
+        super(publisher.getSessionProcessId());
         this.publisher = publisher;
     }
 

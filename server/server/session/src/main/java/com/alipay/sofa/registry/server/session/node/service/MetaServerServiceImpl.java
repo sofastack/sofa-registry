@@ -25,10 +25,7 @@ import com.alipay.sofa.registry.server.session.remoting.DataNodeExchanger;
 import com.alipay.sofa.registry.server.session.slot.SlotTableCache;
 import com.alipay.sofa.registry.server.shared.env.ServerEnv;
 import com.alipay.sofa.registry.server.shared.meta.AbstractMetaServerService;
-import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-
-import java.util.List;
 
 /**
  *
@@ -58,13 +55,5 @@ public final class MetaServerServiceImpl extends
     @Override
     protected Node createNode() {
         return new SessionNode(new URL(ServerEnv.IP), sessionServerConfig.getSessionServerRegion());
-    }
-
-    @Override
-    public List<String> getZoneSessionServerList(String zonename) {
-        if (StringUtils.isBlank(zonename)) {
-            zonename = sessionServerConfig.getSessionServerRegion();
-        }
-        return super.getZoneSessionServerList(zonename);
     }
 }

@@ -55,7 +55,11 @@ public interface MetaServerService {
      */
     Set<String> getDataCenters();
 
-    public List<String> getZoneSessionServerList(String zonename);
+    /**
+     * @param zonename zone is null, get all session
+     * @return
+     */
+    public List<String> getSessionServerList(String zonename);
 
     public Set<String> getDataServerList();
 

@@ -52,21 +52,30 @@ import static org.junit.Assert.assertTrue;
  */
 @RunWith(SpringRunner.class)
 public class SessionDigestResourceTest extends BaseIntegrationTest {
+    private static final String                   dataId   = "test-dataId-" + System.nanoTime();
+    private static final String                   value    = "SessionDigestResourceTest";
+    private final static MySubscriberDataObserver observer = new MySubscriberDataObserver();
+
     @BeforeClass
     public static void beforeClass() throws Exception {
         clientOff();
-        dataId = "test-dataId-" + System.currentTimeMillis();
-        value = "SessionDigestResourceTest";
 
         PublisherRegistration registration = new PublisherRegistration(dataId);
         registryClient1.register(registration, value);
         Thread.sleep(2000L);
 
-        SubscriberRegistration subReg = new SubscriberRegistration(dataId,
-            new MySubscriberDataObserver());
+        SubscriberRegistration subReg = new SubscriberRegistration(dataId, observer);
         subReg.setScopeEnum(ScopeEnum.dataCenter);
         registryClient1.register(subReg);
         Thread.sleep(2000L);
+
+        assertEquals(dataId, observer.dataId);
+        assertEquals(LOCAL_REGION, observer.userData.getLocalZone());
+        assertEquals(1, observer.userData.getZoneData().size());
+        assertEquals(1, observer.userData.getZoneData().values().size());
+        assertEquals(true, observer.userData.getZoneData().containsKey(LOCAL_REGION));
+        assertEquals(1, observer.userData.getZoneData().get(LOCAL_REGION).size());
+        assertEquals(value, observer.userData.getZoneData().get(LOCAL_REGION).get(0));
     }
 
     @AfterClass

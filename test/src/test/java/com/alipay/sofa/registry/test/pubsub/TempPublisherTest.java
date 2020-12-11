@@ -26,6 +26,7 @@ import com.alipay.sofa.registry.common.model.store.DataInfo;
 import com.alipay.sofa.registry.common.model.store.Publisher;
 import com.alipay.sofa.registry.core.model.ScopeEnum;
 import com.alipay.sofa.registry.server.session.node.service.DataNodeService;
+import com.alipay.sofa.registry.server.shared.env.ServerEnv;
 import com.alipay.sofa.registry.test.BaseIntegrationTest;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -78,6 +79,7 @@ public class TempPublisherTest extends BaseIntegrationTest {
         tempPublisher.setRegisterId(UUID.randomUUID().toString());
         tempPublisher.setDataInfoId(DataInfo.toDataInfoId(dataId, DEFAULT_INSTANCE_ID,
             DEFAULT_GROUP));
+        tempPublisher.setSessionProcessId(ServerEnv.PROCESS_ID);
         List<ServerDataBox> dataBoxData = new ArrayList(1);
         dataBoxData.add(new ServerDataBox(object2bytes(value)));
         tempPublisher.setDataList(dataBoxData);
@@ -144,6 +146,7 @@ public class TempPublisherTest extends BaseIntegrationTest {
         List<ServerDataBox> dataBoxData = new ArrayList(1);
         dataBoxData.add(new ServerDataBox(object2bytes(value)));
         tempPublisher.setDataList(dataBoxData);
+        tempPublisher.setSessionProcessId(ServerEnv.PROCESS_ID);
         sessionApplicationContext.getBean(DataNodeService.class).register(tempPublisher);
 
         Thread.sleep(5000L);

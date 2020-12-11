@@ -117,8 +117,6 @@ public class BlacklistTest extends BaseIntegrationTest {
 
         assertTrue(response.isSuccess());
 
-        BaseIntegrationTest.dataId = null;
-
         //wait for new list meta dispatch to session
         Thread.sleep(2000L);
 
@@ -129,15 +127,15 @@ public class BlacklistTest extends BaseIntegrationTest {
         registryClient1.register(registration, value);
         Thread.sleep(2000L);
 
-        SubscriberRegistration subReg = new SubscriberRegistration(dataId,
-            new MySubscriberDataObserver());
+        MySubscriberDataObserver observer = new MySubscriberDataObserver();
+        SubscriberRegistration subReg = new SubscriberRegistration(dataId, observer);
         subReg.setScopeEnum(ScopeEnum.dataCenter);
 
         registryClient1.register(subReg);
 
         Thread.sleep(2000L);
-        assertEquals(dataId, this.dataId);
-        assertEquals(LOCAL_REGION, userData.getLocalZone());
+        assertEquals(dataId, observer.dataId);
+        assertEquals(LOCAL_REGION, observer.userData.getLocalZone());
 
         Map<String, List<Publisher>> publisherMap = sessionChannel
             .getWebTarget()
@@ -190,7 +188,6 @@ public class BlacklistTest extends BaseIntegrationTest {
 
         assertTrue(response.isSuccess());
 
-        BaseIntegrationTest.dataId = null;
         //wait for new list meta dispatch to session
         Thread.sleep(2000L);
 
@@ -200,16 +197,15 @@ public class BlacklistTest extends BaseIntegrationTest {
         PublisherRegistration registration = new PublisherRegistration(dataId);
         registryClient1.register(registration, value);
         Thread.sleep(2000L);
-
-        SubscriberRegistration subReg = new SubscriberRegistration(dataId,
-            new MySubscriberDataObserver());
+        MySubscriberDataObserver observer = new MySubscriberDataObserver();
+        SubscriberRegistration subReg = new SubscriberRegistration(dataId, observer);
         subReg.setScopeEnum(ScopeEnum.dataCenter);
 
         registryClient1.register(subReg);
 
         Thread.sleep(2000L);
-        assertEquals(dataId, this.dataId);
-        assertEquals(LOCAL_REGION, userData.getLocalZone());
+        assertEquals(dataId, observer.dataId);
+        assertEquals(LOCAL_REGION, observer.userData.getLocalZone());
 
         Map<String, List<Publisher>> publisherMap = sessionChannel
             .getWebTarget()

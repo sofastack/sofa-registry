@@ -40,28 +40,32 @@ public class PubSubTest extends BaseIntegrationTest {
      */
     @Test
     public void publisherTest() throws InterruptedException {
-        String dataId = "test-dataId-" + System.currentTimeMillis();
+        String dataId = "test-dataId-" + System.nanoTime();
         String value = "test publish";
 
         PublisherRegistration registration = new PublisherRegistration(dataId);
         registryClient1.register(registration, value);
         Thread.sleep(2000L);
 
-        SubscriberRegistration subReg = new SubscriberRegistration(dataId,
-            new MySubscriberDataObserver());
+        PublisherRegistration registrationNotMatch = new PublisherRegistration(dataId + "_notmatch");
+        registryClient1.register(registrationNotMatch, value);
+        Thread.sleep(2000L);
+
+        MySubscriberDataObserver observer = new MySubscriberDataObserver();
+        SubscriberRegistration subReg = new SubscriberRegistration(dataId, observer);
         subReg.setScopeEnum(ScopeEnum.dataCenter);
 
         registryClient1.register(subReg);
 
         Thread.sleep(3 * 1000L);
         //        Thread.sleep(2000000L);
-        assertEquals(dataId, this.dataId);
-        assertEquals(LOCAL_REGION, userData.getLocalZone());
-        assertEquals(1, userData.getZoneData().size());
-        assertEquals(1, userData.getZoneData().values().size());
-        assertEquals(true, userData.getZoneData().containsKey(LOCAL_REGION));
-        assertEquals(1, userData.getZoneData().get(LOCAL_REGION).size());
-        assertEquals(value, userData.getZoneData().get(LOCAL_REGION).get(0));
+        assertEquals(dataId, observer.dataId);
+        assertEquals(LOCAL_REGION, observer.userData.getLocalZone());
+        assertEquals(1, observer.userData.getZoneData().size());
+        assertEquals(1, observer.userData.getZoneData().values().size());
+        assertEquals(true, observer.userData.getZoneData().containsKey(LOCAL_REGION));
+        assertEquals(1, observer.userData.getZoneData().get(LOCAL_REGION).size());
+        assertEquals(value, observer.userData.getZoneData().get(LOCAL_REGION).get(0));
 
         registryClient1.unregister(dataId, DEFAULT_GROUP, RegistryType.SUBSCRIBER);
         registryClient1.unregister(dataId, DEFAULT_GROUP, RegistryType.PUBLISHER);
@@ -74,11 +78,11 @@ public class PubSubTest extends BaseIntegrationTest {
      */
     @Test
     public void subscriberTest() throws InterruptedException {
-        String dataId = "test-dataId-" + System.currentTimeMillis();
+        String dataId = "test-dataId-" + System.nanoTime();
         String value = "test subscriber";
 
-        SubscriberRegistration subReg = new SubscriberRegistration(dataId,
-            new MySubscriberDataObserver());
+        MySubscriberDataObserver observer = new MySubscriberDataObserver();
+        SubscriberRegistration subReg = new SubscriberRegistration(dataId, observer);
         subReg.setScopeEnum(ScopeEnum.dataCenter);
         registryClient1.register(subReg);
         Thread.sleep(2000L);
@@ -87,13 +91,13 @@ public class PubSubTest extends BaseIntegrationTest {
         registryClient1.register(registration, value);
         Thread.sleep(2000L);
 
-        assertEquals(dataId, this.dataId);
-        assertEquals(LOCAL_REGION, userData.getLocalZone());
-        assertEquals(1, userData.getZoneData().size());
-        assertEquals(1, userData.getZoneData().values().size());
-        assertEquals(true, userData.getZoneData().containsKey(LOCAL_REGION));
-        assertEquals(1, userData.getZoneData().get(LOCAL_REGION).size());
-        assertEquals(value, userData.getZoneData().get(LOCAL_REGION).get(0));
+        assertEquals(dataId, observer.dataId);
+        assertEquals(LOCAL_REGION, observer.userData.getLocalZone());
+        assertEquals(1, observer.userData.getZoneData().size());
+        assertEquals(1, observer.userData.getZoneData().values().size());
+        assertEquals(true, observer.userData.getZoneData().containsKey(LOCAL_REGION));
+        assertEquals(1, observer.userData.getZoneData().get(LOCAL_REGION).size());
+        assertEquals(value, observer.userData.getZoneData().get(LOCAL_REGION).get(0));
 
         registryClient1.unregister(dataId, DEFAULT_GROUP, RegistryType.SUBSCRIBER);
         registryClient1.unregister(dataId, DEFAULT_GROUP, RegistryType.PUBLISHER);
@@ -108,36 +112,37 @@ public class PubSubTest extends BaseIntegrationTest {
     public void multiClientTest() throws InterruptedException {
 
         // registryClient1 publish data, registryClient2 subscriber
-        String dataId = "test-dataId-" + System.currentTimeMillis();
+        String dataId = "test-dataId-" + System.nanoTime();
         String value = "test multi client publish";
 
         PublisherRegistration registration = new PublisherRegistration(dataId);
         registryClient1.register(registration, value);
         Thread.sleep(2000L);
 
-        SubscriberRegistration subReg = new SubscriberRegistration(dataId,
-            new MySubscriberDataObserver());
+        MySubscriberDataObserver observer = new MySubscriberDataObserver();
+        SubscriberRegistration subReg = new SubscriberRegistration(dataId, observer);
         subReg.setScopeEnum(ScopeEnum.zone);
 
         registryClient2.register(subReg);
 
         Thread.sleep(2000L);
-        assertEquals(dataId, this.dataId);
-        assertEquals(LOCAL_REGION, userData.getLocalZone());
-        assertEquals(1, userData.getZoneData().size());
-        assertEquals(1, userData.getZoneData().values().size());
-        assertEquals(true, userData.getZoneData().containsKey(LOCAL_REGION));
-        assertEquals(1, userData.getZoneData().get(LOCAL_REGION).size());
-        assertEquals(value, userData.getZoneData().get(LOCAL_REGION).get(0));
+        assertEquals(dataId, observer.dataId);
+        assertEquals(LOCAL_REGION, observer.userData.getLocalZone());
+        assertEquals(1, observer.userData.getZoneData().size());
+        assertEquals(1, observer.userData.getZoneData().values().size());
+        assertEquals(true, observer.userData.getZoneData().containsKey(LOCAL_REGION));
+        assertEquals(1, observer.userData.getZoneData().get(LOCAL_REGION).size());
+        assertEquals(value, observer.userData.getZoneData().get(LOCAL_REGION).get(0));
 
         registryClient2.unregister(dataId, DEFAULT_GROUP, RegistryType.SUBSCRIBER);
         registryClient1.unregister(dataId, DEFAULT_GROUP, RegistryType.PUBLISHER);
 
         // registryClient1 subscriber, registryClient2 publish data
-        dataId = "test-dataId-" + System.currentTimeMillis();
+        dataId = "test-dataId-" + System.nanoTime();
         value = "test multi client subscriber";
 
-        subReg = new SubscriberRegistration(dataId, new MySubscriberDataObserver());
+        observer = new MySubscriberDataObserver();
+        subReg = new SubscriberRegistration(dataId, observer);
         subReg.setScopeEnum(ScopeEnum.global);
         registryClient1.register(subReg);
         Thread.sleep(2000L);
@@ -146,13 +151,13 @@ public class PubSubTest extends BaseIntegrationTest {
         registryClient2.register(registration, value);
         Thread.sleep(2000L);
 
-        assertEquals(dataId, this.dataId);
-        assertEquals(LOCAL_REGION, userData.getLocalZone());
-        assertEquals(1, userData.getZoneData().size());
-        assertEquals(1, userData.getZoneData().values().size());
-        assertEquals(true, userData.getZoneData().containsKey(LOCAL_REGION));
-        assertEquals(1, userData.getZoneData().get(LOCAL_REGION).size());
-        assertEquals(value, userData.getZoneData().get(LOCAL_REGION).get(0));
+        assertEquals(dataId, observer.dataId);
+        assertEquals(LOCAL_REGION, observer.userData.getLocalZone());
+        assertEquals(1, observer.userData.getZoneData().size());
+        assertEquals(1, observer.userData.getZoneData().values().size());
+        assertEquals(true, observer.userData.getZoneData().containsKey(LOCAL_REGION));
+        assertEquals(1, observer.userData.getZoneData().get(LOCAL_REGION).size());
+        assertEquals(value, observer.userData.getZoneData().get(LOCAL_REGION).get(0));
 
         registryClient1.unregister(dataId, DEFAULT_GROUP, RegistryType.SUBSCRIBER);
         registryClient2.unregister(dataId, DEFAULT_GROUP, RegistryType.PUBLISHER);
@@ -161,7 +166,8 @@ public class PubSubTest extends BaseIntegrationTest {
         dataId = "test-dataId-" + System.currentTimeMillis();
         value = "test multi client subscriber";
 
-        subReg = new SubscriberRegistration(dataId, new MySubscriberDataObserver());
+        observer = new MySubscriberDataObserver();
+        subReg = new SubscriberRegistration(dataId, observer);
         subReg.setScopeEnum(ScopeEnum.zone);
         registryClient1.register(subReg);
         Thread.sleep(2000L);
@@ -171,14 +177,14 @@ public class PubSubTest extends BaseIntegrationTest {
         registryClient2.register(registration, value);
         Thread.sleep(2000L);
 
-        assertEquals(dataId, this.dataId);
-        assertEquals(LOCAL_REGION, userData.getLocalZone());
-        assertEquals(1, userData.getZoneData().size());
-        assertEquals(1, userData.getZoneData().values().size());
-        assertEquals(true, userData.getZoneData().containsKey(LOCAL_REGION));
-        assertEquals(2, userData.getZoneData().get(LOCAL_REGION).size());
-        assertEquals(value, userData.getZoneData().get(LOCAL_REGION).get(0));
-        assertEquals(value, userData.getZoneData().get(LOCAL_REGION).get(1));
+        assertEquals(dataId, observer.dataId);
+        assertEquals(LOCAL_REGION, observer.userData.getLocalZone());
+        assertEquals(1, observer.userData.getZoneData().size());
+        assertEquals(1, observer.userData.getZoneData().values().size());
+        assertEquals(true, observer.userData.getZoneData().containsKey(LOCAL_REGION));
+        assertEquals(2, observer.userData.getZoneData().get(LOCAL_REGION).size());
+        assertEquals(value, observer.userData.getZoneData().get(LOCAL_REGION).get(0));
+        assertEquals(value, observer.userData.getZoneData().get(LOCAL_REGION).get(1));
 
         registryClient1.unregister(dataId, DEFAULT_GROUP, RegistryType.SUBSCRIBER);
         registryClient1.unregister(dataId, DEFAULT_GROUP, RegistryType.PUBLISHER);

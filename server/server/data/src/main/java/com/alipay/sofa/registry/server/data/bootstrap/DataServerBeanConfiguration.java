@@ -28,7 +28,6 @@ import com.alipay.sofa.registry.server.data.change.event.DataChangeEventCenter;
 import com.alipay.sofa.registry.server.data.change.notify.IDataChangeNotifier;
 import com.alipay.sofa.registry.server.data.change.notify.SessionServerNotifier;
 import com.alipay.sofa.registry.server.data.change.notify.TempPublisherNotifier;
-import com.alipay.sofa.registry.server.data.event.EventCenter;
 import com.alipay.sofa.registry.server.data.lease.SessionLeaseManager;
 import com.alipay.sofa.registry.server.data.remoting.DataNodeExchanger;
 import com.alipay.sofa.registry.server.data.remoting.MetaNodeExchanger;
@@ -42,7 +41,7 @@ import com.alipay.sofa.registry.server.data.remoting.metaserver.RaftClientManage
 import com.alipay.sofa.registry.server.data.remoting.metaserver.handler.NotifyProvideDataChangeHandler;
 import com.alipay.sofa.registry.server.data.remoting.metaserver.provideData.ProvideDataProcessor;
 import com.alipay.sofa.registry.server.data.remoting.metaserver.provideData.ProvideDataProcessorManager;
-import com.alipay.sofa.registry.server.data.remoting.metaserver.provideData.processor.DatumExpireProvideDataProcessor;
+import com.alipay.sofa.registry.server.data.remoting.metaserver.provideData.processor.SessionLeaseProvideDataProcessor;
 import com.alipay.sofa.registry.server.data.remoting.sessionserver.SessionServerConnectionFactory;
 import com.alipay.sofa.registry.server.data.remoting.sessionserver.handler.*;
 import com.alipay.sofa.registry.server.data.resource.DataDigestResource;
@@ -280,11 +279,6 @@ public class DataServerBeanConfiguration {
     public static class DataServerEventBeanConfiguration {
 
         @Bean
-        public EventCenter eventCenter() {
-            return new EventCenter();
-        }
-
-        @Bean
         public DataChangeEventCenter dataChangeEventCenter() {
             return new DataChangeEventCenter();
         }
@@ -374,11 +368,11 @@ public class DataServerBeanConfiguration {
         }
 
         @Bean
-        public ProvideDataProcessor datumExpireProvideDataProcessor(ProvideDataProcessor provideDataProcessorManager) {
-            ProvideDataProcessor datumExpireProvideDataProcessor = new DatumExpireProvideDataProcessor();
+        public ProvideDataProcessor sessionLeaseProvideDataProcessor(ProvideDataProcessor provideDataProcessorManager) {
+            ProvideDataProcessor sessionLeaseProvideDataProcessor = new SessionLeaseProvideDataProcessor();
             ((ProvideDataProcessorManager) provideDataProcessorManager)
-                .addProvideDataProcessor(datumExpireProvideDataProcessor);
-            return datumExpireProvideDataProcessor;
+                .addProvideDataProcessor(sessionLeaseProvideDataProcessor);
+            return sessionLeaseProvideDataProcessor;
         }
 
     }

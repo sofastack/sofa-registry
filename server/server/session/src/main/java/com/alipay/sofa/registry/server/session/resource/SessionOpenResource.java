@@ -48,21 +48,14 @@ public class SessionOpenResource {
     @Path("query.json")
     @Produces(MediaType.APPLICATION_JSON)
     public List<String> getSessionServerListJson(@QueryParam("zone") String zone) {
-        if (StringUtils.isEmpty(zone)) {
+        if (StringUtils.isBlank(zone)) {
             zone = sessionServerConfig.getSessionServerRegion();
         }
 
         if (StringUtils.isNotBlank(zone)) {
             zone = zone.toUpperCase();
         }
-
-        List<String> serverList = mataNodeService.getZoneSessionServerList(zone);
-
-        serverList = serverList.stream()
-                .map(server -> server + ":" + sessionServerConfig.getServerPort())
-                .collect(Collectors.toList());
-
-        return serverList;
+        return getSessionServers(zone);
     }
 
     @GET
@@ -78,4 +71,24 @@ public class SessionOpenResource {
         return "OK";
     }
 
+    /**
+     * Get server list for current data center
+     *
+     * @return
+     */
+    @GET
+    @Path("dataCenter")
+    @Produces(MediaType.APPLICATION_JSON)
+    public List<String> getCurrentDataCenterServerList() {
+        return getSessionServers(null);
+    }
+
+    private List<String> getSessionServers(String zone) {
+        List<String> serverList = mataNodeService.getSessionServerList(zone);
+
+        serverList = serverList.stream()
+                .map(server -> server + ":" + sessionServerConfig.getServerPort())
+                .collect(Collectors.toList());
+        return serverList;
+    }
 }

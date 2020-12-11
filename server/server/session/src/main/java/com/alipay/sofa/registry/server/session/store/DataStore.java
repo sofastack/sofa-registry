@@ -54,6 +54,8 @@ public interface DataStore extends DataManager<Publisher, String, String> {
 
     Set<ConnectId> getConnectIds();
 
+    Set<String> getPublisherProcessIds();
+
     Map<String/*dataInfoId*/, Map<String/*registerId*/, Publisher>> getDataInfoIdPublishers();
 
     Map<String/*dataInfoId*/, Map<String/*registerId*/, Publisher>> getDataInfoIdPublishers(int slotId);

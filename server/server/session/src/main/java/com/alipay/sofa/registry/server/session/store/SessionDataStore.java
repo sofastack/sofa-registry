@@ -233,6 +233,19 @@ public class SessionDataStore implements DataStore {
     }
 
     @Override
+    public Set<String> getPublisherProcessIds() {
+        HashSet<String> processIds = Sets.newHashSet();
+        for (Map<String, Publisher> publishers : getDataInfoIdPublishers().values()) {
+            for (Publisher publisher : publishers.values()) {
+                if (publisher.getProcessId() != null) {
+                    processIds.add(publisher.getProcessId());
+                }
+            }
+        }
+        return processIds;
+    }
+
+    @Override
     public Map<String, Map<String, Publisher>> getDataInfoIdPublishers() {
         Map<String, Map<String, Publisher>> ret = new HashMap<>(registry.size());
         for (Map.Entry<String, Map<String, Publisher>> e : registry.entrySet()) {

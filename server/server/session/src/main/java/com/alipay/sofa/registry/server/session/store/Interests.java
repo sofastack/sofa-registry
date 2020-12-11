@@ -100,4 +100,6 @@ public interface Interests extends DataManager<Subscriber, String, String> {
     Set<ConnectId> getConnectIds();
 
     List<String> getDataCenters();
+
+    Set<String> getSubscriberProcessIds();
 }
