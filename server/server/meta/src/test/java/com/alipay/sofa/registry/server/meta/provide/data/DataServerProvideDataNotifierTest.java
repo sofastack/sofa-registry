@@ -96,7 +96,7 @@ public class DataServerProvideDataNotifierTest extends AbstractTest {
     }
 
     @Test
-    public void testNotifyNormal() throws RequestException {
+    public void testNotifyNormal() throws RequestException, InterruptedException {
         String ip1 = randomIp(), ip2 = randomIp();
         when(dataConnectionHandler.getConnections(anyString()))
                 .thenReturn(Lists.newArrayList(new InetSocketAddress(ip1, Math.abs(random.nextInt(65535)) % 65535),
@@ -109,6 +109,7 @@ public class DataServerProvideDataNotifierTest extends AbstractTest {
         when(dataNodeExchanger.request(any(Request.class))).thenReturn(()->{return null;});
         notifier.notifyProvideDataChange(new ProvideDataChangeEvent(ValueConstants.BLACK_LIST_DATA_ID,
                 System.currentTimeMillis(), DataOperator.ADD));
+        Thread.sleep(50);
         verify(dataNodeExchanger, times(2)).request(any(Request.class));
     }
 }

@@ -161,8 +161,8 @@ public class DefaultCrossDcMetaServerTest extends AbstractTest {
     }
 
     //run manually
-    @Test
-    @Ignore
+//    @Test
+//    @Ignore
     public void testRaftMechanismWorks() throws Exception {
         RaftExchanger raftExchanger = startRaftExchanger();
 
