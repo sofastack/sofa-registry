@@ -189,8 +189,12 @@ public class SessionNotifyTest extends BaseIntegrationTest {
         Thread.sleep(500);
     }
 
-    @Ignore
     @Test
+    public void fakeTest() {
+        //todo: make it work
+    }
+//    @Ignore
+//    @Test
     public void doTest() throws Exception {
 
         ThreadPoolExecutor executor = new ThreadPoolExecutor(threadNum, threadNum, 0L, TimeUnit.MILLISECONDS,

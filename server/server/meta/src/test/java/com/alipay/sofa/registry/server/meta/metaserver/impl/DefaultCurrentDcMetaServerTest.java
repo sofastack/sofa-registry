@@ -218,8 +218,7 @@ public class DefaultCurrentDcMetaServerTest extends AbstractTest {
 
     @Test
     public void testGetEpoch() {
-        Assert.assertEquals(0, metaServer.getEpoch());
         metaServer.renew(new MetaNode(randomURL(), getDc()), 1);
-        Assert.assertTrue(metaServer.getEpoch() <= System.currentTimeMillis());
+        Assert.assertTrue(metaServer.getEpoch() <= DatumVersionUtil.nextId());
     }
 }
