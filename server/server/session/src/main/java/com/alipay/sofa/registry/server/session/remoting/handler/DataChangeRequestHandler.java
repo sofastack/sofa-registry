@@ -18,6 +18,8 @@ package com.alipay.sofa.registry.server.session.remoting.handler;
 
 import java.util.concurrent.Executor;
 
+import com.alipay.sofa.registry.common.model.dataserver.Datum;
+import com.alipay.sofa.registry.server.session.cache.Value;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import com.alipay.sofa.registry.common.model.Node.NodeType;
@@ -85,9 +87,17 @@ public class DataChangeRequestHandler extends AbstractClientHandler<DataChangeRe
     public Object reply(Channel channel, DataChangeRequest dataChangeRequest) {
         dataChangeRequest.setDataCenter(dataChangeRequest.getDataCenter());
         dataChangeRequest.setDataInfoId(dataChangeRequest.getDataInfoId());
-        //update cache when change
-        sessionCacheService.invalidate(new Key(KeyType.OBJ, DatumKey.class.getName(), new DatumKey(
-            dataChangeRequest.getDataInfoId(), dataChangeRequest.getDataCenter())));
+
+        final Key key = new Key(KeyType.OBJ, DatumKey.class.getName(), new DatumKey(
+            dataChangeRequest.getDataInfoId(), dataChangeRequest.getDataCenter()));
+        Value<Datum> value = sessionCacheService.getValueIfPresent(key);
+        if (value != null) {
+            Datum datum = value.getPayload();
+            //update cache when change
+            if (datum != null && datum.getVersion() < dataChangeRequest.getVersion()) {
+                sessionCacheService.invalidate();
+            }
+        }
 
         if (sessionServerConfig.isStopPushSwitch()) {
             return null;

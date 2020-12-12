@@ -220,8 +220,8 @@ public class DataNodeServiceImpl implements DataNodeService {
             Request<GetDataVersionRequest> getDataVersionRequestRequest = new Request<GetDataVersionRequest>() {
                 @Override
                 public GetDataVersionRequest getRequestBody() {
-                    GetDataVersionRequest getDataVersionRequest = new GetDataVersionRequest();
-                    getDataVersionRequest.setDataInfoIds((List<String>) dataInfoIdList);
+                    GetDataVersionRequest getDataVersionRequest = new GetDataVersionRequest(
+                        ServerEnv.PROCESS_ID, (List<String>) dataInfoIdList);
                     return getDataVersionRequest;
                 }
 

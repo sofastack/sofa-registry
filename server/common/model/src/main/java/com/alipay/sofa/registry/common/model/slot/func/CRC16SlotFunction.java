@@ -16,6 +16,8 @@
  */
 package com.alipay.sofa.registry.common.model.slot.func;
 
+import com.alipay.sofa.registry.common.model.slot.SlotConfig;
+
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 
@@ -29,7 +31,7 @@ public class CRC16SlotFunction implements SlotFunction {
     private final int                     slotMask;
 
     public CRC16SlotFunction() {
-        this(SlotFunctionRegistry.MAX_SLOTS);
+        this(SlotConfig.SLOT_NUM);
     }
 
     public CRC16SlotFunction(int slotNums) {

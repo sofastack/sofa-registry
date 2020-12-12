@@ -163,7 +163,7 @@ public class SessionServerConfiguration {
             return list;
         }
 
-        @Bean(name = "serverSyncHandlers")
+        @Bean(name = "sessionSyncHandlers")
         public Collection<AbstractServerHandler> serverSyncHandlers() {
             Collection<AbstractServerHandler> list = new ArrayList<>();
             list.add(dataSlotDiffDataInfoIdRequestHandler());

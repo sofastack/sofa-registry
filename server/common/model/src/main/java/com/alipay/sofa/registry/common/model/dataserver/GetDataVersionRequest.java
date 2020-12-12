@@ -16,7 +16,11 @@
  */
 package com.alipay.sofa.registry.common.model.dataserver;
 
+import com.alipay.sofa.registry.common.model.ProcessId;
+import com.google.common.collect.Lists;
+
 import java.io.Serializable;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -27,14 +31,17 @@ import java.util.List;
  */
 public class GetDataVersionRequest implements Serializable {
 
-    private static final long serialVersionUID = 8942977145684175886L;
+    private static final long  serialVersionUID = 8942977145684175886L;
 
-    private List<String>      dataInfoIds;
+    private final ProcessId    sessionProcessId;
+    private final List<String> dataInfoIds;
 
     /**
      * constructor
      */
-    public GetDataVersionRequest() {
+    public GetDataVersionRequest(ProcessId sessionProcessId, List<String> dataInfoIds) {
+        this.sessionProcessId = sessionProcessId;
+        this.dataInfoIds = Collections.unmodifiableList(Lists.newArrayList(dataInfoIds));
     }
 
     /**
@@ -47,12 +54,11 @@ public class GetDataVersionRequest implements Serializable {
     }
 
     /**
-     * Setter method for property <tt>dataInfoIds</tt>.
-     *
-     * @param dataInfoIds  value to be assigned to property dataInfoIds
+     * Getter method for property <tt>sessionProcessId</tt>.
+     * @return property value of sessionProcessId
      */
-    public void setDataInfoIds(List<String> dataInfoIds) {
-        this.dataInfoIds = dataInfoIds;
+    public ProcessId getSessionProcessId() {
+        return sessionProcessId;
     }
 
     @Override

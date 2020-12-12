@@ -16,6 +16,8 @@
  */
 package com.alipay.sofa.registry.common.model.slot.func;
 
+import com.alipay.sofa.registry.common.model.slot.SlotConfig;
+
 /**
  *
  * @author yuzhi.lyz
@@ -23,11 +25,12 @@ package com.alipay.sofa.registry.common.model.slot.func;
  */
 public final class MD5SlotFunction implements SlotFunction {
     public static final MD5SlotFunction INSTANCE        = new MD5SlotFunction();
+
     private final int                   maxSlots;
     private final MD5HashFunction       md5HashFunction = new MD5HashFunction();
 
     private MD5SlotFunction() {
-        this.maxSlots = SlotFunctionRegistry.MAX_SLOTS;
+        this.maxSlots = SlotConfig.SLOT_NUM;
     }
 
     @Override

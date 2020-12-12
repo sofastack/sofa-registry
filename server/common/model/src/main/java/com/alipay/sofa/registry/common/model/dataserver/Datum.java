@@ -261,7 +261,7 @@ public class Datum implements Serializable {
             if (existing == publisher) {
                 return true;
             }
-            if (!existing.publisherVersion().lessThan(publisher.publisherVersion())) {
+            if (!existing.publisherVersion().orderThan(publisher.publisherVersion())) {
                 return false;
             }
             if (pubMap.replace(publisher.getRegisterId(), existing, publisher)) {

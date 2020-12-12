@@ -26,7 +26,6 @@ import com.alipay.sofa.registry.common.model.metaserver.nodes.DataNode;
 import com.alipay.sofa.registry.common.model.slot.DataNodeSlot;
 import com.alipay.sofa.registry.common.model.slot.Slot;
 import com.alipay.sofa.registry.common.model.slot.SlotTable;
-import com.alipay.sofa.registry.common.model.slot.func.SlotFunctionRegistry;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.remoting.Channel;
@@ -35,7 +34,6 @@ import com.alipay.sofa.registry.server.meta.slot.impl.DefaultSlotManager;
 import com.google.common.collect.Maps;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import java.util.Collections;
 import java.util.Map;
 
 /**
@@ -52,15 +50,6 @@ public class HeartbeatRequestHandler extends AbstractServerHandler<RenewNodesReq
 
     @Autowired
     private DefaultSlotManager  defaultSlotManager;
-
-    private SlotTable mockSlotTable(String address) {
-        Map<Integer, Slot> slots = Maps.newHashMap();
-        for (int i = 0; i < SlotFunctionRegistry.MAX_SLOTS; i++) {
-            Slot s = new Slot(i, address, i, Collections.emptySet());
-            slots.put(i, s);
-        }
-        return new SlotTable(SlotFunctionRegistry.MAX_SLOTS, slots);
-    }
 
     @Override
     public Object reply(Channel channel, RenewNodesRequest<Node> renewNodesRequest) {

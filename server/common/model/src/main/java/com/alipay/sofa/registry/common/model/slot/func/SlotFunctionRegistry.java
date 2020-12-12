@@ -16,6 +16,9 @@
  */
 package com.alipay.sofa.registry.common.model.slot.func;
 
+import com.alipay.sofa.registry.common.model.slot.SlotConfig;
+import com.alipay.sofa.registry.log.Logger;
+import com.alipay.sofa.registry.log.LoggerFactory;
 import com.google.common.collect.Maps;
 
 import java.util.Map;
@@ -26,22 +29,22 @@ import java.util.Map;
  * @version v 0.1 2020-11-28 12:24 yuzhi.lyz Exp $
  */
 public final class SlotFunctionRegistry {
-    public static final int                        MAX_SLOTS = 2;
-    private static final String                    DEF_FUNC  = "crc16";
-    private static final Map<String, SlotFunction> funcs     = Maps.newConcurrentMap();
+    private static final Logger                    LOGGER             = LoggerFactory
+                                                                          .getLogger(SlotFunctionRegistry.class);
+
+    private static final Map<String, SlotFunction> funcs              = Maps.newConcurrentMap();
 
     static {
-        register(CRC16SlotFunction.INSTANCE.name(), CRC16SlotFunction.INSTANCE);
-        register(MD5SlotFunction.INSTANCE.name(), MD5SlotFunction.INSTANCE);
+        register(CRC16SlotFunction.INSTANCE);
+        register(MD5SlotFunction.INSTANCE);
     }
 
-    public static void register(String name, SlotFunction func) {
-        funcs.put(name, func);
+    public static void register(SlotFunction func) {
+        funcs.put(func.name(), func);
     }
 
     public static SlotFunction getFunc() {
-        // TODO need config by env?
-        return funcs.get(DEF_FUNC);
+        return funcs.get(SlotConfig.FUNC);
     }
 
 }

@@ -92,9 +92,9 @@ public class HealthResource {
         ret = ret && start;
         sb.append(", SessionServerStart:").append(start);
 
-        start = sessionServerBootstrap.getServerForDataSyncStart();
+        start = sessionServerBootstrap.getServerForSessionSyncStart();
         ret = ret && start;
-        sb.append(", ServerForDataSyncStart:").append(start);
+        sb.append(", ServerForSessionSyncStart:").append(start);
 
         start = sessionServerBootstrap.getDataStart();
         ret = ret && start;

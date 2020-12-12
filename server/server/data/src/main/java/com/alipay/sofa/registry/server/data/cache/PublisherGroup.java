@@ -109,7 +109,7 @@ public final class PublisherGroup {
 
     private boolean tryAddPublisher(Publisher publisher) {
         PublisherEnvelope exist = pubMap.get(publisher.getRegisterId());
-        if (exist != null && !exist.publisherVersion.lessThan(publisher.publisherVersion())) {
+        if (exist != null && !exist.publisherVersion.orderThan(publisher.publisherVersion())) {
             LOGGER.warn("[AddLessVer] {}, exist={}, add={}", publisher.getRegisterId(),
                 exist.publisherVersion, publisher.publisherVersion());
             return false;
@@ -164,7 +164,7 @@ public final class PublisherGroup {
                     // use concurrent version
                     PublisherVersion newVersion = PublisherVersion.of(
                         existing.publisherVersion.getVersion(), registerTimestamp);
-                    if (existing.publisherVersion.lessThan(newVersion)) {
+                    if (existing.publisherVersion.orderThan(newVersion)) {
                         // mark unpub
                         pubMap.put(e.getKey(),
                             PublisherEnvelope.unpubOf(newVersion, sessionProcessId));
@@ -191,7 +191,7 @@ public final class PublisherGroup {
                     // the removedPublishers is from pubMap, but now notExist/unpub/pubByOtherSession
                     continue;
                 }
-                if (existing.publisherVersion.lessThan(e.getValue())) {
+                if (existing.publisherVersion.orderThan(e.getValue())) {
                     if (sessionProcessId == null) {
                         pubMap.remove(e.getKey());
                     } else {
@@ -216,7 +216,9 @@ public final class PublisherGroup {
         try {
             boolean modified = false;
             for (Publisher publisher : updatedPublishers) {
-                modified = modified || tryAddPublisher(publisher);
+                if (tryAddPublisher(publisher)) {
+                    modified = true;
+                }
             }
             if (modified) {
                 return updateVersion();

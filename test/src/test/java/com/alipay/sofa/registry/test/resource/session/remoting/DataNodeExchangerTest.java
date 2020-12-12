@@ -16,6 +16,7 @@
  */
 package com.alipay.sofa.registry.test.resource.session.remoting;
 
+import com.alipay.sofa.registry.server.shared.env.ServerEnv;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.test.context.junit4.SpringRunner;
@@ -26,6 +27,8 @@ import com.alipay.sofa.registry.remoting.exchange.RequestException;
 import com.alipay.sofa.registry.remoting.exchange.message.Request;
 import com.alipay.sofa.registry.server.session.remoting.DataNodeExchanger;
 import com.alipay.sofa.registry.test.BaseIntegrationTest;
+
+import java.util.Collections;
 
 /**
  * @author kezhu.wukz
@@ -39,7 +42,8 @@ public class DataNodeExchangerTest extends BaseIntegrationTest {
         Request<GetDataVersionRequest> request = new Request<GetDataVersionRequest>() {
             @Override
             public GetDataVersionRequest getRequestBody() {
-                GetDataVersionRequest getDataVersionRequest = new GetDataVersionRequest();
+                GetDataVersionRequest getDataVersionRequest = new GetDataVersionRequest(ServerEnv.PROCESS_ID,
+                    Collections.emptyList());
                 return getDataVersionRequest;
             }
 

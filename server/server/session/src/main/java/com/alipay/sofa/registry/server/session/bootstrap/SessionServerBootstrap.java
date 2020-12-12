@@ -53,8 +53,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
  */
 public class SessionServerBootstrap {
 
-    private static final Logger               LOGGER                 = LoggerFactory
-                                                                         .getLogger(SessionServerBootstrap.class);
+    private static final Logger               LOGGER                    = LoggerFactory
+                                                                            .getLogger(SessionServerBootstrap.class);
 
     @Autowired
     private SessionServerConfig               sessionServerConfig;
@@ -92,22 +92,22 @@ public class SessionServerBootstrap {
 
     private Server                            dataSyncServer;
 
-    @Resource(name = "serverSyncHandlers")
-    private Collection<AbstractServerHandler> serverSyncHandlers;
+    @Resource(name = "sessionSyncHandlers")
+    private Collection<AbstractServerHandler> sessionSyncHandlers;
 
     private Server                            httpServer;
 
-    private final AtomicBoolean               metaStart              = new AtomicBoolean(false);
+    private final AtomicBoolean               metaStart                 = new AtomicBoolean(false);
 
-    private final AtomicBoolean               schedulerStart         = new AtomicBoolean(false);
+    private final AtomicBoolean               schedulerStart            = new AtomicBoolean(false);
 
-    private final AtomicBoolean               httpStart              = new AtomicBoolean(false);
+    private final AtomicBoolean               httpStart                 = new AtomicBoolean(false);
 
-    private final AtomicBoolean               serverStart            = new AtomicBoolean(false);
+    private final AtomicBoolean               serverStart               = new AtomicBoolean(false);
 
-    private final AtomicBoolean               dataStart              = new AtomicBoolean(false);
+    private final AtomicBoolean               dataStart                 = new AtomicBoolean(false);
 
-    private final AtomicBoolean               serverForDataSyncStart = new AtomicBoolean(false);
+    private final AtomicBoolean               serverForSessionSyncStart = new AtomicBoolean(false);
 
     /**
      * Do initialized.
@@ -118,7 +118,7 @@ public class SessionServerBootstrap {
 
             initEnvironment();
 
-            openDataSyncServer();
+            openSessionSyncServer();
 
             connectMetaServer();
 
@@ -197,17 +197,17 @@ public class SessionServerBootstrap {
         }
     }
 
-    private void openDataSyncServer() {
+    private void openSessionSyncServer() {
         try {
-            if (serverForDataSyncStart.compareAndSet(false, true)) {
+            if (serverForSessionSyncStart.compareAndSet(false, true)) {
                 dataSyncServer = boltExchange.open(new URL(NetUtil.getLocalAddress()
                     .getHostAddress(), sessionServerConfig.getSyncSessionPort()),
-                    serverSyncHandlers.toArray(new ChannelHandler[serverSyncHandlers.size()]));
+                    sessionSyncHandlers.toArray(new ChannelHandler[sessionSyncHandlers.size()]));
                 LOGGER.info("Data server for sync started! port:{}",
                     sessionServerConfig.getSyncSessionPort());
             }
         } catch (Exception e) {
-            serverForDataSyncStart.set(false);
+            serverForSessionSyncStart.set(false);
             LOGGER.error("Data sync server start error! port:{}",
                 sessionServerConfig.getSyncSessionPort(), e);
             throw new RuntimeException("Data sync server start error!", e);
@@ -360,7 +360,7 @@ public class SessionServerBootstrap {
         return dataStart.get();
     }
 
-    public boolean getServerForDataSyncStart() {
-        return serverForDataSyncStart.get();
+    public boolean getServerForSessionSyncStart() {
+        return serverForSessionSyncStart.get();
     }
 }
