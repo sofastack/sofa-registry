@@ -14,31 +14,39 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alipay.sofa.registry.server.session.cache;
+package com.alipay.sofa.registry.server.session.acceptor;
 
-import java.util.Map;
+import com.alipay.sofa.registry.common.model.ConnectId;
 
 /**
  *
- * @author shangyu.wh
- * @version $Id: CacheService.java, v 0.1 2017-12-06 20:19 shangyu.wh Exp $
+ * @author yuzhi.lyz
+ * @version v 0.1 2020-12-12 15:20 yuzhi.lyz Exp $
  */
-public interface CacheService {
+public final class ClientOffWriteDataRequest implements WriteDataRequest {
+    private final ConnectId connectId;
 
-    /**
-     * get cache by key
-     * @param key
-     * @return
-     */
-    Value getValue(Key key) throws CacheAccessException;
+    public ClientOffWriteDataRequest(ConnectId connectId) {
+        this.connectId = connectId;
+    }
 
-    Value getValueIfPresent(Key key);
+    @Override
+    public Object getRequestBody() {
+        return connectId;
+    }
 
-    Map<Key, Value> getValues(final Iterable<Key> keys) throws CacheAccessException;
+    @Override
+    public WriteDataRequestType getRequestType() {
+        return WriteDataRequestType.CLIENT_OFF;
+    }
 
-    /**
-     * invalidate cache by keys
-     * @param keys
-     */
-    void invalidate(Key... keys);
+    @Override
+    public ConnectId getConnectId() {
+        return connectId;
+    }
+
+    @Override
+    public String getDataServerIP() {
+        return null;
+    }
 }

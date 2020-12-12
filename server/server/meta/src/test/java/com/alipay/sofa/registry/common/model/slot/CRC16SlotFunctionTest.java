@@ -37,7 +37,7 @@ public class CRC16SlotFunctionTest extends AbstractTest {
 
     @Test
     public void testMaxSlots() {
-        Assert.assertEquals(SlotFunctionRegistry.MAX_SLOTS, slotFunction.maxSlots());
+        Assert.assertEquals(SlotConfig.SLOT_NUM, slotFunction.maxSlots());
     }
 
     @Test

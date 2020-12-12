@@ -24,6 +24,7 @@ import java.util.Set;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ThreadPoolExecutor;
 
+import com.alipay.sofa.registry.server.data.lease.SessionLeaseManager;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import com.alipay.sofa.registry.common.model.GenericResponse;
@@ -43,10 +44,13 @@ import com.alipay.sofa.registry.util.ParaCheckUtil;
 public class GetDataVersionsHandler extends AbstractServerHandler<GetDataVersionRequest> {
 
     @Autowired
-    private DatumCache         datumCache;
+    private DatumCache          datumCache;
 
     @Autowired
-    private ThreadPoolExecutor getDataProcessorExecutor;
+    private ThreadPoolExecutor  getDataProcessorExecutor;
+
+    @Autowired
+    private SessionLeaseManager sessionLeaseManager;
 
     @Override
     public Executor getExecutor() {
@@ -60,10 +64,13 @@ public class GetDataVersionsHandler extends AbstractServerHandler<GetDataVersion
     @Override
     public void checkParam(GetDataVersionRequest request) throws RuntimeException {
         ParaCheckUtil.checkNotEmpty(request.getDataInfoIds(), "GetDataVersionRequest.dataInfoIds");
+        ParaCheckUtil.checkNotNull(request.getSessionProcessId(), "request.sessionProcessId");
     }
 
     @Override
     public Object doHandle(Channel channel, GetDataVersionRequest request) {
+        sessionLeaseManager.renewSession(request.getSessionProcessId());
+
         Map<String/*datacenter*/, Map<String/*dataInfoId*/, Long/*version*/>> map = new HashMap<>();
         List<String> dataInfoIds = request.getDataInfoIds();
         for (String dataInfoId : dataInfoIds) {

@@ -86,7 +86,7 @@ public final class PublisherVersion implements Serializable, Comparable<Publishe
         return 0;
     }
 
-    public boolean lessThan(PublisherVersion o) {
+    public boolean orderThan(PublisherVersion o) {
         return compareTo(o) < 0;
     }
 

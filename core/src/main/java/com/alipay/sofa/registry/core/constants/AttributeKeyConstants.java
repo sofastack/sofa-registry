@@ -14,31 +14,29 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alipay.sofa.registry.server.session.cache;
-
-import java.util.Map;
+package com.alipay.sofa.registry.core.constants;
 
 /**
  *
- * @author shangyu.wh
- * @version $Id: CacheService.java, v 0.1 2017-12-06 20:19 shangyu.wh Exp $
+ * @author zhuoyu.sjw
+ * @version $Id: AttributeKeyConstants.java, v 0.1 2018-03-30 20:18 zhuoyu.sjw Exp $$
  */
-public interface CacheService {
+public class AttributeKeyConstants {
 
     /**
-     * get cache by key
-     * @param key
-     * @return
+     * Access Key
      */
-    Value getValue(Key key) throws CacheAccessException;
-
-    Value getValueIfPresent(Key key);
-
-    Map<Key, Value> getValues(final Iterable<Key> keys) throws CacheAccessException;
-
+    public static final String ATTRIBUTE_ACCESS_KEY = "!AccessKey";
     /**
-     * invalidate cache by keys
-     * @param keys
+     * Algorithm Key
      */
-    void invalidate(Key... keys);
+    public static final String ATTRIBUTE_ALGORITHM  = "!Algorithm";
+    /**
+     * Signature Key
+     */
+    public static final String ATTRIBUTE_SIGNATURE  = "!Signature";
+    /**
+     * Timestamp Key
+     */
+    public static final String ATTRIBUTE_TIMESTAMP  = "!Timestamp";
 }

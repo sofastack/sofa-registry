@@ -85,26 +85,27 @@ public class SessionCacheService implements CacheService {
 
     @Override
     public Value getValue(final Key key) throws CacheAccessException {
-        Value payload = null;
         try {
-            payload = readWriteCacheMap.get(key);
+            return readWriteCacheMap.get(key);
         } catch (Throwable e) {
             String msg = "Cannot get value for key is:" + key;
             throw new CacheAccessException(msg, e);
         }
-        return payload;
+    }
+
+    @Override
+    public Value getValueIfPresent(Key key) {
+        return readWriteCacheMap.getIfPresent(key);
     }
 
     @Override
     public Map<Key, Value> getValues(final Iterable<Key> keys) throws CacheAccessException {
-        Map<Key, Value> valueMap = null;
         try {
-            valueMap = readWriteCacheMap.getAll(keys);
+            return readWriteCacheMap.getAll(keys);
         } catch (Throwable e) {
             String msg = "Cannot get value for keys are:" + keys;
             throw new CacheAccessException(msg, e);
         }
-        return valueMap;
     }
 
     @Override

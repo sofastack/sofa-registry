@@ -19,6 +19,7 @@ package com.alipay.sofa.registry.server.meta.slot.impl;
 import com.alipay.sofa.jraft.util.ThreadPoolUtil;
 import com.alipay.sofa.registry.common.model.metaserver.nodes.DataNode;
 import com.alipay.sofa.registry.common.model.slot.DataNodeSlot;
+import com.alipay.sofa.registry.common.model.slot.SlotConfig;
 import com.alipay.sofa.registry.common.model.slot.SlotTable;
 import com.alipay.sofa.registry.common.model.store.URL;
 import com.alipay.sofa.registry.exception.DisposeException;
@@ -165,12 +166,12 @@ public class LocalSlotManager extends AbstractLifecycle implements SlotManager, 
 
     @Override
     public int getSlotNums() {
-        return metaServerConfig.getTotalSlotNumber();
+        return SlotConfig.SLOT_NUM;
     }
 
     @Override
     public int getSlotReplicaNums() {
-        return metaServerConfig.getSlotReplicas();
+        return SlotConfig.SLOT_REPLICAS;
     }
 
     @Override
