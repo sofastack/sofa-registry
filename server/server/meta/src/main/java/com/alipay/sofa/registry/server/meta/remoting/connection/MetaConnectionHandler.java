@@ -23,6 +23,7 @@ import com.alipay.sofa.registry.net.NetUtil;
 import com.alipay.sofa.registry.remoting.Channel;
 import com.alipay.sofa.registry.server.meta.bootstrap.config.NodeConfig;
 import com.alipay.sofa.registry.server.shared.remoting.ListenServerChannelHandler;
+import com.alipay.sofa.registry.server.meta.remoting.handler.AbstractServerHandler;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.net.InetSocketAddress;

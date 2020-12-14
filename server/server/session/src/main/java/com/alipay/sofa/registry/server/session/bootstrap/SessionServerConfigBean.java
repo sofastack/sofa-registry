@@ -27,6 +27,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**
  * The type Session server config bean.
+ *
  * @author shangyu.wh
  * @version $Id : SessionServerConfigBean.java, v 0.1 2017-11-14 11:49 synex Exp $
  */
@@ -155,11 +156,6 @@ public class SessionServerConfigBean implements SessionServerConfig {
     private int                  renewDatumWheelQueueSize                = 10000;
 
     private int                  pushDataTaskRetryFirstDelay             = 500;
-    private int                newRevisionTaskMaxBufferSize            = 1000000;
-
-    private int                newRevisionTaskWorkerSize               = 100;
-
-    private int                clientNodeExchangeTimeOut               = 1000;            //time out cause netty HashedWheelTimer occupy a lot of mem
 
     private long                 pushDataTaskRetryIncrementDelay         = 500;
 
@@ -191,12 +187,15 @@ public class SessionServerConfigBean implements SessionServerConfig {
 
     private boolean              beginDataFetchTask                      = false;
 
-
     //begin config for enterprise version
 
-    /** forever close push zone，such as:RZBETA */
+    /**
+     * forever close push zone，such as:RZBETA
+     */
     private String               invalidForeverZones                     = "";
-    /** config regex,exception to the rule of forever close push zone*/
+    /**
+     * config regex,exception to the rule of forever close push zone
+     */
     private String               invalidIgnoreDataidRegex                = "";
 
     private Set<String>          invalidForeverZonesSet;
@@ -221,7 +220,7 @@ public class SessionServerConfigBean implements SessionServerConfig {
 
     private int                  slotSyncPublisherMaxNum                 = 512;
 
-    private boolean            enableSessionLoadbalancePolicy          = false;
+    private boolean              enableSessionLoadbalancePolicy          = false;
 
     //end config for enterprise version
 
@@ -231,6 +230,7 @@ public class SessionServerConfigBean implements SessionServerConfig {
 
     /**
      * constructor
+     *
      * @param commonConfig
      */
     public SessionServerConfigBean(CommonConfig commonConfig) {
@@ -249,7 +249,7 @@ public class SessionServerConfigBean implements SessionServerConfig {
     /**
      * Setter method for property <tt>renewDatumWheelThreadSize </tt>.
      *
-     * @param renewDatumWheelThreadSize  value to be assigned to property renewDatumWheelThreadSize
+     * @param renewDatumWheelThreadSize value to be assigned to property renewDatumWheelThreadSize
      */
     public void setRenewDatumWheelThreadSize(int renewDatumWheelThreadSize) {
         this.renewDatumWheelThreadSize = renewDatumWheelThreadSize;
@@ -267,7 +267,7 @@ public class SessionServerConfigBean implements SessionServerConfig {
     /**
      * Setter method for property <tt>renewDatumWheelQueueSize </tt>.
      *
-     * @param renewDatumWheelQueueSize  value to be assigned to property renewDatumWheelQueueSize
+     * @param renewDatumWheelQueueSize value to be assigned to property renewDatumWheelQueueSize
      */
     public void setRenewDatumWheelQueueSize(int renewDatumWheelQueueSize) {
         this.renewDatumWheelQueueSize = renewDatumWheelQueueSize;
@@ -286,7 +286,7 @@ public class SessionServerConfigBean implements SessionServerConfig {
     /**
      * Setter method for property <tt>userDataPushRetryExecutorQueueSize </tt>.
      *
-     * @param userDataPushRetryExecutorQueueSize  value to be assigned to property userDataPushRetryExecutorQueueSize
+     * @param userDataPushRetryExecutorQueueSize value to be assigned to property userDataPushRetryExecutorQueueSize
      */
     public void setUserDataPushRetryExecutorQueueSize(int userDataPushRetryExecutorQueueSize) {
         this.userDataPushRetryExecutorQueueSize = userDataPushRetryExecutorQueueSize;
@@ -305,7 +305,7 @@ public class SessionServerConfigBean implements SessionServerConfig {
     /**
      * Setter method for property <tt>userDataPushRetryExecutorThreadSize </tt>.
      *
-     * @param userDataPushRetryExecutorThreadSize  value to be assigned to property userDataPushRetryExecutorThreadSize
+     * @param userDataPushRetryExecutorThreadSize value to be assigned to property userDataPushRetryExecutorThreadSize
      */
     public void setUserDataPushRetryExecutorThreadSize(int userDataPushRetryExecutorThreadSize) {
         this.userDataPushRetryExecutorThreadSize = userDataPushRetryExecutorThreadSize;
@@ -324,7 +324,7 @@ public class SessionServerConfigBean implements SessionServerConfig {
     /**
      * Setter method for property <tt>dataNodeRetryExecutorThreadSize </tt>.
      *
-     * @param dataNodeRetryExecutorThreadSize  value to be assigned to property dataNodeRetryExecutorThreadSize
+     * @param dataNodeRetryExecutorThreadSize value to be assigned to property dataNodeRetryExecutorThreadSize
      */
     public void setDataNodeRetryExecutorThreadSize(int dataNodeRetryExecutorThreadSize) {
         this.dataNodeRetryExecutorThreadSize = dataNodeRetryExecutorThreadSize;
@@ -343,7 +343,7 @@ public class SessionServerConfigBean implements SessionServerConfig {
     /**
      * Setter method for property <tt>dataNodeRetryExecutorQueueSize </tt>.
      *
-     * @param dataNodeRetryExecutorQueueSize  value to be assigned to property dataNodeRetryExecutorQueueSize
+     * @param dataNodeRetryExecutorQueueSize value to be assigned to property dataNodeRetryExecutorQueueSize
      */
     public void setDataNodeRetryExecutorQueueSize(int dataNodeRetryExecutorQueueSize) {
         this.dataNodeRetryExecutorQueueSize = dataNodeRetryExecutorQueueSize;
@@ -361,7 +361,7 @@ public class SessionServerConfigBean implements SessionServerConfig {
     /**
      * Setter method for property <tt>writeDataAcceptorQueueSize </tt>.
      *
-     * @param writeDataAcceptorQueueSize  value to be assigned to property writeDataAcceptorQueueSize
+     * @param writeDataAcceptorQueueSize value to be assigned to property writeDataAcceptorQueueSize
      */
     public void setWriteDataAcceptorQueueSize(int writeDataAcceptorQueueSize) {
         this.writeDataAcceptorQueueSize = writeDataAcceptorQueueSize;
@@ -379,7 +379,7 @@ public class SessionServerConfigBean implements SessionServerConfig {
     /**
      * Setter method for property <tt>renewAndSnapshotSilentPeriodSec </tt>.
      *
-     * @param renewAndSnapshotSilentPeriodSec  value to be assigned to property renewAndSnapshotSilentPeriodSec
+     * @param renewAndSnapshotSilentPeriodSec value to be assigned to property renewAndSnapshotSilentPeriodSec
      */
     public void setRenewAndSnapshotSilentPeriodSec(int renewAndSnapshotSilentPeriodSec) {
         this.renewAndSnapshotSilentPeriodSec = renewAndSnapshotSilentPeriodSec;
@@ -398,7 +398,7 @@ public class SessionServerConfigBean implements SessionServerConfig {
     /**
      * Setter method for property <tt>publishDataTaskRetryTimes </tt>.
      *
-     * @param publishDataTaskRetryTimes  value to be assigned to property publishDataTaskRetryTimes
+     * @param publishDataTaskRetryTimes value to be assigned to property publishDataTaskRetryTimes
      */
     public void setPublishDataTaskRetryTimes(int publishDataTaskRetryTimes) {
         this.publishDataTaskRetryTimes = publishDataTaskRetryTimes;
@@ -417,7 +417,7 @@ public class SessionServerConfigBean implements SessionServerConfig {
     /**
      * Setter method for property <tt>unPublishDataTaskRetryTimes </tt>.
      *
-     * @param unPublishDataTaskRetryTimes  value to be assigned to property unPublishDataTaskRetryTimes
+     * @param unPublishDataTaskRetryTimes value to be assigned to property unPublishDataTaskRetryTimes
      */
     public void setUnPublishDataTaskRetryTimes(int unPublishDataTaskRetryTimes) {
         this.unPublishDataTaskRetryTimes = unPublishDataTaskRetryTimes;
@@ -565,7 +565,7 @@ public class SessionServerConfigBean implements SessionServerConfig {
     /**
      * Setter method for property <tt>cancelDataTaskRetryIncrementDelay</tt>.
      *
-     * @param cancelDataTaskRetryIncrementDelay  value to be assigned to property cancelDataTaskRetryIncrementDelay
+     * @param cancelDataTaskRetryIncrementDelay value to be assigned to property cancelDataTaskRetryIncrementDelay
      */
     public void setCancelDataTaskRetryIncrementDelay(long cancelDataTaskRetryIncrementDelay) {
         this.cancelDataTaskRetryIncrementDelay = cancelDataTaskRetryIncrementDelay;
@@ -574,7 +574,7 @@ public class SessionServerConfigBean implements SessionServerConfig {
     /**
      * Setter method for property <tt>cancelDataTaskRetryFirstDelay </tt>.
      *
-     * @param cancelDataTaskRetryFirstDelay  value to be assigned to property cancelDataTaskRetryFirstDelay
+     * @param cancelDataTaskRetryFirstDelay value to be assigned to property cancelDataTaskRetryFirstDelay
      */
     public void setCancelDataTaskRetryFirstDelay(long cancelDataTaskRetryFirstDelay) {
         this.cancelDataTaskRetryFirstDelay = cancelDataTaskRetryFirstDelay;
@@ -593,7 +593,7 @@ public class SessionServerConfigBean implements SessionServerConfig {
     /**
      * Setter method for property <tt>publishDataTaskRetryFirstDelay </tt>.
      *
-     * @param publishDataTaskRetryFirstDelay  value to be assigned to property publishDataTaskRetryFirstDelay
+     * @param publishDataTaskRetryFirstDelay value to be assigned to property publishDataTaskRetryFirstDelay
      */
     public void setPublishDataTaskRetryFirstDelay(long publishDataTaskRetryFirstDelay) {
         this.publishDataTaskRetryFirstDelay = publishDataTaskRetryFirstDelay;
@@ -612,7 +612,7 @@ public class SessionServerConfigBean implements SessionServerConfig {
     /**
      * Setter method for property <tt>publishDataTaskRetryIncrementDelay </tt>.
      *
-     * @param publishDataTaskRetryIncrementDelay  value to be assigned to property publishDataTaskRetryIncrementDelay
+     * @param publishDataTaskRetryIncrementDelay value to be assigned to property publishDataTaskRetryIncrementDelay
      */
     public void setPublishDataTaskRetryIncrementDelay(long publishDataTaskRetryIncrementDelay) {
         this.publishDataTaskRetryIncrementDelay = publishDataTaskRetryIncrementDelay;
@@ -631,7 +631,7 @@ public class SessionServerConfigBean implements SessionServerConfig {
     /**
      * Setter method for property <tt>unPublishDataTaskRetryFirstDelay </tt>.
      *
-     * @param unPublishDataTaskRetryFirstDelay  value to be assigned to property unPublishDataTaskRetryFirstDelay
+     * @param unPublishDataTaskRetryFirstDelay value to be assigned to property unPublishDataTaskRetryFirstDelay
      */
     public void setUnPublishDataTaskRetryFirstDelay(long unPublishDataTaskRetryFirstDelay) {
         this.unPublishDataTaskRetryFirstDelay = unPublishDataTaskRetryFirstDelay;
@@ -650,7 +650,7 @@ public class SessionServerConfigBean implements SessionServerConfig {
     /**
      * Setter method for property <tt>unPublishDataTaskRetryIncrementDelay </tt>.
      *
-     * @param unPublishDataTaskRetryIncrementDelay  value to be assigned to property unPublishDataTaskRetryIncrementDelay
+     * @param unPublishDataTaskRetryIncrementDelay value to be assigned to property unPublishDataTaskRetryIncrementDelay
      */
     public void setUnPublishDataTaskRetryIncrementDelay(long unPublishDataTaskRetryIncrementDelay) {
         this.unPublishDataTaskRetryIncrementDelay = unPublishDataTaskRetryIncrementDelay;
@@ -711,6 +711,25 @@ public class SessionServerConfigBean implements SessionServerConfig {
      */
     public void setSubscriberRegisterFetchRetryTimes(int subscriberRegisterFetchRetryTimes) {
         this.subscriberRegisterFetchRetryTimes = subscriberRegisterFetchRetryTimes;
+    }
+
+    /**
+     * Getter method for property <tt>sessionRegisterDataServerTaskRetryTimes</tt>.
+     *
+     * @return property value of sessionRegisterDataServerTaskRetryTimes
+     */
+    @Override
+    public int getSessionRegisterDataServerTaskRetryTimes() {
+        return sessionRegisterDataServerTaskRetryTimes;
+    }
+
+    /**
+     * Setter method for property <tt>sessionRegisterDataServerTaskRetryTimes</tt>.
+     *
+     * @param sessionRegisterDataServerTaskRetryTimes value to be assigned to property sessionRegisterDataServerTaskRetryTimes
+     */
+    public void setSessionRegisterDataServerTaskRetryTimes(int sessionRegisterDataServerTaskRetryTimes) {
+        this.sessionRegisterDataServerTaskRetryTimes = sessionRegisterDataServerTaskRetryTimes;
     }
 
     /**
@@ -910,7 +929,7 @@ public class SessionServerConfigBean implements SessionServerConfig {
     /**
      * Setter method for property <tt>schedulerCleanInvolidClientTimeOut</tt>.
      *
-     * @param schedulerCleanInvalidClientTimeOut  value to be assigned to property schedulerCleanInvolidClientTimeOut
+     * @param schedulerCleanInvalidClientTimeOut value to be assigned to property schedulerCleanInvolidClientTimeOut
      */
     public void setSchedulerCleanInvalidClientTimeOut(int schedulerCleanInvalidClientTimeOut) {
         this.schedulerCleanInvalidClientTimeOut = schedulerCleanInvalidClientTimeOut;
@@ -919,7 +938,7 @@ public class SessionServerConfigBean implements SessionServerConfig {
     /**
      * Setter method for property <tt>schedulerCleanInvolidClientFirstDelay</tt>.
      *
-     * @param schedulerCleanInvalidClientFirstDelay  value to be assigned to property schedulerCleanInvolidClientFirstDelay
+     * @param schedulerCleanInvalidClientFirstDelay value to be assigned to property schedulerCleanInvolidClientFirstDelay
      */
     public void setSchedulerCleanInvalidClientFirstDelay(int schedulerCleanInvalidClientFirstDelay) {
         this.schedulerCleanInvalidClientFirstDelay = schedulerCleanInvalidClientFirstDelay;
@@ -928,7 +947,7 @@ public class SessionServerConfigBean implements SessionServerConfig {
     /**
      * Setter method for property <tt>schedulerCleanInvolidClientBackOffBound</tt>.
      *
-     * @param schedulerCleanInvalidClientBackOffBound  value to be assigned to property schedulerCleanInvolidClientBackOffBound
+     * @param schedulerCleanInvalidClientBackOffBound value to be assigned to property schedulerCleanInvolidClientBackOffBound
      */
     public void setSchedulerCleanInvalidClientBackOffBound(int schedulerCleanInvalidClientBackOffBound) {
         this.schedulerCleanInvalidClientBackOffBound = schedulerCleanInvalidClientBackOffBound;
@@ -947,7 +966,7 @@ public class SessionServerConfigBean implements SessionServerConfig {
     /**
      * Setter method for property <tt>stopPushSwitch</tt>.
      *
-     * @param stopPushSwitch  value to be assigned to property stopPushSwitch
+     * @param stopPushSwitch value to be assigned to property stopPushSwitch
      */
     @Override
     public void setStopPushSwitch(boolean stopPushSwitch) {
@@ -967,7 +986,7 @@ public class SessionServerConfigBean implements SessionServerConfig {
     /**
      * Setter method for property <tt>beginDataFetchTask</tt>.
      *
-     * @param beginDataFetchTask  value to be assigned to property beginDataFetchTask
+     * @param beginDataFetchTask value to be assigned to property beginDataFetchTask
      */
     @Override
     public void setBeginDataFetchTask(boolean beginDataFetchTask) {
@@ -981,7 +1000,7 @@ public class SessionServerConfigBean implements SessionServerConfig {
     /**
      * Setter method for property <tt>invalidForeverZones</tt>.
      *
-     * @param invalidForeverZones  value to be assigned to property invalidForeverZones
+     * @param invalidForeverZones value to be assigned to property invalidForeverZones
      */
     public void setInvalidForeverZones(String invalidForeverZones) {
         this.invalidForeverZones = invalidForeverZones;
@@ -994,7 +1013,7 @@ public class SessionServerConfigBean implements SessionServerConfig {
     /**
      * Setter method for property <tt>invalidIgnoreDataidRegex</tt>.
      *
-     * @param invalidIgnoreDataidRegex  value to be assigned to property invalidIgnoreDataidRegex
+     * @param invalidIgnoreDataidRegex value to be assigned to property invalidIgnoreDataidRegex
      */
     public void setInvalidIgnoreDataidRegex(String invalidIgnoreDataidRegex) {
         this.invalidIgnoreDataidRegex = invalidIgnoreDataidRegex;
@@ -1008,7 +1027,7 @@ public class SessionServerConfigBean implements SessionServerConfig {
     /**
      * Setter method for property <tt>accessDataExecutorMinPoolSize</tt>.
      *
-     * @param accessDataExecutorMinPoolSize  value to be assigned to property accessDataExecutorMinPoolSize
+     * @param accessDataExecutorMinPoolSize value to be assigned to property accessDataExecutorMinPoolSize
      */
     public void setAccessDataExecutorMinPoolSize(int accessDataExecutorMinPoolSize) {
         this.accessDataExecutorMinPoolSize = accessDataExecutorMinPoolSize;
@@ -1022,7 +1041,7 @@ public class SessionServerConfigBean implements SessionServerConfig {
     /**
      * Setter method for property <tt>accessDataExecutorMaxPoolSize</tt>.
      *
-     * @param accessDataExecutorMaxPoolSize  value to be assigned to property accessDataExecutorMaxPoolSize
+     * @param accessDataExecutorMaxPoolSize value to be assigned to property accessDataExecutorMaxPoolSize
      */
     public void setAccessDataExecutorMaxPoolSize(int accessDataExecutorMaxPoolSize) {
         this.accessDataExecutorMaxPoolSize = accessDataExecutorMaxPoolSize;
@@ -1036,7 +1055,7 @@ public class SessionServerConfigBean implements SessionServerConfig {
     /**
      * Setter method for property <tt>accessDataExecutorQueueSize</tt>.
      *
-     * @param accessDataExecutorQueueSize  value to be assigned to property accessDataExecutorQueueSize
+     * @param accessDataExecutorQueueSize value to be assigned to property accessDataExecutorQueueSize
      */
     public void setAccessDataExecutorQueueSize(int accessDataExecutorQueueSize) {
         this.accessDataExecutorQueueSize = accessDataExecutorQueueSize;
@@ -1050,7 +1069,7 @@ public class SessionServerConfigBean implements SessionServerConfig {
     /**
      * Setter method for property <tt>accessDataExecutorKeepAliveTime</tt>.
      *
-     * @param accessDataExecutorKeepAliveTime  value to be assigned to property accessDataExecutorKeepAliveTime
+     * @param accessDataExecutorKeepAliveTime value to be assigned to property accessDataExecutorKeepAliveTime
      */
     public void setAccessDataExecutorKeepAliveTime(long accessDataExecutorKeepAliveTime) {
         this.accessDataExecutorKeepAliveTime = accessDataExecutorKeepAliveTime;
@@ -1099,7 +1118,7 @@ public class SessionServerConfigBean implements SessionServerConfig {
     /**
      * Setter method for property <tt>dataChangeExecutorMinPoolSize</tt>.
      *
-     * @param dataChangeExecutorMinPoolSize  value to be assigned to property dataChangeExecutorMinPoolSize
+     * @param dataChangeExecutorMinPoolSize value to be assigned to property dataChangeExecutorMinPoolSize
      */
     public void setDataChangeExecutorMinPoolSize(int dataChangeExecutorMinPoolSize) {
         this.dataChangeExecutorMinPoolSize = dataChangeExecutorMinPoolSize;
@@ -1108,7 +1127,7 @@ public class SessionServerConfigBean implements SessionServerConfig {
     /**
      * Setter method for property <tt>dataChangeExecutorMaxPoolSize</tt>.
      *
-     * @param dataChangeExecutorMaxPoolSize  value to be assigned to property dataChangeExecutorMaxPoolSize
+     * @param dataChangeExecutorMaxPoolSize value to be assigned to property dataChangeExecutorMaxPoolSize
      */
     public void setDataChangeExecutorMaxPoolSize(int dataChangeExecutorMaxPoolSize) {
         this.dataChangeExecutorMaxPoolSize = dataChangeExecutorMaxPoolSize;
@@ -1117,7 +1136,7 @@ public class SessionServerConfigBean implements SessionServerConfig {
     /**
      * Setter method for property <tt>dataChangeExecutorQueueSize</tt>.
      *
-     * @param dataChangeExecutorQueueSize  value to be assigned to property dataChangeExecutorQueueSize
+     * @param dataChangeExecutorQueueSize value to be assigned to property dataChangeExecutorQueueSize
      */
     public void setDataChangeExecutorQueueSize(int dataChangeExecutorQueueSize) {
         this.dataChangeExecutorQueueSize = dataChangeExecutorQueueSize;
@@ -1126,7 +1145,7 @@ public class SessionServerConfigBean implements SessionServerConfig {
     /**
      * Setter method for property <tt>dataChangeExecutorKeepAliveTime</tt>.
      *
-     * @param dataChangeExecutorKeepAliveTime  value to be assigned to property dataChangeExecutorKeepAliveTime
+     * @param dataChangeExecutorKeepAliveTime value to be assigned to property dataChangeExecutorKeepAliveTime
      */
     public void setDataChangeExecutorKeepAliveTime(long dataChangeExecutorKeepAliveTime) {
         this.dataChangeExecutorKeepAliveTime = dataChangeExecutorKeepAliveTime;
@@ -1175,7 +1194,7 @@ public class SessionServerConfigBean implements SessionServerConfig {
     /**
      * Setter method for property <tt>pushTaskExecutorMinPoolSize</tt>.
      *
-     * @param pushTaskExecutorMinPoolSize  value to be assigned to property pushTaskExecutorMinPoolSize
+     * @param pushTaskExecutorMinPoolSize value to be assigned to property pushTaskExecutorMinPoolSize
      */
     public void setPushTaskExecutorMinPoolSize(int pushTaskExecutorMinPoolSize) {
         this.pushTaskExecutorMinPoolSize = pushTaskExecutorMinPoolSize;
@@ -1184,7 +1203,7 @@ public class SessionServerConfigBean implements SessionServerConfig {
     /**
      * Setter method for property <tt>pushTaskExecutorMaxPoolSize</tt>.
      *
-     * @param pushTaskExecutorMaxPoolSize  value to be assigned to property pushTaskExecutorMaxPoolSize
+     * @param pushTaskExecutorMaxPoolSize value to be assigned to property pushTaskExecutorMaxPoolSize
      */
     public void setPushTaskExecutorMaxPoolSize(int pushTaskExecutorMaxPoolSize) {
         this.pushTaskExecutorMaxPoolSize = pushTaskExecutorMaxPoolSize;
@@ -1193,7 +1212,7 @@ public class SessionServerConfigBean implements SessionServerConfig {
     /**
      * Setter method for property <tt>pushTaskExecutorQueueSize</tt>.
      *
-     * @param pushTaskExecutorQueueSize  value to be assigned to property pushTaskExecutorQueueSize
+     * @param pushTaskExecutorQueueSize value to be assigned to property pushTaskExecutorQueueSize
      */
     public void setPushTaskExecutorQueueSize(int pushTaskExecutorQueueSize) {
         this.pushTaskExecutorQueueSize = pushTaskExecutorQueueSize;
@@ -1202,7 +1221,7 @@ public class SessionServerConfigBean implements SessionServerConfig {
     /**
      * Setter method for property <tt>pushTaskExecutorKeepAliveTime</tt>.
      *
-     * @param pushTaskExecutorKeepAliveTime  value to be assigned to property pushTaskExecutorKeepAliveTime
+     * @param pushTaskExecutorKeepAliveTime value to be assigned to property pushTaskExecutorKeepAliveTime
      */
     public void setPushTaskExecutorKeepAliveTime(long pushTaskExecutorKeepAliveTime) {
         this.pushTaskExecutorKeepAliveTime = pushTaskExecutorKeepAliveTime;
@@ -1238,7 +1257,7 @@ public class SessionServerConfigBean implements SessionServerConfig {
     /**
      * Setter method for property <tt>defaultSessionExecutorMinPoolSize</tt>.
      *
-     * @param defaultSessionExecutorMinPoolSize  value to be assigned to property defaultSessionExecutorMinPoolSize
+     * @param defaultSessionExecutorMinPoolSize value to be assigned to property defaultSessionExecutorMinPoolSize
      */
     public void setDefaultSessionExecutorMinPoolSize(int defaultSessionExecutorMinPoolSize) {
         this.defaultSessionExecutorMinPoolSize = defaultSessionExecutorMinPoolSize;
@@ -1247,7 +1266,7 @@ public class SessionServerConfigBean implements SessionServerConfig {
     /**
      * Setter method for property <tt>defaultSessionExecutorMaxPoolSize</tt>.
      *
-     * @param defaultSessionExecutorMaxPoolSize  value to be assigned to property defaultSessionExecutorMaxPoolSize
+     * @param defaultSessionExecutorMaxPoolSize value to be assigned to property defaultSessionExecutorMaxPoolSize
      */
     public void setDefaultSessionExecutorMaxPoolSize(int defaultSessionExecutorMaxPoolSize) {
         this.defaultSessionExecutorMaxPoolSize = defaultSessionExecutorMaxPoolSize;
@@ -1256,7 +1275,7 @@ public class SessionServerConfigBean implements SessionServerConfig {
     /**
      * Setter method for property <tt>defaultSessionExecutorKeepAliveTime</tt>.
      *
-     * @param defaultSessionExecutorKeepAliveTime  value to be assigned to property defaultSessionExecutorKeepAliveTime
+     * @param defaultSessionExecutorKeepAliveTime value to be assigned to property defaultSessionExecutorKeepAliveTime
      */
     public void setDefaultSessionExecutorKeepAliveTime(long defaultSessionExecutorKeepAliveTime) {
         this.defaultSessionExecutorKeepAliveTime = defaultSessionExecutorKeepAliveTime;
@@ -1292,7 +1311,7 @@ public class SessionServerConfigBean implements SessionServerConfig {
     /**
      * Setter method for property <tt>connectClientExecutorMinPoolSize</tt>.
      *
-     * @param connectClientExecutorMinPoolSize  value to be assigned to property connectClientExecutorMinPoolSize
+     * @param connectClientExecutorMinPoolSize value to be assigned to property connectClientExecutorMinPoolSize
      */
     public void setConnectClientExecutorMinPoolSize(int connectClientExecutorMinPoolSize) {
         this.connectClientExecutorMinPoolSize = connectClientExecutorMinPoolSize;
@@ -1301,7 +1320,7 @@ public class SessionServerConfigBean implements SessionServerConfig {
     /**
      * Setter method for property <tt>connectClientExecutorMaxPoolSize</tt>.
      *
-     * @param connectClientExecutorMaxPoolSize  value to be assigned to property connectClientExecutorMaxPoolSize
+     * @param connectClientExecutorMaxPoolSize value to be assigned to property connectClientExecutorMaxPoolSize
      */
     public void setConnectClientExecutorMaxPoolSize(int connectClientExecutorMaxPoolSize) {
         this.connectClientExecutorMaxPoolSize = connectClientExecutorMaxPoolSize;
@@ -1310,7 +1329,7 @@ public class SessionServerConfigBean implements SessionServerConfig {
     /**
      * Setter method for property <tt>connectClientExecutorQueueSize</tt>.
      *
-     * @param connectClientExecutorQueueSize  value to be assigned to property connectClientExecutorQueueSize
+     * @param connectClientExecutorQueueSize value to be assigned to property connectClientExecutorQueueSize
      */
     public void setConnectClientExecutorQueueSize(int connectClientExecutorQueueSize) {
         this.connectClientExecutorQueueSize = connectClientExecutorQueueSize;
@@ -1329,7 +1348,7 @@ public class SessionServerConfigBean implements SessionServerConfig {
     /**
      * Setter method for property <tt>dataChangeFetchTaskMaxBufferSize</tt>.
      *
-     * @param dataChangeFetchTaskMaxBufferSize  value to be assigned to property dataChangeFetchTaskMaxBufferSize
+     * @param dataChangeFetchTaskMaxBufferSize value to be assigned to property dataChangeFetchTaskMaxBufferSize
      */
     public void setDataChangeFetchTaskMaxBufferSize(int dataChangeFetchTaskMaxBufferSize) {
         this.dataChangeFetchTaskMaxBufferSize = dataChangeFetchTaskMaxBufferSize;
@@ -1348,7 +1367,7 @@ public class SessionServerConfigBean implements SessionServerConfig {
     /**
      * Setter method for property <tt>dataChangeFetchTaskWorkerSize</tt>.
      *
-     * @param dataChangeFetchTaskWorkerSize  value to be assigned to property dataChangeFetchTaskWorkerSize
+     * @param dataChangeFetchTaskWorkerSize value to be assigned to property dataChangeFetchTaskWorkerSize
      */
     public void setDataChangeFetchTaskWorkerSize(int dataChangeFetchTaskWorkerSize) {
         this.dataChangeFetchTaskWorkerSize = dataChangeFetchTaskWorkerSize;
@@ -1367,7 +1386,7 @@ public class SessionServerConfigBean implements SessionServerConfig {
     /**
      * Setter method for property <tt>userDataPushRetryWheelTicksSize</tt>.
      *
-     * @param userDataPushRetryWheelTicksSize  value to be assigned to property userDataPushRetryWheelTicksSize
+     * @param userDataPushRetryWheelTicksSize value to be assigned to property userDataPushRetryWheelTicksSize
      */
     public void setUserDataPushRetryWheelTicksSize(int userDataPushRetryWheelTicksSize) {
         this.userDataPushRetryWheelTicksSize = userDataPushRetryWheelTicksSize;
@@ -1386,7 +1405,7 @@ public class SessionServerConfigBean implements SessionServerConfig {
     /**
      * Setter method for property <tt>userDataPushRetryWheelTicksDuration</tt>.
      *
-     * @param userDataPushRetryWheelTicksDuration  value to be assigned to property userDataPushRetryWheelTicksDuration
+     * @param userDataPushRetryWheelTicksDuration value to be assigned to property userDataPushRetryWheelTicksDuration
      */
     public void setUserDataPushRetryWheelTicksDuration(int userDataPushRetryWheelTicksDuration) {
         this.userDataPushRetryWheelTicksDuration = userDataPushRetryWheelTicksDuration;
@@ -1405,7 +1424,7 @@ public class SessionServerConfigBean implements SessionServerConfig {
     /**
      * Setter method for property <tt>pushDataTaskRetryFirstDelay</tt>.
      *
-     * @param pushDataTaskRetryFirstDelay  value to be assigned to property pushDataTaskRetryFirstDelay
+     * @param pushDataTaskRetryFirstDelay value to be assigned to property pushDataTaskRetryFirstDelay
      */
     public void setPushDataTaskRetryFirstDelay(int pushDataTaskRetryFirstDelay) {
         this.pushDataTaskRetryFirstDelay = pushDataTaskRetryFirstDelay;
@@ -1451,7 +1470,7 @@ public class SessionServerConfigBean implements SessionServerConfig {
     /**
      * Setter method for property <tt>renewDatumWheelTaskDelaySec </tt>.
      *
-     * @param renewDatumWheelTaskDelaySec  value to be assigned to property renewDatumWheelTaskDelaySec
+     * @param renewDatumWheelTaskDelaySec value to be assigned to property renewDatumWheelTaskDelaySec
      */
     public void setRenewDatumWheelTaskDelaySec(int renewDatumWheelTaskDelaySec) {
         this.renewDatumWheelTaskDelaySec = renewDatumWheelTaskDelaySec;
@@ -1469,7 +1488,7 @@ public class SessionServerConfigBean implements SessionServerConfig {
     /**
      * Setter method for property <tt>renewDatumWheelTaskRandomFirstDelaySec </tt>.
      *
-     * @param renewDatumWheelTaskRandomFirstDelaySec  value to be assigned to property renewDatumWheelTaskRandomFirstDelaySec
+     * @param renewDatumWheelTaskRandomFirstDelaySec value to be assigned to property renewDatumWheelTaskRandomFirstDelaySec
      */
     public void setRenewDatumWheelTaskRandomFirstDelaySec(int renewDatumWheelTaskRandomFirstDelaySec) {
         this.renewDatumWheelTaskRandomFirstDelaySec = renewDatumWheelTaskRandomFirstDelaySec;
@@ -1478,7 +1497,7 @@ public class SessionServerConfigBean implements SessionServerConfig {
     /**
      * Setter method for property <tt>renewDatumWheelTicksSize</tt>.
      *
-     * @param renewDatumWheelTicksSize  value to be assigned to property renewDatumWheelTicksSize
+     * @param renewDatumWheelTicksSize value to be assigned to property renewDatumWheelTicksSize
      */
     public void setRenewDatumWheelTicksSize(int renewDatumWheelTicksSize) {
         this.renewDatumWheelTicksSize = renewDatumWheelTicksSize;
@@ -1487,7 +1506,7 @@ public class SessionServerConfigBean implements SessionServerConfig {
     /**
      * Setter method for property <tt>renewDatumWheelTicksDuration</tt>.
      *
-     * @param renewDatumWheelTicksDuration  value to be assigned to property renewDatumWheelTicksDuration
+     * @param renewDatumWheelTicksDuration value to be assigned to property renewDatumWheelTicksDuration
      */
     public void setRenewDatumWheelTicksDuration(int renewDatumWheelTicksDuration) {
         this.renewDatumWheelTicksDuration = renewDatumWheelTicksDuration;
@@ -1496,7 +1515,7 @@ public class SessionServerConfigBean implements SessionServerConfig {
     /**
      * Setter method for property <tt>pushDataTaskRetryIncrementDelay</tt>.
      *
-     * @param pushDataTaskRetryIncrementDelay  value to be assigned to property pushDataTaskRetryIncrementDelay
+     * @param pushDataTaskRetryIncrementDelay value to be assigned to property pushDataTaskRetryIncrementDelay
      */
     public void setPushDataTaskRetryIncrementDelay(long pushDataTaskRetryIncrementDelay) {
         this.pushDataTaskRetryIncrementDelay = pushDataTaskRetryIncrementDelay;
@@ -1523,7 +1542,7 @@ public class SessionServerConfigBean implements SessionServerConfig {
     /**
      * Setter method for property <tt>blacklistPubDataIdRegex</tt>.
      *
-     * @param blacklistPubDataIdRegex  value to be assigned to property blacklistPubDataIdRegex
+     * @param blacklistPubDataIdRegex value to be assigned to property blacklistPubDataIdRegex
      */
     public void setBlacklistPubDataIdRegex(String blacklistPubDataIdRegex) {
         this.blacklistPubDataIdRegex = blacklistPubDataIdRegex;
@@ -1532,7 +1551,7 @@ public class SessionServerConfigBean implements SessionServerConfig {
     /**
      * Setter method for property <tt>blacklistSubDataIdRegex</tt>.
      *
-     * @param blacklistSubDataIdRegex  value to be assigned to property blacklistSubDataIdRegex
+     * @param blacklistSubDataIdRegex value to be assigned to property blacklistSubDataIdRegex
      */
     public void setBlacklistSubDataIdRegex(String blacklistSubDataIdRegex) {
         this.blacklistSubDataIdRegex = blacklistSubDataIdRegex;
@@ -1550,7 +1569,7 @@ public class SessionServerConfigBean implements SessionServerConfig {
     /**
      * Setter method for property <tt>pushTaskConfirmWaitTimeout</tt>.
      *
-     * @param pushTaskConfirmWaitTimeout  value to be assigned to property pushTaskConfirmWaitTimeout
+     * @param pushTaskConfirmWaitTimeout value to be assigned to property pushTaskConfirmWaitTimeout
      */
     public void setPushTaskConfirmWaitTimeout(long pushTaskConfirmWaitTimeout) {
         this.pushTaskConfirmWaitTimeout = pushTaskConfirmWaitTimeout;
@@ -1595,7 +1614,7 @@ public class SessionServerConfigBean implements SessionServerConfig {
     /**
      * Setter method for property <tt>pushTaskConfirmCheckWheelTicksSize</tt>.
      *
-     * @param pushTaskConfirmCheckWheelTicksSize  value to be assigned to property pushTaskConfirmCheckWheelTicksSize
+     * @param pushTaskConfirmCheckWheelTicksSize value to be assigned to property pushTaskConfirmCheckWheelTicksSize
      */
     public void setPushTaskConfirmCheckWheelTicksSize(int pushTaskConfirmCheckWheelTicksSize) {
         this.pushTaskConfirmCheckWheelTicksSize = pushTaskConfirmCheckWheelTicksSize;
@@ -1604,7 +1623,7 @@ public class SessionServerConfigBean implements SessionServerConfig {
     /**
      * Setter method for property <tt>pushTaskConfirmCheckWheelTicksDuration</tt>.
      *
-     * @param pushTaskConfirmCheckWheelTicksDuration  value to be assigned to property pushTaskConfirmCheckWheelTicksDuration
+     * @param pushTaskConfirmCheckWheelTicksDuration value to be assigned to property pushTaskConfirmCheckWheelTicksDuration
      */
     public void setPushTaskConfirmCheckWheelTicksDuration(int pushTaskConfirmCheckWheelTicksDuration) {
         this.pushTaskConfirmCheckWheelTicksDuration = pushTaskConfirmCheckWheelTicksDuration;
@@ -1613,7 +1632,7 @@ public class SessionServerConfigBean implements SessionServerConfig {
     /**
      * Setter method for property <tt>pushTaskConfirmCheckExecutorQueueSize</tt>.
      *
-     * @param pushTaskConfirmCheckExecutorQueueSize  value to be assigned to property pushTaskConfirmCheckExecutorQueueSize
+     * @param pushTaskConfirmCheckExecutorQueueSize value to be assigned to property pushTaskConfirmCheckExecutorQueueSize
      */
     public void setPushTaskConfirmCheckExecutorQueueSize(int pushTaskConfirmCheckExecutorQueueSize) {
         this.pushTaskConfirmCheckExecutorQueueSize = pushTaskConfirmCheckExecutorQueueSize;
@@ -1622,7 +1641,7 @@ public class SessionServerConfigBean implements SessionServerConfig {
     /**
      * Setter method for property <tt>pushTaskConfirmCheckExecutorThreadSize</tt>.
      *
-     * @param pushTaskConfirmCheckExecutorThreadSize  value to be assigned to property pushTaskConfirmCheckExecutorThreadSize
+     * @param pushTaskConfirmCheckExecutorThreadSize value to be assigned to property pushTaskConfirmCheckExecutorThreadSize
      */
     public void setPushTaskConfirmCheckExecutorThreadSize(int pushTaskConfirmCheckExecutorThreadSize) {
         this.pushTaskConfirmCheckExecutorThreadSize = pushTaskConfirmCheckExecutorThreadSize;
@@ -1667,7 +1686,7 @@ public class SessionServerConfigBean implements SessionServerConfig {
     /**
      * Setter method for property <tt>publishDataExecutorMinPoolSize</tt>.
      *
-     * @param publishDataExecutorMinPoolSize  value to be assigned to property publishDataExecutorMinPoolSize
+     * @param publishDataExecutorMinPoolSize value to be assigned to property publishDataExecutorMinPoolSize
      */
     public void setPublishDataExecutorMinPoolSize(int publishDataExecutorMinPoolSize) {
         this.publishDataExecutorMinPoolSize = publishDataExecutorMinPoolSize;
@@ -1676,7 +1695,7 @@ public class SessionServerConfigBean implements SessionServerConfig {
     /**
      * Setter method for property <tt>publishDataExecutorMaxPoolSize</tt>.
      *
-     * @param publishDataExecutorMaxPoolSize  value to be assigned to property publishDataExecutorMaxPoolSize
+     * @param publishDataExecutorMaxPoolSize value to be assigned to property publishDataExecutorMaxPoolSize
      */
     public void setPublishDataExecutorMaxPoolSize(int publishDataExecutorMaxPoolSize) {
         this.publishDataExecutorMaxPoolSize = publishDataExecutorMaxPoolSize;
@@ -1685,7 +1704,7 @@ public class SessionServerConfigBean implements SessionServerConfig {
     /**
      * Setter method for property <tt>publishDataExecutorQueueSize</tt>.
      *
-     * @param publishDataExecutorQueueSize  value to be assigned to property publishDataExecutorQueueSize
+     * @param publishDataExecutorQueueSize value to be assigned to property publishDataExecutorQueueSize
      */
     public void setPublishDataExecutorQueueSize(int publishDataExecutorQueueSize) {
         this.publishDataExecutorQueueSize = publishDataExecutorQueueSize;
@@ -1694,7 +1713,7 @@ public class SessionServerConfigBean implements SessionServerConfig {
     /**
      * Setter method for property <tt>publishDataExecutorKeepAliveTime</tt>.
      *
-     * @param publishDataExecutorKeepAliveTime  value to be assigned to property publishDataExecutorKeepAliveTime
+     * @param publishDataExecutorKeepAliveTime value to be assigned to property publishDataExecutorKeepAliveTime
      */
     public void setPublishDataExecutorKeepAliveTime(long publishDataExecutorKeepAliveTime) {
         this.publishDataExecutorKeepAliveTime = publishDataExecutorKeepAliveTime;
@@ -1712,7 +1731,7 @@ public class SessionServerConfigBean implements SessionServerConfig {
     /**
      * Setter method for property <tt>accessLimitRate</tt>.
      *
-     * @param accessLimitRate  value to be assigned to property accessLimitRate
+     * @param accessLimitRate value to be assigned to property accessLimitRate
      */
     public void setAccessLimitRate(double accessLimitRate) {
         this.accessLimitRate = accessLimitRate;
@@ -1731,7 +1750,7 @@ public class SessionServerConfigBean implements SessionServerConfig {
     /**
      * Setter method for property <tt>dataClientConnNum </tt>.
      *
-     * @param dataClientConnNum  value to be assigned to property dataClientConnNum
+     * @param dataClientConnNum value to be assigned to property dataClientConnNum
      */
     public void setDataClientConnNum(int dataClientConnNum) {
         this.dataClientConnNum = dataClientConnNum;
@@ -1778,7 +1797,7 @@ public class SessionServerConfigBean implements SessionServerConfig {
     /**
      * Setter method for property <tt>sessionSchedulerPoolSize </tt>.
      *
-     * @param sessionSchedulerPoolSize  value to be assigned to property sessionSchedulerPoolSize
+     * @param sessionSchedulerPoolSize value to be assigned to property sessionSchedulerPoolSize
      */
     public void setSessionSchedulerPoolSize(int sessionSchedulerPoolSize) {
         this.sessionSchedulerPoolSize = sessionSchedulerPoolSize;
@@ -1796,7 +1815,7 @@ public class SessionServerConfigBean implements SessionServerConfig {
     /**
      * Setter method for property <tt>dataNodeExchangeForFetchDatumTimeOut </tt>.
      *
-     * @param dataNodeExchangeForFetchDatumTimeOut  value to be assigned to property dataNodeExchangeForFetchDatumTimeOut
+     * @param dataNodeExchangeForFetchDatumTimeOut value to be assigned to property dataNodeExchangeForFetchDatumTimeOut
      */
     public void setDataNodeExchangeForFetchDatumTimeOut(int dataNodeExchangeForFetchDatumTimeOut) {
         this.dataNodeExchangeForFetchDatumTimeOut = dataNodeExchangeForFetchDatumTimeOut;
@@ -1804,6 +1823,7 @@ public class SessionServerConfigBean implements SessionServerConfig {
 
     /**
      * Getter method for property <tt>slotSyncPublisherMaxNum</tt>.
+     *
      * @return property value of slotSyncPublisherMaxNum
      */
     @Override
@@ -1824,6 +1844,7 @@ public class SessionServerConfigBean implements SessionServerConfig {
 
     /**
      * Setter method for property <tt>slotSyncPublisherMaxNum</tt>.
+     *
      * @param slotSyncPublisherMaxNum value to be assigned to property slotSyncPublisherMaxNum
      */
     public void setSlotSyncPublisherMaxNum(int slotSyncPublisherMaxNum) {

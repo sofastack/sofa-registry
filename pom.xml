@@ -82,13 +82,10 @@
         <rocksdbjni.version>6.4.6</rocksdbjni.version>
         <main.user.dir>${user.dir}</main.user.dir>
         <argLine>-Dnetwork_interface_denylist=docker0</argLine>
-<<<<<<< HEAD
         <!-- for linke 添加isSkipUT, isSkipIT参数声明，防止编译时产生错误 -->
         <isSkipUT>false</isSkipUT>
         <isSkipIT>false</isSkipIT>
-=======
         <fastjson.version>1.2.51.sec09_noneautotype</fastjson.version>
->>>>>>> [app_discovery] support subscribe app and interface publisher
     </properties>
 
     <dependencyManagement>

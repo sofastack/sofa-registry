@@ -16,16 +16,13 @@
  */
 package com.alipay.sofa.registry.server.session.cache;
 
-import com.alipay.sofa.registry.common.model.Node;
 import com.alipay.sofa.registry.common.model.constants.ValueConstants;
 import com.alipay.sofa.registry.common.model.dataserver.Datum;
 import com.alipay.sofa.registry.common.model.store.DataInfo;
-import com.alipay.sofa.registry.common.model.store.Subscriber;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
-import com.alipay.sofa.registry.server.session.node.NodeManager;
-import com.alipay.sofa.registry.server.session.node.NodeManagerFactory;
 import com.alipay.sofa.registry.server.session.store.Interests;
+import com.alipay.sofa.registry.server.shared.meta.MetaServerService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.CollectionUtils;
 
@@ -33,11 +30,9 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
- *
  * @author xiaojian.xj
  * @version $Id: SessionDatumCacheDecorator.java, v 0.1 2020年11月03日 20:23 xiaojian.xj Exp $
  */
@@ -51,6 +46,9 @@ public class SessionDatumCacheDecorator {
 
     @Autowired
     private CacheService             sessionCacheService;
+
+    @Autowired
+    private MetaServerService        metaServerService;
 
     @Autowired
     private AppRevisionCacheRegistry appRevisionCacheRegistry;
@@ -76,12 +74,12 @@ public class SessionDatumCacheDecorator {
 
     public Map<String, Datum> getDatumsCache(String dataInfoId) {
         Map<String, Datum> map = new HashMap<>();
-        NodeManager nodeManager = NodeManagerFactory.getNodeManager(Node.NodeType.META);
-        Collection<String> dataCenters = nodeManager.getDataCenters();
+
+        Collection<String> dataCenters = metaServerService.getDataCenters();
         if (dataCenters != null) {
             Collection<Key> keys = dataCenters.stream().map(dataCenter -> new Key(Key.KeyType.OBJ,
-                DatumKey.class.getName(), new DatumKey(dataInfoId, dataCenter)))
-                .collect(Collectors.toList());
+                    DatumKey.class.getName(), new DatumKey(dataInfoId, dataCenter)))
+                    .collect(Collectors.toList());
 
             Map<Key, Value> values = null;
             try {
@@ -90,10 +88,10 @@ public class SessionDatumCacheDecorator {
                 // The version is set to 0, so that when session checks the datum versions regularly, it will actively re-query the data.
                 for (String dataCenter : dataCenters) {
                     boolean result = sessionInterests.checkAndUpdateInterestVersionZero(dataCenter,
-                        dataInfoId);
+                            dataInfoId);
                     taskLogger.error(String.format(
-                        "error when access cache, so checkAndUpdateInterestVersionZero(return %s): %s",
-                        result, e.getMessage()), e);
+                            "error when access cache, so checkAndUpdateInterestVersionZero(return %s): %s",
+                            result, e.getMessage()), e);
                 }
             }
 

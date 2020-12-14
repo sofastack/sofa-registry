@@ -18,8 +18,6 @@ package com.alipay.sofa.registry.server.session.node.service;
 
 import com.alipay.sofa.registry.common.model.store.URL;
 import com.alipay.sofa.registry.remoting.CallbackHandler;
-import com.alipay.sofa.registry.core.model.AppRevisionRegister;
-import com.alipay.sofa.registry.core.model.AppRevisionKey;
 import com.alipay.sofa.registry.common.model.metaserver.ProvideData;
 
 /**
@@ -29,11 +27,4 @@ import com.alipay.sofa.registry.common.model.metaserver.ProvideData;
 public interface ClientNodeService {
 
     void pushWithCallback(Object object, URL url, CallbackHandler callbackHandler);
-    /**
-     * fetch persistence data from meta server
-     *
-     * @param dataInfoId
-     * @return
-     */
-    ProvideData fetchData(String dataInfoId);
 }

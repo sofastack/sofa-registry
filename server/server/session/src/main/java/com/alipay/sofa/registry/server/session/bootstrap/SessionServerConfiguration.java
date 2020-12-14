@@ -19,6 +19,7 @@ package com.alipay.sofa.registry.server.session.bootstrap;
 import java.util.ArrayList;
 import java.util.Collection;
 
+import com.alipay.sofa.jraft.NodeManager;
 import com.alipay.sofa.registry.server.session.assemble.AppAssembleService;
 import com.alipay.sofa.registry.server.session.assemble.AppInterfaceAssembleService;
 import com.alipay.sofa.registry.server.session.assemble.AssembleService;

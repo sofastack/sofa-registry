@@ -27,6 +27,7 @@ import com.alipay.sofa.registry.common.model.constants.ValueConstants;
 import com.alipay.sofa.registry.common.model.store.DataInfo;
 import com.alipay.sofa.registry.server.session.cache.AppRevisionCacheRegistry;
 import com.alipay.sofa.registry.server.session.cache.SessionDatumCacheDecorator;
+import com.alipay.sofa.registry.util.CollectionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import com.alipay.sofa.registry.common.model.Node.NodeType;
@@ -140,6 +141,9 @@ public class DataChangeRequestHandler extends AbstractClientHandler<DataChangeRe
     }
 
     private void refreshMeta(Collection<String> revisions) {
+        if (revisions == null || revisions.isEmpty()) {
+            return;
+        }
         for (String revision : revisions) {
             appRevisionCacheRegistry.getRevision(revision);
         }

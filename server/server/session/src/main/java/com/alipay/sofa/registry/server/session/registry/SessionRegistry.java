@@ -26,9 +26,6 @@ import java.util.function.Supplier;
 import com.alipay.sofa.registry.server.session.cache.AppRevisionCacheRegistry;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import com.alipay.sofa.registry.common.model.Node;
-import com.alipay.sofa.registry.common.model.RenewDatumRequest;
-import com.alipay.sofa.registry.common.model.constants.ValueConstants;
 import com.alipay.sofa.registry.common.model.store.Publisher;
 import com.alipay.sofa.registry.common.model.store.StoreData;
 import com.alipay.sofa.registry.common.model.store.Subscriber;
@@ -58,11 +55,6 @@ import com.alipay.sofa.registry.server.shared.env.ServerEnv;
 import com.alipay.sofa.registry.task.listener.TaskEvent;
 import com.alipay.sofa.registry.task.listener.TaskListenerManager;
 import com.google.common.collect.Lists;
-import org.springframework.beans.factory.annotation.Autowired;
-
-import java.util.*;
-import java.util.concurrent.TimeUnit;
-import java.util.function.Supplier;
 
 /**
  * @author shangyu.wh
@@ -70,64 +62,65 @@ import java.util.function.Supplier;
  */
 public class SessionRegistry implements Registry {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(SessionRegistry.class);
+    private static final Logger       LOGGER                  = LoggerFactory
+                                                                  .getLogger(SessionRegistry.class);
 
-    protected static final Logger TASK_LOGGER = LoggerFactory.getLogger(SessionRegistry.class,
-            "[Task]");
+    protected static final Logger     TASK_LOGGER             = LoggerFactory.getLogger(
+                                                                  SessionRegistry.class, "[Task]");
 
     /**
      * store subscribers
      */
     @Autowired
-    private Interests sessionInterests;
+    private Interests                 sessionInterests;
 
     /**
      * store watchers
      */
     @Autowired
-    private Watchers sessionWatchers;
+    private Watchers                  sessionWatchers;
 
     /**
      * store publishers
      */
     @Autowired
-    private DataStore sessionDataStore;
+    private DataStore                 sessionDataStore;
 
     /**
      * transfer data to DataNode
      */
     @Autowired
-    private DataNodeService dataNodeService;
+    private DataNodeService           dataNodeService;
 
     /**
      * trigger task com.alipay.sofa.registry.server.meta.listener process
      */
     @Autowired
-    private TaskListenerManager taskListenerManager;
+    private TaskListenerManager       taskListenerManager;
 
     @Autowired
-    private SessionServerConfig sessionServerConfig;
+    private SessionServerConfig       sessionServerConfig;
 
     @Autowired
-    private Exchange boltExchange;
+    private Exchange                  boltExchange;
 
     @Autowired
-    private SessionRegistryStrategy sessionRegistryStrategy;
+    private SessionRegistryStrategy   sessionRegistryStrategy;
 
     @Autowired
     private WrapperInterceptorManager wrapperInterceptorManager;
 
     @Autowired
-    private DataIdMatchStrategy dataIdMatchStrategy;
+    private DataIdMatchStrategy       dataIdMatchStrategy;
 
     @Autowired
-    private WriteDataAcceptor writeDataAcceptor;
+    private WriteDataAcceptor         writeDataAcceptor;
 
     @Autowired
-    private SlotTableCache slotTableCache;
-    private AppRevisionCacheRegistry appRevisionCacheRegistry;
+    private SlotTableCache            slotTableCache;
+    private AppRevisionCacheRegistry  appRevisionCacheRegistry;
 
-    private volatile boolean enableDataRenewSnapshot = true;
+    private volatile boolean          enableDataRenewSnapshot = true;
 
     @Override
     public void register(StoreData storeData) {
@@ -199,7 +192,7 @@ public class SessionRegistry implements Registry {
                 // All write operations to DataServer (pub/unPub/clientoff/renew/snapshot)
                 // are handed over to WriteDataAcceptor
                 writeDataAcceptor.accept(new PublisherWriteDataRequest(publisher,
-                        WriteDataRequest.WriteDataRequestType.UN_PUBLISHER, slotTableCache
+                    WriteDataRequest.WriteDataRequestType.UN_PUBLISHER, slotTableCache
                         .getLeader(publisher.getDataInfoId())));
 
                 sessionRegistryStrategy.afterPublisherUnRegister(publisher);
@@ -332,81 +325,81 @@ public class SessionRegistry implements Registry {
 
                 subMap.forEach((registerId, sub) -> {
                     if (isFireSubscriberPushEmptyTask(sub.getDataId())) {
-                            fireSubscriberPushEmptyTask(sub);
-                        }
-                    });
-                }
-
-                if (pubExisted || subExisted) {
-                    connectIdsAll.add(connectId);
-                }
-            });
-            cancel(connectIdsAll);
-        }
-
-        protected boolean isFireSubscriberPushEmptyTask (String dataId){
-            return dataIdMatchStrategy.match(dataId, () -> sessionServerConfig.getBlacklistSubDataIdRegex());
-        }
-
-        private void fireSubscriberPushEmptyTask (Subscriber subscriber){
-            //trigger empty data push
-            TaskEvent taskEvent = new TaskEvent(subscriber,
-                    TaskEvent.TaskType.SUBSCRIBER_PUSH_EMPTY_TASK);
-            TASK_LOGGER.info("send " + taskEvent.getTaskType() + " taskEvent:{}", taskEvent);
-            getTaskListenerManager().sendTaskEvent(taskEvent);
-        }
-
-        public void cleanClientConnect () {
-
-            Set<ConnectId> connectIndexes = new HashSet<>();
-            Set<ConnectId> pubIndexes = sessionDataStore.getConnectIds();
-            Set<ConnectId> subIndexes = sessionInterests.getConnectIds();
-            Set<ConnectId> watchIndexes = sessionWatchers.getConnectIds();
-            connectIndexes.addAll(pubIndexes);
-            connectIndexes.addAll(subIndexes);
-            connectIndexes.addAll(watchIndexes);
-
-            Server sessionServer = boltExchange.getServer(sessionServerConfig.getServerPort());
-
-            List<ConnectId> connectIds = new ArrayList<>();
-            for (ConnectId connectId : connectIndexes) {
-                Channel channel = sessionServer.getChannel(new URL(connectId.getClientHostAddress(),
-                        connectId.getClientPort()));
-                if (channel == null) {
-                    connectIds.add(connectId);
-                    LOGGER.warn("Client connect has not existed!it must be remove!connectId:{}",
-                            connectId);
-                }
+                        fireSubscriberPushEmptyTask(sub);
+                    }
+                });
             }
-            if (!connectIds.isEmpty()) {
-                cancel(connectIds);
+
+            if (pubExisted || subExisted) {
+                connectIdsAll.add(connectId);
+            }
+        });
+        cancel(connectIdsAll);
+    }
+
+    protected boolean isFireSubscriberPushEmptyTask(String dataId) {
+        return dataIdMatchStrategy.match(dataId, () -> sessionServerConfig.getBlacklistSubDataIdRegex());
+    }
+
+    private void fireSubscriberPushEmptyTask(Subscriber subscriber) {
+        //trigger empty data push
+        TaskEvent taskEvent = new TaskEvent(subscriber,
+            TaskEvent.TaskType.SUBSCRIBER_PUSH_EMPTY_TASK);
+        TASK_LOGGER.info("send " + taskEvent.getTaskType() + " taskEvent:{}", taskEvent);
+        getTaskListenerManager().sendTaskEvent(taskEvent);
+    }
+
+    public void cleanClientConnect() {
+
+        Set<ConnectId> connectIndexes = new HashSet<>();
+        Set<ConnectId> pubIndexes = sessionDataStore.getConnectIds();
+        Set<ConnectId> subIndexes = sessionInterests.getConnectIds();
+        Set<ConnectId> watchIndexes = sessionWatchers.getConnectIds();
+        connectIndexes.addAll(pubIndexes);
+        connectIndexes.addAll(subIndexes);
+        connectIndexes.addAll(watchIndexes);
+
+        Server sessionServer = boltExchange.getServer(sessionServerConfig.getServerPort());
+
+        List<ConnectId> connectIds = new ArrayList<>();
+        for (ConnectId connectId : connectIndexes) {
+            Channel channel = sessionServer.getChannel(new URL(connectId.getClientHostAddress(),
+                connectId.getClientPort()));
+            if (channel == null) {
+                connectIds.add(connectId);
+                LOGGER.warn("Client connect has not existed!it must be remove!connectId:{}",
+                    connectId);
             }
         }
-
-        /**
-         * Getter method for property <tt>sessionInterests</tt>.
-         *
-         * @return property value of sessionInterests
-         */
-        protected Interests getSessionInterests () {
-            return sessionInterests;
-        }
-
-        /**
-         * Getter method for property <tt>sessionDataStore</tt>.
-         *
-         * @return property value of sessionDataStore
-         */
-        protected DataStore getSessionDataStore () {
-            return sessionDataStore;
-        }
-
-        /**
-         * Getter method for property <tt>taskListenerManager</tt>.
-         *
-         * @return property value of taskListenerManager
-         */
-        protected TaskListenerManager getTaskListenerManager () {
-            return taskListenerManager;
+        if (!connectIds.isEmpty()) {
+            cancel(connectIds);
         }
     }
+
+    /**
+     * Getter method for property <tt>sessionInterests</tt>.
+     *
+     * @return property value of sessionInterests
+     */
+    protected Interests getSessionInterests() {
+        return sessionInterests;
+    }
+
+    /**
+     * Getter method for property <tt>sessionDataStore</tt>.
+     *
+     * @return property value of sessionDataStore
+     */
+    protected DataStore getSessionDataStore() {
+        return sessionDataStore;
+    }
+
+    /**
+     * Getter method for property <tt>taskListenerManager</tt>.
+     *
+     * @return property value of taskListenerManager
+     */
+    protected TaskListenerManager getTaskListenerManager() {
+        return taskListenerManager;
+    }
+}
