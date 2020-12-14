@@ -26,13 +26,16 @@ import com.alipay.sofa.registry.common.model.store.Publisher;
 import com.alipay.sofa.registry.common.model.store.Subscriber;
 import com.alipay.sofa.registry.common.model.store.URL;
 import com.alipay.sofa.registry.core.model.AssembleType;
+import com.alipay.sofa.registry.core.model.ReceivedData;
 import com.alipay.sofa.registry.core.model.ScopeEnum;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.server.session.assemble.SubscriberAssembleStrategy;
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
 import com.alipay.sofa.registry.server.session.cache.AppRevisionCacheRegistry;
+import com.alipay.sofa.registry.server.session.cache.DatumKey;
 import com.alipay.sofa.registry.server.session.cache.SessionDatumCacheDecorator;
+import com.alipay.sofa.registry.server.session.converter.ReceivedDataConverter;
 import com.alipay.sofa.registry.server.session.push.FirePushService;
 import com.alipay.sofa.registry.server.session.scheduler.ExecutorManager;
 import com.alipay.sofa.registry.server.session.store.Interests;
@@ -43,16 +46,12 @@ import com.alipay.sofa.registry.task.listener.TaskListenerManager;
 import org.springframework.util.CollectionUtils;
 
 import java.net.InetSocketAddress;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.Map.Entry;
-import java.util.Set;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 /**
- *
  * @author shangyu.wh
  * @version $Id: DataChangeFetchTask.java, v 0.1 2017-12-13 12:25 shangyu.wh Exp $
  */
@@ -157,7 +156,7 @@ public class DataChangeFetchTask extends AbstractSessionTask {
                             subscriber -> subscriber.getAssembleType() == assembleType)
                             .collect(Collectors.toList());
 
-                    if(subscribersSend.isEmpty()){
+                    if (subscribersSend.isEmpty()) {
                         continue;
                     }
                     Subscriber defaultSubscriber = subscribersSend.stream().findFirst().get();
@@ -256,99 +255,6 @@ public class DataChangeFetchTask extends AbstractSessionTask {
         }
     }
 
-    private void fireReceivedDataMultiPushTask(Datum datum, List<String> subscriberRegisterIdList,
-                                               Collection<Subscriber> subscribers, ScopeEnum scopeEnum,
-                                               Subscriber subscriber, PushTaskClosure pushTaskClosure) {
-        String dataId = datum.getDataId();
-        String clientCell = sessionServerConfig.getClientCell(subscriber.getCell());
-        Predicate<String> zonePredicate = (zone) -> {
-            if (!clientCell.equals(zone)) {
-                if (ScopeEnum.zone == scopeEnum) {
-                    // zone scope subscribe only return zone list
-                    return true;
-
-                } else if (ScopeEnum.dataCenter == scopeEnum || ScopeEnum.global == scopeEnum) {
-                    // disable zone config
-                    return sessionServerConfig.isInvalidForeverZone(zone) && !sessionServerConfig
-                            .isInvalidIgnored(dataId);
-                }
-            }
-            return false;
-        };
-        ReceivedData receivedData = ReceivedDataConverter
-                .getReceivedDataMulti(datum, scopeEnum, subscriberRegisterIdList,
-                        clientCell, zonePredicate);
-
-        //trigger push to client node
-        Map<ReceivedData, URL> parameter = new HashMap<>();
-        parameter.put(receivedData, subscriber.getSourceAddress());
-        TaskEvent taskEvent = new TaskEvent(parameter, TaskType.RECEIVED_DATA_MULTI_PUSH_TASK);
-        taskEvent.setTaskClosure(pushTaskClosure);
-        taskEvent.setAttribute(Constant.PUSH_CLIENT_SUBSCRIBERS, subscribers);
-        taskLogger.info("send {} taskURL:{},taskScope:{},,taskId={}", taskEvent.getTaskType(),
-                subscriber.getSourceAddress(), scopeEnum, taskEvent.getTaskId());
-        taskListenerManager.sendTaskEvent(taskEvent);
-    }
-
-    private Map<InetSocketAddress, Map<String, Subscriber>> getCache(ScopeEnum scopeEnum) {
-        return sessionInterests.querySubscriberIndex(dataChangeRequest.getDataInfoId(), scopeEnum);
-    }
-
-    private Datum getDatumCache() {
-        // build key
-        DatumKey datumKey = new DatumKey(dataChangeRequest.getDataInfoId(),
-            dataChangeRequest.getDataCenter());
-        Key key = new Key(KeyType.OBJ, DatumKey.class.getName(), datumKey);
-
-        // get from cache (it will fetch from backend server)
-        Value<Datum> value = null;
-        try {
-            value = sessionCacheService.getValue(key);
-        } catch (CacheAccessException e) {
-            LOGGER.error("error when access cache: {}", datumKey, e);
-        }
-
-        return value == null ? null : value.getPayload();
-    }
-
-    private void fireUserDataElementPushTask(InetSocketAddress address, Datum datum,
-                                             Collection<Subscriber> subscribers,
-                                             PushTaskClosure pushTaskClosure) {
-
-        TaskEvent taskEvent = new TaskEvent(TaskType.USER_DATA_ELEMENT_PUSH_TASK);
-        taskEvent.setTaskClosure(pushTaskClosure);
-        taskEvent.setSendTimeStamp(DatumVersionUtil.getRealTimestamp(datum.getVersion()));
-        taskEvent.setAttribute(Constant.PUSH_CLIENT_SUBSCRIBERS, subscribers);
-        taskEvent.setAttribute(Constant.PUSH_CLIENT_DATUM, datum);
-        taskEvent.setAttribute(Constant.PUSH_CLIENT_URL, new URL(address));
-
-        int size = datum != null ? datum.publisherSize() : 0;
-
-        taskLogger.info(
-            "send {} taskURL:{},dataInfoId={},dataCenter={},pubSize={},subSize={},taskId={}",
-            taskEvent.getTaskType(), address, datum.getDataInfoId(), datum.getDataCenter(), size,
-            subscribers.size(), taskEvent.getTaskId());
-        taskListenerManager.sendTaskEvent(taskEvent);
-    }
-
-    private void fireUserDataElementMultiPushTask(InetSocketAddress address, Datum datum,
-                                                  Collection<Subscriber> subscribers,
-                                                  PushTaskClosure pushTaskClosure) {
-
-        TaskEvent taskEvent = new TaskEvent(TaskType.USER_DATA_ELEMENT_MULTI_PUSH_TASK);
-        taskEvent.setTaskClosure(pushTaskClosure);
-        taskEvent.setSendTimeStamp(DatumVersionUtil.getRealTimestamp(datum.getVersion()));
-        taskEvent.setAttribute(Constant.PUSH_CLIENT_SUBSCRIBERS, subscribers);
-        taskEvent.setAttribute(Constant.PUSH_CLIENT_DATUM, datum);
-        taskEvent.setAttribute(Constant.PUSH_CLIENT_URL, new URL(address));
-
-        int size = datum != null ? datum.publisherSize() : 0;
-
-        taskLogger.info(
-            "send {} taskURL:{},dataInfoId={},dataCenter={},pubSize={},subSize={},taskId={}",
-            taskEvent.getTaskType(), address, datum.getDataInfoId(), datum.getDataCenter(), size,
-            subscribers.size(), taskEvent.getTaskId());
-        taskListenerManager.sendTaskEvent(taskEvent);
     private Map<InetSocketAddress, Map<String, Subscriber>> getCache(String dataInfoId,
                                                                      ScopeEnum scopeEnum) {
         return sessionInterests.querySubscriberIndex(dataInfoId, scopeEnum);
@@ -378,7 +284,7 @@ public class DataChangeFetchTask extends AbstractSessionTask {
     /**
      * Setter method for property <tt>dataChangeRequest</tt>.
      *
-     * @param dataChangeRequest  value to be assigned to property dataChangeRequest
+     * @param dataChangeRequest value to be assigned to property dataChangeRequest
      */
     public void setDataChangeRequest(DataChangeRequest dataChangeRequest) {
         this.dataChangeRequest = dataChangeRequest;

@@ -67,7 +67,6 @@ import com.alipay.sofa.registry.server.meta.remoting.connection.MetaConnectionHa
 import com.alipay.sofa.registry.server.meta.remoting.connection.SessionConnectionHandler;
 import com.alipay.sofa.registry.server.meta.remoting.handler.FetchProvideDataRequestHandler;
 import com.alipay.sofa.registry.server.meta.remoting.handler.HeartbeatRequestHandler;
-import com.alipay.sofa.registry.server.meta.resource.*;
 import com.alipay.sofa.registry.server.meta.slot.impl.*;
 import com.alipay.sofa.registry.server.shared.remoting.AbstractServerHandler;
 import com.alipay.sofa.registry.server.meta.repository.NodeConfirmStatusService;
@@ -83,19 +82,9 @@ import com.alipay.sofa.registry.server.meta.task.processor.MetaNodeSingleTaskPro
 import com.alipay.sofa.registry.server.meta.task.processor.SessionNodeSingleTaskProcessor;
 import com.alipay.sofa.registry.store.api.DBService;
 import com.alipay.sofa.registry.util.DefaultExecutorFactory;
-import com.alipay.sofa.registry.util.NamedThreadFactory;
 import com.alipay.sofa.registry.util.OsUtils;
 import com.alipay.sofa.registry.util.PropertySplitter;
-import org.glassfish.jersey.jackson.JacksonFeature;
-import org.glassfish.jersey.server.ResourceConfig;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
-import org.springframework.boot.context.properties.EnableConfigurationProperties;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Import;
 
-import java.util.ArrayList;
-import java.util.Collection;
 import java.util.concurrent.*;
 
 /**

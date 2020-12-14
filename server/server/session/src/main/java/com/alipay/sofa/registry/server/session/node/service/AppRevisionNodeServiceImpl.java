@@ -28,13 +28,13 @@ import com.alipay.sofa.registry.remoting.exchange.message.Request;
 import com.alipay.sofa.registry.remoting.exchange.message.Response;
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
 import com.alipay.sofa.registry.server.session.node.RaftClientManager;
-import com.alipay.sofa.registry.server.session.node.SessionNodeManager;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.List;
 
 public class AppRevisionNodeServiceImpl implements AppRevisionNodeService {
-    private static final Logger   LOGGER = LoggerFactory.getLogger(SessionNodeManager.class,
+    private static final Logger   LOGGER = LoggerFactory.getLogger(
+                                             AppRevisionNodeServiceImpl.class,
                                              "[AppRevisionService]");
 
     @Autowired

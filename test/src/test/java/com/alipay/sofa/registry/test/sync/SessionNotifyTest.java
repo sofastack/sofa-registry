@@ -232,7 +232,7 @@ public class SessionNotifyTest extends BaseIntegrationTest {
                 // post sync data request
                 DataChangeRequest request = new DataChangeRequest(DataInfo.toDataInfoId(
                         DATA_ID, DEFAULT_INSTANCE_ID, DEFAULT_GROUP), LOCAL_DATACENTER,
-                        finalI);
+                        finalI,  new HashSet<>());
 
                 boltChannelMap.forEach((connect,boltChannel)->{
 
