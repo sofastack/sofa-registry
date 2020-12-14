@@ -17,6 +17,8 @@
 package com.alipay.sofa.registry.server.meta.lease.impl;
 
 import com.alipay.sofa.registry.common.model.Node;
+import com.alipay.sofa.registry.jraft.command.CommandCodec;
+import com.alipay.sofa.registry.jraft.processor.SnapshotProcess;
 import com.alipay.sofa.registry.observer.impl.AbstractObservable;
 import com.alipay.sofa.registry.server.meta.cluster.node.NodeAdded;
 import com.alipay.sofa.registry.server.meta.cluster.node.NodeRemoved;
@@ -24,11 +26,17 @@ import com.alipay.sofa.registry.server.meta.lease.EpochAware;
 import com.alipay.sofa.registry.server.meta.lease.Lease;
 import com.alipay.sofa.registry.server.meta.lease.LeaseManager;
 import com.alipay.sofa.registry.store.api.annotation.ReadOnLeader;
+import com.alipay.sofa.registry.util.FileUtils;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import org.glassfish.jersey.internal.guava.Sets;
 
+import java.io.File;
+import java.io.IOException;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
@@ -40,7 +48,7 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
  */
 public class DefaultLeaseManager<T extends Node> extends AbstractObservable implements
                                                                            LeaseManager<T>,
-                                                                           EpochAware {
+                                                                           EpochAware, SnapshotProcess {
 
     private static final String                     EVICT_BETWEEN_MILLI = "evict.between.milli";
 
@@ -58,6 +66,16 @@ public class DefaultLeaseManager<T extends Node> extends AbstractObservable impl
     protected final ReentrantReadWriteLock          lock                = new ReentrantReadWriteLock();
 
     private final AtomicLong                        lastEvictTime       = new AtomicLong();
+
+    private final String snapshotFilePrefix;
+
+    private final String epochSnapshotPath  = String.format("%s-version", getClass().getSimpleName());
+
+    private final String storageSnapshotPath = String.format("%s-storage", getClass().getSimpleName());
+
+    public DefaultLeaseManager(String snapshotFilePrefix) {
+        this.snapshotFilePrefix = snapshotFilePrefix;
+    }
 
     public void register(T renewal, int leaseDuration) {
         if (renewal == null) {
@@ -191,4 +209,79 @@ public class DefaultLeaseManager<T extends Node> extends AbstractObservable impl
     public void refreshEpoch(long newEpoch) {
         currentEpoch.set(newEpoch);
     }
+
+    @Override
+    public boolean save(String path) {
+        if(path.equalsIgnoreCase(epochSnapshotPath)) {
+            return save(path, currentEpoch.get());
+        } else if (path.equalsIgnoreCase(storageSnapshotPath)) {
+            return save(path, repo);
+        }
+        throw new IllegalArgumentException("Unknown path: " + path);
+    }
+
+    private boolean save(String path, Object values) {
+        try {
+            FileUtils.writeByteArrayToFile(new File(path), CommandCodec.encodeCommand(values),
+                    false);
+            return true;
+        } catch (IOException e) {
+            logger.error("Fail to save snapshot", e);
+            return false;
+        }
+    }
+
+    @Override
+    public boolean load(String path) {
+        if(path.equalsIgnoreCase(epochSnapshotPath)) {
+            try {
+                long epoch = load(path, Long.class);
+                refreshEpoch(epoch);
+            } catch (IOException e) {
+                logger.error("Load lease manager epoch data error!", e);
+                return false;
+            }
+        } else if(path.equalsIgnoreCase(storageSnapshotPath)) {
+            try {
+                Map<String, Lease<T>> leaseStore = load(path, repo.getClass());
+                synchronized (this) {
+                    this.repo.putAll(leaseStore);
+                }
+            } catch (IOException e) {
+                logger.error("Load lease manager data error!", e);
+                return false;
+            }
+        }
+        throw new IllegalArgumentException("Unknown path: " + path);
+    }
+
+    private  <T> T load(String path, Class<T> clazz) throws IOException {
+        byte[] bs = FileUtils.readFileToByteArray(new File(path));
+        if (bs.length > 0) {
+            return CommandCodec.decodeCommand(bs, clazz);
+        }
+        throw new IOException("Fail to load snapshot from " + path + ", content: "
+                + Arrays.toString(bs));
+    }
+
+    @Override
+    public SnapshotProcess copy() {
+        DefaultLeaseManager<T> leaseManager = copyMySelf();
+        leaseManager.repo.putAll(this.repo);
+        leaseManager.refreshEpoch(this.currentEpoch.get());
+        return leaseManager;
+    }
+
+    @Override
+    public Set<String> getSnapshotFileNames() {
+        Set<String> set = Sets.newHashSet();
+        set.add(epochSnapshotPath);
+        set.add(storageSnapshotPath);
+        return set;
+    }
+
+    protected DefaultLeaseManager<T> copyMySelf() {
+        return new DefaultLeaseManager<>(snapshotFilePrefix);
+    }
+
 }

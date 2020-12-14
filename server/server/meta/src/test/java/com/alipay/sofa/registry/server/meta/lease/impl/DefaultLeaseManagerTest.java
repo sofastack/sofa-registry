@@ -26,15 +26,13 @@ import org.junit.Test;
 
 import java.util.Objects;
 
-import static org.junit.Assert.*;
-
 public class DefaultLeaseManagerTest extends AbstractTest {
 
     private DefaultLeaseManager<SimpleNode> leaseManager;
 
     @Before
     public void beforeDefaultLeaseManagerTest() {
-        leaseManager = new DefaultLeaseManager<>();
+        leaseManager = new DefaultLeaseManager<>("snapshotFilePrefix");
         leaseManager.setLogger(logger);
     }
 
@@ -73,6 +71,7 @@ public class DefaultLeaseManagerTest extends AbstractTest {
         Thread.sleep(1000);
         logger.info("[expired] {}", leaseManager.repo.get(ip).isExpired());
         leaseManager.evict();
+        Thread.sleep(100);
         Assert.assertNull(leaseManager.repo.get(ip));
     }
 

@@ -109,7 +109,7 @@ public class RaftServerHandler implements ChannelHandler {
 
         Method method = Processor.getInstance().getWorkMethod(processRequest);
 
-        if (Processor.getInstance().isLeaderReadMethod(method)) {
+        if (Processor.getInstance().isLeaderDirectExecuteMethod(method)) {
             Object obj = Processor.getInstance().process(method, processRequest);
             long cost = System.currentTimeMillis() - start;
             LOGGER.info("Raft server process request self cost:{},request={}", cost, processRequest);

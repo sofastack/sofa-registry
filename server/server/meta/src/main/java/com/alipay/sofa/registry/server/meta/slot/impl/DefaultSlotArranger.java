@@ -24,7 +24,7 @@ import com.alipay.sofa.registry.observer.Observer;
 import com.alipay.sofa.registry.server.meta.cluster.node.NodeAdded;
 import com.alipay.sofa.registry.server.meta.cluster.node.NodeModified;
 import com.alipay.sofa.registry.server.meta.cluster.node.NodeRemoved;
-import com.alipay.sofa.registry.server.meta.lease.DataServerManager;
+import com.alipay.sofa.registry.server.meta.lease.data.DataServerManager;
 import com.alipay.sofa.registry.server.meta.slot.ArrangeTaskDispatcher;
 import com.alipay.sofa.registry.server.meta.slot.SlotArranger;
 import org.springframework.beans.factory.annotation.Autowired;

@@ -16,20 +16,17 @@
  */
 package com.alipay.sofa.registry.server.meta.provide.data;
 
-import com.alipay.sofa.registry.common.model.Node;
 import com.alipay.sofa.registry.common.model.constants.ValueConstants;
 import com.alipay.sofa.registry.common.model.metaserver.DataOperator;
 import com.alipay.sofa.registry.common.model.metaserver.ProvideDataChangeEvent;
 import com.alipay.sofa.registry.common.model.metaserver.nodes.DataNode;
 import com.alipay.sofa.registry.remoting.exchange.RequestException;
 import com.alipay.sofa.registry.remoting.exchange.message.Request;
-import com.alipay.sofa.registry.remoting.exchange.message.Response;
 import com.alipay.sofa.registry.server.meta.AbstractTest;
-import com.alipay.sofa.registry.server.meta.lease.DataServerManager;
+import com.alipay.sofa.registry.server.meta.lease.data.DataServerManager;
 import com.alipay.sofa.registry.server.meta.remoting.DataNodeExchanger;
 import com.alipay.sofa.registry.server.meta.remoting.connection.DataConnectionHandler;
 import org.assertj.core.util.Lists;
-import org.assertj.core.util.Sets;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
@@ -37,7 +34,6 @@ import org.mockito.MockitoAnnotations;
 
 import java.net.InetSocketAddress;
 
-import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
 
 public class DataServerProvideDataNotifierTest extends AbstractTest {

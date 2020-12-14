@@ -63,7 +63,7 @@ public class ProxyHandler implements InvocationHandler {
 
             request.setServiceName(serviceId);
 
-            if (Processor.getInstance().isLeaderReadMethod(method)) {
+            if (Processor.getInstance().isLeaderDirectExecuteMethod(method)) {
                 return doInvokeMethod(request);
             }
             return client.sendRequest(request);

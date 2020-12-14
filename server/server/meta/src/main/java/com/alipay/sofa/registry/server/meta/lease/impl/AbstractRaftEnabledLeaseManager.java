@@ -39,7 +39,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import javax.annotation.Resource;
 import java.lang.reflect.Proxy;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
@@ -156,6 +155,10 @@ public abstract class AbstractRaftEnabledLeaseManager<T extends Node> extends
             RaftLeaseManager.class, serviceId, raftExchanger.getRaftClient()));
     }
 
+    protected String getSnapshotPrefix() {
+        return getClass().getSimpleName();
+    }
+
     @VisibleForTesting
     AbstractRaftEnabledLeaseManager<T> setRaftLeaseManager(RaftLeaseManager<String, T> raftLeaseManager) {
         this.raftLeaseManager = raftLeaseManager;
@@ -183,6 +186,10 @@ public abstract class AbstractRaftEnabledLeaseManager<T extends Node> extends
                                                                                        implements
                                                                                        RaftLeaseManager<String, T> {
 
+        public DefaultRaftLeaseManager() {
+            super(getSnapshotPrefix());
+        }
+
         @Override
         public Map<String, Lease<T>> getLeaseStore() {
             lock.readLock().lock();
@@ -197,25 +204,6 @@ public abstract class AbstractRaftEnabledLeaseManager<T extends Node> extends
             repo.get(renewal.getNodeUrl().getIpAddress()).setRenewal(renewal);
         }
 
-        @Override
-        public boolean save(String path) {
-            return false;
-        }
-
-        @Override
-        public boolean load(String path) {
-            return false;
-        }
-
-        @Override
-        public SnapshotProcess copy() {
-            return null;
-        }
-
-        @Override
-        public Set<String> getSnapshotFileNames() {
-            return null;
-        }
     }
 
     public interface RaftLeaseManager<K, T extends Node> extends LeaseManager<T>, EpochAware,

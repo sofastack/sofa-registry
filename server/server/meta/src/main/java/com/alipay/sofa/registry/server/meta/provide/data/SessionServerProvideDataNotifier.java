@@ -18,7 +18,7 @@ package com.alipay.sofa.registry.server.meta.provide.data;
 
 import com.alipay.sofa.registry.common.model.metaserver.nodes.SessionNode;
 import com.alipay.sofa.registry.remoting.exchange.NodeExchanger;
-import com.alipay.sofa.registry.server.meta.lease.SessionManager;
+import com.alipay.sofa.registry.server.meta.lease.session.SessionManager;
 import com.alipay.sofa.registry.server.meta.remoting.connection.NodeConnectManager;
 import com.alipay.sofa.registry.server.meta.remoting.handler.AbstractServerHandler;
 import org.springframework.beans.factory.annotation.Autowired;

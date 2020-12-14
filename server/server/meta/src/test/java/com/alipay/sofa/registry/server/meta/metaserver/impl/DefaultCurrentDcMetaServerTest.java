@@ -25,8 +25,8 @@ import com.alipay.sofa.registry.common.model.slot.SlotTable;
 import com.alipay.sofa.registry.lifecycle.impl.LifecycleHelper;
 import com.alipay.sofa.registry.server.meta.AbstractTest;
 import com.alipay.sofa.registry.server.meta.bootstrap.config.NodeConfig;
-import com.alipay.sofa.registry.server.meta.lease.DataServerManager;
-import com.alipay.sofa.registry.server.meta.lease.SessionManager;
+import com.alipay.sofa.registry.server.meta.lease.data.DataServerManager;
+import com.alipay.sofa.registry.server.meta.lease.session.SessionManager;
 import com.alipay.sofa.registry.server.meta.remoting.RaftExchanger;
 import com.alipay.sofa.registry.server.meta.slot.SlotManager;
 import com.alipay.sofa.registry.util.DatumVersionUtil;
@@ -42,7 +42,6 @@ import org.mockito.stubbing.Answer;
 import java.util.List;
 import java.util.Map;
 
-import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
 
 public class DefaultCurrentDcMetaServerTest extends AbstractTest {
