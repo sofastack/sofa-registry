@@ -14,6 +14,8 @@
 
     <properties>
         <main.user.dir>../</main.user.dir>
+            <!-- for linke 引入jacoco.path的参数定义 -->
+        <jacoco.path>${project.build.directory}/jacoco-it.exec</jacoco.path>
     </properties>
 
     <dependencies>
@@ -76,4 +78,42 @@
             <scope>test</scope>
         </dependency>
     </dependencies>
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>2.8.1</version>
+                <configuration>
+                    <skipTests>${isSkipIT}</skipTests>
+                    <includes>
+                        <!-- 这里需要根据自己的需要指定要跑的测试类 -->
+                        <include>**/*Test.java</include>
+                    </includes>
+                    <testFailureIgnore>true</testFailureIgnore>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>test-testng</id>
+                        <phase>test</phase>
+                        <goals>
+                            <goal>test</goal>
+                        </goals>
+                        <configuration>
+                            <junitArtifactName>none:none</junitArtifactName>
+                            <testNGArtifactName>org.testng:com.springsource.org.testng</testNGArtifactName>
+                            <argLine>-Xmx1024m -XX:PermSize=256m -XX:MaxPermSize=512m</argLine>
+                            <suiteXmlFiles>
+                                <!-- 这里需要根据自己配置的testng的xml指定对应的路径 -->
+                                <suiteXmlFile>src/test/resources/testSuiteCore.xml</suiteXmlFile>
+                            </suiteXmlFiles>
+                            <!-- 如无特殊需求，将forkMode设置为once -->
+                            <forkMode>once</forkMode>
+                            <testFailureIgnore>true</testFailureIgnore>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
 </project>

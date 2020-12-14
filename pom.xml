@@ -82,6 +82,9 @@
         <rocksdbjni.version>6.4.6</rocksdbjni.version>
         <main.user.dir>${user.dir}</main.user.dir>
         <argLine>-Dnetwork_interface_denylist=docker0</argLine>
+        <!-- for linke 添加isSkipUT, isSkipIT参数声明，防止编译时产生错误 -->
+        <isSkipUT>false</isSkipUT>
+        <isSkipIT>false</isSkipIT>
     </properties>
 
     <dependencyManagement>
@@ -410,14 +413,6 @@
                 </configuration>
             </plugin>
             <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-surefire-plugin</artifactId>
-                <version>2.21.0</version>
-                <configuration>
-                    <forkMode>once</forkMode>
-                </configuration>
-            </plugin>
-            <plugin>
                 <groupId>org.jacoco</groupId>
                 <artifactId>jacoco-maven-plugin</artifactId>
                 <version>0.7.9</version>
@@ -439,6 +434,27 @@
                         </goals>
                     </execution>
                 </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>2.8.1</version>
+                <configuration>
+                    <!-- 根据JDK版本配置，jdk8: -Xmx1024m -XX:MetaspaceSize=256m -XX:MaxMetaspaceSize=512m -->
+                    <argLine>-Xmx1024m -XX:PermSize=256m -XX:MaxPermSize=512m</argLine>
+                    <skipTests>${isSkipUT}</skipTests>
+                    <includes>
+                        <!-- 这里需要根据自己的需要指定要跑的单元测试 -->
+                        <include>**/*Test.java</include>
+                    </includes>
+                    <excludes>
+                        <!-- 这里需要根据自己的需要指定要排除单元测试 -->
+<!--                        <exclude>com/alipay/**/*.java</exclude>-->
+                    </excludes>
+                    <!-- 如无特殊需求，将forkMode设置为once -->
+                    <forkMode>once</forkMode>
+                    <testFailureIgnore>true</testFailureIgnore>
+                </configuration>
             </plugin>
         </plugins>
     </build>
