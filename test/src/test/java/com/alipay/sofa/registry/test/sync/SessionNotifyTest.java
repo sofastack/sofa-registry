@@ -17,7 +17,10 @@
 package com.alipay.sofa.registry.test.sync;
 
 import com.alipay.remoting.Connection;
-import com.alipay.sofa.registry.common.model.*;
+import com.alipay.sofa.registry.common.model.CommonResponse;
+import com.alipay.sofa.registry.common.model.GenericResponse;
+import com.alipay.sofa.registry.common.model.Node;
+import com.alipay.sofa.registry.common.model.ServerDataBox;
 import com.alipay.sofa.registry.common.model.constants.ValueConstants;
 import com.alipay.sofa.registry.common.model.dataserver.Datum;
 import com.alipay.sofa.registry.common.model.dataserver.GetDataRequest;
@@ -32,19 +35,18 @@ import com.alipay.sofa.registry.remoting.bolt.BoltChannel;
 import com.alipay.sofa.registry.remoting.bolt.BoltClient;
 import com.alipay.sofa.registry.remoting.bolt.exchange.BoltExchange;
 import com.alipay.sofa.registry.remoting.exchange.Exchange;
-import com.alipay.sofa.registry.server.data.remoting.handler.AbstractServerHandler;
 import com.alipay.sofa.registry.server.session.cache.DatumKey;
 import com.alipay.sofa.registry.server.session.cache.Key;
 import com.alipay.sofa.registry.server.session.cache.Key.KeyType;
 import com.alipay.sofa.registry.server.session.cache.SessionCacheService;
 import com.alipay.sofa.registry.server.session.store.SessionInterests;
 import com.alipay.sofa.registry.server.shared.env.ServerEnv;
+import com.alipay.sofa.registry.server.shared.remoting.AbstractServerHandler;
 import com.alipay.sofa.registry.test.BaseIntegrationTest;
 import com.alipay.sofa.registry.util.DatumVersionUtil;
 import com.alipay.sofa.registry.util.NamedThreadFactory;
 import com.alipay.sofa.registry.util.ParaCheckUtil;
 import org.junit.BeforeClass;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.test.context.junit4.SpringRunner;
@@ -233,6 +235,11 @@ public class SessionNotifyTest extends BaseIntegrationTest {
 
     public static class MockDataChangeRequestHandler extends
                                                     AbstractServerHandler<DataChangeRequest> {
+
+        @Override
+        protected Node.NodeType getConnectNodeType() {
+            return null;
+        }
 
         @Override
         public void checkParam(DataChangeRequest request) throws RuntimeException {

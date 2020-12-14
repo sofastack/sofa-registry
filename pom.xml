@@ -442,7 +442,7 @@
                 <configuration>
                     <!-- 根据JDK版本配置，jdk8: -Xmx1024m -XX:MetaspaceSize=256m -XX:MaxMetaspaceSize=512m -->
                     <argLine>-Xmx1024m -XX:PermSize=256m -XX:MaxPermSize=512m</argLine>
-                    <skipTests>${isSkipUT}</skipTests>
+                    <skipTests>${isSkipUnitTest}</skipTests>
                     <includes>
                         <!-- 这里需要根据自己的需要指定要跑的单元测试 -->
                         <include>**/*Test.java</include>

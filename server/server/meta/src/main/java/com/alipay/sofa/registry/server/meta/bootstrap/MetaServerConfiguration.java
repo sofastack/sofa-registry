@@ -42,7 +42,6 @@ import com.alipay.sofa.registry.server.meta.remoting.SessionNodeExchanger;
 import com.alipay.sofa.registry.server.meta.remoting.connection.DataConnectionHandler;
 import com.alipay.sofa.registry.server.meta.remoting.connection.MetaConnectionHandler;
 import com.alipay.sofa.registry.server.meta.remoting.connection.SessionConnectionHandler;
-import com.alipay.sofa.registry.server.meta.remoting.handler.MetaServerHandler;
 import com.alipay.sofa.registry.server.meta.remoting.handler.FetchProvideDataRequestHandler;
 import com.alipay.sofa.registry.server.meta.remoting.handler.HeartbeatRequestHandler;
 import com.alipay.sofa.registry.server.meta.resource.*;

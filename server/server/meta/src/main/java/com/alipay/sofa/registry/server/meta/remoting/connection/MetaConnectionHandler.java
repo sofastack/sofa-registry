@@ -21,9 +21,7 @@ import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.net.NetUtil;
 import com.alipay.sofa.registry.remoting.Channel;
-import com.alipay.sofa.registry.remoting.RemotingException;
 import com.alipay.sofa.registry.server.meta.bootstrap.config.NodeConfig;
-import com.alipay.sofa.registry.server.meta.remoting.handler.MetaServerHandler;
 import com.alipay.sofa.registry.server.shared.remoting.ListenServerChannelHandler;
 import org.springframework.beans.factory.annotation.Autowired;
 
