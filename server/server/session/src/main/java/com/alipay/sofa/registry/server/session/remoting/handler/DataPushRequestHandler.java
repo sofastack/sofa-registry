@@ -21,6 +21,7 @@ import com.alipay.sofa.registry.common.model.sessionserver.DataPushRequest;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.remoting.Channel;
+import com.alipay.sofa.registry.server.shared.remoting.AbstractClientHandler;
 import com.alipay.sofa.registry.task.listener.TaskEvent;
 import com.alipay.sofa.registry.task.listener.TaskEvent.TaskType;
 import com.alipay.sofa.registry.task.listener.TaskListenerManager;
@@ -32,16 +33,12 @@ import org.springframework.beans.factory.annotation.Autowired;
  * @author shangyu.wh
  * @version $Id: DataChangeRequestHandler.java, v 0.1 2017-12-12 15:09 shangyu.wh Exp $
  */
-public class DataPushRequestHandler extends AbstractClientHandler {
+public class DataPushRequestHandler extends AbstractClientHandler<DataPushRequest> {
 
-    private static final Logger LOGGER          = LoggerFactory
-                                                    .getLogger(DataPushRequestHandler.class);
+    private static final Logger LOGGER      = LoggerFactory.getLogger(DataPushRequestHandler.class);
 
-    private static final Logger TASK_LOGGER     = LoggerFactory.getLogger(
-                                                    DataPushRequestHandler.class, "[Task]");
-
-    private static final Logger EXCHANGE_LOGGER = LoggerFactory.getLogger("SESSION-EXCHANGE",
-                                                    "[DataPushRequestHandler]");
+    private static final Logger TASK_LOGGER = LoggerFactory.getLogger(DataPushRequestHandler.class,
+                                                "[Task]");
     /**
      * trigger task com.alipay.sofa.registry.server.meta.listener process
      */
@@ -49,32 +46,18 @@ public class DataPushRequestHandler extends AbstractClientHandler {
     private TaskListenerManager taskListenerManager;
 
     @Override
-    public HandlerType getType() {
-        return HandlerType.PROCESSER;
-    }
-
-    @Override
     protected NodeType getConnectNodeType() {
         return NodeType.DATA;
     }
 
     @Override
-    public Object reply(Channel channel, Object message) {
-        if (!(message instanceof DataPushRequest)) {
-            LOGGER.error("Request message type {} is not mach the require data type!", message
-                .getClass().getName());
-            return null;
-        }
-        DataPushRequest dataPushRequest = (DataPushRequest) message;
-        EXCHANGE_LOGGER.info("request={}", dataPushRequest);
-
+    public Object doHandle(Channel channel, DataPushRequest request) {
         try {
-            fireDataPushTask(dataPushRequest);
+            fireDataPushTask(request);
         } catch (Exception e) {
             LOGGER.error("DataPush Request error!", e);
             throw new RuntimeException("DataPush Request error!", e);
         }
-
         return null;
     }
 

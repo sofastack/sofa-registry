@@ -17,10 +17,10 @@
 package com.alipay.sofa.registry.server.session.remoting.handler;
 
 import com.alipay.sofa.registry.common.model.ConnectId;
+import com.alipay.sofa.registry.common.model.Node;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.remoting.Channel;
-import com.alipay.sofa.registry.remoting.RemotingException;
 import com.alipay.sofa.registry.remoting.exchange.Exchange;
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
 import com.alipay.sofa.registry.server.session.registry.Registry;
@@ -28,6 +28,8 @@ import com.alipay.sofa.registry.server.session.scheduler.ExecutorManager;
 import com.alipay.sofa.registry.server.session.store.DataStore;
 import com.alipay.sofa.registry.server.session.store.Interests;
 import com.alipay.sofa.registry.server.session.store.Watchers;
+import com.alipay.sofa.registry.server.shared.remoting.ListenServerChannelHandler;
+import org.apache.commons.collections.MapUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.Collections;
@@ -38,7 +40,7 @@ import java.util.Map;
  * @author shangyu.wh
  * @version $Id: ServerConnectionLisener.java, v 0.1 2017-11-30 15:04 shangyu.wh Exp $
  */
-public class ClientNodeConnectionHandler extends AbstractServerHandler {
+public class ClientNodeConnectionHandler extends ListenServerChannelHandler {
 
     private static final Logger LOGGER = LoggerFactory.getLogger("SESSION-CONNECT");
 
@@ -64,19 +66,14 @@ public class ClientNodeConnectionHandler extends AbstractServerHandler {
     private Exchange            boltExchange;
 
     @Override
-    public HandlerType getType() {
-        return HandlerType.LISENTER;
-    }
-
-    @Override
-    public void connected(Channel channel) throws RemotingException {
-        super.connected(channel);
-    }
-
-    @Override
-    public void disconnected(Channel channel) throws RemotingException {
+    public void disconnected(Channel channel) {
         super.disconnected(channel);
         fireCancelClient(channel);
+    }
+
+    @Override
+    protected Node.NodeType getConnectNodeType() {
+        return Node.NodeType.CLIENT;
     }
 
     private void fireCancelClient(Channel channel) {
@@ -99,18 +96,17 @@ public class ClientNodeConnectionHandler extends AbstractServerHandler {
     }
 
     private boolean checkPub(ConnectId connectId) {
-        Map pubMap = sessionDataStore.queryByConnectId(connectId);
-        return pubMap != null && !pubMap.isEmpty();
+        Map map = sessionDataStore.queryByConnectId(connectId);
+        return MapUtils.isEmpty(map);
     }
 
     private boolean checkSub(ConnectId connectId) {
-        Map subMap = sessionInterests.queryByConnectId(connectId);
-        return subMap != null && !subMap.isEmpty();
+        Map map = sessionInterests.queryByConnectId(connectId);
+        return MapUtils.isEmpty(map);
     }
 
     private boolean checkWatcher(ConnectId connectId) {
-        Map subMap = sessionWatchers.queryByConnectId(connectId);
-        return subMap != null && !subMap.isEmpty();
+        Map map = sessionWatchers.queryByConnectId(connectId);
+        return MapUtils.isEmpty(map);
     }
-
 }

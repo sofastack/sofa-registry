@@ -14,19 +14,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alipay.sofa.registry.server.session.remoting.handler;
+package com.alipay.sofa.registry.server.shared.remoting;
 
-import com.alipay.sofa.registry.common.model.Node.NodeType;
-import com.alipay.sofa.registry.server.shared.remoting.ListenClientChannelHandler;
+import com.alipay.sofa.registry.log.Logger;
+import com.alipay.sofa.registry.log.LoggerFactory;
 
 /**
  *
  * @author shangyu.wh
- * @version $Id: ClientConnectionHandler.java, v 0.1 2017-12-08 20:17 shangyu.wh Exp $
+ * @version $Id: ServerHandler.java, v 0.1 2017-11-28 18:06 shangyu.wh Exp $
  */
-public class MetaNodeConnectionHandler extends ListenClientChannelHandler {
-    @Override
-    protected NodeType getConnectNodeType() {
-        return NodeType.META;
+public abstract class AbstractServerHandler<T> extends AbstractChannelHandler<T> {
+
+    private static final Logger LOGGER_CONNECT  = LoggerFactory.getLogger("SRV-CONNECT");
+
+    private static final Logger LOGGER_EXCHANGE = LoggerFactory.getLogger("SRV-EXCHANGE");
+
+    public AbstractServerHandler() {
+        super(LOGGER_CONNECT, LOGGER_EXCHANGE);
     }
 }

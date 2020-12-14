@@ -48,7 +48,8 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
  */
 public class DefaultLeaseManager<T extends Node> extends AbstractObservable implements
                                                                            LeaseManager<T>,
-                                                                           EpochAware, SnapshotProcess {
+                                                                           EpochAware,
+                                                                           SnapshotProcess {
 
     private static final String                     EVICT_BETWEEN_MILLI = "evict.between.milli";
 
@@ -67,11 +68,17 @@ public class DefaultLeaseManager<T extends Node> extends AbstractObservable impl
 
     private final AtomicLong                        lastEvictTime       = new AtomicLong();
 
-    private final String snapshotFilePrefix;
+    private final String                            snapshotFilePrefix;
 
-    private final String epochSnapshotPath  = String.format("%s-version", getClass().getSimpleName());
+    private final String                            epochSnapshotPath   = String.format(
+                                                                            "%s-version",
+                                                                            getClass()
+                                                                                .getSimpleName());
 
-    private final String storageSnapshotPath = String.format("%s-storage", getClass().getSimpleName());
+    private final String                            storageSnapshotPath = String.format(
+                                                                            "%s-storage",
+                                                                            getClass()
+                                                                                .getSimpleName());
 
     public DefaultLeaseManager(String snapshotFilePrefix) {
         this.snapshotFilePrefix = snapshotFilePrefix;
@@ -212,7 +219,7 @@ public class DefaultLeaseManager<T extends Node> extends AbstractObservable impl
 
     @Override
     public boolean save(String path) {
-        if(path.equalsIgnoreCase(epochSnapshotPath)) {
+        if (path.equalsIgnoreCase(epochSnapshotPath)) {
             return save(path, currentEpoch.get());
         } else if (path.equalsIgnoreCase(storageSnapshotPath)) {
             return save(path, repo);
@@ -223,7 +230,7 @@ public class DefaultLeaseManager<T extends Node> extends AbstractObservable impl
     private boolean save(String path, Object values) {
         try {
             FileUtils.writeByteArrayToFile(new File(path), CommandCodec.encodeCommand(values),
-                    false);
+                false);
             return true;
         } catch (IOException e) {
             logger.error("Fail to save snapshot", e);
@@ -233,7 +240,7 @@ public class DefaultLeaseManager<T extends Node> extends AbstractObservable impl
 
     @Override
     public boolean load(String path) {
-        if(path.equalsIgnoreCase(epochSnapshotPath)) {
+        if (path.equalsIgnoreCase(epochSnapshotPath)) {
             try {
                 long epoch = load(path, Long.class);
                 refreshEpoch(epoch);
@@ -241,7 +248,7 @@ public class DefaultLeaseManager<T extends Node> extends AbstractObservable impl
                 logger.error("Load lease manager epoch data error!", e);
                 return false;
             }
-        } else if(path.equalsIgnoreCase(storageSnapshotPath)) {
+        } else if (path.equalsIgnoreCase(storageSnapshotPath)) {
             try {
                 Map<String, Lease<T>> leaseStore = load(path, repo.getClass());
                 synchronized (this) {
@@ -255,13 +262,13 @@ public class DefaultLeaseManager<T extends Node> extends AbstractObservable impl
         throw new IllegalArgumentException("Unknown path: " + path);
     }
 
-    private  <T> T load(String path, Class<T> clazz) throws IOException {
+    private <T> T load(String path, Class<T> clazz) throws IOException {
         byte[] bs = FileUtils.readFileToByteArray(new File(path));
         if (bs.length > 0) {
             return CommandCodec.decodeCommand(bs, clazz);
         }
         throw new IOException("Fail to load snapshot from " + path + ", content: "
-                + Arrays.toString(bs));
+                              + Arrays.toString(bs));
     }
 
     @Override

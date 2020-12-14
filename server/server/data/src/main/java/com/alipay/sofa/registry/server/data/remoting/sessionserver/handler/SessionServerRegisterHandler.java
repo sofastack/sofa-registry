@@ -21,8 +21,8 @@ import com.alipay.sofa.registry.common.model.Node;
 import com.alipay.sofa.registry.common.model.dataserver.SessionServerRegisterRequest;
 import com.alipay.sofa.registry.remoting.Channel;
 import com.alipay.sofa.registry.remoting.bolt.BoltChannel;
-import com.alipay.sofa.registry.server.data.remoting.handler.AbstractServerHandler;
 import com.alipay.sofa.registry.server.data.remoting.sessionserver.SessionServerConnectionFactory;
+import com.alipay.sofa.registry.server.shared.remoting.AbstractServerHandler;
 import com.alipay.sofa.registry.util.ParaCheckUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -55,17 +55,12 @@ public class SessionServerRegisterHandler extends
     }
 
     @Override
-    public HandlerType getType() {
-        return HandlerType.PROCESSER;
-    }
-
-    @Override
     public Class interest() {
         return SessionServerRegisterRequest.class;
     }
 
     @Override
     protected Node.NodeType getConnectNodeType() {
-        return Node.NodeType.DATA;
+        return Node.NodeType.SESSION;
     }
 }

@@ -20,25 +20,22 @@ import com.alipay.sofa.registry.common.model.Node;
 import com.alipay.sofa.registry.common.model.metaserver.ConfigureLoadbalanceRequest;
 import com.alipay.sofa.registry.remoting.Channel;
 import com.alipay.sofa.registry.server.session.connections.ConnectionsService;
+import com.alipay.sofa.registry.server.shared.remoting.AbstractClientHandler;
+import com.alipay.sofa.registry.util.ParaCheckUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 
 /**
  * @author xiangxu
  * @version : ConfigureLoadbalanceHandler.java, v 0.1 2020年05月29日 11:51 上午 xiangxu Exp $
  */
-public class ConfigureLoadbalanceHandler extends AbstractClientHandler {
+public class ConfigureLoadbalanceHandler extends AbstractClientHandler<ConfigureLoadbalanceRequest> {
 
     @Autowired
     private ConnectionsService connectionsService;
 
     @Override
     protected Node.NodeType getConnectNodeType() {
-        return Node.NodeType.SESSION;
-    }
-
-    @Override
-    public HandlerType getType() {
-        return HandlerType.PROCESSER;
+        return Node.NodeType.META;
     }
 
     @Override
@@ -47,10 +44,13 @@ public class ConfigureLoadbalanceHandler extends AbstractClientHandler {
     }
 
     @Override
-    public Object reply(Channel channel, Object message) {
-        ConfigureLoadbalanceRequest configureLoadbalanceRequest = (ConfigureLoadbalanceRequest) message;
+    public void checkParam(ConfigureLoadbalanceRequest request) throws RuntimeException {
+        ParaCheckUtil.checkNonNegative(request.getMaxConnections(), "request.maxConnections");
+    }
 
-        connectionsService.setMaxConnections(configureLoadbalanceRequest.getMaxConnections());
+    @Override
+    public Object doHandle(Channel channel, ConfigureLoadbalanceRequest request) {
+        connectionsService.setMaxConnections(request.getMaxConnections());
         return null;
     }
 }

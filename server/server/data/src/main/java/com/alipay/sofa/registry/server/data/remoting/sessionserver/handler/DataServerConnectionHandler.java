@@ -19,10 +19,8 @@ package com.alipay.sofa.registry.server.data.remoting.sessionserver.handler;
 import com.alipay.sofa.registry.common.model.Node;
 import com.alipay.sofa.registry.common.model.Node.NodeType;
 import com.alipay.sofa.registry.remoting.Channel;
-import com.alipay.sofa.registry.remoting.ChannelHandler;
-import com.alipay.sofa.registry.remoting.RemotingException;
-import com.alipay.sofa.registry.server.data.remoting.handler.AbstractServerHandler;
 import com.alipay.sofa.registry.server.data.remoting.sessionserver.SessionServerConnectionFactory;
+import com.alipay.sofa.registry.server.shared.remoting.ListenServerChannelHandler;
 import org.springframework.beans.factory.annotation.Autowired;
 
 /**
@@ -33,22 +31,12 @@ import org.springframework.beans.factory.annotation.Autowired;
  * @author xuanbei
  * @since 2019/2/15
  */
-public class DataServerConnectionHandler extends AbstractServerHandler {
+public class DataServerConnectionHandler extends ListenServerChannelHandler {
     @Autowired
     private SessionServerConnectionFactory sessionServerConnectionFactory;
 
     @Override
-    public ChannelHandler.HandlerType getType() {
-        return ChannelHandler.HandlerType.LISENTER;
-    }
-
-    @Override
-    public void connected(Channel channel) throws RemotingException {
-        super.connected(channel);
-    }
-
-    @Override
-    public void disconnected(Channel channel) throws RemotingException {
+    public void disconnected(Channel channel) {
         super.disconnected(channel);
         sessionServerConnectionFactory.sessionDisconnected(channel.getRemoteAddress());
     }
@@ -56,19 +44,5 @@ public class DataServerConnectionHandler extends AbstractServerHandler {
     @Override
     protected Node.NodeType getConnectNodeType() {
         return NodeType.SESSION;
-    }
-
-    @Override
-    public void checkParam(Object request) throws RuntimeException {
-    }
-
-    @Override
-    public Object doHandle(Channel channel, Object request) {
-        return null;
-    }
-
-    @Override
-    public Object buildFailedResponse(String msg) {
-        return null;
     }
 }

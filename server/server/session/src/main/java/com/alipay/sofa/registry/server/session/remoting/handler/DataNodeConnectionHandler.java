@@ -16,24 +16,23 @@
  */
 package com.alipay.sofa.registry.server.session.remoting.handler;
 
-import org.springframework.beans.factory.annotation.Autowired;
-
 import com.alipay.sofa.registry.common.model.Node.NodeType;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.remoting.Channel;
-import com.alipay.sofa.registry.remoting.RemotingException;
 import com.alipay.sofa.registry.server.session.registry.SessionRegistry;
+import com.alipay.sofa.registry.server.shared.remoting.ListenClientChannelHandler;
 import com.alipay.sofa.registry.task.listener.TaskEvent;
 import com.alipay.sofa.registry.task.listener.TaskEvent.TaskType;
 import com.alipay.sofa.registry.task.listener.TaskListenerManager;
+import org.springframework.beans.factory.annotation.Autowired;
 
 /**
  *
  * @author shangyu.wh
  * @version $Id: ClientConnectionHandler.java, v 0.1 2017-12-08 20:17 shangyu.wh Exp $
  */
-public class DataNodeConnectionHandler extends AbstractClientHandler {
+public class DataNodeConnectionHandler extends ListenClientChannelHandler {
 
     private static final Logger taskLogger = LoggerFactory.getLogger(SessionRegistry.class,
                                                "[Task]");
@@ -45,12 +44,7 @@ public class DataNodeConnectionHandler extends AbstractClientHandler {
     private TaskListenerManager taskListenerManager;
 
     @Override
-    public HandlerType getType() {
-        return HandlerType.LISENTER;
-    }
-
-    @Override
-    public void connected(Channel channel) throws RemotingException {
+    public void connected(Channel channel) {
         super.connected(channel);
         fireRegisterProcessIdTask(channel);
     }

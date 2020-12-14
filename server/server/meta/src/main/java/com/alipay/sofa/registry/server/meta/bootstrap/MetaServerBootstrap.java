@@ -26,7 +26,7 @@ import com.alipay.sofa.registry.remoting.exchange.Exchange;
 import com.alipay.sofa.registry.server.meta.bootstrap.config.MetaServerConfig;
 import com.alipay.sofa.registry.server.meta.executor.ExecutorManager;
 import com.alipay.sofa.registry.server.meta.remoting.RaftExchanger;
-import com.alipay.sofa.registry.server.meta.remoting.handler.AbstractServerHandler;
+import com.alipay.sofa.registry.server.meta.remoting.handler.MetaServerHandler;
 import com.alipay.sofa.registry.task.batcher.TaskDispatchers;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -48,54 +48,54 @@ import java.util.concurrent.atomic.AtomicBoolean;
  */
 public class MetaServerBootstrap {
 
-    private static final Logger               LOGGER       = LoggerFactory
-                                                               .getLogger(MetaServerBootstrap.class);
+    private static final Logger           LOGGER       = LoggerFactory
+                                                           .getLogger(MetaServerBootstrap.class);
 
     @Autowired
-    private MetaServerConfig                  metaServerConfig;
+    private MetaServerConfig              metaServerConfig;
 
     @Autowired
-    private Exchange                          boltExchange;
+    private Exchange                      boltExchange;
 
     @Autowired
-    private Exchange                          jerseyExchange;
+    private Exchange                      jerseyExchange;
 
     @Autowired
-    private ExecutorManager                   executorManager;
+    private ExecutorManager               executorManager;
 
     @Resource(name = "sessionServerHandlers")
-    private Collection<AbstractServerHandler> sessionServerHandlers;
+    private Collection<MetaServerHandler> sessionServerHandlers;
 
     @Resource(name = "dataServerHandlers")
-    private Collection<AbstractServerHandler> dataServerHandlers;
+    private Collection<MetaServerHandler> dataServerHandlers;
 
     @Resource(name = "metaServerHandlers")
-    private Collection<AbstractServerHandler> metaServerHandlers;
+    private Collection<MetaServerHandler> metaServerHandlers;
 
     @Autowired
-    private ResourceConfig                    jerseyResourceConfig;
+    private ResourceConfig                jerseyResourceConfig;
 
     @Autowired
-    private ApplicationContext                applicationContext;
+    private ApplicationContext            applicationContext;
 
     @Autowired
-    private RaftExchanger                     raftExchanger;
+    private RaftExchanger                 raftExchanger;
 
-    private Server                            sessionServer;
+    private Server                        sessionServer;
 
-    private Server                            dataServer;
+    private Server                        dataServer;
 
-    private Server                            metaServer;
+    private Server                        metaServer;
 
-    private Server                            httpServer;
+    private Server                        httpServer;
 
-    private final AtomicBoolean               sessionStart = new AtomicBoolean(false);
+    private final AtomicBoolean           sessionStart = new AtomicBoolean(false);
 
-    private final AtomicBoolean               dataStart    = new AtomicBoolean(false);
+    private final AtomicBoolean           dataStart    = new AtomicBoolean(false);
 
-    private final AtomicBoolean               metaStart    = new AtomicBoolean(false);
+    private final AtomicBoolean           metaStart    = new AtomicBoolean(false);
 
-    private final AtomicBoolean               httpStart    = new AtomicBoolean(false);
+    private final AtomicBoolean           httpStart    = new AtomicBoolean(false);
 
     /**
      * Do initialized.

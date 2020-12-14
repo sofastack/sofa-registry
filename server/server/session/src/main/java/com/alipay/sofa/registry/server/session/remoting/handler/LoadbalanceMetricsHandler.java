@@ -21,6 +21,7 @@ import com.alipay.sofa.registry.common.model.metaserver.GetLoadbalanceMetricsReq
 import com.alipay.sofa.registry.common.model.metaserver.LoadbalanceMetrics;
 import com.alipay.sofa.registry.remoting.Channel;
 import com.alipay.sofa.registry.server.session.connections.ConnectionsService;
+import com.alipay.sofa.registry.server.shared.remoting.AbstractClientHandler;
 import org.springframework.beans.factory.annotation.Autowired;
 
 /**
@@ -34,16 +35,11 @@ public class LoadbalanceMetricsHandler extends AbstractClientHandler {
 
     @Override
     protected NodeType getConnectNodeType() {
-        return NodeType.SESSION;
+        return NodeType.META;
     }
 
     @Override
-    public HandlerType getType() {
-        return HandlerType.PROCESSER;
-    }
-
-    @Override
-    public Object reply(Channel channel, Object message) {
+    public Object doHandle(Channel channel, Object request) {
         LoadbalanceMetrics m = new LoadbalanceMetrics();
         m.setConnectionCount(connectionsService.getConnections().size());
         return m;

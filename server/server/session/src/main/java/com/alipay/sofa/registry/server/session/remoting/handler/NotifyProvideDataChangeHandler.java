@@ -23,6 +23,7 @@ import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.remoting.Channel;
 import com.alipay.sofa.registry.server.session.store.Watchers;
+import com.alipay.sofa.registry.server.shared.remoting.AbstractClientHandler;
 import com.alipay.sofa.registry.task.listener.TaskEvent;
 import com.alipay.sofa.registry.task.listener.TaskEvent.TaskType;
 import com.alipay.sofa.registry.task.listener.TaskListenerManager;
@@ -33,7 +34,7 @@ import org.springframework.beans.factory.annotation.Autowired;
  * @author shangyu.wh
  * @version $Id: DataChangeRequestHandler.java, v 0.1 2017-12-12 15:09 shangyu.wh Exp $
  */
-public class NotifyProvideDataChangeHandler extends AbstractClientHandler {
+public class NotifyProvideDataChangeHandler extends AbstractClientHandler<ProvideDataChangeEvent> {
 
     private static final Logger LOGGER      = LoggerFactory
                                                 .getLogger(NotifyProvideDataChangeHandler.class);
@@ -53,19 +54,12 @@ public class NotifyProvideDataChangeHandler extends AbstractClientHandler {
     private TaskListenerManager taskListenerManager;
 
     @Override
-    public HandlerType getType() {
-        return HandlerType.PROCESSER;
-    }
-
-    @Override
     protected NodeType getConnectNodeType() {
-        return NodeType.DATA;
+        return NodeType.META;
     }
 
     @Override
-    public Object reply(Channel channel, Object message) {
-
-        ProvideDataChangeEvent provideDataChangeEvent = (ProvideDataChangeEvent) message;
+    public Object doHandle(Channel channel, ProvideDataChangeEvent provideDataChangeEvent) {
         final String notifyDataInfoId = provideDataChangeEvent.getDataInfoId();
         if (!ValueConstants.STOP_PUSH_DATA_SWITCH_DATA_ID.equals(notifyDataInfoId)
             && !ValueConstants.BLACK_LIST_DATA_ID.equals(notifyDataInfoId)
@@ -87,7 +81,6 @@ public class NotifyProvideDataChangeHandler extends AbstractClientHandler {
     }
 
     private void fireDataChangeFetchTask(ProvideDataChangeEvent provideDataChangeEvent) {
-
         TaskEvent taskEvent = new TaskEvent(provideDataChangeEvent,
             TaskType.PROVIDE_DATA_CHANGE_FETCH_TASK);
         TASK_LOGGER.info("send " + taskEvent.getTaskType() + " taskEvent:{}", taskEvent);

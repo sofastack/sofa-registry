@@ -22,8 +22,8 @@ import com.alipay.sofa.registry.common.model.metaserver.SlotTableChangeRequest;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.remoting.Channel;
-import com.alipay.sofa.registry.server.data.remoting.handler.AbstractClientHandler;
 import com.alipay.sofa.registry.server.data.slot.SlotManager;
+import com.alipay.sofa.registry.server.shared.remoting.AbstractClientHandler;
 import com.alipay.sofa.registry.util.ParaCheckUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -55,12 +55,12 @@ public final class SlotTableChangeHandler extends AbstractClientHandler<SlotTabl
     }
 
     @Override
-    public HandlerType getType() {
-        return HandlerType.PROCESSER;
+    protected Node.NodeType getConnectNodeType() {
+        return Node.NodeType.META;
     }
 
     @Override
-    protected Node.NodeType getConnectNodeType() {
-        return Node.NodeType.DATA;
+    public Class interest() {
+        return SlotTableChangeRequest.class;
     }
 }

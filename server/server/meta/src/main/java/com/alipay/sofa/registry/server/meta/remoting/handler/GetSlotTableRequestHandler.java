@@ -34,7 +34,7 @@ import java.util.List;
  * @author yuzhi.lyz
  * @version v 0.1 2020-11-11 11:23 yuzhi.lyz Exp $
  */
-public final class GetSlotTableRequestHandler extends AbstractServerHandler<GetSlotTableRequest> {
+public final class GetSlotTableRequestHandler extends MetaServerHandler<GetSlotTableRequest> {
 
     private static final Logger LOGGER = LoggerFactory.getLogger("META-SLOT");
 
@@ -42,7 +42,7 @@ public final class GetSlotTableRequestHandler extends AbstractServerHandler<GetS
     private MetaServer          metaServer;
 
     @Override
-    public Object reply(Channel channel, GetSlotTableRequest getNodesRequest) {
+    public Object doHandle(Channel channel, GetSlotTableRequest getNodesRequest) {
         // TODO
         final long epochOfNode = getNodesRequest.getEpochOfNode();
         final SlotTable currentTable = metaServer.getSlotTable();
@@ -64,11 +64,6 @@ public final class GetSlotTableRequestHandler extends AbstractServerHandler<GetS
             getNodesRequest.getTargetDataNode(), getNodesRequest.isIgnoredFollowers());
         return new GenericResponse().fillSucceed(new GetSlotTableResult(currentTable.getEpoch(),
             dataNodeSlots));
-    }
-
-    @Override
-    public HandlerType getType() {
-        return HandlerType.PROCESSER;
     }
 
     @Override

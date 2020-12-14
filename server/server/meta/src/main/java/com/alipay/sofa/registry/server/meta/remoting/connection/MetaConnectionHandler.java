@@ -23,7 +23,8 @@ import com.alipay.sofa.registry.net.NetUtil;
 import com.alipay.sofa.registry.remoting.Channel;
 import com.alipay.sofa.registry.remoting.RemotingException;
 import com.alipay.sofa.registry.server.meta.bootstrap.config.NodeConfig;
-import com.alipay.sofa.registry.server.meta.remoting.handler.AbstractServerHandler;
+import com.alipay.sofa.registry.server.meta.remoting.handler.MetaServerHandler;
+import com.alipay.sofa.registry.server.shared.remoting.ListenServerChannelHandler;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.net.InetSocketAddress;
@@ -36,7 +37,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * @author shangyu.wh
  * @version $Id: MetaConnectionHandler.java, v 0.1 2018-02-12 15:01 shangyu.wh Exp $
  */
-public class MetaConnectionHandler extends AbstractServerHandler implements NodeConnectManager {
+public class MetaConnectionHandler extends ListenServerChannelHandler implements NodeConnectManager {
 
     private static final Logger                                                      LOGGER      = LoggerFactory
                                                                                                      .getLogger(MetaConnectionHandler.class);
@@ -47,20 +48,15 @@ public class MetaConnectionHandler extends AbstractServerHandler implements Node
     private Map<String/*dataCenter*/, Map<String/*connectId*/, InetSocketAddress>> connections = new ConcurrentHashMap<>();
 
     @Override
-    public void connected(Channel channel) throws RemotingException {
+    public void connected(Channel channel) {
         super.connected(channel);
         addConnection(channel);
     }
 
     @Override
-    public void disconnected(Channel channel) throws RemotingException {
+    public void disconnected(Channel channel) {
         super.disconnected(channel);
         removeConnection(channel);
-    }
-
-    @Override
-    public HandlerType getType() {
-        return HandlerType.LISENTER;
     }
 
     @Override
@@ -111,7 +107,7 @@ public class MetaConnectionHandler extends AbstractServerHandler implements Node
     }
 
     @Override
-    public NodeType getNodeType() {
+    public NodeType getConnectNodeType() {
         return NodeType.META;
     }
 

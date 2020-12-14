@@ -31,6 +31,7 @@ import com.alipay.sofa.registry.server.session.scheduler.ExecutorManager;
 import com.alipay.sofa.registry.server.session.slot.SlotTableCache;
 import com.alipay.sofa.registry.server.session.store.DataStore;
 import com.alipay.sofa.registry.server.shared.env.ServerEnv;
+import com.alipay.sofa.registry.server.shared.remoting.AbstractServerHandler;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.Map;
@@ -60,7 +61,7 @@ public class DataSlotDiffPublisherRequestHandler extends
     private SlotTableCache      slotTableCache;
 
     @Override
-    public Object reply(Channel channel, DataSlotDiffPublisherRequest request) {
+    public Object doHandle(Channel channel, DataSlotDiffPublisherRequest request) {
         try {
             slotTableCache.triggerUpdateSlotTable(request.getSlotTableEpoch());
             final int slotId = request.getSlotId();
@@ -82,11 +83,6 @@ public class DataSlotDiffPublisherRequestHandler extends
             existingPublishers, sessionServerConfig.getSlotSyncPublisherMaxNum());
         DataSlotDiffUtils.logDiffResult(result, targetSlot, LOGGER);
         return result;
-    }
-
-    @Override
-    public HandlerType getType() {
-        return HandlerType.PROCESSER;
     }
 
     @Override

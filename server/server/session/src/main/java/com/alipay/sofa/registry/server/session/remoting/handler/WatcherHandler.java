@@ -16,22 +16,23 @@
  */
 package com.alipay.sofa.registry.server.session.remoting.handler;
 
-import java.util.concurrent.Executor;
-
-import org.springframework.beans.factory.annotation.Autowired;
-
+import com.alipay.sofa.registry.common.model.Node;
 import com.alipay.sofa.registry.core.model.ConfiguratorRegister;
 import com.alipay.sofa.registry.core.model.RegisterResponse;
 import com.alipay.sofa.registry.remoting.Channel;
 import com.alipay.sofa.registry.server.session.scheduler.ExecutorManager;
 import com.alipay.sofa.registry.server.session.strategy.WatcherHandlerStrategy;
+import com.alipay.sofa.registry.server.shared.remoting.AbstractServerHandler;
+import org.springframework.beans.factory.annotation.Autowired;
+
+import java.util.concurrent.Executor;
 
 /**
  *
  * @author shangyu.wh
  * @version $Id: SubscriberHandler.java, v 0.1 2017-11-30 15:01 shangyu.wh Exp $
  */
-public class WatcherHandler extends AbstractServerHandler {
+public class WatcherHandler extends AbstractServerHandler<ConfiguratorRegister> {
     @Autowired
     private ExecutorManager        executorManager;
 
@@ -39,16 +40,11 @@ public class WatcherHandler extends AbstractServerHandler {
     private WatcherHandlerStrategy watcherHandlerStrategy;
 
     @Override
-    public Object reply(Channel channel, Object message) {
+    public Object doHandle(Channel channel, ConfiguratorRegister message) {
         RegisterResponse result = new RegisterResponse();
         ConfiguratorRegister configuratorRegister = (ConfiguratorRegister) message;
         watcherHandlerStrategy.handleConfiguratorRegister(channel, configuratorRegister, result);
         return result;
-    }
-
-    @Override
-    public HandlerType getType() {
-        return HandlerType.PROCESSER;
     }
 
     @Override
@@ -59,6 +55,11 @@ public class WatcherHandler extends AbstractServerHandler {
     @Override
     public Executor getExecutor() {
         return executorManager.getAccessDataExecutor();
+    }
+
+    @Override
+    protected Node.NodeType getConnectNodeType() {
+        return Node.NodeType.CLIENT;
     }
 
 }

@@ -14,19 +14,31 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alipay.sofa.registry.server.session.remoting.handler;
+package com.alipay.sofa.registry.server.meta.remoting.handler;
 
-import com.alipay.sofa.registry.common.model.Node.NodeType;
-import com.alipay.sofa.registry.server.shared.remoting.ListenClientChannelHandler;
+import com.alipay.sofa.registry.common.model.Node;
+import com.alipay.sofa.registry.server.shared.remoting.AbstractServerHandler;
+import org.springframework.beans.factory.annotation.Autowired;
+
+import java.util.concurrent.Executor;
+import java.util.concurrent.ThreadPoolExecutor;
 
 /**
- *
  * @author shangyu.wh
- * @version $Id: ClientConnectionHandler.java, v 0.1 2017-12-08 20:17 shangyu.wh Exp $
+ * @version $Id: ServerHandler.java, v 0.1 2017-11-28 18:06 shangyu.wh Exp $
  */
-public class MetaNodeConnectionHandler extends ListenClientChannelHandler {
+public abstract class MetaServerHandler<T> extends AbstractServerHandler<T> {
+
+    @Autowired
+    private ThreadPoolExecutor defaultRequestExecutor;
+
     @Override
-    protected NodeType getConnectNodeType() {
-        return NodeType.META;
+    public Executor getExecutor() {
+        return defaultRequestExecutor;
+    }
+
+    @Override
+    protected Node.NodeType getConnectNodeType() {
+        return null;
     }
 }

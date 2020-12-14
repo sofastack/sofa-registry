@@ -35,5 +35,5 @@ public interface NodeConnectManager {
 
     Collection<InetSocketAddress> getConnections(String dataCenter);
 
-    NodeType getNodeType();
+    NodeType getConnectNodeType();
 }

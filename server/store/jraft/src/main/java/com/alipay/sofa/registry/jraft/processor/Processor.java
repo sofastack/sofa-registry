@@ -253,9 +253,9 @@ public class Processor {
 
     public boolean isLeaderDirectExecuteMethod(Method method) {
         if (ServiceStateMachine.getInstance().isLeader()) {
-            return method != null &&
-                    (method.isAnnotationPresent(ReadOnLeader.class)
-                            || method.isAnnotationPresent(ExecuteOnLeader.class));
+            return method != null
+                   && (method.isAnnotationPresent(ReadOnLeader.class) || method
+                       .isAnnotationPresent(ExecuteOnLeader.class));
         }
         return false;
     }
