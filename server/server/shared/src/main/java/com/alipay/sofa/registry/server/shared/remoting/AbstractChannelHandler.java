@@ -14,54 +14,49 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alipay.sofa.registry.server.data.remoting.handler;
+package com.alipay.sofa.registry.server.shared.remoting;
 
-import com.alipay.sofa.registry.common.model.Node.NodeType;
+import com.alipay.sofa.registry.common.model.Node;
 import com.alipay.sofa.registry.log.Logger;
-import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.remoting.Channel;
 import com.alipay.sofa.registry.remoting.ChannelHandler;
 
 /**
  *
- * @author shangyu.wh
- * @version $Id: ClientHandler.java, v 0.1 2017-11-28 18:06 shangyu.wh Exp $
+ * @author yuzhi.lyz
+ * @version v 0.1 2020-12-14 13:57 yuzhi.lyz Exp $
  */
-public abstract class AbstractClientHandler<T> implements ChannelHandler<T> {
+public abstract class AbstractChannelHandler<T> implements ChannelHandler<T> {
+    private final Logger connectLog;
+    private final Logger exchangeLog;
 
-    private static final Logger LOGGER          = LoggerFactory
-                                                    .getLogger(AbstractClientHandler.class);
-
-    private static final Logger LOGGER_EXCHANGE = LoggerFactory.getLogger("DATA-EXCHANGE");
+    protected AbstractChannelHandler(Logger connectLog, Logger exchangeLog) {
+        this.connectLog = connectLog;
+        this.exchangeLog = exchangeLog;
+    }
 
     @Override
     public void connected(Channel channel) {
-        if (channel != null && channel.isConnected()) {
-            LOGGER
-                .info(getConnectNodeType() + " node connected,remote address:"
-                      + channel.getRemoteAddress() + " localAddress:" + channel.getLocalAddress());
-        }
+        connectLog.info("{} node connected, channel {}", getConnectNodeType(), channel);
     }
 
     @Override
     public void disconnected(Channel channel) {
-        if (channel != null && !channel.isConnected()) {
-            LOGGER
-                .info(getConnectNodeType() + " node disconnected,remote address:"
-                      + channel.getRemoteAddress() + " localAddress:" + channel.getLocalAddress());
-        }
+        connectLog.info("{} node disconnected, channel {}", getConnectNodeType(), channel);
     }
 
-    protected abstract NodeType getConnectNodeType();
+    protected abstract Node.NodeType getConnectNodeType();
 
     @Override
     public void caught(Channel channel, T message, Throwable exception) {
-
+        exchangeLog.error("{} caughtException, channel {}, msg={}", getConnectNodeType(), channel,
+            message, exception);
     }
 
     @Override
     public void received(Channel channel, T message) {
-
+        // only support as async
+        throw new UnsupportedOperationException();
     }
 
     @Override
@@ -70,8 +65,8 @@ public abstract class AbstractClientHandler<T> implements ChannelHandler<T> {
             logRequest(channel, request);
             checkParam(request);
             return doHandle(channel, request);
-        } catch (Exception e) {
-            LOGGER.error("[{}] handle request failed", getClassName(), e);
+        } catch (Throwable e) {
+            exchangeLog.error("[{}] handle request failed", getClassName(), e);
             return buildFailedResponse(e.getMessage());
         }
     }
@@ -82,7 +77,8 @@ public abstract class AbstractClientHandler<T> implements ChannelHandler<T> {
      * @param request
      * @throws RuntimeException
      */
-    public abstract void checkParam(T request) throws RuntimeException;
+    public void checkParam(T request) throws RuntimeException {
+    }
 
     /**
      * execute
@@ -98,7 +94,9 @@ public abstract class AbstractClientHandler<T> implements ChannelHandler<T> {
      * @param msg
      * @return
      */
-    public abstract Object buildFailedResponse(String msg);
+    public Object buildFailedResponse(String msg) {
+        throw new RuntimeException(msg);
+    }
 
     /**
      * print request
@@ -106,27 +104,11 @@ public abstract class AbstractClientHandler<T> implements ChannelHandler<T> {
      * @param request
      */
     protected void logRequest(Channel channel, T request) {
-        if (channel != null) {
-            log(new StringBuilder("Remote:").append(channel.getRemoteAddress()).append(" Request:")
-                .append(request).toString());
-        } else {
-            log(request.toString());
-        }
-    }
-
-    /**
-     * print info log
-     *
-     * @param log
-     */
-    protected void log(String log) {
-        LOGGER_EXCHANGE.info(new StringBuilder("[").append(getClassName()).append("] ").append(log)
-            .toString());
-    }
-
-    @Override
-    public Class interest() {
-        return null;
+        StringBuilder sb = new StringBuilder(256);
+        sb.append("[").append(getClassName()).append("] ");
+        sb.append("Remote:").append(RemotingHelper.getChannelRemoteAddress(channel))
+            .append(" Request:").append(request);
+        exchangeLog.info(sb.toString());
     }
 
     /**
@@ -136,5 +118,10 @@ public abstract class AbstractClientHandler<T> implements ChannelHandler<T> {
      */
     private String getClassName() {
         return this.getClass().getSimpleName();
+    }
+
+    @Override
+    public HandlerType getType() {
+        return HandlerType.PROCESSER;
     }
 }

@@ -28,6 +28,6 @@ import com.alipay.sofa.registry.server.meta.lease.LeaseManager;
  * Nov 19, 2020
  */
 public interface DataServerManager extends Lifecycle, Observable, NodeCluster<DataNode>,
-        LeaseManager<DataNode> {
+                                  LeaseManager<DataNode> {
 
 }

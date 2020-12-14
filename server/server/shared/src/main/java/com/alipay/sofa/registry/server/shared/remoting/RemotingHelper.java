@@ -14,19 +14,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alipay.sofa.registry.server.session.remoting.handler;
+package com.alipay.sofa.registry.server.shared.remoting;
 
-import com.alipay.sofa.registry.common.model.Node.NodeType;
-import com.alipay.sofa.registry.server.shared.remoting.ListenClientChannelHandler;
+import com.alipay.sofa.registry.remoting.Channel;
+
+import java.net.InetSocketAddress;
 
 /**
  *
- * @author shangyu.wh
- * @version $Id: ClientConnectionHandler.java, v 0.1 2017-12-08 20:17 shangyu.wh Exp $
+ * @author yuzhi.lyz
+ * @version v 0.1 2020-12-14 11:39 yuzhi.lyz Exp $
  */
-public class MetaNodeConnectionHandler extends ListenClientChannelHandler {
-    @Override
-    protected NodeType getConnectNodeType() {
-        return NodeType.META;
+public final class RemotingHelper {
+    private RemotingHelper() {
+    }
+
+    public static InetSocketAddress getChannelRemoteAddress(Channel channel) {
+        return channel == null ? null : channel.getRemoteAddress();
     }
 }

@@ -34,7 +34,7 @@ import com.alipay.sofa.registry.store.api.annotation.RaftReference;
  * @author shangyu.wh
  * @version $Id: GetNodesRequestHandler.java, v 0.1 2018-03-02 15:12 shangyu.wh Exp $
  */
-public class FetchProvideDataRequestHandler extends AbstractServerHandler<FetchProvideDataRequest> {
+public class FetchProvideDataRequestHandler extends MetaServerHandler<FetchProvideDataRequest> {
 
     private static final Logger DB_LOGGER = LoggerFactory.getLogger(
                                               FetchProvideDataRequestHandler.class, "[DBService]");
@@ -43,7 +43,7 @@ public class FetchProvideDataRequestHandler extends AbstractServerHandler<FetchP
     private DBService           persistenceDataDBService;
 
     @Override
-    public Object reply(Channel channel, FetchProvideDataRequest fetchProvideDataRequest) {
+    public Object doHandle(Channel channel, FetchProvideDataRequest fetchProvideDataRequest) {
         try {
             DBResponse ret = persistenceDataDBService.get(fetchProvideDataRequest.getDataInfoId());
             if (ret == null) {
@@ -74,11 +74,6 @@ public class FetchProvideDataRequestHandler extends AbstractServerHandler<FetchP
             throw new RuntimeException("Get persistence Data from db error!", e);
         }
 
-    }
-
-    @Override
-    public HandlerType getType() {
-        return HandlerType.PROCESSER;
     }
 
     @Override

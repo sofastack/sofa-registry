@@ -16,12 +16,13 @@
  */
 package com.alipay.sofa.registry.server.session.remoting.handler;
 
+import com.alipay.sofa.registry.common.model.Node;
 import com.alipay.sofa.registry.core.model.RegisterResponse;
 import com.alipay.sofa.registry.core.model.SubscriberRegister;
 import com.alipay.sofa.registry.remoting.Channel;
-import com.alipay.sofa.registry.remoting.RemotingException;
 import com.alipay.sofa.registry.server.session.scheduler.ExecutorManager;
 import com.alipay.sofa.registry.server.session.strategy.SubscriberHandlerStrategy;
+import com.alipay.sofa.registry.server.shared.remoting.AbstractServerHandler;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.concurrent.Executor;
@@ -31,7 +32,7 @@ import java.util.concurrent.Executor;
  * @author shangyu.wh
  * @version $Id: SubscriberHandler.java, v 0.1 2017-11-30 15:01 shangyu.wh Exp $
  */
-public class SubscriberHandler extends AbstractServerHandler {
+public class SubscriberHandler extends AbstractServerHandler<SubscriberRegister> {
     @Autowired
     private ExecutorManager           executorManager;
 
@@ -39,17 +40,11 @@ public class SubscriberHandler extends AbstractServerHandler {
     private SubscriberHandlerStrategy subscriberHandlerStrategy;
 
     @Override
-    public Object reply(Channel channel, Object message) throws RemotingException {
+    public Object doHandle(Channel channel, SubscriberRegister subscriberRegister) {
         RegisterResponse registerResponse = new RegisterResponse();
-        SubscriberRegister subscriberRegister = (SubscriberRegister) message;
         subscriberHandlerStrategy.handleSubscriberRegister(channel, subscriberRegister,
             registerResponse);
         return registerResponse;
-    }
-
-    @Override
-    public HandlerType getType() {
-        return HandlerType.PROCESSER;
     }
 
     @Override
@@ -62,4 +57,8 @@ public class SubscriberHandler extends AbstractServerHandler {
         return executorManager.getAccessDataExecutor();
     }
 
+    @Override
+    protected Node.NodeType getConnectNodeType() {
+        return Node.NodeType.CLIENT;
+    }
 }

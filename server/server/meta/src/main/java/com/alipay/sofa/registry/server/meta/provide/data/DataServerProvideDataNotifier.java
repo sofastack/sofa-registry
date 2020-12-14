@@ -20,7 +20,8 @@ import com.alipay.sofa.registry.common.model.metaserver.nodes.DataNode;
 import com.alipay.sofa.registry.remoting.exchange.NodeExchanger;
 import com.alipay.sofa.registry.server.meta.lease.data.DataServerManager;
 import com.alipay.sofa.registry.server.meta.remoting.connection.NodeConnectManager;
-import com.alipay.sofa.registry.server.meta.remoting.handler.AbstractServerHandler;
+import com.alipay.sofa.registry.server.meta.remoting.handler.MetaServerHandler;
+import com.alipay.sofa.registry.server.shared.remoting.AbstractServerHandler;
 import com.google.common.annotations.VisibleForTesting;
 import org.springframework.beans.factory.annotation.Autowired;
 

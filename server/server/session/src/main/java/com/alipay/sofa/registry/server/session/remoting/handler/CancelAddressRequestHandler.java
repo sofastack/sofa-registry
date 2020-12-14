@@ -16,17 +16,14 @@
  */
 package com.alipay.sofa.registry.server.session.remoting.handler;
 
-import com.alipay.sofa.registry.common.model.ConnectId;
 import com.alipay.sofa.registry.common.model.Node.NodeType;
 import com.alipay.sofa.registry.common.model.sessionserver.CancelAddressRequest;
 import com.alipay.sofa.registry.core.model.Result;
-import com.alipay.sofa.registry.log.Logger;
-import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.remoting.Channel;
 import com.alipay.sofa.registry.server.session.registry.Registry;
+import com.alipay.sofa.registry.server.shared.remoting.AbstractServerHandler;
+import com.alipay.sofa.registry.util.ParaCheckUtil;
 import org.springframework.beans.factory.annotation.Autowired;
-
-import java.util.List;
 
 /**
  *
@@ -35,19 +32,8 @@ import java.util.List;
  */
 public class CancelAddressRequestHandler extends AbstractServerHandler<CancelAddressRequest> {
 
-    private static final Logger LOGGER          = LoggerFactory
-                                                    .getLogger(CancelAddressRequestHandler.class);
-
-    private static final Logger EXCHANGE_LOGGER = LoggerFactory.getLogger("SESSION-EXCHANGE",
-                                                    "[CancelAddressRequestHandler]");
-
     @Autowired
-    private Registry            sessionRegistry;
-
-    @Override
-    public HandlerType getType() {
-        return HandlerType.PROCESSER;
-    }
+    private Registry sessionRegistry;
 
     @Override
     public Class interest() {
@@ -60,28 +46,19 @@ public class CancelAddressRequestHandler extends AbstractServerHandler<CancelAdd
     }
 
     @Override
-    public Object reply(Channel channel, CancelAddressRequest cancelProcessRequest) {
+    public void checkParam(CancelAddressRequest request) throws RuntimeException {
+        ParaCheckUtil.checkNotEmpty(request.getConnectIds(), "request.connectIds");
+    }
 
-        Result result = new Result();
+    @Override
+    public Object doHandle(Channel channel, CancelAddressRequest request) {
+        sessionRegistry.cancel(request.getConnectIds());
+        return Result.success();
+    }
 
-        try {
-            EXCHANGE_LOGGER.info("request={}", cancelProcessRequest);
-            List<ConnectId> connectIds = cancelProcessRequest.getConnectIds();
-            if (connectIds == null || connectIds.isEmpty()) {
-                LOGGER.error("Request connectIds cannot be null or empty!");
-                result.setMessage("Request connectIds cannot be null or empty!");
-                result.setSuccess(false);
-                return result;
-            }
-            sessionRegistry.cancel(connectIds);
-        } catch (Exception e) {
-            LOGGER.error("Cancel Address Request error!", e);
-            throw new RuntimeException("Cancel Address Request error!", e);
-        }
-
-        result.setSuccess(true);
-
-        return result;
+    @Override
+    public Object buildFailedResponse(String msg) {
+        return Result.failed(msg);
     }
 
 }

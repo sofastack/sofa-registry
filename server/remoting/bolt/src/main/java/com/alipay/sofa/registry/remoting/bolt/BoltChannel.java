@@ -144,4 +144,10 @@ public class BoltChannel implements Channel {
     public void setBizContext(BizContext bizContext) {
         this.bizContext = bizContext;
     }
+
+    @Override
+    public String toString() {
+        return String.format("connected=%s, remote=%s, local=%s", isConnected(),
+            getRemoteAddress(), getLocalAddress());
+    }
 }

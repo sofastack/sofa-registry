@@ -16,13 +16,8 @@
  */
 package com.alipay.sofa.registry.server.session.remoting.handler;
 
-import java.util.concurrent.Executor;
-
-import com.alipay.sofa.registry.common.model.dataserver.Datum;
-import com.alipay.sofa.registry.server.session.cache.Value;
-import org.springframework.beans.factory.annotation.Autowired;
-
 import com.alipay.sofa.registry.common.model.Node.NodeType;
+import com.alipay.sofa.registry.common.model.dataserver.Datum;
 import com.alipay.sofa.registry.common.model.sessionserver.DataChangeRequest;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
@@ -32,9 +27,14 @@ import com.alipay.sofa.registry.server.session.cache.CacheService;
 import com.alipay.sofa.registry.server.session.cache.DatumKey;
 import com.alipay.sofa.registry.server.session.cache.Key;
 import com.alipay.sofa.registry.server.session.cache.Key.KeyType;
+import com.alipay.sofa.registry.server.session.cache.Value;
 import com.alipay.sofa.registry.server.session.scheduler.ExecutorManager;
 import com.alipay.sofa.registry.server.session.store.Interests;
 import com.alipay.sofa.registry.server.session.strategy.DataChangeRequestHandlerStrategy;
+import com.alipay.sofa.registry.server.shared.remoting.AbstractClientHandler;
+import org.springframework.beans.factory.annotation.Autowired;
+
+import java.util.concurrent.Executor;
 
 /**
  *
@@ -69,11 +69,6 @@ public class DataChangeRequestHandler extends AbstractClientHandler<DataChangeRe
     private DataChangeRequestHandlerStrategy dataChangeRequestHandlerStrategy;
 
     @Override
-    public HandlerType getType() {
-        return HandlerType.PROCESSER;
-    }
-
-    @Override
     protected NodeType getConnectNodeType() {
         return NodeType.DATA;
     }
@@ -84,7 +79,7 @@ public class DataChangeRequestHandler extends AbstractClientHandler<DataChangeRe
     }
 
     @Override
-    public Object reply(Channel channel, DataChangeRequest dataChangeRequest) {
+    public Object doHandle(Channel channel, DataChangeRequest dataChangeRequest) {
         dataChangeRequest.setDataCenter(dataChangeRequest.getDataCenter());
         dataChangeRequest.setDataInfoId(dataChangeRequest.getDataInfoId());
 
@@ -117,7 +112,6 @@ public class DataChangeRequestHandler extends AbstractClientHandler<DataChangeRe
                 dataChangeRequest, channel.getRemoteAddress());
 
             fireChangFetch(dataChangeRequest);
-
         } catch (Exception e) {
             LOGGER.error("DataChange Request error!", e);
             throw new RuntimeException("DataChangeRequest Request error!", e);

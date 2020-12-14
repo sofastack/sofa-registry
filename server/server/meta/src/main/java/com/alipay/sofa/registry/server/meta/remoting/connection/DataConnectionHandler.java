@@ -20,7 +20,8 @@ import com.alipay.sofa.registry.common.model.Node.NodeType;
 import com.alipay.sofa.registry.net.NetUtil;
 import com.alipay.sofa.registry.remoting.Channel;
 import com.alipay.sofa.registry.remoting.RemotingException;
-import com.alipay.sofa.registry.server.meta.remoting.handler.AbstractServerHandler;
+import com.alipay.sofa.registry.server.meta.remoting.handler.MetaServerHandler;
+import com.alipay.sofa.registry.server.shared.remoting.ListenServerChannelHandler;
 
 import java.net.InetSocketAddress;
 import java.util.Collection;
@@ -33,24 +34,19 @@ import java.util.concurrent.ConcurrentHashMap;
  * @author shangyu.wh
  * @version $Id: DataConnectionHandler.java, v 0.1 2018-01-24 16:04 shangyu.wh Exp $
  */
-public class DataConnectionHandler extends AbstractServerHandler implements NodeConnectManager {
+public class DataConnectionHandler extends ListenServerChannelHandler implements NodeConnectManager {
     private Map<String/*connectId*/, InetSocketAddress> connections = new ConcurrentHashMap<>();
 
     @Override
-    public void connected(Channel channel) throws RemotingException {
+    public void connected(Channel channel) {
         super.connected(channel);
         addConnection(channel);
     }
 
     @Override
-    public void disconnected(Channel channel) throws RemotingException {
+    public void disconnected(Channel channel) {
         super.disconnected(channel);
         removeConnection(channel);
-    }
-
-    @Override
-    public HandlerType getType() {
-        return HandlerType.LISENTER;
     }
 
     @Override
@@ -74,7 +70,7 @@ public class DataConnectionHandler extends AbstractServerHandler implements Node
     }
 
     @Override
-    public NodeType getNodeType() {
+    public NodeType getConnectNodeType() {
         return NodeType.DATA;
     }
 }

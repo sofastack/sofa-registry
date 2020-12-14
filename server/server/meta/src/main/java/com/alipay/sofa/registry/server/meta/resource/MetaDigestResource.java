@@ -79,8 +79,8 @@ public class MetaDigestResource {
         try {
             return metaServerManager.getSummary(NodeType.valueOf(type.toUpperCase())).getNodes();
         } catch (Exception e) {
-            TASK_LOGGER.error("Fail get Register Node By Type {} !", type, e);
-            throw new RuntimeException("Fail get Register Node By Type" + type, e);
+            TASK_LOGGER.error("Fail get Register Node By Type:{}", type, e);
+            throw new RuntimeException("Fail get Register Node By Type:" + type, e);
         }
     }
 

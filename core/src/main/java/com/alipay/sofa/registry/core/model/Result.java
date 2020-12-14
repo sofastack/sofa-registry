@@ -31,6 +31,22 @@ public class Result implements Serializable {
 
     private String            message;
 
+    public Result() {
+    }
+
+    public Result(boolean success, String message) {
+        this.success = success;
+        this.message = message;
+    }
+
+    public static Result failed(String message) {
+        return new Result(false, message);
+    }
+
+    public static Result success() {
+        return new Result(true, null);
+    }
+
     /**
      * Getter method for property <tt>success</tt>.
      *

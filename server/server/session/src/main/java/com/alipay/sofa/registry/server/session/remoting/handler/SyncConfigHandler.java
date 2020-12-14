@@ -16,11 +16,12 @@
  */
 package com.alipay.sofa.registry.server.session.remoting.handler;
 
+import com.alipay.sofa.registry.common.model.Node;
 import com.alipay.sofa.registry.core.model.SyncConfigRequest;
 import com.alipay.sofa.registry.core.model.SyncConfigResponse;
 import com.alipay.sofa.registry.remoting.Channel;
-import com.alipay.sofa.registry.remoting.RemotingException;
 import com.alipay.sofa.registry.server.session.strategy.SyncConfigHandlerStrategy;
+import com.alipay.sofa.registry.server.shared.remoting.AbstractServerHandler;
 import org.springframework.beans.factory.annotation.Autowired;
 
 /**
@@ -33,17 +34,17 @@ public class SyncConfigHandler extends AbstractServerHandler {
     private SyncConfigHandlerStrategy syncConfigHandlerStrategy;
 
     @Override
-    public HandlerType getType() {
-        return HandlerType.PROCESSER;
-    }
-
-    @Override
     public InvokeType getInvokeType() {
         return InvokeType.SYNC;
     }
 
     @Override
-    public Object reply(Channel channel, Object message) throws RemotingException {
+    protected Node.NodeType getConnectNodeType() {
+        return Node.NodeType.CLIENT;
+    }
+
+    @Override
+    public Object doHandle(Channel channel, Object request) {
         SyncConfigResponse response = new SyncConfigResponse();
         response.setSuccess(true);
         syncConfigHandlerStrategy.handleSyncConfigResponse(response);

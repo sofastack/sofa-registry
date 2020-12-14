@@ -16,6 +16,16 @@
  */
 package com.alipay.sofa.registry.server.data.remoting.sessionserver.handler;
 
+import com.alipay.sofa.registry.common.model.GenericResponse;
+import com.alipay.sofa.registry.common.model.Node;
+import com.alipay.sofa.registry.common.model.dataserver.GetDataVersionRequest;
+import com.alipay.sofa.registry.remoting.Channel;
+import com.alipay.sofa.registry.server.data.cache.DatumCache;
+import com.alipay.sofa.registry.server.data.lease.SessionLeaseManager;
+import com.alipay.sofa.registry.server.shared.remoting.AbstractServerHandler;
+import com.alipay.sofa.registry.util.ParaCheckUtil;
+import org.springframework.beans.factory.annotation.Autowired;
+
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -23,17 +33,6 @@ import java.util.Map.Entry;
 import java.util.Set;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ThreadPoolExecutor;
-
-import com.alipay.sofa.registry.server.data.lease.SessionLeaseManager;
-import org.springframework.beans.factory.annotation.Autowired;
-
-import com.alipay.sofa.registry.common.model.GenericResponse;
-import com.alipay.sofa.registry.common.model.Node;
-import com.alipay.sofa.registry.common.model.dataserver.GetDataVersionRequest;
-import com.alipay.sofa.registry.remoting.Channel;
-import com.alipay.sofa.registry.server.data.cache.DatumCache;
-import com.alipay.sofa.registry.server.data.remoting.handler.AbstractServerHandler;
-import com.alipay.sofa.registry.util.ParaCheckUtil;
 
 /**
  * processor to get versions of specific dataInfoIds
@@ -55,10 +54,6 @@ public class GetDataVersionsHandler extends AbstractServerHandler<GetDataVersion
     @Override
     public Executor getExecutor() {
         return getDataProcessorExecutor;
-    }
-
-    @Override
-    protected void logRequest(Channel channel, GetDataVersionRequest request) {
     }
 
     @Override
@@ -96,17 +91,12 @@ public class GetDataVersionsHandler extends AbstractServerHandler<GetDataVersion
     }
 
     @Override
-    public HandlerType getType() {
-        return HandlerType.PROCESSER;
-    }
-
-    @Override
     public Class interest() {
         return GetDataVersionRequest.class;
     }
 
     @Override
     protected Node.NodeType getConnectNodeType() {
-        return Node.NodeType.DATA;
+        return Node.NodeType.SESSION;
     }
 }

@@ -19,14 +19,14 @@ package com.alipay.sofa.registry.server.data.remoting.metaserver.handler;
 import com.alipay.sofa.registry.common.model.CommonResponse;
 import com.alipay.sofa.registry.common.model.Node.NodeType;
 import com.alipay.sofa.registry.common.model.metaserver.DataOperator;
-import com.alipay.sofa.registry.common.model.metaserver.ProvideDataChangeEvent;
 import com.alipay.sofa.registry.common.model.metaserver.ProvideData;
+import com.alipay.sofa.registry.common.model.metaserver.ProvideDataChangeEvent;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.remoting.Channel;
-import com.alipay.sofa.registry.server.data.remoting.handler.AbstractClientHandler;
 import com.alipay.sofa.registry.server.data.remoting.metaserver.provideData.ProvideDataProcessor;
 import com.alipay.sofa.registry.server.shared.meta.MetaServerService;
+import com.alipay.sofa.registry.server.shared.remoting.AbstractClientHandler;
 import org.springframework.beans.factory.annotation.Autowired;
 
 /**
@@ -34,7 +34,7 @@ import org.springframework.beans.factory.annotation.Autowired;
  * @author shangyu.wh
  * @version $Id: DataChangeRequestHandler.java, v 0.1 2017-12-12 15:09 shangyu.wh Exp $
  */
-public class NotifyProvideDataChangeHandler extends AbstractClientHandler {
+public class NotifyProvideDataChangeHandler extends AbstractClientHandler<ProvideDataChangeEvent> {
 
     private static final Logger  LOGGER = LoggerFactory
                                             .getLogger(NotifyProvideDataChangeHandler.class);
@@ -46,27 +46,14 @@ public class NotifyProvideDataChangeHandler extends AbstractClientHandler {
     private ProvideDataProcessor provideDataProcessorManager;
 
     @Override
-    public HandlerType getType() {
-        return HandlerType.PROCESSER;
-    }
-
-    @Override
     protected NodeType getConnectNodeType() {
-        return NodeType.DATA;
+        return NodeType.META;
     }
 
     @Override
-    public void checkParam(Object request) throws RuntimeException {
-
-    }
-
-    @Override
-    public Object doHandle(Channel channel, Object request) {
-        LOGGER.info("Received notifyProvideDataChange: {}", request);
-
-        ProvideDataChangeEvent provideDataChangeEvent = (ProvideDataChangeEvent) request;
-        String dataInfoId = provideDataChangeEvent.getDataInfoId();
-        if (provideDataChangeEvent.getDataOperator() != DataOperator.REMOVE) {
+    public Object doHandle(Channel channel, ProvideDataChangeEvent request) {
+        String dataInfoId = request.getDataInfoId();
+        if (request.getDataOperator() != DataOperator.REMOVE) {
             ProvideData provideData = metaServerService.fetchData(dataInfoId);
             provideDataProcessorManager.changeDataProcess(provideData);
         }

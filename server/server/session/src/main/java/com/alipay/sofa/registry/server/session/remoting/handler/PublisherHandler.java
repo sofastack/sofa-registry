@@ -16,12 +16,13 @@
  */
 package com.alipay.sofa.registry.server.session.remoting.handler;
 
+import com.alipay.sofa.registry.common.model.Node;
 import com.alipay.sofa.registry.core.model.PublisherRegister;
 import com.alipay.sofa.registry.core.model.RegisterResponse;
 import com.alipay.sofa.registry.remoting.Channel;
-import com.alipay.sofa.registry.remoting.RemotingException;
 import com.alipay.sofa.registry.server.session.scheduler.ExecutorManager;
 import com.alipay.sofa.registry.server.session.strategy.PublisherHandlerStrategy;
+import com.alipay.sofa.registry.server.shared.remoting.AbstractServerHandler;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.concurrent.Executor;
@@ -32,7 +33,7 @@ import java.util.concurrent.Executor;
  * @author shangyu.wh
  * @version $Id: SessionHandler.java, v 0.1 2017-11-29 11:32 shangyu.wh Exp $
  */
-public class PublisherHandler extends AbstractServerHandler {
+public class PublisherHandler extends AbstractServerHandler<PublisherRegister> {
     @Autowired
     private ExecutorManager          executorManager;
 
@@ -40,17 +41,19 @@ public class PublisherHandler extends AbstractServerHandler {
     private PublisherHandlerStrategy publisherHandlerStrategy;
 
     @Override
-    public Object reply(Channel channel, Object message) throws RemotingException {
+    protected Node.NodeType getConnectNodeType() {
+        return Node.NodeType.CLIENT;
+    }
 
+    @Override
+    public Object doHandle(Channel channel, PublisherRegister publisherRegister) {
         RegisterResponse result = new RegisterResponse();
-        PublisherRegister publisherRegister = (PublisherRegister) message;
         publisherHandlerStrategy.handlePublisherRegister(channel, publisherRegister, result);
         return result;
     }
 
-    @Override
-    public HandlerType getType() {
-        return HandlerType.PROCESSER;
+    protected void logRequest(Channel channel, PublisherRegister request) {
+        // not log
     }
 
     @Override

@@ -41,7 +41,7 @@ import java.util.Map;
  * @author shangyu.wh
  * @version $Id: RenewNodesRequestHandler.java, v 0.1 2018-03-30 19:58 shangyu.wh Exp $
  */
-public class HeartbeatRequestHandler extends AbstractServerHandler<RenewNodesRequest<Node>> {
+public class HeartbeatRequestHandler extends MetaServerHandler<RenewNodesRequest<Node>> {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(HeartbeatRequestHandler.class);
 
@@ -52,7 +52,7 @@ public class HeartbeatRequestHandler extends AbstractServerHandler<RenewNodesReq
     private DefaultSlotManager  defaultSlotManager;
 
     @Override
-    public Object reply(Channel channel, RenewNodesRequest<Node> renewNodesRequest) {
+    public Object doHandle(Channel channel, RenewNodesRequest<Node> renewNodesRequest) {
         Node renewNode = null;
         try {
             renewNode = renewNodesRequest.getNode();
@@ -99,10 +99,4 @@ public class HeartbeatRequestHandler extends AbstractServerHandler<RenewNodesReq
     public Class interest() {
         return RenewNodesRequest.class;
     }
-
-    @Override
-    public HandlerType getType() {
-        return HandlerType.PROCESSER;
-    }
-
 }

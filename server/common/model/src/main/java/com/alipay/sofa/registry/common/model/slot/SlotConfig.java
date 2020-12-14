@@ -26,14 +26,14 @@ import com.alipay.sofa.registry.log.LoggerFactory;
  */
 public final class SlotConfig {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(SlotConfig.class);
+    private static final Logger LOGGER                 = LoggerFactory.getLogger(SlotConfig.class);
 
     private static final String KEY_DATA_SLOT_NUM      = "data.slot.num";
     private static final String KEY_DATA_SLOT_FUNC     = "data.slot.func";
     private static final String KEY_DATA_SLOT_REPLICAS = "data.slot.replicas";
-    public static final  int    SLOT_NUM;
-    public static final  int    SLOT_REPLICAS;
-    public static final  String FUNC;
+    public static final int     SLOT_NUM;
+    public static final int     SLOT_REPLICAS;
+    public static final String  FUNC;
 
     private SlotConfig() {
     }
@@ -47,10 +47,11 @@ public final class SlotConfig {
         String replicas = System.getProperty(KEY_DATA_SLOT_REPLICAS, "1");
         SLOT_REPLICAS = Integer.parseInt(replicas);
         if (SLOT_REPLICAS <= 0) {
-            throw new IllegalArgumentException("illegal " + KEY_DATA_SLOT_REPLICAS + ":" + SLOT_REPLICAS);
+            throw new IllegalArgumentException("illegal " + KEY_DATA_SLOT_REPLICAS + ":"
+                                               + SLOT_REPLICAS);
         }
         FUNC = System.getProperty(KEY_DATA_SLOT_FUNC, "crc16");
-        LOGGER.info("{}={}, {}={}, {}={}", KEY_DATA_SLOT_NUM, SLOT_NUM, KEY_DATA_SLOT_REPLICAS, SLOT_REPLICAS,
-                KEY_DATA_SLOT_FUNC, FUNC);
+        LOGGER.info("{}={}, {}={}, {}={}", KEY_DATA_SLOT_NUM, SLOT_NUM, KEY_DATA_SLOT_REPLICAS,
+            SLOT_REPLICAS, KEY_DATA_SLOT_FUNC, FUNC);
     }
 }

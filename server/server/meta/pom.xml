@@ -51,6 +51,10 @@
             <artifactId>registry-common-model</artifactId>
         </dependency>
         <dependency>
+            <groupId>com.alipay.sofa</groupId>
+            <artifactId>registry-server-shared</artifactId>
+        </dependency>
+        <dependency>
             <groupId>com.alipay.sofa.common</groupId>
             <artifactId>sofa-common-tools</artifactId>
         </dependency>

@@ -77,17 +77,7 @@ public class ClientOffHandler extends AbstractDataHandler<ClientOffRequest> {
     }
 
     @Override
-    public HandlerType getType() {
-        return HandlerType.PROCESSER;
-    }
-
-    @Override
     public Class interest() {
         return ClientOffRequest.class;
-    }
-
-    @Override
-    protected Node.NodeType getConnectNodeType() {
-        return Node.NodeType.DATA;
     }
 }
