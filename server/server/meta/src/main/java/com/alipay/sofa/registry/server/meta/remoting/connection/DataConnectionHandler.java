@@ -19,8 +19,6 @@ package com.alipay.sofa.registry.server.meta.remoting.connection;
 import com.alipay.sofa.registry.common.model.Node.NodeType;
 import com.alipay.sofa.registry.net.NetUtil;
 import com.alipay.sofa.registry.remoting.Channel;
-import com.alipay.sofa.registry.remoting.RemotingException;
-import com.alipay.sofa.registry.server.meta.remoting.handler.MetaServerHandler;
 import com.alipay.sofa.registry.server.shared.remoting.ListenServerChannelHandler;
 
 import java.net.InetSocketAddress;

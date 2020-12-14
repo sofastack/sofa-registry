@@ -18,7 +18,6 @@ package com.alipay.sofa.registry.server.data.remoting.sessionserver.handler;
 
 import com.alipay.sofa.registry.common.model.CommonResponse;
 import com.alipay.sofa.registry.common.model.ConnectId;
-import com.alipay.sofa.registry.common.model.Node;
 import com.alipay.sofa.registry.common.model.dataserver.ClientOffRequest;
 import com.alipay.sofa.registry.common.model.dataserver.DatumVersion;
 import com.alipay.sofa.registry.remoting.Channel;

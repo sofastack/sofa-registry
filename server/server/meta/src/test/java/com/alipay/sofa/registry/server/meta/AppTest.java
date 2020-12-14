@@ -42,6 +42,6 @@ public class AppTest extends AbstractTest {
 
     @After
     public void afterAppTest() throws IOException {
-//        waitForAnyKeyToExit();
+        //        waitForAnyKeyToExit();
     }
 }
