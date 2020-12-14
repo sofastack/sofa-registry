@@ -48,8 +48,6 @@ public class ExecutorManager {
 
     private final ThreadPoolExecutor          fetchDataExecutor;
     private final ThreadPoolExecutor          standaloneCheckVersionExecutor;
-    private final ThreadPoolExecutor          renNewDataExecutor;
-    private final ThreadPoolExecutor          getSessionNodeExecutor;
     private final ThreadPoolExecutor          connectMetaExecutor;
     private final ThreadPoolExecutor          connectDataExecutor;
 
@@ -102,12 +100,6 @@ public class ExecutorManager {
 
         fetchDataExecutor = new ThreadPoolExecutor(1, 2/*CONFIG*/, 0, TimeUnit.SECONDS, new SynchronousQueue<>(),
                 new NamedThreadFactory("SessionScheduler-fetchData"));
-
-        renNewDataExecutor = new ThreadPoolExecutor(1, 2/*CONFIG*/, 0, TimeUnit.SECONDS, new SynchronousQueue<>(),
-                new NamedThreadFactory("SessionScheduler-renewData"));
-
-        getSessionNodeExecutor = new ThreadPoolExecutor(1, 2/*CONFIG*/, 0, TimeUnit.SECONDS, new SynchronousQueue<>(),
-                new NamedThreadFactory("SessionScheduler-getSessionNode"));
 
         standaloneCheckVersionExecutor = new ThreadPoolExecutor(1, 2/*CONFIG*/, 0, TimeUnit.SECONDS,
                 new SynchronousQueue<>(), new NamedThreadFactory("SessionScheduler-standaloneCheckVersion"));
@@ -220,15 +212,8 @@ public class ExecutorManager {
             standaloneCheckVersionExecutor.shutdown();
         }
 
-        if (renNewDataExecutor != null && !renNewDataExecutor.isShutdown()) {
-            renNewDataExecutor.shutdown();
-        }
         if (fetchDataExecutor != null && !fetchDataExecutor.isShutdown()) {
             fetchDataExecutor.shutdown();
-        }
-
-        if (getSessionNodeExecutor != null && !getSessionNodeExecutor.isShutdown()) {
-            getSessionNodeExecutor.shutdown();
         }
 
         if (connectMetaExecutor != null && !connectMetaExecutor.isShutdown()) {

@@ -44,7 +44,6 @@ public class TaskEvent {
         SYNC_UNPUBLISHER_TASK("SyncUnPublisherTask"), //
         SYNC_SUBSCRIBER_TASK("SyncSubscriberTask"), //
         SYNC_UNSUBSCRIBER_TASK("SyncUnSubscriberTask"), //
-        SESSION_REGISTER_DATA_TASK("SessionRegisterDataTask"), //
         PROVIDE_DATA_CHANGE_FETCH_TASK("ProvideDataChangeFetchTask"), //
         SUBSCRIBER_MULTI_FETCH_TASK("SubscriberMultiFetchTask"), //
         PUBLISH_DATA_TASK("PublishDataTask"), //

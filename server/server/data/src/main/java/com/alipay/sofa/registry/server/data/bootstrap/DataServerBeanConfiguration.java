@@ -176,7 +176,6 @@ public class DataServerBeanConfiguration {
             list.add(clientOffHandler());
             list.add(getDataVersionsHandler());
             list.add(publishDataProcessor());
-            list.add(sessionServerRegisterHandler());
             list.add(unPublishDataHandler());
             list.add(dataServerConnectionHandler());
             return list;
@@ -230,11 +229,6 @@ public class DataServerBeanConfiguration {
         @Bean
         public AbstractServerHandler publishDataProcessor() {
             return new PublishDataHandler();
-        }
-
-        @Bean
-        public AbstractServerHandler sessionServerRegisterHandler() {
-            return new SessionServerRegisterHandler();
         }
 
         @Bean

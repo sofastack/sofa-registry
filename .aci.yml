@@ -29,9 +29,10 @@ STC扫描:
 集成测试:
   stage: 测试
   plugin: LINKQ-IT         # java集成测试插件
+  checkRule:
+    - passRate = 100
   tools:
     jdk: '1.8'
-    maven: 3.0.3
   parameters:
     encoding: UTF-8 # 编码设置
   pluginConfig:

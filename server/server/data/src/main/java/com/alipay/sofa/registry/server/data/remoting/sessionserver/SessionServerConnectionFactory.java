@@ -18,20 +18,22 @@ package com.alipay.sofa.registry.server.data.remoting.sessionserver;
 
 import com.alipay.remoting.Connection;
 import com.alipay.sofa.registry.common.model.ProcessId;
+import com.alipay.sofa.registry.common.model.Tuple;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
-import com.alipay.sofa.registry.net.NetUtil;
+import com.alipay.sofa.registry.remoting.Channel;
+import com.alipay.sofa.registry.remoting.bolt.BoltChannel;
 import com.alipay.sofa.registry.server.data.bootstrap.DataServerConfig;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.net.InetSocketAddress;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
 
 /**
  * the factory to hold SessionServer connections
@@ -41,52 +43,66 @@ import java.util.concurrent.atomic.AtomicInteger;
  * @version $Id: SessionServerConnectionFactory.java, v 0.1 2017-12-06 15:48 qian.lqlq Exp $
  */
 public class SessionServerConnectionFactory {
-    private static final Logger     LOGGER              = LoggerFactory
-                                                            .getLogger(SessionServerConnectionFactory.class);
+    private static final Logger LOGGER = LoggerFactory
+            .getLogger(SessionServerConnectionFactory.class);
 
-    private final Map<String, Pair> session2Connections = new ConcurrentHashMap<>();
+    private final Map<String, Channels> session2Connections = new ConcurrentHashMap<>();
 
     @Autowired
-    private DataServerConfig        dataServerConfig;
+    private DataServerConfig dataServerConfig;
 
-    /**
-     * register connection
-     *
-     * @param processId
-     * @param connection
-     */
-    public void registerSession(ProcessId processId, Connection connection) {
-        String sessionConnAddress = NetUtil.toAddressString(connection.getRemoteAddress());
+    public void registerSession(ProcessId processId, Channel channel) {
+        final InetSocketAddress remoteAddress = channel.getRemoteAddress();
+        final Connection conn = ((BoltChannel) channel).getConnection();
+        if (remoteAddress == null || conn == null) {
+            LOGGER.warn("registerSession with null channel.connection, {}", processId);
+            return;
+        }
+
+        Channels channels = session2Connections
+                .computeIfAbsent(remoteAddress.getAddress().getHostAddress(), k -> new Channels());
+        Tuple<ProcessId, Connection> exist = channels.channels.get(channel);
+        if (exist != null) {
+            if (!exist.o1.equals(processId)) {
+                throw new IllegalArgumentException(
+                        String.format("registerSession channel %s has conflict processId, exist=%s, register=%s",
+                                channel, exist.o1, processId));
+            }
+            return;
+        }
         // maybe register happens after disconnect or parallely, at that time, connection is not fine
         // synchronized avoid the case: isFine=true->disconnect.remove->register.put
         synchronized (this) {
-            if (!connection.isFine()) {
+            if (!channel.isConnected()) {
+                LOGGER.warn("registerSession with unconnected channel, {}, {}", processId, remoteAddress);
                 return;
             }
-            Pair pair = session2Connections.computeIfAbsent(connection.getRemoteIP(), k -> new Pair(processId));
-            pair.connections.put(sessionConnAddress, connection);
+            channels.channels.put(channel, new Tuple<>(processId, conn));
         }
 
-        LOGGER.info("session({}, processId={}) registered", sessionConnAddress, processId);
+        LOGGER.info("registerSession {}, processId={}, channelSize={}", channel, processId, channels.channels.size());
     }
 
     /**
      * session disconnected, The SessionServerDisconnectEvent is triggered only when the last connections is removed
      */
-    public void sessionDisconnected(InetSocketAddress sessionAddress) {
-        final String sessionIpAddress = sessionAddress.getAddress().getHostAddress();
-        final Pair pair = session2Connections.get(sessionIpAddress);
-        if (pair == null) {
-            LOGGER.warn("sessionDisconnected not found session {}", sessionIpAddress);
+    public void sessionDisconnected(Channel channel) {
+        final InetSocketAddress remoteAddress = channel.getRemoteAddress();
+        if (remoteAddress == null) {
+            LOGGER.warn("sessionDisconnected with null channel.connection");
             return;
         }
-        String sessionConnAddress = NetUtil.toAddressString(sessionAddress);
-        boolean removed = false;
-        synchronized (this) {
-            removed = pair.connections.remove(sessionConnAddress) != null;
+        final Channels channels = session2Connections.get(remoteAddress.getAddress().getHostAddress());
+        if (channels == null) {
+            LOGGER.warn("sessionDisconnected not found channels {}", remoteAddress);
+            return;
         }
-        LOGGER.info("sessionDisconnected({}, processId={}) unregistered, removed={}, remains={}",
-            sessionConnAddress, pair.processId, removed, pair.connections.size());
+        Tuple<ProcessId, Connection> tuple = null;
+        synchronized (this) {
+            tuple = channels.channels.remove(channel);
+        }
+        LOGGER.info("sessionDisconnected, removed={}, processId={}, channelSize={}",
+                remoteAddress, channel, tuple != null ? tuple.o1 : null, channels.channels.size());
     }
 
     /**
@@ -94,25 +110,19 @@ public class SessionServerConnectionFactory {
      */
     public Map<String, Connection> getSessonConnectionMap() {
         Map<String, Connection> map = new HashMap<>(session2Connections.size());
-        for (Map.Entry<String, Pair> e : session2Connections.entrySet()) {
-            Pair pair = e.getValue();
-            Object[] conns = pair.connections.values().toArray();
-            if (conns.length > 0) {
-                int n = pair.roundRobin.incrementAndGet();
-                if (n < 0) {
-                    pair.roundRobin.compareAndSet(n, 0);
-                    n = (n == Integer.MIN_VALUE) ? 0 : Math.abs(n);
-                }
-                n = n % conns.length;
-                map.put(e.getKey(), (Connection) conns[n]);
+        for (Map.Entry<String, Channels> e : session2Connections.entrySet()) {
+            Channels channels = e.getValue();
+            Connection conn = channels.chooseConnection();
+            if (conn != null) {
+                map.put(e.getKey(), conn);
             }
         }
         return map;
     }
 
     public boolean containsConnection(ProcessId sessionProcessId) {
-        for (Pair p : session2Connections.values()) {
-            if (p.processId.equals(sessionProcessId) && !p.connections.isEmpty()) {
+        for (Channels p : session2Connections.values()) {
+            if (p.contains(sessionProcessId)) {
                 return true;
             }
         }
@@ -126,16 +136,45 @@ public class SessionServerConnectionFactory {
         return new ArrayList<>(getSessonConnectionMap().values());
     }
 
+    public Set<ProcessId> getProcessIds() {
+        Set<ProcessId> set = Sets.newHashSet();
+        session2Connections.values().forEach(c -> set.addAll(c.getProcessIds()));
+        return set;
+    }
+
     /**
      * convenient class to store sessionConnAddress and connection
      */
-    private static final class Pair {
-        final AtomicInteger           roundRobin  = new AtomicInteger(-1);
-        final ProcessId               processId;
-        final Map<String, Connection> connections = Maps.newConcurrentMap();
+    private static final class Channels {
+        final AtomicInteger                              roundRobin = new AtomicInteger(-1);
+        final Map<Channel, Tuple<ProcessId, Connection>> channels   = Maps.newConcurrentMap();
 
-        Pair(ProcessId processId) {
-            this.processId = processId;
+        Connection chooseConnection() {
+            List<Tuple<ProcessId, Connection>> list = Lists.newArrayList(channels.values());
+            if (list.isEmpty()) {
+                return null;
+            }
+            int n = roundRobin.incrementAndGet();
+            if (n < 0) {
+                roundRobin.compareAndSet(n, 0);
+                n = (n == Integer.MIN_VALUE) ? 0 : Math.abs(n);
+            }
+            n = n % list.size();
+            return list.get(n).o2;
+        }
+
+        boolean contains(ProcessId processId) {
+            for (Tuple<ProcessId, Connection> t : channels.values()) {
+                if (t.o1.equals(processId)) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        Set<ProcessId> getProcessIds() {
+            return channels.values().stream().map(t -> t.o1).collect(Collectors.toSet());
         }
     }
+
 }
