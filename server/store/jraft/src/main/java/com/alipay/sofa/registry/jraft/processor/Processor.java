@@ -21,6 +21,7 @@ import com.alipay.sofa.registry.jraft.command.ProcessRequest;
 import com.alipay.sofa.registry.jraft.command.ProcessResponse;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
+import com.alipay.sofa.registry.store.api.annotation.ExecuteOnLeader;
 import com.alipay.sofa.registry.store.api.annotation.ReadOnLeader;
 
 import java.lang.invoke.MethodHandle;
@@ -250,9 +251,11 @@ public class Processor {
         return workers;
     }
 
-    public boolean isLeaderReadMethod(Method method) {
+    public boolean isLeaderDirectExecuteMethod(Method method) {
         if (ServiceStateMachine.getInstance().isLeader()) {
-            return method != null && method.isAnnotationPresent(ReadOnLeader.class);
+            return method != null &&
+                    (method.isAnnotationPresent(ReadOnLeader.class)
+                            || method.isAnnotationPresent(ExecuteOnLeader.class));
         }
         return false;
     }

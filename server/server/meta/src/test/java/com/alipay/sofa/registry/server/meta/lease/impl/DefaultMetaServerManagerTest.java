@@ -19,16 +19,14 @@ package com.alipay.sofa.registry.server.meta.lease.impl;
 import com.alipay.sofa.registry.common.model.Node;
 import com.alipay.sofa.registry.server.meta.AbstractTest;
 import com.alipay.sofa.registry.server.meta.bootstrap.config.NodeConfig;
-import com.alipay.sofa.registry.server.meta.lease.DataServerManager;
-import com.alipay.sofa.registry.server.meta.lease.SessionManager;
+import com.alipay.sofa.registry.server.meta.lease.data.DataServerManager;
+import com.alipay.sofa.registry.server.meta.lease.session.SessionManager;
 import com.alipay.sofa.registry.server.meta.metaserver.CurrentDcMetaServer;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
-import org.springframework.beans.factory.annotation.Autowired;
 
-import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
 
 public class DefaultMetaServerManagerTest extends AbstractTest {

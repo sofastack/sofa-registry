@@ -14,12 +14,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alipay.sofa.registry.server.meta.lease;
+package com.alipay.sofa.registry.server.meta.lease.data;
 
 import com.alipay.sofa.registry.common.model.metaserver.nodes.DataNode;
 import com.alipay.sofa.registry.lifecycle.Lifecycle;
 import com.alipay.sofa.registry.observer.Observable;
 import com.alipay.sofa.registry.server.meta.cluster.NodeCluster;
+import com.alipay.sofa.registry.server.meta.lease.LeaseManager;
 
 /**
  * @author chen.zhu
@@ -27,6 +28,6 @@ import com.alipay.sofa.registry.server.meta.cluster.NodeCluster;
  * Nov 19, 2020
  */
 public interface DataServerManager extends Lifecycle, Observable, NodeCluster<DataNode>,
-                                  LeaseManager<DataNode> {
+        LeaseManager<DataNode> {
 
 }

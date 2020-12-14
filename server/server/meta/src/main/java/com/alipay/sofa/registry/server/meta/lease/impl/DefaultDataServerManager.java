@@ -20,7 +20,7 @@ import com.alipay.sofa.registry.common.model.metaserver.nodes.DataNode;
 import com.alipay.sofa.registry.exception.InitializeException;
 import com.alipay.sofa.registry.lifecycle.impl.LifecycleHelper;
 import com.alipay.sofa.registry.observer.Observer;
-import com.alipay.sofa.registry.server.meta.lease.DataServerManager;
+import com.alipay.sofa.registry.server.meta.lease.data.DataServerManager;
 import com.alipay.sofa.registry.util.DefaultExecutorFactory;
 import com.alipay.sofa.registry.util.OsUtils;
 import com.google.common.collect.Lists;
@@ -96,4 +96,5 @@ public class DefaultDataServerManager extends AbstractRaftEnabledLeaseManager<Da
     protected String getServiceId() {
         return DEFAULT_DATA_MANAGER_SERVICE_ID;
     }
+
 }

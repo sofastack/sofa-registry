@@ -66,7 +66,7 @@ public class TestAbstractRaftEnabledLeaseManager extends AbstractTest {
         LifecycleHelper.disposeIfPossible(manager);
     }
 
-    @Test
+//    @Test
     public void raftWholeProcess() throws Exception {
         manager = new AbstractRaftEnabledLeaseManager<MetaNode>() {
 
@@ -93,7 +93,7 @@ public class TestAbstractRaftEnabledLeaseManager extends AbstractTest {
         Assert.assertEquals(size, manager.getLeaseStore().size());
     }
 
-    @Test
+    //    @Test
     //    @Ignore
     public void manuallyTestRaftMechanism() throws Exception {
         manager = new AbstractRaftEnabledLeaseManager<MetaNode>() {
