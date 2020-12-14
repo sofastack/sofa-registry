@@ -38,7 +38,7 @@ public class DataServerConnectionHandler extends ListenServerChannelHandler {
     @Override
     public void disconnected(Channel channel) {
         super.disconnected(channel);
-        sessionServerConnectionFactory.sessionDisconnected(channel.getRemoteAddress());
+        sessionServerConnectionFactory.sessionDisconnected(channel);
     }
 
     @Override

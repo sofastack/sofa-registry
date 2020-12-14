@@ -22,9 +22,7 @@ import com.alipay.sofa.registry.common.model.dataserver.ClientOffRequest;
 import com.alipay.sofa.registry.common.model.dataserver.DatumVersion;
 import com.alipay.sofa.registry.remoting.Channel;
 import com.alipay.sofa.registry.server.data.bootstrap.DataServerConfig;
-import com.alipay.sofa.registry.server.data.cache.DatumStorage;
 import com.alipay.sofa.registry.server.data.change.event.DataChangeEventCenter;
-import com.alipay.sofa.registry.server.data.lease.SessionLeaseManager;
 import com.alipay.sofa.registry.util.ParaCheckUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -45,12 +43,6 @@ public class ClientOffHandler extends AbstractDataHandler<ClientOffRequest> {
     @Autowired
     protected DataChangeEventCenter dataChangeEventCenter;
 
-    @Autowired
-    protected DatumStorage          localDatumStorage;
-
-    @Autowired
-    protected SessionLeaseManager   sessionLeaseManager;
-
     @Override
     public void checkParam(ClientOffRequest request) throws RuntimeException {
         ParaCheckUtil.checkNotEmpty(request.getConnectIds(), "ClientOffRequest.connectIds");
@@ -59,7 +51,8 @@ public class ClientOffHandler extends AbstractDataHandler<ClientOffRequest> {
 
     @Override
     public Object doHandle(Channel channel, ClientOffRequest request) {
-        sessionLeaseManager.renewSession(request.getSessionProcessId());
+        processSessionProcessId(channel,request.getSessionProcessId());
+
         List<ConnectId> connectIds = request.getConnectIds();
         for (ConnectId connectId : connectIds) {
             Map<String, DatumVersion> modifieds = localDatumStorage.remove(connectId,

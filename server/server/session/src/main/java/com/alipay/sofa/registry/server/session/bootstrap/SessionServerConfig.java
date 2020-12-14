@@ -81,8 +81,6 @@ public interface SessionServerConfig {
 
     int getSubscriberRegisterFetchRetryTimes();
 
-    int getSessionRegisterDataServerTaskRetryTimes();
-
     int getSchedulerCleanInvalidClientTimeOut();
 
     int getSchedulerCleanInvalidClientFirstDelay();

@@ -86,8 +86,6 @@ public class SessionServerConfigBean implements SessionServerConfig {
 
     private int                  receivedDataMultiPushTaskRetryTimes     = 3;
 
-    private int                  sessionRegisterDataServerTaskRetryTimes = 5;
-
     private int                  defaultSessionExecutorMinPoolSize       = cpus();
 
     private int                  defaultSessionExecutorMaxPoolSize       = cpus() * 5;      //5*CPUs by default
@@ -705,25 +703,6 @@ public class SessionServerConfigBean implements SessionServerConfig {
      */
     public void setSubscriberRegisterFetchRetryTimes(int subscriberRegisterFetchRetryTimes) {
         this.subscriberRegisterFetchRetryTimes = subscriberRegisterFetchRetryTimes;
-    }
-
-    /**
-     * Getter method for property <tt>sessionRegisterDataServerTaskRetryTimes</tt>.
-     *
-     * @return property value of sessionRegisterDataServerTaskRetryTimes
-     */
-    @Override
-    public int getSessionRegisterDataServerTaskRetryTimes() {
-        return sessionRegisterDataServerTaskRetryTimes;
-    }
-
-    /**
-     * Setter method for property <tt>sessionRegisterDataServerTaskRetryTimes</tt>.
-     *
-     * @param sessionRegisterDataServerTaskRetryTimes  value to be assigned to property sessionRegisterDataServerTaskRetryTimes
-     */
-    public void setSessionRegisterDataServerTaskRetryTimes(int sessionRegisterDataServerTaskRetryTimes) {
-        this.sessionRegisterDataServerTaskRetryTimes = sessionRegisterDataServerTaskRetryTimes;
     }
 
     /**

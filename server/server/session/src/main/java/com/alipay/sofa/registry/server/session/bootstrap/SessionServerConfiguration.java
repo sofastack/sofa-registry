@@ -216,7 +216,6 @@ public class SessionServerConfiguration {
         @Bean(name = "dataClientHandlers")
         public Collection<AbstractClientHandler> dataClientHandlers() {
             Collection<AbstractClientHandler> list = new ArrayList<>();
-            list.add(dataNodeConnectionHandler());
             list.add(dataChangeRequestHandler());
             list.add(dataPushRequestHandler());
             return list;
@@ -235,11 +234,6 @@ public class SessionServerConfiguration {
         @Bean
         public AbstractClientHandler metaNodeConnectionHandler() {
             return new MetaNodeConnectionHandler();
-        }
-
-        @Bean
-        public AbstractClientHandler dataNodeConnectionHandler() {
-            return new DataNodeConnectionHandler();
         }
 
         @Bean
@@ -442,14 +436,6 @@ public class SessionServerConfiguration {
         @Bean
         public TaskListener dataChangeFetchCloudTaskListener(TaskListenerManager taskListenerManager) {
             TaskListener taskListener = new DataChangeFetchCloudTaskListener(
-                dataNodeSingleTaskProcessor());
-            taskListenerManager.addTaskListener(taskListener);
-            return taskListener;
-        }
-
-        @Bean
-        public TaskListener sessionRegisterDataTaskListener(TaskListenerManager taskListenerManager) {
-            TaskListener taskListener = new SessionRegisterDataTaskListener(
                 dataNodeSingleTaskProcessor());
             taskListenerManager.addTaskListener(taskListener);
             return taskListener;

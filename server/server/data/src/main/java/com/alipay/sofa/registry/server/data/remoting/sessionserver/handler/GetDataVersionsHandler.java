@@ -22,8 +22,10 @@ import com.alipay.sofa.registry.common.model.dataserver.GetDataVersionRequest;
 import com.alipay.sofa.registry.remoting.Channel;
 import com.alipay.sofa.registry.server.data.cache.DatumCache;
 import com.alipay.sofa.registry.server.data.lease.SessionLeaseManager;
+import com.alipay.sofa.registry.server.data.remoting.sessionserver.SessionServerConnectionFactory;
 import com.alipay.sofa.registry.server.shared.remoting.AbstractServerHandler;
 import com.alipay.sofa.registry.util.ParaCheckUtil;
+import com.google.common.collect.Maps;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.HashMap;
@@ -51,6 +53,9 @@ public class GetDataVersionsHandler extends AbstractServerHandler<GetDataVersion
     @Autowired
     private SessionLeaseManager sessionLeaseManager;
 
+    @Autowired
+    protected SessionServerConnectionFactory sessionServerConnectionFactory;
+
     @Override
     public Executor getExecutor() {
         return getDataProcessorExecutor;
@@ -65,6 +70,7 @@ public class GetDataVersionsHandler extends AbstractServerHandler<GetDataVersion
     @Override
     public Object doHandle(Channel channel, GetDataVersionRequest request) {
         sessionLeaseManager.renewSession(request.getSessionProcessId());
+        sessionServerConnectionFactory.registerSession(request.getSessionProcessId(), channel);
 
         Map<String/*datacenter*/, Map<String/*dataInfoId*/, Long/*version*/>> map = new HashMap<>();
         List<String> dataInfoIds = request.getDataInfoIds();
@@ -74,11 +80,7 @@ public class GetDataVersionsHandler extends AbstractServerHandler<GetDataVersion
             for (Entry<String, Long> entry : entrySet) {
                 String dataCenter = entry.getKey();
                 Long version = entry.getValue();
-                Map<String, Long> dataInfoIdToVersionMap = map.get(dataCenter);
-                if (dataInfoIdToVersionMap == null) {
-                    dataInfoIdToVersionMap = new HashMap<>(dataInfoIds.size());
-                    map.put(dataCenter, dataInfoIdToVersionMap);
-                }
+                Map<String, Long> dataInfoIdToVersionMap = map.computeIfAbsent(dataCenter, k -> Maps.newHashMap());
                 dataInfoIdToVersionMap.put(dataInfoId, version);
             }
         }
