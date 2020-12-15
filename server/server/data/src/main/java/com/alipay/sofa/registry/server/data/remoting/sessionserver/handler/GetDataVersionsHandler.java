@@ -45,13 +45,13 @@ import java.util.concurrent.ThreadPoolExecutor;
 public class GetDataVersionsHandler extends AbstractServerHandler<GetDataVersionRequest> {
 
     @Autowired
-    private DatumCache          datumCache;
+    private DatumCache                       datumCache;
 
     @Autowired
-    private ThreadPoolExecutor  getDataProcessorExecutor;
+    private ThreadPoolExecutor               getDataProcessorExecutor;
 
     @Autowired
-    private SessionLeaseManager sessionLeaseManager;
+    private SessionLeaseManager              sessionLeaseManager;
 
     @Autowired
     protected SessionServerConnectionFactory sessionServerConnectionFactory;

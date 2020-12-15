@@ -141,7 +141,7 @@ public class ExecutorManager {
                         sessionServerConfig.getDataChangeExecutorMaxPoolSize(),
                         sessionServerConfig.getDataChangeExecutorKeepAliveTime(), TimeUnit.SECONDS,
                         new ArrayBlockingQueue<>(100000),
-                        new NamedThreadFactory("DataSlotMigrateRequestHandler-executor", true)));
+                        new NamedThreadFactory("DataChangeRequestHandler-executor", true)));
 
         dataSlotSyncRequestExecutor = reportExecutors.computeIfAbsent(DATA_SLOT_MIGRATE_REQUEST_EXECUTOR,
                 k -> new SessionThreadPoolExecutor(DATA_SLOT_MIGRATE_REQUEST_EXECUTOR,
@@ -149,7 +149,7 @@ public class ExecutorManager {
                         24,
                         60, TimeUnit.SECONDS,
                         new ArrayBlockingQueue<>(sessionServerConfig.getDataChangeExecutorQueueSize()),
-                        new NamedThreadFactory("DataChangeRequestHandler-executor", true)));
+                        new NamedThreadFactory("DataSlotSyncRequestHandler-executor", true)));
 
         checkPushExecutor = reportExecutors.computeIfAbsent(USER_DATA_ELEMENT_PUSH_TASK_CHECK_EXECUTOR,
                 k -> new SessionThreadPoolExecutor(USER_DATA_ELEMENT_PUSH_TASK_CHECK_EXECUTOR, 100, 600, 60L,

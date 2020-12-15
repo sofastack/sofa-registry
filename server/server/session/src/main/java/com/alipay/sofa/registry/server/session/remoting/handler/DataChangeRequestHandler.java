@@ -17,7 +17,6 @@
 package com.alipay.sofa.registry.server.session.remoting.handler;
 
 import com.alipay.sofa.registry.common.model.Node.NodeType;
-import com.alipay.sofa.registry.common.model.dataserver.Datum;
 import com.alipay.sofa.registry.common.model.sessionserver.DataChangeRequest;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
@@ -27,7 +26,6 @@ import com.alipay.sofa.registry.server.session.cache.CacheService;
 import com.alipay.sofa.registry.server.session.cache.DatumKey;
 import com.alipay.sofa.registry.server.session.cache.Key;
 import com.alipay.sofa.registry.server.session.cache.Key.KeyType;
-import com.alipay.sofa.registry.server.session.cache.Value;
 import com.alipay.sofa.registry.server.session.scheduler.ExecutorManager;
 import com.alipay.sofa.registry.server.session.store.Interests;
 import com.alipay.sofa.registry.server.session.strategy.DataChangeRequestHandlerStrategy;
@@ -85,15 +83,8 @@ public class DataChangeRequestHandler extends AbstractClientHandler<DataChangeRe
 
         final Key key = new Key(KeyType.OBJ, DatumKey.class.getName(), new DatumKey(
             dataChangeRequest.getDataInfoId(), dataChangeRequest.getDataCenter()));
-        Value<Datum> value = sessionCacheService.getValueIfPresent(key);
-        if (value != null) {
-            Datum datum = value.getPayload();
-            //update cache when change
-            if (datum != null && datum.getVersion() < dataChangeRequest.getVersion()) {
-                sessionCacheService.invalidate();
-            }
-        }
-
+        // TODO check version to invalidate?
+        sessionCacheService.invalidate(key);
         if (sessionServerConfig.isStopPushSwitch()) {
             return null;
         }

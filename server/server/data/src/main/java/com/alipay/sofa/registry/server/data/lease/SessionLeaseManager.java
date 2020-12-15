@@ -41,10 +41,10 @@ import java.util.concurrent.TimeUnit;
  * @version v 0.1 2020-11-30 10:30 yuzhi.lyz Exp $
  */
 public final class SessionLeaseManager {
-    private static final Logger LOGGER = LoggerFactory
-            .getLogger(SessionLeaseManager.class);
+    private static final Logger            LOGGER                     = LoggerFactory
+                                                                          .getLogger(SessionLeaseManager.class);
 
-    public static final int MIN_LEASE_SEC = 5;
+    public static final int                MIN_LEASE_SEC              = 5;
 
     @Autowired
     private DataServerConfig               dataServerConfig;
@@ -53,7 +53,7 @@ public final class SessionLeaseManager {
     @Autowired
     private SessionServerConnectionFactory sessionServerConnectionFactory;
 
-    private final Map<ProcessId, Long> connectIdRenewTimestampMap = new ConcurrentHashMap<>();
+    private final Map<ProcessId, Long>     connectIdRenewTimestampMap = new ConcurrentHashMap<>();
 
     @PostConstruct
     public void init() {
@@ -64,7 +64,7 @@ public final class SessionLeaseManager {
     public static void validateSessionLeaseSec(int sec) {
         if (sec < MIN_LEASE_SEC) {
             throw new IllegalArgumentException(String.format("min sessionLeaseSec(%d): %d",
-                    MIN_LEASE_SEC, sec));
+                MIN_LEASE_SEC, sec));
         }
     }
 
@@ -127,7 +127,7 @@ public final class SessionLeaseManager {
 
             // compact the unpub
             long tombstoneTimestamp = System.currentTimeMillis()
-                    - dataServerConfig.getDatumCompactDelayMs();
+                                      - dataServerConfig.getDatumCompactDelayMs();
             Map<String, Integer> compacted = localDatumStorage.compact(tombstoneTimestamp);
             LOGGER.info("compact datum, {}", compacted);
         }
