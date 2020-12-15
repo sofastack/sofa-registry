@@ -25,7 +25,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
-import com.alipay.sofa.registry.server.session.cache.CacheService;
 import com.alipay.sofa.registry.server.session.scheduler.ExecutorManager;
 import com.alipay.sofa.registry.server.session.scheduler.task.DataChangeFetchTask;
 import com.alipay.sofa.registry.server.session.scheduler.task.SessionTask;

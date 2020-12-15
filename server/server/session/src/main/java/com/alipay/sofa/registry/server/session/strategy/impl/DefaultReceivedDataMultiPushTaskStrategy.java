@@ -18,6 +18,7 @@ package com.alipay.sofa.registry.server.session.strategy.impl;
 
 import com.alipay.sofa.registry.common.model.store.URL;
 import com.alipay.sofa.registry.core.model.ReceivedData;
+import com.alipay.sofa.registry.server.session.converter.pb.ReceivedDataConvertor;
 import com.alipay.sofa.registry.server.session.strategy.ReceivedDataMultiPushTaskStrategy;
 
 /**
@@ -27,6 +28,9 @@ import com.alipay.sofa.registry.server.session.strategy.ReceivedDataMultiPushTas
 public class DefaultReceivedDataMultiPushTaskStrategy implements ReceivedDataMultiPushTaskStrategy {
     @Override
     public Object convert2PushData(ReceivedData receivedData, URL url) {
+        if (url.getSerializerIndex() != null && URL.PROTOBUF == url.getSerializerIndex()) {
+            return ReceivedDataConvertor.convert2Pb(receivedData);
+        }
         return receivedData;
     }
 }

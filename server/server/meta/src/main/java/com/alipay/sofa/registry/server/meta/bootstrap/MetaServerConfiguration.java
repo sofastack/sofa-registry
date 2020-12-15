@@ -69,17 +69,7 @@ import com.alipay.sofa.registry.server.meta.remoting.handler.FetchProvideDataReq
 import com.alipay.sofa.registry.server.meta.remoting.handler.HeartbeatRequestHandler;
 import com.alipay.sofa.registry.server.meta.slot.impl.*;
 import com.alipay.sofa.registry.server.shared.remoting.AbstractServerHandler;
-import com.alipay.sofa.registry.server.meta.repository.NodeConfirmStatusService;
-import com.alipay.sofa.registry.server.meta.repository.RepositoryService;
-import com.alipay.sofa.registry.server.meta.repository.VersionRepositoryService;
-import com.alipay.sofa.registry.server.meta.repository.annotation.RaftAnnotationBeanPostProcessor;
-import com.alipay.sofa.registry.server.meta.store.DataStoreService;
-import com.alipay.sofa.registry.server.meta.store.MetaStoreService;
-import com.alipay.sofa.registry.server.meta.store.SessionStoreService;
-import com.alipay.sofa.registry.server.meta.store.StoreService;
-import com.alipay.sofa.registry.server.meta.task.processor.DataNodeSingleTaskProcessor;
-import com.alipay.sofa.registry.server.meta.task.processor.MetaNodeSingleTaskProcessor;
-import com.alipay.sofa.registry.server.meta.task.processor.SessionNodeSingleTaskProcessor;
+
 import com.alipay.sofa.registry.store.api.DBService;
 import com.alipay.sofa.registry.util.DefaultExecutorFactory;
 import com.alipay.sofa.registry.util.OsUtils;

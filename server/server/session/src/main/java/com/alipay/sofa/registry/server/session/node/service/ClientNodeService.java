@@ -18,7 +18,6 @@ package com.alipay.sofa.registry.server.session.node.service;
 
 import com.alipay.sofa.registry.common.model.store.URL;
 import com.alipay.sofa.registry.remoting.CallbackHandler;
-import com.alipay.sofa.registry.common.model.metaserver.ProvideData;
 
 /**
  * @author shangyu.wh

@@ -60,7 +60,7 @@ public class AppRevisionNodeServiceImpl implements AppRevisionNodeService {
             }
         };
         try {
-            Response response = metaNodeExchanger.request(request);
+            metaNodeExchanger.request(request);
         } catch (RequestException e) {
             LOGGER.error("add app revision error! " + e.getMessage(), e);
             throw new RuntimeException("add app revision error! " + e.getMessage(), e);

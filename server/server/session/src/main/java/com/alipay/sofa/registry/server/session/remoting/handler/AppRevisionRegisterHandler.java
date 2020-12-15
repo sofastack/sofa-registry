@@ -16,23 +16,28 @@
  */
 package com.alipay.sofa.registry.server.session.remoting.handler;
 
+import com.alipay.sofa.registry.common.model.Node;
 import com.alipay.sofa.registry.core.model.AppRevisionRegister;
 import com.alipay.sofa.registry.core.model.RegisterResponse;
 import com.alipay.sofa.registry.remoting.Channel;
-import com.alipay.sofa.registry.remoting.RemotingException;
 import com.alipay.sofa.registry.server.session.strategy.AppRevisionHandlerStrategy;
+import com.alipay.sofa.registry.server.shared.remoting.AbstractServerHandler;
 import org.springframework.beans.factory.annotation.Autowired;
 
-public class AppRevisionRegisterHandler extends AbstractServerHandler {
+public class AppRevisionRegisterHandler extends AbstractServerHandler<AppRevisionRegister> {
 
     @Autowired
     private AppRevisionHandlerStrategy appRevisionHandlerStrategy;
 
     @Override
-    public Object reply(Channel channel, Object message) throws RemotingException {
+    protected Node.NodeType getConnectNodeType() {
+        return Node.NodeType.CLIENT;
+    }
+
+    @Override
+    public Object doHandle(Channel channel, AppRevisionRegister request) {
         RegisterResponse result = new RegisterResponse();
-        AppRevisionRegister register = (AppRevisionRegister) message;
-        appRevisionHandlerStrategy.handleAppRevisionRegister(register, result);
+        appRevisionHandlerStrategy.handleAppRevisionRegister(request, result);
         return result;
     }
 
@@ -45,4 +50,5 @@ public class AppRevisionRegisterHandler extends AbstractServerHandler {
     public HandlerType getType() {
         return HandlerType.PROCESSER;
     }
+
 }

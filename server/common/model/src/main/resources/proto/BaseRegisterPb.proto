@@ -1,0 +1,23 @@
+syntax = "proto3";
+option java_package = "com.alipay.sofa.registry.common.model.client.pb";
+option java_multiple_files = true;
+option go_package = "pb";
+
+message BaseRegisterPb {
+    string instanceId = 1;
+    string zone = 2;
+    string appName = 3;
+    string dataId = 4;
+    string group = 5;
+    string processId = 6;
+    string registId = 7;
+    string clientId = 8;
+    string dataInfoId = 9;
+    string ip = 10;
+    int32 port = 11;
+    string eventType = 12;
+    int64 version = 13;
+    int64 timestamp = 14;
+    map<string, string> attributes = 15;
+}
+

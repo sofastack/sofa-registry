@@ -16,7 +16,6 @@
  */
 package com.alipay.sofa.registry.server.session.cache;
 
-import com.alipay.sofa.registry.common.model.constants.ValueConstants;
 import com.alipay.sofa.registry.common.model.store.DataInfo;
 import com.alipay.sofa.registry.core.model.AppRevisionRegister;
 import com.alipay.sofa.registry.core.model.AppRevisionInterface;

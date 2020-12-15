@@ -27,7 +27,6 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import com.alipay.sofa.registry.common.model.Node;
 import com.alipay.sofa.registry.common.model.constants.ValueConstants;
 import com.alipay.sofa.registry.common.model.dataserver.Datum;
 import com.alipay.sofa.registry.common.model.store.BaseInfo;
@@ -47,11 +46,6 @@ import com.alipay.sofa.registry.server.session.utils.DatumUtils;
 import com.alipay.sofa.registry.server.shared.meta.MetaServerService;
 import com.alipay.sofa.registry.task.listener.TaskEvent;
 import com.alipay.sofa.registry.task.listener.TaskListenerManager;
-import org.springframework.beans.factory.annotation.Autowired;
-
-import java.net.InetSocketAddress;
-import java.util.*;
-import java.util.stream.Collectors;
 
 /**
  * @author xuanbei
