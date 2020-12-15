@@ -22,12 +22,80 @@ import java.util.List;
 import java.util.Map;
 
 public class AppRevisionInterface implements Serializable {
-    public String                    dataId;
-    public String                    group;
-    public String                    instanceId;
-    public Map<String, List<String>> serviceParams;
+    private String                    dataId;
+    private String                    group;
+    private String                    instanceId;
+    private Map<String, List<String>> serviceParams = new HashMap<>();
 
-    public AppRevisionInterface() {
-        serviceParams = new HashMap<>();
+    /**
+     * Getter method for property <tt>dataId</tt>.
+     *
+     * @return property value of dataId
+     */
+    public String getDataId() {
+        return dataId;
+    }
+
+    /**
+     * Setter method for property <tt>dataId</tt>.
+     *
+     * @param dataId value to be assigned to property dataId
+     */
+    public void setDataId(String dataId) {
+        this.dataId = dataId;
+    }
+
+    /**
+     * Getter method for property <tt>group</tt>.
+     *
+     * @return property value of group
+     */
+    public String getGroup() {
+        return group;
+    }
+
+    /**
+     * Setter method for property <tt>group</tt>.
+     *
+     * @param group value to be assigned to property group
+     */
+    public void setGroup(String group) {
+        this.group = group;
+    }
+
+    /**
+     * Getter method for property <tt>instanceId</tt>.
+     *
+     * @return property value of instanceId
+     */
+    public String getInstanceId() {
+        return instanceId;
+    }
+
+    /**
+     * Setter method for property <tt>instanceId</tt>.
+     *
+     * @param instanceId value to be assigned to property instanceId
+     */
+    public void setInstanceId(String instanceId) {
+        this.instanceId = instanceId;
+    }
+
+    /**
+     * Getter method for property <tt>serviceParams</tt>.
+     *
+     * @return property value of serviceParams
+     */
+    public Map<String, List<String>> getServiceParams() {
+        return serviceParams;
+    }
+
+    /**
+     * Setter method for property <tt>serviceParams</tt>.
+     *
+     * @param serviceParams value to be assigned to property serviceParams
+     */
+    public void setServiceParams(Map<String, List<String>> serviceParams) {
+        this.serviceParams = serviceParams;
     }
 }

@@ -126,11 +126,11 @@ public class AppInterfaceAssembleService implements AssembleService {
                         continue;
                     }
                     AppPublisher appPublisher = (AppPublisher) publisher;
-
-                    datum.getPubMap().put(
-                        appPublisher.getRegisterId(),
-                        AppPublisherConverter.convert(appPublisher, appRevisionCacheRegistry,
-                            dataInfo));
+                    Publisher newPublisher = AppPublisherConverter.convert(appPublisher,
+                        appRevisionCacheRegistry, dataInfo);
+                    if (newPublisher.getDataList().size() > 0) {
+                        datum.getPubMap().put(appPublisher.getRegisterId(), newPublisher);
+                    }
                 }
             }
         }

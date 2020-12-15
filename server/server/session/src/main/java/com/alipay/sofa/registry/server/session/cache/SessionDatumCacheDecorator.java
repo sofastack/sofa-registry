@@ -30,6 +30,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -112,7 +113,7 @@ public class SessionDatumCacheDecorator {
     public Map<String, Map<String, Datum>> getAppDatumCache(String dataInfoId, String instanceId) {
         Map<String/*datacenter*/, Map<String/*appName*/, Datum>> result = new HashMap<>();
         //get metadata from session cache
-        for (String appName : appRevisionCacheRegistry.getApps(dataInfoId)) {
+        for (String appName : appRevisionCacheRegistry.getAppRevisions(dataInfoId).keySet()) {
             String appDataInfoId = DataInfo.toDataInfoId(appName, instanceId, ValueConstants.SOFA_APP);
 
             Map<String/*datacenter*/, Datum> appDatum = this.getDatumsCache(appDataInfoId);

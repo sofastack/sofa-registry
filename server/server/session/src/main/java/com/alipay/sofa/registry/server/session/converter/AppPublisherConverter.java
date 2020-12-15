@@ -21,15 +21,20 @@ import com.alipay.sofa.registry.common.model.ServerDataBox;
 import com.alipay.sofa.registry.common.model.store.AppPublisher;
 import com.alipay.sofa.registry.common.model.store.DataInfo;
 import com.alipay.sofa.registry.common.model.store.Publisher;
+import com.alipay.sofa.registry.core.model.AppRevisionInterface;
 import com.alipay.sofa.registry.core.model.AppRevisionRegister;
 import com.alipay.sofa.registry.server.session.cache.AppRevisionCacheRegistry;
+import com.alipay.sofa.registry.server.session.utils.AddressUtil;
+import com.google.common.collect.ArrayListMultimap;
+import org.springframework.util.CollectionUtils;
 
-import javax.ws.rs.core.UriBuilder;
-import javax.xml.crypto.Data;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 /**
  * @author xiaojian.xj
@@ -47,40 +52,46 @@ public class AppPublisherConverter {
         for (AppRegisterServerDataBox appRegisterServerDataBox : appPublisher.getAppDataList()) {
             AppRevisionRegister revisionRegister = appRevisionCacheRegistry
                 .getRevision(appRegisterServerDataBox.getRevision());
-            Map<String, List<String>> params = extractParams(revisionRegister,
+            if (!revisionRegister.getInterfaces().containsKey(dataInfoId)) {
+                continue;
+            }
+            Map<String, Collection<String>> params = extractParams(revisionRegister,
                 appRegisterServerDataBox, dataInfoId);
-            dataList.add(new ServerDataBox(buildURL(appRegisterServerDataBox.getUrl(), params)));
+            dataList.add(new ServerDataBox(AddressUtil.buildURL(appRegisterServerDataBox.getUrl(),
+                params)));
         }
         publisher.setDataList(dataList);
         return publisher;
 
     }
 
-    private static Map<String, List<String>> extractParams(AppRevisionRegister revisionRegister,
-                                                           AppRegisterServerDataBox serverDataBox,
-                                                           String dataInfoId) {
-        Map<String, List<String>> params = new HashMap<>();
-        params.putAll(revisionRegister.baseParams);
-        if (revisionRegister.interfaces.containsKey(dataInfoId)) {
-            params.putAll(revisionRegister.interfaces.get(dataInfoId).serviceParams);
-        }
-        params.putAll(serverDataBox.getBaseParams());
-        if (serverDataBox.getServiceParams().containsKey(dataInfoId)) {
-            params.putAll(serverDataBox.getServiceParams().get(dataInfoId));
-        }
-        return params;
-    }
+    private static Map<String, Collection<String>> extractParams(AppRevisionRegister revisionRegister,
+                                                                 AppRegisterServerDataBox serverDataBox,
+                                                                 String dataInfoId) {
+        ArrayListMultimap<String, String> multimap = ArrayListMultimap.create();
 
-    private static String buildURL(String address, Map<String, List<String>> params) {
-        List<String> querys = new ArrayList<>();
-        for (Map.Entry<String, List<String>> entry : params.entrySet()) {
-            String key = entry.getKey();
-            for (String value : entry.getValue()) {
-                querys.add(key + "=" + value);
+        combineParams(revisionRegister.getBaseParams(), multimap);
+        combineParams(serverDataBox.getBaseParams(), multimap);
+
+        if (!CollectionUtils.isEmpty(revisionRegister.getInterfaces())) {
+            AppRevisionInterface appRevisionInterface = revisionRegister.getInterfaces().get(
+                dataInfoId);
+            if (appRevisionInterface != null) {
+                combineParams(appRevisionInterface.getServiceParams(), multimap);
             }
         }
-        String queryStr = String.join("&", querys);
-        return address + "?" + queryStr;
+        if (!CollectionUtils.isEmpty(serverDataBox.getInterfaceParams())) {
+            Map<String, List<String>> params = serverDataBox.getInterfaceParams().get(dataInfoId);
+            combineParams(params, multimap);
+        }
+        return multimap.asMap();
+    }
+
+    private static void combineParams(Map<String, List<String>> params, ArrayListMultimap<String, String> multimap) {
+        if (CollectionUtils.isEmpty(params)) {
+            return;
+        }
+        params.forEach((key, value) -> multimap.putAll(key, value));
     }
 
     private static void fillCommonRegion(Publisher publisher, AppPublisher source, DataInfo dataInfo) {

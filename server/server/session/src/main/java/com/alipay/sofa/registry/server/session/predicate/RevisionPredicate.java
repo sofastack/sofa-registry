@@ -39,7 +39,7 @@ public class RevisionPredicate {
             if (revisionRegister == null) {
                 return false;
             }
-            if (!revisionRegister.interfaces.containsKey(dataInfoId)) {
+            if (!revisionRegister.getInterfaces().containsKey(dataInfoId)) {
                 return false;
             }
             return true;

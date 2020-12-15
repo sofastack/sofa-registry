@@ -17,7 +17,6 @@
 package com.alipay.sofa.registry.common.model;
 
 import com.alipay.sofa.registry.common.model.store.WordCache;
-import com.google.common.collect.ArrayListMultimap;
 
 import java.io.Serializable;
 import java.util.HashMap;
@@ -42,24 +41,7 @@ public class AppRegisterServerDataBox implements Serializable {
     private HashMap<String/*key*/, List<String>/*values*/>                     baseParams;
 
     /** */
-    private Map<String/*service*/, Map<String/*key*/, List<String>/*value*/>> serviceParams;
-
-    public String extract(String serviceName) {
-        serviceParams.get(serviceName);
-
-        StringBuilder builder = new StringBuilder();
-        builder.append("?");
-        baseParams.entrySet().stream().forEach(entry -> {
-            entry.getValue().forEach(value -> builder.append(entry.getKey()).append("=").append(value).append("&"));
-        });
-
-        serviceParams.get(serviceName).entrySet().forEach(entry -> {
-            entry.getValue().forEach(value -> builder.append(entry.getKey()).append("=").append(value).append("&"));
-        });
-
-
-        return builder.deleteCharAt(builder.toString().length() - 1).toString();
-    }
+    private Map<String/*service*/, Map<String/*key*/, List<String>/*value*/>> interfaceParams;
 
     /**
      * Getter method for property <tt>revision</tt>.
@@ -116,20 +98,20 @@ public class AppRegisterServerDataBox implements Serializable {
     }
 
     /**
-     * Getter method for property <tt>serviceParams</tt>.
+     * Getter method for property <tt>interfaceParams</tt>.
      *
-     * @return property value of serviceParams
+     * @return property value of interfaceParams
      */
-    public Map<String, Map<String, List<String>>> getServiceParams() {
-        return serviceParams;
+    public Map<String, Map<String, List<String>>> getInterfaceParams() {
+        return interfaceParams;
     }
 
     /**
-     * Setter method for property <tt>serviceParams</tt>.
+     * Setter method for property <tt>interfaceParams</tt>.
      *
-     * @param serviceParams value to be assigned to property serviceParams
+     * @param interfaceParams value to be assigned to property interfaceParams
      */
-    public void setServiceParams(Map<String, Map<String, List<String>>> serviceParams) {
-        this.serviceParams = serviceParams;
+    public void setInterfaceParams(Map<String, Map<String, List<String>>> interfaceParams) {
+        this.interfaceParams = interfaceParams;
     }
 }
