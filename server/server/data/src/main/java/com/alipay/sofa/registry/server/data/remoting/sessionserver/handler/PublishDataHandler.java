@@ -52,7 +52,7 @@ public class PublishDataHandler extends AbstractDataHandler<PublishDataRequest> 
 
     @Override
     public Object doHandle(Channel channel, PublishDataRequest request) {
-        processSessionProcessId(channel,request.getSessionProcessId());
+        processSessionProcessId(channel, request.getSessionProcessId());
 
         Publisher publisher = Publisher.internPublisher(request.getPublisher());
 

@@ -43,15 +43,19 @@ import java.util.stream.Collectors;
  * @version $Id: SessionServerConnectionFactory.java, v 0.1 2017-12-06 15:48 qian.lqlq Exp $
  */
 public class SessionServerConnectionFactory {
-    private static final Logger LOGGER = LoggerFactory
-            .getLogger(SessionServerConnectionFactory.class);
+    private static final Logger         LOGGER              = LoggerFactory
+                                                                .getLogger(SessionServerConnectionFactory.class);
 
     private final Map<String, Channels> session2Connections = new ConcurrentHashMap<>();
 
     @Autowired
-    private DataServerConfig dataServerConfig;
+    private DataServerConfig            dataServerConfig;
 
     public void registerSession(ProcessId processId, Channel channel) {
+        if (channel == null) {
+            LOGGER.warn("registerSession with null channel, {}", processId);
+            return;
+        }
         final InetSocketAddress remoteAddress = channel.getRemoteAddress();
         final Connection conn = ((BoltChannel) channel).getConnection();
         if (remoteAddress == null || conn == null) {
@@ -92,7 +96,8 @@ public class SessionServerConnectionFactory {
             LOGGER.warn("sessionDisconnected with null channel.connection");
             return;
         }
-        final Channels channels = session2Connections.get(remoteAddress.getAddress().getHostAddress());
+        final Channels channels = session2Connections.get(remoteAddress.getAddress()
+            .getHostAddress());
         if (channels == null) {
             LOGGER.warn("sessionDisconnected not found channels {}", remoteAddress);
             return;
@@ -101,8 +106,8 @@ public class SessionServerConnectionFactory {
         synchronized (this) {
             tuple = channels.channels.remove(channel);
         }
-        LOGGER.info("sessionDisconnected, removed={}, processId={}, channelSize={}",
-                remoteAddress, channel, tuple != null ? tuple.o1 : null, channels.channels.size());
+        LOGGER.info("sessionDisconnected, removed={}, processId={}, channelSize={}", remoteAddress,
+            channel, tuple != null ? tuple.o1 : null, channels.channels.size());
     }
 
     /**

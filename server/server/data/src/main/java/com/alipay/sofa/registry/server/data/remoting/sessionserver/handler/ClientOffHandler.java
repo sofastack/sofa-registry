@@ -51,7 +51,7 @@ public class ClientOffHandler extends AbstractDataHandler<ClientOffRequest> {
 
     @Override
     public Object doHandle(Channel channel, ClientOffRequest request) {
-        processSessionProcessId(channel,request.getSessionProcessId());
+        processSessionProcessId(channel, request.getSessionProcessId());
 
         List<ConnectId> connectIds = request.getConnectIds();
         for (ConnectId connectId : connectIds) {

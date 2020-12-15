@@ -58,7 +58,7 @@ public class UnPublishDataHandler extends AbstractDataHandler<UnPublishDataReque
 
     @Override
     public Object doHandle(Channel channel, UnPublishDataRequest request) {
-        processSessionProcessId(channel,request.getSessionProcessId());
+        processSessionProcessId(channel, request.getSessionProcessId());
 
         UnPublisher publisher = new UnPublisher(request.getDataInfoId(),
             request.getSessionProcessId(), request.getRegisterId(), request.getRegisterTimestamp(),

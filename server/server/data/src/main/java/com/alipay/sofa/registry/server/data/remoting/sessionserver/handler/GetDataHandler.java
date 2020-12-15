@@ -37,10 +37,10 @@ import java.util.concurrent.ThreadPoolExecutor;
 public class GetDataHandler extends AbstractDataHandler<GetDataRequest> {
 
     @Autowired
-    private DatumCache datumCache;
+    private DatumCache                     datumCache;
 
     @Autowired
-    private ThreadPoolExecutor getDataProcessorExecutor;
+    private ThreadPoolExecutor             getDataProcessorExecutor;
 
     @Autowired
     private SessionServerConnectionFactory sessionServerConnectionFactory;
@@ -58,7 +58,7 @@ public class GetDataHandler extends AbstractDataHandler<GetDataRequest> {
 
     @Override
     public Object doHandle(Channel channel, GetDataRequest request) {
-        processSessionProcessId(channel,request.getSessionProcessId());
+        processSessionProcessId(channel, request.getSessionProcessId());
 
         String dataInfoId = request.getDataInfoId();
         final SlotAccess slotAccess = checkAccess(dataInfoId, request.getSlotTableEpoch());
@@ -67,7 +67,7 @@ public class GetDataHandler extends AbstractDataHandler<GetDataRequest> {
         }
 
         return SlotAccessGenericResponse.successResponse(slotAccess,
-                datumCache.getDatumGroupByDataCenter(request.getDataCenter(), dataInfoId));
+            datumCache.getDatumGroupByDataCenter(request.getDataCenter(), dataInfoId));
     }
 
     @Override

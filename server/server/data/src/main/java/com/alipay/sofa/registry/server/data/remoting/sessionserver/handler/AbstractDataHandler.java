@@ -47,31 +47,31 @@ import java.util.Set;
  * @version v 0.1 2020-12-04 14:59 yuzhi.lyz Exp $
  */
 public abstract class AbstractDataHandler<T> extends AbstractServerHandler<T> {
-    protected static final Logger LOGGER             = LoggerFactory
-            .getLogger("DATA-ACCESS");
-    protected static final Logger LOGGER_SLOT_ACCESS = LoggerFactory
-            .getLogger("SLOT-ACCESS");
+    protected static final Logger            LOGGER             = LoggerFactory
+                                                                    .getLogger("DATA-ACCESS");
+    protected static final Logger            LOGGER_SLOT_ACCESS = LoggerFactory
+                                                                    .getLogger("SLOT-ACCESS");
 
-    private final Set<StoreData.DataType> DATA_TTPES = Collections
-            .unmodifiableSet(Sets
-                    .newHashSet(
-                            StoreData.DataType.PUBLISHER,
-                            StoreData.DataType.UN_PUBLISHER));
-
-    @Autowired
-    protected DataChangeEventCenter dataChangeEventCenter;
+    private final Set<StoreData.DataType>    DATA_TTPES         = Collections
+                                                                    .unmodifiableSet(Sets
+                                                                        .newHashSet(
+                                                                            StoreData.DataType.PUBLISHER,
+                                                                            StoreData.DataType.UN_PUBLISHER));
 
     @Autowired
-    protected DataServerConfig dataServerConfig;
+    protected DataChangeEventCenter          dataChangeEventCenter;
 
     @Autowired
-    protected SlotManager slotManager;
+    protected DataServerConfig               dataServerConfig;
 
     @Autowired
-    protected DatumStorage localDatumStorage;
+    protected SlotManager                    slotManager;
 
     @Autowired
-    protected SessionLeaseManager sessionLeaseManager;
+    protected DatumStorage                   localDatumStorage;
+
+    @Autowired
+    protected SessionLeaseManager            sessionLeaseManager;
 
     @Autowired
     protected SessionServerConnectionFactory sessionServerConnectionFactory;
@@ -98,12 +98,12 @@ public abstract class AbstractDataHandler<T> extends AbstractServerHandler<T> {
         final SlotAccess slotAccess = slotManager.checkSlotAccess(dataInfoId, slotTableEpoch);
         if (slotAccess.isMoved()) {
             LOGGER_SLOT_ACCESS
-                    .warn("[moved] Slot has moved, {} access: {}", dataInfoId, slotAccess);
+                .warn("[moved] Slot has moved, {} access: {}", dataInfoId, slotAccess);
         }
 
         if (slotAccess.isMigrating()) {
             LOGGER_SLOT_ACCESS.warn("[migrating] Slot is migrating, {} access: {}", dataInfoId,
-                    slotAccess);
+                slotAccess);
         }
         return slotAccess;
     }
