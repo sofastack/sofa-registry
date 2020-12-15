@@ -32,7 +32,6 @@ import com.alipay.sofa.registry.remoting.exchange.message.Request;
 import com.alipay.sofa.registry.remoting.exchange.message.Response;
 import com.alipay.sofa.registry.util.ConcurrentUtils;
 import com.alipay.sofa.registry.util.LoopRunnable;
-import com.google.common.util.concurrent.Uninterruptibles;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -81,7 +80,7 @@ public abstract class AbstractMetaServerService<T extends BaseHeartBeatResponse>
 
         @Override
         public void waitingUnthrowable() {
-            Uninterruptibles.sleepUninterruptibly(intervalMs, TimeUnit.MILLISECONDS);
+            ConcurrentUtils.sleepUninterruptibly(intervalMs, TimeUnit.MILLISECONDS);
         }
     }
 

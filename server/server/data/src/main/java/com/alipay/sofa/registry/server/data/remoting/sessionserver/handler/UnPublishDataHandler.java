@@ -68,7 +68,7 @@ public class UnPublishDataHandler extends AbstractDataHandler<UnPublishDataReque
 
         final SlotAccess slotAccess = checkAccess(publisher.getDataInfoId(),
             request.getSlotTableEpoch());
-        if (!slotAccess.isAccept()) {
+        if (slotAccess.isMoved()) {
             return SlotAccessGenericResponse.failedResponse(slotAccess);
         }
         DatumVersion version = localDatumStorage.putPublisher(publisher,

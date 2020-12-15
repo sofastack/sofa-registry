@@ -26,6 +26,7 @@ import com.alipay.sofa.registry.common.model.PublisherInternUtil;
 import com.alipay.sofa.registry.common.model.store.Publisher;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
+import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 
 /**
@@ -54,15 +55,8 @@ public class SessionDataStore implements DataStore {
 
         write.lock();
         try {
-            Map<String, Publisher> publishers = registry.get(publisher.getDataInfoId());
-
-            if (publishers == null) {
-                ConcurrentHashMap<String, Publisher> newmap = new ConcurrentHashMap<>();
-                publishers = registry.putIfAbsent(publisher.getDataInfoId(), newmap);
-                if (publishers == null) {
-                    publishers = newmap;
-                }
-            }
+            Map<String, Publisher> publishers = registry.computeIfAbsent(publisher.getDataInfoId(), k-> Maps
+                    .newConcurrentMap());
 
             Publisher existingPublisher = publishers.get(publisher.getRegisterId());
 

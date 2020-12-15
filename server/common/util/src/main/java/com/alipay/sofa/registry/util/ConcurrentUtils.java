@@ -24,6 +24,7 @@ import com.google.common.util.concurrent.MoreExecutors;
 import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.Executor;
+import java.util.concurrent.TimeUnit;
 
 /**
  * @author chen.zhu
@@ -90,6 +91,15 @@ public final class ConcurrentUtils {
             o.wait(timeoutMs);
         } catch (InterruptedException ignored) {
             LOGGER.warn("Interrupted waiting", ignored);
+        }
+    }
+
+    public static void sleepUninterruptibly(long sleepFor, TimeUnit unit) {
+        try {
+            unit.sleep(sleepFor);
+        } catch (InterruptedException ignored) {
+            // no need to remark Thread.currentThread().interrupt();
+            LOGGER.warn("Interrupted sleeping", ignored);
         }
     }
 }

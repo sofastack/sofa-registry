@@ -121,8 +121,7 @@ public final class SlotDiffSyncer {
     }
 
     public boolean syncDataInfoIds(int slotId, String targetAddress, ClientExchanger exchanger,
-                                   long slotTableEpoch, String summaryTargetIp)
-                                                                               throws RequestException {
+                                   long slotTableEpoch, String summaryTargetIp) {
         for (;;) {
             Map<String, DatumSummary> summaryMap = datumStorage.getDatumSummary(slotId,
                 summaryTargetIp);
@@ -144,7 +143,7 @@ public final class SlotDiffSyncer {
     }
 
     public boolean syncPublishers(int slotId, String targetAddress, ClientExchanger exchanger, long slotTableEpoch,
-                                  String summaryTargetIp, int maxPublishers) throws RequestException {
+                                  String summaryTargetIp, int maxPublishers) {
         Map<String, DatumSummary> summaryMap = datumStorage.getDatumSummary(slotId, summaryTargetIp);
         Map<String, DatumSummary> round = pickSummarys(summaryMap, maxPublishers);
         // sync for the existing dataInfoIds.publisher

@@ -75,10 +75,6 @@ public class SessionNodeExchanger implements NodeExchanger {
             }
 
         }
-
-        if (LOGGER.isDebugEnabled()) {
-            LOGGER.debug("SessionNodeExchanger response result:{} ", response.getResult());
-        }
         return response;
     }
 

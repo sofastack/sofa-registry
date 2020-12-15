@@ -27,6 +27,7 @@ import com.alipay.sofa.registry.common.model.store.Watcher;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.util.VersionsMapUtils;
+import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 
 /**
@@ -62,16 +63,7 @@ public class SessionWatchers implements Watchers {
 
         write.lock();
         try {
-            Map<String, Watcher> watcherMap = watchers.get(watcher.getDataInfoId());
-
-            if (watcherMap == null) {
-                Map<String, Watcher> newMap = new HashMap<>();
-                watcherMap = watchers.putIfAbsent(watcher.getDataInfoId(), newMap);
-                if (watcherMap == null) {
-                    watcherMap = newMap;
-                }
-            }
-
+            Map<String, Watcher> watcherMap = watchers.computeIfAbsent(watcher.getDataInfoId(), k->Maps.newConcurrentMap());
             Watcher existingWatcher = watcherMap.get(watcher.getRegisterId());
 
             if (existingWatcher != null) {

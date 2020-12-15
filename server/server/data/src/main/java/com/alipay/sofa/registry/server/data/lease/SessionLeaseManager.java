@@ -27,7 +27,6 @@ import com.alipay.sofa.registry.util.ConcurrentUtils;
 import com.alipay.sofa.registry.util.LoopRunnable;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.google.common.util.concurrent.Uninterruptibles;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import javax.annotation.PostConstruct;
@@ -134,7 +133,7 @@ public final class SessionLeaseManager {
 
         @Override
         public void waitingUnthrowable() {
-            Uninterruptibles.sleepUninterruptibly(1, TimeUnit.SECONDS);
+            ConcurrentUtils.sleepUninterruptibly(1, TimeUnit.SECONDS);
         }
     }
 }

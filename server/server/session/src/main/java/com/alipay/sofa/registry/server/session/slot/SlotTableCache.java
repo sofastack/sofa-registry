@@ -31,6 +31,8 @@ public interface SlotTableCache {
 
     String getLeader(String dataInfoId);
 
+    String getLeader(int slotId);
+
     void triggerUpdateSlotTable(long epoch);
 
     long getEpoch();

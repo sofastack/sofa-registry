@@ -37,11 +37,9 @@ public interface SessionServerConfig {
 
     int getSchedulerHeartbeatIntervalSec();
 
-    int getSchedulerFetchDataTimeout();
+    int getSchedulerFetchDataVersionIntervalMs();
 
-    int getSchedulerFetchDataFirstDelay();
-
-    int getSchedulerFetchDataExpBackOffBound();
+    int getSchedulerFetchDataVersionPoolSize();
 
     int getClientNodeExchangeTimeOut();
 
@@ -80,12 +78,6 @@ public interface SessionServerConfig {
     int getDataChangeFetchTaskRetryTimes();
 
     int getSubscriberRegisterFetchRetryTimes();
-
-    int getSchedulerCleanInvalidClientTimeOut();
-
-    int getSchedulerCleanInvalidClientFirstDelay();
-
-    int getSchedulerCleanInvalidClientBackOffBound();
 
     int getAccessDataExecutorMinPoolSize();
 

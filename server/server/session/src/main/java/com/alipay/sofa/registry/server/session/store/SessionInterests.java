@@ -17,18 +17,6 @@
 package com.alipay.sofa.registry.server.session.store;
 
 import com.alipay.sofa.registry.common.model.ConnectId;
-import java.net.InetSocketAddress;
-import java.util.Collection;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicLong;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
-
-import org.springframework.beans.factory.annotation.Autowired;
-
 import com.alipay.sofa.registry.common.model.store.Subscriber;
 import com.alipay.sofa.registry.common.model.store.WordCache;
 import com.alipay.sofa.registry.core.model.ScopeEnum;
@@ -38,9 +26,17 @@ import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
 import com.alipay.sofa.registry.server.session.cache.SubscriberResult;
 import com.alipay.sofa.registry.util.VersionsMapUtils;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+import org.springframework.beans.factory.annotation.Autowired;
 
+import java.net.InetSocketAddress;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
+import java.util.stream.Collectors;
 
 /**
  * @author shangyu.wh
@@ -82,15 +78,8 @@ public class SessionInterests implements Interests, ReSubscribers {
 
         write.lock();
         try {
-            Map<String, Subscriber> subscribers = interests.get(subscriber.getDataInfoId());
-
-            if (subscribers == null) {
-                Map<String, Subscriber> newMap = new ConcurrentHashMap<>();
-                subscribers = interests.putIfAbsent(subscriber.getDataInfoId(), newMap);
-                if (subscribers == null) {
-                    subscribers = newMap;
-                }
-            }
+            Map<String, Subscriber> subscribers = interests.computeIfAbsent(subscriber.getDataInfoId(),
+                    k->Maps.newConcurrentMap());
 
             Subscriber existingSubscriber = subscribers.get(subscriber.getRegisterId());
 
@@ -117,7 +106,6 @@ public class SessionInterests implements Interests, ReSubscribers {
 
     @Override
     public boolean deleteById(String registerId, String dataInfoId) {
-
         write.lock();
         try {
 
@@ -194,7 +182,6 @@ public class SessionInterests implements Interests, ReSubscribers {
     }
 
     public Subscriber queryById(String registerId, String dataInfoId) {
-
         Map<String, Subscriber> subscribers = interests.get(dataInfoId);
 
         if (subscribers == null) {
@@ -208,7 +195,7 @@ public class SessionInterests implements Interests, ReSubscribers {
         Map<String, Subscriber> subscribers = interests.get(dataInfoId);
         if (subscribers == null) {
             LOGGER.info("There is not registered subscriber for : {}", dataInfoId);
-            return null;
+            return Collections.emptyList();
         }
         return subscribers.values();
     }
@@ -223,14 +210,7 @@ public class SessionInterests implements Interests, ReSubscribers {
         }
 
         Map<String/*dataInfoId*/, Long/*version*/> dataInfoVersions = interestVersions
-            .get(dataCenter);
-        if (dataInfoVersions == null) {
-            Map<String/*dataInfoId*/, Long/*version*/> newDataInfoVersions = new ConcurrentHashMap<>();
-            dataInfoVersions = interestVersions.putIfAbsent(dataCenter, newDataInfoVersions);
-            if (dataInfoVersions == null) {
-                dataInfoVersions = newDataInfoVersions;
-            }
-        }
+            .computeIfAbsent(dataCenter, k->Maps.newConcurrentMap());
 
         Long oldValue = dataInfoVersions.get(dataInfoId);
 
@@ -254,14 +234,7 @@ public class SessionInterests implements Interests, ReSubscribers {
             }
 
             Map<String/*dataInfoId*/, Long/*version*/> dataInfoVersions = interestVersions
-                .get(dataCenter);
-            if (dataInfoVersions == null) {
-                Map<String/*dataInfoId*/, Long/*version*/> newDataInfoVersions = new ConcurrentHashMap<>();
-                dataInfoVersions = interestVersions.putIfAbsent(dataCenter, newDataInfoVersions);
-                if (dataInfoVersions == null) {
-                    dataInfoVersions = newDataInfoVersions;
-                }
-            }
+                    .computeIfAbsent(dataCenter, k -> Maps.newConcurrentMap());
             //set zero
             if (version.longValue() == 0l) {
                 return dataInfoVersions.put(dataInfoId, version) != null;
@@ -278,7 +251,8 @@ public class SessionInterests implements Interests, ReSubscribers {
 
     @Override
     public Collection<String> getInterestDataInfoIds() {
-        return interests.keySet();
+        return interests.entrySet().stream().filter(e -> !(e.getValue().isEmpty())).map(e -> e.getKey())
+                .collect(Collectors.toSet());
     }
 
     private void addIndex(Subscriber subscriber) {
@@ -373,7 +347,6 @@ public class SessionInterests implements Interests, ReSubscribers {
     }
 
     private void invalidateResultIndex(Subscriber subscriber) {
-
         SubscriberResult subscriberResult = new SubscriberResult(subscriber.getDataInfoId(),
             subscriber.getScope());
         Map<InetSocketAddress, Map<String, Subscriber>> mapSub = resultIndex.get(subscriberResult);
@@ -412,14 +385,8 @@ public class SessionInterests implements Interests, ReSubscribers {
 
             String dataInfoId = subscriber.getDataInfoId();
 
-            Map<String, Subscriber> subscriberMap = stopPushInterests.get(dataInfoId);
-            if (subscriberMap == null) {
-                Map<String, Subscriber> newMap = new ConcurrentHashMap<>();
-                subscriberMap = stopPushInterests.putIfAbsent(dataInfoId, newMap);
-                if (subscriberMap == null) {
-                    subscriberMap = newMap;
-                }
-            }
+            Map<String, Subscriber> subscriberMap = stopPushInterests
+                    .computeIfAbsent(dataInfoId, k -> Maps.newConcurrentMap());
             subscriberMap.put(subscriber.getRegisterId(), subscriber);
         }
     }

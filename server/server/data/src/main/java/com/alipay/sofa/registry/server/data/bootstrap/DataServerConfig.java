@@ -92,13 +92,13 @@ public class DataServerConfig {
 
     private volatile int         sessionLeaseSec                              = 30;
 
-    private int                  datumCompactDelayMs                          = 1000 * 60 * 3;
+    private int                  datumCompactDelayMs                          = 1000 * 60 * 5;
 
     private int                  slotMigratingExecutorThreadSize              = 8;
 
     private int                  slotLeaderSyncSessionExecutorThreadSize      = 12;
-    private int                  slotLeaderSyncSessionExecutorQueueSize       = 30000;
-    private volatile int         slotLeaderSyncSessionIntervalSec             = 10;
+    private int                  slotLeaderSyncSessionExecutorQueueSize       = 10000;
+    private volatile int         slotLeaderSyncSessionIntervalSec             = 6;
 
     private int                  slotFollowerSyncLeaderExecutorThreadSize     = 4;
     private int                  slotFollowerSyncLeaderExecutorQueueSize      = 10000;

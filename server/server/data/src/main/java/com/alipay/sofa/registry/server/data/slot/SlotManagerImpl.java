@@ -16,6 +16,7 @@
  */
 package com.alipay.sofa.registry.server.data.slot;
 
+import com.alipay.sofa.registry.common.model.Tuple;
 import com.alipay.sofa.registry.common.model.slot.Slot;
 import com.alipay.sofa.registry.common.model.slot.SlotAccess;
 import com.alipay.sofa.registry.common.model.slot.SlotTable;
@@ -31,16 +32,18 @@ import com.alipay.sofa.registry.server.data.remoting.DataNodeExchanger;
 import com.alipay.sofa.registry.server.data.remoting.SessionNodeExchanger;
 import com.alipay.sofa.registry.server.data.remoting.metaserver.MetaServerServiceImpl;
 import com.alipay.sofa.registry.server.shared.env.ServerEnv;
+import com.alipay.sofa.registry.task.KeyedThreadPoolExecutor;
+import com.alipay.sofa.registry.task.KeyedThreadPoolExecutor.KeyedTask;
 import com.alipay.sofa.registry.util.ConcurrentUtils;
 import com.alipay.sofa.registry.util.LoopRunnable;
-import com.alipay.sofa.registry.util.NamedThreadFactory;
 import com.google.common.collect.Maps;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import javax.annotation.PostConstruct;
 import java.util.*;
-import java.util.concurrent.*;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.atomic.AtomicReference;
 
 /**
@@ -77,9 +80,8 @@ public final class SlotManagerImpl implements SlotManager {
 
     private final List<SlotChangeListener>   slotChangeListeners = new ArrayList<>();
 
-    private ScheduledExecutorService         migratingScheduler;
-    private ExecutorService                  syncSessionExecutor;
-    private ExecutorService                  syncLeaderExecutor;
+    private KeyedThreadPoolExecutor          syncSessionExecutor;
+    private KeyedThreadPoolExecutor          syncLeaderExecutor;
 
     /**
      * the sync and migrating may happen parallelly when slot role has modified.
@@ -91,16 +93,14 @@ public final class SlotManagerImpl implements SlotManager {
 
     @PostConstruct
     public void init() {
-        this.migratingScheduler = createScheduler("Migrating",
-            dataServerConfig.getSlotMigratingExecutorThreadSize());
-
-        this.syncSessionExecutor = createExecutor("SyncSession",
+        this.syncSessionExecutor = new KeyedThreadPoolExecutor("Slot-Executor-SyncSession",
             dataServerConfig.getSlotLeaderSyncSessionExecutorThreadSize(),
             dataServerConfig.getSlotLeaderSyncSessionExecutorQueueSize());
 
-        this.syncLeaderExecutor = createExecutor("SyncLeader",
+        this.syncLeaderExecutor = new KeyedThreadPoolExecutor("Slot-Executor-SyncLeader",
             dataServerConfig.getSlotFollowerSyncLeaderExecutorThreadSize(),
             dataServerConfig.getSlotFollowerSyncLeaderExecutorQueueSize());
+
         SlotChangeListener l = localDatumStorage.getSlotChanngeListener();
         if (l != null) {
             this.slotChangeListeners.add(l);
@@ -208,18 +208,19 @@ public final class SlotManagerImpl implements SlotManager {
                 final long slotTableEpoch = slotTableStates.table.getEpoch();
                 for (SlotState slotState : slotTableStates.slotStates.values()) {
                     final Slot slot = slotState.slot;
+                    final KeyedTask<SyncLeaderTask> syncLeaderTask = slotState.syncLeaderTask;
                     if (isLeader(slot)) {
-                        if (slotState.syncLeaderTask != null && !slotState.syncLeaderTask.isFinished()) {
+                        if (syncLeaderTask != null && !syncLeaderTask.isFinished()) {
                             // must wait the sync leader finish, avoid the sync-leader conflict with sync-session
-                            LOGGER.warn("wait for sync-leader to finish, {}", slot);
+                            LOGGER.warn("wait for sync-leader to finish, {}", slot, syncLeaderTask);
                             continue;
                         }
                         slotState.syncLeaderTask = null;
                         final Set<String> sessions = metaServerService.getSessionNodes().keySet();
                         if (slotState.migrated) {
                             for (String sessionIp : sessions) {
-                                SyncSessionTask task = slotState.syncSessionTasks.get(sessionIp);
-                                if (task == null || task.isScheduleable(syncIntervalMs)) {
+                                KeyedTask<SyncSessionTask> task = slotState.syncSessionTasks.get(sessionIp);
+                                if (task == null || task.isOverAfter(syncIntervalMs)) {
                                     task = slotState.commitSyncSessionTask(slotTableEpoch, sessionIp);
                                     slotState.syncSessionTasks.put(sessionIp, task);
                                 }
@@ -228,11 +229,14 @@ public final class SlotManagerImpl implements SlotManager {
                             for (String sessionIp : sessions) {
                                 MigratingTask mtask = slotState.migratingTasks.get(sessionIp);
                                 if (mtask == null || mtask.task.isFailed()) {
+                                    KeyedTask<SyncSessionTask> ktask = slotState
+                                            .commitSyncSessionTask(slotTableEpoch, sessionIp);
                                     if (mtask == null) {
-                                        mtask = new MigratingTask();
+                                        mtask = new MigratingTask(ktask);
                                         slotState.migratingTasks.put(sessionIp, mtask);
+                                    } else {
+                                        mtask.task = ktask;
                                     }
-                                    mtask.task = slotState.commitSyncSessionTask(slotTableEpoch, sessionIp);
                                     // TODO add max trycount, avoid the unhealth session block the migrating
                                     mtask.tryCount++;
                                 }
@@ -251,14 +255,13 @@ public final class SlotManagerImpl implements SlotManager {
                         }
                     } else {
                         // sync leader
-                        if (slotState.syncLeaderTask != null && !slotState.syncLeaderTask
-                                .isScheduleable(dataServerConfig.getSlotFollowerSyncLeaderIntervalMs())) {
-                            // the sync leader is running or waiting, check next round
-                            continue;
-                        } else {
+                        if (syncLeaderTask == null ||
+                                syncLeaderTask.isOverAfter(dataServerConfig.getSlotFollowerSyncLeaderIntervalMs())) {
                             SyncLeaderTask task = new SyncLeaderTask(slotTableEpoch, slot);
-                            syncLeaderExecutor.submit(task);
-                            slotState.syncLeaderTask = task;
+                            slotState.syncLeaderTask = syncLeaderExecutor.execute(slot.getId(), task);
+                        } else {
+                            // the sync leader is running or waiting, check next round
+                            LOGGER.info("sync-leader running, {}", syncLeaderTask);
                         }
                     }
                 }
@@ -278,11 +281,11 @@ public final class SlotManagerImpl implements SlotManager {
     }
 
     private final class SlotState {
-        volatile Slot                      slot;
-        volatile boolean                   migrated;
-        final Map<String, MigratingTask>   migratingTasks   = Maps.newHashMap();
-        final Map<String, SyncSessionTask> syncSessionTasks = Maps.newHashMap();
-        SyncLeaderTask                     syncLeaderTask;
+        volatile Slot                                 slot;
+        volatile boolean                              migrated;
+        final Map<String, MigratingTask>              migratingTasks   = Maps.newHashMap();
+        final Map<String, KeyedTask<SyncSessionTask>> syncSessionTasks = Maps.newHashMap();
+        KeyedTask<SyncLeaderTask>                     syncLeaderTask;
 
         SlotState(Slot slot) {
             this.slot = slot;
@@ -297,103 +300,77 @@ public final class SlotManagerImpl implements SlotManager {
             this.slot = s;
         }
 
-        SyncSessionTask commitSyncSessionTask(long slotTableEpoch, String sessionIp) {
+        KeyedTask<SyncSessionTask> commitSyncSessionTask(long slotTableEpoch, String sessionIp) {
             SyncSessionTask task = new SyncSessionTask(slotTableEpoch, slot, sessionIp);
-            syncSessionExecutor.submit(task);
-            return task;
-        }
-    }
-
-    abstract class SyncTask implements Runnable {
-        final long       slotTableEpoch;
-        final Slot       slot;
-        final long       createTime = System.currentTimeMillis();
-        volatile long    startTime;
-        volatile long    endTime;
-        volatile boolean success;
-
-        SyncTask(long slotTableEpoch, Slot slot) {
-            this.slotTableEpoch = slotTableEpoch;
-            this.slot = slot;
-        }
-
-        abstract void run0();
-
-        @Override
-        public final void run() {
-            startTime = System.currentTimeMillis();
-            try {
-                run0();
-            } catch (Throwable e) {
-                LOGGER.error("failed to run sync task", e);
-            } finally {
-                endTime = System.currentTimeMillis();
-            }
-        }
-
-        boolean isScheduleable(int intervalMs) {
-            if (endTime <= 0) {
-                return false;
-            }
-            return System.currentTimeMillis() - endTime >= intervalMs;
-        }
-
-        boolean isFailed() {
-            return isFinished() && !success;
-        }
-
-        boolean isSuccess() {
-            return isFinished() && success;
-        }
-
-        boolean isFinished() {
-            return endTime > 0;
+            return syncSessionExecutor.execute(new Tuple(slot.getId(), sessionIp), task);
         }
     }
 
     private static class MigratingTask {
-        final long      createTimestamp = System.currentTimeMillis();
-        SyncSessionTask task;
-        int             tryCount;
+        final long                 createTimestamp = System.currentTimeMillis();
+        KeyedTask<SyncSessionTask> task;
+        int                        tryCount;
+
+        MigratingTask(KeyedTask<SyncSessionTask> task) {
+            this.task = task;
+        }
     }
 
-    private final class SyncSessionTask extends SyncTask {
+    private final class SyncSessionTask implements Runnable {
+        final long   slotTableEpoch;
+        final Slot   slot;
         final String sessioIp;
 
         SyncSessionTask(long slotTableEpoch, Slot slot, String sessioIp) {
-            super(slotTableEpoch, slot);
+            this.slotTableEpoch = slotTableEpoch;
+            this.slot = slot;
             this.sessioIp = sessioIp;
         }
 
-        void run0() {
+        public void run() {
             try {
                 SlotDiffSyncer syncer = new SlotDiffSyncer(dataServerConfig, localDatumStorage,
                     dataChangeEventCenter, sessionLeaseManager);
                 syncer.syncSession(slot.getId(), sessioIp, sessionNodeExchanger, slotTableEpoch);
-                success = true;
             } catch (Throwable e) {
                 LOGGER.error("sync session failed: {}, slot={}", sessioIp, slot.getId(), e);
+                throw new RuntimeException(e);
             }
-        }
-    }
-
-    private final class SyncLeaderTask extends SyncTask {
-        SyncLeaderTask(long slotTableEpoch, Slot slot) {
-            super(slotTableEpoch, slot);
         }
 
         @Override
-        void run0() {
+        public String toString() {
+            return "SyncSessionTask{" + "slotTableEpoch=" + slotTableEpoch + ", sessioIp='"
+                   + sessioIp + '\'' + ", slot=" + slot + '}';
+        }
+    }
+
+    private final class SyncLeaderTask implements Runnable {
+        final long slotTableEpoch;
+        final Slot slot;
+
+        SyncLeaderTask(long slotTableEpoch, Slot slot) {
+            this.slotTableEpoch = slotTableEpoch;
+            this.slot = slot;
+        }
+
+        @Override
+        public void run() {
             try {
                 //sync leader no need to notify event
                 SlotDiffSyncer syncer = new SlotDiffSyncer(dataServerConfig, localDatumStorage,
                     null, sessionLeaseManager);
                 syncer.syncSlotLeader(slot.getId(), slot.getLeader(), dataNodeExchanger,
                     slotTableEpoch);
-                success = true;
             } catch (Throwable e) {
                 LOGGER.error("sync leader failed: {}, slot={}", slot.getLeader(), slot.getId(), e);
+                throw new RuntimeException(e);
             }
+        }
+
+        @Override
+        public String toString() {
+            return "SyncLeaderTask{" + "slotTableEpoch=" + slotTableEpoch + ", slot=" + slot + '}';
         }
     }
 
@@ -415,12 +392,6 @@ public final class SlotManagerImpl implements SlotManager {
         });
         return new ScheduledThreadPoolExecutor(corePoolSize, threadFactoryBuilder
                 .setNameFormat("Slot-Sched-" + name).build());
-    }
-
-    private ExecutorService createExecutor(String name, int corePoolSize, int queueSize) {
-        return new ThreadPoolExecutor(corePoolSize, corePoolSize, 300, TimeUnit.SECONDS,
-            new ArrayBlockingQueue<>(queueSize), new NamedThreadFactory("Slot-Executor-" + name,
-                true));
     }
 
     private static Slot.Role getRole(Slot s) {

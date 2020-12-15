@@ -16,6 +16,8 @@
  */
 package com.alipay.sofa.registry.common.model;
 
+import java.util.Objects;
+
 /**
  *
  * @author yuzhi.lyz
@@ -28,5 +30,25 @@ public final class Tuple<T1, T2> {
     public Tuple(T1 o1, T2 o2) {
         this.o1 = o1;
         this.o2 = o2;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o)
+            return true;
+        if (!(o instanceof Tuple))
+            return false;
+        Tuple<?, ?> tuple = (Tuple<?, ?>) o;
+        return Objects.equals(o1, tuple.o1) && Objects.equals(o2, tuple.o2);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(o1, o2);
+    }
+
+    @Override
+    public String toString() {
+        return "Tuple{" + "o1=" + o1 + ", o2=" + o2 + '}';
     }
 }

@@ -95,4 +95,8 @@ public final class PublisherVersion implements Serializable, Comparable<Publishe
         return "PublisherVersion{" + "version=" + version + ", registerTimestamp="
                + registerTimestamp + '}';
     }
+
+    public PublisherVersion incrRegisterTimestamp() {
+        return PublisherVersion.of(this.version, this.registerTimestamp + 1);
+    }
 }

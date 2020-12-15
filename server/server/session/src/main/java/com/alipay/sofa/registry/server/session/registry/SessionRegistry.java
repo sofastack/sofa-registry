@@ -16,20 +16,14 @@
  */
 package com.alipay.sofa.registry.server.session.registry;
 
-import com.alipay.sofa.registry.common.model.ConnectId;
-
+import javax.annotation.PostConstruct;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 
-import com.alipay.sofa.registry.server.session.cache.AppRevisionCacheRegistry;
-import org.springframework.beans.factory.annotation.Autowired;
-
-import com.alipay.sofa.registry.common.model.store.Publisher;
-import com.alipay.sofa.registry.common.model.store.StoreData;
-import com.alipay.sofa.registry.common.model.store.Subscriber;
-import com.alipay.sofa.registry.common.model.store.URL;
-import com.alipay.sofa.registry.common.model.store.Watcher;
+import com.alipay.sofa.registry.common.model.ConnectId;
+import com.alipay.sofa.registry.common.model.slot.SlotConfig;
+import com.alipay.sofa.registry.common.model.store.*;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.remoting.Channel;
@@ -51,9 +45,15 @@ import com.alipay.sofa.registry.server.session.wrapper.Wrapper;
 import com.alipay.sofa.registry.server.session.wrapper.WrapperInterceptorManager;
 import com.alipay.sofa.registry.server.session.wrapper.WrapperInvocation;
 import com.alipay.sofa.registry.server.shared.env.ServerEnv;
+import com.alipay.sofa.registry.task.KeyedThreadPoolExecutor;
+import com.alipay.sofa.registry.task.KeyedThreadPoolExecutor.KeyedTask;
 import com.alipay.sofa.registry.task.listener.TaskEvent;
 import com.alipay.sofa.registry.task.listener.TaskListenerManager;
+import com.alipay.sofa.registry.util.ConcurrentUtils;
+import com.alipay.sofa.registry.util.LoopRunnable;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+import org.springframework.beans.factory.annotation.Autowired;
 
 /**
  * @author shangyu.wh
@@ -61,11 +61,10 @@ import com.google.common.collect.Lists;
  */
 public class SessionRegistry implements Registry {
 
-    private static final Logger       LOGGER                  = LoggerFactory
-                                                                  .getLogger(SessionRegistry.class);
+    private static final Logger       LOGGER      = LoggerFactory.getLogger(SessionRegistry.class);
 
-    protected static final Logger     TASK_LOGGER             = LoggerFactory.getLogger(
-                                                                  SessionRegistry.class, "[Task]");
+    protected static final Logger     TASK_LOGGER = LoggerFactory.getLogger(SessionRegistry.class,
+                                                      "[Task]");
 
     /**
      * store subscribers
@@ -118,10 +117,15 @@ public class SessionRegistry implements Registry {
     @Autowired
     private SlotTableCache            slotTableCache;
 
-    @Autowired
-    private AppRevisionCacheRegistry  appRevisionCacheRegistry;
+    private KeyedThreadPoolExecutor   fetchVersionThreadPoolExecutor;
 
-    private volatile boolean          enableDataRenewSnapshot = true;
+    @PostConstruct
+    public void init() {
+        this.fetchVersionThreadPoolExecutor = new KeyedThreadPoolExecutor("fetchVersion",
+            sessionServerConfig.getSchedulerFetchDataVersionPoolSize(), SlotConfig.SLOT_NUM * 2);
+
+        ConcurrentUtils.createDaemonThread("SessionWatchDog", new WatchDog()).start();
+    }
 
     @Override
     public void register(StoreData storeData) {
@@ -246,74 +250,115 @@ public class SessionRegistry implements Registry {
         }
     }
 
-    @Override
-    public void fetchChangData() {
-        if (!sessionServerConfig.isBeginDataFetchTask()) {
+    private final class WatchDog extends LoopRunnable {
+        final Map<Integer, KeyedTask<FetchVersionTask>> fetchVersionTasks = Maps.newConcurrentMap();
+
+        @Override
+        public void runUnthrowable() {
             try {
-                TimeUnit.MILLISECONDS.sleep(500);
-            } catch (InterruptedException e) {
-                LOGGER.error("fetchChangData task sleep InterruptedException", e);
+                if (sessionServerConfig.isBeginDataFetchTask()) {
+                    fetchVersions();
+                }
+            } catch (Throwable e) {
+                LOGGER.error("WatchDog failed fetch verions", e);
+            }
+            try {
+                cleanClientConnect();
+            } catch (Throwable e) {
+                LOGGER.error("WatchDog failed cleanClientConnect", e);
+            }
+        }
+
+        @Override
+        public void waitingUnthrowable() {
+            ConcurrentUtils.sleepUninterruptibly(1, TimeUnit.SECONDS);
+        }
+
+        private void fetchVersions() {
+            Collection<String> checkDataInfoIds = sessionInterests.getInterestDataInfoIds();
+            Map<Integer/*slotId*/, Collection<String>/*dataInfoIds*/> map = calculateDataNode(checkDataInfoIds);
+            for (Map.Entry<Integer, Collection<String>> e : map.entrySet()) {
+                final int slotId = e.getKey();
+                KeyedTask<FetchVersionTask> task = fetchVersionTasks.get(slotId);
+                if (task == null
+                    || task.isOverAfter(sessionServerConfig
+                        .getSchedulerFetchDataVersionIntervalMs())) {
+                    task = fetchVersionThreadPoolExecutor.execute(slotId, new FetchVersionTask(
+                        slotId, e.getValue()));
+                    fetchVersionTasks.put(slotId, task);
+                    LOGGER.info("commit FetchVersionTask, {}, size={}", slotId, task);
+                } else {
+                    LOGGER.info("FetchVersioning, {}, status={}", slotId, task);
+                }
             }
             return;
         }
+    }
 
-        fetchChangDataProcess();
+    private final class FetchVersionTask implements Runnable {
+        final int                slotId;
+        final Collection<String> dataInfoIds;
+
+        FetchVersionTask(int slotId, Collection<String> dataInfoIds) {
+            this.slotId = slotId;
+            this.dataInfoIds = dataInfoIds;
+        }
+
+        @Override
+        public void run() {
+            fetchChangDataProcess(slotId, dataInfoIds);
+        }
+
+        @Override
+        public String toString() {
+            return "FetchVersionTask{" + "slotId=" + slotId + ", dataInfoIds=" + dataInfoIds.size()
+                   + '}';
+        }
     }
 
     @Override
     public void fetchChangDataProcess() {
-        //check dataInfoId's sub list is not empty
-        List<String> checkDataInfoIds = new ArrayList<>();
-        sessionInterests.getInterestDataInfoIds().forEach((dataInfoId) -> {
-            Collection<Subscriber> subscribers = sessionInterests.getInterests(dataInfoId);
-            if (subscribers != null && !subscribers.isEmpty()) {
-                checkDataInfoIds.add(dataInfoId);
-            }
-        });
-        Set<String> fetchDataInfoIds = new HashSet<>();
+        Collection<String> checkDataInfoIds = sessionInterests.getInterestDataInfoIds();
+        Map<Integer/*slotId*/, Collection<String>/*dataInfoIds*/> map = calculateDataNode(checkDataInfoIds);
 
-        for (String dataInfoId : checkDataInfoIds) {
-            fetchDataInfoIds.add(dataInfoId);
-            fetchDataInfoIds.addAll(appRevisionCacheRegistry.getAppRevisions(dataInfoId).keySet());
-        }
-
-        LOGGER.info("[fetchChangDataProcess] Fetch data versions for {} dataInfoIds",
-                fetchDataInfoIds.size());
-
-        Map<String/*address*/, Collection<String>/*dataInfoIds*/> map = calculateDataNode(
-                fetchDataInfoIds);
-
-        map.forEach((address, dataInfoIds) -> {
-
+        map.forEach((slotId, dataInfoIds) -> {
             //TODO asynchronous fetch version
-            Map<String/*datacenter*/, Map<String/*datainfoid*/, Long>> dataVersions = dataNodeService
-                    .fetchDataVersion(URL.valueOf(address), dataInfoIds);
-
-            if (dataVersions != null) {
-                sessionRegistryStrategy.doFetchChangDataProcess(dataVersions);
-            } else {
-                LOGGER.warn("Fetch no change data versions info from {}", address);
-            }
+            fetchChangDataProcess(slotId, dataInfoIds);
         });
 
     }
 
-    private Map<String, Collection<String>> calculateDataNode(Collection<String> dataInfoIds) {
-
-        Map<String, Collection<String>> map = new HashMap<>();
-        if (dataInfoIds != null) {
-            dataInfoIds.forEach(dataInfoId -> {
-                URL url = new URL(slotTableCache.getLeader(dataInfoId), sessionServerConfig.getDataServerPort());
-                Collection<String> list = map.computeIfAbsent(url.getAddressString(), k -> new ArrayList<>());
-                list.add(dataInfoId);
-            });
+    private void fetchChangDataProcess(int slotId, Collection<String> dataInfoIds) {
+        String leader = slotTableCache.getLeader(slotId);
+        if (leader == null) {
+            LOGGER
+                .error("slot not assign {} when fetch dataInfoIds={}", slotId, dataInfoIds.size());
+            return;
         }
+        LOGGER.info("[fetchChangDataProcess] Fetch data versions from {}, {}, dataInfoIds={}",
+            slotId, leader, dataInfoIds.size());
+        Map<String/*datacenter*/, Map<String/*datainfoid*/, Long>> dataVersions = dataNodeService
+            .fetchDataVersion(new URL(leader, sessionServerConfig.getDataServerPort()), dataInfoIds);
+
+        if (dataVersions != null) {
+            sessionRegistryStrategy.doFetchChangDataProcess(dataVersions);
+        } else {
+            LOGGER.warn("Fetch no change data versions info from {}, {}", slotId, leader);
+        }
+    }
+
+    private Map<Integer, Collection<String>> calculateDataNode(Collection<String> dataInfoIds) {
+        Map<Integer, Collection<String>> map = new HashMap<>();
+        dataInfoIds.forEach(dataInfoId -> {
+            int slotId = slotTableCache.slotOf(dataInfoId);
+            Collection<String> list = map.computeIfAbsent(slotId, k -> Lists.newArrayList());
+            list.add(dataInfoId);
+        });
 
         return map;
     }
 
     public void remove(List<ConnectId> connectIds) {
-
         List<ConnectId> connectIdsAll = new ArrayList<>();
         connectIds.forEach(connectId -> {
             Map pubMap = getSessionDataStore().queryByConnectId(connectId);
@@ -351,14 +396,10 @@ public class SessionRegistry implements Registry {
     }
 
     public void cleanClientConnect() {
-
         Set<ConnectId> connectIndexes = new HashSet<>();
-        Set<ConnectId> pubIndexes = sessionDataStore.getConnectIds();
-        Set<ConnectId> subIndexes = sessionInterests.getConnectIds();
-        Set<ConnectId> watchIndexes = sessionWatchers.getConnectIds();
-        connectIndexes.addAll(pubIndexes);
-        connectIndexes.addAll(subIndexes);
-        connectIndexes.addAll(watchIndexes);
+        connectIndexes.addAll(sessionDataStore.getConnectIds());
+        connectIndexes.addAll(sessionInterests.getConnectIds());
+        connectIndexes.addAll(sessionWatchers.getConnectIds());
 
         Server sessionServer = boltExchange.getServer(sessionServerConfig.getServerPort());
 
