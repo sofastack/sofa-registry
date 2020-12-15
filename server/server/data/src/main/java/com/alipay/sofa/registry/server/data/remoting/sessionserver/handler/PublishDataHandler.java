@@ -59,7 +59,8 @@ public class PublishDataHandler extends AbstractDataHandler<PublishDataRequest> 
 
         final SlotAccess slotAccess = checkAccess(publisher.getDataInfoId(),
             request.getSlotTableEpoch());
-        if (!slotAccess.isAccept()) {
+        if (slotAccess.isMoved()) {
+            // only reject the when moved
             return SlotAccessGenericResponse.failedResponse(slotAccess);
         }
         if (publisher.getPublishType() == PublishType.TEMPORARY) {

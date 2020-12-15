@@ -27,6 +27,8 @@ import com.alipay.sofa.registry.server.session.converter.pb.RegisterResponseConv
 import com.alipay.sofa.registry.server.shared.remoting.AbstractServerHandler;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import java.util.concurrent.Executor;
+
 /**
  * TODO
  *
@@ -40,7 +42,7 @@ public class PublisherPbHandler extends AbstractServerHandler<PublisherRegisterP
 
     @Override
     protected Node.NodeType getConnectNodeType() {
-        return Node.NodeType.CLIENT;
+        return publisherHandler.getConnectNodeType();
     }
 
     /**
@@ -54,9 +56,6 @@ public class PublisherPbHandler extends AbstractServerHandler<PublisherRegisterP
     @Override
     public Object doHandle(Channel channel, PublisherRegisterPb message) {
         RegisterResponsePb.Builder builder = RegisterResponsePb.newBuilder();
-        if (!(message instanceof PublisherRegisterPb)) {
-            return builder.setSuccess(false).setMessage("Unknown publisher register type").build();
-        }
 
         Object response = publisherHandler.doHandle(channel,
             PublisherRegisterConvertor.convert2Java(message));
@@ -75,5 +74,10 @@ public class PublisherPbHandler extends AbstractServerHandler<PublisherRegisterP
     @Override
     public Class interest() {
         return PublisherRegisterPb.class;
+    }
+
+    @Override
+    public Executor getExecutor() {
+        return publisherHandler.getExecutor();
     }
 }

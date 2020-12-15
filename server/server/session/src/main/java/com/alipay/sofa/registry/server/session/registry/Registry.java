@@ -61,13 +61,6 @@ public interface Registry {
     void unRegister(StoreData<String> data);
 
     /**
-     * Timing tasks to send all subscriber dataInfoId version to data,
-     * Select higher version data push to client node
-     *
-     */
-    void fetchChangData();
-
-    /**
      * for fetchChangData first invoke
      */
     void fetchChangDataProcess();

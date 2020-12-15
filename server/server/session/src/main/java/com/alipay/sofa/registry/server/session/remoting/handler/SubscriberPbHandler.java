@@ -30,6 +30,8 @@ import com.alipay.sofa.registry.server.session.converter.pb.SubscriberRegisterCo
 import com.alipay.sofa.registry.server.shared.remoting.AbstractServerHandler;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import java.util.concurrent.Executor;
+
 /**
  * @author zhuoyu.sjw
  * @version $Id: SubscriberPbHandler.java, v 0.1 2018-04-02 16:03 zhuoyu.sjw Exp $$
@@ -41,7 +43,7 @@ public class SubscriberPbHandler extends AbstractServerHandler<SubscriberRegiste
 
     @Override
     protected Node.NodeType getConnectNodeType() {
-        return Node.NodeType.CLIENT;
+        return subscriberHandler.getConnectNodeType();
     }
 
     /**
@@ -55,9 +57,6 @@ public class SubscriberPbHandler extends AbstractServerHandler<SubscriberRegiste
     @Override
     public Object doHandle(Channel channel, SubscriberRegisterPb message) {
         RegisterResponsePb.Builder builder = RegisterResponsePb.newBuilder();
-        if (!(message instanceof SubscriberRegisterPb)) {
-            return builder.setSuccess(false).setMessage("Unknown subscriber register type").build();
-        }
 
         if (channel instanceof BoltChannel) {
             BoltChannel boltChannel = (BoltChannel) channel;
@@ -90,5 +89,10 @@ public class SubscriberPbHandler extends AbstractServerHandler<SubscriberRegiste
     @Override
     public Class interest() {
         return SubscriberRegisterPb.class;
+    }
+
+    @Override
+    public Executor getExecutor() {
+        return subscriberHandler.getExecutor();
     }
 }

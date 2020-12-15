@@ -46,9 +46,9 @@ import com.alipay.sofa.registry.server.data.resource.DataDigestResource;
 import com.alipay.sofa.registry.server.data.resource.HealthResource;
 import com.alipay.sofa.registry.server.data.slot.SlotManager;
 import com.alipay.sofa.registry.server.data.slot.SlotManagerImpl;
-import com.alipay.sofa.registry.server.data.util.ThreadPoolExecutorDataServer;
 import com.alipay.sofa.registry.server.shared.remoting.AbstractClientHandler;
 import com.alipay.sofa.registry.server.shared.remoting.AbstractServerHandler;
+import com.alipay.sofa.registry.task.MetricsableThreadPoolExecutor;
 import com.alipay.sofa.registry.util.NamedThreadFactory;
 import com.alipay.sofa.registry.util.PropertySplitter;
 import org.glassfish.jersey.jackson.JacksonFeature;
@@ -325,7 +325,7 @@ public class DataServerBeanConfiguration {
 
         @Bean(name = "publishProcessorExecutor")
         public ThreadPoolExecutor publishProcessorExecutor(DataServerConfig dataServerConfig) {
-            return new ThreadPoolExecutorDataServer("PublishProcessorExecutor",
+            return new MetricsableThreadPoolExecutor("PublishProcessorExecutor",
                 dataServerConfig.getPublishExecutorMinPoolSize(),
                 dataServerConfig.getPublishExecutorMaxPoolSize(), 300, TimeUnit.SECONDS,
                 new ArrayBlockingQueue<>(dataServerConfig.getPublishExecutorQueueSize()),
@@ -334,7 +334,7 @@ public class DataServerBeanConfiguration {
 
         @Bean(name = "getDataProcessorExecutor")
         public ThreadPoolExecutor getDataProcessorExecutor(DataServerConfig dataServerConfig) {
-            return new ThreadPoolExecutorDataServer("GetDataProcessorExecutor",
+            return new MetricsableThreadPoolExecutor("GetDataProcessorExecutor",
                 dataServerConfig.getGetDataExecutorMinPoolSize(),
                 dataServerConfig.getGetDataExecutorMaxPoolSize(),
                 dataServerConfig.getGetDataExecutorKeepAliveTime(), TimeUnit.SECONDS,
@@ -344,7 +344,7 @@ public class DataServerBeanConfiguration {
 
         @Bean(name = "slotSyncRequestProcessorExecutor")
         public ThreadPoolExecutor slotSyncRequestProcessorExecutor(DataServerConfig dataServerConfig) {
-            return new ThreadPoolExecutorDataServer("SlotSyncRequestProcessorExecutor",
+            return new MetricsableThreadPoolExecutor("SlotSyncRequestProcessorExecutor",
                 dataServerConfig.getSlotSyncRequestExecutorMinPoolSize(),
                 dataServerConfig.getSlotSyncRequestExecutorMaxPoolSize(), 300, TimeUnit.SECONDS,
                 new ArrayBlockingQueue<>(dataServerConfig.getSlotSyncRequestExecutorQueueSize()),

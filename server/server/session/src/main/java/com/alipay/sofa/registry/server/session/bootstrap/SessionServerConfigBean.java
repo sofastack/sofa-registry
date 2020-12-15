@@ -51,12 +51,6 @@ public class SessionServerConfigBean implements SessionServerConfig {
 
     private int                  schedulerHeartbeatIntervalSec           = 3;
 
-    private int                  schedulerFetchDataTimeout               = 1;               //MINUTES
-
-    private int                  schedulerFetchDataFirstDelay            = 30;
-
-    private int                  schedulerFetchDataExpBackOffBound       = 10;
-
     private int                  schedulerCleanInvalidClientTimeOut      = 3;
 
     private int                  schedulerCleanInvalidClientFirstDelay   = 10;
@@ -177,15 +171,19 @@ public class SessionServerConfigBean implements SessionServerConfig {
 
     private long                 publishDataExecutorKeepAliveTime        = 60;
 
+    private int                  schedulerFetchDataVersionIntervalMs     = 1000 * 6;
+
+    private int                  schedulerFetchDataVersionPoolSize       = 12;
+
     private double               accessLimitRate                         = 100000.0;
 
     private String               sessionServerRegion;
 
     private String               sessionServerDataCenter;
 
-    private boolean              stopPushSwitch                          = false;
+    private volatile boolean     stopPushSwitch                          = false;
 
-    private boolean              beginDataFetchTask                      = false;
+    private volatile boolean     beginDataFetchTask                      = false;
 
     //begin config for enterprise version
 
@@ -464,63 +462,6 @@ public class SessionServerConfigBean implements SessionServerConfig {
      */
     public void setSchedulerHeartbeatTimeout(int schedulerHeartbeatIntervalSec) {
         this.schedulerHeartbeatIntervalSec = schedulerHeartbeatIntervalSec;
-    }
-
-    /**
-     * Getter method for property <tt>schedulerFetchDataTimeout</tt>.
-     *
-     * @return property value of schedulerFetchDataTimeout
-     */
-    @Override
-    public int getSchedulerFetchDataTimeout() {
-        return schedulerFetchDataTimeout;
-    }
-
-    /**
-     * Setter method for property <tt>schedulerFetchDataTimeout</tt>.
-     *
-     * @param schedulerFetchDataTimeout value to be assigned to property schedulerFetchDataTimeout
-     */
-    public void setSchedulerFetchDataTimeout(int schedulerFetchDataTimeout) {
-        this.schedulerFetchDataTimeout = schedulerFetchDataTimeout;
-    }
-
-    /**
-     * Getter method for property <tt>schedulerFetchDataFirstDelay</tt>.
-     *
-     * @return property value of schedulerFetchDataFirstDelay
-     */
-    @Override
-    public int getSchedulerFetchDataFirstDelay() {
-        return schedulerFetchDataFirstDelay;
-    }
-
-    /**
-     * Setter method for property <tt>schedulerFetchDataFirstDelay</tt>.
-     *
-     * @param schedulerFetchDataFirstDelay value to be assigned to property schedulerFetchDataFirstDelay
-     */
-    public void setSchedulerFetchDataFirstDelay(int schedulerFetchDataFirstDelay) {
-        this.schedulerFetchDataFirstDelay = schedulerFetchDataFirstDelay;
-    }
-
-    /**
-     * Getter method for property <tt>schedulerFetchDataExpBackOffBound</tt>.
-     *
-     * @return property value of schedulerFetchDataExpBackOffBound
-     */
-    @Override
-    public int getSchedulerFetchDataExpBackOffBound() {
-        return schedulerFetchDataExpBackOffBound;
-    }
-
-    /**
-     * Setter method for property <tt>schedulerFetchDataExpBackOffBound</tt>.
-     *
-     * @param schedulerFetchDataExpBackOffBound value to be assigned to property schedulerFetchDataExpBackOffBound
-     */
-    public void setSchedulerFetchDataExpBackOffBound(int schedulerFetchDataExpBackOffBound) {
-        this.schedulerFetchDataExpBackOffBound = schedulerFetchDataExpBackOffBound;
     }
 
     /**
@@ -1834,6 +1775,40 @@ public class SessionServerConfigBean implements SessionServerConfig {
 
     public static int cpus() {
         return Runtime.getRuntime().availableProcessors();
+    }
+
+    /**
+     * Getter method for property <tt>schedulerFetchDataVersionIntervalMs</tt>.
+     * @return property value of schedulerFetchDataVersionIntervalMs
+     */
+    @Override
+    public int getSchedulerFetchDataVersionIntervalMs() {
+        return schedulerFetchDataVersionIntervalMs;
+    }
+
+    /**
+     * Setter method for property <tt>schedulerFetchDataVersionIntervalMs</tt>.
+     * @param schedulerFetchDataVersionIntervalMs value to be assigned to property schedulerFetchDataVersionIntervalMs
+     */
+    public void setSchedulerFetchDataVersionIntervalMs(int schedulerFetchDataVersionIntervalMs) {
+        this.schedulerFetchDataVersionIntervalMs = schedulerFetchDataVersionIntervalMs;
+    }
+
+    /**
+     * Getter method for property <tt>schedulerFetchDataVersionPoolSize</tt>.
+     * @return property value of schedulerFetchDataVersionPoolSize
+     */
+    @Override
+    public int getSchedulerFetchDataVersionPoolSize() {
+        return schedulerFetchDataVersionPoolSize;
+    }
+
+    /**
+     * Setter method for property <tt>schedulerFetchDataVersionPoolSize</tt>.
+     * @param schedulerFetchDataVersionPoolSize value to be assigned to property schedulerFetchDataVersionPoolSize
+     */
+    public void setSchedulerFetchDataVersionPoolSize(int schedulerFetchDataVersionPoolSize) {
+        this.schedulerFetchDataVersionPoolSize = schedulerFetchDataVersionPoolSize;
     }
 
     @Override

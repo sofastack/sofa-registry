@@ -82,16 +82,24 @@ public class DataNodeExchanger extends ClientExchanger {
         return getClient();
     }
 
+    @Override
     protected Collection<ChannelHandler> getClientHandlers() {
         return dataClientHandlers;
     }
 
+    @Override
     public int getRpcTimeout() {
         return sessionServerConfig.getDataNodeExchangeTimeOut();
     }
 
+    @Override
     public int getServerPort() {
         return sessionServerConfig.getDataServerPort();
+    }
+
+    @Override
+    public int getConnNum() {
+        return sessionServerConfig.getDataClientConnNum();
     }
 
 }

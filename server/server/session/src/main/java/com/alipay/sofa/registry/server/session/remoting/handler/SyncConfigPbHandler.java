@@ -28,6 +28,8 @@ import com.alipay.sofa.registry.server.session.converter.pb.SyncConfigResponseCo
 import com.alipay.sofa.registry.server.shared.remoting.AbstractServerHandler;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import java.util.concurrent.Executor;
+
 /**
  *
  * @author zhuoyu.sjw
@@ -40,7 +42,7 @@ public class SyncConfigPbHandler extends AbstractServerHandler<SyncConfigRequest
 
     @Override
     protected Node.NodeType getConnectNodeType() {
-        return Node.NodeType.CLIENT;
+        return syncConfigHandler.getConnectNodeType();
     }
 
     /**
@@ -54,11 +56,6 @@ public class SyncConfigPbHandler extends AbstractServerHandler<SyncConfigRequest
     @Override
     public Object doHandle(Channel channel, SyncConfigRequestPb message) {
         SyncConfigResponsePb.Builder builder = SyncConfigResponsePb.newBuilder();
-        if (!(message instanceof SyncConfigRequestPb)) {
-            return builder.setResult(
-                ResultPb.newBuilder().setSuccess(false)
-                    .setMessage("Unknown sync config request type").build()).build();
-        }
 
         Object response = syncConfigHandler.doHandle(channel,
             SyncConfigRequestConvertor.convert2Java(message));
@@ -79,5 +76,10 @@ public class SyncConfigPbHandler extends AbstractServerHandler<SyncConfigRequest
     @Override
     public Class interest() {
         return SyncConfigRequestPb.class;
+    }
+
+    @Override
+    public Executor getExecutor() {
+        return syncConfigHandler.getExecutor();
     }
 }

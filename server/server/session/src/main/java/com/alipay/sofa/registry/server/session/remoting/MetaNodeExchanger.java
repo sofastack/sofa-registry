@@ -35,6 +35,7 @@ public class MetaNodeExchanger extends AbstractMetaNodeExchanger {
         return sessionServerConfig.getMetaServerPort();
     }
 
+    @Override
     public int getRpcTimeout() {
         return sessionServerConfig.getMetaNodeExchangeTimeOut();
     }

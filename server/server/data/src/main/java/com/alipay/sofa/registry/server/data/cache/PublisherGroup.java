@@ -27,6 +27,7 @@ import com.alipay.sofa.registry.common.model.store.WordCache;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.util.DatumVersionUtil;
+import com.alipay.sofa.registry.util.ParaCheckUtil;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import org.apache.commons.collections.CollectionUtils;
@@ -110,7 +111,7 @@ public final class PublisherGroup {
     private boolean tryAddPublisher(Publisher publisher) {
         PublisherEnvelope exist = pubMap.get(publisher.getRegisterId());
         if (exist != null && !exist.publisherVersion.orderThan(publisher.publisherVersion())) {
-            LOGGER.warn("[AddLessVer] {}, exist={}, add={}", publisher.getRegisterId(),
+            LOGGER.warn("[AddOlderVer] {}, exist={}, add={}", publisher.getRegisterId(),
                 exist.publisherVersion, publisher.publisherVersion());
             return false;
         }
@@ -135,13 +136,17 @@ public final class PublisherGroup {
         try {
             boolean modified = false;
             if (sessionProcessId == null) {
+                modified = !pubMap.isEmpty();
                 pubMap.clear();
             } else {
                 Iterator<Map.Entry<String, PublisherEnvelope>> it = pubMap.entrySet().iterator();
                 while (it.hasNext()) {
-                    PublisherEnvelope envelope = it.next().getValue();
+                    Map.Entry<String, PublisherEnvelope> e = it.next();
+                    final String registerId = e.getKey();
+                    PublisherEnvelope envelope = e.getValue();
                     if (envelope.isPub() && envelope.sessionProcessId.equals(sessionProcessId)) {
-                        // just remove it, the data out of order may delete at next clean
+                        pubMap.put(registerId, PublisherEnvelope.unpubOf(
+                            envelope.publisherVersion.incrRegisterTimestamp(), sessionProcessId));
                         it.remove();
                         modified = true;
                     }
@@ -186,20 +191,35 @@ public final class PublisherGroup {
         try {
             boolean modified = false;
             for (Map.Entry<String, PublisherVersion> e : removedPublishers.entrySet()) {
-                final PublisherEnvelope existing = pubMap.get(e.getKey());
+                final String registerId = e.getKey();
+                final PublisherVersion removedVer = e.getValue();
+
+                final PublisherEnvelope existing = pubMap.get(registerId);
                 if (existing == null) {
                     // the removedPublishers is from pubMap, but now notExist/unpub/pubByOtherSession
                     continue;
                 }
-                if (existing.publisherVersion.orderThan(e.getValue())) {
+                if (existing.publisherVersion.equals(removedVer)) {
+                    // sync from leader
                     if (sessionProcessId == null) {
-                        pubMap.remove(e.getKey());
-                    } else {
-                        // mark unpub
-                        pubMap.put(e.getKey(),
-                            PublisherEnvelope.unpubOf(e.getValue(), sessionProcessId));
+                        pubMap.remove(registerId);
+                        modified = true;
+                        continue;
                     }
-                    modified = true;
+                    if (sessionProcessId.equals(existing.sessionProcessId)) {
+                        // syn from session, mark unpub with higher registerTimestamp
+                        pubMap.put(registerId, PublisherEnvelope.unpubOf(
+                            removedVer.incrRegisterTimestamp(), sessionProcessId));
+                        modified = true;
+                    } else {
+                        LOGGER.warn("[RemovePidModified] {}, exist={}/{}, expect={}/{}",
+                            registerId, existing.publisherVersion, existing.sessionProcessId,
+                            removedVer, sessionProcessId);
+                    }
+                } else {
+                    // the item has modified after diff, ignored
+                    LOGGER.warn("[RemoveVerModified] {}, exist={}, expect={}", registerId,
+                        existing.publisherVersion, removedVer);
                 }
             }
             return modified ? updateVersion() : null;
@@ -211,6 +231,9 @@ public final class PublisherGroup {
     DatumVersion update(List<Publisher> updatedPublishers) {
         if (CollectionUtils.isEmpty(updatedPublishers)) {
             return null;
+        }
+        for (Publisher p : updatedPublishers) {
+            ParaCheckUtil.checkNotNull(p.getSessionProcessId(), "publisher.sessionProcessId");
         }
         lock.lock();
         try {

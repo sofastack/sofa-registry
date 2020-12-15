@@ -23,7 +23,7 @@ import com.alipay.sofa.registry.remoting.exchange.message.Request;
  * @author shangyu.wh
  * @version $Id: RequestException.java, v 0.1 2018-01-15 18:16 shangyu.wh Exp $
  */
-public class RequestException extends Exception {
+public class RequestException extends RuntimeException {
 
     private static final int MAX_BODY_SIZE = 512;
     private Request          request;
