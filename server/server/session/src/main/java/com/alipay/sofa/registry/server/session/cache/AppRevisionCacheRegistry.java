@@ -49,20 +49,20 @@ public class AppRevisionCacheRegistry {
     }
 
     public void register(AppRevisionRegister appRevision) throws Exception {
-        if (this.registry.containsKey(appRevision.revision)) {
+        if (this.registry.containsKey(appRevision.getRevision())) {
             return;
         }
-        singleFlight.execute("revisionRegister" + appRevision.revision, () -> {
+        singleFlight.execute("revisionRegister" + appRevision.getRevision(), () -> {
             appRevisionNodeService.register(appRevision);
             return null;
         });
     }
 
-    public Set<String> getApps(String dataInfoId) {
+    public Map<String, Set<String>> getAppRevisions(String dataInfoId) {
         if (!interfaceRevisions.containsKey(dataInfoId)) {
-            return new HashSet<>();
+            return new HashMap<>();
         }
-        return interfaceRevisions.get(dataInfoId).keySet();
+        return interfaceRevisions.get(dataInfoId);
     }
 
     public AppRevisionRegister getRevision(String revision) {
@@ -98,18 +98,18 @@ public class AppRevisionCacheRegistry {
     }
 
     private void onNewRevision(AppRevisionRegister rev) {
-        for (AppRevisionInterface inf : rev.interfaces.values()) {
-            String dataInfoId = DataInfo.toDataInfoId(inf.dataId, inf.instanceId, inf.group);
+        for (AppRevisionInterface inf : rev.getInterfaces().values()) {
+            String dataInfoId = DataInfo.toDataInfoId(inf.getDataId(), inf.getInstanceId(), inf.getGroup());
             Map<String, Set<String>> apps = interfaceRevisions.computeIfAbsent(dataInfoId,
                     k -> new ConcurrentHashMap<>());
-            Set<String> infRevisions = apps.computeIfAbsent(rev.appname,
+            Set<String> infRevisions = apps.computeIfAbsent(rev.getAppName(),
                     k -> Sets.newConcurrentHashSet());
-            infRevisions.add(rev.revision);
+            infRevisions.add(rev.getRevision());
 
-            appInterfaces.computeIfAbsent(rev.appname, k -> Sets.newConcurrentHashSet())
+            appInterfaces.computeIfAbsent(rev.getAppName(), k -> Sets.newConcurrentHashSet())
                     .add(dataInfoId);
         }
-        registry.put(rev.revision, rev);
+        registry.put(rev.getRevision(), rev);
     }
 
     private String generateKeysDigest() {

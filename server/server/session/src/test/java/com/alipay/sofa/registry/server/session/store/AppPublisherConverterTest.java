@@ -45,13 +45,19 @@ public class AppPublisherConverterTest {
         serverDataBox.setRevision(jsonObject.getString(AppRegisterConstant.REVISION_KEY));
         serverDataBox.setBaseParams(JSONObject.parseObject(
             jsonObject.getString(AppRegisterConstant.BASE_PARAMS_KEY), HashMap.class));
-        serverDataBox.setServiceParams(JSONObject.parseObject(
+        serverDataBox.setInterfaceParams(JSONObject.parseObject(
             jsonObject.getString(AppRegisterConstant.INTERFACE_PARAMS_KEY), HashMap.class));
         Assert.assertEquals(serverDataBox.getBaseParams().get("a").size(), 1);
         Assert.assertEquals(
-            serverDataBox.getServiceParams()
+            serverDataBox.getInterfaceParams()
                 .get("com.alipay.test.Simple5#@#DEFAULT_INSTANCE_ID#@#DEFAULT_GROUP").get("b")
                 .size(), 2);
 
+        AppRegisterServerDataBox dataBox = JSONObject.parseObject(box,
+            AppRegisterServerDataBox.class);
+        Assert.assertEquals(
+            dataBox.getInterfaceParams()
+                .get("com.alipay.test.Simple5#@#DEFAULT_INSTANCE_ID#@#DEFAULT_GROUP").get("b")
+                .size(), 2);
     }
 }

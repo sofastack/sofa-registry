@@ -74,7 +74,6 @@ public class RaftAppRevisionService extends AbstractSnapshotProcess implements A
             return true;
         } catch (IOException e) {
             LOGGER.error("Load app revisions error:", e);
-            e.printStackTrace();
             return false;
         }
     }
@@ -95,7 +94,7 @@ public class RaftAppRevisionService extends AbstractSnapshotProcess implements A
 
     public void add(AppRevisionRegister appRevision) {
         rwLock.writeLock().lock();
-        if (registry.putIfAbsent(appRevision.revision, appRevision) == null) {
+        if (registry.putIfAbsent(appRevision.getRevision(), appRevision) == null) {
             keysDigest = generateKeysDigest();
         }
         rwLock.writeLock().unlock();

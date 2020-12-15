@@ -17,7 +17,6 @@
 package com.alipay.sofa.registry.server.session.registry;
 
 import com.alipay.sofa.registry.common.model.ConnectId;
-import com.alipay.sofa.registry.common.model.store.*;
 
 import java.util.*;
 import java.util.concurrent.TimeUnit;
@@ -118,6 +117,8 @@ public class SessionRegistry implements Registry {
 
     @Autowired
     private SlotTableCache            slotTableCache;
+
+    @Autowired
     private AppRevisionCacheRegistry  appRevisionCacheRegistry;
 
     private volatile boolean          enableDataRenewSnapshot = true;
@@ -273,7 +274,7 @@ public class SessionRegistry implements Registry {
 
         for (String dataInfoId : checkDataInfoIds) {
             fetchDataInfoIds.add(dataInfoId);
-            fetchDataInfoIds.addAll(appRevisionCacheRegistry.getApps(dataInfoId));
+            fetchDataInfoIds.addAll(appRevisionCacheRegistry.getAppRevisions(dataInfoId).keySet());
         }
 
         LOGGER.info("[fetchChangDataProcess] Fetch data versions for {} dataInfoIds",

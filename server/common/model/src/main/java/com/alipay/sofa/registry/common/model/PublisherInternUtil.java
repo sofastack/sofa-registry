@@ -24,7 +24,6 @@ import com.google.common.collect.ArrayListMultimap;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 
 /**
  *
@@ -66,7 +65,7 @@ public class PublisherInternUtil {
                 });
 
                 Map<String, Map<String, List<String>>> serviceParams = new HashMap<>();
-                dataBox.getServiceParams().entrySet().forEach(entry -> {
+                dataBox.getInterfaceParams().entrySet().forEach(entry -> {
                     // cache serviceName
                     serviceParams.put(WordCache.getInstance().getWordCache(entry.getKey()), entry.getValue());
 

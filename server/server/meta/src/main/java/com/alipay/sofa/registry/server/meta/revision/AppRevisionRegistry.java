@@ -26,7 +26,7 @@ public class AppRevisionRegistry {
     private AppRevisionService appRevisionService;
 
     public void register(AppRevisionRegister appRevision) {
-        if (appRevisionService.existed(appRevision.revision)) {
+        if (appRevisionService.existed(appRevision.getRevision())) {
             return;
         }
         appRevisionService.add(appRevision);
