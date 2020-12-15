@@ -16,9 +16,11 @@
  */
 package com.alipay.sofa.registry.server.meta.remoting.handler;
 
+import com.alipay.sofa.registry.common.model.Node;
 import com.alipay.sofa.registry.common.model.metaserver.FetchRevisionsRequest;
 import com.alipay.sofa.registry.remoting.Channel;
 import com.alipay.sofa.registry.server.meta.revision.AppRevisionRegistry;
+import com.alipay.sofa.registry.server.shared.remoting.AbstractServerHandler;
 import org.springframework.beans.factory.annotation.Autowired;
 
 public class FetchRevisionsHandler extends AbstractServerHandler<FetchRevisionsRequest> {
@@ -26,7 +28,12 @@ public class FetchRevisionsHandler extends AbstractServerHandler<FetchRevisionsR
     private AppRevisionRegistry appRevisionRegistry;
 
     @Override
-    public Object reply(Channel channel, FetchRevisionsRequest message) {
+    protected Node.NodeType getConnectNodeType() {
+        return Node.NodeType.SESSION;
+    }
+
+    @Override
+    public Object doHandle(Channel channel, FetchRevisionsRequest message) {
         return appRevisionRegistry.fetchRevisions(message.keys);
     }
 

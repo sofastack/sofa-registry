@@ -1,0 +1,11 @@
+syntax = "proto3";
+option java_package = "com.alipay.sofa.registry.common.model.client.pb";
+option java_multiple_files = true;
+option go_package = "pb";
+
+enum ScopeEnumPb {
+    zone = 0;
+    dataCenter = 1;
+    global = 2;
+}
+

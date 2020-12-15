@@ -1,0 +1,13 @@
+syntax = "proto3";
+option java_package = "com.alipay.sofa.registry.common.model.client.pb";
+option java_multiple_files = true;
+option go_package = "pb";
+
+message RegisterResponsePb {
+    bool success = 1;
+    string registId = 2;
+    int64 version = 3;
+    bool refused = 4;
+    string message = 5;
+}
+

@@ -18,7 +18,6 @@ package com.alipay.sofa.registry.server.session.strategy;
 
 import com.alipay.sofa.registry.core.model.AppRevisionRegister;
 import com.alipay.sofa.registry.core.model.RegisterResponse;
-import com.alipay.sofa.registry.remoting.Channel;
 
 public interface AppRevisionHandlerStrategy {
     void handleAppRevisionRegister(AppRevisionRegister appRevisionRegister,

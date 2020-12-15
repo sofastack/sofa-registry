@@ -1,0 +1,14 @@
+syntax = "proto3";
+option java_package = "com.alipay.sofa.registry.common.model.client.pb";
+option java_multiple_files = true;
+option go_package = "pb";
+
+import "DataBoxPb.proto";
+import "BaseRegisterPb.proto";
+
+message PublisherRegisterPb {
+    repeated DataBoxPb dataList = 1;
+
+    BaseRegisterPb baseRegister = 2;
+}
+

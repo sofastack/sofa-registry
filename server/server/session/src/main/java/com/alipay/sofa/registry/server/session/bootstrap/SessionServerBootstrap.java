@@ -16,6 +16,9 @@
  */
 package com.alipay.sofa.registry.server.session.bootstrap;
 
+import com.alipay.remoting.CustomSerializerManager;
+import com.alipay.remoting.serialization.SerializerManager;
+import com.alipay.sofa.registry.common.model.client.pb.*;
 import com.alipay.sofa.registry.common.model.constants.ValueConstants;
 import com.alipay.sofa.registry.common.model.metaserver.ProvideData;
 import com.alipay.sofa.registry.common.model.store.URL;
@@ -24,6 +27,8 @@ import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.net.NetUtil;
 import com.alipay.sofa.registry.remoting.ChannelHandler;
 import com.alipay.sofa.registry.remoting.Server;
+import com.alipay.sofa.registry.remoting.bolt.serializer.ProtobufCustomSerializer;
+import com.alipay.sofa.registry.remoting.bolt.serializer.ProtobufSerializer;
 import com.alipay.sofa.registry.remoting.exchange.Exchange;
 import com.alipay.sofa.registry.remoting.exchange.NodeExchanger;
 import com.alipay.sofa.registry.server.session.filter.blacklist.BlacklistManager;
@@ -128,7 +133,10 @@ public class SessionServerBootstrap {
 
             connectDataServer();
 
+            registerSerializer();
+
             openSessionServer();
+
 
             LOGGER.info("Initialized Session Server...");
 
@@ -295,6 +303,28 @@ public class SessionServerBootstrap {
                 jerseyResourceConfig.register(bean.getClass());
             });
         }
+    }
+
+    private void registerSerializer() {
+        ProtobufCustomSerializer serializer = new ProtobufCustomSerializer();
+        CustomSerializerManager.registerCustomSerializer(PublisherRegisterPb.class.getName(),
+            serializer);
+        CustomSerializerManager.registerCustomSerializer(SubscriberRegisterPb.class.getName(),
+            serializer);
+        CustomSerializerManager.registerCustomSerializer(SyncConfigRequestPb.class.getName(),
+            serializer);
+        CustomSerializerManager.registerCustomSerializer(SyncConfigResponsePb.class.getName(),
+            serializer);
+        CustomSerializerManager.registerCustomSerializer(RegisterResponsePb.class.getName(),
+            serializer);
+        CustomSerializerManager.registerCustomSerializer(ResultPb.class.getName(), serializer);
+        CustomSerializerManager
+            .registerCustomSerializer(ReceivedDataPb.class.getName(), serializer);
+        CustomSerializerManager.registerCustomSerializer(ReceivedConfigDataPb.class.getName(),
+            serializer);
+
+        SerializerManager.addSerializer(ProtobufSerializer.PROTOCOL_PROTOBUF,
+            ProtobufSerializer.getInstance());
     }
 
     private void stopServer() {

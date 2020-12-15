@@ -1,0 +1,13 @@
+syntax = "proto3";
+option java_package = "com.alipay.sofa.registry.common.model.client.pb";
+option java_multiple_files = true;
+option go_package = "pb";
+
+import "ResultPb.proto";
+
+message SyncConfigResponsePb {
+    ResultPb result = 1;
+    repeated string availableSegments = 2;
+    int32 retryInterval = 3;
+}
+

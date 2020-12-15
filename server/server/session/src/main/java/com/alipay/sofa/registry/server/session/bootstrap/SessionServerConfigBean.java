@@ -714,25 +714,6 @@ public class SessionServerConfigBean implements SessionServerConfig {
     }
 
     /**
-     * Getter method for property <tt>sessionRegisterDataServerTaskRetryTimes</tt>.
-     *
-     * @return property value of sessionRegisterDataServerTaskRetryTimes
-     */
-    @Override
-    public int getSessionRegisterDataServerTaskRetryTimes() {
-        return sessionRegisterDataServerTaskRetryTimes;
-    }
-
-    /**
-     * Setter method for property <tt>sessionRegisterDataServerTaskRetryTimes</tt>.
-     *
-     * @param sessionRegisterDataServerTaskRetryTimes value to be assigned to property sessionRegisterDataServerTaskRetryTimes
-     */
-    public void setSessionRegisterDataServerTaskRetryTimes(int sessionRegisterDataServerTaskRetryTimes) {
-        this.sessionRegisterDataServerTaskRetryTimes = sessionRegisterDataServerTaskRetryTimes;
-    }
-
-    /**
      * Getter method for property <tt>clientNodeExchangeTimeOut</tt>.
      *
      * @return property value of clientNodeExchangeTimeOut

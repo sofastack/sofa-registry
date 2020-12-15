@@ -19,12 +19,9 @@ package com.alipay.sofa.registry.server.session.bootstrap;
 import java.util.ArrayList;
 import java.util.Collection;
 
-import com.alipay.sofa.jraft.NodeManager;
-import com.alipay.sofa.registry.server.session.assemble.AppAssembleService;
 import com.alipay.sofa.registry.server.session.assemble.AppInterfaceAssembleService;
 import com.alipay.sofa.registry.server.session.assemble.AssembleService;
 import com.alipay.sofa.registry.server.session.assemble.DefaultSubscriberAssembleStrategy;
-import com.alipay.sofa.registry.server.session.assemble.InterfaceAssembleService;
 import com.alipay.sofa.registry.server.session.assemble.SubscriberAssembleStrategy;
 import com.alipay.sofa.registry.server.session.cache.*;
 import com.alipay.sofa.registry.server.session.connections.ConnectionsService;
@@ -52,7 +49,6 @@ import com.alipay.sofa.registry.server.session.cache.CacheGenerator;
 import com.alipay.sofa.registry.server.session.cache.CacheService;
 import com.alipay.sofa.registry.server.session.cache.DatumCacheGenerator;
 import com.alipay.sofa.registry.server.session.cache.SessionCacheService;
-import com.alipay.sofa.registry.server.session.connections.ConnectionsService;
 import com.alipay.sofa.registry.server.session.filter.DataIdMatchStrategy;
 import com.alipay.sofa.registry.server.session.filter.IPMatchStrategy;
 import com.alipay.sofa.registry.server.session.filter.ProcessFilter;
@@ -65,7 +61,6 @@ import com.alipay.sofa.registry.server.session.node.processor.ClientNodeSingleTa
 import com.alipay.sofa.registry.server.session.node.processor.ConsoleSyncSingleTaskProcessor;
 import com.alipay.sofa.registry.server.session.node.processor.DataNodeSingleTaskProcessor;
 import com.alipay.sofa.registry.server.session.node.processor.MetaNodeSingleTaskProcessor;
-import com.alipay.sofa.registry.server.session.node.service.*;
 import com.alipay.sofa.registry.server.session.provideData.ProvideDataProcessor;
 import com.alipay.sofa.registry.server.session.provideData.ProvideDataProcessorManager;
 import com.alipay.sofa.registry.server.session.provideData.processor.BlackListProvideDataProcessor;
@@ -75,22 +70,16 @@ import com.alipay.sofa.registry.server.session.registry.SessionRegistry;
 import com.alipay.sofa.registry.server.session.remoting.ClientNodeExchanger;
 import com.alipay.sofa.registry.server.session.remoting.DataNodeExchanger;
 import com.alipay.sofa.registry.server.session.remoting.MetaNodeExchanger;
-import com.alipay.sofa.registry.server.session.remoting.handler.*;
-import com.alipay.sofa.registry.server.session.resource.*;
 import com.alipay.sofa.registry.server.session.scheduler.ExecutorManager;
 import com.alipay.sofa.registry.server.session.scheduler.timertask.SyncClientsHeartbeatTask;
 import com.alipay.sofa.registry.server.session.slot.SlotTableCache;
 import com.alipay.sofa.registry.server.session.slot.SlotTableCacheImpl;
 import com.alipay.sofa.registry.server.session.store.*;
-import com.alipay.sofa.registry.server.session.strategy.*;
-import com.alipay.sofa.registry.server.session.strategy.impl.*;
-import com.alipay.sofa.registry.server.session.wrapper.*;
 import com.alipay.sofa.registry.server.shared.meta.MetaServerService;
 import com.alipay.sofa.registry.server.shared.remoting.AbstractClientHandler;
 import com.alipay.sofa.registry.server.shared.remoting.AbstractServerHandler;
 import com.alipay.sofa.registry.server.session.store.DataStore;
 import com.alipay.sofa.registry.server.session.store.Interests;
-import com.alipay.sofa.registry.server.session.store.SessionDataStore;
 import com.alipay.sofa.registry.server.session.store.SessionInterests;
 import com.alipay.sofa.registry.server.session.store.SessionWatchers;
 import com.alipay.sofa.registry.server.session.store.Watchers;
@@ -115,16 +104,6 @@ import com.alipay.sofa.registry.task.listener.DefaultTaskListenerManager;
 import com.alipay.sofa.registry.task.listener.TaskListener;
 import com.alipay.sofa.registry.task.listener.TaskListenerManager;
 import com.alipay.sofa.registry.util.PropertySplitter;
-import org.glassfish.jersey.jackson.JacksonFeature;
-import org.glassfish.jersey.server.ResourceConfig;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
-import org.springframework.boot.context.properties.EnableConfigurationProperties;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Import;
-
-import java.util.ArrayList;
-import java.util.Collection;
 
 /**
  * @author shangyu.wh
@@ -210,6 +189,10 @@ public class SessionServerConfiguration {
             list.add(cancelAddressRequestHandler());
             list.add(syncConfigHandler());
             list.add(appRevisionRegisterHandler());
+            list.add(appRevisionRegisterPbHandler());
+            list.add(publisherPbHandler());
+            list.add(subscriberPbHandler());
+            list.add(syncConfigPbHandler());
             return list;
         }
 
@@ -260,6 +243,28 @@ public class SessionServerConfiguration {
         public AbstractServerHandler dataSlotDiffPublisherRequestHandler() {
             return new DataSlotDiffPublisherRequestHandler();
         }
+
+        @Bean
+        public AbstractServerHandler publisherPbHandler() {
+            return new PublisherPbHandler();
+        }
+
+        @Bean
+        public AbstractServerHandler appRevisionRegisterPbHandler() {
+            return new AppRevisionRegisterPbHandler();
+        }
+
+        @Bean
+        public AbstractServerHandler subscriberPbHandler() {
+            return new SubscriberPbHandler();
+        }
+
+        @Bean
+        public AbstractServerHandler syncConfigPbHandler() {
+            return new SyncConfigPbHandler();
+        }
+
+        @Bean
         public AbstractServerHandler appRevisionRegisterHandler() {
             return new AppRevisionRegisterHandler();
         }
@@ -398,12 +403,13 @@ public class SessionServerConfiguration {
         public ClientNodeService clientNodeService() {
             return new ClientNodeServiceImpl();
         }
-       @Bean
+
+        @Bean
         public RaftClientManager raftClientManager() {
             return new RaftClientManager();
         }
 
-       @Bean
+        @Bean
         public AppRevisionNodeService appRevisionNodeService() {
             return new AppRevisionNodeServiceImpl();
         }

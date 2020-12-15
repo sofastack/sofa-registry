@@ -16,7 +16,6 @@
  */
 package com.alipay.sofa.registry.server.session.converter;
 
-import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.alipay.sofa.registry.common.model.AppRegisterServerDataBox;
 import com.alipay.sofa.registry.common.model.ServerDataBox;

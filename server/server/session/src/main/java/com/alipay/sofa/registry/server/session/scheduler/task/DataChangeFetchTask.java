@@ -16,26 +16,19 @@
  */
 package com.alipay.sofa.registry.server.session.scheduler.task;
 
-import com.alipay.remoting.util.StringUtils;
 import com.alipay.sofa.registry.common.model.dataserver.Datum;
 import com.alipay.sofa.registry.common.model.sessionserver.DataChangeRequest;
-import com.alipay.sofa.registry.common.model.store.AppPublisher;
 import com.alipay.sofa.registry.common.model.store.BaseInfo.ClientVersion;
-import com.alipay.sofa.registry.common.model.store.DataInfo;
-import com.alipay.sofa.registry.common.model.store.Publisher;
 import com.alipay.sofa.registry.common.model.store.Subscriber;
 import com.alipay.sofa.registry.common.model.store.URL;
 import com.alipay.sofa.registry.core.model.AssembleType;
-import com.alipay.sofa.registry.core.model.ReceivedData;
 import com.alipay.sofa.registry.core.model.ScopeEnum;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.server.session.assemble.SubscriberAssembleStrategy;
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
 import com.alipay.sofa.registry.server.session.cache.AppRevisionCacheRegistry;
-import com.alipay.sofa.registry.server.session.cache.DatumKey;
 import com.alipay.sofa.registry.server.session.cache.SessionDatumCacheDecorator;
-import com.alipay.sofa.registry.server.session.converter.ReceivedDataConverter;
 import com.alipay.sofa.registry.server.session.push.FirePushService;
 import com.alipay.sofa.registry.server.session.scheduler.ExecutorManager;
 import com.alipay.sofa.registry.server.session.store.Interests;
@@ -48,7 +41,6 @@ import org.springframework.util.CollectionUtils;
 import java.net.InetSocketAddress;
 import java.util.*;
 import java.util.Map.Entry;
-import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 /**
@@ -101,9 +93,9 @@ public class DataChangeFetchTask extends AbstractSessionTask {
     @Override
     public void execute() {
 
-        DataInfo dataInfo = DataInfo.valueOf(dataChangeRequest.getDataInfoId());
-        Datum datum = sessionDatumCacheDecorator.getDatumCache(dataChangeRequest.getDataCenter(),
-            dataChangeRequest.getDataInfoId());
+        //        DataInfo dataInfo = DataInfo.valueOf(dataChangeRequest.getDataInfoId());
+        //        Datum datum = sessionDatumCacheDecorator.getDatumCache(dataChangeRequest.getDataCenter(),
+        //            dataChangeRequest.getDataInfoId());
         // FIXME delete
         //        if (StringUtils.equals(APP_GROUP, dataInfo.getDataType())) {
         //

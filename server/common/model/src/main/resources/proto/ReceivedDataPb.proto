@@ -1,0 +1,19 @@
+syntax = "proto3";
+option java_package = "com.alipay.sofa.registry.common.model.client.pb";
+option java_multiple_files = true;
+option go_package = "pb";
+
+import "DataBoxesPb.proto";
+
+message ReceivedDataPb {
+    string dataId = 1;
+    string group = 2;
+    string instanceId = 3;
+    string segment = 4;
+    string scope = 5;
+    repeated string subscriberRegistIds = 6;
+    map<string, DataBoxesPb> data = 7;
+    int64 version = 8;
+    string localZone = 9;
+}
+
