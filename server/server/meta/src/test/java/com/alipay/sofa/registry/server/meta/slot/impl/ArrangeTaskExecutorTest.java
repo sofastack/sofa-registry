@@ -20,20 +20,16 @@ import com.alipay.sofa.registry.exception.SofaRegistryRuntimeException;
 import com.alipay.sofa.registry.lifecycle.impl.LifecycleHelper;
 import com.alipay.sofa.registry.server.meta.AbstractTest;
 import com.alipay.sofa.registry.server.meta.slot.RebalanceTask;
-import com.google.common.collect.Lists;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
-import java.util.List;
 import java.util.Queue;
-import java.util.concurrent.*;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicLong;
-
-import static org.junit.Assert.*;
+import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.CyclicBarrier;
+import java.util.concurrent.TimeUnit;
 
 public class ArrangeTaskExecutorTest extends AbstractTest {
 
@@ -42,14 +38,12 @@ public class ArrangeTaskExecutorTest extends AbstractTest {
     @Before
     public void beforeArrangeTaskExecutorTest() throws Exception {
         executor = new ArrangeTaskExecutor();
-        LifecycleHelper.initializeIfPossible(executor);
-        LifecycleHelper.startIfPossible(executor);
+        executor.postConstruct();
     }
 
     @After
     public void afterArrangeTaskExecutorTest() throws Exception {
-        LifecycleHelper.stopIfPossible(executor);
-        LifecycleHelper.disposeIfPossible(executor);
+        executor.preDestroy();
     }
 
     @Test

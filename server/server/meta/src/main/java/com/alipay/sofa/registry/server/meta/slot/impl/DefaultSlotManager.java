@@ -16,6 +16,7 @@
  */
 package com.alipay.sofa.registry.server.meta.slot.impl;
 
+import com.alipay.sofa.jraft.util.ThreadPoolUtil;
 import com.alipay.sofa.registry.common.model.metaserver.nodes.DataNode;
 import com.alipay.sofa.registry.common.model.slot.DataNodeSlot;
 import com.alipay.sofa.registry.common.model.slot.SlotTable;
@@ -23,32 +24,58 @@ import com.alipay.sofa.registry.exception.DisposeException;
 import com.alipay.sofa.registry.exception.InitializeException;
 import com.alipay.sofa.registry.exception.StartException;
 import com.alipay.sofa.registry.exception.StopException;
-import com.alipay.sofa.registry.jraft.processor.Processor;
-import com.alipay.sofa.registry.jraft.processor.ProxyHandler;
+import com.alipay.sofa.registry.jraft.bootstrap.ServiceStateMachine;
 import com.alipay.sofa.registry.lifecycle.impl.AbstractLifecycle;
 import com.alipay.sofa.registry.lifecycle.impl.LifecycleHelper;
-import com.alipay.sofa.registry.server.meta.remoting.RaftExchanger;
+import com.alipay.sofa.registry.server.meta.bootstrap.config.MetaServerConfig;
+import com.alipay.sofa.registry.server.meta.lease.data.DefaultDataServerManager;
 import com.alipay.sofa.registry.server.meta.slot.SlotManager;
+import com.alipay.sofa.registry.server.meta.slot.tasks.InitReshardingTask;
+import com.alipay.sofa.registry.server.meta.slot.tasks.SlotLeaderRebalanceTask;
+import com.alipay.sofa.registry.server.meta.slot.tasks.SlotReassignTask;
+import com.alipay.sofa.registry.store.api.annotation.RaftReference;
+import com.alipay.sofa.registry.store.api.annotation.RaftReferenceContainer;
+import com.alipay.sofa.registry.util.NamedThreadFactory;
+import com.alipay.sofa.registry.util.OsUtils;
+import com.google.common.annotations.VisibleForTesting;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
-import java.lang.reflect.Proxy;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * @author chen.zhu
  * <p>
  * Dec 02, 2020
  */
+@RaftReferenceContainer
 public class DefaultSlotManager extends AbstractLifecycle implements SlotManager {
 
     @Autowired
-    private RaftExchanger    raftExchanger;
+    private LocalSlotManager                           localSlotManager;
+
+    @RaftReference(uniqueId = LocalSlotManager.LOCAL_SLOT_MANAGER, interfaceType = SlotManager.class)
+    private SlotManager                                raftSlotManager;
 
     @Autowired
-    private LocalSlotManager localSlotManager;
+    private MetaServerConfig                           metaServerConfig;
 
-    private SlotManager      raftSlotManager;
+    @Autowired
+    private ArrangeTaskExecutor                        arrangeTaskExecutor;
+
+    @Autowired
+    private DefaultDataServerManager                   dataServerManager;
+
+    private final AtomicReference<SlotPeriodCheckType> currentCheck = new AtomicReference<>(
+                                                                        SlotPeriodCheckType.CHECK_SLOT_ASSIGNMENT_BALANCE);
+
+    private ScheduledExecutorService                   scheduled;
+
+    private ScheduledFuture<?>                         future;
 
     @PostConstruct
     public void postConstruct() throws Exception {
@@ -65,21 +92,51 @@ public class DefaultSlotManager extends AbstractLifecycle implements SlotManager
     @Override
     protected void doInitialize() throws InitializeException {
         super.doInitialize();
-        initRaftService();
+        scheduled = ThreadPoolUtil.newScheduledBuilder()
+            .coreThreads(Math.min(OsUtils.getCpuCount(), 2))
+            .poolName(DefaultSlotManager.class.getSimpleName()).enableMetric(true)
+            .threadFactory(new NamedThreadFactory(DefaultSlotManager.class.getSimpleName()))
+            .build();
     }
 
     @Override
     protected void doStart() throws StartException {
         super.doStart();
+        if (isRaftLeader()) {
+            initCheck();
+        }
+        future = scheduled.scheduleWithFixedDelay(new Runnable() {
+            @Override
+            public void run() {
+                if (ServiceStateMachine.getInstance().isLeader()) {
+                    currentCheck.set(currentCheck
+                        .get()
+                        .action(arrangeTaskExecutor, localSlotManager, raftSlotManager,
+                            dataServerManager).next());
+                }
+            }
+        }, getIntervalMilli(), getIntervalMilli(), TimeUnit.MILLISECONDS);
+    }
+
+    private long getIntervalMilli() {
+        return TimeUnit.SECONDS.toMillis(metaServerConfig.getSchedulerHeartbeatExpBackOffBound());
     }
 
     @Override
     protected void doStop() throws StopException {
+        if (future != null) {
+            future.cancel(true);
+            future = null;
+        }
         super.doStop();
     }
 
     @Override
     protected void doDispose() throws DisposeException {
+        if (scheduled != null) {
+            scheduled.shutdownNow();
+            scheduled = null;
+        }
         super.doDispose();
     }
 
@@ -88,34 +145,128 @@ public class DefaultSlotManager extends AbstractLifecycle implements SlotManager
         raftSlotManager.refresh(slotTable);
     }
 
+    public SlotManager getRaftSlotManager() {
+        return raftSlotManager;
+    }
+
     @Override
     public int getSlotNums() {
+        if (isRaftLeader()) {
+            return localSlotManager.getSlotNums();
+        }
         return raftSlotManager.getSlotNums();
     }
 
     @Override
     public int getSlotReplicaNums() {
+        if (isRaftLeader()) {
+            return localSlotManager.getSlotReplicaNums();
+        }
         return raftSlotManager.getSlotReplicaNums();
     }
 
     @Override
     public DataNodeSlot getDataNodeManagedSlot(DataNode dataNode, boolean ignoreFollowers) {
+        if (isRaftLeader()) {
+            return localSlotManager.getDataNodeManagedSlot(dataNode, ignoreFollowers);
+        }
         return raftSlotManager.getDataNodeManagedSlot(dataNode, ignoreFollowers);
     }
 
     @Override
     public SlotTable getSlotTable() {
+        if (isRaftLeader()) {
+            return localSlotManager.getSlotTable();
+        }
         return raftSlotManager.getSlotTable();
     }
 
-    private String getServiceId() {
-        return "DefaultSlotManager.RaftService";
+    @VisibleForTesting
+    protected void initCheck() {
+        if (localSlotManager.getSlotTable().getEpoch() != SlotTable.INIT.getEpoch()) {
+            if (logger.isInfoEnabled()) {
+                logger.info("[initCheck] slot table(version: {}) not empty, quit init slot table",
+                    localSlotManager.getSlotTable().getEpoch());
+            }
+            return;
+        }
+        arrangeTaskExecutor.offer(new InitReshardingTask(localSlotManager, raftSlotManager,
+            dataServerManager));
     }
 
-    private void initRaftService() {
-        Processor.getInstance().addWorker(getServiceId(), SlotManager.class, localSlotManager);
-        raftSlotManager = (SlotManager) Proxy.newProxyInstance(Thread.currentThread()
-            .getContextClassLoader(), new Class<?>[] { SlotManager.class }, new ProxyHandler(
-            SlotManager.class, getServiceId(), raftExchanger.getRaftClient()));
+    public enum SlotPeriodCheckType {
+        CHECK_SLOT_ASSIGNMENT_BALANCE {
+            @Override
+            SlotPeriodCheckType next() {
+                return CHECK_SLOT_LEADER_BALANCE;
+            }
+
+            @Override
+            SlotPeriodCheckType action(ArrangeTaskExecutor arrangeTaskExecutor,
+                                       LocalSlotManager localSlotManager,
+                                       SlotManager raftSlotManager,
+                                       DefaultDataServerManager dataServerManager) {
+                arrangeTaskExecutor.offer(new SlotReassignTask(localSlotManager, raftSlotManager,
+                    dataServerManager));
+                return this;
+            }
+        },
+        CHECK_SLOT_LEADER_BALANCE {
+            @Override
+            SlotPeriodCheckType next() {
+                return CHECK_SLOT_ASSIGNMENT_BALANCE;
+            }
+
+            @Override
+            SlotPeriodCheckType action(ArrangeTaskExecutor arrangeTaskExecutor,
+                                       LocalSlotManager localSlotManager,
+                                       SlotManager raftSlotManager,
+                                       DefaultDataServerManager dataServerManager) {
+                arrangeTaskExecutor.offer(new SlotLeaderRebalanceTask(localSlotManager,
+                    raftSlotManager, dataServerManager));
+                return this;
+            }
+        };
+
+        abstract SlotPeriodCheckType next();
+
+        abstract SlotPeriodCheckType action(ArrangeTaskExecutor arrangeTaskExecutor,
+                                            LocalSlotManager localSlotManager,
+                                            SlotManager raftSlotManager,
+                                            DefaultDataServerManager dataServerManager);
+    }
+
+    protected boolean isRaftLeader() {
+        return ServiceStateMachine.getInstance().isLeader();
+    }
+
+    @VisibleForTesting
+    DefaultSlotManager setLocalSlotManager(LocalSlotManager localSlotManager) {
+        this.localSlotManager = localSlotManager;
+        return this;
+    }
+
+    @VisibleForTesting
+    DefaultSlotManager setRaftSlotManager(SlotManager raftSlotManager) {
+        this.raftSlotManager = raftSlotManager;
+        return this;
+    }
+
+    @VisibleForTesting
+    DefaultSlotManager setMetaServerConfig(MetaServerConfig metaServerConfig) {
+        this.metaServerConfig = metaServerConfig;
+        return this;
+    }
+
+    @VisibleForTesting
+    DefaultSlotManager setArrangeTaskExecutor(ArrangeTaskExecutor arrangeTaskExecutor) {
+        this.arrangeTaskExecutor = arrangeTaskExecutor;
+        return this;
+    }
+
+    @VisibleForTesting
+    DefaultSlotManager setDataServerManager(DefaultDataServerManager dataServerManager) {
+        this.dataServerManager = dataServerManager;
+        return this;
     }
 }

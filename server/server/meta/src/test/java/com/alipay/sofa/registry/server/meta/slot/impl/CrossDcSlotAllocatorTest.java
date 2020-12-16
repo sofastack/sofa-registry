@@ -23,34 +23,23 @@ import com.alipay.sofa.registry.exception.InitializeException;
 import com.alipay.sofa.registry.exception.StartException;
 import com.alipay.sofa.registry.exception.StopException;
 import com.alipay.sofa.registry.jraft.bootstrap.ServiceStateMachine;
-import com.alipay.sofa.registry.lifecycle.Lifecycle;
 import com.alipay.sofa.registry.lifecycle.LifecycleState;
 import com.alipay.sofa.registry.lifecycle.impl.LifecycleHelper;
-import com.alipay.sofa.registry.net.NetUtil;
 import com.alipay.sofa.registry.remoting.exchange.Exchange;
 import com.alipay.sofa.registry.server.meta.AbstractTest;
-import com.alipay.sofa.registry.server.meta.bootstrap.config.MetaServerConfig;
-import com.alipay.sofa.registry.server.meta.bootstrap.config.MetaServerConfigBean;
-import com.alipay.sofa.registry.server.meta.bootstrap.config.NodeConfig;
-import com.alipay.sofa.registry.server.meta.executor.ExecutorManager;
 import com.alipay.sofa.registry.server.meta.metaserver.CrossDcMetaServer;
-import com.alipay.sofa.registry.server.meta.metaserver.CurrentDcMetaServer;
 import com.alipay.sofa.registry.server.meta.remoting.RaftExchanger;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Maps;
 import org.assertj.core.util.Lists;
-import org.assertj.core.util.Sets;
-import org.junit.*;
+import org.junit.After;
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.TimeoutException;
 
-import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
 
 public class CrossDcSlotAllocatorTest extends AbstractTest {

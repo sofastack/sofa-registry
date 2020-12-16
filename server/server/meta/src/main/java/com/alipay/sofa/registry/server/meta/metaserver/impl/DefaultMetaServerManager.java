@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alipay.sofa.registry.server.meta.lease.impl;
+package com.alipay.sofa.registry.server.meta.metaserver.impl;
 
 import com.alipay.sofa.registry.common.model.Node;
 import com.alipay.sofa.registry.common.model.metaserver.NodeChangeResult;
@@ -23,7 +23,8 @@ import com.alipay.sofa.registry.common.model.metaserver.nodes.MetaNode;
 import com.alipay.sofa.registry.common.model.metaserver.nodes.SessionNode;
 import com.alipay.sofa.registry.server.meta.bootstrap.config.NodeConfig;
 import com.alipay.sofa.registry.server.meta.lease.data.DataServerManager;
-import com.alipay.sofa.registry.server.meta.lease.session.SessionManager;
+import com.alipay.sofa.registry.server.meta.lease.impl.CrossDcMetaServerManager;
+import com.alipay.sofa.registry.server.meta.lease.session.SessionServerManager;
 import com.alipay.sofa.registry.server.meta.metaserver.CurrentDcMetaServer;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Maps;
@@ -46,7 +47,7 @@ public class DefaultMetaServerManager {
     private CurrentDcMetaServer      currentDcMetaServer;
 
     @Autowired
-    private SessionManager           sessionManager;
+    private SessionServerManager     sessionServerManager;
 
     @Autowired
     private DataServerManager        dataServerManager;
@@ -95,9 +96,9 @@ public class DefaultMetaServerManager {
         Map<String, Map<String, SessionNode>> nodeMap = Maps.newHashMap();
         Map<String, Long> epochMap = Maps.newHashMap();
         nodeMap.put(nodeConfig.getLocalDataCenter(),
-            transform(currentDcMetaServer.getSessionServers()));
+            transform(sessionServerManager.getClusterMembers()));
         result.setNodes(nodeMap);
-        result.setVersion(sessionManager.getEpoch());
+        result.setVersion(sessionServerManager.getEpoch());
         result.setDataCenterListVersions(epochMap);
         return result;
     }
@@ -136,8 +137,8 @@ public class DefaultMetaServerManager {
     }
 
     @VisibleForTesting
-    DefaultMetaServerManager setSessionManager(SessionManager sessionManager) {
-        this.sessionManager = sessionManager;
+    DefaultMetaServerManager setSessionManager(SessionServerManager sessionServerManager) {
+        this.sessionServerManager = sessionServerManager;
         return this;
     }
 

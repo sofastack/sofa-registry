@@ -22,21 +22,25 @@ import com.alipay.sofa.registry.remoting.exchange.Exchange;
 import com.alipay.sofa.registry.remoting.exchange.NodeExchanger;
 import com.alipay.sofa.registry.remoting.jersey.exchange.JerseyExchange;
 import com.alipay.sofa.registry.server.meta.bootstrap.bean.lifecycle.RaftAnnotationBeanPostProcessor;
+import com.alipay.sofa.registry.server.meta.bootstrap.bean.lifecycle.RaftServiceLifecycleController;
 import com.alipay.sofa.registry.server.meta.bootstrap.config.MetaServerConfig;
 import com.alipay.sofa.registry.server.meta.bootstrap.config.MetaServerConfigBean;
 import com.alipay.sofa.registry.server.meta.bootstrap.config.NodeConfig;
 import com.alipay.sofa.registry.server.meta.bootstrap.config.NodeConfigBeanProperty;
 import com.alipay.sofa.registry.server.meta.executor.ExecutorManager;
+import com.alipay.sofa.registry.server.meta.lease.data.DataLeaseManager;
+import com.alipay.sofa.registry.server.meta.lease.data.DefaultDataServerManager;
 import com.alipay.sofa.registry.server.meta.lease.impl.CrossDcMetaServerManager;
-import com.alipay.sofa.registry.server.meta.lease.impl.DefaultDataServerManager;
-import com.alipay.sofa.registry.server.meta.lease.impl.DefaultMetaServerManager;
-import com.alipay.sofa.registry.server.meta.lease.impl.DefaultSessionManager;
-import com.alipay.sofa.registry.server.meta.metaserver.CurrentDcMetaServer;
+import com.alipay.sofa.registry.server.meta.lease.session.DefaultSessionServerManager;
+import com.alipay.sofa.registry.server.meta.lease.session.SessionLeaseManager;
 import com.alipay.sofa.registry.server.meta.metaserver.impl.DefaultCurrentDcMetaServer;
+import com.alipay.sofa.registry.server.meta.metaserver.impl.DefaultLocalMetaServer;
+import com.alipay.sofa.registry.server.meta.metaserver.impl.DefaultMetaServerManager;
 import com.alipay.sofa.registry.server.meta.provide.data.DataServerProvideDataNotifier;
 import com.alipay.sofa.registry.server.meta.provide.data.DefaultProvideDataNotifier;
 import com.alipay.sofa.registry.server.meta.provide.data.SessionServerProvideDataNotifier;
 import com.alipay.sofa.registry.server.meta.remoting.DataNodeExchanger;
+import com.alipay.sofa.registry.server.meta.remoting.MetaServerExchanger;
 import com.alipay.sofa.registry.server.meta.remoting.RaftExchanger;
 import com.alipay.sofa.registry.server.meta.remoting.SessionNodeExchanger;
 import com.alipay.sofa.registry.server.meta.remoting.connection.DataConnectionHandler;
@@ -119,6 +123,11 @@ public class MetaServerConfiguration {
             return new RaftAnnotationBeanPostProcessor();
         }
 
+        @Bean
+        public RaftServiceLifecycleController raftServiceLifecycleController() {
+            return new RaftServiceLifecycleController();
+        }
+
     }
 
     @Configuration
@@ -140,7 +149,7 @@ public class MetaServerConfiguration {
     }
 
     @Configuration
-    public static class MetaServerClusterConfiguration {
+    public static class MetaServerManagementConfiguration {
         @Bean
         public CrossDcMetaServerManager crossDcMetaServerManager() {
             return new CrossDcMetaServerManager();
@@ -152,17 +161,32 @@ public class MetaServerConfiguration {
         }
 
         @Bean
+        public DataLeaseManager dataLeaseManager() {
+            return new DataLeaseManager();
+        }
+
+        @Bean
         public DefaultDataServerManager dataServerManager() {
             return new DefaultDataServerManager();
         }
 
         @Bean
-        public DefaultSessionManager defaultSessionManager() {
-            return new DefaultSessionManager();
+        public SessionLeaseManager sessionLeaseManager() {
+            return new SessionLeaseManager();
         }
 
         @Bean
-        public CurrentDcMetaServer currentDcMetaServer() {
+        public DefaultSessionServerManager defaultSessionManager() {
+            return new DefaultSessionServerManager();
+        }
+
+        @Bean
+        public DefaultLocalMetaServer localMetaServer() {
+            return new DefaultLocalMetaServer();
+        }
+
+        @Bean
+        public DefaultCurrentDcMetaServer currentDcMetaServer() {
             return new DefaultCurrentDcMetaServer();
         }
 
@@ -287,6 +311,11 @@ public class MetaServerConfiguration {
         @Bean
         public NodeExchanger dataNodeExchanger() {
             return new DataNodeExchanger();
+        }
+
+        @Bean
+        public NodeExchanger metaServerExchanger() {
+            return new MetaServerExchanger();
         }
 
     }

@@ -16,8 +16,6 @@
  */
 package com.alipay.sofa.registry.server.meta.remoting;
 
-import org.springframework.beans.factory.annotation.Autowired;
-
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.remoting.Channel;
@@ -29,6 +27,7 @@ import com.alipay.sofa.registry.remoting.exchange.RequestException;
 import com.alipay.sofa.registry.remoting.exchange.message.Request;
 import com.alipay.sofa.registry.remoting.exchange.message.Response;
 import com.alipay.sofa.registry.server.meta.bootstrap.config.MetaServerConfig;
+import org.springframework.beans.factory.annotation.Autowired;
 
 /**
  *
@@ -60,9 +59,14 @@ public class SessionNodeExchanger implements NodeExchanger {
 
             Channel channel = sessionServer.getChannel(request.getRequestUrl());
             if (channel != null && channel.isConnected()) {
-                final Object result = sessionServer.sendSync(channel, request.getRequestBody(),
-                        request.getTimeout() != null ? request.getTimeout() : metaServerConfig.getSessionNodeExchangeTimeout());
-                response = () -> result;
+                if(request.getCallBackHandler() != null) {
+                    sessionServer.sendCallback(channel, request.getRequestBody(), request.getCallBackHandler(),
+                            request.getTimeout() != null ? request.getTimeout() : metaServerConfig.getSessionNodeExchangeTimeout());
+                } else {
+                    final Object result = sessionServer.sendSync(channel, request.getRequestBody(),
+                            request.getTimeout() != null ? request.getTimeout() : metaServerConfig.getSessionNodeExchangeTimeout());
+                    response = () -> result;
+                }
             } else {
                 String errorMsg = "SessionNode Exchanger get channel error! channel with url:"
                         + channel == null ? "" : channel.getRemoteAddress() + " can not be null or disconnected!";

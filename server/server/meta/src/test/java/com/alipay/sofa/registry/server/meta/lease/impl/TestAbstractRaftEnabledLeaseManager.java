@@ -23,41 +23,92 @@ import com.alipay.sofa.registry.exception.StartException;
 import com.alipay.sofa.registry.exception.StopException;
 import com.alipay.sofa.registry.lifecycle.impl.LifecycleHelper;
 import com.alipay.sofa.registry.server.meta.AbstractTest;
+import com.alipay.sofa.registry.server.meta.lease.AbstractRaftEnabledLeaseManager;
 import com.alipay.sofa.registry.server.meta.lease.Lease;
+import com.alipay.sofa.registry.server.meta.lease.LeaseManager;
 import com.alipay.sofa.registry.server.meta.remoting.RaftExchanger;
+import com.alipay.sofa.registry.util.DatumVersionUtil;
+import org.assertj.core.util.Lists;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.lang.reflect.InvocationHandler;
+import java.lang.reflect.Method;
+import java.lang.reflect.Proxy;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.CyclicBarrier;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
 
-import static org.junit.Assert.*;
-import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.*;
 
 public class TestAbstractRaftEnabledLeaseManager extends AbstractTest {
 
-    private String                                    serviceId = "TEST-SERVICE-ID";
+    private String                                        snapshotFile      = "TEST-SERVICE-ID";
 
-    private AbstractRaftEnabledLeaseManager<MetaNode> manager   = new AbstractRaftEnabledLeaseManager<MetaNode>() {
+    private final DefaultLeaseManager<MetaNode>           localLeaseManager = spy(new DefaultLeaseManager<>(
+                                                                                snapshotFile));
 
-                                                                    @Override
-                                                                    protected String getServiceId() {
-                                                                        return serviceId;
-                                                                    }
-                                                                };
+    private final AtomicReference<LeaseManager<MetaNode>> raftLeaseManager  = new AtomicReference<>();
 
-    private RaftExchanger                             raftExchanger;
+    private final AtomicInteger                           evitTimeMilli     = new AtomicInteger(
+                                                                                1000 * 60);
+
+    private final AtomicBoolean                           isLeader          = new AtomicBoolean(
+                                                                                true);
+
+    private AbstractRaftEnabledLeaseManager<MetaNode>     manager           = new AbstractRaftEnabledLeaseManager<MetaNode>() {
+                                                                                @Override
+                                                                                protected long getIntervalMilli() {
+                                                                                    return evitTimeMilli
+                                                                                        .get();
+                                                                                }
+
+                                                                                @Override
+                                                                                protected DefaultLeaseManager<MetaNode> getLocalLeaseManager() {
+                                                                                    return localLeaseManager;
+                                                                                }
+
+                                                                                @Override
+                                                                                protected LeaseManager<MetaNode> getRaftLeaseManager() {
+                                                                                    return raftLeaseManager
+                                                                                        .get();
+                                                                                }
+
+                                                                                @Override
+                                                                                protected long getEvictBetweenMilli() {
+                                                                                    return evitTimeMilli
+                                                                                        .get();
+                                                                                }
+
+                                                                                @Override
+                                                                                protected boolean isRaftLeader() {
+                                                                                    return isLeader
+                                                                                        .get();
+                                                                                }
+                                                                            };
+
+    private RaftExchanger                                 raftExchanger;
 
     @Before
     public void beforeTestAbstractRaftEnabledLeaseManager() throws InitializeException,
                                                            StartException {
         raftExchanger = mock(RaftExchanger.class);
-        manager.setScheduled(scheduled).setRaftExchanger(raftExchanger).setExecutors(executors);
+        raftLeaseManager.set((LeaseManager<MetaNode>) Proxy.newProxyInstance(Thread.currentThread()
+            .getContextClassLoader(), new Class[] { LeaseManager.class }, new InvocationHandler() {
+            @Override
+            public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+                return method.invoke(localLeaseManager, args);
+            }
+        }));
+        manager.setScheduled(scheduled).setExecutors(executors);
         LifecycleHelper.initializeIfPossible(manager);
         LifecycleHelper.startIfPossible(manager);
-        manager.setRaftLeaseManager(manager.new DefaultRaftLeaseManager<>());
     }
 
     @After
@@ -66,49 +117,24 @@ public class TestAbstractRaftEnabledLeaseManager extends AbstractTest {
         LifecycleHelper.disposeIfPossible(manager);
     }
 
-    //    @Test
-    public void raftWholeProcess() throws Exception {
-        manager = new AbstractRaftEnabledLeaseManager<MetaNode>() {
-
-            @Override
-            protected String getServiceId() {
-                return serviceId;
-            }
-        };
-        manager.setScheduled(scheduled).setExecutors(executors);
-        RaftExchanger raftExchanger = startRaftExchanger();
-        manager.setRaftExchanger(raftExchanger);
-        LifecycleHelper.initializeIfPossible(manager);
-        LifecycleHelper.startIfPossible(manager);
-        int size = manager.getLeaseStore().size();
-
+    @Test
+    public void testRunRaftProxy() throws Exception {
+        isLeader.set(false);
+        int size = manager.getClusterMembers().size();
         MetaNode node = new MetaNode(randomURL(randomIp()), getDc());
         manager.renew(node, 10);
-        waitConditionUntilTimeOut(()->manager.getLeaseStore().get(node.getIp()) != null, 1000);
-        Assert.assertEquals(node, manager.getLeaseStore().get(node.getIp()).getRenewal());
-        Assert.assertFalse(manager.getLeaseStore().get(node.getIp()).isExpired());
-        Assert.assertTrue(manager.getLeaseStore().size() > size);
+        waitConditionUntilTimeOut(()->manager.getLease(node) != null, 1000);
+        Assert.assertEquals(node, manager.getLease(node).getRenewal());
+        Assert.assertFalse(manager.getLease(node).isExpired());
+        Assert.assertTrue(manager.getClusterMembers().size() > size);
         manager.cancel(node);
-        waitConditionUntilTimeOut(()->manager.getLeaseStore().size() == size, 1000);
-        Assert.assertEquals(size, manager.getLeaseStore().size());
+        waitConditionUntilTimeOut(()->manager.getClusterMembers().size() == size, 1000);
+        Assert.assertEquals(size, manager.getClusterMembers().size());
     }
 
-    //    @Test
-    //    @Ignore
-    public void manuallyTestRaftMechanism() throws Exception {
-        manager = new AbstractRaftEnabledLeaseManager<MetaNode>() {
-
-            @Override
-            protected String getServiceId() {
-                return serviceId;
-            }
-        };
-        manager.setScheduled(scheduled).setExecutors(executors);
-        RaftExchanger raftExchanger = startRaftExchanger();
-        manager.setRaftExchanger(raftExchanger);
-        LifecycleHelper.initializeIfPossible(manager);
-        LifecycleHelper.startIfPossible(manager);
-
+    @Test
+    public void testRaftBatchInsert() throws Exception {
+        isLeader.set(false);
         int tasks = 1000;
         CyclicBarrier barrier = new CyclicBarrier(tasks / 10);
         CountDownLatch latch = new CountDownLatch(tasks);
@@ -126,49 +152,130 @@ public class TestAbstractRaftEnabledLeaseManager extends AbstractTest {
             });
         }
         latch.await();
-        Assert.assertEquals(tasks, manager.getLeaseStore().size());
+        Assert.assertEquals(tasks, manager.getClusterMembers().size());
     }
 
     @Test
     public void testRegister() {
-        manager.register(new MetaNode(randomURL(randomIp()), getDc()), 10);
-        Assert.assertEquals(1, manager.getLeaseStore().size());
-        Lease<MetaNode> lease = manager.getLeaseStore().entrySet().iterator().next().getValue();
+        manager.renew(new MetaNode(randomURL(randomIp()), getDc()), 10);
+        Assert.assertEquals(1, manager.getClusterMembers().size());
+        Lease<MetaNode> lease = manager.getLease(manager.getClusterMembers().get(0));
         Assert.assertFalse(lease.isExpired());
+    }
+
+    @Test(expected = UnsupportedOperationException.class)
+    public void testDirectRegister() {
+        manager.register(new Lease<MetaNode>(new MetaNode(randomURL(), getDc()), 1));
+    }
+
+    @Test
+    public void testGetEpoch() throws TimeoutException, InterruptedException {
+        raftLeaseManager.set(spy(new DefaultLeaseManager<>(snapshotFile)));
+        isLeader.set(true);
+        manager.getEpoch();
+        verify(raftLeaseManager.get(), never()).getEpoch();
+
+        isLeader.set(false);
+        manager.getEpoch();
+        verify(raftLeaseManager.get(), times(1)).getEpoch();
     }
 
     @Test
     public void testCancel() {
         MetaNode node = new MetaNode(randomURL(randomIp()), getDc());
-        manager.register(node, 10);
-        Assert.assertEquals(1, manager.getLeaseStore().size());
+        manager.renew(node, 10);
+        Assert.assertEquals(1, manager.getClusterMembers().size());
         manager.cancel(node);
-        Assert.assertEquals(0, manager.getLeaseStore().size());
+        Assert.assertEquals(0, manager.getClusterMembers().size());
     }
 
     @Test
     public void testRenew() throws InterruptedException {
         MetaNode node = new MetaNode(randomURL(randomIp()), getDc());
         manager.renew(node, 1);
-        Assert.assertEquals(1, manager.getLeaseStore().size());
-        Lease<MetaNode> lease = manager.getLeaseStore().get(node.getIp());
+        Assert.assertEquals(1, manager.getClusterMembers().size());
+        Lease<MetaNode> lease = manager.getLease(node);
         long prevLastUpdateTime = lease.getLastUpdateTimestamp();
         long prevBeginTime = lease.getBeginTimestamp();
         // let time pass, so last update time could be diff
         Thread.sleep(5);
         manager.renew(node, 10);
-        lease = manager.getLeaseStore().get(node.getIp());
+        lease = manager.getLease(node);
         Assert.assertEquals(prevBeginTime, lease.getBeginTimestamp());
         Assert.assertNotEquals(prevLastUpdateTime, lease.getLastUpdateTimestamp());
     }
 
     @Test
-    public void testEvict() {
-
+    public void testEvict() throws InterruptedException {
+        MetaNode node = new MetaNode(randomURL(randomIp()), getDc());
+        manager.renew(node, 1);
+        Assert.assertEquals(1, manager.getClusterMembers().size());
+        TimeUnit.SECONDS.sleep(1);
+        TimeUnit.MILLISECONDS.sleep(100);
+        manager.evict();
+        Assert.assertEquals(0, manager.getClusterMembers().size());
     }
 
     @Test
-    public void testGetServiceId() {
-        Assert.assertEquals(serviceId, manager.getServiceId());
+    public void testEvitTooQuick() throws InterruptedException {
+        manager = spy(manager);
+        evitTimeMilli.set(1000);
+        MetaNode node = new MetaNode(randomURL(randomIp()), getDc());
+        manager.renew(node, 1);
+        Assert.assertEquals(1, manager.getClusterMembers().size());
+        manager.evict();
+        manager.evict();
+        manager.evict();
+        verify(localLeaseManager, times(1)).getExpiredLeases();
     }
+
+    @Test
+    public void testEvitTooQuickThreadSafe() throws InterruptedException {
+        manager = spy(manager);
+        evitTimeMilli.set(1000);
+        MetaNode node = new MetaNode(randomURL(randomIp()), getDc());
+        manager.renew(node, 1);
+        Assert.assertEquals(1, manager.getClusterMembers().size());
+        int tasks = 100;
+        CyclicBarrier barrier = new CyclicBarrier(tasks);
+        CountDownLatch latch = new CountDownLatch(tasks);
+        for (int i = 0; i < tasks; i++) {
+            executors.execute(new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        barrier.await();
+                    } catch (Exception ignore) {
+                    }
+                    manager.evict();
+                    latch.countDown();
+                }
+            });
+        }
+        latch.await();
+        verify(localLeaseManager, times(1)).getExpiredLeases();
+    }
+
+    @Test
+    public void testEvictConcurrentModificateWithRenew() {
+        MetaNode node = new MetaNode(randomURL(randomIp()), getDc());
+        manager.renew(node, 10);
+        verify(localLeaseManager, times(1)).getLease(node);
+
+        Assert.assertEquals(1, manager.getClusterMembers().size());
+        when(localLeaseManager.getExpiredLeases()).thenReturn(
+            Lists.newArrayList(new Lease<MetaNode>(node, 1000)));
+        manager.evict();
+        verify(localLeaseManager, times(2)).getLease(node);
+        Assert.assertEquals(1, manager.getClusterMembers().size());
+    }
+
+    @Test
+    public void testRefreshEpoch() {
+        raftLeaseManager.set(spy(new DefaultLeaseManager<>(snapshotFile)));
+        manager.refreshEpoch(DatumVersionUtil.nextId());
+        verify(localLeaseManager, times(1)).refreshEpoch(anyLong());
+        verify(raftLeaseManager.get(), never()).refreshEpoch(anyLong());
+    }
+
 }

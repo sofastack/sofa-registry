@@ -21,7 +21,7 @@ import com.alipay.sofa.registry.jraft.command.ProcessRequest;
 import com.alipay.sofa.registry.jraft.command.ProcessResponse;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
-import com.alipay.sofa.registry.store.api.annotation.ExecuteOnLeader;
+import com.alipay.sofa.registry.store.api.annotation.NonRaftMethod;
 import com.alipay.sofa.registry.store.api.annotation.ReadOnLeader;
 
 import java.lang.invoke.MethodHandle;
@@ -73,7 +73,10 @@ public class Processor {
             LOG.warn("Service {} has bean existed!", serviceId);
             return;
         }
-
+        if (LOG.isInfoEnabled()) {
+            LOG.info("[addWorker] serviceId: {}, interfaceClazz: {}, target: {}", serviceId,
+                interfaceClazz, target);
+        }
         Map<String, Method> publicMethods = new HashMap();
         for (Method m : interfaceClazz.getMethods()) {
             publicMethods.put(getSignificantMethodName(m), m);
@@ -255,7 +258,7 @@ public class Processor {
         if (ServiceStateMachine.getInstance().isLeader()) {
             return method != null
                    && (method.isAnnotationPresent(ReadOnLeader.class) || method
-                       .isAnnotationPresent(ExecuteOnLeader.class));
+                       .isAnnotationPresent(NonRaftMethod.class));
         }
         return false;
     }

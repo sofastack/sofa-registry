@@ -25,8 +25,6 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 import java.io.IOException;
 import java.sql.SQLException;
 
-import static org.junit.Assert.*;
-
 @SpringBootApplication
 @EnableScheduling
 public class AppTest extends AbstractTest {

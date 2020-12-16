@@ -166,4 +166,21 @@ public final class SlotTable implements Serializable {
             }
         });
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        SlotTable slotTable = (SlotTable) o;
+        return epoch == slotTable.epoch && slots.equals(slotTable.slots);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(epoch, slots);
+    }
 }

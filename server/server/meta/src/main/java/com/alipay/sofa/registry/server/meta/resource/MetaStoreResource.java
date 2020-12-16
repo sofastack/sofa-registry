@@ -24,17 +24,14 @@ import com.alipay.sofa.registry.net.NetUtil;
 import com.alipay.sofa.registry.server.meta.bootstrap.config.NodeConfig;
 import com.alipay.sofa.registry.server.meta.metaserver.CurrentDcMetaServer;
 import com.alipay.sofa.registry.server.meta.remoting.RaftExchanger;
+import com.alipay.sofa.registry.util.DatumVersionUtil;
 import com.google.common.collect.Lists;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import javax.ws.rs.FormParam;
-import javax.ws.rs.GET;
-import javax.ws.rs.POST;
-import javax.ws.rs.Path;
-import javax.ws.rs.Produces;
+import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import java.util.HashMap;
 import java.util.List;
@@ -101,7 +98,7 @@ public class MetaStoreResource {
                 metaNodes.add(metaNode);
             }
 
-            currentDcMetaServer.updateClusterMembers(metaNodes);
+            currentDcMetaServer.updateClusterMembers(metaNodes, DatumVersionUtil.nextId());
             result.setSuccess(true);
 
             LOGGER.info("Change peer ipAddressList {} to store!", ipAddressList0);
@@ -148,7 +145,7 @@ public class MetaStoreResource {
                 MetaNode metaNode = new MetaNode(new URL(ipAddress, 0), nodeConfig.getLocalDataCenter());
                 metaNodes.add(metaNode);
             }
-            currentDcMetaServer.updateClusterMembers(metaNodes);
+            currentDcMetaServer.updateClusterMembers(metaNodes, DatumVersionUtil.nextId());
 
             result.setSuccess(true);
 
@@ -184,7 +181,6 @@ public class MetaStoreResource {
 
                     raftExchanger.removePeer(ipAddress);
                     currentDcMetaServer.cancel(new MetaNode(new URL(ipAddress), dataCenter));
-//                    metaServerRegistry.cancel(ipAddress, NodeType.META);
                     LOGGER.info("Remove peer ipAddress {} to store!", ipAddress);
                 } catch (Exception e) {
                     LOGGER.error("Error remove peer ipAddress {} to store!", ipAddress, e);

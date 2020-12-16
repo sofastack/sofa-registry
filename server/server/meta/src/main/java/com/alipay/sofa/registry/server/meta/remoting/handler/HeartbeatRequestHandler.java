@@ -29,7 +29,8 @@ import com.alipay.sofa.registry.common.model.slot.SlotTable;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.remoting.Channel;
-import com.alipay.sofa.registry.server.meta.metaserver.CurrentDcMetaServer;
+import com.alipay.sofa.registry.server.meta.lease.LeaseManager;
+import com.alipay.sofa.registry.server.meta.metaserver.impl.DefaultCurrentDcMetaServer;
 import com.alipay.sofa.registry.server.meta.slot.impl.DefaultSlotManager;
 import com.google.common.collect.Maps;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -43,33 +44,34 @@ import java.util.Map;
  */
 public class HeartbeatRequestHandler extends MetaServerHandler<RenewNodesRequest<Node>> {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(HeartbeatRequestHandler.class);
+    private static final Logger        LOGGER = LoggerFactory
+                                                  .getLogger(HeartbeatRequestHandler.class);
 
     @Autowired
-    private CurrentDcMetaServer currentDcMetaServer;
+    private DefaultCurrentDcMetaServer currentDcMetaServer;
 
     @Autowired
-    private DefaultSlotManager  defaultSlotManager;
+    private DefaultSlotManager         defaultSlotManager;
 
     @Override
     public Object doHandle(Channel channel, RenewNodesRequest<Node> renewNodesRequest) {
         Node renewNode = null;
         try {
             renewNode = renewNodesRequest.getNode();
-            currentDcMetaServer.renew(renewNode, renewNodesRequest.getDuration());
+            getLeaseManager(renewNode).renew(renewNode, renewNodesRequest.getDuration());
             SlotTable slotTable = currentDcMetaServer.getSlotTable();
             BaseHeartBeatResponse response = null;
             switch (renewNode.getNodeType()) {
                 case SESSION:
                     response = new SessionHeartBeatResponse(currentDcMetaServer.getEpoch(),
-                        slotTable, currentDcMetaServer.getClusterMembers(),
-                        currentDcMetaServer.getSessionServers());
+                        slotTable, currentDcMetaServer.getClusterMembers(), currentDcMetaServer
+                            .getSessionServerManager().getClusterMembers());
                     break;
                 case DATA:
                     slotTable = transferDataNodeSlotToSlotTable((DataNode) renewNode, slotTable);
                     response = new DataHeartBeatResponse(currentDcMetaServer.getEpoch(), slotTable,
-                        currentDcMetaServer.getClusterMembers(),
-                        currentDcMetaServer.getSessionServers());
+                        currentDcMetaServer.getClusterMembers(), currentDcMetaServer
+                            .getSessionServerManager().getClusterMembers());
                     break;
                 case META:
                     response = new BaseHeartBeatResponse(currentDcMetaServer.getEpoch(), slotTable,
@@ -85,6 +87,20 @@ public class HeartbeatRequestHandler extends MetaServerHandler<RenewNodesRequest
             return new GenericResponse<BaseHeartBeatResponse>().fillFailed("Node " + renewNode
                                                                            + "renew error!");
         }
+    }
+
+    private LeaseManager getLeaseManager(Node node) {
+        switch (node.getNodeType()) {
+            case SESSION:
+                return currentDcMetaServer.getSessionServerManager();
+            case DATA:
+                return currentDcMetaServer.getDataServerManager();
+            case META:
+                throw new IllegalArgumentException("node type not correct: " + node.getNodeType());
+            default:
+                break;
+        }
+        throw new IllegalArgumentException("node type not correct: " + node.getNodeType());
     }
 
     private SlotTable transferDataNodeSlotToSlotTable(DataNode node, SlotTable slotTable) {

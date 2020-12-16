@@ -16,25 +16,9 @@
  */
 package com.alipay.sofa.registry.server.meta.remoting;
 
-import java.util.*;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.stream.Collectors;
-
 import com.alipay.remoting.ProtocolCode;
 import com.alipay.remoting.ProtocolManager;
 import com.alipay.remoting.rpc.protocol.RpcProtocol;
-import com.alipay.sofa.jraft.util.ThreadPoolMetricSet;
-import com.alipay.sofa.jraft.util.ThreadPoolUtil;
-import com.alipay.sofa.registry.jraft.LeaderAware;
-import com.alipay.sofa.registry.server.meta.metaserver.CurrentDcMetaServer;
-import com.alipay.sofa.registry.util.ConcurrentUtils;
-import com.alipay.sofa.registry.util.NamedThreadFactory;
-import com.codahale.metrics.MetricRegistry;
-import com.google.common.annotations.VisibleForTesting;
-import org.springframework.beans.factory.annotation.Autowired;
-
 import com.alipay.sofa.jraft.CliService;
 import com.alipay.sofa.jraft.Status;
 import com.alipay.sofa.jraft.conf.Configuration;
@@ -43,8 +27,11 @@ import com.alipay.sofa.jraft.core.NodeImpl;
 import com.alipay.sofa.jraft.entity.PeerId;
 import com.alipay.sofa.jraft.option.CliOptions;
 import com.alipay.sofa.jraft.rpc.impl.AbstractClientService;
+import com.alipay.sofa.jraft.util.ThreadPoolMetricSet;
+import com.alipay.sofa.jraft.util.ThreadPoolUtil;
 import com.alipay.sofa.registry.common.model.metaserver.nodes.MetaNode;
 import com.alipay.sofa.registry.common.model.store.URL;
+import com.alipay.sofa.registry.jraft.LeaderAware;
 import com.alipay.sofa.registry.jraft.bootstrap.RaftClient;
 import com.alipay.sofa.registry.jraft.bootstrap.RaftServer;
 import com.alipay.sofa.registry.jraft.bootstrap.RaftServerConfig;
@@ -56,6 +43,18 @@ import com.alipay.sofa.registry.net.NetUtil;
 import com.alipay.sofa.registry.server.meta.bootstrap.config.MetaServerConfig;
 import com.alipay.sofa.registry.server.meta.bootstrap.config.NodeConfig;
 import com.alipay.sofa.registry.server.meta.executor.ExecutorManager;
+import com.alipay.sofa.registry.server.meta.metaserver.impl.DefaultCurrentDcMetaServer;
+import com.alipay.sofa.registry.util.ConcurrentUtils;
+import com.alipay.sofa.registry.util.NamedThreadFactory;
+import com.codahale.metrics.MetricRegistry;
+import com.google.common.annotations.VisibleForTesting;
+import org.springframework.beans.factory.annotation.Autowired;
+
+import java.util.*;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.stream.Collectors;
 
 /**
  * @author shangyu.wh
@@ -63,36 +62,38 @@ import com.alipay.sofa.registry.server.meta.executor.ExecutorManager;
  */
 public class RaftExchanger {
 
-    private static final Logger LOGGER         = LoggerFactory.getLogger(RaftExchanger.class);
+    private static final Logger        LOGGER         = LoggerFactory
+                                                          .getLogger(RaftExchanger.class);
 
-    private static final Logger METRICS_LOGGER = LoggerFactory.getLogger("META-JRAFT-METRICS");
+    private static final Logger        METRICS_LOGGER = LoggerFactory
+                                                          .getLogger("META-JRAFT-METRICS");
 
-    private static final Logger LOGGER_START   = LoggerFactory.getLogger("META-START-LOGS");
-
-    @Autowired
-    private MetaServerConfig    metaServerConfig;
-
-    @Autowired
-    private NodeConfig          nodeConfig;
+    private static final Logger        LOGGER_START   = LoggerFactory.getLogger("META-START-LOGS");
 
     @Autowired
-    private ThreadPoolExecutor  defaultRequestExecutor;
+    private MetaServerConfig           metaServerConfig;
 
     @Autowired
-    private CurrentDcMetaServer currentDcMetaServer;
+    private NodeConfig                 nodeConfig;
 
     @Autowired
-    private List<LeaderAware>   leaderAwares;
+    private ThreadPoolExecutor         defaultRequestExecutor;
 
-    private RaftServer          raftServer;
+    @Autowired
+    private DefaultCurrentDcMetaServer currentDcMetaServer;
 
-    private RaftClient          raftClient;
+    @Autowired
+    private List<LeaderAware>          leaderAwares;
 
-    private CliService          cliService;
+    private RaftServer                 raftServer;
 
-    private final AtomicBoolean clientStart    = new AtomicBoolean(false);
-    private final AtomicBoolean serverStart    = new AtomicBoolean(false);
-    private final AtomicBoolean clsStart       = new AtomicBoolean(false);
+    private RaftClient                 raftClient;
+
+    private CliService                 cliService;
+
+    private final AtomicBoolean        clientStart    = new AtomicBoolean(false);
+    private final AtomicBoolean        serverStart    = new AtomicBoolean(false);
+    private final AtomicBoolean        clsStart       = new AtomicBoolean(false);
 
     /**
      * Start Raft server
@@ -288,8 +289,8 @@ public class RaftExchanger {
             Collection<String> metas = metaMap.get(nodeConfig.getLocalDataCenter());
             String ip = NetUtil.getLocalAddress().getHostAddress();
             if (metas != null && metas.contains(ip)) {
-                currentDcMetaServer.renew(
-                    new MetaNode(new URL(ip, 0), nodeConfig.getLocalDataCenter()), 0);
+                currentDcMetaServer.renew(new MetaNode(new URL(ip, metaServerConfig
+                    .getMetaServerPort()), nodeConfig.getLocalDataCenter()));
             } else {
                 LOGGER_START.error(
                     "Register CurrentNode fail!meta node list config not contains current ip {}",
@@ -505,7 +506,7 @@ public class RaftExchanger {
     }
 
     @VisibleForTesting
-    public RaftExchanger setCurrentDcMetaServer(CurrentDcMetaServer currentDcMetaServer) {
+    public RaftExchanger setCurrentDcMetaServer(DefaultCurrentDcMetaServer currentDcMetaServer) {
         this.currentDcMetaServer = currentDcMetaServer;
         return this;
     }

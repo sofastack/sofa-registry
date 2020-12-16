@@ -18,7 +18,6 @@ package com.alipay.sofa.registry.server.meta.lease.impl;
 
 import com.alipay.sofa.registry.exception.InitializeException;
 import com.alipay.sofa.registry.lifecycle.impl.LifecycleHelper;
-import com.alipay.sofa.registry.remoting.bolt.exchange.BoltExchange;
 import com.alipay.sofa.registry.remoting.exchange.Exchange;
 import com.alipay.sofa.registry.server.meta.AbstractTest;
 import com.alipay.sofa.registry.server.meta.bootstrap.config.MetaServerConfig;
@@ -34,14 +33,11 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
-import org.springframework.beans.factory.annotation.Autowired;
 
-import javax.annotation.Resource;
-import java.util.concurrent.*;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.CyclicBarrier;
+import java.util.concurrent.TimeoutException;
 
-import static com.alipay.sofa.registry.server.meta.bootstrap.MetaServerConfiguration.GLOBAL_EXECUTOR;
-import static com.alipay.sofa.registry.server.meta.bootstrap.MetaServerConfiguration.SCHEDULED_EXECUTOR;
-import static org.junit.Assert.*;
 import static org.mockito.Mockito.when;
 
 public class CrossDcMetaServerManagerTest extends AbstractTest {
@@ -72,8 +68,7 @@ public class CrossDcMetaServerManagerTest extends AbstractTest {
 
     @After
     public void afterCrossDcMetaServerManagerTest() throws Exception {
-        LifecycleHelper.stopIfPossible(crossDcMetaServerManager);
-        LifecycleHelper.disposeIfPossible(crossDcMetaServerManager);
+        crossDcMetaServerManager.preDestory();
     }
 
     @Test
@@ -109,14 +104,14 @@ public class CrossDcMetaServerManagerTest extends AbstractTest {
     }
 
     @Test
-    public void testIsLeader() throws InitializeException, InterruptedException, TimeoutException {
+    public void testIsLeader() throws Exception {
         when(nodeConfig.getDataCenterMetaServers(getDc())).thenReturn(Sets.newLinkedHashSet(randomIp(), randomIp(), randomIp()));
         when(nodeConfig.getMetaNodeIP()).thenReturn(ImmutableMap.of(
                 getDc(), Lists.newArrayList(randomIp(), randomIp(), randomIp()),
                 "dc2", Lists.newArrayList(randomIp(), randomIp(), randomIp()),
                 "dc3", Lists.newArrayList(randomIp(), randomIp(), randomIp())
                 ));
-        LifecycleHelper.initializeIfPossible(crossDcMetaServerManager);
+        crossDcMetaServerManager.postConstruct();
         crossDcMetaServerManager.isLeader();
         waitConditionUntilTimeOut(()->crossDcMetaServerManager.getOrCreate(getDc()).getLifecycleState().isStarted(), 1000);
         //wait for concurrent modification

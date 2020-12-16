@@ -21,9 +21,12 @@ import com.alipay.sofa.registry.common.model.slot.DataNodeSlot;
 import com.alipay.sofa.registry.common.model.slot.Slot;
 import com.alipay.sofa.registry.common.model.slot.SlotTable;
 import com.alipay.sofa.registry.common.model.store.URL;
-import com.alipay.sofa.registry.server.meta.lease.impl.DefaultDataServerManager;
+import com.alipay.sofa.registry.log.Logger;
+import com.alipay.sofa.registry.log.LoggerFactory;
+import com.alipay.sofa.registry.server.meta.lease.data.DefaultDataServerManager;
 import com.alipay.sofa.registry.server.meta.slot.RebalanceTask;
 import com.alipay.sofa.registry.server.meta.slot.SlotManager;
+import com.alipay.sofa.registry.server.meta.slot.impl.LocalSlotManager;
 import com.alipay.sofa.registry.util.DatumVersionUtil;
 import org.glassfish.jersey.internal.guava.Sets;
 
@@ -36,7 +39,12 @@ import java.util.*;
  */
 public class ServerDeadRebalanceWork implements RebalanceTask {
 
-    private SlotManager              slotManager;
+    private static final Logger      logger = LoggerFactory
+                                                .getLogger(ServerDeadRebalanceWork.class);
+
+    private SlotManager              raftSlotManager;
+
+    private LocalSlotManager         localSlotManager;
 
     private DefaultDataServerManager dataServerManager;
 
@@ -44,9 +52,10 @@ public class ServerDeadRebalanceWork implements RebalanceTask {
 
     private long                     nextEpoch;
 
-    public ServerDeadRebalanceWork(SlotManager slotManager,
+    public ServerDeadRebalanceWork(SlotManager raftSlotManager, LocalSlotManager localSlotManager,
                                    DefaultDataServerManager dataServerManager, DataNode deadServer) {
-        this.slotManager = slotManager;
+        this.raftSlotManager = raftSlotManager;
+        this.localSlotManager = localSlotManager;
         this.dataServerManager = dataServerManager;
         this.deadServer = deadServer;
     }
@@ -58,8 +67,11 @@ public class ServerDeadRebalanceWork implements RebalanceTask {
      */
     @Override
     public void run() {
-        DataNodeSlot dataNodeSlot = slotManager.getDataNodeManagedSlot(deadServer, false);
-        Map<Integer, Slot> slotMap = slotManager.getSlotTable().getSlotMap();
+        if (logger.isInfoEnabled()) {
+            logger.info("[run] begin to run, dead server - {}", deadServer);
+        }
+        DataNodeSlot dataNodeSlot = localSlotManager.getDataNodeManagedSlot(deadServer, false);
+        Map<Integer, Slot> slotMap = localSlotManager.getSlotTable().getSlotMap();
         // first step, select one from previous followers and promote to be slot leader
         // second step, add followers for the slot as previous has been removed
         promoteFollowers(slotMap, dataNodeSlot.getLeaders());
@@ -68,7 +80,13 @@ public class ServerDeadRebalanceWork implements RebalanceTask {
         slots.addAll(dataNodeSlot.getLeaders());
         reassignFollowers(slotMap, slots);
 
-        slotManager.refresh(new SlotTable(nextEpoch, slotMap));
+        if (logger.isInfoEnabled()) {
+            logger.info("[run] end of slot table calculation, dead server - {}", deadServer);
+        }
+        raftSlotManager.refresh(new SlotTable(nextEpoch, slotMap));
+        if (logger.isInfoEnabled()) {
+            logger.info("[run] end of running, dead server - {}", deadServer);
+        }
     }
 
     private void promoteFollowers(Map<Integer, Slot> slotMap, List<Integer> slotNums) {
@@ -77,7 +95,13 @@ public class ServerDeadRebalanceWork implements RebalanceTask {
             Slot slot = slotMap.get(slotNum);
             // select one candidate from followers as new leader
             String newLeader = promotesFollower(slot.getFollowers(), selectedFollowers);
-            Set<String> newFollowers = slot.getFollowers();
+            if(newLeader == null) {
+                Set<String> candidates = Sets.newHashSet();
+                dataServerManager.getClusterMembers().forEach(dataNode -> candidates.add(dataNode.getIp()));
+                newLeader = randomSelect(candidates);
+            }
+            Set<String> newFollowers = Sets.newHashSet();
+            newFollowers.addAll(slot.getFollowers());
             newFollowers.remove(newLeader);
             // replace the slot info
             nextEpoch = DatumVersionUtil.nextId();
@@ -87,16 +111,19 @@ public class ServerDeadRebalanceWork implements RebalanceTask {
     }
 
     private String promotesFollower(Set<String> followers, Set<String> selectedFollowers) {
+        if (followers == null || followers.isEmpty()) {
+            return null;
+        }
         String result = followers.iterator().next();
-        int minLeaderSlots = slotManager
+        int minLeaderSlots = localSlotManager
             .getDataNodeManagedSlot(new DataNode(new URL(result), deadServer.getDataCenter()), true)
             .getLeaders().size();
         for (String follower : followers) {
             if (follower.equals(result)) {
                 continue;
             }
-            DataNodeSlot slot = slotManager.getDataNodeManagedSlot(new DataNode(new URL(follower),
-                deadServer.getDataCenter()), true);
+            DataNodeSlot slot = localSlotManager.getDataNodeManagedSlot(new DataNode(new URL(
+                follower), deadServer.getDataCenter()), true);
             if (slot.getLeaders().size() < minLeaderSlots && !selectedFollowers.contains(follower)) {
                 result = follower;
                 minLeaderSlots = slot.getLeaders().size();
@@ -111,7 +138,9 @@ public class ServerDeadRebalanceWork implements RebalanceTask {
             Slot slot = slotMap.get(slotNum);
             // select new follower from alive data servers
             String newFollower = findNewFollower(slotMap, slot.getId());
-            slot.getFollowers().add(newFollower);
+            Set<String> newFollowers = Sets.newHashSet();
+            newFollowers.addAll(slot.getFollowers());
+            newFollowers.add(newFollower);
             // generate new slot, as epoch has been changed
             nextEpoch = DatumVersionUtil.nextId();
             Slot newSlot = new Slot(slot.getId(), slot.getLeader(), nextEpoch, slot.getFollowers());
@@ -120,7 +149,7 @@ public class ServerDeadRebalanceWork implements RebalanceTask {
     }
 
     private String findNewFollower(Map<Integer, Slot> slotMap, int targetSlotId) {
-        List<DataNode> dataNodes = dataServerManager.getLocalClusterMembers();
+        List<DataNode> dataNodes = dataServerManager.getClusterMembers();
         Slot targetSlot = slotMap.get(targetSlotId);
         Set<String> candidates = Sets.newHashSet();
         dataNodes.forEach(dataNode -> {candidates.add(dataNode.getIp());});
@@ -138,5 +167,10 @@ public class ServerDeadRebalanceWork implements RebalanceTask {
             result = iterator.next();
         }
         return result;
+    }
+
+    @Override
+    public String toString() {
+        return "ServerDeadRebalanceWork{" + "deadServer=" + deadServer + '}';
     }
 }

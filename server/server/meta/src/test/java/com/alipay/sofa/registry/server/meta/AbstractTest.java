@@ -16,13 +16,22 @@
  */
 package com.alipay.sofa.registry.server.meta;
 
+import com.alipay.sofa.jraft.Status;
 import com.alipay.sofa.jraft.storage.impl.RocksDBLogStorage;
 import com.alipay.sofa.jraft.util.StorageOptionsFactory;
+import com.alipay.sofa.registry.common.model.metaserver.nodes.DataNode;
+import com.alipay.sofa.registry.common.model.slot.Slot;
+import com.alipay.sofa.registry.common.model.slot.SlotConfig;
+import com.alipay.sofa.registry.common.model.slot.SlotTable;
 import com.alipay.sofa.registry.common.model.store.URL;
 import com.alipay.sofa.registry.exception.SofaRegistryRuntimeException;
+import com.alipay.sofa.registry.jraft.bootstrap.ServiceStateMachine;
+import com.alipay.sofa.registry.jraft.processor.LeaderProcessListener;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.net.NetUtil;
+import com.alipay.sofa.registry.observer.Observable;
+import com.alipay.sofa.registry.observer.Observer;
 import com.alipay.sofa.registry.remoting.CallbackHandler;
 import com.alipay.sofa.registry.remoting.Channel;
 import com.alipay.sofa.registry.remoting.Client;
@@ -30,8 +39,9 @@ import com.alipay.sofa.registry.server.meta.bootstrap.config.MetaServerConfig;
 import com.alipay.sofa.registry.server.meta.bootstrap.config.MetaServerConfigBean;
 import com.alipay.sofa.registry.server.meta.bootstrap.config.NodeConfig;
 import com.alipay.sofa.registry.server.meta.executor.ExecutorManager;
-import com.alipay.sofa.registry.server.meta.metaserver.CurrentDcMetaServer;
+import com.alipay.sofa.registry.server.meta.metaserver.impl.DefaultCurrentDcMetaServer;
 import com.alipay.sofa.registry.server.meta.remoting.RaftExchanger;
+import com.alipay.sofa.registry.util.DatumVersionUtil;
 import com.alipay.sofa.registry.util.FileUtils;
 import com.alipay.sofa.registry.util.NamedThreadFactory;
 import com.alipay.sofa.registry.util.ObjectFactory;
@@ -53,15 +63,13 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
-import java.util.Collection;
-import java.util.Map;
-import java.util.Random;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.BooleanSupplier;
 
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.mock;
 
 /**
  * @author chen.zhu
@@ -95,7 +103,9 @@ public class AbstractTest {
         executors = Executors.newCachedThreadPool(new NamedThreadFactory(name.getMethodName()));
         scheduled = Executors.newScheduledThreadPool(Runtime.getRuntime().availableProcessors(),
             new NamedThreadFactory("sched-" + name.getMethodName()));
-        logger.info(remarkableMessage("[begin test][{}]"), name.getMethodName());
+        if (logger.isInfoEnabled()) {
+            logger.info(remarkableMessage("[begin test][{}]"), name.getMethodName());
+        }
     }
 
     @After
@@ -175,7 +185,7 @@ public class AbstractTest {
                 return Sets.newHashSet(metaServers.get(dataCenter));
             }
         };
-        CurrentDcMetaServer metaServer = mock(CurrentDcMetaServer.class);
+        DefaultCurrentDcMetaServer metaServer = mock(DefaultCurrentDcMetaServer.class);
         raftExchanger.setMetaServerConfig(config).setNodeConfig(nodeConfig)
             .setCurrentDcMetaServer(metaServer);
         ExecutorManager executorManager = mock(ExecutorManager.class);
@@ -204,16 +214,17 @@ public class AbstractTest {
         waitConditionUntilTimeOut(booleanSupplier, 5000, 2);
     }
 
-    protected void waitConditionUntilTimeOut(BooleanSupplier booleanSupplier, int waitTimeMilli)
-                                                                                                throws TimeoutException,
-                                                                                                InterruptedException {
+    protected static void waitConditionUntilTimeOut(BooleanSupplier booleanSupplier,
+                                                    int waitTimeMilli) throws TimeoutException,
+                                                                      InterruptedException {
 
         waitConditionUntilTimeOut(booleanSupplier, waitTimeMilli, 2);
     }
 
-    protected void waitConditionUntilTimeOut(BooleanSupplier booleanSupplier, int waitTimeMilli,
-                                             int intervalMilli) throws TimeoutException,
-                                                               InterruptedException {
+    protected static void waitConditionUntilTimeOut(BooleanSupplier booleanSupplier,
+                                                    int waitTimeMilli, int intervalMilli)
+                                                                                         throws TimeoutException,
+                                                                                         InterruptedException {
 
         long maxTime = System.currentTimeMillis() + waitTimeMilli;
 
@@ -309,6 +320,51 @@ public class AbstractTest {
             responseDelayMilli);
     }
 
+    public void makeRaftLeader() throws TimeoutException, InterruptedException {
+        ServiceStateMachine.getInstance().setExecutor((ThreadPoolExecutor) executors);
+        ServiceStateMachine.getInstance().setLeaderProcessListener(new LeaderProcessListener() {
+            @Override
+            public void startProcess() {
+
+            }
+
+            @Override
+            public void stopProcess() {
+
+            }
+        });
+        ServiceStateMachine.getInstance().onLeaderStart(100);
+        waitConditionUntilTimeOut(()-> ServiceStateMachine.getInstance().isLeader(), 500);
+    }
+
+    public void makeRaftNonLeader() throws TimeoutException, InterruptedException {
+        ServiceStateMachine.getInstance().setExecutor((ThreadPoolExecutor) executors);
+        ServiceStateMachine.getInstance().setLeaderProcessListener(new LeaderProcessListener() {
+            @Override
+            public void startProcess() {
+
+            }
+
+            @Override
+            public void stopProcess() {
+
+            }
+        });
+        ServiceStateMachine.getInstance().onLeaderStop(Status.OK());
+        waitConditionUntilTimeOut(()-> !ServiceStateMachine.getInstance().isLeader(), 500);
+    }
+
+    public void printSlotTable(SlotTable slotTable) {
+        logger.info("[epoch] {}", slotTable.getEpoch());
+        StringBuilder sb = new StringBuilder("slot-table\n");
+        slotTable.getSlotMap().forEach((slotId, slot)->{
+            sb.append(slotId).append(": ").append(slot.getLeader()).append(";");
+            slot.getFollowers().forEach(sb::append);
+            sb.append("\n");
+        });
+        logger.info("{}", sb.toString());
+    }
+
     public static class MockRpcClient implements Client {
 
         private ObjectFactory<Object>    response;
@@ -358,7 +414,11 @@ public class AbstractTest {
         @Override
         public void sendCallback(URL url, Object message, CallbackHandler callbackHandler, int timeoutMillis) {
             if(isPositive) {
-                scheduled.schedule(() -> callbackHandler.onCallback(channel, response.create()), responseDelayMilli, TimeUnit.MILLISECONDS);
+                scheduled.schedule(() ->
+                                callbackHandler.onCallback(channel,
+                        response.create()),
+                        responseDelayMilli,
+                        TimeUnit.MILLISECONDS);
             } else {
                 scheduled.schedule(() -> callbackHandler.onException(channel, throwable), responseDelayMilli, TimeUnit.MILLISECONDS);
             }
@@ -427,6 +487,129 @@ public class AbstractTest {
         public MockRpcClient setThrowable(Throwable throwable) {
             this.throwable = throwable;
             return this;
+        }
+    }
+
+    public static class NotifyObserversCounter implements Observer {
+
+        private final AtomicInteger counter = new AtomicInteger(0);
+
+        @Override
+        public void update(Observable source, Object message) {
+            counter.getAndIncrement();
+        }
+
+        public int getCounter() {
+            return counter.get();
+        }
+    }
+
+    public static class ConcurrentExecutor implements Executor {
+
+        private final int             tasks;
+
+        private final CyclicBarrier   barrier;
+
+        private final CountDownLatch  latch;
+
+        private final ExecutorService executors;
+
+        public ConcurrentExecutor(int tasks, ExecutorService executors) {
+            this.tasks = tasks;
+            this.barrier = new CyclicBarrier(tasks);
+            this.latch = new CountDownLatch(tasks);
+            this.executors = executors;
+        }
+
+        @Override
+        public void execute(final Runnable command) {
+            for (int i = 0; i < tasks; i++) {
+                executors.execute(new Runnable() {
+                    @Override
+                    public void run() {
+                        try {
+                            barrier.await();
+                            command.run();
+                        } catch (Exception ignore) {
+                        }
+
+                        latch.countDown();
+                    }
+                });
+            }
+            try {
+                latch.await();
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+        }
+    }
+
+    public static class SlotTableGenerator {
+
+        private final List<DataNode> dataNodes;
+
+        public SlotTableGenerator(List<DataNode> dataNodes) {
+            this.dataNodes = dataNodes;
+        }
+
+        public SlotTable createSlotTable() {
+            long epoch = DatumVersionUtil.nextId();
+            Map<Integer, Slot> slotMap = generateSlotMap();
+            return new SlotTable(epoch, slotMap);
+        }
+
+        public SlotTable createLeaderUnBalancedSlotTable() {
+            long epoch = DatumVersionUtil.nextId();
+            Map<Integer, Slot> slotMap = generateUnBalancedSlotMap();
+            return new SlotTable(epoch, slotMap);
+        }
+
+        private Map<Integer, Slot> generateSlotMap() {
+            Map<Integer, Slot> slotMap = Maps.newHashMap();
+            for (int i = 0; i < SlotConfig.SLOT_NUM; i++) {
+                long epoch = System.currentTimeMillis();
+                String leader = getNextLeader().getIp();
+                List<String> followers = Lists.newArrayList();
+                for (int j = 0; j < SlotConfig.SLOT_REPLICAS; j++) {
+                    followers.add(getNextFollower().getIp());
+                }
+                Slot slot = new Slot(i, leader, epoch, followers);
+                slotMap.put(i, slot);
+            }
+            return slotMap;
+        }
+
+        private Map<Integer, Slot> generateUnBalancedSlotMap() {
+            Map<Integer, Slot> slotMap = Maps.newHashMap();
+            int leaderIndex = Math.abs(random.nextInt()) % dataNodes.size();
+            for (int i = 0; i < SlotConfig.SLOT_NUM; i++) {
+                long epoch = System.currentTimeMillis();
+                String leader = dataNodes.get(leaderIndex).getIp();
+                List<String> followers = Lists.newArrayList();
+                for (int j = 0; j < SlotConfig.SLOT_REPLICAS; j++) {
+                    DataNode follower = getNextFollower();
+                    while (follower.getIp().equalsIgnoreCase(dataNodes.get(leaderIndex).getIp())) {
+                        follower = getNextFollower();
+                    }
+                    followers.add(follower.getIp());
+                }
+                Slot slot = new Slot(i, leader, epoch, followers);
+                slotMap.put(i, slot);
+            }
+            return slotMap;
+        }
+
+        private AtomicInteger nextLeader   = new AtomicInteger();
+
+        private AtomicInteger nextFollower = new AtomicInteger(1);
+
+        private DataNode getNextLeader() {
+            return dataNodes.get(nextLeader.getAndIncrement() % dataNodes.size());
+        }
+
+        private DataNode getNextFollower() {
+            return dataNodes.get(nextFollower.getAndIncrement() % dataNodes.size());
         }
     }
 }

@@ -22,19 +22,17 @@ import com.alipay.sofa.registry.common.model.slot.SlotTable;
 import com.alipay.sofa.registry.jraft.bootstrap.ServiceStateMachine;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
-import com.alipay.sofa.registry.server.meta.lease.impl.DefaultDataServerManager;
+import com.alipay.sofa.registry.server.meta.lease.data.DefaultDataServerManager;
 import com.alipay.sofa.registry.server.meta.slot.RebalanceTask;
 import com.alipay.sofa.registry.server.meta.slot.SlotManager;
 import com.alipay.sofa.registry.server.meta.slot.impl.LocalSlotManager;
 import com.alipay.sofa.registry.util.DatumVersionUtil;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import org.glassfish.jersey.internal.guava.Sets;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Random;
-import java.util.Set;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * @author chen.zhu
@@ -43,8 +41,8 @@ import java.util.Set;
  */
 public class InitReshardingTask implements RebalanceTask {
 
-    private static final Logger            logger = LoggerFactory
-                                                      .getLogger(InitReshardingTask.class);
+    private static final Logger            logger            = LoggerFactory
+                                                                 .getLogger(InitReshardingTask.class);
 
     private final LocalSlotManager         localSlotManager;
 
@@ -52,9 +50,13 @@ public class InitReshardingTask implements RebalanceTask {
 
     private final DefaultDataServerManager dataServerManager;
 
-    private final Random                   random = new Random();
-
     private long                           nextEpoch;
+
+    private AtomicInteger                  nextLeaderIndex   = new AtomicInteger();
+
+    private AtomicInteger                  nextFollowerIndex = new AtomicInteger(1);
+
+    private List<DataNode>                 dataNodes;
 
     public InitReshardingTask(LocalSlotManager localSlotManager, SlotManager raftSlotManager,
                               DefaultDataServerManager dataServerManager) {
@@ -65,58 +67,80 @@ public class InitReshardingTask implements RebalanceTask {
 
     @Override
     public void run() {
-        if(!ServiceStateMachine.getInstance().isLeader()) {
-            if(logger.isInfoEnabled()) {
+        if (!checkPrivilege()) {
+            return;
+        }
+        initParameters();
+        if (dataNodes == null || dataNodes.isEmpty()) {
+            return;
+        }
+        if (logger.isInfoEnabled()) {
+            logger.info("[run] candidates({}): {}", dataNodes.size(), dataNodes);
+        }
+
+        SlotTable slotTable = createSlotTable();
+        if (logger.isInfoEnabled()) {
+            logger.info("[run] end to init slot table");
+        }
+
+        raftSlotManager.refresh(slotTable);
+        if (logger.isInfoEnabled()) {
+            logger.info("[run] raft refreshed slot-table");
+        }
+    }
+
+    private boolean checkPrivilege() {
+        if (!ServiceStateMachine.getInstance().isLeader()) {
+            if (logger.isInfoEnabled()) {
                 logger.info("[run] not leader now, quit");
             }
-            return;
+            return false;
         } else {
-            if(logger.isInfoEnabled()) {
+            if (logger.isInfoEnabled()) {
                 logger.info("[run] start to init slot table");
             }
         }
-        List<DataNode> dataNodes = dataServerManager.getLocalClusterMembers();
-        if(dataNodes.isEmpty()) {
-            if(logger.isInfoEnabled()) {
+        return true;
+    }
+
+    private void initParameters() {
+        dataNodes = dataServerManager.getClusterMembers();
+        if (dataNodes.isEmpty()) {
+            if (logger.isInfoEnabled()) {
                 logger.info("[run] empty candidate, quit");
             }
             return;
         }
-        List<String> candidates = Lists.newArrayListWithCapacity(dataNodes.size());
-        if(logger.isInfoEnabled()) {
-            logger.info("[run] candidates({}): {}", dataNodes.size(), dataNodes);
-        }
-        dataNodes.forEach(dataNode -> candidates.add(dataNode.getIp()));
-        Map<Integer, Slot> slotMap = Maps.newHashMap();
-        for(int slotId = 0; slotId < localSlotManager.getSlotNums(); slotId++) {
-            Set<String> selected = Sets.newHashSet();
-            nextEpoch = DatumVersionUtil.nextId();
-            String leader = randomSelect(candidates, selected);
-            List<String> followers = Lists.newArrayListWithCapacity(localSlotManager.getSlotReplicaNums());
-            for(int replica = 0; replica < localSlotManager.getSlotReplicaNums() - 1; replica++) {
-                followers.add(randomSelect(candidates, selected));
-            }
-            slotMap.put(slotId, new Slot(slotId, leader, nextEpoch, followers));
-        }
-        if(!ServiceStateMachine.getInstance().isLeader()) {
-            if(logger.isWarnEnabled()) {
-                logger.warn("[run] not leader, won't update slot table");
-            }
-            return;
-        }
-        if(logger.isInfoEnabled()) {
-            logger.info("[run] end to init slot table");
-        }
-        raftSlotManager.refresh(new SlotTable(nextEpoch, slotMap));
+        nextLeaderIndex.set(0);
+        nextFollowerIndex.set(dataNodes.size() - 1);
+        nextEpoch = DatumVersionUtil.nextId();
     }
 
-    private String randomSelect(List<String> candidates, Set<String> selected) {
-        int randomIndex = Math.abs(random.nextInt()) % candidates.size();
-        String result = candidates.get(randomIndex);
-        while (selected.contains(result)) {
-            randomIndex = Math.abs(random.nextInt()) % candidates.size();
-            result = candidates.get(randomIndex);
+    public SlotTable createSlotTable() {
+        Map<Integer, Slot> slotMap = generateSlotMap();
+        return new SlotTable(nextEpoch, slotMap);
+    }
+
+    private Map<Integer, Slot> generateSlotMap() {
+        Map<Integer, Slot> slotMap = Maps.newHashMap();
+        for (int i = 0; i < localSlotManager.getSlotNums(); i++) {
+            long epoch = System.currentTimeMillis();
+            String leader = getNextLeader().getIp();
+            List<String> followers = Lists.newArrayList();
+            for (int j = 0; j < localSlotManager.getSlotReplicaNums(); j++) {
+                followers.add(getNextFollower().getIp());
+            }
+            Slot slot = new Slot(i, leader, epoch, followers);
+            slotMap.put(i, slot);
         }
-        return result;
+        return slotMap;
+    }
+
+    private DataNode getNextLeader() {
+        return dataNodes.get(nextLeaderIndex.getAndIncrement() % dataNodes.size());
+    }
+
+    private DataNode getNextFollower() {
+        return dataNodes.get(nextFollowerIndex.getAndIncrement() % dataNodes.size());
     }
 }

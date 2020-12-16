@@ -17,10 +17,12 @@
 package com.alipay.sofa.registry.server.meta.provide.data;
 
 import com.alipay.sofa.registry.common.model.metaserver.nodes.SessionNode;
+import com.alipay.sofa.registry.exception.SofaRegistryRuntimeException;
 import com.alipay.sofa.registry.remoting.exchange.NodeExchanger;
-import com.alipay.sofa.registry.server.meta.lease.session.SessionManager;
+import com.alipay.sofa.registry.server.meta.lease.session.SessionServerManager;
 import com.alipay.sofa.registry.server.meta.remoting.connection.NodeConnectManager;
 import com.alipay.sofa.registry.server.shared.remoting.AbstractServerHandler;
+import com.google.common.annotations.VisibleForTesting;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.List;
@@ -41,7 +43,7 @@ public class SessionServerProvideDataNotifier extends AbstractProvideDataNotifie
     private AbstractServerHandler sessionConnectionHandler;
 
     @Autowired
-    private SessionManager        sessionManager;
+    private SessionServerManager  sessionServerManager;
 
     @Override
     protected NodeExchanger getNodeExchanger() {
@@ -50,17 +52,35 @@ public class SessionServerProvideDataNotifier extends AbstractProvideDataNotifie
 
     @Override
     protected List<SessionNode> getNodes() {
-        return sessionManager.getClusterMembers();
+        return sessionServerManager.getClusterMembers();
     }
 
     @Override
     protected NodeConnectManager getNodeConnectManager() {
         if (!(sessionConnectionHandler instanceof NodeConnectManager)) {
             logger.error("sessionConnectionHandler inject is not NodeConnectManager instance!");
-            throw new RuntimeException(
+            throw new SofaRegistryRuntimeException(
                 "sessionConnectionHandler inject is not NodeConnectManager instance!");
         }
 
         return (NodeConnectManager) sessionConnectionHandler;
+    }
+
+    @VisibleForTesting
+    SessionServerProvideDataNotifier setSessionNodeExchanger(NodeExchanger sessionNodeExchanger) {
+        this.sessionNodeExchanger = sessionNodeExchanger;
+        return this;
+    }
+
+    @VisibleForTesting
+    SessionServerProvideDataNotifier setSessionConnectionHandler(AbstractServerHandler sessionConnectionHandler) {
+        this.sessionConnectionHandler = sessionConnectionHandler;
+        return this;
+    }
+
+    @VisibleForTesting
+    SessionServerProvideDataNotifier setSessionServerManager(SessionServerManager sessionServerManager) {
+        this.sessionServerManager = sessionServerManager;
+        return this;
     }
 }

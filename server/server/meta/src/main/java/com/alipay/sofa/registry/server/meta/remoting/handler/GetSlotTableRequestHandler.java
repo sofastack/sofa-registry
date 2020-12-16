@@ -24,7 +24,7 @@ import com.alipay.sofa.registry.common.model.slot.SlotTable;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.remoting.Channel;
-import com.alipay.sofa.registry.server.meta.MetaServer;
+import com.alipay.sofa.registry.server.meta.metaserver.CurrentDcMetaServer;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.List;
@@ -39,13 +39,13 @@ public final class GetSlotTableRequestHandler extends MetaServerHandler<GetSlotT
     private static final Logger LOGGER = LoggerFactory.getLogger("META-SLOT");
 
     @Autowired
-    private MetaServer          metaServer;
+    private CurrentDcMetaServer currentDcMetaServer;
 
     @Override
     public Object doHandle(Channel channel, GetSlotTableRequest getNodesRequest) {
         // TODO
         final long epochOfNode = getNodesRequest.getEpochOfNode();
-        final SlotTable currentTable = metaServer.getSlotTable();
+        final SlotTable currentTable = currentDcMetaServer.getSlotTable();
         if (epochOfNode == currentTable.getEpoch()) {
             // not change, return null
             return new GenericResponse().fillSucceed(null);

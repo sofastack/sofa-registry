@@ -17,6 +17,8 @@
 package com.alipay.sofa.registry.common.model.metaserver.nodes;
 
 import com.alipay.sofa.registry.common.model.Node;
+import com.alipay.sofa.registry.common.model.ProcessId;
+import com.alipay.sofa.registry.common.model.metaserver.ProvideData;
 import com.alipay.sofa.registry.common.model.store.URL;
 
 /**
@@ -26,13 +28,13 @@ import com.alipay.sofa.registry.common.model.store.URL;
  */
 public class SessionNode implements Node {
 
-    private URL    nodeUrl;
+    private URL       nodeUrl;
 
-    private String regionId;
+    private String    regionId;
 
-    private String name;
+    private String    name;
 
-    private long   processId;
+    private ProcessId processId;
 
     /**
      * constructor
@@ -86,11 +88,11 @@ public class SessionNode implements Node {
             : that.nodeUrl != null;
     }
 
-    public long getProcessId() {
+    public ProcessId getProcessId() {
         return processId;
     }
 
-    public SessionNode setProcessId(long processId) {
+    public SessionNode setProcessId(ProcessId processId) {
         this.processId = processId;
         return this;
     }

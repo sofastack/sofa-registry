@@ -14,13 +14,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alipay.sofa.registry.server.meta.lease.impl;
+package com.alipay.sofa.registry.server.meta.metaserver.impl;
 
 import com.alipay.sofa.registry.common.model.Node;
 import com.alipay.sofa.registry.server.meta.AbstractTest;
 import com.alipay.sofa.registry.server.meta.bootstrap.config.NodeConfig;
 import com.alipay.sofa.registry.server.meta.lease.data.DataServerManager;
-import com.alipay.sofa.registry.server.meta.lease.session.SessionManager;
+import com.alipay.sofa.registry.server.meta.lease.impl.CrossDcMetaServerManager;
+import com.alipay.sofa.registry.server.meta.lease.session.SessionServerManager;
 import com.alipay.sofa.registry.server.meta.metaserver.CurrentDcMetaServer;
 import org.junit.Before;
 import org.junit.Test;
@@ -38,7 +39,7 @@ public class DefaultMetaServerManagerTest extends AbstractTest {
     private CurrentDcMetaServer      currentDcMetaServer;
 
     @Mock
-    private SessionManager           sessionManager;
+    private SessionServerManager     sessionServerManager;
 
     @Mock
     private DataServerManager        dataServerManager;
@@ -53,7 +54,7 @@ public class DefaultMetaServerManagerTest extends AbstractTest {
         MockitoAnnotations.initMocks(this);
         manager = new DefaultMetaServerManager();
         manager.setCrossDcMetaServerManager(crossDcMetaServerManager)
-            .setCurrentDcMetaServer(currentDcMetaServer).setSessionManager(sessionManager)
+            .setCurrentDcMetaServer(currentDcMetaServer).setSessionManager(sessionServerManager)
             .setDataServerManager(dataServerManager).setNodeConfig(nodeConfig);
     }
 
@@ -61,7 +62,7 @@ public class DefaultMetaServerManagerTest extends AbstractTest {
     public void testGetSummary() {
         manager.getSummary(Node.NodeType.DATA);
         verify(dataServerManager, times(1)).getClusterMembers();
-        verify(sessionManager, never()).getClusterMembers();
+        verify(sessionServerManager, never()).getClusterMembers();
     }
 
     @Test
@@ -75,6 +76,6 @@ public class DefaultMetaServerManagerTest extends AbstractTest {
     public void testGetSummary3() {
         manager.getSummary(Node.NodeType.META);
         verify(currentDcMetaServer, times(1)).getClusterMembers();
-        verify(sessionManager, never()).getClusterMembers();
+        verify(sessionServerManager, never()).getClusterMembers();
     }
 }

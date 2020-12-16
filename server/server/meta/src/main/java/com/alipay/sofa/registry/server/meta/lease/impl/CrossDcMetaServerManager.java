@@ -24,8 +24,8 @@ import com.alipay.sofa.registry.remoting.bolt.exchange.BoltExchange;
 import com.alipay.sofa.registry.remoting.exchange.Exchange;
 import com.alipay.sofa.registry.server.meta.bootstrap.config.MetaServerConfig;
 import com.alipay.sofa.registry.server.meta.bootstrap.config.NodeConfig;
-import com.alipay.sofa.registry.server.meta.lease.MetaServerManager;
 import com.alipay.sofa.registry.server.meta.metaserver.CrossDcMetaServer;
+import com.alipay.sofa.registry.server.meta.metaserver.MetaServerManager;
 import com.alipay.sofa.registry.server.meta.metaserver.impl.DefaultCrossDcMetaServer;
 import com.alipay.sofa.registry.server.meta.remoting.RaftExchanger;
 import com.alipay.sofa.registry.util.ConcurrentUtils;
@@ -86,7 +86,6 @@ public class CrossDcMetaServerManager extends AbstractLifecycle implements MetaS
     @PostConstruct
     public void postConstruct() throws Exception {
         LifecycleHelper.initializeIfPossible(this);
-        LifecycleHelper.startIfPossible(this);
     }
 
     @PreDestroy
@@ -119,19 +118,6 @@ public class CrossDcMetaServerManager extends AbstractLifecycle implements MetaS
             }
         }
         return metaServer;
-    }
-
-    public void remove(String dc) {
-        CrossDcMetaServer metaServer = crossDcMetaServers.remove(dc);
-        if (metaServer == null) {
-            return;
-        }
-        try {
-            LifecycleHelper.stopIfPossible(metaServer);
-            LifecycleHelper.disposeIfPossible(metaServer);
-        } catch (Exception e) {
-            logger.error("[remove][{}]", dc, e);
-        }
     }
 
     @Override

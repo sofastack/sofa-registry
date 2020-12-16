@@ -80,6 +80,10 @@ public class MetaServerConfigBean implements MetaServerConfig {
 
     private int                raftElectionTimeout                             = 1000;
 
+    private int                initialSlotTableLockTimeMilli                   = 1000;
+
+    private int                waitForDataServerRestartTimeMilli               = 15 * 1000;
+
     /**
      * Whether to enable metrics for node.
      */
@@ -813,6 +817,26 @@ public class MetaServerConfigBean implements MetaServerConfig {
     @Override
     public double getSessionLoadbalanceThresholdRatio() {
         return sessionLoadbalanceThresholdRatio;
+    }
+
+    @Override
+    public int getSchedulerConnectMetaServerTimeout() {
+        return schedulerConnectMetaServerTimeout;
+    }
+
+    @Override
+    public int getSchedulerConnectMetaServerExpBackOffBound() {
+        return schedulerConnectMetaServerExpBackOffBound;
+    }
+
+    @Override
+    public int getInitialSlotTableNonChangeLockTimeMilli() {
+        return initialSlotTableLockTimeMilli;
+    }
+
+    @Override
+    public int getWaitForDataServerRestartTime() {
+        return waitForDataServerRestartTimeMilli;
     }
 
     public void setSessionLoadbalanceThresholdRatio(double sessionLoadbalanceThresholdRatio) {

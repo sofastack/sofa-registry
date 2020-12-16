@@ -16,8 +16,20 @@
  */
 package com.alipay.sofa.registry.server.meta.resource;
 
-import java.util.HashMap;
-import java.util.Map;
+import com.alipay.sofa.registry.common.model.Node.NodeType;
+import com.alipay.sofa.registry.common.model.console.PersistenceData;
+import com.alipay.sofa.registry.common.model.constants.ValueConstants;
+import com.alipay.sofa.registry.log.Logger;
+import com.alipay.sofa.registry.log.LoggerFactory;
+import com.alipay.sofa.registry.metrics.ReporterUtils;
+import com.alipay.sofa.registry.server.meta.metaserver.impl.DefaultMetaServerManager;
+import com.alipay.sofa.registry.store.api.DBResponse;
+import com.alipay.sofa.registry.store.api.DBService;
+import com.alipay.sofa.registry.store.api.OperationStatus;
+import com.alipay.sofa.registry.store.api.annotation.RaftReference;
+import com.codahale.metrics.Gauge;
+import com.codahale.metrics.MetricRegistry;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import javax.annotation.PostConstruct;
 import javax.ws.rs.GET;
@@ -25,22 +37,8 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
-
-import com.alipay.sofa.registry.server.meta.lease.impl.DefaultMetaServerManager;
-import org.springframework.beans.factory.annotation.Autowired;
-
-import com.alipay.sofa.registry.common.model.Node.NodeType;
-import com.alipay.sofa.registry.common.model.console.PersistenceData;
-import com.alipay.sofa.registry.common.model.constants.ValueConstants;
-import com.alipay.sofa.registry.log.Logger;
-import com.alipay.sofa.registry.log.LoggerFactory;
-import com.alipay.sofa.registry.metrics.ReporterUtils;
-import com.alipay.sofa.registry.store.api.DBResponse;
-import com.alipay.sofa.registry.store.api.DBService;
-import com.alipay.sofa.registry.store.api.OperationStatus;
-import com.alipay.sofa.registry.store.api.annotation.RaftReference;
-import com.codahale.metrics.Gauge;
-import com.codahale.metrics.MetricRegistry;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  *
