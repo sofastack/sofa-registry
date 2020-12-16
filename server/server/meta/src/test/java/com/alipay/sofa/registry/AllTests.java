@@ -23,23 +23,44 @@ package com.alipay.sofa.registry;
  */
 
 import com.alipay.sofa.registry.common.model.slot.CRC16SlotFunctionTest;
+import com.alipay.sofa.registry.server.meta.cluster.node.NodeModifiedTest;
 import com.alipay.sofa.registry.server.meta.lease.LeaseTest;
-import com.alipay.sofa.registry.server.meta.lease.impl.*;
+import com.alipay.sofa.registry.server.meta.lease.data.DataLeaseManagerTest;
+import com.alipay.sofa.registry.server.meta.lease.data.DefaultDataServerManagerTest;
+import com.alipay.sofa.registry.server.meta.lease.impl.CrossDcMetaServerManagerTest;
+import com.alipay.sofa.registry.server.meta.lease.impl.DefaultLeaseManagerTest;
+import com.alipay.sofa.registry.server.meta.lease.impl.TestAbstractRaftEnabledLeaseManager;
+import com.alipay.sofa.registry.server.meta.lease.session.DefaultSessionServerManagerTest;
+import com.alipay.sofa.registry.server.meta.lease.session.SessionLeaseManagerTest;
 import com.alipay.sofa.registry.server.meta.metaserver.impl.DefaultCrossDcMetaServerTest;
 import com.alipay.sofa.registry.server.meta.metaserver.impl.DefaultCurrentDcMetaServerTest;
+import com.alipay.sofa.registry.server.meta.metaserver.impl.DefaultLocalMetaServerTest;
+import com.alipay.sofa.registry.server.meta.metaserver.impl.DefaultMetaServerManagerTest;
 import com.alipay.sofa.registry.server.meta.provide.data.DataServerProvideDataNotifierTest;
-import com.alipay.sofa.registry.server.meta.slot.impl.ArrangeTaskExecutorTest;
-import com.alipay.sofa.registry.server.meta.slot.impl.CrossDcSlotAllocatorTest;
+import com.alipay.sofa.registry.server.meta.provide.data.DefaultProvideDataNotifierTest;
+import com.alipay.sofa.registry.server.meta.provide.data.SessionServerProvideDataNotifierTest;
+import com.alipay.sofa.registry.server.meta.slot.impl.*;
+import com.alipay.sofa.registry.server.meta.slot.tasks.InitReshardingTaskTest;
+import com.alipay.sofa.registry.server.meta.slot.tasks.ServerDeadRebalanceWorkTest;
+import com.alipay.sofa.registry.server.meta.slot.tasks.SlotLeaderRebalanceTaskTest;
+import com.alipay.sofa.registry.server.meta.slot.tasks.SlotReassignTaskTest;
 import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
 
 @RunWith(Suite.class)
 @Suite.SuiteClasses({ CRC16SlotFunctionTest.class, DefaultCrossDcMetaServerTest.class,
                      CrossDcSlotAllocatorTest.class, DefaultCurrentDcMetaServerTest.class,
-                     DefaultSessionManagerTest.class, DefaultDataServerManagerTest.class,
+                     DefaultSessionServerManagerTest.class, DefaultDataServerManagerTest.class,
                      DefaultLeaseManagerTest.class, CrossDcMetaServerManagerTest.class,
                      TestAbstractRaftEnabledLeaseManager.class, LeaseTest.class,
                      DefaultMetaServerManagerTest.class, ArrangeTaskExecutorTest.class,
-                     DataServerProvideDataNotifierTest.class })
+                     DataServerProvideDataNotifierTest.class, DefaultLocalMetaServerTest.class,
+                     DataLeaseManagerTest.class, SessionLeaseManagerTest.class,
+                     SessionServerProvideDataNotifierTest.class,
+                     DefaultProvideDataNotifierTest.class, LocalSlotManagerTest.class,
+                     NodeModifiedTest.class, DefaultSlotManagerTest.class,
+                     DataServerArrangeTaskDispatcherTest.class, DefaultSlotArrangerTest.class,
+                     ServerDeadRebalanceWorkTest.class, InitReshardingTaskTest.class,
+                     SlotLeaderRebalanceTaskTest.class, SlotReassignTaskTest.class })
 public class AllTests {
 }

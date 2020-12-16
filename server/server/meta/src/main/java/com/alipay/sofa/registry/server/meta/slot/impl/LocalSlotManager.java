@@ -16,30 +16,19 @@
  */
 package com.alipay.sofa.registry.server.meta.slot.impl;
 
-import com.alipay.sofa.jraft.util.ThreadPoolUtil;
 import com.alipay.sofa.registry.common.model.metaserver.nodes.DataNode;
 import com.alipay.sofa.registry.common.model.slot.DataNodeSlot;
 import com.alipay.sofa.registry.common.model.slot.SlotConfig;
 import com.alipay.sofa.registry.common.model.slot.SlotTable;
 import com.alipay.sofa.registry.common.model.store.URL;
-import com.alipay.sofa.registry.exception.DisposeException;
-import com.alipay.sofa.registry.exception.InitializeException;
-import com.alipay.sofa.registry.jraft.LeaderAware;
-import com.alipay.sofa.registry.jraft.bootstrap.ServiceStateMachine;
 import com.alipay.sofa.registry.jraft.command.CommandCodec;
 import com.alipay.sofa.registry.jraft.processor.SnapshotProcess;
 import com.alipay.sofa.registry.lifecycle.impl.AbstractLifecycle;
 import com.alipay.sofa.registry.lifecycle.impl.LifecycleHelper;
-import com.alipay.sofa.registry.server.meta.bootstrap.config.MetaServerConfig;
 import com.alipay.sofa.registry.server.meta.bootstrap.config.NodeConfig;
-import com.alipay.sofa.registry.server.meta.lease.impl.DefaultDataServerManager;
 import com.alipay.sofa.registry.server.meta.slot.SlotManager;
-import com.alipay.sofa.registry.server.meta.slot.tasks.InitReshardingTask;
-import com.alipay.sofa.registry.server.meta.slot.tasks.SlotLeaderRebalanceTask;
-import com.alipay.sofa.registry.server.meta.slot.tasks.SlotReassignTask;
+import com.alipay.sofa.registry.store.api.annotation.RaftService;
 import com.alipay.sofa.registry.util.FileUtils;
-import com.alipay.sofa.registry.util.NamedThreadFactory;
-import com.alipay.sofa.registry.util.OsUtils;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
 import org.glassfish.jersey.internal.guava.Sets;
@@ -52,9 +41,6 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ScheduledFuture;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
@@ -64,38 +50,27 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
  * <p>
  * Nov 13, 2020
  */
+@RaftService(uniqueId = LocalSlotManager.LOCAL_SLOT_MANAGER, interfaceType = SlotManager.class)
+public class LocalSlotManager extends AbstractLifecycle implements SlotManager, SnapshotProcess {
 
-public class LocalSlotManager extends AbstractLifecycle implements SlotManager, LeaderAware,
-                                                       SnapshotProcess {
-
-    @Autowired
-    private DefaultDataServerManager                   dataServerManager;
+    public static final String               LOCAL_SLOT_MANAGER = "LocalSlotManager";
 
     @Autowired
-    private MetaServerConfig                           metaServerConfig;
+    private NodeConfig                       nodeConfig;
 
-    @Autowired
-    private NodeConfig                                 nodeConfig;
+    private final ReadWriteLock              lock               = new ReentrantReadWriteLock();
 
-    @Autowired
-    private ArrangeTaskExecutor                        arrangeTaskExecutor;
+    private final AtomicReference<SlotTable> currentSlotTable   = new AtomicReference<>(
+                                                                    SlotTable.INIT);
 
-    @Autowired
-    private DefaultSlotManager                         defaultSlotManager;
+    private Map<DataNode, DataNodeSlot>      reverseMap         = ImmutableMap.of();
 
-    private ScheduledExecutorService                   scheduled;
+    public LocalSlotManager() {
+    }
 
-    private ScheduledFuture<?>                         future;
-
-    private final ReadWriteLock                        lock             = new ReentrantReadWriteLock();
-
-    private final AtomicReference<SlotTable>           currentSlotTable = new AtomicReference<>(
-                                                                            SlotTable.INIT);
-
-    private Map<DataNode, DataNodeSlot>                reverseMap       = ImmutableMap.of();
-
-    private final AtomicReference<SlotPeriodCheckType> currentCheck     = new AtomicReference<>(
-                                                                            SlotPeriodCheckType.CHECK_SLOT_ASSIGNMENT_BALANCE);
+    public LocalSlotManager(NodeConfig nodeConfig) {
+        this.nodeConfig = nodeConfig;
+    }
 
     @PostConstruct
     public void postConstruct() throws Exception {
@@ -107,24 +82,6 @@ public class LocalSlotManager extends AbstractLifecycle implements SlotManager, 
     public void preDestroy() throws Exception {
         LifecycleHelper.stopIfPossible(this);
         LifecycleHelper.disposeIfPossible(this);
-    }
-
-    @Override
-    protected void doInitialize() throws InitializeException {
-        super.doInitialize();
-        scheduled = ThreadPoolUtil.newScheduledBuilder()
-            .coreThreads(Math.min(4, OsUtils.getCpuCount())).enableMetric(true)
-            .poolName(getClass().getSimpleName())
-            .threadFactory(new NamedThreadFactory(getClass().getSimpleName())).build();
-    }
-
-    @Override
-    protected void doDispose() throws DisposeException {
-        if (scheduled != null) {
-            scheduled.shutdownNow();
-            scheduled = null;
-        }
-        super.doDispose();
     }
 
     @Override
@@ -147,6 +104,7 @@ public class LocalSlotManager extends AbstractLifecycle implements SlotManager, 
                         "[refresh]receive slot table,but epoch({}) is smaller than current({})",
                         slotTable.getEpoch(), currentSlotTable.get().getEpoch());
                 }
+                return;
             }
             setSlotTable(slotTable);
             refreshReverseMap();
@@ -158,9 +116,13 @@ public class LocalSlotManager extends AbstractLifecycle implements SlotManager, 
     private void refreshReverseMap() {
         Map<DataNode, DataNodeSlot> newMap = Maps.newHashMap();
         List<DataNodeSlot> dataNodeSlots = getSlotTable().transfer(null, false);
-        dataNodeSlots.forEach(dataNodeSlot -> newMap.put(
-                new DataNode(new URL(dataNodeSlot.getDataNode()), nodeConfig.getLocalDataCenter()),
-                dataNodeSlot));
+        dataNodeSlots.forEach(dataNodeSlot -> {
+            try {
+                newMap.put(new DataNode(new URL(dataNodeSlot.getDataNode()), nodeConfig.getLocalDataCenter()), dataNodeSlot);
+            } catch (Exception e) {
+                logger.error("[refreshReverseMap][{}]", dataNodeSlot.getDataNode(), e);
+            }
+        });
         this.reverseMap = ImmutableMap.copyOf(newMap);
     }
 
@@ -178,7 +140,10 @@ public class LocalSlotManager extends AbstractLifecycle implements SlotManager, 
     public DataNodeSlot getDataNodeManagedSlot(DataNode dataNode, boolean ignoreFollowers) {
         lock.readLock().lock();
         try {
-            DataNodeSlot target = reverseMap.get(dataNode);
+            // here we ignore port for data-node, as when store the reverse-map, we lose the port information
+            // besides, port is not matter here
+            DataNodeSlot target = reverseMap.get(new DataNode(new URL(dataNode.getIp()), dataNode
+                .getDataCenter()));
             if (target == null) {
                 return new DataNodeSlot(dataNode.getIp());
             }
@@ -190,46 +155,6 @@ public class LocalSlotManager extends AbstractLifecycle implements SlotManager, 
 
     public void setSlotTable(SlotTable slotTable) {
         this.currentSlotTable.set(slotTable);
-    }
-
-    @Override
-    public void isLeader() {
-        initCheck();
-        future = scheduled.scheduleWithFixedDelay(new Runnable() {
-            @Override
-            public void run() {
-                if (ServiceStateMachine.getInstance().isLeader()) {
-                    currentCheck.set(currentCheck
-                        .get()
-                        .action(arrangeTaskExecutor, LocalSlotManager.this, defaultSlotManager,
-                            dataServerManager).next());
-                }
-            }
-        }, getIntervalMilli(), getIntervalMilli(), TimeUnit.MILLISECONDS);
-    }
-
-    @Override
-    public void notLeader() {
-        if (future != null) {
-            future.cancel(true);
-            future = null;
-        }
-    }
-
-    private void initCheck() {
-        if (currentSlotTable.get().getEpoch() != SlotTable.INIT.getEpoch()) {
-            if (logger.isInfoEnabled()) {
-                logger.info("[initCheck] slot table(version: {}) not empty, quit init slot table",
-                    currentSlotTable.get().getEpoch());
-            }
-            return;
-        }
-        arrangeTaskExecutor.offer(new InitReshardingTask(this, defaultSlotManager,
-            dataServerManager));
-    }
-
-    private int getIntervalMilli() {
-        return 60 * 1000;
     }
 
     @Override
@@ -272,48 +197,6 @@ public class LocalSlotManager extends AbstractLifecycle implements SlotManager, 
         Set<String> files = Sets.newHashSet();
         files.add(getClass().getSimpleName());
         return files;
-    }
-
-    public enum SlotPeriodCheckType {
-        CHECK_SLOT_ASSIGNMENT_BALANCE {
-            @Override
-            SlotPeriodCheckType next() {
-                return CHECK_SLOT_LEADER_BALANCE;
-            }
-
-            @Override
-            SlotPeriodCheckType action(ArrangeTaskExecutor arrangeTaskExecutor,
-                                       LocalSlotManager localSlotManager,
-                                       SlotManager raftSlotManager,
-                                       DefaultDataServerManager dataServerManager) {
-                arrangeTaskExecutor.offer(new SlotReassignTask(localSlotManager, raftSlotManager,
-                    dataServerManager));
-                return this;
-            }
-        },
-        CHECK_SLOT_LEADER_BALANCE {
-            @Override
-            SlotPeriodCheckType next() {
-                return CHECK_SLOT_ASSIGNMENT_BALANCE;
-            }
-
-            @Override
-            SlotPeriodCheckType action(ArrangeTaskExecutor arrangeTaskExecutor,
-                                       LocalSlotManager localSlotManager,
-                                       SlotManager raftSlotManager,
-                                       DefaultDataServerManager dataServerManager) {
-                arrangeTaskExecutor.offer(new SlotLeaderRebalanceTask(localSlotManager,
-                    raftSlotManager, dataServerManager));
-                return this;
-            }
-        };
-
-        abstract SlotPeriodCheckType next();
-
-        abstract SlotPeriodCheckType action(ArrangeTaskExecutor arrangeTaskExecutor,
-                                            LocalSlotManager localSlotManager,
-                                            SlotManager raftSlotManager,
-                                            DefaultDataServerManager dataServerManager);
     }
 
 }

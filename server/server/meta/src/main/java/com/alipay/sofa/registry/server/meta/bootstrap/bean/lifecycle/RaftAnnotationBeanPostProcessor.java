@@ -31,6 +31,7 @@ import org.springframework.beans.factory.config.BeanPostProcessor;
 import org.springframework.core.Ordered;
 import org.springframework.util.ReflectionUtils;
 
+import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.Proxy;
 
@@ -57,11 +58,11 @@ public class RaftAnnotationBeanPostProcessor implements BeanPostProcessor, Order
     @Override
     public Object postProcessAfterInitialization(Object bean, String beanName)
                                                                               throws BeansException {
-        processRaftService(bean, beanName);
+        processRaftService(bean);
         return bean;
     }
 
-    private void processRaftReference(Object bean) {
+    public void processRaftReference(Object bean) {
         final Class<?> beanClass = bean.getClass();
 
         ReflectionUtils.doWithFields(beanClass, field -> {
@@ -70,19 +71,24 @@ public class RaftAnnotationBeanPostProcessor implements BeanPostProcessor, Order
             if (referenceAnnotation == null) {
                 return;
             }
-
-            Class<?> interfaceType = referenceAnnotation.interfaceType();
-
-            if (interfaceType.equals(void.class)) {
-                interfaceType = field.getType();
-            }
-            String serviceId = getServiceId(interfaceType, referenceAnnotation.uniqueId());
-            Object proxy = getProxy(interfaceType, serviceId);
-            ReflectionUtils.makeAccessible(field);
-            ReflectionUtils.setField(field, bean, proxy);
+            replaceBeanToRaftService(referenceAnnotation, field, bean);
 
         }, field -> !Modifier.isStatic(field.getModifiers())
                 && field.isAnnotationPresent(RaftReference.class));
+    }
+
+    private void replaceBeanToRaftService(RaftReference referenceAnnotation, Field field,
+                                          Object bean) {
+        Class<?> interfaceType = referenceAnnotation.interfaceType();
+
+        if (interfaceType.equals(void.class)) {
+            interfaceType = field.getType();
+        }
+        String serviceId = getServiceId(interfaceType, referenceAnnotation.uniqueId());
+        Object proxy = getProxy(interfaceType, serviceId);
+        ReflectionUtils.makeAccessible(field);
+        field.setAccessible(true);
+        ReflectionUtils.setField(field, bean, proxy);
     }
 
     private Object getProxy(Class<?> interfaceType, String serviceId) {
@@ -96,7 +102,7 @@ public class RaftAnnotationBeanPostProcessor implements BeanPostProcessor, Order
                 raftExchanger.getRaftClient()));
     }
 
-    private void processRaftService(Object bean, String beanName) {
+    private void processRaftService(Object bean) {
 
         final Class<?> beanClass = AopProxyUtils.ultimateTargetClass(bean);
 
@@ -106,6 +112,24 @@ public class RaftAnnotationBeanPostProcessor implements BeanPostProcessor, Order
             return;
         }
 
+        registerBeanAsRaftService(raftServiceAnnotation, bean, beanClass);
+
+    }
+
+    public void registerBeanAsRaftService(Object bean) {
+        final Class<?> beanClass = AopProxyUtils.ultimateTargetClass(bean);
+
+        RaftService raftServiceAnnotation = beanClass.getAnnotation(RaftService.class);
+
+        if (raftServiceAnnotation == null) {
+            return;
+        }
+
+        registerBeanAsRaftService(raftServiceAnnotation, bean, beanClass);
+    }
+
+    private void registerBeanAsRaftService(RaftService raftServiceAnnotation, Object bean,
+                                           final Class<?> beanClass) {
         Class<?> interfaceType = raftServiceAnnotation.interfaceType();
 
         if (interfaceType.equals(void.class)) {
@@ -113,7 +137,7 @@ public class RaftAnnotationBeanPostProcessor implements BeanPostProcessor, Order
 
             if (interfaces == null || interfaces.length == 0 || interfaces.length > 1) {
                 throw new RuntimeException(
-                    "Bean " + beanName
+                    "Bean " + beanClass
                             + " does not has any interface or has more than one interface.");
             }
 

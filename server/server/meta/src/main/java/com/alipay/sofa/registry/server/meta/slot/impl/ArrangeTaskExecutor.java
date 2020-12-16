@@ -69,8 +69,8 @@ public class ArrangeTaskExecutor extends AbstractLifecycle {
     @Override
     protected void doInitialize() throws InitializeException {
         super.doInitialize();
-        executors = DefaultExecutorFactory.createAllowCoreTimeout(getClass().getSimpleName(),
-            Math.max(4, OsUtils.getCpuCount())).create();
+        executors = DefaultExecutorFactory.createAllowCoreTimeout(
+            ArrangeTaskExecutor.class.getSimpleName(), Math.max(4, OsUtils.getCpuCount())).create();
     }
 
     @Override

@@ -34,4 +34,9 @@ public abstract class AbstractNodeEvent<T extends Node> implements NodeEvent<T> 
     public T getNode() {
         return node;
     }
+
+    @Override
+    public String toString() {
+        return getClass().getSimpleName() + "{" + "node=" + node + '}';
+    }
 }

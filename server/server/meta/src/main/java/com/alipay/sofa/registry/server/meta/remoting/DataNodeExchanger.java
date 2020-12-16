@@ -16,8 +16,6 @@
  */
 package com.alipay.sofa.registry.server.meta.remoting;
 
-import org.springframework.beans.factory.annotation.Autowired;
-
 import com.alipay.sofa.registry.common.model.store.URL;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
@@ -30,6 +28,8 @@ import com.alipay.sofa.registry.remoting.exchange.RequestException;
 import com.alipay.sofa.registry.remoting.exchange.message.Request;
 import com.alipay.sofa.registry.remoting.exchange.message.Response;
 import com.alipay.sofa.registry.server.meta.bootstrap.config.MetaServerConfig;
+import com.google.common.annotations.VisibleForTesting;
+import org.springframework.beans.factory.annotation.Autowired;
 
 /**
  *
@@ -87,5 +87,17 @@ public class DataNodeExchanger implements NodeExchanger {
     @Override
     public Client connectServer() {
         return null;
+    }
+
+    @VisibleForTesting
+    public DataNodeExchanger setMetaServerConfig(MetaServerConfig metaServerConfig) {
+        this.metaServerConfig = metaServerConfig;
+        return this;
+    }
+
+    @VisibleForTesting
+    public DataNodeExchanger setBoltExchange(Exchange boltExchange) {
+        this.boltExchange = boltExchange;
+        return this;
     }
 }

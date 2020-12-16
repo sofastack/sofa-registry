@@ -16,16 +16,14 @@
  */
 package com.alipay.sofa.registry.server.meta;
 
-import com.alipay.sofa.registry.common.model.metaserver.nodes.MetaNode;
-import com.alipay.sofa.registry.server.meta.slot.SlotTableAware;
 import com.alipay.sofa.registry.lifecycle.Lifecycle;
-import com.alipay.sofa.registry.server.meta.cluster.NodeCluster;
+import com.alipay.sofa.registry.server.meta.slot.SlotTableAware;
 
 /**
  * @author chen.zhu
  * <p>
  * Nov 13, 2020
  */
-public interface MetaServer extends NodeCluster<MetaNode>, SlotTableAware, Lifecycle {
+public interface MetaServer extends SlotTableAware, Lifecycle {
 
 }

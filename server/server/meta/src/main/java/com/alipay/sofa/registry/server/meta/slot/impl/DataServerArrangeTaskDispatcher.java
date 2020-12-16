@@ -19,17 +19,20 @@ package com.alipay.sofa.registry.server.meta.slot.impl;
 import com.alipay.sofa.jraft.util.ThreadPoolUtil;
 import com.alipay.sofa.registry.common.model.metaserver.nodes.DataNode;
 import com.alipay.sofa.registry.common.model.slot.SlotTable;
+import com.alipay.sofa.registry.common.model.store.URL;
 import com.alipay.sofa.registry.exception.DisposeException;
 import com.alipay.sofa.registry.exception.InitializeException;
 import com.alipay.sofa.registry.lifecycle.impl.LifecycleHelper;
 import com.alipay.sofa.registry.observer.impl.AbstractLifecycleObservable;
-import com.alipay.sofa.registry.server.meta.lease.impl.DefaultDataServerManager;
+import com.alipay.sofa.registry.server.meta.bootstrap.config.MetaServerConfig;
+import com.alipay.sofa.registry.server.meta.lease.data.DefaultDataServerManager;
 import com.alipay.sofa.registry.server.meta.slot.ArrangeTaskDispatcher;
 import com.alipay.sofa.registry.server.meta.slot.tasks.InitReshardingTask;
 import com.alipay.sofa.registry.server.meta.slot.tasks.ServerDeadRebalanceWork;
 import com.alipay.sofa.registry.server.meta.slot.tasks.SlotReassignTask;
 import com.alipay.sofa.registry.util.NamedThreadFactory;
 import com.alipay.sofa.registry.util.OsUtils;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Maps;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -66,6 +69,9 @@ public class DataServerArrangeTaskDispatcher extends AbstractLifecycleObservable
     @Autowired
     private DefaultSlotManager                              defaultSlotManager;
 
+    @Autowired
+    private MetaServerConfig                                metaServerConfig;
+
     private AtomicBoolean                                   inited            = new AtomicBoolean(
                                                                                   false);
 
@@ -89,9 +95,13 @@ public class DataServerArrangeTaskDispatcher extends AbstractLifecycleObservable
     @Override
     protected void doInitialize() throws InitializeException {
         super.doInitialize();
-        scheduled = ThreadPoolUtil.newScheduledBuilder()
-            .coreThreads(Math.min(OsUtils.getCpuCount(), 2)).poolName(getClass().getSimpleName())
-            .enableMetric(true).threadFactory(new NamedThreadFactory(getClass().getSimpleName()))
+        scheduled = ThreadPoolUtil
+            .newScheduledBuilder()
+            .coreThreads(Math.min(OsUtils.getCpuCount(), 2))
+            .poolName(DataServerArrangeTaskDispatcher.class.getSimpleName())
+            .enableMetric(true)
+            .threadFactory(
+                new NamedThreadFactory(DataServerArrangeTaskDispatcher.class.getSimpleName()))
             .build();
 
     }
@@ -110,18 +120,22 @@ public class DataServerArrangeTaskDispatcher extends AbstractLifecycleObservable
         if (logger.isInfoEnabled()) {
             logger.info("[serverAlive]{}", dataNode);
         }
-        initSlotTableIfNeeded();
+        if (initSlotTableIfNeeded()) {
+            lockForInitSlotTable();
+        }
 
         if (lock.get()) {
             if (logger.isInfoEnabled()) {
-                logger.info("[serverAlive] stop work until init slot table");
+                logger
+                    .info("[serverAlive][{}] stop rebalance task until init slot table", dataNode);
             }
             return;
         }
-        DeadServerAction deadServerAction = deadServerActions.get(dataNode);
+        DeadServerAction deadServerAction = deadServerActions.get(new DataNode(new URL(dataNode
+            .getIp()), dataNode.getDataCenter()));
         if (deadServerAction == null) {
-            arrangeTaskExecutor.offer(new SlotReassignTask(slotManager, defaultSlotManager,
-                dataServerManager));
+            arrangeTaskExecutor.offer(new SlotReassignTask(slotManager, defaultSlotManager
+                .getRaftSlotManager(), dataServerManager));
         } else {
             if (logger.isInfoEnabled()) {
                 logger.info("[serverAlive][dead server alive]{}", dataNode);
@@ -130,26 +144,36 @@ public class DataServerArrangeTaskDispatcher extends AbstractLifecycleObservable
         }
     }
 
-    private void initSlotTableIfNeeded() {
+    private boolean initSlotTableIfNeeded() {
         if (inited.compareAndSet(false, true)
             && slotManager.getSlotTable().getEpoch() == SlotTable.INIT.getEpoch()) {
-            logger.info("[first init] generate slot table after 1s");
-            lock.set(true);
+            if (logger.isInfoEnabled()) {
+                logger.info("[first init] lock and generate slot table after {} ms",
+                    metaServerConfig.getInitialSlotTableNonChangeLockTimeMilli());
+            }
             scheduled.schedule(new Runnable() {
                 @Override
                 public void run() {
                     arrangeTaskExecutor.offer(new InitReshardingTask(slotManager,
-                        defaultSlotManager, dataServerManager));
+                        defaultSlotManager.getRaftSlotManager(), dataServerManager));
                 }
-            }, 1000, TimeUnit.MILLISECONDS);
-            // release the lock
-            scheduled.schedule(new Runnable() {
+            }, metaServerConfig.getInitialSlotTableNonChangeLockTimeMilli(), TimeUnit.MILLISECONDS);
+            return true;
+        }
+        return false;
+    }
+
+    private void lockForInitSlotTable() {
+        lock.set(true);
+        // release the lock after slot-table is initializing
+        scheduled
+            .schedule(new Runnable() {
                 @Override
                 public void run() {
                     lock.set(false);
                 }
-            }, 1010, TimeUnit.MILLISECONDS);
-        }
+            }, metaServerConfig.getInitialSlotTableNonChangeLockTimeMilli() + 10,
+                TimeUnit.MILLISECONDS);
     }
 
     @Override
@@ -157,11 +181,13 @@ public class DataServerArrangeTaskDispatcher extends AbstractLifecycleObservable
         if (logger.isInfoEnabled()) {
             logger.info("[serverDead]{}", dataNode.getIp());
         }
-        deadServerActions.putIfAbsent(dataNode, new DeadServerAction(dataNode));
+        // we only cares for data server ip
+        DataNode simpleNode = new DataNode(new URL(dataNode.getIp()), dataNode.getDataCenter());
+        deadServerActions.putIfAbsent(simpleNode, new DeadServerAction(simpleNode));
     }
 
     private int getWaitForRestartMilli() {
-        return 15 * 1000;
+        return metaServerConfig.getWaitForDataServerRestartTime();
     }
 
     public class DeadServerAction implements Runnable {
@@ -177,8 +203,8 @@ public class DataServerArrangeTaskDispatcher extends AbstractLifecycleObservable
         @Override
         public void run() {
             cleanCache();
-            arrangeTaskExecutor.offer(new ServerDeadRebalanceWork(slotManager, dataServerManager,
-                dataNode));
+            arrangeTaskExecutor.offer(new ServerDeadRebalanceWork(defaultSlotManager
+                .getRaftSlotManager(), slotManager, dataServerManager, dataNode));
         }
 
         public void serverAlive() {
@@ -189,5 +215,51 @@ public class DataServerArrangeTaskDispatcher extends AbstractLifecycleObservable
         private void cleanCache() {
             deadServerActions.remove(dataNode);
         }
+    }
+
+    /**
+     *
+     * For Unit Test use only
+     *
+     */
+    @VisibleForTesting
+    ConcurrentMap<DataNode, DeadServerAction> getDeadServerActions() {
+        return deadServerActions;
+    }
+
+    @VisibleForTesting
+    DataServerArrangeTaskDispatcher setArrangeTaskExecutor(ArrangeTaskExecutor arrangeTaskExecutor) {
+        this.arrangeTaskExecutor = arrangeTaskExecutor;
+        return this;
+    }
+
+    @VisibleForTesting
+    DataServerArrangeTaskDispatcher setDataServerManager(DefaultDataServerManager dataServerManager) {
+        this.dataServerManager = dataServerManager;
+        return this;
+    }
+
+    @VisibleForTesting
+    DataServerArrangeTaskDispatcher setSlotManager(LocalSlotManager slotManager) {
+        this.slotManager = slotManager;
+        return this;
+    }
+
+    @VisibleForTesting
+    DataServerArrangeTaskDispatcher setDefaultSlotManager(DefaultSlotManager defaultSlotManager) {
+        this.defaultSlotManager = defaultSlotManager;
+        return this;
+    }
+
+    @VisibleForTesting
+    DataServerArrangeTaskDispatcher setInited(AtomicBoolean inited) {
+        this.inited = inited;
+        return this;
+    }
+
+    @VisibleForTesting
+    DataServerArrangeTaskDispatcher setMetaServerConfig(MetaServerConfig metaServerConfig) {
+        this.metaServerConfig = metaServerConfig;
+        return this;
     }
 }

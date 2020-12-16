@@ -19,7 +19,7 @@ package com.alipay.sofa.registry.server.meta.slot.tasks;
 import com.alipay.sofa.registry.common.model.metaserver.nodes.DataNode;
 import com.alipay.sofa.registry.common.model.slot.DataNodeSlot;
 import com.alipay.sofa.registry.common.model.slot.Slot;
-import com.alipay.sofa.registry.server.meta.lease.impl.DefaultDataServerManager;
+import com.alipay.sofa.registry.server.meta.lease.data.DefaultDataServerManager;
 import com.alipay.sofa.registry.server.meta.slot.RebalanceTask;
 import com.alipay.sofa.registry.server.meta.slot.SlotManager;
 import com.alipay.sofa.registry.server.meta.slot.impl.LocalSlotManager;
@@ -73,7 +73,8 @@ public class SlotReassignTask extends AbstractRebalanceTask implements Rebalance
 
     @Override
     protected Slot createMigratedSlot(Slot prevSlot, long epoch, DataNode from, DataNode to) {
-        Set<String> newFollowers = prevSlot.getFollowers();
+        Set<String> newFollowers = Sets.newHashSet();
+        newFollowers.addAll(prevSlot.getFollowers());
         newFollowers.remove(to.getIp());
         newFollowers.add(from.getIp());
         return new Slot(prevSlot.getId(), to.getIp(), epoch, newFollowers);

@@ -14,21 +14,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alipay.sofa.registry.store.api.annotation;
+package com.alipay.sofa.registry.server.meta.remoting.notifier;
 
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.Target;
-
-import static java.lang.annotation.RetentionPolicy.RUNTIME;
+import com.alipay.sofa.registry.common.model.metaserver.nodes.SessionNode;
 
 /**
  * @author chen.zhu
  * <p>
- * Dec 13, 2020
+ * Dec 15, 2020
  */
+public interface DataServerService extends MetaServerChangeListener {
 
-@Target({ ElementType.METHOD })
-@Retention(RUNTIME)
-public @interface ExecuteOnLeader {
+    void sessionServerRestart(SessionNode prev, SessionNode current);
+
+    void sessionServerOffline(SessionNode sessionNode);
+
+    void sessionServerOnline(SessionNode sessionNode);
+
 }

@@ -14,19 +14,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alipay.sofa.registry.server.meta.lease.session;
+package com.alipay.sofa.registry.store.api.annotation;
 
-import com.alipay.sofa.registry.common.model.metaserver.nodes.SessionNode;
-import com.alipay.sofa.registry.lifecycle.Lifecycle;
-import com.alipay.sofa.registry.observer.Observable;
-import com.alipay.sofa.registry.server.meta.cluster.NodeCluster;
-import com.alipay.sofa.registry.server.meta.lease.LeaseManager;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
 /**
  * @author chen.zhu
  * <p>
- * Nov 23, 2020
+ * Dec 14, 2020
  */
-public interface SessionManager extends Observable, Lifecycle, LeaseManager<SessionNode>,
-                               NodeCluster<SessionNode> {
+@Retention(RetentionPolicy.RUNTIME)
+@Target(ElementType.METHOD)
+public @interface NonRaftMethod {
 }

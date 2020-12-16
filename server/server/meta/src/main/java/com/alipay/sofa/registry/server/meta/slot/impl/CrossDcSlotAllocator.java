@@ -20,7 +20,10 @@ import com.alipay.sofa.registry.common.model.metaserver.GetSlotTableRequest;
 import com.alipay.sofa.registry.common.model.metaserver.nodes.MetaNode;
 import com.alipay.sofa.registry.common.model.slot.SlotTable;
 import com.alipay.sofa.registry.datacenter.DataCenterAware;
-import com.alipay.sofa.registry.exception.*;
+import com.alipay.sofa.registry.exception.DisposeException;
+import com.alipay.sofa.registry.exception.InitializeException;
+import com.alipay.sofa.registry.exception.StartException;
+import com.alipay.sofa.registry.exception.StopException;
 import com.alipay.sofa.registry.jraft.bootstrap.ServiceStateMachine;
 import com.alipay.sofa.registry.jraft.processor.Processor;
 import com.alipay.sofa.registry.jraft.processor.ProxyHandler;
@@ -28,11 +31,11 @@ import com.alipay.sofa.registry.lifecycle.impl.AbstractLifecycle;
 import com.alipay.sofa.registry.remoting.CallbackHandler;
 import com.alipay.sofa.registry.remoting.Channel;
 import com.alipay.sofa.registry.remoting.exchange.Exchange;
-import com.alipay.sofa.registry.server.meta.cluster.RaftInterface;
 import com.alipay.sofa.registry.server.meta.metaserver.CrossDcMetaServer;
 import com.alipay.sofa.registry.server.meta.remoting.RaftExchanger;
 import com.alipay.sofa.registry.server.meta.slot.SlotAllocator;
 import com.alipay.sofa.registry.server.meta.slot.SlotTableAware;
+import com.alipay.sofa.registry.store.api.annotation.RaftMethod;
 import com.google.common.annotations.VisibleForTesting;
 
 import java.lang.reflect.Proxy;
@@ -158,7 +161,7 @@ public class CrossDcSlotAllocator extends AbstractLifecycle implements SlotAlloc
      *
      * @param slotTable the slot table
      */
-    @RaftInterface
+    @RaftMethod
     public void setSlotTable(SlotTable slotTable) {
         currentSlotTable.set(slotTable);
     }

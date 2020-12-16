@@ -22,8 +22,6 @@ import org.junit.Test;
 
 import java.util.concurrent.TimeUnit;
 
-import static org.junit.Assert.*;
-
 public class LeaseTest extends AbstractTest {
 
     private Lease<Object> lease;
@@ -55,5 +53,15 @@ public class LeaseTest extends AbstractTest {
         Thread.sleep(5);
         lease.renew();
         Assert.assertNotEquals(firstUpdate, lease.getLastUpdateTimestamp());
+    }
+
+    @Test
+    public void testSetRenewal() {
+        Object first = new Object();
+        lease = new Lease<>(first, 1);
+        lease.renew();
+        Object second = new Object();
+        lease.setRenewal(second);
+        Assert.assertNotEquals(first, lease.getRenewal());
     }
 }

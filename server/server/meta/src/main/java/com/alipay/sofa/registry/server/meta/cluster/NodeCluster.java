@@ -28,9 +28,19 @@ import java.util.List;
  */
 public interface NodeCluster<T extends Node> {
 
+    /**
+     * return current epoch.
+     *
+     * @return the get epoch
+     */
     @ReadOnLeader
     long getEpoch();
 
+    /**
+     * Gets cluster members(for instance, meta-servers, data-servers or session-servers).
+     *
+     * @return the get cluster members
+     */
     @ReadOnLeader
     List<T> getClusterMembers();
 

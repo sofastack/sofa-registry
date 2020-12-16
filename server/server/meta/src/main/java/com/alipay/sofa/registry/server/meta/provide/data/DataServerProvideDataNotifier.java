@@ -17,6 +17,7 @@
 package com.alipay.sofa.registry.server.meta.provide.data;
 
 import com.alipay.sofa.registry.common.model.metaserver.nodes.DataNode;
+import com.alipay.sofa.registry.exception.SofaRegistryRuntimeException;
 import com.alipay.sofa.registry.remoting.exchange.NodeExchanger;
 import com.alipay.sofa.registry.server.meta.lease.data.DataServerManager;
 import com.alipay.sofa.registry.server.meta.remoting.connection.NodeConnectManager;
@@ -57,7 +58,7 @@ public class DataServerProvideDataNotifier extends AbstractProvideDataNotifier<D
     protected NodeConnectManager getNodeConnectManager() {
         if (!(dataConnectionHandler instanceof NodeConnectManager)) {
             logger.error("dataConnectionHandler inject is not NodeConnectManager instance!");
-            throw new RuntimeException(
+            throw new SofaRegistryRuntimeException(
                 "dataConnectionHandler inject is not NodeConnectManager instance!");
         }
 

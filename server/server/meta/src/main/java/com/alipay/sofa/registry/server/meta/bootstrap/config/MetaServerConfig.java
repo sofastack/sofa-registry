@@ -119,4 +119,11 @@ public interface MetaServerConfig {
 
     double getSessionLoadbalanceThresholdRatio();
 
+    int getSchedulerConnectMetaServerTimeout();
+
+    int getSchedulerConnectMetaServerExpBackOffBound();
+
+    int getInitialSlotTableNonChangeLockTimeMilli();
+
+    int getWaitForDataServerRestartTime();
 }

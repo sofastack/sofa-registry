@@ -14,14 +14,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alipay.sofa.registry.server.meta.cluster;
+package com.alipay.sofa.registry.server.meta.lease.data;
 
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
+import com.alipay.sofa.registry.observer.Observer;
 
-@Retention(RetentionPolicy.RUNTIME)
-@Target(ElementType.METHOD)
-public @interface RaftInterface {
+/**
+ * @author chen.zhu
+ * <p>
+ * Dec 15, 2020
+ */
+public interface DataManagerObserver extends Observer {
 }

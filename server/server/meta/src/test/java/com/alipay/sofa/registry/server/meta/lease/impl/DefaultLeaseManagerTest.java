@@ -20,10 +20,14 @@ import com.alipay.sofa.registry.common.model.Node;
 import com.alipay.sofa.registry.common.model.store.URL;
 import com.alipay.sofa.registry.server.meta.AbstractTest;
 import com.alipay.sofa.registry.util.DatumVersionUtil;
+import com.alipay.sofa.registry.util.FileUtils;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.io.File;
+import java.util.Collections;
+import java.util.List;
 import java.util.Objects;
 
 public class DefaultLeaseManagerTest extends AbstractTest {
@@ -37,16 +41,9 @@ public class DefaultLeaseManagerTest extends AbstractTest {
     }
 
     @Test
-    public void testRegister() throws InterruptedException {
-        String ip = randomIp();
-        leaseManager.register(new SimpleNode(ip), 1);
-        Assert.assertNotNull(leaseManager.repo.get(ip));
-    }
-
-    @Test
     public void testCancel() {
         String ip = randomIp();
-        leaseManager.register(new SimpleNode(ip), 1);
+        leaseManager.renew(new SimpleNode(ip), 1);
         Assert.assertNotNull(leaseManager.repo.get(ip));
         leaseManager.cancel(new SimpleNode(ip));
         Assert.assertNull(leaseManager.repo.get(ip));
@@ -55,7 +52,7 @@ public class DefaultLeaseManagerTest extends AbstractTest {
     @Test
     public void testRenew() {
         String ip = randomIp();
-        leaseManager.register(new SimpleNode(ip), 1);
+        leaseManager.renew(new SimpleNode(ip), 1);
         Assert.assertNotNull(leaseManager.repo.get(ip));
         leaseManager.cancel(new SimpleNode(ip));
         Assert.assertNull(leaseManager.repo.get(ip));
@@ -63,16 +60,13 @@ public class DefaultLeaseManagerTest extends AbstractTest {
         Assert.assertNotNull(leaseManager.repo.get(ip));
     }
 
-    @Test
+    @Test(expected = UnsupportedOperationException.class)
     public void testEvict() throws InterruptedException {
         String ip = randomIp();
-        leaseManager.register(new SimpleNode(ip), 1);
+        leaseManager.renew(new SimpleNode(ip), 1);
         Assert.assertNotNull(leaseManager.repo.get(ip));
-        Thread.sleep(1000);
         logger.info("[expired] {}", leaseManager.repo.get(ip).isExpired());
         leaseManager.evict();
-        Thread.sleep(100);
-        Assert.assertNull(leaseManager.repo.get(ip));
     }
 
     @Test
@@ -87,7 +81,63 @@ public class DefaultLeaseManagerTest extends AbstractTest {
         Assert.assertNotEquals(0, leaseManager.getEpoch());
     }
 
-    public static class SimpleNode implements Node {
+    @Test(expected = IllegalArgumentException.class)
+    public void testRegisterNPE() {
+        leaseManager.register(null);
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void testCancelNPE() {
+        leaseManager.cancel(null);
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void testRenewNPE() {
+        leaseManager.renew(null, 100);
+    }
+
+    @Test
+    public void testRefreshEpochWithLowerVersion() {
+        long epoch = DatumVersionUtil.nextId();
+        leaseManager.refreshEpoch(epoch);
+        Assert.assertEquals(epoch, leaseManager.getEpoch());
+        leaseManager.refreshEpoch(epoch - 100);
+        Assert.assertEquals(epoch, leaseManager.getEpoch());
+    }
+
+    @Test
+    public void testSaveAndLoad() {
+        int tasks = 100;
+        new ConcurrentExecutor(tasks, executors).execute(new Runnable() {
+            @Override
+            public void run() {
+                leaseManager.renew(new SimpleNode(randomIp()), Math.abs(random.nextInt()));
+            }
+        });
+        String path = leaseManager.getSnapshotFileNames().iterator().next();
+        leaseManager.copy().save(path);
+        DefaultLeaseManager<SimpleNode> loadManager = new DefaultLeaseManager<>(path);
+        loadManager.load(path);
+        List<SimpleNode> expected = leaseManager.getClusterMembers();
+        List<SimpleNode> actual = loadManager.getClusterMembers();
+        Collections.sort(expected);
+        Collections.sort(actual);
+        Assert.assertEquals(expected, actual);
+    }
+
+    @Test
+    public void testEmptyLoad() {
+        String path = randomString(100);
+        try {
+            FileUtils.writeByteArrayToFile(new File(path), new byte[0], true);
+        } catch (Exception ignore) {
+
+        }
+        DefaultLeaseManager<SimpleNode> loadManager = new DefaultLeaseManager<>(path);
+        Assert.assertFalse(loadManager.load(path));
+    }
+
+    public static class SimpleNode implements Node, Comparable<SimpleNode> {
 
         private final URL url;
 
@@ -111,10 +161,12 @@ public class DefaultLeaseManagerTest extends AbstractTest {
 
         @Override
         public boolean equals(Object o) {
-            if (this == o)
+            if (this == o) {
                 return true;
-            if (o == null || getClass() != o.getClass())
+            }
+            if (o == null || getClass() != o.getClass()) {
                 return false;
+            }
             SimpleNode that = (SimpleNode) o;
             return Objects.equals(url, that.url);
         }
@@ -122,6 +174,11 @@ public class DefaultLeaseManagerTest extends AbstractTest {
         @Override
         public int hashCode() {
             return Objects.hash(url);
+        }
+
+        @Override
+        public int compareTo(SimpleNode o) {
+            return this.url.getIpAddress().compareTo(o.url.getIpAddress());
         }
     }
 }

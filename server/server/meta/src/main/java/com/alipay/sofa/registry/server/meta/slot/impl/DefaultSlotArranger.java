@@ -20,13 +20,14 @@ import com.alipay.sofa.registry.common.model.metaserver.nodes.DataNode;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.observer.Observable;
-import com.alipay.sofa.registry.observer.Observer;
 import com.alipay.sofa.registry.server.meta.cluster.node.NodeAdded;
 import com.alipay.sofa.registry.server.meta.cluster.node.NodeModified;
 import com.alipay.sofa.registry.server.meta.cluster.node.NodeRemoved;
+import com.alipay.sofa.registry.server.meta.lease.data.DataManagerObserver;
 import com.alipay.sofa.registry.server.meta.lease.data.DataServerManager;
 import com.alipay.sofa.registry.server.meta.slot.ArrangeTaskDispatcher;
 import com.alipay.sofa.registry.server.meta.slot.SlotArranger;
+import com.google.common.annotations.VisibleForTesting;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import javax.annotation.PostConstruct;
@@ -38,7 +39,7 @@ import javax.annotation.PreDestroy;
  * Nov 24, 2020
  */
 
-public class DefaultSlotArranger implements SlotArranger, Observer {
+public class DefaultSlotArranger implements SlotArranger, DataManagerObserver {
 
     private static final Logger             logger = LoggerFactory
                                                        .getLogger(DefaultSlotArranger.class);
@@ -89,5 +90,17 @@ public class DefaultSlotArranger implements SlotArranger, Observer {
     @Override
     public void onServerChanged(DataNode oldNode, DataNode newNode) {
 
+    }
+
+    @VisibleForTesting
+    DefaultSlotArranger setDataServerManager(DataServerManager dataServerManager) {
+        this.dataServerManager = dataServerManager;
+        return this;
+    }
+
+    @VisibleForTesting
+    DefaultSlotArranger setArrangeTaskDispatcher(ArrangeTaskDispatcher<DataNode> arrangeTaskDispatcher) {
+        this.arrangeTaskDispatcher = arrangeTaskDispatcher;
+        return this;
     }
 }

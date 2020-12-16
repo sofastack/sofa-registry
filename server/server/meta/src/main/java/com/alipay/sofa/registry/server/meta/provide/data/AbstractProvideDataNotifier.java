@@ -30,6 +30,7 @@ import com.alipay.sofa.registry.remoting.exchange.message.Request;
 import com.alipay.sofa.registry.server.meta.remoting.connection.NodeConnectManager;
 import com.alipay.sofa.registry.util.DefaultExecutorFactory;
 import com.alipay.sofa.registry.util.OsUtils;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Sets;
 
 import java.net.InetSocketAddress;
@@ -37,7 +38,6 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.Executor;
-import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -47,13 +47,13 @@ import java.util.concurrent.TimeUnit;
  */
 public abstract class AbstractProvideDataNotifier<T extends Node> implements ProvideDataNotifier {
 
-    protected final Logger        logger    = LoggerFactory.getLogger(getClass(),
-                                                String.format("[%s]", getClass().getSimpleName()));
+    protected final Logger logger    = LoggerFactory.getLogger(getClass(),
+                                         String.format("[%s]", getClass().getSimpleName()));
 
-    private final ExecutorService executors = DefaultExecutorFactory.createCachedThreadPoolFactory(
-                                                getClass().getSimpleName(),
-                                                Math.min(4, OsUtils.getCpuCount()), 60 * 1000,
-                                                TimeUnit.MILLISECONDS).create();
+    private Executor       executors = DefaultExecutorFactory.createCachedThreadPoolFactory(
+                                         getClass().getSimpleName(),
+                                         Math.min(4, OsUtils.getCpuCount()), 60 * 1000,
+                                         TimeUnit.MILLISECONDS).create();
 
     @Override
     public void notifyProvideDataChange(ProvideDataChangeEvent event) {
@@ -91,6 +91,12 @@ public abstract class AbstractProvideDataNotifier<T extends Node> implements Pro
             }
         });
 
+    }
+
+    @VisibleForTesting
+    AbstractProvideDataNotifier<T> setExecutors(Executor executors) {
+        this.executors = executors;
+        return this;
     }
 
     protected abstract NodeExchanger getNodeExchanger();
@@ -133,8 +139,10 @@ public abstract class AbstractProvideDataNotifier<T extends Node> implements Pro
 
                 @Override
                 public void onException(Channel channel, Throwable exception) {
-                    logger.error("[onException] provide data notification err ({})",
-                        channel.getRemoteAddress(), exception);
+                    logger
+                        .error("[onException] provide data notification err ({})",
+                            channel != null ? channel.getRemoteAddress() : "unknown channel",
+                            exception);
                 }
 
                 @Override

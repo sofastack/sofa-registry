@@ -24,5 +24,4 @@ package com.alipay.sofa.registry.server.meta.lease;
 public interface EpochAware {
     void refreshEpoch(long newEpoch);
 
-    long getEpoch();
 }

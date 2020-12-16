@@ -17,13 +17,26 @@
 package com.alipay.sofa.registry.server.meta.lease;
 
 import com.alipay.sofa.registry.common.model.Node;
+import com.alipay.sofa.registry.server.meta.cluster.NodeCluster;
+import com.alipay.sofa.registry.store.api.annotation.NonRaftMethod;
+import com.alipay.sofa.registry.store.api.annotation.RaftMethod;
+import com.alipay.sofa.registry.store.api.annotation.ReadOnLeader;
 
 /**
  * @author chen.zhu
  * <p>
  * Nov 19, 2020
  */
-public interface LeaseManager<T extends Node> {
+public interface LeaseManager<T extends Node> extends NodeCluster<T>, EpochAware {
+
+    /**
+     * Register boolean.
+     *
+     * @param lease the lease
+     * @return the boolean
+     */
+    @RaftMethod
+    void register(Lease<T> lease);
 
     /**
      * Cancel Lease for unpub/unregister perspective.
@@ -31,6 +44,7 @@ public interface LeaseManager<T extends Node> {
      * @param renewal the renewal
      * @return the boolean
      */
+    @RaftMethod
     boolean cancel(T renewal);
 
     /**
@@ -42,13 +56,24 @@ public interface LeaseManager<T extends Node> {
      * @param leaseDuration the lease duration
      * @return the boolean
      */
+    @NonRaftMethod
     boolean renew(T renewal, int leaseDuration);
+
+    /**
+     * Gets get lease.
+     *
+     * @param renewal the renewal
+     * @return the get lease
+     */
+    @ReadOnLeader
+    Lease<T> getLease(T renewal);
 
     /**
      * Evict expired leases.
      * Return true if version should change (some nodes are expired, and removed)
      * Otherwise, return false.
      */
+    @NonRaftMethod
     boolean evict();
 
 }

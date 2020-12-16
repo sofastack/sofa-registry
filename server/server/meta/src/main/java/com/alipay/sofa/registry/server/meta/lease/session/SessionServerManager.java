@@ -14,24 +14,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alipay.sofa.registry.server.meta.lease;
+package com.alipay.sofa.registry.server.meta.lease.session;
 
+import com.alipay.sofa.registry.common.model.metaserver.nodes.SessionNode;
 import com.alipay.sofa.registry.lifecycle.Lifecycle;
-import com.alipay.sofa.registry.server.meta.MetaServer;
+import com.alipay.sofa.registry.observer.Observable;
+import com.alipay.sofa.registry.server.meta.cluster.NodeCluster;
+import com.alipay.sofa.registry.server.meta.lease.LeaseManager;
 
 /**
  * @author chen.zhu
  * <p>
- * Nov 19, 2020
+ * Nov 23, 2020
  */
-public interface MetaServerManager extends Lifecycle {
-
-    /**
-     * Gets get or create.
-     *
-     * @param dc the dc
-     * @return the get or create
-     */
-    MetaServer getOrCreate(String dc);
-
+public interface SessionServerManager extends Observable, Lifecycle, LeaseManager<SessionNode>,
+                                     NodeCluster<SessionNode> {
 }
