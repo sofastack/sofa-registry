@@ -154,6 +154,20 @@ public class WorkerThread extends AbstractWorkerThread {
                 return;
             }
 
+            Object preRequest = syncTask.getPreRequest();
+            if (preRequest != null) {
+                Object preResult = client.invokeSync(preRequest);
+                if (!(preResult instanceof RegisterResponse)) {
+                    LOGGER.warn("[register] result type is wrong, {}", preResult);
+                    return;
+                }
+                RegisterResponse preResponse = (RegisterResponse) preResult;
+                if (!preResponse.isSuccess()) {
+                    LOGGER.info("[register] register to server failed, {}, {}", preRequest,
+                        preResponse);
+                    return;
+                }
+            }
             Object request = syncTask.getRequest();
 
             Object result = client.invokeSync(request);

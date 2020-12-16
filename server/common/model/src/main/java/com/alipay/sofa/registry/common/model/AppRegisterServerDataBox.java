@@ -38,7 +38,7 @@ public class AppRegisterServerDataBox implements Serializable {
     private String                                                               url;
 
     /** baseParams */
-    private HashMap<String/*key*/, List<String>/*values*/>                     baseParams;
+    private Map<String/*key*/, List<String>/*values*/>                         baseParams;
 
     /** */
     private Map<String/*service*/, Map<String/*key*/, List<String>/*value*/>> interfaceParams;
@@ -84,7 +84,7 @@ public class AppRegisterServerDataBox implements Serializable {
      *
      * @return property value of baseParams
      */
-    public HashMap<String, List<String>> getBaseParams() {
+    public Map<String, List<String>> getBaseParams() {
         return baseParams;
     }
 
@@ -93,7 +93,7 @@ public class AppRegisterServerDataBox implements Serializable {
      *
      * @param baseParams value to be assigned to property baseParams
      */
-    public void setBaseParams(HashMap<String, List<String>> baseParams) {
+    public void setBaseParams(Map<String, List<String>> baseParams) {
         this.baseParams = baseParams;
     }
 

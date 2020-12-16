@@ -97,6 +97,9 @@ public class AppRevisionCacheRegistry {
     }
 
     private void onNewRevision(AppRevisionRegister rev) {
+        if (rev.getInterfaces() == null) {
+            return;
+        }
         for (AppRevisionInterface inf : rev.getInterfaces().values()) {
             String dataInfoId = DataInfo.toDataInfoId(inf.getDataId(), inf.getInstanceId(), inf.getGroup());
             Map<String, Set<String>> apps = interfaceRevisions.computeIfAbsent(dataInfoId,

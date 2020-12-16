@@ -23,7 +23,7 @@ import com.alipay.sofa.registry.server.meta.revision.AppRevisionRegistry;
 import com.alipay.sofa.registry.server.shared.remoting.AbstractServerHandler;
 import org.springframework.beans.factory.annotation.Autowired;
 
-public class AddAppRevisionHandler extends AbstractServerHandler<AppRevisionRegister> {
+public class AppRevisionRegisterHandler extends AbstractServerHandler<AppRevisionRegister> {
     @Autowired
     private AppRevisionRegistry appRevisionRegistry;
 

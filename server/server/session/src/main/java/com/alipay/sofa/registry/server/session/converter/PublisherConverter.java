@@ -19,6 +19,7 @@ package com.alipay.sofa.registry.server.session.converter;
 import com.alibaba.fastjson.JSONObject;
 import com.alipay.sofa.registry.common.model.AppRegisterServerDataBox;
 import com.alipay.sofa.registry.common.model.ServerDataBox;
+import com.alipay.sofa.registry.common.model.constants.ValueConstants;
 import com.alipay.sofa.registry.common.model.store.AppPublisher;
 import com.alipay.sofa.registry.common.model.store.BaseInfo.ClientVersion;
 import com.alipay.sofa.registry.common.model.store.DataInfo;
@@ -33,16 +34,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- *
  * @author shangyu.wh
  * @version $Id: PublisherConvert.java, v 0.1 2017-11-30 17:54 shangyu.wh Exp $
  */
 public class PublisherConverter {
-
-
-    public static final String PUB_TYPE = "!PublisherType";
-
-    public static final String APP_PUBLISHER = "APP_PUBLISHER";
 
     private static Converter<PublisherRegister, AppPublisher> appPublisherConverter = source -> {
         AppPublisher appPublisher = new AppPublisher();
@@ -95,7 +90,7 @@ public class PublisherConverter {
      */
     public static Publisher convert(PublisherRegister publisherRegister) {
 
-        if (StringUtils.equalsIgnoreCase(APP_PUBLISHER, publisherRegister.getAttributes().get(PUB_TYPE))) {
+        if (StringUtils.equalsIgnoreCase(ValueConstants.SOFA_APP, publisherRegister.getGroup())) {
             return appPublisherConverter.convert(publisherRegister);
         }
 
@@ -107,7 +102,7 @@ public class PublisherConverter {
         if (null != boxList) {
             for (DataBox dataBox : boxList) {
                 ServerDataBox serverDataBox = new ServerDataBox(ServerDataBox.getBytes(dataBox
-                    .getData()));
+                        .getData()));
                 serverDataBoxes.add(serverDataBox);
             }
         }
