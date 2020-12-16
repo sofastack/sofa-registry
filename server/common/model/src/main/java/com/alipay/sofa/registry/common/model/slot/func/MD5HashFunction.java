@@ -16,6 +16,8 @@
  */
 package com.alipay.sofa.registry.common.model.slot.func;
 
+import com.alipay.sofa.registry.util.MessageDigests;
+
 import java.nio.charset.Charset;
 
 /**

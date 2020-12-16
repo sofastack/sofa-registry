@@ -16,18 +16,20 @@
  */
 package com.alipay.sofa.registry.util;
 
-import org.springframework.util.DigestUtils;
-
+import java.nio.charset.Charset;
 import java.util.Collections;
 import java.util.List;
 
 public class RevisionUtils {
+    private static final Charset UTF8 = Charset.forName("utf-8");
+
     public static String revisionsDigest(List<String> keys) {
         Collections.sort(keys);
         StringBuffer sb = new StringBuffer();
         for (String key : keys) {
             sb.append(key.toString());
         }
-        return DigestUtils.md5DigestAsHex(sb.toString().getBytes());
+        return MessageDigests
+            .toHexString(MessageDigests.md5().digest(sb.toString().getBytes(UTF8)));
     }
 }
