@@ -150,6 +150,11 @@ public class DefaultConfigurator extends AbstractInternalRegister implements Con
         return register;
     }
 
+    @Override
+    public Object getPreRequest() {
+        return null;
+    }
+
     /**
      * Put configurator data.
      *

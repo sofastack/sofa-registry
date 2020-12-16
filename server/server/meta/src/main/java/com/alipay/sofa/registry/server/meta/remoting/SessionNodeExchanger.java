@@ -66,6 +66,9 @@ public class SessionNodeExchanger implements NodeExchanger {
                     final Object result = sessionServer.sendSync(channel, request.getRequestBody(),
                             request.getTimeout() != null ? request.getTimeout() : metaServerConfig.getSessionNodeExchangeTimeout());
                     response = () -> result;
+                    if (LOGGER.isDebugEnabled()) {
+                        LOGGER.debug("SessionNodeExchanger response result:{} ", response.getResult());
+                    }
                 }
             } else {
                 String errorMsg = "SessionNode Exchanger get channel error! channel with url:"

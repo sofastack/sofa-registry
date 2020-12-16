@@ -78,8 +78,11 @@ public class FirePushService {
         } else {
             return;
         }
+        if (datum == null) {
+            datum = emptyDatum(subscribers.stream().findAny().get());
+        }
         taskEvent.setTaskClosure(pushTaskClosure);
-        taskEvent.setSendTimeStamp(DatumVersionUtil.getRealTimestamp(datum.getVersion()));
+        taskEvent.setSendTimeStamp(DatumVersionUtil.nextId());
         taskEvent.setAttribute(Constant.PUSH_CLIENT_SUBSCRIBERS, subscribers);
         taskEvent.setAttribute(Constant.PUSH_CLIENT_DATUM, datum);
         taskEvent.setAttribute(Constant.PUSH_CLIENT_URL, clientUrl);
@@ -143,5 +146,17 @@ public class FirePushService {
         taskLogger.info("send {} taskURL:{},taskScope", taskEvent.getTaskType(),
             subscriber.getSourceAddress(), receivedData.getScope());
         taskListenerManager.sendTaskEvent(taskEvent);
+    }
+
+    private Datum emptyDatum(Subscriber subscriber) {
+        Datum datum = new Datum();
+        datum.setDataInfoId(subscriber.getDataId());
+        datum.setDataId(subscriber.getDataId());
+        datum.setInstanceId(subscriber.getInstanceId());
+        datum.setGroup(subscriber.getGroup());
+        datum.setVersion(DatumVersionUtil.nextId());
+        datum.setPubMap(new HashMap<>());
+        datum.setDataCenter(sessionServerConfig.getSessionServerDataCenter());
+        return datum;
     }
 }

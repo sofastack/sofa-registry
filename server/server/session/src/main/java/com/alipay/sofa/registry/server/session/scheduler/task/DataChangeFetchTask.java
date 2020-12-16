@@ -92,22 +92,6 @@ public class DataChangeFetchTask extends AbstractSessionTask {
 
     @Override
     public void execute() {
-
-        //        DataInfo dataInfo = DataInfo.valueOf(dataChangeRequest.getDataInfoId());
-        //        Datum datum = sessionDatumCacheDecorator.getDatumCache(dataChangeRequest.getDataCenter(),
-        //            dataChangeRequest.getDataInfoId());
-        // FIXME delete
-        //        if (StringUtils.equals(APP_GROUP, dataInfo.getDataType())) {
-        //
-        //            refreshMeta(datum.getPubMap().values());
-        //
-        //            //dataInfoId is app, get relate interfaces dataInfoId from cache
-        //            Set<String> interfaces = appRevisionCacheRegistry.getInterfaces(dataChangeRequest
-        //                .getDataInfoId());
-        //            for (String interfaceDataInfoId : interfaces) {
-        //                doExecute(interfaceDataInfoId);
-        //            }
-        //        }
         doExecute(dataChangeRequest.getDataInfoId());
     }
 

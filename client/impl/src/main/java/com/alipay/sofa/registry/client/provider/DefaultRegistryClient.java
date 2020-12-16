@@ -260,6 +260,7 @@ public class DefaultRegistryClient implements RegistryClient {
 
         publisher = new DefaultPublisher(registration, workerThread, registryClientConfig);
         ((DefaultPublisher) publisher).setAuthManager(authManager);
+        publisher.setPreRequest(registration.getPreRequest());
 
         Publisher oldPublisher = registrationPublisherMap.putIfAbsent(registration, publisher);
         if (null != oldPublisher) {

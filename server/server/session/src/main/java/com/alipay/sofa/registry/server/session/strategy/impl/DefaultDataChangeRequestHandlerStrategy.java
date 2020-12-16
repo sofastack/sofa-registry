@@ -38,8 +38,8 @@ public class DefaultDataChangeRequestHandlerStrategy implements DataChangeReques
 
     @Override
     public void doFireChangFetch(DataChangeRequest dataChangeRequest) {
-        TaskEvent taskEvent = new TaskEvent(dataChangeRequest.getDataInfoId(),
-            TaskEvent.TaskType.DATA_CHANGE_FETCH_CLOUD_TASK);
+        TaskEvent taskEvent = new TaskEvent(dataChangeRequest,
+            TaskEvent.TaskType.DATA_CHANGE_FETCH_TASK);
         taskLogger.info("send " + taskEvent.getTaskType() + " taskEvent:{}", taskEvent);
         taskListenerManager.sendTaskEvent(taskEvent);
     }

@@ -20,13 +20,11 @@ import com.alipay.sofa.registry.common.model.store.AppPublisher;
 import com.alipay.sofa.registry.common.model.store.Publisher;
 import com.alipay.sofa.registry.common.model.store.WordCache;
 import com.google.common.collect.ArrayListMultimap;
+import com.sun.corba.se.spi.orbutil.threadpool.Work;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
- *
  * @author xiaojian.xj
  * @version $Id: PublisherInternUtil.java, v 0.1 2020年11月12日 16:53 xiaojian.xj Exp $
  */
@@ -34,6 +32,7 @@ public class PublisherInternUtil {
 
     /**
      * change publisher word cache
+     *
      * @param publisher
      * @return
      */
@@ -55,22 +54,22 @@ public class PublisherInternUtil {
                 dataBox.setUrl(dataBox.getUrl());
                 dataBox.setRevision(dataBox.getRevision());
 
-                ArrayListMultimap<String, String> baseParams = ArrayListMultimap.create();
-                dataBox.getBaseParams().entrySet().forEach(entry -> {
+                if(dataBox.getBaseParams() != null){
+                    Map<String, List<String>> baseParams = new HashMap<>();
+                    dataBox.getBaseParams().forEach((key, value) -> baseParams.put(WordCache.getInstance().getWordCache(key), value));
+                    dataBox.setBaseParams(baseParams);
+                }
 
-                    entry.getValue().stream().forEach(value -> {
-                        // cache base params key and value
-                        baseParams.put(WordCache.getInstance().getWordCache(entry.getKey()), WordCache.getInstance().getWordCache(value));
+                if(dataBox.getInterfaceParams() != null) {
+                    Map<String, Map<String, List<String>>> interfaceParams = new HashMap<>();
+                    dataBox.getInterfaceParams().forEach((key, value) -> {
+                        // cache serviceName
+                        String interfaceName = WordCache.getInstance().getWordCache(key);
+                        value.forEach((key1, value1) -> interfaceParams.computeIfAbsent(interfaceName, k -> new HashMap<>()).put(WordCache.getInstance().getWordCache(key1), value1));
+
                     });
-                });
-
-                Map<String, Map<String, List<String>>> serviceParams = new HashMap<>();
-                dataBox.getInterfaceParams().entrySet().forEach(entry -> {
-                    // cache serviceName
-                    serviceParams.put(WordCache.getInstance().getWordCache(entry.getKey()), entry.getValue());
-
-                });
-
+                    dataBox.setInterfaceParams(interfaceParams);
+                }
             }
 
             return appPublisher;

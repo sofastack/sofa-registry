@@ -280,7 +280,7 @@ public class MetaServerConfiguration {
             list.add(sessionConnectionHandler());
             list.add(renewNodesRequestHandler());
             list.add(fetchProvideDataRequestHandler());
-            list.add(addAppRevisionHandler());
+            list.add(appRevisionRegisterHandler());
             list.add(checkRevisionsHandler());
             list.add(fetchRevisionsHandler());
             return list;
@@ -328,8 +328,8 @@ public class MetaServerConfiguration {
         }
 
         @Bean
-        public AbstractServerHandler addAppRevisionHandler() {
-            return new AddAppRevisionHandler();
+        public AbstractServerHandler appRevisionRegisterHandler() {
+            return new AppRevisionRegisterHandler();
         }
 
         @Bean

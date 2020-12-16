@@ -114,6 +114,9 @@ public class DataChangeRequestHandler extends AbstractClientHandler<DataChangeRe
                 //dataInfoId is app, get relate interfaces dataInfoId from cache
                 Set<String> interfaces = appRevisionCacheRegistry.getInterfaces(dataInfo
                     .getDataId());
+                if (interfaces == null || interfaces.isEmpty()) {
+                    return null;
+                }
                 for (String interfaceDataInfoId : interfaces) {
                     DataChangeRequest request = new DataChangeRequest();
                     request.setDataInfoId(interfaceDataInfoId);

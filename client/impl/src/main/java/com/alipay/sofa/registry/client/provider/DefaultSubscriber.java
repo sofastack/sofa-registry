@@ -217,6 +217,11 @@ public class DefaultSubscriber extends AbstractInternalRegister implements Subsc
         return register;
     }
 
+    @Override
+    public Object getPreRequest() {
+        return null;
+    }
+
     public void putReceivedData(SegmentData segmentData, String localZone) {
         writeLock.lock();
         try {

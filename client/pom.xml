@@ -30,7 +30,7 @@
 
     <properties>
         <!-- Build args -->
-        <module.install.skip>true</module.install.skip>
+        <module.install.skip>false</module.install.skip>
         <module.deploy.skip>true</module.deploy.skip>
         <nexus.staging.deploy.mojo.skip>true</nexus.staging.deploy.mojo.skip>
         <maven.compiler.source>1.6</maven.compiler.source>

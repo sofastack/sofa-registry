@@ -113,10 +113,7 @@ public class SessionServerNotifier implements IDataChangeNotifier {
                 }
                 AppPublisher appPublisher = (AppPublisher) publisher;
                 for (AppRegisterServerDataBox dataBox : appPublisher.getAppDataList()) {
-
-                    if (!revisions.contains(dataBox.getRevision())) {
-                        revisions.add(dataBox.getRevision());
-                    }
+                    revisions.add(dataBox.getRevision());
                 }
             }
         }

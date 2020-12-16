@@ -30,4 +30,6 @@ public interface Publisher extends Register {
      * @param data the data
      */
     void republish(String... data);
+
+    void setPreRequest(Object request);
 }

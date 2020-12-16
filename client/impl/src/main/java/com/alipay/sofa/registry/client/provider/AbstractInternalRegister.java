@@ -77,6 +77,8 @@ public abstract class AbstractInternalRegister implements Register {
      */
     public abstract Object assembly();
 
+    public abstract Object getPreRequest();
+
     /**
      * Is registered boolean.
      *
@@ -184,6 +186,7 @@ public abstract class AbstractInternalRegister implements Register {
             SyncTask syncTask = new SyncTask();
             syncTask.setRequestId(requestId);
             syncTask.setRequest(assembly());
+            syncTask.setPreRequest(getPreRequest());
             syncTask.setDone(isDone());
             return syncTask;
         } finally {
@@ -348,6 +351,8 @@ public abstract class AbstractInternalRegister implements Register {
 
         private Object  request;
 
+        private Object  preRequest;
+
         private boolean done;
 
         /**
@@ -402,6 +407,14 @@ public abstract class AbstractInternalRegister implements Register {
          */
         public void setDone(boolean done) {
             this.done = done;
+        }
+
+        public Object getPreRequest() {
+            return preRequest;
+        }
+
+        public void setPreRequest(Object preRequest) {
+            this.preRequest = preRequest;
         }
     }
 }
