@@ -25,7 +25,7 @@ public class AppRevisionInterface implements Serializable {
     private String                    dataId;
     private String                    group;
     private String                    instanceId;
-    private Map<String, List<String>> serviceParams = new HashMap<>();
+    private Map<String, List<String>> serviceParams = new HashMap<String, List<String>>();
 
     /**
      * Getter method for property <tt>dataId</tt>.
