@@ -16,18 +16,8 @@
  */
 package com.alipay.sofa.registry.server.meta.remoting;
 
-import com.alipay.sofa.registry.common.model.store.URL;
-import com.alipay.sofa.registry.log.Logger;
-import com.alipay.sofa.registry.log.LoggerFactory;
-import com.alipay.sofa.registry.remoting.Channel;
-import com.alipay.sofa.registry.remoting.Client;
-import com.alipay.sofa.registry.remoting.Server;
-import com.alipay.sofa.registry.remoting.exchange.Exchange;
-import com.alipay.sofa.registry.remoting.exchange.NodeExchanger;
-import com.alipay.sofa.registry.remoting.exchange.RequestException;
-import com.alipay.sofa.registry.remoting.exchange.message.Request;
-import com.alipay.sofa.registry.remoting.exchange.message.Response;
 import com.alipay.sofa.registry.server.meta.bootstrap.config.MetaServerConfig;
+import com.alipay.sofa.registry.server.shared.remoting.ServerSideExchanger;
 import org.springframework.beans.factory.annotation.Autowired;
 
 /**
@@ -35,51 +25,18 @@ import org.springframework.beans.factory.annotation.Autowired;
  * @author shangyu.wh
  * @version $Id: MetaNodeExchanger.java, v 0.1 2018-02-12 14:22 shangyu.wh Exp $
  */
-public class MetaServerExchanger implements NodeExchanger {
-
-    private static final Logger LOGGER = LoggerFactory.getLogger(MetaServerExchanger.class);
+public class MetaServerExchanger extends ServerSideExchanger {
 
     @Autowired
-    private MetaServerConfig    metaServerConfig;
-
-    @Autowired
-    private Exchange            boltExchange;
+    private MetaServerConfig metaServerConfig;
 
     @Override
-    public Response request(Request request) throws RequestException {
-        Response response = null;
-        try {
-            Server metaServer = boltExchange.getServer(metaServerConfig.getMetaServerPort());
-
-            if (metaServer != null) {
-                URL url = request.getRequestUrl();
-                if (url != null) {
-
-                    Channel channel = metaServer.getChannel(url);
-
-                    if (channel != null && channel.isConnected()) {
-                        final Object result = metaServer.sendSync(channel, request.getRequestBody(),
-                                request.getTimeout() != null ? request.getTimeout() : metaServerConfig.getDataNodeExchangeTimeout());
-                        response = () -> result;
-                    } else {
-                        LOGGER.error("MetaServer Exchanger get channel error! channel with url:"
-                                + url + " can not be null or disconnected!");
-                        throw new RequestException(
-                                "MetaServer Exchanger get channel error! channel with url:" + url
-                                        + " can not be null or disconnected!",
-                                request);
-                    }
-                }
-            }
-        } catch (Exception e) {
-            LOGGER.error("MetaServer Exchanger request data error!", e);
-            throw new RequestException("MetaServer Exchanger request data error!", request, e);
-        }
-        return response;
+    public int getRpcTimeout() {
+        return metaServerConfig.getMetaNodeExchangeTimeout();
     }
 
     @Override
-    public Client connectServer() {
-        return null;
+    public int getServerPort() {
+        return metaServerConfig.getMetaServerPort();
     }
 }

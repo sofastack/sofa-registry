@@ -16,17 +16,8 @@
  */
 package com.alipay.sofa.registry.server.meta.remoting;
 
-import com.alipay.sofa.registry.log.Logger;
-import com.alipay.sofa.registry.log.LoggerFactory;
-import com.alipay.sofa.registry.remoting.Channel;
-import com.alipay.sofa.registry.remoting.Client;
-import com.alipay.sofa.registry.remoting.Server;
-import com.alipay.sofa.registry.remoting.exchange.Exchange;
-import com.alipay.sofa.registry.remoting.exchange.NodeExchanger;
-import com.alipay.sofa.registry.remoting.exchange.RequestException;
-import com.alipay.sofa.registry.remoting.exchange.message.Request;
-import com.alipay.sofa.registry.remoting.exchange.message.Response;
 import com.alipay.sofa.registry.server.meta.bootstrap.config.MetaServerConfig;
+import com.alipay.sofa.registry.server.shared.remoting.ServerSideExchanger;
 import org.springframework.beans.factory.annotation.Autowired;
 
 /**
@@ -34,55 +25,18 @@ import org.springframework.beans.factory.annotation.Autowired;
  * @author shangyu.wh
  * @version $Id: SessionNodeExchanger.java, v 0.1 2018-01-15 21:21 shangyu.wh Exp $
  */
-public class SessionNodeExchanger implements NodeExchanger {
-
-    private static final Logger LOGGER = LoggerFactory.getLogger(SessionNodeExchanger.class);
+public class SessionNodeExchanger extends ServerSideExchanger {
 
     @Autowired
-    private Exchange            boltExchange;
-
-    @Autowired
-    private MetaServerConfig    metaServerConfig;
+    private MetaServerConfig metaServerConfig;
 
     @Override
-    public Response request(Request request) throws RequestException {
-        Response response = null;
-
-        if (LOGGER.isDebugEnabled()) {
-            LOGGER.debug("SessionNodeExchanger request body:{} url:{}", request.getRequestBody(),
-                    request.getRequestUrl());
-        }
-
-        Server sessionServer = boltExchange.getServer(metaServerConfig.getSessionServerPort());
-
-        if (sessionServer != null) {
-
-            Channel channel = sessionServer.getChannel(request.getRequestUrl());
-            if (channel != null && channel.isConnected()) {
-                if(request.getCallBackHandler() != null) {
-                    sessionServer.sendCallback(channel, request.getRequestBody(), request.getCallBackHandler(),
-                            request.getTimeout() != null ? request.getTimeout() : metaServerConfig.getSessionNodeExchangeTimeout());
-                } else {
-                    final Object result = sessionServer.sendSync(channel, request.getRequestBody(),
-                            request.getTimeout() != null ? request.getTimeout() : metaServerConfig.getSessionNodeExchangeTimeout());
-                    response = () -> result;
-                    if (LOGGER.isDebugEnabled()) {
-                        LOGGER.debug("SessionNodeExchanger response result:{} ", response.getResult());
-                    }
-                }
-            } else {
-                String errorMsg = "SessionNode Exchanger get channel error! channel with url:"
-                        + channel == null ? "" : channel.getRemoteAddress() + " can not be null or disconnected!";
-                LOGGER.error(errorMsg);
-                throw new RequestException(errorMsg, request);
-            }
-
-        }
-        return response;
+    public int getRpcTimeout() {
+        return metaServerConfig.getSessionNodeExchangeTimeout();
     }
 
     @Override
-    public Client connectServer() {
-        return null;
+    public int getServerPort() {
+        return metaServerConfig.getSessionServerPort();
     }
 }

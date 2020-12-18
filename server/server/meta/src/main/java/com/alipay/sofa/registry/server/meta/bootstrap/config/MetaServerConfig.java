@@ -51,14 +51,6 @@ public interface MetaServerConfig {
 
     int getMetaNodeExchangeTimeout();
 
-    int getDataCenterChangeNotifyTaskRetryTimes();
-
-    int getDataNodeChangePushTaskRetryTimes();
-
-    int getGetDataCenterChangeListTaskRetryTimes();
-
-    int getSessionNodeChangePushTaskRetryTimes();
-
     String getRaftGroup();
 
     String getRaftDataPath();

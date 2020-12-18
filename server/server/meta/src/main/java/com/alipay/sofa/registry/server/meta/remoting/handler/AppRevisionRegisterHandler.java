@@ -20,10 +20,9 @@ import com.alipay.sofa.registry.common.model.Node;
 import com.alipay.sofa.registry.core.model.AppRevisionRegister;
 import com.alipay.sofa.registry.remoting.Channel;
 import com.alipay.sofa.registry.server.meta.revision.AppRevisionRegistry;
-import com.alipay.sofa.registry.server.shared.remoting.AbstractServerHandler;
 import org.springframework.beans.factory.annotation.Autowired;
 
-public class AppRevisionRegisterHandler extends AbstractServerHandler<AppRevisionRegister> {
+public class AppRevisionRegisterHandler extends MetaServerHandler<AppRevisionRegister> {
     @Autowired
     private AppRevisionRegistry appRevisionRegistry;
 
@@ -41,10 +40,5 @@ public class AppRevisionRegisterHandler extends AbstractServerHandler<AppRevisio
     @Override
     public Class interest() {
         return AppRevisionRegister.class;
-    }
-
-    @Override
-    public HandlerType getType() {
-        return HandlerType.PROCESSER;
     }
 }

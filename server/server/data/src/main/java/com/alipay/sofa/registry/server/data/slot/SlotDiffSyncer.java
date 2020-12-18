@@ -31,7 +31,7 @@ import com.alipay.sofa.registry.server.data.change.event.DataChangeEventCenter;
 import com.alipay.sofa.registry.server.data.lease.SessionLeaseManager;
 import com.alipay.sofa.registry.server.data.remoting.DataNodeExchanger;
 import com.alipay.sofa.registry.server.data.remoting.SessionNodeExchanger;
-import com.alipay.sofa.registry.server.shared.remoting.ClientExchanger;
+import com.alipay.sofa.registry.server.shared.remoting.ClientSideExchanger;
 import org.glassfish.jersey.internal.guava.Sets;
 
 import java.util.*;
@@ -120,7 +120,7 @@ public final class SlotDiffSyncer {
         return result;
     }
 
-    public boolean syncDataInfoIds(int slotId, String targetAddress, ClientExchanger exchanger,
+    public boolean syncDataInfoIds(int slotId, String targetAddress, ClientSideExchanger exchanger,
                                    long slotTableEpoch, String summaryTargetIp) {
         for (;;) {
             Map<String, DatumSummary> summaryMap = datumStorage.getDatumSummary(slotId,
@@ -142,7 +142,7 @@ public final class SlotDiffSyncer {
         }
     }
 
-    public boolean syncPublishers(int slotId, String targetAddress, ClientExchanger exchanger, long slotTableEpoch,
+    public boolean syncPublishers(int slotId, String targetAddress, ClientSideExchanger exchanger, long slotTableEpoch,
                                   String summaryTargetIp, int maxPublishers) {
         Map<String, DatumSummary> summaryMap = datumStorage.getDatumSummary(slotId, summaryTargetIp);
         Map<String, DatumSummary> round = pickSummarys(summaryMap, maxPublishers);

@@ -70,14 +70,6 @@ public class MetaServerConfigBean implements MetaServerConfig {
 
     private int                metaNodeExchangeTimeout                         = 3000;
 
-    private int                dataCenterChangeNotifyTaskRetryTimes            = 3;
-
-    private int                dataNodeChangePushTaskRetryTimes                = 1;
-
-    private int                getDataCenterChangeListTaskRetryTimes           = 3;
-
-    private int                sessionNodeChangePushTaskRetryTimes             = 3;
-
     private int                raftElectionTimeout                             = 1000;
 
     private int                initialSlotTableLockTimeMilli                   = 1000;
@@ -339,82 +331,6 @@ public class MetaServerConfigBean implements MetaServerConfig {
      */
     public void setMetaNodeExchangeTimeout(int metaNodeExchangeTimeout) {
         this.metaNodeExchangeTimeout = metaNodeExchangeTimeout;
-    }
-
-    /**
-     * Getter method for property <tt>dataCenterChangeNotifyTaskRetryTimes</tt>.
-     *
-     * @return property value of dataCenterChangeNotifyTaskRetryTimes
-     */
-    @Override
-    public int getDataCenterChangeNotifyTaskRetryTimes() {
-        return dataCenterChangeNotifyTaskRetryTimes;
-    }
-
-    /**
-     * Setter method for property <tt>dataCenterChangeNotifyTaskRetryTimes</tt>.
-     *
-     * @param dataCenterChangeNotifyTaskRetryTimes value to be assigned to property dataCenterChangeNotifyTaskRetryTimes
-     */
-    public void setDataCenterChangeNotifyTaskRetryTimes(int dataCenterChangeNotifyTaskRetryTimes) {
-        this.dataCenterChangeNotifyTaskRetryTimes = dataCenterChangeNotifyTaskRetryTimes;
-    }
-
-    /**
-     * Getter method for property <tt>dataNodeChangePushTaskRetryTimes</tt>.
-     *
-     * @return property value of dataNodeChangePushTaskRetryTimes
-     */
-    @Override
-    public int getDataNodeChangePushTaskRetryTimes() {
-        return dataNodeChangePushTaskRetryTimes;
-    }
-
-    /**
-     * Setter method for property <tt>dataNodeChangePushTaskRetryTimes</tt>.
-     *
-     * @param dataNodeChangePushTaskRetryTimes value to be assigned to property dataNodeChangePushTaskRetryTimes
-     */
-    public void setDataNodeChangePushTaskRetryTimes(int dataNodeChangePushTaskRetryTimes) {
-        this.dataNodeChangePushTaskRetryTimes = dataNodeChangePushTaskRetryTimes;
-    }
-
-    /**
-     * Getter method for property <tt>getDataCenterChangeListTaskRetryTimes</tt>.
-     *
-     * @return property value of getDataCenterChangeListTaskRetryTimes
-     */
-    @Override
-    public int getGetDataCenterChangeListTaskRetryTimes() {
-        return getDataCenterChangeListTaskRetryTimes;
-    }
-
-    /**
-     * Setter method for property <tt>getDataCenterChangeListTaskRetryTimes</tt>.
-     *
-     * @param getDataCenterChangeListTaskRetryTimes value to be assigned to property getDataCenterChangeListTaskRetryTimes
-     */
-    public void setGetDataCenterChangeListTaskRetryTimes(int getDataCenterChangeListTaskRetryTimes) {
-        this.getDataCenterChangeListTaskRetryTimes = getDataCenterChangeListTaskRetryTimes;
-    }
-
-    /**
-     * Getter method for property <tt>sessionNodeChangePushTaskRetryTimes</tt>.
-     *
-     * @return property value of sessionNodeChangePushTaskRetryTimes
-     */
-    @Override
-    public int getSessionNodeChangePushTaskRetryTimes() {
-        return sessionNodeChangePushTaskRetryTimes;
-    }
-
-    /**
-     * Setter method for property <tt>sessionNodeChangePushTaskRetryTimes</tt>.
-     *
-     * @param sessionNodeChangePushTaskRetryTimes value to be assigned to property sessionNodeChangePushTaskRetryTimes
-     */
-    public void setSessionNodeChangePushTaskRetryTimes(int sessionNodeChangePushTaskRetryTimes) {
-        this.sessionNodeChangePushTaskRetryTimes = sessionNodeChangePushTaskRetryTimes;
     }
 
     /**

@@ -38,11 +38,6 @@ public class FetchRevisionsHandler extends AbstractServerHandler<FetchRevisionsR
     }
 
     @Override
-    public HandlerType getType() {
-        return HandlerType.PROCESSER;
-    }
-
-    @Override
     public Class interest() {
         return FetchRevisionsRequest.class;
     }

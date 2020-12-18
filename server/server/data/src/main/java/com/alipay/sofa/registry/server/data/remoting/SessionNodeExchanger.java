@@ -19,7 +19,7 @@ package com.alipay.sofa.registry.server.data.remoting;
 import com.alipay.sofa.registry.remoting.ChannelHandler;
 import com.alipay.sofa.registry.remoting.exchange.Exchange;
 import com.alipay.sofa.registry.server.data.bootstrap.DataServerConfig;
-import com.alipay.sofa.registry.server.shared.remoting.ClientExchanger;
+import com.alipay.sofa.registry.server.shared.remoting.ClientSideExchanger;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.Collection;
@@ -30,7 +30,7 @@ import java.util.Collections;
  * @author yuzhi.lyz
  * @version v 0.1 2020-11-30 21:28 yuzhi.lyz Exp $
  */
-public final class SessionNodeExchanger extends ClientExchanger {
+public final class SessionNodeExchanger extends ClientSideExchanger {
     @Autowired
     private DataServerConfig dataServerConfig;
 
