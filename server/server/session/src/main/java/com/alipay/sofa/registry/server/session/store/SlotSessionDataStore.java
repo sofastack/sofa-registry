@@ -52,9 +52,9 @@ public class SlotSessionDataStore implements DataStore {
     }
 
     @Override
-    public Collection<Publisher> getStoreDataByDataInfoId(String dataInfoId) {
+    public Collection<Publisher> getDatas(String dataInfoId) {
         DataStore ds = getOrCreateDataStore(dataInfoId);
-        return ds.getStoreDataByDataInfoId(dataInfoId);
+        return ds.getDatas(dataInfoId);
     }
 
     @Override
@@ -64,10 +64,10 @@ public class SlotSessionDataStore implements DataStore {
     }
 
     @Override
-    public Collection<String> getStoreDataInfoIds() {
+    public Collection<String> getDataInfoIds() {
         Set<String> set = new HashSet<>(128);
         slot2DataStores.values().forEach(ds -> {
-            set.addAll(ds.getStoreDataInfoIds());
+            set.addAll(ds.getDataInfoIds());
         });
         return set;
     }
@@ -80,17 +80,17 @@ public class SlotSessionDataStore implements DataStore {
     }
 
     @Override
-    public Set<String> getPublisherProcessIds() {
+    public Set<String> collectProcessIds() {
         Set<String> ret = Sets.newHashSet();
-        slot2DataStores.values().forEach(d -> ret.addAll(d.getPublisherProcessIds()));
+        slot2DataStores.values().forEach(d -> ret.addAll(d.collectProcessIds()));
         return ret;
     }
 
     @Override
-    public Map<String, Map<String, Publisher>> getDataInfoIdPublishers() {
+    public Map<String, Map<String, Publisher>> getDatas() {
         Map<String, Map<String, Publisher>> ret = new HashMap<>(512);
         for (DataStore ds : slot2DataStores.values()) {
-            Map<String, Map<String, Publisher>> m = ds.getDataInfoIdPublishers();
+            Map<String, Map<String, Publisher>> m = ds.getDatas();
             for (Map.Entry<String, Map<String, Publisher>> e : m.entrySet()) {
                 Map<String, Publisher> publisherMap = ret.computeIfAbsent(e.getKey(), k -> new HashMap<>(128));
                 publisherMap.putAll(e.getValue());
@@ -102,13 +102,13 @@ public class SlotSessionDataStore implements DataStore {
     @Override
     public Map<String, Map<String, Publisher>> getDataInfoIdPublishers(int slotId) {
         DataStore ds = slot2DataStores.computeIfAbsent(slotId, k -> new SessionDataStore());
-        return ds.getDataInfoIdPublishers();
+        return ds.getDatas();
     }
 
     @Override
-    public void add(Publisher publisher) {
+    public boolean add(Publisher publisher) {
         DataStore ds = getOrCreateDataStore(publisher.getDataInfoId());
-        ds.add(publisher);
+        return ds.add(publisher);
     }
 
     @Override

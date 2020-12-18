@@ -30,6 +30,7 @@ import com.alipay.sofa.registry.server.session.store.ReSubscribers;
 import com.alipay.sofa.registry.task.listener.TaskEvent;
 import com.alipay.sofa.registry.task.listener.TaskEvent.TaskType;
 import com.alipay.sofa.registry.task.listener.TaskListenerManager;
+import com.alipay.sofa.registry.util.ConcurrentUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.CollectionUtils;
 
@@ -103,12 +104,8 @@ public class StopPushProvideDataProcessor implements ProvideDataProcessor {
             LOGGER.error("Open push switch first fetch task execute error", e);
         }
 
-        try {
-            //wait 1 MINUTES for dataFetch task evict duplicate subscriber push
-            TimeUnit.MINUTES.sleep(1);
-        } catch (InterruptedException e) {
-            LOGGER.error("Wait for dataFetch Task Interrupted!");
-        }
+        //wait 1 MINUTES for dataFetch task evict duplicate subscriber push
+        ConcurrentUtils.sleepUninterruptibly(1, TimeUnit.MINUTES);
 
         //fetch task process 1 minutes,can schedule execute fetch task
         sessionServerConfig.setBeginDataFetchTask(true);

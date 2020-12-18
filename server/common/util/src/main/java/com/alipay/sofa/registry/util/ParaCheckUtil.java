@@ -68,6 +68,12 @@ public class ParaCheckUtil {
         }
     }
 
+    public static void checkIsPositive(long v, String paraName) {
+        if (v <= 0) {
+            throw new RuntimeException(String.format("%s is require positive, %d", paraName, v));
+        }
+    }
+
     public static void checkContains(Set sets, Object param, String paraName)
                                                                              throws RuntimeException {
         if (!sets.contains(param)) {

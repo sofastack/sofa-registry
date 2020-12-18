@@ -16,11 +16,7 @@
  */
 package com.alipay.sofa.registry.server.session.store;
 
-import com.alipay.sofa.registry.common.model.ConnectId;
 import com.alipay.sofa.registry.common.model.store.Watcher;
-
-import java.util.Collection;
-import java.util.Set;
 
 /**
  *
@@ -28,14 +24,6 @@ import java.util.Set;
  * @version $Id: SessionInterests.java, v 0.1 2017-11-30 15:53 shangyu.wh Exp $
  */
 public interface Watchers extends DataManager<Watcher, String, String> {
-
-    /**
-     * query watcher by dataInfoID
-     *
-     * @param dataInfoId
-     * @return
-     */
-    Collection<Watcher> getWatchers(String dataInfoId);
 
     /**
      * check watchers interest dataInfoId version
@@ -48,5 +36,4 @@ public interface Watchers extends DataManager<Watcher, String, String> {
      */
     boolean checkWatcherVersions(String dataInfoId, Long version);
 
-    Set<ConnectId> getConnectIds();
 }

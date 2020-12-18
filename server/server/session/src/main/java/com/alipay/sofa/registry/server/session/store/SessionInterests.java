@@ -16,52 +16,32 @@
  */
 package com.alipay.sofa.registry.server.session.store;
 
-import com.alipay.sofa.registry.common.model.ConnectId;
 import com.alipay.sofa.registry.common.model.store.Subscriber;
 import com.alipay.sofa.registry.common.model.store.WordCache;
 import com.alipay.sofa.registry.core.model.ScopeEnum;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
-import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
-import com.alipay.sofa.registry.server.session.cache.SubscriberResult;
 import com.alipay.sofa.registry.util.VersionsMapUtils;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.apache.commons.collections.MapUtils;
 
 import java.net.InetSocketAddress;
-import java.util.*;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicLong;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
-import java.util.stream.Collectors;
 
 /**
  * @author shangyu.wh
  * @version $Id: AbstractSessionInterests.java, v 0.1 2017-11-30 20:42 shangyu.wh Exp $
  */
-public class SessionInterests implements Interests, ReSubscribers {
+public class SessionInterests extends AbstractDataManager<Subscriber> implements Interests,
+                                                                     ReSubscribers {
 
     private static final Logger                                                                                   LOGGER            = LoggerFactory
                                                                                                                                         .getLogger(SessionInterests.class);
-
-    private final ReentrantReadWriteLock                                                                          readWriteLock     = new ReentrantReadWriteLock();
-    private final Lock                                                                                            read              = readWriteLock
-                                                                                                                                        .readLock();
-    private final Lock                                                                                            write             = readWriteLock
-                                                                                                                                        .writeLock();
-
-    @Autowired
-    private SessionServerConfig                                                                                   sessionServerConfig;
-
-    /**
-     * store all register subscriber
-     */
-    private final ConcurrentHashMap<String/*dataInfoId*/, Map<String/*registerId*/, Subscriber>>                interests         = new ConcurrentHashMap<>();
-
-    private final Map<ConnectId/*connectId*/, Map<String/*registerId*/, Subscriber>>                            connectIndex      = new ConcurrentHashMap<>();
 
     private final Map<SubscriberResult, Map<InetSocketAddress, Map<String, Subscriber>>>                          resultIndex       = new ConcurrentHashMap<>();
 
@@ -72,145 +52,63 @@ public class SessionInterests implements Interests, ReSubscribers {
 
     private final Map<String/*dataInfoId*/, Map<String/*registerId*/, Subscriber>>                              stopPushInterests = new ConcurrentHashMap<>();
 
+    public SessionInterests() {
+        super(LOGGER);
+    }
+
     @Override
-    public void add(Subscriber subscriber) {
+    public boolean add(Subscriber subscriber) {
         Subscriber.internSubscriber(subscriber);
 
+        Map<String, Subscriber> subscribers = stores.computeIfAbsent(subscriber.getDataInfoId(),
+                k -> Maps.newConcurrentMap());
+
+        Subscriber existingSubscriber = null;
         write.lock();
         try {
-            Map<String, Subscriber> subscribers = interests.computeIfAbsent(subscriber.getDataInfoId(),
-                    k->Maps.newConcurrentMap());
-
-            Subscriber existingSubscriber = subscribers.get(subscriber.getRegisterId());
+            existingSubscriber = subscribers.get(subscriber.getRegisterId());
 
             if (existingSubscriber != null) {
-                LOGGER.warn("There is subscriber already exists,it will be overwrite! {}",
-                    existingSubscriber);
                 if (sessionServerConfig.isStopPushSwitch()) {
                     deleteReSubscriber(existingSubscriber);
                 }
-                invalidateIndex(existingSubscriber);
+                invalidateResultIndex(existingSubscriber);
             }
 
             subscribers.put(subscriber.getRegisterId(), subscriber);
 
             addReSubscriber(subscriber);
-
-            addIndex(subscriber);
-
+            addResultIndex(subscriber);
         } finally {
             write.unlock();
         }
-
+        // log without lock
+        if (existingSubscriber != null) {
+            LOGGER.warn("There is subscriber already exists,it will be overwrite! {}",
+                    existingSubscriber);
+        }
+        return true;
     }
 
     @Override
-    public boolean deleteById(String registerId, String dataInfoId) {
-        write.lock();
-        try {
-
-            Map<String, Subscriber> subscribers = interests.get(dataInfoId);
-
-            if (subscribers == null) {
-                LOGGER.error(
-                    "Delete failed because subscriber is not registered for dataInfoId: {}",
-                    dataInfoId);
-                return false;
-            } else {
-                Subscriber subscriberTodelete = subscribers.remove(registerId);
-
-                if (subscriberTodelete == null) {
-                    LOGGER.error(
-                        "Delete failed because subscriber is not registered for registerId: {}",
-                        registerId);
-                    return false;
-                } else {
-                    if (sessionServerConfig.isStopPushSwitch()) {
-                        deleteReSubscriber(subscriberTodelete);
-                    }
-                    removeIndex(subscriberTodelete);
-
-                    return true;
-                }
-            }
-        } finally {
-            write.unlock();
+    protected void postDelete(Subscriber data) {
+        if (sessionServerConfig.isStopPushSwitch()) {
+            deleteReSubscriber(data);
         }
-
-    }
-
-    @Override
-    public boolean deleteByConnectId(ConnectId connectId) {
-        write.lock();
-        try {
-            for (Map<String, Subscriber> map : interests.values()) {
-                for (Iterator it = map.values().iterator(); it.hasNext();) {
-                    Subscriber subscriber = (Subscriber) it.next();
-                    if (connectId.equals(subscriber.connectId())) {
-                        it.remove();
-                        if (sessionServerConfig.isStopPushSwitch()) {
-                            deleteReSubscriber(subscriber);
-                        }
-
-                        invalidateIndex(subscriber);
-                    }
-                }
-            }
-            //force remove connectId
-            invalidateConnectIndex(connectId);
-            return true;
-        } catch (Exception e) {
-            LOGGER.error("Delete subscriber by connectId {} error!", connectId, e);
-            return false;
-        } finally {
-            write.unlock();
-        }
-    }
-
-    @Override
-    public long count() {
-        AtomicLong count = new AtomicLong(0);
-        for (Map<String, Subscriber> map : interests.values()) {
-            count.addAndGet(map.size());
-        }
-        return count.get();
-    }
-
-    @Override
-    public Map<String, Subscriber> queryByConnectId(ConnectId connectId) {
-        return connectIndex.get(connectId);
-    }
-
-    public Subscriber queryById(String registerId, String dataInfoId) {
-        Map<String, Subscriber> subscribers = interests.get(dataInfoId);
-
-        if (subscribers == null) {
-            return null;
-        }
-        return subscribers.get(registerId);
-    }
-
-    @Override
-    public Collection<Subscriber> getInterests(String dataInfoId) {
-        Map<String, Subscriber> subscribers = interests.get(dataInfoId);
-        if (subscribers == null) {
-            LOGGER.info("There is not registered subscriber for : {}", dataInfoId);
-            return Collections.emptyList();
-        }
-        return subscribers.values();
+        removeResultIndex(data);
     }
 
     @Override
     public boolean checkInterestVersions(String dataCenter, String dataInfoId, Long version) {
 
-        Map<String, Subscriber> subscribers = interests.get(dataInfoId);
+        Map<String, Subscriber> subscribers = stores.get(dataInfoId);
 
-        if (subscribers == null || subscribers.isEmpty()) {
+        if (MapUtils.isEmpty(subscribers)) {
             return false;
         }
 
         Map<String/*dataInfoId*/, Long/*version*/> dataInfoVersions = interestVersions
-            .computeIfAbsent(dataCenter, k->Maps.newConcurrentMap());
+                .computeIfAbsent(dataCenter, k -> Maps.newConcurrentMap());
 
         Long oldValue = dataInfoVersions.get(dataInfoId);
 
@@ -220,21 +118,18 @@ public class SessionInterests implements Interests, ReSubscribers {
 
     @Override
     public boolean checkAndUpdateInterestVersions(String dataCenter, String dataInfoId, Long version) {
+        dataInfoId = WordCache.getInstance().getWordCache(dataInfoId);
+        final Map<String, Subscriber> subscribers = stores.get(dataInfoId);
+
+        if (MapUtils.isEmpty(subscribers)) {
+            LOGGER.info("There is no Subscriber Existed, dataInfoId={}", dataInfoId);
+            return false;
+        }
+        Map<String/*dataInfoId*/, Long/*version*/> dataInfoVersions = interestVersions
+                .computeIfAbsent(dataCenter, k -> Maps.newConcurrentMap());
+
         read.lock();
         try {
-            dataInfoId = WordCache.getInstance().getWordCache(dataInfoId);
-
-            Map<String, Subscriber> subscribers = interests.get(dataInfoId);
-
-            if (subscribers == null || subscribers.isEmpty()) {
-                LOGGER.info(
-                    "There are not Subscriber Existed! Who are interest with dataInfoId {} !",
-                    dataInfoId);
-                return false;
-            }
-
-            Map<String/*dataInfoId*/, Long/*version*/> dataInfoVersions = interestVersions
-                    .computeIfAbsent(dataCenter, k -> Maps.newConcurrentMap());
             //set zero
             if (version.longValue() == 0l) {
                 return dataInfoVersions.put(dataInfoId, version) != null;
@@ -245,82 +140,21 @@ public class SessionInterests implements Interests, ReSubscribers {
         }
     }
 
+    @Override
     public boolean checkAndUpdateInterestVersionZero(String dataCenter, String dataInfoId) {
         return checkAndUpdateInterestVersions(dataCenter, dataInfoId, 0l);
     }
 
-    @Override
-    public Collection<String> getInterestDataInfoIds() {
-        return interests.entrySet().stream().filter(e -> !(e.getValue().isEmpty())).map(e -> e.getKey())
-                .collect(Collectors.toSet());
-    }
-
-    private void addIndex(Subscriber subscriber) {
-        addConnectIndex(subscriber);
-        addResultIndex(subscriber);
-    }
-
-    private void removeIndex(Subscriber subscriber) {
-        removeConnectIndex(subscriber);
-        removeResultIndex(subscriber);
-    }
-
-    private void invalidateIndex(Subscriber subscriber) {
-        removeConnectIndex(subscriber);
-        invalidateResultIndex(subscriber);
-    }
-
-    private void addConnectIndex(Subscriber subscriber) {
-        ConnectId connectId = subscriber.connectId();
-
-        Map<String/*registerId*/, Subscriber> subscriberMap = connectIndex.get(connectId);
-        if (subscriberMap == null) {
-            Map<String/*registerId*/, Subscriber> newSubscriberMap = new ConcurrentHashMap<>();
-            subscriberMap = connectIndex.putIfAbsent(connectId, newSubscriberMap);
-            if (subscriberMap == null) {
-                subscriberMap = newSubscriberMap;
-            }
-        }
-
-        subscriberMap.put(subscriber.getRegisterId(), subscriber);
-    }
-
     private void addResultIndex(Subscriber subscriber) {
-
         SubscriberResult subscriberResult = new SubscriberResult(subscriber.getDataInfoId(),
-            subscriber.getScope());
-        Map<InetSocketAddress, Map<String, Subscriber>> mapSub = resultIndex.get(subscriberResult);
-        if (mapSub == null) {
-            Map<InetSocketAddress, Map<String, Subscriber>> newMap = new ConcurrentHashMap<>();
-            mapSub = resultIndex.putIfAbsent(subscriberResult, newMap);
-            if (mapSub == null) {
-                mapSub = newMap;
-            }
-        }
+                subscriber.getScope());
+        final Map<InetSocketAddress, Map<String, Subscriber>> mapSub = resultIndex
+                .computeIfAbsent(subscriberResult, k -> Maps.newConcurrentMap());
 
-        InetSocketAddress address = new InetSocketAddress(subscriber.getSourceAddress()
-            .getIpAddress(), subscriber.getSourceAddress().getPort());
+        InetSocketAddress address = new InetSocketAddress(subscriber.getSourceAddress().getIpAddress(), subscriber.getSourceAddress().getPort());
 
-        Map<String, Subscriber> subscribers = mapSub.get(address);
-        if (subscribers == null) {
-            Map<String, Subscriber> newSubs = new ConcurrentHashMap<>();
-            subscribers = mapSub.putIfAbsent(address, newSubs);
-            if (subscribers == null) {
-                subscribers = newSubs;
-            }
-        }
-
+        Map<String, Subscriber> subscribers = mapSub.computeIfAbsent(address, k -> Maps.newConcurrentMap());
         subscribers.put(subscriber.getRegisterId(), subscriber);
-    }
-
-    private void removeConnectIndex(Subscriber subscriber) {
-        ConnectId connectId = subscriber.connectId();
-        Map<String/*registerId*/, Subscriber> subscriberMap = connectIndex.get(connectId);
-        if (subscriberMap != null) {
-            subscriberMap.remove(subscriber.getRegisterId());
-        } else {
-            LOGGER.warn("ConnectId {} not existed in Index to remove!", connectId);
-        }
     }
 
     private void removeResultIndex(Subscriber subscriber) {
@@ -334,16 +168,12 @@ public class SessionInterests implements Interests, ReSubscribers {
             if (subscribers != null) {
                 subscribers.remove(subscriber.getRegisterId());
             } else {
-                LOGGER.warn("InetSocketAddress {} not existed in Index to remove!", address);
+                LOGGER.warn("Address {} not existed in Index to remove!", address);
             }
 
         } else {
             LOGGER.warn("SubscriberResult {} not existed in Index to remove!", subscriberResult);
         }
-    }
-
-    private void invalidateConnectIndex(ConnectId connectId) {
-        connectIndex.remove(connectId);
     }
 
     private void invalidateResultIndex(Subscriber subscriber) {
@@ -353,9 +183,7 @@ public class SessionInterests implements Interests, ReSubscribers {
         if (mapSub != null) {
             InetSocketAddress address = new InetSocketAddress(subscriber.getSourceAddress()
                 .getIpAddress(), subscriber.getSourceAddress().getPort());
-
             mapSub.remove(address);
-
         } else {
             LOGGER.warn("SubscriberResult {} not existed in Index to remove!", subscriberResult);
         }
@@ -364,19 +192,18 @@ public class SessionInterests implements Interests, ReSubscribers {
     @Override
     public Map<InetSocketAddress, Map<String, Subscriber>> querySubscriberIndex(String dataInfoId,
                                                                                 ScopeEnum scope) {
+        final SubscriberResult subscriberResult = new SubscriberResult(dataInfoId, scope);
         read.lock();
         try {
-            SubscriberResult subscriberResult = new SubscriberResult(dataInfoId, scope);
             Map<InetSocketAddress, Map<String, Subscriber>> map = resultIndex.get(subscriberResult);
-            if (map != null && !map.isEmpty()) {
-                return new ConcurrentHashMap<>(map);
+            if (!MapUtils.isEmpty(map)) {
+                return StoreHelpers.copyMap((Map)map);
             } else {
-                return new ConcurrentHashMap<>();
+                return Collections.emptyMap();
             }
         } finally {
             read.unlock();
         }
-
     }
 
     @Override
@@ -393,7 +220,6 @@ public class SessionInterests implements Interests, ReSubscribers {
 
     @Override
     public boolean deleteReSubscriber(Subscriber subscriber) {
-
         Map<String, Subscriber> subscribers = stopPushInterests.get(subscriber.getDataInfoId());
 
         if (subscribers == null) {
@@ -406,30 +232,7 @@ public class SessionInterests implements Interests, ReSubscribers {
 
     @Override
     public Map<String/*dataInfoId*/, Map<String/*registerId*/, Subscriber>> getReSubscribers() {
-        return stopPushInterests;
-    }
-
-    @Override
-    public void clearReSubscribers() {
-        stopPushInterests.clear();
-    }
-
-    @Override
-    public Set<ConnectId> getConnectIds() {
-        return Sets.newHashSet(connectIndex.keySet());
-    }
-
-    public SessionServerConfig getSessionServerConfig() {
-        return sessionServerConfig;
-    }
-
-    /**
-     * Setter method for property <tt>sessionServerConfig</tt>.
-     *
-     * @param sessionServerConfig value to be assigned to property sessionServerConfig
-     */
-    public void setSessionServerConfig(SessionServerConfig sessionServerConfig) {
-        this.sessionServerConfig = sessionServerConfig;
+        return StoreHelpers.copyMap((Map)stopPushInterests);
     }
 
     @Override
@@ -438,16 +241,39 @@ public class SessionInterests implements Interests, ReSubscribers {
     }
 
     @Override
-    public Set<String> getSubscriberProcessIds() {
-        HashSet<String> processIds = Sets.newHashSet();
-        for (Map<String, Subscriber> subscribers : interests.values()) {
-            for (Subscriber subscriber : subscribers.values()) {
-                if (subscriber.getProcessId() != null) {
-                    processIds.add(subscriber.getProcessId());
-                }
-            }
+    public void clearReSubscribers() {
+        stopPushInterests.clear();
+    }
+
+    private static final class SubscriberResult {
+        final String    dataInfoId;
+        final ScopeEnum scope;
+
+        SubscriberResult(String dataInfoId, ScopeEnum scope) {
+            this.dataInfoId = dataInfoId;
+            this.scope = scope;
         }
-        return processIds;
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o)
+                return true;
+            if (!(o instanceof SubscriberResult))
+                return false;
+            SubscriberResult that = (SubscriberResult) o;
+            return Objects.equals(dataInfoId, that.dataInfoId) && scope == that.scope;
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(dataInfoId, scope);
+        }
+
+        @Override
+        public String toString() {
+            return "SubscriberResult{" + "dataInfoId='" + dataInfoId + '\'' + ", scope=" + scope
+                   + '}';
+        }
     }
 
 }

@@ -275,7 +275,7 @@ public class SessionRegistry implements Registry {
         }
 
         private void fetchVersions() {
-            Collection<String> checkDataInfoIds = sessionInterests.getInterestDataInfoIds();
+            Collection<String> checkDataInfoIds = sessionInterests.getDataInfoIds();
             Map<Integer/*slotId*/, Collection<String>/*dataInfoIds*/> map = calculateDataNode(checkDataInfoIds);
             for (Map.Entry<Integer, Collection<String>> e : map.entrySet()) {
                 final int slotId = e.getKey();
@@ -318,7 +318,7 @@ public class SessionRegistry implements Registry {
 
     @Override
     public void fetchChangDataProcess() {
-        Collection<String> checkDataInfoIds = sessionInterests.getInterestDataInfoIds();
+        Collection<String> checkDataInfoIds = sessionInterests.getDataInfoIds();
         Map<Integer/*slotId*/, Collection<String>/*dataInfoIds*/> map = calculateDataNode(checkDataInfoIds);
 
         map.forEach((slotId, dataInfoIds) -> {

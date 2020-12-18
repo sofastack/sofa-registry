@@ -16,237 +16,62 @@
  */
 package com.alipay.sofa.registry.server.session.store;
 
-import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
-
-import com.alipay.sofa.registry.common.model.ConnectId;
 import com.alipay.sofa.registry.common.model.PublisherInternUtil;
 import com.alipay.sofa.registry.common.model.store.Publisher;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
+import com.alipay.sofa.registry.util.ParaCheckUtil;
 import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
+
+import java.util.Map;
 
 /**
  * @author shangyu.wh
  * @version $Id: SessionDataStore.java, v 0.1 2017-12-01 18:14 shangyu.wh Exp $
  */
-public class SessionDataStore implements DataStore {
+public class SessionDataStore extends AbstractDataManager<Publisher> implements DataStore {
 
-    private static final Logger                                                 LOGGER        = LoggerFactory
-                                                                                                  .getLogger(SessionDataStore.class);
-    private final ReentrantReadWriteLock                                        readWriteLock = new ReentrantReadWriteLock();
-    private final Lock                                                          write         = readWriteLock
-                                                                                                  .writeLock();
+    private static final Logger LOGGER = LoggerFactory.getLogger(SessionDataStore.class);
 
-    /**
-     * publisher store
-     */
-    private Map<String/*dataInfoId*/, Map<String/*registerId*/, Publisher>>   registry      = new ConcurrentHashMap<>();
-
-    /*** index */
-    private Map<ConnectId/*connectId*/, Map<String/*registerId*/, Publisher>> connectIndex  = new ConcurrentHashMap<>();
+    public SessionDataStore() {
+        super(LOGGER);
+    }
 
     @Override
-    public void add(Publisher publisher) {
+    public boolean add(Publisher publisher) {
+        ParaCheckUtil.checkNotNull(publisher.getVersion(), "publisher.version");
+        ParaCheckUtil.checkNotNull(publisher.getRegisterTimestamp(), "publisher.registerTimestamp");
+
         PublisherInternUtil.internPublisher(publisher);
+        Map<String, Publisher> publishers = stores.computeIfAbsent(publisher.getDataInfoId(), k -> Maps
+                .newConcurrentMap());
 
+        boolean toAdd = true;
+        Publisher existingPublisher = null;
         write.lock();
         try {
-            Map<String, Publisher> publishers = registry.computeIfAbsent(publisher.getDataInfoId(), k-> Maps
-                    .newConcurrentMap());
-
-            Publisher existingPublisher = publishers.get(publisher.getRegisterId());
-
+            existingPublisher = publishers.get(publisher.getRegisterId());
             if (existingPublisher != null) {
-                if (existingPublisher.getVersion() != null) {
-                    long oldVersion = existingPublisher.getVersion();
-                    Long newVersion = publisher.getVersion();
-                    if (newVersion == null) {
-                        LOGGER.error("There is publisher input version can't be null!");
-                        return;
-                    } else if (oldVersion > newVersion) {
-                        LOGGER
-                            .warn(
-                                "There is publisher already exists,but old version {} higher than input {},it will not be overwrite! {}",
-                                oldVersion, newVersion, existingPublisher);
-                        return;
-                    } else if (oldVersion == newVersion) {
-                        Long newTime = publisher.getRegisterTimestamp();
-                        long oldTime = existingPublisher.getRegisterTimestamp();
-                        if (newTime == null) {
-                            LOGGER
-                                .error("There is publisher input Register Timestamp can not be null!");
-                            return;
-                        }
-                        if (oldTime > newTime) {
-                            LOGGER
-                                .warn(
-                                    "There is publisher already exists,but old timestamp {} higher than input {},it will not be overwrite! {}",
-                                    oldTime, newTime, existingPublisher);
-                            return;
-                        }
-                    }
+                if (!existingPublisher.publisherVersion().orderThan(publisher.publisherVersion())) {
+                    toAdd = false;
                 }
-                LOGGER
-                    .warn(
-                        "There is publisher already exists,version:{},it will be overwrite!Input version:{},info:{}",
-                        existingPublisher.getVersion(), publisher.getVersion(), existingPublisher);
-                removeFromConnectIndex(existingPublisher);
             }
-            publishers.put(publisher.getRegisterId(), publisher);
-            addToConnectIndex(publisher);
-
-        } finally {
-            write.unlock();
-        }
-    }
-
-    @Override
-    public boolean deleteById(String registerId, String dataInfoId) {
-
-        write.lock();
-        try {
-            Map<String, Publisher> publishers = registry.get(dataInfoId);
-
-            if (publishers == null) {
-                LOGGER.warn("Delete failed because publisher is not registered for dataInfoId: {}",
-                    dataInfoId);
-                return false;
-            } else {
-                Publisher publisherTodelete = publishers.remove(registerId);
-
-                if (publisherTodelete == null) {
-                    LOGGER.warn(
-                        "Delete failed because publisher is not registered for registerId: {}",
-                        registerId);
-                    return false;
-
-                } else {
-                    removeFromConnectIndex(publisherTodelete);
-                    return true;
-                }
+            if (toAdd) {
+                publishers.put(publisher.getRegisterId(), publisher);
             }
         } finally {
             write.unlock();
         }
-    }
-
-    @Override
-    public Map<String, Publisher> queryByConnectId(ConnectId connectId) {
-        return connectIndex.get(connectId);
-    }
-
-    @Override
-    public boolean deleteByConnectId(ConnectId connectId) {
-        write.lock();
-        try {
-            for (Map<String, Publisher> map : registry.values()) {
-                for (Iterator it = map.values().iterator(); it.hasNext();) {
-                    Publisher publisher = (Publisher) it.next();
-                    if (publisher != null && connectId.equals(publisher.connectId())) {
-                        it.remove();
-                        LOGGER.info("remove publisher by connectId={}, {}", connectId, publisher);
-                    }
-                }
-            }
-            connectIndex.remove(connectId);
-            return true;
-        } finally {
-            write.unlock();
+        // log without lock
+        if (existingPublisher != null) {
+            LOGGER.warn("exist publisher, added={}, existVer={}, inputVer={}, {}", toAdd,
+                    existingPublisher.publisherVersion(), publisher.publisherVersion(), existingPublisher);
         }
+        return toAdd;
+
     }
 
-    @Override
-    public Collection<Publisher> getStoreDataByDataInfoId(String dataInfoId) {
-
-        Map<String, Publisher> publishers = registry.get(dataInfoId);
-
-        if (publishers == null) {
-            LOGGER.info("There is not registered publisher for dataInfoId: {}", dataInfoId);
-            return null;
-        } else {
-            return publishers.values();
-        }
-    }
-
-    @Override
-    public Publisher queryById(String registerId, String dataInfoId) {
-
-        Map<String, Publisher> publishers = registry.get(dataInfoId);
-
-        if (publishers == null) {
-            LOGGER.warn("Publisher is not registered for dataInfoId: {}", dataInfoId);
-            return null;
-        }
-        return publishers.get(registerId);
-    }
-
-    @Override
-    public Collection<String> getStoreDataInfoIds() {
-        return registry.keySet();
-    }
-
-    @Override
-    public long count() {
-        long count = 0;
-        for (Map<String, Publisher> map : registry.values()) {
-            count += map.size();
-        }
-        return count;
-    }
-
-    private void addToConnectIndex(Publisher publisher) {
-        ConnectId connectId = publisher.connectId();
-        Map<String/*registerId*/, Publisher> publisherMap = connectIndex.get(connectId);
-        if (publisherMap == null) {
-            Map<String/*registerId*/, Publisher> newPublisherMap = new ConcurrentHashMap<>();
-            publisherMap = connectIndex.putIfAbsent(connectId, newPublisherMap);
-            if (publisherMap == null) {
-                publisherMap = newPublisherMap;
-            }
-        }
-
-        publisherMap.put(publisher.getRegisterId(), publisher);
-    }
-
-    private void removeFromConnectIndex(Publisher publisher) {
-        ConnectId connectId = publisher.connectId();
-        Map<String/*registerId*/, Publisher> publisherMap = connectIndex.get(connectId);
-        if (publisherMap != null) {
-            publisherMap.remove(publisher.getRegisterId());
-        } else {
-            LOGGER.warn("ConnectId {} not existed in Index to remove!", connectId);
-        }
-    }
-
-    @Override
-    public Set<ConnectId> getConnectIds() {
-        return Sets.newHashSet(connectIndex.keySet());
-    }
-
-    @Override
-    public Set<String> getPublisherProcessIds() {
-        HashSet<String> processIds = Sets.newHashSet();
-        for (Map<String, Publisher> publishers : getDataInfoIdPublishers().values()) {
-            for (Publisher publisher : publishers.values()) {
-                if (publisher.getProcessId() != null) {
-                    processIds.add(publisher.getProcessId());
-                }
-            }
-        }
-        return processIds;
-    }
-
-    @Override
-    public Map<String, Map<String, Publisher>> getDataInfoIdPublishers() {
-        Map<String, Map<String, Publisher>> ret = new HashMap<>(registry.size());
-        for (Map.Entry<String, Map<String, Publisher>> e : registry.entrySet()) {
-            ret.put(e.getKey(), new HashMap<>(e.getValue()));
-        }
-        return ret;
+    protected void postDelete(Publisher data) {
     }
 
     @Override

@@ -27,7 +27,11 @@ import com.alipay.sofa.registry.remoting.exchange.NodeExchanger;
 import com.alipay.sofa.registry.remoting.exchange.RequestException;
 import com.alipay.sofa.registry.remoting.exchange.message.Request;
 import com.alipay.sofa.registry.remoting.exchange.message.Response;
+import com.alipay.sofa.registry.util.CollectionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+
+import java.util.Collection;
+import java.util.Optional;
 
 /**
  *
@@ -38,7 +42,7 @@ public abstract class ServerSideExchanger implements NodeExchanger {
     private static final Logger LOGGER = LoggerFactory.getLogger(ServerSideExchanger.class);
 
     @Autowired
-    protected Exchange          boltExchange;
+    protected Exchange boltExchange;
 
     @Override
     public Response request(Request request) throws RequestException {
@@ -72,6 +76,23 @@ public abstract class ServerSideExchanger implements NodeExchanger {
         } catch (Throwable e) {
             throw new RequestException(getServerPort() + ", Exchanger request error! Request url:" + url, request, e);
         }
+    }
+
+    public Channel choseChannel() {
+        Server sessionServer = boltExchange.getServer(getServerPort());
+        if (sessionServer == null) {
+            return null;
+
+        }
+        Collection<Channel> channels = sessionServer.getChannels();
+        Optional<Channel> channelOptional = CollectionUtils.getRandom(channels);
+        if (channelOptional.isPresent()) {
+            Channel channel = channelOptional.get();
+            if (channel.isConnected()) {
+                return channel;
+            }
+        }
+        return null;
     }
 
     @Override
