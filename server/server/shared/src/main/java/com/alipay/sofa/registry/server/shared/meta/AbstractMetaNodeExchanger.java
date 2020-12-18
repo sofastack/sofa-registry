@@ -25,7 +25,7 @@ import com.alipay.sofa.registry.remoting.exchange.Exchange;
 import com.alipay.sofa.registry.remoting.exchange.RequestException;
 import com.alipay.sofa.registry.remoting.exchange.message.Request;
 import com.alipay.sofa.registry.remoting.exchange.message.Response;
-import com.alipay.sofa.registry.server.shared.remoting.ClientExchanger;
+import com.alipay.sofa.registry.server.shared.remoting.ClientSideExchanger;
 import com.google.common.collect.Sets;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -37,7 +37,7 @@ import java.util.Collection;
  * @author yuzhi.lyz
  * @version v 0.1 2020-11-28 15:36 yuzhi.lyz Exp $
  */
-public abstract class AbstractMetaNodeExchanger extends ClientExchanger {
+public abstract class AbstractMetaNodeExchanger extends ClientSideExchanger {
     private static final Logger        LOGGER = LoggerFactory
                                                   .getLogger(AbstractMetaNodeExchanger.class);
 

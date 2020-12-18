@@ -26,7 +26,7 @@ import com.alipay.sofa.registry.remoting.exchange.RequestException;
 import com.alipay.sofa.registry.remoting.exchange.message.Request;
 import com.alipay.sofa.registry.remoting.exchange.message.Response;
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
-import com.alipay.sofa.registry.server.shared.remoting.ClientExchanger;
+import com.alipay.sofa.registry.server.shared.remoting.ClientSideExchanger;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import javax.annotation.Resource;
@@ -38,7 +38,7 @@ import java.util.Set;
  * @author shangyu.wh
  * @version $Id : DataNodeExchanger.java, v 0.1 2017-12-01 11:51 shangyu.wh Exp $
  */
-public class DataNodeExchanger extends ClientExchanger {
+public class DataNodeExchanger extends ClientSideExchanger {
 
     private static final Logger        LOGGER          = LoggerFactory
                                                            .getLogger(DataNodeExchanger.class);

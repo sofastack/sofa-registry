@@ -16,18 +16,9 @@
  */
 package com.alipay.sofa.registry.server.meta.remoting;
 
-import com.alipay.sofa.registry.common.model.store.URL;
-import com.alipay.sofa.registry.log.Logger;
-import com.alipay.sofa.registry.log.LoggerFactory;
-import com.alipay.sofa.registry.remoting.Channel;
-import com.alipay.sofa.registry.remoting.Client;
-import com.alipay.sofa.registry.remoting.Server;
 import com.alipay.sofa.registry.remoting.exchange.Exchange;
-import com.alipay.sofa.registry.remoting.exchange.NodeExchanger;
-import com.alipay.sofa.registry.remoting.exchange.RequestException;
-import com.alipay.sofa.registry.remoting.exchange.message.Request;
-import com.alipay.sofa.registry.remoting.exchange.message.Response;
 import com.alipay.sofa.registry.server.meta.bootstrap.config.MetaServerConfig;
+import com.alipay.sofa.registry.server.shared.remoting.ServerSideExchanger;
 import com.google.common.annotations.VisibleForTesting;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -36,57 +27,19 @@ import org.springframework.beans.factory.annotation.Autowired;
  * @author shangyu.wh
  * @version $Id: DataNodeExchanger.java, v 0.1 2018-01-23 19:18 shangyu.wh Exp $
  */
-public class DataNodeExchanger implements NodeExchanger {
-
-    private static final Logger LOGGER = LoggerFactory.getLogger(DataNodeExchanger.class);
+public class DataNodeExchanger extends ServerSideExchanger {
 
     @Autowired
-    private MetaServerConfig    metaServerConfig;
-
-    @Autowired
-    private Exchange            boltExchange;
+    private MetaServerConfig metaServerConfig;
 
     @Override
-    public Response request(Request request) throws RequestException {
-        Response response = null;
-        try {
-            Server dataServer = boltExchange.getServer(metaServerConfig.getDataServerPort());
-
-            if (dataServer != null) {
-                URL url = request.getRequestUrl();
-                if (url != null) {
-
-                    Channel channel = dataServer.getChannel(url);
-
-                    if (channel != null && channel.isConnected()) {
-                        if(request.getCallBackHandler() != null) {
-                            dataServer.sendCallback(channel, request.getRequestBody(), request.getCallBackHandler(),
-                                    request.getTimeout() != null ? request.getTimeout() : metaServerConfig.getDataNodeExchangeTimeout());
-                        } else {
-                            final Object result = dataServer.sendSync(channel, request.getRequestBody(),
-                                    request.getTimeout() != null ? request.getTimeout() : metaServerConfig.getDataNodeExchangeTimeout());
-                            response = () -> result;
-                        }
-                    } else {
-                        LOGGER.error("DataNode Exchanger get channel error! channel with url:" + url
-                                + " can not be null or disconnected!");
-                        throw new RequestException(
-                                "DataNode Exchanger get channel error! channel with url:" + url
-                                        + " can not be null or disconnected!",
-                                request);
-                    }
-                }
-            }
-        } catch (Exception e) {
-            LOGGER.error("DataNode Exchanger request data error!", e);
-            throw new RequestException("DataNode Exchanger request data error!", request, e);
-        }
-        return response;
+    public int getRpcTimeout() {
+        return metaServerConfig.getDataNodeExchangeTimeout();
     }
 
     @Override
-    public Client connectServer() {
-        return null;
+    public int getServerPort() {
+        return metaServerConfig.getDataServerPort();
     }
 
     @VisibleForTesting

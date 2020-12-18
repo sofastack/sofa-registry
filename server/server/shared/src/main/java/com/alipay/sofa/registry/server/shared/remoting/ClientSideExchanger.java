@@ -42,8 +42,8 @@ import java.util.*;
  * @author yuzhi.lyz
  * @version v 0.1 2020-11-29 12:08 yuzhi.lyz Exp $
  */
-public abstract class ClientExchanger implements NodeExchanger {
-    private static final Logger    LOGGER    = LoggerFactory.getLogger(ClientExchanger.class);
+public abstract class ClientSideExchanger implements NodeExchanger {
+    private static final Logger    LOGGER    = LoggerFactory.getLogger(ClientSideExchanger.class);
     private final String           serverType;
 
     @Autowired
@@ -52,7 +52,7 @@ public abstract class ClientExchanger implements NodeExchanger {
     protected volatile Set<String> serverIps = Sets.newHashSet();
     private final Connector        connector;
 
-    protected ClientExchanger(String serverType) {
+    protected ClientSideExchanger(String serverType) {
         this.serverType = serverType;
         this.connector = new Connector();
         ConcurrentUtils.createDaemonThread(serverType + "-async-connector", connector).start();
@@ -60,20 +60,28 @@ public abstract class ClientExchanger implements NodeExchanger {
 
     @Override
     public Response request(Request request) throws RequestException {
+        if (LOGGER.isDebugEnabled()) {
+            LOGGER.debug("serverPort={} to server, url:{}, request body:{} ", getServerPort(), request.getRequestUrl(),
+                    request.getRequestBody());
+        }
+
+        final URL url = request.getRequestUrl();
+        if (url == null) {
+            throw new RequestException("null url", request);
+        }
         Client client = boltExchange.getClient(serverType);
         final int timeout = request.getTimeout() != null ? request.getTimeout() : getRpcTimeout();
         try {
             CallbackHandler callback = request.getCallBackHandler();
             if (callback == null) {
-                final Object result = client.sendSync(request.getRequestUrl(), request.getRequestBody(), timeout);
+                final Object result = client.sendSync(url, request.getRequestBody(), timeout);
                 return () -> result;
             } else {
-                client.sendCallback(request.getRequestUrl(), request.getRequestBody(), callback, timeout);
+                client.sendCallback(url, request.getRequestBody(), callback, timeout);
                 return () -> Response.ResultStatus.SUCCESSFUL;
             }
         } catch (Throwable e) {
-            throw new RequestException(serverType + "Exchanger request error! Request url:" + request.getRequestUrl(),
-                    request, e);
+            throw new RequestException(serverType + "Exchanger request error! Request url:" + url, request, e);
         }
     }
 
