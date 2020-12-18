@@ -111,10 +111,9 @@ public class SessionDigestResource {
                                                                                    @PathParam("type") String type) {
         Map<String, Collection<? extends StoreData>> serverList = new HashMap<>();
         if (dataInfoId != null) {
-            Collection<Publisher> publishers = sessionDataStore
-                .getStoreDataByDataInfoId(dataInfoId);
-            Collection<Subscriber> subscribers = sessionInterests.getInterests(dataInfoId);
-            Collection<Watcher> watchers = sessionWatchers.getWatchers(dataInfoId);
+            Collection<Publisher> publishers = sessionDataStore.getDatas(dataInfoId);
+            Collection<Subscriber> subscribers = sessionInterests.getDatas(dataInfoId);
+            Collection<Watcher> watchers = sessionWatchers.getDatas(dataInfoId);
             fillServerList(type, serverList, publishers, subscribers, watchers);
         }
 
@@ -189,8 +188,8 @@ public class SessionDigestResource {
     @Produces(MediaType.APPLICATION_JSON)
     public Collection<String> getDataInfoIdList() {
         Collection<String> ret = new HashSet<>();
-        ret.addAll(sessionInterests.getInterestDataInfoIds());
-        ret.addAll(sessionDataStore.getStoreDataInfoIds());
+        ret.addAll(sessionInterests.getDataInfoIds());
+        ret.addAll(sessionDataStore.getDataInfoIds());
         return ret;
     }
 

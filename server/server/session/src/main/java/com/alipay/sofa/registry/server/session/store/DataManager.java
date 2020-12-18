@@ -18,7 +18,9 @@ package com.alipay.sofa.registry.server.session.store;
 
 import com.alipay.sofa.registry.common.model.ConnectId;
 
+import java.util.Collection;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * Session Data store manager,according base data function
@@ -41,15 +43,7 @@ public interface DataManager<DATA, ID, DATAINFOID> {
      *
      * @param data
      */
-    void add(DATA data);
-
-    /**
-     * remove single data by register id
-     * @param registerId
-     * @param dataInfoId
-     * @return
-     */
-    boolean deleteById(ID registerId, DATAINFOID dataInfoId);
+    boolean add(DATA data);
 
     /**
      * query data by client node connectId
@@ -66,9 +60,29 @@ public interface DataManager<DATA, ID, DATAINFOID> {
      */
     boolean deleteByConnectId(ConnectId connectId);
 
+    DATA queryById(ID registerId, DATAINFOID dataInfoId);
+
+    /**
+     * remove single data by register id
+     * @param registerId
+     * @param dataInfoId
+     * @return
+     */
+    boolean deleteById(ID registerId, DATAINFOID dataInfoId);
+
     /**
      * count pub and sub number
      * @return
      */
     long count();
+
+    Set<ConnectId> getConnectIds();
+
+    Collection<DATA> getDatas(DATAINFOID dataInfoId);
+
+    Map<DATAINFOID, Map<ID, DATA>> getDatas();
+
+    Set<String> collectProcessIds();
+
+    Collection<DATAINFOID> getDataInfoIds();
 }

@@ -118,13 +118,13 @@ public class DataCacheTest extends BaseTest {
         Assert.assertEquals(2, map.size());
 
         //remain 100
-        Assert.assertEquals(map2.keySet().size(), 2);
+        Assert.assertEquals(map2.keySet().size(), 1);
 
         InetSocketAddress address = new InetSocketAddress("192.168.1.2", 9000);
         InetSocketAddress addressDel = new InetSocketAddress("192.168.1.9", 8000);
         Assert.assertFalse(map2.get(address).isEmpty());
 
-        Assert.assertFalse(!map2.get(addressDel).isEmpty());
+        Assert.assertTrue(map2.get(addressDel) == null);
 
         //Assert.assertEquals(NetUtil.toAddressString(map2.keySet().iterator().next()),"192.168.1.2:9000");
         Assert.assertEquals(map2.get(address).size(), 100);
@@ -280,6 +280,8 @@ public class DataCacheTest extends BaseTest {
         publisher1.setRegisterId("RegisterId1");
         publisher1.setSourceAddress(new URL("192.168.1.1", 12345));
         publisher1.setTargetAddress(new URL("192.168.1.2", 9600));
+        publisher1.setVersion(1L);
+        publisher1.setRegisterTimestamp(System.currentTimeMillis());
 
         Publisher publisher2 = new Publisher();
         publisher2.setDataInfoId("dataInfoId2");
@@ -287,7 +289,8 @@ public class DataCacheTest extends BaseTest {
         publisher2.setRegisterId("RegisterId2");
         publisher2.setSourceAddress(new URL("192.168.1.1", 12345));
         publisher2.setTargetAddress(new URL("192.168.1.2", 9600));
-
+        publisher2.setVersion(2L);
+        publisher2.setRegisterTimestamp(System.currentTimeMillis());
         sessionDataStore.add(publisher1);
         sessionDataStore.add(publisher2);
 
@@ -306,6 +309,8 @@ public class DataCacheTest extends BaseTest {
         publisher3.setRegisterId(publisher1.getRegisterId());
         publisher3.setSourceAddress(new URL("192.168.1.1", 12346));
         publisher3.setTargetAddress(new URL("192.168.1.2", 9600));
+        publisher3.setVersion(2L);
+        publisher3.setRegisterTimestamp(System.currentTimeMillis());
 
         Publisher publisher4 = new Publisher();
         publisher4.setDataInfoId(publisher2.getDataInfoId());
@@ -313,6 +318,8 @@ public class DataCacheTest extends BaseTest {
         publisher4.setRegisterId(publisher2.getRegisterId());
         publisher4.setSourceAddress(new URL("192.168.1.1", 12346));
         publisher4.setTargetAddress(new URL("192.168.1.2", 9600));
+        publisher4.setVersion(2L);
+        publisher4.setRegisterTimestamp(System.currentTimeMillis());
 
         sessionDataStore.add(publisher3);
         sessionDataStore.add(publisher4);
@@ -468,7 +475,7 @@ public class DataCacheTest extends BaseTest {
             .getAddressString() + "_" + subscriber1.getTargetAddress().getAddressString()));
 
         Assert.assertEquals(sessionInterests.queryByConnectId(ConnectId
-            .parse("192.168.1.1:12345_192.168.1.2:9600")), null);
+            .parse("192.168.1.1:12345_192.168.1.2:9600")).isEmpty(), true);
         Assert.assertEquals(
             sessionInterests
                 .queryByConnectId(ConnectId.parse("192.168.1.1:12346_192.168.1.2:9600")).size(), 1);
@@ -480,8 +487,8 @@ public class DataCacheTest extends BaseTest {
             sessionInterests
                 .querySubscriberIndex(subscriber1.getDataInfoId(), subscriber1.getScope())
                 .get(new InetSocketAddress("192.168.1.1", 12346)).size(), 1);
-        Assert.assertEquals(sessionInterests.getInterests(subscriber1.getDataInfoId()).size(), 1);
-        Assert.assertTrue(sessionInterests.getInterests(subscriber1.getDataInfoId()).contains(
+        Assert.assertEquals(sessionInterests.getDatas(subscriber1.getDataInfoId()).size(), 1);
+        Assert.assertTrue(sessionInterests.getDatas(subscriber1.getDataInfoId()).contains(
             subscriber2));
     }
 }

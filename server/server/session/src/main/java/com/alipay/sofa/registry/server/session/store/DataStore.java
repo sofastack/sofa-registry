@@ -16,12 +16,9 @@
  */
 package com.alipay.sofa.registry.server.session.store;
 
-import com.alipay.sofa.registry.common.model.ConnectId;
 import com.alipay.sofa.registry.common.model.store.Publisher;
 
-import java.util.Collection;
 import java.util.Map;
-import java.util.Set;
 
 /**
  *
@@ -29,34 +26,6 @@ import java.util.Set;
  * @version $Id: DataStore.java, v 0.1 2017-12-01 18:13 shangyu.wh Exp $
  */
 public interface DataStore extends DataManager<Publisher, String, String> {
-
-    /**
-     * get all publishers by dataInfoId
-     * @param dataInfoId
-     * @return
-     */
-    Collection<Publisher> getStoreDataByDataInfoId(String dataInfoId);
-
-    /***
-     * get Publiser by registerId and dataInfoId
-     * @param registerId
-     * @param dataInfoId
-     * @return
-     */
-    Publisher queryById(String registerId, String dataInfoId);
-
-    /**
-     * get all publisher dataInfoIds
-     *
-     * @return
-     */
-    Collection<String> getStoreDataInfoIds();
-
-    Set<ConnectId> getConnectIds();
-
-    Set<String> getPublisherProcessIds();
-
-    Map<String/*dataInfoId*/, Map<String/*registerId*/, Publisher>> getDataInfoIdPublishers();
 
     Map<String/*dataInfoId*/, Map<String/*registerId*/, Publisher>> getDataInfoIdPublishers(int slotId);
 }

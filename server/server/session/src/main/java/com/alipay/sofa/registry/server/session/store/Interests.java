@@ -16,15 +16,12 @@
  */
 package com.alipay.sofa.registry.server.session.store;
 
-import java.net.InetSocketAddress;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
-import com.alipay.sofa.registry.common.model.ConnectId;
 import com.alipay.sofa.registry.common.model.store.Subscriber;
 import com.alipay.sofa.registry.core.model.ScopeEnum;
+
+import java.net.InetSocketAddress;
+import java.util.List;
+import java.util.Map;
 
 /**
  *
@@ -32,14 +29,6 @@ import com.alipay.sofa.registry.core.model.ScopeEnum;
  * @version $Id: SessionInterests.java, v 0.1 2017-11-30 15:53 shangyu.wh Exp $
  */
 public interface Interests extends DataManager<Subscriber, String, String> {
-
-    /**
-     * query subscribers by dataInfoID
-     *
-     * @param dataInfoId
-     * @return
-     */
-    Collection<Subscriber> getInterests(String dataInfoId);
 
     /**
      * check subscribers interest dataInfoId version,very dataCenter dataInfoId version different
@@ -74,14 +63,7 @@ public interface Interests extends DataManager<Subscriber, String, String> {
     boolean checkAndUpdateInterestVersionZero(String dataCenter, String dataInfoId);
 
     /**
-     * get all subscriber dataInfoIds
-     *
-     * @return
-     */
-    Collection<String> getInterestDataInfoIds();
-
-    /**
-     * get subscribers whith specify dataInfo and scope,and group by source InetSocketAddress
+     * get subscribers whith specify dataInfo and scope,and group by source address
      * @param dataInfoId
      * @param scope
      * @return
@@ -89,17 +71,5 @@ public interface Interests extends DataManager<Subscriber, String, String> {
     Map<InetSocketAddress, Map<String, Subscriber>> querySubscriberIndex(String dataInfoId,
                                                                          ScopeEnum scope);
 
-    /**
-     * get subscriber by dataInfoId and registerId
-     * @param registerId
-     * @param dataInfoId
-     * @return
-     */
-    Subscriber queryById(String registerId, String dataInfoId);
-
-    Set<ConnectId> getConnectIds();
-
     List<String> getDataCenters();
-
-    Set<String> getSubscriberProcessIds();
 }
