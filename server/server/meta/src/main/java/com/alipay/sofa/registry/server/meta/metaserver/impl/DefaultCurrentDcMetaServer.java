@@ -125,26 +125,24 @@ public class DefaultCurrentDcMetaServer extends AbstractMetaServer implements Cu
 
     @Override
     public SlotTable getSlotTable() {
-        if (ServiceStateMachine.getInstance().isLeader()) {
-            return localMetaServer.getSlotTable();
-        }
-        return raftMetaServer.getSlotTable();
+        return getMetaServer().getSlotTable();
     }
 
     @Override
     public List<MetaNode> getClusterMembers() {
-        if (ServiceStateMachine.getInstance().isLeader()) {
-            return localMetaServer.getClusterMembers();
-        }
-        return raftMetaServer.getClusterMembers();
+        return getMetaServer().getClusterMembers();
     }
 
     @ReadOnLeader
     public long getEpoch() {
+        return getMetaServer().getEpoch();
+    }
+
+    private CurrentDcMetaServer getMetaServer() {
         if (ServiceStateMachine.getInstance().isLeader()) {
-            return localMetaServer.getEpoch();
+            return localMetaServer;
         }
-        return raftMetaServer.getEpoch();
+        return raftMetaServer;
     }
 
     @VisibleForTesting
