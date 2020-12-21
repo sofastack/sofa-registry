@@ -77,12 +77,22 @@ public class DefaultSlotManager extends AbstractLifecycle implements SlotManager
 
     private ScheduledFuture<?>                         future;
 
+    /**
+     * Post construct.
+     *
+     * @throws Exception the exception
+     */
     @PostConstruct
     public void postConstruct() throws Exception {
         LifecycleHelper.initializeIfPossible(this);
         LifecycleHelper.startIfPossible(this);
     }
 
+    /**
+     * Pre destroy.
+     *
+     * @throws Exception the exception
+     */
     @PreDestroy
     public void preDestroy() throws Exception {
         LifecycleHelper.stopIfPossible(this);
@@ -140,45 +150,65 @@ public class DefaultSlotManager extends AbstractLifecycle implements SlotManager
         super.doDispose();
     }
 
+    /**
+     * Refresh.
+     *
+     * @param slotTable the slot table
+     */
     @Override
     public void refresh(SlotTable slotTable) {
         raftSlotManager.refresh(slotTable);
     }
 
+    /**
+     * Gets get raft slot manager.
+     *
+     * @return the get raft slot manager
+     */
     public SlotManager getRaftSlotManager() {
         return raftSlotManager;
     }
 
+    /**
+     * Gets get slot nums.
+     *
+     * @return the get slot nums
+     */
     @Override
     public int getSlotNums() {
-        if (isRaftLeader()) {
-            return localSlotManager.getSlotNums();
-        }
-        return raftSlotManager.getSlotNums();
+        return getSlotManager().getSlotNums();
     }
 
+    /**
+     * Gets get slot replica nums.
+     *
+     * @return the get slot replica nums
+     */
     @Override
     public int getSlotReplicaNums() {
-        if (isRaftLeader()) {
-            return localSlotManager.getSlotReplicaNums();
-        }
-        return raftSlotManager.getSlotReplicaNums();
+        return getSlotManager().getSlotReplicaNums();
     }
 
+    /**
+     * Gets get data node managed slot.
+     *
+     * @param dataNode        the data node
+     * @param ignoreFollowers the ignore followers
+     * @return the get data node managed slot
+     */
     @Override
     public DataNodeSlot getDataNodeManagedSlot(DataNode dataNode, boolean ignoreFollowers) {
-        if (isRaftLeader()) {
-            return localSlotManager.getDataNodeManagedSlot(dataNode, ignoreFollowers);
-        }
-        return raftSlotManager.getDataNodeManagedSlot(dataNode, ignoreFollowers);
+        return getSlotManager().getDataNodeManagedSlot(dataNode, ignoreFollowers);
     }
 
+    /**
+     * Gets get slot table.
+     *
+     * @return the get slot table
+     */
     @Override
     public SlotTable getSlotTable() {
-        if (isRaftLeader()) {
-            return localSlotManager.getSlotTable();
-        }
-        return raftSlotManager.getSlotTable();
+        return getSlotManager().getSlotTable();
     }
 
     @VisibleForTesting
@@ -195,6 +225,11 @@ public class DefaultSlotManager extends AbstractLifecycle implements SlotManager
     }
 
     public enum SlotPeriodCheckType {
+        /**
+         * check slot assignment balance
+         *
+         * The goal is to balance slot numbers between data-servers
+         * */
         CHECK_SLOT_ASSIGNMENT_BALANCE {
             @Override
             SlotPeriodCheckType next() {
@@ -211,6 +246,12 @@ public class DefaultSlotManager extends AbstractLifecycle implements SlotManager
                 return this;
             }
         },
+
+        /**
+         * check slot leader balance
+         *
+         * The goal is to balance slot leaders between data-servers
+         * */
         CHECK_SLOT_LEADER_BALANCE {
             @Override
             SlotPeriodCheckType next() {
@@ -234,6 +275,14 @@ public class DefaultSlotManager extends AbstractLifecycle implements SlotManager
                                             LocalSlotManager localSlotManager,
                                             SlotManager raftSlotManager,
                                             DefaultDataServerManager dataServerManager);
+    }
+
+    private SlotManager getSlotManager() {
+        if(isRaftLeader()) {
+            return localSlotManager;
+        } else {
+            return raftSlotManager;
+        }
     }
 
     protected boolean isRaftLeader() {

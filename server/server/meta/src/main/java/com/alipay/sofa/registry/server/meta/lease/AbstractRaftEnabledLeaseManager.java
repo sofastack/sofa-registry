@@ -92,18 +92,12 @@ public abstract class AbstractRaftEnabledLeaseManager<T extends Node> extends
 
     @Override
     public long getEpoch() {
-        if (isRaftLeader()) {
-            return getLocalLeaseManager().getEpoch();
-        }
-        return getRaftLeaseManager().getEpoch();
+        return getLeaseManager().getEpoch();
     }
 
     @Override
     public List<T> getClusterMembers() {
-        if (isRaftLeader()) {
-            return getLocalLeaseManager().getClusterMembers();
-        }
-        return getRaftLeaseManager().getClusterMembers();
+        return getLeaseManager().getClusterMembers();
     }
 
     @Override
@@ -124,18 +118,7 @@ public abstract class AbstractRaftEnabledLeaseManager<T extends Node> extends
     @Override
     public boolean renew(T renewal, int leaseDuration) {
         int validLeaseDuration = leaseDuration > 0 ? leaseDuration : Lease.DEFAULT_DURATION_SECS;
-        Lease<T> lease = null;
-        if (!isRaftLeader()) {
-            lease = getRaftLeaseManager().getLease(renewal);
-        } else {
-            lock.readLock().lock();
-            try {
-                lease = getLocalLeaseManager().getLease(renewal);
-            } finally {
-                lock.readLock().unlock();
-            }
-        }
-
+        Lease<T> lease = getLeaseManager().getLease(renewal);
         /*
          * no exist lease, try register the node to all meta-servers through raft
          * */
@@ -143,11 +126,7 @@ public abstract class AbstractRaftEnabledLeaseManager<T extends Node> extends
             getRaftLeaseManager().register(new Lease<>(renewal, validLeaseDuration));
             notifyObservers(new NodeAdded<>(renewal));
         } else {
-            if (isRaftLeader()) {
-                getLocalLeaseManager().renew(renewal, leaseDuration);
-            } else {
-                getRaftLeaseManager().renew(renewal, leaseDuration);
-            }
+            getLeaseManager().renew(renewal, leaseDuration);
         }
         return true;
     }
@@ -207,6 +186,14 @@ public abstract class AbstractRaftEnabledLeaseManager<T extends Node> extends
     @Override
     public void refreshEpoch(long newEpoch) {
         getLocalLeaseManager().refreshEpoch(newEpoch);
+    }
+
+    protected LeaseManager<T> getLeaseManager() {
+        if(isRaftLeader()) {
+            return getLocalLeaseManager();
+        } else {
+            return getRaftLeaseManager();
+        }
     }
 
     protected boolean isRaftLeader() {
