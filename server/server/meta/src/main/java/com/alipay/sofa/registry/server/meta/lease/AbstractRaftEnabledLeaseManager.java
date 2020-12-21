@@ -189,7 +189,7 @@ public abstract class AbstractRaftEnabledLeaseManager<T extends Node> extends
     }
 
     protected LeaseManager<T> getLeaseManager() {
-        if(isRaftLeader()) {
+        if (isRaftLeader()) {
             return getLocalLeaseManager();
         } else {
             return getRaftLeaseManager();

@@ -572,6 +572,45 @@
                 </pluginRepository>
             </pluginRepositories>
         </profile>
+        <!-- antcode release jar -->
+        <profile>
+            <id>antcode-release</id>
+            <distributionManagement>
+                <repository>
+                    <id>maven-release</id>
+                    <name>antcode maven release</name>
+                    <url>http://mvn.test.alipay.net/artifactory/content/repositories/maven-release/</url>
+                </repository>
+                <snapshotRepository>
+                    <id>maven-release</id>
+                    <name>antcode maven snapshot</name>
+                    <url>http://mvn.test.alipay.net/artifactory/content/repositories/maven-snapshot/</url>
+                </snapshotRepository>
+            </distributionManagement>
+        </profile>
+        <!-- 以下内容是配置jar包发布指定的mvn库，与上面配置不冲突 -->
+        <profile>
+            <id>alipay-dev</id>
+            <distributionManagement>
+                <repository>
+                    <id>nexus-server@alipay-dev</id>
+                    <name>alipay dev Repository</name>
+                    <url>http://mvn.dev.alipay.net/artifactory/content/repositories/middleware</url>
+                </repository>
+            </distributionManagement>
+        </profile>
+
+        <profile>
+            <id>alipay-release</id>
+            <distributionManagement>
+                <repository>
+                    <id>nexus-server@alipay-release</id>
+                    <name>alipay release Repository</name>
+                    <url>http://mvn.test.alipay.net/artifactory/content/repositories/middleware</url>
+                </repository>
+            </distributionManagement>
+        </profile>
+
     </profiles>
 
 </project>

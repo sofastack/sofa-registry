@@ -113,7 +113,7 @@ public abstract class AbstractDataManager<T extends BaseInfo> implements
 
     @Override
     public Map<String, Map<String, T>> getDatas() {
-        return StoreHelpers.copyMap((Map)stores);
+        return StoreHelpers.copyMap((Map) stores);
     }
 
     @Override

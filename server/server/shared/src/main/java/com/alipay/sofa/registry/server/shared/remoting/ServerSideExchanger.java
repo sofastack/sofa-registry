@@ -46,21 +46,30 @@ public abstract class ServerSideExchanger implements NodeExchanger {
 
     @Override
     public Response request(Request request) throws RequestException {
-        if (LOGGER.isDebugEnabled()) {
-            LOGGER.debug("serverPort={} to client, url:{}, request body:{} ", getServerPort(), request.getRequestUrl(),
-                    request.getRequestBody());
-        }
         final URL url = request.getRequestUrl();
         if (url == null) {
             throw new RequestException("null url", request);
+        }
+        return request(url, request);
+    }
+
+    public Response request(URL url, Request request) throws RequestException {
+        if (LOGGER.isDebugEnabled()) {
+            LOGGER.debug("serverPort={} to client, url:{}, request body:{} ", getServerPort(), request.getRequestUrl(),
+                    request.getRequestBody());
         }
         final Server server = boltExchange.getServer(getServerPort());
         if (server == null) {
             throw new RequestException("no server for " + getServerPort(), request);
         }
         final int timeout = request.getTimeout() != null ? request.getTimeout() : getRpcTimeout();
+        Channel channel = null;
+        if (url == null) {
+            channel = choseChannel(server);
+        } else {
+            channel = server.getChannel(url);
+        }
 
-        Channel channel = server.getChannel(url);
         if (channel == null || !channel.isConnected()) {
             throw new RequestException(getServerPort() + ", get channel error! channel with url:" + url
                     + " can not be null or disconnected!", request);
@@ -78,13 +87,8 @@ public abstract class ServerSideExchanger implements NodeExchanger {
         }
     }
 
-    public Channel choseChannel() {
-        Server sessionServer = boltExchange.getServer(getServerPort());
-        if (sessionServer == null) {
-            return null;
-
-        }
-        Collection<Channel> channels = sessionServer.getChannels();
+    private Channel choseChannel(Server server) {
+        Collection<Channel> channels = server.getChannels();
         Optional<Channel> channelOptional = CollectionUtils.getRandom(channels);
         if (channelOptional.isPresent()) {
             Channel channel = channelOptional.get();

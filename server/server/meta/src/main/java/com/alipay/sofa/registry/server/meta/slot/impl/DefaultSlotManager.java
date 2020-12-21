@@ -278,7 +278,7 @@ public class DefaultSlotManager extends AbstractLifecycle implements SlotManager
     }
 
     private SlotManager getSlotManager() {
-        if(isRaftLeader()) {
+        if (isRaftLeader()) {
             return localSlotManager;
         } else {
             return raftSlotManager;
