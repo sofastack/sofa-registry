@@ -42,7 +42,7 @@ public abstract class ServerSideExchanger implements NodeExchanger {
     private static final Logger LOGGER = LoggerFactory.getLogger(ServerSideExchanger.class);
 
     @Autowired
-    protected Exchange boltExchange;
+    protected Exchange          boltExchange;
 
     @Override
     public Response request(Request request) throws RequestException {
