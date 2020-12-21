@@ -474,8 +474,10 @@ public class DataCacheTest extends BaseTest {
         sessionInterests.deleteByConnectId(ConnectId.parse(subscriber1.getSourceAddress()
             .getAddressString() + "_" + subscriber1.getTargetAddress().getAddressString()));
 
-        Assert.assertEquals(sessionInterests.queryByConnectId(ConnectId
-            .parse("192.168.1.1:12345_192.168.1.2:9600")).isEmpty(), true);
+        Assert.assertEquals(
+            sessionInterests
+                .queryByConnectId(ConnectId.parse("192.168.1.1:12345_192.168.1.2:9600")).isEmpty(),
+            true);
         Assert.assertEquals(
             sessionInterests
                 .queryByConnectId(ConnectId.parse("192.168.1.1:12346_192.168.1.2:9600")).size(), 1);

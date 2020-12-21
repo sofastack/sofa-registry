@@ -197,7 +197,7 @@ public class SessionInterests extends AbstractDataManager<Subscriber> implements
         try {
             Map<InetSocketAddress, Map<String, Subscriber>> map = resultIndex.get(subscriberResult);
             if (!MapUtils.isEmpty(map)) {
-                return StoreHelpers.copyMap((Map)map);
+                return StoreHelpers.copyMap((Map) map);
             } else {
                 return Collections.emptyMap();
             }
@@ -232,7 +232,7 @@ public class SessionInterests extends AbstractDataManager<Subscriber> implements
 
     @Override
     public Map<String/*dataInfoId*/, Map<String/*registerId*/, Subscriber>> getReSubscribers() {
-        return StoreHelpers.copyMap((Map)stopPushInterests);
+        return StoreHelpers.copyMap((Map) stopPushInterests);
     }
 
     @Override
