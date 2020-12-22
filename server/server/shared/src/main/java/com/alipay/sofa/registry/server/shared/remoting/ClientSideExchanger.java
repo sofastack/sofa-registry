@@ -35,6 +35,7 @@ import com.alipay.sofa.registry.util.LoopRunnable;
 import com.google.common.collect.Sets;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import javax.annotation.PostConstruct;
 import java.util.*;
 
 /**
@@ -55,8 +56,14 @@ public abstract class ClientSideExchanger implements NodeExchanger {
     protected ClientSideExchanger(String serverType) {
         this.serverType = serverType;
         this.connector = new Connector();
-        ConcurrentUtils.createDaemonThread(serverType + "-async-connector", connector).start();
     }
+
+    @PostConstruct
+    public void init(){
+        ConcurrentUtils.createDaemonThread(serverType + "-async-connector", connector).start();
+        LOGGER.info("init connector");
+    }
+
 
     @Override
     public Response request(Request request) throws RequestException {
