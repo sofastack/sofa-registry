@@ -287,12 +287,14 @@ public class DataChangeFetchCloudTask extends AbstractSessionTask {
         taskEvent.setAttribute(Constant.PUSH_CLIENT_DATUM, datum);
         taskEvent.setAttribute(Constant.PUSH_CLIENT_URL, subscriber.getSourceAddress());
 
-        int size = datum != null ? datum.publisherSize() : 0;
+        final int size = datum != null ? datum.publisherSize() : 0;
+        final String dataInfoId = datum != null ? datum.getDataInfoId() : null;
+        final String dataCenter = datum != null ? datum.getDataCenter() : null;
 
         taskLogger.info(
             "send {} taskURL:{},dataInfoId={},dataCenter={},pubSize={},subSize={},taskId={}",
-            taskEvent.getTaskType(), subscriber.getSourceAddress(), datum.getDataInfoId(),
-            datum.getDataCenter(), size, subscribers.size(), taskEvent.getTaskId());
+                taskEvent.getTaskType(), subscriber.getSourceAddress(), dataInfoId, dataCenter, size,
+                subscribers.size(), taskEvent.getTaskId());
         taskListenerManager.sendTaskEvent(taskEvent);
     }
 
@@ -307,12 +309,14 @@ public class DataChangeFetchCloudTask extends AbstractSessionTask {
         taskEvent.setAttribute(Constant.PUSH_CLIENT_DATUM, datum);
         taskEvent.setAttribute(Constant.PUSH_CLIENT_URL, subscriber.getSourceAddress());
 
-        int size = datum != null ? datum.publisherSize() : 0;
+        final int size = datum != null ? datum.publisherSize() : 0;
+        final String dataInfoId = datum != null ? datum.getDataInfoId() : null;
+        final String dataCenter = datum != null ? datum.getDataCenter() : null;
 
         taskLogger.info(
             "send {} taskURL:{},dataInfoId={},dataCenter={},pubSize={},subSize={},taskId={}",
-            taskEvent.getTaskType(), subscriber.getSourceAddress(), datum.getDataInfoId(),
-            datum.getDataCenter(), size, subscribers.size(), taskEvent.getTaskId());
+                taskEvent.getTaskType(), subscriber.getSourceAddress(), dataInfoId, dataCenter, size,
+                subscribers.size(), taskEvent.getTaskId());
         taskListenerManager.sendTaskEvent(taskEvent);
     }
 
