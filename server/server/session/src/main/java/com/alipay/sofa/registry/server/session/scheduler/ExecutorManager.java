@@ -19,9 +19,7 @@ package com.alipay.sofa.registry.server.session.scheduler;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.metrics.TaskMetrics;
-import com.alipay.sofa.registry.remoting.exchange.NodeExchanger;
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
-import com.alipay.sofa.registry.server.session.registry.Registry;
 import com.alipay.sofa.registry.server.shared.meta.MetaServerService;
 import com.alipay.sofa.registry.task.MetricsableThreadPoolExecutor;
 import com.alipay.sofa.registry.timer.AsyncHashedWheelTimer;
@@ -58,16 +56,8 @@ public class ExecutorManager {
 
     private final AsyncHashedWheelTimer       pushTaskCheckAsyncHashedWheelTimer;
 
-    private SessionServerConfig               sessionServerConfig;
-
-    @Autowired
-    private Registry                          sessionRegistry;
-
     @Autowired
     protected MetaServerService               metaServerService;
-
-    @Autowired
-    private NodeExchanger                     dataNodeExchanger;
 
     private Map<String, ThreadPoolExecutor>   reportExecutors                            = new HashMap<>();
 
@@ -81,16 +71,11 @@ public class ExecutorManager {
 
     private static final String               USER_DATA_ELEMENT_PUSH_TASK_CHECK_EXECUTOR = "UserDataElementPushCheckExecutor";
 
-    private static final String               PUSH_TASK_CLOSURE_CHECK_EXECUTOR           = "PushTaskClosureCheckExecutor";
-
     private static final String               CONNECT_CLIENT_EXECUTOR                    = "ConnectClientExecutor";
 
     private static final String               PUBLISH_DATA_EXECUTOR                      = "PublishDataExecutor";
 
     public ExecutorManager(SessionServerConfig sessionServerConfig) {
-
-        this.sessionServerConfig = sessionServerConfig;
-
         scheduler = new ScheduledThreadPoolExecutor(sessionServerConfig.getSessionSchedulerPoolSize(),
                 new NamedThreadFactory("SessionScheduler"));
 

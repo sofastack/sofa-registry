@@ -16,15 +16,12 @@
  */
 package com.alipay.sofa.registry.server.session.scheduler.task;
 
-import java.util.List;
-
 import com.alipay.sofa.registry.common.model.ConnectId;
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
 import com.alipay.sofa.registry.server.session.node.service.DataNodeService;
-import com.alipay.sofa.registry.server.session.store.DataStore;
-import com.alipay.sofa.registry.server.session.store.Interests;
-import com.alipay.sofa.registry.server.session.store.Watchers;
 import com.alipay.sofa.registry.task.listener.TaskEvent;
+
+import java.util.List;
 
 /**
  *
@@ -33,16 +30,6 @@ import com.alipay.sofa.registry.task.listener.TaskEvent;
  */
 public class CancelDataTask extends AbstractSessionTask {
     /**
-     * store subscribers
-     */
-    private final Interests           sessionInterests;
-    /**
-     * store publishers
-     */
-    private final DataStore           sessionDataStore;
-
-    private final Watchers            sessionWatchers;
-    /**
      * transfer data to DataNode
      */
     private final DataNodeService     dataNodeService;
@@ -50,12 +37,7 @@ public class CancelDataTask extends AbstractSessionTask {
     private List<ConnectId>           connectIds;
     private final long                gmtOccur = System.currentTimeMillis();
 
-    public CancelDataTask(Interests sessionInterests, DataStore sessionDataStore,
-                          Watchers sessionWatchers, DataNodeService dataNodeService,
-                          SessionServerConfig sessionServerConfig) {
-        this.sessionInterests = sessionInterests;
-        this.sessionDataStore = sessionDataStore;
-        this.sessionWatchers = sessionWatchers;
+    public CancelDataTask(DataNodeService dataNodeService, SessionServerConfig sessionServerConfig) {
         this.dataNodeService = dataNodeService;
         this.sessionServerConfig = sessionServerConfig;
     }

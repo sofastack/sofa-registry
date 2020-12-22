@@ -16,23 +16,19 @@
  */
 package com.alipay.sofa.registry.server.session.listener;
 
-import javax.annotation.PostConstruct;
-
-import org.springframework.beans.factory.annotation.Autowired;
-
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
 import com.alipay.sofa.registry.server.session.node.service.DataNodeService;
 import com.alipay.sofa.registry.server.session.scheduler.task.CancelDataTask;
 import com.alipay.sofa.registry.server.session.scheduler.task.SessionTask;
-import com.alipay.sofa.registry.server.session.store.DataStore;
-import com.alipay.sofa.registry.server.session.store.Interests;
-import com.alipay.sofa.registry.server.session.store.Watchers;
 import com.alipay.sofa.registry.task.batcher.TaskDispatcher;
 import com.alipay.sofa.registry.task.batcher.TaskDispatchers;
 import com.alipay.sofa.registry.task.batcher.TaskProcessor;
 import com.alipay.sofa.registry.task.listener.TaskEvent;
 import com.alipay.sofa.registry.task.listener.TaskEvent.TaskType;
 import com.alipay.sofa.registry.task.listener.TaskListener;
+import org.springframework.beans.factory.annotation.Autowired;
+
+import javax.annotation.PostConstruct;
 
 /**
  *
@@ -40,21 +36,6 @@ import com.alipay.sofa.registry.task.listener.TaskListener;
  * @version $Id: CancelDataTaskListener.java, v 0.1 2017-12-27 12:02 shangyu.wh Exp $
  */
 public class CancelDataTaskListener implements TaskListener {
-
-    /**
-     * store subscribers
-     */
-    @Autowired
-    private Interests                           sessionInterests;
-
-    /**
-     * store publishers
-     */
-    @Autowired
-    private DataStore                           sessionDataStore;
-
-    @Autowired
-    private Watchers                            sessionWatchers;
 
     /**
      * transfer data to DataNode
@@ -85,8 +66,7 @@ public class CancelDataTaskListener implements TaskListener {
     @Override
     public void handleEvent(TaskEvent event) {
 
-        SessionTask cancelDataTask = new CancelDataTask(sessionInterests, sessionDataStore,
-            sessionWatchers, dataNodeService, sessionServerConfig);
+        SessionTask cancelDataTask = new CancelDataTask(dataNodeService, sessionServerConfig);
 
         cancelDataTask.setTaskEvent(event);
         singleTaskDispatcher.dispatch(cancelDataTask.getTaskId(), cancelDataTask,

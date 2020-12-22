@@ -21,7 +21,6 @@ import com.alipay.sofa.registry.common.model.store.Publisher;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.server.data.bootstrap.DataServerConfig;
-import com.alipay.sofa.registry.server.data.cache.DatumCache;
 import com.alipay.sofa.registry.util.ConcurrentUtils;
 import com.alipay.sofa.registry.util.LoopRunnable;
 import com.google.common.collect.Lists;
@@ -59,9 +58,6 @@ public final class DataChangeEventCenter {
 
     @Autowired
     private DataServerConfig                      dataServerConfig;
-
-    @Autowired
-    private DatumCache                            datumCache;
 
     private final Map<String, Set<String>>        dataCenter2Changes     = Maps.newConcurrentMap();
     private final ReadWriteLock                   lock                   = new ReentrantReadWriteLock();

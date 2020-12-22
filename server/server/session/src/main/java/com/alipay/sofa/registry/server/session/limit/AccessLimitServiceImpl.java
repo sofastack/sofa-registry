@@ -26,12 +26,9 @@ import com.google.common.util.concurrent.RateLimiter;
  */
 public class AccessLimitServiceImpl implements AccessLimitService {
 
-    private SessionServerConfig sessionServerConfig;
-
-    private RateLimiter         rateLimiter;
+    private RateLimiter rateLimiter;
 
     public AccessLimitServiceImpl(SessionServerConfig sessionServerConfig) {
-        this.sessionServerConfig = sessionServerConfig;
         rateLimiter = RateLimiter.create(sessionServerConfig.getAccessLimitRate());
     }
 

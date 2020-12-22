@@ -23,11 +23,9 @@ import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.remoting.Channel;
 import com.alipay.sofa.registry.remoting.bolt.BoltChannel;
-import com.alipay.sofa.registry.server.data.bootstrap.DataServerConfig;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-import org.springframework.beans.factory.annotation.Autowired;
 
 import java.net.InetSocketAddress;
 import java.util.*;
@@ -47,9 +45,6 @@ public class SessionServerConnectionFactory {
                                                                 .getLogger(SessionServerConnectionFactory.class);
 
     private final Map<String, Channels> session2Connections = new ConcurrentHashMap<>();
-
-    @Autowired
-    private DataServerConfig            dataServerConfig;
 
     public void registerSession(ProcessId processId, Channel channel) {
         if (channel == null) {

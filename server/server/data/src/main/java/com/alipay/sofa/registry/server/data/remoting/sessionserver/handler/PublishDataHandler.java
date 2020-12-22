@@ -16,20 +16,17 @@
  */
 package com.alipay.sofa.registry.server.data.remoting.sessionserver.handler;
 
-import java.util.concurrent.Executor;
-import java.util.concurrent.ThreadPoolExecutor;
-
-import org.springframework.beans.factory.annotation.Autowired;
-
 import com.alipay.sofa.registry.common.model.PublishType;
 import com.alipay.sofa.registry.common.model.dataserver.DatumVersion;
 import com.alipay.sofa.registry.common.model.dataserver.PublishDataRequest;
 import com.alipay.sofa.registry.common.model.slot.SlotAccess;
 import com.alipay.sofa.registry.common.model.slot.SlotAccessGenericResponse;
 import com.alipay.sofa.registry.common.model.store.Publisher;
-import com.alipay.sofa.registry.log.Logger;
-import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.remoting.Channel;
+import org.springframework.beans.factory.annotation.Autowired;
+
+import java.util.concurrent.Executor;
+import java.util.concurrent.ThreadPoolExecutor;
 
 /**
  * processor to publish data
@@ -39,10 +36,8 @@ import com.alipay.sofa.registry.remoting.Channel;
  */
 public class PublishDataHandler extends AbstractDataHandler<PublishDataRequest> {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(PublishDataHandler.class);
-
     @Autowired
-    private ThreadPoolExecutor  publishProcessorExecutor;
+    private ThreadPoolExecutor publishProcessorExecutor;
 
     @Override
     public void checkParam(PublishDataRequest request) throws RuntimeException {

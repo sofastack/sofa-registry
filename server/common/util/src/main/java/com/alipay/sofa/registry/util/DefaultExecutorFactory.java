@@ -35,7 +35,6 @@ public class DefaultExecutorFactory implements ObjectFactory<ExecutorService> {
     private static final boolean                  DEFAULT_ALLOW_CORE_THREAD_TIMEOUT = true;
     private static final String                   DEFAULT_THREAD_PREFIX             = "SofaRegistry";
 
-    private int                                   maxQueueSize                      = DEFAULT_MAX_QUEUE_SIZE;
     private int                                   corePoolSize                      = DEFAULT_CORE_POOL_SIZE;
     private int                                   maxPoolSize                       = DEFAULT_MAX_POOL_SIZE;
     private long                                  keepAliveTime                     = DEFAULT_KEEPER_ALIVE_TIME_SECONDS;
@@ -99,7 +98,6 @@ public class DefaultExecutorFactory implements ObjectFactory<ExecutorService> {
         this.corePoolSize = corePoolSize;
         this.allowCoreThreadTimeOut = allowCoreThreadTimeOut;
         this.maxPoolSize = maxPoolSize;
-        this.maxQueueSize = maxQueueSize;
         this.keepAliveTime = keepAliveTime;
         this.keepAliveTimeUnit = keepAliveTimeUnit;
         this.workQueue = new LinkedBlockingQueue<>(maxQueueSize);

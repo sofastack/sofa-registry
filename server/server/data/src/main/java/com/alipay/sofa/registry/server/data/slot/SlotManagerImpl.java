@@ -37,13 +37,10 @@ import com.alipay.sofa.registry.task.KeyedThreadPoolExecutor.KeyedTask;
 import com.alipay.sofa.registry.util.ConcurrentUtils;
 import com.alipay.sofa.registry.util.LoopRunnable;
 import com.google.common.collect.Maps;
-import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import javax.annotation.PostConstruct;
 import java.util.*;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.atomic.AtomicReference;
 
 /**
@@ -382,16 +379,6 @@ public final class SlotManagerImpl implements SlotManager {
     @Override
     public long getSlotTableEpoch() {
         return slotTableStates.table.getEpoch();
-    }
-
-    private ScheduledExecutorService createScheduler(String name, int corePoolSize) {
-        ThreadFactoryBuilder threadFactoryBuilder = new ThreadFactoryBuilder();
-        threadFactoryBuilder.setDaemon(true);
-        threadFactoryBuilder.setUncaughtExceptionHandler((t, err) -> {
-            LOGGER.error("unexpect exception task in thread {}, err={}", t.getName(), err);
-        });
-        return new ScheduledThreadPoolExecutor(corePoolSize, threadFactoryBuilder
-                .setNameFormat("Slot-Sched-" + name).build());
     }
 
     private static Slot.Role getRole(Slot s) {

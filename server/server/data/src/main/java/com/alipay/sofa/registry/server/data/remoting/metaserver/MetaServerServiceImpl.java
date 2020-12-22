@@ -20,9 +20,6 @@ import com.alipay.sofa.registry.common.model.Node;
 import com.alipay.sofa.registry.common.model.metaserver.inter.communicate.DataHeartBeatResponse;
 import com.alipay.sofa.registry.common.model.metaserver.nodes.DataNode;
 import com.alipay.sofa.registry.common.model.store.URL;
-import com.alipay.sofa.registry.log.Logger;
-import com.alipay.sofa.registry.log.LoggerFactory;
-import com.alipay.sofa.registry.server.data.bootstrap.DataServerConfig;
 import com.alipay.sofa.registry.server.data.remoting.DataNodeExchanger;
 import com.alipay.sofa.registry.server.data.remoting.SessionNodeExchanger;
 import com.alipay.sofa.registry.server.data.slot.SlotManager;
@@ -36,11 +33,6 @@ import org.springframework.beans.factory.annotation.Autowired;
  * @version $Id: MetaServiceImpl.java, v 0.1 2018－03－07 20:41 qian.lqlq Exp $
  */
 public class MetaServerServiceImpl extends AbstractMetaServerService<DataHeartBeatResponse> {
-
-    private static final Logger  LOGGER = LoggerFactory.getLogger(MetaServerServiceImpl.class);
-
-    @Autowired
-    private DataServerConfig     dataServerConfig;
 
     @Autowired
     private SlotManager          slotManager;

@@ -27,19 +27,19 @@ import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.server.session.assemble.SubscriberAssembleStrategy;
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
-import com.alipay.sofa.registry.server.session.cache.AppRevisionCacheRegistry;
-import com.alipay.sofa.registry.server.session.cache.SessionDatumCacheDecorator;
 import com.alipay.sofa.registry.server.session.push.FirePushService;
 import com.alipay.sofa.registry.server.session.scheduler.ExecutorManager;
 import com.alipay.sofa.registry.server.session.store.Interests;
 import com.alipay.sofa.registry.server.session.store.ReSubscribers;
 import com.alipay.sofa.registry.task.batcher.TaskProcessor.ProcessingResult;
 import com.alipay.sofa.registry.task.listener.TaskEvent;
-import com.alipay.sofa.registry.task.listener.TaskListenerManager;
 import org.springframework.util.CollectionUtils;
 
 import java.net.InetSocketAddress;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
 import java.util.Map.Entry;
 import java.util.stream.Collectors;
 
@@ -54,39 +54,24 @@ public class DataChangeFetchTask extends AbstractSessionTask {
 
     private final SessionServerConfig        sessionServerConfig;
 
-    /**
-     * trigger task com.alipay.sofa.registry.server.meta.listener process
-     */
-    private final TaskListenerManager        taskListenerManager;
-
     private final ExecutorManager            executorManager;
 
     private DataChangeRequest                dataChangeRequest;
 
     private final Interests                  sessionInterests;
 
-    private final SessionDatumCacheDecorator sessionDatumCacheDecorator;
-
     private final FirePushService            firePushService;
 
     private final SubscriberAssembleStrategy subscriberAssembleStrategy;
 
-    private final AppRevisionCacheRegistry   appRevisionCacheRegistry;
-
     public DataChangeFetchTask(SessionServerConfig sessionServerConfig,
-                               TaskListenerManager taskListenerManager,
                                ExecutorManager executorManager, Interests sessionInterests,
                                SubscriberAssembleStrategy subscriberAssembleStrategy,
-                               SessionDatumCacheDecorator sessionDatumCacheDecorator,
-                               AppRevisionCacheRegistry appRevisionCacheRegistry,
                                FirePushService firePushService) {
         this.sessionServerConfig = sessionServerConfig;
-        this.taskListenerManager = taskListenerManager;
         this.executorManager = executorManager;
         this.sessionInterests = sessionInterests;
         this.subscriberAssembleStrategy = subscriberAssembleStrategy;
-        this.appRevisionCacheRegistry = appRevisionCacheRegistry;
-        this.sessionDatumCacheDecorator = sessionDatumCacheDecorator;
         this.firePushService = firePushService;
     }
 

@@ -18,9 +18,6 @@ package com.alipay.sofa.registry.server.session.store;
 
 import com.alipay.sofa.registry.common.model.ConnectId;
 import com.alipay.sofa.registry.common.model.store.Publisher;
-import com.alipay.sofa.registry.log.Logger;
-import com.alipay.sofa.registry.log.LoggerFactory;
-import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
 import com.alipay.sofa.registry.server.session.slot.SlotTableCache;
 import org.glassfish.jersey.internal.guava.Sets;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -35,11 +32,6 @@ import java.util.concurrent.ConcurrentHashMap;
  * @version v 0.1 2020-11-06 16:24 yuzhi.lyz Exp $
  */
 public class SlotSessionDataStore implements DataStore {
-    private static final Logger           LOGGER          = LoggerFactory
-                                                              .getLogger(SlotSessionDataStore.class);
-
-    @Autowired
-    private SessionServerConfig           sessionServerConfig;
 
     @Autowired
     private SlotTableCache                slotTableCache;

@@ -48,7 +48,6 @@ public final class LocalDatumStorage implements DatumStorage {
 
     private final SlotFunction                  slotFunction       = SlotFunctionRegistry.getFunc();
     private final Map<Integer, PublisherGroups> publisherGroupsMap = Maps.newConcurrentMap();
-    private final Set<ProcessId>                processIds         = Sets.newConcurrentHashSet();
 
     @Autowired
     private DataServerConfig                    dataServerConfig;

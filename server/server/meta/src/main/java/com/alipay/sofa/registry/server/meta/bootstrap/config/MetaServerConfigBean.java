@@ -42,21 +42,7 @@ public class MetaServerConfigBean implements MetaServerConfig {
 
     private int                schedulerHeartbeatTimeout                       = 3;
 
-    private int                schedulerHeartbeatFirstDelay                    = 30;
-
     private int                schedulerHeartbeatExpBackOffBound               = 10;
-
-    private int                schedulerGetDataChangeTimeout                   = 5;
-
-    private int                schedulerGetDataChangeFirstDelay                = 5;
-
-    private int                schedulerGetDataChangeExpBackOffBound           = 5;
-
-    private int                schedulerConnectMetaServerTimeout               = 3;
-
-    private int                schedulerConnectMetaServerFirstDelay            = 3;
-
-    private int                schedulerConnectMetaServerExpBackOffBound       = 10;
 
     private int                schedulerCheckNodeListChangePushTimeout         = 3;
 
@@ -88,25 +74,9 @@ public class MetaServerConfigBean implements MetaServerConfig {
 
     private int                rockDBCacheSize                                 = 64;           //64M
 
-    private int                heartbeatCheckExecutorMinSize                   = 3;
-    private int                heartbeatCheckExecutorMaxSize                   = 10;
-    private int                heartbeatCheckExecutorQueueSize                 = 1024;
-
-    private int                checkDataChangeExecutorMinSize                  = 3;
-    private int                checkDataChangeExecutorMaxSize                  = 10;
-    private int                checkDataChangeExecutorQueueSize                = 1024;
-
-    private int                getOtherDataCenterChangeExecutorMinSize         = 3;
-    private int                getOtherDataCenterChangeExecutorMaxSize         = 10;
-    private int                getOtherDataCenterChangeExecutorQueueSize       = 1024;
-
     private int                connectMetaServerExecutorMinSize                = 3;
     private int                connectMetaServerExecutorMaxSize                = 10;
     private int                connectMetaServerExecutorQueueSize              = 1024;
-
-    private int                checkNodeListChangePushExecutorMinSize          = 3;
-    private int                checkNodeListChangePushExecutorMaxSize          = 10;
-    private int                checkNodeListChangePushExecutorQueueSize        = 1024;
 
     private int                raftClientRefreshExecutorMinSize                = 3;
     private int                raftClientRefreshExecutorMaxSize                = 10;
@@ -193,15 +163,6 @@ public class MetaServerConfigBean implements MetaServerConfig {
     }
 
     /**
-     * Setter method for property <tt>schedulerHeartbeatFirstDelay</tt>.
-     *
-     * @param schedulerHeartbeatFirstDelay value to be assigned to property schedulerHeartbeatFirstDelay
-     */
-    public void setSchedulerHeartbeatFirstDelay(int schedulerHeartbeatFirstDelay) {
-        this.schedulerHeartbeatFirstDelay = schedulerHeartbeatFirstDelay;
-    }
-
-    /**
      * Getter method for property <tt>schedulerHeartbeatExpBackOffBound</tt>.
      *
      * @return property value of schedulerHeartbeatExpBackOffBound
@@ -256,43 +217,6 @@ public class MetaServerConfigBean implements MetaServerConfig {
      */
     public void setSessionNodeExchangeTimeout(int sessionNodeExchangeTimeout) {
         this.sessionNodeExchangeTimeout = sessionNodeExchangeTimeout;
-    }
-
-    /**
-     * Setter method for property <tt>schedulerConnectMetaServerTimeout</tt>.
-     *
-     * @param schedulerConnectMetaServerTimeout value to be assigned to property schedulerConnectMetaServerTimeout
-     */
-    public void setSchedulerConnectMetaServerTimeout(int schedulerConnectMetaServerTimeout) {
-        this.schedulerConnectMetaServerTimeout = schedulerConnectMetaServerTimeout;
-    }
-
-    /**
-     * Getter method for property <tt>schedulerConnectMetaServerFirstDelay</tt>.
-     *
-     * @return property value of schedulerConnectMetaServerFirstDelay
-     */
-    @Override
-    public int getSchedulerConnectMetaServerFirstDelay() {
-        return schedulerConnectMetaServerFirstDelay;
-    }
-
-    /**
-     * Setter method for property <tt>schedulerConnectMetaServerFirstDelay</tt>.
-     *
-     * @param schedulerConnectMetaServerFirstDelay value to be assigned to property schedulerConnectMetaServerFirstDelay
-     */
-    public void setSchedulerConnectMetaServerFirstDelay(int schedulerConnectMetaServerFirstDelay) {
-        this.schedulerConnectMetaServerFirstDelay = schedulerConnectMetaServerFirstDelay;
-    }
-
-    /**
-     * Setter method for property <tt>schedulerConnectMetaServerExpBackOffBound</tt>.
-     *
-     * @param schedulerConnectMetaServerExpBackOffBound value to be assigned to property schedulerConnectMetaServerExpBackOffBound
-     */
-    public void setSchedulerConnectMetaServerExpBackOffBound(int schedulerConnectMetaServerExpBackOffBound) {
-        this.schedulerConnectMetaServerExpBackOffBound = schedulerConnectMetaServerExpBackOffBound;
     }
 
     /**
@@ -392,33 +316,6 @@ public class MetaServerConfigBean implements MetaServerConfig {
     }
 
     /**
-     * Setter method for property <tt>schedulerGetDataChangeTimeout</tt>.
-     *
-     * @param schedulerGetDataChangeTimeout value to be assigned to property schedulerGetDataChangeTimeout
-     */
-    public void setSchedulerGetDataChangeTimeout(int schedulerGetDataChangeTimeout) {
-        this.schedulerGetDataChangeTimeout = schedulerGetDataChangeTimeout;
-    }
-
-    /**
-     * Setter method for property <tt>schedulerGetDataChangeFirstDelay</tt>.
-     *
-     * @param schedulerGetDataChangeFirstDelay value to be assigned to property schedulerGetDataChangeFirstDelay
-     */
-    public void setSchedulerGetDataChangeFirstDelay(int schedulerGetDataChangeFirstDelay) {
-        this.schedulerGetDataChangeFirstDelay = schedulerGetDataChangeFirstDelay;
-    }
-
-    /**
-     * Setter method for property <tt>schedulerGetDataChangeExpBackOffBound</tt>.
-     *
-     * @param schedulerGetDataChangeExpBackOffBound value to be assigned to property schedulerGetDataChangeExpBackOffBound
-     */
-    public void setSchedulerGetDataChangeExpBackOffBound(int schedulerGetDataChangeExpBackOffBound) {
-        this.schedulerGetDataChangeExpBackOffBound = schedulerGetDataChangeExpBackOffBound;
-    }
-
-    /**
      * Getter method for property <tt>raftGroup</tt>.
      *
      * @return property value of raftGroup
@@ -495,26 +392,6 @@ public class MetaServerConfigBean implements MetaServerConfig {
     }
 
     /**
-     * Getter method for property <tt>checkDataChangeExecutorQueueSize</tt>.
-     *
-     * @return property value of checkDataChangeExecutorQueueSize
-     */
-    @Override
-    public int getCheckDataChangeExecutorQueueSize() {
-        return checkDataChangeExecutorQueueSize;
-    }
-
-    /**
-     * Getter method for property <tt>getOtherDataCenterChangeExecutorQueueSize</tt>.
-     *
-     * @return property value of getOtherDataCenterChangeExecutorQueueSize
-     */
-    @Override
-    public int getGetOtherDataCenterChangeExecutorQueueSize() {
-        return getOtherDataCenterChangeExecutorQueueSize;
-    }
-
-    /**
      * Getter method for property <tt>connectMetaServerExecutorMinSize</tt>.
      *
      * @return property value of connectMetaServerExecutorMinSize
@@ -542,36 +419,6 @@ public class MetaServerConfigBean implements MetaServerConfig {
     @Override
     public int getConnectMetaServerExecutorQueueSize() {
         return connectMetaServerExecutorQueueSize;
-    }
-
-    /**
-     * Getter method for property <tt>checkNodeListChangePushExecutorMinSize</tt>.
-     *
-     * @return property value of checkNodeListChangePushExecutorMinSize
-     */
-    @Override
-    public int getCheckNodeListChangePushExecutorMinSize() {
-        return checkNodeListChangePushExecutorMinSize;
-    }
-
-    /**
-     * Getter method for property <tt>checkNodeListChangePushExecutorMaxSize</tt>.
-     *
-     * @return property value of checkNodeListChangePushExecutorMaxSize
-     */
-    @Override
-    public int getCheckNodeListChangePushExecutorMaxSize() {
-        return checkNodeListChangePushExecutorMaxSize;
-    }
-
-    /**
-     * Getter method for property <tt>checkNodeListChangePushExecutorQueueSize</tt>.
-     *
-     * @return property value of checkNodeListChangePushExecutorQueueSize
-     */
-    @Override
-    public int getCheckNodeListChangePushExecutorQueueSize() {
-        return checkNodeListChangePushExecutorQueueSize;
     }
 
     /**
@@ -733,16 +580,6 @@ public class MetaServerConfigBean implements MetaServerConfig {
     @Override
     public double getSessionLoadbalanceThresholdRatio() {
         return sessionLoadbalanceThresholdRatio;
-    }
-
-    @Override
-    public int getSchedulerConnectMetaServerTimeout() {
-        return schedulerConnectMetaServerTimeout;
-    }
-
-    @Override
-    public int getSchedulerConnectMetaServerExpBackOffBound() {
-        return schedulerConnectMetaServerExpBackOffBound;
     }
 
     @Override
