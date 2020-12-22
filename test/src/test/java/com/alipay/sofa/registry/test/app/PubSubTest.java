@@ -16,7 +16,6 @@
  */
 package com.alipay.sofa.registry.test.app;
 
-import com.alibaba.fastjson.JSON;
 import com.alipay.sofa.registry.client.api.registration.PublisherRegistration;
 import com.alipay.sofa.registry.client.api.registration.SubscriberRegistration;
 import com.alipay.sofa.registry.common.model.constants.ValueConstants;
@@ -24,6 +23,7 @@ import com.alipay.sofa.registry.common.model.constants.ValueConstants;
 import com.alipay.sofa.registry.core.model.ScopeEnum;
 import com.alipay.sofa.registry.server.test.AppDiscoveryBuilder;
 import com.alipay.sofa.registry.test.BaseIntegrationTest;
+import com.alipay.sofa.registry.util.JsonUtils;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.test.context.junit4.SpringRunner;
@@ -54,7 +54,7 @@ public class PubSubTest extends BaseIntegrationTest {
 
         publisher.setPreRequest(builder.buildAppRevision());
 
-        registryClient1.register(publisher, JSON.toJSONString(builder.buildData()));
+        registryClient1.register(publisher, JsonUtils.writeValueAsString(builder.buildData()));
 
         MySubscriberDataObserver observer = new MySubscriberDataObserver();
         SubscriberRegistration subReg = new SubscriberRegistration("func1", observer);

@@ -28,6 +28,7 @@ import com.alipay.sofa.registry.lifecycle.impl.LifecycleHelper;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.server.shared.meta.MetaServerService;
+import com.alipay.sofa.registry.util.JsonUtils;
 import com.alipay.sofa.registry.util.NamedThreadFactory;
 import com.alipay.sofa.registry.util.OsUtils;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -162,7 +163,7 @@ public class BlacklistManagerImpl extends AbstractLifecycle implements Blacklist
         TypeReference<HashMap<String, HashMap<String, HashSet<String>>>> typeReference = new TypeReference<HashMap<String, HashMap<String, HashSet<String>>>>() {
         };
 
-        ObjectMapper mapper = new ObjectMapper();
+        ObjectMapper mapper = JsonUtils.getJacksonObjectMapper();
 
         Map<String, Map<String, Set<String>>> blacklistConfigMap;
         try {

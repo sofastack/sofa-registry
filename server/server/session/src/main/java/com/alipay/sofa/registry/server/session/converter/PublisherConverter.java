@@ -16,7 +16,6 @@
  */
 package com.alipay.sofa.registry.server.session.converter;
 
-import com.alibaba.fastjson.JSONObject;
 import com.alipay.sofa.registry.common.model.AppRegisterServerDataBox;
 import com.alipay.sofa.registry.common.model.ServerDataBox;
 import com.alipay.sofa.registry.common.model.constants.ValueConstants;
@@ -27,6 +26,7 @@ import com.alipay.sofa.registry.common.model.store.Publisher;
 import com.alipay.sofa.registry.common.model.store.URL;
 import com.alipay.sofa.registry.core.model.DataBox;
 import com.alipay.sofa.registry.core.model.PublisherRegister;
+import com.alipay.sofa.registry.util.JsonUtils;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.util.CollectionUtils;
 
@@ -114,9 +114,8 @@ public class PublisherConverter {
         if (CollectionUtils.isEmpty(dataList)) {
             return dataBoxes;
         }
-
         for (DataBox dataBox : dataList) {
-            AppRegisterServerDataBox serverDataBox = JSONObject.parseObject(dataBox.getData(), AppRegisterServerDataBox.class);
+            AppRegisterServerDataBox serverDataBox = JsonUtils.read(dataBox.getData(), AppRegisterServerDataBox.class);
             dataBoxes.add(serverDataBox);
         }
 

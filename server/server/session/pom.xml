@@ -31,10 +31,6 @@
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>com.alibaba</groupId>
-            <artifactId>fastjson</artifactId>
-        </dependency>
-        <dependency>
             <groupId>com.alipay.sofa</groupId>
             <artifactId>registry-remoting-api</artifactId>
         </dependency>
