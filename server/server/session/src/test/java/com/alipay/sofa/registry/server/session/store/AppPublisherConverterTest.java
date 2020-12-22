@@ -16,14 +16,15 @@
  */
 package com.alipay.sofa.registry.server.session.store;
 
-import com.alibaba.fastjson.JSON;
-import com.alibaba.fastjson.JSONObject;
 import com.alipay.sofa.registry.common.model.AppRegisterServerDataBox;
 import com.alipay.sofa.registry.server.session.converter.AppRegisterConstant;
+import com.alipay.sofa.registry.util.JsonUtils;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.Assert;
 import org.junit.Test;
 
 import java.util.HashMap;
+import java.util.Map;
 
 /**
  *
@@ -33,27 +34,26 @@ import java.util.HashMap;
 public class AppPublisherConverterTest {
 
     @Test
-    public void testConvert() {
+    public void testConvert() throws Exception{
 
         String box = "{\"url\":\"127.0.0.1:8080\",\"revision\":\"faf447f9a7990b4be937f0e06664ee41\",\"baseParams\":{\"a\":[\"2\"]},"
                      + "\"interfaceParams\":{\"com.alipay.test.Simple4#@#DEFAULT_INSTANCE_ID#@#DEFAULT_GROUP\":{},\"com.alipay.test"
                      + ".Simple5#@#DEFAULT_INSTANCE_ID#@#DEFAULT_GROUP\":{\"b\":[\"3\",\"4\"]}}}";
 
-        JSONObject jsonObject = JSON.parseObject(box);
+        ObjectMapper mapper = JsonUtils.getJacksonObjectMapper();
+        Map<String,Object> jsonObject = mapper.readValue(box, HashMap.class);
         AppRegisterServerDataBox serverDataBox = new AppRegisterServerDataBox();
-        serverDataBox.setUrl(jsonObject.getString(AppRegisterConstant.URL_KEY));
-        serverDataBox.setRevision(jsonObject.getString(AppRegisterConstant.REVISION_KEY));
-        serverDataBox.setBaseParams(JSONObject.parseObject(
-            jsonObject.getString(AppRegisterConstant.BASE_PARAMS_KEY), HashMap.class));
-        serverDataBox.setInterfaceParams(JSONObject.parseObject(
-            jsonObject.getString(AppRegisterConstant.INTERFACE_PARAMS_KEY), HashMap.class));
+        serverDataBox.setUrl((String) jsonObject.get(AppRegisterConstant.URL_KEY));
+        serverDataBox.setRevision((String) jsonObject.get(AppRegisterConstant.REVISION_KEY));
+        serverDataBox.setBaseParams((Map)jsonObject.get(AppRegisterConstant.BASE_PARAMS_KEY));
+        serverDataBox.setInterfaceParams((Map) jsonObject.get(AppRegisterConstant.INTERFACE_PARAMS_KEY));
         Assert.assertEquals(serverDataBox.getBaseParams().get("a").size(), 1);
         Assert.assertEquals(
             serverDataBox.getInterfaceParams()
                 .get("com.alipay.test.Simple5#@#DEFAULT_INSTANCE_ID#@#DEFAULT_GROUP").get("b")
                 .size(), 2);
 
-        AppRegisterServerDataBox dataBox = JSONObject.parseObject(box,
+        AppRegisterServerDataBox dataBox = mapper.readValue(box,
             AppRegisterServerDataBox.class);
         Assert.assertEquals(
             dataBox.getInterfaceParams()

@@ -85,7 +85,6 @@
         <!-- for linke 添加isSkipUT, isSkipIT参数声明，防止编译时产生错误 -->
         <isSkipUT>false</isSkipUT>
         <isSkipIT>false</isSkipIT>
-        <fastjson.version>1.2.51.sec09_noneautotype</fastjson.version>
     </properties>
 
     <dependencyManagement>
@@ -353,11 +352,6 @@
                 <groupId>org.rocksdb</groupId>
                 <artifactId>rocksdbjni</artifactId>
                 <version>${rocksdbjni.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.alibaba</groupId>
-                <artifactId>fastjson</artifactId>
-                <version>${fastjson.version}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>
