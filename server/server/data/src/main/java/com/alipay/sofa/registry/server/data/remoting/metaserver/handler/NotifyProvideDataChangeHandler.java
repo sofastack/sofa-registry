@@ -21,8 +21,6 @@ import com.alipay.sofa.registry.common.model.Node.NodeType;
 import com.alipay.sofa.registry.common.model.metaserver.DataOperator;
 import com.alipay.sofa.registry.common.model.metaserver.ProvideData;
 import com.alipay.sofa.registry.common.model.metaserver.ProvideDataChangeEvent;
-import com.alipay.sofa.registry.log.Logger;
-import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.remoting.Channel;
 import com.alipay.sofa.registry.server.data.remoting.metaserver.provideData.ProvideDataProcessor;
 import com.alipay.sofa.registry.server.shared.meta.MetaServerService;
@@ -35,9 +33,6 @@ import org.springframework.beans.factory.annotation.Autowired;
  * @version $Id: DataChangeRequestHandler.java, v 0.1 2017-12-12 15:09 shangyu.wh Exp $
  */
 public class NotifyProvideDataChangeHandler extends AbstractClientHandler<ProvideDataChangeEvent> {
-
-    private static final Logger  LOGGER = LoggerFactory
-                                            .getLogger(NotifyProvideDataChangeHandler.class);
 
     @Autowired
     private MetaServerService    metaServerService;

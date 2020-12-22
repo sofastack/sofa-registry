@@ -25,7 +25,6 @@ import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
 import com.alipay.sofa.registry.server.session.converter.ReceivedDataConverter;
-import com.alipay.sofa.registry.server.session.predicate.RevisionPredicate;
 import com.alipay.sofa.registry.server.session.predicate.ZonePredicate;
 import com.alipay.sofa.registry.server.session.scheduler.task.Constant;
 import com.alipay.sofa.registry.server.session.scheduler.task.PushTaskClosure;
@@ -35,11 +34,7 @@ import com.alipay.sofa.registry.task.listener.TaskListenerManager;
 import com.alipay.sofa.registry.util.DatumVersionUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.function.Predicate;
 
 /**
@@ -50,9 +45,6 @@ import java.util.function.Predicate;
 public class FirePushService {
 
     private static final Logger taskLogger = LoggerFactory.getLogger(FirePushService.class);
-
-    @Autowired
-    private RevisionPredicate   revisionPredicate;
 
     @Autowired
     private SessionServerConfig sessionServerConfig;

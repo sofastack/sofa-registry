@@ -21,7 +21,6 @@ import com.alipay.sofa.registry.common.model.slot.SlotAccess;
 import com.alipay.sofa.registry.common.model.slot.SlotAccessGenericResponse;
 import com.alipay.sofa.registry.remoting.Channel;
 import com.alipay.sofa.registry.server.data.cache.DatumCache;
-import com.alipay.sofa.registry.server.data.remoting.sessionserver.SessionServerConnectionFactory;
 import com.alipay.sofa.registry.util.ParaCheckUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -37,13 +36,10 @@ import java.util.concurrent.ThreadPoolExecutor;
 public class GetDataHandler extends AbstractDataHandler<GetDataRequest> {
 
     @Autowired
-    private DatumCache                     datumCache;
+    private DatumCache         datumCache;
 
     @Autowired
-    private ThreadPoolExecutor             getDataProcessorExecutor;
-
-    @Autowired
-    private SessionServerConnectionFactory sessionServerConnectionFactory;
+    private ThreadPoolExecutor getDataProcessorExecutor;
 
     @Override
     public Executor getExecutor() {

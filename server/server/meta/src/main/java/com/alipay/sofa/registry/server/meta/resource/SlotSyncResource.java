@@ -18,8 +18,6 @@ package com.alipay.sofa.registry.server.meta.resource;
 
 import com.alipay.sofa.registry.common.model.console.PersistenceData;
 import com.alipay.sofa.registry.common.model.constants.ValueConstants;
-import com.alipay.sofa.registry.log.Logger;
-import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.store.api.DBResponse;
 import com.alipay.sofa.registry.store.api.DBService;
 import com.alipay.sofa.registry.store.api.annotation.RaftReference;
@@ -39,14 +37,8 @@ import java.util.Map;
 @Path("slotSync")
 public class SlotSyncResource {
 
-    private static final Logger DB_LOGGER   = LoggerFactory.getLogger(SlotSyncResource.class,
-                                                "[DBService]");
-
-    private static final Logger TASK_LOGGER = LoggerFactory.getLogger(SlotSyncResource.class,
-                                                "[Task]");
-
     @RaftReference
-    private DBService           persistenceDataDBService;
+    private DBService persistenceDataDBService;
 
     /**
      * get

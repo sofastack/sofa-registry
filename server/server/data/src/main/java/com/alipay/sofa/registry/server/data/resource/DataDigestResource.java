@@ -20,8 +20,6 @@ import com.alipay.sofa.registry.common.model.ConnectId;
 import com.alipay.sofa.registry.common.model.dataserver.Datum;
 import com.alipay.sofa.registry.common.model.store.DataInfo;
 import com.alipay.sofa.registry.common.model.store.Publisher;
-import com.alipay.sofa.registry.log.Logger;
-import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.server.data.bootstrap.DataServerConfig;
 import com.alipay.sofa.registry.server.data.cache.DatumCache;
 import com.alipay.sofa.registry.server.data.remoting.metaserver.MetaServerServiceImpl;
@@ -45,8 +43,6 @@ import java.util.stream.Collectors;
  */
 @Path("digest")
 public class DataDigestResource {
-    private static final Logger            LOGGER  = LoggerFactory
-                                                       .getLogger(DataDigestResource.class);
 
     private final static String            SESSION = "SESSION";
 

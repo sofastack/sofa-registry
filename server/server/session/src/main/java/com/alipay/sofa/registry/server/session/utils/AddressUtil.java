@@ -16,8 +16,6 @@
  */
 package com.alipay.sofa.registry.server.session.utils;
 
-import com.alipay.sofa.registry.log.Logger;
-import com.alipay.sofa.registry.log.LoggerFactory;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -29,8 +27,6 @@ import java.util.Map;
  * @version $Id: AddressUtil.java, v 0.1 2020年12月13日 15:18 xiaojian.xj Exp $
  */
 public class AddressUtil {
-
-    private static final Logger LOGGER = LoggerFactory.getLogger(AddressUtil.class);
 
     //public static String buildURL(String address, Map<String, Collection<String>> params) {
     //    if (CollectionUtils.isEmpty(params)) {

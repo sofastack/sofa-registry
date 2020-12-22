@@ -16,9 +16,6 @@
  */
 package com.alipay.sofa.registry.server.data.change.event;
 
-import com.alipay.sofa.registry.log.Logger;
-import com.alipay.sofa.registry.log.LoggerFactory;
-
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
@@ -29,9 +26,6 @@ import java.util.concurrent.LinkedBlockingQueue;
  * @version $Id: DataChangeEventQueue.java, v 0.1 2017-12-11 17:10 qian.lqlq Exp $
  */
 public class DataChangeEventQueue {
-
-    private static final Logger                   LOGGER = LoggerFactory
-                                                             .getLogger(DataChangeEventQueue.class);
 
     /**
      *

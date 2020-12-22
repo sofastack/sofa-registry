@@ -17,14 +17,8 @@
 package com.alipay.sofa.registry.server.session.listener;
 
 import com.alipay.sofa.registry.server.session.assemble.SubscriberAssembleStrategy;
-import com.alipay.sofa.registry.server.session.cache.AppRevisionCacheRegistry;
-import com.alipay.sofa.registry.server.session.cache.SessionDatumCacheDecorator;
-import com.alipay.sofa.registry.server.session.push.FirePushService;
-import org.springframework.beans.factory.annotation.Autowired;
-
-import com.alipay.sofa.registry.log.Logger;
-import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
+import com.alipay.sofa.registry.server.session.push.FirePushService;
 import com.alipay.sofa.registry.server.session.scheduler.ExecutorManager;
 import com.alipay.sofa.registry.server.session.scheduler.task.DataChangeFetchTask;
 import com.alipay.sofa.registry.server.session.scheduler.task.SessionTask;
@@ -35,7 +29,7 @@ import com.alipay.sofa.registry.task.batcher.TaskProcessor;
 import com.alipay.sofa.registry.task.listener.TaskEvent;
 import com.alipay.sofa.registry.task.listener.TaskEvent.TaskType;
 import com.alipay.sofa.registry.task.listener.TaskListener;
-import com.alipay.sofa.registry.task.listener.TaskListenerManager;
+import org.springframework.beans.factory.annotation.Autowired;
 
 /**
  *
@@ -43,9 +37,6 @@ import com.alipay.sofa.registry.task.listener.TaskListenerManager;
  * @version $Id: DataChangeFetchTaskListener.java, v 0.1 2017-12-13 11:58 shangyu.wh Exp $
  */
 public class DataChangeFetchTaskListener implements TaskListener {
-
-    private final static Logger                          LOGGER = LoggerFactory
-                                                                    .getLogger(DataChangeFetchTaskListener.class);
 
     @Autowired
     private SessionServerConfig                          sessionServerConfig;
@@ -58,18 +49,6 @@ public class DataChangeFetchTaskListener implements TaskListener {
 
     @Autowired
     private SubscriberAssembleStrategy                   subscriberAssembleStrategy;
-
-    @Autowired
-    private AppRevisionCacheRegistry                     appRevisionCacheRegistry;
-
-    /**
-     * trigger task com.alipay.sofa.registry.server.meta.listener process
-     */
-    @Autowired
-    private TaskListenerManager                          taskListenerManager;
-
-    @Autowired
-    private SessionDatumCacheDecorator                   sessionDatumCacheDecorator;
 
     @Autowired
     private FirePushService                              firePushService;
@@ -106,8 +85,7 @@ public class DataChangeFetchTaskListener implements TaskListener {
     @Override
     public void handleEvent(TaskEvent event) {
         SessionTask dataChangeFetchTask = new DataChangeFetchTask(sessionServerConfig,
-            taskListenerManager, executorManager, sessionInterests, subscriberAssembleStrategy,
-            sessionDatumCacheDecorator, appRevisionCacheRegistry, firePushService);
+            executorManager, sessionInterests, subscriberAssembleStrategy, firePushService);
         dataChangeFetchTask.setTaskEvent(event);
 
         getSingleTaskDispatcher().dispatch(dataChangeFetchTask.getTaskId(), dataChangeFetchTask,

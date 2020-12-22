@@ -16,10 +16,7 @@
  */
 package com.alipay.sofa.registry.server.session.listener;
 
-import org.springframework.beans.factory.annotation.Autowired;
-
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
-import com.alipay.sofa.registry.server.session.scheduler.ExecutorManager;
 import com.alipay.sofa.registry.server.session.scheduler.task.DataPushTask;
 import com.alipay.sofa.registry.server.session.scheduler.task.SessionTask;
 import com.alipay.sofa.registry.server.session.store.Interests;
@@ -30,6 +27,7 @@ import com.alipay.sofa.registry.task.listener.TaskEvent;
 import com.alipay.sofa.registry.task.listener.TaskEvent.TaskType;
 import com.alipay.sofa.registry.task.listener.TaskListener;
 import com.alipay.sofa.registry.task.listener.TaskListenerManager;
+import org.springframework.beans.factory.annotation.Autowired;
 
 /**
  *
@@ -49,9 +47,6 @@ public class DataPushTaskListener implements TaskListener {
      */
     @Autowired
     private TaskListenerManager                          taskListenerManager;
-
-    @Autowired
-    private ExecutorManager                              executorManager;
 
     private volatile TaskDispatcher<String, SessionTask> singleTaskDispatcher;
 
@@ -82,7 +77,7 @@ public class DataPushTaskListener implements TaskListener {
     @Override
     public void handleEvent(TaskEvent event) {
         SessionTask dataPushTask = new DataPushTask(sessionInterests, sessionServerConfig,
-            executorManager, taskListenerManager);
+            taskListenerManager);
         dataPushTask.setTaskEvent(event);
         getSingleTaskDispatcher().dispatch(dataPushTask.getTaskId(), dataPushTask,
             dataPushTask.getExpiryTime());

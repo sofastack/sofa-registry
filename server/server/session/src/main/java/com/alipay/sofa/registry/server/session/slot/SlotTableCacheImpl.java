@@ -17,13 +17,11 @@
 package com.alipay.sofa.registry.server.session.slot;
 
 import com.alipay.sofa.registry.common.model.slot.Slot;
+import com.alipay.sofa.registry.common.model.slot.SlotTable;
 import com.alipay.sofa.registry.common.model.slot.func.SlotFunction;
 import com.alipay.sofa.registry.common.model.slot.func.SlotFunctionRegistry;
-import com.alipay.sofa.registry.common.model.slot.SlotTable;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
-import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
-import org.springframework.beans.factory.annotation.Autowired;
 
 /**
  *
@@ -32,9 +30,6 @@ import org.springframework.beans.factory.annotation.Autowired;
  */
 public final class SlotTableCacheImpl implements SlotTableCache {
     private static final Logger LOGGER       = LoggerFactory.getLogger(SlotTableCacheImpl.class);
-
-    @Autowired
-    private SessionServerConfig sessionServerConfig;
 
     private final SlotFunction  slotFunction = SlotFunctionRegistry.getFunc();
     private volatile SlotTable  slotTable    = SlotTable.INIT;

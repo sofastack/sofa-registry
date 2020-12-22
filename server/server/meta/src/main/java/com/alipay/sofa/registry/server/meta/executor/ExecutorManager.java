@@ -34,8 +34,6 @@ public class ExecutorManager {
 
     private ThreadPoolExecutor       connectMetaServerExecutor;
 
-    private ThreadPoolExecutor       checkNodeListChangePushExecutor;
-
     private ThreadPoolExecutor       raftClientRefreshExecutor;
 
     private final MetaServerConfig   metaServerConfig;
@@ -64,13 +62,6 @@ public class ExecutorManager {
             new NamedThreadFactory("MetaScheduler-ConnectMetaServer"));
         connectMetaServerExecutor.allowCoreThreadTimeOut(true);
 
-        checkNodeListChangePushExecutor = new ThreadPoolExecutor(
-            metaServerConfig.getCheckNodeListChangePushExecutorMinSize(),
-            metaServerConfig.getCheckNodeListChangePushExecutorMaxSize(), 300, TimeUnit.SECONDS,
-            new LinkedBlockingQueue<>(metaServerConfig.getCheckDataChangeExecutorQueueSize()),
-            new NamedThreadFactory("MetaScheduler-CheckNodeListChangePush"));
-        checkNodeListChangePushExecutor.allowCoreThreadTimeOut(true);
-
         raftClientRefreshExecutor = new ThreadPoolExecutor(
             metaServerConfig.getRaftClientRefreshExecutorMinSize(),
             metaServerConfig.getRaftClientRefreshExecutorMaxSize(), 300, TimeUnit.SECONDS,
@@ -98,10 +89,6 @@ public class ExecutorManager {
 
         if (connectMetaServerExecutor != null && !connectMetaServerExecutor.isShutdown()) {
             connectMetaServerExecutor.shutdown();
-        }
-
-        if (checkNodeListChangePushExecutor != null) {
-            checkNodeListChangePushExecutor.isShutdown();
         }
 
         if (raftClientRefreshExecutor != null) {

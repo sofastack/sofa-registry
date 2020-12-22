@@ -16,23 +16,16 @@
  */
 package com.alipay.sofa.registry.server.session.remoting.handler;
 
-import java.util.Collection;
-import java.util.Set;
-import java.util.concurrent.Executor;
-
 import com.alipay.remoting.util.StringUtils;
-import com.alipay.sofa.registry.common.model.constants.ValueConstants;
-import com.alipay.sofa.registry.common.model.store.DataInfo;
-import com.alipay.sofa.registry.server.session.cache.AppRevisionCacheRegistry;
-import com.alipay.sofa.registry.server.session.cache.SessionDatumCacheDecorator;
-import org.springframework.beans.factory.annotation.Autowired;
-
 import com.alipay.sofa.registry.common.model.Node.NodeType;
+import com.alipay.sofa.registry.common.model.constants.ValueConstants;
 import com.alipay.sofa.registry.common.model.sessionserver.DataChangeRequest;
+import com.alipay.sofa.registry.common.model.store.DataInfo;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.remoting.Channel;
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
+import com.alipay.sofa.registry.server.session.cache.AppRevisionCacheRegistry;
 import com.alipay.sofa.registry.server.session.cache.CacheService;
 import com.alipay.sofa.registry.server.session.cache.DatumKey;
 import com.alipay.sofa.registry.server.session.cache.Key;
@@ -43,6 +36,8 @@ import com.alipay.sofa.registry.server.session.strategy.DataChangeRequestHandler
 import com.alipay.sofa.registry.server.shared.remoting.AbstractClientHandler;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import java.util.Collection;
+import java.util.Set;
 import java.util.concurrent.Executor;
 
 /**
@@ -75,9 +70,6 @@ public class DataChangeRequestHandler extends AbstractClientHandler<DataChangeRe
 
     @Autowired
     private DataChangeRequestHandlerStrategy dataChangeRequestHandlerStrategy;
-
-    @Autowired
-    private SessionDatumCacheDecorator       sessionDatumCacheDecorator;
 
     @Autowired
     private AppRevisionCacheRegistry         appRevisionCacheRegistry;

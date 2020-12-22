@@ -21,8 +21,6 @@ import com.alipay.sofa.registry.common.model.Node;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.remoting.Channel;
-import com.alipay.sofa.registry.remoting.exchange.Exchange;
-import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
 import com.alipay.sofa.registry.server.session.registry.Registry;
 import com.alipay.sofa.registry.server.session.scheduler.ExecutorManager;
 import com.alipay.sofa.registry.server.session.store.DataStore;
@@ -58,12 +56,6 @@ public class ClientNodeConnectionHandler extends ListenServerChannelHandler {
 
     @Autowired
     private ExecutorManager     executorManager;
-
-    @Autowired
-    private SessionServerConfig sessionServerConfig;
-
-    @Autowired
-    private Exchange            boltExchange;
 
     @Override
     public void disconnected(Channel channel) {

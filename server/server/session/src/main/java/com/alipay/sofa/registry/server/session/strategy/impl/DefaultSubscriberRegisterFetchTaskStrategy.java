@@ -20,8 +20,6 @@ import com.alipay.sofa.registry.common.model.dataserver.Datum;
 import com.alipay.sofa.registry.common.model.store.BaseInfo;
 import com.alipay.sofa.registry.common.model.store.Subscriber;
 import com.alipay.sofa.registry.core.model.AssembleType;
-import com.alipay.sofa.registry.log.Logger;
-import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.server.session.assemble.SubscriberAssembleStrategy;
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
 import com.alipay.sofa.registry.server.session.cache.CacheService;
@@ -39,10 +37,6 @@ import java.util.Map;
  */
 public class DefaultSubscriberRegisterFetchTaskStrategy implements
                                                        SubscriberRegisterFetchTaskStrategy {
-    private static final Logger        taskLogger = LoggerFactory
-                                                      .getLogger(
-                                                          DefaultSubscriberRegisterFetchTaskStrategy.class,
-                                                          "[Task]");
 
     @Autowired
     private SubscriberAssembleStrategy subscriberAssembleStrategy;

@@ -19,8 +19,6 @@ package com.alipay.sofa.registry.server.data.cache;
 import com.alipay.sofa.registry.common.model.ConnectId;
 import com.alipay.sofa.registry.common.model.dataserver.Datum;
 import com.alipay.sofa.registry.common.model.store.Publisher;
-import com.alipay.sofa.registry.log.Logger;
-import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.server.data.bootstrap.DataServerConfig;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -36,12 +34,11 @@ import java.util.Map;
  * @version $Id: DatumCache.java, v 0.1 2017-12-06 20:50 qian.lqlq Exp $
  */
 public class DatumCache {
-    private static final Logger LOGGER = LoggerFactory.getLogger(DatumCache.class);
     @Autowired
-    private DatumStorage        localDatumStorage;
+    private DatumStorage     localDatumStorage;
 
     @Autowired
-    private DataServerConfig    dataServerConfig;
+    private DataServerConfig dataServerConfig;
 
     /**
      * get datum by specific dataCenter and dataInfoId

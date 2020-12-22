@@ -17,7 +17,6 @@
 package com.alipay.sofa.registry.server.session.acceptor;
 
 import com.alipay.sofa.registry.common.model.ConnectId;
-import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
 import com.alipay.sofa.registry.task.listener.TaskListenerManager;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -32,13 +31,10 @@ public class WriteDataAcceptorImpl implements WriteDataAcceptor {
     @Autowired
     private TaskListenerManager taskListenerManager;
 
-    @Autowired
-    private SessionServerConfig sessionServerConfig;
-
     public void accept(WriteDataRequest request) {
         ConnectId connectId = request.getConnectId();
         WriteDataProcessor writeDataProcessor = new WriteDataProcessor(connectId,
-            taskListenerManager, sessionServerConfig);
+            taskListenerManager);
         writeDataProcessor.process(request);
     }
 }

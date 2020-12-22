@@ -37,8 +37,6 @@ public interface MetaServerConfig {
 
     int getSchedulerHeartbeatExpBackOffBound();
 
-    int getSchedulerConnectMetaServerFirstDelay();
-
     int getSchedulerCheckNodeListChangePushTimeout();
 
     int getSchedulerCheckNodeListChangePushFirstDelay();
@@ -59,21 +57,11 @@ public interface MetaServerConfig {
 
     int getRockDBCacheSize();
 
-    int getCheckDataChangeExecutorQueueSize();
-
-    int getGetOtherDataCenterChangeExecutorQueueSize();
-
     int getConnectMetaServerExecutorMinSize();
 
     int getConnectMetaServerExecutorMaxSize();
 
     int getConnectMetaServerExecutorQueueSize();
-
-    int getCheckNodeListChangePushExecutorMinSize();
-
-    int getCheckNodeListChangePushExecutorMaxSize();
-
-    int getCheckNodeListChangePushExecutorQueueSize();
 
     int getRaftClientRefreshExecutorMinSize();
 
@@ -110,10 +98,6 @@ public interface MetaServerConfig {
     int getRaftElectionTimeout();
 
     double getSessionLoadbalanceThresholdRatio();
-
-    int getSchedulerConnectMetaServerTimeout();
-
-    int getSchedulerConnectMetaServerExpBackOffBound();
 
     int getInitialSlotTableNonChangeLockTimeMilli();
 

@@ -16,15 +16,6 @@
  */
 package com.alipay.sofa.registry.server.session.scheduler.task;
 
-import java.net.InetSocketAddress;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.function.Predicate;
-
 import com.alipay.sofa.registry.common.model.dataserver.Datum;
 import com.alipay.sofa.registry.common.model.sessionserver.DataPushRequest;
 import com.alipay.sofa.registry.common.model.store.BaseInfo.ClientVersion;
@@ -36,11 +27,15 @@ import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
 import com.alipay.sofa.registry.server.session.converter.ReceivedDataConverter;
-import com.alipay.sofa.registry.server.session.scheduler.ExecutorManager;
 import com.alipay.sofa.registry.server.session.store.Interests;
 import com.alipay.sofa.registry.task.listener.TaskEvent;
 import com.alipay.sofa.registry.task.listener.TaskEvent.TaskType;
 import com.alipay.sofa.registry.task.listener.TaskListenerManager;
+
+import java.net.InetSocketAddress;
+import java.util.*;
+import java.util.Map.Entry;
+import java.util.function.Predicate;
 
 /**
  *
@@ -58,8 +53,6 @@ public class DataPushTask extends AbstractSessionTask {
 
     private final Interests           sessionInterests;
 
-    private final ExecutorManager     executorManager;
-
     /**
      * trigger task com.alipay.sofa.registry.server.meta.listener process
      */
@@ -68,10 +61,9 @@ public class DataPushTask extends AbstractSessionTask {
     private DataPushRequest           dataPushRequest;
 
     public DataPushTask(Interests sessionInterests, SessionServerConfig sessionServerConfig,
-                        ExecutorManager executorManager, TaskListenerManager taskListenerManager) {
+                        TaskListenerManager taskListenerManager) {
         this.sessionInterests = sessionInterests;
         this.sessionServerConfig = sessionServerConfig;
-        this.executorManager = executorManager;
         this.taskListenerManager = taskListenerManager;
     }
 
@@ -144,7 +136,8 @@ public class DataPushTask extends AbstractSessionTask {
     }
 
     private void fireReceivedDataMultiPushTask(Datum datum, List<String> subscriberRegisterIdList,
-                                               ScopeEnum scopeEnum, Subscriber subscriber, Map<String, Subscriber> subscriberMap) {
+                                               ScopeEnum scopeEnum, Subscriber subscriber,
+                                               Map<String, Subscriber> subscriberMap) {
         Collection<Subscriber> subscribers = new ArrayList<>(subscriberMap.values());
         String dataId = datum.getDataId();
         String clientCell = sessionServerConfig.getClientCell(subscriber.getCell());
@@ -164,7 +157,7 @@ public class DataPushTask extends AbstractSessionTask {
             }
             return false;
         };
-        LOGGER.info("Datum push={}",datum);
+        LOGGER.info("Datum push={}", datum);
         ReceivedData receivedData = ReceivedDataConverter.getReceivedDataMulti(datum, scopeEnum,
                 subscriberRegisterIdList, clientCell, zonePredicate);
 
@@ -173,8 +166,9 @@ public class DataPushTask extends AbstractSessionTask {
         parameter.put(receivedData, subscriber.getSourceAddress());
         TaskEvent taskEvent = new TaskEvent(parameter, TaskType.RECEIVED_DATA_MULTI_PUSH_TASK);
         taskEvent.setAttribute(Constant.PUSH_CLIENT_SUBSCRIBERS, subscribers);
-        taskLogger.info("send {} taskURL:{},taskScope:{},version:{}", taskEvent.getTaskType(), subscriber.getSourceAddress(),
-                scopeEnum,receivedData.getVersion());
+        taskLogger.info("send {} taskURL:{},taskScope:{},version:{}", taskEvent.getTaskType(),
+                subscriber.getSourceAddress(),
+                scopeEnum, receivedData.getVersion());
         taskListenerManager.sendTaskEvent(taskEvent);
     }
 

@@ -21,8 +21,6 @@ import com.alipay.sofa.registry.common.model.dataserver.UnPublishDataRequest;
 import com.alipay.sofa.registry.common.model.slot.SlotAccess;
 import com.alipay.sofa.registry.common.model.slot.SlotAccessGenericResponse;
 import com.alipay.sofa.registry.common.model.store.Publisher;
-import com.alipay.sofa.registry.log.Logger;
-import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.remoting.Channel;
 import com.alipay.sofa.registry.server.data.cache.UnPublisher;
 import com.alipay.sofa.registry.util.ParaCheckUtil;
@@ -39,10 +37,8 @@ import java.util.concurrent.ThreadPoolExecutor;
  */
 public class UnPublishDataHandler extends AbstractDataHandler<UnPublishDataRequest> {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(UnPublishDataHandler.class);
-
     @Autowired
-    private ThreadPoolExecutor  publishProcessorExecutor;
+    private ThreadPoolExecutor publishProcessorExecutor;
 
     @Override
     public Executor getExecutor() {
