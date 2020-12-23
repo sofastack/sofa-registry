@@ -283,12 +283,4 @@ public class RaftServer {
         this.followerProcessListener = followerProcessListener;
     }
 
-    /**
-     * Getter method for property <tt>serverHandlers</tt>.
-     *
-     * @return property value of serverHandlers
-     */
-    public List<ChannelHandler> getServerHandlers() {
-        return serverHandlers;
-    }
 }
