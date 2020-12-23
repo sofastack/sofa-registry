@@ -17,7 +17,6 @@
 package com.alipay.sofa.registry.jraft.bootstrap;
 
 import com.alipay.remoting.rpc.RpcClient;
-import com.alipay.remoting.rpc.RpcServer;
 import com.alipay.sofa.jraft.Node;
 import com.alipay.sofa.jraft.RaftGroupService;
 import com.alipay.sofa.jraft.conf.Configuration;
@@ -25,7 +24,10 @@ import com.alipay.sofa.jraft.core.NodeImpl;
 import com.alipay.sofa.jraft.entity.PeerId;
 import com.alipay.sofa.jraft.option.NodeOptions;
 import com.alipay.sofa.jraft.rpc.RaftRpcServerFactory;
-import com.alipay.sofa.jraft.rpc.impl.AbstractBoltClientService;
+import com.alipay.sofa.jraft.rpc.RpcServer;
+import com.alipay.sofa.jraft.rpc.impl.AbstractClientService;
+import com.alipay.sofa.jraft.rpc.impl.BoltRpcClient;
+import com.alipay.sofa.jraft.rpc.impl.BoltRpcServer;
 import com.alipay.sofa.jraft.storage.impl.RocksDBLogStorage;
 import com.alipay.sofa.jraft.util.StorageOptionsFactory;
 import com.alipay.sofa.registry.common.model.store.URL;
@@ -122,8 +124,7 @@ public class RaftServer {
 
         boltServer.initServer();
 
-        RpcServer rpcServer = boltServer.getRpcServer();
-
+        RpcServer rpcServer = new BoltRpcServer(boltServer.getRpcServer());
         RaftRpcServerFactory.addRaftRequestProcessors(rpcServer);
 
         this.fsm = ServiceStateMachine.getInstance();
@@ -141,8 +142,8 @@ public class RaftServer {
                 node.getNodeMetrics().getMetricRegistry(), raftServerConfig.getMetricsLogger());
         }
 
-        RpcClient raftClient = ((AbstractBoltClientService) (((NodeImpl) node).getRpcService()))
-            .getRpcClient();
+        RpcClient raftClient = ((BoltRpcClient) ((AbstractClientService) (((NodeImpl) node)
+            .getRpcService())).getRpcClient()).getRpcClient();
 
         NotifyLeaderChangeHandler notifyLeaderChangeHandler = new NotifyLeaderChangeHandler(
             groupId, null);
@@ -282,4 +283,12 @@ public class RaftServer {
         this.followerProcessListener = followerProcessListener;
     }
 
+    /**
+     * Getter method for property <tt>serverHandlers</tt>.
+     *
+     * @return property value of serverHandlers
+     */
+    public List<ChannelHandler> getServerHandlers() {
+        return serverHandlers;
+    }
 }
