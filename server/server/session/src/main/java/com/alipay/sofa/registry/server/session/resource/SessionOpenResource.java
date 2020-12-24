@@ -16,8 +16,11 @@
  */
 package com.alipay.sofa.registry.server.session.resource;
 
+import com.alipay.sofa.registry.common.model.slot.Slot;
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
+import com.alipay.sofa.registry.server.session.slot.SlotTableCache;
 import com.alipay.sofa.registry.server.shared.meta.MetaServerService;
+import com.alipay.sofa.registry.util.ParaCheckUtil;
 import com.google.common.base.Joiner;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,7 +30,9 @@ import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
@@ -42,7 +47,10 @@ public class SessionOpenResource {
     private SessionServerConfig sessionServerConfig;
 
     @Autowired
-    private MetaServerService   mataNodeService;
+    private MetaServerService mataNodeService;
+
+    @Autowired
+    private SlotTableCache slotTableCache;
 
     @GET
     @Path("query.json")
@@ -91,4 +99,13 @@ public class SessionOpenResource {
                 .collect(Collectors.toList());
         return serverList;
     }
+
+    @GET
+    @Path("slot")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Slot getSlot(@QueryParam("dataInfoId") String dataInfoId) {
+        ParaCheckUtil.checkNotBlank(dataInfoId,"dataInfoId");
+        return slotTableCache.getSlot(dataInfoId);
+    }
+
 }

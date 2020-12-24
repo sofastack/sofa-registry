@@ -75,7 +75,7 @@
         <lookout.version>1.5.2</lookout.version>
         <mockito.version>1.10.19</mockito.version>
         <powermock.version>1.6.6</powermock.version>
-        <jraft.version>1.3.5.Alpha1</jraft.version>
+        <jraft.version>1.3.5</jraft.version>
         <metrics.version>4.0.2</metrics.version>
         <commons-io.version>2.4</commons-io.version>
         <jetty.version>[9.4.17.v20190418,9.4.19.v20190610]</jetty.version>
