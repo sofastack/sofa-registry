@@ -293,8 +293,8 @@ public class DataChangeFetchCloudTask extends AbstractSessionTask {
 
         taskLogger.info(
             "send {} taskURL:{},dataInfoId={},dataCenter={},pubSize={},subSize={},taskId={}",
-                taskEvent.getTaskType(), subscriber.getSourceAddress(), dataInfoId, dataCenter, size,
-                subscribers.size(), taskEvent.getTaskId());
+            taskEvent.getTaskType(), subscriber.getSourceAddress(), dataInfoId, dataCenter, size,
+            subscribers.size(), taskEvent.getTaskId());
         taskListenerManager.sendTaskEvent(taskEvent);
     }
 
@@ -315,8 +315,8 @@ public class DataChangeFetchCloudTask extends AbstractSessionTask {
 
         taskLogger.info(
             "send {} taskURL:{},dataInfoId={},dataCenter={},pubSize={},subSize={},taskId={}",
-                taskEvent.getTaskType(), subscriber.getSourceAddress(), dataInfoId, dataCenter, size,
-                subscribers.size(), taskEvent.getTaskId());
+            taskEvent.getTaskType(), subscriber.getSourceAddress(), dataInfoId, dataCenter, size,
+            subscribers.size(), taskEvent.getTaskId());
         taskListenerManager.sendTaskEvent(taskEvent);
     }
 

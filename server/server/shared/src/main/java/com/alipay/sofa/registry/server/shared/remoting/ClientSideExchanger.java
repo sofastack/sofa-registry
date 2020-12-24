@@ -59,11 +59,10 @@ public abstract class ClientSideExchanger implements NodeExchanger {
     }
 
     @PostConstruct
-    public void init(){
+    public void init() {
         ConcurrentUtils.createDaemonThread(serverType + "-async-connector", connector).start();
         LOGGER.info("init connector");
     }
-
 
     @Override
     public Response request(Request request) throws RequestException {
