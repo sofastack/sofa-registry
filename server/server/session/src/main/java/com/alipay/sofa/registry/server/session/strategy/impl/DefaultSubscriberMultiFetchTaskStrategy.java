@@ -16,17 +16,6 @@
  */
 package com.alipay.sofa.registry.server.session.strategy.impl;
 
-import java.net.InetSocketAddress;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
-
-import com.google.common.collect.Lists;
-import org.springframework.beans.factory.annotation.Autowired;
-
 import com.alipay.sofa.registry.common.model.constants.ValueConstants;
 import com.alipay.sofa.registry.common.model.dataserver.Datum;
 import com.alipay.sofa.registry.common.model.store.BaseInfo;
@@ -40,12 +29,17 @@ import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
 import com.alipay.sofa.registry.server.session.cache.*;
 import com.alipay.sofa.registry.server.session.converter.ReceivedDataConverter;
 import com.alipay.sofa.registry.server.session.scheduler.task.Constant;
-import com.alipay.sofa.registry.server.session.store.Interests;
 import com.alipay.sofa.registry.server.session.strategy.SubscriberMultiFetchTaskStrategy;
 import com.alipay.sofa.registry.server.session.utils.DatumUtils;
 import com.alipay.sofa.registry.server.shared.meta.MetaServerService;
 import com.alipay.sofa.registry.task.listener.TaskEvent;
 import com.alipay.sofa.registry.task.listener.TaskListenerManager;
+import com.google.common.collect.Lists;
+import org.springframework.beans.factory.annotation.Autowired;
+
+import java.net.InetSocketAddress;
+import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * @author xuanbei
@@ -58,9 +52,6 @@ public class DefaultSubscriberMultiFetchTaskStrategy implements SubscriberMultiF
 
     private static final Logger LOGGER     = LoggerFactory
                                                .getLogger(DefaultSubscriberMultiFetchTaskStrategy.class);
-
-    @Autowired
-    private Interests           sessionInterests;
 
     @Autowired
     private MetaServerService   metaServerService;
@@ -114,13 +105,7 @@ public class DefaultSubscriberMultiFetchTaskStrategy implements SubscriberMultiF
             try {
                 values = sessionCacheService.getValues(keys);
             } catch (CacheAccessException e) {
-                // The version is set to 0, so that when session checks the datum versions regularly, it will actively re-query the data.
-                for (String dataCenter : dataCenters) {
-                    boolean result = sessionInterests.checkAndUpdateInterestVersionZero(dataCenter, fetchDataInfoId);
-                    LOGGER.error(String.format(
-                            "error when access cache, so checkAndUpdateInterestVersionZero(return %s): %s", result,
-                            e.getMessage()), e);
-                }
+                LOGGER.error("error when access cache", e);
             }
 
             if (values != null) {

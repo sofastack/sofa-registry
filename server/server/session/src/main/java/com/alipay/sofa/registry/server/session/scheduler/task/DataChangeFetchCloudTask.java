@@ -32,7 +32,6 @@ import com.alipay.sofa.registry.server.session.scheduler.ExecutorManager;
 import com.alipay.sofa.registry.server.session.store.Interests;
 import com.alipay.sofa.registry.server.session.store.ReSubscribers;
 import com.alipay.sofa.registry.server.shared.meta.MetaServerService;
-import com.alipay.sofa.registry.task.batcher.TaskProcessor.ProcessingResult;
 import com.alipay.sofa.registry.task.listener.TaskEvent;
 import com.alipay.sofa.registry.task.listener.TaskEvent.TaskType;
 import com.alipay.sofa.registry.task.listener.TaskListenerManager;
@@ -113,9 +112,6 @@ public class DataChangeFetchCloudTask extends AbstractSessionTask {
         Map<String/*dataCenter*/, Datum> datumMap = getDatumsCache();
 
         if (datumMap != null && !datumMap.isEmpty()) {
-
-            PushTaskClosure pushTaskClosure = getTaskClosure(datumMap);
-
             for (ScopeEnum scopeEnum : ScopeEnum.values()) {
                 Map<InetSocketAddress, Map<String, Subscriber>> map = getCache(fetchDataInfoId,
                     scopeEnum);
@@ -133,61 +129,14 @@ public class DataChangeFetchCloudTask extends AbstractSessionTask {
                             evictReSubscribers(subscriberMap.values());
 
                             fireReceivedDataMultiPushTask(datumMap, subscriberRegisterIdList,
-                                scopeEnum, subscriber, subscriberMap, pushTaskClosure);
+                                scopeEnum, subscriber, subscriberMap);
                         }
                     }
                 }
             }
-
-            pushTaskClosure.start();
         } else {
             LOGGER.error("Get publisher data error,which dataInfoId:{}", fetchDataInfoId);
         }
-    }
-
-    public PushTaskClosure getTaskClosure(Map<String/*dataCenter*/, Datum> datumMap) {
-
-        PushTaskClosure pushTaskClosure = new PushTaskClosure(executorManager.getPushTaskCheckAsyncHashedWheelTimer(),
-                sessionServerConfig, fetchDataInfoId);
-        pushTaskClosure.setTaskClosure((status, task) -> {
-            if (status == ProcessingResult.Success) {
-                if (sessionServerConfig.isStopPushSwitch()) {
-                    LOGGER.info("Stop Push switch on,dataInfoId {} version can not be update!", fetchDataInfoId);
-                    return;
-                }
-                List<String> dataCenters = sessionInterests.getDataCenters();
-                datumMap.forEach((dataCenter, datum) -> {
-                    dataCenters.remove(dataCenter);
-
-                    String dataInfoId = fetchDataInfoId;
-                    Long version = datum.getVersion();
-                    boolean result = sessionInterests.checkAndUpdateInterestVersions(dataCenter, dataInfoId, version);
-                    if (result) {
-                        LOGGER.info("Push all tasks success,dataCenter:{} dataInfoId:{} version:{} update!", dataCenter,
-                                dataInfoId, version);
-                    } else {
-                        LOGGER.info(
-                                "Push all tasks success,but dataCenter:{} dataInfoId:{} version:{} need not update!",
-                                dataCenter, dataInfoId, version);
-                    }
-                });
-
-                // now, elements left in dataCenters, means that datum of the dataCenter,
-                // cannot be obtained from DataServer this time, it may cause pushing empty datum wrongly,
-                // so it is necessary to ensure that it can be checked later
-                dataCenters.forEach(dataCenter -> {
-                    boolean result = sessionInterests.checkAndUpdateInterestVersionZero(dataCenter, fetchDataInfoId);
-                    LOGGER.warn(
-                            "Obtained datum from DataServer({}) failed, set sessionInterests dataInfoId({}) version zero, return {}",
-                            dataCenter, fetchDataInfoId, result);
-                });
-
-            } else {
-                LOGGER.warn("Push tasks found error,subscribers version can not be update!dataInfoId={}",
-                        fetchDataInfoId);
-            }
-        });
-        return pushTaskClosure;
     }
 
     private void evictReSubscribers(Collection<Subscriber> subscribersPush) {
@@ -235,19 +184,18 @@ public class DataChangeFetchCloudTask extends AbstractSessionTask {
     private void fireReceivedDataMultiPushTask(Map<String, Datum> datums,
                                                List<String> subscriberRegisterIdList,
                                                ScopeEnum scopeEnum, Subscriber subscriber,
-                                               Map<String, Subscriber> subscriberMap,
-                                               PushTaskClosure pushTaskClosure) {
+                                               Map<String, Subscriber> subscriberMap) {
         boolean isOldVersion = !ClientVersion.StoreData.equals(subscriber.getClientVersion());
         if (!isOldVersion) {
             fireReceiveDataPushTask(datums, subscriberRegisterIdList, scopeEnum, subscriber,
-                subscriberMap, pushTaskClosure);
+                subscriberMap);
         } else {
             if (subscriber.getScope() == ScopeEnum.zone) {
                 fireUserDataElementPushTask(ReceivedDataConverter.getMergeDatum(datums),
-                    subscriber, subscriberMap, pushTaskClosure);
+                    subscriber, subscriberMap);
             } else {
                 fireUserDataElementMultiPushTask(ReceivedDataConverter.getMergeDatum(datums),
-                    subscriber, subscriberMap, pushTaskClosure);
+                    subscriber, subscriberMap);
             }
         }
     }
@@ -255,8 +203,7 @@ public class DataChangeFetchCloudTask extends AbstractSessionTask {
     private void fireReceiveDataPushTask(Map<String, Datum> datums,
                                          List<String> subscriberRegisterIdList,
                                          ScopeEnum scopeEnum, Subscriber subscriber,
-                                         Map<String, Subscriber> subscriberMap,
-                                         PushTaskClosure pushTaskClosure) {
+                                         Map<String, Subscriber> subscriberMap) {
         Collection<Subscriber> subscribers = new ArrayList<>(subscriberMap.values());
         LOGGER.info("Datums push={}", datums);
         ReceivedData receivedData = ReceivedDataConverter.getReceivedDataMulti(datums, scopeEnum,
@@ -266,7 +213,6 @@ public class DataChangeFetchCloudTask extends AbstractSessionTask {
         Map<ReceivedData, URL> parameter = new HashMap<>();
         parameter.put(receivedData, subscriber.getSourceAddress());
         TaskEvent taskEvent = new TaskEvent(parameter, TaskType.RECEIVED_DATA_MULTI_PUSH_TASK);
-        taskEvent.setTaskClosure(pushTaskClosure);
         taskEvent.setAttribute(Constant.PUSH_CLIENT_SUBSCRIBERS, subscribers);
 
         taskLogger.info("send {} taskURL:{},taskScope:{},version:{},taskId={}",
@@ -276,13 +222,11 @@ public class DataChangeFetchCloudTask extends AbstractSessionTask {
     }
 
     private void fireUserDataElementPushTask(Datum datum, Subscriber subscriber,
-                                             Map<String, Subscriber> subscriberMap,
-                                             PushTaskClosure pushTaskClosure) {
+                                             Map<String, Subscriber> subscriberMap) {
 
         Collection<Subscriber> subscribers = new ArrayList<>(subscriberMap.values());
 
         TaskEvent taskEvent = new TaskEvent(TaskType.USER_DATA_ELEMENT_PUSH_TASK);
-        taskEvent.setTaskClosure(pushTaskClosure);
         taskEvent.setAttribute(Constant.PUSH_CLIENT_SUBSCRIBERS, subscribers);
         taskEvent.setAttribute(Constant.PUSH_CLIENT_DATUM, datum);
         taskEvent.setAttribute(Constant.PUSH_CLIENT_URL, subscriber.getSourceAddress());
@@ -299,12 +243,10 @@ public class DataChangeFetchCloudTask extends AbstractSessionTask {
     }
 
     private void fireUserDataElementMultiPushTask(Datum datum, Subscriber subscriber,
-                                                  Map<String, Subscriber> subscriberMap,
-                                                  PushTaskClosure pushTaskClosure) {
+                                                  Map<String, Subscriber> subscriberMap) {
         Collection<Subscriber> subscribers = new ArrayList<>(subscriberMap.values());
 
         TaskEvent taskEvent = new TaskEvent(TaskType.USER_DATA_ELEMENT_MULTI_PUSH_TASK);
-        taskEvent.setTaskClosure(pushTaskClosure);
         taskEvent.setAttribute(Constant.PUSH_CLIENT_SUBSCRIBERS, subscribers);
         taskEvent.setAttribute(Constant.PUSH_CLIENT_DATUM, datum);
         taskEvent.setAttribute(Constant.PUSH_CLIENT_URL, subscriber.getSourceAddress());

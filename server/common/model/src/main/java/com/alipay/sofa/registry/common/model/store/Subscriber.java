@@ -33,18 +33,19 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 public class Subscriber extends BaseInfo {
 
     /** UID */
-    private static final long                       serialVersionUID = 98433360274932292L;
+    private static final long                             serialVersionUID = 98433360274932292L;
     /** */
-    private ScopeEnum                               scope;
+    private ScopeEnum                                     scope;
     /** */
-    private ElementType                             elementType;
+    private ElementType                                   elementType;
     /** */
-    private AssembleType                            assembleType;
+    private AssembleType                                  assembleType;
 
+    volatile PushContext                                  context;
     /**
      * last push context
      */
-    private Map<String/*dataCenter*/, PushContext> lastPushContexts = new ConcurrentHashMap<>();
+    private final Map<String/*dataCenter*/, PushContext> lastPushContexts = new ConcurrentHashMap<>();
 
     /**
      * Getter method for property <tt>scope</tt>.
@@ -126,6 +127,7 @@ public class Subscriber extends BaseInfo {
 
         while (true) {
             PushContext pushContext = new PushContext(version, pubCount);
+            this.context = pushContext;
             PushContext oldPushContext = lastPushContexts.putIfAbsent(dataCenter, pushContext);
             // Add firstly
             if (oldPushContext == null) {
@@ -158,6 +160,14 @@ public class Subscriber extends BaseInfo {
                           && pushContext.pushVersion != null && pushContext.pushVersion > ValueConstants.DEFAULT_NO_DATUM_VERSION);
         }
         return allowPush;
+    }
+
+    public long getLastPushVersion(String dataCenter) {
+        if (context != null) {
+            return context.pushVersion;
+        }
+        final PushContext pushContext = lastPushContexts.get(dataCenter);
+        return pushContext == null ? 0 : pushContext.pushVersion;
     }
 
     /**
@@ -221,12 +231,12 @@ public class Subscriber extends BaseInfo {
         /**
          * last pushed dataInfo version
          */
-        private Long pushVersion;
+        volatile Long pushVersion;
 
         /**
          * push pushed dataInfo pubCount
          */
-        private int  pushPubCount;
+        volatile int  pushPubCount;
 
         public PushContext(Long pushVersion, int pushPubCount) {
             this.pushVersion = pushVersion;

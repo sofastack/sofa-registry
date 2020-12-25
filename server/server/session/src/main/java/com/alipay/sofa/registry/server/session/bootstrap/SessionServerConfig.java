@@ -145,16 +145,6 @@ public interface SessionServerConfig {
 
     int getDataNodeRetryExecutorThreadSize();
 
-    long getPushTaskConfirmWaitTimeout();
-
-    int getPushTaskConfirmCheckWheelTicksSize();
-
-    int getPushTaskConfirmCheckWheelTicksDuration();
-
-    int getPushTaskConfirmCheckExecutorQueueSize();
-
-    int getPushTaskConfirmCheckExecutorThreadSize();
-
     int getPublishDataExecutorMinPoolSize();
 
     int getPublishDataExecutorMaxPoolSize();

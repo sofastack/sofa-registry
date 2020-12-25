@@ -17,18 +17,14 @@
 package com.alipay.sofa.registry.server.session.store;
 
 import com.alipay.sofa.registry.common.model.store.Subscriber;
-import com.alipay.sofa.registry.common.model.store.WordCache;
 import com.alipay.sofa.registry.core.model.ScopeEnum;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
-import com.alipay.sofa.registry.util.VersionsMapUtils;
-import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import org.apache.commons.collections.MapUtils;
 
 import java.net.InetSocketAddress;
 import java.util.Collections;
-import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
@@ -40,17 +36,12 @@ import java.util.concurrent.ConcurrentHashMap;
 public class SessionInterests extends AbstractDataManager<Subscriber> implements Interests,
                                                                      ReSubscribers {
 
-    private static final Logger                                                                                   LOGGER            = LoggerFactory
-                                                                                                                                        .getLogger(SessionInterests.class);
+    private static final Logger                                                          LOGGER            = LoggerFactory
+                                                                                                               .getLogger(SessionInterests.class);
 
-    private final Map<SubscriberResult, Map<InetSocketAddress, Map<String, Subscriber>>>                          resultIndex       = new ConcurrentHashMap<>();
+    private final Map<SubscriberResult, Map<InetSocketAddress, Map<String, Subscriber>>> resultIndex       = new ConcurrentHashMap<>();
 
-    /**
-     * store subscriber interest dataInfo version belong one dataCenter
-     */
-    private final ConcurrentHashMap<String/*dataCenter*/, Map<String/*dataInfoId*/, Long /*dataInfoVersion*/>> interestVersions  = new ConcurrentHashMap<>();
-
-    private final Map<String/*dataInfoId*/, Map<String/*registerId*/, Subscriber>>                              stopPushInterests = new ConcurrentHashMap<>();
+    private final Map<String/*dataInfoId*/, Map<String/*registerId*/, Subscriber>>     stopPushInterests = new ConcurrentHashMap<>();
 
     public SessionInterests() {
         super(LOGGER);
@@ -99,50 +90,18 @@ public class SessionInterests extends AbstractDataManager<Subscriber> implements
     }
 
     @Override
-    public boolean checkInterestVersions(String dataCenter, String dataInfoId, Long version) {
-
+    public boolean checkInterestVersions(String dataCenter, String dataInfoId, long version) {
         Map<String, Subscriber> subscribers = stores.get(dataInfoId);
-
         if (MapUtils.isEmpty(subscribers)) {
             return false;
         }
-
-        Map<String/*dataInfoId*/, Long/*version*/> dataInfoVersions = interestVersions
-                .computeIfAbsent(dataCenter, k -> Maps.newConcurrentMap());
-
-        Long oldValue = dataInfoVersions.get(dataInfoId);
-
-        return oldValue == null || version > oldValue;
-
-    }
-
-    @Override
-    public boolean checkAndUpdateInterestVersions(String dataCenter, String dataInfoId, Long version) {
-        dataInfoId = WordCache.getInstance().getWordCache(dataInfoId);
-        final Map<String, Subscriber> subscribers = stores.get(dataInfoId);
-
-        if (MapUtils.isEmpty(subscribers)) {
-            LOGGER.info("There is no Subscriber Existed, dataInfoId={}", dataInfoId);
-            return false;
-        }
-        Map<String/*dataInfoId*/, Long/*version*/> dataInfoVersions = interestVersions
-                .computeIfAbsent(dataCenter, k -> Maps.newConcurrentMap());
-
-        read.lock();
-        try {
-            //set zero
-            if (version.longValue() == 0l) {
-                return dataInfoVersions.put(dataInfoId, version) != null;
+        for (Subscriber subscriber : subscribers.values()) {
+            long ver = subscriber.getLastPushVersion(dataCenter);
+            if (ver < version) {
+                return true;
             }
-            return VersionsMapUtils.checkAndUpdateVersions(dataInfoVersions, dataInfoId, version);
-        } finally {
-            read.unlock();
         }
-    }
-
-    @Override
-    public boolean checkAndUpdateInterestVersionZero(String dataCenter, String dataInfoId) {
-        return checkAndUpdateInterestVersions(dataCenter, dataInfoId, 0l);
+        return false;
     }
 
     private void addResultIndex(Subscriber subscriber) {
@@ -233,11 +192,6 @@ public class SessionInterests extends AbstractDataManager<Subscriber> implements
     @Override
     public Map<String/*dataInfoId*/, Map<String/*registerId*/, Subscriber>> getReSubscribers() {
         return StoreHelpers.copyMap((Map) stopPushInterests);
-    }
-
-    @Override
-    public List<String> getDataCenters() {
-        return Lists.newArrayList(interestVersions.keySet());
     }
 
     @Override

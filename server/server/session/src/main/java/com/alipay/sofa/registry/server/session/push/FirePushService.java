@@ -27,7 +27,6 @@ import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
 import com.alipay.sofa.registry.server.session.converter.ReceivedDataConverter;
 import com.alipay.sofa.registry.server.session.predicate.ZonePredicate;
 import com.alipay.sofa.registry.server.session.scheduler.task.Constant;
-import com.alipay.sofa.registry.server.session.scheduler.task.PushTaskClosure;
 import com.alipay.sofa.registry.task.listener.TaskEvent;
 import com.alipay.sofa.registry.task.listener.TaskEvent.TaskType;
 import com.alipay.sofa.registry.task.listener.TaskListenerManager;
@@ -55,13 +54,12 @@ public class FirePushService {
     public void fireUserDataElementPushTask(Subscriber subscriber, Datum datum) {
 
         List<Subscriber> subscribers = Collections.singletonList(subscriber);
-        this.fireUserDataElementPushTask(subscriber.getSourceAddress(), datum, subscribers, null,
+        this.fireUserDataElementPushTask(subscriber.getSourceAddress(), datum, subscribers,
             subscriber.getScope());
     }
 
     public void fireUserDataElementPushTask(URL clientUrl, Datum datum,
-                                            Collection<Subscriber> subscribers,
-                                            PushTaskClosure pushTaskClosure, ScopeEnum scopeEnum) {
+                                            Collection<Subscriber> subscribers, ScopeEnum scopeEnum) {
         TaskEvent taskEvent;
         if (scopeEnum == ScopeEnum.zone) {
             taskEvent = new TaskEvent(TaskType.USER_DATA_ELEMENT_PUSH_TASK);
@@ -73,13 +71,12 @@ public class FirePushService {
         if (datum == null) {
             datum = emptyDatum(subscribers.stream().findAny().get());
         }
-        taskEvent.setTaskClosure(pushTaskClosure);
         taskEvent.setSendTimeStamp(DatumVersionUtil.nextId());
         taskEvent.setAttribute(Constant.PUSH_CLIENT_SUBSCRIBERS, subscribers);
         taskEvent.setAttribute(Constant.PUSH_CLIENT_DATUM, datum);
         taskEvent.setAttribute(Constant.PUSH_CLIENT_URL, clientUrl);
 
-        int size = datum != null && datum.getPubMap() != null ? datum.getPubMap().size() : 0;
+        int size = datum != null ? datum.publisherSize() : 0;
 
         taskLogger.info(
             "send {} taskURL:{},dataInfoId={},dataCenter={},pubSize={},subSize={},taskId={}",
@@ -94,13 +91,12 @@ public class FirePushService {
 
         List<Subscriber> subscribers = Collections.singletonList(subscriber);
         this.fireReceivedDataMultiPushTask(datum, subscriberRegisterIdList, subscribers,
-            subscriber.getScope(), subscriber, null);
+            subscriber.getScope(), subscriber);
     }
 
     public void fireReceivedDataMultiPushTask(Datum datum, List<String> subscriberRegisterIdList,
                                               Collection<Subscriber> subscribers,
-                                              ScopeEnum scopeEnum, Subscriber subscriber,
-                                              PushTaskClosure pushTaskClosure) {
+                                              ScopeEnum scopeEnum, Subscriber subscriber) {
         String dataId = datum.getDataId();
         String clientCell = sessionServerConfig.getClientCell(subscriber.getCell());
         Predicate<String> zonePredicate = ZonePredicate.zonePredicate(dataId, clientCell,
@@ -113,7 +109,6 @@ public class FirePushService {
         Map<ReceivedData, URL> parameter = new HashMap<>();
         parameter.put(receivedData, subscriber.getSourceAddress());
         TaskEvent taskEvent = new TaskEvent(parameter, TaskType.RECEIVED_DATA_MULTI_PUSH_TASK);
-        taskEvent.setTaskClosure(pushTaskClosure);
         taskEvent.setAttribute(Constant.PUSH_CLIENT_SUBSCRIBERS, subscribers);
         taskLogger.info("send {} taskURL:{},taskScope:{},,taskId={}", taskEvent.getTaskType(),
             subscriber.getSourceAddress(), scopeEnum, taskEvent.getTaskId());
@@ -135,6 +130,8 @@ public class FirePushService {
         parameter.put(receivedData, subscriber.getSourceAddress());
         TaskEvent taskEvent = new TaskEvent(parameter,
             TaskEvent.TaskType.RECEIVED_DATA_MULTI_PUSH_TASK);
+        taskEvent.setAttribute(Constant.PUSH_CLIENT_SUBSCRIBERS,
+            Collections.singletonList(subscriber));
         taskLogger.info("send {} taskURL:{},taskScope", taskEvent.getTaskType(),
             subscriber.getSourceAddress(), receivedData.getScope());
         taskListenerManager.sendTaskEvent(taskEvent);

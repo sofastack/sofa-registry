@@ -21,7 +21,6 @@ import com.alipay.sofa.registry.common.model.dataserver.Datum;
 import com.alipay.sofa.registry.common.model.store.DataInfo;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
-import com.alipay.sofa.registry.server.session.store.Interests;
 import com.alipay.sofa.registry.server.shared.meta.MetaServerService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.CollectionUtils;
@@ -42,9 +41,6 @@ public class SessionDatumCacheDecorator {
                                                     .getLogger(SessionDatumCacheDecorator.class);
 
     @Autowired
-    private Interests                sessionInterests;
-
-    @Autowired
     private CacheService             sessionCacheService;
 
     @Autowired
@@ -61,12 +57,7 @@ public class SessionDatumCacheDecorator {
         try {
             value = sessionCacheService.getValue(key);
         } catch (CacheAccessException e) {
-            // The version is set to 0, so that when session checks the datum versions regularly, it will actively re-query the data.
-            boolean result = sessionInterests.checkAndUpdateInterestVersionZero(dataCenter,
-                dataInfoId);
-            taskLogger.error(String.format(
-                "error when access cache, so checkAndUpdateInterestVersionZero(return %s): %s",
-                result, e.getMessage()), e);
+            taskLogger.error("error when access cache", e);
         }
 
         return value == null ? null : value.getPayload();
@@ -85,14 +76,7 @@ public class SessionDatumCacheDecorator {
             try {
                 values = sessionCacheService.getValues(keys);
             } catch (CacheAccessException e) {
-                // The version is set to 0, so that when session checks the datum versions regularly, it will actively re-query the data.
-                for (String dataCenter : dataCenters) {
-                    boolean result = sessionInterests.checkAndUpdateInterestVersionZero(dataCenter,
-                            dataInfoId);
-                    taskLogger.error(String.format(
-                            "error when access cache, so checkAndUpdateInterestVersionZero(return %s): %s",
-                            result, e.getMessage()), e);
-                }
+                taskLogger.error("error when access cache",e);
             }
 
             if (values != null) {

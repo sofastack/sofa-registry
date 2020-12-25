@@ -20,8 +20,6 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import com.alipay.sofa.registry.task.TaskClosure;
-
 /**
  *
  * @author shangyu.wh
@@ -48,8 +46,6 @@ public class TaskEvent {
         SUBSCRIBER_MULTI_FETCH_TASK("SubscriberMultiFetchTask"), //
         PUBLISH_DATA_TASK("PublishDataTask"), //
         UN_PUBLISH_DATA_TASK("UnPublishDataTask"), //
-        RENEW_DATUM_TASK("RenewDatumTask"), //
-        DATUM_SNAPSHOT_TASK("DatumSnapshotTask"), //
 
         //Session Adapter task
         USER_DATA_ELEMENT_PUSH_TASK("UserDataElementPushTask"), //
@@ -79,8 +75,6 @@ public class TaskEvent {
     private long                      sendTimeStamp;
 
     private long                      createTime;
-
-    private TaskClosure               taskClosure;
 
     private final String              taskId;
 
@@ -164,24 +158,6 @@ public class TaskEvent {
         } else {
             attributes.put(key, value);
         }
-    }
-
-    /**
-     * Getter method for property <tt>taskClosure</tt>.
-     *
-     * @return property value of taskClosure
-     */
-    public TaskClosure getTaskClosure() {
-        return taskClosure;
-    }
-
-    /**
-     * Setter method for property <tt>taskClosure</tt>.
-     *
-     * @param taskClosure  value to be assigned to property taskClosure
-     */
-    public void setTaskClosure(TaskClosure taskClosure) {
-        this.taskClosure = taskClosure;
     }
 
     /**
