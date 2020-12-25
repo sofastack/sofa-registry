@@ -143,6 +143,8 @@ public class SubscriberPushEmptyTask extends AbstractSessionTask {
         Map<ReceivedData, URL> parameter = new HashMap<>();
         parameter.put(receivedData, subscriber.getSourceAddress());
         TaskEvent taskEvent = new TaskEvent(parameter, TaskType.RECEIVED_DATA_MULTI_PUSH_TASK);
+        taskEvent.setAttribute(Constant.PUSH_CLIENT_SUBSCRIBERS,
+            Collections.singletonList(subscriber));
         taskLogger.info("send {} taskURL:{},taskScope", taskEvent.getTaskType(),
             subscriber.getSourceAddress(), receivedData.getScope());
         taskListenerManager.sendTaskEvent(taskEvent);

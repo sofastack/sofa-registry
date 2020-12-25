@@ -16,23 +16,17 @@
  */
 package com.alipay.sofa.registry.server.session.listener;
 
-import java.util.concurrent.TimeUnit;
-
-import org.springframework.beans.factory.annotation.Autowired;
-
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.remoting.exchange.Exchange;
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
 import com.alipay.sofa.registry.server.session.node.service.ClientNodeService;
 import com.alipay.sofa.registry.server.session.scheduler.ExecutorManager;
-import com.alipay.sofa.registry.server.session.scheduler.task.PushTaskClosure;
 import com.alipay.sofa.registry.server.session.scheduler.task.ReceivedDataMultiPushTask;
 import com.alipay.sofa.registry.server.session.scheduler.task.SessionTask;
 import com.alipay.sofa.registry.server.session.store.Interests;
 import com.alipay.sofa.registry.server.session.strategy.ReceivedDataMultiPushTaskStrategy;
 import com.alipay.sofa.registry.server.session.strategy.TaskMergeProcessorStrategy;
-import com.alipay.sofa.registry.task.TaskClosure;
 import com.alipay.sofa.registry.task.batcher.TaskProcessor;
 import com.alipay.sofa.registry.task.listener.TaskEvent;
 import com.alipay.sofa.registry.task.listener.TaskEvent.TaskType;
@@ -40,6 +34,9 @@ import com.alipay.sofa.registry.task.listener.TaskListener;
 import com.alipay.sofa.registry.timer.AsyncHashedWheelTimer;
 import com.alipay.sofa.registry.timer.AsyncHashedWheelTimer.TaskFailedCallback;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
+import org.springframework.beans.factory.annotation.Autowired;
+
+import java.util.concurrent.TimeUnit;
 
 /**
  *
@@ -112,11 +109,6 @@ public class ReceivedDataMultiPushTaskListener implements TaskListener, PushTask
 
     @Override
     public void handleEvent(TaskEvent event) {
-        TaskClosure taskClosure = event.getTaskClosure();
-
-        if (taskClosure != null && taskClosure instanceof PushTaskClosure) {
-            ((PushTaskClosure) taskClosure).addTask(event);
-        }
         receiveDataTaskMergeProcessorStrategy.handleEvent(event);
     }
 
@@ -124,7 +116,7 @@ public class ReceivedDataMultiPushTaskListener implements TaskListener, PushTask
     public void executePushAsync(TaskEvent event) {
 
         SessionTask receivedDataMultiPushTask = new ReceivedDataMultiPushTask(sessionServerConfig, clientNodeService,
-                executorManager, boltExchange, receivedDataMultiPushTaskStrategy,asyncHashedWheelTimer,sessionInterests);
+                executorManager, boltExchange, receivedDataMultiPushTaskStrategy,asyncHashedWheelTimer);
         receivedDataMultiPushTask.setTaskEvent(event);
 
         executorManager.getPushTaskExecutor()

@@ -31,7 +31,6 @@ import com.alipay.sofa.registry.server.session.push.FirePushService;
 import com.alipay.sofa.registry.server.session.scheduler.ExecutorManager;
 import com.alipay.sofa.registry.server.session.store.Interests;
 import com.alipay.sofa.registry.server.session.store.ReSubscribers;
-import com.alipay.sofa.registry.task.batcher.TaskProcessor.ProcessingResult;
 import com.alipay.sofa.registry.task.listener.TaskEvent;
 import org.springframework.util.CollectionUtils;
 
@@ -131,7 +130,6 @@ public class DataChangeFetchTask extends AbstractSessionTask {
                                 + dataChangeRequest.getDataCenter());
                         continue;
                     }
-                    PushTaskClosure pushTaskClosure = getTaskClosure(dataInfoId, datum.getVersion());
 
                     switch (scopeEnum) {
                         case zone:
@@ -143,20 +141,20 @@ public class DataChangeFetchTask extends AbstractSessionTask {
                             boolean isOldVersion = !ClientVersion.StoreData.equals(subscriber
                                     .getClientVersion());
                             if (isOldVersion) {
-                                firePushService.fireUserDataElementPushTask(new URL(entry.getKey()), datum, subscribersSend, pushTaskClosure, scopeEnum);
+                                firePushService.fireUserDataElementPushTask(new URL(entry.getKey()), datum, subscribersSend,
+                                        scopeEnum);
                             } else {
                                 firePushService.fireReceivedDataMultiPushTask(datum, subscriberRegisterIdList, subscribersSend,
-                                        scopeEnum, subscriber, pushTaskClosure);
+                                        scopeEnum, subscriber);
                             }
                             break;
                         case global:
                             firePushService.fireReceivedDataMultiPushTask(datum, subscriberRegisterIdList,
-                                    subscribersSend, scopeEnum, defaultSubscriber, pushTaskClosure);
+                                    subscribersSend, scopeEnum, defaultSubscriber);
                             break;
                         default:
                             LOGGER.warn("unknown scope, {}", scopeEnum);
                     }
-                    pushTaskClosure.start();
                 }
             }
         }
@@ -171,42 +169,6 @@ public class DataChangeFetchTask extends AbstractSessionTask {
             }
         }
         return subscribersSend;
-    }
-
-    public PushTaskClosure getTaskClosure(String dataInfoId, Long version) {
-        //this for all this dataInfoId push result get and call back to change version
-        PushTaskClosure pushTaskClosure = new PushTaskClosure(executorManager.getPushTaskCheckAsyncHashedWheelTimer(),
-                sessionServerConfig, dataInfoId);
-        pushTaskClosure.setTaskClosure((status, task) -> {
-            String dataCenter = dataChangeRequest.getDataCenter();
-            Long changeVersion = dataChangeRequest.getVersion();
-            if (status == ProcessingResult.Success) {
-
-                if (sessionServerConfig.isStopPushSwitch()) {
-                    LOGGER.info("Stop Push switch on, dataCenter:{}, dataInfoId:{}, changeVersion:{}, pushVersion:{}, can not be update!",
-                            dataCenter, dataInfoId, changeVersion, version);
-                    return;
-                }
-                boolean result = sessionInterests.checkAndUpdateInterestVersions(dataCenter, dataInfoId, version);
-                if (result) {
-                    LOGGER.info("Push all tasks success, dataCenter:{}, dataInfoId:{}, changeVersion:{}, pushVersion:{}, update!",
-                            dataCenter,
-                            dataInfoId, changeVersion, version);
-                } else {
-                    LOGGER.info("Push all tasks success,but dataCenter:{} dataInfoId:{} version:{} need not update!",
-                            dataCenter, dataInfoId, version);
-                    LOGGER.info(
-                            "Push all tasks success, but dataCenter:{}, dataInfoId:{}, changeVersion:{}, pushVersion:{}, need not update!",
-                            dataCenter, dataInfoId, changeVersion, version);
-                }
-            } else {
-                LOGGER.warn(
-                        "Push tasks found error, subscribers version can not be update! dataCenter:{}, dataInfoId:{}, changeVersion:{}, "
-                                + "pushVersion:{}",
-                        dataCenter, dataInfoId, changeVersion, version);
-            }
-        });
-        return pushTaskClosure;
     }
 
     private void evictReSubscribers(Collection<Subscriber> subscribersPush) {

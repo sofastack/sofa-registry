@@ -16,38 +16,20 @@
  */
 package com.alipay.sofa.registry.test.task;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
-import com.alipay.sofa.registry.server.shared.meta.MetaServerService;
+import com.alipay.sofa.registry.client.api.model.RegistryType;
+import com.alipay.sofa.registry.client.api.registration.PublisherRegistration;
+import com.alipay.sofa.registry.client.api.registration.SubscriberRegistration;
+import com.alipay.sofa.registry.common.model.constants.ValueConstants;
+import com.alipay.sofa.registry.common.model.store.DataInfo;
+import com.alipay.sofa.registry.core.model.ScopeEnum;
+import com.alipay.sofa.registry.test.BaseIntegrationTest;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.test.context.junit4.SpringRunner;
 
-import com.alipay.sofa.registry.client.api.model.RegistryType;
-import com.alipay.sofa.registry.client.api.registration.PublisherRegistration;
-import com.alipay.sofa.registry.client.api.registration.SubscriberRegistration;
-import com.alipay.sofa.registry.common.model.constants.ValueConstants;
-import com.alipay.sofa.registry.common.model.dataserver.Datum;
-import com.alipay.sofa.registry.common.model.store.DataInfo;
-import com.alipay.sofa.registry.core.model.ScopeEnum;
-import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
-import com.alipay.sofa.registry.server.session.cache.CacheService;
-import com.alipay.sofa.registry.server.session.scheduler.ExecutorManager;
-import com.alipay.sofa.registry.server.session.scheduler.task.DataChangeFetchCloudTask;
-import com.alipay.sofa.registry.server.session.scheduler.task.PushTaskClosure;
-import com.alipay.sofa.registry.server.session.scheduler.task.SessionTask;
-import com.alipay.sofa.registry.server.session.store.Interests;
-import com.alipay.sofa.registry.task.batcher.TaskProcessor.ProcessingResult;
-import com.alipay.sofa.registry.task.listener.TaskEvent;
-import com.alipay.sofa.registry.task.listener.TaskListenerManager;
-import com.alipay.sofa.registry.test.BaseIntegrationTest;
+import static org.junit.Assert.assertEquals;
 
 /**
  * @author kezhu.wukz
@@ -87,6 +69,11 @@ public class DataChangeFetchCloudTaskTest extends BaseIntegrationTest {
         assertEquals(value, observer.userData.getZoneData().get(LOCAL_REGION).get(0));
     }
 
+    @Test
+    public void donothingTest() {
+
+    }
+
     @After
     public void afterDataChangeFetchCloudTaskTest() {
         //remove sub
@@ -94,55 +81,4 @@ public class DataChangeFetchCloudTaskTest extends BaseIntegrationTest {
         registryClient1.unregister(dataId, ValueConstants.DEFAULT_GROUP, RegistryType.PUBLISHER);
     }
 
-    @Test
-    public void getTaskClosureTest() {
-        String dataCenter = "MockDC";
-
-        Interests sessionInterests = (Interests) sessionApplicationContext
-            .getBean("sessionInterests");
-        SessionServerConfig sessionServerConfig = (SessionServerConfig) sessionApplicationContext
-            .getBean("sessionServerConfig");
-        TaskListenerManager taskListenerManager = (TaskListenerManager) sessionApplicationContext
-            .getBean("taskListenerManager");
-        ExecutorManager executorManager = (ExecutorManager) sessionApplicationContext
-            .getBean("executorManager");
-        CacheService sessionCacheService = (CacheService) sessionApplicationContext
-            .getBean("sessionCacheService");
-        MetaServerService metaServerService = (MetaServerService) sessionApplicationContext
-            .getBean("metaServerService");
-        TaskEvent event = new TaskEvent(testDataInfoId,
-            TaskEvent.TaskType.DATA_CHANGE_FETCH_CLOUD_TASK);
-
-        SessionTask dataChangeFetchTask = new DataChangeFetchCloudTask(sessionServerConfig,
-            taskListenerManager, sessionInterests, executorManager, sessionCacheService,
-            metaServerService);
-        dataChangeFetchTask.setTaskEvent(event);
-
-        //put a new dataCenter, version set 1
-
-        sessionInterests.checkAndUpdateInterestVersions(dataCenter, testDataInfoId, 1L);
-        List<String> dataCenters = sessionInterests.getDataCenters();
-        assertTrue(dataCenters.size() > 0);
-        assertTrue(dataCenters.contains(dataCenter));
-
-        // version will uodate to 0
-        Map<String, Datum> datumMap = new HashMap<>();
-        {
-            Datum datum = new Datum();
-            datum.setVersion(2);
-            datumMap.put("testDataCenter1", datum);
-        }
-        {
-            Datum datum = new Datum();
-            datum.setVersion(2);
-            datumMap.put("testDataCenter2", datum);
-        }
-        PushTaskClosure taskClosure = ((DataChangeFetchCloudTask) dataChangeFetchTask)
-            .getTaskClosure(datumMap);
-        taskClosure.run(ProcessingResult.Success, dataChangeFetchTask);
-
-        // check version should be 0
-        assertTrue(sessionInterests.checkInterestVersions(dataCenter, testDataInfoId, 1L));
-
-    }
 }

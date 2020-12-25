@@ -20,7 +20,6 @@ import com.alipay.sofa.registry.common.model.store.Subscriber;
 import com.alipay.sofa.registry.core.model.ScopeEnum;
 
 import java.net.InetSocketAddress;
-import java.util.List;
 import java.util.Map;
 
 /**
@@ -40,27 +39,7 @@ public interface Interests extends DataManager<Subscriber, String, String> {
      * @param version
      * @return
      */
-    boolean checkInterestVersions(String dataCenter, String dataInfoId, Long version);
-
-    /**
-     * check subscribers interest dataInfoId version,very dataCenter dataInfoId version different
-     * if not exist add
-     * else check and update big version
-     *
-     * @param dataCenter
-     * @param dataInfoId
-     * @param version
-     * @return
-     */
-    boolean checkAndUpdateInterestVersions(String dataCenter, String dataInfoId, Long version);
-
-    /**
-     * set subscribers interest dataInfoId version zero
-     * @param dataCenter
-     * @param dataInfoId
-     * @return
-     */
-    boolean checkAndUpdateInterestVersionZero(String dataCenter, String dataInfoId);
+    boolean checkInterestVersions(String dataCenter, String dataInfoId, long version);
 
     /**
      * get subscribers whith specify dataInfo and scope,and group by source address
@@ -70,6 +49,4 @@ public interface Interests extends DataManager<Subscriber, String, String> {
      */
     Map<InetSocketAddress, Map<String, Subscriber>> querySubscriberIndex(String dataInfoId,
                                                                          ScopeEnum scope);
-
-    List<String> getDataCenters();
 }
