@@ -207,10 +207,10 @@ public class Processor {
                 throw new NoSuchMethodException("Can not find method from processor！");
             }
             return appServiceMethod;
-        } catch (Exception e) {
+        } catch (Throwable e) {
             LOG.error("Process request {} get WorkMethod error!", request, e);
             throw new RuntimeException(String.format("Process request %s get WorkMethod error!",
-                request));
+                request, e));
         }
     }
 
@@ -243,10 +243,10 @@ public class Processor {
                 }
             });
             return methodHandle;
-        } catch (Exception e) {
+        } catch (Throwable e) {
             LOG.error("Process request {} get WorkMethod error!", request, e);
             throw new RuntimeException(String.format("Process request %s get WorkMethod error!",
-                    request));
+                    request, e));
         }
     }
 

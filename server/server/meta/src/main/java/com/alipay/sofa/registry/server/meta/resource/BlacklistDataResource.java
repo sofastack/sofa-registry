@@ -68,9 +68,9 @@ public class BlacklistDataResource {
             boolean ret = persistenceDataDBService.update(ValueConstants.BLACK_LIST_DATA_ID,
                 persistenceData);
             DB_LOGGER.info("Success update blacklist to DB result {}!", ret);
-        } catch (Exception e) {
+        } catch (Throwable e) {
             DB_LOGGER.error("Error update blacklist to DB!", e);
-            throw new RuntimeException("Update blacklist to error!");
+            throw new RuntimeException("Update blacklist to error!", e);
         }
 
         fireDataChangeNotify(persistenceData.getVersion(), ValueConstants.BLACK_LIST_DATA_ID,

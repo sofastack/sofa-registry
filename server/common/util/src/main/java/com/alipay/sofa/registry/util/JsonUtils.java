@@ -37,7 +37,7 @@ public final class JsonUtils {
         try {
             return JACKSON_MAPPER.get().readValue(str, clazz);
         } catch (Throwable e) {
-            throw new RuntimeException("failed to read json to " + clazz.getName() + ", " + str);
+            throw new RuntimeException("failed to read json to " + clazz.getName() + ", " + str, e);
         }
     }
 
@@ -45,7 +45,7 @@ public final class JsonUtils {
         try {
             return JACKSON_MAPPER.get().writeValueAsString(o);
         } catch (Throwable e) {
-            throw new RuntimeException("failed to write json: " + o);
+            throw new RuntimeException("failed to write json: " + o, e);
         }
     }
 }
