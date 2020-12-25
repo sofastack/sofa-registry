@@ -16,7 +16,6 @@
  */
 package com.alipay.sofa.registry.util;
 
-
 import java.util.Collection;
 import java.util.Set;
 
