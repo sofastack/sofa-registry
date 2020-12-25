@@ -545,6 +545,13 @@ public class AbstractTest {
         }
     }
 
+    protected SlotTable randomSlotTable() {
+        List<DataNode> dataNodes = Lists.newArrayList(new DataNode(randomURL(randomIp()), getDc()),
+            new DataNode(randomURL(randomIp()), getDc()), new DataNode(randomURL(randomIp()),
+                getDc()));
+        return new SlotTableGenerator(dataNodes).createSlotTable();
+    }
+
     public static class SlotTableGenerator {
 
         private final List<DataNode> dataNodes;

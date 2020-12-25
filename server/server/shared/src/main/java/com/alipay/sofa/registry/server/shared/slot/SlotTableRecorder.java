@@ -14,32 +14,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alipay.sofa.registry.server.meta;
+package com.alipay.sofa.registry.server.shared.slot;
 
-import org.junit.After;
-import org.junit.Test;
-import org.springframework.boot.SpringApplication;
-import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.scheduling.annotation.EnableScheduling;
+import com.alipay.sofa.registry.common.model.slot.SlotTable;
 
-import java.io.IOException;
-import java.sql.SQLException;
+/**
+ * @author chen.zhu
+ * <p>
+ * Dec 25, 2020 
+ */
+public interface SlotTableRecorder {
 
-@SpringBootApplication
-@EnableScheduling
-public class AppTest extends AbstractTest {
-
-    @Test
-    public void startMetaServer() throws IOException, SQLException {
-        //        start();
-    }
-
-    private void start() throws IOException, SQLException {
-        SpringApplication.run(AppTest.class);
-    }
-
-    @After
-    public void afterAppTest() throws IOException {
-        //        waitForAnyKeyToExit();
-    }
+    void record(SlotTable slotTable);
 }

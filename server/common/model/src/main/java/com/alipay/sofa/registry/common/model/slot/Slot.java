@@ -91,7 +91,7 @@ public final class Slot implements Serializable, Cloneable {
             return false;
         Slot slot = (Slot) o;
         return id == slot.id && leaderEpoch == slot.leaderEpoch
-                && Objects.equals(leader, slot.leader) && Objects.equals(followers, slot.followers);
+               && Objects.equals(leader, slot.leader) && Objects.equals(followers, slot.followers);
     }
 
     @Override
@@ -102,6 +102,6 @@ public final class Slot implements Serializable, Cloneable {
     @Override
     public String toString() {
         return "Slot{" + "id=" + id + ", leader='" + leader + '\'' + ", leaderEpoch=" + leaderEpoch
-                + ", followers=" + followers + '}';
+               + ", followers=" + followers + '}';
     }
 }

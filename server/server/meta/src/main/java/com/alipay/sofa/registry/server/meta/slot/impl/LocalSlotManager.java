@@ -23,8 +23,8 @@ import com.alipay.sofa.registry.common.model.slot.SlotTable;
 import com.alipay.sofa.registry.common.model.store.URL;
 import com.alipay.sofa.registry.jraft.command.CommandCodec;
 import com.alipay.sofa.registry.jraft.processor.SnapshotProcess;
-import com.alipay.sofa.registry.lifecycle.impl.AbstractLifecycle;
 import com.alipay.sofa.registry.lifecycle.impl.LifecycleHelper;
+import com.alipay.sofa.registry.observer.impl.AbstractLifecycleObservable;
 import com.alipay.sofa.registry.server.meta.bootstrap.config.NodeConfig;
 import com.alipay.sofa.registry.server.meta.slot.SlotManager;
 import com.alipay.sofa.registry.store.api.annotation.RaftService;
@@ -51,7 +51,8 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
  * Nov 13, 2020
  */
 @RaftService(uniqueId = LocalSlotManager.LOCAL_SLOT_MANAGER, interfaceType = SlotManager.class)
-public class LocalSlotManager extends AbstractLifecycle implements SlotManager, SnapshotProcess {
+public class LocalSlotManager extends AbstractLifecycleObservable implements SlotManager,
+                                                                 SnapshotProcess {
 
     public static final String               LOCAL_SLOT_MANAGER = "LocalSlotManager";
 
@@ -111,6 +112,7 @@ public class LocalSlotManager extends AbstractLifecycle implements SlotManager, 
         } finally {
             lock.writeLock().unlock();
         }
+        notifyObservers(slotTable);
     }
 
     private void refreshReverseMap() {

@@ -22,6 +22,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
+import com.alipay.sofa.registry.server.meta.monitor.DefaultSlotTableMonitor;
 import com.alipay.sofa.registry.server.meta.remoting.handler.*;
 import com.alipay.sofa.registry.server.meta.revision.*;
 import com.alipay.sofa.registry.server.meta.repository.service.*;
@@ -86,12 +87,8 @@ import java.util.concurrent.*;
 @EnableConfigurationProperties
 public class MetaServerConfiguration {
 
-    public static final String SCHEDULED_EXECUTOR       = "scheduledExecutor";
-    public static final String GLOBAL_EXECUTOR          = "globalExecutor";
-    public static final int    maxScheduledCorePoolSize = 8;
-    public static final int    THREAD_POOL_TIME_OUT     = 5;
-    public static final int    GLOBAL_THREAD_MULTI_CORE = 100;
-    public static final int    GLOBAL_THREAD_MAX        = 100;
+    public static final String SCHEDULED_EXECUTOR = "scheduledExecutor";
+    public static final String GLOBAL_EXECUTOR    = "globalExecutor";
 
     @Bean
     @ConditionalOnMissingBean
@@ -226,6 +223,15 @@ public class MetaServerConfiguration {
         @Bean
         public DefaultSlotManager defaultSlotManager() {
             return new DefaultSlotManager();
+        }
+    }
+
+    @Configuration
+    public static class MetaServerMonitorConfiguration {
+
+        @Bean
+        public DefaultSlotTableMonitor slotTableMonitor() {
+            return new DefaultSlotTableMonitor();
         }
     }
 

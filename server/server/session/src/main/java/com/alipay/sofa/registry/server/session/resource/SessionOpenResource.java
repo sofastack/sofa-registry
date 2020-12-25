@@ -45,10 +45,10 @@ public class SessionOpenResource {
     private SessionServerConfig sessionServerConfig;
 
     @Autowired
-    private MetaServerService mataNodeService;
+    private MetaServerService   mataNodeService;
 
     @Autowired
-    private SlotTableCache slotTableCache;
+    private SlotTableCache      slotTableCache;
 
     @GET
     @Path("query.json")
@@ -102,7 +102,7 @@ public class SessionOpenResource {
     @Path("slot")
     @Produces(MediaType.APPLICATION_JSON)
     public Slot getSlot(@QueryParam("dataInfoId") String dataInfoId) {
-        ParaCheckUtil.checkNotBlank(dataInfoId,"dataInfoId");
+        ParaCheckUtil.checkNotBlank(dataInfoId, "dataInfoId");
         return slotTableCache.getSlot(dataInfoId);
     }
 
