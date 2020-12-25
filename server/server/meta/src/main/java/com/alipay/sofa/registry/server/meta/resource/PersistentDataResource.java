@@ -68,9 +68,9 @@ public class PersistentDataResource {
         try {
             boolean ret = persistenceDataDBService.put(dataInfoId, data);
             DB_LOGGER.info("put Persistence Data {} to DB result {}!", data, ret);
-        } catch (Exception e) {
-            DB_LOGGER.error("error put Persistence Data {} to DB!", data);
-            throw new RuntimeException("Put Persistence Data " + data + " to DB error!");
+        } catch (Throwable e) {
+            DB_LOGGER.error("error put Persistence Data {} to DB!", data, e);
+            throw new RuntimeException("Put Persistence Data " + data + " to DB error!", e);
         }
 
         fireDataChangeNotify(data.getVersion(), dataInfoId, DataOperator.ADD);

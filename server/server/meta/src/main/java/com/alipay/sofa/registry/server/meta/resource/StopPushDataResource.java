@@ -71,9 +71,9 @@ public class StopPushDataResource {
             boolean ret = persistenceDataDBService.put(
                 ValueConstants.STOP_PUSH_DATA_SWITCH_DATA_ID, persistenceData);
             DB_LOGGER.info("open stop push data switch to DB result {}!", ret);
-        } catch (Exception e) {
-            DB_LOGGER.error("error open stop push data switch to DB!");
-            throw new RuntimeException("open stop push data switch to DB error!");
+        } catch (Throwable e) {
+            DB_LOGGER.error("error open stop push data switch to DB!", e);
+            throw new RuntimeException("open stop push data switch to DB error!", e);
         }
 
         fireDataChangeNotify(persistenceData.getVersion(),

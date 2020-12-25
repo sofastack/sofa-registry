@@ -106,7 +106,7 @@ public class NetUtil {
             }
             return a.getHostAddress();
         } catch (UnknownHostException e) {
-            throw new RuntimeException("Unknown host {" + domain + "}");
+            throw new RuntimeException("Unknown host {" + domain + "}", e);
         }
     }
 
