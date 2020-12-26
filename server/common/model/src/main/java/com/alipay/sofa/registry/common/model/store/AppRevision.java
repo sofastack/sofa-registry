@@ -14,17 +14,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alipay.sofa.registry.core.model;
+package com.alipay.sofa.registry.common.model.store;
+
+import com.alipay.sofa.registry.core.model.AppRevisionInterface;
+import com.alipay.sofa.registry.core.model.AppRevisionRegister;
 
 import java.io.Serializable;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class AppRevisionRegister implements Serializable {
-    private String                     revision;
-    private String                     appName;
-    private Map<String, List<String>>  baseParams;
-    private List<AppRevisionInterface> interfaces;
+public class AppRevision implements Serializable {
+    private String                            revision;
+    private String                            appName;
+    private Map<String, List<String>>         baseParams;
+    private Map<String, AppRevisionInterface> interfaceMap;
 
     /**
      * Getter method for property <tt>revision</tt>.
@@ -80,21 +84,26 @@ public class AppRevisionRegister implements Serializable {
         this.baseParams = baseParams;
     }
 
-    /**
-     * Getter method for property <tt>interfaces</tt>.
-     *
-     * @return property value of interfaces
-     */
-    public List<AppRevisionInterface> getInterfaceList() {
-        return interfaces;
+    public Map<String, AppRevisionInterface> getInterfaceMap() {
+        return interfaceMap;
     }
 
-    /**
-     * Setter method for property <tt>interfaces</tt>.
-     *
-     * @param interfaces value to be assigned to property interfaces
-     */
-    public void setInterfaces(List<AppRevisionInterface> interfaces) {
-        this.interfaces = interfaces;
+    public void setInterfaceMap(Map<String, AppRevisionInterface> interfaceMap) {
+        this.interfaceMap = interfaceMap;
+    }
+
+    public static AppRevision convert(AppRevisionRegister register) {
+        AppRevision revision = new AppRevision();
+        revision.setAppName(register.getAppName());
+        revision.setRevision(register.getRevision());
+        revision.setBaseParams(register.getBaseParams());
+        Map<String, AppRevisionInterface> interfaceMap = new HashMap<>();
+        for (AppRevisionInterface inf : register.getInterfaceList()) {
+            String dataInfoId = DataInfo.toDataInfoId(inf.getDataId(), inf.getInstanceId(),
+                inf.getGroup());
+            interfaceMap.put(dataInfoId, inf);
+        }
+        revision.setInterfaceMap(interfaceMap);
+        return revision;
     }
 }

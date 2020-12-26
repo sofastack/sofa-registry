@@ -17,12 +17,12 @@
 package com.alipay.sofa.registry.server.meta.remoting.handler;
 
 import com.alipay.sofa.registry.common.model.Node;
-import com.alipay.sofa.registry.core.model.AppRevisionRegister;
+import com.alipay.sofa.registry.common.model.store.AppRevision;
 import com.alipay.sofa.registry.remoting.Channel;
 import com.alipay.sofa.registry.server.meta.revision.AppRevisionRegistry;
 import org.springframework.beans.factory.annotation.Autowired;
 
-public class AppRevisionRegisterHandler extends MetaServerHandler<AppRevisionRegister> {
+public class AppRevisionRegisterHandler extends MetaServerHandler<AppRevision> {
     @Autowired
     private AppRevisionRegistry appRevisionRegistry;
 
@@ -32,13 +32,13 @@ public class AppRevisionRegisterHandler extends MetaServerHandler<AppRevisionReg
     }
 
     @Override
-    public Object doHandle(Channel channel, AppRevisionRegister message) {
+    public Object doHandle(Channel channel, AppRevision message) {
         appRevisionRegistry.register(message);
         return message;
     }
 
     @Override
     public Class interest() {
-        return AppRevisionRegister.class;
+        return AppRevision.class;
     }
 }

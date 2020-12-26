@@ -38,10 +38,10 @@ public class AppRevisionRegisterPbHandler extends AbstractServerHandler<AppRevis
     }
 
     @Override
-    public Object doHandle(Channel channel, AppRevisionRegisterPb message) {
+    public Object doHandle(Channel channel, AppRevisionRegisterPb request) {
 
-        AppRevisionRegister appRevision = AppRevisionRegisterConvertor.convert2Java(message);
         RegisterResponse registerResponse = new RegisterResponse();
+        AppRevisionRegister appRevision = AppRevisionRegisterConvertor.convert2Java(request);
         appRevisionHandlerStrategy.handleAppRevisionRegister(appRevision, registerResponse);
         return RegisterResponseConvertor.convert2Pb(registerResponse);
     }

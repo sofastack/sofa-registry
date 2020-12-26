@@ -16,7 +16,7 @@
  */
 package com.alipay.sofa.registry.server.session.predicate;
 
-import com.alipay.sofa.registry.core.model.AppRevisionRegister;
+import com.alipay.sofa.registry.common.model.store.AppRevision;
 import com.alipay.sofa.registry.server.session.cache.AppRevisionCacheRegistry;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -35,11 +35,11 @@ public class RevisionPredicate {
     public Predicate<String> revisionPredicate(String dataInfoId) {
         Predicate<String> predicate = (revision) -> {
 
-            AppRevisionRegister revisionRegister = appRevisionCacheRegistry.getRevision(revision);
+            AppRevision revisionRegister = appRevisionCacheRegistry.getRevision(revision);
             if (revisionRegister == null) {
                 return false;
             }
-            if (!revisionRegister.getInterfaces().containsKey(dataInfoId)) {
+            if (!revisionRegister.getInterfaceMap().containsKey(dataInfoId)) {
                 return false;
             }
             return true;

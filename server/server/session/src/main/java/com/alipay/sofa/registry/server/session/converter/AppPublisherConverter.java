@@ -19,10 +19,10 @@ package com.alipay.sofa.registry.server.session.converter;
 import com.alipay.sofa.registry.common.model.AppRegisterServerDataBox;
 import com.alipay.sofa.registry.common.model.ServerDataBox;
 import com.alipay.sofa.registry.common.model.store.AppPublisher;
+import com.alipay.sofa.registry.common.model.store.AppRevision;
 import com.alipay.sofa.registry.common.model.store.DataInfo;
 import com.alipay.sofa.registry.common.model.store.Publisher;
 import com.alipay.sofa.registry.core.model.AppRevisionInterface;
-import com.alipay.sofa.registry.core.model.AppRevisionRegister;
 import com.alipay.sofa.registry.server.session.cache.AppRevisionCacheRegistry;
 import com.alipay.sofa.registry.server.session.utils.AddressUtil;
 import com.google.common.collect.ArrayListMultimap;
@@ -47,22 +47,24 @@ public class AppPublisherConverter {
         fillCommonRegion(publisher, appPublisher, dataInfo);
         List<ServerDataBox> dataList = new ArrayList<>();
         for (AppRegisterServerDataBox appRegisterServerDataBox : appPublisher.getAppDataList()) {
-            AppRevisionRegister revisionRegister = appRevisionCacheRegistry
+            AppRevision revisionRegister = appRevisionCacheRegistry
                 .getRevision(appRegisterServerDataBox.getRevision());
-            if (!revisionRegister.getInterfaces().containsKey(dataInfoId)) {
+            if (!revisionRegister.getInterfaceMap().containsKey(dataInfoId)) {
                 continue;
             }
             Map<String, Collection<String>> params = extractParams(revisionRegister,
                 appRegisterServerDataBox, dataInfoId);
-            dataList.add(new ServerDataBox(AddressUtil.buildURL(appRegisterServerDataBox.getUrl(),
-                params)));
+            ServerDataBox serverDataBox = new ServerDataBox(AddressUtil.buildURL(
+                appRegisterServerDataBox.getUrl(), params));
+            serverDataBox.object2bytes();
+            dataList.add(serverDataBox);
         }
         publisher.setDataList(dataList);
         return publisher;
 
     }
 
-    private static Map<String, Collection<String>> extractParams(AppRevisionRegister revisionRegister,
+    private static Map<String, Collection<String>> extractParams(AppRevision revisionRegister,
                                                                  AppRegisterServerDataBox serverDataBox,
                                                                  String dataInfoId) {
         ArrayListMultimap<String, String> multimap = ArrayListMultimap.create();
@@ -70,8 +72,8 @@ public class AppPublisherConverter {
         combineParams(revisionRegister.getBaseParams(), multimap);
         combineParams(serverDataBox.getBaseParams(), multimap);
 
-        if (!CollectionUtils.isEmpty(revisionRegister.getInterfaces())) {
-            AppRevisionInterface appRevisionInterface = revisionRegister.getInterfaces().get(
+        if (!CollectionUtils.isEmpty(revisionRegister.getInterfaceMap())) {
+            AppRevisionInterface appRevisionInterface = revisionRegister.getInterfaceMap().get(
                 dataInfoId);
             if (appRevisionInterface != null) {
                 combineParams(appRevisionInterface.getServiceParams(), multimap);

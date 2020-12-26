@@ -18,6 +18,7 @@ package com.alipay.sofa.registry.common.model.store;
 
 import com.alipay.sofa.registry.common.model.constants.ValueConstants;
 
+import javax.xml.bind.ValidationEvent;
 import java.io.Serializable;
 
 /**

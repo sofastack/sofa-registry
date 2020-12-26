@@ -16,7 +16,7 @@
  */
 package com.alipay.sofa.registry.server.meta.revision;
 
-import com.alipay.sofa.registry.core.model.AppRevisionRegister;
+import com.alipay.sofa.registry.common.model.store.AppRevision;
 import com.alipay.sofa.registry.store.api.annotation.RaftReference;
 
 import java.util.List;
@@ -25,7 +25,7 @@ public class AppRevisionRegistry {
     @RaftReference
     private AppRevisionService appRevisionService;
 
-    public void register(AppRevisionRegister appRevision) {
+    public void register(AppRevision appRevision) {
         if (appRevisionService.existed(appRevision.getRevision())) {
             return;
         }
@@ -39,7 +39,7 @@ public class AppRevisionRegistry {
         return appRevisionService.getKeys();
     }
 
-    public List<AppRevisionRegister> fetchRevisions(List<String> keys) {
+    public List<AppRevision> fetchRevisions(List<String> keys) {
         return appRevisionService.getMulti(keys);
     }
 }

@@ -24,6 +24,8 @@ import com.alipay.sofa.registry.common.model.store.BaseInfo.ClientVersion;
 import com.alipay.sofa.registry.common.model.store.DataInfo;
 import com.alipay.sofa.registry.common.model.store.Publisher;
 import com.alipay.sofa.registry.common.model.store.URL;
+import com.alipay.sofa.registry.core.model.AppPublisherBody;
+import com.alipay.sofa.registry.core.model.AppPublisherBodyInterface;
 import com.alipay.sofa.registry.core.model.DataBox;
 import com.alipay.sofa.registry.core.model.PublisherRegister;
 import com.alipay.sofa.registry.util.JsonUtils;
@@ -31,7 +33,12 @@ import org.apache.commons.lang.StringUtils;
 import org.springframework.util.CollectionUtils;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+
+import static com.alipay.sofa.registry.common.model.constants.ValueConstants.DEFAULT_GROUP;
+import static com.alipay.sofa.registry.common.model.constants.ValueConstants.DEFAULT_INSTANCE_ID;
 
 /**
  * @author shangyu.wh
@@ -115,7 +122,25 @@ public class PublisherConverter {
             return dataBoxes;
         }
         for (DataBox dataBox : dataList) {
-            AppRegisterServerDataBox serverDataBox = JsonUtils.read(dataBox.getData(), AppRegisterServerDataBox.class);
+            AppPublisherBody body = JsonUtils.read(dataBox.getData(), AppPublisherBody.class);
+            AppRegisterServerDataBox serverDataBox = new AppRegisterServerDataBox();
+            serverDataBox.setRevision(body.getRevision());
+            serverDataBox.setUrl(body.getUrl());
+            serverDataBox.setBaseParams(body.getBaseParams());
+            Map<String, Map<String, List<String>>> interfaceParams = new HashMap<>();
+            for (AppPublisherBodyInterface inf : body.getInterfaces()) {
+                String instanceId = inf.getInstanceId();
+                String group = inf.getGroup();
+                if (StringUtils.isBlank(instanceId)) {
+                    instanceId = DEFAULT_INSTANCE_ID;
+                }
+                if (StringUtils.isBlank(inf.getGroup())) {
+                    group = DEFAULT_GROUP;
+                }
+                String dataInfoId = DataInfo.toDataInfoId(inf.getDataId(), instanceId, group);
+                interfaceParams.computeIfAbsent(dataInfoId, k -> new HashMap<>()).putAll(inf.getParams());
+            }
+            serverDataBox.setInterfaceParams(interfaceParams);
             dataBoxes.add(serverDataBox);
         }
 

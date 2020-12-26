@@ -16,8 +16,8 @@
  */
 package com.alipay.sofa.registry.server.session.cache;
 
+import com.alipay.sofa.registry.common.model.store.AppRevision;
 import com.alipay.sofa.registry.common.model.store.DataInfo;
-import com.alipay.sofa.registry.core.model.AppRevisionRegister;
 import com.alipay.sofa.registry.core.model.AppRevisionInterface;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
@@ -38,7 +38,7 @@ public class AppRevisionCacheRegistry {
     @Autowired
     private AppRevisionNodeService                                                  appRevisionNodeService;
 
-    final private Map<String /*revision*/, AppRevisionRegister>                    registry           = new ConcurrentHashMap<>();
+    final private Map<String /*revision*/, AppRevision>                            registry           = new ConcurrentHashMap<>();
     private String                                                                  keysDigest         = "";
     final private Map<String /*interface*/, Map<String /*appname*/, Set<String>>> interfaceRevisions = new ConcurrentHashMap<>();
     final private Map<String /*appname*/, Set<String /*interfaces*/>>             appInterfaces      = new ConcurrentHashMap<>();
@@ -47,7 +47,7 @@ public class AppRevisionCacheRegistry {
     public AppRevisionCacheRegistry() {
     }
 
-    public void register(AppRevisionRegister appRevision) throws Exception {
+    public void register(AppRevision appRevision) throws Exception {
         if (this.registry.containsKey(appRevision.getRevision())) {
             return;
         }
@@ -64,8 +64,8 @@ public class AppRevisionCacheRegistry {
         return interfaceRevisions.get(dataInfoId);
     }
 
-    public AppRevisionRegister getRevision(String revision) {
-        AppRevisionRegister revisionRegister = registry.get(revision);
+    public AppRevision getRevision(String revision) {
+        AppRevision revisionRegister = registry.get(revision);
         if (revisionRegister != null) {
             return revisionRegister;
         }
@@ -80,9 +80,9 @@ public class AppRevisionCacheRegistry {
     public void refreshAll() {
         try {
             singleFlight.execute("refreshAll", () -> {
-                List<AppRevisionRegister> revisions = appRevisionNodeService
+                List<AppRevision> revisions = appRevisionNodeService
                         .fetchMulti(appRevisionNodeService.checkRevisions(keysDigest));
-                for (AppRevisionRegister rev : revisions) {
+                for (AppRevision rev : revisions) {
                     onNewRevision(rev);
                 }
                 if (revisions.size() > 0) {
@@ -96,11 +96,11 @@ public class AppRevisionCacheRegistry {
         }
     }
 
-    private void onNewRevision(AppRevisionRegister rev) {
-        if (rev.getInterfaces() == null) {
+    private void onNewRevision(AppRevision rev) {
+        if (rev.getInterfaceMap() == null) {
             return;
         }
-        for (AppRevisionInterface inf : rev.getInterfaces().values()) {
+        for (AppRevisionInterface inf : rev.getInterfaceMap().values()) {
             String dataInfoId = DataInfo.toDataInfoId(inf.getDataId(), inf.getInstanceId(), inf.getGroup());
             Map<String, Set<String>> apps = interfaceRevisions.computeIfAbsent(dataInfoId,
                     k -> new ConcurrentHashMap<>());
@@ -116,7 +116,7 @@ public class AppRevisionCacheRegistry {
 
     private String generateKeysDigest() {
         List<String> keys = new ArrayList<>();
-        for (Map.Entry<String, AppRevisionRegister> entry : registry.entrySet()) {
+        for (Map.Entry<String, AppRevision> entry : registry.entrySet()) {
             keys.add(entry.getKey());
         }
         return RevisionUtils.revisionsDigest(keys);
