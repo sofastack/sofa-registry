@@ -20,6 +20,7 @@ import com.alipay.sofa.registry.client.api.registration.PublisherRegistration;
 import com.alipay.sofa.registry.client.api.registration.SubscriberRegistration;
 import com.alipay.sofa.registry.common.model.constants.ValueConstants;
 
+import com.alipay.sofa.registry.core.model.AppRevisionInterface;
 import com.alipay.sofa.registry.core.model.ScopeEnum;
 import com.alipay.sofa.registry.server.test.AppDiscoveryBuilder;
 import com.alipay.sofa.registry.test.BaseIntegrationTest;
@@ -38,16 +39,16 @@ public class PubSubTest extends BaseIntegrationTest {
         String appname = "foo";
         String revision = "1111";
         AppDiscoveryBuilder builder = new AppDiscoveryBuilder(appname, revision, "127.0.0.1:12220");
-        String serviceId1 = builder.addService("func1", ValueConstants.DEFAULT_GROUP,
+        AppRevisionInterface inf1 = builder.addService("func1", ValueConstants.DEFAULT_GROUP,
             ValueConstants.DEFAULT_INSTANCE_ID);
-        String serviceId2 = builder.addService("func2", ValueConstants.DEFAULT_GROUP,
+        AppRevisionInterface inf2 = builder.addService("func2", ValueConstants.DEFAULT_GROUP,
             ValueConstants.DEFAULT_INSTANCE_ID);
         builder.addMetaBaseParam("metaParam1", "metaValue1");
-        builder.addMetaInterfaceParam(serviceId1, "metaParam2", " metaValue2");
-        builder.addMetaInterfaceParam(serviceId2, "metaParam3", " metaValue3");
+        builder.addMetaInterfaceParam(inf1, "metaParam2", " metaValue2");
+        builder.addMetaInterfaceParam(inf2, "metaParam3", " metaValue3");
         builder.addDataBaseParam("dataParam1", "dataValue1");
-        builder.addDataInterfaceParam(serviceId1, "dataParam2", "dataValue2");
-        builder.addDataInterfaceParam(serviceId2, "dataParam3", "dataValue3");
+        builder.addDataInterfaceParam(inf1, "dataParam2", "dataValue2");
+        builder.addDataInterfaceParam(inf1, "dataParam3", "dataValue3");
 
         PublisherRegistration publisher = new PublisherRegistration(appname);
         publisher.setGroup(ValueConstants.SOFA_APP);

@@ -19,10 +19,10 @@ package com.alipay.sofa.registry.server.session.converter.pb;
 import com.alipay.sofa.registry.common.model.client.pb.AppRevisionInterfacePb;
 import com.alipay.sofa.registry.common.model.client.pb.AppRevisionRegisterPb;
 import com.alipay.sofa.registry.common.model.client.pb.QueryValues;
-import com.alipay.sofa.registry.common.model.store.DataInfo;
 import com.alipay.sofa.registry.core.model.AppRevisionInterface;
 import com.alipay.sofa.registry.core.model.AppRevisionRegister;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -44,7 +44,7 @@ public class AppRevisionRegisterConvertor {
                 entry.getValue().getValuesList().subList(0, values.getValuesCount()));
         }
         appRevision.setBaseParams(baseParams);
-        Map<String, AppRevisionInterface> serviceParams = new HashMap<>();
+        List<AppRevisionInterface> serviceParams = new ArrayList<>();
         for (AppRevisionInterfacePb interfacePb : appRevisionRegisterPb.getInterfacesList()) {
             AppRevisionInterface inf = new AppRevisionInterface();
             inf.setDataId(interfacePb.getDataId());
@@ -58,8 +58,7 @@ public class AppRevisionRegisterConvertor {
                 inf.getServiceParams().put(key,
                     values.getValuesList().subList(0, values.getValuesCount()));
             }
-            serviceParams.put(
-                DataInfo.toDataInfoId(inf.getDataId(), inf.getInstanceId(), inf.getGroup()), inf);
+            serviceParams.add(inf);
         }
         appRevision.setInterfaces(serviceParams);
         return appRevision;

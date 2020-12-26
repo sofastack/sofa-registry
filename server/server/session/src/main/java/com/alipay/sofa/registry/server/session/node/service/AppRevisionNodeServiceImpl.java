@@ -18,8 +18,8 @@ package com.alipay.sofa.registry.server.session.node.service;
 
 import com.alipay.sofa.registry.common.model.metaserver.CheckRevisionsRequest;
 import com.alipay.sofa.registry.common.model.metaserver.FetchRevisionsRequest;
+import com.alipay.sofa.registry.common.model.store.AppRevision;
 import com.alipay.sofa.registry.common.model.store.URL;
-import com.alipay.sofa.registry.core.model.AppRevisionRegister;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.remoting.exchange.NodeExchanger;
@@ -46,10 +46,10 @@ public class AppRevisionNodeServiceImpl implements AppRevisionNodeService {
     @Autowired
     RaftClientManager             raftClientManager;
 
-    public void register(AppRevisionRegister appRevision) {
-        Request<AppRevisionRegister> request = new Request<AppRevisionRegister>() {
+    public void register(AppRevision appRevision) {
+        Request<AppRevision> request = new Request<AppRevision>() {
             @Override
-            public AppRevisionRegister getRequestBody() {
+            public AppRevision getRequestBody() {
                 return appRevision;
             }
 
@@ -90,7 +90,7 @@ public class AppRevisionNodeServiceImpl implements AppRevisionNodeService {
 
     }
 
-    public List<AppRevisionRegister> fetchMulti(List<String> keys) {
+    public List<AppRevision> fetchMulti(List<String> keys) {
         Request<FetchRevisionsRequest> request = new Request<FetchRevisionsRequest>() {
             @Override
             public FetchRevisionsRequest getRequestBody() {
@@ -106,7 +106,7 @@ public class AppRevisionNodeServiceImpl implements AppRevisionNodeService {
         try {
             Response response = metaNodeExchanger.request(request);
             Object result = response.getResult();
-            return (List<AppRevisionRegister>) result;
+            return (List<AppRevision>) result;
         } catch (RequestException e) {
             LOGGER.error("fetch app revision error! " + e.getMessage(), e);
             throw new RuntimeException("fetch app revision error! " + e.getMessage(), e);

@@ -16,10 +16,17 @@
  */
 package com.alipay.sofa.registry.server.session.strategy;
 
+import com.alipay.sofa.registry.common.model.store.AppRevision;
+import com.alipay.sofa.registry.common.model.store.DataInfo;
+import com.alipay.sofa.registry.core.model.AppRevisionInterface;
 import com.alipay.sofa.registry.core.model.AppRevisionRegister;
 import com.alipay.sofa.registry.core.model.RegisterResponse;
 import com.alipay.sofa.registry.server.session.cache.AppRevisionCacheRegistry;
+import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+
+import static com.alipay.sofa.registry.common.model.constants.ValueConstants.DEFAULT_GROUP;
+import static com.alipay.sofa.registry.common.model.constants.ValueConstants.DEFAULT_INSTANCE_ID;
 
 public class DefaultAppRevisionHandlerStrategy implements AppRevisionHandlerStrategy {
     @Autowired
@@ -29,7 +36,10 @@ public class DefaultAppRevisionHandlerStrategy implements AppRevisionHandlerStra
     public void handleAppRevisionRegister(AppRevisionRegister appRevisionRegister,
                                           RegisterResponse response) {
         try {
-            appRevisionCacheService.register(appRevisionRegister);
+            setDefaultField(appRevisionRegister);
+            validate(appRevisionRegister);
+            AppRevision revision = AppRevision.convert(appRevisionRegister);
+            appRevisionCacheService.register(revision);
             response.setSuccess(true);
             response.setMessage("app revision register success!");
         } catch (Throwable e) {
@@ -38,4 +48,26 @@ public class DefaultAppRevisionHandlerStrategy implements AppRevisionHandlerStra
         }
     }
 
+    private void setDefaultField(AppRevisionRegister register) {
+        for (AppRevisionInterface inf : register.getInterfaceList()) {
+            if (StringUtils.isBlank(inf.getInstanceId())) {
+                inf.setInstanceId(DEFAULT_INSTANCE_ID);
+            }
+            if (StringUtils.isBlank(inf.getGroup())) {
+                inf.setGroup(DEFAULT_GROUP);
+            }
+        }
+    }
+
+    private void validate(AppRevisionRegister register) {
+        if (StringUtils.isBlank(register.getAppName())) {
+            throw new IllegalArgumentException("register appName is empty");
+        }
+        if (StringUtils.isBlank(register.getRevision())) {
+            throw new IllegalArgumentException("register revision is empty");
+        }
+        for (AppRevisionInterface inf : register.getInterfaceList()) {
+            DataInfo.toDataInfoId(inf.getDataId(), inf.getInstanceId(), inf.getGroup());
+        }
+    }
 }

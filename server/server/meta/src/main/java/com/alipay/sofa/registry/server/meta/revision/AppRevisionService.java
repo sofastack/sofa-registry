@@ -16,7 +16,7 @@
  */
 package com.alipay.sofa.registry.server.meta.revision;
 
-import com.alipay.sofa.registry.core.model.AppRevisionRegister;
+import com.alipay.sofa.registry.common.model.store.AppRevision;
 import com.alipay.sofa.registry.store.api.annotation.ReadOnLeader;
 
 import java.util.List;
@@ -24,12 +24,12 @@ import java.util.List;
 public interface AppRevisionService {
 
     @ReadOnLeader
-    AppRevisionRegister get(String revision);
+    AppRevision get(String revision);
 
     @ReadOnLeader
     boolean existed(String revision);
 
-    void add(AppRevisionRegister appRevision);
+    void add(AppRevision appRevision);
 
     @ReadOnLeader
     String getKeysDigest();
@@ -38,5 +38,5 @@ public interface AppRevisionService {
     List<String> getKeys();
 
     @ReadOnLeader
-    List<AppRevisionRegister> getMulti(List<String> keys);
+    List<AppRevision> getMulti(List<String> keys);
 }
