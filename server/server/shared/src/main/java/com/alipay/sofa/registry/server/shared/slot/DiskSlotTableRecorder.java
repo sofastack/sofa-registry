@@ -33,8 +33,7 @@ public class DiskSlotTableRecorder implements SlotTableRecorder {
     @Override
     public void record(SlotTable slotTable) {
         try {
-            String slotStr = JsonUtils.getJacksonObjectMapper().writerWithDefaultPrettyPrinter()
-                .writeValueAsString(slotTable);
+            String slotStr = JsonUtils.writeValueAsString(slotTable);
             if (logger.isInfoEnabled()) {
                 logger.info("[record] record slot:\n {}", slotStr);
             }

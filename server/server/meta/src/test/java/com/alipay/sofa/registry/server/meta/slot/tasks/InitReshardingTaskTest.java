@@ -18,11 +18,14 @@ package com.alipay.sofa.registry.server.meta.slot.tasks;
 
 import com.alipay.sofa.registry.common.model.metaserver.nodes.DataNode;
 import com.alipay.sofa.registry.common.model.slot.SlotTable;
+import com.alipay.sofa.registry.common.model.store.URL;
 import com.alipay.sofa.registry.server.meta.AbstractTest;
 import com.alipay.sofa.registry.server.meta.bootstrap.config.NodeConfig;
 import com.alipay.sofa.registry.server.meta.lease.data.DefaultDataServerManager;
 import com.alipay.sofa.registry.server.meta.slot.SlotManager;
 import com.alipay.sofa.registry.server.meta.slot.impl.LocalSlotManager;
+import com.alipay.sofa.registry.util.JsonUtils;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import org.assertj.core.util.Lists;
 import org.junit.Assert;
 import org.junit.Before;
@@ -67,5 +70,54 @@ public class InitReshardingTaskTest extends AbstractTest {
         task.run();
         Assert.assertNotEquals(SlotTable.INIT, localSlotManager.getSlotTable());
         printSlotTable(localSlotManager.getSlotTable());
+    }
+
+    @Test
+    public void testNoDupLeaderAndFollower() throws Exception {
+        makeRaftLeader();
+        List<DataNode> dataNodes = Lists.newArrayList(
+                new DataNode(new URL("100.88.142.32"), getDc()),
+                new DataNode(new URL("100.88.142.36"), getDc()),
+                new DataNode(new URL("100.88.142.19"), getDc()));
+        when(dataServerManager.getClusterMembers()).thenReturn(dataNodes);
+        task = new InitReshardingTask(localSlotManager, raftSlotManager, dataServerManager);
+        task.run();
+        logger.info(JsonUtils.getJacksonObjectMapper()
+                .writerWithDefaultPrettyPrinter()
+                .writeValueAsString(localSlotManager.getSlotTable()));
+        SlotTable slotTable = localSlotManager.getSlotTable();
+        slotTable.getSlotMap().forEach((slotId, slot) -> {
+            Assert.assertFalse(slot.getFollowers().contains(slot.getLeader()));
+        });
+    }
+
+    @Test
+    public void testOnlyOneDataServerRegistered() throws Exception {
+        makeRaftLeader();
+        List<DataNode> dataNodes = Lists.newArrayList(new DataNode(new URL("100.88.142.36"),
+            getDc()));
+        when(dataServerManager.getClusterMembers()).thenReturn(dataNodes);
+        task = new InitReshardingTask(localSlotManager, raftSlotManager, dataServerManager);
+        task.run();
+        logger.info(JsonUtils.getJacksonObjectMapper().writerWithDefaultPrettyPrinter()
+            .writeValueAsString(localSlotManager.getSlotTable()));
+
+        dataNodes = Lists.newArrayList(new DataNode(new URL("100.88.142.36"), getDc()),
+            new DataNode(new URL("100.88.142.32"), getDc()));
+        when(dataServerManager.getClusterMembers()).thenReturn(dataNodes);
+        SlotReassignTask slotTask = new SlotReassignTask(localSlotManager, raftSlotManager,
+            dataServerManager);
+        slotTask.run();
+        logger.info(JsonUtils.getJacksonObjectMapper().writerWithDefaultPrettyPrinter()
+            .writeValueAsString(localSlotManager.getSlotTable()));
+
+        dataNodes = Lists.newArrayList(new DataNode(new URL("100.88.142.36"), getDc()),
+            new DataNode(new URL("100.88.142.32"), getDc()), new DataNode(new URL("100.88.142.19"),
+                getDc()));
+        when(dataServerManager.getClusterMembers()).thenReturn(dataNodes);
+        slotTask = new SlotReassignTask(localSlotManager, raftSlotManager, dataServerManager);
+        slotTask.run();
+        logger.info(JsonUtils.getJacksonObjectMapper().writerWithDefaultPrettyPrinter()
+            .writeValueAsString(localSlotManager.getSlotTable()));
     }
 }
