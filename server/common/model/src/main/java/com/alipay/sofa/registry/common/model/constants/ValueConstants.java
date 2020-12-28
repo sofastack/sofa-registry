@@ -77,8 +77,8 @@ public class ValueConstants {
     /**
      * switch for dataId sensitive is disable or not, default value is false which means dataId is case sensitive
      */
-    public static final Boolean  DISABLE_DATA_ID_CASE_SENSITIVE        = Boolean
-                                                                           .valueOf(System
+    public static final boolean  DISABLE_DATA_ID_CASE_SENSITIVE        = Boolean
+                                                                           .parseBoolean(System
                                                                                .getProperty(DISABLE_DATA_ID_CASE_SENSITIVE_SWITCH));
 
 }

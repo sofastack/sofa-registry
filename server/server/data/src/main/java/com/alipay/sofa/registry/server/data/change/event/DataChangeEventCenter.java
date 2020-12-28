@@ -139,7 +139,9 @@ public final class DataChangeEventCenter {
                 DataChangeEventQueue queue = getQueue(e.getKey());
                 for (IDataChangeEvent event : e.getValue()) {
                     if (!queue.onChange(event)) {
-                        LOGGER.error("failed to commit change event, {}, {}", e.getKey(), e);
+                        LOGGER.error("failed to commit change event, {}", event);
+                    }else{
+                        LOGGER.info("commit change event, {}", event);
                     }
                 }
             }

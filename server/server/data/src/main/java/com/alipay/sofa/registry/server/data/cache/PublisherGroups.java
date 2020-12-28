@@ -107,7 +107,10 @@ public final class PublisherGroups {
     Map<String, DatumSummary> getSummary(String sessionIpAddress) {
         Map<String, DatumSummary> summarys = Maps.newHashMap();
         publisherGroupMap.forEach((k, g) -> {
-            summarys.put(k, g.getSummary(sessionIpAddress));
+            DatumSummary summary = g.getSummary(sessionIpAddress);
+            if (!summary.isEmpty()) {
+                summarys.put(k, summary);
+            }
         });
         return summarys;
     }
