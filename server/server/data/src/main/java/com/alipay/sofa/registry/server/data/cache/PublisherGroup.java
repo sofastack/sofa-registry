@@ -38,7 +38,6 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
 /**
- *
  * @author yuzhi.lyz
  * @version v 0.1 2020-12-02 20:26 yuzhi.lyz Exp $
  */
@@ -139,18 +138,17 @@ public final class PublisherGroup {
                 modified = !pubMap.isEmpty();
                 pubMap.clear();
             } else {
-                Iterator<Map.Entry<String, PublisherEnvelope>> it = pubMap.entrySet().iterator();
-                while (it.hasNext()) {
-                    Map.Entry<String, PublisherEnvelope> e = it.next();
+                Map<String, PublisherEnvelope> removed = Maps.newHashMap();
+                for (Map.Entry<String, PublisherEnvelope> e : pubMap.entrySet()) {
                     final String registerId = e.getKey();
                     PublisherEnvelope envelope = e.getValue();
                     if (envelope.isPub() && envelope.sessionProcessId.equals(sessionProcessId)) {
-                        pubMap.put(registerId, PublisherEnvelope.unpubOf(
+                        removed.put(registerId, PublisherEnvelope.unpubOf(
                             envelope.publisherVersion.incrRegisterTimestamp(), sessionProcessId));
-                        it.remove();
-                        modified = true;
                     }
                 }
+                modified = !removed.isEmpty();
+                pubMap.putAll(removed);
             }
             return modified ? updateVersion() : null;
         } finally {
@@ -161,7 +159,7 @@ public final class PublisherGroup {
     DatumVersion remove(ConnectId connectId, ProcessId sessionProcessId, long registerTimestamp) {
         lock.lock();
         try {
-            boolean modified = false;
+            Map<String, PublisherEnvelope> removed = Maps.newHashMap();
             for (Map.Entry<String, PublisherEnvelope> e : pubMap.entrySet()) {
                 PublisherEnvelope existing = e.getValue();
                 if (existing.sessionProcessId.equals(sessionProcessId)
@@ -171,13 +169,13 @@ public final class PublisherGroup {
                         existing.publisherVersion.getVersion(), registerTimestamp);
                     if (existing.publisherVersion.orderThan(newVersion)) {
                         // mark unpub
-                        pubMap.put(e.getKey(),
+                        removed.put(e.getKey(),
                             PublisherEnvelope.unpubOf(newVersion, sessionProcessId));
-                        modified = true;
                     }
                 }
             }
-            return modified ? updateVersion() : null;
+            pubMap.putAll(removed);
+            return !removed.isEmpty() ? updateVersion() : null;
         } finally {
             lock.unlock();
         }

@@ -48,9 +48,9 @@ public class DataServerConfig {
 
     private int                  queueSize;
 
-    private int                  notifyIntervalMs;
+    private int                  notifyIntervalMs                             = 200;
 
-    private int                  notifyTempDataIntervalMs;
+    private int                  notifyTempDataIntervalMs                     = 200;
 
     private int                  rpcTimeout;
 

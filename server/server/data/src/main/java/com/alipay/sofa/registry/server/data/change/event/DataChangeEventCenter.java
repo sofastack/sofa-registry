@@ -81,6 +81,8 @@ public final class DataChangeEventCenter {
 
         ConcurrentUtils.createDaemonThread("changeMerger", changeMerger).start();
         ConcurrentUtils.createDaemonThread("tempChangeMerger", tempChangeMerger).start();
+
+        LOGGER.info("start DataChange NotifyIntervalMs={}", dataServerConfig.getNotifyIntervalMs());
     }
 
     public void onTempPubChange(Publisher publisher, String dataCenter) {
