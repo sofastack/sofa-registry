@@ -77,9 +77,17 @@ public class DatumSummary implements Serializable {
         return m;
     }
 
+    public boolean isEmpty(){
+        return publisherVersions.isEmpty();
+    }
+
+    public int size(){
+        return publisherVersions.size();
+    }
+
     @Override
     public String toString() {
-        return "DatumSummary{" + "dataInfoId='" + dataInfoId + '\'' + ", publisherVersions="
-               + publisherVersions + '}';
+        return String.format("Summary={%s=%d}", dataInfoId, size());
     }
+
 }

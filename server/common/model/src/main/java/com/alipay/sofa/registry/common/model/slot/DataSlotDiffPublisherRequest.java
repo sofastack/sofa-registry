@@ -63,4 +63,12 @@ public class DataSlotDiffPublisherRequest implements Serializable {
         return datumSummarys;
     }
 
+    @Override
+    public String toString() {
+        return "DataSlotDiffPublisherRequest{" +
+                ", slotId=" + slotId +
+                ", slotTableEpoch=" + slotTableEpoch +
+                ", datumSummarys=" + datumSummarys.values() +
+                '}';
+    }
 }

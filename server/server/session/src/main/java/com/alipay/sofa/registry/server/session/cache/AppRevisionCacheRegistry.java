@@ -98,6 +98,7 @@ public class AppRevisionCacheRegistry {
 
     private void onNewRevision(AppRevision rev) {
         if (rev.getInterfaceMap() == null) {
+            LOG.warn("AppRevision no interface, {}", rev);
             return;
         }
         for (AppRevisionInterface inf : rev.getInterfaceMap().values()) {
@@ -112,6 +113,7 @@ public class AppRevisionCacheRegistry {
                     .add(dataInfoId);
         }
         registry.put(rev.getRevision(), rev);
+        LOG.info("onNewRevision {}", rev);
     }
 
     private String generateKeysDigest() {

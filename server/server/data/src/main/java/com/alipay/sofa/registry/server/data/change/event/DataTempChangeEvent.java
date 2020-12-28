@@ -43,4 +43,13 @@ public final class DataTempChangeEvent implements IDataChangeEvent {
     public DataSourceTypeEnum getSourceType() {
         return DataSourceTypeEnum.PUB_TEMP;
     }
+
+    @Override
+    public String toString() {
+        return "DataTempChangeEvent{" +
+                "dataCenter='" + datum.getDataCenter() + '\'' +
+                ", dataInfoId='" + datum.getDataInfoId() + '\'' +
+                ", publisherNum='" + datum.publisherSize() + '\'' +
+                '}';
+    }
 }

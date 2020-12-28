@@ -16,8 +16,10 @@
  */
 package com.alipay.sofa.registry.common.model.store;
 
+import com.alipay.sofa.registry.common.model.constants.ValueConstants;
 import com.alipay.sofa.registry.core.model.AppRevisionInterface;
 import com.alipay.sofa.registry.core.model.AppRevisionRegister;
+import com.google.common.collect.Maps;
 
 import java.io.Serializable;
 import java.util.HashMap;
@@ -27,8 +29,8 @@ import java.util.Map;
 public class AppRevision implements Serializable {
     private String                            revision;
     private String                            appName;
-    private Map<String, List<String>>         baseParams;
-    private Map<String, AppRevisionInterface> interfaceMap;
+    private Map<String, List<String>>         baseParams = Maps.newHashMap();
+    private Map<String, AppRevisionInterface> interfaceMap = Maps.newHashMap();
 
     /**
      * Getter method for property <tt>revision</tt>.
@@ -94,7 +96,11 @@ public class AppRevision implements Serializable {
 
     public static AppRevision convert(AppRevisionRegister register) {
         AppRevision revision = new AppRevision();
-        revision.setAppName(register.getAppName());
+        String appName = register.getAppName();
+        if(ValueConstants.DISABLE_DATA_ID_CASE_SENSITIVE){
+            appName = appName.toUpperCase();
+        }
+        revision.setAppName(appName);
         revision.setRevision(register.getRevision());
         revision.setBaseParams(register.getBaseParams());
         Map<String, AppRevisionInterface> interfaceMap = new HashMap<>();
@@ -105,5 +111,15 @@ public class AppRevision implements Serializable {
         }
         revision.setInterfaceMap(interfaceMap);
         return revision;
+    }
+
+    @Override
+    public String toString() {
+        return "AppRevision{" +
+                "revision='" + revision + '\'' +
+                ", appName='" + appName + '\'' +
+                ", baseParams=" + (baseParams == null ? "0" : baseParams.size()) + '\'' +
+                ", interfaceMap=" + (interfaceMap == null ? "0" : baseParams.size()) + '\'' +
+                '}';
     }
 }
