@@ -16,6 +16,8 @@
  */
 package com.alipay.sofa.registry.common.model.slot;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.collect.Maps;
 
 import java.io.Serializable;
@@ -39,6 +41,7 @@ public final class SlotTable implements Serializable {
         return new ArrayList<>(slots.values());
     }
 
+    @JsonIgnore
     public Map<Integer, Slot> getSlotMap() {
         return Maps.newHashMap(slots);
     }
@@ -70,6 +73,7 @@ public final class SlotTable implements Serializable {
         return m;
     }
 
+    @JsonIgnore
     public Set<Integer> getSlotIds() {
         return new TreeSet<>(slots.keySet());
     }

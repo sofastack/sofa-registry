@@ -127,7 +127,7 @@ public class InitReshardingTask implements RebalanceTask {
             long epoch = System.currentTimeMillis();
             String leader = getNextLeader().getIp();
             List<String> followers = Lists.newArrayList();
-            for (int j = 0; j < localSlotManager.getSlotReplicaNums(); j++) {
+            for (int j = 0; j < localSlotManager.getSlotReplicaNums() - 1; j++) {
                 followers.add(getNextFollower().getIp());
             }
             Slot slot = new Slot(i, leader, epoch, followers);
