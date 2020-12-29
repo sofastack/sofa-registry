@@ -90,12 +90,13 @@ public class DefaultDataServerManagerTest extends AbstractTest {
     }
 
     @Test
-    public void testDataServerManagerRefreshEpochOnlyOnceWhenNewRegistered() throws TimeoutException, InterruptedException {
+    public void testDataServerManagerRefreshEpochOnlyOnceWhenNewRegistered()
+                                                                            throws TimeoutException,
+                                                                            InterruptedException {
         makeRaftLeader();
         DataNode node = new DataNode(randomURL(randomIp()), getDc());
         DataLeaseManager leaseManager = spy(new DataLeaseManager());
-        dataServerManager.setDataLeaseManager(leaseManager)
-                .setRaftDataLeaseManager(leaseManager);
+        dataServerManager.setDataLeaseManager(leaseManager).setRaftDataLeaseManager(leaseManager);
         dataServerManager.renew(node, 1000);
         Assert.assertEquals(1, dataServerManager.getClusterMembers().size());
         verify(leaseManager, times(1)).refreshEpoch(anyLong());

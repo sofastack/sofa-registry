@@ -38,4 +38,6 @@ public interface SlotTableCache {
     long getEpoch();
 
     boolean updateSlotTable(SlotTable slotTable);
+
+    int slotNum();
 }

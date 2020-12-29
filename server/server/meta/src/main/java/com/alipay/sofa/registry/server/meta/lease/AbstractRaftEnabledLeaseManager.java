@@ -123,15 +123,18 @@ public abstract class AbstractRaftEnabledLeaseManager<T extends Node> extends
          * no exist lease, try register the node to all meta-servers through raft
          * */
         if (lease == null) {
-            if(logger.isInfoEnabled()) {
-                logger.info("[renew] node [{}] is not exist, go raft registering and refreshing epoch", renewal);
+            if (logger.isInfoEnabled()) {
+                logger.info(
+                    "[renew] node [{}] is not exist, go raft registering and refreshing epoch",
+                    renewal);
             }
             // update lease will include a epoch update operation
             try {
                 getRaftLeaseManager().register(new Lease<>(renewal, validLeaseDuration));
             } catch (Throwable th) {
                 logger.error("[renew] fail to register node [{}] as raft failure", renewal, th);
-                throw new SofaRegistryRaftException("register node exception: node[" + renewal.toString() + "]", th);
+                throw new SofaRegistryRaftException("register node exception: node["
+                                                    + renewal.toString() + "]", th);
             }
             notifyObservers(new NodeAdded<>(renewal));
         } else {
@@ -180,13 +183,16 @@ public abstract class AbstractRaftEnabledLeaseManager<T extends Node> extends
                 Lease<T> doubleCheck = getLocalLeaseManager().getLease(lease.getRenewal());
                 // at this point of view, entry might be deleted through cancel method
                 if (doubleCheck == null) {
-                    if(logger.isInfoEnabled()) {
-                        logger.info("[evict] node[{}] was evict, but is now not exist, skip eviction", lease.getRenewal());
+                    if (logger.isInfoEnabled()) {
+                        logger.info(
+                            "[evict] node[{}] was evict, but is now not exist, skip eviction",
+                            lease.getRenewal());
                     }
                     continue;
                 }
                 if (doubleCheck.isExpired()) {
-                    logger.warn("[evict] node evict [{}], cancel it and refresh epoch", doubleCheck);
+                    logger
+                        .warn("[evict] node evict [{}], cancel it and refresh epoch", doubleCheck);
                     try {
                         cancel(lease.prepareCancel());
                     } catch (Throwable th) {

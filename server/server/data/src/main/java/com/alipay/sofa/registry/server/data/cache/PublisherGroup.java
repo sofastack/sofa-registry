@@ -68,7 +68,11 @@ public final class PublisherGroup {
         this.dataId = publisher.getDataId();
         this.instanceId = publisher.getInstanceId();
         this.group = publisher.getGroup();
-        this.version = System.currentTimeMillis();
+        this.version = DatumVersionUtil.nextId();
+    }
+
+    DatumVersion getVersion() {
+        return new DatumVersion(version);
     }
 
     Datum toDatum() {
@@ -102,7 +106,7 @@ public final class PublisherGroup {
         return map;
     }
 
-    private DatumVersion updateVersion() {
+    DatumVersion updateVersion() {
         this.version = DatumVersionUtil.nextId();
         return new DatumVersion(version);
     }
@@ -118,7 +122,7 @@ public final class PublisherGroup {
         return true;
     }
 
-    DatumVersion addPublisher(Publisher publisher, ProcessId sessionProcessId) {
+    DatumVersion addPublisher(Publisher publisher) {
         lock.lock();
         try {
             if (tryAddPublisher(publisher)) {

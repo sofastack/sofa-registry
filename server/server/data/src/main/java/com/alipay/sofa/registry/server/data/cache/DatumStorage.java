@@ -43,6 +43,10 @@ public interface DatumStorage {
      */
     Datum get(String dataInfoId);
 
+    DatumVersion getVersion(String dataInfoId);
+
+    Map<String, DatumVersion> getVersions(int slotId);
+
     Map<String, Publisher> getByConnectId(ConnectId connectId);
 
     Map<String, Map<String, Publisher>> getPublishers(int slot);
@@ -54,7 +58,9 @@ public interface DatumStorage {
      */
     Map<String, Datum> getAll();
 
-    DatumVersion putPublisher(Publisher publisher, ProcessId seesionProcessId);
+    DatumVersion putPublisher(Publisher publisher);
+
+    DatumVersion createEmptyDatumIfAbsent(Publisher publisher);
 
     Map<String, DatumVersion> clean(ProcessId sessionProcessId);
 
@@ -75,5 +81,7 @@ public interface DatumStorage {
     Set<ProcessId> getSessionProcessIds();
 
     Map<String, Integer> compact(long tombstoneTimestamp);
+
+    void updateVersion(int slotId);
 
 }

@@ -18,10 +18,13 @@ package com.alipay.sofa.registry.server.data.cache;
 
 import com.alipay.sofa.registry.common.model.ConnectId;
 import com.alipay.sofa.registry.common.model.dataserver.Datum;
+import com.alipay.sofa.registry.common.model.dataserver.DatumVersion;
 import com.alipay.sofa.registry.common.model.store.Publisher;
 import com.alipay.sofa.registry.server.data.bootstrap.DataServerConfig;
+import com.google.common.collect.Maps;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.util.CollectionUtils;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -78,15 +81,23 @@ public class DatumCache {
      * @param dataInfoId
      * @return
      */
-    public Map<String, Long> getVersions(String dataInfoId) {
-        Map<String, Long> datumMap = new HashMap<>();
-
+    public Map<String, DatumVersion> getVersions(String dataInfoId) {
+        Map<String, DatumVersion> datumMap = Maps.newHashMap();
         //local
-        Datum localDatum = localDatumStorage.get(dataInfoId);
-        if (localDatum != null) {
-            datumMap.put(dataServerConfig.getLocalDataCenter(), localDatum.getVersion());
+        DatumVersion version = localDatumStorage.getVersion(dataInfoId);
+        if (version != null) {
+            datumMap.put(dataServerConfig.getLocalDataCenter(), version);
         }
+        return datumMap;
+    }
 
+    public Map<String, Map<String, DatumVersion>> getVersions(int slotId) {
+        Map<String, Map<String, DatumVersion>> datumMap = new HashMap<>();
+        //local
+        Map<String, DatumVersion> versions = localDatumStorage.getVersions(slotId);
+        if (!CollectionUtils.isEmpty(versions)) {
+            datumMap.put(dataServerConfig.getLocalDataCenter(), versions);
+        }
         return datumMap;
     }
 

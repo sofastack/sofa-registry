@@ -26,6 +26,7 @@ import com.alipay.sofa.registry.server.data.cache.UnPublisher;
 import com.alipay.sofa.registry.util.ParaCheckUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import java.util.Collections;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ThreadPoolExecutor;
 
@@ -67,10 +68,9 @@ public class UnPublishDataHandler extends AbstractDataHandler<UnPublishDataReque
         if (slotAccess.isMoved()) {
             return SlotAccessGenericResponse.failedResponse(slotAccess);
         }
-        DatumVersion version = localDatumStorage.putPublisher(publisher,
-            request.getSessionProcessId());
+        DatumVersion version = localDatumStorage.putPublisher(publisher);
         if (version != null) {
-            dataChangeEventCenter.onChange(publisher.getDataInfoId(),
+            dataChangeEventCenter.onChange(Collections.singletonList(publisher.getDataInfoId()),
                 dataServerConfig.getLocalDataCenter());
         }
         return SlotAccessGenericResponse.successResponse(slotAccess, null);

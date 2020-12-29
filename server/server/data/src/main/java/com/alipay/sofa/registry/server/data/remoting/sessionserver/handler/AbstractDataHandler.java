@@ -52,7 +52,7 @@ public abstract class AbstractDataHandler<T> extends AbstractServerHandler<T> {
     protected static final Logger            LOGGER_SLOT_ACCESS = LoggerFactory
                                                                     .getLogger("SLOT-ACCESS");
 
-    private final Set<StoreData.DataType>    DATA_TTPES         = Collections
+    private final Set<StoreData.DataType>    DATA_TYPES         = Collections
                                                                     .unmodifiableSet(Sets
                                                                         .newHashSet(
                                                                             StoreData.DataType.PUBLISHER,
@@ -87,7 +87,7 @@ public abstract class AbstractDataHandler<T> extends AbstractServerHandler<T> {
         if (publisher.getPublishType() != PublishType.TEMPORARY) {
             ParaCheckUtil.checkNotNull(publisher.getSourceAddress(), "publisher.sourceAddress");
         }
-        ParaCheckUtil.checkContains(DATA_TTPES, publisher.getDataType(), "publisher.dataType");
+        ParaCheckUtil.checkContains(DATA_TYPES, publisher.getDataType(), "publisher.dataType");
     }
 
     protected void checkSessionProcessId(ProcessId sessionProcessId) {
@@ -95,15 +95,18 @@ public abstract class AbstractDataHandler<T> extends AbstractServerHandler<T> {
     }
 
     protected SlotAccess checkAccess(String dataInfoId, long slotTableEpoch) {
-        final SlotAccess slotAccess = slotManager.checkSlotAccess(dataInfoId, slotTableEpoch);
+        final int slotId = slotManager.slotOf(dataInfoId);
+        return checkAccess(slotId, slotTableEpoch);
+    }
+
+    protected SlotAccess checkAccess(int slotId, long slotTableEpoch) {
+        final SlotAccess slotAccess = slotManager.checkSlotAccess(slotId, slotTableEpoch);
         if (slotAccess.isMoved()) {
-            LOGGER_SLOT_ACCESS
-                .warn("[moved] Slot has moved, {} access: {}", dataInfoId, slotAccess);
+            LOGGER_SLOT_ACCESS.warn("[moved] Slot has moved, access: {}", slotAccess);
         }
 
         if (slotAccess.isMigrating()) {
-            LOGGER_SLOT_ACCESS.warn("[migrating] Slot is migrating, {} access: {}", dataInfoId,
-                slotAccess);
+            LOGGER_SLOT_ACCESS.warn("[migrating] Slot is migrating, access: {}", slotAccess);
         }
         return slotAccess;
     }

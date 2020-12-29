@@ -24,9 +24,6 @@ import java.util.concurrent.TimeUnit;
 
 import javax.annotation.PostConstruct;
 
-import com.alipay.sofa.registry.common.model.AppRegisterServerDataBox;
-import com.alipay.sofa.registry.common.model.store.AppPublisher;
-import com.alipay.sofa.registry.common.model.store.Publisher;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import com.alipay.remoting.Connection;
@@ -104,19 +101,7 @@ public class SessionServerNotifier implements IDataChangeNotifier {
 
     @Override
     public void notify(Datum datum, Long lastVersion) {
-        Set<String> revisions = null;
-
-        for (Publisher publisher : datum.getPubMap().values()) {
-            if (publisher instanceof AppPublisher) {
-                if (revisions == null) {
-                    revisions = new HashSet<>();
-                }
-                AppPublisher appPublisher = (AppPublisher) publisher;
-                for (AppRegisterServerDataBox dataBox : appPublisher.getAppDataList()) {
-                    revisions.add(dataBox.getRevision());
-                }
-            }
-        }
+        Set<String> revisions = datum.revisions();
 
         DataChangeRequest request = new DataChangeRequest(datum.getDataInfoId(),
             datum.getDataCenter(), datum.getVersion(), revisions);

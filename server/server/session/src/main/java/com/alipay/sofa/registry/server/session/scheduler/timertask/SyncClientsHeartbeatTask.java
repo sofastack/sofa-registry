@@ -16,21 +16,12 @@
  */
 package com.alipay.sofa.registry.server.session.scheduler.timertask;
 
-import java.util.Iterator;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.concurrent.ThreadPoolExecutor;
-
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.scheduling.annotation.Scheduled;
-
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.metrics.TaskMetrics;
 import com.alipay.sofa.registry.remoting.Server;
 import com.alipay.sofa.registry.remoting.exchange.Exchange;
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
-import com.alipay.sofa.registry.server.session.listener.ReceivedDataMultiPushTaskListener;
 import com.alipay.sofa.registry.server.session.scheduler.ExecutorManager;
 import com.alipay.sofa.registry.server.session.store.DataStore;
 import com.alipay.sofa.registry.server.session.store.Interests;
@@ -38,9 +29,15 @@ import com.alipay.sofa.registry.server.session.store.Watchers;
 import com.alipay.sofa.registry.task.batcher.AcceptorExecutor;
 import com.alipay.sofa.registry.task.batcher.TaskDispatcher;
 import com.alipay.sofa.registry.task.batcher.TaskDispatchers;
-import com.alipay.sofa.registry.task.listener.TaskListener;
 import com.codahale.metrics.Gauge;
 import com.codahale.metrics.MetricRegistry;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.annotation.Scheduled;
+
+import java.util.Iterator;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.concurrent.ThreadPoolExecutor;
 
 /**
  * The type Sync clients heartbeat task.
@@ -87,9 +84,6 @@ public class SyncClientsHeartbeatTask {
 
     @Autowired
     private ExecutorManager     executorManager;
-
-    @Autowired
-    private TaskListener        receivedDataMultiPushTaskListener;
 
     @Scheduled(initialDelayString = "${session.server.syncHeartbeat.fixedDelay}", fixedDelayString = "${session.server.syncHeartbeat.fixedDelay}")
     public void syncCounte() {
@@ -184,20 +178,20 @@ public class SyncClientsHeartbeatTask {
 
     @Scheduled(initialDelayString = "${session.server.printTask.fixedDelay}", fixedDelayString = "${session.server.printTask.fixedDelay}")
     public void printPushMultiTaskExecute() {
-        if (receivedDataMultiPushTaskListener instanceof ReceivedDataMultiPushTaskListener) {
-            ReceivedDataMultiPushTaskListener listener = (ReceivedDataMultiPushTaskListener) receivedDataMultiPushTaskListener;
-            StringBuilder sb = new StringBuilder();
-            sb.append("ReceivedDataPush").append(" >>>>>>>");
-            sb.append(", AcceptedTasks:").append(
-                listener.getTaskMergeProcessorStrategy().getPutTaskSize());
-            sb.append(", SendTasks:").append(
-                listener.getTaskMergeProcessorStrategy().getSendTaskSize());
-            sb.append(" ,PendingTaskSize:").append(
-                listener.getTaskMergeProcessorStrategy().getPendingTaskSize());
-            sb.append(", OverriddenTasks:").append(
-                listener.getTaskMergeProcessorStrategy().getOverrideTaskSize());
-            sb.append("\n");
-            PRO_LOGGER.info(sb.toString());
-        }
+        //        if (receivedDataMultiPushTaskListener instanceof ReceivedDataMultiPushTaskListener) {
+        //            ReceivedDataMultiPushTaskListener listener = (ReceivedDataMultiPushTaskListener) receivedDataMultiPushTaskListener;
+        //            StringBuilder sb = new StringBuilder();
+        //            sb.append("ReceivedDataPush").append(" >>>>>>>");
+        //            sb.append(", AcceptedTasks:").append(
+        //                listener.getTaskMergeProcessorStrategy().getPutTaskSize());
+        //            sb.append(", SendTasks:").append(
+        //                listener.getTaskMergeProcessorStrategy().getSendTaskSize());
+        //            sb.append(" ,PendingTaskSize:").append(
+        //                listener.getTaskMergeProcessorStrategy().getPendingTaskSize());
+        //            sb.append(", OverriddenTasks:").append(
+        //                listener.getTaskMergeProcessorStrategy().getOverrideTaskSize());
+        //            sb.append("\n");
+        //            PRO_LOGGER.info(sb.toString());
+        //        }
     }
 }

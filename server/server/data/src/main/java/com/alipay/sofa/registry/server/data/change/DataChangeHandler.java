@@ -124,6 +124,8 @@ public class DataChangeHandler {
             if (existDatum != null) {
                 datum.addPublishers(existDatum.getPubMap());
             }
+            // TODO the version maybe confict with the existing
+            datum.updateVersion();
 
             LOGGER.info("[DataChangeHandler][{}] temp pub, {}, dataCenter={}, size={}, ver={}",
                 name, datum.getDataInfoId(), datum.getDataCenter(), datum.publisherSize(),

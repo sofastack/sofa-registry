@@ -105,12 +105,14 @@ public class DefaultSessionServerManagerTest extends AbstractTest {
     }
 
     @Test
-    public void testDataServerManagerRefreshEpochOnlyOnceWhenNewRegistered() throws TimeoutException, InterruptedException {
+    public void testDataServerManagerRefreshEpochOnlyOnceWhenNewRegistered()
+                                                                            throws TimeoutException,
+                                                                            InterruptedException {
         makeRaftLeader();
         SessionNode node = new SessionNode(randomURL(randomIp()), getDc());
         SessionLeaseManager leaseManager = spy(new SessionLeaseManager());
         sessionManager.setSessionLeaseManager(leaseManager)
-                .setRaftSessionLeaseManager(leaseManager);
+            .setRaftSessionLeaseManager(leaseManager);
         sessionManager.renew(node, 1000);
         Assert.assertEquals(1, sessionManager.getClusterMembers().size());
         verify(leaseManager, times(1)).refreshEpoch(anyLong());

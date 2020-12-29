@@ -18,13 +18,17 @@ package com.alipay.sofa.registry.common.model.dataserver;
 
 import java.io.Serializable;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
+import com.alipay.sofa.registry.common.model.AppRegisterServerDataBox;
 import com.alipay.sofa.registry.common.model.PublisherInternUtil;
+import com.alipay.sofa.registry.common.model.store.AppPublisher;
 import com.alipay.sofa.registry.common.model.store.Publisher;
 import com.alipay.sofa.registry.common.model.store.WordCache;
 import com.alipay.sofa.registry.util.DatumVersionUtil;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 
 /**
  * datum store in dataserver
@@ -284,5 +288,19 @@ public class Datum implements Serializable {
 
     public Map<String, Publisher> publisherSnapshot() {
         return Maps.newHashMap(pubMap);
+    }
+
+    public Set<String> revisions() {
+        Set<String> revisions = Sets.newHashSet();
+
+        for (Publisher publisher : pubMap.values()) {
+            if (publisher instanceof AppPublisher) {
+                AppPublisher appPublisher = (AppPublisher) publisher;
+                for (AppRegisterServerDataBox dataBox : appPublisher.getAppDataList()) {
+                    revisions.add(dataBox.getRevision());
+                }
+            }
+        }
+        return revisions;
     }
 }

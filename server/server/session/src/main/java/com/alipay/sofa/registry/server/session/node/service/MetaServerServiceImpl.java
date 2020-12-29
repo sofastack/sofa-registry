@@ -44,17 +44,24 @@ public final class MetaServerServiceImpl extends
     @Autowired
     private DataNodeExchanger   dataNodeExchanger;
 
+    private volatile long       sessionEpoch;
+
     @Override
     protected void handleRenewResult(SessionHeartBeatResponse result) {
         dataNodeExchanger.setServerIps(getDataServerList());
         dataNodeExchanger.notifyConnectServerAsync();
 
         slotTableCache.updateSlotTable(result.getSlotTable());
+        this.sessionEpoch = sessionEpoch;
     }
 
     @Override
     protected Node createNode() {
         return new SessionNode(new URL(ServerEnv.IP), sessionServerConfig.getSessionServerRegion())
             .setProcessId(ServerEnv.PROCESS_ID);
+    }
+
+    public long getSessionEpoch() {
+        return sessionEpoch;
     }
 }

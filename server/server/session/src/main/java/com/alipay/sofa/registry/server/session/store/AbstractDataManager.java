@@ -22,6 +22,7 @@ import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
 import com.alipay.sofa.registry.util.ParaCheckUtil;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import org.apache.commons.collections.MapUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -54,11 +55,21 @@ public abstract class AbstractDataManager<T extends BaseInfo> implements
         this.logger = logger;
     }
 
+
+    protected T addData(T data) {
+        Map<String, T> datas = stores.computeIfAbsent(data.getDataInfoId(),
+                k -> Maps.newConcurrentMap());
+
+        T existing = datas.put(data.getRegisterId(), data);
+        return existing;
+    }
+
+
     @Override
     public boolean deleteById(String registerId, String dataInfoId) {
         Map<String, T> datas = stores.get(dataInfoId);
         if (datas == null) {
-            logger.error("Delete failed because is not registered for dataInfoId: {}", dataInfoId);
+            logger.error("Delete failed because is not registered for {}", dataInfoId);
             return false;
         }
         boolean modified = false;
@@ -67,18 +78,16 @@ public abstract class AbstractDataManager<T extends BaseInfo> implements
             T dataToDelete = datas.remove(registerId);
             if (dataToDelete != null) {
                 modified = true;
-                postDelete(dataToDelete);
             }
         } finally {
             write.unlock();
         }
-        if (modified) {
-            logger.error("Delete failed because is not registered for registerId: {}", registerId);
+        if (!modified) {
+            logger.error("Delete failed because is not registered for {}, {}", dataInfoId,
+                registerId);
         }
         return modified;
     }
-
-    protected abstract void postDelete(T data);
 
     @Override
     public boolean deleteByConnectId(ConnectId connectId) {
@@ -91,7 +100,6 @@ public abstract class AbstractDataManager<T extends BaseInfo> implements
                     if (connectId.equals(data.connectId())) {
                         modified = true;
                         it.remove();
-                        postDelete(data);
                     }
                 }
             }

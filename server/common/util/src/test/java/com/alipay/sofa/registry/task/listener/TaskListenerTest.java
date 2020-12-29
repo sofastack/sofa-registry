@@ -17,7 +17,6 @@
 package com.alipay.sofa.registry.task.listener;
 
 import static com.alipay.sofa.registry.task.listener.TaskEvent.TaskType.CANCEL_DATA_TASK;
-import static com.alipay.sofa.registry.task.listener.TaskEvent.TaskType.DATA_PUSH_TASK;
 import static com.alipay.sofa.registry.task.listener.TaskEvent.TaskType.WATCHER_REGISTER_FETCH_TASK;
 
 import org.junit.Assert;
@@ -34,47 +33,26 @@ public class TaskListenerTest {
     private static final TaskListenerManager taskListenerManager                    = new DefaultTaskListenerManager();
     private static volatile boolean          watcherRegisterFetchTaskListenerCalled = false;
     private static volatile boolean          cancelDataTaskListenerCalled           = false;
-    private static volatile boolean          dataPushTaskListenerCalled             = false;
 
     @BeforeClass
     public static void beforeClass() {
         taskListenerManager.addTaskListener(new CancelDataTaskListener());
-        taskListenerManager.addTaskListener(new DataPushTaskListener());
         taskListenerManager.addTaskListener(new WatcherRegisterFetchTaskListener());
     }
 
     @Test
     public void doTest() {
-        Assert.assertEquals(3, taskListenerManager.getTaskListeners().size());
-        taskListenerManager.sendTaskEvent(new TaskEvent(DATA_PUSH_TASK));
-        Assert.assertTrue(dataPushTaskListenerCalled);
-        Assert.assertFalse(cancelDataTaskListenerCalled);
-        Assert.assertFalse(watcherRegisterFetchTaskListenerCalled);
-        dataPushTaskListenerCalled = false;
+        Assert.assertEquals(2, taskListenerManager.getTaskListeners().size());
 
         taskListenerManager.sendTaskEvent(new TaskEvent(CANCEL_DATA_TASK));
-        Assert.assertFalse(dataPushTaskListenerCalled);
         Assert.assertTrue(cancelDataTaskListenerCalled);
         Assert.assertFalse(watcherRegisterFetchTaskListenerCalled);
         cancelDataTaskListenerCalled = false;
 
         taskListenerManager.sendTaskEvent(new TaskEvent(WATCHER_REGISTER_FETCH_TASK));
-        Assert.assertFalse(dataPushTaskListenerCalled);
         Assert.assertFalse(cancelDataTaskListenerCalled);
         Assert.assertTrue(watcherRegisterFetchTaskListenerCalled);
         watcherRegisterFetchTaskListenerCalled = false;
-    }
-
-    private static class DataPushTaskListener implements TaskListener {
-        @Override
-        public TaskType support() {
-            return DATA_PUSH_TASK;
-        }
-
-        @Override
-        public void handleEvent(TaskEvent event) {
-            dataPushTaskListenerCalled = true;
-        }
     }
 
     private static class CancelDataTaskListener implements TaskListener {

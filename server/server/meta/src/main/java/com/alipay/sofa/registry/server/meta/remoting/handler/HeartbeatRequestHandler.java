@@ -23,6 +23,8 @@ import com.alipay.sofa.registry.common.model.metaserver.inter.communicate.BaseHe
 import com.alipay.sofa.registry.common.model.metaserver.inter.communicate.DataHeartBeatResponse;
 import com.alipay.sofa.registry.common.model.metaserver.inter.communicate.SessionHeartBeatResponse;
 import com.alipay.sofa.registry.common.model.metaserver.nodes.DataNode;
+import com.alipay.sofa.registry.common.model.metaserver.nodes.MetaNode;
+import com.alipay.sofa.registry.common.model.metaserver.nodes.SessionNode;
 import com.alipay.sofa.registry.common.model.slot.DataNodeSlot;
 import com.alipay.sofa.registry.common.model.slot.Slot;
 import com.alipay.sofa.registry.common.model.slot.SlotTable;
@@ -35,6 +37,7 @@ import com.alipay.sofa.registry.server.meta.slot.impl.DefaultSlotManager;
 import com.google.common.collect.Maps;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -61,21 +64,26 @@ public class HeartbeatRequestHandler extends MetaServerHandler<RenewNodesRequest
             getLeaseManager(renewNode).renew(renewNode, renewNodesRequest.getDuration());
             SlotTable slotTable = currentDcMetaServer.getSlotTable();
             BaseHeartBeatResponse response = null;
+            // TODO the epoch and the nodes is not atomic
+            final long metaEpoch = currentDcMetaServer.getEpoch();
+            final List<MetaNode> metaNodes = currentDcMetaServer.getClusterMembers();
+
+            final long sessionEpoch = currentDcMetaServer.getSessionServerManager().getEpoch();
+            final List<SessionNode> sessionNodes = currentDcMetaServer.getSessionServerManager()
+                .getClusterMembers();
+
             switch (renewNode.getNodeType()) {
                 case SESSION:
-                    response = new SessionHeartBeatResponse(currentDcMetaServer.getEpoch(),
-                        slotTable, currentDcMetaServer.getClusterMembers(), currentDcMetaServer
-                            .getSessionServerManager().getClusterMembers(), currentDcMetaServer.getSessionServerManager().getEpoch());
+                    response = new SessionHeartBeatResponse(metaEpoch, slotTable, metaNodes,
+                        sessionEpoch, sessionNodes);
                     break;
                 case DATA:
                     slotTable = transferDataNodeSlotToSlotTable((DataNode) renewNode, slotTable);
-                    response = new DataHeartBeatResponse(currentDcMetaServer.getEpoch(), slotTable,
-                        currentDcMetaServer.getClusterMembers(), currentDcMetaServer
-                            .getSessionServerManager().getClusterMembers());
+                    response = new DataHeartBeatResponse(metaEpoch, slotTable, metaNodes,
+                        sessionEpoch, sessionNodes);
                     break;
                 case META:
-                    response = new BaseHeartBeatResponse(currentDcMetaServer.getEpoch(), slotTable,
-                        currentDcMetaServer.getClusterMembers());
+                    response = new BaseHeartBeatResponse(metaEpoch, slotTable, metaNodes);
                     break;
                 default:
                     break;

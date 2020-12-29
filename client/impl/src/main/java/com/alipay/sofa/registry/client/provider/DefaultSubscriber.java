@@ -313,6 +313,10 @@ public class DefaultSubscriber extends AbstractInternalRegister implements Subsc
         }
     }
 
+    public boolean isInited() {
+        return init.get();
+    }
+
     @Override
     public String toString() {
         return "DefaultSubscriber{" + "registration=" + registration + '}' + super.toString();

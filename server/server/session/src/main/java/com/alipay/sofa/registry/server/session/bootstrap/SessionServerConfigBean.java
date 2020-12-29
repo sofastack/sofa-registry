@@ -129,26 +129,6 @@ public class SessionServerConfigBean implements SessionServerConfig {
 
     private int                  metaNodeExchangeTimeOut                 = 3000;
 
-    private int                  userDataPushRetryWheelTicksSize         = 5120;
-
-    private int                  userDataPushRetryWheelTicksDuration     = 100;
-
-    private int                  userDataPushRetryExecutorQueueSize      = 1000000;
-
-    private int                  userDataPushRetryExecutorThreadSize     = 10;
-
-    private int                  renewDatumWheelTicksSize                = 2048;
-
-    private int                  renewDatumWheelTicksDuration            = 500;
-
-    private int                  renewDatumWheelTaskDelaySec             = 180;
-
-    private int                  renewDatumWheelTaskRandomFirstDelaySec  = 200;
-
-    private int                  renewDatumWheelThreadSize               = 10;
-
-    private int                  renewDatumWheelQueueSize                = 10000;
-
     private int                  pushDataTaskRetryFirstDelay             = 500;
 
     private long                 pushDataTaskRetryIncrementDelay         = 500;
@@ -171,9 +151,7 @@ public class SessionServerConfigBean implements SessionServerConfig {
 
     private long                 publishDataExecutorKeepAliveTime        = 60;
 
-    private int                  schedulerFetchDataVersionIntervalMs     = 1000 * 6;
-
-    private int                  schedulerFetchDataVersionPoolSize       = 12;
+    private int                  schedulerFetchDataVersionIntervalMs     = 1000 * 2;
 
     private double               accessLimitRate                         = 100000.0;
 
@@ -182,8 +160,6 @@ public class SessionServerConfigBean implements SessionServerConfig {
     private String               sessionServerDataCenter;
 
     private volatile boolean     stopPushSwitch                          = false;
-
-    private volatile boolean     beginDataFetchTask                      = false;
 
     //begin config for enterprise version
 
@@ -233,80 +209,6 @@ public class SessionServerConfigBean implements SessionServerConfig {
      */
     public SessionServerConfigBean(CommonConfig commonConfig) {
         this.commonConfig = commonConfig;
-    }
-
-    /**
-     * Getter method for property <tt>renewDatumWheelThreadSize</tt>.
-     *
-     * @return property value of renewDatumWheelThreadSize
-     */
-    public int getRenewDatumWheelThreadSize() {
-        return renewDatumWheelThreadSize;
-    }
-
-    /**
-     * Setter method for property <tt>renewDatumWheelThreadSize </tt>.
-     *
-     * @param renewDatumWheelThreadSize value to be assigned to property renewDatumWheelThreadSize
-     */
-    public void setRenewDatumWheelThreadSize(int renewDatumWheelThreadSize) {
-        this.renewDatumWheelThreadSize = renewDatumWheelThreadSize;
-    }
-
-    /**
-     * Getter method for property <tt>renewDatumWheelQueueSize</tt>.
-     *
-     * @return property value of renewDatumWheelQueueSize
-     */
-    public int getRenewDatumWheelQueueSize() {
-        return renewDatumWheelQueueSize;
-    }
-
-    /**
-     * Setter method for property <tt>renewDatumWheelQueueSize </tt>.
-     *
-     * @param renewDatumWheelQueueSize value to be assigned to property renewDatumWheelQueueSize
-     */
-    public void setRenewDatumWheelQueueSize(int renewDatumWheelQueueSize) {
-        this.renewDatumWheelQueueSize = renewDatumWheelQueueSize;
-    }
-
-    /**
-     * Getter method for property <tt>userDataPushRetryExecutorQueueSize</tt>.
-     *
-     * @return property value of userDataPushRetryExecutorQueueSize
-     */
-    @Override
-    public int getUserDataPushRetryExecutorQueueSize() {
-        return userDataPushRetryExecutorQueueSize;
-    }
-
-    /**
-     * Setter method for property <tt>userDataPushRetryExecutorQueueSize </tt>.
-     *
-     * @param userDataPushRetryExecutorQueueSize value to be assigned to property userDataPushRetryExecutorQueueSize
-     */
-    public void setUserDataPushRetryExecutorQueueSize(int userDataPushRetryExecutorQueueSize) {
-        this.userDataPushRetryExecutorQueueSize = userDataPushRetryExecutorQueueSize;
-    }
-
-    /**
-     * Getter method for property <tt>userDataPushRetryExecutorThreadSize</tt>.
-     *
-     * @return property value of userDataPushRetryExecutorThreadSize
-     */
-    @Override
-    public int getUserDataPushRetryExecutorThreadSize() {
-        return userDataPushRetryExecutorThreadSize;
-    }
-
-    /**
-     * Setter method for property <tt>userDataPushRetryExecutorThreadSize </tt>.
-     *
-     * @param userDataPushRetryExecutorThreadSize value to be assigned to property userDataPushRetryExecutorThreadSize
-     */
-    public void setUserDataPushRetryExecutorThreadSize(int userDataPushRetryExecutorThreadSize) {
-        this.userDataPushRetryExecutorThreadSize = userDataPushRetryExecutorThreadSize;
     }
 
     /**
@@ -895,26 +797,6 @@ public class SessionServerConfigBean implements SessionServerConfig {
         this.stopPushSwitch = stopPushSwitch;
     }
 
-    /**
-     * Getter method for property <tt>beginDataFetchTask</tt>.
-     *
-     * @return property value of beginDataFetchTask
-     */
-    @Override
-    public boolean isBeginDataFetchTask() {
-        return beginDataFetchTask;
-    }
-
-    /**
-     * Setter method for property <tt>beginDataFetchTask</tt>.
-     *
-     * @param beginDataFetchTask value to be assigned to property beginDataFetchTask
-     */
-    @Override
-    public void setBeginDataFetchTask(boolean beginDataFetchTask) {
-        this.beginDataFetchTask = beginDataFetchTask;
-    }
-
     public String getInvalidForeverZones() {
         return invalidForeverZones;
     }
@@ -1296,44 +1178,6 @@ public class SessionServerConfigBean implements SessionServerConfig {
     }
 
     /**
-     * Getter method for property <tt>userDataPushRetryWheelTicksSize</tt>.
-     *
-     * @return property value of userDataPushRetryWheelTicksSize
-     */
-    @Override
-    public int getUserDataPushRetryWheelTicksSize() {
-        return userDataPushRetryWheelTicksSize;
-    }
-
-    /**
-     * Setter method for property <tt>userDataPushRetryWheelTicksSize</tt>.
-     *
-     * @param userDataPushRetryWheelTicksSize value to be assigned to property userDataPushRetryWheelTicksSize
-     */
-    public void setUserDataPushRetryWheelTicksSize(int userDataPushRetryWheelTicksSize) {
-        this.userDataPushRetryWheelTicksSize = userDataPushRetryWheelTicksSize;
-    }
-
-    /**
-     * Getter method for property <tt>userDataPushRetryWheelTicksDuration</tt>.
-     *
-     * @return property value of userDataPushRetryWheelTicksDuration
-     */
-    @Override
-    public int getUserDataPushRetryWheelTicksDuration() {
-        return userDataPushRetryWheelTicksDuration;
-    }
-
-    /**
-     * Setter method for property <tt>userDataPushRetryWheelTicksDuration</tt>.
-     *
-     * @param userDataPushRetryWheelTicksDuration value to be assigned to property userDataPushRetryWheelTicksDuration
-     */
-    public void setUserDataPushRetryWheelTicksDuration(int userDataPushRetryWheelTicksDuration) {
-        this.userDataPushRetryWheelTicksDuration = userDataPushRetryWheelTicksDuration;
-    }
-
-    /**
      * Getter method for property <tt>pushDataTaskRetryFirstDelay</tt>.
      *
      * @return property value of pushDataTaskRetryFirstDelay
@@ -1360,78 +1204,6 @@ public class SessionServerConfigBean implements SessionServerConfig {
     @Override
     public long getPushDataTaskRetryIncrementDelay() {
         return pushDataTaskRetryIncrementDelay;
-    }
-
-    /**
-     * Getter method for property <tt>renewDatumWheelTicksSize</tt>.
-     *
-     * @return property value of renewDatumWheelTicksSize
-     */
-    public int getRenewDatumWheelTicksSize() {
-        return renewDatumWheelTicksSize;
-    }
-
-    /**
-     * Getter method for property <tt>renewDatumWheelTicksDuration</tt>.
-     *
-     * @return property value of renewDatumWheelTicksDuration
-     */
-    public int getRenewDatumWheelTicksDuration() {
-        return renewDatumWheelTicksDuration;
-    }
-
-    /**
-     * Getter method for property <tt>renewDatumWheelTaskDelaySec</tt>.
-     *
-     * @return property value of renewDatumWheelTaskDelaySec
-     */
-    public int getRenewDatumWheelTaskDelaySec() {
-        return renewDatumWheelTaskDelaySec;
-    }
-
-    /**
-     * Setter method for property <tt>renewDatumWheelTaskDelaySec </tt>.
-     *
-     * @param renewDatumWheelTaskDelaySec value to be assigned to property renewDatumWheelTaskDelaySec
-     */
-    public void setRenewDatumWheelTaskDelaySec(int renewDatumWheelTaskDelaySec) {
-        this.renewDatumWheelTaskDelaySec = renewDatumWheelTaskDelaySec;
-    }
-
-    /**
-     * Getter method for property <tt>renewDatumWheelTaskRandomFirstDelaySec</tt>.
-     *
-     * @return property value of renewDatumWheelTaskRandomFirstDelaySec
-     */
-    public int getRenewDatumWheelTaskRandomFirstDelaySec() {
-        return renewDatumWheelTaskRandomFirstDelaySec;
-    }
-
-    /**
-     * Setter method for property <tt>renewDatumWheelTaskRandomFirstDelaySec </tt>.
-     *
-     * @param renewDatumWheelTaskRandomFirstDelaySec value to be assigned to property renewDatumWheelTaskRandomFirstDelaySec
-     */
-    public void setRenewDatumWheelTaskRandomFirstDelaySec(int renewDatumWheelTaskRandomFirstDelaySec) {
-        this.renewDatumWheelTaskRandomFirstDelaySec = renewDatumWheelTaskRandomFirstDelaySec;
-    }
-
-    /**
-     * Setter method for property <tt>renewDatumWheelTicksSize</tt>.
-     *
-     * @param renewDatumWheelTicksSize value to be assigned to property renewDatumWheelTicksSize
-     */
-    public void setRenewDatumWheelTicksSize(int renewDatumWheelTicksSize) {
-        this.renewDatumWheelTicksSize = renewDatumWheelTicksSize;
-    }
-
-    /**
-     * Setter method for property <tt>renewDatumWheelTicksDuration</tt>.
-     *
-     * @param renewDatumWheelTicksDuration value to be assigned to property renewDatumWheelTicksDuration
-     */
-    public void setRenewDatumWheelTicksDuration(int renewDatumWheelTicksDuration) {
-        this.renewDatumWheelTicksDuration = renewDatumWheelTicksDuration;
     }
 
     /**
@@ -1792,23 +1564,6 @@ public class SessionServerConfigBean implements SessionServerConfig {
      */
     public void setSchedulerFetchDataVersionIntervalMs(int schedulerFetchDataVersionIntervalMs) {
         this.schedulerFetchDataVersionIntervalMs = schedulerFetchDataVersionIntervalMs;
-    }
-
-    /**
-     * Getter method for property <tt>schedulerFetchDataVersionPoolSize</tt>.
-     * @return property value of schedulerFetchDataVersionPoolSize
-     */
-    @Override
-    public int getSchedulerFetchDataVersionPoolSize() {
-        return schedulerFetchDataVersionPoolSize;
-    }
-
-    /**
-     * Setter method for property <tt>schedulerFetchDataVersionPoolSize</tt>.
-     * @param schedulerFetchDataVersionPoolSize value to be assigned to property schedulerFetchDataVersionPoolSize
-     */
-    public void setSchedulerFetchDataVersionPoolSize(int schedulerFetchDataVersionPoolSize) {
-        this.schedulerFetchDataVersionPoolSize = schedulerFetchDataVersionPoolSize;
     }
 
     @Override

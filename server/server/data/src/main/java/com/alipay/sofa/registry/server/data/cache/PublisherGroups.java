@@ -32,7 +32,6 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- *
  * @author yuzhi.lyz
  * @version v 0.1 2020-12-02 21:52 yuzhi.lyz Exp $
  */
@@ -42,6 +41,17 @@ public final class PublisherGroups {
     Datum getDatum(String dataInfoId) {
         PublisherGroup group = publisherGroupMap.get(dataInfoId);
         return group == null ? null : group.toDatum();
+    }
+
+    DatumVersion getVersion(String dataInfoId) {
+        PublisherGroup group = publisherGroupMap.get(dataInfoId);
+        return group == null ? null : group.getVersion();
+    }
+
+    Map<String, DatumVersion> getVersions() {
+        final Map<String, DatumVersion> ret = new HashMap<>(publisherGroupMap.size());
+        publisherGroupMap.forEach((k, v) -> ret.put(k, v.getVersion()));
+        return ret;
     }
 
     Map<String, Datum> getAllDatum() {
@@ -58,12 +68,15 @@ public final class PublisherGroups {
         return map;
     }
 
-    DatumVersion putPublisher(Publisher publisher, ProcessId seesionProcessId, String dataCenter) {
-        PublisherGroup group = publisherGroupMap
+    DatumVersion putPublisher(Publisher publisher, String dataCenter) {
+        PublisherGroup group = createGroupIfAbsent(publisher, dataCenter);
+        return group.addPublisher(publisher);
+    }
+
+    PublisherGroup createGroupIfAbsent(Publisher publisher, String dataCenter) {
+        return publisherGroupMap
                 .computeIfAbsent(publisher.getDataInfoId(),
                         k -> new PublisherGroup(publisher, dataCenter));
-
-        return group.addPublisher(publisher, seesionProcessId);
     }
 
     Map<String, DatumVersion> clean(ProcessId sessionProcessId) {
@@ -130,5 +143,9 @@ public final class PublisherGroups {
             }
         });
         return compacts;
+    }
+
+    void updateVersion() {
+        publisherGroupMap.values().forEach(g -> g.updateVersion());
     }
 }

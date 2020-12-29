@@ -17,7 +17,6 @@
 package com.alipay.sofa.registry.common.model.slot;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.collect.Maps;
 
 import java.io.Serializable;
@@ -44,33 +43,6 @@ public final class SlotTable implements Serializable {
     @JsonIgnore
     public Map<Integer, Slot> getSlotMap() {
         return Maps.newHashMap(slots);
-    }
-
-    public static Map<Integer, Slot> getSlotsAdded(SlotTable from, SlotTable to) {
-        Map<Integer, Slot> m = new TreeMap<>(to.slots);
-        from.slots.keySet().forEach(slotId -> {
-            m.remove(slotId);
-        });
-        return m;
-    }
-
-    public static Map<Integer, Slot> getSlotsDeleted(SlotTable from, SlotTable to) {
-        Map<Integer, Slot> m = new TreeMap<>(from.slots);
-        to.slots.keySet().forEach(slotId -> {
-            m.remove(slotId);
-        });
-        return m;
-    }
-
-    public static Map<Integer, Slot> getSlotUpdated(SlotTable from, SlotTable to) {
-        Map<Integer, Slot> m = new TreeMap<>();
-        from.slots.forEach((slotId, fromSlot) -> {
-            final Slot toSlot = to.slots.get(slotId);
-            if (toSlot != null && !fromSlot.equals(toSlot)) {
-                m.put(slotId, toSlot);
-            }
-        });
-        return m;
     }
 
     @JsonIgnore

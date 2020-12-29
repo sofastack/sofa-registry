@@ -29,8 +29,6 @@ import java.util.List;
  */
 public class SessionHeartBeatResponse extends BaseHeartBeatResponse {
 
-    private long sessionEpoch;
-
     /**
      * Constructor.
      *
@@ -38,20 +36,12 @@ public class SessionHeartBeatResponse extends BaseHeartBeatResponse {
      * @param slotTable       the slot table
      * @param metaNodes       the meta nodes
      * @param sessionNodes    the session nodes
-     * @param sessionEpoch    the session epoch
+     * @param sessionServerEpoch    the session epoch
      */
     public SessionHeartBeatResponse(long metaServerEpoch, SlotTable slotTable,
-                                    List<MetaNode> metaNodes, List<SessionNode> sessionNodes, long sessionEpoch) {
-        super(metaServerEpoch, slotTable, metaNodes, sessionNodes);
-        this.sessionEpoch = sessionEpoch;
+                                    List<MetaNode> metaNodes, long sessionServerEpoch,
+                                    List<SessionNode> sessionNodes) {
+        super(metaServerEpoch, slotTable, metaNodes, sessionServerEpoch, sessionNodes);
     }
 
-    /**
-     * Gets get session epoch.
-     *
-     * @return the get session epoch
-     */
-    public long getSessionEpoch() {
-        return sessionEpoch;
-    }
 }

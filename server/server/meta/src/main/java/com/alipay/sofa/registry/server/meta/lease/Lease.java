@@ -132,13 +132,9 @@ public class Lease<T> implements Serializable {
      */
     @Override
     public String toString() {
-        return "Lease{" +
-                "epoch=" + epoch +
-                ", renewal=" + renewal +
-                ", beginTimestamp=" + beginTimestamp +
-                ", lastUpdateTimestamp=" + lastUpdateTimestamp +
-                ", duration=" + duration +
-                '}';
+        return "Lease{" + "epoch=" + epoch + ", renewal=" + renewal + ", beginTimestamp="
+               + beginTimestamp + ", lastUpdateTimestamp=" + lastUpdateTimestamp + ", duration="
+               + duration + '}';
     }
 
     /**
@@ -149,11 +145,12 @@ public class Lease<T> implements Serializable {
      */
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o)
+            return true;
+        if (o == null || getClass() != o.getClass())
+            return false;
         Lease<?> lease = (Lease<?>) o;
-        return beginTimestamp == lease.beginTimestamp &&
-                renewal.equals(lease.renewal);
+        return beginTimestamp == lease.beginTimestamp && renewal.equals(lease.renewal);
     }
 
     /**

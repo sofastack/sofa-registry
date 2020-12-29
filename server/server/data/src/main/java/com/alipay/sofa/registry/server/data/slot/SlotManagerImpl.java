@@ -107,13 +107,17 @@ public final class SlotManagerImpl implements SlotManager {
     }
 
     @Override
-    public SlotAccess checkSlotAccess(String dataInfoId, long srcSlotEpoch) {
+    public int slotOf(String dataInfoId) {
+        return slotFunction.slotOf(dataInfoId);
+    }
+
+    @Override
+    public SlotAccess checkSlotAccess(int slotId, long srcSlotEpoch) {
         final long currentEpoch = slotTableStates.table.getEpoch();
         if (currentEpoch < srcSlotEpoch) {
             triggerUpdateSlotTable(srcSlotEpoch);
         }
 
-        final int slotId = slotFunction.slotOf(dataInfoId);
         final SlotState state = slotTableStates.slotStates.get(slotId);
         if (state == null || !isLeader(state.slot)) {
             return new SlotAccess(slotId, currentEpoch, SlotAccess.Status.Moved);
@@ -244,6 +248,9 @@ public final class SlotManagerImpl implements SlotManager {
                                 continue;
                             }
                             if (slotState.migratingTasks.values().stream().allMatch(m -> m.task.isSuccess())) {
+                                // after migrated, force to update the version
+                                // make sure the version is newly than old leader's
+                                localDatumStorage.updateVersion(slot.getId());
                                 slotState.migrated = true;
                                 LOGGER.info("slot migrating finish {}, sessions={}", slot,
                                         slotState.migratingTasks.keySet());

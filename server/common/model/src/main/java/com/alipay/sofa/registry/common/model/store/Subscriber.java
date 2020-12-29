@@ -16,7 +16,7 @@
  */
 package com.alipay.sofa.registry.common.model.store;
 
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 import com.alipay.sofa.registry.common.model.ElementType;
@@ -24,28 +24,36 @@ import com.alipay.sofa.registry.common.model.constants.ValueConstants;
 import com.alipay.sofa.registry.core.model.AssembleType;
 import com.alipay.sofa.registry.core.model.ScopeEnum;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.collections.MapUtils;
 
 /**
- *
  * @author shangyu.wh
  * @version $Id: Subscriber.java, v 0.1 2017-11-30 16:03 shangyu.wh Exp $
  */
 public class Subscriber extends BaseInfo {
 
-    /** UID */
+    /**
+     * UID
+     */
     private static final long                             serialVersionUID = 98433360274932292L;
-    /** */
+    /**
+     *
+     */
     private ScopeEnum                                     scope;
-    /** */
+    /**
+     *
+     */
     private ElementType                                   elementType;
-    /** */
+    /**
+     *
+     */
     private AssembleType                                  assembleType;
 
-    volatile PushContext                                  context;
     /**
      * last push context
      */
-    private final Map<String/*dataCenter*/, PushContext> lastPushContexts = new ConcurrentHashMap<>();
+    private final Map<String/*dataCenter*/, PushContext> lastPushContexts = new HashMap<>(4);
 
     /**
      * Getter method for property <tt>scope</tt>.
@@ -87,93 +95,77 @@ public class Subscriber extends BaseInfo {
         this.assembleType = assembleType;
     }
 
-    /**
-     * check version input greater than current version
-     * @param version
-     * @return
-     */
-    public boolean checkVersion(String dataCenter, Long version) {
-
-        PushContext lastPushContext = lastPushContexts.get(dataCenter);
-        if (lastPushContext == null) {
-            return version != null;
+    public synchronized Set<String> getPushedDataInfoIds() {
+        final Set<String> ret = new HashSet<>(4);
+        for (PushContext ctx : lastPushContexts.values()) {
+            ret.addAll(ctx.pushDatums.keySet());
         }
-        Long oldVersion = lastPushContext.pushVersion;
-        if (oldVersion == null) {
-            return version != null;
-        } else {
-            if (version != null) {
-                return version > oldVersion;
+        return ret;
+    }
+
+    public synchronized boolean checkVersion(String dataCenter, Map<String, Long> datumVersions) {
+        final PushContext ctx = lastPushContexts.get(dataCenter);
+        if (ctx == null || ctx.fetchSeqEnd == 0) {
+            return true;
+        }
+
+        // has diff dataInfoId
+        if (!datumVersions.keySet().equals(ctx.pushDatums.keySet())) {
+            return true;
+        }
+        for (Map.Entry<String, Long> version : datumVersions.entrySet()) {
+            DatumPushContext datumCtx = ctx.pushDatums.get(version.getKey());
+            if (datumCtx.version < version.getValue()) {
+                return true;
             }
+        }
+        return false;
+    }
+
+    public synchronized boolean checkAndUpdateVersion(String dataCenter, long pushVersion, Map<String, Long> datumVersion,
+                                                      long fetchSeqStart, long fetchSeqEnd) {
+        final PushContext ctx = lastPushContexts.computeIfAbsent(dataCenter, k -> new PushContext());
+
+        if (ctx.pushVersion >= pushVersion || ctx.fetchSeqEnd >= fetchSeqStart) {
             return false;
         }
+        ctx.pushVersion = pushVersion;
+        ctx.fetchSeqEnd = fetchSeqEnd;
+        ctx.update(datumVersion);
+        return true;
     }
 
-    /**
-     * check version input greater or equal to current version
-     * @param version
-     * @return
-     */
-    public void checkAndUpdateVersion(String dataCenter, Long version) {
-        checkAndUpdateVersion(dataCenter, version, -1);
-    }
-
-    /**
-     * check version input greater or equal to current version
-     * @param version
-     * @return
-     */
-    public void checkAndUpdateVersion(String dataCenter, Long version, int pubCount) {
-
-        while (true) {
-            PushContext pushContext = new PushContext(version, pubCount);
-            this.context = pushContext;
-            PushContext oldPushContext = lastPushContexts.putIfAbsent(dataCenter, pushContext);
-            // Add firstly
-            if (oldPushContext == null) {
-                break;
-            } else {
-                if (oldPushContext.pushVersion == null
-                    || (pushContext.pushVersion != null && pushContext.pushVersion > oldPushContext.pushVersion)) {
-                    if (lastPushContexts.replace(dataCenter, oldPushContext, pushContext)) {
-                        break;
-                    }
-                } else {
-                    break;
-                }
-            }
+    public synchronized boolean checkVersion(String dataCenter, long fetchSeqStart) {
+        final PushContext ctx = lastPushContexts.get(dataCenter);
+        if (ctx == null || ctx.fetchSeqEnd < fetchSeqStart) {
+            return true;
         }
+        return false;
     }
 
     /**
      * If the pushed data is empty, check the last push, for avoid continuous empty datum push
      */
     public boolean allowPush(String dataCenter, int pubCount) {
-        boolean allowPush = true;
-        // condition of no push:
-        // 1. last push count is 0 and this time is also 0
-        // 2. last push is a valid push (version > 1)
-        if (pubCount == 0) {
-            PushContext pushContext = lastPushContexts.get(dataCenter);
-            allowPush = !(pushContext != null && pushContext.pushPubCount == 0
-            //last push is a valid push
-                          && pushContext.pushVersion != null && pushContext.pushVersion > ValueConstants.DEFAULT_NO_DATUM_VERSION);
-        }
-        return allowPush;
-    }
-
-    public long getLastPushVersion(String dataCenter) {
-        if (context != null) {
-            return context.pushVersion;
-        }
-        final PushContext pushContext = lastPushContexts.get(dataCenter);
-        return pushContext == null ? 0 : pushContext.pushVersion;
+        // TODO
+        //        boolean allowPush = true;
+        //        // condition of no push:
+        //        // 1. last push count is 0 and this time is also 0
+        //        // 2. last push is a valid push (version > 1)
+        //        if (pubCount == 0) {
+        //            PushContext pushContext = lastPushContexts.get(dataCenter);
+        //            allowPush = !(pushContext != null && pushContext.pushPubCount == 0
+        //            //last push is a valid push
+        //                          && pushContext.pushVersion != null && pushContext.pushVersion > ValueConstants.DEFAULT_NO_DATUM_VERSION);
+        //        }
+        //        return allowPush;
+        return true;
     }
 
     /**
      * Setter method for property <tt>elementType</tt>.
      *
-     * @param elementType  value to be assigned to property elementType
+     * @param elementType value to be assigned to property elementType
      */
     public void setElementType(ElementType elementType) {
         this.elementType = elementType;
@@ -210,6 +202,7 @@ public class Subscriber extends BaseInfo {
 
     /**
      * change subscriber word cache
+     *
      * @param subscriber
      * @return
      */
@@ -227,32 +220,36 @@ public class Subscriber extends BaseInfo {
         return subscriber;
     }
 
-    static class PushContext {
-        /**
-         * last pushed dataInfo version
-         */
-        volatile Long pushVersion;
+    private static class DatumPushContext {
+        final long version;
 
-        /**
-         * push pushed dataInfo pubCount
-         */
-        volatile int  pushPubCount;
-
-        public PushContext(Long pushVersion, int pushPubCount) {
-            this.pushVersion = pushVersion;
-            this.pushPubCount = pushPubCount;
+        DatumPushContext(long version) {
+            this.version = version;
         }
 
-        /**
-         * @see Object#toString()
-         */
         @Override
         public String toString() {
-            final StringBuilder sb = new StringBuilder("PushContext{");
-            sb.append("pushVersion=").append(pushVersion);
-            sb.append(", pushPubCount=").append(pushPubCount);
-            sb.append('}');
-            return sb.toString();
+            return "DatumPushContext{" + "version=" + version + '}';
         }
     }
+
+    private static class PushContext {
+        //dataInfoId as key
+        Map<String, DatumPushContext> pushDatums = Collections.emptyMap();
+        long                          pushVersion;
+        long                          fetchSeqEnd;
+
+        void update(Map<String, Long> datumVersions) {
+            Map<String, DatumPushContext> map = new HashMap<>(datumVersions.size());
+            datumVersions.forEach((k, v) -> map.put(k, new DatumPushContext(v)));
+            this.pushDatums = map;
+        }
+
+        @Override
+        public String toString() {
+            return "PushContext{" + "pushVersion=" + pushVersion + ", fetchSeqEnd=" + fetchSeqEnd
+                   + ", pushDatums=" + pushDatums + '}';
+        }
+    }
+
 }

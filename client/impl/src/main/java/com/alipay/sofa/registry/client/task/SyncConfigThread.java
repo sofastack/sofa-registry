@@ -98,6 +98,11 @@ public class SyncConfigThread extends Thread {
 
                         DefaultSubscriber defaultSubscriber = (DefaultSubscriber) subscriber;
 
+                        if (!defaultSubscriber.isInited()) {
+                            LOGGER.info("[syncConfig] DefaultSubscriber not init, {}",
+                                defaultSubscriber.getRegistId());
+                            continue;
+                        }
                         List<String> nowAvailableSegments = defaultSubscriber
                             .getAvailableSegments();
 

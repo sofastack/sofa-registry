@@ -14,28 +14,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alipay.sofa.registry.server.session.listener;
+package com.alipay.sofa.registry.util;
 
-/**
- *
- * @author shangyu.wh
- * @version $Id: PushTaskSender.java, v 0.1 2018-12-18 19:31 shangyu.wh Exp $
- */
+import java.util.concurrent.SynchronousQueue;
+import java.util.concurrent.TimeUnit;
 
-import com.alipay.sofa.registry.task.listener.TaskEvent;
+public abstract class WakeupLoopRunnable extends LoopRunnable {
+    private final SynchronousQueue<Object> bell = new SynchronousQueue<>();
 
-/**
- *
- * @author shangyu.wh
- * @version $Id: PushTask.java, v 0.1 2018-12-11 14:22 shangyu.wh Exp $
- */
-public interface PushTaskSender {
-
-    enum PushDataType {
-        RECEIVE_DATA, USER_ELEMENT, USER_ELEMENT_MULTI
+    @Override
+    public void waitingUnthrowable() {
+        ConcurrentUtils.pollUninterruptibly(bell, getWaitingMillis(), TimeUnit.MILLISECONDS);
     }
 
-    void executePushAsync(TaskEvent event);
+    public abstract int getWaitingMillis();
 
-    PushDataType getPushDataType();
+    public void wakeup() {
+        bell.offer(this);
+    }
 }

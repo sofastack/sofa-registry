@@ -16,8 +16,6 @@
  */
 package com.alipay.sofa.registry.server.session.cache;
 
-import com.alipay.sofa.registry.log.Logger;
-import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.server.session.node.service.DataNodeService;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -28,8 +26,6 @@ import org.springframework.beans.factory.annotation.Autowired;
  */
 public class DatumCacheGenerator implements CacheGenerator {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(DatumCacheGenerator.class);
-
     /**
      * DataNode service
      */
@@ -38,7 +34,6 @@ public class DatumCacheGenerator implements CacheGenerator {
 
     @Override
     public Value generatePayload(Key key) {
-
         EntityType entityType = key.getEntityType();
         if (entityType instanceof DatumKey) {
             DatumKey datumKey = (DatumKey) entityType;
@@ -48,14 +43,9 @@ public class DatumCacheGenerator implements CacheGenerator {
 
             if (isNotBlank(dataCenter) && isNotBlank(dataInfoId)) {
                 return new Value(dataNodeService.fetchDataCenter(dataInfoId, dataCenter));
-            } else {
-                LOGGER.warn("Input key " + key + " invalid!");
             }
-        } else {
-            LOGGER.warn("Input key " + key + " invalid!");
         }
-
-        return null;
+        throw new IllegalArgumentException("unsupported Key:" + key);
     }
 
     public boolean isNotBlank(String ss) {

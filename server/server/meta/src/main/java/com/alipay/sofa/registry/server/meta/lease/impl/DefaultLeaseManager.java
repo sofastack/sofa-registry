@@ -79,7 +79,7 @@ public class DefaultLeaseManager<T extends Node> extends AbstractObservable impl
         if (lease == null) {
             throw new IllegalArgumentException("[register]NullPointer of lease");
         }
-        if(logger.isInfoEnabled()) {
+        if (logger.isInfoEnabled()) {
             logger.info("[register] register node: {}", lease.getRenewal());
         }
         lock.writeLock().lock();

@@ -354,8 +354,10 @@ public class AbstractTest {
 
     public void printSlotTable(SlotTable slotTable) {
         try {
-            logger.warn("{}", JsonUtils.getJacksonObjectMapper().writerWithDefaultPrettyPrinter().writeValueAsString(slotTable));
-        } catch (Exception ignore) {}
+            logger.warn("{}", JsonUtils.getJacksonObjectMapper().writerWithDefaultPrettyPrinter()
+                .writeValueAsString(slotTable));
+        } catch (Exception ignore) {
+        }
     }
 
     protected boolean isSlotTableBalanced(SlotTable slotTable, List<DataNode> dataNodes) {

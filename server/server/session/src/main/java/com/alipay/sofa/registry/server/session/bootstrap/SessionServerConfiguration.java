@@ -19,15 +19,12 @@ package com.alipay.sofa.registry.server.session.bootstrap;
 import java.util.ArrayList;
 import java.util.Collection;
 
-import com.alipay.sofa.registry.server.session.assemble.AppInterfaceAssembleService;
-import com.alipay.sofa.registry.server.session.assemble.AssembleService;
-import com.alipay.sofa.registry.server.session.assemble.DefaultSubscriberAssembleStrategy;
-import com.alipay.sofa.registry.server.session.assemble.SubscriberAssembleStrategy;
 import com.alipay.sofa.registry.server.session.cache.*;
 import com.alipay.sofa.registry.server.session.connections.ConnectionsService;
 import com.alipay.sofa.registry.server.session.node.service.*;
-import com.alipay.sofa.registry.server.session.predicate.RevisionPredicate;
 import com.alipay.sofa.registry.server.session.push.FirePushService;
+import com.alipay.sofa.registry.server.session.push.PushDataGenerator;
+import com.alipay.sofa.registry.server.session.push.PushProcessor;
 import com.alipay.sofa.registry.server.session.remoting.handler.*;
 import com.alipay.sofa.registry.server.session.resource.*;
 import com.alipay.sofa.registry.server.session.strategy.*;
@@ -83,15 +80,10 @@ import com.alipay.sofa.registry.server.session.store.Interests;
 import com.alipay.sofa.registry.server.session.store.SessionInterests;
 import com.alipay.sofa.registry.server.session.store.SessionWatchers;
 import com.alipay.sofa.registry.server.session.store.Watchers;
-import com.alipay.sofa.registry.server.session.strategy.impl.DefaultDataChangeRequestHandlerStrategy;
 import com.alipay.sofa.registry.server.session.strategy.impl.DefaultPublisherHandlerStrategy;
-import com.alipay.sofa.registry.server.session.strategy.impl.DefaultPushTaskMergeProcessor;
 import com.alipay.sofa.registry.server.session.strategy.impl.DefaultReceivedConfigDataPushTaskStrategy;
-import com.alipay.sofa.registry.server.session.strategy.impl.DefaultReceivedDataMultiPushTaskStrategy;
 import com.alipay.sofa.registry.server.session.strategy.impl.DefaultSessionRegistryStrategy;
 import com.alipay.sofa.registry.server.session.strategy.impl.DefaultSubscriberHandlerStrategy;
-import com.alipay.sofa.registry.server.session.strategy.impl.DefaultSubscriberMultiFetchTaskStrategy;
-import com.alipay.sofa.registry.server.session.strategy.impl.DefaultSubscriberRegisterFetchTaskStrategy;
 import com.alipay.sofa.registry.server.session.strategy.impl.DefaultSyncConfigHandlerStrategy;
 import com.alipay.sofa.registry.server.session.strategy.impl.DefaultWatcherHandlerStrategy;
 import com.alipay.sofa.registry.server.session.wrapper.AccessLimitWrapperInterceptor;
@@ -419,6 +411,18 @@ public class SessionServerConfiguration {
         public FirePushService firePushService() {
             return new FirePushService();
         }
+
+        @Bean
+        @ConditionalOnMissingBean
+        public PushProcessor pushProcessor() {
+            return new PushProcessor();
+        }
+
+        @Bean
+        @ConditionalOnMissingBean
+        public PushDataGenerator pushDataGenerator() {
+            return new PushDataGenerator();
+        }
     }
 
     @Configuration
@@ -464,22 +468,6 @@ public class SessionServerConfiguration {
         }
 
         @Bean
-        public TaskListener subscriberRegisterFetchTaskListener(TaskListenerManager taskListenerManager) {
-            TaskListener taskListener = new SubscriberRegisterFetchTaskListener(
-                dataNodeSingleTaskProcessor());
-            taskListenerManager.addTaskListener(taskListener);
-            return taskListener;
-        }
-
-        @Bean
-        public TaskListener subscriberMultiFetchTaskListener(TaskListenerManager taskListenerManager) {
-            TaskListener taskListener = new SubscriberMultiFetchTaskListener(
-                dataNodeSingleTaskProcessor());
-            taskListenerManager.addTaskListener(taskListener);
-            return taskListener;
-        }
-
-        @Bean
         public TaskListener watcherRegisterFetchTaskListener(TaskListenerManager taskListenerManager) {
             TaskListener taskListener = new WatcherRegisterFetchTaskListener(
                 metaNodeSingleTaskProcessor());
@@ -491,40 +479,6 @@ public class SessionServerConfiguration {
         public TaskListener provideDataChangeFetchTaskListener(TaskListenerManager taskListenerManager) {
             TaskListener taskListener = new ProvideDataChangeFetchTaskListener(
                 metaNodeSingleTaskProcessor());
-            taskListenerManager.addTaskListener(taskListener);
-            return taskListener;
-        }
-
-        @Bean
-        public TaskListener dataChangeFetchTaskListener(TaskListenerManager taskListenerManager) {
-            TaskListener taskListener = new DataChangeFetchTaskListener(
-                dataNodeSingleTaskProcessor());
-            taskListenerManager.addTaskListener(taskListener);
-            return taskListener;
-        }
-
-        @Bean
-        public TaskListener dataPushTaskListener(TaskListenerManager taskListenerManager) {
-            TaskListener taskListener = new DataPushTaskListener(dataNodeSingleTaskProcessor());
-            taskListenerManager.addTaskListener(taskListener);
-            return taskListener;
-        }
-
-        @Bean
-        public TaskListener dataChangeFetchCloudTaskListener(TaskListenerManager taskListenerManager) {
-            TaskListener taskListener = new DataChangeFetchCloudTaskListener(
-                dataNodeSingleTaskProcessor());
-            taskListenerManager.addTaskListener(taskListener);
-            return taskListener;
-        }
-
-        @Bean
-        public TaskListener receivedDataMultiPushTaskListener(TaskListenerManager taskListenerManager,
-                                                              TaskMergeProcessorStrategy receiveDataTaskMergeProcessorStrategy,
-                                                              SessionServerConfig sessionServerConfig) {
-            TaskListener taskListener = new ReceivedDataMultiPushTaskListener(
-                clientNodeSingleTaskProcessor(), receiveDataTaskMergeProcessorStrategy,
-                sessionServerConfig);
             taskListenerManager.addTaskListener(taskListener);
             return taskListener;
         }
@@ -555,14 +509,6 @@ public class SessionServerConfiguration {
         @Bean
         public TaskListener unPublishDataTaskListener(TaskListenerManager taskListenerManager) {
             TaskListener taskListener = new UnPublishDataTaskListener();
-            taskListenerManager.addTaskListener(taskListener);
-            return taskListener;
-        }
-
-        @Bean
-        @ConditionalOnMissingBean(name = "subscriberPushEmptyTaskListener")
-        public TaskListener subscriberPushEmptyTaskListener(TaskListenerManager taskListenerManager) {
-            TaskListener taskListener = new SubscriberPushEmptyTaskListener();
             taskListenerManager.addTaskListener(taskListener);
             return taskListener;
         }
@@ -603,26 +549,8 @@ public class SessionServerConfiguration {
 
         @Bean
         @ConditionalOnMissingBean
-        public DataChangeRequestHandlerStrategy dataChangeRequestHandlerStrategy() {
-            return new DefaultDataChangeRequestHandlerStrategy();
-        }
-
-        @Bean
-        @ConditionalOnMissingBean
         public SyncConfigHandlerStrategy syncConfigHandlerStrategy() {
             return new DefaultSyncConfigHandlerStrategy();
-        }
-
-        @Bean
-        @ConditionalOnMissingBean
-        public SubscriberRegisterFetchTaskStrategy subscriberRegisterFetchTaskStrategy() {
-            return new DefaultSubscriberRegisterFetchTaskStrategy();
-        }
-
-        @Bean
-        @ConditionalOnMissingBean
-        public SubscriberMultiFetchTaskStrategy subscriberMultiFetchTaskStrategy() {
-            return new DefaultSubscriberMultiFetchTaskStrategy();
         }
 
         @Bean
@@ -645,18 +573,6 @@ public class SessionServerConfiguration {
 
         @Bean
         @ConditionalOnMissingBean
-        public TaskMergeProcessorStrategy receiveDataTaskMergeProcessorStrategy() {
-            return new DefaultPushTaskMergeProcessor();
-        }
-
-        @Bean
-        @ConditionalOnMissingBean
-        public ReceivedDataMultiPushTaskStrategy receivedDataMultiPushTaskStrategy() {
-            return new DefaultReceivedDataMultiPushTaskStrategy();
-        }
-
-        @Bean
-        @ConditionalOnMissingBean
         public ReceivedConfigDataPushTaskStrategy receivedConfigDataPushTaskStrategy() {
             return new DefaultReceivedConfigDataPushTaskStrategy();
         }
@@ -665,43 +581,6 @@ public class SessionServerConfiguration {
         public AppRevisionHandlerStrategy appRevisionHandlerStrategy() {
             return new DefaultAppRevisionHandlerStrategy();
         }
-
-        @Bean
-        public RevisionPredicate revisionPredicate() {
-            return new RevisionPredicate();
-        }
-
-        @Bean
-        public SessionDatumCacheDecorator sessionDatumCacheDecorator() {
-            return new SessionDatumCacheDecorator();
-        }
-
-        //        @Bean
-        //        public AssembleService appAssembleService(SubscriberAssembleStrategy subscriberAssembleStrategy) {
-        //            AppAssembleService appAssembleService = new AppAssembleService();
-        //            subscriberAssembleStrategy.add(appAssembleService);
-        //            return appAssembleService;
-        //        }
-        //
-        //        @Bean
-        //        public AssembleService interfaceAssembleService(SubscriberAssembleStrategy subscriberAssembleStrategy) {
-        //            InterfaceAssembleService interfaceAssembleService = new InterfaceAssembleService();
-        //            subscriberAssembleStrategy.add(interfaceAssembleService);
-        //            return interfaceAssembleService;
-        //        }
-
-        @Bean
-        public AssembleService appInterfaceAssembleService(SubscriberAssembleStrategy subscriberAssembleStrategy) {
-            AppInterfaceAssembleService appInterfaceAssembleService = new AppInterfaceAssembleService();
-            subscriberAssembleStrategy.add(appInterfaceAssembleService);
-            return appInterfaceAssembleService;
-        }
-
-        @Bean
-        public SubscriberAssembleStrategy subscriberAssembleStrategy() {
-            return new DefaultSubscriberAssembleStrategy();
-        }
-
     }
 
     @Configuration

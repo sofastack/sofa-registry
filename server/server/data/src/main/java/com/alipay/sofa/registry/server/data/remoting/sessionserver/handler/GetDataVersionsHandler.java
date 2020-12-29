@@ -16,23 +16,16 @@
  */
 package com.alipay.sofa.registry.server.data.remoting.sessionserver.handler;
 
-import com.alipay.sofa.registry.common.model.GenericResponse;
-import com.alipay.sofa.registry.common.model.Node;
+import com.alipay.sofa.registry.common.model.dataserver.DatumVersion;
 import com.alipay.sofa.registry.common.model.dataserver.GetDataVersionRequest;
+import com.alipay.sofa.registry.common.model.slot.SlotAccess;
+import com.alipay.sofa.registry.common.model.slot.SlotAccessGenericResponse;
 import com.alipay.sofa.registry.remoting.Channel;
 import com.alipay.sofa.registry.server.data.cache.DatumCache;
-import com.alipay.sofa.registry.server.data.lease.SessionLeaseManager;
-import com.alipay.sofa.registry.server.data.remoting.sessionserver.SessionServerConnectionFactory;
-import com.alipay.sofa.registry.server.shared.remoting.AbstractServerHandler;
 import com.alipay.sofa.registry.util.ParaCheckUtil;
-import com.google.common.collect.Maps;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Set;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ThreadPoolExecutor;
 
@@ -42,19 +35,13 @@ import java.util.concurrent.ThreadPoolExecutor;
  * @author qian.lqlq
  * @version $Id: GetDataVersionsProcessor.java, v 0.1 2017-12-06 19:56 qian.lqlq Exp $
  */
-public class GetDataVersionsHandler extends AbstractServerHandler<GetDataVersionRequest> {
+public class GetDataVersionsHandler extends AbstractDataHandler<GetDataVersionRequest> {
 
     @Autowired
-    private DatumCache                       datumCache;
+    private DatumCache         datumCache;
 
     @Autowired
-    private ThreadPoolExecutor               getDataProcessorExecutor;
-
-    @Autowired
-    private SessionLeaseManager              sessionLeaseManager;
-
-    @Autowired
-    protected SessionServerConnectionFactory sessionServerConnectionFactory;
+    private ThreadPoolExecutor getDataProcessorExecutor;
 
     @Override
     public Executor getExecutor() {
@@ -63,42 +50,25 @@ public class GetDataVersionsHandler extends AbstractServerHandler<GetDataVersion
 
     @Override
     public void checkParam(GetDataVersionRequest request) throws RuntimeException {
-        ParaCheckUtil.checkNotEmpty(request.getDataInfoIds(), "GetDataVersionRequest.dataInfoIds");
-        ParaCheckUtil.checkNotNull(request.getSessionProcessId(), "request.sessionProcessId");
+        ParaCheckUtil.checkNonNegative(request.getSlotId(), "GetDataVersionRequest.slotId");
+        checkSessionProcessId(request.getSessionProcessId());
     }
 
     @Override
     public Object doHandle(Channel channel, GetDataVersionRequest request) {
-        sessionLeaseManager.renewSession(request.getSessionProcessId());
-        sessionServerConnectionFactory.registerSession(request.getSessionProcessId(), channel);
-
-        Map<String/*datacenter*/, Map<String/*dataInfoId*/, Long/*version*/>> map = new HashMap<>();
-        List<String> dataInfoIds = request.getDataInfoIds();
-        for (String dataInfoId : dataInfoIds) {
-            Map<String, Long> datumMap = datumCache.getVersions(dataInfoId);
-            Set<Entry<String, Long>> entrySet = datumMap.entrySet();
-            for (Entry<String, Long> entry : entrySet) {
-                String dataCenter = entry.getKey();
-                Long version = entry.getValue();
-                Map<String, Long> dataInfoIdToVersionMap = map.computeIfAbsent(dataCenter, k -> Maps.newHashMap());
-                dataInfoIdToVersionMap.put(dataInfoId, version);
-            }
+        processSessionProcessId(channel, request.getSessionProcessId());
+        final SlotAccess slotAccess = checkAccess(request.getSlotId(), request.getSlotTableEpoch());
+        if (!slotAccess.isAccept()) {
+            return SlotAccessGenericResponse.failedResponse(slotAccess);
         }
-        return new GenericResponse<Map<String, Map<String, Long>>>().fillSucceed(map);
-    }
 
-    @Override
-    public GenericResponse<Map<String, Map<String, Long>>> buildFailedResponse(String msg) {
-        return new GenericResponse<Map<String, Map<String, Long>>>().fillFailed(msg);
+        Map<String/*datacenter*/, Map<String/*dataInfoId*/, DatumVersion>> map = datumCache
+            .getVersions(request.getSlotId());
+        return SlotAccessGenericResponse.successResponse(slotAccess, map);
     }
 
     @Override
     public Class interest() {
         return GetDataVersionRequest.class;
-    }
-
-    @Override
-    protected Node.NodeType getConnectNodeType() {
-        return Node.NodeType.SESSION;
     }
 }

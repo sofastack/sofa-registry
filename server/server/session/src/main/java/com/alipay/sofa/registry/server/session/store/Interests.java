@@ -17,10 +17,8 @@
 package com.alipay.sofa.registry.server.session.store;
 
 import com.alipay.sofa.registry.common.model.store.Subscriber;
-import com.alipay.sofa.registry.core.model.ScopeEnum;
 
-import java.net.InetSocketAddress;
-import java.util.Map;
+import java.util.Collection;
 
 /**
  *
@@ -35,18 +33,14 @@ public interface Interests extends DataManager<Subscriber, String, String> {
      * else check return bigger version
      *
      * @param dataCenter
-     * @param dataInfoId
+     * @param datumDataInfoId
      * @param version
      * @return
      */
-    boolean checkInterestVersions(String dataCenter, String dataInfoId, long version);
+    boolean checkInterestVersions(String dataCenter, String datumDataInfoId, long version);
 
-    /**
-     * get subscribers whith specify dataInfo and scope,and group by source address
-     * @param dataInfoId
-     * @param scope
-     * @return
-     */
-    Map<InetSocketAddress, Map<String, Subscriber>> querySubscriberIndex(String dataInfoId,
-                                                                         ScopeEnum scope);
+    Collection<Subscriber> getInterestOfDatum(String datumDataInfoId);
+
+    Collection<String> getPushedDataInfoIds();
+
 }

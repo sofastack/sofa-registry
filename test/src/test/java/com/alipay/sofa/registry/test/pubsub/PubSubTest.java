@@ -40,7 +40,7 @@ public class PubSubTest extends BaseIntegrationTest {
      */
     @Test
     public void publisherTest() throws InterruptedException {
-        String dataId = "test-dataId-" + System.nanoTime();
+        String dataId = "test-dataId-publisherTest-" + System.nanoTime();
         String value = "test publish";
 
         PublisherRegistration registration = new PublisherRegistration(dataId);
@@ -78,7 +78,7 @@ public class PubSubTest extends BaseIntegrationTest {
      */
     @Test
     public void subscriberTest() throws InterruptedException {
-        String dataId = "test-dataId-" + System.nanoTime();
+        String dataId = "test-dataId-subscriberTest-" + System.nanoTime();
         String value = "test subscriber";
 
         MySubscriberDataObserver observer = new MySubscriberDataObserver();
@@ -112,7 +112,7 @@ public class PubSubTest extends BaseIntegrationTest {
     public void multiClientTest() throws InterruptedException {
 
         // registryClient1 publish data, registryClient2 subscriber
-        String dataId = "test-dataId-" + System.nanoTime();
+        String dataId = "test-dataId-multiClientTest-" + System.nanoTime();
         String value = "test multi client publish";
 
         PublisherRegistration registration = new PublisherRegistration(dataId);

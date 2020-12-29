@@ -46,10 +46,8 @@ public final class DataTempChangeEvent implements IDataChangeEvent {
 
     @Override
     public String toString() {
-        return "DataTempChangeEvent{" +
-                "dataCenter='" + datum.getDataCenter() + '\'' +
-                ", dataInfoId='" + datum.getDataInfoId() + '\'' +
-                ", publisherNum='" + datum.publisherSize() + '\'' +
-                '}';
+        return "DataTempChangeEvent{" + "dataCenter='" + datum.getDataCenter() + '\''
+               + ", dataInfoId='" + datum.getDataInfoId() + '\'' + ", publisherNum='"
+               + datum.publisherSize() + '\'' + '}';
     }
 }

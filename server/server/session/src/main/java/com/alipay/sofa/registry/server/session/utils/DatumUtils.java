@@ -21,6 +21,7 @@ import com.alipay.sofa.registry.common.model.dataserver.Datum;
 import com.alipay.sofa.registry.common.model.store.Subscriber;
 
 import java.util.HashMap;
+import java.util.Map;
 
 /**
  * @author xuanbei
@@ -45,5 +46,11 @@ public class DatumUtils {
             datum.setDataCenter(ValueConstants.DEFAULT_DATA_CENTER);
         }
         return datum;
+    }
+
+    public static Map<String, Long> getVesions(Map<String, Datum> datumMap) {
+        Map<String, Long> versions = new HashMap<>(datumMap.size());
+        datumMap.forEach((k, v) -> versions.put(k, v.getVersion()));
+        return versions;
     }
 }

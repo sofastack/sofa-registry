@@ -17,6 +17,7 @@
 package com.alipay.sofa.registry.server.session.slot;
 
 import com.alipay.sofa.registry.common.model.slot.Slot;
+import com.alipay.sofa.registry.common.model.slot.SlotConfig;
 import com.alipay.sofa.registry.common.model.slot.SlotTable;
 import com.alipay.sofa.registry.common.model.slot.func.SlotFunction;
 import com.alipay.sofa.registry.common.model.slot.func.SlotFunctionRegistry;
@@ -24,7 +25,6 @@ import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 
 /**
- *
  * @author yuzhi.lyz
  * @version v 0.1 2020-11-11 10:07 yuzhi.lyz Exp $
  */
@@ -76,5 +76,10 @@ public final class SlotTableCacheImpl implements SlotTableCache {
         this.slotTable = slotTable;
         LOGGER.info("updating slot table, expect={}, current={}", slotTable.getEpoch(), curEpoch);
         return true;
+    }
+
+    @Override
+    public int slotNum() {
+        return SlotConfig.SLOT_NUM;
     }
 }

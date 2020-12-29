@@ -41,8 +41,8 @@ import java.util.stream.Collectors;
  * @version $Id: SessionServerConnectionFactory.java, v 0.1 2017-12-06 15:48 qian.lqlq Exp $
  */
 public class SessionServerConnectionFactory {
-    private static final Logger LOGGER = LoggerFactory
-            .getLogger(SessionServerConnectionFactory.class);
+    private static final Logger         LOGGER              = LoggerFactory
+                                                                .getLogger(SessionServerConnectionFactory.class);
 
     private final Map<String, Channels> session2Connections = new ConcurrentHashMap<>();
 
@@ -92,7 +92,7 @@ public class SessionServerConnectionFactory {
             return;
         }
         final Channels channels = session2Connections.get(remoteAddress.getAddress()
-                .getHostAddress());
+            .getHostAddress());
         if (channels == null) {
             LOGGER.warn("sessionDisconnected not found channels {}", remoteAddress);
             return;
@@ -101,8 +101,8 @@ public class SessionServerConnectionFactory {
         synchronized (this) {
             tuple = channels.channels.remove(remoteAddress);
         }
-        LOGGER.info("sessionDisconnected, removed={}, processId={}, channelSize={}",
-                channel, tuple != null ? tuple.o1 : null, channels.channels.size());
+        LOGGER.info("sessionDisconnected, removed={}, processId={}, channelSize={}", channel,
+            tuple != null ? tuple.o1 : null, channels.channels.size());
     }
 
     /**
@@ -159,9 +159,11 @@ public class SessionServerConnectionFactory {
      * convenient class to store sessionConnAddress and connection
      */
     private static final class Channels {
-        final AtomicInteger roundRobin = new AtomicInteger(-1);
+        final AtomicInteger                                        roundRobin = new AtomicInteger(
+                                                                                  -1);
         // remoteAddress as key
-        final Map<InetSocketAddress, Tuple<ProcessId, Connection>> channels = Maps.newConcurrentMap();
+        final Map<InetSocketAddress, Tuple<ProcessId, Connection>> channels   = Maps
+                                                                                  .newConcurrentMap();
 
         Connection chooseConnection() {
             List<Tuple<ProcessId, Connection>> list = Lists.newArrayList(channels.values());
