@@ -20,14 +20,11 @@ import com.alipay.sofa.registry.common.model.store.Publisher;
 import com.alipay.sofa.registry.common.model.store.Subscriber;
 import com.alipay.sofa.registry.common.model.store.Watcher;
 
-import java.util.Map;
-
 /**
  * @author xuanbei
  * @since 2019/2/15
  */
 public interface SessionRegistryStrategy {
-    void doFetchChangDataProcess(Map<String, Map<String, Long>> dataInfoIdVersions);
 
     void afterPublisherRegister(Publisher publisher);
 

@@ -39,8 +39,6 @@ public interface SessionServerConfig {
 
     int getSchedulerFetchDataVersionIntervalMs();
 
-    int getSchedulerFetchDataVersionPoolSize();
-
     int getClientNodeExchangeTimeOut();
 
     int getDataNodeExchangeTimeOut();
@@ -113,14 +111,6 @@ public interface SessionServerConfig {
 
     int getDataChangeFetchTaskWorkerSize();
 
-    int getUserDataPushRetryWheelTicksSize();
-
-    int getUserDataPushRetryWheelTicksDuration();
-
-    int getUserDataPushRetryExecutorQueueSize();
-
-    int getUserDataPushRetryExecutorThreadSize();
-
     int getPushDataTaskRetryFirstDelay();
 
     long getPushDataTaskRetryIncrementDelay();
@@ -132,10 +122,6 @@ public interface SessionServerConfig {
     boolean isStopPushSwitch();
 
     void setStopPushSwitch(boolean stopPushSwitch);
-
-    boolean isBeginDataFetchTask();
-
-    void setBeginDataFetchTask(boolean beginDataFetchTask);
 
     boolean isInvalidForeverZone(String zoneId);
 

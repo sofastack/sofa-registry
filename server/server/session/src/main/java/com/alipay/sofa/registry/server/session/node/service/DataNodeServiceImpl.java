@@ -18,7 +18,6 @@ package com.alipay.sofa.registry.server.session.node.service;
 
 import com.alipay.sofa.registry.common.model.CommonResponse;
 import com.alipay.sofa.registry.common.model.ConnectId;
-import com.alipay.sofa.registry.common.model.GenericResponse;
 import com.alipay.sofa.registry.common.model.dataserver.*;
 import com.alipay.sofa.registry.common.model.slot.SlotAccessGenericResponse;
 import com.alipay.sofa.registry.common.model.store.Publisher;
@@ -40,8 +39,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.CollectionUtils;
 
 import javax.annotation.PostConstruct;
-import java.util.Collection;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -213,15 +210,14 @@ public class DataNodeServiceImpl implements DataNodeService {
     }
 
     @Override
-    public Map<String/*datacenter*/, Map<String/*datainfoid*/, Long>> fetchDataVersion(URL dataNodeUrl,
-                                                                                         Collection<String> dataInfoIdList) {
-        Map<String, Map<String, Long>> map = new HashMap<>();
+    public Map<String/*datacenter*/, Map<String/*datainfoid*/, DatumVersion>> fetchDataVersion(URL dataNodeUrl,
+                                                                                                 int slotId) {
         try {
             Request<GetDataVersionRequest> getDataVersionRequestRequest = new Request<GetDataVersionRequest>() {
                 @Override
                 public GetDataVersionRequest getRequestBody() {
                     GetDataVersionRequest getDataVersionRequest = new GetDataVersionRequest(
-                        ServerEnv.PROCESS_ID, (List<String>) dataInfoIdList);
+                        ServerEnv.PROCESS_ID, slotId);
                     return getDataVersionRequest;
                 }
 
@@ -233,24 +229,17 @@ public class DataNodeServiceImpl implements DataNodeService {
 
             Response response = dataNodeExchanger.request(getDataVersionRequestRequest);
             Object result = response.getResult();
-            GenericResponse genericResponse = (GenericResponse) result;
+            SlotAccessGenericResponse<Map<String, Map<String, DatumVersion>>> genericResponse = (SlotAccessGenericResponse<Map<String, Map<String, DatumVersion>>>) result;
             if (genericResponse.isSuccess()) {
-                map = (Map<String, Map<String, Long>>) genericResponse.getData();
-                if (map.isEmpty()) {
-                    LOGGER
-                        .warn(
-                            "GetDataVersionRequestRequest get response contains no data!target data Node url:{} about dataInfoIds size:{}",
-                            dataNodeUrl.getAddressString(), dataInfoIdList.size());
-                }
+                Map<String, Map<String, DatumVersion>> map = genericResponse.getData();
+                return map;
             } else {
-                throw new RuntimeException("fetchDataVersion has not get fail response! msg:"
+                throw new RuntimeException("fetchDataVersion has get fail response! msg:"
                                            + genericResponse.getMessage());
             }
         } catch (RequestException e) {
             throw new RuntimeException("Fetch data Version request error! " + e.getMessage(), e);
         }
-
-        return map;
     }
 
     @Override

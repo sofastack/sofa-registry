@@ -24,7 +24,10 @@ import com.alipay.sofa.registry.common.model.slot.SlotTable;
  * @version v 0.1 2020-10-30 10:46 yuzhi.lyz Exp $
  */
 public interface SlotManager {
-    SlotAccess checkSlotAccess(String dataInfoId, long srcSlotEpoch);
+
+    int slotOf(String dataInfoId);
+
+    SlotAccess checkSlotAccess(int slotId, long srcSlotEpoch);
 
     boolean isLeader(int slotId);
 

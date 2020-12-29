@@ -55,6 +55,8 @@ public interface MetaServerService {
      */
     Set<String> getDataCenters();
 
+    long getSessionServerEpoch();
+
     /**
      * @param zonename zone is null, get all session
      * @return

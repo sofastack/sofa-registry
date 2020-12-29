@@ -62,10 +62,7 @@ public class DataSlotDiffDataInfoIdRequest implements Serializable {
 
     @Override
     public String toString() {
-        return "DataSlotDiffDataInfoIdRequest{" +
-                ", slotId=" + slotId +
-                ", slotTableEpoch=" + slotTableEpoch +
-                ", allDataInfoIds=" + allDataInfoIds +
-                '}';
+        return "DataSlotDiffDataInfoIdRequest{" + ", slotId=" + slotId + ", slotTableEpoch="
+               + slotTableEpoch + ", allDataInfoIds=" + allDataInfoIds + '}';
     }
 }

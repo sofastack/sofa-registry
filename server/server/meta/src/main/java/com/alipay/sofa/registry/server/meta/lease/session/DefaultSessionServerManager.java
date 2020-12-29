@@ -106,9 +106,9 @@ public class DefaultSessionServerManager extends AbstractRaftEnabledLeaseManager
     @Override
     protected void tryRenewNode(Lease<SessionNode> lease, SessionNode renewal, int duration) {
         if (renewal.getProcessId() != null
-                && !Objects.equals(lease.getRenewal().getProcessId(), renewal.getProcessId())) {
+            && !Objects.equals(lease.getRenewal().getProcessId(), renewal.getProcessId())) {
             logger.warn("[renew] session node is restart, as process-Id change from {} to {}",
-                    lease.getRenewal().getProcessId(), renewal.getProcessId());
+                lease.getRenewal().getProcessId(), renewal.getProcessId());
             // replace the session node, as it has changed process-id already
             lease.setRenewal(renewal);
             sessionLeaseManager.register(new Lease<>(renewal, duration));

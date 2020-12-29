@@ -18,10 +18,10 @@ package com.alipay.sofa.registry.server.session.node.service;
 
 import com.alipay.sofa.registry.common.model.ConnectId;
 import com.alipay.sofa.registry.common.model.dataserver.Datum;
+import com.alipay.sofa.registry.common.model.dataserver.DatumVersion;
 import com.alipay.sofa.registry.common.model.store.Publisher;
 import com.alipay.sofa.registry.common.model.store.URL;
 
-import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
@@ -61,8 +61,8 @@ public interface DataNodeService {
      * @param dataInfoIdList
      * @return
      */
-    Map<String/*datacenter*/, Map<String/*datainfoid*/, Long>> fetchDataVersion(URL dataNodeUrl,
-                                                                                  Collection<String> dataInfoIdList);
+    Map<String/*datacenter*/, Map<String/*datainfoid*/, DatumVersion>> fetchDataVersion(URL dataNodeUrl,
+                                                                                          int slotId);
 
     /**
      * fetch one dataCenter publisher data from data server

@@ -17,8 +17,6 @@
 package com.alipay.sofa.registry.common.model.slot.func;
 
 import com.alipay.sofa.registry.common.model.slot.SlotConfig;
-import com.alipay.sofa.registry.log.Logger;
-import com.alipay.sofa.registry.log.LoggerFactory;
 import com.google.common.collect.Maps;
 
 import java.util.Map;
@@ -29,10 +27,7 @@ import java.util.Map;
  * @version v 0.1 2020-11-28 12:24 yuzhi.lyz Exp $
  */
 public final class SlotFunctionRegistry {
-    private static final Logger                    LOGGER = LoggerFactory
-                                                              .getLogger(SlotFunctionRegistry.class);
-
-    private static final Map<String, SlotFunction> funcs  = Maps.newConcurrentMap();
+    private static final Map<String, SlotFunction> funcs = Maps.newConcurrentMap();
 
     static {
         register(CRC16SlotFunction.INSTANCE);

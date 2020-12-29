@@ -38,7 +38,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import java.util.*;
 
 /**
- *
  * @author yuzhi.lyz
  * @version v 0.1 2020-12-02 19:40 yuzhi.lyz Exp $
  */
@@ -64,6 +63,18 @@ public final class LocalDatumStorage implements DatumStorage {
     }
 
     @Override
+    public DatumVersion getVersion(String dataInfoId) {
+        PublisherGroups groups = getPublisherGroups(dataInfoId);
+        return groups == null ? null : groups.getVersion(dataInfoId);
+    }
+
+    @Override
+    public Map<String, DatumVersion> getVersions(int slotId) {
+        PublisherGroups groups = publisherGroupsMap.get(slotId);
+        return groups == null ? Collections.emptyMap() : groups.getVersions();
+    }
+
+    @Override
     public Map<String, Datum> getAll() {
         Map<String, Datum> m = new HashMap<>(64);
         publisherGroupsMap.values().forEach(g -> m.putAll(g.getAllDatum()));
@@ -84,22 +95,29 @@ public final class LocalDatumStorage implements DatumStorage {
             return Collections.emptyMap();
         }
         Map<String, Map<String, Publisher>> map = Maps.newHashMap();
-        Map<String,Datum> datumMap = groups.getAllDatum();
-        datumMap.values().forEach(d->map.put(d.getDataInfoId(),d.publisherSnapshot()));
+        Map<String, Datum> datumMap = groups.getAllDatum();
+        datumMap.values().forEach(d -> map.put(d.getDataInfoId(), d.publisherSnapshot()));
         return map;
     }
 
     @Override
-    public DatumVersion putPublisher(Publisher publisher, ProcessId seesionProcessId) {
+    public DatumVersion putPublisher(Publisher publisher) {
         PublisherGroups groups = getPublisherGroups(publisher.getDataInfoId());
-        return groups == null ? null : groups.putPublisher(publisher, seesionProcessId,
+        return groups == null ? null : groups.putPublisher(publisher,
             dataServerConfig.getLocalDataCenter());
+    }
+
+    @Override
+    public DatumVersion createEmptyDatumIfAbsent(Publisher publisher) {
+        PublisherGroups groups = getPublisherGroups(publisher.getDataInfoId());
+        return groups == null ? null : groups.createGroupIfAbsent(publisher,
+            dataServerConfig.getLocalDataCenter()).getVersion();
     }
 
     @Override
     public Map<String, DatumVersion> clean(ProcessId sessionProcessId) {
         // clean by sessionProcessId, the sessionProcessId could not be null
-        ParaCheckUtil.checkNotNull(sessionProcessId,"sessionProcessId");
+        ParaCheckUtil.checkNotNull(sessionProcessId, "sessionProcessId");
         Map<String, DatumVersion> versionMap = new HashMap<>(32);
         publisherGroupsMap.values().forEach(g -> versionMap.putAll(g.clean(sessionProcessId)));
         return versionMap;
@@ -108,8 +126,8 @@ public final class LocalDatumStorage implements DatumStorage {
     @Override
     public Map<String, DatumVersion> remove(ConnectId connectId, ProcessId sessionProcessId, long registerTimestamp) {
         // remove by client off, the sessionProcessId could not be null
-        ParaCheckUtil.checkNotNull(sessionProcessId,"sessionProcessId");
-        ParaCheckUtil.checkNotNull(connectId,"connectId");
+        ParaCheckUtil.checkNotNull(sessionProcessId, "sessionProcessId");
+        ParaCheckUtil.checkNotNull(connectId, "connectId");
         Map<String, DatumVersion> versionMap = new HashMap<>(32);
         publisherGroupsMap.values()
                 .forEach(g -> versionMap.putAll(g.remove(connectId, sessionProcessId, registerTimestamp)));
@@ -161,6 +179,15 @@ public final class LocalDatumStorage implements DatumStorage {
         Map<String, Integer> compacts = Maps.newHashMap();
         publisherGroupsMap.values().forEach(g -> compacts.putAll(g.compact(tombstoneTimestamp)));
         return compacts;
+    }
+
+    @Override
+    public void updateVersion(int slotId) {
+        PublisherGroups groups = publisherGroupsMap.get(slotId);
+        if (groups == null) {
+            return;
+        }
+        groups.updateVersion();
     }
 
     private final class SlotListener implements SlotChangeListener {

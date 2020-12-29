@@ -21,10 +21,8 @@ import com.alipay.sofa.registry.common.model.sessionserver.DataPushRequest;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.remoting.Channel;
+import com.alipay.sofa.registry.server.session.push.FirePushService;
 import com.alipay.sofa.registry.server.shared.remoting.AbstractClientHandler;
-import com.alipay.sofa.registry.task.listener.TaskEvent;
-import com.alipay.sofa.registry.task.listener.TaskEvent.TaskType;
-import com.alipay.sofa.registry.task.listener.TaskListenerManager;
 import org.springframework.beans.factory.annotation.Autowired;
 
 /**
@@ -35,15 +33,10 @@ import org.springframework.beans.factory.annotation.Autowired;
  */
 public class DataPushRequestHandler extends AbstractClientHandler<DataPushRequest> {
 
-    private static final Logger LOGGER      = LoggerFactory.getLogger(DataPushRequestHandler.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(DataPushRequestHandler.class);
 
-    private static final Logger TASK_LOGGER = LoggerFactory.getLogger(DataPushRequestHandler.class,
-                                                "[Task]");
-    /**
-     * trigger task com.alipay.sofa.registry.server.meta.listener process
-     */
     @Autowired
-    private TaskListenerManager taskListenerManager;
+    private FirePushService     firePushService;
 
     @Override
     protected NodeType getConnectNodeType() {
@@ -53,19 +46,12 @@ public class DataPushRequestHandler extends AbstractClientHandler<DataPushReques
     @Override
     public Object doHandle(Channel channel, DataPushRequest request) {
         try {
-            fireDataPushTask(request);
-        } catch (Exception e) {
+            firePushService.fireOnDatum(request.getDatum());
+        } catch (Throwable e) {
             LOGGER.error("DataPush Request error!", e);
             throw new RuntimeException("DataPush Request error!", e);
         }
         return null;
-    }
-
-    private void fireDataPushTask(DataPushRequest dataPushRequest) {
-        //trigger fetch data for subscriber,and push to client node
-        TaskEvent taskEvent = new TaskEvent(dataPushRequest, TaskType.DATA_PUSH_TASK);
-        TASK_LOGGER.info("send " + taskEvent.getTaskType() + " taskEvent:{}", taskEvent);
-        taskListenerManager.sendTaskEvent(taskEvent);
     }
 
     @Override

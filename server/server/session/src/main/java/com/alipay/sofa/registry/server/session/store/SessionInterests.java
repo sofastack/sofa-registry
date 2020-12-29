@@ -16,32 +16,30 @@
  */
 package com.alipay.sofa.registry.server.session.store;
 
+import com.alipay.sofa.registry.common.model.SubscriberUtils;
+import com.alipay.sofa.registry.common.model.constants.ValueConstants;
+import com.alipay.sofa.registry.common.model.store.DataInfo;
 import com.alipay.sofa.registry.common.model.store.Subscriber;
-import com.alipay.sofa.registry.core.model.ScopeEnum;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
-import com.google.common.collect.Maps;
-import org.apache.commons.collections.MapUtils;
+import com.alipay.sofa.registry.server.session.cache.AppRevisionCacheRegistry;
+import com.alipay.sofa.registry.util.ParaCheckUtil;
+import com.google.common.collect.Lists;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.util.CollectionUtils;
 
-import java.net.InetSocketAddress;
-import java.util.Collections;
-import java.util.Map;
-import java.util.Objects;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.*;
 
 /**
  * @author shangyu.wh
  * @version $Id: AbstractSessionInterests.java, v 0.1 2017-11-30 20:42 shangyu.wh Exp $
  */
-public class SessionInterests extends AbstractDataManager<Subscriber> implements Interests,
-                                                                     ReSubscribers {
+public class SessionInterests extends AbstractDataManager<Subscriber> implements Interests {
 
-    private static final Logger                                                          LOGGER            = LoggerFactory
-                                                                                                               .getLogger(SessionInterests.class);
+    private static final Logger      LOGGER = LoggerFactory.getLogger(SessionInterests.class);
 
-    private final Map<SubscriberResult, Map<InetSocketAddress, Map<String, Subscriber>>> resultIndex       = new ConcurrentHashMap<>();
-
-    private final Map<String/*dataInfoId*/, Map<String/*registerId*/, Subscriber>>     stopPushInterests = new ConcurrentHashMap<>();
+    @Autowired
+    private AppRevisionCacheRegistry appRevisionCacheRegistry;
 
     public SessionInterests() {
         super(LOGGER);
@@ -49,31 +47,12 @@ public class SessionInterests extends AbstractDataManager<Subscriber> implements
 
     @Override
     public boolean add(Subscriber subscriber) {
+        ParaCheckUtil.checkNotNull(subscriber.getScope(), "subscriber.scope");
+        ParaCheckUtil.checkNotNull(subscriber.getAssembleType(), "subscriber.assembleType");
         Subscriber.internSubscriber(subscriber);
 
-        Map<String, Subscriber> subscribers = stores.computeIfAbsent(subscriber.getDataInfoId(),
-                k -> Maps.newConcurrentMap());
+        Subscriber existingSubscriber = addData(subscriber);
 
-        Subscriber existingSubscriber = null;
-        write.lock();
-        try {
-            existingSubscriber = subscribers.get(subscriber.getRegisterId());
-
-            if (existingSubscriber != null) {
-                if (sessionServerConfig.isStopPushSwitch()) {
-                    deleteReSubscriber(existingSubscriber);
-                }
-                invalidateResultIndex(existingSubscriber);
-            }
-
-            subscribers.put(subscriber.getRegisterId(), subscriber);
-
-            addReSubscriber(subscriber);
-            addResultIndex(subscriber);
-        } finally {
-            write.unlock();
-        }
-        // log without lock
         if (existingSubscriber != null) {
             LOGGER.warn("There is subscriber already exists,it will be overwrite! {}",
                     existingSubscriber);
@@ -82,152 +61,42 @@ public class SessionInterests extends AbstractDataManager<Subscriber> implements
     }
 
     @Override
-    protected void postDelete(Subscriber data) {
-        if (sessionServerConfig.isStopPushSwitch()) {
-            deleteReSubscriber(data);
-        }
-        removeResultIndex(data);
-    }
-
-    @Override
-    public boolean checkInterestVersions(String dataCenter, String dataInfoId, long version) {
-        Map<String, Subscriber> subscribers = stores.get(dataInfoId);
-        if (MapUtils.isEmpty(subscribers)) {
+    public boolean checkInterestVersions(String dataCenter, String datumDataInfoId, long version) {
+        Collection<Subscriber> subscribers = getInterestOfDatum(datumDataInfoId);
+        if (CollectionUtils.isEmpty(subscribers)) {
             return false;
         }
-        for (Subscriber subscriber : subscribers.values()) {
-            long ver = subscriber.getLastPushVersion(dataCenter);
-            if (ver < version) {
+        for (Subscriber subscriber : subscribers) {
+            if (subscriber.checkVersion(dataCenter,
+                Collections.singletonMap(datumDataInfoId, version))) {
                 return true;
             }
         }
         return false;
     }
 
-    private void addResultIndex(Subscriber subscriber) {
-        SubscriberResult subscriberResult = new SubscriberResult(subscriber.getDataInfoId(),
-                subscriber.getScope());
-        final Map<InetSocketAddress, Map<String, Subscriber>> mapSub = resultIndex
-                .computeIfAbsent(subscriberResult, k -> Maps.newConcurrentMap());
-
-        InetSocketAddress address = new InetSocketAddress(subscriber.getSourceAddress().getIpAddress(), subscriber.getSourceAddress().getPort());
-
-        Map<String, Subscriber> subscribers = mapSub.computeIfAbsent(address, k -> Maps.newConcurrentMap());
-        subscribers.put(subscriber.getRegisterId(), subscriber);
-    }
-
-    private void removeResultIndex(Subscriber subscriber) {
-        SubscriberResult subscriberResult = new SubscriberResult(subscriber.getDataInfoId(),
-            subscriber.getScope());
-        Map<InetSocketAddress, Map<String, Subscriber>> mapSub = resultIndex.get(subscriberResult);
-        if (mapSub != null) {
-            InetSocketAddress address = new InetSocketAddress(subscriber.getSourceAddress()
-                .getIpAddress(), subscriber.getSourceAddress().getPort());
-            Map<String, Subscriber> subscribers = mapSub.get(address);
-            if (subscribers != null) {
-                subscribers.remove(subscriber.getRegisterId());
-            } else {
-                LOGGER.warn("Address {} not existed in Index to remove!", address);
+    @Override
+    public Collection<Subscriber> getInterestOfDatum(String datumDataInfoId) {
+        DataInfo dataInfo = DataInfo.valueOf(datumDataInfoId);
+        if (ValueConstants.SOFA_APP.equals(dataInfo.getDataType())) {
+            List<Subscriber> list = Lists.newArrayList();
+            Set<String> interfaceDataInfoIds = appRevisionCacheRegistry.getInterfaces(dataInfo
+                .getDataId());
+            for (String interfaceDataInfoId : interfaceDataInfoIds) {
+                list.addAll(getDatas(interfaceDataInfoId));
             }
-
+            return list;
         } else {
-            LOGGER.warn("SubscriberResult {} not existed in Index to remove!", subscriberResult);
-        }
-    }
-
-    private void invalidateResultIndex(Subscriber subscriber) {
-        SubscriberResult subscriberResult = new SubscriberResult(subscriber.getDataInfoId(),
-            subscriber.getScope());
-        Map<InetSocketAddress, Map<String, Subscriber>> mapSub = resultIndex.get(subscriberResult);
-        if (mapSub != null) {
-            InetSocketAddress address = new InetSocketAddress(subscriber.getSourceAddress()
-                .getIpAddress(), subscriber.getSourceAddress().getPort());
-            mapSub.remove(address);
-        } else {
-            LOGGER.warn("SubscriberResult {} not existed in Index to remove!", subscriberResult);
+            return getDatas(datumDataInfoId);
         }
     }
 
     @Override
-    public Map<InetSocketAddress, Map<String, Subscriber>> querySubscriberIndex(String dataInfoId,
-                                                                                ScopeEnum scope) {
-        final SubscriberResult subscriberResult = new SubscriberResult(dataInfoId, scope);
-        read.lock();
-        try {
-            Map<InetSocketAddress, Map<String, Subscriber>> map = resultIndex.get(subscriberResult);
-            if (!MapUtils.isEmpty(map)) {
-                return StoreHelpers.copyMap((Map) map);
-            } else {
-                return Collections.emptyMap();
-            }
-        } finally {
-            read.unlock();
+    public Collection<String> getPushedDataInfoIds() {
+        List<Subscriber> subscribers = new ArrayList<>(512);
+        for (Map<String, Subscriber> e : stores.values()) {
+            subscribers.addAll(e.values());
         }
+        return SubscriberUtils.getPushedDataInfoIds(subscribers);
     }
-
-    @Override
-    public void addReSubscriber(Subscriber subscriber) {
-        if (sessionServerConfig.isStopPushSwitch()) {
-
-            String dataInfoId = subscriber.getDataInfoId();
-
-            Map<String, Subscriber> subscriberMap = stopPushInterests
-                    .computeIfAbsent(dataInfoId, k -> Maps.newConcurrentMap());
-            subscriberMap.put(subscriber.getRegisterId(), subscriber);
-        }
-    }
-
-    @Override
-    public boolean deleteReSubscriber(Subscriber subscriber) {
-        Map<String, Subscriber> subscribers = stopPushInterests.get(subscriber.getDataInfoId());
-
-        if (subscribers == null) {
-            return false;
-        } else {
-            return subscribers.remove(subscriber.getRegisterId()) != null;
-        }
-
-    }
-
-    @Override
-    public Map<String/*dataInfoId*/, Map<String/*registerId*/, Subscriber>> getReSubscribers() {
-        return StoreHelpers.copyMap((Map) stopPushInterests);
-    }
-
-    @Override
-    public void clearReSubscribers() {
-        stopPushInterests.clear();
-    }
-
-    private static final class SubscriberResult {
-        final String    dataInfoId;
-        final ScopeEnum scope;
-
-        SubscriberResult(String dataInfoId, ScopeEnum scope) {
-            this.dataInfoId = dataInfoId;
-            this.scope = scope;
-        }
-
-        @Override
-        public boolean equals(Object o) {
-            if (this == o)
-                return true;
-            if (!(o instanceof SubscriberResult))
-                return false;
-            SubscriberResult that = (SubscriberResult) o;
-            return Objects.equals(dataInfoId, that.dataInfoId) && scope == that.scope;
-        }
-
-        @Override
-        public int hashCode() {
-            return Objects.hash(dataInfoId, scope);
-        }
-
-        @Override
-        public String toString() {
-            return "SubscriberResult{" + "dataInfoId='" + dataInfoId + '\'' + ", scope=" + scope
-                   + '}';
-        }
-    }
-
 }

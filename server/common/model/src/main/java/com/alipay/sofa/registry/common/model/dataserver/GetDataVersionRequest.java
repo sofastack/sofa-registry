@@ -29,28 +29,22 @@ import java.util.List;
  * @author qian.lqlq
  * @version $Id: GetDataVersionRequest.java, v 0.1 2017-12-01 下午4:58 qian.lqlq Exp $
  */
-public class GetDataVersionRequest implements Serializable {
+public class GetDataVersionRequest extends AbstractSlotRequest {
 
-    private static final long  serialVersionUID = 8942977145684175886L;
+    private static final long serialVersionUID = 8942977145684175886L;
 
-    private final ProcessId    sessionProcessId;
-    private final List<String> dataInfoIds;
+    private final int         slotId;
 
     /**
      * constructor
      */
-    public GetDataVersionRequest(ProcessId sessionProcessId, List<String> dataInfoIds) {
-        this.sessionProcessId = sessionProcessId;
-        this.dataInfoIds = Collections.unmodifiableList(Lists.newArrayList(dataInfoIds));
+    public GetDataVersionRequest(ProcessId sessionProcessId, int slotId) {
+        super(sessionProcessId);
+        this.slotId = slotId;
     }
 
-    /**
-     * Getter method for property <tt>dataInfoIds</tt>.
-     *
-     * @return property value of dataInfoIds
-     */
-    public List<String> getDataInfoIds() {
-        return dataInfoIds;
+    public int getSlotId() {
+        return slotId;
     }
 
     /**
@@ -63,10 +57,7 @@ public class GetDataVersionRequest implements Serializable {
 
     @Override
     public String toString() {
-        StringBuilder sb = new StringBuilder("[GetDataVersionRequest] dataInfoIds=");
-        if (dataInfoIds != null) {
-            sb.append(this.dataInfoIds.size());
-        }
-        return sb.toString();
+        return "GetDataVersionRequest{" + "sessionProcessId=" + sessionProcessId + ", slotId="
+               + slotId + '}';
     }
 }

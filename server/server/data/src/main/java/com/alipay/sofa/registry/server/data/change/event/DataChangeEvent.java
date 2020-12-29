@@ -58,12 +58,9 @@ public class DataChangeEvent implements IDataChangeEvent {
         return DataSourceTypeEnum.PUB;
     }
 
-
     @Override
     public String toString() {
-        return "DataChangeEvent{" +
-                "dataCenter='" + dataCenter + '\'' +
-                ", dataInfoId='" + dataInfoId + '\'' +
-                '}';
+        return "DataChangeEvent{" + "dataCenter='" + dataCenter + '\'' + ", dataInfoId='"
+               + dataInfoId + '\'' + '}';
     }
 }

@@ -77,11 +77,11 @@ public class DatumSummary implements Serializable {
         return m;
     }
 
-    public boolean isEmpty(){
+    public boolean isEmpty() {
         return publisherVersions.isEmpty();
     }
 
-    public int size(){
+    public int size() {
         return publisherVersions.size();
     }
 

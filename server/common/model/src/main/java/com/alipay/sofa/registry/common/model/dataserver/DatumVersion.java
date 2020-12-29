@@ -16,12 +16,9 @@
  */
 package com.alipay.sofa.registry.common.model.dataserver;
 
-import com.alipay.sofa.registry.util.DatumVersionUtil;
-
 import java.io.Serializable;
 
 /**
- *
  * @author yuzhi.lyz
  * @version v 0.1 2020-12-04 11:54 yuzhi.lyz Exp $
  */
@@ -35,6 +32,7 @@ public final class DatumVersion implements Serializable {
 
     /**
      * Getter method for property <tt>value</tt>.
+     *
      * @return property value of value
      */
     public long getValue() {
@@ -46,7 +44,18 @@ public final class DatumVersion implements Serializable {
         return Long.valueOf(value).toString();
     }
 
-    public static DatumVersion newVersion() {
-        return new DatumVersion(DatumVersionUtil.nextId());
+    @Override
+    public boolean equals(Object o) {
+        if (this == o)
+            return true;
+        if (o == null || getClass() != o.getClass())
+            return false;
+        DatumVersion that = (DatumVersion) o;
+        return value == that.value;
+    }
+
+    @Override
+    public int hashCode() {
+        return Long.valueOf(value).hashCode();
     }
 }

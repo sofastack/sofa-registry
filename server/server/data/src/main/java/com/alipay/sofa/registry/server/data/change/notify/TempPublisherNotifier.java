@@ -24,7 +24,6 @@ import java.util.concurrent.Executor;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import com.alipay.remoting.Connection;
-import com.alipay.remoting.InvokeCallback;
 import com.alipay.sofa.registry.common.model.CommonResponse;
 import com.alipay.sofa.registry.common.model.dataserver.Datum;
 import com.alipay.sofa.registry.common.model.sessionserver.DataPushRequest;
@@ -86,30 +85,14 @@ public class TempPublisherNotifier implements IDataChangeNotifier {
         try {
             Server sessionServer = boltExchange.getServer(dataServerConfig.getPort());
             sessionServer.sendCallback(sessionServer.getChannel(connection.getRemoteAddress()),
-                request, new CallbackHandler() {
-
-                    @Override
-                    public void onCallback(Channel channel, Object message) {
-                        notifyPushdataCallback.onResponse(message);
-                    }
-
-                    @Override
-                    public void onException(Channel channel, Throwable exception) {
-                        notifyPushdataCallback.onException(exception);
-                    }
-
-                    @Override
-                    public Executor getExecutor() {
-                        return notifyPushdataCallback.getExecutor();
-                    }
-                }, dataServerConfig.getRpcTimeout());
+                request, notifyPushdataCallback, dataServerConfig.getRpcTimeout());
         } catch (Exception e) {
             LOGGER.error("[TempPublisherNotifier] notify sessionserver {} failed, {}",
                 connection.getRemoteIP(), request, e);
         }
     }
 
-    private static class NotifyPushDataCallback implements InvokeCallback {
+    private static class NotifyPushDataCallback implements CallbackHandler {
 
         private Connection      connection;
 
@@ -121,7 +104,7 @@ public class TempPublisherNotifier implements IDataChangeNotifier {
         }
 
         @Override
-        public void onResponse(Object obj) {
+        public void onCallback(Channel channel, Object obj) {
             CommonResponse result = (CommonResponse) obj;
             if (result != null && !result.isSuccess()) {
                 //doNotify(this);
@@ -133,8 +116,11 @@ public class TempPublisherNotifier implements IDataChangeNotifier {
         }
 
         @Override
-        public void onException(Throwable e) {
-            onResponse(CommonResponse.buildFailedResponse(e.getMessage()));
+        public void onException(Channel channel, Throwable e) {
+            LOGGER
+                .error(
+                    "[TempPublisherNotifier] notify sessionserver {} not success, request={}, result={}",
+                    connection.getRemoteIP(), request, e.getMessage());
         }
 
         @Override

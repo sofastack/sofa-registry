@@ -29,6 +29,7 @@ import com.google.common.collect.Sets;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import javax.annotation.PostConstruct;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -98,21 +99,11 @@ public final class DataChangeEventCenter {
         }
     }
 
-    public void onChange(Set<String> dataInfoIds, String dataCenter) {
-        Set<String> changes = dataCenter2Changes.computeIfAbsent(dataCenter, k -> Sets.newHashSet());
+    public void onChange(Collection<String> dataInfoIds, String dataCenter) {
+        Set<String> changes = dataCenter2Changes.computeIfAbsent(dataCenter, k -> Sets.newConcurrentHashSet());
         lock.readLock().lock();
         try {
             changes.addAll(dataInfoIds);
-        } finally {
-            lock.readLock().unlock();
-        }
-    }
-
-    public void onChange(String dataInfoId, String dataCenter) {
-        Set<String> changes = dataCenter2Changes.computeIfAbsent(dataCenter, k -> Sets.newHashSet());
-        lock.readLock().lock();
-        try {
-            changes.add(dataInfoId);
         } finally {
             lock.readLock().unlock();
         }
@@ -140,7 +131,7 @@ public final class DataChangeEventCenter {
                 for (IDataChangeEvent event : e.getValue()) {
                     if (!queue.onChange(event)) {
                         LOGGER.error("failed to commit change event, {}", event);
-                    }else{
+                    } else {
                         LOGGER.info("commit change event, {}", event);
                     }
                 }
@@ -175,7 +166,7 @@ public final class DataChangeEventCenter {
 
     private final class ChangeMerger extends Merger {
         ChangeMerger() {
-            super(dataServerConfig.getNotifyIntervalMs(), tempLock.writeLock());
+            super(dataServerConfig.getNotifyIntervalMs(), DataChangeEventCenter.this.lock.writeLock());
         }
 
         @Override

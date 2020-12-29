@@ -71,9 +71,6 @@ public class SessionDataStore extends AbstractDataManager<Publisher> implements 
 
     }
 
-    protected void postDelete(Publisher data) {
-    }
-
     @Override
     public Map<String, Map<String, Publisher>> getDataInfoIdPublishers(int slotId) {
         throw new UnsupportedOperationException();

@@ -73,6 +73,7 @@ public class SyncConfigThreadTest {
         when(registerCache.getAllSubscribers()).thenReturn(subscribers);
 
         when(subscriber.getAvailableSegments()).thenReturn(new ArrayList<String>());
+        when(subscriber.isInited()).thenReturn(true);
 
         // do
         SyncConfigThread configThread = new SyncConfigThread(client, registerCache, config,

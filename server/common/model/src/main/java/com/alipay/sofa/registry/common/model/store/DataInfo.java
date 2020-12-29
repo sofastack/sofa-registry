@@ -20,6 +20,7 @@ import com.alipay.sofa.registry.common.model.constants.ValueConstants;
 
 import javax.xml.bind.ValidationEvent;
 import java.io.Serializable;
+import java.util.Objects;
 
 /**
  *
@@ -171,5 +172,20 @@ public class DataInfo implements Serializable {
      */
     public void setDataType(String dataType) {
         this.dataType = dataType;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o)
+            return true;
+        if (o == null || getClass() != o.getClass())
+            return false;
+        DataInfo dataInfo = (DataInfo) o;
+        return dataInfoId.equals(dataInfo.dataInfoId);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(dataInfoId);
     }
 }

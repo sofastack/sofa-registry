@@ -29,7 +29,7 @@ import java.util.Map;
 public class AppRevision implements Serializable {
     private String                            revision;
     private String                            appName;
-    private Map<String, List<String>>         baseParams = Maps.newHashMap();
+    private Map<String, List<String>>         baseParams   = Maps.newHashMap();
     private Map<String, AppRevisionInterface> interfaceMap = Maps.newHashMap();
 
     /**
@@ -97,7 +97,7 @@ public class AppRevision implements Serializable {
     public static AppRevision convert(AppRevisionRegister register) {
         AppRevision revision = new AppRevision();
         String appName = register.getAppName();
-        if(ValueConstants.DISABLE_DATA_ID_CASE_SENSITIVE){
+        if (ValueConstants.DISABLE_DATA_ID_CASE_SENSITIVE) {
             appName = appName.toUpperCase();
         }
         revision.setAppName(appName);
@@ -115,11 +115,8 @@ public class AppRevision implements Serializable {
 
     @Override
     public String toString() {
-        return "AppRevision{" +
-                "revision='" + revision + '\'' +
-                ", appName='" + appName + '\'' +
-                ", baseParams=" + (baseParams == null ? "0" : baseParams.size()) + '\'' +
-                ", interfaceMap=" + (interfaceMap == null ? "0" : baseParams.size()) + '\'' +
-                '}';
+        return "AppRevision{" + "revision='" + revision + '\'' + ", appName='" + appName + '\''
+               + ", baseParams=" + (baseParams == null ? "0" : baseParams.size()) + '\''
+               + ", interfaceMap=" + (interfaceMap == null ? "0" : baseParams.size()) + '\'' + '}';
     }
 }

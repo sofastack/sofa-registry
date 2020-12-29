@@ -43,7 +43,7 @@ public class DataNodeExchangerTest extends BaseIntegrationTest {
             @Override
             public GetDataVersionRequest getRequestBody() {
                 GetDataVersionRequest getDataVersionRequest = new GetDataVersionRequest(
-                    ServerEnv.PROCESS_ID, Collections.emptyList());
+                    ServerEnv.PROCESS_ID, 0);
                 return getDataVersionRequest;
             }
 

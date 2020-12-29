@@ -16,13 +16,8 @@
  */
 package com.alipay.sofa.registry.server.session.registry;
 
-import javax.annotation.PostConstruct;
-import java.util.*;
-import java.util.concurrent.TimeUnit;
-import java.util.function.Supplier;
-
 import com.alipay.sofa.registry.common.model.ConnectId;
-import com.alipay.sofa.registry.common.model.slot.SlotConfig;
+import com.alipay.sofa.registry.common.model.dataserver.DatumVersion;
 import com.alipay.sofa.registry.common.model.store.*;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
@@ -36,6 +31,7 @@ import com.alipay.sofa.registry.server.session.acceptor.WriteDataRequest;
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
 import com.alipay.sofa.registry.server.session.filter.DataIdMatchStrategy;
 import com.alipay.sofa.registry.server.session.node.service.DataNodeService;
+import com.alipay.sofa.registry.server.session.push.FirePushService;
 import com.alipay.sofa.registry.server.session.slot.SlotTableCache;
 import com.alipay.sofa.registry.server.session.store.DataStore;
 import com.alipay.sofa.registry.server.session.store.Interests;
@@ -45,15 +41,18 @@ import com.alipay.sofa.registry.server.session.wrapper.Wrapper;
 import com.alipay.sofa.registry.server.session.wrapper.WrapperInterceptorManager;
 import com.alipay.sofa.registry.server.session.wrapper.WrapperInvocation;
 import com.alipay.sofa.registry.server.shared.env.ServerEnv;
-import com.alipay.sofa.registry.task.KeyedThreadPoolExecutor;
-import com.alipay.sofa.registry.task.KeyedThreadPoolExecutor.KeyedTask;
-import com.alipay.sofa.registry.task.listener.TaskEvent;
 import com.alipay.sofa.registry.task.listener.TaskListenerManager;
 import com.alipay.sofa.registry.util.ConcurrentUtils;
 import com.alipay.sofa.registry.util.LoopRunnable;
+import com.alipay.sofa.registry.util.WakeupLoopRunnable;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.util.CollectionUtils;
+
+import javax.annotation.PostConstruct;
+import java.util.*;
+import java.util.concurrent.TimeUnit;
+import java.util.function.Supplier;
 
 /**
  * @author shangyu.wh
@@ -61,13 +60,10 @@ import org.springframework.beans.factory.annotation.Autowired;
  */
 public class SessionRegistry implements Registry {
 
-    private static final Logger       LOGGER      = LoggerFactory.getLogger(SessionRegistry.class);
+    private static final Logger       LOGGER          = LoggerFactory
+                                                          .getLogger(SessionRegistry.class);
 
-
-    protected static final Logger     FETCH_VER_LOGGER = LoggerFactory.getLogger("FETCH-VER");
-
-    protected static final Logger     TASK_LOGGER = LoggerFactory.getLogger(SessionRegistry.class,
-                                                      "[Task]");
+    protected static final Logger     SCAN_VER_LOGGER = LoggerFactory.getLogger("SCAN-VER");
 
     /**
      * store subscribers
@@ -120,14 +116,15 @@ public class SessionRegistry implements Registry {
     @Autowired
     private SlotTableCache            slotTableCache;
 
-    private KeyedThreadPoolExecutor   fetchVersionThreadPoolExecutor;
+    @Autowired
+    private FirePushService           firePushService;
+
+    private final VersionWatchDog     versionWatchDog = new VersionWatchDog();
 
     @PostConstruct
     public void init() {
-        this.fetchVersionThreadPoolExecutor = new KeyedThreadPoolExecutor("fetchVersion",
-            sessionServerConfig.getSchedulerFetchDataVersionPoolSize(), SlotConfig.SLOT_NUM * 2);
-
-        ConcurrentUtils.createDaemonThread("SessionWatchDog", new WatchDog()).start();
+        ConcurrentUtils.createDaemonThread("SessionVerWatchDog", versionWatchDog).start();
+        ConcurrentUtils.createDaemonThread("SessionClientWatchDog", new ClientWatchDog()).start();
     }
 
     @Override
@@ -253,22 +250,14 @@ public class SessionRegistry implements Registry {
         }
     }
 
-    private final class WatchDog extends LoopRunnable {
-        final Map<Integer, KeyedTask<FetchVersionTask>> fetchVersionTasks = Maps.newConcurrentMap();
+    private final class ClientWatchDog extends LoopRunnable {
 
         @Override
         public void runUnthrowable() {
             try {
-                if (sessionServerConfig.isBeginDataFetchTask()) {
-                    fetchVersions();
-                }
-            } catch (Throwable e) {
-                LOGGER.error("WatchDog failed fetch verions", e);
-            }
-            try {
                 cleanClientConnect();
             } catch (Throwable e) {
-                LOGGER.error("WatchDog failed cleanClientConnect", e);
+                LOGGER.error("WatchDog failed to cleanClientConnect", e);
             }
         }
 
@@ -276,89 +265,91 @@ public class SessionRegistry implements Registry {
         public void waitingUnthrowable() {
             ConcurrentUtils.sleepUninterruptibly(1, TimeUnit.SECONDS);
         }
+    }
 
-        private void fetchVersions() {
-            Collection<String> checkDataInfoIds = sessionInterests.getDataInfoIds();
-            Map<Integer/*slotId*/, Collection<String>/*dataInfoIds*/> map = calculateDataNode(checkDataInfoIds);
-            for (Map.Entry<Integer, Collection<String>> e : map.entrySet()) {
-                final int slotId = e.getKey();
-                KeyedTask<FetchVersionTask> task = fetchVersionTasks.get(slotId);
-                if (task == null
-                    || task.isOverAfter(sessionServerConfig
-                        .getSchedulerFetchDataVersionIntervalMs())) {
-                    task = fetchVersionThreadPoolExecutor.execute(slotId, new FetchVersionTask(
-                        slotId, e.getValue()));
-                    fetchVersionTasks.put(slotId, task);
-                    FETCH_VER_LOGGER.info("commit FetchVersionTask, {}, size={}", slotId, task);
-                } else {
-                    FETCH_VER_LOGGER.info("FetchVersioning, {}, status={}", slotId, task);
+    private final class VersionWatchDog extends WakeupLoopRunnable {
+        boolean prevStopPushSwitch;
+
+        @Override
+        public void runUnthrowable() {
+            try {
+                final boolean stop = sessionServerConfig.isStopPushSwitch();
+                if (!stop) {
+                    scanVersions();
+                    if (prevStopPushSwitch) {
+                        SCAN_VER_LOGGER.info("[ReSub] resub after stopPushSwitch closed");
+                    }
                 }
+                prevStopPushSwitch = stop;
+            } catch (Throwable e) {
+                SCAN_VER_LOGGER.error("WatchDog failed fetch verions", e);
             }
-            return;
+        }
+
+        @Override
+        public int getWaitingMillis() {
+            return sessionServerConfig.getSchedulerFetchDataVersionIntervalMs();
         }
     }
 
-    private final class FetchVersionTask implements Runnable {
-        final int                slotId;
-        final Collection<String> dataInfoIds;
-
-        FetchVersionTask(int slotId, Collection<String> dataInfoIds) {
-            this.slotId = slotId;
-            this.dataInfoIds = dataInfoIds;
-        }
-
-        @Override
-        public void run() {
-            fetchChangDataProcess(slotId, dataInfoIds);
-        }
-
-        @Override
-        public String toString() {
-            return "FetchVersionTask{" + "slotId=" + slotId + ", dataInfoIds=" + dataInfoIds.size()
-                   + '}';
+    private void scanVersions() {
+        Collection<String> pushedDataInfoIds = sessionInterests.getPushedDataInfoIds();
+        Map<Integer, List<String>> pushedDataInfoIdMap = groupBySlot(pushedDataInfoIds);
+        for (int i = 0; i < slotTableCache.slotNum(); i++) {
+            fetchChangDataProcess(i, pushedDataInfoIdMap.getOrDefault(i, Collections.emptyList()));
         }
     }
 
     @Override
     public void fetchChangDataProcess() {
-        Collection<String> checkDataInfoIds = sessionInterests.getDataInfoIds();
-        Map<Integer/*slotId*/, Collection<String>/*dataInfoIds*/> map = calculateDataNode(checkDataInfoIds);
-
-        map.forEach((slotId, dataInfoIds) -> {
-            //TODO asynchronous fetch version
-            fetchChangDataProcess(slotId, dataInfoIds);
-        });
-
+        versionWatchDog.wakeup();
     }
 
-    private void fetchChangDataProcess(int slotId, Collection<String> dataInfoIds) {
+    private Map<Integer, List<String>> groupBySlot(Collection<String> dataInfoIds) {
+        Map<Integer, List<String>> ret = new HashMap<>(64);
+        for (String dataInfoId : dataInfoIds) {
+            List<String> list = ret.computeIfAbsent(slotTableCache.slotOf(dataInfoId), k -> Lists.newArrayList());
+            list.add(dataInfoId);
+        }
+        return ret;
+    }
+
+    private void fetchChangDataProcess(int slotId, List<String> pushedDataInfoIds) {
         String leader = slotTableCache.getLeader(slotId);
         if (leader == null) {
-            FETCH_VER_LOGGER
-                .error("slot not assign {} when fetch dataInfoIds={}", slotId, dataInfoIds.size());
+            SCAN_VER_LOGGER.warn("slot not assigned, {}", slotId);
             return;
         }
-        FETCH_VER_LOGGER.info("[fetchChangDataProcess] Fetch data versions from {}, {}, dataInfoIds={}",
-            slotId, leader, dataInfoIds.size());
-        Map<String/*datacenter*/, Map<String/*datainfoid*/, Long>> dataVersions = dataNodeService
-            .fetchDataVersion(new URL(leader, sessionServerConfig.getDataServerPort()), dataInfoIds);
+        SCAN_VER_LOGGER.info("fetch ver from {}, slotId={}, pushed={}", leader, slotId,
+            pushedDataInfoIds.size());
+        Map<String/*datacenter*/, Map<String/*datainfoid*/, DatumVersion>> dataVersions = dataNodeService
+            .fetchDataVersion(new URL(leader, sessionServerConfig.getDataServerPort()), slotId);
 
-        if (dataVersions != null) {
-            sessionRegistryStrategy.doFetchChangDataProcess(dataVersions);
-        } else {
-            FETCH_VER_LOGGER.warn("Fetch no change data versions info from {}, {}", slotId, leader);
+        if (CollectionUtils.isEmpty(dataVersions)) {
+            SCAN_VER_LOGGER.warn("fetch empty ver from {}, slotId={}", leader, slotId);
+            return;
         }
-    }
-
-    private Map<Integer, Collection<String>> calculateDataNode(Collection<String> dataInfoIds) {
-        Map<Integer, Collection<String>> map = new HashMap<>();
-        dataInfoIds.forEach(dataInfoId -> {
-            int slotId = slotTableCache.slotOf(dataInfoId);
-            Collection<String> list = map.computeIfAbsent(slotId, k -> Lists.newArrayList());
-            list.add(dataInfoId);
-        });
-
-        return map;
+        for (Map.Entry<String, Map<String, DatumVersion>> e : dataVersions.entrySet()) {
+            final String dataCenter = e.getKey();
+            final Map<String, DatumVersion> versionMap = e.getValue();
+            for (Map.Entry<String, DatumVersion> version : versionMap.entrySet()) {
+                final String dataInfoId = version.getKey();
+                final long verVal = version.getValue().getValue();
+                if (sessionInterests.checkInterestVersions(dataCenter, dataInfoId, verVal)) {
+                    firePushService.fireOnChange(dataCenter, dataInfoId, verVal);
+                    SCAN_VER_LOGGER.info("notify fetch by check ver {} for {}, slotId={}", verVal,
+                        dataInfoId, slotId);
+                }
+            }
+            // to check the dataInfoId has deleted
+            for (String pushedDataInfoId : pushedDataInfoIds) {
+                if (!versionMap.containsKey(pushedDataInfoId)) {
+                    firePushService.fireOnChange(dataCenter, pushedDataInfoId, Long.MIN_VALUE);
+                    SCAN_VER_LOGGER.warn("pushedDataInfoId has remove {}, slotId={}",
+                        pushedDataInfoId, slotId);
+                }
+            }
+        }
     }
 
     public void remove(List<ConnectId> connectIds) {
@@ -391,11 +382,7 @@ public class SessionRegistry implements Registry {
     }
 
     private void fireSubscriberPushEmptyTask(Subscriber subscriber) {
-        //trigger empty data push
-        TaskEvent taskEvent = new TaskEvent(subscriber,
-            TaskEvent.TaskType.SUBSCRIBER_PUSH_EMPTY_TASK);
-        TASK_LOGGER.info("send " + taskEvent.getTaskType() + " taskEvent:{}", taskEvent);
-        getTaskListenerManager().sendTaskEvent(taskEvent);
+        firePushService.fireOnPushEmpty(subscriber);
     }
 
     public void cleanClientConnect() {

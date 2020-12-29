@@ -25,6 +25,7 @@ import com.alipay.sofa.registry.common.model.store.Publisher;
 import com.alipay.sofa.registry.remoting.Channel;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import java.util.Collections;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ThreadPoolExecutor;
 
@@ -59,13 +60,15 @@ public class PublishDataHandler extends AbstractDataHandler<PublishDataRequest> 
             return SlotAccessGenericResponse.failedResponse(slotAccess);
         }
         if (publisher.getPublishType() == PublishType.TEMPORARY) {
+            // create datum for the temp publisher, we need the datum.version for check ver
+            localDatumStorage.createEmptyDatumIfAbsent(publisher);
             // temporary only notify session, not store
             dataChangeEventCenter.onTempPubChange(publisher, dataServerConfig.getLocalDataCenter());
         } else {
-            DatumVersion version = localDatumStorage.putPublisher(publisher,
-                request.getSessionProcessId());
+            DatumVersion version = localDatumStorage.putPublisher(publisher);
             if (version != null) {
-                dataChangeEventCenter.onChange(publisher.getDataInfoId(),
+                dataChangeEventCenter.onChange(
+                    Collections.singletonList(publisher.getDataInfoId()),
                     dataServerConfig.getLocalDataCenter());
             }
         }

@@ -19,6 +19,7 @@ package com.alipay.sofa.registry.common.model.store;
 import com.google.common.collect.Maps;
 import org.junit.Test;
 
+import java.util.Collections;
 import java.util.Map;
 
 /**
@@ -49,8 +50,7 @@ public class SubTest {
 
     private static boolean test1(Map<String, Subscriber> map, String dataCenter, long ver) {
         for (Subscriber s : map.values()) {
-            long v = s.getLastPushVersion(dataCenter);
-            if (v < ver) {
+            if (s.checkVersion(dataCenter, Collections.singletonMap("aa", ver))) {
                 return true;
             }
         }
@@ -61,7 +61,7 @@ public class SubTest {
         String key = String.valueOf(System.currentTimeMillis());
         for (int i = 0; i < count; i++) {
             Subscriber sub = new Subscriber();
-            sub.checkAndUpdateVersion(dataCenter, 10L, 10);
+            sub.checkVersion(dataCenter, Collections.singletonMap("aa", 10L));
             map.put(key + "_" + i, sub);
         }
     }

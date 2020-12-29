@@ -16,7 +16,6 @@
  */
 package com.alipay.sofa.registry.server.session.cache;
 
-import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
@@ -62,25 +61,19 @@ public class SessionCacheService implements CacheService {
             throw new IllegalArgumentException("Generator key input error!");
         }
 
-        Value value = null;
         switch (key.getKeyType()) {
             case OBJ:
                 EntityType entityType = key.getEntityType();
                 CacheGenerator cacheGenerator = cacheGenerators
                     .get(entityType.getClass().getName());
-                value = cacheGenerator.generatePayload(key);
-                break;
+                return cacheGenerator.generatePayload(key);
             case JSON:
-                break;
             case XML:
-                break;
             default:
                 LOGGER.error("Unidentified data type: " + key.getKeyType()
                              + " found in the cache key.");
-                value = new Value(new HashMap<String, Object>());
-                break;
+                throw new IllegalArgumentException("unsupport Key:" + key);
         }
-        return value;
     }
 
     @Override

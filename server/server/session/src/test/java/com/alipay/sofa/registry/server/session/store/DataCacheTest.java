@@ -17,9 +17,11 @@
 package com.alipay.sofa.registry.server.session.store;
 
 import com.alipay.sofa.registry.common.model.ConnectId;
+import com.alipay.sofa.registry.common.model.SubscriberUtils;
 import com.alipay.sofa.registry.common.model.constants.ValueConstants;
 import com.alipay.sofa.registry.common.model.store.*;
 import com.alipay.sofa.registry.common.model.store.DataInfo;
+import com.alipay.sofa.registry.core.model.AssembleType;
 import com.alipay.sofa.registry.core.model.ScopeEnum;
 import com.alipay.sofa.registry.net.NetUtil;
 import com.alipay.sofa.registry.server.session.bootstrap.CommonConfig;
@@ -29,11 +31,13 @@ import com.alipay.sofa.registry.server.session.cache.CacheGenerator;
 import com.alipay.sofa.registry.server.session.cache.CacheService;
 import com.alipay.sofa.registry.server.session.cache.SessionCacheService;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.google.common.util.concurrent.Uninterruptibles;
 import org.junit.Assert;
 import org.junit.Test;
 
 import java.net.InetSocketAddress;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -160,11 +164,14 @@ public class DataCacheTest extends BaseTest {
             Publisher p = getPub(dataId, null, URL.valueOf(connectIdss));
             sessionDataStore.add(p);
             publisherList.add(p);
-            Assert.assertTrue(getCachePub(sessionDataStore, connectIdss +
-                    ValueConstants.CONNECT_ID_SPLIT + p.getTargetAddress().buildAddressString()));
+            Assert.assertTrue(getCachePub(sessionDataStore, connectIdss
+                                                            + ValueConstants.CONNECT_ID_SPLIT
+                                                            + p.getTargetAddress()
+                                                                .buildAddressString()));
         }
         for (Publisher p : publisherList) {
-            String c = connectId + ValueConstants.CONNECT_ID_SPLIT + p.getTargetAddress().buildAddressString();
+            String c = connectId + ValueConstants.CONNECT_ID_SPLIT
+                       + p.getTargetAddress().buildAddressString();
             Assert.assertFalse(getCachePub(sessionDataStore, c));
         }
     }
@@ -201,8 +208,15 @@ public class DataCacheTest extends BaseTest {
     private Map<InetSocketAddress, Map<String, Subscriber>> getCacheSub(String dataInfoId,
                                                                         ScopeEnum scopeEnum,
                                                                         SessionInterests sessionInterests) {
-
-        return sessionInterests.querySubscriberIndex(dataInfoId, scopeEnum);
+        Collection<Subscriber> subscribers = sessionInterests.getDatas(dataInfoId);
+        Map<InetSocketAddress, Map<String, Subscriber>> ret = Maps.newHashMap();
+        Map<AssembleType, Map<ScopeEnum, List<Subscriber>>> groups = SubscriberUtils
+            .groupByAssembleAndScope(subscribers);
+        for (Map<ScopeEnum, List<Subscriber>> group : groups.values()) {
+            List<Subscriber> list = group.get(scopeEnum);
+            ret.putAll(SubscriberUtils.groupBySourceAddress(list));
+        }
+        return ret;
     }
 
     private Subscriber getSub(String dataId, ScopeEnum scopeEnum, String registerId, URL url) {
@@ -222,6 +236,7 @@ public class DataCacheTest extends BaseTest {
         subscriberRegister.setVersion(version.get());
         subscriberRegister.setRegisterTimestamp(System.currentTimeMillis());
         subscriberRegister.setScope(scopeEnum);
+        subscriberRegister.setAssembleType(AssembleType.sub_app_and_interface);
         subscriberRegister.setDataInfoId(DataInfo.toDataInfoId(dataId, "instance2", "rpc"));
 
         subscriberRegister.setSourceAddress(url == null ? new URL("192.168.1.2", 9000) : url);
@@ -327,6 +342,8 @@ public class DataCacheTest extends BaseTest {
         sessionInterests.setSessionServerConfig(config);
 
         Subscriber subscriber1 = new Subscriber();
+        subscriber1.setScope(ScopeEnum.dataCenter);
+        subscriber1.setAssembleType(AssembleType.sub_app_and_interface);
         subscriber1.setDataInfoId("dataInfoId1");
         subscriber1.setDataId("dataId1");
         subscriber1.setRegisterId("RegisterId1");
@@ -334,6 +351,8 @@ public class DataCacheTest extends BaseTest {
         subscriber1.setTargetAddress(new URL("192.168.1.2", 9600));
 
         Subscriber subscriber2 = new Subscriber();
+        subscriber2.setScope(ScopeEnum.dataCenter);
+        subscriber2.setAssembleType(AssembleType.sub_app_and_interface);
         subscriber2.setDataInfoId("dataInfoId2");
         subscriber2.setDataId("dataId2");
         subscriber2.setRegisterId("RegisterId2");
@@ -353,6 +372,8 @@ public class DataCacheTest extends BaseTest {
                 .queryByConnectId(ConnectId.parse("192.168.1.1:12345_192.168.1.2:9600")).size(), 2);
 
         Subscriber subscriber3 = new Subscriber();
+        subscriber3.setScope(ScopeEnum.dataCenter);
+        subscriber3.setAssembleType(AssembleType.sub_app_and_interface);
         subscriber3.setDataInfoId(subscriber1.getDataInfoId());
         subscriber3.setDataId(subscriber1.getDataId());
         subscriber3.setRegisterId(subscriber1.getRegisterId());
@@ -360,6 +381,8 @@ public class DataCacheTest extends BaseTest {
         subscriber3.setTargetAddress(new URL("192.168.1.2", 9600));
 
         Subscriber subscriber4 = new Subscriber();
+        subscriber4.setScope(ScopeEnum.dataCenter);
+        subscriber4.setAssembleType(AssembleType.sub_app_and_interface);
         subscriber4.setDataInfoId(subscriber2.getDataInfoId());
         subscriber4.setDataId(subscriber2.getDataId());
         subscriber4.setRegisterId(subscriber2.getRegisterId());
@@ -440,6 +463,8 @@ public class DataCacheTest extends BaseTest {
         sessionInterests.setSessionServerConfig(config);
 
         Subscriber subscriber1 = new Subscriber();
+        subscriber1.setScope(ScopeEnum.dataCenter);
+        subscriber1.setAssembleType(AssembleType.sub_app_and_interface);
         subscriber1.setDataInfoId("dataInfoId1");
         subscriber1.setDataId("dataId1");
         subscriber1.setRegisterId("RegisterId1");
@@ -448,6 +473,8 @@ public class DataCacheTest extends BaseTest {
         sessionInterests.add(subscriber1);
 
         Subscriber subscriber2 = new Subscriber();
+        subscriber2.setScope(subscriber1.getScope());
+        subscriber2.setAssembleType(subscriber1.getAssembleType());
         subscriber2.setDataInfoId(subscriber1.getDataInfoId());
         subscriber2.setDataId(subscriber1.getDataId());
         subscriber2.setRegisterId(subscriber1.getRegisterId());
@@ -467,13 +494,10 @@ public class DataCacheTest extends BaseTest {
             sessionInterests
                 .queryByConnectId(ConnectId.parse("192.168.1.1:12346_192.168.1.2:9600")).size(), 1);
 
-        Assert.assertEquals(
-            sessionInterests.querySubscriberIndex(subscriber1.getDataInfoId(),
-                subscriber1.getScope()).get(new InetSocketAddress("192.168.1.1", 12345)), null);
-        Assert.assertEquals(
-            sessionInterests
-                .querySubscriberIndex(subscriber1.getDataInfoId(), subscriber1.getScope())
-                .get(new InetSocketAddress("192.168.1.1", 12346)).size(), 1);
+        Map<InetSocketAddress, Map<String, Subscriber>> addressMap = getCacheSub(
+            subscriber1.getDataInfoId(), subscriber1.getScope(), sessionInterests);
+        Assert.assertEquals(addressMap.get(new InetSocketAddress("192.168.1.1", 12345)), null);
+        Assert.assertEquals(addressMap.get(new InetSocketAddress("192.168.1.1", 12346)).size(), 1);
         Assert.assertEquals(sessionInterests.getDatas(subscriber1.getDataInfoId()).size(), 1);
         Assert.assertTrue(sessionInterests.getDatas(subscriber1.getDataInfoId()).contains(
             subscriber2));

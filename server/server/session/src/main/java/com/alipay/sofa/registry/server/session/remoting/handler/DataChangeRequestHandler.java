@@ -16,28 +16,19 @@
  */
 package com.alipay.sofa.registry.server.session.remoting.handler;
 
-import com.alipay.remoting.util.StringUtils;
 import com.alipay.sofa.registry.common.model.Node.NodeType;
-import com.alipay.sofa.registry.common.model.constants.ValueConstants;
 import com.alipay.sofa.registry.common.model.sessionserver.DataChangeRequest;
-import com.alipay.sofa.registry.common.model.store.DataInfo;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.remoting.Channel;
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
 import com.alipay.sofa.registry.server.session.cache.AppRevisionCacheRegistry;
-import com.alipay.sofa.registry.server.session.cache.CacheService;
-import com.alipay.sofa.registry.server.session.cache.DatumKey;
-import com.alipay.sofa.registry.server.session.cache.Key;
-import com.alipay.sofa.registry.server.session.cache.Key.KeyType;
+import com.alipay.sofa.registry.server.session.push.FirePushService;
 import com.alipay.sofa.registry.server.session.scheduler.ExecutorManager;
 import com.alipay.sofa.registry.server.session.store.Interests;
-import com.alipay.sofa.registry.server.session.strategy.DataChangeRequestHandlerStrategy;
 import com.alipay.sofa.registry.server.shared.remoting.AbstractClientHandler;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import java.util.Collection;
-import java.util.Set;
 import java.util.concurrent.Executor;
 
 /**
@@ -47,32 +38,25 @@ import java.util.concurrent.Executor;
  */
 public class DataChangeRequestHandler extends AbstractClientHandler<DataChangeRequest> {
 
-    private static final Logger              LOGGER          = LoggerFactory
-                                                                 .getLogger(DataChangeRequestHandler.class);
-
-    private static final Logger              EXCHANGE_LOGGER = LoggerFactory
-                                                                 .getLogger("SESSION-EXCHANGE");
-
+    private static final Logger      LOGGER          = LoggerFactory
+                                                         .getLogger(DataChangeRequestHandler.class);
     /**
      * store subscribers
      */
     @Autowired
-    private Interests                        sessionInterests;
+    private Interests                sessionInterests;
 
     @Autowired
-    private SessionServerConfig              sessionServerConfig;
+    private SessionServerConfig      sessionServerConfig;
 
     @Autowired
-    private ExecutorManager                  executorManager;
+    private ExecutorManager          executorManager;
 
     @Autowired
-    private CacheService                     sessionCacheService;
+    private AppRevisionCacheRegistry appRevisionCacheRegistry;
 
     @Autowired
-    private DataChangeRequestHandlerStrategy dataChangeRequestHandlerStrategy;
-
-    @Autowired
-    private AppRevisionCacheRegistry         appRevisionCacheRegistry;
+    private FirePushService          firePushService;
 
     @Override
     protected NodeType getConnectNodeType() {
@@ -86,74 +70,21 @@ public class DataChangeRequestHandler extends AbstractClientHandler<DataChangeRe
 
     @Override
     public Object doHandle(Channel channel, DataChangeRequest dataChangeRequest) {
-        dataChangeRequest.setDataCenter(dataChangeRequest.getDataCenter());
-        dataChangeRequest.setDataInfoId(dataChangeRequest.getDataInfoId());
-
-        final Key key = new Key(KeyType.OBJ, DatumKey.class.getName(), new DatumKey(
-            dataChangeRequest.getDataInfoId(), dataChangeRequest.getDataCenter()));
-        // TODO check version to invalidate?
-        sessionCacheService.invalidate(key);
         if (sessionServerConfig.isStopPushSwitch()) {
             return null;
         }
-
-        try {
-            DataInfo dataInfo = DataInfo.valueOf(dataChangeRequest.getDataInfoId());
-            refreshMeta(dataChangeRequest.getRevisions());
-
-            if (StringUtils.equals(ValueConstants.SOFA_APP, dataInfo.getDataType())) {
-
-                //dataInfoId is app, get relate interfaces dataInfoId from cache
-                Set<String> interfaces = appRevisionCacheRegistry.getInterfaces(dataInfo
-                    .getDataId());
-
-                if (interfaces == null || interfaces.isEmpty()) {
-                    LOGGER.warn("App no intefaces {}", dataChangeRequest.getDataInfoId());
-                    return null;
-                }
-                for (String interfaceDataInfoId : interfaces) {
-                    DataChangeRequest request = new DataChangeRequest();
-                    request.setDataInfoId(interfaceDataInfoId);
-                    request.setChangedDataInfoId(dataChangeRequest.getDataInfoId());
-                    request.setDataCenter(dataChangeRequest.getDataCenter());
-                    request.setVersion(dataChangeRequest.getVersion());
-                    fireChangFetch(request);
-                }
-            } else {
-                dataChangeRequest.setChangedDataInfoId(dataChangeRequest.getDataInfoId());
-                fireChangFetch(dataChangeRequest);
-            }
-            EXCHANGE_LOGGER.info(
-                "Data version has change,and will fetch to update!Request={},URL={}",
-                dataChangeRequest, channel.getRemoteAddress());
-        } catch (Exception e) {
-            LOGGER.error("DataChange Request error!", e);
-            throw new RuntimeException("DataChangeRequest Request error!", e);
+        dataChangeRequest.setDataCenter(dataChangeRequest.getDataCenter());
+        dataChangeRequest.setDataInfoId(dataChangeRequest.getDataInfoId());
+        appRevisionCacheRegistry.refreshMeta(dataChangeRequest.getRevisions());
+        if (!sessionInterests.checkInterestVersions(dataChangeRequest.getDataCenter(),
+            dataChangeRequest.getDataInfoId(), dataChangeRequest.getVersion())) {
+            LOGGER.info("obsolete version {}, ver={}, dataCenter={}", dataChangeRequest.getDataInfoId(),
+                    dataChangeRequest.getVersion(), dataChangeRequest.getDataCenter());
+            return null;
         }
-
-        return null;
-    }
-
-    private void refreshMeta(Collection<String> revisions) {
-        if (revisions == null || revisions.isEmpty()) {
-            return;
-        }
-        for (String revision : revisions) {
-            appRevisionCacheRegistry.getRevision(revision);
-        }
-    }
-
-    /**
-     * @param dataChangeRequest
-     */
-    private void fireChangFetch(DataChangeRequest dataChangeRequest) {
-        boolean result = sessionInterests.checkInterestVersions(dataChangeRequest.getDataCenter(),
+        firePushService.fireOnChange(dataChangeRequest.getDataCenter(),
             dataChangeRequest.getDataInfoId(), dataChangeRequest.getVersion());
-
-        if (!result) {
-            return;
-        }
-        dataChangeRequestHandlerStrategy.doFireChangFetch(dataChangeRequest);
+        return null;
     }
 
     @Override

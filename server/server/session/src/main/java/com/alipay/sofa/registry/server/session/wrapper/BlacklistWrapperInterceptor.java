@@ -20,12 +20,8 @@ import com.alipay.sofa.registry.common.model.store.BaseInfo;
 import com.alipay.sofa.registry.common.model.store.StoreData;
 import com.alipay.sofa.registry.common.model.store.StoreData.DataType;
 import com.alipay.sofa.registry.common.model.store.Subscriber;
-import com.alipay.sofa.registry.log.Logger;
-import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.server.session.filter.ProcessFilter;
-import com.alipay.sofa.registry.server.session.registry.SessionRegistry;
-import com.alipay.sofa.registry.task.listener.TaskEvent;
-import com.alipay.sofa.registry.task.listener.TaskListenerManager;
+import com.alipay.sofa.registry.server.session.push.FirePushService;
 import org.springframework.beans.factory.annotation.Autowired;
 
 /**
@@ -36,12 +32,8 @@ import org.springframework.beans.factory.annotation.Autowired;
  */
 public class BlacklistWrapperInterceptor implements WrapperInterceptor<StoreData, Boolean> {
 
-    private static final Logger     TASK_LOGGER = LoggerFactory.getLogger(SessionRegistry.class,
-                                                    "[Task]");
-
     @Autowired
-    private TaskListenerManager     taskListenerManager;
-
+    private FirePushService         firePushService;
     /**
      * blacklist filter
      */
@@ -75,9 +67,6 @@ public class BlacklistWrapperInterceptor implements WrapperInterceptor<StoreData
 
     private void fireSubscriberPushEmptyTask(Subscriber subscriber) {
         //trigger empty data push
-        TaskEvent taskEvent = new TaskEvent(subscriber,
-            TaskEvent.TaskType.SUBSCRIBER_PUSH_EMPTY_TASK);
-        TASK_LOGGER.info("send " + taskEvent.getTaskType() + " taskEvent:{}", taskEvent);
-        taskListenerManager.sendTaskEvent(taskEvent);
+        firePushService.fireOnPushEmpty(subscriber);
     }
 }

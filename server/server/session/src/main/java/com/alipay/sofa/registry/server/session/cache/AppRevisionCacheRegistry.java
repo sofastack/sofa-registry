@@ -26,6 +26,7 @@ import com.alipay.sofa.registry.util.RevisionUtils;
 import com.alipay.sofa.registry.util.SingleFlight;
 import com.google.common.collect.Sets;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.util.CollectionUtils;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -58,10 +59,8 @@ public class AppRevisionCacheRegistry {
     }
 
     public Map<String, Set<String>> getAppRevisions(String dataInfoId) {
-        if (!interfaceRevisions.containsKey(dataInfoId)) {
-            return new HashMap<>();
-        }
-        return interfaceRevisions.get(dataInfoId);
+        final Map<String, Set<String>> ret = interfaceRevisions.get(dataInfoId);
+        return ret == null ? Collections.emptyMap() : ret;
     }
 
     public AppRevision getRevision(String revision) {
@@ -74,7 +73,8 @@ public class AppRevisionCacheRegistry {
     }
 
     public Set<String> getInterfaces(String appname) {
-        return appInterfaces.get(appname);
+        final Set<String> ret = appInterfaces.get(appname);
+        return ret == null ? Collections.emptySet() : ret;
     }
 
     public void refreshAll() {
@@ -93,6 +93,15 @@ public class AppRevisionCacheRegistry {
         } catch (Exception e) {
             LOG.error("refresh revisions failed ", e);
             throw new RuntimeException("refresh revision failed", e);
+        }
+    }
+
+    public void refreshMeta(Collection<String> revisions) {
+        if (CollectionUtils.isEmpty(revisions)) {
+            return;
+        }
+        for (String revision : revisions) {
+            getRevision(revision);
         }
     }
 

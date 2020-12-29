@@ -35,13 +35,13 @@ import com.alipay.sofa.registry.remoting.Channel;
  */
 public class BoltChannel implements Channel {
 
-    private Connection                connection;
+    private Connection          connection;
 
-    private AsyncContext              asyncContext;
+    private AsyncContext        asyncContext;
 
-    private BizContext                bizContext;
+    private BizContext          bizContext;
 
-    private Map<String, Object>       attributes;
+    private Map<String, Object> attributes;
 
     @Override
     public InetSocketAddress getRemoteAddress() {

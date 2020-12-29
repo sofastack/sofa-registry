@@ -117,19 +117,22 @@ public abstract class AbstractMetaServerService<T extends BaseHeartBeatResponse>
 
     private void updateState(T response) {
         State s = new State(response.getDataCentersFromMetaNodes(), response.getSessionNodesMap(),
-            response.getSlotTable().getDataServers());
+            response.getSlotTable().getDataServers(), response.getSessionServerEpoch());
         this.state = s;
     }
 
     private static final class State {
-        static final State                 NULL = new State(Collections.emptySet(),
-                                                    Collections.emptyMap(), Collections.emptySet());
-        protected Set<String>              dataCenters;
-        protected Map<String, SessionNode> sessionNodes;
-        protected Set<String>              dataServers;
+        static final State                       NULL = new State(Collections.emptySet(),
+                                                          Collections.emptyMap(),
+                                                          Collections.emptySet(), 0);
+        protected final long                     sessionServerEpoch;
+        protected final Set<String>              dataCenters;
+        protected final Map<String, SessionNode> sessionNodes;
+        protected final Set<String>              dataServers;
 
         State(Set<String> dataCenters, Map<String, SessionNode> sessionNodes,
-              Set<String> dataServers) {
+              Set<String> dataServers, long sessionServerEpoch) {
+            this.sessionServerEpoch = sessionServerEpoch;
             this.dataCenters = Collections.unmodifiableSet(dataCenters);
             this.sessionNodes = Collections.unmodifiableMap(sessionNodes);
             this.dataServers = Collections.unmodifiableSet(dataServers);
@@ -192,6 +195,10 @@ public abstract class AbstractMetaServerService<T extends BaseHeartBeatResponse>
         return state.dataServers;
     }
 
+    public long getSessionServerEpoch() {
+        return state.sessionServerEpoch;
+    }
+
     public Set<String> getMetaServerList() {
         return metaNodeExchanger.getServerIps();
     }
@@ -216,4 +223,5 @@ public abstract class AbstractMetaServerService<T extends BaseHeartBeatResponse>
     protected abstract void handleRenewResult(T result);
 
     protected abstract Node createNode();
+
 }

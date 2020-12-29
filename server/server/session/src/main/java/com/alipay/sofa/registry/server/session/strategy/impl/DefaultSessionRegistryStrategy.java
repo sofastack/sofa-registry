@@ -16,10 +16,7 @@
  */
 package com.alipay.sofa.registry.server.session.strategy.impl;
 
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
-
+import com.alipay.sofa.registry.server.session.push.FirePushService;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import com.alipay.sofa.registry.common.model.store.Publisher;
@@ -28,7 +25,6 @@ import com.alipay.sofa.registry.common.model.store.Watcher;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
-import com.alipay.sofa.registry.server.session.store.Interests;
 import com.alipay.sofa.registry.server.session.strategy.SessionRegistryStrategy;
 import com.alipay.sofa.registry.task.listener.TaskEvent;
 import com.alipay.sofa.registry.task.listener.TaskListenerManager;
@@ -39,17 +35,8 @@ import com.alipay.sofa.registry.task.listener.TaskListenerManager;
  * @since 2019/2/15
  */
 public class DefaultSessionRegistryStrategy implements SessionRegistryStrategy {
-    private static final Logger LOGGER     = LoggerFactory
-                                               .getLogger(DefaultSessionRegistryStrategy.class);
-
     private static final Logger taskLogger = LoggerFactory.getLogger(
                                                DefaultSessionRegistryStrategy.class, "[Task]");
-
-    /**
-     * store subscribers
-     */
-    @Autowired
-    private Interests           sessionInterests;
 
     /**
      * trigger task com.alipay.sofa.registry.server.meta.listener process
@@ -58,45 +45,10 @@ public class DefaultSessionRegistryStrategy implements SessionRegistryStrategy {
     private TaskListenerManager taskListenerManager;
 
     @Autowired
+    private FirePushService     firePushService;
+
+    @Autowired
     private SessionServerConfig sessionServerConfig;
-
-    @Override
-    public void doFetchChangDataProcess(Map<String/*datacenter*/, Map<String/*datainfoid*/, Long>> dataInfoIdVersions) {
-        //diff dataCenter same dataInfoId sent once fetch on cloud mode
-        Set<String> changeDataInfoIds = new HashSet<>();
-        dataInfoIdVersions.forEach((dataCenter, dataInfoIdMap) -> {
-            if (dataInfoIdMap != null) {
-                dataInfoIdMap.forEach((dataInfoID, version) -> {
-                    if (checkInterestVersions(dataCenter, dataInfoID, version)) {
-                        changeDataInfoIds.add(dataInfoID);
-                    }
-                });
-            }
-        });
-
-        changeDataInfoIds.forEach(this::fireDataChangeCloudTask);
-    }
-
-    protected boolean checkInterestVersions(String dataCenter, String pushDataInfoId, Long version) {
-        boolean result = sessionInterests
-            .checkInterestVersions(dataCenter, pushDataInfoId, version);
-        if (result) {
-            LOGGER
-                .info(
-                    "Request dataCenter {} dataInfo {} fetch version {} be interested,Higher than current version!Will fire data change Task",
-                    dataCenter, pushDataInfoId, version);
-        }
-        return result;
-    }
-
-    private void fireDataChangeCloudTask(String dataInfoId) {
-
-        //trigger fetch data for subscriber,and push to client node
-        TaskEvent taskEvent = new TaskEvent(dataInfoId,
-            TaskEvent.TaskType.DATA_CHANGE_FETCH_CLOUD_TASK);
-        taskLogger.info("send {} taskEvent:{}", taskEvent.getTaskType(), taskEvent);
-        taskListenerManager.sendTaskEvent(taskEvent);
-    }
 
     @Override
     public void afterPublisherRegister(Publisher publisher) {
@@ -106,11 +58,7 @@ public class DefaultSessionRegistryStrategy implements SessionRegistryStrategy {
     @Override
     public void afterSubscriberRegister(Subscriber subscriber) {
         if (!sessionServerConfig.isStopPushSwitch()) {
-            //trigger fetch data for subscriber,and push to client node
-            TaskEvent taskEvent = new TaskEvent(subscriber,
-                TaskEvent.TaskType.SUBSCRIBER_REGISTER_FETCH_TASK);
-            taskLogger.info("send {} taskEvent:{}", taskEvent.getTaskType(), taskEvent);
-            taskListenerManager.sendTaskEvent(taskEvent);
+            firePushService.fireOnRegister(subscriber);
         }
     }
 

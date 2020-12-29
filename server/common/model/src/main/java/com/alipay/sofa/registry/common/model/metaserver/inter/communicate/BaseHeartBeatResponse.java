@@ -33,6 +33,8 @@ public class BaseHeartBeatResponse implements Serializable {
 
     private final long              metaServerEpoch;
 
+    private final long              sessionServerEpoch;
+
     private final SlotTable         slotTable;
 
     private final List<MetaNode>    metaNodes;
@@ -40,14 +42,16 @@ public class BaseHeartBeatResponse implements Serializable {
     private final List<SessionNode> sessionNodes;
 
     public BaseHeartBeatResponse(long metaServerEpoch, SlotTable slotTable, List<MetaNode> metaNodes) {
-        this(metaServerEpoch, slotTable, metaNodes, Collections.emptyList());
+        this(metaServerEpoch, slotTable, metaNodes, 0, Collections.emptyList());
     }
 
     public BaseHeartBeatResponse(long metaServerEpoch, SlotTable slotTable,
-                                 List<MetaNode> metaNodes, List<SessionNode> sessionNodes) {
+                                 List<MetaNode> metaNodes, long sessionServerEpoch,
+                                 List<SessionNode> sessionNodes) {
         this.metaServerEpoch = metaServerEpoch;
         this.slotTable = slotTable;
         this.metaNodes = Collections.unmodifiableList(metaNodes);
+        this.sessionServerEpoch = sessionServerEpoch;
         this.sessionNodes = Collections.unmodifiableList(sessionNodes);
     }
 
@@ -79,5 +83,13 @@ public class BaseHeartBeatResponse implements Serializable {
         final Map<String, SessionNode> m = new HashMap<>(sessionNodes.size());
         sessionNodes.forEach(s -> m.put(s.getIp(), s));
         return m;
+    }
+
+    public long getSessionServerEpoch() {
+        return sessionServerEpoch;
+    }
+
+    public long getMetaServerEpoch() {
+        return metaServerEpoch;
     }
 }

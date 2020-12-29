@@ -20,7 +20,6 @@ import com.alipay.sofa.registry.common.model.store.Watcher;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.util.VersionsMapUtils;
-import com.google.common.collect.Maps;
 import org.apache.commons.collections.MapUtils;
 
 import java.util.Map;
@@ -45,17 +44,8 @@ public class SessionWatchers extends AbstractDataManager<Watcher> implements Wat
     @Override
     public boolean add(Watcher watcher) {
         Watcher.internWatcher(watcher);
-        Map<String, Watcher> watcherMap = stores
-                .computeIfAbsent(watcher.getDataInfoId(), k -> Maps.newConcurrentMap());
-        Watcher existingWatcher = null;
-        write.lock();
-        try {
-            existingWatcher = watcherMap.get(watcher.getRegisterId());
-            watcherMap.put(watcher.getRegisterId(), watcher);
-        } finally {
-            write.unlock();
-        }
-        // log without lock
+
+        Watcher existingWatcher = addData(watcher);
         if (existingWatcher != null) {
             LOGGER.warn("watcher already exists,it will be overwrite! {}", existingWatcher);
         }
@@ -77,9 +67,5 @@ public class SessionWatchers extends AbstractDataManager<Watcher> implements Wat
         } finally {
             read.unlock();
         }
-    }
-
-    @Override
-    protected void postDelete(Watcher data) {
     }
 }

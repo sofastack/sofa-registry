@@ -23,6 +23,7 @@ import com.google.common.util.concurrent.MoreExecutors;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.Executor;
 import java.util.concurrent.TimeUnit;
 
@@ -90,6 +91,7 @@ public final class ConcurrentUtils {
         try {
             o.wait(timeoutMs);
         } catch (InterruptedException ignored) {
+            // no need to remark Thread.currentThread().interrupt();
             LOGGER.warn("Interrupted waiting", ignored);
         }
     }
@@ -101,5 +103,15 @@ public final class ConcurrentUtils {
             // no need to remark Thread.currentThread().interrupt();
             LOGGER.warn("Interrupted sleeping", ignored);
         }
+    }
+
+    public static <T> T pollUninterruptibly(BlockingQueue<T> queue, long wait, TimeUnit unit) {
+        try {
+            return queue.poll(wait, unit);
+        } catch (InterruptedException ignored) {
+            // no need to remark Thread.currentThread().interrupt();
+            LOGGER.warn("Interrupted polling", ignored);
+        }
+        return null;
     }
 }

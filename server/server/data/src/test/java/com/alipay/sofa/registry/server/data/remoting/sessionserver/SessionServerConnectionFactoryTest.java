@@ -1,3 +1,19 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package com.alipay.sofa.registry.server.data.remoting.sessionserver;
 
 import com.alipay.remoting.Connection;
@@ -32,7 +48,6 @@ public class SessionServerConnectionFactoryTest {
         Assert.assertEquals(1, factory.getProcessIds().size());
         Assert.assertTrue(factory.getSessonConnectionMap().containsKey(IP1));
 
-
         MockBlotChannel channel2 = new MockBlotChannel(IP1, 5551);
         factory.registerSession(ServerEnv.PROCESS_ID, channel2);
 
@@ -40,7 +55,6 @@ public class SessionServerConnectionFactoryTest {
         Assert.assertEquals(1, factory.getSessionConnections().size());
         Assert.assertEquals(1, factory.getProcessIds().size());
         Assert.assertTrue(factory.getSessonConnectionMap().containsKey(IP1));
-
 
         ProcessId processId2 = ServerEnv.createProcessId();
         MockBlotChannel channel3 = new MockBlotChannel(IP2, 5551);
@@ -63,7 +77,6 @@ public class SessionServerConnectionFactoryTest {
         Assert.assertEquals(1, factory.getAllSessonConnections().get(IP1).size());
         Assert.assertEquals(1, factory.getAllSessonConnections().get(IP2).size());
 
-
         factory.sessionDisconnected(channel3);
 
         Assert.assertTrue(factory.containsConnection(ServerEnv.PROCESS_ID));
@@ -75,15 +88,16 @@ public class SessionServerConnectionFactoryTest {
         Assert.assertEquals(0, factory.getAllSessonConnections().get(IP2).size());
     }
 
-    private static final class MockBlotChannel extends  BoltChannel{
+    private static final class MockBlotChannel extends BoltChannel {
         final InetSocketAddress remote;
-        final InetSocketAddress local = new InetSocketAddress(ServerEnv.IP, 9602);
-        boolean connected = true;
-        final Connection conn = new Connection(new MockNettyChannel());
+        final InetSocketAddress local     = new InetSocketAddress(ServerEnv.IP, 9602);
+        boolean                 connected = true;
+        final Connection        conn      = new Connection(new MockNettyChannel());
 
-        MockBlotChannel(String remoteAddress, int remotePort){
+        MockBlotChannel(String remoteAddress, int remotePort) {
             this.remote = new InetSocketAddress(remoteAddress, remotePort);
         }
+
         @Override
         public InetSocketAddress getRemoteAddress() {
             return remote;
@@ -104,7 +118,7 @@ public class SessionServerConnectionFactoryTest {
         }
     }
 
-    private static final class MockNettyChannel implements   io.netty.channel.Channel{
+    private static final class MockNettyChannel implements io.netty.channel.Channel {
 
         @Override
         public ChannelId id() {
@@ -232,7 +246,8 @@ public class SessionServerConnectionFactoryTest {
         }
 
         @Override
-        public ChannelFuture connect(SocketAddress remoteAddress, SocketAddress localAddress, ChannelPromise promise) {
+        public ChannelFuture connect(SocketAddress remoteAddress, SocketAddress localAddress,
+                                     ChannelPromise promise) {
             return null;
         }
 
@@ -308,7 +323,7 @@ public class SessionServerConnectionFactoryTest {
 
         @Override
         public <T> Attribute<T> attr(AttributeKey<T> key) {
-            return new Attribute(){
+            return new Attribute() {
 
                 @Override
                 public AttributeKey key() {
@@ -362,6 +377,5 @@ public class SessionServerConnectionFactoryTest {
             return 0;
         }
     }
-
 
 }
