@@ -134,10 +134,6 @@ public class DataCacheTest extends BaseTest {
     @Test
     public void testGetPub() {
         SessionDataStore sessionDataStore = new SessionDataStore();
-        CacheService cacheService = new SessionCacheService();
-
-        Map<String, CacheGenerator> cacheGenerators = new HashMap<>();
-        ((SessionCacheService) cacheService).setCacheGenerators(cacheGenerators);
 
         String dataId = "dataid";
         String connectId = "192.168.1.2:9000_127.0.0.1:34567";
@@ -154,26 +150,19 @@ public class DataCacheTest extends BaseTest {
     @Test
     public void testGetPubRefresh() {
         SessionDataStore sessionDataStore = new SessionDataStore();
-        CacheService cacheService = new SessionCacheService();
-
-        Map<String, CacheGenerator> cacheGenerators = new HashMap<>();
-        ((SessionCacheService) cacheService).setCacheGenerators(cacheGenerators);
 
         String dataId = "dataid";
         String connectId = "192.168.1.2:9000";
         int number = 1000;
-        ExecutorService executorService = Executors.newFixedThreadPool(number);
         List<Publisher> publisherList = Lists.newArrayList();
         for (int i = 0; i < number; i++) {
             String connectIdss = "192.111.0.1:" + (8000 + i);
-            executorService.submit(() -> {
-                Publisher p = getPub(dataId, null, URL.valueOf(connectIdss));
-                sessionDataStore.add(p);
-                publisherList.add(p);
-                Assert.assertTrue(getCachePub(sessionDataStore, connectIdss));
-            });
+            Publisher p = getPub(dataId, null, URL.valueOf(connectIdss));
+            sessionDataStore.add(p);
+            publisherList.add(p);
+            Assert.assertTrue(getCachePub(sessionDataStore, connectIdss +
+                    ValueConstants.CONNECT_ID_SPLIT + p.getTargetAddress().buildAddressString()));
         }
-        Uninterruptibles.sleepUninterruptibly(1, TimeUnit.SECONDS);
         for (Publisher p : publisherList) {
             String c = connectId + ValueConstants.CONNECT_ID_SPLIT + p.getTargetAddress().buildAddressString();
             Assert.assertFalse(getCachePub(sessionDataStore, c));
@@ -183,11 +172,6 @@ public class DataCacheTest extends BaseTest {
     @Test
     public void testDelPubById() {
         SessionDataStore sessionDataStore = new SessionDataStore();
-        CacheService cacheService = new SessionCacheService();
-
-        Map<String, CacheGenerator> cacheGenerators = new HashMap<>();
-        ((SessionCacheService) cacheService).setCacheGenerators(cacheGenerators);
-
         String dataId = "dataid";
         String connectId = "192.168.1.2:9000_127.0.0.1:34567";
         for (int i = 0; i < 10; i++) {

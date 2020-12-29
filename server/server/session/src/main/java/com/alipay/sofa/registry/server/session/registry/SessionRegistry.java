@@ -63,6 +63,9 @@ public class SessionRegistry implements Registry {
 
     private static final Logger       LOGGER      = LoggerFactory.getLogger(SessionRegistry.class);
 
+
+    protected static final Logger     FETCH_VER_LOGGER = LoggerFactory.getLogger("FETCH-VER");
+
     protected static final Logger     TASK_LOGGER = LoggerFactory.getLogger(SessionRegistry.class,
                                                       "[Task]");
 
@@ -286,9 +289,9 @@ public class SessionRegistry implements Registry {
                     task = fetchVersionThreadPoolExecutor.execute(slotId, new FetchVersionTask(
                         slotId, e.getValue()));
                     fetchVersionTasks.put(slotId, task);
-                    LOGGER.info("commit FetchVersionTask, {}, size={}", slotId, task);
+                    FETCH_VER_LOGGER.info("commit FetchVersionTask, {}, size={}", slotId, task);
                 } else {
-                    LOGGER.info("FetchVersioning, {}, status={}", slotId, task);
+                    FETCH_VER_LOGGER.info("FetchVersioning, {}, status={}", slotId, task);
                 }
             }
             return;
@@ -331,11 +334,11 @@ public class SessionRegistry implements Registry {
     private void fetchChangDataProcess(int slotId, Collection<String> dataInfoIds) {
         String leader = slotTableCache.getLeader(slotId);
         if (leader == null) {
-            LOGGER
+            FETCH_VER_LOGGER
                 .error("slot not assign {} when fetch dataInfoIds={}", slotId, dataInfoIds.size());
             return;
         }
-        LOGGER.info("[fetchChangDataProcess] Fetch data versions from {}, {}, dataInfoIds={}",
+        FETCH_VER_LOGGER.info("[fetchChangDataProcess] Fetch data versions from {}, {}, dataInfoIds={}",
             slotId, leader, dataInfoIds.size());
         Map<String/*datacenter*/, Map<String/*datainfoid*/, Long>> dataVersions = dataNodeService
             .fetchDataVersion(new URL(leader, sessionServerConfig.getDataServerPort()), dataInfoIds);
@@ -343,7 +346,7 @@ public class SessionRegistry implements Registry {
         if (dataVersions != null) {
             sessionRegistryStrategy.doFetchChangDataProcess(dataVersions);
         } else {
-            LOGGER.warn("Fetch no change data versions info from {}, {}", slotId, leader);
+            FETCH_VER_LOGGER.warn("Fetch no change data versions info from {}, {}", slotId, leader);
         }
     }
 

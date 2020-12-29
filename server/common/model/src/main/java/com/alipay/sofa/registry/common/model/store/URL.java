@@ -204,7 +204,7 @@ public final class URL implements Serializable {
      * @return
      */
     public String buildAddressString() {
-        StringBuilder sb = new StringBuilder();
+        StringBuilder sb = new StringBuilder(32);
         sb.append(ipAddress).append(COLON).append(port);
         return sb.toString();
     }

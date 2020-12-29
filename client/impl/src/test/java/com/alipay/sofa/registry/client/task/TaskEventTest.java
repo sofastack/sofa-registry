@@ -77,9 +77,10 @@ public class TaskEventTest {
     @Test
     public void testEquals() {
         TaskEvent event1 = new TaskEvent(null);
+        TaskEvent event2 = new TaskEvent(null);
+
         Assert.assertTrue(event1.equals(event1));
         Assert.assertFalse(event1.equals("xxxx"));
-        TaskEvent event2 = new TaskEvent(null);
         Assert.assertTrue(event1.equals(event2));
 
         event1.incSendCount();

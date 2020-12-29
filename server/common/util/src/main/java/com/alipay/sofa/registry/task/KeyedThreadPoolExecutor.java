@@ -62,7 +62,7 @@ public class KeyedThreadPoolExecutor {
         public void run() {
             for (;;) {
                 try {
-                    final KeyedTask task = queue.poll(60, TimeUnit.SECONDS);
+                    final KeyedTask task = queue.poll(180, TimeUnit.SECONDS);
                     if (task == null) {
                         LOGGER.info("{}_{} idle", executorName, idx);
                         continue;
