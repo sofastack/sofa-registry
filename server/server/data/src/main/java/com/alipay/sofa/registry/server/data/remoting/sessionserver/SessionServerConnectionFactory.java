@@ -41,8 +41,8 @@ import java.util.stream.Collectors;
  * @version $Id: SessionServerConnectionFactory.java, v 0.1 2017-12-06 15:48 qian.lqlq Exp $
  */
 public class SessionServerConnectionFactory {
-    private static final Logger         LOGGER              = LoggerFactory
-                                                                .getLogger(SessionServerConnectionFactory.class);
+    private static final Logger LOGGER = LoggerFactory
+            .getLogger(SessionServerConnectionFactory.class);
 
     private final Map<String, Channels> session2Connections = new ConcurrentHashMap<>();
 
@@ -60,14 +60,14 @@ public class SessionServerConnectionFactory {
 
         Channels channels = session2Connections
                 .computeIfAbsent(remoteAddress.getAddress().getHostAddress(), k -> new Channels());
-        Tuple<ProcessId, Connection> exist = channels.channels.get(channel);
+        Tuple<ProcessId, Connection> exist = channels.channels.get(remoteAddress);
         if (exist != null) {
-            if (!exist.o1.equals(processId)) {
-                throw new IllegalArgumentException(
-                        String.format("registerSession channel %s has conflict processId, exist=%s, register=%s",
-                                channel, exist.o1, processId));
+            if (exist.o1.equals(processId)) {
+                // the same
+                return;
             }
-            return;
+            LOGGER.warn("registerSession channel {} has conflict processId, exist={}, register={}",
+                    channel, exist.o1, processId);
         }
         // maybe register happens after disconnect or parallely, at that time, connection is not fine
         // synchronized avoid the case: isFine=true->disconnect.remove->register.put
@@ -76,7 +76,7 @@ public class SessionServerConnectionFactory {
                 LOGGER.warn("registerSession with unconnected channel, {}, {}", processId, remoteAddress);
                 return;
             }
-            channels.channels.put(channel, new Tuple<>(processId, conn));
+            channels.channels.put(remoteAddress, new Tuple<>(processId, conn));
         }
 
         LOGGER.info("registerSession {}, processId={}, channelSize={}", channel, processId, channels.channels.size());
@@ -92,17 +92,17 @@ public class SessionServerConnectionFactory {
             return;
         }
         final Channels channels = session2Connections.get(remoteAddress.getAddress()
-            .getHostAddress());
+                .getHostAddress());
         if (channels == null) {
             LOGGER.warn("sessionDisconnected not found channels {}", remoteAddress);
             return;
         }
         Tuple<ProcessId, Connection> tuple = null;
         synchronized (this) {
-            tuple = channels.channels.remove(channel);
+            tuple = channels.channels.remove(remoteAddress);
         }
-        LOGGER.info("sessionDisconnected, removed={}, processId={}, channelSize={}", remoteAddress,
-            channel, tuple != null ? tuple.o1 : null, channels.channels.size());
+        LOGGER.info("sessionDisconnected, removed={}, processId={}, channelSize={}",
+                channel, tuple != null ? tuple.o1 : null, channels.channels.size());
     }
 
     /**
@@ -116,6 +116,19 @@ public class SessionServerConnectionFactory {
             if (conn != null) {
                 map.put(e.getKey(), conn);
             }
+        }
+        return map;
+    }
+
+    public Map<String, List<Connection>> getAllSessonConnections() {
+        Map<String, List<Connection>> map = new HashMap<>(session2Connections.size());
+        for (Map.Entry<String, Channels> e : session2Connections.entrySet()) {
+            Channels channels = e.getValue();
+            List<Connection> conns = new ArrayList<>(channels.channels.size());
+            for (Tuple<ProcessId, Connection> t : channels.channels.values()) {
+                conns.add(t.o2);
+            }
+            map.put(e.getKey(), conns);
         }
         return map;
     }
@@ -146,8 +159,9 @@ public class SessionServerConnectionFactory {
      * convenient class to store sessionConnAddress and connection
      */
     private static final class Channels {
-        final AtomicInteger                              roundRobin = new AtomicInteger(-1);
-        final Map<Channel, Tuple<ProcessId, Connection>> channels   = Maps.newConcurrentMap();
+        final AtomicInteger roundRobin = new AtomicInteger(-1);
+        // remoteAddress as key
+        final Map<InetSocketAddress, Tuple<ProcessId, Connection>> channels = Maps.newConcurrentMap();
 
         Connection chooseConnection() {
             List<Tuple<ProcessId, Connection>> list = Lists.newArrayList(channels.values());

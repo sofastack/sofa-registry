@@ -17,8 +17,8 @@
 package com.alipay.sofa.registry.remoting.bolt;
 
 import java.net.InetSocketAddress;
+import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 import javax.ws.rs.client.WebTarget;
 
@@ -41,7 +41,7 @@ public class BoltChannel implements Channel {
 
     private BizContext                bizContext;
 
-    private final Map<String, Object> attributes = new ConcurrentHashMap<>();
+    private Map<String, Object>       attributes;
 
     @Override
     public InetSocketAddress getRemoteAddress() {
@@ -68,12 +68,15 @@ public class BoltChannel implements Channel {
     }
 
     @Override
-    public Object getAttribute(String key) {
-        return attributes.get(key);
+    public synchronized Object getAttribute(String key) {
+        return attributes == null ? null : attributes.get(key);
     }
 
     @Override
-    public void setAttribute(String key, Object value) {
+    public synchronized void setAttribute(String key, Object value) {
+        if (attributes == null) {
+            attributes = new HashMap<>();
+        }
         if (value == null) { // The null value unallowed in the ConcurrentHashMap.
             attributes.remove(key);
         } else {
