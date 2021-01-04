@@ -35,7 +35,7 @@ public class DiskSlotTableRecorder implements SlotTableRecorder {
         try {
             String slotStr = JsonUtils.writeValueAsString(slotTable);
             if (logger.isInfoEnabled()) {
-                logger.info("[record] record slot:\n {}", slotStr);
+                logger.info("[record] record slot: {}", slotStr);
             }
         } catch (Exception e) {
             logger.error("[record]", e);
