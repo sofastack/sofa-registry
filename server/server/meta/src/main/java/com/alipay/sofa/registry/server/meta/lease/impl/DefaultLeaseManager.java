@@ -79,10 +79,13 @@ public class DefaultLeaseManager<T extends Node> extends AbstractObservable impl
         if (lease == null) {
             throw new IllegalArgumentException("[register]NullPointer of lease");
         }
+        if(logger.isInfoEnabled()) {
+            logger.info("[register] register node: {}", lease.getRenewal());
+        }
         lock.writeLock().lock();
         try {
             repo.putIfAbsent(lease.getRenewal().getNodeUrl().getIpAddress(), lease);
-            refreshEpoch(DatumVersionUtil.nextId());
+            refreshEpochIfNeeded();
         } finally {
             lock.writeLock().unlock();
         }
@@ -111,7 +114,7 @@ public class DefaultLeaseManager<T extends Node> extends AbstractObservable impl
             lock.readLock().unlock();
         }
         if (result) {
-            refreshEpoch(DatumVersionUtil.nextId());
+            refreshEpochIfNeeded();
         }
         return result;
     }
@@ -192,6 +195,21 @@ public class DefaultLeaseManager<T extends Node> extends AbstractObservable impl
             lock.readLock().unlock();
         }
         return result;
+    }
+
+    /**
+     * For raft scenario, epoch is refreshed cross all MetaServers (shall not refresh epoch by myself)
+     * Under this circumstances, raft lease manager will actively trigger a epoch refreshment
+     * For local scenario, a auto-refresh is needed as no-others would do the stuff
+     * */
+    protected boolean isEpochRefreshedByMyself() {
+        return true;
+    }
+
+    private void refreshEpochIfNeeded() {
+        if(isEpochRefreshedByMyself()) {
+            refreshEpoch(DatumVersionUtil.nextId());
+        }
     }
 
     @Override

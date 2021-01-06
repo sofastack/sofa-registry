@@ -17,6 +17,7 @@
 package com.alipay.sofa.registry.server.meta.lease;
 
 import java.io.Serializable;
+import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -48,6 +49,13 @@ public class Lease<T> implements Serializable {
         this.duration = durationSECS * 1000;
     }
 
+    /**
+     * Constructor.
+     *
+     * @param renewal  the renewal
+     * @param duration the duration
+     * @param unit     the unit
+     */
     public Lease(T renewal, long duration, TimeUnit unit) {
         this.renewal = renewal;
         this.beginTimestamp = System.currentTimeMillis();
@@ -113,5 +121,45 @@ public class Lease<T> implements Serializable {
      */
     public long getLastUpdateTimestamp() {
         return lastUpdateTimestamp;
+    }
+
+    /**
+     * To string string.
+     *
+     * @return the string
+     */
+    @Override
+    public String toString() {
+        return "Lease{" +
+                "renewal=" + renewal.toString() +
+                ", beginTimestamp=" + beginTimestamp +
+                ", lastUpdateTimestamp=" + lastUpdateTimestamp +
+                ", duration=" + duration +
+                '}';
+    }
+
+    /**
+     * Equals boolean.
+     *
+     * @param o the o
+     * @return the boolean
+     */
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Lease<?> lease = (Lease<?>) o;
+        return beginTimestamp == lease.beginTimestamp &&
+                renewal.equals(lease.renewal);
+    }
+
+    /**
+     * Hash code int.
+     *
+     * @return the int
+     */
+    @Override
+    public int hashCode() {
+        return Objects.hash(renewal, beginTimestamp);
     }
 }
