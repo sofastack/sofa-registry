@@ -88,4 +88,16 @@ public class DefaultDataServerManagerTest extends AbstractTest {
     public void testEvitTime() {
         Assert.assertEquals(60 * 1000, dataServerManager.getEvictBetweenMilli());
     }
+
+    @Test
+    public void testDataServerManagerRefreshEpochOnlyOnceWhenNewRegistered() throws TimeoutException, InterruptedException {
+        makeRaftLeader();
+        DataNode node = new DataNode(randomURL(randomIp()), getDc());
+        DataLeaseManager leaseManager = spy(new DataLeaseManager());
+        dataServerManager.setDataLeaseManager(leaseManager)
+                .setRaftDataLeaseManager(leaseManager);
+        dataServerManager.renew(node, 1000);
+        Assert.assertEquals(1, dataServerManager.getClusterMembers().size());
+        verify(leaseManager, times(1)).refreshEpoch(anyLong());
+    }
 }

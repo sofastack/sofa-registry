@@ -51,6 +51,11 @@ public class SessionLeaseManager extends DefaultLeaseManager<SessionNode> implem
 
     }
 
+    @Override
+    protected boolean isEpochRefreshedByMyself() {
+        return false;
+    }
+
     private void renewAllNodes() {
         this.repo.forEach((ipAddress, lease)->lease.renew());
     }

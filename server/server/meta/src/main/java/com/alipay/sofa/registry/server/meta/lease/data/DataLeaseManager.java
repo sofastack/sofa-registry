@@ -51,6 +51,11 @@ public class DataLeaseManager extends DefaultLeaseManager<DataNode> implements L
 
     }
 
+    @Override
+    protected boolean isEpochRefreshedByMyself() {
+        return false;
+    }
+
     private void renewAllNodes() {
         this.repo.forEach((ipAddress, lease)->lease.renew());
     }

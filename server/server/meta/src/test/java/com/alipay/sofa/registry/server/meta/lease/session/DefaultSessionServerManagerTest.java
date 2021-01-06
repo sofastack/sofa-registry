@@ -17,9 +17,11 @@
 package com.alipay.sofa.registry.server.meta.lease.session;
 
 import com.alipay.sofa.registry.common.model.ProcessId;
+import com.alipay.sofa.registry.common.model.metaserver.nodes.DataNode;
 import com.alipay.sofa.registry.common.model.metaserver.nodes.SessionNode;
 import com.alipay.sofa.registry.server.meta.AbstractTest;
 import com.alipay.sofa.registry.server.meta.bootstrap.config.MetaServerConfig;
+import com.alipay.sofa.registry.server.meta.lease.data.DataLeaseManager;
 import com.alipay.sofa.registry.server.meta.remoting.RaftExchanger;
 import org.junit.After;
 import org.junit.Assert;
@@ -85,11 +87,11 @@ public class DefaultSessionServerManagerTest extends AbstractTest {
 
         makeRaftLeader();
 
-        Assert.assertFalse(sessionManager.renew(sessionNode, 1));
+        sessionManager.renew(sessionNode, 1);
         verify(leaseManager, times(1)).register(any());
         Assert.assertEquals(1, counter.getCounter());
 
-        Assert.assertTrue(sessionManager.renew(sessionNode, 1));
+        sessionManager.renew(sessionNode, 1);
         verify(leaseManager, times(1)).register(any());
         Assert.assertEquals(1, counter.getCounter());
 
@@ -100,5 +102,17 @@ public class DefaultSessionServerManagerTest extends AbstractTest {
         verify(leaseManager, times(2)).register(any());
         verify(leaseManager, times(1)).renew(any(), anyInt());
         Assert.assertEquals(2, counter.getCounter());
+    }
+
+    @Test
+    public void testDataServerManagerRefreshEpochOnlyOnceWhenNewRegistered() throws TimeoutException, InterruptedException {
+        makeRaftLeader();
+        SessionNode node = new SessionNode(randomURL(randomIp()), getDc());
+        SessionLeaseManager leaseManager = spy(new SessionLeaseManager());
+        sessionManager.setSessionLeaseManager(leaseManager)
+                .setRaftSessionLeaseManager(leaseManager);
+        sessionManager.renew(node, 1000);
+        Assert.assertEquals(1, sessionManager.getClusterMembers().size());
+        verify(leaseManager, times(1)).refreshEpoch(anyLong());
     }
 }

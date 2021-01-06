@@ -19,10 +19,8 @@ package com.alipay.sofa.registry.server.meta.lease.session;
 import com.alipay.sofa.registry.common.model.metaserver.nodes.SessionNode;
 import com.alipay.sofa.registry.exception.DisposeException;
 import com.alipay.sofa.registry.exception.InitializeException;
-import com.alipay.sofa.registry.jraft.bootstrap.ServiceStateMachine;
 import com.alipay.sofa.registry.lifecycle.impl.LifecycleHelper;
 import com.alipay.sofa.registry.server.meta.bootstrap.config.MetaServerConfig;
-import com.alipay.sofa.registry.server.meta.cluster.node.NodeAdded;
 import com.alipay.sofa.registry.server.meta.cluster.node.NodeModified;
 import com.alipay.sofa.registry.server.meta.lease.AbstractRaftEnabledLeaseManager;
 import com.alipay.sofa.registry.server.meta.lease.Lease;
@@ -106,45 +104,18 @@ public class DefaultSessionServerManager extends AbstractRaftEnabledLeaseManager
      * Once a restart event happened on the same session-server, an notification will be sent
      * */
     @Override
-    public boolean renew(SessionNode renewal, int leaseDuration) {
-        if (!ServiceStateMachine.getInstance().isLeader()) {
-            return raftSessionLeaseManager.renew(renewal, leaseDuration);
-        }
-        int validLeaseDuration = leaseDuration > 0 ? leaseDuration : Lease.DEFAULT_DURATION_SECS;
-        Lease<SessionNode> lease = null;
-        lock.readLock().lock();
-        try {
-            lease = sessionLeaseManager.getLease(renewal);
-        } finally {
-            lock.readLock().unlock();
-        }
-        /*
-         * no exist lease, try register the node to all meta-servers through raft
-         *
-         * Or, notify session server changes, if restart event has been monitored
-         * */
-        lock.writeLock().lock();
-        try {
-            if (lease == null) {
-                sessionLeaseManager.register(new Lease<>(renewal, validLeaseDuration));
-                notifyObservers(new NodeAdded<>(renewal));
-                return false;
-            }
-            if (renewal.getProcessId() != null
+    protected void tryRenewNode(Lease<SessionNode> lease, SessionNode renewal, int duration) {
+        if (renewal.getProcessId() != null
                 && !Objects.equals(lease.getRenewal().getProcessId(), renewal.getProcessId())) {
-                logger.warn("[renew] session node is restart, as process-Id change from {} to {}",
+            logger.warn("[renew] session node is restart, as process-Id change from {} to {}",
                     lease.getRenewal().getProcessId(), renewal.getProcessId());
-                // replace the session node, as it has changed process-id already
-                lease.setRenewal(renewal);
-                sessionLeaseManager.register(new Lease<>(renewal, validLeaseDuration));
-                notifyObservers(new NodeModified<>(lease.getRenewal(), renewal));
-            } else {
-                sessionLeaseManager.renew(renewal, validLeaseDuration);
-            }
-        } finally {
-            lock.writeLock().unlock();
+            // replace the session node, as it has changed process-id already
+            lease.setRenewal(renewal);
+            sessionLeaseManager.register(new Lease<>(renewal, duration));
+            notifyObservers(new NodeModified<>(lease.getRenewal(), renewal));
+        } else {
+            sessionLeaseManager.renew(renewal, duration);
         }
-        return true;
     }
 
     @Override
