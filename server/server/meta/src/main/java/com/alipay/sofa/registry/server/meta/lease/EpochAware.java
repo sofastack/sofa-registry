@@ -22,6 +22,6 @@ package com.alipay.sofa.registry.server.meta.lease;
  * Nov 26, 2020
  */
 public interface EpochAware {
-    void refreshEpoch(long newEpoch);
+    boolean refreshEpoch(long newEpoch);
 
 }

@@ -127,7 +127,7 @@ public class TestAbstractRaftEnabledLeaseManager extends AbstractTest {
         Assert.assertEquals(node, manager.getLease(node).getRenewal());
         Assert.assertFalse(manager.getLease(node).isExpired());
         Assert.assertTrue(manager.getClusterMembers().size() > size);
-        manager.cancel(node);
+        manager.cancel(manager.getLease(node).prepareCancel());
         waitConditionUntilTimeOut(()->manager.getClusterMembers().size() == size, 1000);
         Assert.assertEquals(size, manager.getClusterMembers().size());
     }
@@ -135,7 +135,7 @@ public class TestAbstractRaftEnabledLeaseManager extends AbstractTest {
     @Test
     public void testRaftBatchInsert() throws Exception {
         isLeader.set(false);
-        int tasks = 1000;
+        int tasks = 100;
         CyclicBarrier barrier = new CyclicBarrier(tasks / 10);
         CountDownLatch latch = new CountDownLatch(tasks);
         for (int i = 0; i < tasks; i++) {
@@ -151,7 +151,10 @@ public class TestAbstractRaftEnabledLeaseManager extends AbstractTest {
                 }
             });
         }
-        latch.await();
+        logger.info("[count] {}", latch.getCount());
+        TimeUnit.MILLISECONDS.sleep(1000);
+        logger.info("[count] {}", latch.getCount());
+        latch.await(3, TimeUnit.SECONDS);
         Assert.assertEquals(tasks, manager.getClusterMembers().size());
     }
 
@@ -185,7 +188,7 @@ public class TestAbstractRaftEnabledLeaseManager extends AbstractTest {
         MetaNode node = new MetaNode(randomURL(randomIp()), getDc());
         manager.renew(node, 10);
         Assert.assertEquals(1, manager.getClusterMembers().size());
-        manager.cancel(node);
+        manager.cancel(manager.getLease(node).prepareCancel());
         Assert.assertEquals(0, manager.getClusterMembers().size());
     }
 
@@ -270,12 +273,10 @@ public class TestAbstractRaftEnabledLeaseManager extends AbstractTest {
         Assert.assertEquals(1, manager.getClusterMembers().size());
     }
 
-    @Test
+    @Test(expected = UnsupportedOperationException.class)
     public void testRefreshEpoch() {
         raftLeaseManager.set(spy(new DefaultLeaseManager<>(snapshotFile)));
         manager.refreshEpoch(DatumVersionUtil.nextId());
-        verify(localLeaseManager, times(1)).refreshEpoch(anyLong());
-        verify(raftLeaseManager.get(), never()).refreshEpoch(anyLong());
     }
 
 }

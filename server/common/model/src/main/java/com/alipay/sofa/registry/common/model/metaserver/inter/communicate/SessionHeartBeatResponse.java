@@ -20,10 +20,7 @@ import com.alipay.sofa.registry.common.model.metaserver.nodes.MetaNode;
 import com.alipay.sofa.registry.common.model.metaserver.nodes.SessionNode;
 import com.alipay.sofa.registry.common.model.slot.SlotTable;
 
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 /**
  * @author chen.zhu
@@ -32,9 +29,29 @@ import java.util.Map;
  */
 public class SessionHeartBeatResponse extends BaseHeartBeatResponse {
 
-    public SessionHeartBeatResponse(long metaServerEpoch, SlotTable slotTable,
-                                    List<MetaNode> metaNodes, List<SessionNode> sessionNodes) {
-        super(metaServerEpoch, slotTable, metaNodes, sessionNodes);
+    private long sessionEpoch;
 
+    /**
+     * Constructor.
+     *
+     * @param metaServerEpoch the meta server epoch
+     * @param slotTable       the slot table
+     * @param metaNodes       the meta nodes
+     * @param sessionNodes    the session nodes
+     * @param sessionEpoch    the session epoch
+     */
+    public SessionHeartBeatResponse(long metaServerEpoch, SlotTable slotTable,
+                                    List<MetaNode> metaNodes, List<SessionNode> sessionNodes, long sessionEpoch) {
+        super(metaServerEpoch, slotTable, metaNodes, sessionNodes);
+        this.sessionEpoch = sessionEpoch;
+    }
+
+    /**
+     * Gets get session epoch.
+     *
+     * @return the get session epoch
+     */
+    public long getSessionEpoch() {
+        return sessionEpoch;
     }
 }

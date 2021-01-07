@@ -20,9 +20,11 @@ import com.alipay.sofa.registry.common.model.metaserver.nodes.MetaNode;
 import com.alipay.sofa.registry.common.model.slot.SlotTable;
 import com.alipay.sofa.registry.lifecycle.impl.LifecycleHelper;
 import com.alipay.sofa.registry.server.meta.AbstractTest;
+import com.alipay.sofa.registry.server.meta.lease.session.SessionLeaseManager;
 import com.alipay.sofa.registry.server.meta.slot.SlotManager;
 import com.alipay.sofa.registry.server.meta.slot.impl.LocalSlotManager;
 import com.alipay.sofa.registry.util.DatumVersionUtil;
+import com.alipay.sofa.registry.util.FileUtils;
 import com.google.common.collect.Maps;
 import org.assertj.core.util.Lists;
 import org.assertj.core.util.Sets;
@@ -31,6 +33,8 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CountDownLatch;
@@ -181,7 +185,7 @@ public class DefaultLocalMetaServerTest extends AbstractTest {
     }
 
     @Test
-    public void testTestSaveAndLoad() {
+    public void testTestSaveAndLoad() throws IOException {
         List<MetaNode> metaNodeList = Lists.newArrayList(new MetaNode(randomURL(), getDc()),
             new MetaNode(randomURL(), getDc()), new MetaNode(randomURL(), getDc()));
         metaServer.updateClusterMembers(metaNodeList, DatumVersionUtil.nextId());
@@ -189,5 +193,7 @@ public class DefaultLocalMetaServerTest extends AbstractTest {
         DefaultLocalMetaServer loadMetaServer = new DefaultLocalMetaServer();
         loadMetaServer.load("DefaultLocalMetaServer");
         Assert.assertEquals(metaNodeList, loadMetaServer.getClusterMembers());
+        FileUtils.forceDelete(new File(metaServer.copy().getSnapshotFileNames().iterator().next()));
+
     }
 }

@@ -81,7 +81,7 @@ public class DefaultSlotArrangerTest extends AbstractTest {
     public void testOnServerRemoved() {
         DataNode dataNode = new DataNode(randomURL(randomIp()), getDc());
         dataServerManager.renew(dataNode, 100);
-        dataServerManager.cancel(dataNode);
+        dataServerManager.cancel(dataServerManager.getLease(dataNode).prepareCancel());
 
         verify(slotArranger, times(2)).update(any(), any());
         verify(slotArranger, times(1)).onServerRemoved(any(DataNode.class));

@@ -25,7 +25,6 @@ import com.alipay.sofa.registry.observer.impl.AbstractLifecycleObservable;
 import com.alipay.sofa.registry.server.meta.cluster.node.NodeAdded;
 import com.alipay.sofa.registry.server.meta.cluster.node.NodeRemoved;
 import com.alipay.sofa.registry.server.meta.lease.impl.DefaultLeaseManager;
-import com.alipay.sofa.registry.util.DatumVersionUtil;
 import com.google.common.annotations.VisibleForTesting;
 
 import javax.annotation.Resource;
@@ -108,10 +107,10 @@ public abstract class AbstractRaftEnabledLeaseManager<T extends Node> extends
     }
 
     @Override
-    public boolean cancel(T renewal) {
-        boolean result = getRaftLeaseManager().cancel(renewal);
+    public boolean cancel(Lease<T> lease) {
+        boolean result = getRaftLeaseManager().cancel(lease);
         if (result) {
-            notifyObservers(new NodeRemoved<>(renewal));
+            notifyObservers(new NodeRemoved<>(lease.getRenewal()));
         }
         return result;
     }
@@ -127,13 +126,7 @@ public abstract class AbstractRaftEnabledLeaseManager<T extends Node> extends
             if(logger.isInfoEnabled()) {
                 logger.info("[renew] node [{}] is not exist, go raft registering and refreshing epoch", renewal);
             }
-            // update epoch first to avoid half-failure: register succeed but epoch update fail
-            try {
-                getRaftLeaseManager().refreshEpoch(DatumVersionUtil.nextId());
-            } catch (Throwable th) {
-                logger.error("[renew] fail to refresh epoch as raft failure", th);
-                throw new SofaRegistryRaftException("refresh epoch exception: node[" + renewal.toString() +"]", th);
-            }
+            // update lease will include a epoch update operation
             try {
                 getRaftLeaseManager().register(new Lease<>(renewal, validLeaseDuration));
             } catch (Throwable th) {
@@ -195,14 +188,9 @@ public abstract class AbstractRaftEnabledLeaseManager<T extends Node> extends
                 if (doubleCheck.isExpired()) {
                     logger.warn("[evict] node evict [{}], cancel it and refresh epoch", doubleCheck);
                     try {
-                        getRaftLeaseManager().cancel(lease.getRenewal());
+                        cancel(lease.prepareCancel());
                     } catch (Throwable th) {
                         logger.error("[evict] node cancel failure", th);
-                    }
-                    try {
-                        getRaftLeaseManager().refreshEpoch(DatumVersionUtil.nextId());
-                    } catch (Throwable th) {
-                        logger.error("[evict] refresh epoch failure", th);
                     }
                 }
             }
@@ -213,8 +201,8 @@ public abstract class AbstractRaftEnabledLeaseManager<T extends Node> extends
     }
 
     @Override
-    public void refreshEpoch(long newEpoch) {
-        getLocalLeaseManager().refreshEpoch(newEpoch);
+    public boolean refreshEpoch(long newEpoch) {
+        throw new UnsupportedOperationException("refresh epoch is only triggered through raft call");
     }
 
     protected LeaseManager<T> getLeaseManager() {

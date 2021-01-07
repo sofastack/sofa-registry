@@ -22,6 +22,7 @@ import com.alipay.sofa.registry.common.model.slot.SlotConfig;
 import com.alipay.sofa.registry.common.model.slot.SlotTable;
 import com.alipay.sofa.registry.server.meta.AbstractTest;
 import com.alipay.sofa.registry.server.meta.bootstrap.config.NodeConfig;
+import com.alipay.sofa.registry.util.FileUtils;
 import org.assertj.core.util.Lists;
 import org.junit.After;
 import org.junit.Assert;
@@ -30,6 +31,8 @@ import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.CyclicBarrier;
@@ -145,7 +148,7 @@ public class LocalSlotManagerTest extends AbstractTest {
     }
 
     @Test
-    public void testSaveAndLoadSnapshot() {
+    public void testSaveAndLoadSnapshot() throws IOException {
         List<DataNode> dataNodes = Lists.newArrayList(new DataNode(randomURL(randomIp()), getDc()),
             new DataNode(randomURL(randomIp()), getDc()), new DataNode(randomURL(randomIp()),
                 getDc()), new DataNode(randomURL(randomIp()), getDc()), new DataNode(
@@ -155,6 +158,7 @@ public class LocalSlotManagerTest extends AbstractTest {
         LocalSlotManager loadSlotManager = new LocalSlotManager(nodeConfig);
         loadSlotManager.load(slotManager.getSnapshotFileNames().iterator().next());
         Assert.assertEquals(slotManager.getSlotTable(), loadSlotManager.getSlotTable());
+        FileUtils.forceDelete(new File(slotManager.getSnapshotFileNames().iterator().next()));
     }
 
     @Test

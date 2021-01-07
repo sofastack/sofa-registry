@@ -16,6 +16,8 @@
  */
 package com.alipay.sofa.registry.server.meta.lease;
 
+import com.alipay.sofa.registry.util.DatumVersionUtil;
+
 import java.io.Serializable;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
@@ -28,6 +30,8 @@ import java.util.concurrent.TimeUnit;
 public class Lease<T> implements Serializable {
 
     public static final int DEFAULT_DURATION_SECS = 15;
+
+    private long            epoch;
 
     private T               renewal;
 
@@ -47,6 +51,7 @@ public class Lease<T> implements Serializable {
         this.beginTimestamp = System.currentTimeMillis();
         this.lastUpdateTimestamp = beginTimestamp;
         this.duration = durationSECS * 1000;
+        this.epoch = DatumVersionUtil.nextId();
     }
 
     /**
@@ -57,10 +62,7 @@ public class Lease<T> implements Serializable {
      * @param unit     the unit
      */
     public Lease(T renewal, long duration, TimeUnit unit) {
-        this.renewal = renewal;
-        this.beginTimestamp = System.currentTimeMillis();
-        this.lastUpdateTimestamp = beginTimestamp;
-        this.duration = unit.toMillis(duration);
+        this(renewal, unit.toSeconds(duration));
     }
 
     /**
@@ -131,7 +133,8 @@ public class Lease<T> implements Serializable {
     @Override
     public String toString() {
         return "Lease{" +
-                "renewal=" + renewal.toString() +
+                "epoch=" + epoch +
+                ", renewal=" + renewal +
                 ", beginTimestamp=" + beginTimestamp +
                 ", lastUpdateTimestamp=" + lastUpdateTimestamp +
                 ", duration=" + duration +
@@ -151,6 +154,24 @@ public class Lease<T> implements Serializable {
         Lease<?> lease = (Lease<?>) o;
         return beginTimestamp == lease.beginTimestamp &&
                 renewal.equals(lease.renewal);
+    }
+
+    /**
+     * Gets get epoch.
+     *
+     * @return the get epoch
+     */
+    public long getEpoch() {
+        return epoch;
+    }
+
+    /**
+     * Sets set epoch.
+     * @return this
+     */
+    public Lease<T> prepareCancel() {
+        this.epoch = DatumVersionUtil.nextId();
+        return this;
     }
 
     /**
