@@ -65,7 +65,7 @@ public class HeartbeatRequestHandler extends MetaServerHandler<RenewNodesRequest
                 case SESSION:
                     response = new SessionHeartBeatResponse(currentDcMetaServer.getEpoch(),
                         slotTable, currentDcMetaServer.getClusterMembers(), currentDcMetaServer
-                            .getSessionServerManager().getClusterMembers());
+                            .getSessionServerManager().getClusterMembers(), currentDcMetaServer.getSessionServerManager().getEpoch());
                     break;
                 case DATA:
                     slotTable = transferDataNodeSlotToSlotTable((DataNode) renewNode, slotTable);

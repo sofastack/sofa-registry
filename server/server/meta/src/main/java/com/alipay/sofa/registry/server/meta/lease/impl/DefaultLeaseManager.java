@@ -84,8 +84,9 @@ public class DefaultLeaseManager<T extends Node> extends AbstractObservable impl
         }
         lock.writeLock().lock();
         try {
-            repo.putIfAbsent(lease.getRenewal().getNodeUrl().getIpAddress(), lease);
-            refreshEpochIfNeeded();
+            String nodeIp = lease.getRenewal().getNodeUrl().getIpAddress();
+            repo.putIfAbsent(nodeIp, lease);
+            refreshEpoch(lease.getEpoch());
         } finally {
             lock.writeLock().unlock();
         }
@@ -93,28 +94,25 @@ public class DefaultLeaseManager<T extends Node> extends AbstractObservable impl
 
     @Override
     @RaftMethod
-    public boolean cancel(T renewal) {
-        if (renewal == null) {
+    public boolean cancel(Lease<T> lease) {
+        if (lease == null) {
             throw new IllegalArgumentException("[cancel]NullPointer of renewal");
         }
         // read lock for concurrent modification, and mutext for renew/register operations
-        lock.readLock().lock();
+        lock.writeLock().lock();
         boolean result = true;
         try {
             if (logger.isInfoEnabled()) {
-                logger.info("[cancel][begin] {}", renewal);
+                logger.info("[cancel][begin] {}", lease);
             }
-            Lease<T> lease = repo.remove(renewal.getNodeUrl().getIpAddress());
-            if (lease != null && logger.isInfoEnabled()) {
-                logger.info("[cancel][end] {} {} {}", lease.getRenewal(),
-                    lease.getBeginTimestamp(), lease.getLastUpdateTimestamp());
+            Lease<T> removed = repo.remove(lease.getRenewal().getNodeUrl().getIpAddress());
+            if (logger.isInfoEnabled()) {
+                logger.info("[cancel][end] {}", removed);
             }
-            result = lease != null;
+            refreshEpoch(lease.getEpoch());
+            result = removed != null;
         } finally {
-            lock.readLock().unlock();
-        }
-        if (result) {
-            refreshEpochIfNeeded();
+            lock.writeLock().unlock();
         }
         return result;
     }
@@ -197,35 +195,22 @@ public class DefaultLeaseManager<T extends Node> extends AbstractObservable impl
         return result;
     }
 
-    /**
-     * For raft scenario, epoch is refreshed cross all MetaServers (shall not refresh epoch by myself)
-     * Under this circumstances, raft lease manager will actively trigger a epoch refreshment
-     * For local scenario, a auto-refresh is needed as no-others would do the stuff
-     * */
-    protected boolean isEpochRefreshedByMyself() {
-        return true;
-    }
-
-    private void refreshEpochIfNeeded() {
-        if(isEpochRefreshedByMyself()) {
-            refreshEpoch(DatumVersionUtil.nextId());
-        }
-    }
-
     @Override
     @NonRaftMethod
-    public void refreshEpoch(long newEpoch) {
+    public boolean refreshEpoch(long newEpoch) {
         if (currentEpoch.get() < newEpoch) {
             if (logger.isInfoEnabled()) {
                 logger.info("[refreshEpoch] epoch change from {} to {}", currentEpoch.get(),
                     newEpoch);
             }
             currentEpoch.set(newEpoch);
+            return true;
         } else {
             if (logger.isInfoEnabled()) {
                 logger.info("[refreshEpoch] epoch change not able, current {}, request {}",
                     currentEpoch.get(), newEpoch);
             }
+            return false;
         }
     }
 

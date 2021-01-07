@@ -41,11 +41,11 @@ public interface LeaseManager<T extends Node> extends NodeCluster<T>, EpochAware
     /**
      * Cancel Lease for unpub/unregister perspective.
      *
-     * @param renewal the renewal
+     * @param lease the lease
      * @return the boolean
      */
     @RaftMethod
-    boolean cancel(T renewal);
+    boolean cancel(Lease<T> lease);
 
     /**
      * Renew Lease.

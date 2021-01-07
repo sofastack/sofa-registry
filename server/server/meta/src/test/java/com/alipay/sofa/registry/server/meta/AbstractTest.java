@@ -41,10 +41,8 @@ import com.alipay.sofa.registry.server.meta.bootstrap.config.NodeConfig;
 import com.alipay.sofa.registry.server.meta.executor.ExecutorManager;
 import com.alipay.sofa.registry.server.meta.metaserver.impl.DefaultCurrentDcMetaServer;
 import com.alipay.sofa.registry.server.meta.remoting.RaftExchanger;
-import com.alipay.sofa.registry.util.DatumVersionUtil;
-import com.alipay.sofa.registry.util.FileUtils;
-import com.alipay.sofa.registry.util.NamedThreadFactory;
-import com.alipay.sofa.registry.util.ObjectFactory;
+import com.alipay.sofa.registry.util.*;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.google.common.collect.Maps;
 import io.netty.util.ResourceLeakDetector;
 import org.apache.commons.lang.reflect.FieldUtils;
@@ -355,14 +353,9 @@ public class AbstractTest {
     }
 
     public void printSlotTable(SlotTable slotTable) {
-        logger.info("[epoch] {}", slotTable.getEpoch());
-        StringBuilder sb = new StringBuilder("slot-table\n");
-        slotTable.getSlotMap().forEach((slotId, slot)->{
-            sb.append(slotId).append(": ").append(slot.getLeader()).append(";");
-            slot.getFollowers().forEach(sb::append);
-            sb.append("\n");
-        });
-        logger.info("{}", sb.toString());
+        try {
+            logger.warn("{}", JsonUtils.getJacksonObjectMapper().writerWithDefaultPrettyPrinter().writeValueAsString(slotTable));
+        } catch (Exception ignore) {}
     }
 
     public static class MockRpcClient implements Client {

@@ -19,6 +19,8 @@ package com.alipay.sofa.registry.server.meta.lease.impl;
 import com.alipay.sofa.registry.common.model.Node;
 import com.alipay.sofa.registry.common.model.store.URL;
 import com.alipay.sofa.registry.server.meta.AbstractTest;
+import com.alipay.sofa.registry.server.meta.lease.Lease;
+import com.alipay.sofa.registry.server.meta.lease.data.DataLeaseManager;
 import com.alipay.sofa.registry.util.DatumVersionUtil;
 import com.alipay.sofa.registry.util.FileUtils;
 import org.junit.Assert;
@@ -26,6 +28,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
@@ -45,7 +48,7 @@ public class DefaultLeaseManagerTest extends AbstractTest {
         String ip = randomIp();
         leaseManager.renew(new SimpleNode(ip), 1);
         Assert.assertNotNull(leaseManager.repo.get(ip));
-        leaseManager.cancel(new SimpleNode(ip));
+        leaseManager.cancel(leaseManager.getLease(new SimpleNode(ip)).prepareCancel());
         Assert.assertNull(leaseManager.repo.get(ip));
     }
 
@@ -54,7 +57,7 @@ public class DefaultLeaseManagerTest extends AbstractTest {
         String ip = randomIp();
         leaseManager.renew(new SimpleNode(ip), 1);
         Assert.assertNotNull(leaseManager.repo.get(ip));
-        leaseManager.cancel(new SimpleNode(ip));
+        leaseManager.cancel(leaseManager.getLease(new SimpleNode(ip)).prepareCancel());
         Assert.assertNull(leaseManager.repo.get(ip));
         leaseManager.renew(new SimpleNode(ip), 1);
         Assert.assertNotNull(leaseManager.repo.get(ip));
@@ -106,7 +109,7 @@ public class DefaultLeaseManagerTest extends AbstractTest {
     }
 
     @Test
-    public void testSaveAndLoad() {
+    public void testSaveAndLoad() throws IOException {
         int tasks = 100;
         new ConcurrentExecutor(tasks, executors).execute(new Runnable() {
             @Override
@@ -123,10 +126,11 @@ public class DefaultLeaseManagerTest extends AbstractTest {
         Collections.sort(expected);
         Collections.sort(actual);
         Assert.assertEquals(expected, actual);
+        FileUtils.forceDelete(new File(path));
     }
 
     @Test
-    public void testEmptyLoad() {
+    public void testEmptyLoad() throws IOException {
         String path = randomString(100);
         try {
             FileUtils.writeByteArrayToFile(new File(path), new byte[0], true);
@@ -135,6 +139,7 @@ public class DefaultLeaseManagerTest extends AbstractTest {
         }
         DefaultLeaseManager<SimpleNode> loadManager = new DefaultLeaseManager<>(path);
         Assert.assertFalse(loadManager.load(path));
+        FileUtils.forceDelete(new File(path));
     }
 
     public static class SimpleNode implements Node, Comparable<SimpleNode> {

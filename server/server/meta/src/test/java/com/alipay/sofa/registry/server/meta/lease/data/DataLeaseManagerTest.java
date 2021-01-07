@@ -19,8 +19,13 @@ package com.alipay.sofa.registry.server.meta.lease.data;
 import com.alipay.sofa.registry.common.model.metaserver.nodes.DataNode;
 import com.alipay.sofa.registry.server.meta.AbstractTest;
 import com.alipay.sofa.registry.server.meta.lease.Lease;
+import com.alipay.sofa.registry.server.meta.lease.session.SessionLeaseManager;
+import com.alipay.sofa.registry.util.FileUtils;
 import org.junit.Assert;
 import org.junit.Test;
+
+import java.io.File;
+import java.io.IOException;
 
 import static org.junit.Assert.assertNotNull;
 
@@ -54,12 +59,13 @@ public class DataLeaseManagerTest extends AbstractTest {
     }
 
     @Test
-    public void testSnapshotProcess() {
+    public void testSnapshotProcess() throws IOException {
         new ConcurrentExecutor(1000, executors)
                 .execute(()->manager.register(new Lease<DataNode>(new DataNode(randomURL(randomIp()), getDc()), 1)));
         manager.copy().save(DataLeaseManager.DATA_LEASE_MANAGER);
         DataLeaseManager loadManager = new DataLeaseManager();
         loadManager.load(DataLeaseManager.DATA_LEASE_MANAGER);
         Assert.assertEquals(manager.getClusterMembers().size(), loadManager.getClusterMembers().size());
+        FileUtils.forceDelete(new File(DataLeaseManager.DATA_LEASE_MANAGER));
     }
 }
