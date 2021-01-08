@@ -413,6 +413,11 @@ public class MetaServerConfiguration {
         }
 
         @Bean
+        public SlotTableResource slotTableResource() {
+            return new SlotTableResource();
+        }
+
+        @Bean
         public SessionLoadbalanceResource sessionLoadbalanceSwitchResource() {
             return new SessionLoadbalanceResource();
         }

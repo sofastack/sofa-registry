@@ -76,8 +76,8 @@ import static org.mockito.Mockito.mock;
  */
 public class AbstractTest {
 
-    protected Logger                       logger           = LoggerFactory
-                                                                .getLogger(AbstractTest.class);
+    protected final Logger                 logger           = LoggerFactory
+                                                                .getLogger(getClass());
 
     protected ExecutorService              executors;
 
@@ -356,6 +356,65 @@ public class AbstractTest {
         try {
             logger.warn("{}", JsonUtils.getJacksonObjectMapper().writerWithDefaultPrettyPrinter().writeValueAsString(slotTable));
         } catch (Exception ignore) {}
+    }
+
+    protected boolean isSlotTableBalanced(SlotTable slotTable, List<DataNode> dataNodes) {
+        Map<String, Integer> counter = Maps.newHashMap();
+        for(Slot slot : slotTable.getSlots()) {
+            counterIncr(counter, slot.getLeader());
+            for(String follower : slot.getFollowers()) {
+                counterIncr(counter, follower);
+            }
+        }
+        AtomicInteger total = new AtomicInteger();
+        counter.values().forEach(count -> total.addAndGet(count));
+        int average = total.get() / dataNodes.size();
+        int lowWaterMark = average * 1 / 2;
+        int highWaterMark = average * 3 / 2;
+
+        logger.info("[counter] {}", counter);
+        for(DataNode dataNode : dataNodes) {
+            if(counter.get(dataNode.getIp()) == null) {
+                return false;
+            }
+            if(counter.get(dataNode.getIp()) < lowWaterMark) {
+                logger.info("[lower] {}, {}, {}", dataNode.getIp(), counter.get(dataNode.getIp()), lowWaterMark);
+                return false;
+            }
+            if(counter.get(dataNode.getIp()) > highWaterMark) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private void counterIncr(Map<String, Integer> counter, String ip) {
+        Integer prev = counter.get(ip);
+        counter.put(ip, prev == null ? 1 : prev + 1);
+    }
+
+    protected boolean isSlotTableLeaderBalanced(SlotTable slotTable, List<DataNode> dataNodes) {
+        Map<String, Integer> counter = Maps.newHashMap();
+        for(Slot slot : slotTable.getSlots()) {
+            counterIncr(counter, slot.getLeader());
+        }
+
+        int average = slotTable.getSlotMap().size() / dataNodes.size();
+        int lowWaterMark = average * 1 / 2;
+        int highWaterMark = average * 3 / 2;
+
+        for(DataNode dataNode : dataNodes) {
+            if(counter.get(dataNode.getIp()) == null) {
+                return false;
+            }
+            if(counter.get(dataNode.getIp()) < lowWaterMark) {
+                return false;
+            }
+            if(counter.get(dataNode.getIp()) > highWaterMark) {
+                return false;
+            }
+        }
+        return true;
     }
 
     public static class MockRpcClient implements Client {

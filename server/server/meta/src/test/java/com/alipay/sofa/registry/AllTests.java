@@ -40,6 +40,7 @@ import com.alipay.sofa.registry.server.meta.monitor.DefaultSlotTableMonitorTest;
 import com.alipay.sofa.registry.server.meta.provide.data.DataServerProvideDataNotifierTest;
 import com.alipay.sofa.registry.server.meta.provide.data.DefaultProvideDataNotifierTest;
 import com.alipay.sofa.registry.server.meta.provide.data.SessionServerProvideDataNotifierTest;
+import com.alipay.sofa.registry.server.meta.resource.SlotTableResourceTest;
 import com.alipay.sofa.registry.server.meta.slot.impl.*;
 import com.alipay.sofa.registry.server.meta.slot.tasks.InitReshardingTaskTest;
 import com.alipay.sofa.registry.server.meta.slot.tasks.ServerDeadRebalanceWorkTest;
@@ -64,6 +65,7 @@ import org.junit.runners.Suite;
                      DataServerArrangeTaskDispatcherTest.class, DefaultSlotArrangerTest.class,
                      ServerDeadRebalanceWorkTest.class, InitReshardingTaskTest.class,
                      SlotLeaderRebalanceTaskTest.class, SlotReassignTaskTest.class,
-                     DefaultSlotTableMonitorTest.class, DiskSlotTableRecorderTest.class })
+                     DefaultSlotTableMonitorTest.class, DiskSlotTableRecorderTest.class,
+                     SlotTableResourceTest.class})
 public class AllTests {
 }
