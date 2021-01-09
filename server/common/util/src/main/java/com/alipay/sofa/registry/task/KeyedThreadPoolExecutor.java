@@ -20,10 +20,7 @@ import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.util.ConcurrentUtils;
 
-import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.RejectedExecutionException;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 
 /**
  *
@@ -43,7 +40,7 @@ public class KeyedThreadPoolExecutor {
         this.coreBufferSize = coreBufferSize;
         workers = new Worker[coreSize];
         for (int i = 0; i < coreSize; i++) {
-            Worker w = new Worker(i, new ArrayBlockingQueue<>(coreBufferSize));
+            Worker w = new Worker(i, new LinkedBlockingQueue<>(coreBufferSize));
             workers[i] = w;
             ConcurrentUtils.createDaemonThread(executorName + "_" + i, w).start();
         }
@@ -75,12 +72,26 @@ public class KeyedThreadPoolExecutor {
         }
     }
 
+    private int getQueueSize() {
+        int size = 0;
+        for (Worker w : workers) {
+            size += w.queue.size();
+        }
+        return size;
+    }
+
     public <T extends Runnable> KeyedTask<T> execute(Object key, T runnable) {
+        final int size = getQueueSize();
+        if (size >= coreBufferSize) {
+            throw new RejectedExecutionException(String.format("%s is full, max=%d, now=%d",
+                    executorName, coreBufferSize, size));
+        }
         KeyedTask task = new KeyedTask(key, runnable);
         Worker w = workerOf(key);
+        // should not happen,
         if (!w.queue.offer(task)) {
             throw new RejectedExecutionException(String.format("%s_%d full, max=%d, now=%d",
-                executorName, w.idx, coreBufferSize, w.queue.size()));
+                    executorName, w.idx, coreBufferSize, w.queue.size()));
         }
         return task;
     }
