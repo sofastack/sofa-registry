@@ -16,7 +16,11 @@
  */
 package com.alipay.sofa.registry.server.session.cache;
 
+import com.alipay.sofa.registry.common.model.dataserver.Datum;
+import com.alipay.sofa.registry.log.Logger;
+import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.server.session.node.service.DataNodeService;
+import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 
 /**
@@ -25,7 +29,7 @@ import org.springframework.beans.factory.annotation.Autowired;
  * @version $Id: DatumCacheGenerator.java, v 0.1 2018-11-19 16:15 shangyu.wh Exp $
  */
 public class DatumCacheGenerator implements CacheGenerator {
-
+    private static final Logger LOGGER = LoggerFactory.getLogger(DatumCacheGenerator.class);
     /**
      * DataNode service
      */
@@ -40,15 +44,13 @@ public class DatumCacheGenerator implements CacheGenerator {
 
             String dataCenter = datumKey.getDataCenter();
             String dataInfoId = datumKey.getDataInfoId();
-
-            if (isNotBlank(dataCenter) && isNotBlank(dataInfoId)) {
-                return new Value(dataNodeService.fetchDataCenter(dataInfoId, dataCenter));
+            if (StringUtils.isNotBlank(dataCenter) && StringUtils.isNotBlank(dataInfoId)) {
+                Datum datum = dataNodeService.fetchDataCenter(dataInfoId, dataCenter);
+                LOGGER.info("generateCache {}, dataCenter={}, {}", dataInfoId, dataCenter,
+                        datum == null ? null : datum.simpleString());
+                return new Value(datum);
             }
         }
         throw new IllegalArgumentException("unsupported Key:" + key);
-    }
-
-    public boolean isNotBlank(String ss) {
-        return ss != null && !ss.isEmpty();
     }
 }
