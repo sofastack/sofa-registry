@@ -97,12 +97,12 @@ public class DataServerConfig {
     private int                  slotMigratingExecutorThreadSize              = 8;
 
     private int                  slotLeaderSyncSessionExecutorThreadSize      = 12;
-    private int                  slotLeaderSyncSessionExecutorQueueSize       = 10000;
+    private int                  slotLeaderSyncSessionExecutorQueueSize       = 40000;
     private volatile int         slotLeaderSyncSessionIntervalSec             = 6;
 
     private int                  slotFollowerSyncLeaderExecutorThreadSize     = 4;
     private int                  slotFollowerSyncLeaderExecutorQueueSize      = 10000;
-    private volatile int         slotFollowerSyncLeaderIntervalMs             = 60000;
+    private volatile int         slotFollowerSyncLeaderIntervalMs             = 1000 * 30;
 
     // the publisher.digest if len(registerId/uuid+long+long), 50bytes
     private volatile int         slotSyncPublisherDigestMaxNum                = 10000;

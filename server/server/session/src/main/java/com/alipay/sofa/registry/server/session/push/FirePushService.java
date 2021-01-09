@@ -68,7 +68,7 @@ public class FirePushService {
     @PostConstruct
     public void init() {
         //TODO
-        fetchExecutor = new KeyedThreadPoolExecutor("FetchExecutor", 4, 1000);
+        fetchExecutor = new KeyedThreadPoolExecutor("FetchExecutor", 4, 10000);
     }
 
     public boolean fireOnChange(String dataCenter, String dataInfoId, long expectVersion) {

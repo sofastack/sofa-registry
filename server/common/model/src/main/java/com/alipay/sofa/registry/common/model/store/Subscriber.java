@@ -126,18 +126,18 @@ public class Subscriber extends BaseInfo {
                                                       long fetchSeqStart, long fetchSeqEnd) {
         final PushContext ctx = lastPushContexts.computeIfAbsent(dataCenter, k -> new PushContext());
 
-        if (ctx.pushVersion >= pushVersion || ctx.fetchSeqEnd >= fetchSeqStart) {
-            return false;
+        if (ctx.pushVersion < pushVersion && ctx.fetchSeqEnd <= fetchSeqStart) {
+            ctx.pushVersion = pushVersion;
+            ctx.fetchSeqEnd = fetchSeqEnd;
+            ctx.update(datumVersion);
+            return true;
         }
-        ctx.pushVersion = pushVersion;
-        ctx.fetchSeqEnd = fetchSeqEnd;
-        ctx.update(datumVersion);
-        return true;
+        return false;
     }
 
     public synchronized boolean checkVersion(String dataCenter, long fetchSeqStart) {
         final PushContext ctx = lastPushContexts.get(dataCenter);
-        if (ctx == null || ctx.fetchSeqEnd < fetchSeqStart) {
+        if (ctx == null || ctx.fetchSeqEnd <= fetchSeqStart) {
             return true;
         }
         return false;
