@@ -99,8 +99,8 @@ public class PushProcessor {
                 watchDog.wakeup();
             }
         } else {
-            LOGGER.info("[ConflictPending] {}, prev {} > {}", key, prev.fetchSeqEnd,
-                pushTask.fetchSeqStart);
+            LOGGER.info("[ConflictPending] {}, {}, prev {} > {}", pushTask.subscriber.getDataInfoId(), key,
+                    prev.fetchSeqEnd, pushTask.fetchSeqStart);
         }
     }
 
@@ -263,7 +263,7 @@ public class PushProcessor {
                 pushingTasks.put(pushingTaskKey, this);
                 clientNodeService.pushWithCallback(data, subscriber.getSourceAddress(),
                     new PushClientCallback(this, pushingTaskKey));
-                LOGGER.info("pushing {}, subscribers={}", pushingTaskKey, subscriberMap.size());
+                LOGGER.info("pushing {}, subscribers={}, {}", pushingTaskKey, subscriberMap.size());
             } catch (Throwable e) {
                 // try to delete self
                 boolean cleaned = false;
@@ -330,7 +330,11 @@ public class PushProcessor {
             boolean cleaned = false;
             try {
                 cleaned = pushingTasks.remove(pushingTaskKey, pushTask);
-                retry(pushTask, "callbackErr");
+                if(channel.isConnected()) {
+                    retry(pushTask, "callbackErr");
+                }else{
+                    LOGGER.warn("push.onException, channel is closed, {}", pushingTaskKey);
+                }
             } catch (Throwable e) {
                 LOGGER.error("error push.onException, {}", pushTask, e);
             }

@@ -16,6 +16,7 @@
  */
 package com.alipay.sofa.registry.server.data.remoting.sessionserver.handler;
 
+import com.alipay.sofa.registry.common.model.dataserver.Datum;
 import com.alipay.sofa.registry.common.model.dataserver.GetDataRequest;
 import com.alipay.sofa.registry.common.model.slot.SlotAccess;
 import com.alipay.sofa.registry.common.model.slot.SlotAccessGenericResponse;
@@ -24,6 +25,7 @@ import com.alipay.sofa.registry.server.data.cache.DatumCache;
 import com.alipay.sofa.registry.util.ParaCheckUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import java.util.Map;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ThreadPoolExecutor;
 
@@ -56,14 +58,19 @@ public class GetDataHandler extends AbstractDataHandler<GetDataRequest> {
     public Object doHandle(Channel channel, GetDataRequest request) {
         processSessionProcessId(channel, request.getSessionProcessId());
 
-        String dataInfoId = request.getDataInfoId();
+        final String dataInfoId = request.getDataInfoId();
+
         final SlotAccess slotAccess = checkAccess(dataInfoId, request.getSlotTableEpoch());
         if (!slotAccess.isAccept()) {
             return SlotAccessGenericResponse.failedResponse(slotAccess);
         }
 
-        return SlotAccessGenericResponse.successResponse(slotAccess,
-            datumCache.getDatumGroupByDataCenter(request.getDataCenter(), dataInfoId));
+        Map<String, Datum> datumMap = datumCache.getDatumGroupByDataCenter(request.getDataCenter(), dataInfoId);
+        final String localDataCenter = dataServerConfig.getLocalDataCenter();
+        final Datum localDatum = datumMap.get(localDataCenter);
+        LOGGER.info("get datum {} from {}, {}", dataInfoId, localDataCenter,
+                localDatum == null ? null : localDatum.simpleString());
+        return SlotAccessGenericResponse.successResponse(slotAccess, datumMap);
     }
 
     @Override

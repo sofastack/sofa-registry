@@ -25,7 +25,6 @@ import com.alipay.sofa.registry.remoting.exchange.message.Request;
  */
 public class RequestException extends RuntimeException {
 
-    private static final int MAX_BODY_SIZE = 512;
     private Request          request;
 
     /**
@@ -80,15 +79,17 @@ public class RequestException extends RuntimeException {
      */
     @Override
     public String getMessage() {
-        StringBuilder sb = new StringBuilder();
+        StringBuilder sb = new StringBuilder(256);
         if (request != null) {
-            String requestBody = request.getRequestBody() != null ? request.getRequestBody()
-                .toString() : "null";
-            if (requestBody.length() > MAX_BODY_SIZE) {
-                requestBody = requestBody.substring(0, MAX_BODY_SIZE);
+            final Object requestBody = request.getRequestBody();
+            String requestBodyStr = null;
+            if (requestBody instanceof String) {
+                requestBodyStr = requestBody.toString();
+            } else if (requestBody != null) {
+                requestBodyStr = request.getRequestBody().getClass().getName();
             }
             sb.append("request url: ").append(request.getRequestUrl()).append(", body: ")
-                .append(requestBody).append(", ");
+                    .append(requestBodyStr).append(", ");
         }
         sb.append(super.getMessage());
         return sb.toString();

@@ -303,4 +303,13 @@ public class Datum implements Serializable {
         }
         return revisions;
     }
+
+    public String simpleString(){
+        StringBuilder sb = new StringBuilder(128);
+        sb.append("Datum={").append(dataInfoId).
+                append(", size=").append(publisherSize()).
+                append(", ver=").append(version).
+                append('}');
+        return sb.toString();
+    }
 }
