@@ -30,7 +30,7 @@ public class DatumCacheGenerator implements CacheGenerator {
      * DataNode service
      */
     @Autowired
-    private DataNodeService     dataNodeService;
+    private DataNodeService dataNodeService;
 
     @Override
     public Value generatePayload(Key key) {

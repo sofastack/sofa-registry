@@ -21,10 +21,10 @@ import javax.ws.rs.core.MediaType;
 public class SlotTableResource {
 
     @Autowired
-    private DefaultSlotManager defaultSlotManager;
+    private DefaultSlotManager       defaultSlotManager;
 
     @Autowired
-    private LocalSlotManager slotManager;
+    private LocalSlotManager         slotManager;
 
     @Autowired
     private DefaultDataServerManager dataServerManager;
@@ -34,7 +34,7 @@ public class SlotTableResource {
     @Produces(MediaType.APPLICATION_JSON)
     public SlotTable forceRefreshSlotTable() {
         InitReshardingTask task = new InitReshardingTask(slotManager,
-                defaultSlotManager.getRaftSlotManager(), dataServerManager);
+            defaultSlotManager.getRaftSlotManager(), dataServerManager);
         task.run();
         return slotManager.getSlotTable();
     }

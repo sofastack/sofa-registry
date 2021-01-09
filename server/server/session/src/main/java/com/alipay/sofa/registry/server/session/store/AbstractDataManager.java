@@ -25,6 +25,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import org.apache.commons.collections.MapUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.util.CollectionUtils;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -55,56 +56,44 @@ public abstract class AbstractDataManager<T extends BaseInfo> implements
         this.logger = logger;
     }
 
-
     protected T addData(T data) {
-        Map<String, T> datas = stores.computeIfAbsent(data.getDataInfoId(),
+        Map<String, T> dataMap = stores.computeIfAbsent(data.getDataInfoId(),
                 k -> Maps.newConcurrentMap());
 
-        T existing = datas.put(data.getRegisterId(), data);
+        T existing = dataMap.put(data.getRegisterId(), data);
         return existing;
     }
 
-
     @Override
     public boolean deleteById(String registerId, String dataInfoId) {
-        Map<String, T> datas = stores.get(dataInfoId);
-        if (datas == null) {
-            logger.error("Delete failed because is not registered for {}", dataInfoId);
+        Map<String, T> dataMap = stores.get(dataInfoId);
+        if (CollectionUtils.isEmpty(dataMap)) {
+            logger.warn("Delete failed because is not registered for {}", dataInfoId);
             return false;
         }
-        boolean modified = false;
-        write.lock();
-        try {
-            T dataToDelete = datas.remove(registerId);
-            if (dataToDelete != null) {
-                modified = true;
-            }
-        } finally {
-            write.unlock();
+        T dataToDelete = dataMap.remove(registerId);
+
+        if (dataToDelete == null) {
+            logger.warn("Delete failed because is not registered for {}, {}", dataInfoId, registerId);
         }
-        if (!modified) {
-            logger.error("Delete failed because is not registered for {}, {}", dataInfoId,
-                registerId);
-        }
-        return modified;
+        return dataToDelete != null;
     }
 
     @Override
     public boolean deleteByConnectId(ConnectId connectId) {
         boolean modified = false;
-        write.lock();
-        try {
-            for (Map<String, T> map : stores.values()) {
-                for (Iterator it = map.values().iterator(); it.hasNext();) {
-                    T data = (T) it.next();
-                    if (connectId.equals(data.connectId())) {
+
+        for (Map<String, T> map : stores.values()) {
+            // copy a map for iterate
+            for (Map.Entry<String, T> e : Maps.newHashMap(map).entrySet()) {
+                final T data = e.getValue();
+                if (connectId.equals(data.connectId())) {
+                    // may be the value has removed by anther thread
+                    if (map.remove(e.getKey(), data)) {
                         modified = true;
-                        it.remove();
                     }
                 }
             }
-        } finally {
-            write.unlock();
         }
         return modified;
     }

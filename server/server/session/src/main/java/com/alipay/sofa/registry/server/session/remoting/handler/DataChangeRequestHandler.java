@@ -38,8 +38,8 @@ import java.util.concurrent.Executor;
  */
 public class DataChangeRequestHandler extends AbstractClientHandler<DataChangeRequest> {
 
-    private static final Logger      LOGGER          = LoggerFactory
-                                                         .getLogger(DataChangeRequestHandler.class);
+    private static final Logger      LOGGER = LoggerFactory
+                                                .getLogger(DataChangeRequestHandler.class);
     /**
      * store subscribers
      */
@@ -78,8 +78,9 @@ public class DataChangeRequestHandler extends AbstractClientHandler<DataChangeRe
         appRevisionCacheRegistry.refreshMeta(dataChangeRequest.getRevisions());
         if (!sessionInterests.checkInterestVersions(dataChangeRequest.getDataCenter(),
             dataChangeRequest.getDataInfoId(), dataChangeRequest.getVersion())) {
-            LOGGER.info("obsolete version {}, ver={}, dataCenter={}", dataChangeRequest.getDataInfoId(),
-                    dataChangeRequest.getVersion(), dataChangeRequest.getDataCenter());
+            LOGGER.info("obsolete version {}, ver={}, dataCenter={}",
+                dataChangeRequest.getDataInfoId(), dataChangeRequest.getVersion(),
+                dataChangeRequest.getDataCenter());
             return null;
         }
         firePushService.fireOnChange(dataChangeRequest.getDataCenter(),

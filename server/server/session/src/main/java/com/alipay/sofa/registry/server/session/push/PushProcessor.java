@@ -17,7 +17,10 @@
 package com.alipay.sofa.registry.server.session.push;
 
 import com.alipay.sofa.registry.common.model.dataserver.Datum;
+import com.alipay.sofa.registry.common.model.store.BaseInfo;
 import com.alipay.sofa.registry.common.model.store.Subscriber;
+import com.alipay.sofa.registry.core.model.AssembleType;
+import com.alipay.sofa.registry.core.model.ScopeEnum;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.remoting.CallbackHandler;
@@ -41,25 +44,25 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
 public class PushProcessor {
-    private static final Logger                    LOGGER       = LoggerFactory
-                                                                    .getLogger(PushProcessor.class);
+    private static final Logger                 LOGGER       = LoggerFactory
+                                                                 .getLogger(PushProcessor.class);
 
-    private KeyedThreadPoolExecutor                pushExecutor;
-    private final Map<PendingTaskKey, PushTask>           pendingTasks = Maps.newConcurrentMap();
-    private final Lock                             pendingLock  = new ReentrantLock();
+    private KeyedThreadPoolExecutor             pushExecutor;
+    private final Map<PendingTaskKey, PushTask> pendingTasks = Maps.newConcurrentMap();
+    private final Lock                          pendingLock  = new ReentrantLock();
 
     private final Map<PushingTaskKey, PushTask> pushingTasks = Maps.newConcurrentMap();
 
     @Autowired
-    private SessionServerConfig                    sessionServerConfig;
+    private SessionServerConfig                 sessionServerConfig;
 
     @Autowired
-    private PushDataGenerator                      pushDataGenerator;
+    private PushDataGenerator                   pushDataGenerator;
 
     @Autowired
-    private ClientNodeService                      clientNodeService;
+    private ClientNodeService                   clientNodeService;
 
-    private final WatchDog                         watchDog     = new WatchDog();
+    private final WatchDog                      watchDog     = new WatchDog();
 
     @PostConstruct
     public void init() {
@@ -158,7 +161,8 @@ public class PushProcessor {
         final long now = System.currentTimeMillis();
         pendingLock.lock();
         try {
-            final Iterator<Map.Entry<PendingTaskKey, PushTask>> it = pendingTasks.entrySet().iterator();
+            final Iterator<Map.Entry<PendingTaskKey, PushTask>> it = pendingTasks.entrySet()
+                .iterator();
             while (it.hasNext()) {
                 Map.Entry<PendingTaskKey, PushTask> e = it.next();
                 PushTask task = e.getValue();
@@ -279,7 +283,8 @@ public class PushProcessor {
         }
 
         PushingTaskKey pushingKeyOf() {
-            return new PushingTaskKey(subscriber.getDataInfoId(), addr);
+            return new PushingTaskKey(subscriber.getDataInfoId(), addr, subscriber.getScope(),
+                subscriber.getAssembleType(), subscriber.getClientVersion());
         }
 
         @Override
@@ -292,8 +297,9 @@ public class PushProcessor {
     }
 
     private final class PushClientCallback implements CallbackHandler {
-        final PushTask pushTask;
+        final PushTask       pushTask;
         final PushingTaskKey pushingTaskKey;
+
         PushClientCallback(PushTask pushTask, PushingTaskKey pushingTaskKey) {
             this.pushTask = pushTask;
             this.pushingTaskKey = pushingTaskKey;
@@ -372,34 +378,47 @@ public class PushProcessor {
         }
     }
 
-    private static final class PushingTaskKey {
-        final InetSocketAddress addr;
-        final String dataInfoId;
+    private static final class PushingTasks {
 
-        PushingTaskKey(String dataInfoId, InetSocketAddress addr) {
+    }
+
+    private static final class PushingTaskKey {
+        final InetSocketAddress      addr;
+        final String                 dataInfoId;
+        final ScopeEnum              scopeEnum;
+        final AssembleType           assembleType;
+        final BaseInfo.ClientVersion clientVersion;
+
+        PushingTaskKey(String dataInfoId, InetSocketAddress addr, ScopeEnum scopeEnum,
+                       AssembleType assembleType, BaseInfo.ClientVersion clientVersion) {
             this.dataInfoId = dataInfoId;
             this.addr = addr;
+            this.scopeEnum = scopeEnum;
+            this.assembleType = assembleType;
+            this.clientVersion = clientVersion;
         }
 
         @Override
         public boolean equals(Object o) {
-            if (this == o) return true;
-            if (o == null || getClass() != o.getClass()) return false;
+            if (this == o)
+                return true;
+            if (o == null || getClass() != o.getClass())
+                return false;
             PushingTaskKey that = (PushingTaskKey) o;
-            return Objects.equals(addr, that.addr) && Objects.equals(dataInfoId, that.dataInfoId);
+            return Objects.equals(addr, that.addr) && Objects.equals(dataInfoId, that.dataInfoId)
+                   && scopeEnum == that.scopeEnum && assembleType == that.assembleType
+                   && clientVersion == that.clientVersion;
         }
 
         @Override
         public int hashCode() {
-            return Objects.hash(addr, dataInfoId);
+            return Objects.hash(addr, dataInfoId, scopeEnum, assembleType, clientVersion);
         }
 
         @Override
         public String toString() {
-            return "PushingTaskKey{" +
-                    "addr=" + addr +
-                    ", dataInfoId='" + dataInfoId + '\'' +
-                    '}';
+            return "PushingTaskKey{" + "addr=" + addr + ", dataInfoId='" + dataInfoId + '\''
+                   + ", scopeEnum=" + scopeEnum + '}';
         }
     }
 

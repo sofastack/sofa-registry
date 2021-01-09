@@ -26,13 +26,13 @@ import static org.mockito.Mockito.when;
 
 public class SlotTableResourceTest extends AbstractTest {
 
-    private LocalSlotManager slotManager;
+    private LocalSlotManager         slotManager;
 
-    private DefaultSlotManager defaultSlotManager;
+    private DefaultSlotManager       defaultSlotManager;
 
     private DefaultDataServerManager dataServerManager;
 
-    private SlotTableResource resource;
+    private SlotTableResource        resource;
 
     @Before
     public void beforeSlotTableResourceTest() {
@@ -48,10 +48,9 @@ public class SlotTableResourceTest extends AbstractTest {
     @Test
     public void testForceRefreshSlotTable() throws TimeoutException, InterruptedException {
         makeRaftLeader();
-        List<DataNode> dataNodes = Lists.newArrayList(
-                new DataNode(randomURL(randomIp()), getDc()),
-                new DataNode(randomURL(randomIp()), getDc()),
-                new DataNode(randomURL(randomIp()), getDc()));
+        List<DataNode> dataNodes = Lists.newArrayList(new DataNode(randomURL(randomIp()), getDc()),
+            new DataNode(randomURL(randomIp()), getDc()), new DataNode(randomURL(randomIp()),
+                getDc()));
         when(dataServerManager.getClusterMembers()).thenReturn(dataNodes);
         SlotTable slotTable = new SlotTableGenerator(dataNodes).createLeaderUnBalancedSlotTable();
         printSlotTable(slotTable);
@@ -62,6 +61,5 @@ public class SlotTableResourceTest extends AbstractTest {
         printSlotTable(current);
         Assert.assertTrue(isSlotTableBalanced(slotManager.getSlotTable(), dataNodes));
     }
-
 
 }

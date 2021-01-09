@@ -76,8 +76,7 @@ import static org.mockito.Mockito.mock;
  */
 public class AbstractTest {
 
-    protected final Logger                 logger           = LoggerFactory
-                                                                .getLogger(getClass());
+    protected final Logger                 logger           = LoggerFactory.getLogger(getClass());
 
     protected ExecutorService              executors;
 
@@ -397,7 +396,7 @@ public class AbstractTest {
 
     protected boolean isSlotTableLeaderBalanced(SlotTable slotTable, List<DataNode> dataNodes) {
         Map<String, Integer> counter = Maps.newHashMap();
-        for(Slot slot : slotTable.getSlots()) {
+        for (Slot slot : slotTable.getSlots()) {
             counterIncr(counter, slot.getLeader());
         }
 
@@ -405,14 +404,14 @@ public class AbstractTest {
         int lowWaterMark = average * 1 / 2;
         int highWaterMark = average * 3 / 2;
 
-        for(DataNode dataNode : dataNodes) {
-            if(counter.get(dataNode.getIp()) == null) {
+        for (DataNode dataNode : dataNodes) {
+            if (counter.get(dataNode.getIp()) == null) {
                 return false;
             }
-            if(counter.get(dataNode.getIp()) < lowWaterMark) {
+            if (counter.get(dataNode.getIp()) < lowWaterMark) {
                 return false;
             }
-            if(counter.get(dataNode.getIp()) > highWaterMark) {
+            if (counter.get(dataNode.getIp()) > highWaterMark) {
                 return false;
             }
         }

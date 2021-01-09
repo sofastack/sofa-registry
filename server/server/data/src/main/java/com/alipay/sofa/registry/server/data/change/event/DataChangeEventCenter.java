@@ -166,7 +166,8 @@ public final class DataChangeEventCenter {
 
     private final class ChangeMerger extends Merger {
         ChangeMerger() {
-            super(dataServerConfig.getNotifyIntervalMs(), DataChangeEventCenter.this.lock.writeLock());
+            super(dataServerConfig.getNotifyIntervalMs(), DataChangeEventCenter.this.lock
+                .writeLock());
         }
 
         @Override

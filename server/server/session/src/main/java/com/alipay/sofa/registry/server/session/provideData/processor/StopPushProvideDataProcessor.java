@@ -32,8 +32,8 @@ import org.springframework.beans.factory.annotation.Autowired;
  */
 public class StopPushProvideDataProcessor implements ProvideDataProcessor {
 
-    private static final Logger LOGGER      = LoggerFactory
-                                                .getLogger(StopPushProvideDataProcessor.class);
+    private static final Logger LOGGER = LoggerFactory
+                                           .getLogger(StopPushProvideDataProcessor.class);
 
     @Autowired
     private SessionServerConfig sessionServerConfig;
