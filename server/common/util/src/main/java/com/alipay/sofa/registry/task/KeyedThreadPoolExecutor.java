@@ -84,14 +84,14 @@ public class KeyedThreadPoolExecutor {
         final int size = getQueueSize();
         if (size >= coreBufferSize) {
             throw new RejectedExecutionException(String.format("%s is full, max=%d, now=%d",
-                    executorName, coreBufferSize, size));
+                executorName, coreBufferSize, size));
         }
         KeyedTask task = new KeyedTask(key, runnable);
         Worker w = workerOf(key);
         // should not happen,
         if (!w.queue.offer(task)) {
             throw new RejectedExecutionException(String.format("%s_%d full, max=%d, now=%d",
-                    executorName, w.idx, coreBufferSize, w.queue.size()));
+                executorName, w.idx, coreBufferSize, w.queue.size()));
         }
         return task;
     }

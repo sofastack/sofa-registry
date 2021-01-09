@@ -30,7 +30,6 @@ public class TaskEvent {
     public enum TaskType {
         //Session task
         WATCHER_REGISTER_FETCH_TASK("WatcherRegisterFetchTask"), //
-        DATA_PUSH_TASK("DataPushTask"), //
         RECEIVED_DATA_CONFIG_PUSH_TASK("ReceivedDataConfigPushTask"), //
         CANCEL_DATA_TASK("CancelDataTask"), //
         SYNC_PUBLISHER_TASK("SyncPublisherTask"), //

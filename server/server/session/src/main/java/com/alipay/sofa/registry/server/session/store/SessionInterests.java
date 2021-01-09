@@ -49,13 +49,15 @@ public class SessionInterests extends AbstractDataManager<Subscriber> implements
     public boolean add(Subscriber subscriber) {
         ParaCheckUtil.checkNotNull(subscriber.getScope(), "subscriber.scope");
         ParaCheckUtil.checkNotNull(subscriber.getAssembleType(), "subscriber.assembleType");
+        ParaCheckUtil.checkNotNull(subscriber.getClientVersion(), "subscriber.clientVersion");
+
         Subscriber.internSubscriber(subscriber);
 
         Subscriber existingSubscriber = addData(subscriber);
 
         if (existingSubscriber != null) {
             LOGGER.warn("There is subscriber already exists,it will be overwrite! {}",
-                    existingSubscriber);
+                existingSubscriber);
         }
         return true;
     }

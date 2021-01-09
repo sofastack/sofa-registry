@@ -237,6 +237,7 @@ public class DataCacheTest extends BaseTest {
         subscriberRegister.setRegisterTimestamp(System.currentTimeMillis());
         subscriberRegister.setScope(scopeEnum);
         subscriberRegister.setAssembleType(AssembleType.sub_app_and_interface);
+        subscriberRegister.setClientVersion(BaseInfo.ClientVersion.StoreData);
         subscriberRegister.setDataInfoId(DataInfo.toDataInfoId(dataId, "instance2", "rpc"));
 
         subscriberRegister.setSourceAddress(url == null ? new URL("192.168.1.2", 9000) : url);
@@ -344,6 +345,7 @@ public class DataCacheTest extends BaseTest {
         Subscriber subscriber1 = new Subscriber();
         subscriber1.setScope(ScopeEnum.dataCenter);
         subscriber1.setAssembleType(AssembleType.sub_app_and_interface);
+        subscriber1.setClientVersion(BaseInfo.ClientVersion.StoreData);
         subscriber1.setDataInfoId("dataInfoId1");
         subscriber1.setDataId("dataId1");
         subscriber1.setRegisterId("RegisterId1");
@@ -353,6 +355,7 @@ public class DataCacheTest extends BaseTest {
         Subscriber subscriber2 = new Subscriber();
         subscriber2.setScope(ScopeEnum.dataCenter);
         subscriber2.setAssembleType(AssembleType.sub_app_and_interface);
+        subscriber2.setClientVersion(BaseInfo.ClientVersion.StoreData);
         subscriber2.setDataInfoId("dataInfoId2");
         subscriber2.setDataId("dataId2");
         subscriber2.setRegisterId("RegisterId2");
@@ -374,6 +377,7 @@ public class DataCacheTest extends BaseTest {
         Subscriber subscriber3 = new Subscriber();
         subscriber3.setScope(ScopeEnum.dataCenter);
         subscriber3.setAssembleType(AssembleType.sub_app_and_interface);
+        subscriber3.setClientVersion(BaseInfo.ClientVersion.StoreData);
         subscriber3.setDataInfoId(subscriber1.getDataInfoId());
         subscriber3.setDataId(subscriber1.getDataId());
         subscriber3.setRegisterId(subscriber1.getRegisterId());
@@ -383,6 +387,7 @@ public class DataCacheTest extends BaseTest {
         Subscriber subscriber4 = new Subscriber();
         subscriber4.setScope(ScopeEnum.dataCenter);
         subscriber4.setAssembleType(AssembleType.sub_app_and_interface);
+        subscriber4.setClientVersion(BaseInfo.ClientVersion.StoreData);
         subscriber4.setDataInfoId(subscriber2.getDataInfoId());
         subscriber4.setDataId(subscriber2.getDataId());
         subscriber4.setRegisterId(subscriber2.getRegisterId());
@@ -465,6 +470,7 @@ public class DataCacheTest extends BaseTest {
         Subscriber subscriber1 = new Subscriber();
         subscriber1.setScope(ScopeEnum.dataCenter);
         subscriber1.setAssembleType(AssembleType.sub_app_and_interface);
+        subscriber1.setClientVersion(BaseInfo.ClientVersion.StoreData);
         subscriber1.setDataInfoId("dataInfoId1");
         subscriber1.setDataId("dataId1");
         subscriber1.setRegisterId("RegisterId1");
@@ -475,6 +481,7 @@ public class DataCacheTest extends BaseTest {
         Subscriber subscriber2 = new Subscriber();
         subscriber2.setScope(subscriber1.getScope());
         subscriber2.setAssembleType(subscriber1.getAssembleType());
+        subscriber2.setClientVersion(subscriber1.getClientVersion());
         subscriber2.setDataInfoId(subscriber1.getDataInfoId());
         subscriber2.setDataId(subscriber1.getDataId());
         subscriber2.setRegisterId(subscriber1.getRegisterId());

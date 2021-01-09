@@ -66,6 +66,6 @@ import org.junit.runners.Suite;
                      ServerDeadRebalanceWorkTest.class, InitReshardingTaskTest.class,
                      SlotLeaderRebalanceTaskTest.class, SlotReassignTaskTest.class,
                      DefaultSlotTableMonitorTest.class, DiskSlotTableRecorderTest.class,
-                     SlotTableResourceTest.class})
+                     SlotTableResourceTest.class })
 public class AllTests {
 }
