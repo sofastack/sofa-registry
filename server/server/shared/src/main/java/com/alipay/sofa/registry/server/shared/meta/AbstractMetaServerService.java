@@ -119,6 +119,8 @@ public abstract class AbstractMetaServerService<T extends BaseHeartBeatResponse>
         State s = new State(response.getDataCentersFromMetaNodes(), response.getSessionNodesMap(),
             response.getSlotTable().getDataServers(), response.getSessionServerEpoch());
         this.state = s;
+        LOGGER.info("update MetaStat, dataCenters={}, sessions={}/{}, datas={}", state.dataCenters,
+                s.sessionServerEpoch, s.sessionNodes.keySet(), s.dataServers);
     }
 
     private static final class State {

@@ -89,16 +89,16 @@ public class ClientNodeConnectionHandler extends ListenServerChannelHandler {
 
     private boolean checkPub(ConnectId connectId) {
         Map map = sessionDataStore.queryByConnectId(connectId);
-        return MapUtils.isEmpty(map);
+        return !MapUtils.isEmpty(map);
     }
 
     private boolean checkSub(ConnectId connectId) {
         Map map = sessionInterests.queryByConnectId(connectId);
-        return MapUtils.isEmpty(map);
+        return !MapUtils.isEmpty(map);
     }
 
     private boolean checkWatcher(ConnectId connectId) {
         Map map = sessionWatchers.queryByConnectId(connectId);
-        return MapUtils.isEmpty(map);
+        return !MapUtils.isEmpty(map);
     }
 }

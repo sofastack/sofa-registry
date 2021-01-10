@@ -43,7 +43,7 @@ public final class ServerEnv {
     @VisibleForTesting
     public static ProcessId createProcessId() {
         Random random = new Random();
-        return new ProcessId(IP, System.currentTimeMillis(), PID, random.nextInt());
+        return new ProcessId(IP, System.currentTimeMillis(), PID, random.nextInt(1024 * 8));
     }
 
     static int getPID() {

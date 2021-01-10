@@ -263,7 +263,7 @@ public class PushProcessor {
                 pushingTasks.put(pushingTaskKey, this);
                 clientNodeService.pushWithCallback(data, subscriber.getSourceAddress(),
                     new PushClientCallback(this, pushingTaskKey));
-                LOGGER.info("pushing {}, subscribers={}, {}", pushingTaskKey, subscriberMap.size());
+                LOGGER.info("pushing {}, subscribers={}", pushingTaskKey, subscriberMap.size());
             } catch (Throwable e) {
                 // try to delete self
                 boolean cleaned = false;
@@ -275,7 +275,7 @@ public class PushProcessor {
         }
 
         boolean afterThan(PushTask t) {
-            return fetchSeqStart > t.fetchSeqEnd;
+            return fetchSeqStart >= t.fetchSeqEnd;
         }
 
         PendingTaskKey pendingKeyOf() {
@@ -320,7 +320,7 @@ public class PushProcessor {
             } catch (Throwable e) {
                 LOGGER.error("error push.onCallback, {}", pushTask, e);
             } finally {
-                cleaned = pushingTasks.remove(pushingTaskKey, pushTask);
+                cleaned = pushingTasks.remove(pushingTaskKey) != null;
             }
             LOGGER.info("Push success, clean record={}, {}", cleaned, pushTask);
         }
@@ -329,7 +329,7 @@ public class PushProcessor {
         public void onException(Channel channel, Throwable exception) {
             boolean cleaned = false;
             try {
-                cleaned = pushingTasks.remove(pushingTaskKey, pushTask);
+                cleaned = pushingTasks.remove(pushingTaskKey) != null;
                 if(channel.isConnected()) {
                     retry(pushTask, "callbackErr");
                 }else{
@@ -380,10 +380,6 @@ public class PushProcessor {
             return "PendingTaskKey{" + "dataCenter='" + dataCenter + '\'' + ", addr=" + addr
                    + ", subscriberIds=" + subscriberIds + '}';
         }
-    }
-
-    private static final class PushingTasks {
-
     }
 
     private static final class PushingTaskKey {
