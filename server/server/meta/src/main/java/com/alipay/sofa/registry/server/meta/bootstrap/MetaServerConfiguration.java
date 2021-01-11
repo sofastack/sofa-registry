@@ -16,26 +16,6 @@
  */
 package com.alipay.sofa.registry.server.meta.bootstrap;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
-
-import com.alipay.sofa.registry.server.meta.monitor.DefaultSlotTableMonitor;
-import com.alipay.sofa.registry.server.meta.remoting.handler.*;
-import com.alipay.sofa.registry.server.meta.revision.*;
-import com.alipay.sofa.registry.server.meta.repository.service.*;
-import com.alipay.sofa.registry.util.NamedThreadFactory;
-import com.alipay.sofa.registry.server.meta.resource.*;
-import org.glassfish.jersey.jackson.JacksonFeature;
-import org.glassfish.jersey.server.ResourceConfig;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
-import org.springframework.boot.context.properties.EnableConfigurationProperties;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Import;
-
 import com.alipay.sofa.registry.jraft.service.PersistenceDataDBService;
 import com.alipay.sofa.registry.remoting.bolt.exchange.BoltExchange;
 import com.alipay.sofa.registry.remoting.exchange.Exchange;
@@ -56,6 +36,7 @@ import com.alipay.sofa.registry.server.meta.lease.session.SessionLeaseManager;
 import com.alipay.sofa.registry.server.meta.metaserver.impl.DefaultCurrentDcMetaServer;
 import com.alipay.sofa.registry.server.meta.metaserver.impl.DefaultLocalMetaServer;
 import com.alipay.sofa.registry.server.meta.metaserver.impl.DefaultMetaServerManager;
+import com.alipay.sofa.registry.server.meta.monitor.DefaultSlotTableMonitor;
 import com.alipay.sofa.registry.server.meta.provide.data.DataServerProvideDataNotifier;
 import com.alipay.sofa.registry.server.meta.provide.data.DefaultProvideDataNotifier;
 import com.alipay.sofa.registry.server.meta.provide.data.SessionServerProvideDataNotifier;
@@ -66,16 +47,28 @@ import com.alipay.sofa.registry.server.meta.remoting.SessionNodeExchanger;
 import com.alipay.sofa.registry.server.meta.remoting.connection.DataConnectionHandler;
 import com.alipay.sofa.registry.server.meta.remoting.connection.MetaConnectionHandler;
 import com.alipay.sofa.registry.server.meta.remoting.connection.SessionConnectionHandler;
-import com.alipay.sofa.registry.server.meta.remoting.handler.FetchProvideDataRequestHandler;
-import com.alipay.sofa.registry.server.meta.remoting.handler.HeartbeatRequestHandler;
+import com.alipay.sofa.registry.server.meta.remoting.handler.*;
+import com.alipay.sofa.registry.server.meta.repository.service.RaftAppRevisionService;
+import com.alipay.sofa.registry.server.meta.resource.*;
+import com.alipay.sofa.registry.server.meta.revision.AppRevisionRegistry;
+import com.alipay.sofa.registry.server.meta.revision.AppRevisionService;
 import com.alipay.sofa.registry.server.meta.slot.impl.*;
 import com.alipay.sofa.registry.server.shared.remoting.AbstractServerHandler;
-
 import com.alipay.sofa.registry.store.api.DBService;
 import com.alipay.sofa.registry.util.DefaultExecutorFactory;
+import com.alipay.sofa.registry.util.NamedThreadFactory;
 import com.alipay.sofa.registry.util.OsUtils;
 import com.alipay.sofa.registry.util.PropertySplitter;
+import org.glassfish.jersey.jackson.JacksonFeature;
+import org.glassfish.jersey.server.ResourceConfig;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Import;
 
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.concurrent.*;
 
 /**

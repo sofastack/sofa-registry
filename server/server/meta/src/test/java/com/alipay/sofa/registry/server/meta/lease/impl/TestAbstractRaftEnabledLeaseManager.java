@@ -220,9 +220,9 @@ public class TestAbstractRaftEnabledLeaseManager extends AbstractTest {
     }
 
     @Test
-    public void testEvitTooQuick() throws InterruptedException {
+    public void testEvictTooQuick() throws InterruptedException {
         manager = spy(manager);
-        evitTimeMilli.set(1000);
+        evitTimeMilli.set(3000);
         MetaNode node = new MetaNode(randomURL(randomIp()), getDc());
         manager.renew(node, 1);
         Assert.assertEquals(1, manager.getClusterMembers().size());
