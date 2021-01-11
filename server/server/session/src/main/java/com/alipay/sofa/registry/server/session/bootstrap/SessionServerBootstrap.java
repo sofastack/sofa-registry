@@ -33,6 +33,7 @@ import com.alipay.sofa.registry.remoting.exchange.Exchange;
 import com.alipay.sofa.registry.remoting.exchange.NodeExchanger;
 import com.alipay.sofa.registry.server.session.filter.blacklist.BlacklistManager;
 import com.alipay.sofa.registry.server.session.provideData.ProvideDataProcessor;
+import com.alipay.sofa.registry.server.session.registry.SessionRegistry;
 import com.alipay.sofa.registry.server.session.scheduler.ExecutorManager;
 import com.alipay.sofa.registry.server.shared.env.ServerEnv;
 import com.alipay.sofa.registry.server.shared.meta.MetaServerService;
@@ -72,6 +73,9 @@ public class SessionServerBootstrap {
 
     @Autowired
     private ExecutorManager                   executorManager;
+
+    @Autowired
+    private SessionRegistry                   sessionRegistry;
 
     @Resource(name = "serverHandlers")
     private Collection<AbstractServerHandler> serverHandlers;
@@ -266,6 +270,8 @@ public class SessionServerBootstrap {
         } else {
             LOGGER.info("Fetch session stop push switch data null,config not change!");
         }
+        // start fetch change data after got the switch
+        sessionRegistry.fetchChangDataProcess();
     }
 
     private void fetchBlackList() {

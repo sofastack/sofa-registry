@@ -366,7 +366,7 @@ public class FirePushService {
             }
 
             default:
-                LOGGER.error("unsupport assembleType {}, {}", assembleType, subscriber);
+                LOGGER.error("unsupported assembleType {}, {}", assembleType, subscriber);
                 return;
         }
         final long pushVersion = DatumVersionUtil.nextId();
