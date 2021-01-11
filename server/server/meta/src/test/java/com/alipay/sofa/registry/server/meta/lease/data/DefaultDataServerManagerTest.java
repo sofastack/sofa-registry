@@ -48,8 +48,7 @@ public class DefaultDataServerManagerTest extends AbstractTest {
         dataServerManager.setDataLeaseManager(spy(new DataLeaseManager()))
             .setRaftDataLeaseManager(spy(new DataLeaseManager()))
             .setMetaServerConfig(metaServerConfig).setScheduled(scheduled);
-        when(metaServerConfig.getSchedulerHeartbeatTimeout()).thenReturn(60);
-        when(metaServerConfig.getSchedulerHeartbeatExpBackOffBound()).thenReturn(60);
+        when(metaServerConfig.getExpireCheckIntervalMilli()).thenReturn(60);
         dataServerManager.postConstruct();
     }
 

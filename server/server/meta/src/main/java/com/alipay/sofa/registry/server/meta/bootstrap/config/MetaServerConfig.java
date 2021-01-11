@@ -33,9 +33,7 @@ public interface MetaServerConfig {
 
     int getCrossDcMetaSyncIntervalMilli();
 
-    int getSchedulerHeartbeatTimeout();
-
-    int getSchedulerHeartbeatExpBackOffBound();
+    int getExpireCheckIntervalMilli();
 
     int getSchedulerCheckNodeListChangePushTimeout();
 
@@ -100,6 +98,8 @@ public interface MetaServerConfig {
     double getSessionLoadbalanceThresholdRatio();
 
     int getInitialSlotTableNonChangeLockTimeMilli();
+
+    int getDataNodeNums();
 
     int getWaitForDataServerRestartTime();
 }

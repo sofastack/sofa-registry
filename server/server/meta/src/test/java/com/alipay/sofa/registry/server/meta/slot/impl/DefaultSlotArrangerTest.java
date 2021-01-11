@@ -44,7 +44,7 @@ public class DefaultSlotArrangerTest extends AbstractTest {
         slotArranger = spy(new DefaultSlotArranger());
         DataLeaseManager leaseManager = new DataLeaseManager();
         MetaServerConfig metaServerConfig = mock(MetaServerConfig.class);
-        when(metaServerConfig.getSchedulerHeartbeatExpBackOffBound()).thenReturn(60);
+        when(metaServerConfig.getExpireCheckIntervalMilli()).thenReturn(60);
         dataServerManager = spy(new DefaultDataServerManager(leaseManager, leaseManager,
             metaServerConfig));
         arrangeTaskDispatcher = mock(DataServerArrangeTaskDispatcher.class);
