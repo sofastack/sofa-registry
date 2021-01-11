@@ -85,7 +85,7 @@ public class DefaultDataServerManagerTest extends AbstractTest {
 
     @Test
     public void testEvitTime() {
-        Assert.assertEquals(60 * 1000, dataServerManager.getEvictBetweenMilli());
+        Assert.assertEquals(60, dataServerManager.getEvictBetweenMilli());
     }
 
     @Test
