@@ -58,17 +58,6 @@ public final class SlotDiffSyncer {
         this.sessionLeaseManager = sessionLeaseManager;
     }
 
-    private List<String> processSyncRemovedDataInfoId(List<String> removeds,
-                                                      ProcessId sessionProcessId) {
-        List<String> ids = new ArrayList<>(removeds.size());
-        for (String removed : removeds) {
-            if (datumStorage.remove(removed, sessionProcessId) != null) {
-                ids.add(removed);
-            }
-        }
-        return ids;
-    }
-
     private DataSlotDiffSyncResult processSyncResp(int slotId,
                                                    GenericResponse<DataSlotDiffSyncResult> resp,
                                                    String targetAddress, Map<String, DatumSummary> summarys) {
@@ -92,7 +81,11 @@ public final class SlotDiffSyncer {
         }
 
         final Set<String> changeDataIds = Sets.newHashSet();
-        changeDataIds.addAll(processSyncRemovedDataInfoId(result.getRemovedDataInfoIds(), sessionProcessId));
+        result.getRemovedDataInfoIds().forEach(k->{
+            if (datumStorage.remove(k, sessionProcessId, summarys.get(k).getPublisherVersions()) != null) {
+                changeDataIds.add(k);
+            }
+        });
 
         result.getUpdatedPublishers().forEach((k, list) -> {
             if (datumStorage.update(k, list) != null) {
@@ -129,8 +122,7 @@ public final class SlotDiffSyncer {
                 slotTableEpoch, slotId, new HashSet<>(summaryMap.keySet()));
             GenericResponse<DataSlotDiffSyncResult> resp = (GenericResponse<DataSlotDiffSyncResult>) exchanger
                 .requestRaw(targetAddress, request).getResult();
-            DataSlotDiffSyncResult result = processSyncResp(slotId, resp, targetAddress,
-                Collections.emptyMap());
+            DataSlotDiffSyncResult result = processSyncResp(slotId, resp, targetAddress, summaryMap);
             if (result == null) {
                 return false;
             }
