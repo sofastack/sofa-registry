@@ -69,7 +69,13 @@ public abstract class AbstractRaftEnabledLeaseManager<T extends Node> extends
             @Override
             public void run() {
                 if (isRaftLeader()) {
+                    if(logger.isInfoEnabled()) {
+                        logger.info("[schedule-evict][begin]");
+                    }
                     evict();
+                    if(logger.isInfoEnabled()) {
+                        logger.info("[schedule-evict][end]");
+                    }
                 }
             }
         }, getIntervalMilli(), getIntervalMilli(), TimeUnit.MILLISECONDS);

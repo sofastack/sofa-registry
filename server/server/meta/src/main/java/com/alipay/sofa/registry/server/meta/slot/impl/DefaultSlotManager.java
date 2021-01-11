@@ -129,7 +129,7 @@ public class DefaultSlotManager extends AbstractLifecycle implements SlotManager
     }
 
     private long getIntervalMilli() {
-        return TimeUnit.SECONDS.toMillis(metaServerConfig.getSchedulerHeartbeatExpBackOffBound());
+        return TimeUnit.SECONDS.toMillis(metaServerConfig.getExpireCheckIntervalMilli());
     }
 
     @Override

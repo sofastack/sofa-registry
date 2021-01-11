@@ -120,12 +120,12 @@ public class DefaultSessionServerManager extends AbstractRaftEnabledLeaseManager
 
     @Override
     protected long getIntervalMilli() {
-        return TimeUnit.SECONDS.toMillis(metaServerConfig.getSchedulerHeartbeatExpBackOffBound());
+        return TimeUnit.SECONDS.toMillis(metaServerConfig.getExpireCheckIntervalMilli());
     }
 
     @Override
     protected long getEvictBetweenMilli() {
-        return TimeUnit.SECONDS.toMillis(metaServerConfig.getSchedulerHeartbeatExpBackOffBound());
+        return TimeUnit.SECONDS.toMillis(metaServerConfig.getExpireCheckIntervalMilli());
     }
 
     @VisibleForTesting

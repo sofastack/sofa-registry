@@ -17,11 +17,9 @@
 package com.alipay.sofa.registry.server.meta.lease.session;
 
 import com.alipay.sofa.registry.common.model.ProcessId;
-import com.alipay.sofa.registry.common.model.metaserver.nodes.DataNode;
 import com.alipay.sofa.registry.common.model.metaserver.nodes.SessionNode;
 import com.alipay.sofa.registry.server.meta.AbstractTest;
 import com.alipay.sofa.registry.server.meta.bootstrap.config.MetaServerConfig;
-import com.alipay.sofa.registry.server.meta.lease.data.DataLeaseManager;
 import com.alipay.sofa.registry.server.meta.remoting.RaftExchanger;
 import org.junit.After;
 import org.junit.Assert;
@@ -50,8 +48,7 @@ public class DefaultSessionServerManagerTest extends AbstractTest {
         sessionManager.setMetaServerConfig(metaServerConfig)
             .setSessionLeaseManager(new SessionLeaseManager())
             .setRaftSessionLeaseManager(new SessionLeaseManager()).setScheduled(scheduled);
-        when(metaServerConfig.getSchedulerHeartbeatTimeout()).thenReturn(60);
-        when(metaServerConfig.getSchedulerHeartbeatExpBackOffBound()).thenReturn(60);
+        when(metaServerConfig.getExpireCheckIntervalMilli()).thenReturn(60);
         raftExchanger = mock(RaftExchanger.class);
         sessionManager.postConstruct();
     }

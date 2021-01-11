@@ -40,10 +40,6 @@ public class MetaServerConfigBean implements MetaServerConfig {
 
     private int                httpServerPort                                  = 9615;
 
-    private int                schedulerHeartbeatTimeout                       = 3;
-
-    private int                schedulerHeartbeatExpBackOffBound               = 10;
-
     private int                schedulerCheckNodeListChangePushTimeout         = 3;
 
     private int                schedulerCheckNodeListChangePushFirstDelay      = 1;
@@ -58,9 +54,9 @@ public class MetaServerConfigBean implements MetaServerConfig {
 
     private int                raftElectionTimeout                             = 1000;
 
-    private int                initialSlotTableLockTimeMilli                   = 1000;
+    private int                initialSlotTableLockTimeMilli                   = Integer.getInteger("init.slot.talbe.wait.milli", 1000);
 
-    private int                waitForDataServerRestartTimeMilli               = 15 * 1000;
+    private int                waitForDataServerRestartTimeMilli               = Integer.getInteger("data.server.recover.interval.milli", 3000);
 
     /**
      * Whether to enable metrics for node.
@@ -101,6 +97,15 @@ public class MetaServerConfigBean implements MetaServerConfig {
     private int                metaSchedulerPoolSize                           = 6;
     private double             sessionLoadbalanceThresholdRatio                = 1.1;
 
+    private int                expireCheckIntervalMilli                        = 5000;
+
+    private int                dataNodeNums = Integer.getInteger("data.node.nums", 1);
+
+    /**
+     * Gets get session server port.
+     *
+     * @return the get session server port
+     */
     @Override
     public int getSessionServerPort() {
         return sessionServerPort;
@@ -115,6 +120,11 @@ public class MetaServerConfigBean implements MetaServerConfig {
         this.sessionServerPort = sessionServerPort;
     }
 
+    /**
+     * Gets get data server port.
+     *
+     * @return the get data server port
+     */
     @Override
     public int getDataServerPort() {
         return dataServerPort;
@@ -129,6 +139,11 @@ public class MetaServerConfigBean implements MetaServerConfig {
         this.dataServerPort = dataServerPort;
     }
 
+    /**
+     * Gets get http server port.
+     *
+     * @return the get http server port
+     */
     @Override
     public int getHttpServerPort() {
         return httpServerPort;
@@ -144,41 +159,24 @@ public class MetaServerConfigBean implements MetaServerConfig {
     }
 
     /**
-     * Getter method for property <tt>schedulerHeartbeatTimeout</tt>.
-     *
-     * @return property value of schedulerHeartbeatTimeout
-     */
-    @Override
-    public int getSchedulerHeartbeatTimeout() {
-        return schedulerHeartbeatTimeout;
-    }
-
-    /**
-     * Setter method for property <tt>schedulerHeartbeatTimeout</tt>.
-     *
-     * @param schedulerHeartbeatTimeout value to be assigned to property schedulerHeartbeatTimeout
-     */
-    public void setSchedulerHeartbeatTimeout(int schedulerHeartbeatTimeout) {
-        this.schedulerHeartbeatTimeout = schedulerHeartbeatTimeout;
-    }
-
-    /**
      * Getter method for property <tt>schedulerHeartbeatExpBackOffBound</tt>.
      *
      * @return property value of schedulerHeartbeatExpBackOffBound
      */
     @Override
-    public int getSchedulerHeartbeatExpBackOffBound() {
-        return schedulerHeartbeatExpBackOffBound;
+    public int getExpireCheckIntervalMilli() {
+        return expireCheckIntervalMilli;
     }
 
     /**
-     * Setter method for property <tt>schedulerHeartbeatExpBackOffBound</tt>.
+     * Sets set expire check interval milli.
      *
-     * @param schedulerHeartbeatExpBackOffBound value to be assigned to property schedulerHeartbeatExpBackOffBound
+     * @param expireCheckIntervalMilli the expire check interval milli
+     * @return the set expire check interval milli
      */
-    public void setSchedulerHeartbeatExpBackOffBound(int schedulerHeartbeatExpBackOffBound) {
-        this.schedulerHeartbeatExpBackOffBound = schedulerHeartbeatExpBackOffBound;
+    public MetaServerConfigBean setExpireCheckIntervalMilli(int expireCheckIntervalMilli) {
+        this.expireCheckIntervalMilli = expireCheckIntervalMilli;
+        return this;
     }
 
     /**
@@ -335,6 +333,11 @@ public class MetaServerConfigBean implements MetaServerConfig {
         return ValueConstants.RAFT_SERVER_PORT;
     }
 
+    /**
+     * Gets get cross dc meta sync interval milli.
+     *
+     * @return the get cross dc meta sync interval milli
+     */
     @Override
     public int getCrossDcMetaSyncIntervalMilli() {
         return ValueConstants.CROSS_DC_META_SYNC_INTERVAL_MILLI;
@@ -359,6 +362,11 @@ public class MetaServerConfigBean implements MetaServerConfig {
         this.raftDataPath = raftDataPath;
     }
 
+    /**
+     * Is enable metrics boolean.
+     *
+     * @return the boolean
+     */
     @Override
     public boolean isEnableMetrics() {
         return enableMetrics;
@@ -460,139 +468,392 @@ public class MetaServerConfigBean implements MetaServerConfig {
         this.metaSchedulerPoolSize = metaSchedulerPoolSize;
     }
 
+    /**
+     * Gets get meta scheduler pool size.
+     *
+     * @return the get meta scheduler pool size
+     */
     @Override
     public int getMetaSchedulerPoolSize() {
         return metaSchedulerPoolSize;
     }
 
+    /**
+     * To string string.
+     *
+     * @return the string
+     */
     @Override
     public String toString() {
         return ToStringBuilder.reflectionToString(this, ToStringStyle.MULTI_LINE_STYLE);
     }
 
+    /**
+     * Gets get default request executor min size.
+     *
+     * @return the get default request executor min size
+     */
     public int getDefaultRequestExecutorMinSize() {
         return defaultRequestExecutorMinSize;
     }
 
+    /**
+     * Sets set default request executor min size.
+     *
+     * @param defaultRequestExecutorMinSize the default request executor min size
+     */
     public void setDefaultRequestExecutorMinSize(int defaultRequestExecutorMinSize) {
         this.defaultRequestExecutorMinSize = defaultRequestExecutorMinSize;
     }
 
+    /**
+     * Gets get default request executor max size.
+     *
+     * @return the get default request executor max size
+     */
     public int getDefaultRequestExecutorMaxSize() {
         return defaultRequestExecutorMaxSize;
     }
 
+    /**
+     * Sets set default request executor max size.
+     *
+     * @param defaultRequestExecutorMaxSize the default request executor max size
+     */
     public void setDefaultRequestExecutorMaxSize(int defaultRequestExecutorMaxSize) {
         this.defaultRequestExecutorMaxSize = defaultRequestExecutorMaxSize;
     }
 
+    /**
+     * Gets get default request executor queue size.
+     *
+     * @return the get default request executor queue size
+     */
     public int getDefaultRequestExecutorQueueSize() {
         return defaultRequestExecutorQueueSize;
     }
 
+    /**
+     * Sets set default request executor queue size.
+     *
+     * @param defaultRequestExecutorQueueSize the default request executor queue size
+     */
     public void setDefaultRequestExecutorQueueSize(int defaultRequestExecutorQueueSize) {
         this.defaultRequestExecutorQueueSize = defaultRequestExecutorQueueSize;
     }
 
+    /**
+     * Gets get raft executor min size.
+     *
+     * @return the get raft executor min size
+     */
     public int getRaftExecutorMinSize() {
         return raftExecutorMinSize;
     }
 
+    /**
+     * Sets set raft executor min size.
+     *
+     * @param raftExecutorMinSize the raft executor min size
+     */
     public void setRaftExecutorMinSize(int raftExecutorMinSize) {
         this.raftExecutorMinSize = raftExecutorMinSize;
     }
 
+    /**
+     * Gets get raft executor max size.
+     *
+     * @return the get raft executor max size
+     */
     public int getRaftExecutorMaxSize() {
         return raftExecutorMaxSize;
     }
 
+    /**
+     * Sets set raft executor max size.
+     *
+     * @param raftExecutorMaxSize the raft executor max size
+     */
     public void setRaftExecutorMaxSize(int raftExecutorMaxSize) {
         this.raftExecutorMaxSize = raftExecutorMaxSize;
     }
 
+    /**
+     * Gets get raft executor queue size.
+     *
+     * @return the get raft executor queue size
+     */
     public int getRaftExecutorQueueSize() {
         return raftExecutorQueueSize;
     }
 
+    /**
+     * Sets set raft executor queue size.
+     *
+     * @param raftExecutorQueueSize the raft executor queue size
+     */
     public void setRaftExecutorQueueSize(int raftExecutorQueueSize) {
         this.raftExecutorQueueSize = raftExecutorQueueSize;
     }
 
+    /**
+     * Gets get raft server executor min size.
+     *
+     * @return the get raft server executor min size
+     */
     public int getRaftServerExecutorMinSize() {
         return raftServerExecutorMinSize;
     }
 
+    /**
+     * Sets set raft server executor min size.
+     *
+     * @param raftServerExecutorMinSize the raft server executor min size
+     */
     public void setRaftServerExecutorMinSize(int raftServerExecutorMinSize) {
         this.raftServerExecutorMinSize = raftServerExecutorMinSize;
     }
 
+    /**
+     * Gets get raft server executor max size.
+     *
+     * @return the get raft server executor max size
+     */
     public int getRaftServerExecutorMaxSize() {
         return raftServerExecutorMaxSize;
     }
 
+    /**
+     * Sets set raft server executor max size.
+     *
+     * @param raftServerExecutorMaxSize the raft server executor max size
+     */
     public void setRaftServerExecutorMaxSize(int raftServerExecutorMaxSize) {
         this.raftServerExecutorMaxSize = raftServerExecutorMaxSize;
     }
 
+    /**
+     * Gets get raft server executor queue size.
+     *
+     * @return the get raft server executor queue size
+     */
     public int getRaftServerExecutorQueueSize() {
         return raftServerExecutorQueueSize;
     }
 
+    /**
+     * Sets set raft server executor queue size.
+     *
+     * @param raftServerExecutorQueueSize the raft server executor queue size
+     */
     public void setRaftServerExecutorQueueSize(int raftServerExecutorQueueSize) {
         this.raftServerExecutorQueueSize = raftServerExecutorQueueSize;
     }
 
+    /**
+     * Gets get raft fsm executor min size.
+     *
+     * @return the get raft fsm executor min size
+     */
     @Override
     public int getRaftFsmExecutorMinSize() {
         return raftFsmExecutorMinSize;
     }
 
+    /**
+     * Sets set raft fsm executor min size.
+     *
+     * @param raftFsmExecutorMinSize the raft fsm executor min size
+     */
     public void setRaftFsmExecutorMinSize(int raftFsmExecutorMinSize) {
         this.raftFsmExecutorMinSize = raftFsmExecutorMinSize;
     }
 
+    /**
+     * Gets get raft fsm executor max size.
+     *
+     * @return the get raft fsm executor max size
+     */
     @Override
     public int getRaftFsmExecutorMaxSize() {
         return raftFsmExecutorMaxSize;
     }
 
+    /**
+     * Sets set raft fsm executor max size.
+     *
+     * @param raftFsmExecutorMaxSize the raft fsm executor max size
+     */
     public void setRaftFsmExecutorMaxSize(int raftFsmExecutorMaxSize) {
         this.raftFsmExecutorMaxSize = raftFsmExecutorMaxSize;
     }
 
+    /**
+     * Gets get raft fsm executor queue size.
+     *
+     * @return the get raft fsm executor queue size
+     */
     @Override
     public int getRaftFsmExecutorQueueSize() {
         return raftFsmExecutorQueueSize;
     }
 
+    /**
+     * Sets set raft fsm executor queue size.
+     *
+     * @param raftFsmExecutorQueueSize the raft fsm executor queue size
+     */
     public void setRaftFsmExecutorQueueSize(int raftFsmExecutorQueueSize) {
         this.raftFsmExecutorQueueSize = raftFsmExecutorQueueSize;
     }
 
+    /**
+     * Gets get raft election timeout.
+     *
+     * @return the get raft election timeout
+     */
     public int getRaftElectionTimeout() {
         return raftElectionTimeout;
     }
 
+    /**
+     * Sets set raft election timeout.
+     *
+     * @param raftElectionTimeout the raft election timeout
+     */
     public void setRaftElectionTimeout(int raftElectionTimeout) {
         this.raftElectionTimeout = raftElectionTimeout;
     }
 
+    /**
+     * Gets get session loadbalance threshold ratio.
+     *
+     * @return the get session loadbalance threshold ratio
+     */
     @Override
     public double getSessionLoadbalanceThresholdRatio() {
         return sessionLoadbalanceThresholdRatio;
     }
 
+    /**
+     * Gets get initial slot table non change lock time milli.
+     *
+     * @return the get initial slot table non change lock time milli
+     */
     @Override
     public int getInitialSlotTableNonChangeLockTimeMilli() {
         return initialSlotTableLockTimeMilli;
     }
 
     @Override
+    public int getDataNodeNums() {
+        return dataNodeNums;
+    }
+
+    /**
+     * Sets set initial slot table lock time milli.
+     *
+     * @param initialSlotTableLockTimeMilli the initial slot table lock time milli
+     * @return the set initial slot table lock time milli
+     */
+    public MetaServerConfigBean setInitialSlotTableLockTimeMilli(int initialSlotTableLockTimeMilli) {
+        this.initialSlotTableLockTimeMilli = initialSlotTableLockTimeMilli;
+        return this;
+    }
+
+    /**
+     * Gets get wait for data server restart time.
+     *
+     * @return the get wait for data server restart time
+     */
+    @Override
     public int getWaitForDataServerRestartTime() {
         return waitForDataServerRestartTimeMilli;
     }
 
+    /**
+     * Sets set session loadbalance threshold ratio.
+     *
+     * @param sessionLoadbalanceThresholdRatio the session loadbalance threshold ratio
+     */
     public void setSessionLoadbalanceThresholdRatio(double sessionLoadbalanceThresholdRatio) {
         this.sessionLoadbalanceThresholdRatio = sessionLoadbalanceThresholdRatio;
+    }
+
+    /**
+     * Sets set wait for data server restart time milli.
+     *
+     * @param waitForDataServerRestartTimeMilli the wait for data server restart time milli
+     * @return the set wait for data server restart time milli
+     */
+    public MetaServerConfigBean setWaitForDataServerRestartTimeMilli(int waitForDataServerRestartTimeMilli) {
+        this.waitForDataServerRestartTimeMilli = waitForDataServerRestartTimeMilli;
+        return this;
+    }
+
+    /**
+     * Sets set connect meta server executor min size.
+     *
+     * @param connectMetaServerExecutorMinSize the connect meta server executor min size
+     * @return the set connect meta server executor min size
+     */
+    public MetaServerConfigBean setConnectMetaServerExecutorMinSize(int connectMetaServerExecutorMinSize) {
+        this.connectMetaServerExecutorMinSize = connectMetaServerExecutorMinSize;
+        return this;
+    }
+
+    /**
+     * Sets set connect meta server executor max size.
+     *
+     * @param connectMetaServerExecutorMaxSize the connect meta server executor max size
+     * @return the set connect meta server executor max size
+     */
+    public MetaServerConfigBean setConnectMetaServerExecutorMaxSize(int connectMetaServerExecutorMaxSize) {
+        this.connectMetaServerExecutorMaxSize = connectMetaServerExecutorMaxSize;
+        return this;
+    }
+
+    /**
+     * Sets set connect meta server executor queue size.
+     *
+     * @param connectMetaServerExecutorQueueSize the connect meta server executor queue size
+     * @return the set connect meta server executor queue size
+     */
+    public MetaServerConfigBean setConnectMetaServerExecutorQueueSize(int connectMetaServerExecutorQueueSize) {
+        this.connectMetaServerExecutorQueueSize = connectMetaServerExecutorQueueSize;
+        return this;
+    }
+
+    /**
+     * Sets set raft client refresh executor min size.
+     *
+     * @param raftClientRefreshExecutorMinSize the raft client refresh executor min size
+     * @return the set raft client refresh executor min size
+     */
+    public MetaServerConfigBean setRaftClientRefreshExecutorMinSize(int raftClientRefreshExecutorMinSize) {
+        this.raftClientRefreshExecutorMinSize = raftClientRefreshExecutorMinSize;
+        return this;
+    }
+
+    /**
+     * Sets set raft client refresh executor max size.
+     *
+     * @param raftClientRefreshExecutorMaxSize the raft client refresh executor max size
+     * @return the set raft client refresh executor max size
+     */
+    public MetaServerConfigBean setRaftClientRefreshExecutorMaxSize(int raftClientRefreshExecutorMaxSize) {
+        this.raftClientRefreshExecutorMaxSize = raftClientRefreshExecutorMaxSize;
+        return this;
+    }
+
+    /**
+     * Sets set raft client refresh executor queue size.
+     *
+     * @param raftClientRefreshExecutorQueueSize the raft client refresh executor queue size
+     * @return the set raft client refresh executor queue size
+     */
+    public MetaServerConfigBean setRaftClientRefreshExecutorQueueSize(int raftClientRefreshExecutorQueueSize) {
+        this.raftClientRefreshExecutorQueueSize = raftClientRefreshExecutorQueueSize;
+        return this;
     }
 }

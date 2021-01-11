@@ -60,7 +60,7 @@ public class DefaultSlotManagerTest extends AbstractTest {
     public void beforeDefaultSlotManagerTest() throws Exception {
         MockitoAnnotations.initMocks(this);
         when(nodeConfig.getLocalDataCenter()).thenReturn(getDc());
-        when(metaServerConfig.getSchedulerHeartbeatExpBackOffBound()).thenReturn(60);
+        when(metaServerConfig.getExpireCheckIntervalMilli()).thenReturn(60);
         localSlotManager = spy(new LocalSlotManager(nodeConfig));
         raftSlotManager = spy(new LocalSlotManager(nodeConfig));
         slotManager = new DefaultSlotManager().setDataServerManager(dataServerManager)
@@ -88,7 +88,7 @@ public class DefaultSlotManagerTest extends AbstractTest {
             .setArrangeTaskExecutor(arrangeTaskExecutor).setMetaServerConfig(metaServerConfig)
             .setLocalSlotManager(localSlotManager).setRaftSlotManager(raftSlotManager);
         slotManager = spy(slotManager);
-        when(metaServerConfig.getSchedulerHeartbeatExpBackOffBound()).thenReturn(1);
+        when(metaServerConfig.getExpireCheckIntervalMilli()).thenReturn(1);
         makeRaftLeader();
         slotManager.postConstruct();
         verify(slotManager, atLeast(1)).initCheck();

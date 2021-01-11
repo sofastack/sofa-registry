@@ -107,12 +107,12 @@ public class DefaultDataServerManager extends AbstractRaftEnabledLeaseManager<Da
 
     @Override
     protected long getIntervalMilli() {
-        return TimeUnit.SECONDS.toMillis(metaServerConfig.getSchedulerHeartbeatExpBackOffBound());
+        return TimeUnit.SECONDS.toMillis(metaServerConfig.getExpireCheckIntervalMilli());
     }
 
     @Override
     protected long getEvictBetweenMilli() {
-        return TimeUnit.SECONDS.toMillis(metaServerConfig.getSchedulerHeartbeatExpBackOffBound());
+        return TimeUnit.SECONDS.toMillis(metaServerConfig.getExpireCheckIntervalMilli());
     }
 
     @VisibleForTesting
