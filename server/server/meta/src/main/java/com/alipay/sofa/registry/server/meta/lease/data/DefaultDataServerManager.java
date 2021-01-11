@@ -33,7 +33,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.TimeUnit;
 
 /**
  * @author chen.zhu
@@ -107,12 +106,12 @@ public class DefaultDataServerManager extends AbstractRaftEnabledLeaseManager<Da
 
     @Override
     protected long getIntervalMilli() {
-        return TimeUnit.SECONDS.toMillis(metaServerConfig.getExpireCheckIntervalMilli());
+        return metaServerConfig.getExpireCheckIntervalMilli();
     }
 
     @Override
     protected long getEvictBetweenMilli() {
-        return TimeUnit.SECONDS.toMillis(metaServerConfig.getExpireCheckIntervalMilli());
+        return metaServerConfig.getExpireCheckIntervalMilli();
     }
 
     @VisibleForTesting
