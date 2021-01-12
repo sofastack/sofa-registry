@@ -46,6 +46,7 @@ import com.alipay.sofa.registry.util.ConcurrentUtils;
 import com.alipay.sofa.registry.util.LoopRunnable;
 import com.alipay.sofa.registry.util.WakeupLoopRunnable;
 import com.google.common.collect.Lists;
+import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.CollectionUtils;
 
@@ -322,8 +323,8 @@ public class SessionRegistry implements Registry {
     }
 
     private void fetchChangDataProcess(int slotId, List<String> pushedDataInfoIds) {
-        String leader = slotTableCache.getLeader(slotId);
-        if (leader == null) {
+        final String leader = slotTableCache.getLeader(slotId);
+        if (StringUtils.isBlank(leader)) {
             SCAN_VER_LOGGER.warn("slot not assigned, {}", slotId);
             return;
         }

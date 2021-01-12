@@ -19,6 +19,7 @@ package com.alipay.sofa.registry.server.session.node.service;
 import com.alipay.sofa.registry.common.model.CommonResponse;
 import com.alipay.sofa.registry.common.model.ConnectId;
 import com.alipay.sofa.registry.common.model.dataserver.*;
+import com.alipay.sofa.registry.common.model.slot.Slot;
 import com.alipay.sofa.registry.common.model.slot.SlotAccessGenericResponse;
 import com.alipay.sofa.registry.common.model.store.Publisher;
 import com.alipay.sofa.registry.common.model.store.URL;
@@ -35,6 +36,7 @@ import com.alipay.sofa.registry.server.shared.meta.MetaServerService;
 import com.alipay.sofa.registry.timer.AsyncHashedWheelTimer;
 import com.alipay.sofa.registry.timer.AsyncHashedWheelTimer.TaskFailedCallback;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
+import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.CollectionUtils;
 
@@ -264,6 +266,7 @@ public class DataNodeServiceImpl implements DataNodeService {
         try {
             //dataCenter null means all dataCenters
             GetDataRequest getDataRequest = new GetDataRequest(ServerEnv.PROCESS_ID, dataInfoId, dataCenterId);
+
             Request<GetDataRequest> getDataRequestStringRequest = new Request<GetDataRequest>() {
 
                 @Override
@@ -346,9 +349,12 @@ public class DataNodeServiceImpl implements DataNodeService {
     }
 
     private URL getUrl(String dataInfoId) {
-        //meta push data node has not port
-        String dataIp = slotTableCache.getLeader(dataInfoId);
+        final Slot slot = slotTableCache.getSlot(dataInfoId);
+        final String dataIp = slot.getLeader();
+        if (StringUtils.isBlank(dataIp)) {
+            throw new RequestException(String.format("slot has no leader %s, slot={}", dataInfoId,
+                slot));
+        }
         return new URL(dataIp, sessionServerConfig.getDataServerPort());
     }
-
 }
