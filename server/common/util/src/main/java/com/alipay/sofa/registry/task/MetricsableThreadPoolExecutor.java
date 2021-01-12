@@ -19,6 +19,7 @@ package com.alipay.sofa.registry.task;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.metrics.TaskMetrics;
+import com.alipay.sofa.registry.util.NamedThreadFactory;
 
 import java.util.concurrent.*;
 
@@ -63,5 +64,14 @@ public class MetricsableThreadPoolExecutor extends ThreadPoolExecutor {
     @Override
     public String toString() {
         return (new StringBuilder(executorName).append(" ").append(super.toString())).toString();
+    }
+
+    public static MetricsableThreadPoolExecutor newExecutor(String executorName, int corePoolSize,
+                                                            int size,
+                                                            RejectedExecutionHandler handler) {
+        return new MetricsableThreadPoolExecutor(executorName, corePoolSize, corePoolSize, 60,
+            TimeUnit.SECONDS, size <= 1024 * 4 ? new ArrayBlockingQueue<>(size)
+                : new LinkedBlockingQueue<>(size), new NamedThreadFactory(executorName, true),
+            handler);
     }
 }

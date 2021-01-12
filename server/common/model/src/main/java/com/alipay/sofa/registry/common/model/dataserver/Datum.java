@@ -17,6 +17,7 @@
 package com.alipay.sofa.registry.common.model.dataserver;
 
 import java.io.Serializable;
+import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -38,21 +39,21 @@ import com.google.common.collect.Sets;
  */
 public class Datum implements Serializable {
 
-    private static final long                     serialVersionUID = 5307489721610438103L;
+    private static final long            serialVersionUID = 5307489721610438103L;
 
-    private String                                dataInfoId;
+    private String                       dataInfoId;
 
-    private String                                dataCenter;
+    private String                       dataCenter;
 
-    private String                                dataId;
+    private String                       dataId;
 
-    private String                                instanceId;
+    private String                       instanceId;
 
-    private String                                group;
+    private String                       group;
+    //key=registerId
+    private final Map<String, Publisher> pubMap           = Maps.newHashMap();
 
-    private Map<String/*registerId*/, Publisher> pubMap           = new ConcurrentHashMap<>();
-
-    private long                                  version;
+    private long                         version;
 
     /**
      * constructor
@@ -81,7 +82,7 @@ public class Datum implements Serializable {
         this.dataId = publisher.getDataId();
         this.instanceId = publisher.getInstanceId();
         this.group = publisher.getGroup();
-        pubMap.put(publisher.getRegisterId(), publisher);
+        addPublisher(publisher);
     }
 
     /**
@@ -97,7 +98,7 @@ public class Datum implements Serializable {
         this.dataId = publisher.getDataId();
         this.instanceId = publisher.getInstanceId();
         this.group = publisher.getGroup();
-        pubMap.put(publisher.getRegisterId(), publisher);
+        addPublisher(publisher);
     }
 
     public void updateVersion() {
@@ -195,24 +196,6 @@ public class Datum implements Serializable {
     }
 
     /**
-     * Getter method for property <tt>pubMap</tt>.
-     *
-     * @return property value of pubMap
-     */
-    public Map<String, Publisher> getPubMap() {
-        return pubMap;
-    }
-
-    /**
-     * Setter method for property <tt>pubMap</tt>.
-     *
-     * @param pubMap  value to be assigned to property pubMap
-     */
-    public void setPubMap(Map<String, Publisher> pubMap) {
-        this.pubMap = pubMap;
-    }
-
-    /**
      * Getter method for property <tt>version</tt>.
      *
      * @return property value of version
@@ -237,9 +220,8 @@ public class Datum implements Serializable {
         datum.setGroup(datum.getGroup());
         datum.setInstanceId(datum.getInstanceId());
 
-        Map<String, Publisher> pubMap = datum.pubMap;
-        if (pubMap != null && !pubMap.isEmpty()) {
-            pubMap.forEach((registerId, publisher) -> {
+        synchronized (datum) {
+            datum.pubMap.forEach((registerId, publisher) -> {
                 // let registerId == pub.getRegisterId in every <registerId, pub>, for reducing old gen memory
                 // because this Datum is put into Memory directly, by DatumCache.coverDatum
                 publisher.setRegisterId(registerId);
@@ -253,44 +235,49 @@ public class Datum implements Serializable {
 
     @Override
     public String toString() {
-        StringBuilder sb = new StringBuilder("[Datum] dataInfoId=").append(dataInfoId)
-            .append(", dataId=").append(dataId).append(", dataCenter=").append(dataCenter)
-            .append(", instanceId=").append(instanceId).append(", version=").append(version)
-            .append(", pubMap=").append(pubMap);
+        StringBuilder sb = new StringBuilder(128);
+        sb.append("Datum={").append(dataInfoId).append(", dataCenter=").append(dataCenter)
+            .append(", size=").append(publisherSize()).append(", ver=").append(version).append('}');
         return sb.toString();
     }
 
-    public boolean addPublisher(Publisher publisher) {
-        for (; ; ) {
-            Publisher existing = pubMap.computeIfAbsent(publisher.getRegisterId(), k -> publisher);
-            if (existing == publisher) {
-                return true;
-            }
-            if (!existing.publisherVersion().orderThan(publisher.publisherVersion())) {
-                return false;
-            }
-            if (pubMap.replace(publisher.getRegisterId(), existing, publisher)) {
-                return true;
-            }
+    public synchronized boolean addPublisher(Publisher publisher) {
+        Publisher existing = pubMap.computeIfAbsent(publisher.getRegisterId(), k -> publisher);
+        if (existing == publisher) {
+            return true;
         }
+        if (!existing.publisherVersion().orderThan(publisher.publisherVersion())) {
+            return false;
+        }
+        pubMap.put(publisher.getRegisterId(), publisher);
+        return true;
     }
 
-    public int publisherSize() {
-        final Map<String, Publisher> m = pubMap;
-        return m == null ? 0 : m.size();
+    public synchronized int publisherSize() {
+        return pubMap.size();
     }
 
-    public void addPublishers(Map<String, Publisher> publisherMap) {
+    public synchronized void addPublishers(Map<String, Publisher> publisherMap) {
         if (publisherMap != null) {
-            pubMap.putAll(publisherMap);
+            publisherMap.values().forEach(p->addPublisher(p));
         }
     }
 
-    public Map<String, Publisher> publisherSnapshot() {
-        return Maps.newHashMap(pubMap);
+    public synchronized Map<String, Publisher> getPubMap() {
+        return Collections.unmodifiableMap(Maps.newHashMap(pubMap));
     }
 
-    public Set<String> revisions() {
+    /**
+     * should not call that, just for json serde
+     */
+    public synchronized void setPubMap(Map<String, Publisher> pubMap) {
+        this.pubMap.clear();
+        if (pubMap != null) {
+            this.pubMap.putAll(pubMap);
+        }
+    }
+
+    public synchronized Set<String> revisions() {
         Set<String> revisions = Sets.newHashSet();
 
         for (Publisher publisher : pubMap.values()) {
@@ -304,12 +291,4 @@ public class Datum implements Serializable {
         return revisions;
     }
 
-    public String simpleString(){
-        StringBuilder sb = new StringBuilder(128);
-        sb.append("Datum={").append(dataInfoId).
-                append(", size=").append(publisherSize()).
-                append(", ver=").append(version).
-                append('}');
-        return sb.toString();
-    }
 }

@@ -28,8 +28,9 @@ import com.alipay.sofa.registry.remoting.CallbackHandler;
 import com.alipay.sofa.registry.remoting.Channel;
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
 import com.alipay.sofa.registry.server.session.node.service.ClientNodeService;
-import com.alipay.sofa.registry.server.session.utils.DatumUtils;
+import com.alipay.sofa.registry.server.shared.util.DatumUtils;
 import com.alipay.sofa.registry.task.KeyedThreadPoolExecutor;
+import com.alipay.sofa.registry.task.MetricsableThreadPoolExecutor;
 import com.alipay.sofa.registry.trace.TraceID;
 import com.alipay.sofa.registry.util.ConcurrentUtils;
 import com.alipay.sofa.registry.util.WakeupLoopRunnable;
@@ -40,20 +41,20 @@ import org.springframework.beans.factory.annotation.Autowired;
 import javax.annotation.PostConstruct;
 import java.net.InetSocketAddress;
 import java.util.*;
-import java.util.concurrent.Executor;
+import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
 public class PushProcessor {
-    private static final Logger                 LOGGER       = LoggerFactory
-                                                                 .getLogger(PushProcessor.class);
+    private static final Logger                 LOGGER               = LoggerFactory
+                                                                         .getLogger(PushProcessor.class);
 
     private KeyedThreadPoolExecutor             pushExecutor;
-    private final Map<PendingTaskKey, PushTask> pendingTasks = Maps.newConcurrentMap();
-    private final Lock                          pendingLock  = new ReentrantLock();
+    private final Map<PendingTaskKey, PushTask> pendingTasks         = Maps.newConcurrentMap();
+    private final Lock                          pendingLock          = new ReentrantLock();
 
-    private final Map<PushingTaskKey, PushTask> pushingTasks = Maps.newConcurrentMap();
+    private final Map<PushingTaskKey, PushTask> pushingTasks         = Maps.newConcurrentMap();
 
     @Autowired
     private SessionServerConfig                 sessionServerConfig;
@@ -64,12 +65,19 @@ public class PushProcessor {
     @Autowired
     private ClientNodeService                   clientNodeService;
 
-    private final WatchDog                      watchDog     = new WatchDog();
+    private final WatchDog                      watchDog             = new WatchDog();
+
+    private final ThreadPoolExecutor            pushCallbackExecutor = MetricsableThreadPoolExecutor
+                                                                         .newExecutor(
+                                                                             "PushCallbackExecutor",
+                                                                             2, 1000,
+                                                                             new CallRunHandler());
 
     @PostConstruct
     public void init() {
-        // TODO config arg
-        pushExecutor = new KeyedThreadPoolExecutor("PushExecutor", 6, 10000);
+        pushExecutor = new KeyedThreadPoolExecutor("PushExecutor",
+            sessionServerConfig.getPushTaskExecutorPoolSize(),
+            sessionServerConfig.getPushTaskExecutorQueueSize());
         ConcurrentUtils.createDaemonThread("PushWatchDog", watchDog).start();
     }
 
@@ -102,8 +110,8 @@ public class PushProcessor {
             }
             return true;
         } else {
-            LOGGER.info("[ConflictPending] {}, {}, prev {} > {}", pushTask.subscriber.getDataInfoId(), key,
-                    prev.fetchSeqEnd, pushTask.fetchSeqStart);
+            LOGGER.info("[ConflictPending] {}, {}, prev {} > {}",
+                pushTask.subscriber.getDataInfoId(), key, prev.fetchSeqEnd, pushTask.fetchSeqStart);
             return false;
         }
     }
@@ -115,8 +123,8 @@ public class PushProcessor {
                                             long fetchEndSeq) {
         PushTask pushTask = new PushTask(noDelay, pushVersion, dataCenter, addr, subscriberMap,
             datumMap, fetchStartSeq, fetchEndSeq);
-        // TODO config 500ms
-        pushTask.expireAfter(500);
+        // wait to merge to debouncing
+        pushTask.expireAfter(sessionServerConfig.getPushDataTaskDebouncingMillis());
         return Collections.singletonList(pushTask);
     }
 
@@ -199,7 +207,7 @@ public class PushProcessor {
             return false;
         }
         final long span = prev.spanMillis();
-        if (span > sessionServerConfig.getClientNodeExchangeTimeOut() * 3) {
+        if (span > sessionServerConfig.getClientNodeExchangeTimeOut() * 2) {
             // force to remove the prev task
             pushingTasks.remove(pushingTaskKey);
             LOGGER.warn("[prevRunTooLong] prev={}, now={}", prev, task);
@@ -211,15 +219,17 @@ public class PushProcessor {
     }
 
     private boolean retry(PushTask task, String reason) {
-        // TODO config retrytimes
-        if (task.retryCount.incrementAndGet() <= 3) {
-            task.expireAfter(500);
-            if(firePush(task)) {
-                LOGGER.info("add retry for {}, {}", reason, task);
+        final int retry = task.retryCount.incrementAndGet();
+        if (retry <= sessionServerConfig.getPushTaskRetryTimes()) {
+            final int backoffMillis = getRetryBackoffTime(retry);
+            task.expireAfter(backoffMillis);
+            if (firePush(task)) {
+                LOGGER.info("add retry for {}, {}, retry={}, backoff={}", reason, task.taskID,
+                    retry, backoffMillis);
                 return true;
             }
         }
-        LOGGER.info("skip retry for {}, {}", reason, task);
+        LOGGER.info("skip retry for {}, {}, retry={}", reason, task.taskID, retry);
         return false;
     }
 
@@ -239,7 +249,6 @@ public class PushProcessor {
         final Map<String, Subscriber> subscriberMap;
         final Subscriber              subscriber;
         final AtomicInteger           retryCount      = new AtomicInteger();
-
 
         PushTask(boolean noDelay, long pushVersion, String dataCenter, InetSocketAddress addr,
                  Map<String, Subscriber> subscriberMap, Map<String, Datum> datumMap,
@@ -265,11 +274,11 @@ public class PushProcessor {
             this.expireTimestamp = System.currentTimeMillis() + intervalMs;
         }
 
-        void updatePushTimestamp(){
+        void updatePushTimestamp() {
             this.pushTimestamp = System.currentTimeMillis();
         }
 
-        long spanMillis(){
+        long spanMillis() {
             return System.currentTimeMillis() - pushTimestamp;
         }
 
@@ -289,7 +298,8 @@ public class PushProcessor {
                 pushingTasks.put(pushingTaskKey, this);
                 clientNodeService.pushWithCallback(data, subscriber.getSourceAddress(),
                     new PushClientCallback(this, pushingTaskKey));
-                LOGGER.info("{}, pushing {}, subscribers={}", taskID, pushingTaskKey, subscriberMap.size());
+                LOGGER.info("{}, pushing {}, subscribers={}", taskID, pushingTaskKey,
+                    subscriberMap.size());
             } catch (Throwable e) {
                 // try to delete self
                 boolean cleaned = false;
@@ -315,19 +325,11 @@ public class PushProcessor {
 
         @Override
         public String toString() {
-            return "PushTask{" +
-                    "taskID=" + taskID +
-                    ", createTimestamp=" + createTimestamp +
-                    ", expireTimestamp=" + expireTimestamp +
-                    ", pushTimestamp=" + pushTimestamp +
-                    ", fetchSeqStart=" + fetchSeqStart +
-                    ", fetchSeqEnd=" + fetchSeqEnd +
-                    ", dataCenter='" + dataCenter +
-                    ", pushVersion=" + pushVersion +
-                    ", addr=" + addr +
-                    ", subscriber=" + subscriber +
-                    ", retryCount=" + retryCount +
-                    '}';
+            return "PushTask{" + "taskID=" + taskID + ", createTimestamp=" + createTimestamp
+                   + ", expireTimestamp=" + expireTimestamp + ", pushTimestamp=" + pushTimestamp
+                   + ", fetchSeqStart=" + fetchSeqStart + ", fetchSeqEnd=" + fetchSeqEnd
+                   + ", dataCenter='" + dataCenter + ", pushVersion=" + pushVersion + ", addr="
+                   + addr + ", subscriber=" + subscriber + ", retryCount=" + retryCount + '}';
         }
     }
 
@@ -359,7 +361,8 @@ public class PushProcessor {
                 // after removed=true, the value aslo in the map
                 cleaned = pushingTasks.remove(pushingTaskKey) != null;
             }
-            LOGGER.info("Push success, clean record={}, span={}, {}", cleaned, pushTask.spanMillis(), pushTask);
+            LOGGER.info("Push success, clean record={}, span={}, {}", cleaned,
+                pushTask.spanMillis(), pushTask);
         }
 
         @Override
@@ -369,26 +372,27 @@ public class PushProcessor {
                 // TODO should use remove(k, exceptV). but in some case,
                 // after removed=true, the value aslo in the map
                 cleaned = pushingTasks.remove(pushingTaskKey) != null;
-                if(channel.isConnected()) {
+                if (channel.isConnected()) {
                     retry(pushTask, "callbackErr");
-                }else{
-                    LOGGER.warn("{}, push.onException, channel is closed, {}", pushTask.taskID, pushingTaskKey);
+                } else {
+                    LOGGER.warn("{}, push.onException, channel is closed, {}", pushTask.taskID,
+                        pushingTaskKey);
                 }
             } catch (Throwable e) {
                 LOGGER.error("error push.onException, {}", pushTask, e);
             }
-            if(exception instanceof InvokeTimeoutException){
-                LOGGER.error("Push error timeout, clean record={}, span={}, {}",
-                        cleaned, pushTask.spanMillis(), pushTask);
-            }else {
-                LOGGER.error("Push error, clean record={}, span={}, {}",
-                        cleaned, pushTask.spanMillis(), pushTask, exception);
+            if (exception instanceof InvokeTimeoutException) {
+                LOGGER.error("Push error timeout, clean record={}, span={}, {}", cleaned,
+                    pushTask.spanMillis(), pushTask);
+            } else {
+                LOGGER.error("Push error, clean record={}, span={}, {}", cleaned,
+                    pushTask.spanMillis(), pushTask, exception);
             }
         }
 
         @Override
         public Executor getExecutor() {
-            return null;
+            return pushCallbackExecutor;
         }
     }
 
@@ -465,6 +469,23 @@ public class PushProcessor {
             return "PushingTaskKey{" + "addr=" + addr + ", dataInfoId='" + dataInfoId + '\''
                    + ", scopeEnum=" + scopeEnum + '}';
         }
+    }
+
+    private static final class CallRunHandler extends ThreadPoolExecutor.CallerRunsPolicy {
+        public void rejectedExecution(Runnable r, ThreadPoolExecutor e) {
+            super.rejectedExecution(r, e);
+            LOGGER.warn("push callback busy");
+        }
+    }
+
+    private int getRetryBackoffTime(int retry) {
+        final int initialSleepTime = sessionServerConfig.getPushDataTaskRetryFirstDelayMillis();
+        if (retry == 0) {
+            return initialSleepTime;
+        }
+        int increment = sessionServerConfig.getPushDataTaskRetryIncrementDelayMillis();
+        int result = initialSleepTime + (increment * (retry - 1));
+        return result >= 0L ? result : 0;
     }
 
 }

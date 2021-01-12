@@ -31,13 +31,11 @@ import com.alipay.sofa.registry.server.session.predicate.ZonePredicate;
 import com.google.common.collect.Lists;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Map;
 import java.util.function.Predicate;
 
 public class PushDataGenerator {
-    private static final Logger LOGGER = LoggerFactory.getLogger(PushDataGenerator.class);
+    private static final Logger      LOGGER = LoggerFactory.getLogger(PushDataGenerator.class);
 
     @Autowired
     private SessionServerConfig      sessionServerConfig;
@@ -77,9 +75,7 @@ public class PushDataGenerator {
         ret.setDataId(dataInfo.getDataId());
         ret.setInstanceId(dataInfo.getInstanceId());
         ret.setGroup(dataInfo.getDataType());
-        List<String> simples = new ArrayList<>(datumMap.size());
         for (Datum datum : datumMap.values()) {
-            simples.add(datum.simpleString());
             for (Publisher publisher : datum.getPubMap().values()) {
                 if (publisher instanceof AppPublisher) {
                     AppPublisher appPublisher = (AppPublisher) publisher;
@@ -93,7 +89,7 @@ public class PushDataGenerator {
                 }
             }
         }
-        LOGGER.info("merged {}, from {}", ret.simpleString(), simples);
+        LOGGER.info("merged {}, from {}", ret, datumMap);
         return ret;
     }
 }

@@ -53,8 +53,6 @@ public interface SessionServerConfig {
 
     String getSessionServerDataCenter();
 
-    int getReceivedDataMultiPushTaskRetryTimes();
-
     int getCancelDataTaskRetryTimes();
 
     long getCancelDataTaskRetryFirstDelay();
@@ -72,8 +70,6 @@ public interface SessionServerConfig {
     long getUnPublishDataTaskRetryFirstDelay();
 
     long getUnPublishDataTaskRetryIncrementDelay();
-
-    int getDataChangeFetchTaskRetryTimes();
 
     int getSubscriberRegisterFetchRetryTimes();
 
@@ -93,13 +89,17 @@ public interface SessionServerConfig {
 
     long getDataChangeExecutorKeepAliveTime();
 
-    int getPushTaskExecutorMinPoolSize();
-
-    int getPushTaskExecutorMaxPoolSize();
+    int getPushTaskExecutorPoolSize();
 
     int getPushTaskExecutorQueueSize();
 
-    long getPushTaskExecutorKeepAliveTime();
+    int getPushTaskRetryTimes();
+
+    int getPushDataTaskRetryFirstDelayMillis();
+
+    int getPushDataTaskRetryIncrementDelayMillis();
+
+    int getPushDataTaskDebouncingMillis();
 
     int getConnectClientExecutorMinPoolSize();
 
@@ -110,10 +110,6 @@ public interface SessionServerConfig {
     int getDataChangeFetchTaskMaxBufferSize();
 
     int getDataChangeFetchTaskWorkerSize();
-
-    int getPushDataTaskRetryFirstDelay();
-
-    long getPushDataTaskRetryIncrementDelay();
 
     String getBlacklistPubDataIdRegex();
 
@@ -150,4 +146,8 @@ public interface SessionServerConfig {
     Set<String> getMetaServerIpAddresses();
 
     boolean isEnableSessionLoadbalancePolicy();
+
+    int getSlotSyncMaxBufferSize();
+
+    int getSlotSyncWorkerSize();
 }

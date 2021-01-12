@@ -18,7 +18,6 @@ package com.alipay.sofa.registry.server.session.scheduler;
 
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
-import com.alipay.sofa.registry.metrics.TaskMetrics;
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
 import com.alipay.sofa.registry.server.shared.meta.MetaServerService;
 import com.alipay.sofa.registry.task.MetricsableThreadPoolExecutor;
@@ -41,12 +40,9 @@ public class ExecutorManager {
 
     private final ScheduledThreadPoolExecutor scheduler;
 
-    private final ThreadPoolExecutor          fetchDataExecutor;
-
     private final ThreadPoolExecutor          accessDataExecutor;
     private final ThreadPoolExecutor          dataChangeRequestExecutor;
     private final ThreadPoolExecutor          dataSlotSyncRequestExecutor;
-    private final ThreadPoolExecutor          pushTaskExecutor;
     private final ThreadPoolExecutor          connectClientExecutor;
     private final ThreadPoolExecutor          publishDataExecutor;
 
@@ -54,8 +50,6 @@ public class ExecutorManager {
     protected MetaServerService               metaServerService;
 
     private Map<String, ThreadPoolExecutor>   reportExecutors                    = new HashMap<>();
-
-    private static final String               PUSH_TASK_EXECUTOR                 = "PushTaskExecutor";
 
     private static final String               ACCESS_DATA_EXECUTOR               = "AccessDataExecutor";
 
@@ -71,9 +65,6 @@ public class ExecutorManager {
         scheduler = new ScheduledThreadPoolExecutor(sessionServerConfig.getSessionSchedulerPoolSize(),
                 new NamedThreadFactory("SessionScheduler"));
 
-        fetchDataExecutor = new ThreadPoolExecutor(1, 2/*CONFIG*/, 0, TimeUnit.SECONDS, new SynchronousQueue<>(),
-                new NamedThreadFactory("SessionScheduler-fetchData"));
-
         accessDataExecutor = reportExecutors.computeIfAbsent(ACCESS_DATA_EXECUTOR,
                 k -> new MetricsableThreadPoolExecutor(ACCESS_DATA_EXECUTOR,
                         sessionServerConfig.getAccessDataExecutorMinPoolSize(),
@@ -87,29 +78,20 @@ public class ExecutorManager {
                     LOGGER.error(msg);
                 }));
 
-        pushTaskExecutor = reportExecutors.computeIfAbsent(PUSH_TASK_EXECUTOR,
-                k -> new ThreadPoolExecutor(sessionServerConfig.getPushTaskExecutorMinPoolSize(),
-                        sessionServerConfig.getPushTaskExecutorMaxPoolSize(),
-                        sessionServerConfig.getPushTaskExecutorKeepAliveTime(), TimeUnit.SECONDS,
-                        new LinkedBlockingQueue<>(sessionServerConfig.getPushTaskExecutorQueueSize()),
-                        new NamedThreadFactory("PushTask-executor", true)));
-
-        TaskMetrics.getInstance().registerThreadExecutor(PUSH_TASK_EXECUTOR, pushTaskExecutor);
-
         dataChangeRequestExecutor = reportExecutors.computeIfAbsent(DATA_CHANGE_REQUEST_EXECUTOR,
                 k -> new MetricsableThreadPoolExecutor(DATA_CHANGE_REQUEST_EXECUTOR,
                         sessionServerConfig.getDataChangeExecutorMinPoolSize(),
                         sessionServerConfig.getDataChangeExecutorMaxPoolSize(),
                         sessionServerConfig.getDataChangeExecutorKeepAliveTime(), TimeUnit.SECONDS,
-                        new ArrayBlockingQueue<>(100000),
+                        new ArrayBlockingQueue<>(sessionServerConfig.getDataChangeExecutorQueueSize()),
                         new NamedThreadFactory("DataChangeRequestHandler-executor", true)));
 
         dataSlotSyncRequestExecutor = reportExecutors.computeIfAbsent(DATA_SLOT_MIGRATE_REQUEST_EXECUTOR,
                 k -> new MetricsableThreadPoolExecutor(DATA_SLOT_MIGRATE_REQUEST_EXECUTOR,
-                        12,
-                        24,
+                        sessionServerConfig.getSlotSyncWorkerSize(),
+                        sessionServerConfig.getSlotSyncWorkerSize(),
                         60, TimeUnit.SECONDS,
-                        new ArrayBlockingQueue<>(sessionServerConfig.getDataChangeExecutorQueueSize()),
+                        new ArrayBlockingQueue<>(sessionServerConfig.getSlotSyncMaxBufferSize()),
                         new NamedThreadFactory("DataSlotSyncRequestHandler-executor", true)));
 
         connectClientExecutor = reportExecutors.computeIfAbsent(CONNECT_CLIENT_EXECUTOR,
@@ -136,16 +118,8 @@ public class ExecutorManager {
             scheduler.shutdown();
         }
 
-        if (fetchDataExecutor != null && !fetchDataExecutor.isShutdown()) {
-            fetchDataExecutor.shutdown();
-        }
-
         if (accessDataExecutor != null && !accessDataExecutor.isShutdown()) {
             accessDataExecutor.shutdown();
-        }
-
-        if (pushTaskExecutor != null && !pushTaskExecutor.isShutdown()) {
-            pushTaskExecutor.shutdown();
         }
 
         if (dataChangeRequestExecutor != null && !dataChangeRequestExecutor.isShutdown()) {
@@ -171,10 +145,6 @@ public class ExecutorManager {
 
     public ThreadPoolExecutor getAccessDataExecutor() {
         return accessDataExecutor;
-    }
-
-    public ThreadPoolExecutor getPushTaskExecutor() {
-        return pushTaskExecutor;
     }
 
     public ThreadPoolExecutor getDataChangeRequestExecutor() {

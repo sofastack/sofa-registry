@@ -34,7 +34,7 @@ public class DatumCacheGenerator implements CacheGenerator {
      * DataNode service
      */
     @Autowired
-    private DataNodeService dataNodeService;
+    private DataNodeService     dataNodeService;
 
     @Override
     public Value generatePayload(Key key) {
@@ -46,8 +46,7 @@ public class DatumCacheGenerator implements CacheGenerator {
             String dataInfoId = datumKey.getDataInfoId();
             if (StringUtils.isNotBlank(dataCenter) && StringUtils.isNotBlank(dataInfoId)) {
                 Datum datum = dataNodeService.fetchDataCenter(dataInfoId, dataCenter);
-                LOGGER.info("generateCache {}, dataCenter={}, {}", dataInfoId, dataCenter,
-                        datum == null ? null : datum.simpleString());
+                LOGGER.info("generateCache {}, dataCenter={}, {}", dataInfoId, dataCenter, datum);
                 return new Value(datum);
             }
         }

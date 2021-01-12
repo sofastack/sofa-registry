@@ -111,7 +111,7 @@ public class ReceivedDataConverter {
         Map<String/*zone*/, List<DataBox>> swizzMap = new HashMap<>();
 
         Map<String, Publisher> publisherMap = datum.getPubMap();
-        if (publisherMap == null || publisherMap.isEmpty()) {
+        if (publisherMap.isEmpty()) {
             receivedData.setData(swizzMap);
             return receivedData;
         }
@@ -182,7 +182,7 @@ public class ReceivedDataConverter {
             Datum datum = entry.getValue();
 
             Map<String, Publisher> publisherMap = datum.getPubMap();
-            if (publisherMap == null || publisherMap.isEmpty()) {
+            if (publisherMap.isEmpty()) {
                 continue;
             }
 
@@ -241,7 +241,7 @@ public class ReceivedDataConverter {
             return null;
         }
         merge.setVersion(version);
-        merge.setPubMap(mergePublisherMap);
+        merge.addPublishers(mergePublisherMap);
         merge.setDataCenter(ValueConstants.DEFAULT_DATA_CENTER);
         return merge;
     }

@@ -25,7 +25,7 @@ import com.alipay.sofa.registry.remoting.exchange.message.Request;
  */
 public class RequestException extends RuntimeException {
 
-    private Request          request;
+    private Request request;
 
     /**
      * constructor
@@ -89,7 +89,7 @@ public class RequestException extends RuntimeException {
                 requestBodyStr = request.getRequestBody().getClass().getName();
             }
             sb.append("request url: ").append(request.getRequestUrl()).append(", body: ")
-                    .append(requestBodyStr).append(", ");
+                .append(requestBodyStr).append(", ");
         }
         sb.append(super.getMessage());
         return sb.toString();

@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alipay.sofa.registry.server.session.utils;
+package com.alipay.sofa.registry.server.shared.util;
 
 import com.alipay.sofa.registry.common.model.constants.ValueConstants;
 import com.alipay.sofa.registry.common.model.dataserver.Datum;
@@ -27,7 +27,10 @@ import java.util.Map;
  * @author xuanbei
  * @since 2019/2/12
  */
-public class DatumUtils {
+public final class DatumUtils {
+    private DatumUtils() {
+    }
+
     /**
      * create new datum when parameter is null.
      *
@@ -42,7 +45,6 @@ public class DatumUtils {
             datum.setInstanceId(subscriber.getInstanceId());
             datum.setGroup(subscriber.getGroup());
             datum.setVersion(ValueConstants.DEFAULT_NO_DATUM_VERSION);
-            datum.setPubMap(new HashMap<>());
             datum.setDataCenter(ValueConstants.DEFAULT_DATA_CENTER);
         }
         return datum;

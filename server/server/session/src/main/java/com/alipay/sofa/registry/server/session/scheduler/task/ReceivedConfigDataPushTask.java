@@ -134,11 +134,11 @@ public class ReceivedConfigDataPushTask extends AbstractSessionTask {
     public String toString() {
         return "RECEIVED_DATA_CONFIG_PUSH_TASK{" + "taskId='" + getTaskId() + '\''
                + ", receivedConfigData=" + receivedConfigData + ", url=" + url + ", retry='"
-               + sessionServerConfig.getReceivedDataMultiPushTaskRetryTimes() + '\'' + '}';
+               + sessionServerConfig.getPushTaskRetryTimes() + '\'' + '}';
     }
 
     @Override
     public boolean checkRetryTimes() {
-        return checkRetryTimes(sessionServerConfig.getReceivedDataMultiPushTaskRetryTimes());
+        return checkRetryTimes(sessionServerConfig.getPushTaskRetryTimes());
     }
 }

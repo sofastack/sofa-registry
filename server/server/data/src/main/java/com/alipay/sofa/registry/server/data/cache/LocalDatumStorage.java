@@ -96,7 +96,7 @@ public final class LocalDatumStorage implements DatumStorage {
         }
         Map<String, Map<String, Publisher>> map = Maps.newHashMap();
         Map<String, Datum> datumMap = groups.getAllDatum();
-        datumMap.values().forEach(d -> map.put(d.getDataInfoId(), d.publisherSnapshot()));
+        datumMap.values().forEach(d -> map.put(d.getDataInfoId(), d.getPubMap()));
         return map;
     }
 

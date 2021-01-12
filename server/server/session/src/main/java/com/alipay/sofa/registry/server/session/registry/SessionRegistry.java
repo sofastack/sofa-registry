@@ -121,7 +121,7 @@ public class SessionRegistry implements Registry {
 
     private final VersionWatchDog     versionWatchDog = new VersionWatchDog();
 
-    private volatile boolean          scanVerEnable = false;
+    private volatile boolean          scanVerEnable   = false;
 
     @PostConstruct
     public void init() {

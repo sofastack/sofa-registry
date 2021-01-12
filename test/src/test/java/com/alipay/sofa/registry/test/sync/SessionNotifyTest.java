@@ -160,7 +160,7 @@ public class SessionNotifyTest extends BaseIntegrationTest {
         datum.setGroup(DEFAULT_GROUP);
         //no datum set version current timestamp
         datum.setVersion(DatumVersionUtil.nextId());
-        datum.setPubMap(publisherMap);
+        datum.addPublishers(publisherMap);
         datum.setDataCenter(ValueConstants.DEFAULT_DATA_CENTER);
 
         // open sync port and connect it
