@@ -23,6 +23,7 @@ import com.alipay.sofa.registry.common.model.slot.func.SlotFunction;
 import com.alipay.sofa.registry.common.model.slot.func.SlotFunctionRegistry;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
+import org.apache.commons.lang.StringUtils;
 
 /**
  * @author yuzhi.lyz
@@ -71,10 +72,17 @@ public final class SlotTableCacheImpl implements SlotTableCache {
     public synchronized boolean updateSlotTable(SlotTable slotTable) {
         final long curEpoch = this.slotTable.getEpoch();
         if (curEpoch >= slotTable.getEpoch()) {
+            LOGGER.info("skip update, current={}, update={}", curEpoch, slotTable.getEpoch());
             return false;
         }
         this.slotTable = slotTable;
-        LOGGER.info("updating slot table, expect={}, current={}", slotTable.getEpoch(), curEpoch);
+        for (Slot slot : this.slotTable.getSlots()) {
+            if (StringUtils.isBlank(slot.getLeader())) {
+                LOGGER.error("[NoLeader] {}", slot);
+            }
+        }
+        LOGGER.info("updating slot table, expect={}, current={}, {}", slotTable.getEpoch(),
+            curEpoch, this.slotTable);
         return true;
     }
 
