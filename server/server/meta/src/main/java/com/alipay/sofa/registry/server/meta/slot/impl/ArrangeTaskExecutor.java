@@ -21,7 +21,6 @@ import com.alipay.sofa.registry.exception.InitializeException;
 import com.alipay.sofa.registry.exception.SofaRegistryRuntimeException;
 import com.alipay.sofa.registry.lifecycle.impl.AbstractLifecycle;
 import com.alipay.sofa.registry.lifecycle.impl.LifecycleHelper;
-import com.alipay.sofa.registry.server.meta.slot.RebalanceTask;
 import com.alipay.sofa.registry.util.DefaultExecutorFactory;
 import com.alipay.sofa.registry.util.OsUtils;
 
@@ -44,15 +43,15 @@ import java.util.function.BiConsumer;
 
 public class ArrangeTaskExecutor extends AbstractLifecycle {
 
-    private volatile ExecutorService     executors;
+    private volatile ExecutorService executors;
 
-    private BlockingQueue<Runnable> tasks      = new LinkedBlockingQueue<>();
+    private BlockingQueue<Runnable>  tasks      = new LinkedBlockingQueue<>();
 
-    private final AtomicLong             totalTasks = new AtomicLong();
+    private final AtomicLong         totalTasks = new AtomicLong();
 
-    private volatile Runnable       currentTask;
+    private volatile Runnable        currentTask;
 
-    private AtomicBoolean                isRunning  = new AtomicBoolean(false);
+    private AtomicBoolean            isRunning  = new AtomicBoolean(false);
 
     @PostConstruct
     public void postConstruct() throws Exception {

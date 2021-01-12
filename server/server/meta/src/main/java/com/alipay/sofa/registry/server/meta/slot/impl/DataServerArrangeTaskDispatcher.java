@@ -202,8 +202,8 @@ public class DataServerArrangeTaskDispatcher extends AbstractLifecycleObservable
         @Override
         public void run() {
             cleanCache();
-            arrangeTaskExecutor.offer(new ReassignTask(slotManager,
-                    defaultSlotManager.getRaftSlotManager(), dataServerManager));
+            arrangeTaskExecutor.offer(new ReassignTask(slotManager, defaultSlotManager
+                .getRaftSlotManager(), dataServerManager));
         }
 
         public void serverAlive() {
