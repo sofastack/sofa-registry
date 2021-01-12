@@ -20,7 +20,6 @@ import com.alipay.sofa.registry.common.model.slot.Slot;
 import com.alipay.sofa.registry.common.model.slot.SlotConfig;
 import com.alipay.sofa.registry.common.model.slot.SlotTable;
 import com.google.common.collect.Maps;
-import javafx.util.Builder;
 
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;

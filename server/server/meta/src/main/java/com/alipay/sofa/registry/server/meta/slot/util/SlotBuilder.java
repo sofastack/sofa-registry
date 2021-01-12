@@ -19,7 +19,6 @@ package com.alipay.sofa.registry.server.meta.slot.util;
 import com.alipay.sofa.registry.common.model.slot.Slot;
 import com.alipay.sofa.registry.exception.SofaRegistryRuntimeException;
 import com.alipay.sofa.registry.util.DatumVersionUtil;
-import javafx.util.Builder;
 import org.apache.commons.lang.StringUtils;
 import org.glassfish.jersey.internal.guava.Sets;
 

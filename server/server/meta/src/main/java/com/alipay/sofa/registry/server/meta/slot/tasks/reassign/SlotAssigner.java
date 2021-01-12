@@ -24,12 +24,12 @@ import com.alipay.sofa.registry.common.model.slot.SlotTable;
 import com.alipay.sofa.registry.lifecycle.Initializable;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
+import com.alipay.sofa.registry.server.meta.slot.util.Builder;
 import com.alipay.sofa.registry.server.meta.slot.util.DataNodeComparator;
 import com.alipay.sofa.registry.server.meta.slot.util.SlotBuilder;
 import com.alipay.sofa.registry.server.meta.slot.util.SlotTableBuilder;
 import com.alipay.sofa.registry.server.shared.comparator.ComparatorVisitor;
 import com.alipay.sofa.registry.util.MathUtils;
-import javafx.util.Builder;
 
 import java.util.Collection;
 import java.util.HashSet;
