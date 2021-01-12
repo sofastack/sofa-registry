@@ -182,22 +182,13 @@ public class Subscriber extends BaseInfo {
         final StringBuilder sb = new StringBuilder("scope=");
         sb.append(scope).append(",");
         sb.append("elementType=").append(elementType).append(",");
-        sb.append("pushVersion=").append(lastPushContexts);
+        sb.append("ctx=").append(lastPushContexts);
         return sb.toString();
     }
 
-    /**
-     * @see Object#toString()
-     */
-    @Override
-    public String toString() {
-        final StringBuilder sb = new StringBuilder("Subscriber{");
-        sb.append("scope=").append(scope);
-        sb.append(", elementType=").append(elementType);
-        sb.append(", lastPushContexts=").append(lastPushContexts);
-        sb.append(", super=").append(super.toString());
-        sb.append('}');
-        return sb.toString();
+    public String printPushContext() {
+        final StringBuilder sb = new StringBuilder(128);
+        return sb.append(lastPushContexts).toString();
     }
 
     /**
