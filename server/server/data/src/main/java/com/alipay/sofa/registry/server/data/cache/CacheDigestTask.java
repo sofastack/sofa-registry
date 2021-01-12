@@ -62,7 +62,7 @@ public class CacheDigestTask {
                             String dataInfoId = dataInfoEntry.getKey();
                             Datum data = dataInfoEntry.getValue();
                             Map<String, Publisher> pubMap = data.getPubMap();
-                            StringBuilder pubStr = new StringBuilder();
+                            StringBuilder pubStr = new StringBuilder(512);
                             if (!CollectionUtils.isEmpty(pubMap)) {
                                 for (Publisher publisher : pubMap.values()) {
                                     pubStr.append(logPublisher(publisher)).append(";");

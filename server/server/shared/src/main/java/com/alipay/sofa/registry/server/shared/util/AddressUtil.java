@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alipay.sofa.registry.server.session.utils;
+package com.alipay.sofa.registry.server.shared.util;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -26,7 +26,9 @@ import java.util.Map;
  * @author xiaojian.xj
  * @version $Id: AddressUtil.java, v 0.1 2020年12月13日 15:18 xiaojian.xj Exp $
  */
-public class AddressUtil {
+public final class AddressUtil {
+    private AddressUtil() {
+    }
 
     //public static String buildURL(String address, Map<String, Collection<String>> params) {
     //    if (CollectionUtils.isEmpty(params)) {

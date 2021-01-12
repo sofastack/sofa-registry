@@ -17,6 +17,7 @@
 package com.alipay.sofa.registry.server.data.bootstrap;
 
 import com.alipay.sofa.registry.server.shared.env.ServerEnv;
+import com.alipay.sofa.registry.util.OsUtils;
 import org.apache.commons.lang.builder.ToStringBuilder;
 import org.apache.commons.lang.builder.ToStringStyle;
 import org.springframework.boot.context.properties.ConfigurationProperties;
@@ -58,17 +59,21 @@ public class DataServerConfig {
 
     private volatile Set<String> metaIps                                      = null;
 
-    private int                  getDataExecutorMinPoolSize                   = 80;
+    private int                  getDataExecutorMinPoolSize                   = OsUtils
+                                                                                  .getCpuCount() * 5;
 
-    private int                  getDataExecutorMaxPoolSize                   = 400;
+    private int                  getDataExecutorMaxPoolSize                   = OsUtils
+                                                                                  .getCpuCount() * 10;
 
     private int                  getDataExecutorQueueSize                     = 10000;
 
     private long                 getDataExecutorKeepAliveTime                 = 60;
 
-    private int                  notifyDataSyncExecutorMinPoolSize            = 80;
+    private int                  notifyDataSyncExecutorMinPoolSize            = OsUtils
+                                                                                  .getCpuCount() * 5;
 
-    private int                  notifyDataSyncExecutorMaxPoolSize            = 400;
+    private int                  notifyDataSyncExecutorMaxPoolSize            = OsUtils
+                                                                                  .getCpuCount() * 10;
 
     private int                  notifyDataSyncExecutorQueueSize              = 700;
 
@@ -80,13 +85,16 @@ public class DataServerConfig {
 
     private int                  notifySessionRetryTimes                      = 5;
 
-    private int                  publishExecutorMinPoolSize                   = 200;
+    private int                  publishExecutorMinPoolSize                   = OsUtils
+                                                                                  .getCpuCount() * 5;
 
-    private int                  publishExecutorMaxPoolSize                   = 400;
+    private int                  publishExecutorMaxPoolSize                   = OsUtils
+                                                                                  .getCpuCount() * 10;
 
     private int                  publishExecutorQueueSize                     = 10000;
 
-    private int                  sessionServerNotifierRetryExecutorThreadSize = 10;
+    private int                  sessionServerNotifierRetryExecutorThreadSize = OsUtils
+                                                                                  .getCpuCount() * 2;
 
     private int                  sessionServerNotifierRetryExecutorQueueSize  = 10000;
 
@@ -96,11 +104,13 @@ public class DataServerConfig {
 
     private int                  slotMigratingExecutorThreadSize              = 8;
 
-    private int                  slotLeaderSyncSessionExecutorThreadSize      = 12;
+    private int                  slotLeaderSyncSessionExecutorThreadSize      = OsUtils
+                                                                                  .getCpuCount() * 2;
     private int                  slotLeaderSyncSessionExecutorQueueSize       = 40000;
     private volatile int         slotLeaderSyncSessionIntervalSec             = 6;
 
-    private int                  slotFollowerSyncLeaderExecutorThreadSize     = 4;
+    private int                  slotFollowerSyncLeaderExecutorThreadSize     = OsUtils
+                                                                                  .getCpuCount();
     private int                  slotFollowerSyncLeaderExecutorQueueSize      = 10000;
     private volatile int         slotFollowerSyncLeaderIntervalMs             = 1000 * 30;
 
@@ -109,13 +119,17 @@ public class DataServerConfig {
 
     private volatile int         slotSyncPublisherMaxNum                      = 512;
 
-    private int                  slotSyncRequestExecutorMinPoolSize           = 32;
+    private int                  slotSyncRequestExecutorMinPoolSize           = OsUtils
+                                                                                  .getCpuCount() * 4;
 
-    private int                  slotSyncRequestExecutorMaxPoolSize           = 32;
+    private int                  slotSyncRequestExecutorMaxPoolSize           = OsUtils
+                                                                                  .getCpuCount() * 4;
 
     private int                  slotSyncRequestExecutorQueueSize             = 1000;
 
     private int                  schedulerHeartbeatIntervalSec                = 3;
+
+    private boolean              enableTestApi                                = false;
 
     /**
      * constructor
@@ -852,6 +866,14 @@ public class DataServerConfig {
      */
     public void setSyncSessionPort(int syncSessionPort) {
         this.syncSessionPort = syncSessionPort;
+    }
+
+    public boolean isEnableTestApi() {
+        return enableTestApi;
+    }
+
+    public void setEnableTestApi(boolean enableTestApi) {
+        this.enableTestApi = enableTestApi;
     }
 
     @Override

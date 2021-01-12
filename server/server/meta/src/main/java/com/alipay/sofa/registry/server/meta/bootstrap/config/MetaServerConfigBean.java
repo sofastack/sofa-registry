@@ -54,9 +54,15 @@ public class MetaServerConfigBean implements MetaServerConfig {
 
     private int                raftElectionTimeout                             = 1000;
 
-    private int                initialSlotTableLockTimeMilli                   = Integer.getInteger("init.slot.talbe.wait.milli", 1000);
+    private int                initialSlotTableLockTimeMilli                   = Integer
+                                                                                   .getInteger(
+                                                                                       "init.slot.talbe.wait.milli",
+                                                                                       1000);
 
-    private int                waitForDataServerRestartTimeMilli               = Integer.getInteger("data.server.recover.interval.milli", 3000);
+    private int                waitForDataServerRestartTimeMilli               = Integer
+                                                                                   .getInteger(
+                                                                                       "data.server.recover.interval.milli",
+                                                                                       3000);
 
     /**
      * Whether to enable metrics for node.
@@ -99,7 +105,10 @@ public class MetaServerConfigBean implements MetaServerConfig {
 
     private int                expireCheckIntervalMilli                        = 5000;
 
-    private int                dataNodeNums = Integer.getInteger("data.node.nums", 1);
+    private int                dataNodeNums                                    = Integer
+                                                                                   .getInteger(
+                                                                                       "data.node.nums",
+                                                                                       1);
 
     /**
      * Gets get session server port.

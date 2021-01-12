@@ -24,7 +24,7 @@ import com.alipay.sofa.registry.common.model.store.DataInfo;
 import com.alipay.sofa.registry.common.model.store.Publisher;
 import com.alipay.sofa.registry.core.model.AppRevisionInterface;
 import com.alipay.sofa.registry.server.session.cache.AppRevisionCacheRegistry;
-import com.alipay.sofa.registry.server.session.utils.AddressUtil;
+import com.alipay.sofa.registry.server.shared.util.AddressUtil;
 import com.google.common.collect.ArrayListMultimap;
 import org.springframework.util.CollectionUtils;
 

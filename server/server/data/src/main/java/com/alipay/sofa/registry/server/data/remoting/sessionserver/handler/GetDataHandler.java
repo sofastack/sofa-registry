@@ -65,11 +65,11 @@ public class GetDataHandler extends AbstractDataHandler<GetDataRequest> {
             return SlotAccessGenericResponse.failedResponse(slotAccess);
         }
 
-        Map<String, Datum> datumMap = datumCache.getDatumGroupByDataCenter(request.getDataCenter(), dataInfoId);
+        Map<String, Datum> datumMap = datumCache.getDatumGroupByDataCenter(request.getDataCenter(),
+            dataInfoId);
         final String localDataCenter = dataServerConfig.getLocalDataCenter();
         final Datum localDatum = datumMap.get(localDataCenter);
-        LOGGER.info("get datum {} from {}, {}", dataInfoId, localDataCenter,
-                localDatum == null ? null : localDatum.simpleString());
+        LOGGER.info("get datum {} from {}, {}", dataInfoId, localDataCenter, localDatum);
         return SlotAccessGenericResponse.successResponse(slotAccess, datumMap);
     }
 

@@ -74,7 +74,8 @@ public abstract class AbstractDataManager<T extends BaseInfo> implements
         T dataToDelete = dataMap.remove(registerId);
 
         if (dataToDelete == null) {
-            logger.warn("Delete failed because is not registered for {}, {}", dataInfoId, registerId);
+            logger.warn("Delete failed because is not registered for {}, {}", dataInfoId,
+                registerId);
         }
         return dataToDelete != null;
     }

@@ -28,7 +28,7 @@ import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
 import com.alipay.sofa.registry.server.session.cache.*;
 import com.alipay.sofa.registry.server.session.store.Interests;
-import com.alipay.sofa.registry.server.session.utils.DatumUtils;
+import com.alipay.sofa.registry.server.shared.util.DatumUtils;
 import com.alipay.sofa.registry.task.KeyedThreadPoolExecutor;
 import com.alipay.sofa.registry.util.DatumVersionUtil;
 import com.google.common.collect.Lists;
@@ -67,8 +67,9 @@ public class FirePushService {
 
     @PostConstruct
     public void init() {
-        //TODO
-        fetchExecutor = new KeyedThreadPoolExecutor("FetchExecutor", 4, 10000);
+        fetchExecutor = new KeyedThreadPoolExecutor("FetchExecutor",
+            sessionServerConfig.getDataChangeFetchTaskWorkerSize(),
+            sessionServerConfig.getDataChangeFetchTaskMaxBufferSize());
     }
 
     public boolean fireOnChange(String dataCenter, String dataInfoId, long expectVersion) {

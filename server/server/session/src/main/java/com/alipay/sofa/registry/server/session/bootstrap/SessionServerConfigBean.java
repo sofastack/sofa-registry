@@ -21,6 +21,7 @@ import java.util.Set;
 import java.util.regex.Pattern;
 
 import com.alipay.sofa.registry.server.shared.env.ServerEnv;
+import com.alipay.sofa.registry.util.OsUtils;
 import org.apache.commons.lang.builder.ToStringBuilder;
 import org.apache.commons.lang.builder.ToStringStyle;
 import org.springframework.boot.context.properties.ConfigurationProperties;
@@ -37,164 +38,138 @@ public class SessionServerConfigBean implements SessionServerConfig {
     /**
      * The constant PREFIX.
      */
-    public static final String   PREFIX                                  = "session.server";
+    public static final String   PREFIX                                = "session.server";
 
-    private int                  serverPort                              = 9600;
+    private int                  serverPort                            = 9600;
 
-    private int                  syncSessionPort                         = 9602;
+    private int                  syncSessionPort                       = 9602;
 
-    private int                  metaServerPort                          = 9610;
+    private int                  metaServerPort                        = 9610;
 
-    private int                  dataServerPort                          = 9620;
+    private int                  dataServerPort                        = 9620;
 
     private int                  httpServerPort;
 
-    private int                  schedulerHeartbeatIntervalSec           = 3;
+    private int                  schedulerHeartbeatIntervalSec         = 3;
 
-    private int                  schedulerCleanInvalidClientTimeOut      = 3;
+    private int                  cancelDataTaskRetryTimes              = 2;
 
-    private int                  schedulerCleanInvalidClientFirstDelay   = 10;
+    private long                 cancelDataTaskRetryFirstDelay         = 500;
 
-    private int                  schedulerCleanInvalidClientBackOffBound = 5;
+    private long                 cancelDataTaskRetryIncrementDelay     = 500;
 
-    private int                  cancelDataTaskRetryTimes                = 2;
+    private int                  publishDataTaskRetryTimes             = 2;
 
-    private long                 cancelDataTaskRetryFirstDelay           = 500;
+    private long                 publishDataTaskRetryFirstDelay        = 3000;
 
-    private long                 cancelDataTaskRetryIncrementDelay       = 500;
+    private long                 publishDataTaskRetryIncrementDelay    = 5000;
 
-    private int                  publishDataTaskRetryTimes               = 2;
+    private int                  unPublishDataTaskRetryTimes           = 2;
 
-    private long                 publishDataTaskRetryFirstDelay          = 3000;
+    private long                 unPublishDataTaskRetryFirstDelay      = 3000;
 
-    private long                 publishDataTaskRetryIncrementDelay      = 5000;
+    private long                 unPublishDataTaskRetryIncrementDelay  = 5000;
 
-    private int                  unPublishDataTaskRetryTimes             = 2;
+    private int                  subscriberRegisterFetchRetryTimes     = 3;
 
-    private long                 unPublishDataTaskRetryFirstDelay        = 3000;
+    private int                  accessDataExecutorMinPoolSize         = OsUtils.getCpuCount() * 10;
 
-    private long                 unPublishDataTaskRetryIncrementDelay    = 5000;
+    private int                  accessDataExecutorMaxPoolSize         = OsUtils.getCpuCount() * 20;
 
-    private int                  dataChangeFetchTaskRetryTimes           = 3;
+    private int                  accessDataExecutorQueueSize           = 10000;
 
-    private int                  subscriberRegisterFetchRetryTimes       = 3;
+    private long                 accessDataExecutorKeepAliveTime       = 60;
 
-    private int                  receivedDataMultiPushTaskRetryTimes     = 3;
+    private int                  dataChangeExecutorMinPoolSize         = OsUtils.getCpuCount() * 2;
 
-    private int                  defaultSessionExecutorMinPoolSize       = cpus();
+    private int                  dataChangeExecutorMaxPoolSize         = OsUtils.getCpuCount() * 3;
 
-    private int                  defaultSessionExecutorMaxPoolSize       = cpus() * 5;      //5*CPUs by default
+    private int                  dataChangeExecutorQueueSize           = 20000;
 
-    private long                 defaultSessionExecutorKeepAliveTime     = 60;
+    private long                 dataChangeExecutorKeepAliveTime       = 60;
 
-    private int                  accessDataExecutorMinPoolSize           = 100;
+    private int                  connectClientExecutorMinPoolSize      = OsUtils.getCpuCount();
 
-    private int                  accessDataExecutorMaxPoolSize           = 400;
+    private int                  connectClientExecutorMaxPoolSize      = OsUtils.getCpuCount();
 
-    private int                  accessDataExecutorQueueSize             = 10000;
+    private int                  connectClientExecutorQueueSize        = 2000;
 
-    private long                 accessDataExecutorKeepAliveTime         = 60;
+    private int                  dataChangeFetchTaskMaxBufferSize      = 10000;
 
-    private int                  pushTaskExecutorMinPoolSize             = 40;
+    private int                  dataChangeFetchTaskWorkerSize         = OsUtils.getCpuCount() * 2;
 
-    private int                  pushTaskExecutorMaxPoolSize             = 400;
+    private int                  slotSyncMaxBufferSize                 = 5000;
 
-    private int                  pushTaskExecutorQueueSize               = 100000;
+    private int                  slotSyncWorkerSize                    = OsUtils.getCpuCount() * 4;
 
-    private long                 pushTaskExecutorKeepAliveTime           = 60;
+    private int                  clientNodeExchangeTimeOut             = 1000;                      //time out cause netty HashedWheelTimer occupy a lot of mem
 
-    private int                  dataChangeExecutorMinPoolSize           = 40;
+    private int                  dataNodeExchangeTimeOut               = 3000;
 
-    private int                  dataChangeExecutorMaxPoolSize           = 400;
+    private int                  dataNodeExchangeForFetchDatumTimeOut  = 5000;
 
-    private int                  dataChangeExecutorQueueSize             = 100000;
+    private int                  metaNodeExchangeTimeOut               = 3000;
 
-    private long                 dataChangeExecutorKeepAliveTime         = 60;
+    private int                  pushTaskExecutorPoolSize              = OsUtils.getCpuCount() * 3;
 
-    private int                  connectClientExecutorMinPoolSize        = 60;
+    private int                  pushTaskExecutorQueueSize             = 20000;
 
-    private int                  connectClientExecutorMaxPoolSize        = 400;
+    private int                  pushDataTaskRetryFirstDelayMillis     = 500;
 
-    private int                  connectClientExecutorQueueSize          = 10000;
+    private int                  pushDataTaskRetryIncrementDelayMillis = 500;
 
-    private int                  dataChangeFetchTaskMaxBufferSize        = 1000000;
+    private int                  pushDataTaskDebouncingMillis          = 500;
 
-    private int                  dataChangeFetchTaskWorkerSize           = 100;
+    private int                  pushTaskRetryTimes                    = 3;
 
-    private int                  clientNodeExchangeTimeOut               = 1000;            //time out cause netty HashedWheelTimer occupy a lot of mem
+    private int                  publishDataExecutorMinPoolSize        = OsUtils.getCpuCount() * 10;
 
-    private int                  dataNodeExchangeTimeOut                 = 3000;
+    private int                  publishDataExecutorMaxPoolSize        = OsUtils.getCpuCount() * 20;
 
-    private int                  dataNodeExchangeForFetchDatumTimeOut    = 5000;
+    private int                  publishDataExecutorQueueSize          = 10000;
 
-    private int                  metaNodeExchangeTimeOut                 = 3000;
+    private long                 publishDataExecutorKeepAliveTime      = 60;
 
-    private int                  pushDataTaskRetryFirstDelay             = 500;
+    private int                  schedulerFetchDataVersionIntervalMs   = 1000 * 2;
 
-    private long                 pushDataTaskRetryIncrementDelay         = 500;
-
-    private long                 pushTaskConfirmWaitTimeout              = 10000;
-
-    private int                  pushTaskConfirmCheckWheelTicksSize      = 1024;
-
-    private int                  pushTaskConfirmCheckWheelTicksDuration  = 100;
-
-    private int                  pushTaskConfirmCheckExecutorQueueSize   = 10000;
-
-    private int                  pushTaskConfirmCheckExecutorThreadSize  = 10;
-
-    private int                  publishDataExecutorMinPoolSize          = 100;
-
-    private int                  publishDataExecutorMaxPoolSize          = 400;
-
-    private int                  publishDataExecutorQueueSize            = 10000;
-
-    private long                 publishDataExecutorKeepAliveTime        = 60;
-
-    private int                  schedulerFetchDataVersionIntervalMs     = 1000 * 2;
-
-    private double               accessLimitRate                         = 100000.0;
+    private double               accessLimitRate                       = 100000.0;
 
     private String               sessionServerRegion;
 
     private String               sessionServerDataCenter;
 
-    private volatile boolean     stopPushSwitch                          = false;
+    private volatile boolean     stopPushSwitch                        = false;
 
     //begin config for enterprise version
 
     /**
      * forever close push zone，such as:RZBETA
      */
-    private String               invalidForeverZones                     = "";
+    private String               invalidForeverZones                   = "";
     /**
      * config regex,exception to the rule of forever close push zone
      */
-    private String               invalidIgnoreDataidRegex                = "";
+    private String               invalidIgnoreDataidRegex              = "";
 
     private Set<String>          invalidForeverZonesSet;
 
-    private Pattern              invalidIgnoreDataIdPattern              = null;
+    private Pattern              invalidIgnoreDataIdPattern            = null;
 
-    private String               blacklistPubDataIdRegex                 = "";
+    private String               blacklistPubDataIdRegex               = "";
 
-    private String               blacklistSubDataIdRegex                 = "";
+    private String               blacklistSubDataIdRegex               = "";
 
-    private int                  renewAndSnapshotSilentPeriodSec         = 20;
+    private int                  dataNodeRetryExecutorQueueSize        = 1000000;
 
-    private int                  writeDataAcceptorQueueSize              = 10000;
+    private int                  dataNodeRetryExecutorThreadSize       = 100;
 
-    private int                  dataNodeRetryExecutorQueueSize          = 1000000;
+    private int                  dataClientConnNum                     = 10;
 
-    private int                  dataNodeRetryExecutorThreadSize         = 100;
+    private int                  sessionSchedulerPoolSize              = 6;
 
-    private int                  dataClientConnNum                       = 10;
+    private int                  slotSyncPublisherMaxNum               = 512;
 
-    private int                  sessionSchedulerPoolSize                = 6;
-
-    private int                  slotSyncPublisherMaxNum                 = 512;
-
-    private boolean              enableSessionLoadbalancePolicy          = false;
+    private boolean              enableSessionLoadbalancePolicy        = false;
 
     //end config for enterprise version
 
@@ -247,42 +222,6 @@ public class SessionServerConfigBean implements SessionServerConfig {
      */
     public void setDataNodeRetryExecutorQueueSize(int dataNodeRetryExecutorQueueSize) {
         this.dataNodeRetryExecutorQueueSize = dataNodeRetryExecutorQueueSize;
-    }
-
-    /**
-     * Getter method for property <tt>writeDataAcceptorQueueSize</tt>.
-     *
-     * @return property value of writeDataAcceptorQueueSize
-     */
-    public int getWriteDataAcceptorQueueSize() {
-        return writeDataAcceptorQueueSize;
-    }
-
-    /**
-     * Setter method for property <tt>writeDataAcceptorQueueSize </tt>.
-     *
-     * @param writeDataAcceptorQueueSize value to be assigned to property writeDataAcceptorQueueSize
-     */
-    public void setWriteDataAcceptorQueueSize(int writeDataAcceptorQueueSize) {
-        this.writeDataAcceptorQueueSize = writeDataAcceptorQueueSize;
-    }
-
-    /**
-     * Getter method for property <tt>renewAndSnapshotSilentPeriodSec</tt>.
-     *
-     * @return property value of renewAndSnapshotSilentPeriodSec
-     */
-    public int getRenewAndSnapshotSilentPeriodSec() {
-        return renewAndSnapshotSilentPeriodSec;
-    }
-
-    /**
-     * Setter method for property <tt>renewAndSnapshotSilentPeriodSec </tt>.
-     *
-     * @param renewAndSnapshotSilentPeriodSec value to be assigned to property renewAndSnapshotSilentPeriodSec
-     */
-    public void setRenewAndSnapshotSilentPeriodSec(int renewAndSnapshotSilentPeriodSec) {
-        this.renewAndSnapshotSilentPeriodSec = renewAndSnapshotSilentPeriodSec;
     }
 
     /**
@@ -499,42 +438,13 @@ public class SessionServerConfigBean implements SessionServerConfig {
         this.unPublishDataTaskRetryIncrementDelay = unPublishDataTaskRetryIncrementDelay;
     }
 
-    /**
-     * Getter method for property <tt>receivedDataMultiPushTaskRetryTimes</tt>.
-     *
-     * @return property value of receivedDataMultiPushTaskRetryTimes
-     */
     @Override
-    public int getReceivedDataMultiPushTaskRetryTimes() {
-        return receivedDataMultiPushTaskRetryTimes;
+    public int getPushTaskRetryTimes() {
+        return pushTaskRetryTimes;
     }
 
-    /**
-     * Setter method for property <tt>receivedDataMultiPushTaskRetryTimes</tt>.
-     *
-     * @param receivedDataMultiPushTaskRetryTimes value to be assigned to property receivedDataMultiPushTaskRetryTimes
-     */
-    public void setReceivedDataMultiPushTaskRetryTimes(int receivedDataMultiPushTaskRetryTimes) {
-        this.receivedDataMultiPushTaskRetryTimes = receivedDataMultiPushTaskRetryTimes;
-    }
-
-    /**
-     * Getter method for property <tt>dataChangeFetchTaskRetryTimes</tt>.
-     *
-     * @return property value of dataChangeFetchTaskRetryTimes
-     */
-    @Override
-    public int getDataChangeFetchTaskRetryTimes() {
-        return dataChangeFetchTaskRetryTimes;
-    }
-
-    /**
-     * Setter method for property <tt>dataChangeFetchTaskRetryTimes</tt>.
-     *
-     * @param dataChangeFetchTaskRetryTimes value to be assigned to property dataChangeFetchTaskRetryTimes
-     */
-    public void setDataChangeFetchTaskRetryTimes(int dataChangeFetchTaskRetryTimes) {
-        this.dataChangeFetchTaskRetryTimes = dataChangeFetchTaskRetryTimes;
+    public void setPushTaskRetryTimes(int pushTaskRetryTimes) {
+        this.pushTaskRetryTimes = pushTaskRetryTimes;
     }
 
     /**
@@ -724,60 +634,6 @@ public class SessionServerConfigBean implements SessionServerConfig {
     }
 
     /**
-     * Getter method for property <tt>schedulerCleanInvolidClientTimeOut</tt>.
-     *
-     * @return property value of schedulerCleanInvolidClientTimeOut
-     */
-    public int getSchedulerCleanInvalidClientTimeOut() {
-        return schedulerCleanInvalidClientTimeOut;
-    }
-
-    /**
-     * Getter method for property <tt>schedulerCleanInvolidClientFirstDelay</tt>.
-     *
-     * @return property value of schedulerCleanInvolidClientFirstDelay
-     */
-    public int getSchedulerCleanInvalidClientFirstDelay() {
-        return schedulerCleanInvalidClientFirstDelay;
-    }
-
-    /**
-     * Getter method for property <tt>schedulerCleanInvolidClientBackOffBound</tt>.
-     *
-     * @return property value of schedulerCleanInvolidClientBackOffBound
-     */
-    public int getSchedulerCleanInvalidClientBackOffBound() {
-        return schedulerCleanInvalidClientBackOffBound;
-    }
-
-    /**
-     * Setter method for property <tt>schedulerCleanInvolidClientTimeOut</tt>.
-     *
-     * @param schedulerCleanInvalidClientTimeOut value to be assigned to property schedulerCleanInvolidClientTimeOut
-     */
-    public void setSchedulerCleanInvalidClientTimeOut(int schedulerCleanInvalidClientTimeOut) {
-        this.schedulerCleanInvalidClientTimeOut = schedulerCleanInvalidClientTimeOut;
-    }
-
-    /**
-     * Setter method for property <tt>schedulerCleanInvolidClientFirstDelay</tt>.
-     *
-     * @param schedulerCleanInvalidClientFirstDelay value to be assigned to property schedulerCleanInvolidClientFirstDelay
-     */
-    public void setSchedulerCleanInvalidClientFirstDelay(int schedulerCleanInvalidClientFirstDelay) {
-        this.schedulerCleanInvalidClientFirstDelay = schedulerCleanInvalidClientFirstDelay;
-    }
-
-    /**
-     * Setter method for property <tt>schedulerCleanInvolidClientBackOffBound</tt>.
-     *
-     * @param schedulerCleanInvalidClientBackOffBound value to be assigned to property schedulerCleanInvolidClientBackOffBound
-     */
-    public void setSchedulerCleanInvalidClientBackOffBound(int schedulerCleanInvalidClientBackOffBound) {
-        this.schedulerCleanInvalidClientBackOffBound = schedulerCleanInvalidClientBackOffBound;
-    }
-
-    /**
      * Getter method for property <tt>stopPushSwitch</tt>.
      *
      * @return property value of stopPushSwitch
@@ -956,23 +812,13 @@ public class SessionServerConfigBean implements SessionServerConfig {
     }
 
     /**
-     * Getter method for property <tt>pushTaskExecutorMinPoolSize</tt>.
-     *
-     * @return property value of pushTaskExecutorMinPoolSize
-     */
-    @Override
-    public int getPushTaskExecutorMinPoolSize() {
-        return pushTaskExecutorMinPoolSize;
-    }
-
-    /**
      * Getter method for property <tt>pushTaskExecutorMaxPoolSize</tt>.
      *
      * @return property value of pushTaskExecutorMaxPoolSize
      */
     @Override
-    public int getPushTaskExecutorMaxPoolSize() {
-        return pushTaskExecutorMaxPoolSize;
+    public int getPushTaskExecutorPoolSize() {
+        return pushTaskExecutorPoolSize;
     }
 
     /**
@@ -985,32 +831,22 @@ public class SessionServerConfigBean implements SessionServerConfig {
         return pushTaskExecutorQueueSize;
     }
 
-    /**
-     * Getter method for property <tt>pushTaskExecutorKeepAliveTime</tt>.
-     *
-     * @return property value of pushTaskExecutorKeepAliveTime
-     */
     @Override
-    public long getPushTaskExecutorKeepAliveTime() {
-        return pushTaskExecutorKeepAliveTime;
+    public int getPushDataTaskDebouncingMillis() {
+        return pushDataTaskDebouncingMillis;
+    }
+
+    public void setPushDataTaskDebouncingMillis(int pushDataTaskDebouncingMillis) {
+        this.pushDataTaskDebouncingMillis = pushDataTaskDebouncingMillis;
     }
 
     /**
-     * Setter method for property <tt>pushTaskExecutorMinPoolSize</tt>.
+     * Setter method for property <tt>pushTaskExecutorPoolSize</tt>.
      *
-     * @param pushTaskExecutorMinPoolSize value to be assigned to property pushTaskExecutorMinPoolSize
+     * @param pushTaskExecutorPoolSize value to be assigned to property pushTaskExecutorPoolSize
      */
-    public void setPushTaskExecutorMinPoolSize(int pushTaskExecutorMinPoolSize) {
-        this.pushTaskExecutorMinPoolSize = pushTaskExecutorMinPoolSize;
-    }
-
-    /**
-     * Setter method for property <tt>pushTaskExecutorMaxPoolSize</tt>.
-     *
-     * @param pushTaskExecutorMaxPoolSize value to be assigned to property pushTaskExecutorMaxPoolSize
-     */
-    public void setPushTaskExecutorMaxPoolSize(int pushTaskExecutorMaxPoolSize) {
-        this.pushTaskExecutorMaxPoolSize = pushTaskExecutorMaxPoolSize;
+    public void setPushTaskExecutorPoolSize(int pushTaskExecutorPoolSize) {
+        this.pushTaskExecutorPoolSize = pushTaskExecutorPoolSize;
     }
 
     /**
@@ -1020,69 +856,6 @@ public class SessionServerConfigBean implements SessionServerConfig {
      */
     public void setPushTaskExecutorQueueSize(int pushTaskExecutorQueueSize) {
         this.pushTaskExecutorQueueSize = pushTaskExecutorQueueSize;
-    }
-
-    /**
-     * Setter method for property <tt>pushTaskExecutorKeepAliveTime</tt>.
-     *
-     * @param pushTaskExecutorKeepAliveTime value to be assigned to property pushTaskExecutorKeepAliveTime
-     */
-    public void setPushTaskExecutorKeepAliveTime(long pushTaskExecutorKeepAliveTime) {
-        this.pushTaskExecutorKeepAliveTime = pushTaskExecutorKeepAliveTime;
-    }
-
-    /**
-     * Getter method for property <tt>defaultSessionExecutorMinPoolSize</tt>.
-     *
-     * @return property value of defaultSessionExecutorMinPoolSize
-     */
-    public int getDefaultSessionExecutorMinPoolSize() {
-        return defaultSessionExecutorMinPoolSize;
-    }
-
-    /**
-     * Getter method for property <tt>defaultSessionExecutorMaxPoolSize</tt>.
-     *
-     * @return property value of defaultSessionExecutorMaxPoolSize
-     */
-    public int getDefaultSessionExecutorMaxPoolSize() {
-        return defaultSessionExecutorMaxPoolSize;
-    }
-
-    /**
-     * Getter method for property <tt>defaultSessionExecutorKeepAliveTime</tt>.
-     *
-     * @return property value of defaultSessionExecutorKeepAliveTime
-     */
-    public long getDefaultSessionExecutorKeepAliveTime() {
-        return defaultSessionExecutorKeepAliveTime;
-    }
-
-    /**
-     * Setter method for property <tt>defaultSessionExecutorMinPoolSize</tt>.
-     *
-     * @param defaultSessionExecutorMinPoolSize value to be assigned to property defaultSessionExecutorMinPoolSize
-     */
-    public void setDefaultSessionExecutorMinPoolSize(int defaultSessionExecutorMinPoolSize) {
-        this.defaultSessionExecutorMinPoolSize = defaultSessionExecutorMinPoolSize;
-    }
-
-    /**
-     * Setter method for property <tt>defaultSessionExecutorMaxPoolSize</tt>.
-     *
-     * @param defaultSessionExecutorMaxPoolSize value to be assigned to property defaultSessionExecutorMaxPoolSize
-     */
-    public void setDefaultSessionExecutorMaxPoolSize(int defaultSessionExecutorMaxPoolSize) {
-        this.defaultSessionExecutorMaxPoolSize = defaultSessionExecutorMaxPoolSize;
-    }
-
-    /**
-     * Setter method for property <tt>defaultSessionExecutorKeepAliveTime</tt>.
-     *
-     * @param defaultSessionExecutorKeepAliveTime value to be assigned to property defaultSessionExecutorKeepAliveTime
-     */
-    public void setDefaultSessionExecutorKeepAliveTime(long defaultSessionExecutorKeepAliveTime) {
-        this.defaultSessionExecutorKeepAliveTime = defaultSessionExecutorKeepAliveTime;
     }
 
     /**
@@ -1178,41 +951,41 @@ public class SessionServerConfigBean implements SessionServerConfig {
     }
 
     /**
-     * Getter method for property <tt>pushDataTaskRetryFirstDelay</tt>.
+     * Getter method for property <tt>pushDataTaskRetryFirstDelayMillis</tt>.
      *
-     * @return property value of pushDataTaskRetryFirstDelay
+     * @return property value of pushDataTaskRetryFirstDelayMillis
      */
     @Override
-    public int getPushDataTaskRetryFirstDelay() {
-        return pushDataTaskRetryFirstDelay;
+    public int getPushDataTaskRetryFirstDelayMillis() {
+        return pushDataTaskRetryFirstDelayMillis;
     }
 
     /**
-     * Setter method for property <tt>pushDataTaskRetryFirstDelay</tt>.
+     * Setter method for property <tt>pushDataTaskRetryFirstDelayMillis</tt>.
      *
-     * @param pushDataTaskRetryFirstDelay value to be assigned to property pushDataTaskRetryFirstDelay
+     * @param pushDataTaskRetryFirstDelayMillis value to be assigned to property pushDataTaskRetryFirstDelayMillis
      */
-    public void setPushDataTaskRetryFirstDelay(int pushDataTaskRetryFirstDelay) {
-        this.pushDataTaskRetryFirstDelay = pushDataTaskRetryFirstDelay;
+    public void setPushDataTaskRetryFirstDelayMillis(int pushDataTaskRetryFirstDelayMillis) {
+        this.pushDataTaskRetryFirstDelayMillis = pushDataTaskRetryFirstDelayMillis;
     }
 
     /**
-     * Getter method for property <tt>pushDataTaskRetryIncrementDelay</tt>.
+     * Getter method for property <tt>pushDataTaskRetryIncrementDelayMillis</tt>.
      *
-     * @return property value of pushDataTaskRetryIncrementDelay
+     * @return property value of pushDataTaskRetryIncrementDelayMillis
      */
     @Override
-    public long getPushDataTaskRetryIncrementDelay() {
-        return pushDataTaskRetryIncrementDelay;
+    public int getPushDataTaskRetryIncrementDelayMillis() {
+        return pushDataTaskRetryIncrementDelayMillis;
     }
 
     /**
-     * Setter method for property <tt>pushDataTaskRetryIncrementDelay</tt>.
+     * Setter method for property <tt>pushDataTaskRetryIncrementDelayMillis</tt>.
      *
-     * @param pushDataTaskRetryIncrementDelay value to be assigned to property pushDataTaskRetryIncrementDelay
+     * @param pushDataTaskRetryIncrementDelayMillis value to be assigned to property pushDataTaskRetryIncrementDelay
      */
-    public void setPushDataTaskRetryIncrementDelay(long pushDataTaskRetryIncrementDelay) {
-        this.pushDataTaskRetryIncrementDelay = pushDataTaskRetryIncrementDelay;
+    public void setPushDataTaskRetryIncrementDelayMillis(int pushDataTaskRetryIncrementDelayMillis) {
+        this.pushDataTaskRetryIncrementDelayMillis = pushDataTaskRetryIncrementDelayMillis;
     }
 
     /**
@@ -1249,96 +1022,6 @@ public class SessionServerConfigBean implements SessionServerConfig {
      */
     public void setBlacklistSubDataIdRegex(String blacklistSubDataIdRegex) {
         this.blacklistSubDataIdRegex = blacklistSubDataIdRegex;
-    }
-
-    /**
-     * Getter method for property <tt>pushTaskConfirmWaitTimeout</tt>.
-     *
-     * @return property value of pushTaskConfirmWaitTimeout
-     */
-    public long getPushTaskConfirmWaitTimeout() {
-        return pushTaskConfirmWaitTimeout;
-    }
-
-    /**
-     * Setter method for property <tt>pushTaskConfirmWaitTimeout</tt>.
-     *
-     * @param pushTaskConfirmWaitTimeout value to be assigned to property pushTaskConfirmWaitTimeout
-     */
-    public void setPushTaskConfirmWaitTimeout(long pushTaskConfirmWaitTimeout) {
-        this.pushTaskConfirmWaitTimeout = pushTaskConfirmWaitTimeout;
-    }
-
-    /**
-     * Getter method for property <tt>pushTaskConfirmCheckWheelTicksSize</tt>.
-     *
-     * @return property value of pushTaskConfirmCheckWheelTicksSize
-     */
-    public int getPushTaskConfirmCheckWheelTicksSize() {
-        return pushTaskConfirmCheckWheelTicksSize;
-    }
-
-    /**
-     * Getter method for property <tt>pushTaskConfirmCheckWheelTicksDuration</tt>.
-     *
-     * @return property value of pushTaskConfirmCheckWheelTicksDuration
-     */
-    public int getPushTaskConfirmCheckWheelTicksDuration() {
-        return pushTaskConfirmCheckWheelTicksDuration;
-    }
-
-    /**
-     * Getter method for property <tt>pushTaskConfirmCheckExecutorQueueSize</tt>.
-     *
-     * @return property value of pushTaskConfirmCheckExecutorQueueSize
-     */
-    public int getPushTaskConfirmCheckExecutorQueueSize() {
-        return pushTaskConfirmCheckExecutorQueueSize;
-    }
-
-    /**
-     * Getter method for property <tt>pushTaskConfirmCheckExecutorThreadSize</tt>.
-     *
-     * @return property value of pushTaskConfirmCheckExecutorThreadSize
-     */
-    public int getPushTaskConfirmCheckExecutorThreadSize() {
-        return pushTaskConfirmCheckExecutorThreadSize;
-    }
-
-    /**
-     * Setter method for property <tt>pushTaskConfirmCheckWheelTicksSize</tt>.
-     *
-     * @param pushTaskConfirmCheckWheelTicksSize value to be assigned to property pushTaskConfirmCheckWheelTicksSize
-     */
-    public void setPushTaskConfirmCheckWheelTicksSize(int pushTaskConfirmCheckWheelTicksSize) {
-        this.pushTaskConfirmCheckWheelTicksSize = pushTaskConfirmCheckWheelTicksSize;
-    }
-
-    /**
-     * Setter method for property <tt>pushTaskConfirmCheckWheelTicksDuration</tt>.
-     *
-     * @param pushTaskConfirmCheckWheelTicksDuration value to be assigned to property pushTaskConfirmCheckWheelTicksDuration
-     */
-    public void setPushTaskConfirmCheckWheelTicksDuration(int pushTaskConfirmCheckWheelTicksDuration) {
-        this.pushTaskConfirmCheckWheelTicksDuration = pushTaskConfirmCheckWheelTicksDuration;
-    }
-
-    /**
-     * Setter method for property <tt>pushTaskConfirmCheckExecutorQueueSize</tt>.
-     *
-     * @param pushTaskConfirmCheckExecutorQueueSize value to be assigned to property pushTaskConfirmCheckExecutorQueueSize
-     */
-    public void setPushTaskConfirmCheckExecutorQueueSize(int pushTaskConfirmCheckExecutorQueueSize) {
-        this.pushTaskConfirmCheckExecutorQueueSize = pushTaskConfirmCheckExecutorQueueSize;
-    }
-
-    /**
-     * Setter method for property <tt>pushTaskConfirmCheckExecutorThreadSize</tt>.
-     *
-     * @param pushTaskConfirmCheckExecutorThreadSize value to be assigned to property pushTaskConfirmCheckExecutorThreadSize
-     */
-    public void setPushTaskConfirmCheckExecutorThreadSize(int pushTaskConfirmCheckExecutorThreadSize) {
-        this.pushTaskConfirmCheckExecutorThreadSize = pushTaskConfirmCheckExecutorThreadSize;
     }
 
     /**
@@ -1545,10 +1228,6 @@ public class SessionServerConfigBean implements SessionServerConfig {
         this.slotSyncPublisherMaxNum = slotSyncPublisherMaxNum;
     }
 
-    public static int cpus() {
-        return Runtime.getRuntime().availableProcessors();
-    }
-
     /**
      * Getter method for property <tt>schedulerFetchDataVersionIntervalMs</tt>.
      * @return property value of schedulerFetchDataVersionIntervalMs
@@ -1564,6 +1243,22 @@ public class SessionServerConfigBean implements SessionServerConfig {
      */
     public void setSchedulerFetchDataVersionIntervalMs(int schedulerFetchDataVersionIntervalMs) {
         this.schedulerFetchDataVersionIntervalMs = schedulerFetchDataVersionIntervalMs;
+    }
+
+    public int getSlotSyncMaxBufferSize() {
+        return slotSyncMaxBufferSize;
+    }
+
+    public void setSlotSyncMaxBufferSize(int slotSyncMaxBufferSize) {
+        this.slotSyncMaxBufferSize = slotSyncMaxBufferSize;
+    }
+
+    public int getSlotSyncWorkerSize() {
+        return slotSyncWorkerSize;
+    }
+
+    public void setSlotSyncWorkerSize(int slotSyncWorkerSize) {
+        this.slotSyncWorkerSize = slotSyncWorkerSize;
     }
 
     @Override

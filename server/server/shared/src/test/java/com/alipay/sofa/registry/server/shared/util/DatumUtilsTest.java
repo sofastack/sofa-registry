@@ -14,12 +14,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alipay.sofa.registry.server.session;
+package com.alipay.sofa.registry.server.shared.util;
 
 import com.alipay.sofa.registry.common.model.constants.ValueConstants;
 import com.alipay.sofa.registry.common.model.dataserver.Datum;
 import com.alipay.sofa.registry.common.model.store.Subscriber;
-import com.alipay.sofa.registry.server.session.utils.DatumUtils;
 import org.junit.Assert;
 import org.junit.Test;
 

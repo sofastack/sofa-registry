@@ -43,6 +43,7 @@ import com.alipay.sofa.registry.server.data.remoting.metaserver.provideData.proc
 import com.alipay.sofa.registry.server.data.remoting.sessionserver.SessionServerConnectionFactory;
 import com.alipay.sofa.registry.server.data.remoting.sessionserver.handler.*;
 import com.alipay.sofa.registry.server.data.resource.DataDigestResource;
+import com.alipay.sofa.registry.server.data.resource.DatumApiResource;
 import com.alipay.sofa.registry.server.data.resource.HealthResource;
 import com.alipay.sofa.registry.server.data.slot.SlotManager;
 import com.alipay.sofa.registry.server.data.slot.SlotManagerImpl;
@@ -310,6 +311,11 @@ public class DataServerBeanConfiguration {
         @Bean
         public HealthResource healthResource() {
             return new HealthResource();
+        }
+
+        @Bean
+        public DatumApiResource datumApiResource() {
+            return new DatumApiResource();
         }
 
         @Bean

@@ -44,7 +44,7 @@ public final class SlotConfig {
         if (SLOT_NUM <= 0) {
             throw new IllegalArgumentException("illegal " + KEY_DATA_SLOT_NUM + ":" + SLOT_NUM);
         }
-        String replicas = System.getProperty(KEY_DATA_SLOT_REPLICAS, "1");
+        String replicas = System.getProperty(KEY_DATA_SLOT_REPLICAS, "2");
         SLOT_REPLICAS = Integer.parseInt(replicas);
         if (SLOT_REPLICAS <= 0) {
             throw new IllegalArgumentException("illegal " + KEY_DATA_SLOT_REPLICAS + ":"
