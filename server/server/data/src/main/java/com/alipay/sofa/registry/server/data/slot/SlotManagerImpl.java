@@ -35,7 +35,6 @@ import com.alipay.sofa.registry.server.shared.env.ServerEnv;
 import com.alipay.sofa.registry.task.KeyedThreadPoolExecutor;
 import com.alipay.sofa.registry.task.KeyedThreadPoolExecutor.KeyedTask;
 import com.alipay.sofa.registry.util.ConcurrentUtils;
-import com.alipay.sofa.registry.util.LoopRunnable;
 import com.alipay.sofa.registry.util.WakeupLoopRunnable;
 import com.google.common.collect.Maps;
 import org.springframework.beans.factory.annotation.Autowired;
