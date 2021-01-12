@@ -30,9 +30,6 @@ import com.alipay.sofa.registry.lifecycle.impl.LifecycleHelper;
 import com.alipay.sofa.registry.server.meta.bootstrap.config.MetaServerConfig;
 import com.alipay.sofa.registry.server.meta.lease.data.DefaultDataServerManager;
 import com.alipay.sofa.registry.server.meta.slot.SlotManager;
-import com.alipay.sofa.registry.server.meta.slot.tasks.init.InitReshardingTask;
-import com.alipay.sofa.registry.server.meta.slot.tasks.SlotLeaderRebalanceTask;
-import com.alipay.sofa.registry.server.meta.slot.tasks.SlotReassignTask;
 import com.alipay.sofa.registry.server.meta.slot.tasks.reassign.ReassignTask;
 import com.alipay.sofa.registry.store.api.annotation.RaftReference;
 import com.alipay.sofa.registry.store.api.annotation.RaftReferenceContainer;
@@ -46,7 +43,6 @@ import javax.annotation.PreDestroy;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * @author chen.zhu
@@ -57,23 +53,23 @@ import java.util.concurrent.atomic.AtomicReference;
 public class DefaultSlotManager extends AbstractLifecycle implements SlotManager {
 
     @Autowired
-    private LocalSlotManager                           localSlotManager;
+    private LocalSlotManager         localSlotManager;
 
     @RaftReference(uniqueId = LocalSlotManager.LOCAL_SLOT_MANAGER, interfaceType = SlotManager.class)
-    private SlotManager                                raftSlotManager;
+    private SlotManager              raftSlotManager;
 
     @Autowired
-    private MetaServerConfig                           metaServerConfig;
+    private MetaServerConfig         metaServerConfig;
 
     @Autowired
-    private ArrangeTaskExecutor                        arrangeTaskExecutor;
+    private ArrangeTaskExecutor      arrangeTaskExecutor;
 
     @Autowired
-    private DefaultDataServerManager                   dataServerManager;
+    private DefaultDataServerManager dataServerManager;
 
-    private ScheduledExecutorService                   scheduled;
+    private ScheduledExecutorService scheduled;
 
-    private ScheduledFuture<?>                         future;
+    private ScheduledFuture<?>       future;
 
     /**
      * Post construct.
@@ -101,11 +97,10 @@ public class DefaultSlotManager extends AbstractLifecycle implements SlotManager
     protected void doInitialize() throws InitializeException {
         super.doInitialize();
         scheduled = ThreadPoolUtil.newScheduledBuilder()
-                .coreThreads(Math.min(OsUtils.getCpuCount(), 2))
-                .poolName(DefaultSlotManager.class.getSimpleName())
-                .enableMetric(true)
-                .threadFactory(new NamedThreadFactory(DefaultSlotManager.class.getSimpleName()))
-                .build();
+            .coreThreads(Math.min(OsUtils.getCpuCount(), 2))
+            .poolName(DefaultSlotManager.class.getSimpleName()).enableMetric(true)
+            .threadFactory(new NamedThreadFactory(DefaultSlotManager.class.getSimpleName()))
+            .build();
     }
 
     @Override
@@ -115,8 +110,8 @@ public class DefaultSlotManager extends AbstractLifecycle implements SlotManager
             @Override
             public void run() {
                 if (isRaftLeader()) {
-                    arrangeTaskExecutor.offer(new ReassignTask(localSlotManager,
-                            raftSlotManager, dataServerManager));
+                    arrangeTaskExecutor.offer(new ReassignTask(localSlotManager, raftSlotManager,
+                        dataServerManager));
                 }
             }
         }, getIntervalMilli(), getIntervalMilli(), TimeUnit.MILLISECONDS);

@@ -36,6 +36,7 @@ import com.alipay.sofa.registry.task.KeyedThreadPoolExecutor;
 import com.alipay.sofa.registry.task.KeyedThreadPoolExecutor.KeyedTask;
 import com.alipay.sofa.registry.util.ConcurrentUtils;
 import com.alipay.sofa.registry.util.LoopRunnable;
+import com.alipay.sofa.registry.util.WakeupLoopRunnable;
 import com.google.common.collect.Maps;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -187,14 +188,7 @@ public final class SlotManagerImpl implements SlotManager {
         final Map<Integer, SlotState> slotStates = Maps.newConcurrentMap();
     }
 
-    private final class SyncingWatchDog extends LoopRunnable {
-        private final Object bell = new Object();
-
-        void wakeup() {
-            synchronized (bell) {
-                bell.notify();
-            }
-        }
+    private final class SyncingWatchDog extends WakeupLoopRunnable {
 
         @Override
         public void runUnthrowable() {
@@ -275,12 +269,8 @@ public final class SlotManagerImpl implements SlotManager {
         }
 
         @Override
-        public void waitingUnthrowable() {
-            synchronized (bell) {
-                if (updatingSlotTable.get() == null) {
-                    ConcurrentUtils.objectWaitUninterruptibly(bell, 1000);
-                }
-            }
+        public int getWaitingMillis() {
+            return 100;
         }
     }
 

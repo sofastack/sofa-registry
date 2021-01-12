@@ -14,24 +14,34 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alipay.sofa.registry.server.shared.util;
+package com.alipay.sofa.registry.server.shared.comparator;
 
-import com.alipay.sofa.registry.common.model.Node;
+import com.alipay.sofa.registry.common.model.Tuple;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
+import java.util.Set;
 
 /**
  * @author chen.zhu
  * <p>
  * Jan 12, 2021
  */
-public class NodeUtils {
+public interface Comparator<T> {
 
-    public static <T extends Node> List<String> transferNodeToIpList(Collection<T> nodes) {
-        List<String> result = new ArrayList<>(nodes.size());
-        nodes.forEach(node -> result.add(node.getNodeUrl().getIpAddress()));
-        return result;
-    }
+    Set<T> getAdded();
+
+    Set<T> getRemoved();
+
+    Set<Tuple<T, T>> getModified();
+
+    void accept(ComparatorVisitor<T> visitor);
+
+    void acceptAdded(ComparatorVisitor<T> visitor);
+
+    void acceptRemoved(ComparatorVisitor<T> visitor);
+
+    void acceptRemains(ComparatorVisitor<T> visitor);
+
+    boolean hasAnyChange();
+
+    int totalChange();
 }

@@ -41,7 +41,7 @@ import static org.mockito.Mockito.when;
 
 public class InitReshardingTaskTest extends AbstractTest {
 
-    private InitReshardingTask task;
+    private InitReshardingTask       task;
 
     private SlotManager              raftSlotManager;
 

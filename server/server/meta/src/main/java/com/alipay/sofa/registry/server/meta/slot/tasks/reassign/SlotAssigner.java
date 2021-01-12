@@ -1,19 +1,34 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package com.alipay.sofa.registry.server.meta.slot.tasks.reassign;
 
+import com.alipay.sofa.registry.common.model.Tuple;
 import com.alipay.sofa.registry.common.model.slot.DataNodeSlot;
 import com.alipay.sofa.registry.common.model.slot.Slot;
 import com.alipay.sofa.registry.common.model.slot.SlotConfig;
 import com.alipay.sofa.registry.common.model.slot.SlotTable;
-import com.alipay.sofa.registry.comparator.ComparatorVisitor;
-import com.alipay.sofa.registry.comparator.Pair;
 import com.alipay.sofa.registry.lifecycle.Initializable;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.server.meta.slot.util.DataNodeComparator;
 import com.alipay.sofa.registry.server.meta.slot.util.SlotBuilder;
 import com.alipay.sofa.registry.server.meta.slot.util.SlotTableBuilder;
+import com.alipay.sofa.registry.server.shared.comparator.ComparatorVisitor;
 import com.alipay.sofa.registry.util.MathUtils;
-import io.netty.util.internal.MathUtil;
 import javafx.util.Builder;
 
 import java.util.Collection;
@@ -26,46 +41,49 @@ import java.util.Set;
  * <p>
  * Jan 12, 2021
  */
-public class SlotAssigner implements ComparatorVisitor<String>, Builder<SlotTable>, Runnable, Initializable {
+public class SlotAssigner implements ComparatorVisitor<String>, Builder<SlotTable>, Runnable,
+                         Initializable {
 
-    private static final Logger logger = LoggerFactory.getLogger(SlotAssigner.class);
+    private static final Logger      logger           = LoggerFactory.getLogger(SlotAssigner.class);
 
-    private final SlotTable prevSlotTable;
+    private final SlotTable          prevSlotTable;
 
-    private final Set<String> currentDataServers;
+    private final Set<String>        currentDataServers;
 
     private final DataNodeComparator comparator;
 
-    private SlotAssignerState state = SlotAssignerState.Init;
+    private SlotAssignerState        state            = SlotAssignerState.Init;
 
-    private final SlotTableBuilder builder = new SlotTableBuilder();
+    private final SlotTableBuilder   builder          = new SlotTableBuilder();
 
-    private final MigrateSlotGroup migrateSlotGroup = new MigrateSlotGroup();
+    private final MigrateSlotGroup   migrateSlotGroup = new MigrateSlotGroup();
 
-    private final int leaderLimit;
+    private final int                leaderLimit;
 
-    private final int followerLimit;
+    private final int                followerLimit;
 
-    public SlotAssigner(SlotTable prevSlotTable, Collection<String> dataServers, DataNodeComparator comparator) {
+    public SlotAssigner(SlotTable prevSlotTable, Collection<String> dataServers,
+                        DataNodeComparator comparator) {
         this.prevSlotTable = prevSlotTable;
         this.currentDataServers = new HashSet<>(dataServers);
         this.comparator = comparator;
         this.leaderLimit = MathUtils.divideCeil(SlotConfig.SLOT_NUM, currentDataServers.size());
-        this.followerLimit = MathUtils.divideCeil((SlotConfig.SLOT_REPLICAS - 1) * SlotConfig.SLOT_NUM,
-                currentDataServers.size());
+        this.followerLimit = MathUtils.divideCeil((SlotConfig.SLOT_REPLICAS - 1)
+                                                  * SlotConfig.SLOT_NUM, currentDataServers.size());
     }
 
     @Override
     public void run() {
-        while(state != SlotAssignerState.End) {
-            if(logger.isInfoEnabled()) {
+        while (state != SlotAssignerState.End) {
+            if (logger.isInfoEnabled()) {
                 logger.info("[run] state: {} begin", state.name());
             }
 
             state.doAction(this);
 
-            if(logger.isInfoEnabled()) {
-                logger.info("[run] state: {} end, change to {}", state.name(), state.nextStep().name());
+            if (logger.isInfoEnabled()) {
+                logger.info("[run] state: {} end, change to {}", state.name(), state.nextStep()
+                    .name());
             }
 
             state = state.nextStep();
@@ -89,7 +107,7 @@ public class SlotAssigner implements ComparatorVisitor<String>, Builder<SlotTabl
     }
 
     @Override
-    public void visitModified(Pair<String, String> modified) {
+    public void visitModified(Tuple<String, String> modified) {
         throw new UnsupportedOperationException();
     }
 
@@ -111,13 +129,13 @@ public class SlotAssigner implements ComparatorVisitor<String>, Builder<SlotTabl
         DataNodeSlot dataNodeSlot = prevSlotTable.transfer(remain, false).get(0);
         int leaderSize = dataNodeSlot.getLeaders().size();
         int followerSize = dataNodeSlot.getFollowers().size();
-        for(int i = leaderSize; i > leaderLimit; i--) {
-            int slotId = dataNodeSlot.getLeaders().get(i-1);
+        for (int i = leaderSize; i > leaderLimit; i--) {
+            int slotId = dataNodeSlot.getLeaders().get(i - 1);
             migrateSlotGroup.addLeader(slotId);
             builder.getOrCreate(slotId).removeLeader(remain);
         }
-        for(int i = followerSize; i > followerLimit; i--) {
-            int slotId = dataNodeSlot.getFollowers().get(i-1);
+        for (int i = followerSize; i > followerLimit; i--) {
+            int slotId = dataNodeSlot.getFollowers().get(i - 1);
             migrateSlotGroup.addFollower(slotId);
             builder.getOrCreate(slotId).removeFollower(remain);
         }
@@ -132,11 +150,11 @@ public class SlotAssigner implements ComparatorVisitor<String>, Builder<SlotTabl
         DataNodeSlot dataNodeSlot = prevSlotTable.transfer(dataNode, false).get(0);
         int leaderSize = dataNodeSlot.getLeaders().size();
         int followerSize = dataNodeSlot.getFollowers().size();
-        for(int i = leaderSize; i < leaderLimit && !migrateSlotGroup.getLeaders().isEmpty(); i++) {
+        for (int i = leaderSize; i < leaderLimit && !migrateSlotGroup.getLeaders().isEmpty(); i++) {
             int leaderSlotId = migrateSlotGroup.pickupLeader();
             builder.getOrCreate(leaderSlotId).addLeader(dataNode);
         }
-        for(int i = followerSize; i < followerLimit && !migrateSlotGroup.getFollowers().isEmpty(); i++) {
+        for (int i = followerSize; i < followerLimit && !migrateSlotGroup.getFollowers().isEmpty(); i++) {
             int followerSlotId = migrateSlotGroup.pickupFollower(dataNodeSlot.getFollowers());
             builder.getOrCreate(followerSlotId).addFollower(dataNode);
         }
