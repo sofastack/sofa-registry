@@ -631,7 +631,7 @@ public class AbstractTest {
                 long epoch = System.currentTimeMillis();
                 String leader = getNextLeader().getIp();
                 List<String> followers = Lists.newArrayList();
-                for (int j = 0; j < SlotConfig.SLOT_REPLICAS; j++) {
+                for (int j = 0; j < SlotConfig.SLOT_REPLICAS - 1; j++) {
                     followers.add(getNextFollower().getIp());
                 }
                 Slot slot = new Slot(i, leader, epoch, followers);
@@ -647,7 +647,7 @@ public class AbstractTest {
                 long epoch = System.currentTimeMillis();
                 String leader = dataNodes.get(leaderIndex).getIp();
                 List<String> followers = Lists.newArrayList();
-                for (int j = 0; j < SlotConfig.SLOT_REPLICAS; j++) {
+                for (int j = 0; j < SlotConfig.SLOT_REPLICAS - 1; j++) {
                     DataNode follower = getNextFollower();
                     while (follower.getIp().equalsIgnoreCase(dataNodes.get(leaderIndex).getIp())) {
                         follower = getNextFollower();

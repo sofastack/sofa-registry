@@ -40,6 +40,7 @@ import java.util.Set;
  * 3. migrate leadership from heavy traffic data servers to target servers
  * we define heavy traffic data server as they holds more than average leader slots
  */
+@Deprecated
 public class SlotLeaderRebalanceTask extends AbstractRebalanceTask implements RebalanceTask {
 
     public SlotLeaderRebalanceTask(LocalSlotManager localSlotManager, SlotManager raftSlotManager,

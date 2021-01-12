@@ -35,6 +35,7 @@ import java.util.Set;
  * This task focus on re-balancing(assigning) slots to low traffic data-servers
  *
  */
+@Deprecated
 public class SlotReassignTask extends AbstractRebalanceTask implements RebalanceTask {
 
     public SlotReassignTask(LocalSlotManager localSlotManager, SlotManager raftSlotManager,

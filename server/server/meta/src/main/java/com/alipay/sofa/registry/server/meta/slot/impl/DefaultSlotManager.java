@@ -30,9 +30,10 @@ import com.alipay.sofa.registry.lifecycle.impl.LifecycleHelper;
 import com.alipay.sofa.registry.server.meta.bootstrap.config.MetaServerConfig;
 import com.alipay.sofa.registry.server.meta.lease.data.DefaultDataServerManager;
 import com.alipay.sofa.registry.server.meta.slot.SlotManager;
-import com.alipay.sofa.registry.server.meta.slot.tasks.InitReshardingTask;
+import com.alipay.sofa.registry.server.meta.slot.tasks.init.InitReshardingTask;
 import com.alipay.sofa.registry.server.meta.slot.tasks.SlotLeaderRebalanceTask;
 import com.alipay.sofa.registry.server.meta.slot.tasks.SlotReassignTask;
+import com.alipay.sofa.registry.server.meta.slot.tasks.reassign.ReassignTask;
 import com.alipay.sofa.registry.store.api.annotation.RaftReference;
 import com.alipay.sofa.registry.store.api.annotation.RaftReferenceContainer;
 import com.alipay.sofa.registry.util.NamedThreadFactory;
@@ -70,9 +71,6 @@ public class DefaultSlotManager extends AbstractLifecycle implements SlotManager
     @Autowired
     private DefaultDataServerManager                   dataServerManager;
 
-    private final AtomicReference<SlotPeriodCheckType> currentCheck = new AtomicReference<>(
-                                                                        SlotPeriodCheckType.CHECK_SLOT_ASSIGNMENT_BALANCE);
-
     private ScheduledExecutorService                   scheduled;
 
     private ScheduledFuture<?>                         future;
@@ -103,26 +101,22 @@ public class DefaultSlotManager extends AbstractLifecycle implements SlotManager
     protected void doInitialize() throws InitializeException {
         super.doInitialize();
         scheduled = ThreadPoolUtil.newScheduledBuilder()
-            .coreThreads(Math.min(OsUtils.getCpuCount(), 2))
-            .poolName(DefaultSlotManager.class.getSimpleName()).enableMetric(true)
-            .threadFactory(new NamedThreadFactory(DefaultSlotManager.class.getSimpleName()))
-            .build();
+                .coreThreads(Math.min(OsUtils.getCpuCount(), 2))
+                .poolName(DefaultSlotManager.class.getSimpleName())
+                .enableMetric(true)
+                .threadFactory(new NamedThreadFactory(DefaultSlotManager.class.getSimpleName()))
+                .build();
     }
 
     @Override
     protected void doStart() throws StartException {
         super.doStart();
-        if (isRaftLeader()) {
-            initCheck();
-        }
         future = scheduled.scheduleWithFixedDelay(new Runnable() {
             @Override
             public void run() {
-                if (ServiceStateMachine.getInstance().isLeader()) {
-                    currentCheck.set(currentCheck
-                        .get()
-                        .action(arrangeTaskExecutor, localSlotManager, raftSlotManager,
-                            dataServerManager).next());
+                if (isRaftLeader()) {
+                    arrangeTaskExecutor.offer(new ReassignTask(localSlotManager,
+                            raftSlotManager, dataServerManager));
                 }
             }
         }, getIntervalMilli(), getIntervalMilli(), TimeUnit.MILLISECONDS);
@@ -209,72 +203,6 @@ public class DefaultSlotManager extends AbstractLifecycle implements SlotManager
     @Override
     public SlotTable getSlotTable() {
         return getSlotManager().getSlotTable();
-    }
-
-    @VisibleForTesting
-    protected void initCheck() {
-        if (localSlotManager.getSlotTable().getEpoch() != SlotTable.INIT.getEpoch()) {
-            if (logger.isInfoEnabled()) {
-                logger.info("[initCheck] slot table(version: {}) not empty, quit init slot table",
-                    localSlotManager.getSlotTable().getEpoch());
-            }
-            return;
-        }
-        arrangeTaskExecutor.offer(new InitReshardingTask(localSlotManager, raftSlotManager,
-            dataServerManager));
-    }
-
-    public enum SlotPeriodCheckType {
-        /**
-         * check slot assignment balance
-         *
-         * The goal is to balance slot numbers between data-servers
-         * */
-        CHECK_SLOT_ASSIGNMENT_BALANCE {
-            @Override
-            SlotPeriodCheckType next() {
-                return CHECK_SLOT_LEADER_BALANCE;
-            }
-
-            @Override
-            SlotPeriodCheckType action(ArrangeTaskExecutor arrangeTaskExecutor,
-                                       LocalSlotManager localSlotManager,
-                                       SlotManager raftSlotManager,
-                                       DefaultDataServerManager dataServerManager) {
-                arrangeTaskExecutor.offer(new SlotReassignTask(localSlotManager, raftSlotManager,
-                    dataServerManager));
-                return this;
-            }
-        },
-
-        /**
-         * check slot leader balance
-         *
-         * The goal is to balance slot leaders between data-servers
-         * */
-        CHECK_SLOT_LEADER_BALANCE {
-            @Override
-            SlotPeriodCheckType next() {
-                return CHECK_SLOT_ASSIGNMENT_BALANCE;
-            }
-
-            @Override
-            SlotPeriodCheckType action(ArrangeTaskExecutor arrangeTaskExecutor,
-                                       LocalSlotManager localSlotManager,
-                                       SlotManager raftSlotManager,
-                                       DefaultDataServerManager dataServerManager) {
-                arrangeTaskExecutor.offer(new SlotLeaderRebalanceTask(localSlotManager,
-                    raftSlotManager, dataServerManager));
-                return this;
-            }
-        };
-
-        abstract SlotPeriodCheckType next();
-
-        abstract SlotPeriodCheckType action(ArrangeTaskExecutor arrangeTaskExecutor,
-                                            LocalSlotManager localSlotManager,
-                                            SlotManager raftSlotManager,
-                                            DefaultDataServerManager dataServerManager);
     }
 
     private SlotManager getSlotManager() {

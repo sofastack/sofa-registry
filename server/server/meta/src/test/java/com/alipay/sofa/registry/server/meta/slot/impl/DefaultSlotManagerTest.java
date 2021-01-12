@@ -76,11 +76,6 @@ public class DefaultSlotManagerTest extends AbstractTest {
     }
 
     @Test
-    public void testNonLeaderWillNotGenerateSlotTable() {
-        verify(slotManager, never()).initCheck();
-    }
-
-    @Test
     public void testLeaderWillGenerateSlotTable() throws Exception {
         localSlotManager = spy(new LocalSlotManager(nodeConfig));
         raftSlotManager = spy(new LocalSlotManager(nodeConfig));
@@ -91,11 +86,9 @@ public class DefaultSlotManagerTest extends AbstractTest {
         when(metaServerConfig.getExpireCheckIntervalMilli()).thenReturn(1);
         makeRaftLeader();
         slotManager.postConstruct();
-        verify(slotManager, atLeast(1)).initCheck();
-        verify(arrangeTaskExecutor, atLeast(1)).offer(any());
-
+        verify(arrangeTaskExecutor, never()).offer(any());
         Thread.sleep(1010);
-        verify(arrangeTaskExecutor, atLeast(2)).offer(any());
+        verify(arrangeTaskExecutor, atLeast(1)).offer(any());
     }
 
     @Test
@@ -164,15 +157,5 @@ public class DefaultSlotManagerTest extends AbstractTest {
             false));
         verify(localSlotManager, times(1)).getDataNodeManagedSlot(any(), anyBoolean());
         verify(raftSlotManager, times(1)).getDataNodeManagedSlot(any(), anyBoolean());
-    }
-
-    @Test
-    public void testInitCheck() {
-        SlotTable slotTable = new SlotTableGenerator(Lists.newArrayList(new DataNode(
-            randomURL(randomIp()), getDc()), new DataNode(randomURL(randomIp()), getDc())))
-            .createSlotTable();
-        localSlotManager.refresh(slotTable);
-        slotManager.initCheck();
-        verify(arrangeTaskExecutor, never()).offer(any());
     }
 }
