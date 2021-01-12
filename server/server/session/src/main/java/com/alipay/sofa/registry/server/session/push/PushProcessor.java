@@ -110,8 +110,9 @@ public class PushProcessor {
             }
             return true;
         } else {
-            LOGGER.info("[ConflictPending] {}, {}, prev {} > {}",
-                pushTask.subscriber.getDataInfoId(), key, prev.fetchSeqEnd, pushTask.fetchSeqStart);
+            LOGGER.info("[ConflictPending] key={}, prev={}, {}, prev {}={} > {}-{}", key,
+                prev.taskID, prev.pushingTaskKey, prev.fetchSeqEnd, pushTask.taskID,
+                pushTask.fetchSeqStart);
             return false;
         }
     }
@@ -128,19 +129,24 @@ public class PushProcessor {
         return Collections.singletonList(pushTask);
     }
 
-    void firePush(boolean noDelay, long pushVersion, String dataCenter, InetSocketAddress addr, Map<String, Subscriber> subscriberMap,
-                  Map<String, Datum> datumMap, long fetchSeqStart, long fetchSeqEnd) {
-        List<PushTask> fires = createPushTask(noDelay, pushVersion, dataCenter, addr, subscriberMap, datumMap, fetchSeqStart, fetchSeqEnd);
-        fires.forEach(t -> firePush(t));
+    void firePush(boolean noDelay, long pushVersion, String dataCenter, InetSocketAddress addr,
+                  Map<String, Subscriber> subscriberMap, Map<String, Datum> datumMap,
+                  long fetchSeqStart, long fetchSeqEnd) {
+        List<PushTask> fires = createPushTask(noDelay, pushVersion, dataCenter, addr,
+            subscriberMap, datumMap, fetchSeqStart, fetchSeqEnd);
+        for (PushTask task : fires) {
+            boolean fire = firePush(task);
+            LOGGER.info("fire push={}, {}", fire, task);
+        }
     }
 
     private boolean commitTask(PushTask task) {
         try {
             // keyed by pushingKey: client.addr && dataInfoId
-            pushExecutor.execute(task.pushingKeyOf(), task);
+            pushExecutor.execute(task.pushingTaskKey, task);
             return true;
         } catch (Throwable e) {
-            LOGGER.error("failed to exec push task {}", task.pendingKeyOf(), e);
+            LOGGER.error("failed to exec push task {},{}", task.taskID, task.pushingTaskKey, e);
             return false;
         }
     }
@@ -196,21 +202,24 @@ public class PushProcessor {
             // check the subcriber version
             for (Subscriber subscriber : task.subscriberMap.values()) {
                 if (!subscriber.checkVersion(task.dataCenter, task.fetchSeqStart)) {
-                    LOGGER.warn("conflict push, subscriber={}, {}", subscriber, task);
+                    LOGGER.warn("conflict push {}, {}, subscriber={}", task.taskID, pushingTaskKey,
+                        subscriber.printPushContext());
                     return false;
                 }
             }
             return true;
         }
         if (!task.afterThan(prev)) {
-            LOGGER.warn("prev push is newly, prev={}, now={}", prev, task);
+            LOGGER.warn("prev push is newly, {}, prev={}, now={}", pushingTaskKey, prev.taskID,
+                task.taskID);
             return false;
         }
         final long span = prev.spanMillis();
         if (span > sessionServerConfig.getClientNodeExchangeTimeOut() * 2) {
             // force to remove the prev task
-            pushingTasks.remove(pushingTaskKey);
-            LOGGER.warn("[prevRunTooLong] prev={}, now={}", prev, task);
+            final boolean cleaned = pushingTasks.remove(pushingTaskKey) != null;
+            LOGGER.warn("[prevRunTooLong] {}, clean={}, prev={}, now={}", pushingTaskKey, cleaned,
+                prev.taskID, task.taskID);
             return true;
         }
         // task after the prev, but prev.pushclient not callback, retry
@@ -224,12 +233,13 @@ public class PushProcessor {
             final int backoffMillis = getRetryBackoffTime(retry);
             task.expireAfter(backoffMillis);
             if (firePush(task)) {
-                LOGGER.info("add retry for {}, {}, retry={}, backoff={}", reason, task.taskID,
-                    retry, backoffMillis);
+                LOGGER.info("add retry for {}, {}, {}, retry={}, backoff={}", reason, task.taskID,
+                    task.pushingTaskKey, retry, backoffMillis);
                 return true;
             }
         }
-        LOGGER.info("skip retry for {}, {}, retry={}", reason, task.taskID, retry);
+        LOGGER.info("skip retry for {}, {}, {}, retry={}", reason, task.taskID,
+            task.pushingTaskKey, retry);
         return false;
     }
 
@@ -250,6 +260,8 @@ public class PushProcessor {
         final Subscriber              subscriber;
         final AtomicInteger           retryCount      = new AtomicInteger();
 
+        final PushingTaskKey          pushingTaskKey;
+
         PushTask(boolean noDelay, long pushVersion, String dataCenter, InetSocketAddress addr,
                  Map<String, Subscriber> subscriberMap, Map<String, Datum> datumMap,
                  long fetchSeqStart, long fetchSeqEnd) {
@@ -263,6 +275,8 @@ public class PushProcessor {
             this.fetchSeqStart = fetchSeqStart;
             this.fetchSeqEnd = fetchSeqEnd;
             this.subscriber = subscriberMap.values().iterator().next();
+            this.pushingTaskKey = new PushingTaskKey(subscriber.getDataInfoId(), addr,
+                subscriber.getScope(), subscriber.getAssembleType(), subscriber.getClientVersion());
         }
 
         protected Object createPushData() {
@@ -289,7 +303,7 @@ public class PushProcessor {
             }
             PushingTaskKey pushingTaskKey = null;
             try {
-                pushingTaskKey = this.pushingKeyOf();
+                pushingTaskKey = this.pushingTaskKey;
                 if (!checkPushing(this, pushingTaskKey)) {
                     return;
                 }
@@ -298,15 +312,15 @@ public class PushProcessor {
                 pushingTasks.put(pushingTaskKey, this);
                 clientNodeService.pushWithCallback(data, subscriber.getSourceAddress(),
                     new PushClientCallback(this, pushingTaskKey));
-                LOGGER.info("{}, pushing {}, subscribers={}", taskID, pushingTaskKey,
-                    subscriberMap.size());
+                LOGGER.info("{}, pushing {}", taskID, pushingTaskKey);
             } catch (Throwable e) {
                 // try to delete self
                 boolean cleaned = false;
                 if (pushingTaskKey != null) {
                     cleaned = pushingTasks.remove(pushingTaskKey) != null;
                 }
-                LOGGER.error("{}, failed to pushing, cleaned={}, {}", taskID, cleaned, this, e);
+                LOGGER.error("{}, failed to pushing {}, cleaned={}, {}", taskID, pushingTaskKey,
+                    cleaned, this, e);
             }
         }
 
@@ -315,21 +329,22 @@ public class PushProcessor {
         }
 
         PendingTaskKey pendingKeyOf() {
-            return new PendingTaskKey(dataCenter, addr, subscriberMap.keySet());
-        }
-
-        PushingTaskKey pushingKeyOf() {
-            return new PushingTaskKey(subscriber.getDataInfoId(), addr, subscriber.getScope(),
-                subscriber.getAssembleType(), subscriber.getClientVersion());
+            return new PendingTaskKey(dataCenter, addr, subscriber.getDataInfoId(),
+                subscriberMap.keySet());
         }
 
         @Override
         public String toString() {
-            return "PushTask{" + "taskID=" + taskID + ", createTimestamp=" + createTimestamp
-                   + ", expireTimestamp=" + expireTimestamp + ", pushTimestamp=" + pushTimestamp
-                   + ", fetchSeqStart=" + fetchSeqStart + ", fetchSeqEnd=" + fetchSeqEnd
-                   + ", dataCenter='" + dataCenter + ", pushVersion=" + pushVersion + ", addr="
-                   + addr + ", subscriber=" + subscriber + ", retryCount=" + retryCount + '}';
+            StringBuilder sb = new StringBuilder(512);
+            sb.append("PushTask{").append(subscriber.getDataInfoId()).append(",ID=").append(taskID)
+                .append(",createT=").append(createTimestamp).append(",expireT=")
+                .append(expireTimestamp).append(",seqStart=").append(fetchSeqStart)
+                .append(",seqEnd=").append(fetchSeqEnd).append(",DC=").append(dataCenter)
+                .append(",ver=").append(pushVersion).append(",addr=").append(addr)
+                .append(",scope=").append(subscriber.getScope()).append(",subIds=")
+                .append(subscriberMap.keySet()).append(",sub=")
+                .append(subscriber.printPushContext()).append(",retry=").append(retryCount.get());
+            return sb.toString();
         }
     }
 
@@ -351,18 +366,20 @@ public class PushProcessor {
                     if (!subscriber.checkAndUpdateVersion(pushTask.dataCenter,
                         pushTask.pushVersion, versions, pushTask.fetchSeqStart,
                         pushTask.fetchSeqEnd)) {
-                        LOGGER.warn("Push success, but failed to updateVersion, {}", pushTask);
+                        LOGGER.warn("PushY, but failed to updateVersion, {}, {}", pushTask.taskID,
+                            pushTask.pushingTaskKey);
                     }
                 }
             } catch (Throwable e) {
-                LOGGER.error("error push.onCallback, {}", pushTask, e);
+                LOGGER.error("error push.onCallback, {}, {}", pushTask.taskID,
+                    pushTask.pushingTaskKey, e);
             } finally {
                 // TODO should use remove(k, exceptV). but in some case,
                 // after removed=true, the value aslo in the map
-                cleaned = pushingTasks.remove(pushingTaskKey) != null;
+                cleaned = pushingTasks.remove(pushingTaskKey, pushTask);
             }
-            LOGGER.info("Push success, clean record={}, span={}, {}", cleaned,
-                pushTask.spanMillis(), pushTask);
+            LOGGER.info("PushY, clean record={}, span={}, {}, {}", cleaned, pushTask.spanMillis(),
+                pushTask.taskID, pushTask.pushingTaskKey);
         }
 
         @Override
@@ -371,22 +388,21 @@ public class PushProcessor {
             try {
                 // TODO should use remove(k, exceptV). but in some case,
                 // after removed=true, the value aslo in the map
-                cleaned = pushingTasks.remove(pushingTaskKey) != null;
+                cleaned = pushingTasks.remove(pushingTaskKey, pushTask);
                 if (channel.isConnected()) {
                     retry(pushTask, "callbackErr");
                 } else {
-                    LOGGER.warn("{}, push.onException, channel is closed, {}", pushTask.taskID,
-                        pushingTaskKey);
+                    LOGGER.warn("PushN, channel closed, {}, {}", pushTask.taskID, pushingTaskKey);
                 }
             } catch (Throwable e) {
-                LOGGER.error("error push.onException, {}", pushTask, e);
+                LOGGER.error("error push.onException, {}, {}", pushTask.taskID, pushingTaskKey, e);
             }
             if (exception instanceof InvokeTimeoutException) {
-                LOGGER.error("Push error timeout, clean record={}, span={}, {}", cleaned,
-                    pushTask.spanMillis(), pushTask);
+                LOGGER.error("PushN, timeout, clean record={}, span={}, {}, {}", cleaned,
+                    pushTask.spanMillis(), pushTask.taskID, pushingTaskKey);
             } else {
-                LOGGER.error("Push error, clean record={}, span={}, {}", cleaned,
-                    pushTask.spanMillis(), pushTask, exception);
+                LOGGER.error("PushN, clean record={}, span={}, {}, {}", cleaned,
+                    pushTask.spanMillis(), pushTask.taskID, pushingTaskKey, exception);
             }
         }
 
@@ -398,11 +414,14 @@ public class PushProcessor {
 
     private static final class PendingTaskKey {
         final String            dataCenter;
+        final String            dataInfoId;
         final InetSocketAddress addr;
         final Set<String>       subscriberIds;
 
-        PendingTaskKey(String dataCenter, InetSocketAddress addr, Set<String> subscriberIds) {
+        PendingTaskKey(String dataCenter, InetSocketAddress addr, String dataInfoId,
+                       Set<String> subscriberIds) {
             this.dataCenter = dataCenter;
+            this.dataInfoId = dataInfoId;
             this.addr = addr;
             this.subscriberIds = subscriberIds;
         }
@@ -415,19 +434,20 @@ public class PushProcessor {
                 return false;
             PendingTaskKey pendingTaskKey = (PendingTaskKey) o;
             return Objects.equals(addr, pendingTaskKey.addr)
+                   && Objects.equals(dataInfoId, pendingTaskKey.dataInfoId)
                    && Objects.equals(dataCenter, pendingTaskKey.dataCenter)
                    && Objects.equals(subscriberIds, pendingTaskKey.subscriberIds);
         }
 
         @Override
         public int hashCode() {
-            return Objects.hash(dataCenter, addr, subscriberIds);
+            return Objects.hash(dataCenter, addr, dataInfoId, subscriberIds);
         }
 
         @Override
         public String toString() {
-            return "PendingTaskKey{" + "dataCenter='" + dataCenter + '\'' + ", addr=" + addr
-                   + ", subscriberIds=" + subscriberIds + '}';
+            return "PendingTaskKey{" + dataInfoId + ", dataCenter='" + dataCenter + '\''
+                   + ", addr=" + addr + ", subscriberIds=" + subscriberIds + '}';
         }
     }
 
