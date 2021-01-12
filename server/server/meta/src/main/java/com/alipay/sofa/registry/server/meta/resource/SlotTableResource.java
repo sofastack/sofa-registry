@@ -20,7 +20,7 @@ import com.alipay.sofa.registry.common.model.slot.SlotTable;
 import com.alipay.sofa.registry.server.meta.lease.data.DefaultDataServerManager;
 import com.alipay.sofa.registry.server.meta.slot.impl.DefaultSlotManager;
 import com.alipay.sofa.registry.server.meta.slot.impl.LocalSlotManager;
-import com.alipay.sofa.registry.server.meta.slot.tasks.InitReshardingTask;
+import com.alipay.sofa.registry.server.meta.slot.tasks.init.InitReshardingTask;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import javax.ws.rs.GET;

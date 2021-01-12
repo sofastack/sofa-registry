@@ -37,6 +37,7 @@ import java.util.*;
  * <p>
  * Nov 25, 2020
  */
+@Deprecated
 public class ServerDeadRebalanceWork implements RebalanceTask {
 
     private static final Logger      logger = LoggerFactory

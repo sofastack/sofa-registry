@@ -27,9 +27,8 @@ import com.alipay.sofa.registry.observer.impl.AbstractLifecycleObservable;
 import com.alipay.sofa.registry.server.meta.bootstrap.config.MetaServerConfig;
 import com.alipay.sofa.registry.server.meta.lease.data.DefaultDataServerManager;
 import com.alipay.sofa.registry.server.meta.slot.ArrangeTaskDispatcher;
-import com.alipay.sofa.registry.server.meta.slot.tasks.InitReshardingTask;
-import com.alipay.sofa.registry.server.meta.slot.tasks.ServerDeadRebalanceWork;
-import com.alipay.sofa.registry.server.meta.slot.tasks.SlotReassignTask;
+import com.alipay.sofa.registry.server.meta.slot.tasks.init.InitReshardingTask;
+import com.alipay.sofa.registry.server.meta.slot.tasks.reassign.ReassignTask;
 import com.alipay.sofa.registry.util.NamedThreadFactory;
 import com.alipay.sofa.registry.util.OsUtils;
 import com.google.common.annotations.VisibleForTesting;
@@ -134,7 +133,7 @@ public class DataServerArrangeTaskDispatcher extends AbstractLifecycleObservable
         DeadServerAction deadServerAction = deadServerActions.get(new DataNode(new URL(dataNode
             .getIp()), dataNode.getDataCenter()));
         if (deadServerAction == null) {
-            arrangeTaskExecutor.offer(new SlotReassignTask(slotManager, defaultSlotManager
+            arrangeTaskExecutor.offer(new ReassignTask(slotManager, defaultSlotManager
                 .getRaftSlotManager(), dataServerManager));
         } else {
             if (logger.isInfoEnabled()) {
@@ -203,8 +202,8 @@ public class DataServerArrangeTaskDispatcher extends AbstractLifecycleObservable
         @Override
         public void run() {
             cleanCache();
-            arrangeTaskExecutor.offer(new ServerDeadRebalanceWork(defaultSlotManager
-                .getRaftSlotManager(), slotManager, dataServerManager, dataNode));
+            arrangeTaskExecutor.offer(new ReassignTask(slotManager,
+                    defaultSlotManager.getRaftSlotManager(), dataServerManager));
         }
 
         public void serverAlive() {

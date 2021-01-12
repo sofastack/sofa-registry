@@ -46,11 +46,11 @@ public class ArrangeTaskExecutor extends AbstractLifecycle {
 
     private volatile ExecutorService     executors;
 
-    private BlockingQueue<RebalanceTask> tasks      = new LinkedBlockingQueue<>();
+    private BlockingQueue<Runnable> tasks      = new LinkedBlockingQueue<>();
 
     private final AtomicLong             totalTasks = new AtomicLong();
 
-    private volatile RebalanceTask       currentTask;
+    private volatile Runnable       currentTask;
 
     private AtomicBoolean                isRunning  = new AtomicBoolean(false);
 
@@ -70,12 +70,12 @@ public class ArrangeTaskExecutor extends AbstractLifecycle {
     protected void doInitialize() throws InitializeException {
         super.doInitialize();
         executors = DefaultExecutorFactory.createAllowCoreTimeout(
-            ArrangeTaskExecutor.class.getSimpleName(), Math.max(4, OsUtils.getCpuCount())).create();
+            ArrangeTaskExecutor.class.getSimpleName(), Math.max(2, OsUtils.getCpuCount())).create();
     }
 
     @Override
     protected void doDispose() throws DisposeException {
-        Queue<RebalanceTask> taskQueue = null;
+        Queue<Runnable> taskQueue = null;
         synchronized (this) {
             taskQueue = tasks;
             tasks = new LinkedBlockingQueue<>();
@@ -87,7 +87,7 @@ public class ArrangeTaskExecutor extends AbstractLifecycle {
         super.doDispose();
     }
 
-    public void offer(RebalanceTask task) {
+    public void offer(Runnable task) {
         logger.info("[offer]{}", task);
         boolean offered = false;
         synchronized (this) {
@@ -113,7 +113,7 @@ public class ArrangeTaskExecutor extends AbstractLifecycle {
 
         @Override
         public void run() {
-            RebalanceTask task = null;
+            Runnable task = null;
             if (!isRunning.compareAndSet(false, true)) {
                 logger.debug("[run][already run]{}", this);
                 return;

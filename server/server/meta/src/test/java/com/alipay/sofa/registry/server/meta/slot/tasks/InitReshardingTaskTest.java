@@ -24,8 +24,8 @@ import com.alipay.sofa.registry.server.meta.bootstrap.config.NodeConfig;
 import com.alipay.sofa.registry.server.meta.lease.data.DefaultDataServerManager;
 import com.alipay.sofa.registry.server.meta.slot.SlotManager;
 import com.alipay.sofa.registry.server.meta.slot.impl.LocalSlotManager;
+import com.alipay.sofa.registry.server.meta.slot.tasks.init.InitReshardingTask;
 import com.alipay.sofa.registry.util.JsonUtils;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import org.assertj.core.util.Lists;
 import org.junit.Assert;
 import org.junit.Before;
@@ -41,7 +41,7 @@ import static org.mockito.Mockito.when;
 
 public class InitReshardingTaskTest extends AbstractTest {
 
-    private InitReshardingTask       task;
+    private InitReshardingTask task;
 
     private SlotManager              raftSlotManager;
 

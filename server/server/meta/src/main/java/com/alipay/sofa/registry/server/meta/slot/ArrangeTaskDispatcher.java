@@ -22,6 +22,10 @@ import com.alipay.sofa.registry.common.model.Node;
  * @author chen.zhu
  * <p>
  * Nov 25, 2020
+ *
+ * update in Jan/12/2021:
+ * Considering simplify the process of rebalance and server alive/dead
+ * We group all these logics together, simpily
  */
 public interface ArrangeTaskDispatcher<T extends Node> {
 

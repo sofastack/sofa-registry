@@ -23,7 +23,7 @@ import com.alipay.sofa.registry.server.meta.AbstractTest;
 import com.alipay.sofa.registry.server.meta.bootstrap.config.MetaServerConfig;
 import com.alipay.sofa.registry.server.meta.bootstrap.config.NodeConfig;
 import com.alipay.sofa.registry.server.meta.lease.data.DefaultDataServerManager;
-import com.alipay.sofa.registry.server.meta.slot.tasks.InitReshardingTask;
+import com.alipay.sofa.registry.server.meta.slot.tasks.init.InitReshardingTask;
 import com.alipay.sofa.registry.server.meta.slot.tasks.SlotReassignTask;
 import org.assertj.core.util.Lists;
 import org.junit.After;
@@ -113,7 +113,7 @@ public class DataServerArrangeTaskDispatcherTest extends AbstractTest {
         when(dataServerManager.getClusterMembers()).thenReturn(currentDataNodes);
 
         dispatcher.serverDead(dataNode);
-        waitConditionUntilTimeOut(()->slotManager.getSlotTable().getEpoch() > slotTable.getEpoch(), 50000);
+        waitConditionUntilTimeOut(()->slotManager.getSlotTable().getEpoch() > slotTable.getEpoch(), 500000);
 
         dataNodeSlot.getLeaders().forEach(slotId->{
             Assert.assertNotEquals(dataNodeSlot.getDataNode(), slotManager.getSlotTable().getSlot(slotId).getLeader());
