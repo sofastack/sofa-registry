@@ -51,20 +51,20 @@ public final class LocalDatumStorage implements DatumStorage {
     @Autowired
     private DataServerConfig                    dataServerConfig;
 
-    private PublisherGroups getPublisherGroups(String dataInfoId) {
+    private PublisherGroups getPublisherGroupsOfSlot(String dataInfoId) {
         final Integer slotId = slotFunction.slotOf(dataInfoId);
         return publisherGroupsMap.get(slotId);
     }
 
     @Override
     public Datum get(String dataInfoId) {
-        PublisherGroups groups = getPublisherGroups(dataInfoId);
+        PublisherGroups groups = getPublisherGroupsOfSlot(dataInfoId);
         return groups == null ? null : groups.getDatum(dataInfoId);
     }
 
     @Override
     public DatumVersion getVersion(String dataInfoId) {
-        PublisherGroups groups = getPublisherGroups(dataInfoId);
+        PublisherGroups groups = getPublisherGroupsOfSlot(dataInfoId);
         return groups == null ? null : groups.getVersion(dataInfoId);
     }
 
@@ -102,14 +102,14 @@ public final class LocalDatumStorage implements DatumStorage {
 
     @Override
     public DatumVersion putPublisher(Publisher publisher) {
-        PublisherGroups groups = getPublisherGroups(publisher.getDataInfoId());
+        PublisherGroups groups = getPublisherGroupsOfSlot(publisher.getDataInfoId());
         return groups == null ? null : groups.putPublisher(publisher,
             dataServerConfig.getLocalDataCenter());
     }
 
     @Override
     public DatumVersion createEmptyDatumIfAbsent(Publisher publisher) {
-        PublisherGroups groups = getPublisherGroups(publisher.getDataInfoId());
+        PublisherGroups groups = getPublisherGroupsOfSlot(publisher.getDataInfoId());
         return groups == null ? null : groups.createGroupIfAbsent(publisher,
             dataServerConfig.getLocalDataCenter()).getVersion();
     }
@@ -134,24 +134,25 @@ public final class LocalDatumStorage implements DatumStorage {
         return versionMap;
     }
 
+    // only for http testapi
     @Override
     public DatumVersion remove(String dataInfoId, ProcessId sessionProcessId) {
         // the sessionProcessId is null when the call from sync leader
-        PublisherGroups groups = getPublisherGroups(dataInfoId);
+        PublisherGroups groups = getPublisherGroupsOfSlot(dataInfoId);
         return groups == null ? null : groups.remove(dataInfoId, sessionProcessId);
     }
 
     @Override
     public DatumVersion update(String dataInfoId, List<Publisher> updatedPublishers) {
-        PublisherGroups groups = getPublisherGroups(dataInfoId);
-        return groups == null ? null : groups.update(dataInfoId, updatedPublishers);
+        PublisherGroups groups = getPublisherGroupsOfSlot(dataInfoId);
+        return groups == null ? null : groups.update(dataInfoId, updatedPublishers, dataServerConfig.getLocalDataCenter());
     }
 
     @Override
     public DatumVersion remove(String dataInfoId, ProcessId sessionProcessId,
                                Map<String, PublisherVersion> removedPublishers) {
         // the sessionProcessId is null when the call from sync leader
-        PublisherGroups groups = getPublisherGroups(dataInfoId);
+        PublisherGroups groups = getPublisherGroupsOfSlot(dataInfoId);
         return groups == null ? null : groups.remove(dataInfoId, sessionProcessId,
             removedPublishers);
     }

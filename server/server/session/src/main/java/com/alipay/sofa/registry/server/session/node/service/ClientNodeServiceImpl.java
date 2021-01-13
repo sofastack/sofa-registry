@@ -21,7 +21,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import com.alipay.sofa.registry.common.model.store.URL;
 import com.alipay.sofa.registry.remoting.CallbackHandler;
 import com.alipay.sofa.registry.remoting.exchange.NodeExchanger;
-import com.alipay.sofa.registry.remoting.exchange.RequestException;
 import com.alipay.sofa.registry.remoting.exchange.message.Request;
 
 /**
@@ -35,10 +34,7 @@ public class ClientNodeServiceImpl implements ClientNodeService {
 
     @Override
     public void pushWithCallback(Object object, URL url, CallbackHandler callbackHandler) {
-
-        try {
             Request<Object> request = new Request<Object>() {
-
                 @Override
                 public Object getRequestBody() {
                     return object;
@@ -54,11 +50,6 @@ public class ClientNodeServiceImpl implements ClientNodeService {
                     return callbackHandler;
                 }
             };
-
             clientNodeExchanger.request(request);
-
-        } catch (RequestException e) {
-            throw new RuntimeException("Push data to client node error !" + e.getMessage(), e);
-        }
     }
 }

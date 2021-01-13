@@ -24,6 +24,7 @@ import com.alipay.sofa.registry.common.model.dataserver.DatumSummary;
 import com.alipay.sofa.registry.common.model.dataserver.DatumVersion;
 import com.alipay.sofa.registry.common.model.store.Publisher;
 import com.google.common.collect.Maps;
+import org.apache.commons.collections.CollectionUtils;
 import org.glassfish.jersey.internal.guava.Sets;
 
 import java.util.HashMap;
@@ -106,9 +107,12 @@ public final class PublisherGroups {
         return group == null ? null : group.clean(sessionProcessId);
     }
 
-    DatumVersion update(String dataInfoId, List<Publisher> updatedPublishers) {
-        PublisherGroup group = publisherGroupMap.get(dataInfoId);
-        return group == null ? null : group.update(updatedPublishers);
+    DatumVersion update(String dataInfoId, List<Publisher> updatedPublishers, String dataCenter) {
+        if (CollectionUtils.isEmpty(updatedPublishers)) {
+            return null;
+        }
+        PublisherGroup group = createGroupIfAbsent(updatedPublishers.get(0), dataCenter);
+        return group.update(updatedPublishers);
     }
 
     DatumVersion remove(String dataInfoId, ProcessId sessionProcessId,

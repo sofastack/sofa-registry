@@ -26,6 +26,7 @@ import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.remoting.CallbackHandler;
 import com.alipay.sofa.registry.remoting.Channel;
+import com.alipay.sofa.registry.remoting.exchange.RequestChannelClosedException;
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
 import com.alipay.sofa.registry.server.session.node.service.ClientNodeService;
 import com.alipay.sofa.registry.server.shared.util.DatumUtils;
@@ -214,7 +215,7 @@ public class PushProcessor {
                 task.taskID);
             return false;
         }
-        final long span = prev.spanMillis();
+        final long span = System.currentTimeMillis() - prev.pushTimestamp;
         if (span > sessionServerConfig.getClientNodeExchangeTimeOut() * 2) {
             // force to remove the prev task
             final boolean cleaned = pushingTasks.remove(pushingTaskKey) != null;
@@ -281,6 +282,7 @@ public class PushProcessor {
 
         protected Object createPushData() {
             Datum merged = pushDataGenerator.mergeDatum(subscriber, dataCenter, datumMap);
+            LOGGER.info("merged {}, from {}, {}, {}", merged, datumMap, taskID, pushingTaskKey);
             return pushDataGenerator.createPushData(merged, subscriberMap, pushVersion);
         }
 
@@ -292,18 +294,13 @@ public class PushProcessor {
             this.pushTimestamp = System.currentTimeMillis();
         }
 
-        long spanMillis() {
-            return System.currentTimeMillis() - pushTimestamp;
-        }
-
         @Override
         public void run() {
             if (sessionServerConfig.isStopPushSwitch()) {
                 return;
             }
-            PushingTaskKey pushingTaskKey = null;
+
             try {
-                pushingTaskKey = this.pushingTaskKey;
                 if (!checkPushing(this, pushingTaskKey)) {
                     return;
                 }
@@ -313,14 +310,14 @@ public class PushProcessor {
                 clientNodeService.pushWithCallback(data, subscriber.getSourceAddress(),
                     new PushClientCallback(this, pushingTaskKey));
                 LOGGER.info("{}, pushing {}", taskID, pushingTaskKey);
+            }catch (RequestChannelClosedException e){
+                // try to delete self
+                boolean cleaned = pushingTasks.remove(pushingTaskKey) != null;
+                LOGGER.error("{}, failed to pushing {}, cleaned={}, {}", taskID, pushingTaskKey, cleaned, e.getMessage());
             } catch (Throwable e) {
                 // try to delete self
-                boolean cleaned = false;
-                if (pushingTaskKey != null) {
-                    cleaned = pushingTasks.remove(pushingTaskKey) != null;
-                }
-                LOGGER.error("{}, failed to pushing {}, cleaned={}, {}", taskID, pushingTaskKey,
-                    cleaned, this, e);
+                boolean cleaned = pushingTasks.remove(pushingTaskKey) != null;
+                LOGGER.error("{}, failed to pushing {}, cleaned={}", taskID, pushingTaskKey, cleaned, e);
             }
         }
 
@@ -351,7 +348,7 @@ public class PushProcessor {
     private final class PushClientCallback implements CallbackHandler {
         final PushTask       pushTask;
         final PushingTaskKey pushingTaskKey;
-
+        long finishedTimestamp;
         PushClientCallback(PushTask pushTask, PushingTaskKey pushingTaskKey) {
             this.pushTask = pushTask;
             this.pushingTaskKey = pushingTaskKey;
@@ -359,6 +356,7 @@ public class PushProcessor {
 
         @Override
         public void onCallback(Channel channel, Object message) {
+            this.finishedTimestamp = System.currentTimeMillis();
             boolean cleaned = false;
             try {
                 final Map<String, Long> versions = DatumUtils.getVesions(pushTask.datumMap);
@@ -378,12 +376,13 @@ public class PushProcessor {
                 // after removed=true, the value aslo in the map
                 cleaned = pushingTasks.remove(pushingTaskKey, pushTask);
             }
-            LOGGER.info("PushY, clean record={}, span={}, {}, {}", cleaned, pushTask.spanMillis(),
+            LOGGER.info("PushY, clean record={}, span={}/{}, {}, {}", cleaned, pushSpanMillis(), totalSpanMillis(),
                 pushTask.taskID, pushTask.pushingTaskKey);
         }
 
         @Override
         public void onException(Channel channel, Throwable exception) {
+            this.finishedTimestamp = System.currentTimeMillis();
             boolean cleaned = false;
             try {
                 // TODO should use remove(k, exceptV). but in some case,
@@ -398,12 +397,20 @@ public class PushProcessor {
                 LOGGER.error("error push.onException, {}, {}", pushTask.taskID, pushingTaskKey, e);
             }
             if (exception instanceof InvokeTimeoutException) {
-                LOGGER.error("PushN, timeout, clean record={}, span={}, {}, {}", cleaned,
-                    pushTask.spanMillis(), pushTask.taskID, pushingTaskKey);
+                LOGGER.error("PushN, timeout, clean record={}, span={}/{}, {}, {}", cleaned,
+                        pushSpanMillis(), totalSpanMillis(), pushTask.taskID, pushingTaskKey);
             } else {
-                LOGGER.error("PushN, clean record={}, span={}, {}, {}", cleaned,
-                    pushTask.spanMillis(), pushTask.taskID, pushingTaskKey, exception);
+                LOGGER.error("PushN, clean record={}, span={}/{}, {}, {}", cleaned,
+                        pushSpanMillis(), totalSpanMillis(), pushTask.taskID, pushingTaskKey, exception);
             }
+        }
+
+        private long pushSpanMillis(){
+            return finishedTimestamp - pushTask.pushTimestamp;
+        }
+
+        private long totalSpanMillis(){
+            return finishedTimestamp - pushTask.createTimestamp;
         }
 
         @Override
