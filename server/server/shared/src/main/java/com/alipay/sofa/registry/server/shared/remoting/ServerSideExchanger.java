@@ -24,6 +24,7 @@ import com.alipay.sofa.registry.remoting.Client;
 import com.alipay.sofa.registry.remoting.Server;
 import com.alipay.sofa.registry.remoting.exchange.Exchange;
 import com.alipay.sofa.registry.remoting.exchange.NodeExchanger;
+import com.alipay.sofa.registry.remoting.exchange.RequestChannelClosedException;
 import com.alipay.sofa.registry.remoting.exchange.RequestException;
 import com.alipay.sofa.registry.remoting.exchange.message.Request;
 import com.alipay.sofa.registry.remoting.exchange.message.Response;
@@ -71,8 +72,7 @@ public abstract class ServerSideExchanger implements NodeExchanger {
         }
 
         if (channel == null || !channel.isConnected()) {
-            throw new RequestException(getServerPort() + ", get channel error! channel with url:" + url
-                    + " can not be null or disconnected!", request);
+            throw new RequestChannelClosedException(getServerPort() + ", channel may be closed", request);
         }
         try {
             if (request.getCallBackHandler() != null) {

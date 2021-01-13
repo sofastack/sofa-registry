@@ -89,7 +89,6 @@ public class PushDataGenerator {
                 }
             }
         }
-        LOGGER.info("merged {}, from {}", ret, datumMap);
         return ret;
     }
 }

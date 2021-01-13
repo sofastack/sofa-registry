@@ -30,7 +30,6 @@ import com.alipay.sofa.registry.util.DatumVersionUtil;
 import com.alipay.sofa.registry.util.ParaCheckUtil;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
 
 import java.util.*;
@@ -113,10 +112,20 @@ public final class PublisherGroup {
 
     private boolean tryAddPublisher(Publisher publisher) {
         PublisherEnvelope exist = pubMap.get(publisher.getRegisterId());
-        if (exist != null && !exist.publisherVersion.orderThan(publisher.publisherVersion())) {
-            LOGGER.warn("[AddOlderVer] {}, exist={}, add={}", publisher.getRegisterId(),
-                exist.publisherVersion, publisher.publisherVersion());
-            return false;
+        final PublisherVersion publisherVersion = publisher.publisherVersion();
+        if (exist != null) {
+            if(exist.publisherVersion.equals(publisherVersion)){
+                LOGGER.info("[AddSameVer] {}, {}, exist={}, add={}",
+                        publisher.getDataInfoId(), publisher.getRegisterId(),
+                        exist.publisherVersion, publisher.publisherVersion());
+                return false;
+            }
+            if(!exist.publisherVersion.orderThan(publisherVersion)) {
+                LOGGER.warn("[AddOlderVer] {}, {}, exist={}, add={}",
+                        publisher.getDataInfoId(), publisher.getRegisterId(),
+                        exist.publisherVersion, publisher.publisherVersion());
+                return false;
+            }
         }
         pubMap.put(publisher.getRegisterId(), PublisherEnvelope.of(publisher));
         return true;
@@ -231,9 +240,6 @@ public final class PublisherGroup {
     }
 
     DatumVersion update(List<Publisher> updatedPublishers) {
-        if (CollectionUtils.isEmpty(updatedPublishers)) {
-            return null;
-        }
         for (Publisher p : updatedPublishers) {
             ParaCheckUtil.checkNotNull(p.getSessionProcessId(), "publisher.sessionProcessId");
         }

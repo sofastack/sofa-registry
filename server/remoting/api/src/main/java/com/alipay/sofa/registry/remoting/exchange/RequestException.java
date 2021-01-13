@@ -86,7 +86,7 @@ public class RequestException extends RuntimeException {
             if (requestBody instanceof String) {
                 requestBodyStr = requestBody.toString();
             } else if (requestBody != null) {
-                requestBodyStr = request.getRequestBody().getClass().getName();
+                requestBodyStr = request.getRequestBody().getClass().getSimpleName();
             }
             sb.append("request url: ").append(request.getRequestUrl()).append(", body: ")
                 .append(requestBodyStr).append(", ");
