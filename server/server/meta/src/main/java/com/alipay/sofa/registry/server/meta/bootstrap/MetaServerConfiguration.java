@@ -54,6 +54,7 @@ import com.alipay.sofa.registry.server.meta.revision.AppRevisionRegistry;
 import com.alipay.sofa.registry.server.meta.revision.AppRevisionService;
 import com.alipay.sofa.registry.server.meta.slot.impl.*;
 import com.alipay.sofa.registry.server.shared.remoting.AbstractServerHandler;
+import com.alipay.sofa.registry.server.shared.resource.SlotGenericResource;
 import com.alipay.sofa.registry.store.api.DBService;
 import com.alipay.sofa.registry.util.DefaultExecutorFactory;
 import com.alipay.sofa.registry.util.NamedThreadFactory;
@@ -413,6 +414,11 @@ public class MetaServerConfiguration {
         @Bean
         public SessionLoadbalanceResource sessionLoadbalanceSwitchResource() {
             return new SessionLoadbalanceResource();
+        }
+
+        @Bean
+        public SlotGenericResource slotResource() {
+            return new SlotGenericResource();
         }
     }
 

@@ -23,6 +23,14 @@ import com.alipay.sofa.registry.common.model.slot.func.SlotFunction;
 import com.alipay.sofa.registry.common.model.slot.func.SlotFunctionRegistry;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
+import com.alipay.sofa.registry.server.shared.resource.SlotGenericResource;
+import com.alipay.sofa.registry.server.shared.slot.DiskSlotTableRecorder;
+import com.alipay.sofa.registry.server.shared.slot.SlotTableRecorder;
+import com.google.common.collect.Lists;
+import org.springframework.beans.factory.annotation.Autowired;
+
+import javax.annotation.PostConstruct;
+import java.util.List;
 import org.apache.commons.lang.StringUtils;
 
 /**
@@ -34,6 +42,18 @@ public final class SlotTableCacheImpl implements SlotTableCache {
 
     private final SlotFunction  slotFunction = SlotFunctionRegistry.getFunc();
     private volatile SlotTable  slotTable    = SlotTable.INIT;
+
+    @Autowired
+    private SlotGenericResource slotGenericResource;
+
+    private List<SlotTableRecorder> recorders;
+
+    @PostConstruct
+    public void init() {
+        recorders = Lists.newArrayList(
+                slotGenericResource,
+                new DiskSlotTableRecorder());
+    }
 
     @Override
     public int slotOf(String dataInfoId) {
@@ -75,6 +95,7 @@ public final class SlotTableCacheImpl implements SlotTableCache {
             LOGGER.info("skip update, current={}, update={}", curEpoch, slotTable.getEpoch());
             return false;
         }
+        recordSlotTable(slotTable);
         this.slotTable = slotTable;
         for (Slot slot : this.slotTable.getSlots()) {
             if (StringUtils.isBlank(slot.getLeader())) {
@@ -84,6 +105,10 @@ public final class SlotTableCacheImpl implements SlotTableCache {
         LOGGER.info("updating slot table, expect={}, current={}, {}", slotTable.getEpoch(),
             curEpoch, this.slotTable);
         return true;
+    }
+
+    private void recordSlotTable(SlotTable slotTable) {
+        recorders.forEach(recorder->recorder.record(slotTable));
     }
 
     @Override

@@ -23,7 +23,7 @@ import com.alipay.sofa.registry.server.meta.slot.impl.LocalSlotManager;
 import com.alipay.sofa.registry.server.meta.slot.tasks.init.InitReshardingTask;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import javax.ws.rs.GET;
+import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
@@ -45,7 +45,7 @@ public class SlotTableResource {
     @Autowired
     private DefaultDataServerManager dataServerManager;
 
-    @GET
+    @PUT
     @Path("force/refresh")
     @Produces(MediaType.APPLICATION_JSON)
     public SlotTable forceRefreshSlotTable() {

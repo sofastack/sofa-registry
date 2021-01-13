@@ -28,6 +28,7 @@ import com.alipay.sofa.registry.server.session.push.PushProcessor;
 import com.alipay.sofa.registry.server.session.remoting.handler.*;
 import com.alipay.sofa.registry.server.session.resource.*;
 import com.alipay.sofa.registry.server.session.strategy.*;
+import com.alipay.sofa.registry.server.shared.resource.SlotGenericResource;
 import org.glassfish.jersey.jackson.JacksonFeature;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -345,6 +346,11 @@ public class SessionServerConfiguration {
         @Bean
         public ConnectionsResource connectionsResource() {
             return new ConnectionsResource();
+        }
+
+        @Bean
+        public SlotGenericResource slotGenericResource() {
+            return new SlotGenericResource();
         }
     }
 
