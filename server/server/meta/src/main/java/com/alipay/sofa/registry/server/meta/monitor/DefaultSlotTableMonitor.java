@@ -27,15 +27,18 @@ import com.alipay.sofa.registry.lifecycle.impl.LifecycleHelper;
 import com.alipay.sofa.registry.observer.Observable;
 import com.alipay.sofa.registry.observer.Observer;
 import com.alipay.sofa.registry.server.meta.slot.impl.LocalSlotManager;
+import com.alipay.sofa.registry.server.shared.resource.SlotGenericResource;
 import com.alipay.sofa.registry.server.shared.slot.DiskSlotTableRecorder;
 import com.alipay.sofa.registry.server.shared.slot.SlotTableRecorder;
 import com.alipay.sofa.registry.util.NamedThreadFactory;
 import com.alipay.sofa.registry.util.OsUtils;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.Lists;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
+import java.util.List;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
@@ -51,7 +54,10 @@ public class DefaultSlotTableMonitor extends AbstractLifecycle implements SlotTa
     @Autowired
     private LocalSlotManager         slotManager;
 
-    private SlotTableRecorder        recorder;
+    @Autowired
+    private SlotGenericResource slotGenericResource;
+
+    private List<SlotTableRecorder>  recorders;
 
     private ScheduledExecutorService scheduled;
 
@@ -72,7 +78,9 @@ public class DefaultSlotTableMonitor extends AbstractLifecycle implements SlotTa
     @Override
     protected void doInitialize() throws InitializeException {
         super.doInitialize();
-        recorder = new DiskSlotTableRecorder();
+        recorders = Lists.newArrayList(
+                new DiskSlotTableRecorder(),
+                slotGenericResource);
         scheduled = ThreadPoolUtil.newScheduledBuilder()
             .coreThreads(Math.min(OsUtils.getCpuCount(), 2))
             .threadFactory(new NamedThreadFactory(DefaultSlotTableMonitor.class.getSimpleName()))
@@ -108,7 +116,7 @@ public class DefaultSlotTableMonitor extends AbstractLifecycle implements SlotTa
 
     @Override
     public void recordSlotTable() {
-        recorder.record(slotManager.getSlotTable());
+        recorders.forEach(recorder -> recorder.record(slotManager.getSlotTable()));
     }
 
     @Override

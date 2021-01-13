@@ -32,10 +32,14 @@ import com.alipay.sofa.registry.server.data.remoting.DataNodeExchanger;
 import com.alipay.sofa.registry.server.data.remoting.SessionNodeExchanger;
 import com.alipay.sofa.registry.server.data.remoting.metaserver.MetaServerServiceImpl;
 import com.alipay.sofa.registry.server.shared.env.ServerEnv;
+import com.alipay.sofa.registry.server.shared.resource.SlotGenericResource;
+import com.alipay.sofa.registry.server.shared.slot.DiskSlotTableRecorder;
+import com.alipay.sofa.registry.server.shared.slot.SlotTableRecorder;
 import com.alipay.sofa.registry.task.KeyedThreadPoolExecutor;
 import com.alipay.sofa.registry.task.KeyedThreadPoolExecutor.KeyedTask;
 import com.alipay.sofa.registry.util.ConcurrentUtils;
 import com.alipay.sofa.registry.util.WakeupLoopRunnable;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -75,6 +79,11 @@ public final class SlotManagerImpl implements SlotManager {
     @Autowired
     private SessionLeaseManager              sessionLeaseManager;
 
+    @Autowired
+    private SlotGenericResource              slotGenericResource;
+
+    private List<SlotTableRecorder>          recorders;
+
     private final List<SlotChangeListener>   slotChangeListeners = new ArrayList<>();
 
     private KeyedThreadPoolExecutor          syncSessionExecutor;
@@ -104,6 +113,9 @@ public final class SlotManagerImpl implements SlotManager {
         }
         watchDog = new SyncingWatchDog();
         ConcurrentUtils.createDaemonThread("SyncingWatchDog", watchDog).start();
+        recorders = Lists.newArrayList(
+                slotGenericResource,
+                new DiskSlotTableRecorder());
     }
 
     @Override
@@ -144,6 +156,7 @@ public final class SlotManagerImpl implements SlotManager {
         if (updating != null && updating.getEpoch() >= update.getEpoch()) {
             return false;
         }
+        recordSlotTable(update);
         //confirmed that slotTable is related to us
         update = update.filter(ServerEnv.IP);
 
@@ -158,6 +171,10 @@ public final class SlotManagerImpl implements SlotManager {
         LOGGER.info("updating slot table, new={}, current={}", update.getEpoch(),
             curSlotTable.getEpoch());
         return true;
+    }
+
+    private void recordSlotTable(SlotTable slotTable) {
+        recorders.forEach(recorder->recorder.record(slotTable));
     }
 
     private void updateSlotState(SlotTable updating) {
