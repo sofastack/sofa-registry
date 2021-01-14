@@ -145,7 +145,8 @@ public final class LocalDatumStorage implements DatumStorage {
     @Override
     public DatumVersion update(String dataInfoId, List<Publisher> updatedPublishers) {
         PublisherGroups groups = getPublisherGroupsOfSlot(dataInfoId);
-        return groups == null ? null : groups.update(dataInfoId, updatedPublishers, dataServerConfig.getLocalDataCenter());
+        return groups == null ? null : groups.update(dataInfoId, updatedPublishers,
+            dataServerConfig.getLocalDataCenter());
     }
 
     @Override

@@ -38,21 +38,20 @@ import org.apache.commons.lang.StringUtils;
  * @version v 0.1 2020-11-11 10:07 yuzhi.lyz Exp $
  */
 public final class SlotTableCacheImpl implements SlotTableCache {
-    private static final Logger LOGGER       = LoggerFactory.getLogger(SlotTableCacheImpl.class);
+    private static final Logger     LOGGER       = LoggerFactory
+                                                     .getLogger(SlotTableCacheImpl.class);
 
-    private final SlotFunction  slotFunction = SlotFunctionRegistry.getFunc();
-    private volatile SlotTable  slotTable    = SlotTable.INIT;
+    private final SlotFunction      slotFunction = SlotFunctionRegistry.getFunc();
+    private volatile SlotTable      slotTable    = SlotTable.INIT;
 
     @Autowired
-    private SlotGenericResource slotGenericResource;
+    private SlotGenericResource     slotGenericResource;
 
     private List<SlotTableRecorder> recorders;
 
     @PostConstruct
     public void init() {
-        recorders = Lists.newArrayList(
-                slotGenericResource,
-                new DiskSlotTableRecorder());
+        recorders = Lists.newArrayList(slotGenericResource, new DiskSlotTableRecorder());
     }
 
     @Override
