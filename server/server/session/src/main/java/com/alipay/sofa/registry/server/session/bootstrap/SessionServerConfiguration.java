@@ -27,6 +27,7 @@ import com.alipay.sofa.registry.server.session.push.PushDataGenerator;
 import com.alipay.sofa.registry.server.session.push.PushProcessor;
 import com.alipay.sofa.registry.server.session.remoting.handler.*;
 import com.alipay.sofa.registry.server.session.resource.*;
+import com.alipay.sofa.registry.server.session.scheduler.timertask.SessionCacheDigestTask;
 import com.alipay.sofa.registry.server.session.strategy.*;
 import com.alipay.sofa.registry.server.shared.resource.SlotGenericResource;
 import org.glassfish.jersey.jackson.JacksonFeature;
@@ -542,6 +543,11 @@ public class SessionServerConfiguration {
         @Bean
         public SyncClientsHeartbeatTask syncClientsHeartbeatTask() {
             return new SyncClientsHeartbeatTask();
+        }
+
+        @Bean
+        public SessionCacheDigestTask sessionCacheDigestTask() {
+            return new SessionCacheDigestTask();
         }
     }
 

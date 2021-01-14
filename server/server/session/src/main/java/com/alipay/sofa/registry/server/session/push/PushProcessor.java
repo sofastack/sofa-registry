@@ -281,9 +281,10 @@ public class PushProcessor {
         }
 
         protected Object createPushData() {
-            Datum merged = pushDataGenerator.mergeDatum(subscriber, dataCenter, datumMap);
+            Datum merged = pushDataGenerator.mergeDatum(subscriber, dataCenter, datumMap,
+                pushVersion);
             LOGGER.info("merged {}, from {}, {}, {}", merged, datumMap, taskID, pushingTaskKey);
-            return pushDataGenerator.createPushData(merged, subscriberMap, pushVersion);
+            return pushDataGenerator.createPushData(merged, subscriberMap);
         }
 
         void expireAfter(long intervalMs) {

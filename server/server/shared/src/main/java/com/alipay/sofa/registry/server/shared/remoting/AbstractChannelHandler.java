@@ -27,8 +27,8 @@ import com.alipay.sofa.registry.remoting.ChannelHandler;
  * @version v 0.1 2020-12-14 13:57 yuzhi.lyz Exp $
  */
 public abstract class AbstractChannelHandler<T> implements ChannelHandler<T> {
-    private final Logger connectLog;
-    private final Logger exchangeLog;
+    private final Logger   connectLog;
+    protected final Logger exchangeLog;
 
     protected AbstractChannelHandler(Logger connectLog, Logger exchangeLog) {
         this.connectLog = connectLog;
@@ -104,11 +104,13 @@ public abstract class AbstractChannelHandler<T> implements ChannelHandler<T> {
      * @param request
      */
     protected void logRequest(Channel channel, T request) {
-        StringBuilder sb = new StringBuilder(256);
-        sb.append("[").append(getClassName()).append("] ");
-        sb.append("Remote:").append(RemotingHelper.getChannelRemoteAddress(channel))
-            .append(" Request:").append(request);
-        exchangeLog.info(sb.toString());
+        if (exchangeLog.isInfoEnabled()) {
+            StringBuilder sb = new StringBuilder(256);
+            sb.append("[").append(getClassName()).append("] ");
+            sb.append("Remote:").append(RemotingHelper.getChannelRemoteAddress(channel))
+                .append(" Request:").append(request);
+            exchangeLog.info(sb.toString());
+        }
     }
 
     /**

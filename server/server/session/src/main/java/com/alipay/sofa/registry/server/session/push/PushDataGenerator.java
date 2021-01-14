@@ -43,7 +43,7 @@ public class PushDataGenerator {
     @Autowired
     private AppRevisionCacheRegistry appRevisionCacheRegistry;
 
-    public Object createPushData(Datum datum, Map<String, Subscriber> subscriberMap, long version) {
+    public Object createPushData(Datum datum, Map<String, Subscriber> subscriberMap) {
         SubscriberUtils.getAndAssertHasSameScope(subscriberMap.values());
         final Subscriber subscriber = subscriberMap.values().iterator().next();
         BaseInfo.ClientVersion clientVersion = subscriber.getClientVersion();
@@ -59,7 +59,7 @@ public class PushDataGenerator {
         ReceivedData receivedData = ReceivedDataConverter.getReceivedDataMulti(datum,
             subscriber.getScope(), Lists.newArrayList(subscriberMap.keySet()), clientCell,
             zonePredicate);
-        receivedData.setVersion(version);
+        receivedData.setVersion(datum.getVersion());
         final Byte serializerIndex = subscriber.getSourceAddress().getSerializerIndex();
         if (serializerIndex != null && URL.PROTOBUF == serializerIndex.byteValue()) {
             return ReceivedDataConvertor.convert2Pb(receivedData);
@@ -67,9 +67,11 @@ public class PushDataGenerator {
         return receivedData;
     }
 
-    public Datum mergeDatum(Subscriber subscriber, String dataCenter, Map<String, Datum> datumMap) {
+    public Datum mergeDatum(Subscriber subscriber, String dataCenter, Map<String, Datum> datumMap,
+                            long pushVersion) {
         DataInfo dataInfo = DataInfo.valueOf(subscriber.getDataInfoId());
         Datum ret = new Datum();
+        ret.setVersion(pushVersion);
         ret.setDataInfoId(dataInfo.getDataInfoId());
         ret.setDataCenter(dataCenter);
         ret.setDataId(dataInfo.getDataId());

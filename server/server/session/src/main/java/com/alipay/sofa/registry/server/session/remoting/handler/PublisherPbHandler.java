@@ -66,6 +66,11 @@ public class PublisherPbHandler extends AbstractServerHandler<PublisherRegisterP
         return RegisterResponseConvertor.convert2Pb((RegisterResponse) response);
     }
 
+    @Override
+    protected void logRequest(Channel channel, PublisherRegisterPb request) {
+        // not log
+    }
+
     /**
      * Interest class.
      *

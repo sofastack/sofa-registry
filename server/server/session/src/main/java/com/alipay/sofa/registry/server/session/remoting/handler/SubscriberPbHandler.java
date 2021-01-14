@@ -81,6 +81,11 @@ public class SubscriberPbHandler extends AbstractServerHandler<SubscriberRegiste
         return RegisterResponseConvertor.convert2Pb((RegisterResponse) response);
     }
 
+    @Override
+    protected void logRequest(Channel channel, SubscriberRegisterPb request) {
+        // not log
+    }
+
     /**
      * Interest class.
      *

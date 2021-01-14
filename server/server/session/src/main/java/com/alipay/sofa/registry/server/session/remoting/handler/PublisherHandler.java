@@ -34,6 +34,7 @@ import java.util.concurrent.Executor;
  * @version $Id: SessionHandler.java, v 0.1 2017-11-29 11:32 shangyu.wh Exp $
  */
 public class PublisherHandler extends AbstractServerHandler<PublisherRegister> {
+
     @Autowired
     private ExecutorManager          executorManager;
 
@@ -52,6 +53,7 @@ public class PublisherHandler extends AbstractServerHandler<PublisherRegister> {
         return result;
     }
 
+    @Override
     protected void logRequest(Channel channel, PublisherRegister request) {
         // not log
     }
