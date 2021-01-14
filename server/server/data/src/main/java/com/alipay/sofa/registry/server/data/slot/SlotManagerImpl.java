@@ -113,9 +113,7 @@ public final class SlotManagerImpl implements SlotManager {
         }
         watchDog = new SyncingWatchDog();
         ConcurrentUtils.createDaemonThread("SyncingWatchDog", watchDog).start();
-        recorders = Lists.newArrayList(
-                slotGenericResource,
-                new DiskSlotTableRecorder());
+        recorders = Lists.newArrayList(slotGenericResource, new DiskSlotTableRecorder());
     }
 
     @Override

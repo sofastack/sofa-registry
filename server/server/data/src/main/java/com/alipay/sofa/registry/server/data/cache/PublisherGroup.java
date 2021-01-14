@@ -114,16 +114,18 @@ public final class PublisherGroup {
         PublisherEnvelope exist = pubMap.get(publisher.getRegisterId());
         final PublisherVersion publisherVersion = publisher.publisherVersion();
         if (exist != null) {
-            if(exist.publisherVersion.equals(publisherVersion)){
-                LOGGER.info("[AddSameVer] {}, {}, exist={}, add={}",
-                        publisher.getDataInfoId(), publisher.getRegisterId(),
-                        exist.publisherVersion, publisher.publisherVersion());
+            if (exist.publisherVersion.equals(publisherVersion)) {
+                LOGGER
+                    .info("[AddSameVer] {}, {}, exist={}, add={}", publisher.getDataInfoId(),
+                        publisher.getRegisterId(), exist.publisherVersion,
+                        publisher.publisherVersion());
                 return false;
             }
-            if(!exist.publisherVersion.orderThan(publisherVersion)) {
-                LOGGER.warn("[AddOlderVer] {}, {}, exist={}, add={}",
-                        publisher.getDataInfoId(), publisher.getRegisterId(),
-                        exist.publisherVersion, publisher.publisherVersion());
+            if (!exist.publisherVersion.orderThan(publisherVersion)) {
+                LOGGER
+                    .warn("[AddOlderVer] {}, {}, exist={}, add={}", publisher.getDataInfoId(),
+                        publisher.getRegisterId(), exist.publisherVersion,
+                        publisher.publisherVersion());
                 return false;
             }
         }

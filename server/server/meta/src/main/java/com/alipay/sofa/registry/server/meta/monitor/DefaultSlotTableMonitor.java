@@ -55,7 +55,7 @@ public class DefaultSlotTableMonitor extends AbstractLifecycle implements SlotTa
     private LocalSlotManager         slotManager;
 
     @Autowired
-    private SlotGenericResource slotGenericResource;
+    private SlotGenericResource      slotGenericResource;
 
     private List<SlotTableRecorder>  recorders;
 
@@ -78,9 +78,7 @@ public class DefaultSlotTableMonitor extends AbstractLifecycle implements SlotTa
     @Override
     protected void doInitialize() throws InitializeException {
         super.doInitialize();
-        recorders = Lists.newArrayList(
-                new DiskSlotTableRecorder(),
-                slotGenericResource);
+        recorders = Lists.newArrayList(new DiskSlotTableRecorder(), slotGenericResource);
         scheduled = ThreadPoolUtil.newScheduledBuilder()
             .coreThreads(Math.min(OsUtils.getCpuCount(), 2))
             .threadFactory(new NamedThreadFactory(DefaultSlotTableMonitor.class.getSimpleName()))

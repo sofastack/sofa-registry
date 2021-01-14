@@ -310,14 +310,16 @@ public class PushProcessor {
                 clientNodeService.pushWithCallback(data, subscriber.getSourceAddress(),
                     new PushClientCallback(this, pushingTaskKey));
                 LOGGER.info("{}, pushing {}", taskID, pushingTaskKey);
-            }catch (RequestChannelClosedException e){
+            } catch (RequestChannelClosedException e) {
                 // try to delete self
                 boolean cleaned = pushingTasks.remove(pushingTaskKey) != null;
-                LOGGER.error("{}, failed to pushing {}, cleaned={}, {}", taskID, pushingTaskKey, cleaned, e.getMessage());
+                LOGGER.error("{}, failed to pushing {}, cleaned={}, {}", taskID, pushingTaskKey,
+                    cleaned, e.getMessage());
             } catch (Throwable e) {
                 // try to delete self
                 boolean cleaned = pushingTasks.remove(pushingTaskKey) != null;
-                LOGGER.error("{}, failed to pushing {}, cleaned={}", taskID, pushingTaskKey, cleaned, e);
+                LOGGER.error("{}, failed to pushing {}, cleaned={}", taskID, pushingTaskKey,
+                    cleaned, e);
             }
         }
 
@@ -348,7 +350,8 @@ public class PushProcessor {
     private final class PushClientCallback implements CallbackHandler {
         final PushTask       pushTask;
         final PushingTaskKey pushingTaskKey;
-        long finishedTimestamp;
+        long                 finishedTimestamp;
+
         PushClientCallback(PushTask pushTask, PushingTaskKey pushingTaskKey) {
             this.pushTask = pushTask;
             this.pushingTaskKey = pushingTaskKey;
@@ -376,8 +379,8 @@ public class PushProcessor {
                 // after removed=true, the value aslo in the map
                 cleaned = pushingTasks.remove(pushingTaskKey, pushTask);
             }
-            LOGGER.info("PushY, clean record={}, span={}/{}, {}, {}", cleaned, pushSpanMillis(), totalSpanMillis(),
-                pushTask.taskID, pushTask.pushingTaskKey);
+            LOGGER.info("PushY, clean record={}, span={}/{}, {}, {}", cleaned, pushSpanMillis(),
+                totalSpanMillis(), pushTask.taskID, pushTask.pushingTaskKey);
         }
 
         @Override
@@ -398,18 +401,19 @@ public class PushProcessor {
             }
             if (exception instanceof InvokeTimeoutException) {
                 LOGGER.error("PushN, timeout, clean record={}, span={}/{}, {}, {}", cleaned,
-                        pushSpanMillis(), totalSpanMillis(), pushTask.taskID, pushingTaskKey);
+                    pushSpanMillis(), totalSpanMillis(), pushTask.taskID, pushingTaskKey);
             } else {
-                LOGGER.error("PushN, clean record={}, span={}/{}, {}, {}", cleaned,
-                        pushSpanMillis(), totalSpanMillis(), pushTask.taskID, pushingTaskKey, exception);
+                LOGGER
+                    .error("PushN, clean record={}, span={}/{}, {}, {}", cleaned, pushSpanMillis(),
+                        totalSpanMillis(), pushTask.taskID, pushingTaskKey, exception);
             }
         }
 
-        private long pushSpanMillis(){
+        private long pushSpanMillis() {
             return finishedTimestamp - pushTask.pushTimestamp;
         }
 
-        private long totalSpanMillis(){
+        private long totalSpanMillis() {
             return finishedTimestamp - pushTask.createTimestamp;
         }
 
