@@ -159,17 +159,19 @@ public class SessionServerConfigBean implements SessionServerConfig {
 
     private String               blacklistSubDataIdRegex               = "";
 
-    private int                  dataNodeRetryExecutorQueueSize        = 1000000;
+    private int                  dataNodeRetryExecutorQueueSize        = 20000;
 
-    private int                  dataNodeRetryExecutorThreadSize       = 100;
+    private int                  dataNodeRetryExecutorThreadSize       = OsUtils.getCpuCount();
 
     private int                  dataClientConnNum                     = 10;
 
-    private int                  sessionSchedulerPoolSize              = 6;
+    private int                  sessionSchedulerPoolSize              = OsUtils.getCpuCount();
 
     private int                  slotSyncPublisherMaxNum               = 512;
 
     private boolean              enableSessionLoadbalancePolicy        = false;
+
+    private int                  cacheDigestFixDelaySecs               = 60 * 10;
 
     //end config for enterprise version
 
@@ -1256,6 +1258,15 @@ public class SessionServerConfigBean implements SessionServerConfig {
 
     public int getSlotSyncWorkerSize() {
         return slotSyncWorkerSize;
+    }
+
+    @Override
+    public int getCacheDigestFixDelaySecs() {
+        return cacheDigestFixDelaySecs;
+    }
+
+    public void setCacheDigestFixDelaySecs(int cacheDigestFixDelaySecs) {
+        this.cacheDigestFixDelaySecs = cacheDigestFixDelaySecs;
     }
 
     public void setSlotSyncWorkerSize(int slotSyncWorkerSize) {

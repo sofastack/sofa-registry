@@ -39,14 +39,15 @@ import static com.alipay.sofa.registry.common.model.constants.ValueConstants.DEF
  * @since 2019/2/15
  */
 public class DefaultPublisherHandlerStrategy implements PublisherHandlerStrategy {
-    private static final Logger LOGGER = LoggerFactory.getLogger(PublisherHandler.class);
-
+    private static final Logger LOGGER     = LoggerFactory.getLogger(PublisherHandler.class);
+    private static final Logger PUB_LOGGER = LoggerFactory.getLogger("PUB-RECEIVE");
     @Autowired
     private Registry            sessionRegistry;
 
     @Override
     public void handlePublisherRegister(Channel channel, PublisherRegister publisherRegister,
                                         RegisterResponse registerResponse) {
+        Publisher publisher = null;
         try {
             String ip = channel.getRemoteAddress().getAddress().getHostAddress();
             int port = channel.getRemoteAddress().getPort();
@@ -61,26 +62,60 @@ public class DefaultPublisherHandlerStrategy implements PublisherHandlerStrategy
                 publisherRegister.setInstanceId(DEFAULT_INSTANCE_ID);
             }
 
-            Publisher publisher = PublisherConverter.convert(publisherRegister);
+            publisher = PublisherConverter.convert(publisherRegister);
             publisher.setProcessId(ip + ":" + port);
-            publisher.setSourceAddress(new URL(channel.getRemoteAddress()));
-            publisher.setTargetAddress(new URL(channel.getLocalAddress()));
-            if (EventTypeConstants.REGISTER.equals(publisherRegister.getEventType())) {
-                sessionRegistry.register(publisher);
-            } else if (EventTypeConstants.UNREGISTER.equals(publisherRegister.getEventType())) {
-                sessionRegistry.unRegister(publisher);
-            }
-            registerResponse.setSuccess(true);
-            registerResponse.setVersion(publisher.getVersion());
-            registerResponse.setRegistId(publisherRegister.getRegistId());
-            registerResponse.setMessage("Publisher register success!");
-            LOGGER.info("Publisher register success!Type:{} Info:{}",
-                publisherRegister.getEventType(), publisher);
-        } catch (Exception e) {
-            LOGGER.error("Publisher register error!Type {}", publisherRegister.getEventType(), e);
-            registerResponse.setSuccess(false);
-            registerResponse.setMessage("Publisher register failed!Type:"
-                                        + publisherRegister.getEventType());
+
+            handle(publisher, channel, publisherRegister, registerResponse);
+        } catch (Throwable e) {
+            handleError(publisherRegister, publisher, registerResponse, e);
         }
+    }
+
+    protected void handle(Publisher publisher, Channel channel,
+                          PublisherRegister publisherRegister, RegisterResponse registerResponse) {
+        publisher.setSourceAddress(new URL(channel.getRemoteAddress()));
+        publisher.setTargetAddress(new URL(channel.getLocalAddress()));
+        final String eventType = publisherRegister.getEventType();
+        if (EventTypeConstants.REGISTER.equals(eventType)) {
+            sessionRegistry.register(publisher);
+        } else if (EventTypeConstants.UNREGISTER.equals(eventType)) {
+            sessionRegistry.unRegister(publisher);
+        } else {
+            LOGGER.warn("unsupported publisher.eventType:{}", eventType);
+        }
+        registerResponse.setSuccess(true);
+        registerResponse.setVersion(publisher.getVersion());
+        registerResponse.setRegistId(publisherRegister.getRegistId());
+        registerResponse.setMessage("Publisher register success!");
+        log(true, publisherRegister, publisher);
+    }
+
+    private void log(boolean success, PublisherRegister publisherRegister, Publisher publisher) {
+        //[Y|N],[R|U|N],app,zone,dataInfoId,registerId,version,registerTimestamp,clientVersion,clientIp,clientPort
+        PUB_LOGGER.info("{},{},{},{},{},{},{},{},{},{},{}", success ? 'Y' : 'N',
+            getEventTypeFlag(publisherRegister.getEventType()), publisherRegister.getAppName(),
+            publisherRegister.getZone(), publisherRegister.getDataInfoId(), publisherRegister
+                .getRegistId(), publisherRegister.getVersion(), publisher == null ? null
+                : publisher.getRegisterTimestamp(),
+            publisher == null ? null : publisher.getClientVersion(), publisherRegister.getIp(),
+            publisherRegister.getPort());
+    }
+
+    private char getEventTypeFlag(String eventType) {
+        if (EventTypeConstants.REGISTER.equals(eventType)) {
+            return 'R';
+        } else if (EventTypeConstants.UNREGISTER.equals(eventType)) {
+            return 'U';
+        }
+        return 'N';
+    }
+
+    protected void handleError(PublisherRegister publisherRegister, Publisher publisher,
+                               RegisterResponse registerResponse, Throwable e) {
+        log(false, publisherRegister, publisher);
+        LOGGER.error("Publisher register error!Type {}", publisherRegister.getEventType(), e);
+        registerResponse.setSuccess(false);
+        registerResponse.setMessage("Publisher register failed!Type:"
+                                    + publisherRegister.getEventType());
     }
 }

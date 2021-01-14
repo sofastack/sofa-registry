@@ -48,6 +48,11 @@ public class SubscriberHandler extends AbstractServerHandler<SubscriberRegister>
     }
 
     @Override
+    protected void logRequest(Channel channel, SubscriberRegister request) {
+        // not log
+    }
+
+    @Override
     public Class interest() {
         return SubscriberRegister.class;
     }

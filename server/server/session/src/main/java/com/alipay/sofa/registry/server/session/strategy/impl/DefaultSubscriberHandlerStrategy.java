@@ -39,8 +39,9 @@ import static com.alipay.sofa.registry.common.model.constants.ValueConstants.DEF
  * @since 2019/2/15
  */
 public class DefaultSubscriberHandlerStrategy implements SubscriberHandlerStrategy {
-    private static final Logger LOGGER = LoggerFactory
-                                           .getLogger(DefaultSubscriberHandlerStrategy.class);
+    private static final Logger LOGGER     = LoggerFactory
+                                               .getLogger(DefaultSubscriberHandlerStrategy.class);
+    private static final Logger SUB_LOGGER = LoggerFactory.getLogger("SUB-RECEIVE");
 
     @Autowired
     private Registry            sessionRegistry;
@@ -48,6 +49,7 @@ public class DefaultSubscriberHandlerStrategy implements SubscriberHandlerStrate
     @Override
     public void handleSubscriberRegister(Channel channel, SubscriberRegister subscriberRegister,
                                          RegisterResponse registerResponse) {
+        Subscriber subscriber = null;
         try {
             String ip = channel.getRemoteAddress().getAddress().getHostAddress();
             int port = channel.getRemoteAddress().getPort();
@@ -62,27 +64,63 @@ public class DefaultSubscriberHandlerStrategy implements SubscriberHandlerStrate
                 subscriberRegister.setInstanceId(DEFAULT_INSTANCE_ID);
             }
 
-            Subscriber subscriber = SubscriberConverter.convert(subscriberRegister);
+            subscriber = SubscriberConverter.convert(subscriberRegister);
             subscriber.setProcessId(ip + ":" + port);
-            subscriber.setSourceAddress(new URL(channel.getRemoteAddress(), BoltChannelUtil
-                .getBoltCustomSerializer(channel)));
-            subscriber.setTargetAddress(new URL(channel.getLocalAddress()));
 
-            if (EventTypeConstants.REGISTER.equals(subscriberRegister.getEventType())) {
-                sessionRegistry.register(subscriber);
-            } else if (EventTypeConstants.UNREGISTER.equals(subscriberRegister.getEventType())) {
-                sessionRegistry.unRegister(subscriber);
-            }
-            registerResponse.setVersion(subscriberRegister.getVersion());
-            registerResponse.setRegistId(subscriberRegister.getRegistId());
-            LOGGER.info("Subscriber register success! Type:{} Info:{}",
-                subscriberRegister.getEventType(), subscriber);
-            registerResponse.setSuccess(true);
-            registerResponse.setMessage("Subscriber register success!");
-        } catch (Exception e) {
-            LOGGER.error("Subscriber register error!Type{}", subscriberRegister.getEventType(), e);
-            registerResponse.setSuccess(false);
-            registerResponse.setMessage("Subscriber register failed!");
+            handle(subscriber, channel, subscriberRegister, registerResponse);
+        } catch (Throwable e) {
+            handleError(subscriberRegister, subscriber, registerResponse, e);
         }
+    }
+
+    protected void handle(Subscriber subscriber, Channel channel,
+                          SubscriberRegister subscriberRegister, RegisterResponse registerResponse) {
+        subscriber.setSourceAddress(new URL(channel.getRemoteAddress(), BoltChannelUtil
+            .getBoltCustomSerializer(channel)));
+        subscriber.setTargetAddress(new URL(channel.getLocalAddress()));
+
+        final String eventType = subscriberRegister.getEventType();
+        if (EventTypeConstants.REGISTER.equals(eventType)) {
+            sessionRegistry.register(subscriber);
+        } else if (EventTypeConstants.UNREGISTER.equals(eventType)) {
+            sessionRegistry.unRegister(subscriber);
+        } else {
+            LOGGER.warn("unsupported subscriber.eventType:{}", eventType);
+        }
+        registerResponse.setVersion(subscriberRegister.getVersion());
+        registerResponse.setRegistId(subscriberRegister.getRegistId());
+        registerResponse.setSuccess(true);
+        registerResponse.setMessage("Subscriber register success!");
+        log(true, subscriberRegister, subscriber);
+    }
+
+    private void log(boolean success, SubscriberRegister subscriberRegister, Subscriber subscriber) {
+        //[Y|N],[R|U|N],app,zone,dataInfoId,registerId,scope,assembleType,elementType,clientVersion,clientIp,clientPort
+        SUB_LOGGER.info("{},{},{},{},{},{},{},{},{},{},{},{}", success ? 'Y' : 'N',
+            getEventTypeFlag(subscriberRegister.getEventType()), subscriberRegister.getAppName(),
+            subscriberRegister.getZone(), subscriberRegister.getDataInfoId(), subscriberRegister
+                .getRegistId(), subscriberRegister.getScope(),
+            subscriberRegister.getAssembleType(),
+            subscriber == null ? null : subscriber.getElementType(), subscriber == null ? null
+                : subscriber.getClientVersion(), subscriberRegister.getIp(), subscriberRegister
+                .getPort());
+    }
+
+    private char getEventTypeFlag(String eventType) {
+        if (EventTypeConstants.REGISTER.equals(eventType)) {
+            return 'R';
+        } else if (EventTypeConstants.UNREGISTER.equals(eventType)) {
+            return 'U';
+        }
+        return 'N';
+    }
+
+    protected void handleError(SubscriberRegister subscriberRegister, Subscriber subscriber,
+                               RegisterResponse registerResponse, Throwable e) {
+        log(false, subscriberRegister, subscriber);
+        LOGGER.error("Publisher register error!Type {}", subscriberRegister.getEventType(), e);
+        registerResponse.setSuccess(false);
+        registerResponse.setMessage("Publisher register failed!Type:"
+                                    + subscriberRegister.getEventType());
     }
 }

@@ -107,7 +107,7 @@ public final class PublisherGroups {
         return group == null ? null : group.clean(sessionProcessId);
     }
 
-    DatumVersion update(String dataInfoId, List<Publisher> updatedPublishers, String dataCenter) {
+    DatumVersion update(List<Publisher> updatedPublishers, String dataCenter) {
         if (CollectionUtils.isEmpty(updatedPublishers)) {
             return null;
         }

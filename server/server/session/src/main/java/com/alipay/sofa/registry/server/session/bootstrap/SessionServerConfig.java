@@ -150,4 +150,6 @@ public interface SessionServerConfig {
     int getSlotSyncMaxBufferSize();
 
     int getSlotSyncWorkerSize();
+
+    int getCacheDigestFixDelaySecs();
 }

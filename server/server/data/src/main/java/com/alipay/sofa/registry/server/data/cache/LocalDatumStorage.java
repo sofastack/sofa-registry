@@ -51,26 +51,40 @@ public final class LocalDatumStorage implements DatumStorage {
     @Autowired
     private DataServerConfig                    dataServerConfig;
 
-    private PublisherGroups getPublisherGroupsOfSlot(String dataInfoId) {
+    private PublisherGroups getPublisherGroups(String dataInfoId) {
         final Integer slotId = slotFunction.slotOf(dataInfoId);
-        return publisherGroupsMap.get(slotId);
+        PublisherGroups groups = publisherGroupsMap.get(slotId);
+        if (groups == null) {
+            LOGGER.warn("[nullGroups] {}, {}", slotId, dataInfoId);
+
+        }
+        return groups;
+    }
+
+    private PublisherGroups getPublisherGroups(int slotId) {
+        PublisherGroups groups = publisherGroupsMap.get(slotId);
+        if (groups == null) {
+            LOGGER.warn("[nullGroups] {}", slotId);
+
+        }
+        return groups;
     }
 
     @Override
     public Datum get(String dataInfoId) {
-        PublisherGroups groups = getPublisherGroupsOfSlot(dataInfoId);
+        final PublisherGroups groups = getPublisherGroups(dataInfoId);
         return groups == null ? null : groups.getDatum(dataInfoId);
     }
 
     @Override
     public DatumVersion getVersion(String dataInfoId) {
-        PublisherGroups groups = getPublisherGroupsOfSlot(dataInfoId);
+        PublisherGroups groups = getPublisherGroups(dataInfoId);
         return groups == null ? null : groups.getVersion(dataInfoId);
     }
 
     @Override
     public Map<String, DatumVersion> getVersions(int slotId) {
-        PublisherGroups groups = publisherGroupsMap.get(slotId);
+        PublisherGroups groups = getPublisherGroups(slotId);
         return groups == null ? Collections.emptyMap() : groups.getVersions();
     }
 
@@ -89,8 +103,8 @@ public final class LocalDatumStorage implements DatumStorage {
     }
 
     @Override
-    public Map<String, Map<String, Publisher>> getPublishers(int slot) {
-        PublisherGroups groups = publisherGroupsMap.get(slot);
+    public Map<String, Map<String, Publisher>> getPublishers(int slotId) {
+        PublisherGroups groups = getPublisherGroups(slotId);
         if (groups == null) {
             return Collections.emptyMap();
         }
@@ -102,14 +116,14 @@ public final class LocalDatumStorage implements DatumStorage {
 
     @Override
     public DatumVersion putPublisher(Publisher publisher) {
-        PublisherGroups groups = getPublisherGroupsOfSlot(publisher.getDataInfoId());
+        PublisherGroups groups = getPublisherGroups(publisher.getDataInfoId());
         return groups == null ? null : groups.putPublisher(publisher,
             dataServerConfig.getLocalDataCenter());
     }
 
     @Override
     public DatumVersion createEmptyDatumIfAbsent(Publisher publisher) {
-        PublisherGroups groups = getPublisherGroupsOfSlot(publisher.getDataInfoId());
+        PublisherGroups groups = getPublisherGroups(publisher.getDataInfoId());
         return groups == null ? null : groups.createGroupIfAbsent(publisher,
             dataServerConfig.getLocalDataCenter()).getVersion();
     }
@@ -138,14 +152,14 @@ public final class LocalDatumStorage implements DatumStorage {
     @Override
     public DatumVersion remove(String dataInfoId, ProcessId sessionProcessId) {
         // the sessionProcessId is null when the call from sync leader
-        PublisherGroups groups = getPublisherGroupsOfSlot(dataInfoId);
+        PublisherGroups groups = getPublisherGroups(dataInfoId);
         return groups == null ? null : groups.remove(dataInfoId, sessionProcessId);
     }
 
     @Override
     public DatumVersion update(String dataInfoId, List<Publisher> updatedPublishers) {
-        PublisherGroups groups = getPublisherGroupsOfSlot(dataInfoId);
-        return groups == null ? null : groups.update(dataInfoId, updatedPublishers,
+        PublisherGroups groups = getPublisherGroups(dataInfoId);
+        return groups == null ? null : groups.update(updatedPublishers,
             dataServerConfig.getLocalDataCenter());
     }
 
@@ -153,7 +167,7 @@ public final class LocalDatumStorage implements DatumStorage {
     public DatumVersion remove(String dataInfoId, ProcessId sessionProcessId,
                                Map<String, PublisherVersion> removedPublishers) {
         // the sessionProcessId is null when the call from sync leader
-        PublisherGroups groups = getPublisherGroupsOfSlot(dataInfoId);
+        PublisherGroups groups = getPublisherGroups(dataInfoId);
         return groups == null ? null : groups.remove(dataInfoId, sessionProcessId,
             removedPublishers);
     }
