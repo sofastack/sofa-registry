@@ -21,6 +21,7 @@ import com.alipay.sofa.registry.client.api.registration.PublisherRegistration;
 import com.alipay.sofa.registry.client.api.registration.SubscriberRegistration;
 import com.alipay.sofa.registry.core.model.ScopeEnum;
 import com.alipay.sofa.registry.test.BaseIntegrationTest;
+import com.alipay.sofa.registry.test.BaseIntegrationTest.MySubscriberDataObserver;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.test.context.junit4.SpringRunner;
@@ -29,7 +30,7 @@ import static com.alipay.sofa.registry.client.constants.ValueConstants.DEFAULT_G
 import static org.junit.Assert.assertEquals;
 
 /**
- * @author xuanbei 18/12/2
+ * @author xuanbe 18/12/2
  */
 @RunWith(SpringRunner.class)
 public class PubSubTest extends BaseIntegrationTest {

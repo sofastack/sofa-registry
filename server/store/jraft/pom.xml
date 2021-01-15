@@ -36,7 +36,7 @@
         </dependency>
         <dependency>
             <groupId>com.alipay.sofa</groupId>
-            <artifactId>registry-store-api</artifactId>
+            <artifactId>registry-store-common</artifactId>
         </dependency>
         <dependency>
             <groupId>org.slf4j</groupId>

@@ -166,15 +166,13 @@ public final class DataChangeEventCenter {
         final Connection                connection;
         final String                    dataCenter;
         final Map<String, DatumVersion> dataInfoIds;
-        final Set<String>               revisions;
         volatile int                    retryCount;
 
         public ChangeNotifier(Connection connection, String dataCenter,
-                              Map<String, DatumVersion> dataInfoIds, Set<String> revisions) {
+                              Map<String, DatumVersion> dataInfoIds) {
             this.dataCenter = dataCenter;
             this.connection = connection;
             this.dataInfoIds = dataInfoIds;
-            this.revisions = revisions;
         }
 
         @Override
@@ -185,8 +183,7 @@ public final class DataChangeEventCenter {
                     LOGGER.info("change notify failed, conn is closed, {}", connection);
                     return;
                 }
-                DataChangeRequest request = new DataChangeRequest(dataCenter, dataInfoIds,
-                    revisions);
+                DataChangeRequest request = new DataChangeRequest(dataCenter, dataInfoIds);
                 doNotify(request, connection);
                 CHANGE_SUCCESS_COUNTER.inc();
             } catch (Throwable e) {
@@ -344,7 +341,6 @@ public final class DataChangeEventCenter {
                 }
                 for (DataChangeEvent event : events) {
                     final Map<String, DatumVersion> changes = new HashMap<>(events.size());
-                    final Set<String> revisions = new HashSet<>(64);
                     final String dataCenter = event.getDataCenter();
                     for (String dataInfoId : event.getDataInfoIds()) {
                         DatumVersion datumVersion = datumCache.getVersion(dataCenter, dataInfoId);
@@ -359,8 +355,7 @@ public final class DataChangeEventCenter {
                         // group by connection
                         try {
                             notifyExecutor.execute(connection.getRemoteAddress(),
-                                new ChangeNotifier(connection, event.getDataCenter(), changes,
-                                    revisions));
+                                new ChangeNotifier(connection, event.getDataCenter(), changes));
                             CHANGE_COMMIT_COUNTER.inc();
                         } catch (RejectedExecutionException e) {
                             CHANGE_SKIP_COUNTER.inc();

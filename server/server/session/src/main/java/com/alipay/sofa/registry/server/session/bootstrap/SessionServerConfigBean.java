@@ -163,6 +163,7 @@ public class SessionServerConfigBean implements SessionServerConfig {
     private int                  cacheDatumMaxNums                          = 2000;
 
     private int                  cacheDatumExpireSecs                       = 60 * 3;
+    private int                  silenceHour                                = 24;
 
     //end config for enterprise version
 
@@ -1094,5 +1095,18 @@ public class SessionServerConfigBean implements SessionServerConfig {
 
     public void setCacheDatumExpireSecs(int cacheDatumExpireSecs) {
         this.cacheDatumExpireSecs = cacheDatumExpireSecs;
+    }
+
+    public int getAppRevisionGcSilenceHour() {
+        return silenceHour;
+    }
+
+    /**
+     * Setter method for property <tt>silenceHour</tt>.
+     *
+     * @param silenceHour value to be assigned to property silenceHour
+     */
+    public void setSilenceHour(int silenceHour) {
+        this.silenceHour = silenceHour;
     }
 }

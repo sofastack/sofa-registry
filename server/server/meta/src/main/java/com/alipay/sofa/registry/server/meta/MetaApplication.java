@@ -21,6 +21,7 @@ import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.server.meta.bootstrap.EnableMetaServer;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration;
 
 /**
  *
@@ -28,7 +29,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
  * @version $Id: MetaApplication.java, v 0.1 2017-11-13 19:03 zhuoyu.sjw Exp $$
  */
 @EnableMetaServer
-@SpringBootApplication
+@SpringBootApplication(exclude = { DataSourceAutoConfiguration.class })
 public class MetaApplication {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(MetaApplication.class);

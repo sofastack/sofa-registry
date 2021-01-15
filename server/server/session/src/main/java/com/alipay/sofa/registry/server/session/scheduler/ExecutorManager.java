@@ -19,6 +19,7 @@ package com.alipay.sofa.registry.server.session.scheduler;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
+import com.alipay.sofa.registry.server.session.metadata.AppRevisionHeartbeatRegistry;
 import com.alipay.sofa.registry.server.shared.meta.MetaServerService;
 import com.alipay.sofa.registry.task.MetricsableThreadPoolExecutor;
 import com.alipay.sofa.registry.util.NamedThreadFactory;
@@ -48,6 +49,9 @@ public class ExecutorManager {
     @Autowired
     protected MetaServerService               metaServerService;
 
+    @Autowired
+    protected AppRevisionHeartbeatRegistry    appRevisionHeartbeatRegistry;
+
     private Map<String, ThreadPoolExecutor>   reportExecutors                    = new HashMap<>();
 
     private static final String               ACCESS_DATA_EXECUTOR               = "AccessDataExecutor";
@@ -57,6 +61,10 @@ public class ExecutorManager {
     private static final String               DATA_SLOT_MIGRATE_REQUEST_EXECUTOR = "DataSlotMigrateRequestExecutor";
 
     private static final String               CONNECT_CLIENT_EXECUTOR            = "ConnectClientExecutor";
+
+    private static final String               REVISION_HEARTBEAT_EXECUTOR        = "RevisionHeartbeatExecutor";
+
+    private static final String               REVISION_GC_EXECUTOR               = "RevisionGcExecutor";
 
     public ExecutorManager(SessionServerConfig sessionServerConfig) {
         scheduler = new ScheduledThreadPoolExecutor(sessionServerConfig.getSessionSchedulerPoolSize(),
@@ -100,6 +108,8 @@ public class ExecutorManager {
     }
 
     public void startScheduler() {
+        scheduler.scheduleWithFixedDelay(() -> appRevisionHeartbeatRegistry.doRevisionHeartbeat(), 10, 10, TimeUnit.MINUTES);
+        scheduler.scheduleWithFixedDelay(() -> appRevisionHeartbeatRegistry.doRevisionGc(), 60, 60, TimeUnit.SECONDS);
     }
 
     public void stopScheduler() {

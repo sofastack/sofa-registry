@@ -1,0 +1,57 @@
+syntax = "proto3";
+option java_package = "com.alipay.sofa.registry.common.model.client.pb";
+option java_multiple_files = true;
+option go_package = "proto";
+
+
+message MetaRegister {
+  string application = 1;
+  string revision = 2;
+  string clientVersion = 3;
+  map<string, StringList> baseParams = 4;
+  map<string, MetaService> services = 5;
+}
+
+message MetaService{
+  string id = 1;
+  string serviceId = 2;
+  map<string, StringList> params = 3;
+}
+
+message StringList{
+  repeated string values = 1;
+}
+
+message AppList {
+  int64 version = 1;
+  repeated string apps = 2;
+}
+
+message ServiceAppMappingRequest{
+  repeated string serviceIds = 1;
+}
+
+message ServiceAppMappingResponse{
+  map<string, AppList> serviceAppMapping = 1;
+  int32 statusCode = 2;
+  string message = 3;
+}
+
+message GetRevisionsRequest{
+  repeated string revisions = 1;
+}
+
+message GetRevisionsResponse{
+  map<string, MetaRegister> revisions = 1;
+  int32 statusCode = 2;
+  string message = 3;
+}
+
+message MetaHeartbeatRequest{
+  repeated string revisions = 1;
+}
+
+message MetaHeartbeatResponse{
+  int32 statusCode = 1;
+  string message = 2;
+}

@@ -28,6 +28,12 @@
         <dependency>
             <groupId>com.alipay.sofa</groupId>
             <artifactId>registry-server-shared</artifactId>
+            <exclusions>
+                <exclusion>
+                    <groupId>com.alipay.sofa</groupId>
+                    <artifactId>registry-store-jdbc</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>com.alipay.sofa</groupId>

@@ -26,7 +26,7 @@ import com.alipay.sofa.registry.remoting.Channel;
 import com.alipay.sofa.registry.store.api.DBResponse;
 import com.alipay.sofa.registry.store.api.DBService;
 import com.alipay.sofa.registry.store.api.OperationStatus;
-import com.alipay.sofa.registry.store.api.annotation.RaftReference;
+import com.alipay.sofa.registry.jraft.annotation.RaftReference;
 
 /**
  * Handle session node's query request, such as get ProvideData by dataInfoId

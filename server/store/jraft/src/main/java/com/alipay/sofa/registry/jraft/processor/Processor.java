@@ -22,7 +22,7 @@ import com.alipay.sofa.registry.jraft.command.ProcessRequest;
 import com.alipay.sofa.registry.jraft.command.ProcessResponse;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
-import com.alipay.sofa.registry.store.api.annotation.NonRaftMethod;
+import com.alipay.sofa.registry.jraft.annotation.NonRaftMethod;
 import com.alipay.sofa.registry.store.api.annotation.ReadOnLeader;
 
 import java.lang.invoke.MethodHandle;

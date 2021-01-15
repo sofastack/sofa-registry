@@ -35,6 +35,16 @@
             <outputDirectory>./</outputDirectory>
             <destName>version_${project.version}</destName>
         </file>
+        <file>
+            <source>../../store/jdbc/src/main/resources/mapper/app_revision.xml</source>
+            <outputDirectory>./conf</outputDirectory>
+            <destName>app_revision.xml</destName>
+        </file>
+        <file>
+            <source>../../store/jdbc/src/main/resources/mapper/interface_apps_index.xml</source>
+            <outputDirectory>./conf</outputDirectory>
+            <destName>interface_apps_index.xml</destName>
+        </file>
     </files>
 
     <moduleSets>

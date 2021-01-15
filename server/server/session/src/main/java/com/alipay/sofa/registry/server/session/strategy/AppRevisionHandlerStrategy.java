@@ -16,10 +16,40 @@
  */
 package com.alipay.sofa.registry.server.session.strategy;
 
-import com.alipay.sofa.registry.core.model.AppRevisionRegister;
+import com.alipay.sofa.registry.common.model.client.pb.GetRevisionsResponse;
+import com.alipay.sofa.registry.common.model.client.pb.MetaHeartbeatResponse;
+import com.alipay.sofa.registry.common.model.client.pb.ServiceAppMappingResponse;
+import com.alipay.sofa.registry.common.model.store.AppRevision;
 import com.alipay.sofa.registry.core.model.RegisterResponse;
+import java.util.List;
 
 public interface AppRevisionHandlerStrategy {
-    void handleAppRevisionRegister(AppRevisionRegister appRevisionRegister,
-                                   RegisterResponse response);
+
+    /**
+     * appRevision register
+     * @param appRevision
+     * @param response
+     */
+    void handleAppRevisionRegister(AppRevision appRevision, RegisterResponse response);
+
+    /**
+     * query apps by services
+     * @param services
+     * @return
+     */
+    ServiceAppMappingResponse queryApps(List<String> services);
+
+    /**
+     * query appRevision
+     * @param revisions
+     * @return
+     */
+    GetRevisionsResponse queryRevision(List<String> revisions);
+
+    /**
+     * revision heartbeat
+     * @param revisions
+     * @return
+     */
+    MetaHeartbeatResponse heartbeat(List<String> revisions);
 }

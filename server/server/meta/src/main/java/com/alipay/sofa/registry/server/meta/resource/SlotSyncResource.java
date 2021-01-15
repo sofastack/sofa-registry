@@ -20,7 +20,7 @@ import com.alipay.sofa.registry.common.model.console.PersistenceData;
 import com.alipay.sofa.registry.common.model.constants.ValueConstants;
 import com.alipay.sofa.registry.store.api.DBResponse;
 import com.alipay.sofa.registry.store.api.DBService;
-import com.alipay.sofa.registry.store.api.annotation.RaftReference;
+import com.alipay.sofa.registry.jraft.annotation.RaftReference;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;

@@ -16,21 +16,55 @@
  */
 package com.alipay.sofa.registry.common.model.store;
 
-import com.alipay.sofa.registry.common.model.constants.ValueConstants;
 import com.alipay.sofa.registry.core.model.AppRevisionInterface;
-import com.alipay.sofa.registry.core.model.AppRevisionRegister;
 import com.google.common.collect.Maps;
-
 import java.io.Serializable;
-import java.util.HashMap;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
 public class AppRevision implements Serializable {
+
+    private String                            dataCenter;
+
     private String                            revision;
+
     private String                            appName;
+
+    private String                            clientVersion;
+
     private Map<String, List<String>>         baseParams   = Maps.newHashMap();
+
     private Map<String, AppRevisionInterface> interfaceMap = Maps.newHashMap();
+
+    private Date                              lastHeartbeat;
+
+    public AppRevision() {
+    }
+
+    public AppRevision(String dataCenter, String revision, Date lastHeartbeat) {
+        this.dataCenter = dataCenter;
+        this.revision = revision;
+        this.lastHeartbeat = lastHeartbeat;
+    }
+
+    /**
+     * Getter method for property <tt>dataCenter</tt>.
+     *
+     * @return property value of dataCenter
+     */
+    public String getDataCenter() {
+        return dataCenter;
+    }
+
+    /**
+     * Setter method for property <tt>dataCenter</tt>.
+     *
+     * @param dataCenter value to be assigned to property dataCenter
+     */
+    public void setDataCenter(String dataCenter) {
+        this.dataCenter = dataCenter;
+    }
 
     /**
      * Getter method for property <tt>revision</tt>.
@@ -94,29 +128,47 @@ public class AppRevision implements Serializable {
         this.interfaceMap = interfaceMap;
     }
 
-    public static AppRevision convert(AppRevisionRegister register) {
-        AppRevision revision = new AppRevision();
-        String appName = register.getAppName();
-        if (ValueConstants.DISABLE_DATA_ID_CASE_SENSITIVE) {
-            appName = appName.toUpperCase();
-        }
-        revision.setAppName(appName);
-        revision.setRevision(register.getRevision());
-        revision.setBaseParams(register.getBaseParams());
-        Map<String, AppRevisionInterface> interfaceMap = new HashMap<>();
-        for (AppRevisionInterface inf : register.getInterfaceList()) {
-            String dataInfoId = DataInfo.toDataInfoId(inf.getDataId(), inf.getInstanceId(),
-                inf.getGroup());
-            interfaceMap.put(dataInfoId, inf);
-        }
-        revision.setInterfaceMap(interfaceMap);
-        return revision;
+    /**
+     * Getter method for property <tt>lastHeartbeat</tt>.
+     *
+     * @return property value of lastHeartbeat
+     */
+    public Date getLastHeartbeat() {
+        return lastHeartbeat;
+    }
+
+    /**
+     * Setter method for property <tt>lastHeartbeat</tt>.
+     *
+     * @param lastHeartbeat value to be assigned to property lastHeartbeat
+     */
+    public void setLastHeartbeat(Date lastHeartbeat) {
+        this.lastHeartbeat = lastHeartbeat;
+    }
+
+    /**
+     * Getter method for property <tt>clientVersion</tt>.
+     *
+     * @return property value of clientVersion
+     */
+    public String getClientVersion() {
+        return clientVersion;
+    }
+
+    /**
+     * Setter method for property <tt>clientVersion</tt>.
+     *
+     * @param clientVersion value to be assigned to property clientVersion
+     */
+    public void setClientVersion(String clientVersion) {
+        this.clientVersion = clientVersion;
     }
 
     @Override
     public String toString() {
-        return "AppRevision{" + "revision='" + revision + '\'' + ", appName='" + appName + '\''
-               + ", baseParams=" + (baseParams == null ? "0" : baseParams.size()) + '\''
-               + ", interfaceMap=" + (interfaceMap == null ? "0" : baseParams.size()) + '\'' + '}';
+        return "AppRevision{" + "dataCenter='" + dataCenter + '\'' + ", revision='" + revision
+               + '\'' + ", appName='" + appName + '\'' + ", clientVersion='" + clientVersion + '\''
+               + ", baseParams=" + baseParams + ", interfaceMap=" + interfaceMap
+               + ", lastHeartbeat=" + lastHeartbeat + '}';
     }
 }

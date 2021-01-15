@@ -20,6 +20,7 @@ import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration;
 import org.springframework.scheduling.annotation.EnableScheduling;
 
 /**
@@ -27,7 +28,7 @@ import org.springframework.scheduling.annotation.EnableScheduling;
  * @author zhuoyu.sjw
  * @version $Id: SessionApplication.java, v 0.1 2017-11-13 20:19 zhuoyu.sjw Exp $$
  */
-@SpringBootApplication
+@SpringBootApplication(exclude = { DataSourceAutoConfiguration.class })
 @EnableScheduling
 public class SessionApplication {
 

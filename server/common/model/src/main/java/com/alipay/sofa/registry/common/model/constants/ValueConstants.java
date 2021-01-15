@@ -79,4 +79,8 @@ public class ValueConstants {
                                                                            .parseBoolean(System
                                                                                .getProperty(DISABLE_DATA_ID_CASE_SENSITIVE_SWITCH));
 
+    // response status code
+    public static final int      METADATA_STATUS_PROCESS_SUCCESS       = 200;
+    public static final int      METADATA_STATUS_DATA_NOT_FOUND        = 404;
+    public static final int      METADATA_STATUS_PROCESS_ERROR         = 500;
 }
