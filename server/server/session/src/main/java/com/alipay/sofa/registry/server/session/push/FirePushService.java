@@ -39,6 +39,7 @@ import org.springframework.util.CollectionUtils;
 import javax.annotation.PostConstruct;
 import java.net.InetSocketAddress;
 import java.util.*;
+import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Predicate;
 
@@ -77,9 +78,13 @@ public class FirePushService {
             fetchExecutor
                 .execute(dataInfoId, new ChangeTask(dataCenter, dataInfoId, expectVersion));
             return true;
-        } catch (Throwable e) {
-            LOGGER.error("failed to exec ChangeTask {}, dataCenter={}, expectVer={}", dataInfoId,
-                dataCenter, expectVersion, e);
+        } catch (RejectedExecutionException e) {
+            LOGGER.error("failed to exec ChangeTask {}, dataCenter={}, expectVer={}, {}", dataInfoId,
+                dataCenter, expectVersion, e.getMessage());
+            return false;
+        }catch (Throwable e){
+            LOGGER.error("failed to exec ChangeTask {}, dataCenter={}, expectVer={}, {}", dataInfoId,
+                    dataCenter, expectVersion, e);
             return false;
         }
     }
