@@ -18,8 +18,8 @@ package com.alipay.sofa.registry.server.meta.lease;
 
 import com.alipay.sofa.registry.common.model.Node;
 import com.alipay.sofa.registry.server.meta.cluster.NodeCluster;
-import com.alipay.sofa.registry.store.api.annotation.NonRaftMethod;
-import com.alipay.sofa.registry.store.api.annotation.RaftMethod;
+import com.alipay.sofa.registry.jraft.annotation.NonRaftMethod;
+import com.alipay.sofa.registry.jraft.annotation.RaftMethod;
 import com.alipay.sofa.registry.store.api.annotation.ReadOnLeader;
 
 /**

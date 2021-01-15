@@ -144,4 +144,6 @@ public interface SessionServerConfig {
     int getCacheDatumMaxNums();
 
     int getCacheDatumExpireSecs();
+
+    int getAppRevisionGcSilenceHour();
 }

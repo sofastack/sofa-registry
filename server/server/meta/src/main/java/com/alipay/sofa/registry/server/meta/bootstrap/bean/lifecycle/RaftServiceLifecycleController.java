@@ -16,8 +16,8 @@
  */
 package com.alipay.sofa.registry.server.meta.bootstrap.bean.lifecycle;
 
-import com.alipay.sofa.registry.store.api.annotation.RaftReferenceContainer;
-import com.alipay.sofa.registry.store.api.annotation.RaftService;
+import com.alipay.sofa.registry.jraft.annotation.RaftReferenceContainer;
+import com.alipay.sofa.registry.jraft.annotation.RaftService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 

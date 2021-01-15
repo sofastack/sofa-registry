@@ -22,7 +22,7 @@ import com.alipay.sofa.registry.jraft.processor.SnapshotProcess;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.server.meta.revision.AppRevisionService;
-import com.alipay.sofa.registry.store.api.annotation.RaftService;
+import com.alipay.sofa.registry.jraft.annotation.RaftService;
 import com.alipay.sofa.registry.util.RevisionUtils;
 
 import java.io.IOException;

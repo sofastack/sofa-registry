@@ -21,8 +21,8 @@ import com.alipay.sofa.registry.common.model.slot.DataNodeSlot;
 import com.alipay.sofa.registry.common.model.slot.SlotTable;
 import com.alipay.sofa.registry.jraft.bootstrap.ServiceStateMachine;
 import com.alipay.sofa.registry.server.meta.slot.SlotManager;
-import com.alipay.sofa.registry.store.api.annotation.RaftReference;
-import com.alipay.sofa.registry.store.api.annotation.RaftReferenceContainer;
+import com.alipay.sofa.registry.jraft.annotation.RaftReference;
+import com.alipay.sofa.registry.jraft.annotation.RaftReferenceContainer;
 import org.springframework.beans.factory.annotation.Autowired;
 
 /**

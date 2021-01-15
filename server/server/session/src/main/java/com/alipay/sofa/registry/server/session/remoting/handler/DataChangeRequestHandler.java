@@ -23,7 +23,7 @@ import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.remoting.Channel;
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
-import com.alipay.sofa.registry.server.session.cache.AppRevisionCacheRegistry;
+import com.alipay.sofa.registry.server.session.metadata.AppRevisionCacheRegistry;
 import com.alipay.sofa.registry.server.session.push.FirePushService;
 import com.alipay.sofa.registry.server.session.scheduler.ExecutorManager;
 import com.alipay.sofa.registry.server.session.store.Interests;
@@ -75,7 +75,6 @@ public class DataChangeRequestHandler extends AbstractClientHandler<DataChangeRe
         if (sessionServerConfig.isStopPushSwitch()) {
             return null;
         }
-        appRevisionCacheRegistry.refreshMeta(dataChangeRequest.getRevisions());
         final String dataCenter = dataChangeRequest.getDataCenter();
         for (Map.Entry<String, DatumVersion> e : dataChangeRequest.getDataInfoIds().entrySet()) {
             final String dataInfoId = e.getKey();

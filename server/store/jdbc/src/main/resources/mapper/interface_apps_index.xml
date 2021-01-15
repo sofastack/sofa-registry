@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.alipay.sofa.registry.jdbc.mapper.InterfaceAppsIndexMapper">
+
+    <resultMap type="com.alipay.sofa.registry.jdbc.domain.InterfaceAppsIndexDomain" id="interfaceAppsResultMap">
+        <id property="id" column="id" javaType="long" jdbcType="BIGINT"/>
+        <result property="dataCenter" column="data_center" javaType="java.lang.String" jdbcType="VARCHAR"/>
+        <result property="interfaceName" column="interface_name" javaType="java.lang.String" jdbcType="VARCHAR"/>
+        <result property="appName" column="app_name" javaType="java.lang.String" jdbcType="VARCHAR"/>
+        <result property="revision" column="revision" javaType="java.lang.String" jdbcType="VARCHAR"/>
+        <result property="hashcode" column="hashcode" javaType="java.lang.String" jdbcType="VARCHAR"/>
+        <result property="gmtCreate" column="gmt_create" javaType="java.util.Date" jdbcType="TIMESTAMP"/>
+        <result property="gmtModify" column="gmt_modified" javaType="java.sql.Timestamp" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+    <insert id="insert" parameterType="com.alipay.sofa.registry.jdbc.domain.InterfaceAppsIndexDomain">
+      INSERT INTO interface_apps_index(data_center, interface_name, app_name, reference, hashcode, gmt_create, gmt_modified)
+      VALUES
+      <foreach collection="list" item="domain" separator=",">
+      (#{domain.dataCenter},#{domain.interfaceName},#{domain.appName}, true , #{domain.hashcode}, NOW(6),  NOW(6))
+      </foreach>
+        ON DUPLICATE KEY UPDATE reference = true
+    </insert>
+
+    <select id="batchQueryByInterface" resultMap="interfaceAppsResultMap">
+         select * from interface_apps_index
+        <if test="list != null and list.size() > 0">
+            where
+             <foreach  collection="list" item="query" open="(" close=")" separator=" or ">
+               ( data_center = #{query.dataCenter} and interface_name = #{query.interfaceName})
+            </foreach>
+        </if>
+    </select>
+
+
+    <select id="queryByInterfaceName" resultMap="interfaceAppsResultMap">
+        <![CDATA[
+         select * from interface_apps_index
+         where data_center = #{dataCenter} and interface_name = #{interfaceName}
+        ]]>
+    </select>
+
+    <select id="getTotalCount" resultType="java.lang.Integer">
+        select count(1) from interface_apps_index
+    </select>
+
+    <select id="queryModifyAfterThan" resultMap="interfaceAppsResultMap">
+        select * from interface_apps_index where data_center = #{dataCenter} and gmt_modified > #{maxUpdate}
+        order by gmt_modified limit #{limitCount}
+    </select>
+
+    <select id="queryModifyEquals" resultMap="interfaceAppsResultMap">
+        select * from interface_apps_index where data_center = #{dataCenter} and gmt_modified = #{maxUpdate}
+    </select>
+
+
+</mapper>

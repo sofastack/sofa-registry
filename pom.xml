@@ -67,7 +67,7 @@
         <junit.jupiter.version>5.0.2</junit.jupiter.version>
         <junit.vintage.version>${junit.version}.2</junit.vintage.version>
         <junit.platform.version>1.0.2</junit.platform.version>
-        <sofa.hessian.version>3.3.8</sofa.hessian.version>
+        <sofa.hessian.version>3.3.12</sofa.hessian.version>
         <netty.version>4.1.42.Final</netty.version>
         <jersey.version>2.26</jersey.version>
         <protobuf.version>3.5.1</protobuf.version>
@@ -124,12 +124,17 @@
             </dependency>
             <dependency>
                 <groupId>com.alipay.sofa</groupId>
-                <artifactId>registry-store-api</artifactId>
+                <artifactId>registry-store-common</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.alipay.sofa</groupId>
                 <artifactId>registry-store-jraft</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.alipay.sofa</groupId>
+                <artifactId>registry-store-jdbc</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
@@ -343,6 +348,39 @@
                 <groupId>io.prometheus</groupId>
                 <artifactId>simpleclient_dropwizard</artifactId>
                 <version>0.9.0</version>
+            </dependency>
+
+            <!-- connect db -->
+            <dependency>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-starter-jdbc</artifactId>
+                <version>1.5.17.RELEASE</version>
+            </dependency>
+
+            <!-- db connection manager -->
+            <dependency>
+                <groupId>com.alibaba</groupId>
+                <artifactId>druid</artifactId>
+                <version>1.2.5</version>
+            </dependency>
+
+            <!-- mybatis -->
+            <dependency>
+                <groupId>org.mybatis</groupId>
+                <artifactId>mybatis</artifactId>
+                <version>3.2.8</version>
+            </dependency>
+            <dependency>
+                <groupId>org.mybatis</groupId>
+                <artifactId>mybatis-spring</artifactId>
+                <version>1.2.2</version>
+            </dependency>
+
+            <!-- mysql -->
+            <dependency>
+                <groupId>mysql</groupId>
+                <artifactId>mysql-connector-java</artifactId>
+                <version>5.1.47</version>
             </dependency>
 
             <!-- junit -->

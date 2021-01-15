@@ -20,7 +20,7 @@ import com.alipay.sofa.registry.common.model.metaserver.nodes.SessionNode;
 import com.alipay.sofa.registry.jraft.LeaderAware;
 import com.alipay.sofa.registry.server.meta.lease.LeaseManager;
 import com.alipay.sofa.registry.server.meta.lease.impl.DefaultLeaseManager;
-import com.alipay.sofa.registry.store.api.annotation.RaftService;
+import com.alipay.sofa.registry.jraft.annotation.RaftService;
 
 /**
  * @author chen.zhu

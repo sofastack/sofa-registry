@@ -35,7 +35,7 @@ import com.alipay.sofa.registry.server.meta.metaserver.CrossDcMetaServer;
 import com.alipay.sofa.registry.server.meta.remoting.RaftExchanger;
 import com.alipay.sofa.registry.server.meta.slot.SlotAllocator;
 import com.alipay.sofa.registry.server.meta.slot.SlotTableAware;
-import com.alipay.sofa.registry.store.api.annotation.RaftMethod;
+import com.alipay.sofa.registry.jraft.annotation.RaftMethod;
 import com.google.common.annotations.VisibleForTesting;
 
 import java.lang.reflect.Proxy;

@@ -37,13 +37,9 @@ public class DataChangeRequest implements Serializable {
 
     private final String                    dataCenter;
 
-    private final Set<String>               revisions;
-
-    public DataChangeRequest(String dataCenter, Map<String, DatumVersion> dataInfoIds,
-                             Set<String> revisions) {
+    public DataChangeRequest(String dataCenter, Map<String, DatumVersion> dataInfoIds) {
         this.dataCenter = dataCenter;
         this.dataInfoIds = dataInfoIds;
-        this.revisions = revisions;
     }
 
     public Map<String, DatumVersion> getDataInfoIds() {
@@ -54,13 +50,9 @@ public class DataChangeRequest implements Serializable {
         return dataCenter;
     }
 
-    public Set<String> getRevisions() {
-        return Collections.unmodifiableSet(revisions);
-    }
-
     @Override
     public String toString() {
-        return "DataChangeRequest{" + "dataInfoIds=" + dataInfoIds.size() + ", dataCenter='"
-               + dataCenter + '\'' + ", revisions=" + revisions.size() + '}';
+        return "DataChangeRequest{" + "dataInfoIds=" + dataInfoIds + ", dataCenter='" + dataCenter
+               + '\'' + '}';
     }
 }

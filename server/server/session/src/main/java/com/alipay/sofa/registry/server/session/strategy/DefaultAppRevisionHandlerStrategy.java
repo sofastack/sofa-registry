@@ -16,58 +16,126 @@
  */
 package com.alipay.sofa.registry.server.session.strategy;
 
+import com.alipay.sofa.registry.common.model.Tuple;
+import com.alipay.sofa.registry.common.model.client.pb.AppList;
+import com.alipay.sofa.registry.common.model.client.pb.GetRevisionsResponse;
+import com.alipay.sofa.registry.common.model.client.pb.MetaHeartbeatResponse;
+import com.alipay.sofa.registry.common.model.client.pb.ServiceAppMappingResponse;
+import com.alipay.sofa.registry.common.model.constants.ValueConstants;
 import com.alipay.sofa.registry.common.model.store.AppRevision;
-import com.alipay.sofa.registry.common.model.store.DataInfo;
-import com.alipay.sofa.registry.core.model.AppRevisionInterface;
-import com.alipay.sofa.registry.core.model.AppRevisionRegister;
 import com.alipay.sofa.registry.core.model.RegisterResponse;
-import com.alipay.sofa.registry.server.session.cache.AppRevisionCacheRegistry;
+import com.alipay.sofa.registry.log.Logger;
+import com.alipay.sofa.registry.log.LoggerFactory;
+import com.alipay.sofa.registry.server.session.metadata.AppRevisionCacheRegistry;
+import com.alipay.sofa.registry.server.session.converter.pb.AppRevisionConvertor;
+import com.alipay.sofa.registry.server.session.metadata.AppRevisionHeartbeatRegistry;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-
-import static com.alipay.sofa.registry.common.model.constants.ValueConstants.DEFAULT_GROUP;
-import static com.alipay.sofa.registry.common.model.constants.ValueConstants.DEFAULT_INSTANCE_ID;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
 
 public class DefaultAppRevisionHandlerStrategy implements AppRevisionHandlerStrategy {
+
+    private static final Logger          LOG = LoggerFactory
+                                                 .getLogger(DefaultAppRevisionHandlerStrategy.class);
+
     @Autowired
-    private AppRevisionCacheRegistry appRevisionCacheService;
+    private AppRevisionCacheRegistry     appRevisionCacheService;
+
+    @Autowired
+    private AppRevisionHeartbeatRegistry appRevisionHeartbeatRegistry;
 
     @Override
-    public void handleAppRevisionRegister(AppRevisionRegister appRevisionRegister,
-                                          RegisterResponse response) {
+    public void handleAppRevisionRegister(AppRevision appRevision, RegisterResponse response) {
         try {
-            setDefaultField(appRevisionRegister);
-            validate(appRevisionRegister);
-            AppRevision revision = AppRevision.convert(appRevisionRegister);
-            appRevisionCacheService.register(revision);
+            validate(appRevision);
+            appRevisionCacheService.register(appRevision);
             response.setSuccess(true);
             response.setMessage("app revision register success!");
         } catch (Throwable e) {
             response.setSuccess(false);
             response.setMessage("app revision register failed!");
+            LOG.error("app revision register error.", e);
         }
     }
 
-    private void setDefaultField(AppRevisionRegister register) {
-        for (AppRevisionInterface inf : register.getInterfaceList()) {
-            if (StringUtils.isBlank(inf.getInstanceId())) {
-                inf.setInstanceId(DEFAULT_INSTANCE_ID);
+    @Override
+    public ServiceAppMappingResponse queryApps(List<String> services) {
+        ServiceAppMappingResponse.Builder builder = ServiceAppMappingResponse.newBuilder();
+
+        int statusCode = ValueConstants.METADATA_STATUS_PROCESS_SUCCESS;
+        try {
+            for (String service : Optional.ofNullable(services).orElse(new ArrayList<>())) {
+                Tuple<Long, Set<String>> appNames = appRevisionCacheService.getAppNames(service);
+                AppList.Builder build = AppList.newBuilder().addAllApps(appNames.o2);
+                build.setVersion(appNames.o1);
+                builder.putServiceAppMapping(service, build.build());
             }
-            if (StringUtils.isBlank(inf.getGroup())) {
-                inf.setGroup(DEFAULT_GROUP);
-            }
+        } catch (Throwable e) {
+            statusCode = ValueConstants.METADATA_STATUS_PROCESS_ERROR;
+            builder.setMessage(String
+                .format("query apps by services error. service: %s.", services));
+            LOG.error(String.format("query apps by services error. service: %s", services), e);
+
         }
+        builder.setStatusCode(statusCode);
+        return builder.build();
     }
 
-    private void validate(AppRevisionRegister register) {
-        if (StringUtils.isBlank(register.getAppName())) {
+    @Override
+    public GetRevisionsResponse queryRevision(List<String> revisions) {
+        GetRevisionsResponse.Builder builder = GetRevisionsResponse.newBuilder();
+        int statusCode = ValueConstants.METADATA_STATUS_PROCESS_SUCCESS;
+        try {
+            for (String revision : Optional.ofNullable(revisions).orElse(new ArrayList<>())) {
+                AppRevision appRevision = appRevisionCacheService.getRevision(revision);
+                if (appRevision == null) {
+                    statusCode = ValueConstants.METADATA_STATUS_DATA_NOT_FOUND;
+                    builder.setMessage(String.format("query revision: %s fail.", revision));
+                    LOG.error("query revision {} fail", revision);
+                }
+                builder.putRevisions(revision, AppRevisionConvertor.convert2Pb(appRevision));
+            }
+        } catch (Throwable e) {
+            statusCode = ValueConstants.METADATA_STATUS_PROCESS_ERROR;
+            builder.setMessage(String.format("query revisions: %s error.", revisions));
+            LOG.error("query revision {} error", revisions, e);
+        }
+        builder.setStatusCode(statusCode);
+        return builder.build();
+    }
+
+    @Override
+    public MetaHeartbeatResponse heartbeat(List<String> revisions) {
+
+        MetaHeartbeatResponse.Builder builder = MetaHeartbeatResponse.newBuilder();
+        int statusCode = ValueConstants.METADATA_STATUS_PROCESS_SUCCESS;
+        try {
+            for (String revision : Optional.ofNullable(revisions).orElse(new ArrayList<>())) {
+                AppRevision appRevision = appRevisionHeartbeatRegistry.heartbeat(revision);
+                if (appRevision == null) {
+                    statusCode = ValueConstants.METADATA_STATUS_DATA_NOT_FOUND;
+                    builder.setMessage(String.format("revision: %s heartbeat fail.", revision));
+                    LOG.error("revision heartbeat {} fail", revision);
+                }
+            }
+        } catch (Throwable e) {
+            statusCode = ValueConstants.METADATA_STATUS_PROCESS_ERROR;
+            builder.setMessage(String.format("revisions: %s heartbeat error.", revisions));
+            LOG.error("revision heartbeat {} error", revisions, e);
+        }
+        builder.setStatusCode(statusCode);
+        return builder.build();
+    }
+
+    private void validate(AppRevision appRevision) {
+        if (StringUtils.isBlank(appRevision.getAppName())) {
             throw new IllegalArgumentException("register appName is empty");
         }
-        if (StringUtils.isBlank(register.getRevision())) {
+        if (StringUtils.isBlank(appRevision.getRevision())) {
             throw new IllegalArgumentException("register revision is empty");
-        }
-        for (AppRevisionInterface inf : register.getInterfaceList()) {
-            DataInfo.toDataInfoId(inf.getDataId(), inf.getInstanceId(), inf.getGroup());
         }
     }
 }
