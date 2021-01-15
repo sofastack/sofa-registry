@@ -18,9 +18,6 @@ package com.alipay.sofa.registry.server.session.remoting;
 
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
-import com.alipay.sofa.registry.remoting.exchange.RequestException;
-import com.alipay.sofa.registry.remoting.exchange.message.Request;
-import com.alipay.sofa.registry.remoting.exchange.message.Response;
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
 import com.alipay.sofa.registry.server.shared.remoting.ServerSideExchanger;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -35,16 +32,6 @@ public class ClientNodeExchanger extends ServerSideExchanger {
 
     @Autowired
     private SessionServerConfig sessionServerConfig;
-
-    @Override
-    public Response request(Request request) throws RequestException {
-        try {
-            return super.request(request);
-        } catch (Throwable e) {
-            LOGGER.error("ClientNode Exchanger request data error, {}", request, e);
-            throw new RequestException("ClientNode Exchanger request data error", request, e);
-        }
-    }
 
     @Override
     public int getRpcTimeout() {

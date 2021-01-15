@@ -71,7 +71,7 @@ public class ExecutorManager {
                         sessionServerConfig.getAccessDataExecutorMaxPoolSize(),
                         sessionServerConfig.getAccessDataExecutorKeepAliveTime(), TimeUnit.SECONDS,
                         new ArrayBlockingQueue<>(sessionServerConfig.getAccessDataExecutorQueueSize()),
-                        new NamedThreadFactory("AccessData-executor", true), (r, executor) -> {
+                        new NamedThreadFactory("AccessExecutor", true), (r, executor) -> {
                     String msg = String
                             .format("Task(%s) %s rejected from %s, just ignore it to let client timeout.", r.getClass(),
                                     r, executor);
@@ -84,7 +84,7 @@ public class ExecutorManager {
                         sessionServerConfig.getDataChangeExecutorMaxPoolSize(),
                         sessionServerConfig.getDataChangeExecutorKeepAliveTime(), TimeUnit.SECONDS,
                         new ArrayBlockingQueue<>(sessionServerConfig.getDataChangeExecutorQueueSize()),
-                        new NamedThreadFactory("DataChangeRequestHandler-executor", true)));
+                        new NamedThreadFactory("DataChangeExecutor", true)));
 
         dataSlotSyncRequestExecutor = reportExecutors.computeIfAbsent(DATA_SLOT_MIGRATE_REQUEST_EXECUTOR,
                 k -> new MetricsableThreadPoolExecutor(DATA_SLOT_MIGRATE_REQUEST_EXECUTOR,
@@ -92,7 +92,7 @@ public class ExecutorManager {
                         sessionServerConfig.getSlotSyncWorkerSize(),
                         60, TimeUnit.SECONDS,
                         new ArrayBlockingQueue<>(sessionServerConfig.getSlotSyncMaxBufferSize()),
-                        new NamedThreadFactory("DataSlotSyncRequestHandler-executor", true)));
+                        new NamedThreadFactory("SlotSyncExecutor", true)));
 
         connectClientExecutor = reportExecutors.computeIfAbsent(CONNECT_CLIENT_EXECUTOR,
                 k -> new MetricsableThreadPoolExecutor(CONNECT_CLIENT_EXECUTOR,
@@ -107,7 +107,7 @@ public class ExecutorManager {
                         sessionServerConfig.getPublishDataExecutorMaxPoolSize(),
                         sessionServerConfig.getPublishDataExecutorKeepAliveTime(), TimeUnit.SECONDS,
                         new ArrayBlockingQueue<>(sessionServerConfig.getPublishDataExecutorQueueSize()),
-                        new NamedThreadFactory("PublishData-executor", true)));
+                        new NamedThreadFactory("PublishExecutor", true)));
     }
 
     public void startScheduler() {

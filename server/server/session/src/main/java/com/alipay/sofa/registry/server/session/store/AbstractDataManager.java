@@ -68,14 +68,13 @@ public abstract class AbstractDataManager<T extends BaseInfo> implements
     public boolean deleteById(String registerId, String dataInfoId) {
         Map<String, T> dataMap = stores.get(dataInfoId);
         if (CollectionUtils.isEmpty(dataMap)) {
-            logger.warn("Delete failed because is not registered for {}", dataInfoId);
+            logger.warn("Delete but not registered, {}", dataInfoId);
             return false;
         }
         T dataToDelete = dataMap.remove(registerId);
 
         if (dataToDelete == null) {
-            logger.warn("Delete failed because is not registered for {}, {}", dataInfoId,
-                registerId);
+            logger.warn("Delete but not registered, {}, {}", dataInfoId, registerId);
         }
         return dataToDelete != null;
     }
