@@ -35,9 +35,6 @@ public class WriteDataProcessor {
     private static final Logger       LOGGER     = LoggerFactory
                                                      .getLogger(WriteDataProcessor.class);
 
-    private static final Logger       taskLogger = LoggerFactory.getLogger(
-                                                     WriteDataProcessor.class, "[Task]");
-
     private final TaskListenerManager taskListenerManager;
 
     private final ConnectId           connectId;
@@ -106,8 +103,6 @@ public class WriteDataProcessor {
 
     private void sendEvent(Object eventObj, TaskType taskType) {
         TaskEvent taskEvent = new TaskEvent(eventObj, taskType);
-        taskLogger.info("send connectId:{}, taskType:{}, taskEvent:{}", connectId, taskType,
-            taskEvent);
         taskListenerManager.sendTaskEvent(taskEvent);
     }
 
