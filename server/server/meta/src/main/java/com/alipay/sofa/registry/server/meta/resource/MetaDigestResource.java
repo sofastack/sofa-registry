@@ -26,7 +26,7 @@ import com.alipay.sofa.registry.server.meta.metaserver.impl.DefaultMetaServerMan
 import com.alipay.sofa.registry.store.api.DBResponse;
 import com.alipay.sofa.registry.store.api.DBService;
 import com.alipay.sofa.registry.store.api.OperationStatus;
-import com.alipay.sofa.registry.store.api.annotation.RaftReference;
+import com.alipay.sofa.registry.jraft.annotation.RaftReference;
 import com.codahale.metrics.Gauge;
 import com.codahale.metrics.MetricRegistry;
 import org.springframework.beans.factory.annotation.Autowired;

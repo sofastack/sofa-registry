@@ -19,8 +19,12 @@ package com.alipay.sofa.registry.server.session.bootstrap;
 import java.util.ArrayList;
 import java.util.Collection;
 
-import com.alipay.sofa.registry.server.session.cache.*;
+import com.alipay.sofa.registry.jdbc.config.JdbcConfiguration;
+import com.alipay.sofa.registry.jraft.config.RaftConfiguration;
 import com.alipay.sofa.registry.server.session.connections.ConnectionsService;
+import com.alipay.sofa.registry.server.session.metadata.AppRevisionCacheRegistry;
+import com.alipay.sofa.registry.server.session.metadata.AppRevisionHeartbeatRegistry;
+import com.alipay.sofa.registry.server.session.node.repository.AppRevisionRaftRepository;
 import com.alipay.sofa.registry.server.session.node.service.*;
 import com.alipay.sofa.registry.server.session.push.ChangeProcessor;
 import com.alipay.sofa.registry.server.session.push.FirePushService;
@@ -34,12 +38,16 @@ import com.alipay.sofa.registry.server.session.strategy.*;
 import com.alipay.sofa.registry.server.shared.remoting.SlotTableChangeEventHandler;
 import com.alipay.sofa.registry.server.shared.resource.MetricsResource;
 import com.alipay.sofa.registry.server.shared.resource.SlotGenericResource;
+import com.alipay.sofa.registry.store.api.driver.RepositoryConfig;
+import com.alipay.sofa.registry.store.api.driver.RepositoryManager;
+import com.alipay.sofa.registry.store.api.repository.AppRevisionRepository;
 import org.glassfish.jersey.jackson.JacksonFeature;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.DependsOn;
 import org.springframework.context.annotation.Import;
 
 import com.alipay.sofa.registry.remoting.bolt.exchange.BoltExchange;
@@ -108,7 +116,7 @@ import com.alipay.sofa.registry.util.PropertySplitter;
  * @version $Id: SessionServerConfiguration.java, v 0.1 2017-11-14 11:39 synex Exp $
  */
 @Configuration
-@Import(SessionServerInitializer.class)
+@Import({ SessionServerInitializer.class, JdbcConfiguration.class, RaftConfiguration.class })
 @EnableConfigurationProperties
 public class SessionServerConfiguration {
 
@@ -186,11 +194,14 @@ public class SessionServerConfiguration {
             list.add(clientNodeConnectionHandler());
             list.add(cancelAddressRequestHandler());
             list.add(syncConfigHandler());
-            list.add(appRevisionRegisterHandler());
-            list.add(appRevisionRegisterPbHandler());
             list.add(publisherPbHandler());
             list.add(subscriberPbHandler());
             list.add(syncConfigPbHandler());
+            list.add(metadataRegisterPbHandler());
+            list.add(serviceAppMappingHandler());
+            list.add(metaRevisionHeartbeatHandler());
+            list.add(getRevisionHandler());
+
             return list;
         }
 
@@ -248,8 +259,23 @@ public class SessionServerConfiguration {
         }
 
         @Bean
-        public AbstractServerHandler appRevisionRegisterPbHandler() {
-            return new AppRevisionRegisterPbHandler();
+        public AbstractServerHandler metadataRegisterPbHandler() {
+            return new MetadataRegisterPbHandler();
+        }
+
+        @Bean
+        public AbstractServerHandler serviceAppMappingHandler() {
+            return new ServiceAppMappingPbHandler();
+        }
+
+        @Bean
+        public AbstractServerHandler getRevisionHandler() {
+            return new GetRevisionPbHandler();
+        }
+
+        @Bean
+        public AbstractServerHandler metaRevisionHeartbeatHandler() {
+            return new MetaRevisionHeartbeatPbHandler();
         }
 
         @Bean
@@ -260,11 +286,6 @@ public class SessionServerConfiguration {
         @Bean
         public AbstractServerHandler syncConfigPbHandler() {
             return new SyncConfigPbHandler();
-        }
-
-        @Bean
-        public AbstractServerHandler appRevisionRegisterHandler() {
-            return new AppRevisionRegisterHandler();
         }
 
         @Bean(name = "dataClientHandlers")
@@ -462,8 +483,17 @@ public class SessionServerConfiguration {
         }
 
         @Bean
-        public AppRevisionCacheRegistry appRevisionCacheRegistry() {
-            return new AppRevisionCacheRegistry();
+        @DependsOn({ "appRevisionJdbcRepository", "appRevisionRaftRepository",
+                "interfaceAppsJdbcRepository", "interfaceAppsRaftRepository" })
+        public AppRevisionCacheRegistry appRevisionCacheRegistry(RepositoryManager repositoryManager) {
+            return new AppRevisionCacheRegistry(repositoryManager);
+        }
+
+        @Bean
+        @DependsOn({ "appRevisionJdbcRepository", "appRevisionRaftRepository",
+                "appRevisionHeartbeatJdbcRepository", "appRevisionHeartbeatRaftRepository" })
+        public AppRevisionHeartbeatRegistry appRevisionHeartbeatRegistry(RepositoryManager repositoryManager) {
+            return new AppRevisionHeartbeatRegistry(repositoryManager);
         }
     }
 
@@ -695,4 +725,34 @@ public class SessionServerConfiguration {
             return stopPushProvideDataProcessor;
         }
     }
+
+    @Configuration
+    public static class SessionPersistenceConfiguration {
+
+        @Bean
+        public RepositoryConfig repositoryConfig() {
+            return new RepositoryConfig();
+        }
+
+        @Bean
+        public RepositoryManager repositoryManager() {
+            return new RepositoryManager();
+        }
+
+        @Bean
+        public JdbcConfiguration jdbcConfiguration() {
+            return new JdbcConfiguration();
+        }
+
+        @Bean
+        public AppRevisionRepository appRevisionRaftRepository() {
+            return new AppRevisionRaftRepository();
+        }
+
+        @Bean
+        public RaftConfiguration raftConfiguration() {
+            return new RaftConfiguration();
+        }
+    }
+
 }

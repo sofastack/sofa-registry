@@ -16,6 +16,7 @@
  */
 package com.alipay.sofa.registry.util;
 
+import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
@@ -90,6 +91,11 @@ public final class MessageDigests {
         MessageDigest instance = messageDigest.get();
         instance.reset();
         return instance;
+    }
+
+    public static String getMd5String(String digest) {
+
+        return toHexString(md5().digest(digest.getBytes(StandardCharsets.UTF_8)));
     }
 
     /**

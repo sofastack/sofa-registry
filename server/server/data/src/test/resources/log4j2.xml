@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<configuration status="info" shutdownHook="disable" monitorInterval="5">
+
+    <Properties>
+        <Property name="LOG_HOME">${user.home}/logs/registry/data</Property>
+        <Property name="LOG_LEVEL">INFO</Property>
+    </Properties>
+
+    <appenders>
+        <RollingRandomAccessFile name="DEFAULT-SERVER-APPENDER" fileName="${LOG_HOME}/registry-data.log"
+                                 filePattern="${LOG_HOME}/common-default.log.%d{yyyy-MM-dd}">
+            <ThresholdFilter level="ERROR" onMatch="DENY" onMismatch="NEUTRAL"/>
+            <PatternLayout pattern="[%d{ISO8601}][%p][%t][%c{0}] - %m%n"/>
+            <Policies>
+                <TimeBasedTriggeringPolicy/>
+            </Policies>
+            <DefaultRolloverStrategy max="3">
+                <Delete basePath="${LOG_HOME}" maxDepth="2">
+                    <IfFileName glob="registry-data.log.*" />
+                    <IfLastModified age="3d" />
+                </Delete>
+            </DefaultRolloverStrategy>
+        </RollingRandomAccessFile>
+
+        <RollingRandomAccessFile name="ERROR-APPENDER" fileName="${LOG_HOME}/common-error.log"
+                                 filePattern="${LOG_HOME}/common-error.log.%d{yyyy-MM-dd}">
+            <ThresholdFilter level="ERROR" onMatch="ACCEPT" onMismatch="DENY"/>
+            <PatternLayout pattern="[%d{ISO8601}][%p][%t][%c{0}] - %m%n"/>
+            <Policies>
+                <TimeBasedTriggeringPolicy/>
+            </Policies>
+            <DefaultRolloverStrategy max="30">
+                <Delete basePath="${LOG_HOME}" maxDepth="2">
+                    <IfFileName glob="common-error.log.*" />
+                    <IfLastModified age="30d" />
+                </Delete>
+            </DefaultRolloverStrategy>
+        </RollingRandomAccessFile>
+    </appenders>
+
+    <loggers>
+        <logger name="com.alipay.sofa" level="${LOG_LEVEL}" additivity="false">
+            <appender-ref ref="DEFAULT-SERVER-APPENDER"/>
+            <appender-ref ref="ERROR-APPENDER"/>
+        </logger>
+
+        <root level="INFO">
+            <appender-ref ref="DEFAULT-SERVER-APPENDER"/>
+            <appender-ref ref="ERROR-APPENDER"/>
+        </root>
+    </loggers>
+
+</configuration>

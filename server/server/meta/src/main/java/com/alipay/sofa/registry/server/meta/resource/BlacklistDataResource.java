@@ -26,7 +26,7 @@ import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.server.meta.provide.data.DefaultProvideDataNotifier;
 import com.alipay.sofa.registry.store.api.DBService;
-import com.alipay.sofa.registry.store.api.annotation.RaftReference;
+import com.alipay.sofa.registry.jraft.annotation.RaftReference;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import javax.ws.rs.POST;

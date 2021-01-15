@@ -31,7 +31,7 @@ import com.alipay.sofa.registry.observer.impl.AbstractLifecycleObservable;
 import com.alipay.sofa.registry.server.meta.bootstrap.config.NodeConfig;
 import com.alipay.sofa.registry.server.meta.remoting.notifier.Notifier;
 import com.alipay.sofa.registry.server.meta.slot.SlotManager;
-import com.alipay.sofa.registry.store.api.annotation.RaftService;
+import com.alipay.sofa.registry.jraft.annotation.RaftService;
 import com.alipay.sofa.registry.util.FileUtils;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;

@@ -22,63 +22,47 @@ import java.util.List;
 import java.util.Map;
 
 public class AppRevisionInterface implements Serializable {
-    private String                    dataId;
-    private String                    group;
-    private String                    instanceId;
+
+    private String                    id;
+
+    private String                    dataInfoId;
+
     private Map<String, List<String>> serviceParams = new HashMap<String, List<String>>();
 
     /**
-     * Getter method for property <tt>dataId</tt>.
+     * Getter method for property <tt>id</tt>.
      *
-     * @return property value of dataId
+     * @return property value of id
      */
-    public String getDataId() {
-        return dataId;
+    public String getId() {
+        return id;
     }
 
     /**
-     * Setter method for property <tt>dataId</tt>.
+     * Setter method for property <tt>id</tt>.
      *
-     * @param dataId value to be assigned to property dataId
+     * @param id value to be assigned to property id
      */
-    public void setDataId(String dataId) {
-        this.dataId = dataId;
+    public void setId(String id) {
+        this.id = id;
     }
 
     /**
-     * Getter method for property <tt>group</tt>.
+     * Getter method for property <tt>dataInfoId</tt>.
      *
-     * @return property value of group
+     * @return property value of dataInfoId
      */
-    public String getGroup() {
-        return group;
+    public String getDataInfoId() {
+        return dataInfoId;
     }
 
     /**
-     * Setter method for property <tt>group</tt>.
+     * Setter method for property <tt>dataInfoId</tt>.
      *
-     * @param group value to be assigned to property group
+     * @param dataInfoId value to be assigned to property dataInfoId
      */
-    public void setGroup(String group) {
-        this.group = group;
-    }
-
-    /**
-     * Getter method for property <tt>instanceId</tt>.
-     *
-     * @return property value of instanceId
-     */
-    public String getInstanceId() {
-        return instanceId;
-    }
-
-    /**
-     * Setter method for property <tt>instanceId</tt>.
-     *
-     * @param instanceId value to be assigned to property instanceId
-     */
-    public void setInstanceId(String instanceId) {
-        this.instanceId = instanceId;
+    public void setDataInfoId(String dataInfoId) {
+        this.dataInfoId = dataInfoId;
     }
 
     /**

@@ -33,6 +33,7 @@ import com.alipay.sofa.registry.remoting.bolt.serializer.ProtobufSerializer;
 import com.alipay.sofa.registry.remoting.exchange.Exchange;
 import com.alipay.sofa.registry.remoting.exchange.NodeExchanger;
 import com.alipay.sofa.registry.server.session.filter.blacklist.BlacklistManager;
+import com.alipay.sofa.registry.server.session.metadata.AppRevisionCacheRegistry;
 import com.alipay.sofa.registry.server.session.provideData.ProvideDataProcessor;
 import com.alipay.sofa.registry.server.session.registry.SessionRegistry;
 import com.alipay.sofa.registry.server.session.scheduler.ExecutorManager;
@@ -108,6 +109,9 @@ public class SessionServerBootstrap {
     @Resource(name = "sessionSyncHandlers")
     private Collection<AbstractServerHandler> sessionSyncHandlers;
 
+    @Autowired
+    private AppRevisionCacheRegistry          appRevisionCacheRegistry;
+
     private Server                            httpServer;
 
     private final AtomicBoolean               metaStart                 = new AtomicBoolean(false);
@@ -153,6 +157,9 @@ public class SessionServerBootstrap {
                 connectMetaServer();
                 return true;
             });
+
+            // load metadata
+            appRevisionCacheRegistry.loadMetadata();
 
             startScheduler();
 

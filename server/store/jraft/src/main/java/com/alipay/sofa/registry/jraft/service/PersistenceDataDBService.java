@@ -22,7 +22,7 @@ import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.store.api.DBResponse;
 import com.alipay.sofa.registry.store.api.DBService;
-import com.alipay.sofa.registry.store.api.annotation.RaftService;
+import com.alipay.sofa.registry.jraft.annotation.RaftService;
 
 import java.io.IOException;
 import java.util.HashSet;

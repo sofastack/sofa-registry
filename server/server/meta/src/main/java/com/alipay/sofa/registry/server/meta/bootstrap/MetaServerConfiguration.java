@@ -16,6 +16,8 @@
  */
 package com.alipay.sofa.registry.server.meta.bootstrap;
 
+import com.alipay.sofa.registry.jdbc.config.JdbcConfiguration;
+import com.alipay.sofa.registry.jraft.config.RaftConfiguration;
 import com.alipay.sofa.registry.jraft.service.PersistenceDataDBService;
 import com.alipay.sofa.registry.remoting.bolt.exchange.BoltExchange;
 import com.alipay.sofa.registry.remoting.exchange.Exchange;
@@ -59,6 +61,8 @@ import com.alipay.sofa.registry.server.shared.resource.MetricsResource;
 import com.alipay.sofa.registry.server.shared.resource.SlotGenericResource;
 import com.alipay.sofa.registry.store.api.DBService;
 import com.alipay.sofa.registry.task.MetricsableThreadPoolExecutor;
+import com.alipay.sofa.registry.store.api.driver.RepositoryConfig;
+import com.alipay.sofa.registry.store.api.driver.RepositoryManager;
 import com.alipay.sofa.registry.util.DefaultExecutorFactory;
 import com.alipay.sofa.registry.util.NamedThreadFactory;
 import com.alipay.sofa.registry.util.OsUtils;
@@ -80,7 +84,8 @@ import java.util.concurrent.*;
  * @version $Id: MetaServerConfiguration.java, v 0.1 2018-01-12 14:53 shangyu.wh Exp $
  */
 @Configuration
-@Import(MetaServerInitializerConfiguration.class)
+@Import({ MetaServerInitializerConfiguration.class, JdbcConfiguration.class,
+         RaftConfiguration.class })
 @EnableConfigurationProperties
 public class MetaServerConfiguration {
 
@@ -455,7 +460,28 @@ public class MetaServerConfiguration {
     }
 
     @Configuration
-    public static class MetaDBConfiguration {
+    public static class MetaPersistenceConfiguration {
+
+        @Bean
+        public RepositoryConfig repositoryConfig() {
+            return new RepositoryConfig();
+        }
+
+        @Bean
+        public RepositoryManager repositoryManager() {
+            return new RepositoryManager();
+        }
+
+        @Bean
+        public JdbcConfiguration jdbcConfiguration() {
+            return new JdbcConfiguration();
+        }
+
+        @Bean
+        public RaftConfiguration raftConfiguration() {
+            return new RaftConfiguration();
+        }
+
         @Bean
         public DBService persistenceDataDBService() {
             return new PersistenceDataDBService();

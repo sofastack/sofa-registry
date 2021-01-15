@@ -19,6 +19,7 @@
     <modules>
         <module>api</module>
         <module>jraft</module>
+        <module>jdbc</module>
     </modules>
 
 

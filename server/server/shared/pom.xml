@@ -79,7 +79,15 @@
         </dependency>
         <dependency>
             <groupId>com.alipay.sofa</groupId>
+            <artifactId>registry-store-common</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.alipay.sofa</groupId>
             <artifactId>registry-store-jraft</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.alipay.sofa</groupId>
+            <artifactId>registry-store-jdbc</artifactId>
         </dependency>
         <dependency>
             <groupId>junit</groupId>

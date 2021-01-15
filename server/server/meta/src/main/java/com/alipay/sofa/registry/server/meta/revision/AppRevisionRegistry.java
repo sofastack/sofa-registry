@@ -19,7 +19,7 @@ package com.alipay.sofa.registry.server.meta.revision;
 import com.alipay.sofa.registry.common.model.store.AppRevision;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
-import com.alipay.sofa.registry.store.api.annotation.RaftReference;
+import com.alipay.sofa.registry.jraft.annotation.RaftReference;
 
 import java.util.List;
 
