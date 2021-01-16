@@ -32,8 +32,7 @@ import com.google.common.collect.Lists;
  */
 public class WriteDataProcessor {
 
-    private static final Logger       LOGGER     = LoggerFactory
-                                                     .getLogger(WriteDataProcessor.class);
+    private static final Logger       LOGGER = LoggerFactory.getLogger(WriteDataProcessor.class);
 
     private final TaskListenerManager taskListenerManager;
 

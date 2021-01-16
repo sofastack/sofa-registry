@@ -37,10 +37,11 @@ public interface Interests extends DataManager<Subscriber, String, String> {
      * @param version
      * @return
      */
-    boolean checkInterestVersions(String dataCenter, String datumDataInfoId, long version);
+    boolean checkInterestVersion(String dataCenter, String datumDataInfoId, long version);
 
     Collection<Subscriber> getInterestOfDatum(String datumDataInfoId);
 
     Collection<String> getPushedDataInfoIds();
 
+    Collection<Subscriber> getInterestNeverPushed();
 }

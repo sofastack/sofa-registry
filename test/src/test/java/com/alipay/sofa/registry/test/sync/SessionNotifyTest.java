@@ -272,7 +272,7 @@ public class SessionNotifyTest extends BaseIntegrationTest {
 
 
             try {
-                boolean resultT = sessionInterests.checkInterestVersions(
+                boolean resultT = sessionInterests.checkInterestVersion(
                         dataChangeRequest.getDataCenter(), dataChangeRequest.getDataInfoId(),
                         dataChangeRequest.getVersion());
                 //if (!resultT) {

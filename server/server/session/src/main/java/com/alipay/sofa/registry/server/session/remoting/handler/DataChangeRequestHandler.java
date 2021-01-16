@@ -76,7 +76,7 @@ public class DataChangeRequestHandler extends AbstractClientHandler<DataChangeRe
         dataChangeRequest.setDataCenter(dataChangeRequest.getDataCenter());
         dataChangeRequest.setDataInfoId(dataChangeRequest.getDataInfoId());
         appRevisionCacheRegistry.refreshMeta(dataChangeRequest.getRevisions());
-        if (!sessionInterests.checkInterestVersions(dataChangeRequest.getDataCenter(),
+        if (!sessionInterests.checkInterestVersion(dataChangeRequest.getDataCenter(),
             dataChangeRequest.getDataInfoId(), dataChangeRequest.getVersion())) {
             LOGGER.info("obsolete version {}, ver={}, dataCenter={}",
                 dataChangeRequest.getDataInfoId(), dataChangeRequest.getVersion(),

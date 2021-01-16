@@ -17,15 +17,11 @@
 package com.alipay.sofa.registry.common.model.store;
 
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
 
 import com.alipay.sofa.registry.common.model.ElementType;
-import com.alipay.sofa.registry.common.model.constants.ValueConstants;
 import com.alipay.sofa.registry.core.model.AssembleType;
 import com.alipay.sofa.registry.core.model.ScopeEnum;
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import org.apache.commons.collections.CollectionUtils;
-import org.apache.commons.collections.MapUtils;
 
 /**
  * @author shangyu.wh
@@ -103,7 +99,22 @@ public class Subscriber extends BaseInfo {
         return ret;
     }
 
-    public synchronized boolean checkVersion(String dataCenter, Map<String, Long> datumVersions) {
+    // check the version of one dataInfoId
+    public synchronized boolean checkVersion(String dataCenter, String dataInfoId, long version) {
+        final PushContext ctx = lastPushContexts.get(dataCenter);
+        if (ctx == null || ctx.fetchSeqEnd == 0) {
+            return true;
+        }
+
+        DatumPushContext datumCtx = ctx.pushDatums.get(dataInfoId);
+        if (datumCtx == null) {
+            return true;
+        }
+        return datumCtx.version < version;
+    }
+
+    // check all the version
+    public synchronized boolean checkVersions(String dataCenter, Map<String, Long> datumVersions) {
         final PushContext ctx = lastPushContexts.get(dataCenter);
         if (ctx == null || ctx.fetchSeqEnd == 0) {
             return true;
@@ -143,23 +154,17 @@ public class Subscriber extends BaseInfo {
         return false;
     }
 
-    /**
-     * If the pushed data is empty, check the last push, for avoid continuous empty datum push
-     */
-    public boolean allowPush(String dataCenter, int pubCount) {
-        // TODO
-        //        boolean allowPush = true;
-        //        // condition of no push:
-        //        // 1. last push count is 0 and this time is also 0
-        //        // 2. last push is a valid push (version > 1)
-        //        if (pubCount == 0) {
-        //            PushContext pushContext = lastPushContexts.get(dataCenter);
-        //            allowPush = !(pushContext != null && pushContext.pushPubCount == 0
-        //            //last push is a valid push
-        //                          && pushContext.pushVersion != null && pushContext.pushVersion > ValueConstants.DEFAULT_NO_DATUM_VERSION);
-        //        }
-        //        return allowPush;
-        return true;
+    public synchronized boolean hasPushed() {
+        // TODO now not care multi-datacenter
+        if (lastPushContexts.isEmpty()) {
+            return false;
+        }
+        for (PushContext ctx : lastPushContexts.values()) {
+            if (ctx.fetchSeqEnd != 0) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /**

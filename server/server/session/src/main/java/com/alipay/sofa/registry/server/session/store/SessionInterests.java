@@ -63,14 +63,13 @@ public class SessionInterests extends AbstractDataManager<Subscriber> implements
     }
 
     @Override
-    public boolean checkInterestVersions(String dataCenter, String datumDataInfoId, long version) {
+    public boolean checkInterestVersion(String dataCenter, String datumDataInfoId, long version) {
         Collection<Subscriber> subscribers = getInterestOfDatum(datumDataInfoId);
         if (CollectionUtils.isEmpty(subscribers)) {
             return false;
         }
         for (Subscriber subscriber : subscribers) {
-            if (subscriber.checkVersion(dataCenter,
-                Collections.singletonMap(datumDataInfoId, version))) {
+            if (subscriber.checkVersion(dataCenter, datumDataInfoId, version)) {
                 return true;
             }
         }
@@ -100,5 +99,18 @@ public class SessionInterests extends AbstractDataManager<Subscriber> implements
             subscribers.addAll(e.values());
         }
         return SubscriberUtils.getPushedDataInfoIds(subscribers);
+    }
+
+    @Override
+    public Collection<Subscriber> getInterestNeverPushed() {
+        List<Subscriber> subscribers = new ArrayList<>(512);
+        for (Map<String, Subscriber> e : stores.values()) {
+            for (Subscriber subscriber : e.values()) {
+                if (!subscriber.hasPushed()) {
+                    subscribers.add(subscriber);
+                }
+            }
+        }
+        return subscribers;
     }
 }
