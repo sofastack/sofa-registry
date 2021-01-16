@@ -15,6 +15,11 @@
         </encoder>
     </appender>
 
+    <appender name ="ASYNC-STDOUT-APPENDER" class= "ch.qos.logback.classic.AsyncAppender">
+        <queueSize>65536</queueSize>
+        <appender-ref ref ="STDOUT-APPENDER"/>
+    </appender>
+
     <appender name="COMMON-ERROR-APPENDER" class="ch.qos.logback.core.rolling.RollingFileAppender">
         <append>true</append>
         <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
@@ -29,6 +34,11 @@
             <pattern>[%d{ISO8601}][%p][%t][%c{0}] - %m%n</pattern>
             <charset>${LOG_ENCODE}</charset>
         </encoder>
+    </appender>
+
+    <appender name ="ASYNC-COMMON-ERROR-APPENDER" class= "ch.qos.logback.classic.AsyncAppender">
+        <queueSize>65536</queueSize>
+        <appender-ref ref ="COMMON-ERROR-APPENDER"/>
     </appender>
 
     <appender name="COMMON-DEFAULT-APPENDER" class="ch.qos.logback.core.rolling.RollingFileAppender">
@@ -51,6 +61,11 @@
         </encoder>
     </appender>
 
+    <appender name ="ASYNC-COMMON-DEFAULT-APPENDER" class= "ch.qos.logback.classic.AsyncAppender">
+        <queueSize>65536</queueSize>
+        <appender-ref ref ="COMMON-DEFAULT-APPENDER"/>
+    </appender>
+
     <appender name="JRAFT-APPENDER" class="ch.qos.logback.core.rolling.RollingFileAppender">
         <append>true</append>
         <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
@@ -71,6 +86,12 @@
         </encoder>
     </appender>
 
+    <appender name ="ASYNC-JRAFT-APPENDER" class= "ch.qos.logback.classic.AsyncAppender">
+        <queueSize>65536</queueSize>
+        <appender-ref ref ="JRAFT-APPENDER"/>
+    </appender>
+
+
     <appender name="RENEW-APPENDER" class="ch.qos.logback.core.rolling.RollingFileAppender">
         <append>true</append>
         <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
@@ -89,6 +110,11 @@
             <pattern>[%d{ISO8601}][%p][%t][%c{0}] - %m%n</pattern>
             <charset>${LOG_ENCODE}</charset>
         </encoder>
+    </appender>
+
+    <appender name ="ASYNC-RENEW-APPENDER" class= "ch.qos.logback.classic.AsyncAppender">
+        <queueSize>65536</queueSize>
+        <appender-ref ref ="RENEW-APPENDER"/>
     </appender>
 
     <!-- data appenders -->
@@ -113,6 +139,11 @@
         </encoder>
     </appender>
 
+    <appender name ="ASYNC-DATA-DEFAULT-APPENDER" class= "ch.qos.logback.classic.AsyncAppender">
+        <queueSize>65536</queueSize>
+        <appender-ref ref ="DATA-DEFAULT-APPENDER"/>
+    </appender>
+
     <appender name="DATA-STARTUP-APPENDER" class="ch.qos.logback.core.rolling.RollingFileAppender">
         <append>true</append>
         <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
@@ -131,6 +162,11 @@
             <pattern>[%d{ISO8601}][%p][%t][%c{0}] - %m%n</pattern>
             <charset>${LOG_ENCODE}</charset>
         </encoder>
+    </appender>
+
+    <appender name ="ASYNC-DATA-STARTUP-APPENDER" class= "ch.qos.logback.classic.AsyncAppender">
+        <queueSize>65536</queueSize>
+        <appender-ref ref ="DATA-STARTUP-APPENDER"/>
     </appender>
 
     <appender name="DATA-DATUM-CHANGE-APPENDER" class="ch.qos.logback.core.rolling.RollingFileAppender">
@@ -153,6 +189,12 @@
         </encoder>
     </appender>
 
+    <appender name ="ASYNC-DATA-STARTUP-APPENDER" class= "ch.qos.logback.classic.AsyncAppender">
+        <queueSize>65536</queueSize>
+        <appender-ref ref ="DATA-STARTUP-APPENDER"/>
+    </appender>
+
+
     <appender name="DATA-CACHE-DIGEST-APPENDER" class="ch.qos.logback.core.rolling.RollingFileAppender">
         <append>true</append>
         <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
@@ -173,6 +215,12 @@
         </encoder>
     </appender>
 
+    <appender name ="ASYNC-DATA-CACHE-DIGEST-APPENDER" class= "ch.qos.logback.classic.AsyncAppender">
+        <queueSize>65536</queueSize>
+        <appender-ref ref ="DATA-CACHE-DIGEST-APPENDER"/>
+    </appender>
+
+
     <appender name="DATA-HTTP-APPENDER" class="ch.qos.logback.core.rolling.RollingFileAppender">
         <append>true</append>
         <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
@@ -191,6 +239,11 @@
             <pattern>[%d{ISO8601}][%p][%t][%c{0}] - %m%n</pattern>
             <charset>${LOG_ENCODE}</charset>
         </encoder>
+    </appender>
+
+    <appender name ="ASYNC-DATA-HTTP-APPENDER" class= "ch.qos.logback.classic.AsyncAppender">
+        <queueSize>65536</queueSize>
+        <appender-ref ref ="DATA-HTTP-APPENDER"/>
     </appender>
 
     <appender name="DATA-CONNECT-APPENDER" class="ch.qos.logback.core.rolling.RollingFileAppender">
@@ -213,6 +266,11 @@
         </encoder>
     </appender>
 
+    <appender name ="ASYNC-DATA-CONNECT-APPENDER" class= "ch.qos.logback.classic.AsyncAppender">
+        <queueSize>65536</queueSize>
+        <appender-ref ref ="DATA-CONNECT-APPENDER"/>
+    </appender>
+
     <appender name="DATA-EXCHANGE-APPENDER" class="ch.qos.logback.core.rolling.RollingFileAppender">
         <append>true</append>
         <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
@@ -231,6 +289,11 @@
             <pattern>[%d{ISO8601}][%p][%t][%c{0}] - %m%n</pattern>
             <charset>${LOG_ENCODE}</charset>
         </encoder>
+    </appender>
+
+    <appender name ="ASYNC-DATA-EXCHANGE-APPENDER" class= "ch.qos.logback.classic.AsyncAppender">
+        <queueSize>65536</queueSize>
+        <appender-ref ref ="DATA-EXCHANGE-APPENDER"/>
     </appender>
 
     <appender name="REGISTRY-METRICS-APPENDER" class="ch.qos.logback.core.rolling.RollingFileAppender">
@@ -253,6 +316,12 @@
         </encoder>
     </appender>
 
+    <appender name ="ASYNC-REGISTRY-METRICS-APPENDER" class= "ch.qos.logback.classic.AsyncAppender">
+        <queueSize>65536</queueSize>
+        <appender-ref ref ="REGISTRY-METRICS-APPENDER"/>
+    </appender>
+
+
     <appender name="DATUM-LEASE-APPENDER" class="ch.qos.logback.core.rolling.RollingFileAppender">
         <append>true</append>
         <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
@@ -273,94 +342,100 @@
         </encoder>
     </appender>
 
+    <appender name ="ASYNC-DATUM-LEASE-APPENDER" class= "ch.qos.logback.classic.AsyncAppender">
+        <queueSize>65536</queueSize>
+        <appender-ref ref ="DATUM-LEASE-APPENDER"/>
+    </appender>
+
+
     <!-- common loggers -->
 
     <logger name="com.alipay.sofa.registry.jraft" level="${LOG_LEVEL}" additivity="false">
-        <appender-ref ref="JRAFT-APPENDER"/>
-        <appender-ref ref="COMMON-ERROR-APPENDER"/>
+        <appender-ref ref="ASYNC-JRAFT-APPENDER"/>
+        <appender-ref ref="ASYNC-COMMON-ERROR-APPENDER"/>
     </logger>
 
     <logger name="com.alipay.sofa.jraft" level="${LOG_LEVEL}" additivity="false">
-        <appender-ref ref="JRAFT-APPENDER"/>
-        <appender-ref ref="COMMON-ERROR-APPENDER"/>
+        <appender-ref ref="ASYNC-JRAFT-APPENDER"/>
+        <appender-ref ref="ASYNC-COMMON-ERROR-APPENDER"/>
     </logger>
 
     <logger name="RENEW-LOGGER" level="${LOG_LEVEL}" additivity="false">
-        <appender-ref ref="RENEW-APPENDER"/>
-        <appender-ref ref="COMMON-ERROR-APPENDER"/>
+        <appender-ref ref="ASYNC-RENEW-APPENDER"/>
+        <appender-ref ref="ASYNC-COMMON-ERROR-APPENDER"/>
     </logger>
 
     <!-- data loggers -->
 
     <logger name="com.alipay.sofa.registry.server.data" level="${LOG_LEVEL}" additivity="false">
-        <appender-ref ref="DATA-DEFAULT-APPENDER"/>
-        <appender-ref ref="COMMON-ERROR-APPENDER"/>
+        <appender-ref ref="ASYNC-DATA-DEFAULT-APPENDER"/>
+        <appender-ref ref="ASYNC-COMMON-ERROR-APPENDER"/>
     </logger>
 
     <logger name="com.alipay.sofa.registry.server.data.bootstrap" level="${LOG_LEVEL}" additivity="false">
-        <appender-ref ref="DATA-STARTUP-APPENDER"/>
-        <appender-ref ref="STDOUT-APPENDER"/>
-        <appender-ref ref="COMMON-ERROR-APPENDER"/>
+        <appender-ref ref="ASYNC-DATA-STARTUP-APPENDER"/>
+        <appender-ref ref="ASYNC-STDOUT-APPENDER"/>
+        <appender-ref ref="ASYNC-COMMON-ERROR-APPENDER"/>
     </logger>
 
     <logger name="com.alipay.sofa.registry.server.data.change.DataChangeHandler" level="${LOG_LEVEL}"
             additivity="false">
-        <appender-ref ref="DATA-DATUM-CHANGE-APPENDER"/>
-        <appender-ref ref="COMMON-ERROR-APPENDER"/>
+        <appender-ref ref="ASYNC-DATA-DATUM-CHANGE-APPENDER"/>
+        <appender-ref ref="ASYNC-COMMON-ERROR-APPENDER"/>
     </logger>
 
     <logger name="com.alipay.sofa.registry.server.data.cache.CacheDigestTask" level="${LOG_LEVEL}" additivity="false">
-        <appender-ref ref="DATA-CACHE-DIGEST-APPENDER"/>
-        <appender-ref ref="COMMON-ERROR-APPENDER"/>
+        <appender-ref ref="ASYNC-DATA-CACHE-DIGEST-APPENDER"/>
+        <appender-ref ref="ASYNC-COMMON-ERROR-APPENDER"/>
     </logger>
 
     <logger name="com.alipay.sofa.registry.server.data.resource" level="${LOG_LEVEL}" additivity="false">
-        <appender-ref ref="DATA-HTTP-APPENDER"/>
-        <appender-ref ref="COMMON-ERROR-APPENDER"/>
+        <appender-ref ref="ASYNC-DATA-HTTP-APPENDER"/>
+        <appender-ref ref="ASYNC-COMMON-ERROR-APPENDER"/>
     </logger>
 
     <logger name="DATA-START-LOGS" level="${LOG_LEVEL}" additivity="false">
-        <appender-ref ref="DATA-STARTUP-APPENDER"/>
-        <appender-ref ref="STDOUT-APPENDER"/>
-        <appender-ref ref="COMMON-ERROR-APPENDER"/>
+        <appender-ref ref="ASYNC-DATA-STARTUP-APPENDER"/>
+        <appender-ref ref="ASYNC-STDOUT-APPENDER"/>
+        <appender-ref ref="ASYNC-COMMON-ERROR-APPENDER"/>
     </logger>
 
     <logger name="org.springframework.boot.SpringApplication" level="${LOG_LEVEL}" additivity="false">
-        <appender-ref ref="DATA-STARTUP-APPENDER"/>
-        <appender-ref ref="STDOUT-APPENDER"/>
-        <appender-ref ref="COMMON-ERROR-APPENDER"/>
+        <appender-ref ref="ASYNC-DATA-STARTUP-APPENDER"/>
+        <appender-ref ref="ASYNC-STDOUT-APPENDER"/>
+        <appender-ref ref="ASYNC-COMMON-ERROR-APPENDER"/>
     </logger>
 
     <logger name="com.alipay.sofa.registry.server.data.DataApplication" level="${LOG_LEVEL}" additivity="false">
-        <appender-ref ref="DATA-STARTUP-APPENDER"/>
-        <appender-ref ref="STDOUT-APPENDER"/>
-        <appender-ref ref="COMMON-ERROR-APPENDER"/>
+        <appender-ref ref="ASYNC-DATA-STARTUP-APPENDER"/>
+        <appender-ref ref="ASYNC-STDOUT-APPENDER"/>
+        <appender-ref ref="ASYNC-COMMON-ERROR-APPENDER"/>
     </logger>
 
     <logger name="DATA-CONNECT" level="${LOG_LEVEL}" additivity="false">
-        <appender-ref ref="DATA-CONNECT-APPENDER"/>
-        <appender-ref ref="COMMON-ERROR-APPENDER"/>
+        <appender-ref ref="ASYNC-DATA-CONNECT-APPENDER"/>
+        <appender-ref ref="ASYNC-COMMON-ERROR-APPENDER"/>
     </logger>
 
     <logger name="DATA-EXCHANGE" level="${LOG_LEVEL}" additivity="false">
-        <appender-ref ref="DATA-EXCHANGE-APPENDER"/>
-        <appender-ref ref="COMMON-ERROR-APPENDER"/>
+        <appender-ref ref="ASYNC-DATA-EXCHANGE-APPENDER"/>
+        <appender-ref ref="ASYNC-COMMON-ERROR-APPENDER"/>
     </logger>
 
     <logger name="REGISTRY-METRICS" level="${LOG_LEVEL}" additivity="false">
-        <appender-ref ref="REGISTRY-METRICS-APPENDER"/>
-        <appender-ref ref="COMMON-ERROR-APPENDER"/>
+        <appender-ref ref="ASYNC-REGISTRY-METRICS-APPENDER"/>
+        <appender-ref ref="ASYNC-COMMON-ERROR-APPENDER"/>
     </logger>
 
     <logger name="com.alipay.sofa.registry.server.data.renew.DatumLeaseManager" level="${LOG_LEVEL}" additivity="false">
-        <appender-ref ref="DATUM-LEASE-APPENDER"/>
-        <appender-ref ref="COMMON-ERROR-APPENDER"/>
+        <appender-ref ref="ASYNC-DATUM-LEASE-APPENDER"/>
+        <appender-ref ref="ASYNC-COMMON-ERROR-APPENDER"/>
     </logger>
 
     <!-- root loggers -->
 
     <root level="${LOG_LEVEL}">
-        <appender-ref ref="COMMON-DEFAULT-APPENDER"/>
-        <appender-ref ref="COMMON-ERROR-APPENDER"/>
+        <appender-ref ref="ASYNC-COMMON-DEFAULT-APPENDER"/>
+        <appender-ref ref="ASYNC-COMMON-ERROR-APPENDER"/>
     </root>
 </configuration>

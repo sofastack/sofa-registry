@@ -28,6 +28,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Executor;
+import java.util.concurrent.ThreadPoolExecutor;
 
 /**
  * processor to remove data of specific clients immediately
@@ -42,6 +44,9 @@ public class ClientOffHandler extends AbstractDataHandler<ClientOffRequest> {
 
     @Autowired
     protected DataChangeEventCenter dataChangeEventCenter;
+
+    @Autowired
+    private ThreadPoolExecutor publishProcessorExecutor;
 
     @Override
     public void checkParam(ClientOffRequest request) throws RuntimeException {
@@ -71,5 +76,10 @@ public class ClientOffHandler extends AbstractDataHandler<ClientOffRequest> {
     @Override
     public Class interest() {
         return ClientOffRequest.class;
+    }
+
+    @Override
+    public Executor getExecutor() {
+        return publishProcessorExecutor;
     }
 }
