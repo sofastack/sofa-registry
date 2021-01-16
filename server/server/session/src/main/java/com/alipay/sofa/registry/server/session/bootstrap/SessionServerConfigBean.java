@@ -94,9 +94,9 @@ public class SessionServerConfigBean implements SessionServerConfig {
 
     private int                  connectClientExecutorQueueSize        = 2000;
 
-    private int                  dataChangeFetchTaskMaxBufferSize      = 10000;
+    private int                  dataChangeFetchTaskMaxBufferSize      = 30000;
 
-    private int                  dataChangeFetchTaskWorkerSize         = OsUtils.getCpuCount() * 2;
+    private int                  dataChangeFetchTaskWorkerSize         = OsUtils.getCpuCount() * 5;
 
     private int                  slotSyncMaxBufferSize                 = 5000;
 
@@ -130,7 +130,7 @@ public class SessionServerConfigBean implements SessionServerConfig {
 
     private long                 publishDataExecutorKeepAliveTime      = 60;
 
-    private int                  schedulerFetchDataVersionIntervalMs   = 1000 * 2;
+    private int                  schedulerScanVersionIntervalMs        = 1000 * 2;
 
     private double               accessLimitRate                       = 100000.0;
 
@@ -1230,22 +1230,22 @@ public class SessionServerConfigBean implements SessionServerConfig {
     }
 
     /**
-     * Getter method for property <tt>schedulerFetchDataVersionIntervalMs</tt>.
+     * Getter method for property <tt>schedulerScanVersionIntervalMs</tt>.
      *
-     * @return property value of schedulerFetchDataVersionIntervalMs
+     * @return property value of schedulerScanVersionIntervalMs
      */
     @Override
-    public int getSchedulerFetchDataVersionIntervalMs() {
-        return schedulerFetchDataVersionIntervalMs;
+    public int getSchedulerScanVersionIntervalMs() {
+        return schedulerScanVersionIntervalMs;
     }
 
     /**
-     * Setter method for property <tt>schedulerFetchDataVersionIntervalMs</tt>.
+     * Setter method for property <tt>schedulerScanVersionIntervalMs</tt>.
      *
-     * @param schedulerFetchDataVersionIntervalMs value to be assigned to property schedulerFetchDataVersionIntervalMs
+     * @param schedulerScanVersionIntervalMs value to be assigned to property schedulerScanVersionIntervalMs
      */
-    public void setSchedulerFetchDataVersionIntervalMs(int schedulerFetchDataVersionIntervalMs) {
-        this.schedulerFetchDataVersionIntervalMs = schedulerFetchDataVersionIntervalMs;
+    public void setSchedulerFetchDataVersionIntervalMs(int schedulerScanVersionIntervalMs) {
+        this.schedulerScanVersionIntervalMs = schedulerScanVersionIntervalMs;
     }
 
     public int getSlotSyncMaxBufferSize() {

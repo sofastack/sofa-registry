@@ -37,7 +37,7 @@ public interface SessionServerConfig {
 
     int getSchedulerHeartbeatIntervalSec();
 
-    int getSchedulerFetchDataVersionIntervalMs();
+    int getSchedulerScanVersionIntervalMs();
 
     int getClientNodeExchangeTimeOut();
 

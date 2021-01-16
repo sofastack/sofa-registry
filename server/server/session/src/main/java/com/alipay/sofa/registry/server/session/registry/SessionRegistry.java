@@ -283,19 +283,20 @@ public class SessionRegistry implements Registry {
                 // 3. scanVerEnable=true after session start and config the stopPush.val
                 if (!stop && scanVerEnable) {
                     scanVersions();
+                    triggerSubscriberRegister();
                     if (prevStopPushSwitch) {
                         SCAN_VER_LOGGER.info("[ReSub] resub after stopPushSwitch closed");
                     }
                 }
                 prevStopPushSwitch = stop;
             } catch (Throwable e) {
-                SCAN_VER_LOGGER.error("WatchDog failed fetch verions", e);
+                SCAN_VER_LOGGER.error("WatchDog failed fetch versions", e);
             }
         }
 
         @Override
         public int getWaitingMillis() {
-            return sessionServerConfig.getSchedulerFetchDataVersionIntervalMs();
+            return sessionServerConfig.getSchedulerScanVersionIntervalMs();
         }
     }
 
@@ -303,7 +304,26 @@ public class SessionRegistry implements Registry {
         Collection<String> pushedDataInfoIds = sessionInterests.getPushedDataInfoIds();
         Map<Integer, List<String>> pushedDataInfoIdMap = groupBySlot(pushedDataInfoIds);
         for (int i = 0; i < slotTableCache.slotNum(); i++) {
-            fetchChangDataProcess(i, pushedDataInfoIdMap.getOrDefault(i, Collections.emptyList()));
+            try {
+                fetchChangDataProcess(i,
+                    pushedDataInfoIdMap.getOrDefault(i, Collections.emptyList()));
+            } catch (Throwable e) {
+                SCAN_VER_LOGGER.error("failed to fetch versions slotId={}", i, e);
+            }
+        }
+    }
+
+    private void triggerSubscriberRegister() {
+        Collection<Subscriber> subscribers = sessionInterests.getInterestNeverPushed();
+        if (!subscribers.isEmpty()) {
+            SCAN_VER_LOGGER.info("find never pushed subscribers:{}", subscribers.size());
+            for (Subscriber subscriber : subscribers) {
+                try {
+                    firePushService.fireOnRegister(subscriber);
+                } catch (Throwable e) {
+                    SCAN_VER_LOGGER.error("failed to register subscriber, {}", subscriber, e);
+                }
+            }
         }
     }
 
@@ -343,17 +363,21 @@ public class SessionRegistry implements Registry {
             for (Map.Entry<String, DatumVersion> version : versionMap.entrySet()) {
                 final String dataInfoId = version.getKey();
                 final long verVal = version.getValue().getValue();
-                if (sessionInterests.checkInterestVersions(dataCenter, dataInfoId, verVal)) {
+                if (sessionInterests.checkInterestVersion(dataCenter, dataInfoId, verVal)) {
                     firePushService.fireOnChange(dataCenter, dataInfoId, verVal);
                     SCAN_VER_LOGGER.info("notify fetch by check ver {} for {}, slotId={}", verVal,
                         dataInfoId, slotId);
                 }
             }
-            // to check the dataInfoId has deleted
+            // to check the dataInfoId has deleted or not exist
             for (String pushedDataInfoId : pushedDataInfoIds) {
                 if (!versionMap.containsKey(pushedDataInfoId)) {
-                    firePushService.fireOnChange(dataCenter, pushedDataInfoId, Long.MIN_VALUE);
-                    SCAN_VER_LOGGER.warn("pushedDataInfoId has remove {}, slotId={}",
+                    // EXCEPT_MIN_VERSION means the datum maybe is null
+                    // after push null datum, the pushedDataInfoId will reset
+                    // the next scan round, would not trigger this
+                    firePushService.fireOnChange(dataCenter, pushedDataInfoId,
+                        FirePushService.EXCEPT_MIN_VERSION);
+                    SCAN_VER_LOGGER.warn("pushedDataInfoId not exist {}, slotId={}",
                         pushedDataInfoId, slotId);
                 }
             }

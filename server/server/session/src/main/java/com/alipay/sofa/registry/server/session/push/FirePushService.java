@@ -44,8 +44,9 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Predicate;
 
 public class FirePushService {
-
-    private static final Logger      LOGGER   = LoggerFactory.getLogger(FirePushService.class);
+    public static final long         EXCEPT_MIN_VERSION = Long.MIN_VALUE;
+    private static final Logger      LOGGER             = LoggerFactory
+                                                            .getLogger(FirePushService.class);
 
     @Autowired
     private SessionServerConfig      sessionServerConfig;
@@ -64,7 +65,7 @@ public class FirePushService {
     @Autowired
     private PushProcessor            pushProcessor;
 
-    private final AtomicLong         fetchSeq = new AtomicLong();
+    private final AtomicLong         fetchSeq           = new AtomicLong();
 
     @PostConstruct
     public void init() {
@@ -79,12 +80,12 @@ public class FirePushService {
                 .execute(dataInfoId, new ChangeTask(dataCenter, dataInfoId, expectVersion));
             return true;
         } catch (RejectedExecutionException e) {
-            LOGGER.error("failed to exec ChangeTask {}, dataCenter={}, expectVer={}, {}", dataInfoId,
-                dataCenter, expectVersion, e.getMessage());
+            LOGGER.error("failed to exec ChangeTask {}, dataCenter={}, expectVer={}, {}",
+                dataInfoId, dataCenter, expectVersion, e.getMessage());
             return false;
-        }catch (Throwable e){
-            LOGGER.error("failed to exec ChangeTask {}, dataCenter={}, expectVer={}, {}", dataInfoId,
-                    dataCenter, expectVersion, e);
+        } catch (Throwable e) {
+            LOGGER.error("failed to exec ChangeTask {}, dataCenter={}, expectVer={}, {}",
+                dataInfoId, dataCenter, expectVersion, e);
             return false;
         }
     }
@@ -93,6 +94,7 @@ public class FirePushService {
         processPush(true, DatumVersionUtil.nextId(), getDataCenterWhenPushEmpty(),
             Collections.emptyMap(), Collections.singletonList(subscriber), Long.MAX_VALUE,
             Long.MAX_VALUE);
+        // use Long.MAX_VALUE as fetchseq, could not push again after push empty
         LOGGER.info("firePushEmpty, {}", subscriber);
         return true;
     }
@@ -101,6 +103,10 @@ public class FirePushService {
         try {
             fetchExecutor.execute(subscriber.getDataInfoId(), new RegisterTask(subscriber));
             return true;
+        } catch (RejectedExecutionException e) {
+            LOGGER.error("failed to exec SubscriberTask {}, {}, {}", subscriber.getDataInfoId(),
+                subscriber, e.getMessage());
+            return false;
         } catch (Throwable e) {
             LOGGER.error("failed to exec SubscriberTask {}, {}", subscriber.getDataInfoId(),
                 subscriber, e);
@@ -130,19 +136,29 @@ public class FirePushService {
     private void doExecuteOnChange(String dataCenter, String changeDataInfoId, long expectVersion) {
         final long fetchSeqStart = fetchSeq.incrementAndGet();
         final Datum datum = getDatum(dataCenter, changeDataInfoId, expectVersion);
-        Set<String> revisions = Collections.emptySet();
-        if (datum != null) {
-            revisions = datum.revisions();
+        if (expectVersion != EXCEPT_MIN_VERSION) {
+            if (datum == null) {
+                // datum change, but get null datum, should not happen
+                LOGGER.error("[NilDatum] {},{},{}", dataCenter, changeDataInfoId, expectVersion);
+                return;
+            }
             if (datum.getVersion() < expectVersion) {
-                LOGGER.warn("[lessVer] {},{},{}<{}", dataCenter, changeDataInfoId,
+                LOGGER.error("[lessVer] {},{},{}<{}", dataCenter, changeDataInfoId,
                     datum.getVersion(), expectVersion);
+                return;
             }
         } else {
-            LOGGER.warn("[NilDatum] {},{},{}", dataCenter, changeDataInfoId, expectVersion);
+            if (datum == null) {
+                LOGGER.info("fetch null datum", dataCenter, changeDataInfoId, expectVersion);
+            }
         }
+
         DataInfo dataInfo = DataInfo.valueOf(changeDataInfoId);
         if (ValueConstants.SOFA_APP.equals(dataInfo.getDataType())) {
-            appRevisionCacheRegistry.refreshMeta(revisions);
+            if (datum != null) {
+                final Set<String> revisions = datum.revisions();
+                appRevisionCacheRegistry.refreshMeta(revisions);
+            }
             onAppDatumChange(dataInfo, datum, fetchSeqStart, dataCenter);
         } else {
             onInterfaceDatumChange(dataInfo, datum, fetchSeqStart, dataCenter);
@@ -199,6 +215,7 @@ public class FirePushService {
                 // 1. push1.datum > push2.datum
                 // 2. push1.pushVersion > push2.pushVersion
                 if (CollectionUtils.isEmpty(datumMap)) {
+                    // TODO datum changed, but
                     LOGGER.warn("empty push {}, dataCenter={}", interfaceDataInfoId, dataCenter);
                 }
                 for (Map.Entry<ScopeEnum, List<Subscriber>> scopes : group.getValue().entrySet()) {
@@ -231,10 +248,10 @@ public class FirePushService {
 
     private void onInterfaceDatumChange(DataInfo interfaceDataInfo, Datum interfaceDatum,
                                         long fetchSeqStart, String dataCenter) {
-        Map<AssembleType, Map<ScopeEnum, List<Subscriber>>> grous = SubscriberUtils
+        Map<AssembleType, Map<ScopeEnum, List<Subscriber>>> groups = SubscriberUtils
             .groupByAssembleAndScope(sessionInterests.getDatas(interfaceDataInfo.getDataInfoId()));
 
-        for (Map.Entry<AssembleType, Map<ScopeEnum, List<Subscriber>>> group : grous.entrySet()) {
+        for (Map.Entry<AssembleType, Map<ScopeEnum, List<Subscriber>>> group : groups.entrySet()) {
             final AssembleType assembleType = group.getKey();
             final Map<String, Datum> datumMap = Maps.newHashMap();
             collect(datumMap, interfaceDatum);
@@ -312,7 +329,7 @@ public class FirePushService {
                                                   Collection<Subscriber> subscribers) {
         List<Subscriber> subscribersSend = Lists.newArrayList();
         for (Subscriber subscriber : subscribers) {
-            if (subscriber.checkVersion(dataCenter, versions)) {
+            if (subscriber.checkVersions(dataCenter, versions)) {
                 subscribersSend.add(subscriber);
             }
         }
@@ -378,6 +395,7 @@ public class FirePushService {
         final long pushVersion = DatumVersionUtil.nextId();
         final long fetchSeqEnd = fetchSeq.incrementAndGet();
         if (CollectionUtils.isEmpty(datumMap)) {
+            // subscriber register allow push empty
             LOGGER.warn("empty push, dataCenter={}, {}", dataCenter, subscriber);
         }
         processPush(true, pushVersion, sessionServerConfig.getSessionServerDataCenter(), datumMap,

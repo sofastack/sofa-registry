@@ -58,7 +58,7 @@ public interface DataNodeService {
      * Get some dataInfoId version from one data server
      *
      * @param dataNodeUrl
-     * @param dataInfoIdList
+     * @param slotId
      * @return
      */
     Map<String/*datacenter*/, Map<String/*datainfoid*/, DatumVersion>> fetchDataVersion(URL dataNodeUrl,

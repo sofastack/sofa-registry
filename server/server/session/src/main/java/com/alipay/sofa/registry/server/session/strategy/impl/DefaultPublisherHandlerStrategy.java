@@ -92,20 +92,14 @@ public class DefaultPublisherHandlerStrategy implements PublisherHandlerStrategy
 
     private void log(boolean success, PublisherRegister publisherRegister, Publisher publisher) {
         //[Y|N],[R|U|N],app,zone,dataInfoId,registerId,version,registerTimestamp,clientVersion,clientIp,clientPort
-        PUB_LOGGER.info("{},{},{},{},{},{},{},{},{},{},{},{},{}",
-                success ? 'Y' : 'N',
-                getEventTypeFlag(publisherRegister.getEventType()),
-                publisherRegister.getAppName(),
-                publisherRegister.getZone(),
-                publisherRegister.getDataId(),
-                publisherRegister.getGroup(),
-                publisherRegister.getInstanceId(),
-                publisherRegister.getRegistId(),
-                publisherRegister.getVersion(),
-                publisher == null ? "" : publisher.getRegisterTimestamp(),
-                publisher == null ? "" : publisher.getClientVersion(),
-                publisherRegister.getIp(),
-                publisherRegister.getPort());
+        PUB_LOGGER.info("{},{},{},{},{},{},{},{},{},{},{},{},{}", success ? 'Y' : 'N',
+            getEventTypeFlag(publisherRegister.getEventType()), publisherRegister.getAppName(),
+            publisherRegister.getZone(), publisherRegister.getDataId(), publisherRegister
+                .getGroup(), publisherRegister.getInstanceId(), publisherRegister.getRegistId(),
+            publisherRegister.getVersion(),
+            publisher == null ? "" : publisher.getRegisterTimestamp(), publisher == null ? ""
+                : publisher.getClientVersion(), publisherRegister.getIp(), publisherRegister
+                .getPort());
     }
 
     private char getEventTypeFlag(String eventType) {

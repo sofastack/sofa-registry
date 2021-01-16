@@ -200,8 +200,9 @@ public class PushProcessor {
         // check the pushing task
         final PushTask prev = pushingTasks.get(pushingTaskKey);
         if (prev == null) {
-            // check the subcriber version
+            // check the subscriber version
             for (Subscriber subscriber : task.subscriberMap.values()) {
+                // TODO need remove the conflict subscriber
                 if (!subscriber.checkVersion(task.dataCenter, task.fetchSeqStart)) {
                     LOGGER.warn("conflict push {}, {}, subscriber={}", task.taskID, pushingTaskKey,
                         subscriber.printPushContext());

@@ -236,11 +236,12 @@ public class DataNodeServiceImpl implements DataNodeService {
                 Map<String, Map<String, DatumVersion>> map = genericResponse.getData();
                 return map;
             } else {
-                throw new RuntimeException("fetchDataVersion has get fail response! msg:"
-                                           + genericResponse.getMessage());
+                throw new RuntimeException(String.format(
+                    "fetchDataVersion fail response! access=%s, msg:%s",
+                    genericResponse.getSlotAccess(), genericResponse.getMessage()));
             }
         } catch (RequestException e) {
-            throw new RuntimeException("Fetch data Version request error! " + e.getMessage(), e);
+            throw new RuntimeException("fetchDataVersion request error", e);
         }
     }
 
