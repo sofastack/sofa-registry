@@ -346,7 +346,7 @@ public class DataNodeServiceImpl implements DataNodeService {
         long initialSleepTime = TimeUnit.MILLISECONDS.toMillis(firstDelay);
         long increment = TimeUnit.MILLISECONDS.toMillis(incrementDelay);
         long result = initialSleepTime + (increment * (retry - 1));
-        return result >= 0L ? result : 0L;
+        return Math.max(result, 0L);
     }
 
     private URL getUrl(String dataInfoId) {
