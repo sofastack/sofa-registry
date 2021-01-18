@@ -29,6 +29,7 @@ import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
 import com.alipay.sofa.registry.server.session.cache.*;
 import com.alipay.sofa.registry.server.session.store.Interests;
 import com.alipay.sofa.registry.server.shared.util.DatumUtils;
+import com.alipay.sofa.registry.task.KeyedPreemptThreadPoolExecutor;
 import com.alipay.sofa.registry.task.KeyedThreadPoolExecutor;
 import com.alipay.sofa.registry.util.DatumVersionUtil;
 import com.google.common.collect.Lists;
@@ -44,40 +45,46 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Predicate;
 
 public class FirePushService {
-    public static final long         EXCEPT_MIN_VERSION = Long.MIN_VALUE;
-    private static final Logger      LOGGER             = LoggerFactory
-                                                            .getLogger(FirePushService.class);
+    public static final long               EXCEPT_MIN_VERSION = Long.MIN_VALUE;
+    private static final Logger            LOGGER             = LoggerFactory
+                                                                  .getLogger(FirePushService.class);
 
     @Autowired
-    private SessionServerConfig      sessionServerConfig;
+    private SessionServerConfig            sessionServerConfig;
 
     @Autowired
-    private CacheService             sessionCacheService;
+    private CacheService                   sessionCacheService;
 
     @Autowired
-    private Interests                sessionInterests;
+    private Interests                      sessionInterests;
 
     @Autowired
-    private AppRevisionCacheRegistry appRevisionCacheRegistry;
+    private AppRevisionCacheRegistry       appRevisionCacheRegistry;
 
-    private KeyedThreadPoolExecutor  fetchExecutor;
+    private KeyedPreemptThreadPoolExecutor changeFetchExecutor;
+    private KeyedThreadPoolExecutor        registerFetchExecutor;
 
     @Autowired
-    private PushProcessor            pushProcessor;
+    private PushProcessor                  pushProcessor;
 
-    private final AtomicLong         fetchSeq           = new AtomicLong();
+    private final AtomicLong               fetchSeq           = new AtomicLong();
 
     @PostConstruct
     public void init() {
-        fetchExecutor = new KeyedThreadPoolExecutor("FetchExecutor",
+        changeFetchExecutor = new KeyedPreemptThreadPoolExecutor("ChangeFetchExecutor",
+            sessionServerConfig.getDataChangeFetchTaskWorkerSize(),
+            sessionServerConfig.getDataChangeFetchTaskMaxBufferSize(), new ChangeTaskComparator());
+
+        registerFetchExecutor = new KeyedThreadPoolExecutor("RegisterFetchExecutor",
             sessionServerConfig.getDataChangeFetchTaskWorkerSize(),
             sessionServerConfig.getDataChangeFetchTaskMaxBufferSize());
     }
 
     public boolean fireOnChange(String dataCenter, String dataInfoId, long expectVersion) {
         try {
-            fetchExecutor
-                .execute(dataInfoId, new ChangeTask(dataCenter, dataInfoId, expectVersion));
+            // TODO only supported local dataCenter
+            changeFetchExecutor.execute(dataInfoId, new ChangeTask(dataCenter, dataInfoId,
+                expectVersion));
             return true;
         } catch (RejectedExecutionException e) {
             LOGGER.error("failed to exec ChangeTask {}, dataCenter={}, expectVer={}, {}",
@@ -101,7 +108,7 @@ public class FirePushService {
 
     public boolean fireOnRegister(Subscriber subscriber) {
         try {
-            fetchExecutor.execute(subscriber.getDataInfoId(), new RegisterTask(subscriber));
+            registerFetchExecutor.execute(subscriber.getDataInfoId(), new RegisterTask(subscriber));
             return true;
         } catch (RejectedExecutionException e) {
             LOGGER.error("failed to exec SubscriberTask {}, {}, {}", subscriber.getDataInfoId(),
@@ -398,6 +405,9 @@ public class FirePushService {
             // subscriber register allow push empty
             LOGGER.warn("empty push, dataCenter={}, {}", dataCenter, subscriber);
         }
+        if (subscriber.hasPushed()) {
+            return;
+        }
         processPush(true, pushVersion, sessionServerConfig.getSessionServerDataCenter(), datumMap,
             Collections.singletonList(subscriber), fetchSeqStart, fetchSeqEnd);
     }
@@ -419,11 +429,28 @@ public class FirePushService {
         public void run() {
             final String dataCenter = sessionServerConfig.getSessionServerDataCenter();
             try {
+                if (subscriber.hasPushed()) {
+                    return;
+                }
                 doExecuteOnSubscriber(dataCenter, subscriber);
             } catch (Throwable e) {
                 LOGGER.error("failed to do register Task, dataCenter={}, {}", dataCenter,
                     subscriber, e);
             }
+        }
+    }
+
+    private final class ChangeTaskComparator implements Comparator<Runnable> {
+
+        @Override
+        public int compare(Runnable prev, Runnable current) {
+            if (prev instanceof ChangeTask && current instanceof ChangeTask) {
+                return Long.compare(((ChangeTask) prev).expectVersion,
+                    ((ChangeTask) current).expectVersion);
+            }
+            throw new IllegalArgumentException(String.format(
+                "cloud not compare, prev=%s, current=%s", prev.getClass().getName(), current
+                    .getClass().getName()));
         }
     }
 }
