@@ -20,46 +20,80 @@ import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.util.ConcurrentUtils;
 
-import java.util.concurrent.*;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.TimeUnit;
 
 /**
- *
  * thread unsafe, could not use concurrently
+ *
  * @author yuzhi.lyz
  * @version v 0.1 2020-12-15 13:38 yuzhi.lyz Exp $
  */
 public class KeyedThreadPoolExecutor {
-    private static final Logger LOGGER = LoggerFactory.getLogger(KeyedThreadPoolExecutor.class);
-
-    private final Worker[]      workers;
-    private final String        executorName;
-    private final int           coreBufferSize;
+    private static final Logger    LOGGER = LoggerFactory.getLogger(KeyedThreadPoolExecutor.class);
+    private final AbstractWorker[] workers;
+    private final String           executorName;
+    private final int              coreBufferSize;
 
     public KeyedThreadPoolExecutor(String executorName, int coreSize, int coreBufferSize) {
         this.executorName = executorName;
         this.coreBufferSize = coreBufferSize;
-        workers = new Worker[coreSize];
+        workers = new AbstractWorker[coreSize];
         for (int i = 0; i < coreSize; i++) {
-            Worker w = new Worker(i, new LinkedBlockingQueue<>(coreBufferSize));
+            AbstractWorker w = createWorker(i, coreBufferSize);
             workers[i] = w;
             ConcurrentUtils.createDaemonThread(executorName + "_" + i, w).start();
         }
     }
 
-    private final class Worker implements Runnable {
-        final BlockingQueue<KeyedTask> queue;
-        final int                      idx;
+    protected AbstractWorker createWorker(int idx, int coreBufferSize) {
+        return new WorkerImpl(idx, new LinkedBlockingQueue<>(coreBufferSize));
+    }
 
-        Worker(int idx, BlockingQueue<KeyedTask> queue) {
-            this.idx = idx;
+    protected interface Worker extends Runnable {
+        int size();
+
+        KeyedTask poll() throws InterruptedException;
+
+        boolean offer(KeyedTask task);
+
+    }
+
+    private final class WorkerImpl extends AbstractWorker {
+        final BlockingQueue<KeyedTask> queue;
+
+        WorkerImpl(int idx, BlockingQueue<KeyedTask> queue) {
+            super(idx);
             this.queue = queue;
+        }
+
+        public int size() {
+            return queue.size();
+        }
+
+        public KeyedTask poll() throws InterruptedException {
+            return queue.poll(180, TimeUnit.SECONDS);
+        }
+
+        public boolean offer(KeyedTask task) {
+            return queue.offer(task);
+        }
+
+    }
+
+    protected abstract class AbstractWorker<T> implements Worker {
+        final int idx;
+
+        protected AbstractWorker(int idx) {
+            this.idx = idx;
         }
 
         @Override
         public void run() {
             for (;;) {
                 try {
-                    final KeyedTask task = queue.poll(180, TimeUnit.SECONDS);
+                    final KeyedTask task = poll();
                     if (task == null) {
                         LOGGER.info("{}_{} idle", executorName, idx);
                         continue;
@@ -75,7 +109,7 @@ public class KeyedThreadPoolExecutor {
     private int getQueueSize() {
         int size = 0;
         for (Worker w : workers) {
-            size += w.queue.size();
+            size += w.size();
         }
         return size;
     }
@@ -83,101 +117,22 @@ public class KeyedThreadPoolExecutor {
     public <T extends Runnable> KeyedTask<T> execute(Object key, T runnable) {
         final int size = getQueueSize();
         if (size >= coreBufferSize) {
-            throw new RejectedExecutionException(String.format("%s is full, max=%d, now=%d",
+            throw new FastRejectedExecutionException(String.format("%s is full, max=%d, now=%d",
                 executorName, coreBufferSize, size));
         }
         KeyedTask task = new KeyedTask(key, runnable);
-        Worker w = workerOf(key);
+        AbstractWorker w = workerOf(key);
         // should not happen,
-        if (!w.queue.offer(task)) {
-            throw new RejectedExecutionException(String.format("%s_%d full, max=%d, now=%d",
-                executorName, w.idx, coreBufferSize, w.queue.size()));
+        if (!w.offer(task)) {
+            throw new FastRejectedExecutionException(String.format("%s_%d full, max=%d, now=%d",
+                executorName, w.idx, coreBufferSize, w.size()));
         }
         return task;
     }
 
-    private Worker workerOf(Object key) {
+    private AbstractWorker workerOf(Object key) {
         int n = (key.hashCode() & 0x7fffffff) % workers.length;
         return workers[n];
     }
 
-    public static final class KeyedTask<T extends Runnable> implements Runnable {
-        final long       createTime = System.currentTimeMillis();
-        final Object     key;
-        final T          runnable;
-
-        volatile long    startTime;
-        volatile long    endTime;
-        volatile boolean success;
-        volatile boolean canceled;
-
-        private KeyedTask(Object key, T runnable) {
-            this.key = key;
-            this.runnable = runnable;
-        }
-
-        public void cancel() {
-            this.canceled = true;
-        }
-
-        @Override
-        public void run() {
-            try {
-                if (!canceled) {
-                    runnable.run();
-                }
-                this.success = true;
-            } catch (Throwable e) {
-                LOGGER.error("failed to run task {}, {}", key, runnable, e);
-            } finally {
-                this.endTime = System.currentTimeMillis();
-            }
-        }
-
-        public boolean isFinished() {
-            return this.endTime > 0;
-        }
-
-        public boolean isSuccess() {
-            return isFinished() && success;
-        }
-
-        public boolean isFailed() {
-            return isFinished() && !success;
-        }
-
-        public long getCreateTime() {
-            return createTime;
-        }
-
-        public long getStartTime() {
-            return startTime;
-        }
-
-        public long getEndTime() {
-            return endTime;
-        }
-
-        public Object key() {
-            return key;
-        }
-
-        public T getRunnable() {
-            return runnable;
-        }
-
-        public boolean isOverAfter(int intervalMs) {
-            if (!isFinished()) {
-                return false;
-            }
-            return canceled || System.currentTimeMillis() - endTime >= intervalMs;
-        }
-
-        @Override
-        public String toString() {
-            return "KeyedTask{" + "createTime=" + createTime + ", key=" + key + ", runnable="
-                   + runnable + ", startTime=" + startTime + ", endTime=" + endTime + ", success="
-                   + success + ", canceled=" + canceled + '}';
-        }
-    }
 }
