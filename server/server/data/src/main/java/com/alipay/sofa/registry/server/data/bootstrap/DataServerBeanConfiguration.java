@@ -49,6 +49,7 @@ import com.alipay.sofa.registry.server.data.slot.SlotManager;
 import com.alipay.sofa.registry.server.data.slot.SlotManagerImpl;
 import com.alipay.sofa.registry.server.shared.remoting.AbstractClientHandler;
 import com.alipay.sofa.registry.server.shared.remoting.AbstractServerHandler;
+import com.alipay.sofa.registry.server.shared.resource.MetricsResource;
 import com.alipay.sofa.registry.server.shared.resource.SlotGenericResource;
 import com.alipay.sofa.registry.task.MetricsableThreadPoolExecutor;
 import com.alipay.sofa.registry.util.NamedThreadFactory;
@@ -328,6 +329,11 @@ public class DataServerBeanConfiguration {
         @Bean
         public SlotGenericResource slotGenericResource() {
             return new SlotGenericResource();
+        }
+
+        @Bean
+        public MetricsResource metricsResource() {
+            return new MetricsResource();
         }
 
     }

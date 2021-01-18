@@ -29,6 +29,7 @@ import com.alipay.sofa.registry.server.session.remoting.handler.*;
 import com.alipay.sofa.registry.server.session.resource.*;
 import com.alipay.sofa.registry.server.session.scheduler.timertask.SessionCacheDigestTask;
 import com.alipay.sofa.registry.server.session.strategy.*;
+import com.alipay.sofa.registry.server.shared.resource.MetricsResource;
 import com.alipay.sofa.registry.server.shared.resource.SlotGenericResource;
 import org.glassfish.jersey.jackson.JacksonFeature;
 import org.glassfish.jersey.server.ResourceConfig;
@@ -352,6 +353,11 @@ public class SessionServerConfiguration {
         @Bean
         public SlotGenericResource slotGenericResource() {
             return new SlotGenericResource();
+        }
+
+        @Bean
+        public MetricsResource metricsResource() {
+            return new MetricsResource();
         }
     }
 

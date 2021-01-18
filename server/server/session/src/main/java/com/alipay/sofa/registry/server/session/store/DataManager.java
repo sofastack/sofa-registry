@@ -51,14 +51,14 @@ public interface DataManager<DATA, ID, DATAINFOID> {
      * @param connectId
      * @return
      */
-    Map<String, DATA> queryByConnectId(ConnectId connectId);
+    Map<ID, DATA> queryByConnectId(ConnectId connectId);
 
     /**
      * remove data by client node connectId
      *
      * @param connectId
      */
-    boolean deleteByConnectId(ConnectId connectId);
+    Map<ID, DATA> deleteByConnectId(ConnectId connectId);
 
     DATA queryById(ID registerId, DATAINFOID dataInfoId);
 

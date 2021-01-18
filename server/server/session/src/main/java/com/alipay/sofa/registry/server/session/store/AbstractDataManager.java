@@ -80,8 +80,8 @@ public abstract class AbstractDataManager<T extends BaseInfo> implements
     }
 
     @Override
-    public boolean deleteByConnectId(ConnectId connectId) {
-        boolean modified = false;
+    public Map<String, T> deleteByConnectId(ConnectId connectId) {
+        Map<String, T> ret = Maps.newHashMap();
 
         for (Map<String, T> map : stores.values()) {
             // copy a map for iterate
@@ -90,12 +90,12 @@ public abstract class AbstractDataManager<T extends BaseInfo> implements
                 if (connectId.equals(data.connectId())) {
                     // may be the value has removed by anther thread
                     if (map.remove(e.getKey(), data)) {
-                        modified = true;
+                        ret.put(e.getKey(), data);
                     }
                 }
             }
         }
-        return modified;
+        return ret;
     }
 
     @Override

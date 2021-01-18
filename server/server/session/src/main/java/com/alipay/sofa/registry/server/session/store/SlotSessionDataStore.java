@@ -19,6 +19,7 @@ package com.alipay.sofa.registry.server.session.store;
 import com.alipay.sofa.registry.common.model.ConnectId;
 import com.alipay.sofa.registry.common.model.store.Publisher;
 import com.alipay.sofa.registry.server.session.slot.SlotTableCache;
+import com.google.common.collect.Maps;
 import org.glassfish.jersey.internal.guava.Sets;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.CollectionUtils;
@@ -122,14 +123,12 @@ public class SlotSessionDataStore implements DataStore {
     }
 
     @Override
-    public boolean deleteByConnectId(ConnectId connectId) {
-        boolean deleted = false;
+    public Map<String, Publisher> deleteByConnectId(ConnectId connectId) {
+        Map<String, Publisher> ret = Maps.newHashMap();
         for (DataStore ds : slot2DataStores.values()) {
-            if (ds.deleteByConnectId(connectId)) {
-                deleted = true;
-            }
+            ret.putAll(ds.deleteByConnectId(connectId));
         }
-        return deleted;
+        return ret;
     }
 
     @Override

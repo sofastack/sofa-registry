@@ -228,29 +228,24 @@ public class SessionRegistry implements Registry {
     @Override
     public void cancel(List<ConnectId> connectIds) {
         //update local firstly, data node send error depend on renew check
-        List<ConnectId> connectIdsWithPub = removeFromSession(connectIds);
-        // clientOff to dataNode async
-        clientOffToDataNode(connectIdsWithPub);
-    }
-
-    private List<ConnectId> removeFromSession(List<ConnectId> connectIds) {
-        List<ConnectId> connectIdsWithPub = Lists.newArrayList();
         for (ConnectId connectId : connectIds) {
-            if (sessionDataStore.deleteByConnectId(connectId)) {
-                connectIdsWithPub.add(connectId);
+            List<Publisher> removes = removeFromSession(connectId);
+            if (!removes.isEmpty()) {
+                // clientOff to dataNode async
+                clientOffToDataNode(connectId, removes);
             }
-            sessionInterests.deleteByConnectId(connectId);
-            sessionWatchers.deleteByConnectId(connectId);
         }
-        return connectIdsWithPub;
     }
 
-    private void clientOffToDataNode(List<ConnectId> connectIdsWithPub) {
-        // All write operations to DataServer (pub/unPub/clientoff/renew/snapshot)
-        // are handed over to WriteDataAcceptor
-        for (ConnectId connectId : connectIdsWithPub) {
-            writeDataAcceptor.accept(new ClientOffWriteDataRequest(connectId));
-        }
+    private List<Publisher> removeFromSession(ConnectId connectId) {
+        Map<String, Publisher> publisherMap = sessionDataStore.deleteByConnectId(connectId);
+        sessionInterests.deleteByConnectId(connectId);
+        sessionWatchers.deleteByConnectId(connectId);
+        return Lists.newArrayList(publisherMap.values());
+    }
+
+    private void clientOffToDataNode(ConnectId connectId, List<Publisher> clientOffPublishers) {
+        writeDataAcceptor.accept(new ClientOffWriteDataRequest(connectId, clientOffPublishers));
     }
 
     private final class ClientWatchDog extends LoopRunnable {

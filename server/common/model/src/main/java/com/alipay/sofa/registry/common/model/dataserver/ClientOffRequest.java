@@ -18,11 +18,11 @@ package com.alipay.sofa.registry.common.model.dataserver;
 
 import com.alipay.sofa.registry.common.model.ConnectId;
 import com.alipay.sofa.registry.common.model.ProcessId;
+import com.alipay.sofa.registry.common.model.PublisherVersion;
+import com.alipay.sofa.registry.common.model.store.Publisher;
+import com.google.common.collect.Maps;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 
 /**
  * request to remove data of specific clients immediately
@@ -32,43 +32,37 @@ import java.util.List;
  */
 public class ClientOffRequest extends AbstractSlotRequest {
 
-    private static final long     serialVersionUID = -3547806571058756207L;
+    private static final long                                serialVersionUID = -3547806571058756207L;
 
-    private final List<ConnectId> connectIds;
+    private final ConnectId                                  connectId;
+    private final Map<String, Map<String, PublisherVersion>> publisherMap     = Maps.newHashMap();
 
-    private final long            gmtOccur;
-
-    /**
-     * constructor
-     */
-    public ClientOffRequest(ProcessId sessionProcessId, Collection<ConnectId> connectIds,
-                            long gmtOccur) {
+    public ClientOffRequest(ProcessId sessionProcessId, ConnectId connectId) {
         super(sessionProcessId);
-        this.connectIds = Collections.unmodifiableList(new ArrayList<>(connectIds));
-        this.gmtOccur = gmtOccur;
+        this.connectId = connectId;
     }
 
-    /**
-     * Getter method for property <tt>connectIds</tt>.
-     *
-     * @return property value of connectIds
-     */
-    public List<ConnectId> getConnectIds() {
-        return connectIds;
+    public void addPublisher(Publisher publisher) {
+        Map<String, PublisherVersion> publishers = publisherMap.computeIfAbsent(
+                publisher.getDataInfoId(), k -> Maps.newHashMap());
+        publishers.put(publisher.getRegisterId(), publisher.publisherVersion());
     }
 
-    /**
-     * Getter method for property <tt>gmtOccur</tt>.
-     *
-     * @return property value of gmtOccur
-     */
-    public long getGmtOccur() {
-        return gmtOccur;
+    public ConnectId getConnectId() {
+        return connectId;
+    }
+
+    public Map<String, Map<String, PublisherVersion>> getPublisherMap() {
+        return publisherMap;
+    }
+
+    public boolean isEmpty() {
+        return publisherMap.isEmpty();
     }
 
     @Override
     public String toString() {
-        return new StringBuilder("[ClientOffRequest] connectIds=").append(this.connectIds)
-            .append(", gmtOccur=").append(gmtOccur).toString();
+        return "ClientOffRequest{" + "connectId=" + connectId + ", publisherMap=" + publisherMap
+               + '}';
     }
 }

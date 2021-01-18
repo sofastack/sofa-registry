@@ -22,7 +22,6 @@ import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.task.listener.TaskEvent;
 import com.alipay.sofa.registry.task.listener.TaskEvent.TaskType;
 import com.alipay.sofa.registry.task.listener.TaskListenerManager;
-import com.google.common.collect.Lists;
 
 /**
  *
@@ -78,8 +77,7 @@ public class WriteDataProcessor {
                 connectId, request.getRequestType(), request.getRequestBody());
         }
 
-        ConnectId connectId = request.getConnectId();
-        sendEvent(Lists.newArrayList(connectId), TaskType.CANCEL_DATA_TASK);
+        sendEvent(request.getRequestBody(), TaskType.CANCEL_DATA_TASK);
     }
 
     private void doUnPublishAsync(WriteDataRequest request) {

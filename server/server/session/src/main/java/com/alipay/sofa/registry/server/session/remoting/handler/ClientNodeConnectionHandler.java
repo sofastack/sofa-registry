@@ -27,11 +27,9 @@ import com.alipay.sofa.registry.server.session.store.DataStore;
 import com.alipay.sofa.registry.server.session.store.Interests;
 import com.alipay.sofa.registry.server.session.store.Watchers;
 import com.alipay.sofa.registry.server.shared.remoting.ListenServerChannelHandler;
-import org.apache.commons.collections.MapUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.Collections;
-import java.util.Map;
 
 /**
  *
@@ -72,33 +70,7 @@ public class ClientNodeConnectionHandler extends ListenServerChannelHandler {
         //avoid block connect ConnectionEventExecutor thread pool
         executorManager.getConnectClientExecutor().execute(() -> {
             ConnectId connectId = ConnectId.of(channel.getRemoteAddress(), channel.getLocalAddress());
-            if (checkCache(connectId)) {
-                sessionRegistry.cancel(Collections.singletonList(connectId));
-            }
+            sessionRegistry.cancel(Collections.singletonList(connectId));
         });
-    }
-
-    private boolean checkCache(ConnectId connectId) {
-        boolean checkSub = checkSub(connectId);
-        boolean checkPub = checkPub(connectId);
-        boolean checkWatcher = checkWatcher(connectId);
-        LOGGER.info("Client off checkCache connectId:{} result pub:{},sub:{},wat:{}", connectId,
-            checkPub, checkSub, checkWatcher);
-        return checkPub || checkSub || checkWatcher;
-    }
-
-    private boolean checkPub(ConnectId connectId) {
-        Map map = sessionDataStore.queryByConnectId(connectId);
-        return !MapUtils.isEmpty(map);
-    }
-
-    private boolean checkSub(ConnectId connectId) {
-        Map map = sessionInterests.queryByConnectId(connectId);
-        return !MapUtils.isEmpty(map);
-    }
-
-    private boolean checkWatcher(ConnectId connectId) {
-        Map map = sessionWatchers.queryByConnectId(connectId);
-        return !MapUtils.isEmpty(map);
     }
 }

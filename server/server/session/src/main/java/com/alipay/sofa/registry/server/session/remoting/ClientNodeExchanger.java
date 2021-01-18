@@ -16,8 +16,6 @@
  */
 package com.alipay.sofa.registry.server.session.remoting;
 
-import com.alipay.sofa.registry.log.Logger;
-import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
 import com.alipay.sofa.registry.server.shared.remoting.ServerSideExchanger;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,7 +26,6 @@ import org.springframework.beans.factory.annotation.Autowired;
  * @version $Id: ClientNodeExchanger.java, v 0.1 2017-12-12 12:13 shangyu.wh Exp $
  */
 public class ClientNodeExchanger extends ServerSideExchanger {
-    private static final Logger LOGGER = LoggerFactory.getLogger("SESSION-PUSH", "[Exchange]");
 
     @Autowired
     private SessionServerConfig sessionServerConfig;

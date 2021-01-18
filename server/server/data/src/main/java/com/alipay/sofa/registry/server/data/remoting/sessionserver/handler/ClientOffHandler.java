@@ -17,7 +17,7 @@
 package com.alipay.sofa.registry.server.data.remoting.sessionserver.handler;
 
 import com.alipay.sofa.registry.common.model.CommonResponse;
-import com.alipay.sofa.registry.common.model.ConnectId;
+import com.alipay.sofa.registry.common.model.PublisherVersion;
 import com.alipay.sofa.registry.common.model.dataserver.ClientOffRequest;
 import com.alipay.sofa.registry.common.model.dataserver.DatumVersion;
 import com.alipay.sofa.registry.remoting.Channel;
@@ -26,6 +26,7 @@ import com.alipay.sofa.registry.server.data.change.event.DataChangeEventCenter;
 import com.alipay.sofa.registry.util.ParaCheckUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Executor;
@@ -50,20 +51,25 @@ public class ClientOffHandler extends AbstractDataHandler<ClientOffRequest> {
 
     @Override
     public void checkParam(ClientOffRequest request) throws RuntimeException {
-        ParaCheckUtil.checkNotEmpty(request.getConnectIds(), "ClientOffRequest.connectIds");
+        ParaCheckUtil.checkNotNull(request.getConnectId(), "ClientOffRequest.connectIds");
+        ParaCheckUtil.checkNotNull(request.getPublisherMap(), "ClientOffRequest.publisherMap");
         ParaCheckUtil.checkNotNull(request.getSessionProcessId(), "request.sessionProcessId");
     }
 
     @Override
     public Object doHandle(Channel channel, ClientOffRequest request) {
         processSessionProcessId(channel, request.getSessionProcessId());
-
-        List<ConnectId> connectIds = request.getConnectIds();
-        for (ConnectId connectId : connectIds) {
-            Map<String, DatumVersion> modifieds = localDatumStorage.remove(connectId,
-                request.getSessionProcessId(), request.getGmtOccur());
-            dataChangeEventCenter.onChange(modifieds.keySet(),
-                dataServerConfig.getLocalDataCenter());
+        Map<String, Map<String, PublisherVersion>> publisherMap = request.getPublisherMap();
+        List<String> dataInfoIds = new ArrayList<>(publisherMap.size());
+        for (Map.Entry<String, Map<String, PublisherVersion>> e : publisherMap.entrySet()) {
+            DatumVersion version = localDatumStorage.remove(e.getKey(),
+                request.getSessionProcessId(), e.getValue());
+            if (version != null) {
+                dataInfoIds.add(e.getKey());
+            }
+        }
+        if (!dataInfoIds.isEmpty()) {
+            dataChangeEventCenter.onChange(dataInfoIds, dataServerConfig.getLocalDataCenter());
         }
         return CommonResponse.buildSuccessResponse();
     }

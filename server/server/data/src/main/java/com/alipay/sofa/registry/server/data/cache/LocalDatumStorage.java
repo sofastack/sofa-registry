@@ -137,17 +137,6 @@ public final class LocalDatumStorage implements DatumStorage {
         return versionMap;
     }
 
-    @Override
-    public Map<String, DatumVersion> remove(ConnectId connectId, ProcessId sessionProcessId, long registerTimestamp) {
-        // remove by client off, the sessionProcessId could not be null
-        ParaCheckUtil.checkNotNull(sessionProcessId, "sessionProcessId");
-        ParaCheckUtil.checkNotNull(connectId, "connectId");
-        Map<String, DatumVersion> versionMap = new HashMap<>(32);
-        publisherGroupsMap.values()
-                .forEach(g -> versionMap.putAll(g.remove(connectId, sessionProcessId, registerTimestamp)));
-        return versionMap;
-    }
-
     // only for http testapi
     @Override
     public DatumVersion remove(String dataInfoId, ProcessId sessionProcessId) {

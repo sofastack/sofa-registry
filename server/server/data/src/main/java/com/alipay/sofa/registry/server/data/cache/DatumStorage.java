@@ -64,9 +64,6 @@ public interface DatumStorage {
 
     Map<String, DatumVersion> clean(ProcessId sessionProcessId);
 
-    Map<String, DatumVersion> remove(ConnectId connectId, ProcessId sessionProcessId,
-                                     long registerTimestamp);
-
     DatumVersion remove(String dataInfoId, ProcessId sessionProcessId);
 
     DatumVersion remove(String dataInfoId, ProcessId sessionProcessId,

@@ -16,12 +16,10 @@
  */
 package com.alipay.sofa.registry.server.session.scheduler.task;
 
-import com.alipay.sofa.registry.common.model.ConnectId;
+import com.alipay.sofa.registry.common.model.ClientOffPublishers;
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
 import com.alipay.sofa.registry.server.session.node.service.DataNodeService;
 import com.alipay.sofa.registry.task.listener.TaskEvent;
-
-import java.util.List;
 
 /**
  *
@@ -34,8 +32,7 @@ public class CancelDataTask extends AbstractSessionTask {
      */
     private final DataNodeService     dataNodeService;
     private final SessionServerConfig sessionServerConfig;
-    private List<ConnectId>           connectIds;
-    private final long                gmtOccur = System.currentTimeMillis();
+    private ClientOffPublishers       clientOffPublishers;
 
     public CancelDataTask(DataNodeService dataNodeService, SessionServerConfig sessionServerConfig) {
         this.dataNodeService = dataNodeService;
@@ -44,7 +41,7 @@ public class CancelDataTask extends AbstractSessionTask {
 
     @Override
     public void execute() {
-        dataNodeService.clientOff(connectIds, gmtOccur);
+        dataNodeService.clientOff(clientOffPublishers);
     }
 
     @Override
@@ -55,21 +52,15 @@ public class CancelDataTask extends AbstractSessionTask {
             setTaskId(taskEvent.getTaskId());
         }
 
-        Object obj = taskEvent.getEventObj();
-        if (obj instanceof List) {
-            this.connectIds = (List<ConnectId>) obj;
-            if (connectIds.isEmpty()) {
-                throw new IllegalArgumentException("Input clientOff connectIds error!");
-            }
-        } else {
-            throw new IllegalArgumentException("Input task event object error!");
-        }
+        this.clientOffPublishers = (ClientOffPublishers) taskEvent.getEventObj();
+
     }
 
     @Override
     public String toString() {
-        return "CANCEL_DATA_TASK{" + "taskId='" + getTaskId() + '\'' + ", connectIds=" + connectIds
-               + ", retry='" + sessionServerConfig.getCancelDataTaskRetryTimes() + '\'' + '}';
+        return "CANCEL_DATA_TASK{" + "taskId='" + getTaskId() + '\'' + ", connectId="
+               + clientOffPublishers.getConnectId() + ", retry='"
+               + sessionServerConfig.getCancelDataTaskRetryTimes() + '\'' + '}';
     }
 
     @Override

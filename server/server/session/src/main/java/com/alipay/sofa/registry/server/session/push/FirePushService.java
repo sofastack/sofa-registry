@@ -34,6 +34,7 @@ import com.alipay.sofa.registry.task.KeyedThreadPoolExecutor;
 import com.alipay.sofa.registry.util.DatumVersionUtil;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import io.prometheus.client.Counter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.CollectionUtils;
 
@@ -45,9 +46,9 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Predicate;
 
 public class FirePushService {
-    public static final long               EXCEPT_MIN_VERSION = Long.MIN_VALUE;
-    private static final Logger            LOGGER             = LoggerFactory
-                                                                  .getLogger(FirePushService.class);
+    public static final long               EXCEPT_MIN_VERSION  = Long.MIN_VALUE;
+    private static final Logger            LOGGER              = LoggerFactory
+                                                                   .getLogger(FirePushService.class);
 
     @Autowired
     private SessionServerConfig            sessionServerConfig;
@@ -67,7 +68,39 @@ public class FirePushService {
     @Autowired
     private PushProcessor                  pushProcessor;
 
-    private final AtomicLong               fetchSeq           = new AtomicLong();
+    private final AtomicLong               fetchSeq            = new AtomicLong();
+
+    private final Counter                  changeTaskCounter   = Counter.build()
+                                                                   .namespace("session")
+                                                                   .subsystem("fetch")
+                                                                   .name("change_task_total")
+                                                                   .help("change task").register();
+    private final Counter                  registerTaskCounter = Counter.build()
+                                                                   .namespace("session")
+                                                                   .subsystem("fetch")
+                                                                   .name("register_task_total")
+                                                                   .help("register task")
+                                                                   .register();
+    private final Counter                  pushEmptyCounter    = Counter.build()
+                                                                   .namespace("session")
+                                                                   .subsystem("fetch")
+                                                                   .name("empty_task_total")
+                                                                   .help("empty task").register();
+    private final Counter                  pushTempCounter     = Counter.build()
+                                                                   .namespace("session")
+                                                                   .subsystem("fetch")
+                                                                   .name("temp_task_total")
+                                                                   .help("temp task").register();
+
+    private final Counter                  cacheCounter        = Counter.build()
+                                                                   .namespace("session")
+                                                                   .subsystem("fetch")
+                                                                   .name("cache_total")
+                                                                   .help(" cache")
+                                                                   .labelNames("hit").register();
+
+    private Counter.Child                  cacheHitCounter     = cacheCounter.labels("Y");
+    private Counter.Child                  cacheMissCounter    = cacheCounter.labels("N");
 
     @PostConstruct
     public void init() {
@@ -85,6 +118,7 @@ public class FirePushService {
             // TODO only supported local dataCenter
             changeFetchExecutor.execute(dataInfoId, new ChangeTask(dataCenter, dataInfoId,
                 expectVersion));
+            changeTaskCounter.inc();
             return true;
         } catch (RejectedExecutionException e) {
             LOGGER.error("failed to exec ChangeTask {}, dataCenter={}, expectVer={}, {}",
@@ -101,7 +135,8 @@ public class FirePushService {
         processPush(true, DatumVersionUtil.nextId(), getDataCenterWhenPushEmpty(),
             Collections.emptyMap(), Collections.singletonList(subscriber), Long.MAX_VALUE,
             Long.MAX_VALUE);
-        // use Long.MAX_VALUE as fetchseq, could not push again after push empty
+        pushEmptyCounter.inc();
+        // use Long.MAX_VALUE as fetch.seq, could not push again after push empty
         LOGGER.info("firePushEmpty, {}", subscriber);
         return true;
     }
@@ -109,6 +144,7 @@ public class FirePushService {
     public boolean fireOnRegister(Subscriber subscriber) {
         try {
             registerFetchExecutor.execute(subscriber.getDataInfoId(), new RegisterTask(subscriber));
+            registerTaskCounter.inc();
             return true;
         } catch (RejectedExecutionException e) {
             LOGGER.error("failed to exec SubscriberTask {}, {}, {}", subscriber.getDataInfoId(),
@@ -132,6 +168,7 @@ public class FirePushService {
         processPush(true, datum.getVersion(), datum.getDataCenter(),
             Collections.singletonMap(datum.getDataInfoId(), datum), subscribers,
             fetchSeq.incrementAndGet(), fetchSeq.incrementAndGet());
+        pushTempCounter.inc();
         return true;
     }
 
@@ -323,9 +360,11 @@ public class FirePushService {
             Datum datum = (Datum) value.getPayload();
             if (datum != null && datum.getVersion() >= expectVersion) {
                 // the expect version got
+                cacheHitCounter.inc();
                 return datum;
             }
         }
+        cacheMissCounter.inc();
         // the cache is too old
         sessionCacheService.invalidate(key);
         value = sessionCacheService.getValue(key);
