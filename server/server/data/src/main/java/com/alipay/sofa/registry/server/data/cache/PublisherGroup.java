@@ -174,31 +174,6 @@ public final class PublisherGroup {
         }
     }
 
-    DatumVersion remove(ConnectId connectId, ProcessId sessionProcessId, long registerTimestamp) {
-        wlock.lock();
-        try {
-            Map<String, PublisherEnvelope> removed = Maps.newHashMap();
-            for (Map.Entry<String, PublisherEnvelope> e : pubMap.entrySet()) {
-                PublisherEnvelope existing = e.getValue();
-                if (existing.sessionProcessId.equals(sessionProcessId)
-                    && existing.isConnectId(connectId)) {
-                    // use concurrent version
-                    PublisherVersion newVersion = PublisherVersion.of(
-                        existing.publisherVersion.getVersion(), registerTimestamp);
-                    if (existing.publisherVersion.orderThan(newVersion)) {
-                        // mark unpub
-                        removed.put(e.getKey(),
-                            PublisherEnvelope.unpubOf(newVersion, sessionProcessId));
-                    }
-                }
-            }
-            pubMap.putAll(removed);
-            return !removed.isEmpty() ? updateVersion() : null;
-        } finally {
-            wlock.unlock();
-        }
-    }
-
     DatumVersion remove(ProcessId sessionProcessId, Map<String, PublisherVersion> removedPublishers) {
         if (MapUtils.isEmpty(removedPublishers)) {
             return null;

@@ -16,12 +16,15 @@
  */
 package com.alipay.sofa.registry.metrics;
 
-import java.util.concurrent.TimeUnit;
-
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.Slf4jReporter;
+import io.prometheus.client.CollectorRegistry;
+import io.prometheus.client.dropwizard.DropwizardExports;
+import io.prometheus.client.hotspot.DefaultExports;
+
+import java.util.concurrent.TimeUnit;
 
 /**
  *
@@ -57,5 +60,13 @@ public class ReporterUtils {
      */
     public static void startSlf4jReporter(long period, MetricRegistry registry) {
         startSlf4jReporter(period, registry, METRIC_LOGGER);
+    }
+
+    public static void enablePrometheusDefaultExports() {
+        DefaultExports.initialize();
+    }
+
+    public static void registerPrometheusMetrics(MetricRegistry metrics) {
+        CollectorRegistry.defaultRegistry.register(new DropwizardExports(metrics));
     }
 }

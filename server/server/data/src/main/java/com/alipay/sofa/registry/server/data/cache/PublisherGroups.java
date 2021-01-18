@@ -91,17 +91,6 @@ public final class PublisherGroups {
         return versionMap;
     }
 
-    Map<String, DatumVersion> remove(ConnectId connectId, ProcessId sessionProcessId, long registerTimestamp) {
-        Map<String, DatumVersion> versionMap = new HashMap<>(32);
-        publisherGroupMap.values().forEach(g -> {
-            DatumVersion ver = g.remove(connectId, sessionProcessId, registerTimestamp);
-            if (ver != null) {
-                versionMap.put(g.dataInfoId, ver);
-            }
-        });
-        return versionMap;
-    }
-
     DatumVersion remove(String dataInfoId, ProcessId sessionProcessId) {
         PublisherGroup group = publisherGroupMap.get(dataInfoId);
         return group == null ? null : group.clean(sessionProcessId);

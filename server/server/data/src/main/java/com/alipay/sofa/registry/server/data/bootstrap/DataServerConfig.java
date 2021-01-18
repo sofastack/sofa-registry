@@ -65,7 +65,7 @@ public class DataServerConfig {
     private int                  getDataExecutorMaxPoolSize                   = OsUtils
                                                                                   .getCpuCount() * 10;
 
-    private int                  getDataExecutorQueueSize                     = 10000;
+    private int                  getDataExecutorQueueSize                     = 20000;
 
     private long                 getDataExecutorKeepAliveTime                 = 60;
 
@@ -100,7 +100,7 @@ public class DataServerConfig {
 
     private volatile int         sessionLeaseSec                              = 30;
 
-    private int                  datumCompactDelayMs                          = 1000 * 60 * 5;
+    private int                  datumCompactDelayMs                          = 1000 * 60 * 3;
 
     private int                  slotMigratingExecutorThreadSize              = 8;
 

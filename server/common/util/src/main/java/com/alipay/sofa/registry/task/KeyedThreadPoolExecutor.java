@@ -19,6 +19,7 @@ package com.alipay.sofa.registry.task;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.util.ConcurrentUtils;
+import io.prometheus.client.Counter;
 
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -36,9 +37,15 @@ public class KeyedThreadPoolExecutor {
     private final String           executorName;
     private final int              coreBufferSize;
 
+    private final Counter          taskCounter;
+
     public KeyedThreadPoolExecutor(String executorName, int coreSize, int coreBufferSize) {
         this.executorName = executorName;
         this.coreBufferSize = coreBufferSize;
+        this.taskCounter = Counter.build().namespace("keyedExecutor")
+            .help("metrics for keyed executor")
+            .name(executorName.replace('-', '_') + "_task_total").labelNames("idx", "type")
+            .register();
         workers = new AbstractWorker[coreSize];
         for (int i = 0; i < coreSize; i++) {
             AbstractWorker w = createWorker(i, coreBufferSize);
@@ -83,10 +90,14 @@ public class KeyedThreadPoolExecutor {
     }
 
     protected abstract class AbstractWorker<T> implements Worker {
-        final int idx;
+        final int           idx;
+        final Counter.Child workerExecCounter;
+        final Counter.Child workerCommitCounter;
 
         protected AbstractWorker(int idx) {
             this.idx = idx;
+            this.workerExecCounter = taskCounter.labels(String.valueOf(idx), "exec");
+            this.workerCommitCounter = taskCounter.labels(String.valueOf(idx), "commit");
         }
 
         @Override
@@ -99,6 +110,7 @@ public class KeyedThreadPoolExecutor {
                         continue;
                     }
                     task.run();
+                    workerExecCounter.inc();
                 } catch (Throwable e) {
                     LOGGER.error("{}_{} run task error", executorName, idx, e);
                 }
@@ -127,6 +139,7 @@ public class KeyedThreadPoolExecutor {
             throw new FastRejectedExecutionException(String.format("%s_%d full, max=%d, now=%d",
                 executorName, w.idx, coreBufferSize, w.size()));
         }
+        w.workerCommitCounter.inc();
         return task;
     }
 

@@ -37,6 +37,7 @@ import com.alipay.sofa.registry.util.ConcurrentUtils;
 import com.alipay.sofa.registry.util.WakeupLoopRunnable;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import io.prometheus.client.Counter;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import javax.annotation.PostConstruct;
@@ -48,14 +49,14 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
 public class PushProcessor {
-    private static final Logger                 LOGGER               = LoggerFactory
-                                                                         .getLogger(PushProcessor.class);
+    private static final Logger                 LOGGER                   = LoggerFactory
+                                                                             .getLogger(PushProcessor.class);
 
     private KeyedThreadPoolExecutor             pushExecutor;
-    private final Map<PendingTaskKey, PushTask> pendingTasks         = Maps.newConcurrentMap();
-    private final Lock                          pendingLock          = new ReentrantLock();
+    private final Map<PendingTaskKey, PushTask> pendingTasks             = Maps.newConcurrentMap();
+    private final Lock                          pendingLock              = new ReentrantLock();
 
-    private final Map<PushingTaskKey, PushTask> pushingTasks         = Maps.newConcurrentMap();
+    private final Map<PushingTaskKey, PushTask> pushingTasks             = Maps.newConcurrentMap();
 
     @Autowired
     private SessionServerConfig                 sessionServerConfig;
@@ -66,13 +67,53 @@ public class PushProcessor {
     @Autowired
     private ClientNodeService                   clientNodeService;
 
-    private final WatchDog                      watchDog             = new WatchDog();
+    private final WatchDog                      watchDog                 = new WatchDog();
 
-    private final ThreadPoolExecutor            pushCallbackExecutor = MetricsableThreadPoolExecutor
-                                                                         .newExecutor(
-                                                                             "PushCallbackExecutor",
-                                                                             2, 1000,
-                                                                             new CallRunHandler());
+    private final ThreadPoolExecutor            pushCallbackExecutor     = MetricsableThreadPoolExecutor
+                                                                             .newExecutor(
+                                                                                 "PushCallbackExecutor",
+                                                                                 2,
+                                                                                 1000,
+                                                                                 new CallRunHandler());
+
+    private final Counter                       pendingCounter           = Counter.build()
+                                                                             .namespace("session")
+                                                                             .subsystem("push")
+                                                                             .name("pending_total")
+                                                                             .help("pending fetch")
+                                                                             .labelNames("type")
+                                                                             .register();
+    private final Counter.Child                 pendingReplaceCounter    = pendingCounter
+                                                                             .labels("replace");
+    private final Counter.Child                 pendingNewCounter        = pendingCounter
+                                                                             .labels("new");
+    private final Counter.Child                 pendingConflictCounter   = pendingCounter
+                                                                             .labels("conflict");
+
+    private final Counter                       commitCounter            = Counter
+                                                                             .build()
+                                                                             .namespace("session")
+                                                                             .subsystem("push")
+                                                                             .name(
+                                                                                 "fire_commit_total")
+                                                                             .help("commit task")
+                                                                             .register();
+    private final Counter                       pushClientCounter        = Counter
+                                                                             .build()
+                                                                             .namespace("session")
+                                                                             .subsystem("push")
+                                                                             .name(
+                                                                                 "push_client_total")
+                                                                             .help(
+                                                                                 "push client task")
+                                                                             .labelNames("type")
+                                                                             .register();
+    private final Counter.Child                 pushClientPushingCounter = pushClientCounter
+                                                                             .labels("I");
+    private final Counter.Child                 pushClientSuccessCounter = pushClientCounter
+                                                                             .labels("S");
+    private final Counter.Child                 pushClientFailCounter    = pushClientCounter
+                                                                             .labels("F");
 
     @PostConstruct
     public void init() {
@@ -86,6 +127,7 @@ public class PushProcessor {
         PendingTaskKey key = pushTask.pendingKeyOf();
         if (pendingTasks.putIfAbsent(key, pushTask) == null) {
             // fast path
+            pendingNewCounter.inc();
             return true;
         }
         boolean conflict = false;
@@ -95,10 +137,12 @@ public class PushProcessor {
             prev = pendingTasks.get(key);
             if (prev == null) {
                 pendingTasks.put(key, pushTask);
+                pendingNewCounter.inc();
             } else if (pushTask.afterThan(prev)) {
                 // update the expireTimestamp as prev's, avoid the push block by the continues fire
                 pushTask.expireTimestamp = prev.expireTimestamp;
                 pendingTasks.put(key, pushTask);
+                pendingReplaceCounter.inc();
             } else {
                 conflict = true;
             }
@@ -111,6 +155,7 @@ public class PushProcessor {
             }
             return true;
         } else {
+            pendingConflictCounter.inc();
             LOGGER.info("[ConflictPending] key={}, prev={}, {}, prev {}={} > {}-{}", key,
                 prev.taskID, prev.pushingTaskKey, prev.fetchSeqEnd, pushTask.taskID,
                 pushTask.fetchSeqStart);
@@ -145,6 +190,7 @@ public class PushProcessor {
         try {
             // keyed by pushingKey: client.addr && dataInfoId
             pushExecutor.execute(task.pushingTaskKey, task);
+            commitCounter.inc();
             return true;
         } catch (Throwable e) {
             LOGGER.error("failed to exec push task {},{}", task.taskID, task.pushingTaskKey, e);
@@ -311,6 +357,7 @@ public class PushProcessor {
                 pushingTasks.put(pushingTaskKey, this);
                 clientNodeService.pushWithCallback(data, subscriber.getSourceAddress(),
                     new PushClientCallback(this, pushingTaskKey));
+                pushClientPushingCounter.inc();
                 LOGGER.info("{}, pushing {}", taskID, pushingTaskKey);
             } catch (RequestChannelClosedException e) {
                 // try to delete self
@@ -362,6 +409,7 @@ public class PushProcessor {
         @Override
         public void onCallback(Channel channel, Object message) {
             this.finishedTimestamp = System.currentTimeMillis();
+            pushClientSuccessCounter.inc();
             boolean cleaned = false;
             try {
                 final Map<String, Long> versions = DatumUtils.getVesions(pushTask.datumMap);
@@ -388,6 +436,7 @@ public class PushProcessor {
         @Override
         public void onException(Channel channel, Throwable exception) {
             this.finishedTimestamp = System.currentTimeMillis();
+            pushClientFailCounter.inc();
             boolean cleaned = false;
             try {
                 // TODO should use remove(k, exceptV). but in some case,

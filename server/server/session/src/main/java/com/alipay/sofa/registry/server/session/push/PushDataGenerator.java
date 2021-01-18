@@ -20,8 +20,6 @@ import com.alipay.sofa.registry.common.model.SubscriberUtils;
 import com.alipay.sofa.registry.common.model.dataserver.Datum;
 import com.alipay.sofa.registry.common.model.store.*;
 import com.alipay.sofa.registry.core.model.ReceivedData;
-import com.alipay.sofa.registry.log.Logger;
-import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
 import com.alipay.sofa.registry.server.session.cache.AppRevisionCacheRegistry;
 import com.alipay.sofa.registry.server.session.converter.AppPublisherConverter;
@@ -35,7 +33,6 @@ import java.util.Map;
 import java.util.function.Predicate;
 
 public class PushDataGenerator {
-    private static final Logger      LOGGER = LoggerFactory.getLogger(PushDataGenerator.class);
 
     @Autowired
     private SessionServerConfig      sessionServerConfig;

@@ -16,13 +16,12 @@
  */
 package com.alipay.sofa.registry.server.session.node.service;
 
-import com.alipay.sofa.registry.common.model.ConnectId;
+import com.alipay.sofa.registry.common.model.ClientOffPublishers;
 import com.alipay.sofa.registry.common.model.dataserver.Datum;
 import com.alipay.sofa.registry.common.model.dataserver.DatumVersion;
 import com.alipay.sofa.registry.common.model.store.Publisher;
 import com.alipay.sofa.registry.common.model.store.URL;
 
-import java.util.List;
 import java.util.Map;
 
 /**
@@ -50,9 +49,9 @@ public interface DataNodeService {
      * session server support api to stop some client node,all register data on data server will be removed
      * data on session server will be remove too
      *
-     * @param connectIds
+     * @param clientOffPublishers
      */
-    void clientOff(List<ConnectId> connectIds, long gmtOccur);
+    void clientOff(ClientOffPublishers clientOffPublishers);
 
     /**
      * Get some dataInfoId version from one data server

@@ -16,8 +16,8 @@
  */
 package com.alipay.sofa.registry.server.session.node.service;
 
+import com.alipay.sofa.registry.common.model.ClientOffPublishers;
 import com.alipay.sofa.registry.common.model.CommonResponse;
-import com.alipay.sofa.registry.common.model.ConnectId;
 import com.alipay.sofa.registry.common.model.dataserver.*;
 import com.alipay.sofa.registry.common.model.slot.Slot;
 import com.alipay.sofa.registry.common.model.slot.SlotAccessGenericResponse;
@@ -35,6 +35,8 @@ import com.alipay.sofa.registry.server.shared.env.ServerEnv;
 import com.alipay.sofa.registry.server.shared.meta.MetaServerService;
 import com.alipay.sofa.registry.timer.AsyncHashedWheelTimer;
 import com.alipay.sofa.registry.timer.AsyncHashedWheelTimer.TaskFailedCallback;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -47,7 +49,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
- *
  * @author shangyu.wh
  * @version $Id: DataNode.java, v 0.1 2017-12-01 11:30 shangyu.wh Exp $
  */
@@ -165,20 +166,18 @@ public class DataNodeServiceImpl implements DataNodeService {
     }
 
     @Override
-    public void clientOff(List<ConnectId> connectIds, long gmtOccur) {
-        if (CollectionUtils.isEmpty(connectIds)) {
+    public void clientOff(ClientOffPublishers clientOffPublishers) {
+        if (clientOffPublishers.isEmpty()) {
             return;
         }
-        //get all local dataCenter data node
+        //group by dataInfoId
         String bizName = "ClientOff";
-        for (String dataNode : metaServerService.getDataServerList()) {
-            Request<ClientOffRequest> request = buildClientOffRequest(connectIds, dataNode,
-                gmtOccur);
+        List<Request<ClientOffRequest>> requests = buildClientOffRequest(clientOffPublishers);
+        for (Request<ClientOffRequest> req : requests) {
             try {
-                sendRequest(bizName, request);
+                sendRequest(bizName, req);
             } catch (RequestException e) {
-                doRetryAsync(bizName, request, e,
-                    sessionServerConfig.getCancelDataTaskRetryTimes(),
+                doRetryAsync(bizName, req, e, sessionServerConfig.getCancelDataTaskRetryTimes(),
                     sessionServerConfig.getCancelDataTaskRetryFirstDelay(),
                     sessionServerConfig.getCancelDataTaskRetryIncrementDelay());
 
@@ -186,29 +185,30 @@ public class DataNodeServiceImpl implements DataNodeService {
         }
     }
 
-    private Request<ClientOffRequest> buildClientOffRequest(List<ConnectId> connectIds,
-                                                            String address, long gmtOccur) {
-        return new Request<ClientOffRequest>() {
+    private List<Request<ClientOffRequest>> buildClientOffRequest(ClientOffPublishers clientOffPublishers) {
+        List<Request<ClientOffRequest>> ret = Lists.newArrayList();
+        Map<Integer, ClientOffRequest> groups = groupBySlot(clientOffPublishers);
+        for (Map.Entry<Integer, ClientOffRequest> group : groups.entrySet()) {
+            ret.add(new Request<ClientOffRequest>() {
+                private AtomicInteger retryTimes = new AtomicInteger();
 
-            private AtomicInteger retryTimes = new AtomicInteger();
+                @Override
+                public ClientOffRequest getRequestBody() {
+                    return group.getValue();
+                }
 
-            @Override
-            public ClientOffRequest getRequestBody() {
-                ClientOffRequest clientOffRequest = new ClientOffRequest(ServerEnv.PROCESS_ID,
-                    connectIds, gmtOccur);
-                return clientOffRequest;
-            }
+                @Override
+                public URL getRequestUrl() {
+                    return getUrl(group.getKey());
+                }
 
-            @Override
-            public URL getRequestUrl() {
-                return new URL(address, sessionServerConfig.getDataServerPort());
-            }
-
-            @Override
-            public AtomicInteger getRetryTimes() {
-                return retryTimes;
-            }
-        };
+                @Override
+                public AtomicInteger getRetryTimes() {
+                    return retryTimes;
+                }
+            });
+        }
+        return ret;
     }
 
     @Override
@@ -351,11 +351,27 @@ public class DataNodeServiceImpl implements DataNodeService {
 
     private URL getUrl(String dataInfoId) {
         final Slot slot = slotTableCache.getSlot(dataInfoId);
-        final String dataIp = slot.getLeader();
+        return getUrl(slot.getId());
+    }
+
+    private URL getUrl(int slotId) {
+        final String dataIp = slotTableCache.getLeader(slotId);
         if (StringUtils.isBlank(dataIp)) {
-            throw new RequestException(String.format("slot has no leader %s, slot={}", dataInfoId,
-                slot));
+            throw new RequestException(String.format("slot has no leader, slotId=%s", slotId));
         }
         return new URL(dataIp, sessionServerConfig.getDataServerPort());
+    }
+
+    private Map<Integer, ClientOffRequest> groupBySlot(ClientOffPublishers clientOffPublishers) {
+        List<Publisher> publishers = clientOffPublishers.getPublishers();
+        Map<Integer, ClientOffRequest> ret = Maps.newHashMap();
+        for (Publisher publisher : publishers) {
+            final String dataInfoId = publisher.getDataInfoId();
+            int slotId = slotTableCache.slotOf(dataInfoId);
+            ClientOffRequest request = ret.computeIfAbsent(slotId,
+                    k -> new ClientOffRequest(ServerEnv.PROCESS_ID, clientOffPublishers.getConnectId()));
+            request.addPublisher(publisher);
+        }
+        return ret;
     }
 }
