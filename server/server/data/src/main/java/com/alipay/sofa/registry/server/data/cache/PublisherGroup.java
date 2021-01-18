@@ -34,7 +34,9 @@ import org.apache.commons.collections.MapUtils;
 
 import java.util.*;
 import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 /**
  * @author yuzhi.lyz
@@ -44,7 +46,9 @@ public final class PublisherGroup {
     private static final Logger                         LOGGER = LoggerFactory
                                                                    .getLogger(PublisherGroup.class);
 
-    private final Lock                                  lock   = new ReentrantLock();
+    private final ReadWriteLock                         lock   = new ReentrantReadWriteLock();
+    private final Lock                                  rlock  = lock.readLock();
+    private final Lock                                  wlock  = lock.writeLock();
 
     final String                                        dataInfoId;
 
@@ -83,12 +87,12 @@ public final class PublisherGroup {
         datum.setInstanceId(instanceId);
         long ver;
         List<PublisherEnvelope> list = new ArrayList<>(pubMap.size());
-        lock.lock();
+        rlock.lock();
         try {
             ver = this.version;
             list.addAll(pubMap.values());
         } finally {
-            lock.unlock();
+            rlock.unlock();
         }
         datum.setVersion(ver);
         list.stream().filter(PublisherEnvelope::isPub).forEach(p -> datum.addPublisher(p.publisher));
@@ -134,19 +138,19 @@ public final class PublisherGroup {
     }
 
     DatumVersion addPublisher(Publisher publisher) {
-        lock.lock();
+        wlock.lock();
         try {
             if (tryAddPublisher(publisher)) {
                 return updateVersion();
             }
             return null;
         } finally {
-            lock.unlock();
+            wlock.unlock();
         }
     }
 
     DatumVersion clean(ProcessId sessionProcessId) {
-        lock.lock();
+        wlock.lock();
         try {
             boolean modified = false;
             if (sessionProcessId == null) {
@@ -167,12 +171,12 @@ public final class PublisherGroup {
             }
             return modified ? updateVersion() : null;
         } finally {
-            lock.unlock();
+            wlock.unlock();
         }
     }
 
     DatumVersion remove(ConnectId connectId, ProcessId sessionProcessId, long registerTimestamp) {
-        lock.lock();
+        wlock.lock();
         try {
             Map<String, PublisherEnvelope> removed = Maps.newHashMap();
             for (Map.Entry<String, PublisherEnvelope> e : pubMap.entrySet()) {
@@ -192,7 +196,7 @@ public final class PublisherGroup {
             pubMap.putAll(removed);
             return !removed.isEmpty() ? updateVersion() : null;
         } finally {
-            lock.unlock();
+            wlock.unlock();
         }
     }
 
@@ -200,7 +204,7 @@ public final class PublisherGroup {
         if (MapUtils.isEmpty(removedPublishers)) {
             return null;
         }
-        lock.lock();
+        wlock.lock();
         try {
             boolean modified = false;
             for (Map.Entry<String, PublisherVersion> e : removedPublishers.entrySet()) {
@@ -237,7 +241,7 @@ public final class PublisherGroup {
             }
             return modified ? updateVersion() : null;
         } finally {
-            lock.unlock();
+            wlock.unlock();
         }
     }
 
@@ -245,7 +249,7 @@ public final class PublisherGroup {
         for (Publisher p : updatedPublishers) {
             ParaCheckUtil.checkNotNull(p.getSessionProcessId(), "publisher.sessionProcessId");
         }
-        lock.lock();
+        wlock.lock();
         try {
             boolean modified = false;
             for (Publisher publisher : updatedPublishers) {
@@ -258,7 +262,7 @@ public final class PublisherGroup {
             }
             return null;
         } finally {
-            lock.unlock();
+            wlock.unlock();
         }
     }
 
@@ -286,7 +290,7 @@ public final class PublisherGroup {
 
     int compact(long tombstoneTimestamp) {
         int count = 0;
-        lock.lock();
+        wlock.lock();
         try {
             Iterator<Map.Entry<String, PublisherEnvelope>> it = pubMap.entrySet().iterator();
             while (it.hasNext()) {
@@ -299,7 +303,7 @@ public final class PublisherGroup {
                 }
             }
         } finally {
-            lock.unlock();
+            wlock.unlock();
         }
         return count;
     }

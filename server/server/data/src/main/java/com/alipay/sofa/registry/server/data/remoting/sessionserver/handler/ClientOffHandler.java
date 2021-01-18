@@ -46,7 +46,7 @@ public class ClientOffHandler extends AbstractDataHandler<ClientOffRequest> {
     protected DataChangeEventCenter dataChangeEventCenter;
 
     @Autowired
-    private ThreadPoolExecutor publishProcessorExecutor;
+    private ThreadPoolExecutor      publishProcessorExecutor;
 
     @Override
     public void checkParam(ClientOffRequest request) throws RuntimeException {
