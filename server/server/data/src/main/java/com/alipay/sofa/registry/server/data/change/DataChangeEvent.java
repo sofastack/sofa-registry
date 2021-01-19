@@ -14,9 +14,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alipay.sofa.registry.server.data.change.event;
+package com.alipay.sofa.registry.server.data.change;
 
-import com.alipay.sofa.registry.server.data.change.DataSourceTypeEnum;
+import com.google.common.collect.Lists;
+
+import java.util.Collections;
+import java.util.List;
 
 /**
  * event for data changed
@@ -25,12 +28,12 @@ import com.alipay.sofa.registry.server.data.change.DataSourceTypeEnum;
  * @version $Id: DataChangeEvent.java, v 0.1 2017-12-07 18:44 qian.lqlq Exp $
  */
 public class DataChangeEvent implements IDataChangeEvent {
-    private final String dataCenter;
-    private final String dataInfoId;
+    private final String       dataCenter;
+    private final List<String> dataInfoIds;
 
-    public DataChangeEvent(String dataCenter, String dataInfoId) {
+    public DataChangeEvent(String dataCenter, List<String> dataInfoIds) {
         this.dataCenter = dataCenter;
-        this.dataInfoId = dataInfoId;
+        this.dataInfoIds = Collections.unmodifiableList(Lists.newArrayList(dataInfoIds));
     }
 
     /**
@@ -41,26 +44,13 @@ public class DataChangeEvent implements IDataChangeEvent {
         return dataCenter;
     }
 
-    /**
-     * Getter method for property <tt>dataInfoId</tt>.
-     * @return property value of dataInfoId
-     */
-    public String getDataInfoId() {
-        return dataInfoId;
-    }
-
-    /**
-     * Getter method for property <tt>sourceType</tt>.
-     *
-     * @return property value of sourceType
-     */
-    public DataSourceTypeEnum getSourceType() {
-        return DataSourceTypeEnum.PUB;
+    public List<String> getDataInfoIds() {
+        return dataInfoIds;
     }
 
     @Override
     public String toString() {
-        return "DataChangeEvent{" + "dataCenter='" + dataCenter + '\'' + ", dataInfoId='"
-               + dataInfoId + '\'' + '}';
+        return "DataChangeEvent{" + "dataCenter='" + dataCenter + '\'' + ", dataInfoIds='"
+               + dataInfoIds + '\'' + '}';
     }
 }

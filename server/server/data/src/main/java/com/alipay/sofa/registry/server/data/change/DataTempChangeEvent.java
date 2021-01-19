@@ -14,31 +14,32 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alipay.sofa.registry.server.data.change.notify;
+package com.alipay.sofa.registry.server.data.change;
 
 import com.alipay.sofa.registry.common.model.dataserver.Datum;
-import com.alipay.sofa.registry.server.data.change.DataSourceTypeEnum;
-
-import java.util.Set;
 
 /**
  *
- * @author qian.lqlq
- * @version $Id: IDataChangeNotifier.java, v 0.1 2018-03-09 15:30 qian.lqlq Exp $
+ * @author yuzhi.lyz
+ * @version v 0.1 2020-12-08 19:54 yuzhi.lyz Exp $
  */
-public interface IDataChangeNotifier {
+public final class DataTempChangeEvent implements IDataChangeEvent {
+    private final Datum datum;
+
+    public DataTempChangeEvent(Datum datum) {
+        this.datum = datum;
+    }
 
     /**
-     *
-     * @return
+     * Getter method for property <tt>datum</tt>.
+     * @return property value of datum
      */
-    Set<DataSourceTypeEnum> getSuitableSource();
+    public Datum getDatum() {
+        return datum;
+    }
 
-    /**
-     *
-     * @param datum
-     * @param lastVersion
-     */
-    void notify(Datum datum, Long lastVersion);
-
+    @Override
+    public String toString() {
+        return "DataTempChangeEvent{" + "datum=" + datum + '}';
+    }
 }

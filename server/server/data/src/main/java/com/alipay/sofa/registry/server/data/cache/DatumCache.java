@@ -91,6 +91,12 @@ public class DatumCache {
         return datumMap;
     }
 
+    public DatumVersion getVersion(String dataCenter, String dataInfoId) {
+        //TODO only get local datacenter
+        DatumVersion version = localDatumStorage.getVersion(dataInfoId);
+        return version;
+    }
+
     public Map<String, Map<String, DatumVersion>> getVersions(int slotId) {
         Map<String, Map<String, DatumVersion>> datumMap = new HashMap<>();
         //local

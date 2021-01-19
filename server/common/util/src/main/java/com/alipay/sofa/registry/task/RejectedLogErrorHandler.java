@@ -14,15 +14,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alipay.sofa.registry.server.data.change.event;
+package com.alipay.sofa.registry.task;
 
-import com.alipay.sofa.registry.server.data.change.DataSourceTypeEnum;
+import com.alipay.sofa.registry.log.Logger;
 
-/**
- *
- * @author qian.lqlq
- * @version $Id: IDataChangeEvent.java, v 0.1 2018-05-10 17:11 qian.lqlq Exp $
- */
-public interface IDataChangeEvent {
-    DataSourceTypeEnum getSourceType();
+import java.util.concurrent.RejectedExecutionHandler;
+import java.util.concurrent.ThreadPoolExecutor;
+
+public final class RejectedLogErrorHandler implements RejectedExecutionHandler {
+    private final Logger logger;
+
+    public RejectedLogErrorHandler(Logger logger) {
+        this.logger = logger;
+    }
+
+    @Override
+    public void rejectedExecution(Runnable r, ThreadPoolExecutor executor) {
+        String msg = String.format("Task(%s) %s rejected from %s", r.getClass(), r, executor);
+        logger.error(msg);
+    }
 }

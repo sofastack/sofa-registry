@@ -62,7 +62,7 @@ public final class PublisherGroup {
     // if the delete publisher from session, mark unpub
     final Map<String/*registerId*/, PublisherEnvelope> pubMap = Maps.newConcurrentMap();
 
-    private long                                        version;
+    private volatile long                               version;
 
     PublisherGroup(Publisher publisher, String dataCenter) {
         this.dataInfoId = publisher.getDataInfoId();

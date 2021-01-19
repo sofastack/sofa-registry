@@ -58,4 +58,8 @@ public final class DatumVersion implements Serializable {
     public int hashCode() {
         return Long.valueOf(value).hashCode();
     }
+
+    public static DatumVersion of(long v) {
+        return new DatumVersion(v);
+    }
 }

@@ -16,138 +16,45 @@
  */
 package com.alipay.sofa.registry.common.model.sessionserver;
 
+import com.alipay.sofa.registry.common.model.dataserver.DatumVersion;
 import com.alipay.sofa.registry.common.model.store.WordCache;
+import com.google.common.collect.Maps;
 
 import java.io.Serializable;
-import java.util.Set;
+import java.util.*;
 
 /**
- * request to notify sessionserver when data changed
+ * request to notify session server when data changed
  *
  * @author qian.lqlq
  * @version $Id: DataChangeRequest.java, v 0.1 2017-12-01 15:48 qian.lqlq Exp $
  */
 public class DataChangeRequest implements Serializable {
 
-    private static final long serialVersionUID = -7674982522990222894L;
+    private static final long               serialVersionUID = -7674982522990222894L;
 
-    private String            dataInfoId;
-    private String            changedDataInfoId;
+    private final Map<String, DatumVersion> dataInfoIds;
 
-    private String            dataCenter;
+    private final String                    dataCenter;
 
-    private long              version;
+    private final Set<String>               revisions;
 
-    private Set<String>       revisions;
-
-    /**
-     * constructor
-     */
-    public DataChangeRequest() {
-    }
-
-    /**
-     * constructor
-     *
-     * @param dataInfoId
-     * @param dataCenter
-     * @param version
-     */
-    public DataChangeRequest(String dataInfoId, String dataCenter, long version,
+    public DataChangeRequest(String dataCenter, Map<String, DatumVersion> dataInfoIds,
                              Set<String> revisions) {
-        this.dataInfoId = dataInfoId;
         this.dataCenter = dataCenter;
-        this.version = version;
+        this.dataInfoIds = dataInfoIds;
         this.revisions = revisions;
     }
 
-    /**
-     * Getter method for property <tt>dataInfoId</tt>.
-     *
-     * @return property value of dataInfoId
-     */
-    public String getDataInfoId() {
-        return dataInfoId;
+    public Map<String, DatumVersion> getDataInfoIds() {
+        return Collections.unmodifiableMap(dataInfoIds);
     }
 
-    /**
-     * Setter method for property <tt>dataInfoId</tt>.
-     *
-     * @param dataInfoId value to be assigned to property dataInfoId
-     */
-    public void setDataInfoId(String dataInfoId) {
-        this.dataInfoId = WordCache.getInstance().getWordCache(dataInfoId);
-    }
-
-    /**
-     * Getter method for property <tt>dataCenter</tt>.
-     *
-     * @return property value of dataCenter
-     */
     public String getDataCenter() {
         return dataCenter;
     }
 
-    /**
-     * Setter method for property <tt>dataCenter</tt>.
-     *
-     * @param dataCenter value to be assigned to property dataCenter
-     */
-    public void setDataCenter(String dataCenter) {
-        this.dataCenter = WordCache.getInstance().getWordCache(dataCenter);
-    }
-
-    /**
-     * Getter method for property <tt>version</tt>.
-     *
-     * @return property value of version
-     */
-    public long getVersion() {
-        return version;
-    }
-
-    /**
-     * Setter method for property <tt>version</tt>.
-     *
-     * @param version value to be assigned to property version
-     */
-    public void setVersion(long version) {
-        this.version = version;
-    }
-
-    /**
-     * Getter method for property <tt>revisions</tt>.
-     *
-     * @return property value of revisions
-     */
     public Set<String> getRevisions() {
-        return revisions;
-    }
-
-    /**
-     * Setter method for property <tt>revisions</tt>.
-     *
-     * @param revisions value to be assigned to property revisions
-     */
-    public void setRevisions(Set<String> revisions) {
-        this.revisions = revisions;
-    }
-
-    @Override
-    public String toString() {
-        final StringBuilder sb = new StringBuilder("DataChangeRequest{");
-        sb.append("dataInfoId='").append(dataInfoId).append('\'');
-        sb.append(", dataCenter='").append(dataCenter).append('\'');
-        sb.append(", version=").append(version);
-        sb.append('}');
-        return sb.toString();
-    }
-
-    public String getChangedDataInfoId() {
-        return changedDataInfoId;
-    }
-
-    public void setChangedDataInfoId(String changedDataInfoId) {
-        this.changedDataInfoId = changedDataInfoId;
+        return Collections.unmodifiableSet(revisions);
     }
 }

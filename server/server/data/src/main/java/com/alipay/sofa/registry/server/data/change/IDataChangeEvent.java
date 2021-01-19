@@ -19,17 +19,8 @@ package com.alipay.sofa.registry.server.data.change;
 /**
  *
  * @author qian.lqlq
- * @version $Id: DataSourceTypeEnum.java, v 0.1 2018-03-12 18:01 qian.lqlq Exp $
+ * @version $Id: IDataChangeEvent.java, v 0.1 2018-05-10 17:11 qian.lqlq Exp $
  */
-public enum DataSourceTypeEnum {
+public interface IDataChangeEvent {
 
-    /**
-     * pub by client
-     */
-    PUB,
-
-    /**
-     * pub temporary data
-     */
-    PUB_TEMP,
 }

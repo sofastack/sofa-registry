@@ -188,4 +188,8 @@ public class DataInfo implements Serializable {
     public int hashCode() {
         return Objects.hash(dataInfoId);
     }
+
+    public boolean typeIsSofaApp() {
+        return ValueConstants.SOFA_APP.equals(dataType);
+    }
 }
