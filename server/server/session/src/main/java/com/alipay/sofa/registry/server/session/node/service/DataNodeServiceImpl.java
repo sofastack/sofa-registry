@@ -32,7 +32,6 @@ import com.alipay.sofa.registry.remoting.exchange.message.Response;
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
 import com.alipay.sofa.registry.server.session.slot.SlotTableCache;
 import com.alipay.sofa.registry.server.shared.env.ServerEnv;
-import com.alipay.sofa.registry.server.shared.meta.MetaServerService;
 import com.alipay.sofa.registry.timer.AsyncHashedWheelTimer;
 import com.alipay.sofa.registry.timer.AsyncHashedWheelTimer.TaskFailedCallback;
 import com.google.common.collect.Lists;
@@ -61,9 +60,6 @@ public class DataNodeServiceImpl implements DataNodeService {
 
     @Autowired
     private SlotTableCache        slotTableCache;
-
-    @Autowired
-    private MetaServerService     metaServerService;
 
     @Autowired
     private SessionServerConfig   sessionServerConfig;

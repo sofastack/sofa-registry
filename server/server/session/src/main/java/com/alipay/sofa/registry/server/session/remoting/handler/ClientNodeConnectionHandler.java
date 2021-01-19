@@ -23,9 +23,6 @@ import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.remoting.Channel;
 import com.alipay.sofa.registry.server.session.registry.Registry;
 import com.alipay.sofa.registry.server.session.scheduler.ExecutorManager;
-import com.alipay.sofa.registry.server.session.store.DataStore;
-import com.alipay.sofa.registry.server.session.store.Interests;
-import com.alipay.sofa.registry.server.session.store.Watchers;
 import com.alipay.sofa.registry.server.shared.remoting.ListenServerChannelHandler;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -42,15 +39,6 @@ public class ClientNodeConnectionHandler extends ListenServerChannelHandler {
 
     @Autowired
     private Registry            sessionRegistry;
-
-    @Autowired
-    private DataStore           sessionDataStore;
-
-    @Autowired
-    private Interests           sessionInterests;
-
-    @Autowired
-    private Watchers            sessionWatchers;
 
     @Autowired
     private ExecutorManager     executorManager;
