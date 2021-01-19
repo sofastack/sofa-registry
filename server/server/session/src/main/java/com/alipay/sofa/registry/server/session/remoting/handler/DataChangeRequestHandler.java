@@ -17,6 +17,7 @@
 package com.alipay.sofa.registry.server.session.remoting.handler;
 
 import com.alipay.sofa.registry.common.model.Node.NodeType;
+import com.alipay.sofa.registry.common.model.dataserver.DatumVersion;
 import com.alipay.sofa.registry.common.model.sessionserver.DataChangeRequest;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
@@ -29,6 +30,7 @@ import com.alipay.sofa.registry.server.session.store.Interests;
 import com.alipay.sofa.registry.server.shared.remoting.AbstractClientHandler;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import java.util.Map;
 import java.util.concurrent.Executor;
 
 /**
@@ -73,18 +75,18 @@ public class DataChangeRequestHandler extends AbstractClientHandler<DataChangeRe
         if (sessionServerConfig.isStopPushSwitch()) {
             return null;
         }
-        dataChangeRequest.setDataCenter(dataChangeRequest.getDataCenter());
-        dataChangeRequest.setDataInfoId(dataChangeRequest.getDataInfoId());
         appRevisionCacheRegistry.refreshMeta(dataChangeRequest.getRevisions());
-        if (!sessionInterests.checkInterestVersion(dataChangeRequest.getDataCenter(),
-            dataChangeRequest.getDataInfoId(), dataChangeRequest.getVersion())) {
-            LOGGER.info("obsolete version {}, ver={}, dataCenter={}",
-                dataChangeRequest.getDataInfoId(), dataChangeRequest.getVersion(),
-                dataChangeRequest.getDataCenter());
-            return null;
+        final String dataCenter = dataChangeRequest.getDataCenter();
+        for (Map.Entry<String, DatumVersion> e : dataChangeRequest.getDataInfoIds().entrySet()) {
+            final String dataInfoId = e.getKey();
+            final DatumVersion version = e.getValue();
+            if (!sessionInterests.checkInterestVersion(dataCenter, dataInfoId, version.getValue())) {
+                LOGGER.info("obsolete version {}, ver={}, dataCenter={}", dataInfoId, version,
+                    dataCenter);
+                continue;
+            }
+            firePushService.fireOnChange(dataCenter, dataInfoId, version.getValue());
         }
-        firePushService.fireOnChange(dataChangeRequest.getDataCenter(),
-            dataChangeRequest.getDataInfoId(), dataChangeRequest.getVersion());
         return null;
     }
 

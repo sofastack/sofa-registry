@@ -159,7 +159,7 @@ public class FirePushService {
 
     public boolean fireOnDatum(Datum datum) {
         DataInfo dataInfo = DataInfo.valueOf(datum.getDataInfoId());
-        if (ValueConstants.SOFA_APP.equals(dataInfo.getDataType())) {
+        if (dataInfo.typeIsSofaApp()) {
             LOGGER.error("unsupported DataType when fireOnDatum {}", dataInfo);
             return false;
         }
@@ -198,7 +198,7 @@ public class FirePushService {
         }
 
         DataInfo dataInfo = DataInfo.valueOf(changeDataInfoId);
-        if (ValueConstants.SOFA_APP.equals(dataInfo.getDataType())) {
+        if (dataInfo.typeIsSofaApp()) {
             if (datum != null) {
                 final Set<String> revisions = datum.revisions();
                 appRevisionCacheRegistry.refreshMeta(revisions);

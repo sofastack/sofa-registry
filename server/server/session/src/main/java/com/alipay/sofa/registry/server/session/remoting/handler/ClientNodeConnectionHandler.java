@@ -18,8 +18,6 @@ package com.alipay.sofa.registry.server.session.remoting.handler;
 
 import com.alipay.sofa.registry.common.model.ConnectId;
 import com.alipay.sofa.registry.common.model.Node;
-import com.alipay.sofa.registry.log.Logger;
-import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.remoting.Channel;
 import com.alipay.sofa.registry.server.session.registry.Registry;
 import com.alipay.sofa.registry.server.session.scheduler.ExecutorManager;
@@ -34,8 +32,6 @@ import java.util.Collections;
  * @version $Id: ServerConnectionLisener.java, v 0.1 2017-11-30 15:04 shangyu.wh Exp $
  */
 public class ClientNodeConnectionHandler extends ListenServerChannelHandler {
-
-    private static final Logger LOGGER = LoggerFactory.getLogger("SESSION-CONNECT");
 
     @Autowired
     private Registry            sessionRegistry;

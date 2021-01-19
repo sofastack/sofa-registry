@@ -17,7 +17,6 @@
 package com.alipay.sofa.registry.server.session.store;
 
 import com.alipay.sofa.registry.common.model.SubscriberUtils;
-import com.alipay.sofa.registry.common.model.constants.ValueConstants;
 import com.alipay.sofa.registry.common.model.store.DataInfo;
 import com.alipay.sofa.registry.common.model.store.Subscriber;
 import com.alipay.sofa.registry.log.Logger;
@@ -79,7 +78,7 @@ public class SessionInterests extends AbstractDataManager<Subscriber> implements
     @Override
     public Collection<Subscriber> getInterestOfDatum(String datumDataInfoId) {
         DataInfo dataInfo = DataInfo.valueOf(datumDataInfoId);
-        if (ValueConstants.SOFA_APP.equals(dataInfo.getDataType())) {
+        if (dataInfo.typeIsSofaApp()) {
             List<Subscriber> list = Lists.newArrayList();
             Set<String> interfaceDataInfoIds = appRevisionCacheRegistry.getInterfaces(dataInfo
                 .getDataId());

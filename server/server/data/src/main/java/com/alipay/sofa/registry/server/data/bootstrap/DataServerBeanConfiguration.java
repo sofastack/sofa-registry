@@ -23,11 +23,7 @@ import com.alipay.sofa.registry.server.data.cache.CacheDigestTask;
 import com.alipay.sofa.registry.server.data.cache.DatumCache;
 import com.alipay.sofa.registry.server.data.cache.DatumStorage;
 import com.alipay.sofa.registry.server.data.cache.LocalDatumStorage;
-import com.alipay.sofa.registry.server.data.change.DataChangeHandler;
-import com.alipay.sofa.registry.server.data.change.event.DataChangeEventCenter;
-import com.alipay.sofa.registry.server.data.change.notify.IDataChangeNotifier;
-import com.alipay.sofa.registry.server.data.change.notify.SessionServerNotifier;
-import com.alipay.sofa.registry.server.data.change.notify.TempPublisherNotifier;
+import com.alipay.sofa.registry.server.data.change.DataChangeEventCenter;
 import com.alipay.sofa.registry.server.data.lease.SessionLeaseManager;
 import com.alipay.sofa.registry.server.data.remoting.DataNodeExchanger;
 import com.alipay.sofa.registry.server.data.remoting.MetaNodeExchanger;
@@ -64,7 +60,6 @@ import org.springframework.context.annotation.Import;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.List;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
@@ -243,33 +238,6 @@ public class DataServerBeanConfiguration {
         public NotifyProvideDataChangeHandler notifyProvideDataChangeHandler() {
             return new NotifyProvideDataChangeHandler();
         }
-    }
-
-    @Configuration
-    public static class DataServerNotifyBeanConfiguration {
-        @Bean
-        public DataChangeHandler dataChangeHandler() {
-            return new DataChangeHandler();
-        }
-
-        @Bean
-        public SessionServerNotifier sessionServerNotifier() {
-            return new SessionServerNotifier();
-        }
-
-        @Bean
-        public TempPublisherNotifier tempPublisherNotifier() {
-            return new TempPublisherNotifier();
-        }
-
-        @Bean(name = "dataChangeNotifiers")
-        public List<IDataChangeNotifier> dataChangeNotifiers() {
-            List<IDataChangeNotifier> list = new ArrayList<>();
-            list.add(sessionServerNotifier());
-            list.add(tempPublisherNotifier());
-            return list;
-        }
-
     }
 
     @Configuration

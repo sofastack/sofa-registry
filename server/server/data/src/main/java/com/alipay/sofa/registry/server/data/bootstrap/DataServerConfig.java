@@ -33,7 +33,7 @@ import java.util.Set;
 @ConfigurationProperties(prefix = DataServerConfig.PRE_FIX)
 public class DataServerConfig {
 
-    public static final String   PRE_FIX                                      = "data.server";
+    public static final String   PRE_FIX                                  = "data.server";
 
     private int                  port;
 
@@ -45,91 +45,69 @@ public class DataServerConfig {
 
     private int                  httpServerPort;
 
-    private int                  queueCount;
+    private int                  notifyExecutorPoolSize                   = OsUtils.getCpuCount() * 3;
 
-    private int                  queueSize;
+    private int                  notifyExecutorQueueSize                  = 10000;
 
-    private int                  notifyIntervalMs                             = 200;
+    private int                  notifyRetryQueueSize                     = 10000;
 
-    private int                  notifyTempDataIntervalMs                     = 200;
+    private int                  notifyMaxItems                           = 500;
 
-    private int                  rpcTimeout;
+    private int                  notifyIntervalMs                         = 500;
+
+    private int                  notifyRetryTimes                         = 3;
+
+    private int                  notifyTempExecutorPoolSize               = OsUtils.getCpuCount() * 3;
+
+    private int                  notifyTempExecutorQueueSize              = 4000;
+    private int                  notifyTempDataIntervalMs                 = 200;
+
+    private int                  rpcTimeout                               = 3000;
 
     private CommonConfig         commonConfig;
 
-    private volatile Set<String> metaIps                                      = null;
+    private volatile Set<String> metaIps                                  = null;
 
-    private int                  getDataExecutorMinPoolSize                   = OsUtils
-                                                                                  .getCpuCount() * 5;
+    private int                  getDataExecutorMinPoolSize               = OsUtils.getCpuCount() * 5;
 
-    private int                  getDataExecutorMaxPoolSize                   = OsUtils
-                                                                                  .getCpuCount() * 10;
+    private int                  getDataExecutorMaxPoolSize               = OsUtils.getCpuCount() * 10;
 
-    private int                  getDataExecutorQueueSize                     = 20000;
+    private int                  getDataExecutorQueueSize                 = 20000;
 
-    private long                 getDataExecutorKeepAliveTime                 = 60;
+    private long                 getDataExecutorKeepAliveTime             = 60;
 
-    private int                  notifyDataSyncExecutorMinPoolSize            = OsUtils
-                                                                                  .getCpuCount() * 5;
+    private int                  publishExecutorMinPoolSize               = OsUtils.getCpuCount() * 5;
 
-    private int                  notifyDataSyncExecutorMaxPoolSize            = OsUtils
-                                                                                  .getCpuCount() * 10;
+    private int                  publishExecutorMaxPoolSize               = OsUtils.getCpuCount() * 10;
 
-    private int                  notifyDataSyncExecutorQueueSize              = 700;
+    private int                  publishExecutorQueueSize                 = 10000;
 
-    private long                 notifyDataSyncExecutorKeepAliveTime          = 60;
+    private volatile int         sessionLeaseSec                          = 30;
 
-    private long                 notifySessionRetryFirstDelay                 = 3000;
+    private int                  datumCompactDelayMs                      = 1000 * 60 * 3;
 
-    private long                 notifySessionRetryIncrementDelay             = 3000;
+    private int                  slotLeaderSyncSessionExecutorThreadSize  = OsUtils.getCpuCount() * 3;
+    private int                  slotLeaderSyncSessionExecutorQueueSize   = 40000;
+    private volatile int         slotLeaderSyncSessionIntervalSec         = 4;
 
-    private int                  notifySessionRetryTimes                      = 5;
-
-    private int                  publishExecutorMinPoolSize                   = OsUtils
-                                                                                  .getCpuCount() * 5;
-
-    private int                  publishExecutorMaxPoolSize                   = OsUtils
-                                                                                  .getCpuCount() * 10;
-
-    private int                  publishExecutorQueueSize                     = 10000;
-
-    private int                  sessionServerNotifierRetryExecutorThreadSize = OsUtils
-                                                                                  .getCpuCount() * 2;
-
-    private int                  sessionServerNotifierRetryExecutorQueueSize  = 10000;
-
-    private volatile int         sessionLeaseSec                              = 30;
-
-    private int                  datumCompactDelayMs                          = 1000 * 60 * 3;
-
-    private int                  slotMigratingExecutorThreadSize              = 8;
-
-    private int                  slotLeaderSyncSessionExecutorThreadSize      = OsUtils
-                                                                                  .getCpuCount() * 2;
-    private int                  slotLeaderSyncSessionExecutorQueueSize       = 40000;
-    private volatile int         slotLeaderSyncSessionIntervalSec             = 6;
-
-    private int                  slotFollowerSyncLeaderExecutorThreadSize     = OsUtils
-                                                                                  .getCpuCount();
-    private int                  slotFollowerSyncLeaderExecutorQueueSize      = 10000;
-    private volatile int         slotFollowerSyncLeaderIntervalMs             = 1000 * 30;
+    private int                  slotFollowerSyncLeaderExecutorThreadSize = OsUtils.getCpuCount();
+    private int                  slotFollowerSyncLeaderExecutorQueueSize  = 10000;
+    private volatile int         slotFollowerSyncLeaderIntervalMs         = 1000 * 30;
 
     // the publisher.digest if len(registerId/uuid+long+long), 50bytes
-    private volatile int         slotSyncPublisherDigestMaxNum                = 10000;
+    private volatile int         slotSyncPublisherDigestMaxNum            = 8000;
 
-    private volatile int         slotSyncPublisherMaxNum                      = 512;
+    private volatile int         slotSyncPublisherMaxNum                  = 512;
 
-    private int                  slotSyncRequestExecutorMinPoolSize           = OsUtils
-                                                                                  .getCpuCount() * 4;
+    private int                  slotSyncRequestExecutorMinPoolSize       = OsUtils.getCpuCount() * 3;
 
-    private int                  slotSyncRequestExecutorMaxPoolSize           = OsUtils
-                                                                                  .getCpuCount() * 4;
+    private int                  slotSyncRequestExecutorMaxPoolSize       = OsUtils.getCpuCount() * 3;
 
-    private int                  slotSyncRequestExecutorQueueSize             = 1000;
+    private int                  slotSyncRequestExecutorQueueSize         = 1000;
 
-    private int                  schedulerHeartbeatIntervalSec                = 3;
+    private int                  schedulerHeartbeatIntervalSec            = 3;
 
-    private boolean              enableTestApi                                = false;
+    private boolean              enableTestApi                            = false;
 
     /**
      * constructor
@@ -217,42 +195,6 @@ public class DataServerConfig {
      */
     public void setHttpServerPort(int httpServerPort) {
         this.httpServerPort = httpServerPort;
-    }
-
-    /**
-     * Getter method for property <tt>queueCount</tt>.
-     *
-     * @return property value of queueCount
-     */
-    public int getQueueCount() {
-        return queueCount;
-    }
-
-    /**
-     * Setter method for property <tt>queueCount</tt>.
-     *
-     * @param queueCount  value to be assigned to property queueCount
-     */
-    public void setQueueCount(int queueCount) {
-        this.queueCount = queueCount;
-    }
-
-    /**
-     * Getter method for property <tt>queueSize</tt>.
-     *
-     * @return property value of queueSize
-     */
-    public int getQueueSize() {
-        return queueSize;
-    }
-
-    /**
-     * Setter method for property <tt>queueSize</tt>.
-     *
-     * @param queueSize  value to be assigned to property queueSize
-     */
-    public void setQueueSize(int queueSize) {
-        this.queueSize = queueSize;
     }
 
     /**
@@ -382,114 +324,6 @@ public class DataServerConfig {
     }
 
     /**
-     * Getter method for property <tt>notifyDataSyncExecutorMinPoolSize</tt>.
-     *
-     * @return property value of notifyDataSyncExecutorMinPoolSize
-     */
-    public int getNotifyDataSyncExecutorMinPoolSize() {
-        return notifyDataSyncExecutorMinPoolSize;
-    }
-
-    /**
-     * Setter method for property <tt>notifyDataSyncExecutorMinPoolSize</tt>.
-     *
-     * @param notifyDataSyncExecutorMinPoolSize  value to be assigned to property notifyDataSyncExecutorMinPoolSize
-     */
-    public void setNotifyDataSyncExecutorMinPoolSize(int notifyDataSyncExecutorMinPoolSize) {
-        this.notifyDataSyncExecutorMinPoolSize = notifyDataSyncExecutorMinPoolSize;
-    }
-
-    /**
-     * Getter method for property <tt>notifyDataSyncExecutorMaxPoolSize</tt>.
-     *
-     * @return property value of notifyDataSyncExecutorMaxPoolSize
-     */
-    public int getNotifyDataSyncExecutorMaxPoolSize() {
-        return notifyDataSyncExecutorMaxPoolSize;
-    }
-
-    /**
-     * Setter method for property <tt>notifyDataSyncExecutorMaxPoolSize</tt>.
-     *
-     * @param notifyDataSyncExecutorMaxPoolSize  value to be assigned to property notifyDataSyncExecutorMaxPoolSize
-     */
-    public void setNotifyDataSyncExecutorMaxPoolSize(int notifyDataSyncExecutorMaxPoolSize) {
-        this.notifyDataSyncExecutorMaxPoolSize = notifyDataSyncExecutorMaxPoolSize;
-    }
-
-    /**
-     * Getter method for property <tt>notifyDataSyncExecutorQueueSize</tt>.
-     *
-     * @return property value of notifyDataSyncExecutorQueueSize
-     */
-    public int getNotifyDataSyncExecutorQueueSize() {
-        return notifyDataSyncExecutorQueueSize;
-    }
-
-    /**
-     * Setter method for property <tt>notifyDataSyncExecutorQueueSize</tt>.
-     *
-     * @param notifyDataSyncExecutorQueueSize  value to be assigned to property notifyDataSyncExecutorQueueSize
-     */
-    public void setNotifyDataSyncExecutorQueueSize(int notifyDataSyncExecutorQueueSize) {
-        this.notifyDataSyncExecutorQueueSize = notifyDataSyncExecutorQueueSize;
-    }
-
-    /**
-     * Getter method for property <tt>notifyDataSyncExecutorKeepAliveTime</tt>.
-     *
-     * @return property value of notifyDataSyncExecutorKeepAliveTime
-     */
-    public long getNotifyDataSyncExecutorKeepAliveTime() {
-        return notifyDataSyncExecutorKeepAliveTime;
-    }
-
-    /**
-     * Setter method for property <tt>notifyDataSyncExecutorKeepAliveTime</tt>.
-     *
-     * @param notifyDataSyncExecutorKeepAliveTime  value to be assigned to property notifyDataSyncExecutorKeepAliveTime
-     */
-    public void setNotifyDataSyncExecutorKeepAliveTime(long notifyDataSyncExecutorKeepAliveTime) {
-        this.notifyDataSyncExecutorKeepAliveTime = notifyDataSyncExecutorKeepAliveTime;
-    }
-
-    /**
-     * Getter method for property <tt>notifySessionRetryFirstDelay</tt>.
-     *
-     * @return property value of notifySessionRetryFirstDelay
-     */
-    public long getNotifySessionRetryFirstDelay() {
-        return notifySessionRetryFirstDelay;
-    }
-
-    /**
-     * Setter method for property <tt>notifySessionRetryFirstDelay</tt>.
-     *
-     * @param notifySessionRetryFirstDelay  value to be assigned to property notifySessionRetryFirstDelay
-     */
-    public void setNotifySessionRetryFirstDelay(long notifySessionRetryFirstDelay) {
-        this.notifySessionRetryFirstDelay = notifySessionRetryFirstDelay;
-    }
-
-    /**
-     * Getter method for property <tt>notifySessionRetryIncrementDelay</tt>.
-     *
-     * @return property value of notifySessionRetryIncrementDelay
-     */
-    public long getNotifySessionRetryIncrementDelay() {
-        return notifySessionRetryIncrementDelay;
-    }
-
-    /**
-     * Setter method for property <tt>notifySessionRetryIncrementDelay</tt>.
-     *
-     * @param notifySessionRetryIncrementDelay  value to be assigned to property notifySessionRetryIncrementDelay
-     */
-    public void setNotifySessionRetryIncrementDelay(long notifySessionRetryIncrementDelay) {
-        this.notifySessionRetryIncrementDelay = notifySessionRetryIncrementDelay;
-    }
-
-    /**
      * Getter method for property <tt>publishExecutorMinPoolSize</tt>.
      *
      * @return property value of publishExecutorMinPoolSize
@@ -559,60 +393,6 @@ public class DataServerConfig {
     }
 
     /**
-     * Getter method for property <tt>notifySessionRetryTimes</tt>.
-     *
-     * @return property value of notifySessionRetryTimes
-     */
-    public int getNotifySessionRetryTimes() {
-        return notifySessionRetryTimes;
-    }
-
-    /**
-     * Setter method for property <tt>notifySessionRetryTimes </tt>.
-     *
-     * @param notifySessionRetryTimes  value to be assigned to property notifySessionRetryTimes
-     */
-    public void setNotifySessionRetryTimes(int notifySessionRetryTimes) {
-        this.notifySessionRetryTimes = notifySessionRetryTimes;
-    }
-
-    /**
-     * Getter method for property <tt>sessionServerNotifierRetryExecutorThreadSize</tt>.
-     *
-     * @return property value of sessionServerNotifierRetryExecutorThreadSize
-     */
-    public int getSessionServerNotifierRetryExecutorThreadSize() {
-        return sessionServerNotifierRetryExecutorThreadSize;
-    }
-
-    /**
-     * Setter method for property <tt>sessionServerNotifierRetryExecutorThreadSize </tt>.
-     *
-     * @param sessionServerNotifierRetryExecutorThreadSize  value to be assigned to property sessionServerNotifierRetryExecutorThreadSize
-     */
-    public void setSessionServerNotifierRetryExecutorThreadSize(int sessionServerNotifierRetryExecutorThreadSize) {
-        this.sessionServerNotifierRetryExecutorThreadSize = sessionServerNotifierRetryExecutorThreadSize;
-    }
-
-    /**
-     * Getter method for property <tt>sessionServerNotifierRetryExecutorQueueSize</tt>.
-     *
-     * @return property value of sessionServerNotifierRetryExecutorQueueSize
-     */
-    public int getSessionServerNotifierRetryExecutorQueueSize() {
-        return sessionServerNotifierRetryExecutorQueueSize;
-    }
-
-    /**
-     * Setter method for property <tt>sessionServerNotifierRetryExecutorQueueSize </tt>.
-     *
-     * @param sessionServerNotifierRetryExecutorQueueSize  value to be assigned to property sessionServerNotifierRetryExecutorQueueSize
-     */
-    public void setSessionServerNotifierRetryExecutorQueueSize(int sessionServerNotifierRetryExecutorQueueSize) {
-        this.sessionServerNotifierRetryExecutorQueueSize = sessionServerNotifierRetryExecutorQueueSize;
-    }
-
-    /**
      * Getter method for property <tt>sessionLeaseSec</tt>.
      * @return property value of sessionLeaseSec
      */
@@ -642,22 +422,6 @@ public class DataServerConfig {
      */
     public void setDatumCompactDelayMs(int datumCompactDelayMs) {
         this.datumCompactDelayMs = datumCompactDelayMs;
-    }
-
-    /**
-     * Getter method for property <tt>slotMigratingExecutorThreadSize</tt>.
-     * @return property value of slotMigratingExecutorThreadSize
-     */
-    public int getSlotMigratingExecutorThreadSize() {
-        return slotMigratingExecutorThreadSize;
-    }
-
-    /**
-     * Setter method for property <tt>slotMigratingExecutorThreadSize</tt>.
-     * @param slotMigratingExecutorThreadSize value to be assigned to property slotMigratingExecutorThreadSize
-     */
-    public void setSlotMigratingExecutorThreadSize(int slotMigratingExecutorThreadSize) {
-        this.slotMigratingExecutorThreadSize = slotMigratingExecutorThreadSize;
     }
 
     /**
@@ -874,6 +638,62 @@ public class DataServerConfig {
 
     public void setEnableTestApi(boolean enableTestApi) {
         this.enableTestApi = enableTestApi;
+    }
+
+    public int getNotifyMaxItems() {
+        return notifyMaxItems;
+    }
+
+    public void setNotifyMaxItems(int notifyMaxItems) {
+        this.notifyMaxItems = notifyMaxItems;
+    }
+
+    public int getNotifyExecutorPoolSize() {
+        return notifyExecutorPoolSize;
+    }
+
+    public void setNotifyExecutorPoolSize(int notifyExecutorPoolSize) {
+        this.notifyExecutorPoolSize = notifyExecutorPoolSize;
+    }
+
+    public int getNotifyExecutorQueueSize() {
+        return notifyExecutorQueueSize;
+    }
+
+    public void setNotifyExecutorQueueSize(int notifyExecutorQueueSize) {
+        this.notifyExecutorQueueSize = notifyExecutorQueueSize;
+    }
+
+    public int getNotifyTempExecutorPoolSize() {
+        return notifyTempExecutorPoolSize;
+    }
+
+    public void setNotifyTempExecutorPoolSize(int notifyTempExecutorPoolSize) {
+        this.notifyTempExecutorPoolSize = notifyTempExecutorPoolSize;
+    }
+
+    public int getNotifyTempExecutorQueueSize() {
+        return notifyTempExecutorQueueSize;
+    }
+
+    public void setNotifyTempExecutorQueueSize(int notifyTempExecutorQueueSize) {
+        this.notifyTempExecutorQueueSize = notifyTempExecutorQueueSize;
+    }
+
+    public int getNotifyRetryQueueSize() {
+        return notifyRetryQueueSize;
+    }
+
+    public void setNotifyRetryQueueSize(int notifyRetryQueueSize) {
+        this.notifyRetryQueueSize = notifyRetryQueueSize;
+    }
+
+    public int getNotifyRetryTimes() {
+        return notifyRetryTimes;
+    }
+
+    public void setNotifyRetryTimes(int notifyRetryTimes) {
+        this.notifyRetryTimes = notifyRetryTimes;
     }
 
     @Override
