@@ -20,7 +20,6 @@ import com.alipay.sofa.registry.common.model.ClientOffPublishers;
 import com.alipay.sofa.registry.common.model.ConnectId;
 import com.alipay.sofa.registry.common.model.store.Publisher;
 
-import java.util.Collections;
 import java.util.List;
 
 /**
@@ -30,13 +29,11 @@ import java.util.List;
  */
 public final class ClientOffWriteDataRequest implements WriteDataRequest {
     private final ConnectId           connectId;
-    private final List<Publisher>     publishers;
 
     private final ClientOffPublishers requestBody;
 
     public ClientOffWriteDataRequest(ConnectId connectId, List<Publisher> publishers) {
         this.connectId = connectId;
-        this.publishers = Collections.unmodifiableList(publishers);
         this.requestBody = new ClientOffPublishers(connectId, publishers);
     }
 
