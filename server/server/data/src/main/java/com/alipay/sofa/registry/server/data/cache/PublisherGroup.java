@@ -118,10 +118,11 @@ public final class PublisherGroup {
         final PublisherVersion publisherVersion = publisher.publisherVersion();
         if (exist != null) {
             if (exist.publisherVersion.equals(publisherVersion)) {
-                LOGGER
-                    .info("[AddSameVer] {}, {}, exist={}, add={}", publisher.getDataInfoId(),
-                        publisher.getRegisterId(), exist.publisherVersion,
-                        publisher.publisherVersion());
+                if (LOGGER.isDebugEnabled()) {
+                    LOGGER.debug("[AddSameVer] {}, {}, exist={}, add={}",
+                        publisher.getDataInfoId(), publisher.getRegisterId(),
+                        exist.publisherVersion, publisher.publisherVersion());
+                }
                 return false;
             }
             if (!exist.publisherVersion.orderThan(publisherVersion)) {
@@ -203,14 +204,14 @@ public final class PublisherGroup {
                             removedVer.incrRegisterTimestamp(), sessionProcessId));
                         modified = true;
                     } else {
-                        LOGGER.warn("[RemovePidModified] {}, exist={}/{}, expect={}/{}",
-                            registerId, existing.publisherVersion, existing.sessionProcessId,
-                            removedVer, sessionProcessId);
+                        LOGGER.warn("[RemovePidModified] {}, {}, exist={}/{}, expect={}/{}",
+                            dataInfoId, registerId, existing.publisherVersion,
+                            existing.sessionProcessId, removedVer, sessionProcessId);
                     }
                 } else {
                     // the item has modified after diff, ignored
-                    LOGGER.warn("[RemoveVerModified] {}, exist={}, expect={}", registerId,
-                        existing.publisherVersion, removedVer);
+                    LOGGER.warn("[RemoveVerModified] {}, {}, exist={}, expect={}", dataInfoId,
+                        registerId, existing.publisherVersion, removedVer);
                 }
             }
             return modified ? updateVersion() : null;

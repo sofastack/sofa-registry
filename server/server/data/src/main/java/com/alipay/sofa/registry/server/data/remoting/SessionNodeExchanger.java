@@ -51,7 +51,7 @@ public final class SessionNodeExchanger extends ClientSideExchanger {
 
     @Override
     public int getConnNum() {
-        return 3;
+        return 5;
     }
 
     @Override

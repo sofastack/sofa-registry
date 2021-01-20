@@ -51,7 +51,7 @@ public class DataServerConfig {
 
     private int                  notifyRetryQueueSize                     = 10000;
 
-    private int                  notifyMaxItems                           = 500;
+    private int                  notifyMaxItems                           = 200;
 
     private int                  notifyIntervalMs                         = 500;
 
@@ -95,7 +95,7 @@ public class DataServerConfig {
     private volatile int         slotFollowerSyncLeaderIntervalMs         = 1000 * 30;
 
     // the publisher.digest if len(registerId/uuid+long+long), 50bytes
-    private volatile int         slotSyncPublisherDigestMaxNum            = 8000;
+    private volatile int         slotSyncPublisherDigestMaxNum            = 4000;
 
     private volatile int         slotSyncPublisherMaxNum                  = 512;
 
