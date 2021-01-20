@@ -27,6 +27,7 @@ import com.alipay.remoting.ConnectionEventProcessor;
 import com.alipay.remoting.ConnectionEventType;
 import com.alipay.remoting.InvokeCallback;
 import com.alipay.remoting.Url;
+import com.alipay.remoting.config.Configs;
 import com.alipay.remoting.exception.RemotingException;
 import com.alipay.remoting.rpc.RpcClient;
 import com.alipay.remoting.rpc.protocol.RpcProtocol;
@@ -52,9 +53,9 @@ public class BoltClient implements Client {
 
     private static final Logger LOGGER         = LoggerFactory.getLogger(BoltClient.class);
 
-    private RpcClient           rpcClient;
+    private final RpcClient     rpcClient;
 
-    private AtomicBoolean       closed         = new AtomicBoolean(false);
+    private final AtomicBoolean closed         = new AtomicBoolean(false);
 
     private int                 connectTimeout = 2000;
 
@@ -65,9 +66,17 @@ public class BoltClient implements Client {
      */
     public BoltClient(int connNum) {
         rpcClient = new RpcClient();
+        configIO();
         rpcClient.init();
 
         this.connNum = connNum;
+    }
+
+    private void configIO() {
+        final int low = Integer.getInteger(Configs.NETTY_BUFFER_LOW_WATERMARK, 1024 * 128);
+        final int high = Integer.getInteger(Configs.NETTY_BUFFER_HIGH_WATERMARK, 1024 * 256);
+        rpcClient.initWriteBufferWaterMark(low, high);
+        LOGGER.info("config watermark, low={}, high={}", low, high);
     }
 
     public Map<String, List<Connection>> getConnections() {

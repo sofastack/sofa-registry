@@ -20,8 +20,7 @@ import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 
 public class KeyedTask<T extends Runnable> implements Runnable {
-    private static final Logger LOGGER     = LoggerFactory
-                                               .getLogger(KeyedPreemptThreadPoolExecutor.class);
+    private static final Logger LOGGER     = LoggerFactory.getLogger(KeyedTask.class);
     final long                  createTime = System.currentTimeMillis();
     final Object                key;
     final T                     runnable;

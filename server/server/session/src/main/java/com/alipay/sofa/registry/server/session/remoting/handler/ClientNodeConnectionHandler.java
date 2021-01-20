@@ -34,10 +34,10 @@ import java.util.Collections;
 public class ClientNodeConnectionHandler extends ListenServerChannelHandler {
 
     @Autowired
-    private Registry            sessionRegistry;
+    private Registry        sessionRegistry;
 
     @Autowired
-    private ExecutorManager     executorManager;
+    private ExecutorManager executorManager;
 
     @Override
     public void disconnected(Channel channel) {

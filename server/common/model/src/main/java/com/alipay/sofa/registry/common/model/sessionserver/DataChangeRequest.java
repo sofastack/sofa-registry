@@ -57,4 +57,10 @@ public class DataChangeRequest implements Serializable {
     public Set<String> getRevisions() {
         return Collections.unmodifiableSet(revisions);
     }
+
+    @Override
+    public String toString() {
+        return "DataChangeRequest{" + "dataInfoIds=" + dataInfoIds.size() + ", dataCenter='"
+               + dataCenter + '\'' + ", revisions=" + revisions.size() + '}';
+    }
 }

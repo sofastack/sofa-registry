@@ -17,6 +17,7 @@
 package com.alipay.sofa.registry.server.data.change;
 
 import com.alipay.remoting.Connection;
+import com.alipay.sofa.registry.common.model.Tuple;
 import com.alipay.sofa.registry.common.model.dataserver.Datum;
 import com.alipay.sofa.registry.common.model.dataserver.DatumVersion;
 import com.alipay.sofa.registry.common.model.sessionserver.DataChangeRequest;
@@ -78,14 +79,14 @@ public final class DataChangeEventCenter {
     private TempChangeMerger                      tempChangeMerger;
     private ChangeMerger                          changeMerger;
 
-    private ThreadPoolExecutor                    notifyExecutor;
+    private KeyedThreadPoolExecutor               notifyExecutor;
     private KeyedThreadPoolExecutor               notifyTempExecutor;
 
     @PostConstruct
     public void init() {
-        this.notifyExecutor = MetricsableThreadPoolExecutor.newExecutor("notify",
+        this.notifyExecutor = new KeyedThreadPoolExecutor("notify",
             dataServerConfig.getNotifyExecutorPoolSize(),
-            dataServerConfig.getNotifyExecutorQueueSize(), new RejectedLogErrorHandler(LOGGER));
+            dataServerConfig.getNotifyExecutorQueueSize());
         this.notifyTempExecutor = new KeyedThreadPoolExecutor("notifyTemp",
             dataServerConfig.getNotifyTempExecutorPoolSize(),
             dataServerConfig.getNotifyExecutorQueueSize());
@@ -242,9 +243,10 @@ public final class DataChangeEventCenter {
             for (Connection connection : connections) {
                 for (DataTempChangeEvent event : events) {
                     Datum datum = event.getDatum();
-                    // group by dataInfoId
                     try {
-                        notifyTempExecutor.execute(datum.getDataInfoId(), new TempNotifier(connection, datum));
+                        // group by connect && dataInfoId
+                        notifyTempExecutor.execute(Tuple.of(datum.getDataInfoId(), connection.getRemoteAddress()),
+                                new TempNotifier(connection, datum));
                     } catch (RejectedExecutionException e) {
                         LOGGER.warn("notify temp full, {}, {}", datum, e.getMessage());
                     } catch (Throwable e) {
@@ -318,13 +320,14 @@ public final class DataChangeEventCenter {
                     continue;
                 }
                 for (Connection connection : connections) {
-                    notifyExecutor.execute(new ChangeNotifier(connection, event.getDataCenter(),
-                        changes, revisions));
+                    // group by connection
+                    notifyExecutor.execute(connection.getRemoteAddress(), new ChangeNotifier(
+                        connection, event.getDataCenter(), changes, revisions));
                 }
             }
             // commit retry
             for (ChangeNotifier retry : retrys) {
-                notifyExecutor.execute(retry);
+                notifyExecutor.execute(retry.connection.getRemoteAddress(), retry);
             }
         }
 
