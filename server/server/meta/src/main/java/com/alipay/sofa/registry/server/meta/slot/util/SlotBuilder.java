@@ -19,6 +19,8 @@ package com.alipay.sofa.registry.server.meta.slot.util;
 import com.alipay.sofa.registry.common.model.slot.Slot;
 import com.alipay.sofa.registry.exception.SofaRegistryRuntimeException;
 import com.alipay.sofa.registry.util.DatumVersionUtil;
+import com.alipay.sofa.registry.util.JsonUtils;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import org.apache.commons.lang.StringUtils;
 import org.glassfish.jersey.internal.guava.Sets;
 
@@ -46,7 +48,14 @@ public class SlotBuilder implements Builder<Slot> {
         this.followerNums = followerNums;
     }
 
-    public SlotBuilder addLeader(String leader) {
+    public SlotBuilder(int slotId, int followerNums, String leader, long epoch) {
+        this.slotId = slotId;
+        this.followerNums = followerNums;
+        this.leader = leader;
+        this.epoch = epoch;
+    }
+
+    public SlotBuilder setLeader(String leader) {
         if (this.leader != null) {
             return this;
         }
@@ -55,17 +64,24 @@ public class SlotBuilder implements Builder<Slot> {
         return this;
     }
 
-    public SlotBuilder addFollower(String follower) {
-        if (followers.size() < followerNums) {
+    public SlotBuilder forceSetLeader(String leader) {
+        this.leader = leader;
+        if (leader != null) {
             epoch = DatumVersionUtil.nextId();
-            followers.add(follower);
         }
         return this;
     }
 
-    public SlotBuilder removeFollower(String follower) {
-        followers.remove(follower);
-        return this;
+    public boolean addFollower(String follower) {
+        if (followers.size() < followerNums && follower != null) {
+            followers.add(follower);
+            return true;
+        }
+        return false;
+    }
+
+    public boolean removeFollower(String follower) {
+        return followers.remove(follower);
     }
 
     public SlotBuilder removeLeader(String leader) {
@@ -81,15 +97,23 @@ public class SlotBuilder implements Builder<Slot> {
     }
 
     private boolean isReady() {
-        return leader != null && followers.size() == followerNums;
+        return leader != null;
     }
 
     public String getLeader() {
         return leader;
     }
 
+    public int getSlotId() {
+        return slotId;
+    }
+
     public Set<String> getFollowers() {
         return followers;
+    }
+
+    public long getEpoch() {
+        return epoch;
     }
 
     @Override
@@ -100,5 +124,15 @@ public class SlotBuilder implements Builder<Slot> {
                                                    + StringUtils.join(followers, ",") + "]");
         }
         return new Slot(slotId, leader, epoch, followers);
+    }
+
+    @Override
+    public String toString() {
+        try {
+            return JsonUtils.getJacksonObjectMapper().writerWithDefaultPrettyPrinter()
+                .writeValueAsString(this);
+        } catch (JsonProcessingException e) {
+            return "";
+        }
     }
 }

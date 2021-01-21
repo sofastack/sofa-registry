@@ -19,8 +19,7 @@ package com.alipay.sofa.registry.server.meta.monitor;
 import com.alipay.sofa.registry.common.model.metaserver.nodes.DataNode;
 import com.alipay.sofa.registry.server.meta.AbstractTest;
 import com.alipay.sofa.registry.server.meta.bootstrap.config.NodeConfig;
-import com.alipay.sofa.registry.server.meta.slot.SlotManager;
-import com.alipay.sofa.registry.server.meta.slot.impl.LocalSlotManager;
+import com.alipay.sofa.registry.server.meta.slot.manager.LocalSlotManager;
 import org.assertj.core.util.Lists;
 import org.junit.After;
 import org.junit.Before;
@@ -28,7 +27,6 @@ import org.junit.Test;
 
 import java.util.List;
 
-import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
 
 public class DefaultSlotTableMonitorTest extends AbstractTest {

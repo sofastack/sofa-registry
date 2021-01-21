@@ -107,7 +107,11 @@ public final class SlotTableCacheImpl implements SlotTableCache {
     }
 
     private void recordSlotTable(SlotTable slotTable) {
-        recorders.forEach(recorder->recorder.record(slotTable));
+        recorders.forEach(recorder -> {
+            if(recorder != null) {
+                recorder.record(slotTable);
+            }
+        });
     }
 
     @Override

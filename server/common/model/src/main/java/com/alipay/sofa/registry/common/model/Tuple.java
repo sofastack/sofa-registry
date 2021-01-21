@@ -23,7 +23,7 @@ import java.util.Objects;
  * @author yuzhi.lyz
  * @version v 0.1 2020-12-15 10:28 yuzhi.lyz Exp $
  */
-public final class Tuple<T1, T2> {
+public class Tuple<T1, T2> {
     public final T1 o1;
     public final T2 o2;
 
@@ -44,6 +44,14 @@ public final class Tuple<T1, T2> {
             return false;
         Tuple<?, ?> tuple = (Tuple<?, ?>) o;
         return Objects.equals(o1, tuple.o1) && Objects.equals(o2, tuple.o2);
+    }
+
+    public T1 getFirst() {
+        return o1;
+    }
+
+    public T2 getSecond() {
+        return o2;
     }
 
     @Override

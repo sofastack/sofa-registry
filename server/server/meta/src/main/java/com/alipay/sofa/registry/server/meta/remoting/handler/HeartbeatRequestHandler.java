@@ -33,7 +33,7 @@ import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.remoting.Channel;
 import com.alipay.sofa.registry.server.meta.lease.LeaseManager;
 import com.alipay.sofa.registry.server.meta.metaserver.impl.DefaultCurrentDcMetaServer;
-import com.alipay.sofa.registry.server.meta.slot.impl.DefaultSlotManager;
+import com.alipay.sofa.registry.server.meta.slot.manager.DefaultSlotManager;
 import com.google.common.collect.Maps;
 import org.springframework.beans.factory.annotation.Autowired;
 
