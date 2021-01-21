@@ -21,6 +21,7 @@ import com.alipay.sofa.registry.common.model.metaserver.ProvideData;
 import com.alipay.sofa.registry.common.model.store.URL;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
+import com.alipay.sofa.registry.metrics.ReporterUtils;
 import com.alipay.sofa.registry.net.NetUtil;
 import com.alipay.sofa.registry.remoting.ChannelHandler;
 import com.alipay.sofa.registry.remoting.Server;
@@ -103,6 +104,7 @@ public class DataServerBootstrap {
 
             LOGGER.info("the configuration items are as follows: " + dataServerConfig.toString());
 
+            ReporterUtils.enablePrometheusDefaultExports();
 
             openDataServer();
 
@@ -117,6 +119,7 @@ public class DataServerBootstrap {
             fetchProviderData();
 
             startScheduler();
+
 
             Runtime.getRuntime().addShutdownHook(new Thread(this::doStop));
 

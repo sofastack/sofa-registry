@@ -75,6 +75,12 @@ public interface MetaServerConfig {
 
     int getDefaultRequestExecutorQueueSize();
 
+    int getAppRevisionRegisterExecutorMinSize();
+
+    int getAppRevisionRegisterExecutorMaxSize();
+
+    int getAppRevisionRegisterExecutorQueueSize();
+
     int getRaftExecutorMinSize();
 
     int getRaftExecutorQueueSize();

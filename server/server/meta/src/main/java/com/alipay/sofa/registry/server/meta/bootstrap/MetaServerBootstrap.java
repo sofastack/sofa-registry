@@ -19,6 +19,7 @@ package com.alipay.sofa.registry.server.meta.bootstrap;
 import com.alipay.sofa.registry.common.model.store.URL;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
+import com.alipay.sofa.registry.metrics.ReporterUtils;
 import com.alipay.sofa.registry.net.NetUtil;
 import com.alipay.sofa.registry.remoting.ChannelHandler;
 import com.alipay.sofa.registry.remoting.Server;
@@ -103,6 +104,7 @@ public class MetaServerBootstrap {
     public void start() {
         try {
             LOGGER.info("the configuration items are as follows: " + metaServerConfig.toString());
+            ReporterUtils.enablePrometheusDefaultExports();
 
             openSessionRegisterServer();
 

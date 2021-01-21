@@ -22,14 +22,18 @@ import com.alipay.sofa.registry.core.model.AppRevisionInterface;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.server.session.node.service.AppRevisionNodeService;
+import com.alipay.sofa.registry.util.ConcurrentUtils;
+import com.alipay.sofa.registry.util.LoopRunnable;
 import com.alipay.sofa.registry.util.RevisionUtils;
 import com.alipay.sofa.registry.util.SingleFlight;
 import com.google.common.collect.Sets;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.CollectionUtils;
 
+import javax.annotation.PostConstruct;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
 
 public class AppRevisionCacheRegistry {
 
@@ -40,12 +44,27 @@ public class AppRevisionCacheRegistry {
     private AppRevisionNodeService                                                  appRevisionNodeService;
 
     final private Map<String /*revision*/, AppRevision>                            registry           = new ConcurrentHashMap<>();
-    private String                                                                  keysDigest         = "";
+    private volatile String                                                         keysDigest         = "";
     final private Map<String /*interface*/, Map<String /*appname*/, Set<String>>> interfaceRevisions = new ConcurrentHashMap<>();
     final private Map<String /*appname*/, Set<String /*interfaces*/>>             appInterfaces      = new ConcurrentHashMap<>();
     private SingleFlight                                                            singleFlight       = new SingleFlight();
 
-    public AppRevisionCacheRegistry() {
+    @PostConstruct
+    public void init() {
+        ConcurrentUtils
+            .createDaemonThread("SessionRefreshRevisionWatchDog", new RevisionWatchDog()).start();
+    }
+
+    private final class RevisionWatchDog extends LoopRunnable {
+        @Override
+        public void runUnthrowable() {
+            refreshAll();
+        }
+
+        @Override
+        public void waitingUnthrowable() {
+            ConcurrentUtils.sleepUninterruptibly(5, TimeUnit.SECONDS);
+        }
     }
 
     public void register(AppRevision appRevision) throws Exception {
@@ -64,11 +83,14 @@ public class AppRevisionCacheRegistry {
     }
 
     public AppRevision getRevision(String revision) {
-        AppRevision revisionRegister = registry.get(revision);
-        if (revisionRegister != null) {
-            return revisionRegister;
+        for (int i = 0; i < 2; i++) {
+            // 第一次可能会被前一个revision的请求合并到导致虽然在meta内没有fetch回来，第二个fetch肯定能拿到对应 revisipn
+            AppRevision revisionRegister = registry.get(revision);
+            if (revisionRegister != null) {
+                return revisionRegister;
+            }
+            refreshAll();
         }
-        refreshAll();
         return registry.get(revision);
     }
 
@@ -80,8 +102,14 @@ public class AppRevisionCacheRegistry {
     public void refreshAll() {
         try {
             singleFlight.execute("refreshAll", () -> {
+                List<String> allRevisionIds = appRevisionNodeService.checkRevisions(keysDigest);
+                if (allRevisionIds == null || allRevisionIds.size() == 0) {
+                    return null;
+                }
+                Set<String> newRevisionIds = Sets.difference(new HashSet<>(allRevisionIds), registry.keySet());
+                LOG.info("refresh revisions: {}, newRevisionIds: {} ", keysDigest, newRevisionIds);
                 List<AppRevision> revisions = appRevisionNodeService
-                        .fetchMulti(appRevisionNodeService.checkRevisions(keysDigest));
+                        .fetchMulti(new ArrayList<>(newRevisionIds));
                 for (AppRevision rev : revisions) {
                     onNewRevision(rev);
                 }
