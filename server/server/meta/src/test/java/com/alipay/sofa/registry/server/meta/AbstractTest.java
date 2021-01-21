@@ -41,6 +41,9 @@ import com.alipay.sofa.registry.server.meta.bootstrap.config.NodeConfig;
 import com.alipay.sofa.registry.server.meta.executor.ExecutorManager;
 import com.alipay.sofa.registry.server.meta.metaserver.impl.DefaultCurrentDcMetaServer;
 import com.alipay.sofa.registry.server.meta.remoting.RaftExchanger;
+import com.alipay.sofa.registry.server.meta.slot.balance.BalancePolicy;
+import com.alipay.sofa.registry.server.meta.slot.balance.NaiveBalancePolicy;
+import com.alipay.sofa.registry.server.shared.slot.SlotTableUtils;
 import com.alipay.sofa.registry.util.*;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.google.common.collect.Maps;
@@ -49,6 +52,7 @@ import org.apache.commons.lang.reflect.FieldUtils;
 import org.assertj.core.util.Lists;
 import org.assertj.core.util.Sets;
 import org.junit.After;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.rules.TestName;
@@ -90,6 +94,8 @@ public class AbstractTest {
     private AtomicReference<RaftExchanger> raftExchangerRef = new AtomicReference<>();
 
     private String                         raftMiddlePath;
+
+    private BalancePolicy balancePolicy = new NaiveBalancePolicy();
 
     @Before
     public void beforeAbstractTest() throws Exception {
@@ -370,10 +376,10 @@ public class AbstractTest {
         AtomicInteger total = new AtomicInteger();
         counter.values().forEach(count -> total.addAndGet(count));
         int average = total.get() / dataNodes.size();
-        int lowWaterMark = average * 1 / 2;
-        int highWaterMark = average * 3 / 2;
+        int lowWaterMark = balancePolicy.getLowWaterMarkSlotNums(average);
+//        int highWaterMark = average * 3 / 2;
 
-        logger.info("[counter] {}", counter);
+        logger.info("[isSlotTableBalanced][counter] {}", counter);
         for(DataNode dataNode : dataNodes) {
             if(counter.get(dataNode.getIp()) == null) {
                 return false;
@@ -382,11 +388,17 @@ public class AbstractTest {
                 logger.info("[lower] {}, {}, {}", dataNode.getIp(), counter.get(dataNode.getIp()), lowWaterMark);
                 return false;
             }
-            if(counter.get(dataNode.getIp()) > highWaterMark) {
-                return false;
-            }
+//            if(counter.get(dataNode.getIp()) > highWaterMark) {
+//                return false;
+//            }
         }
         return true;
+    }
+
+    protected void assertSlotTableNoDupLeaderFollower(SlotTable slotTable) {
+        slotTable.getSlotMap().forEach((slotId, slot) -> {
+            Assert.assertFalse(slot.getFollowers().contains(slot.getLeader()));
+        });
     }
 
     private void counterIncr(Map<String, Integer> counter, String ip) {
@@ -401,9 +413,9 @@ public class AbstractTest {
         }
 
         int average = slotTable.getSlotMap().size() / dataNodes.size();
-        int lowWaterMark = average * 1 / 2;
-        int highWaterMark = average * 3 / 2;
+        int lowWaterMark = balancePolicy.getLowWaterMarkSlotLeaderNums(average);
 
+        logger.info("[isSlotTableLeaderBalanced][counter] {}", counter);
         for (DataNode dataNode : dataNodes) {
             if (counter.get(dataNode.getIp()) == null) {
                 return false;
@@ -411,9 +423,9 @@ public class AbstractTest {
             if (counter.get(dataNode.getIp()) < lowWaterMark) {
                 return false;
             }
-            if (counter.get(dataNode.getIp()) > highWaterMark) {
-                return false;
-            }
+//            if (counter.get(dataNode.getIp()) > highWaterMark) {
+//                return false;
+//            }
         }
         return true;
     }
@@ -605,6 +617,73 @@ public class AbstractTest {
         return new SlotTableGenerator(dataNodes).createSlotTable();
     }
 
+    protected SlotTable randomSlotTable(List<DataNode> dataNodes) {
+        return new SlotTableGenerator(dataNodes).createSlotTable();
+    }
+
+    protected SlotTable randomUnBalancedSlotTable(List<DataNode> dataNodes) {
+        return new SlotTableGenerator(dataNodes).createLeaderUnBalancedSlotTable();
+    }
+
+    protected List<DataNode> randomDataNodes(int num) {
+        List<DataNode> dataNodes = new ArrayList<>();
+        for(int i = 0; i < num; i++) {
+            dataNodes.add(new DataNode(randomURL(randomIp()), getDc()));
+        }
+        return dataNodes;
+    }
+
+    protected boolean isMoreBalanced(SlotTable before, SlotTable current, List<DataNode> dataNodes) {
+//        Map<String, Integer> beforeLeaderCount = SlotTableUtils.getSlotTableLeaderCount(before);
+//        Map<String, Integer> currentLeaderCount = SlotTableUtils.getSlotTableLeaderCount(current);
+//
+//        Map<String, Integer> beforeSlotsCount = SlotTableUtils.getSlotTableSlotCount(before);
+//        Map<String, Integer> currentSlotsCount = SlotTableUtils.getSlotTableSlotCount(current);
+
+        int maxLeaderGapBefore = maxLeaderGap(before, dataNodes);
+        int maxLeaderGapCurrent = maxLeaderGap(current, dataNodes);
+        int maxSlotsGapBefore = maxSlotGap(before, dataNodes);
+        int maxSlotsGapCurrent = maxSlotGap(current, dataNodes);
+        logger.info("[before leader gap] {}", maxLeaderGapBefore);
+        logger.info("[current leader gap] {}", maxLeaderGapCurrent);
+        logger.info("[before slots gap] {}", maxSlotsGapBefore);
+        logger.info("[current slots gap] {}", maxSlotsGapCurrent);
+        return maxLeaderGapBefore > maxLeaderGapCurrent || maxSlotsGapBefore > maxSlotsGapCurrent;
+    }
+
+    private int maxLeaderGap(SlotTable slotTable, List<DataNode> dataNodes) {
+        Map<String, Integer> counter = new HashMap<>(dataNodes.size());
+        dataNodes.forEach(dataNode -> counter.put(dataNode.getIp(), 0));
+        for(Map.Entry<Integer, Slot> entry : slotTable.getSlotMap().entrySet()) {
+            int count = counter.get(entry.getValue().getLeader());
+            counter.put(entry.getValue().getLeader(), count + 1);
+        }
+        return maxGap(counter);
+    }
+
+    private int maxSlotGap(SlotTable slotTable, List<DataNode> dataNodes) {
+        Map<String, Integer> counter = new HashMap<>(dataNodes.size());
+        dataNodes.forEach(dataNode -> counter.put(dataNode.getIp(), 0));
+        for(Map.Entry<Integer, Slot> entry : slotTable.getSlotMap().entrySet()) {
+            int count = counter.get(entry.getValue().getLeader());
+            counter.put(entry.getValue().getLeader(), count + 1);
+            for(String dataServer : entry.getValue().getFollowers()) {
+                count = counter.get(dataServer);
+                counter.put(dataServer, count + 1);
+            }
+        }
+        return maxGap(counter);
+    }
+
+    private int maxGap(Map<String, Integer> stats) {
+        int min = Integer.MAX_VALUE, max = Integer.MIN_VALUE;
+        for(int count : stats.values()) {
+            min = Math.min(count, min);
+            max = Math.max(count, max);
+        }
+        return max - min;
+    }
+
     public static class SlotTableGenerator {
 
         private final List<DataNode> dataNodes;
@@ -643,14 +722,14 @@ public class AbstractTest {
         private Map<Integer, Slot> generateUnBalancedSlotMap() {
             Map<Integer, Slot> slotMap = Maps.newHashMap();
             int leaderIndex = Math.abs(random.nextInt()) % dataNodes.size();
+            String leader = dataNodes.get(leaderIndex).getIp();
             for (int i = 0; i < SlotConfig.SLOT_NUM; i++) {
                 long epoch = System.currentTimeMillis();
-                String leader = dataNodes.get(leaderIndex).getIp();
                 List<String> followers = Lists.newArrayList();
                 for (int j = 0; j < SlotConfig.SLOT_REPLICAS - 1; j++) {
                     DataNode follower = getNextFollower();
-                    while (follower.getIp().equalsIgnoreCase(dataNodes.get(leaderIndex).getIp())) {
-                        follower = getNextFollower();
+                    while (follower.getIp().equalsIgnoreCase(leader) || followers.contains(follower)) {
+                        follower = getNextUnbalancedFollower();
                     }
                     followers.add(follower.getIp());
                 }
@@ -669,6 +748,10 @@ public class AbstractTest {
         }
 
         private DataNode getNextFollower() {
+            return dataNodes.get(nextFollower.getAndIncrement() % dataNodes.size());
+        }
+
+        private DataNode getNextUnbalancedFollower() {
             return dataNodes.get(nextFollower.getAndIncrement() % dataNodes.size());
         }
     }

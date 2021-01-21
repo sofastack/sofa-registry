@@ -34,7 +34,7 @@ import com.alipay.sofa.registry.task.KeyedThreadPoolExecutor;
 import com.alipay.sofa.registry.task.MetricsableThreadPoolExecutor;
 import com.alipay.sofa.registry.trace.TraceID;
 import com.alipay.sofa.registry.util.ConcurrentUtils;
-import com.alipay.sofa.registry.util.WakeupLoopRunnable;
+import com.alipay.sofa.registry.util.WakeUpLoopRunnable;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import static com.alipay.sofa.registry.server.session.push.PushMetrics.Push.*;
@@ -158,7 +158,7 @@ public class PushProcessor {
         }
     }
 
-    private final class WatchDog extends WakeupLoopRunnable {
+    private final class WatchDog extends WakeUpLoopRunnable {
 
         @Override
         public void runUnthrowable() {

@@ -16,6 +16,7 @@
  */
 package com.alipay.sofa.registry.jraft.processor;
 
+import com.alipay.sofa.registry.exception.SofaRegistryRuntimeException;
 import com.alipay.sofa.registry.jraft.bootstrap.ServiceStateMachine;
 import com.alipay.sofa.registry.jraft.command.ProcessRequest;
 import com.alipay.sofa.registry.jraft.command.ProcessResponse;
@@ -101,8 +102,7 @@ public class Processor {
         Object target = workers.get(serviceId);
         if (target == null) {
             LOG.warn("Can not find service {} from process!", serviceId);
-            return ProcessResponse.fail(
-                String.format("Can not find service %s from process!", serviceId)).build();
+            throw new SofaRegistryRuntimeException("Can not find service from process: " + serviceId);
         }
 
         try {

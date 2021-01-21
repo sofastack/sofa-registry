@@ -30,7 +30,7 @@ public final class SlotFunctionRegistry {
     private static final Map<String, SlotFunction> funcs = Maps.newConcurrentMap();
 
     static {
-        register(CRC16SlotFunction.INSTANCE);
+        register(Crc32cSlotFunction.INSTANCE);
         register(MD5SlotFunction.INSTANCE);
     }
 

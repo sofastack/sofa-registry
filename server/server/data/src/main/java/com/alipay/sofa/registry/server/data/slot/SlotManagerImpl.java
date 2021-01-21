@@ -39,7 +39,7 @@ import com.alipay.sofa.registry.server.shared.slot.SlotTableRecorder;
 import com.alipay.sofa.registry.task.KeyedTask;
 import com.alipay.sofa.registry.task.KeyedThreadPoolExecutor;
 import com.alipay.sofa.registry.util.ConcurrentUtils;
-import com.alipay.sofa.registry.util.WakeupLoopRunnable;
+import com.alipay.sofa.registry.util.WakeUpLoopRunnable;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -178,7 +178,11 @@ public final class SlotManagerImpl implements SlotManager {
     }
 
     private void recordSlotTable(SlotTable slotTable) {
-        recorders.forEach(recorder->recorder.record(slotTable));
+        recorders.forEach(recorder -> {
+            if(recorder != null) {
+                recorder.record(slotTable);
+            }
+        });
     }
 
     private void updateSlotState(SlotTable updating) {
@@ -210,7 +214,7 @@ public final class SlotManagerImpl implements SlotManager {
         final Map<Integer, SlotState> slotStates = Maps.newConcurrentMap();
     }
 
-    private final class SyncingWatchDog extends WakeupLoopRunnable {
+    private final class SyncingWatchDog extends WakeUpLoopRunnable {
 
         @Override
         public void runUnthrowable() {

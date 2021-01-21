@@ -60,11 +60,6 @@ public class MetaServerConfigBean implements MetaServerConfig {
                                                                                        "init.slot.talbe.wait.milli",
                                                                                        1000);
 
-    private int                waitForDataServerRestartTimeMilli               = Integer
-                                                                                   .getInteger(
-                                                                                       "data.server.recover.interval.milli",
-                                                                                       3000);
-
     /**
      * Whether to enable metrics for node.
      */
@@ -778,33 +773,12 @@ public class MetaServerConfigBean implements MetaServerConfig {
     }
 
     /**
-     * Gets get wait for data server restart time.
-     *
-     * @return the get wait for data server restart time
-     */
-    @Override
-    public int getWaitForDataServerRestartTime() {
-        return waitForDataServerRestartTimeMilli;
-    }
-
-    /**
      * Sets set session loadbalance threshold ratio.
      *
      * @param sessionLoadbalanceThresholdRatio the session loadbalance threshold ratio
      */
     public void setSessionLoadbalanceThresholdRatio(double sessionLoadbalanceThresholdRatio) {
         this.sessionLoadbalanceThresholdRatio = sessionLoadbalanceThresholdRatio;
-    }
-
-    /**
-     * Sets set wait for data server restart time milli.
-     *
-     * @param waitForDataServerRestartTimeMilli the wait for data server restart time milli
-     * @return the set wait for data server restart time milli
-     */
-    public MetaServerConfigBean setWaitForDataServerRestartTimeMilli(int waitForDataServerRestartTimeMilli) {
-        this.waitForDataServerRestartTimeMilli = waitForDataServerRestartTimeMilli;
-        return this;
     }
 
     /**

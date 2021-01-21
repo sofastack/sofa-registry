@@ -26,7 +26,7 @@ import com.alipay.sofa.registry.lifecycle.impl.AbstractLifecycle;
 import com.alipay.sofa.registry.lifecycle.impl.LifecycleHelper;
 import com.alipay.sofa.registry.observer.Observable;
 import com.alipay.sofa.registry.observer.Observer;
-import com.alipay.sofa.registry.server.meta.slot.impl.LocalSlotManager;
+import com.alipay.sofa.registry.server.meta.slot.manager.LocalSlotManager;
 import com.alipay.sofa.registry.server.shared.resource.SlotGenericResource;
 import com.alipay.sofa.registry.server.shared.slot.DiskSlotTableRecorder;
 import com.alipay.sofa.registry.server.shared.slot.SlotTableRecorder;
@@ -114,13 +114,18 @@ public class DefaultSlotTableMonitor extends AbstractLifecycle implements SlotTa
 
     @Override
     public void recordSlotTable() {
-        recorders.forEach(recorder -> recorder.record(slotManager.getSlotTable()));
+        recorders.forEach(recorder -> {
+            if(recorder != null) {
+                recorder.record(slotManager.getSlotTable());
+            }
+            });
     }
 
     @Override
     public void update(Observable source, Object message) {
         if (message instanceof SlotTable) {
-            logger.warn("[update] slot-table changed");
+            logger.warn("[update] slot-table changed, current epoch: [{}]",
+                ((SlotTable) message).getEpoch());
             recordSlotTable();
         }
     }

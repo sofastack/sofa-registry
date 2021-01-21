@@ -25,7 +25,9 @@ import com.alipay.sofa.registry.log.LoggerFactory;
  * @version v 0.1 2020-11-30 16:51 yuzhi.lyz Exp $
  */
 public abstract class LoopRunnable implements Runnable {
-    private static final Logger LOGGER = LoggerFactory.getLogger(LoopRunnable.class);
+    private static final Logger LOGGER   = LoggerFactory.getLogger(LoopRunnable.class);
+
+    private volatile boolean isClosed = false;
 
     public abstract void runUnthrowable();
 
@@ -35,10 +37,18 @@ public abstract class LoopRunnable implements Runnable {
         LOGGER.error("unexpect exit in LoopRunnable {}", this.getClass().getSimpleName(), e);
     }
 
+    public void close() {
+        isClosed = true;
+    }
+
     public void run() {
         LOGGER.info("loop-run started {}", this.getClass().getSimpleName());
         try {
             for (;;) {
+                if (isClosed) {
+                    LOGGER.warn("[closed] quit");
+                    return;
+                }
                 try {
                     runUnthrowable();
                 } catch (Throwable unexpect) {
