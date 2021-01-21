@@ -33,4 +33,7 @@ public interface ArrangeTaskDispatcher<T extends Node> {
 
     void serverDead(T t);
 
+    void reassign();
+
+    void rebalance();
 }

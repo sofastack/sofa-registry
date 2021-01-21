@@ -35,10 +35,21 @@ public final class DataNodeSlot implements Serializable {
     private final List<Integer> leaders          = new ArrayList<>();
     private final List<Integer> followers        = new ArrayList<>();
 
+    /**
+     * Constructor.
+     *
+     * @param dataNode the data node
+     */
     public DataNodeSlot(String dataNode) {
         this.dataNode = dataNode;
     }
 
+    /**
+     * Fork data node slot.
+     *
+     * @param ignoreFollowers the ignore followers
+     * @return the data node slot
+     */
     public DataNodeSlot fork(boolean ignoreFollowers) {
         DataNodeSlot clone = new DataNodeSlot(dataNode);
         clone.getLeaders().addAll(leaders);
@@ -70,6 +81,15 @@ public final class DataNodeSlot implements Serializable {
      */
     public List<Integer> getFollowers() {
         return followers;
+    }
+
+    /**
+     * Total slot num int.
+     *
+     * @return the int
+     */
+    public int totalSlotNum() {
+        return leaders.size() + followers.size();
     }
 
 }

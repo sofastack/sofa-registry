@@ -52,7 +52,9 @@ import com.alipay.sofa.registry.server.meta.repository.service.RaftAppRevisionSe
 import com.alipay.sofa.registry.server.meta.resource.*;
 import com.alipay.sofa.registry.server.meta.revision.AppRevisionRegistry;
 import com.alipay.sofa.registry.server.meta.revision.AppRevisionService;
-import com.alipay.sofa.registry.server.meta.slot.impl.*;
+import com.alipay.sofa.registry.server.meta.slot.arrange.ScheduledSlotArranger;
+import com.alipay.sofa.registry.server.meta.slot.manager.DefaultSlotManager;
+import com.alipay.sofa.registry.server.meta.slot.manager.LocalSlotManager;
 import com.alipay.sofa.registry.server.shared.remoting.AbstractServerHandler;
 import com.alipay.sofa.registry.server.shared.resource.MetricsResource;
 import com.alipay.sofa.registry.server.shared.resource.SlotGenericResource;
@@ -197,21 +199,6 @@ public class MetaServerConfiguration {
     public static class SlotManagementConfiguration {
 
         @Bean
-        public ArrangeTaskExecutor arrangeTaskExecutor() {
-            return new ArrangeTaskExecutor();
-        }
-
-        @Bean
-        public DataServerArrangeTaskDispatcher dataArrangeTaskDispathcher() {
-            return new DataServerArrangeTaskDispatcher();
-        }
-
-        @Bean
-        public DefaultSlotArranger slotArranger() {
-            return new DefaultSlotArranger();
-        }
-
-        @Bean
         public LocalSlotManager slotManager() {
             return new LocalSlotManager();
         }
@@ -219,6 +206,11 @@ public class MetaServerConfiguration {
         @Bean
         public DefaultSlotManager defaultSlotManager() {
             return new DefaultSlotManager();
+        }
+
+        @Bean
+        public ScheduledSlotArranger scheduledSlotArranger() {
+            return new ScheduledSlotArranger();
         }
     }
 

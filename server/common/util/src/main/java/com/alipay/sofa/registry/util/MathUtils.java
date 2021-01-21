@@ -37,4 +37,5 @@ public class MathUtils {
         result += dividend % divisor == 0 ? 0 : 1;
         return result;
     }
+
 }

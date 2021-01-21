@@ -17,6 +17,7 @@
 package com.alipay.sofa.registry.server.meta.lease;
 
 import com.alipay.sofa.registry.common.model.Node;
+import com.alipay.sofa.registry.exception.InitializeException;
 import com.alipay.sofa.registry.exception.SofaRegistryRaftException;
 import com.alipay.sofa.registry.exception.StartException;
 import com.alipay.sofa.registry.exception.StopException;
@@ -29,6 +30,7 @@ import com.google.common.annotations.VisibleForTesting;
 
 import javax.annotation.Resource;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
@@ -36,6 +38,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
+import static com.alipay.sofa.registry.server.meta.bootstrap.MetaServerConfiguration.GLOBAL_EXECUTOR;
 import static com.alipay.sofa.registry.server.meta.bootstrap.MetaServerConfiguration.SCHEDULED_EXECUTOR;
 
 /**
@@ -56,11 +59,22 @@ public abstract class AbstractRaftEnabledLeaseManager<T extends Node> extends
     @Resource(name = SCHEDULED_EXECUTOR)
     private ScheduledExecutorService scheduled;
 
+    @Resource(name = GLOBAL_EXECUTOR)
+    private ExecutorService          executros;
+
     private ScheduledFuture<?>       future;
 
     private final AtomicLong         lastEvictTime = new AtomicLong();
 
     protected final ReadWriteLock    lock          = new ReentrantReadWriteLock();
+
+    @Override
+    protected void doInitialize() throws InitializeException {
+        super.doInitialize();
+        if (executros != null) {
+            setExecutors(executros);
+        }
+    }
 
     @Override
     protected void doStart() throws StartException {
@@ -69,12 +83,12 @@ public abstract class AbstractRaftEnabledLeaseManager<T extends Node> extends
             @Override
             public void run() {
                 if (isRaftLeader()) {
-                    if (logger.isInfoEnabled()) {
-                        logger.info("[schedule-evict][begin]");
+                    if (logger.isDebugEnabled()) {
+                        logger.debug("[schedule-evict][begin]");
                     }
                     evict();
-                    if (logger.isInfoEnabled()) {
-                        logger.info("[schedule-evict][end]");
+                    if (logger.isDebugEnabled()) {
+                        logger.debug("[schedule-evict][end]");
                     }
                 }
             }

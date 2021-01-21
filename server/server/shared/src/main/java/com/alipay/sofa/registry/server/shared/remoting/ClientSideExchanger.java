@@ -31,7 +31,7 @@ import com.alipay.sofa.registry.remoting.exchange.RequestException;
 import com.alipay.sofa.registry.remoting.exchange.message.Request;
 import com.alipay.sofa.registry.remoting.exchange.message.Response;
 import com.alipay.sofa.registry.util.ConcurrentUtils;
-import com.alipay.sofa.registry.util.WakeupLoopRunnable;
+import com.alipay.sofa.registry.util.WakeUpLoopRunnable;
 import com.google.common.collect.Sets;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -171,7 +171,7 @@ public abstract class ClientSideExchanger implements NodeExchanger {
         connector.wakeup();
     }
 
-    private final class Connector extends WakeupLoopRunnable {
+    private final class Connector extends WakeUpLoopRunnable {
 
         @Override
         public void runUnthrowable() {

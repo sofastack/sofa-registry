@@ -50,7 +50,7 @@ public final class SlotConfig {
             throw new IllegalArgumentException("illegal " + KEY_DATA_SLOT_REPLICAS + ":"
                                                + SLOT_REPLICAS);
         }
-        FUNC = System.getProperty(KEY_DATA_SLOT_FUNC, "crc16");
+        FUNC = System.getProperty(KEY_DATA_SLOT_FUNC, "crc32c");
         LOGGER.info("{}={}, {}={}, {}={}", KEY_DATA_SLOT_NUM, SLOT_NUM, KEY_DATA_SLOT_REPLICAS,
             SLOT_REPLICAS, KEY_DATA_SLOT_FUNC, FUNC);
     }

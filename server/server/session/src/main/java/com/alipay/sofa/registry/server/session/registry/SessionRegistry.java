@@ -44,7 +44,7 @@ import com.alipay.sofa.registry.server.shared.env.ServerEnv;
 import com.alipay.sofa.registry.task.listener.TaskListenerManager;
 import com.alipay.sofa.registry.util.ConcurrentUtils;
 import com.alipay.sofa.registry.util.LoopRunnable;
-import com.alipay.sofa.registry.util.WakeupLoopRunnable;
+import com.alipay.sofa.registry.util.WakeUpLoopRunnable;
 import com.google.common.collect.Lists;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -265,7 +265,7 @@ public class SessionRegistry implements Registry {
         }
     }
 
-    private final class VersionWatchDog extends WakeupLoopRunnable {
+    private final class VersionWatchDog extends WakeUpLoopRunnable {
         boolean prevStopPushSwitch;
 
         @Override

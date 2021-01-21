@@ -37,7 +37,7 @@ import com.alipay.sofa.registry.server.meta.bootstrap.config.MetaServerConfig;
 import com.alipay.sofa.registry.server.meta.metaserver.CrossDcMetaServer;
 import com.alipay.sofa.registry.server.meta.remoting.RaftExchanger;
 import com.alipay.sofa.registry.server.meta.slot.SlotAllocator;
-import com.alipay.sofa.registry.server.meta.slot.impl.CrossDcSlotAllocator;
+import com.alipay.sofa.registry.server.meta.slot.arrange.CrossDcSlotAllocator;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import org.springframework.aop.target.dynamic.Refreshable;
