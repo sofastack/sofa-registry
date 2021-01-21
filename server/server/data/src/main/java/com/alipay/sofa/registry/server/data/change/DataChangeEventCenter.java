@@ -34,9 +34,11 @@ import com.alipay.sofa.registry.server.data.remoting.sessionserver.SessionServer
 import com.alipay.sofa.registry.task.KeyedThreadPoolExecutor;
 import com.alipay.sofa.registry.util.ConcurrentUtils;
 import com.alipay.sofa.registry.util.LoopRunnable;
+import static com.alipay.sofa.registry.server.data.change.ChangeMetrics.*;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+
 import org.springframework.beans.factory.annotation.Autowired;
 
 import javax.annotation.PostConstruct;
@@ -133,11 +135,14 @@ public final class DataChangeEventCenter {
         public void run() {
             try {
                 if (!connection.isFine()) {
+                    CHANGETEMP_FAIL_COUNTER.inc();
                     LOGGER.info("temp change notify failed, conn is closed, {}", connection);
                     return;
                 }
                 notifyTempPub(connection, datum);
+                CHANGETEMP_SUCCESS_COUNTER.inc();
             } catch (Throwable e) {
+                CHANGETEMP_FAIL_COUNTER.inc();
                 LOGGER.error("failed to notify temp {}, {}", connection, datum, e);
             }
         }
@@ -162,13 +167,16 @@ public final class DataChangeEventCenter {
         public void run() {
             try {
                 if (!connection.isFine()) {
+                    CHANGE_FAIL_COUNTER.inc();
                     LOGGER.info("change notify failed, conn is closed, {}", connection);
                     return;
                 }
                 DataChangeRequest request = new DataChangeRequest(dataCenter, dataInfoIds,
                     revisions);
                 doNotify(request, connection);
+                CHANGE_SUCCESS_COUNTER.inc();
             } catch (Throwable e) {
+                CHANGE_FAIL_COUNTER.inc();
                 LOGGER.error("failed to notify {}", this, e);
                 retry(this);
             }
@@ -184,18 +192,33 @@ public final class DataChangeEventCenter {
     private void retry(ChangeNotifier notifier) {
         notifier.retryCount++;
         if (notifier.retryCount < dataServerConfig.getNotifyRetryTimes()) {
-            final int maxSize = dataServerConfig.getNotifyRetryQueueSize();
-            boolean retry = false;
-            synchronized (retryNotifiers) {
-                if (retryNotifiers.size() < maxSize) {
-                    retryNotifiers.add(notifier);
-                    retry = true;
-                }
-            }
-            if (!retry) {
-                LOGGER.warn("skip retry of full, {}", notifier);
+            if (commitRetry(notifier)) {
+                CHANGE_RETRY_COUNTER.inc();
+                return;
             }
         }
+        CHANGE_SKIP_COUNTER.inc();
+        LOGGER.warn("skip retry of full, {}", notifier);
+    }
+
+    private boolean commitRetry(ChangeNotifier retry) {
+        final int maxSize = dataServerConfig.getNotifyRetryQueueSize();
+        synchronized (retryNotifiers) {
+            if (retryNotifiers.size() < maxSize) {
+                retryNotifiers.add(retry);
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private List<ChangeNotifier> getRetries() {
+        List<ChangeNotifier> retries = null;
+        synchronized (retryNotifiers) {
+            retries = Lists.newArrayList(retryNotifiers);
+            retryNotifiers.clear();
+        }
+        return retries;
     }
 
     private void notifyTempPub(Connection connection, Datum datum) {
@@ -232,6 +255,9 @@ public final class DataChangeEventCenter {
             } finally {
                 tempLock.writeLock().unlock();
             }
+            if (events.isEmpty()) {
+                return;
+            }
             final List<Connection> connections = sessionServerConnectionFactory.getSessionConnections();
             if (connections.isEmpty()) {
                 LOGGER.warn("session conn is empty when temp change");
@@ -244,10 +270,13 @@ public final class DataChangeEventCenter {
                         // group by connect && dataInfoId
                         notifyTempExecutor.execute(Tuple.of(datum.getDataInfoId(), connection.getRemoteAddress()),
                                 new TempNotifier(connection, datum));
+                        CHANGETEMP_COMMIT_COUNTER.inc();
                     } catch (RejectedExecutionException e) {
-                        LOGGER.warn("notify temp full, {}, {}", datum, e.getMessage());
+                        CHANGETEMP_SKIP_COUNTER.inc();
+                        LOGGER.warn("commit notify temp full, {}, {}", datum, e.getMessage());
                     } catch (Throwable e) {
-                        LOGGER.error("notify temp full, {}", datum, e);
+                        CHANGETEMP_SKIP_COUNTER.inc();
+                        LOGGER.error("commit notify temp failed, {}", datum, e);
                     }
                 }
             }
@@ -280,50 +309,61 @@ public final class DataChangeEventCenter {
             } finally {
                 lock.writeLock().unlock();
             }
-            // get retrys
-            List<ChangeNotifier> retrys = null;
-            synchronized (retryNotifiers) {
-                retrys = Lists.newArrayList(retryNotifiers);
-                retryNotifiers.clear();
-            }
 
-            final List<Connection> connections = sessionServerConnectionFactory
-                .getSessionConnections();
-            if (connections.isEmpty()) {
-                LOGGER.warn("session conn is empty when change");
-                return;
-            }
-            for (DataChangeEvent event : events) {
-                final Map<String, DatumVersion> changes = new HashMap<>(events.size());
-                final Set<String> revisions = new HashSet<>(64);
-                final String dataCenter = event.getDataCenter();
-                for (String dataInfoId : event.getDataInfoIds()) {
-                    final DataInfo dataInfo = DataInfo.valueOf(dataInfoId);
-                    if (dataInfo.typeIsSofaApp()) {
-                        // get datum is slower than  get version
-                        Datum datum = datumCache.get(dataCenter, dataInfoId);
-                        if (datum != null) {
-                            changes.put(dataInfoId, DatumVersion.of(datum.getVersion()));
-                            revisions.addAll(datum.revisions());
+            if (!events.isEmpty()) {
+                final List<Connection> connections = sessionServerConnectionFactory
+                    .getSessionConnections();
+                if (connections.isEmpty()) {
+                    LOGGER.error("session conn is empty when change");
+                    return;
+                }
+                for (DataChangeEvent event : events) {
+                    final Map<String, DatumVersion> changes = new HashMap<>(events.size());
+                    final Set<String> revisions = new HashSet<>(64);
+                    final String dataCenter = event.getDataCenter();
+                    for (String dataInfoId : event.getDataInfoIds()) {
+                        final DataInfo dataInfo = DataInfo.valueOf(dataInfoId);
+                        if (dataInfo.typeIsSofaApp()) {
+                            // get datum is slower than  get version
+                            Datum datum = datumCache.get(dataCenter, dataInfoId);
+                            if (datum != null) {
+                                changes.put(dataInfoId, DatumVersion.of(datum.getVersion()));
+                                revisions.addAll(datum.revisions());
+                            }
+                        } else {
+                            DatumVersion datumVersion = datumCache.getVersion(dataCenter,
+                                dataInfoId);
+                            if (datumVersion != null) {
+                                changes.put(dataInfoId, datumVersion);
+                            }
                         }
-                    } else {
-                        DatumVersion datumVersion = datumCache.getVersion(dataCenter, dataInfoId);
-                        if (datumVersion != null) {
-                            changes.put(dataInfoId, datumVersion);
+                    }
+                    if (changes.isEmpty()) {
+                        continue;
+                    }
+                    for (Connection connection : connections) {
+                        // group by connection
+                        try {
+                            notifyExecutor.execute(connection.getRemoteAddress(),
+                                new ChangeNotifier(connection, event.getDataCenter(), changes,
+                                    revisions));
+                            CHANGE_COMMIT_COUNTER.inc();
+                        } catch (RejectedExecutionException e) {
+                            CHANGE_SKIP_COUNTER.inc();
+                            LOGGER.warn("commit notify full, {}, {}", connection, changes.size(),
+                                e.getMessage());
+                        } catch (Throwable e) {
+                            CHANGE_SKIP_COUNTER.inc();
+                            LOGGER.error("commit notify failed, {}, {}", connection,
+                                changes.size(), e);
                         }
                     }
                 }
-                if (changes.isEmpty()) {
-                    continue;
-                }
-                for (Connection connection : connections) {
-                    // group by connection
-                    notifyExecutor.execute(connection.getRemoteAddress(), new ChangeNotifier(
-                        connection, event.getDataCenter(), changes, revisions));
-                }
             }
+
+            final List<ChangeNotifier> retries = getRetries();
             // commit retry
-            for (ChangeNotifier retry : retrys) {
+            for (ChangeNotifier retry : retries) {
                 notifyExecutor.execute(retry.connection.getRemoteAddress(), retry);
             }
         }

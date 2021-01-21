@@ -23,6 +23,7 @@ import com.alipay.sofa.registry.common.model.slot.SlotAccessGenericResponse;
 import com.alipay.sofa.registry.remoting.Channel;
 import com.alipay.sofa.registry.server.data.cache.DatumCache;
 import com.alipay.sofa.registry.util.ParaCheckUtil;
+import static com.alipay.sofa.registry.server.data.remoting.sessionserver.handler.HandlerMetrics.GetData.*;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.Map;
@@ -62,6 +63,7 @@ public class GetDataHandler extends AbstractDataHandler<GetDataRequest> {
 
         final SlotAccess slotAccess = checkAccess(dataInfoId, request.getSlotTableEpoch());
         if (!slotAccess.isAccept()) {
+            GET_DATUM_N_COUNTER.inc();
             return SlotAccessGenericResponse.failedResponse(slotAccess);
         }
 
@@ -69,6 +71,10 @@ public class GetDataHandler extends AbstractDataHandler<GetDataRequest> {
             dataInfoId);
         final String localDataCenter = dataServerConfig.getLocalDataCenter();
         final Datum localDatum = datumMap.get(localDataCenter);
+        GET_DATUM_Y_COUNTER.inc();
+        if (localDatum != null) {
+            GET_PUBLISHER_COUNTER.inc(localDatum.publisherSize());
+        }
         LOGGER.info("get datum {} from {}, {}", dataInfoId, localDataCenter, localDatum);
         return SlotAccessGenericResponse.successResponse(slotAccess, datumMap);
     }

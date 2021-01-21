@@ -29,8 +29,6 @@ import org.junit.Test;
 
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
-import java.util.List;
-import java.util.Map;
 
 public class SessionServerConnectionFactoryTest {
 
@@ -46,7 +44,7 @@ public class SessionServerConnectionFactoryTest {
         Assert.assertTrue(factory.containsConnection(ServerEnv.PROCESS_ID));
         Assert.assertEquals(1, factory.getSessionConnections().size());
         Assert.assertEquals(1, factory.getProcessIds().size());
-        Assert.assertTrue(factory.getSessonConnectionMap().containsKey(IP1));
+        Assert.assertTrue(factory.getSessionConnectionMap().containsKey(IP1));
 
         MockBlotChannel channel2 = new MockBlotChannel(IP1, 5551);
         factory.registerSession(ServerEnv.PROCESS_ID, channel2);
@@ -54,7 +52,7 @@ public class SessionServerConnectionFactoryTest {
         Assert.assertTrue(factory.containsConnection(ServerEnv.PROCESS_ID));
         Assert.assertEquals(1, factory.getSessionConnections().size());
         Assert.assertEquals(1, factory.getProcessIds().size());
-        Assert.assertTrue(factory.getSessonConnectionMap().containsKey(IP1));
+        Assert.assertTrue(factory.getSessionConnectionMap().containsKey(IP1));
 
         ProcessId processId2 = ServerEnv.createProcessId();
         MockBlotChannel channel3 = new MockBlotChannel(IP2, 5551);
@@ -63,8 +61,8 @@ public class SessionServerConnectionFactoryTest {
         Assert.assertTrue(factory.containsConnection(ServerEnv.PROCESS_ID));
         Assert.assertTrue(factory.containsConnection(processId2));
         Assert.assertEquals(2, factory.getProcessIds().size());
-        Assert.assertTrue(factory.getSessonConnectionMap().containsKey(IP1));
-        Assert.assertTrue(factory.getSessonConnectionMap().containsKey(IP2));
+        Assert.assertTrue(factory.getSessionConnectionMap().containsKey(IP1));
+        Assert.assertTrue(factory.getSessionConnectionMap().containsKey(IP2));
 
         channel1.connected = false;
         factory.sessionDisconnected(channel1);
@@ -72,20 +70,20 @@ public class SessionServerConnectionFactoryTest {
         Assert.assertTrue(factory.containsConnection(ServerEnv.PROCESS_ID));
         Assert.assertTrue(factory.containsConnection(processId2));
         Assert.assertEquals(2, factory.getProcessIds().size());
-        Assert.assertTrue(factory.getSessonConnectionMap().containsKey(IP1));
-        Assert.assertTrue(factory.getSessonConnectionMap().containsKey(IP2));
-        Assert.assertEquals(1, factory.getAllSessonConnections().get(IP1).size());
-        Assert.assertEquals(1, factory.getAllSessonConnections().get(IP2).size());
+        Assert.assertTrue(factory.getSessionConnectionMap().containsKey(IP1));
+        Assert.assertTrue(factory.getSessionConnectionMap().containsKey(IP2));
+        Assert.assertEquals(1, factory.getAllSessionConnections().get(IP1).size());
+        Assert.assertEquals(1, factory.getAllSessionConnections().get(IP2).size());
 
         factory.sessionDisconnected(channel3);
 
         Assert.assertTrue(factory.containsConnection(ServerEnv.PROCESS_ID));
         Assert.assertTrue(!factory.containsConnection(processId2));
         Assert.assertEquals(1, factory.getProcessIds().size());
-        Assert.assertTrue(factory.getSessonConnectionMap().containsKey(IP1));
-        Assert.assertTrue(!factory.getSessonConnectionMap().containsKey(IP2));
-        Assert.assertEquals(1, factory.getAllSessonConnections().get(IP1).size());
-        Assert.assertEquals(0, factory.getAllSessonConnections().get(IP2).size());
+        Assert.assertTrue(factory.getSessionConnectionMap().containsKey(IP1));
+        Assert.assertTrue(!factory.getSessionConnectionMap().containsKey(IP2));
+        Assert.assertEquals(1, factory.getAllSessionConnections().get(IP1).size());
+        Assert.assertEquals(0, factory.getAllSessionConnections().get(IP2).size());
     }
 
     private static final class MockBlotChannel extends BoltChannel {

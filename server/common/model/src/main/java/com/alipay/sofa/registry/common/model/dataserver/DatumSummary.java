@@ -85,6 +85,14 @@ public class DatumSummary implements Serializable {
         return publisherVersions.size();
     }
 
+    public static int countPublisherSize(Collection<DatumSummary> summaries) {
+        int count = 0;
+        for (DatumSummary summary : summaries) {
+            count += summary.size();
+        }
+        return count;
+    }
+
     @Override
     public String toString() {
         return String.format("Summary={%s=%d}", dataInfoId, size());
