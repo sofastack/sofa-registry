@@ -27,7 +27,7 @@ public class RevisionUtils {
         Collections.sort(keys);
         StringBuffer sb = new StringBuffer();
         for (String key : keys) {
-            sb.append(key.toString());
+            sb.append(key);
         }
         return MessageDigests
             .toHexString(MessageDigests.md5().digest(sb.toString().getBytes(UTF8)));

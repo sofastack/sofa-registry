@@ -17,6 +17,7 @@
 package com.alipay.sofa.registry.server.meta.bootstrap.config;
 
 import com.alipay.sofa.registry.common.model.constants.ValueConstants;
+import com.alipay.sofa.registry.util.OsUtils;
 import org.apache.commons.lang.builder.ToStringBuilder;
 import org.apache.commons.lang.builder.ToStringStyle;
 import org.springframework.boot.context.properties.ConfigurationProperties;
@@ -74,7 +75,7 @@ public class MetaServerConfigBean implements MetaServerConfig {
                                                                                  + File.separator
                                                                                  + "raftData";
 
-    private int                rockDBCacheSize                                 = 64;           //64M
+    private int                rockDBCacheSize                                 = 64;                   //64M
 
     private int                connectMetaServerExecutorMinSize                = 3;
     private int                connectMetaServerExecutorMaxSize                = 10;
@@ -87,6 +88,12 @@ public class MetaServerConfigBean implements MetaServerConfig {
     private int                defaultRequestExecutorMinSize                   = 20;
     private int                defaultRequestExecutorMaxSize                   = 600;
     private int                defaultRequestExecutorQueueSize                 = 500;
+
+    private int                appRevisionRegisterExecutorMinSize              = OsUtils
+                                                                                   .getCpuCount() * 5;
+    private int                appRevisionRegisterExecutorMaxSize              = OsUtils
+                                                                                   .getCpuCount() * 20;
+    private int                appRevisionRegisterExecutorQueueSize            = 500;
 
     private int                raftExecutorMinSize                             = 20;
     private int                raftExecutorMaxSize                             = 400;
@@ -864,5 +871,29 @@ public class MetaServerConfigBean implements MetaServerConfig {
     public MetaServerConfigBean setRaftClientRefreshExecutorQueueSize(int raftClientRefreshExecutorQueueSize) {
         this.raftClientRefreshExecutorQueueSize = raftClientRefreshExecutorQueueSize;
         return this;
+    }
+
+    public int getAppRevisionRegisterExecutorMinSize() {
+        return appRevisionRegisterExecutorMinSize;
+    }
+
+    public void setAppRevisionRegisterExecutorMinSize(int appRevisionRegisterExecutorMinSize) {
+        this.appRevisionRegisterExecutorMinSize = appRevisionRegisterExecutorMinSize;
+    }
+
+    public int getAppRevisionRegisterExecutorMaxSize() {
+        return appRevisionRegisterExecutorMaxSize;
+    }
+
+    public void setAppRevisionRegisterExecutorMaxSize(int appRevisionRegisterExecutorMaxSize) {
+        this.appRevisionRegisterExecutorMaxSize = appRevisionRegisterExecutorMaxSize;
+    }
+
+    public int getAppRevisionRegisterExecutorQueueSize() {
+        return appRevisionRegisterExecutorQueueSize;
+    }
+
+    public void setAppRevisionRegisterExecutorQueueSize(int appRevisionRegisterExecutorQueueSize) {
+        this.appRevisionRegisterExecutorQueueSize = appRevisionRegisterExecutorQueueSize;
     }
 }

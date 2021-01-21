@@ -17,19 +17,23 @@
 package com.alipay.sofa.registry.server.meta.revision;
 
 import com.alipay.sofa.registry.common.model.store.AppRevision;
+import com.alipay.sofa.registry.log.Logger;
+import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.store.api.annotation.RaftReference;
 
 import java.util.List;
 
 public class AppRevisionRegistry {
     @RaftReference
-    private AppRevisionService appRevisionService;
+    private AppRevisionService  appRevisionService;
+    private static final Logger LOGGER = LoggerFactory.getLogger(AppRevisionService.class);
 
     public void register(AppRevision appRevision) {
         if (appRevisionService.existed(appRevision.getRevision())) {
             return;
         }
         appRevisionService.add(appRevision);
+        LOGGER.info("register new revision: {}", appRevision.getRevision());
     }
 
     public List<String> checkRevisions(String keysDigest) {

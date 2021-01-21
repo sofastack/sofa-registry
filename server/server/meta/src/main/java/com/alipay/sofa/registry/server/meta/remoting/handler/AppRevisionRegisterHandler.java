@@ -22,9 +22,15 @@ import com.alipay.sofa.registry.remoting.Channel;
 import com.alipay.sofa.registry.server.meta.revision.AppRevisionRegistry;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import java.util.concurrent.Executor;
+import java.util.concurrent.ThreadPoolExecutor;
+
 public class AppRevisionRegisterHandler extends MetaServerHandler<AppRevision> {
     @Autowired
     private AppRevisionRegistry appRevisionRegistry;
+
+    @Autowired
+    private ThreadPoolExecutor  appRevisionExecutor;
 
     @Override
     protected Node.NodeType getConnectNodeType() {
@@ -40,5 +46,10 @@ public class AppRevisionRegisterHandler extends MetaServerHandler<AppRevision> {
     @Override
     public Class interest() {
         return AppRevision.class;
+    }
+
+    @Override
+    public Executor getExecutor() {
+        return appRevisionExecutor;
     }
 }

@@ -57,6 +57,7 @@ import com.alipay.sofa.registry.server.shared.remoting.AbstractServerHandler;
 import com.alipay.sofa.registry.server.shared.resource.MetricsResource;
 import com.alipay.sofa.registry.server.shared.resource.SlotGenericResource;
 import com.alipay.sofa.registry.store.api.DBService;
+import com.alipay.sofa.registry.task.MetricsableThreadPoolExecutor;
 import com.alipay.sofa.registry.util.DefaultExecutorFactory;
 import com.alipay.sofa.registry.util.NamedThreadFactory;
 import com.alipay.sofa.registry.util.OsUtils;
@@ -438,8 +439,8 @@ public class MetaServerConfiguration {
 
         @Bean
         public ThreadPoolExecutor defaultRequestExecutor(MetaServerConfig metaServerConfig) {
-            ThreadPoolExecutor defaultRequestExecutor = new ThreadPoolExecutor(
-                metaServerConfig.getDefaultRequestExecutorMinSize(),
+            ThreadPoolExecutor defaultRequestExecutor = new MetricsableThreadPoolExecutor(
+                "MetaHandlerDefaultExecutor", metaServerConfig.getDefaultRequestExecutorMinSize(),
                 metaServerConfig.getDefaultRequestExecutorMaxSize(), 300, TimeUnit.SECONDS,
                 new LinkedBlockingQueue<>(metaServerConfig.getDefaultRequestExecutorQueueSize()),
                 new NamedThreadFactory("MetaHandler-DefaultRequest"));
@@ -447,6 +448,18 @@ public class MetaServerConfiguration {
             return defaultRequestExecutor;
         }
 
+        @Bean
+        public ThreadPoolExecutor appRevisionExecutor(MetaServerConfig metaServerConfig) {
+            ThreadPoolExecutor appRevisionExecutor = new MetricsableThreadPoolExecutor(
+                "AppRevisionHandlerExecutor",
+                metaServerConfig.getAppRevisionRegisterExecutorMinSize(),
+                metaServerConfig.getAppRevisionRegisterExecutorMaxSize(), 300, TimeUnit.SECONDS,
+                new LinkedBlockingQueue<>(metaServerConfig
+                    .getAppRevisionRegisterExecutorQueueSize()), new NamedThreadFactory(
+                    "AppRevisionHandlerThread"));
+            appRevisionExecutor.allowCoreThreadTimeOut(true);
+            return appRevisionExecutor;
+        }
     }
 
     @Configuration

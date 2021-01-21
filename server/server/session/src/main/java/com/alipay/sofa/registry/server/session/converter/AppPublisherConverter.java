@@ -23,6 +23,8 @@ import com.alipay.sofa.registry.common.model.store.AppRevision;
 import com.alipay.sofa.registry.common.model.store.DataInfo;
 import com.alipay.sofa.registry.common.model.store.Publisher;
 import com.alipay.sofa.registry.core.model.AppRevisionInterface;
+import com.alipay.sofa.registry.log.Logger;
+import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.server.session.cache.AppRevisionCacheRegistry;
 import com.alipay.sofa.registry.server.shared.util.AddressUtil;
 import com.google.common.collect.ArrayListMultimap;
@@ -38,6 +40,7 @@ import java.util.Map;
  * @version $Id: AppPublisherConverter.java, v 0.1 2020年11月24日 20:50 xiaojian.xj Exp $
  */
 public class AppPublisherConverter {
+    private static final Logger LOG = LoggerFactory.getLogger(AppPublisherConverter.class);
 
     public static Publisher convert(AppPublisher appPublisher,
                                     AppRevisionCacheRegistry appRevisionCacheRegistry,
@@ -49,6 +52,13 @@ public class AppPublisherConverter {
         for (AppRegisterServerDataBox appRegisterServerDataBox : appPublisher.getAppDataList()) {
             AppRevision revisionRegister = appRevisionCacheRegistry
                 .getRevision(appRegisterServerDataBox.getRevision());
+            if (revisionRegister == null) {
+                LOG.error("Can not find revision {}, url {}",
+                    appRegisterServerDataBox.getRevision(), appRegisterServerDataBox.getUrl());
+                throw new RuntimeException(String.format("can not find revision %s, url %s",
+                    appRegisterServerDataBox.getRevision(), appRegisterServerDataBox.getUrl()));
+            }
+
             if (!revisionRegister.getInterfaceMap().containsKey(dataInfoId)) {
                 continue;
             }

@@ -28,21 +28,21 @@ import com.alipay.sofa.registry.util.RevisionUtils;
 import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.locks.ReadWriteLock;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 @RaftService
 public class RaftAppRevisionService extends AbstractSnapshotProcess implements AppRevisionService {
-    private static final Logger      LOGGER            = LoggerFactory
-                                                           .getLogger(RaftAppRevisionService.class);
+    private static final Logger               LOGGER            = LoggerFactory
+                                                                    .getLogger(RaftAppRevisionService.class);
 
-    private Set<String>              snapShotFileNames = new HashSet<>();
+    private Set<String>                       snapShotFileNames = new HashSet<>();
 
-    private Map<String, AppRevision> registry          = new ConcurrentHashMap<>();
-    private String                   keysDigest        = "";
+    private volatile Map<String, AppRevision> registry          = new ConcurrentHashMap<>();
+    private volatile String                   keysDigest        = "";
 
-    private static final String      REVISIONS_NAME    = "revisions";
-    private ReadWriteLock            rwLock            = new ReentrantReadWriteLock();
+    private static final String               REVISIONS_NAME    = "revisions";
+    private Lock                              lock              = new ReentrantLock();
 
     public RaftAppRevisionService() {
     }
@@ -63,12 +63,17 @@ public class RaftAppRevisionService extends AbstractSnapshotProcess implements A
     public boolean load(String path) {
         try {
             if (path.endsWith(REVISIONS_NAME)) {
-                Map<String, AppRevision> reg = load(path, registry.getClass());
-                if (reg == null) {
-                    reg = new HashMap<>();
+                lock.lock();
+                try {
+                    Map<String, AppRevision> reg = load(path, registry.getClass());
+                    if (reg == null) {
+                        reg = new HashMap<>();
+                    }
+                    registry = reg;
+                    keysDigest = generateKeysDigest();
+                } finally {
+                    lock.unlock();
                 }
-                registry = reg;
-                keysDigest = generateKeysDigest();
                 return true;
             }
             return true;
@@ -93,11 +98,16 @@ public class RaftAppRevisionService extends AbstractSnapshotProcess implements A
     }
 
     public void add(AppRevision appRevision) {
-        rwLock.writeLock().lock();
-        if (registry.putIfAbsent(appRevision.getRevision(), appRevision) == null) {
-            keysDigest = generateKeysDigest();
+        lock.lock();
+        try {
+            if (registry.putIfAbsent(appRevision.getRevision(), appRevision) == null) {
+                keysDigest = generateKeysDigest();
+            }
+            LOGGER.info("add new revision {}, summary digest {}", appRevision.getRevision(),
+                keysDigest);
+        } finally {
+            lock.unlock();
         }
-        rwLock.writeLock().unlock();
     }
 
     public boolean existed(String revision) {
