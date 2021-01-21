@@ -32,8 +32,9 @@ import com.alipay.sofa.registry.server.data.lease.SessionLeaseManager;
 import com.alipay.sofa.registry.server.data.remoting.DataNodeExchanger;
 import com.alipay.sofa.registry.server.data.remoting.SessionNodeExchanger;
 import com.alipay.sofa.registry.server.shared.remoting.ClientSideExchanger;
-import org.glassfish.jersey.internal.guava.Sets;
+import com.google.common.collect.Sets;
 
+import static com.alipay.sofa.registry.server.data.slot.SlotMetrics.Sync.*;
 import java.util.*;
 
 /**
@@ -118,6 +119,7 @@ public final class SlotDiffSyncer {
         for (;;) {
             Map<String, DatumSummary> summaryMap = datumStorage.getDatumSummary(slotId,
                 summaryTargetIp);
+            observeSyncSessionId(slotId, summaryMap.size());
             DataSlotDiffDataInfoIdRequest request = new DataSlotDiffDataInfoIdRequest(
                 slotTableEpoch, slotId, new HashSet<>(summaryMap.keySet()));
             GenericResponse<DataSlotDiffSyncResult> resp = (GenericResponse<DataSlotDiffSyncResult>) exchanger
@@ -140,7 +142,8 @@ public final class SlotDiffSyncer {
         Map<String, DatumSummary> round = pickSummarys(summaryMap, maxPublishers);
         // sync for the existing dataInfoIds.publisher
         while (!summaryMap.isEmpty()) {
-            // maybe to many publishers
+            // maybe to many publishers, spit round
+            observeSyncSessionPub(slotId, DatumSummary.countPublisherSize(round.values()));
             DataSlotDiffPublisherRequest request = new DataSlotDiffPublisherRequest(slotTableEpoch, slotId, round);
 
             GenericResponse<DataSlotDiffSyncResult> resp = (GenericResponse<DataSlotDiffSyncResult>) exchanger
@@ -189,4 +192,5 @@ public final class SlotDiffSyncer {
         }
         return m;
     }
+
 }

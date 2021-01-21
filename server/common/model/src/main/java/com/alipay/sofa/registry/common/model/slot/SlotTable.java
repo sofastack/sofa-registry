@@ -131,6 +131,14 @@ public final class SlotTable implements Serializable {
         return new SlotTable(epoch, slotMap);
     }
 
+    public int getLeaderNum(String leaderIp) {
+        return (int) slots.values().stream().filter(s -> leaderIp.equals(s.getLeader())).count();
+    }
+
+    public int getFollowerNum(String followerIp) {
+        return (int) slots.values().stream().filter(s -> s.getFollowers().contains(followerIp)).count();
+    }
+
     public void assertSlotLessThan(SlotTable slotTable) {
         slots.values().forEach(s -> {
             Slot after = slotTable.getSlot(s.getId());
@@ -159,4 +167,5 @@ public final class SlotTable implements Serializable {
     public int hashCode() {
         return Objects.hash(epoch, slots);
     }
+
 }

@@ -34,6 +34,7 @@ import com.alipay.sofa.registry.server.data.remoting.metaserver.MetaServerServic
 import com.alipay.sofa.registry.server.shared.env.ServerEnv;
 import com.alipay.sofa.registry.server.shared.resource.SlotGenericResource;
 import com.alipay.sofa.registry.server.shared.slot.DiskSlotTableRecorder;
+import static com.alipay.sofa.registry.server.data.slot.SlotMetrics.Manager.*;
 import com.alipay.sofa.registry.server.shared.slot.SlotTableRecorder;
 import com.alipay.sofa.registry.task.KeyedTask;
 import com.alipay.sofa.registry.task.KeyedThreadPoolExecutor;
@@ -200,6 +201,8 @@ public final class SlotManagerImpl implements SlotManager {
             }
         }
         slotTableStates.table = updating;
+        observeLeaderAssignGauge(slotTableStates.table.getLeaderNum(ServerEnv.IP));
+        observeFollowerAssignGauge(slotTableStates.table.getFollowerNum(ServerEnv.IP));
     }
 
     private static final class SlotTableStates {
@@ -240,6 +243,10 @@ public final class SlotManagerImpl implements SlotManager {
                                 }
                             }
                         } else {
+                            if (slotState.migratingStartTime == 0) {
+                                slotState.migratingStartTime = System.currentTimeMillis();
+                                observeLeaderMigratingStart(slot.getId());
+                            }
                             for (String sessionIp : sessions) {
                                 MigratingTask mtask = slotState.migratingTasks.get(sessionIp);
                                 if (mtask == null || mtask.task.isFailed()) {
@@ -249,6 +256,8 @@ public final class SlotManagerImpl implements SlotManager {
                                         mtask = new MigratingTask(ktask);
                                         slotState.migratingTasks.put(sessionIp, mtask);
                                     } else {
+                                        // fail
+                                        observeLeaderMigratingFail(slot.getId(), sessionIp);
                                         mtask.task = ktask;
                                     }
                                     // TODO add max trycount, avoid the unhealth session block the migrating
@@ -265,9 +274,12 @@ public final class SlotManagerImpl implements SlotManager {
                                 // make sure the version is newly than old leader's
                                 localDatumStorage.updateVersion(slot.getId());
                                 slotState.migrated = true;
-                                LOGGER.info("slot migrating finish {}, sessions={}", slot,
+                                final long span = System.currentTimeMillis() - slotState.migratingStartTime;
+                                LOGGER.info("slot migrating finish {}, span={}, sessions={}", slot, span,
                                         slotState.migratingTasks.keySet());
                                 slotState.migratingTasks.clear();
+                                observeLeaderMigratingFinish(slot.getId());
+                                observeLeaderMigratingHistogram(slot.getId(), span);
                             }
                         }
                     } else {
@@ -296,6 +308,7 @@ public final class SlotManagerImpl implements SlotManager {
     private final class SlotState {
         volatile Slot                                 slot;
         volatile boolean                              migrated;
+        long                                          migratingStartTime;
         final Map<String, MigratingTask>              migratingTasks   = Maps.newHashMap();
         final Map<String, KeyedTask<SyncSessionTask>> syncSessionTasks = Maps.newHashMap();
         KeyedTask<SyncLeaderTask>                     syncLeaderTask;
@@ -309,6 +322,11 @@ public final class SlotManagerImpl implements SlotManager {
                 this.migrated = false;
                 this.syncSessionTasks.clear();
                 this.migratingTasks.clear();
+                this.migratingStartTime = 0;
+                if (isLeader(s)) {
+                    // leader change
+                    observeLeaderUpdateCounter();
+                }
             }
             this.slot = s;
         }
@@ -339,21 +357,21 @@ public final class SlotManagerImpl implements SlotManager {
     private final class SyncSessionTask implements Runnable {
         final long   slotTableEpoch;
         final Slot   slot;
-        final String sessioIp;
+        final String sessionIp;
 
-        SyncSessionTask(long slotTableEpoch, Slot slot, String sessioIp) {
+        SyncSessionTask(long slotTableEpoch, Slot slot, String sessionIp) {
             this.slotTableEpoch = slotTableEpoch;
             this.slot = slot;
-            this.sessioIp = sessioIp;
+            this.sessionIp = sessionIp;
         }
 
         public void run() {
             try {
                 SlotDiffSyncer syncer = new SlotDiffSyncer(dataServerConfig, localDatumStorage,
                     dataChangeEventCenter, sessionLeaseManager);
-                syncer.syncSession(slot.getId(), sessioIp, sessionNodeExchanger, slotTableEpoch);
+                syncer.syncSession(slot.getId(), sessionIp, sessionNodeExchanger, slotTableEpoch);
             } catch (Throwable e) {
-                LOGGER.error("sync session failed: {}, slot={}", sessioIp, slot.getId(), e);
+                LOGGER.error("sync session failed: {}, slot={}", sessionIp, slot.getId(), e);
                 throw new RuntimeException(e);
             }
         }
@@ -361,7 +379,7 @@ public final class SlotManagerImpl implements SlotManager {
         @Override
         public String toString() {
             return "SyncSessionTask{" + "slotTableEpoch=" + slotTableEpoch + ", sessioIp='"
-                   + sessioIp + '\'' + ", slot=" + slot + '}';
+                   + sessionIp + '\'' + ", slot=" + slot + '}';
         }
     }
 

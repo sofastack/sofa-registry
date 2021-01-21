@@ -23,6 +23,7 @@ import com.alipay.sofa.registry.common.model.slot.SlotAccessGenericResponse;
 import com.alipay.sofa.registry.remoting.Channel;
 import com.alipay.sofa.registry.server.data.cache.DatumCache;
 import com.alipay.sofa.registry.util.ParaCheckUtil;
+import static com.alipay.sofa.registry.server.data.remoting.sessionserver.handler.HandlerMetrics.GetVersion.*;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.Map;
@@ -64,6 +65,7 @@ public class GetDataVersionsHandler extends AbstractDataHandler<GetDataVersionRe
 
         Map<String/*datacenter*/, Map<String/*dataInfoId*/, DatumVersion>> map = datumCache
             .getVersions(request.getSlotId());
+        GET_VERSION_COUNTER.inc();
         return SlotAccessGenericResponse.successResponse(slotAccess, map);
     }
 

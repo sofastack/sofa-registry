@@ -108,7 +108,7 @@ public class SessionServerConnectionFactory {
     /**
      * get the map of sessionIp -> connection
      */
-    public Map<String, Connection> getSessonConnectionMap() {
+    public Map<String, Connection> getSessionConnectionMap() {
         Map<String, Connection> map = new HashMap<>(session2Connections.size());
         for (Map.Entry<String, Channels> e : session2Connections.entrySet()) {
             Channels channels = e.getValue();
@@ -120,7 +120,7 @@ public class SessionServerConnectionFactory {
         return map;
     }
 
-    public Map<String, List<Connection>> getAllSessonConnections() {
+    public Map<String, List<Connection>> getAllSessionConnections() {
         Map<String, List<Connection>> map = new HashMap<>(session2Connections.size());
         for (Map.Entry<String, Channels> e : session2Connections.entrySet()) {
             Channels channels = e.getValue();
@@ -146,7 +146,7 @@ public class SessionServerConnectionFactory {
      * get connections of SessionServer ( Randomly select a connection for each session )
      */
     public List<Connection> getSessionConnections() {
-        return new ArrayList<>(getSessonConnectionMap().values());
+        return new ArrayList<>(getSessionConnectionMap().values());
     }
 
     public Set<ProcessId> getProcessIds() {
