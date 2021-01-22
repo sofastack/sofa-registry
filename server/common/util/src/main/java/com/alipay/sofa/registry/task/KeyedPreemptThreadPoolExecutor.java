@@ -35,8 +35,13 @@ public class KeyedPreemptThreadPoolExecutor extends KeyedThreadPoolExecutor {
     }
 
     @Override
-    protected AbstractWorker createWorker(int idx, int coreBufferSize) {
-        return new WorkerImpl(idx);
+    protected AbstractWorker[] createWorkers(int coreSize, int coreBufferSize) {
+        AbstractWorker[] workers = new AbstractWorker[coreSize];
+        for (int i = 0; i < coreSize; i++) {
+            AbstractWorker w = new WorkerImpl(i);
+            workers[i] = w;
+        }
+        return workers;
     }
 
     private final class WorkerImpl extends AbstractWorker {

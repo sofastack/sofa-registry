@@ -22,7 +22,6 @@ import com.alipay.sofa.registry.util.ConcurrentUtils;
 import io.prometheus.client.Counter;
 
 import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -46,16 +45,20 @@ public class KeyedThreadPoolExecutor {
             .help("metrics for keyed executor")
             .name(executorName.replace('-', '_') + "_task_total").labelNames("idx", "type")
             .register();
-        workers = new AbstractWorker[coreSize];
+
+        workers = createWorkers(coreSize, coreBufferSize);
         for (int i = 0; i < coreSize; i++) {
-            AbstractWorker w = createWorker(i, coreBufferSize);
-            workers[i] = w;
-            ConcurrentUtils.createDaemonThread(executorName + "_" + i, w).start();
+            ConcurrentUtils.createDaemonThread(executorName + "_" + i, workers[i]).start();
         }
     }
 
-    protected AbstractWorker createWorker(int idx, int coreBufferSize) {
-        return new WorkerImpl(idx, new LinkedBlockingQueue<>(coreBufferSize));
+    protected AbstractWorker[] createWorkers(int coreSize, int coreBufferSize) {
+        BlockingQueues<KeyedTask> queues = new BlockingQueues<>(coreSize, coreBufferSize, false);
+        AbstractWorker[] workers = new AbstractWorker[coreSize];
+        for (int i = 0; i < coreSize; i++) {
+            workers[i] = new WorkerImpl(i, queues);
+        }
+        return workers;
     }
 
     protected interface Worker extends Runnable {
@@ -68,11 +71,13 @@ public class KeyedThreadPoolExecutor {
     }
 
     private final class WorkerImpl extends AbstractWorker {
-        final BlockingQueue<KeyedTask> queue;
+        final BlockingQueues<KeyedTask> queues;
+        final BlockingQueue<KeyedTask>  queue;
 
-        WorkerImpl(int idx, BlockingQueue<KeyedTask> queue) {
+        WorkerImpl(int idx, BlockingQueues<KeyedTask> queues) {
             super(idx);
-            this.queue = queue;
+            this.queues = queues;
+            this.queue = queues.getQueue(idx);
         }
 
         public int size() {
@@ -84,7 +89,7 @@ public class KeyedThreadPoolExecutor {
         }
 
         public boolean offer(KeyedTask task) {
-            return queue.offer(task);
+            return queues.offer(idx, task);
         }
 
     }

@@ -52,24 +52,6 @@ public class SessionServerConfigBean implements SessionServerConfig {
 
     private int                  schedulerHeartbeatIntervalSec         = 3;
 
-    private int                  cancelDataTaskRetryTimes              = 2;
-
-    private long                 cancelDataTaskRetryFirstDelay         = 500;
-
-    private long                 cancelDataTaskRetryIncrementDelay     = 500;
-
-    private int                  publishDataTaskRetryTimes             = 2;
-
-    private long                 publishDataTaskRetryFirstDelay        = 3000;
-
-    private long                 publishDataTaskRetryIncrementDelay    = 5000;
-
-    private int                  unPublishDataTaskRetryTimes           = 2;
-
-    private long                 unPublishDataTaskRetryFirstDelay      = 3000;
-
-    private long                 unPublishDataTaskRetryIncrementDelay  = 5000;
-
     private int                  subscriberRegisterFetchRetryTimes     = 3;
 
     private int                  accessDataExecutorMinPoolSize         = OsUtils.getCpuCount() * 10;
@@ -122,13 +104,17 @@ public class SessionServerConfigBean implements SessionServerConfig {
 
     private int                  pushTaskRetryTimes                    = 3;
 
-    private int                  publishDataExecutorMinPoolSize        = OsUtils.getCpuCount() * 10;
+    private int                  dataNodeExecutorWorkerSize            = OsUtils.getCpuCount() * 8;
 
-    private int                  publishDataExecutorMaxPoolSize        = OsUtils.getCpuCount() * 20;
+    private int                  dataNodeExecutorQueueSize             = 20000;
 
-    private int                  publishDataExecutorQueueSize          = 10000;
+    private int                  dataNodeRetryDelayMillis              = 1000;
 
-    private long                 publishDataExecutorKeepAliveTime      = 60;
+    private int                  dataNodeRetryTimes                    = 3;
+
+    private int                  dataNodeRetryQueueSize                = 1000;
+
+    private int                  dataNodeMaxBatchSize                  = 100;
 
     private int                  schedulerScanVersionIntervalMs        = 1000 * 2;
 
@@ -159,10 +145,6 @@ public class SessionServerConfigBean implements SessionServerConfig {
 
     private String               blacklistSubDataIdRegex               = "";
 
-    private int                  dataNodeRetryExecutorQueueSize        = 20000;
-
-    private int                  dataNodeRetryExecutorThreadSize       = OsUtils.getCpuCount();
-
     private int                  dataClientConnNum                     = 10;
 
     private int                  sessionSchedulerPoolSize              = OsUtils.getCpuCount();
@@ -186,82 +168,6 @@ public class SessionServerConfigBean implements SessionServerConfig {
      */
     public SessionServerConfigBean(CommonConfig commonConfig) {
         this.commonConfig = commonConfig;
-    }
-
-    /**
-     * Getter method for property <tt>dataNodeRetryExecutorThreadSize</tt>.
-     *
-     * @return property value of dataNodeRetryExecutorThreadSize
-     */
-    @Override
-    public int getDataNodeRetryExecutorThreadSize() {
-        return dataNodeRetryExecutorThreadSize;
-    }
-
-    /**
-     * Setter method for property <tt>dataNodeRetryExecutorThreadSize </tt>.
-     *
-     * @param dataNodeRetryExecutorThreadSize value to be assigned to property dataNodeRetryExecutorThreadSize
-     */
-    public void setDataNodeRetryExecutorThreadSize(int dataNodeRetryExecutorThreadSize) {
-        this.dataNodeRetryExecutorThreadSize = dataNodeRetryExecutorThreadSize;
-    }
-
-    /**
-     * Getter method for property <tt>dataNodeRetryExecutorQueueSize</tt>.
-     *
-     * @return property value of dataNodeRetryExecutorQueueSize
-     */
-    @Override
-    public int getDataNodeRetryExecutorQueueSize() {
-        return dataNodeRetryExecutorQueueSize;
-    }
-
-    /**
-     * Setter method for property <tt>dataNodeRetryExecutorQueueSize </tt>.
-     *
-     * @param dataNodeRetryExecutorQueueSize value to be assigned to property dataNodeRetryExecutorQueueSize
-     */
-    public void setDataNodeRetryExecutorQueueSize(int dataNodeRetryExecutorQueueSize) {
-        this.dataNodeRetryExecutorQueueSize = dataNodeRetryExecutorQueueSize;
-    }
-
-    /**
-     * Getter method for property <tt>publishDataTaskRetryTimes</tt>.
-     *
-     * @return property value of publishDataTaskRetryTimes
-     */
-    @Override
-    public int getPublishDataTaskRetryTimes() {
-        return publishDataTaskRetryTimes;
-    }
-
-    /**
-     * Setter method for property <tt>publishDataTaskRetryTimes </tt>.
-     *
-     * @param publishDataTaskRetryTimes value to be assigned to property publishDataTaskRetryTimes
-     */
-    public void setPublishDataTaskRetryTimes(int publishDataTaskRetryTimes) {
-        this.publishDataTaskRetryTimes = publishDataTaskRetryTimes;
-    }
-
-    /**
-     * Getter method for property <tt>unPublishDataTaskRetryTimes</tt>.
-     *
-     * @return property value of unPublishDataTaskRetryTimes
-     */
-    @Override
-    public int getUnPublishDataTaskRetryTimes() {
-        return unPublishDataTaskRetryTimes;
-    }
-
-    /**
-     * Setter method for property <tt>unPublishDataTaskRetryTimes </tt>.
-     *
-     * @param unPublishDataTaskRetryTimes value to be assigned to property unPublishDataTaskRetryTimes
-     */
-    public void setUnPublishDataTaskRetryTimes(int unPublishDataTaskRetryTimes) {
-        this.unPublishDataTaskRetryTimes = unPublishDataTaskRetryTimes;
     }
 
     /**
@@ -305,139 +211,6 @@ public class SessionServerConfigBean implements SessionServerConfig {
      */
     public void setSchedulerHeartbeatTimeout(int schedulerHeartbeatIntervalSec) {
         this.schedulerHeartbeatIntervalSec = schedulerHeartbeatIntervalSec;
-    }
-
-    /**
-     * Getter method for property <tt>cancelDataTaskRetryTimes</tt>.
-     *
-     * @return property value of cancelDataTaskRetryTimes
-     */
-    @Override
-    public int getCancelDataTaskRetryTimes() {
-        return cancelDataTaskRetryTimes;
-    }
-
-    /**
-     * Setter method for property <tt>cancelDataTaskRetryTimes</tt>.
-     *
-     * @param cancelDataTaskRetryTimes value to be assigned to property cancelDataTaskRetryTimes
-     */
-    public void setCancelDataTaskRetryTimes(int cancelDataTaskRetryTimes) {
-        this.cancelDataTaskRetryTimes = cancelDataTaskRetryTimes;
-    }
-
-    /**
-     * Getter method for property <tt>cancelDataTaskRetryFirstDelay</tt>.
-     *
-     * @return property value of cancelDataTaskRetryFirstDelay
-     */
-    @Override
-    public long getCancelDataTaskRetryFirstDelay() {
-        return cancelDataTaskRetryFirstDelay;
-    }
-
-    /**
-     * Getter method for property <tt>cancelDataTaskRetryIncrementDelay</tt>.
-     *
-     * @return property value of cancelDataTaskRetryIncrementDelay
-     */
-    @Override
-    public long getCancelDataTaskRetryIncrementDelay() {
-        return cancelDataTaskRetryIncrementDelay;
-    }
-
-    /**
-     * Setter method for property <tt>cancelDataTaskRetryIncrementDelay</tt>.
-     *
-     * @param cancelDataTaskRetryIncrementDelay value to be assigned to property cancelDataTaskRetryIncrementDelay
-     */
-    public void setCancelDataTaskRetryIncrementDelay(long cancelDataTaskRetryIncrementDelay) {
-        this.cancelDataTaskRetryIncrementDelay = cancelDataTaskRetryIncrementDelay;
-    }
-
-    /**
-     * Setter method for property <tt>cancelDataTaskRetryFirstDelay </tt>.
-     *
-     * @param cancelDataTaskRetryFirstDelay value to be assigned to property cancelDataTaskRetryFirstDelay
-     */
-    public void setCancelDataTaskRetryFirstDelay(long cancelDataTaskRetryFirstDelay) {
-        this.cancelDataTaskRetryFirstDelay = cancelDataTaskRetryFirstDelay;
-    }
-
-    /**
-     * Getter method for property <tt>publishDataTaskRetryFirstDelay</tt>.
-     *
-     * @return property value of publishDataTaskRetryFirstDelay
-     */
-    @Override
-    public long getPublishDataTaskRetryFirstDelay() {
-        return publishDataTaskRetryFirstDelay;
-    }
-
-    /**
-     * Setter method for property <tt>publishDataTaskRetryFirstDelay </tt>.
-     *
-     * @param publishDataTaskRetryFirstDelay value to be assigned to property publishDataTaskRetryFirstDelay
-     */
-    public void setPublishDataTaskRetryFirstDelay(long publishDataTaskRetryFirstDelay) {
-        this.publishDataTaskRetryFirstDelay = publishDataTaskRetryFirstDelay;
-    }
-
-    /**
-     * Getter method for property <tt>publishDataTaskRetryIncrementDelay</tt>.
-     *
-     * @return property value of publishDataTaskRetryIncrementDelay
-     */
-    @Override
-    public long getPublishDataTaskRetryIncrementDelay() {
-        return publishDataTaskRetryIncrementDelay;
-    }
-
-    /**
-     * Setter method for property <tt>publishDataTaskRetryIncrementDelay </tt>.
-     *
-     * @param publishDataTaskRetryIncrementDelay value to be assigned to property publishDataTaskRetryIncrementDelay
-     */
-    public void setPublishDataTaskRetryIncrementDelay(long publishDataTaskRetryIncrementDelay) {
-        this.publishDataTaskRetryIncrementDelay = publishDataTaskRetryIncrementDelay;
-    }
-
-    /**
-     * Getter method for property <tt>unPublishDataTaskRetryFirstDelay</tt>.
-     *
-     * @return property value of unPublishDataTaskRetryFirstDelay
-     */
-    @Override
-    public long getUnPublishDataTaskRetryFirstDelay() {
-        return unPublishDataTaskRetryFirstDelay;
-    }
-
-    /**
-     * Setter method for property <tt>unPublishDataTaskRetryFirstDelay </tt>.
-     *
-     * @param unPublishDataTaskRetryFirstDelay value to be assigned to property unPublishDataTaskRetryFirstDelay
-     */
-    public void setUnPublishDataTaskRetryFirstDelay(long unPublishDataTaskRetryFirstDelay) {
-        this.unPublishDataTaskRetryFirstDelay = unPublishDataTaskRetryFirstDelay;
-    }
-
-    /**
-     * Getter method for property <tt>unPublishDataTaskRetryIncrementDelay</tt>.
-     *
-     * @return property value of unPublishDataTaskRetryIncrementDelay
-     */
-    @Override
-    public long getUnPublishDataTaskRetryIncrementDelay() {
-        return unPublishDataTaskRetryIncrementDelay;
-    }
-
-    /**
-     * Setter method for property <tt>unPublishDataTaskRetryIncrementDelay </tt>.
-     *
-     * @param unPublishDataTaskRetryIncrementDelay value to be assigned to property unPublishDataTaskRetryIncrementDelay
-     */
-    public void setUnPublishDataTaskRetryIncrementDelay(long unPublishDataTaskRetryIncrementDelay) {
-        this.unPublishDataTaskRetryIncrementDelay = unPublishDataTaskRetryIncrementDelay;
     }
 
     @Override
@@ -1027,78 +800,6 @@ public class SessionServerConfigBean implements SessionServerConfig {
     }
 
     /**
-     * Getter method for property <tt>publishDataExecutorMinPoolSize</tt>.
-     *
-     * @return property value of publishDataExecutorMinPoolSize
-     */
-    public int getPublishDataExecutorMinPoolSize() {
-        return publishDataExecutorMinPoolSize;
-    }
-
-    /**
-     * Getter method for property <tt>publishDataExecutorMaxPoolSize</tt>.
-     *
-     * @return property value of publishDataExecutorMaxPoolSize
-     */
-    public int getPublishDataExecutorMaxPoolSize() {
-        return publishDataExecutorMaxPoolSize;
-    }
-
-    /**
-     * Getter method for property <tt>publishDataExecutorQueueSize</tt>.
-     *
-     * @return property value of publishDataExecutorQueueSize
-     */
-    public int getPublishDataExecutorQueueSize() {
-        return publishDataExecutorQueueSize;
-    }
-
-    /**
-     * Getter method for property <tt>publishDataExecutorKeepAliveTime</tt>.
-     *
-     * @return property value of publishDataExecutorKeepAliveTime
-     */
-    public long getPublishDataExecutorKeepAliveTime() {
-        return publishDataExecutorKeepAliveTime;
-    }
-
-    /**
-     * Setter method for property <tt>publishDataExecutorMinPoolSize</tt>.
-     *
-     * @param publishDataExecutorMinPoolSize value to be assigned to property publishDataExecutorMinPoolSize
-     */
-    public void setPublishDataExecutorMinPoolSize(int publishDataExecutorMinPoolSize) {
-        this.publishDataExecutorMinPoolSize = publishDataExecutorMinPoolSize;
-    }
-
-    /**
-     * Setter method for property <tt>publishDataExecutorMaxPoolSize</tt>.
-     *
-     * @param publishDataExecutorMaxPoolSize value to be assigned to property publishDataExecutorMaxPoolSize
-     */
-    public void setPublishDataExecutorMaxPoolSize(int publishDataExecutorMaxPoolSize) {
-        this.publishDataExecutorMaxPoolSize = publishDataExecutorMaxPoolSize;
-    }
-
-    /**
-     * Setter method for property <tt>publishDataExecutorQueueSize</tt>.
-     *
-     * @param publishDataExecutorQueueSize value to be assigned to property publishDataExecutorQueueSize
-     */
-    public void setPublishDataExecutorQueueSize(int publishDataExecutorQueueSize) {
-        this.publishDataExecutorQueueSize = publishDataExecutorQueueSize;
-    }
-
-    /**
-     * Setter method for property <tt>publishDataExecutorKeepAliveTime</tt>.
-     *
-     * @param publishDataExecutorKeepAliveTime value to be assigned to property publishDataExecutorKeepAliveTime
-     */
-    public void setPublishDataExecutorKeepAliveTime(long publishDataExecutorKeepAliveTime) {
-        this.publishDataExecutorKeepAliveTime = publishDataExecutorKeepAliveTime;
-    }
-
-    /**
      * Getter method for property <tt>accessLimitRate</tt>.
      *
      * @return property value of accessLimitRate
@@ -1284,5 +985,59 @@ public class SessionServerConfigBean implements SessionServerConfig {
 
     public void setEnableSessionLoadbalancePolicy(boolean enableSessionLoadbalancePolicy) {
         this.enableSessionLoadbalancePolicy = enableSessionLoadbalancePolicy;
+    }
+
+    @Override
+    public int getDataNodeExecutorWorkerSize() {
+        return dataNodeExecutorWorkerSize;
+    }
+
+    public void setDataNodeExecutorWorkerSize(int dataNodeExecutorWorkerSize) {
+        this.dataNodeExecutorWorkerSize = dataNodeExecutorWorkerSize;
+    }
+
+    @Override
+    public int getDataNodeExecutorQueueSize() {
+        return dataNodeExecutorQueueSize;
+    }
+
+    public void setDataNodeExecutorQueueSize(int dataNodeExecutorQueueSize) {
+        this.dataNodeExecutorQueueSize = dataNodeExecutorQueueSize;
+    }
+
+    @Override
+    public int getDataNodeRetryDelayMillis() {
+        return dataNodeRetryDelayMillis;
+    }
+
+    public void setDataNodeRetryDelayMillis(int dataNodeRetryDelayMillis) {
+        this.dataNodeRetryDelayMillis = dataNodeRetryDelayMillis;
+    }
+
+    @Override
+    public int getDataNodeRetryTimes() {
+        return dataNodeRetryTimes;
+    }
+
+    public void setDataNodeRetryTimes(int dataNodeRetryTimes) {
+        this.dataNodeRetryTimes = dataNodeRetryTimes;
+    }
+
+    @Override
+    public int getDataNodeRetryQueueSize() {
+        return dataNodeRetryQueueSize;
+    }
+
+    public void setDataNodeRetryQueueSize(int dataNodeRetryQueueSize) {
+        this.dataNodeRetryQueueSize = dataNodeRetryQueueSize;
+    }
+
+    @Override
+    public int getDataNodeMaxBatchSize() {
+        return dataNodeMaxBatchSize;
+    }
+
+    public void setDataNodeMaxBatchSize(int dataNodeMaxBatchSize) {
+        this.dataNodeMaxBatchSize = dataNodeMaxBatchSize;
     }
 }

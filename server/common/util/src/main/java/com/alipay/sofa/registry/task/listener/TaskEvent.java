@@ -31,14 +31,11 @@ public class TaskEvent {
         //Session task
         WATCHER_REGISTER_FETCH_TASK("WatcherRegisterFetchTask"), //
         RECEIVED_DATA_CONFIG_PUSH_TASK("ReceivedDataConfigPushTask"), //
-        CANCEL_DATA_TASK("CancelDataTask"), //
         SYNC_PUBLISHER_TASK("SyncPublisherTask"), //
         SYNC_UNPUBLISHER_TASK("SyncUnPublisherTask"), //
         SYNC_SUBSCRIBER_TASK("SyncSubscriberTask"), //
         SYNC_UNSUBSCRIBER_TASK("SyncUnSubscriberTask"), //
         PROVIDE_DATA_CHANGE_FETCH_TASK("ProvideDataChangeFetchTask"), //
-        PUBLISH_DATA_TASK("PublishDataTask"), //
-        UN_PUBLISH_DATA_TASK("UnPublishDataTask"), //
 
         //MetaServer task
         PERSISTENCE_DATA_CHANGE_NOTIFY_TASK("PersistenceDataChangeNotifyTask"), //

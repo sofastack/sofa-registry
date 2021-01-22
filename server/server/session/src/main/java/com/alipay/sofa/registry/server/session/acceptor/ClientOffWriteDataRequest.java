@@ -27,7 +27,7 @@ import java.util.List;
  * @author yuzhi.lyz
  * @version v 0.1 2020-12-12 15:20 yuzhi.lyz Exp $
  */
-public final class ClientOffWriteDataRequest implements WriteDataRequest {
+public final class ClientOffWriteDataRequest implements WriteDataRequest<ClientOffPublishers> {
     private final ConnectId           connectId;
 
     private final ClientOffPublishers requestBody;
@@ -38,7 +38,7 @@ public final class ClientOffWriteDataRequest implements WriteDataRequest {
     }
 
     @Override
-    public Object getRequestBody() {
+    public ClientOffPublishers getRequestBody() {
         return requestBody;
     }
 
@@ -52,8 +52,4 @@ public final class ClientOffWriteDataRequest implements WriteDataRequest {
         return connectId;
     }
 
-    @Override
-    public String getDataServerIP() {
-        return null;
-    }
 }
