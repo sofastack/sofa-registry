@@ -505,28 +505,6 @@ public class SessionServerConfiguration {
         }
 
         @Bean
-        @ConditionalOnMissingBean(name = "cancelDataTaskListener")
-        public TaskListener cancelDataTaskListener(TaskListenerManager taskListenerManager) {
-            TaskListener taskListener = new CancelDataTaskListener();
-            taskListenerManager.addTaskListener(taskListener);
-            return taskListener;
-        }
-
-        @Bean
-        public TaskListener publishDataTaskListener(TaskListenerManager taskListenerManager) {
-            TaskListener taskListener = new PublishDataTaskListener();
-            taskListenerManager.addTaskListener(taskListener);
-            return taskListener;
-        }
-
-        @Bean
-        public TaskListener unPublishDataTaskListener(TaskListenerManager taskListenerManager) {
-            TaskListener taskListener = new UnPublishDataTaskListener();
-            taskListenerManager.addTaskListener(taskListener);
-            return taskListener;
-        }
-
-        @Bean
         public TaskListenerManager taskListenerManager() {
             return new DefaultTaskListenerManager();
         }

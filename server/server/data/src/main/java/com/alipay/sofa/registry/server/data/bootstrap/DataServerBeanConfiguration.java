@@ -171,10 +171,8 @@ public class DataServerBeanConfiguration {
         public Collection<AbstractServerHandler> serverHandlers() {
             Collection<AbstractServerHandler> list = new ArrayList<>();
             list.add(getDataHandler());
-            list.add(clientOffHandler());
+            list.add(batchPutDataHandler());
             list.add(getDataVersionsHandler());
-            list.add(publishDataProcessor());
-            list.add(unPublishDataHandler());
             list.add(dataServerConnectionHandler());
             return list;
         }
@@ -220,18 +218,8 @@ public class DataServerBeanConfiguration {
         }
 
         @Bean
-        public AbstractServerHandler clientOffHandler() {
-            return new ClientOffHandler();
-        }
-
-        @Bean
-        public AbstractServerHandler publishDataProcessor() {
-            return new PublishDataHandler();
-        }
-
-        @Bean
-        public AbstractServerHandler unPublishDataHandler() {
-            return new UnPublishDataHandler();
+        public AbstractServerHandler batchPutDataHandler() {
+            return new BatchPutDataHandler();
         }
 
         @Bean

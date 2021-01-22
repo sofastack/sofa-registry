@@ -44,7 +44,6 @@ public class ExecutorManager {
     private final ThreadPoolExecutor          dataChangeRequestExecutor;
     private final ThreadPoolExecutor          dataSlotSyncRequestExecutor;
     private final ThreadPoolExecutor          connectClientExecutor;
-    private final ThreadPoolExecutor          publishDataExecutor;
 
     @Autowired
     protected MetaServerService               metaServerService;
@@ -58,8 +57,6 @@ public class ExecutorManager {
     private static final String               DATA_SLOT_MIGRATE_REQUEST_EXECUTOR = "DataSlotMigrateRequestExecutor";
 
     private static final String               CONNECT_CLIENT_EXECUTOR            = "ConnectClientExecutor";
-
-    private static final String               PUBLISH_DATA_EXECUTOR              = "PublishDataExecutor";
 
     public ExecutorManager(SessionServerConfig sessionServerConfig) {
         scheduler = new ScheduledThreadPoolExecutor(sessionServerConfig.getSessionSchedulerPoolSize(),
@@ -100,14 +97,6 @@ public class ExecutorManager {
                         sessionServerConfig.getConnectClientExecutorMaxPoolSize(), 60L, TimeUnit.SECONDS,
                         new LinkedBlockingQueue(sessionServerConfig.getConnectClientExecutorQueueSize()),
                         new NamedThreadFactory("DisconnectClientExecutor", true)));
-
-        publishDataExecutor = reportExecutors.computeIfAbsent(PUBLISH_DATA_EXECUTOR,
-                k -> new MetricsableThreadPoolExecutor(PUBLISH_DATA_EXECUTOR,
-                        sessionServerConfig.getPublishDataExecutorMinPoolSize(),
-                        sessionServerConfig.getPublishDataExecutorMaxPoolSize(),
-                        sessionServerConfig.getPublishDataExecutorKeepAliveTime(), TimeUnit.SECONDS,
-                        new ArrayBlockingQueue<>(sessionServerConfig.getPublishDataExecutorQueueSize()),
-                        new NamedThreadFactory("PublishExecutor", true)));
     }
 
     public void startScheduler() {
@@ -133,10 +122,6 @@ public class ExecutorManager {
         if (connectClientExecutor != null && !connectClientExecutor.isShutdown()) {
             connectClientExecutor.shutdown();
         }
-
-        if (publishDataExecutor != null && !publishDataExecutor.isShutdown()) {
-            publishDataExecutor.shutdown();
-        }
     }
 
     public Map<String, ThreadPoolExecutor> getReportExecutors() {
@@ -159,7 +144,4 @@ public class ExecutorManager {
         return connectClientExecutor;
     }
 
-    public ThreadPoolExecutor getPublishDataExecutor() {
-        return publishDataExecutor;
-    }
 }

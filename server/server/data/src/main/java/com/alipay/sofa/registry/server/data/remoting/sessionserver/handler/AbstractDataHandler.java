@@ -84,7 +84,8 @@ public abstract class AbstractDataHandler<T> extends AbstractServerHandler<T> {
         ParaCheckUtil.checkNotBlank(publisher.getDataInfoId(), "publisher.dataInfoId");
         ParaCheckUtil.checkNotNull(publisher.getVersion(), "publisher.version");
         ParaCheckUtil.checkNotBlank(publisher.getRegisterId(), "publisher.registerId");
-        if (publisher.getPublishType() != PublishType.TEMPORARY) {
+        if (publisher.getPublishType() != PublishType.TEMPORARY
+            && publisher.getDataType() == StoreData.DataType.PUBLISHER) {
             ParaCheckUtil.checkNotNull(publisher.getSourceAddress(), "publisher.sourceAddress");
         }
         ParaCheckUtil.checkContains(DATA_TYPES, publisher.getDataType(), "publisher.dataType");

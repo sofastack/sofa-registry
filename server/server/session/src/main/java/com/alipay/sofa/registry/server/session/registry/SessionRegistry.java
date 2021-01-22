@@ -147,8 +147,7 @@ public class SessionRegistry implements Registry {
                                 // All write operations to DataServer (pub/unPub/clientoff/renew/snapshot)
                                 // are handed over to WriteDataAcceptor
                                 writeDataAcceptor.accept(new PublisherWriteDataRequest(publisher,
-                                        WriteDataRequest.WriteDataRequestType.PUBLISHER,
-                                        slotTableCache.getLeader(publisher.getDataInfoId())));
+                                        WriteDataRequest.WriteDataRequestType.PUBLISHER));
 
                                 sessionRegistryStrategy.afterPublisherRegister(publisher);
                                 break;
@@ -200,8 +199,7 @@ public class SessionRegistry implements Registry {
                 // All write operations to DataServer (pub/unPub/clientoff/renew/snapshot)
                 // are handed over to WriteDataAcceptor
                 writeDataAcceptor.accept(new PublisherWriteDataRequest(publisher,
-                    WriteDataRequest.WriteDataRequestType.UN_PUBLISHER, slotTableCache
-                        .getLeader(publisher.getDataInfoId())));
+                    WriteDataRequest.WriteDataRequestType.UN_PUBLISHER));
 
                 sessionRegistryStrategy.afterPublisherUnRegister(publisher);
                 break;

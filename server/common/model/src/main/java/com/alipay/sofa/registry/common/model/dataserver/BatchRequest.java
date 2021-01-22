@@ -14,38 +14,33 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alipay.sofa.registry.server.session.acceptor;
+package com.alipay.sofa.registry.common.model.dataserver;
 
-import com.alipay.sofa.registry.common.model.ConnectId;
-import com.alipay.sofa.registry.common.model.store.Publisher;
+import com.alipay.sofa.registry.common.model.ProcessId;
+import com.google.common.collect.Lists;
 
-/**
- *
- * @author yuzhi.lyz
- * @version v 0.1 2020-12-12 15:14 yuzhi.lyz Exp $
- */
-public final class PublisherWriteDataRequest implements WriteDataRequest<Publisher> {
-    private final Publisher            publisher;
-    private final WriteDataRequestType type;
+import java.util.List;
 
-    public PublisherWriteDataRequest(Publisher publisher, WriteDataRequestType type) {
-        this.publisher = publisher;
-        this.type = type;
+public class BatchRequest extends AbstractSlotRequest {
+    private final int          slotId;
+    private final List<Object> request;
+
+    public BatchRequest(ProcessId sessionProcessId, int slotId, List<Object> request) {
+        super(sessionProcessId);
+        this.slotId = slotId;
+        this.request = Lists.newArrayList(request);
+    }
+
+    public int getSlotId() {
+        return slotId;
+    }
+
+    public List<Object> getRequest() {
+        return request;
     }
 
     @Override
-    public Publisher getRequestBody() {
-        return publisher;
+    public String toString() {
+        return "BatchRequest{" + "slotId=" + slotId + ", requests=" + request.size() + '}';
     }
-
-    @Override
-    public WriteDataRequestType getRequestType() {
-        return type;
-    }
-
-    @Override
-    public ConnectId getConnectId() {
-        return publisher.connectId();
-    }
-
 }
