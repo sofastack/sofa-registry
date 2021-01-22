@@ -20,8 +20,8 @@ import com.alipay.sofa.registry.common.model.CommonResponse;
 import com.alipay.sofa.registry.common.model.ProcessId;
 import com.alipay.sofa.registry.common.model.ServerDataBox;
 import com.alipay.sofa.registry.common.model.constants.ValueConstants;
+import com.alipay.sofa.registry.common.model.dataserver.BatchRequest;
 import com.alipay.sofa.registry.common.model.dataserver.Datum;
-import com.alipay.sofa.registry.common.model.dataserver.PublishDataRequest;
 import com.alipay.sofa.registry.common.model.store.Publisher;
 import com.alipay.sofa.registry.common.model.store.URL;
 import com.alipay.sofa.registry.log.Logger;
@@ -29,7 +29,8 @@ import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.server.data.bootstrap.DataServerConfig;
 import com.alipay.sofa.registry.server.data.cache.DatumCache;
 import com.alipay.sofa.registry.server.data.cache.DatumStorage;
-import com.alipay.sofa.registry.server.data.cache.UnPublisher;
+import com.alipay.sofa.registry.common.model.store.UnPublisher;
+import com.alipay.sofa.registry.server.data.slot.SlotManager;
 import com.alipay.sofa.registry.server.shared.env.ServerEnv;
 import com.alipay.sofa.registry.server.shared.remoting.AbstractServerHandler;
 import com.alipay.sofa.registry.server.shared.util.DatumUtils;
@@ -43,10 +44,7 @@ import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  *
@@ -71,7 +69,10 @@ public class DatumApiResource {
     private DatumStorage           localDatumStorage;
 
     @Autowired
-    private AbstractServerHandler  publishDataProcessor;
+    private AbstractServerHandler  batchPutDataHandler;
+
+    @Autowired
+    private SlotManager            slotManager;
 
     /**
      * curl -i -d '{"dataInfoId":"testDataId#@#DEFAULT_INSTANCE_ID#@#DEFAULT_GROUP"}' -H "Content-Type: application/json" -X POST http://localhost:9622/datum/api/get
@@ -141,8 +142,10 @@ public class DatumApiResource {
             Publisher publisher = buildPublisher(datum, datumParam);
 
             //build request and invoke
-            PublishDataRequest request = new PublishDataRequest(publisher);
-            publishDataProcessor.doHandle(null, request);
+            int slot = slotManager.slotOf(publisher.getDataInfoId());
+            BatchRequest batchRequest = new BatchRequest(publisher.getSessionProcessId(), slot,
+                Collections.singletonList(publisher));
+            batchPutDataHandler.doHandle(null, batchRequest);
             // get the newly datum
             datum = datumCache.get(datumParam.getDataCenter(), datumParam.getDataInfoId());
             return createResponse(datum);
@@ -171,8 +174,10 @@ public class DatumApiResource {
             UnPublisher publisher = buildUnPublisher(datum, datumParam);
 
             //build request and invoke
-            PublishDataRequest request = new PublishDataRequest(publisher);
-            publishDataProcessor.doHandle(null, request);
+            int slot = slotManager.slotOf(publisher.getDataInfoId());
+            BatchRequest batchRequest = new BatchRequest(publisher.getSessionProcessId(), slot,
+                Collections.singletonList(publisher));
+            batchPutDataHandler.doHandle(null, batchRequest);
             // get the newly datum
             datum = datumCache.get(datumParam.getDataCenter(), datumParam.getDataInfoId());
             return createResponse(datum);

@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alipay.sofa.registry.server.data.cache;
+package com.alipay.sofa.registry.common.model.store;
 
 import com.alipay.sofa.registry.common.model.ProcessId;
 import com.alipay.sofa.registry.common.model.store.DataInfo;
@@ -52,5 +52,10 @@ public class UnPublisher extends Publisher {
     @Override
     public DataType getDataType() {
         return DataType.UN_PUBLISHER;
+    }
+
+    public static UnPublisher of(Publisher publisher) {
+        return new UnPublisher(publisher.getDataInfoId(), publisher.getSessionProcessId(),
+            publisher.getRegisterId(), publisher.getRegisterTimestamp(), publisher.getVersion());
     }
 }

@@ -19,9 +19,7 @@ package com.alipay.sofa.registry.server.session.acceptor;
 import com.alipay.sofa.registry.common.model.ConnectId;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
-import com.alipay.sofa.registry.task.listener.TaskEvent;
-import com.alipay.sofa.registry.task.listener.TaskEvent.TaskType;
-import com.alipay.sofa.registry.task.listener.TaskListenerManager;
+import com.alipay.sofa.registry.server.session.node.service.DataNodeService;
 
 /**
  *
@@ -31,15 +29,15 @@ import com.alipay.sofa.registry.task.listener.TaskListenerManager;
  */
 public class WriteDataProcessor {
 
-    private static final Logger       LOGGER = LoggerFactory.getLogger(WriteDataProcessor.class);
+    private static final Logger   LOGGER = LoggerFactory.getLogger(WriteDataProcessor.class);
 
-    private final TaskListenerManager taskListenerManager;
+    private final ConnectId       connectId;
 
-    private final ConnectId           connectId;
+    private final DataNodeService dataNodeService;
 
-    public WriteDataProcessor(ConnectId connectId, TaskListenerManager taskListenerManager) {
+    public WriteDataProcessor(ConnectId connectId, DataNodeService dataNodeService) {
         this.connectId = connectId;
-        this.taskListenerManager = taskListenerManager;
+        this.dataNodeService = dataNodeService;
     }
 
     public void process(WriteDataRequest request) {
@@ -76,8 +74,8 @@ public class WriteDataProcessor {
             LOGGER.debug("doClientOffAsync: connectId={}, requestType={}, requestBody={}",
                 connectId, request.getRequestType(), request.getRequestBody());
         }
-
-        sendEvent(request.getRequestBody(), TaskType.CANCEL_DATA_TASK);
+        ClientOffWriteDataRequest req = (ClientOffWriteDataRequest) request;
+        dataNodeService.clientOff(req.getRequestBody());
     }
 
     private void doUnPublishAsync(WriteDataRequest request) {
@@ -85,8 +83,8 @@ public class WriteDataProcessor {
             LOGGER.debug("doUnPublishAsync: connectId={}, requestType={}, requestBody={}",
                 connectId, request.getRequestType(), request.getRequestBody());
         }
-
-        sendEvent(request.getRequestBody(), TaskType.UN_PUBLISH_DATA_TASK);
+        PublisherWriteDataRequest req = (PublisherWriteDataRequest) request;
+        dataNodeService.unregister(req.getRequestBody());
     }
 
     private void doPublishAsync(WriteDataRequest request) {
@@ -94,13 +92,7 @@ public class WriteDataProcessor {
             LOGGER.debug("doPublishAsync: connectId={}, requestType={}, requestBody={}", connectId,
                 request.getRequestType(), request.getRequestBody());
         }
-
-        sendEvent(request.getRequestBody(), TaskType.PUBLISH_DATA_TASK);
+        PublisherWriteDataRequest req = (PublisherWriteDataRequest) request;
+        dataNodeService.register(req.getRequestBody());
     }
-
-    private void sendEvent(Object eventObj, TaskType taskType) {
-        TaskEvent taskEvent = new TaskEvent(eventObj, taskType);
-        taskListenerManager.sendTaskEvent(taskEvent);
-    }
-
 }

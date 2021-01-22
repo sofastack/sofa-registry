@@ -17,6 +17,7 @@
 package com.alipay.sofa.registry.common.model.store;
 
 import java.io.Serializable;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
@@ -64,7 +65,7 @@ public abstract class BaseInfo implements Serializable, StoreData<String> {
 
     private long                clientRegisterTimestamp;
 
-    private Map<String, String> attributes       = new HashMap<>();
+    private Map<String, String> attributes;
 
     /**
      * ClientVersion Enum
@@ -203,8 +204,11 @@ public abstract class BaseInfo implements Serializable, StoreData<String> {
      *
      * @return property value of attributes
      */
-    public Map<String, String> getAttributes() {
-        return attributes;
+    public synchronized Map<String, String> getAttributes() {
+        if (attributes == null) {
+            return Collections.EMPTY_MAP;
+        }
+        return new HashMap<>(attributes);
     }
 
     /**
@@ -212,13 +216,12 @@ public abstract class BaseInfo implements Serializable, StoreData<String> {
      *
      * @param attributes  value to be assigned to property attributes
      */
-    public void setAttributes(Map<String, String> attributes) {
-        Map<String, String> newAttributes = new HashMap<>();
-        if (attributes != null && !attributes.isEmpty()) {
-            attributes.forEach((key, value) -> newAttributes
-                    .put(key, value));
+    public synchronized void setAttributes(Map<String, String> attributes) {
+        if (attributes == null || attributes.isEmpty()) {
+            this.attributes = null;
+        } else {
+            this.attributes = new HashMap<>(attributes);
         }
-        this.attributes = newAttributes;
     }
 
     /**

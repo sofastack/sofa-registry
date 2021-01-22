@@ -23,6 +23,7 @@ import com.alipay.sofa.registry.common.model.slot.Slot;
 import com.alipay.sofa.registry.common.model.slot.SlotAccessGenericResponse;
 import com.alipay.sofa.registry.common.model.store.Publisher;
 import com.alipay.sofa.registry.common.model.store.URL;
+import com.alipay.sofa.registry.common.model.store.UnPublisher;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.remoting.exchange.NodeExchanger;
@@ -32,20 +33,19 @@ import com.alipay.sofa.registry.remoting.exchange.message.Response;
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
 import com.alipay.sofa.registry.server.session.slot.SlotTableCache;
 import com.alipay.sofa.registry.server.shared.env.ServerEnv;
-import com.alipay.sofa.registry.timer.AsyncHashedWheelTimer;
-import com.alipay.sofa.registry.timer.AsyncHashedWheelTimer.TaskFailedCallback;
+import com.alipay.sofa.registry.task.BlockingQueues;
+import com.alipay.sofa.registry.task.FastRejectedExecutionException;
+import com.alipay.sofa.registry.util.ConcurrentUtils;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.CollectionUtils;
 
 import javax.annotation.PostConstruct;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * @author shangyu.wh
@@ -53,112 +53,52 @@ import java.util.concurrent.atomic.AtomicInteger;
  */
 public class DataNodeServiceImpl implements DataNodeService {
 
-    private static final Logger   LOGGER = LoggerFactory.getLogger(DataNodeServiceImpl.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(DataNodeServiceImpl.class);
 
     @Autowired
-    private NodeExchanger         dataNodeExchanger;
+    private NodeExchanger       dataNodeExchanger;
 
     @Autowired
-    private SlotTableCache        slotTableCache;
+    private SlotTableCache      slotTableCache;
 
     @Autowired
-    private SessionServerConfig   sessionServerConfig;
+    private SessionServerConfig sessionServerConfig;
 
-    private AsyncHashedWheelTimer asyncHashedWheelTimer;
+    private Worker[]            workers;
+    private BlockingQueues<Req> blockingQueues;
 
     @PostConstruct
     public void init() {
-        ThreadFactoryBuilder threadFactoryBuilder = new ThreadFactoryBuilder();
-        threadFactoryBuilder.setDaemon(true);
-        asyncHashedWheelTimer = new AsyncHashedWheelTimer(threadFactoryBuilder.setNameFormat(
-            "Registry-DataNodeServiceImpl-Retry-WheelTimer").build(), 100, TimeUnit.MILLISECONDS,
-            1024, sessionServerConfig.getDataNodeRetryExecutorThreadSize(),
-            sessionServerConfig.getDataNodeRetryExecutorQueueSize(), threadFactoryBuilder
-                .setNameFormat("Registry-DataNodeServiceImpl-Retry-WheelExecutor-%d").build(),
-            new TaskFailedCallback() {
-                @Override
-                public void executionRejected(Throwable e) {
-                    LOGGER.error("executionRejected: " + e.getMessage(), e);
-                }
+        this.workers = new Worker[sessionServerConfig.getDataNodeExecutorWorkerSize()];
+        blockingQueues = new BlockingQueues<>(sessionServerConfig.getDataNodeExecutorWorkerSize(),
+            sessionServerConfig.getDataNodeExecutorQueueSize(), false);
+        for (int i = 0; i < workers.length; i++) {
+            workers[i] = new Worker(blockingQueues.getQueue(i));
+            ConcurrentUtils.createDaemonThread("req-data-worker-" + i, workers[i]).start();
+        }
+    }
 
-                @Override
-                public void executionFailed(Throwable e) {
-                    LOGGER.error("executionFailed: " + e.getMessage(), e);
-                }
-            });
+    private void commitReq(int slotId, Req req) {
+        int idx = slotId % blockingQueues.queueNum();
+        try {
+            blockingQueues.put(idx, req);
+        } catch (FastRejectedExecutionException e) {
+            throw new FastRejectedExecutionException(String.format(
+                "commit req overflow, slotId=%d, %s", slotId, e.getMessage()));
+        }
     }
 
     @Override
     public void register(final Publisher publisher) {
-        String bizName = "PublishData";
-        Request<PublishDataRequest> request = buildPublishDataRequest(publisher);
-        try {
-            sendRequest(bizName, request);
-        } catch (RequestException e) {
-            doRetryAsync(bizName, request, e, sessionServerConfig.getPublishDataTaskRetryTimes(),
-                sessionServerConfig.getPublishDataTaskRetryFirstDelay(),
-                sessionServerConfig.getPublishDataTaskRetryIncrementDelay());
-        }
-    }
-
-    private Request<PublishDataRequest> buildPublishDataRequest(Publisher publisher) {
-        return new Request<PublishDataRequest>() {
-            private AtomicInteger retryTimes = new AtomicInteger();
-
-            @Override
-            public PublishDataRequest getRequestBody() {
-                PublishDataRequest publishDataRequest = new PublishDataRequest(publisher);
-                return publishDataRequest;
-            }
-
-            @Override
-            public URL getRequestUrl() {
-                return getUrl(publisher.getDataInfoId());
-            }
-
-            @Override
-            public AtomicInteger getRetryTimes() {
-                return retryTimes;
-            }
-        };
+        final int slotId = slotTableCache.slotOf(publisher.getDataInfoId());
+        commitReq(slotId, new Req(slotId, publisher));
     }
 
     @Override
     public void unregister(final Publisher publisher) {
-        String bizName = "UnPublishData";
-        Request<UnPublishDataRequest> request = buildUnPublishDataRequest(publisher);
-        try {
-            sendRequest(bizName, request);
-        } catch (RequestException e) {
-            doRetryAsync(bizName, request, e, sessionServerConfig.getUnPublishDataTaskRetryTimes(),
-                sessionServerConfig.getUnPublishDataTaskRetryFirstDelay(),
-                sessionServerConfig.getUnPublishDataTaskRetryIncrementDelay());
-        }
-    }
-
-    private Request<UnPublishDataRequest> buildUnPublishDataRequest(Publisher publisher) {
-        return new Request<UnPublishDataRequest>() {
-
-            private AtomicInteger retryTimes = new AtomicInteger();
-
-            @Override
-            public UnPublishDataRequest getRequestBody() {
-                UnPublishDataRequest unPublishDataRequest = new UnPublishDataRequest(
-                    publisher.getDataInfoId(), publisher.getRegisterId(),
-                    publisher.getRegisterTimestamp(), ServerEnv.PROCESS_ID, publisher.getVersion());
-                return unPublishDataRequest;
-            }
-
-            @Override
-            public URL getRequestUrl() {
-                return getUrl(publisher.getDataInfoId());
-            }
-
-            @Override
-            public AtomicInteger getRetryTimes() {
-                return retryTimes;
-            }
-        };
+        final int slotId = slotTableCache.slotOf(publisher.getDataInfoId());
+        UnPublisher unPublisher = UnPublisher.of(publisher);
+        commitReq(slotId, new Req(slotId, unPublisher));
     }
 
     @Override
@@ -166,45 +106,12 @@ public class DataNodeServiceImpl implements DataNodeService {
         if (clientOffPublishers.isEmpty()) {
             return;
         }
-        //group by dataInfoId
-        String bizName = "ClientOff";
-        List<Request<ClientOffRequest>> requests = buildClientOffRequest(clientOffPublishers);
-        for (Request<ClientOffRequest> req : requests) {
-            try {
-                sendRequest(bizName, req);
-            } catch (RequestException e) {
-                doRetryAsync(bizName, req, e, sessionServerConfig.getCancelDataTaskRetryTimes(),
-                    sessionServerConfig.getCancelDataTaskRetryFirstDelay(),
-                    sessionServerConfig.getCancelDataTaskRetryIncrementDelay());
-
-            }
-        }
-    }
-
-    private List<Request<ClientOffRequest>> buildClientOffRequest(ClientOffPublishers clientOffPublishers) {
-        List<Request<ClientOffRequest>> ret = Lists.newArrayList();
         Map<Integer, ClientOffRequest> groups = groupBySlot(clientOffPublishers);
         for (Map.Entry<Integer, ClientOffRequest> group : groups.entrySet()) {
-            ret.add(new Request<ClientOffRequest>() {
-                private AtomicInteger retryTimes = new AtomicInteger();
-
-                @Override
-                public ClientOffRequest getRequestBody() {
-                    return group.getValue();
-                }
-
-                @Override
-                public URL getRequestUrl() {
-                    return getUrl(group.getKey());
-                }
-
-                @Override
-                public AtomicInteger getRetryTimes() {
-                    return retryTimes;
-                }
-            });
+            final int slotId = group.getKey();
+            final ClientOffRequest clientOff = group.getValue();
+            commitReq(slotId, new Req(slotId, clientOff));
         }
-        return ret;
     }
 
     @Override
@@ -306,43 +213,16 @@ public class DataNodeServiceImpl implements DataNodeService {
         return map;
     }
 
-    private CommonResponse sendRequest(String bizName, Request request) throws RequestException {
+    private CommonResponse sendRequest(Request request) throws RequestException {
         Response response = dataNodeExchanger.request(request);
         Object result = response.getResult();
-        CommonResponse commonResponse = (CommonResponse) result;
-        if (!commonResponse.isSuccess()) {
+        SlotAccessGenericResponse resp = (SlotAccessGenericResponse) result;
+        if (!resp.isSuccess()) {
             throw new RuntimeException(String.format(
-                "[%s] response not success, failed! target url: %s, request: %s, message: %s",
-                bizName, request.getRequestUrl(), request.getRequestBody(),
-                commonResponse.getMessage()));
+                "response failed, target: %s, request: %s, message: %s", request.getRequestUrl(),
+                request.getRequestBody(), resp.getMessage()));
         }
-        return commonResponse;
-    }
-
-    private void doRetryAsync(String bizName, Request request, Exception e, int maxRetryTimes, long firstDelay,
-                              long incrementDelay) {
-        int retryTimes = request.getRetryTimes().incrementAndGet();
-        if (retryTimes <= maxRetryTimes) {
-            LOGGER.warn("{} failed, will retry again, retryTimes: {}, msg: {}", bizName, retryTimes, e.getMessage());
-            asyncHashedWheelTimer.newTimeout(timeout -> {
-                try {
-                    sendRequest(bizName, request);
-                } catch (RequestException ex) {
-                    doRetryAsync(bizName, request, ex, maxRetryTimes, firstDelay, incrementDelay);
-                }
-            }, getDelayTime(retryTimes, firstDelay, incrementDelay), TimeUnit.MILLISECONDS);
-        } else {
-            LOGGER.error(String.format(
-                    "%s failed, retryTimes have exceeded! stop retry! retryTimes: %s, url: %s, request: %s, msg: %s",
-                    bizName, (retryTimes - 1), request.getRequestUrl(), request.getRequestBody(), e.getMessage()), e);
-        }
-    }
-
-    private long getDelayTime(int retry, long firstDelay, long incrementDelay) {
-        long initialSleepTime = TimeUnit.MILLISECONDS.toMillis(firstDelay);
-        long increment = TimeUnit.MILLISECONDS.toMillis(incrementDelay);
-        long result = initialSleepTime + (increment * (retry - 1));
-        return Math.max(result, 0L);
+        return resp;
     }
 
     private URL getUrl(String dataInfoId) {
@@ -367,6 +247,135 @@ public class DataNodeServiceImpl implements DataNodeService {
             ClientOffRequest request = ret.computeIfAbsent(slotId,
                     k -> new ClientOffRequest(ServerEnv.PROCESS_ID, clientOffPublishers.getConnectId()));
             request.addPublisher(publisher);
+        }
+        return ret;
+    }
+
+    private static final class Req {
+        final int    slotId;
+        final Object req;
+
+        Req(int slotId, Object req) {
+            this.slotId = slotId;
+            this.req = req;
+        }
+    }
+
+    private static final class RetryBatch {
+        final BatchRequest batch;
+        long               expireTimestamp;
+        int                retryCount;
+
+        RetryBatch(BatchRequest batch) {
+            this.batch = batch;
+        }
+
+        @Override
+        public String toString() {
+            return "RetryBatch{" + "batch=" + batch + ", retry=" + retryCount + ", expire="
+                   + expireTimestamp + '}';
+        }
+    }
+
+    private final class Worker implements Runnable {
+        final BlockingQueue<Req>     queue;
+        final LinkedList<RetryBatch> retryBatches = Lists.newLinkedList();
+
+        Worker(BlockingQueue<Req> queue) {
+            this.queue = queue;
+        }
+
+        @Override
+        public void run() {
+            for (;;) {
+                try {
+                    final Req firstReq = queue.poll(200, TimeUnit.MILLISECONDS);
+                    if (firstReq != null) {
+                        // TODO config max
+                        Map<Integer, LinkedList<Object>> reqs = drainReq(queue, 100);
+                        // send by order, firstReq.slotId is the first one
+                        LinkedList<Object> firstBatch = reqs.remove(firstReq.slotId);
+                        if (firstBatch == null) {
+                            firstBatch = Lists.newLinkedList();
+                        }
+                        firstBatch.addFirst(firstReq.req);
+                        request(firstReq.slotId, firstBatch);
+                        for (Map.Entry<Integer, LinkedList<Object>> batch : reqs.entrySet()) {
+                            request(batch.getKey(), batch.getValue());
+                        }
+                    }
+                    // check the retry
+                    if (!retryBatches.isEmpty()) {
+                        final Iterator<RetryBatch> it = retryBatches.iterator();
+                        while (it.hasNext()) {
+                            RetryBatch batch = it.next();
+                            it.remove();
+                            if (!DataNodeServiceImpl.this.request(batch.batch)) {
+                                retry(batch);
+                            }
+                        }
+                    }
+                } catch (Throwable e) {
+                    LOGGER.error("failed to request batch", e);
+                }
+            }
+        }
+
+        private boolean retry(RetryBatch retry) {
+            retry.retryCount++;
+            if (retry.retryCount <= sessionServerConfig.getDataNodeRetryTimes()) {
+                if (retryBatches.size() >= sessionServerConfig.getDataNodeRetryQueueSize()) {
+                    // remove the oldest
+                    retryBatches.removeFirst();
+                }
+                retry.expireTimestamp = System.currentTimeMillis()
+                                        + sessionServerConfig.getDataNodeRetryDelayMillis();
+                retryBatches.add(retry);
+                return true;
+            }
+            return false;
+        }
+
+        private boolean request(int slotId, List<Object> reqs) {
+            final BatchRequest batch = new BatchRequest(ServerEnv.PROCESS_ID, slotId, reqs);
+            if (!DataNodeServiceImpl.this.request(batch)) {
+                retry(new RetryBatch(batch));
+                return false;
+            }
+            return true;
+        }
+    }
+
+    private boolean request(BatchRequest batch) {
+        try {
+            sendRequest(new Request() {
+                @Override
+                public Object getRequestBody() {
+                    return batch;
+                }
+
+                @Override
+                public URL getRequestUrl() {
+                    return getUrl(batch.getSlotId());
+                }
+            });
+            return true;
+        } catch (Throwable e) {
+            LOGGER.error("failed to request batch, {}", batch, e);
+            return false;
+        }
+    }
+
+    private Map<Integer, LinkedList<Object>> drainReq(BlockingQueue<Req> queue, int max) {
+        List<Req> reqs = new ArrayList<>(max);
+        queue.drainTo(reqs, max);
+        if(reqs.isEmpty()){
+            return Collections.emptyMap();
+        }
+        Map<Integer, LinkedList<Object>> ret = Maps.newLinkedHashMap();
+        for(Req req: reqs){
+            LinkedList<Object> objects = ret.computeIfAbsent(req.slotId, k->Lists.newLinkedList());
+            objects.add(req.req);
         }
         return ret;
     }

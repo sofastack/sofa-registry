@@ -53,24 +53,6 @@ public interface SessionServerConfig {
 
     String getSessionServerDataCenter();
 
-    int getCancelDataTaskRetryTimes();
-
-    long getCancelDataTaskRetryFirstDelay();
-
-    long getCancelDataTaskRetryIncrementDelay();
-
-    int getPublishDataTaskRetryTimes();
-
-    long getPublishDataTaskRetryFirstDelay();
-
-    long getPublishDataTaskRetryIncrementDelay();
-
-    int getUnPublishDataTaskRetryTimes();
-
-    long getUnPublishDataTaskRetryFirstDelay();
-
-    long getUnPublishDataTaskRetryIncrementDelay();
-
     int getSubscriberRegisterFetchRetryTimes();
 
     int getAccessDataExecutorMinPoolSize();
@@ -123,17 +105,17 @@ public interface SessionServerConfig {
 
     boolean isInvalidIgnored(String dataId);
 
-    int getDataNodeRetryExecutorQueueSize();
+    int getDataNodeRetryQueueSize();
 
-    int getDataNodeRetryExecutorThreadSize();
+    int getDataNodeRetryTimes();
 
-    int getPublishDataExecutorMinPoolSize();
+    int getDataNodeRetryDelayMillis();
 
-    int getPublishDataExecutorMaxPoolSize();
+    int getDataNodeExecutorWorkerSize();
 
-    int getPublishDataExecutorQueueSize();
+    int getDataNodeExecutorQueueSize();
 
-    long getPublishDataExecutorKeepAliveTime();
+    int getDataNodeMaxBatchSize();
 
     double getAccessLimitRate();
 
