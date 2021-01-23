@@ -26,12 +26,11 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executor;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import com.alipay.remoting.Connection;
-import com.alipay.remoting.ConnectionEventType;
-import com.alipay.remoting.InvokeCallback;
-import com.alipay.remoting.Url;
+import com.alipay.remoting.*;
 import com.alipay.remoting.exception.RemotingException;
 import com.alipay.remoting.rpc.RpcServer;
+import com.alipay.remoting.rpc.protocol.AsyncUserProcessor;
+import com.alipay.remoting.rpc.protocol.SyncUserProcessor;
 import com.alipay.sofa.registry.common.model.store.URL;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
@@ -52,25 +51,25 @@ public class BoltServer implements Server {
 
     private static final Logger        LOGGER      = LoggerFactory.getLogger(BoltServer.class);
 
-    private static final Logger        PUSH_LOGGER = LoggerFactory.getLogger("SESSION-PUSH",
+    protected static final Logger      PUSH_LOGGER = LoggerFactory.getLogger("SESSION-PUSH",
                                                        "[Server]");
     /**
      * accoding server port
      * can not be null
      */
-    private final URL                  url;
+    protected final URL                url;
     private final List<ChannelHandler> channelHandlers;
     /**
      * bolt server
      */
-    private RpcServer                  boltServer;
+    private final RpcServer            boltServer;
     /**
      * started status
      */
-    private AtomicBoolean              isStarted   = new AtomicBoolean(false);
-    private Map<String, Channel>       channels    = new ConcurrentHashMap<>();
+    private final AtomicBoolean        isStarted   = new AtomicBoolean(false);
+    private final Map<String, Channel> channels    = new ConcurrentHashMap<>();
 
-    private AtomicBoolean              initHandler = new AtomicBoolean(false);
+    private final AtomicBoolean        initHandler = new AtomicBoolean(false);
 
     /**
      * constructor
@@ -80,6 +79,7 @@ public class BoltServer implements Server {
     public BoltServer(URL url, List<ChannelHandler> channelHandlers) {
         this.channelHandlers = channelHandlers;
         this.url = url;
+        this.boltServer = createRpcServer();
     }
 
     /**
@@ -88,7 +88,6 @@ public class BoltServer implements Server {
     public void startServer() {
         if (isStarted.compareAndSet(false, true)) {
             try {
-                boltServer = new RpcServer(url.getPort(), true);
                 initHandler();
                 boltServer.start();
 
@@ -116,7 +115,6 @@ public class BoltServer implements Server {
      */
     public void initServer() {
         try {
-            boltServer = new RpcServer(url.getPort(), true);
             initHandler();
         } catch (Exception e) {
             LOGGER.error("Init bolt server error!", e);
@@ -124,23 +122,28 @@ public class BoltServer implements Server {
         }
     }
 
+    protected RpcServer createRpcServer() {
+        return new RpcServer(url.getPort(), true);
+    }
+
     private void initHandler() {
         if (initHandler.compareAndSet(false, true)) {
             boltServer.addConnectionEventProcessor(ConnectionEventType.CONNECT,
-                new ConnectionEventAdapter(ConnectionEventType.CONNECT,
-                    getConnectionEventHandler(), this));
+                newConnectionEventProcessor(ConnectionEventType.CONNECT));
             boltServer.addConnectionEventProcessor(ConnectionEventType.CLOSE,
-                new ConnectionEventAdapter(ConnectionEventType.CLOSE, getConnectionEventHandler(),
-                    this));
+                newConnectionEventProcessor(ConnectionEventType.CLOSE));
             boltServer.addConnectionEventProcessor(ConnectionEventType.EXCEPTION,
-                new ConnectionEventAdapter(ConnectionEventType.EXCEPTION,
-                    getConnectionEventHandler(), this));
+                newConnectionEventProcessor(ConnectionEventType.EXCEPTION));
 
             registerUserProcessorHandler();
         }
     }
 
-    private ChannelHandler getConnectionEventHandler() {
+    protected ConnectionEventProcessor newConnectionEventProcessor(ConnectionEventType type) {
+        return new ConnectionEventAdapter(type, getConnectionEventHandler(), this);
+    }
+
+    protected ChannelHandler getConnectionEventHandler() {
         if (channelHandlers != null) {
             for (ChannelHandler channelHandler : channelHandlers) {
                 if (HandlerType.LISENTER.equals(channelHandler.getType())) {
@@ -156,15 +159,23 @@ public class BoltServer implements Server {
             for (ChannelHandler channelHandler : channelHandlers) {
                 if (HandlerType.PROCESSER.equals(channelHandler.getType())) {
                     if (InvokeType.SYNC.equals(channelHandler.getInvokeType())) {
-                        boltServer.registerUserProcessor(new SyncUserProcessorAdapter(
-                            channelHandler));
+                        boltServer
+                            .registerUserProcessor(newSyncUserProcessorAdapter(channelHandler));
                     } else {
-                        boltServer.registerUserProcessor(new AsyncUserProcessorAdapter(
-                            channelHandler));
+                        boltServer
+                            .registerUserProcessor(newAsyncUserProcessorAdapter(channelHandler));
                     }
                 }
             }
         }
+    }
+
+    protected SyncUserProcessor newSyncUserProcessorAdapter(ChannelHandler channelHandler) {
+        return new SyncUserProcessorAdapter(channelHandler);
+    }
+
+    protected AsyncUserProcessor newAsyncUserProcessorAdapter(ChannelHandler channelHandler) {
+        return new AsyncUserProcessorAdapter(channelHandler);
     }
 
     @Override
@@ -248,7 +259,8 @@ public class BoltServer implements Server {
                         boltUrl);
                 }
 
-                return boltServer.invokeSync(boltUrl, message, timeoutMillis);
+                return boltServer.invokeSync(boltUrl, message, newInvokeContext(message),
+                    timeoutMillis);
             } catch (RemotingException e) {
                 LOGGER.error("Bolt Server sendSync message RemotingException! target url:"
                              + boltUrl, e);
@@ -276,22 +288,23 @@ public class BoltServer implements Server {
                     LOGGER.debug("Bolt Server sendSync message:{} , target url:{}", message,
                         boltUrl);
                 }
-                boltServer.invokeWithCallback(boltUrl, message, new InvokeCallback() {
-                    @Override
-                    public void onResponse(Object result) {
-                        callbackHandler.onCallback(channel, result);
-                    }
+                boltServer.invokeWithCallback(boltUrl, message, newInvokeContext(message),
+                    new InvokeCallback() {
+                        @Override
+                        public void onResponse(Object result) {
+                            callbackHandler.onCallback(channel, result);
+                        }
 
-                    @Override
-                    public void onException(Throwable e) {
-                        callbackHandler.onException(channel, e);
-                    }
+                        @Override
+                        public void onException(Throwable e) {
+                            callbackHandler.onException(channel, e);
+                        }
 
-                    @Override
-                    public Executor getExecutor() {
-                        return callbackHandler.getExecutor();
-                    }
-                }, timeoutMillis);
+                        @Override
+                        public Executor getExecutor() {
+                            return callbackHandler.getExecutor();
+                        }
+                    }, timeoutMillis);
                 return;
             } catch (RemotingException e) {
                 throw new RuntimeException("Bolt Server invoke with callback RemotingException!", e);
@@ -305,6 +318,10 @@ public class BoltServer implements Server {
         }
         throw new IllegalArgumentException(
             "Send message connection can not be null or connection not be connected!");
+    }
+
+    protected InvokeContext newInvokeContext(Object request) {
+        return null;
     }
 
     public void addChannel(Channel channel) {
