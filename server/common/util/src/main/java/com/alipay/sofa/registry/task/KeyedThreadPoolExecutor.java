@@ -33,8 +33,8 @@ import java.util.concurrent.TimeUnit;
 public class KeyedThreadPoolExecutor {
     private static final Logger    LOGGER = LoggerFactory.getLogger(KeyedThreadPoolExecutor.class);
     private final AbstractWorker[] workers;
-    private final String           executorName;
-    private final int              coreBufferSize;
+    protected final String         executorName;
+    protected final int            coreBufferSize;
 
     private final Counter          taskCounter;
 
@@ -123,7 +123,7 @@ public class KeyedThreadPoolExecutor {
         }
     }
 
-    private int getQueueSize() {
+    protected int getQueueSize() {
         int size = 0;
         for (Worker w : workers) {
             size += w.size();
@@ -132,11 +132,6 @@ public class KeyedThreadPoolExecutor {
     }
 
     public <T extends Runnable> KeyedTask<T> execute(Object key, T runnable) {
-        final int size = getQueueSize();
-        if (size >= coreBufferSize) {
-            throw new FastRejectedExecutionException(String.format("%s is full, max=%d, now=%d",
-                executorName, coreBufferSize, size));
-        }
         KeyedTask task = new KeyedTask(key, runnable);
         AbstractWorker w = workerOf(key);
         // should not happen,
