@@ -20,6 +20,7 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Map;
+import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
@@ -38,7 +39,7 @@ public class KeyedPreemptThreadPoolExecutor extends KeyedThreadPoolExecutor {
     protected AbstractWorker[] createWorkers(int coreSize, int coreBufferSize) {
         AbstractWorker[] workers = new AbstractWorker[coreSize];
         for (int i = 0; i < coreSize; i++) {
-            AbstractWorker w = new WorkerImpl(i);
+            AbstractWorker w = new WorkerImpl(i, coreBufferSize / coreSize);
             workers[i] = w;
         }
         return workers;
@@ -49,9 +50,11 @@ public class KeyedPreemptThreadPoolExecutor extends KeyedThreadPoolExecutor {
         final LinkedList<Object>     keysQueue;
         final Lock                   lock = new ReentrantLock();
         final Condition              cond = lock.newCondition();
+        final int                    queueSize;
 
-        WorkerImpl(int idx) {
+        WorkerImpl(int idx, int queueSize) {
             super(idx);
+            this.queueSize = queueSize;
             this.keysQueue = new LinkedList<>();
         }
 
@@ -84,6 +87,10 @@ public class KeyedPreemptThreadPoolExecutor extends KeyedThreadPoolExecutor {
         }
 
         public boolean offer(KeyedTask task) {
+            if (size() >= queueSize && getQueueSize() >= coreBufferSize) {
+                // reach avg and total size, is full
+                return false;
+            }
             lock.lock();
             try {
                 final KeyedTask prev = map.get(task.key);
@@ -109,6 +116,7 @@ public class KeyedPreemptThreadPoolExecutor extends KeyedThreadPoolExecutor {
                 lock.unlock();
             }
         }
+
     }
 
 }
