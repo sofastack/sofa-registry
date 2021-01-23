@@ -24,7 +24,7 @@ package com.alipay.sofa.registry.server.meta.slot.balance;
 public class NaiveBalancePolicy implements BalancePolicy {
 
     // "final" instead of "static final" to make it dynamic and flexible
-    private final int threshold = Integer.getInteger("slot.threshold", 50);
+    private final int threshold = Integer.getInteger("slot.threshold", 30);
 
     // "final" instead of "static final" to make it dynamic and flexible
     private final int maxMoveSlots = Integer.getInteger("slot.leader.max.move", 2);

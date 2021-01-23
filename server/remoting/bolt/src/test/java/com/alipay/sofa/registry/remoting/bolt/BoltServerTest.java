@@ -20,6 +20,7 @@ import java.net.InetSocketAddress;
 
 import javax.ws.rs.client.WebTarget;
 
+import com.alipay.sofa.registry.common.model.store.URL;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -34,7 +35,7 @@ public class BoltServerTest {
 
     @Test
     public void testGetChannel() {
-        BoltServer sessionServer = new BoltServer(null, null);
+        BoltServer sessionServer = new BoltServer(new URL(), null);
         for (int i = 0; i < 30; i++) {
 
             int finalI = i;
