@@ -113,7 +113,7 @@ public final class SlotManagerImpl implements SlotManager {
             dataServerConfig.getSlotFollowerSyncLeaderExecutorThreadSize(),
             dataServerConfig.getSlotFollowerSyncLeaderExecutorQueueSize());
 
-        SlotChangeListener l = localDatumStorage.getSlotChanngeListener();
+        SlotChangeListener l = localDatumStorage.getSlotChangeListener();
         if (l != null) {
             this.slotChangeListeners.add(l);
         }
@@ -135,7 +135,7 @@ public final class SlotManagerImpl implements SlotManager {
         }
 
         final SlotState state = slotTableStates.slotStates.get(slotId);
-        if (state == null || !isLeader(state.slot)) {
+        if (state == null || !localIsLeader(state.slot)) {
             return new SlotAccess(slotId, currentEpoch, SlotAccess.Status.Moved);
         }
         if (!state.migrated) {
@@ -147,7 +147,13 @@ public final class SlotManagerImpl implements SlotManager {
     @Override
     public boolean isLeader(int slotId) {
         final SlotState state = slotTableStates.slotStates.get(slotId);
-        return state != null && isLeader(state.slot);
+        return state != null && localIsLeader(state.slot);
+    }
+
+    @Override
+    public boolean isFollower(int slotId) {
+        final SlotState state = slotTableStates.slotStates.get(slotId);
+        return state != null && state.slot.getFollowers().contains(ServerEnv.IP);
     }
 
     @Override
@@ -193,6 +199,7 @@ public final class SlotManagerImpl implements SlotManager {
                 state.update(s);
             } else {
                 slotTableStates.slotStates.put(s.getId(), new SlotState(s));
+                LOGGER.info("add slot, slot={}", s);
             }
         });
 
@@ -200,8 +207,10 @@ public final class SlotManagerImpl implements SlotManager {
         while (it.hasNext()) {
             Map.Entry<Integer, SlotState> e = it.next();
             if (updating.getSlot(e.getKey()) == null) {
+                final Slot slot = e.getValue().slot;
                 it.remove();
-                listenRemove(e.getValue().slot);
+                listenRemove(slot);
+                LOGGER.info("remove slot, slot={}", slot);
             }
         }
         slotTableStates.table = updating;
@@ -230,7 +239,7 @@ public final class SlotManagerImpl implements SlotManager {
                 for (SlotState slotState : slotTableStates.slotStates.values()) {
                     final Slot slot = slotState.slot;
                     final KeyedTask<SyncLeaderTask> syncLeaderTask = slotState.syncLeaderTask;
-                    if (isLeader(slot)) {
+                    if (localIsLeader(slot)) {
                         if (syncLeaderTask != null && !syncLeaderTask.isFinished()) {
                             // must wait the sync leader finish, avoid the sync-leader conflict with sync-session
                             LOGGER.warn("wait for sync-leader to finish, {}", slot, syncLeaderTask);
@@ -321,18 +330,20 @@ public final class SlotManagerImpl implements SlotManager {
             this.slot = slot;
         }
 
-        synchronized void update(Slot s) {
+        void update(Slot s) {
             if (slot.getLeaderEpoch() != s.getLeaderEpoch()) {
                 this.migrated = false;
                 this.syncSessionTasks.clear();
                 this.migratingTasks.clear();
                 this.migratingStartTime = 0;
-                if (isLeader(s)) {
+                if (localIsLeader(s)) {
                     // leader change
                     observeLeaderUpdateCounter();
                 }
+                LOGGER.info("update slot with leaderEpoch, exist={}, now={}", slot, s);
             }
             this.slot = s;
+            LOGGER.info("update slot, slot={}", slot);
         }
 
         KeyedTask<SyncSessionTask> commitSyncSessionTask(long slotTableEpoch, String sessionIp,
@@ -373,7 +384,14 @@ public final class SlotManagerImpl implements SlotManager {
             try {
                 SlotDiffSyncer syncer = new SlotDiffSyncer(dataServerConfig, localDatumStorage,
                     dataChangeEventCenter, sessionLeaseManager);
-                syncer.syncSession(slot.getId(), sessionIp, sessionNodeExchanger, slotTableEpoch);
+                syncer.syncSession(slot.getId(), sessionIp, sessionNodeExchanger, slotTableEpoch,
+                    new SyncContinues() {
+                        @Override
+                        public boolean continues() {
+                            // if not leader, the syncing need to break
+                            return isLeader(slot.getId());
+                        }
+                    });
             } catch (Throwable e) {
                 LOGGER.error("sync session failed: {}, slot={}", sessionIp, slot.getId(), e);
                 throw new RuntimeException(e);
@@ -403,7 +421,12 @@ public final class SlotManagerImpl implements SlotManager {
                 SlotDiffSyncer syncer = new SlotDiffSyncer(dataServerConfig, localDatumStorage,
                     null, sessionLeaseManager);
                 syncer.syncSlotLeader(slot.getId(), slot.getLeader(), dataNodeExchanger,
-                    slotTableEpoch);
+                    slotTableEpoch, new SyncContinues() {
+                        @Override
+                        public boolean continues() {
+                            return isFollower(slot.getId());
+                        }
+                    });
             } catch (Throwable e) {
                 LOGGER.error("sync leader failed: {}, slot={}", slot.getLeader(), slot.getId(), e);
                 throw new RuntimeException(e);
@@ -427,7 +450,7 @@ public final class SlotManagerImpl implements SlotManager {
     }
 
     private static Slot.Role getRole(Slot s) {
-        return isLeader(s) ? Slot.Role.Leader : Slot.Role.Follower;
+        return localIsLeader(s) ? Slot.Role.Leader : Slot.Role.Follower;
     }
 
     private void listenAdd(Slot s) {
@@ -438,7 +461,7 @@ public final class SlotManagerImpl implements SlotManager {
         slotChangeListeners.forEach(listener -> listener.onSlotRemove(s.getId(), getRole(s)));
     }
 
-    private static boolean isLeader(Slot slot) {
+    private static boolean localIsLeader(Slot slot) {
         return ServerEnv.isLocalServer(slot.getLeader());
     }
 }

@@ -22,6 +22,7 @@ import com.alipay.sofa.registry.common.model.PublisherVersion;
 import com.alipay.sofa.registry.common.model.dataserver.Datum;
 import com.alipay.sofa.registry.common.model.dataserver.DatumSummary;
 import com.alipay.sofa.registry.common.model.dataserver.DatumVersion;
+import com.alipay.sofa.registry.common.model.store.DataInfo;
 import com.alipay.sofa.registry.common.model.store.Publisher;
 import com.alipay.sofa.registry.common.model.store.WordCache;
 import com.alipay.sofa.registry.log.Logger;
@@ -64,12 +65,13 @@ public final class PublisherGroup {
 
     private volatile long                               version;
 
-    PublisherGroup(Publisher publisher, String dataCenter) {
-        this.dataInfoId = publisher.getDataInfoId();
-        this.dataCenter = WordCache.getInstance().getWordCache(dataCenter);
-        this.dataId = publisher.getDataId();
-        this.instanceId = publisher.getInstanceId();
-        this.group = publisher.getGroup();
+    PublisherGroup(String dataInfoId, String dataCenter) {
+        DataInfo dataInfo = DataInfo.valueOf(dataInfoId);
+        this.dataInfoId = dataInfoId;
+        this.dataCenter = WordCache.getWordCache(dataCenter);
+        this.dataId = dataInfo.getDataId();
+        this.instanceId = WordCache.getWordCache(dataInfo.getInstanceId());
+        this.group = WordCache.getWordCache(dataInfo.getDataType());
         this.version = DatumVersionUtil.nextId();
     }
 

@@ -27,7 +27,7 @@ import com.alipay.sofa.registry.log.LoggerFactory;
 public abstract class LoopRunnable implements Runnable {
     private static final Logger LOGGER   = LoggerFactory.getLogger(LoopRunnable.class);
 
-    private volatile boolean isClosed = false;
+    private volatile boolean    isClosed = false;
 
     public abstract void runUnthrowable();
 
