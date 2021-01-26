@@ -25,7 +25,6 @@ import com.alipay.sofa.registry.common.model.store.Publisher;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.remoting.Channel;
-import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
 import com.alipay.sofa.registry.server.session.scheduler.ExecutorManager;
 import com.alipay.sofa.registry.server.session.slot.SlotTableCache;
 import com.alipay.sofa.registry.server.session.store.DataStore;
@@ -46,9 +45,6 @@ public class DataSlotDiffDataInfoIdRequestHandler
                                                  AbstractServerHandler<DataSlotDiffDataInfoIdRequest> {
     private static final Logger LOGGER = LoggerFactory
                                            .getLogger(DataSlotDiffDataInfoIdRequestHandler.class);
-
-    @Autowired
-    private SessionServerConfig sessionServerConfig;
 
     @Autowired
     private ExecutorManager     executorManager;
@@ -79,7 +75,7 @@ public class DataSlotDiffDataInfoIdRequestHandler
                                                   Set<String> dataInfoIds,
                                                   Map<String, Map<String, Publisher>> existingPublishers) {
         DataSlotDiffSyncResult result = DataSlotDiffUtils.diffDataInfoIdsResult(dataInfoIds,
-            existingPublishers, sessionServerConfig.getSlotSyncPublisherMaxNum());
+            existingPublishers);
         DataSlotDiffUtils.logDiffResult(result, targetSlot, LOGGER);
         return result;
     }

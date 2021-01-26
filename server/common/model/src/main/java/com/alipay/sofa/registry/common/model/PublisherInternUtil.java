@@ -56,7 +56,7 @@ public class PublisherInternUtil {
 
                 if(dataBox.getBaseParams() != null){
                     Map<String, List<String>> baseParams = new HashMap<>();
-                    dataBox.getBaseParams().forEach((key, value) -> baseParams.put(WordCache.getInstance().getWordCache(key), value));
+                    dataBox.getBaseParams().forEach((key, value) -> baseParams.put(WordCache.getWordCache(key), value));
                     dataBox.setBaseParams(baseParams);
                 }
 
@@ -64,8 +64,8 @@ public class PublisherInternUtil {
                     Map<String, Map<String, List<String>>> interfaceParams = new HashMap<>();
                     dataBox.getInterfaceParams().forEach((key, value) -> {
                         // cache serviceName
-                        String interfaceName = WordCache.getInstance().getWordCache(key);
-                        value.forEach((key1, value1) -> interfaceParams.computeIfAbsent(interfaceName, k -> new HashMap<>()).put(WordCache.getInstance().getWordCache(key1), value1));
+                        String interfaceName = WordCache.getWordCache(key);
+                        value.forEach((key1, value1) -> interfaceParams.computeIfAbsent(interfaceName, k -> new HashMap<>()).put(WordCache.getWordCache(key1), value1));
 
                     });
                     dataBox.setInterfaceParams(interfaceParams);

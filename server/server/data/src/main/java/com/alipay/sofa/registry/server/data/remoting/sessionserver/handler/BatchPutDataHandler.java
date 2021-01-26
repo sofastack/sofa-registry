@@ -88,7 +88,8 @@ public class BatchPutDataHandler extends AbstractDataHandler<BatchRequest> {
         publisher = Publisher.internPublisher(publisher);
         if (publisher.getPublishType() == PublishType.TEMPORARY) {
             // create datum for the temp publisher, we need the datum.version for check ver
-            localDatumStorage.createEmptyDatumIfAbsent(publisher);
+            localDatumStorage.createEmptyDatumIfAbsent(publisher.getDataInfoId(),
+                dataServerConfig.getLocalDataCenter());
             // temporary only notify session, not store
             dataChangeEventCenter.onTempPubChange(publisher, dataServerConfig.getLocalDataCenter());
         } else {

@@ -88,7 +88,7 @@ public class DataServerConfig {
 
     private int                  slotLeaderSyncSessionExecutorThreadSize  = OsUtils.getCpuCount() * 3;
     private int                  slotLeaderSyncSessionExecutorQueueSize   = 40000;
-    private volatile int         slotLeaderSyncSessionIntervalSec         = 5;
+    private volatile int         slotLeaderSyncSessionIntervalSec         = 6;
 
     private int                  slotFollowerSyncLeaderExecutorThreadSize = OsUtils.getCpuCount();
     private int                  slotFollowerSyncLeaderExecutorQueueSize  = 10000;

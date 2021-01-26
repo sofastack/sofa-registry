@@ -83,9 +83,9 @@ public final class URL implements Serializable {
                Byte serializerIndex, Map<String, String> parameters) {
         this.protocol = protocol;
         this.host = host;
-        this.ipAddress = WordCache.getInstance().getWordCache(getIPAddressFromDomain(ipAddress));
+        this.ipAddress = WordCache.getWordCache(getIPAddressFromDomain(ipAddress));
         this.port = port;
-        this.addressString = WordCache.getInstance().getWordCache(buildAddressString());
+        this.addressString = WordCache.getWordCache(buildAddressString());
         this.path = path;
         this.serializerIndex = serializerIndex;
         this.parameters = parameters;

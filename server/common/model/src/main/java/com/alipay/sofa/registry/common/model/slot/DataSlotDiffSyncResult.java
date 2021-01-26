@@ -36,6 +36,7 @@ import java.util.Map;
 public class DataSlotDiffSyncResult implements Serializable {
     private long                               slotTableEpoch;
     private final Map<String, List<Publisher>> updatedPublishers;
+    private final List<String>                 addedDataInfoIds;
     private final List<String>                 removedDataInfoIds;
     private final Map<String, List<String>>    removedPublishers;
     // if from session, return the sessionProcessId for lease
@@ -45,12 +46,12 @@ public class DataSlotDiffSyncResult implements Serializable {
 
     public DataSlotDiffSyncResult(boolean hasRemain,
                                   Map<String, List<Publisher>> updatedPublishers,
-                                  List<String> removedDataInfoIds,
+                                  List<String> addedDataInfoIds, List<String> removedDataInfoIds,
                                   Map<String, List<String>> removedPublishers) {
-        this.updatedPublishers = Collections.unmodifiableMap(Maps.newHashMap(updatedPublishers));
-        this.removedDataInfoIds = Collections.unmodifiableList(Lists
-            .newArrayList(removedDataInfoIds));
-        this.removedPublishers = Collections.unmodifiableMap(Maps.newHashMap(removedPublishers));
+        this.updatedPublishers = Maps.newHashMap(updatedPublishers);
+        this.addedDataInfoIds = Lists.newArrayList(addedDataInfoIds);
+        this.removedDataInfoIds = Lists.newArrayList(removedDataInfoIds);
+        this.removedPublishers = Maps.newHashMap(removedPublishers);
         this.hasRemain = hasRemain;
     }
 
@@ -79,7 +80,7 @@ public class DataSlotDiffSyncResult implements Serializable {
      * @return property value of updatedPublishers
      */
     public Map<String, List<Publisher>> getUpdatedPublishers() {
-        return updatedPublishers;
+        return Collections.unmodifiableMap(updatedPublishers);
     }
 
     /**
@@ -87,7 +88,7 @@ public class DataSlotDiffSyncResult implements Serializable {
      * @return property value of removedPublishers
      */
     public Map<String, List<String>> getRemovedPublishers() {
-        return removedPublishers;
+        return Collections.unmodifiableMap(removedPublishers);
     }
 
     /**
@@ -95,7 +96,11 @@ public class DataSlotDiffSyncResult implements Serializable {
      * @return property value of removedDataInfoIds
      */
     public List<String> getRemovedDataInfoIds() {
-        return removedDataInfoIds;
+        return Collections.unmodifiableList(removedDataInfoIds);
+    }
+
+    public List<String> getAddedDataInfoIds() {
+        return Collections.unmodifiableList(addedDataInfoIds);
     }
 
     public int getRemovedPublishersCount() {

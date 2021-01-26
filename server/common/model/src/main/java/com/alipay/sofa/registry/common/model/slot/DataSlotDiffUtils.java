@@ -20,6 +20,7 @@ import com.alipay.sofa.registry.common.model.PublisherVersion;
 import com.alipay.sofa.registry.common.model.dataserver.DatumSummary;
 import com.alipay.sofa.registry.common.model.store.Publisher;
 import com.alipay.sofa.registry.log.Logger;
+import com.google.common.collect.Lists;
 import org.apache.commons.collections.MapUtils;
 
 import java.util.*;
@@ -34,9 +35,8 @@ public final class DataSlotDiffUtils {
     }
 
     public static DataSlotDiffSyncResult diffDataInfoIdsResult(Set<String> targetDataInfoIds,
-                                                               Map<String, Map<String, Publisher>> sourcePublishers,
-                                                               int publisherMaxNum) {
-        Map<String, List<Publisher>> adds = new HashMap<>();
+                                                               Map<String, Map<String, Publisher>> sourcePublishers) {
+        List<String> adds = Lists.newArrayList();
         for (Map.Entry<String, Map<String, Publisher>> e : sourcePublishers.entrySet()) {
             final String dataInfoId = e.getKey();
             if (targetDataInfoIds.contains(dataInfoId)) {
@@ -45,28 +45,9 @@ public final class DataSlotDiffUtils {
             if (MapUtils.isEmpty(e.getValue())) {
                 continue;
             }
-            adds.put(dataInfoId, new ArrayList<>(e.getValue().values()));
+            adds.add(dataInfoId);
         }
 
-        Map<String, List<Publisher>> updateds = new HashMap<>(sourcePublishers.size());
-        int publisherCount = 0;
-
-        for (Map.Entry<String, List<Publisher>> add : adds.entrySet()) {
-            publisherCount += add.getValue().size();
-
-            if (updateds.isEmpty()) {
-                // add at lease one
-                updateds.put(add.getKey(), add.getValue());
-                continue;
-            }
-            if (publisherCount >= publisherMaxNum) {
-                // too many publishers, mark has remain
-                break;
-            }
-            updateds.put(add.getKey(), add.getValue());
-        }
-
-        final boolean hasRemain = updateds.size() != adds.size();
         // find the removed dataInfoIds
         List<String> removeds = new ArrayList<>();
         for (String dataInfoId : targetDataInfoIds) {
@@ -74,8 +55,8 @@ public final class DataSlotDiffUtils {
                 removeds.add(dataInfoId);
             }
         }
-        DataSlotDiffSyncResult result = new DataSlotDiffSyncResult(hasRemain, updateds, removeds,
-            Collections.emptyMap());
+        DataSlotDiffSyncResult result = new DataSlotDiffSyncResult(false, Collections.emptyMap(),
+            adds, removeds, Collections.emptyMap());
         return result;
     }
 
@@ -130,21 +111,25 @@ public final class DataSlotDiffUtils {
         }
         // the iter has break
         final boolean hasRemian = checkRound != targetDatumSummarys.size();
-        DataSlotDiffSyncResult result = new DataSlotDiffSyncResult(hasRemian, updateds, removedDataInfoIds,
-                removedPublishers);
+        DataSlotDiffSyncResult result = new DataSlotDiffSyncResult(hasRemian, updateds, Collections.emptyList(),
+                removedDataInfoIds, removedPublishers);
         return result;
     }
 
     public static void logDiffResult(DataSlotDiffSyncResult result, int slotId, Logger log) {
         if (!result.getUpdatedPublishers().isEmpty()) {
-            log.info("DiffSync, update dataInfoIds for slot={}, remain={}, dataInfoIds={}/{}, {}",
+            log.info("DiffSync, update dataInfoIds for slot={}, remain={}, dataInfoIds={}/{}",
                 slotId, result.isHasRemain(), result.getUpdatedPublishers().size(),
-                result.getUpdatedPublishersCount(), result.getUpdatedPublishers().keySet());
+                result.getUpdatedPublishersCount());
         }
         if (!result.getRemovedPublishers().isEmpty()) {
             log.info("DiffSync, remove publishers for slot={}, dataInfoId={}/{}, {}", slotId,
                 result.getRemovedPublishers().size(), result.getRemovedPublishersCount(), result
                     .getRemovedPublishers().keySet());
+        }
+        if (!result.getAddedDataInfoIds().isEmpty()) {
+            log.info("DiffSync, add dataInfoIds for slot={}, dataInfoId={}, {}", slotId, result
+                .getAddedDataInfoIds().size(), result.getAddedDataInfoIds());
         }
         if (!result.getRemovedDataInfoIds().isEmpty()) {
             log.info("DiffSync, remove dataInfoIds for slot={}, dataInfoId={}, {}", slotId, result

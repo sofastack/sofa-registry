@@ -70,14 +70,14 @@ public final class PublisherGroups {
     }
 
     DatumVersion putPublisher(Publisher publisher, String dataCenter) {
-        PublisherGroup group = createGroupIfAbsent(publisher, dataCenter);
+        PublisherGroup group = createGroupIfAbsent(publisher.getDataInfoId(), dataCenter);
         return group.addPublisher(publisher);
     }
 
-    PublisherGroup createGroupIfAbsent(Publisher publisher, String dataCenter) {
+    PublisherGroup createGroupIfAbsent(String dataInfoId, String dataCenter) {
         return publisherGroupMap
-                .computeIfAbsent(publisher.getDataInfoId(),
-                        k -> new PublisherGroup(publisher, dataCenter));
+                .computeIfAbsent(dataInfoId,
+                        k -> new PublisherGroup(dataInfoId, dataCenter));
     }
 
     Map<String, DatumVersion> clean(ProcessId sessionProcessId) {
@@ -100,7 +100,8 @@ public final class PublisherGroups {
         if (CollectionUtils.isEmpty(updatedPublishers)) {
             return null;
         }
-        PublisherGroup group = createGroupIfAbsent(updatedPublishers.get(0), dataCenter);
+        PublisherGroup group = createGroupIfAbsent(updatedPublishers.get(0).getDataInfoId(),
+            dataCenter);
         return group.update(updatedPublishers);
     }
 
