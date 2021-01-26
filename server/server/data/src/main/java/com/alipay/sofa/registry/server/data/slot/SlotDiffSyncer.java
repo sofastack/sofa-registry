@@ -32,7 +32,6 @@ import com.alipay.sofa.registry.server.data.lease.SessionLeaseManager;
 import com.alipay.sofa.registry.server.data.remoting.DataNodeExchanger;
 import com.alipay.sofa.registry.server.data.remoting.SessionNodeExchanger;
 import com.alipay.sofa.registry.server.shared.remoting.ClientSideExchanger;
-import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 
 import static com.alipay.sofa.registry.server.data.slot.SlotMetrics.Sync.*;
