@@ -34,6 +34,7 @@ import org.junit.Test;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CountDownLatch;
@@ -65,7 +66,7 @@ public class DefaultLocalMetaServerTest extends AbstractTest {
 
     @Test
     public void testGetSlotTable() {
-        when(slotManager.getSlotTable()).thenReturn(new SlotTable(0L, Maps.newHashMap()));
+        when(slotManager.getSlotTable()).thenReturn(new SlotTable(0L, Collections.emptyList()));
         metaServer.getSlotTable();
         verify(slotManager, times(1)).getSlotTable();
     }

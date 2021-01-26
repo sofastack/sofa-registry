@@ -126,7 +126,7 @@ public class DefaultCurrentDcMetaServerTest extends AbstractTest {
     @Test
     public void testGetSlotTable() throws TimeoutException, InterruptedException {
         when(slotManager.getSlotTable()).thenReturn(
-            new SlotTable(DatumVersionUtil.nextId(), ImmutableMap.of(1, new Slot(1, randomIp(), 2,
+            new SlotTable(DatumVersionUtil.nextId(), Lists.newArrayList(new Slot(1, randomIp(), 2,
                 Lists.newArrayList(randomIp())))));
 
         makeRaftLeader();

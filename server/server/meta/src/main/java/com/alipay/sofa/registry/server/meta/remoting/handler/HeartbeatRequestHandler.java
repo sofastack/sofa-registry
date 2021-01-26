@@ -34,11 +34,12 @@ import com.alipay.sofa.registry.remoting.Channel;
 import com.alipay.sofa.registry.server.meta.lease.LeaseManager;
 import com.alipay.sofa.registry.server.meta.metaserver.impl.DefaultCurrentDcMetaServer;
 import com.alipay.sofa.registry.server.meta.slot.manager.DefaultSlotManager;
-import com.google.common.collect.Maps;
+import com.alipay.sofa.registry.server.shared.slot.SlotTableUtils;
+import org.glassfish.jersey.internal.guava.Sets;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.List;
-import java.util.Map;
+import java.util.Set;
 
 /**
  * Handle session/data node's heartbeat request
@@ -63,6 +64,10 @@ public class HeartbeatRequestHandler extends MetaServerHandler<RenewNodesRequest
             renewNode = renewNodesRequest.getNode();
             getLeaseManager(renewNode).renew(renewNode, renewNodesRequest.getDuration());
             SlotTable slotTable = currentDcMetaServer.getSlotTable();
+            if (!SlotTableUtils.isValidSlotTable(slotTable)) {
+                return new GenericResponse<BaseHeartBeatResponse>()
+                        .fillFailed("slot-table not valid, check meta-server log for detail");
+            }
             BaseHeartBeatResponse response = null;
             // TODO the epoch and the nodes is not atomic
             final long metaEpoch = currentDcMetaServer.getEpoch();
@@ -113,9 +118,9 @@ public class HeartbeatRequestHandler extends MetaServerHandler<RenewNodesRequest
 
     private SlotTable transferDataNodeSlotToSlotTable(DataNode node, SlotTable slotTable) {
         DataNodeSlot dataNodeSlot = defaultSlotManager.getDataNodeManagedSlot(node, false);
-        Map<Integer, Slot> result = Maps.newHashMap();
-        dataNodeSlot.getLeaders().forEach(leaderSlotId->result.put(leaderSlotId, slotTable.getSlot(leaderSlotId)));
-        dataNodeSlot.getFollowers().forEach(followerSlotId->result.put(followerSlotId, slotTable.getSlot(followerSlotId)));
+        Set<Slot> result = Sets.newHashSet();
+        dataNodeSlot.getLeaders().forEach(leaderSlotId->result.add(slotTable.getSlot(leaderSlotId)));
+        dataNodeSlot.getFollowers().forEach(followerSlotId->result.add(slotTable.getSlot(followerSlotId)));
         return new SlotTable(slotTable.getEpoch(), result);
     }
 

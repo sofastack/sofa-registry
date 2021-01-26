@@ -35,12 +35,11 @@ import org.mockito.MockitoAnnotations;
 import java.util.List;
 import java.util.concurrent.TimeoutException;
 
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
-public class InitReshardingTaskTest extends AbstractTest {
+public class BalanceTaskTest extends AbstractTest {
 
-    private InitReshardingTask       task;
+    private BalanceTask task;
 
     private SlotManager              raftSlotManager;
 
@@ -63,9 +62,8 @@ public class InitReshardingTaskTest extends AbstractTest {
 
     @Test
     public void testRun() throws TimeoutException, InterruptedException {
-        makeRaftLeader();
         Assert.assertEquals(SlotTable.INIT, localSlotManager.getSlotTable());
-        task = new InitReshardingTask(localSlotManager, raftSlotManager, dataServerManager);
+        task = new BalanceTask(localSlotManager, raftSlotManager, dataServerManager);
         task.run();
         Assert.assertNotEquals(SlotTable.INIT, localSlotManager.getSlotTable());
         printSlotTable(localSlotManager.getSlotTable());
@@ -73,13 +71,12 @@ public class InitReshardingTaskTest extends AbstractTest {
 
     @Test
     public void testNoDupLeaderAndFollower() throws Exception {
-        makeRaftLeader();
         List<DataNode> dataNodes = Lists.newArrayList(
                 new DataNode(new URL("100.88.142.32"), getDc()),
                 new DataNode(new URL("100.88.142.36"), getDc()),
                 new DataNode(new URL("100.88.142.19"), getDc()));
         when(dataServerManager.getClusterMembers()).thenReturn(dataNodes);
-        task = new InitReshardingTask(localSlotManager, raftSlotManager, dataServerManager);
+        task = new BalanceTask(localSlotManager, raftSlotManager, dataServerManager);
         task.run();
         logger.info(JsonUtils.getJacksonObjectMapper()
                 .writerWithDefaultPrettyPrinter()
@@ -88,5 +85,14 @@ public class InitReshardingTaskTest extends AbstractTest {
         slotTable.getSlotMap().forEach((slotId, slot) -> {
             Assert.assertFalse(slot.getFollowers().contains(slot.getLeader()));
         });
+    }
+
+    @Test
+    public void nonExecutionDueToEmptyDataSet() {
+        when(dataServerManager.getClusterMembers()).thenReturn(Lists.newArrayList());
+        raftSlotManager = spy(raftSlotManager);
+        task = new BalanceTask(localSlotManager, raftSlotManager, dataServerManager);
+        task.run();
+        verify(raftSlotManager, never()).refresh(any(SlotTable.class));
     }
 }

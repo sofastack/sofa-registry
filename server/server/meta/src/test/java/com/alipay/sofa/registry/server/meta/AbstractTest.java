@@ -38,14 +38,12 @@ import com.alipay.sofa.registry.remoting.Client;
 import com.alipay.sofa.registry.server.meta.bootstrap.config.MetaServerConfig;
 import com.alipay.sofa.registry.server.meta.bootstrap.config.MetaServerConfigBean;
 import com.alipay.sofa.registry.server.meta.bootstrap.config.NodeConfig;
-import com.alipay.sofa.registry.server.meta.executor.ExecutorManager;
+import com.alipay.sofa.registry.server.meta.bootstrap.ExecutorManager;
 import com.alipay.sofa.registry.server.meta.metaserver.impl.DefaultCurrentDcMetaServer;
 import com.alipay.sofa.registry.server.meta.remoting.RaftExchanger;
 import com.alipay.sofa.registry.server.meta.slot.balance.BalancePolicy;
 import com.alipay.sofa.registry.server.meta.slot.balance.NaiveBalancePolicy;
-import com.alipay.sofa.registry.server.shared.slot.SlotTableUtils;
 import com.alipay.sofa.registry.util.*;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.google.common.collect.Maps;
 import io.netty.util.ResourceLeakDetector;
 import org.apache.commons.lang.reflect.FieldUtils;
@@ -695,13 +693,13 @@ public class AbstractTest {
         public SlotTable createSlotTable() {
             long epoch = DatumVersionUtil.nextId();
             Map<Integer, Slot> slotMap = generateSlotMap();
-            return new SlotTable(epoch, slotMap);
+            return new SlotTable(epoch, slotMap.values());
         }
 
         public SlotTable createLeaderUnBalancedSlotTable() {
             long epoch = DatumVersionUtil.nextId();
             Map<Integer, Slot> slotMap = generateUnBalancedSlotMap();
-            return new SlotTable(epoch, slotMap);
+            return new SlotTable(epoch, slotMap.values());
         }
 
         private Map<Integer, Slot> generateSlotMap() {

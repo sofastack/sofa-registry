@@ -17,17 +17,14 @@
 package com.alipay.sofa.registry.server.meta.slot.arrange;
 
 import com.alipay.sofa.registry.common.model.slot.SlotTable;
-import com.alipay.sofa.registry.exception.DisposeException;
-import com.alipay.sofa.registry.exception.InitializeException;
-import com.alipay.sofa.registry.exception.StartException;
-import com.alipay.sofa.registry.exception.StopException;
+import com.alipay.sofa.registry.exception.*;
 import com.alipay.sofa.registry.jraft.bootstrap.ServiceStateMachine;
 import com.alipay.sofa.registry.lifecycle.impl.LifecycleHelper;
 import com.alipay.sofa.registry.observer.Observable;
-import com.alipay.sofa.registry.observer.Observer;
 import com.alipay.sofa.registry.observer.impl.AbstractLifecycleObservable;
 import com.alipay.sofa.registry.server.meta.cluster.node.NodeAdded;
 import com.alipay.sofa.registry.server.meta.cluster.node.NodeRemoved;
+import com.alipay.sofa.registry.server.meta.lease.data.DataManagerObserver;
 import com.alipay.sofa.registry.server.meta.lease.data.DefaultDataServerManager;
 import com.alipay.sofa.registry.server.meta.slot.assigner.DefaultSlotAssigner;
 import com.alipay.sofa.registry.server.meta.slot.balance.DefaultSlotBalancer;
@@ -35,21 +32,24 @@ import com.alipay.sofa.registry.server.meta.slot.manager.DefaultSlotManager;
 import com.alipay.sofa.registry.server.meta.slot.manager.LocalSlotManager;
 import com.alipay.sofa.registry.server.meta.slot.util.DataNodeComparator;
 import com.alipay.sofa.registry.server.meta.slot.util.SlotTableBuilder;
+import com.alipay.sofa.registry.server.shared.slot.SlotTableUtils;
 import com.alipay.sofa.registry.server.shared.util.NodeUtils;
 import com.alipay.sofa.registry.util.ConcurrentUtils;
+import com.alipay.sofa.registry.util.JsonUtils;
 import com.alipay.sofa.registry.util.WakeUpLoopRunnable;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * @author chen.zhu
  * <p>
  * Jan 14, 2021
  */
-public class ScheduledSlotArranger extends AbstractLifecycleObservable implements Observer {
+public class ScheduledSlotArranger extends AbstractLifecycleObservable implements DataManagerObserver {
 
     @Autowired
     private DefaultDataServerManager dataServerManager;
@@ -61,6 +61,8 @@ public class ScheduledSlotArranger extends AbstractLifecycleObservable implement
     private DefaultSlotManager       defaultSlotManager;
 
     private final ScheduledSlotArrangeTask task = new ScheduledSlotArrangeTask();
+
+    private final AtomicBoolean lock = new AtomicBoolean(false);
 
     public ScheduledSlotArranger() {
     }
@@ -120,6 +122,14 @@ public class ScheduledSlotArranger extends AbstractLifecycleObservable implement
         }
     }
 
+    public boolean tryLock() {
+        return lock.compareAndSet(false, true);
+    }
+
+    public void unlock() {
+        lock.set(false);
+    }
+
     private boolean isRaftLeader() {
         return ServiceStateMachine.getInstance().isLeader();
     }
@@ -139,11 +149,21 @@ public class ScheduledSlotArranger extends AbstractLifecycleObservable implement
 
     private void assignSlots() {
         SlotTable slotTable = new DefaultSlotAssigner(slotManager, dataServerManager).assign();
-        defaultSlotManager.refresh(slotTable);
+        if (slotTable != null && !SlotTableUtils.isValidSlotTable(slotTable)) {
+            throw new SofaRegistrySlotTableException("slot table is not valid: \n"
+                    + JsonUtils.writeValueAsString(slotTable));
+        }
+        if (slotTable != null && slotTable.getEpoch() > slotManager.getSlotTable().getEpoch()) {
+            defaultSlotManager.refresh(slotTable);
+        }
     }
 
     private void balanceSlots() {
         SlotTable slotTable = new DefaultSlotBalancer(slotManager, dataServerManager).balance();
+        if (!SlotTableUtils.isValidSlotTable(slotTable)) {
+            throw new SofaRegistrySlotTableException("slot table is not valid: \n"
+                    + JsonUtils.writeValueAsString(slotTable));
+        }
         if (slotTable != null && slotTable.getEpoch() > slotManager.getSlotTable().getEpoch()) {
             defaultSlotManager.refresh(slotTable);
         }
@@ -164,16 +184,27 @@ public class ScheduledSlotArranger extends AbstractLifecycleObservable implement
                 if (dataServerManager.getClusterMembers().isEmpty()) {
                     logger.warn("[ScheduledSlotArrangeTask] empty data server list, continue");
                 } else {
-                    if (hasAnySlotsToAssign()) {
-                        logger.info("[re-assign][begin] slots needs to be re-assign");
-                        assignSlots();
-                        logger.info("[re-assign][end]");
-                    } else {
-                        logger.info("[balance][begin] try re-balance slots arrangement");
-                        balanceSlots();
-                        logger.info("[balance][end]");
-                    }
+                    tryBalanceSlots();
                 }
+            }
+        }
+
+        private void tryBalanceSlots() {
+            if(!tryLock()) {
+                return;
+            }
+            try {
+                if (hasAnySlotsToAssign()) {
+                    logger.info("[re-assign][begin] assign slots to data-server");
+                    assignSlots();
+                    logger.info("[re-assign][end]");
+                } else {
+                    logger.info("[balance][begin] balance slots to data-server");
+                    balanceSlots();
+                    logger.info("[balance][end]");
+                }
+            } finally {
+                unlock();
             }
         }
     }

@@ -21,7 +21,6 @@ import com.alipay.sofa.registry.common.model.slot.Slot;
 import com.alipay.sofa.registry.common.model.slot.SlotConfig;
 import com.alipay.sofa.registry.common.model.slot.SlotTable;
 import com.alipay.sofa.registry.common.model.store.URL;
-import com.alipay.sofa.registry.exception.InitializeException;
 import com.alipay.sofa.registry.server.meta.AbstractTest;
 import com.alipay.sofa.registry.server.meta.bootstrap.config.NodeConfig;
 import com.alipay.sofa.registry.server.meta.lease.data.DefaultDataServerManager;
@@ -33,7 +32,6 @@ import com.alipay.sofa.registry.server.meta.slot.manager.DefaultSlotManager;
 import com.alipay.sofa.registry.server.meta.slot.manager.LocalSlotManager;
 import com.alipay.sofa.registry.util.FileUtils;
 import com.alipay.sofa.registry.util.JsonUtils;
-import com.alipay.sofa.registry.util.NamedThreadFactory;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.collect.Maps;
@@ -48,8 +46,6 @@ import org.mockito.MockitoAnnotations;
 import java.io.File;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.TimeoutException;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 import static org.mockito.Mockito.*;
 
@@ -95,7 +91,7 @@ public class SlotMigrationIntegrationTest extends AbstractTest {
             getDc()), new DataNode(new URL("100.88.142.32"), getDc()), new DataNode(new URL(
             "100.88.142.19"), getDc()));
         when(dataServerManager.getClusterMembers()).thenReturn(dataNodes);
-        InitReshardingTask slotTask = new InitReshardingTask(localSlotManager, raftSlotManager,
+        BalanceTask slotTask = new BalanceTask(localSlotManager, raftSlotManager,
             dataServerManager);
         slotTask.run();
 //        logger.info(JsonUtils.getJacksonObjectMapper().writerWithDefaultPrettyPrinter()
@@ -406,7 +402,7 @@ public class SlotMigrationIntegrationTest extends AbstractTest {
         public SlotTable toSlotTable() {
             Map<Integer, Slot> slotMap = Maps.newHashMap();
             slots.forEach(slot -> slotMap.put(slot.getId(), slot));
-            return new SlotTable(epoch, slotMap);
+            return new SlotTable(epoch, slotMap.values());
         }
     }
 }

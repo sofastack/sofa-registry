@@ -37,7 +37,7 @@ public class DefaultBalanceSlotFollowerSelector implements Selector<String> {
     public String select(Collection<String> candidates) {
         String[] sortedCandidates = candidates
                 .stream()
-                .sorted(new DataServerFollowerSizeComparator(slotBalancer.getSlotTableBuilder(), SortType.ASC))
+                .sorted(new DataServerFollowerSizeComparator(slotBalancer.getSlotTableBuilder(), SortType.DES))
                 .toArray(String[]::new);
         return sortedCandidates[0];
     }

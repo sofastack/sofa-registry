@@ -106,7 +106,7 @@ public class CrossDcMetaServerManager extends AbstractLifecycle implements MetaS
                         raftExchanger, metaServerConfig);
                     try {
                         LifecycleHelper.initializeIfPossible(metaServer);
-                    } catch (Exception e) {
+                    } catch (Throwable e) {
                         logger
                             .error(
                                 "[getOrCreate][{}]Cross-Dc-MetaServer create err, stop register to map",
