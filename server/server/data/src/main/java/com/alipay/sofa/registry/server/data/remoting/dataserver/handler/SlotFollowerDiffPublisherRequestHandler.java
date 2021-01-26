@@ -86,9 +86,9 @@ public class SlotFollowerDiffPublisherRequestHandler
     }
 
     private DataSlotDiffSyncResult calcDiffResult(int targetSlot,
-                                                  Map<String, DatumSummary> datumSummarys,
+                                                  Map<String, DatumSummary> datumSummaries,
                                                   Map<String, Map<String, Publisher>> existingPublishers) {
-        DataSlotDiffSyncResult result = DataSlotDiffUtils.diffPublishersResult(datumSummarys,
+        DataSlotDiffSyncResult result = DataSlotDiffUtils.diffPublishersResult(datumSummaries,
             existingPublishers, dataServerConfig.getSlotSyncPublisherMaxNum());
         DataSlotDiffUtils.logDiffResult(result, targetSlot, LOGGER);
         return result;

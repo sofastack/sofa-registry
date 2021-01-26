@@ -60,16 +60,16 @@ public final class DataSlotDiffUtils {
         return result;
     }
 
-    public static DataSlotDiffSyncResult diffPublishersResult(Map<String, DatumSummary> targetDatumSummarys,
+    public static DataSlotDiffSyncResult diffPublishersResult(Map<String, DatumSummary> targetDatumSummaries,
                                                               Map<String, Map<String, Publisher>> sourcePublishers,
                                                               int publisherMaxNum) {
-        Map<String, List<Publisher>> updateds = new HashMap<>(targetDatumSummarys.size());
+        Map<String, List<Publisher>> updateds = new HashMap<>(targetDatumSummaries.size());
         Map<String, List<String>> removedPublishers = new HashMap<>();
         List<String> removedDataInfoIds = new ArrayList<>();
 
         int publisherCount = 0;
         int checkRound = 0;
-        for (Map.Entry<String, DatumSummary> summary : targetDatumSummarys.entrySet()) {
+        for (Map.Entry<String, DatumSummary> summary : targetDatumSummaries.entrySet()) {
             checkRound++;
             final String dataInfoId = summary.getKey();
             Map<String, Publisher> publisherMap = sourcePublishers.get(dataInfoId);
@@ -110,7 +110,7 @@ public final class DataSlotDiffUtils {
             }
         }
         // the iter has break
-        final boolean hasRemian = checkRound != targetDatumSummarys.size();
+        final boolean hasRemian = checkRound != targetDatumSummaries.size();
         DataSlotDiffSyncResult result = new DataSlotDiffSyncResult(hasRemian, updateds, Collections.emptyList(),
                 removedDataInfoIds, removedPublishers);
         return result;
