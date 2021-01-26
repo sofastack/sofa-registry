@@ -164,8 +164,7 @@ public class DataSlotDiffSyncResultTest {
         // not reach max
         result = DataSlotDiffUtils.diffPublishersResult(summaryMap, publishers, 400);
         Assert.assertFalse(result.isHasRemain());
-        Assert.assertEquals(result.getRemovedDataInfoIds().size(), 1);
-        Assert.assertEquals(result.getRemovedDataInfoIds().get(0), "a");
+        Assert.assertEquals(result.getRemovedDataInfoIds().size(), 0);
         Assert.assertTrue(result.getRemovedPublishers().get("b").size() == 1);
         Assert
             .assertEquals(result.getRemovedPublishers().get("b").get(0), removedB.getRegisterId());
@@ -181,8 +180,7 @@ public class DataSlotDiffSyncResultTest {
         // reach max
         result = DataSlotDiffUtils.diffPublishersResult(summaryMap, publishers, 1);
         Assert.assertTrue(result.isHasRemain());
-        Assert.assertEquals(result.getRemovedDataInfoIds().size(), 1);
-        Assert.assertEquals(result.getRemovedDataInfoIds().get(0), "a");
+        Assert.assertEquals(result.getRemovedDataInfoIds().size(), 0);
         Assert.assertTrue(result.getRemovedPublishers().get("b").size() == 1);
         Assert
             .assertEquals(result.getRemovedPublishers().get("b").get(0), removedB.getRegisterId());

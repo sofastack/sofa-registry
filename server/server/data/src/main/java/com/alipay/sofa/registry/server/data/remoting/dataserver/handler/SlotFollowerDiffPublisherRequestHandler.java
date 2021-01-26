@@ -101,7 +101,7 @@ public class SlotFollowerDiffPublisherRequestHandler
 
     @Override
     public Class interest() {
-        return SlotFollowerDiffPublisherRequestHandler.class;
+        return DataSlotDiffPublisherRequest.class;
     }
 
     @Override

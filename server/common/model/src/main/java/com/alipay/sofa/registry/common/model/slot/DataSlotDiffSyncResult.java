@@ -20,6 +20,7 @@ import com.alipay.sofa.registry.common.model.ProcessId;
 import com.alipay.sofa.registry.common.model.store.Publisher;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
 
@@ -27,6 +28,7 @@ import java.io.Serializable;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  *
@@ -138,5 +140,14 @@ public class DataSlotDiffSyncResult implements Serializable {
     public boolean isEmpty() {
         return MapUtils.isEmpty(updatedPublishers) && CollectionUtils.isEmpty(removedDataInfoIds)
                && MapUtils.isEmpty(removedPublishers) && CollectionUtils.isEmpty(addedDataInfoIds);
+    }
+
+    public Set<String> syncDataInfoIds() {
+        Set<String> ret = Sets.newHashSet();
+        ret.addAll(updatedPublishers.keySet());
+        ret.addAll(addedDataInfoIds);
+        ret.addAll(removedDataInfoIds);
+        ret.addAll(removedPublishers.keySet());
+        return ret;
     }
 }

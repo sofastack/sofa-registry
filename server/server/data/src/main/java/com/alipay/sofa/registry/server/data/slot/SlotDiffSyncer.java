@@ -32,6 +32,7 @@ import com.alipay.sofa.registry.server.data.lease.SessionLeaseManager;
 import com.alipay.sofa.registry.server.data.remoting.DataNodeExchanger;
 import com.alipay.sofa.registry.server.data.remoting.SessionNodeExchanger;
 import com.alipay.sofa.registry.server.shared.remoting.ClientSideExchanger;
+import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 
 import static com.alipay.sofa.registry.server.data.slot.SlotMetrics.Sync.*;
@@ -43,7 +44,7 @@ import java.util.*;
  * @version v 0.1 2020-11-20 13:56 yuzhi.lyz Exp $
  */
 public final class SlotDiffSyncer {
-    private static final Logger         LOGGER = LoggerFactory.getLogger(SlotDiffSyncer.class);
+    private static final Logger         LOGGER      = LoggerFactory.getLogger(SlotDiffSyncer.class);
     private static final Logger         DIFF_LOGGER = LoggerFactory.getLogger("SYNC-DIFF");
     private final DataServerConfig      dataServerConfig;
 
@@ -125,7 +126,9 @@ public final class SlotDiffSyncer {
             LOGGER.info("syncing dataInfoIds break, slot={} from {}", slotId, targetAddress);
             return true;
         }
-        Map<String, DatumSummary> summaryMap = datumStorage.getDatumSummary(slotId, summaryTargetIp);
+        // no need the empty dataInfoId,
+        Map<String, DatumSummary> summaryMap = datumStorage.getDatumSummary(slotId,
+            summaryTargetIp, false);
         observeSyncSessionId(slotId, summaryMap.size());
         DataSlotDiffDataInfoIdRequest request = new DataSlotDiffDataInfoIdRequest(slotTableEpoch,
             slotId, new HashSet<>(summaryMap.keySet()));
@@ -140,7 +143,8 @@ public final class SlotDiffSyncer {
 
     public boolean syncPublishers(int slotId, String targetAddress, ClientSideExchanger exchanger, long slotTableEpoch,
                                   String summaryTargetIp, int maxPublishers, SyncContinues continues) {
-        Map<String, DatumSummary> summaryMap = datumStorage.getDatumSummary(slotId, summaryTargetIp);
+        // need the empty dataInfoId to add updatePublisher
+        Map<String, DatumSummary> summaryMap = datumStorage.getDatumSummary(slotId, summaryTargetIp, true);
         Map<String, DatumSummary> round = pickSummaries(summaryMap, maxPublishers);
         // sync for the existing dataInfoIds.publisher
         while (!summaryMap.isEmpty()) {
@@ -162,8 +166,14 @@ public final class SlotDiffSyncer {
                 // the sync round has finish, enter next round
                 round.keySet().forEach(d -> summaryMap.remove(d));
                 round = pickSummaries(summaryMap, maxPublishers);
+            }else{
+                // has remain, remove the synced dataInfoIds, enter next round
+                Set<String> synced = result.syncDataInfoIds();
+                for (String dataInfoId : synced) {
+                    round.remove(dataInfoId);
+                    summaryMap.remove(dataInfoId);
+                }
             }
-            // has remain, resync the round
         }
         return true;
     }
