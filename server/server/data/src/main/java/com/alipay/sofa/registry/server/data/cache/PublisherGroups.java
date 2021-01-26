@@ -112,14 +112,12 @@ public final class PublisherGroups {
     }
 
     Map<String, DatumSummary> getSummary(String sessionIpAddress) {
-        Map<String, DatumSummary> summarys = Maps.newHashMap();
+        Map<String, DatumSummary> summaries = Maps.newHashMap();
         publisherGroupMap.forEach((k, g) -> {
             DatumSummary summary = g.getSummary(sessionIpAddress);
-            if (!summary.isEmpty()) {
-                summarys.put(k, summary);
-            }
+            summaries.put(k, summary);
         });
-        return summarys;
+        return summaries;
     }
 
     Set<ProcessId> getSessionProcessIds() {

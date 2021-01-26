@@ -74,11 +74,10 @@ public final class SlotDiffSyncer {
         final ProcessId sessionProcessId = result.getSessionProcessId();
         if (sessionProcessId != null) {
             sessionLeaseManager.renewSession(sessionProcessId);
-            LOGGER.info("renew session by sync {}", sessionProcessId);
         }
 
         if (result.isEmpty()) {
-            LOGGER.info("sync slot={} from {}, empty", targetAddress, slotId);
+            DIFF_LOGGER.info("sync slot={} from {}, empty", slotId, targetAddress);
             return result;
         }
 
@@ -126,8 +125,7 @@ public final class SlotDiffSyncer {
             LOGGER.info("syncing dataInfoIds break, slot={} from {}", slotId, targetAddress);
             return true;
         }
-        Map<String, DatumSummary> summaryMap = datumStorage
-            .getDatumSummary(slotId, summaryTargetIp);
+        Map<String, DatumSummary> summaryMap = datumStorage.getDatumSummary(slotId, summaryTargetIp);
         observeSyncSessionId(slotId, summaryMap.size());
         DataSlotDiffDataInfoIdRequest request = new DataSlotDiffDataInfoIdRequest(slotTableEpoch,
             slotId, new HashSet<>(summaryMap.keySet()));
@@ -143,7 +141,7 @@ public final class SlotDiffSyncer {
     public boolean syncPublishers(int slotId, String targetAddress, ClientSideExchanger exchanger, long slotTableEpoch,
                                   String summaryTargetIp, int maxPublishers, SyncContinues continues) {
         Map<String, DatumSummary> summaryMap = datumStorage.getDatumSummary(slotId, summaryTargetIp);
-        Map<String, DatumSummary> round = pickSummarys(summaryMap, maxPublishers);
+        Map<String, DatumSummary> round = pickSummaries(summaryMap, maxPublishers);
         // sync for the existing dataInfoIds.publisher
         while (!summaryMap.isEmpty()) {
             if(!continues.continues()){
@@ -163,7 +161,7 @@ public final class SlotDiffSyncer {
             if (!result.isHasRemain()) {
                 // the sync round has finish, enter next round
                 round.keySet().forEach(d -> summaryMap.remove(d));
-                round = pickSummarys(summaryMap, maxPublishers);
+                round = pickSummaries(summaryMap, maxPublishers);
             }
             // has remain, resync the round
         }
@@ -190,9 +188,9 @@ public final class SlotDiffSyncer {
         return syncDataInfoIds && syncPublishers;
     }
 
-    private Map<String, DatumSummary> pickSummarys(Map<String, DatumSummary> syncSummarys, int n) {
+    private Map<String, DatumSummary> pickSummaries(Map<String, DatumSummary> syncSummaries, int n) {
         Map<String, DatumSummary> m = new HashMap<>();
-        for (Map.Entry<String, DatumSummary> e : syncSummarys.entrySet()) {
+        for (Map.Entry<String, DatumSummary> e : syncSummaries.entrySet()) {
             // at least pick one
             m.put(e.getKey(), e.getValue());
             n -= e.getValue().getPublisherVersions().size();
