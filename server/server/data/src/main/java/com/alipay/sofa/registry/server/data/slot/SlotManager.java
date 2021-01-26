@@ -31,6 +31,8 @@ public interface SlotManager {
 
     boolean isLeader(int slotId);
 
+    boolean isFollower(int slotId);
+
     boolean updateSlotTable(SlotTable slotTable);
 
     long getSlotTableEpoch();

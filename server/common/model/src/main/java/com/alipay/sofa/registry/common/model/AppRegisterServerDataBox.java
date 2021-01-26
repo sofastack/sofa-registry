@@ -58,7 +58,7 @@ public class AppRegisterServerDataBox implements Serializable {
      * @param revision value to be assigned to property revision
      */
     public void setRevision(String revision) {
-        this.revision = WordCache.getInstance().getWordCache(revision);
+        this.revision = WordCache.getWordCache(revision);
     }
 
     /**

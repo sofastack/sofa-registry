@@ -24,36 +24,21 @@ import com.google.common.collect.Interners;
  * @author shangyu.wh
  * @version $Id: WordCache.java, v 0.1 2018-11-06 12:01 shangyu.wh Exp $
  */
-public class WordCache {
-
-    private static volatile WordCache instance;
-
-    /**
-     * get WordCache instance
-     * @return
-     */
-    public static WordCache getInstance() {
-        if (instance == null) {
-            synchronized (WordCache.class) {
-                if (instance == null) {
-                    instance = new WordCache();
-                }
-            }
-        }
-        return instance;
+public final class WordCache {
+    private WordCache() {
     }
 
     /**
      * word cache map
      */
-    private Interner<String> interners = Interners.newWeakInterner();
+    private static final Interner<String> interners = Interners.newWeakInterner();
 
     /**
      *
      * @param s
      * @return String
      */
-    public String getWordCache(String s) {
+    public static String getWordCache(String s) {
         if (s == null) {
             return null;
         }

@@ -67,8 +67,8 @@ public class Datum implements Serializable {
      * @param dataCenter
      */
     public Datum(String dataInfoId, String dataCenter) {
-        this.dataInfoId = WordCache.getInstance().getWordCache(dataInfoId);
-        this.dataCenter = WordCache.getInstance().getWordCache(dataCenter);
+        this.dataInfoId = WordCache.getWordCache(dataInfoId);
+        this.dataCenter = WordCache.getWordCache(dataCenter);
         updateVersion();
     }
 
@@ -93,7 +93,7 @@ public class Datum implements Serializable {
      */
     public Datum(Publisher publisher, String dataCenter, long version) {
         this.dataInfoId = publisher.getDataInfoId();
-        this.dataCenter = WordCache.getInstance().getWordCache(dataCenter);
+        this.dataCenter = WordCache.getWordCache(dataCenter);
         this.version = version;
         this.dataId = publisher.getDataId();
         this.instanceId = publisher.getInstanceId();
@@ -120,7 +120,7 @@ public class Datum implements Serializable {
      * @param dataInfoId  value to be assigned to property dataInfoId
      */
     public void setDataInfoId(String dataInfoId) {
-        this.dataInfoId = WordCache.getInstance().getWordCache(dataInfoId);
+        this.dataInfoId = WordCache.getWordCache(dataInfoId);
     }
 
     /**
@@ -138,7 +138,7 @@ public class Datum implements Serializable {
      * @param dataCenter  value to be assigned to property dataCenter
      */
     public void setDataCenter(String dataCenter) {
-        this.dataCenter = WordCache.getInstance().getWordCache(dataCenter);
+        this.dataCenter = WordCache.getWordCache(dataCenter);
     }
 
     /**
@@ -156,7 +156,7 @@ public class Datum implements Serializable {
      * @param dataId  value to be assigned to property dataId
      */
     public void setDataId(String dataId) {
-        this.dataId = WordCache.getInstance().getWordCache(dataId);
+        this.dataId = WordCache.getWordCache(dataId);
     }
 
     /**
@@ -174,7 +174,7 @@ public class Datum implements Serializable {
      * @param instanceId  value to be assigned to property instanceId
      */
     public void setInstanceId(String instanceId) {
-        this.instanceId = WordCache.getInstance().getWordCache(instanceId);
+        this.instanceId = WordCache.getWordCache(instanceId);
     }
 
     /**
@@ -192,7 +192,7 @@ public class Datum implements Serializable {
      * @param group  value to be assigned to property group
      */
     public void setGroup(String group) {
-        this.group = WordCache.getInstance().getWordCache(group);
+        this.group = WordCache.getWordCache(group);
     }
 
     /**

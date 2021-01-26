@@ -30,8 +30,8 @@ public class DatumKey implements EntityType {
     private final String dataCenter;
 
     public DatumKey(String dataInfoId, String dataCenter) {
-        this.dataInfoId = WordCache.getInstance().getWordCache(dataInfoId);
-        this.dataCenter = WordCache.getInstance().getWordCache(dataCenter);
+        this.dataInfoId = WordCache.getWordCache(dataInfoId);
+        this.dataCenter = WordCache.getWordCache(dataCenter);
     }
 
     @Override

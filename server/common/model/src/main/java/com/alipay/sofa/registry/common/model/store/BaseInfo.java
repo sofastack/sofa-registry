@@ -106,7 +106,7 @@ public abstract class BaseInfo implements Serializable, StoreData<String> {
      * @param cell  value to be assigned to property cell
      */
     public void setCell(String cell) {
-        this.cell = WordCache.getInstance().getWordCache(cell);
+        this.cell = WordCache.getWordCache(cell);
     }
 
     /**
@@ -124,7 +124,7 @@ public abstract class BaseInfo implements Serializable, StoreData<String> {
      * @param appName  value to be assigned to property appName
      */
     public void setAppName(String appName) {
-        this.appName = WordCache.getInstance().getWordCache(appName);
+        this.appName = WordCache.getWordCache(appName);
     }
 
     /**
@@ -142,7 +142,7 @@ public abstract class BaseInfo implements Serializable, StoreData<String> {
      * @param processId  value to be assigned to property processId
      */
     public void setProcessId(String processId) {
-        this.processId = WordCache.getInstance().getWordCache(processId);
+        this.processId = WordCache.getWordCache(processId);
     }
 
     /**
@@ -239,7 +239,7 @@ public abstract class BaseInfo implements Serializable, StoreData<String> {
      * @param dataInfoId  value to be assigned to property dataInfoId
      */
     public void setDataInfoId(String dataInfoId) {
-        this.dataInfoId = WordCache.getInstance().getWordCache(dataInfoId);
+        this.dataInfoId = WordCache.getWordCache(dataInfoId);
     }
 
     @Override
@@ -281,7 +281,7 @@ public abstract class BaseInfo implements Serializable, StoreData<String> {
      * @param dataId  value to be assigned to property dataId
      */
     public void setDataId(String dataId) {
-        this.dataId = WordCache.getInstance().getWordCache(dataId);
+        this.dataId = WordCache.getWordCache(dataId);
     }
 
     /**
@@ -299,7 +299,7 @@ public abstract class BaseInfo implements Serializable, StoreData<String> {
      * @param clientId  value to be assigned to property clientId
      */
     public void setClientId(String clientId) {
-        this.clientId = WordCache.getInstance().getWordCache(clientId);
+        this.clientId = WordCache.getWordCache(clientId);
     }
 
     /**
@@ -317,7 +317,7 @@ public abstract class BaseInfo implements Serializable, StoreData<String> {
      * @param instanceId  value to be assigned to property instanceId
      */
     public void setInstanceId(String instanceId) {
-        this.instanceId = WordCache.getInstance().getWordCache(instanceId);
+        this.instanceId = WordCache.getWordCache(instanceId);
     }
 
     /**
@@ -335,7 +335,7 @@ public abstract class BaseInfo implements Serializable, StoreData<String> {
      * @param group  value to be assigned to property group
      */
     public void setGroup(String group) {
-        this.group = WordCache.getInstance().getWordCache(group);
+        this.group = WordCache.getWordCache(group);
     }
 
     /**

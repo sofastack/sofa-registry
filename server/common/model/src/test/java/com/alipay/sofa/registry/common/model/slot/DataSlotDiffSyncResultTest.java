@@ -20,6 +20,7 @@ import com.alipay.sofa.registry.common.model.dataserver.DatumSummary;
 import com.alipay.sofa.registry.common.model.store.Publisher;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import org.junit.Assert;
@@ -45,36 +46,14 @@ public class DataSlotDiffSyncResultTest {
         m.put("a", 100);
         m.put("b", 200);
         Map<String, Map<String, Publisher>> publishers = randPublishers(m);
-        // 400 more than 100+200
         DataSlotDiffSyncResult result = DataSlotDiffUtils.diffDataInfoIdsResult(Sets.newHashSet(),
-            publishers, 400);
+            publishers);
         Assert.assertFalse(result.isHasRemain());
-        Assert.assertEquals(result.getUpdatedPublishers().keySet(), m.keySet());
+        Assert.assertFalse(result.getAddedDataInfoIds().isEmpty());
+        Assert.assertEquals(result.getAddedDataInfoIds(), Lists.newArrayList("a", "b"));
+        Assert.assertTrue(result.getUpdatedPublishers().isEmpty());
         Assert.assertTrue(result.getRemovedPublishers().isEmpty());
-        checkUpdatedSize(m, result);
-        checkAddedPublisher(publishers, result);
-
-        // collect parts
-        result = DataSlotDiffUtils.diffDataInfoIdsResult(Sets.newHashSet(), publishers, 200);
-        Assert.assertTrue(result.isHasRemain());
-        // at lease contains one
-        Assert.assertEquals(result.getUpdatedPublishers().size(), 1);
-        Assert.assertTrue(result.getRemovedPublishers().isEmpty());
-        checkUpdatedSize(m, result);
-        checkAddedPublisher(publishers, result);
-
-        // collect parts
-        result = DataSlotDiffUtils.diffDataInfoIdsResult(Sets.newHashSet(), publishers, 1);
-        Assert.assertTrue(result.isHasRemain());
-        // at lease contains one
-        Assert.assertEquals(result.getUpdatedPublishers().size(), 1);
-        Assert.assertTrue(result.getRemovedPublishers().isEmpty());
-        checkUpdatedSize(m, result);
-        checkAddedPublisher(publishers, result);
-
-        result = DataSlotDiffUtils.diffDataInfoIdsResult(Sets.newHashSet(), Maps.newHashMap(), 100);
-        Assert.assertFalse(result.isHasRemain());
-        Assert.assertEquals(result.getUpdatedPublishers().size(), 0);
+        Assert.assertTrue(result.getRemovedDataInfoIds().isEmpty());
     }
 
     @Test
@@ -85,25 +64,28 @@ public class DataSlotDiffSyncResultTest {
         Map<String, Map<String, Publisher>> publishers = randPublishers(m);
 
         DataSlotDiffSyncResult result = DataSlotDiffUtils.diffDataInfoIdsResult(
-            Sets.newHashSet("a", "b"), publishers, 400);
+            Sets.newHashSet("a", "b"), publishers);
         Assert.assertFalse(result.isHasRemain());
+        Assert.assertTrue(result.getAddedDataInfoIds().isEmpty());
         Assert.assertTrue(result.getUpdatedPublishers().isEmpty());
         Assert.assertTrue(result.getRemovedPublishers().isEmpty());
-
-        result = DataSlotDiffUtils.diffDataInfoIdsResult(Sets.newHashSet("a", "b", "c"),
-            publishers, 400);
-        Assert.assertFalse(result.isHasRemain());
-        Assert.assertTrue(result.getUpdatedPublishers().isEmpty());
-        Assert.assertTrue(result.getRemovedPublishers().isEmpty());
+        Assert.assertTrue(result.getRemovedDataInfoIds().isEmpty());
 
         result = DataSlotDiffUtils
-            .diffDataInfoIdsResult(Sets.newHashSet("a", "c"), publishers, 100);
+            .diffDataInfoIdsResult(Sets.newHashSet("a", "b", "c"), publishers);
+        Assert.assertFalse(result.isHasRemain());
+        Assert.assertTrue(result.getAddedDataInfoIds().isEmpty());
+        Assert.assertTrue(result.getUpdatedPublishers().isEmpty());
+        Assert.assertTrue(result.getRemovedPublishers().isEmpty());
+        Assert.assertFalse(result.getRemovedDataInfoIds().isEmpty());
+
+        Assert.assertEquals(result.getRemovedDataInfoIds(), Lists.newArrayList("c"));
+
+        result = DataSlotDiffUtils.diffDataInfoIdsResult(Sets.newHashSet("a", "c"), publishers);
         Assert.assertFalse(result.isHasRemain());
         Assert.assertTrue(result.getRemovedPublishers().isEmpty());
         // add "b"
-        Assert.assertEquals(result.getUpdatedPublishers().keySet(), Sets.newHashSet("b"));
-        checkUpdatedSize(m, result);
-        checkAddedPublisher(publishers, result);
+        Assert.assertEquals(result.getAddedDataInfoIds(), Lists.newArrayList("b"));
 
         // delete "c"
         Assert.assertTrue(result.getRemovedDataInfoIds().size() == 1);

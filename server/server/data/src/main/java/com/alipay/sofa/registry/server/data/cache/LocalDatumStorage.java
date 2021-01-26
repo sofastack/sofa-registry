@@ -122,9 +122,9 @@ public final class LocalDatumStorage implements DatumStorage {
     }
 
     @Override
-    public DatumVersion createEmptyDatumIfAbsent(Publisher publisher) {
-        PublisherGroups groups = getPublisherGroups(publisher.getDataInfoId());
-        return groups == null ? null : groups.createGroupIfAbsent(publisher,
+    public DatumVersion createEmptyDatumIfAbsent(String dataInfoId, String dataCenter) {
+        PublisherGroups groups = getPublisherGroups(dataInfoId);
+        return groups == null ? null : groups.createGroupIfAbsent(dataInfoId,
             dataServerConfig.getLocalDataCenter()).getVersion();
     }
 
@@ -168,7 +168,7 @@ public final class LocalDatumStorage implements DatumStorage {
     }
 
     @Override
-    public SlotChangeListener getSlotChanngeListener() {
+    public SlotChangeListener getSlotChangeListener() {
         return new SlotListener();
     }
 

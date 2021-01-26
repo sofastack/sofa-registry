@@ -60,7 +60,7 @@ public interface DatumStorage {
 
     DatumVersion putPublisher(Publisher publisher);
 
-    DatumVersion createEmptyDatumIfAbsent(Publisher publisher);
+    DatumVersion createEmptyDatumIfAbsent(String dataInfoId, String dataCenter);
 
     Map<String, DatumVersion> clean(ProcessId sessionProcessId);
 
@@ -73,7 +73,7 @@ public interface DatumStorage {
 
     Map<String, DatumSummary> getDatumSummary(int slotId, String sessionIpAddress);
 
-    SlotChangeListener getSlotChanngeListener();
+    SlotChangeListener getSlotChangeListener();
 
     Set<ProcessId> getSessionProcessIds();
 
