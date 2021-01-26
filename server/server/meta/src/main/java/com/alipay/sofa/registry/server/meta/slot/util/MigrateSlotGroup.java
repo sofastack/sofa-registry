@@ -93,44 +93,6 @@ public class MigrateSlotGroup {
     }
 
     /**
-     * Pickup leader slot and removes it from candidate set;
-     *
-     * @return the int
-     */
-    public int pickupLeader(Collection<Integer> ignoredSlots) {
-        Iterator<Integer> iterator = leaders.iterator();
-        int slotId = iterator.next();
-        while (iterator.hasNext() && ignoredSlots.contains(slotId)) {
-            slotId = iterator.next();
-        }
-        leaders.remove(slotId);
-        return slotId;
-    }
-
-    /**
-     * Pickup follower slot and removes it from candidate set;
-     *
-     * @return the int
-     */
-    public int pickupFollower(Collection<Integer> ignoredSlots) {
-        Iterator<Integer> iterator = followers.keySet().iterator();
-        int slotId = iterator.next();
-        while (iterator.hasNext() && ignoredSlots.contains(slotId)) {
-            slotId = iterator.next();
-        }
-        if (ignoredSlots.contains(slotId)) {
-            return -1;
-        }
-        int leftCounts = followers.get(slotId);
-        if (leftCounts == 1) {
-            followers.remove(slotId);
-        } else {
-            followers.put(slotId, leftCounts - 1);
-        }
-        return slotId;
-    }
-
-    /**
      * Gets get leaders.
      *
      * @return the get leaders
@@ -148,13 +110,19 @@ public class MigrateSlotGroup {
         return followers;
     }
 
-    /**
-     * Is empty boolean.
-     *
-     * @return the boolean
-     */
-    public boolean isEmpty() {
-        return leaders.isEmpty() && followers.isEmpty();
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        MigrateSlotGroup that = (MigrateSlotGroup) o;
+        return Objects.equals(leaders, that.leaders) &&
+                Objects.equals(followers, that.followers);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(leaders, followers);
     }
 
     @Override

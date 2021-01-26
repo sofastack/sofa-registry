@@ -16,6 +16,7 @@
  */
 package com.alipay.sofa.registry.server.meta.lease;
 
+import com.alipay.sofa.registry.common.model.metaserver.nodes.DataNode;
 import com.alipay.sofa.registry.server.meta.AbstractTest;
 import org.junit.Assert;
 import org.junit.Test;
@@ -63,5 +64,21 @@ public class LeaseTest extends AbstractTest {
         Object second = new Object();
         lease.setRenewal(second);
         Assert.assertNotEquals(first, lease.getRenewal());
+    }
+
+    @Test
+    public void testEquals() throws InterruptedException {
+        DataNode sample = new DataNode(randomURL(randomIp()), getDc());
+        Lease<Object> lease1 = new Lease<>(new Object(), 1, TimeUnit.MILLISECONDS);
+        Lease<Object> lease2 = new Lease<>(sample, 1, TimeUnit.MILLISECONDS);
+        Thread.sleep(5);
+        Lease<DataNode> lease3 = new Lease<>(new DataNode(sample.getNodeUrl(), getDc()), 1, TimeUnit.MILLISECONDS);
+        Lease<Object> lease4 = lease2;
+        lease4.setRenewal(lease3.getRenewal());
+
+        Assert.assertNotEquals(lease1, lease2);
+        Assert.assertNotEquals(lease2, lease3);
+        Assert.assertEquals(lease2, lease4);
+        Assert.assertNotEquals(lease2.hashCode(), lease3.hashCode());
     }
 }

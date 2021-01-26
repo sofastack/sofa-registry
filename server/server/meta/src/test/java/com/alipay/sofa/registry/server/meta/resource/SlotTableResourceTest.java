@@ -16,11 +16,13 @@
  */
 package com.alipay.sofa.registry.server.meta.resource;
 
+import com.alipay.sofa.registry.common.model.GenericResponse;
 import com.alipay.sofa.registry.common.model.metaserver.nodes.DataNode;
 import com.alipay.sofa.registry.common.model.slot.SlotTable;
 import com.alipay.sofa.registry.server.meta.AbstractTest;
 import com.alipay.sofa.registry.server.meta.bootstrap.config.NodeConfig;
 import com.alipay.sofa.registry.server.meta.lease.data.DefaultDataServerManager;
+import com.alipay.sofa.registry.server.meta.slot.arrange.ScheduledSlotArranger;
 import com.alipay.sofa.registry.server.meta.slot.manager.DefaultSlotManager;
 import com.alipay.sofa.registry.server.meta.slot.manager.LocalSlotManager;
 import org.assertj.core.util.Lists;
@@ -44,6 +46,8 @@ public class SlotTableResourceTest extends AbstractTest {
 
     private SlotTableResource        resource;
 
+    private ScheduledSlotArranger    slotArranger;
+
     @Before
     public void beforeSlotTableResourceTest() {
         NodeConfig nodeConfig = mock(NodeConfig.class);
@@ -52,7 +56,8 @@ public class SlotTableResourceTest extends AbstractTest {
         defaultSlotManager = mock(DefaultSlotManager.class);
         when(defaultSlotManager.getRaftSlotManager()).thenReturn(slotManager);
         dataServerManager = mock(DefaultDataServerManager.class);
-        resource = new SlotTableResource(defaultSlotManager, slotManager, dataServerManager);
+        slotArranger = mock(ScheduledSlotArranger.class);
+        resource = new SlotTableResource(defaultSlotManager, slotManager, dataServerManager, slotArranger);
     }
 
     @Test
@@ -67,8 +72,9 @@ public class SlotTableResourceTest extends AbstractTest {
         slotManager.refresh(slotTable);
 //        Assert.assertFalse(isSlotTableBalanced(slotManager.getSlotTable(), dataNodes));
 
-        SlotTable current = resource.forceRefreshSlotTable();
-        printSlotTable(current);
+        when(slotArranger.tryLock()).thenReturn(true);
+        GenericResponse<SlotTable> current = resource.forceRefreshSlotTable();
+        printSlotTable(current.getData());
         Assert.assertTrue(isSlotTableBalanced(slotManager.getSlotTable(), dataNodes));
     }
 

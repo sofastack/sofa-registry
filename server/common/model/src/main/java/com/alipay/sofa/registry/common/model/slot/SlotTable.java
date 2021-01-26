@@ -16,6 +16,8 @@
  */
 package com.alipay.sofa.registry.common.model.slot;
 
+import com.alipay.sofa.registry.exception.SofaRegistrySlotTableException;
+import com.alipay.sofa.registry.util.JsonUtils;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.google.common.collect.Maps;
 
@@ -27,13 +29,26 @@ import java.util.*;
  * @version v 0.1 2020-10-30 10:08 yuzhi.lyz Exp $
  */
 public final class SlotTable implements Serializable {
-    public static final SlotTable    INIT = new SlotTable(-1, Collections.emptyMap());
+    public static final SlotTable    INIT = new SlotTable(-1, Collections.emptyList());
     private final long               epoch;
     private final Map<Integer, Slot> slots;
 
-    public SlotTable(long epoch, Map<Integer, Slot> slots) {
+    private SlotTable(long epoch, Map<Integer, Slot> slots) {
         this.epoch = epoch;
         this.slots = Collections.unmodifiableSortedMap(new TreeMap<>(slots));
+    }
+
+    public SlotTable(long epoch, final Collection<Slot> slots) {
+        this.epoch = epoch;
+        SortedMap<Integer, Slot> slotMap = Maps.newTreeMap();
+        slots.forEach(slot->{
+            Slot exist = slotMap.putIfAbsent(slot.getId(), slot);
+            if (exist != null) {
+                throw new SofaRegistrySlotTableException("dup slot when construct slot table: "
+                        + JsonUtils.writeValueAsString(slots));
+            }
+        });
+        this.slots = Collections.unmodifiableSortedMap(slotMap);
     }
 
     public List<Slot> getSlots() {
@@ -124,7 +139,7 @@ public final class SlotTable implements Serializable {
         }
         final Map<Integer, Slot> slotMap = new HashMap<>(slots.size());
         slots.forEach((k, v) -> {
-            if (v.getLeader().equals(ip) || v.getFollowers().contains(v)) {
+            if (v.getLeader().equals(ip) || v.getFollowers().contains(ip)) {
                 slotMap.put(k, v);
             }
         });

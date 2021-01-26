@@ -86,7 +86,7 @@ public class LocalSlotManagerTest extends AbstractTest {
         SlotTable slotTable = new SlotTableGenerator(dataNodes).createSlotTable();
         slotManager = spy(slotManager);
         slotManager.refresh(slotTable);
-        SlotTable lowerEpochTable = new SlotTable(10, slotTable.getSlotMap());
+        SlotTable lowerEpochTable = new SlotTable(10, slotTable.getSlotMap().values());
         slotManager.refresh(lowerEpochTable);
         verify(slotManager, times(1)).setSlotTable(any());
     }

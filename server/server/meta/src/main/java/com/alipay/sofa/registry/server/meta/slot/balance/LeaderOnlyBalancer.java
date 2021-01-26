@@ -8,7 +8,6 @@ import com.alipay.sofa.registry.server.meta.slot.SlotBalancer;
 import com.alipay.sofa.registry.server.meta.slot.SlotManager;
 import com.alipay.sofa.registry.server.meta.slot.util.SlotTableBuilder;
 import com.alipay.sofa.registry.server.shared.slot.SlotTableUtils;
-import com.alipay.sofa.registry.util.MathUtils;
 
 import java.util.Comparator;
 import java.util.HashSet;
@@ -40,7 +39,7 @@ public class LeaderOnlyBalancer implements SlotBalancer {
 
     @Override
     public SlotTable balance() {
-        int avg = MathUtils.divideCeil(slotManager.getSlotNums(), currentDataServers.size());
+        int avg = slotManager.getSlotNums() / currentDataServers.size();
         Set<String> targetDataServers = findDataServersNeedLeaderSlots(avg);
         if(targetDataServers.isEmpty()) {
             logger.warn("[balance]no data-servers needs leader balance");
@@ -69,7 +68,7 @@ public class LeaderOnlyBalancer implements SlotBalancer {
             maxMove = Math.min(maxMove, candidate.getLeaders().size() - avg);
             while(maxMove-- > 0) {
                 Integer slotId = candidate.getLeaders().get(maxMove);
-                slotTableBuilder.setLeader(slotId, dataServer);
+                slotTableBuilder.flipLeaderTo(slotId, dataServer);
                 logger.info("[balance] slot[{}] leader change from [{}] to [{}]", slotId, candidate.getDataNode(), dataServer);
             }
         }

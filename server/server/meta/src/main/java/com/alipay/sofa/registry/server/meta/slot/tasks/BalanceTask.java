@@ -19,7 +19,6 @@ package com.alipay.sofa.registry.server.meta.slot.tasks;
 import com.alipay.sofa.registry.common.model.metaserver.nodes.DataNode;
 import com.alipay.sofa.registry.common.model.slot.Slot;
 import com.alipay.sofa.registry.common.model.slot.SlotTable;
-import com.alipay.sofa.registry.jraft.bootstrap.ServiceStateMachine;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.server.meta.lease.data.DefaultDataServerManager;
@@ -39,10 +38,10 @@ import java.util.concurrent.atomic.AtomicInteger;
  * <p>
  * Dec 01, 2020
  */
-public class InitReshardingTask implements RebalanceTask {
+public class BalanceTask implements RebalanceTask {
 
     private static final Logger            logger            = LoggerFactory
-                                                                 .getLogger(InitReshardingTask.class);
+                                                                 .getLogger(BalanceTask.class);
 
     private final LocalSlotManager         localSlotManager;
 
@@ -52,14 +51,14 @@ public class InitReshardingTask implements RebalanceTask {
 
     private long                           nextEpoch;
 
-    private AtomicInteger                  nextLeaderIndex   = new AtomicInteger();
+    private final AtomicInteger            nextLeaderIndex   = new AtomicInteger();
 
-    private AtomicInteger                  nextFollowerIndex = new AtomicInteger(1);
+    private final AtomicInteger            nextFollowerIndex = new AtomicInteger(1);
 
     private List<DataNode>                 dataNodes;
 
-    public InitReshardingTask(LocalSlotManager localSlotManager, SlotManager raftSlotManager,
-                              DefaultDataServerManager dataServerManager) {
+    public BalanceTask(LocalSlotManager localSlotManager, SlotManager raftSlotManager,
+                       DefaultDataServerManager dataServerManager) {
         this.localSlotManager = localSlotManager;
         this.raftSlotManager = raftSlotManager;
         this.dataServerManager = dataServerManager;
@@ -67,9 +66,6 @@ public class InitReshardingTask implements RebalanceTask {
 
     @Override
     public void run() {
-        if (!checkPrivilege()) {
-            return;
-        }
         initParameters();
         if (dataNodes == null || dataNodes.isEmpty()) {
             return;
@@ -89,20 +85,6 @@ public class InitReshardingTask implements RebalanceTask {
         }
     }
 
-    private boolean checkPrivilege() {
-        if (!ServiceStateMachine.getInstance().isLeader()) {
-            if (logger.isInfoEnabled()) {
-                logger.info("[run] not leader now, quit");
-            }
-            return false;
-        } else {
-            if (logger.isInfoEnabled()) {
-                logger.info("[run] start to init slot table");
-            }
-        }
-        return true;
-    }
-
     private void initParameters() {
         dataNodes = dataServerManager.getClusterMembers();
         if (dataNodes.isEmpty()) {
@@ -118,7 +100,7 @@ public class InitReshardingTask implements RebalanceTask {
 
     public SlotTable createSlotTable() {
         Map<Integer, Slot> slotMap = generateSlotMap();
-        return new SlotTable(nextEpoch, slotMap);
+        return new SlotTable(nextEpoch, slotMap.values());
     }
 
     private Map<Integer, Slot> generateSlotMap() {

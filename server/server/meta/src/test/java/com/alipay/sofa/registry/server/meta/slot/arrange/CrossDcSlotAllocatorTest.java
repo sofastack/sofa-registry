@@ -85,8 +85,8 @@ public class CrossDcSlotAllocatorTest extends AbstractTest {
         Assert.assertNull(allocator.getSlotTable());
 
         when(exchange.getClient(Exchange.META_SERVER_TYPE)).thenReturn(getRpcClient(scheduled, 1,
-                new SlotTable(System.currentTimeMillis(), ImmutableMap.of(
-                        1, new Slot(1, "10.0.0.1", System.currentTimeMillis(), Lists.newArrayList("10.0.0.2"))
+                new SlotTable(System.currentTimeMillis(), Lists.newArrayList(
+                        new Slot(1, "10.0.0.1", System.currentTimeMillis(), Lists.newArrayList("10.0.0.2"))
                 ))));
         allocator.refreshSlotTable(0);
         waitConditionUntilTimeOut(()->allocator.getSlotTable() != null, 1000);
@@ -111,8 +111,8 @@ public class CrossDcSlotAllocatorTest extends AbstractTest {
         when(exchange.getClient(Exchange.META_SERVER_TYPE))
                 .thenReturn(getRpcClient(scheduled, 3, new TimeoutException("expected timeout")))
                 .thenReturn(getRpcClient(scheduled, 1,
-                new SlotTable(System.currentTimeMillis(), ImmutableMap.of(
-                        1, new Slot(1, "10.0.0.1", System.currentTimeMillis(), Lists.newArrayList("10.0.0.2"))
+                new SlotTable(System.currentTimeMillis(), Lists.newArrayList(
+                        new Slot(1, "10.0.0.1", System.currentTimeMillis(), Lists.newArrayList("10.0.0.2"))
                 ))));
         allocator.refreshSlotTable(0);
         waitConditionUntilTimeOut(()->allocator.getSlotTable() != null, 1000);
@@ -150,11 +150,11 @@ public class CrossDcSlotAllocatorTest extends AbstractTest {
         when(exchange.getClient(Exchange.META_SERVER_TYPE))
                 .thenReturn(getRpcClient(scheduled, 3, new TimeoutException("expected timeout")))
                 .thenReturn(getRpcClient(scheduled, 1,
-                        new SlotTable(System.currentTimeMillis(), ImmutableMap.of(
-                                1, new Slot(1, randomIp(), System.currentTimeMillis(), Lists.newArrayList(randomIp())),
-                                2, new Slot(2, randomIp(), System.currentTimeMillis(), Lists.newArrayList(randomIp())),
-                                3, new Slot(3, randomIp(), System.currentTimeMillis(), Lists.newArrayList(randomIp())),
-                                4, new Slot(4, randomIp(), System.currentTimeMillis(), Lists.newArrayList(randomIp()))
+                        new SlotTable(System.currentTimeMillis(), Lists.newArrayList(
+                                new Slot(1, randomIp(), System.currentTimeMillis(), Lists.newArrayList(randomIp())),
+                                new Slot(2, randomIp(), System.currentTimeMillis(), Lists.newArrayList(randomIp())),
+                                new Slot(3, randomIp(), System.currentTimeMillis(), Lists.newArrayList(randomIp())),
+                                new Slot(4, randomIp(), System.currentTimeMillis(), Lists.newArrayList(randomIp()))
                         ))));
 
         LifecycleHelper.initializeIfPossible(allocator);

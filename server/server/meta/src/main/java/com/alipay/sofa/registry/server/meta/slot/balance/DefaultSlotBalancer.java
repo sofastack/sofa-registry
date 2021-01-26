@@ -24,10 +24,10 @@ import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.server.meta.lease.data.DataServerManager;
 import com.alipay.sofa.registry.server.meta.slot.SlotBalancer;
 import com.alipay.sofa.registry.server.meta.slot.manager.LocalSlotManager;
+import com.alipay.sofa.registry.server.meta.slot.util.SlotBuilder;
 import com.alipay.sofa.registry.server.meta.slot.util.SlotTableBuilder;
 import com.alipay.sofa.registry.server.shared.slot.SlotTableUtils;
 import com.alipay.sofa.registry.server.shared.util.NodeUtils;
-import com.alipay.sofa.registry.util.MathUtils;
 
 import java.util.*;
 
@@ -73,13 +73,11 @@ public class DefaultSlotBalancer implements SlotBalancer {
             return new LeaderOnlyBalancer(slotTableBuilder, currentDataServers, slotManager).balance();
         }
 
-        logger.info("[assignLeaderSlots] begin");
         if (balanceLeaderSlots()) {
+            logger.info("[assignLeaderSlots] end");
             slotTableBuilder.incrEpoch();
-        }
-
-        logger.info("[balanceFollowerSlots] begin");
-        if (balanceFollowerSlots()) {
+        } else if (balanceFollowerSlots()) {
+            logger.info("[balanceFollowerSlots] end");
             slotTableBuilder.incrEpoch();
         }
         return slotTableBuilder.build();
@@ -87,7 +85,7 @@ public class DefaultSlotBalancer implements SlotBalancer {
 
     private boolean balanceLeaderSlots() {
         boolean result = false;
-        int avg = MathUtils.divideCeil(slotManager.getSlotNums(), currentDataServers.size());
+        int avg = slotManager.getSlotNums() / currentDataServers.size();
         Set<String> targetDataServers = findDataServersNeedLeaderSlots(avg);
         if (targetDataServers.isEmpty()) {
             logger.info("[balanceLeaderSlots]no leader slots need to balance, quit");
@@ -120,7 +118,7 @@ public class DefaultSlotBalancer implements SlotBalancer {
                 String prevLeader = slotTableBuilder.getOrCreate(slotId).getLeader();
                 logger.info("[balanceLeaderSlots] slot[{}] leader balance from [{}] to [{}]",
                     slotId, prevLeader, dataServer);
-                slotTableBuilder.setLeader(slotId, dataServer);
+                slotTableBuilder.flipLeaderTo(slotId, dataServer);
                 targetSlots.remove(slotId);
                 result = true;
             }
@@ -151,9 +149,7 @@ public class DefaultSlotBalancer implements SlotBalancer {
 
     private boolean balanceFollowerSlots() {
         boolean result = false;
-        int avgSlotNum = MathUtils
-            .divideCeil(slotManager.getSlotNums() * slotManager.getSlotReplicaNums(),
-                currentDataServers.size());
+        int avgSlotNum = slotManager.getSlotNums() * slotManager.getSlotReplicaNums() / currentDataServers.size();
         List<String> targetDataServers = findTargetDataServers(avgSlotNum);
         logger.info("[balanceFollowerSlots] data-servers need more follower slots: {}",
             targetDataServers);
@@ -188,6 +184,10 @@ public class DefaultSlotBalancer implements SlotBalancer {
                 candidateSlots = new DefaultBalanceFollowerFilter(this, targetDataServers)
                     .filter(candidateSlots);
                 for (Integer slotId : candidateSlots) {
+                    SlotBuilder slotBuilder = slotTableBuilder.getOrCreate(slotId);
+                    if (dataServer.equals(slotBuilder.getLeader()) || slotBuilder.getFollowers().contains(dataServer)) {
+                        continue;
+                    }
                     logger.info(
                         "[balanceFollowerSlots] slot[{}] remove follower [{}], add follower [{}]",
                         slotId, candidate, dataServer);

@@ -108,16 +108,16 @@ public class LocalSlotManager extends AbstractLifecycleObservable implements Slo
                 return;
             }
             setSlotTable(slotTable);
-            refreshReverseMap();
+            refreshReverseMap(slotTable);
         } finally {
             lock.writeLock().unlock();
         }
         notifyObservers(slotTable);
     }
 
-    private void refreshReverseMap() {
+    private void refreshReverseMap(SlotTable slotTable) {
         Map<DataNode, DataNodeSlot> newMap = Maps.newHashMap();
-        List<DataNodeSlot> dataNodeSlots = getSlotTable().transfer(null, false);
+        List<DataNodeSlot> dataNodeSlots = slotTable.transfer(null, false);
         dataNodeSlots.forEach(dataNodeSlot -> {
             try {
                 newMap.put(new DataNode(new URL(dataNodeSlot.getDataNode()), nodeConfig.getLocalDataCenter()), dataNodeSlot);

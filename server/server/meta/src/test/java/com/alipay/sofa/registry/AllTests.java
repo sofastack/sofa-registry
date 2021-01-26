@@ -24,6 +24,7 @@ package com.alipay.sofa.registry;
 
 import com.alipay.sofa.registry.common.model.slot.Crc32CSlotFunctionTest;
 import com.alipay.sofa.registry.server.meta.cluster.node.NodeModifiedTest;
+import com.alipay.sofa.registry.server.meta.cluster.node.TestAbstractNodeEventTest;
 import com.alipay.sofa.registry.server.meta.lease.LeaseTest;
 import com.alipay.sofa.registry.server.meta.lease.data.DataLeaseManagerTest;
 import com.alipay.sofa.registry.server.meta.lease.data.DefaultDataServerManagerTest;
@@ -42,8 +43,10 @@ import com.alipay.sofa.registry.server.meta.provide.data.DefaultProvideDataNotif
 import com.alipay.sofa.registry.server.meta.provide.data.SessionServerProvideDataNotifierTest;
 import com.alipay.sofa.registry.server.meta.resource.SlotTableResourceTest;
 import com.alipay.sofa.registry.server.meta.slot.arrange.*;
-import com.alipay.sofa.registry.server.meta.slot.tasks.InitReshardingTaskTest;
+import com.alipay.sofa.registry.server.meta.slot.manager.DefaultSlotManagerTest;
+import com.alipay.sofa.registry.server.meta.slot.tasks.BalanceTaskTest;
 import com.alipay.sofa.registry.server.meta.slot.tasks.SlotMigrationIntegrationTest;
+import com.alipay.sofa.registry.server.meta.slot.util.SlotTableBuilderTest;
 import com.alipay.sofa.registry.server.shared.slot.DiskSlotTableRecorderTest;
 import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
@@ -58,8 +61,10 @@ import org.junit.runners.Suite;
                      DefaultLocalMetaServerTest.class, DataLeaseManagerTest.class,
                      SessionLeaseManagerTest.class, SessionServerProvideDataNotifierTest.class,
                      DefaultProvideDataNotifierTest.class, LocalSlotManagerTest.class,
-                     NodeModifiedTest.class, InitReshardingTaskTest.class,
+                     NodeModifiedTest.class, BalanceTaskTest.class,
+                     TestAbstractNodeEventTest.class, DefaultSlotManagerTest.class,
                      DefaultSlotTableMonitorTest.class, DiskSlotTableRecorderTest.class,
-                     SlotTableResourceTest.class, SlotMigrationIntegrationTest.class })
+                     SlotTableResourceTest.class, SlotMigrationIntegrationTest.class,
+                     SlotTableBuilderTest.class })
 public class AllTests {
 }

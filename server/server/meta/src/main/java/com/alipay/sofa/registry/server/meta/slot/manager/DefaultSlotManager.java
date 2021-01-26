@@ -19,21 +19,12 @@ package com.alipay.sofa.registry.server.meta.slot.manager;
 import com.alipay.sofa.registry.common.model.metaserver.nodes.DataNode;
 import com.alipay.sofa.registry.common.model.slot.DataNodeSlot;
 import com.alipay.sofa.registry.common.model.slot.SlotTable;
-import com.alipay.sofa.registry.exception.DisposeException;
-import com.alipay.sofa.registry.exception.StopException;
 import com.alipay.sofa.registry.jraft.bootstrap.ServiceStateMachine;
-import com.alipay.sofa.registry.lifecycle.impl.AbstractLifecycle;
-import com.alipay.sofa.registry.lifecycle.impl.LifecycleHelper;
 import com.alipay.sofa.registry.server.meta.slot.SlotManager;
 import com.alipay.sofa.registry.store.api.annotation.RaftReference;
 import com.alipay.sofa.registry.store.api.annotation.RaftReferenceContainer;
-import com.google.common.annotations.VisibleForTesting;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import javax.annotation.PostConstruct;
-import javax.annotation.PreDestroy;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ScheduledFuture;
 
 /**
  * @author chen.zhu
@@ -41,7 +32,7 @@ import java.util.concurrent.ScheduledFuture;
  * Dec 02, 2020
  */
 @RaftReferenceContainer
-public class DefaultSlotManager extends AbstractLifecycle implements SlotManager {
+public class DefaultSlotManager implements SlotManager {
 
     @Autowired
     private LocalSlotManager         localSlotManager;
@@ -49,56 +40,12 @@ public class DefaultSlotManager extends AbstractLifecycle implements SlotManager
     @RaftReference(uniqueId = LocalSlotManager.LOCAL_SLOT_MANAGER, interfaceType = SlotManager.class)
     private SlotManager              raftSlotManager;
 
-    private ScheduledExecutorService scheduled;
-
-    private ScheduledFuture<?>       future;
-
     public DefaultSlotManager() {
     }
 
     public DefaultSlotManager(LocalSlotManager localSlotManager, SlotManager raftSlotManager) {
         this.localSlotManager = localSlotManager;
         this.raftSlotManager = raftSlotManager;
-    }
-
-    /**
-     * Post construct.
-     *
-     * @throws Exception the exception
-     */
-    @PostConstruct
-    public void postConstruct() throws Exception {
-        LifecycleHelper.initializeIfPossible(this);
-        LifecycleHelper.startIfPossible(this);
-    }
-
-    /**
-     * Pre destroy.
-     *
-     * @throws Exception the exception
-     */
-    @PreDestroy
-    public void preDestroy() throws Exception {
-        LifecycleHelper.stopIfPossible(this);
-        LifecycleHelper.disposeIfPossible(this);
-    }
-
-    @Override
-    protected void doStop() throws StopException {
-        if (future != null) {
-            future.cancel(true);
-            future = null;
-        }
-        super.doStop();
-    }
-
-    @Override
-    protected void doDispose() throws DisposeException {
-        if (scheduled != null) {
-            scheduled.shutdownNow();
-            scheduled = null;
-        }
-        super.doDispose();
     }
 
     /**
@@ -170,20 +117,8 @@ public class DefaultSlotManager extends AbstractLifecycle implements SlotManager
         }
     }
 
-    protected boolean isRaftLeader() {
+    private boolean isRaftLeader() {
         return ServiceStateMachine.getInstance().isLeader();
-    }
-
-    @VisibleForTesting
-    DefaultSlotManager setLocalSlotManager(LocalSlotManager localSlotManager) {
-        this.localSlotManager = localSlotManager;
-        return this;
-    }
-
-    @VisibleForTesting
-    DefaultSlotManager setRaftSlotManager(SlotManager raftSlotManager) {
-        this.raftSlotManager = raftSlotManager;
-        return this;
     }
 
 }

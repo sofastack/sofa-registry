@@ -185,13 +185,7 @@ public abstract class AbstractRaftEnabledLeaseManager<T extends Node> extends
             logger.warn("[evict][too quick] last evict time: {}", lastEvictTime.get());
             return false;
         }
-        long lastTime = lastEvictTime.get();
-        if (!lastEvictTime.compareAndSet(lastTime, System.currentTimeMillis())) {
-            if (logger.isWarnEnabled()) {
-                logger.warn("[evict][concurrent evict, quit] last evict time: {}", lastTime);
-            }
-            return false;
-        }
+        lastEvictTime.set(System.currentTimeMillis());
         List<Lease<T>> expirations = getLocalLeaseManager().getExpiredLeases();
         if (expirations.isEmpty()) {
             return false;
@@ -203,11 +197,6 @@ public abstract class AbstractRaftEnabledLeaseManager<T extends Node> extends
                 Lease<T> doubleCheck = getLocalLeaseManager().getLease(lease.getRenewal());
                 // at this point of view, entry might be deleted through cancel method
                 if (doubleCheck == null) {
-                    if (logger.isInfoEnabled()) {
-                        logger.info(
-                            "[evict] node[{}] was evict, but is now not exist, skip eviction",
-                            lease.getRenewal());
-                    }
                     continue;
                 }
                 if (doubleCheck.isExpired()) {
