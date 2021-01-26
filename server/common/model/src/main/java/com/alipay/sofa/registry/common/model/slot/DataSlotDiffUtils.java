@@ -65,7 +65,6 @@ public final class DataSlotDiffUtils {
                                                               int publisherMaxNum) {
         Map<String, List<Publisher>> updateds = new HashMap<>(targetDatumSummaries.size());
         Map<String, List<String>> removedPublishers = new HashMap<>();
-        List<String> removedDataInfoIds = new ArrayList<>();
 
         int publisherCount = 0;
         int checkRound = 0;
@@ -74,8 +73,7 @@ public final class DataSlotDiffUtils {
             final String dataInfoId = summary.getKey();
             Map<String, Publisher> publisherMap = sourcePublishers.get(dataInfoId);
             if (publisherMap == null) {
-                // the dataInfoId has removed
-                removedDataInfoIds.add(dataInfoId);
+                // the dataInfoId has removed, do not handle it, diffDataInfoIds will handle it
                 continue;
             }
             Set<String> registerIds = summary.getValue().getPublisherVersions().keySet();
@@ -112,7 +110,7 @@ public final class DataSlotDiffUtils {
         // the iter has break
         final boolean hasRemian = checkRound != targetDatumSummaries.size();
         DataSlotDiffSyncResult result = new DataSlotDiffSyncResult(hasRemian, updateds, Collections.emptyList(),
-                removedDataInfoIds, removedPublishers);
+                Collections.emptyList(), removedPublishers);
         return result;
     }
 

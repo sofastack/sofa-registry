@@ -162,9 +162,11 @@ public final class LocalDatumStorage implements DatumStorage {
     }
 
     @Override
-    public Map<String, DatumSummary> getDatumSummary(int slotId, String sessionIpAddress) {
+    public Map<String, DatumSummary> getDatumSummary(int slotId, String sessionIpAddress,
+                                                     boolean containsEmpty) {
         final PublisherGroups groups = publisherGroupsMap.get(slotId);
-        return groups != null ? groups.getSummary(sessionIpAddress) : Collections.emptyMap();
+        return groups != null ? groups.getSummary(sessionIpAddress, containsEmpty) : Collections
+            .emptyMap();
     }
 
     @Override

@@ -84,6 +84,8 @@ public final class SlotMetrics {
                                                                          .help(
                                                                              "migrating in seconds.")
                                                                          .labelNames("slot")
+                                                                         .buckets(3, 5, 10, 20, 30,
+                                                                             60, 120, 180, 240)
                                                                          .register();
 
         static void observeLeaderUpdateCounter() {
@@ -103,7 +105,7 @@ public final class SlotMetrics {
         }
 
         static void observeLeaderMigratingFinish(int slotId) {
-            LEADER_MIGRATING_GAUGE.labels(String.valueOf(slotId)).dec();
+            LEADER_MIGRATING_GAUGE.labels(String.valueOf(slotId)).set(0);
         }
 
         static void observeLeaderMigratingFail(int slotId, String sessionIp) {
