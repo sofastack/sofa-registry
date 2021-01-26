@@ -16,13 +16,11 @@
  */
 package com.alipay.sofa.registry.common.model.slot;
 
+import com.alipay.sofa.common.profile.StringUtil;
 import com.alipay.sofa.registry.common.model.metaserver.nodes.DataNode;
 
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 /**
  *
@@ -92,4 +90,27 @@ public final class DataNodeSlot implements Serializable {
         return leaders.size() + followers.size();
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        DataNodeSlot that = (DataNodeSlot) o;
+        return Objects.equals(dataNode, that.dataNode) &&
+                Objects.equals(leaders, that.leaders) &&
+                Objects.equals(followers, that.followers);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(dataNode, leaders, followers);
+    }
+
+    @Override
+    public String toString() {
+        return "DataNodeSlot{" +
+                "dataNode='" + dataNode + '\'' +
+                ", leaders=" + leaders +
+                ", followers=" + followers +
+                '}';
+    }
 }

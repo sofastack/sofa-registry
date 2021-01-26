@@ -16,11 +16,14 @@
  */
 package com.alipay.sofa.registry.server.meta.resource;
 
+import com.alipay.sofa.registry.common.model.GenericResponse;
 import com.alipay.sofa.registry.common.model.slot.SlotTable;
+import com.alipay.sofa.registry.jraft.bootstrap.ServiceStateMachine;
 import com.alipay.sofa.registry.server.meta.lease.data.DefaultDataServerManager;
+import com.alipay.sofa.registry.server.meta.slot.arrange.ScheduledSlotArranger;
 import com.alipay.sofa.registry.server.meta.slot.manager.DefaultSlotManager;
 import com.alipay.sofa.registry.server.meta.slot.manager.LocalSlotManager;
-import com.alipay.sofa.registry.server.meta.slot.tasks.InitReshardingTask;
+import com.alipay.sofa.registry.server.meta.slot.tasks.BalanceTask;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import javax.ws.rs.PUT;
@@ -45,23 +48,39 @@ public class SlotTableResource {
     @Autowired
     private DefaultDataServerManager dataServerManager;
 
+    @Autowired
+    private ScheduledSlotArranger slotArranger;
+
     @PUT
     @Path("force/refresh")
     @Produces(MediaType.APPLICATION_JSON)
-    public SlotTable forceRefreshSlotTable() {
-        InitReshardingTask task = new InitReshardingTask(slotManager,
-            defaultSlotManager.getRaftSlotManager(), dataServerManager);
-        task.run();
-        return slotManager.getSlotTable();
+    public GenericResponse<SlotTable> forceRefreshSlotTable() {
+        if(ServiceStateMachine.getInstance().isLeader()) {
+            if(slotArranger.tryLock()) {
+                try {
+                    BalanceTask task = new BalanceTask(slotManager,
+                            defaultSlotManager.getRaftSlotManager(), dataServerManager);
+                    task.run();
+                    return new GenericResponse<SlotTable>().fillSucceed(slotManager.getSlotTable());
+                } finally {
+                    slotArranger.unlock();
+                }
+            } else {
+                return new GenericResponse<SlotTable>().fillFailed("scheduled slot arrangement is running");
+            }
+        } else {
+            return new GenericResponse<SlotTable>().fillFailed("not the meta-server leader");
+        }
     }
 
     public SlotTableResource() {
     }
 
     public SlotTableResource(DefaultSlotManager defaultSlotManager, LocalSlotManager slotManager,
-                             DefaultDataServerManager dataServerManager) {
+                             DefaultDataServerManager dataServerManager, ScheduledSlotArranger slotArranger) {
         this.defaultSlotManager = defaultSlotManager;
         this.slotManager = slotManager;
         this.dataServerManager = dataServerManager;
+        this.slotArranger = slotArranger;
     }
 }
