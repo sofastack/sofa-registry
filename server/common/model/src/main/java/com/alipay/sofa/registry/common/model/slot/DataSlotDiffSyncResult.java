@@ -137,6 +137,6 @@ public class DataSlotDiffSyncResult implements Serializable {
 
     public boolean isEmpty() {
         return MapUtils.isEmpty(updatedPublishers) && CollectionUtils.isEmpty(removedDataInfoIds)
-               && MapUtils.isEmpty(removedPublishers);
+               && MapUtils.isEmpty(removedPublishers) && CollectionUtils.isEmpty(addedDataInfoIds);
     }
 }
