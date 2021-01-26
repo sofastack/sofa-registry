@@ -301,7 +301,7 @@ public final class SlotManagerImpl implements SlotManager {
                                 syncLeaderTask.isOverAfter(dataServerConfig.getSlotFollowerSyncLeaderIntervalMs())) {
                             SyncLeaderTask task = new SyncLeaderTask(slotTableEpoch, slot);
                             slotState.syncLeaderTask = syncLeaderExecutor.execute(slot.getId(), task);
-                        } else {
+                        } else if(!syncLeaderTask.isFinished()){
                             // the sync leader is running or waiting, check next round
                             LOGGER.info("sync-leader running, {}", syncLeaderTask);
                         }
