@@ -30,12 +30,14 @@ public final class PublisherEnvelope {
     final Publisher        publisher;
     final ProcessId        sessionProcessId;
     final PublisherVersion publisherVersion;
+    final long tombstoneTimestamp;
 
     private PublisherEnvelope(Publisher publisher, ProcessId sessionProcessId,
-                              PublisherVersion publisherVersion) {
+                              PublisherVersion publisherVersion, long tombstoneTimestamp) {
         this.publisher = publisher;
         this.sessionProcessId = sessionProcessId;
         this.publisherVersion = publisherVersion;
+        this.tombstoneTimestamp = tombstoneTimestamp;
     }
 
     static PublisherEnvelope of(Publisher publisher) {
@@ -51,11 +53,11 @@ public final class PublisherEnvelope {
     }
 
     static PublisherEnvelope pubOf(Publisher publisher, ProcessId sessionProcessId) {
-        return new PublisherEnvelope(publisher, sessionProcessId, publisher.publisherVersion());
+        return new PublisherEnvelope(publisher, sessionProcessId, publisher.publisherVersion(), Long.MAX_VALUE);
     }
 
     static PublisherEnvelope unpubOf(PublisherVersion version, ProcessId sessionProcessId) {
-        return new PublisherEnvelope(null, sessionProcessId, version);
+        return new PublisherEnvelope(null, sessionProcessId, version, System.currentTimeMillis());
     }
 
     boolean isPub() {
@@ -75,7 +77,7 @@ public final class PublisherEnvelope {
         StringBuilder sb = new StringBuilder(128);
         sb.append("pub=").append(isPub()).append(", connectId=")
             .append(publisher != null ? publisher.connectId() : "null").append(", ver=")
-            .append(publisherVersion);
+            .append(publisherVersion).append(", ts=").append(tombstoneTimestamp);
         return sb.toString();
     }
 }
