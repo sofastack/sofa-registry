@@ -34,7 +34,6 @@ import com.google.common.collect.Sets;
 import org.apache.commons.collections.MapUtils;
 
 import java.util.*;
-import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
@@ -47,8 +46,6 @@ public final class PublisherGroup {
                                                                    .getLogger(PublisherGroup.class);
 
     private final ReadWriteLock                         lock   = new ReentrantReadWriteLock();
-    private final Lock                                  rlock  = lock.readLock();
-    private final Lock                                  wlock  = lock.writeLock();
 
     final String                                        dataInfoId;
 
@@ -88,12 +85,12 @@ public final class PublisherGroup {
         datum.setInstanceId(instanceId);
         long ver;
         List<PublisherEnvelope> list = new ArrayList<>(pubMap.size());
-        rlock.lock();
+        lock.readLock().lock();
         try {
             ver = this.version;
             list.addAll(pubMap.values());
         } finally {
-            rlock.unlock();
+            lock.readLock().unlock();
         }
         datum.setVersion(ver);
         list.stream().filter(PublisherEnvelope::isPub).forEach(p -> datum.addPublisher(p.publisher));
@@ -140,40 +137,39 @@ public final class PublisherGroup {
     }
 
     DatumVersion addPublisher(Publisher publisher) {
-        wlock.lock();
+        lock.writeLock().lock();
         try {
             if (tryAddPublisher(publisher)) {
                 return updateVersion();
             }
             return null;
         } finally {
-            wlock.unlock();
+            lock.writeLock().unlock();
         }
     }
 
     DatumVersion clean(ProcessId sessionProcessId) {
-        wlock.lock();
+        lock.writeLock().lock();
         try {
             boolean modified = false;
             if (sessionProcessId == null) {
                 modified = !pubMap.isEmpty();
                 pubMap.clear();
             } else {
-                Map<String, PublisherEnvelope> removed = Maps.newHashMap();
-                for (Map.Entry<String, PublisherEnvelope> e : pubMap.entrySet()) {
-                    final String registerId = e.getKey();
-                    PublisherEnvelope envelope = e.getValue();
+                // clean by session processId, could not increase the pub version
+                // the publisher from the session maybe sync again after clean, could not reject that
+                Iterator<Map.Entry<String, PublisherEnvelope>> it = pubMap.entrySet().iterator();
+                while(it.hasNext()){
+                    PublisherEnvelope envelope = it.next().getValue();
                     if (envelope.isPub() && envelope.sessionProcessId.equals(sessionProcessId)) {
-                        removed.put(registerId, PublisherEnvelope.unpubOf(
-                            envelope.publisherVersion.incrRegisterTimestamp(), sessionProcessId));
+                        it.remove();
+                        modified = true;
                     }
                 }
-                modified = !removed.isEmpty();
-                pubMap.putAll(removed);
             }
             return modified ? updateVersion() : null;
         } finally {
-            wlock.unlock();
+            lock.writeLock().unlock();
         }
     }
 
@@ -181,7 +177,7 @@ public final class PublisherGroup {
         if (MapUtils.isEmpty(removedPublishers)) {
             return null;
         }
-        wlock.lock();
+        lock.writeLock().lock();
         try {
             boolean modified = false;
             for (Map.Entry<String, PublisherVersion> e : removedPublishers.entrySet()) {
@@ -218,7 +214,7 @@ public final class PublisherGroup {
             }
             return modified ? updateVersion() : null;
         } finally {
-            wlock.unlock();
+            lock.writeLock().unlock();
         }
     }
 
@@ -226,7 +222,7 @@ public final class PublisherGroup {
         for (Publisher p : updatedPublishers) {
             ParaCheckUtil.checkNotNull(p.getSessionProcessId(), "publisher.sessionProcessId");
         }
-        wlock.lock();
+        lock.writeLock().lock();
         try {
             boolean modified = false;
             for (Publisher publisher : updatedPublishers) {
@@ -239,7 +235,7 @@ public final class PublisherGroup {
             }
             return null;
         } finally {
-            wlock.unlock();
+            lock.writeLock().unlock();
         }
     }
 
@@ -267,20 +263,20 @@ public final class PublisherGroup {
 
     int compact(long tombstoneTimestamp) {
         int count = 0;
-        wlock.lock();
+        lock.writeLock().lock();
         try {
             Iterator<Map.Entry<String, PublisherEnvelope>> it = pubMap.entrySet().iterator();
             while (it.hasNext()) {
                 PublisherEnvelope envelope = it.next().getValue();
                 // compact the unpub
                 if (!envelope.isPub()
-                    && envelope.publisherVersion.getRegisterTimestamp() < tombstoneTimestamp) {
+                    && envelope.tombstoneTimestamp < tombstoneTimestamp) {
                     it.remove();
                     count++;
                 }
             }
         } finally {
-            wlock.unlock();
+            lock.writeLock().unlock();
         }
         return count;
     }
