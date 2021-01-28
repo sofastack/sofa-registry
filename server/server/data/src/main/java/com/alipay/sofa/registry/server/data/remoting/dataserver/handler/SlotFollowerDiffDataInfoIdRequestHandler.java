@@ -25,7 +25,6 @@ import com.alipay.sofa.registry.common.model.store.Publisher;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.remoting.Channel;
-import com.alipay.sofa.registry.server.data.bootstrap.DataServerConfig;
 import com.alipay.sofa.registry.server.data.cache.DatumStorage;
 import com.alipay.sofa.registry.server.data.slot.SlotManager;
 import com.alipay.sofa.registry.server.shared.remoting.AbstractServerHandler;
@@ -50,9 +49,6 @@ public class SlotFollowerDiffDataInfoIdRequestHandler
 
     @Autowired
     private ThreadPoolExecutor  slotSyncRequestProcessorExecutor;
-
-    @Autowired
-    private DataServerConfig    dataServerConfig;
 
     @Autowired
     private DatumStorage        localDatumStorage;
