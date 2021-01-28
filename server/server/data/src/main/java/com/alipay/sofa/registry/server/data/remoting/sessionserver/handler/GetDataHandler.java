@@ -20,6 +20,8 @@ import com.alipay.sofa.registry.common.model.dataserver.Datum;
 import com.alipay.sofa.registry.common.model.dataserver.GetDataRequest;
 import com.alipay.sofa.registry.common.model.slot.SlotAccess;
 import com.alipay.sofa.registry.common.model.slot.SlotAccessGenericResponse;
+import com.alipay.sofa.registry.log.Logger;
+import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.remoting.Channel;
 import com.alipay.sofa.registry.server.data.cache.DatumCache;
 import com.alipay.sofa.registry.util.ParaCheckUtil;
@@ -37,7 +39,7 @@ import java.util.concurrent.ThreadPoolExecutor;
  * @version $Id: GetDataProcessor.java, v 0.1 2017-12-01 15:48 qian.lqlq Exp $
  */
 public class GetDataHandler extends AbstractDataHandler<GetDataRequest> {
-
+    private static final Logger LOGGER             = LoggerFactory.getLogger("GET");
     @Autowired
     private DatumCache         datumCache;
 
@@ -73,10 +75,18 @@ public class GetDataHandler extends AbstractDataHandler<GetDataRequest> {
         final Datum localDatum = datumMap.get(localDataCenter);
         GET_DATUM_Y_COUNTER.inc();
         if (localDatum != null) {
+            LOGGER.info("getD,{},{},{},{}", dataInfoId, localDataCenter,
+                    localDatum.publisherSize(), localDatum.getVersion());
             GET_PUBLISHER_COUNTER.inc(localDatum.publisherSize());
+        } else {
+            LOGGER.info("getDNil,{},{}", dataInfoId, localDataCenter);
         }
-        LOGGER.info("get datum {} from {}, {}", dataInfoId, localDataCenter, localDatum);
         return SlotAccessGenericResponse.successResponse(slotAccess, datumMap);
+    }
+
+    @Override
+    protected void logRequest(Channel channel, GetDataRequest request) {
+        // not log
     }
 
     @Override

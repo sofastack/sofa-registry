@@ -47,9 +47,7 @@ import java.util.Set;
  * @version v 0.1 2020-12-04 14:59 yuzhi.lyz Exp $
  */
 public abstract class AbstractDataHandler<T> extends AbstractServerHandler<T> {
-    protected static final Logger            LOGGER             = LoggerFactory
-                                                                    .getLogger("DATA-ACCESS");
-    protected static final Logger            LOGGER_SLOT_ACCESS = LoggerFactory
+    private static final Logger              LOGGER_SLOT_ACCESS = LoggerFactory
                                                                     .getLogger("SLOT-ACCESS");
 
     private final Set<StoreData.DataType>    DATA_TYPES         = Collections
