@@ -307,12 +307,16 @@ public class DataNodeServiceImpl implements DataNodeService {
                     // check the retry
                     if (!retryBatches.isEmpty()) {
                         final Iterator<RetryBatch> it = retryBatches.iterator();
+                        List<RetryBatch> retries = Lists.newArrayList();
                         while (it.hasNext()) {
                             RetryBatch batch = it.next();
                             it.remove();
                             if (!DataNodeServiceImpl.this.request(batch.batch)) {
-                                retry(batch);
+                                retries.add(batch);
                             }
+                        }
+                        for (RetryBatch retry : retries) {
+                            retry(retry);
                         }
                     }
                 } catch (Throwable e) {

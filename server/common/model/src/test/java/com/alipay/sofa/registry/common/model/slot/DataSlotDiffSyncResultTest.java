@@ -90,7 +90,7 @@ public class DataSlotDiffSyncResultTest {
         // delete "c"
         Assert.assertTrue(result.getRemovedDataInfoIds().size() == 1);
         Assert.assertTrue(result.getRemovedDataInfoIds().contains("c"));
-        DataSlotDiffUtils.logDiffResult(result, 10, LOG);
+        DataSlotDiffUtils.logDiffResult(result, 10);
 
     }
 
@@ -175,7 +175,7 @@ public class DataSlotDiffSyncResultTest {
         Assert.assertEquals(result.getUpdatedPublishers().get("c").get(0), modifyC);
         Assert.assertEquals(result.getUpdatedPublishers().get("d").get(0), addD);
 
-        DataSlotDiffUtils.logDiffResult(result, 10, LOG);
+        DataSlotDiffUtils.logDiffResult(result, 10);
 
         // reach max
         result = DataSlotDiffUtils.diffPublishersResult(summaryMap, publishers, 1);
@@ -199,7 +199,7 @@ public class DataSlotDiffSyncResultTest {
             Assert.assertEquals(result.getUpdatedPublishers().get("d").size(), 1);
             Assert.assertEquals(result.getUpdatedPublishers().get("d").get(0), addD);
         }
-        DataSlotDiffUtils.logDiffResult(result, 10, LOG);
+        DataSlotDiffUtils.logDiffResult(result, 10);
 
     }
 
@@ -228,7 +228,7 @@ public class DataSlotDiffSyncResultTest {
         for (Map.Entry<String, Map<String, Publisher>> e : publishers.entrySet()) {
             final DatumSummary summary = new DatumSummary(e.getKey());
             e.getValue().forEach((k, p) -> {
-                summary.addPublisherVersion(p.getRegisterId(), p.publisherVersion());
+                summary.addPublisherVersion(p.getRegisterId(), p.registerVersion());
             });
             summaryMap.put(e.getKey(), summary);
         }

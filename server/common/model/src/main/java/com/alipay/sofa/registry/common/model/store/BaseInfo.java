@@ -23,6 +23,7 @@ import java.util.Map;
 import java.util.Set;
 
 import com.alipay.sofa.registry.common.model.ConnectId;
+import com.alipay.sofa.registry.common.model.RegisterVersion;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.google.common.collect.Sets;
 
@@ -414,6 +415,10 @@ public abstract class BaseInfo implements Serializable, StoreData<String> {
     public ConnectId connectId() {
         return new ConnectId(getSourceAddress().getIpAddress(), getSourceAddress().getPort(),
             getTargetAddress().getIpAddress(), getTargetAddress().getPort());
+    }
+
+    public RegisterVersion registerVersion() {
+        return RegisterVersion.of(getVersion(), getRegisterTimestamp());
     }
 
 }

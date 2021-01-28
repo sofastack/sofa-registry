@@ -47,7 +47,9 @@ public class SessionWatchers extends AbstractDataManager<Watcher> implements Wat
 
         Watcher existingWatcher = addData(watcher);
         if (existingWatcher != null) {
-            LOGGER.warn("watcher already exists,it will be overwrite! {}", existingWatcher);
+            LOGGER.warn("dups watcher, {}, {}, exist={}, input={}",
+                existingWatcher.getDataInfoId(), existingWatcher.getRegisterId(),
+                existingWatcher.registerVersion(), watcher.registerVersion());
         }
         return true;
     }

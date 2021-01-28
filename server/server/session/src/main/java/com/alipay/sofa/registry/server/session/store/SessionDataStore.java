@@ -52,7 +52,7 @@ public class SessionDataStore extends AbstractDataManager<Publisher> implements 
         try {
             existingPublisher = publishers.get(publisher.getRegisterId());
             if (existingPublisher != null) {
-                if (!existingPublisher.publisherVersion().orderThan(publisher.publisherVersion())) {
+                if (!existingPublisher.registerVersion().orderThan(publisher.registerVersion())) {
                     toAdd = false;
                 }
             }
@@ -63,9 +63,10 @@ public class SessionDataStore extends AbstractDataManager<Publisher> implements 
             write.unlock();
         }
         // log without lock
-        if (existingPublisher != null) {
-            LOGGER.warn("exist publisher, added={}, existVer={}, inputVer={}, {}", toAdd,
-                    existingPublisher.publisherVersion(), publisher.publisherVersion(), existingPublisher);
+        if (existingPublisher != null && !toAdd) {
+            LOGGER.warn("conflict publisher {}, {}, exist={}, input={}",
+                    publisher.getDataInfoId(), publisher.getRegisterId(),
+                    existingPublisher.registerVersion(), publisher.registerVersion());
         }
         return toAdd;
 

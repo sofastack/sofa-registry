@@ -18,7 +18,7 @@ package com.alipay.sofa.registry.server.data.cache;
 
 import com.alipay.sofa.registry.common.model.ConnectId;
 import com.alipay.sofa.registry.common.model.ProcessId;
-import com.alipay.sofa.registry.common.model.PublisherVersion;
+import com.alipay.sofa.registry.common.model.RegisterVersion;
 import com.alipay.sofa.registry.common.model.dataserver.Datum;
 import com.alipay.sofa.registry.common.model.dataserver.DatumSummary;
 import com.alipay.sofa.registry.common.model.dataserver.DatumVersion;
@@ -106,7 +106,7 @@ public final class PublisherGroups {
     }
 
     DatumVersion remove(String dataInfoId, ProcessId sessionProcessId,
-                        Map<String, PublisherVersion> removedPublishers) {
+                        Map<String, RegisterVersion> removedPublishers) {
         PublisherGroup group = publisherGroupMap.get(dataInfoId);
         return group == null ? null : group.remove(sessionProcessId, removedPublishers);
     }

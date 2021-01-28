@@ -17,7 +17,7 @@
 package com.alipay.sofa.registry.server.data.remoting.sessionserver.handler;
 
 import com.alipay.sofa.registry.common.model.PublishType;
-import com.alipay.sofa.registry.common.model.PublisherVersion;
+import com.alipay.sofa.registry.common.model.RegisterVersion;
 import com.alipay.sofa.registry.common.model.dataserver.BatchRequest;
 import com.alipay.sofa.registry.common.model.dataserver.ClientOffRequest;
 import com.alipay.sofa.registry.common.model.dataserver.DatumVersion;
@@ -102,9 +102,9 @@ public class BatchPutDataHandler extends AbstractDataHandler<BatchRequest> {
     }
 
     public List<String> doHandle(ClientOffRequest request) {
-        Map<String, Map<String, PublisherVersion>> publisherMap = request.getPublisherMap();
+        Map<String, Map<String, RegisterVersion>> publisherMap = request.getPublisherMap();
         List<String> dataInfoIds = new ArrayList<>(publisherMap.size());
-        for (Map.Entry<String, Map<String, PublisherVersion>> e : publisherMap.entrySet()) {
+        for (Map.Entry<String, Map<String, RegisterVersion>> e : publisherMap.entrySet()) {
             DatumVersion version = localDatumStorage.remove(e.getKey(),
                 request.getSessionProcessId(), e.getValue());
             if (version != null) {
