@@ -84,7 +84,7 @@ public class SessionServerConfigBean implements SessionServerConfig {
 
     private int                  slotSyncWorkerSize                    = OsUtils.getCpuCount() * 4;
 
-    private int                  clientNodeExchangeTimeOut             = 1000;                      //time out cause netty HashedWheelTimer occupy a lot of mem
+    private int                  clientNodeExchangeTimeOut             = 1000;                           //time out cause netty HashedWheelTimer occupy a lot of mem
 
     private int                  dataNodeExchangeTimeOut               = 3000;
 
@@ -94,7 +94,7 @@ public class SessionServerConfigBean implements SessionServerConfig {
 
     private int                  pushTaskExecutorPoolSize              = OsUtils.getCpuCount() * 3;
 
-    private int                  pushTaskExecutorQueueSize             = 20000;
+    private int                  pushTaskExecutorQueueSize             = pushTaskExecutorPoolSize * 3000;
 
     private int                  pushDataTaskRetryFirstDelayMillis     = 500;
 

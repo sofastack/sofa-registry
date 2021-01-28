@@ -20,7 +20,6 @@ import java.io.Serializable;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
 
 import com.alipay.sofa.registry.common.model.AppRegisterServerDataBox;
 import com.alipay.sofa.registry.common.model.PublisherInternUtil;
@@ -246,7 +245,7 @@ public class Datum implements Serializable {
         if (existing == publisher) {
             return true;
         }
-        if (!existing.publisherVersion().orderThan(publisher.publisherVersion())) {
+        if (!existing.registerVersion().orderThan(publisher.registerVersion())) {
             return false;
         }
         pubMap.put(publisher.getRegisterId(), publisher);

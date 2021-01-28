@@ -22,4 +22,8 @@ public class RequestChannelClosedException extends RequestException {
     public RequestChannelClosedException(String message, Request request) {
         super(message, request);
     }
+
+    public RequestChannelClosedException(String message) {
+        super(message);
+    }
 }

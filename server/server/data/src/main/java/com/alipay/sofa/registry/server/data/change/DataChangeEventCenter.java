@@ -185,7 +185,8 @@ public final class DataChangeEventCenter {
         @Override
         public String toString() {
             return "ChangeNotifier{" + "connection=" + connection + ", dataCenter='" + dataCenter
-                   + '\'' + ", dataInfoIds=" + dataInfoIds + ", retryCount=" + retryCount + '}';
+                   + '\'' + ", dataInfoIds=" + dataInfoIds.size() + ", retryCount=" + retryCount
+                   + '}';
         }
     }
 

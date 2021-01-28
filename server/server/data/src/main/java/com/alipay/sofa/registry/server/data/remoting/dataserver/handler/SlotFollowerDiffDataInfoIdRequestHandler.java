@@ -84,7 +84,7 @@ public class SlotFollowerDiffDataInfoIdRequestHandler
                                                   Map<String, Map<String, Publisher>> existingPublishers) {
         DataSlotDiffSyncResult result = DataSlotDiffUtils.diffDataInfoIdsResult(dataInfoIds,
             existingPublishers);
-        DataSlotDiffUtils.logDiffResult(result, targetSlot, LOGGER);
+        DataSlotDiffUtils.logDiffResult(result, targetSlot);
         return result;
     }
 

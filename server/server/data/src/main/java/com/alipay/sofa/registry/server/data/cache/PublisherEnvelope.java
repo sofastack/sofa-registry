@@ -18,7 +18,7 @@ package com.alipay.sofa.registry.server.data.cache;
 
 import com.alipay.sofa.registry.common.model.ConnectId;
 import com.alipay.sofa.registry.common.model.ProcessId;
-import com.alipay.sofa.registry.common.model.PublisherVersion;
+import com.alipay.sofa.registry.common.model.RegisterVersion;
 import com.alipay.sofa.registry.common.model.store.Publisher;
 
 /**
@@ -27,16 +27,16 @@ import com.alipay.sofa.registry.common.model.store.Publisher;
  * @version v 0.1 2020-12-02 19:47 yuzhi.lyz Exp $
  */
 public final class PublisherEnvelope {
-    final Publisher        publisher;
-    final ProcessId        sessionProcessId;
-    final PublisherVersion publisherVersion;
-    final long tombstoneTimestamp;
+    final Publisher       publisher;
+    final ProcessId       sessionProcessId;
+    final RegisterVersion registerVersion;
+    final long            tombstoneTimestamp;
 
     private PublisherEnvelope(Publisher publisher, ProcessId sessionProcessId,
-                              PublisherVersion publisherVersion, long tombstoneTimestamp) {
+                              RegisterVersion registerVersion, long tombstoneTimestamp) {
         this.publisher = publisher;
         this.sessionProcessId = sessionProcessId;
-        this.publisherVersion = publisherVersion;
+        this.registerVersion = registerVersion;
         this.tombstoneTimestamp = tombstoneTimestamp;
     }
 
@@ -45,7 +45,7 @@ public final class PublisherEnvelope {
             case PUBLISHER:
                 return pubOf(publisher, publisher.getSessionProcessId());
             case UN_PUBLISHER:
-                return unpubOf(publisher.publisherVersion(), publisher.getSessionProcessId());
+                return unpubOf(publisher.registerVersion(), publisher.getSessionProcessId());
             default:
                 throw new IllegalArgumentException("unaccept Publisher Type:"
                                                    + publisher.getDataType());
@@ -53,10 +53,11 @@ public final class PublisherEnvelope {
     }
 
     static PublisherEnvelope pubOf(Publisher publisher, ProcessId sessionProcessId) {
-        return new PublisherEnvelope(publisher, sessionProcessId, publisher.publisherVersion(), Long.MAX_VALUE);
+        return new PublisherEnvelope(publisher, sessionProcessId, publisher.registerVersion(),
+            Long.MAX_VALUE);
     }
 
-    static PublisherEnvelope unpubOf(PublisherVersion version, ProcessId sessionProcessId) {
+    static PublisherEnvelope unpubOf(RegisterVersion version, ProcessId sessionProcessId) {
         return new PublisherEnvelope(null, sessionProcessId, version, System.currentTimeMillis());
     }
 
@@ -64,8 +65,8 @@ public final class PublisherEnvelope {
         return publisher != null;
     }
 
-    PublisherVersion getVersionIfPub() {
-        return isPub() ? publisherVersion : null;
+    RegisterVersion getVersionIfPub() {
+        return isPub() ? registerVersion : null;
     }
 
     boolean isConnectId(ConnectId connectId) {
@@ -77,7 +78,7 @@ public final class PublisherEnvelope {
         StringBuilder sb = new StringBuilder(128);
         sb.append("pub=").append(isPub()).append(", connectId=")
             .append(publisher != null ? publisher.connectId() : "null").append(", ver=")
-            .append(publisherVersion).append(", ts=").append(tombstoneTimestamp);
+            .append(registerVersion).append(", ts=").append(tombstoneTimestamp);
         return sb.toString();
     }
 }

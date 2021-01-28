@@ -21,6 +21,7 @@ import com.alipay.sofa.registry.common.model.store.StoreData;
 import com.alipay.sofa.registry.remoting.Channel;
 import com.alipay.sofa.registry.remoting.Server;
 import com.alipay.sofa.registry.remoting.exchange.Exchange;
+import com.alipay.sofa.registry.remoting.exchange.RequestChannelClosedException;
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -49,9 +50,8 @@ public class ClientCheckWrapperInterceptor implements WrapperInterceptor<StoreDa
         Channel channel = sessionServer.getChannel(baseInfo.getSourceAddress());
 
         if (channel == null) {
-            throw new RuntimeException(String.format(
-                "Register address %s  has not connected session server!",
-                baseInfo.getSourceAddress()));
+            throw new RequestChannelClosedException(String.format(
+                "Register address %s  channel closed", baseInfo.getSourceAddress()));
         }
         return invocation.proceed();
     }

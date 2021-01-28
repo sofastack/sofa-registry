@@ -29,7 +29,7 @@ import org.springframework.beans.factory.annotation.Autowired;
  * @version $Id: DatumCacheGenerator.java, v 0.1 2018-11-19 16:15 shangyu.wh Exp $
  */
 public class DatumCacheGenerator implements CacheGenerator {
-    private static final Logger LOGGER = LoggerFactory.getLogger(DatumCacheGenerator.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger("CACHE-GEN");
     /**
      * DataNode service
      */

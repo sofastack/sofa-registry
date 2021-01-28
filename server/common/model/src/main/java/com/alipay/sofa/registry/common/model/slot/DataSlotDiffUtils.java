@@ -16,10 +16,11 @@
  */
 package com.alipay.sofa.registry.common.model.slot;
 
-import com.alipay.sofa.registry.common.model.PublisherVersion;
+import com.alipay.sofa.registry.common.model.RegisterVersion;
 import com.alipay.sofa.registry.common.model.dataserver.DatumSummary;
 import com.alipay.sofa.registry.common.model.store.Publisher;
 import com.alipay.sofa.registry.log.Logger;
+import com.alipay.sofa.registry.log.LoggerFactory;
 import com.google.common.collect.Lists;
 import org.apache.commons.collections.MapUtils;
 
@@ -31,6 +32,8 @@ import java.util.*;
  * @version v 0.1 2020-11-24 15:46 yuzhi.lyz Exp $
  */
 public final class DataSlotDiffUtils {
+    private static final Logger SYNC_LOGGER = LoggerFactory.getLogger("SYNC-SRV");
+
     private DataSlotDiffUtils() {
     }
 
@@ -84,7 +87,7 @@ public final class DataSlotDiffUtils {
                 }
             }
             List<Publisher> publishers = new ArrayList<>();
-            Map<String, PublisherVersion> versions = summary.getValue().getPublisherVersions();
+            Map<String, RegisterVersion> versions = summary.getValue().getPublisherVersions();
             for (Map.Entry<String, Publisher> p : publisherMap.entrySet()) {
                 final String registerId = p.getKey();
                 if (!versions.containsKey(registerId)) {
@@ -92,7 +95,7 @@ public final class DataSlotDiffUtils {
                     continue;
                 }
                 // compare version
-                if (p.getValue().publisherVersion().equals(versions.get(registerId))) {
+                if (p.getValue().registerVersion().equals(versions.get(registerId))) {
                     // the same
                     continue;
                 }
@@ -114,24 +117,25 @@ public final class DataSlotDiffUtils {
         return result;
     }
 
-    public static void logDiffResult(DataSlotDiffSyncResult result, int slotId, Logger log) {
+    public static void logDiffResult(DataSlotDiffSyncResult result, int slotId) {
         if (!result.getUpdatedPublishers().isEmpty()) {
-            log.info("DiffSync, update dataInfoIds for slot={}, remain={}, dataInfoIds={}/{}",
-                slotId, result.isHasRemain(), result.getUpdatedPublishers().size(),
+            SYNC_LOGGER.info(
+                "DiffSync, update dataInfoIds for slot={}, remain={}, dataInfoIds={}/{}", slotId,
+                result.isHasRemain(), result.getUpdatedPublishers().size(),
                 result.getUpdatedPublishersCount());
         }
         if (!result.getRemovedPublishers().isEmpty()) {
-            log.info("DiffSync, remove publishers for slot={}, dataInfoId={}/{}, {}", slotId,
-                result.getRemovedPublishers().size(), result.getRemovedPublishersCount(), result
-                    .getRemovedPublishers().keySet());
+            SYNC_LOGGER.info("DiffSync, remove publishers for slot={}, dataInfoId={}/{}, {}",
+                slotId, result.getRemovedPublishers().size(), result.getRemovedPublishersCount(),
+                result.getRemovedPublishers().keySet());
         }
         if (!result.getAddedDataInfoIds().isEmpty()) {
-            log.info("DiffSync, add dataInfoIds for slot={}, dataInfoId={}, {}", slotId, result
-                .getAddedDataInfoIds().size(), result.getAddedDataInfoIds());
+            SYNC_LOGGER.info("DiffSync, add dataInfoIds for slot={}, dataInfoId={}, {}", slotId,
+                result.getAddedDataInfoIds().size(), result.getAddedDataInfoIds());
         }
         if (!result.getRemovedDataInfoIds().isEmpty()) {
-            log.info("DiffSync, remove dataInfoIds for slot={}, dataInfoId={}, {}", slotId, result
-                .getRemovedDataInfoIds().size(), result.getRemovedDataInfoIds());
+            SYNC_LOGGER.info("DiffSync, remove dataInfoIds for slot={}, dataInfoId={}, {}", slotId,
+                result.getRemovedDataInfoIds().size(), result.getRemovedDataInfoIds());
         }
     }
 }

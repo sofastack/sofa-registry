@@ -16,7 +16,7 @@
  */
 package com.alipay.sofa.registry.common.model.dataserver;
 
-import com.alipay.sofa.registry.common.model.PublisherVersion;
+import com.alipay.sofa.registry.common.model.RegisterVersion;
 import com.google.common.collect.Maps;
 
 import java.io.Serializable;
@@ -31,15 +31,15 @@ import java.util.Map;
  * @version v 0.1 2020-11-05 14:27 yuzhi.lyz Exp $
  */
 public class DatumSummary implements Serializable {
-    private final String                                 dataInfoId;
-    private Map<String/*registerId*/, PublisherVersion> publisherVersions = Maps.newHashMap();
+    private final String                                dataInfoId;
+    private Map<String/*registerId*/, RegisterVersion> publisherVersions = Maps.newHashMap();
 
     public DatumSummary(String dataInfoId) {
         this.dataInfoId = dataInfoId;
     }
 
     public DatumSummary(String dataInfoId,
-                        Map<String/*registerId*/, PublisherVersion> publisherVersions) {
+                        Map<String/*registerId*/, RegisterVersion> publisherVersions) {
         this.dataInfoId = dataInfoId;
         this.publisherVersions = Collections.unmodifiableMap(Maps.newHashMap(publisherVersions));
     }
@@ -56,18 +56,18 @@ public class DatumSummary implements Serializable {
      * Getter method for property <tt>publisherVersions</tt>.
      * @return property value of publisherVersions
      */
-    public Map<String, PublisherVersion> getPublisherVersions() {
+    public Map<String, RegisterVersion> getPublisherVersions() {
         return publisherVersions;
     }
 
-    public void addPublisherVersion(String registerId, PublisherVersion version) {
+    public void addPublisherVersion(String registerId, RegisterVersion version) {
         publisherVersions.put(registerId, version);
     }
 
-    public Map<String, PublisherVersion> getPublisherVersions(Collection<String> registerIds) {
-        Map<String, PublisherVersion> m = new HashMap<>(registerIds.size());
+    public Map<String, RegisterVersion> getPublisherVersions(Collection<String> registerIds) {
+        Map<String, RegisterVersion> m = new HashMap<>(registerIds.size());
         registerIds.forEach(k -> {
-                    PublisherVersion v = publisherVersions.get(k);
+                    RegisterVersion v = publisherVersions.get(k);
                     if (v == null) {
                         throw new IllegalArgumentException("not contains registerId:" + k);
                     }
