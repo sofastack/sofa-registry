@@ -24,6 +24,9 @@ import com.alipay.sofa.registry.common.model.dataserver.DatumVersion;
 import com.alipay.sofa.registry.common.model.slot.SlotAccess;
 import com.alipay.sofa.registry.common.model.slot.SlotAccessGenericResponse;
 import com.alipay.sofa.registry.common.model.store.Publisher;
+import com.alipay.sofa.registry.common.model.store.UnPublisher;
+import com.alipay.sofa.registry.log.Logger;
+import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.remoting.Channel;
 import com.alipay.sofa.registry.util.ParaCheckUtil;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,7 +36,7 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.ThreadPoolExecutor;
 
 public class BatchPutDataHandler extends AbstractDataHandler<BatchRequest> {
-
+    private static final Logger LOGGER = LoggerFactory.getLogger("PUT");
     @Autowired
     private ThreadPoolExecutor publishProcessorExecutor;
 
@@ -45,9 +48,9 @@ public class BatchPutDataHandler extends AbstractDataHandler<BatchRequest> {
                 checkPublisher((Publisher) req);
             } else if (req instanceof ClientOffRequest) {
                 ParaCheckUtil.checkNotNull(((ClientOffRequest) req).getConnectId(),
-                    "ClientOffRequest.connectIds");
+                        "ClientOffRequest.connectIds");
                 ParaCheckUtil.checkNotNull(((ClientOffRequest) req).getPublisherMap(),
-                    "ClientOffRequest.publisherMap");
+                        "ClientOffRequest.publisherMap");
             } else {
                 throw new IllegalArgumentException("unsupported item in batch:" + req);
             }
@@ -62,14 +65,30 @@ public class BatchPutDataHandler extends AbstractDataHandler<BatchRequest> {
             // only reject the when moved
             return SlotAccessGenericResponse.failedResponse(slotAccess);
         }
+        final String slotIdStr = String.valueOf(request.getSlotId());
         final Set<String> changeDataInfoIds = new HashSet<>(64);
         try {
             for (Object req : request.getRequest()) {
                 // contains publisher and unPublisher
                 if (req instanceof Publisher) {
-                    changeDataInfoIds.addAll(doHandle((Publisher) req));
+                    Publisher publisher = (Publisher) req;
+                    changeDataInfoIds.addAll(doHandle(publisher));
+                    if (publisher instanceof UnPublisher) {
+                        LOGGER.info("unpub,{},{},{},{}", slotIdStr, publisher.getDataInfoId(),
+                                publisher.getRegisterId(), publisher.registerVersion());
+                    } else {
+                        LOGGER.info("pub,{},{},{},{}", slotIdStr, publisher.getDataInfoId(), publisher.getRegisterId(),
+                                publisher.registerVersion());
+                    }
                 } else if (req instanceof ClientOffRequest) {
-                    changeDataInfoIds.addAll(doHandle((ClientOffRequest) req));
+                    ClientOffRequest clientOff = (ClientOffRequest) req;
+                    changeDataInfoIds.addAll(doHandle(clientOff));
+                    for (Map.Entry<String, Map<String, RegisterVersion>> e : clientOff.getPublisherMap().entrySet()) {
+                        final String dataInfoId = e.getKey();
+                        for (Map.Entry<String, RegisterVersion> ver : e.getValue().entrySet()) {
+                            LOGGER.info("off,{},{},{},{}", slotIdStr, dataInfoId, ver.getKey(), ver.getValue());
+                        }
+                    }
                 } else {
                     throw new IllegalArgumentException("unsupported item in batch:" + req);
                 }
@@ -78,9 +97,10 @@ public class BatchPutDataHandler extends AbstractDataHandler<BatchRequest> {
             // if has exception, try to notify the req which was handled
             if (!changeDataInfoIds.isEmpty()) {
                 dataChangeEventCenter.onChange(changeDataInfoIds,
-                    dataServerConfig.getLocalDataCenter());
+                        dataServerConfig.getLocalDataCenter());
             }
         }
+
         return SlotAccessGenericResponse.successResponse(slotAccess, null);
     }
 
@@ -89,7 +109,7 @@ public class BatchPutDataHandler extends AbstractDataHandler<BatchRequest> {
         if (publisher.getPublishType() == PublishType.TEMPORARY) {
             // create datum for the temp publisher, we need the datum.version for check ver
             localDatumStorage.createEmptyDatumIfAbsent(publisher.getDataInfoId(),
-                dataServerConfig.getLocalDataCenter());
+                    dataServerConfig.getLocalDataCenter());
             // temporary only notify session, not store
             dataChangeEventCenter.onTempPubChange(publisher, dataServerConfig.getLocalDataCenter());
         } else {
@@ -106,7 +126,7 @@ public class BatchPutDataHandler extends AbstractDataHandler<BatchRequest> {
         List<String> dataInfoIds = new ArrayList<>(publisherMap.size());
         for (Map.Entry<String, Map<String, RegisterVersion>> e : publisherMap.entrySet()) {
             DatumVersion version = localDatumStorage.remove(e.getKey(),
-                request.getSessionProcessId(), e.getValue());
+                    request.getSessionProcessId(), e.getValue());
             if (version != null) {
                 dataInfoIds.add(e.getKey());
             }
