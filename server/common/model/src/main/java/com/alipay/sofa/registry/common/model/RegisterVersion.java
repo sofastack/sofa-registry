@@ -24,17 +24,17 @@ import java.util.Objects;
  * @author yuzhi.lyz
  * @version v 0.1 2020-12-02 21:44 yuzhi.lyz Exp $
  */
-public final class PublisherVersion implements Serializable, Comparable<PublisherVersion> {
+public final class RegisterVersion implements Serializable, Comparable<RegisterVersion> {
     private final long version;
     private final long registerTimestamp;
 
-    public PublisherVersion(long version, long registerTimestamp) {
+    public RegisterVersion(long version, long registerTimestamp) {
         this.version = version;
         this.registerTimestamp = registerTimestamp;
     }
 
-    public static PublisherVersion of(long version, long registerTimestamp) {
-        return new PublisherVersion(version, registerTimestamp);
+    public static RegisterVersion of(long version, long registerTimestamp) {
+        return new RegisterVersion(version, registerTimestamp);
     }
 
     /**
@@ -57,9 +57,9 @@ public final class PublisherVersion implements Serializable, Comparable<Publishe
     public boolean equals(Object o) {
         if (this == o)
             return true;
-        if (!(o instanceof PublisherVersion))
+        if (!(o instanceof RegisterVersion))
             return false;
-        PublisherVersion that = (PublisherVersion) o;
+        RegisterVersion that = (RegisterVersion) o;
         return version == that.version && registerTimestamp == that.registerTimestamp;
     }
 
@@ -69,7 +69,7 @@ public final class PublisherVersion implements Serializable, Comparable<Publishe
     }
 
     @Override
-    public int compareTo(PublisherVersion o) {
+    public int compareTo(RegisterVersion o) {
         if (version < o.version) {
             return -1;
         }
@@ -86,17 +86,17 @@ public final class PublisherVersion implements Serializable, Comparable<Publishe
         return 0;
     }
 
-    public boolean orderThan(PublisherVersion o) {
+    public boolean orderThan(RegisterVersion o) {
         return compareTo(o) < 0;
     }
 
     @Override
     public String toString() {
-        return "PublisherVersion{" + "version=" + version + ", registerTimestamp="
+        return "RegisterVersion{" + "version=" + version + ", registerTimestamp="
                + registerTimestamp + '}';
     }
 
-    public PublisherVersion incrRegisterTimestamp() {
-        return PublisherVersion.of(this.version, this.registerTimestamp + 1);
+    public RegisterVersion incrRegisterTimestamp() {
+        return RegisterVersion.of(this.version, this.registerTimestamp + 1);
     }
 }

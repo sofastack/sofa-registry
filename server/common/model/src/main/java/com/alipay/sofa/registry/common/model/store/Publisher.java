@@ -128,8 +128,4 @@ public class Publisher extends BaseInfo {
         return publisher;
     }
 
-    public PublisherVersion publisherVersion() {
-        return PublisherVersion.of(getVersion(), getRegisterTimestamp());
-    }
-
 }

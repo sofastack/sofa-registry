@@ -24,6 +24,7 @@ import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.remoting.Channel;
 import com.alipay.sofa.registry.remoting.Server;
 import com.alipay.sofa.registry.remoting.exchange.Exchange;
+import com.alipay.sofa.registry.remoting.exchange.RequestChannelClosedException;
 import com.alipay.sofa.registry.server.session.acceptor.ClientOffWriteDataRequest;
 import com.alipay.sofa.registry.server.session.acceptor.PublisherWriteDataRequest;
 import com.alipay.sofa.registry.server.session.acceptor.WriteDataAcceptor;
@@ -180,6 +181,8 @@ public class SessionRegistry implements Registry {
 
         try {
             wrapperInvocation.proceed();
+        } catch (RequestChannelClosedException e) {
+            throw e;
         } catch (Exception e) {
             throw new RuntimeException("Proceed register error!", e);
         }

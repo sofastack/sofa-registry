@@ -55,8 +55,9 @@ public class SessionInterests extends AbstractDataManager<Subscriber> implements
         Subscriber existingSubscriber = addData(subscriber);
 
         if (existingSubscriber != null) {
-            LOGGER.warn("There is subscriber already exists,it will be overwrite! {}",
-                existingSubscriber);
+            LOGGER.warn("dups subscriber, {}, {}, exist={}, input={}",
+                existingSubscriber.getDataInfoId(), existingSubscriber.getRegisterId(),
+                existingSubscriber.registerVersion(), subscriber.registerVersion());
         }
         return true;
     }

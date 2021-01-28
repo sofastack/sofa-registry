@@ -39,8 +39,6 @@ import static com.alipay.sofa.registry.common.model.constants.ValueConstants.DEF
  * @since 2019/2/15
  */
 public class DefaultSubscriberHandlerStrategy implements SubscriberHandlerStrategy {
-    private static final Logger LOGGER     = LoggerFactory
-                                               .getLogger(DefaultSubscriberHandlerStrategy.class);
     private static final Logger SUB_LOGGER = LoggerFactory.getLogger("SUB-RECEIVE");
 
     @Autowired
@@ -85,7 +83,7 @@ public class DefaultSubscriberHandlerStrategy implements SubscriberHandlerStrate
         } else if (EventTypeConstants.UNREGISTER.equals(eventType)) {
             sessionRegistry.unRegister(subscriber);
         } else {
-            LOGGER.warn("unsupported subscriber.eventType:{}", eventType);
+            RegisterLogs.REGISTER_LOGGER.warn("unsupported subscriber.eventType:{}", eventType);
         }
         registerResponse.setVersion(subscriberRegister.getVersion());
         registerResponse.setRegistId(subscriberRegister.getRegistId());
@@ -97,30 +95,19 @@ public class DefaultSubscriberHandlerStrategy implements SubscriberHandlerStrate
     private void log(boolean success, SubscriberRegister subscriberRegister, Subscriber subscriber) {
         //[Y|N],[R|U|N],app,zone,dataInfoId,registerId,scope,assembleType,elementType,clientVersion,clientIp,clientPort
         SUB_LOGGER.info("{},{},{},{},{},{},{},{},{},{},{},{},{},{}", success ? 'Y' : 'N',
-            getEventTypeFlag(subscriberRegister.getEventType()), subscriberRegister.getAppName(),
-            subscriberRegister.getZone(), subscriberRegister.getDataId(), subscriberRegister
-                .getGroup(), subscriberRegister.getInstanceId(), subscriberRegister.getRegistId(),
-            subscriberRegister.getScope(), subscriber == null ? "" : subscriber.getAssembleType(),
-            subscriber == null ? "" : subscriber.getElementType(), subscriber == null ? ""
-                : subscriber.getClientVersion(), subscriberRegister.getIp(), subscriberRegister
-                .getPort());
-    }
-
-    private char getEventTypeFlag(String eventType) {
-        if (EventTypeConstants.REGISTER.equals(eventType)) {
-            return 'R';
-        } else if (EventTypeConstants.UNREGISTER.equals(eventType)) {
-            return 'U';
-        }
-        return 'N';
+            EventTypeConstants.getEventTypeFlag(subscriberRegister.getEventType()),
+            subscriberRegister.getAppName(), subscriberRegister.getZone(), subscriberRegister
+                .getDataId(), subscriberRegister.getGroup(), subscriberRegister.getInstanceId(),
+            subscriberRegister.getRegistId(), subscriberRegister.getScope(),
+            subscriber == null ? "" : subscriber.getAssembleType(), subscriber == null ? ""
+                : subscriber.getElementType(),
+            subscriber == null ? "" : subscriber.getClientVersion(), subscriberRegister.getIp(),
+            subscriberRegister.getPort());
     }
 
     protected void handleError(SubscriberRegister subscriberRegister, Subscriber subscriber,
                                RegisterResponse registerResponse, Throwable e) {
         log(false, subscriberRegister, subscriber);
-        LOGGER.error("Publisher register error!Type {}", subscriberRegister.getEventType(), e);
-        registerResponse.setSuccess(false);
-        registerResponse.setMessage("Publisher register failed!Type:"
-                                    + subscriberRegister.getEventType());
+        RegisterLogs.logError(subscriberRegister, "Subscriber", registerResponse, e);
     }
 }

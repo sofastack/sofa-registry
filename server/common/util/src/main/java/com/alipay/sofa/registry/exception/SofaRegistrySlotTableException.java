@@ -18,7 +18,8 @@ public class SofaRegistrySlotTableException extends SofaRegistryRuntimeException
         super(cause);
     }
 
-    public SofaRegistrySlotTableException(String message, Throwable cause, boolean enableSuppression, boolean writableStackTrace) {
+    public SofaRegistrySlotTableException(String message, Throwable cause,
+                                          boolean enableSuppression, boolean writableStackTrace) {
         super(message, cause, enableSuppression, writableStackTrace);
     }
 }

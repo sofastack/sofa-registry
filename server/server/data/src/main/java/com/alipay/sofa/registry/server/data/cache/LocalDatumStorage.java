@@ -18,7 +18,7 @@ package com.alipay.sofa.registry.server.data.cache;
 
 import com.alipay.sofa.registry.common.model.ConnectId;
 import com.alipay.sofa.registry.common.model.ProcessId;
-import com.alipay.sofa.registry.common.model.PublisherVersion;
+import com.alipay.sofa.registry.common.model.RegisterVersion;
 import com.alipay.sofa.registry.common.model.dataserver.Datum;
 import com.alipay.sofa.registry.common.model.dataserver.DatumSummary;
 import com.alipay.sofa.registry.common.model.dataserver.DatumVersion;
@@ -154,7 +154,7 @@ public final class LocalDatumStorage implements DatumStorage {
 
     @Override
     public DatumVersion remove(String dataInfoId, ProcessId sessionProcessId,
-                               Map<String, PublisherVersion> removedPublishers) {
+                               Map<String, RegisterVersion> removedPublishers) {
         // the sessionProcessId is null when the call from sync leader
         PublisherGroups groups = getPublisherGroups(dataInfoId);
         return groups == null ? null : groups.remove(dataInfoId, sessionProcessId,

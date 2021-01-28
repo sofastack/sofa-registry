@@ -17,7 +17,7 @@
 package com.alipay.sofa.registry.server.data;
 
 import com.alipay.remoting.serialization.HessianSerializer;
-import com.alipay.sofa.registry.common.model.PublisherVersion;
+import com.alipay.sofa.registry.common.model.RegisterVersion;
 import com.alipay.sofa.registry.common.model.dataserver.DatumSummary;
 import com.alipay.sofa.registry.common.model.slot.DataSlotDiffPublisherRequest;
 import org.junit.Test;
@@ -44,7 +44,7 @@ public class MigrateTest {
             DatumSummary summary = new DatumSummary("app" + System.currentTimeMillis());
             for (int j = 0; j < 1000; j++) {
                 summary.addPublisherVersion(UUID.randomUUID().toString(),
-                    PublisherVersion.of(0, System.currentTimeMillis()));
+                    RegisterVersion.of(0, System.currentTimeMillis()));
             }
             request.getDatumSummarys().put(summary.getDataInfoId(), summary);
         }

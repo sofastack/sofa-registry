@@ -18,7 +18,7 @@ package com.alipay.sofa.registry.common.model.dataserver;
 
 import com.alipay.sofa.registry.common.model.ConnectId;
 import com.alipay.sofa.registry.common.model.ProcessId;
-import com.alipay.sofa.registry.common.model.PublisherVersion;
+import com.alipay.sofa.registry.common.model.RegisterVersion;
 import com.alipay.sofa.registry.common.model.store.Publisher;
 import com.google.common.collect.Maps;
 
@@ -32,10 +32,10 @@ import java.util.*;
  */
 public class ClientOffRequest extends AbstractSlotRequest {
 
-    private static final long                                serialVersionUID = -3547806571058756207L;
+    private static final long                               serialVersionUID = -3547806571058756207L;
 
-    private final ConnectId                                  connectId;
-    private final Map<String, Map<String, PublisherVersion>> publisherMap     = Maps.newHashMap();
+    private final ConnectId                                 connectId;
+    private final Map<String, Map<String, RegisterVersion>> publisherMap     = Maps.newHashMap();
 
     public ClientOffRequest(ProcessId sessionProcessId, ConnectId connectId) {
         super(sessionProcessId);
@@ -43,16 +43,16 @@ public class ClientOffRequest extends AbstractSlotRequest {
     }
 
     public void addPublisher(Publisher publisher) {
-        Map<String, PublisherVersion> publishers = publisherMap.computeIfAbsent(
+        Map<String, RegisterVersion> publishers = publisherMap.computeIfAbsent(
                 publisher.getDataInfoId(), k -> Maps.newHashMap());
-        publishers.put(publisher.getRegisterId(), publisher.publisherVersion());
+        publishers.put(publisher.getRegisterId(), publisher.registerVersion());
     }
 
     public ConnectId getConnectId() {
         return connectId;
     }
 
-    public Map<String, Map<String, PublisherVersion>> getPublisherMap() {
+    public Map<String, Map<String, RegisterVersion>> getPublisherMap() {
         return publisherMap;
     }
 

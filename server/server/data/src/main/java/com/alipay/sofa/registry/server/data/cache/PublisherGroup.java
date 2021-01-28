@@ -18,7 +18,7 @@ package com.alipay.sofa.registry.server.data.cache;
 
 import com.alipay.sofa.registry.common.model.ConnectId;
 import com.alipay.sofa.registry.common.model.ProcessId;
-import com.alipay.sofa.registry.common.model.PublisherVersion;
+import com.alipay.sofa.registry.common.model.RegisterVersion;
 import com.alipay.sofa.registry.common.model.dataserver.Datum;
 import com.alipay.sofa.registry.common.model.dataserver.DatumSummary;
 import com.alipay.sofa.registry.common.model.dataserver.DatumVersion;
@@ -114,21 +114,19 @@ public final class PublisherGroup {
 
     private boolean tryAddPublisher(Publisher publisher) {
         PublisherEnvelope exist = pubMap.get(publisher.getRegisterId());
-        final PublisherVersion publisherVersion = publisher.publisherVersion();
+        final RegisterVersion registerVersion = publisher.registerVersion();
         if (exist != null) {
-            if (exist.publisherVersion.equals(publisherVersion)) {
+            if (exist.registerVersion.equals(registerVersion)) {
                 if (LOGGER.isDebugEnabled()) {
                     LOGGER.debug("[AddSameVer] {}, {}, exist={}, add={}",
                         publisher.getDataInfoId(), publisher.getRegisterId(),
-                        exist.publisherVersion, publisher.publisherVersion());
+                        exist.registerVersion, publisher.registerVersion());
                 }
                 return false;
             }
-            if (!exist.publisherVersion.orderThan(publisherVersion)) {
-                LOGGER
-                    .warn("[AddOlderVer] {}, {}, exist={}, add={}", publisher.getDataInfoId(),
-                        publisher.getRegisterId(), exist.publisherVersion,
-                        publisher.publisherVersion());
+            if (!exist.registerVersion.orderThan(registerVersion)) {
+                LOGGER.warn("[AddOlderVer] {}, {}, exist={}, add={}", publisher.getDataInfoId(),
+                    publisher.getRegisterId(), exist.registerVersion, publisher.registerVersion());
                 return false;
             }
         }
@@ -159,7 +157,7 @@ public final class PublisherGroup {
                 // clean by session processId, could not increase the pub version
                 // the publisher from the session maybe sync again after clean, could not reject that
                 Iterator<Map.Entry<String, PublisherEnvelope>> it = pubMap.entrySet().iterator();
-                while(it.hasNext()){
+                while (it.hasNext()) {
                     PublisherEnvelope envelope = it.next().getValue();
                     if (envelope.isPub() && envelope.sessionProcessId.equals(sessionProcessId)) {
                         it.remove();
@@ -173,23 +171,23 @@ public final class PublisherGroup {
         }
     }
 
-    DatumVersion remove(ProcessId sessionProcessId, Map<String, PublisherVersion> removedPublishers) {
+    DatumVersion remove(ProcessId sessionProcessId, Map<String, RegisterVersion> removedPublishers) {
         if (MapUtils.isEmpty(removedPublishers)) {
             return null;
         }
         lock.writeLock().lock();
         try {
             boolean modified = false;
-            for (Map.Entry<String, PublisherVersion> e : removedPublishers.entrySet()) {
+            for (Map.Entry<String, RegisterVersion> e : removedPublishers.entrySet()) {
                 final String registerId = e.getKey();
-                final PublisherVersion removedVer = e.getValue();
+                final RegisterVersion removedVer = e.getValue();
 
                 final PublisherEnvelope existing = pubMap.get(registerId);
                 if (existing == null) {
                     // the removedPublishers is from pubMap, but now notExist/unpub/pubByOtherSession
                     continue;
                 }
-                if (existing.publisherVersion.equals(removedVer)) {
+                if (existing.registerVersion.equals(removedVer)) {
                     // sync from leader
                     if (sessionProcessId == null) {
                         pubMap.remove(registerId);
@@ -203,13 +201,13 @@ public final class PublisherGroup {
                         modified = true;
                     } else {
                         LOGGER.warn("[RemovePidModified] {}, {}, exist={}/{}, expect={}/{}",
-                            dataInfoId, registerId, existing.publisherVersion,
+                            dataInfoId, registerId, existing.registerVersion,
                             existing.sessionProcessId, removedVer, sessionProcessId);
                     }
                 } else {
                     // the item has modified after diff, ignored
                     LOGGER.warn("[RemoveVerModified] {}, {}, exist={}, expect={}", dataInfoId,
-                        registerId, existing.publisherVersion, removedVer);
+                        registerId, existing.registerVersion, removedVer);
                 }
             }
             return modified ? updateVersion() : null;
@@ -240,10 +238,10 @@ public final class PublisherGroup {
     }
 
     DatumSummary getSummary(String sessionIpAddress) {
-        Map<String/*registerId*/, PublisherVersion> publisherVersions = new HashMap<>(64);
+        Map<String/*registerId*/, RegisterVersion> publisherVersions = new HashMap<>(64);
         for (Map.Entry<String, PublisherEnvelope> e : Maps.newHashMap(pubMap).entrySet()) {
             PublisherEnvelope envelope = e.getValue();
-            PublisherVersion v = envelope.getVersionIfPub();
+            RegisterVersion v = envelope.getVersionIfPub();
             if (v == null) {
                 continue;
             }
@@ -269,8 +267,7 @@ public final class PublisherGroup {
             while (it.hasNext()) {
                 PublisherEnvelope envelope = it.next().getValue();
                 // compact the unpub
-                if (!envelope.isPub()
-                    && envelope.tombstoneTimestamp < tombstoneTimestamp) {
+                if (!envelope.isPub() && envelope.tombstoneTimestamp < tombstoneTimestamp) {
                     it.remove();
                     count++;
                 }
