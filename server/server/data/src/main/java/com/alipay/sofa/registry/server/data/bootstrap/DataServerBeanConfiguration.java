@@ -19,7 +19,6 @@ package com.alipay.sofa.registry.server.data.bootstrap;
 import com.alipay.sofa.registry.remoting.bolt.exchange.BoltExchange;
 import com.alipay.sofa.registry.remoting.exchange.Exchange;
 import com.alipay.sofa.registry.remoting.jersey.exchange.JerseyExchange;
-import com.alipay.sofa.registry.server.data.cache.CacheDigestTask;
 import com.alipay.sofa.registry.server.data.cache.DatumCache;
 import com.alipay.sofa.registry.server.data.cache.DatumStorage;
 import com.alipay.sofa.registry.server.data.cache.LocalDatumStorage;
@@ -43,6 +42,8 @@ import com.alipay.sofa.registry.server.data.resource.DatumApiResource;
 import com.alipay.sofa.registry.server.data.resource.HealthResource;
 import com.alipay.sofa.registry.server.data.slot.SlotManager;
 import com.alipay.sofa.registry.server.data.slot.SlotManagerImpl;
+import com.alipay.sofa.registry.server.data.timer.CacheCountTask;
+import com.alipay.sofa.registry.server.data.timer.CacheDigestTask;
 import com.alipay.sofa.registry.server.shared.remoting.AbstractClientHandler;
 import com.alipay.sofa.registry.server.shared.remoting.AbstractServerHandler;
 import com.alipay.sofa.registry.server.shared.resource.MetricsResource;
@@ -135,6 +136,11 @@ public class DataServerBeanConfiguration {
         @Bean
         public CacheDigestTask cacheDigestTask() {
             return new CacheDigestTask();
+        }
+
+        @Bean
+        public CacheCountTask cacheCountTask() {
+            return new CacheCountTask();
         }
 
     }
@@ -303,7 +309,7 @@ public class DataServerBeanConfiguration {
                 dataServerConfig.getPublishExecutorMinPoolSize(),
                 dataServerConfig.getPublishExecutorMaxPoolSize(), 300, TimeUnit.SECONDS,
                 new ArrayBlockingQueue<>(dataServerConfig.getPublishExecutorQueueSize()),
-                new NamedThreadFactory("DataServer-PublishProcessor-executor", true));
+                new NamedThreadFactory("PutExecutor", true));
         }
 
         @Bean(name = "getDataProcessorExecutor")
@@ -313,7 +319,7 @@ public class DataServerBeanConfiguration {
                 dataServerConfig.getGetDataExecutorMaxPoolSize(),
                 dataServerConfig.getGetDataExecutorKeepAliveTime(), TimeUnit.SECONDS,
                 new ArrayBlockingQueue<>(dataServerConfig.getGetDataExecutorQueueSize()),
-                new NamedThreadFactory("DataServer-GetDataProcessor-executor", true));
+                new NamedThreadFactory("GetExecutor", true));
         }
 
         @Bean(name = "slotSyncRequestProcessorExecutor")
@@ -322,7 +328,7 @@ public class DataServerBeanConfiguration {
                 dataServerConfig.getSlotSyncRequestExecutorMinPoolSize(),
                 dataServerConfig.getSlotSyncRequestExecutorMaxPoolSize(), 300, TimeUnit.SECONDS,
                 new ArrayBlockingQueue<>(dataServerConfig.getSlotSyncRequestExecutorQueueSize()),
-                new NamedThreadFactory("DataServer-SlotSyncRequestProcessor-executor", true));
+                new NamedThreadFactory("SyncExecutor", true));
         }
 
     }

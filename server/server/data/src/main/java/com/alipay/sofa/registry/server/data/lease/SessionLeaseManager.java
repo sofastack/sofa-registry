@@ -43,6 +43,9 @@ public final class SessionLeaseManager {
     private static final Logger            LOGGER                     = LoggerFactory
                                                                           .getLogger(SessionLeaseManager.class);
 
+    private static final Logger            COMPACT_LOGGER             = LoggerFactory
+                                                                          .getLogger("COMPACT");
+
     public static final int                MIN_LEASE_SEC              = 5;
 
     @Autowired
@@ -128,7 +131,7 @@ public final class SessionLeaseManager {
             long tombstoneTimestamp = System.currentTimeMillis()
                                       - dataServerConfig.getDatumCompactDelayMs();
             Map<String, Integer> compacted = localDatumStorage.compact(tombstoneTimestamp);
-            LOGGER.info("compact datum, {}", compacted);
+            COMPACT_LOGGER.info("compact datum, {}", compacted);
         }
 
         @Override

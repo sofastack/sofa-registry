@@ -29,6 +29,7 @@ import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.util.DatumVersionUtil;
 import com.alipay.sofa.registry.util.ParaCheckUtil;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import org.apache.commons.collections.MapUtils;
@@ -95,6 +96,16 @@ public final class PublisherGroup {
         datum.setVersion(ver);
         list.stream().filter(PublisherEnvelope::isPub).forEach(p -> datum.addPublisher(p.publisher));
         return datum;
+    }
+
+    List<Publisher> getPublishers() {
+        List<Publisher> list = new ArrayList<>(pubMap.size());
+        for (PublisherEnvelope envelope : Lists.newArrayList(pubMap.values())) {
+            if (envelope.isPub()) {
+                list.add(envelope.publisher);
+            }
+        }
+        return list;
     }
 
     Map<String, Publisher> getByConnectId(ConnectId connectId) {
@@ -183,7 +194,7 @@ public final class PublisherGroup {
                 final RegisterVersion removedVer = e.getValue();
 
                 final PublisherEnvelope existing = pubMap.get(registerId);
-                if (existing == null) {
+                if (existing == null || !existing.isPub()) {
                     // the removedPublishers is from pubMap, but now notExist/unpub/pubByOtherSession
                     continue;
                 }
@@ -260,20 +271,20 @@ public final class PublisherGroup {
     }
 
     int compact(long tombstoneTimestamp) {
+        // compact not modify the version, no need to lock
         int count = 0;
-        lock.writeLock().lock();
-        try {
-            Iterator<Map.Entry<String, PublisherEnvelope>> it = pubMap.entrySet().iterator();
-            while (it.hasNext()) {
-                PublisherEnvelope envelope = it.next().getValue();
-                // compact the unpub
-                if (!envelope.isPub() && envelope.tombstoneTimestamp < tombstoneTimestamp) {
-                    it.remove();
-                    count++;
-                }
+        Map<String, PublisherEnvelope> compacts = Maps.newHashMap();
+        for (Map.Entry<String, PublisherEnvelope> e : Maps.newHashMap(pubMap).entrySet()) {
+            final PublisherEnvelope envelope = e.getValue();
+            if (!envelope.isPub() && envelope.tombstoneTimestamp <= tombstoneTimestamp) {
+                compacts.put(e.getKey(), envelope);
             }
-        } finally {
-            lock.writeLock().unlock();
+        }
+
+        for (Map.Entry<String, PublisherEnvelope> compact : compacts.entrySet()) {
+            if (pubMap.remove(compact.getKey(), compact.getValue())) {
+                count++;
+            }
         }
         return count;
     }

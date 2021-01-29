@@ -48,10 +48,10 @@ public class SessionWatchers extends AbstractDataManager<Watcher> implements Wat
         Watcher existingWatcher = addData(watcher);
         if (existingWatcher != null) {
             LOGGER.warn("dups watcher, {}, {}, exist={}/{}, input={}/{}",
-                    existingWatcher.getDataInfoId(), existingWatcher.getRegisterId(),
-                    // not use get registerVersion, avoid the subscriber.version is null
-                    existingWatcher.getVersion(), existingWatcher.getRegisterTimestamp(),
-                    watcher.getVersion(), watcher.getRegisterTimestamp());
+                existingWatcher.getDataInfoId(), existingWatcher.getRegisterId(),
+                // not use get registerVersion, avoid the subscriber.version is null
+                existingWatcher.getVersion(), existingWatcher.getRegisterTimestamp(),
+                watcher.getVersion(), watcher.getRegisterTimestamp());
         }
         return true;
     }

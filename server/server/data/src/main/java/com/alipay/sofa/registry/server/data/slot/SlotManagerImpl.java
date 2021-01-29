@@ -57,6 +57,9 @@ public final class SlotManagerImpl implements SlotManager {
     private static final Logger              LOGGER              = LoggerFactory
                                                                      .getLogger(SlotManagerImpl.class);
 
+    private static final Logger              MIGRATING_LOGGER    = LoggerFactory
+                                                                     .getLogger("MIGRATING");
+
     private final SlotFunction               slotFunction        = SlotFunctionRegistry.getFunc();
 
     @Autowired
@@ -259,6 +262,7 @@ public final class SlotManagerImpl implements SlotManager {
                             if (slotState.migratingStartTime == 0) {
                                 slotState.migratingStartTime = System.currentTimeMillis();
                                 observeLeaderMigratingStart(slot.getId());
+                                LOGGER.info("start migrating, slotId={}, sessions={}", slot.getId(), sessions);
                             }
                             for (String sessionIp : sessions) {
                                 MigratingTask mtask = slotState.migratingTasks.get(sessionIp);
@@ -277,11 +281,12 @@ public final class SlotManagerImpl implements SlotManager {
                                     mtask.tryCount++;
                                 }
                             }
+
                             // check all migrating task
                             if (slotState.migratingTasks.isEmpty()) {
                                 LOGGER.warn("sessionNodes is empty when migrating, {}", slot);
-                                continue;
                             }
+
                             if (slotState.migratingTasks.values().stream().allMatch(m -> m.task.isSuccess())) {
                                 // after migrated, force to update the version
                                 // make sure the version is newly than old leader's
@@ -293,6 +298,9 @@ public final class SlotManagerImpl implements SlotManager {
                                 slotState.migratingTasks.clear();
                                 observeLeaderMigratingFinish(slot.getId());
                                 observeLeaderMigratingHistogram(slot.getId(), span);
+                            }else{
+                                MIGRATING_LOGGER.info("[migrating]{},{},{}", slot.getId(),
+                                        System.currentTimeMillis() - slotState.migratingStartTime, sessions.size());
                             }
                         }
                     } else {
@@ -314,7 +322,7 @@ public final class SlotManagerImpl implements SlotManager {
 
         @Override
         public int getWaitingMillis() {
-            return 100;
+            return 200;
         }
     }
 

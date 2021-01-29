@@ -38,7 +38,7 @@ import java.util.concurrent.ThreadPoolExecutor;
 public class BatchPutDataHandler extends AbstractDataHandler<BatchRequest> {
     private static final Logger LOGGER = LoggerFactory.getLogger("PUT");
     @Autowired
-    private ThreadPoolExecutor publishProcessorExecutor;
+    private ThreadPoolExecutor  publishProcessorExecutor;
 
     @Override
     public void checkParam(BatchRequest request) throws RuntimeException {
@@ -48,9 +48,9 @@ public class BatchPutDataHandler extends AbstractDataHandler<BatchRequest> {
                 checkPublisher((Publisher) req);
             } else if (req instanceof ClientOffRequest) {
                 ParaCheckUtil.checkNotNull(((ClientOffRequest) req).getConnectId(),
-                        "ClientOffRequest.connectIds");
+                    "ClientOffRequest.connectIds");
                 ParaCheckUtil.checkNotNull(((ClientOffRequest) req).getPublisherMap(),
-                        "ClientOffRequest.publisherMap");
+                    "ClientOffRequest.publisherMap");
             } else {
                 throw new IllegalArgumentException("unsupported item in batch:" + req);
             }
@@ -74,19 +74,24 @@ public class BatchPutDataHandler extends AbstractDataHandler<BatchRequest> {
                     Publisher publisher = (Publisher) req;
                     changeDataInfoIds.addAll(doHandle(publisher));
                     if (publisher instanceof UnPublisher) {
-                        LOGGER.info("unpub,{},{},{},{}", slotIdStr, publisher.getDataInfoId(),
-                                publisher.getRegisterId(), publisher.registerVersion());
+                        LOGGER.info("unpub,{},{},{},{},{}", slotIdStr, publisher.getDataInfoId(),
+                            publisher.getRegisterId(), publisher.getVersion(),
+                            publisher.getRegisterTimestamp());
                     } else {
-                        LOGGER.info("pub,{},{},{},{}", slotIdStr, publisher.getDataInfoId(), publisher.getRegisterId(),
-                                publisher.registerVersion());
+                        LOGGER.info("pub,{},{},{},{}", slotIdStr, publisher.getDataInfoId(),
+                            publisher.getRegisterId(), publisher.getVersion(),
+                            publisher.getRegisterTimestamp());
                     }
                 } else if (req instanceof ClientOffRequest) {
                     ClientOffRequest clientOff = (ClientOffRequest) req;
                     changeDataInfoIds.addAll(doHandle(clientOff));
-                    for (Map.Entry<String, Map<String, RegisterVersion>> e : clientOff.getPublisherMap().entrySet()) {
+                    for (Map.Entry<String, Map<String, RegisterVersion>> e : clientOff
+                        .getPublisherMap().entrySet()) {
                         final String dataInfoId = e.getKey();
                         for (Map.Entry<String, RegisterVersion> ver : e.getValue().entrySet()) {
-                            LOGGER.info("off,{},{},{},{}", slotIdStr, dataInfoId, ver.getKey(), ver.getValue());
+                            RegisterVersion version = ver.getValue();
+                            LOGGER.info("off,{},{},{},{}", slotIdStr, dataInfoId, ver.getKey(),
+                                version.getVersion(), version.getRegisterTimestamp());
                         }
                     }
                 } else {
@@ -97,7 +102,7 @@ public class BatchPutDataHandler extends AbstractDataHandler<BatchRequest> {
             // if has exception, try to notify the req which was handled
             if (!changeDataInfoIds.isEmpty()) {
                 dataChangeEventCenter.onChange(changeDataInfoIds,
-                        dataServerConfig.getLocalDataCenter());
+                    dataServerConfig.getLocalDataCenter());
             }
         }
 
@@ -109,7 +114,7 @@ public class BatchPutDataHandler extends AbstractDataHandler<BatchRequest> {
         if (publisher.getPublishType() == PublishType.TEMPORARY) {
             // create datum for the temp publisher, we need the datum.version for check ver
             localDatumStorage.createEmptyDatumIfAbsent(publisher.getDataInfoId(),
-                    dataServerConfig.getLocalDataCenter());
+                dataServerConfig.getLocalDataCenter());
             // temporary only notify session, not store
             dataChangeEventCenter.onTempPubChange(publisher, dataServerConfig.getLocalDataCenter());
         } else {
@@ -126,7 +131,7 @@ public class BatchPutDataHandler extends AbstractDataHandler<BatchRequest> {
         List<String> dataInfoIds = new ArrayList<>(publisherMap.size());
         for (Map.Entry<String, Map<String, RegisterVersion>> e : publisherMap.entrySet()) {
             DatumVersion version = localDatumStorage.remove(e.getKey(),
-                    request.getSessionProcessId(), e.getValue());
+                request.getSessionProcessId(), e.getValue());
             if (version != null) {
                 dataInfoIds.add(e.getKey());
             }

@@ -96,7 +96,7 @@ public class ExecutorManager {
                         sessionServerConfig.getConnectClientExecutorMinPoolSize(),
                         sessionServerConfig.getConnectClientExecutorMaxPoolSize(), 60L, TimeUnit.SECONDS,
                         new LinkedBlockingQueue(sessionServerConfig.getConnectClientExecutorQueueSize()),
-                        new NamedThreadFactory("DisconnectClientExecutor", true)));
+                        new NamedThreadFactory("DisconnectCliExecutor", true)));
     }
 
     public void startScheduler() {

@@ -109,6 +109,10 @@ public class DataServerConfig {
 
     private boolean              enableTestApi                            = false;
 
+    private int                  cacheDigestIntervalSecs                  = 60 * 15;
+
+    private int                  cacheCountIntervalSecs                   = 30;
+
     /**
      * constructor
      * @param commonConfig
@@ -694,6 +698,22 @@ public class DataServerConfig {
 
     public void setNotifyRetryTimes(int notifyRetryTimes) {
         this.notifyRetryTimes = notifyRetryTimes;
+    }
+
+    public int getCacheDigestIntervalSecs() {
+        return cacheDigestIntervalSecs;
+    }
+
+    public void setCacheDigestIntervalSecs(int cacheDigestIntervalSecs) {
+        this.cacheDigestIntervalSecs = cacheDigestIntervalSecs;
+    }
+
+    public int getCacheCountIntervalSecs() {
+        return cacheCountIntervalSecs;
+    }
+
+    public void setCacheCountIntervalSecs(int cacheCountIntervalSecs) {
+        this.cacheCountIntervalSecs = cacheCountIntervalSecs;
     }
 
     @Override

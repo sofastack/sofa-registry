@@ -56,10 +56,10 @@ public class SessionInterests extends AbstractDataManager<Subscriber> implements
 
         if (existingSubscriber != null) {
             LOGGER.warn("dups subscriber, {}, {}, exist={}/{}, input={}/{}",
-                    existingSubscriber.getDataInfoId(), existingSubscriber.getRegisterId(),
-                    // not use get registerVersion, avoid the subscriber.version is null
-                    existingSubscriber.getVersion(), existingSubscriber.getRegisterTimestamp(),
-                    subscriber.getVersion(), existingSubscriber.getRegisterTimestamp());
+                existingSubscriber.getDataInfoId(), existingSubscriber.getRegisterId(),
+                // not use get registerVersion, avoid the subscriber.version is null
+                existingSubscriber.getVersion(), existingSubscriber.getRegisterTimestamp(),
+                subscriber.getVersion(), existingSubscriber.getRegisterTimestamp());
         }
         return true;
     }

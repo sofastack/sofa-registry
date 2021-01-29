@@ -90,8 +90,15 @@ public final class LocalDatumStorage implements DatumStorage {
 
     @Override
     public Map<String, Datum> getAll() {
-        Map<String, Datum> m = new HashMap<>(64);
+        Map<String, Datum> m = new HashMap<>(128);
         publisherGroupsMap.values().forEach(g -> m.putAll(g.getAllDatum()));
+        return m;
+    }
+
+    @Override
+    public Map<String, List<Publisher>> getAllPublisher() {
+        Map<String, List<Publisher>> m = new HashMap<>(128);
+        publisherGroupsMap.values().forEach(g -> m.putAll(g.getAllPublisher()));
         return m;
     }
 

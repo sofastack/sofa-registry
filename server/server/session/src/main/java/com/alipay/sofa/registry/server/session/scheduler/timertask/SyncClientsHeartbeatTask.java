@@ -86,7 +86,7 @@ public class SyncClientsHeartbeatTask {
     private ExecutorManager     executorManager;
 
     @Scheduled(initialDelayString = "${session.server.syncHeartbeat.fixedDelay}", fixedDelayString = "${session.server.syncHeartbeat.fixedDelay}")
-    public void syncCounte() {
+    public void syncCount() {
         long countSub = sessionInterests.count();
         long countPub = sessionDataStore.count();
         long countSubW = sessionWatchers.count();
@@ -174,24 +174,5 @@ public class SyncClientsHeartbeatTask {
             sb.append("\n");
         }
         sb0.append("\n").append(sb);
-    }
-
-    @Scheduled(initialDelayString = "${session.server.printTask.fixedDelay}", fixedDelayString = "${session.server.printTask.fixedDelay}")
-    public void printPushMultiTaskExecute() {
-        //        if (receivedDataMultiPushTaskListener instanceof ReceivedDataMultiPushTaskListener) {
-        //            ReceivedDataMultiPushTaskListener listener = (ReceivedDataMultiPushTaskListener) receivedDataMultiPushTaskListener;
-        //            StringBuilder sb = new StringBuilder();
-        //            sb.append("ReceivedDataPush").append(" >>>>>>>");
-        //            sb.append(", AcceptedTasks:").append(
-        //                listener.getTaskMergeProcessorStrategy().getPutTaskSize());
-        //            sb.append(", SendTasks:").append(
-        //                listener.getTaskMergeProcessorStrategy().getSendTaskSize());
-        //            sb.append(" ,PendingTaskSize:").append(
-        //                listener.getTaskMergeProcessorStrategy().getPendingTaskSize());
-        //            sb.append(", OverriddenTasks:").append(
-        //                listener.getTaskMergeProcessorStrategy().getOverrideTaskSize());
-        //            sb.append("\n");
-        //            PRO_LOGGER.info(sb.toString());
-        //        }
     }
 }

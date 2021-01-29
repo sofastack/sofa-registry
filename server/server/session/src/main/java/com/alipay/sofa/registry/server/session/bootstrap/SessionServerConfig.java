@@ -133,5 +133,7 @@ public interface SessionServerConfig {
 
     int getSlotSyncWorkerSize();
 
-    int getCacheDigestFixDelaySecs();
+    int getCacheDigestIntervalSecs();
+
+    int getCacheCountIntervalSecs();
 }
