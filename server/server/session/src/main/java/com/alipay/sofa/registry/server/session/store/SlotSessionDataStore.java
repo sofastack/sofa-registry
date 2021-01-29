@@ -51,6 +51,15 @@ public class SlotSessionDataStore implements DataStore {
     }
 
     @Override
+    public List<Publisher> getDataList() {
+        List<Publisher> ret = new ArrayList<>(2048);
+        slot2DataStores.values().forEach(ds -> {
+            ret.addAll(ds.getDataList());
+        });
+        return ret;
+    }
+
+    @Override
     public Publisher queryById(String registerId, String dataInfoId) {
         DataStore ds = getOrCreateDataStore(dataInfoId);
         return ds.queryById(registerId, dataInfoId);

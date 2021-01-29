@@ -40,10 +40,10 @@ public class NamedThreadFactory implements ThreadFactory {
         this(name, false);
     }
 
-    public NamedThreadFactory(String preffix, boolean daemon) {
+    public NamedThreadFactory(String prefix, boolean daemon) {
         SecurityManager s = System.getSecurityManager();
         group = (s != null) ? s.getThreadGroup() : Thread.currentThread().getThreadGroup();
-        namePrefix = preffix + "-" + POOL_NUMBER.getAndIncrement() + "-thread-";
+        namePrefix = prefix + "-" + POOL_NUMBER.getAndIncrement() + "-T-";
         isDaemon = daemon;
     }
 

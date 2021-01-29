@@ -39,12 +39,12 @@ import java.util.concurrent.ThreadPoolExecutor;
  * @version $Id: GetDataProcessor.java, v 0.1 2017-12-01 15:48 qian.lqlq Exp $
  */
 public class GetDataHandler extends AbstractDataHandler<GetDataRequest> {
-    private static final Logger LOGGER             = LoggerFactory.getLogger("GET");
+    private static final Logger LOGGER = LoggerFactory.getLogger("GET");
     @Autowired
-    private DatumCache         datumCache;
+    private DatumCache          datumCache;
 
     @Autowired
-    private ThreadPoolExecutor getDataProcessorExecutor;
+    private ThreadPoolExecutor  getDataProcessorExecutor;
 
     @Override
     public Executor getExecutor() {
@@ -76,7 +76,7 @@ public class GetDataHandler extends AbstractDataHandler<GetDataRequest> {
         GET_DATUM_Y_COUNTER.inc();
         if (localDatum != null) {
             LOGGER.info("getD,{},{},{},{}", dataInfoId, localDataCenter,
-                    localDatum.publisherSize(), localDatum.getVersion());
+                localDatum.publisherSize(), localDatum.getVersion());
             GET_PUBLISHER_COUNTER.inc(localDatum.publisherSize());
         } else {
             LOGGER.info("getDNil,{},{}", dataInfoId, localDataCenter);

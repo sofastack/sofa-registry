@@ -19,6 +19,7 @@ package com.alipay.sofa.registry.server.session.store;
 import com.alipay.sofa.registry.common.model.ConnectId;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -79,6 +80,8 @@ public interface DataManager<DATA, ID, DATAINFOID> {
     Set<ConnectId> getConnectIds();
 
     Collection<DATA> getDatas(DATAINFOID dataInfoId);
+
+    List<DATA> getDataList();
 
     Map<DATAINFOID, Map<ID, DATA>> getDatas();
 

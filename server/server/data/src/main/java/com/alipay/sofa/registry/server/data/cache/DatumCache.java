@@ -21,12 +21,12 @@ import com.alipay.sofa.registry.common.model.dataserver.Datum;
 import com.alipay.sofa.registry.common.model.dataserver.DatumVersion;
 import com.alipay.sofa.registry.common.model.store.Publisher;
 import com.alipay.sofa.registry.server.data.bootstrap.DataServerConfig;
-import com.google.common.collect.Maps;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.CollectionUtils;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -75,22 +75,6 @@ public class DatumCache {
         localDatumStorage.remove(dataInfoId, null);
     }
 
-    /**
-     * get datum of all data centers by dataInfoId
-     *
-     * @param dataInfoId
-     * @return
-     */
-    public Map<String, DatumVersion> getVersions(String dataInfoId) {
-        Map<String, DatumVersion> datumMap = Maps.newHashMap();
-        //local
-        DatumVersion version = localDatumStorage.getVersion(dataInfoId);
-        if (version != null) {
-            datumMap.put(dataServerConfig.getLocalDataCenter(), version);
-        }
-        return datumMap;
-    }
-
     public DatumVersion getVersion(String dataCenter, String dataInfoId) {
         //TODO only get local datacenter
         DatumVersion version = localDatumStorage.getVersion(dataInfoId);
@@ -135,6 +119,13 @@ public class DatumCache {
     public Map<String, Map<String, Datum>> getAll() {
         Map<String, Map<String, Datum>> datumMap = new HashMap<>();
         datumMap.put(dataServerConfig.getLocalDataCenter(), localDatumStorage.getAll());
+        return datumMap;
+    }
+
+    // get without datum.version, it's more efficient than getDatum
+    public Map<String, Map<String, List<Publisher>>> getAllPublisher() {
+        Map<String, Map<String, List<Publisher>>> datumMap = new HashMap<>();
+        datumMap.put(dataServerConfig.getLocalDataCenter(), localDatumStorage.getAllPublisher());
         return datumMap;
     }
 

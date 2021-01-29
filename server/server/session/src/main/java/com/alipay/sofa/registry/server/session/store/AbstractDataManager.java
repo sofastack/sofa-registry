@@ -114,6 +114,15 @@ public abstract class AbstractDataManager<T extends BaseInfo> implements
     }
 
     @Override
+    public List<T> getDataList() {
+        List<T> ret = new ArrayList<>(512);
+        for (Map<String, T> store : stores.values()) {
+            ret.addAll(store.values());
+        }
+        return ret;
+    }
+
+    @Override
     public Map<String, T> queryByConnectId(ConnectId connectId) {
         return StoreHelpers.getByConnectId(connectId, stores);
     }

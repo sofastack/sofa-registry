@@ -50,7 +50,7 @@ public class DatumCacheGenerator implements CacheGenerator {
                     LOGGER.info("genCacheNil,{},{}", dataInfoId, dataCenter);
                 } else {
                     LOGGER.info("genCache,{},{},{},{}", dataInfoId, dataCenter,
-                            datum.publisherSize(), datum.getVersion());
+                        datum.publisherSize(), datum.getVersion());
                 }
                 return new Value(datum);
             }
