@@ -208,8 +208,7 @@ public class DataServerBootstrap {
 
     private void startScheduler() {
         try {
-            if (schedulerStarted.compareAndSet(false, true)) {
-            }
+            schedulerStarted.compareAndSet(false, true);
         } catch (Exception e) {
             schedulerStarted.set(false);
             LOGGER.error("Data Scheduler start error!", e);
