@@ -27,6 +27,7 @@ import com.alipay.sofa.registry.server.session.push.PushDataGenerator;
 import com.alipay.sofa.registry.server.session.push.PushProcessor;
 import com.alipay.sofa.registry.server.session.remoting.handler.*;
 import com.alipay.sofa.registry.server.session.resource.*;
+import com.alipay.sofa.registry.server.session.scheduler.timertask.CacheCountTask;
 import com.alipay.sofa.registry.server.session.scheduler.timertask.SessionCacheDigestTask;
 import com.alipay.sofa.registry.server.session.strategy.*;
 import com.alipay.sofa.registry.server.shared.resource.MetricsResource;
@@ -532,6 +533,11 @@ public class SessionServerConfiguration {
         @Bean
         public SessionCacheDigestTask sessionCacheDigestTask() {
             return new SessionCacheDigestTask();
+        }
+
+        @Bean
+        public CacheCountTask cacheCountTask() {
+            return new CacheCountTask();
         }
     }
 

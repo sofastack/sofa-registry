@@ -14,23 +14,26 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alipay.sofa.registry.server.data.cache;
-
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ScheduledThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
-
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.util.CollectionUtils;
+package com.alipay.sofa.registry.server.data.timer;
 
 import com.alipay.sofa.registry.common.model.dataserver.Datum;
 import com.alipay.sofa.registry.common.model.store.Publisher;
 import com.alipay.sofa.registry.common.model.store.URL;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
+import com.alipay.sofa.registry.server.data.bootstrap.DataServerConfig;
+import com.alipay.sofa.registry.server.data.cache.DatumCache;
+import com.alipay.sofa.registry.util.ConcurrentUtils;
 import com.alipay.sofa.registry.util.NamedThreadFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.util.CollectionUtils;
+
+import javax.annotation.PostConstruct;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 /**
  *
@@ -38,31 +41,36 @@ import com.alipay.sofa.registry.util.NamedThreadFactory;
  * @version $Id: CacheDigestTask.java, v 0.1 2018－04－27 17:40 qian.lqlq Exp $
  */
 public class CacheDigestTask {
-
-    private static final Logger LOGGER = LoggerFactory.getLogger(CacheDigestTask.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger("CACHE-DIGEST");
 
     @Autowired
     private DatumCache          datumCache;
 
-    /**
-     *
-     */
-    public void start() {
+    @Autowired
+    private DataServerConfig    dataServerConfig;
+
+    @PostConstruct
+    public void init() {
+        final int intervalSec = dataServerConfig.getCacheDigestIntervalSecs();
+        if (intervalSec <= 0) {
+            LOGGER.info("cache digest off with intervalSecs={}", intervalSec);
+            return;
+        }
         ScheduledExecutorService executor = new ScheduledThreadPoolExecutor(1,
                 new NamedThreadFactory("CacheDigestTask"));
-        executor.scheduleAtFixedRate(() -> {
+        executor.scheduleWithFixedDelay(() -> {
             try {
                 Map<String, Map<String, Datum>> allMap = datumCache.getAll();
                 if (!allMap.isEmpty()) {
                     for (Entry<String, Map<String, Datum>> dataCenterEntry : allMap.entrySet()) {
                         String dataCenter = dataCenterEntry.getKey();
                         Map<String, Datum> datumMap = dataCenterEntry.getValue();
-                        LOGGER.info("[CacheDigestTask] size of datum in {} is {}", dataCenter, datumMap.size());
+                        LOGGER.info("size of datum in {} is {}", dataCenter, datumMap.size());
                         for (Entry<String, Datum> dataInfoEntry : datumMap.entrySet()) {
                             String dataInfoId = dataInfoEntry.getKey();
                             Datum data = dataInfoEntry.getValue();
                             Map<String, Publisher> pubMap = data.getPubMap();
-                            StringBuilder pubStr = new StringBuilder(512);
+                            StringBuilder pubStr = new StringBuilder(1024);
                             if (!CollectionUtils.isEmpty(pubMap)) {
                                 for (Publisher publisher : pubMap.values()) {
                                     pubStr.append(logPublisher(publisher)).append(";");
@@ -70,18 +78,20 @@ public class CacheDigestTask {
                             }
                             LOGGER.info("[Datum]{},{},{},[{}]", dataInfoId,
                                     data.getVersion(), dataCenter, pubStr.toString());
+                            // avoid io is busy
+                            ConcurrentUtils.sleepUninterruptibly(20, TimeUnit.MILLISECONDS);
                         }
                         int pubCount = datumMap.values().stream().mapToInt(Datum::publisherSize).sum();
-                        LOGGER.info("[CacheDigestTask] size of publisher in {} is {}", dataCenter, pubCount);
+                        LOGGER.info("size of publisher in {} is {}", dataCenter, pubCount);
                     }
                 } else {
-                    LOGGER.info("[CacheDigestTask] datum cache is empty");
+                    LOGGER.info("datum cache is empty");
                 }
 
             } catch (Throwable t) {
-                LOGGER.error("[CacheDigestTask] cache digest error", t);
+                LOGGER.error("cache digest error", t);
             }
-        }, 30, 600, TimeUnit.SECONDS);
+        }, intervalSec, intervalSec, TimeUnit.SECONDS);
     }
 
     private String logPublisher(Publisher publisher) {

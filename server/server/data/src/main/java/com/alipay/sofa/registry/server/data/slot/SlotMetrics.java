@@ -101,7 +101,7 @@ public final class SlotMetrics {
         }
 
         static void observeLeaderMigratingStart(int slotId) {
-            LEADER_MIGRATING_GAUGE.labels(String.valueOf(slotId)).inc();
+            LEADER_MIGRATING_GAUGE.labels(String.valueOf(slotId)).set(1);
         }
 
         static void observeLeaderMigratingFinish(int slotId) {

@@ -25,6 +25,7 @@ import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
 import com.alipay.sofa.registry.server.session.store.DataStore;
 import com.alipay.sofa.registry.server.session.store.Interests;
+import com.alipay.sofa.registry.util.ConcurrentUtils;
 import com.alipay.sofa.registry.util.NamedThreadFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -59,14 +60,14 @@ public class SessionCacheDigestTask {
 
     @PostConstruct
     public void init() {
-        final int delaySec = sessionServerConfig.getCacheDigestFixDelaySecs();
-        if (delaySec <= 0) {
-            LOGGER.info("cache digest unable with delaySec={}", delaySec);
+        final int intervalSec = sessionServerConfig.getCacheDigestIntervalSecs();
+        if (intervalSec <= 0) {
+            LOGGER.info("cache digest off with intervalSec={}", intervalSec);
             return;
         }
         ScheduledExecutorService executor = new ScheduledThreadPoolExecutor(1,
-                new NamedThreadFactory("SessionCacheDigestTask"));
-        executor.scheduleAtFixedRate(() -> {
+                new NamedThreadFactory("CacheDigestTask"));
+        executor.scheduleWithFixedDelay(() -> {
 
                     try {
                         Collection<String> storeDataInfoIds = sessionDataStore.getDataInfoIds();
@@ -84,14 +85,15 @@ public class SessionCacheDigestTask {
                                     sessionServerConfig.getSessionServerDataCenter(), dataInfoId,
                                     publishers.size(), subscribers.size(),
                                     logPubOrSub(publishers), logPubOrSub(subscribers));
-
+                            // avoid io is too busy
+                            ConcurrentUtils.sleepUninterruptibly(20, TimeUnit.MILLISECONDS);
                         });
 
                     } catch (Throwable t) {
-                        LOGGER.error("[SessionCacheDigestTask] cache digest error", t);
+                        LOGGER.error("[CacheDigestTask] cache digest error", t);
                     }
 
-                }, delaySec, delaySec, TimeUnit.SECONDS);
+                }, intervalSec, intervalSec, TimeUnit.SECONDS);
     }
 
     private String logPubOrSub(Collection<? extends BaseInfo> infos) {

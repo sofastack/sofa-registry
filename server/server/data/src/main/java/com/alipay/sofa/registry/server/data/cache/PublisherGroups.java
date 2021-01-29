@@ -50,15 +50,23 @@ public final class PublisherGroups {
     }
 
     Map<String, DatumVersion> getVersions() {
-        final Map<String, DatumVersion> ret = new HashMap<>(publisherGroupMap.size());
+        final Map<String, DatumVersion> ret = new HashMap<>(publisherGroupMap.size() * 2);
         publisherGroupMap.forEach((k, v) -> ret.put(k, v.getVersion()));
         return ret;
     }
 
     Map<String, Datum> getAllDatum() {
-        Map<String, Datum> map = new HashMap<>(publisherGroupMap.size());
+        Map<String, Datum> map = new HashMap<>(publisherGroupMap.size() * 2);
         publisherGroupMap.forEach((k, v) -> {
             map.put(k, v.toDatum());
+        });
+        return map;
+    }
+
+    Map<String, List<Publisher>> getAllPublisher() {
+        Map<String, List<Publisher>> map = new HashMap<>(publisherGroupMap.size() * 2);
+        publisherGroupMap.forEach((k, v) -> {
+            map.put(k, v.getPublishers());
         });
         return map;
     }
@@ -81,7 +89,7 @@ public final class PublisherGroups {
     }
 
     Map<String, DatumVersion> clean(ProcessId sessionProcessId) {
-        Map<String, DatumVersion> versionMap = new HashMap<>(32);
+        Map<String, DatumVersion> versionMap = new HashMap<>(64);
         publisherGroupMap.values().forEach(g -> {
             DatumVersion ver = g.clean(sessionProcessId);
             if (ver != null) {

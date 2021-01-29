@@ -26,7 +26,6 @@ import com.alipay.sofa.registry.net.NetUtil;
 import com.alipay.sofa.registry.remoting.ChannelHandler;
 import com.alipay.sofa.registry.remoting.Server;
 import com.alipay.sofa.registry.remoting.exchange.Exchange;
-import com.alipay.sofa.registry.server.data.cache.CacheDigestTask;
 import com.alipay.sofa.registry.server.shared.meta.MetaServerService;
 import com.alipay.sofa.registry.server.shared.remoting.AbstractServerHandler;
 import org.glassfish.jersey.server.ResourceConfig;
@@ -71,9 +70,6 @@ public class DataServerBootstrap {
 
     @Autowired
     private Exchange                          boltExchange;
-
-    @Autowired
-    private CacheDigestTask                   cacheDigestTask;
 
     @Resource(name = "serverHandlers")
     private Collection<AbstractServerHandler> serverHandlers;
@@ -213,8 +209,6 @@ public class DataServerBootstrap {
     private void startScheduler() {
         try {
             if (schedulerStarted.compareAndSet(false, true)) {
-                //start dump log
-                cacheDigestTask.start();
             }
         } catch (Exception e) {
             schedulerStarted.set(false);

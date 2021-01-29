@@ -153,7 +153,9 @@ public class SessionServerConfigBean implements SessionServerConfig {
 
     private boolean              enableSessionLoadbalancePolicy        = false;
 
-    private int                  cacheDigestFixDelaySecs               = 60 * 10;
+    private int                  cacheDigestIntervalSecs               = 60 * 15;
+
+    private int                  cacheCountIntervalSecs                = 30;
 
     //end config for enterprise version
 
@@ -962,12 +964,12 @@ public class SessionServerConfigBean implements SessionServerConfig {
     }
 
     @Override
-    public int getCacheDigestFixDelaySecs() {
-        return cacheDigestFixDelaySecs;
+    public int getCacheDigestIntervalSecs() {
+        return cacheDigestIntervalSecs;
     }
 
-    public void setCacheDigestFixDelaySecs(int cacheDigestFixDelaySecs) {
-        this.cacheDigestFixDelaySecs = cacheDigestFixDelaySecs;
+    public void setCacheDigestIntervalSecs(int cacheDigestIntervalSecs) {
+        this.cacheDigestIntervalSecs = cacheDigestIntervalSecs;
     }
 
     public void setSlotSyncWorkerSize(int slotSyncWorkerSize) {
@@ -1039,5 +1041,14 @@ public class SessionServerConfigBean implements SessionServerConfig {
 
     public void setDataNodeMaxBatchSize(int dataNodeMaxBatchSize) {
         this.dataNodeMaxBatchSize = dataNodeMaxBatchSize;
+    }
+
+    @Override
+    public int getCacheCountIntervalSecs() {
+        return cacheCountIntervalSecs;
+    }
+
+    public void setCacheCountIntervalSecs(int cacheCountIntervalSecs) {
+        this.cacheCountIntervalSecs = cacheCountIntervalSecs;
     }
 }
