@@ -31,9 +31,11 @@ import com.alipay.sofa.registry.server.meta.slot.util.filter.Filters;
 import com.alipay.sofa.registry.server.meta.slot.util.selector.Selectors;
 import com.alipay.sofa.registry.server.shared.slot.SlotTableUtils;
 import com.alipay.sofa.registry.server.shared.util.NodeUtils;
+import com.google.common.collect.Lists;
 
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
 
 /**
@@ -113,23 +115,22 @@ public class DefaultSlotBalancer implements SlotBalancer {
             int maxMove = balancePolicy
                 .getMaxMoveLeaderSlots(avg, dataNodeSlot.getLeaders().size());//avg - dataNodeSlot.getLeaders().size();
             maxMove = Math.min(maxMove, dataNodeSlot.getFollowers().size());
-            List<Integer> targetSlots = Filters.balanceLeaderFilter(this, targetDataServers)
-                .filter(dataNodeSlot.getFollowers());
-            if (targetSlots.isEmpty()) {
-                logger
-                    .info(
-                        "[findTargetLeaderSlots] data-server[{}], no slots be able from follower to become leader",
-                        dataNodeSlot.getDataNode());
-                continue;
-            }
+            LinkedList<Integer> targetSlots = Lists.newLinkedList(Filters.balanceLeaderFilter(this, targetDataServers)
+                .filter(dataNodeSlot.getFollowers()));
             while (maxMove-- > 0) {
+                if (targetSlots.isEmpty()) {
+                    logger
+                            .info(
+                                    "[findTargetLeaderSlots] data-server[{}], no slots be able from follower to become leader",
+                                    dataNodeSlot.getDataNode());
+                    break;
+                }
                 targetSlots.sort(Comparators.slotLeaderHasMostLeaderSlots(slotTableBuilder));
-                Integer slotId = targetSlots.get(0);
+                Integer slotId = targetSlots.removeFirst();
                 String prevLeader = slotTableBuilder.getOrCreate(slotId).getLeader();
                 logger.info("[balanceLeaderSlots] slot[{}] leader balance from [{}] to [{}]",
                     slotId, prevLeader, dataServer);
                 slotTableBuilder.replaceLeader(slotId, dataServer);
-                targetSlots.remove(slotId);
                 result = true;
             }
         }
