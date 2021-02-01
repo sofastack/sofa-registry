@@ -14,16 +14,27 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alipay.sofa.registry.server.meta.slot.balance;
-
-import java.util.List;
+package com.alipay.sofa.registry.server.meta.slot.util.comparator;
 
 /**
  * @author chen.zhu
  * <p>
  * Jan 18, 2021
  */
-public interface Filter<T> {
+public enum SortType {
 
-    List<T> filter(List<T> candidates);
+    ASC {
+        @Override
+        public int getScore(int score) {
+            return score;
+        }
+    },
+    DES {
+        @Override
+        public int getScore(int score) {
+            return -score;
+        }
+    };
+
+    public abstract int getScore(int score);
 }

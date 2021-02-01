@@ -16,7 +16,7 @@
  */
 package com.alipay.sofa.registry.server.meta.slot.util;
 
-import com.alipay.sofa.registry.server.meta.slot.assigner.FollowerToAssign;
+import com.alipay.sofa.registry.common.model.Tuple;
 import com.alipay.sofa.registry.server.meta.slot.assigner.ScoreStrategy;
 import com.alipay.sofa.registry.util.JsonUtils;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -110,14 +110,14 @@ public class MigrateSlotGroup {
         return followers;
     }
 
-
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o)
+            return true;
+        if (o == null || getClass() != o.getClass())
+            return false;
         MigrateSlotGroup that = (MigrateSlotGroup) o;
-        return Objects.equals(leaders, that.leaders) &&
-                Objects.equals(followers, that.followers);
+        return Objects.equals(leaders, that.leaders) && Objects.equals(followers, that.followers);
     }
 
     @Override
@@ -132,6 +132,21 @@ public class MigrateSlotGroup {
                 .writeValueAsString(this);
         } catch (JsonProcessingException e) {
             return "";
+        }
+    }
+
+    public static class FollowerToAssign extends Tuple<Integer, Integer> {
+
+        public FollowerToAssign(Integer o1, Integer o2) {
+            super(o1, o2);
+        }
+
+        public int getSlotId() {
+            return getFirst();
+        }
+
+        public int getAssigneeNums() {
+            return getSecond();
         }
     }
 }

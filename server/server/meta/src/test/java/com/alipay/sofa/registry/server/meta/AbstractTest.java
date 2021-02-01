@@ -93,7 +93,7 @@ public class AbstractTest {
 
     private String                         raftMiddlePath;
 
-    private BalancePolicy balancePolicy = new NaiveBalancePolicy();
+    private BalancePolicy                  balancePolicy    = new NaiveBalancePolicy();
 
     @Before
     public void beforeAbstractTest() throws Exception {
@@ -421,9 +421,9 @@ public class AbstractTest {
             if (counter.get(dataNode.getIp()) < lowWaterMark) {
                 return false;
             }
-//            if (counter.get(dataNode.getIp()) > highWaterMark) {
-//                return false;
-//            }
+            //            if (counter.get(dataNode.getIp()) > highWaterMark) {
+            //                return false;
+            //            }
         }
         return true;
     }
@@ -625,18 +625,18 @@ public class AbstractTest {
 
     protected List<DataNode> randomDataNodes(int num) {
         List<DataNode> dataNodes = new ArrayList<>();
-        for(int i = 0; i < num; i++) {
+        for (int i = 0; i < num; i++) {
             dataNodes.add(new DataNode(randomURL(randomIp()), getDc()));
         }
         return dataNodes;
     }
 
     protected boolean isMoreBalanced(SlotTable before, SlotTable current, List<DataNode> dataNodes) {
-//        Map<String, Integer> beforeLeaderCount = SlotTableUtils.getSlotTableLeaderCount(before);
-//        Map<String, Integer> currentLeaderCount = SlotTableUtils.getSlotTableLeaderCount(current);
-//
-//        Map<String, Integer> beforeSlotsCount = SlotTableUtils.getSlotTableSlotCount(before);
-//        Map<String, Integer> currentSlotsCount = SlotTableUtils.getSlotTableSlotCount(current);
+        //        Map<String, Integer> beforeLeaderCount = SlotTableUtils.getSlotTableLeaderCount(before);
+        //        Map<String, Integer> currentLeaderCount = SlotTableUtils.getSlotTableLeaderCount(current);
+        //
+        //        Map<String, Integer> beforeSlotsCount = SlotTableUtils.getSlotTableSlotCount(before);
+        //        Map<String, Integer> currentSlotsCount = SlotTableUtils.getSlotTableSlotCount(current);
 
         int maxLeaderGapBefore = maxLeaderGap(before, dataNodes);
         int maxLeaderGapCurrent = maxLeaderGap(current, dataNodes);
@@ -675,7 +675,7 @@ public class AbstractTest {
 
     private int maxGap(Map<String, Integer> stats) {
         int min = Integer.MAX_VALUE, max = Integer.MIN_VALUE;
-        for(int count : stats.values()) {
+        for (int count : stats.values()) {
             min = Math.min(count, min);
             max = Math.max(count, max);
         }
@@ -726,7 +726,8 @@ public class AbstractTest {
                 List<String> followers = Lists.newArrayList();
                 for (int j = 0; j < SlotConfig.SLOT_REPLICAS - 1; j++) {
                     DataNode follower = getNextFollower();
-                    while (follower.getIp().equalsIgnoreCase(leader) || followers.contains(follower)) {
+                    while (follower.getIp().equalsIgnoreCase(leader)
+                           || followers.contains(follower)) {
                         follower = getNextUnbalancedFollower();
                     }
                     followers.add(follower.getIp());

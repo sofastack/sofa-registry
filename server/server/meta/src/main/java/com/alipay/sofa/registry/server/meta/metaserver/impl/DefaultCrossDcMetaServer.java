@@ -210,6 +210,10 @@ public class DefaultCrossDcMetaServer extends AbstractMetaServer implements Cros
         }
         NodeClusterViewRequest request = new NodeClusterViewRequest(Node.NodeType.META, getDc());
         MetaNode metaServer = getRemoteMetaServer();
+        if (metaServer == null) {
+            logger.warn("[doRefresh] no meta-server available");
+            return;
+        }
         exchange.getClient(Exchange.META_SERVER_TYPE).sendCallback(metaServer.getNodeUrl(),
             request, new CallbackHandler() {
                 @Override
@@ -219,7 +223,7 @@ public class DefaultCrossDcMetaServer extends AbstractMetaServer implements Cros
                         raftStorage
                             .tryUpdateRemoteDcMetaServerList((DataCenterNodes<MetaNode>) message);
                     } else {
-                        logger.error("[onCallback]unknown type from response: {}", message);
+                        logger.error("[doRefresh][onCallback]unknown type from response: {}", message);
                     }
                 }
 
@@ -228,9 +232,14 @@ public class DefaultCrossDcMetaServer extends AbstractMetaServer implements Cros
                     if (logger.isErrorEnabled()) {
                         logger
                             .error(
-                                "[doRefresh][{}]Bolt Request Failure, remote: {}, will try other meta-server",
+                                "[doRefresh][onException][{}]Bolt Request Failure, remote: {}, will try other meta-server",
                                 getDc(), channel != null ? channel.getRemoteAddress().getHostName()
                                     : "unknown", exception);
+                    }
+                    List<MetaNode> metaNodes = getClusterMembers();
+                    if(metaNodes == null || metaNodes.isEmpty()) {
+                        logger.warn("[doRefresh][onException] no meta-servers available");
+                        return;
                     }
                     requestMetaNodeIndex.set(requestMetaNodeIndex.incrementAndGet()
                                              % getClusterMembers().size());
@@ -276,7 +285,8 @@ public class DefaultCrossDcMetaServer extends AbstractMetaServer implements Cros
     }
 
     private MetaNode getRemoteMetaServer() {
-        return getClusterMembers().get(requestMetaNodeIndex.get());
+        List<MetaNode> metaServers = getClusterMembers();
+        return metaServers.isEmpty() ? null : metaServers.get(requestMetaNodeIndex.get() % getClusterMembers().size());
     }
 
     @VisibleForTesting

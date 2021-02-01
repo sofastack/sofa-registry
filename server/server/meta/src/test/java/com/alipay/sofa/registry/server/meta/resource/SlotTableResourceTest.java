@@ -57,7 +57,8 @@ public class SlotTableResourceTest extends AbstractTest {
         when(defaultSlotManager.getRaftSlotManager()).thenReturn(slotManager);
         dataServerManager = mock(DefaultDataServerManager.class);
         slotArranger = mock(ScheduledSlotArranger.class);
-        resource = new SlotTableResource(defaultSlotManager, slotManager, dataServerManager, slotArranger);
+        resource = new SlotTableResource(defaultSlotManager, slotManager, dataServerManager,
+            slotArranger);
     }
 
     @Test
@@ -68,9 +69,9 @@ public class SlotTableResourceTest extends AbstractTest {
                 getDc()));
         when(dataServerManager.getClusterMembers()).thenReturn(dataNodes);
         SlotTable slotTable = new SlotTableGenerator(dataNodes).createLeaderUnBalancedSlotTable();
-//        printSlotTable(slotTable);
+        //        printSlotTable(slotTable);
         slotManager.refresh(slotTable);
-//        Assert.assertFalse(isSlotTableBalanced(slotManager.getSlotTable(), dataNodes));
+        //        Assert.assertFalse(isSlotTableBalanced(slotManager.getSlotTable(), dataNodes));
 
         when(slotArranger.tryLock()).thenReturn(true);
         GenericResponse<SlotTable> current = resource.forceRefreshSlotTable();
