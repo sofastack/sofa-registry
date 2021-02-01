@@ -67,7 +67,7 @@ public class ScheduledSlotArranger extends AbstractLifecycleObservable implement
 
     private final ScheduledSlotArrangeTask task = new ScheduledSlotArrangeTask();
 
-    private final Lock lock = new ReentrantLock();
+    private final Lock                     lock = new ReentrantLock();
 
     public ScheduledSlotArranger() {
     }
@@ -171,12 +171,13 @@ public class ScheduledSlotArranger extends AbstractLifecycleObservable implement
     private void refreshSlotTable(SlotTable slotTable) {
         if (!SlotTableUtils.isValidSlotTable(slotTable)) {
             throw new SofaRegistrySlotTableException("slot table is not valid: \n"
-                    + JsonUtils.writeValueAsString(slotTable));
+                                                     + JsonUtils.writeValueAsString(slotTable));
         }
         if (slotTable != null && slotTable.getEpoch() > slotManager.getSlotTable().getEpoch()) {
             defaultSlotManager.refresh(slotTable);
         } else {
-            logger.warn("[refreshSlotTable] slot-table epoch not change: {}", JsonUtils.writeValueAsString(slotTable));
+            logger.warn("[refreshSlotTable] slot-table epoch not change: {}",
+                JsonUtils.writeValueAsString(slotTable));
         }
     }
 

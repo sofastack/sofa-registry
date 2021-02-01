@@ -55,11 +55,6 @@ public class MetaServerConfigBean implements MetaServerConfig {
 
     private int                raftElectionTimeout                             = 1000;
 
-    private int                initialSlotTableLockTimeMilli                   = Integer
-                                                                                   .getInteger(
-                                                                                       "init.slot.talbe.wait.milli",
-                                                                                       1000);
-
     /**
      * Whether to enable metrics for node.
      */
@@ -105,12 +100,7 @@ public class MetaServerConfigBean implements MetaServerConfig {
     private int                metaSchedulerPoolSize                           = 6;
     private double             sessionLoadbalanceThresholdRatio                = 1.1;
 
-    private int                expireCheckIntervalMilli                        = 5000;
-
-    private int                dataNodeNums                                    = Integer
-                                                                                   .getInteger(
-                                                                                       "data.node.nums",
-                                                                                       1);
+    private int                expireCheckIntervalMilli                        = 1000;
 
     /**
      * Gets get session server port.
@@ -744,32 +734,6 @@ public class MetaServerConfigBean implements MetaServerConfig {
     @Override
     public double getSessionLoadbalanceThresholdRatio() {
         return sessionLoadbalanceThresholdRatio;
-    }
-
-    /**
-     * Gets get initial slot table non change lock time milli.
-     *
-     * @return the get initial slot table non change lock time milli
-     */
-    @Override
-    public int getInitialSlotTableNonChangeLockTimeMilli() {
-        return initialSlotTableLockTimeMilli;
-    }
-
-    @Override
-    public int getDataNodeNums() {
-        return dataNodeNums;
-    }
-
-    /**
-     * Sets set initial slot table lock time milli.
-     *
-     * @param initialSlotTableLockTimeMilli the initial slot table lock time milli
-     * @return the set initial slot table lock time milli
-     */
-    public MetaServerConfigBean setInitialSlotTableLockTimeMilli(int initialSlotTableLockTimeMilli) {
-        this.initialSlotTableLockTimeMilli = initialSlotTableLockTimeMilli;
-        return this;
     }
 
     /**
