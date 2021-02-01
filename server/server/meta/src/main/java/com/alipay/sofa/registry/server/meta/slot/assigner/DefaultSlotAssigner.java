@@ -32,6 +32,7 @@ import com.alipay.sofa.registry.server.meta.slot.util.selector.Selector;
 import com.alipay.sofa.registry.server.meta.slot.util.selector.Selectors;
 import com.alipay.sofa.registry.server.shared.util.NodeUtils;
 import com.google.common.collect.Lists;
+import org.apache.commons.lang.StringUtils;
 
 import java.util.List;
 
@@ -157,6 +158,10 @@ public class DefaultSlotAssigner implements SlotAssigner {
             Selector<String> selector = Selectors.leastSlotsFirst(slotTableBuilder);
             for (int i = 0; i < followerToAssign.getAssigneeNums(); i++) {
                 String candidate = selector.select(candidates);
+                if (StringUtils.isEmpty(candidate)) {
+                    logger.warn("[tryAssignFollowerSlots] candidate is null");
+                    continue;
+                }
                 if (candidate.equals(slotBuilder.getLeader())
                     || slotBuilder.getFollowers().contains(candidate)) {
                     logger.error(
