@@ -70,7 +70,7 @@ public final class DataChangeEventCenter {
 
     private final Map<String, Set<String>>        dataCenter2Changes     = Maps.newConcurrentMap();
     private final ReadWriteLock                   lock                   = new ReentrantReadWriteLock();
-    private final List<ChangeNotifier>            retryNotifiers         = Lists.newLinkedList();
+    private final LinkedList<ChangeNotifierRetry> retryNotifiers         = Lists.newLinkedList();
 
     private final Map<String, Map<String, Datum>> dataCenter2TempChanges = Maps.newConcurrentMap();
     private final ReadWriteLock                   tempLock               = new ReentrantReadWriteLock();
@@ -148,6 +148,16 @@ public final class DataChangeEventCenter {
         }
     }
 
+    private final class ChangeNotifierRetry {
+        final ChangeNotifier notifier;
+        final long           expireTimestamp;
+
+        ChangeNotifierRetry(ChangeNotifier notifier, long expireTimestamp) {
+            this.notifier = notifier;
+            this.expireTimestamp = expireTimestamp;
+        }
+    }
+
     private final class ChangeNotifier implements Runnable {
         final Connection                connection;
         final String                    dataCenter;
@@ -204,22 +214,32 @@ public final class DataChangeEventCenter {
 
     private boolean commitRetry(ChangeNotifier retry) {
         final int maxSize = dataServerConfig.getNotifyRetryQueueSize();
+        final long expireTimestamp = System.currentTimeMillis()
+                                     + dataServerConfig.getNotifyRetryBackoffMillis();
         synchronized (retryNotifiers) {
-            if (retryNotifiers.size() < maxSize) {
-                retryNotifiers.add(retry);
-                return true;
+            if (retryNotifiers.size() >= maxSize) {
+                // remove first
+                retryNotifiers.removeFirst();
             }
+            retryNotifiers.add(new ChangeNotifierRetry(retry, expireTimestamp));
         }
-        return false;
+        return true;
     }
 
-    private List<ChangeNotifier> getRetries() {
-        List<ChangeNotifier> retries = null;
+    private List<ChangeNotifier> getExpires() {
+        final List<ChangeNotifier> expires = Lists.newLinkedList();
+        final long now = System.currentTimeMillis();
         synchronized (retryNotifiers) {
-            retries = Lists.newArrayList(retryNotifiers);
-            retryNotifiers.clear();
+            final Iterator<ChangeNotifierRetry> it = retryNotifiers.iterator();
+            while (it.hasNext()) {
+                ChangeNotifierRetry retry = it.next();
+                if (retry.expireTimestamp <= now) {
+                    expires.add(retry.notifier);
+                    it.remove();
+                }
+            }
         }
-        return retries;
+        return expires;
     }
 
     private void notifyTempPub(Connection connection, Datum datum) {
@@ -362,7 +382,7 @@ public final class DataChangeEventCenter {
                 }
             }
 
-            final List<ChangeNotifier> retries = getRetries();
+            final List<ChangeNotifier> retries = getExpires();
             // commit retry
             for (ChangeNotifier retry : retries) {
                 notifyExecutor.execute(retry.connection.getRemoteAddress(), retry);

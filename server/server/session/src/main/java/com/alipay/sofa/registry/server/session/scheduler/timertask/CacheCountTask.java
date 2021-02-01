@@ -97,8 +97,9 @@ public class CacheCountTask {
             for (Entry<String, Map<String, Integer>> groupCounts : count.getValue().entrySet()) {
                 final String group = groupCounts.getKey();
                 for (Entry<String, Integer> apps : groupCounts.getValue().entrySet()) {
-                    COUNT_LOGGER.info("{},{},{},{},{}", prefix, instanceId, group, apps.getKey(),
-                        apps.getValue());
+                    final String app = apps.getKey();
+                    COUNT_LOGGER.info("{},{},{},{},{}", prefix, instanceId, group, app == null ? ""
+                        : app, apps.getValue());
                 }
             }
         }

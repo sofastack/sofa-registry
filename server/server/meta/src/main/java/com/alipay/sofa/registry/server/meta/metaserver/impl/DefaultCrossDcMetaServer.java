@@ -223,7 +223,8 @@ public class DefaultCrossDcMetaServer extends AbstractMetaServer implements Cros
                         raftStorage
                             .tryUpdateRemoteDcMetaServerList((DataCenterNodes<MetaNode>) message);
                     } else {
-                        logger.error("[doRefresh][onCallback]unknown type from response: {}", message);
+                        logger.error("[doRefresh][onCallback]unknown type from response: {}",
+                            message);
                     }
                 }
 
@@ -237,7 +238,7 @@ public class DefaultCrossDcMetaServer extends AbstractMetaServer implements Cros
                                     : "unknown", exception);
                     }
                     List<MetaNode> metaNodes = getClusterMembers();
-                    if(metaNodes == null || metaNodes.isEmpty()) {
+                    if (metaNodes == null || metaNodes.isEmpty()) {
                         logger.warn("[doRefresh][onException] no meta-servers available");
                         return;
                     }
@@ -286,7 +287,8 @@ public class DefaultCrossDcMetaServer extends AbstractMetaServer implements Cros
 
     private MetaNode getRemoteMetaServer() {
         List<MetaNode> metaServers = getClusterMembers();
-        return metaServers.isEmpty() ? null : metaServers.get(requestMetaNodeIndex.get() % getClusterMembers().size());
+        return metaServers.isEmpty() ? null : metaServers.get(requestMetaNodeIndex.get()
+                                                              % getClusterMembers().size());
     }
 
     @VisibleForTesting

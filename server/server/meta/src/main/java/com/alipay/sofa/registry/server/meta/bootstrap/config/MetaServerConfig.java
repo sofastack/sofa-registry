@@ -103,8 +103,4 @@ public interface MetaServerConfig {
 
     double getSessionLoadbalanceThresholdRatio();
 
-    int getInitialSlotTableNonChangeLockTimeMilli();
-
-    int getDataNodeNums();
-
 }

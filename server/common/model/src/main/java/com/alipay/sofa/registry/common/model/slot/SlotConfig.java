@@ -18,6 +18,7 @@ package com.alipay.sofa.registry.common.model.slot;
 
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
+import com.alipay.sofa.registry.util.SystemUtils;
 
 /**
  *
@@ -39,18 +40,16 @@ public final class SlotConfig {
     }
 
     static {
-        String max = System.getProperty(KEY_DATA_SLOT_NUM, "16");
-        SLOT_NUM = Integer.parseInt(max);
+        SLOT_NUM = SystemUtils.getEnvInteger(KEY_DATA_SLOT_NUM, 16);
         if (SLOT_NUM <= 0) {
             throw new IllegalArgumentException("illegal " + KEY_DATA_SLOT_NUM + ":" + SLOT_NUM);
         }
-        String replicas = System.getProperty(KEY_DATA_SLOT_REPLICAS, "2");
-        SLOT_REPLICAS = Integer.parseInt(replicas);
+        SLOT_REPLICAS = SystemUtils.getEnvInteger(KEY_DATA_SLOT_REPLICAS, 2);
         if (SLOT_REPLICAS <= 0) {
             throw new IllegalArgumentException("illegal " + KEY_DATA_SLOT_REPLICAS + ":"
                                                + SLOT_REPLICAS);
         }
-        FUNC = System.getProperty(KEY_DATA_SLOT_FUNC, "crc32c");
+        FUNC = SystemUtils.getEnv(KEY_DATA_SLOT_FUNC, "crc32c");
         LOGGER.info("{}={}, {}={}, {}={}", KEY_DATA_SLOT_NUM, SLOT_NUM, KEY_DATA_SLOT_REPLICAS,
             SLOT_REPLICAS, KEY_DATA_SLOT_FUNC, FUNC);
     }
