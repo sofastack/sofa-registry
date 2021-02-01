@@ -14,13 +14,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alipay.sofa.registry.server.meta.slot.util;
+package com.alipay.sofa.registry.server.meta.slot.util.builder;
 
 import com.alipay.sofa.registry.common.model.slot.DataNodeSlot;
 import com.alipay.sofa.registry.common.model.slot.Slot;
 import com.alipay.sofa.registry.common.model.slot.SlotTable;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
+import com.alipay.sofa.registry.server.meta.slot.util.MigrateSlotGroup;
 import com.alipay.sofa.registry.util.DatumVersionUtil;
 import com.alipay.sofa.registry.util.JsonUtils;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -102,12 +103,12 @@ public class SlotTableBuilder implements Builder<SlotTable> {
         dataServers.forEach(dataServer->reverseMap.putIfAbsent(dataServer, new DataNodeSlot(dataServer)));
     }
 
-    public SlotTableBuilder flipLeaderTo(int slotId, String nextLeader) {
+    public String replaceLeader(int slotId, String nextLeader) {
         SlotBuilder slotBuilder = getOrCreate(slotId);
         String prevLeader = slotBuilder.getLeader();
         slotBuilder.forceSetLeader(nextLeader).removeFollower(nextLeader);
         DataNodeSlot nextLeaderDataNodeSlot = reverseMap.get(nextLeader);
-        if(nextLeaderDataNodeSlot == null) {
+        if (nextLeaderDataNodeSlot == null) {
             nextLeaderDataNodeSlot = new DataNodeSlot(nextLeader);
             reverseMap.put(nextLeader, nextLeaderDataNodeSlot);
         }
@@ -117,7 +118,7 @@ public class SlotTableBuilder implements Builder<SlotTable> {
             reverseMap.get(prevLeader).getLeaders().remove(new Integer(slotId));
             addFollower(slotId, prevLeader);
         }
-        return this;
+        return prevLeader;
     }
 
     public SlotTableBuilder removeFollower(int slotId, String follower) {
@@ -173,18 +174,12 @@ public class SlotTableBuilder implements Builder<SlotTable> {
         MigrateSlotGroup migrateSlotGroup = new MigrateSlotGroup();
         for (int slotId = 0; slotId < totalSlotNums; slotId++) {
             SlotBuilder slotBuilder = getOrCreate(slotId);
-            if (slotBuilder == null) {
+            if (StringUtils.isEmpty(slotBuilder.getLeader())) {
                 migrateSlotGroup.addLeader(slotId);
-                migrateSlotGroup.addFollower(slotId, slotReplicas - 1);
-
-            } else {
-                if (StringUtils.isEmpty(slotBuilder.getLeader())) {
-                    migrateSlotGroup.addLeader(slotId);
-                }
-                int lackFollowerNums = slotReplicas - 1 - slotBuilder.getFollowers().size();
-                if (lackFollowerNums > 0) {
-                    migrateSlotGroup.addFollower(slotId, lackFollowerNums);
-                }
+            }
+            int lackFollowerNums = slotReplicas - 1 - slotBuilder.getFollowers().size();
+            if (lackFollowerNums > 0) {
+                migrateSlotGroup.addFollower(slotId, lackFollowerNums);
             }
         }
         return migrateSlotGroup;
@@ -246,10 +241,6 @@ public class SlotTableBuilder implements Builder<SlotTable> {
             }
         });
         return newDataNodeSlot;
-    }
-
-    public Map<Integer, SlotBuilder> getBuildingSlots() {
-        return buildingSlots;
     }
 
     @Override

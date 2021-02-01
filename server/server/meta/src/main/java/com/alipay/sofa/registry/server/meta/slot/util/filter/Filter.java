@@ -14,31 +14,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alipay.sofa.registry.server.meta.slot.balance;
+package com.alipay.sofa.registry.server.meta.slot.util.filter;
 
-import com.alipay.sofa.registry.server.meta.slot.assigner.Selector;
-
-import java.util.Collection;
+import java.util.List;
 
 /**
- * @author chen.zhu
- * <p>
- * Jan 18, 2021
+ * @author zhuchen
+ * @date Jan 27, 2021, 7:24:23 PM
  */
-public class DefaultBalanceSlotLeaderSelector implements Selector<String> {
+public interface Filter<T> {
 
-    private DefaultSlotBalancer slotBalancer;
-
-    public DefaultBalanceSlotLeaderSelector(DefaultSlotBalancer slotBalancer) {
-        this.slotBalancer = slotBalancer;
-    }
-
-    @Override
-    public String select(Collection<String> candidates) {
-        String[] sortedCandidates = candidates
-                .stream()
-                .sorted(new DataServerLeaderSizeComparator(slotBalancer.getSlotTableBuilder(), SortType.ASC))
-                .toArray(String[]::new);
-        return sortedCandidates[0];
-    }
+    /**
+     * Filter list.
+     *
+     * @param candidates the candidates
+     * @return the filtered candidates list
+     */
+    List<T> filter(List<T> candidates);
 }

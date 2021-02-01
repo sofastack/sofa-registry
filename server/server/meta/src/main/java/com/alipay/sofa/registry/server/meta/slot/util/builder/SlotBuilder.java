@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alipay.sofa.registry.server.meta.slot.util;
+package com.alipay.sofa.registry.server.meta.slot.util.builder;
 
 import com.alipay.sofa.registry.common.model.slot.Slot;
 import com.alipay.sofa.registry.exception.SofaRegistryRuntimeException;
@@ -82,18 +82,6 @@ public class SlotBuilder implements Builder<Slot> {
 
     public boolean removeFollower(String follower) {
         return followers.remove(follower);
-    }
-
-    public SlotBuilder removeLeader(String leader) {
-        if (leader.equalsIgnoreCase(this.leader)) {
-            this.leader = null;
-        }
-        return this;
-    }
-
-    public SlotBuilder epoch(long epoch) {
-        this.epoch = epoch;
-        return this;
     }
 
     private boolean isReady() {

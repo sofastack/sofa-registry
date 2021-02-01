@@ -1,3 +1,19 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package com.alipay.sofa.registry.server.meta.slot.tasks;
 
 import com.alipay.sofa.registry.common.model.metaserver.nodes.DataNode;
@@ -25,7 +41,6 @@ import java.util.List;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-
 /**
  * @author chen.zhu
  * <p>
@@ -33,11 +48,11 @@ import static org.mockito.Mockito.when;
  */
 public class SlotMigrateChaosTest extends AbstractTest {
 
-    private DefaultSlotManager defaultSlotManager;
+    private DefaultSlotManager       defaultSlotManager;
 
-    private SlotManager raftSlotManager;
+    private SlotManager              raftSlotManager;
 
-    private LocalSlotManager localSlotManager;
+    private LocalSlotManager         localSlotManager;
 
     @Mock
     private DefaultDataServerManager dataServerManager;
@@ -47,7 +62,7 @@ public class SlotMigrateChaosTest extends AbstractTest {
         int slotNums = 16;
         do {
             slotNums = random.nextInt(1024);
-        } while(slotNums < 32);
+        } while (slotNums < 32);
         System.setProperty("data.slot.num", slotNums + "");
         System.setProperty("data.slot.replicas", "2");
         System.setProperty("slot.frozen.milli", "1");
@@ -58,8 +73,8 @@ public class SlotMigrateChaosTest extends AbstractTest {
     public void beforeSlotMigrateChaosTest() throws Exception {
         MockitoAnnotations.initMocks(this);
         List<DataNode> dataNodes = Lists.newArrayList(new DataNode(randomURL(randomIp()), getDc()),
-                new DataNode(randomURL(randomIp()), getDc()), new DataNode(randomURL(randomIp()),
-                        getDc()), new DataNode(randomURL(randomIp()), getDc()));
+            new DataNode(randomURL(randomIp()), getDc()), new DataNode(randomURL(randomIp()),
+                getDc()), new DataNode(randomURL(randomIp()), getDc()));
         when(dataServerManager.getClusterMembers()).thenReturn(dataNodes);
         NodeConfig nodeConfig = mock(NodeConfig.class);
         when(nodeConfig.getLocalDataCenter()).thenReturn(getDc());
@@ -80,19 +95,19 @@ public class SlotMigrateChaosTest extends AbstractTest {
 
         when(dataServerManager.getClusterMembers()).thenReturn(dataNodes);
         ScheduledSlotArranger arranger = new ScheduledSlotArranger(dataServerManager,
-                localSlotManager, defaultSlotManager);
+            localSlotManager, defaultSlotManager);
         makeRaftLeader();
 
         SlotTable prev = slotTable;
         arranger.getTask().runUnthrowable();
         SlotTable current = localSlotManager.getSlotTable();
         int count = 1;
-        while(prev.getEpoch() < current.getEpoch()) {
+        while (prev.getEpoch() < current.getEpoch()) {
             Assert.assertTrue(isMoreBalanced(prev, current, dataNodes));
             prev = localSlotManager.getSlotTable();
             arranger.getTask().runUnthrowable();
             current = localSlotManager.getSlotTable();
-            count ++;
+            count++;
         }
         logger.info("[count] {}", count);
         Assert.assertTrue(isSlotTableBalanced(current, dataNodes));

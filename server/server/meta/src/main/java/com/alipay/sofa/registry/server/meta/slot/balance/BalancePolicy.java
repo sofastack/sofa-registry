@@ -23,11 +23,40 @@ package com.alipay.sofa.registry.server.meta.slot.balance;
  */
 public interface BalancePolicy {
 
+    /**
+     * Gets get low water mark slot nums.
+     * low watermark means the threshold we could endure with, that once the total slot numbers (include leader and follower)
+     * on a data-server is under the low water mark, we need to rebalance the slot-table
+     * @param average the average
+     * @return the get low water mark slot nums
+     */
     int getLowWaterMarkSlotNums(int average);
 
+    /**
+     * Gets get max move follower slots.
+     * max move means the maximum number of slots' followers we are good to migrate per balance time
+     * @param average      the average
+     * @param totalSlotNum the total slot num
+     * @return the get max move follower slots
+     */
     int getMaxMoveFollowerSlots(int average, int totalSlotNum);
 
+    /**
+     * Gets get low water mark slot leader nums.
+     * low watermark means the threshold we could endure with, that once the slot leader numbers on a data-server
+     * is under the low water mark, we need to rebalance the slot-table
+     * @param average the average
+     * @return the get low water mark slot leader nums
+     */
     int getLowWaterMarkSlotLeaderNums(int average);
 
+    /**
+     * Gets get max move leader slots.
+     * max move means the maximum number of slots' leader we are good to migrate per balance time
+     *
+     * @param average       the average
+     * @param leaderSlotNum the leader slot num
+     * @return the get max move leader slots
+     */
     int getMaxMoveLeaderSlots(int average, int leaderSlotNum);
 }

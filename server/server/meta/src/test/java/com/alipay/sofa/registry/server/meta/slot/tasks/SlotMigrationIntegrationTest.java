@@ -91,11 +91,10 @@ public class SlotMigrationIntegrationTest extends AbstractTest {
             getDc()), new DataNode(new URL("100.88.142.32"), getDc()), new DataNode(new URL(
             "100.88.142.19"), getDc()));
         when(dataServerManager.getClusterMembers()).thenReturn(dataNodes);
-        BalanceTask slotTask = new BalanceTask(localSlotManager, raftSlotManager,
-            dataServerManager);
+        BalanceTask slotTask = new BalanceTask(localSlotManager, raftSlotManager, dataServerManager);
         slotTask.run();
-//        logger.info(JsonUtils.getJacksonObjectMapper().writerWithDefaultPrettyPrinter()
-//            .writeValueAsString(localSlotManager.getSlotTable()));
+        //        logger.info(JsonUtils.getJacksonObjectMapper().writerWithDefaultPrettyPrinter()
+        //            .writeValueAsString(localSlotManager.getSlotTable()));
         Assert.assertTrue(isSlotTableBalanced(localSlotManager.getSlotTable(),
             dataServerManager.getClusterMembers()));
         Assert.assertTrue(isSlotTableLeaderBalanced(localSlotManager.getSlotTable(),
@@ -117,8 +116,8 @@ public class SlotMigrationIntegrationTest extends AbstractTest {
         DefaultSlotBalancer slotBalancer = new DefaultSlotBalancer(localSlotManager,
             dataServerManager);
         localSlotManager.refresh(slotBalancer.balance());
-//        logger.info(JsonUtils.getJacksonObjectMapper().writerWithDefaultPrettyPrinter()
-//            .writeValueAsString(localSlotManager.getSlotTable()));
+        //        logger.info(JsonUtils.getJacksonObjectMapper().writerWithDefaultPrettyPrinter()
+        //            .writeValueAsString(localSlotManager.getSlotTable()));
         Assert.assertTrue(isSlotTableBalanced(localSlotManager.getSlotTable(),
             dataServerManager.getClusterMembers()));
         Assert.assertTrue(isSlotTableLeaderBalanced(localSlotManager.getSlotTable(),
@@ -129,16 +128,16 @@ public class SlotMigrationIntegrationTest extends AbstractTest {
         when(dataServerManager.getClusterMembers()).thenReturn(dataNodes);
         assigner = new DefaultSlotAssigner(localSlotManager, dataServerManager);
         localSlotManager.refresh(assigner.assign());
-//        logger.info(JsonUtils.getJacksonObjectMapper().writerWithDefaultPrettyPrinter()
-//            .writeValueAsString(localSlotManager.getSlotTable()));
+        //        logger.info(JsonUtils.getJacksonObjectMapper().writerWithDefaultPrettyPrinter()
+        //            .writeValueAsString(localSlotManager.getSlotTable()));
 
         dataNodes = Lists.newArrayList(new DataNode(new URL("100.88.142.36"), getDc()),
             new DataNode(new URL("100.88.142.32"), getDc()));
         when(dataServerManager.getClusterMembers()).thenReturn(dataNodes);
         assigner = new DefaultSlotAssigner(localSlotManager, dataServerManager);
         localSlotManager.refresh(assigner.assign());
-//        logger.info(JsonUtils.getJacksonObjectMapper().writerWithDefaultPrettyPrinter()
-//            .writeValueAsString(localSlotManager.getSlotTable()));
+        //        logger.info(JsonUtils.getJacksonObjectMapper().writerWithDefaultPrettyPrinter()
+        //            .writeValueAsString(localSlotManager.getSlotTable()));
         Assert.assertTrue(isSlotTableBalanced(localSlotManager.getSlotTable(),
             dataServerManager.getClusterMembers()));
         assertSlotTableNoDupLeaderFollower(localSlotManager.getSlotTable());
@@ -146,8 +145,8 @@ public class SlotMigrationIntegrationTest extends AbstractTest {
         Thread.sleep(2);
         slotBalancer = new DefaultSlotBalancer(localSlotManager, dataServerManager);
         localSlotManager.refresh(slotBalancer.balance());
-//        logger.info(JsonUtils.getJacksonObjectMapper().writerWithDefaultPrettyPrinter()
-//            .writeValueAsString(localSlotManager.getSlotTable()));
+        //        logger.info(JsonUtils.getJacksonObjectMapper().writerWithDefaultPrettyPrinter()
+        //            .writeValueAsString(localSlotManager.getSlotTable()));
         Assert.assertTrue(isSlotTableBalanced(localSlotManager.getSlotTable(),
             dataServerManager.getClusterMembers()));
         Assert.assertTrue(isSlotTableLeaderBalanced(localSlotManager.getSlotTable(),
@@ -161,8 +160,8 @@ public class SlotMigrationIntegrationTest extends AbstractTest {
         when(dataServerManager.getClusterMembers()).thenReturn(dataNodes);
         slotBalancer = new DefaultSlotBalancer(localSlotManager, dataServerManager);
         localSlotManager.refresh(slotBalancer.balance());
-//        logger.info(JsonUtils.getJacksonObjectMapper().writerWithDefaultPrettyPrinter()
-//            .writeValueAsString(localSlotManager.getSlotTable()));
+        //        logger.info(JsonUtils.getJacksonObjectMapper().writerWithDefaultPrettyPrinter()
+        //            .writeValueAsString(localSlotManager.getSlotTable()));
         Assert.assertTrue(isSlotTableBalanced(localSlotManager.getSlotTable(),
             dataServerManager.getClusterMembers()));
         assertSlotTableNoDupLeaderFollower(localSlotManager.getSlotTable());
@@ -174,8 +173,8 @@ public class SlotMigrationIntegrationTest extends AbstractTest {
         when(dataServerManager.getClusterMembers()).thenReturn(dataNodes);
         slotBalancer = new DefaultSlotBalancer(localSlotManager, dataServerManager);
         localSlotManager.refresh(slotBalancer.balance());
-//        logger.info(JsonUtils.getJacksonObjectMapper().writerWithDefaultPrettyPrinter()
-//            .writeValueAsString(localSlotManager.getSlotTable()));
+        //        logger.info(JsonUtils.getJacksonObjectMapper().writerWithDefaultPrettyPrinter()
+        //            .writeValueAsString(localSlotManager.getSlotTable()));
         Assert.assertTrue(isSlotTableBalanced(localSlotManager.getSlotTable(),
             dataServerManager.getClusterMembers()));
         Assert.assertTrue(isSlotTableLeaderBalanced(localSlotManager.getSlotTable(),
@@ -247,111 +246,113 @@ public class SlotMigrationIntegrationTest extends AbstractTest {
     public void testDataServerAddedAndDeleted() throws Exception {
         System.setProperty("slot.leader.max.move", SlotConfig.SLOT_NUM + "");
         ScheduledSlotArranger assigner = new ScheduledSlotArranger(dataServerManager,
-                localSlotManager, defaultSlotManager);
+            localSlotManager, defaultSlotManager);
         List<DataNode> dataNodes = Lists.newArrayList(new DataNode(new URL("100.88.142.32"),
-                getDc()));
+            getDc()));
         when(dataServerManager.getClusterMembers()).thenReturn(dataNodes);
         makeRaftLeader();
         assigner.getTask().runUnthrowable();
         logger.info(JsonUtils.getJacksonObjectMapper().writerWithDefaultPrettyPrinter()
-                .writeValueAsString(localSlotManager.getSlotTable()));
+            .writeValueAsString(localSlotManager.getSlotTable()));
 
         dataNodes = Lists.newArrayList(new DataNode(new URL("100.88.142.32"), getDc()),
-                new DataNode(new URL("100.88.142.36"), getDc()));
+            new DataNode(new URL("100.88.142.36"), getDc()));
         when(dataServerManager.getClusterMembers()).thenReturn(dataNodes);
         assigner.getTask().runUnthrowable();
         logger.info(JsonUtils.getJacksonObjectMapper().writerWithDefaultPrettyPrinter()
-                .writeValueAsString(localSlotManager.getSlotTable()));
+            .writeValueAsString(localSlotManager.getSlotTable()));
         Assert.assertTrue(isSlotTableBalanced(localSlotManager.getSlotTable(),
-                dataServerManager.getClusterMembers()));
+            dataServerManager.getClusterMembers()));
         assertSlotTableNoDupLeaderFollower(localSlotManager.getSlotTable());
 
         Thread.sleep(2);
         assigner.getTask().runUnthrowable();
         logger.info(JsonUtils.getJacksonObjectMapper().writerWithDefaultPrettyPrinter()
-                .writeValueAsString(localSlotManager.getSlotTable()));
+            .writeValueAsString(localSlotManager.getSlotTable()));
         Assert.assertTrue(isSlotTableBalanced(localSlotManager.getSlotTable(),
-                dataServerManager.getClusterMembers()));
+            dataServerManager.getClusterMembers()));
         Assert.assertTrue(isSlotTableLeaderBalanced(localSlotManager.getSlotTable(),
-                dataServerManager.getClusterMembers()));
+            dataServerManager.getClusterMembers()));
         assertSlotTableNoDupLeaderFollower(localSlotManager.getSlotTable());
 
         Thread.sleep(2);
         dataNodes = Lists.newArrayList(new DataNode(new URL("100.88.142.32"), getDc()),
-                new DataNode(new URL("100.88.142.36"), getDc()), new DataNode(new URL("100.88.142.19"),
-                        getDc()));
+            new DataNode(new URL("100.88.142.36"), getDc()), new DataNode(new URL("100.88.142.19"),
+                getDc()));
         when(dataServerManager.getClusterMembers()).thenReturn(dataNodes);
         assigner.getTask().runUnthrowable();
         logger.info(JsonUtils.getJacksonObjectMapper().writerWithDefaultPrettyPrinter()
-                .writeValueAsString(localSlotManager.getSlotTable()));
+            .writeValueAsString(localSlotManager.getSlotTable()));
         Assert.assertTrue(isSlotTableBalanced(localSlotManager.getSlotTable(),
-                dataServerManager.getClusterMembers()));
+            dataServerManager.getClusterMembers()));
         assertSlotTableNoDupLeaderFollower(localSlotManager.getSlotTable());
 
         Thread.sleep(2);
         dataNodes = Lists.newArrayList(new DataNode(new URL("100.88.142.32"), getDc()),
-                new DataNode(new URL("100.88.142.36"), getDc()), new DataNode(new URL("100.88.142.19"),
-                        getDc()));
+            new DataNode(new URL("100.88.142.36"), getDc()), new DataNode(new URL("100.88.142.19"),
+                getDc()));
         when(dataServerManager.getClusterMembers()).thenReturn(dataNodes);
         assigner.getTask().runUnthrowable();
         logger.info(JsonUtils.getJacksonObjectMapper().writerWithDefaultPrettyPrinter()
-                .writeValueAsString(localSlotManager.getSlotTable()));
+            .writeValueAsString(localSlotManager.getSlotTable()));
         Assert.assertTrue(isSlotTableBalanced(localSlotManager.getSlotTable(),
-                dataServerManager.getClusterMembers()));
+            dataServerManager.getClusterMembers()));
         Assert.assertTrue(isSlotTableLeaderBalanced(localSlotManager.getSlotTable(),
-                dataServerManager.getClusterMembers()));
+            dataServerManager.getClusterMembers()));
         assertSlotTableNoDupLeaderFollower(localSlotManager.getSlotTable());
 
         Thread.sleep(2);
         dataNodes = Lists.newArrayList(new DataNode(new URL("100.88.142.32"), getDc()),
-                new DataNode(new URL("100.88.142.36"), getDc()));
+            new DataNode(new URL("100.88.142.36"), getDc()));
         when(dataServerManager.getClusterMembers()).thenReturn(dataNodes);
         assigner.getTask().runUnthrowable();
         logger.info(JsonUtils.getJacksonObjectMapper().writerWithDefaultPrettyPrinter()
-                .writeValueAsString(localSlotManager.getSlotTable()));
+            .writeValueAsString(localSlotManager.getSlotTable()));
         Assert.assertTrue(isSlotTableBalanced(localSlotManager.getSlotTable(),
-                dataServerManager.getClusterMembers()));
+            dataServerManager.getClusterMembers()));
         Assert.assertTrue(isSlotTableLeaderBalanced(localSlotManager.getSlotTable(),
-                dataServerManager.getClusterMembers()));
+            dataServerManager.getClusterMembers()));
         assertSlotTableNoDupLeaderFollower(localSlotManager.getSlotTable());
 
         Thread.sleep(2);
         dataNodes = Lists.newArrayList(new DataNode(new URL("100.88.142.32"), getDc()),
-                new DataNode(new URL("100.88.142.36"), getDc()), new DataNode(new URL("100.88.142.19"),
-                        getDc()));
+            new DataNode(new URL("100.88.142.36"), getDc()), new DataNode(new URL("100.88.142.19"),
+                getDc()));
         when(dataServerManager.getClusterMembers()).thenReturn(dataNodes);
         assigner.getTask().runUnthrowable();
         logger.info(JsonUtils.getJacksonObjectMapper().writerWithDefaultPrettyPrinter()
-                .writeValueAsString(localSlotManager.getSlotTable()));
+            .writeValueAsString(localSlotManager.getSlotTable()));
         Assert.assertTrue(isSlotTableBalanced(localSlotManager.getSlotTable(),
-                dataServerManager.getClusterMembers()));
+            dataServerManager.getClusterMembers()));
         assertSlotTableNoDupLeaderFollower(localSlotManager.getSlotTable());
 
         Thread.sleep(2);
         dataNodes = Lists.newArrayList(new DataNode(new URL("100.88.142.32"), getDc()),
-                new DataNode(new URL("100.88.142.36"), getDc()), new DataNode(new URL("100.88.142.19"),
-                        getDc()));
+            new DataNode(new URL("100.88.142.36"), getDc()), new DataNode(new URL("100.88.142.19"),
+                getDc()));
         when(dataServerManager.getClusterMembers()).thenReturn(dataNodes);
         assigner.getTask().runUnthrowable();
         logger.info(JsonUtils.getJacksonObjectMapper().writerWithDefaultPrettyPrinter()
-                .writeValueAsString(localSlotManager.getSlotTable()));
+            .writeValueAsString(localSlotManager.getSlotTable()));
         Assert.assertTrue(isSlotTableBalanced(localSlotManager.getSlotTable(),
-                dataServerManager.getClusterMembers()));
+            dataServerManager.getClusterMembers()));
         Assert.assertTrue(isSlotTableLeaderBalanced(localSlotManager.getSlotTable(),
-                dataServerManager.getClusterMembers()));
+            dataServerManager.getClusterMembers()));
         assertSlotTableNoDupLeaderFollower(localSlotManager.getSlotTable());
     }
 
     @Test
     public void testDataLeaderBalance() throws Exception {
         ScheduledSlotArranger assigner = new ScheduledSlotArranger(dataServerManager,
-                localSlotManager, defaultSlotManager);
-        byte[] bytes = FileUtils.readFileToByteArray(new File("src/test/resources/test/slot-table.json"));
-        SlotTable prevSlotTable = JsonUtils.getJacksonObjectMapper().readValue(bytes, InnerSlotTable.class).toSlotTable();
+            localSlotManager, defaultSlotManager);
+        byte[] bytes = FileUtils.readFileToByteArray(new File(
+            "src/test/resources/test/slot-table.json"));
+        SlotTable prevSlotTable = JsonUtils.getJacksonObjectMapper()
+            .readValue(bytes, InnerSlotTable.class).toSlotTable();
         localSlotManager.refresh(prevSlotTable);
-        List<DataNode> dataNodes = Lists.newArrayList(new DataNode(new URL("100.88.142.32"), getDc()),
-                new DataNode(new URL("100.88.142.36"), getDc()), new DataNode(new URL("100.88.142.19"),
-                        getDc()));
+        List<DataNode> dataNodes = Lists.newArrayList(new DataNode(new URL("100.88.142.32"),
+            getDc()), new DataNode(new URL("100.88.142.36"), getDc()), new DataNode(new URL(
+            "100.88.142.19"), getDc()));
         when(dataServerManager.getClusterMembers()).thenReturn(dataNodes);
         makeRaftLeader();
         assigner.getTask().runUnthrowable();
@@ -366,22 +367,21 @@ public class SlotMigrationIntegrationTest extends AbstractTest {
         assigner.getTask().runUnthrowable();
 
         logger.info(JsonUtils.getJacksonObjectMapper().writerWithDefaultPrettyPrinter()
-                .writeValueAsString(localSlotManager.getSlotTable()));
+            .writeValueAsString(localSlotManager.getSlotTable()));
         Assert.assertTrue(isSlotTableLeaderBalanced(localSlotManager.getSlotTable(),
-                dataServerManager.getClusterMembers()));
+            dataServerManager.getClusterMembers()));
         assertSlotTableNoDupLeaderFollower(localSlotManager.getSlotTable());
     }
 
-
     public static class InnerSlotTable {
-        private long epoch;
-        private List<Slot> slots;
+        private long         epoch;
+        private List<Slot>   slots;
         private List<String> dataServers;
 
         @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
-        public InnerSlotTable(@JsonProperty("id")long epoch,
-                              @JsonProperty("slots")List<Slot> slots,
-                              @JsonProperty("dataServers")List<String> dataServers) {
+        public InnerSlotTable(@JsonProperty("id") long epoch,
+                              @JsonProperty("slots") List<Slot> slots,
+                              @JsonProperty("dataServers") List<String> dataServers) {
             this.epoch = epoch;
             this.slots = slots;
             this.dataServers = dataServers;

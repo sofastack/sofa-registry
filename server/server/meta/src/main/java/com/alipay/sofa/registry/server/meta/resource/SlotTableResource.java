@@ -49,24 +49,25 @@ public class SlotTableResource {
     private DefaultDataServerManager dataServerManager;
 
     @Autowired
-    private ScheduledSlotArranger slotArranger;
+    private ScheduledSlotArranger    slotArranger;
 
     @PUT
     @Path("force/refresh")
     @Produces(MediaType.APPLICATION_JSON)
     public GenericResponse<SlotTable> forceRefreshSlotTable() {
-        if(ServiceStateMachine.getInstance().isLeader()) {
-            if(slotArranger.tryLock()) {
+        if (ServiceStateMachine.getInstance().isLeader()) {
+            if (slotArranger.tryLock()) {
                 try {
                     BalanceTask task = new BalanceTask(slotManager,
-                            defaultSlotManager.getRaftSlotManager(), dataServerManager);
+                        defaultSlotManager.getRaftSlotManager(), dataServerManager);
                     task.run();
                     return new GenericResponse<SlotTable>().fillSucceed(slotManager.getSlotTable());
                 } finally {
                     slotArranger.unlock();
                 }
             } else {
-                return new GenericResponse<SlotTable>().fillFailed("scheduled slot arrangement is running");
+                return new GenericResponse<SlotTable>()
+                    .fillFailed("scheduled slot arrangement is running");
             }
         } else {
             return new GenericResponse<SlotTable>().fillFailed("not the meta-server leader");
@@ -77,7 +78,8 @@ public class SlotTableResource {
     }
 
     public SlotTableResource(DefaultSlotManager defaultSlotManager, LocalSlotManager slotManager,
-                             DefaultDataServerManager dataServerManager, ScheduledSlotArranger slotArranger) {
+                             DefaultDataServerManager dataServerManager,
+                             ScheduledSlotArranger slotArranger) {
         this.defaultSlotManager = defaultSlotManager;
         this.slotManager = slotManager;
         this.dataServerManager = dataServerManager;
