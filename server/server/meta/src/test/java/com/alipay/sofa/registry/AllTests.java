@@ -43,10 +43,11 @@ import com.alipay.sofa.registry.server.meta.provide.data.DefaultProvideDataNotif
 import com.alipay.sofa.registry.server.meta.provide.data.SessionServerProvideDataNotifierTest;
 import com.alipay.sofa.registry.server.meta.resource.SlotTableResourceTest;
 import com.alipay.sofa.registry.server.meta.slot.arrange.*;
+import com.alipay.sofa.registry.server.meta.slot.balance.LeaderOnlyBalancerTest;
 import com.alipay.sofa.registry.server.meta.slot.manager.DefaultSlotManagerTest;
 import com.alipay.sofa.registry.server.meta.slot.tasks.BalanceTaskTest;
 import com.alipay.sofa.registry.server.meta.slot.tasks.SlotMigrationIntegrationTest;
-import com.alipay.sofa.registry.server.meta.slot.util.SlotTableBuilderTest;
+import com.alipay.sofa.registry.server.meta.slot.util.*;
 import com.alipay.sofa.registry.server.shared.slot.DiskSlotTableRecorderTest;
 import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
@@ -65,6 +66,8 @@ import org.junit.runners.Suite;
                      TestAbstractNodeEventTest.class, DefaultSlotManagerTest.class,
                      DefaultSlotTableMonitorTest.class, DiskSlotTableRecorderTest.class,
                      SlotTableResourceTest.class, SlotMigrationIntegrationTest.class,
-                     SlotTableBuilderTest.class })
+                     SlotTableBuilderTest.class, SlotBuilderTest.class,
+                     DataNodeComparatorTest.class, MigrateSlotGroupTest.class,
+                     ScheduledSlotArrangerTest.class, LeaderOnlyBalancerTest.class })
 public class AllTests {
 }

@@ -72,7 +72,8 @@ public class LeaseTest extends AbstractTest {
         Lease<Object> lease1 = new Lease<>(new Object(), 1, TimeUnit.MILLISECONDS);
         Lease<Object> lease2 = new Lease<>(sample, 1, TimeUnit.MILLISECONDS);
         Thread.sleep(5);
-        Lease<DataNode> lease3 = new Lease<>(new DataNode(sample.getNodeUrl(), getDc()), 1, TimeUnit.MILLISECONDS);
+        Lease<DataNode> lease3 = new Lease<>(new DataNode(sample.getNodeUrl(), getDc()), 1,
+            TimeUnit.MILLISECONDS);
         Lease<Object> lease4 = lease2;
         lease4.setRenewal(lease3.getRenewal());
 

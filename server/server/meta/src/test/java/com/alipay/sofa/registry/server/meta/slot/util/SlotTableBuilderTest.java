@@ -1,9 +1,27 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package com.alipay.sofa.registry.server.meta.slot.util;
 
 import com.alipay.sofa.registry.common.model.metaserver.nodes.DataNode;
 import com.alipay.sofa.registry.common.model.slot.DataNodeSlot;
 import com.alipay.sofa.registry.common.model.slot.SlotTable;
 import com.alipay.sofa.registry.server.meta.AbstractTest;
+import com.alipay.sofa.registry.server.meta.slot.util.builder.SlotBuilder;
+import com.alipay.sofa.registry.server.meta.slot.util.builder.SlotTableBuilder;
 import com.alipay.sofa.registry.server.shared.util.NodeUtils;
 import com.google.common.collect.Lists;
 import org.junit.Assert;
@@ -18,6 +36,11 @@ import java.util.concurrent.CyclicBarrier;
 
 import static org.junit.Assert.*;
 
+/**
+ * @author chen.zhu
+ * <p>
+ * Jan 15, 2021
+ */
 public class SlotTableBuilderTest extends AbstractTest {
 
     private SlotTableBuilder slotTableBuilder;
@@ -34,7 +57,7 @@ public class SlotTableBuilderTest extends AbstractTest {
         CyclicBarrier barrier = new CyclicBarrier(tasks);
         CountDownLatch latch = new CountDownLatch(tasks);
         List<SlotBuilder> result = new ArrayList<>(tasks);
-        for(int i = 0; i < tasks; i++) {
+        for (int i = 0; i < tasks; i++) {
             final int index = i;
             executors.execute(new Runnable() {
                 @Override
@@ -52,7 +75,7 @@ public class SlotTableBuilderTest extends AbstractTest {
         }
         latch.await();
         SlotBuilder sample = slotTableBuilder.getOrCreate(slotId);
-        for(SlotBuilder sb : result) {
+        for (SlotBuilder sb : result) {
             assertSame(sb, sample);
         }
     }
@@ -66,17 +89,20 @@ public class SlotTableBuilderTest extends AbstractTest {
         slotTableBuilder.init(slotTable, NodeUtils.transferNodeToIpList(dataNodes));
         Assert.assertNotNull(slotTableBuilder.getDataNodeSlot(alternative.getIp()));
 
-        for(int slotId = 0; slotId < slotTable.getSlots().size(); slotId++) {
-            Assert.assertEquals(slotTableBuilder.getOrCreate(slotId).getLeader(), slotTable.getSlot(slotId).getLeader());
-            Assert.assertEquals(slotTableBuilder.getOrCreate(slotId).getEpoch(), slotTable.getSlot(slotId).getLeaderEpoch());
-            Assert.assertEquals(slotTableBuilder.getOrCreate(slotId).getFollowers(), slotTable.getSlot(slotId).getFollowers());
+        for (int slotId = 0; slotId < slotTable.getSlots().size(); slotId++) {
+            Assert.assertEquals(slotTableBuilder.getOrCreate(slotId).getLeader(), slotTable
+                .getSlot(slotId).getLeader());
+            Assert.assertEquals(slotTableBuilder.getOrCreate(slotId).getEpoch(),
+                slotTable.getSlot(slotId).getLeaderEpoch());
+            Assert.assertEquals(slotTableBuilder.getOrCreate(slotId).getFollowers(), slotTable
+                .getSlot(slotId).getFollowers());
         }
 
-
-        for(DataNode dataNode : dataNodes) {
+        for (DataNode dataNode : dataNodes) {
             List<DataNodeSlot> samples = slotTable.transfer(dataNode.getIp(), false);
-            if(!samples.isEmpty()) {
-                Assert.assertEquals(samples.get(0), slotTableBuilder.getDataNodeSlot(dataNode.getIp()));
+            if (!samples.isEmpty()) {
+                Assert.assertEquals(samples.get(0),
+                    slotTableBuilder.getDataNodeSlot(dataNode.getIp()));
             }
         }
     }
@@ -97,12 +123,13 @@ public class SlotTableBuilderTest extends AbstractTest {
         } while (nextLeader.equals(prevLeader));
         logger.info("[prev leader] {}", prevLeader);
         logger.info("[next leader] {}", nextLeader);
-        slotTableBuilder.flipLeaderTo(slotId, nextLeader);
+        slotTableBuilder.replaceLeader(slotId, nextLeader);
         Assert.assertNotEquals(sb.getLeader(), prevLeader);
         logger.info("[followers] {}", sb.getFollowers());
         Assert.assertTrue(sb.getEpoch() > prevEpoch);
 
-        Assert.assertTrue(slotTableBuilder.getDataNodeSlot(nextLeader).getLeaders().contains(slotId));
+        Assert.assertTrue(slotTableBuilder.getDataNodeSlot(nextLeader).getLeaders()
+            .contains(slotId));
     }
 
     @Test
@@ -114,7 +141,8 @@ public class SlotTableBuilderTest extends AbstractTest {
         String follower = slotTable.getSlot(slotId).getFollowers().iterator().next();
         slotTableBuilder.removeFollower(slotId, follower);
         Assert.assertFalse(slotTableBuilder.getOrCreate(slotId).getFollowers().contains(follower));
-        Assert.assertFalse(slotTableBuilder.getDataNodeSlot(follower).getFollowers().contains(slotId));
+        Assert.assertFalse(slotTableBuilder.getDataNodeSlot(follower).getFollowers()
+            .contains(slotId));
     }
 
     @Test
@@ -123,7 +151,7 @@ public class SlotTableBuilderTest extends AbstractTest {
         SlotTable slotTable = randomSlotTable(dataNodes);
         slotTableBuilder.init(slotTable, NodeUtils.transferNodeToIpList(dataNodes));
         int slotId = random.nextInt(16);
-        SlotBuilder sb  = slotTableBuilder.getOrCreate(slotId);
+        SlotBuilder sb = slotTableBuilder.getOrCreate(slotId);
         String prevFollower = sb.getFollowers().iterator().next();
 
         long prevEpoch = sb.getEpoch();
@@ -134,13 +162,17 @@ public class SlotTableBuilderTest extends AbstractTest {
         } while (nextFollower.equals(prevFollower) || nextFollower.equals(sb.getLeader()));
 
         slotTableBuilder.addFollower(slotId, nextFollower);
-        Assert.assertFalse(slotTableBuilder.getOrCreate(slotId).getFollowers().contains(nextFollower));
-        Assert.assertFalse(slotTableBuilder.getDataNodeSlot(nextFollower).getFollowers().contains(slotId));
+        Assert.assertFalse(slotTableBuilder.getOrCreate(slotId).getFollowers()
+            .contains(nextFollower));
+        Assert.assertFalse(slotTableBuilder.getDataNodeSlot(nextFollower).getFollowers()
+            .contains(slotId));
 
         sb.removeFollower(prevFollower);
         slotTableBuilder.addFollower(slotId, nextFollower);
-        Assert.assertTrue(slotTableBuilder.getOrCreate(slotId).getFollowers().contains(nextFollower));
-        Assert.assertTrue(slotTableBuilder.getDataNodeSlot(nextFollower).getFollowers().contains(slotId));
+        Assert.assertTrue(slotTableBuilder.getOrCreate(slotId).getFollowers()
+            .contains(nextFollower));
+        Assert.assertTrue(slotTableBuilder.getDataNodeSlot(nextFollower).getFollowers()
+            .contains(slotId));
     }
 
     @Test
@@ -168,8 +200,10 @@ public class SlotTableBuilderTest extends AbstractTest {
         slotTableBuilder.removeDataServerSlots(dataNodes.get(0).getIp());
         Assert.assertTrue(slotTableBuilder.hasNoAssignedSlots());
 
-        Assert.assertTrue(slotTableBuilder.getDataNodeSlot(dataNodes.get(0).getIp()).getFollowers().isEmpty());
-        Assert.assertTrue(slotTableBuilder.getDataNodeSlot(dataNodes.get(0).getIp()).getLeaders().isEmpty());
+        Assert.assertTrue(slotTableBuilder.getDataNodeSlot(dataNodes.get(0).getIp()).getFollowers()
+            .isEmpty());
+        Assert.assertTrue(slotTableBuilder.getDataNodeSlot(dataNodes.get(0).getIp()).getLeaders()
+            .isEmpty());
 
     }
 
@@ -196,12 +230,12 @@ public class SlotTableBuilderTest extends AbstractTest {
         slotTableBuilder = new SlotTableBuilder(6, 2);
         List<DataNode> dataNodes = randomDataNodes(3);
         String leader = dataNodes.get(0).getIp();
-        for(int i = 0; i < 6; i++) {
+        for (int i = 0; i < 6; i++) {
             slotTableBuilder.getOrCreate(i);
-            slotTableBuilder.flipLeaderTo(i, leader);
+            slotTableBuilder.replaceLeader(i, leader);
         }
         Assert.assertEquals(Lists.newArrayList(slotTableBuilder.getDataNodeSlot(leader)),
-                slotTableBuilder.getDataNodeSlotsLeaderBeyond(6/3));
+            slotTableBuilder.getDataNodeSlotsLeaderBeyond(6 / 3));
     }
 
     @Test
@@ -210,19 +244,20 @@ public class SlotTableBuilderTest extends AbstractTest {
         List<DataNode> dataNodes = randomDataNodes(3);
         slotTableBuilder.init(null, NodeUtils.transferNodeToIpList(dataNodes));
         String leader = dataNodes.get(0).getIp();
-        for(int i = 0; i < 6; i++) {
+        for (int i = 0; i < 6; i++) {
             slotTableBuilder.getOrCreate(i);
-            slotTableBuilder.flipLeaderTo(i, leader);
+            slotTableBuilder.replaceLeader(i, leader);
         }
-        List<DataNodeSlot> expected = Lists.newArrayList(slotTableBuilder.getDataNodeSlot(dataNodes.get(1).getIp()),
-                slotTableBuilder.getDataNodeSlot(dataNodes.get(2).getIp()));
+        List<DataNodeSlot> expected = Lists.newArrayList(
+            slotTableBuilder.getDataNodeSlot(dataNodes.get(1).getIp()),
+            slotTableBuilder.getDataNodeSlot(dataNodes.get(2).getIp()));
         expected.sort(new Comparator<DataNodeSlot>() {
             @Override
             public int compare(DataNodeSlot o1, DataNodeSlot o2) {
                 return o1.getDataNode().compareTo(o2.getDataNode());
             }
         });
-        List<DataNodeSlot> actual = slotTableBuilder.getDataNodeSlotsLeaderBelow(6/3);
+        List<DataNodeSlot> actual = slotTableBuilder.getDataNodeSlotsLeaderBelow(6 / 3);
         actual.sort(new Comparator<DataNodeSlot>() {
             @Override
             public int compare(DataNodeSlot o1, DataNodeSlot o2) {
@@ -237,13 +272,13 @@ public class SlotTableBuilderTest extends AbstractTest {
         slotTableBuilder = new SlotTableBuilder(6, 2);
         List<DataNode> dataNodes = randomDataNodes(3);
         String leader = dataNodes.get(0).getIp();
-        for(int i = 0; i < 6; i++) {
+        for (int i = 0; i < 6; i++) {
             slotTableBuilder.getOrCreate(i);
-            slotTableBuilder.flipLeaderTo(i, leader);
+            slotTableBuilder.replaceLeader(i, leader);
             slotTableBuilder.addFollower(i, dataNodes.get(1).getIp());
         }
         List<DataNodeSlot> expected = Lists.newArrayList(slotTableBuilder.getDataNodeSlot(leader),
-                slotTableBuilder.getDataNodeSlot(dataNodes.get(1).getIp()));
+            slotTableBuilder.getDataNodeSlot(dataNodes.get(1).getIp()));
         expected.sort(new Comparator<DataNodeSlot>() {
             @Override
             public int compare(DataNodeSlot o1, DataNodeSlot o2) {
@@ -266,13 +301,14 @@ public class SlotTableBuilderTest extends AbstractTest {
         List<DataNode> dataNodes = randomDataNodes(3);
         slotTableBuilder.init(null, NodeUtils.transferNodeToIpList(dataNodes));
         String leader = dataNodes.get(0).getIp();
-        for(int i = 0; i < 6; i++) {
+        for (int i = 0; i < 6; i++) {
             slotTableBuilder.getOrCreate(i);
-            slotTableBuilder.flipLeaderTo(i, leader);
+            slotTableBuilder.replaceLeader(i, leader);
             slotTableBuilder.addFollower(i, dataNodes.get(1).getIp());
         }
-        Assert.assertEquals(Lists.newArrayList(slotTableBuilder.getDataNodeSlot(dataNodes.get(2).getIp())),
-                slotTableBuilder.getDataNodeTotalSlotsBelow(6 / 3));
+        Assert.assertEquals(
+            Lists.newArrayList(slotTableBuilder.getDataNodeSlot(dataNodes.get(2).getIp())),
+            slotTableBuilder.getDataNodeTotalSlotsBelow(6 / 3));
     }
 
     @Test
@@ -294,6 +330,19 @@ public class SlotTableBuilderTest extends AbstractTest {
         slotTableBuilder.incrEpoch();
         SlotTable slotTable1 = slotTableBuilder.build();
         assertSlotTableNoDupLeaderFollower(slotTable1);
+    }
+
+    @Test
+    public void testGetDataNodeSlot() {
+        List<DataNode> dataNodes = randomDataNodes(6);
+        SlotTable slotTable = randomSlotTable(dataNodes);
+        slotTableBuilder.init(slotTable, NodeUtils.transferNodeToIpList(dataNodes));
+        DataNodeSlot dataNodeSlot = slotTableBuilder.getDataNodeSlot(randomIp());
+        Assert.assertNotNull(dataNodeSlot);
+        Assert.assertTrue(dataNodeSlot.getLeaders().isEmpty());
+        Assert.assertTrue(dataNodeSlot.getFollowers().isEmpty());
+
+        logger.info("[slotTableBuilder] {}", slotTableBuilder.toString());
     }
 
 }

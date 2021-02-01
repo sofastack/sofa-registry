@@ -66,7 +66,7 @@ public class HeartbeatRequestHandler extends MetaServerHandler<RenewNodesRequest
             SlotTable slotTable = currentDcMetaServer.getSlotTable();
             if (!SlotTableUtils.isValidSlotTable(slotTable)) {
                 return new GenericResponse<BaseHeartBeatResponse>()
-                        .fillFailed("slot-table not valid, check meta-server log for detail");
+                    .fillFailed("slot-table not valid, check meta-server log for detail");
             }
             BaseHeartBeatResponse response = null;
             // TODO the epoch and the nodes is not atomic

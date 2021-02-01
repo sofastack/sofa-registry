@@ -14,16 +14,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alipay.sofa.registry.server.meta.slot.assigner;
+package com.alipay.sofa.registry.server.meta.slot.util.filter;
 
-import java.util.Collection;
+import java.util.List;
 
 /**
  * @author chen.zhu
  * <p>
- * Jan 15, 2021
+ * Jan 27, 2021
  */
-public interface Selector<T> {
+public interface FilterChain<T> extends Filter<T> {
 
-    T select(Collection<T> candidates);
+    void addFilter(Filter<T> filter);
+
+    List<Filter<T>> getFilters();
 }

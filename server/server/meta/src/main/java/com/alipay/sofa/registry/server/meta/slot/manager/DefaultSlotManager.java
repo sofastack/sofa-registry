@@ -25,7 +25,6 @@ import com.alipay.sofa.registry.store.api.annotation.RaftReference;
 import com.alipay.sofa.registry.store.api.annotation.RaftReferenceContainer;
 import org.springframework.beans.factory.annotation.Autowired;
 
-
 /**
  * @author chen.zhu
  * <p>
@@ -35,10 +34,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 public class DefaultSlotManager implements SlotManager {
 
     @Autowired
-    private LocalSlotManager         localSlotManager;
+    private LocalSlotManager localSlotManager;
 
     @RaftReference(uniqueId = LocalSlotManager.LOCAL_SLOT_MANAGER, interfaceType = SlotManager.class)
-    private SlotManager              raftSlotManager;
+    private SlotManager      raftSlotManager;
 
     public DefaultSlotManager() {
     }

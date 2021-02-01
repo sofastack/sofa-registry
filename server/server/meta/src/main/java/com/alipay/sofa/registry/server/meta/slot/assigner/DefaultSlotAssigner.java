@@ -23,10 +23,13 @@ import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.server.meta.lease.data.DataServerManager;
 import com.alipay.sofa.registry.server.meta.slot.SlotAssigner;
 import com.alipay.sofa.registry.server.meta.slot.manager.LocalSlotManager;
-import com.alipay.sofa.registry.server.meta.slot.util.DataNodeComparator;
 import com.alipay.sofa.registry.server.meta.slot.util.MigrateSlotGroup;
-import com.alipay.sofa.registry.server.meta.slot.util.SlotBuilder;
-import com.alipay.sofa.registry.server.meta.slot.util.SlotTableBuilder;
+import com.alipay.sofa.registry.server.meta.slot.util.builder.SlotBuilder;
+import com.alipay.sofa.registry.server.meta.slot.util.builder.SlotTableBuilder;
+import com.alipay.sofa.registry.server.meta.slot.util.comparator.DataNodeComparator;
+import com.alipay.sofa.registry.server.meta.slot.util.comparator.SortType;
+import com.alipay.sofa.registry.server.meta.slot.util.selector.Selector;
+import com.alipay.sofa.registry.server.meta.slot.util.selector.Selectors;
 import com.alipay.sofa.registry.server.shared.util.NodeUtils;
 import com.google.common.collect.Lists;
 
@@ -43,8 +46,6 @@ public class DefaultSlotAssigner implements SlotAssigner {
 
     private final LocalSlotManager   slotManager;
 
-    private final DataServerManager  dataServerManager;
-
     private final SlotTable          prevSlotTable;
 
     private final List<String>       currentDataServers;
@@ -57,7 +58,6 @@ public class DefaultSlotAssigner implements SlotAssigner {
 
     public DefaultSlotAssigner(LocalSlotManager slotManager, DataServerManager dataServerManager) {
         this.slotManager = slotManager;
-        this.dataServerManager = dataServerManager;
         this.prevSlotTable = slotManager.getSlotTable();
         this.currentDataServers = NodeUtils.transferNodeToIpList(dataServerManager
             .getClusterMembers());
@@ -68,87 +68,108 @@ public class DefaultSlotAssigner implements SlotAssigner {
 
     @Override
     public SlotTable assign() {
-        if (currentDataServers.isEmpty()) {
-            logger.error("[no available data-servers] quit");
-            throw new SofaRegistryRuntimeException(
-                "no available data-servers for slot-table reassignment");
-        }
-        slotTableBuilder.init(prevSlotTable, currentDataServers);
 
         findUnassignedSlots();
 
         logger.info("[assign][assignLeaderSlots] begin");
-        if (assignLeaderSlots()) {
-            logger.info("[assign][after assignLeaderSlots] leader changed");
+        if (tryAssignLeaderSlots()) {
+            logger.info("[assign][after assignLeaderSlots] end -- leader changed");
+            slotTableBuilder.incrEpoch();
+        } else {
+            logger.info("[assign][after assignLeaderSlots] end -- no changes");
         }
 
         logger.info("[assign][assignLeaderSlots] begin");
-        if (assignFollowerSlots()) {
-            logger.info("[assign][after assignLeaderSlots] follower changed");
+        if (tryAssignFollowerSlots()) {
+            logger.info("[assign][after assignLeaderSlots] end -- follower changed");
             slotTableBuilder.incrEpoch();
+        } else {
+            logger.info("[assign][assignLeaderSlots] end -- no changes");
         }
         return slotTableBuilder.build();
     }
 
     private void findUnassignedSlots() {
+        if (currentDataServers.isEmpty()) {
+            logger.error("[no available data-servers] quit");
+            throw new SofaRegistryRuntimeException(
+                    "no available data-servers for slot-table reassignment");
+        }
+        slotTableBuilder.init(prevSlotTable, currentDataServers);
         comparator.getRemoved().forEach(slotTableBuilder::removeDataServerSlots);
         migrateSlotGroup = slotTableBuilder.getNoAssignedSlots();
     }
 
-    private boolean assignLeaderSlots() {
-        List<Integer> leaders = migrateSlotGroup
-            .getLeadersByScore(new LeaderEmergentScoreJury(this));
+    private boolean tryAssignLeaderSlots() {
+        /** our strategy(assign leader) is to swap follower to leader when follower is enabled
+         * if no followers, we select a new data-server to assign, that's simple and low prioritized
+         * so, leaders are resolved in an order that who has least followers first
+         * (as we wish to satisfy these nodes first)
+         * leaders with no follower is lowest priority, as whatever we did, it will pick up a candidate
+         * that is not its follower
+        */
+        List<Integer> leaders = migrateSlotGroup.getLeadersByScore(new FewerFellowerFirstStrategy(
+            slotTableBuilder));
         boolean result = false;
         if (leaders.isEmpty()) {
-            logger.info("[assignLeaderSlots] need assign leader slots set empty, quit");
+            logger.info("[assignLeaderSlots] no slot leader needs assign, quit");
             return false;
         }
         for (Integer slotId : leaders) {
             List<String> currentDataNodes = Lists.newArrayList(currentDataServers);
-            SlotBuilder slotBuilder = slotTableBuilder.getOrCreate(slotId);
-            Selector<String> selector = new DefaultSlotLeaderSelector(this, slotId);
-            String dataNode = selector.select(currentDataNodes);
-            logger.info("[assignLeaderSlots]assign slot[{}] leader as [{}]", slotId, dataNode);
-            slotBuilder.setLeader(dataNode);
-            // if remove follower is true, it means we just slip a follower to a leader
-            // in this circumstances, we need to re-assign the follower role to a new datanode
-            if (slotBuilder.removeFollower(dataNode)) {
-                logger.info("[assignLeaderSlots] follower is added to be assign slot[{}]", slotId);
-                result = true;
+            String nextLeader = Selectors.slotLeaderSelector(slotTableBuilder, slotId).select(
+                currentDataNodes);
+            logger.info("[assignLeaderSlots]assign slot[{}] leader as [{}]", slotId, nextLeader);
+            boolean nextLeaderWasFollower = isNextLeaderFollowerOfSlot(slotId, nextLeader);
+            slotTableBuilder.replaceLeader(slotId, nextLeader);
+            if (nextLeaderWasFollower) {
                 migrateSlotGroup.addFollower(slotId);
             }
+            result = true;
         }
         return result;
     }
 
-    private boolean assignFollowerSlots() {
-        List<FollowerToAssign> followerToAssigns = migrateSlotGroup
+    private boolean isNextLeaderFollowerOfSlot(int slotId, String nextLeader) {
+        return slotTableBuilder.getOrCreate(slotId).getFollowers().contains(nextLeader);
+    }
+
+    private boolean tryAssignFollowerSlots() {
+        List<MigrateSlotGroup.FollowerToAssign> followerToAssigns = migrateSlotGroup
             .getFollowersByScore(new FollowerEmergentScoreJury());
         boolean result = false;
         if (followerToAssigns.isEmpty()) {
             logger.info("[assignFollowerSlots] need assign follower slots set empty, quit");
             return false;
         }
-        for (FollowerToAssign followerToAssign : followerToAssigns) {
-            List<String> currentDataNodes = Lists.newArrayList(currentDataServers);
+        for (MigrateSlotGroup.FollowerToAssign followerToAssign : followerToAssigns) {
+            List<String> candidates = Lists.newArrayList(currentDataServers);
             SlotBuilder slotBuilder = slotTableBuilder.getOrCreate(followerToAssign.getSlotId());
-            currentDataNodes.removeAll(slotBuilder.getFollowers());
-            currentDataNodes.remove(slotBuilder.getLeader());
-            if (currentDataNodes.isEmpty()) {
+            candidates.removeAll(slotBuilder.getFollowers());
+            candidates.remove(slotBuilder.getLeader());
+            if (candidates.isEmpty()) {
                 logger
                     .info(
                         "[assignFollowerSlots] empty candidate set for slot[{}] followers assign, quit",
                         followerToAssign.getSlotId());
                 continue;
             }
-            Selector<String> selector = new DefaultSlotFollowerSelector(this);
+            Selector<String> selector = Selectors.leastSlotsFirst(slotTableBuilder);
             for (int i = 0; i < followerToAssign.getAssigneeNums(); i++) {
-                String dataNode = selector.select(currentDataNodes);
+                String candidate = selector.select(candidates);
+                if (candidate.equals(slotBuilder.getLeader())
+                    || slotBuilder.getFollowers().contains(candidate)) {
+                    logger.error(
+                        "[tryAssignFollowerSlots] candidate follower data [{}] for slot[{}] equals "
+                                + "with leader or already a follower", candidate,
+                        followerToAssign.getSlotId());
+                    continue;
+                }
                 logger.info("[assignFollowerSlots]assign slot[{}] add follower as [{}]",
-                    followerToAssign.getSlotId(), dataNode);
+                    followerToAssign.getSlotId(), candidate);
                 result = true;
-                slotBuilder.addFollower(dataNode);
-                currentDataNodes.remove(dataNode);
+                slotBuilder.addFollower(candidate);
+                candidates.remove(candidate);
             }
         }
         return result;
@@ -161,14 +182,6 @@ public class DefaultSlotAssigner implements SlotAssigner {
         return slotManager;
     }
 
-    public DataServerManager getDataServerManager() {
-        return dataServerManager;
-    }
-
-    public SlotTable getPrevSlotTable() {
-        return prevSlotTable;
-    }
-
     public List<String> getCurrentDataServers() {
         return currentDataServers;
     }
@@ -179,5 +192,40 @@ public class DefaultSlotAssigner implements SlotAssigner {
 
     public MigrateSlotGroup getMigrateSlotGroup() {
         return migrateSlotGroup;
+    }
+
+    /**
+     * ==================================  Classes ====================================== *
+     * */
+
+    public static class FewerFellowerFirstStrategy implements ScoreStrategy<Integer> {
+
+        private SlotTableBuilder slotTableBuilder;
+
+        public FewerFellowerFirstStrategy(SlotTableBuilder slotTableBuilder) {
+            this.slotTableBuilder = slotTableBuilder;
+        }
+
+        @Override
+        public int score(Integer slotId) {
+            SlotBuilder slotBuilder = slotTableBuilder.getOrCreate(slotId);
+            int followerNums = slotBuilder.getFollowers().size();
+            // if no followers, we leave it the least priority
+            // because our strategy(assign leader) is to swap follower to leader when follower is enabled
+            // if no followers, we select a new data-server to assign, that's simple and low prioritized
+            if (followerNums == 0) {
+                return Integer.MAX_VALUE;
+            }
+            return SortType.ASC.getScore(slotBuilder.getFollowers().size());
+        }
+    }
+
+    public static class FollowerEmergentScoreJury implements
+                                                 ScoreStrategy<MigrateSlotGroup.FollowerToAssign> {
+
+        @Override
+        public int score(MigrateSlotGroup.FollowerToAssign followerToAssign) {
+            return SortType.DES.getScore(followerToAssign.getAssigneeNums());
+        }
     }
 }

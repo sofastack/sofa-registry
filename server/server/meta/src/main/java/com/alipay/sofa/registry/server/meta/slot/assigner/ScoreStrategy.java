@@ -24,4 +24,5 @@ package com.alipay.sofa.registry.server.meta.slot.assigner;
 public interface ScoreStrategy<T> {
 
     int score(T t);
+
 }

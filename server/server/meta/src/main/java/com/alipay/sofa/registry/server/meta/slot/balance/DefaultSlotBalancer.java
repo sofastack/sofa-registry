@@ -24,12 +24,17 @@ import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.server.meta.lease.data.DataServerManager;
 import com.alipay.sofa.registry.server.meta.slot.SlotBalancer;
 import com.alipay.sofa.registry.server.meta.slot.manager.LocalSlotManager;
-import com.alipay.sofa.registry.server.meta.slot.util.SlotBuilder;
-import com.alipay.sofa.registry.server.meta.slot.util.SlotTableBuilder;
+import com.alipay.sofa.registry.server.meta.slot.util.builder.SlotBuilder;
+import com.alipay.sofa.registry.server.meta.slot.util.builder.SlotTableBuilder;
+import com.alipay.sofa.registry.server.meta.slot.util.comparator.Comparators;
+import com.alipay.sofa.registry.server.meta.slot.util.filter.Filters;
+import com.alipay.sofa.registry.server.meta.slot.util.selector.Selectors;
 import com.alipay.sofa.registry.server.shared.slot.SlotTableUtils;
 import com.alipay.sofa.registry.server.shared.util.NodeUtils;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
 
 /**
  * @author chen.zhu
@@ -68,42 +73,47 @@ public class DefaultSlotBalancer implements SlotBalancer {
                 "no available data-servers for slot-table reassignment");
         }
         slotTableBuilder.init(prevSlotTable, currentDataServers);
-        if(slotManager.getSlotReplicaNums() < 2) {
-            logger.warn("[balance] slot replica[{}] means no followers, balance leader only", slotManager.getSlotReplicaNums());
-            return new LeaderOnlyBalancer(slotTableBuilder, currentDataServers, slotManager).balance();
+        if (slotManager.getSlotReplicaNums() < 2) {
+            logger.warn("[balance] slot replica[{}] means no followers, balance leader only",
+                slotManager.getSlotReplicaNums());
+            return new LeaderOnlyBalancer(slotTableBuilder, currentDataServers, slotManager)
+                .balance();
         }
 
-        if (balanceLeaderSlots()) {
+        if (tryBalanceLeaderSlots()) {
             logger.info("[assignLeaderSlots] end");
             slotTableBuilder.incrEpoch();
-        } else if (balanceFollowerSlots()) {
+        } else if (tryBalanceFollowerSlots()) {
             logger.info("[balanceFollowerSlots] end");
             slotTableBuilder.incrEpoch();
         }
         return slotTableBuilder.build();
     }
 
-    private boolean balanceLeaderSlots() {
+    private boolean tryBalanceLeaderSlots() {
         boolean result = false;
         int avg = slotManager.getSlotNums() / currentDataServers.size();
-        Set<String> targetDataServers = findDataServersNeedLeaderSlots(avg);
+        List<String> targetDataServers = findDataServersNeedLeaderSlots(avg);
         if (targetDataServers.isEmpty()) {
             logger.info("[balanceLeaderSlots]no leader slots need to balance, quit");
             return false;
         } else {
             logger.info("[balanceLeaderSlots] data-servers: {}, need to assign slot leaders",
                 targetDataServers);
-            logger.info("[balanceLeaderSlots][begin] slot table leader stat: {}", SlotTableUtils.getSlotTableLeaderCount(prevSlotTable));
-            logger.info("[balanceLeaderSlots][begin] slot table slots stat: {}", SlotTableUtils.getSlotTableSlotCount(prevSlotTable));
+            logger.info("[balanceLeaderSlots][begin] slot table leader stat: {}",
+                SlotTableUtils.getSlotTableLeaderCount(prevSlotTable));
+            logger.info("[balanceLeaderSlots][begin] slot table slots stat: {}",
+                SlotTableUtils.getSlotTableSlotCount(prevSlotTable));
         }
         for (String dataServer : targetDataServers) {
             // we flip the target data follower slot to be leader of the slot
             DataNodeSlot dataNodeSlot = slotTableBuilder.getDataNodeSlot(dataServer);
             // we use maxMove to limit the maximum movement slots each time
             // it's now the min(2, avg - [current leader nums], [candidate available nums])
-            int maxMove = balancePolicy.getMaxMoveLeaderSlots(avg, dataNodeSlot.getLeaders().size());//avg - dataNodeSlot.getLeaders().size();
+            int maxMove = balancePolicy
+                .getMaxMoveLeaderSlots(avg, dataNodeSlot.getLeaders().size());//avg - dataNodeSlot.getLeaders().size();
             maxMove = Math.min(maxMove, dataNodeSlot.getFollowers().size());
-            List<Integer> targetSlots = new DefaultBalanceLeaderFilter(this, targetDataServers)
+            List<Integer> targetSlots = Filters.balanceLeaderFilter(this, targetDataServers)
                 .filter(dataNodeSlot.getFollowers());
             if (targetSlots.isEmpty()) {
                 logger
@@ -113,43 +123,41 @@ public class DefaultSlotBalancer implements SlotBalancer {
                 continue;
             }
             while (maxMove-- > 0) {
-                targetSlots.sort(new LeaderSizeComparator(slotTableBuilder, SortType.DES));
+                targetSlots.sort(Comparators.slotLeaderHasMostLeaderSlots(slotTableBuilder));
                 Integer slotId = targetSlots.get(0);
                 String prevLeader = slotTableBuilder.getOrCreate(slotId).getLeader();
                 logger.info("[balanceLeaderSlots] slot[{}] leader balance from [{}] to [{}]",
                     slotId, prevLeader, dataServer);
-                slotTableBuilder.flipLeaderTo(slotId, dataServer);
+                slotTableBuilder.replaceLeader(slotId, dataServer);
                 targetSlots.remove(slotId);
                 result = true;
             }
         }
         if (result) {
             SlotTable slotTable = slotTableBuilder.build();
-            logger.info("[balanceLeaderSlots][end] slot table leader stat: {}", SlotTableUtils.getSlotTableLeaderCount(slotTable));
-            logger.info("[balanceLeaderSlots][end] slot table slots stat: {}", SlotTableUtils.getSlotTableSlotCount(slotTable));
+            logger.info("[balanceLeaderSlots][end] slot table leader stat: {}",
+                SlotTableUtils.getSlotTableLeaderCount(slotTable));
+            logger.info("[balanceLeaderSlots][end] slot table slots stat: {}",
+                SlotTableUtils.getSlotTableSlotCount(slotTable));
         }
         return result;
     }
 
-    private Set<String> findDataServersNeedLeaderSlots(int averageLeaderSlots) {
+    private List<String> findDataServersNeedLeaderSlots(int averageLeaderSlots) {
         int threshold = balancePolicy.getLowWaterMarkSlotLeaderNums(averageLeaderSlots);
         List<DataNodeSlot> dataNodeSlots = slotTableBuilder.getDataNodeSlotsLeaderBelow(threshold);
-        dataNodeSlots.sort(new Comparator<DataNodeSlot>() {
-            @Override
-            public int compare(DataNodeSlot dataNodeSlot1, DataNodeSlot dataNodeSlot2) {
-                return SortType.ASC.getScore(dataNodeSlot1.getLeaders().size() - dataNodeSlot2.getLeaders().size());
-            }
-        });
-        Set<String> dataServers = new HashSet<>(dataNodeSlots.size());
+        List<String> dataServers = new ArrayList<>(dataNodeSlots.size());
         dataNodeSlots.forEach(dataNodeSlot -> dataServers.add(dataNodeSlot.getDataNode()));
+        dataServers.sort(Comparators.leastLeadersFirst(slotTableBuilder));
         logger.info("[findDataServersNeedLeaderSlots] avg: [{}], threshold: [{}], data-servers: {}", averageLeaderSlots,
                 threshold, dataServers);
         return dataServers;
     }
 
-    private boolean balanceFollowerSlots() {
+    private boolean tryBalanceFollowerSlots() {
         boolean result = false;
-        int avgSlotNum = slotManager.getSlotNums() * slotManager.getSlotReplicaNums() / currentDataServers.size();
+        int avgSlotNum = slotManager.getSlotNums() * slotManager.getSlotReplicaNums()
+                         / currentDataServers.size();
         List<String> targetDataServers = findTargetDataServers(avgSlotNum);
         logger.info("[balanceFollowerSlots] data-servers need more follower slots: {}",
             targetDataServers);
@@ -158,14 +166,14 @@ public class DefaultSlotBalancer implements SlotBalancer {
             DataNodeSlot dataNodeSlot = slotTableBuilder.getDataNodeSlot(dataServer);
             int maxMove = balancePolicy.getMaxMoveFollowerSlots(avgSlotNum,
                 dataNodeSlot.totalSlotNum());
-            if (maxMove < 0) {
+            if (maxMove < 1) {
                 logger.warn(
                     "[findTargetFollowerSlots]no followers to move, avg: [{}], actual: [{}]",
                     avgSlotNum, dataNodeSlot.getFollowers().size());
                 continue;
             }
-            List<String> candidates = new DefaultCandidateDataServerFilter(this, new HashSet<>(
-                targetDataServers), avgSlotNum).filter(currentDataServers);
+            List<String> candidates = Filters.candidateDataServerFilter(this,
+                new HashSet<>(targetDataServers), avgSlotNum).filter(currentDataServers);
             if (candidates.isEmpty()) {
                 logger.warn(
                     "[findTargetFollowerSlots] not available slots to migrate for data-server[{}], "
@@ -178,14 +186,15 @@ public class DefaultSlotBalancer implements SlotBalancer {
                 if (candidates.isEmpty()) {
                     break;
                 }
-                String candidate = new DefaultBalanceSlotFollowerSelector(this).select(candidates);
+                String candidate = Selectors.mostFollowerFirst(slotTableBuilder).select(candidates);
                 List<Integer> candidateSlots = slotTableBuilder.getDataNodeSlot(candidate)
                     .getFollowers();
-                candidateSlots = new DefaultBalanceFollowerFilter(this, targetDataServers)
-                    .filter(candidateSlots);
+                candidateSlots = Filters.balanceFollowerFilter(this, targetDataServers).filter(
+                    candidateSlots);
                 for (Integer slotId : candidateSlots) {
                     SlotBuilder slotBuilder = slotTableBuilder.getOrCreate(slotId);
-                    if (dataServer.equals(slotBuilder.getLeader()) || slotBuilder.getFollowers().contains(dataServer)) {
+                    if (dataServer.equals(slotBuilder.getLeader())
+                        || slotBuilder.getFollowers().contains(dataServer)) {
                         continue;
                     }
                     logger.info(
@@ -194,17 +203,17 @@ public class DefaultSlotBalancer implements SlotBalancer {
                     result = true;
                     slotTableBuilder.removeFollower(slotId, candidate);
                     slotTableBuilder.addFollower(slotId, dataServer);
-                    if (maxMove-- <= 0) {
-                        break;
-                    }
+                    maxMove--;
+                    break;
                 }
-                candidates.remove(candidate);
             }
         }
         if (result) {
             SlotTable slotTable = slotTableBuilder.build();
-            logger.info("[balanceFollowerSlots][end] slot table leader stat: {}", SlotTableUtils.getSlotTableLeaderCount(slotTable));
-            logger.info("[balanceFollowerSlots][end] slot table slots stat: {}", SlotTableUtils.getSlotTableSlotCount(slotTable));
+            logger.info("[balanceFollowerSlots][end] slot table leader stat: {}",
+                SlotTableUtils.getSlotTableLeaderCount(slotTable));
+            logger.info("[balanceFollowerSlots][end] slot table slots stat: {}",
+                SlotTableUtils.getSlotTableSlotCount(slotTable));
         }
         return result;
     }

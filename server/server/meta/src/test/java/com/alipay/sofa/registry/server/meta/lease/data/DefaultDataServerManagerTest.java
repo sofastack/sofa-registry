@@ -45,7 +45,7 @@ public class DefaultDataServerManagerTest extends AbstractTest {
     public void beforeDefaultdataServerManagerTest() throws Exception {
         MockitoAnnotations.initMocks(this);
         dataServerManager = new DefaultDataServerManager(spy(new DataLeaseManager()),
-                spy(new DataLeaseManager()), metaServerConfig);
+            spy(new DataLeaseManager()), metaServerConfig);
         dataServerManager.setMetaServerConfig(metaServerConfig).setScheduled(scheduled);
         when(metaServerConfig.getExpireCheckIntervalMilli()).thenReturn(60);
         dataServerManager.postConstruct();

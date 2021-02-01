@@ -14,19 +14,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alipay.sofa.registry.server.meta.slot.assigner;
-
-import com.alipay.sofa.registry.server.meta.slot.balance.SortType;
+package com.alipay.sofa.registry.server.meta.slot.util.builder;
 
 /**
  * @author chen.zhu
  * <p>
- * Jan 15, 2021
+ * Jan 12, 2021
  */
-public class FollowerEmergentScoreJury implements ScoreStrategy<FollowerToAssign> {
-
-    @Override
-    public int score(FollowerToAssign followerToAssign) {
-        return SortType.DES.getScore(followerToAssign.getAssigneeNums());
-    }
+public interface Builder<T> {
+    T build();
 }

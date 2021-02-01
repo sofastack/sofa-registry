@@ -1,3 +1,19 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package com.alipay.sofa.registry.server.shared.slot;
 
 import com.alipay.sofa.registry.common.model.slot.Slot;
@@ -20,7 +36,7 @@ public class SlotTableUtils {
 
     public static Map<String, Integer> getSlotTableLeaderCount(SlotTable slotTable) {
         Map<String, Integer> leaderCounter = Maps.newHashMap();
-        for(Map.Entry<Integer, Slot> entry : slotTable.getSlotMap().entrySet()) {
+        for (Map.Entry<Integer, Slot> entry : slotTable.getSlotMap().entrySet()) {
             Slot slot = entry.getValue();
             incrCount(leaderCounter, slot.getLeader());
         }
@@ -29,10 +45,10 @@ public class SlotTableUtils {
 
     public static Map<String, Integer> getSlotTableSlotCount(SlotTable slotTable) {
         Map<String, Integer> slotCounter = Maps.newHashMap();
-        for(Map.Entry<Integer, Slot> entry : slotTable.getSlotMap().entrySet()) {
+        for (Map.Entry<Integer, Slot> entry : slotTable.getSlotMap().entrySet()) {
             Slot slot = entry.getValue();
             incrCount(slotCounter, slot.getLeader());
-            for(String follower : slot.getFollowers()) {
+            for (String follower : slot.getFollowers()) {
                 incrCount(slotCounter, follower);
             }
         }
@@ -41,7 +57,7 @@ public class SlotTableUtils {
 
     private static void incrCount(Map<String, Integer> counter, String dataServer) {
         Integer count = counter.get(dataServer);
-        if(count == null) {
+        if (count == null) {
             count = 0;
         }
         counter.put(dataServer, count + 1);
@@ -52,10 +68,11 @@ public class SlotTableUtils {
     }
 
     private static boolean checkNoDupLeaderAndFollowers(SlotTable slotTable) {
-        for(Map.Entry<Integer, Slot> entry : slotTable.getSlotMap().entrySet()) {
+        for (Map.Entry<Integer, Slot> entry : slotTable.getSlotMap().entrySet()) {
             Slot slot = entry.getValue();
-            if(slot.getFollowers().contains(slot.getLeader())) {
-                logger.error("[checkNoDupLeaderAndFollowers] slot[{}] leader and follower duplicates", slot);
+            if (slot.getFollowers().contains(slot.getLeader())) {
+                logger.error(
+                    "[checkNoDupLeaderAndFollowers] slot[{}] leader and follower duplicates", slot);
                 return false;
             }
         }
@@ -63,9 +80,9 @@ public class SlotTableUtils {
     }
 
     private static boolean checkNoLeaderEmpty(SlotTable slotTable) {
-        for(Map.Entry<Integer, Slot> entry : slotTable.getSlotMap().entrySet()) {
+        for (Map.Entry<Integer, Slot> entry : slotTable.getSlotMap().entrySet()) {
             Slot slot = entry.getValue();
-            if(StringUtils.isEmpty(slot.getLeader())) {
+            if (StringUtils.isEmpty(slot.getLeader())) {
                 logger.error("[checkNoLeaderEmpty] slot[{}] empty leader", slot);
                 return false;
             }

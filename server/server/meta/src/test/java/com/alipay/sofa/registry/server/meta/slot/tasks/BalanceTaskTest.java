@@ -39,7 +39,7 @@ import static org.mockito.Mockito.*;
 
 public class BalanceTaskTest extends AbstractTest {
 
-    private BalanceTask task;
+    private BalanceTask              task;
 
     private SlotManager              raftSlotManager;
 
