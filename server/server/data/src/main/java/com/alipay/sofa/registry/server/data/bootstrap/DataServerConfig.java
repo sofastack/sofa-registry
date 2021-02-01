@@ -57,6 +57,8 @@ public class DataServerConfig {
 
     private int                  notifyRetryTimes                         = 3;
 
+    private int                  notifyRetryBackoffMillis                 = 500;
+
     private int                  notifyTempExecutorPoolSize               = OsUtils.getCpuCount() * 3;
 
     private int                  notifyTempExecutorQueueSize              = 4000;
@@ -714,6 +716,14 @@ public class DataServerConfig {
 
     public void setCacheCountIntervalSecs(int cacheCountIntervalSecs) {
         this.cacheCountIntervalSecs = cacheCountIntervalSecs;
+    }
+
+    public int getNotifyRetryBackoffMillis() {
+        return notifyRetryBackoffMillis;
+    }
+
+    public void setNotifyRetryBackoffMillis(int notifyRetryBackoffMillis) {
+        this.notifyRetryBackoffMillis = notifyRetryBackoffMillis;
     }
 
     @Override
