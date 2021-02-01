@@ -117,11 +117,12 @@ public class DefaultSlotBalancer implements SlotBalancer {
             maxMove = Math.min(maxMove, dataNodeSlot.getFollowers().size());
             LinkedList<Integer> targetSlots = Lists.newLinkedList(Filters.balanceLeaderFilter(this, targetDataServers)
                 .filter(dataNodeSlot.getFollowers()));
+            logger.info("[tryBalanceLeaderSlots]maxMove [{}], targetSlots [{}]", maxMove, targetSlots);
             while (maxMove-- > 0) {
                 if (targetSlots.isEmpty()) {
                     logger
                             .info(
-                                    "[findTargetLeaderSlots] data-server[{}], no slots be able from follower to become leader",
+                                    "[tryBalanceLeaderSlots] data-server[{}], no slots be able from follower to become leader",
                                     dataNodeSlot.getDataNode());
                     break;
                 }
