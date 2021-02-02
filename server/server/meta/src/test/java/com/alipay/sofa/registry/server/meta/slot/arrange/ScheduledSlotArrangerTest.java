@@ -77,46 +77,46 @@ public class ScheduledSlotArrangerTest extends AbstractTest {
         Assert.assertEquals(1, counter.get());
     }
 
-    @Test(expected = SofaRegistrySlotTableException.class)
-    public void testAssignSlots() {
-        slotArranger = new ScheduledSlotArranger() {
-            @Override
-            protected SlotAssigner createSlotAssigner() {
-                return new SlotAssigner() {
-                    @Override
-                    public SlotTable assign() {
-                        SlotTable slotTable = randomSlotTable();
-                        SlotTableBuilder stb = new SlotTableBuilder(16, 2);
-                        stb.init(slotTable, Lists.newArrayList(slotTable.getDataServers()));
-                        stb.getOrCreate(0).getFollowers().clear();
-                        stb.getOrCreate(0).getFollowers().add(slotTable.getSlot(0).getLeader());
-                        return stb.build();
-                    }
-                };
-            }
-        };
-        slotArranger.assignSlots();
-    }
-
-    @Test(expected = SofaRegistrySlotTableException.class)
-    public void testBalanceSlots() {
-        slotArranger = new ScheduledSlotArranger() {
-            @Override
-            protected SlotBalancer createSlotBalancer() {
-                return new SlotBalancer() {
-                    @Override
-                    public SlotTable balance() {
-                        SlotTable slotTable = randomSlotTable();
-                        SlotTableBuilder stb = new SlotTableBuilder(16, 2);
-                        stb.init(slotTable, Lists.newArrayList(slotTable.getDataServers()));
-                        stb.getOrCreate(0).getFollowers().clear();
-                        stb.getOrCreate(0).getFollowers().add(slotTable.getSlot(0).getLeader());
-                        return stb.build();
-                    }
-                };
-            }
-        };
-        slotArranger.balanceSlots();
-    }
+    //    @Test(expected = SofaRegistrySlotTableException.class)
+    //    public void testAssignSlots() {
+    //        slotArranger = new ScheduledSlotArranger() {
+    //            @Override
+    //            protected SlotAssigner createSlotAssigner() {
+    //                return new SlotAssigner() {
+    //                    @Override
+    //                    public SlotTable assign() {
+    //                        SlotTable slotTable = randomSlotTable();
+    //                        SlotTableBuilder stb = new SlotTableBuilder(16, 2);
+    //                        stb.init(slotTable, Lists.newArrayList(slotTable.getDataServers()));
+    //                        stb.getOrCreate(0).getFollowers().clear();
+    //                        stb.getOrCreate(0).getFollowers().add(slotTable.getSlot(0).getLeader());
+    //                        return stb.build();
+    //                    }
+    //                };
+    //            }
+    //        };
+    //        slotArranger.assignSlots();
+    //    }
+    //
+    //    @Test(expected = SofaRegistrySlotTableException.class)
+    //    public void testBalanceSlots() {
+    //        slotArranger = new ScheduledSlotArranger() {
+    //            @Override
+    //            protected SlotBalancer createSlotBalancer() {
+    //                return new SlotBalancer() {
+    //                    @Override
+    //                    public SlotTable balance() {
+    //                        SlotTable slotTable = randomSlotTable();
+    //                        SlotTableBuilder stb = new SlotTableBuilder(16, 2);
+    //                        stb.init(slotTable, Lists.newArrayList(slotTable.getDataServers()));
+    //                        stb.getOrCreate(0).getFollowers().clear();
+    //                        stb.getOrCreate(0).getFollowers().add(slotTable.getSlot(0).getLeader());
+    //                        return stb.build();
+    //                    }
+    //                };
+    //            }
+    //        };
+    //        slotArranger.balanceSlots();
+    //    }
 
 }

@@ -21,9 +21,11 @@ import com.alipay.sofa.registry.exception.SofaRegistryRuntimeException;
 import com.alipay.sofa.registry.util.DatumVersionUtil;
 import com.alipay.sofa.registry.util.JsonUtils;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.google.common.collect.Sets;
 import org.apache.commons.lang.StringUtils;
-import org.glassfish.jersey.internal.guava.Sets;
 
+import java.util.Collection;
+import java.util.Collections;
 import java.util.Set;
 
 /**
@@ -56,32 +58,42 @@ public class SlotBuilder implements Builder<Slot> {
     }
 
     public SlotBuilder setLeader(String leader) {
-        if (this.leader != null) {
-            return this;
-        }
-        epoch = DatumVersionUtil.nextId();
-        this.leader = leader;
-        return this;
-    }
-
-    public SlotBuilder forceSetLeader(String leader) {
-        this.leader = leader;
-        if (leader != null) {
+        if (!StringUtils.equals(this.leader, leader)) {
+            this.leader = leader;
             epoch = DatumVersionUtil.nextId();
         }
         return this;
     }
 
-    public boolean addFollower(String follower) {
-        if (followers.size() < followerNums && follower != null) {
-            followers.add(follower);
-            return true;
+    public void addFollower(String follower) {
+        if (StringUtils.isBlank(follower)) {
+            throw new IllegalArgumentException("add empty follower");
         }
-        return false;
+        followers.add(follower);
+        if (followers.size() > followerNums) {
+            throw new IllegalArgumentException(String.format("to many followers, %d: %s",
+                followerNums, followers));
+        }
+    }
+
+    public void addFollower(Collection<String> followerCollection) {
+        this.followers.addAll(followerCollection);
+        if (followers.size() > followerNums) {
+            throw new IllegalArgumentException(String.format("to many followers, %d: %s",
+                followerNums, followers));
+        }
     }
 
     public boolean removeFollower(String follower) {
         return followers.remove(follower);
+    }
+
+    public int getFollowerSize() {
+        return followers.size();
+    }
+
+    public boolean containsFollower(String follower) {
+        return followers.contains(follower);
     }
 
     private boolean isReady() {
@@ -97,7 +109,7 @@ public class SlotBuilder implements Builder<Slot> {
     }
 
     public Set<String> getFollowers() {
-        return followers;
+        return Collections.unmodifiableSet(Sets.newHashSet(followers));
     }
 
     public long getEpoch() {
@@ -110,6 +122,9 @@ public class SlotBuilder implements Builder<Slot> {
             throw new SofaRegistryRuntimeException("slot builder is not ready for build: leader["
                                                    + leader + "], followers["
                                                    + StringUtils.join(followers, ",") + "]");
+        }
+        if (epoch <= 0) {
+            this.epoch = DatumVersionUtil.nextId();
         }
         return new Slot(slotId, leader, epoch, followers);
     }

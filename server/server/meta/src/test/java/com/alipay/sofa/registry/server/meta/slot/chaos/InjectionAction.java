@@ -24,7 +24,6 @@ import org.springframework.util.CollectionUtils;
 import java.util.List;
 import java.util.Random;
 
-
 public interface InjectionAction {
 
     Random random = new Random();
@@ -32,17 +31,16 @@ public interface InjectionAction {
     void doInject(List<DataNode> total, List<DataNode> running);
 }
 
-
 enum InjectionEnum {
-    FIRST(0, new FirstInjectionAction()),
-    START(70, new StartInjectionAction()),
-    STOP(30, new StopInjectionAction()),
-    FINAL(0, new FinalInjectionAction()),
-    ;
+    FIRST(0, new FirstInjectionAction()), START(70, new StartInjectionAction()), STOP(
+                                                                                      30,
+                                                                                      new StopInjectionAction()), FINAL(
+                                                                                                                        0,
+                                                                                                                        new FinalInjectionAction()), ;
 
-    private int percent;
+    private int                percent;
 
-    private InjectionAction injectionAction;
+    private InjectionAction    injectionAction;
 
     public static final Random random = new Random();
 
@@ -70,7 +68,6 @@ enum InjectionEnum {
     }
 }
 
-
 class FirstInjectionAction implements InjectionAction {
 
     @Override
@@ -78,7 +75,6 @@ class FirstInjectionAction implements InjectionAction {
         running.addAll(ListUtil.randomPick(total, 1));
     }
 }
-
 
 class StartInjectionAction implements InjectionAction {
 

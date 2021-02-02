@@ -99,13 +99,13 @@ public class SlotMigrateChaosTest extends AbstractTest {
         makeRaftLeader();
 
         SlotTable prev = slotTable;
-        arranger.getTask().runUnthrowable();
+        arranger.arrangeSync();
         SlotTable current = localSlotManager.getSlotTable();
         int count = 1;
         while (prev.getEpoch() < current.getEpoch()) {
             Assert.assertTrue(isMoreBalanced(prev, current, dataNodes));
             prev = localSlotManager.getSlotTable();
-            arranger.getTask().runUnthrowable();
+            arranger.arrangeSync();
             current = localSlotManager.getSlotTable();
             count++;
         }

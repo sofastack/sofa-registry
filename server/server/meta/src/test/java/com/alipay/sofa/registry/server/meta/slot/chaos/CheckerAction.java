@@ -21,6 +21,7 @@ import com.alipay.sofa.registry.common.model.slot.SlotTable;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.server.shared.slot.SlotTableUtils;
+import com.alipay.sofa.registry.util.MathUtils;
 
 import java.util.Comparator;
 import java.util.Map;
@@ -36,7 +37,7 @@ import java.util.OptionalDouble;
 
 public interface CheckerAction {
 
-    public boolean doCheck(SlotTable slotTable);
+    boolean doCheck(SlotTable slotTable);
 
     default Tuple<String, Integer> max(Map<String, Integer> count) {
         Optional<Entry<String, Integer>> max = count.entrySet().stream().max((Comparator.comparing(Entry::getValue)));
@@ -52,6 +53,10 @@ public interface CheckerAction {
         OptionalDouble average = count.entrySet().stream().mapToInt(entry -> entry.getValue()).average();
         return average.getAsDouble();
     }
+
+    default int sum(Map<String, Integer> count) {
+        return (int)count.entrySet().stream().mapToInt(entry -> entry.getValue()).sum();
+    }
 }
 
 class SlotLeaderChecker implements CheckerAction {
@@ -65,7 +70,7 @@ class SlotLeaderChecker implements CheckerAction {
         logger.info("[slot leader checker] leaderCount: " + leaderCount);
         Tuple<String, Integer> max = max(leaderCount);
         Tuple<String, Integer> min = min(leaderCount);
-        double average = average(leaderCount);
+        int average = MathUtils.divideCeil(sum(leaderCount), leaderCount.size());
         logger.info("[slot leader checker] max-ip: {}, max-count:{}, min-ip: {}, min-count:{}, average: {}",
                 max.getFirst(), max.getSecond(), min.getFirst(), min.getSecond(), (int) average);
 

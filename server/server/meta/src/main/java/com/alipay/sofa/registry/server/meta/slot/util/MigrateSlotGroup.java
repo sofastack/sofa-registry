@@ -16,7 +16,6 @@
  */
 package com.alipay.sofa.registry.server.meta.slot.util;
 
-import com.alipay.sofa.registry.common.model.Tuple;
 import com.alipay.sofa.registry.server.meta.slot.assigner.ScoreStrategy;
 import com.alipay.sofa.registry.util.JsonUtils;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -53,6 +52,10 @@ public class MigrateSlotGroup {
         return this;
     }
 
+    public boolean isEmpty() {
+        return leaders.isEmpty() && followers.isEmpty();
+    }
+
     /**
      * Add follower migrate slot group.
      *
@@ -70,7 +73,7 @@ public class MigrateSlotGroup {
     }
 
     public List<Integer> getLeadersByScore(ScoreStrategy<Integer> scoreStrategy) {
-        List<Integer> leaders = new ArrayList<>(getLeaders());
+        List<Integer> leaders = Lists.newArrayList(this.leaders);
         leaders.sort(new Comparator<Integer>() {
             @Override
             public int compare(Integer slotId1, Integer slotId2) {
@@ -82,7 +85,7 @@ public class MigrateSlotGroup {
 
     public List<FollowerToAssign> getFollowersByScore(ScoreStrategy<FollowerToAssign> scoreStrategy) {
         List<FollowerToAssign> assignees = Lists.newArrayList();
-        getFollowers().forEach((slotId, nums)->assignees.add(new FollowerToAssign(slotId, nums)));
+        followers.forEach((slotId, nums)->assignees.add(new FollowerToAssign(slotId, nums)));
         assignees.sort(new Comparator<FollowerToAssign>() {
             @Override
             public int compare(FollowerToAssign o1, FollowerToAssign o2) {
@@ -98,7 +101,7 @@ public class MigrateSlotGroup {
      * @return the get leaders
      */
     public Set<Integer> getLeaders() {
-        return leaders;
+        return Collections.unmodifiableSet(leaders);
     }
 
     /**
@@ -107,7 +110,7 @@ public class MigrateSlotGroup {
      * @return the get followers
      */
     public Map<Integer, Integer> getFollowers() {
-        return followers;
+        return Collections.unmodifiableMap(followers);
     }
 
     @Override
@@ -135,18 +138,21 @@ public class MigrateSlotGroup {
         }
     }
 
-    public static class FollowerToAssign extends Tuple<Integer, Integer> {
+    public static class FollowerToAssign {
+        private final int slotId;
+        private final int assigneeNums;
 
-        public FollowerToAssign(Integer o1, Integer o2) {
-            super(o1, o2);
+        public FollowerToAssign(int slotId, int assigneeNums) {
+            this.slotId = slotId;
+            this.assigneeNums = assigneeNums;
         }
 
         public int getSlotId() {
-            return getFirst();
+            return slotId;
         }
 
         public int getAssigneeNums() {
-            return getSecond();
+            return assigneeNums;
         }
     }
 }
