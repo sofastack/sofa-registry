@@ -16,8 +16,8 @@
  */
 package com.alipay.sofa.registry.common.model.slot;
 
-import com.alipay.sofa.common.profile.StringUtil;
-import com.alipay.sofa.registry.common.model.metaserver.nodes.DataNode;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 
 import java.io.Serializable;
 import java.util.*;
@@ -28,10 +28,10 @@ import java.util.*;
  * @version v 0.1 2020-11-03 11:27 yuzhi.lyz Exp $
  */
 public final class DataNodeSlot implements Serializable {
-    private static final long   serialVersionUID = -4418378966762753298L;
-    private final String        dataNode;
-    private final List<Integer> leaders          = new ArrayList<>();
-    private final List<Integer> followers        = new ArrayList<>();
+    private static final long  serialVersionUID = -4418378966762753298L;
+    private final String       dataNode;
+    private final Set<Integer> leaders          = Sets.newTreeSet();
+    private final Set<Integer> followers        = Sets.newTreeSet();
 
     /**
      * Constructor.
@@ -50,11 +50,49 @@ public final class DataNodeSlot implements Serializable {
      */
     public DataNodeSlot fork(boolean ignoreFollowers) {
         DataNodeSlot clone = new DataNodeSlot(dataNode);
-        clone.getLeaders().addAll(leaders);
+        clone.leaders.addAll(leaders);
         if (!ignoreFollowers) {
-            clone.getFollowers().addAll(followers);
+            clone.followers.addAll(followers);
         }
         return clone;
+    }
+
+    public DataNodeSlot addLeader(int slotId) {
+        leaders.add(slotId);
+        return this;
+    }
+
+    public DataNodeSlot addLeader(Collection<Integer> slotIds) {
+        leaders.addAll(slotIds);
+        return this;
+    }
+
+    public DataNodeSlot removeLeader(int slotId) {
+        leaders.remove(slotId);
+        return this;
+    }
+
+    public DataNodeSlot addFollower(int slotId) {
+        followers.add(slotId);
+        return this;
+    }
+
+    public DataNodeSlot addFollower(Collection<Integer> slotIds) {
+        followers.addAll(slotIds);
+        return this;
+    }
+
+    public DataNodeSlot removeFollower(int slotId) {
+        followers.remove(slotId);
+        return this;
+    }
+
+    public boolean containsLeader(int slotId) {
+        return leaders.contains(slotId);
+    }
+
+    public boolean containsFollower(int slotId) {
+        return followers.contains(slotId);
     }
 
     /**
@@ -69,16 +107,16 @@ public final class DataNodeSlot implements Serializable {
      * Getter method for property <tt>leaders</tt>.
      * @return property value of leaders
      */
-    public List<Integer> getLeaders() {
-        return leaders;
+    public Set<Integer> getLeaders() {
+        return Collections.unmodifiableSet(leaders);
     }
 
     /**
      * Getter method for property <tt>followers</tt>.
      * @return property value of followers
      */
-    public List<Integer> getFollowers() {
-        return followers;
+    public Set<Integer> getFollowers() {
+        return Collections.unmodifiableSet(followers);
     }
 
     /**
@@ -110,5 +148,11 @@ public final class DataNodeSlot implements Serializable {
     public String toString() {
         return "DataNodeSlot{" + "dataNode='" + dataNode + '\'' + ", leaders=" + leaders
                + ", followers=" + followers + '}';
+    }
+
+    public static List<String> collectDataNodes(Collection<DataNodeSlot> dataNodeSlots) {
+        Set<String> ret = Sets.newLinkedHashSet();
+        dataNodeSlots.forEach(d -> ret.add(d.dataNode));
+        return Lists.newArrayList(ret);
     }
 }

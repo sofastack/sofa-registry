@@ -16,27 +16,22 @@
  */
 package com.alipay.sofa.registry.server.meta.slot.balance;
 
+import com.alipay.sofa.registry.common.model.Tuple;
 import com.alipay.sofa.registry.common.model.slot.DataNodeSlot;
 import com.alipay.sofa.registry.common.model.slot.SlotTable;
 import com.alipay.sofa.registry.exception.SofaRegistryRuntimeException;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
-import com.alipay.sofa.registry.server.meta.lease.data.DataServerManager;
 import com.alipay.sofa.registry.server.meta.slot.SlotBalancer;
-import com.alipay.sofa.registry.server.meta.slot.manager.LocalSlotManager;
-import com.alipay.sofa.registry.server.meta.slot.util.builder.SlotBuilder;
 import com.alipay.sofa.registry.server.meta.slot.util.builder.SlotTableBuilder;
 import com.alipay.sofa.registry.server.meta.slot.util.comparator.Comparators;
-import com.alipay.sofa.registry.server.meta.slot.util.filter.Filters;
-import com.alipay.sofa.registry.server.meta.slot.util.selector.Selectors;
-import com.alipay.sofa.registry.server.shared.slot.SlotTableUtils;
-import com.alipay.sofa.registry.server.shared.util.NodeUtils;
+import com.alipay.sofa.registry.server.shared.comparator.Triple;
+import com.alipay.sofa.registry.util.MathUtils;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.List;
+import java.util.*;
 
 /**
  * @author chen.zhu
@@ -48,23 +43,19 @@ public class DefaultSlotBalancer implements SlotBalancer {
     private static final Logger      logger        = LoggerFactory
                                                        .getLogger(DefaultSlotBalancer.class);
 
-    private final LocalSlotManager   slotManager;
-
-    private final SlotTable          prevSlotTable;
-
-    private final List<String>       currentDataServers;
+    private final Set<String>        currentDataServers;
 
     protected final SlotTableBuilder slotTableBuilder;
+    private final BalancePolicy      balancePolicy = new NaiveBalancePolicy();
+    private final int                slotNum;
+    private final int                slotReplicas;
 
-    private BalancePolicy            balancePolicy = new NaiveBalancePolicy();
-
-    public DefaultSlotBalancer(LocalSlotManager slotManager, DataServerManager dataServerManager) {
-        this.slotManager = slotManager;
-        this.prevSlotTable = slotManager.getSlotTable();
-        this.currentDataServers = NodeUtils.transferNodeToIpList(dataServerManager
-            .getClusterMembers());
-        this.slotTableBuilder = new SlotTableBuilder(slotManager.getSlotNums(),
-            slotManager.getSlotReplicaNums());
+    public DefaultSlotBalancer(SlotTableBuilder slotTableBuilder,
+                               Collection<String> currentDataServers) {
+        this.currentDataServers = Collections.unmodifiableSet(Sets.newTreeSet(currentDataServers));
+        this.slotTableBuilder = slotTableBuilder;
+        this.slotNum = slotTableBuilder.getSlotNums();
+        this.slotReplicas = slotTableBuilder.getSlotReplicas();
     }
 
     @Override
@@ -74,167 +65,359 @@ public class DefaultSlotBalancer implements SlotBalancer {
             throw new SofaRegistryRuntimeException(
                 "no available data-servers for slot-table reassignment");
         }
-        slotTableBuilder.init(prevSlotTable, currentDataServers);
-        if (slotManager.getSlotReplicaNums() < 2) {
+        if (slotReplicas < 2) {
             logger.warn("[balance] slot replica[{}] means no followers, balance leader only",
-                slotManager.getSlotReplicaNums());
-            return new LeaderOnlyBalancer(slotTableBuilder, currentDataServers, slotManager)
-                .balance();
+                slotTableBuilder.getSlotReplicas());
+            return new LeaderOnlyBalancer(slotTableBuilder, currentDataServers).balance();
+        }
+        // TODO balance leader need to check the slot.migrating
+        if (balanceLeaderSlots()) {
+            logger.info("[balanceLeaderSlots] end");
+            slotTableBuilder.incrEpoch();
+            return slotTableBuilder.build();
+        }
+        if (balanceHighFollowerSlots()) {
+            logger.info("[balanceHighFollowerSlots] end");
+            slotTableBuilder.incrEpoch();
+            return slotTableBuilder.build();
+        }
+        if (balanceLowFollowerSlots()) {
+            logger.info("[balanceLowFollowerSlots] end");
+            slotTableBuilder.incrEpoch();
+            return slotTableBuilder.build();
         }
 
-        if (tryBalanceLeaderSlots()) {
-            logger.info("[assignLeaderSlots] end");
-            slotTableBuilder.incrEpoch();
-        } else if (tryBalanceFollowerSlots()) {
-            logger.info("[balanceFollowerSlots] end");
-            slotTableBuilder.incrEpoch();
-        }
-        return slotTableBuilder.build();
+        logger.info("[balance] do nothing");
+        return null;
     }
 
-    private boolean tryBalanceLeaderSlots() {
-        boolean result = false;
-        int avg = slotManager.getSlotNums() / currentDataServers.size();
-        List<String> targetDataServers = findDataServersNeedLeaderSlots(avg);
-        if (targetDataServers.isEmpty()) {
-            logger.info("[balanceLeaderSlots]no leader slots need to balance, quit");
-            return false;
-        } else {
-            logger.info("[balanceLeaderSlots] data-servers: {}, need to assign slot leaders",
-                targetDataServers);
-            logger.info("[balanceLeaderSlots][begin] slot table leader stat: {}",
-                SlotTableUtils.getSlotTableLeaderCount(prevSlotTable));
-            logger.info("[balanceLeaderSlots][begin] slot table slots stat: {}",
-                SlotTableUtils.getSlotTableSlotCount(prevSlotTable));
+    private boolean balanceLeaderSlots() {
+        // ceil avg, find the high water mark
+        final int leaderCeilAvg = MathUtils.divideCeil(slotNum, currentDataServers.size());
+        if (upgradeHighLeaders(leaderCeilAvg)) {
+            return true;
         }
-        for (String dataServer : targetDataServers) {
-            // we flip the target data follower slot to be leader of the slot
-            DataNodeSlot dataNodeSlot = slotTableBuilder.getDataNodeSlot(dataServer);
-            // we use maxMove to limit the maximum movement slots each time
-            // it's now the min(2, avg - [current leader nums], [candidate available nums])
-            int maxMove = balancePolicy
-                .getMaxMoveLeaderSlots(avg, dataNodeSlot.getLeaders().size());//avg - dataNodeSlot.getLeaders().size();
-            maxMove = Math.min(maxMove, dataNodeSlot.getFollowers().size());
-            LinkedList<Integer> targetSlots = Lists.newLinkedList(Filters.balanceLeaderFilter(this, targetDataServers)
-                .filter(dataNodeSlot.getFollowers()));
-            logger.info("[tryBalanceLeaderSlots]maxMove [{}], targetSlots [{}]", maxMove, targetSlots);
-            while (maxMove-- > 0) {
-                if (targetSlots.isEmpty()) {
-                    logger
-                            .info(
-                                    "[tryBalanceLeaderSlots] data-server[{}], no slots be able from follower to become leader",
-                                    dataNodeSlot.getDataNode());
-                    break;
+        if (migrateHighLeaders(leaderCeilAvg)) {
+            return true;
+        }
+        return false;
+    }
+
+    private boolean upgradeHighLeaders(int avg) {
+        // smoothly, find the dataNode which owners the target slot's follower
+        // and upgrade the follower to leader
+        final int maxMove = balancePolicy.getMaxMoveLeaderSlots();
+        final int threshold = balancePolicy.getHighWaterMarkSlotLeaderNums(avg);
+        int balanced = 0;
+        Set<String> notSatisfies = Sets.newHashSet();
+
+        while (balanced < maxMove) {
+            // 1. find the dataNode which has leaders more than high water mark
+            //    and sorted by leaders.num desc
+            final List<String> highDataServers = findDataServersLeaderHighWaterMark(threshold);
+            if (highDataServers.isEmpty()) {
+                break;
+            }
+            // could not found any follower to upgrade
+            if (notSatisfies.containsAll(highDataServers)) {
+                logger.info("[upgradeHighLeaders] could not found followers to upgrade for {}",
+                    highDataServers);
+                break;
+            }
+            // 2. find the dataNode which could own a new leader
+            // exclude the high
+            final Set<String> excludes = Sets.newHashSet(highDataServers);
+            // exclude the dataNode which could not add any leader
+            excludes.addAll(findDataServersLeaderHighWaterMark(threshold - 1));
+            for (String highDataServer : highDataServers) {
+                if (notSatisfies.contains(highDataServer)) {
+                    continue;
                 }
-                targetSlots.sort(Comparators.slotLeaderHasMostLeaderSlots(slotTableBuilder));
-                Integer slotId = targetSlots.removeFirst();
-                String prevLeader = slotTableBuilder.getOrCreate(slotId).getLeader();
-                logger.info("[balanceLeaderSlots] slot[{}] leader balance from [{}] to [{}]",
-                    slotId, prevLeader, dataServer);
-                slotTableBuilder.replaceLeader(slotId, dataServer);
-                result = true;
+                Tuple<String, Integer> selected = selectFollower4LeaderUpgrade(highDataServer,
+                    excludes);
+                if (selected == null) {
+                    notSatisfies.add(highDataServer);
+                    continue;
+                }
+                final int slotId = selected.o2;
+                final String newLeaderDataServer = selected.o1;
+                slotTableBuilder.replaceLeader(slotId, newLeaderDataServer);
+                logger.info("[upgradeHighLeaders] slotId={} leader balance from {} to {}", slotId,
+                    highDataServer, newLeaderDataServer);
+                balanced++;
+                break;
             }
         }
-        if (result) {
-            SlotTable slotTable = slotTableBuilder.build();
-            logger.info("[balanceLeaderSlots][end] slot table leader stat: {}",
-                SlotTableUtils.getSlotTableLeaderCount(slotTable));
-            logger.info("[balanceLeaderSlots][end] slot table slots stat: {}",
-                SlotTableUtils.getSlotTableSlotCount(slotTable));
-        }
-        return result;
+        return balanced != 0;
     }
 
-    private List<String> findDataServersNeedLeaderSlots(int averageLeaderSlots) {
-        int threshold = balancePolicy.getLowWaterMarkSlotLeaderNums(averageLeaderSlots);
-        List<DataNodeSlot> dataNodeSlots = slotTableBuilder.getDataNodeSlotsLeaderBelow(threshold);
-        List<String> dataServers = new ArrayList<>(dataNodeSlots.size());
-        dataNodeSlots.forEach(dataNodeSlot -> dataServers.add(dataNodeSlot.getDataNode()));
+    private boolean migrateHighLeaders(int avg) {
+        // could not found the follower to upgrade, migrate follower first
+        final int maxMove = balancePolicy.getMaxMoveFollowerSlots();
+        final int threshold = balancePolicy.getHighWaterMarkSlotLeaderNums(avg);
+        int balanced = 0;
+        while (balanced < maxMove) {
+            // 1. find the dataNode which has leaders more than high water mark
+            //    and sorted by leaders.num desc
+            final List<String> highDataServers = findDataServersLeaderHighWaterMark(threshold);
+            if (highDataServers.isEmpty()) {
+                break;
+            }
+            // 2. find the dataNode which could own a new leader
+            // exclude the high
+            final Set<String> excludes = Sets.newHashSet(highDataServers);
+            // exclude the dataNode which could not add any leader
+            excludes.addAll(findDataServersLeaderHighWaterMark(threshold - 1));
+            for (String highDataServer : highDataServers) {
+                Triple<String, Integer, String> selected = selectFollower4LeaderMigrate(
+                    highDataServer, excludes);
+                if (selected == null) {
+                    logger
+                        .warn(
+                            "[migrateHighLeaders] could not find dataServer to migrate follower for {}",
+                            highDataServer);
+                    continue;
+                }
+                final String oldFollower = selected.getFirst();
+                final int slotId = selected.getMiddle();
+                final String newFollower = selected.getLast();
+                slotTableBuilder.removeFollower(slotId, oldFollower);
+                slotTableBuilder.addFollower(slotId, newFollower);
+                logger.info("[migrateHighLeaders] slotId={}, follower balance from {} to {}",
+                    slotId, oldFollower, newFollower);
+                balanced++;
+                break;
+            }
+        }
+        return balanced != 0;
+    }
+
+    private Triple<String, Integer, String> selectFollower4LeaderMigrate(String leaderDataServer, Set<String> excludes) {
+        final DataNodeSlot dataNodeSlot = slotTableBuilder.getDataNodeSlot(leaderDataServer);
+        Set<Integer> leaderSlots = dataNodeSlot.getLeaders();
+        Map<String, List<Integer>> dataServersWithFollowers = Maps.newHashMap();
+        for (int slot : leaderSlots) {
+            List<String> followerDataServers = slotTableBuilder.getDataServersByFollower(slot);
+            for (String followerDataServer : followerDataServers) {
+                List<Integer> followerSlots = dataServersWithFollowers.computeIfAbsent(followerDataServer,
+                        k -> Lists.newArrayList());
+                followerSlots.add(slot);
+            }
+        }
+        // sort the dataServer by follower.num desc
+        List<String> migrateDataServers = Lists.newArrayList(dataServersWithFollowers.keySet());
+        migrateDataServers.sort(Comparators.mostFollowersFirst(slotTableBuilder));
+        for (String migrateDataServer : migrateDataServers) {
+            final List<Integer> selectedFollowers = dataServersWithFollowers.get(migrateDataServer);
+            for (Integer selectedFollower : selectedFollowers) {
+                // chose the dataServer which own least leaders
+                List<String> candidates = getCandidateDataServers(excludes,
+                        Comparators.leastLeadersFirst(slotTableBuilder), currentDataServers);
+                for (String candidate : candidates) {
+                    DataNodeSlot candidateDataNodeSlot = slotTableBuilder.getDataNodeSlot(candidate);
+                    if (candidateDataNodeSlot.containsFollower(selectedFollower)) {
+                        logger.error("[selectFollower4LeaderMigrate] slotId={}, follower conflict with migrate from {} to {}",
+                                selectedFollower, migrateDataServer, candidate);
+                        continue;
+                    }
+                    return Triple.from(migrateDataServer, selectedFollower, candidate);
+                }
+            }
+
+        }
+        return null;
+
+    }
+
+    private Tuple<String, Integer> selectFollower4LeaderUpgrade(String leaderDataServer, Set<String> excludes) {
+        final DataNodeSlot dataNodeSlot = slotTableBuilder.getDataNodeSlot(leaderDataServer);
+        Set<Integer> leaderSlots = dataNodeSlot.getLeaders();
+        Map<String, List<Integer>> dataServers2Followers = Maps.newHashMap();
+        for (int slot : leaderSlots) {
+            List<String> followerDataServers = slotTableBuilder.getDataServersByFollower(slot);
+            followerDataServers = getCandidateDataServers(excludes, null, followerDataServers);
+            for (String followerDataServer : followerDataServers) {
+                List<Integer> followerSlots = dataServers2Followers.computeIfAbsent(followerDataServer,
+                        k -> Lists.newArrayList());
+                followerSlots.add(slot);
+            }
+        }
+        if (dataServers2Followers.isEmpty()) {
+            logger.info("[selectFollower4LeaderUpgrade] slotId={}, no dataServers could be upgrade for {}",
+                    leaderSlots, leaderDataServer);
+            return null;
+        }
+        // sort the dataServer by leaders.num asc
+        List<String> dataServers = Lists.newArrayList(dataServers2Followers.keySet());
         dataServers.sort(Comparators.leastLeadersFirst(slotTableBuilder));
-        logger.info("[findDataServersNeedLeaderSlots] avg: [{}], threshold: [{}], data-servers: {}", averageLeaderSlots,
-                threshold, dataServers);
+        final String selectedDataServer = dataServers.get(0);
+        List<Integer> followers = dataServers2Followers.get(selectedDataServer);
+        return Tuple.of(selectedDataServer, followers.get(0));
+    }
+
+    private List<String> findDataServersLeaderHighWaterMark(int threshold) {
+        List<DataNodeSlot> dataNodeSlots = slotTableBuilder.getDataNodeSlotsLeaderBeyond(threshold);
+        List<String> dataServers = DataNodeSlot.collectDataNodes(dataNodeSlots);
+        dataServers.sort(Comparators.mostLeadersFirst(slotTableBuilder));
+        logger.info("[LeaderHighWaterMark] threshold={}, dataServers={}", threshold, dataServers);
         return dataServers;
     }
 
-    private boolean tryBalanceFollowerSlots() {
-        boolean result = false;
-        int avgSlotNum = slotManager.getSlotNums() * slotManager.getSlotReplicaNums()
-                         / currentDataServers.size();
-        List<String> targetDataServers = findTargetDataServers(avgSlotNum);
-        logger.info("[balanceFollowerSlots] data-servers need more follower slots: {}",
-            targetDataServers);
+    private List<String> findDataServersFollowerHighWaterMark(int threshold) {
+        List<DataNodeSlot> dataNodeSlots = slotTableBuilder
+            .getDataNodeSlotsFollowerBeyond(threshold);
+        List<String> dataServers = DataNodeSlot.collectDataNodes(dataNodeSlots);
+        dataServers.sort(Comparators.mostFollowersFirst(slotTableBuilder));
+        logger.info("[FollowerHighWaterMark] threshold={}, dataServers={}", threshold, dataServers);
+        return dataServers;
+    }
 
-        for (String dataServer : targetDataServers) {
-            DataNodeSlot dataNodeSlot = slotTableBuilder.getDataNodeSlot(dataServer);
-            int maxMove = balancePolicy.getMaxMoveFollowerSlots(avgSlotNum,
-                dataNodeSlot.totalSlotNum());
-            if (maxMove < 1) {
-                logger.warn(
-                    "[findTargetFollowerSlots]no followers to move, avg: [{}], actual: [{}]",
-                    avgSlotNum, dataNodeSlot.getFollowers().size());
-                continue;
+    private List<String> findDataServersFollowerLowWaterMark(int threshold) {
+        List<DataNodeSlot> dataNodeSlots = slotTableBuilder
+            .getDataNodeSlotsFollowerBelow(threshold);
+        List<String> dataServers = DataNodeSlot.collectDataNodes(dataNodeSlots);
+        dataServers.sort(Comparators.leastFollowersFirst(slotTableBuilder));
+        logger.info("[FollowerLowWaterMark] threshold={}, dataServers={}", threshold, dataServers);
+        return dataServers;
+    }
+
+    private boolean balanceHighFollowerSlots() {
+        final int followerCeilAvg = MathUtils.divideCeil(slotNum * (slotReplicas - 1),
+            currentDataServers.size());
+        final int maxMove = balancePolicy.getMaxMoveFollowerSlots();
+        final int threshold = balancePolicy.getHighWaterMarkSlotFollowerNums(followerCeilAvg);
+        int balanced = 0;
+        while (balanced < maxMove) {
+            final List<String> highDataServers = findDataServersFollowerHighWaterMark(threshold);
+            if (highDataServers.isEmpty()) {
+                break;
             }
-            List<String> candidates = Filters.candidateDataServerFilter(this,
-                new HashSet<>(targetDataServers), avgSlotNum).filter(currentDataServers);
-            if (candidates.isEmpty()) {
-                logger.warn(
-                    "[findTargetFollowerSlots] not available slots to migrate for data-server[{}], "
-                            + "leader-slots: [{}], follower-slots: [{}]", dataNodeSlot
-                        .getDataNode(), dataNodeSlot.getLeaders().size(), dataNodeSlot
-                        .getFollowers().size());
-                continue;
-            }
-            while (maxMove > 0) {
-                if (candidates.isEmpty()) {
-                    break;
+
+            Set<String> excludes = Sets.newHashSet(highDataServers);
+            excludes.addAll(findDataServersFollowerHighWaterMark(threshold - 1));
+
+            for (String highDataServer : highDataServers) {
+                Tuple<String, Integer> selected = selectFollower4BalanceOut(highDataServer,
+                    excludes);
+                if (selected == null) {
+                    logger.warn(
+                        "[balanceHighFollowerSlots] could not find follower slot to balance: {}",
+                        highDataServer);
+                    continue;
                 }
-                String candidate = Selectors.mostFollowerFirst(slotTableBuilder).select(candidates);
-                List<Integer> candidateSlots = slotTableBuilder.getDataNodeSlot(candidate)
-                    .getFollowers();
-                candidateSlots = Filters.balanceFollowerFilter(this, targetDataServers).filter(
-                    candidateSlots);
-                for (Integer slotId : candidateSlots) {
-                    SlotBuilder slotBuilder = slotTableBuilder.getOrCreate(slotId);
-                    if (dataServer.equals(slotBuilder.getLeader())
-                        || slotBuilder.getFollowers().contains(dataServer)) {
-                        continue;
-                    }
-                    logger.info(
-                        "[balanceFollowerSlots] slot[{}] remove follower [{}], add follower [{}]",
-                        slotId, candidate, dataServer);
-                    result = true;
-                    slotTableBuilder.removeFollower(slotId, candidate);
-                    slotTableBuilder.addFollower(slotId, dataServer);
-                    maxMove--;
-                    break;
+                final int followerSlot = selected.o2;
+                final String newFollowerDataServer = selected.o1;
+                slotTableBuilder.removeFollower(followerSlot, highDataServer);
+                slotTableBuilder.addFollower(followerSlot, newFollowerDataServer);
+                logger.info("[balanceHighFollowerSlots] balance follower slotId={} from {} to {}",
+                    followerSlot, highDataServer, newFollowerDataServer);
+                balanced++;
+                break;
+            }
+        }
+        return balanced != 0;
+    }
+
+    private boolean balanceLowFollowerSlots() {
+        final int followerFloorAvg = Math.floorDiv(slotNum * (slotReplicas - 1),
+            currentDataServers.size());
+        final int maxMove = balancePolicy.getMaxMoveFollowerSlots();
+        final int threshold = balancePolicy.getLowWaterMarkSlotFollowerNums(followerFloorAvg);
+        int balanced = 0;
+        while (balanced < maxMove) {
+            final List<String> lowDataServers = findDataServersFollowerLowWaterMark(threshold);
+            if (lowDataServers.isEmpty()) {
+                break;
+            }
+
+            Set<String> excludes = Sets.newHashSet(lowDataServers);
+            excludes.addAll(findDataServersFollowerLowWaterMark(threshold + 1));
+
+            for (String lowDataServer : lowDataServers) {
+                Tuple<String, Integer> selected = selectFollower4BalanceIn(lowDataServer, excludes);
+                if (selected == null) {
+                    logger.warn(
+                        "[balanceLowFollowerSlots] could not find follower slot to balance: {}",
+                        lowDataServer);
+                    continue;
+                }
+                final int followerSlot = selected.o2;
+                final String oldFollowerDataServer = selected.o1;
+                slotTableBuilder.removeFollower(followerSlot, oldFollowerDataServer);
+                slotTableBuilder.addFollower(followerSlot, lowDataServer);
+                logger.info("[balanceLowFollowerSlots] balance follower slotId={} from {} to {}",
+                    followerSlot, oldFollowerDataServer, lowDataServer);
+                balanced++;
+                break;
+            }
+        }
+        return balanced != 0;
+    }
+
+    private Tuple<String, Integer> selectFollower4BalanceIn(String followerDataServer,
+                                                            Set<String> excludes) {
+        final DataNodeSlot dataNodeSlot = slotTableBuilder.getDataNodeSlot(followerDataServer);
+        List<String> candidates = getCandidateDataServers(excludes,
+            Comparators.mostFollowersFirst(slotTableBuilder), currentDataServers);
+        logger.info("[selectFollower4BalanceIn] target={}, followerSize={}, candidates={}",
+            followerDataServer, dataNodeSlot.getFollowers().size(), candidates);
+        for (String candidate : candidates) {
+            DataNodeSlot candidateDataNodeSlot = slotTableBuilder.getDataNodeSlot(candidate);
+            Set<Integer> candidateFollowerSlots = candidateDataNodeSlot.getFollowers();
+            for (int candidateFollowerSlot : candidateFollowerSlots) {
+                if (!dataNodeSlot.containsFollower(candidateFollowerSlot)) {
+                    return Tuple.of(candidate, candidateFollowerSlot);
                 }
             }
         }
-        if (result) {
-            SlotTable slotTable = slotTableBuilder.build();
-            logger.info("[balanceFollowerSlots][end] slot table leader stat: {}",
-                SlotTableUtils.getSlotTableLeaderCount(slotTable));
-            logger.info("[balanceFollowerSlots][end] slot table slots stat: {}",
-                SlotTableUtils.getSlotTableSlotCount(slotTable));
+        return null;
+    }
+
+    private Tuple<String, Integer> selectFollower4BalanceOut(String followerDataServer,
+                                                             Set<String> excludes) {
+        final DataNodeSlot dataNodeSlot = slotTableBuilder.getDataNodeSlot(followerDataServer);
+        Set<Integer> followerSlots = dataNodeSlot.getFollowers();
+        List<String> candidates = getCandidateDataServers(excludes,
+            Comparators.leastFollowersFirst(slotTableBuilder), currentDataServers);
+        logger.info("[selectFollower4BalanceOut] target={}, followerSize={}, candidates={}",
+            followerDataServer, followerSlots.size(), candidates);
+        for (Integer followerSlot : followerSlots) {
+            for (String candidate : candidates) {
+                DataNodeSlot candidateDataNodeSlot = slotTableBuilder.getDataNodeSlot(candidate);
+                if (candidateDataNodeSlot.containsLeader(followerSlot)) {
+                    logger
+                        .info(
+                            "[selectFollower4BalanceOut] conflict leader, target={}, follower={}, candidate={}",
+                            followerDataServer, followerSlot, candidate);
+                    continue;
+                }
+                if (candidateDataNodeSlot.containsFollower(followerSlot)) {
+                    logger
+                        .info(
+                            "[selectFollower4BalanceOut] conflict follower, target={}, follower={}, candidate={}",
+                            followerDataServer, followerSlot, candidate);
+                    continue;
+                }
+                return Tuple.of(candidate, followerSlot);
+            }
         }
-        return result;
-    }
-
-    private List<String> findTargetDataServers(int avg) {
-        int threshold = balancePolicy.getLowWaterMarkSlotNums(avg);
-        logger.info("[findTargetFollowerSlots] avg: [{}], threshold: [{}]", avg, threshold);
-        List<DataNodeSlot> dataNodeSlots = slotTableBuilder.getDataNodeTotalSlotsBelow(threshold);
-        List<String> targetDataServers = new ArrayList<>();
-        dataNodeSlots.forEach(dataNodeSlot -> targetDataServers.add(dataNodeSlot.getDataNode()));
-        return targetDataServers;
-    }
-
-    public SlotTable getPrevSlotTable() {
-        return prevSlotTable;
+        return null;
     }
 
     public SlotTableBuilder getSlotTableBuilder() {
         return slotTableBuilder;
+    }
+
+    private List<String> getCandidateDataServers(Collection<String> excludes,
+                                                 Comparator<String> comp,
+                                                 Collection<String> candidateDataServers) {
+        Set<String> candidates = Sets.newHashSet(candidateDataServers);
+        candidates.removeAll(excludes);
+        List<String> ret = Lists.newArrayList(candidates);
+        if (comp != null) {
+            ret.sort(comp);
+        }
+        return ret;
     }
 
 }

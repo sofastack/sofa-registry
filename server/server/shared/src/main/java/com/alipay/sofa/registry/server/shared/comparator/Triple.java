@@ -16,6 +16,8 @@
  */
 package com.alipay.sofa.registry.server.shared.comparator;
 
+import java.util.Objects;
+
 /**
  * @author chen.zhu
  * <p>
@@ -23,14 +25,11 @@ package com.alipay.sofa.registry.server.shared.comparator;
  */
 public class Triple<F, M, L> {
 
-    private volatile F first;
+    private final F first;
 
-    private volatile M middle;
+    private final M middle;
 
-    private volatile L last;
-
-    public Triple() {
-    }
+    private final L last;
 
     public Triple(F first, M middle, L last) {
         this.first = first;
@@ -40,41 +39,6 @@ public class Triple<F, M, L> {
 
     public static <F, M, L> Triple<F, M, L> from(F first, M middle, L last) {
         return new Triple<F, M, L>(first, middle, last);
-    }
-
-    public boolean equals(Object obj) {
-        if (this == obj) {
-            return true;
-        } else if (obj instanceof Triple) {
-            Triple<Object, Object, Object> o = (Triple) obj;
-            if (this.first == null) {
-                if (o.first != null) {
-                    return false;
-                }
-            } else if (!this.first.equals(o.first)) {
-                return false;
-            }
-
-            if (this.middle == null) {
-                if (o.middle != null) {
-                    return false;
-                }
-            } else if (!this.middle.equals(o.middle)) {
-                return false;
-            }
-
-            if (this.last == null) {
-                if (o.last != null) {
-                    return false;
-                }
-            } else if (!this.last.equals(o.last)) {
-                return false;
-            }
-
-            return true;
-        } else {
-            return false;
-        }
     }
 
     public F getFirst() {
@@ -89,23 +53,20 @@ public class Triple<F, M, L> {
         return this.middle;
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o)
+            return true;
+        if (o == null || getClass() != o.getClass())
+            return false;
+        Triple<?, ?, ?> triple = (Triple<?, ?, ?>) o;
+        return Objects.equals(first, triple.first) && Objects.equals(middle, triple.middle)
+               && Objects.equals(last, triple.last);
+    }
+
+    @Override
     public int hashCode() {
-        int hash = (this.first == null ? 0 : this.first.hashCode());
-        hash = hash * 31 + (this.middle == null ? 0 : this.middle.hashCode());
-        hash = hash * 31 + (this.last == null ? 0 : this.last.hashCode());
-        return hash;
-    }
-
-    public void setFirst(F first) {
-        this.first = first;
-    }
-
-    public void setLast(L last) {
-        this.last = last;
-    }
-
-    public void setMiddle(M middle) {
-        this.middle = middle;
+        return Objects.hash(first, middle, last);
     }
 
     public int size() {

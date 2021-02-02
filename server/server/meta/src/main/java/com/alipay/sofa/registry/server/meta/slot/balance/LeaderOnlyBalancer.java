@@ -16,20 +16,20 @@
  */
 package com.alipay.sofa.registry.server.meta.slot.balance;
 
+import com.alipay.sofa.registry.common.model.Tuple;
 import com.alipay.sofa.registry.common.model.slot.DataNodeSlot;
 import com.alipay.sofa.registry.common.model.slot.SlotTable;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.server.meta.slot.SlotBalancer;
-import com.alipay.sofa.registry.server.meta.slot.SlotManager;
 import com.alipay.sofa.registry.server.meta.slot.util.builder.SlotTableBuilder;
-import com.alipay.sofa.registry.server.meta.slot.util.selector.Selectors;
+import com.alipay.sofa.registry.server.meta.slot.util.comparator.Comparators;
 import com.alipay.sofa.registry.server.shared.slot.SlotTableUtils;
-import com.alipay.sofa.registry.server.shared.util.NodeUtils;
+import com.alipay.sofa.registry.util.MathUtils;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 /**
  * @author chen.zhu
@@ -43,70 +43,90 @@ public class LeaderOnlyBalancer implements SlotBalancer {
 
     private final SlotTableBuilder slotTableBuilder;
 
-    private final List<String>     currentDataServers;
-
-    private final SlotManager      slotManager;
+    private final Set<String>      currentDataServers;
 
     private final BalancePolicy    balancePolicy = new NaiveBalancePolicy();
 
-    public LeaderOnlyBalancer(SlotTableBuilder slotTableBuilder, List<String> currentDataServers,
-                              SlotManager slotManager) {
+    public LeaderOnlyBalancer(SlotTableBuilder slotTableBuilder,
+                              Collection<String> currentDataServers) {
         this.slotTableBuilder = slotTableBuilder;
-        this.currentDataServers = currentDataServers;
-        this.slotManager = slotManager;
+        this.currentDataServers = Collections.unmodifiableSet(Sets.newTreeSet(currentDataServers));
     }
 
     @Override
     public SlotTable balance() {
-        int avg = slotManager.getSlotNums() / currentDataServers.size();
-        Set<String> targetDataServers = findDataServersNeedLeaderSlots(avg);
-        if (targetDataServers.isEmpty()) {
-            logger.warn("[balance]no data-servers needs leader balance");
-            return slotManager.getSlotTable();
-        } else {
-            logger.info("[balance]try balance(add) leader slots to {}", targetDataServers);
-            SlotTable prevSlotTable = slotManager.getSlotTable();
-            logger.info("[balance][begin] slot table leader stat: {}",
-                SlotTableUtils.getSlotTableLeaderCount(prevSlotTable));
-            logger.info("[balance][begin] slot table slots stat: {}",
-                SlotTableUtils.getSlotTableSlotCount(prevSlotTable));
-        }
-        for (String target : targetDataServers) {
-            DataNodeSlot dataNodeSlot = slotTableBuilder.getDataNodeSlot(target);
-            int maxMove = balancePolicy
-                .getMaxMoveLeaderSlots(avg, dataNodeSlot.getLeaders().size());
-            List<DataNodeSlot> candidateDataNodeSlots = slotTableBuilder
-                .getDataNodeSlotsLeaderBeyond(avg);
-            if (candidateDataNodeSlots.isEmpty()) {
-                logger
-                    .warn("[balance] no candidates available(no data-server's leader is above avg)");
-                continue;
+        final int leaderCeilAvg = MathUtils.divideCeil(slotTableBuilder.getSlotNums(),
+            currentDataServers.size());
+        final int maxMove = balancePolicy.getMaxMoveLeaderSlots();
+        int balanced = 0;
+        while (balanced < maxMove) {
+            List<String> targetHighDataServers = findDataServersLeaderHighWaterMark(leaderCeilAvg);
+            if (targetHighDataServers.isEmpty()) {
+                logger.info("[balance]no data-servers needs leader balance");
+                // no balance, return null
+                break;
             }
-            List<String> candidates = NodeUtils
-                .transferDataNodeSlotToIpList(candidateDataNodeSlots);
-            String candidate = Selectors.mostLeaderFirst(slotTableBuilder).select(candidates);
-            DataNodeSlot candidateDataNodeSlot = slotTableBuilder.getDataNodeSlot(candidate);
-            maxMove = Math.min(maxMove, candidateDataNodeSlot.getLeaders().size() - avg);
-            while (maxMove-- > 0) {
-                Integer slotId = candidateDataNodeSlot.getLeaders().get(maxMove);
-                slotTableBuilder.replaceLeader(slotId, target);
-                logger.info("[balance] slot[{}] leader change from [{}] to [{}]", slotId,
-                    candidate, target);
+            final Set<String> excludes = Sets.newHashSet(targetHighDataServers);
+            // exclude the dataNode which could not add any leader
+            excludes.addAll(findDataServersLeaderHighWaterMark(leaderCeilAvg - 1));
+
+            for (String target : targetHighDataServers) {
+                Tuple<String, Integer> candidate = selectLeader(target, excludes);
+                if (candidate == null) {
+                    continue;
+                }
+                final String newLeader = candidate.o1;
+                final int slotId = candidate.o2;
+                slotTableBuilder.replaceLeader(slotId, newLeader);
+                balanced++;
+                break;
             }
         }
-        SlotTable slotTable = slotTableBuilder.build();
-        logger.info("[balance][end] slot table leader stat: {}",
-            SlotTableUtils.getSlotTableLeaderCount(slotTable));
-        logger.info("[balance][end] slot table slots stat: {}",
-            SlotTableUtils.getSlotTableSlotCount(slotTable));
-        return slotTable;
+        if (balanced != 0) {
+            SlotTable slotTable = slotTableBuilder.build();
+            logger.info("[balance][end] slot table leader stat: {}",
+                SlotTableUtils.getSlotTableLeaderCount(slotTable));
+            logger.info("[balance][end] slot table slots stat: {}",
+                SlotTableUtils.getSlotTableSlotCount(slotTable));
+            return slotTable;
+        }
+        return null;
     }
 
-    protected Set<String> findDataServersNeedLeaderSlots(int avg) {
-        int threshold = balancePolicy.getLowWaterMarkSlotLeaderNums(avg);
-        List<DataNodeSlot> dataNodeSlots = slotTableBuilder.getDataNodeSlotsLeaderBelow(threshold);
-        Set<String> dataServers = new HashSet<>(dataNodeSlots.size());
-        dataNodeSlots.forEach(dataNodeSlot -> dataServers.add(dataNodeSlot.getDataNode()));
+    private Tuple<String, Integer> selectLeader(String leaderDataServer, Set<String> excludes) {
+        final DataNodeSlot dataNodeSlot = slotTableBuilder.getDataNodeSlot(leaderDataServer);
+        List<String> candidates = getCandidateDataServers(excludes,
+            Comparators.leastLeadersFirst(slotTableBuilder), currentDataServers);
+        logger.info("[selectLeader] target={}, leaders={}, candidates={}", leaderDataServer,
+            dataNodeSlot.getLeaders().size(), candidates);
+        for (int leader : dataNodeSlot.getLeaders()) {
+            for (String candidate : candidates) {
+                DataNodeSlot candidateDataNodeSlot = slotTableBuilder.getDataNodeSlot(candidate);
+                return Tuple.of(candidate, leader);
+            }
+        }
+        return null;
+    }
+
+    private List<String> findDataServersLeaderHighWaterMark(int avg) {
+        int threshold = balancePolicy.getHighWaterMarkSlotLeaderNums(avg);
+        List<DataNodeSlot> dataNodeSlots = slotTableBuilder.getDataNodeSlotsLeaderBeyond(threshold);
+        List<String> dataServers = DataNodeSlot.collectDataNodes(dataNodeSlots);
+        dataServers.sort(Comparators.mostLeadersFirst(slotTableBuilder));
+        logger.info("[findDataServersLeaderHighWaterMark] avg={}, threshold={}, dataServers={}",
+            avg, threshold, dataServers);
         return dataServers;
+    }
+
+    private List<String> getCandidateDataServers(Collection<String> excludes,
+                                                 Comparator<String> comp,
+                                                 Collection<String> candidateDataServers) {
+        Set<String> candidates = Sets.newHashSet(candidateDataServers);
+        candidates.removeAll(excludes);
+        List<String> ret = Lists.newArrayList(candidates);
+        if (comp != null) {
+            ret.sort(comp);
+        }
+        return ret;
     }
 }
