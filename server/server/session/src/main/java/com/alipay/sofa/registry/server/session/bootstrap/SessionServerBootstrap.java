@@ -40,6 +40,7 @@ import com.alipay.sofa.registry.server.shared.env.ServerEnv;
 import com.alipay.sofa.registry.server.shared.meta.MetaServerService;
 import com.alipay.sofa.registry.server.shared.remoting.AbstractServerHandler;
 import com.alipay.sofa.registry.task.batcher.TaskDispatchers;
+import com.github.rholder.retry.*;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
@@ -51,10 +52,12 @@ import java.lang.annotation.Annotation;
 import java.util.Collection;
 import java.util.Date;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * The type Session server bootstrap.
+ *
  * @author shangyu.wh
  * @version $Id : SessionServerBootstrap.java, v 0.1 2017-11-14 11:44 synex Exp $
  */
@@ -119,6 +122,20 @@ public class SessionServerBootstrap {
 
     private final AtomicBoolean               serverForSessionSyncStart = new AtomicBoolean(false);
 
+    private final Retryer<Boolean>            retryer                   = RetryerBuilder
+                                                                            .<Boolean> newBuilder()
+                                                                            .retryIfRuntimeException()
+                                                                            .withWaitStrategy(
+                                                                                WaitStrategies
+                                                                                    .exponentialWait(
+                                                                                        1000,
+                                                                                        10000,
+                                                                                        TimeUnit.MILLISECONDS))
+                                                                            .withStopStrategy(
+                                                                                StopStrategies
+                                                                                    .stopAfterAttempt(10))
+                                                                            .build();
+
     /**
      * Do initialized.
      */
@@ -131,13 +148,20 @@ public class SessionServerBootstrap {
 
             openSessionSyncServer();
 
-            connectMetaServer();
+
+            retryer.call(() -> {
+                connectMetaServer();
+                return true;
+            });
 
             startScheduler();
 
             openHttpServer();
 
-            connectDataServer();
+            retryer.call(() -> {
+                connectDataServer();
+                return true;
+            });
 
             registerSerializer();
 
@@ -230,9 +254,8 @@ public class SessionServerBootstrap {
 
     private void connectDataServer() {
         try {
-            if (dataStart.compareAndSet(false, true)) {
-                dataNodeExchanger.connectServer();
-            }
+            dataNodeExchanger.connectServer();
+            dataStart.set(true);
         } catch (Exception e) {
             dataStart.set(false);
             LOGGER.error("Data server connected server error! port:{}",
@@ -243,20 +266,19 @@ public class SessionServerBootstrap {
 
     private void connectMetaServer() {
         try {
-            if (metaStart.compareAndSet(false, true)) {
-                mataNodeService.startRaftClient();
-                // register node as renew node
-                mataNodeService.renewNode();
-                // start sched renew
-                mataNodeService
-                    .startRenewer(sessionServerConfig.getSchedulerHeartbeatIntervalSec() * 1000);
-                fetchStopPushSwitch();
+            mataNodeService.startRaftClient();
+            // register node as renew node
+            mataNodeService.renewNode();
+            // start sched renew
+            mataNodeService
+                .startRenewer(sessionServerConfig.getSchedulerHeartbeatIntervalSec() * 1000);
+            fetchStopPushSwitch();
 
-                fetchBlackList();
+            fetchBlackList();
+            metaStart.set(true);
 
-                LOGGER.info("MetaServer connected meta server! Port:{}",
-                    sessionServerConfig.getMetaServerPort());
-            }
+            LOGGER.info("MetaServer connected meta server! Port:{}",
+                sessionServerConfig.getMetaServerPort());
         } catch (Exception e) {
             metaStart.set(false);
             LOGGER.error("MetaServer connected server error! Port:{}",

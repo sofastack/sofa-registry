@@ -26,6 +26,7 @@ import com.alipay.sofa.registry.log.LoggerFactory;
 
 /**
  * SmartLifecycle for SessionServerBootstrap
+ *
  * @author shangyu.wh
  * @version $Id: SessionServerInitializerConfiguration.java, v 0.1 2017-11-14 11:41 synex Exp $
  */
@@ -51,9 +52,10 @@ public class SessionServerInitializer implements SmartLifecycle {
             LOGGER.info("Started SessionServer");
 
             SessionServerInitializer.this.running.set(true);
-        } catch (Exception ex) {
+        } catch (Throwable ex) {
             SessionServerInitializer.this.running.set(false);
             LOGGER.error("Could not initialize Session server!", ex);
+            System.exit(-1);
         }
     }
 
