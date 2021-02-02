@@ -188,6 +188,10 @@
             <charset>${LOG_ENCODE}</charset>
         </encoder>
     </appender>
+    <appender name ="ASYNC-DATA-DATUM-CHANGE-APPENDER" class= "ch.qos.logback.classic.AsyncAppender">
+        <queueSize>65536</queueSize>
+        <appender-ref ref ="DATA-DATUM-CHANGE-APPENDER"/>
+    </appender>
 
     <appender name ="ASYNC-DATA-STARTUP-APPENDER" class= "ch.qos.logback.classic.AsyncAppender">
         <queueSize>65536</queueSize>

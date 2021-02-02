@@ -392,7 +392,7 @@
 
     <logger name="SESSION-PUSH" level="${LOG_LEVEL}" additivity="false">
         <appender-ref ref="ASYNC-SESSION-PUSH-APPENDER"/>
-        <appender-ref ref="ASYNC-SESSION-PUSH-ERROR"/>
+        <appender-ref ref="ASYNC-ERROR-PUSH-APPENDER"/>
     </logger>
 
     <logger name="SESSION-PROFILE-DIGEST" level="${LOG_LEVEL}" additivity="false">
