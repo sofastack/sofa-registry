@@ -25,7 +25,10 @@ import com.alipay.sofa.registry.server.meta.slot.util.MigrateSlotGroup;
 import com.alipay.sofa.registry.util.DatumVersionUtil;
 import com.alipay.sofa.registry.util.JsonUtils;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 
 import java.util.List;
@@ -48,56 +51,57 @@ public class SlotTableBuilder implements Builder<SlotTable> {
 
     private final Map<String, DataNodeSlot> reverseMap    = Maps.newHashMap();
 
-    private final int                       totalSlotNums;
+    private final int                       slotNums;
 
-    private final int                       slotReplicas;
+    private final int                       followerNums;
 
-    private final AtomicLong                epoch         = new AtomicLong(0L);
+    private long                            epoch;
 
-    public SlotTableBuilder(int totalSlotNums, int slotReplicas) {
-        this.totalSlotNums = totalSlotNums;
-        this.slotReplicas = slotReplicas;
+    private final SlotTable                 initSlotTable;
+
+    public SlotTableBuilder(SlotTable initSlotTable, int slotNums, int slotReplicas) {
+        this.slotNums = slotNums;
+        this.followerNums = slotReplicas - 1;
+        this.initSlotTable = initSlotTable;
     }
 
     public SlotBuilder getOrCreate(int slotId) {
-        buildingSlots.putIfAbsent(slotId, new SlotBuilder(slotId, slotReplicas - 1));
+        buildingSlots.putIfAbsent(slotId, new SlotBuilder(slotId, followerNums));
         return buildingSlots.get(slotId);
     }
 
-    public void init(SlotTable slotTable, List<String> dataServers) {
-        for (int slotId = 0; slotId < totalSlotNums; slotId++) {
-            Slot slot = slotTable == null ? null : slotTable.getSlot(slotId);
+    public void init(List<String> dataServers) {
+        for (int slotId = 0; slotId < slotNums; slotId++) {
+            Slot slot = initSlotTable == null ? null : initSlotTable.getSlot(slotId);
             if (slot == null) {
                 getOrCreate(slotId);
                 continue;
             }
-            SlotBuilder slotBuilder = new SlotBuilder(slotId, slotReplicas - 1, slot.getLeader(),
+            SlotBuilder slotBuilder = new SlotBuilder(slotId, followerNums, slot.getLeader(),
                 slot.getLeaderEpoch());
-            slotBuilder.getFollowers().addAll(slotTable.getSlot(slotId).getFollowers());
+            slotBuilder.addFollower(initSlotTable.getSlot(slotId).getFollowers());
             buildingSlots.put(slotId, slotBuilder);
         }
         initReverseMap(dataServers);
     }
 
     private void initReverseMap(List<String> dataServers) {
-        for (int slotId = 0; slotId < totalSlotNums; slotId++) {
+        for (int slotId = 0; slotId < slotNums; slotId++) {
             SlotBuilder slotBuilder = getOrCreate(slotId);
             String leader = slotBuilder.getLeader();
             if (leader != null) {
-                DataNodeSlot dataNodeSlot = reverseMap.getOrDefault(leader,
-                    new DataNodeSlot(leader));
-                dataNodeSlot.getLeaders().add(slotId);
-                reverseMap.put(leader, dataNodeSlot);
+                DataNodeSlot dataNodeSlot = reverseMap.computeIfAbsent(leader,
+                    k->new DataNodeSlot(leader));
+                dataNodeSlot.addLeader(slotId);
             }
             Set<String> followers = slotBuilder.getFollowers();
             for (String follower : followers) {
-                DataNodeSlot dataNodeSlot = reverseMap.getOrDefault(follower, new DataNodeSlot(
-                    follower));
-                dataNodeSlot.getFollowers().add(slotId);
-                reverseMap.put(follower, dataNodeSlot);
+                DataNodeSlot dataNodeSlot = reverseMap.computeIfAbsent(follower,
+                        k->new DataNodeSlot(follower));
+                dataNodeSlot.addFollower(slotId);
             }
         }
-        if (dataServers == null || dataServers.isEmpty()) {
+        if (CollectionUtils.isEmpty(dataServers)) {
             return;
         }
         dataServers.forEach(dataServer->reverseMap.putIfAbsent(dataServer, new DataNodeSlot(dataServer)));
@@ -106,16 +110,13 @@ public class SlotTableBuilder implements Builder<SlotTable> {
     public String replaceLeader(int slotId, String nextLeader) {
         SlotBuilder slotBuilder = getOrCreate(slotId);
         String prevLeader = slotBuilder.getLeader();
-        slotBuilder.forceSetLeader(nextLeader).removeFollower(nextLeader);
-        DataNodeSlot nextLeaderDataNodeSlot = reverseMap.get(nextLeader);
-        if (nextLeaderDataNodeSlot == null) {
-            nextLeaderDataNodeSlot = new DataNodeSlot(nextLeader);
-            reverseMap.put(nextLeader, nextLeaderDataNodeSlot);
-        }
-        nextLeaderDataNodeSlot.getLeaders().add(slotId);
-        nextLeaderDataNodeSlot.getFollowers().remove(new Integer(slotId));
+        slotBuilder.setLeader(nextLeader).removeFollower(nextLeader);
+        DataNodeSlot nextLeaderDataNodeSlot = reverseMap.computeIfAbsent(nextLeader,
+                k->new DataNodeSlot(nextLeader));
+        nextLeaderDataNodeSlot.addLeader(slotId);
+        nextLeaderDataNodeSlot.removeFollower(slotId);
         if (!StringUtils.isEmpty(prevLeader)) {
-            reverseMap.get(prevLeader).getLeaders().remove(new Integer(slotId));
+            reverseMap.get(prevLeader).removeLeader(slotId);
             addFollower(slotId, prevLeader);
         }
         return prevLeader;
@@ -123,32 +124,35 @@ public class SlotTableBuilder implements Builder<SlotTable> {
 
     public SlotTableBuilder removeFollower(int slotId, String follower) {
         SlotBuilder slotBuilder = getOrCreate(slotId);
-        if (slotBuilder.getFollowers().remove(follower)) {
-            reverseMap.get(follower).getFollowers().remove(new Integer(slotId));
+        if (slotBuilder.removeFollower(follower)) {
+            reverseMap.get(follower).removeFollower(slotId);
         }
         return this;
     }
 
     public SlotTableBuilder addFollower(int slotId, String follower) {
         SlotBuilder slotBuilder = getOrCreate(slotId);
-        if (slotBuilder.addFollower(follower)) {
-            DataNodeSlot dataNodeSlot = reverseMap.getOrDefault(follower,
-                new DataNodeSlot(follower));
-            dataNodeSlot.getFollowers().add(slotId);
-            reverseMap.put(follower, dataNodeSlot);
-        }
+        slotBuilder.addFollower(follower);
+        DataNodeSlot dataNodeSlot = reverseMap.computeIfAbsent(follower,
+                k->new DataNodeSlot(follower));
+        dataNodeSlot.addFollower(slotId);
         return this;
     }
 
+    public List<String> getDataServersByFollower(int followerSlot) {
+        SlotBuilder slotBuilder = getOrCreate(followerSlot);
+        return Lists.newArrayList(slotBuilder.getFollowers());
+    }
+
     public boolean hasNoAssignedSlots() {
-        if (buildingSlots.size() < totalSlotNums) {
+        if (buildingSlots.size() < slotNums) {
             return true;
         }
         for (SlotBuilder slotBuilder : buildingSlots.values()) {
             if (StringUtils.isEmpty(slotBuilder.getLeader())) {
                 return true;
             }
-            if (slotBuilder.getFollowers().size() < slotReplicas - 1) {
+            if (slotBuilder.getFollowerSize() < followerNums) {
                 return true;
             }
         }
@@ -157,14 +161,14 @@ public class SlotTableBuilder implements Builder<SlotTable> {
 
     public void removeDataServerSlots(String dataServer) {
         for (SlotBuilder slotBuilder : buildingSlots.values()) {
-            if (slotBuilder.getFollowers().remove(dataServer)) {
+            if (slotBuilder.removeFollower(dataServer)) {
                 logger.info("[removeDataServerSlots] slot [{}] remove follower data-server[{}]",
                     slotBuilder.getSlotId(), dataServer);
             }
             if (dataServer.equals(slotBuilder.getLeader())) {
                 logger.info("[removeDataServerSlots] slot [{}] remove leader data-server[{}]",
                     slotBuilder.getSlotId(), dataServer);
-                slotBuilder.forceSetLeader(null);
+                slotBuilder.setLeader(null);
             }
         }
         reverseMap.remove(dataServer);
@@ -172,12 +176,12 @@ public class SlotTableBuilder implements Builder<SlotTable> {
 
     public MigrateSlotGroup getNoAssignedSlots() {
         MigrateSlotGroup migrateSlotGroup = new MigrateSlotGroup();
-        for (int slotId = 0; slotId < totalSlotNums; slotId++) {
+        for (int slotId = 0; slotId < slotNums; slotId++) {
             SlotBuilder slotBuilder = getOrCreate(slotId);
             if (StringUtils.isEmpty(slotBuilder.getLeader())) {
                 migrateSlotGroup.addLeader(slotId);
             }
-            int lackFollowerNums = slotReplicas - 1 - slotBuilder.getFollowers().size();
+            int lackFollowerNums = followerNums - slotBuilder.getFollowers().size();
             if (lackFollowerNums > 0) {
                 migrateSlotGroup.addFollower(slotId, lackFollowerNums);
             }
@@ -195,26 +199,26 @@ public class SlotTableBuilder implements Builder<SlotTable> {
     public List<DataNodeSlot> getDataNodeSlotsLeaderBelow(int num) {
         return reverseMap.values()
                 .stream()
-                .filter(dataNodeSlot -> {return dataNodeSlot.getLeaders().size() <= num;})
+                .filter(dataNodeSlot -> {return dataNodeSlot.getLeaders().size() < num;})
                 .collect(Collectors.toList());
     }
 
-    public List<DataNodeSlot> getDataNodeTotalSlotsBeyond(int num) {
+    public List<DataNodeSlot> getDataNodeSlotsFollowerBeyond(int num) {
         return reverseMap.values()
                 .stream()
-                .filter(dataNodeSlot -> {return dataNodeSlot.getFollowers().size() + dataNodeSlot.getLeaders().size() > num;})
+                .filter(dataNodeSlot -> {return dataNodeSlot.getFollowers().size() > num;})
                 .collect(Collectors.toList());
     }
 
-    public List<DataNodeSlot> getDataNodeTotalSlotsBelow(int num) {
+    public List<DataNodeSlot> getDataNodeSlotsFollowerBelow(int num) {
         return reverseMap.values()
                 .stream()
-                .filter(dataNodeSlot -> {return dataNodeSlot.getFollowers().size() + dataNodeSlot.getLeaders().size() <= num;})
+                .filter(dataNodeSlot -> {return dataNodeSlot.getFollowers().size() < num;})
                 .collect(Collectors.toList());
     }
 
     public void incrEpoch() {
-        epoch.set(DatumVersionUtil.nextId());
+        this.epoch = DatumVersionUtil.nextId();
     }
 
     @Override
@@ -222,25 +226,17 @@ public class SlotTableBuilder implements Builder<SlotTable> {
         Map<Integer, Slot> stableSlots = Maps.newHashMap();
         buildingSlots.forEach((slotId, slotBuilder)->{
             stableSlots.put(slotId, slotBuilder.build());
-            epoch.set(Math.max(epoch.get(), stableSlots.get(slotId).getLeaderEpoch()));
+            epoch= Math.max(epoch, stableSlots.get(slotId).getLeaderEpoch());
         });
-        return new SlotTable(epoch.get(), stableSlots.values());
+        return new SlotTable(epoch, stableSlots.values());
     }
 
     public DataNodeSlot getDataNodeSlot(String dataServer) {
         DataNodeSlot dataNodeSlot = reverseMap.get(dataServer);
-        if(dataNodeSlot != null) {
-            return dataNodeSlot;
+        if (dataNodeSlot == null) {
+            throw new IllegalArgumentException("no DataNodeSlot for " + dataServer);
         }
-        DataNodeSlot newDataNodeSlot = new DataNodeSlot(dataServer);
-        buildingSlots.forEach((slotId, slotBuilder)->{
-            if(dataServer.equals(slotBuilder.getLeader())) {
-                newDataNodeSlot.getLeaders().add(slotId);
-            } else if(slotBuilder.getFollowers().contains(dataServer)) {
-                newDataNodeSlot.getFollowers().add(slotId);
-            }
-        });
-        return newDataNodeSlot;
+        return dataNodeSlot;
     }
 
     @Override
@@ -251,5 +247,17 @@ public class SlotTableBuilder implements Builder<SlotTable> {
         } catch (JsonProcessingException e) {
             return "";
         }
+    }
+
+    public SlotTable getInitSlotTable() {
+        return initSlotTable;
+    }
+
+    public int getSlotNums() {
+        return slotNums;
+    }
+
+    public int getSlotReplicas() {
+        return followerNums + 1;
     }
 }

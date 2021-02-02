@@ -42,14 +42,6 @@ public class Comparators {
         return new DataServerLeaderSizeComparator(slotTableBuilder, SortType.DES);
     }
 
-    public static DataServerSlotSizeComparator mostTotalSlotSizeFirst(SlotTableBuilder slotTableBuilder) {
-        return new DataServerSlotSizeComparator(slotTableBuilder, SortType.DES);
-    }
-
-    public static DataServerSlotSizeComparator leastTotalSlotSizeFirst(SlotTableBuilder slotTableBuilder) {
-        return new DataServerSlotSizeComparator(slotTableBuilder, SortType.ASC);
-    }
-
     public static DataServerLeaderSizeComparator leastLeadersFirst(SlotTableBuilder slotTableBuilder) {
         return new DataServerLeaderSizeComparator(slotTableBuilder, SortType.ASC);
     }
@@ -134,25 +126,6 @@ public class Comparators {
         @Override
         protected Collection<Integer> getEconomyMember(DataNodeSlot dataNodeSlot) {
             return dataNodeSlot.getFollowers();
-        }
-    }
-
-    public static class DataServerSlotSizeComparator extends AbstractDataServerComparator {
-
-        public DataServerSlotSizeComparator(SlotTableBuilder slotTableBuilder, SortType sortType) {
-            super(slotTableBuilder, sortType);
-        }
-
-        @Override
-        public int compare(String dataServer1, String dataServer2) {
-            DataNodeSlot dataNodeSlot1 = slotTableBuilder.getDataNodeSlot(dataServer1);
-            DataNodeSlot dataNodeSlot2 = slotTableBuilder.getDataNodeSlot(dataServer2);
-            int result = sortType.getScore(dataNodeSlot1.totalSlotNum()
-                                           - dataNodeSlot2.totalSlotNum());
-            if (result == 0) {
-                result = dataNodeSlot1.getLeaders().size() - dataNodeSlot2.getLeaders().size();
-            }
-            return sortType.getScore(result);
         }
     }
 

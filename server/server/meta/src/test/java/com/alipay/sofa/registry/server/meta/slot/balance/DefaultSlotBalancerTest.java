@@ -59,8 +59,8 @@ public class DefaultSlotBalancerTest extends AbstractTest {
 
         SlotTable slotTable = randomSlotTable(Lists.newArrayList(new DataNode(
             randomURL("10.0.0.1"), getDc()), new DataNode(randomURL("10.0.0.2"), getDc())));
-        SlotTableBuilder slotTableBuilder = new SlotTableBuilder(16, 2);
-        slotTableBuilder.init(slotTable, NodeUtils.transferNodeToIpList(dataNodes));
+        SlotTableBuilder slotTableBuilder = new SlotTableBuilder(slotTable, 16, 2);
+        slotTableBuilder.init(NodeUtils.transferNodeToIpList(dataNodes));
 
         SlotBuilder sb = slotTableBuilder.getOrCreate(0);
         sb.getFollowers().clear();
@@ -73,7 +73,8 @@ public class DefaultSlotBalancerTest extends AbstractTest {
         sb.getFollowers().add("10.0.0.3");
 
         slotManager.refresh(slotTableBuilder.build());
-        slotBalancer = new DefaultSlotBalancer(slotManager, dataServerManager);
+        slotBalancer = new DefaultSlotBalancer(slotTableBuilder, Lists.newArrayList("10.0.0.1",
+            "10.0.0.2", "10.0.0.3"));
         for (int i = 0; i < 10; i++) {
             SlotTable slotTable1 = slotBalancer.balance();
             assertSlotTableNoDupLeaderFollower(slotTable1);

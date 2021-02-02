@@ -114,12 +114,12 @@ public final class SlotTable implements Serializable {
         for (Map.Entry<String, List<Integer>> e : leadersMap.entrySet()) {
             DataNodeSlot dataNodeSlot = dataNodeSlotMap.computeIfAbsent(e.getKey(), k -> new DataNodeSlot(k));
             Collections.sort(e.getValue());
-            dataNodeSlot.getLeaders().addAll(e.getValue());
+            dataNodeSlot.addLeader(e.getValue());
         }
         for (Map.Entry<String, List<Integer>> e : followersMap.entrySet()) {
             DataNodeSlot dataNodeSlot = dataNodeSlotMap.computeIfAbsent(e.getKey(), k -> new DataNodeSlot(k));
             Collections.sort(e.getValue());
-            dataNodeSlot.getFollowers().addAll(e.getValue());
+            dataNodeSlot.addFollower(e.getValue());
         }
         return new ArrayList<>(dataNodeSlotMap.values());
     }

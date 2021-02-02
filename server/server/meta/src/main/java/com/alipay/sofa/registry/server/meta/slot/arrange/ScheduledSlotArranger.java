@@ -16,6 +16,7 @@
  */
 package com.alipay.sofa.registry.server.meta.slot.arrange;
 
+import com.alipay.sofa.registry.common.model.metaserver.nodes.DataNode;
 import com.alipay.sofa.registry.common.model.slot.SlotTable;
 import com.alipay.sofa.registry.exception.*;
 import com.alipay.sofa.registry.jraft.bootstrap.ServiceStateMachine;
@@ -44,6 +45,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
+import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
@@ -57,17 +59,17 @@ public class ScheduledSlotArranger extends AbstractLifecycleObservable implement
                                                                       DataManagerObserver {
 
     @Autowired
-    private DefaultDataServerManager       dataServerManager;
+    private DefaultDataServerManager dataServerManager;
 
     @Autowired
-    private LocalSlotManager               slotManager;
+    private LocalSlotManager         slotManager;
 
     @Autowired
-    private DefaultSlotManager             defaultSlotManager;
+    private DefaultSlotManager       defaultSlotManager;
 
-    private final ScheduledSlotArrangeTask task = new ScheduledSlotArrangeTask();
+    private final Arranger           arranger = new Arranger();
 
-    private final Lock                     lock = new ReentrantLock();
+    private final Lock               lock     = new ReentrantLock();
 
     public ScheduledSlotArranger() {
     }
@@ -100,13 +102,13 @@ public class ScheduledSlotArranger extends AbstractLifecycleObservable implement
     @Override
     protected void doStart() throws StartException {
         super.doStart();
-        Thread executor = ConcurrentUtils.createDaemonThread(getClass().getSimpleName(), task);
+        Thread executor = ConcurrentUtils.createDaemonThread(getClass().getSimpleName(), arranger);
         executor.start();
     }
 
     @Override
     protected void doStop() throws StopException {
-        task.close();
+        arranger.close();
         super.doStop();
     }
 
@@ -120,10 +122,10 @@ public class ScheduledSlotArranger extends AbstractLifecycleObservable implement
     public void update(Observable source, Object message) {
         logger.warn("[update] receive from [{}], message: {}", source, message);
         if (message instanceof NodeRemoved) {
-            task.wakeup();
+            arranger.wakeup();
         }
         if (message instanceof NodeAdded) {
-            task.wakeup();
+            arranger.wakeup();
         }
     }
 
@@ -139,41 +141,43 @@ public class ScheduledSlotArranger extends AbstractLifecycleObservable implement
         return ServiceStateMachine.getInstance().isLeader();
     }
 
-    private boolean hasAnySlotsToAssign() {
-        SlotTable prevSlotTable = slotManager.getSlotTable();
-        List<String> currentDataNodes = NodeUtils.transferNodeToIpList(dataServerManager.getClusterMembers());
-        DataNodeComparator comparator = new DataNodeComparator(prevSlotTable.getDataServers(), currentDataNodes);
-
-        SlotTableBuilder slotTableBuilder = new SlotTableBuilder(slotManager.getSlotNums(), slotManager.getSlotReplicaNums());
-        slotTableBuilder.init(prevSlotTable, currentDataNodes);
+    private SlotTableBuilder createSlotTableBuilder(SlotTable slotTable, List<String> currentDataNodeIps,
+                                                    int slotNum, int replicas) {
+        DataNodeComparator comparator = new DataNodeComparator(slotTable.getDataServers(), currentDataNodeIps);
+        SlotTableBuilder slotTableBuilder = new SlotTableBuilder(slotTable, slotNum, replicas);
+        slotTableBuilder.init(currentDataNodeIps);
 
         comparator.getRemoved().forEach(slotTableBuilder::removeDataServerSlots);
-
-        return slotTableBuilder.hasNoAssignedSlots();
+        return slotTableBuilder;
     }
 
-    @VisibleForTesting
-    protected void assignSlots() {
-        SlotTable slotTable = createSlotAssigner().assign();
+    protected void assignSlots(SlotTableBuilder slotTableBuilder,
+                               Collection<String> currentDataServers) {
+        SlotTable slotTable = createSlotAssigner(slotTableBuilder, currentDataServers).assign();
         refreshSlotTable(slotTable);
     }
 
-    protected SlotAssigner createSlotAssigner() {
-        return new DefaultSlotAssigner(slotManager, dataServerManager);
+    protected SlotAssigner createSlotAssigner(SlotTableBuilder slotTableBuilder,
+                                              Collection<String> currentDataServers) {
+        return new DefaultSlotAssigner(slotTableBuilder, currentDataServers);
     }
 
-    @VisibleForTesting
-    protected void balanceSlots() {
-        SlotTable slotTable = createSlotBalancer().balance();
+    protected void balanceSlots(SlotTableBuilder slotTableBuilder,
+                                Collection<String> currentDataServers) {
+        SlotTable slotTable = createSlotBalancer(slotTableBuilder, currentDataServers).balance();
         refreshSlotTable(slotTable);
     }
 
     private void refreshSlotTable(SlotTable slotTable) {
+        if (slotTable == null) {
+            logger.info("[refreshSlotTable] slot-table not change");
+            return;
+        }
         if (!SlotTableUtils.isValidSlotTable(slotTable)) {
             throw new SofaRegistrySlotTableException("slot table is not valid: \n"
                                                      + JsonUtils.writeValueAsString(slotTable));
         }
-        if (slotTable != null && slotTable.getEpoch() > slotManager.getSlotTable().getEpoch()) {
+        if (slotTable.getEpoch() > slotManager.getSlotTable().getEpoch()) {
             defaultSlotManager.refresh(slotTable);
         } else {
             logger.warn("[refreshSlotTable] slot-table epoch not change: {}",
@@ -181,13 +185,14 @@ public class ScheduledSlotArranger extends AbstractLifecycleObservable implement
         }
     }
 
-    protected SlotBalancer createSlotBalancer() {
-        return new DefaultSlotBalancer(slotManager, dataServerManager);
+    protected SlotBalancer createSlotBalancer(SlotTableBuilder slotTableBuilder,
+                                              Collection<String> currentDataServers) {
+        return new DefaultSlotBalancer(slotTableBuilder, currentDataServers);
     }
 
-    public class ScheduledSlotArrangeTask extends WakeUpLoopRunnable {
+    private final class Arranger extends WakeUpLoopRunnable {
 
-        private final int waitingMillis = Integer.getInteger("slot.arrange.interval.milli", 3000);
+        private final int waitingMillis = Integer.getInteger("slot.arrange.interval.milli", 1000);
 
         @Override
         public int getWaitingMillis() {
@@ -196,37 +201,59 @@ public class ScheduledSlotArranger extends AbstractLifecycleObservable implement
 
         @Override
         public void runUnthrowable() {
-            if (isRaftLeader()) {
-                if (dataServerManager.getClusterMembers().isEmpty()) {
-                    logger.warn("[ScheduledSlotArrangeTask] empty data server list, continue");
-                } else {
-                    tryBalanceSlots();
-                }
-            }
-        }
-
-        private void tryBalanceSlots() {
-            if (!tryLock()) {
-                logger.warn("[tryBalanceSlots] tryLock failed");
-                return;
-            }
             try {
-                if (hasAnySlotsToAssign()) {
-                    logger.info("[re-assign][begin] assign slots to data-server");
-                    assignSlots();
-                    logger.info("[re-assign][end]");
-                } else {
-                    logger.info("[balance][begin] balance slots to data-server");
-                    balanceSlots();
-                    logger.info("[balance][end]");
-                }
-            } finally {
-                unlock();
+                arrangeSync();
+            } catch (Throwable e) {
+                logger.error("failed to arrange", e);
             }
         }
     }
 
-    public ScheduledSlotArrangeTask getTask() {
-        return task;
+    private boolean tryArrangeSlots(List<DataNode> dataNodes) {
+        if (!tryLock()) {
+            logger.warn("[tryBalanceSlots] tryLock failed");
+            return false;
+        }
+        try {
+            List<String> currentDataNodeIps = NodeUtils.transferNodeToIpList(dataNodes);
+            logger.info("arrange slot with DataNode, size={}, {}", currentDataNodeIps.size(),
+                currentDataNodeIps);
+            final SlotTable curSlotTable = slotManager.getSlotTable();
+            SlotTableBuilder tableBuilder = createSlotTableBuilder(curSlotTable,
+                currentDataNodeIps, slotManager.getSlotNums(), slotManager.getSlotReplicaNums());
+            if (tableBuilder.hasNoAssignedSlots()) {
+                logger.info("[re-assign][begin] assign slots to data-server");
+                assignSlots(tableBuilder, currentDataNodeIps);
+                logger.info("[re-assign][end]");
+            } else {
+                logger.info("[balance][begin] balance slots to data-server");
+                balanceSlots(tableBuilder, currentDataNodeIps);
+                logger.info("[balance][end]");
+            }
+        } finally {
+            unlock();
+        }
+        return true;
+    }
+
+    public void arrangeAsync() {
+        arranger.wakeup();
+    }
+
+    @VisibleForTesting
+    public boolean arrangeSync() {
+        if (isRaftLeader()) {
+            // the start arrange with the dataNodes snapshot
+            final List<DataNode> dataNodes = dataServerManager.getClusterMembers();
+            if (dataNodes.isEmpty()) {
+                logger.warn("[Arranger] empty data server list, continue");
+                return true;
+            } else {
+                return tryArrangeSlots(dataNodes);
+            }
+        } else {
+            logger.info("not leader for arrange");
+            return false;
+        }
     }
 }

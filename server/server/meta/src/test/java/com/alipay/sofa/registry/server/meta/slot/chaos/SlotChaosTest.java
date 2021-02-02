@@ -25,7 +25,6 @@ import com.alipay.sofa.registry.server.meta.slot.SlotManager;
 import com.alipay.sofa.registry.server.meta.slot.arrange.ScheduledSlotArranger;
 import com.alipay.sofa.registry.server.meta.slot.manager.DefaultSlotManager;
 import com.alipay.sofa.registry.server.meta.slot.manager.LocalSlotManager;
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -42,36 +41,34 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 /**
- *
  * @author xiaojian.xj
  * @version $Id: SlotChaosTest.java, v 0.1 2021年02月02日 11:47 xiaojian.xj Exp $
  */
 public class SlotChaosTest extends AbstractTest {
 
-    private DataServerInjection dataServerInjection;
+    private DataServerInjection      dataServerInjection;
 
-    private DefaultSlotManager defaultSlotManager;
+    private DefaultSlotManager       defaultSlotManager;
 
-    private SlotManager raftSlotManager;
+    private SlotManager              raftSlotManager;
 
-    private LocalSlotManager localSlotManager;
+    private LocalSlotManager         localSlotManager;
 
     @Mock
     private DefaultDataServerManager dataServerManager;
 
-    private ScheduledSlotArranger scheduledSlotArranger;
+    private ScheduledSlotArranger    scheduledSlotArranger;
 
-    private int dataNodeNum = 20;
+    private int                      dataNodeNum = 20;
 
-    private int chaosRandom;
+    private int                      chaosRandom;
 
     @BeforeClass
     public static void beforeSlotMigrateChaosTestClass() throws Exception {
         Map<String, String> env = new HashMap<>();
 
-        env.put("data.slot.num", "512");
+        env.put("data.slot.num", "256");
         env.put("data.slot.replicas", "2");
-        env.put("slot.frozen.milli", "1000");
         env.put("slot.leader.max.move", "2");
         setEnv(env);
     }
@@ -87,7 +84,8 @@ public class SlotChaosTest extends AbstractTest {
         when(nodeConfig.getLocalDataCenter()).thenReturn(getDc());
         raftSlotManager = localSlotManager = new LocalSlotManager(nodeConfig);
         defaultSlotManager = new DefaultSlotManager(localSlotManager, raftSlotManager);
-        scheduledSlotArranger = new ScheduledSlotArranger(dataServerManager, localSlotManager, defaultSlotManager);
+        scheduledSlotArranger = new ScheduledSlotArranger(dataServerManager, localSlotManager,
+            defaultSlotManager);
 
         scheduledSlotArranger.postConstruct();
     }
@@ -108,34 +106,21 @@ public class SlotChaosTest extends AbstractTest {
             // random up and down
             running = dataServerInjection.inject(i);
             when(dataServerManager.getClusterMembers()).thenReturn(running);
-            scheduledSlotArranger.getTask().wakeup();
-            Thread.sleep(3000);
+            scheduledSlotArranger.arrangeAsync();
+            Thread.sleep(2000);
         }
-
-        String frozen = System.getenv("slot.frozen.milli");
-
-        SlotTable finalSlotTable = null;
-        for (int i = 0; i <= 100; i++) {
-            Thread.sleep(Integer.parseInt(frozen));
-            SlotTable slotTable = localSlotManager.getSlotTable();
-            for (CheckEnum checker : CheckEnum.values()) {
-                checker.getCheckerAction().doCheck(slotTable);
-            }
-
-            if (i == 100) {
-                finalSlotTable = slotTable;
-            }
-
+        for (int i = 0; i < 1000; i++) {
+            scheduledSlotArranger.arrangeAsync();
+            Thread.sleep(20);
         }
-
+        SlotTable finalSlotTable = localSlotManager.getSlotTable();
         for (CheckEnum checker : CheckEnum.values()) {
-            Assert.assertTrue(checker.getCheckerAction().doCheck(finalSlotTable));
+            checker.getCheckerAction().doCheck(finalSlotTable);
         }
-
     }
 
     public class DataServerInjection {
-        private int dataNodeNum;
+        private int            dataNodeNum;
 
         private List<DataNode> dataNodes;
 
@@ -159,9 +144,11 @@ public class SlotChaosTest extends AbstractTest {
                 injectType = InjectionEnum.pickInject();
             }
 
-            logger.info("[slot-chaos inject before] chaos: {}, type: {}, size: {}, nodes: {}", chaos, injectType, runningDataNodes.size(), runningDataNodes);
+            logger.info("[slot-chaos inject before] chaos: {}, type: {}, size: {}, nodes: {}",
+                chaos, injectType, runningDataNodes.size(), runningDataNodes);
             injectType.getInjectionAction().doInject(dataNodes, runningDataNodes);
-            logger.info("[slot-chaos inject after] chaos: {}, type: {}, size: {}, nodes: {}", chaos, injectType, runningDataNodes.size(), runningDataNodes);
+            logger.info("[slot-chaos inject after] chaos: {}, type: {}, size: {}, nodes: {}",
+                chaos, injectType, runningDataNodes.size(), runningDataNodes);
             return runningDataNodes;
         }
 

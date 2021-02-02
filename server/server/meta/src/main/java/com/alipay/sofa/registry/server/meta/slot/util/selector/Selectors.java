@@ -44,10 +44,6 @@ public class Selectors {
         return new MostFollowerFirstSelector(slotTableBuilder);
     }
 
-    public static LeastSlotsFirstSelector leastSlotsFirst(SlotTableBuilder slotTableBuilder) {
-        return new LeastSlotsFirstSelector(slotTableBuilder);
-    }
-
     public static abstract class AbstractSlotTableBuilderAwareSelector<T> implements Selector<T> {
 
         protected final SlotTableBuilder slotTableBuilder;
@@ -106,13 +102,13 @@ public class Selectors {
         }
     }
 
-    public static class LeastSlotsFirstSelector extends AbstractDataServerSelector {
+    public static class LeastLeaderFirstSelector extends AbstractDataServerSelector {
 
         private final Comparators.AbstractDataServerComparator comparator;
 
-        public LeastSlotsFirstSelector(SlotTableBuilder slotTableBuilder) {
+        public LeastLeaderFirstSelector(SlotTableBuilder slotTableBuilder) {
             super(slotTableBuilder);
-            this.comparator = Comparators.leastTotalSlotSizeFirst(slotTableBuilder);
+            this.comparator = Comparators.leastLeadersFirst(slotTableBuilder);
         }
 
         @Override
@@ -153,7 +149,7 @@ public class Selectors {
             Collection<String> followerCandidates = Lists.newArrayList(candidates);
             followerCandidates.retainAll(currentFollowers);
             followerCandidates = followerCandidates.isEmpty() ? candidates : followerCandidates;
-            return new LeastSlotsFirstSelector(slotTableBuilder).select(followerCandidates);
+            return new LeastLeaderFirstSelector(slotTableBuilder).select(followerCandidates);
         }
 
     }

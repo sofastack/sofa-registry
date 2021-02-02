@@ -50,7 +50,7 @@ public class SlotBuilderTest extends AbstractTest {
     public void testForceSetLeader() {
         slotBuilder = new SlotBuilder(1, 1, "10.0.0.1", 100);
         long epoch = slotBuilder.getEpoch();
-        slotBuilder.forceSetLeader("10.0.0.2");
+        slotBuilder.setLeader("10.0.0.2");
         Assert.assertEquals("10.0.0.2", slotBuilder.getLeader());
         Assert.assertNotEquals(epoch, slotBuilder.getEpoch());
         Assert.assertEquals(1, slotBuilder.getSlotId());
@@ -85,14 +85,14 @@ public class SlotBuilderTest extends AbstractTest {
     @Test(expected = SofaRegistryRuntimeException.class)
     public void testBuild() {
         slotBuilder = new SlotBuilder(1, 1, "10.0.0.1", 100);
-        slotBuilder.forceSetLeader(null);
+        slotBuilder.setLeader(null);
         slotBuilder.build();
     }
 
     @Test
     public void testBuildNormal() {
         slotBuilder = new SlotBuilder(1, 1, "10.0.0.1", 100);
-        slotBuilder.forceSetLeader("20.0.0.2");
+        slotBuilder.setLeader("20.0.0.2");
         Slot slot = slotBuilder.build();
         Assert.assertEquals("20.0.0.2", slot.getLeader());
         logger.info("[slot-builder] {}", slotBuilder.toString());

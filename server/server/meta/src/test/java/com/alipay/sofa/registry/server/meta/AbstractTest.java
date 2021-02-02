@@ -141,15 +141,17 @@ public class AbstractTest {
             theEnvironmentField.setAccessible(true);
             Map<String, String> env = (Map<String, String>) theEnvironmentField.get(null);
             env.putAll(newenv);
-            Field theCaseInsensitiveEnvironmentField = processEnvironmentClass.getDeclaredField("theCaseInsensitiveEnvironment");
+            Field theCaseInsensitiveEnvironmentField = processEnvironmentClass
+                .getDeclaredField("theCaseInsensitiveEnvironment");
             theCaseInsensitiveEnvironmentField.setAccessible(true);
-            Map<String, String> cienv = (Map<String, String>)theCaseInsensitiveEnvironmentField.get(null);
+            Map<String, String> cienv = (Map<String, String>) theCaseInsensitiveEnvironmentField
+                .get(null);
             cienv.putAll(newenv);
         } catch (NoSuchFieldException e) {
             Class[] classes = Collections.class.getDeclaredClasses();
             Map<String, String> env = System.getenv();
-            for(Class cl : classes) {
-                if("java.util.Collections$UnmodifiableMap".equals(cl.getName())) {
+            for (Class cl : classes) {
+                if ("java.util.Collections$UnmodifiableMap".equals(cl.getName())) {
                     Field field = cl.getDeclaredField("m");
                     field.setAccessible(true);
                     Object obj = field.get(env);
@@ -401,7 +403,7 @@ public class AbstractTest {
         AtomicInteger total = new AtomicInteger();
         counter.values().forEach(count -> total.addAndGet(count));
         int average = total.get() / dataNodes.size();
-        int lowWaterMark = balancePolicy.getLowWaterMarkSlotNums(average);
+        int highWaterMark = balancePolicy.getHighWaterMarkSlotLeaderNums(average);
 //        int highWaterMark = average * 3 / 2;
 
         logger.info("[isSlotTableBalanced][counter] {}", counter);
@@ -409,8 +411,8 @@ public class AbstractTest {
             if(counter.get(dataNode.getIp()) == null) {
                 return false;
             }
-            if(counter.get(dataNode.getIp()) < lowWaterMark) {
-                logger.info("[lower] {}, {}, {}", dataNode.getIp(), counter.get(dataNode.getIp()), lowWaterMark);
+            if(counter.get(dataNode.getIp()) > highWaterMark) {
+                logger.info("[high] {}, {}, {}", dataNode.getIp(), counter.get(dataNode.getIp()), highWaterMark);
                 return false;
             }
 //            if(counter.get(dataNode.getIp()) > highWaterMark) {
