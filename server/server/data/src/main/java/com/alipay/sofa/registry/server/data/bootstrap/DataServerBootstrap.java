@@ -28,6 +28,10 @@ import com.alipay.sofa.registry.remoting.Server;
 import com.alipay.sofa.registry.remoting.exchange.Exchange;
 import com.alipay.sofa.registry.server.shared.meta.MetaServerService;
 import com.alipay.sofa.registry.server.shared.remoting.AbstractServerHandler;
+import com.github.rholder.retry.Retryer;
+import com.github.rholder.retry.RetryerBuilder;
+import com.github.rholder.retry.StopStrategies;
+import com.github.rholder.retry.WaitStrategies;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -40,11 +44,10 @@ import java.lang.annotation.Annotation;
 import java.util.Collection;
 import java.util.Date;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
- *
- *
  * @author qian.lqlq
  * @version $Id: DataServerBootstrap.java, v 0.1 2017-12-06 20:50 qian.lqlq Exp $
  */
@@ -91,6 +94,20 @@ public class DataServerBootstrap {
 
     private final AtomicBoolean               serverForDataSyncStarted = new AtomicBoolean(false);
 
+    private final Retryer<Boolean>            retryer                  = RetryerBuilder
+                                                                           .<Boolean> newBuilder()
+                                                                           .retryIfException()
+                                                                           .withWaitStrategy(
+                                                                               WaitStrategies
+                                                                                   .exponentialWait(
+                                                                                       1000,
+                                                                                       10000,
+                                                                                       TimeUnit.MILLISECONDS))
+                                                                           .withStopStrategy(
+                                                                               StopStrategies
+                                                                                   .stopAfterAttempt(10))
+                                                                           .build();
+
     /**
      * start dataserver
      */
@@ -108,10 +125,13 @@ public class DataServerBootstrap {
 
             openHttpServer();
 
-            startRaftClient();
+
+            retryer.call(() -> {
+                startRaftClient();
+                return true;
+            });
 
             renewNode();
-
             fetchProviderData();
 
             startScheduler();

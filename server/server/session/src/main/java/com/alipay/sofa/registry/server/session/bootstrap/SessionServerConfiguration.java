@@ -411,11 +411,6 @@ public class SessionServerConfiguration {
         }
 
         @Bean
-        public RaftClientManager raftClientManager() {
-            return new RaftClientManager();
-        }
-
-        @Bean
         public AppRevisionNodeService appRevisionNodeService() {
             return new AppRevisionNodeServiceImpl();
         }

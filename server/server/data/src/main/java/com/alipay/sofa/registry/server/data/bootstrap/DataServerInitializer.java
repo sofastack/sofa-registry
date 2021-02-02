@@ -16,15 +16,17 @@
  */
 package com.alipay.sofa.registry.server.data.bootstrap;
 
+import com.alipay.sofa.registry.log.Logger;
+import com.alipay.sofa.registry.log.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.SmartLifecycle;
 
 /**
- *
  * @author qian.lqlq
  * @version $Id: DataServerInitializer.java, v 0.1 2018年01月04日 11:08 qian.lqlq Exp $
  */
 public class DataServerInitializer implements SmartLifecycle {
+    private static final Logger LOGGER = LoggerFactory.getLogger(DataServerInitializer.class);
 
     @Autowired
     private DataServerBootstrap dataServerBootstrap;
@@ -44,8 +46,14 @@ public class DataServerInitializer implements SmartLifecycle {
 
     @Override
     public void start() {
-        dataServerBootstrap.start();
-        this.isRunning = true;
+        try {
+            dataServerBootstrap.start();
+            this.isRunning = true;
+        } catch (Throwable ex) {
+            this.isRunning = false;
+            LOGGER.error("Could not initalized Data server", ex);
+            System.exit(-1);
+        }
     }
 
     @Override

@@ -44,7 +44,7 @@ public class AppRevisionNodeServiceImpl implements AppRevisionNodeService {
     protected NodeExchanger       metaNodeExchanger;
 
     @Autowired
-    RaftClientManager             raftClientManager;
+    private RaftClientManager     raftClientManager;
 
     public void register(AppRevision appRevision) {
         Request<AppRevision> request = new Request<AppRevision>() {

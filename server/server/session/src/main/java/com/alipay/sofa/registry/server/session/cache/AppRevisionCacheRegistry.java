@@ -21,6 +21,7 @@ import com.alipay.sofa.registry.common.model.store.DataInfo;
 import com.alipay.sofa.registry.core.model.AppRevisionInterface;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
+import com.alipay.sofa.registry.server.session.node.RaftClientManager;
 import com.alipay.sofa.registry.server.session.node.service.AppRevisionNodeService;
 import com.alipay.sofa.registry.util.ConcurrentUtils;
 import com.alipay.sofa.registry.util.LoopRunnable;
@@ -43,6 +44,9 @@ public class AppRevisionCacheRegistry {
     @Autowired
     private AppRevisionNodeService                                                  appRevisionNodeService;
 
+    @Autowired
+    private RaftClientManager                                                       raftClientManager;
+
     final private Map<String /*revision*/, AppRevision>                            registry           = new ConcurrentHashMap<>();
     private volatile String                                                         keysDigest         = "";
     final private Map<String /*interface*/, Map<String /*appname*/, Set<String>>> interfaceRevisions = new ConcurrentHashMap<>();
@@ -58,6 +62,10 @@ public class AppRevisionCacheRegistry {
     private final class RevisionWatchDog extends LoopRunnable {
         @Override
         public void runUnthrowable() {
+            if (raftClientManager.getLeader() == null) {
+                LOG.warn("meta has not leader, skip refresh revisions");
+                return;
+            }
             refreshAll();
         }
 

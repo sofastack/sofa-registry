@@ -80,6 +80,7 @@
         <commons-io.version>2.4</commons-io.version>
         <jetty.version>[9.4.17.v20190418,9.4.19.v20190610]</jetty.version>
         <rocksdbjni.version>6.4.6</rocksdbjni.version>
+        <guava-retrying.version>2.0.0</guava-retrying.version>
         <main.user.dir>${user.dir}</main.user.dir>
         <argLine>-Dnetwork_interface_denylist=docker0</argLine>
         <!-- for linke 添加isSkipUT, isSkipIT参数声明，防止编译时产生错误 -->
@@ -373,6 +374,11 @@
                 <groupId>org.rocksdb</groupId>
                 <artifactId>rocksdbjni</artifactId>
                 <version>${rocksdbjni.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.github.rholder</groupId>
+                <artifactId>guava-retrying</artifactId>
+                <version>${guava-retrying.version}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>
