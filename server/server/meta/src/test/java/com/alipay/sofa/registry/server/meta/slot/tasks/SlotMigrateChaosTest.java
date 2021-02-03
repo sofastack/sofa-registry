@@ -48,14 +48,14 @@ import static org.mockito.Mockito.when;
  */
 public class SlotMigrateChaosTest extends AbstractTest {
 
-    private DefaultSlotManager       defaultSlotManager;
+    protected DefaultSlotManager       defaultSlotManager;
 
-    private SlotManager              raftSlotManager;
+    protected SlotManager              raftSlotManager;
 
-    private LocalSlotManager         localSlotManager;
+    protected LocalSlotManager         localSlotManager;
 
     @Mock
-    private DefaultDataServerManager dataServerManager;
+    protected DefaultDataServerManager dataServerManager;
 
     @BeforeClass
     public static void beforeSlotMigrateChaosTestClass() {
