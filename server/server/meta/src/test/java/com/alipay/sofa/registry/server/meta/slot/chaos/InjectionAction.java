@@ -19,6 +19,7 @@ package com.alipay.sofa.registry.server.meta.slot.chaos;
 
 import com.alipay.sofa.registry.common.model.metaserver.nodes.DataNode;
 import com.alipay.sofa.registry.server.meta.slot.util.ListUtil;
+import org.springframework.util.CollectionUtils;
 
 import java.util.List;
 import java.util.Random;
@@ -33,8 +34,11 @@ public interface InjectionAction {
 
 
 enum InjectionEnum {
-    START(60, new StartInjectionAction()),
-    STOP(40, new StopInjectionAction()),;
+    FIRST(0, new FirstInjectionAction()),
+    START(70, new StartInjectionAction()),
+    STOP(30, new StopInjectionAction()),
+    FINAL(0, new FinalInjectionAction()),
+    ;
 
     private int percent;
 
@@ -49,7 +53,6 @@ enum InjectionEnum {
 
     public static InjectionEnum pickInject() {
         int percent = random.nextInt(100);
-        System.out.println("pickInject: " + percent);
         if (percent < STOP.percent) {
             return STOP;
         } else {
@@ -68,12 +71,24 @@ enum InjectionEnum {
 }
 
 
+class FirstInjectionAction implements InjectionAction {
+
+    @Override
+    public void doInject(List<DataNode> total, List<DataNode> running) {
+        running.addAll(ListUtil.randomPick(total, 1));
+    }
+}
+
 
 class StartInjectionAction implements InjectionAction {
 
     @Override
     public void doInject(List<DataNode> total, List<DataNode> running) {
         List<DataNode> reduce = ListUtil.reduce(total, running);
+
+        if (CollectionUtils.isEmpty(reduce)) {
+            return;
+        }
 
         int count = Math.min(total.size() / 3, random.nextInt(reduce.size()) + 1);
         running.addAll(ListUtil.randomPick(reduce, count));
@@ -84,6 +99,15 @@ class StopInjectionAction implements InjectionAction {
 
     @Override
     public void doInject(List<DataNode> total, List<DataNode> running) {
-        running.removeAll(ListUtil.randomPick(running, random.nextInt(running.size() / 3) + 1));
+        running.removeAll(ListUtil.randomPick(running, random.nextInt(running.size()) / 3 + 1));
+    }
+}
+
+class FinalInjectionAction implements InjectionAction {
+
+    @Override
+    public void doInject(List<DataNode> total, List<DataNode> running) {
+        List<DataNode> reduce = ListUtil.reduce(total, running);
+        running.addAll(reduce);
     }
 }
