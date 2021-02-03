@@ -25,7 +25,6 @@ import com.alipay.sofa.registry.server.meta.slot.SlotManager;
 import com.alipay.sofa.registry.server.meta.slot.arrange.ScheduledSlotArranger;
 import com.alipay.sofa.registry.server.meta.slot.manager.DefaultSlotManager;
 import com.alipay.sofa.registry.server.meta.slot.manager.LocalSlotManager;
-import com.alipay.sofa.registry.server.shared.slot.SlotTableUtils;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -33,12 +32,12 @@ import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
-import javax.validation.constraints.AssertTrue;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeoutException;
+
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -51,16 +50,20 @@ public class SlotChaosTest extends AbstractTest {
 
     private DataServerInjection dataServerInjection;
 
-    private DefaultSlotManager       defaultSlotManager;
+    private DefaultSlotManager defaultSlotManager;
 
     private SlotManager raftSlotManager;
 
-    private LocalSlotManager         localSlotManager;
+    private LocalSlotManager localSlotManager;
 
     @Mock
     private DefaultDataServerManager dataServerManager;
 
     private ScheduledSlotArranger scheduledSlotArranger;
+
+    private int dataNodeNum = 20;
+
+    private int chaosRandom;
 
     @BeforeClass
     public static void beforeSlotMigrateChaosTestClass() throws Exception {
@@ -77,8 +80,7 @@ public class SlotChaosTest extends AbstractTest {
     public void beforeSlotMigrateChaosTest() throws Exception {
         MockitoAnnotations.initMocks(this);
 
-        int dataNodeNum = 20;
-        logger.info("[slot-chaos data-node] size: {}", dataNodeNum);
+        logger.info("[slot-chaos data-node] size: " + dataNodeNum);
         dataServerInjection = new DataServerInjection(dataNodeNum);
 
         NodeConfig nodeConfig = mock(NodeConfig.class);
@@ -90,23 +92,21 @@ public class SlotChaosTest extends AbstractTest {
         scheduledSlotArranger.postConstruct();
     }
 
-
     @Test
     public void testChaos() throws TimeoutException, InterruptedException {
-        logger.info("[slot-chaos slot] size: {}", localSlotManager.getSlotNums());
-        int chaosRandom;
+        logger.info("[slot-chaos slot] size: " + localSlotManager.getSlotNums());
 
         do {
             chaosRandom = random.nextInt(100);
         } while (chaosRandom < 30);
 
         makeRaftLeader();
-        logger.info("[slot-chaos slot] chaosRandom: {}", chaosRandom);
+        logger.info("[slot-chaos slot] chaosRandom: " + chaosRandom);
 
         List<DataNode> running;
-        for (int i = 0; i < chaosRandom; i++) {
+        for (int i = 1; i <= chaosRandom; i++) {
             // random up and down
-            running = dataServerInjection.inject();
+            running = dataServerInjection.inject(i);
             when(dataServerManager.getClusterMembers()).thenReturn(running);
             scheduledSlotArranger.getTask().wakeup();
             Thread.sleep(3000);
@@ -144,24 +144,26 @@ public class SlotChaosTest extends AbstractTest {
         public DataServerInjection(int dataNodeNum) {
             this.dataNodeNum = dataNodeNum;
             this.dataNodes = randomDataNodes(dataNodeNum);
-            logger.info("[slot-chaos data-node] dataNodes: {}", dataNodes);
+            logger.info("[slot-chaos data-node] dataNodes: " + dataNodes);
         }
 
-        public List<DataNode> inject() {
+        public List<DataNode> inject(int chaos) {
             InjectionEnum injectType;
-            if (runningDataNodes.size() == 0) {
-                injectType = InjectionEnum.START;
+            if (chaos == 1 || runningDataNodes.size() == 0) {
+                injectType = InjectionEnum.FIRST;
+            } else if (chaos == chaosRandom) {
+                injectType = InjectionEnum.FINAL;
             } else if (runningDataNodes.size() == dataNodeNum) {
                 injectType = InjectionEnum.STOP;
             } else {
                 injectType = InjectionEnum.pickInject();
             }
 
+            logger.info("[slot-chaos inject before] chaos: {}, type: {}, size: {}, nodes: {}", chaos, injectType, runningDataNodes.size(), runningDataNodes);
             injectType.getInjectionAction().doInject(dataNodes, runningDataNodes);
-            logger.info("[slot-chaos inject] type: {}, size: {}, after: {}", injectType, runningDataNodes.size(), runningDataNodes);
+            logger.info("[slot-chaos inject after] chaos: {}, type: {}, size: {}, nodes: {}", chaos, injectType, runningDataNodes.size(), runningDataNodes);
             return runningDataNodes;
         }
-
 
     }
 }

@@ -49,6 +49,10 @@ public class ListUtil {
      * @return
      */
     public static List<DataNode> randomPick(List<DataNode> list, int count) {
+        if (list.size() <= count) {
+            return list;
+        }
+
         Collections.shuffle(list);
         return list.subList(0, count);
     }

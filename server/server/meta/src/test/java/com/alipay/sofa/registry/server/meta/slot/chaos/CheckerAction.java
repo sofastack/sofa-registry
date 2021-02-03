@@ -62,7 +62,7 @@ class SlotLeaderChecker implements CheckerAction {
     public boolean doCheck(SlotTable slotTable) {
 
         Map<String, Integer> leaderCount = SlotTableUtils.getSlotTableLeaderCount(slotTable);
-        logger.info("[slot leader checker] leaderCount: {}", leaderCount);
+        logger.info("[slot leader checker] leaderCount: " + leaderCount);
         Tuple<String, Integer> max = max(leaderCount);
         Tuple<String, Integer> min = min(leaderCount);
         double average = average(leaderCount);
@@ -80,12 +80,12 @@ class SlotChecker implements CheckerAction {
     @Override
     public boolean doCheck(SlotTable slotTable) {
         Map<String, Integer> slotCount = SlotTableUtils.getSlotTableSlotCount(slotTable);
-        logger.info("[slot checker] slotCount: {}", slotCount);
+        logger.info("[slot checker] slotCount: " + slotCount);
 
         Tuple<String, Integer> max = max(slotCount);
         Tuple<String, Integer> min = min(slotCount);
         double average = average(slotCount);
-        logger.info("[slot leader checker] max-ip: {}, max-count:{}, min-ip: {}, min-count:{}, average: {}",
+        logger.info("[slot checker] max-ip: {}, max-count:{}, min-ip: {}, min-count:{}, average: {}",
                 max.getFirst(), max.getSecond(), min.getFirst(), min.getSecond(), (int) average);
 
         return max.getSecond() < min.getSecond() * 2;
