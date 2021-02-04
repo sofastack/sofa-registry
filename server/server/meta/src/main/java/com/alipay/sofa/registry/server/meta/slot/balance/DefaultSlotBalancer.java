@@ -204,6 +204,8 @@ public class DefaultSlotBalancer implements SlotBalancer {
                 followerSlots.add(slot);
             }
         }
+        logger.info("[LeaderMigrate] {} owns slots={}, slotIds={}, migrate candidates {}",
+                leaderDataServer, leaderSlots.size(), leaderSlots, dataServersWithFollowers);
         // sort the dataServer by follower.num desc
         List<String> migrateDataServers = Lists.newArrayList(dataServersWithFollowers.keySet());
         migrateDataServers.sort(Comparators.mostFollowersFirst(slotTableBuilder));
@@ -216,8 +218,8 @@ public class DefaultSlotBalancer implements SlotBalancer {
                 for (String candidate : candidates) {
                     DataNodeSlot candidateDataNodeSlot = slotTableBuilder.getDataNodeSlot(candidate);
                     if (candidateDataNodeSlot.containsFollower(selectedFollower)) {
-                        logger.error("[selectFollower4LeaderMigrate] slotId={}, follower conflict with migrate from {} to {}",
-                                selectedFollower, migrateDataServer, candidate);
+                        logger.error("[LeaderMigrate] slotId={}, follower conflict with migrate from {} to {}",
+                                selectedFollower, migrateDataServer, candidateDataNodeSlot);
                         continue;
                     }
                     return Triple.from(migrateDataServer, selectedFollower, candidate);
@@ -243,9 +245,12 @@ public class DefaultSlotBalancer implements SlotBalancer {
             }
         }
         if (dataServers2Followers.isEmpty()) {
-            logger.info("[selectFollower4LeaderUpgrade] slotId={}, no dataServers could be upgrade for {}",
-                    leaderSlots, leaderDataServer);
+            logger.info("[LeaderUpgrade] {} owns slots={}, no dataServers could be upgrade, slotId={}",
+                    leaderDataServer, leaderSlots.size(), leaderSlots);
             return null;
+        }else{
+            logger.info("[LeaderUpgrade] {} owns slots={}, slotIds={}, upgrade candidates {}",
+                    leaderDataServer, leaderSlots.size(), leaderSlots, dataServers2Followers);
         }
         // sort the dataServer by leaders.num asc
         List<String> dataServers = Lists.newArrayList(dataServers2Followers.keySet());

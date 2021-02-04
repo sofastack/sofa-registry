@@ -17,6 +17,7 @@
 package com.alipay.sofa.registry.server.data.slot;
 
 import com.alipay.sofa.registry.common.model.Tuple;
+import com.alipay.sofa.registry.common.model.slot.DataNodeSlot;
 import com.alipay.sofa.registry.common.model.slot.Slot;
 import com.alipay.sofa.registry.common.model.slot.SlotAccess;
 import com.alipay.sofa.registry.common.model.slot.SlotTable;
@@ -213,6 +214,7 @@ public final class SlotManagerImpl implements SlotManager {
                 final Slot slot = e.getValue().slot;
                 it.remove();
                 listenRemove(slot);
+                observeLeaderMigratingFinish(slot.getId());
                 LOGGER.info("remove slot, slot={}", slot);
             }
         }
@@ -234,7 +236,8 @@ public final class SlotManagerImpl implements SlotManager {
                 final SlotTable updating = updatingSlotTable.getAndSet(null);
                 if (updating != null && updating.getEpoch() > slotTableStates.table.getEpoch()) {
                     updateSlotState(updating);
-                    LOGGER.info("updating slot table {}", updating);
+                    List<DataNodeSlot> leaders = updating.transfer(ServerEnv.IP, true);
+                    LOGGER.info("updating slot table, leaders={}, {}, ", leaders, updating);
                 }
 
                 final int syncIntervalMs = dataServerConfig.getSlotLeaderSyncSessionIntervalSec() * 1000;
@@ -262,7 +265,8 @@ public final class SlotManagerImpl implements SlotManager {
                             if (slotState.migratingStartTime == 0) {
                                 slotState.migratingStartTime = System.currentTimeMillis();
                                 observeLeaderMigratingStart(slot.getId());
-                                LOGGER.info("start migrating, slotId={}, sessions={}", slot.getId(), sessions);
+                                LOGGER.info("start migrating, slotId={}, sessionSize={}, sessions={}",
+                                        slot.getId(), sessions.size(), sessions);
                             }
                             for (String sessionIp : sessions) {
                                 MigratingTask mtask = slotState.migratingTasks.get(sessionIp);
@@ -299,8 +303,16 @@ public final class SlotManagerImpl implements SlotManager {
                                 observeLeaderMigratingFinish(slot.getId());
                                 observeLeaderMigratingHistogram(slot.getId(), span);
                             }else{
-                                MIGRATING_LOGGER.info("[migrating]{},{},{}", slot.getId(),
-                                        System.currentTimeMillis() - slotState.migratingStartTime, sessions.size());
+                                Map<String, Long> spans = Maps.newTreeMap();
+                                final long now = System.currentTimeMillis();
+                                for (Map.Entry<String, MigratingTask> e : slotState.migratingTasks.entrySet()) {
+                                    MigratingTask m = e.getValue();
+                                    if (!m.task.isFinished() || m.task.isFailed()) {
+                                        spans.put(e.getKey(), now - m.createTimestamp);
+                                    }
+                                }
+                                MIGRATING_LOGGER.info("[migrating]{},{},{},{}", slot.getId(),
+                                        now - slotState.migratingStartTime, sessions.size(), spans);
                             }
                         }
                     } else {
@@ -348,6 +360,7 @@ public final class SlotManagerImpl implements SlotManager {
                     // leader change
                     observeLeaderUpdateCounter();
                 }
+                observeLeaderMigratingFinish(slot.getId());
                 LOGGER.info("update slot with leaderEpoch, exist={}, now={}", slot, s);
             }
             this.slot = s;
@@ -361,8 +374,8 @@ public final class SlotManagerImpl implements SlotManager {
                 // group by slotId and session
                 return migrateSessionExecutor.execute(new Tuple(slot.getId(), sessionIp), task);
             } else {
-                // to a session node, at most there is 4 tasks running, avoid too many task hit the same session
-                return syncSessionExecutor.execute(new Tuple((slot.getId() % 4), sessionIp), task);
+                // to a session node, at most there is 8 tasks running, avoid too many task hit the same session
+                return syncSessionExecutor.execute(new Tuple((slot.getId() % 8), sessionIp), task);
             }
         }
     }
