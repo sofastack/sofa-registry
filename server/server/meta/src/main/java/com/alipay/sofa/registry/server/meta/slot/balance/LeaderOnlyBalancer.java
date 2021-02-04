@@ -101,7 +101,6 @@ public class LeaderOnlyBalancer implements SlotBalancer {
             dataNodeSlot.getLeaders().size(), candidates);
         for (int leader : dataNodeSlot.getLeaders()) {
             for (String candidate : candidates) {
-                DataNodeSlot candidateDataNodeSlot = slotTableBuilder.getDataNodeSlot(candidate);
                 return Tuple.of(candidate, leader);
             }
         }

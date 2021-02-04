@@ -19,7 +19,6 @@ package com.alipay.sofa.registry.server.meta.slot.util.filter;
 import com.alipay.sofa.registry.common.model.slot.Slot;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
-import com.alipay.sofa.registry.server.meta.slot.util.builder.SlotBuilder;
 import com.alipay.sofa.registry.server.meta.slot.util.builder.SlotTableBuilder;
 import com.alipay.sofa.registry.util.DatumVersionUtil;
 
