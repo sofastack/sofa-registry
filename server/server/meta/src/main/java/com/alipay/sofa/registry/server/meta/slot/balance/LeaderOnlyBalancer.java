@@ -112,8 +112,8 @@ public class LeaderOnlyBalancer implements SlotBalancer {
         List<DataNodeSlot> dataNodeSlots = slotTableBuilder.getDataNodeSlotsLeaderBeyond(threshold);
         List<String> dataServers = DataNodeSlot.collectDataNodes(dataNodeSlots);
         dataServers.sort(Comparators.mostLeadersFirst(slotTableBuilder));
-        logger.info("[findDataServersLeaderHighWaterMark] avg={}, threshold={}, dataServers={}",
-            avg, threshold, dataServers);
+        logger.info("[LeaderHighWaterMark] avg={}, threshold={}, dataServers={}", avg, threshold,
+            dataServers);
         return dataServers;
     }
 
