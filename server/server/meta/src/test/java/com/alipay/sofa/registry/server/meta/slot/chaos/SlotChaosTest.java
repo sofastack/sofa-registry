@@ -67,8 +67,8 @@ public class SlotChaosTest extends AbstractTest {
     public static void beforeSlotMigrateChaosTestClass() throws Exception {
         Map<String, String> env = new HashMap<>();
 
-        env.put("data.slot.num", "256");
-        env.put("data.slot.replicas", "2");
+        env.put("data.slot.num", "512");
+        env.put("data.slot.replicas", "3");
         env.put("slot.leader.max.move", "2");
         setEnv(env);
     }
