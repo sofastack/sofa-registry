@@ -23,6 +23,7 @@ import com.alipay.sofa.registry.common.model.dataserver.Datum;
 import com.alipay.sofa.registry.common.model.dataserver.DatumSummary;
 import com.alipay.sofa.registry.common.model.dataserver.DatumVersion;
 import com.alipay.sofa.registry.common.model.store.DataInfo;
+import com.alipay.sofa.registry.common.model.store.ProcessIdCache;
 import com.alipay.sofa.registry.common.model.store.Publisher;
 import com.alipay.sofa.registry.common.model.store.WordCache;
 import com.alipay.sofa.registry.log.Logger;
@@ -146,6 +147,7 @@ public final class PublisherGroup {
     }
 
     DatumVersion addPublisher(Publisher publisher) {
+        publisher.setSessionProcessId(ProcessIdCache.cache(publisher.getSessionProcessId()));
         lock.writeLock().lock();
         try {
             if (tryAddPublisher(publisher)) {
@@ -158,6 +160,7 @@ public final class PublisherGroup {
     }
 
     DatumVersion clean(ProcessId sessionProcessId) {
+        sessionProcessId = ProcessIdCache.cache(sessionProcessId);
         lock.writeLock().lock();
         try {
             boolean modified = false;
@@ -183,6 +186,7 @@ public final class PublisherGroup {
     }
 
     DatumVersion remove(ProcessId sessionProcessId, Map<String, RegisterVersion> removedPublishers) {
+        sessionProcessId = ProcessIdCache.cache(sessionProcessId);
         if (MapUtils.isEmpty(removedPublishers)) {
             return null;
         }
@@ -230,6 +234,7 @@ public final class PublisherGroup {
     DatumVersion update(List<Publisher> updatedPublishers) {
         for (Publisher p : updatedPublishers) {
             ParaCheckUtil.checkNotNull(p.getSessionProcessId(), "publisher.sessionProcessId");
+            p.setSessionProcessId(ProcessIdCache.cache(p.getSessionProcessId()));
         }
         lock.writeLock().lock();
         try {

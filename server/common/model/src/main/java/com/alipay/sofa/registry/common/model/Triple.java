@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alipay.sofa.registry.server.shared.comparator;
+package com.alipay.sofa.registry.common.model;
 
 import java.util.Objects;
 
@@ -23,7 +23,7 @@ import java.util.Objects;
  * <p>
  * Jan 12, 2021
  */
-public class Triple<F, M, L> {
+public final class Triple<F, M, L> {
 
     private final F first;
 

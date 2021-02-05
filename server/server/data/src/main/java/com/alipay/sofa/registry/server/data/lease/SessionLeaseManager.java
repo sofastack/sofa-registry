@@ -18,6 +18,7 @@ package com.alipay.sofa.registry.server.data.lease;
 
 import com.alipay.sofa.registry.common.model.ProcessId;
 import com.alipay.sofa.registry.common.model.dataserver.DatumVersion;
+import com.alipay.sofa.registry.common.model.store.ProcessIdCache;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.server.data.bootstrap.DataServerConfig;
@@ -71,6 +72,7 @@ public final class SessionLeaseManager {
     }
 
     public void renewSession(ProcessId sessionProcessId) {
+        sessionProcessId = ProcessIdCache.cache(sessionProcessId);
         connectIdRenewTimestampMap.put(sessionProcessId, System.currentTimeMillis());
     }
 
