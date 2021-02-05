@@ -16,6 +16,7 @@
  */
 package com.alipay.sofa.registry.server.shared.comparator;
 
+import com.alipay.sofa.registry.common.model.Triple;
 import com.alipay.sofa.registry.common.model.Tuple;
 
 import java.util.Collection;

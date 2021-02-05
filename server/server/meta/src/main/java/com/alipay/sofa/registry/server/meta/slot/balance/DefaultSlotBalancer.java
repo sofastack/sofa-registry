@@ -25,7 +25,7 @@ import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.server.meta.slot.SlotBalancer;
 import com.alipay.sofa.registry.server.meta.slot.util.builder.SlotTableBuilder;
 import com.alipay.sofa.registry.server.meta.slot.util.comparator.Comparators;
-import com.alipay.sofa.registry.server.shared.comparator.Triple;
+import com.alipay.sofa.registry.common.model.Triple;
 import com.alipay.sofa.registry.util.MathUtils;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
