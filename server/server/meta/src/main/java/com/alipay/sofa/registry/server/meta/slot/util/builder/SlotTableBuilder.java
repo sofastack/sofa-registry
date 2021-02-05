@@ -137,9 +137,14 @@ public class SlotTableBuilder implements Builder<SlotTable> {
         return this;
     }
 
-    public List<String> getDataServersByFollower(int followerSlot) {
+    public List<String> getDataServersOwnsFollower(int followerSlot) {
         SlotBuilder slotBuilder = getOrCreate(followerSlot);
         return Lists.newArrayList(slotBuilder.getFollowers());
+    }
+
+    public String getDataServersOwnsLeader(int leaderSlot) {
+        SlotBuilder slotBuilder = getOrCreate(leaderSlot);
+        return slotBuilder.getLeader();
     }
 
     public boolean hasNoAssignedSlots() {
