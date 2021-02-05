@@ -30,6 +30,7 @@ import com.alipay.sofa.registry.util.MathUtils;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+import org.apache.commons.lang.StringUtils;
 
 import java.util.*;
 
@@ -86,7 +87,13 @@ public class DefaultSlotBalancer implements SlotBalancer {
             slotTableBuilder.incrEpoch();
             return slotTableBuilder.build();
         }
-
+        // check the low watermark leader, the follower has balanced
+        // just upgrade the followers in low data server
+        if (balanceLowLeaders()) {
+            logger.info("[balanceLowLeaders] end");
+            slotTableBuilder.incrEpoch();
+            return slotTableBuilder.build();
+        }
         logger.info("[balance] do nothing");
         return null;
     }
@@ -103,11 +110,11 @@ public class DefaultSlotBalancer implements SlotBalancer {
         return false;
     }
 
-    private boolean upgradeHighLeaders(int avg) {
+    private boolean upgradeHighLeaders(int ceilAvg) {
         // smoothly, find the dataNode which owners the target slot's follower
         // and upgrade the follower to leader
         final int maxMove = balancePolicy.getMaxMoveLeaderSlots();
-        final int threshold = balancePolicy.getHighWaterMarkSlotLeaderNums(avg);
+        final int threshold = balancePolicy.getHighWaterMarkSlotLeaderNums(ceilAvg);
         int balanced = 0;
         Set<String> notSatisfies = Sets.newHashSet();
 
@@ -133,7 +140,7 @@ public class DefaultSlotBalancer implements SlotBalancer {
                 if (notSatisfies.contains(highDataServer)) {
                     continue;
                 }
-                Tuple<String, Integer> selected = selectFollower4LeaderUpgrade(highDataServer,
+                Tuple<String, Integer> selected = selectFollower4LeaderUpgradeOut(highDataServer,
                     excludes);
                 if (selected == null) {
                     notSatisfies.add(highDataServer);
@@ -151,10 +158,10 @@ public class DefaultSlotBalancer implements SlotBalancer {
         return balanced != 0;
     }
 
-    private boolean migrateHighLeaders(int avg) {
+    private boolean migrateHighLeaders(int ceilAvg) {
         // could not found the follower to upgrade, migrate follower first
         final int maxMove = balancePolicy.getMaxMoveFollowerSlots();
-        final int threshold = balancePolicy.getHighWaterMarkSlotLeaderNums(avg);
+        final int threshold = balancePolicy.getHighWaterMarkSlotLeaderNums(ceilAvg);
         int balanced = 0;
         while (balanced < maxMove) {
             // 1. find the dataNode which has leaders more than high water mark
@@ -192,19 +199,75 @@ public class DefaultSlotBalancer implements SlotBalancer {
         return balanced != 0;
     }
 
+    private boolean balanceLowLeaders() {
+        final int leaderFloorAvg = Math.floorDiv(slotNum, currentDataServers.size());
+        final int maxMove = balancePolicy.getMaxMoveLeaderSlots();
+        final int threshold = balancePolicy.getLowWaterMarkSlotLeaderNums(leaderFloorAvg);
+        int balanced = 0;
+        Set<String> notSatisfies = Sets.newHashSet();
+
+        while (balanced < maxMove) {
+            // 1. find the dataNode which has leaders less than low water mark
+            //    and sorted by leaders.num asc
+            final List<String> lowDataServers = findDataServersLeaderLowWaterMark(threshold);
+            if (lowDataServers.isEmpty()) {
+                break;
+            }
+            // could not found any follower to upgrade
+            if (notSatisfies.containsAll(lowDataServers)) {
+                logger.info("[upgradeLowLeaders] could not found followers to upgrade for {}",
+                    lowDataServers);
+                break;
+            }
+            // 2. find the dataNode which could not remove a leader
+            // exclude the low
+            final Set<String> excludes = Sets.newHashSet(lowDataServers);
+            // exclude the dataNode which could not remove any leader
+            excludes.addAll(findDataServersLeaderLowWaterMark(threshold + 1));
+            for (String lowDataServer : lowDataServers) {
+                if (notSatisfies.contains(lowDataServer)) {
+                    continue;
+                }
+                Tuple<String, Integer> selected = selectFollower4LeaderUpgradeIn(lowDataServer,
+                    excludes);
+                if (selected == null) {
+                    notSatisfies.add(lowDataServer);
+                    continue;
+                }
+                final int slotId = selected.o2;
+                final String oldLeaderDataServer = selected.o1;
+                final String replaceLeader = slotTableBuilder.replaceLeader(slotId, lowDataServer);
+                if (!StringUtils.equals(oldLeaderDataServer, replaceLeader)) {
+                    logger
+                        .error(
+                            "[upgradeLowLeaders] conflict leader, slotId={} leader balance from {}/{} to {}",
+                            slotId, oldLeaderDataServer, replaceLeader, lowDataServer);
+                    throw new SofaRegistryRuntimeException(String.format(
+                        "upgradeLowLeaders, conflict leader=%d of %s and %s", slotId,
+                        oldLeaderDataServer, replaceLeader));
+                }
+                logger.info("[upgradeLowLeaders] slotId={} leader balance from {} to {}", slotId,
+                    oldLeaderDataServer, lowDataServer);
+                balanced++;
+                break;
+            }
+        }
+        return balanced != 0;
+    }
+
     private Triple<String, Integer, String> selectFollower4LeaderMigrate(String leaderDataServer, Set<String> excludes) {
         final DataNodeSlot dataNodeSlot = slotTableBuilder.getDataNodeSlot(leaderDataServer);
         Set<Integer> leaderSlots = dataNodeSlot.getLeaders();
         Map<String, List<Integer>> dataServersWithFollowers = Maps.newHashMap();
         for (int slot : leaderSlots) {
-            List<String> followerDataServers = slotTableBuilder.getDataServersByFollower(slot);
+            List<String> followerDataServers = slotTableBuilder.getDataServersOwnsFollower(slot);
             for (String followerDataServer : followerDataServers) {
                 List<Integer> followerSlots = dataServersWithFollowers.computeIfAbsent(followerDataServer,
                         k -> Lists.newArrayList());
                 followerSlots.add(slot);
             }
         }
-        logger.info("[LeaderMigrate] {} owns slots={}, slotIds={}, migrate candidates {}",
+        logger.info("[LeaderMigrate] {} owns leader slots={}, slotIds={}, migrate candidates {}",
                 leaderDataServer, leaderSlots.size(), leaderSlots, dataServersWithFollowers);
         // sort the dataServer by follower.num desc
         List<String> migrateDataServers = Lists.newArrayList(dataServersWithFollowers.keySet());
@@ -231,12 +294,12 @@ public class DefaultSlotBalancer implements SlotBalancer {
 
     }
 
-    private Tuple<String, Integer> selectFollower4LeaderUpgrade(String leaderDataServer, Set<String> excludes) {
+    private Tuple<String, Integer> selectFollower4LeaderUpgradeOut(String leaderDataServer, Set<String> excludes) {
         final DataNodeSlot dataNodeSlot = slotTableBuilder.getDataNodeSlot(leaderDataServer);
         Set<Integer> leaderSlots = dataNodeSlot.getLeaders();
         Map<String, List<Integer>> dataServers2Followers = Maps.newHashMap();
         for (int slot : leaderSlots) {
-            List<String> followerDataServers = slotTableBuilder.getDataServersByFollower(slot);
+            List<String> followerDataServers = slotTableBuilder.getDataServersOwnsFollower(slot);
             followerDataServers = getCandidateDataServers(excludes, null, followerDataServers);
             for (String followerDataServer : followerDataServers) {
                 List<Integer> followerSlots = dataServers2Followers.computeIfAbsent(followerDataServer,
@@ -245,11 +308,11 @@ public class DefaultSlotBalancer implements SlotBalancer {
             }
         }
         if (dataServers2Followers.isEmpty()) {
-            logger.info("[LeaderUpgrade] {} owns slots={}, no dataServers could be upgrade, slotId={}",
+            logger.info("[LeaderUpgradeOut] {} owns leader slots={}, no dataServers could be upgrade, slotId={}",
                     leaderDataServer, leaderSlots.size(), leaderSlots);
             return null;
         } else {
-            logger.info("[LeaderUpgrade] {} owns slots={}, slotIds={}, upgrade candidates {}",
+            logger.info("[LeaderUpgradeOut] {} owns leader slots={}, slotIds={}, upgrade candidates {}",
                     leaderDataServer, leaderSlots.size(), leaderSlots, dataServers2Followers);
         }
         // sort the dataServer by leaders.num asc
@@ -260,11 +323,55 @@ public class DefaultSlotBalancer implements SlotBalancer {
         return Tuple.of(selectedDataServer, followers.get(0));
     }
 
+    private Tuple<String, Integer> selectFollower4LeaderUpgradeIn(String followerDataServer, Set<String> excludes) {
+        final DataNodeSlot dataNodeSlot = slotTableBuilder.getDataNodeSlot(followerDataServer);
+        Set<Integer> followerSlots = dataNodeSlot.getFollowers();
+        Map<String, List<Integer>> dataServers2Leaders = Maps.newHashMap();
+        for (int slot : followerSlots) {
+            final String leaderDataServers = slotTableBuilder.getDataServersOwnsLeader(slot);
+            if (StringUtils.isBlank(leaderDataServers)) {
+                // no leader, should not happen
+                logger.error("[LeaderUpgradeIn] no leader for slotId={} in {}", slot, followerDataServer);
+                continue;
+            }
+            if (excludes.contains(leaderDataServers)) {
+                final DataNodeSlot leaderDataNodeSlot = slotTableBuilder.getDataNodeSlot(leaderDataServers);
+                logger.info("[LeaderUpgradeIn] {} not owns enough leader to downgrade, {}", leaderDataServers, leaderDataNodeSlot);
+                continue;
+            }
+
+            List<Integer> leaders = dataServers2Leaders.computeIfAbsent(leaderDataServers, k -> Lists.newArrayList());
+            leaders.add(slot);
+        }
+        if (dataServers2Leaders.isEmpty()) {
+            logger.info("[LeaderUpgradeIn] {} owns follower slots={}, no dataServers could be downgrade, slotId={}",
+                    followerDataServer, followerSlots.size(), followerSlots);
+            return null;
+        } else {
+            logger.info("[LeaderUpgradeIn] {} owns follower slots={}, slotIds={}, downgrade candidates {}",
+                    followerDataServer, followerSlots.size(), followerSlots, dataServers2Leaders);
+        }
+        // sort the dataServer by leaders.num asc
+        List<String> dataServers = Lists.newArrayList(dataServers2Leaders.keySet());
+        dataServers.sort(Comparators.mostLeadersFirst(slotTableBuilder));
+        final String selectedDataServer = dataServers.get(0);
+        List<Integer> leaders = dataServers2Leaders.get(selectedDataServer);
+        return Tuple.of(selectedDataServer, leaders.get(0));
+    }
+
     private List<String> findDataServersLeaderHighWaterMark(int threshold) {
         List<DataNodeSlot> dataNodeSlots = slotTableBuilder.getDataNodeSlotsLeaderBeyond(threshold);
         List<String> dataServers = DataNodeSlot.collectDataNodes(dataNodeSlots);
         dataServers.sort(Comparators.mostLeadersFirst(slotTableBuilder));
         logger.info("[LeaderHighWaterMark] threshold={}, dataServers={}", threshold, dataServers);
+        return dataServers;
+    }
+
+    private List<String> findDataServersLeaderLowWaterMark(int threshold) {
+        List<DataNodeSlot> dataNodeSlots = slotTableBuilder.getDataNodeSlotsLeaderBelow(threshold);
+        List<String> dataServers = DataNodeSlot.collectDataNodes(dataNodeSlots);
+        dataServers.sort(Comparators.leastLeadersFirst(slotTableBuilder));
+        logger.info("[LeaderLowWaterMark] threshold={}, dataServers={}", threshold, dataServers);
         return dataServers;
     }
 

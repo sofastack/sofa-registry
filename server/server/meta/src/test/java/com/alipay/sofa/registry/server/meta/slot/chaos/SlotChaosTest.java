@@ -109,7 +109,7 @@ public class SlotChaosTest extends AbstractTest {
             scheduledSlotArranger.arrangeAsync();
             Thread.sleep(2000);
         }
-        for (int i = 0; i < 1000; i++) {
+        for (int i = 0; i < 500; i++) {
             scheduledSlotArranger.arrangeAsync();
             Thread.sleep(20);
         }
