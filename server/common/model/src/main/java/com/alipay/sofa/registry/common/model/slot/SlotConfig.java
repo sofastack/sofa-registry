@@ -40,16 +40,16 @@ public final class SlotConfig {
     }
 
     static {
-        SLOT_NUM = SystemUtils.getEnvInteger(KEY_DATA_SLOT_NUM, 16);
+        SLOT_NUM = SystemUtils.getSystemInteger(KEY_DATA_SLOT_NUM, 16);
         if (SLOT_NUM <= 0) {
             throw new IllegalArgumentException("illegal " + KEY_DATA_SLOT_NUM + ":" + SLOT_NUM);
         }
-        SLOT_REPLICAS = SystemUtils.getEnvInteger(KEY_DATA_SLOT_REPLICAS, 2);
+        SLOT_REPLICAS = SystemUtils.getSystemInteger(KEY_DATA_SLOT_REPLICAS, 2);
         if (SLOT_REPLICAS <= 0) {
             throw new IllegalArgumentException("illegal " + KEY_DATA_SLOT_REPLICAS + ":"
                                                + SLOT_REPLICAS);
         }
-        FUNC = SystemUtils.getEnv(KEY_DATA_SLOT_FUNC, "crc32c");
+        FUNC = SystemUtils.getSystem(KEY_DATA_SLOT_FUNC, "crc32c");
         LOGGER.info("{}={}, {}={}, {}={}", KEY_DATA_SLOT_NUM, SLOT_NUM, KEY_DATA_SLOT_REPLICAS,
             SLOT_REPLICAS, KEY_DATA_SLOT_FUNC, FUNC);
     }

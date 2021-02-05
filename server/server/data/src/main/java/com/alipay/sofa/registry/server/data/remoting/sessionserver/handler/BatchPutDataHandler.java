@@ -74,11 +74,11 @@ public class BatchPutDataHandler extends AbstractDataHandler<BatchRequest> {
                     Publisher publisher = (Publisher) req;
                     changeDataInfoIds.addAll(doHandle(publisher));
                     if (publisher instanceof UnPublisher) {
-                        LOGGER.info("unpub,{},{},{},{},{}", slotIdStr, publisher.getDataInfoId(),
+                        LOGGER.info("unpub,{},{},{},{},{},{}", slotIdStr, publisher.getDataInfoId(),
                             publisher.getRegisterId(), publisher.getVersion(),
                             publisher.getRegisterTimestamp());
                     } else {
-                        LOGGER.info("pub,{},{},{},{}", slotIdStr, publisher.getDataInfoId(),
+                        LOGGER.info("pub,{},{},{},{},{}", slotIdStr, publisher.getDataInfoId(),
                             publisher.getRegisterId(), publisher.getVersion(),
                             publisher.getRegisterTimestamp());
                     }
@@ -90,7 +90,7 @@ public class BatchPutDataHandler extends AbstractDataHandler<BatchRequest> {
                         final String dataInfoId = e.getKey();
                         for (Map.Entry<String, RegisterVersion> ver : e.getValue().entrySet()) {
                             RegisterVersion version = ver.getValue();
-                            LOGGER.info("off,{},{},{},{}", slotIdStr, dataInfoId, ver.getKey(),
+                            LOGGER.info("off,{},{},{},{},{}", slotIdStr, dataInfoId, ver.getKey(),
                                 version.getVersion(), version.getRegisterTimestamp());
                         }
                     }
