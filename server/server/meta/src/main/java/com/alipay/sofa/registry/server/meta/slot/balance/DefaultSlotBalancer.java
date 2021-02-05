@@ -336,7 +336,8 @@ public class DefaultSlotBalancer implements SlotBalancer {
             }
             if (excludes.contains(leaderDataServers)) {
                 final DataNodeSlot leaderDataNodeSlot = slotTableBuilder.getDataNodeSlot(leaderDataServers);
-                logger.info("[LeaderUpgradeIn] {} not owns enough leader to downgrade, {}", leaderDataServers, leaderDataNodeSlot);
+                logger.info("[LeaderUpgradeIn] {} not owns enough leader to downgrade, leaderSize={}, leaders={}",
+                        leaderDataServers, leaderDataNodeSlot.getLeaders().size(), leaderDataNodeSlot.getLeaders());
                 continue;
             }
 
@@ -344,11 +345,11 @@ public class DefaultSlotBalancer implements SlotBalancer {
             leaders.add(slot);
         }
         if (dataServers2Leaders.isEmpty()) {
-            logger.info("[LeaderUpgradeIn] {} owns follower slots={}, no dataServers could be downgrade, slotId={}",
+            logger.info("[LeaderUpgradeIn] {} owns followerSize={}, no dataServers could be downgrade, slotId={}",
                     followerDataServer, followerSlots.size(), followerSlots);
             return null;
         } else {
-            logger.info("[LeaderUpgradeIn] {} owns follower slots={}, slotIds={}, downgrade candidates {}",
+            logger.info("[LeaderUpgradeIn] {} owns followerSize={}, slotIds={}, downgrade candidates {}",
                     followerDataServer, followerSlots.size(), followerSlots, dataServers2Leaders);
         }
         // sort the dataServer by leaders.num asc
