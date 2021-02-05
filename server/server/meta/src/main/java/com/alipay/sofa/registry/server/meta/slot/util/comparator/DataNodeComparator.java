@@ -17,7 +17,7 @@
 package com.alipay.sofa.registry.server.meta.slot.util.comparator;
 
 import com.alipay.sofa.registry.server.shared.comparator.AbstractComparator;
-import com.alipay.sofa.registry.server.shared.comparator.Triple;
+import com.alipay.sofa.registry.common.model.Triple;
 
 import java.util.Collection;
 import java.util.Set;

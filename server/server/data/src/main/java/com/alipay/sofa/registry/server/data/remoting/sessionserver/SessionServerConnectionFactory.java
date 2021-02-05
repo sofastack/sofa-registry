@@ -19,6 +19,7 @@ package com.alipay.sofa.registry.server.data.remoting.sessionserver;
 import com.alipay.remoting.Connection;
 import com.alipay.sofa.registry.common.model.ProcessId;
 import com.alipay.sofa.registry.common.model.Tuple;
+import com.alipay.sofa.registry.common.model.store.ProcessIdCache;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.remoting.Channel;
@@ -69,6 +70,7 @@ public class SessionServerConnectionFactory {
             LOGGER.warn("registerSession channel {} has conflict processId, exist={}, register={}",
                     channel, exist.o1, processId);
         }
+        processId = ProcessIdCache.cache(processId);
         // maybe register happens after disconnect or parallely, at that time, connection is not fine
         // synchronized avoid the case: isFine=true->disconnect.remove->register.put
         synchronized (this) {
