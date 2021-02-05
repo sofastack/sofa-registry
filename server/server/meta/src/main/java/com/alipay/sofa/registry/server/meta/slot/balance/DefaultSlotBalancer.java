@@ -248,7 +248,7 @@ public class DefaultSlotBalancer implements SlotBalancer {
             logger.info("[LeaderUpgrade] {} owns slots={}, no dataServers could be upgrade, slotId={}",
                     leaderDataServer, leaderSlots.size(), leaderSlots);
             return null;
-        }else{
+        } else {
             logger.info("[LeaderUpgrade] {} owns slots={}, slotIds={}, upgrade candidates {}",
                     leaderDataServer, leaderSlots.size(), leaderSlots, dataServers2Followers);
         }
@@ -370,9 +370,21 @@ public class DefaultSlotBalancer implements SlotBalancer {
             DataNodeSlot candidateDataNodeSlot = slotTableBuilder.getDataNodeSlot(candidate);
             Set<Integer> candidateFollowerSlots = candidateDataNodeSlot.getFollowers();
             for (int candidateFollowerSlot : candidateFollowerSlots) {
-                if (!dataNodeSlot.containsFollower(candidateFollowerSlot)) {
-                    return Tuple.of(candidate, candidateFollowerSlot);
+                if (dataNodeSlot.containsFollower(candidateFollowerSlot)) {
+                    logger
+                        .info(
+                            "[selectFollower4BalanceIn] skip, target {} contains follower {}, candidate={}",
+                            followerDataServer, candidateFollowerSlot, candidate);
+                    continue;
                 }
+                if (dataNodeSlot.containsLeader(candidateFollowerSlot)) {
+                    logger
+                        .info(
+                            "[selectFollower4BalanceIn] skip, target {} contains leader {}, candidate={}",
+                            followerDataServer, candidateFollowerSlot, candidate);
+                    continue;
+                }
+                return Tuple.of(candidate, candidateFollowerSlot);
             }
         }
         return null;
