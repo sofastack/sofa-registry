@@ -153,7 +153,7 @@ public class SessionServerConfigBean implements SessionServerConfig {
 
     private boolean              enableSessionLoadbalancePolicy        = false;
 
-    private int                  cacheDigestIntervalSecs               = 60 * 15;
+    private int                  cacheDigestIntervalMinutes            = 15;
 
     private int                  cacheCountIntervalSecs                = 30;
 
@@ -964,12 +964,12 @@ public class SessionServerConfigBean implements SessionServerConfig {
     }
 
     @Override
-    public int getCacheDigestIntervalSecs() {
-        return cacheDigestIntervalSecs;
+    public int getCacheDigestIntervalMinutes() {
+        return cacheDigestIntervalMinutes;
     }
 
-    public void setCacheDigestIntervalSecs(int cacheDigestIntervalSecs) {
-        this.cacheDigestIntervalSecs = cacheDigestIntervalSecs;
+    public void setCacheDigestIntervalMinutes(int cacheDigestIntervalMinutes) {
+        this.cacheDigestIntervalMinutes = cacheDigestIntervalMinutes;
     }
 
     public void setSlotSyncWorkerSize(int slotSyncWorkerSize) {
