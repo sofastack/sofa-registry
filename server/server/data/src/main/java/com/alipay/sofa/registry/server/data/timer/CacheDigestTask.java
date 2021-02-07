@@ -24,19 +24,16 @@ import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.server.data.bootstrap.DataServerConfig;
 import com.alipay.sofa.registry.server.data.cache.DatumCache;
 import com.alipay.sofa.registry.util.ConcurrentUtils;
-import com.alipay.sofa.registry.util.NamedThreadFactory;
+import org.apache.commons.lang.time.DateUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.CollectionUtils;
 
 import javax.annotation.PostConstruct;
-import java.util.Map;
+import java.util.*;
 import java.util.Map.Entry;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 /**
- *
  * @author qian.lqlq
  * @version $Id: CacheDigestTask.java, v 0.1 2018－04－27 17:40 qian.lqlq Exp $
  */
@@ -56,42 +53,52 @@ public class CacheDigestTask {
             LOGGER.info("cache digest off with intervalSecs={}", intervalSec);
             return;
         }
-        ScheduledExecutorService executor = new ScheduledThreadPoolExecutor(1,
-                new NamedThreadFactory("CacheDigestTask"));
-        executor.scheduleWithFixedDelay(() -> {
-            try {
-                Map<String, Map<String, Datum>> allMap = datumCache.getAll();
-                if (!allMap.isEmpty()) {
-                    for (Entry<String, Map<String, Datum>> dataCenterEntry : allMap.entrySet()) {
-                        String dataCenter = dataCenterEntry.getKey();
-                        Map<String, Datum> datumMap = dataCenterEntry.getValue();
-                        LOGGER.info("size of datum in {} is {}", dataCenter, datumMap.size());
-                        for (Entry<String, Datum> dataInfoEntry : datumMap.entrySet()) {
-                            String dataInfoId = dataInfoEntry.getKey();
-                            Datum data = dataInfoEntry.getValue();
-                            Map<String, Publisher> pubMap = data.getPubMap();
-                            StringBuilder pubStr = new StringBuilder(1024);
-                            if (!CollectionUtils.isEmpty(pubMap)) {
-                                for (Publisher publisher : pubMap.values()) {
-                                    pubStr.append(logPublisher(publisher)).append(";");
-                                }
-                            }
-                            LOGGER.info("[Datum]{},{},{},[{}]", dataInfoId,
-                                    data.getVersion(), dataCenter, pubStr.toString());
-                            // avoid io is busy
-                            ConcurrentUtils.sleepUninterruptibly(20, TimeUnit.MILLISECONDS);
-                        }
-                        int pubCount = datumMap.values().stream().mapToInt(Datum::publisherSize).sum();
-                        LOGGER.info("size of publisher in {} is {}", dataCenter, pubCount);
-                    }
-                } else {
-                    LOGGER.info("datum cache is empty");
-                }
-
-            } catch (Throwable t) {
-                LOGGER.error("cache digest error", t);
+        Date firstDate = new Date();
+        firstDate = DateUtils.round(firstDate, Calendar.MINUTE);
+        firstDate.setMinutes(firstDate.getMinutes() / 5 * 5 + 5);
+        Timer timer = new Timer("CacheDigestTask", true);
+        TimerTask task = new TimerTask() {
+            @Override
+            public void run() {
+                dump();
             }
-        }, intervalSec, intervalSec, TimeUnit.SECONDS);
+        };
+        timer.scheduleAtFixedRate(task, firstDate, intervalSec * 1000);
+    }
+
+    private void dump() {
+        try {
+            Map<String, Map<String, Datum>> allMap = datumCache.getAll();
+            if (!allMap.isEmpty()) {
+                for (Entry<String, Map<String, Datum>> dataCenterEntry : allMap.entrySet()) {
+                    String dataCenter = dataCenterEntry.getKey();
+                    Map<String, Datum> datumMap = dataCenterEntry.getValue();
+                    LOGGER.info("size of datum in {} is {}", dataCenter, datumMap.size());
+                    for (Entry<String, Datum> dataInfoEntry : datumMap.entrySet()) {
+                        String dataInfoId = dataInfoEntry.getKey();
+                        Datum data = dataInfoEntry.getValue();
+                        Map<String, Publisher> pubMap = data.getPubMap();
+                        StringBuilder pubStr = new StringBuilder(1024);
+                        if (!CollectionUtils.isEmpty(pubMap)) {
+                            for (Publisher publisher : pubMap.values()) {
+                                pubStr.append(logPublisher(publisher)).append(";");
+                            }
+                        }
+                        LOGGER.info("[Datum]{},{},{},[{}]", dataInfoId,
+                                data.getVersion(), dataCenter, pubStr.toString());
+                        // avoid io is busy
+                        ConcurrentUtils.sleepUninterruptibly(20, TimeUnit.MILLISECONDS);
+                    }
+                    int pubCount = datumMap.values().stream().mapToInt(Datum::publisherSize).sum();
+                    LOGGER.info("size of publisher in {} is {}", dataCenter, pubCount);
+                }
+            } else {
+                LOGGER.info("datum cache is empty");
+            }
+
+        } catch (Throwable t) {
+            LOGGER.error("cache digest error", t);
+        }
     }
 
     private String logPublisher(Publisher publisher) {
