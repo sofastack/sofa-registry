@@ -48,14 +48,15 @@ public class CacheDigestTask {
 
     @PostConstruct
     public void init() {
-        final int intervalSec = dataServerConfig.getCacheDigestIntervalSecs();
-        if (intervalSec <= 0) {
-            LOGGER.info("cache digest off with intervalSecs={}", intervalSec);
+        final int intervalMinutes = dataServerConfig.getCacheDigestIntervalMinutes();
+        if (intervalMinutes <= 0) {
+            LOGGER.info("cache digest off with intervalMinutes={}", intervalMinutes);
             return;
         }
         Date firstDate = new Date();
         firstDate = DateUtils.round(firstDate, Calendar.MINUTE);
-        firstDate.setMinutes(firstDate.getMinutes() / 5 * 5 + 5);
+        firstDate.setMinutes(firstDate.getMinutes() / intervalMinutes * intervalMinutes
+                             + intervalMinutes);
         Timer timer = new Timer("CacheDigestTask", true);
         TimerTask task = new TimerTask() {
             @Override
@@ -63,7 +64,7 @@ public class CacheDigestTask {
                 dump();
             }
         };
-        timer.scheduleAtFixedRate(task, firstDate, intervalSec * 1000);
+        timer.scheduleAtFixedRate(task, firstDate, intervalMinutes * 60 * 1000);
     }
 
     private void dump() {

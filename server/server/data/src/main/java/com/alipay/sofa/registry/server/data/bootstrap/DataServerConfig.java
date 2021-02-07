@@ -25,8 +25,6 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import java.util.Set;
 
 /**
- *
- *
  * @author qian.lqlq
  * @version $Id: DataServerBootstrapConfig.java, v 0.1 2017-12-06 20:50 qian.lqlq Exp $
  */
@@ -111,12 +109,13 @@ public class DataServerConfig {
 
     private boolean              enableTestApi                            = false;
 
-    private int                  cacheDigestIntervalSecs                  = 60 * 15;
+    private int                  cacheDigestIntervalMinutes               = 15;
 
     private int                  cacheCountIntervalSecs                   = 30;
 
     /**
      * constructor
+     *
      * @param commonConfig
      */
     public DataServerConfig(CommonConfig commonConfig) {
@@ -143,7 +142,7 @@ public class DataServerConfig {
     /**
      * Setter method for property <tt>port</tt>.
      *
-     * @param port  value to be assigned to property port
+     * @param port value to be assigned to property port
      */
     public void setPort(int port) {
         this.port = port;
@@ -161,7 +160,7 @@ public class DataServerConfig {
     /**
      * Setter method for property <tt>syncDataPort</tt>.
      *
-     * @param syncDataPort  value to be assigned to property syncDataPort
+     * @param syncDataPort value to be assigned to property syncDataPort
      */
     public void setSyncDataPort(int syncDataPort) {
         this.syncDataPort = syncDataPort;
@@ -179,7 +178,7 @@ public class DataServerConfig {
     /**
      * Setter method for property <tt>metaServerPort</tt>.
      *
-     * @param metaServerPort  value to be assigned to property metaServerPort
+     * @param metaServerPort value to be assigned to property metaServerPort
      */
     public void setMetaServerPort(int metaServerPort) {
         this.metaServerPort = metaServerPort;
@@ -197,7 +196,7 @@ public class DataServerConfig {
     /**
      * Setter method for property <tt>httpServerPort</tt>.
      *
-     * @param httpServerPort  value to be assigned to property httpServerPort
+     * @param httpServerPort value to be assigned to property httpServerPort
      */
     public void setHttpServerPort(int httpServerPort) {
         this.httpServerPort = httpServerPort;
@@ -215,7 +214,7 @@ public class DataServerConfig {
     /**
      * Setter method for property <tt>notifyIntervalMs</tt>.
      *
-     * @param notifyIntervalMs  value to be assigned to property notifyIntervalMs
+     * @param notifyIntervalMs value to be assigned to property notifyIntervalMs
      */
     public void setNotifyIntervalMs(int notifyIntervalMs) {
         this.notifyIntervalMs = notifyIntervalMs;
@@ -233,7 +232,7 @@ public class DataServerConfig {
     /**
      * Setter method for property <tt>notifyTempDataIntervalMs</tt>.
      *
-     * @param notifyTempDataIntervalMs  value to be assigned to property notifyTempDataIntervalMs
+     * @param notifyTempDataIntervalMs value to be assigned to property notifyTempDataIntervalMs
      */
     public void setNotifyTempDataIntervalMs(int notifyTempDataIntervalMs) {
         this.notifyTempDataIntervalMs = notifyTempDataIntervalMs;
@@ -251,7 +250,7 @@ public class DataServerConfig {
     /**
      * Setter method for property <tt>rpcTimeout</tt>.
      *
-     * @param rpcTimeout  value to be assigned to property rpcTimeout
+     * @param rpcTimeout value to be assigned to property rpcTimeout
      */
     public void setRpcTimeout(int rpcTimeout) {
         this.rpcTimeout = rpcTimeout;
@@ -296,7 +295,7 @@ public class DataServerConfig {
     /**
      * Setter method for property <tt>getDataExecutorMinPoolSize</tt>.
      *
-     * @param getDataExecutorMinPoolSize  value to be assigned to property getDataExecutorMinPoolSize
+     * @param getDataExecutorMinPoolSize value to be assigned to property getDataExecutorMinPoolSize
      */
     public void setGetDataExecutorMinPoolSize(int getDataExecutorMinPoolSize) {
         this.getDataExecutorMinPoolSize = getDataExecutorMinPoolSize;
@@ -305,7 +304,7 @@ public class DataServerConfig {
     /**
      * Setter method for property <tt>getDataExecutorMaxPoolSize</tt>.
      *
-     * @param getDataExecutorMaxPoolSize  value to be assigned to property getDataExecutorMaxPoolSize
+     * @param getDataExecutorMaxPoolSize value to be assigned to property getDataExecutorMaxPoolSize
      */
     public void setGetDataExecutorMaxPoolSize(int getDataExecutorMaxPoolSize) {
         this.getDataExecutorMaxPoolSize = getDataExecutorMaxPoolSize;
@@ -314,7 +313,7 @@ public class DataServerConfig {
     /**
      * Setter method for property <tt>getDataExecutorQueueSize</tt>.
      *
-     * @param getDataExecutorQueueSize  value to be assigned to property getDataExecutorQueueSize
+     * @param getDataExecutorQueueSize value to be assigned to property getDataExecutorQueueSize
      */
     public void setGetDataExecutorQueueSize(int getDataExecutorQueueSize) {
         this.getDataExecutorQueueSize = getDataExecutorQueueSize;
@@ -323,7 +322,7 @@ public class DataServerConfig {
     /**
      * Setter method for property <tt>getDataExecutorKeepAliveTime</tt>.
      *
-     * @param getDataExecutorKeepAliveTime  value to be assigned to property getDataExecutorKeepAliveTime
+     * @param getDataExecutorKeepAliveTime value to be assigned to property getDataExecutorKeepAliveTime
      */
     public void setGetDataExecutorKeepAliveTime(long getDataExecutorKeepAliveTime) {
         this.getDataExecutorKeepAliveTime = getDataExecutorKeepAliveTime;
@@ -341,7 +340,7 @@ public class DataServerConfig {
     /**
      * Setter method for property <tt>publishExecutorMinPoolSize</tt>.
      *
-     * @param publishExecutorMinPoolSize  value to be assigned to property publishExecutorMinPoolSize
+     * @param publishExecutorMinPoolSize value to be assigned to property publishExecutorMinPoolSize
      */
     public void setPublishExecutorMinPoolSize(int publishExecutorMinPoolSize) {
         this.publishExecutorMinPoolSize = publishExecutorMinPoolSize;
@@ -359,7 +358,7 @@ public class DataServerConfig {
     /**
      * Setter method for property <tt>publishExecutorMaxPoolSize</tt>.
      *
-     * @param publishExecutorMaxPoolSize  value to be assigned to property publishExecutorMaxPoolSize
+     * @param publishExecutorMaxPoolSize value to be assigned to property publishExecutorMaxPoolSize
      */
     public void setPublishExecutorMaxPoolSize(int publishExecutorMaxPoolSize) {
         this.publishExecutorMaxPoolSize = publishExecutorMaxPoolSize;
@@ -377,7 +376,7 @@ public class DataServerConfig {
     /**
      * Setter method for property <tt>publishExecutorQueueSize</tt>.
      *
-     * @param publishExecutorQueueSize  value to be assigned to property publishExecutorQueueSize
+     * @param publishExecutorQueueSize value to be assigned to property publishExecutorQueueSize
      */
     public void setPublishExecutorQueueSize(int publishExecutorQueueSize) {
         this.publishExecutorQueueSize = publishExecutorQueueSize;
@@ -400,6 +399,7 @@ public class DataServerConfig {
 
     /**
      * Getter method for property <tt>sessionLeaseSec</tt>.
+     *
      * @return property value of sessionLeaseSec
      */
     public int getSessionLeaseSec() {
@@ -408,6 +408,7 @@ public class DataServerConfig {
 
     /**
      * Setter method for property <tt>sessionLeaseSec</tt>.
+     *
      * @param sessionLeaseSec value to be assigned to property sessionLeaseSec
      */
     public void setSessionLeaseSec(int sessionLeaseSec) {
@@ -416,6 +417,7 @@ public class DataServerConfig {
 
     /**
      * Getter method for property <tt>datumCompactDelayMs</tt>.
+     *
      * @return property value of datumCompactDelayMs
      */
     public int getDatumCompactDelayMs() {
@@ -424,6 +426,7 @@ public class DataServerConfig {
 
     /**
      * Setter method for property <tt>datumCompactDelayMs</tt>.
+     *
      * @param datumCompactDelayMs value to be assigned to property datumCompactDelayMs
      */
     public void setDatumCompactDelayMs(int datumCompactDelayMs) {
@@ -432,6 +435,7 @@ public class DataServerConfig {
 
     /**
      * Getter method for property <tt>slotSyncPublisherDigestMaxNum</tt>.
+     *
      * @return property value of slotSyncPublisherDigestMaxNum
      */
     public int getSlotSyncPublisherDigestMaxNum() {
@@ -440,6 +444,7 @@ public class DataServerConfig {
 
     /**
      * Setter method for property <tt>slotSyncPublisherDigestMaxNum</tt>.
+     *
      * @param slotSyncPublisherDigestMaxNum value to be assigned to property slotSyncPublisherDigestMaxNum
      */
     public void setSlotSyncPublisherDigestMaxNum(int slotSyncPublisherDigestMaxNum) {
@@ -448,6 +453,7 @@ public class DataServerConfig {
 
     /**
      * Getter method for property <tt>slotSyncPublisherMaxNum</tt>.
+     *
      * @return property value of slotSyncPublisherMaxNum
      */
     public int getSlotSyncPublisherMaxNum() {
@@ -456,6 +462,7 @@ public class DataServerConfig {
 
     /**
      * Setter method for property <tt>slotSyncPublisherMaxNum</tt>.
+     *
      * @param slotSyncPublisherMaxNum value to be assigned to property slotSyncPublisherMaxNum
      */
     public void setSlotSyncPublisherMaxNum(int slotSyncPublisherMaxNum) {
@@ -464,6 +471,7 @@ public class DataServerConfig {
 
     /**
      * Getter method for property <tt>slotLeaderSyncSessionExecutorThreadSize</tt>.
+     *
      * @return property value of slotLeaderSyncSessionExecutorThreadSize
      */
     public int getSlotLeaderSyncSessionExecutorThreadSize() {
@@ -472,6 +480,7 @@ public class DataServerConfig {
 
     /**
      * Setter method for property <tt>slotLeaderSyncSessionExecutorThreadSize</tt>.
+     *
      * @param slotLeaderSyncSessionExecutorThreadSize value to be assigned to property slotLeaderSyncSessionExecutorThreadSize
      */
     public void setSlotLeaderSyncSessionExecutorThreadSize(int slotLeaderSyncSessionExecutorThreadSize) {
@@ -480,6 +489,7 @@ public class DataServerConfig {
 
     /**
      * Getter method for property <tt>slotLeaderSyncSessionIntervalMs</tt>.
+     *
      * @return property value of slotLeaderSyncSessionIntervalMs
      */
     public int getSlotLeaderSyncSessionIntervalSec() {
@@ -488,6 +498,7 @@ public class DataServerConfig {
 
     /**
      * Setter method for property <tt>slotLeaderSyncSessionIntervalSec</tt>.
+     *
      * @param slotLeaderSyncSessionIntervalSec value to be assigned to property slotLeaderSyncSessionIntervalSec
      */
     public void setSlotLeaderSyncSessionIntervalSec(int slotLeaderSyncSessionIntervalSec) {
@@ -496,6 +507,7 @@ public class DataServerConfig {
 
     /**
      * Getter method for property <tt>slotFollowerSyncLeaderExecutorThreadSize</tt>.
+     *
      * @return property value of slotFollowerSyncLeaderExecutorThreadSize
      */
     public int getSlotFollowerSyncLeaderExecutorThreadSize() {
@@ -504,6 +516,7 @@ public class DataServerConfig {
 
     /**
      * Setter method for property <tt>slotFollowerSyncLeaderExecutorThreadSize</tt>.
+     *
      * @param slotFollowerSyncLeaderExecutorThreadSize value to be assigned to property slotFollowerSyncLeaderExecutorThreadSize
      */
     public void setSlotFollowerSyncLeaderExecutorThreadSize(int slotFollowerSyncLeaderExecutorThreadSize) {
@@ -512,6 +525,7 @@ public class DataServerConfig {
 
     /**
      * Getter method for property <tt>slotFollowerSyncLeaderIntervalMs</tt>.
+     *
      * @return property value of slotFollowerSyncLeaderIntervalMs
      */
     public int getSlotFollowerSyncLeaderIntervalMs() {
@@ -520,6 +534,7 @@ public class DataServerConfig {
 
     /**
      * Setter method for property <tt>slotFollowerSyncLeaderIntervalMs</tt>.
+     *
      * @param slotFollowerSyncLeaderIntervalMs value to be assigned to property slotFollowerSyncLeaderIntervalMs
      */
     public void setSlotFollowerSyncLeaderIntervalMs(int slotFollowerSyncLeaderIntervalMs) {
@@ -528,6 +543,7 @@ public class DataServerConfig {
 
     /**
      * Getter method for property <tt>slotLeaderSyncSessionExecutorQueueSize</tt>.
+     *
      * @return property value of slotLeaderSyncSessionExecutorQueueSize
      */
     public int getSlotLeaderSyncSessionExecutorQueueSize() {
@@ -536,6 +552,7 @@ public class DataServerConfig {
 
     /**
      * Setter method for property <tt>slotLeaderSyncSessionExecutorQueueSize</tt>.
+     *
      * @param slotLeaderSyncSessionExecutorQueueSize value to be assigned to property slotLeaderSyncSessionExecutorQueueSize
      */
     public void setSlotLeaderSyncSessionExecutorQueueSize(int slotLeaderSyncSessionExecutorQueueSize) {
@@ -544,6 +561,7 @@ public class DataServerConfig {
 
     /**
      * Getter method for property <tt>slotFollowerSyncLeaderExecutorQueueSize</tt>.
+     *
      * @return property value of slotFollowerSyncLeaderExecutorQueueSize
      */
     public int getSlotFollowerSyncLeaderExecutorQueueSize() {
@@ -552,6 +570,7 @@ public class DataServerConfig {
 
     /**
      * Setter method for property <tt>slotFollowerSyncLeaderExecutorQueueSize</tt>.
+     *
      * @param slotFollowerSyncLeaderExecutorQueueSize value to be assigned to property slotFollowerSyncLeaderExecutorQueueSize
      */
     public void setSlotFollowerSyncLeaderExecutorQueueSize(int slotFollowerSyncLeaderExecutorQueueSize) {
@@ -560,6 +579,7 @@ public class DataServerConfig {
 
     /**
      * Getter method for property <tt>slotSyncRequestExecutorMinPoolSize</tt>.
+     *
      * @return property value of slotSyncRequestExecutorMinPoolSize
      */
     public int getSlotSyncRequestExecutorMinPoolSize() {
@@ -568,6 +588,7 @@ public class DataServerConfig {
 
     /**
      * Setter method for property <tt>slotSyncRequestExecutorMinPoolSize</tt>.
+     *
      * @param slotSyncRequestExecutorMinPoolSize value to be assigned to property slotSyncRequestExecutorMinPoolSize
      */
     public void setSlotSyncRequestExecutorMinPoolSize(int slotSyncRequestExecutorMinPoolSize) {
@@ -576,6 +597,7 @@ public class DataServerConfig {
 
     /**
      * Getter method for property <tt>slotSyncRequestExecutorMaxPoolSize</tt>.
+     *
      * @return property value of slotSyncRequestExecutorMaxPoolSize
      */
     public int getSlotSyncRequestExecutorMaxPoolSize() {
@@ -584,6 +606,7 @@ public class DataServerConfig {
 
     /**
      * Setter method for property <tt>slotSyncRequestExecutorMaxPoolSize</tt>.
+     *
      * @param slotSyncRequestExecutorMaxPoolSize value to be assigned to property slotSyncRequestExecutorMaxPoolSize
      */
     public void setSlotSyncRequestExecutorMaxPoolSize(int slotSyncRequestExecutorMaxPoolSize) {
@@ -592,6 +615,7 @@ public class DataServerConfig {
 
     /**
      * Getter method for property <tt>slotSyncRequestExecutorQueueSize</tt>.
+     *
      * @return property value of slotSyncRequestExecutorQueueSize
      */
     public int getSlotSyncRequestExecutorQueueSize() {
@@ -600,6 +624,7 @@ public class DataServerConfig {
 
     /**
      * Setter method for property <tt>slotSyncRequestExecutorQueueSize</tt>.
+     *
      * @param slotSyncRequestExecutorQueueSize value to be assigned to property slotSyncRequestExecutorQueueSize
      */
     public void setSlotSyncRequestExecutorQueueSize(int slotSyncRequestExecutorQueueSize) {
@@ -608,6 +633,7 @@ public class DataServerConfig {
 
     /**
      * Getter method for property <tt>schedulerHeartbeatIntervalSec</tt>.
+     *
      * @return property value of schedulerHeartbeatIntervalSec
      */
     public int getSchedulerHeartbeatIntervalSec() {
@@ -616,6 +642,7 @@ public class DataServerConfig {
 
     /**
      * Setter method for property <tt>schedulerHeartbeatIntervalSec</tt>.
+     *
      * @param schedulerHeartbeatIntervalSec value to be assigned to property schedulerHeartbeatIntervalSec
      */
     public void setSchedulerHeartbeatIntervalSec(int schedulerHeartbeatIntervalSec) {
@@ -624,6 +651,7 @@ public class DataServerConfig {
 
     /**
      * Getter method for property <tt>syncSessionPort</tt>.
+     *
      * @return property value of syncSessionPort
      */
     public int getSyncSessionPort() {
@@ -632,6 +660,7 @@ public class DataServerConfig {
 
     /**
      * Setter method for property <tt>syncSessionPort</tt>.
+     *
      * @param syncSessionPort value to be assigned to property syncSessionPort
      */
     public void setSyncSessionPort(int syncSessionPort) {
@@ -702,12 +731,12 @@ public class DataServerConfig {
         this.notifyRetryTimes = notifyRetryTimes;
     }
 
-    public int getCacheDigestIntervalSecs() {
-        return cacheDigestIntervalSecs;
+    public int getCacheDigestIntervalMinutes() {
+        return cacheDigestIntervalMinutes;
     }
 
-    public void setCacheDigestIntervalSecs(int cacheDigestIntervalSecs) {
-        this.cacheDigestIntervalSecs = cacheDigestIntervalSecs;
+    public void setCacheDigestIntervalMinutes(int cacheDigestIntervalMinutes) {
+        this.cacheDigestIntervalMinutes = cacheDigestIntervalMinutes;
     }
 
     public int getCacheCountIntervalSecs() {
