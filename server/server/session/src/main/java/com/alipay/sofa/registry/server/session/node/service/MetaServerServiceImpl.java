@@ -22,13 +22,13 @@ import com.alipay.sofa.registry.common.model.metaserver.nodes.SessionNode;
 import com.alipay.sofa.registry.common.model.store.URL;
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
 import com.alipay.sofa.registry.server.session.remoting.DataNodeExchanger;
+import com.alipay.sofa.registry.server.session.remoting.MetaNodeExchanger;
 import com.alipay.sofa.registry.server.session.slot.SlotTableCache;
 import com.alipay.sofa.registry.server.shared.env.ServerEnv;
 import com.alipay.sofa.registry.server.shared.meta.AbstractMetaServerService;
 import org.springframework.beans.factory.annotation.Autowired;
 
 /**
- *
  * @author yuzhi.lyz
  * @version v 0.1 2020-11-28 20:05 yuzhi.lyz Exp $
  */
@@ -44,8 +44,12 @@ public final class MetaServerServiceImpl extends
     @Autowired
     private DataNodeExchanger   dataNodeExchanger;
 
+    @Autowired
+    private MetaNodeExchanger   metaNodeExchanger;
+
     @Override
     protected void handleRenewResult(SessionHeartBeatResponse result) {
+        metaNodeExchanger.setServerIps(result.getMetaNodesMap().keySet());
         dataNodeExchanger.setServerIps(getDataServerList());
         dataNodeExchanger.notifyConnectServerAsync();
 
