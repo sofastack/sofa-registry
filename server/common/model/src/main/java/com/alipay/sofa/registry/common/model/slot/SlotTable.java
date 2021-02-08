@@ -110,7 +110,7 @@ public final class SlotTable implements Serializable {
                 leaders.add(slot.getId());
             }
         }
-        Map<String, DataNodeSlot> dataNodeSlotMap = new HashMap<>(leadersMap.size());
+        Map<String, DataNodeSlot> dataNodeSlotMap = Maps.newHashMapWithExpectedSize(leadersMap.size());
         for (Map.Entry<String, List<Integer>> e : leadersMap.entrySet()) {
             DataNodeSlot dataNodeSlot = dataNodeSlotMap.computeIfAbsent(e.getKey(), k -> new DataNodeSlot(k));
             Collections.sort(e.getValue());
@@ -137,7 +137,7 @@ public final class SlotTable implements Serializable {
         if (slots.isEmpty()) {
             return this;
         }
-        final Map<Integer, Slot> slotMap = new HashMap<>(slots.size());
+        final Map<Integer, Slot> slotMap = Maps.newHashMapWithExpectedSize(slots.size());
         slots.forEach((k, v) -> {
             if (v.getLeader().equals(ip) || v.getFollowers().contains(ip)) {
                 slotMap.put(k, v);

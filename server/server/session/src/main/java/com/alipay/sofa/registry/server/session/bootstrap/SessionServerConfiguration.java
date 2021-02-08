@@ -195,7 +195,7 @@ public class SessionServerConfiguration {
         @Bean(name = "sessionSyncHandlers")
         public Collection<AbstractServerHandler> serverSyncHandlers() {
             Collection<AbstractServerHandler> list = new ArrayList<>();
-            list.add(dataSlotDiffDataInfoIdRequestHandler());
+            list.add(dataSlotDiffDigestRequestHandler());
             list.add(dataSlotDiffPublisherRequestHandler());
             return list;
         }
@@ -231,8 +231,8 @@ public class SessionServerConfiguration {
         }
 
         @Bean
-        public AbstractServerHandler dataSlotDiffDataInfoIdRequestHandler() {
-            return new DataSlotDiffDataInfoIdRequestHandler();
+        public AbstractServerHandler dataSlotDiffDigestRequestHandler() {
+            return new DataSlotDiffDigestRequestHandler();
         }
 
         @Bean

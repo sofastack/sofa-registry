@@ -333,7 +333,7 @@ public class DataNodeServiceImpl implements DataNodeService {
                     retryBatches.removeFirst();
                 }
                 retry.expireTimestamp = System.currentTimeMillis()
-                                        + sessionServerConfig.getDataNodeRetryDelayMillis();
+                                        + sessionServerConfig.getDataNodeRetryBackoffMillis();
                 retryBatches.add(retry);
                 return true;
             }

@@ -18,8 +18,9 @@ package com.alipay.sofa.registry.server.data.remoting.dataserver.handler;
 
 import com.alipay.sofa.registry.common.model.GenericResponse;
 import com.alipay.sofa.registry.common.model.Node;
-import com.alipay.sofa.registry.common.model.slot.DataSlotDiffDataInfoIdRequest;
-import com.alipay.sofa.registry.common.model.slot.DataSlotDiffSyncResult;
+import com.alipay.sofa.registry.common.model.dataserver.DatumDigest;
+import com.alipay.sofa.registry.common.model.slot.DataSlotDiffDigestRequest;
+import com.alipay.sofa.registry.common.model.slot.DataSlotDiffDigestResult;
 import com.alipay.sofa.registry.common.model.slot.DataSlotDiffUtils;
 import com.alipay.sofa.registry.common.model.store.Publisher;
 import com.alipay.sofa.registry.log.Logger;
@@ -32,7 +33,6 @@ import com.alipay.sofa.registry.util.ParaCheckUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ThreadPoolExecutor;
 
@@ -41,11 +41,10 @@ import java.util.concurrent.ThreadPoolExecutor;
  * @author yuzhi.lyz
  * @version v 0.1 2020-11-06 15:41 yuzhi.lyz Exp $
  */
-public class SlotFollowerDiffDataInfoIdRequestHandler
-                                                     extends
-                                                     AbstractServerHandler<DataSlotDiffDataInfoIdRequest> {
+public class SlotFollowerDiffDigestRequestHandler extends
+                                                 AbstractServerHandler<DataSlotDiffDigestRequest> {
     private static final Logger LOGGER = LoggerFactory
-                                           .getLogger(SlotFollowerDiffDataInfoIdRequestHandler.class);
+                                           .getLogger(SlotFollowerDiffDigestRequestHandler.class);
 
     @Autowired
     private ThreadPoolExecutor  slotSyncRequestProcessorExecutor;
@@ -57,7 +56,7 @@ public class SlotFollowerDiffDataInfoIdRequestHandler
     private SlotManager         slotManager;
 
     @Override
-    public Object doHandle(Channel channel, DataSlotDiffDataInfoIdRequest request) {
+    public Object doHandle(Channel channel, DataSlotDiffDigestRequest request) {
         try {
             slotManager.triggerUpdateSlotTable(request.getSlotTableEpoch());
             final int slotId = request.getSlotId();
@@ -65,7 +64,7 @@ public class SlotFollowerDiffDataInfoIdRequestHandler
                 LOGGER.warn("not leader of {}", slotId);
                 return new GenericResponse().fillFailed("not leader of " + slotId);
             }
-            DataSlotDiffSyncResult result = calcDiffResult(slotId, request.getAllDataInfoIds(),
+            DataSlotDiffDigestResult result = calcDiffResult(slotId, request.getDatumDigest(),
                 localDatumStorage.getPublishers(request.getSlotId()));
             result.setSlotTableEpoch(slotManager.getSlotTableEpoch());
             return new GenericResponse().fillSucceed(result);
@@ -75,10 +74,10 @@ public class SlotFollowerDiffDataInfoIdRequestHandler
         }
     }
 
-    private DataSlotDiffSyncResult calcDiffResult(int targetSlot,
-                                                  Set<String> dataInfoIds,
-                                                  Map<String, Map<String, Publisher>> existingPublishers) {
-        DataSlotDiffSyncResult result = DataSlotDiffUtils.diffDataInfoIdsResult(dataInfoIds,
+    private DataSlotDiffDigestResult calcDiffResult(int targetSlot,
+                                                    Map<String, DatumDigest> targetDigestMap,
+                                                    Map<String, Map<String, Publisher>> existingPublishers) {
+        DataSlotDiffDigestResult result = DataSlotDiffUtils.diffDigestPublishers(targetDigestMap,
             existingPublishers);
         DataSlotDiffUtils.logDiffResult(result, targetSlot);
         return result;
@@ -91,11 +90,11 @@ public class SlotFollowerDiffDataInfoIdRequestHandler
 
     @Override
     public Class interest() {
-        return DataSlotDiffDataInfoIdRequest.class;
+        return DataSlotDiffDigestRequest.class;
     }
 
     @Override
-    public void checkParam(DataSlotDiffDataInfoIdRequest request) throws RuntimeException {
+    public void checkParam(DataSlotDiffDigestRequest request) throws RuntimeException {
         ParaCheckUtil.checkNonNegative(request.getSlotId(), "request.slotId");
     }
 

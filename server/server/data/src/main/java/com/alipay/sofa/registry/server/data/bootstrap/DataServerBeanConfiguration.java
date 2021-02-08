@@ -27,7 +27,7 @@ import com.alipay.sofa.registry.server.data.lease.SessionLeaseManager;
 import com.alipay.sofa.registry.server.data.remoting.DataNodeExchanger;
 import com.alipay.sofa.registry.server.data.remoting.MetaNodeExchanger;
 import com.alipay.sofa.registry.server.data.remoting.SessionNodeExchanger;
-import com.alipay.sofa.registry.server.data.remoting.dataserver.handler.SlotFollowerDiffDataInfoIdRequestHandler;
+import com.alipay.sofa.registry.server.data.remoting.dataserver.handler.SlotFollowerDiffDigestRequestHandler;
 import com.alipay.sofa.registry.server.data.remoting.dataserver.handler.SlotFollowerDiffPublisherRequestHandler;
 import com.alipay.sofa.registry.server.data.remoting.metaserver.MetaServerServiceImpl;
 import com.alipay.sofa.registry.server.data.remoting.metaserver.RaftClientManager;
@@ -210,7 +210,7 @@ public class DataServerBeanConfiguration {
 
         @Bean
         public AbstractServerHandler slotFollowerDiffDataInfoIdRequestHandler() {
-            return new SlotFollowerDiffDataInfoIdRequestHandler();
+            return new SlotFollowerDiffDigestRequestHandler();
         }
 
         @Bean

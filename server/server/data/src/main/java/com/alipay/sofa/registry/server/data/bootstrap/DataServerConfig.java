@@ -51,7 +51,7 @@ public class DataServerConfig {
 
     private int                  notifyMaxItems                           = 300;
 
-    private int                  notifyIntervalMs                         = 500;
+    private int                  notifyIntervalMs                         = 1000;
 
     private int                  notifyRetryTimes                         = 3;
 
@@ -92,7 +92,7 @@ public class DataServerConfig {
 
     private int                  slotFollowerSyncLeaderExecutorThreadSize = OsUtils.getCpuCount();
     private int                  slotFollowerSyncLeaderExecutorQueueSize  = 10000;
-    private volatile int         slotFollowerSyncLeaderIntervalMs         = 1000 * 30;
+    private volatile int         slotFollowerSyncLeaderIntervalSec        = 60;
 
     // the publisher.digest if len(registerId/uuid+long+long), 50bytes
     private volatile int         slotSyncPublisherDigestMaxNum            = 4000;
@@ -524,21 +524,21 @@ public class DataServerConfig {
     }
 
     /**
-     * Getter method for property <tt>slotFollowerSyncLeaderIntervalMs</tt>.
+     * Getter method for property <tt>slotFollowerSyncLeaderIntervalSec</tt>.
      *
-     * @return property value of slotFollowerSyncLeaderIntervalMs
+     * @return property value of slotFollowerSyncLeaderIntervalSec
      */
-    public int getSlotFollowerSyncLeaderIntervalMs() {
-        return slotFollowerSyncLeaderIntervalMs;
+    public int getSlotFollowerSyncLeaderIntervalSec() {
+        return slotFollowerSyncLeaderIntervalSec;
     }
 
     /**
-     * Setter method for property <tt>slotFollowerSyncLeaderIntervalMs</tt>.
+     * Setter method for property <tt>slotFollowerSyncLeaderIntervalSec</tt>.
      *
-     * @param slotFollowerSyncLeaderIntervalMs value to be assigned to property slotFollowerSyncLeaderIntervalMs
+     * @param slotFollowerSyncLeaderIntervalSec value to be assigned to property slotFollowerSyncLeaderIntervalSec
      */
-    public void setSlotFollowerSyncLeaderIntervalMs(int slotFollowerSyncLeaderIntervalMs) {
-        this.slotFollowerSyncLeaderIntervalMs = slotFollowerSyncLeaderIntervalMs;
+    public void setSlotFollowerSyncLeaderIntervalSec(int slotFollowerSyncLeaderIntervalSec) {
+        this.slotFollowerSyncLeaderIntervalSec = slotFollowerSyncLeaderIntervalSec;
     }
 
     /**

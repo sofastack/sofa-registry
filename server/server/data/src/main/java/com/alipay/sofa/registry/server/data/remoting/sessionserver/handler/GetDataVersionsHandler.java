@@ -20,6 +20,8 @@ import com.alipay.sofa.registry.common.model.dataserver.DatumVersion;
 import com.alipay.sofa.registry.common.model.dataserver.GetDataVersionRequest;
 import com.alipay.sofa.registry.common.model.slot.SlotAccess;
 import com.alipay.sofa.registry.common.model.slot.SlotAccessGenericResponse;
+import com.alipay.sofa.registry.log.Logger;
+import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.remoting.Channel;
 import com.alipay.sofa.registry.server.data.cache.DatumCache;
 import com.alipay.sofa.registry.util.ParaCheckUtil;
@@ -37,12 +39,12 @@ import java.util.concurrent.ThreadPoolExecutor;
  * @version $Id: GetDataVersionsProcessor.java, v 0.1 2017-12-06 19:56 qian.lqlq Exp $
  */
 public class GetDataVersionsHandler extends AbstractDataHandler<GetDataVersionRequest> {
+    private static final Logger LOGGER = LoggerFactory.getLogger("GET");
+    @Autowired
+    private DatumCache          datumCache;
 
     @Autowired
-    private DatumCache         datumCache;
-
-    @Autowired
-    private ThreadPoolExecutor getDataProcessorExecutor;
+    private ThreadPoolExecutor  getDataProcessorExecutor;
 
     @Override
     public Executor getExecutor() {
@@ -58,13 +60,16 @@ public class GetDataVersionsHandler extends AbstractDataHandler<GetDataVersionRe
     @Override
     public Object doHandle(Channel channel, GetDataVersionRequest request) {
         processSessionProcessId(channel, request.getSessionProcessId());
-        final SlotAccess slotAccess = checkAccess(request.getSlotId(), request.getSlotTableEpoch());
+        final int slotId = request.getSlotId();
+        final SlotAccess slotAccess = checkAccess(slotId, request.getSlotTableEpoch());
         if (!slotAccess.isAccept()) {
             return SlotAccessGenericResponse.failedResponse(slotAccess);
         }
-
+        final String localDataCenter = dataServerConfig.getLocalDataCenter();
         Map<String/*datacenter*/, Map<String/*dataInfoId*/, DatumVersion>> map = datumCache
-            .getVersions(request.getSlotId());
+            .getVersions(slotId);
+        Map<String, DatumVersion> local = map.get(localDataCenter);
+        LOGGER.info("getV,{},{},{}", slotId, localDataCenter, local == null ? 0 : local.size());
         GET_VERSION_COUNTER.inc();
         return SlotAccessGenericResponse.successResponse(slotAccess, map);
     }

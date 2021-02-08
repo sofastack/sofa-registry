@@ -20,8 +20,8 @@ import com.alipay.sofa.registry.common.model.constants.ValueConstants;
 import com.alipay.sofa.registry.common.model.dataserver.Datum;
 import com.alipay.sofa.registry.common.model.store.DataInfo;
 import com.alipay.sofa.registry.common.model.store.Subscriber;
+import com.google.common.collect.Maps;
 
-import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -51,8 +51,8 @@ public final class DatumUtils {
         return datum;
     }
 
-    public static Map<String, Long> getVesions(Map<String, Datum> datumMap) {
-        Map<String, Long> versions = new HashMap<>(datumMap.size());
+    public static Map<String, Long> getVersions(Map<String, Datum> datumMap) {
+        Map<String, Long> versions = Maps.newHashMapWithExpectedSize(datumMap.size());
         datumMap.forEach((k, v) -> versions.put(k, v.getVersion()));
         return versions;
     }

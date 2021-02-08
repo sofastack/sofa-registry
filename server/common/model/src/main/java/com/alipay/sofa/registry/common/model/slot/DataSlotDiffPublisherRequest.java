@@ -17,9 +17,12 @@
 package com.alipay.sofa.registry.common.model.slot;
 
 import com.alipay.sofa.registry.common.model.dataserver.DatumSummary;
+import com.google.common.collect.Lists;
 
 import java.io.Serializable;
-import java.util.Map;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
 
 /**
  *
@@ -27,16 +30,16 @@ import java.util.Map;
  * @version v 0.1 2020-11-05 14:24 yuzhi.lyz Exp $
  */
 public class DataSlotDiffPublisherRequest implements Serializable {
-    private final long                      slotTableEpoch;
+    private final long               slotTableEpoch;
     // parts of the summary to diff sync
-    private final Map<String, DatumSummary> datumSummarys;
-    private final int                       slotId;
+    private final List<DatumSummary> datumSummaries;
+    private final int                slotId;
 
     public DataSlotDiffPublisherRequest(long slotTableEpoch, int slotId,
-                                        Map<String, DatumSummary> datumSummarys) {
+                                        Collection<DatumSummary> datumSummaries) {
         this.slotTableEpoch = slotTableEpoch;
         this.slotId = slotId;
-        this.datumSummarys = datumSummarys;
+        this.datumSummaries = Collections.unmodifiableList(Lists.newArrayList(datumSummaries));
     }
 
     /**
@@ -55,17 +58,13 @@ public class DataSlotDiffPublisherRequest implements Serializable {
         return slotTableEpoch;
     }
 
-    /**
-     * Getter method for property <tt>datumSummarys</tt>.
-     * @return property value of datumSummarys
-     */
-    public Map<String, DatumSummary> getDatumSummarys() {
-        return datumSummarys;
+    public List<DatumSummary> getDatumSummaries() {
+        return datumSummaries;
     }
 
     @Override
     public String toString() {
         return "SlotDiffPublisherRequest{" + ", slotId=" + slotId + ", slotTableEpoch="
-               + slotTableEpoch + ", datumSummarys=" + datumSummarys.size() + '}';
+               + slotTableEpoch + ", datumSummaries=" + datumSummaries.size() + '}';
     }
 }
