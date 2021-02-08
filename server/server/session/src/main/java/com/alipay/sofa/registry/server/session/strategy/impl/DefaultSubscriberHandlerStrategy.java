@@ -93,14 +93,13 @@ public class DefaultSubscriberHandlerStrategy implements SubscriberHandlerStrate
     }
 
     private void log(boolean success, SubscriberRegister subscriberRegister, Subscriber subscriber) {
-        //[Y|N],[R|U|N],app,zone,dataInfoId,registerId,scope,assembleType,elementType,clientVersion,clientIp,clientPort
-        SUB_LOGGER.info("{},{},{},{},{},{},{},{},{},{},{},{},{},{}", success ? 'Y' : 'N',
+        //[Y|N],[R|U|N],app,zone,dataInfoId,registerId,scope,elementType,clientVersion,clientIp,clientPort
+        SUB_LOGGER.info("{},{},{},{},{},{},{},{},{},{},{},{},{}", success ? 'Y' : 'N',
             EventTypeConstants.getEventTypeFlag(subscriberRegister.getEventType()),
-            subscriberRegister.getAppName(), subscriberRegister.getZone(), subscriberRegister
-                .getDataId(), subscriberRegister.getGroup(), subscriberRegister.getInstanceId(),
-            subscriberRegister.getRegistId(), subscriberRegister.getScope(),
-            subscriber == null ? "" : subscriber.getAssembleType(), subscriber == null ? ""
-                : subscriber.getElementType(),
+            subscriberRegister.getAppName(), subscriberRegister.getZone(),
+            subscriberRegister.getDataId(), subscriberRegister.getGroup(),
+            subscriberRegister.getInstanceId(), subscriberRegister.getRegistId(),
+            subscriberRegister.getScope(), subscriber == null ? "" : subscriber.getElementType(),
             subscriber == null ? "" : subscriber.getClientVersion(), subscriberRegister.getIp(),
             subscriberRegister.getPort());
     }

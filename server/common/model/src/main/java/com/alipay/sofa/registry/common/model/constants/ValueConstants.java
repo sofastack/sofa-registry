@@ -71,8 +71,6 @@ public class ValueConstants {
 
     public static final String   DATA_SESSION_LEASE_SEC                = "data.session.lease.sec#@#9600#@#CONFIG";
 
-    public static final String   SOFA_APP                              = "SOFA_APP";
-
     public static final String   DISABLE_DATA_ID_CASE_SENSITIVE_SWITCH = "disable.dataId.case.sensitive";
     /**
      * switch for dataId sensitive is disable or not, default value is false which means dataId is case sensitive

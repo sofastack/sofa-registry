@@ -17,7 +17,6 @@
 package com.alipay.sofa.registry.core.model;
 
 /**
- *
  * @author zhuoyu.sjw
  * @version $Id: SubscriberRegister.java, v 0.1 2017-11-28 15:40 zhuoyu.sjw Exp $$
  */
@@ -25,13 +24,6 @@ public class SubscriberRegister extends BaseRegister {
     private static final long serialVersionUID = 5884257055097046886L;
 
     private String            scope;
-
-    /**
-     * interface: only sub interface
-     * app: only sub app
-     * app_and_interface: sub app and interface
-     */
-    private String            assembleType;
 
     /**
      * Getter method for property <tt>scope</tt>.
@@ -49,24 +41,6 @@ public class SubscriberRegister extends BaseRegister {
      */
     public void setScope(String scope) {
         this.scope = scope;
-    }
-
-    /**
-     * Getter method for property <tt>assembleType</tt>.
-     *
-     * @return property value of assembleType
-     */
-    public String getAssembleType() {
-        return assembleType;
-    }
-
-    /**
-     * Setter method for property <tt>assembleType</tt>.
-     *
-     * @param assembleType value to be assigned to property assembleType
-     */
-    public void setAssembleType(String assembleType) {
-        this.assembleType = assembleType;
     }
 
     /**

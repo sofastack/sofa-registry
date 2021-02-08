@@ -22,7 +22,6 @@ import com.alipay.sofa.registry.common.model.dataserver.Datum;
 import com.alipay.sofa.registry.common.model.dataserver.DatumVersion;
 import com.alipay.sofa.registry.common.model.sessionserver.DataChangeRequest;
 import com.alipay.sofa.registry.common.model.sessionserver.DataPushRequest;
-import com.alipay.sofa.registry.common.model.store.DataInfo;
 import com.alipay.sofa.registry.common.model.store.Publisher;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
@@ -34,7 +33,9 @@ import com.alipay.sofa.registry.server.data.remoting.sessionserver.SessionServer
 import com.alipay.sofa.registry.task.KeyedThreadPoolExecutor;
 import com.alipay.sofa.registry.util.ConcurrentUtils;
 import com.alipay.sofa.registry.util.LoopRunnable;
+
 import static com.alipay.sofa.registry.server.data.change.ChangeMetrics.*;
+
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
@@ -343,20 +344,9 @@ public final class DataChangeEventCenter {
                     final Set<String> revisions = new HashSet<>(64);
                     final String dataCenter = event.getDataCenter();
                     for (String dataInfoId : event.getDataInfoIds()) {
-                        final DataInfo dataInfo = DataInfo.valueOf(dataInfoId);
-                        if (dataInfo.typeIsSofaApp()) {
-                            // get datum is slower than  get version
-                            Datum datum = datumCache.get(dataCenter, dataInfoId);
-                            if (datum != null) {
-                                changes.put(dataInfoId, DatumVersion.of(datum.getVersion()));
-                                revisions.addAll(datum.revisions());
-                            }
-                        } else {
-                            DatumVersion datumVersion = datumCache.getVersion(dataCenter,
-                                dataInfoId);
-                            if (datumVersion != null) {
-                                changes.put(dataInfoId, datumVersion);
-                            }
+                        DatumVersion datumVersion = datumCache.getVersion(dataCenter, dataInfoId);
+                        if (datumVersion != null) {
+                            changes.put(dataInfoId, datumVersion);
                         }
                     }
                     if (changes.isEmpty()) {

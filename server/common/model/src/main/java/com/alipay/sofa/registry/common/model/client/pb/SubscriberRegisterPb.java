@@ -34,7 +34,6 @@ public final class SubscriberRegisterPb extends com.google.protobuf.GeneratedMes
 
     private SubscriberRegisterPb() {
         scope_ = "";
-        assembleType_ = "";
     }
 
     @java.lang.Override
@@ -86,12 +85,6 @@ public final class SubscriberRegisterPb extends com.google.protobuf.GeneratedMes
                             baseRegister_ = subBuilder.buildPartial();
                         }
 
-                        break;
-                    }
-                    case 26: {
-                        java.lang.String s = input.readStringRequireUtf8();
-
-                        assembleType_ = s;
                         break;
                     }
                 }
@@ -176,39 +169,6 @@ public final class SubscriberRegisterPb extends com.google.protobuf.GeneratedMes
         return getBaseRegister();
     }
 
-    public static final int           ASSEMBLETYPE_FIELD_NUMBER = 3;
-    private volatile java.lang.Object assembleType_;
-
-    /**
-     * <code>string assembleType = 3;</code>
-     */
-    public java.lang.String getAssembleType() {
-        java.lang.Object ref = assembleType_;
-        if (ref instanceof java.lang.String) {
-            return (java.lang.String) ref;
-        } else {
-            com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
-            java.lang.String s = bs.toStringUtf8();
-            assembleType_ = s;
-            return s;
-        }
-    }
-
-    /**
-     * <code>string assembleType = 3;</code>
-     */
-    public com.google.protobuf.ByteString getAssembleTypeBytes() {
-        java.lang.Object ref = assembleType_;
-        if (ref instanceof java.lang.String) {
-            com.google.protobuf.ByteString b = com.google.protobuf.ByteString
-                .copyFromUtf8((java.lang.String) ref);
-            assembleType_ = b;
-            return b;
-        } else {
-            return (com.google.protobuf.ByteString) ref;
-        }
-    }
-
     private byte memoizedIsInitialized = -1;
 
     public final boolean isInitialized() {
@@ -229,9 +189,6 @@ public final class SubscriberRegisterPb extends com.google.protobuf.GeneratedMes
         if (baseRegister_ != null) {
             output.writeMessage(2, getBaseRegister());
         }
-        if (!getAssembleTypeBytes().isEmpty()) {
-            com.google.protobuf.GeneratedMessageV3.writeString(output, 3, assembleType_);
-        }
         unknownFields.writeTo(output);
     }
 
@@ -246,9 +203,6 @@ public final class SubscriberRegisterPb extends com.google.protobuf.GeneratedMes
         }
         if (baseRegister_ != null) {
             size += com.google.protobuf.CodedOutputStream.computeMessageSize(2, getBaseRegister());
-        }
-        if (!getAssembleTypeBytes().isEmpty()) {
-            size += com.google.protobuf.GeneratedMessageV3.computeStringSize(3, assembleType_);
         }
         size += unknownFields.getSerializedSize();
         memoizedSize = size;
@@ -271,7 +225,6 @@ public final class SubscriberRegisterPb extends com.google.protobuf.GeneratedMes
         if (hasBaseRegister()) {
             result = result && getBaseRegister().equals(other.getBaseRegister());
         }
-        result = result && getAssembleType().equals(other.getAssembleType());
         result = result && unknownFields.equals(other.unknownFields);
         return result;
     }
@@ -289,8 +242,6 @@ public final class SubscriberRegisterPb extends com.google.protobuf.GeneratedMes
             hash = (37 * hash) + BASEREGISTER_FIELD_NUMBER;
             hash = (53 * hash) + getBaseRegister().hashCode();
         }
-        hash = (37 * hash) + ASSEMBLETYPE_FIELD_NUMBER;
-        hash = (53 * hash) + getAssembleType().hashCode();
         hash = (29 * hash) + unknownFields.hashCode();
         memoizedHashCode = hash;
         return hash;
@@ -431,8 +382,6 @@ public final class SubscriberRegisterPb extends com.google.protobuf.GeneratedMes
                 baseRegister_ = null;
                 baseRegisterBuilder_ = null;
             }
-            assembleType_ = "";
-
             return this;
         }
 
@@ -462,7 +411,6 @@ public final class SubscriberRegisterPb extends com.google.protobuf.GeneratedMes
             } else {
                 result.baseRegister_ = baseRegisterBuilder_.build();
             }
-            result.assembleType_ = assembleType_;
             onBuilt();
             return result;
         }
@@ -513,10 +461,6 @@ public final class SubscriberRegisterPb extends com.google.protobuf.GeneratedMes
             }
             if (other.hasBaseRegister()) {
                 mergeBaseRegister(other.getBaseRegister());
-            }
-            if (!other.getAssembleType().isEmpty()) {
-                assembleType_ = other.assembleType_;
-                onChanged();
             }
             this.mergeUnknownFields(other.unknownFields);
             onChanged();
@@ -732,75 +676,6 @@ public final class SubscriberRegisterPb extends com.google.protobuf.GeneratedMes
                 baseRegister_ = null;
             }
             return baseRegisterBuilder_;
-        }
-
-        private java.lang.Object assembleType_ = "";
-
-        /**
-         * <code>string assembleType = 3;</code>
-         */
-        public java.lang.String getAssembleType() {
-            java.lang.Object ref = assembleType_;
-            if (!(ref instanceof java.lang.String)) {
-                com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
-                java.lang.String s = bs.toStringUtf8();
-                assembleType_ = s;
-                return s;
-            } else {
-                return (java.lang.String) ref;
-            }
-        }
-
-        /**
-         * <code>string assembleType = 3;</code>
-         */
-        public com.google.protobuf.ByteString getAssembleTypeBytes() {
-            java.lang.Object ref = assembleType_;
-            if (ref instanceof String) {
-                com.google.protobuf.ByteString b = com.google.protobuf.ByteString
-                    .copyFromUtf8((java.lang.String) ref);
-                assembleType_ = b;
-                return b;
-            } else {
-                return (com.google.protobuf.ByteString) ref;
-            }
-        }
-
-        /**
-         * <code>string assembleType = 3;</code>
-         */
-        public Builder setAssembleType(java.lang.String value) {
-            if (value == null) {
-                throw new NullPointerException();
-            }
-
-            assembleType_ = value;
-            onChanged();
-            return this;
-        }
-
-        /**
-         * <code>string assembleType = 3;</code>
-         */
-        public Builder clearAssembleType() {
-
-            assembleType_ = getDefaultInstance().getAssembleType();
-            onChanged();
-            return this;
-        }
-
-        /**
-         * <code>string assembleType = 3;</code>
-         */
-        public Builder setAssembleTypeBytes(com.google.protobuf.ByteString value) {
-            if (value == null) {
-                throw new NullPointerException();
-            }
-            checkByteStringIsUtf8(value);
-
-            assembleType_ = value;
-            onChanged();
-            return this;
         }
 
         public final Builder setUnknownFields(final com.google.protobuf.UnknownFieldSet unknownFields) {

@@ -46,7 +46,6 @@ public class DefaultPublisher extends AbstractInternalRegister implements Publis
     private Worker                worker;
     private Collection<String>    dataList;
     private RegistryClientConfig  config;
-    private Object                preRequest;
 
     /**
      * Instantiates a new Default publisher.
@@ -88,11 +87,6 @@ public class DefaultPublisher extends AbstractInternalRegister implements Publis
             writeLock.unlock();
         }
         this.worker.schedule(new TaskEvent(this));
-    }
-
-    @Override
-    public void setPreRequest(Object preReq) {
-        this.preRequest = preReq;
     }
 
     /**
@@ -153,11 +147,6 @@ public class DefaultPublisher extends AbstractInternalRegister implements Publis
             readLock.unlock();
         }
         return register;
-    }
-
-    @Override
-    public Object getPreRequest() {
-        return preRequest;
     }
 
     /**
