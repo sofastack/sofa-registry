@@ -38,7 +38,7 @@ import static junit.framework.Assert.*;
  */
 public class WrapperInvocationTest {
 
-    private Logger logger = LoggerFactory.getLogger(getClass());
+    private Logger           logger = LoggerFactory.getLogger(getClass());
 
     @Rule
     public ExpectedException thrown = ExpectedException.none();

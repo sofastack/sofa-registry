@@ -21,7 +21,6 @@ import com.alipay.sofa.registry.common.model.constants.ValueConstants;
 import com.alipay.sofa.registry.common.model.dataserver.Datum;
 import com.alipay.sofa.registry.common.model.store.DataInfo;
 import com.alipay.sofa.registry.common.model.store.Subscriber;
-import com.alipay.sofa.registry.core.model.AssembleType;
 import com.alipay.sofa.registry.core.model.ScopeEnum;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
@@ -31,10 +30,10 @@ import com.alipay.sofa.registry.server.session.store.Interests;
 import com.alipay.sofa.registry.server.shared.util.DatumUtils;
 import com.alipay.sofa.registry.task.KeyedPreemptThreadPoolExecutor;
 import com.alipay.sofa.registry.task.KeyedThreadPoolExecutor;
-import com.alipay.sofa.registry.util.DatumVersionUtil;
+
 import static com.alipay.sofa.registry.server.session.push.PushMetrics.Fetch.*;
+
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.CollectionUtils;
 
@@ -43,7 +42,6 @@ import java.net.InetSocketAddress;
 import java.util.*;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.atomic.AtomicLong;
-import java.util.function.Predicate;
 
 public class FirePushService {
     public static final long               EXCEPT_MIN_VERSION = Long.MIN_VALUE;
@@ -59,16 +57,11 @@ public class FirePushService {
     @Autowired
     private Interests                      sessionInterests;
 
-    @Autowired
-    private AppRevisionCacheRegistry       appRevisionCacheRegistry;
-
     private KeyedPreemptThreadPoolExecutor changeFetchExecutor;
     private KeyedThreadPoolExecutor        registerFetchExecutor;
 
     @Autowired
     private PushProcessor                  pushProcessor;
-
-    private final AtomicLong               fetchSeq           = new AtomicLong();
 
     @PostConstruct
     public void init() {
@@ -100,11 +93,9 @@ public class FirePushService {
     }
 
     public boolean fireOnPushEmpty(Subscriber subscriber) {
-        processPush(true, DatumVersionUtil.nextId(), getDataCenterWhenPushEmpty(),
-            Collections.emptyMap(), Collections.singletonList(subscriber), Long.MAX_VALUE,
-            Long.MAX_VALUE);
+        Datum emptyDatum = DatumUtils.newEmptyDatum(subscriber, getDataCenterWhenPushEmpty());
+        processPush(true, emptyDatum, Collections.singletonList(subscriber));
         PUSH_EMPTY_COUNTER.inc();
-        // use Long.MAX_VALUE as fetch.seq, could not push again after push empty
         LOGGER.info("firePushEmpty, {}", subscriber);
         return true;
     }
@@ -127,15 +118,9 @@ public class FirePushService {
 
     public boolean fireOnDatum(Datum datum) {
         DataInfo dataInfo = DataInfo.valueOf(datum.getDataInfoId());
-        if (dataInfo.typeIsSofaApp()) {
-            LOGGER.error("unsupported DataType when fireOnDatum {}", dataInfo);
-            return false;
-        }
         Collection<Subscriber> subscribers = sessionInterests.getInterestOfDatum(dataInfo
             .getDataInfoId());
-        processPush(true, datum.getVersion(), datum.getDataCenter(),
-            Collections.singletonMap(datum.getDataInfoId(), datum), subscribers,
-            fetchSeq.incrementAndGet(), fetchSeq.incrementAndGet());
+        processPush(true, datum, subscribers);
         PUSH_TEMP_COUNTER.inc();
         return true;
     }
@@ -146,7 +131,6 @@ public class FirePushService {
     }
 
     private void doExecuteOnChange(String dataCenter, String changeDataInfoId, long expectVersion) {
-        final long fetchSeqStart = fetchSeq.incrementAndGet();
         final Datum datum = getDatum(dataCenter, changeDataInfoId, expectVersion);
         if (expectVersion != EXCEPT_MIN_VERSION) {
             if (datum == null) {
@@ -166,151 +150,27 @@ public class FirePushService {
         }
 
         DataInfo dataInfo = DataInfo.valueOf(changeDataInfoId);
-        if (dataInfo.typeIsSofaApp()) {
-            if (datum != null) {
-                final Set<String> revisions = datum.revisions();
-                appRevisionCacheRegistry.refreshMeta(revisions);
-            }
-            onAppDatumChange(dataInfo, datum, fetchSeqStart, dataCenter);
-        } else {
-            onInterfaceDatumChange(dataInfo, datum, fetchSeqStart, dataCenter);
+        onDatumChange(dataInfo, datum, dataCenter);
+    }
+
+    private void onDatumChange(DataInfo dataInfo, Datum datum, String dataCenter) {
+
+        Map<ScopeEnum, List<Subscriber>> scopes = SubscriberUtils.groupByScope(sessionInterests
+            .getDatas(dataInfo.getDataInfoId()));
+        if (datum == null) {
+            datum = DatumUtils.newEmptyDatum(dataInfo, dataCenter);
+            LOGGER.warn("empty push {}, dataCenter={}", dataInfo.getDataInfoId(), dataCenter);
+        }
+        for (Map.Entry<ScopeEnum, List<Subscriber>> scope : scopes.entrySet()) {
+            processPush(false, datum, scope.getValue());
         }
     }
 
-    private void onAppDatumChange(DataInfo appDataInfo, Datum appDatum, long fetchSeqStart, String dataCenter) {
-        //dataInfoId is app, get relate interfaces dataInfoId from cache
-        Set<String> interfaceInfoIds = appRevisionCacheRegistry.getInterfaces(appDataInfo.getDataId());
-
-        if (CollectionUtils.isEmpty(interfaceInfoIds)) {
-            LOGGER.warn("App no interfaces {}", appDataInfo.getDataInfoId());
-            return;
-        }
-        for (String interfaceDataInfoId : interfaceInfoIds) {
-            Map<AssembleType, Map<ScopeEnum, List<Subscriber>>> groups = SubscriberUtils
-                    .groupByAssembleAndScope(sessionInterests.getDatas(interfaceDataInfoId));
-            if (groups.isEmpty()) {
-                continue;
-            }
-            for (Map.Entry<AssembleType, Map<ScopeEnum, List<Subscriber>>> group : groups
-                    .entrySet()) {
-                final AssembleType assembleType = group.getKey();
-                final Map<String, Datum> datumMap = Maps.newHashMap();
-                collect(datumMap, appDatum);
-
-                switch (assembleType) {
-                    // not care app change
-                    case sub_interface:
-                        continue;
-                    case sub_app_and_interface: {
-                        // not collect self, self has collected
-                        datumMap.putAll(getAppDatumsOfInterface(interfaceDataInfoId, dataCenter,
-                                appDataInfo.getInstanceId(), t -> !t.equals(appDataInfo.getDataId())));
-                        // add interface datum
-                        Datum interfaceDatum = getDatum(dataCenter, interfaceDataInfoId, Long.MIN_VALUE);
-                        collect(datumMap, interfaceDatum);
-                        break;
-                    }
-                    case sub_app: {
-                        // not collect self, self has collected
-                        datumMap.putAll(getAppDatumsOfInterface(interfaceDataInfoId, dataCenter,
-                                appDataInfo.getInstanceId(), t -> !t.equals(appDataInfo.getDataId())));
-                        break;
-                    }
-                    default: {
-                        LOGGER.error("unsupported AssembleType:" + assembleType);
-                        continue;
-                    }
-                }
-                final long pushVersion = DatumVersionUtil.nextId();
-                final long fetchEndSeq = fetchSeq.incrementAndGet();
-                // push1.fetchSeq.start > push2.fetchSeq.end, means
-                // 1. push1.datum > push2.datum
-                // 2. push1.pushVersion > push2.pushVersion
-                if (CollectionUtils.isEmpty(datumMap)) {
-                    // TODO datum changed, but
-                    LOGGER.warn("empty push {}, dataCenter={}", interfaceDataInfoId, dataCenter);
-                }
-                for (Map.Entry<ScopeEnum, List<Subscriber>> scopes : group.getValue().entrySet()) {
-                    processPush(false, pushVersion, dataCenter, datumMap, scopes.getValue(),
-                            fetchSeqStart, fetchEndSeq);
-                }
-            }
-        }
-    }
-
-    private Map<String, Datum> getAppDatumsOfInterface(String interfaceDataInfoId,
-                                                       String dataCenter, String instanceId,
-                                                       Predicate<String> predicate) {
-        Set<String> appDataIds = appRevisionCacheRegistry.getAppRevisions(interfaceDataInfoId)
-            .keySet();
-        if (CollectionUtils.isEmpty(appDataIds)) {
-            return Collections.emptyMap();
-        }
-        Map<String, Datum> datumMap = Maps.newHashMap();
-        for (String appDataId : appDataIds) {
-            if (predicate == null || predicate.test(appDataId)) {
-                String appDataInfoId = DataInfo.toDataInfoId(appDataId, instanceId,
-                    ValueConstants.SOFA_APP);
-                Datum appDatum = getDatum(dataCenter, appDataInfoId, Long.MIN_VALUE);
-                collect(datumMap, appDatum);
-            }
-        }
-        return datumMap;
-    }
-
-    private void onInterfaceDatumChange(DataInfo interfaceDataInfo, Datum interfaceDatum,
-                                        long fetchSeqStart, String dataCenter) {
-        Map<AssembleType, Map<ScopeEnum, List<Subscriber>>> groups = SubscriberUtils
-            .groupByAssembleAndScope(sessionInterests.getDatas(interfaceDataInfo.getDataInfoId()));
-
-        for (Map.Entry<AssembleType, Map<ScopeEnum, List<Subscriber>>> group : groups.entrySet()) {
-            final AssembleType assembleType = group.getKey();
-            final Map<String, Datum> datumMap = Maps.newHashMap();
-            collect(datumMap, interfaceDatum);
-            long pushVersion = 0;
-            switch (assembleType) {
-                case sub_app:
-                    // not care interface change
-                    continue;
-                case sub_app_and_interface: {
-                    datumMap.putAll(getAppDatumsOfInterface(interfaceDataInfo.getDataInfoId(),
-                        dataCenter, interfaceDataInfo.getInstanceId(), null));
-                    break;
-                }
-                case sub_interface: {
-                    // only care the interface
-                    if (interfaceDatum != null) {
-                        pushVersion = interfaceDatum.getVersion();
-                    }
-                    break;
-                }
-                default: {
-                    LOGGER.error("unsupported AssembleType:" + assembleType);
-                    continue;
-                }
-            }
-            if (pushVersion <= 0) {
-                pushVersion = DatumVersionUtil.nextId();
-            }
-            final long fetchSeqEnd = fetchSeq.incrementAndGet();
-            if (CollectionUtils.isEmpty(datumMap)) {
-                LOGGER.warn("empty push {}, dataCenter={}", interfaceDataInfo.getDataInfoId(),
-                    dataCenter);
-            }
-            for (Map.Entry<ScopeEnum, List<Subscriber>> scopes : group.getValue().entrySet()) {
-                processPush(false, pushVersion, dataCenter, datumMap, scopes.getValue(),
-                    fetchSeqStart, fetchSeqEnd);
-            }
-        }
-    }
-
-    private void processPush(boolean noDelay, long pushVersion, String dataCenter,
-                             Map<String, Datum> datumMap, Collection<Subscriber> subscriberList,
-                             long fetchSeqStart, long fetchSeqEnd) {
+    private void processPush(boolean noDelay, Datum datum, Collection<Subscriber> subscriberList) {
         if (subscriberList.isEmpty()) {
             return;
         }
-        subscriberList = subscribersPushCheck(dataCenter, DatumUtils.getVesions(datumMap),
+        subscriberList = subscribersPushCheck(datum.getDataCenter(), datum.getVersion(),
             subscriberList);
         if (CollectionUtils.isEmpty(subscriberList)) {
             return;
@@ -320,8 +180,7 @@ public class FirePushService {
         for (Map.Entry<InetSocketAddress, Map<String, Subscriber>> e : group.entrySet()) {
             final InetSocketAddress addr = e.getKey();
             final Map<String, Subscriber> subscriberMap = e.getValue();
-            pushProcessor.firePush(noDelay, pushVersion, dataCenter, addr, subscriberMap, datumMap,
-                fetchSeqStart, fetchSeqEnd);
+            pushProcessor.firePush(noDelay, addr, subscriberMap, datum);
         }
     }
 
@@ -344,11 +203,11 @@ public class FirePushService {
         return value == null ? null : (Datum) value.getPayload();
     }
 
-    private List<Subscriber> subscribersPushCheck(String dataCenter, Map<String, Long> versions,
+    private List<Subscriber> subscribersPushCheck(String dataCenter, Long version,
                                                   Collection<Subscriber> subscribers) {
         List<Subscriber> subscribersSend = Lists.newArrayList();
         for (Subscriber subscriber : subscribers) {
-            if (subscriber.checkVersions(dataCenter, versions)) {
+            if (subscriber.checkVersion(dataCenter, version)) {
                 subscribersSend.add(subscriber);
             }
         }
@@ -378,62 +237,17 @@ public class FirePushService {
     }
 
     private void doExecuteOnSubscriber(String dataCenter, Subscriber subscriber) {
-        final AssembleType assembleType = subscriber.getAssembleType();
         final String subDataInfoId = subscriber.getDataInfoId();
 
-        final long fetchSeqStart = fetchSeq.incrementAndGet();
-        long pushVersion = 0;
-        final Map<String, Datum> datumMap = Maps.newHashMap();
-        switch (assembleType) {
-            case sub_interface: {
-                // only care the interface
-                Datum datum = getDatum(dataCenter, subDataInfoId, Long.MIN_VALUE);
-                if (datum != null) {
-                    // sub_interface, use the datum.version as push.version
-                    pushVersion = datum.getVersion();
-                }
-                collect(datumMap, datum);
-                break;
-            }
-            case sub_app_and_interface: {
-                // try get app
-                datumMap.putAll(getAppDatumsOfInterface(subDataInfoId, dataCenter,
-                    subscriber.getInstanceId(), null));
-                // try get interface
-                Datum datum = getDatum(dataCenter, subDataInfoId, Long.MIN_VALUE);
-                collect(datumMap, datum);
-                break;
-            }
-
-            case sub_app: {
-                datumMap.putAll(getAppDatumsOfInterface(subDataInfoId, dataCenter,
-                    subscriber.getInstanceId(), null));
-                break;
-            }
-
-            default:
-                LOGGER.error("unsupported assembleType {}, {}", assembleType, subscriber);
-                return;
-        }
-        if (pushVersion <= 0) {
-            pushVersion = DatumVersionUtil.nextId();
-        }
-        final long fetchSeqEnd = fetchSeq.incrementAndGet();
-        if (CollectionUtils.isEmpty(datumMap)) {
-            // subscriber register allow push empty
+        Datum datum = getDatum(dataCenter, subDataInfoId, Long.MIN_VALUE);
+        if (datum == null) {
+            datum = DatumUtils.newEmptyDatum(subscriber, dataCenter);
             LOGGER.warn("empty push, dataCenter={}, {}", dataCenter, subscriber);
         }
         if (subscriber.hasPushed()) {
             return;
         }
-        processPush(true, pushVersion, sessionServerConfig.getSessionServerDataCenter(), datumMap,
-            Collections.singletonList(subscriber), fetchSeqStart, fetchSeqEnd);
-    }
-
-    private void collect(Map<String, Datum> datumMap, Datum datum) {
-        if (datum != null) {
-            datumMap.put(datum.getDataInfoId(), datum);
-        }
+        processPush(true, datum, Collections.singletonList(subscriber));
     }
 
     private final class RegisterTask implements Runnable {

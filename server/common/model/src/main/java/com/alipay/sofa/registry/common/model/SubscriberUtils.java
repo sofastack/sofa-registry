@@ -17,7 +17,6 @@
 package com.alipay.sofa.registry.common.model;
 
 import com.alipay.sofa.registry.common.model.store.Subscriber;
-import com.alipay.sofa.registry.core.model.AssembleType;
 import com.alipay.sofa.registry.core.model.ScopeEnum;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
@@ -47,20 +46,18 @@ public final class SubscriberUtils {
         return ret;
     }
 
-    public static Map<AssembleType, Map<ScopeEnum, List<Subscriber>>> groupByAssembleAndScope(Collection<Subscriber> subscribers) {
+    public static Map<ScopeEnum, List<Subscriber>> groupByScope(Collection<Subscriber> subscribers) {
         if (subscribers.isEmpty()) {
             return Collections.emptyMap();
         }
-        Map<AssembleType, Map<ScopeEnum, List<Subscriber>>> ret = Maps.newHashMap();
+        Map<ScopeEnum, List<Subscriber>> ret = Maps.newHashMap();
         for (Subscriber subscriber : subscribers) {
-            final AssembleType assembleType = subscriber.getAssembleType();
             final ScopeEnum scopeEnum = subscriber.getScope();
-            if (assembleType == null || scopeEnum == null) {
-                LOGGER.warn("Nil AssembleType or ScopeEnum, {}", subscriber);
+            if (scopeEnum == null) {
+                LOGGER.warn("Nil ScopeEnum, {}", subscriber);
                 continue;
             }
-            Map<ScopeEnum, List<Subscriber>> assembleTypeMapMap = ret.computeIfAbsent(assembleType, k -> Maps.newHashMap());
-            List<Subscriber> subList = assembleTypeMapMap.computeIfAbsent(scopeEnum, k -> Lists.newArrayList());
+            List<Subscriber> subList = ret.computeIfAbsent(scopeEnum, k -> Lists.newArrayList());
             subList.add(subscriber);
         }
         return ret;
@@ -68,7 +65,7 @@ public final class SubscriberUtils {
 
     public static Set<String> getPushedDataInfoIds(Collection<Subscriber> subscribers) {
         final Set<String> ret = new HashSet<>(256);
-        subscribers.forEach(s -> ret.addAll(s.getPushedDataInfoIds()));
+        subscribers.forEach(s -> ret.add(s.getDataInfoId()));
         return ret;
     }
 

@@ -37,25 +37,45 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
  */
 public abstract class AbstractInternalRegister implements Register {
 
-    /** */
+    /**
+     *
+     */
     private final AtomicLong initialVersion = new AtomicLong(VersionConstants.UNINITIALIZED_VERSION);
-    /** */
+    /**
+     *
+     */
     private AuthManager      authManager;
-    /** */
+    /**
+     *
+     */
     private volatile boolean registered     = false;
-    /** */
+    /**
+     *
+     */
     private volatile boolean enabled        = true;
-    /** */
+    /**
+     *
+     */
     private volatile boolean refused        = false;
-    /** */
+    /**
+     *
+     */
     private AtomicLong       pubVersion     = new AtomicLong(VersionConstants.UNINITIALIZED_VERSION);
-    /** */
+    /**
+     *
+     */
     private AtomicLong       ackVersion     = new AtomicLong(VersionConstants.UNINITIALIZED_VERSION);
-    /** */
+    /**
+     *
+     */
     private volatile long    timestamp      = System.currentTimeMillis();
-    /** */
+    /**
+     *
+     */
     private volatile int     registerCount  = 0;
-    /** */
+    /**
+     *
+     */
     private volatile String  requestId      = UUID.randomUUID().toString();
 
     private ReadWriteLock    lock           = new ReentrantReadWriteLock();
@@ -76,8 +96,6 @@ public abstract class AbstractInternalRegister implements Register {
      * @return the object
      */
     public abstract Object assembly();
-
-    public abstract Object getPreRequest();
 
     /**
      * Is registered boolean.
@@ -111,8 +129,8 @@ public abstract class AbstractInternalRegister implements Register {
      * Sync ok.
      *
      * @param requestId the request id
-     * @param version the version 
-     * @param refused the refused 
+     * @param version   the version
+     * @param refused   the refused
      * @return the boolean
      */
     public boolean syncOK(String requestId, long version, boolean refused) {
@@ -186,7 +204,6 @@ public abstract class AbstractInternalRegister implements Register {
             SyncTask syncTask = new SyncTask();
             syncTask.setRequestId(requestId);
             syncTask.setRequest(assembly());
-            syncTask.setPreRequest(getPreRequest());
             syncTask.setDone(isDone());
             return syncTask;
         } finally {
@@ -305,7 +322,7 @@ public abstract class AbstractInternalRegister implements Register {
     /**
      * Sets auth signature.
      *
-     * @param register the register 
+     * @param register the register
      */
     void setAuthSignature(BaseRegister register) {
         // auth signature
@@ -350,8 +367,6 @@ public abstract class AbstractInternalRegister implements Register {
         private String  requestId;
 
         private Object  request;
-
-        private Object  preRequest;
 
         private boolean done;
 
@@ -409,12 +424,5 @@ public abstract class AbstractInternalRegister implements Register {
             this.done = done;
         }
 
-        public Object getPreRequest() {
-            return preRequest;
-        }
-
-        public void setPreRequest(Object preRequest) {
-            this.preRequest = preRequest;
-        }
     }
 }

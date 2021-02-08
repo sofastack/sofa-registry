@@ -21,8 +21,6 @@ import com.alipay.sofa.registry.common.model.dataserver.Datum;
 import com.alipay.sofa.registry.common.model.store.*;
 import com.alipay.sofa.registry.core.model.ReceivedData;
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
-import com.alipay.sofa.registry.server.session.cache.AppRevisionCacheRegistry;
-import com.alipay.sofa.registry.server.session.converter.AppPublisherConverter;
 import com.alipay.sofa.registry.server.session.converter.ReceivedDataConverter;
 import com.alipay.sofa.registry.server.session.converter.pb.ReceivedDataConvertor;
 import com.alipay.sofa.registry.server.session.predicate.ZonePredicate;
@@ -35,10 +33,7 @@ import java.util.function.Predicate;
 public class PushDataGenerator {
 
     @Autowired
-    private SessionServerConfig      sessionServerConfig;
-
-    @Autowired
-    private AppRevisionCacheRegistry appRevisionCacheRegistry;
+    private SessionServerConfig sessionServerConfig;
 
     public Object createPushData(Datum datum, Map<String, Subscriber> subscriberMap) {
         SubscriberUtils.getAndAssertHasSameScope(subscriberMap.values());
@@ -64,30 +59,4 @@ public class PushDataGenerator {
         return receivedData;
     }
 
-    public Datum mergeDatum(Subscriber subscriber, String dataCenter, Map<String, Datum> datumMap,
-                            long pushVersion) {
-        DataInfo dataInfo = DataInfo.valueOf(subscriber.getDataInfoId());
-        Datum ret = new Datum();
-        ret.setVersion(pushVersion);
-        ret.setDataInfoId(dataInfo.getDataInfoId());
-        ret.setDataCenter(dataCenter);
-        ret.setDataId(dataInfo.getDataId());
-        ret.setInstanceId(dataInfo.getInstanceId());
-        ret.setGroup(dataInfo.getDataType());
-        for (Datum datum : datumMap.values()) {
-            for (Publisher publisher : datum.getPubMap().values()) {
-                if (publisher instanceof AppPublisher) {
-                    AppPublisher appPublisher = (AppPublisher) publisher;
-                    Publisher newPublisher = AppPublisherConverter.convert(appPublisher,
-                        appRevisionCacheRegistry, dataInfo);
-                    if (newPublisher.getDataList().size() > 0) {
-                        ret.addPublisher(newPublisher);
-                    }
-                } else {
-                    ret.addPublisher(publisher);
-                }
-            }
-        }
-        return ret;
-    }
 }

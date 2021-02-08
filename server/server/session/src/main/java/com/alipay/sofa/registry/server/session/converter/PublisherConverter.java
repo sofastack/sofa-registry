@@ -18,7 +18,6 @@ package com.alipay.sofa.registry.server.session.converter;
 
 import com.alipay.sofa.registry.common.model.AppRegisterServerDataBox;
 import com.alipay.sofa.registry.common.model.ServerDataBox;
-import com.alipay.sofa.registry.common.model.constants.ValueConstants;
 import com.alipay.sofa.registry.common.model.store.AppPublisher;
 import com.alipay.sofa.registry.common.model.store.BaseInfo.ClientVersion;
 import com.alipay.sofa.registry.common.model.store.DataInfo;
@@ -96,11 +95,6 @@ public class PublisherConverter {
      * @return
      */
     public static Publisher convert(PublisherRegister publisherRegister) {
-
-        if (StringUtils.equalsIgnoreCase(ValueConstants.SOFA_APP, publisherRegister.getGroup())) {
-            return appPublisherConverter.convert(publisherRegister);
-        }
-
         return publisherConverter.convert(publisherRegister);
     }
 

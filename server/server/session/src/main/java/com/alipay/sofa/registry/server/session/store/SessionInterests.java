@@ -17,13 +17,11 @@
 package com.alipay.sofa.registry.server.session.store;
 
 import com.alipay.sofa.registry.common.model.SubscriberUtils;
-import com.alipay.sofa.registry.common.model.store.DataInfo;
 import com.alipay.sofa.registry.common.model.store.Subscriber;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.server.session.cache.AppRevisionCacheRegistry;
 import com.alipay.sofa.registry.util.ParaCheckUtil;
-import com.google.common.collect.Lists;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.CollectionUtils;
 
@@ -47,7 +45,6 @@ public class SessionInterests extends AbstractDataManager<Subscriber> implements
     @Override
     public boolean add(Subscriber subscriber) {
         ParaCheckUtil.checkNotNull(subscriber.getScope(), "subscriber.scope");
-        ParaCheckUtil.checkNotNull(subscriber.getAssembleType(), "subscriber.assembleType");
         ParaCheckUtil.checkNotNull(subscriber.getClientVersion(), "subscriber.clientVersion");
 
         Subscriber.internSubscriber(subscriber);
@@ -71,7 +68,7 @@ public class SessionInterests extends AbstractDataManager<Subscriber> implements
             return false;
         }
         for (Subscriber subscriber : subscribers) {
-            if (subscriber.checkVersion(dataCenter, datumDataInfoId, version)) {
+            if (subscriber.checkVersion(dataCenter, version)) {
                 return true;
             }
         }
@@ -80,18 +77,7 @@ public class SessionInterests extends AbstractDataManager<Subscriber> implements
 
     @Override
     public Collection<Subscriber> getInterestOfDatum(String datumDataInfoId) {
-        DataInfo dataInfo = DataInfo.valueOf(datumDataInfoId);
-        if (dataInfo.typeIsSofaApp()) {
-            List<Subscriber> list = Lists.newArrayList();
-            Set<String> interfaceDataInfoIds = appRevisionCacheRegistry.getInterfaces(dataInfo
-                .getDataId());
-            for (String interfaceDataInfoId : interfaceDataInfoIds) {
-                list.addAll(getDatas(interfaceDataInfoId));
-            }
-            return list;
-        } else {
-            return getDatas(datumDataInfoId);
-        }
+        return getDatas(datumDataInfoId);
     }
 
     @Override

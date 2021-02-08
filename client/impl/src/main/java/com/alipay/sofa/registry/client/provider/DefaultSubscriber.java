@@ -63,7 +63,7 @@ public class DefaultSubscriber extends AbstractInternalRegister implements Subsc
     /**
      * Instantiates a new Default subscriber multi.
      *
-     * @param registration the registration 
+     * @param registration the registration
      */
     DefaultSubscriber(SubscriberRegistration registration, Worker worker,
                       RegistryClientConfig config) {
@@ -215,11 +215,6 @@ public class DefaultSubscriber extends AbstractInternalRegister implements Subsc
             readLock.unlock();
         }
         return register;
-    }
-
-    @Override
-    public Object getPreRequest() {
-        return null;
     }
 
     public void putReceivedData(SegmentData segmentData, String localZone) {

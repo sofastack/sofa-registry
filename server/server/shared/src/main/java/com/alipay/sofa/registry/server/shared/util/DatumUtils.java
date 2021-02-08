@@ -18,6 +18,7 @@ package com.alipay.sofa.registry.server.shared.util;
 
 import com.alipay.sofa.registry.common.model.constants.ValueConstants;
 import com.alipay.sofa.registry.common.model.dataserver.Datum;
+import com.alipay.sofa.registry.common.model.store.DataInfo;
 import com.alipay.sofa.registry.common.model.store.Subscriber;
 
 import java.util.HashMap;
@@ -54,5 +55,25 @@ public final class DatumUtils {
         Map<String, Long> versions = new HashMap<>(datumMap.size());
         datumMap.forEach((k, v) -> versions.put(k, v.getVersion()));
         return versions;
+    }
+
+    public static Datum newEmptyDatum(Subscriber subscriber, String datacenter) {
+        Datum datum = new Datum();
+        datum.setDataId(subscriber.getDataId());
+        datum.setInstanceId(subscriber.getInstanceId());
+        datum.setGroup(subscriber.getGroup());
+        datum.setVersion(ValueConstants.DEFAULT_NO_DATUM_VERSION);
+        datum.setDataCenter(datacenter);
+        return datum;
+    }
+
+    public static Datum newEmptyDatum(DataInfo dataInfo, String datacenter) {
+        Datum datum = new Datum();
+        datum.setDataId(dataInfo.getDataId());
+        datum.setInstanceId(dataInfo.getInstanceId());
+        datum.setGroup(dataInfo.getDataType());
+        datum.setVersion(ValueConstants.DEFAULT_NO_DATUM_VERSION);
+        datum.setDataCenter(datacenter);
+        return datum;
     }
 }
