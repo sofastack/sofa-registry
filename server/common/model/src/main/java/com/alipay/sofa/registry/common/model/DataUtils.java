@@ -17,15 +17,12 @@
 package com.alipay.sofa.registry.common.model;
 
 import com.alipay.sofa.registry.common.model.store.BaseInfo;
-import com.alipay.sofa.registry.log.Logger;
-import com.alipay.sofa.registry.log.LoggerFactory;
 import com.google.common.collect.Maps;
 
 import java.util.Collection;
 import java.util.Map;
 
 public final class DataUtils {
-    private static final Logger LOGGER = LoggerFactory.getLogger(DataUtils.class);
 
     private DataUtils() {
     }

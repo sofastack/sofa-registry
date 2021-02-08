@@ -16,7 +16,11 @@
  */
 package com.alipay.sofa.registry.common.model.slot;
 
+import com.alipay.sofa.registry.common.model.dataserver.DatumDigest;
+
 import java.io.Serializable;
+import java.util.Collections;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -24,16 +28,17 @@ import java.util.Set;
  * @author yuzhi.lyz
  * @version v 0.1 2020-11-05 14:24 yuzhi.lyz Exp $
  */
-public class DataSlotDiffDataInfoIdRequest implements Serializable {
-    private final long        slotTableEpoch;
-    // all dataInfoIds, diff which was removed
-    private final Set<String> allDataInfoIds;
-    private final int         slotId;
+public class DataSlotDiffDigestRequest implements Serializable {
+    private final long                     slotTableEpoch;
+    // all dataInfoIds, diff by digest
+    private final Map<String, DatumDigest> datumDigest;
+    private final int                      slotId;
 
-    public DataSlotDiffDataInfoIdRequest(long slotTableEpoch, int slotId, Set<String> allDataInfoIds) {
+    public DataSlotDiffDigestRequest(long slotTableEpoch, int slotId,
+                                     Map<String, DatumDigest> datumDigest) {
         this.slotTableEpoch = slotTableEpoch;
         this.slotId = slotId;
-        this.allDataInfoIds = allDataInfoIds;
+        this.datumDigest = datumDigest;
     }
 
     /**
@@ -52,17 +57,13 @@ public class DataSlotDiffDataInfoIdRequest implements Serializable {
         return slotTableEpoch;
     }
 
-    /**
-     * Getter method for property <tt>allDataInfoIds</tt>.
-     * @return property value of allDataInfoIds
-     */
-    public Set<String> getAllDataInfoIds() {
-        return allDataInfoIds;
+    public Map<String, DatumDigest> getDatumDigest() {
+        return Collections.unmodifiableMap(datumDigest);
     }
 
     @Override
     public String toString() {
-        return "SlotDiffDataInfoIdRequest{" + ", slotId=" + slotId + ", slotTableEpoch="
-               + slotTableEpoch + ", allDataInfoIds=" + allDataInfoIds.size() + '}';
+        return "SlotDiffDatumDigestRequest{" + "slotTableEpoch=" + slotTableEpoch + ", slotId="
+               + slotId + ", datumDigestSize=" + datumDigest.size() + '}';
     }
 }

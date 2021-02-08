@@ -108,15 +108,15 @@ public class SessionServerConfigBean implements SessionServerConfig {
 
     private int                  dataNodeExecutorQueueSize             = 20000;
 
-    private int                  dataNodeRetryDelayMillis              = 1000;
+    private int                  dataNodeRetryBackoffMillis            = 1000;
 
-    private int                  dataNodeRetryTimes                    = 3;
+    private int                  dataNodeRetryTimes                    = 5;
 
     private int                  dataNodeRetryQueueSize                = 1000;
 
     private int                  dataNodeMaxBatchSize                  = 100;
 
-    private int                  schedulerScanVersionIntervalMs        = 1000 * 2;
+    private int                  schedulerScanVersionIntervalMillis    = 1000 * 5;
 
     private double               accessLimitRate                       = 100000.0;
 
@@ -938,8 +938,8 @@ public class SessionServerConfigBean implements SessionServerConfig {
      * @return property value of schedulerScanVersionIntervalMs
      */
     @Override
-    public int getSchedulerScanVersionIntervalMs() {
-        return schedulerScanVersionIntervalMs;
+    public int getSchedulerScanVersionIntervalMillis() {
+        return schedulerScanVersionIntervalMillis;
     }
 
     /**
@@ -948,7 +948,7 @@ public class SessionServerConfigBean implements SessionServerConfig {
      * @param schedulerScanVersionIntervalMs value to be assigned to property schedulerScanVersionIntervalMs
      */
     public void setSchedulerFetchDataVersionIntervalMs(int schedulerScanVersionIntervalMs) {
-        this.schedulerScanVersionIntervalMs = schedulerScanVersionIntervalMs;
+        this.schedulerScanVersionIntervalMillis = schedulerScanVersionIntervalMs;
     }
 
     public int getSlotSyncMaxBufferSize() {
@@ -1008,12 +1008,12 @@ public class SessionServerConfigBean implements SessionServerConfig {
     }
 
     @Override
-    public int getDataNodeRetryDelayMillis() {
-        return dataNodeRetryDelayMillis;
+    public int getDataNodeRetryBackoffMillis() {
+        return dataNodeRetryBackoffMillis;
     }
 
-    public void setDataNodeRetryDelayMillis(int dataNodeRetryDelayMillis) {
-        this.dataNodeRetryDelayMillis = dataNodeRetryDelayMillis;
+    public void setDataNodeRetryBackoffMillis(int dataNodeRetryBackoffMillis) {
+        this.dataNodeRetryBackoffMillis = dataNodeRetryBackoffMillis;
     }
 
     @Override

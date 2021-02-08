@@ -111,7 +111,7 @@ public class SessionServerConnectionFactory {
      * get the map of sessionIp -> connection
      */
     public Map<String, Connection> getSessionConnectionMap() {
-        Map<String, Connection> map = new HashMap<>(session2Connections.size());
+        Map<String, Connection> map = Maps.newHashMapWithExpectedSize(session2Connections.size());
         for (Map.Entry<String, Channels> e : session2Connections.entrySet()) {
             Channels channels = e.getValue();
             Connection conn = channels.chooseConnection();
@@ -123,7 +123,8 @@ public class SessionServerConnectionFactory {
     }
 
     public Map<String, List<Connection>> getAllSessionConnections() {
-        Map<String, List<Connection>> map = new HashMap<>(session2Connections.size());
+        Map<String, List<Connection>> map = Maps.newHashMapWithExpectedSize(session2Connections
+            .size());
         for (Map.Entry<String, Channels> e : session2Connections.entrySet()) {
             Channels channels = e.getValue();
             List<Connection> conns = new ArrayList<>(channels.channels.size());

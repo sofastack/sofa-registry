@@ -16,7 +16,7 @@
  */
 package com.alipay.sofa.registry.server.session.store;
 
-import com.alipay.sofa.registry.common.model.PublisherInternUtil;
+import com.alipay.sofa.registry.common.model.PublisherUtils;
 import com.alipay.sofa.registry.common.model.store.Publisher;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
@@ -42,7 +42,7 @@ public class SessionDataStore extends AbstractDataManager<Publisher> implements 
         ParaCheckUtil.checkNotNull(publisher.getVersion(), "publisher.version");
         ParaCheckUtil.checkNotNull(publisher.getRegisterTimestamp(), "publisher.registerTimestamp");
 
-        PublisherInternUtil.internPublisher(publisher);
+        PublisherUtils.internPublisher(publisher);
         Map<String, Publisher> publishers = stores.computeIfAbsent(publisher.getDataInfoId(), k -> Maps
                 .newConcurrentMap());
 

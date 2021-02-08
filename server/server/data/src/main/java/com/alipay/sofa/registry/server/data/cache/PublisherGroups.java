@@ -119,14 +119,13 @@ public final class PublisherGroups {
         return group == null ? null : group.remove(sessionProcessId, removedPublishers);
     }
 
-    Map<String, DatumSummary> getSummary(String sessionIpAddress, boolean containsEmpty) {
+    Map<String, DatumSummary> getSummary(String sessionIpAddress) {
         Map<String, DatumSummary> summaries = Maps.newHashMap();
         publisherGroupMap.forEach((k, g) -> {
             DatumSummary summary = g.getSummary(sessionIpAddress);
-            if (summary.isEmpty() && !containsEmpty) {
-                return;
+            if (!summary.isEmpty()) {
+                summaries.put(k, summary);
             }
-            summaries.put(k, summary);
         });
         return summaries;
     }
