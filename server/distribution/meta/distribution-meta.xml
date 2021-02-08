@@ -26,9 +26,9 @@
             <destName>registry-meta.jar</destName>
         </file>
         <file>
-            <source>../../server/meta/src/main/resources/logback-spring.xml</source>
+            <source>../../server/meta/src/main/resources/log4j2.xml</source>
             <outputDirectory>./conf</outputDirectory>
-            <destName>logback-spring.xml</destName>
+            <destName>log4j2.xml</destName>
         </file>
         <file>
             <source>../version</source>

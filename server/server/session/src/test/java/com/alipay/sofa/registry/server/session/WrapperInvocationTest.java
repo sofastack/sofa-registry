@@ -16,6 +16,8 @@
  */
 package com.alipay.sofa.registry.server.session;
 
+import com.alipay.sofa.registry.log.Logger;
+import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.server.session.wrapper.Wrapper;
 import com.alipay.sofa.registry.server.session.wrapper.WrapperInterceptor;
 import com.alipay.sofa.registry.server.session.wrapper.WrapperInterceptorManager;
@@ -35,6 +37,8 @@ import static junit.framework.Assert.*;
  * @version 1.0: WrapperInvocationTest.java, v 0.1 2019-06-18 17:41 shangyu.wh Exp $
  */
 public class WrapperInvocationTest {
+
+    private Logger logger = LoggerFactory.getLogger(getClass());
 
     @Rule
     public ExpectedException thrown = ExpectedException.none();
@@ -66,7 +70,7 @@ public class WrapperInvocationTest {
 
             @Override
             public Boolean invokeCodeWrapper(WrapperInvocation<String,Boolean> invocation) throws Exception {
-                System.out.println("0");
+                logger.info("0");
                 if("EXP".equals(invocation.getParameterSupplier().get())){
                     throw new IllegalAccessException("test exception!");
                 }
@@ -83,7 +87,7 @@ public class WrapperInvocationTest {
 
             @Override
             public Boolean invokeCodeWrapper(WrapperInvocation<String,Boolean> invocation) throws Exception {
-                System.out.println("1");
+                logger.info("1");
                 if("Proceed".equals(invocation.getParameterSupplier().get())){
                     ret.set(1);
                     return true;
@@ -101,7 +105,7 @@ public class WrapperInvocationTest {
 
             @Override
             public Boolean invokeCodeWrapper(WrapperInvocation<String,Boolean> invocation) throws Exception {
-                System.out.println("2");
+                logger.info("2");
                 if("test".equals(invocation.getParameterSupplier().get())){
                     return true;
                 }
