@@ -52,7 +52,6 @@ public class SubscriberRegisterConvertor {
         subscriberRegister.setAttributes(subscriberRegisterPb.getBaseRegister().getAttributesMap());
 
         subscriberRegister.setScope(subscriberRegisterPb.getScope());
-        subscriberRegister.setAssembleType(subscriberRegisterPb.getAssembleType());
         return subscriberRegister;
     }
 

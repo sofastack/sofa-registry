@@ -21,33 +21,23 @@ import com.alipay.sofa.registry.common.model.SubscriberUtils;
 import com.alipay.sofa.registry.common.model.constants.ValueConstants;
 import com.alipay.sofa.registry.common.model.store.*;
 import com.alipay.sofa.registry.common.model.store.DataInfo;
-import com.alipay.sofa.registry.core.model.AssembleType;
 import com.alipay.sofa.registry.core.model.ScopeEnum;
 import com.alipay.sofa.registry.net.NetUtil;
 import com.alipay.sofa.registry.server.session.bootstrap.CommonConfig;
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfigBean;
-import com.alipay.sofa.registry.server.session.cache.CacheGenerator;
-import com.alipay.sofa.registry.server.session.cache.CacheService;
-import com.alipay.sofa.registry.server.session.cache.SessionCacheService;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.google.common.util.concurrent.Uninterruptibles;
 import org.junit.Assert;
 import org.junit.Test;
 
 import java.net.InetSocketAddress;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 
 /**
- *
  * @author shangyu.wh
  * @version $Id: DataCacheTest.java, v 0.1 2017-12-06 19:42 shangyu.wh Exp $
  */
@@ -210,12 +200,9 @@ public class DataCacheTest extends BaseTest {
                                                                         SessionInterests sessionInterests) {
         Collection<Subscriber> subscribers = sessionInterests.getDatas(dataInfoId);
         Map<InetSocketAddress, Map<String, Subscriber>> ret = Maps.newHashMap();
-        Map<AssembleType, Map<ScopeEnum, List<Subscriber>>> groups = SubscriberUtils
-            .groupByAssembleAndScope(subscribers);
-        for (Map<ScopeEnum, List<Subscriber>> group : groups.values()) {
-            List<Subscriber> list = group.get(scopeEnum);
-            ret.putAll(SubscriberUtils.groupBySourceAddress(list));
-        }
+        Map<ScopeEnum, List<Subscriber>> scopes = SubscriberUtils.groupByScope(subscribers);
+        List<Subscriber> list = scopes.get(scopeEnum);
+        ret.putAll(SubscriberUtils.groupBySourceAddress(list));
         return ret;
     }
 
@@ -236,7 +223,6 @@ public class DataCacheTest extends BaseTest {
         subscriberRegister.setVersion(version.get());
         subscriberRegister.setRegisterTimestamp(System.currentTimeMillis());
         subscriberRegister.setScope(scopeEnum);
-        subscriberRegister.setAssembleType(AssembleType.sub_app_and_interface);
         subscriberRegister.setClientVersion(BaseInfo.ClientVersion.StoreData);
         subscriberRegister.setDataInfoId(DataInfo.toDataInfoId(dataId, "instance2", "rpc"));
 
@@ -344,7 +330,6 @@ public class DataCacheTest extends BaseTest {
 
         Subscriber subscriber1 = new Subscriber();
         subscriber1.setScope(ScopeEnum.dataCenter);
-        subscriber1.setAssembleType(AssembleType.sub_app_and_interface);
         subscriber1.setClientVersion(BaseInfo.ClientVersion.StoreData);
         subscriber1.setDataInfoId("dataInfoId1");
         subscriber1.setDataId("dataId1");
@@ -354,7 +339,6 @@ public class DataCacheTest extends BaseTest {
 
         Subscriber subscriber2 = new Subscriber();
         subscriber2.setScope(ScopeEnum.dataCenter);
-        subscriber2.setAssembleType(AssembleType.sub_app_and_interface);
         subscriber2.setClientVersion(BaseInfo.ClientVersion.StoreData);
         subscriber2.setDataInfoId("dataInfoId2");
         subscriber2.setDataId("dataId2");
@@ -376,7 +360,6 @@ public class DataCacheTest extends BaseTest {
 
         Subscriber subscriber3 = new Subscriber();
         subscriber3.setScope(ScopeEnum.dataCenter);
-        subscriber3.setAssembleType(AssembleType.sub_app_and_interface);
         subscriber3.setClientVersion(BaseInfo.ClientVersion.StoreData);
         subscriber3.setDataInfoId(subscriber1.getDataInfoId());
         subscriber3.setDataId(subscriber1.getDataId());
@@ -386,7 +369,6 @@ public class DataCacheTest extends BaseTest {
 
         Subscriber subscriber4 = new Subscriber();
         subscriber4.setScope(ScopeEnum.dataCenter);
-        subscriber4.setAssembleType(AssembleType.sub_app_and_interface);
         subscriber4.setClientVersion(BaseInfo.ClientVersion.StoreData);
         subscriber4.setDataInfoId(subscriber2.getDataInfoId());
         subscriber4.setDataId(subscriber2.getDataId());
@@ -469,7 +451,6 @@ public class DataCacheTest extends BaseTest {
 
         Subscriber subscriber1 = new Subscriber();
         subscriber1.setScope(ScopeEnum.dataCenter);
-        subscriber1.setAssembleType(AssembleType.sub_app_and_interface);
         subscriber1.setClientVersion(BaseInfo.ClientVersion.StoreData);
         subscriber1.setDataInfoId("dataInfoId1");
         subscriber1.setDataId("dataId1");
@@ -480,7 +461,6 @@ public class DataCacheTest extends BaseTest {
 
         Subscriber subscriber2 = new Subscriber();
         subscriber2.setScope(subscriber1.getScope());
-        subscriber2.setAssembleType(subscriber1.getAssembleType());
         subscriber2.setClientVersion(subscriber1.getClientVersion());
         subscriber2.setDataInfoId(subscriber1.getDataInfoId());
         subscriber2.setDataId(subscriber1.getDataId());

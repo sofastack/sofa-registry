@@ -21,7 +21,6 @@ import com.alipay.sofa.registry.common.model.store.DataInfo;
 import com.alipay.sofa.registry.common.model.store.Subscriber;
 import com.alipay.sofa.registry.common.model.store.URL;
 import com.alipay.sofa.registry.common.model.store.Watcher;
-import com.alipay.sofa.registry.converter.AssembleTypeConverter;
 import com.alipay.sofa.registry.converter.ScopeEnumConverter;
 import com.alipay.sofa.registry.core.model.ConfiguratorRegister;
 import com.alipay.sofa.registry.core.model.SubscriberRegister;
@@ -64,7 +63,6 @@ public class SubscriberConverter {
                     source.getGroup());
 
             subscriber.setDataInfoId(dataInfo.getDataInfoId());
-            subscriber.setAssembleType(AssembleTypeConverter.convertToSubType(subscriberRegister.getAssembleType()));
 
             return subscriber;
         };

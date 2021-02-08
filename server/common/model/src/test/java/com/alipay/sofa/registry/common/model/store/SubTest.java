@@ -22,7 +22,6 @@ import java.util.Collections;
 import java.util.Map;
 
 /**
- *
  * @author yuzhi.lyz
  * @version v 0.1 2020-12-26 11:46 yuzhi.lyz Exp $
  */
@@ -49,7 +48,7 @@ public class SubTest {
 
     private static boolean test1(Map<String, Subscriber> map, String dataCenter, long ver) {
         for (Subscriber s : map.values()) {
-            if (s.checkVersions(dataCenter, Collections.singletonMap("aa", ver))) {
+            if (s.checkVersion(dataCenter, ver)) {
                 return true;
             }
         }
@@ -60,7 +59,7 @@ public class SubTest {
         String key = String.valueOf(System.currentTimeMillis());
         for (int i = 0; i < count; i++) {
             Subscriber sub = new Subscriber();
-            sub.checkVersions(dataCenter, Collections.singletonMap("aa", 10L));
+            sub.checkVersion(dataCenter, 10L);
             map.put(key + "_" + i, sub);
         }
     }

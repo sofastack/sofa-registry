@@ -8,6 +8,5 @@ import "BaseRegisterPb.proto";
 message SubscriberRegisterPb {
     string scope = 1;
     BaseRegisterPb baseRegister = 2;
-    string assembleType = 3;
 }
 

@@ -24,8 +24,6 @@ package com.alipay.sofa.registry.client.api.registration;
  */
 public class PublisherRegistration extends BaseRegistration {
 
-    private Object preRequest;
-
     /**
      * Instantiates a new Publisher registration.
      *
@@ -44,13 +42,5 @@ public class PublisherRegistration extends BaseRegistration {
     public String toString() {
         return "PublisherRegistration{" + "dataId='" + dataId + '\'' + ", group='" + group + '\''
                + ", appName='" + appName + '\'' + '}';
-    }
-
-    public Object getPreRequest() {
-        return preRequest;
-    }
-
-    public void setPreRequest(Object preRequest) {
-        this.preRequest = preRequest;
     }
 }

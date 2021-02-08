@@ -47,14 +47,4 @@ public interface SubscriberRegisterPbOrBuilder extends
      * <code>.BaseRegisterPb baseRegister = 2;</code>
      */
     com.alipay.sofa.registry.common.model.client.pb.BaseRegisterPbOrBuilder getBaseRegisterOrBuilder();
-
-    /**
-     * <code>string assembleType = 3;</code>
-     */
-    java.lang.String getAssembleType();
-
-    /**
-     * <code>string assembleType = 3;</code>
-     */
-    com.google.protobuf.ByteString getAssembleTypeBytes();
 }

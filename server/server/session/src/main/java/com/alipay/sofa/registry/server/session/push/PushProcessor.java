@@ -20,7 +20,6 @@ import com.alipay.remoting.rpc.exception.InvokeTimeoutException;
 import com.alipay.sofa.registry.common.model.dataserver.Datum;
 import com.alipay.sofa.registry.common.model.store.BaseInfo;
 import com.alipay.sofa.registry.common.model.store.Subscriber;
-import com.alipay.sofa.registry.core.model.AssembleType;
 import com.alipay.sofa.registry.core.model.ScopeEnum;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
@@ -29,7 +28,6 @@ import com.alipay.sofa.registry.remoting.Channel;
 import com.alipay.sofa.registry.remoting.exchange.RequestChannelClosedException;
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
 import com.alipay.sofa.registry.server.session.node.service.ClientNodeService;
-import com.alipay.sofa.registry.server.shared.util.DatumUtils;
 import com.alipay.sofa.registry.task.KeyedThreadPoolExecutor;
 import com.alipay.sofa.registry.task.MetricsableThreadPoolExecutor;
 import com.alipay.sofa.registry.trace.TraceID;
@@ -37,7 +35,9 @@ import com.alipay.sofa.registry.util.ConcurrentUtils;
 import com.alipay.sofa.registry.util.WakeUpLoopRunnable;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+
 import static com.alipay.sofa.registry.server.session.push.PushMetrics.Push.*;
+
 import org.springframework.beans.factory.annotation.Autowired;
 
 import javax.annotation.PostConstruct;
@@ -90,56 +90,39 @@ public class PushProcessor {
             PENDING_NEW_COUNTER.inc();
             return true;
         }
-        boolean conflict = false;
-        PushTask prev = null;
+        PushTask prev;
         pendingLock.lock();
         try {
             prev = pendingTasks.get(key);
             if (prev == null) {
                 pendingTasks.put(key, pushTask);
                 PENDING_NEW_COUNTER.inc();
-            } else if (pushTask.afterThan(prev)) {
+            } else {
                 // update the expireTimestamp as prev's, avoid the push block by the continues fire
                 pushTask.expireTimestamp = prev.expireTimestamp;
                 pendingTasks.put(key, pushTask);
                 PENDING_REPLACE_COUNTER.inc();
-            } else {
-                conflict = true;
             }
         } finally {
             pendingLock.unlock();
         }
-        if (!conflict) {
-            if (pushTask.noDelay) {
-                watchDog.wakeup();
-            }
-            return true;
-        } else {
-            PENDING_CONFLICT_COUNTER.inc();
-            LOGGER.info("[ConflictPending] key={}, prev={}, {}, prev {}={} > {}-{}", key,
-                prev.taskID, prev.pushingTaskKey, prev.fetchSeqEnd, pushTask.taskID,
-                pushTask.fetchSeqStart);
-            return false;
+        if (pushTask.noDelay) {
+            watchDog.wakeup();
         }
+        return true;
     }
 
-    protected List<PushTask> createPushTask(boolean noDelay, long pushVersion, String dataCenter,
-                                            InetSocketAddress addr,
-                                            Map<String, Subscriber> subscriberMap,
-                                            Map<String, Datum> datumMap, long fetchStartSeq,
-                                            long fetchEndSeq) {
-        PushTask pushTask = new PushTask(noDelay, pushVersion, dataCenter, addr, subscriberMap,
-            datumMap, fetchStartSeq, fetchEndSeq);
+    protected List<PushTask> createPushTask(boolean noDelay, InetSocketAddress addr,
+                                            Map<String, Subscriber> subscriberMap, Datum datum) {
+        PushTask pushTask = new PushTask(noDelay, addr, subscriberMap, datum);
         // wait to merge to debouncing
         pushTask.expireAfter(sessionServerConfig.getPushDataTaskDebouncingMillis());
         return Collections.singletonList(pushTask);
     }
 
-    void firePush(boolean noDelay, long pushVersion, String dataCenter, InetSocketAddress addr,
-                  Map<String, Subscriber> subscriberMap, Map<String, Datum> datumMap,
-                  long fetchSeqStart, long fetchSeqEnd) {
-        List<PushTask> fires = createPushTask(noDelay, pushVersion, dataCenter, addr,
-            subscriberMap, datumMap, fetchSeqStart, fetchSeqEnd);
+    void firePush(boolean noDelay, InetSocketAddress addr, Map<String, Subscriber> subscriberMap,
+                  Datum datum) {
+        List<PushTask> fires = createPushTask(noDelay, addr, subscriberMap, datum);
         for (PushTask task : fires) {
             boolean fire = firePush(task);
             LOGGER.info("fire push={}, {}", fire, task);
@@ -206,21 +189,7 @@ public class PushProcessor {
         // check the pushing task
         final PushTask prev = pushingTasks.get(pushingTaskKey);
         if (prev == null) {
-            // check the subscriber version
-            for (Subscriber subscriber : task.subscriberMap.values()) {
-                // TODO need remove the conflict subscriber
-                if (!subscriber.checkVersion(task.dataCenter, task.fetchSeqStart)) {
-                    LOGGER.warn("conflict push {}, {}, subscriber={}", task.taskID, pushingTaskKey,
-                        subscriber.printPushContext());
-                    return false;
-                }
-            }
             return true;
-        }
-        if (!task.afterThan(prev)) {
-            LOGGER.warn("prev push is newly, {}, prev={}, now={}", pushingTaskKey, prev.taskID,
-                task.taskID);
-            return false;
         }
         final long span = System.currentTimeMillis() - prev.pushTimestamp;
         if (span > sessionServerConfig.getClientNodeExchangeTimeOut() * 2) {
@@ -258,11 +227,9 @@ public class PushProcessor {
         volatile long                 pushTimestamp;
 
         final boolean                 noDelay;
-        final long                    fetchSeqStart;
-        final long                    fetchSeqEnd;
         final String                  dataCenter;
         final long                    pushVersion;
-        final Map<String, Datum>      datumMap;
+        final Datum                   datum;
         final InetSocketAddress       addr;
         final Map<String, Subscriber> subscriberMap;
         final Subscriber              subscriber;
@@ -270,28 +237,22 @@ public class PushProcessor {
 
         final PushingTaskKey          pushingTaskKey;
 
-        PushTask(boolean noDelay, long pushVersion, String dataCenter, InetSocketAddress addr,
-                 Map<String, Subscriber> subscriberMap, Map<String, Datum> datumMap,
-                 long fetchSeqStart, long fetchSeqEnd) {
+        PushTask(boolean noDelay, InetSocketAddress addr, Map<String, Subscriber> subscriberMap,
+                 Datum datum) {
             this.taskID = TraceID.newTraceID();
             this.noDelay = noDelay;
-            this.dataCenter = dataCenter;
-            this.pushVersion = pushVersion;
-            this.datumMap = datumMap;
+            this.dataCenter = datum.getDataCenter();
+            this.pushVersion = datum.getVersion();
+            this.datum = datum;
             this.addr = addr;
             this.subscriberMap = subscriberMap;
-            this.fetchSeqStart = fetchSeqStart;
-            this.fetchSeqEnd = fetchSeqEnd;
             this.subscriber = subscriberMap.values().iterator().next();
             this.pushingTaskKey = new PushingTaskKey(subscriber.getDataInfoId(), addr,
-                subscriber.getScope(), subscriber.getAssembleType(), subscriber.getClientVersion());
+                subscriber.getScope(), subscriber.getClientVersion());
         }
 
         protected Object createPushData() {
-            Datum merged = pushDataGenerator.mergeDatum(subscriber, dataCenter, datumMap,
-                pushVersion);
-            LOGGER.info("merged {}, from {}, {}, {}", merged, datumMap, taskID, pushingTaskKey);
-            return pushDataGenerator.createPushData(merged, subscriberMap);
+            return pushDataGenerator.createPushData(datum, subscriberMap);
         }
 
         void expireAfter(long intervalMs) {
@@ -332,10 +293,6 @@ public class PushProcessor {
             }
         }
 
-        boolean afterThan(PushTask t) {
-            return fetchSeqStart >= t.fetchSeqEnd;
-        }
-
         PendingTaskKey pendingKeyOf() {
             return new PendingTaskKey(dataCenter, addr, subscriber.getDataInfoId(),
                 subscriberMap.keySet());
@@ -346,12 +303,11 @@ public class PushProcessor {
             StringBuilder sb = new StringBuilder(512);
             sb.append("PushTask{").append(subscriber.getDataInfoId()).append(",ID=").append(taskID)
                 .append(",createT=").append(createTimestamp).append(",expireT=")
-                .append(expireTimestamp).append(",seqStart=").append(fetchSeqStart)
-                .append(",seqEnd=").append(fetchSeqEnd).append(",DC=").append(dataCenter)
-                .append(",ver=").append(pushVersion).append(",addr=").append(addr)
-                .append(",scope=").append(subscriber.getScope()).append(",subIds=")
-                .append(subscriberMap.keySet()).append(",sub=")
-                .append(subscriber.printPushContext()).append(",retry=").append(retryCount.get());
+                .append(expireTimestamp).append(",DC=").append(dataCenter).append(",ver=")
+                .append(pushVersion).append(",addr=").append(addr).append(",scope=")
+                .append(subscriber.getScope()).append(",subIds=").append(subscriberMap.keySet())
+                .append(",sub=").append(subscriber.printPushContext()).append(",retry=")
+                .append(retryCount.get());
             return sb.toString();
         }
     }
@@ -372,11 +328,9 @@ public class PushProcessor {
             PUSH_CLIENT_SUCCESS_COUNTER.inc();
             boolean cleaned = false;
             try {
-                final Map<String, Long> versions = DatumUtils.getVesions(pushTask.datumMap);
                 for (Subscriber subscriber : pushTask.subscriberMap.values()) {
-                    if (!subscriber.checkAndUpdateVersion(pushTask.dataCenter,
-                        pushTask.pushVersion, versions, pushTask.fetchSeqStart,
-                        pushTask.fetchSeqEnd)) {
+                    if (!subscriber
+                        .checkAndUpdateVersion(pushTask.dataCenter, pushTask.pushVersion)) {
                         LOGGER.warn("PushY, but failed to updateVersion, {}, {}", pushTask.taskID,
                             pushTask.pushingTaskKey);
                     }
@@ -477,15 +431,13 @@ public class PushProcessor {
         final InetSocketAddress      addr;
         final String                 dataInfoId;
         final ScopeEnum              scopeEnum;
-        final AssembleType           assembleType;
         final BaseInfo.ClientVersion clientVersion;
 
         PushingTaskKey(String dataInfoId, InetSocketAddress addr, ScopeEnum scopeEnum,
-                       AssembleType assembleType, BaseInfo.ClientVersion clientVersion) {
+                       BaseInfo.ClientVersion clientVersion) {
             this.dataInfoId = dataInfoId;
             this.addr = addr;
             this.scopeEnum = scopeEnum;
-            this.assembleType = assembleType;
             this.clientVersion = clientVersion;
         }
 
@@ -497,13 +449,12 @@ public class PushProcessor {
                 return false;
             PushingTaskKey that = (PushingTaskKey) o;
             return Objects.equals(addr, that.addr) && Objects.equals(dataInfoId, that.dataInfoId)
-                   && scopeEnum == that.scopeEnum && assembleType == that.assembleType
-                   && clientVersion == that.clientVersion;
+                   && scopeEnum == that.scopeEnum && clientVersion == that.clientVersion;
         }
 
         @Override
         public int hashCode() {
-            return Objects.hash(addr, dataInfoId, scopeEnum, assembleType, clientVersion);
+            return Objects.hash(addr, dataInfoId, scopeEnum, clientVersion);
         }
 
         @Override

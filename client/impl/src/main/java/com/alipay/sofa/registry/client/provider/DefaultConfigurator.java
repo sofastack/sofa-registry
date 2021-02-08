@@ -35,6 +35,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * The type Default configurator.
+ *
  * @author zhuoyu.sjw
  * @version $Id : DefaultConfigurator.java, v 0.1 2018-04-18 14:41 zhuoyu.sjw Exp $$
  */
@@ -56,7 +57,7 @@ public class DefaultConfigurator extends AbstractInternalRegister implements Con
     /**
      * Instantiates a new Default configurator.
      *
-     * @param config the config 
+     * @param config the config
      * @param worker the worker
      */
     public DefaultConfigurator(ConfiguratorRegistration registration, RegistryClientConfig config,
@@ -148,11 +149,6 @@ public class DefaultConfigurator extends AbstractInternalRegister implements Con
             readLock.unlock();
         }
         return register;
-    }
-
-    @Override
-    public Object getPreRequest() {
-        return null;
     }
 
     /**

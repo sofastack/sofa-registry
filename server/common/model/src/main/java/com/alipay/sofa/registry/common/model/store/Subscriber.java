@@ -19,7 +19,6 @@ package com.alipay.sofa.registry.common.model.store;
 import java.util.*;
 
 import com.alipay.sofa.registry.common.model.ElementType;
-import com.alipay.sofa.registry.core.model.AssembleType;
 import com.alipay.sofa.registry.core.model.ScopeEnum;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
@@ -44,7 +43,6 @@ public class Subscriber extends BaseInfo {
     /**
      *
      */
-    private AssembleType                                  assembleType;
 
     /**
      * last push context
@@ -73,82 +71,20 @@ public class Subscriber extends BaseInfo {
         return elementType;
     }
 
-    /**
-     * Getter method for property <tt>assembleType</tt>.
-     *
-     * @return property value of assembleType
-     */
-    public AssembleType getAssembleType() {
-        return assembleType;
-    }
-
-    /**
-     * Setter method for property <tt>assembleType</tt>.
-     *
-     * @param assembleType value to be assigned to property assembleType
-     */
-    public void setAssembleType(AssembleType assembleType) {
-        this.assembleType = assembleType;
-    }
-
-    public synchronized Set<String> getPushedDataInfoIds() {
-        final Set<String> ret = new HashSet<>(4);
-        for (PushContext ctx : lastPushContexts.values()) {
-            ret.addAll(ctx.pushDatums.keySet());
-        }
-        return ret;
-    }
-
-    // check the version of one dataInfoId
-    public synchronized boolean checkVersion(String dataCenter, String dataInfoId, long version) {
+    // check the version
+    public synchronized boolean checkVersion(String dataCenter, long version) {
         final PushContext ctx = lastPushContexts.get(dataCenter);
-        if (ctx == null || ctx.fetchSeqEnd == 0) {
+        if (ctx == null) {
             return true;
         }
-
-        DatumPushContext datumCtx = ctx.pushDatums.get(dataInfoId);
-        if (datumCtx == null) {
-            return true;
-        }
-        return datumCtx.version < version;
+        return ctx.pushVersion < version;
     }
 
-    // check all the version
-    public synchronized boolean checkVersions(String dataCenter, Map<String, Long> datumVersions) {
-        final PushContext ctx = lastPushContexts.get(dataCenter);
-        if (ctx == null || ctx.fetchSeqEnd == 0) {
-            return true;
-        }
-
-        // has diff dataInfoId
-        if (!datumVersions.keySet().equals(ctx.pushDatums.keySet())) {
-            return true;
-        }
-        for (Map.Entry<String, Long> version : datumVersions.entrySet()) {
-            DatumPushContext datumCtx = ctx.pushDatums.get(version.getKey());
-            if (datumCtx.version < version.getValue()) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    public synchronized boolean checkAndUpdateVersion(String dataCenter, long pushVersion, Map<String, Long> datumVersion,
-                                                      long fetchSeqStart, long fetchSeqEnd) {
+    public synchronized boolean checkAndUpdateVersion(String dataCenter, long pushVersion) {
         final PushContext ctx = lastPushContexts.computeIfAbsent(dataCenter, k -> new PushContext());
 
-        if (ctx.pushVersion < pushVersion && ctx.fetchSeqEnd <= fetchSeqStart) {
+        if (ctx.pushVersion < pushVersion) {
             ctx.pushVersion = pushVersion;
-            ctx.fetchSeqEnd = fetchSeqEnd;
-            ctx.update(datumVersion);
-            return true;
-        }
-        return false;
-    }
-
-    public synchronized boolean checkVersion(String dataCenter, long fetchSeqStart) {
-        final PushContext ctx = lastPushContexts.get(dataCenter);
-        if (ctx == null || ctx.fetchSeqEnd <= fetchSeqStart) {
             return true;
         }
         return false;
@@ -160,7 +96,7 @@ public class Subscriber extends BaseInfo {
             return false;
         }
         for (PushContext ctx : lastPushContexts.values()) {
-            if (ctx.fetchSeqEnd != 0) {
+            if (ctx.pushVersion != 0) {
                 return true;
             }
         }
@@ -216,35 +152,12 @@ public class Subscriber extends BaseInfo {
         return subscriber;
     }
 
-    private static class DatumPushContext {
-        final long version;
-
-        DatumPushContext(long version) {
-            this.version = version;
-        }
-
-        @Override
-        public String toString() {
-            return "DatumPushContext{" + "version=" + version + '}';
-        }
-    }
-
     private static class PushContext {
-        //dataInfoId as key
-        Map<String, DatumPushContext> pushDatums = Collections.emptyMap();
-        long                          pushVersion;
-        long                          fetchSeqEnd;
-
-        void update(Map<String, Long> datumVersions) {
-            Map<String, DatumPushContext> map = new HashMap<>(datumVersions.size());
-            datumVersions.forEach((k, v) -> map.put(k, new DatumPushContext(v)));
-            this.pushDatums = map;
-        }
+        long pushVersion;
 
         @Override
         public String toString() {
-            return "PushContext{" + "pushVersion=" + pushVersion + ", fetchSeqEnd=" + fetchSeqEnd
-                   + ", pushDatums=" + pushDatums + '}';
+            return "PushContext{" + "pushVersion=" + pushVersion + '}';
         }
     }
 
