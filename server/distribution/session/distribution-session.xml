@@ -26,9 +26,9 @@
             <destName>registry-session.jar</destName>
         </file>
         <file>
-            <source>../../server/session/src/main/resources/logback-spring.xml</source>
+            <source>../../server/session/src/main/resources/log4j2.xml</source>
             <outputDirectory>./conf</outputDirectory>
-            <destName>logback-spring.xml</destName>
+            <destName>log4j2.xml</destName>
         </file>
         <file>
             <source>../version</source>
