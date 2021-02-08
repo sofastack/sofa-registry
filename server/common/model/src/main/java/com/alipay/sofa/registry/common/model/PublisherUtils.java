@@ -16,16 +16,19 @@
  */
 package com.alipay.sofa.registry.common.model;
 
+import com.alipay.sofa.registry.common.model.dataserver.DatumSummary;
 import com.alipay.sofa.registry.common.model.store.Publisher;
-import com.alipay.sofa.registry.common.model.store.WordCache;
+import com.google.common.collect.Maps;
 
 import java.util.*;
 
 /**
  * @author xiaojian.xj
- * @version $Id: PublisherInternUtil.java, v 0.1 2020年11月12日 16:53 xiaojian.xj Exp $
+ * @version $Id: PublisherUtils.java, v 0.1 2020年11月12日 16:53 xiaojian.xj Exp $
  */
-public class PublisherInternUtil {
+public final class PublisherUtils {
+    private PublisherUtils() {
+    }
 
     /**
      * change publisher word cache
@@ -44,5 +47,14 @@ public class PublisherInternUtil {
         publisher.setProcessId(publisher.getProcessId());
         publisher.setAppName(publisher.getAppName());
         return publisher;
+    }
+
+    public static Map<String, DatumSummary> getDatumSummary(Map<String, Map<String, Publisher>> publisherMap) {
+        Map<String, DatumSummary> sourceSummaryMap = Maps.newHashMapWithExpectedSize(publisherMap
+            .size());
+        for (Map.Entry<String, Map<String, Publisher>> e : publisherMap.entrySet()) {
+            sourceSummaryMap.put(e.getKey(), DatumSummary.of(e.getKey(), e.getValue()));
+        }
+        return sourceSummaryMap;
     }
 }

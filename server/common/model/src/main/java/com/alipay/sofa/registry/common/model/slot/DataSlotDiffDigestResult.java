@@ -31,38 +31,27 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- *
  * @author yuzhi.lyz
  * @version v 0.1 2020-11-05 17:04 yuzhi.lyz Exp $
  */
-public class DataSlotDiffSyncResult implements Serializable {
-    private long                               slotTableEpoch;
-    private final Map<String, List<Publisher>> updatedPublishers;
-    private final List<String>                 addedDataInfoIds;
-    private final List<String>                 removedDataInfoIds;
-    private final Map<String, List<String>>    removedPublishers;
+public class DataSlotDiffDigestResult implements Serializable {
+    private long               slotTableEpoch;
+    private final List<String> updatedDataInfoIds;
+    private final List<String> addedDataInfoIds;
+    private final List<String> removedDataInfoIds;
     // if from session, return the sessionProcessId for lease
-    private ProcessId                          sessionProcessId;
-    // contains all the updated/added publishers
-    private final boolean                      hasRemain;
+    private ProcessId          sessionProcessId;
 
-    public DataSlotDiffSyncResult(boolean hasRemain,
-                                  Map<String, List<Publisher>> updatedPublishers,
-                                  List<String> addedDataInfoIds, List<String> removedDataInfoIds,
-                                  Map<String, List<String>> removedPublishers) {
-        this.updatedPublishers = Maps.newHashMap(updatedPublishers);
+    public DataSlotDiffDigestResult(List<String> updatedDataInfoIds, List<String> addedDataInfoIds,
+                                    List<String> removedDataInfoIds) {
+        this.updatedDataInfoIds = Lists.newArrayList(updatedDataInfoIds);
         this.addedDataInfoIds = Lists.newArrayList(addedDataInfoIds);
         this.removedDataInfoIds = Lists.newArrayList(removedDataInfoIds);
-        this.removedPublishers = Maps.newHashMap(removedPublishers);
-        this.hasRemain = hasRemain;
-    }
-
-    public boolean isHasRemain() {
-        return hasRemain;
     }
 
     /**
      * Getter method for property <tt>slotTableEpoch</tt>.
+     *
      * @return property value of slotTableEpoch
      */
     public long getSlotTableEpoch() {
@@ -71,30 +60,20 @@ public class DataSlotDiffSyncResult implements Serializable {
 
     /**
      * Setter method for property <tt>slotTableEpoch</tt>.
+     *
      * @param slotTableEpoch value to be assigned to property slotTableEpoch
      */
     public void setSlotTableEpoch(long slotTableEpoch) {
         this.slotTableEpoch = slotTableEpoch;
     }
 
-    /**
-     * Getter method for property <tt>updatedPublishers</tt>.
-     * @return property value of updatedPublishers
-     */
-    public Map<String, List<Publisher>> getUpdatedPublishers() {
-        return Collections.unmodifiableMap(updatedPublishers);
-    }
-
-    /**
-     * Getter method for property <tt>removedPublishers</tt>.
-     * @return property value of removedPublishers
-     */
-    public Map<String, List<String>> getRemovedPublishers() {
-        return Collections.unmodifiableMap(removedPublishers);
+    public List<String> getUpdatedDataInfoIds() {
+        return Collections.unmodifiableList(updatedDataInfoIds);
     }
 
     /**
      * Getter method for property <tt>removedDataInfoIds</tt>.
+     *
      * @return property value of removedDataInfoIds
      */
     public List<String> getRemovedDataInfoIds() {
@@ -105,24 +84,9 @@ public class DataSlotDiffSyncResult implements Serializable {
         return Collections.unmodifiableList(addedDataInfoIds);
     }
 
-    public int getRemovedPublishersCount() {
-        int count = 0;
-        for (List<String> list : removedPublishers.values()) {
-            count += list.size();
-        }
-        return count;
-    }
-
-    public int getUpdatedPublishersCount() {
-        int count = 0;
-        for (List<Publisher> list : updatedPublishers.values()) {
-            count += list.size();
-        }
-        return count;
-    }
-
     /**
      * Getter method for property <tt>sessionProcessId</tt>.
+     *
      * @return property value of sessionProcessId
      */
     public ProcessId getSessionProcessId() {
@@ -131,6 +95,7 @@ public class DataSlotDiffSyncResult implements Serializable {
 
     /**
      * Setter method for property <tt>sessionProcessId</tt>.
+     *
      * @param sessionProcessId value to be assigned to property sessionProcessId
      */
     public void setSessionProcessId(ProcessId sessionProcessId) {
@@ -138,16 +103,9 @@ public class DataSlotDiffSyncResult implements Serializable {
     }
 
     public boolean isEmpty() {
-        return MapUtils.isEmpty(updatedPublishers) && CollectionUtils.isEmpty(removedDataInfoIds)
-               && MapUtils.isEmpty(removedPublishers) && CollectionUtils.isEmpty(addedDataInfoIds);
+        return CollectionUtils.isEmpty(updatedDataInfoIds)
+               && CollectionUtils.isEmpty(removedDataInfoIds)
+               && CollectionUtils.isEmpty(addedDataInfoIds);
     }
 
-    public Set<String> syncDataInfoIds() {
-        Set<String> ret = Sets.newHashSet();
-        ret.addAll(updatedPublishers.keySet());
-        ret.addAll(addedDataInfoIds);
-        ret.addAll(removedDataInfoIds);
-        ret.addAll(removedPublishers.keySet());
-        return ret;
-    }
 }

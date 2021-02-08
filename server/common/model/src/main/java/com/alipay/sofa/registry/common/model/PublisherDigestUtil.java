@@ -16,35 +16,61 @@
  */
 package com.alipay.sofa.registry.common.model;
 
-import com.alipay.sofa.registry.common.model.store.Publisher;
+import com.alipay.sofa.registry.common.model.dataserver.DatumSummary;
+import com.alipay.sofa.registry.common.model.dataserver.DatumDigest;
+import com.google.common.collect.Maps;
 
-import java.util.Collection;
+import java.util.*;
 
 /**
- *
  * @author kezhu.wukz
  * @author shangyu.wh
  * @version $Id: PublisherDigestUtil.java, v 0.1 2019-05-30 20:58 shangyu.wh Exp $
  */
-public class PublisherDigestUtil {
-
-    public static long getDigestValueSum(Collection<Publisher> publishers) {
-        long digest = 0L;
-        if (publishers != null && !publishers.isEmpty()) {
-            for (Publisher publisher : publishers) {
-                digest += getDigestValue(publisher);
-            }
-        }
-        return digest;
+public final class PublisherDigestUtil {
+    private PublisherDigestUtil() {
     }
 
-    public static long getDigestValue(Publisher publisher) {
-        String registerId = publisher.getRegisterId();
-        Long version = publisher.getVersion();
-        long registerTimestamp = publisher.getRegisterTimestamp();
-        long result = registerId != null ? registerId.hashCode() : 0;
-        result = 31 * result + (version != null ? version.hashCode() : 0);
-        result = 31 * result + (int) (registerTimestamp ^ (registerTimestamp >>> 32));
-        return result;
+    public static Map<String, DatumDigest> digest(Map<String, DatumSummary> summaryMap) {
+        if (summaryMap.isEmpty()) {
+            return Collections.emptyMap();
+        }
+        Map<String, Map<String, RegisterVersion>> sorted = Maps.newTreeMap();
+        for (Map.Entry<String, DatumSummary> summaryEntry : summaryMap.entrySet()) {
+            sorted.put(summaryEntry.getKey(), new TreeMap<>(summaryEntry.getValue()
+                .getPublisherVersions()));
+        }
+
+        final Map<String, DatumDigest> ret = Maps.newHashMapWithExpectedSize(summaryMap.size());
+        for (Map.Entry<String, Map<String, RegisterVersion>> e : sorted.entrySet()) {
+            int publisherNum = 0;
+            long publisherIdSign = 0;
+            long publisherVerSign = 0;
+            long publisherTimestampSign = 0;
+
+            final String dataInfoId = e.getKey();
+            publisherNum += e.getValue().size();
+
+            for (Map.Entry<String, RegisterVersion> pub : e.getValue().entrySet()) {
+                final String registerId = pub.getKey();
+                final long digestRegisterId = digest(registerId);
+                publisherIdSign = publisherIdSign * 31 + digestRegisterId;
+                final RegisterVersion ver = pub.getValue();
+                publisherVerSign = 31 * publisherVerSign + ver.getVersion();
+                publisherTimestampSign = 31 * publisherTimestampSign + ver.getRegisterTimestamp();
+            }
+            ret.put(dataInfoId, new DatumDigest(publisherNum, publisherIdSign, publisherVerSign,
+                publisherTimestampSign));
+        }
+        return ret;
+    }
+
+    private static int digest(String str) {
+        // use string.hashCode, it's the fastest. the calc result has cached.
+        // but must pay attention to the compatibility of different jdk versions
+        // after jdk1.2, the java doc promise:
+        // The hash code for a String object is computed as
+        // s[0]*31^(n-1) + s[1]*31^(n-2) + ... + s[n-1]
+        return str.hashCode();
     }
 }

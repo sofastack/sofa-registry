@@ -73,8 +73,7 @@ public interface DatumStorage {
 
     DatumVersion update(String dataInfoId, List<Publisher> updatedPublishers);
 
-    Map<String, DatumSummary> getDatumSummary(int slotId, String sessionIpAddress,
-                                              boolean containsEmpty);
+    Map<String, DatumSummary> getDatumSummary(int slotId, String sessionIpAddress);
 
     SlotChangeListener getSlotChangeListener();
 

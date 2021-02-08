@@ -292,7 +292,7 @@ public class SessionRegistry implements Registry {
 
         @Override
         public int getWaitingMillis() {
-            return sessionServerConfig.getSchedulerScanVersionIntervalMs();
+            return sessionServerConfig.getSchedulerScanVersionIntervalMillis();
         }
     }
 

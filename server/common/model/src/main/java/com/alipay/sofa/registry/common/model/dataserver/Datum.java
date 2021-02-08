@@ -19,14 +19,12 @@ package com.alipay.sofa.registry.common.model.dataserver;
 import java.io.Serializable;
 import java.util.Collections;
 import java.util.Map;
-import java.util.Set;
 
-import com.alipay.sofa.registry.common.model.PublisherInternUtil;
+import com.alipay.sofa.registry.common.model.PublisherUtils;
 import com.alipay.sofa.registry.common.model.store.Publisher;
 import com.alipay.sofa.registry.common.model.store.WordCache;
 import com.alipay.sofa.registry.util.DatumVersionUtil;
 import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
 
 /**
  * datum store in dataserver
@@ -223,7 +221,7 @@ public class Datum implements Serializable {
                 // because this Datum is put into Memory directly, by DatumCache.coverDatum
                 publisher.setRegisterId(registerId);
                 // change publisher word cache
-                PublisherInternUtil.internPublisher(publisher);
+                PublisherUtils.internPublisher(publisher);
             });
         }
 

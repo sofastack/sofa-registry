@@ -289,6 +289,9 @@ public final class SlotManagerImpl implements SlotManager {
                             // check all migrating task
                             if (slotState.migratingTasks.isEmpty()) {
                                 LOGGER.warn("sessionNodes is empty when migrating, {}", slot);
+                                MIGRATING_LOGGER.info("[migrating]{},{},{}", slot.getId(),
+                                        System.currentTimeMillis() - slotState.migratingStartTime, sessions.size());
+                                continue;
                             }
 
                             if (slotState.migratingTasks.values().stream().allMatch(m -> m.task.isSuccess())) {
@@ -318,12 +321,14 @@ public final class SlotManagerImpl implements SlotManager {
                     } else {
                         // sync leader
                         if (syncLeaderTask == null ||
-                                syncLeaderTask.isOverAfter(dataServerConfig.getSlotFollowerSyncLeaderIntervalMs())) {
+                                syncLeaderTask.isOverAfter(dataServerConfig.getSlotFollowerSyncLeaderIntervalSec())) {
                             SyncLeaderTask task = new SyncLeaderTask(slotTableEpoch, slot);
                             slotState.syncLeaderTask = syncLeaderExecutor.execute(slot.getId(), task);
                         } else if(!syncLeaderTask.isFinished()){
-                            // the sync leader is running or waiting, check next round
-                            LOGGER.info("sync-leader running, {}", syncLeaderTask);
+                            if (System.currentTimeMillis() - syncLeaderTask.getCreateTime() > 5000) {
+                                // the sync leader is running more than 5secs, print
+                                LOGGER.info("sync-leader running, {}", syncLeaderTask);
+                            }
                         }
                     }
                 }

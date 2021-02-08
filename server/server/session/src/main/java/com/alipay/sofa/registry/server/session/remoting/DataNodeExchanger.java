@@ -61,7 +61,8 @@ public class DataNodeExchanger extends ClientSideExchanger {
     @Override
     public Response request(Request request) throws RequestException {
         URL url = request.getRequestUrl();
-        EXCHANGE_LOGGER.info("DataNode Exchanger request={},url={}", request.getRequestBody(), url);
+        EXCHANGE_LOGGER
+            .info("DataNode Exchanger request={}, url={}", request.getRequestBody(), url);
 
         try {
             return super.request(request);

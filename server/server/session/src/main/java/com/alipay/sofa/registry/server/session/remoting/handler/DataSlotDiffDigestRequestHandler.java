@@ -18,8 +18,9 @@ package com.alipay.sofa.registry.server.session.remoting.handler;
 
 import com.alipay.sofa.registry.common.model.GenericResponse;
 import com.alipay.sofa.registry.common.model.Node;
-import com.alipay.sofa.registry.common.model.slot.DataSlotDiffDataInfoIdRequest;
-import com.alipay.sofa.registry.common.model.slot.DataSlotDiffSyncResult;
+import com.alipay.sofa.registry.common.model.dataserver.DatumDigest;
+import com.alipay.sofa.registry.common.model.slot.DataSlotDiffDigestRequest;
+import com.alipay.sofa.registry.common.model.slot.DataSlotDiffDigestResult;
 import com.alipay.sofa.registry.common.model.slot.DataSlotDiffUtils;
 import com.alipay.sofa.registry.common.model.store.Publisher;
 import com.alipay.sofa.registry.log.Logger;
@@ -32,7 +33,7 @@ import com.alipay.sofa.registry.server.shared.env.ServerEnv;
 import com.alipay.sofa.registry.server.shared.remoting.AbstractServerHandler;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import java.util.*;
+import java.util.Map;
 import java.util.concurrent.Executor;
 
 /**
@@ -40,11 +41,10 @@ import java.util.concurrent.Executor;
  * @author yuzhi.lyz
  * @version v 0.1 2020-11-06 15:41 yuzhi.lyz Exp $
  */
-public class DataSlotDiffDataInfoIdRequestHandler
-                                                 extends
-                                                 AbstractServerHandler<DataSlotDiffDataInfoIdRequest> {
+public class DataSlotDiffDigestRequestHandler extends
+                                             AbstractServerHandler<DataSlotDiffDigestRequest> {
     private static final Logger LOGGER = LoggerFactory
-                                           .getLogger(DataSlotDiffDataInfoIdRequestHandler.class);
+                                           .getLogger(DataSlotDiffDigestRequestHandler.class);
 
     @Autowired
     private ExecutorManager     executorManager;
@@ -56,11 +56,11 @@ public class DataSlotDiffDataInfoIdRequestHandler
     private SlotTableCache      slotTableCache;
 
     @Override
-    public Object doHandle(Channel channel, DataSlotDiffDataInfoIdRequest request) {
+    public Object doHandle(Channel channel, DataSlotDiffDigestRequest request) {
         try {
             slotTableCache.triggerUpdateSlotTable(request.getSlotTableEpoch());
-            DataSlotDiffSyncResult result = calcDiffResult(request.getSlotId(),
-                request.getAllDataInfoIds(),
+            DataSlotDiffDigestResult result = calcDiffResult(request.getSlotId(),
+                request.getDatumDigest(),
                 sessionDataStore.getDataInfoIdPublishers(request.getSlotId()));
             result.setSlotTableEpoch(slotTableCache.getEpoch());
             result.setSessionProcessId(ServerEnv.PROCESS_ID);
@@ -71,10 +71,11 @@ public class DataSlotDiffDataInfoIdRequestHandler
         }
     }
 
-    private DataSlotDiffSyncResult calcDiffResult(int targetSlot,
-                                                  Set<String> dataInfoIds,
-                                                  Map<String, Map<String, Publisher>> existingPublishers) {
-        DataSlotDiffSyncResult result = DataSlotDiffUtils.diffDataInfoIdsResult(dataInfoIds,
+    private DataSlotDiffDigestResult calcDiffResult(int targetSlot,
+                                                    Map<String, DatumDigest> digestMap,
+                                                    Map<String, Map<String, Publisher>> existingPublishers) {
+
+        DataSlotDiffDigestResult result = DataSlotDiffUtils.diffDigestPublishers(digestMap,
             existingPublishers);
         DataSlotDiffUtils.logDiffResult(result, targetSlot);
         return result;
@@ -92,6 +93,6 @@ public class DataSlotDiffDataInfoIdRequestHandler
 
     @Override
     public Class interest() {
-        return DataSlotDiffDataInfoIdRequest.class;
+        return DataSlotDiffDigestRequest.class;
     }
 }

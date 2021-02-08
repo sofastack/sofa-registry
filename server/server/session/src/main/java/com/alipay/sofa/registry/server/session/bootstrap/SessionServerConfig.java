@@ -37,7 +37,7 @@ public interface SessionServerConfig {
 
     int getSchedulerHeartbeatIntervalSec();
 
-    int getSchedulerScanVersionIntervalMs();
+    int getSchedulerScanVersionIntervalMillis();
 
     int getClientNodeExchangeTimeOut();
 
@@ -109,7 +109,7 @@ public interface SessionServerConfig {
 
     int getDataNodeRetryTimes();
 
-    int getDataNodeRetryDelayMillis();
+    int getDataNodeRetryBackoffMillis();
 
     int getDataNodeExecutorWorkerSize();
 

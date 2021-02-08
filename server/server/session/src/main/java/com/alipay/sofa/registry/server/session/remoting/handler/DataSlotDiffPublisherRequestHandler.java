@@ -20,7 +20,7 @@ import com.alipay.sofa.registry.common.model.GenericResponse;
 import com.alipay.sofa.registry.common.model.Node;
 import com.alipay.sofa.registry.common.model.dataserver.DatumSummary;
 import com.alipay.sofa.registry.common.model.slot.DataSlotDiffPublisherRequest;
-import com.alipay.sofa.registry.common.model.slot.DataSlotDiffSyncResult;
+import com.alipay.sofa.registry.common.model.slot.DataSlotDiffPublisherResult;
 import com.alipay.sofa.registry.common.model.slot.DataSlotDiffUtils;
 import com.alipay.sofa.registry.common.model.store.Publisher;
 import com.alipay.sofa.registry.log.Logger;
@@ -34,6 +34,7 @@ import com.alipay.sofa.registry.server.shared.env.ServerEnv;
 import com.alipay.sofa.registry.server.shared.remoting.AbstractServerHandler;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Executor;
 
@@ -65,8 +66,8 @@ public class DataSlotDiffPublisherRequestHandler extends
         try {
             slotTableCache.triggerUpdateSlotTable(request.getSlotTableEpoch());
             final int slotId = request.getSlotId();
-            DataSlotDiffSyncResult result = calcDiffResult(slotId, request.getDatumSummarys(),
-                sessionDataStore.getDataInfoIdPublishers(slotId));
+            DataSlotDiffPublisherResult result = calcDiffResult(slotId,
+                request.getDatumSummaries(), sessionDataStore.getDataInfoIdPublishers(slotId));
             result.setSlotTableEpoch(slotTableCache.getEpoch());
             result.setSessionProcessId(ServerEnv.PROCESS_ID);
             return new GenericResponse().fillSucceed(result);
@@ -76,10 +77,10 @@ public class DataSlotDiffPublisherRequestHandler extends
         }
     }
 
-    private DataSlotDiffSyncResult calcDiffResult(int targetSlot,
-                                                  Map<String, DatumSummary> datumSummarys,
-                                                  Map<String, Map<String, Publisher>> existingPublishers) {
-        DataSlotDiffSyncResult result = DataSlotDiffUtils.diffPublishersResult(datumSummarys,
+    private DataSlotDiffPublisherResult calcDiffResult(int targetSlot,
+                                                       List<DatumSummary> datumSummaries,
+                                                       Map<String, Map<String, Publisher>> existingPublishers) {
+        DataSlotDiffPublisherResult result = DataSlotDiffUtils.diffPublishersResult(datumSummaries,
             existingPublishers, sessionServerConfig.getSlotSyncPublisherMaxNum());
         DataSlotDiffUtils.logDiffResult(result, targetSlot);
         return result;

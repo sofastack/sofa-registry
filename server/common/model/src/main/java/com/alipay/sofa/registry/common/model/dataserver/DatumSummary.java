@@ -17,6 +17,7 @@
 package com.alipay.sofa.registry.common.model.dataserver;
 
 import com.alipay.sofa.registry.common.model.RegisterVersion;
+import com.alipay.sofa.registry.common.model.store.Publisher;
 import com.google.common.collect.Maps;
 
 import java.io.Serializable;
@@ -31,17 +32,27 @@ import java.util.Map;
  * @version v 0.1 2020-11-05 14:27 yuzhi.lyz Exp $
  */
 public class DatumSummary implements Serializable {
-    private final String                                dataInfoId;
-    private Map<String/*registerId*/, RegisterVersion> publisherVersions = Maps.newHashMap();
-
-    public DatumSummary(String dataInfoId) {
-        this.dataInfoId = dataInfoId;
-    }
+    private final String                                      dataInfoId;
+    private final Map<String/*registerId*/, RegisterVersion> publisherVersions;
 
     public DatumSummary(String dataInfoId,
                         Map<String/*registerId*/, RegisterVersion> publisherVersions) {
         this.dataInfoId = dataInfoId;
         this.publisherVersions = Collections.unmodifiableMap(Maps.newHashMap(publisherVersions));
+    }
+
+    public DatumSummary(String dataInfoId) {
+        this.dataInfoId = dataInfoId;
+        this.publisherVersions = Collections.emptyMap();
+    }
+
+    public static DatumSummary of(String dataInfoId, Map<String, Publisher> publisherMap) {
+        Map<String, RegisterVersion> versionMap = Maps.newHashMapWithExpectedSize(publisherMap
+            .size());
+        for (Map.Entry<String, Publisher> e : publisherMap.entrySet()) {
+            versionMap.put(e.getKey(), e.getValue().registerVersion());
+        }
+        return new DatumSummary(dataInfoId, versionMap);
     }
 
     /**
@@ -60,12 +71,8 @@ public class DatumSummary implements Serializable {
         return publisherVersions;
     }
 
-    public void addPublisherVersion(String registerId, RegisterVersion version) {
-        publisherVersions.put(registerId, version);
-    }
-
     public Map<String, RegisterVersion> getPublisherVersions(Collection<String> registerIds) {
-        Map<String, RegisterVersion> m = new HashMap<>(registerIds.size());
+        Map<String, RegisterVersion> m = Maps.newHashMapWithExpectedSize(registerIds.size());
         registerIds.forEach(k -> {
                     RegisterVersion v = publisherVersions.get(k);
                     if (v == null) {

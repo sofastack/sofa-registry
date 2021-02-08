@@ -20,13 +20,15 @@ import com.alipay.remoting.serialization.HessianSerializer;
 import com.alipay.sofa.registry.common.model.RegisterVersion;
 import com.alipay.sofa.registry.common.model.dataserver.DatumSummary;
 import com.alipay.sofa.registry.common.model.slot.DataSlotDiffPublisherRequest;
+import com.alipay.sofa.registry.common.model.store.Publisher;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import org.junit.Test;
 
 import java.io.BufferedOutputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.OutputStream;
-import java.util.HashMap;
-import java.util.UUID;
+import java.util.*;
 import java.util.zip.GZIPOutputStream;
 
 /**
@@ -38,16 +40,17 @@ public class MigrateTest {
     @Test
     public void testBody() throws Exception {
         HessianSerializer s = new HessianSerializer();
-        DataSlotDiffPublisherRequest request = new DataSlotDiffPublisherRequest(100, 200,
-            new HashMap<>());
+        List<DatumSummary> list = Lists.newArrayList();
         for (int i = 0; i < 10; i++) {
-            DatumSummary summary = new DatumSummary("app" + System.currentTimeMillis());
+            Map<String, RegisterVersion> publisherMap = Maps.newHashMap();
             for (int j = 0; j < 1000; j++) {
-                summary.addPublisherVersion(UUID.randomUUID().toString(),
+                publisherMap.put(UUID.randomUUID().toString(),
                     RegisterVersion.of(0, System.currentTimeMillis()));
             }
-            request.getDatumSummarys().put(summary.getDataInfoId(), summary);
+            DatumSummary summary = new DatumSummary("app" + System.currentTimeMillis(),publisherMap);
+            list.add(summary);
         }
+        DataSlotDiffPublisherRequest request = new DataSlotDiffPublisherRequest(100, 200, list);
         byte[] bs = s.serialize(request);
         ByteArrayOutputStream b = new ByteArrayOutputStream();
         GZIPOutputStream zip = new GZIPOutputStream(b);

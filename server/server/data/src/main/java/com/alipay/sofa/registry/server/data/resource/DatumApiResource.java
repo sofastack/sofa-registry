@@ -203,7 +203,7 @@ public class DatumApiResource {
         Map<String, Long> datumVersions = new HashMap<>();
         if (dataServerConfig.isLocalDataCenter(datumParam.getDataCenter())) {
             Map<String, Datum> localDatums = localDatumStorage.getAll();
-            return DatumUtils.getVesions(localDatums);
+            return DatumUtils.getVersions(localDatums);
         } else {
             // TODO need support remote datecenter
             LOGGER.error("unsupport remote datacenter, {}", datumParam.getDataCenter());
