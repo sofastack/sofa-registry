@@ -1,0 +1,220 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration status="info" shutdownHook="disable" monitorInterval="5">
+
+    <Properties>
+        <Property name="META_LOG_HOME">${user.home}/logs/registry/meta</Property>
+        <Property name="LOG_LEVEL">INFO</Property>
+    </Properties>
+
+    <appenders>
+        <console name="STDOUT-APPENDER" target="SYSTEM_OUT">
+            <PatternLayout pattern="[%d{HH:mm:ss:SSS}][%p][%t][%c{1}]%m%n"/>
+        </console>
+
+        <RollingRandomAccessFile name="COMMON-ERROR-APPENDER" fileName="${META_LOG_HOME}/common-error.log"
+                                 filePattern="${META_LOG_HOME}/common-error.log.%d{yyyy-MM-dd}">
+            <ThresholdFilter level="ERROR" onMatch="ACCEPT" onMismatch="DENY"/>
+            <PatternLayout pattern="[%d{ISO8601}][%p][%t][%c{0}] - %m%n"/>
+            <Policies>
+                <TimeBasedTriggeringPolicy/>
+            </Policies>
+            <DefaultRolloverStrategy max="30">
+                <Delete basePath="${META_LOG_HOME}" maxDepth="2">
+                    <IfFileName glob="common-error.log.*" />
+                    <IfLastModified age="30d" />
+                </Delete>
+            </DefaultRolloverStrategy>
+        </RollingRandomAccessFile>
+
+        <RollingRandomAccessFile name="COMMON-DEFAULT-APPENDER" fileName="${META_LOG_HOME}/common-default.log"
+                                 filePattern="${META_LOG_HOME}/common-default.log.%d{yyyy-MM-dd}">
+            <ThresholdFilter level="ERROR" onMatch="DENY"/>
+            <PatternLayout pattern="[%d{ISO8601}][%p][%t][%c{0}] - %m%n"/>
+            <Policies>
+                <TimeBasedTriggeringPolicy/>
+            </Policies>
+            <DefaultRolloverStrategy max="30">
+                <Delete basePath="${META_LOG_HOME}" maxDepth="2">
+                    <IfFileName glob="common-default.log.*" />
+                    <IfLastModified age="30d" />
+                </Delete>
+            </DefaultRolloverStrategy>
+        </RollingRandomAccessFile>
+
+        <RollingRandomAccessFile name="JRAFT-APPENDER" fileName="${META_LOG_HOME}/registry-raft.log"
+                                 filePattern="${META_LOG_HOME}/registry-raft.log.%d{yyyy-MM-dd}">
+            <PatternLayout pattern="[%d{ISO8601}][%p][%t][%c{0}] - %m%n"/>
+            <Policies>
+                <TimeBasedTriggeringPolicy/>
+            </Policies>
+            <DefaultRolloverStrategy max="30">
+                <Delete basePath="${META_LOG_HOME}" maxDepth="2">
+                    <IfFileName glob="registry-raft.log.*" />
+                    <IfLastModified age="30d" />
+                </Delete>
+            </DefaultRolloverStrategy>
+        </RollingRandomAccessFile>
+
+        <RollingRandomAccessFile name="META-DEFAULT-APPENDER" fileName="${META_LOG_HOME}/registry-meta.log"
+                                 filePattern="${META_LOG_HOME}/registry-meta.log.%d{yyyy-MM-dd}">
+            <PatternLayout pattern="[%d{ISO8601}][%p][%t][%c{0}] - %m%n"/>
+            <Policies>
+                <TimeBasedTriggeringPolicy/>
+            </Policies>
+            <DefaultRolloverStrategy max="3">
+                <Delete basePath="${META_LOG_HOME}" maxDepth="2">
+                    <IfFileName glob="registry-meta.log.*" />
+                    <IfLastModified age="3d" />
+                </Delete>
+            </DefaultRolloverStrategy>
+        </RollingRandomAccessFile>
+
+        <RollingRandomAccessFile name="META-STARTUP-APPENDER" fileName="${META_LOG_HOME}/registry-startup.log"
+                                 filePattern="${META_LOG_HOME}/registry-startup.log.%d{yyyy-MM-dd}">
+            <PatternLayout pattern="[%d{ISO8601}][%p][%t][%c{0}] - %m%n"/>
+            <Policies>
+                <TimeBasedTriggeringPolicy/>
+            </Policies>
+            <DefaultRolloverStrategy max="30">
+                <Delete basePath="${META_LOG_HOME}" maxDepth="2">
+                    <IfFileName glob="registry-startup.log.*" />
+                    <IfLastModified age="30d" />
+                </Delete>
+            </DefaultRolloverStrategy>
+        </RollingRandomAccessFile>
+
+        <RollingRandomAccessFile name="SLOT-TABLE-RECORDER-APPENDER" fileName="${META_LOG_HOME}/slot-table-recorder.log"
+                                 filePattern="${META_LOG_HOME}/slot-table-recorder.log.%d{yyyy-MM-dd}">
+            <PatternLayout pattern="[%d{ISO8601}][%p][%t][%c{0}] - %m%n"/>
+            <Policies>
+                <TimeBasedTriggeringPolicy/>
+            </Policies>
+            <DefaultRolloverStrategy max="30">
+                <Delete basePath="${META_LOG_HOME}" maxDepth="2">
+                    <IfFileName glob="slot-table-recorder.log.*" />
+                    <IfLastModified age="30d" />
+                </Delete>
+            </DefaultRolloverStrategy>
+        </RollingRandomAccessFile>
+
+        <RollingRandomAccessFile name="META-JRAFT-METRICS-APPENDER" fileName="${META_LOG_HOME}/registry-raft-metrics.log"
+                                 filePattern="${META_LOG_HOME}/registry-raft-metrics.log.%d{yyyy-MM-dd}">
+            <PatternLayout pattern="[%d{ISO8601}][%p][%t][%c{0}] - %m%n"/>
+            <Policies>
+                <TimeBasedTriggeringPolicy/>
+            </Policies>
+            <DefaultRolloverStrategy max="72">
+                <Delete basePath="${META_LOG_HOME}" maxDepth="2">
+                    <IfFileName glob="registry-raft-metrics.log.*" />
+                    <IfLastModified age="30d" />
+                </Delete>
+            </DefaultRolloverStrategy>
+        </RollingRandomAccessFile>
+
+        <RollingRandomAccessFile name="REGISTRY-METRICS-APPENDER" fileName="${META_LOG_HOME}/registry-metrics.log"
+                                 filePattern="${META_LOG_HOME}/registry-metrics.log.%d{yyyy-MM-dd}">
+            <PatternLayout pattern="[%d{ISO8601}][%p][%t][%c{0}] - %m%n"/>
+            <ThresholdFilter level="ERROR" onMatch="DENY"/>
+            <Policies>
+                <TimeBasedTriggeringPolicy/>
+            </Policies>
+            <DefaultRolloverStrategy max="30">
+                <Delete basePath="${META_LOG_HOME}" maxDepth="2">
+                    <IfFileName glob="registry-metrics.log.*" />
+                    <IfLastModified age="30d" />
+                </Delete>
+            </DefaultRolloverStrategy>
+        </RollingRandomAccessFile>
+
+        <RollingRandomAccessFile name="META-HTTP-APPENDER" fileName="${META_LOG_HOME}/registry-http.log"
+                                 filePattern="${META_LOG_HOME}/registry-http.log.%d{yyyy-MM-dd}">
+            <PatternLayout pattern="[%d{ISO8601}][%p][%t][%c{0}] - %m%n"/>
+            <ThresholdFilter level="ERROR" onMatch="DENY"/>
+            <Policies>
+                <TimeBasedTriggeringPolicy/>
+            </Policies>
+            <DefaultRolloverStrategy max="30">
+                <Delete basePath="${META_LOG_HOME}" maxDepth="2">
+                    <IfFileName glob="registry-http.log.*" />
+                    <IfLastModified age="30d" />
+                </Delete>
+            </DefaultRolloverStrategy>
+        </RollingRandomAccessFile>
+
+    </appenders>
+
+    <loggers>
+        <!-- common loggers -->
+
+        <logger name="com.alipay.sofa.registry.jraft" level="${LOG_LEVEL}" additivity="false">
+            <appender-ref ref="JRAFT-APPENDER"/>
+            <appender-ref ref="COMMON-ERROR-APPENDER"/>
+        </logger>
+
+        <logger name="com.alipay.sofa.jraft" level="${LOG_LEVEL}" additivity="false">
+            <appender-ref ref="JRAFT-APPENDER"/>
+            <appender-ref ref="COMMON-ERROR-APPENDER"/>
+        </logger>
+
+        <!-- meta loggers -->
+
+        <logger name="META-JRAFT-METRICS" level="${LOG_LEVEL}" additivity="false">
+            <appender-ref ref="META-JRAFT-METRICS-APPENDER"/>
+            <appender-ref ref="COMMON-ERROR-APPENDER"/>
+        </logger>
+
+        <logger name="com.alipay.sofa.registry.server.meta" level="${LOG_LEVEL}" additivity="false">
+            <appender-ref ref="STDOUT-APPENDER"/>
+            <appender-ref ref="META-DEFAULT-APPENDER"/>
+            <appender-ref ref="COMMON-ERROR-APPENDER"/>
+        </logger>
+
+        <logger name="com.alipay.sofa.registry.server.meta.bootstrap" level="${LOG_LEVEL}" additivity="false">
+            <appender-ref ref="META-STARTUP-APPENDER"/>
+            <appender-ref ref="STDOUT-APPENDER"/>
+            <appender-ref ref="COMMON-ERROR-APPENDER"/>
+        </logger>
+
+        <logger name="com.alipay.sofa.registry.server.shared.slot.DiskSlotTableRecorder" level="${LOG_LEVEL}" additivity="false">
+            <appender-ref ref="SLOT-TABLE-RECORDER-APPENDER"/>
+            <appender-ref ref="STDOUT-APPENDER"/>
+        </logger>
+
+        <logger name="com.alipay.sofa.registry.server.meta.resource" level="${LOG_LEVEL}" additivity="false">
+            <appender-ref ref="META-HTTP-APPENDER"/>
+            <appender-ref ref="COMMON-ERROR-APPENDER"/>
+        </logger>
+
+        <logger name="META-START-LOGS" level="${LOG_LEVEL}" additivity="false">
+            <appender-ref ref="META-STARTUP-APPENDER"/>
+            <appender-ref ref="STDOUT-APPENDER"/>
+            <appender-ref ref="COMMON-ERROR-APPENDER"/>
+        </logger>
+
+        <logger name="org.springframework.boot.SpringApplication" level="${LOG_LEVEL}" additivity="false">
+            <appender-ref ref="META-STARTUP-APPENDER"/>
+            <appender-ref ref="STDOUT-APPENDER"/>
+            <appender-ref ref="COMMON-ERROR-APPENDER"/>
+        </logger>
+
+        <logger name="com.alipay.sofa.registry.server.meta.MetaApplication" level="${LOG_LEVEL}" additivity="false">
+            <appender-ref ref="META-STARTUP-APPENDER"/>
+            <appender-ref ref="STDOUT-APPENDER"/>
+            <appender-ref ref="COMMON-ERROR-APPENDER"/>
+        </logger>
+
+        <logger name="REGISTRY-METRICS" level="${LOG_LEVEL}" additivity="false">
+            <appender-ref ref="REGISTRY-METRICS-APPENDER"/>
+            <appender-ref ref="COMMON-ERROR-APPENDER"/>
+        </logger>
+
+        <!-- root loggers -->
+
+        <root level="${LOG_LEVEL}">
+            <appender-ref ref="STDOUT-APPENDER"/>
+            <appender-ref ref="COMMON-DEFAULT-APPENDER"/>
+            <appender-ref ref="COMMON-ERROR-APPENDER"/>
+        </root>
+    </loggers>
+
+</configuration>
