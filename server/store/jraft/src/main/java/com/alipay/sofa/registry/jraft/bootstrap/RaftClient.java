@@ -78,11 +78,12 @@ public class RaftClient {
     public RaftClient(String groupId, String confStr, AbstractClientService cliClientService) {
 
         this.groupId = groupId;
-        conf = new Configuration();
+        Configuration conf = new Configuration();
         if (!conf.parse(confStr)) {
             throw new IllegalArgumentException("Fail to parse conf:" + confStr);
         }
         cliOptions = new CliOptions();
+        this.conf = conf;
         this.cliClientService = (CliClientService) cliClientService;
     }
 
@@ -91,7 +92,6 @@ public class RaftClient {
      */
     public void start() {
         if (started.compareAndSet(false, true)) {
-
             RouteTable.getInstance().updateConfiguration(groupId, conf);
 
             cliClientService.init(cliOptions);
@@ -129,6 +129,15 @@ public class RaftClient {
         if (cliClientService != null) {
             cliClientService.shutdown();
         }
+    }
+
+    public void updateConfiguration(String groupId, String confStr) {
+        Configuration conf = new Configuration();
+        if (!conf.parse(confStr)) {
+            throw new IllegalArgumentException("Fail to parse conf:" + confStr);
+        }
+        RouteTable.getInstance().updateConfiguration(groupId, conf);
+        this.conf = conf;
     }
 
     /**

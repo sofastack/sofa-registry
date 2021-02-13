@@ -21,23 +21,28 @@ import com.alipay.sofa.registry.common.model.constants.ValueConstants;
 import com.alipay.sofa.registry.jraft.bootstrap.RaftClient;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
-import com.alipay.sofa.registry.net.NetUtil;
+import com.alipay.sofa.registry.remoting.jersey.JerseyClient;
+import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 
+import javax.ws.rs.core.Response;
 import java.util.Collection;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
- *
  * @author shangyu.wh
  * @version $Id: RaftClientManager.java, v 0.1 2018-06-20 20:50 shangyu.wh Exp $
  */
 public abstract class AbstractRaftClientManager {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(AbstractRaftClientManager.class);
+    private static final Logger  LOGGER = LoggerFactory.getLogger(AbstractRaftClientManager.class);
 
-    private volatile RaftClient raftClient;
+    private volatile RaftClient  raftClient;
+
+    private volatile Set<String> serverIps;
 
     public synchronized void startRaftClient() {
         if (raftClient != null) {
@@ -56,7 +61,7 @@ public abstract class AbstractRaftClientManager {
 
     private String getServerConfig() {
         String ret = "";
-        Set<String> ips = getConfigMetaIp();
+        Set<String> ips = queryConfigMetaIp();
         if (ips != null && !ips.isEmpty()) {
             ret = ips.stream().map(ip -> ip + ":" + ValueConstants.RAFT_SERVER_PORT).collect(Collectors.joining(","));
         }
@@ -66,17 +71,28 @@ public abstract class AbstractRaftClientManager {
         return ret;
     }
 
-    public Set<String> getConfigMetaIp() {
-        Set<String> set = Sets.newHashSet();
-        Collection<String> metaDomains = getMetaNodeDomains();
-        metaDomains.forEach(domain -> {
-            String ip = NetUtil.getIPAddressFromDomain(domain);
-            if (ip == null) {
-                throw new RuntimeException("Node config convert domain {" + domain + "} error!");
+    public Set<String> queryConfigMetaIp() {
+        Collection<String> metaAddresses = getMetaNodeAddresses();
+        List<String> metaIps = null;
+        for (String address : metaAddresses) {
+            String url = String.format("http://%s:9615/manage/metaNodes", address);
+            Response resp = JerseyClient.getInstance().getClient().target(url).request().buildGet()
+                .invoke();
+            if (resp.getStatus() != Response.Status.OK.getStatusCode()) {
+                continue;
             }
-            set.add(ip);
-        });
-        return set;
+            Map<String, List<String>> ret = Maps.newHashMap();
+            ret = resp.readEntity(ret.getClass());
+            metaIps = ret.get(getLocalDataCenter());
+            if (metaIps != null && !metaIps.isEmpty()) {
+                break;
+            }
+        }
+        if (metaIps == null || metaIps.isEmpty()) {
+            throw new RuntimeException("fetch metaIPs from meta is empty");
+        }
+        serverIps = Sets.newHashSet(metaIps);
+        return serverIps;
     }
 
     private String getGroup() {
@@ -112,5 +128,13 @@ public abstract class AbstractRaftClientManager {
 
     protected abstract String getLocalDataCenter();
 
-    protected abstract Collection<String> getMetaNodeDomains();
+    protected abstract Collection<String> getMetaNodeAddresses();
+
+    public Set<String> getServerIps() {
+        return serverIps;
+    }
+
+    public void refreshConfiguration() {
+        raftClient.updateConfiguration(getGroup(), getServerConfig());
+    }
 }

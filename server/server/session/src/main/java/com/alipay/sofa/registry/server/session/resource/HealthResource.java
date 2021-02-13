@@ -31,7 +31,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import com.alipay.sofa.registry.common.model.CommonResponse;
 import com.alipay.sofa.registry.metrics.ReporterUtils;
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerBootstrap;
-import com.alipay.sofa.registry.server.session.node.RaftClientManager;
+import com.alipay.sofa.registry.server.session.node.service.RaftClientManager;
 import com.codahale.metrics.Gauge;
 import com.codahale.metrics.MetricRegistry;
 

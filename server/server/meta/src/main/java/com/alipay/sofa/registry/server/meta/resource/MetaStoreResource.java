@@ -26,6 +26,7 @@ import com.alipay.sofa.registry.server.meta.metaserver.CurrentDcMetaServer;
 import com.alipay.sofa.registry.server.meta.remoting.RaftExchanger;
 import com.alipay.sofa.registry.util.DatumVersionUtil;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -39,7 +40,6 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
- *
  * @author shangyu.wh
  * @version $Id: MetaStoreResource.java, v 0.1 2018-07-30 18:55 shangyu.wh Exp $
  */
@@ -207,5 +207,17 @@ public class MetaStoreResource {
     public List<String> getMetaList() {
         List<PeerId> peerIds = raftExchanger.getPeers();
         return peerIds.stream().map(PeerId::getIp).collect(Collectors.toList());
+    }
+
+    @GET
+    @Path("metaNodes")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Map<String, List<String>> getMetaNodesMap() {
+        List<PeerId> peerIds = raftExchanger.getPeers();
+        String localDataCenter = nodeConfig.getLocalDataCenter();
+        List<String> metaIps = peerIds.stream().map(PeerId::getIp).collect(Collectors.toList());
+        Map<String, List<String>> ret = Maps.newHashMap();
+        ret.put(localDataCenter, metaIps);
+        return ret;
     }
 }

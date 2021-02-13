@@ -22,7 +22,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 import org.apache.commons.lang.builder.ToStringStyle;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
-import java.util.Set;
+import java.util.Collection;
 
 /**
  * @author qian.lqlq
@@ -31,86 +31,96 @@ import java.util.Set;
 @ConfigurationProperties(prefix = DataServerConfig.PRE_FIX)
 public class DataServerConfig {
 
-    public static final String   PRE_FIX                                  = "data.server";
+    public static final String          PRE_FIX                                  = "data.server";
 
-    private int                  port                                     = 9620;
+    private int                         port                                     = 9620;
 
-    private int                  syncDataPort                             = 9621;
-    private int                  syncSessionPort                          = 9602;
+    private int                         syncDataPort                             = 9621;
+    private int                         syncSessionPort                          = 9602;
 
-    private int                  metaServerPort                           = 9611;
+    private int                         metaServerPort                           = 9611;
 
-    private int                  httpServerPort                           = 9622;
+    private int                         httpServerPort                           = 9622;
 
-    private int                  notifyExecutorPoolSize                   = OsUtils.getCpuCount() * 3;
+    private int                         notifyExecutorPoolSize                   = OsUtils
+                                                                                     .getCpuCount() * 3;
 
-    private int                  notifyExecutorQueueSize                  = 10000;
+    private int                         notifyExecutorQueueSize                  = 10000;
 
-    private int                  notifyRetryQueueSize                     = 10000;
+    private int                         notifyRetryQueueSize                     = 10000;
 
-    private int                  notifyMaxItems                           = 300;
+    private int                         notifyMaxItems                           = 300;
 
-    private int                  notifyIntervalMillis                     = 1000;
+    private int                         notifyIntervalMillis                     = 1000;
 
-    private int                  notifyRetryTimes                         = 3;
+    private int                         notifyRetryTimes                         = 3;
 
-    private int                  notifyRetryBackoffMillis                 = 500;
+    private int                         notifyRetryBackoffMillis                 = 500;
 
-    private int                  notifyTempExecutorPoolSize               = OsUtils.getCpuCount() * 3;
+    private int                         notifyTempExecutorPoolSize               = OsUtils
+                                                                                     .getCpuCount() * 3;
 
-    private int                  notifyTempExecutorQueueSize              = 4000;
-    private int                  notifyTempDataIntervalMillis             = 500;
+    private int                         notifyTempExecutorQueueSize              = 4000;
+    private int                         notifyTempDataIntervalMillis             = 500;
 
-    private int                  rpcTimeoutMillis                         = 3000;
+    private int                         rpcTimeoutMillis                         = 3000;
 
-    private CommonConfig         commonConfig;
+    private CommonConfig                commonConfig;
 
-    private volatile Set<String> metaIps                                  = null;
+    private volatile Collection<String> metaAddresses                            = null;
 
-    private int                  getDataExecutorMinPoolSize               = OsUtils.getCpuCount() * 5;
+    private int                         getDataExecutorMinPoolSize               = OsUtils
+                                                                                     .getCpuCount() * 5;
 
-    private int                  getDataExecutorMaxPoolSize               = OsUtils.getCpuCount() * 10;
+    private int                         getDataExecutorMaxPoolSize               = OsUtils
+                                                                                     .getCpuCount() * 10;
 
-    private int                  getDataExecutorQueueSize                 = 20000;
+    private int                         getDataExecutorQueueSize                 = 20000;
 
-    private long                 getDataExecutorKeepAliveTime             = 60;
+    private long                        getDataExecutorKeepAliveTime             = 60;
 
-    private int                  publishExecutorMinPoolSize               = OsUtils.getCpuCount() * 5;
+    private int                         publishExecutorMinPoolSize               = OsUtils
+                                                                                     .getCpuCount() * 5;
 
-    private int                  publishExecutorMaxPoolSize               = OsUtils.getCpuCount() * 10;
+    private int                         publishExecutorMaxPoolSize               = OsUtils
+                                                                                     .getCpuCount() * 10;
 
-    private int                  publishExecutorQueueSize                 = 10000;
+    private int                         publishExecutorQueueSize                 = 10000;
 
-    private volatile int         sessionLeaseSecs                         = 30;
+    private volatile int                sessionLeaseSecs                         = 30;
 
-    private int                  datumCompactDelaySecs                    = 60 * 3;
+    private int                         datumCompactDelaySecs                    = 60 * 3;
 
-    private int                  slotLeaderSyncSessionExecutorThreadSize  = OsUtils.getCpuCount() * 3;
-    private int                  slotLeaderSyncSessionExecutorQueueSize   = 40000;
-    private volatile int         slotLeaderSyncSessionIntervalSecs        = 6;
+    private int                         slotLeaderSyncSessionExecutorThreadSize  = OsUtils
+                                                                                     .getCpuCount() * 3;
+    private int                         slotLeaderSyncSessionExecutorQueueSize   = 40000;
+    private volatile int                slotLeaderSyncSessionIntervalSecs        = 6;
 
-    private int                  slotFollowerSyncLeaderExecutorThreadSize = OsUtils.getCpuCount();
-    private int                  slotFollowerSyncLeaderExecutorQueueSize  = 10000;
-    private volatile int         slotFollowerSyncLeaderIntervalSecs       = 60;
+    private int                         slotFollowerSyncLeaderExecutorThreadSize = OsUtils
+                                                                                     .getCpuCount();
+    private int                         slotFollowerSyncLeaderExecutorQueueSize  = 10000;
+    private volatile int                slotFollowerSyncLeaderIntervalSecs       = 60;
 
     // the publisher.digest if len(registerId/uuid+long+long), 50bytes
-    private volatile int         slotSyncPublisherDigestMaxNum            = 4000;
+    private volatile int                slotSyncPublisherDigestMaxNum            = 4000;
 
-    private volatile int         slotSyncPublisherMaxNum                  = 512;
+    private volatile int                slotSyncPublisherMaxNum                  = 512;
 
-    private int                  slotSyncRequestExecutorMinPoolSize       = OsUtils.getCpuCount() * 3;
+    private int                         slotSyncRequestExecutorMinPoolSize       = OsUtils
+                                                                                     .getCpuCount() * 3;
 
-    private int                  slotSyncRequestExecutorMaxPoolSize       = OsUtils.getCpuCount() * 3;
+    private int                         slotSyncRequestExecutorMaxPoolSize       = OsUtils
+                                                                                     .getCpuCount() * 3;
 
-    private int                  slotSyncRequestExecutorQueueSize         = 1000;
+    private int                         slotSyncRequestExecutorQueueSize         = 1000;
 
-    private int                  schedulerHeartbeatIntervalSecs           = 1;
+    private int                         schedulerHeartbeatIntervalSecs           = 1;
 
-    private boolean              enableTestApi                            = false;
+    private boolean                     enableTestApi                            = false;
 
-    private int                  cacheDigestIntervalMinutes               = 15;
+    private int                         cacheDigestIntervalMinutes               = 15;
 
-    private int                  cacheCountIntervalSecs                   = 30;
+    private int                         cacheCountIntervalSecs                   = 30;
 
     /**
      * constructor
@@ -386,14 +396,14 @@ public class DataServerConfig {
      *
      * @return property value of metaServerIpAddress
      */
-    public Set<String> getMetaServerIpAddresses() {
-        final Set<String> ips = metaIps;
-        if (ips != null && !ips.isEmpty()) {
-            return ips;
+    public Collection<String> getMetaServerAddresses() {
+        final Collection<String> addresses = metaAddresses;
+        if (addresses != null) {
+            return addresses;
         }
-        metaIps = ServerEnv.transferMetaIps(commonConfig.getMetaNode(),
+        metaAddresses = ServerEnv.getMetaAddresses(commonConfig.getMetaNode(),
             commonConfig.getLocalDataCenter());
-        return metaIps;
+        return metaAddresses;
     }
 
     /**
