@@ -26,14 +26,12 @@ import com.alipay.sofa.registry.remoting.exchange.RequestException;
 import com.alipay.sofa.registry.remoting.exchange.message.Request;
 import com.alipay.sofa.registry.remoting.exchange.message.Response;
 import com.alipay.sofa.registry.server.shared.remoting.ClientSideExchanger;
-import com.google.common.collect.Sets;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import javax.annotation.Resource;
 import java.util.Collection;
 
 /**
- *
  * @author yuzhi.lyz
  * @version v 0.1 2020-11-28 15:36 yuzhi.lyz Exp $
  */
@@ -52,8 +50,8 @@ public abstract class AbstractMetaNodeExchanger extends ClientSideExchanger {
     }
 
     public void startRaftClient() {
-        this.serverIps = Sets.newHashSet(raftClientManager.getConfigMetaIp());
         raftClientManager.startRaftClient();
+        this.serverIps = raftClientManager.getServerIps();
         connectServer();
     }
 
@@ -65,6 +63,8 @@ public abstract class AbstractMetaNodeExchanger extends ClientSideExchanger {
             return super.request(request);
         } catch (Throwable e) {
             //retry
+            raftClientManager.refreshConfiguration();
+            this.serverIps = raftClientManager.getServerIps();
             URL url = new URL(raftClientManager.refreshLeader().getIp(), getServerPort());
             LOGGER.warn(
                 "MetaNode Exchanger request send error!It will be retry once!Request url:{}", url);
@@ -84,4 +84,5 @@ public abstract class AbstractMetaNodeExchanger extends ClientSideExchanger {
     protected Collection<ChannelHandler> getClientHandlers() {
         return metaClientHandlers;
     }
+
 }

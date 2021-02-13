@@ -25,16 +25,12 @@ import com.google.common.base.Joiner;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import javax.ws.rs.GET;
-import javax.ws.rs.Path;
-import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
+import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import java.util.List;
 import java.util.stream.Collectors;
 
 /**
- *
  * @author shangyu.wh
  * @version $Id: SessionOpenResource.java, v 0.1 2018-03-21 11:06 shangyu.wh Exp $
  */
@@ -45,7 +41,7 @@ public class SessionOpenResource {
     private SessionServerConfig sessionServerConfig;
 
     @Autowired
-    private MetaServerService   mataNodeService;
+    private MetaServerService   metaNodeService;
 
     @Autowired
     private SlotTableCache      slotTableCache;
@@ -90,7 +86,7 @@ public class SessionOpenResource {
     }
 
     private List<String> getSessionServers(String zone) {
-        List<String> serverList = mataNodeService.getSessionServerList(zone);
+        List<String> serverList = metaNodeService.getSessionServerList(zone);
 
         serverList = serverList.stream()
                 .map(server -> server + ":" + sessionServerConfig.getServerPort())
@@ -105,5 +101,4 @@ public class SessionOpenResource {
         ParaCheckUtil.checkNotBlank(dataInfoId, "dataInfoId");
         return slotTableCache.getSlot(dataInfoId);
     }
-
 }
