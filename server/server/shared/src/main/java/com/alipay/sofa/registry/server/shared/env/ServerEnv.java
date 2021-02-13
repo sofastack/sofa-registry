@@ -27,7 +27,6 @@ import java.util.Random;
 import java.util.Set;
 
 /**
- *
  * @author yuzhi.lyz
  * @version v 0.1 2020-11-28 15:25 yuzhi.lyz Exp $
  */
@@ -60,6 +59,22 @@ public final class ServerEnv {
 
     public static boolean isLocalServer(String ip) {
         return IP.equals(ip);
+    }
+
+    public static Collection<String> getMetaAddresses(Map<String, Collection<String>> metaMap,
+                                                      String localDataCenter) {
+        if (metaMap == null) {
+            throw new RuntimeException("metaNodes is null");
+        }
+        if (localDataCenter == null) {
+            throw new RuntimeException("local datacenter is null");
+        }
+        Collection<String> addresses = metaMap.get(localDataCenter);
+        if (addresses == null || addresses.isEmpty()) {
+            throw new RuntimeException(String.format("LocalDataCenter(%s) is not in metaNode",
+                localDataCenter));
+        }
+        return addresses;
     }
 
     public static Set<String> transferMetaIps(Map<String, Collection<String>> metaMap, String localDataCenter) {

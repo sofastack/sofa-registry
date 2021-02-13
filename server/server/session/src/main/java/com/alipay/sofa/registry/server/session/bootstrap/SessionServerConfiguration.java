@@ -67,7 +67,7 @@ import com.alipay.sofa.registry.server.session.filter.blacklist.*;
 import com.alipay.sofa.registry.server.session.limit.AccessLimitService;
 import com.alipay.sofa.registry.server.session.limit.AccessLimitServiceImpl;
 import com.alipay.sofa.registry.server.session.listener.*;
-import com.alipay.sofa.registry.server.session.node.RaftClientManager;
+import com.alipay.sofa.registry.server.session.node.service.RaftClientManager;
 import com.alipay.sofa.registry.server.session.node.processor.ClientNodeSingleTaskProcessor;
 import com.alipay.sofa.registry.server.session.node.processor.ConsoleSyncSingleTaskProcessor;
 import com.alipay.sofa.registry.server.session.node.processor.DataNodeSingleTaskProcessor;

@@ -16,7 +16,7 @@
  */
 package com.alipay.sofa.registry.server.session.bootstrap;
 
-import java.util.Set;
+import java.util.Collection;
 
 /**
  * SessionServerConfig Interface
@@ -129,7 +129,7 @@ public interface SessionServerConfig {
 
     int getSlotSyncPublisherMaxNum();
 
-    Set<String> getMetaServerIpAddresses();
+    Collection<String> getMetaServerAddresses();
 
     boolean isEnableSessionLoadbalancePolicy();
 

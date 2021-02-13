@@ -27,7 +27,6 @@ import com.alipay.sofa.registry.remoting.exchange.RequestException;
 import com.alipay.sofa.registry.remoting.exchange.message.Request;
 import com.alipay.sofa.registry.remoting.exchange.message.Response;
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
-import com.alipay.sofa.registry.server.session.node.RaftClientManager;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.List;

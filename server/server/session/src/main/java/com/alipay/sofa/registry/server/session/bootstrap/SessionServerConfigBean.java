@@ -16,6 +16,7 @@
  */
 package com.alipay.sofa.registry.server.session.bootstrap;
 
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.regex.Pattern;
@@ -38,138 +39,149 @@ public class SessionServerConfigBean implements SessionServerConfig {
     /**
      * The constant PREFIX.
      */
-    public static final String   PREFIX                                     = "session.server";
+    public static final String          PREFIX                                     = "session.server";
 
-    private int                  serverPort                                 = 9600;
+    private int                         serverPort                                 = 9600;
 
-    private int                  syncSessionPort                            = 9602;
+    private int                         syncSessionPort                            = 9602;
 
-    private int                  metaServerPort                             = 9610;
+    private int                         metaServerPort                             = 9610;
 
-    private int                  dataServerPort                             = 9620;
+    private int                         dataServerPort                             = 9620;
 
-    private int                  httpServerPort;
+    private int                         httpServerPort;
 
-    private int                  schedulerHeartbeatIntervalSecs             = 1;
+    private int                         schedulerHeartbeatIntervalSecs             = 1;
 
-    private int                  subscriberRegisterFetchRetryTimes          = 3;
+    private int                         subscriberRegisterFetchRetryTimes          = 3;
 
-    private int                  accessDataExecutorMinPoolSize              = OsUtils.getCpuCount() * 10;
+    private int                         accessDataExecutorMinPoolSize              = OsUtils
+                                                                                       .getCpuCount() * 10;
 
-    private int                  accessDataExecutorMaxPoolSize              = OsUtils.getCpuCount() * 20;
+    private int                         accessDataExecutorMaxPoolSize              = OsUtils
+                                                                                       .getCpuCount() * 20;
 
-    private int                  accessDataExecutorQueueSize                = 10000;
+    private int                         accessDataExecutorQueueSize                = 10000;
 
-    private long                 accessDataExecutorKeepAliveTime            = 60;
+    private long                        accessDataExecutorKeepAliveTime            = 60;
 
-    private int                  dataChangeExecutorMinPoolSize              = OsUtils.getCpuCount() * 2;
+    private int                         dataChangeExecutorMinPoolSize              = OsUtils
+                                                                                       .getCpuCount() * 2;
 
-    private int                  dataChangeExecutorMaxPoolSize              = OsUtils.getCpuCount() * 3;
+    private int                         dataChangeExecutorMaxPoolSize              = OsUtils
+                                                                                       .getCpuCount() * 3;
 
-    private int                  dataChangeExecutorQueueSize                = 20000;
+    private int                         dataChangeExecutorQueueSize                = 20000;
 
-    private long                 dataChangeExecutorKeepAliveTime            = 60;
+    private long                        dataChangeExecutorKeepAliveTime            = 60;
 
-    private int                  connectClientExecutorMinPoolSize           = OsUtils.getCpuCount();
+    private int                         connectClientExecutorMinPoolSize           = OsUtils
+                                                                                       .getCpuCount();
 
-    private int                  connectClientExecutorMaxPoolSize           = OsUtils.getCpuCount();
+    private int                         connectClientExecutorMaxPoolSize           = OsUtils
+                                                                                       .getCpuCount();
 
-    private int                  connectClientExecutorQueueSize             = 2000;
+    private int                         connectClientExecutorQueueSize             = 2000;
 
-    private int                  dataChangeFetchTaskMaxBufferSize           = 30000;
+    private int                         dataChangeFetchTaskMaxBufferSize           = 30000;
 
-    private int                  dataChangeFetchTaskWorkerSize              = OsUtils.getCpuCount() * 5;
+    private int                         dataChangeFetchTaskWorkerSize              = OsUtils
+                                                                                       .getCpuCount() * 5;
 
-    private int                  dataChangeDebouncingMillis                 = 1000;
-    private int                  dataChangeMaxDebouncingMillis              = 3000;
+    private int                         dataChangeDebouncingMillis                 = 1000;
+    private int                         dataChangeMaxDebouncingMillis              = 3000;
 
-    private int                  slotSyncMaxBufferSize                      = 5000;
+    private int                         slotSyncMaxBufferSize                      = 5000;
 
-    private int                  slotSyncWorkerSize                         = OsUtils.getCpuCount() * 4;
+    private int                         slotSyncWorkerSize                         = OsUtils
+                                                                                       .getCpuCount() * 4;
 
-    private int                  clientNodeExchangeTimeoutMillis            = 1000;                           //time out cause netty HashedWheelTimer occupy a lot of mem
+    private int                         clientNodeExchangeTimeoutMillis            = 1000;                           //time out cause netty HashedWheelTimer occupy a lot of mem
 
-    private int                  dataNodeExchangeTimeoutMillis              = 3000;
+    private int                         dataNodeExchangeTimeoutMillis              = 3000;
 
-    private int                  dataNodeExchangeForFetchDatumTimeoutMillis = 5000;
+    private int                         dataNodeExchangeForFetchDatumTimeoutMillis = 5000;
 
-    private int                  metaNodeExchangeTimeoutMillis              = 3000;
+    private int                         metaNodeExchangeTimeoutMillis              = 3000;
 
-    private int                  pushTaskExecutorPoolSize                   = OsUtils.getCpuCount() * 3;
+    private int                         pushTaskExecutorPoolSize                   = OsUtils
+                                                                                       .getCpuCount() * 3;
 
-    private int                  pushTaskExecutorQueueSize                  = pushTaskExecutorPoolSize * 3000;
+    private int                         pushTaskExecutorQueueSize                  = pushTaskExecutorPoolSize * 3000;
 
-    private int                  pushDataTaskRetryFirstDelayMillis          = 500;
+    private int                         pushDataTaskRetryFirstDelayMillis          = 500;
 
-    private int                  pushDataTaskRetryIncrementDelayMillis      = 500;
+    private int                         pushDataTaskRetryIncrementDelayMillis      = 500;
 
-    private int                  pushDataTaskDebouncingMillis               = 500;
+    private int                         pushDataTaskDebouncingMillis               = 500;
 
-    private int                  pushTaskRetryTimes                         = 3;
+    private int                         pushTaskRetryTimes                         = 3;
 
-    private int                  dataNodeExecutorWorkerSize                 = OsUtils.getCpuCount() * 8;
+    private int                         dataNodeExecutorWorkerSize                 = OsUtils
+                                                                                       .getCpuCount() * 8;
 
-    private int                  dataNodeExecutorQueueSize                  = 20000;
+    private int                         dataNodeExecutorQueueSize                  = 20000;
 
-    private int                  dataNodeRetryBackoffMillis                 = 1000;
+    private int                         dataNodeRetryBackoffMillis                 = 1000;
 
-    private int                  dataNodeRetryTimes                         = 5;
+    private int                         dataNodeRetryTimes                         = 5;
 
-    private int                  dataNodeRetryQueueSize                     = 1000;
+    private int                         dataNodeRetryQueueSize                     = 1000;
 
-    private int                  dataNodeMaxBatchSize                       = 100;
+    private int                         dataNodeMaxBatchSize                       = 100;
 
-    private int                  schedulerScanVersionIntervalMillis         = 1000 * 5;
+    private int                         schedulerScanVersionIntervalMillis         = 1000 * 5;
 
-    private double               accessLimitRate                            = 100000.0;
+    private double                      accessLimitRate                            = 100000.0;
 
-    private String               sessionServerRegion;
+    private String                      sessionServerRegion;
 
-    private String               sessionServerDataCenter;
+    private String                      sessionServerDataCenter;
 
-    private volatile boolean     stopPushSwitch                             = false;
+    private volatile boolean            stopPushSwitch                             = false;
 
     //begin config for enterprise version
 
     /**
      * forever close push zone，such as:RZBETA
      */
-    private String               invalidForeverZones                        = "";
+    private String                      invalidForeverZones                        = "";
     /**
      * config regex,exception to the rule of forever close push zone
      */
-    private String               invalidIgnoreDataidRegex                   = "";
+    private String                      invalidIgnoreDataidRegex                   = "";
 
-    private volatile Set<String> invalidForeverZonesSet;
+    private volatile Set<String>        invalidForeverZonesSet;
 
-    private Pattern              invalidIgnoreDataIdPattern                 = null;
+    private Pattern                     invalidIgnoreDataIdPattern                 = null;
 
-    private String               blacklistPubDataIdRegex                    = "";
+    private String                      blacklistPubDataIdRegex                    = "";
 
-    private String               blacklistSubDataIdRegex                    = "";
+    private String                      blacklistSubDataIdRegex                    = "";
 
-    private int                  dataClientConnNum                          = 10;
+    private int                         dataClientConnNum                          = 10;
 
-    private int                  sessionSchedulerPoolSize                   = OsUtils.getCpuCount();
+    private int                         sessionSchedulerPoolSize                   = OsUtils
+                                                                                       .getCpuCount();
 
-    private int                  slotSyncPublisherMaxNum                    = 512;
+    private int                         slotSyncPublisherMaxNum                    = 512;
 
-    private boolean              enableSessionLoadbalancePolicy             = false;
+    private boolean                     enableSessionLoadbalancePolicy             = false;
 
-    private int                  cacheDigestIntervalMinutes                 = 15;
+    private int                         cacheDigestIntervalMinutes                 = 15;
 
-    private int                  cacheCountIntervalSecs                     = 30;
+    private int                         cacheCountIntervalSecs                     = 30;
 
-    private int                  cacheDatumMaxNums                          = 2000;
+    private int                         cacheDatumMaxNums                          = 2000;
 
-    private int                  cacheDatumExpireSecs                       = 60 * 3;
-    private int                  silenceHour                                = 24;
+    private int                         cacheDatumExpireSecs                       = 60 * 3;
+    private int                         silenceHour                                = 24;
 
     //end config for enterprise version
 
-    private CommonConfig         commonConfig;
+    private CommonConfig                commonConfig;
 
-    private volatile Set<String> metaIps;
+    private volatile Collection<String> metaAddresses;
 
     /**
      * constructor
@@ -940,14 +952,14 @@ public class SessionServerConfigBean implements SessionServerConfig {
     }
 
     @Override
-    public Set<String> getMetaServerIpAddresses() {
-        final Set<String> ips = metaIps;
-        if (ips != null && !ips.isEmpty()) {
-            return ips;
+    public Collection<String> getMetaServerAddresses() {
+        final Collection<String> addresses = metaAddresses;
+        if (addresses != null) {
+            return addresses;
         }
-        metaIps = ServerEnv.transferMetaIps(commonConfig.getMetaNode(),
+        metaAddresses = ServerEnv.getMetaAddresses(commonConfig.getMetaNode(),
             commonConfig.getLocalDataCenter());
-        return metaIps;
+        return metaAddresses;
     }
 
     /**

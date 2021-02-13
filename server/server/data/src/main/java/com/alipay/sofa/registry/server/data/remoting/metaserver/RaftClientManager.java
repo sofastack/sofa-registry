@@ -37,7 +37,7 @@ public final class RaftClientManager extends AbstractRaftClientManager {
     }
 
     @Override
-    protected Collection<String> getMetaNodeDomains() {
-        return dataServerConfig.getMetaServerIpAddresses();
+    protected Collection<String> getMetaNodeAddresses() {
+        return dataServerConfig.getMetaServerAddresses();
     }
 }
