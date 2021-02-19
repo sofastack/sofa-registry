@@ -16,28 +16,17 @@
  */
 package com.alipay.sofa.registry.server.session.converter;
 
-import com.alipay.sofa.registry.common.model.AppRegisterServerDataBox;
 import com.alipay.sofa.registry.common.model.ServerDataBox;
-import com.alipay.sofa.registry.common.model.store.AppPublisher;
 import com.alipay.sofa.registry.common.model.store.BaseInfo.ClientVersion;
 import com.alipay.sofa.registry.common.model.store.DataInfo;
 import com.alipay.sofa.registry.common.model.store.Publisher;
 import com.alipay.sofa.registry.common.model.store.URL;
-import com.alipay.sofa.registry.core.model.AppPublisherBody;
-import com.alipay.sofa.registry.core.model.AppPublisherBodyInterface;
 import com.alipay.sofa.registry.core.model.DataBox;
 import com.alipay.sofa.registry.core.model.PublisherRegister;
-import com.alipay.sofa.registry.util.JsonUtils;
-import org.apache.commons.lang.StringUtils;
-import org.springframework.util.CollectionUtils;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
-import static com.alipay.sofa.registry.common.model.constants.ValueConstants.DEFAULT_GROUP;
-import static com.alipay.sofa.registry.common.model.constants.ValueConstants.DEFAULT_INSTANCE_ID;
 
 /**
  * @author shangyu.wh
@@ -45,15 +34,7 @@ import static com.alipay.sofa.registry.common.model.constants.ValueConstants.DEF
  */
 public class PublisherConverter {
 
-    private static Converter<PublisherRegister, AppPublisher> appPublisherConverter = source -> {
-        AppPublisher appPublisher = new AppPublisher();
-        fillCommonRegion(appPublisher, source);
-        appPublisher.setAppDataList(convert2AppDataList(source.getDataList()));
-
-        return appPublisher;
-    };
-
-    private static Converter<PublisherRegister, Publisher> publisherConverter = source -> {
+    private static final Converter<PublisherRegister, Publisher> publisherConverter = source -> {
         Publisher publisher = new Publisher();
 
         fillCommonRegion(publisher, source);
@@ -108,36 +89,5 @@ public class PublisherConverter {
             }
         }
         return serverDataBoxes;
-    }
-
-    private static List<AppRegisterServerDataBox> convert2AppDataList(List<DataBox> dataList) {
-        List<AppRegisterServerDataBox> dataBoxes = new ArrayList<>();
-        if (CollectionUtils.isEmpty(dataList)) {
-            return dataBoxes;
-        }
-        for (DataBox dataBox : dataList) {
-            AppPublisherBody body = JsonUtils.read(dataBox.getData(), AppPublisherBody.class);
-            AppRegisterServerDataBox serverDataBox = new AppRegisterServerDataBox();
-            serverDataBox.setRevision(body.getRevision());
-            serverDataBox.setUrl(body.getUrl());
-            serverDataBox.setBaseParams(body.getBaseParams());
-            Map<String, Map<String, List<String>>> interfaceParams = new HashMap<>();
-            for (AppPublisherBodyInterface inf : body.getInterfaces()) {
-                String instanceId = inf.getInstanceId();
-                String group = inf.getGroup();
-                if (StringUtils.isBlank(instanceId)) {
-                    instanceId = DEFAULT_INSTANCE_ID;
-                }
-                if (StringUtils.isBlank(inf.getGroup())) {
-                    group = DEFAULT_GROUP;
-                }
-                String dataInfoId = DataInfo.toDataInfoId(inf.getDataId(), instanceId, group);
-                interfaceParams.computeIfAbsent(dataInfoId, k -> new HashMap<>()).putAll(inf.getParams());
-            }
-            serverDataBox.setInterfaceParams(interfaceParams);
-            dataBoxes.add(serverDataBox);
-        }
-
-        return dataBoxes;
     }
 }

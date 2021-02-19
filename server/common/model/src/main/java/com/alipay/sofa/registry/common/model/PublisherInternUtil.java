@@ -16,11 +16,8 @@
  */
 package com.alipay.sofa.registry.common.model;
 
-import com.alipay.sofa.registry.common.model.store.AppPublisher;
 import com.alipay.sofa.registry.common.model.store.Publisher;
 import com.alipay.sofa.registry.common.model.store.WordCache;
-import com.google.common.collect.ArrayListMultimap;
-import com.sun.corba.se.spi.orbutil.threadpool.Work;
 
 import java.util.*;
 
@@ -46,34 +43,6 @@ public class PublisherInternUtil {
         publisher.setCell(publisher.getCell());
         publisher.setProcessId(publisher.getProcessId());
         publisher.setAppName(publisher.getAppName());
-
-        if (publisher instanceof AppPublisher) {
-            AppPublisher appPublisher = (AppPublisher) publisher;
-
-            for (AppRegisterServerDataBox dataBox : appPublisher.getAppDataList()) {
-                dataBox.setUrl(dataBox.getUrl());
-                dataBox.setRevision(dataBox.getRevision());
-
-                if(dataBox.getBaseParams() != null){
-                    Map<String, List<String>> baseParams = new HashMap<>();
-                    dataBox.getBaseParams().forEach((key, value) -> baseParams.put(WordCache.getWordCache(key), value));
-                    dataBox.setBaseParams(baseParams);
-                }
-
-                if(dataBox.getInterfaceParams() != null) {
-                    Map<String, Map<String, List<String>>> interfaceParams = new HashMap<>();
-                    dataBox.getInterfaceParams().forEach((key, value) -> {
-                        // cache serviceName
-                        String interfaceName = WordCache.getWordCache(key);
-                        value.forEach((key1, value1) -> interfaceParams.computeIfAbsent(interfaceName, k -> new HashMap<>()).put(WordCache.getWordCache(key1), value1));
-
-                    });
-                    dataBox.setInterfaceParams(interfaceParams);
-                }
-            }
-
-            return appPublisher;
-        }
         return publisher;
     }
 }
