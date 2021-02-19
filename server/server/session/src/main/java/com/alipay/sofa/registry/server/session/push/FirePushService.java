@@ -17,7 +17,6 @@
 package com.alipay.sofa.registry.server.session.push;
 
 import com.alipay.sofa.registry.common.model.SubscriberUtils;
-import com.alipay.sofa.registry.common.model.constants.ValueConstants;
 import com.alipay.sofa.registry.common.model.dataserver.Datum;
 import com.alipay.sofa.registry.common.model.store.DataInfo;
 import com.alipay.sofa.registry.common.model.store.Subscriber;
@@ -41,7 +40,6 @@ import javax.annotation.PostConstruct;
 import java.net.InetSocketAddress;
 import java.util.*;
 import java.util.concurrent.RejectedExecutionException;
-import java.util.concurrent.atomic.AtomicLong;
 
 public class FirePushService {
     public static final long               EXCEPT_MIN_VERSION = Long.MIN_VALUE;
