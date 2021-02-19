@@ -21,9 +21,7 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
 
-import com.alipay.sofa.registry.common.model.AppRegisterServerDataBox;
 import com.alipay.sofa.registry.common.model.PublisherInternUtil;
-import com.alipay.sofa.registry.common.model.store.AppPublisher;
 import com.alipay.sofa.registry.common.model.store.Publisher;
 import com.alipay.sofa.registry.common.model.store.WordCache;
 import com.alipay.sofa.registry.util.DatumVersionUtil;
@@ -274,20 +272,6 @@ public class Datum implements Serializable {
         if (pubMap != null) {
             this.pubMap.putAll(pubMap);
         }
-    }
-
-    public synchronized Set<String> revisions() {
-        Set<String> revisions = Sets.newHashSet();
-
-        for (Publisher publisher : pubMap.values()) {
-            if (publisher instanceof AppPublisher) {
-                AppPublisher appPublisher = (AppPublisher) publisher;
-                for (AppRegisterServerDataBox dataBox : appPublisher.getAppDataList()) {
-                    revisions.add(dataBox.getRevision());
-                }
-            }
-        }
-        return revisions;
     }
 
 }
