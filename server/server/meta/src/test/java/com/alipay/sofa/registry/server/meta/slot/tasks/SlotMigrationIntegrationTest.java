@@ -388,6 +388,39 @@ public class SlotMigrationIntegrationTest extends AbstractTest {
         assertSlotTableNoDupLeaderFollower(localSlotManager.getSlotTable());
     }
 
+    @Test
+    public void testDataLeaderBalance2() throws Exception {
+        ScheduledSlotArranger assigner = new ScheduledSlotArranger(dataServerManager,
+                localSlotManager, defaultSlotManager);
+        byte[] bytes = FileUtils.readFileToByteArray(new File(
+                "src/test/resources/test/slot-table-2.json"));
+        SlotTable prevSlotTable = JsonUtils.getJacksonObjectMapper()
+                .readValue(bytes, InnerSlotTable.class).toSlotTable();
+        localSlotManager.refresh(prevSlotTable);
+        List<DataNode> dataNodes = Lists.newArrayList(
+                new DataNode(new URL("100.83.52.136"), getDc()),
+                new DataNode(new URL("100.88.50.178"), getDc()),
+                new DataNode(new URL("11.166.229.74"), getDc()));
+        when(dataServerManager.getClusterMembers()).thenReturn(dataNodes);
+        makeRaftLeader();
+        assigner.arrangeSync();
+
+        Thread.sleep(2);
+        assigner.arrangeSync();
+
+        Thread.sleep(2);
+        assigner.arrangeSync();
+
+        Thread.sleep(2);
+        assigner.arrangeSync();
+
+        logger.info(JsonUtils.getJacksonObjectMapper().writerWithDefaultPrettyPrinter()
+                .writeValueAsString(localSlotManager.getSlotTable()));
+        Assert.assertTrue(isSlotTableLeaderBalanced(localSlotManager.getSlotTable(),
+                dataServerManager.getClusterMembers()));
+        assertSlotTableNoDupLeaderFollower(localSlotManager.getSlotTable());
+    }
+
     public static class InnerSlotTable {
         private long         epoch;
         private List<Slot>   slots;
