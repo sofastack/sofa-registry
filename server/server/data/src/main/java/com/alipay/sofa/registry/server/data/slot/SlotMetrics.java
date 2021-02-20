@@ -118,12 +118,12 @@ public final class SlotMetrics {
         }
     }
 
-    static final class Sync {
+    static final class SyncSession {
         private static final Counter SYNC_SESSION_ID_COUNTER      = Counter
                                                                       .build()
                                                                       .namespace("data")
                                                                       .subsystem("sync")
-                                                                      .name("sync_session_id_total")
+                                                                      .name("session_id_total")
                                                                       .help(
                                                                           "count sync session dataInfoIds")
                                                                       .labelNames("slot")
@@ -133,8 +133,7 @@ public final class SlotMetrics {
                                                                       .build()
                                                                       .namespace("data")
                                                                       .subsystem("sync")
-                                                                      .name(
-                                                                          "sync_session_id_num_total")
+                                                                      .name("session_id_num_total")
                                                                       .help(
                                                                           "count sync session dataInfoId's num")
                                                                       .labelNames("slot")
@@ -144,8 +143,7 @@ public final class SlotMetrics {
                                                                       .build()
                                                                       .namespace("data")
                                                                       .subsystem("sync")
-                                                                      .name(
-                                                                          "sync_session_pub_total")
+                                                                      .name("session_pub_total")
                                                                       .help(
                                                                           "count sync session pubs")
                                                                       .labelNames("slot")
@@ -155,8 +153,7 @@ public final class SlotMetrics {
                                                                       .build()
                                                                       .namespace("data")
                                                                       .subsystem("sync")
-                                                                      .name(
-                                                                          "sync_session_pub_num_total")
+                                                                      .name("session_pub_num_total")
                                                                       .help(
                                                                           "count sync session pub's num")
                                                                       .labelNames("slot")
@@ -172,6 +169,56 @@ public final class SlotMetrics {
             final String str = String.valueOf(slotId);
             SYNC_SESSION_PUB_COUNTER.labels(str).inc();
             SYNC_SESSION_PUB_NUM_COUNTER.labels(str).inc(pubNum);
+        }
+
+    }
+
+    static final class SyncLeader {
+        private static final Counter SYNC_LEADER_ID_COUNTER      = Counter
+                                                                     .build()
+                                                                     .namespace("data")
+                                                                     .subsystem("sync")
+                                                                     .name("leader_id_total")
+                                                                     .help(
+                                                                         "count sync leader dataInfoIds")
+                                                                     .labelNames("slot").register();
+
+        private static final Counter SYNC_LEADER_ID_NUM_COUNTER  = Counter
+                                                                     .build()
+                                                                     .namespace("data")
+                                                                     .subsystem("sync")
+                                                                     .name("leader_id_num_total")
+                                                                     .help(
+                                                                         "count sync leader dataInfoId's num")
+                                                                     .labelNames("slot").register();
+
+        private static final Counter SYNC_LEADER_PUB_COUNTER     = Counter
+                                                                     .build()
+                                                                     .namespace("data")
+                                                                     .subsystem("sync")
+                                                                     .name("leader_pub_total")
+                                                                     .help("count sync leader pubs")
+                                                                     .labelNames("slot").register();
+
+        private static final Counter SYNC_LEADER_PUB_NUM_COUNTER = Counter
+                                                                     .build()
+                                                                     .namespace("data")
+                                                                     .subsystem("sync")
+                                                                     .name("leader_pub_num_total")
+                                                                     .help(
+                                                                         "count sync leader pub's num")
+                                                                     .labelNames("slot").register();
+
+        static void observeSyncLeaderId(int slotId, int idNum) {
+            final String str = String.valueOf(slotId);
+            SYNC_LEADER_ID_COUNTER.labels(str).inc();
+            SYNC_LEADER_ID_NUM_COUNTER.labels(str).inc(idNum);
+        }
+
+        static void observeSyncLeaderPub(int slotId, int pubNum) {
+            final String str = String.valueOf(slotId);
+            SYNC_LEADER_PUB_COUNTER.labels(str).inc();
+            SYNC_LEADER_PUB_NUM_COUNTER.labels(str).inc(pubNum);
         }
 
     }
