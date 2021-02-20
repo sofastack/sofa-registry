@@ -159,7 +159,12 @@ public class SlotTableBuilderTest extends AbstractTest {
             nextFollower = dataNodes.get(index++).getIp();
         } while (nextFollower.equals(prevFollower) || nextFollower.equals(sb.getLeader()));
 
-        slotTableBuilder.addFollower(slotId, nextFollower);
+        try {
+            slotTableBuilder.addFollower(slotId, nextFollower);
+            Assert.assertTrue("could not reach", false);
+        } catch (IllegalArgumentException e) {
+            Assert.assertTrue(e.getMessage().contains("to many"));
+        }
         Assert.assertFalse(slotTableBuilder.getOrCreate(slotId).getFollowers()
             .contains(nextFollower));
         Assert.assertFalse(slotTableBuilder.getDataNodeSlot(nextFollower).getFollowers()
@@ -201,10 +206,7 @@ public class SlotTableBuilderTest extends AbstractTest {
         slotTableBuilder.removeDataServerSlots(dataNodes.get(0).getIp());
         Assert.assertTrue(slotTableBuilder.hasNoAssignedSlots());
 
-        Assert.assertTrue(slotTableBuilder.getDataNodeSlot(dataNodes.get(0).getIp()).getFollowers()
-            .isEmpty());
-        Assert.assertTrue(slotTableBuilder.getDataNodeSlot(dataNodes.get(0).getIp()).getLeaders()
-            .isEmpty());
+        Assert.assertNull(slotTableBuilder.getDataNodeSlotIfPresent(dataNodes.get(0).getIp()));
 
     }
 
@@ -212,7 +214,7 @@ public class SlotTableBuilderTest extends AbstractTest {
     public void testGetNoAssignedSlots() {
         List<DataNode> dataNodes = randomDataNodes(6);
         SlotTable slotTable = randomSlotTable(dataNodes);
-        SlotTableBuilder slotTableBuilder = new SlotTableBuilder(slotTable,16, 2);
+        SlotTableBuilder slotTableBuilder = new SlotTableBuilder(slotTable, 16, 2);
         slotTableBuilder.init(NodeUtils.transferNodeToIpList(dataNodes));
         Assert.assertFalse(slotTableBuilder.hasNoAssignedSlots());
         DataNodeSlot dataNodeSlot = slotTableBuilder.getDataNodeSlot(dataNodes.get(0).getIp());
@@ -298,11 +300,17 @@ public class SlotTableBuilderTest extends AbstractTest {
         SlotTable slotTable = randomSlotTable(dataNodes);
         SlotTableBuilder slotTableBuilder = new SlotTableBuilder(slotTable, 6, 2);
         slotTableBuilder.init(NodeUtils.transferNodeToIpList(dataNodes));
-        DataNodeSlot dataNodeSlot = slotTableBuilder.getDataNodeSlot(randomIp());
+        DataNodeSlot dataNodeSlot = null;
+        try {
+            dataNodeSlot = slotTableBuilder.getDataNodeSlot(randomIp());
+            // should not reach that
+            Assert.assertTrue(false);
+        } catch (IllegalArgumentException e) {
+            Assert.assertTrue(e.getMessage().contains("no DataNodeSlot for"));
+        }
+        Assert.assertNull(dataNodeSlot);
+        dataNodeSlot = slotTableBuilder.getDataNodeSlot(dataNodes.get(0).getIp());
         Assert.assertNotNull(dataNodeSlot);
-        Assert.assertTrue(dataNodeSlot.getLeaders().isEmpty());
-        Assert.assertTrue(dataNodeSlot.getFollowers().isEmpty());
-
         logger.info("[slotTableBuilder] {}", slotTableBuilder.toString());
     }
 

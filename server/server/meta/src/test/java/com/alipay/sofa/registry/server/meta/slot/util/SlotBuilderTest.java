@@ -42,7 +42,7 @@ public class SlotBuilderTest extends AbstractTest {
     public void testSetLeader() {
         slotBuilder = new SlotBuilder(1, 1, "10.0.0.1", 100);
         slotBuilder.setLeader("10.0.0.2");
-        Assert.assertEquals("10.0.0.1", slotBuilder.getLeader());
+        Assert.assertEquals("10.0.0.2", slotBuilder.getLeader());
         Assert.assertEquals(1, slotBuilder.getSlotId());
     }
 
@@ -63,7 +63,11 @@ public class SlotBuilderTest extends AbstractTest {
         slotBuilder.addFollower("10.0.0.2");
         Assert.assertEquals(epoch, slotBuilder.getEpoch());
         Assert.assertTrue(slotBuilder.getFollowers().contains("10.0.0.2"));
-        slotBuilder.addFollower("10.0.0.3");
+        try {
+            slotBuilder.addFollower("10.0.0.3");
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
         Assert.assertEquals(epoch, slotBuilder.getEpoch());
         Assert.assertFalse(slotBuilder.getFollowers().contains("10.0.0.3"));
     }

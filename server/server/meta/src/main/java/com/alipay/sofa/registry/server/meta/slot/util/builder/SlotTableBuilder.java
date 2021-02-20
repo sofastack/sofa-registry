@@ -77,7 +77,10 @@ public class SlotTableBuilder implements Builder<SlotTable> {
             }
             SlotBuilder slotBuilder = new SlotBuilder(slotId, followerNums, slot.getLeader(),
                 slot.getLeaderEpoch());
-            slotBuilder.addFollower(initSlotTable.getSlot(slotId).getFollowers());
+            if (!slotBuilder.addFollower(initSlotTable.getSlot(slotId).getFollowers())) {
+                throw new IllegalArgumentException(String.format("to many followers, %s",
+                    slotBuilder));
+            }
             buildingSlots.put(slotId, slotBuilder);
         }
         initReverseMap(dataServers);
@@ -115,7 +118,6 @@ public class SlotTableBuilder implements Builder<SlotTable> {
         nextLeaderDataNodeSlot.removeFollower(slotId);
         if (!StringUtils.isEmpty(prevLeader)) {
             reverseMap.get(prevLeader).removeLeader(slotId);
-            addFollower(slotId, prevLeader);
         }
         return prevLeader;
     }
@@ -130,7 +132,9 @@ public class SlotTableBuilder implements Builder<SlotTable> {
 
     public SlotTableBuilder addFollower(int slotId, String follower) {
         SlotBuilder slotBuilder = getOrCreate(slotId);
-        slotBuilder.addFollower(follower);
+        if (!slotBuilder.addFollower(follower)) {
+            throw new IllegalArgumentException(String.format("to many followers, %s", slotBuilder));
+        }
         DataNodeSlot dataNodeSlot = reverseMap.computeIfAbsent(follower,
                 k->new DataNodeSlot(follower));
         dataNodeSlot.addFollower(slotId);
@@ -235,11 +239,15 @@ public class SlotTableBuilder implements Builder<SlotTable> {
     }
 
     public DataNodeSlot getDataNodeSlot(String dataServer) {
-        DataNodeSlot dataNodeSlot = reverseMap.get(dataServer);
+        DataNodeSlot dataNodeSlot = getDataNodeSlotIfPresent(dataServer);
         if (dataNodeSlot == null) {
             throw new IllegalArgumentException("no DataNodeSlot for " + dataServer);
         }
         return dataNodeSlot;
+    }
+
+    public DataNodeSlot getDataNodeSlotIfPresent(String dataServer) {
+        return reverseMap.get(dataServer);
     }
 
     @Override

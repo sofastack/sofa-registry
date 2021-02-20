@@ -17,8 +17,6 @@
 package com.alipay.sofa.registry.server.meta.slot.util;
 
 import com.alipay.sofa.registry.server.meta.slot.assigner.ScoreStrategy;
-import com.alipay.sofa.registry.util.JsonUtils;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import org.glassfish.jersey.internal.guava.Sets;
@@ -37,9 +35,9 @@ import java.util.*;
 public class MigrateSlotGroup {
 
     /** slotId */
-    private final Set<Integer>          leaders   = Sets.newHashSet();
+    private final Set<Integer>          leaders       = Sets.newHashSet();
     /** key: slotId, value: counter (one slot could has multi followers to migrate) */
-    private final Map<Integer, Integer> followers = Maps.newHashMap();
+    private final Map<Integer, Integer> lackFollowers = Maps.newHashMap();
 
     /**
      * Add leader migrate slot group.
@@ -53,7 +51,7 @@ public class MigrateSlotGroup {
     }
 
     public boolean isEmpty() {
-        return leaders.isEmpty() && followers.isEmpty();
+        return leaders.isEmpty() && lackFollowers.isEmpty();
     }
 
     /**
@@ -63,12 +61,12 @@ public class MigrateSlotGroup {
      * @return the migrate slot group
      */
     public MigrateSlotGroup addFollower(int slotId) {
-        followers.put(slotId, followers.getOrDefault(slotId, 0) + 1);
+        lackFollowers.put(slotId, lackFollowers.getOrDefault(slotId, 0) + 1);
         return this;
     }
 
     public MigrateSlotGroup addFollower(int slotId, int num) {
-        followers.put(slotId, followers.getOrDefault(slotId, 0) + num);
+        lackFollowers.put(slotId, lackFollowers.getOrDefault(slotId, 0) + num);
         return this;
     }
 
@@ -85,7 +83,7 @@ public class MigrateSlotGroup {
 
     public List<FollowerToAssign> getFollowersByScore(ScoreStrategy<FollowerToAssign> scoreStrategy) {
         List<FollowerToAssign> assignees = Lists.newArrayList();
-        followers.forEach((slotId, nums)->assignees.add(new FollowerToAssign(slotId, nums)));
+        lackFollowers.forEach((slotId, nums)->assignees.add(new FollowerToAssign(slotId, nums)));
         assignees.sort(new Comparator<FollowerToAssign>() {
             @Override
             public int compare(FollowerToAssign o1, FollowerToAssign o2) {
@@ -109,8 +107,8 @@ public class MigrateSlotGroup {
      *
      * @return the get followers
      */
-    public Map<Integer, Integer> getFollowers() {
-        return Collections.unmodifiableMap(followers);
+    public Map<Integer, Integer> getLackFollowers() {
+        return Collections.unmodifiableMap(lackFollowers);
     }
 
     @Override
@@ -120,22 +118,19 @@ public class MigrateSlotGroup {
         if (o == null || getClass() != o.getClass())
             return false;
         MigrateSlotGroup that = (MigrateSlotGroup) o;
-        return Objects.equals(leaders, that.leaders) && Objects.equals(followers, that.followers);
+        return Objects.equals(leaders, that.leaders)
+               && Objects.equals(lackFollowers, that.lackFollowers);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(leaders, followers);
+        return Objects.hash(leaders, lackFollowers);
     }
 
     @Override
     public String toString() {
-        try {
-            return JsonUtils.getJacksonObjectMapper().writerWithDefaultPrettyPrinter()
-                .writeValueAsString(this);
-        } catch (JsonProcessingException e) {
-            return "";
-        }
+        return "MigrateSlotGroup{" + "leaders=" + leaders + ", lackFollowers=" + lackFollowers
+               + '}';
     }
 
     public static class FollowerToAssign {
@@ -153,6 +148,21 @@ public class MigrateSlotGroup {
 
         public int getAssigneeNums() {
             return assigneeNums;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o)
+                return true;
+            if (o == null || getClass() != o.getClass())
+                return false;
+            FollowerToAssign that = (FollowerToAssign) o;
+            return slotId == that.slotId && assigneeNums == that.assigneeNums;
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(slotId, assigneeNums);
         }
     }
 }

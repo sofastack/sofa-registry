@@ -75,10 +75,21 @@ public class LeaderOnlyBalancerTest extends AbstractTest {
         slotTableBuilder.init(currentDataServers);
         SlotTable prev = slotTableBuilder.build();
         SlotTable slotTable = balancer.balance();
+        Assert.assertEquals(1, slotTable.transfer(currentDataServers.get(1), false).get(0)
+            .totalSlotNum());
+        Assert.assertEquals(1, slotTable.transfer(currentDataServers.get(2), false).get(0)
+            .totalSlotNum());
+
+        Assert.assertTrue(isMoreBalanced(prev, slotTable, Lists.newArrayList(new DataNode(new URL(
+            "10.0.0.1"), getDc()), new DataNode(new URL("10.0.0.2"), getDc()), new DataNode(
+            new URL("10.0.0.3"), getDc()))));
+
+        slotTable = balancer.balance();
         Assert.assertEquals(2, slotTable.transfer(currentDataServers.get(1), false).get(0)
             .totalSlotNum());
         Assert.assertEquals(2, slotTable.transfer(currentDataServers.get(2), false).get(0)
             .totalSlotNum());
+
         Assert.assertTrue(isMoreBalanced(prev, slotTable, Lists.newArrayList(new DataNode(new URL(
             "10.0.0.1"), getDc()), new DataNode(new URL("10.0.0.2"), getDc()), new DataNode(
             new URL("10.0.0.3"), getDc()))));
@@ -92,7 +103,7 @@ public class LeaderOnlyBalancerTest extends AbstractTest {
         slotTableBuilder.init(currentDataServers);
         slotManager.refresh(slotTable);
         balancer = new LeaderOnlyBalancer(slotTableBuilder, currentDataServers);
-        Assert.assertSame(slotManager.getSlotTable(), balancer.balance());
+        Assert.assertNull(balancer.balance());
     }
 
     @Test
