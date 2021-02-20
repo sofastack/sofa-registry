@@ -47,7 +47,8 @@ public class MigrateTest {
                 publisherMap.put(UUID.randomUUID().toString(),
                     RegisterVersion.of(0, System.currentTimeMillis()));
             }
-            DatumSummary summary = new DatumSummary("app" + System.currentTimeMillis(),publisherMap);
+            DatumSummary summary = new DatumSummary("app" + System.currentTimeMillis(),
+                publisherMap);
             list.add(summary);
         }
         DataSlotDiffPublisherRequest request = new DataSlotDiffPublisherRequest(100, 200, list);

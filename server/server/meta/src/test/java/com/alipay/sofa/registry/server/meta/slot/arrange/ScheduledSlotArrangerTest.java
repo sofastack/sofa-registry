@@ -46,9 +46,6 @@ public class ScheduledSlotArrangerTest extends AbstractTest {
     @Test
     public void testTryLock() throws InterruptedException {
         Assert.assertTrue(slotArranger.tryLock());
-        Assert.assertFalse(slotArranger.tryLock());
-        Assert.assertFalse(slotArranger.tryLock());
-        Assert.assertFalse(slotArranger.tryLock());
         slotArranger.unlock();
         Assert.assertTrue(slotArranger.tryLock());
         slotArranger.unlock();

@@ -31,7 +31,7 @@ import java.util.*;
  */
 public class SessionInterests extends AbstractDataManager<Subscriber> implements Interests {
 
-    private static final Logger      LOGGER = LoggerFactory.getLogger(SessionInterests.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(SessionInterests.class);
 
     public SessionInterests() {
         super(LOGGER);

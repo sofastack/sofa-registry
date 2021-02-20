@@ -42,14 +42,14 @@ public class MigrateSlotGroupTest extends AbstractTest {
     public void testAddFollower() {
         migrateSlotGroup.addFollower(1);
         migrateSlotGroup.addFollower(2);
-        Assert.assertEquals(ImmutableMap.of(1, 1, 2, 1), migrateSlotGroup.getFollowers());
+        Assert.assertEquals(ImmutableMap.of(1, 1, 2, 1), migrateSlotGroup.getLackFollowers());
     }
 
     @Test
     public void testTestAddFollower() {
         migrateSlotGroup.addFollower(1, 2);
         migrateSlotGroup.addFollower(2, 3);
-        Assert.assertEquals(ImmutableMap.of(1, 2, 2, 3), migrateSlotGroup.getFollowers());
+        Assert.assertEquals(ImmutableMap.of(1, 2, 2, 3), migrateSlotGroup.getLackFollowers());
         logger.info("[migrate slot group] {}", migrateSlotGroup.toString());
     }
 

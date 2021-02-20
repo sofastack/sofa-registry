@@ -78,22 +78,22 @@ import static org.mockito.Mockito.mock;
  */
 public class AbstractTest {
 
-    protected final Logger                 logger           = LoggerFactory.getLogger(getClass());
+    protected final Logger logger = LoggerFactory.getLogger(getClass());
 
-    protected ExecutorService              executors;
+    protected ExecutorService executors;
 
-    protected ScheduledExecutorService     scheduled;
+    protected ScheduledExecutorService scheduled;
 
     @Rule
-    public TestName                        name             = new TestName();
+    public TestName name = new TestName();
 
-    public static final Random             random           = new Random();
+    public static final Random random = new Random();
 
     private AtomicReference<RaftExchanger> raftExchangerRef = new AtomicReference<>();
 
-    private String                         raftMiddlePath;
+    private String raftMiddlePath;
 
-    private BalancePolicy                  balancePolicy    = new NaiveBalancePolicy();
+    private BalancePolicy balancePolicy = new NaiveBalancePolicy();
 
     @Before
     public void beforeAbstractTest() throws Exception {
@@ -103,7 +103,7 @@ public class AbstractTest {
 
         executors = Executors.newCachedThreadPool(new NamedThreadFactory(name.getMethodName()));
         scheduled = Executors.newScheduledThreadPool(Runtime.getRuntime().availableProcessors(),
-            new NamedThreadFactory("sched-" + name.getMethodName()));
+                new NamedThreadFactory("sched-" + name.getMethodName()));
         if (logger.isInfoEnabled()) {
             logger.info(remarkableMessage("[begin test][{}]"), name.getMethodName());
         }
@@ -111,7 +111,7 @@ public class AbstractTest {
 
     @After
     public void afterAbstractTest() throws IOException, NoSuchMethodException,
-                                   InvocationTargetException, IllegalAccessException {
+            InvocationTargetException, IllegalAccessException {
         if (raftExchangerRef.get() != null) {
             raftExchangerRef.get().getRaftServer().shutdown();
             raftExchangerRef.get().getRaftClient().shutdown();
@@ -126,7 +126,7 @@ public class AbstractTest {
             method.invoke(node);
 
             FileUtils.forceDelete(new File(System.getProperty("user.home") + File.separator
-                                           + "raftData"));
+                    + "raftData"));
         }
         executors.shutdownNow();
         scheduled.shutdownNow();
@@ -142,10 +142,10 @@ public class AbstractTest {
             Map<String, String> env = (Map<String, String>) theEnvironmentField.get(null);
             env.putAll(newenv);
             Field theCaseInsensitiveEnvironmentField = processEnvironmentClass
-                .getDeclaredField("theCaseInsensitiveEnvironment");
+                    .getDeclaredField("theCaseInsensitiveEnvironment");
             theCaseInsensitiveEnvironmentField.setAccessible(true);
             Map<String, String> cienv = (Map<String, String>) theCaseInsensitiveEnvironmentField
-                .get(null);
+                    .get(null);
             cienv.putAll(newenv);
         } catch (NoSuchFieldException e) {
             Class[] classes = Collections.class.getDeclaredClasses();
@@ -176,9 +176,9 @@ public class AbstractTest {
     public RaftExchanger startRaftExchanger() throws Exception {
 
         FileUtils.deleteDirectory(new File(System.getProperty("user.home") + File.separator
-                                           + "raftData"));
+                + "raftData"));
         Field field = FieldUtils.getField(StorageOptionsFactory.class, "tableFormatConfigTable",
-            true);
+                true);
         field.setAccessible(true);
         setFinalStatic(field, Maps.newConcurrentMap());
 
@@ -217,7 +217,7 @@ public class AbstractTest {
         };
         DefaultCurrentDcMetaServer metaServer = mock(DefaultCurrentDcMetaServer.class);
         raftExchanger.setMetaServerConfig(config).setNodeConfig(nodeConfig)
-            .setCurrentDcMetaServer(metaServer);
+                .setCurrentDcMetaServer(metaServer);
         ExecutorManager executorManager = mock(ExecutorManager.class);
         raftExchanger.startRaftClient();
         raftExchanger.startRaftServer(executorManager);
@@ -238,23 +238,23 @@ public class AbstractTest {
     }
 
     protected void waitConditionUntilTimeOut(BooleanSupplier booleanSupplier)
-                                                                             throws TimeoutException,
-                                                                             InterruptedException {
+            throws TimeoutException,
+            InterruptedException {
 
         waitConditionUntilTimeOut(booleanSupplier, 5000, 2);
     }
 
     protected static void waitConditionUntilTimeOut(BooleanSupplier booleanSupplier,
                                                     int waitTimeMilli) throws TimeoutException,
-                                                                      InterruptedException {
+            InterruptedException {
 
         waitConditionUntilTimeOut(booleanSupplier, waitTimeMilli, 2);
     }
 
     protected static void waitConditionUntilTimeOut(BooleanSupplier booleanSupplier,
                                                     int waitTimeMilli, int intervalMilli)
-                                                                                         throws TimeoutException,
-                                                                                         InterruptedException {
+            throws TimeoutException,
+            InterruptedException {
 
         long maxTime = System.currentTimeMillis() + waitTimeMilli;
 
@@ -300,8 +300,8 @@ public class AbstractTest {
 
     public static String randomIp() {
         return String.format("%d.%d.%d.%d", (Math.abs(random.nextInt()) % netmask + 1),
-            (Math.abs(random.nextInt()) % netmask + 1), (Math.abs(random.nextInt()) % netmask + 1),
-            (Math.abs(random.nextInt()) % netmask + 1));
+                (Math.abs(random.nextInt()) % netmask + 1), (Math.abs(random.nextInt()) % netmask + 1),
+                (Math.abs(random.nextInt()) % netmask + 1));
     }
 
     protected static boolean isUsable(int port) {
@@ -336,18 +336,18 @@ public class AbstractTest {
     public static Client getRpcClient(ScheduledExecutorService scheduled, int responseDelayMilli,
                                       Object responseObj) {
         return new MockRpcClient().setScheduled(scheduled)
-            .setResponseDelayMilli(responseDelayMilli).setResponseObj(responseObj);
+                .setResponseDelayMilli(responseDelayMilli).setResponseObj(responseObj);
     }
 
     public static Client getRpcClient(ScheduledExecutorService scheduled, int responseDelayMilli,
                                       Throwable th) {
         return new MockRpcClient().setScheduled(scheduled)
-            .setResponseDelayMilli(responseDelayMilli).setPositive(false).setThrowable(th);
+                .setResponseDelayMilli(responseDelayMilli).setPositive(false).setThrowable(th);
     }
 
     public static Client getRpcClient(Object response, int responseDelayMilli) {
         return new MockRpcClient().setResponseObj(response).setResponseDelayMilli(
-            responseDelayMilli);
+                responseDelayMilli);
     }
 
     public void makeRaftLeader() throws TimeoutException, InterruptedException {
@@ -364,7 +364,7 @@ public class AbstractTest {
             }
         });
         ServiceStateMachine.getInstance().onLeaderStart(100);
-        waitConditionUntilTimeOut(()-> ServiceStateMachine.getInstance().isLeader(), 500);
+        waitConditionUntilTimeOut(() -> ServiceStateMachine.getInstance().isLeader(), 500);
     }
 
     public void makeRaftNonLeader() throws TimeoutException, InterruptedException {
@@ -381,43 +381,53 @@ public class AbstractTest {
             }
         });
         ServiceStateMachine.getInstance().onLeaderStop(Status.OK());
-        waitConditionUntilTimeOut(()-> !ServiceStateMachine.getInstance().isLeader(), 500);
+        waitConditionUntilTimeOut(() -> !ServiceStateMachine.getInstance().isLeader(), 500);
     }
 
     public void printSlotTable(SlotTable slotTable) {
         try {
             logger.warn("{}", JsonUtils.getJacksonObjectMapper().writerWithDefaultPrettyPrinter()
-                .writeValueAsString(slotTable));
+                    .writeValueAsString(slotTable));
         } catch (Exception ignore) {
         }
     }
 
     protected boolean isSlotTableBalanced(SlotTable slotTable, List<DataNode> dataNodes) {
-        Map<String, Integer> counter = Maps.newHashMap();
-        for(Slot slot : slotTable.getSlots()) {
-            counterIncr(counter, slot.getLeader());
-            for(String follower : slot.getFollowers()) {
-                counterIncr(counter, follower);
+        Map<String, Integer> leaderCounter = Maps.newHashMap();
+        for (Slot slot : slotTable.getSlots()) {
+            counterIncr(leaderCounter, slot.getLeader());
+        }
+        Map<String, Integer> followerCounter = Maps.newHashMap();
+        for (Slot slot : slotTable.getSlots()) {
+            for (String follower : slot.getFollowers()) {
+                counterIncr(followerCounter, follower);
             }
         }
-        AtomicInteger total = new AtomicInteger();
-        counter.values().forEach(count -> total.addAndGet(count));
-        int average = total.get() / dataNodes.size();
-        int highWaterMark = balancePolicy.getHighWaterMarkSlotLeaderNums(average);
-//        int highWaterMark = average * 3 / 2;
+        AtomicInteger leaderTotal = new AtomicInteger();
+        leaderCounter.values().forEach(count -> leaderTotal.addAndGet(count));
+        int leaderAverage = MathUtils.divideCeil(leaderTotal.get(), dataNodes.size());
+        int leaderHighWaterMark = balancePolicy.getHighWaterMarkSlotLeaderNums(leaderAverage);
 
-        logger.info("[isSlotTableBalanced][counter] {}", counter);
-        for(DataNode dataNode : dataNodes) {
-            if(counter.get(dataNode.getIp()) == null) {
+        AtomicInteger followerTotal = new AtomicInteger();
+        followerCounter.values().forEach(count -> followerTotal.addAndGet(count));
+        int followerAverage = MathUtils.divideCeil(followerTotal.get(), dataNodes.size());
+        int followerHighWaterMark = balancePolicy.getHighWaterMarkSlotFollowerNums(followerAverage);
+
+        logger.info("[isSlotTableBalanced][leaderCounter] {}", leaderCounter);
+        logger.info("[isSlotTableBalanced][followerCounter] {}", followerCounter);
+        for (DataNode dataNode : dataNodes) {
+            if (leaderCounter.get(dataNode.getIp()) == null) {
                 return false;
             }
-            if(counter.get(dataNode.getIp()) > highWaterMark) {
-                logger.info("[high] {}, {}, {}", dataNode.getIp(), counter.get(dataNode.getIp()), highWaterMark);
+            if (leaderCounter.get(dataNode.getIp()) > leaderHighWaterMark) {
+                logger.info("[highLeader] {}, {}, {}", dataNode.getIp(), leaderCounter.get(dataNode.getIp()), leaderHighWaterMark);
                 return false;
             }
-//            if(counter.get(dataNode.getIp()) > highWaterMark) {
-//                return false;
-//            }
+
+            if (followerCounter.get(dataNode.getIp()) > followerHighWaterMark) {
+                logger.info("[highFollower] {}, {}, {}", dataNode.getIp(), followerCounter.get(dataNode.getIp()), followerHighWaterMark);
+                return false;
+            }
         }
         return true;
     }
@@ -459,17 +469,17 @@ public class AbstractTest {
 
     public static class MockRpcClient implements Client {
 
-        private ObjectFactory<Object>    response;
+        private ObjectFactory<Object> response;
 
-        private int                      responseDelayMilli;
+        private int responseDelayMilli;
 
         private ScheduledExecutorService scheduled;
 
-        private Channel                  channel;
+        private Channel channel;
 
-        private boolean                  isPositive = true;
+        private boolean isPositive = true;
 
-        private Throwable                throwable;
+        private Throwable throwable;
 
         @Override
         public Channel getChannel(URL url) {
@@ -505,10 +515,10 @@ public class AbstractTest {
 
         @Override
         public void sendCallback(URL url, Object message, CallbackHandler callbackHandler, int timeoutMillis) {
-            if(isPositive) {
+            if (isPositive) {
                 scheduled.schedule(() ->
                                 callbackHandler.onCallback(channel,
-                        response.create()),
+                                        response.create()),
                         responseDelayMilli,
                         TimeUnit.MILLISECONDS);
             } else {
@@ -598,11 +608,11 @@ public class AbstractTest {
 
     public static class ConcurrentExecutor implements Executor {
 
-        private final int             tasks;
+        private final int tasks;
 
-        private final CyclicBarrier   barrier;
+        private final CyclicBarrier barrier;
 
-        private final CountDownLatch  latch;
+        private final CountDownLatch latch;
 
         private final ExecutorService executors;
 
@@ -639,8 +649,8 @@ public class AbstractTest {
 
     protected SlotTable randomSlotTable() {
         List<DataNode> dataNodes = Lists.newArrayList(new DataNode(randomURL(randomIp()), getDc()),
-            new DataNode(randomURL(randomIp()), getDc()), new DataNode(randomURL(randomIp()),
-                getDc()));
+                new DataNode(randomURL(randomIp()), getDc()), new DataNode(randomURL(randomIp()),
+                        getDc()));
         return new SlotTableGenerator(dataNodes).createSlotTable();
     }
 
@@ -681,7 +691,7 @@ public class AbstractTest {
     private int maxLeaderGap(SlotTable slotTable, List<DataNode> dataNodes) {
         Map<String, Integer> counter = new HashMap<>(dataNodes.size());
         dataNodes.forEach(dataNode -> counter.put(dataNode.getIp(), 0));
-        for(Map.Entry<Integer, Slot> entry : slotTable.getSlotMap().entrySet()) {
+        for (Map.Entry<Integer, Slot> entry : slotTable.getSlotMap().entrySet()) {
             int count = counter.get(entry.getValue().getLeader());
             counter.put(entry.getValue().getLeader(), count + 1);
         }
@@ -691,10 +701,10 @@ public class AbstractTest {
     private int maxSlotGap(SlotTable slotTable, List<DataNode> dataNodes) {
         Map<String, Integer> counter = new HashMap<>(dataNodes.size());
         dataNodes.forEach(dataNode -> counter.put(dataNode.getIp(), 0));
-        for(Map.Entry<Integer, Slot> entry : slotTable.getSlotMap().entrySet()) {
+        for (Map.Entry<Integer, Slot> entry : slotTable.getSlotMap().entrySet()) {
             int count = counter.get(entry.getValue().getLeader());
             counter.put(entry.getValue().getLeader(), count + 1);
-            for(String dataServer : entry.getValue().getFollowers()) {
+            for (String dataServer : entry.getValue().getFollowers()) {
                 count = counter.get(dataServer);
                 counter.put(dataServer, count + 1);
             }
@@ -756,7 +766,7 @@ public class AbstractTest {
                 for (int j = 0; j < SlotConfig.SLOT_REPLICAS - 1; j++) {
                     DataNode follower = getNextFollower();
                     while (follower.getIp().equalsIgnoreCase(leader)
-                           || followers.contains(follower)) {
+                            || followers.contains(follower)) {
                         follower = getNextUnbalancedFollower();
                     }
                     followers.add(follower.getIp());
@@ -767,7 +777,7 @@ public class AbstractTest {
             return slotMap;
         }
 
-        private AtomicInteger nextLeader   = new AtomicInteger();
+        private AtomicInteger nextLeader = new AtomicInteger();
 
         private AtomicInteger nextFollower = new AtomicInteger(1);
 
