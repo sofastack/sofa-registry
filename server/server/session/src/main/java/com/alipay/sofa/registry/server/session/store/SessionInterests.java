@@ -20,9 +20,7 @@ import com.alipay.sofa.registry.common.model.SubscriberUtils;
 import com.alipay.sofa.registry.common.model.store.Subscriber;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
-import com.alipay.sofa.registry.server.session.cache.AppRevisionCacheRegistry;
 import com.alipay.sofa.registry.util.ParaCheckUtil;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.CollectionUtils;
 
 import java.util.*;
@@ -34,9 +32,6 @@ import java.util.*;
 public class SessionInterests extends AbstractDataManager<Subscriber> implements Interests {
 
     private static final Logger      LOGGER = LoggerFactory.getLogger(SessionInterests.class);
-
-    @Autowired
-    private AppRevisionCacheRegistry appRevisionCacheRegistry;
 
     public SessionInterests() {
         super(LOGGER);
