@@ -844,7 +844,8 @@ public class SessionServerConfigBean implements SessionServerConfig {
             String[] zoneNameArr = getInvalidForeverZones().split(";");
             Set<String> set = new HashSet<>();
             for (String str : zoneNameArr) {
-                if (str.trim().length() > 0) {
+                str = str.trim();
+                if (str.length() != 0) {
                     set.add(str);
                 }
             }
