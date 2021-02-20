@@ -19,8 +19,6 @@ package com.alipay.sofa.registry.server.meta.slot.util.builder;
 import com.alipay.sofa.registry.common.model.slot.Slot;
 import com.alipay.sofa.registry.exception.SofaRegistryRuntimeException;
 import com.alipay.sofa.registry.util.DatumVersionUtil;
-import com.alipay.sofa.registry.util.JsonUtils;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.google.common.collect.Sets;
 import org.apache.commons.lang.StringUtils;
 
@@ -65,23 +63,27 @@ public class SlotBuilder implements Builder<Slot> {
         return this;
     }
 
-    public void addFollower(String follower) {
+    public boolean addFollower(String follower) {
         if (StringUtils.isBlank(follower)) {
             throw new IllegalArgumentException("add empty follower");
         }
-        followers.add(follower);
-        if (followers.size() > followerNums) {
-            throw new IllegalArgumentException(String.format("to many followers, %d: %s",
-                followerNums, followers));
+        if (followers.contains(follower)) {
+            return true;
         }
+        if (followers.size() >= followerNums) {
+            return false;
+        }
+        followers.add(follower);
+        return true;
     }
 
-    public void addFollower(Collection<String> followerCollection) {
-        this.followers.addAll(followerCollection);
-        if (followers.size() > followerNums) {
-            throw new IllegalArgumentException(String.format("to many followers, %d: %s",
-                followerNums, followers));
+    public boolean addFollower(Collection<String> followerCollection) {
+        for (String follower : followerCollection) {
+            if (!addFollower(follower)) {
+                return false;
+            }
         }
+        return true;
     }
 
     public boolean removeFollower(String follower) {
@@ -131,11 +133,8 @@ public class SlotBuilder implements Builder<Slot> {
 
     @Override
     public String toString() {
-        try {
-            return JsonUtils.getJacksonObjectMapper().writerWithDefaultPrettyPrinter()
-                .writeValueAsString(this);
-        } catch (JsonProcessingException e) {
-            return "";
-        }
+        return "SlotBuilder{" + "slotId=" + slotId + ", followerNums=" + followerNums
+               + ", leader='" + leader + '\'' + ", followers=" + followers + ", epoch=" + epoch
+               + '}';
     }
 }

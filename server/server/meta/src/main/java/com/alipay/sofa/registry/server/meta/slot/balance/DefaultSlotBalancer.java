@@ -162,37 +162,40 @@ public class DefaultSlotBalancer implements SlotBalancer {
         // could not found the follower to upgrade, migrate follower first
         final int maxMove = balancePolicy.getMaxMoveFollowerSlots();
         final int threshold = balancePolicy.getHighWaterMarkSlotLeaderNums(ceilAvg);
+
+        // 1. find the dataNode which has leaders more than high water mark
+        //    and sorted by leaders.num desc
+        final List<String> highDataServers = findDataServersLeaderHighWaterMark(threshold);
+        if (highDataServers.isEmpty()) {
+            return false;
+        }
+        // 2. find the dataNode which could own a new leader
+        // exclude the high
+        final Set<String> excludes = Sets.newHashSet(highDataServers);
+        // exclude the dataNode which could not add any leader
+        excludes.addAll(findDataServersLeaderHighWaterMark(threshold - 1));
         int balanced = 0;
-        while (balanced < maxMove) {
-            // 1. find the dataNode which has leaders more than high water mark
-            //    and sorted by leaders.num desc
-            final List<String> highDataServers = findDataServersLeaderHighWaterMark(threshold);
-            if (highDataServers.isEmpty()) {
-                break;
+        final Set<String> newFollowerDataServers = Sets.newHashSet();
+        // only balance highDataServer once at one round, avoid the follower moves multi times
+        for (String highDataServer : highDataServers) {
+            Triple<String, Integer, String> selected = selectFollower4LeaderMigrate(highDataServer,
+                excludes, newFollowerDataServers);
+            if (selected == null) {
+                logger.warn(
+                    "[migrateHighLeaders] could not find dataServer to migrate follower for {}",
+                    highDataServer);
+                continue;
             }
-            // 2. find the dataNode which could own a new leader
-            // exclude the high
-            final Set<String> excludes = Sets.newHashSet(highDataServers);
-            // exclude the dataNode which could not add any leader
-            excludes.addAll(findDataServersLeaderHighWaterMark(threshold - 1));
-            for (String highDataServer : highDataServers) {
-                Triple<String, Integer, String> selected = selectFollower4LeaderMigrate(
-                    highDataServer, excludes);
-                if (selected == null) {
-                    logger
-                        .warn(
-                            "[migrateHighLeaders] could not find dataServer to migrate follower for {}",
-                            highDataServer);
-                    continue;
-                }
-                final String oldFollower = selected.getFirst();
-                final int slotId = selected.getMiddle();
-                final String newFollower = selected.getLast();
-                slotTableBuilder.removeFollower(slotId, oldFollower);
-                slotTableBuilder.addFollower(slotId, newFollower);
-                logger.info("[migrateHighLeaders] slotId={}, follower balance from {} to {}",
-                    slotId, oldFollower, newFollower);
-                balanced++;
+            final String oldFollower = selected.getFirst();
+            final int slotId = selected.getMiddle();
+            final String newFollower = selected.getLast();
+            slotTableBuilder.removeFollower(slotId, oldFollower);
+            slotTableBuilder.addFollower(slotId, newFollower);
+            newFollowerDataServers.add(newFollower);
+            logger.info("[migrateHighLeaders] slotId={}, follower balance from {} to {}", slotId,
+                oldFollower, newFollower);
+            balanced++;
+            if (balanced >= maxMove) {
                 break;
             }
         }
@@ -255,20 +258,25 @@ public class DefaultSlotBalancer implements SlotBalancer {
         return balanced != 0;
     }
 
-    private Triple<String, Integer, String> selectFollower4LeaderMigrate(String leaderDataServer, Set<String> excludes) {
+    private Triple<String, Integer, String> selectFollower4LeaderMigrate(String leaderDataServer, Set<String> excludes,
+                                                                         Set<String> newFollowerDataServers) {
         final DataNodeSlot dataNodeSlot = slotTableBuilder.getDataNodeSlot(leaderDataServer);
         Set<Integer> leaderSlots = dataNodeSlot.getLeaders();
         Map<String, List<Integer>> dataServersWithFollowers = Maps.newHashMap();
         for (int slot : leaderSlots) {
             List<String> followerDataServers = slotTableBuilder.getDataServersOwnsFollower(slot);
             for (String followerDataServer : followerDataServers) {
+                if (newFollowerDataServers.contains(followerDataServer)) {
+                    // the followerDataServer contains move in follower, could not be move out candidates
+                    continue;
+                }
                 List<Integer> followerSlots = dataServersWithFollowers.computeIfAbsent(followerDataServer,
                         k -> Lists.newArrayList());
                 followerSlots.add(slot);
             }
         }
-        logger.info("[LeaderMigrate] {} owns leader slots={}, slotIds={}, migrate candidates {}",
-                leaderDataServer, leaderSlots.size(), leaderSlots, dataServersWithFollowers);
+        logger.info("[LeaderMigrate] {} owns leader slots={}, slotIds={}, migrate candidates {}, newFollowers={}",
+                leaderDataServer, leaderSlots.size(), leaderSlots, dataServersWithFollowers, newFollowerDataServers);
         // sort the dataServer by follower.num desc
         List<String> migrateDataServers = Lists.newArrayList(dataServersWithFollowers.keySet());
         migrateDataServers.sort(Comparators.mostFollowersFirst(slotTableBuilder));
@@ -279,6 +287,10 @@ public class DefaultSlotBalancer implements SlotBalancer {
                 List<String> candidates = getCandidateDataServers(excludes,
                         Comparators.leastLeadersFirst(slotTableBuilder), currentDataServers);
                 for (String candidate : candidates) {
+                    if (candidate.equals(migrateDataServer)) {
+                        // the same, skip
+                        continue;
+                    }
                     DataNodeSlot candidateDataNodeSlot = slotTableBuilder.getDataNodeSlot(candidate);
                     if (candidateDataNodeSlot.containsFollower(selectedFollower)) {
                         logger.error("[LeaderMigrate] slotId={}, follower conflict with migrate from {} to {}",
@@ -291,7 +303,6 @@ public class DefaultSlotBalancer implements SlotBalancer {
 
         }
         return null;
-
     }
 
     private Tuple<String, Integer> selectFollower4LeaderUpgradeOut(String leaderDataServer, Set<String> excludes) {
