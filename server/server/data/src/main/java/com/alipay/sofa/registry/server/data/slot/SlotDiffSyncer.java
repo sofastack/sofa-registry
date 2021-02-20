@@ -35,7 +35,7 @@ import com.alipay.sofa.registry.server.shared.remoting.ClientSideExchanger;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 
-import static com.alipay.sofa.registry.server.data.slot.SlotMetrics.Sync.*;
+import static com.alipay.sofa.registry.server.data.slot.SlotMetrics.*;
 
 import java.util.*;
 
@@ -105,7 +105,8 @@ public final class SlotDiffSyncer {
     }
 
     public boolean syncPublishers(int slotId, String targetAddress, ClientSideExchanger exchanger, long slotTableEpoch,
-                                  Map<String, DatumSummary> summaryMap, int maxPublishers, SyncContinues continues) {
+                                  Map<String, DatumSummary> summaryMap, int maxPublishers,
+                                  SyncContinues continues, boolean syncSession) {
         // need the empty dataInfoId to add updatePublisher
         Map<String, DatumSummary> round = pickSummaries(summaryMap, maxPublishers);
         // sync for the existing dataInfoIds.publisher
@@ -115,7 +116,11 @@ public final class SlotDiffSyncer {
                 return true;
             }
             // maybe to many publishers, spit round
-            observeSyncSessionPub(slotId, DatumSummary.countPublisherSize(round.values()));
+            if (syncSession) {
+                SyncSession.observeSyncSessionPub(slotId, DatumSummary.countPublisherSize(round.values()));
+            } else {
+                SyncLeader.observeSyncLeaderPub(slotId, DatumSummary.countPublisherSize(round.values()));
+            }
             DataSlotDiffPublisherRequest request = new DataSlotDiffPublisherRequest(slotTableEpoch, slotId, round.values());
 
             GenericResponse<DataSlotDiffPublisherResult> resp = (GenericResponse<DataSlotDiffPublisherResult>) exchanger
@@ -145,7 +150,12 @@ public final class SlotDiffSyncer {
                         SyncContinues continues) {
         Map<String, DatumSummary> summaryMap = datumStorage
             .getDatumSummary(slotId, summaryTargetIp);
-        observeSyncSessionId(slotId, summaryMap.size());
+        final boolean syncSession = summaryTargetIp != null;
+        if (syncSession) {
+            SyncSession.observeSyncSessionId(slotId, summaryMap.size());
+        } else {
+            SyncLeader.observeSyncLeaderId(slotId, summaryMap.size());
+        }
         Map<String, DatumDigest> digestMap = PublisherDigestUtil.digest(summaryMap);
         DataSlotDiffDigestRequest request = new DataSlotDiffDigestRequest(slotTableEpoch, slotId,
             digestMap);
@@ -169,7 +179,7 @@ public final class SlotDiffSyncer {
         }
 
         return syncPublishers(slotId, targetAddress, exchanger, slotTableEpoch, newSummaryMap,
-            maxPublishers, continues);
+            maxPublishers, continues, syncSession);
     }
 
     private DataSlotDiffDigestResult processSyncDigestResp(int slotId,
