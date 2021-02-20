@@ -22,9 +22,9 @@ import com.alipay.remoting.exception.SerializationException;
 import com.alipay.remoting.serialization.Serializer;
 import com.google.protobuf.MessageLite;
 
-import java.io.UnsupportedEncodingException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
+import java.nio.charset.StandardCharsets;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -34,15 +34,15 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public class ProtobufSerializer implements Serializer {
 
-    public static final byte                 PROTOCOL_PROTOBUF    = 11;
+    public static final byte                       PROTOCOL_PROTOBUF    = 11;
 
     /** cache parse method */
-    private ConcurrentHashMap<Class, Method> parseMethodMap       = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<Class, Method> parseMethodMap       = new ConcurrentHashMap<>();
 
     /** cache toByteArray method */
-    private ConcurrentHashMap<Class, Method> toByteArrayMethodMap = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<Class, Method> toByteArrayMethodMap = new ConcurrentHashMap<>();
 
-    private static ProtobufSerializer        instance             = new ProtobufSerializer();
+    private final static ProtobufSerializer        instance             = new ProtobufSerializer();
 
     private ProtobufSerializer() {
 
@@ -79,12 +79,7 @@ public class ProtobufSerializer implements Serializer {
             }
 
         } else if (object instanceof String) {
-            try {
-                // return ByteString.copyFromUtf8((String) object).toByteArray();
-                return ((String) object).getBytes("utf-8");
-            } catch (UnsupportedEncodingException e) {
-                throw new SerializationException("Unsupported encoding of string", e);
-            }
+            return ((String) object).getBytes(StandardCharsets.UTF_8);
         } else {
             throw new SerializationException("Unsupported class:" + object.getClass().getName()
                                              + ", only support protobuf message");
@@ -124,131 +119,10 @@ public class ProtobufSerializer implements Serializer {
                             + ".parseFrom(byte[]), please check the generated code", e);
             }
         } else if (clazz == String.class) {
-            try {
-                // return ByteString.wrap(bytes).toStringUtf8();
-                return new String(bytes, "utf-8");
-            } catch (UnsupportedEncodingException e) {
-                throw new DeserializationException("Unsupported encoding of string", e);
-            }
+            return new String(bytes, StandardCharsets.UTF_8);
         } else {
             throw new DeserializationException("Unsupported class:" + clazz.getName()
                                                + ", only support protobuf message");
-        }
-    }
-
-    /**
-     * 请求参数类型缓存 {service+method:class}
-     */
-    private static ConcurrentHashMap<String, Class> REQUEST_CLASS_CACHE  = new ConcurrentHashMap<>();
-
-    /**
-     * 返回结果类型缓存 {service+method:class}
-     */
-    private static ConcurrentHashMap<String, Class> RESPONSE_CLASS_CACHE = new ConcurrentHashMap<>();
-
-    /**
-     * 从缓存中获取请求值类
-     *
-     * @param service    接口名
-     * @param methodName 方法名
-     * @return 请求参数类
-     * @throws ClassNotFoundException 无法找到该接口
-     * @throws NoSuchMethodException  无法找到该方法
-     * @throws CodecException         其它序列化异常
-     */
-    public static Class getReqClass(String service, String methodName, ClassLoader classLoader)
-                                                                                               throws ClassNotFoundException,
-                                                                                               NoSuchMethodException,
-                                                                                               CodecException {
-        if (classLoader == null) {
-            classLoader = Thread.currentThread().getContextClassLoader();
-        }
-        String key = buildMethodKey(service, methodName);
-        Class reqClass = REQUEST_CLASS_CACHE.get(key);
-        if (reqClass == null) {
-            // 读取接口里的方法参数和返回值
-            String interfaceClass = service.contains(":") ? service.substring(0,
-                service.indexOf(":")) : service;
-            Class clazz = Class.forName(interfaceClass, true, classLoader);
-            loadProtoClassToCache(key, clazz, methodName);
-        }
-        return REQUEST_CLASS_CACHE.get(key);
-    }
-
-    /**
-     * 从缓存中获取返回值类
-     *
-     * @param service    接口名
-     * @param methodName 方法名
-     * @return 请求参数类
-     * @throws ClassNotFoundException 无法找到该接口
-     * @throws NoSuchMethodException  无法找到该方法
-     * @throws CodecException         其它序列化异常
-     */
-    public static Class getResClass(String service, String methodName, ClassLoader classLoader)
-                                                                                               throws ClassNotFoundException,
-                                                                                               NoSuchMethodException,
-                                                                                               CodecException {
-        if (classLoader == null) {
-            classLoader = Thread.currentThread().getContextClassLoader();
-        }
-        String key = service + "#" + methodName;
-        Class reqClass = RESPONSE_CLASS_CACHE.get(key);
-        if (reqClass == null) {
-            // 读取接口里的方法参数和返回值
-            String interfaceClass = service.contains(":") ? service.substring(0,
-                service.indexOf(":")) : service;
-            Class clazz = Class.forName(interfaceClass, true, classLoader);
-            loadProtoClassToCache(key, clazz, methodName);
-        }
-        return RESPONSE_CLASS_CACHE.get(key);
-    }
-
-    /**
-     * 拼装缓存的key
-     *
-     * @param serviceName 接口名
-     * @param methodName  方法名
-     * @return
-     */
-    private static String buildMethodKey(String serviceName, String methodName) {
-        return serviceName + "#" + methodName;
-    }
-
-    /**
-     * 加载protobuf接口里方法的参数和返回值类型到缓存，不需要传递
-     *
-     * @param key        缓存的key
-     * @param clazz      接口名
-     * @param methodName 方法名
-     * @throws ClassNotFoundException 无法找到该接口
-     * @throws NoSuchMethodException  无法找到该方法
-     * @throws CodecException         其它序列化异常
-     */
-    private static void loadProtoClassToCache(String key, Class clazz, String methodName)
-                                                                                         throws CodecException {
-        Method pbMethod = null;
-        Method[] methods = clazz.getMethods();
-        for (Method method : methods) {
-            if (methodName.equals(method.getName())) {
-                pbMethod = method;
-                break;
-            }
-        }
-        if (pbMethod != null) {
-            Class[] parameterTypes = pbMethod.getParameterTypes();
-            if (parameterTypes.length != 1 || !isProtoBufMessageLite(parameterTypes[0])) {
-                throw new CodecException("class based protobuf: " + clazz.getName()
-                                         + ", only support one protobuf parameter!");
-            }
-            Class reqClass = parameterTypes[0];
-            REQUEST_CLASS_CACHE.put(key, reqClass);
-            Class resClass = pbMethod.getReturnType();
-            if (resClass == void.class || !isProtoBufMessageLite(resClass)) {
-                throw new CodecException("class based protobuf: " + clazz.getName()
-                                         + ", only support return protobuf message!");
-            }
-            RESPONSE_CLASS_CACHE.put(key, resClass);
         }
     }
 

@@ -16,6 +16,8 @@
  */
 package com.alipay.sofa.registry.util;
 
+import org.apache.commons.lang.StringUtils;
+
 import java.util.Collection;
 import java.util.Set;
 
@@ -44,7 +46,7 @@ public class ParaCheckUtil {
      * @throws RuntimeException
      */
     public static void checkNotBlank(String param, String paraName) throws RuntimeException {
-        if (param == null || param.trim().length() == 0) {
+        if (StringUtils.isBlank(param)) {
             throw new RuntimeException(String.format("%s is not allowed to be blank", paraName));
         }
     }
