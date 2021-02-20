@@ -240,7 +240,7 @@ public final class SlotManagerImpl implements SlotManager {
                     LOGGER.info("updating slot table, leaders={}, {}, ", leaders, updating);
                 }
 
-                final int syncIntervalMs = dataServerConfig.getSlotLeaderSyncSessionIntervalSec() * 1000;
+                final int syncSessionIntervalMs = dataServerConfig.getSlotLeaderSyncSessionIntervalSec() * 1000;
                 final long slotTableEpoch = slotTableStates.table.getEpoch();
                 for (SlotState slotState : slotTableStates.slotStates.values()) {
                     final Slot slot = slotState.slot;
@@ -256,7 +256,7 @@ public final class SlotManagerImpl implements SlotManager {
                         if (slotState.migrated) {
                             for (String sessionIp : sessions) {
                                 KeyedTask<SyncSessionTask> task = slotState.syncSessionTasks.get(sessionIp);
-                                if (task == null || task.isOverAfter(syncIntervalMs)) {
+                                if (task == null || task.isOverAfter(syncSessionIntervalMs)) {
                                     task = slotState.commitSyncSessionTask(slotTableEpoch, sessionIp, false);
                                     slotState.syncSessionTasks.put(sessionIp, task);
                                 }
@@ -321,7 +321,8 @@ public final class SlotManagerImpl implements SlotManager {
                     } else {
                         // sync leader
                         if (syncLeaderTask == null ||
-                                syncLeaderTask.isOverAfter(dataServerConfig.getSlotFollowerSyncLeaderIntervalSec())) {
+                                syncLeaderTask.isOverAfter(
+                                        dataServerConfig.getSlotFollowerSyncLeaderIntervalSec() * 1000)) {
                             SyncLeaderTask task = new SyncLeaderTask(slotTableEpoch, slot);
                             slotState.syncLeaderTask = syncLeaderExecutor.execute(slot.getId(), task);
                         } else if(!syncLeaderTask.isFinished()){
