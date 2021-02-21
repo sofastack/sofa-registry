@@ -31,7 +31,7 @@ public class MetaServerExchanger extends ServerSideExchanger {
     private MetaServerConfig metaServerConfig;
 
     @Override
-    public int getRpcTimeout() {
+    public int getRpcTimeoutMillis() {
         return metaServerConfig.getMetaNodeExchangeTimeout();
     }
 

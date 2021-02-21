@@ -192,7 +192,7 @@ public class PushProcessor {
             return true;
         }
         final long span = System.currentTimeMillis() - prev.pushTimestamp;
-        if (span > sessionServerConfig.getClientNodeExchangeTimeOut() * 2) {
+        if (span > sessionServerConfig.getClientNodeExchangeTimeoutMillis() * 2) {
             // force to remove the prev task
             final boolean cleaned = pushingTasks.remove(pushingTaskKey) != null;
             LOGGER.warn("[prevRunTooLong] {}, clean={}, prev={}, now={}", pushingTaskKey, cleaned,

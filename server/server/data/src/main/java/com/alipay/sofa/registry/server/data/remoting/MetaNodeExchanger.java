@@ -30,8 +30,8 @@ public class MetaNodeExchanger extends AbstractMetaNodeExchanger {
     private DataServerConfig dataServerConfig;
 
     @Override
-    public int getRpcTimeout() {
-        return dataServerConfig.getRpcTimeout();
+    public int getRpcTimeoutMillis() {
+        return dataServerConfig.getRpcTimeoutMillis();
     }
 
     @Override

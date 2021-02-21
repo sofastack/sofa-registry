@@ -240,7 +240,7 @@ public final class SlotManagerImpl implements SlotManager {
                     LOGGER.info("updating slot table, leaders={}, {}, ", leaders, updating);
                 }
 
-                final int syncSessionIntervalMs = dataServerConfig.getSlotLeaderSyncSessionIntervalSec() * 1000;
+                final int syncSessionIntervalMs = dataServerConfig.getSlotLeaderSyncSessionIntervalSecs() * 1000;
                 final long slotTableEpoch = slotTableStates.table.getEpoch();
                 for (SlotState slotState : slotTableStates.slotStates.values()) {
                     final Slot slot = slotState.slot;
@@ -322,7 +322,7 @@ public final class SlotManagerImpl implements SlotManager {
                         // sync leader
                         if (syncLeaderTask == null ||
                                 syncLeaderTask.isOverAfter(
-                                        dataServerConfig.getSlotFollowerSyncLeaderIntervalSec() * 1000)) {
+                                        dataServerConfig.getSlotFollowerSyncLeaderIntervalSecs() * 1000)) {
                             SyncLeaderTask task = new SyncLeaderTask(slotTableEpoch, slot);
                             slotState.syncLeaderTask = syncLeaderExecutor.execute(slot.getId(), task);
                         } else if(!syncLeaderTask.isFinished()){

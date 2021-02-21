@@ -271,7 +271,7 @@ public class SessionServerBootstrap {
             mataNodeService.renewNode();
             // start sched renew
             mataNodeService
-                .startRenewer(sessionServerConfig.getSchedulerHeartbeatIntervalSec() * 1000);
+                .startRenewer(sessionServerConfig.getSchedulerHeartbeatIntervalSecs() * 1000);
             fetchStopPushSwitch();
 
             fetchBlackList();

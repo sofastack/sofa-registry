@@ -39,8 +39,8 @@ public class DataNodeExchanger extends ClientSideExchanger {
     }
 
     @Override
-    public int getRpcTimeout() {
-        return dataServerConfig.getRpcTimeout();
+    public int getRpcTimeoutMillis() {
+        return dataServerConfig.getRpcTimeoutMillis();
     }
 
     @Override

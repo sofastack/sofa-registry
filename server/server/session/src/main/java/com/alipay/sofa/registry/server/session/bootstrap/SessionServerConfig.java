@@ -35,17 +35,17 @@ public interface SessionServerConfig {
 
     int getHttpServerPort();
 
-    int getSchedulerHeartbeatIntervalSec();
+    int getSchedulerHeartbeatIntervalSecs();
 
     int getSchedulerScanVersionIntervalMillis();
 
-    int getClientNodeExchangeTimeOut();
+    int getClientNodeExchangeTimeoutMillis();
 
-    int getDataNodeExchangeTimeOut();
+    int getDataNodeExchangeTimeoutMillis();
 
-    int getDataNodeExchangeForFetchDatumTimeOut();
+    int getDataNodeExchangeForFetchDatumTimeoutMillis();
 
-    int getMetaNodeExchangeTimeOut();
+    int getMetaNodeExchangeTimeoutMillis();
 
     String getSessionServerRegion();
 

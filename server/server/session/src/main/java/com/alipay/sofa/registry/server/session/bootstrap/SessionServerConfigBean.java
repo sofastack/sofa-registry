@@ -38,124 +38,124 @@ public class SessionServerConfigBean implements SessionServerConfig {
     /**
      * The constant PREFIX.
      */
-    public static final String   PREFIX                                = "session.server";
+    public static final String   PREFIX                                     = "session.server";
 
-    private int                  serverPort                            = 9600;
+    private int                  serverPort                                 = 9600;
 
-    private int                  syncSessionPort                       = 9602;
+    private int                  syncSessionPort                            = 9602;
 
-    private int                  metaServerPort                        = 9610;
+    private int                  metaServerPort                             = 9610;
 
-    private int                  dataServerPort                        = 9620;
+    private int                  dataServerPort                             = 9620;
 
     private int                  httpServerPort;
 
-    private int                  schedulerHeartbeatIntervalSec         = 3;
+    private int                  schedulerHeartbeatIntervalSecs             = 3;
 
-    private int                  subscriberRegisterFetchRetryTimes     = 3;
+    private int                  subscriberRegisterFetchRetryTimes          = 3;
 
-    private int                  accessDataExecutorMinPoolSize         = OsUtils.getCpuCount() * 10;
+    private int                  accessDataExecutorMinPoolSize              = OsUtils.getCpuCount() * 10;
 
-    private int                  accessDataExecutorMaxPoolSize         = OsUtils.getCpuCount() * 20;
+    private int                  accessDataExecutorMaxPoolSize              = OsUtils.getCpuCount() * 20;
 
-    private int                  accessDataExecutorQueueSize           = 10000;
+    private int                  accessDataExecutorQueueSize                = 10000;
 
-    private long                 accessDataExecutorKeepAliveTime       = 60;
+    private long                 accessDataExecutorKeepAliveTime            = 60;
 
-    private int                  dataChangeExecutorMinPoolSize         = OsUtils.getCpuCount() * 2;
+    private int                  dataChangeExecutorMinPoolSize              = OsUtils.getCpuCount() * 2;
 
-    private int                  dataChangeExecutorMaxPoolSize         = OsUtils.getCpuCount() * 3;
+    private int                  dataChangeExecutorMaxPoolSize              = OsUtils.getCpuCount() * 3;
 
-    private int                  dataChangeExecutorQueueSize           = 20000;
+    private int                  dataChangeExecutorQueueSize                = 20000;
 
-    private long                 dataChangeExecutorKeepAliveTime       = 60;
+    private long                 dataChangeExecutorKeepAliveTime            = 60;
 
-    private int                  connectClientExecutorMinPoolSize      = OsUtils.getCpuCount();
+    private int                  connectClientExecutorMinPoolSize           = OsUtils.getCpuCount();
 
-    private int                  connectClientExecutorMaxPoolSize      = OsUtils.getCpuCount();
+    private int                  connectClientExecutorMaxPoolSize           = OsUtils.getCpuCount();
 
-    private int                  connectClientExecutorQueueSize        = 2000;
+    private int                  connectClientExecutorQueueSize             = 2000;
 
-    private int                  dataChangeFetchTaskMaxBufferSize      = 30000;
+    private int                  dataChangeFetchTaskMaxBufferSize           = 30000;
 
-    private int                  dataChangeFetchTaskWorkerSize         = OsUtils.getCpuCount() * 5;
+    private int                  dataChangeFetchTaskWorkerSize              = OsUtils.getCpuCount() * 5;
 
-    private int                  slotSyncMaxBufferSize                 = 5000;
+    private int                  slotSyncMaxBufferSize                      = 5000;
 
-    private int                  slotSyncWorkerSize                    = OsUtils.getCpuCount() * 4;
+    private int                  slotSyncWorkerSize                         = OsUtils.getCpuCount() * 4;
 
-    private int                  clientNodeExchangeTimeOut             = 1000;                           //time out cause netty HashedWheelTimer occupy a lot of mem
+    private int                  clientNodeExchangeTimeoutMillis            = 1000;                           //time out cause netty HashedWheelTimer occupy a lot of mem
 
-    private int                  dataNodeExchangeTimeOut               = 3000;
+    private int                  dataNodeExchangeTimeoutMillis              = 3000;
 
-    private int                  dataNodeExchangeForFetchDatumTimeOut  = 5000;
+    private int                  dataNodeExchangeForFetchDatumTimeoutMillis = 5000;
 
-    private int                  metaNodeExchangeTimeOut               = 3000;
+    private int                  metaNodeExchangeTimeoutMillis              = 3000;
 
-    private int                  pushTaskExecutorPoolSize              = OsUtils.getCpuCount() * 3;
+    private int                  pushTaskExecutorPoolSize                   = OsUtils.getCpuCount() * 3;
 
-    private int                  pushTaskExecutorQueueSize             = pushTaskExecutorPoolSize * 3000;
+    private int                  pushTaskExecutorQueueSize                  = pushTaskExecutorPoolSize * 3000;
 
-    private int                  pushDataTaskRetryFirstDelayMillis     = 500;
+    private int                  pushDataTaskRetryFirstDelayMillis          = 500;
 
-    private int                  pushDataTaskRetryIncrementDelayMillis = 500;
+    private int                  pushDataTaskRetryIncrementDelayMillis      = 500;
 
-    private int                  pushDataTaskDebouncingMillis          = 500;
+    private int                  pushDataTaskDebouncingMillis               = 500;
 
-    private int                  pushTaskRetryTimes                    = 3;
+    private int                  pushTaskRetryTimes                         = 3;
 
-    private int                  dataNodeExecutorWorkerSize            = OsUtils.getCpuCount() * 8;
+    private int                  dataNodeExecutorWorkerSize                 = OsUtils.getCpuCount() * 8;
 
-    private int                  dataNodeExecutorQueueSize             = 20000;
+    private int                  dataNodeExecutorQueueSize                  = 20000;
 
-    private int                  dataNodeRetryBackoffMillis            = 1000;
+    private int                  dataNodeRetryBackoffMillis                 = 1000;
 
-    private int                  dataNodeRetryTimes                    = 5;
+    private int                  dataNodeRetryTimes                         = 5;
 
-    private int                  dataNodeRetryQueueSize                = 1000;
+    private int                  dataNodeRetryQueueSize                     = 1000;
 
-    private int                  dataNodeMaxBatchSize                  = 100;
+    private int                  dataNodeMaxBatchSize                       = 100;
 
-    private int                  schedulerScanVersionIntervalMillis    = 1000 * 5;
+    private int                  schedulerScanVersionIntervalMillis         = 1000 * 5;
 
-    private double               accessLimitRate                       = 100000.0;
+    private double               accessLimitRate                            = 100000.0;
 
     private String               sessionServerRegion;
 
     private String               sessionServerDataCenter;
 
-    private volatile boolean     stopPushSwitch                        = false;
+    private volatile boolean     stopPushSwitch                             = false;
 
     //begin config for enterprise version
 
     /**
      * forever close push zone，such as:RZBETA
      */
-    private String               invalidForeverZones                   = "";
+    private String               invalidForeverZones                        = "";
     /**
      * config regex,exception to the rule of forever close push zone
      */
-    private String               invalidIgnoreDataidRegex              = "";
+    private String               invalidIgnoreDataidRegex                   = "";
 
     private volatile Set<String> invalidForeverZonesSet;
 
-    private Pattern              invalidIgnoreDataIdPattern            = null;
+    private Pattern              invalidIgnoreDataIdPattern                 = null;
 
-    private String               blacklistPubDataIdRegex               = "";
+    private String               blacklistPubDataIdRegex                    = "";
 
-    private String               blacklistSubDataIdRegex               = "";
+    private String               blacklistSubDataIdRegex                    = "";
 
-    private int                  dataClientConnNum                     = 10;
+    private int                  dataClientConnNum                          = 10;
 
-    private int                  sessionSchedulerPoolSize              = OsUtils.getCpuCount();
+    private int                  sessionSchedulerPoolSize                   = OsUtils.getCpuCount();
 
-    private int                  slotSyncPublisherMaxNum               = 512;
+    private int                  slotSyncPublisherMaxNum                    = 512;
 
-    private boolean              enableSessionLoadbalancePolicy        = false;
+    private boolean              enableSessionLoadbalancePolicy             = false;
 
-    private int                  cacheDigestIntervalMinutes            = 15;
+    private int                  cacheDigestIntervalMinutes                 = 15;
 
-    private int                  cacheCountIntervalSecs                = 30;
+    private int                  cacheCountIntervalSecs                     = 30;
 
     //end config for enterprise version
 
@@ -202,8 +202,8 @@ public class SessionServerConfigBean implements SessionServerConfig {
      * @return property value of schedulerHeartbeatIntervalSec
      */
     @Override
-    public int getSchedulerHeartbeatIntervalSec() {
-        return schedulerHeartbeatIntervalSec;
+    public int getSchedulerHeartbeatIntervalSecs() {
+        return schedulerHeartbeatIntervalSecs;
     }
 
     /**
@@ -212,7 +212,7 @@ public class SessionServerConfigBean implements SessionServerConfig {
      * @param schedulerHeartbeatIntervalSec value to be assigned to property schedulerHeartbeatIntervalSec
      */
     public void setSchedulerHeartbeatTimeout(int schedulerHeartbeatIntervalSec) {
-        this.schedulerHeartbeatIntervalSec = schedulerHeartbeatIntervalSec;
+        this.schedulerHeartbeatIntervalSecs = schedulerHeartbeatIntervalSec;
     }
 
     @Override
@@ -249,17 +249,17 @@ public class SessionServerConfigBean implements SessionServerConfig {
      * @return property value of clientNodeExchangeTimeOut
      */
     @Override
-    public int getClientNodeExchangeTimeOut() {
-        return clientNodeExchangeTimeOut;
+    public int getClientNodeExchangeTimeoutMillis() {
+        return clientNodeExchangeTimeoutMillis;
     }
 
     /**
      * Setter method for property <tt>clientNodeExchangeTimeOut</tt>.
      *
-     * @param clientNodeExchangeTimeOut value to be assigned to property clientNodeExchangeTimeOut
+     * @param clientNodeExchangeTimeoutMillis value to be assigned to property clientNodeExchangeTimeOut
      */
-    public void setClientNodeExchangeTimeOut(int clientNodeExchangeTimeOut) {
-        this.clientNodeExchangeTimeOut = clientNodeExchangeTimeOut;
+    public void setClientNodeExchangeTimeoutMillis(int clientNodeExchangeTimeoutMillis) {
+        this.clientNodeExchangeTimeoutMillis = clientNodeExchangeTimeoutMillis;
     }
 
     /**
@@ -268,17 +268,17 @@ public class SessionServerConfigBean implements SessionServerConfig {
      * @return property value of dataNodeExchangeTimeOut
      */
     @Override
-    public int getDataNodeExchangeTimeOut() {
-        return dataNodeExchangeTimeOut;
+    public int getDataNodeExchangeTimeoutMillis() {
+        return dataNodeExchangeTimeoutMillis;
     }
 
     /**
      * Setter method for property <tt>dataNodeExchangeTimeOut</tt>.
      *
-     * @param dataNodeExchangeTimeOut value to be assigned to property dataNodeExchangeTimeOut
+     * @param dataNodeExchangeTimeoutMillis value to be assigned to property dataNodeExchangeTimeOut
      */
-    public void setDataNodeExchangeTimeOut(int dataNodeExchangeTimeOut) {
-        this.dataNodeExchangeTimeOut = dataNodeExchangeTimeOut;
+    public void setDataNodeExchangeTimeoutMillis(int dataNodeExchangeTimeoutMillis) {
+        this.dataNodeExchangeTimeoutMillis = dataNodeExchangeTimeoutMillis;
     }
 
     /**
@@ -359,17 +359,17 @@ public class SessionServerConfigBean implements SessionServerConfig {
      * @return property value of metaNodeExchangeTimeOut
      */
     @Override
-    public int getMetaNodeExchangeTimeOut() {
-        return metaNodeExchangeTimeOut;
+    public int getMetaNodeExchangeTimeoutMillis() {
+        return metaNodeExchangeTimeoutMillis;
     }
 
     /**
      * Setter method for property <tt>metaNodeExchangeTimeOut</tt>.
      *
-     * @param metaNodeExchangeTimeOut value to be assigned to property metaNodeExchangeTimeOut
+     * @param metaNodeExchangeTimeoutMillis value to be assigned to property metaNodeExchangeTimeOut
      */
-    public void setMetaNodeExchangeTimeOut(int metaNodeExchangeTimeOut) {
-        this.metaNodeExchangeTimeOut = metaNodeExchangeTimeOut;
+    public void setMetaNodeExchangeTimeoutMillis(int metaNodeExchangeTimeoutMillis) {
+        this.metaNodeExchangeTimeoutMillis = metaNodeExchangeTimeoutMillis;
     }
 
     /**
@@ -890,17 +890,17 @@ public class SessionServerConfigBean implements SessionServerConfig {
      *
      * @return property value of dataNodeExchangeForFetchDatumTimeOut
      */
-    public int getDataNodeExchangeForFetchDatumTimeOut() {
-        return dataNodeExchangeForFetchDatumTimeOut;
+    public int getDataNodeExchangeForFetchDatumTimeoutMillis() {
+        return dataNodeExchangeForFetchDatumTimeoutMillis;
     }
 
     /**
      * Setter method for property <tt>dataNodeExchangeForFetchDatumTimeOut </tt>.
      *
-     * @param dataNodeExchangeForFetchDatumTimeOut value to be assigned to property dataNodeExchangeForFetchDatumTimeOut
+     * @param dataNodeExchangeForFetchDatumTimeoutMillis value to be assigned to property dataNodeExchangeForFetchDatumTimeOut
      */
-    public void setDataNodeExchangeForFetchDatumTimeOut(int dataNodeExchangeForFetchDatumTimeOut) {
-        this.dataNodeExchangeForFetchDatumTimeOut = dataNodeExchangeForFetchDatumTimeOut;
+    public void setDataNodeExchangeForFetchDatumTimeoutMillis(int dataNodeExchangeForFetchDatumTimeoutMillis) {
+        this.dataNodeExchangeForFetchDatumTimeoutMillis = dataNodeExchangeForFetchDatumTimeoutMillis;
     }
 
     /**

@@ -36,7 +36,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
 /**
- *
  * @author yuzhi.lyz
  * @version v 0.1 2020-11-30 10:30 yuzhi.lyz Exp $
  */
@@ -60,7 +59,7 @@ public final class SessionLeaseManager {
 
     @PostConstruct
     public void init() {
-        validateSessionLeaseSec(dataServerConfig.getSessionLeaseSec());
+        validateSessionLeaseSec(dataServerConfig.getSessionLeaseSecs());
         ConcurrentUtils.createDaemonThread("session-lease-cleaner", new LeaseCleaner()).start();
     }
 
@@ -119,7 +118,8 @@ public final class SessionLeaseManager {
         @Override
         public void runUnthrowable() {
             renewByConnection();
-            Map<ProcessId, Date> expires = getExpireProcessId(dataServerConfig.getSessionLeaseSec() * 1000);
+            Map<ProcessId, Date> expires = getExpireProcessId(dataServerConfig
+                .getSessionLeaseSecs() * 1000);
             LOGGER.info("lease expire sessions, {}", expires);
 
             if (!expires.isEmpty()) {
@@ -131,7 +131,7 @@ public final class SessionLeaseManager {
 
             // compact the unpub
             long tombstoneTimestamp = System.currentTimeMillis()
-                                      - dataServerConfig.getDatumCompactDelayMs();
+                                      - dataServerConfig.getDatumCompactDelaySecs() * 1000;
             Map<String, Integer> compacted = localDatumStorage.compact(tombstoneTimestamp);
             COMPACT_LOGGER.info("compact datum, {}", compacted);
         }

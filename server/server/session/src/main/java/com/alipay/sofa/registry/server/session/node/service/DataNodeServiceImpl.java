@@ -185,7 +185,7 @@ public class DataNodeServiceImpl implements DataNodeService {
 
                 @Override
                 public Integer getTimeout() {
-                    return sessionServerConfig.getDataNodeExchangeForFetchDatumTimeOut();
+                    return sessionServerConfig.getDataNodeExchangeForFetchDatumTimeoutMillis();
                 }
             };
 
