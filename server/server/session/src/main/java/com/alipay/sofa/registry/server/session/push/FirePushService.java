@@ -133,7 +133,8 @@ public class FirePushService {
         if (expectVersion != EXCEPT_MIN_VERSION) {
             if (datum == null) {
                 // datum change, but get null datum, should not happen
-                LOGGER.error("[NilDatum] {},{},{}", dataCenter, changeDataInfoId, expectVersion);
+                LOGGER.error("[changeNilDatum] {},{},{}", dataCenter, changeDataInfoId,
+                    expectVersion);
                 return;
             }
             if (datum.getVersion() < expectVersion) {
@@ -143,7 +144,8 @@ public class FirePushService {
             }
         } else {
             if (datum == null) {
-                LOGGER.info("fetch null datum", dataCenter, changeDataInfoId, expectVersion);
+                LOGGER
+                    .info("[fetchNilDatum] {},{},{}", dataCenter, changeDataInfoId, expectVersion);
             }
         }
 
@@ -270,17 +272,11 @@ public class FirePushService {
         }
     }
 
-    private final class ChangeTaskComparator implements Comparator<Runnable> {
+    private final class ChangeTaskComparator implements Comparator<ChangeTask> {
 
         @Override
-        public int compare(Runnable prev, Runnable current) {
-            if (prev instanceof ChangeTask && current instanceof ChangeTask) {
-                return Long.compare(((ChangeTask) prev).expectVersion,
-                    ((ChangeTask) current).expectVersion);
-            }
-            throw new IllegalArgumentException(String.format(
-                "cloud not compare, prev=%s, current=%s", prev.getClass().getName(), current
-                    .getClass().getName()));
+        public int compare(ChangeTask prev, ChangeTask current) {
+            return Long.compare(prev.expectVersion, current.expectVersion);
         }
     }
 }

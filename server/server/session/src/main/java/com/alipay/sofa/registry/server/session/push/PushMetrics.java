@@ -59,8 +59,7 @@ public final class PushMetrics {
         static final Counter.Child   PENDING_REPLACE_COUNTER     = PENDING_COUNTER
                                                                      .labels("replace");
         static final Counter.Child   PENDING_NEW_COUNTER         = PENDING_COUNTER.labels("new");
-        static final Counter.Child   PENDING_CONFLICT_COUNTER    = PENDING_COUNTER
-                                                                     .labels("conflict");
+        static final Counter.Child   PENDING_SKIP_COUNTER        = PENDING_COUNTER.labels("skip");
 
         static final Counter         COMMIT_COUNTER              = Counter.build()
                                                                      .namespace("session")

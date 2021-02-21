@@ -26,10 +26,10 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
 public class KeyedPreemptThreadPoolExecutor extends KeyedThreadPoolExecutor {
-    private final Comparator<Runnable> comparator;
+    private final Comparator<? extends Runnable> comparator;
 
     public KeyedPreemptThreadPoolExecutor(String executorName, int coreSize, int coreBufferSize,
-                                          Comparator<Runnable> comparator) {
+                                          Comparator<? extends Runnable> comparator) {
         super(executorName, coreSize, coreBufferSize);
         this.comparator = comparator;
     }
@@ -90,11 +90,12 @@ public class KeyedPreemptThreadPoolExecutor extends KeyedThreadPoolExecutor {
                 // reach avg and total size, is full
                 return false;
             }
+            final Comparator<Runnable> c = (Comparator<Runnable>) comparator;
             lock.lock();
             try {
                 final KeyedTask prev = map.get(task.key);
                 if (prev != null) {
-                    int comp = comparator.compare(prev.runnable, task.runnable);
+                    int comp = c.compare(prev.runnable, task.runnable);
                     if (comp >= 0) {
                         // the prev is high priority than current, ignored
                         return true;

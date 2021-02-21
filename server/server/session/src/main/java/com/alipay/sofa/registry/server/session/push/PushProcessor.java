@@ -90,32 +90,43 @@ public class PushProcessor {
             PENDING_NEW_COUNTER.inc();
             return true;
         }
-        PushTask prev;
+        boolean skip = false;
+        PushTask prev = null;
         pendingLock.lock();
         try {
             prev = pendingTasks.get(key);
             if (prev == null) {
                 pendingTasks.put(key, pushTask);
                 PENDING_NEW_COUNTER.inc();
-            } else {
+            } else if (pushTask.afterThan(prev)) {
                 // update the expireTimestamp as prev's, avoid the push block by the continues fire
                 pushTask.expireTimestamp = prev.expireTimestamp;
                 pendingTasks.put(key, pushTask);
                 PENDING_REPLACE_COUNTER.inc();
+            } else {
+                skip = true;
             }
         } finally {
             pendingLock.unlock();
         }
-        if (pushTask.noDelay) {
-            watchDog.wakeup();
+        if (!skip) {
+            if (pushTask.noDelay) {
+                watchDog.wakeup();
+            }
+            return true;
+        } else {
+            PENDING_SKIP_COUNTER.inc();
+            LOGGER.info("[SkipPending] key={}, prev={}, {}, ver={}, now={}, ver={}", key,
+                prev.taskID, prev.pushingTaskKey, prev.datum.getVersion(), pushTask.taskID,
+                pushTask.datum.getVersion());
+            return false;
         }
-        return true;
     }
 
     protected List<PushTask> createPushTask(boolean noDelay, InetSocketAddress addr,
                                             Map<String, Subscriber> subscriberMap, Datum datum) {
         PushTask pushTask = new PushTask(noDelay, addr, subscriberMap, datum);
-        // wait to merge to debouncing
+        // set expireTimestamp, wait to merge to debouncing
         pushTask.expireAfter(sessionServerConfig.getPushDataTaskDebouncingMillis());
         return Collections.singletonList(pushTask);
     }
@@ -228,7 +239,6 @@ public class PushProcessor {
 
         final boolean                 noDelay;
         final String                  dataCenter;
-        final long                    pushVersion;
         final Datum                   datum;
         final InetSocketAddress       addr;
         final Map<String, Subscriber> subscriberMap;
@@ -242,7 +252,6 @@ public class PushProcessor {
             this.taskID = TraceID.newTraceID();
             this.noDelay = noDelay;
             this.dataCenter = datum.getDataCenter();
-            this.pushVersion = datum.getVersion();
             this.datum = datum;
             this.addr = addr;
             this.subscriberMap = subscriberMap;
@@ -257,6 +266,10 @@ public class PushProcessor {
 
         void expireAfter(long intervalMs) {
             this.expireTimestamp = System.currentTimeMillis() + intervalMs;
+        }
+
+        boolean afterThan(PushTask t) {
+            return datum.getVersion() > t.datum.getVersion();
         }
 
         void updatePushTimestamp() {
@@ -304,7 +317,7 @@ public class PushProcessor {
             sb.append("PushTask{").append(subscriber.getDataInfoId()).append(",ID=").append(taskID)
                 .append(",createT=").append(createTimestamp).append(",expireT=")
                 .append(expireTimestamp).append(",DC=").append(dataCenter).append(",ver=")
-                .append(pushVersion).append(",addr=").append(addr).append(",scope=")
+                .append(datum.getVersion()).append(",addr=").append(addr).append(",scope=")
                 .append(subscriber.getScope()).append(",subIds=").append(subscriberMap.keySet())
                 .append(",sub=").append(subscriber.printPushContext()).append(",retry=")
                 .append(retryCount.get());
@@ -329,8 +342,8 @@ public class PushProcessor {
             boolean cleaned = false;
             try {
                 for (Subscriber subscriber : pushTask.subscriberMap.values()) {
-                    if (!subscriber
-                        .checkAndUpdateVersion(pushTask.dataCenter, pushTask.pushVersion)) {
+                    if (!subscriber.checkAndUpdateVersion(pushTask.dataCenter,
+                        pushTask.datum.getVersion())) {
                         LOGGER.warn("PushY, but failed to updateVersion, {}, {}", pushTask.taskID,
                             pushTask.pushingTaskKey);
                     }

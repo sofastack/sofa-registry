@@ -105,7 +105,7 @@ public class DataServerConfig {
 
     private int                  slotSyncRequestExecutorQueueSize         = 1000;
 
-    private int                  schedulerHeartbeatIntervalSecs           = 3;
+    private int                  schedulerHeartbeatIntervalSecs           = 1;
 
     private boolean              enableTestApi                            = false;
 
