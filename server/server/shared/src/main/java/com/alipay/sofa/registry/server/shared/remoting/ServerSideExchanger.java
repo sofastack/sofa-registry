@@ -63,7 +63,7 @@ public abstract class ServerSideExchanger implements NodeExchanger {
         if (server == null) {
             throw new RequestException("no server for " + getServerPort(), request);
         }
-        final int timeout = request.getTimeout() != null ? request.getTimeout() : getRpcTimeout();
+        final int timeout = request.getTimeout() != null ? request.getTimeout() : getRpcTimeoutMillis();
         Channel channel = null;
         if (url == null) {
             channel = choseChannel(server);
@@ -104,7 +104,7 @@ public abstract class ServerSideExchanger implements NodeExchanger {
         throw new UnsupportedOperationException();
     }
 
-    public abstract int getRpcTimeout();
+    public abstract int getRpcTimeoutMillis();
 
     public abstract int getServerPort();
 }

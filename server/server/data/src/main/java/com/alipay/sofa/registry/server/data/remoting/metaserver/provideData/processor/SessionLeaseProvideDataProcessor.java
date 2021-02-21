@@ -52,7 +52,7 @@ public class SessionLeaseProvideDataProcessor implements ProvideDataProcessor {
 
         LOGGER.info("Fetch sessionLeaseSec {}", data);
         SessionLeaseManager.validateSessionLeaseSec(data);
-        dataServerConfig.setSessionLeaseSec(data);
+        dataServerConfig.setSessionLeaseSecs(data);
     }
 
     @Override
