@@ -81,7 +81,7 @@ public class DataChangeRequestHandler extends AbstractClientHandler<DataChangeRe
             final String dataInfoId = e.getKey();
             final DatumVersion version = e.getValue();
             if (!sessionInterests.checkInterestVersion(dataCenter, dataInfoId, version.getValue())) {
-                LOGGER.info("obsolete version {}, ver={}, dataCenter={}", dataInfoId, version,
+                LOGGER.info("obsolete change, {}, ver={}, dataCenter={}", dataInfoId, version,
                     dataCenter);
                 continue;
             }
