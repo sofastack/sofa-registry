@@ -74,9 +74,9 @@ public class BatchPutDataHandler extends AbstractDataHandler<BatchRequest> {
                     Publisher publisher = (Publisher) req;
                     changeDataInfoIds.addAll(doHandle(publisher));
                     if (publisher instanceof UnPublisher) {
-                        LOGGER.info("unpub,{},{},{},{},{},{}", slotIdStr,
-                            publisher.getDataInfoId(), publisher.getRegisterId(),
-                            publisher.getVersion(), publisher.getRegisterTimestamp());
+                        LOGGER.info("unpub,{},{},{},{},{}", slotIdStr, publisher.getDataInfoId(),
+                            publisher.getRegisterId(), publisher.getVersion(),
+                            publisher.getRegisterTimestamp());
                     } else {
                         LOGGER.info("pub,{},{},{},{},{}", slotIdStr, publisher.getDataInfoId(),
                             publisher.getRegisterId(), publisher.getVersion(),

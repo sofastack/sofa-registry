@@ -50,7 +50,7 @@ public class SessionServerConfigBean implements SessionServerConfig {
 
     private int                  httpServerPort;
 
-    private int                  schedulerHeartbeatIntervalSecs             = 3;
+    private int                  schedulerHeartbeatIntervalSecs             = 1;
 
     private int                  subscriberRegisterFetchRetryTimes          = 3;
 

@@ -47,10 +47,10 @@ public class DatumCacheGenerator implements CacheGenerator {
             if (StringUtils.isNotBlank(dataCenter) && StringUtils.isNotBlank(dataInfoId)) {
                 Datum datum = dataNodeService.fetchDataCenter(dataInfoId, dataCenter);
                 if (datum == null) {
-                    LOGGER.info("genCacheNil,{},{}", dataInfoId, dataCenter);
+                    LOGGER.info("loadNil,{},{}", dataInfoId, dataCenter);
                 } else {
-                    LOGGER.info("genCache,{},{},{},{}", dataInfoId, dataCenter,
-                        datum.publisherSize(), datum.getVersion());
+                    LOGGER.info("load,{},{},{},{}", dataInfoId, dataCenter, datum.publisherSize(),
+                        datum.getVersion());
                 }
                 return new Value(datum);
             }

@@ -19,13 +19,11 @@ package com.alipay.sofa.registry.server.session.cache;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
+import com.google.common.cache.*;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
-import com.google.common.cache.CacheBuilder;
-import com.google.common.cache.CacheLoader;
-import com.google.common.cache.LoadingCache;
 
 /**
  *
@@ -33,9 +31,9 @@ import com.google.common.cache.LoadingCache;
  * @version $Id: CacheService.java, v 0.1 2017-12-06 18:22 shangyu.wh Exp $
  */
 public class SessionCacheService implements CacheService {
-
-    private static final Logger            LOGGER = LoggerFactory
-                                                      .getLogger(SessionCacheService.class);
+    private static final Logger            CACHE_LOGGER = LoggerFactory.getLogger("CACHE-GEN");
+    private static final Logger            LOGGER       = LoggerFactory
+                                                            .getLogger(SessionCacheService.class);
 
     private final LoadingCache<Key, Value> readWriteCacheMap;
     /**
@@ -48,12 +46,30 @@ public class SessionCacheService implements CacheService {
      */
     public SessionCacheService() {
         this.readWriteCacheMap = CacheBuilder.newBuilder().maximumSize(1000L)
-            .expireAfterWrite(31000, TimeUnit.MILLISECONDS).build(new CacheLoader<Key, Value>() {
+            .expireAfterWrite(31000, TimeUnit.MILLISECONDS).removalListener(new RemoveListener())
+            .build(new CacheLoader<Key, Value>() {
                 @Override
                 public Value load(Key key) {
                     return generatePayload(key);
                 }
             });
+    }
+
+    private final class RemoveListener implements RemovalListener<Key, Value> {
+
+        @Override
+        public void onRemoval(RemovalNotification<Key, Value> notification) {
+            final RemovalCause cause = notification.getCause();
+            if (cause == RemovalCause.SIZE || cause == RemovalCause.COLLECTED) {
+                Key key = notification.getKey();
+                EntityType entityType = key.getEntityType();
+                if (entityType instanceof DatumKey) {
+                    DatumKey datumKey = (DatumKey) entityType;
+                    CACHE_LOGGER.info("remove,{},{},{}", datumKey.getDataInfoId(),
+                        datumKey.getDataCenter(), cause);
+                }
+            }
+        }
     }
 
     private Value generatePayload(Key key) {
