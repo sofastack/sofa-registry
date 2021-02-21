@@ -76,7 +76,7 @@ public abstract class ClientSideExchanger implements NodeExchanger {
             throw new RequestException("null url", request);
         }
         Client client = boltExchange.getClient(serverType);
-        final int timeout = request.getTimeout() != null ? request.getTimeout() : getRpcTimeout();
+        final int timeout = request.getTimeout() != null ? request.getTimeout() : getRpcTimeoutMillis();
         try {
             CallbackHandler callback = request.getCallBackHandler();
             if (callback == null) {
@@ -189,7 +189,7 @@ public abstract class ClientSideExchanger implements NodeExchanger {
         }
     }
 
-    public abstract int getRpcTimeout();
+    public abstract int getRpcTimeoutMillis();
 
     public abstract int getServerPort();
 

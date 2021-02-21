@@ -36,7 +36,7 @@ public class MetaNodeExchanger extends AbstractMetaNodeExchanger {
     }
 
     @Override
-    public int getRpcTimeout() {
-        return sessionServerConfig.getMetaNodeExchangeTimeOut();
+    public int getRpcTimeoutMillis() {
+        return sessionServerConfig.getMetaNodeExchangeTimeoutMillis();
     }
 }

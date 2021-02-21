@@ -202,7 +202,7 @@ public class DataServerBootstrap {
 
     private void renewNode() {
         metaServerService.renewNode();
-        metaServerService.startRenewer(dataServerConfig.getSchedulerHeartbeatIntervalSec() * 1000);
+        metaServerService.startRenewer(dataServerConfig.getSchedulerHeartbeatIntervalSecs() * 1000);
 
     }
 
@@ -211,7 +211,7 @@ public class DataServerBootstrap {
             .fetchData(ValueConstants.DATA_SESSION_LEASE_SEC);
         Integer expireSec = ProvideData.toInteger(provideData);
         if (expireSec != null) {
-            dataServerConfig.setSessionLeaseSec(expireSec);
+            dataServerConfig.setSessionLeaseSecs(expireSec);
             LOGGER.info("Fetch {}={}, update current config",
                 ValueConstants.DATA_SESSION_LEASE_SEC, expireSec);
         }
@@ -220,7 +220,7 @@ public class DataServerBootstrap {
             .fetchData(ValueConstants.DATA_DATUM_SYNC_SESSION_INTERVAL_SEC);
         Integer syncSessionIntervalSec = ProvideData.toInteger(provideData);
         if (syncSessionIntervalSec != null) {
-            dataServerConfig.setSlotLeaderSyncSessionIntervalSec(syncSessionIntervalSec);
+            dataServerConfig.setSlotLeaderSyncSessionIntervalSecs(syncSessionIntervalSec);
             LOGGER.info("Fetch {}={}, update current config",
                 ValueConstants.DATA_DATUM_SYNC_SESSION_INTERVAL_SEC, syncSessionIntervalSec);
         }

@@ -51,7 +51,7 @@ public class DataServerConfig {
 
     private int                  notifyMaxItems                           = 300;
 
-    private int                  notifyIntervalMs                         = 1000;
+    private int                  notifyIntervalMillis                     = 1000;
 
     private int                  notifyRetryTimes                         = 3;
 
@@ -60,9 +60,9 @@ public class DataServerConfig {
     private int                  notifyTempExecutorPoolSize               = OsUtils.getCpuCount() * 3;
 
     private int                  notifyTempExecutorQueueSize              = 4000;
-    private int                  notifyTempDataIntervalMs                 = 200;
+    private int                  notifyTempDataIntervalMillis             = 500;
 
-    private int                  rpcTimeout                               = 3000;
+    private int                  rpcTimeoutMillis                         = 3000;
 
     private CommonConfig         commonConfig;
 
@@ -82,17 +82,17 @@ public class DataServerConfig {
 
     private int                  publishExecutorQueueSize                 = 10000;
 
-    private volatile int         sessionLeaseSec                          = 30;
+    private volatile int         sessionLeaseSecs                         = 30;
 
-    private int                  datumCompactDelayMs                      = 1000 * 60 * 3;
+    private int                  datumCompactDelaySecs                    = 60 * 3;
 
     private int                  slotLeaderSyncSessionExecutorThreadSize  = OsUtils.getCpuCount() * 3;
     private int                  slotLeaderSyncSessionExecutorQueueSize   = 40000;
-    private volatile int         slotLeaderSyncSessionIntervalSec         = 6;
+    private volatile int         slotLeaderSyncSessionIntervalSecs        = 6;
 
     private int                  slotFollowerSyncLeaderExecutorThreadSize = OsUtils.getCpuCount();
     private int                  slotFollowerSyncLeaderExecutorQueueSize  = 10000;
-    private volatile int         slotFollowerSyncLeaderIntervalSec        = 60;
+    private volatile int         slotFollowerSyncLeaderIntervalSecs       = 60;
 
     // the publisher.digest if len(registerId/uuid+long+long), 50bytes
     private volatile int         slotSyncPublisherDigestMaxNum            = 4000;
@@ -105,7 +105,7 @@ public class DataServerConfig {
 
     private int                  slotSyncRequestExecutorQueueSize         = 1000;
 
-    private int                  schedulerHeartbeatIntervalSec            = 3;
+    private int                  schedulerHeartbeatIntervalSecs           = 3;
 
     private boolean              enableTestApi                            = false;
 
@@ -207,17 +207,17 @@ public class DataServerConfig {
      *
      * @return property value of notifyIntervalMs
      */
-    public int getNotifyIntervalMs() {
-        return notifyIntervalMs;
+    public int getNotifyIntervalMillis() {
+        return notifyIntervalMillis;
     }
 
     /**
      * Setter method for property <tt>notifyIntervalMs</tt>.
      *
-     * @param notifyIntervalMs value to be assigned to property notifyIntervalMs
+     * @param notifyIntervalMillis value to be assigned to property notifyIntervalMs
      */
-    public void setNotifyIntervalMs(int notifyIntervalMs) {
-        this.notifyIntervalMs = notifyIntervalMs;
+    public void setNotifyIntervalMillis(int notifyIntervalMillis) {
+        this.notifyIntervalMillis = notifyIntervalMillis;
     }
 
     /**
@@ -225,17 +225,17 @@ public class DataServerConfig {
      *
      * @return property value of notifyTempDataIntervalMs
      */
-    public int getNotifyTempDataIntervalMs() {
-        return notifyTempDataIntervalMs;
+    public int getNotifyTempDataIntervalMillis() {
+        return notifyTempDataIntervalMillis;
     }
 
     /**
      * Setter method for property <tt>notifyTempDataIntervalMs</tt>.
      *
-     * @param notifyTempDataIntervalMs value to be assigned to property notifyTempDataIntervalMs
+     * @param notifyTempDataIntervalMillis value to be assigned to property notifyTempDataIntervalMs
      */
-    public void setNotifyTempDataIntervalMs(int notifyTempDataIntervalMs) {
-        this.notifyTempDataIntervalMs = notifyTempDataIntervalMs;
+    public void setNotifyTempDataIntervalMillis(int notifyTempDataIntervalMillis) {
+        this.notifyTempDataIntervalMillis = notifyTempDataIntervalMillis;
     }
 
     /**
@@ -243,17 +243,17 @@ public class DataServerConfig {
      *
      * @return property value of rpcTimeout
      */
-    public int getRpcTimeout() {
-        return rpcTimeout;
+    public int getRpcTimeoutMillis() {
+        return rpcTimeoutMillis;
     }
 
     /**
      * Setter method for property <tt>rpcTimeout</tt>.
      *
-     * @param rpcTimeout value to be assigned to property rpcTimeout
+     * @param rpcTimeoutMillis value to be assigned to property rpcTimeout
      */
-    public void setRpcTimeout(int rpcTimeout) {
-        this.rpcTimeout = rpcTimeout;
+    public void setRpcTimeoutMillis(int rpcTimeoutMillis) {
+        this.rpcTimeoutMillis = rpcTimeoutMillis;
     }
 
     /**
@@ -402,35 +402,35 @@ public class DataServerConfig {
      *
      * @return property value of sessionLeaseSec
      */
-    public int getSessionLeaseSec() {
-        return sessionLeaseSec;
+    public int getSessionLeaseSecs() {
+        return sessionLeaseSecs;
     }
 
     /**
      * Setter method for property <tt>sessionLeaseSec</tt>.
      *
-     * @param sessionLeaseSec value to be assigned to property sessionLeaseSec
+     * @param sessionLeaseSecs value to be assigned to property sessionLeaseSec
      */
-    public void setSessionLeaseSec(int sessionLeaseSec) {
-        this.sessionLeaseSec = sessionLeaseSec;
+    public void setSessionLeaseSecs(int sessionLeaseSecs) {
+        this.sessionLeaseSecs = sessionLeaseSecs;
     }
 
     /**
-     * Getter method for property <tt>datumCompactDelayMs</tt>.
+     * Getter method for property <tt>datumCompactDelaySecs</tt>.
      *
-     * @return property value of datumCompactDelayMs
+     * @return property value of datumCompactDelaySecs
      */
-    public int getDatumCompactDelayMs() {
-        return datumCompactDelayMs;
+    public int getDatumCompactDelaySecs() {
+        return datumCompactDelaySecs;
     }
 
     /**
-     * Setter method for property <tt>datumCompactDelayMs</tt>.
+     * Setter method for property <tt>datumCompactDelaySecs</tt>.
      *
-     * @param datumCompactDelayMs value to be assigned to property datumCompactDelayMs
+     * @param datumCompactDelaySecs value to be assigned to property datumCompactDelaySecs
      */
-    public void setDatumCompactDelayMs(int datumCompactDelayMs) {
-        this.datumCompactDelayMs = datumCompactDelayMs;
+    public void setDatumCompactDelaySecs(int datumCompactDelaySecs) {
+        this.datumCompactDelaySecs = datumCompactDelaySecs;
     }
 
     /**
@@ -492,17 +492,17 @@ public class DataServerConfig {
      *
      * @return property value of slotLeaderSyncSessionIntervalMs
      */
-    public int getSlotLeaderSyncSessionIntervalSec() {
-        return slotLeaderSyncSessionIntervalSec;
+    public int getSlotLeaderSyncSessionIntervalSecs() {
+        return slotLeaderSyncSessionIntervalSecs;
     }
 
     /**
      * Setter method for property <tt>slotLeaderSyncSessionIntervalSec</tt>.
      *
-     * @param slotLeaderSyncSessionIntervalSec value to be assigned to property slotLeaderSyncSessionIntervalSec
+     * @param slotLeaderSyncSessionIntervalSecs value to be assigned to property slotLeaderSyncSessionIntervalSec
      */
-    public void setSlotLeaderSyncSessionIntervalSec(int slotLeaderSyncSessionIntervalSec) {
-        this.slotLeaderSyncSessionIntervalSec = slotLeaderSyncSessionIntervalSec;
+    public void setSlotLeaderSyncSessionIntervalSecs(int slotLeaderSyncSessionIntervalSecs) {
+        this.slotLeaderSyncSessionIntervalSecs = slotLeaderSyncSessionIntervalSecs;
     }
 
     /**
@@ -528,17 +528,17 @@ public class DataServerConfig {
      *
      * @return property value of slotFollowerSyncLeaderIntervalSec
      */
-    public int getSlotFollowerSyncLeaderIntervalSec() {
-        return slotFollowerSyncLeaderIntervalSec;
+    public int getSlotFollowerSyncLeaderIntervalSecs() {
+        return slotFollowerSyncLeaderIntervalSecs;
     }
 
     /**
      * Setter method for property <tt>slotFollowerSyncLeaderIntervalSec</tt>.
      *
-     * @param slotFollowerSyncLeaderIntervalSec value to be assigned to property slotFollowerSyncLeaderIntervalSec
+     * @param slotFollowerSyncLeaderIntervalSecs value to be assigned to property slotFollowerSyncLeaderIntervalSec
      */
-    public void setSlotFollowerSyncLeaderIntervalSec(int slotFollowerSyncLeaderIntervalSec) {
-        this.slotFollowerSyncLeaderIntervalSec = slotFollowerSyncLeaderIntervalSec;
+    public void setSlotFollowerSyncLeaderIntervalSecs(int slotFollowerSyncLeaderIntervalSecs) {
+        this.slotFollowerSyncLeaderIntervalSecs = slotFollowerSyncLeaderIntervalSecs;
     }
 
     /**
@@ -636,17 +636,17 @@ public class DataServerConfig {
      *
      * @return property value of schedulerHeartbeatIntervalSec
      */
-    public int getSchedulerHeartbeatIntervalSec() {
-        return schedulerHeartbeatIntervalSec;
+    public int getSchedulerHeartbeatIntervalSecs() {
+        return schedulerHeartbeatIntervalSecs;
     }
 
     /**
      * Setter method for property <tt>schedulerHeartbeatIntervalSec</tt>.
      *
-     * @param schedulerHeartbeatIntervalSec value to be assigned to property schedulerHeartbeatIntervalSec
+     * @param schedulerHeartbeatIntervalSecs value to be assigned to property schedulerHeartbeatIntervalSec
      */
-    public void setSchedulerHeartbeatIntervalSec(int schedulerHeartbeatIntervalSec) {
-        this.schedulerHeartbeatIntervalSec = schedulerHeartbeatIntervalSec;
+    public void setSchedulerHeartbeatIntervalSecs(int schedulerHeartbeatIntervalSecs) {
+        this.schedulerHeartbeatIntervalSecs = schedulerHeartbeatIntervalSecs;
     }
 
     /**

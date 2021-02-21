@@ -97,7 +97,8 @@ public final class DataChangeEventCenter {
         ConcurrentUtils.createDaemonThread("changeMerger", changeMerger).start();
         ConcurrentUtils.createDaemonThread("tempChangeMerger", tempChangeMerger).start();
 
-        LOGGER.info("start DataChange NotifyIntervalMs={}", dataServerConfig.getNotifyIntervalMs());
+        LOGGER.info("start DataChange NotifyIntervalMs={}",
+            dataServerConfig.getNotifyIntervalMillis());
     }
 
     public void onTempPubChange(Publisher publisher, String dataCenter) {
@@ -258,7 +259,7 @@ public final class DataChangeEventCenter {
     private void doNotify(Object request, Connection connection) {
         Server sessionServer = boltExchange.getServer(dataServerConfig.getPort());
         sessionServer.sendSync(sessionServer.getChannel(connection.getRemoteAddress()), request,
-            dataServerConfig.getRpcTimeout());
+            dataServerConfig.getRpcTimeoutMillis());
     }
 
     private final class TempChangeMerger extends LoopRunnable {
@@ -306,8 +307,8 @@ public final class DataChangeEventCenter {
 
         @Override
         public void waitingUnthrowable() {
-            ConcurrentUtils.sleepUninterruptibly(dataServerConfig.getNotifyTempDataIntervalMs(),
-                TimeUnit.MILLISECONDS);
+            ConcurrentUtils.sleepUninterruptibly(
+                dataServerConfig.getNotifyTempDataIntervalMillis(), TimeUnit.MILLISECONDS);
         }
     }
 
@@ -381,7 +382,7 @@ public final class DataChangeEventCenter {
 
         @Override
         public void waitingUnthrowable() {
-            ConcurrentUtils.sleepUninterruptibly(dataServerConfig.getNotifyIntervalMs(),
+            ConcurrentUtils.sleepUninterruptibly(dataServerConfig.getNotifyIntervalMillis(),
                 TimeUnit.MILLISECONDS);
         }
     }
