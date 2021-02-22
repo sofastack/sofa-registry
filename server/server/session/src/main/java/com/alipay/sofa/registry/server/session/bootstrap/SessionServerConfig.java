@@ -71,6 +71,10 @@ public interface SessionServerConfig {
 
     long getDataChangeExecutorKeepAliveTime();
 
+    int getDataChangeDebouncingMillis();
+
+    int getDataChangeMaxDebouncingMillis();
+
     int getPushTaskExecutorPoolSize();
 
     int getPushTaskExecutorQueueSize();
