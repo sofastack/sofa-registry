@@ -38,8 +38,10 @@ import com.alipay.sofa.registry.remoting.Channel;
 import com.alipay.sofa.registry.remoting.jersey.JerseyClient;
 import com.alipay.sofa.registry.server.test.TestRegistryMain;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.SpringBootConfiguration;
+import org.springframework.boot.logging.LoggingSystem;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.ConfigurableApplicationContext;
 
@@ -99,6 +101,12 @@ public class BaseIntegrationTest {
 
     @Value("${data.server.syncDataPort}")
     protected int                                   syncDataPort;
+
+    @BeforeClass
+    public static void beforeClass() throws Exception {
+        System.setProperty(LoggingSystem.SYSTEM_PROPERTY, "org.springframework.boot.logging.log4j2.Log4J2LoggingSystem");
+
+    }
 
     @Before
     public void before() throws Exception {
