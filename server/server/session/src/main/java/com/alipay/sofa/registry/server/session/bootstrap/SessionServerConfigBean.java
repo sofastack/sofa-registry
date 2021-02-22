@@ -80,6 +80,9 @@ public class SessionServerConfigBean implements SessionServerConfig {
 
     private int                  dataChangeFetchTaskWorkerSize              = OsUtils.getCpuCount() * 5;
 
+    private int                  dataChangeDebouncingMillis                 = 1000;
+    private int                  dataChangeMaxDebouncingMillis              = 3000;
+
     private int                  slotSyncMaxBufferSize                      = 5000;
 
     private int                  slotSyncWorkerSize                         = OsUtils.getCpuCount() * 4;
@@ -550,6 +553,24 @@ public class SessionServerConfigBean implements SessionServerConfig {
     @Override
     public long getDataChangeExecutorKeepAliveTime() {
         return dataChangeExecutorKeepAliveTime;
+    }
+
+    @Override
+    public int getDataChangeDebouncingMillis() {
+        return dataChangeDebouncingMillis;
+    }
+
+    public void setDataChangeDebouncingMillis(int dataChangeDebouncingMillis) {
+        this.dataChangeDebouncingMillis = dataChangeDebouncingMillis;
+    }
+
+    @Override
+    public int getDataChangeMaxDebouncingMillis() {
+        return dataChangeMaxDebouncingMillis;
+    }
+
+    public void setDataChangeMaxDebouncingMillis(int dataChangeMaxDebouncingMillis) {
+        this.dataChangeMaxDebouncingMillis = dataChangeMaxDebouncingMillis;
     }
 
     /**

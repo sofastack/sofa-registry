@@ -89,7 +89,7 @@ public class PubSubTest extends BaseIntegrationTest {
 
         PublisherRegistration registration = new PublisherRegistration(dataId);
         registryClient1.register(registration, value);
-        Thread.sleep(2000L);
+        Thread.sleep(3000L);
 
         assertEquals(dataId, observer.dataId);
         assertEquals(LOCAL_REGION, observer.userData.getLocalZone());
@@ -149,7 +149,7 @@ public class PubSubTest extends BaseIntegrationTest {
 
         registration = new PublisherRegistration(dataId);
         registryClient2.register(registration, value);
-        Thread.sleep(2000L);
+        Thread.sleep(3000L);
 
         assertEquals(dataId, observer.dataId);
         assertEquals(LOCAL_REGION, observer.userData.getLocalZone());
@@ -175,7 +175,7 @@ public class PubSubTest extends BaseIntegrationTest {
         registration = new PublisherRegistration(dataId);
         registryClient1.register(registration, value);
         registryClient2.register(registration, value);
-        Thread.sleep(2000L);
+        Thread.sleep(3000L);
 
         assertEquals(dataId, observer.dataId);
         assertEquals(LOCAL_REGION, observer.userData.getLocalZone());

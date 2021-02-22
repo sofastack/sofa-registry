@@ -23,30 +23,43 @@ public final class PushMetrics {
     }
 
     static final class Fetch {
-        static final Counter         CHANGE_TASK_COUNTER   = Counter.build().namespace("session")
-                                                               .subsystem("fetch")
-                                                               .name("change_task_total")
-                                                               .help("change task").register();
-        static final Counter         REGISTER_TASK_COUNTER = Counter.build().namespace("session")
-                                                               .subsystem("fetch")
-                                                               .name("register_task_total")
-                                                               .help("register task").register();
-        static final Counter         PUSH_EMPTY_COUNTER    = Counter.build().namespace("session")
-                                                               .subsystem("fetch")
-                                                               .name("empty_task_total")
-                                                               .help("empty task").register();
-        static final Counter         PUSH_TEMP_COUNTER     = Counter.build().namespace("session")
-                                                               .subsystem("fetch")
-                                                               .name("temp_task_total")
-                                                               .help("temp task").register();
+        static final Counter         CHANGE_TASK_COUNTER      = Counter.build()
+                                                                  .namespace("session")
+                                                                  .subsystem("fetch")
+                                                                  .name("change_task_total")
+                                                                  .help("change task").register();
 
-        private static final Counter CACHE_COUNTER         = Counter.build().namespace("session")
-                                                               .subsystem("fetch")
-                                                               .name("cache_total").help(" cache")
-                                                               .labelNames("hit").register();
+        static final Counter         CHANGE_TASK_EXEC_COUNTER = Counter.build()
+                                                                  .namespace("session")
+                                                                  .subsystem("fetch")
+                                                                  .name("change_task_exec_total")
+                                                                  .help("change task exec")
+                                                                  .register();
+        static final Counter         REGISTER_TASK_COUNTER    = Counter.build()
+                                                                  .namespace("session")
+                                                                  .subsystem("fetch")
+                                                                  .name("register_task_total")
+                                                                  .help("register task").register();
+        static final Counter         PUSH_EMPTY_COUNTER       = Counter.build()
+                                                                  .namespace("session")
+                                                                  .subsystem("fetch")
+                                                                  .name("empty_task_total")
+                                                                  .help("empty task").register();
+        static final Counter         PUSH_TEMP_COUNTER        = Counter.build()
+                                                                  .namespace("session")
+                                                                  .subsystem("fetch")
+                                                                  .name("temp_task_total")
+                                                                  .help("temp task").register();
 
-        static final Counter.Child   CACHE_HIT_COUNTER     = CACHE_COUNTER.labels("Y");
-        static final Counter.Child   CACHE_MISS_COUNTER    = CACHE_COUNTER.labels("N");
+        private static final Counter CACHE_COUNTER            = Counter.build()
+                                                                  .namespace("session")
+                                                                  .subsystem("fetch")
+                                                                  .name("cache_total")
+                                                                  .help(" cache").labelNames("hit")
+                                                                  .register();
+
+        static final Counter.Child   CACHE_HIT_COUNTER        = CACHE_COUNTER.labels("Y");
+        static final Counter.Child   CACHE_MISS_COUNTER       = CACHE_COUNTER.labels("N");
     }
 
     static final class Push {
