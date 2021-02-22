@@ -28,7 +28,7 @@
 
         <RollingRandomAccessFile name="COMMON-DEFAULT-APPENDER" fileName="${META_LOG_HOME}/common-default.log"
                                  filePattern="${META_LOG_HOME}/common-default.log.%d{yyyy-MM-dd}">
-            <ThresholdFilter level="ERROR" onMatch="DENY"/>
+            <ThresholdFilter level="ERROR" onMatch="DENY" onMismatch="NEUTRAL"/>
             <PatternLayout pattern="[%d{ISO8601}][%p][%t][%c{0}] - %m%n"/>
             <Policies>
                 <TimeBasedTriggeringPolicy/>
@@ -114,7 +114,7 @@
         <RollingRandomAccessFile name="REGISTRY-METRICS-APPENDER" fileName="${META_LOG_HOME}/registry-metrics.log"
                                  filePattern="${META_LOG_HOME}/registry-metrics.log.%d{yyyy-MM-dd}">
             <PatternLayout pattern="[%d{ISO8601}][%p][%t][%c{0}] - %m%n"/>
-            <ThresholdFilter level="ERROR" onMatch="DENY"/>
+            <ThresholdFilter level="ERROR" onMatch="DENY" onMismatch="NEUTRAL"/>
             <Policies>
                 <TimeBasedTriggeringPolicy/>
             </Policies>
@@ -129,7 +129,7 @@
         <RollingRandomAccessFile name="META-HTTP-APPENDER" fileName="${META_LOG_HOME}/registry-http.log"
                                  filePattern="${META_LOG_HOME}/registry-http.log.%d{yyyy-MM-dd}">
             <PatternLayout pattern="[%d{ISO8601}][%p][%t][%c{0}] - %m%n"/>
-            <ThresholdFilter level="ERROR" onMatch="DENY"/>
+            <ThresholdFilter level="ERROR" onMatch="DENY" onMismatch="NEUTRAL"/>
             <Policies>
                 <TimeBasedTriggeringPolicy/>
             </Policies>
