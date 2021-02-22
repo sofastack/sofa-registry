@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration status="info" shutdownHook="disable" monitorInterval="5">
+
+    <Properties>
+        <Property name="LOG_HOME">${user.home}/logs/registry/temp</Property>
+        <Property name="LOG_LEVEL">INFO</Property>
+    </Properties>
+
+    <appenders>
+        <console name="STDOUT" target="SYSTEM_OUT">
+            <PatternLayout pattern="[%d{ISO8601}][%p][%t][%c{0}] - %m%n"/>
+        </console>
+
+        <RollingRandomAccessFile name="DEFAULT-SERVER-APPENDER" fileName="${LOG_HOME}/registry-test.log"
+                                 filePattern="${LOG_HOME}/registry-test.log.%d{yyyy-MM-dd}">
+            <PatternLayout pattern="[%d{ISO8601}][%p][%t][%c{0}] - %m%n"/>
+            <Policies>
+                <TimeBasedTriggeringPolicy/>
+            </Policies>
+            <DefaultRolloverStrategy max="30">
+                <Delete basePath="${META_LOG_HOME}" maxDepth="2">
+                    <IfFileName glob="registry-test.log.*" />
+                    <IfLastModified age="30d" />
+                </Delete>
+            </DefaultRolloverStrategy>
+        </RollingRandomAccessFile>
+
+
+
+    </appenders>
+
+    <loggers>
+        <root level="${LOG_LEVEL}">
+            <appender-ref ref="DEFAULT-SERVER-APPENDER"/>
+            <appender-ref ref="STDOUT"/>
+        </root>
+    </loggers>
+
+</configuration>
