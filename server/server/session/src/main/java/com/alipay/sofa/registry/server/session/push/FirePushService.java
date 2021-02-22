@@ -27,7 +27,6 @@ import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
 import com.alipay.sofa.registry.server.session.cache.*;
 import com.alipay.sofa.registry.server.session.store.Interests;
 import com.alipay.sofa.registry.server.shared.util.DatumUtils;
-import com.alipay.sofa.registry.task.KeyedPreemptThreadPoolExecutor;
 import com.alipay.sofa.registry.task.KeyedThreadPoolExecutor;
 
 import static com.alipay.sofa.registry.server.session.push.PushMetrics.Fetch.*;
@@ -42,31 +41,29 @@ import java.util.*;
 import java.util.concurrent.RejectedExecutionException;
 
 public class FirePushService {
-    public static final long               EXCEPT_MIN_VERSION = Long.MIN_VALUE;
-    private static final Logger            LOGGER             = LoggerFactory
-                                                                  .getLogger(FirePushService.class);
+    public static final long        EXCEPT_MIN_VERSION = Long.MIN_VALUE;
+    private static final Logger     LOGGER             = LoggerFactory
+                                                           .getLogger(FirePushService.class);
 
     @Autowired
-    private SessionServerConfig            sessionServerConfig;
+    private SessionServerConfig     sessionServerConfig;
 
     @Autowired
-    private CacheService                   sessionCacheService;
+    private CacheService            sessionCacheService;
 
     @Autowired
-    private Interests                      sessionInterests;
+    private Interests               sessionInterests;
 
-    private KeyedPreemptThreadPoolExecutor changeFetchExecutor;
-    private KeyedThreadPoolExecutor        registerFetchExecutor;
+    private KeyedThreadPoolExecutor registerFetchExecutor;
 
     @Autowired
-    private PushProcessor                  pushProcessor;
+    private PushProcessor           pushProcessor;
+    @Autowired
+    private ChangeProcessor         changeProcessor;
+    private final ChangeHandler     changeHandler      = new ChangeHandler();
 
     @PostConstruct
     public void init() {
-        changeFetchExecutor = new KeyedPreemptThreadPoolExecutor("ChangeFetchExecutor",
-            sessionServerConfig.getDataChangeFetchTaskWorkerSize(),
-            sessionServerConfig.getDataChangeFetchTaskMaxBufferSize(), new ChangeTaskComparator());
-
         registerFetchExecutor = new KeyedThreadPoolExecutor("RegisterFetchExecutor",
             sessionServerConfig.getDataChangeFetchTaskWorkerSize(),
             sessionServerConfig.getDataChangeFetchTaskMaxBufferSize());
@@ -75,16 +72,11 @@ public class FirePushService {
     public boolean fireOnChange(String dataCenter, String dataInfoId, long expectVersion) {
         try {
             // TODO only supported local dataCenter
-            changeFetchExecutor.execute(dataInfoId, new ChangeTask(dataCenter, dataInfoId,
-                expectVersion));
+            changeProcessor.fireChange(dataCenter, dataInfoId, changeHandler, expectVersion);
             CHANGE_TASK_COUNTER.inc();
             return true;
-        } catch (RejectedExecutionException e) {
-            LOGGER.error("failed to exec ChangeTask {}, dataCenter={}, expectVer={}, {}",
-                dataInfoId, dataCenter, expectVersion, e.getMessage());
-            return false;
         } catch (Throwable e) {
-            LOGGER.error("failed to exec ChangeTask {}, dataCenter={}, expectVer={}, {}",
+            LOGGER.error("failed to exec ChangeHandler {}, dataCenter={}, expectVer={}, {}",
                 dataInfoId, dataCenter, expectVersion, e);
             return false;
         }
@@ -154,7 +146,6 @@ public class FirePushService {
     }
 
     private void onDatumChange(DataInfo dataInfo, Datum datum, String dataCenter) {
-
         Map<ScopeEnum, List<Subscriber>> scopes = SubscriberUtils.groupByScope(sessionInterests
             .getDatas(dataInfo.getDataInfoId()));
         if (datum == null) {
@@ -214,24 +205,16 @@ public class FirePushService {
         return subscribersSend;
     }
 
-    private final class ChangeTask implements Runnable {
-        final String dataCenter;
-        final String dataInfoId;
-        final long   expectVersion;
-
-        ChangeTask(String dataCenter, String dataInfoId, long expectVersion) {
-            this.dataCenter = dataCenter;
-            this.dataInfoId = dataInfoId;
-            this.expectVersion = expectVersion;
-        }
+    private final class ChangeHandler implements ChangeProcessor.ChangeHandler {
 
         @Override
-        public void run() {
+        public void onChange(String dataCenter, String dataInfoId, long expectDatumVersion) {
             try {
-                doExecuteOnChange(dataCenter, dataInfoId, expectVersion);
+                CHANGE_TASK_EXEC_COUNTER.inc();
+                doExecuteOnChange(dataCenter, dataInfoId, expectDatumVersion);
             } catch (Throwable e) {
                 LOGGER.error("failed to do change Task, {}, dataCenter={}, expectVersion={}",
-                    dataInfoId, dataCenter, expectVersion, e);
+                    dataInfoId, dataCenter, expectDatumVersion, e);
             }
         }
     }
@@ -269,14 +252,6 @@ public class FirePushService {
                 LOGGER.error("failed to do register Task, dataCenter={}, {}", dataCenter,
                     subscriber, e);
             }
-        }
-    }
-
-    private final class ChangeTaskComparator implements Comparator<ChangeTask> {
-
-        @Override
-        public int compare(ChangeTask prev, ChangeTask current) {
-            return Long.compare(prev.expectVersion, current.expectVersion);
         }
     }
 }

@@ -22,6 +22,7 @@ import java.util.Collection;
 import com.alipay.sofa.registry.server.session.cache.*;
 import com.alipay.sofa.registry.server.session.connections.ConnectionsService;
 import com.alipay.sofa.registry.server.session.node.service.*;
+import com.alipay.sofa.registry.server.session.push.ChangeProcessor;
 import com.alipay.sofa.registry.server.session.push.FirePushService;
 import com.alipay.sofa.registry.server.session.push.PushDataGenerator;
 import com.alipay.sofa.registry.server.session.push.PushProcessor;
@@ -425,6 +426,12 @@ public class SessionServerConfiguration {
         @ConditionalOnMissingBean
         public PushProcessor pushProcessor() {
             return new PushProcessor();
+        }
+
+        @Bean
+        @ConditionalOnMissingBean
+        public ChangeProcessor changeProcessor() {
+            return new ChangeProcessor();
         }
 
         @Bean

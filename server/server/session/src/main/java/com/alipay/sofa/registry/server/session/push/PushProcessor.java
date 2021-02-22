@@ -35,18 +35,17 @@ import com.alipay.sofa.registry.util.ConcurrentUtils;
 import com.alipay.sofa.registry.util.WakeUpLoopRunnable;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-
-import static com.alipay.sofa.registry.server.session.push.PushMetrics.Push.*;
-
 import org.springframework.beans.factory.annotation.Autowired;
 
 import javax.annotation.PostConstruct;
 import java.net.InetSocketAddress;
 import java.util.*;
-import java.util.concurrent.*;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.Executor;
+import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
+
+import static com.alipay.sofa.registry.server.session.push.PushMetrics.Push.*;
 
 public class PushProcessor {
     private static final Logger                 LOGGER               = LoggerFactory
@@ -206,7 +205,7 @@ public class PushProcessor {
         if (span > sessionServerConfig.getClientNodeExchangeTimeoutMillis() * 2) {
             // force to remove the prev task
             final boolean cleaned = pushingTasks.remove(pushingTaskKey) != null;
-            LOGGER.warn("[prevRunTooLong] {}, clean={}, prev={}, now={}", pushingTaskKey, cleaned,
+            LOGGER.warn("[prevPushTooLong] {}, clean={}, prev={}, now={}", pushingTaskKey, cleaned,
                 prev.taskID, task.taskID);
             return true;
         }
@@ -216,7 +215,8 @@ public class PushProcessor {
     }
 
     private boolean retry(PushTask task, String reason) {
-        final int retry = task.retryCount.incrementAndGet();
+        task.retryCount++;
+        final int retry = task.retryCount;
         if (retry <= sessionServerConfig.getPushTaskRetryTimes()) {
             final int backoffMillis = getRetryBackoffTime(retry);
             task.expireAfter(backoffMillis);
@@ -243,7 +243,7 @@ public class PushProcessor {
         final InetSocketAddress       addr;
         final Map<String, Subscriber> subscriberMap;
         final Subscriber              subscriber;
-        final AtomicInteger           retryCount      = new AtomicInteger();
+        int                           retryCount;
 
         final PushingTaskKey          pushingTaskKey;
 
@@ -320,7 +320,7 @@ public class PushProcessor {
                 .append(datum.getVersion()).append(",addr=").append(addr).append(",scope=")
                 .append(subscriber.getScope()).append(",subIds=").append(subscriberMap.keySet())
                 .append(",sub=").append(subscriber.printPushContext()).append(",retry=")
-                .append(retryCount.get());
+                .append(retryCount);
             return sb.toString();
         }
     }
@@ -435,8 +435,8 @@ public class PushProcessor {
 
         @Override
         public String toString() {
-            return "PendingTaskKey{" + dataInfoId + ", dataCenter='" + dataCenter + '\''
-                   + ", addr=" + addr + ", subscriberIds=" + subscriberIds + '}';
+            return "PendingKey{" + dataInfoId + ',' + dataCenter + ',' + addr + ", subscriberIds="
+                   + subscriberIds + '}';
         }
     }
 
@@ -472,8 +472,7 @@ public class PushProcessor {
 
         @Override
         public String toString() {
-            return "PushingTaskKey{" + "addr=" + addr + ", dataInfoId='" + dataInfoId + '\''
-                   + ", scopeEnum=" + scopeEnum + '}';
+            return "PushingKey{" + dataInfoId + ',' + scopeEnum + ',' + addr + '}';
         }
     }
 
