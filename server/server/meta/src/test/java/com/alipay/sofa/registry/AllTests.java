@@ -67,7 +67,7 @@ import org.junit.runners.Suite;
                      DefaultSlotTableMonitorTest.class,
                      DiskSlotTableRecorderTest.class,
                      SlotTableResourceTest.class,
-                     //SlotMigrationIntegrationTest.class,
+                     SlotMigrationIntegrationTest.class,
                      SlotTableBuilderTest.class, SlotBuilderTest.class,
                      DataNodeComparatorTest.class, MigrateSlotGroupTest.class,
                      ScheduledSlotArrangerTest.class, LeaderOnlyBalancerTest.class })
