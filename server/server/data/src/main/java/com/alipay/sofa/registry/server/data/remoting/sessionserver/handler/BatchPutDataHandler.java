@@ -16,10 +16,11 @@
  */
 package com.alipay.sofa.registry.server.data.remoting.sessionserver.handler;
 
+import com.alipay.sofa.registry.common.model.ProcessId;
 import com.alipay.sofa.registry.common.model.PublishType;
 import com.alipay.sofa.registry.common.model.RegisterVersion;
 import com.alipay.sofa.registry.common.model.dataserver.BatchRequest;
-import com.alipay.sofa.registry.common.model.dataserver.ClientOffRequest;
+import com.alipay.sofa.registry.common.model.dataserver.ClientOffPublisher;
 import com.alipay.sofa.registry.common.model.dataserver.DatumVersion;
 import com.alipay.sofa.registry.common.model.slot.SlotAccess;
 import com.alipay.sofa.registry.common.model.slot.SlotAccessGenericResponse;
@@ -29,6 +30,7 @@ import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.remoting.Channel;
 import com.alipay.sofa.registry.util.ParaCheckUtil;
+import com.google.common.collect.Sets;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.*;
@@ -46,11 +48,11 @@ public class BatchPutDataHandler extends AbstractDataHandler<BatchRequest> {
         for (Object req : request.getRequest()) {
             if (req instanceof Publisher) {
                 checkPublisher((Publisher) req);
-            } else if (req instanceof ClientOffRequest) {
-                ParaCheckUtil.checkNotNull(((ClientOffRequest) req).getConnectId(),
-                    "ClientOffRequest.connectIds");
-                ParaCheckUtil.checkNotNull(((ClientOffRequest) req).getPublisherMap(),
-                    "ClientOffRequest.publisherMap");
+            } else if (req instanceof ClientOffPublisher) {
+                ParaCheckUtil.checkNotNull(((ClientOffPublisher) req).getConnectId(),
+                    "ClientOffPublisher.connectIds");
+                ParaCheckUtil.checkNotNull(((ClientOffPublisher) req).getPublisherMap(),
+                    "ClientOffPublisher.publisherMap");
             } else {
                 throw new IllegalArgumentException("unsupported item in batch:" + req);
             }
@@ -59,14 +61,16 @@ public class BatchPutDataHandler extends AbstractDataHandler<BatchRequest> {
 
     @Override
     public Object doHandle(Channel channel, BatchRequest request) {
-        processSessionProcessId(channel, request.getSessionProcessId());
-        final SlotAccess slotAccess = checkAccess(request.getSlotId(), request.getSlotTableEpoch());
-        if (slotAccess.isMoved()) {
+        final ProcessId sessionProcessId = request.getSessionProcessId();
+        processSessionProcessId(channel, sessionProcessId);
+        final SlotAccess slotAccess = checkAccess(request.getSlotId(), request.getSlotTableEpoch(),
+            request.getSlotLeaderEpoch());
+        if (slotAccess.isMoved() || slotAccess.isMisMatch()) {
             // only reject the when moved
             return SlotAccessGenericResponse.failedResponse(slotAccess);
         }
         final String slotIdStr = String.valueOf(request.getSlotId());
-        final Set<String> changeDataInfoIds = new HashSet<>(64);
+        final Set<String> changeDataInfoIds = Sets.newHashSetWithExpectedSize(128);
         try {
             for (Object req : request.getRequest()) {
                 // contains publisher and unPublisher
@@ -82,9 +86,9 @@ public class BatchPutDataHandler extends AbstractDataHandler<BatchRequest> {
                             publisher.getRegisterId(), publisher.getVersion(),
                             publisher.getRegisterTimestamp());
                     }
-                } else if (req instanceof ClientOffRequest) {
-                    ClientOffRequest clientOff = (ClientOffRequest) req;
-                    changeDataInfoIds.addAll(doHandle(clientOff));
+                } else if (req instanceof ClientOffPublisher) {
+                    ClientOffPublisher clientOff = (ClientOffPublisher) req;
+                    changeDataInfoIds.addAll(doHandle(clientOff, sessionProcessId));
                     for (Map.Entry<String, Map<String, RegisterVersion>> e : clientOff
                         .getPublisherMap().entrySet()) {
                         final String dataInfoId = e.getKey();
@@ -126,12 +130,12 @@ public class BatchPutDataHandler extends AbstractDataHandler<BatchRequest> {
         return Collections.emptyList();
     }
 
-    public List<String> doHandle(ClientOffRequest request) {
+    public List<String> doHandle(ClientOffPublisher request, ProcessId sessionProcessId) {
         Map<String, Map<String, RegisterVersion>> publisherMap = request.getPublisherMap();
         List<String> dataInfoIds = new ArrayList<>(publisherMap.size());
         for (Map.Entry<String, Map<String, RegisterVersion>> e : publisherMap.entrySet()) {
-            DatumVersion version = localDatumStorage.remove(e.getKey(),
-                request.getSessionProcessId(), e.getValue());
+            DatumVersion version = localDatumStorage.remove(e.getKey(), sessionProcessId,
+                e.getValue());
             if (version != null) {
                 dataInfoIds.add(e.getKey());
             }

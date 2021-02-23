@@ -17,6 +17,7 @@
 package com.alipay.sofa.registry.common.model.dataserver;
 
 import com.alipay.sofa.registry.common.model.ProcessId;
+import com.alipay.sofa.registry.util.StringFormatter;
 import com.google.common.collect.Lists;
 
 import java.io.Serializable;
@@ -33,22 +34,16 @@ public class GetDataVersionRequest extends AbstractSlotRequest {
 
     private static final long serialVersionUID = 8942977145684175886L;
 
-    private final int         slotId;
-
     /**
      * constructor
      */
     public GetDataVersionRequest(ProcessId sessionProcessId, int slotId) {
-        super(sessionProcessId);
-        this.slotId = slotId;
-    }
-
-    public int getSlotId() {
-        return slotId;
+        super(slotId, sessionProcessId);
     }
 
     /**
      * Getter method for property <tt>sessionProcessId</tt>.
+     *
      * @return property value of sessionProcessId
      */
     public ProcessId getSessionProcessId() {
@@ -57,7 +52,7 @@ public class GetDataVersionRequest extends AbstractSlotRequest {
 
     @Override
     public String toString() {
-        return "GetDataVersionRequest{" + "sessionProcessId=" + sessionProcessId + ", slotId="
-               + slotId + '}';
+        return StringFormatter.format("GetDataVer:{},{},{}", getSlotId(), getSlotLeaderEpoch(),
+            getSlotTableEpoch());
     }
 }

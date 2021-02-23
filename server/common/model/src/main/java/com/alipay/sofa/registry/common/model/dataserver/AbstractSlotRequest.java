@@ -27,10 +27,12 @@ import java.io.Serializable;
  */
 public abstract class AbstractSlotRequest implements Serializable {
     protected final ProcessId sessionProcessId;
-
+    private final int         slotId;
     protected long            slotTableEpoch;
+    protected long            slotLeaderEpoch;
 
-    protected AbstractSlotRequest(ProcessId sessionProcessId) {
+    protected AbstractSlotRequest(int slotId, ProcessId sessionProcessId) {
+        this.slotId = slotId;
         this.sessionProcessId = sessionProcessId;
     }
 
@@ -56,5 +58,17 @@ public abstract class AbstractSlotRequest implements Serializable {
      */
     public void setSlotTableEpoch(long slotTableEpoch) {
         this.slotTableEpoch = slotTableEpoch;
+    }
+
+    public long getSlotLeaderEpoch() {
+        return slotLeaderEpoch;
+    }
+
+    public void setSlotLeaderEpoch(long slotLeaderEpoch) {
+        this.slotLeaderEpoch = slotLeaderEpoch;
+    }
+
+    public int getSlotId() {
+        return slotId;
     }
 }

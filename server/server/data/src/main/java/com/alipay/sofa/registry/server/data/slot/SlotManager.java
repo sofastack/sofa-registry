@@ -16,6 +16,7 @@
  */
 package com.alipay.sofa.registry.server.data.slot;
 
+import com.alipay.sofa.registry.common.model.slot.Slot;
 import com.alipay.sofa.registry.common.model.slot.SlotAccess;
 import com.alipay.sofa.registry.common.model.slot.SlotTable;
 
@@ -27,7 +28,9 @@ public interface SlotManager {
 
     int slotOf(String dataInfoId);
 
-    SlotAccess checkSlotAccess(int slotId, long srcSlotEpoch);
+    Slot getSlot(int slotId);
+
+    SlotAccess checkSlotAccess(int slotId, long srcSlotEpoch, long srcLeaderEpoch);
 
     boolean isLeader(int slotId);
 

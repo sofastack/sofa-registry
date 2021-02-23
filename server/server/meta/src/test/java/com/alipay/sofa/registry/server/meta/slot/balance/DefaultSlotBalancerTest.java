@@ -26,6 +26,7 @@ import com.alipay.sofa.registry.server.meta.slot.util.builder.SlotBuilder;
 import com.alipay.sofa.registry.server.meta.slot.util.builder.SlotTableBuilder;
 import com.alipay.sofa.registry.server.shared.util.NodeUtils;
 import org.assertj.core.util.Lists;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -63,21 +64,32 @@ public class DefaultSlotBalancerTest extends AbstractTest {
         slotTableBuilder.init(NodeUtils.transferNodeToIpList(dataNodes));
 
         SlotBuilder sb = slotTableBuilder.getOrCreate(0);
-        sb.getFollowers().clear();
-        sb.getFollowers().add("10.0.0.3");
+        replaceFollower(sb, "10.0.0.3");
         sb = slotTableBuilder.getOrCreate(1);
-        sb.getFollowers().clear();
-        sb.getFollowers().add("10.0.0.3");
+        replaceFollower(sb, "10.0.0.3");
         sb = slotTableBuilder.getOrCreate(2);
-        sb.getFollowers().clear();
-        sb.getFollowers().add("10.0.0.3");
+        replaceFollower(sb, "10.0.0.3");
 
         slotManager.refresh(slotTableBuilder.build());
         slotBalancer = new DefaultSlotBalancer(slotTableBuilder, Lists.newArrayList("10.0.0.1",
             "10.0.0.2", "10.0.0.3"));
         for (int i = 0; i < 10; i++) {
             SlotTable slotTable1 = slotBalancer.balance();
+            if (i == 0) {
+                Assert.assertNotNull(slotTable1);
+            }
+            if (slotTable1 == null) {
+                break;
+            }
+            logger.info("balance {}: {}", i, slotTable1);
             assertSlotTableNoDupLeaderFollower(slotTable1);
         }
+    }
+
+    private static void replaceFollower(SlotBuilder sb, String follower) {
+        for (String f : sb.getFollowers()) {
+            sb.removeFollower(f);
+        }
+        sb.addFollower(follower);
     }
 }

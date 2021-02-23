@@ -35,7 +35,9 @@ import com.alipay.sofa.registry.server.data.remoting.metaserver.MetaServerServic
 import com.alipay.sofa.registry.server.shared.env.ServerEnv;
 import com.alipay.sofa.registry.server.shared.resource.SlotGenericResource;
 import com.alipay.sofa.registry.server.shared.slot.DiskSlotTableRecorder;
+
 import static com.alipay.sofa.registry.server.data.slot.SlotMetrics.Manager.*;
+
 import com.alipay.sofa.registry.server.shared.slot.SlotTableRecorder;
 import com.alipay.sofa.registry.task.KeyedTask;
 import com.alipay.sofa.registry.task.KeyedThreadPoolExecutor;
@@ -48,9 +50,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import javax.annotation.PostConstruct;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 /**
- *
  * @author yuzhi.lyz
  * @version v 0.1 2020-12-02 09:44 yuzhi.lyz Exp $
  */
@@ -101,6 +104,7 @@ public final class SlotManagerImpl implements SlotManager {
      */
     private SyncingWatchDog                  watchDog;
     private final AtomicReference<SlotTable> updatingSlotTable   = new AtomicReference<SlotTable>();
+    private final ReadWriteLock              updateLock          = new ReentrantReadWriteLock();
     private final SlotTableStates            slotTableStates     = new SlotTableStates();
 
     @PostConstruct
@@ -132,20 +136,45 @@ public final class SlotManagerImpl implements SlotManager {
     }
 
     @Override
-    public SlotAccess checkSlotAccess(int slotId, long srcSlotEpoch) {
-        final long currentEpoch = slotTableStates.table.getEpoch();
+    public Slot getSlot(int slotId) {
+        final SlotState state = slotTableStates.slotStates.get(slotId);
+        return state == null ? null : state.slot;
+    }
+
+    @Override
+    public SlotAccess checkSlotAccess(int slotId, long srcSlotEpoch, long srcLeaderEpoch) {
+        SlotTable currentSlotTable;
+        SlotState state;
+        updateLock.readLock().lock();
+        try {
+            currentSlotTable = slotTableStates.table;
+            state = slotTableStates.slotStates.get(slotId);
+        } finally {
+            updateLock.readLock().unlock();
+        }
+
+        final long currentEpoch = currentSlotTable.getEpoch();
         if (currentEpoch < srcSlotEpoch) {
             triggerUpdateSlotTable(srcSlotEpoch);
         }
+        if (state == null) {
+            return new SlotAccess(slotId, currentEpoch, SlotAccess.Status.Moved, -1);
+        }
 
-        final SlotState state = slotTableStates.slotStates.get(slotId);
-        if (state == null || !localIsLeader(state.slot)) {
-            return new SlotAccess(slotId, currentEpoch, SlotAccess.Status.Moved);
+        final Slot slot = state.slot;
+        if (!localIsLeader(slot)) {
+            return new SlotAccess(slotId, currentEpoch, SlotAccess.Status.Moved,
+                slot.getLeaderEpoch());
         }
         if (!state.migrated) {
-            return new SlotAccess(slotId, currentEpoch, SlotAccess.Status.Migrating);
+            return new SlotAccess(slotId, currentEpoch, SlotAccess.Status.Migrating,
+                slot.getLeaderEpoch());
         }
-        return new SlotAccess(slotId, currentEpoch, SlotAccess.Status.Accept);
+        if (slot.getLeaderEpoch() != srcLeaderEpoch) {
+            return new SlotAccess(slotId, currentEpoch, SlotAccess.Status.MisMatch,
+                slot.getLeaderEpoch());
+        }
+        return new SlotAccess(slotId, currentEpoch, SlotAccess.Status.Accept, slot.getLeaderEpoch());
     }
 
     @Override
@@ -189,7 +218,7 @@ public final class SlotManagerImpl implements SlotManager {
 
     private void recordSlotTable(SlotTable slotTable) {
         recorders.forEach(recorder -> {
-            if(recorder != null) {
+            if (recorder != null) {
                 recorder.record(slotTable);
             }
         });
@@ -213,6 +242,8 @@ public final class SlotManagerImpl implements SlotManager {
             if (updating.getSlot(e.getKey()) == null) {
                 final Slot slot = e.getValue().slot;
                 it.remove();
+                // import
+                // first remove the slot for GetData Access check, then clean the data
                 listenRemove(slot);
                 observeLeaderMigratingFinish(slot.getId());
                 LOGGER.info("remove slot, slot={}", slot);
@@ -235,7 +266,13 @@ public final class SlotManagerImpl implements SlotManager {
             try {
                 final SlotTable updating = updatingSlotTable.getAndSet(null);
                 if (updating != null && updating.getEpoch() > slotTableStates.table.getEpoch()) {
-                    updateSlotState(updating);
+                    // lock for update, avoid the checkAccess get the wrong epoch
+                    updateLock.writeLock().lock();
+                    try {
+                        updateSlotState(updating);
+                    } finally {
+                        updateLock.writeLock().unlock();
+                    }
                     List<DataNodeSlot> leaders = updating.transfer(ServerEnv.IP, true);
                     LOGGER.info("updating slot table, leaders={}, {}, ", leaders, updating);
                 }
@@ -305,7 +342,7 @@ public final class SlotManagerImpl implements SlotManager {
                                 slotState.migratingTasks.clear();
                                 observeLeaderMigratingFinish(slot.getId());
                                 observeLeaderMigratingHistogram(slot.getId(), span);
-                            }else{
+                            } else {
                                 Map<String, Long> spans = Maps.newTreeMap();
                                 final long now = System.currentTimeMillis();
                                 for (Map.Entry<String, MigratingTask> e : slotState.migratingTasks.entrySet()) {
@@ -325,7 +362,7 @@ public final class SlotManagerImpl implements SlotManager {
                                         dataServerConfig.getSlotFollowerSyncLeaderIntervalSecs() * 1000)) {
                             SyncLeaderTask task = new SyncLeaderTask(slotTableEpoch, slot);
                             slotState.syncLeaderTask = syncLeaderExecutor.execute(slot.getId(), task);
-                        } else if(!syncLeaderTask.isFinished()){
+                        } else if (!syncLeaderTask.isFinished()) {
                             if (System.currentTimeMillis() - syncLeaderTask.getCreateTime() > 5000) {
                                 // the sync leader is running more than 5secs, print
                                 LOGGER.info("sync-leader running, {}", syncLeaderTask);

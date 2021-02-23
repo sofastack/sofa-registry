@@ -22,6 +22,7 @@ import com.alipay.sofa.registry.common.model.ServerDataBox;
 import com.alipay.sofa.registry.common.model.constants.ValueConstants;
 import com.alipay.sofa.registry.common.model.dataserver.BatchRequest;
 import com.alipay.sofa.registry.common.model.dataserver.Datum;
+import com.alipay.sofa.registry.common.model.slot.Slot;
 import com.alipay.sofa.registry.common.model.store.Publisher;
 import com.alipay.sofa.registry.common.model.store.URL;
 import com.alipay.sofa.registry.log.Logger;
@@ -142,9 +143,12 @@ public class DatumApiResource {
             Publisher publisher = buildPublisher(datum, datumParam);
 
             //build request and invoke
-            int slot = slotManager.slotOf(publisher.getDataInfoId());
-            BatchRequest batchRequest = new BatchRequest(publisher.getSessionProcessId(), slot,
+            final int slotId = slotManager.slotOf(publisher.getDataInfoId());
+            final Slot slot = slotManager.getSlot(slotId);
+            BatchRequest batchRequest = new BatchRequest(publisher.getSessionProcessId(), slotId,
                 Collections.singletonList(publisher));
+            batchRequest.setSlotTableEpoch(slotManager.getSlotTableEpoch());
+            batchRequest.setSlotLeaderEpoch(slot.getLeaderEpoch());
             batchPutDataHandler.doHandle(null, batchRequest);
             // get the newly datum
             datum = datumCache.get(datumParam.getDataCenter(), datumParam.getDataInfoId());
@@ -174,9 +178,12 @@ public class DatumApiResource {
             UnPublisher publisher = buildUnPublisher(datum, datumParam);
 
             //build request and invoke
-            int slot = slotManager.slotOf(publisher.getDataInfoId());
-            BatchRequest batchRequest = new BatchRequest(publisher.getSessionProcessId(), slot,
+            final int slotId = slotManager.slotOf(publisher.getDataInfoId());
+            final Slot slot = slotManager.getSlot(slotId);
+            BatchRequest batchRequest = new BatchRequest(publisher.getSessionProcessId(), slotId,
                 Collections.singletonList(publisher));
+            batchRequest.setSlotTableEpoch(slotManager.getSlotTableEpoch());
+            batchRequest.setSlotLeaderEpoch(slot.getLeaderEpoch());
             batchPutDataHandler.doHandle(null, batchRequest);
             // get the newly datum
             datum = datumCache.get(datumParam.getDataCenter(), datumParam.getDataInfoId());

@@ -18,6 +18,7 @@ package com.alipay.sofa.registry.common.model.slot;
 
 import com.alipay.sofa.registry.exception.SofaRegistrySlotTableException;
 import com.alipay.sofa.registry.util.JsonUtils;
+import com.alipay.sofa.registry.util.StringFormatter;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.google.common.collect.Maps;
 
@@ -69,6 +70,14 @@ public final class SlotTable implements Serializable {
         return slots.get(slotId);
     }
 
+    public Map<Integer, String> slotLeaders() {
+        Map<Integer, String> ret = Maps.newTreeMap();
+        for (Map.Entry<Integer, Slot> e : slots.entrySet()) {
+            ret.put(e.getKey(), e.getValue().getLeader());
+        }
+        return ret;
+    }
+
     /**
      * Getter method for property <tt>epoch</tt>.
      * @return property value of epoch
@@ -79,8 +88,8 @@ public final class SlotTable implements Serializable {
 
     @Override
     public String toString() {
-        return "SlotTable{" + "epoch=" + epoch + ", slotsNum=" + slots.size() + ", slotKeys="
-               + slots.keySet() + '}';
+        return StringFormatter.format("SlotTable{epoch={}, num={}, leaders={}}", epoch,
+            slots.size(), slotLeaders());
     }
 
     /**

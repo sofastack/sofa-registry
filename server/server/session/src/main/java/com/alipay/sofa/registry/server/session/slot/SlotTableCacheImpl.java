@@ -66,6 +66,11 @@ public final class SlotTableCacheImpl implements SlotTableCache {
     }
 
     @Override
+    public Slot getSlot(int slotId) {
+        return slotTable.getSlot(slotId);
+    }
+
+    @Override
     public String getLeader(String dataInfoId) {
         final Slot slot = getSlot(dataInfoId);
         return slot == null ? null : slot.getLeader();

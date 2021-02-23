@@ -25,6 +25,7 @@ import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.remoting.Channel;
 import com.alipay.sofa.registry.server.data.cache.DatumCache;
 import com.alipay.sofa.registry.util.ParaCheckUtil;
+
 import static com.alipay.sofa.registry.server.data.remoting.sessionserver.handler.HandlerMetrics.GetVersion.*;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -61,17 +62,26 @@ public class GetDataVersionsHandler extends AbstractDataHandler<GetDataVersionRe
     public Object doHandle(Channel channel, GetDataVersionRequest request) {
         processSessionProcessId(channel, request.getSessionProcessId());
         final int slotId = request.getSlotId();
-        final SlotAccess slotAccess = checkAccess(slotId, request.getSlotTableEpoch());
-        if (!slotAccess.isAccept()) {
-            return SlotAccessGenericResponse.failedResponse(slotAccess);
+        final SlotAccess slotAccessBefore = checkAccess(slotId, request.getSlotTableEpoch(),
+            request.getSlotLeaderEpoch());
+        if (!slotAccessBefore.isAccept()) {
+            return SlotAccessGenericResponse.failedResponse(slotAccessBefore);
         }
         final String localDataCenter = dataServerConfig.getLocalDataCenter();
         Map<String/*datacenter*/, Map<String/*dataInfoId*/, DatumVersion>> map = datumCache
             .getVersions(slotId);
+        // double check slot access, @see GetDataHanlder
+        final SlotAccess slotAccessAfter = checkAccess(slotId, request.getSlotTableEpoch(),
+            request.getSlotLeaderEpoch());
+        if (slotAccessAfter.getSlotLeaderEpoch() != slotAccessBefore.getSlotLeaderEpoch()) {
+            return SlotAccessGenericResponse.failedResponse(slotAccessAfter,
+                "slotLeaderEpoch has change, prev=" + slotAccessBefore);
+        }
+
         Map<String, DatumVersion> local = map.get(localDataCenter);
         LOGGER.info("getV,{},{},{}", slotId, localDataCenter, local == null ? 0 : local.size());
         GET_VERSION_COUNTER.inc();
-        return SlotAccessGenericResponse.successResponse(slotAccess, map);
+        return SlotAccessGenericResponse.successResponse(slotAccessAfter, map);
     }
 
     @Override

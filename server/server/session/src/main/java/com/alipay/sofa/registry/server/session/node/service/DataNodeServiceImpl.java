@@ -36,6 +36,7 @@ import com.alipay.sofa.registry.server.shared.env.ServerEnv;
 import com.alipay.sofa.registry.task.BlockingQueues;
 import com.alipay.sofa.registry.task.FastRejectedExecutionException;
 import com.alipay.sofa.registry.util.ConcurrentUtils;
+import com.alipay.sofa.registry.util.StringFormatter;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import org.apache.commons.lang.StringUtils;
@@ -106,29 +107,31 @@ public class DataNodeServiceImpl implements DataNodeService {
         if (clientOffPublishers.isEmpty()) {
             return;
         }
-        Map<Integer, ClientOffRequest> groups = groupBySlot(clientOffPublishers);
-        for (Map.Entry<Integer, ClientOffRequest> group : groups.entrySet()) {
+        Map<Integer, ClientOffPublisher> groups = groupBySlot(clientOffPublishers);
+        for (Map.Entry<Integer, ClientOffPublisher> group : groups.entrySet()) {
             final int slotId = group.getKey();
-            final ClientOffRequest clientOff = group.getValue();
+            final ClientOffPublisher clientOff = group.getValue();
             commitReq(slotId, new Req(slotId, clientOff));
         }
     }
 
     @Override
-    public Map<String/*datacenter*/, Map<String/*datainfoid*/, DatumVersion>> fetchDataVersion(URL dataNodeUrl,
-                                                                                                 int slotId) {
+    public Map<String/*datacenter*/, Map<String/*datainfoid*/, DatumVersion>> fetchDataVersion(int slotId) {
         try {
+            final Slot slot = getSlot(slotId);
+            final GetDataVersionRequest request = new GetDataVersionRequest(ServerEnv.PROCESS_ID,
+                slotId);
+            request.setSlotTableEpoch(slotTableCache.getEpoch());
+            request.setSlotLeaderEpoch(slot.getLeaderEpoch());
             Request<GetDataVersionRequest> getDataVersionRequestRequest = new Request<GetDataVersionRequest>() {
                 @Override
                 public GetDataVersionRequest getRequestBody() {
-                    GetDataVersionRequest getDataVersionRequest = new GetDataVersionRequest(
-                        ServerEnv.PROCESS_ID, slotId);
-                    return getDataVersionRequest;
+                    return request;
                 }
 
                 @Override
                 public URL getRequestUrl() {
-                    return dataNodeUrl;
+                    return getUrl(slot);
                 }
             };
 
@@ -169,8 +172,10 @@ public class DataNodeServiceImpl implements DataNodeService {
         Map<String/*datacenter*/, Datum> map;
         try {
             //dataCenter null means all dataCenters
-            GetDataRequest getDataRequest = new GetDataRequest(ServerEnv.PROCESS_ID, dataInfoId, dataCenterId);
-
+            final Slot slot = getSlot(dataInfoId);
+            GetDataRequest getDataRequest = new GetDataRequest(ServerEnv.PROCESS_ID, dataInfoId, dataCenterId, slot.getId());
+            getDataRequest.setSlotTableEpoch(slotTableCache.getEpoch());
+            getDataRequest.setSlotLeaderEpoch(slot.getLeaderEpoch());
             Request<GetDataRequest> getDataRequestStringRequest = new Request<GetDataRequest>() {
 
                 @Override
@@ -180,7 +185,7 @@ public class DataNodeServiceImpl implements DataNodeService {
 
                 @Override
                 public URL getRequestUrl() {
-                    return getUrl(dataInfoId);
+                    return getUrl(slot);
                 }
 
                 @Override
@@ -225,27 +230,40 @@ public class DataNodeServiceImpl implements DataNodeService {
         return resp;
     }
 
-    private URL getUrl(String dataInfoId) {
-        final Slot slot = slotTableCache.getSlot(dataInfoId);
-        return getUrl(slot.getId());
+    private Slot getSlot(String dataInfoId) {
+        final int slotId = slotTableCache.slotOf(dataInfoId);
+        Slot slot = slotTableCache.getSlot(slotId);
+        if (slot == null) {
+            throw new RequestException(StringFormatter.format("slot not found for {}, slotId={}",
+                dataInfoId, slotId));
+        }
+        return slot;
     }
 
-    private URL getUrl(int slotId) {
-        final String dataIp = slotTableCache.getLeader(slotId);
+    private Slot getSlot(int slotId) {
+        Slot slot = slotTableCache.getSlot(slotId);
+        if (slot == null) {
+            throw new RequestException(StringFormatter.format("slot not found, slotId={}", slotId));
+        }
+        return slot;
+    }
+
+    private URL getUrl(Slot slot) {
+        final String dataIp = slot.getLeader();
         if (StringUtils.isBlank(dataIp)) {
-            throw new RequestException(String.format("slot has no leader, slotId=%s", slotId));
+            throw new RequestException(String.format("slot has no leader, slotId=%s", slot));
         }
         return new URL(dataIp, sessionServerConfig.getDataServerPort());
     }
 
-    private Map<Integer, ClientOffRequest> groupBySlot(ClientOffPublishers clientOffPublishers) {
+    private Map<Integer, ClientOffPublisher> groupBySlot(ClientOffPublishers clientOffPublishers) {
         List<Publisher> publishers = clientOffPublishers.getPublishers();
-        Map<Integer, ClientOffRequest> ret = Maps.newHashMap();
+        Map<Integer, ClientOffPublisher> ret = Maps.newHashMap();
         for (Publisher publisher : publishers) {
             final String dataInfoId = publisher.getDataInfoId();
             int slotId = slotTableCache.slotOf(dataInfoId);
-            ClientOffRequest request = ret.computeIfAbsent(slotId,
-                    k -> new ClientOffRequest(ServerEnv.PROCESS_ID, clientOffPublishers.getConnectId()));
+            ClientOffPublisher request = ret.computeIfAbsent(slotId,
+                    k -> new ClientOffPublisher(clientOffPublishers.getConnectId()));
             request.addPublisher(publisher);
         }
         return ret;
@@ -352,6 +370,9 @@ public class DataNodeServiceImpl implements DataNodeService {
 
     private boolean request(BatchRequest batch) {
         try {
+            final Slot slot = getSlot(batch.getSlotId());
+            batch.setSlotTableEpoch(slotTableCache.getEpoch());
+            batch.setSlotLeaderEpoch(slot.getLeaderEpoch());
             sendRequest(new Request() {
                 @Override
                 public Object getRequestBody() {
@@ -360,7 +381,7 @@ public class DataNodeServiceImpl implements DataNodeService {
 
                 @Override
                 public URL getRequestUrl() {
-                    return getUrl(batch.getSlotId());
+                    return getUrl(slot);
                 }
             });
             return true;

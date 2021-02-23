@@ -25,7 +25,9 @@ import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.remoting.Channel;
 import com.alipay.sofa.registry.server.data.cache.DatumCache;
 import com.alipay.sofa.registry.util.ParaCheckUtil;
+
 import static com.alipay.sofa.registry.server.data.remoting.sessionserver.handler.HandlerMetrics.GetData.*;
+
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.Map;
@@ -63,14 +65,30 @@ public class GetDataHandler extends AbstractDataHandler<GetDataRequest> {
 
         final String dataInfoId = request.getDataInfoId();
 
-        final SlotAccess slotAccess = checkAccess(dataInfoId, request.getSlotTableEpoch());
-        if (!slotAccess.isAccept()) {
+        final SlotAccess slotAccessBefore = checkAccess(dataInfoId, request.getSlotTableEpoch(),
+            request.getSlotLeaderEpoch());
+        if (!slotAccessBefore.isAccept()) {
             GET_DATUM_N_COUNTER.inc();
-            return SlotAccessGenericResponse.failedResponse(slotAccess);
+            return SlotAccessGenericResponse.failedResponse(slotAccessBefore);
         }
-
         Map<String, Datum> datumMap = datumCache.getDatumGroupByDataCenter(request.getDataCenter(),
             dataInfoId);
+        // import. double check the slot access. avoid the case:
+        // 1. the slot is leader, the first check pass
+        // 2. slot moved and data cleaned
+        // 3. get datum, but null after cleaned, dangerous!!
+        // 3.1. session get datum by change.version, ignored null datum, would not push
+        // 3.2. session get datum by subscriber.register, accept null datum(the pub may not exists) and push empty
+        // so, need a double check slot access, make sure the slot's leader not change in the getting
+        final SlotAccess slotAccessAfter = checkAccess(dataInfoId, request.getSlotTableEpoch(),
+            request.getSlotLeaderEpoch());
+        if (slotAccessAfter.getSlotLeaderEpoch() != slotAccessBefore.getSlotLeaderEpoch()) {
+            // the slot's leader has change
+            GET_DATUM_N_COUNTER.inc();
+            return SlotAccessGenericResponse.failedResponse(slotAccessAfter,
+                "slotLeaderEpoch has change, prev=" + slotAccessBefore);
+        }
+
         final String localDataCenter = dataServerConfig.getLocalDataCenter();
         final Datum localDatum = datumMap.get(localDataCenter);
         GET_DATUM_Y_COUNTER.inc();
@@ -81,7 +99,7 @@ public class GetDataHandler extends AbstractDataHandler<GetDataRequest> {
         } else {
             LOGGER.info("getDNil,{},{}", dataInfoId, localDataCenter);
         }
-        return SlotAccessGenericResponse.successResponse(slotAccess, datumMap);
+        return SlotAccessGenericResponse.successResponse(slotAccessAfter, datumMap);
     }
 
     @Override
