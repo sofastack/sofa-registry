@@ -29,6 +29,8 @@ public interface SlotTableCache {
 
     Slot getSlot(String dataInfoId);
 
+    Slot getSlot(int slotId);
+
     String getLeader(String dataInfoId);
 
     String getLeader(int slotId);

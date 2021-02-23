@@ -49,6 +49,10 @@ public final class SlotAccessGenericResponse<T> extends GenericResponse<T> {
         return new SlotAccessGenericResponse(false, access.toString(), access, null);
     }
 
+    public static <T> SlotAccessGenericResponse<T> failedResponse(SlotAccess access, String msg) {
+        return new SlotAccessGenericResponse(false, msg, access, null);
+    }
+
     public static <T> SlotAccessGenericResponse<T> failedResponse(String msg) {
         return new SlotAccessGenericResponse(false, msg, null, null);
     }

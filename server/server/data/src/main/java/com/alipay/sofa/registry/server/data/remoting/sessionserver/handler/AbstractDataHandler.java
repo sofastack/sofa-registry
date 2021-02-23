@@ -42,7 +42,6 @@ import java.util.Collections;
 import java.util.Set;
 
 /**
- *
  * @author yuzhi.lyz
  * @version v 0.1 2020-12-04 14:59 yuzhi.lyz Exp $
  */
@@ -93,19 +92,26 @@ public abstract class AbstractDataHandler<T> extends AbstractServerHandler<T> {
         ParaCheckUtil.checkNotNull(sessionProcessId, "request.sessionProcessId");
     }
 
-    protected SlotAccess checkAccess(String dataInfoId, long slotTableEpoch) {
+    protected SlotAccess checkAccess(String dataInfoId, long slotTableEpoch, long slotLeaderEpoch) {
         final int slotId = slotManager.slotOf(dataInfoId);
-        return checkAccess(slotId, slotTableEpoch);
+        return checkAccess(slotId, slotTableEpoch, slotLeaderEpoch);
     }
 
-    protected SlotAccess checkAccess(int slotId, long slotTableEpoch) {
-        final SlotAccess slotAccess = slotManager.checkSlotAccess(slotId, slotTableEpoch);
+    protected SlotAccess checkAccess(int slotId, long slotTableEpoch, long slotLeaderEpoch) {
+        final SlotAccess slotAccess = slotManager.checkSlotAccess(slotId, slotTableEpoch,
+            slotLeaderEpoch);
         if (slotAccess.isMoved()) {
-            LOGGER_SLOT_ACCESS.warn("[moved] Slot has moved, access: {}", slotAccess);
+            LOGGER_SLOT_ACCESS.warn("[moved]{}, leaderEpoch={}, tableEpoch", slotAccess,
+                slotLeaderEpoch, slotTableEpoch);
         }
 
         if (slotAccess.isMigrating()) {
-            LOGGER_SLOT_ACCESS.warn("[migrating] Slot is migrating, access: {}", slotAccess);
+            LOGGER_SLOT_ACCESS.warn("[migrating]{}, leaderEpoch={}, tableEpoch", slotAccess,
+                slotLeaderEpoch, slotTableEpoch);
+        }
+        if (slotAccess.isMisMatch()) {
+            LOGGER_SLOT_ACCESS.warn("[mismatch]{}, leaderEpoch={}, tableEpoch", slotAccess,
+                slotLeaderEpoch, slotTableEpoch);
         }
         return slotAccess;
     }

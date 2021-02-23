@@ -347,7 +347,7 @@ public class SessionRegistry implements Registry {
         SCAN_VER_LOGGER.info("fetch ver from {}, slotId={}, pushed={}", leader, slotId,
             pushedDataInfoIds.size());
         Map<String/*datacenter*/, Map<String/*datainfoid*/, DatumVersion>> dataVersions = dataNodeService
-            .fetchDataVersion(new URL(leader, sessionServerConfig.getDataServerPort()), slotId);
+            .fetchDataVersion(slotId);
 
         if (CollectionUtils.isEmpty(dataVersions)) {
             SCAN_VER_LOGGER.warn("fetch empty ver from {}, slotId={}", leader, slotId);

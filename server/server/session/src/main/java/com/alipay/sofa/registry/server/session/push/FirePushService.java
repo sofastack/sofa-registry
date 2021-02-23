@@ -221,11 +221,10 @@ public class FirePushService {
 
     private void doExecuteOnSubscriber(String dataCenter, Subscriber subscriber) {
         final String subDataInfoId = subscriber.getDataInfoId();
-
         Datum datum = getDatum(dataCenter, subDataInfoId, Long.MIN_VALUE);
         if (datum == null) {
             datum = DatumUtils.newEmptyDatum(subscriber, dataCenter);
-            LOGGER.warn("empty push, dataCenter={}, {}", dataCenter, subscriber);
+            LOGGER.warn("[registerEmptyPush] {},{},{}", subDataInfoId, dataCenter, subscriber);
         }
         if (subscriber.hasPushed()) {
             return;
