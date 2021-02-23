@@ -22,23 +22,22 @@ import com.alipay.sofa.registry.common.model.RegisterVersion;
 import com.alipay.sofa.registry.common.model.store.Publisher;
 import com.google.common.collect.Maps;
 
+import java.io.Serializable;
 import java.util.*;
 
 /**
  * request to remove data of specific clients immediately
  *
  * @author qian.lqlq
- * @version $Id: ClientOffRequest.java, v 0.1 2017-12-01 15:48 qian.lqlq Exp $
+ * @version $Id: ClientOffPublisher.java, v 0.1 2017-12-01 15:48 qian.lqlq Exp $
  */
-public class ClientOffRequest extends AbstractSlotRequest {
-
+public final class ClientOffPublisher implements Serializable {
     private static final long                               serialVersionUID = -3547806571058756207L;
 
     private final ConnectId                                 connectId;
     private final Map<String, Map<String, RegisterVersion>> publisherMap     = Maps.newHashMap();
 
-    public ClientOffRequest(ProcessId sessionProcessId, ConnectId connectId) {
-        super(sessionProcessId);
+    public ClientOffPublisher(ConnectId connectId) {
         this.connectId = connectId;
     }
 
@@ -62,7 +61,7 @@ public class ClientOffRequest extends AbstractSlotRequest {
 
     @Override
     public String toString() {
-        return "ClientOffRequest{" + "connectId=" + connectId + ", publisherMap=" + publisherMap
+        return "ClientOffPublisher{" + "connectId=" + connectId + ", publisherMap=" + publisherMap
                + '}';
     }
 }

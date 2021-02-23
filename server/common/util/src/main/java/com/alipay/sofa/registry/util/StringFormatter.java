@@ -14,29 +14,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alipay.sofa.registry.common.model.dataserver;
+package com.alipay.sofa.registry.util;
 
-import com.alipay.sofa.registry.common.model.ProcessId;
-import com.alipay.sofa.registry.util.StringFormatter;
-import com.google.common.collect.Lists;
+import org.slf4j.helpers.FormattingTuple;
+import org.slf4j.helpers.MessageFormatter;
 
-import java.util.List;
-
-public class BatchRequest extends AbstractSlotRequest {
-    private final List<Object> request;
-
-    public BatchRequest(ProcessId sessionProcessId, int slotId, List<Object> request) {
-        super(slotId, sessionProcessId);
-        this.request = Lists.newArrayList(request);
+public final class StringFormatter {
+    private StringFormatter() {
     }
 
-    public List<Object> getRequest() {
-        return request;
-    }
-
-    @Override
-    public String toString() {
-        return StringFormatter.format("Batch:{},{},{},{}", getSlotId(), request.size(),
-            getSlotLeaderEpoch(), getSlotTableEpoch());
+    public static String format(String messagePattern, Object... argArray) {
+        FormattingTuple tuple = MessageFormatter.arrayFormat(messagePattern, argArray);
+        return tuple.getMessage();
     }
 }

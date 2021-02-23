@@ -17,6 +17,7 @@
 package com.alipay.sofa.registry.common.model.dataserver;
 
 import com.alipay.sofa.registry.common.model.ProcessId;
+import com.alipay.sofa.registry.util.StringFormatter;
 
 /**
  * request to get specific data
@@ -35,8 +36,9 @@ public class GetDataRequest extends AbstractSlotRequest {
      */
     private final String      dataCenter;
 
-    public GetDataRequest(ProcessId sessionProcessId, String dataInfoId, String dataCenter) {
-        super(sessionProcessId);
+    public GetDataRequest(ProcessId sessionProcessId, String dataInfoId, String dataCenter,
+                          int slotId) {
+        super(slotId, sessionProcessId);
         this.dataInfoId = dataInfoId;
         this.dataCenter = dataCenter;
     }
@@ -61,8 +63,7 @@ public class GetDataRequest extends AbstractSlotRequest {
 
     @Override
     public String toString() {
-        return "GetDataRequest{" + "dataInfoId='" + dataInfoId + '\'' + ", dataCenter='"
-               + dataCenter + '\'' + ", sessionProcessId=" + sessionProcessId + ", slotTableEpoch="
-               + slotTableEpoch + '}';
+        return StringFormatter.format("GetData:{},{},{},{},{}", dataInfoId, dataCenter,
+            getSlotId(), getSlotLeaderEpoch(), getSlotTableEpoch());
     }
 }

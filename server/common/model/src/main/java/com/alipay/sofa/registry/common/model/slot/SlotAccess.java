@@ -24,17 +24,19 @@ import java.io.Serializable;
  */
 public final class SlotAccess implements Serializable {
     public enum Status {
-        Accept, Migrating, Moved,
+        Accept, Migrating, Moved, MisMatch,
     }
 
-    private final Status status;
     private final int    slotId;
-    private final long   slotEpoch;
+    private final Status status;
+    private final long   slotTableEpoch;
+    private final long   slotLeaderEpoch;
 
-    public SlotAccess(int slotId, long slotEpoch, Status status) {
-        this.slotEpoch = slotEpoch;
+    public SlotAccess(int slotId, long slotTableEpoch, Status status, long slotLeaderEpoch) {
+        this.slotTableEpoch = slotTableEpoch;
         this.slotId = slotId;
         this.status = status;
+        this.slotLeaderEpoch = slotLeaderEpoch;
     }
 
     public boolean isMoved() {
@@ -49,6 +51,10 @@ public final class SlotAccess implements Serializable {
         return status == Status.Accept;
     }
 
+    public boolean isMisMatch() {
+        return status == Status.MisMatch;
+    }
+
     public Status getStatus() {
         return status;
     }
@@ -57,13 +63,17 @@ public final class SlotAccess implements Serializable {
         return slotId;
     }
 
-    public long getSlotEpoch() {
-        return slotEpoch;
+    public long getSlotTableEpoch() {
+        return slotTableEpoch;
+    }
+
+    public long getSlotLeaderEpoch() {
+        return slotLeaderEpoch;
     }
 
     @Override
     public String toString() {
-        return "SlotAccess{" + "status=" + status + ", slotId=" + slotId + ", slotEpoch="
-               + slotEpoch + '}';
+        return "SlotAccess{" + "slotId=" + slotId + ", status=" + status + ", tableEpoch="
+               + slotTableEpoch + ", leaderEpoch=" + slotLeaderEpoch + '}';
     }
 }
