@@ -104,7 +104,8 @@ public class BaseIntegrationTest {
 
     @BeforeClass
     public static void beforeClass() throws Exception {
-        System.setProperty(LoggingSystem.SYSTEM_PROPERTY, "org.springframework.boot.logging.log4j2.Log4J2LoggingSystem");
+        System.setProperty(LoggingSystem.SYSTEM_PROPERTY,
+            "org.springframework.boot.logging.log4j2.Log4J2LoggingSystem");
 
     }
 
