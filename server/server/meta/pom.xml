@@ -124,14 +124,15 @@
                 <configuration>
                     <!-- 根据JDK版本配置，jdk8: -Xmx1024m -XX:MetaspaceSize=256m -XX:MaxMetaspaceSize=512m -->
                     <argLine>-Xmx1024m -XX:PermSize=256m -XX:MaxPermSize=512m</argLine>
-                    <skipTests>${isSkipUnitTest}</skipTests>
                     <includes>
                         <!-- 这里需要根据自己的需要指定要跑的单元测试 -->
-                        <include>**/AllTests.java</include>
+<!--                        <include>**/AllTests.java</include>-->
                     </includes>
                     <excludes>
                         <!-- 这里需要根据自己的需要指定要排除单元测试 -->
                         <!--                        <exclude>com/alipay/**/*.java</exclude>-->
+                        <exclude>**/AllTests.java</exclude>
+                        <exclude>**/AppTest.java</exclude>
                     </excludes>
                     <!-- 如无特殊需求，将forkMode设置为once -->
                     <forkMode>once</forkMode>
