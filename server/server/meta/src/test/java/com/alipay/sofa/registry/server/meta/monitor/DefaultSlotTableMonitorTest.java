@@ -16,12 +16,16 @@
  */
 package com.alipay.sofa.registry.server.meta.monitor;
 
+import com.alipay.sofa.registry.common.model.metaserver.inter.heartbeat.DataHeartbeatRequest;
 import com.alipay.sofa.registry.common.model.metaserver.nodes.DataNode;
+import com.alipay.sofa.registry.common.model.slot.*;
 import com.alipay.sofa.registry.server.meta.AbstractTest;
 import com.alipay.sofa.registry.server.meta.bootstrap.config.NodeConfig;
+import com.alipay.sofa.registry.server.meta.monitor.impl.DefaultSlotTableMonitor;
 import com.alipay.sofa.registry.server.meta.slot.manager.LocalSlotManager;
 import org.assertj.core.util.Lists;
 import org.junit.After;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -35,12 +39,14 @@ public class DefaultSlotTableMonitorTest extends AbstractTest {
 
     private LocalSlotManager        slotManager;
 
+    private List<DataNode> dataNodes;
+
     @Before
     public void beforeDefaultSlotTableMonitorTest() throws Exception {
         NodeConfig nodeConfig = mock(NodeConfig.class);
         when(nodeConfig.getLocalDataCenter()).thenReturn(getDc());
         slotManager = new LocalSlotManager(nodeConfig);
-        List<DataNode> dataNodes = Lists.newArrayList(new DataNode(randomURL(randomIp()), getDc()),
+        dataNodes = Lists.newArrayList(new DataNode(randomURL(randomIp()), getDc()),
             new DataNode(randomURL(randomIp()), getDc()), new DataNode(randomURL(randomIp()),
                 getDc()));
         slotManager.refresh(new SlotTableGenerator(dataNodes).createSlotTable());
@@ -52,7 +58,6 @@ public class DefaultSlotTableMonitorTest extends AbstractTest {
 
     @After
     public void afterDefaultSlotTableMonitorTest() throws Exception {
-        slotManager.preDestroy();
         monitor.preDestroy();
     }
 
@@ -66,5 +71,85 @@ public class DefaultSlotTableMonitorTest extends AbstractTest {
     public void testUpdate() {
         slotManager.refresh(randomSlotTable());
         verify(slotManager, atLeast(1)).getSlotTable();
+    }
+
+    @Test
+    public void testIsSlotTableStable() {
+        monitor.update(slotManager, slotManager.getSlotTable());
+        Assert.assertFalse(monitor.isSlotTableStable());
+        SlotTable slotTable = slotManager.getSlotTable();
+        for(DataNode dataNode : dataNodes) {
+            List<SlotStatus> slotStatuses = Lists.newArrayList();
+            DataNodeSlot dataNodeSlot = slotTable.transfer(dataNode.getIp(), false).get(0);
+            dataNodeSlot.getLeaders().forEach(slotId -> {
+                slotStatuses.add(new SlotStatus(slotId, slotTable.getSlot(slotId).getLeaderEpoch(), SlotStatus.LeaderStatus.HEALTHY));
+            });
+            monitor.onHeartbeat(new DataHeartbeatRequest(dataNode, slotManager.getSlotTable().getEpoch(), getDc(),
+                    System.currentTimeMillis(),
+                    new SlotConfig.SlotBasicInfo(SlotConfig.SLOT_NUM, SlotConfig.SLOT_REPLICAS, SlotConfig.FUNC),
+                    slotStatuses));
+        }
+        Assert.assertTrue(monitor.isSlotTableStable());
+
+        final boolean[] unstable = {false};
+        for(DataNode dataNode : dataNodes) {
+            List<SlotStatus> slotStatuses = Lists.newArrayList();
+            DataNodeSlot dataNodeSlot = slotTable.transfer(dataNode.getIp(), false).get(0);
+            dataNodeSlot.getLeaders().forEach(slotId -> {
+                if (!unstable[0]) {
+                    slotStatuses.add(new SlotStatus(slotId, slotTable.getSlot(slotId).getLeaderEpoch(), SlotStatus.LeaderStatus.UNHEALTHY));
+                    unstable[0] = true;
+                } else {
+                    slotStatuses.add(new SlotStatus(slotId, slotTable.getSlot(slotId).getLeaderEpoch(), SlotStatus.LeaderStatus.HEALTHY));
+                }
+            });
+            monitor.onHeartbeat(new DataHeartbeatRequest(dataNode, slotManager.getSlotTable().getEpoch(), getDc(),
+                    System.currentTimeMillis(),
+                    new SlotConfig.SlotBasicInfo(SlotConfig.SLOT_NUM, SlotConfig.SLOT_REPLICAS, SlotConfig.FUNC),
+                    slotStatuses));
+        }
+        Assert.assertFalse(monitor.isSlotTableStable());
+    }
+
+    @Test
+    public void testOnHeartbeatWithPrevEpoch() {
+        monitor.update(slotManager, slotManager.getSlotTable());
+        Assert.assertFalse(monitor.isSlotTableStable());
+        SlotTable slotTable = slotManager.getSlotTable();
+        for(DataNode dataNode : dataNodes) {
+            List<SlotStatus> slotStatuses = Lists.newArrayList();
+            DataNodeSlot dataNodeSlot = slotTable.transfer(dataNode.getIp(), false).get(0);
+            dataNodeSlot.getLeaders().forEach(slotId -> {
+                slotStatuses.add(new SlotStatus(slotId, slotTable.getSlot(slotId).getLeaderEpoch(), SlotStatus.LeaderStatus.HEALTHY));
+            });
+            monitor.onHeartbeat(new DataHeartbeatRequest(dataNode, slotTable.getEpoch() - 1, getDc(),
+                    System.currentTimeMillis(),
+                    new SlotConfig.SlotBasicInfo(SlotConfig.SLOT_NUM, SlotConfig.SLOT_REPLICAS, SlotConfig.FUNC),
+                    slotStatuses));
+        }
+        Assert.assertFalse(monitor.isSlotTableStable());
+    }
+
+    @Test
+    public void testUpdateSlotTableThenIsStableShouldBeFalse() {
+        monitor.update(slotManager, slotManager.getSlotTable());
+        Assert.assertFalse(monitor.isSlotTableStable());
+        SlotTable slotTable = slotManager.getSlotTable();
+        for (DataNode dataNode : dataNodes) {
+            List<SlotStatus> slotStatuses = Lists.newArrayList();
+            DataNodeSlot dataNodeSlot = slotTable.transfer(dataNode.getIp(), false).get(0);
+            dataNodeSlot.getLeaders().forEach(slotId -> {
+                slotStatuses.add(new SlotStatus(slotId, slotTable.getSlot(slotId).getLeaderEpoch(), SlotStatus.LeaderStatus.HEALTHY));
+            });
+            monitor.onHeartbeat(new DataHeartbeatRequest(dataNode, slotManager.getSlotTable().getEpoch(), getDc(),
+                    System.currentTimeMillis(),
+                    new SlotConfig.SlotBasicInfo(SlotConfig.SLOT_NUM, SlotConfig.SLOT_REPLICAS, SlotConfig.FUNC),
+                    slotStatuses));
+        }
+        Assert.assertTrue(monitor.isSlotTableStable());
+
+        slotManager.refresh(new SlotTableGenerator(dataNodes).createSlotTable());
+        monitor.update(slotManager, slotManager.getSlotTable());
+        Assert.assertFalse(monitor.isSlotTableStable());
     }
 }

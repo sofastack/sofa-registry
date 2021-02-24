@@ -65,7 +65,7 @@ public final class ConcurrentUtils {
                     public void run() {
                         try {
                             doRun0(t);
-                        } catch (Exception e) {
+                        } catch (Throwable e) {
                             logger.error("[SafeParaLoop][{}]", getInfo(t), e);
                         }
                     }

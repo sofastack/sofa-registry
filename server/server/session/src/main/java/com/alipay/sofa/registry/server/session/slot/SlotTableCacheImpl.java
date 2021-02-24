@@ -83,11 +83,6 @@ public final class SlotTableCacheImpl implements SlotTableCache {
     }
 
     @Override
-    public void triggerUpdateSlotTable(long epoch) {
-        // TODO
-    }
-
-    @Override
     public long getEpoch() {
         return slotTable.getEpoch();
     }

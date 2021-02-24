@@ -16,6 +16,7 @@
  */
 package com.alipay.sofa.registry.server.meta.lease.session;
 
+import com.alipay.sofa.registry.common.model.metaserver.inter.heartbeat.HeartbeatRequest;
 import com.alipay.sofa.registry.common.model.metaserver.nodes.SessionNode;
 import com.alipay.sofa.registry.exception.DisposeException;
 import com.alipay.sofa.registry.exception.InitializeException;
@@ -143,5 +144,10 @@ public class DefaultSessionServerManager extends AbstractRaftEnabledLeaseManager
     DefaultSessionServerManager setMetaServerConfig(MetaServerConfig metaServerConfig) {
         this.metaServerConfig = metaServerConfig;
         return this;
+    }
+
+    @Override
+    public void handleHeartbeat(HeartbeatRequest<SessionNode> request) {
+
     }
 }

@@ -21,11 +21,15 @@ import com.alipay.sofa.registry.common.model.slot.DataNodeSlot;
 import com.alipay.sofa.registry.common.model.slot.SlotConfig;
 import com.alipay.sofa.registry.common.model.slot.SlotTable;
 import com.alipay.sofa.registry.common.model.store.URL;
+import com.alipay.sofa.registry.exception.InitializeException;
 import com.alipay.sofa.registry.jraft.command.CommandCodec;
 import com.alipay.sofa.registry.jraft.processor.SnapshotProcess;
 import com.alipay.sofa.registry.lifecycle.impl.LifecycleHelper;
+import com.alipay.sofa.registry.observer.Observable;
+import com.alipay.sofa.registry.observer.Observer;
 import com.alipay.sofa.registry.observer.impl.AbstractLifecycleObservable;
 import com.alipay.sofa.registry.server.meta.bootstrap.config.NodeConfig;
+import com.alipay.sofa.registry.server.meta.remoting.notifier.Notifier;
 import com.alipay.sofa.registry.server.meta.slot.SlotManager;
 import com.alipay.sofa.registry.store.api.annotation.RaftService;
 import com.alipay.sofa.registry.util.FileUtils;
@@ -35,7 +39,6 @@ import org.glassfish.jersey.internal.guava.Sets;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import javax.annotation.PostConstruct;
-import javax.annotation.PreDestroy;
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
@@ -59,6 +62,9 @@ public class LocalSlotManager extends AbstractLifecycleObservable implements Slo
     @Autowired
     private NodeConfig                       nodeConfig;
 
+    @Autowired
+    private List<Notifier>                   notifiers;
+
     private final ReadWriteLock              lock               = new ReentrantReadWriteLock();
 
     private final AtomicReference<SlotTable> currentSlotTable   = new AtomicReference<>(
@@ -76,13 +82,12 @@ public class LocalSlotManager extends AbstractLifecycleObservable implements Slo
     @PostConstruct
     public void postConstruct() throws Exception {
         LifecycleHelper.initializeIfPossible(this);
-        LifecycleHelper.startIfPossible(this);
     }
 
-    @PreDestroy
-    public void preDestroy() throws Exception {
-        LifecycleHelper.stopIfPossible(this);
-        LifecycleHelper.disposeIfPossible(this);
+    @Override
+    protected void doInitialize() throws InitializeException {
+        super.doInitialize();
+        addObserver(new SlotTableChangeNotification());
     }
 
     @Override
@@ -199,6 +204,25 @@ public class LocalSlotManager extends AbstractLifecycleObservable implements Slo
         Set<String> files = Sets.newHashSet();
         files.add(getClass().getSimpleName());
         return files;
+    }
+
+    private final class SlotTableChangeNotification implements Observer {
+
+        @Override
+        public void update(Observable source, Object message) {
+            if (message instanceof SlotTable) {
+                if (notifiers == null || notifiers.isEmpty()) {
+                    return;
+                }
+                notifiers.forEach(notifier -> {
+                    try {
+                        notifier.notifySlotTableChange((SlotTable) message);
+                    } catch (Throwable th) {
+                        logger.error("[notify] notifier [{}]", notifier.getClass().getSimpleName(), th);
+                    }
+                });
+            }
+        }
     }
 
 }

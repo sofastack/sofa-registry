@@ -64,7 +64,8 @@ public class GenericResponse<T> extends CommonResponse {
      *
      * @param data  value to be assigned to property data
      */
-    public void setData(T data) {
+    public GenericResponse<T> setData(T data) {
         this.data = data;
+        return this;
     }
 }

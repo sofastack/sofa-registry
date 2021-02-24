@@ -14,30 +14,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alipay.sofa.registry.server.session.slot;
+package com.alipay.sofa.registry.server.meta.remoting.notifier;
 
-import com.alipay.sofa.registry.common.model.slot.Slot;
+import com.alipay.sofa.registry.common.model.metaserver.ProvideDataChangeEvent;
 import com.alipay.sofa.registry.common.model.slot.SlotTable;
 
 /**
- *
- * @author yuzhi.lyz
- * @version v 0.1 2020-11-06 16:21 yuzhi.lyz Exp $
+ * @author chen.zhu
+ * <p>
+ * Feb 23, 2021
  */
-public interface SlotTableCache {
-    int slotOf(String dataInfoId);
+public interface Notifier {
 
-    Slot getSlot(String dataInfoId);
+    void notifySlotTableChange(SlotTable slotTable);
 
-    Slot getSlot(int slotId);
-
-    String getLeader(String dataInfoId);
-
-    String getLeader(int slotId);
-
-    long getEpoch();
-
-    boolean updateSlotTable(SlotTable slotTable);
-
-    int slotNum();
+    void notifyProvideDataChange(ProvideDataChangeEvent event);
 }

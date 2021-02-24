@@ -14,13 +14,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alipay.sofa.registry.server.meta.remoting.notifier;
+package com.alipay.sofa.registry.server.meta.monitor;
+
+import com.alipay.sofa.registry.common.model.slot.Slot;
+import com.alipay.sofa.registry.common.model.slot.SlotStatus;
 
 /**
  * @author chen.zhu
  * <p>
- * Dec 15, 2020
+ * Jan 28, 2021
  */
-public interface SessionServerService extends MetaServerChangeListener {
+public interface SlotStats {
 
+    Slot getSlot();
+
+    boolean isLeaderStable();
+
+    void updateSlotState(SlotStatus.LeaderStatus state);
 }

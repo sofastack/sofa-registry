@@ -14,13 +14,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alipay.sofa.registry.server.meta.provide.data;
+package com.alipay.sofa.registry.server.meta.remoting.data;
 
-import com.alipay.sofa.registry.common.model.metaserver.nodes.SessionNode;
+import com.alipay.sofa.registry.common.model.metaserver.nodes.DataNode;
 import com.alipay.sofa.registry.exception.SofaRegistryRuntimeException;
 import com.alipay.sofa.registry.remoting.exchange.NodeExchanger;
-import com.alipay.sofa.registry.server.meta.lease.session.SessionServerManager;
+import com.alipay.sofa.registry.server.meta.lease.data.DataServerManager;
 import com.alipay.sofa.registry.server.meta.remoting.connection.NodeConnectManager;
+import com.alipay.sofa.registry.server.meta.remoting.notifier.AbstractNotifier;
 import com.alipay.sofa.registry.server.shared.remoting.AbstractServerHandler;
 import com.google.common.annotations.VisibleForTesting;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,55 +33,54 @@ import java.util.List;
  * <p>
  * Dec 03, 2020
  */
-public class SessionServerProvideDataNotifier extends AbstractProvideDataNotifier<SessionNode>
-                                                                                              implements
-                                                                                              ProvideDataNotifier {
+public class DefaultDataServerService extends AbstractNotifier<DataNode> implements
+                                                                        DataServerService {
 
     @Autowired
-    private NodeExchanger         sessionNodeExchanger;
+    private NodeExchanger         dataNodeExchanger;
 
     @Autowired
-    private AbstractServerHandler sessionConnectionHandler;
+    private AbstractServerHandler dataConnectionHandler;
 
     @Autowired
-    private SessionServerManager  sessionServerManager;
+    private DataServerManager     dataServerManager;
 
     @Override
     protected NodeExchanger getNodeExchanger() {
-        return sessionNodeExchanger;
+        return dataNodeExchanger;
     }
 
     @Override
-    protected List<SessionNode> getNodes() {
-        return sessionServerManager.getClusterMembers();
+    protected List<DataNode> getNodes() {
+        return dataServerManager.getClusterMembers();
     }
 
     @Override
     protected NodeConnectManager getNodeConnectManager() {
-        if (!(sessionConnectionHandler instanceof NodeConnectManager)) {
-            logger.error("sessionConnectionHandler inject is not NodeConnectManager instance!");
+        if (!(dataConnectionHandler instanceof NodeConnectManager)) {
+            logger.error("dataConnectionHandler inject is not NodeConnectManager instance!");
             throw new SofaRegistryRuntimeException(
-                "sessionConnectionHandler inject is not NodeConnectManager instance!");
+                "dataConnectionHandler inject is not NodeConnectManager instance!");
         }
 
-        return (NodeConnectManager) sessionConnectionHandler;
+        return (NodeConnectManager) dataConnectionHandler;
     }
 
     @VisibleForTesting
-    SessionServerProvideDataNotifier setSessionNodeExchanger(NodeExchanger sessionNodeExchanger) {
-        this.sessionNodeExchanger = sessionNodeExchanger;
+    DefaultDataServerService setDataNodeExchanger(NodeExchanger dataNodeExchanger) {
+        this.dataNodeExchanger = dataNodeExchanger;
         return this;
     }
 
     @VisibleForTesting
-    SessionServerProvideDataNotifier setSessionConnectionHandler(AbstractServerHandler sessionConnectionHandler) {
-        this.sessionConnectionHandler = sessionConnectionHandler;
+    DefaultDataServerService setDataConnectionHandler(AbstractServerHandler dataConnectionHandler) {
+        this.dataConnectionHandler = dataConnectionHandler;
         return this;
     }
 
     @VisibleForTesting
-    SessionServerProvideDataNotifier setSessionServerManager(SessionServerManager sessionServerManager) {
-        this.sessionServerManager = sessionServerManager;
+    DefaultDataServerService setDataServerManager(DataServerManager dataServerManager) {
+        this.dataServerManager = dataServerManager;
         return this;
     }
 }

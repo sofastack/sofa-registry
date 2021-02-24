@@ -36,8 +36,6 @@ public class DefaultSessionServerManagerTest extends AbstractTest {
 
     private DefaultSessionServerManager sessionManager;
 
-    private RaftExchanger               raftExchanger;
-
     @Mock
     private MetaServerConfig            metaServerConfig;
 
@@ -45,11 +43,12 @@ public class DefaultSessionServerManagerTest extends AbstractTest {
     public void beforeDefaultSessionManagerTest() throws Exception {
         MockitoAnnotations.initMocks(this);
         sessionManager = new DefaultSessionServerManager();
+        SessionLeaseManager sessionLeaseManager = new SessionLeaseManager();
         sessionManager.setMetaServerConfig(metaServerConfig)
-            .setSessionLeaseManager(new SessionLeaseManager())
-            .setRaftSessionLeaseManager(new SessionLeaseManager()).setScheduled(scheduled);
+            .setSessionLeaseManager(sessionLeaseManager)
+            .setRaftSessionLeaseManager(sessionLeaseManager)
+                .setScheduled(scheduled);
         when(metaServerConfig.getExpireCheckIntervalMilli()).thenReturn(60);
-        raftExchanger = mock(RaftExchanger.class);
         sessionManager.postConstruct();
     }
 
@@ -59,9 +58,10 @@ public class DefaultSessionServerManagerTest extends AbstractTest {
     }
 
     @Test
-    public void testGetEpoch() {
+    public void testGetEpoch() throws TimeoutException, InterruptedException {
         Assert.assertEquals(0, sessionManager.getEpoch());
         sessionManager.renew(new SessionNode(randomURL(randomIp()), getDc()), 1000);
+        waitConditionUntilTimeOut(()->sessionManager.getEpoch() > 0, 100);
         Assert.assertNotEquals(0, sessionManager.getEpoch());
     }
 

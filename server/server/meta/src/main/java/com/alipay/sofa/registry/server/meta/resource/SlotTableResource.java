@@ -16,9 +16,13 @@
  */
 package com.alipay.sofa.registry.server.meta.resource;
 
+import com.alipay.sofa.registry.common.model.CommonResponse;
 import com.alipay.sofa.registry.common.model.GenericResponse;
 import com.alipay.sofa.registry.common.model.slot.SlotTable;
 import com.alipay.sofa.registry.jraft.bootstrap.ServiceStateMachine;
+import com.alipay.sofa.registry.lifecycle.impl.LifecycleHelper;
+import com.alipay.sofa.registry.log.Logger;
+import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.server.meta.lease.data.DefaultDataServerManager;
 import com.alipay.sofa.registry.server.meta.slot.arrange.ScheduledSlotArranger;
 import com.alipay.sofa.registry.server.meta.slot.manager.DefaultSlotManager;
@@ -39,6 +43,8 @@ import javax.ws.rs.core.MediaType;
 @Path("openapi/slot/table")
 public class SlotTableResource {
 
+    private final Logger logger = LoggerFactory.getLogger(getClass());
+
     @Autowired
     private DefaultSlotManager       defaultSlotManager;
 
@@ -55,22 +61,56 @@ public class SlotTableResource {
     @Path("force/refresh")
     @Produces(MediaType.APPLICATION_JSON)
     public GenericResponse<SlotTable> forceRefreshSlotTable() {
+        logger.info("[forceRefreshSlotTable] begin");
         if (ServiceStateMachine.getInstance().isLeader()) {
             if (slotArranger.tryLock()) {
                 try {
                     BalanceTask task = new BalanceTask(slotManager,
                         defaultSlotManager.getRaftSlotManager(), dataServerManager);
                     task.run();
+                    logger.info("[forceRefreshSlotTable] end with succeed");
                     return new GenericResponse<SlotTable>().fillSucceed(slotManager.getSlotTable());
                 } finally {
                     slotArranger.unlock();
                 }
             } else {
+                logger.info("[forceRefreshSlotTable] end, fail to get the lock");
                 return new GenericResponse<SlotTable>()
                     .fillFailed("scheduled slot arrangement is running");
             }
         } else {
+            logger.info("[forceRefreshSlotTable] end, not meta-server leader");
             return new GenericResponse<SlotTable>().fillFailed("not the meta-server leader");
+        }
+    }
+
+    @PUT
+    @Path("/slot/table/reconcile/stop")
+    @Produces(MediaType.APPLICATION_JSON)
+    public CommonResponse stopSlotTableReconcile() {
+        logger.info("[stopSlotTableReconcile] begin");
+        try {
+            LifecycleHelper.stopIfPossible(slotArranger);
+            logger.info("[stopSlotTableReconcile] end with succeed");
+            return GenericResponse.buildSuccessResponse("succeed");
+        } catch (Throwable throwable) {
+            logger.error("[stopSlotTableReconcile] end", throwable);
+            return GenericResponse.buildFailedResponse(throwable.getMessage());
+        }
+    }
+
+    @PUT
+    @Path("/slot/table/reconcile/start")
+    @Produces(MediaType.APPLICATION_JSON)
+    public CommonResponse startSlotTableReconcile() {
+        logger.info("[startSlotTableReconcile] begin");
+        try {
+            LifecycleHelper.startIfPossible(slotArranger);
+            logger.info("[startSlotTableReconcile] end with succeed");
+            return GenericResponse.buildSuccessResponse("succeed");
+        } catch (Throwable throwable) {
+            logger.error("[startSlotTableReconcile] end", throwable);
+            return GenericResponse.buildFailedResponse(throwable.getMessage());
         }
     }
 

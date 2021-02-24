@@ -14,30 +14,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alipay.sofa.registry.server.session.slot;
+package com.alipay.sofa.registry.server.meta.monitor;
 
-import com.alipay.sofa.registry.common.model.slot.Slot;
+import com.alipay.sofa.registry.common.model.slot.SlotStatus;
 import com.alipay.sofa.registry.common.model.slot.SlotTable;
+import com.alipay.sofa.registry.lifecycle.Initializable;
+
+import java.util.List;
 
 /**
- *
- * @author yuzhi.lyz
- * @version v 0.1 2020-11-06 16:21 yuzhi.lyz Exp $
+ * @author chen.zhu
+ * <p>
+ * Jan 28, 2021
  */
-public interface SlotTableCache {
-    int slotOf(String dataInfoId);
+public interface SlotTableStats extends Initializable {
 
-    Slot getSlot(String dataInfoId);
+    boolean isSlotTableStable();
 
-    Slot getSlot(int slotId);
+    void updateSlotTable(SlotTable slotTable);
 
-    String getLeader(String dataInfoId);
-
-    String getLeader(int slotId);
-
-    long getEpoch();
-
-    boolean updateSlotTable(SlotTable slotTable);
-
-    int slotNum();
+    void checkSlotStatuses(List<SlotStatus> slotStatuses);
 }

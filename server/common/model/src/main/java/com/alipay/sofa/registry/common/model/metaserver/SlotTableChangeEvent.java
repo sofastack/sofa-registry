@@ -16,36 +16,30 @@
  */
 package com.alipay.sofa.registry.common.model.metaserver;
 
-import com.alipay.sofa.registry.common.model.slot.SlotTable;
-
 import java.io.Serializable;
 
 /**
  *
  * @author yuzhi.lyz
  * @version v 0.1 2020-11-02 17:30 yuzhi.lyz Exp $
+ *
  */
-public final class SlotTableChangeRequest implements Serializable {
-    private SlotTable slotTable;
+public final class SlotTableChangeEvent implements Serializable {
 
-    /**
-     * Getter method for property <tt>slotTable</tt>.
-     * @return property value of slotTable
-     */
-    public SlotTable getSlotTable() {
-        return slotTable;
+    private final long slotTableEpoch;
+
+    public SlotTableChangeEvent(long slotTableEpoch) {
+        this.slotTableEpoch = slotTableEpoch;
     }
 
-    /**
-     * Setter method for property <tt>slotTable</tt>.
-     * @param slotTable value to be assigned to property slotTable
-     */
-    public void setSlotTable(SlotTable slotTable) {
-        this.slotTable = slotTable;
+    public long getSlotTableEpoch() {
+        return slotTableEpoch;
     }
 
     @Override
     public String toString() {
-        return "SlotTableChangeRequest{" + "slotTable=" + slotTable + '}';
+        return "SlotTableChangeEvent{" +
+                "slotTableEpoch=" + slotTableEpoch +
+                '}';
     }
 }

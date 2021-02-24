@@ -20,6 +20,8 @@ import com.alipay.sofa.registry.common.model.slot.Slot;
 import com.alipay.sofa.registry.common.model.slot.SlotAccess;
 import com.alipay.sofa.registry.common.model.slot.SlotTable;
 
+import java.util.List;
+
 /**
  * @author yuzhi.lyz
  * @version v 0.1 2020-10-30 10:46 yuzhi.lyz Exp $
@@ -31,6 +33,8 @@ public interface SlotManager {
     Slot getSlot(int slotId);
 
     SlotAccess checkSlotAccess(int slotId, long srcSlotEpoch, long srcLeaderEpoch);
+
+    List<SlotAccess> getSlotAccesses();
 
     boolean isLeader(int slotId);
 
