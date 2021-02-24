@@ -85,7 +85,8 @@ public class DataChangeRequestHandler extends AbstractClientHandler<DataChangeRe
             if (!check.interested) {
                 if (check != Interests.InterestVersionCheck.NoSub) {
                     // log exclude NoSub
-                    LOGGER.info("[SkipChange]{},{}, ver={}, {}", dataInfoId, dataCenter, version, check);
+                    LOGGER.info("[SkipChange]{},{}, ver={}, {}", dataInfoId, dataCenter, version,
+                        check);
                 }
                 continue;
             }

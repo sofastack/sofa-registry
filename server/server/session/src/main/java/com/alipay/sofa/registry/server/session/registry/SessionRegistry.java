@@ -301,7 +301,8 @@ public class SessionRegistry implements Registry {
         Map<Integer, List<String>> pushedDataInfoIdMap = groupBySlot(pushedDataInfoIds);
         for (int i = 0; i < slotTableCache.slotNum(); i++) {
             try {
-                fetchChangDataProcess(i,
+                // TODO not support multi cluster
+                fetchChangDataProcess(sessionServerConfig.getSessionServerDataCenter(), i,
                     pushedDataInfoIdMap.getOrDefault(i, Collections.emptyList()));
             } catch (Throwable e) {
                 SCAN_VER_LOGGER.error("failed to fetch versions slotId={}", i, e);
@@ -338,7 +339,7 @@ public class SessionRegistry implements Registry {
         return ret;
     }
 
-    private void fetchChangDataProcess(int slotId, List<String> pushedDataInfoIds) {
+    private void fetchChangDataProcess(String dataCenter, int slotId, List<String> pushedDataInfoIds) {
         final String leader = slotTableCache.getLeader(slotId);
         if (StringUtils.isBlank(leader)) {
             SCAN_VER_LOGGER.warn("slot not assigned, {}", slotId);
@@ -346,36 +347,32 @@ public class SessionRegistry implements Registry {
         }
         SCAN_VER_LOGGER.info("fetch ver from {}, slotId={}, pushed={}", leader, slotId,
             pushedDataInfoIds.size());
-        Map<String/*datacenter*/, Map<String/*datainfoid*/, DatumVersion>> dataVersions = dataNodeService
-            .fetchDataVersion(slotId);
+        Map<String/*datainfoid*/, DatumVersion> dataVersions = dataNodeService.fetchDataVersion(
+            dataCenter, slotId);
 
         if (CollectionUtils.isEmpty(dataVersions)) {
             SCAN_VER_LOGGER.warn("fetch empty ver from {}, slotId={}", leader, slotId);
             return;
         }
-        for (Map.Entry<String, Map<String, DatumVersion>> e : dataVersions.entrySet()) {
-            final String dataCenter = e.getKey();
-            final Map<String, DatumVersion> versionMap = e.getValue();
-            for (Map.Entry<String, DatumVersion> version : versionMap.entrySet()) {
-                final String dataInfoId = version.getKey();
-                final long verVal = version.getValue().getValue();
-                if (sessionInterests.checkInterestVersion(dataCenter, dataInfoId, verVal).interested) {
-                    firePushService.fireOnChange(dataCenter, dataInfoId, verVal);
-                    SCAN_VER_LOGGER.info("notify fetch by check ver {} for {}, slotId={}", verVal,
-                        dataInfoId, slotId);
-                }
+        for (Map.Entry<String, DatumVersion> version : dataVersions.entrySet()) {
+            final String dataInfoId = version.getKey();
+            final long verVal = version.getValue().getValue();
+            if (sessionInterests.checkInterestVersion(dataCenter, dataInfoId, verVal).interested) {
+                firePushService.fireOnChange(dataCenter, dataInfoId, verVal);
+                SCAN_VER_LOGGER.info("notify fetch by check ver {} for {}, slotId={}", verVal,
+                    dataInfoId, slotId);
             }
-            // to check the dataInfoId has deleted or not exist
-            for (String pushedDataInfoId : pushedDataInfoIds) {
-                if (!versionMap.containsKey(pushedDataInfoId)) {
-                    // EXCEPT_MIN_VERSION means the datum maybe is null
-                    // after push null datum, the pushedDataInfoId will reset
-                    // the next scan round, would not trigger this
-                    firePushService.fireOnChange(dataCenter, pushedDataInfoId,
-                        FirePushService.EXCEPT_MIN_VERSION);
-                    SCAN_VER_LOGGER.warn("pushedDataInfoId not exist {}, slotId={}",
-                        pushedDataInfoId, slotId);
-                }
+        }
+        // to check the dataInfoId has deleted or not exist
+        for (String pushedDataInfoId : pushedDataInfoIds) {
+            if (!dataVersions.containsKey(pushedDataInfoId)) {
+                // EXCEPT_MIN_VERSION means the datum maybe is null
+                // after push null datum, the pushedDataInfoId will reset
+                // the next scan round, would not trigger this
+                firePushService.fireOnChange(dataCenter, pushedDataInfoId,
+                    FirePushService.EXCEPT_MIN_VERSION);
+                SCAN_VER_LOGGER.warn("pushedDataInfoId not exist {}, slotId={}", pushedDataInfoId,
+                    slotId);
             }
         }
     }

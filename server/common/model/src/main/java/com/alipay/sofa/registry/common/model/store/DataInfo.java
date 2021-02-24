@@ -17,6 +17,7 @@
 package com.alipay.sofa.registry.common.model.store;
 
 import com.alipay.sofa.registry.common.model.constants.ValueConstants;
+import com.alipay.sofa.registry.util.ParaCheckUtil;
 
 import javax.xml.bind.ValidationEvent;
 import java.io.Serializable;
@@ -90,10 +91,7 @@ public class DataInfo implements Serializable {
      * @return
      */
     public static DataInfo valueOf(String dataInfoId) {
-        if (dataInfoId == null || dataInfoId.isEmpty()) {
-            throw new IllegalArgumentException("dataInfoId null");
-        }
-
+        ParaCheckUtil.checkNotBlank(dataInfoId, "dataInfoId");
         String[] str = dataInfoId.split(DELIMITER);
         if (str.length != DATAID_LENTH) {
             throw new IllegalArgumentException("dataInfoId input error!");

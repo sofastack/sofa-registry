@@ -22,6 +22,7 @@ import com.alipay.sofa.registry.common.model.dataserver.*;
 import com.alipay.sofa.registry.common.model.slot.Slot;
 import com.alipay.sofa.registry.common.model.slot.SlotAccessGenericResponse;
 import com.alipay.sofa.registry.common.model.store.Publisher;
+import com.alipay.sofa.registry.common.model.store.SubDatum;
 import com.alipay.sofa.registry.common.model.store.URL;
 import com.alipay.sofa.registry.common.model.store.UnPublisher;
 import com.alipay.sofa.registry.log.Logger;
@@ -33,6 +34,7 @@ import com.alipay.sofa.registry.remoting.exchange.message.Response;
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
 import com.alipay.sofa.registry.server.session.slot.SlotTableCache;
 import com.alipay.sofa.registry.server.shared.env.ServerEnv;
+import com.alipay.sofa.registry.server.shared.util.DatumUtils;
 import com.alipay.sofa.registry.task.BlockingQueues;
 import com.alipay.sofa.registry.task.FastRejectedExecutionException;
 import com.alipay.sofa.registry.util.ConcurrentUtils;
@@ -41,7 +43,6 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.util.CollectionUtils;
 
 import javax.annotation.PostConstruct;
 import java.util.*;
@@ -116,11 +117,13 @@ public class DataNodeServiceImpl implements DataNodeService {
     }
 
     @Override
-    public Map<String/*datacenter*/, Map<String/*datainfoid*/, DatumVersion>> fetchDataVersion(int slotId) {
+    public Map<String/*datainfoid*/, DatumVersion> fetchDataVersion(String dataCenter, int slotId) {
+        String dataNodeIp = null;
         try {
             final Slot slot = getSlot(slotId);
-            final GetDataVersionRequest request = new GetDataVersionRequest(ServerEnv.PROCESS_ID,
-                slotId);
+            dataNodeIp = slot.getLeader();
+            final GetDataVersionRequest request = new GetDataVersionRequest(dataCenter,
+                ServerEnv.PROCESS_ID, slotId);
             request.setSlotTableEpoch(slotTableCache.getEpoch());
             request.setSlotLeaderEpoch(slot.getLeaderEpoch());
             Request<GetDataVersionRequest> getDataVersionRequestRequest = new Request<GetDataVersionRequest>() {
@@ -137,43 +140,32 @@ public class DataNodeServiceImpl implements DataNodeService {
 
             Response response = dataNodeExchanger.request(getDataVersionRequestRequest);
             Object result = response.getResult();
-            SlotAccessGenericResponse<Map<String, Map<String, DatumVersion>>> genericResponse = (SlotAccessGenericResponse<Map<String, Map<String, DatumVersion>>>) result;
+            SlotAccessGenericResponse<Map<String, DatumVersion>> genericResponse = (SlotAccessGenericResponse<Map<String, DatumVersion>>) result;
             if (genericResponse.isSuccess()) {
-                Map<String, Map<String, DatumVersion>> map = genericResponse.getData();
-                return map;
+                Map<String, DatumVersion> map = genericResponse.getData();
+                return DatumUtils.intern(map);
             } else {
-                throw new RuntimeException(String.format(
-                    "fetchDataVersion fail response! access=%s, msg:%s",
-                    genericResponse.getSlotAccess(), genericResponse.getMessage()));
+                throw new RuntimeException(StringFormatter.format(
+                    "GetDataVersion got fail response {}, {}, slotId={}, access={}, msg:{}",
+                    dataNodeIp, dataCenter, slotId, genericResponse.getSlotAccess(),
+                    genericResponse.getMessage()));
             }
         } catch (RequestException e) {
-            throw new RuntimeException("fetchDataVersion request error", e);
+            throw new RuntimeException(StringFormatter.format("GetDataVersion fail {}, slotId={}",
+                dataNodeIp, dataCenter, slotId, e));
         }
     }
 
     @Override
-    public Datum fetchDataCenter(String dataInfoId, String dataCenterId) {
-
-        Map<String/*datacenter*/, Datum> map = getDatumMap(dataInfoId, dataCenterId);
-        if (map != null && map.size() > 0) {
-            return map.get(dataCenterId);
-        }
-        return null;
-    }
-
-    @Override
-    public Map<String/*datacenter*/, Datum> fetchGlobal(String dataInfoId) {
-        //get all dataCenter data
-        return getDatumMap(dataInfoId, null);
-    }
-
-    @Override
-    public Map<String, Datum> getDatumMap(String dataInfoId, String dataCenterId) {
-        Map<String/*datacenter*/, Datum> map;
+    public SubDatum fetch(String dataInfoId, String dataCenter) {
+        String dataNodeIp = null;
+        int slotId = -1;
         try {
-            //dataCenter null means all dataCenters
             final Slot slot = getSlot(dataInfoId);
-            GetDataRequest getDataRequest = new GetDataRequest(ServerEnv.PROCESS_ID, dataInfoId, dataCenterId, slot.getId());
+            dataNodeIp = slot.getLeader();
+            slotId = slot.getId();
+            GetDataRequest getDataRequest = new GetDataRequest(ServerEnv.PROCESS_ID, dataInfoId,
+                dataCenter, slot.getId());
             getDataRequest.setSlotTableEpoch(slotTableCache.getEpoch());
             getDataRequest.setSlotLeaderEpoch(slot.getLeaderEpoch());
             Request<GetDataRequest> getDataRequestStringRequest = new Request<GetDataRequest>() {
@@ -196,26 +188,19 @@ public class DataNodeServiceImpl implements DataNodeService {
 
             Response response = dataNodeExchanger.request(getDataRequestStringRequest);
             Object result = response.getResult();
-            SlotAccessGenericResponse<Map<String, Datum>> genericResponse = (SlotAccessGenericResponse<Map<String, Datum>>) result;
+            SlotAccessGenericResponse<SubDatum> genericResponse = (SlotAccessGenericResponse<SubDatum>) result;
             if (genericResponse.isSuccess()) {
-                map = genericResponse.getData();
-                if (CollectionUtils.isEmpty(map)) {
-                    LOGGER.warn("GetDataRequest get response contains no datum!dataInfoId={}", dataInfoId);
-                } else {
-                    map.forEach((dataCenter, datum) -> Datum.internDatum(datum));
-                }
+                final SubDatum datum = genericResponse.getData();
+                return SubDatum.intern(datum);
             } else {
-                throw new RuntimeException(
-                        String.format("GetDataRequest has got fail response!dataInfoId:%s msg:%s", dataInfoId,
-                                genericResponse.getMessage()));
+                throw new RuntimeException(StringFormatter.format(
+                    "GetData got fail response {}, {}, {}, slotId={} msg:{}", dataNodeIp,
+                    dataInfoId, dataCenter, slotId, genericResponse.getMessage()));
             }
         } catch (RequestException e) {
-            throw new RuntimeException(
-                    String.format("Get data request to data node error!dataInfoId:%s msg:%s ", dataInfoId,
-                            e.getMessage()), e);
+            throw new RuntimeException(StringFormatter.format("GetData fail {}, {}, {}, slotId={}",
+                dataNodeIp, dataInfoId, dataCenter, slotId), e);
         }
-
-        return map;
     }
 
     private CommonResponse sendRequest(Request request) throws RequestException {
@@ -394,12 +379,12 @@ public class DataNodeServiceImpl implements DataNodeService {
     private Map<Integer, LinkedList<Object>> drainReq(BlockingQueue<Req> queue, int max) {
         List<Req> reqs = new ArrayList<>(max);
         queue.drainTo(reqs, max);
-        if(reqs.isEmpty()){
+        if (reqs.isEmpty()) {
             return Collections.emptyMap();
         }
         Map<Integer, LinkedList<Object>> ret = Maps.newLinkedHashMap();
-        for(Req req: reqs){
-            LinkedList<Object> objects = ret.computeIfAbsent(req.slotId, k->Lists.newLinkedList());
+        for (Req req : reqs) {
+            LinkedList<Object> objects = ret.computeIfAbsent(req.slotId, k -> Lists.newLinkedList());
             objects.add(req.req);
         }
         return ret;

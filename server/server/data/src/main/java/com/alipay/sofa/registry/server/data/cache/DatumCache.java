@@ -21,9 +21,7 @@ import com.alipay.sofa.registry.common.model.dataserver.Datum;
 import com.alipay.sofa.registry.common.model.dataserver.DatumVersion;
 import com.alipay.sofa.registry.common.model.store.Publisher;
 import com.alipay.sofa.registry.server.data.bootstrap.DataServerConfig;
-import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.util.CollectionUtils;
 
 import java.util.HashMap;
 import java.util.List;
@@ -54,23 +52,6 @@ public class DatumCache {
         return localDatumStorage.get(dataInfoId);
     }
 
-    /**
-     * get datum of all data centers by dataInfoId
-     *
-     * @param dataInfoId
-     * @return
-     */
-    public Map<String, Datum> get(String dataInfoId) {
-        Map<String, Datum> datumMap = new HashMap<>();
-
-        //local
-        Datum localDatum = localDatumStorage.get(dataInfoId);
-        if (localDatum != null) {
-            datumMap.put(dataServerConfig.getLocalDataCenter(), localDatum);
-        }
-        return datumMap;
-    }
-
     public void clean(String dataCenter, String dataInfoId) {
         localDatumStorage.remove(dataInfoId, null);
     }
@@ -81,34 +62,9 @@ public class DatumCache {
         return version;
     }
 
-    public Map<String, Map<String, DatumVersion>> getVersions(int slotId) {
-        Map<String, Map<String, DatumVersion>> datumMap = new HashMap<>();
+    public Map<String, DatumVersion> getVersions(String dataCenter, int slotId) {
         //local
-        Map<String, DatumVersion> versions = localDatumStorage.getVersions(slotId);
-        if (!CollectionUtils.isEmpty(versions)) {
-            datumMap.put(dataServerConfig.getLocalDataCenter(), versions);
-        }
-        return datumMap;
-    }
-
-    /**
-     * get datum group by dataCenter
-     *
-     * @param dataCenter
-     * @param dataInfoId
-     * @return
-     */
-    public Map<String, Datum> getDatumGroupByDataCenter(String dataCenter, String dataInfoId) {
-        Map<String, Datum> map = new HashMap<>();
-        if (StringUtils.isEmpty(dataCenter)) {
-            map = this.get(dataInfoId);
-        } else {
-            Datum datum = this.get(dataCenter, dataInfoId);
-            if (datum != null) {
-                map.put(dataCenter, datum);
-            }
-        }
-        return map;
+        return localDatumStorage.getVersions(slotId);
     }
 
     /**

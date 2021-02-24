@@ -16,27 +16,27 @@
  */
 package com.alipay.sofa.registry.server.session.cache;
 
+import com.alipay.sofa.registry.util.StringFormatter;
+
 /**
  * cache query condition key
  *
  * @author shangyu.wh
  * @version $Id: Key.java, v 0.1 2017-12-06 15:52 shangyu.wh Exp $
  */
-public class Key {
+public final class Key {
 
-    private String     entityName;
-    private String     hashKey;
-    private KeyType    keyType;
-    private EntityType entityType;
+    private final String     entityName;
+    private final String     hashKey;
+    private final EntityType entityType;
 
     /**
      * construct func
      */
-    public Key(KeyType keyType, String entityName, EntityType entityType) {
-        this.keyType = keyType;
+    public Key(String entityName, EntityType entityType) {
         this.entityName = entityName;
         this.entityType = entityType;
-        this.hashKey = this.keyType + this.entityName + this.entityType.getUniqueKey();
+        this.hashKey = this.entityName + this.entityType.getUniqueKey();
     }
 
     /**
@@ -55,15 +55,6 @@ public class Key {
      */
     public String getHashKey() {
         return hashKey;
-    }
-
-    /**
-     * Getter method for property <tt>keyType</tt>.
-     *
-     * @return property value of keyType
-     */
-    public KeyType getKeyType() {
-        return keyType;
     }
 
     /**
@@ -92,17 +83,6 @@ public class Key {
 
     @Override
     public String toString() {
-        StringBuilder sb = new StringBuilder();
-        sb.append("{name=").append(entityName).append(", type=").append(entityType)
-            .append(", format=").append(keyType);
-        sb.append('}');
-        return sb.toString();
-    }
-
-    /**
-     * cache data type
-     */
-    public enum KeyType {
-        JSON, XML, OBJ
+        return StringFormatter.format("Key{{}, type={}}", entityName, entityType);
     }
 }

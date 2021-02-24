@@ -140,4 +140,8 @@ public interface SessionServerConfig {
     int getCacheDigestIntervalMinutes();
 
     int getCacheCountIntervalSecs();
+
+    int getCacheDatumMaxNums();
+
+    int getCacheDatumExpireSecs();
 }

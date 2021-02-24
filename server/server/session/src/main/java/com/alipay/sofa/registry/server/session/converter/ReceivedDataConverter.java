@@ -16,23 +16,22 @@
  */
 package com.alipay.sofa.registry.server.session.converter;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.function.Predicate;
-
 import com.alipay.sofa.registry.common.model.ServerDataBox;
-import com.alipay.sofa.registry.common.model.dataserver.Datum;
 import com.alipay.sofa.registry.common.model.store.DataInfo;
-import com.alipay.sofa.registry.common.model.store.Publisher;
+import com.alipay.sofa.registry.common.model.store.SubDatum;
+import com.alipay.sofa.registry.common.model.store.SubPublisher;
 import com.alipay.sofa.registry.core.model.DataBox;
 import com.alipay.sofa.registry.core.model.ReceivedConfigData;
 import com.alipay.sofa.registry.core.model.ReceivedData;
 import com.alipay.sofa.registry.core.model.ScopeEnum;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.function.Predicate;
 
 /**
  * The type Received data converter.
@@ -52,7 +51,7 @@ public class ReceivedDataConverter {
      * @param regionLocal              the region local
      * @return received data multi
      */
-    public static ReceivedData getReceivedDataMulti(Datum datum, ScopeEnum scope,
+    public static ReceivedData getReceivedDataMulti(SubDatum datum, ScopeEnum scope,
                                                     List subscriberRegisterIdList,
                                                     String regionLocal,
                                                     Predicate<String> zonePredicate) {
@@ -76,13 +75,12 @@ public class ReceivedDataConverter {
 
         Map<String/*zone*/, List<DataBox>> swizzMap = new HashMap<>();
 
-        Map<String, Publisher> publisherMap = datum.getPubMap();
-        if (publisherMap.isEmpty()) {
+        List<SubPublisher> publishers = datum.getPublishers();
+        if (publishers.isEmpty()) {
             receivedData.setData(swizzMap);
             return receivedData;
         }
-        for (Entry<String, Publisher> entry : publisherMap.entrySet()) {
-            Publisher publisher = entry.getValue();
+        for (SubPublisher publisher : publishers) {
             List<ServerDataBox> datas = publisher.getDataList();
 
             String region = publisher.getCell();
