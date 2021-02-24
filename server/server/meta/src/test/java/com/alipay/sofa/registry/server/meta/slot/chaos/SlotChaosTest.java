@@ -21,6 +21,7 @@ import com.alipay.sofa.registry.common.model.slot.SlotTable;
 import com.alipay.sofa.registry.server.meta.AbstractTest;
 import com.alipay.sofa.registry.server.meta.bootstrap.config.NodeConfig;
 import com.alipay.sofa.registry.server.meta.lease.data.DefaultDataServerManager;
+import com.alipay.sofa.registry.server.meta.monitor.SlotTableMonitor;
 import com.alipay.sofa.registry.server.meta.slot.SlotManager;
 import com.alipay.sofa.registry.server.meta.slot.arrange.ScheduledSlotArranger;
 import com.alipay.sofa.registry.server.meta.slot.manager.DefaultSlotManager;
@@ -59,6 +60,9 @@ public class SlotChaosTest extends AbstractTest {
 
     private ScheduledSlotArranger    scheduledSlotArranger;
 
+    @Mock
+    private SlotTableMonitor slotTableMonitor;
+
     private int                      dataNodeNum = 20;
 
     private int                      chaosRandom;
@@ -85,8 +89,9 @@ public class SlotChaosTest extends AbstractTest {
         raftSlotManager = localSlotManager = new LocalSlotManager(nodeConfig);
         defaultSlotManager = new DefaultSlotManager(localSlotManager, raftSlotManager);
         scheduledSlotArranger = new ScheduledSlotArranger(dataServerManager, localSlotManager,
-            defaultSlotManager);
+            defaultSlotManager, slotTableMonitor);
 
+        when(slotTableMonitor.isSlotTableStable()).thenReturn(true);
         scheduledSlotArranger.postConstruct();
     }
 

@@ -178,6 +178,23 @@ public final class SlotManagerImpl implements SlotManager {
     }
 
     @Override
+    public List<SlotAccess> getSlotAccesses() {
+        List<SlotAccess> slotAccesses = Lists.newArrayList();
+        slotTableStates.slotStates.forEach((slotId, slotState) -> {
+            if (slotState != null && localIsLeader(slotState.slot)) {
+                SlotAccess result = null;
+                if (slotState.migrated) {
+                    result = new SlotAccess(slotId, slotTableStates.table.getEpoch(), SlotAccess.Status.Accept, slotState.slot.getLeaderEpoch());
+                } else {
+                    result = new SlotAccess(slotId, slotTableStates.table.getEpoch(), SlotAccess.Status.Migrating, slotState.slot.getLeaderEpoch());
+                }
+                slotAccesses.add(result);
+            }
+        });
+        return slotAccesses;
+    }
+
+    @Override
     public boolean isLeader(int slotId) {
         final SlotState state = slotTableStates.slotStates.get(slotId);
         return state != null && localIsLeader(state.slot);

@@ -57,11 +57,6 @@ public class LocalSlotManagerTest extends AbstractTest {
         slotManager.postConstruct();
     }
 
-    @After
-    public void afterLocalSlotManagerTest() throws Exception {
-        slotManager.preDestroy();
-    }
-
     @Test
     public void testRefresh() {
         slotManager = spy(slotManager);

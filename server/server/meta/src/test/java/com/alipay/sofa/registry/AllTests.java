@@ -38,9 +38,9 @@ import com.alipay.sofa.registry.server.meta.metaserver.impl.DefaultCurrentDcMeta
 import com.alipay.sofa.registry.server.meta.metaserver.impl.DefaultLocalMetaServerTest;
 import com.alipay.sofa.registry.server.meta.metaserver.impl.DefaultMetaServerManagerTest;
 import com.alipay.sofa.registry.server.meta.monitor.DefaultSlotTableMonitorTest;
-import com.alipay.sofa.registry.server.meta.provide.data.DataServerProvideDataNotifierTest;
+import com.alipay.sofa.registry.server.meta.remoting.session.DefaultSessionServerServiceTest;
+import com.alipay.sofa.registry.server.meta.remoting.data.DefaultDataServerServiceTest;
 import com.alipay.sofa.registry.server.meta.provide.data.DefaultProvideDataNotifierTest;
-import com.alipay.sofa.registry.server.meta.provide.data.SessionServerProvideDataNotifierTest;
 import com.alipay.sofa.registry.server.meta.resource.SlotTableResourceTest;
 import com.alipay.sofa.registry.server.meta.slot.arrange.*;
 import com.alipay.sofa.registry.server.meta.slot.balance.LeaderOnlyBalancerTest;
@@ -58,9 +58,9 @@ import org.junit.runners.Suite;
                      DefaultSessionServerManagerTest.class, DefaultDataServerManagerTest.class,
                      DefaultLeaseManagerTest.class, CrossDcMetaServerManagerTest.class,
                      TestAbstractRaftEnabledLeaseManager.class, LeaseTest.class,
-                     DefaultMetaServerManagerTest.class, DataServerProvideDataNotifierTest.class,
+                     DefaultMetaServerManagerTest.class, DefaultDataServerServiceTest.class,
                      DefaultLocalMetaServerTest.class, DataLeaseManagerTest.class,
-                     SessionLeaseManagerTest.class, SessionServerProvideDataNotifierTest.class,
+                     SessionLeaseManagerTest.class, DefaultSessionServerServiceTest.class,
                      DefaultProvideDataNotifierTest.class, LocalSlotManagerTest.class,
                      NodeModifiedTest.class, BalanceTaskTest.class,
                      TestAbstractNodeEventTest.class, DefaultSlotManagerTest.class,

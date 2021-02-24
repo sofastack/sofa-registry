@@ -21,18 +21,17 @@ import com.alipay.sofa.registry.common.model.slot.Slot;
 import com.alipay.sofa.registry.common.model.slot.SlotConfig;
 import com.alipay.sofa.registry.common.model.slot.SlotTable;
 import com.alipay.sofa.registry.common.model.store.URL;
+import com.alipay.sofa.registry.lifecycle.LifecycleState;
 import com.alipay.sofa.registry.server.meta.AbstractTest;
 import com.alipay.sofa.registry.server.meta.bootstrap.config.NodeConfig;
 import com.alipay.sofa.registry.server.meta.lease.data.DefaultDataServerManager;
+import com.alipay.sofa.registry.server.meta.monitor.SlotTableMonitor;
 import com.alipay.sofa.registry.server.meta.slot.SlotManager;
 import com.alipay.sofa.registry.server.meta.slot.arrange.ScheduledSlotArranger;
-import com.alipay.sofa.registry.server.meta.slot.assigner.DefaultSlotAssigner;
-import com.alipay.sofa.registry.server.meta.slot.balance.DefaultSlotBalancer;
 import com.alipay.sofa.registry.server.meta.slot.manager.DefaultSlotManager;
 import com.alipay.sofa.registry.server.meta.slot.manager.LocalSlotManager;
 import com.alipay.sofa.registry.server.meta.slot.util.builder.SlotTableBuilder;
 import com.alipay.sofa.registry.server.meta.slot.util.comparator.DataNodeComparator;
-import com.alipay.sofa.registry.server.shared.util.NodeUtils;
 import com.alipay.sofa.registry.util.FileUtils;
 import com.alipay.sofa.registry.util.JsonUtils;
 import com.fasterxml.jackson.annotation.JsonCreator;
@@ -68,6 +67,9 @@ public class SlotMigrationIntegrationTest extends AbstractTest {
     @Mock
     private DefaultDataServerManager dataServerManager;
 
+    @Mock
+    private SlotTableMonitor slotTableMonitor;
+
     @BeforeClass
     public static void beforeSlotMigrationIntegrationTestClass() {
         System.setProperty("slot.frozen.milli", "1");
@@ -83,6 +85,7 @@ public class SlotMigrationIntegrationTest extends AbstractTest {
         NodeConfig nodeConfig = mock(NodeConfig.class);
         when(nodeConfig.getLocalDataCenter()).thenReturn(getDc());
         raftSlotManager = localSlotManager = new LocalSlotManager(nodeConfig);
+        when(slotTableMonitor.isSlotTableStable()).thenReturn(true);
         defaultSlotManager = new DefaultSlotManager(localSlotManager, raftSlotManager);
     }
 
@@ -90,7 +93,8 @@ public class SlotMigrationIntegrationTest extends AbstractTest {
     public void testDataServerAddedOneByOne() throws Exception {
         System.setProperty("slot.leader.max.move", SlotConfig.SLOT_NUM + "");
         ScheduledSlotArranger assigner = new ScheduledSlotArranger(dataServerManager,
-            localSlotManager, defaultSlotManager);
+            localSlotManager, defaultSlotManager, slotTableMonitor);
+        assigner.getLifecycleState().setPhase(LifecycleState.LifecyclePhase.STARTED);
         List<DataNode> dataNodes = Lists.newArrayList(new DataNode(new URL("100.88.142.32"),
             getDc()));
         when(dataServerManager.getClusterMembers()).thenReturn(dataNodes);
@@ -150,7 +154,9 @@ public class SlotMigrationIntegrationTest extends AbstractTest {
     public void testDataServerAddedAndDeleted() throws Exception {
         System.setProperty("slot.leader.max.move", SlotConfig.SLOT_NUM + "");
         ScheduledSlotArranger assigner = new ScheduledSlotArranger(dataServerManager,
-            localSlotManager, defaultSlotManager);
+            localSlotManager, defaultSlotManager, slotTableMonitor);
+        assigner.getLifecycleState().setPhase(LifecycleState.LifecyclePhase.STARTED);
+
         List<DataNode> dataNodes = Lists.newArrayList(new DataNode(new URL("100.88.142.32"),
             getDc()));
         when(dataServerManager.getClusterMembers()).thenReturn(dataNodes);
@@ -246,7 +252,9 @@ public class SlotMigrationIntegrationTest extends AbstractTest {
     @Test
     public void testDataLeaderBalance() throws Exception {
         ScheduledSlotArranger assigner = new ScheduledSlotArranger(dataServerManager,
-            localSlotManager, defaultSlotManager);
+            localSlotManager, defaultSlotManager, slotTableMonitor);
+        assigner.getLifecycleState().setPhase(LifecycleState.LifecyclePhase.STARTED);
+
         byte[] bytes = FileUtils.readFileToByteArray(new File(
             "src/test/resources/test/slot-table.json"));
         SlotTable prevSlotTable = JsonUtils.getJacksonObjectMapper()
@@ -270,7 +278,8 @@ public class SlotMigrationIntegrationTest extends AbstractTest {
     @Test
     public void testDataLeaderBalance2() throws Exception {
         ScheduledSlotArranger assigner = new ScheduledSlotArranger(dataServerManager,
-            localSlotManager, defaultSlotManager);
+            localSlotManager, defaultSlotManager, slotTableMonitor);
+        assigner.getLifecycleState().setPhase(LifecycleState.LifecyclePhase.STARTED);
         byte[] bytes = FileUtils.readFileToByteArray(new File(
             "src/test/resources/test/slot-table-2.json"));
         SlotTable prevSlotTable = JsonUtils.getJacksonObjectMapper()

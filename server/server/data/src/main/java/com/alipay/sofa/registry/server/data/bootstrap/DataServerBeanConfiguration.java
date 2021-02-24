@@ -36,7 +36,10 @@ import com.alipay.sofa.registry.server.data.remoting.metaserver.provideData.Prov
 import com.alipay.sofa.registry.server.data.remoting.metaserver.provideData.ProvideDataProcessorManager;
 import com.alipay.sofa.registry.server.data.remoting.metaserver.provideData.processor.SessionLeaseProvideDataProcessor;
 import com.alipay.sofa.registry.server.data.remoting.sessionserver.SessionServerConnectionFactory;
-import com.alipay.sofa.registry.server.data.remoting.sessionserver.handler.*;
+import com.alipay.sofa.registry.server.data.remoting.sessionserver.handler.BatchPutDataHandler;
+import com.alipay.sofa.registry.server.data.remoting.sessionserver.handler.DataServerConnectionHandler;
+import com.alipay.sofa.registry.server.data.remoting.sessionserver.handler.GetDataHandler;
+import com.alipay.sofa.registry.server.data.remoting.sessionserver.handler.GetDataVersionsHandler;
 import com.alipay.sofa.registry.server.data.resource.DataDigestResource;
 import com.alipay.sofa.registry.server.data.resource.DatumApiResource;
 import com.alipay.sofa.registry.server.data.resource.HealthResource;
@@ -46,6 +49,7 @@ import com.alipay.sofa.registry.server.data.timer.CacheCountTask;
 import com.alipay.sofa.registry.server.data.timer.CacheDigestTask;
 import com.alipay.sofa.registry.server.shared.remoting.AbstractClientHandler;
 import com.alipay.sofa.registry.server.shared.remoting.AbstractServerHandler;
+import com.alipay.sofa.registry.server.shared.remoting.SlotTableChangeEventHandler;
 import com.alipay.sofa.registry.server.shared.resource.MetricsResource;
 import com.alipay.sofa.registry.server.shared.resource.SlotGenericResource;
 import com.alipay.sofa.registry.task.MetricsableThreadPoolExecutor;
@@ -195,6 +199,7 @@ public class DataServerBeanConfiguration {
         public Collection<AbstractClientHandler> metaClientHandlers() {
             Collection<AbstractClientHandler> list = new ArrayList<>();
             list.add(notifyProvideDataChangeHandler());
+            list.add(slotTableChangeEventHandler());
             return list;
         }
 
@@ -231,6 +236,11 @@ public class DataServerBeanConfiguration {
         @Bean
         public NotifyProvideDataChangeHandler notifyProvideDataChangeHandler() {
             return new NotifyProvideDataChangeHandler();
+        }
+
+        @Bean
+        public SlotTableChangeEventHandler slotTableChangeEventHandler() {
+            return new SlotTableChangeEventHandler();
         }
     }
 

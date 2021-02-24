@@ -53,4 +53,53 @@ public final class SlotConfig {
         LOGGER.info("{}={}, {}={}, {}={}", KEY_DATA_SLOT_NUM, SLOT_NUM, KEY_DATA_SLOT_REPLICAS,
             SLOT_REPLICAS, KEY_DATA_SLOT_FUNC, FUNC);
     }
+
+    public static class SlotBasicInfo {
+
+        private final int slotNum;
+
+        private final int slotReplicas;
+
+        private final String slotFunc;
+
+        /**
+         * Constructor.
+         *
+         * @param slotNum      the slot num
+         * @param slotReplicas the slot replicas
+         * @param slotFunc     the slot func
+         */
+        public SlotBasicInfo(int slotNum, int slotReplicas, String slotFunc) {
+            this.slotNum = slotNum;
+            this.slotReplicas = slotReplicas;
+            this.slotFunc = slotFunc;
+        }
+
+        /**
+         * Gets get slot num.
+         *
+         * @return the get slot num
+         */
+        public int getSlotNum() {
+            return slotNum;
+        }
+
+        /**
+         * Gets get slot replicas.
+         *
+         * @return the get slot replicas
+         */
+        public int getSlotReplicas() {
+            return slotReplicas;
+        }
+
+        /**
+         * Gets get slot func.
+         *
+         * @return the get slot func
+         */
+        public String getSlotFunc() {
+            return slotFunc;
+        }
+    }
 }

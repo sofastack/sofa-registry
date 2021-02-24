@@ -31,6 +31,7 @@ import com.alipay.sofa.registry.server.session.resource.*;
 import com.alipay.sofa.registry.server.session.scheduler.timertask.CacheCountTask;
 import com.alipay.sofa.registry.server.session.scheduler.timertask.SessionCacheDigestTask;
 import com.alipay.sofa.registry.server.session.strategy.*;
+import com.alipay.sofa.registry.server.shared.remoting.SlotTableChangeEventHandler;
 import com.alipay.sofa.registry.server.shared.resource.MetricsResource;
 import com.alipay.sofa.registry.server.shared.resource.SlotGenericResource;
 import org.glassfish.jersey.jackson.JacksonFeature;
@@ -281,6 +282,7 @@ public class SessionServerConfiguration {
             list.add(notifyProvideDataChangeHandler());
             list.add(loadbalanceMetricsHandler());
             list.add(configureLoadbalanceHandler());
+            list.add(slotTableChangeEventHandler());
             return list;
         }
 
@@ -312,6 +314,11 @@ public class SessionServerConfiguration {
         @Bean
         public AbstractClientHandler configureLoadbalanceHandler() {
             return new ConfigureLoadbalanceHandler();
+        }
+
+        @Bean
+        public SlotTableChangeEventHandler slotTableChangeEventHandler() {
+            return new SlotTableChangeEventHandler();
         }
     }
 

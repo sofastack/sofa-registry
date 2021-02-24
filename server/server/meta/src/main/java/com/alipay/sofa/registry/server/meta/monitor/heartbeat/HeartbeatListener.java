@@ -14,30 +14,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alipay.sofa.registry.server.session.slot;
+package com.alipay.sofa.registry.server.meta.monitor.heartbeat;
 
-import com.alipay.sofa.registry.common.model.slot.Slot;
-import com.alipay.sofa.registry.common.model.slot.SlotTable;
+import com.alipay.sofa.registry.common.model.Node;
+import com.alipay.sofa.registry.common.model.metaserver.inter.heartbeat.HeartbeatRequest;
 
 /**
- *
- * @author yuzhi.lyz
- * @version v 0.1 2020-11-06 16:21 yuzhi.lyz Exp $
+ * @author chen.zhu
+ * <p>
+ * Feb 24, 2021
  */
-public interface SlotTableCache {
-    int slotOf(String dataInfoId);
-
-    Slot getSlot(String dataInfoId);
-
-    Slot getSlot(int slotId);
-
-    String getLeader(String dataInfoId);
-
-    String getLeader(int slotId);
-
-    long getEpoch();
-
-    boolean updateSlotTable(SlotTable slotTable);
-
-    int slotNum();
+public interface HeartbeatListener<T extends Node> {
+    void onHeartbeat(HeartbeatRequest<T> heartbeat);
 }

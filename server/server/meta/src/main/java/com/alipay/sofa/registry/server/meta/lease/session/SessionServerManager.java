@@ -16,6 +16,7 @@
  */
 package com.alipay.sofa.registry.server.meta.lease.session;
 
+import com.alipay.sofa.registry.common.model.metaserver.inter.heartbeat.HeartbeatRequest;
 import com.alipay.sofa.registry.common.model.metaserver.nodes.SessionNode;
 import com.alipay.sofa.registry.lifecycle.Lifecycle;
 import com.alipay.sofa.registry.observer.Observable;
@@ -29,4 +30,6 @@ import com.alipay.sofa.registry.server.meta.lease.LeaseManager;
  */
 public interface SessionServerManager extends Observable, Lifecycle, LeaseManager<SessionNode>,
                                      NodeCluster<SessionNode> {
+
+    void handleHeartbeat(HeartbeatRequest<SessionNode> request);
 }

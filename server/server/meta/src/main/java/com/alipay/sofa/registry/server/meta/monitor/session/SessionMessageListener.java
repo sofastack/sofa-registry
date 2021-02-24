@@ -14,26 +14,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alipay.sofa.registry.server.meta.remoting.notifier;
+package com.alipay.sofa.registry.server.meta.monitor.session;
 
-import com.alipay.sofa.registry.common.model.metaserver.nodes.MetaNode;
-import com.alipay.sofa.registry.server.meta.metaserver.MetaServerObserver;
-
-import java.util.List;
+import com.alipay.sofa.registry.common.model.metaserver.nodes.SessionNode;
+import com.alipay.sofa.registry.server.meta.monitor.heartbeat.HeartbeatListener;
 
 /**
  * @author chen.zhu
  * <p>
- * Dec 15, 2020
+ * Feb 24, 2021
  */
-public interface MetaServerChangeListener extends MetaServerObserver {
-
-    /**
-     * Meta servers changed.
-     *
-     * @param metaNodes the meta nodes
-     * @param epoch     the epoch
-     */
-    void metaServersChanged(List<MetaNode> metaNodes, long epoch);
+public interface SessionMessageListener extends HeartbeatListener<SessionNode> {
 
 }
