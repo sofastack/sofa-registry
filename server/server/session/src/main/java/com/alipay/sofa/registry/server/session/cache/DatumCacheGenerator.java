@@ -16,15 +16,14 @@
  */
 package com.alipay.sofa.registry.server.session.cache;
 
-import com.alipay.sofa.registry.common.model.dataserver.Datum;
+import com.alipay.sofa.registry.common.model.store.SubDatum;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.server.session.node.service.DataNodeService;
-import org.apache.commons.lang.StringUtils;
+import com.alipay.sofa.registry.util.ParaCheckUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 
 /**
- *
  * @author shangyu.wh
  * @version $Id: DatumCacheGenerator.java, v 0.1 2018-11-19 16:15 shangyu.wh Exp $
  */
@@ -42,19 +41,19 @@ public class DatumCacheGenerator implements CacheGenerator {
         if (entityType instanceof DatumKey) {
             DatumKey datumKey = (DatumKey) entityType;
 
-            String dataCenter = datumKey.getDataCenter();
-            String dataInfoId = datumKey.getDataInfoId();
-            if (StringUtils.isNotBlank(dataCenter) && StringUtils.isNotBlank(dataInfoId)) {
-                Datum datum = dataNodeService.fetchDataCenter(dataInfoId, dataCenter);
-                if (datum == null) {
-                    LOGGER.info("loadNil,{},{}", dataInfoId, dataCenter);
-                } else {
-                    LOGGER.info("load,{},{},{},{}", dataInfoId, dataCenter, datum.publisherSize(),
-                        datum.getVersion());
-                }
-                return new Value(datum);
+            final String dataCenter = datumKey.getDataCenter();
+            final String dataInfoId = datumKey.getDataInfoId();
+            ParaCheckUtil.checkNotBlank(dataCenter, "dataCenter");
+            ParaCheckUtil.checkNotBlank(dataInfoId, "dataInfoId");
+            SubDatum datum = dataNodeService.fetch(dataInfoId, dataCenter);
+            if (datum == null) {
+                LOGGER.info("loadNil,{},{}", dataInfoId, dataCenter);
+            } else {
+                LOGGER.info("load,{},{},{},{}", dataInfoId, dataCenter, datum.getPublishers()
+                    .size(), datum.getVersion());
             }
+            return new Value(datum);
         }
-        throw new IllegalArgumentException("unsupported Key:" + key);
+        throw new IllegalArgumentException("unsupported key type:" + entityType);
     }
 }

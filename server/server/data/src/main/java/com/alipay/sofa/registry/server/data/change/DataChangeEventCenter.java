@@ -138,14 +138,16 @@ public final class DataChangeEventCenter {
             try {
                 if (!connection.isFine()) {
                     CHANGETEMP_FAIL_COUNTER.inc();
-                    LOGGER.info("temp change notify failed, conn is closed, {}", connection);
+                    LOGGER.info("temp change notify failed, conn is closed, {}",
+                        connection.getRemoteAddress());
                     return;
                 }
                 notifyTempPub(connection, datum);
                 CHANGETEMP_SUCCESS_COUNTER.inc();
             } catch (Throwable e) {
                 CHANGETEMP_FAIL_COUNTER.inc();
-                LOGGER.error("failed to notify temp {}, {}", connection, datum, e);
+                LOGGER.error("failed to notify temp {}, {}", connection.getRemoteAddress(), datum,
+                    e);
             }
         }
     }

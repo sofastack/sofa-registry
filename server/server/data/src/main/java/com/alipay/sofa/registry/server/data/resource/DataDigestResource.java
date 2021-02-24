@@ -24,8 +24,8 @@ import com.alipay.sofa.registry.server.data.bootstrap.DataServerConfig;
 import com.alipay.sofa.registry.server.data.cache.DatumCache;
 import com.alipay.sofa.registry.server.data.remoting.metaserver.MetaServerServiceImpl;
 import com.alipay.sofa.registry.server.data.remoting.sessionserver.SessionServerConnectionFactory;
+import com.alipay.sofa.registry.util.ParaCheckUtil;
 import com.google.common.collect.Lists;
-import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import javax.ws.rs.*;
@@ -67,18 +67,14 @@ public class DataDigestResource {
                                                    @QueryParam("group") String group,
                                                    @QueryParam("instanceId") String instanceId,
                                                    @QueryParam("dataCenter") String dataCenter) {
+
+        ParaCheckUtil.checkNotBlank(dataId, "dataId");
+        ParaCheckUtil.checkNotBlank(group, "group");
+        ParaCheckUtil.checkNotBlank(instanceId, "instanceId");
+        ParaCheckUtil.checkNotBlank(dataCenter, "dataCenter");
+        String dataInfoId = DataInfo.toDataInfoId(dataId, instanceId, group);
         Map<String, Datum> retList = new HashMap<>();
-
-        if (!StringUtils.isBlank(dataId) && !StringUtils.isBlank(instanceId)
-            && !StringUtils.isBlank(group)) {
-            String dataInfoId = DataInfo.toDataInfoId(dataId, instanceId, group);
-            if (StringUtils.isBlank(dataCenter)) {
-                retList = datumCache.get(dataInfoId);
-            } else {
-                retList.put(dataCenter, datumCache.get(dataCenter, dataInfoId));
-            }
-
-        }
+        retList.put(dataCenter, datumCache.get(dataCenter, dataInfoId));
         return retList;
     }
 

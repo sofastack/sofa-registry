@@ -17,9 +17,9 @@
 package com.alipay.sofa.registry.server.session.node.service;
 
 import com.alipay.sofa.registry.common.model.ClientOffPublishers;
-import com.alipay.sofa.registry.common.model.dataserver.Datum;
 import com.alipay.sofa.registry.common.model.dataserver.DatumVersion;
 import com.alipay.sofa.registry.common.model.store.Publisher;
+import com.alipay.sofa.registry.common.model.store.SubDatum;
 
 import java.util.Map;
 
@@ -58,7 +58,7 @@ public interface DataNodeService {
      * @param slotId
      * @return
      */
-    Map<String/*datacenter*/, Map<String/*datainfoid*/, DatumVersion>> fetchDataVersion(int slotId);
+    Map<String/*datainfoid*/, DatumVersion> fetchDataVersion(String dataCenter, int slotId);
 
     /**
      * fetch one dataCenter publisher data from data server
@@ -67,21 +67,6 @@ public interface DataNodeService {
      * @param dataCenterId
      * @return
      */
-    Datum fetchDataCenter(String dataInfoId, String dataCenterId);
-
-    /**
-     * fetch all dataCenter datum
-     * @param dataInfoId
-     * @return
-     */
-    Map<String/*datacenterId*/, Datum> fetchGlobal(String dataInfoId);
-
-    /**
-     * fetch datum by specify dataCenter and dataInfoId
-     * @param dataInfoId
-     * @param dataCenterId
-     * @return
-     */
-    Map<String, Datum> getDatumMap(String dataInfoId, String dataCenterId);
+    SubDatum fetch(String dataInfoId, String dataCenterId);
 
 }

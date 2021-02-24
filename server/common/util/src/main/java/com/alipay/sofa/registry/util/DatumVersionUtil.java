@@ -24,7 +24,9 @@ package com.alipay.sofa.registry.util;
  * @author kezhu.wukz
  * @version $Id: DatumVersionUtil.java, v 0.1 2019-07-04 22:05 kezhu.wukz Exp $
  */
-public class DatumVersionUtil {
+public final class DatumVersionUtil {
+    private DatumVersionUtil() {
+    }
 
     private static long sequence           = 0L;
 

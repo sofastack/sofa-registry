@@ -56,12 +56,12 @@ public abstract class ServerSideExchanger implements NodeExchanger {
 
     public Response request(URL url, Request request) throws RequestException {
         if (LOGGER.isDebugEnabled()) {
-            LOGGER.debug("serverPort={} to client, url:{}, request body:{} ", getServerPort(), request.getRequestUrl(),
+            LOGGER.debug("serverPort={} to client, url:{}, request body:{} ", getServerPort(), url,
                     request.getRequestBody());
         }
         final Server server = boltExchange.getServer(getServerPort());
         if (server == null) {
-            throw new RequestException("no server for " + getServerPort(), request);
+            throw new RequestException("no server for " + url + "," + getServerPort(), request);
         }
         final int timeout = request.getTimeout() != null ? request.getTimeout() : getRpcTimeoutMillis();
         Channel channel = null;
@@ -72,7 +72,7 @@ public abstract class ServerSideExchanger implements NodeExchanger {
         }
 
         if (channel == null || !channel.isConnected()) {
-            throw new RequestChannelClosedException(getServerPort() + ", channel may be closed", request);
+            throw new RequestChannelClosedException(getServerPort() + ", channel may be closed, " + url, request);
         }
         try {
             if (request.getCallBackHandler() != null) {

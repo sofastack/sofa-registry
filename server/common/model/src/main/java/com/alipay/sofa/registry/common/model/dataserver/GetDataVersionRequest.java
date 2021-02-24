@@ -34,11 +34,14 @@ public class GetDataVersionRequest extends AbstractSlotRequest {
 
     private static final long serialVersionUID = 8942977145684175886L;
 
+    private final String      dataCenter;
+
     /**
      * constructor
      */
-    public GetDataVersionRequest(ProcessId sessionProcessId, int slotId) {
+    public GetDataVersionRequest(String dataCenter, ProcessId sessionProcessId, int slotId) {
         super(slotId, sessionProcessId);
+        this.dataCenter = dataCenter;
     }
 
     /**
@@ -50,9 +53,13 @@ public class GetDataVersionRequest extends AbstractSlotRequest {
         return sessionProcessId;
     }
 
+    public String getDataCenter() {
+        return dataCenter;
+    }
+
     @Override
     public String toString() {
-        return StringFormatter.format("GetDataVer:{},{},{}", getSlotId(), getSlotLeaderEpoch(),
-            getSlotTableEpoch());
+        return StringFormatter.format("GetDataVer:{},{},{},{}", getSlotId(), dataCenter,
+            getSlotLeaderEpoch(), getSlotTableEpoch());
     }
 }

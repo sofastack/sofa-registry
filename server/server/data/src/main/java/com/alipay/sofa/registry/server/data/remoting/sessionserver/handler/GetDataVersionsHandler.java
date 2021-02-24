@@ -27,6 +27,7 @@ import com.alipay.sofa.registry.server.data.cache.DatumCache;
 import com.alipay.sofa.registry.util.ParaCheckUtil;
 
 import static com.alipay.sofa.registry.server.data.remoting.sessionserver.handler.HandlerMetrics.GetVersion.*;
+
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.Map;
@@ -55,6 +56,7 @@ public class GetDataVersionsHandler extends AbstractDataHandler<GetDataVersionRe
     @Override
     public void checkParam(GetDataVersionRequest request) throws RuntimeException {
         ParaCheckUtil.checkNonNegative(request.getSlotId(), "GetDataVersionRequest.slotId");
+        ParaCheckUtil.checkNotBlank(request.getDataCenter(), "GetDataVersionRequest.dataCenter");
         checkSessionProcessId(request.getSessionProcessId());
     }
 
@@ -67,9 +69,8 @@ public class GetDataVersionsHandler extends AbstractDataHandler<GetDataVersionRe
         if (!slotAccessBefore.isAccept()) {
             return SlotAccessGenericResponse.failedResponse(slotAccessBefore);
         }
-        final String localDataCenter = dataServerConfig.getLocalDataCenter();
-        Map<String/*datacenter*/, Map<String/*dataInfoId*/, DatumVersion>> map = datumCache
-            .getVersions(slotId);
+        Map<String/*dataInfoId*/, DatumVersion> map = datumCache.getVersions(
+            request.getDataCenter(), slotId);
         // double check slot access, @see GetDataHanlder
         final SlotAccess slotAccessAfter = checkAccess(slotId, request.getSlotTableEpoch(),
             request.getSlotLeaderEpoch());
@@ -77,9 +78,7 @@ public class GetDataVersionsHandler extends AbstractDataHandler<GetDataVersionRe
             return SlotAccessGenericResponse.failedResponse(slotAccessAfter,
                 "slotLeaderEpoch has change, prev=" + slotAccessBefore);
         }
-
-        Map<String, DatumVersion> local = map.get(localDataCenter);
-        LOGGER.info("getV,{},{},{}", slotId, localDataCenter, local == null ? 0 : local.size());
+        LOGGER.info("getV,{},{},{}", slotId, request.getDataCenter(), map.size());
         GET_VERSION_COUNTER.inc();
         return SlotAccessGenericResponse.successResponse(slotAccessAfter, map);
     }

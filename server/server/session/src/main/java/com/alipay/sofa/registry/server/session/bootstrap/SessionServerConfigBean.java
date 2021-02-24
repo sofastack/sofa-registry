@@ -160,6 +160,10 @@ public class SessionServerConfigBean implements SessionServerConfig {
 
     private int                  cacheCountIntervalSecs                     = 30;
 
+    private int                  cacheDatumMaxNums                          = 2000;
+
+    private int                  cacheDatumExpireSecs                       = 60 * 3;
+
     //end config for enterprise version
 
     private CommonConfig         commonConfig;
@@ -1072,5 +1076,23 @@ public class SessionServerConfigBean implements SessionServerConfig {
 
     public void setCacheCountIntervalSecs(int cacheCountIntervalSecs) {
         this.cacheCountIntervalSecs = cacheCountIntervalSecs;
+    }
+
+    @Override
+    public int getCacheDatumMaxNums() {
+        return cacheDatumMaxNums;
+    }
+
+    public void setCacheDatumMaxNums(int cacheDatumMaxNums) {
+        this.cacheDatumMaxNums = cacheDatumMaxNums;
+    }
+
+    @Override
+    public int getCacheDatumExpireSecs() {
+        return cacheDatumExpireSecs;
+    }
+
+    public void setCacheDatumExpireSecs(int cacheDatumExpireSecs) {
+        this.cacheDatumExpireSecs = cacheDatumExpireSecs;
     }
 }

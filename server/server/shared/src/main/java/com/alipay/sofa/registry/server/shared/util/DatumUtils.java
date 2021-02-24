@@ -18,10 +18,13 @@ package com.alipay.sofa.registry.server.shared.util;
 
 import com.alipay.sofa.registry.common.model.constants.ValueConstants;
 import com.alipay.sofa.registry.common.model.dataserver.Datum;
-import com.alipay.sofa.registry.common.model.store.DataInfo;
-import com.alipay.sofa.registry.common.model.store.Subscriber;
+import com.alipay.sofa.registry.common.model.dataserver.DatumVersion;
+import com.alipay.sofa.registry.common.model.store.*;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
+import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -32,23 +35,10 @@ public final class DatumUtils {
     private DatumUtils() {
     }
 
-    /**
-     * create new datum when parameter is null.
-     *
-     * @param datum
-     * @param subscriber
-     * @return
-     */
-    public static Datum newDatumIfNull(Datum datum, Subscriber subscriber) {
-        if (datum == null) {
-            datum = new Datum();
-            datum.setDataId(subscriber.getDataId());
-            datum.setInstanceId(subscriber.getInstanceId());
-            datum.setGroup(subscriber.getGroup());
-            datum.setVersion(ValueConstants.DEFAULT_NO_DATUM_VERSION);
-            datum.setDataCenter(ValueConstants.DEFAULT_DATA_CENTER);
-        }
-        return datum;
+    public static Map<String, DatumVersion> intern(Map<String, DatumVersion> versionMap) {
+        Map<String, DatumVersion> ret = Maps.newHashMapWithExpectedSize(versionMap.size());
+        versionMap.forEach((k, v) -> ret.put(WordCache.getWordCache(k), v));
+        return ret;
     }
 
     public static Map<String, Long> getVersions(Map<String, Datum> datumMap) {
@@ -57,23 +47,31 @@ public final class DatumUtils {
         return versions;
     }
 
-    public static Datum newEmptyDatum(Subscriber subscriber, String datacenter) {
-        Datum datum = new Datum();
-        datum.setDataId(subscriber.getDataId());
-        datum.setInstanceId(subscriber.getInstanceId());
-        datum.setGroup(subscriber.getGroup());
-        datum.setVersion(ValueConstants.DEFAULT_NO_DATUM_VERSION);
-        datum.setDataCenter(datacenter);
+    public static SubDatum newEmptySubDatum(Subscriber subscriber, String datacenter) {
+        SubDatum datum = new SubDatum(subscriber.getDataInfoId(), datacenter,
+            ValueConstants.DEFAULT_NO_DATUM_VERSION, Collections.emptyList(),
+            subscriber.getDataId(), subscriber.getInstanceId(), subscriber.getGroup());
         return datum;
     }
 
-    public static Datum newEmptyDatum(DataInfo dataInfo, String datacenter) {
-        Datum datum = new Datum();
-        datum.setDataId(dataInfo.getDataId());
-        datum.setInstanceId(dataInfo.getInstanceId());
-        datum.setGroup(dataInfo.getDataType());
-        datum.setVersion(ValueConstants.DEFAULT_NO_DATUM_VERSION);
-        datum.setDataCenter(datacenter);
+    public static SubDatum newEmptySubDatum(DataInfo dataInfo, String datacenter) {
+        SubDatum datum = new SubDatum(dataInfo.getDataInfoId(), datacenter,
+            ValueConstants.DEFAULT_NO_DATUM_VERSION, Collections.emptyList(), dataInfo.getDataId(),
+            dataInfo.getInstanceId(), dataInfo.getDataType());
         return datum;
+    }
+
+    public static SubDatum of(Datum datum) {
+        List<SubPublisher> publishers = Lists.newArrayListWithCapacity(datum.publisherSize());
+        for (Publisher publisher : datum.getPubMap().values()) {
+            final URL srcAddress = publisher.getSourceAddress();
+            // temp publisher the srcAddress maybe null
+            final String srcAddressString = srcAddress == null ? null : srcAddress
+                .getAddressString();
+            publishers.add(new SubPublisher(publisher.getCell(), publisher.getDataList(), publisher
+                .getClientId(), srcAddressString));
+        }
+        return new SubDatum(datum.getDataInfoId(), datum.getDataCenter(), datum.getVersion(),
+            publishers, datum.getDataId(), datum.getInstanceId(), datum.getGroup());
     }
 }
