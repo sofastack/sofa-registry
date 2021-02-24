@@ -21,7 +21,6 @@ import com.alipay.sofa.registry.common.model.store.Subscriber;
 import java.util.Collection;
 
 /**
- *
  * @author shangyu.wh
  * @version $Id: SessionInterests.java, v 0.1 2017-11-30 15:53 shangyu.wh Exp $
  */
@@ -37,11 +36,21 @@ public interface Interests extends DataManager<Subscriber, String, String> {
      * @param version
      * @return
      */
-    boolean checkInterestVersion(String dataCenter, String datumDataInfoId, long version);
+    InterestVersionCheck checkInterestVersion(String dataCenter, String datumDataInfoId,
+                                              long version);
 
     Collection<Subscriber> getInterestOfDatum(String datumDataInfoId);
 
     Collection<String> getPushedDataInfoIds();
 
     Collection<Subscriber> getInterestNeverPushed();
+
+    enum InterestVersionCheck {
+        NoSub(false), Obsolete(false), Interested(true), ;
+        public final boolean interested;
+
+        private InterestVersionCheck(boolean Interested) {
+            this.interested = Interested;
+        }
+    }
 }

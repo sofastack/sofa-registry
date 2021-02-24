@@ -80,9 +80,13 @@ public class DataChangeRequestHandler extends AbstractClientHandler<DataChangeRe
         for (Map.Entry<String, DatumVersion> e : dataChangeRequest.getDataInfoIds().entrySet()) {
             final String dataInfoId = e.getKey();
             final DatumVersion version = e.getValue();
-            if (!sessionInterests.checkInterestVersion(dataCenter, dataInfoId, version.getValue())) {
-                LOGGER.info("obsolete change, {}, ver={}, dataCenter={}", dataInfoId, version,
-                    dataCenter);
+            Interests.InterestVersionCheck check = sessionInterests.checkInterestVersion(
+                dataCenter, dataInfoId, version.getValue());
+            if (!check.interested) {
+                if (check != Interests.InterestVersionCheck.NoSub) {
+                    // log exclude NoSub
+                    LOGGER.info("[SkipChange]{},{}, ver={}, {}", dataInfoId, dataCenter, version, check);
+                }
                 continue;
             }
             firePushService.fireOnChange(dataCenter, dataInfoId, version.getValue());

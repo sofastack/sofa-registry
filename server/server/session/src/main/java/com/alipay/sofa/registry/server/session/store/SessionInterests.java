@@ -57,17 +57,18 @@ public class SessionInterests extends AbstractDataManager<Subscriber> implements
     }
 
     @Override
-    public boolean checkInterestVersion(String dataCenter, String datumDataInfoId, long version) {
+    public InterestVersionCheck checkInterestVersion(String dataCenter, String datumDataInfoId,
+                                                     long version) {
         Collection<Subscriber> subscribers = getInterestOfDatum(datumDataInfoId);
         if (CollectionUtils.isEmpty(subscribers)) {
-            return false;
+            return InterestVersionCheck.NoSub;
         }
         for (Subscriber subscriber : subscribers) {
             if (subscriber.checkVersion(dataCenter, version)) {
-                return true;
+                return InterestVersionCheck.Interested;
             }
         }
-        return false;
+        return InterestVersionCheck.Obsolete;
     }
 
     @Override
