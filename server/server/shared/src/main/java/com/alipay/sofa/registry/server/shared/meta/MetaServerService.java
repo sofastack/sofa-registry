@@ -18,6 +18,7 @@ package com.alipay.sofa.registry.server.shared.meta;
 
 import com.alipay.sofa.jraft.entity.PeerId;
 import com.alipay.sofa.registry.common.model.metaserver.ProvideData;
+import com.alipay.sofa.registry.common.model.metaserver.SlotTableChangeEvent;
 
 import java.util.List;
 import java.util.Set;
@@ -34,6 +35,8 @@ public interface MetaServerService {
      * update data server expireTime
      */
     void renewNode();
+
+    boolean handleSlotTableChange(SlotTableChangeEvent event);
 
     /**
      * get provider data

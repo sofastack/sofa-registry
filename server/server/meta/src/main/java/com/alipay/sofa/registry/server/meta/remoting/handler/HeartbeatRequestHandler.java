@@ -18,21 +18,25 @@ package com.alipay.sofa.registry.server.meta.remoting.handler;
 
 import com.alipay.sofa.registry.common.model.GenericResponse;
 import com.alipay.sofa.registry.common.model.Node;
-import com.alipay.sofa.registry.common.model.metaserver.RenewNodesRequest;
-import com.alipay.sofa.registry.common.model.metaserver.inter.communicate.BaseHeartBeatResponse;
-import com.alipay.sofa.registry.common.model.metaserver.inter.communicate.DataHeartBeatResponse;
-import com.alipay.sofa.registry.common.model.metaserver.inter.communicate.SessionHeartBeatResponse;
+import com.alipay.sofa.registry.common.model.metaserver.inter.heartbeat.BaseHeartBeatResponse;
+import com.alipay.sofa.registry.common.model.metaserver.inter.heartbeat.DataHeartBeatResponse;
+import com.alipay.sofa.registry.common.model.metaserver.inter.heartbeat.HeartbeatRequest;
+import com.alipay.sofa.registry.common.model.metaserver.inter.heartbeat.SessionHeartBeatResponse;
 import com.alipay.sofa.registry.common.model.metaserver.nodes.DataNode;
 import com.alipay.sofa.registry.common.model.metaserver.nodes.MetaNode;
 import com.alipay.sofa.registry.common.model.metaserver.nodes.SessionNode;
 import com.alipay.sofa.registry.common.model.slot.DataNodeSlot;
 import com.alipay.sofa.registry.common.model.slot.Slot;
+import com.alipay.sofa.registry.common.model.slot.SlotConfig;
 import com.alipay.sofa.registry.common.model.slot.SlotTable;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.remoting.Channel;
-import com.alipay.sofa.registry.server.meta.lease.LeaseManager;
+import com.alipay.sofa.registry.server.meta.bootstrap.config.NodeConfig;
 import com.alipay.sofa.registry.server.meta.metaserver.impl.DefaultCurrentDcMetaServer;
+import com.alipay.sofa.registry.server.meta.monitor.data.DataMessageListener;
+import com.alipay.sofa.registry.server.meta.monitor.heartbeat.HeartbeatListener;
+import com.alipay.sofa.registry.server.meta.monitor.session.SessionMessageListener;
 import com.alipay.sofa.registry.server.meta.slot.manager.DefaultSlotManager;
 import com.alipay.sofa.registry.server.shared.slot.SlotTableUtils;
 import org.glassfish.jersey.internal.guava.Sets;
@@ -46,23 +50,33 @@ import java.util.Set;
  * @author shangyu.wh
  * @version $Id: RenewNodesRequestHandler.java, v 0.1 2018-03-30 19:58 shangyu.wh Exp $
  */
-public class HeartbeatRequestHandler extends MetaServerHandler<RenewNodesRequest<Node>> {
+public class HeartbeatRequestHandler extends MetaServerHandler<HeartbeatRequest<Node>> {
 
-    private static final Logger        LOGGER = LoggerFactory
-                                                  .getLogger(HeartbeatRequestHandler.class);
-
-    @Autowired
-    private DefaultCurrentDcMetaServer currentDcMetaServer;
+    private static final Logger          logger = LoggerFactory
+                                                    .getLogger(HeartbeatRequestHandler.class);
 
     @Autowired
-    private DefaultSlotManager         defaultSlotManager;
+    private DefaultCurrentDcMetaServer   currentDcMetaServer;
+
+    @Autowired
+    private DefaultSlotManager           defaultSlotManager;
+
+    @Autowired
+    private List<DataMessageListener>    dataMessageListeners;
+
+    @Autowired
+    private List<SessionMessageListener> sessionMessageListeners;
+
+    @Autowired
+    private NodeConfig                   nodeConfig;
 
     @Override
-    public Object doHandle(Channel channel, RenewNodesRequest<Node> renewNodesRequest) {
+    public Object doHandle(Channel channel, HeartbeatRequest<Node> heartbeat) {
         Node renewNode = null;
         try {
-            renewNode = renewNodesRequest.getNode();
-            getLeaseManager(renewNode).renew(renewNode, renewNodesRequest.getDuration());
+            renewNode = heartbeat.getNode();
+            onHeartbeat(heartbeat, channel);
+
             SlotTable slotTable = currentDcMetaServer.getSlotTable();
             if (!SlotTableUtils.isValidSlotTable(slotTable)) {
                 return new GenericResponse<BaseHeartBeatResponse>()
@@ -96,24 +110,52 @@ public class HeartbeatRequestHandler extends MetaServerHandler<RenewNodesRequest
 
             return new GenericResponse<BaseHeartBeatResponse>().fillSucceed(response);
         } catch (Throwable e) {
-            LOGGER.error("Node {} renew error!", renewNode, e);
+            logger.error("Node {} renew error!", renewNode, e);
             return new GenericResponse<BaseHeartBeatResponse>().fillFailed("Node " + renewNode
                                                                            + "renew error!");
         }
     }
 
-    private LeaseManager getLeaseManager(Node node) {
+    @SuppressWarnings("unchecked")
+    private void onHeartbeat(HeartbeatRequest heartbeat, Channel channel) {
+        new DefaultHeartbeatListener(nodeConfig.getLocalDataCenter(), channel)
+            .onHeartbeat(heartbeat);
+        Node node = heartbeat.getNode();
         switch (node.getNodeType()) {
             case SESSION:
-                return currentDcMetaServer.getSessionServerManager();
+                currentDcMetaServer.getSessionServerManager().renew((SessionNode) node,
+                    heartbeat.getDuration());
+                onSessionHeartbeat(heartbeat);
             case DATA:
-                return currentDcMetaServer.getDataServerManager();
+                currentDcMetaServer.getDataServerManager().renew((DataNode) node,
+                    heartbeat.getDuration());
+                onDataHeartbeat(heartbeat);
             case META:
                 throw new IllegalArgumentException("node type not correct: " + node.getNodeType());
             default:
                 break;
         }
         throw new IllegalArgumentException("node type not correct: " + node.getNodeType());
+    }
+
+    private void onSessionHeartbeat(HeartbeatRequest<SessionNode> heartbeat) {
+        sessionMessageListeners.forEach(listener -> {
+            try {
+                listener.onHeartbeat(heartbeat);
+            } catch (Throwable th) {
+                logger.error("[onDataHeartbeat]", th);
+            }
+        });
+    }
+
+    private void onDataHeartbeat(HeartbeatRequest<DataNode> heartbeat) {
+        dataMessageListeners.forEach(listener -> {
+            try {
+                listener.onHeartbeat(heartbeat);
+            } catch (Throwable th) {
+                logger.error("[onDataHeartbeat]", th);
+            }
+        });
     }
 
     private SlotTable transferDataNodeSlotToSlotTable(DataNode node, SlotTable slotTable) {
@@ -126,6 +168,90 @@ public class HeartbeatRequestHandler extends MetaServerHandler<RenewNodesRequest
 
     @Override
     public Class interest() {
-        return RenewNodesRequest.class;
+        return HeartbeatRequest.class;
+    }
+
+    public static class DefaultHeartbeatListener implements HeartbeatListener<Node> {
+
+        private static final Logger logger                      = LoggerFactory
+                                                                    .getLogger(DefaultHeartbeatListener.class);
+
+        public static final String  KEY_TIMESTAMP_GAP_THRESHOLD = "timestamp.gap.threshold";
+
+        private static final long   timeGapThreshold            = Long.getLong(
+                                                                    KEY_TIMESTAMP_GAP_THRESHOLD,
+                                                                    2000);
+
+        private final String        dataCenter;
+
+        private final Channel       channel;
+
+        private volatile boolean    isValidChannel              = true;
+
+        public DefaultHeartbeatListener(String dataCenter, Channel channel) {
+            this.dataCenter = dataCenter;
+            this.channel = channel;
+        }
+
+        @Override
+        public void onHeartbeat(HeartbeatRequest<Node> heartbeat) {
+            checkIfDataCenterMatched(heartbeat);
+            checkIfTimeSynced(heartbeat);
+            checkIfSlotBasicInfoMatched(heartbeat);
+            closeIfChannelNotValid();
+        }
+
+        private void closeIfChannelNotValid() {
+            if (!isValidChannel) {
+                channel.close();
+            }
+        }
+
+        private void checkIfTimeSynced(HeartbeatRequest<Node> heartbeat) {
+            long timestamp = heartbeat.getTimestamp();
+            if (System.currentTimeMillis() - timestamp > timeGapThreshold) {
+                logger.error("[checkIfTimeSynced] {} timestamp[{}] is far behind mine[{}]",
+                    heartbeat.getNode(), timestamp, System.currentTimeMillis());
+            }
+        }
+
+        private void checkIfSlotBasicInfoMatched(HeartbeatRequest<Node> heartbeat) {
+
+            SlotConfig.SlotBasicInfo slotBasicInfo = heartbeat.getSlotBasicInfo();
+            if (SlotConfig.FUNC.equals(slotBasicInfo.getSlotFunc())) {
+                logger
+                    .error(
+                        "[checkIfSlotBasicInfoMatched] {} slot function not match(meta-server: [{}], node: [{}]",
+                        heartbeat.getNode(), SlotConfig.FUNC, slotBasicInfo.getSlotFunc());
+                isValidChannel = false;
+            }
+            if (SlotConfig.SLOT_NUM != slotBasicInfo.getSlotNum()) {
+                logger
+                    .error(
+                        "[checkIfSlotBasicInfoMatched] {} slot number not match(meta-server: [{}], node: [{}]",
+                        heartbeat.getNode(), SlotConfig.SLOT_NUM, slotBasicInfo.getSlotNum());
+                isValidChannel = false;
+            }
+            if (SlotConfig.SLOT_REPLICAS != slotBasicInfo.getSlotReplicas()) {
+                logger
+                    .error(
+                        "[checkIfSlotBasicInfoMatched] {} slot replicas not match(meta-server: [{}], node: [{}]",
+                        heartbeat.getNode(), SlotConfig.SLOT_REPLICAS, slotBasicInfo.getSlotReplicas());
+                isValidChannel = false;
+            }
+
+        }
+
+        private void checkIfDataCenterMatched(HeartbeatRequest<Node> heartbeat) {
+            String dc = heartbeat.getDataCenter();
+            if (!this.dataCenter.equalsIgnoreCase(dc)) {
+                logger
+                    .error(
+                        "[checkIfDataCenterMatched] {} datacenter not match(meta-server: [{}], node: [{}]",
+                        heartbeat.getNode(), this.dataCenter, dc);
+                isValidChannel = false;
+            }
+        }
+
     }
 }

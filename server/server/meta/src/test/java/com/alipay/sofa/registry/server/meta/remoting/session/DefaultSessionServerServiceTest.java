@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alipay.sofa.registry.server.meta.provide.data;
+package com.alipay.sofa.registry.server.meta.remoting.session;
 
 import com.alipay.sofa.registry.common.model.Node;
 import com.alipay.sofa.registry.common.model.constants.ValueConstants;
@@ -31,6 +31,7 @@ import com.alipay.sofa.registry.server.meta.AbstractTest;
 import com.alipay.sofa.registry.server.meta.lease.session.SessionServerManager;
 import com.alipay.sofa.registry.server.meta.remoting.DataNodeExchanger;
 import com.alipay.sofa.registry.server.meta.remoting.connection.SessionConnectionHandler;
+import com.alipay.sofa.registry.server.meta.remoting.session.DefaultSessionServerService;
 import com.alipay.sofa.registry.server.shared.remoting.AbstractServerHandler;
 import com.google.common.util.concurrent.MoreExecutors;
 import org.assertj.core.util.Lists;
@@ -47,18 +48,18 @@ import java.util.concurrent.TimeoutException;
 import static org.mockito.Matchers.*;
 import static org.mockito.Mockito.*;
 
-public class SessionServerProvideDataNotifierTest extends AbstractTest {
+public class DefaultSessionServerServiceTest extends AbstractTest {
 
-    private SessionServerProvideDataNotifier notifier = new SessionServerProvideDataNotifier();
-
-    @Mock
-    private NodeExchanger                    sessionNodeExchanger;
+    private DefaultSessionServerService notifier = new DefaultSessionServerService();
 
     @Mock
-    private SessionConnectionHandler         sessionConnectionHandler;
+    private NodeExchanger               sessionNodeExchanger;
 
     @Mock
-    private SessionServerManager             sessionServerManager;
+    private SessionConnectionHandler    sessionConnectionHandler;
+
+    @Mock
+    private SessionServerManager        sessionServerManager;
 
     @Before
     public void beforeSessionServerProvideDataNotifierTest() {
@@ -92,7 +93,7 @@ public class SessionServerProvideDataNotifierTest extends AbstractTest {
     @Test
     public void testBoltRequest() throws RequestException, InterruptedException {
         String ip1 = randomIp(), ip2 = randomIp();
-        Client rpcClient = spy(getRpcClient(scheduled, 10, new TimeoutException()));
+        Client rpcClient = spy(getRpcClient(scheduled, 10, new TimeoutException("expected")));
         when(sessionNodeExchanger.request(any(Request.class))).then(new Answer<Object>() {
             @Override
             public Object answer(InvocationOnMock invocationOnMock) throws Throwable {
@@ -139,27 +140,6 @@ public class SessionServerProvideDataNotifierTest extends AbstractTest {
             }
         });
         notifier.setSessionNodeExchanger(otherNodeExchanger);
-        notifier.notifyProvideDataChange(new ProvideDataChangeEvent(
-            ValueConstants.BLACK_LIST_DATA_ID, System.currentTimeMillis(), DataOperator.ADD));
-        Thread.sleep(200);
-    }
-
-    @Test(expected = SofaRegistryRuntimeException.class)
-    public void testBoltRequestThrowException() throws RequestException, InterruptedException {
-        String ip1 = randomIp(), ip2 = randomIp();
-        when(sessionConnectionHandler.getConnections(anyString())).thenReturn(
-            Lists.newArrayList(new InetSocketAddress(ip1, Math.abs(random.nextInt(65535)) % 65535),
-                new InetSocketAddress(ip2, Math.abs(random.nextInt(65535)) % 65535),
-                new InetSocketAddress(randomIp(), 1024)));
-        when(sessionServerManager.getClusterMembers()).thenReturn(
-            Lists.newArrayList(new SessionNode(randomURL(ip1), getDc()), new SessionNode(
-                randomURL(ip2), getDc()), new SessionNode(randomURL(randomIp()), getDc())));
-        Client client = spy(getRpcClient(scheduled, 10, "Response"));
-        DataNodeExchanger otherNodeExchanger = mock(DataNodeExchanger.class);
-        when(otherNodeExchanger.request(any(Request.class))).thenThrow(
-            new RequestException("mocked exception"));
-        notifier.setSessionNodeExchanger(otherNodeExchanger);
-        notifier.setExecutors(MoreExecutors.directExecutor());
         notifier.notifyProvideDataChange(new ProvideDataChangeEvent(
             ValueConstants.BLACK_LIST_DATA_ID, System.currentTimeMillis(), DataOperator.ADD));
         Thread.sleep(200);

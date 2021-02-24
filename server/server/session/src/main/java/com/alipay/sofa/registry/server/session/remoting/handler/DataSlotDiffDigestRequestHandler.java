@@ -58,7 +58,6 @@ public class DataSlotDiffDigestRequestHandler extends
     @Override
     public Object doHandle(Channel channel, DataSlotDiffDigestRequest request) {
         try {
-            slotTableCache.triggerUpdateSlotTable(request.getSlotTableEpoch());
             DataSlotDiffDigestResult result = calcDiffResult(request.getSlotId(),
                 request.getDatumDigest(),
                 sessionDataStore.getDataInfoIdPublishers(request.getSlotId()));

@@ -18,7 +18,9 @@ package com.alipay.sofa.registry.server.meta.slot.arrange;
 
 import com.alipay.sofa.registry.common.model.metaserver.nodes.DataNode;
 import com.alipay.sofa.registry.common.model.slot.SlotTable;
-import com.alipay.sofa.registry.exception.*;
+import com.alipay.sofa.registry.exception.DisposeException;
+import com.alipay.sofa.registry.exception.InitializeException;
+import com.alipay.sofa.registry.exception.SofaRegistrySlotTableException;
 import com.alipay.sofa.registry.jraft.bootstrap.ServiceStateMachine;
 import com.alipay.sofa.registry.lifecycle.impl.LifecycleHelper;
 import com.alipay.sofa.registry.observer.Observable;
@@ -27,6 +29,7 @@ import com.alipay.sofa.registry.server.meta.cluster.node.NodeAdded;
 import com.alipay.sofa.registry.server.meta.cluster.node.NodeRemoved;
 import com.alipay.sofa.registry.server.meta.lease.data.DataManagerObserver;
 import com.alipay.sofa.registry.server.meta.lease.data.DefaultDataServerManager;
+import com.alipay.sofa.registry.server.meta.monitor.SlotTableMonitor;
 import com.alipay.sofa.registry.server.meta.slot.SlotAssigner;
 import com.alipay.sofa.registry.server.meta.slot.SlotBalancer;
 import com.alipay.sofa.registry.server.meta.slot.assigner.DefaultSlotAssigner;
@@ -67,6 +70,9 @@ public class ScheduledSlotArranger extends AbstractLifecycleObservable implement
     @Autowired
     private DefaultSlotManager       defaultSlotManager;
 
+    @Autowired
+    private SlotTableMonitor         slotTableMonitor;
+
     private final Arranger           arranger = new Arranger();
 
     private final Lock               lock     = new ReentrantLock();
@@ -75,10 +81,13 @@ public class ScheduledSlotArranger extends AbstractLifecycleObservable implement
     }
 
     public ScheduledSlotArranger(DefaultDataServerManager dataServerManager,
-                                 LocalSlotManager slotManager, DefaultSlotManager defaultSlotManager) {
+                                 LocalSlotManager slotManager,
+                                 DefaultSlotManager defaultSlotManager,
+                                 SlotTableMonitor slotTableMonitor) {
         this.dataServerManager = dataServerManager;
         this.slotManager = slotManager;
         this.defaultSlotManager = defaultSlotManager;
+        this.slotTableMonitor = slotTableMonitor;
     }
 
     @PostConstruct
@@ -97,19 +106,8 @@ public class ScheduledSlotArranger extends AbstractLifecycleObservable implement
     protected void doInitialize() throws InitializeException {
         super.doInitialize();
         dataServerManager.addObserver(this);
-    }
-
-    @Override
-    protected void doStart() throws StartException {
-        super.doStart();
         Thread executor = ConcurrentUtils.createDaemonThread(getClass().getSimpleName(), arranger);
         executor.start();
-    }
-
-    @Override
-    protected void doStop() throws StopException {
-        arranger.close();
-        super.doStop();
     }
 
     @Override
@@ -164,6 +162,10 @@ public class ScheduledSlotArranger extends AbstractLifecycleObservable implement
 
     protected void balanceSlots(SlotTableBuilder slotTableBuilder,
                                 Collection<String> currentDataServers) {
+        if (!slotTableMonitor.isSlotTableStable()) {
+            logger.warn("[balanceSlots] slot-table not stable, won't balance");
+            return;
+        }
         SlotTable slotTable = createSlotBalancer(slotTableBuilder, currentDataServers).balance();
         refreshSlotTable(slotTable);
     }
@@ -211,7 +213,7 @@ public class ScheduledSlotArranger extends AbstractLifecycleObservable implement
 
     private boolean tryArrangeSlots(List<DataNode> dataNodes) {
         if (!tryLock()) {
-            logger.warn("[tryBalanceSlots] tryLock failed");
+            logger.warn("[tryArrangeSlots] tryLock failed");
             return false;
         }
         try {
@@ -243,6 +245,10 @@ public class ScheduledSlotArranger extends AbstractLifecycleObservable implement
     @VisibleForTesting
     public boolean arrangeSync() {
         if (isRaftLeader()) {
+            if (!getLifecycleState().isStarted() && !getLifecycleState().isStarting()) {
+                logger.warn("[arrangeSync] not start running, quit");
+                return false;
+            }
             // the start arrange with the dataNodes snapshot
             final List<DataNode> dataNodes = dataServerManager.getClusterMembers();
             if (dataNodes.isEmpty()) {

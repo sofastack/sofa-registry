@@ -35,10 +35,8 @@ import com.alipay.sofa.registry.server.meta.lease.session.SessionLeaseManager;
 import com.alipay.sofa.registry.server.meta.metaserver.impl.DefaultCurrentDcMetaServer;
 import com.alipay.sofa.registry.server.meta.metaserver.impl.DefaultLocalMetaServer;
 import com.alipay.sofa.registry.server.meta.metaserver.impl.DefaultMetaServerManager;
-import com.alipay.sofa.registry.server.meta.monitor.DefaultSlotTableMonitor;
-import com.alipay.sofa.registry.server.meta.provide.data.DataServerProvideDataNotifier;
+import com.alipay.sofa.registry.server.meta.monitor.impl.DefaultSlotTableMonitor;
 import com.alipay.sofa.registry.server.meta.provide.data.DefaultProvideDataNotifier;
-import com.alipay.sofa.registry.server.meta.provide.data.SessionServerProvideDataNotifier;
 import com.alipay.sofa.registry.server.meta.remoting.DataNodeExchanger;
 import com.alipay.sofa.registry.server.meta.remoting.MetaServerExchanger;
 import com.alipay.sofa.registry.server.meta.remoting.RaftExchanger;
@@ -46,7 +44,9 @@ import com.alipay.sofa.registry.server.meta.remoting.SessionNodeExchanger;
 import com.alipay.sofa.registry.server.meta.remoting.connection.DataConnectionHandler;
 import com.alipay.sofa.registry.server.meta.remoting.connection.MetaConnectionHandler;
 import com.alipay.sofa.registry.server.meta.remoting.connection.SessionConnectionHandler;
+import com.alipay.sofa.registry.server.meta.remoting.data.DefaultDataServerService;
 import com.alipay.sofa.registry.server.meta.remoting.handler.*;
+import com.alipay.sofa.registry.server.meta.remoting.session.DefaultSessionServerService;
 import com.alipay.sofa.registry.server.meta.repository.service.RaftAppRevisionService;
 import com.alipay.sofa.registry.server.meta.resource.*;
 import com.alipay.sofa.registry.server.meta.revision.AppRevisionRegistry;
@@ -220,6 +220,7 @@ public class MetaServerConfiguration {
         public DefaultSlotTableMonitor slotTableMonitor() {
             return new DefaultSlotTableMonitor();
         }
+
     }
 
     @Configuration
@@ -231,13 +232,13 @@ public class MetaServerConfiguration {
         }
 
         @Bean
-        public DataServerProvideDataNotifier dataServerProvideDataNotifier() {
-            return new DataServerProvideDataNotifier();
+        public DefaultDataServerService dataServerProvideDataNotifier() {
+            return new DefaultDataServerService();
         }
 
         @Bean
-        public SessionServerProvideDataNotifier sessionServerProvideDataNotifier() {
-            return new SessionServerProvideDataNotifier();
+        public DefaultSessionServerService sessionServerProvideDataNotifier() {
+            return new DefaultSessionServerService();
         }
     }
 

@@ -16,16 +16,24 @@
  */
 package com.alipay.sofa.registry.server.data.remoting.metaserver;
 
-import com.alipay.sofa.registry.common.model.Node;
-import com.alipay.sofa.registry.common.model.metaserver.inter.communicate.DataHeartBeatResponse;
+import com.alipay.sofa.registry.common.model.metaserver.inter.heartbeat.DataHeartBeatResponse;
+import com.alipay.sofa.registry.common.model.metaserver.inter.heartbeat.DataHeartbeatRequest;
+import com.alipay.sofa.registry.common.model.metaserver.inter.heartbeat.HeartbeatRequest;
 import com.alipay.sofa.registry.common.model.metaserver.nodes.DataNode;
+import com.alipay.sofa.registry.common.model.slot.SlotAccess;
+import com.alipay.sofa.registry.common.model.slot.SlotConfig;
+import com.alipay.sofa.registry.common.model.slot.SlotStatus;
 import com.alipay.sofa.registry.common.model.store.URL;
+import com.alipay.sofa.registry.server.data.bootstrap.DataServerConfig;
 import com.alipay.sofa.registry.server.data.remoting.DataNodeExchanger;
 import com.alipay.sofa.registry.server.data.remoting.SessionNodeExchanger;
 import com.alipay.sofa.registry.server.data.slot.SlotManager;
 import com.alipay.sofa.registry.server.shared.env.ServerEnv;
 import com.alipay.sofa.registry.server.shared.meta.AbstractMetaServerService;
+import com.google.common.collect.Lists;
 import org.springframework.beans.factory.annotation.Autowired;
+
+import java.util.List;
 
 /**
  *
@@ -43,6 +51,14 @@ public class MetaServerServiceImpl extends AbstractMetaServerService<DataHeartBe
     @Autowired
     private SessionNodeExchanger sessionNodeExchanger;
 
+    @Autowired
+    private DataServerConfig     dataServerConfig;
+
+    @Override
+    protected long getCurrentSlotTableEpoch() {
+        return slotManager.getSlotTableEpoch();
+    }
+
     @Override
     protected void handleRenewResult(DataHeartBeatResponse result) {
         metaNodeExchanger.setServerIps(result.getMetaNodesMap().keySet());
@@ -58,7 +74,22 @@ public class MetaServerServiceImpl extends AbstractMetaServerService<DataHeartBe
     }
 
     @Override
-    protected Node createNode() {
+    protected HeartbeatRequest createRequest() {
+        return new DataHeartbeatRequest(createNode(), slotManager.getSlotTableEpoch(),
+            dataServerConfig.getLocalDataCenter(), System.currentTimeMillis(),
+            new SlotConfig.SlotBasicInfo(SlotConfig.SLOT_NUM, SlotConfig.SLOT_REPLICAS, SlotConfig.FUNC),
+                transferToSlotStatus(slotManager.getSlotAccesses()));
+    }
+
+    private List<SlotStatus> transferToSlotStatus(List<SlotAccess> slotAccesses) {
+        List<SlotStatus> slotStatuses = Lists.newLinkedList();
+        for (SlotAccess slotAccess : slotAccesses) {
+            slotStatuses.add(SlotStatus.from(slotAccess));
+        }
+        return slotStatuses;
+    }
+
+    private DataNode createNode() {
         return new DataNode(new URL(ServerEnv.IP), metaNodeExchanger.getLocalDataCenter());
     }
 }

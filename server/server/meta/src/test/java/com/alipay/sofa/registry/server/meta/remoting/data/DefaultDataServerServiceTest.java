@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alipay.sofa.registry.server.meta.provide.data;
+package com.alipay.sofa.registry.server.meta.remoting.data;
 
 import com.alipay.sofa.registry.common.model.Node;
 import com.alipay.sofa.registry.common.model.constants.ValueConstants;
@@ -30,6 +30,7 @@ import com.alipay.sofa.registry.server.meta.AbstractTest;
 import com.alipay.sofa.registry.server.meta.lease.data.DataServerManager;
 import com.alipay.sofa.registry.server.meta.remoting.DataNodeExchanger;
 import com.alipay.sofa.registry.server.meta.remoting.connection.DataConnectionHandler;
+import com.alipay.sofa.registry.server.meta.remoting.data.DefaultDataServerService;
 import com.alipay.sofa.registry.server.shared.remoting.AbstractServerHandler;
 import org.assertj.core.util.Lists;
 import org.junit.Before;
@@ -44,18 +45,18 @@ import java.util.concurrent.TimeoutException;
 
 import static org.mockito.Mockito.*;
 
-public class DataServerProvideDataNotifierTest extends AbstractTest {
+public class DefaultDataServerServiceTest extends AbstractTest {
 
-    private DataServerProvideDataNotifier notifier = new DataServerProvideDataNotifier();
-
-    @Mock
-    private DataServerManager             dataServerManager;
+    private DefaultDataServerService notifier = new DefaultDataServerService();
 
     @Mock
-    private DataNodeExchanger             dataNodeExchanger;
+    private DataServerManager        dataServerManager;
 
     @Mock
-    private DataConnectionHandler         dataConnectionHandler;
+    private DataNodeExchanger        dataNodeExchanger;
+
+    @Mock
+    private DataConnectionHandler    dataConnectionHandler;
 
     @Before
     public void beforeDataServerProvideDataNotifierTest() {
@@ -89,10 +90,7 @@ public class DataServerProvideDataNotifierTest extends AbstractTest {
         when(dataConnectionHandler.getConnections(anyString()))
                 .thenReturn(Lists.newArrayList(new InetSocketAddress(randomIp(), Math.abs(random.nextInt(65535)) % 65535),
                         new InetSocketAddress(randomIp(), Math.abs(random.nextInt(65535)) % 65535 ) ));
-        when(dataServerManager.getClusterMembers())
-                .thenReturn(Lists.newArrayList(new DataNode(randomURL(randomIp()), getDc()),
-                        new DataNode(randomURL(randomIp()), getDc()),
-                        new DataNode(randomURL(randomIp()), getDc())));
+        when(dataServerManager.getClusterMembers()).thenReturn(randomDataNodes(3));
         when(dataNodeExchanger.request(any(Request.class))).thenReturn(()->{return null;});
         notifier.notifyProvideDataChange(new ProvideDataChangeEvent(ValueConstants.BLACK_LIST_DATA_ID,
                 System.currentTimeMillis(), DataOperator.ADD));
@@ -141,7 +139,7 @@ public class DataServerProvideDataNotifierTest extends AbstractTest {
     @Test
     public void testBoltRequest() throws RequestException, InterruptedException {
         String ip1 = randomIp(), ip2 = randomIp();
-        Client rpcClient = spy(getRpcClient(scheduled, 10, new TimeoutException()));
+        Client rpcClient = spy(getRpcClient(scheduled, 10, new TimeoutException("expected")));
         when(dataNodeExchanger.request(any(Request.class))).then(new Answer<Object>() {
             @Override
             public Object answer(InvocationOnMock invocationOnMock) throws Throwable {
@@ -161,9 +159,8 @@ public class DataServerProvideDataNotifierTest extends AbstractTest {
                 getDc()), new DataNode(randomURL(randomIp()), getDc())));
         notifier.notifyProvideDataChange(new ProvideDataChangeEvent(
             ValueConstants.BLACK_LIST_DATA_ID, System.currentTimeMillis(), DataOperator.ADD));
-        verify(rpcClient, timeout(1000)).sendCallback(any(), any(), any(), anyInt());
         Thread.sleep(100);
-
+        verify(rpcClient, atLeast(1)).sendCallback(any(), any(), any(), anyInt());
     }
 
     @Test

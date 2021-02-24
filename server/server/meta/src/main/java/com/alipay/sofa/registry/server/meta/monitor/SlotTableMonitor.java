@@ -16,12 +16,17 @@
  */
 package com.alipay.sofa.registry.server.meta.monitor;
 
+import com.alipay.sofa.registry.observer.Observer;
+import com.alipay.sofa.registry.server.meta.monitor.data.DataMessageListener;
+
 /**
  * @author chen.zhu
  * <p>
  * Dec 25, 2020
  */
-public interface SlotTableMonitor {
+public interface SlotTableMonitor extends DataMessageListener, Observer {
 
     void recordSlotTable();
+
+    boolean isSlotTableStable();
 }

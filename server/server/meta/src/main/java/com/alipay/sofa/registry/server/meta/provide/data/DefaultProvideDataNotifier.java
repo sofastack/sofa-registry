@@ -18,6 +18,8 @@ package com.alipay.sofa.registry.server.meta.provide.data;
 
 import com.alipay.sofa.registry.common.model.Node;
 import com.alipay.sofa.registry.common.model.metaserver.ProvideDataChangeEvent;
+import com.alipay.sofa.registry.server.meta.remoting.data.DefaultDataServerService;
+import com.alipay.sofa.registry.server.meta.remoting.session.DefaultSessionServerService;
 import com.google.common.annotations.VisibleForTesting;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -39,31 +41,31 @@ import java.util.Set;
 public class DefaultProvideDataNotifier implements ProvideDataNotifier {
 
     @Autowired
-    private DataServerProvideDataNotifier    dataServerProvideDataNotifier;
+    private DefaultDataServerService    defaultDataServerService;
 
     @Autowired
-    private SessionServerProvideDataNotifier sessionServerProvideDataNotifier;
+    private DefaultSessionServerService defaultSessionServerService;
 
     @Override
     public void notifyProvideDataChange(ProvideDataChangeEvent event) {
         Set<Node.NodeType> notifyTypes = event.getNodeTypes();
         if (notifyTypes.contains(Node.NodeType.DATA)) {
-            dataServerProvideDataNotifier.notifyProvideDataChange(event);
+            defaultDataServerService.notifyProvideDataChange(event);
         }
         if (notifyTypes.contains(Node.NodeType.SESSION)) {
-            sessionServerProvideDataNotifier.notifyProvideDataChange(event);
+            defaultSessionServerService.notifyProvideDataChange(event);
         }
     }
 
     @VisibleForTesting
-    DefaultProvideDataNotifier setDataServerProvideDataNotifier(DataServerProvideDataNotifier dataServerProvideDataNotifier) {
-        this.dataServerProvideDataNotifier = dataServerProvideDataNotifier;
+    DefaultProvideDataNotifier setDataServerProvideDataNotifier(DefaultDataServerService defaultDataServerService) {
+        this.defaultDataServerService = defaultDataServerService;
         return this;
     }
 
     @VisibleForTesting
-    DefaultProvideDataNotifier setSessionServerProvideDataNotifier(SessionServerProvideDataNotifier sessionServerProvideDataNotifier) {
-        this.sessionServerProvideDataNotifier = sessionServerProvideDataNotifier;
+    DefaultProvideDataNotifier setSessionServerProvideDataNotifier(DefaultSessionServerService defaultSessionServerService) {
+        this.defaultSessionServerService = defaultSessionServerService;
         return this;
     }
 }

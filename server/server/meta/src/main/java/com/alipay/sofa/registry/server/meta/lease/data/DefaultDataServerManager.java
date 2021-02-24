@@ -16,23 +16,27 @@
  */
 package com.alipay.sofa.registry.server.meta.lease.data;
 
+import com.alipay.sofa.registry.common.model.metaserver.inter.heartbeat.DataHeartbeatRequest;
+import com.alipay.sofa.registry.common.model.metaserver.inter.heartbeat.HeartbeatRequest;
 import com.alipay.sofa.registry.common.model.metaserver.nodes.DataNode;
-import com.alipay.sofa.registry.exception.DisposeException;
 import com.alipay.sofa.registry.exception.InitializeException;
 import com.alipay.sofa.registry.lifecycle.impl.LifecycleHelper;
 import com.alipay.sofa.registry.server.meta.bootstrap.config.MetaServerConfig;
 import com.alipay.sofa.registry.server.meta.lease.AbstractRaftEnabledLeaseManager;
 import com.alipay.sofa.registry.server.meta.lease.LeaseManager;
+import com.alipay.sofa.registry.server.meta.monitor.data.DataServerStats;
 import com.alipay.sofa.registry.store.api.annotation.RaftReference;
 import com.alipay.sofa.registry.store.api.annotation.RaftReferenceContainer;
-import com.alipay.sofa.registry.util.DefaultExecutorFactory;
-import com.alipay.sofa.registry.util.OsUtils;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
-import java.util.concurrent.ExecutorService;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 
 /**
  * @author chen.zhu
@@ -44,19 +48,29 @@ public class DefaultDataServerManager extends AbstractRaftEnabledLeaseManager<Da
                                                                                        DataServerManager {
 
     @RaftReference(uniqueId = DataLeaseManager.DATA_LEASE_MANAGER, interfaceType = LeaseManager.class)
-    private LeaseManager<DataNode> raftDataLeaseManager;
+    private LeaseManager<DataNode>       raftDataLeaseManager;
 
     @Autowired
-    private DataLeaseManager       dataLeaseManager;
+    private DataLeaseManager             dataLeaseManager;
 
     @Autowired
-    private MetaServerConfig       metaServerConfig;
+    private MetaServerConfig             metaServerConfig;
 
-    private ExecutorService        executors;
+    private final Map<String, DataServerStats> dataServerStatses = Maps.newConcurrentMap();
 
+    /**
+     * Constructor.
+     */
     public DefaultDataServerManager() {
     }
 
+    /**
+     * Constructor.
+     *
+     * @param raftDataLeaseManager the raft data lease manager
+     * @param dataLeaseManager     the data lease manager
+     * @param metaServerConfig     the meta server config
+     */
     public DefaultDataServerManager(LeaseManager<DataNode> raftDataLeaseManager,
                                     DataLeaseManager dataLeaseManager,
                                     MetaServerConfig metaServerConfig) {
@@ -65,12 +79,22 @@ public class DefaultDataServerManager extends AbstractRaftEnabledLeaseManager<Da
         this.metaServerConfig = metaServerConfig;
     }
 
+    /**
+     * Post construct.
+     *
+     * @throws Exception the exception
+     */
     @PostConstruct
     public void postConstruct() throws Exception {
         LifecycleHelper.initializeIfPossible(this);
         LifecycleHelper.startIfPossible(this);
     }
 
+    /**
+     * Pre destory.
+     *
+     * @throws Exception the exception
+     */
     @PreDestroy
     public void preDestory() throws Exception {
         LifecycleHelper.stopIfPossible(this);
@@ -90,18 +114,7 @@ public class DefaultDataServerManager extends AbstractRaftEnabledLeaseManager<Da
     @Override
     protected void doInitialize() throws InitializeException {
         super.doInitialize();
-        executors = DefaultExecutorFactory.createAllowCoreTimeout(getClass().getSimpleName(),
-            Math.min(4, OsUtils.getCpuCount())).create();
-        dataLeaseManager.setExecutors(executors);
         dataLeaseManager.setLogger(logger);
-    }
-
-    @Override
-    protected void doDispose() throws DisposeException {
-        if (executors != null) {
-            executors.shutdownNow();
-        }
-        super.doDispose();
     }
 
     @Override
@@ -132,8 +145,31 @@ public class DefaultDataServerManager extends AbstractRaftEnabledLeaseManager<Da
         return this;
     }
 
+    /**
+     * To string string.
+     *
+     * @return the string
+     */
     @Override
     public String toString() {
         return "DefaultDataServerManager";
+    }
+
+    /**
+     * On heartbeat.
+     *
+     * @param heartbeat the heartbeat
+     */
+    @Override
+    public void onHeartbeat(HeartbeatRequest<DataNode> heartbeat) {
+        String dataServer = heartbeat.getNode().getIp();
+        dataServerStatses.put(dataServer,
+            new DataServerStats(dataServer, heartbeat.getSlotTableEpoch(),
+                ((DataHeartbeatRequest) heartbeat).getSlotStatus()));
+    }
+
+    @Override
+    public List<DataServerStats> getDataServersStats() {
+        return Collections.unmodifiableList(Lists.newLinkedList(dataServerStatses.values()));
     }
 }

@@ -19,11 +19,11 @@ package com.alipay.sofa.registry.server.shared.meta;
 import com.alipay.remoting.Connection;
 import com.alipay.sofa.jraft.entity.PeerId;
 import com.alipay.sofa.registry.common.model.GenericResponse;
-import com.alipay.sofa.registry.common.model.Node;
 import com.alipay.sofa.registry.common.model.metaserver.FetchProvideDataRequest;
 import com.alipay.sofa.registry.common.model.metaserver.ProvideData;
-import com.alipay.sofa.registry.common.model.metaserver.RenewNodesRequest;
-import com.alipay.sofa.registry.common.model.metaserver.inter.communicate.BaseHeartBeatResponse;
+import com.alipay.sofa.registry.common.model.metaserver.SlotTableChangeEvent;
+import com.alipay.sofa.registry.common.model.metaserver.inter.heartbeat.BaseHeartBeatResponse;
+import com.alipay.sofa.registry.common.model.metaserver.inter.heartbeat.HeartbeatRequest;
 import com.alipay.sofa.registry.common.model.metaserver.nodes.SessionNode;
 import com.alipay.sofa.registry.common.model.store.URL;
 import com.alipay.sofa.registry.log.Logger;
@@ -31,12 +31,11 @@ import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.remoting.exchange.message.Request;
 import com.alipay.sofa.registry.remoting.exchange.message.Response;
 import com.alipay.sofa.registry.util.ConcurrentUtils;
-import com.alipay.sofa.registry.util.LoopRunnable;
+import com.alipay.sofa.registry.util.WakeUpLoopRunnable;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.*;
-import java.util.concurrent.TimeUnit;
 
 /**
  *
@@ -62,7 +61,25 @@ public abstract class AbstractMetaServerService<T extends BaseHeartBeatResponse>
         ConcurrentUtils.createDaemonThread("meta-renewer", this.renewer).start();
     }
 
-    private final class Renewer extends LoopRunnable {
+    @Override
+    public boolean handleSlotTableChange(SlotTableChangeEvent event) {
+        long epoch = event.getSlotTableEpoch();
+        long currentEpoch = getCurrentSlotTableEpoch();
+        if (currentEpoch >= epoch) {
+            LOGGER.warn(
+                "[handleSlotTableChange] slot-table change event epoch: [{}], current epoch: [{}], "
+                        + "won't retrieve again", epoch, currentEpoch);
+            return false;
+        }
+        LOGGER
+            .info("[handleSlotTableChange] slot table is changed, run heart-beat to retrieve new version");
+        renewer.wakeup();
+        return true;
+    }
+
+    protected abstract long getCurrentSlotTableEpoch();
+
+    private final class Renewer extends WakeUpLoopRunnable {
         final int intervalMs;
 
         Renewer(int intervalMs) {
@@ -79,8 +96,8 @@ public abstract class AbstractMetaServerService<T extends BaseHeartBeatResponse>
         }
 
         @Override
-        public void waitingUnthrowable() {
-            ConcurrentUtils.sleepUninterruptibly(intervalMs, TimeUnit.MILLISECONDS);
+        public int getWaitingMillis() {
+            return intervalMs;
         }
     }
 
@@ -88,11 +105,11 @@ public abstract class AbstractMetaServerService<T extends BaseHeartBeatResponse>
     public void renewNode() {
         final String leaderIp = getLeader().getIp();
         try {
-            RenewNodesRequest renewNodesRequest = new RenewNodesRequest(createNode());
+            HeartbeatRequest heartbeatRequest = createRequest();
             GenericResponse<T> resp = (GenericResponse<T>) metaNodeExchanger.request(new Request() {
                 @Override
                 public Object getRequestBody() {
-                    return renewNodesRequest;
+                    return heartbeatRequest;
                 }
 
                 @Override
@@ -224,6 +241,6 @@ public abstract class AbstractMetaServerService<T extends BaseHeartBeatResponse>
 
     protected abstract void handleRenewResult(T result);
 
-    protected abstract Node createNode();
+    protected abstract HeartbeatRequest createRequest();
 
 }

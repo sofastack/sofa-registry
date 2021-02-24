@@ -17,8 +17,10 @@
 package com.alipay.sofa.registry.server.session.node.service;
 
 import com.alipay.sofa.registry.common.model.Node;
-import com.alipay.sofa.registry.common.model.metaserver.inter.communicate.SessionHeartBeatResponse;
+import com.alipay.sofa.registry.common.model.metaserver.inter.heartbeat.HeartbeatRequest;
+import com.alipay.sofa.registry.common.model.metaserver.inter.heartbeat.SessionHeartBeatResponse;
 import com.alipay.sofa.registry.common.model.metaserver.nodes.SessionNode;
+import com.alipay.sofa.registry.common.model.slot.SlotConfig;
 import com.alipay.sofa.registry.common.model.store.URL;
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
 import com.alipay.sofa.registry.server.session.remoting.DataNodeExchanger;
@@ -48,6 +50,11 @@ public final class MetaServerServiceImpl extends
     private MetaNodeExchanger   metaNodeExchanger;
 
     @Override
+    protected long getCurrentSlotTableEpoch() {
+        return slotTableCache.getEpoch();
+    }
+
+    @Override
     protected void handleRenewResult(SessionHeartBeatResponse result) {
         metaNodeExchanger.setServerIps(result.getMetaNodesMap().keySet());
         dataNodeExchanger.setServerIps(getDataServerList());
@@ -57,7 +64,13 @@ public final class MetaServerServiceImpl extends
     }
 
     @Override
-    protected Node createNode() {
+    protected HeartbeatRequest createRequest() {
+        return new HeartbeatRequest(createNode(), slotTableCache.getEpoch(),
+            sessionServerConfig.getSessionServerDataCenter(), System.currentTimeMillis(),
+            new SlotConfig.SlotBasicInfo(SlotConfig.SLOT_NUM, SlotConfig.SLOT_REPLICAS, SlotConfig.FUNC));
+    }
+
+    private Node createNode() {
         return new SessionNode(new URL(ServerEnv.IP), sessionServerConfig.getSessionServerRegion())
             .setProcessId(ServerEnv.PROCESS_ID);
     }

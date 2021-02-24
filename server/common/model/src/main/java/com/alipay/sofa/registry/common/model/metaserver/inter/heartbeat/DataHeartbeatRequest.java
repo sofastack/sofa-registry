@@ -14,26 +14,36 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alipay.sofa.registry.server.meta.lease.data;
+package com.alipay.sofa.registry.common.model.metaserver.inter.heartbeat;
 
 import com.alipay.sofa.registry.common.model.metaserver.nodes.DataNode;
-import com.alipay.sofa.registry.lifecycle.Lifecycle;
-import com.alipay.sofa.registry.observer.Observable;
-import com.alipay.sofa.registry.server.meta.cluster.NodeCluster;
-import com.alipay.sofa.registry.server.meta.lease.LeaseManager;
-import com.alipay.sofa.registry.server.meta.monitor.data.DataMessageListener;
-import com.alipay.sofa.registry.server.meta.monitor.data.DataServerStats;
+import com.alipay.sofa.registry.common.model.slot.SlotConfig;
+import com.alipay.sofa.registry.common.model.slot.SlotStatus;
 
 import java.util.List;
 
 /**
  * @author chen.zhu
  * <p>
- * Nov 19, 2020
+ * Feb 23, 2021
  */
-public interface DataServerManager extends Lifecycle, Observable, NodeCluster<DataNode>,
-                                  LeaseManager<DataNode>, DataMessageListener {
+public class DataHeartbeatRequest extends HeartbeatRequest<DataNode> {
 
-    List<DataServerStats> getDataServersStats();
+    private final List<SlotStatus> slotStatuses;
 
+    public DataHeartbeatRequest(DataNode node, long slotTableEpoch, String dataCenter,
+                                long timestamp, SlotConfig.SlotBasicInfo slotBasicInfo,
+                                List<SlotStatus> slotStatuses) {
+        super(node, slotTableEpoch, dataCenter, timestamp, slotBasicInfo);
+        this.slotStatuses = slotStatuses;
+    }
+
+    /**
+     * Gets get slot status.
+     *
+     * @return the get slot status
+     */
+    public List<SlotStatus> getSlotStatus() {
+        return slotStatuses;
+    }
 }
