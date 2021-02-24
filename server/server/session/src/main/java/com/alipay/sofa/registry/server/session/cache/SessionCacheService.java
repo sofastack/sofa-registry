@@ -19,11 +19,14 @@ package com.alipay.sofa.registry.server.session.cache;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
+import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
 import com.google.common.cache.*;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
+
+import javax.annotation.PostConstruct;
 
 /**
  *
@@ -31,23 +34,24 @@ import com.alipay.sofa.registry.log.LoggerFactory;
  * @version $Id: CacheService.java, v 0.1 2017-12-06 18:22 shangyu.wh Exp $
  */
 public class SessionCacheService implements CacheService {
-    private static final Logger            CACHE_LOGGER = LoggerFactory.getLogger("CACHE-GEN");
-    private static final Logger            LOGGER       = LoggerFactory
-                                                            .getLogger(SessionCacheService.class);
+    private static final Logger         CACHE_LOGGER = LoggerFactory.getLogger("CACHE-GEN");
+    private static final Logger         LOGGER       = LoggerFactory
+                                                         .getLogger(SessionCacheService.class);
 
-    private final LoadingCache<Key, Value> readWriteCacheMap;
+    private LoadingCache<Key, Value>    readWriteCacheMap;
+    @Autowired
+    private SessionServerConfig         sessionServerConfig;
     /**
      * injectQ
      */
-    private Map<String, CacheGenerator>    cacheGenerators;
+    private Map<String, CacheGenerator> cacheGenerators;
 
-    /**
-     * constructor
-     */
-    public SessionCacheService() {
-        this.readWriteCacheMap = CacheBuilder.newBuilder().maximumSize(1000L)
-            .expireAfterWrite(31000, TimeUnit.MILLISECONDS).removalListener(new RemoveListener())
-            .build(new CacheLoader<Key, Value>() {
+    @PostConstruct
+    public void init() {
+        this.readWriteCacheMap = CacheBuilder.newBuilder()
+            .maximumSize(sessionServerConfig.getCacheDatumMaxNums())
+            .expireAfterWrite(sessionServerConfig.getCacheDatumExpireSecs(), TimeUnit.SECONDS)
+            .removalListener(new RemoveListener()).build(new CacheLoader<Key, Value>() {
                 @Override
                 public Value load(Key key) {
                     return generatePayload(key);
@@ -77,19 +81,9 @@ public class SessionCacheService implements CacheService {
             throw new IllegalArgumentException("Generator key input error!");
         }
 
-        switch (key.getKeyType()) {
-            case OBJ:
-                EntityType entityType = key.getEntityType();
-                CacheGenerator cacheGenerator = cacheGenerators
-                    .get(entityType.getClass().getName());
-                return cacheGenerator.generatePayload(key);
-            case JSON:
-            case XML:
-            default:
-                LOGGER.error("Unidentified data type: " + key.getKeyType()
-                             + " found in the cache key.");
-                throw new IllegalArgumentException("unsupport Key:" + key);
-        }
+        EntityType entityType = key.getEntityType();
+        CacheGenerator cacheGenerator = cacheGenerators.get(entityType.getClass().getName());
+        return cacheGenerator.generatePayload(key);
     }
 
     @Override
@@ -121,10 +115,9 @@ public class SessionCacheService implements CacheService {
     public void invalidate(Key... keys) {
         for (Key key : keys) {
             if (LOGGER.isDebugEnabled()) {
-                LOGGER.debug("Invalidating the response cache key : {} {} {}", key.getEntityType(),
-                    key.getEntityName(), key.getKeyType());
+                LOGGER.debug("Invalidating cache key: {} {}", key.getEntityType(),
+                    key.getEntityName());
             }
-
             readWriteCacheMap.invalidate(key);
         }
     }

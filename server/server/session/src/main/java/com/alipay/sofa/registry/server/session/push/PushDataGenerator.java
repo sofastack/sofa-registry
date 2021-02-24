@@ -17,7 +17,6 @@
 package com.alipay.sofa.registry.server.session.push;
 
 import com.alipay.sofa.registry.common.model.SubscriberUtils;
-import com.alipay.sofa.registry.common.model.dataserver.Datum;
 import com.alipay.sofa.registry.common.model.store.*;
 import com.alipay.sofa.registry.core.model.ReceivedData;
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
@@ -35,7 +34,7 @@ public class PushDataGenerator {
     @Autowired
     private SessionServerConfig sessionServerConfig;
 
-    public Object createPushData(Datum datum, Map<String, Subscriber> subscriberMap) {
+    public Object createPushData(SubDatum datum, Map<String, Subscriber> subscriberMap) {
         SubscriberUtils.getAndAssertHasSameScope(subscriberMap.values());
         final Subscriber subscriber = subscriberMap.values().iterator().next();
         BaseInfo.ClientVersion clientVersion = subscriber.getClientVersion();

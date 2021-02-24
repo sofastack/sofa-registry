@@ -16,10 +16,8 @@
  */
 package com.alipay.sofa.registry.server.shared.util;
 
-import com.alipay.sofa.registry.common.model.constants.ValueConstants;
 import com.alipay.sofa.registry.common.model.dataserver.Datum;
 import com.alipay.sofa.registry.common.model.store.Subscriber;
-import org.junit.Assert;
 import org.junit.Test;
 
 /**
@@ -38,16 +36,5 @@ public class DatumUtilsTest {
         subscriber.setDataId("subscriber-dataId");
         subscriber.setGroup("DEFAULT_GROUP");
 
-        datum = DatumUtils.newDatumIfNull(datum, subscriber);
-        Assert.assertEquals(19092L, datum.getVersion());
-        Assert.assertEquals("test-dataId", datum.getDataId());
-        Assert.assertEquals("test-dataCenter", datum.getDataCenter());
-        Assert.assertEquals(null, datum.getGroup());
-
-        datum = DatumUtils.newDatumIfNull(null, subscriber);
-        Assert.assertEquals(ValueConstants.DEFAULT_NO_DATUM_VERSION, datum.getVersion());
-        Assert.assertEquals("subscriber-dataId", datum.getDataId());
-        Assert.assertEquals(ValueConstants.DEFAULT_DATA_CENTER, datum.getDataCenter());
-        Assert.assertEquals("DEFAULT_GROUP", datum.getGroup());
     }
 }

@@ -17,8 +17,8 @@
 package com.alipay.sofa.registry.server.session.push;
 
 import com.alipay.sofa.registry.common.model.SubscriberUtils;
-import com.alipay.sofa.registry.common.model.dataserver.Datum;
 import com.alipay.sofa.registry.common.model.store.DataInfo;
+import com.alipay.sofa.registry.common.model.store.SubDatum;
 import com.alipay.sofa.registry.common.model.store.Subscriber;
 import com.alipay.sofa.registry.core.model.ScopeEnum;
 import com.alipay.sofa.registry.log.Logger;
@@ -83,7 +83,7 @@ public class FirePushService {
     }
 
     public boolean fireOnPushEmpty(Subscriber subscriber) {
-        Datum emptyDatum = DatumUtils.newEmptyDatum(subscriber, getDataCenterWhenPushEmpty());
+        SubDatum emptyDatum = DatumUtils.newEmptySubDatum(subscriber, getDataCenterWhenPushEmpty());
         processPush(true, emptyDatum, Collections.singletonList(subscriber));
         PUSH_EMPTY_COUNTER.inc();
         LOGGER.info("firePushEmpty, {}", subscriber);
@@ -106,7 +106,7 @@ public class FirePushService {
         }
     }
 
-    public boolean fireOnDatum(Datum datum) {
+    public boolean fireOnDatum(SubDatum datum) {
         DataInfo dataInfo = DataInfo.valueOf(datum.getDataInfoId());
         Collection<Subscriber> subscribers = sessionInterests.getInterestOfDatum(dataInfo
             .getDataInfoId());
@@ -121,7 +121,7 @@ public class FirePushService {
     }
 
     private void doExecuteOnChange(String dataCenter, String changeDataInfoId, long expectVersion) {
-        final Datum datum = getDatum(dataCenter, changeDataInfoId, expectVersion);
+        final SubDatum datum = getDatum(dataCenter, changeDataInfoId, expectVersion);
         if (expectVersion != EXCEPT_MIN_VERSION) {
             if (datum == null) {
                 // datum change, but get null datum, should not happen
@@ -145,11 +145,11 @@ public class FirePushService {
         onDatumChange(dataInfo, datum, dataCenter);
     }
 
-    private void onDatumChange(DataInfo dataInfo, Datum datum, String dataCenter) {
+    private void onDatumChange(DataInfo dataInfo, SubDatum datum, String dataCenter) {
         Map<ScopeEnum, List<Subscriber>> scopes = SubscriberUtils.groupByScope(sessionInterests
             .getDatas(dataInfo.getDataInfoId()));
         if (datum == null) {
-            datum = DatumUtils.newEmptyDatum(dataInfo, dataCenter);
+            datum = DatumUtils.newEmptySubDatum(dataInfo, dataCenter);
             LOGGER.warn("empty push {}, dataCenter={}", dataInfo.getDataInfoId(), dataCenter);
         }
         for (Map.Entry<ScopeEnum, List<Subscriber>> scope : scopes.entrySet()) {
@@ -157,7 +157,7 @@ public class FirePushService {
         }
     }
 
-    private void processPush(boolean noDelay, Datum datum, Collection<Subscriber> subscriberList) {
+    private void processPush(boolean noDelay, SubDatum datum, Collection<Subscriber> subscriberList) {
         if (subscriberList.isEmpty()) {
             return;
         }
@@ -175,12 +175,11 @@ public class FirePushService {
         }
     }
 
-    private Datum getDatum(String dataCenter, String dataInfoId, long expectVersion) {
-        Key key = new Key(Key.KeyType.OBJ, DatumKey.class.getName(), new DatumKey(dataInfoId,
-            dataCenter));
+    private SubDatum getDatum(String dataCenter, String dataInfoId, long expectVersion) {
+        Key key = new Key(DatumKey.class.getName(), new DatumKey(dataInfoId, dataCenter));
         Value value = sessionCacheService.getValueIfPresent(key);
         if (value != null) {
-            Datum datum = (Datum) value.getPayload();
+            SubDatum datum = (SubDatum) value.getPayload();
             if (datum != null && datum.getVersion() >= expectVersion) {
                 // the expect version got
                 CACHE_HIT_COUNTER.inc();
@@ -191,7 +190,7 @@ public class FirePushService {
         // the cache is too old
         sessionCacheService.invalidate(key);
         value = sessionCacheService.getValue(key);
-        return value == null ? null : (Datum) value.getPayload();
+        return value == null ? null : (SubDatum) value.getPayload();
     }
 
     private List<Subscriber> subscribersPushCheck(String dataCenter, Long version,
@@ -221,9 +220,9 @@ public class FirePushService {
 
     private void doExecuteOnSubscriber(String dataCenter, Subscriber subscriber) {
         final String subDataInfoId = subscriber.getDataInfoId();
-        Datum datum = getDatum(dataCenter, subDataInfoId, Long.MIN_VALUE);
+        SubDatum datum = getDatum(dataCenter, subDataInfoId, Long.MIN_VALUE);
         if (datum == null) {
-            datum = DatumUtils.newEmptyDatum(subscriber, dataCenter);
+            datum = DatumUtils.newEmptySubDatum(subscriber, dataCenter);
             LOGGER.warn("[registerEmptyPush] {},{},{}", subDataInfoId, dataCenter, subscriber);
         }
         if (subscriber.hasPushed()) {

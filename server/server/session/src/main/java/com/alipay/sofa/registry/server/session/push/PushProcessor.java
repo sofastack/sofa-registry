@@ -17,8 +17,8 @@
 package com.alipay.sofa.registry.server.session.push;
 
 import com.alipay.remoting.rpc.exception.InvokeTimeoutException;
-import com.alipay.sofa.registry.common.model.dataserver.Datum;
 import com.alipay.sofa.registry.common.model.store.BaseInfo;
+import com.alipay.sofa.registry.common.model.store.SubDatum;
 import com.alipay.sofa.registry.common.model.store.Subscriber;
 import com.alipay.sofa.registry.core.model.ScopeEnum;
 import com.alipay.sofa.registry.log.Logger;
@@ -123,7 +123,7 @@ public class PushProcessor {
     }
 
     protected List<PushTask> createPushTask(boolean noDelay, InetSocketAddress addr,
-                                            Map<String, Subscriber> subscriberMap, Datum datum) {
+                                            Map<String, Subscriber> subscriberMap, SubDatum datum) {
         PushTask pushTask = new PushTask(noDelay, addr, subscriberMap, datum);
         // set expireTimestamp, wait to merge to debouncing
         pushTask.expireAfter(sessionServerConfig.getPushDataTaskDebouncingMillis());
@@ -131,7 +131,7 @@ public class PushProcessor {
     }
 
     void firePush(boolean noDelay, InetSocketAddress addr, Map<String, Subscriber> subscriberMap,
-                  Datum datum) {
+                  SubDatum datum) {
         List<PushTask> fires = createPushTask(noDelay, addr, subscriberMap, datum);
         for (PushTask task : fires) {
             boolean fire = firePush(task);
@@ -239,7 +239,7 @@ public class PushProcessor {
 
         final boolean                 noDelay;
         final String                  dataCenter;
-        final Datum                   datum;
+        final SubDatum                datum;
         final InetSocketAddress       addr;
         final Map<String, Subscriber> subscriberMap;
         final Subscriber              subscriber;
@@ -248,7 +248,7 @@ public class PushProcessor {
         final PushingTaskKey          pushingTaskKey;
 
         PushTask(boolean noDelay, InetSocketAddress addr, Map<String, Subscriber> subscriberMap,
-                 Datum datum) {
+                 SubDatum datum) {
             this.taskID = TraceID.newTraceID();
             this.noDelay = noDelay;
             this.dataCenter = datum.getDataCenter();

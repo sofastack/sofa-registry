@@ -20,7 +20,6 @@ import java.io.Serializable;
 import java.util.Collections;
 import java.util.Map;
 
-import com.alipay.sofa.registry.common.model.PublisherUtils;
 import com.alipay.sofa.registry.common.model.store.Publisher;
 import com.alipay.sofa.registry.common.model.store.WordCache;
 import com.alipay.sofa.registry.util.DatumVersionUtil;
@@ -206,26 +205,6 @@ public class Datum implements Serializable {
      */
     public void setVersion(long version) {
         this.version = version;
-    }
-
-    public static Datum internDatum(Datum datum) {
-        datum.setDataCenter(datum.getDataCenter());
-        datum.setDataInfoId(datum.getDataInfoId());
-        datum.setDataId(datum.getDataId());
-        datum.setGroup(datum.getGroup());
-        datum.setInstanceId(datum.getInstanceId());
-
-        synchronized (datum) {
-            datum.pubMap.forEach((registerId, publisher) -> {
-                // let registerId == pub.getRegisterId in every <registerId, pub>, for reducing old gen memory
-                // because this Datum is put into Memory directly, by DatumCache.coverDatum
-                publisher.setRegisterId(registerId);
-                // change publisher word cache
-                PublisherUtils.internPublisher(publisher);
-            });
-        }
-
-        return datum;
     }
 
     @Override

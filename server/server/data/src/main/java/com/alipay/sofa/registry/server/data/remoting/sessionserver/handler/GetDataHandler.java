@@ -20,19 +20,19 @@ import com.alipay.sofa.registry.common.model.dataserver.Datum;
 import com.alipay.sofa.registry.common.model.dataserver.GetDataRequest;
 import com.alipay.sofa.registry.common.model.slot.SlotAccess;
 import com.alipay.sofa.registry.common.model.slot.SlotAccessGenericResponse;
+import com.alipay.sofa.registry.common.model.store.SubDatum;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.remoting.Channel;
 import com.alipay.sofa.registry.server.data.cache.DatumCache;
+import com.alipay.sofa.registry.server.shared.util.DatumUtils;
 import com.alipay.sofa.registry.util.ParaCheckUtil;
-
-import static com.alipay.sofa.registry.server.data.remoting.sessionserver.handler.HandlerMetrics.GetData.*;
-
 import org.springframework.beans.factory.annotation.Autowired;
 
-import java.util.Map;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ThreadPoolExecutor;
+
+import static com.alipay.sofa.registry.server.data.remoting.sessionserver.handler.HandlerMetrics.GetData.*;
 
 /**
  * processor to get specific data
@@ -56,6 +56,7 @@ public class GetDataHandler extends AbstractDataHandler<GetDataRequest> {
     @Override
     public void checkParam(GetDataRequest request) throws RuntimeException {
         ParaCheckUtil.checkNotBlank(request.getDataInfoId(), "GetDataRequest.dataInfoId");
+        ParaCheckUtil.checkNotBlank(request.getDataCenter(), "GetDataRequest.dataCenter");
         checkSessionProcessId(request.getSessionProcessId());
     }
 
@@ -64,15 +65,14 @@ public class GetDataHandler extends AbstractDataHandler<GetDataRequest> {
         processSessionProcessId(channel, request.getSessionProcessId());
 
         final String dataInfoId = request.getDataInfoId();
-
+        final String dataCenter = request.getDataCenter();
         final SlotAccess slotAccessBefore = checkAccess(dataInfoId, request.getSlotTableEpoch(),
             request.getSlotLeaderEpoch());
         if (!slotAccessBefore.isAccept()) {
             GET_DATUM_N_COUNTER.inc();
             return SlotAccessGenericResponse.failedResponse(slotAccessBefore);
         }
-        Map<String, Datum> datumMap = datumCache.getDatumGroupByDataCenter(request.getDataCenter(),
-            dataInfoId);
+        final Datum datum = datumCache.get(dataCenter, dataInfoId);
         // important. double check the slot access. avoid the case:
         // 1. the slot is leader, the first check pass
         // 2. slot moved and data cleaned
@@ -88,18 +88,18 @@ public class GetDataHandler extends AbstractDataHandler<GetDataRequest> {
             return SlotAccessGenericResponse.failedResponse(slotAccessAfter,
                 "slotLeaderEpoch has change, prev=" + slotAccessBefore);
         }
-
-        final String localDataCenter = dataServerConfig.getLocalDataCenter();
-        final Datum localDatum = datumMap.get(localDataCenter);
+        // return SubDatum, it's serdeSize and memoryOverhead much smaller than Datum
+        final SubDatum subDatum = datum != null ? DatumUtils.of(datum) : null;
         GET_DATUM_Y_COUNTER.inc();
-        if (localDatum != null) {
-            LOGGER.info("getD,{},{},{},{}", dataInfoId, localDataCenter,
-                localDatum.publisherSize(), localDatum.getVersion());
-            GET_PUBLISHER_COUNTER.inc(localDatum.publisherSize());
+        if (subDatum != null) {
+            LOGGER.info("getD,{},{},{},{}", dataInfoId, dataCenter,
+                subDatum.getPublishers().size(), subDatum.getVersion());
+            GET_PUBLISHER_COUNTER.inc(subDatum.getPublishers().size());
         } else {
-            LOGGER.info("getDNil,{},{}", dataInfoId, localDataCenter);
+            LOGGER.info("getNilD,{},{}", dataInfoId, dataCenter);
         }
-        return SlotAccessGenericResponse.successResponse(slotAccessAfter, datumMap);
+
+        return SlotAccessGenericResponse.successResponse(slotAccessAfter, subDatum);
     }
 
     @Override
