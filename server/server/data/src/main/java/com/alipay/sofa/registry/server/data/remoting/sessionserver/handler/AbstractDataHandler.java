@@ -101,16 +101,16 @@ public abstract class AbstractDataHandler<T> extends AbstractServerHandler<T> {
         final SlotAccess slotAccess = slotManager.checkSlotAccess(slotId, slotTableEpoch,
             slotLeaderEpoch);
         if (slotAccess.isMoved()) {
-            LOGGER_SLOT_ACCESS.warn("[moved]{}, leaderEpoch={}, tableEpoch", slotAccess,
+            LOGGER_SLOT_ACCESS.warn("[moved]{}, leaderEpoch={}, tableEpoch={}", slotAccess,
                 slotLeaderEpoch, slotTableEpoch);
         }
 
         if (slotAccess.isMigrating()) {
-            LOGGER_SLOT_ACCESS.warn("[migrating]{}, leaderEpoch={}, tableEpoch", slotAccess,
+            LOGGER_SLOT_ACCESS.warn("[migrating]{}, leaderEpoch={}, tableEpoch={}", slotAccess,
                 slotLeaderEpoch, slotTableEpoch);
         }
         if (slotAccess.isMisMatch()) {
-            LOGGER_SLOT_ACCESS.warn("[mismatch]{}, leaderEpoch={}, tableEpoch", slotAccess,
+            LOGGER_SLOT_ACCESS.warn("[mismatch]{}, leaderEpoch={}, tableEpoch={}", slotAccess,
                 slotLeaderEpoch, slotTableEpoch);
         }
         return slotAccess;
