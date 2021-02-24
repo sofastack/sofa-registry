@@ -359,7 +359,7 @@ public class SessionRegistry implements Registry {
             for (Map.Entry<String, DatumVersion> version : versionMap.entrySet()) {
                 final String dataInfoId = version.getKey();
                 final long verVal = version.getValue().getValue();
-                if (sessionInterests.checkInterestVersion(dataCenter, dataInfoId, verVal)) {
+                if (sessionInterests.checkInterestVersion(dataCenter, dataInfoId, verVal).interested) {
                     firePushService.fireOnChange(dataCenter, dataInfoId, verVal);
                     SCAN_VER_LOGGER.info("notify fetch by check ver {} for {}, slotId={}", verVal,
                         dataInfoId, slotId);

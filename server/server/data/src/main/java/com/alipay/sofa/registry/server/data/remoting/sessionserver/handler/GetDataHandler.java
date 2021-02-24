@@ -73,7 +73,7 @@ public class GetDataHandler extends AbstractDataHandler<GetDataRequest> {
         }
         Map<String, Datum> datumMap = datumCache.getDatumGroupByDataCenter(request.getDataCenter(),
             dataInfoId);
-        // import. double check the slot access. avoid the case:
+        // important. double check the slot access. avoid the case:
         // 1. the slot is leader, the first check pass
         // 2. slot moved and data cleaned
         // 3. get datum, but null after cleaned, dangerous!!
