@@ -67,6 +67,10 @@ public class DatumCache {
         return localDatumStorage.getVersions(slotId);
     }
 
+    public DatumVersion updateVersion(String dataCenter, String dataInfoId) {
+        return localDatumStorage.updateVersion(dataInfoId);
+    }
+
     /**
      * get all datum
      *

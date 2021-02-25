@@ -63,12 +63,6 @@ public final class SubscriberUtils {
         return ret;
     }
 
-    public static Set<String> getPushedDataInfoIds(Collection<Subscriber> subscribers) {
-        final Set<String> ret = new HashSet<>(256);
-        subscribers.forEach(s -> ret.add(s.getDataInfoId()));
-        return ret;
-    }
-
     public static ScopeEnum getAndAssertHasSameScope(Collection<Subscriber> subscribers) {
         ScopeEnum scope = subscribers.stream().findFirst().get().getScope();
         for (Subscriber subscriber : subscribers) {

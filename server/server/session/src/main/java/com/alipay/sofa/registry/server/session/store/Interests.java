@@ -16,9 +16,11 @@
  */
 package com.alipay.sofa.registry.server.session.store;
 
+import com.alipay.sofa.registry.common.model.dataserver.DatumVersion;
 import com.alipay.sofa.registry.common.model.store.Subscriber;
 
 import java.util.Collection;
+import java.util.Map;
 
 /**
  * @author shangyu.wh
@@ -39,11 +41,11 @@ public interface Interests extends DataManager<Subscriber, String, String> {
     InterestVersionCheck checkInterestVersion(String dataCenter, String datumDataInfoId,
                                               long version);
 
-    Collection<Subscriber> getInterestOfDatum(String datumDataInfoId);
+    Collection<Subscriber> getInterests(String datumDataInfoId);
 
-    Collection<String> getPushedDataInfoIds();
+    Map<String, DatumVersion> getInterestVersions(String dataCenter);
 
-    Collection<Subscriber> getInterestNeverPushed();
+    Collection<Subscriber> getInterestsNeverPushed();
 
     enum InterestVersionCheck {
         NoSub(false), Obsolete(false), Interested(true), ;

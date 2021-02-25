@@ -16,14 +16,19 @@
  */
 package com.alipay.sofa.registry.server.session.store;
 
-import com.alipay.sofa.registry.common.model.SubscriberUtils;
+import com.alipay.sofa.registry.common.model.dataserver.DatumVersion;
 import com.alipay.sofa.registry.common.model.store.Subscriber;
+import com.alipay.sofa.registry.core.model.ScopeEnum;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.util.ParaCheckUtil;
+import com.google.common.collect.Maps;
 import org.springframework.util.CollectionUtils;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
 
 /**
  * @author shangyu.wh
@@ -59,7 +64,7 @@ public class SessionInterests extends AbstractDataManager<Subscriber> implements
     @Override
     public InterestVersionCheck checkInterestVersion(String dataCenter, String datumDataInfoId,
                                                      long version) {
-        Collection<Subscriber> subscribers = getInterestOfDatum(datumDataInfoId);
+        Collection<Subscriber> subscribers = getInterests(datumDataInfoId);
         if (CollectionUtils.isEmpty(subscribers)) {
             return InterestVersionCheck.NoSub;
         }
@@ -72,21 +77,40 @@ public class SessionInterests extends AbstractDataManager<Subscriber> implements
     }
 
     @Override
-    public Collection<Subscriber> getInterestOfDatum(String datumDataInfoId) {
+    public Collection<Subscriber> getInterests(String datumDataInfoId) {
         return getDatas(datumDataInfoId);
     }
 
     @Override
-    public Collection<String> getPushedDataInfoIds() {
-        List<Subscriber> subscribers = new ArrayList<>(512);
-        for (Map<String, Subscriber> e : stores.values()) {
-            subscribers.addAll(e.values());
+    public Map<String, DatumVersion> getInterestVersions(String dataCenter) {
+        final Map<String, DatumVersion> ret = Maps.newHashMapWithExpectedSize(stores.size());
+        final String localDataCenter = sessionServerConfig.getSessionServerDataCenter();
+        final boolean isLocalDataCenter = localDataCenter.equals(dataCenter);
+        for (Map.Entry<String, Map<String, Subscriber>> e : stores.entrySet()) {
+            Map<String, Subscriber> subs = e.getValue();
+            if (subs.isEmpty()) {
+                continue;
+            }
+            final String dataInfoId = e.getKey();
+            long maxVersion = 0;
+            for (Subscriber sub : subs.values()) {
+                // not global sub and not local dataCenter, not interest the other dataCenter's pub
+                if (sub.getScope() != ScopeEnum.global && !isLocalDataCenter) {
+                    continue;
+                }
+                final long pushVersion = sub.getPushVersion(dataCenter);
+                if (maxVersion < pushVersion) {
+                    maxVersion = pushVersion;
+                }
+            }
+            ret.put(dataInfoId, new DatumVersion(maxVersion));
         }
-        return SubscriberUtils.getPushedDataInfoIds(subscribers);
+
+        return ret;
     }
 
     @Override
-    public Collection<Subscriber> getInterestNeverPushed() {
+    public Collection<Subscriber> getInterestsNeverPushed() {
         List<Subscriber> subscribers = new ArrayList<>(512);
         for (Map<String, Subscriber> e : stores.values()) {
             for (Subscriber subscriber : e.values()) {

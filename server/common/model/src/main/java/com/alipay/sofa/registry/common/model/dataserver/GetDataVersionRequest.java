@@ -19,10 +19,12 @@ package com.alipay.sofa.registry.common.model.dataserver;
 import com.alipay.sofa.registry.common.model.ProcessId;
 import com.alipay.sofa.registry.util.StringFormatter;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 
 import java.io.Serializable;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 /**
  * request to get versions of specific data
@@ -32,25 +34,24 @@ import java.util.List;
  */
 public class GetDataVersionRequest extends AbstractSlotRequest {
 
-    private static final long serialVersionUID = 8942977145684175886L;
+    private static final long               serialVersionUID = 8942977145684175886L;
 
-    private final String      dataCenter;
+    private final String                    dataCenter;
+    // dataInfoId:max(push.version)
+    private final Map<String, DatumVersion> interests;
 
     /**
      * constructor
      */
-    public GetDataVersionRequest(String dataCenter, ProcessId sessionProcessId, int slotId) {
+    public GetDataVersionRequest(String dataCenter, ProcessId sessionProcessId, int slotId,
+                                 Map<String, DatumVersion> interests) {
         super(slotId, sessionProcessId);
         this.dataCenter = dataCenter;
+        this.interests = Collections.unmodifiableMap(Maps.newHashMap(interests));
     }
 
-    /**
-     * Getter method for property <tt>sessionProcessId</tt>.
-     *
-     * @return property value of sessionProcessId
-     */
-    public ProcessId getSessionProcessId() {
-        return sessionProcessId;
+    public Map<String, DatumVersion> getInterests() {
+        return interests;
     }
 
     public String getDataCenter() {
@@ -59,7 +60,7 @@ public class GetDataVersionRequest extends AbstractSlotRequest {
 
     @Override
     public String toString() {
-        return StringFormatter.format("GetDataVer:{},{},{},{}", getSlotId(), dataCenter,
-            getSlotLeaderEpoch(), getSlotTableEpoch());
+        return StringFormatter.format("GetDataVer:{},{},{},{},interests={}", getSlotId(),
+            dataCenter, getSlotLeaderEpoch(), getSlotTableEpoch(), interests.size());
     }
 }
