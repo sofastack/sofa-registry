@@ -61,10 +61,10 @@ public class HeartbeatRequestHandler extends MetaServerHandler<HeartbeatRequest<
     @Autowired
     private DefaultSlotManager           defaultSlotManager;
 
-    @Autowired
+    @Autowired (required = false)
     private List<DataMessageListener>    dataMessageListeners;
 
-    @Autowired
+    @Autowired (required = false)
     private List<SessionMessageListener> sessionMessageListeners;
 
     @Autowired
@@ -126,10 +126,12 @@ public class HeartbeatRequestHandler extends MetaServerHandler<HeartbeatRequest<
                 currentDcMetaServer.getSessionServerManager().renew((SessionNode) node,
                     heartbeat.getDuration());
                 onSessionHeartbeat(heartbeat);
+                break;
             case DATA:
                 currentDcMetaServer.getDataServerManager().renew((DataNode) node,
                     heartbeat.getDuration());
                 onDataHeartbeat(heartbeat);
+                break;
             case META:
                 throw new IllegalArgumentException("node type not correct: " + node.getNodeType());
             default:
@@ -139,6 +141,9 @@ public class HeartbeatRequestHandler extends MetaServerHandler<HeartbeatRequest<
     }
 
     private void onSessionHeartbeat(HeartbeatRequest<SessionNode> heartbeat) {
+        if(sessionMessageListeners == null || sessionMessageListeners.isEmpty()) {
+            return;
+        }
         sessionMessageListeners.forEach(listener -> {
             try {
                 listener.onHeartbeat(heartbeat);
@@ -149,6 +154,9 @@ public class HeartbeatRequestHandler extends MetaServerHandler<HeartbeatRequest<
     }
 
     private void onDataHeartbeat(HeartbeatRequest<DataNode> heartbeat) {
+        if(dataMessageListeners == null || dataMessageListeners.isEmpty()) {
+            return;
+        }
         dataMessageListeners.forEach(listener -> {
             try {
                 listener.onHeartbeat(heartbeat);
