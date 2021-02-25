@@ -21,4 +21,8 @@ jobs:
       with:
         java-version: 1.8
     - name: Build with Maven
-      run: mvn clean package
+      run: mvn clean install -DskipTests -B -V
+        && sh ./tools/check_format.sh
+        && mvn clean test
+    - name: Codecov
+      uses: codecov/codecov-action@v1
