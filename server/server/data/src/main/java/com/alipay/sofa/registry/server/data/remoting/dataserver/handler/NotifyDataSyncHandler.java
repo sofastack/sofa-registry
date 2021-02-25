@@ -45,7 +45,7 @@ import com.alipay.sofa.registry.server.data.remoting.dataserver.GetSyncDataHandl
 import com.alipay.sofa.registry.server.data.remoting.dataserver.SyncDataCallback;
 import com.alipay.sofa.registry.server.data.remoting.handler.AbstractClientHandler;
 import com.alipay.sofa.registry.server.data.util.LocalServerStatusEnum;
-import com.alipay.sofa.registry.server.data.util.ThreadPoolExecutorDataServer;
+import com.alipay.sofa.registry.server.data.util.DataMetricsThreadPoolExecutor;
 import com.alipay.sofa.registry.util.NamedThreadFactory;
 import com.alipay.sofa.registry.util.ParaCheckUtil;
 
@@ -161,7 +161,7 @@ public class NotifyDataSyncHandler extends AbstractClientHandler<NotifyDataSyncR
     @Override
     public Executor getExecutor() {
         if (notifyExecutor == null) {
-            notifyExecutor = new ThreadPoolExecutorDataServer("NotifyDataSyncProcessorExecutor",
+            notifyExecutor = new DataMetricsThreadPoolExecutor("NotifyDataSyncProcessorExecutor",
                 dataServerConfig.getNotifyDataSyncExecutorMinPoolSize(),
                 dataServerConfig.getNotifyDataSyncExecutorMaxPoolSize(),
                 dataServerConfig.getNotifyDataSyncExecutorKeepAliveTime(), TimeUnit.SECONDS,

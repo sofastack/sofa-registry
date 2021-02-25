@@ -16,9 +16,6 @@
  */
 package com.alipay.sofa.registry.server.session.connections;
 
-import com.alipay.sofa.registry.common.model.store.BaseInfo;
-import com.alipay.sofa.registry.common.model.store.Publisher;
-import com.alipay.sofa.registry.common.model.store.Subscriber;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.remoting.Channel;
@@ -70,6 +67,9 @@ public class ConnectionsService {
     }
 
     public void setMaxConnections(int connections) {
+        if (!sessionServerConfig.isEnableSessionLoadbalancePolicy()) {
+            throw new RuntimeException("drop connections is not allowed");
+        }
         List<String> connectionIds = getConnections();
 
         int needDropped = connectionIds.size() - connections;

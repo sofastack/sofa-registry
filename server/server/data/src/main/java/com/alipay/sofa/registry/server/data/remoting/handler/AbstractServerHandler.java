@@ -22,6 +22,10 @@ import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.remoting.Channel;
 import com.alipay.sofa.registry.remoting.ChannelHandler;
 import com.alipay.sofa.registry.remoting.RemotingException;
+import org.springframework.beans.factory.annotation.Autowired;
+
+import java.util.concurrent.Executor;
+import java.util.concurrent.ThreadPoolExecutor;
 
 /**
  *
@@ -29,6 +33,9 @@ import com.alipay.sofa.registry.remoting.RemotingException;
  * @version $Id: ServerHandler.java, v 0.1 2017-11-28 18:06 shangyu.wh Exp $
  */
 public abstract class AbstractServerHandler<T> implements ChannelHandler<T> {
+
+    @Autowired
+    private ThreadPoolExecutor  defaultRequestExecutor;
 
     private static final Logger LOGGER          = LoggerFactory
                                                     .getLogger(AbstractServerHandler.class);
@@ -142,5 +149,10 @@ public abstract class AbstractServerHandler<T> implements ChannelHandler<T> {
      */
     private String getClassName() {
         return this.getClass().getSimpleName();
+    }
+
+    @Override
+    public Executor getExecutor() {
+        return defaultRequestExecutor;
     }
 }

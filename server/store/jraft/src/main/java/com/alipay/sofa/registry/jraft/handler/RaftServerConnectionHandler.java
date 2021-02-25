@@ -21,6 +21,9 @@ import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.remoting.Channel;
 import com.alipay.sofa.registry.remoting.ChannelHandler;
 
+import java.util.concurrent.Executor;
+import java.util.concurrent.ThreadPoolExecutor;
+
 /**
  *
  * @author shangyu.wh
@@ -29,6 +32,12 @@ import com.alipay.sofa.registry.remoting.ChannelHandler;
 public class RaftServerConnectionHandler implements ChannelHandler {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(RaftServerConnectionHandler.class);
+
+    private ThreadPoolExecutor  executor;
+
+    public RaftServerConnectionHandler(ThreadPoolExecutor executor) {
+        this.executor = executor;
+    }
 
     @Override
     public void connected(Channel channel) {
@@ -69,5 +78,10 @@ public class RaftServerConnectionHandler implements ChannelHandler {
     @Override
     public Class interest() {
         return null;
+    }
+
+    @Override
+    public Executor getExecutor() {
+        return executor;
     }
 }
