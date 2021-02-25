@@ -120,8 +120,8 @@ public class DefaultSlotTableMonitor extends AbstractLifecycle implements SlotTa
     }
 
     @Override
-    public boolean isSlotTableStable() {
-        return slotTableStats.isSlotTableStable();
+    public boolean isStableTableStable() {
+        return slotTableStats.isSlotLeadersStable() && slotTableStats.isSlotFollowersStable();
     }
 
     @Override
@@ -154,6 +154,6 @@ public class DefaultSlotTableMonitor extends AbstractLifecycle implements SlotTa
             logger.warn("[onHeartbeat] empty heartbeat");
             return;
         }
-        slotTableStats.checkSlotStatuses(heartbeat.getSlotStatus());
+        slotTableStats.checkSlotStatuses(heartbeat.getNode(), heartbeat.getSlotStatus());
     }
 }

@@ -16,6 +16,7 @@
  */
 package com.alipay.sofa.registry.server.meta.slot.balance;
 
+import com.alipay.sofa.registry.common.model.Triple;
 import com.alipay.sofa.registry.common.model.Tuple;
 import com.alipay.sofa.registry.common.model.slot.DataNodeSlot;
 import com.alipay.sofa.registry.common.model.slot.SlotTable;
@@ -25,7 +26,6 @@ import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.server.meta.slot.SlotBalancer;
 import com.alipay.sofa.registry.server.meta.slot.util.builder.SlotTableBuilder;
 import com.alipay.sofa.registry.server.meta.slot.util.comparator.Comparators;
-import com.alipay.sofa.registry.common.model.Triple;
 import com.alipay.sofa.registry.util.MathUtils;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -34,6 +34,8 @@ import org.apache.commons.lang.StringUtils;
 
 import java.util.*;
 
+import static com.alipay.sofa.registry.server.meta.slot.balance.LeaderOnlyBalancer.TRIGGER_THESHOLD;
+
 /**
  * @author chen.zhu
  * <p>
@@ -41,7 +43,7 @@ import java.util.*;
  */
 public class DefaultSlotBalancer implements SlotBalancer {
 
-    private static final Logger      logger        = LoggerFactory
+    private static final Logger      LOGGER        = LoggerFactory
                                                        .getLogger(DefaultSlotBalancer.class);
 
     private final Set<String>        currentDataServers;
@@ -62,39 +64,38 @@ public class DefaultSlotBalancer implements SlotBalancer {
     @Override
     public SlotTable balance() {
         if (currentDataServers.isEmpty()) {
-            logger.error("[no available data-servers] quit");
+            LOGGER.error("[no available data-servers] quit");
             throw new SofaRegistryRuntimeException(
                 "no available data-servers for slot-table reassignment");
         }
-        if (slotReplicas < 2) {
-            logger.warn("[balance] slot replica[{}] means no followers, balance leader only",
+        if (slotReplicas < TRIGGER_THESHOLD) {
+            LOGGER.warn("[balance] slot replica[{}] means no followers, balance leader only",
                 slotTableBuilder.getSlotReplicas());
             return new LeaderOnlyBalancer(slotTableBuilder, currentDataServers).balance();
         }
-        // TODO balance leader need to check the slot.migrating
         if (balanceLeaderSlots()) {
-            logger.info("[balanceLeaderSlots] end");
+            LOGGER.info("[balanceLeaderSlots] end");
             slotTableBuilder.incrEpoch();
             return slotTableBuilder.build();
         }
         if (balanceHighFollowerSlots()) {
-            logger.info("[balanceHighFollowerSlots] end");
+            LOGGER.info("[balanceHighFollowerSlots] end");
             slotTableBuilder.incrEpoch();
             return slotTableBuilder.build();
         }
         if (balanceLowFollowerSlots()) {
-            logger.info("[balanceLowFollowerSlots] end");
+            LOGGER.info("[balanceLowFollowerSlots] end");
             slotTableBuilder.incrEpoch();
             return slotTableBuilder.build();
         }
         // check the low watermark leader, the follower has balanced
         // just upgrade the followers in low data server
         if (balanceLowLeaders()) {
-            logger.info("[balanceLowLeaders] end");
+            LOGGER.info("[balanceLowLeaders] end");
             slotTableBuilder.incrEpoch();
             return slotTableBuilder.build();
         }
-        logger.info("[balance] do nothing");
+        LOGGER.info("[balance] do nothing");
         return null;
     }
 
@@ -127,7 +128,7 @@ public class DefaultSlotBalancer implements SlotBalancer {
             }
             // could not found any follower to upgrade
             if (notSatisfies.containsAll(highDataServers)) {
-                logger.info("[upgradeHighLeaders] could not found followers to upgrade for {}",
+                LOGGER.info("[upgradeHighLeaders] could not found followers to upgrade for {}",
                     highDataServers);
                 break;
             }
@@ -149,7 +150,7 @@ public class DefaultSlotBalancer implements SlotBalancer {
                 final int slotId = selected.o2;
                 final String newLeaderDataServer = selected.o1;
                 slotTableBuilder.replaceLeader(slotId, newLeaderDataServer);
-                logger.info("[upgradeHighLeaders] slotId={} leader balance from {} to {}", slotId,
+                LOGGER.info("[upgradeHighLeaders] slotId={} leader balance from {} to {}", slotId,
                     highDataServer, newLeaderDataServer);
                 balanced++;
                 break;
@@ -181,7 +182,7 @@ public class DefaultSlotBalancer implements SlotBalancer {
             Triple<String, Integer, String> selected = selectFollower4LeaderMigrate(highDataServer,
                 excludes, newFollowerDataServers);
             if (selected == null) {
-                logger.warn(
+                LOGGER.warn(
                     "[migrateHighLeaders] could not find dataServer to migrate follower for {}",
                     highDataServer);
                 continue;
@@ -192,7 +193,7 @@ public class DefaultSlotBalancer implements SlotBalancer {
             slotTableBuilder.removeFollower(slotId, oldFollower);
             slotTableBuilder.addFollower(slotId, newFollower);
             newFollowerDataServers.add(newFollower);
-            logger.info("[migrateHighLeaders] slotId={}, follower balance from {} to {}", slotId,
+            LOGGER.info("[migrateHighLeaders] slotId={}, follower balance from {} to {}", slotId,
                 oldFollower, newFollower);
             balanced++;
             if (balanced >= maxMove) {
@@ -218,7 +219,7 @@ public class DefaultSlotBalancer implements SlotBalancer {
             }
             // could not found any follower to upgrade
             if (notSatisfies.containsAll(lowDataServers)) {
-                logger.info("[upgradeLowLeaders] could not found followers to upgrade for {}",
+                LOGGER.info("[upgradeLowLeaders] could not found followers to upgrade for {}",
                     lowDataServers);
                 break;
             }
@@ -241,7 +242,7 @@ public class DefaultSlotBalancer implements SlotBalancer {
                 final String oldLeaderDataServer = selected.o1;
                 final String replaceLeader = slotTableBuilder.replaceLeader(slotId, lowDataServer);
                 if (!StringUtils.equals(oldLeaderDataServer, replaceLeader)) {
-                    logger
+                    LOGGER
                         .error(
                             "[upgradeLowLeaders] conflict leader, slotId={} leader balance from {}/{} to {}",
                             slotId, oldLeaderDataServer, replaceLeader, lowDataServer);
@@ -249,7 +250,7 @@ public class DefaultSlotBalancer implements SlotBalancer {
                         "upgradeLowLeaders, conflict leader=%d of %s and %s", slotId,
                         oldLeaderDataServer, replaceLeader));
                 }
-                logger.info("[upgradeLowLeaders] slotId={} leader balance from {} to {}", slotId,
+                LOGGER.info("[upgradeLowLeaders] slotId={} leader balance from {} to {}", slotId,
                     oldLeaderDataServer, lowDataServer);
                 balanced++;
                 break;
@@ -275,7 +276,7 @@ public class DefaultSlotBalancer implements SlotBalancer {
                 followerSlots.add(slot);
             }
         }
-        logger.info("[LeaderMigrate] {} owns leader slots={}, slotIds={}, migrate candidates {}, newFollowers={}",
+        LOGGER.info("[selectFollower4LeaderMigrate] {} owns leader slots={}, slotIds={}, migrate candidates {}, newFollowers={}",
                 leaderDataServer, leaderSlots.size(), leaderSlots, dataServersWithFollowers, newFollowerDataServers);
         // sort the dataServer by follower.num desc
         List<String> migrateDataServers = Lists.newArrayList(dataServersWithFollowers.keySet());
@@ -293,7 +294,7 @@ public class DefaultSlotBalancer implements SlotBalancer {
                     }
                     DataNodeSlot candidateDataNodeSlot = slotTableBuilder.getDataNodeSlot(candidate);
                     if (candidateDataNodeSlot.containsFollower(selectedFollower)) {
-                        logger.error("[LeaderMigrate] slotId={}, follower conflict with migrate from {} to {}",
+                        LOGGER.error("[selectFollower4LeaderMigrate] slotId={}, follower conflict with migrate from {} to {}",
                                 selectedFollower, migrateDataServer, candidateDataNodeSlot);
                         continue;
                     }
@@ -319,11 +320,11 @@ public class DefaultSlotBalancer implements SlotBalancer {
             }
         }
         if (dataServers2Followers.isEmpty()) {
-            logger.info("[LeaderUpgradeOut] {} owns leader slots={}, no dataServers could be upgrade, slotId={}",
+            LOGGER.info("[LeaderUpgradeOut] {} owns leader slots={}, no dataServers could be upgrade, slotId={}",
                     leaderDataServer, leaderSlots.size(), leaderSlots);
             return null;
         } else {
-            logger.info("[LeaderUpgradeOut] {} owns leader slots={}, slotIds={}, upgrade candidates {}",
+            LOGGER.info("[LeaderUpgradeOut] {} owns leader slots={}, slotIds={}, upgrade candidates {}",
                     leaderDataServer, leaderSlots.size(), leaderSlots, dataServers2Followers);
         }
         // sort the dataServer by leaders.num asc
@@ -342,12 +343,12 @@ public class DefaultSlotBalancer implements SlotBalancer {
             final String leaderDataServers = slotTableBuilder.getDataServersOwnsLeader(slot);
             if (StringUtils.isBlank(leaderDataServers)) {
                 // no leader, should not happen
-                logger.error("[LeaderUpgradeIn] no leader for slotId={} in {}", slot, followerDataServer);
+                LOGGER.error("[LeaderUpgradeIn] no leader for slotId={} in {}", slot, followerDataServer);
                 continue;
             }
             if (excludes.contains(leaderDataServers)) {
                 final DataNodeSlot leaderDataNodeSlot = slotTableBuilder.getDataNodeSlot(leaderDataServers);
-                logger.info("[LeaderUpgradeIn] {} not owns enough leader to downgrade, leaderSize={}, leaders={}",
+                LOGGER.info("[LeaderUpgradeIn] {} not owns enough leader to downgrade, leaderSize={}, leaders={}",
                         leaderDataServers, leaderDataNodeSlot.getLeaders().size(), leaderDataNodeSlot.getLeaders());
                 continue;
             }
@@ -356,11 +357,11 @@ public class DefaultSlotBalancer implements SlotBalancer {
             leaders.add(slot);
         }
         if (dataServers2Leaders.isEmpty()) {
-            logger.info("[LeaderUpgradeIn] {} owns followerSize={}, no dataServers could be downgrade, slotId={}",
+            LOGGER.info("[LeaderUpgradeIn] {} owns followerSize={}, no dataServers could be downgrade, slotId={}",
                     followerDataServer, followerSlots.size(), followerSlots);
             return null;
         } else {
-            logger.info("[LeaderUpgradeIn] {} owns followerSize={}, slotIds={}, downgrade candidates {}",
+            LOGGER.info("[LeaderUpgradeIn] {} owns followerSize={}, slotIds={}, downgrade candidates {}",
                     followerDataServer, followerSlots.size(), followerSlots, dataServers2Leaders);
         }
         // sort the dataServer by leaders.num asc
@@ -375,7 +376,7 @@ public class DefaultSlotBalancer implements SlotBalancer {
         List<DataNodeSlot> dataNodeSlots = slotTableBuilder.getDataNodeSlotsLeaderBeyond(threshold);
         List<String> dataServers = DataNodeSlot.collectDataNodes(dataNodeSlots);
         dataServers.sort(Comparators.mostLeadersFirst(slotTableBuilder));
-        logger.info("[LeaderHighWaterMark] threshold={}, dataServers={}", threshold, dataServers);
+        LOGGER.info("[LeaderHighWaterMark] threshold={}, dataServers={}", threshold, dataServers);
         return dataServers;
     }
 
@@ -383,7 +384,7 @@ public class DefaultSlotBalancer implements SlotBalancer {
         List<DataNodeSlot> dataNodeSlots = slotTableBuilder.getDataNodeSlotsLeaderBelow(threshold);
         List<String> dataServers = DataNodeSlot.collectDataNodes(dataNodeSlots);
         dataServers.sort(Comparators.leastLeadersFirst(slotTableBuilder));
-        logger.info("[LeaderLowWaterMark] threshold={}, dataServers={}", threshold, dataServers);
+        LOGGER.info("[LeaderLowWaterMark] threshold={}, dataServers={}", threshold, dataServers);
         return dataServers;
     }
 
@@ -392,7 +393,7 @@ public class DefaultSlotBalancer implements SlotBalancer {
             .getDataNodeSlotsFollowerBeyond(threshold);
         List<String> dataServers = DataNodeSlot.collectDataNodes(dataNodeSlots);
         dataServers.sort(Comparators.mostFollowersFirst(slotTableBuilder));
-        logger.info("[FollowerHighWaterMark] threshold={}, dataServers={}", threshold, dataServers);
+        LOGGER.info("[FollowerHighWaterMark] threshold={}, dataServers={}", threshold, dataServers);
         return dataServers;
     }
 
@@ -401,7 +402,7 @@ public class DefaultSlotBalancer implements SlotBalancer {
             .getDataNodeSlotsFollowerBelow(threshold);
         List<String> dataServers = DataNodeSlot.collectDataNodes(dataNodeSlots);
         dataServers.sort(Comparators.leastFollowersFirst(slotTableBuilder));
-        logger.info("[FollowerLowWaterMark] threshold={}, dataServers={}", threshold, dataServers);
+        LOGGER.info("[FollowerLowWaterMark] threshold={}, dataServers={}", threshold, dataServers);
         return dataServers;
     }
 
@@ -410,7 +411,7 @@ public class DefaultSlotBalancer implements SlotBalancer {
             currentDataServers.size());
         final int maxMove = balancePolicy.getMaxMoveFollowerSlots();
         final int threshold = balancePolicy.getHighWaterMarkSlotFollowerNums(followerCeilAvg);
-        int balanced = 0;
+        int balanced = 0, prevBalanced = -1;
         while (balanced < maxMove) {
             final List<String> highDataServers = findDataServersFollowerHighWaterMark(threshold);
             if (highDataServers.isEmpty()) {
@@ -420,11 +421,12 @@ public class DefaultSlotBalancer implements SlotBalancer {
             Set<String> excludes = Sets.newHashSet(highDataServers);
             excludes.addAll(findDataServersFollowerHighWaterMark(threshold - 1));
 
+            prevBalanced = balanced;
             for (String highDataServer : highDataServers) {
                 Tuple<String, Integer> selected = selectFollower4BalanceOut(highDataServer,
                     excludes);
                 if (selected == null) {
-                    logger.warn(
+                    LOGGER.warn(
                         "[balanceHighFollowerSlots] could not find follower slot to balance: {}",
                         highDataServer);
                     continue;
@@ -433,9 +435,19 @@ public class DefaultSlotBalancer implements SlotBalancer {
                 final String newFollowerDataServer = selected.o1;
                 slotTableBuilder.removeFollower(followerSlot, highDataServer);
                 slotTableBuilder.addFollower(followerSlot, newFollowerDataServer);
-                logger.info("[balanceHighFollowerSlots] balance follower slotId={} from {} to {}",
+                LOGGER.info("[balanceHighFollowerSlots] balance follower slotId={} from {} to {}",
                     followerSlot, highDataServer, newFollowerDataServer);
                 balanced++;
+                break;
+            }
+            /**
+             * avoid for infinity loop
+             * once the "prev-balanced == balanced", it means that we can't find any suitable candidate for migrate
+             * stop before we case an infinity loop
+             * */
+            if (prevBalanced == balanced) {
+                LOGGER
+                    .warn("[balanceHighFollowerSlots][prevBlanced == balanced]no more balance available");
                 break;
             }
         }
@@ -447,7 +459,7 @@ public class DefaultSlotBalancer implements SlotBalancer {
             currentDataServers.size());
         final int maxMove = balancePolicy.getMaxMoveFollowerSlots();
         final int threshold = balancePolicy.getLowWaterMarkSlotFollowerNums(followerFloorAvg);
-        int balanced = 0;
+        int balanced = 0, prevBalanced = -1;
         while (balanced < maxMove) {
             final List<String> lowDataServers = findDataServersFollowerLowWaterMark(threshold);
             if (lowDataServers.isEmpty()) {
@@ -457,10 +469,11 @@ public class DefaultSlotBalancer implements SlotBalancer {
             Set<String> excludes = Sets.newHashSet(lowDataServers);
             excludes.addAll(findDataServersFollowerLowWaterMark(threshold + 1));
 
+            prevBalanced = balanced;
             for (String lowDataServer : lowDataServers) {
                 Tuple<String, Integer> selected = selectFollower4BalanceIn(lowDataServer, excludes);
                 if (selected == null) {
-                    logger.warn(
+                    LOGGER.warn(
                         "[balanceLowFollowerSlots] could not find follower slot to balance: {}",
                         lowDataServer);
                     continue;
@@ -469,9 +482,14 @@ public class DefaultSlotBalancer implements SlotBalancer {
                 final String oldFollowerDataServer = selected.o1;
                 slotTableBuilder.removeFollower(followerSlot, oldFollowerDataServer);
                 slotTableBuilder.addFollower(followerSlot, lowDataServer);
-                logger.info("[balanceLowFollowerSlots] balance follower slotId={} from {} to {}",
+                LOGGER.info("[balanceLowFollowerSlots] balance follower slotId={} from {} to {}",
                     followerSlot, oldFollowerDataServer, lowDataServer);
                 balanced++;
+                break;
+            }
+            if (prevBalanced == balanced) {
+                LOGGER
+                    .warn("[balanceLowFollowerSlots][prevBlanced == balanced]no more balance available");
                 break;
             }
         }
@@ -483,21 +501,21 @@ public class DefaultSlotBalancer implements SlotBalancer {
         final DataNodeSlot dataNodeSlot = slotTableBuilder.getDataNodeSlot(followerDataServer);
         List<String> candidates = getCandidateDataServers(excludes,
             Comparators.mostFollowersFirst(slotTableBuilder), currentDataServers);
-        logger.info("[selectFollower4BalanceIn] target={}, followerSize={}, candidates={}",
+        LOGGER.info("[selectFollower4BalanceIn] target={}, followerSize={}, candidates={}",
             followerDataServer, dataNodeSlot.getFollowers().size(), candidates);
         for (String candidate : candidates) {
             DataNodeSlot candidateDataNodeSlot = slotTableBuilder.getDataNodeSlot(candidate);
             Set<Integer> candidateFollowerSlots = candidateDataNodeSlot.getFollowers();
             for (int candidateFollowerSlot : candidateFollowerSlots) {
                 if (dataNodeSlot.containsFollower(candidateFollowerSlot)) {
-                    logger
+                    LOGGER
                         .info(
                             "[selectFollower4BalanceIn] skip, target {} contains follower {}, candidate={}",
                             followerDataServer, candidateFollowerSlot, candidate);
                     continue;
                 }
                 if (dataNodeSlot.containsLeader(candidateFollowerSlot)) {
-                    logger
+                    LOGGER
                         .info(
                             "[selectFollower4BalanceIn] skip, target {} contains leader {}, candidate={}",
                             followerDataServer, candidateFollowerSlot, candidate);
@@ -515,22 +533,22 @@ public class DefaultSlotBalancer implements SlotBalancer {
         Set<Integer> followerSlots = dataNodeSlot.getFollowers();
         List<String> candidates = getCandidateDataServers(excludes,
             Comparators.leastFollowersFirst(slotTableBuilder), currentDataServers);
-        logger.info("[selectFollower4BalanceOut] target={}, followerSize={}, candidates={}",
+        LOGGER.info("[selectFollower4BalanceOut] target={}, followerSize={}, candidates={}",
             followerDataServer, followerSlots.size(), candidates);
         for (Integer followerSlot : followerSlots) {
             for (String candidate : candidates) {
                 DataNodeSlot candidateDataNodeSlot = slotTableBuilder.getDataNodeSlot(candidate);
                 if (candidateDataNodeSlot.containsLeader(followerSlot)) {
-                    logger
+                    LOGGER
                         .info(
-                            "[selectFollower4BalanceOut] conflict leader, target={}, follower={}, candidate={}",
+                            "[selectFollower4BalanceOut] skip, conflict leader, target={}, follower={}, candidate={}",
                             followerDataServer, followerSlot, candidate);
                     continue;
                 }
                 if (candidateDataNodeSlot.containsFollower(followerSlot)) {
-                    logger
+                    LOGGER
                         .info(
-                            "[selectFollower4BalanceOut] conflict follower, target={}, follower={}, candidate={}",
+                            "[selectFollower4BalanceOut] skip, conflict follower, target={}, follower={}, candidate={}",
                             followerDataServer, followerSlot, candidate);
                     continue;
                 }

@@ -16,7 +16,8 @@
  */
 package com.alipay.sofa.registry.server.meta.monitor;
 
-import com.alipay.sofa.registry.common.model.slot.SlotStatus;
+import com.alipay.sofa.registry.common.model.metaserver.nodes.DataNode;
+import com.alipay.sofa.registry.common.model.slot.BaseSlotStatus;
 import com.alipay.sofa.registry.common.model.slot.SlotTable;
 import com.alipay.sofa.registry.lifecycle.Initializable;
 
@@ -29,9 +30,11 @@ import java.util.List;
  */
 public interface SlotTableStats extends Initializable {
 
-    boolean isSlotTableStable();
+    boolean isSlotLeadersStable();
+
+    boolean isSlotFollowersStable();
 
     void updateSlotTable(SlotTable slotTable);
 
-    void checkSlotStatuses(List<SlotStatus> slotStatuses);
+    void checkSlotStatuses(DataNode node, List<BaseSlotStatus> slotStatuses);
 }

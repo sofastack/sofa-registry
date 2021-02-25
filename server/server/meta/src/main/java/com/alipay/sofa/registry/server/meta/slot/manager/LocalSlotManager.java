@@ -33,6 +33,7 @@ import com.alipay.sofa.registry.server.meta.remoting.notifier.Notifier;
 import com.alipay.sofa.registry.server.meta.slot.SlotManager;
 import com.alipay.sofa.registry.jraft.annotation.RaftService;
 import com.alipay.sofa.registry.util.FileUtils;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
 import org.glassfish.jersey.internal.guava.Sets;
@@ -225,4 +226,9 @@ public class LocalSlotManager extends AbstractLifecycleObservable implements Slo
         }
     }
 
+    @VisibleForTesting
+    public LocalSlotManager setNotifiers(List<Notifier> notifiers) {
+        this.notifiers = notifiers;
+        return this;
+    }
 }

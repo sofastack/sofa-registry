@@ -16,10 +16,8 @@
  */
 package com.alipay.sofa.registry.server.meta.monitor.impl;
 
-import com.alipay.sofa.registry.common.model.slot.Slot;
-import com.alipay.sofa.registry.common.model.slot.SlotConfig;
-import com.alipay.sofa.registry.common.model.slot.SlotStatus;
-import com.alipay.sofa.registry.common.model.slot.SlotTable;
+import com.alipay.sofa.registry.common.model.metaserver.nodes.DataNode;
+import com.alipay.sofa.registry.common.model.slot.*;
 import com.alipay.sofa.registry.exception.InitializeException;
 import com.alipay.sofa.registry.lifecycle.impl.AbstractLifecycle;
 import com.alipay.sofa.registry.server.meta.monitor.SlotStats;
@@ -59,7 +57,7 @@ public class DefaultSlotTableStats extends AbstractLifecycle implements SlotTabl
     }
 
     @Override
-    public boolean isSlotTableStable() {
+    public boolean isSlotLeadersStable() {
         for (Map.Entry<Integer, SlotStats> entry : slotStatses.entrySet()) {
             SlotStats slotStats = entry.getValue();
             if (!slotStats.isLeaderStable()) {
@@ -70,8 +68,20 @@ public class DefaultSlotTableStats extends AbstractLifecycle implements SlotTabl
     }
 
     @Override
-    public void checkSlotStatuses(List<SlotStatus> slotStatuses) {
-        for (SlotStatus slotStatus : slotStatuses) {
+    public boolean isSlotFollowersStable() {
+        for (Map.Entry<Integer, SlotStats> entry : slotStatses.entrySet()) {
+            if (!entry.getValue().isFollowersStable()) {
+                logger.info("[isSlotFollowersStable]slot[{}] follower not stable {}",
+                    entry.getKey(), entry.getValue());
+                return false;
+            }
+        }
+        return true;
+    }
+
+    @Override
+    public void checkSlotStatuses(DataNode node, List<BaseSlotStatus> slotStatuses) {
+        for (BaseSlotStatus slotStatus : slotStatuses) {
             int slotId = slotStatus.getSlotId();
             SlotStats slotStats = slotStatses.get(slotId);
             if (slotStats == null || slotStats.getSlot() == null) {
@@ -85,7 +95,11 @@ public class DefaultSlotTableStats extends AbstractLifecycle implements SlotTabl
                             .getLeaderEpoch());
                 continue;
             }
-            slotStats.updateSlotState(slotStatus.getLeaderStatus());
+            if (slotStatus.getRole() == Slot.Role.Leader) {
+                slotStats.updateLeaderState((LeaderSlotStatus) slotStatus);
+            } else {
+                slotStats.updateFollowerState((FollowerSlotStatus) slotStatus);
+            }
         }
     }
 

@@ -17,10 +17,7 @@
 package com.alipay.sofa.registry.server.data.slot;
 
 import com.alipay.sofa.registry.common.model.Tuple;
-import com.alipay.sofa.registry.common.model.slot.DataNodeSlot;
-import com.alipay.sofa.registry.common.model.slot.Slot;
-import com.alipay.sofa.registry.common.model.slot.SlotAccess;
-import com.alipay.sofa.registry.common.model.slot.SlotTable;
+import com.alipay.sofa.registry.common.model.slot.*;
 import com.alipay.sofa.registry.common.model.slot.func.SlotFunction;
 import com.alipay.sofa.registry.common.model.slot.func.SlotFunctionRegistry;
 import com.alipay.sofa.registry.log.Logger;
@@ -35,9 +32,6 @@ import com.alipay.sofa.registry.server.data.remoting.metaserver.MetaServerServic
 import com.alipay.sofa.registry.server.shared.env.ServerEnv;
 import com.alipay.sofa.registry.server.shared.resource.SlotGenericResource;
 import com.alipay.sofa.registry.server.shared.slot.DiskSlotTableRecorder;
-
-import static com.alipay.sofa.registry.server.data.slot.SlotMetrics.Manager.*;
-
 import com.alipay.sofa.registry.server.shared.slot.SlotTableRecorder;
 import com.alipay.sofa.registry.task.KeyedTask;
 import com.alipay.sofa.registry.task.KeyedThreadPoolExecutor;
@@ -50,8 +44,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import javax.annotation.PostConstruct;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
+
+import static com.alipay.sofa.registry.server.data.slot.SlotMetrics.Manager.*;
 
 /**
  * @author yuzhi.lyz
@@ -178,20 +175,35 @@ public final class SlotManagerImpl implements SlotManager {
     }
 
     @Override
-    public List<SlotAccess> getSlotAccesses() {
-        List<SlotAccess> slotAccesses = Lists.newArrayList();
-        slotTableStates.slotStates.forEach((slotId, slotState) -> {
-            if (slotState != null && localIsLeader(slotState.slot)) {
-                SlotAccess result = null;
-                if (slotState.migrated) {
-                    result = new SlotAccess(slotId, slotTableStates.table.getEpoch(), SlotAccess.Status.Accept, slotState.slot.getLeaderEpoch());
-                } else {
-                    result = new SlotAccess(slotId, slotTableStates.table.getEpoch(), SlotAccess.Status.Migrating, slotState.slot.getLeaderEpoch());
+    public List<BaseSlotStatus> getSlotStatuses() {
+        List<BaseSlotStatus> slotStatuses = Lists
+            .newArrayListWithCapacity(slotTableStates.slotStates.size());
+        try {
+            updateLock.readLock().lock();
+            for (Map.Entry<Integer, SlotState> entry : slotTableStates.slotStates.entrySet()) {
+                int slotId = entry.getKey();
+                SlotState slotState = entry.getValue();
+                if (slotState == null) {
+                    continue;
                 }
-                slotAccesses.add(result);
+                if (localIsLeader(slotState.slot)) {
+                    LeaderSlotStatus status = new LeaderSlotStatus(slotId,
+                        slotState.slot.getLeaderEpoch(), ServerEnv.IP,
+                        slotState.migrated ? BaseSlotStatus.LeaderStatus.HEALTHY
+                            : BaseSlotStatus.LeaderStatus.UNHEALTHY);
+                    slotStatuses.add(status);
+                } else {
+                    KeyedTask syncLeaderTask = slotState.syncLeaderTask;
+                    FollowerSlotStatus status = new FollowerSlotStatus(slotId,
+                        slotState.slot.getLeaderEpoch(), ServerEnv.IP,
+                        syncLeaderTask.getStartTime(), slotState.lastSuccessLeaderSyncTime);
+                    slotStatuses.add(status);
+                }
             }
-        });
-        return slotAccesses;
+            return slotStatuses;
+        } finally {
+            updateLock.readLock().unlock();
+        }
     }
 
     @Override
@@ -269,6 +281,16 @@ public final class SlotManagerImpl implements SlotManager {
         slotTableStates.table = updating;
         observeLeaderAssignGauge(slotTableStates.table.getLeaderNum(ServerEnv.IP));
         observeFollowerAssignGauge(slotTableStates.table.getFollowerNum(ServerEnv.IP));
+    }
+
+    @Override
+    public Lock readLock() {
+        return updateLock.readLock();
+    }
+
+    @Override
+    public Lock writeLock() {
+        return updateLock.writeLock();
     }
 
     private static final class SlotTableStates {
@@ -374,6 +396,9 @@ public final class SlotManagerImpl implements SlotManager {
                         }
                     } else {
                         // sync leader
+                        if (syncLeaderTask != null && syncLeaderTask.isFinished()) {
+                            slotState.completeSyncLeaderTask();
+                        }
                         if (syncLeaderTask == null ||
                                 syncLeaderTask.isOverAfter(
                                         dataServerConfig.getSlotFollowerSyncLeaderIntervalSecs() * 1000)) {
@@ -402,8 +427,9 @@ public final class SlotManagerImpl implements SlotManager {
         volatile Slot                                 slot;
         volatile boolean                              migrated;
         long                                          migratingStartTime;
-        final Map<String, MigratingTask>              migratingTasks   = Maps.newHashMap();
-        final Map<String, KeyedTask<SyncSessionTask>> syncSessionTasks = Maps.newHashMap();
+        volatile long                                 lastSuccessLeaderSyncTime = -1L;
+        final Map<String, MigratingTask>              migratingTasks            = Maps.newHashMap();
+        final Map<String, KeyedTask<SyncSessionTask>> syncSessionTasks          = Maps.newHashMap();
         KeyedTask<SyncLeaderTask>                     syncLeaderTask;
 
         SlotState(Slot slot) {
@@ -436,6 +462,12 @@ public final class SlotManagerImpl implements SlotManager {
             } else {
                 // to a session node, at most there is 8 tasks running, avoid too many task hit the same session
                 return syncSessionExecutor.execute(new Tuple((slot.getId() % 8), sessionIp), task);
+            }
+        }
+
+        public void completeSyncLeaderTask() {
+            if (syncLeaderTask.isSuccess()) {
+                this.lastSuccessLeaderSyncTime = syncLeaderTask.getEndTime();
             }
         }
     }

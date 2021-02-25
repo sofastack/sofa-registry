@@ -162,10 +162,6 @@ public class ScheduledSlotArranger extends AbstractLifecycleObservable implement
 
     protected void balanceSlots(SlotTableBuilder slotTableBuilder,
                                 Collection<String> currentDataServers) {
-        if (!slotTableMonitor.isSlotTableStable()) {
-            logger.warn("[balanceSlots] slot-table not stable, won't balance");
-            return;
-        }
         SlotTable slotTable = createSlotBalancer(slotTableBuilder, currentDataServers).balance();
         refreshSlotTable(slotTable);
     }
@@ -218,8 +214,8 @@ public class ScheduledSlotArranger extends AbstractLifecycleObservable implement
         }
         try {
             List<String> currentDataNodeIps = NodeUtils.transferNodeToIpList(dataNodes);
-            logger.info("arrange slot with DataNode, size={}, {}", currentDataNodeIps.size(),
-                currentDataNodeIps);
+            logger.info("[tryArrangeSlots][begin]arrange slot with DataNode, size={}, {}",
+                currentDataNodeIps.size(), currentDataNodeIps);
             final SlotTable curSlotTable = slotManager.getSlotTable();
             SlotTableBuilder tableBuilder = createSlotTableBuilder(curSlotTable,
                 currentDataNodeIps, slotManager.getSlotNums(), slotManager.getSlotReplicaNums());
@@ -227,10 +223,12 @@ public class ScheduledSlotArranger extends AbstractLifecycleObservable implement
                 logger.info("[re-assign][begin] assign slots to data-server");
                 assignSlots(tableBuilder, currentDataNodeIps);
                 logger.info("[re-assign][end]");
-            } else {
+            } else if (slotTableMonitor.isStableTableStable()) {
                 logger.info("[balance][begin] balance slots to data-server");
                 balanceSlots(tableBuilder, currentDataNodeIps);
                 logger.info("[balance][end]");
+            } else {
+                logger.info("[tryArrangeSlots][end] no arrangement");
             }
         } finally {
             unlock();

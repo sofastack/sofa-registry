@@ -17,8 +17,8 @@
 package com.alipay.sofa.registry.common.model.metaserver.inter.heartbeat;
 
 import com.alipay.sofa.registry.common.model.Node;
+import com.alipay.sofa.registry.common.model.slot.BaseSlotStatus;
 import com.alipay.sofa.registry.common.model.slot.SlotConfig;
-import com.alipay.sofa.registry.common.model.slot.SlotStatus;
 
 import java.io.Serializable;
 import java.util.Collections;
@@ -43,7 +43,7 @@ public class HeartbeatRequest<T extends Node> implements Serializable {
 
     private final SlotConfig.SlotBasicInfo slotBasicInfo;
 
-    private final List<SlotStatus>         slotStatuses;
+    private final List<BaseSlotStatus>     slotStatuses;
 
     /**
      * constructor
@@ -67,7 +67,7 @@ public class HeartbeatRequest<T extends Node> implements Serializable {
      */
     public HeartbeatRequest(T node, long slotTableEpoch, String dataCenter, long timestamp,
                             SlotConfig.SlotBasicInfo slotBasicInfo,
-                            final List<SlotStatus> slotStatuses) {
+                            final List<BaseSlotStatus> slotStatuses) {
         this.node = node;
         this.slotTableEpoch = slotTableEpoch;
         this.dataCenter = dataCenter;
@@ -144,7 +144,7 @@ public class HeartbeatRequest<T extends Node> implements Serializable {
      *
      * @return the get slot status
      */
-    public List<SlotStatus> getSlotStatus() {
+    public List<BaseSlotStatus> getSlotStatus() {
         return slotStatuses;
     }
 

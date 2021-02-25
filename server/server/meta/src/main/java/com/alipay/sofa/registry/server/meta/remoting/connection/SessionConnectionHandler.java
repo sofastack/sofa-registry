@@ -34,7 +34,7 @@ import java.util.concurrent.ConcurrentHashMap;
 public class SessionConnectionHandler extends ListenServerChannelHandler implements
                                                                         NodeConnectManager {
 
-    private Map<String/*connectId*/, InetSocketAddress> connections = new ConcurrentHashMap<>();
+    private final Map<String/*connectId*/, InetSocketAddress> connections = new ConcurrentHashMap<>();
 
     @Override
     public void connected(Channel channel) {

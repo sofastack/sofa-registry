@@ -34,6 +34,8 @@ import java.util.List;
  * @author yuzhi.lyz
  * @version v 0.1 2020-11-11 11:23 yuzhi.lyz Exp $
  */
+
+// for cross-dc sync use only
 public final class GetSlotTableRequestHandler extends MetaServerHandler<GetSlotTableRequest> {
 
     private static final Logger LOGGER = LoggerFactory.getLogger("META-SLOT");
@@ -43,7 +45,6 @@ public final class GetSlotTableRequestHandler extends MetaServerHandler<GetSlotT
 
     @Override
     public Object doHandle(Channel channel, GetSlotTableRequest getNodesRequest) {
-        // TODO
         final long epochOfNode = getNodesRequest.getEpochOfNode();
         final SlotTable currentTable = currentDcMetaServer.getSlotTable();
         if (epochOfNode == currentTable.getEpoch()) {

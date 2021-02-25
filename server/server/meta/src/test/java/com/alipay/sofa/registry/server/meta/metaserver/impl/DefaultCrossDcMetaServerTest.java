@@ -163,8 +163,8 @@ public class DefaultCrossDcMetaServerTest extends AbstractTest {
             getRpcClient(scheduled, 1, new TimeoutException()));
         server.setRaftStorage(server.new RaftMetaServerListStorage());
         server.doRefresh(0);
-        Thread.sleep(20);
-        verify(server, times(4)).doRefresh(anyInt());
+        Thread.sleep(100);
+        verify(server, atLeast(3)).doRefresh(anyInt());
     }
 
     //run manually

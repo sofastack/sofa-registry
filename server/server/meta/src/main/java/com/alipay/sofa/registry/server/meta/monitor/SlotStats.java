@@ -16,8 +16,9 @@
  */
 package com.alipay.sofa.registry.server.meta.monitor;
 
+import com.alipay.sofa.registry.common.model.slot.FollowerSlotStatus;
+import com.alipay.sofa.registry.common.model.slot.LeaderSlotStatus;
 import com.alipay.sofa.registry.common.model.slot.Slot;
-import com.alipay.sofa.registry.common.model.slot.SlotStatus;
 
 /**
  * @author chen.zhu
@@ -30,5 +31,11 @@ public interface SlotStats {
 
     boolean isLeaderStable();
 
-    void updateSlotState(SlotStatus.LeaderStatus state);
+    boolean isFollowersStable();
+
+    boolean isFollowerStable(String dataServer);
+
+    void updateLeaderState(LeaderSlotStatus leaderSlotStatus);
+
+    void updateFollowerState(FollowerSlotStatus followerSlotStatus);
 }
