@@ -67,7 +67,8 @@ public final class MetaServerServiceImpl extends
     protected HeartbeatRequest createRequest() {
         return new HeartbeatRequest(createNode(), slotTableCache.getEpoch(),
             sessionServerConfig.getSessionServerDataCenter(), System.currentTimeMillis(),
-            new SlotConfig.SlotBasicInfo(SlotConfig.SLOT_NUM, SlotConfig.SLOT_REPLICAS, SlotConfig.FUNC));
+            new SlotConfig.SlotBasicInfo(SlotConfig.SLOT_NUM, SlotConfig.SLOT_REPLICAS,
+                SlotConfig.FUNC));
     }
 
     private Node createNode() {

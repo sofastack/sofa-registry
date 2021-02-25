@@ -38,8 +38,6 @@ public final class SlotTableChangeEvent implements Serializable {
 
     @Override
     public String toString() {
-        return "SlotTableChangeEvent{" +
-                "slotTableEpoch=" + slotTableEpoch +
-                '}';
+        return "SlotTableChangeEvent{" + "slotTableEpoch=" + slotTableEpoch + '}';
     }
 }

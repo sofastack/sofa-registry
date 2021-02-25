@@ -30,11 +30,11 @@ import java.util.Map;
  */
 public class DefaultSlotStats implements SlotStats {
 
-    private final Slot                 slot;
+    private final Slot                       slot;
 
-    private volatile SlotStatus.LeaderStatus leaderStatus = SlotStatus.LeaderStatus.INIT;
+    private volatile SlotStatus.LeaderStatus leaderStatus    = SlotStatus.LeaderStatus.INIT;
 
-    private final Map<String, Long> followerOffsets = Maps.newConcurrentMap();
+    private final Map<String, Long>          followerOffsets = Maps.newConcurrentMap();
 
     public DefaultSlotStats(Slot slot) {
         this.slot = slot;

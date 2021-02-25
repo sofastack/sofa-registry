@@ -16,7 +16,6 @@
  */
 package com.alipay.sofa.registry.server.meta.monitor.impl;
 
-import com.alipay.sofa.registry.common.model.metaserver.inter.heartbeat.DataHeartbeatRequest;
 import com.alipay.sofa.registry.common.model.metaserver.inter.heartbeat.HeartbeatRequest;
 import com.alipay.sofa.registry.common.model.metaserver.nodes.DataNode;
 import com.alipay.sofa.registry.common.model.slot.SlotTable;
@@ -151,6 +150,10 @@ public class DefaultSlotTableMonitor extends AbstractLifecycle implements SlotTa
                     slotTableEpoch, slotManager.getSlotTable().getEpoch());
             return;
         }
-        slotTableStats.checkSlotStatuses(((DataHeartbeatRequest) heartbeat).getSlotStatus());
+        if (heartbeat.getSlotStatus() == null) {
+            logger.warn("[onHeartbeat] empty heartbeat");
+            return;
+        }
+        slotTableStats.checkSlotStatuses(heartbeat.getSlotStatus());
     }
 }

@@ -43,7 +43,7 @@ import javax.ws.rs.core.MediaType;
 @Path("openapi/slot/table")
 public class SlotTableResource {
 
-    private final Logger logger = LoggerFactory.getLogger(getClass());
+    private final Logger             logger = LoggerFactory.getLogger(getClass());
 
     @Autowired
     private DefaultSlotManager       defaultSlotManager;

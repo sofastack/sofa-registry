@@ -16,7 +16,7 @@
  */
 package com.alipay.sofa.registry.server.meta.monitor;
 
-import com.alipay.sofa.registry.common.model.metaserver.inter.heartbeat.DataHeartbeatRequest;
+import com.alipay.sofa.registry.common.model.metaserver.inter.heartbeat.HeartbeatRequest;
 import com.alipay.sofa.registry.common.model.metaserver.nodes.DataNode;
 import com.alipay.sofa.registry.common.model.slot.*;
 import com.alipay.sofa.registry.server.meta.AbstractTest;
@@ -39,16 +39,15 @@ public class DefaultSlotTableMonitorTest extends AbstractTest {
 
     private LocalSlotManager        slotManager;
 
-    private List<DataNode> dataNodes;
+    private List<DataNode>          dataNodes;
 
     @Before
     public void beforeDefaultSlotTableMonitorTest() throws Exception {
         NodeConfig nodeConfig = mock(NodeConfig.class);
         when(nodeConfig.getLocalDataCenter()).thenReturn(getDc());
         slotManager = new LocalSlotManager(nodeConfig);
-        dataNodes = Lists.newArrayList(new DataNode(randomURL(randomIp()), getDc()),
-            new DataNode(randomURL(randomIp()), getDc()), new DataNode(randomURL(randomIp()),
-                getDc()));
+        dataNodes = Lists.newArrayList(new DataNode(randomURL(randomIp()), getDc()), new DataNode(
+            randomURL(randomIp()), getDc()), new DataNode(randomURL(randomIp()), getDc()));
         slotManager.refresh(new SlotTableGenerator(dataNodes).createSlotTable());
         slotManager = spy(slotManager);
         monitor.setSlotManager(slotManager);
@@ -84,7 +83,7 @@ public class DefaultSlotTableMonitorTest extends AbstractTest {
             dataNodeSlot.getLeaders().forEach(slotId -> {
                 slotStatuses.add(new SlotStatus(slotId, slotTable.getSlot(slotId).getLeaderEpoch(), SlotStatus.LeaderStatus.HEALTHY));
             });
-            monitor.onHeartbeat(new DataHeartbeatRequest(dataNode, slotManager.getSlotTable().getEpoch(), getDc(),
+            monitor.onHeartbeat(new HeartbeatRequest<DataNode>(dataNode, slotManager.getSlotTable().getEpoch(), getDc(),
                     System.currentTimeMillis(),
                     new SlotConfig.SlotBasicInfo(SlotConfig.SLOT_NUM, SlotConfig.SLOT_REPLICAS, SlotConfig.FUNC),
                     slotStatuses));
@@ -103,7 +102,7 @@ public class DefaultSlotTableMonitorTest extends AbstractTest {
                     slotStatuses.add(new SlotStatus(slotId, slotTable.getSlot(slotId).getLeaderEpoch(), SlotStatus.LeaderStatus.HEALTHY));
                 }
             });
-            monitor.onHeartbeat(new DataHeartbeatRequest(dataNode, slotManager.getSlotTable().getEpoch(), getDc(),
+            monitor.onHeartbeat(new HeartbeatRequest<DataNode>(dataNode, slotManager.getSlotTable().getEpoch(), getDc(),
                     System.currentTimeMillis(),
                     new SlotConfig.SlotBasicInfo(SlotConfig.SLOT_NUM, SlotConfig.SLOT_REPLICAS, SlotConfig.FUNC),
                     slotStatuses));
@@ -122,7 +121,7 @@ public class DefaultSlotTableMonitorTest extends AbstractTest {
             dataNodeSlot.getLeaders().forEach(slotId -> {
                 slotStatuses.add(new SlotStatus(slotId, slotTable.getSlot(slotId).getLeaderEpoch(), SlotStatus.LeaderStatus.HEALTHY));
             });
-            monitor.onHeartbeat(new DataHeartbeatRequest(dataNode, slotTable.getEpoch() - 1, getDc(),
+            monitor.onHeartbeat(new HeartbeatRequest<DataNode>(dataNode, slotTable.getEpoch() - 1, getDc(),
                     System.currentTimeMillis(),
                     new SlotConfig.SlotBasicInfo(SlotConfig.SLOT_NUM, SlotConfig.SLOT_REPLICAS, SlotConfig.FUNC),
                     slotStatuses));
@@ -141,7 +140,7 @@ public class DefaultSlotTableMonitorTest extends AbstractTest {
             dataNodeSlot.getLeaders().forEach(slotId -> {
                 slotStatuses.add(new SlotStatus(slotId, slotTable.getSlot(slotId).getLeaderEpoch(), SlotStatus.LeaderStatus.HEALTHY));
             });
-            monitor.onHeartbeat(new DataHeartbeatRequest(dataNode, slotManager.getSlotTable().getEpoch(), getDc(),
+            monitor.onHeartbeat(new HeartbeatRequest<DataNode>(dataNode, slotManager.getSlotTable().getEpoch(), getDc(),
                     System.currentTimeMillis(),
                     new SlotConfig.SlotBasicInfo(SlotConfig.SLOT_NUM, SlotConfig.SLOT_REPLICAS, SlotConfig.FUNC),
                     slotStatuses));

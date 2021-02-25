@@ -40,11 +40,13 @@ import com.alipay.sofa.registry.server.meta.slot.SlotAllocator;
 import com.alipay.sofa.registry.server.meta.slot.arrange.CrossDcSlotAllocator;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import org.springframework.aop.target.dynamic.Refreshable;
 
 import java.lang.reflect.Proxy;
 import java.util.Collection;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
@@ -118,11 +120,11 @@ public class DefaultCrossDcMetaServer extends AbstractMetaServer implements Cros
     }
 
     private void initMetaNodes() {
-        List<MetaNode> metaNodes = Lists.newArrayList();
+        Set<MetaNode> metaNodes = Sets.newHashSet();
         for (String ip : initMetaAddresses) {
             metaNodes.add(new MetaNode(new URL(ip), dcName));
         }
-        this.metaServers.set(metaNodes);
+        this.metaServers = metaNodes;
     }
 
     private void initSlotAllocator() throws InitializeException {
@@ -195,7 +197,7 @@ public class DefaultCrossDcMetaServer extends AbstractMetaServer implements Cros
 
     @Override
     public List<MetaNode> getClusterMembers() {
-        return metaServers.get();
+        return Lists.newArrayList(metaServers);
     }
 
     private int getIntervalMilli() {
@@ -331,12 +333,12 @@ public class DefaultCrossDcMetaServer extends AbstractMetaServer implements Cros
                     logger
                         .warn(
                             "[tryUpdateRemoteDcMetaServerList][{}] remote meta server changed, \nbefore: {}, \nafter: {}",
-                            getDc(), DefaultCrossDcMetaServer.this.metaServers.get(),
+                            getDc(), DefaultCrossDcMetaServer.this.metaServers,
                             response.getNodes() != null ? response.getNodes().values() : "None");
                 }
                 currentVersion.set(remoteVersion);
                 if (response.getNodes() != null) {
-                    metaServers.set(Lists.newArrayList(response.getNodes().values()));
+                    metaServers = Sets.newHashSet(response.getNodes().values());
                 }
             } finally {
                 DefaultCrossDcMetaServer.this.lock.writeLock().unlock();
