@@ -28,6 +28,7 @@ import com.alipay.sofa.registry.util.ParaCheckUtil;
 
 import static com.alipay.sofa.registry.server.data.remoting.sessionserver.handler.HandlerMetrics.GetVersion.*;
 
+import com.google.common.collect.Maps;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.Map;
@@ -64,23 +65,50 @@ public class GetDataVersionsHandler extends AbstractDataHandler<GetDataVersionRe
     public Object doHandle(Channel channel, GetDataVersionRequest request) {
         processSessionProcessId(channel, request.getSessionProcessId());
         final int slotId = request.getSlotId();
+        final String dataCenter = request.getDataCenter();
         final SlotAccess slotAccessBefore = checkAccess(slotId, request.getSlotTableEpoch(),
             request.getSlotLeaderEpoch());
         if (!slotAccessBefore.isAccept()) {
             return SlotAccessGenericResponse.failedResponse(slotAccessBefore);
         }
-        Map<String/*dataInfoId*/, DatumVersion> map = datumCache.getVersions(
-            request.getDataCenter(), slotId);
-        // double check slot access, @see GetDataHanlder
+        Map<String/*dataInfoId*/, DatumVersion> map = datumCache.getVersions(dataCenter, slotId);
+        // double check slot access, @see GetDataHandler
         final SlotAccess slotAccessAfter = checkAccess(slotId, request.getSlotTableEpoch(),
             request.getSlotLeaderEpoch());
         if (slotAccessAfter.getSlotLeaderEpoch() != slotAccessBefore.getSlotLeaderEpoch()) {
             return SlotAccessGenericResponse.failedResponse(slotAccessAfter,
                 "slotLeaderEpoch has change, prev=" + slotAccessBefore);
         }
-        LOGGER.info("getV,{},{},{}", slotId, request.getDataCenter(), map.size());
+        Map<String, DatumVersion> ret = Maps.newHashMapWithExpectedSize(request.getInterests()
+            .size());
+        for (Map.Entry<String, DatumVersion> e : request.getInterests().entrySet()) {
+            final String dataInfoId = e.getKey();
+            final DatumVersion currentVer = map.get(dataInfoId);
+            // contains the datum which is interested
+            if (currentVer != null) {
+                ret.put(dataInfoId, currentVer);
+                final DatumVersion interestVer = e.getValue();
+                if (interestVer.getValue() > currentVer.getValue()) {
+                    // the session.push version is bigger than datum.version. this may happens:
+                    // 1. slot-1 own by data-A, balance slot-1, migrating from data-A to data-B.
+                    //    this need a very short time window to broadcast the information. e.g. a heartbeat interval time
+                    // 2.1. part of session/data has not updated the slotTable. [session-A, data-A]
+                    // 2.2. another part of the session/data has updated the slotTable. [session-B, data-B]
+                    // 3. data-B finish migrating and session-B put publisher-B to data-B gen a new datum.version=V1
+                    // 4. session-A put publisher-A to data-A, gen a new datum.version=V2(V1<V2), and push V2 to subscriber-A
+                    // 5. session-A update the slotTable, connect to data-B, but the subscriber-A(push.version)=V2 is
+                    //    bigger than current datum.version=V1, the publisher-B would not push to subscriber-A.
+                    // so, we need to compare the push.version and datum.version
+                    DatumVersion updateVer = datumCache.updateVersion(dataCenter, dataInfoId);
+                    LOGGER.info("updateV,{},{},{},interestVer={},currentVer={},updateVer={}",
+                        slotId, dataInfoId, dataCenter, interestVer, currentVer, updateVer);
+                }
+            }
+        }
+        LOGGER.info("getV,{},{},interests={},gets={},rets={}", slotId, dataCenter, request
+            .getInterests().size(), map.size(), ret.size());
         GET_VERSION_COUNTER.inc();
-        return SlotAccessGenericResponse.successResponse(slotAccessAfter, map);
+        return SlotAccessGenericResponse.successResponse(slotAccessAfter, ret);
     }
 
     @Override

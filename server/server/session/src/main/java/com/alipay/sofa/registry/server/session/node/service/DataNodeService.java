@@ -58,7 +58,8 @@ public interface DataNodeService {
      * @param slotId
      * @return
      */
-    Map<String/*datainfoid*/, DatumVersion> fetchDataVersion(String dataCenter, int slotId);
+    Map<String/*datainfoid*/, DatumVersion> fetchDataVersion(String dataCenter, int slotId,
+                                                              Map<String, DatumVersion> interests);
 
     /**
      * fetch one dataCenter publisher data from data server

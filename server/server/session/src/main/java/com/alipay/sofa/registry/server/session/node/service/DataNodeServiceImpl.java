@@ -117,13 +117,15 @@ public class DataNodeServiceImpl implements DataNodeService {
     }
 
     @Override
-    public Map<String/*datainfoid*/, DatumVersion> fetchDataVersion(String dataCenter, int slotId) {
+    public Map<String/*datainfoid*/, DatumVersion> fetchDataVersion(String dataCenter,
+                                                                     int slotId,
+                                                                     Map<String, DatumVersion> interests) {
         String dataNodeIp = null;
         try {
             final Slot slot = getSlot(slotId);
             dataNodeIp = slot.getLeader();
             final GetDataVersionRequest request = new GetDataVersionRequest(dataCenter,
-                ServerEnv.PROCESS_ID, slotId);
+                ServerEnv.PROCESS_ID, slotId, interests);
             request.setSlotTableEpoch(slotTableCache.getEpoch());
             request.setSlotLeaderEpoch(slot.getLeaderEpoch());
             Request<GetDataVersionRequest> getDataVersionRequestRequest = new Request<GetDataVersionRequest>() {

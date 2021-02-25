@@ -202,6 +202,12 @@ public final class LocalDatumStorage implements DatumStorage {
         groups.updateVersion();
     }
 
+    @Override
+    public DatumVersion updateVersion(String dataInfoId) {
+        PublisherGroups groups = getPublisherGroups(dataInfoId);
+        return groups == null ? null : groups.updateVersion(dataInfoId);
+    }
+
     private final class SlotListener implements SlotChangeListener {
 
         @Override
