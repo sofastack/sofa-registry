@@ -20,12 +20,13 @@ import com.alipay.sofa.registry.common.model.metaserver.nodes.DataNode;
 import com.alipay.sofa.registry.common.model.slot.DataNodeSlot;
 import com.alipay.sofa.registry.common.model.slot.SlotConfig;
 import com.alipay.sofa.registry.common.model.slot.SlotTable;
+import com.alipay.sofa.registry.exception.SofaRegistryRuntimeException;
 import com.alipay.sofa.registry.server.meta.AbstractTest;
 import com.alipay.sofa.registry.server.meta.bootstrap.config.NodeConfig;
+import com.alipay.sofa.registry.server.meta.remoting.notifier.Notifier;
 import com.alipay.sofa.registry.server.meta.slot.manager.LocalSlotManager;
 import com.alipay.sofa.registry.util.FileUtils;
 import org.assertj.core.util.Lists;
-import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -165,5 +166,27 @@ public class LocalSlotManagerTest extends AbstractTest {
     @Test
     public void testGetSlotReplicaNums() {
         Assert.assertEquals(SlotConfig.SLOT_REPLICAS, slotManager.getSlotReplicaNums());
+    }
+
+    @Test
+    public void testSlotChangeNotification() {
+        Notifier notifier = mock(Notifier.class);
+        slotManager.setNotifiers(Lists.newArrayList(notifier));
+        slotManager.refresh(randomSlotTable());
+        verify(notifier, times(1)).notifySlotTableChange(any());
+    }
+
+    @Test
+    public void testSlotChangeNotifyOneFailWontAffectOthers() {
+        Notifier notifier1 = mock(Notifier.class);
+        Notifier notifier2 = mock(Notifier.class);
+        Notifier notifier3 = mock(Notifier.class);
+        doThrow(new SofaRegistryRuntimeException("expected")).when(notifier2)
+            .notifySlotTableChange(any());
+
+        slotManager.setNotifiers(Lists.newArrayList(notifier1, notifier2, notifier3));
+        slotManager.refresh(randomSlotTable());
+        verify(notifier1, times(1)).notifySlotTableChange(any());
+        verify(notifier3, times(1)).notifySlotTableChange(any());
     }
 }

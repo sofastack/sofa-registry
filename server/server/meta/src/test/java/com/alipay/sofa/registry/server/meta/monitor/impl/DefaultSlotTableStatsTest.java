@@ -17,10 +17,7 @@
 package com.alipay.sofa.registry.server.meta.monitor.impl;
 
 import com.alipay.sofa.registry.common.model.metaserver.nodes.DataNode;
-import com.alipay.sofa.registry.common.model.slot.DataNodeSlot;
-import com.alipay.sofa.registry.common.model.slot.SlotConfig;
-import com.alipay.sofa.registry.common.model.slot.SlotStatus;
-import com.alipay.sofa.registry.common.model.slot.SlotTable;
+import com.alipay.sofa.registry.common.model.slot.*;
 import com.alipay.sofa.registry.exception.InitializeException;
 import com.alipay.sofa.registry.server.meta.AbstractTest;
 import com.alipay.sofa.registry.server.meta.bootstrap.config.NodeConfig;
@@ -32,6 +29,7 @@ import org.junit.Test;
 
 import java.util.List;
 
+import static com.alipay.sofa.registry.server.meta.monitor.impl.DefaultSlotStats.MAX_SYNC_GAP;
 import static org.mockito.Mockito.*;
 
 public class DefaultSlotTableStatsTest extends AbstractTest {
@@ -59,62 +57,98 @@ public class DefaultSlotTableStatsTest extends AbstractTest {
 
     @Test
     public void testIsSlotTableStable() {
-        Assert.assertFalse(slotTableStats.isSlotTableStable());
+        Assert.assertFalse(slotTableStats.isSlotLeadersStable());
         SlotTable slotTable = slotManager.getSlotTable();
         for(DataNode dataNode : dataNodes) {
-            List<SlotStatus> slotStatuses = Lists.newArrayList();
+            List<BaseSlotStatus> slotStatuses = Lists.newArrayList();
             DataNodeSlot dataNodeSlot = slotTable.transfer(dataNode.getIp(), false).get(0);
             dataNodeSlot.getLeaders().forEach(slotId -> {
-                slotStatuses.add(new SlotStatus(slotId, slotTable.getSlot(slotId).getLeaderEpoch(), SlotStatus.LeaderStatus.HEALTHY));
+                slotStatuses.add(new LeaderSlotStatus(slotId, slotTable.getSlot(slotId).getLeaderEpoch(),
+                        dataNode.getIp(), BaseSlotStatus.LeaderStatus.HEALTHY));
             });
-            slotTableStats.checkSlotStatuses(slotStatuses);
+            slotTableStats.checkSlotStatuses(dataNode, slotStatuses);
         }
-        Assert.assertTrue(slotTableStats.isSlotTableStable());
+        Assert.assertTrue(slotTableStats.isSlotLeadersStable());
     }
 
     @Test
     public void testCheckSlotStatuses() {
-        Assert.assertFalse(slotTableStats.isSlotTableStable());
+        Assert.assertFalse(slotTableStats.isSlotLeadersStable());
         SlotTable slotTable = slotManager.getSlotTable();
         for(DataNode dataNode : dataNodes) {
-            List<SlotStatus> slotStatuses = Lists.newArrayList();
+            List<BaseSlotStatus> slotStatuses = Lists.newArrayList();
             DataNodeSlot dataNodeSlot = slotTable.transfer(dataNode.getIp(), false).get(0);
             dataNodeSlot.getLeaders().forEach(slotId -> {
-                slotStatuses.add(new SlotStatus(slotId, slotTable.getSlot(slotId).getLeaderEpoch() - 1, SlotStatus.LeaderStatus.HEALTHY));
+                slotStatuses.add(new LeaderSlotStatus(slotId, slotTable.getSlot(slotId).getLeaderEpoch() - 1,
+                        dataNode.getIp(), BaseSlotStatus.LeaderStatus.HEALTHY));
             });
-            slotTableStats.checkSlotStatuses(slotStatuses);
+            slotTableStats.checkSlotStatuses(dataNode, slotStatuses);
         }
-        Assert.assertFalse(slotTableStats.isSlotTableStable());
+        Assert.assertFalse(slotTableStats.isSlotLeadersStable());
     }
 
     @Test
     public void testUpdateSlotTable() {
-        Assert.assertFalse(slotTableStats.isSlotTableStable());
+        Assert.assertFalse(slotTableStats.isSlotLeadersStable());
         SlotTable slotTable = slotManager.getSlotTable();
         for(DataNode dataNode : dataNodes) {
-            List<SlotStatus> slotStatuses = Lists.newArrayList();
+            List<BaseSlotStatus> slotStatuses = Lists.newArrayList();
             DataNodeSlot dataNodeSlot = slotTable.transfer(dataNode.getIp(), false).get(0);
             dataNodeSlot.getLeaders().forEach(slotId -> {
-                slotStatuses.add(new SlotStatus(slotId, slotTable.getSlot(slotId).getLeaderEpoch(), SlotStatus.LeaderStatus.HEALTHY));
+                slotStatuses.add(new LeaderSlotStatus(slotId, slotTable.getSlot(slotId).getLeaderEpoch(),
+                        dataNode.getIp(), BaseSlotStatus.LeaderStatus.HEALTHY));
             });
-            slotTableStats.checkSlotStatuses(slotStatuses);
+            slotTableStats.checkSlotStatuses(dataNode, slotStatuses);
         }
-        Assert.assertTrue(slotTableStats.isSlotTableStable());
+        Assert.assertTrue(slotTableStats.isSlotLeadersStable());
 
         slotManager.refresh(new SlotTableGenerator(dataNodes).createSlotTable());
         slotTableStats.updateSlotTable(slotManager.getSlotTable());
-        Assert.assertFalse(slotTableStats.isSlotTableStable());
+        Assert.assertFalse(slotTableStats.isSlotLeadersStable());
     }
 
     @Test
-    public void testDataReportWhenInit() throws InitializeException {
+    public void testDataReportHeartbeatWhenInit() throws InitializeException {
         slotManager = new LocalSlotManager(nodeConfig);
         slotTableStats = new DefaultSlotTableStats(slotManager);
         slotTableStats.initialize();
-        List<SlotStatus> slotStatuses = Lists.newArrayList();
+        List<BaseSlotStatus> slotStatuses = Lists.newArrayList();
         for (int slotId = 0; slotId < SlotConfig.SLOT_NUM; slotId++) {
-            slotStatuses.add(new SlotStatus(slotId, 0, SlotStatus.LeaderStatus.UNHEALTHY));
+            slotStatuses.add(new LeaderSlotStatus(slotId, 0, randomIp(),
+                BaseSlotStatus.LeaderStatus.UNHEALTHY));
         }
-        slotTableStats.checkSlotStatuses(slotStatuses);
+        slotTableStats
+            .checkSlotStatuses(new DataNode(randomURL(randomIp()), getDc()), slotStatuses);
+    }
+
+    @Test
+    public void testFollowerStatus() {
+        Assert.assertFalse(slotTableStats.isSlotFollowersStable());
+        DataNode dataNode = new DataNode(randomURL(randomIp()), getDc());
+        List<BaseSlotStatus> slotStatuses = Lists.newArrayList();
+        for (int slotId = 0; slotId < SlotConfig.SLOT_NUM; slotId++) {
+            slotStatuses.add(new FollowerSlotStatus(slotId, System.currentTimeMillis(), dataNode
+                .getIp(), System.currentTimeMillis(), -1));
+        }
+        slotTableStats.checkSlotStatuses(dataNode, slotStatuses);
+        Assert.assertFalse(slotTableStats.isSlotFollowersStable());
+
+        slotStatuses = Lists.newArrayList();
+        for (int slotId = 0; slotId < SlotConfig.SLOT_NUM; slotId++) {
+            slotStatuses.add(new FollowerSlotStatus(slotId, System.currentTimeMillis(), dataNode
+                .getIp(), System.currentTimeMillis(), System.currentTimeMillis() - MAX_SYNC_GAP));
+        }
+        slotTableStats.checkSlotStatuses(dataNode, slotStatuses);
+        Assert.assertFalse(slotTableStats.isSlotFollowersStable());
+
+        for (DataNode node : dataNodes) {
+            slotStatuses = Lists.newArrayList();
+            for (int slotId = 0; slotId < SlotConfig.SLOT_NUM; slotId++) {
+                slotStatuses.add(new FollowerSlotStatus(slotId, System.currentTimeMillis(), node
+                    .getIp(), System.currentTimeMillis(), System.currentTimeMillis() - 1000));
+            }
+            slotTableStats.checkSlotStatuses(node, slotStatuses);
+        }
+        Assert.assertTrue(slotTableStats.isSlotFollowersStable());
     }
 }

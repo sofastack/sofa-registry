@@ -37,13 +37,13 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public class MetaConnectionHandler extends ListenServerChannelHandler implements NodeConnectManager {
 
-    private static final Logger                                                      LOGGER      = LoggerFactory
-                                                                                                     .getLogger(MetaConnectionHandler.class);
+    private static final Logger                                                            LOGGER      = LoggerFactory
+                                                                                                           .getLogger(MetaConnectionHandler.class);
 
     @Autowired
-    private NodeConfig                                                               nodeConfig;
+    private NodeConfig                                                                     nodeConfig;
 
-    private Map<String/*dataCenter*/, Map<String/*connectId*/, InetSocketAddress>> connections = new ConcurrentHashMap<>();
+    private final Map<String/*dataCenter*/, Map<String/*connectId*/, InetSocketAddress>> connections = new ConcurrentHashMap<>();
 
     @Override
     public void connected(Channel channel) {

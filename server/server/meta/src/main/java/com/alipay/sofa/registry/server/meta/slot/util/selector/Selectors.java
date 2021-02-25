@@ -40,10 +40,6 @@ public class Selectors {
         return new MostLeaderFirstSelector(slotTableBuilder);
     }
 
-    public static MostFollowerFirstSelector mostFollowerFirst(SlotTableBuilder slotTableBuilder) {
-        return new MostFollowerFirstSelector(slotTableBuilder);
-    }
-
     public static abstract class AbstractSlotTableBuilderAwareSelector<T> implements Selector<T> {
 
         protected final SlotTableBuilder slotTableBuilder;

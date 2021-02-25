@@ -21,6 +21,7 @@ import com.alipay.sofa.registry.common.model.slot.SlotTable;
 import com.alipay.sofa.registry.server.meta.AbstractTest;
 import com.alipay.sofa.registry.server.meta.bootstrap.config.NodeConfig;
 import com.alipay.sofa.registry.server.meta.lease.data.DataServerManager;
+import com.alipay.sofa.registry.server.meta.monitor.SlotTableMonitor;
 import com.alipay.sofa.registry.server.meta.slot.manager.LocalSlotManager;
 import com.alipay.sofa.registry.server.meta.slot.util.builder.SlotBuilder;
 import com.alipay.sofa.registry.server.meta.slot.util.builder.SlotTableBuilder;
@@ -43,12 +44,15 @@ public class DefaultSlotBalancerTest extends AbstractTest {
 
     private DataServerManager   dataServerManager;
 
+    private SlotTableMonitor    slotTableMonitor;
+
     @Before
     public void beforeDefaultSlotBalancerTest() {
         NodeConfig nodeConfig = mock(NodeConfig.class);
         when(nodeConfig.getLocalDataCenter()).thenReturn(getDc());
         slotManager = new LocalSlotManager(nodeConfig);
         dataServerManager = mock(DataServerManager.class);
+        slotTableMonitor = mock(SlotTableMonitor.class);
     }
 
     @Test

@@ -16,17 +16,19 @@
  */
 package com.alipay.sofa.registry.server.data.slot;
 
+import com.alipay.sofa.registry.common.model.slot.BaseSlotStatus;
 import com.alipay.sofa.registry.common.model.slot.Slot;
 import com.alipay.sofa.registry.common.model.slot.SlotAccess;
 import com.alipay.sofa.registry.common.model.slot.SlotTable;
 
 import java.util.List;
+import java.util.concurrent.locks.ReadWriteLock;
 
 /**
  * @author yuzhi.lyz
  * @version v 0.1 2020-10-30 10:46 yuzhi.lyz Exp $
  */
-public interface SlotManager {
+public interface SlotManager extends ReadWriteLock {
 
     int slotOf(String dataInfoId);
 
@@ -34,7 +36,7 @@ public interface SlotManager {
 
     SlotAccess checkSlotAccess(int slotId, long srcSlotEpoch, long srcLeaderEpoch);
 
-    List<SlotAccess> getSlotAccesses();
+    List<BaseSlotStatus> getSlotStatuses();
 
     boolean isLeader(int slotId);
 
@@ -45,4 +47,5 @@ public interface SlotManager {
     long getSlotTableEpoch();
 
     void triggerUpdateSlotTable(long epoch);
+
 }

@@ -91,7 +91,7 @@ public class SlotChaosTest extends AbstractTest {
         scheduledSlotArranger = new ScheduledSlotArranger(dataServerManager, localSlotManager,
             defaultSlotManager, slotTableMonitor);
 
-        when(slotTableMonitor.isSlotTableStable()).thenReturn(true);
+        when(slotTableMonitor.isStableTableStable()).thenReturn(true);
         scheduledSlotArranger.postConstruct();
     }
 

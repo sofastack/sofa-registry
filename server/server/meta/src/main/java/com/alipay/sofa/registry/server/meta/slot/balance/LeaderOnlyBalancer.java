@@ -38,14 +38,16 @@ import java.util.*;
  */
 public class LeaderOnlyBalancer implements SlotBalancer {
 
-    private static final Logger    logger        = LoggerFactory
-                                                     .getLogger(LeaderOnlyBalancer.class);
+    private static final Logger    logger           = LoggerFactory
+                                                        .getLogger(LeaderOnlyBalancer.class);
+
+    public static final int        TRIGGER_THESHOLD = 2;
 
     private final SlotTableBuilder slotTableBuilder;
 
     private final Set<String>      currentDataServers;
 
-    private final BalancePolicy    balancePolicy = new NaiveBalancePolicy();
+    private final BalancePolicy    balancePolicy    = new NaiveBalancePolicy();
 
     public LeaderOnlyBalancer(SlotTableBuilder slotTableBuilder,
                               Collection<String> currentDataServers) {
