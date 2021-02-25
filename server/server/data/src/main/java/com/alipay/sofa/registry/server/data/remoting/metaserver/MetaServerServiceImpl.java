@@ -17,7 +17,6 @@
 package com.alipay.sofa.registry.server.data.remoting.metaserver;
 
 import com.alipay.sofa.registry.common.model.metaserver.inter.heartbeat.DataHeartBeatResponse;
-import com.alipay.sofa.registry.common.model.metaserver.inter.heartbeat.DataHeartbeatRequest;
 import com.alipay.sofa.registry.common.model.metaserver.inter.heartbeat.HeartbeatRequest;
 import com.alipay.sofa.registry.common.model.metaserver.nodes.DataNode;
 import com.alipay.sofa.registry.common.model.slot.SlotAccess;
@@ -75,10 +74,10 @@ public class MetaServerServiceImpl extends AbstractMetaServerService<DataHeartBe
 
     @Override
     protected HeartbeatRequest createRequest() {
-        return new DataHeartbeatRequest(createNode(), slotManager.getSlotTableEpoch(),
+        return new HeartbeatRequest<DataNode>(createNode(), slotManager.getSlotTableEpoch(),
             dataServerConfig.getLocalDataCenter(), System.currentTimeMillis(),
-            new SlotConfig.SlotBasicInfo(SlotConfig.SLOT_NUM, SlotConfig.SLOT_REPLICAS, SlotConfig.FUNC),
-                transferToSlotStatus(slotManager.getSlotAccesses()));
+            new SlotConfig.SlotBasicInfo(SlotConfig.SLOT_NUM, SlotConfig.SLOT_REPLICAS,
+                SlotConfig.FUNC), transferToSlotStatus(slotManager.getSlotAccesses()));
     }
 
     private List<SlotStatus> transferToSlotStatus(List<SlotAccess> slotAccesses) {

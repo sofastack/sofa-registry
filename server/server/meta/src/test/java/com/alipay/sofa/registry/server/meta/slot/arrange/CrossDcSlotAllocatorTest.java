@@ -137,7 +137,7 @@ public class CrossDcSlotAllocatorTest extends AbstractTest {
         Thread.sleep(20);
 
         Assert.assertNull(allocator.getSlotTable());
-        verify(allocator, atLeast(3)).refreshSlotTable(anyInt());
+        verify(allocator, atLeast(2)).refreshSlotTable(anyInt());
     }
 
     //run manually

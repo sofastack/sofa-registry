@@ -20,6 +20,8 @@ import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.util.SystemUtils;
 
+import java.io.Serializable;
+
 /**
  *
  * @author yuzhi.lyz
@@ -54,11 +56,11 @@ public final class SlotConfig {
             SLOT_REPLICAS, KEY_DATA_SLOT_FUNC, FUNC);
     }
 
-    public static class SlotBasicInfo {
+    public static class SlotBasicInfo implements Serializable {
 
-        private final int slotNum;
+        private final int    slotNum;
 
-        private final int slotReplicas;
+        private final int    slotReplicas;
 
         private final String slotFunc;
 

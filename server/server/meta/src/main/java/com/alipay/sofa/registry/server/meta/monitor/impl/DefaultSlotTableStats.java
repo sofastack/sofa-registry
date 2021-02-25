@@ -47,14 +47,15 @@ public class DefaultSlotTableStats extends AbstractLifecycle implements SlotTabl
     @Override
     protected void doInitialize() throws InitializeException {
         super.doInitialize();
-        for(int slotId = 0; slotId < SlotConfig.SLOT_NUM; slotId++) {
-            slotStatses.put(slotId, new DefaultSlotStats(slotManager.getSlotTable().getSlot(slotId)));
+        for (int slotId = 0; slotId < SlotConfig.SLOT_NUM; slotId++) {
+            slotStatses.put(slotId,
+                new DefaultSlotStats(slotManager.getSlotTable().getSlot(slotId)));
         }
     }
 
     @Override
     public boolean isSlotTableStable() {
-        for(Map.Entry<Integer, SlotStats> entry : slotStatses.entrySet()) {
+        for (Map.Entry<Integer, SlotStats> entry : slotStatses.entrySet()) {
             SlotStats slotStats = entry.getValue();
             if (!slotStats.isLeaderStable()) {
                 return false;
@@ -69,9 +70,11 @@ public class DefaultSlotTableStats extends AbstractLifecycle implements SlotTabl
             int slotId = slotStatus.getSlotId();
             SlotStats slotStats = slotStatses.get(slotId);
             if (slotStats.getSlot().getLeaderEpoch() > slotStatus.getSlotLeaderEpoch()) {
-                logger.warn(
-                    "[checkSlotStatuses] won't update slot status, slot[{}] leader-epoch[{}] is less than current[{}]",
-                    slotId, slotStatus.getSlotLeaderEpoch(), slotStats.getSlot().getLeaderEpoch());
+                logger
+                    .warn(
+                        "[checkSlotStatuses] won't update slot status, slot[{}] leader-epoch[{}] is less than current[{}]",
+                        slotId, slotStatus.getSlotLeaderEpoch(), slotStats.getSlot()
+                            .getLeaderEpoch());
                 continue;
             }
             slotStats.updateSlotState(slotStatus.getLeaderStatus());

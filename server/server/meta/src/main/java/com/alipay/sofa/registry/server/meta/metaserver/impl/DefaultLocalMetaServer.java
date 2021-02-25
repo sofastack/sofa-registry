@@ -27,7 +27,7 @@ import com.alipay.sofa.registry.util.DatumVersionUtil;
 import com.alipay.sofa.registry.util.FileUtils;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
-import org.glassfish.jersey.internal.guava.Sets;
+import com.google.common.collect.Sets;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.io.File;
@@ -64,7 +64,7 @@ public class DefaultLocalMetaServer extends AbstractMetaServer implements Curren
 
     @Override
     public List<MetaNode> getClusterMembers() {
-        return Lists.newArrayList(metaServers.get());
+        return Lists.newArrayList(metaServers);
     }
 
     @Override
@@ -79,7 +79,7 @@ public class DefaultLocalMetaServer extends AbstractMetaServer implements Curren
                 "[updateClusterMembers] update meta-servers, \nprevious[{}]: {} \ncurrent[{}]: {}",
                 currentEpoch.get(), getClusterMembers(), epoch, newMembers);
             currentEpoch.set(epoch);
-            metaServers.set(Lists.newArrayList(newMembers));
+            metaServers = Sets.newHashSet(newMembers);
         } finally {
             lock.writeLock().unlock();
         }
@@ -92,7 +92,7 @@ public class DefaultLocalMetaServer extends AbstractMetaServer implements Curren
             if (logger.isInfoEnabled()) {
                 logger.info("[renew]meta node [{}] renewed", metaNode);
             }
-            metaServers.get().add(metaNode);
+            metaServers.add(metaNode);
         } finally {
             lock.writeLock().unlock();
         }
@@ -105,7 +105,7 @@ public class DefaultLocalMetaServer extends AbstractMetaServer implements Curren
             if (logger.isInfoEnabled()) {
                 logger.info("[cancel]meta node [{}] removed", renewal);
             }
-            metaServers.get().remove(renewal);
+            metaServers.remove(renewal);
         } finally {
             lock.writeLock().unlock();
         }
@@ -116,7 +116,7 @@ public class DefaultLocalMetaServer extends AbstractMetaServer implements Curren
         if (logger.isInfoEnabled()) {
             logger.info("[save] start to save {}", path);
         }
-        return save(path, metaServers.get());
+        return save(path, metaServers);
     }
 
     @Override
@@ -125,9 +125,9 @@ public class DefaultLocalMetaServer extends AbstractMetaServer implements Curren
             logger.info("[load] start to load {}", path);
         }
         try {
-            List<MetaNode> metaNodes = load(path, metaServers.get().getClass());
-            metaServers.get().clear();
-            metaServers.get().addAll(metaNodes);
+            Set<MetaNode> metaNodes = load(path, metaServers.getClass());
+            metaServers.clear();
+            metaServers.addAll(metaNodes);
             currentEpoch.set(DatumVersionUtil.nextId());
             return true;
         } catch (IOException e) {

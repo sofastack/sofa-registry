@@ -61,7 +61,7 @@ public class SlotChaosTest extends AbstractTest {
     private ScheduledSlotArranger    scheduledSlotArranger;
 
     @Mock
-    private SlotTableMonitor slotTableMonitor;
+    private SlotTableMonitor         slotTableMonitor;
 
     private int                      dataNodeNum = 20;
 

@@ -18,8 +18,11 @@ package com.alipay.sofa.registry.common.model.metaserver.inter.heartbeat;
 
 import com.alipay.sofa.registry.common.model.Node;
 import com.alipay.sofa.registry.common.model.slot.SlotConfig;
+import com.alipay.sofa.registry.common.model.slot.SlotStatus;
 
 import java.io.Serializable;
+import java.util.Collections;
+import java.util.List;
 
 /**
  *
@@ -28,17 +31,19 @@ import java.io.Serializable;
  */
 public class HeartbeatRequest<T extends Node> implements Serializable {
 
-    private int                                    duration;
+    private int                            duration;
 
-    private final T                                node;
+    private final T                        node;
 
-    private final long                             slotTableEpoch;
+    private final long                     slotTableEpoch;
 
-    private final String                           dataCenter;
+    private final String                   dataCenter;
 
-    private final long                             timestamp;
+    private final long                     timestamp;
 
     private final SlotConfig.SlotBasicInfo slotBasicInfo;
+
+    private final List<SlotStatus>         slotStatuses;
 
     /**
      * constructor
@@ -52,6 +57,23 @@ public class HeartbeatRequest<T extends Node> implements Serializable {
         this.dataCenter = dataCenter;
         this.timestamp = timestamp;
         this.slotBasicInfo = slotBasicInfo;
+        this.slotStatuses = Collections.EMPTY_LIST;
+    }
+
+    /**
+     * constructor
+     * @param node
+     * @param slotTableEpoch
+     */
+    public HeartbeatRequest(T node, long slotTableEpoch, String dataCenter, long timestamp,
+                            SlotConfig.SlotBasicInfo slotBasicInfo,
+                            final List<SlotStatus> slotStatuses) {
+        this.node = node;
+        this.slotTableEpoch = slotTableEpoch;
+        this.dataCenter = dataCenter;
+        this.timestamp = timestamp;
+        this.slotBasicInfo = slotBasicInfo;
+        this.slotStatuses = slotStatuses;
     }
 
     /**
@@ -115,6 +137,15 @@ public class HeartbeatRequest<T extends Node> implements Serializable {
      */
     public long getSlotTableEpoch() {
         return slotTableEpoch;
+    }
+
+    /**
+     * Gets get slot status.
+     *
+     * @return the get slot status
+     */
+    public List<SlotStatus> getSlotStatus() {
+        return slotStatuses;
     }
 
     /**
