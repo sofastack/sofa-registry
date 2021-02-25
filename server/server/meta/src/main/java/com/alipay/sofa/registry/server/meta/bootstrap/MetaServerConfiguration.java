@@ -272,7 +272,7 @@ public class MetaServerConfiguration {
         public Collection<AbstractServerHandler> sessionServerHandlers() {
             Collection<AbstractServerHandler> list = new ArrayList<>();
             list.add(sessionConnectionHandler());
-            list.add(renewNodesRequestHandler());
+            list.add(heartbeatRequestHandler());
             list.add(fetchProvideDataRequestHandler());
             list.add(appRevisionRegisterHandler());
             list.add(checkRevisionsHandler());
@@ -284,7 +284,7 @@ public class MetaServerConfiguration {
         public Collection<AbstractServerHandler> dataServerHandlers() {
             Collection<AbstractServerHandler> list = new ArrayList<>();
             list.add(dataConnectionHandler());
-            list.add(renewNodesRequestHandler());
+            list.add(heartbeatRequestHandler());
             list.add(fetchProvideDataRequestHandler());
             return list;
         }
@@ -312,7 +312,7 @@ public class MetaServerConfiguration {
         }
 
         @Bean
-        public AbstractServerHandler renewNodesRequestHandler() {
+        public AbstractServerHandler heartbeatRequestHandler() {
             return new HeartbeatRequestHandler();
         }
 

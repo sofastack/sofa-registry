@@ -40,6 +40,7 @@ import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.CyclicBarrier;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 import static org.mockito.Mockito.*;
 
@@ -78,11 +79,15 @@ public class DefaultLocalMetaServerTest extends AbstractTest {
     }
 
     @Test
-    public void testGetClusterMembers() {
-        List<MetaNode> metaNodeList = Lists.newArrayList(new MetaNode(randomURL(), getDc()),
-            new MetaNode(randomURL(), getDc()), new MetaNode(randomURL(), getDc()));
+    public void testGetClusterMembers() throws TimeoutException, InterruptedException {
+        List<MetaNode> metaNodeList = Lists.newArrayList(new MetaNode(randomURL(randomIp()), getDc()),
+            new MetaNode(randomURL(randomIp()), getDc()), new MetaNode(randomURL(randomIp()), getDc()));
         metaServer.updateClusterMembers(metaNodeList, 2L);
-        Assert.assertEquals(metaNodeList, metaServer.getClusterMembers());
+        waitConditionUntilTimeOut(()->!metaServer.getClusterMembers().isEmpty(), 100);
+        metaNodeList.sort(new NodeComparator());
+        List<MetaNode> actual = metaServer.getClusterMembers();
+        actual.sort(new NodeComparator());
+        Assert.assertEquals(metaNodeList, actual);
     }
 
     @Test
@@ -186,13 +191,17 @@ public class DefaultLocalMetaServerTest extends AbstractTest {
 
     @Test
     public void testTestSaveAndLoad() throws IOException {
-        List<MetaNode> metaNodeList = Lists.newArrayList(new MetaNode(randomURL(), getDc()),
-            new MetaNode(randomURL(), getDc()), new MetaNode(randomURL(), getDc()));
+        List<MetaNode> metaNodeList = Lists.newArrayList(new MetaNode(randomURL(randomIp()),
+            getDc()), new MetaNode(randomURL(randomIp()), getDc()), new MetaNode(
+            randomURL(randomIp()), getDc()));
         metaServer.updateClusterMembers(metaNodeList, DatumVersionUtil.nextId());
         metaServer.save(metaServer.copy().getSnapshotFileNames().iterator().next());
         DefaultLocalMetaServer loadMetaServer = new DefaultLocalMetaServer();
         loadMetaServer.load("DefaultLocalMetaServer");
-        Assert.assertEquals(metaNodeList, loadMetaServer.getClusterMembers());
+        List<MetaNode> actual = loadMetaServer.getClusterMembers();
+        actual.sort(new NodeComparator());
+        metaNodeList.sort(new NodeComparator());
+        Assert.assertEquals(metaNodeList, actual);
         FileUtils.forceDelete(new File(metaServer.copy().getSnapshotFileNames().iterator().next()));
 
     }

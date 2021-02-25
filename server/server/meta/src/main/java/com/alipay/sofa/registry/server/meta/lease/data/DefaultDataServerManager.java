@@ -16,7 +16,6 @@
  */
 package com.alipay.sofa.registry.server.meta.lease.data;
 
-import com.alipay.sofa.registry.common.model.metaserver.inter.heartbeat.DataHeartbeatRequest;
 import com.alipay.sofa.registry.common.model.metaserver.inter.heartbeat.HeartbeatRequest;
 import com.alipay.sofa.registry.common.model.metaserver.nodes.DataNode;
 import com.alipay.sofa.registry.exception.InitializeException;
@@ -48,13 +47,13 @@ public class DefaultDataServerManager extends AbstractRaftEnabledLeaseManager<Da
                                                                                        DataServerManager {
 
     @RaftReference(uniqueId = DataLeaseManager.DATA_LEASE_MANAGER, interfaceType = LeaseManager.class)
-    private LeaseManager<DataNode>       raftDataLeaseManager;
+    private LeaseManager<DataNode>             raftDataLeaseManager;
 
     @Autowired
-    private DataLeaseManager             dataLeaseManager;
+    private DataLeaseManager                   dataLeaseManager;
 
     @Autowired
-    private MetaServerConfig             metaServerConfig;
+    private MetaServerConfig                   metaServerConfig;
 
     private final Map<String, DataServerStats> dataServerStatses = Maps.newConcurrentMap();
 
@@ -163,9 +162,10 @@ public class DefaultDataServerManager extends AbstractRaftEnabledLeaseManager<Da
     @Override
     public void onHeartbeat(HeartbeatRequest<DataNode> heartbeat) {
         String dataServer = heartbeat.getNode().getIp();
-        dataServerStatses.put(dataServer,
-            new DataServerStats(dataServer, heartbeat.getSlotTableEpoch(),
-                ((DataHeartbeatRequest) heartbeat).getSlotStatus()));
+        dataServerStatses.put(
+            dataServer,
+            new DataServerStats(dataServer, heartbeat.getSlotTableEpoch(), heartbeat
+                .getSlotStatus()));
     }
 
     @Override

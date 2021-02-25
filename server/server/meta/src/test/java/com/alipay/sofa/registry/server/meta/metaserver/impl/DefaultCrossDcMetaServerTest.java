@@ -123,7 +123,11 @@ public class DefaultCrossDcMetaServerTest extends AbstractTest {
         server.setRaftStorage(server.new RaftMetaServerListStorage());
         server.doRefresh(0);
         waitConditionUntilTimeOut(()->server.getClusterMembers().size() > 2, 1000);
-        Assert.assertEquals(Lists.newArrayList(message.getNodes().values()), server.getClusterMembers());
+        List<MetaNode> expected = Lists.newArrayList(message.getNodes().values());
+        expected.sort(new NodeComparator());
+        List<MetaNode> actual = server.getClusterMembers();
+        actual.sort(new NodeComparator());
+        Assert.assertEquals(expected, actual);
     }
 
     @Test
@@ -142,7 +146,11 @@ public class DefaultCrossDcMetaServerTest extends AbstractTest {
         server.setRaftStorage(server.new RaftMetaServerListStorage());
         server.doRefresh(0);
         waitConditionUntilTimeOut(()->server.getClusterMembers().size() > 2, 1000);
-        Assert.assertEquals(Lists.newArrayList(message.getNodes().values()), server.getClusterMembers());
+        List<MetaNode> expected = Lists.newArrayList(message.getNodes().values());
+        expected.sort(new NodeComparator());
+        List<MetaNode> actual = server.getClusterMembers();
+        actual.sort(new NodeComparator());
+        Assert.assertEquals(expected, actual);
     }
 
     @Test

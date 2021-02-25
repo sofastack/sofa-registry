@@ -1,15 +1,33 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package com.alipay.sofa.registry.common.model.slot;
+
+import java.io.Serializable;
 
 /**
  * @author chen.zhu
  * <p>
  * Feb 24, 2021
  */
-public class SlotStatus {
+public class SlotStatus implements Serializable {
 
-    private final int slotId;
+    private final int    slotId;
 
-    private final long slotLeaderEpoch;
+    private final long   slotLeaderEpoch;
 
     private LeaderStatus leaderStatus = LeaderStatus.INIT;
 
@@ -23,7 +41,6 @@ public class SlotStatus {
         this.slotId = slotId;
         this.slotLeaderEpoch = slotLeaderEpoch;
     }
-
 
     /**
      * Constructor.
@@ -72,7 +89,8 @@ public class SlotStatus {
      * @return the slot status
      */
     public static SlotStatus from(SlotAccess slotAccess) {
-        SlotStatus slotStatus = new SlotStatus(slotAccess.getSlotId(), slotAccess.getSlotLeaderEpoch());
+        SlotStatus slotStatus = new SlotStatus(slotAccess.getSlotId(),
+            slotAccess.getSlotLeaderEpoch());
         if (slotAccess.getStatus() != null) {
             switch (slotAccess.getStatus()) {
                 case Accept:

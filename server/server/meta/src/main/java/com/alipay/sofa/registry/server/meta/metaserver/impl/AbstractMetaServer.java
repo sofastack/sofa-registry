@@ -19,10 +19,9 @@ package com.alipay.sofa.registry.server.meta.metaserver.impl;
 import com.alipay.sofa.registry.common.model.metaserver.nodes.MetaNode;
 import com.alipay.sofa.registry.observer.impl.AbstractLifecycleObservable;
 import com.alipay.sofa.registry.server.meta.MetaServer;
-import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 
-import java.util.List;
-import java.util.concurrent.atomic.AtomicReference;
+import java.util.Set;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
@@ -33,10 +32,8 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
  */
 public abstract class AbstractMetaServer extends AbstractLifecycleObservable implements MetaServer {
 
-    protected volatile AtomicReference<List<MetaNode>> metaServers = new AtomicReference<>(
-                                                                       Lists
-                                                                           .newCopyOnWriteArrayList());
+    protected volatile Set<MetaNode> metaServers = Sets.newHashSet();
 
-    protected final ReadWriteLock                      lock        = new ReentrantReadWriteLock();
+    protected final ReadWriteLock    lock        = new ReentrantReadWriteLock();
 
 }

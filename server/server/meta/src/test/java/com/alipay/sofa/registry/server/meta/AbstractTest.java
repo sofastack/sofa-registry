@@ -19,6 +19,7 @@ package com.alipay.sofa.registry.server.meta;
 import com.alipay.sofa.jraft.Status;
 import com.alipay.sofa.jraft.storage.impl.RocksDBLogStorage;
 import com.alipay.sofa.jraft.util.StorageOptionsFactory;
+import com.alipay.sofa.registry.common.model.Node;
 import com.alipay.sofa.registry.common.model.metaserver.nodes.DataNode;
 import com.alipay.sofa.registry.common.model.slot.Slot;
 import com.alipay.sofa.registry.common.model.slot.SlotConfig;
@@ -648,9 +649,7 @@ public class AbstractTest {
     }
 
     protected SlotTable randomSlotTable() {
-        List<DataNode> dataNodes = Lists.newArrayList(new DataNode(randomURL(randomIp()), getDc()),
-            new DataNode(randomURL(randomIp()), getDc()), new DataNode(randomURL(randomIp()),
-                getDc()));
+        List<DataNode> dataNodes = Lists.newArrayList(randomDataNodes(3));
         return new SlotTableGenerator(dataNodes).createSlotTable();
     }
 
@@ -791,6 +790,14 @@ public class AbstractTest {
 
         private DataNode getNextUnbalancedFollower() {
             return dataNodes.get(nextFollower.getAndIncrement() % dataNodes.size());
+        }
+    }
+
+    public static class NodeComparator implements Comparator<Node> {
+
+        @Override
+        public int compare(Node o1, Node o2) {
+            return o1.getNodeUrl().getIpAddress().compareTo(o2.getNodeUrl().getIpAddress());
         }
     }
 }

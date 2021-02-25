@@ -46,8 +46,7 @@ public class DefaultSessionServerManagerTest extends AbstractTest {
         SessionLeaseManager sessionLeaseManager = new SessionLeaseManager();
         sessionManager.setMetaServerConfig(metaServerConfig)
             .setSessionLeaseManager(sessionLeaseManager)
-            .setRaftSessionLeaseManager(sessionLeaseManager)
-                .setScheduled(scheduled);
+            .setRaftSessionLeaseManager(sessionLeaseManager).setScheduled(scheduled);
         when(metaServerConfig.getExpireCheckIntervalMilli()).thenReturn(60);
         sessionManager.postConstruct();
     }

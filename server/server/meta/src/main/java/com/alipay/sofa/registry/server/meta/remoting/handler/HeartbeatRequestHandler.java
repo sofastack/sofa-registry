@@ -61,15 +61,22 @@ public class HeartbeatRequestHandler extends MetaServerHandler<HeartbeatRequest<
     @Autowired
     private DefaultSlotManager           defaultSlotManager;
 
-    @Autowired (required = false)
+    @Autowired(required = false)
     private List<DataMessageListener>    dataMessageListeners;
 
-    @Autowired (required = false)
+    @Autowired(required = false)
     private List<SessionMessageListener> sessionMessageListeners;
 
     @Autowired
     private NodeConfig                   nodeConfig;
 
+    /**
+     * Do handle object.
+     *
+     * @param channel   the channel
+     * @param heartbeat the heartbeat
+     * @return the object
+     */
     @Override
     public Object doHandle(Channel channel, HeartbeatRequest<Node> heartbeat) {
         Node renewNode = null;
@@ -126,12 +133,12 @@ public class HeartbeatRequestHandler extends MetaServerHandler<HeartbeatRequest<
                 currentDcMetaServer.getSessionServerManager().renew((SessionNode) node,
                     heartbeat.getDuration());
                 onSessionHeartbeat(heartbeat);
-                break;
+                return;
             case DATA:
                 currentDcMetaServer.getDataServerManager().renew((DataNode) node,
                     heartbeat.getDuration());
                 onDataHeartbeat(heartbeat);
-                break;
+                return;
             case META:
                 throw new IllegalArgumentException("node type not correct: " + node.getNodeType());
             default:
@@ -174,6 +181,11 @@ public class HeartbeatRequestHandler extends MetaServerHandler<HeartbeatRequest<
         return new SlotTable(slotTable.getEpoch(), result);
     }
 
+    /**
+     * Interest class.
+     *
+     * @return the class
+     */
     @Override
     public Class interest() {
         return HeartbeatRequest.class;
@@ -196,11 +208,22 @@ public class HeartbeatRequestHandler extends MetaServerHandler<HeartbeatRequest<
 
         private volatile boolean    isValidChannel              = true;
 
+        /**
+         * Constructor.
+         *
+         * @param dataCenter the data center
+         * @param channel    the channel
+         */
         public DefaultHeartbeatListener(String dataCenter, Channel channel) {
             this.dataCenter = dataCenter;
             this.channel = channel;
         }
 
+        /**
+         * On heartbeat.
+         *
+         * @param heartbeat the heartbeat
+         */
         @Override
         public void onHeartbeat(HeartbeatRequest<Node> heartbeat) {
             checkIfDataCenterMatched(heartbeat);
@@ -211,6 +234,7 @@ public class HeartbeatRequestHandler extends MetaServerHandler<HeartbeatRequest<
 
         private void closeIfChannelNotValid() {
             if (!isValidChannel) {
+
                 channel.close();
             }
         }
@@ -226,25 +250,26 @@ public class HeartbeatRequestHandler extends MetaServerHandler<HeartbeatRequest<
         private void checkIfSlotBasicInfoMatched(HeartbeatRequest<Node> heartbeat) {
 
             SlotConfig.SlotBasicInfo slotBasicInfo = heartbeat.getSlotBasicInfo();
-            if (SlotConfig.FUNC.equals(slotBasicInfo.getSlotFunc())) {
+            if (!SlotConfig.FUNC.equals(slotBasicInfo.getSlotFunc())) {
                 logger
                     .error(
-                        "[checkIfSlotBasicInfoMatched] {} slot function not match(meta-server: [{}], node: [{}]",
+                        "[checkIfSlotBasicInfoMatched] {} slot function not match(meta-server: [{}], receive: [{}]",
                         heartbeat.getNode(), SlotConfig.FUNC, slotBasicInfo.getSlotFunc());
                 isValidChannel = false;
             }
             if (SlotConfig.SLOT_NUM != slotBasicInfo.getSlotNum()) {
                 logger
                     .error(
-                        "[checkIfSlotBasicInfoMatched] {} slot number not match(meta-server: [{}], node: [{}]",
+                        "[checkIfSlotBasicInfoMatched] {} slot number not match(meta-server: [{}], receive: [{}]",
                         heartbeat.getNode(), SlotConfig.SLOT_NUM, slotBasicInfo.getSlotNum());
                 isValidChannel = false;
             }
             if (SlotConfig.SLOT_REPLICAS != slotBasicInfo.getSlotReplicas()) {
                 logger
                     .error(
-                        "[checkIfSlotBasicInfoMatched] {} slot replicas not match(meta-server: [{}], node: [{}]",
-                        heartbeat.getNode(), SlotConfig.SLOT_REPLICAS, slotBasicInfo.getSlotReplicas());
+                        "[checkIfSlotBasicInfoMatched] {} slot replicas not match(meta-server: [{}], receive: [{}]",
+                        heartbeat.getNode(), SlotConfig.SLOT_REPLICAS,
+                        slotBasicInfo.getSlotReplicas());
                 isValidChannel = false;
             }
 
@@ -261,5 +286,60 @@ public class HeartbeatRequestHandler extends MetaServerHandler<HeartbeatRequest<
             }
         }
 
+    }
+
+    /**
+     * Sets set current dc meta server.
+     *
+     * @param currentDcMetaServer the current dc meta server
+     * @return the set current dc meta server
+     */
+    public HeartbeatRequestHandler setCurrentDcMetaServer(DefaultCurrentDcMetaServer currentDcMetaServer) {
+        this.currentDcMetaServer = currentDcMetaServer;
+        return this;
+    }
+
+    /**
+     * Sets set default slot manager.
+     *
+     * @param defaultSlotManager the default slot manager
+     * @return the set default slot manager
+     */
+    public HeartbeatRequestHandler setDefaultSlotManager(DefaultSlotManager defaultSlotManager) {
+        this.defaultSlotManager = defaultSlotManager;
+        return this;
+    }
+
+    /**
+     * Sets set data message listeners.
+     *
+     * @param dataMessageListeners the data message listeners
+     * @return the set data message listeners
+     */
+    public HeartbeatRequestHandler setDataMessageListeners(List<DataMessageListener> dataMessageListeners) {
+        this.dataMessageListeners = dataMessageListeners;
+        return this;
+    }
+
+    /**
+     * Sets set session message listeners.
+     *
+     * @param sessionMessageListeners the session message listeners
+     * @return the set session message listeners
+     */
+    public HeartbeatRequestHandler setSessionMessageListeners(List<SessionMessageListener> sessionMessageListeners) {
+        this.sessionMessageListeners = sessionMessageListeners;
+        return this;
+    }
+
+    /**
+     * Sets set node config.
+     *
+     * @param nodeConfig the node config
+     * @return the set node config
+     */
+    public HeartbeatRequestHandler setNodeConfig(NodeConfig nodeConfig) {
+        this.nodeConfig = nodeConfig;
+        return this;
     }
 }

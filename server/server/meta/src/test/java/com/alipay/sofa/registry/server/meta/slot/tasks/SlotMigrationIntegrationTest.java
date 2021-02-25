@@ -68,7 +68,7 @@ public class SlotMigrationIntegrationTest extends AbstractTest {
     private DefaultDataServerManager dataServerManager;
 
     @Mock
-    private SlotTableMonitor slotTableMonitor;
+    private SlotTableMonitor         slotTableMonitor;
 
     @BeforeClass
     public static void beforeSlotMigrationIntegrationTestClass() {
