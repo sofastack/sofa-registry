@@ -28,5 +28,6 @@ public interface SlotTableMonitor extends DataMessageListener, Observer {
 
     void recordSlotTable();
 
-    boolean isSlotTableStable();
+    boolean isStableTableStable();
+
 }

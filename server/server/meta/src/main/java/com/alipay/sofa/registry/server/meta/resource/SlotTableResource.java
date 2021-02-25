@@ -30,6 +30,7 @@ import com.alipay.sofa.registry.server.meta.slot.manager.LocalSlotManager;
 import com.alipay.sofa.registry.server.meta.slot.tasks.BalanceTask;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import javax.ws.rs.GET;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
@@ -40,7 +41,7 @@ import javax.ws.rs.core.MediaType;
  * <p>
  * Jan 08, 2021
  */
-@Path("openapi/slot/table")
+@Path("openapi/v1/slot/table")
 public class SlotTableResource {
 
     private final Logger             logger = LoggerFactory.getLogger(getClass());
@@ -85,7 +86,7 @@ public class SlotTableResource {
     }
 
     @PUT
-    @Path("/slot/table/reconcile/stop")
+    @Path("/reconcile/stop")
     @Produces(MediaType.APPLICATION_JSON)
     public CommonResponse stopSlotTableReconcile() {
         logger.info("[stopSlotTableReconcile] begin");
@@ -100,7 +101,7 @@ public class SlotTableResource {
     }
 
     @PUT
-    @Path("/slot/table/reconcile/start")
+    @Path("/reconcile/start")
     @Produces(MediaType.APPLICATION_JSON)
     public CommonResponse startSlotTableReconcile() {
         logger.info("[startSlotTableReconcile] begin");
@@ -111,6 +112,20 @@ public class SlotTableResource {
         } catch (Throwable throwable) {
             logger.error("[startSlotTableReconcile] end", throwable);
             return GenericResponse.buildFailedResponse(throwable.getMessage());
+        }
+    }
+
+    @GET
+    @Path("/data/slot/status")
+    @Produces(MediaType.APPLICATION_JSON)
+    public GenericResponse<Object> getDataSlotStatuses() {
+        logger.info("[getDataSlotStatuses] begin");
+        try {
+            return new GenericResponse<>().fillSucceed(dataServerManager.getDataServersStats());
+        } catch (Throwable throwable) {
+            return new GenericResponse<>().fillFailed(throwable.getMessage());
+        } finally {
+            logger.info("[getDataSlotStatuses] end");
         }
     }
 

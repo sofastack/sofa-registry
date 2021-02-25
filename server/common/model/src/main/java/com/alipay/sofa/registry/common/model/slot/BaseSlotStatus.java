@@ -23,36 +23,28 @@ import java.io.Serializable;
  * <p>
  * Feb 24, 2021
  */
-public class SlotStatus implements Serializable {
+public class BaseSlotStatus implements Serializable {
 
-    private final int    slotId;
+    protected final int       slotId;
 
-    private final long   slotLeaderEpoch;
+    protected final long      slotLeaderEpoch;
 
-    private LeaderStatus leaderStatus = LeaderStatus.INIT;
+    protected final Slot.Role role;
 
-    /**
-     * Constructor.
-     *
-     * @param slotId          the slot id
-     * @param slotLeaderEpoch the slot leader epoch
-     */
-    public SlotStatus(int slotId, long slotLeaderEpoch) {
-        this.slotId = slotId;
-        this.slotLeaderEpoch = slotLeaderEpoch;
-    }
+    protected final String    server;
 
     /**
      * Constructor.
-     *
-     * @param slotId          the slot id
+     *  @param slotId          the slot id
      * @param slotLeaderEpoch the slot leader epoch
-     * @param leaderStatus    the leader status
+     * @param role            the role
+     * @param server
      */
-    public SlotStatus(int slotId, long slotLeaderEpoch, LeaderStatus leaderStatus) {
+    public BaseSlotStatus(int slotId, long slotLeaderEpoch, Slot.Role role, String server) {
         this.slotId = slotId;
         this.slotLeaderEpoch = slotLeaderEpoch;
-        this.leaderStatus = leaderStatus;
+        this.role = role;
+        this.server = server;
     }
 
     /**
@@ -74,40 +66,39 @@ public class SlotStatus implements Serializable {
     }
 
     /**
-     * Gets get leader status.
+     * Gets get role.
      *
-     * @return the get leader status
+     * @return the get role
      */
-    public LeaderStatus getLeaderStatus() {
-        return leaderStatus;
+    public Slot.Role getRole() {
+        return role;
     }
 
     /**
-     * From slot status.
+     * Gets get data server.
      *
-     * @param slotAccess the slot access
-     * @return the slot status
+     * @return the get data server
      */
-    public static SlotStatus from(SlotAccess slotAccess) {
-        SlotStatus slotStatus = new SlotStatus(slotAccess.getSlotId(),
-            slotAccess.getSlotLeaderEpoch());
-        if (slotAccess.getStatus() != null) {
-            switch (slotAccess.getStatus()) {
-                case Accept:
-                    slotStatus.leaderStatus = LeaderStatus.HEALTHY;
-                default:
-                    slotStatus.leaderStatus = LeaderStatus.UNHEALTHY;
-            }
-        }
-        return slotStatus;
+    public String getServer() {
+        return server;
     }
 
     public static enum LeaderStatus {
         INIT, HEALTHY, UNHEALTHY;
 
+        /**
+         * Is healthy boolean.
+         *
+         * @return the boolean
+         */
         public boolean isHealthy() {
             return this == HEALTHY;
         }
     }
 
+    @Override
+    public String toString() {
+        return "BaseSlotStatus{" + "slotId=" + slotId + ", slotLeaderEpoch=" + slotLeaderEpoch
+               + ", role=" + role + ", server='" + server + '\'' + '}';
+    }
 }

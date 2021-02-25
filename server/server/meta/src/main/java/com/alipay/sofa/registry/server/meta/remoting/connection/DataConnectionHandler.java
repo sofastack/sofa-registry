@@ -33,7 +33,12 @@ import java.util.concurrent.ConcurrentHashMap;
  * @version $Id: DataConnectionHandler.java, v 0.1 2018-01-24 16:04 shangyu.wh Exp $
  */
 public class DataConnectionHandler extends ListenServerChannelHandler implements NodeConnectManager {
-    private Map<String/*connectId*/, InetSocketAddress> connections = new ConcurrentHashMap<>();
+
+    /**
+     * key: connectId
+     * value: InetSocketAddress
+     * */
+    private final Map<String, InetSocketAddress> connections = new ConcurrentHashMap<>();
 
     @Override
     public void connected(Channel channel) {

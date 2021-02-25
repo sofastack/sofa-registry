@@ -16,7 +16,7 @@
  */
 package com.alipay.sofa.registry.server.meta.monitor.data;
 
-import com.alipay.sofa.registry.common.model.slot.SlotStatus;
+import com.alipay.sofa.registry.common.model.slot.BaseSlotStatus;
 
 import java.util.List;
 
@@ -27,9 +27,9 @@ import java.util.List;
  */
 public class DataServerStats {
 
-    private final String           dataServer;
-    private final long             slotTableEpoch;
-    private final List<SlotStatus> slotStatuses;
+    private final String               dataServer;
+    private final long                 slotTableEpoch;
+    private final List<BaseSlotStatus> slotStatuses;
 
     /**
      * Constructor.
@@ -38,7 +38,7 @@ public class DataServerStats {
      * @param slotTableEpoch the slot table epoch
      * @param slotStatuses     the slot status
      */
-    public DataServerStats(String dataServer, long slotTableEpoch, List<SlotStatus> slotStatuses) {
+    public DataServerStats(String dataServer, long slotTableEpoch, List<BaseSlotStatus> slotStatuses) {
         this.dataServer = dataServer;
         this.slotTableEpoch = slotTableEpoch;
         this.slotStatuses = slotStatuses;
@@ -58,7 +58,7 @@ public class DataServerStats {
      *
      * @return the get slot status
      */
-    public List<SlotStatus> getSlotStatus() {
+    public List<BaseSlotStatus> getSlotStatus() {
         return slotStatuses;
     }
 
