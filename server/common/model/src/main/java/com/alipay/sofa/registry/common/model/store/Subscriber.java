@@ -20,6 +20,7 @@ import java.util.*;
 
 import com.alipay.sofa.registry.common.model.ElementType;
 import com.alipay.sofa.registry.core.model.ScopeEnum;
+import com.alipay.sofa.registry.util.StringFormatter;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
 /**
@@ -132,6 +133,11 @@ public class Subscriber extends BaseInfo {
         return sb.append(lastPushContexts).toString();
     }
 
+    public synchronized long getPushVersion(String dataCenter) {
+        PushContext ctx = lastPushContexts.get(dataCenter);
+        return ctx == null ? 0 : ctx.pushVersion;
+    }
+
     /**
      * change subscriber word cache
      *
@@ -139,12 +145,10 @@ public class Subscriber extends BaseInfo {
      * @return
      */
     public static Subscriber internSubscriber(Subscriber subscriber) {
-        subscriber.setRegisterId(subscriber.getRegisterId());
         subscriber.setDataInfoId(subscriber.getDataInfoId());
         subscriber.setInstanceId(subscriber.getInstanceId());
         subscriber.setGroup(subscriber.getGroup());
         subscriber.setDataId(subscriber.getDataId());
-        subscriber.setClientId(subscriber.getClientId());
         subscriber.setCell(subscriber.getCell());
         subscriber.setProcessId(subscriber.getProcessId());
         subscriber.setAppName(subscriber.getAppName());
@@ -157,7 +161,7 @@ public class Subscriber extends BaseInfo {
 
         @Override
         public String toString() {
-            return "PushContext{" + "pushVersion=" + pushVersion + '}';
+            return StringFormatter.format("PushCtx{{}}", pushVersion);
         }
     }
 

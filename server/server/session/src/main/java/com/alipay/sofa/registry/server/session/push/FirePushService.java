@@ -41,9 +41,7 @@ import java.util.*;
 import java.util.concurrent.RejectedExecutionException;
 
 public class FirePushService {
-    public static final long        EXCEPT_MIN_VERSION = Long.MIN_VALUE;
-    private static final Logger     LOGGER             = LoggerFactory
-                                                           .getLogger(FirePushService.class);
+    private static final Logger     LOGGER        = LoggerFactory.getLogger(FirePushService.class);
 
     @Autowired
     private SessionServerConfig     sessionServerConfig;
@@ -60,7 +58,7 @@ public class FirePushService {
     private PushProcessor           pushProcessor;
     @Autowired
     private ChangeProcessor         changeProcessor;
-    private final ChangeHandler     changeHandler      = new ChangeHandler();
+    private final ChangeHandler     changeHandler = new ChangeHandler();
 
     @PostConstruct
     public void init() {
@@ -108,8 +106,8 @@ public class FirePushService {
 
     public boolean fireOnDatum(SubDatum datum) {
         DataInfo dataInfo = DataInfo.valueOf(datum.getDataInfoId());
-        Collection<Subscriber> subscribers = sessionInterests.getInterestOfDatum(dataInfo
-            .getDataInfoId());
+        Collection<Subscriber> subscribers = sessionInterests
+            .getInterests(dataInfo.getDataInfoId());
         processPush(true, datum, subscribers);
         PUSH_TEMP_COUNTER.inc();
         return true;
@@ -122,36 +120,22 @@ public class FirePushService {
 
     private void doExecuteOnChange(String dataCenter, String changeDataInfoId, long expectVersion) {
         final SubDatum datum = getDatum(dataCenter, changeDataInfoId, expectVersion);
-        if (expectVersion != EXCEPT_MIN_VERSION) {
-            if (datum == null) {
-                // datum change, but get null datum, should not happen
-                LOGGER.error("[changeNilDatum] {},{},{}", dataCenter, changeDataInfoId,
-                    expectVersion);
-                return;
-            }
-            if (datum.getVersion() < expectVersion) {
-                LOGGER.error("[lessVer] {},{},{}<{}", dataCenter, changeDataInfoId,
-                    datum.getVersion(), expectVersion);
-                return;
-            }
-        } else {
-            if (datum == null) {
-                LOGGER
-                    .info("[fetchNilDatum] {},{},{}", dataCenter, changeDataInfoId, expectVersion);
-            }
+        if (datum == null) {
+            // datum change, but get null datum, should not happen
+            LOGGER.error("[changeNil] {},{},{}", dataCenter, changeDataInfoId, expectVersion);
+            return;
         }
-
-        DataInfo dataInfo = DataInfo.valueOf(changeDataInfoId);
-        onDatumChange(dataInfo, datum, dataCenter);
+        if (datum.getVersion() < expectVersion) {
+            LOGGER.error("[changeLessVer] {},{},{}<{}", dataCenter, changeDataInfoId,
+                datum.getVersion(), expectVersion);
+            return;
+        }
+        onDatumChange(datum);
     }
 
-    private void onDatumChange(DataInfo dataInfo, SubDatum datum, String dataCenter) {
+    private void onDatumChange(SubDatum datum) {
         Map<ScopeEnum, List<Subscriber>> scopes = SubscriberUtils.groupByScope(sessionInterests
-            .getDatas(dataInfo.getDataInfoId()));
-        if (datum == null) {
-            datum = DatumUtils.newEmptySubDatum(dataInfo, dataCenter);
-            LOGGER.warn("empty push {}, dataCenter={}", dataInfo.getDataInfoId(), dataCenter);
-        }
+            .getDatas(datum.getDataInfoId()));
         for (Map.Entry<ScopeEnum, List<Subscriber>> scope : scopes.entrySet()) {
             processPush(false, datum, scope.getValue());
         }

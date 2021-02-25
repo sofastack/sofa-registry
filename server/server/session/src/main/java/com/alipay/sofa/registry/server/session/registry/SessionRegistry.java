@@ -47,6 +47,7 @@ import com.alipay.sofa.registry.util.ConcurrentUtils;
 import com.alipay.sofa.registry.util.LoopRunnable;
 import com.alipay.sofa.registry.util.WakeUpLoopRunnable;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.CollectionUtils;
@@ -297,21 +298,24 @@ public class SessionRegistry implements Registry {
     }
 
     private void scanVersions() {
-        Collection<String> pushedDataInfoIds = sessionInterests.getPushedDataInfoIds();
-        Map<Integer, List<String>> pushedDataInfoIdMap = groupBySlot(pushedDataInfoIds);
-        for (int i = 0; i < slotTableCache.slotNum(); i++) {
+        // TODO not support multi cluster
+        Map<String, DatumVersion> interestVersions = sessionInterests
+            .getInterestVersions(sessionServerConfig.getSessionServerDataCenter());
+        Map<Integer, Map<String, DatumVersion>> interestVersionsGroup = groupBySlot(interestVersions);
+        for (Map.Entry<Integer, Map<String, DatumVersion>> group : interestVersionsGroup.entrySet()) {
+            final int slotId = group.getKey();
             try {
-                // TODO not support multi cluster
-                fetchChangDataProcess(sessionServerConfig.getSessionServerDataCenter(), i,
-                    pushedDataInfoIdMap.getOrDefault(i, Collections.emptyList()));
+                fetchChangDataProcess(sessionServerConfig.getSessionServerDataCenter(), slotId,
+                    group.getValue());
             } catch (Throwable e) {
-                SCAN_VER_LOGGER.error("failed to fetch versions slotId={}", i, e);
+                SCAN_VER_LOGGER.error("failed to fetch versions slotId={}, size={}", slotId, group
+                    .getValue().size(), e);
             }
         }
     }
 
     private void triggerSubscriberRegister() {
-        Collection<Subscriber> subscribers = sessionInterests.getInterestNeverPushed();
+        Collection<Subscriber> subscribers = sessionInterests.getInterestsNeverPushed();
         if (!subscribers.isEmpty()) {
             SCAN_VER_LOGGER.info("find never pushed subscribers:{}", subscribers.size());
             for (Subscriber subscriber : subscribers) {
@@ -330,28 +334,33 @@ public class SessionRegistry implements Registry {
         versionWatchDog.wakeup();
     }
 
-    private Map<Integer, List<String>> groupBySlot(Collection<String> dataInfoIds) {
-        Map<Integer, List<String>> ret = new HashMap<>(64);
-        for (String dataInfoId : dataInfoIds) {
-            List<String> list = ret.computeIfAbsent(slotTableCache.slotOf(dataInfoId), k -> Lists.newArrayList());
-            list.add(dataInfoId);
+    private Map<Integer, Map<String, DatumVersion>> groupBySlot(Map<String, DatumVersion> interestVersions) {
+        if (CollectionUtils.isEmpty(interestVersions)) {
+            return Collections.emptyMap();
+        }
+        TreeMap<Integer, Map<String, DatumVersion>> ret = Maps.newTreeMap();
+        for (Map.Entry<String, DatumVersion> interestVersion : interestVersions.entrySet()) {
+            final String dataInfoId = interestVersion.getKey();
+            Map<String, DatumVersion> map = ret.computeIfAbsent(slotTableCache.slotOf(dataInfoId), k -> Maps.newHashMapWithExpectedSize(128));
+            map.put(dataInfoId, interestVersion.getValue());
         }
         return ret;
     }
 
-    private void fetchChangDataProcess(String dataCenter, int slotId, List<String> pushedDataInfoIds) {
+    private void fetchChangDataProcess(String dataCenter, int slotId,
+                                       Map<String, DatumVersion> interestVersions) {
         final String leader = slotTableCache.getLeader(slotId);
         if (StringUtils.isBlank(leader)) {
             SCAN_VER_LOGGER.warn("slot not assigned, {}", slotId);
             return;
         }
-        SCAN_VER_LOGGER.info("fetch ver from {}, slotId={}, pushed={}", leader, slotId,
-            pushedDataInfoIds.size());
+        SCAN_VER_LOGGER.info("[fetchSlotVer]{},{},{},interests={}", slotId, dataCenter, leader,
+            interestVersions.size());
         Map<String/*datainfoid*/, DatumVersion> dataVersions = dataNodeService.fetchDataVersion(
-            dataCenter, slotId);
+            dataCenter, slotId, interestVersions);
 
         if (CollectionUtils.isEmpty(dataVersions)) {
-            SCAN_VER_LOGGER.warn("fetch empty ver from {}, slotId={}", leader, slotId);
+            SCAN_VER_LOGGER.warn("[fetchSlotVerEmpty]{},{}", slotId, leader);
             return;
         }
         for (Map.Entry<String, DatumVersion> version : dataVersions.entrySet()) {
@@ -359,20 +368,30 @@ public class SessionRegistry implements Registry {
             final long verVal = version.getValue().getValue();
             if (sessionInterests.checkInterestVersion(dataCenter, dataInfoId, verVal).interested) {
                 firePushService.fireOnChange(dataCenter, dataInfoId, verVal);
-                SCAN_VER_LOGGER.info("notify fetch by check ver {} for {}, slotId={}", verVal,
-                    dataInfoId, slotId);
+                SCAN_VER_LOGGER.info("[fetchSlotVerNotify]{},{},{},{}", slotId, dataInfoId,
+                    dataCenter, verVal);
             }
         }
         // to check the dataInfoId has deleted or not exist
-        for (String pushedDataInfoId : pushedDataInfoIds) {
+        for (Map.Entry<String, DatumVersion> interestVersion : interestVersions.entrySet()) {
+            if (interestVersion.getValue().getValue() <= 0) {
+                // not pushed
+                continue;
+            }
+            // the subscriber has pushed, but the not find datum in data node.
+            // it may appear in the following scenarios:
+            // 1. at a time, all publishers of the dataId deleted and the data node crash(has not push to subscriber)
+            // 2. the slot migrate, because there is no publisher of the dataId in session, the data node contains no datum(version)
+            // 3. now, the data change notify lost and get versions return null
+            // so we should push empty to subscriber with bigger datum.version, but this is a dangerous operation
+            // now just waring, not handle this case. it is very low probability
+            // TODO need push empty
+            final String pushedDataInfoId = interestVersion.getKey();
             if (!dataVersions.containsKey(pushedDataInfoId)) {
                 // EXCEPT_MIN_VERSION means the datum maybe is null
                 // after push null datum, the pushedDataInfoId will reset
                 // the next scan round, would not trigger this
-                firePushService.fireOnChange(dataCenter, pushedDataInfoId,
-                    FirePushService.EXCEPT_MIN_VERSION);
-                SCAN_VER_LOGGER.warn("pushedDataInfoId not exist {}, slotId={}", pushedDataInfoId,
-                    slotId);
+                SCAN_VER_LOGGER.warn("[cleanPushed]{}, slotId={}", pushedDataInfoId, slotId);
             }
         }
     }

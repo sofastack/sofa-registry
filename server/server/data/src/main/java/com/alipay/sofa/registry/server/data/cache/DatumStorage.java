@@ -83,4 +83,6 @@ public interface DatumStorage {
 
     void updateVersion(int slotId);
 
+    DatumVersion updateVersion(String dataInfoId);
+
 }

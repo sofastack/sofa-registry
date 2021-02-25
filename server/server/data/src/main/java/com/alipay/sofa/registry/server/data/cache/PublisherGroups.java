@@ -150,4 +150,12 @@ public final class PublisherGroups {
     void updateVersion() {
         publisherGroupMap.values().forEach(g -> g.updateVersion());
     }
+
+    DatumVersion updateVersion(String dataInfoId) {
+        PublisherGroup group = publisherGroupMap.get(dataInfoId);
+        if (group == null) {
+            return null;
+        }
+        return group.updateVersion();
+    }
 }
