@@ -17,6 +17,7 @@
 package com.alipay.sofa.registry.common.model.store;
 
 import com.alipay.sofa.registry.common.model.ServerDataBox;
+import com.alipay.sofa.registry.util.StringFormatter;
 import com.google.common.collect.Lists;
 
 import java.io.Serializable;
@@ -28,13 +29,15 @@ public final class SubPublisher implements Serializable {
     private final String              clientId;
     private final String              srcAddressString;
     private final List<ServerDataBox> dataList;
+    private final long                registerTimestamp;
 
     public SubPublisher(String cell, List<ServerDataBox> dataList, String clientId,
-                        String srcAddressString) {
+                        String srcAddressString, long registerTimestamp) {
         this.cell = cell;
         this.clientId = clientId;
         this.srcAddressString = srcAddressString;
         this.dataList = Collections.unmodifiableList(Lists.newArrayList(dataList));
+        this.registerTimestamp = registerTimestamp;
     }
 
     public String getCell() {
@@ -53,9 +56,13 @@ public final class SubPublisher implements Serializable {
         return srcAddressString;
     }
 
+    public long getRegisterTimestamp() {
+        return registerTimestamp;
+    }
+
     @Override
     public String toString() {
-        return "SubPublisher{" + "cell='" + cell + '\'' + ", clientId='" + clientId + '\''
-               + ", srcAddr='" + srcAddressString + '\'' + ", dataList=" + dataList.size() + '}';
+        return StringFormatter.format("SubPublisher{{},cell={},src={},datas={},ts={}}", clientId,
+            cell, srcAddressString, dataList.size(), registerTimestamp);
     }
 }

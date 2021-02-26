@@ -69,7 +69,7 @@ public final class DatumUtils {
             final String srcAddressString = srcAddress == null ? null : srcAddress
                 .getAddressString();
             publishers.add(new SubPublisher(publisher.getCell(), publisher.getDataList(), publisher
-                .getClientId(), srcAddressString));
+                .getClientId(), srcAddressString, publisher.getRegisterTimestamp()));
         }
         return new SubDatum(datum.getDataInfoId(), datum.getDataCenter(), datum.getVersion(),
             publishers, datum.getDataId(), datum.getInstanceId(), datum.getGroup());
