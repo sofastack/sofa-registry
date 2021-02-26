@@ -18,8 +18,10 @@ package com.alipay.sofa.registry.server.meta.monitor.impl;
 
 import com.alipay.sofa.registry.common.model.metaserver.nodes.DataNode;
 import com.alipay.sofa.registry.common.model.slot.DataNodeSlot;
+import com.alipay.sofa.registry.common.model.slot.SlotConfig;
 import com.alipay.sofa.registry.common.model.slot.SlotStatus;
 import com.alipay.sofa.registry.common.model.slot.SlotTable;
+import com.alipay.sofa.registry.exception.InitializeException;
 import com.alipay.sofa.registry.server.meta.AbstractTest;
 import com.alipay.sofa.registry.server.meta.bootstrap.config.NodeConfig;
 import com.alipay.sofa.registry.server.meta.slot.manager.LocalSlotManager;
@@ -40,9 +42,11 @@ public class DefaultSlotTableStatsTest extends AbstractTest {
 
     private DefaultSlotTableStats slotTableStats;
 
+    private NodeConfig nodeConfig;
+
     @Before
     public void beforeDefaultSlotTableMonitorTest() throws Exception {
-        NodeConfig nodeConfig = mock(NodeConfig.class);
+        nodeConfig = mock(NodeConfig.class);
         when(nodeConfig.getLocalDataCenter()).thenReturn(getDc());
         slotManager = new LocalSlotManager(nodeConfig);
         slotTableStats = new DefaultSlotTableStats(slotManager);
@@ -100,5 +104,19 @@ public class DefaultSlotTableStatsTest extends AbstractTest {
         slotManager.refresh(new SlotTableGenerator(dataNodes).createSlotTable());
         slotTableStats.updateSlotTable(slotManager.getSlotTable());
         Assert.assertFalse(slotTableStats.isSlotTableStable());
+    }
+
+    @Test
+    public void testDataReportWhenInit() throws InitializeException {
+        slotManager = new LocalSlotManager(nodeConfig);
+        slotTableStats = new DefaultSlotTableStats(slotManager);
+        slotTableStats.initialize();
+        List<SlotStatus> slotStatuses = Lists.newArrayList();
+        for(int slotId = 0; slotId < SlotConfig.SLOT_NUM; slotId++) {
+            slotStatuses.add(new SlotStatus(slotId,
+                    0,
+                    SlotStatus.LeaderStatus.UNHEALTHY));
+        }
+        slotTableStats.checkSlotStatuses(slotStatuses);
     }
 }
