@@ -55,4 +55,12 @@ public class DefaultSlotStats implements SlotStats {
         this.leaderStatus = state;
     }
 
+    @Override
+    public String toString() {
+        return "DefaultSlotStats{" +
+                "slot=" + slot +
+                ", leaderStatus=" + leaderStatus +
+                ", followerOffsets=" + followerOffsets +
+                '}';
+    }
 }

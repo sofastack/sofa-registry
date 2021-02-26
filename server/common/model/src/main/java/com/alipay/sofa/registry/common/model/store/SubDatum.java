@@ -81,6 +81,10 @@ public final class SubDatum implements Serializable {
         return version;
     }
 
+    public boolean isEmpty() {
+        return publishers.isEmpty();
+    }
+
     @Override
     public String toString() {
         return StringFormatter.format("SubDatum{{},{},{},{}}", dataInfoId, dataCenter, version,
@@ -102,7 +106,7 @@ public final class SubDatum implements Serializable {
         for (SubPublisher publisher : datum.publishers) {
             final String cell = WordCache.getWordCache(publisher.getCell());
             publishers.add(new SubPublisher(cell, publisher.getDataList(), publisher.getClientId(),
-                publisher.getSrcAddressString()));
+                publisher.getSrcAddressString(), publisher.getRegisterTimestamp()));
         }
         return new SubDatum(dataInfoId, dataCenter, datum.version, publishers, dataId, instanceId,
             group);

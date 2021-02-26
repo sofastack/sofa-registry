@@ -17,6 +17,7 @@
 package com.alipay.sofa.registry.server.session.push;
 
 import com.alipay.remoting.rpc.exception.InvokeTimeoutException;
+import com.alipay.sofa.registry.common.model.SubscriberUtils;
 import com.alipay.sofa.registry.common.model.store.BaseInfo;
 import com.alipay.sofa.registry.common.model.store.SubDatum;
 import com.alipay.sofa.registry.common.model.store.Subscriber;
@@ -201,12 +202,16 @@ public class PushProcessor {
         if (prev == null) {
             return true;
         }
-        final long span = System.currentTimeMillis() - prev.pushTimestamp;
+        final long now = System.currentTimeMillis();
+        final long span = now - prev.pushTimestamp;
         if (span > sessionServerConfig.getClientNodeExchangeTimeoutMillis() * 2) {
             // force to remove the prev task
             final boolean cleaned = pushingTasks.remove(pushingTaskKey) != null;
             LOGGER.warn("[prevPushTooLong] {}, clean={}, prev={}, now={}", pushingTaskKey, cleaned,
                 prev.taskID, task.taskID);
+            if (cleaned) {
+                prev.trace.finishPush(PushTrace.PushStatus.Timeout, now).print();
+            }
             return true;
         }
         // task after the prev, but prev.pushclient not callback, retry
@@ -246,6 +251,7 @@ public class PushProcessor {
         int                           retryCount;
 
         final PushingTaskKey          pushingTaskKey;
+        final PushTrace               trace;
 
         PushTask(boolean noDelay, InetSocketAddress addr, Map<String, Subscriber> subscriberMap,
                  SubDatum datum) {
@@ -256,6 +262,7 @@ public class PushProcessor {
             this.addr = addr;
             this.subscriberMap = subscriberMap;
             this.subscriber = subscriberMap.values().iterator().next();
+            this.trace = PushTrace.trace(datum, addr, subscriber.getAppName());
             this.pushingTaskKey = new PushingTaskKey(subscriber.getDataInfoId(), addr,
                 subscriber.getScope(), subscriber.getClientVersion());
         }
@@ -288,6 +295,9 @@ public class PushProcessor {
                 }
                 Object data = createPushData();
                 updatePushTimestamp();
+                trace.startPush(
+                    SubscriberUtils.getMaxPushedVersion(dataCenter, subscriberMap.values()),
+                    this.pushTimestamp);
                 pushingTasks.put(pushingTaskKey, this);
                 clientNodeService.pushWithCallback(data, subscriber.getSourceAddress(),
                     new PushClientCallback(this, pushingTaskKey));
@@ -295,14 +305,17 @@ public class PushProcessor {
                 LOGGER.info("{}, pushing {}", taskID, pushingTaskKey);
             } catch (RequestChannelClosedException e) {
                 // try to delete self
+                trace.finishPush(PushTrace.PushStatus.Fail, System.currentTimeMillis()).print();
                 boolean cleaned = pushingTasks.remove(pushingTaskKey) != null;
                 LOGGER.error("{}, failed to pushing {}, cleaned={}, {}", taskID, pushingTaskKey,
                     cleaned, e.getMessage());
             } catch (Throwable e) {
+                trace.finishPush(PushTrace.PushStatus.Fail, System.currentTimeMillis()).print();
                 // try to delete self
                 boolean cleaned = pushingTasks.remove(pushingTaskKey) != null;
                 LOGGER.error("{}, failed to pushing {}, cleaned={}", taskID, pushingTaskKey,
                     cleaned, e);
+
             }
         }
 
@@ -356,6 +369,7 @@ public class PushProcessor {
                 // after removed=true, the value aslo in the map
                 cleaned = pushingTasks.remove(pushingTaskKey, pushTask);
             }
+            this.pushTask.trace.finishPush(PushTrace.PushStatus.OK, this.finishedTimestamp).print();
             LOGGER.info("PushY, clean record={}, span={}/{}, {}, {}", cleaned, pushSpanMillis(),
                 totalSpanMillis(), pushTask.taskID, pushTask.pushingTaskKey);
         }
@@ -378,9 +392,17 @@ public class PushProcessor {
                 LOGGER.error("error push.onException, {}, {}", pushTask.taskID, pushingTaskKey, e);
             }
             if (exception instanceof InvokeTimeoutException) {
+                if (cleaned) {
+                    this.pushTask.trace.finishPush(PushTrace.PushStatus.Timeout,
+                        this.finishedTimestamp).print();
+                }
                 LOGGER.error("PushN, timeout, clean record={}, span={}/{}, {}, {}", cleaned,
                     pushSpanMillis(), totalSpanMillis(), pushTask.taskID, pushingTaskKey);
             } else {
+                if (cleaned) {
+                    this.pushTask.trace.finishPush(PushTrace.PushStatus.Fail,
+                        this.finishedTimestamp).print();
+                }
                 LOGGER
                     .error("PushN, clean record={}, span={}/{}, {}, {}", cleaned, pushSpanMillis(),
                         totalSpanMillis(), pushTask.taskID, pushingTaskKey, exception);

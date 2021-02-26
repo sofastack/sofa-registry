@@ -73,4 +73,15 @@ public final class SubscriberUtils {
         }
         return scope;
     }
+
+    public static long getMaxPushedVersion(String dataCenter, Collection<Subscriber> subscribers) {
+        long max = 0;
+        for (Subscriber sub : subscribers) {
+            long v = sub.getPushVersion(dataCenter);
+            if (max < v) {
+                max = v;
+            }
+        }
+        return max;
+    }
 }
