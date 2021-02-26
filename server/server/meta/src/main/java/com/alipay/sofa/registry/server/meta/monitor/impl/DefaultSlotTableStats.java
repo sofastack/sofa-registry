@@ -16,6 +16,7 @@
  */
 package com.alipay.sofa.registry.server.meta.monitor.impl;
 
+import com.alipay.sofa.registry.common.model.slot.Slot;
 import com.alipay.sofa.registry.common.model.slot.SlotConfig;
 import com.alipay.sofa.registry.common.model.slot.SlotStatus;
 import com.alipay.sofa.registry.common.model.slot.SlotTable;
@@ -26,6 +27,7 @@ import com.alipay.sofa.registry.server.meta.monitor.SlotTableStats;
 import com.alipay.sofa.registry.server.meta.slot.SlotManager;
 import com.google.common.collect.Maps;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -48,8 +50,12 @@ public class DefaultSlotTableStats extends AbstractLifecycle implements SlotTabl
     protected void doInitialize() throws InitializeException {
         super.doInitialize();
         for (int slotId = 0; slotId < SlotConfig.SLOT_NUM; slotId++) {
+            Slot slot = slotManager.getSlotTable().getSlot(slotId);
+            if (slot == null) {
+                slot = new Slot(slotId, null, 0L, Collections.emptyList());
+            }
             slotStatses.put(slotId,
-                new DefaultSlotStats(slotManager.getSlotTable().getSlot(slotId)));
+                new DefaultSlotStats(slot));
         }
     }
 
@@ -69,6 +75,9 @@ public class DefaultSlotTableStats extends AbstractLifecycle implements SlotTabl
         for (SlotStatus slotStatus : slotStatuses) {
             int slotId = slotStatus.getSlotId();
             SlotStats slotStats = slotStatses.get(slotId);
+            if (slotStats == null || slotStats.getSlot() == null) {
+                continue;
+            }
             if (slotStats.getSlot().getLeaderEpoch() > slotStatus.getSlotLeaderEpoch()) {
                 logger
                     .warn(
