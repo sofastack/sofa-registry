@@ -91,8 +91,8 @@ public final class PushTrace {
         LOGGER
             .info(
                 "{},{},{},{},pubTotal={},pubNew={},delay={},{},{},{},firstPubDelay={},lastPubDelay={},addr={}",
-                    status, datum.getDataInfoId(), subApp, datum.getDataCenter(), datum.getPublishers().size(),
-                newPublisherNum, datumTotalDelayMillis, datumPushCommitSpanMillis,
+                status, datum.getDataInfoId(), subApp, datum.getDataCenter(), datum.getPublishers()
+                    .size(), newPublisherNum, datumTotalDelayMillis, datumPushCommitSpanMillis,
                 datumPushStartSpanMillis, datumPushFinishSpanMillis, firstPubPushDelayMillis,
                 lastPubPushDelayMillis, subAddress);
     }

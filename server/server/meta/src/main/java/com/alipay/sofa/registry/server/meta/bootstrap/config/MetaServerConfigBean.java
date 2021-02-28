@@ -31,76 +31,72 @@ import java.io.File;
 @ConfigurationProperties(prefix = MetaServerConfigBean.PREFIX)
 public class MetaServerConfigBean implements MetaServerConfig {
 
-    public static final String PREFIX                                          = "meta.server";
+    public static final String PREFIX                                     = "meta.server";
 
-    private int                sessionServerPort                               = 9610;
+    private int                sessionServerPort                          = 9610;
 
-    private int                dataServerPort                                  = 9611;
+    private int                dataServerPort                             = 9611;
 
-    private int                metaServerPort                                  = 9612;
+    private int                metaServerPort                             = 9612;
 
-    private int                httpServerPort                                  = 9615;
+    private int                httpServerPort                             = 9615;
 
-    private int                schedulerCheckNodeListChangePushTimeout         = 3;
+    private int                schedulerCheckNodeListChangePushTimeout    = 3;
 
-    private int                schedulerCheckNodeListChangePushFirstDelay      = 1;
+    private int                schedulerCheckNodeListChangePushFirstDelay = 1;
 
-    private int                schedulerCheckNodeListChangePushExpBackOffBound = 10;
+    private int                dataNodeExchangeTimeout                    = 3000;
 
-    private int                dataNodeExchangeTimeout                         = 3000;
+    private int                sessionNodeExchangeTimeout                 = 3000;
 
-    private int                sessionNodeExchangeTimeout                      = 3000;
+    private int                metaNodeExchangeTimeout                    = 3000;
 
-    private int                metaNodeExchangeTimeout                         = 3000;
-
-    private int                raftElectionTimeout                             = 1000;
+    private int                raftElectionTimeout                        = 1000;
 
     /**
      * Whether to enable metrics for node.
      */
-    private boolean            enableMetrics                                   = true;
+    private boolean            enableMetrics                              = true;
 
-    private String             raftDataPath                                    = System
-                                                                                   .getProperty("user.home")
-                                                                                 + File.separator
-                                                                                 + "raftData";
+    private String             raftDataPath                               = System
+                                                                              .getProperty("user.home")
+                                                                            + File.separator
+                                                                            + "raftData";
 
-    private int                rockDBCacheSize                                 = 64;                   //64M
+    private int                rockDBCacheSize                            = 64;                        //64M
 
-    private int                connectMetaServerExecutorMinSize                = 3;
-    private int                connectMetaServerExecutorMaxSize                = 10;
-    private int                connectMetaServerExecutorQueueSize              = 1024;
+    private int                connectMetaServerExecutorMinSize           = 3;
+    private int                connectMetaServerExecutorMaxSize           = 10;
+    private int                connectMetaServerExecutorQueueSize         = 1024;
 
-    private int                raftClientRefreshExecutorMinSize                = 3;
-    private int                raftClientRefreshExecutorMaxSize                = 10;
-    private int                raftClientRefreshExecutorQueueSize              = 1024;
+    private int                raftClientRefreshExecutorMinSize           = 3;
+    private int                raftClientRefreshExecutorMaxSize           = 10;
+    private int                raftClientRefreshExecutorQueueSize         = 1024;
 
-    private int                defaultRequestExecutorMinSize                   = 20;
-    private int                defaultRequestExecutorMaxSize                   = 600;
-    private int                defaultRequestExecutorQueueSize                 = 500;
+    private int                defaultRequestExecutorMinSize              = 20;
+    private int                defaultRequestExecutorMaxSize              = 600;
+    private int                defaultRequestExecutorQueueSize            = 500;
 
-    private int                appRevisionRegisterExecutorMinSize              = OsUtils
-                                                                                   .getCpuCount() * 5;
-    private int                appRevisionRegisterExecutorMaxSize              = OsUtils
-                                                                                   .getCpuCount() * 20;
-    private int                appRevisionRegisterExecutorQueueSize            = 500;
+    private int                appRevisionRegisterExecutorMinSize         = OsUtils.getCpuCount() * 5;
+    private int                appRevisionRegisterExecutorMaxSize         = OsUtils.getCpuCount() * 20;
+    private int                appRevisionRegisterExecutorQueueSize       = 500;
 
-    private int                raftExecutorMinSize                             = 20;
-    private int                raftExecutorMaxSize                             = 400;
-    private int                raftExecutorQueueSize                           = 100;
+    private int                raftExecutorMinSize                        = 20;
+    private int                raftExecutorMaxSize                        = 400;
+    private int                raftExecutorQueueSize                      = 100;
 
-    private int                raftServerExecutorMinSize                       = 20;
-    private int                raftServerExecutorMaxSize                       = 100;
-    private int                raftServerExecutorQueueSize                     = 100;
+    private int                raftServerExecutorMinSize                  = 20;
+    private int                raftServerExecutorMaxSize                  = 100;
+    private int                raftServerExecutorQueueSize                = 100;
 
-    private int                raftFsmExecutorMinSize                          = 3;
-    private int                raftFsmExecutorMaxSize                          = 10;
-    private int                raftFsmExecutorQueueSize                        = 100;
+    private int                raftFsmExecutorMinSize                     = 3;
+    private int                raftFsmExecutorMaxSize                     = 10;
+    private int                raftFsmExecutorQueueSize                   = 100;
 
-    private int                metaSchedulerPoolSize                           = 6;
-    private double             sessionLoadbalanceThresholdRatio                = 1.1;
+    private int                metaSchedulerPoolSize                      = 6;
+    private double             sessionLoadbalanceThresholdRatio           = 1.1;
 
-    private int                expireCheckIntervalMilli                        = 1000;
+    private int                expireCheckIntervalMilli                   = 1000;
 
     /**
      * Gets get session server port.
@@ -292,26 +288,6 @@ public class MetaServerConfigBean implements MetaServerConfig {
      */
     public void setSchedulerCheckNodeListChangePushFirstDelay(int schedulerCheckNodeListChangePushFirstDelay) {
         this.schedulerCheckNodeListChangePushFirstDelay = schedulerCheckNodeListChangePushFirstDelay;
-    }
-
-    /**
-     * Getter method for property <tt>schedulerCheckNodeListChangePushExpBackOffBound</tt>.
-     *
-     * @return property value of schedulerCheckNodeListChangePushExpBackOffBound
-     */
-    @Override
-    public int getSchedulerCheckNodeListChangePushExpBackOffBound() {
-        return schedulerCheckNodeListChangePushExpBackOffBound;
-    }
-
-    /**
-     * Setter method for property <tt>schedulerCheckNodeListChangePushExpBackOffBound</tt>.
-     *
-     * @param schedulerCheckNodeListChangePushExpBackOffBound value to be assigned to property
-     *                                                        schedulerCheckNodeListChangePushExpBackOffBound
-     */
-    public void setSchedulerCheckNodeListChangePushExpBackOffBound(int schedulerCheckNodeListChangePushExpBackOffBound) {
-        this.schedulerCheckNodeListChangePushExpBackOffBound = schedulerCheckNodeListChangePushExpBackOffBound;
     }
 
     /**

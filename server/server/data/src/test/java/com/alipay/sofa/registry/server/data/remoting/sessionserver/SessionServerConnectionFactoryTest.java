@@ -54,7 +54,7 @@ public class SessionServerConnectionFactoryTest {
         Assert.assertEquals(1, factory.getProcessIds().size());
         Assert.assertTrue(factory.getSessionConnectionMap().containsKey(IP1));
 
-        ProcessId processId2 = ServerEnv.createProcessId();
+        ProcessId processId2 = new ProcessId("unknown", System.currentTimeMillis(), 100, 100);
         MockBlotChannel channel3 = new MockBlotChannel(IP2, 5551);
         factory.registerSession(processId2, channel3);
 

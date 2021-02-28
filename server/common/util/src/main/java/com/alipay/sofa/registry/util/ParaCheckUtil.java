@@ -19,13 +19,16 @@ package com.alipay.sofa.registry.util;
 import org.apache.commons.lang.StringUtils;
 
 import java.util.Collection;
+import java.util.Objects;
 import java.util.Set;
 
 /**
  * @author qian.lqlq
  * @version $Id: ParaCheckUtil.java, v 0.1 2017-12-06 21:20 qian.lqlq Exp $
  */
-public class ParaCheckUtil {
+public final class ParaCheckUtil {
+    private ParaCheckUtil() {
+    }
 
     /**
      * check object not null
@@ -33,9 +36,17 @@ public class ParaCheckUtil {
      * @param paraName
      * @throws RuntimeException
      */
-    public static void checkNotNull(Object param, String paraName) throws RuntimeException {
+    public static void checkNotNull(Object param, String paraName) {
         if (param == null) {
-            throw new RuntimeException(String.format("%s is not allowed to be null", paraName));
+            throw new IllegalArgumentException(StringFormatter.format(
+                "{} is not allowed to be null", paraName));
+        }
+    }
+
+    public static void checkEquals(Object actual, Object expect, String paraName) {
+        if (!Objects.equals(actual, expect)) {
+            throw new IllegalArgumentException(StringFormatter.format("{}={} is not equals {}",
+                paraName, actual, expect));
         }
     }
 
@@ -45,9 +56,10 @@ public class ParaCheckUtil {
      * @param paraName
      * @throws RuntimeException
      */
-    public static void checkNotBlank(String param, String paraName) throws RuntimeException {
+    public static void checkNotBlank(String param, String paraName) {
         if (StringUtils.isBlank(param)) {
-            throw new RuntimeException(String.format("%s is not allowed to be blank", paraName));
+            throw new IllegalArgumentException(StringFormatter.format(
+                "{} is not allowed to be blank", paraName));
         }
     }
 
@@ -57,30 +69,31 @@ public class ParaCheckUtil {
      * @param paraName
      * @throws RuntimeException
      */
-    public static void checkNotEmpty(Collection<?> param, String paraName) throws RuntimeException {
+    public static void checkNotEmpty(Collection<?> param, String paraName) {
         if (param == null || param.size() == 0) {
-            throw new RuntimeException(String.format("%s is not allowed to be empty", paraName));
+            throw new IllegalArgumentException(StringFormatter.format(
+                "{} is not allowed to be empty", paraName));
         }
     }
 
     public static void checkNonNegative(long v, String paraName) {
         if (v < 0) {
-            throw new RuntimeException(String.format("%s is not allowed to be negative, %d",
-                paraName, v));
+            throw new IllegalArgumentException(StringFormatter.format(
+                "{} is not allowed to be negative, {}", paraName, v));
         }
     }
 
     public static void checkIsPositive(long v, String paraName) {
         if (v <= 0) {
-            throw new RuntimeException(String.format("%s is require positive, %d", paraName, v));
+            throw new IllegalArgumentException(StringFormatter.format("{} is require positive, {}",
+                paraName, v));
         }
     }
 
-    public static void checkContains(Set sets, Object param, String paraName)
-                                                                             throws RuntimeException {
+    public static void checkContains(Set sets, Object param, String paraName) {
         if (!sets.contains(param)) {
-            throw new RuntimeException(String.format("%s is not contain in %s, %s", paraName, sets,
-                param));
+            throw new IllegalArgumentException(StringFormatter.format(
+                "{} is not contain in {}, {}", paraName, sets, param));
         }
     }
 

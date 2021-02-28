@@ -17,8 +17,6 @@
 package com.alipay.sofa.registry.common.model.store;
 
 import com.alipay.sofa.registry.common.model.ProcessId;
-import com.alipay.sofa.registry.common.model.store.DataInfo;
-import com.alipay.sofa.registry.common.model.store.Publisher;
 
 /**
  *
@@ -42,7 +40,7 @@ public class UnPublisher extends Publisher {
         //avoid new datum dataId is null
         DataInfo dataInfo = DataInfo.valueOf(dataInfoId);
         setDataId(dataInfo.getDataId());
-        setGroup(dataInfo.getDataType());
+        setGroup(dataInfo.getGroup());
         setInstanceId(dataInfo.getInstanceId());
 
         setSessionProcessId(sessionProcessId);

@@ -66,11 +66,11 @@ public final class PublisherGroup {
 
     PublisherGroup(String dataInfoId, String dataCenter) {
         DataInfo dataInfo = DataInfo.valueOf(dataInfoId);
-        this.dataInfoId = dataInfoId;
+        this.dataInfoId = WordCache.getWordCache(dataInfoId);
         this.dataCenter = WordCache.getWordCache(dataCenter);
-        this.dataId = dataInfo.getDataId();
+        this.dataId = WordCache.getWordCache(dataInfo.getDataId());
         this.instanceId = WordCache.getWordCache(dataInfo.getInstanceId());
-        this.group = WordCache.getWordCache(dataInfo.getDataType());
+        this.group = WordCache.getWordCache(dataInfo.getGroup());
         this.version = DatumVersionUtil.nextId();
     }
 
@@ -254,7 +254,8 @@ public final class PublisherGroup {
     }
 
     DatumSummary getSummary(String sessionIpAddress) {
-        Map<String/*registerId*/, RegisterVersion> publisherVersions = new HashMap<>(64);
+        Map<String/*registerId*/, RegisterVersion> publisherVersions = Maps
+            .newHashMapWithExpectedSize(64);
         for (Map.Entry<String, PublisherEnvelope> e : Maps.newHashMap(pubMap).entrySet()) {
             PublisherEnvelope envelope = e.getValue();
             RegisterVersion v = envelope.getVersionIfPub();
@@ -271,7 +272,11 @@ public final class PublisherGroup {
 
     Collection<ProcessId> getSessionProcessIds() {
         Set<ProcessId> set = Sets.newHashSet();
-        pubMap.values().forEach(p -> set.add(p.sessionProcessId));
+        for (PublisherEnvelope e : pubMap.values()) {
+            if (e.isPub()) {
+                set.add(e.sessionProcessId);
+            }
+        }
         return set;
     }
 

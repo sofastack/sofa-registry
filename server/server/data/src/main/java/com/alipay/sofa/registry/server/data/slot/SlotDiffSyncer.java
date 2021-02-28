@@ -201,11 +201,10 @@ public final class SlotDiffSyncer {
             DIFF_LOGGER.info("DiffDigestEmpty, slotId={} from {}", slotId, targetAddress);
             return result;
         }
-
-        result.getAddedDataInfoIds().forEach(k -> {
-            // TODO only support localDataCenter
-            datumStorage.createEmptyDatumIfAbsent(k, dataServerConfig.getLocalDataCenter());
-        });
+        // do nothing with added dataInfoId, the added publishers would sync and update by sync.publisher
+        // if we create a new empty datum when absent, it's dangerous.
+        // if some not expect error occurs when sync publisher and no publisher write to datum,
+        // it maybe trigger a empty push with bigger datum.version which created by new empty
         final Set<String> changeDataIds = Sets.newHashSet();
         result.getRemovedDataInfoIds().forEach(k -> {
             if (datumStorage.remove(k, sessionProcessId, summaryMap.get(k).getPublisherVersions()) != null) {

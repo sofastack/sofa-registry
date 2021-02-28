@@ -127,7 +127,7 @@ public class ReceivedDataConverter {
             receivedConfigData.setDataBox(box);
         }
         receivedConfigData.setDataId(dataInfo.getDataId());
-        receivedConfigData.setGroup(dataInfo.getDataType());
+        receivedConfigData.setGroup(dataInfo.getGroup());
         receivedConfigData.setInstanceId(dataInfo.getInstanceId());
         receivedConfigData.setVersion(version);
 

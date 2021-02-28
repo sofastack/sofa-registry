@@ -20,6 +20,8 @@ import com.alipay.sofa.registry.common.model.ConnectId;
 import com.alipay.sofa.registry.common.model.ProcessId;
 import com.alipay.sofa.registry.common.model.RegisterVersion;
 import com.alipay.sofa.registry.common.model.store.Publisher;
+import com.alipay.sofa.registry.common.model.store.StoreData;
+import com.alipay.sofa.registry.util.ParaCheckUtil;
 
 /**
  *
@@ -41,19 +43,23 @@ public final class PublisherEnvelope {
     }
 
     static PublisherEnvelope of(Publisher publisher) {
+        ParaCheckUtil.checkNotNull(publisher.getSessionProcessId(), "publisher.sessionProcessId");
         switch (publisher.getDataType()) {
             case PUBLISHER:
                 return pubOf(publisher, publisher.getSessionProcessId());
             case UN_PUBLISHER:
                 return unpubOf(publisher.registerVersion(), publisher.getSessionProcessId());
             default:
-                throw new IllegalArgumentException("unaccept Publisher Type:"
+                throw new IllegalArgumentException("not accept Publisher Type:"
                                                    + publisher.getDataType());
         }
     }
 
     static PublisherEnvelope pubOf(Publisher publisher, ProcessId sessionProcessId) {
+        ParaCheckUtil.checkEquals(publisher.getDataType(), StoreData.DataType.PUBLISHER,
+            "Publisher.dataType");
         return new PublisherEnvelope(publisher, sessionProcessId, publisher.registerVersion(),
+        // Long.max means pub never compact
             Long.MAX_VALUE);
     }
 
