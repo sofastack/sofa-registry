@@ -39,8 +39,6 @@ public interface MetaServerConfig {
 
     int getSchedulerCheckNodeListChangePushFirstDelay();
 
-    int getSchedulerCheckNodeListChangePushExpBackOffBound();
-
     int getDataNodeExchangeTimeout();
 
     int getSessionNodeExchangeTimeout();

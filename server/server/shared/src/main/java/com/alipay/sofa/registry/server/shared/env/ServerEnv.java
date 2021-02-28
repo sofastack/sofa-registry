@@ -18,7 +18,6 @@ package com.alipay.sofa.registry.server.shared.env;
 
 import com.alipay.sofa.registry.common.model.ProcessId;
 import com.alipay.sofa.registry.net.NetUtil;
-import com.google.common.annotations.VisibleForTesting;
 import org.apache.commons.lang.StringUtils;
 import org.glassfish.jersey.internal.guava.Sets;
 
@@ -40,8 +39,7 @@ public final class ServerEnv {
     public static final int       PID        = getPID();
     public static final ProcessId PROCESS_ID = createProcessId();
 
-    @VisibleForTesting
-    public static ProcessId createProcessId() {
+    private static ProcessId createProcessId() {
         Random random = new Random();
         return new ProcessId(IP, System.currentTimeMillis(), PID, random.nextInt(1024 * 8));
     }

@@ -57,10 +57,7 @@ public class DefaultSlotStats implements SlotStats {
 
     @Override
     public String toString() {
-        return "DefaultSlotStats{" +
-                "slot=" + slot +
-                ", leaderStatus=" + leaderStatus +
-                ", followerOffsets=" + followerOffsets +
-                '}';
+        return "DefaultSlotStats{" + "slot=" + slot + ", leaderStatus=" + leaderStatus
+               + ", followerOffsets=" + followerOffsets + '}';
     }
 }

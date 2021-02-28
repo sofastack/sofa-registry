@@ -85,7 +85,7 @@ public class BlacklistDataResource {
         DataInfo dataInfo = DataInfo.valueOf(ValueConstants.BLACK_LIST_DATA_ID);
         PersistenceData persistenceData = new PersistenceData();
         persistenceData.setDataId(dataInfo.getDataId());
-        persistenceData.setGroup(dataInfo.getDataType());
+        persistenceData.setGroup(dataInfo.getGroup());
         persistenceData.setInstanceId(dataInfo.getInstanceId());
         persistenceData.setVersion(System.currentTimeMillis());
         return persistenceData;

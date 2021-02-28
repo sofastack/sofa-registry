@@ -42,7 +42,7 @@ public class DefaultSlotTableStatsTest extends AbstractTest {
 
     private DefaultSlotTableStats slotTableStats;
 
-    private NodeConfig nodeConfig;
+    private NodeConfig            nodeConfig;
 
     @Before
     public void beforeDefaultSlotTableMonitorTest() throws Exception {
@@ -112,10 +112,8 @@ public class DefaultSlotTableStatsTest extends AbstractTest {
         slotTableStats = new DefaultSlotTableStats(slotManager);
         slotTableStats.initialize();
         List<SlotStatus> slotStatuses = Lists.newArrayList();
-        for(int slotId = 0; slotId < SlotConfig.SLOT_NUM; slotId++) {
-            slotStatuses.add(new SlotStatus(slotId,
-                    0,
-                    SlotStatus.LeaderStatus.UNHEALTHY));
+        for (int slotId = 0; slotId < SlotConfig.SLOT_NUM; slotId++) {
+            slotStatuses.add(new SlotStatus(slotId, 0, SlotStatus.LeaderStatus.UNHEALTHY));
         }
         slotTableStats.checkSlotStatuses(slotStatuses);
     }
