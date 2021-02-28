@@ -54,8 +54,7 @@ public class DefaultSlotTableStats extends AbstractLifecycle implements SlotTabl
             if (slot == null) {
                 slot = new Slot(slotId, null, 0L, Collections.emptyList());
             }
-            slotStatses.put(slotId,
-                new DefaultSlotStats(slot));
+            slotStatses.put(slotId, new DefaultSlotStats(slot));
         }
     }
 

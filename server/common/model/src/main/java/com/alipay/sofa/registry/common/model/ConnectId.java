@@ -104,6 +104,10 @@ public final class ConnectId implements Serializable {
         return clientHostAddress + URL.COLON + clientPort;
     }
 
+    public String sessionAddress() {
+        return sessionHostAddress + URL.COLON + sessionPort;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o)

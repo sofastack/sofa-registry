@@ -114,7 +114,7 @@ public class StopPushDataResource {
         DataInfo dataInfo = DataInfo.valueOf(ValueConstants.STOP_PUSH_DATA_SWITCH_DATA_ID);
         PersistenceData persistenceData = new PersistenceData();
         persistenceData.setDataId(dataInfo.getDataId());
-        persistenceData.setGroup(dataInfo.getDataType());
+        persistenceData.setGroup(dataInfo.getGroup());
         persistenceData.setInstanceId(dataInfo.getInstanceId());
         persistenceData.setVersion(System.currentTimeMillis());
         return persistenceData;

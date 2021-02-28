@@ -16,9 +16,10 @@
  */
 package com.alipay.sofa.registry.server.meta.bootstrap;
 
+import com.alipay.sofa.registry.log.Logger;
+import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.server.meta.bootstrap.config.MetaServerConfig;
 import com.alipay.sofa.registry.server.meta.remoting.RaftExchanger;
-import com.alipay.sofa.registry.task.scheduler.TimedSupervisorTask;
 import com.alipay.sofa.registry.util.NamedThreadFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -29,7 +30,7 @@ import java.util.concurrent.*;
  * @version $Id: ExecutorManager.java, v 0.1 2018-01-16 15:51 shangyu.wh Exp $
  */
 public class ExecutorManager {
-
+    private static final Logger      LOGGER = LoggerFactory.getLogger(ExecutorManager.class);
     private ScheduledExecutorService scheduler;
 
     private ThreadPoolExecutor       connectMetaServerExecutor;
@@ -75,12 +76,18 @@ public class ExecutorManager {
 
         init();
 
-        scheduler.schedule(new TimedSupervisorTask("RaftClientRefresh", scheduler, raftClientRefreshExecutor,
-                        metaServerConfig.getSchedulerCheckNodeListChangePushTimeout(), TimeUnit.SECONDS,
-                        metaServerConfig.getSchedulerCheckNodeListChangePushExpBackOffBound(),
-                        () -> raftExchanger.refreshRaftClient()),
-                metaServerConfig.getSchedulerCheckNodeListChangePushFirstDelay(), TimeUnit.SECONDS);
-   }
+        scheduler.scheduleWithFixedDelay(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    raftExchanger.refreshRaftClient();
+                } catch (Throwable e) {
+                    LOGGER.error("failed to refresh raft client", e);
+                }
+            }
+        }, metaServerConfig.getSchedulerCheckNodeListChangePushFirstDelay(),
+            metaServerConfig.getSchedulerCheckNodeListChangePushTimeout(), TimeUnit.SECONDS);
+    }
 
     public void stopScheduler() {
         if (scheduler != null && !scheduler.isShutdown()) {

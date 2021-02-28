@@ -19,7 +19,6 @@ package com.alipay.sofa.registry.common.model.store;
 import com.alipay.sofa.registry.common.model.constants.ValueConstants;
 import com.alipay.sofa.registry.util.ParaCheckUtil;
 
-import javax.xml.bind.ValidationEvent;
 import java.io.Serializable;
 import java.util.Objects;
 
@@ -36,7 +35,7 @@ public class DataInfo implements Serializable {
 
     private String             dataId;
 
-    private String             dataType;
+    private String             group;
 
     /** symbol : */
     public static final String DELIMITER    = "#@#";
@@ -46,22 +45,22 @@ public class DataInfo implements Serializable {
     /**
      * @param instanceId
      * @param dataId
-     * @param dataType
+     * @param group
      */
-    public DataInfo(String instanceId, String dataId, String dataType) {
+    public DataInfo(String instanceId, String dataId, String group) {
         this.instanceId = instanceId;
         this.dataId = dataId;
-        this.dataType = dataType;
-        this.dataInfoId = toDataInfoId(dataId, instanceId, dataType);
+        this.group = group;
+        this.dataInfoId = toDataInfoId(dataId, instanceId, group);
     }
 
     /**
      * @param dataId
      * @param instanceId
-     * @param dataType
+     * @param group
      * @return
      */
-    public static String toDataInfoId(String dataId, String instanceId, String dataType) {
+    public static String toDataInfoId(String dataId, String instanceId, String group) {
         StringBuilder buf = new StringBuilder();
         if (dataId == null || dataId.isEmpty()) {
             throw new IllegalArgumentException("error dataId:" + dataId);
@@ -77,10 +76,10 @@ public class DataInfo implements Serializable {
         }
         buf.append(DELIMITER).append(instanceId);
 
-        if (dataType == null || dataType.isEmpty()) {
-            throw new IllegalArgumentException("error dataType:" + dataType);
+        if (group == null || group.isEmpty()) {
+            throw new IllegalArgumentException("error group:" + group);
         }
-        buf.append(DELIMITER).append(dataType);
+        buf.append(DELIMITER).append(group);
 
         return buf.toString();
     }
@@ -159,17 +158,17 @@ public class DataInfo implements Serializable {
      *
      * @return property value of dataType
      */
-    public String getDataType() {
-        return dataType;
+    public String getGroup() {
+        return group;
     }
 
     /**
      * Setter method for property <tt>dataType</tt>.
      *
-     * @param dataType  value to be assigned to property dataType
+     * @param group  value to be assigned to property dataType
      */
-    public void setDataType(String dataType) {
-        this.dataType = dataType;
+    public void setGroup(String group) {
+        this.group = group;
     }
 
     @Override

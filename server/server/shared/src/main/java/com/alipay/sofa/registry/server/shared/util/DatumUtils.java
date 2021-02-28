@@ -57,7 +57,7 @@ public final class DatumUtils {
     public static SubDatum newEmptySubDatum(DataInfo dataInfo, String datacenter) {
         SubDatum datum = new SubDatum(dataInfo.getDataInfoId(), datacenter,
             ValueConstants.DEFAULT_NO_DATUM_VERSION, Collections.emptyList(), dataInfo.getDataId(),
-            dataInfo.getInstanceId(), dataInfo.getDataType());
+            dataInfo.getInstanceId(), dataInfo.getGroup());
         return datum;
     }
 
