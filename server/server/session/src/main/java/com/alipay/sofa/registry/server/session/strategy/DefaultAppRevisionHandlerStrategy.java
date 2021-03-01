@@ -16,7 +16,7 @@
  */
 package com.alipay.sofa.registry.server.session.strategy;
 
-import com.alipay.sofa.registry.common.model.Tuple;
+import com.alipay.sofa.registry.common.model.appmeta.InterfaceMapping;
 import com.alipay.sofa.registry.common.model.client.pb.AppList;
 import com.alipay.sofa.registry.common.model.client.pb.GetRevisionsResponse;
 import com.alipay.sofa.registry.common.model.client.pb.MetaHeartbeatResponse;
@@ -26,15 +26,15 @@ import com.alipay.sofa.registry.common.model.store.AppRevision;
 import com.alipay.sofa.registry.core.model.RegisterResponse;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
-import com.alipay.sofa.registry.server.session.metadata.AppRevisionCacheRegistry;
 import com.alipay.sofa.registry.server.session.converter.pb.AppRevisionConvertor;
+import com.alipay.sofa.registry.server.session.metadata.AppRevisionCacheRegistry;
 import com.alipay.sofa.registry.server.session.metadata.AppRevisionHeartbeatRegistry;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 
 public class DefaultAppRevisionHandlerStrategy implements AppRevisionHandlerStrategy {
 
@@ -68,9 +68,9 @@ public class DefaultAppRevisionHandlerStrategy implements AppRevisionHandlerStra
         int statusCode = ValueConstants.METADATA_STATUS_PROCESS_SUCCESS;
         try {
             for (String service : Optional.ofNullable(services).orElse(new ArrayList<>())) {
-                Tuple<Long, Set<String>> appNames = appRevisionCacheService.getAppNames(service);
-                AppList.Builder build = AppList.newBuilder().addAllApps(appNames.o2);
-                build.setVersion(appNames.o1);
+                InterfaceMapping appNames = appRevisionCacheService.getAppNames(service);
+                AppList.Builder build = AppList.newBuilder().addAllApps(appNames.getApps());
+                build.setVersion(appNames.getNanosVersion());
                 builder.putServiceAppMapping(service, build.build());
             }
         } catch (Throwable e) {

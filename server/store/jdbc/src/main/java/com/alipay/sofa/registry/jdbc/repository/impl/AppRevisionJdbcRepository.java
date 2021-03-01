@@ -148,7 +148,7 @@ public class AppRevisionJdbcRepository implements AppRevisionRepository, JdbcRep
 
         try {
             interfaceAppsJdbcRepository.refresh(dataCenter);
-        } catch (Exception e) {
+        } catch (Throwable e) {
             LOG.error("jdbc refresh revisions failed ", e);
             throw new RuntimeException("jdbc refresh revision failed", e);
         }
