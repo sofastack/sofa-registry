@@ -73,14 +73,13 @@ public class DatumSummary implements Serializable {
 
     public Map<String, RegisterVersion> getPublisherVersions(Collection<String> registerIds) {
         Map<String, RegisterVersion> m = Maps.newHashMapWithExpectedSize(registerIds.size());
-        registerIds.forEach(k -> {
-                    RegisterVersion v = publisherVersions.get(k);
-                    if (v == null) {
-                        throw new IllegalArgumentException("not contains registerId:" + k);
-                    }
-                    m.put(k, v);
-                }
-        );
+        for (String registerId : registerIds) {
+            RegisterVersion v = publisherVersions.get(registerId);
+            if (v == null) {
+                throw new IllegalArgumentException("not contains registerId:" + registerId);
+            }
+            m.put(registerId, v);
+        }
         return m;
     }
 

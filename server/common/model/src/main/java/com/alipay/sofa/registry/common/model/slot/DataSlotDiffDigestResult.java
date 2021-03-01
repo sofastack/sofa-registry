@@ -108,4 +108,8 @@ public class DataSlotDiffDigestResult implements Serializable {
                && CollectionUtils.isEmpty(addedDataInfoIds);
     }
 
+    public int getUpdateAndAddSize() {
+        return updatedDataInfoIds.size() + addedDataInfoIds.size();
+    }
+
 }

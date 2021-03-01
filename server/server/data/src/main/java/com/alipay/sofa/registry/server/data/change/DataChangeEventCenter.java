@@ -36,6 +36,7 @@ import com.alipay.sofa.registry.util.LoopRunnable;
 
 import static com.alipay.sofa.registry.server.data.change.ChangeMetrics.*;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
@@ -383,5 +384,11 @@ public final class DataChangeEventCenter {
             ConcurrentUtils.sleepUninterruptibly(dataServerConfig.getNotifyIntervalMillis(),
                 TimeUnit.MILLISECONDS);
         }
+    }
+
+    @VisibleForTesting
+    public Set<String> getOnChanges(String dataCenter) {
+        Set<String> changes = dataCenter2Changes.get(dataCenter);
+        return changes == null ? Collections.emptySet() : Sets.newHashSet(changes);
     }
 }

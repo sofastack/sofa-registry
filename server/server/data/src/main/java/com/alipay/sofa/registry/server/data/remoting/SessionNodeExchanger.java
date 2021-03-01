@@ -30,7 +30,7 @@ import java.util.Collections;
  * @author yuzhi.lyz
  * @version v 0.1 2020-11-30 21:28 yuzhi.lyz Exp $
  */
-public final class SessionNodeExchanger extends ClientSideExchanger {
+public class SessionNodeExchanger extends ClientSideExchanger {
     @Autowired
     private DataServerConfig dataServerConfig;
 
