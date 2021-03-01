@@ -30,6 +30,7 @@ import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.util.DatumVersionUtil;
 import com.alipay.sofa.registry.util.ParaCheckUtil;
+import com.alipay.sofa.registry.util.StringFormatter;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
@@ -298,5 +299,11 @@ public final class PublisherGroup {
             }
         }
         return count;
+    }
+
+    @Override
+    public String toString() {
+        return StringFormatter.format("PubGroup{{},size={},ver={}}", dataInfoId, pubMap.size(),
+            version);
     }
 }

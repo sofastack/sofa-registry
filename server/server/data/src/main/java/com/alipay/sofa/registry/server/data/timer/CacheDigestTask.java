@@ -24,6 +24,7 @@ import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.server.data.bootstrap.DataServerConfig;
 import com.alipay.sofa.registry.server.data.cache.DatumCache;
 import com.alipay.sofa.registry.util.ConcurrentUtils;
+import com.alipay.sofa.registry.util.StringFormatter;
 import org.apache.commons.lang.time.DateUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.CollectionUtils;
@@ -79,7 +80,7 @@ public class CacheDigestTask {
                         String dataInfoId = dataInfoEntry.getKey();
                         Datum data = dataInfoEntry.getValue();
                         Map<String, Publisher> pubMap = data.getPubMap();
-                        StringBuilder pubStr = new StringBuilder(1024);
+                        StringBuilder pubStr = new StringBuilder(4096);
                         if (!CollectionUtils.isEmpty(pubMap)) {
                             for (Publisher publisher : pubMap.values()) {
                                 pubStr.append(logPublisher(publisher)).append(";");
@@ -88,7 +89,7 @@ public class CacheDigestTask {
                         LOGGER.info("[Datum]{},{},{},[{}]", dataInfoId,
                                 data.getVersion(), dataCenter, pubStr.toString());
                         // avoid io is busy
-                        ConcurrentUtils.sleepUninterruptibly(20, TimeUnit.MILLISECONDS);
+                        ConcurrentUtils.sleepUninterruptibly(5, TimeUnit.MILLISECONDS);
                     }
                     int pubCount = datumMap.values().stream().mapToInt(Datum::publisherSize).sum();
                     LOGGER.info("size of publisher in {} is {}", dataCenter, pubCount);
@@ -106,7 +107,7 @@ public class CacheDigestTask {
         if (publisher != null) {
             URL url = publisher.getSourceAddress();
             String urlStr = url != null ? url.getAddressString() : "null";
-            return String.format("%s,%s,%s,%s", publisher.getRegisterId(),
+            return StringFormatter.format("{},{},{},{}", publisher.getRegisterId(),
                 publisher.getRegisterTimestamp(), urlStr, publisher.getVersion());
         }
         return "";

@@ -41,7 +41,7 @@ public class LocalDatumStorageTest {
 
     @Test
     public void testNew() {
-        LocalDatumStorage storage = TestBaseUtils.getLocalStorage(testDc);
+        LocalDatumStorage storage = TestBaseUtils.newLocalStorage(testDc, false);
         assertEmpty(storage);
     }
 
@@ -75,10 +75,7 @@ public class LocalDatumStorageTest {
 
     @Test
     public void testPut() {
-        LocalDatumStorage storage = TestBaseUtils.getLocalStorage(testDc);
-        for (int i = 0; i < SlotConfig.SLOT_NUM; i++) {
-            storage.getSlotChangeListener().onSlotAdd(i, Slot.Role.Leader);
-        }
+        LocalDatumStorage storage = TestBaseUtils.newLocalStorage(testDc, true);
         Publisher publisher = TestBaseUtils.createTestPublisher(testDataId);
         DatumVersion v = storage.put(publisher);
         Assert.assertNotNull(v);
@@ -153,10 +150,7 @@ public class LocalDatumStorageTest {
 
     @Test
     public void testRemove() {
-        LocalDatumStorage storage = TestBaseUtils.getLocalStorage(testDc);
-        for (int i = 0; i < SlotConfig.SLOT_NUM; i++) {
-            storage.getSlotChangeListener().onSlotAdd(i, Slot.Role.Leader);
-        }
+        LocalDatumStorage storage = TestBaseUtils.newLocalStorage(testDc, true);
         Publisher publisher = TestBaseUtils.createTestPublisher(testDataId);
         Publisher publisher2 = TestBaseUtils.createTestPublisher(testDataId);
 
@@ -198,10 +192,7 @@ public class LocalDatumStorageTest {
 
     @Test
     public void testUpdateVersion() {
-        LocalDatumStorage storage = TestBaseUtils.getLocalStorage(testDc);
-        for (int i = 0; i < SlotConfig.SLOT_NUM; i++) {
-            storage.getSlotChangeListener().onSlotAdd(i, Slot.Role.Leader);
-        }
+        LocalDatumStorage storage = TestBaseUtils.newLocalStorage(testDc, true);
         Publisher publisher = TestBaseUtils.createTestPublisher(testDataId);
         storage.put(publisher);
         DatumVersion v1 = storage.getVersion(publisher.getDataInfoId());
@@ -216,10 +207,7 @@ public class LocalDatumStorageTest {
 
     @Test
     public void testClean() {
-        LocalDatumStorage storage = TestBaseUtils.getLocalStorage(testDc);
-        for (int i = 0; i < SlotConfig.SLOT_NUM; i++) {
-            storage.getSlotChangeListener().onSlotAdd(i, Slot.Role.Leader);
-        }
+        LocalDatumStorage storage = TestBaseUtils.newLocalStorage(testDc, true);
         Publisher publisher = TestBaseUtils.createTestPublisher(testDataId);
         Publisher publisher2 = TestBaseUtils.createTestPublisher(testDataId);
         storage.put(publisher);

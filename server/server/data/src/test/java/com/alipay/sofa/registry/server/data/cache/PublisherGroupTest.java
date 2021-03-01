@@ -161,6 +161,8 @@ public class PublisherGroupTest {
         v = group.addPublisher(newer);
         Assert.assertNotNull(v);
         Assert.assertEquals(group.getPublishers().size(), 1);
+
+        Assert.assertTrue(group.toString().length() != 0);
     }
 
     @Test

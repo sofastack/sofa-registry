@@ -19,12 +19,15 @@ package com.alipay.sofa.registry.server.data.slot;
 import com.alipay.sofa.registry.common.model.GenericResponse;
 import com.alipay.sofa.registry.common.model.ProcessId;
 import com.alipay.sofa.registry.common.model.PublisherDigestUtil;
+import com.alipay.sofa.registry.common.model.RegisterVersion;
 import com.alipay.sofa.registry.common.model.dataserver.DatumDigest;
 import com.alipay.sofa.registry.common.model.dataserver.DatumSummary;
 import com.alipay.sofa.registry.common.model.slot.*;
+import com.alipay.sofa.registry.common.model.store.Publisher;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.remoting.exchange.RequestException;
+import com.alipay.sofa.registry.remoting.exchange.message.Response;
 import com.alipay.sofa.registry.server.data.bootstrap.DataServerConfig;
 import com.alipay.sofa.registry.server.data.cache.DatumStorage;
 import com.alipay.sofa.registry.server.data.change.DataChangeEventCenter;
@@ -32,6 +35,8 @@ import com.alipay.sofa.registry.server.data.lease.SessionLeaseManager;
 import com.alipay.sofa.registry.server.data.remoting.DataNodeExchanger;
 import com.alipay.sofa.registry.server.data.remoting.SessionNodeExchanger;
 import com.alipay.sofa.registry.server.shared.remoting.ClientSideExchanger;
+import com.alipay.sofa.registry.util.ParaCheckUtil;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 
@@ -61,11 +66,13 @@ public final class SlotDiffSyncer {
         this.sessionLeaseManager = sessionLeaseManager;
     }
 
-    private DataSlotDiffPublisherResult processSyncPublisherResp(int slotId,
-                                                                 GenericResponse<DataSlotDiffPublisherResult> resp,
-                                                                 String targetAddress, Map<String, DatumSummary> summaryMap) {
+    DataSlotDiffPublisherResult processSyncPublisherResp(int slotId,
+                                                         GenericResponse<DataSlotDiffPublisherResult> resp,
+                                                         String targetAddress,
+                                                         Map<String, DatumSummary> summaryMap) {
         if (resp == null || !resp.isSuccess()) {
-            LOGGER.error("DiffPublisherFailed, slotId={} from {}, resp={}", slotId, targetAddress, resp);
+            LOGGER.error("DiffPublisherFailed, slotId={} from {}, resp={}", slotId, targetAddress,
+                resp);
             return null;
         }
         DataSlotDiffPublisherResult result = resp.getData();
@@ -82,31 +89,40 @@ public final class SlotDiffSyncer {
         }
 
         final Set<String> changeDataIds = Sets.newHashSet();
-        result.getUpdatedPublishers().forEach((k, list) -> {
-            if (datumStorage.put(k, list) != null) {
-                changeDataIds.add(k);
+        for (Map.Entry<String, List<Publisher>> e : result.getUpdatedPublishers().entrySet()) {
+            final String dataInfoId = e.getKey();
+            if (datumStorage.put(dataInfoId, e.getValue()) != null) {
+                changeDataIds.add(dataInfoId);
             }
-        });
-
+        }
         // for sync publishers
-        result.getRemovedPublishers().forEach((k, list) -> {
-            if (datumStorage.remove(k, sessionProcessId, summaryMap.get(k).getPublisherVersions(list)) != null) {
-                changeDataIds.add(k);
+        for (Map.Entry<String, List<String>> e : result.getRemovedPublishers().entrySet()) {
+            final String dataInfoId = e.getKey();
+            final List<String> registerIds = e.getValue();
+            final DatumSummary summary = summaryMap.get(dataInfoId);
+            if (summary == null) {
+                throw new IllegalArgumentException(
+                    "sync publisher with not exist local DatumSummary:" + dataInfoId);
             }
-        });
+            Map<String, RegisterVersion> versionMap = summary.getPublisherVersions(registerIds);
+            if (datumStorage.remove(dataInfoId, sessionProcessId, versionMap) != null) {
+                changeDataIds.add(dataInfoId);
+            }
+        }
         if (sessionProcessId != null && !changeDataIds.isEmpty()) {
             // only trigger event when sync from session
             dataChangeEventCenter.onChange(changeDataIds, dataServerConfig.getLocalDataCenter());
         }
-        DIFF_LOGGER.info("DiffPublisher, slotId={} from {}, updatedP {}:{}, removedP {}:{}", slotId, targetAddress,
-                result.getUpdatedPublishers().size(), result.getUpdatedPublishersCount(),
-                result.getRemovedPublishersCount(), result.getRemovedPublishers().size());
+        DIFF_LOGGER.info("DiffPublisher, slotId={} from {}, updatedP {}:{}, removedP {}:{}",
+            slotId, targetAddress, result.getUpdatedPublishers().size(), result
+                .getUpdatedPublishersCount(), result.getRemovedPublishersCount(), result
+                .getRemovedPublishers().size());
         return result;
     }
 
-    public boolean syncPublishers(int slotId, String targetAddress, ClientSideExchanger exchanger, long slotTableEpoch,
-                                  Map<String, DatumSummary> summaryMap, int maxPublishers,
-                                  SyncContinues continues, boolean syncSession) {
+    boolean syncPublishers(int slotId, String targetAddress, ClientSideExchanger exchanger, long slotTableEpoch,
+                           Map<String, DatumSummary> summaryMap, int maxPublishers,
+                           SyncContinues continues, boolean syncSession) {
         // need the empty dataInfoId to add updatePublisher
         Map<String, DatumSummary> round = pickSummaries(summaryMap, maxPublishers);
         // sync for the existing dataInfoIds.publisher
@@ -145,9 +161,9 @@ public final class SlotDiffSyncer {
         return true;
     }
 
-    public boolean sync(int slotId, String targetAddress, ClientSideExchanger exchanger,
-                        long slotTableEpoch, String summaryTargetIp, int maxPublishers,
-                        SyncContinues continues) {
+    boolean sync(int slotId, String targetAddress, ClientSideExchanger exchanger,
+                 long slotTableEpoch, String summaryTargetIp, int maxPublishers,
+                 SyncContinues continues) {
         Map<String, DatumSummary> summaryMap = datumStorage
             .getDatumSummary(slotId, summaryTargetIp);
         final boolean syncSession = summaryTargetIp != null;
@@ -159,34 +175,44 @@ public final class SlotDiffSyncer {
         Map<String, DatumDigest> digestMap = PublisherDigestUtil.digest(summaryMap);
         DataSlotDiffDigestRequest request = new DataSlotDiffDigestRequest(slotTableEpoch, slotId,
             digestMap);
-        GenericResponse<DataSlotDiffDigestResult> resp = (GenericResponse<DataSlotDiffDigestResult>) exchanger
-            .requestRaw(targetAddress, request).getResult();
+        Response exchangeResp = exchanger.requestRaw(targetAddress, request);
+        GenericResponse<DataSlotDiffDigestResult> resp = (GenericResponse<DataSlotDiffDigestResult>) exchangeResp
+            .getResult();
         DataSlotDiffDigestResult result = processSyncDigestResp(slotId, resp, targetAddress,
             summaryMap);
         if (result == null) {
             return false;
         }
-        if (result.isEmpty()) {
-            // no change
+        if (result.getUpdateAndAddSize() == 0) {
+            // no change of update and add
             return true;
         }
-        final Map<String, DatumSummary> newSummaryMap = Maps.newHashMap();
-        for (String add : result.getAddedDataInfoIds()) {
-            newSummaryMap.put(add, new DatumSummary(add));
-        }
-        for (String update : result.getUpdatedDataInfoIds()) {
-            newSummaryMap.put(update, summaryMap.get(update));
-        }
-
+        final Map<String, DatumSummary> newSummaryMap = getSummaryForSyncPublishers(result,
+            summaryMap);
         return syncPublishers(slotId, targetAddress, exchanger, slotTableEpoch, newSummaryMap,
             maxPublishers, continues, syncSession);
     }
 
-    private DataSlotDiffDigestResult processSyncDigestResp(int slotId,
-                                                           GenericResponse<DataSlotDiffDigestResult> resp,
-                                                           String targetAddress, Map<String, DatumSummary> summaryMap) {
+    static Map<String, DatumSummary> getSummaryForSyncPublishers(DataSlotDiffDigestResult result,
+                                                                 Map<String, DatumSummary> digestSummaryMap) {
+        final Map<String, DatumSummary> newSummaryMap = Maps.newHashMapWithExpectedSize(result
+            .getUpdateAndAddSize());
+        for (String add : result.getAddedDataInfoIds()) {
+            newSummaryMap.put(add, new DatumSummary(add));
+        }
+        for (String update : result.getUpdatedDataInfoIds()) {
+            newSummaryMap.put(update, digestSummaryMap.get(update));
+        }
+        return newSummaryMap;
+    }
+
+    DataSlotDiffDigestResult processSyncDigestResp(int slotId,
+                                                   GenericResponse<DataSlotDiffDigestResult> resp,
+                                                   String targetAddress,
+                                                   Map<String, DatumSummary> summaryMap) {
         if (resp == null || !resp.isSuccess()) {
-            LOGGER.error("DiffDigestFailed, slotId={} from {}, resp={}", slotId, targetAddress, resp);
+            LOGGER.error("DiffDigestFailed, slotId={} from {}, resp={}", slotId, targetAddress,
+                resp);
             return null;
         }
         DataSlotDiffDigestResult result = resp.getData();
@@ -206,26 +232,29 @@ public final class SlotDiffSyncer {
         // if some not expect error occurs when sync publisher and no publisher write to datum,
         // it maybe trigger a empty push with bigger datum.version which created by new empty
         final Set<String> changeDataIds = Sets.newHashSet();
-        result.getRemovedDataInfoIds().forEach(k -> {
-            if (datumStorage.remove(k, sessionProcessId, summaryMap.get(k).getPublisherVersions()) != null) {
-                changeDataIds.add(k);
+        for (String removeDataInfoId : result.getRemovedDataInfoIds()) {
+            if (datumStorage.remove(removeDataInfoId, sessionProcessId,
+                summaryMap.get(removeDataInfoId).getPublisherVersions()) != null) {
+                changeDataIds.add(removeDataInfoId);
             }
-        });
+        }
 
         if (sessionProcessId != null && !changeDataIds.isEmpty()) {
             // only trigger event when sync from session
             dataChangeEventCenter.onChange(changeDataIds, dataServerConfig.getLocalDataCenter());
         }
-        DIFF_LOGGER.info("DiffDigest, slotId={} from {}, update={}, add={}, remove={}, adds={}, removes={}",
-                slotId, targetAddress,
-                result.getUpdatedDataInfoIds().size(), result.getAddedDataInfoIds().size(), result.getRemovedDataInfoIds().size(),
-                result.getAddedDataInfoIds(), result.getRemovedDataInfoIds());
+        DIFF_LOGGER.info(
+            "DiffDigest, slotId={} from {}, update={}, add={}, remove={}, adds={}, removes={}",
+            slotId, targetAddress, result.getUpdatedDataInfoIds().size(), result
+                .getAddedDataInfoIds().size(), result.getRemovedDataInfoIds().size(), result
+                .getAddedDataInfoIds(), result.getRemovedDataInfoIds());
         return result;
     }
 
     public boolean syncSession(int slotId, String sessionIp, SessionNodeExchanger exchanger,
                                long slotTableEpoch, SyncContinues continues)
                                                                             throws RequestException {
+        ParaCheckUtil.checkNotBlank(sessionIp, "sessionIp");
         return sync(slotId, sessionIp, exchanger, slotTableEpoch, sessionIp,
             dataServerConfig.getSlotSyncPublisherDigestMaxNum(), continues);
     }
@@ -233,11 +262,12 @@ public final class SlotDiffSyncer {
     public boolean syncSlotLeader(int slotId, String slotLeaderIp, DataNodeExchanger exchanger,
                                   long slotTableEpoch, SyncContinues continues)
                                                                                throws RequestException {
+        ParaCheckUtil.checkNotBlank(slotLeaderIp, "slotLeaderIp");
         return sync(slotId, slotLeaderIp, exchanger, slotTableEpoch, null,
             dataServerConfig.getSlotSyncPublisherDigestMaxNum(), continues);
     }
 
-    private Map<String, DatumSummary> pickSummaries(Map<String, DatumSummary> syncSummaries, int n) {
+    static Map<String, DatumSummary> pickSummaries(Map<String, DatumSummary> syncSummaries, int n) {
         Map<String, DatumSummary> m = new HashMap<>();
         for (Map.Entry<String, DatumSummary> e : syncSummaries.entrySet()) {
             // at least pick one
@@ -255,4 +285,18 @@ public final class SlotDiffSyncer {
         return m;
     }
 
+    @VisibleForTesting
+    DatumStorage getDatumStorage() {
+        return datumStorage;
+    }
+
+    @VisibleForTesting
+    DataChangeEventCenter getDataChangeEventCenter() {
+        return dataChangeEventCenter;
+    }
+
+    @VisibleForTesting
+    SessionLeaseManager getSessionLeaseManager() {
+        return sessionLeaseManager;
+    }
 }

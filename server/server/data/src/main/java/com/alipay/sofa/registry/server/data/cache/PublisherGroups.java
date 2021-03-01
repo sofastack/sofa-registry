@@ -23,6 +23,7 @@ import com.alipay.sofa.registry.common.model.dataserver.Datum;
 import com.alipay.sofa.registry.common.model.dataserver.DatumSummary;
 import com.alipay.sofa.registry.common.model.dataserver.DatumVersion;
 import com.alipay.sofa.registry.common.model.store.Publisher;
+import com.alipay.sofa.registry.util.StringFormatter;
 import com.google.common.collect.Maps;
 import org.apache.commons.collections.CollectionUtils;
 import org.glassfish.jersey.internal.guava.Sets;
@@ -155,5 +156,11 @@ public final class PublisherGroups {
             return null;
         }
         return group.updateVersion();
+    }
+
+    @Override
+    public String toString() {
+        return StringFormatter
+            .format("PubGroups{{},size={}}", dataCenter, publisherGroupMap.size());
     }
 }
