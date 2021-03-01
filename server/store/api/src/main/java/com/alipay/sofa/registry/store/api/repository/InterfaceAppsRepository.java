@@ -17,6 +17,7 @@
 package com.alipay.sofa.registry.store.api.repository;
 
 import com.alipay.sofa.registry.common.model.Tuple;
+import com.alipay.sofa.registry.common.model.appmeta.InterfaceMapping;
 import com.alipay.sofa.registry.store.api.driver.RegistryRepository;
 
 import java.util.Set;
@@ -38,12 +39,11 @@ public interface InterfaceAppsRepository extends RegistryRepository {
      * @param dataInfoId
      * @return return <appName, revisions>
      */
-    public Tuple<Long, Set<String>> getAppNames(String dataCenter, String dataInfoId);
+    InterfaceMapping getAppNames(String dataCenter, String dataInfoId);
     /**
      * insert
      * @param dataCenter
      * @param appName
-     * @param revision
      * @return
      */
     default int batchSave(String dataCenter, String appName, Set<String> interfaceName) {return 0;}

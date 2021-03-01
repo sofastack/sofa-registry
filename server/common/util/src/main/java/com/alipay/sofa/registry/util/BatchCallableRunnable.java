@@ -83,6 +83,7 @@ public abstract class BatchCallableRunnable<T, E> {
                     }
                 }
             } catch (Throwable t) {
+                // TODO failed the task
                 LOG.error("batch run task error.", t);
                 for (TaskEvent task : tasks) {
                     task.future.error(t.getMessage());
