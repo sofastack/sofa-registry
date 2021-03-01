@@ -103,4 +103,8 @@ public class DatumCache {
     public void setDataServerConfig(DataServerConfig dataServerConfig) {
         this.dataServerConfig = dataServerConfig;
     }
+
+    public DatumStorage getLocalDatumStorage() {
+        return localDatumStorage;
+    }
 }

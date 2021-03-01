@@ -39,22 +39,21 @@ import java.util.concurrent.Executor;
  */
 public class DataChangeRequestHandler extends AbstractClientHandler<DataChangeRequest> {
 
-    private static final Logger      LOGGER = LoggerFactory
-                                                .getLogger(DataChangeRequestHandler.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(DataChangeRequestHandler.class);
     /**
      * store subscribers
      */
     @Autowired
-    private Interests                sessionInterests;
+    private Interests           sessionInterests;
 
     @Autowired
-    private SessionServerConfig      sessionServerConfig;
+    private SessionServerConfig sessionServerConfig;
 
     @Autowired
-    private ExecutorManager          executorManager;
+    private ExecutorManager     executorManager;
 
     @Autowired
-    private FirePushService          firePushService;
+    private FirePushService     firePushService;
 
     @Override
     protected NodeType getConnectNodeType() {

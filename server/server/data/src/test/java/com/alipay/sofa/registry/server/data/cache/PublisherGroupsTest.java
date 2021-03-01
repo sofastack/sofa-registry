@@ -41,6 +41,7 @@ public class PublisherGroupsTest {
     public void testEmpty() {
         PublisherGroups groups = new PublisherGroups(testDc);
         assertEmpty(groups, testDataInfoId);
+        Assert.assertTrue(groups.toString().length() != 0);
     }
 
     @Test

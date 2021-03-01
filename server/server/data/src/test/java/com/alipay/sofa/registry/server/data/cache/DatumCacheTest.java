@@ -18,8 +18,6 @@ package com.alipay.sofa.registry.server.data.cache;
 
 import com.alipay.sofa.registry.common.model.dataserver.Datum;
 import com.alipay.sofa.registry.common.model.dataserver.DatumVersion;
-import com.alipay.sofa.registry.common.model.slot.Slot;
-import com.alipay.sofa.registry.common.model.slot.SlotConfig;
 import com.alipay.sofa.registry.common.model.slot.func.SlotFunctionRegistry;
 import com.alipay.sofa.registry.common.model.store.Publisher;
 import com.alipay.sofa.registry.server.data.TestBaseUtils;
@@ -36,13 +34,9 @@ public class DatumCacheTest {
 
     @Test
     public void test() {
-        LocalDatumStorage storage = TestBaseUtils.getLocalStorage(testDc);
-        DatumCache cache = new DatumCache();
-        cache.setLocalDatumStorage(storage);
-        cache.setDataServerConfig(storage.getDataServerConfig());
-        for (int i = 0; i < SlotConfig.SLOT_NUM; i++) {
-            storage.getSlotChangeListener().onSlotAdd(i, Slot.Role.Leader);
-        }
+        DatumCache cache = TestBaseUtils.newLocalDatumCache(testDc, true);
+        LocalDatumStorage storage = (LocalDatumStorage) cache.getLocalDatumStorage();
+
         Publisher publisher = TestBaseUtils.createTestPublisher(testDataId);
         storage.put(publisher);
 
