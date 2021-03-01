@@ -17,19 +17,36 @@
 package com.alipay.sofa.registry.server.data.cache;
 
 import com.alipay.sofa.registry.common.model.ConnectId;
+import com.alipay.sofa.registry.common.model.ProcessId;
 import com.alipay.sofa.registry.common.model.store.Publisher;
 import com.alipay.sofa.registry.common.model.store.UnPublisher;
 import com.alipay.sofa.registry.server.data.TestBaseUtils;
 import com.alipay.sofa.registry.server.shared.env.ServerEnv;
+import com.alipay.sofa.registry.util.ParaCheckUtil;
 import org.junit.Assert;
 import org.junit.Test;
 
 public class PublisherEnvelopeTest {
 
+    @Test(expected = IllegalArgumentException.class)
+    public void testErrorType() {
+        Publisher p = new Publisher() {
+            public DataType getDataType() {
+                return DataType.SUBSCRIBER;
+            }
+
+            public ProcessId getSessionProcessId() {
+                return ServerEnv.PROCESS_ID;
+            }
+        };
+        PublisherEnvelope.of(p);
+    }
+
     @Test
     public void test() {
         Publisher publisher = TestBaseUtils.createTestPublisher("testDataInfoId");
         PublisherEnvelope envelope = PublisherEnvelope.of(publisher);
+        ParaCheckUtil.checkNotBlank(envelope.toString(), "tostring");
         Assert.assertTrue(publisher == envelope.publisher);
         Assert.assertEquals(publisher.registerVersion(), envelope.registerVersion);
         Assert.assertEquals(publisher.registerVersion(), envelope.getVersionIfPub());

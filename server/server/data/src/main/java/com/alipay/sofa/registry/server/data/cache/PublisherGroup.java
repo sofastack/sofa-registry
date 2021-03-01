@@ -231,15 +231,16 @@ public final class PublisherGroup {
         }
     }
 
-    DatumVersion update(List<Publisher> updatedPublishers) {
-        for (Publisher p : updatedPublishers) {
+    DatumVersion put(List<Publisher> puts) {
+        for (Publisher p : puts) {
             ParaCheckUtil.checkNotNull(p.getSessionProcessId(), "publisher.sessionProcessId");
+            ParaCheckUtil.checkEquals(p.getDataInfoId(), dataInfoId, "publisher.dataInfoId");
             p.setSessionProcessId(ProcessIdCache.cache(p.getSessionProcessId()));
         }
         lock.writeLock().lock();
         try {
             boolean modified = false;
-            for (Publisher publisher : updatedPublishers) {
+            for (Publisher publisher : puts) {
                 if (tryAddPublisher(publisher)) {
                     modified = true;
                 }

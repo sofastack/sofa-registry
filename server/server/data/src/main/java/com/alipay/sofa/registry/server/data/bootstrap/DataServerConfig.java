@@ -33,15 +33,14 @@ public class DataServerConfig {
 
     public static final String   PRE_FIX                                  = "data.server";
 
-    private int                  port;
+    private int                  port                                     = 9620;
 
-    private int                  syncDataPort;
+    private int                  syncDataPort                             = 9621;
+    private int                  syncSessionPort                          = 9602;
 
-    private int                  syncSessionPort;
+    private int                  metaServerPort                           = 9611;
 
-    private int                  metaServerPort;
-
-    private int                  httpServerPort;
+    private int                  httpServerPort                           = 9622;
 
     private int                  notifyExecutorPoolSize                   = OsUtils.getCpuCount() * 3;
 
