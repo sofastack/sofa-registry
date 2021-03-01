@@ -21,6 +21,7 @@ import com.alipay.sofa.registry.common.model.dataserver.Datum;
 import com.alipay.sofa.registry.common.model.dataserver.DatumVersion;
 import com.alipay.sofa.registry.common.model.store.Publisher;
 import com.alipay.sofa.registry.server.data.bootstrap.DataServerConfig;
+import com.google.common.annotations.VisibleForTesting;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.HashMap;
@@ -91,5 +92,15 @@ public class DatumCache {
 
     public Map<String, Publisher> getByConnectId(ConnectId connectId) {
         return localDatumStorage.getByConnectId(connectId);
+    }
+
+    @VisibleForTesting
+    public void setLocalDatumStorage(DatumStorage localDatumStorage) {
+        this.localDatumStorage = localDatumStorage;
+    }
+
+    @VisibleForTesting
+    public void setDataServerConfig(DataServerConfig dataServerConfig) {
+        this.dataServerConfig = dataServerConfig;
     }
 }
