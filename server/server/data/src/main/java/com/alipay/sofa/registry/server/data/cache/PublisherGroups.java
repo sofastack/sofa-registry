@@ -27,7 +27,6 @@ import com.google.common.collect.Maps;
 import org.apache.commons.collections.CollectionUtils;
 import org.glassfish.jersey.internal.guava.Sets;
 
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -38,6 +37,11 @@ import java.util.Set;
  */
 public final class PublisherGroups {
     private final Map<String, PublisherGroup> publisherGroupMap = Maps.newConcurrentMap();
+    private final String                      dataCenter;
+
+    PublisherGroups(String dataCenter) {
+        this.dataCenter = dataCenter;
+    }
 
     Datum getDatum(String dataInfoId) {
         PublisherGroup group = publisherGroupMap.get(dataInfoId);
@@ -50,13 +54,13 @@ public final class PublisherGroups {
     }
 
     Map<String, DatumVersion> getVersions() {
-        final Map<String, DatumVersion> ret = new HashMap<>(publisherGroupMap.size() * 2);
+        final Map<String, DatumVersion> ret = Maps.newHashMapWithExpectedSize(publisherGroupMap.size());
         publisherGroupMap.forEach((k, v) -> ret.put(k, v.getVersion()));
         return ret;
     }
 
     Map<String, Datum> getAllDatum() {
-        Map<String, Datum> map = new HashMap<>(publisherGroupMap.size() * 2);
+        Map<String, Datum> map = Maps.newHashMapWithExpectedSize(publisherGroupMap.size());
         publisherGroupMap.forEach((k, v) -> {
             map.put(k, v.toDatum());
         });
@@ -64,7 +68,7 @@ public final class PublisherGroups {
     }
 
     Map<String, List<Publisher>> getAllPublisher() {
-        Map<String, List<Publisher>> map = new HashMap<>(publisherGroupMap.size() * 2);
+        Map<String, List<Publisher>> map = Maps.newHashMapWithExpectedSize(publisherGroupMap.size());
         publisherGroupMap.forEach((k, v) -> {
             map.put(k, v.getPublishers());
         });
@@ -72,24 +76,19 @@ public final class PublisherGroups {
     }
 
     Map<String, Publisher> getByConnectId(ConnectId connectId) {
-        Map<String, Publisher> map = new HashMap<>(64);
+        Map<String, Publisher> map = Maps.newHashMapWithExpectedSize(64);
         publisherGroupMap.values().forEach(v -> map.putAll(v.getByConnectId(connectId)));
         return map;
     }
 
-    DatumVersion putPublisher(Publisher publisher, String dataCenter) {
-        PublisherGroup group = createGroupIfAbsent(publisher.getDataInfoId(), dataCenter);
-        return group.addPublisher(publisher);
-    }
-
-    PublisherGroup createGroupIfAbsent(String dataInfoId, String dataCenter) {
+    PublisherGroup createGroupIfAbsent(String dataInfoId) {
         return publisherGroupMap
                 .computeIfAbsent(dataInfoId,
                         k -> new PublisherGroup(dataInfoId, dataCenter));
     }
 
     Map<String, DatumVersion> clean(ProcessId sessionProcessId) {
-        Map<String, DatumVersion> versionMap = new HashMap<>(64);
+        Map<String, DatumVersion> versionMap = Maps.newHashMapWithExpectedSize(64);
         publisherGroupMap.values().forEach(g -> {
             DatumVersion ver = g.clean(sessionProcessId);
             if (ver != null) {
@@ -104,13 +103,12 @@ public final class PublisherGroups {
         return group == null ? null : group.clean(sessionProcessId);
     }
 
-    DatumVersion update(List<Publisher> updatedPublishers, String dataCenter) {
-        if (CollectionUtils.isEmpty(updatedPublishers)) {
+    DatumVersion put(String dataInfoId, List<Publisher> publishers) {
+        if (CollectionUtils.isEmpty(publishers)) {
             return null;
         }
-        PublisherGroup group = createGroupIfAbsent(updatedPublishers.get(0).getDataInfoId(),
-            dataCenter);
-        return group.update(updatedPublishers);
+        PublisherGroup group = createGroupIfAbsent(dataInfoId);
+        return group.put(publishers);
     }
 
     DatumVersion remove(String dataInfoId, ProcessId sessionProcessId,

@@ -31,6 +31,7 @@ import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.server.data.bootstrap.DataServerConfig;
 import com.alipay.sofa.registry.server.data.slot.SlotChangeListener;
 import com.alipay.sofa.registry.util.ParaCheckUtil;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -90,21 +91,21 @@ public final class LocalDatumStorage implements DatumStorage {
 
     @Override
     public Map<String, Datum> getAll() {
-        Map<String, Datum> m = new HashMap<>(128);
+        Map<String, Datum> m = Maps.newHashMapWithExpectedSize(128);
         publisherGroupsMap.values().forEach(g -> m.putAll(g.getAllDatum()));
         return m;
     }
 
     @Override
     public Map<String, List<Publisher>> getAllPublisher() {
-        Map<String, List<Publisher>> m = new HashMap<>(128);
+        Map<String, List<Publisher>> m = Maps.newHashMapWithExpectedSize(128);
         publisherGroupsMap.values().forEach(g -> m.putAll(g.getAllPublisher()));
         return m;
     }
 
     @Override
     public Map<String, Publisher> getByConnectId(ConnectId connectId) {
-        Map<String, Publisher> m = new HashMap<>(64);
+        Map<String, Publisher> m = Maps.newHashMapWithExpectedSize(64);
         publisherGroupsMap.values().forEach(g -> m.putAll(g.getByConnectId(connectId)));
         return m;
     }
@@ -122,24 +123,16 @@ public final class LocalDatumStorage implements DatumStorage {
     }
 
     @Override
-    public DatumVersion putPublisher(Publisher publisher) {
-        PublisherGroups groups = getPublisherGroups(publisher.getDataInfoId());
-        return groups == null ? null : groups.putPublisher(publisher,
-            dataServerConfig.getLocalDataCenter());
-    }
-
-    @Override
     public DatumVersion createEmptyDatumIfAbsent(String dataInfoId, String dataCenter) {
         PublisherGroups groups = getPublisherGroups(dataInfoId);
-        return groups == null ? null : groups.createGroupIfAbsent(dataInfoId,
-            dataServerConfig.getLocalDataCenter()).getVersion();
+        return groups == null ? null : groups.createGroupIfAbsent(dataInfoId).getVersion();
     }
 
     @Override
     public Map<String, DatumVersion> clean(ProcessId sessionProcessId) {
         // clean by sessionProcessId, the sessionProcessId could not be null
         ParaCheckUtil.checkNotNull(sessionProcessId, "sessionProcessId");
-        Map<String, DatumVersion> versionMap = new HashMap<>(32);
+        Map<String, DatumVersion> versionMap = Maps.newHashMapWithExpectedSize(32);
         publisherGroupsMap.values().forEach(g -> versionMap.putAll(g.clean(sessionProcessId)));
         return versionMap;
     }
@@ -153,10 +146,14 @@ public final class LocalDatumStorage implements DatumStorage {
     }
 
     @Override
-    public DatumVersion update(String dataInfoId, List<Publisher> updatedPublishers) {
+    public DatumVersion put(String dataInfoId, List<Publisher> publishers) {
         PublisherGroups groups = getPublisherGroups(dataInfoId);
-        return groups == null ? null : groups.update(updatedPublishers,
-            dataServerConfig.getLocalDataCenter());
+        return groups == null ? null : groups.put(dataInfoId, publishers);
+    }
+
+    @Override
+    public DatumVersion put(Publisher publisher) {
+        return put(publisher.getDataInfoId(), Collections.singletonList(publisher));
     }
 
     @Override
@@ -213,7 +210,7 @@ public final class LocalDatumStorage implements DatumStorage {
         @Override
         public void onSlotAdd(int slotId, Slot.Role role) {
             publisherGroupsMap.computeIfAbsent(slotId, k -> {
-                PublisherGroups groups = new PublisherGroups();
+                PublisherGroups groups = new PublisherGroups(dataServerConfig.getLocalDataCenter());
                 LOGGER.info("{} add publisherGroup {}", dataServerConfig.getLocalDataCenter(), slotId);
                 return groups;
             });
@@ -227,4 +224,12 @@ public final class LocalDatumStorage implements DatumStorage {
         }
     }
 
+    @VisibleForTesting
+    public void setDataServerConfig(DataServerConfig dataServerConfig) {
+        this.dataServerConfig = dataServerConfig;
+    }
+
+    public DataServerConfig getDataServerConfig() {
+        return dataServerConfig;
+    }
 }

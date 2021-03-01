@@ -17,16 +17,31 @@
 package com.alipay.sofa.registry.server.data;
 
 import com.alipay.sofa.registry.common.model.ConnectId;
+import com.alipay.sofa.registry.common.model.dataserver.Datum;
 import com.alipay.sofa.registry.common.model.store.DataInfo;
 import com.alipay.sofa.registry.common.model.store.Publisher;
 import com.alipay.sofa.registry.common.model.store.URL;
+import com.alipay.sofa.registry.server.data.bootstrap.DataServerConfig;
+import com.alipay.sofa.registry.server.data.cache.LocalDatumStorage;
 import com.alipay.sofa.registry.server.shared.env.ServerEnv;
+import org.junit.Assert;
 
 import java.util.concurrent.atomic.AtomicLong;
+
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 public final class TestBaseUtils {
     private static final AtomicLong REGISTER_ID_SEQ = new AtomicLong();
     private static final AtomicLong CLIENT_VERSION  = new AtomicLong();
+
+    public final static String      TEST_DATA_ID    = "testDataId";
+    public final static String      TEST_DATA_INFO_ID;
+
+    static {
+        Publisher p = TestBaseUtils.createTestPublisher(TEST_DATA_ID);
+        TEST_DATA_INFO_ID = p.getDataInfoId();
+    }
 
     private TestBaseUtils() {
     }
@@ -54,6 +69,27 @@ public final class TestBaseUtils {
         clone.setRegisterId(publisher.getRegisterId());
         clone.setVersion(publisher.getVersion());
         clone.setRegisterTimestamp(publisher.getRegisterTimestamp());
+        clone.setSessionProcessId(publisher.getSessionProcessId());
         return clone;
+    }
+
+    public static void assertEquals(Datum datum, Publisher publisher) {
+        Assert.assertEquals(publisher.getDataInfoId(), datum.getDataInfoId());
+        Assert.assertEquals(publisher.getDataId(), datum.getDataId());
+        Assert.assertEquals(publisher.getInstanceId(), datum.getInstanceId());
+        Assert.assertEquals(publisher.getGroup(), datum.getGroup());
+        Assert.assertTrue(datum.getPubMap().containsKey(publisher.getRegisterId()));
+    }
+
+    public static ConnectId notExistConnectId() {
+        return ConnectId.of("notExist:9999", "notExist:9998");
+    }
+
+    public static LocalDatumStorage getLocalStorage(String dataCenter) {
+        DataServerConfig dataServerConfig = mock(DataServerConfig.class);
+        when(dataServerConfig.getLocalDataCenter()).thenReturn(dataCenter);
+        LocalDatumStorage storage = new LocalDatumStorage();
+        storage.setDataServerConfig(dataServerConfig);
+        return storage;
     }
 }

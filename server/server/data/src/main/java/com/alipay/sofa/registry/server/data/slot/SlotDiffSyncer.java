@@ -83,7 +83,7 @@ public final class SlotDiffSyncer {
 
         final Set<String> changeDataIds = Sets.newHashSet();
         result.getUpdatedPublishers().forEach((k, list) -> {
-            if (datumStorage.update(k, list) != null) {
+            if (datumStorage.put(k, list) != null) {
                 changeDataIds.add(k);
             }
         });

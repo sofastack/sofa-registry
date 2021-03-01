@@ -16,12 +16,14 @@
  */
 package com.alipay.sofa.registry.server.data.cache;
 
+import com.alipay.sofa.registry.common.model.ConnectId;
 import com.alipay.sofa.registry.common.model.ProcessId;
 import com.alipay.sofa.registry.common.model.RegisterVersion;
 import com.alipay.sofa.registry.common.model.dataserver.Datum;
 import com.alipay.sofa.registry.common.model.dataserver.DatumSummary;
 import com.alipay.sofa.registry.common.model.dataserver.DatumVersion;
 import com.alipay.sofa.registry.common.model.store.Publisher;
+import com.alipay.sofa.registry.common.model.store.URL;
 import com.alipay.sofa.registry.server.data.TestBaseUtils;
 import com.alipay.sofa.registry.server.shared.env.ServerEnv;
 import com.alipay.sofa.registry.util.DatumVersionUtil;
@@ -30,6 +32,7 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import java.util.Collections;
+import java.util.Map;
 
 public class PublisherGroupTest {
     @Test
@@ -166,7 +169,7 @@ public class PublisherGroupTest {
         Publisher publisher = TestBaseUtils.createTestPublisher(dataId);
         PublisherGroup group = new PublisherGroup(publisher.getDataInfoId(), "dc");
         DatumVersion startV = group.getVersion();
-        DatumVersion v = group.update(Lists.newArrayList(publisher, publisher));
+        DatumVersion v = group.put(Lists.newArrayList(publisher, publisher));
         Assert.assertNotNull(v);
         Assert.assertTrue(v.getValue() > startV.getValue());
         Assert.assertEquals(group.getPublishers().size(), 1);
@@ -174,14 +177,14 @@ public class PublisherGroupTest {
 
         Publisher older = TestBaseUtils.cloneBase(publisher);
         older.setVersion(older.getVersion() - 1);
-        v = group.update(Lists.newArrayList(older));
+        v = group.put(Lists.newArrayList(older));
         Assert.assertNull(v);
         Assert.assertEquals(group.getPublishers().size(), 1);
         Assert.assertEquals(group.getPublishers().get(0), publisher);
 
         Publisher newer = TestBaseUtils.cloneBase(publisher);
         newer.setVersion(publisher.getVersion() + 1);
-        v = group.update(Lists.newArrayList(older, newer));
+        v = group.put(Lists.newArrayList(older, newer));
 
         Assert.assertNotNull(v);
         Assert.assertEquals(group.getPublishers().size(), 1);
@@ -201,8 +204,9 @@ public class PublisherGroupTest {
             System.currentTimeMillis(), 1, 1);
 
         Publisher add = TestBaseUtils.createTestPublisher(dataId);
+        add.setTargetAddress(URL.valueOf("xxx:1000"));
         add.setSessionProcessId(mockProcessId);
-        v = group.update(Lists.newArrayList(add));
+        v = group.put(Lists.newArrayList(add));
         Assert.assertNotNull(v);
         Assert.assertEquals(group.getPublishers().size(), 2);
         Assert.assertTrue(group.getPublishers().contains(newer));
@@ -218,6 +222,18 @@ public class PublisherGroupTest {
         Assert.assertTrue(group.getSessionProcessIds().contains(ServerEnv.PROCESS_ID));
         Assert.assertTrue(group.getSessionProcessIds().contains(mockProcessId));
 
+        Map<String, Publisher> conns = group.getByConnectId(ConnectId.of("unknown:999",
+            "unknown:999"));
+        Assert.assertTrue(conns.isEmpty());
+
+        conns = group.getByConnectId(add.connectId());
+        Assert.assertEquals(conns.size(), 1);
+        Assert.assertEquals(conns.get(add.getRegisterId()), add);
+
+        conns = group.getByConnectId(newer.connectId());
+        Assert.assertEquals(conns.size(), 1);
+        Assert.assertEquals(conns.get(newer.getRegisterId()), newer);
+
         v = group.remove(mockProcessId,
             Collections.singletonMap(add.getRegisterId(), add.registerVersion()));
         Assert.assertNotNull(v);
@@ -228,5 +244,12 @@ public class PublisherGroupTest {
 
         summary = group.getSummary(null);
         Assert.assertEquals(summary.getPublisherVersions().size(), 1);
+
+        conns = group.getByConnectId(add.connectId());
+        Assert.assertEquals(conns.size(), 0);
+
+        conns = group.getByConnectId(newer.connectId());
+        Assert.assertEquals(conns.size(), 1);
+        Assert.assertEquals(conns.get(newer.getRegisterId()), newer);
     }
 }

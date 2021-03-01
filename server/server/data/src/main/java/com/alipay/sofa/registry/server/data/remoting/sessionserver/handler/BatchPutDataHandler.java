@@ -122,7 +122,7 @@ public class BatchPutDataHandler extends AbstractDataHandler<BatchRequest> {
             // temporary only notify session, not store
             dataChangeEventCenter.onTempPubChange(publisher, dataServerConfig.getLocalDataCenter());
         } else {
-            DatumVersion version = localDatumStorage.putPublisher(publisher);
+            DatumVersion version = localDatumStorage.put(publisher);
             if (version != null) {
                 return Collections.singletonList(publisher.getDataInfoId());
             }
