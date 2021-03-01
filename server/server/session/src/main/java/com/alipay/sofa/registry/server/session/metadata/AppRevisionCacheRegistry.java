@@ -16,8 +16,10 @@
  */
 package com.alipay.sofa.registry.server.session.metadata;
 
-import com.alipay.sofa.registry.common.model.Tuple;
+import com.alipay.sofa.registry.common.model.appmeta.InterfaceMapping;
 import com.alipay.sofa.registry.common.model.store.AppRevision;
+import com.alipay.sofa.registry.log.Logger;
+import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
 import com.alipay.sofa.registry.store.api.driver.RepositoryManager;
 import com.alipay.sofa.registry.store.api.repository.AppRevisionRepository;
@@ -25,23 +27,32 @@ import com.alipay.sofa.registry.store.api.repository.InterfaceAppsRepository;
 import com.alipay.sofa.registry.util.ConcurrentUtils;
 import com.alipay.sofa.registry.util.LoopRunnable;
 import org.springframework.beans.factory.annotation.Autowired;
+
 import javax.annotation.PostConstruct;
-import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 public class AppRevisionCacheRegistry {
+    private static final Logger LOGGER = LoggerFactory.getLogger(AppRevisionCacheRegistry.class);
+    private final AppRevisionRepository   appRevisionRepository;
 
-    private AppRevisionRepository   appRevisionRepository;
-
-    private InterfaceAppsRepository interfaceAppsRepository;
+    private final InterfaceAppsRepository interfaceAppsRepository;
 
     @Autowired
     private SessionServerConfig     sessionServerConfig;
 
+    private volatile  boolean startWatch;
     private final class RevisionWatchDog extends LoopRunnable {
         @Override
         public void runUnthrowable() {
-            appRevisionRepository.refresh(sessionServerConfig.getSessionServerDataCenter());
+            if (!startWatch) {
+                LOGGER.info("not start watch");
+                return;
+            }
+            try {
+                appRevisionRepository.refresh(sessionServerConfig.getSessionServerDataCenter());
+            } catch (Throwable e) {
+                LOGGER.error("failed to watch", e);
+            }
         }
 
         @Override
@@ -73,7 +84,7 @@ public class AppRevisionCacheRegistry {
         appRevisionRepository.register(appRevision);
     }
 
-    public Tuple<Long, Set<String>> getAppNames(String dataInfoId) {
+    public InterfaceMapping getAppNames(String dataInfoId) {
         return interfaceAppsRepository.getAppNames(
             sessionServerConfig.getSessionServerDataCenter(), dataInfoId);
     }

@@ -16,7 +16,7 @@
  */
 package com.alipay.sofa.registry.test.metadata;
 
-import com.alipay.sofa.registry.common.model.Tuple;
+import com.alipay.sofa.registry.common.model.appmeta.InterfaceMapping;
 import com.alipay.sofa.registry.common.model.constants.ValueConstants;
 import com.alipay.sofa.registry.common.model.store.AppRevision;
 import com.alipay.sofa.registry.common.model.store.DataInfo;
@@ -36,16 +36,8 @@ import org.junit.runner.RunWith;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import java.sql.Timestamp;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
+import java.util.*;
+import java.util.concurrent.*;
 
 /**
  *
@@ -176,10 +168,10 @@ public class MetadataTest extends BaseIntegrationTest {
             for (AppRevisionInterface appRevisionInterface : appRevisionRegister.getInterfaceMap().values()) {
                 Future<Set<String>> submit = fixedThreadPool.submit((Callable) () -> {
                     String dataInfoId = appRevisionInterface.getDataInfoId();
-                    Tuple<Long, Set<String>> appNames = appRevisionCacheRegistry.getAppNames(dataInfoId);
-                    Assert.assertTrue(appNames.o1 > 0);
-                    Assert.assertTrue(appNames.o2.size() == 1);
-                    Assert.assertTrue(appNames.o2.contains(appRevisionRegister.getAppName()));
+                    InterfaceMapping appNames = appRevisionCacheRegistry.getAppNames(dataInfoId);
+                    Assert.assertTrue(appNames.getNanosVersion() > 0);
+                    Assert.assertTrue(appNames.getApps().size() == 1);
+                    Assert.assertTrue(appNames.getApps().contains(appRevisionRegister.getAppName()));
                     return appNames;
                 });
 
