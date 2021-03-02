@@ -18,7 +18,6 @@ package com.alipay.sofa.registry.store.api.repository;
 
 import com.alipay.sofa.registry.common.model.store.AppRevision;
 import com.alipay.sofa.registry.store.api.driver.RegistryRepository;
-import java.util.Collection;
 
 /**
  *

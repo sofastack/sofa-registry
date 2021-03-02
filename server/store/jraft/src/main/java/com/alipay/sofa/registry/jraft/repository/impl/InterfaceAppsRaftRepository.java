@@ -16,16 +16,14 @@
  */
 package com.alipay.sofa.registry.jraft.repository.impl;
 
-import com.alipay.sofa.registry.common.model.Tuple;
+import com.alipay.sofa.registry.common.model.appmeta.InterfaceMapping;
 import com.alipay.sofa.registry.common.model.store.AppRevision;
 import com.alipay.sofa.registry.core.model.AppRevisionInterface;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.store.api.repository.InterfaceAppsRepository;
-import com.google.common.collect.Sets;
 import java.util.Collection;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -34,13 +32,13 @@ import java.util.concurrent.ConcurrentHashMap;
  * @version $Id: InterfaceAppsRaftRepository.java, v 0.1 2021年01月24日 19:44 xiaojian.xj Exp $
  */
 public class InterfaceAppsRaftRepository implements InterfaceAppsRepository, RaftRepository {
-    protected static final Logger                         LOG           = LoggerFactory
-                                                                            .getLogger(InterfaceAppsRaftRepository.class);
+    protected static final Logger                 LOG           = LoggerFactory
+                                                                    .getLogger(InterfaceAppsRaftRepository.class);
 
     /**
      * map: <interface, appNames>
      */
-    protected final Map<String, Tuple<Long, Set<String>>> interfaceApps = new ConcurrentHashMap<>();
+    protected final Map<String, InterfaceMapping> interfaceApps = new ConcurrentHashMap<>();
 
     @Override
     public void loadMetadata(String dataCenter) {
@@ -48,8 +46,8 @@ public class InterfaceAppsRaftRepository implements InterfaceAppsRepository, Raf
     }
 
     @Override
-    public Tuple<Long, Set<String>> getAppNames(String dataCenter, String dataInfoId) {
-        final Tuple<Long, Set<String>> ret = interfaceApps.get(dataInfoId);
+    public InterfaceMapping getAppNames(String dataCenter, String dataInfoId) {
+        final InterfaceMapping ret = interfaceApps.get(dataInfoId);
         return ret;
     }
 
@@ -62,9 +60,9 @@ public class InterfaceAppsRaftRepository implements InterfaceAppsRepository, Raf
 
         Collection<AppRevisionInterface> values = rev.getInterfaceMap().values();
         for (AppRevisionInterface inf : values) {
-            Tuple<Long, Set<String>> tuple = interfaceApps.computeIfAbsent(inf.getDataInfoId(),
-                    k -> new Tuple(-1, Sets.newConcurrentHashSet()));
-            tuple.o2.add(rev.getRevision());
+            InterfaceMapping interfaceMapping = interfaceApps.computeIfAbsent(inf.getDataInfoId(),
+                    k -> new InterfaceMapping(-1));
+            interfaceMapping.getApps().add(rev.getAppName());
         }
 
     }

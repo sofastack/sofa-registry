@@ -21,7 +21,6 @@ import com.alipay.sofa.registry.jdbc.config.MetadataConfig;
 import com.alipay.sofa.registry.jdbc.convertor.AppRevisionDomainConvertor;
 import com.alipay.sofa.registry.jdbc.domain.AppRevisionQueryModel;
 import com.alipay.sofa.registry.jdbc.mapper.AppRevisionMapper;
-import com.alipay.sofa.registry.jdbc.mapper.InterfaceAppsIndexMapper;
 import com.alipay.sofa.registry.jdbc.repository.JdbcRepository;
 import com.alipay.sofa.registry.jdbc.repository.batch.AppRevisionHeartbeatBatchCallable;
 import com.alipay.sofa.registry.log.Logger;
@@ -31,8 +30,6 @@ import com.alipay.sofa.registry.util.BatchCallableRunnable.InvokeFuture;
 import com.alipay.sofa.registry.util.BatchCallableRunnable.TaskEvent;
 import com.alipay.sofa.registry.util.SingleFlight;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.transaction.support.TransactionTemplate;
-
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
 import java.util.HashMap;
@@ -48,8 +45,9 @@ import java.util.Map.Entry;
 public class AppRevisionHeartbeatJdbcRepository implements AppRevisionHeartbeatRepository,
                                                JdbcRepository {
 
-    private static final Logger               LOG          = LoggerFactory
-                                                               .getLogger(AppRevisionHeartbeatJdbcRepository.class);
+    private static final Logger               LOG          = LoggerFactory.getLogger(
+                                                               "METADATA-EXCHANGE",
+                                                               "[AppRevisionHeartbeat]");
 
     @Resource
     private AppRevisionJdbcRepository         appRevisionJdbcRepository;

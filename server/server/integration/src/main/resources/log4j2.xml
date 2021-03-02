@@ -7,6 +7,7 @@
         <Property name="META_LOG_HOME">${registry.integration.home}/logs/meta</Property>
         <Property name="DATA_LOG_HOME">${registry.integration.home}/logs/data</Property>
         <Property name="SESSION_LOG_HOME">${registry.integration.home}/logs/session</Property>
+        <Property name="METADATA_LOG_HOME">${registry.integration.home}/logs/metadata</Property>
         <Property name="LOG_LEVEL">INFO</Property>
     </Properties>
 
@@ -353,15 +354,46 @@
             </DefaultRolloverStrategy>
         </RollingRandomAccessFile>
 
-        <RollingRandomAccessFile name="DRUID-SQL-DIGEST-APPENDER" fileName="${SESSION_LOG_HOME}/druid-sql-digest.log"
-                                 filePattern="${SESSION_LOG_HOME}/druid-sql-digest.log.%d{yyyy-MM-dd}">
+
+        <RollingRandomAccessFile name="METADATA-EXCHANGE-APPENDER" fileName="${METADATA_LOG_HOME}/metadata-exchange.log"
+                                 filePattern="${METADATA_LOG_HOME}/metadata-exchange.log.%d{yyyy-MM-dd}">
             <PatternLayout pattern="[%d{ISO8601}][%p][%t][%c{0}] - %m%n"/>
             <ThresholdFilter level="ERROR" onMatch="DENY" onMismatch="NEUTRAL"/>
             <Policies>
                 <TimeBasedTriggeringPolicy/>
             </Policies>
             <DefaultRolloverStrategy max="10">
-                <Delete basePath="${SESSION_LOG_HOME}" maxDepth="2">
+                <Delete basePath="${METADATA_LOG_HOME}" maxDepth="2">
+                    <IfFileName glob="metadata-exchange.log.*" />
+                    <IfLastModified age="10d" />
+                </Delete>
+            </DefaultRolloverStrategy>
+        </RollingRandomAccessFile>
+
+        <RollingRandomAccessFile name="METADATA-REFRESH-APPENDER" fileName="${METADATA_LOG_HOME}/metadata-refresh.log"
+                                 filePattern="${METADATA_LOG_HOME}/metadata-refresh.log.%d{yyyy-MM-dd}">
+            <PatternLayout pattern="[%d{ISO8601}][%p][%t][%c{0}] - %m%n"/>
+            <ThresholdFilter level="ERROR" onMatch="DENY" onMismatch="NEUTRAL"/>
+            <Policies>
+                <TimeBasedTriggeringPolicy/>
+            </Policies>
+            <DefaultRolloverStrategy max="10">
+                <Delete basePath="${METADATA_LOG_HOME}" maxDepth="2">
+                    <IfFileName glob="metadata-refresh.log.*" />
+                    <IfLastModified age="10d" />
+                </Delete>
+            </DefaultRolloverStrategy>
+        </RollingRandomAccessFile>
+
+        <RollingRandomAccessFile name="DRUID-SQL-DIGEST-APPENDER" fileName="${METADATA_LOG_HOME}/druid-sql-digest.log"
+                                 filePattern="${METADATA_LOG_HOME}/druid-sql-digest.log.%d{yyyy-MM-dd}">
+            <PatternLayout pattern="[%d{ISO8601}][%p][%t][%c{0}] - %m%n"/>
+            <ThresholdFilter level="ERROR" onMatch="DENY" onMismatch="NEUTRAL"/>
+            <Policies>
+                <TimeBasedTriggeringPolicy/>
+            </Policies>
+            <DefaultRolloverStrategy max="10">
+                <Delete basePath="${METADATA_LOG_HOME}" maxDepth="2">
                     <IfFileName glob="druid-sql-digest.log.*" />
                     <IfLastModified age="10d" />
                 </Delete>
@@ -469,12 +501,23 @@
         </logger>
 
 
+        <!-- metadata loggers -->
+        <logger name="METADATA-EXCHANGE" level="${LOG_LEVEL}" additivity="false">
+            <appender-ref ref="METADATA-EXCHANGE-APPENDER"/>
+            <appender-ref ref="COMMON-ERROR-APPENDER"/>
+        </logger>
+
+        <logger name="METADATA-REFRESH" level="${LOG_LEVEL}" additivity="false">
+            <appender-ref ref="METADATA-REFRESH-APPENDER"/>
+            <appender-ref ref="COMMON-ERROR-APPENDER"/>
+        </logger>
+
         <!-- druid配置 -->
-        <logger name="druid.sql.statement" level="info" additivity="false">
+        <logger name="druid.sql.statement" level="debug" additivity="false">
             <appender-ref ref="DRUID-SQL-DIGEST-APPENDER"/>
             <appender-ref ref="COMMON-ERROR-APPENDER"/>
         </logger>
-        <logger name="druid.sql.ResultSet" level="info" additivity="false">
+        <logger name="druid.sql.ResultSet" level="debug" additivity="false">
             <appender-ref ref="DRUID-SQL-DIGEST-APPENDER"/>
             <appender-ref ref="COMMON-ERROR-APPENDER"/>
         </logger>

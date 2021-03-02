@@ -28,16 +28,12 @@ import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.store.api.repository.AppRevisionRepository;
 import com.alipay.sofa.registry.util.BatchCallableRunnable.InvokeFuture;
 import com.alipay.sofa.registry.util.BatchCallableRunnable.TaskEvent;
-import com.alipay.sofa.registry.util.SingleFlight;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.transaction.support.TransactionTemplate;
-import org.springframework.util.CollectionUtils;
 import javax.annotation.Resource;
-import java.util.Collection;
 import java.util.Date;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -52,7 +48,10 @@ import java.util.concurrent.TimeUnit;
 public class AppRevisionJdbcRepository implements AppRevisionRepository, JdbcRepository {
 
     private static final Logger                                    LOG              = LoggerFactory
-                                                                                        .getLogger(AppRevisionJdbcRepository.class);
+                                                                                        .getLogger(
+                                                                                            "METADATA-EXCHANGE",
+                                                                                            "[AppRevision]");
+
     /**
      * map: <revision, AppRevision>
      */

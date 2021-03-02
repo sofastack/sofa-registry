@@ -59,13 +59,28 @@ public class JdbcConfiguration {
             return new JdbcDriverConfigBean();
         }
 
+        @Bean
+        public Slf4jLogFilter logFilter() {
+            Slf4jLogFilter filter = new Slf4jLogFilter();
+            filter.setResultSetLogEnabled(true);
+            filter.setConnectionLogEnabled(true);
+            filter.setStatementParameterClearLogEnable(true);
+            filter.setStatementCreateAfterLogEnabled(true);
+            filter.setStatementCloseAfterLogEnabled(true);
+            filter.setStatementParameterSetLogEnabled(true);
+            filter.setStatementPrepareAfterLogEnabled(true);
+            filter.setStatementExecutableSqlLogEnable(true);
+            return filter;
+        }
+
         /**
          * create datasource
          * @return
          * @throws Exception
          */
         @Bean
-        public DataSource dataSource(JdbcDriverConfig jdbcDriverConfig) throws Exception {
+        public DataSource dataSource(JdbcDriverConfig jdbcDriverConfig, Slf4jLogFilter logFilter)
+                                                                                                 throws Exception {
             Properties props = new Properties();
             props.put(PROP_DRIVERCLASSNAME, jdbcDriverConfig.getDriverClassName());
             props.put(PROP_URL, jdbcDriverConfig.getUrl());
@@ -80,6 +95,9 @@ public class JdbcConfiguration {
             props.put(PROP_REMOVEABANDONEDTIMEOUT, "30");
             props.put(PROP_LOGABANDONED, "true");
             props.put(PROP_INIT, "true");
+
+            // log filter
+            //props.put(PROP_FILTERS, logFilter);
 
             DataSource dataSource = DruidDataSourceFactory.createDataSource(props);
 
@@ -103,20 +121,6 @@ public class JdbcConfiguration {
                 .getResources(jdbcDriverConfig.getMapperLocations()));
 
             return factoryBean.getObject();
-        }
-
-        @Bean
-        public Slf4jLogFilter logFilter() {
-            Slf4jLogFilter filter = new Slf4jLogFilter();
-            filter.setResultSetLogEnabled(true);
-            filter.setConnectionLogEnabled(false);
-            filter.setStatementParameterClearLogEnable(false);
-            filter.setStatementCreateAfterLogEnabled(false);
-            filter.setStatementCloseAfterLogEnabled(false);
-            filter.setStatementParameterSetLogEnabled(false);
-            filter.setStatementPrepareAfterLogEnabled(false);
-            filter.setStatementExecutableSqlLogEnable(true);
-            return filter;
         }
 
         @Bean

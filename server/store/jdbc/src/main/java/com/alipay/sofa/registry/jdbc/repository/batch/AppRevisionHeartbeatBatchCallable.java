@@ -36,8 +36,8 @@ import java.util.stream.Collectors;
 public class AppRevisionHeartbeatBatchCallable extends
                                               BatchCallableRunnable<AppRevision, AppRevision> {
 
-    private static final Logger LOG = LoggerFactory
-                                        .getLogger(AppRevisionHeartbeatBatchCallable.class);
+    private static final Logger LOG = LoggerFactory.getLogger("METADATA-EXCHANGE",
+                                        "[AppRevisionHeartbeatBatch]");
 
     @Autowired
     private AppRevisionMapper   appRevisionMapper;

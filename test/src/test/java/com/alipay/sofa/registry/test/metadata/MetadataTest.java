@@ -193,24 +193,4 @@ public class MetadataTest extends BaseIntegrationTest {
         }
         appRevisionHeartbeatRegistry.doRevisionHeartbeat();
     }
-
-    @Test
-    public void appRevisionGc() {
-        appRevisionHeartbeatRegistry.doRevisionGc();
-    }
-
-    @Test
-    public void testQuery() {
-        Timestamp timestamp = new Timestamp(-1L);
-        timestamp.setTime(1614566488000L);
-        timestamp.setNanos(955482000);
-
-        List<InterfaceAppsIndexDomain> domains = interfaceAppsIndexMapper.queryModifyEquals(
-            "STAGING0", timestamp);
-        Assert.assertTrue(domains.size() > 0);
-
-        List<InterfaceAppsIndexDomain> domains1 = interfaceAppsIndexMapper.queryModifyAfterThan(
-            "STAGING0", timestamp, 100);
-        Assert.assertTrue(domains1.size() > 0);
-    }
 }
