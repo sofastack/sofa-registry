@@ -16,7 +16,7 @@
  */
 package com.alipay.sofa.registry.jdbc.repository.batch;
 
-import com.alipay.sofa.registry.common.model.Tuple;
+import com.alipay.sofa.registry.common.model.appmeta.InterfaceMapping;
 import com.alipay.sofa.registry.jdbc.domain.InterfaceAppIndexQueryModel;
 import com.alipay.sofa.registry.jdbc.domain.InterfaceAppsIndexDomain;
 import com.alipay.sofa.registry.jdbc.mapper.InterfaceAppsIndexMapper;
@@ -28,7 +28,6 @@ import com.google.common.collect.Sets;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.CollectionUtils;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -42,10 +41,10 @@ import java.util.concurrent.TimeUnit;
  */
 public class InterfaceAppBatchQueryCallable
                                            extends
-                                           BatchCallableRunnable<InterfaceAppIndexQueryModel, Tuple<Long, Set<String>>> {
+                                           BatchCallableRunnable<InterfaceAppIndexQueryModel, InterfaceMapping> {
 
-    private static final Logger      LOG = LoggerFactory
-                                             .getLogger(InterfaceAppBatchQueryCallable.class);
+    private static final Logger      LOG = LoggerFactory.getLogger("METADATA-EXCHANGE",
+                                             "[InterfaceAppBatchQuery]");
 
     @Autowired
     private InterfaceAppsIndexMapper interfaceAppsIndexMapper;
@@ -76,14 +75,14 @@ public class InterfaceAppBatchQueryCallable
 
         taskEvents.forEach(taskEvent -> {
             String interfaceName = taskEvent.getData().getInterfaceName();
-            InvokeFuture<Tuple<Long, Set<String>>> future = taskEvent.getFuture();
+            InvokeFuture<InterfaceMapping> future = taskEvent.getFuture();
             Set<String> appNames = indexResult.get(interfaceName);
             Long version = versionResult.get(interfaceName);
 
             if (appNames == null || version == null) {
-                future.putResponse(new Tuple<>(-1L, new HashSet<>()));
+                future.putResponse(new InterfaceMapping(-1));
             } else {
-                future.putResponse(new Tuple<>(version, appNames));
+                future.putResponse(new InterfaceMapping(version, appNames));
             }
         });
         return true;

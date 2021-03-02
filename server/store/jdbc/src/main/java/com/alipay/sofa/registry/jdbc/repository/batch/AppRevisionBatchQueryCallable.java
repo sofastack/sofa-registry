@@ -40,7 +40,8 @@ import java.util.concurrent.TimeUnit;
 public class AppRevisionBatchQueryCallable extends
                                           BatchCallableRunnable<AppRevisionQueryModel, AppRevision> {
 
-    private static final Logger LOG = LoggerFactory.getLogger(AppRevisionBatchQueryCallable.class);
+    private static final Logger LOG = LoggerFactory.getLogger("METADATA-EXCHANGE",
+                                        "[AppRevisionBatchQuery]");
     @Autowired
     private AppRevisionMapper   appRevisionMapper;
 

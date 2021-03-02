@@ -32,15 +32,17 @@ import javax.annotation.PostConstruct;
 import java.util.concurrent.TimeUnit;
 
 public class AppRevisionCacheRegistry {
-    private static final Logger LOGGER = LoggerFactory.getLogger(AppRevisionCacheRegistry.class);
+    private static final Logger           LOGGER = LoggerFactory
+                                                     .getLogger(AppRevisionCacheRegistry.class);
     private final AppRevisionRepository   appRevisionRepository;
 
     private final InterfaceAppsRepository interfaceAppsRepository;
 
     @Autowired
-    private SessionServerConfig     sessionServerConfig;
+    private SessionServerConfig           sessionServerConfig;
 
-    private volatile  boolean startWatch;
+    private volatile boolean              startWatch;
+
     private final class RevisionWatchDog extends LoopRunnable {
         @Override
         public void runUnthrowable() {
@@ -77,6 +79,7 @@ public class AppRevisionCacheRegistry {
 
     public void loadMetadata() {
         interfaceAppsRepository.loadMetadata(sessionServerConfig.getSessionServerDataCenter());
+        startWatch = true;
     }
 
     public void register(AppRevision appRevision) throws Exception {
