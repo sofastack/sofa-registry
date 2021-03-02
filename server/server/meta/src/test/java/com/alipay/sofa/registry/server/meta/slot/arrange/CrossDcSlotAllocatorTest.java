@@ -134,7 +134,7 @@ public class CrossDcSlotAllocatorTest extends AbstractTest {
             getRpcClient(scheduled, 3, new TimeoutException("expected timeout")));
 
         allocator.refreshSlotTable(0);
-        Thread.sleep(20);
+        Thread.sleep(100);
 
         Assert.assertNull(allocator.getSlotTable());
         verify(allocator, atLeast(2)).refreshSlotTable(anyInt());
