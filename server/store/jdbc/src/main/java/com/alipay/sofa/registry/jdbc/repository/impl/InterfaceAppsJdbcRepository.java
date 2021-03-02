@@ -53,10 +53,6 @@ public class InterfaceAppsJdbcRepository implements InterfaceAppsRepository, Jdb
                                                                           "METADATA-EXCHANGE",
                                                                           "[InterfaceApps]");
 
-    private static final Logger                   REFRESH_LOG         = LoggerFactory.getLogger(
-                                                                          "METADATA-REFRESH",
-                                                                          "[InterfaceApps]");
-
     private volatile Timestamp                    lastModifyTimestamp = new Timestamp(-1);
 
     /**
@@ -90,18 +86,18 @@ public class InterfaceAppsJdbcRepository implements InterfaceAppsRepository, Jdb
         // and beyond refreshCount will not be load in this method, they will be load in next schedule
         final int total = interfaceAppsIndexMapper.getTotalCount(dataCenter);
         final int refreshCount = MathUtils.divideCeil(total, refreshLimit);
-        REFRESH_LOG.info("begin load metadata, total count mapping {}, rounds={}, dataCenter={}",
+        LOG.info("begin load metadata, total count mapping {}, rounds={}, dataCenter={}",
             total, refreshCount, dataCenter);
         int refreshTotal = 0;
         for (int i = 0; i < refreshCount; i++) {
             final int num = this.refresh(dataCenter);
-            REFRESH_LOG.info("load metadata in round={}, num={}", i, num);
+            LOG.info("load metadata in round={}, num={}", i, num);
             refreshTotal += num;
             if (num == 0) {
                 break;
             }
         }
-        REFRESH_LOG.info("finish load metadata, total={}", refreshTotal);
+        LOG.info("finish load metadata, total={}", refreshTotal);
     }
 
     /**
@@ -173,8 +169,8 @@ public class InterfaceAppsJdbcRepository implements InterfaceAppsRepository, Jdb
             } else {
                 mapping = new InterfaceMapping(nanosLong);
             }
-            if (REFRESH_LOG.isInfoEnabled()) {
-                REFRESH_LOG.info("refresh interface: {}, ref: {}, app: {}, mapping: {}",
+            if (LOG.isInfoEnabled()) {
+                LOG.info("refresh interface: {}, ref: {}, app: {}, mapping: {}",
                     domain.getInterfaceName(), domain.isReference(), domain.getAppName(), mapping);
             }
             interfaceApps.put(domain.getInterfaceName(), mapping);
@@ -189,8 +185,8 @@ public class InterfaceAppsJdbcRepository implements InterfaceAppsRepository, Jdb
                 prev.remove(domain.getAppName());
                 newMapping = new InterfaceMapping(nanosLong, prev, domain.getAppName());
             }
-            if (REFRESH_LOG.isInfoEnabled()) {
-                REFRESH_LOG
+            if (LOG.isInfoEnabled()) {
+                LOG
                     .info(
                         "update interface mapping: {}, ref: {}, app: {}, newMapping: {}, oldMapping: {}",
                         domain.getInterfaceName(), domain.isReference(), domain.getAppName(),
@@ -198,7 +194,7 @@ public class InterfaceAppsJdbcRepository implements InterfaceAppsRepository, Jdb
             }
             interfaceApps.put(domain.getInterfaceName(), newMapping);
         } else {
-            REFRESH_LOG.info("ignored refresh index {}, current mapping={}", domain, mapping);
+            LOG.info("ignored refresh index {}, current mapping={}", domain, mapping);
         }
     }
 
@@ -208,8 +204,8 @@ public class InterfaceAppsJdbcRepository implements InterfaceAppsRepository, Jdb
             dataCenter, last, refreshLimit);
         List<InterfaceAppsIndexDomain> equals = interfaceAppsIndexMapper.queryModifyEquals(
             dataCenter, last);
-        if (REFRESH_LOG.isInfoEnabled()) {
-            REFRESH_LOG.info("refresh lastTimestamp={}, equals={}, afters={},", last,
+        if (LOG.isInfoEnabled()) {
+            LOG.info("refresh lastTimestamp={}, equals={}, afters={},", last,
                 equals.size(), afters.size());
         }
 
@@ -227,9 +223,9 @@ public class InterfaceAppsJdbcRepository implements InterfaceAppsRepository, Jdb
         InterfaceAppsIndexDomain max = equals.get(equals.size() - 1);
         if (lastModifyTimestamp.before(max.getGmtModify())) {
             this.lastModifyTimestamp = max.getGmtModify();
-            REFRESH_LOG.info("update lastModifyTimestamp {} to {}", last, lastModifyTimestamp);
+            LOG.info("update lastModifyTimestamp {} to {}", last, lastModifyTimestamp);
         } else {
-            REFRESH_LOG.info("skip update lastModifyTimestamp {}, got={}", lastModifyTimestamp,
+            LOG.info("skip update lastModifyTimestamp {}, got={}", lastModifyTimestamp,
                 max.getGmtModify());
         }
         return equals.size();
