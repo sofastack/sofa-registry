@@ -3,7 +3,6 @@
 
     <Properties>
         <Property name="SESSION_LOG_HOME">${user.home}/logs/registry/session</Property>
-        <Property name="METADATA_LOG_HOME">${registry.integration.home}/logs/metadata</Property>
         <Property name="LOG_LEVEL">INFO</Property>
     </Properties>
 
@@ -173,61 +172,31 @@
         </RollingRandomAccessFile>
 
         <!-- metadata appender -->
-        <RollingRandomAccessFile name="METADATA-COMMON-ERROR-APPENDER" fileName="${METADATA_LOG_HOME}/common-error.log"
-                                 filePattern="${METADATA_LOG_HOME}/common-error.log.%d{yyyy-MM-dd}">
-            <ThresholdFilter level="ERROR" onMatch="ACCEPT" onMismatch="DENY"/>
-            <PatternLayout pattern="[%d{ISO8601}][%p][%t][%c{0}] - %m%n"/>
-            <Policies>
-                <TimeBasedTriggeringPolicy/>
-            </Policies>
-            <DefaultRolloverStrategy max="30">
-                <Delete basePath="${METADATA_LOG_HOME}" maxDepth="2">
-                    <IfFileName glob="common-error.log.*" />
-                    <IfLastModified age="30d" />
-                </Delete>
-            </DefaultRolloverStrategy>
-        </RollingRandomAccessFile>
-
-        <RollingRandomAccessFile name="METADATA-EXCHANGE-APPENDER" fileName="${METADATA_LOG_HOME}/metadata-exchange.log"
-                                 filePattern="${METADATA_LOG_HOME}/metadata-exchange.log.%d{yyyy-MM-dd}">
+        <RollingRandomAccessFile name="METADATA-EXCHANGE-APPENDER" fileName="${SESSION_LOG_HOME}/registry-metadata.log"
+                                 filePattern="${SESSION_LOG_HOME}/registry-metadata.log.%d{yyyy-MM-dd}">
             <PatternLayout pattern="[%d{ISO8601}][%p][%t][%c{0}] - %m%n"/>
             <ThresholdFilter level="ERROR" onMatch="DENY" onMismatch="NEUTRAL"/>
             <Policies>
                 <TimeBasedTriggeringPolicy/>
             </Policies>
             <DefaultRolloverStrategy max="10">
-                <Delete basePath="${METADATA_LOG_HOME}" maxDepth="2">
-                    <IfFileName glob="metadata-exchange.log.*" />
+                <Delete basePath="${SESSION_LOG_HOME}" maxDepth="2">
+                    <IfFileName glob="registry-metadata.log.*" />
                     <IfLastModified age="10d" />
                 </Delete>
             </DefaultRolloverStrategy>
         </RollingRandomAccessFile>
 
-        <RollingRandomAccessFile name="METADATA-REFRESH-APPENDER" fileName="${METADATA_LOG_HOME}/metadata-refresh.log"
-                                 filePattern="${METADATA_LOG_HOME}/metadata-refresh.log.%d{yyyy-MM-dd}">
+        <RollingRandomAccessFile name="DRUID-SQL-DIGEST-APPENDER" fileName="${SESSION_LOG_HOME}/registry-sql.log"
+                                 filePattern="${SESSION_LOG_HOME}/registry-sql.log.%d{yyyy-MM-dd}">
             <PatternLayout pattern="[%d{ISO8601}][%p][%t][%c{0}] - %m%n"/>
             <ThresholdFilter level="ERROR" onMatch="DENY" onMismatch="NEUTRAL"/>
             <Policies>
                 <TimeBasedTriggeringPolicy/>
             </Policies>
             <DefaultRolloverStrategy max="10">
-                <Delete basePath="${METADATA_LOG_HOME}" maxDepth="2">
-                    <IfFileName glob="metadata-refresh.log.*" />
-                    <IfLastModified age="10d" />
-                </Delete>
-            </DefaultRolloverStrategy>
-        </RollingRandomAccessFile>
-
-        <RollingRandomAccessFile name="DRUID-SQL-DIGEST-APPENDER" fileName="${METADATA_LOG_HOME}/druid-sql-digest.log"
-                                 filePattern="${METADATA_LOG_HOME}/druid-sql-digest.log.%d{yyyy-MM-dd}">
-            <PatternLayout pattern="[%d{ISO8601}][%p][%t][%c{0}] - %m%n"/>
-            <ThresholdFilter level="ERROR" onMatch="DENY" onMismatch="NEUTRAL"/>
-            <Policies>
-                <TimeBasedTriggeringPolicy/>
-            </Policies>
-            <DefaultRolloverStrategy max="10">
-                <Delete basePath="${METADATA_LOG_HOME}" maxDepth="2">
-                    <IfFileName glob="druid-sql-digest.log.*" />
+                <Delete basePath="${SESSION_LOG_HOME}" maxDepth="2">
+                    <IfFileName glob="registry-sql.log.*" />
                     <IfLastModified age="10d" />
                 </Delete>
             </DefaultRolloverStrategy>
@@ -301,22 +270,17 @@
         <!-- metadata loggers -->
         <logger name="METADATA-EXCHANGE" level="${LOG_LEVEL}" additivity="false">
             <appender-ref ref="METADATA-EXCHANGE-APPENDER"/>
-            <appender-ref ref="METADATA-COMMON-ERROR-APPENDER"/>
-        </logger>
-
-        <logger name="METADATA-REFRESH" level="${LOG_LEVEL}" additivity="false">
-            <appender-ref ref="METADATA-REFRESH-APPENDER"/>
-            <appender-ref ref="METADATA-COMMON-ERROR-APPENDER"/>
+            <appender-ref ref="COMMON-ERROR-APPENDER"/>
         </logger>
 
         <!-- druid配置 -->
         <logger name="druid.sql.statement" level="debug" additivity="false">
             <appender-ref ref="DRUID-SQL-DIGEST-APPENDER"/>
-            <appender-ref ref="METADATA-COMMON-ERROR-APPENDER"/>
+            <appender-ref ref="COMMON-ERROR-APPENDER"/>
         </logger>
         <logger name="druid.sql.ResultSet" level="debug" additivity="false">
             <appender-ref ref="DRUID-SQL-DIGEST-APPENDER"/>
-            <appender-ref ref="METADATA-COMMON-ERROR-APPENDER"/>
+            <appender-ref ref="COMMON-ERROR-APPENDER"/>
         </logger>
 
     </loggers>
