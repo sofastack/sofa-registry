@@ -49,26 +49,31 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public class InterfaceAppsJdbcRepository implements InterfaceAppsRepository, JdbcRepository {
 
-    private static final Logger LOG = LoggerFactory
-            .getLogger(InterfaceAppsJdbcRepository.class);
+    private static final Logger                   LOG                 = LoggerFactory.getLogger(
+                                                                          "METADATA-EXCHANGE",
+                                                                          "[InterfaceApps]");
 
-    private volatile Timestamp lastModifyTimestamp = new Timestamp(-1);
+    private static final Logger                   REFRESH_LOG         = LoggerFactory.getLogger(
+                                                                          "METADATA-REFRESH",
+                                                                          "[InterfaceApps]");
+
+    private volatile Timestamp                    lastModifyTimestamp = new Timestamp(-1);
 
     /**
      * map: <interface, appNames>
      */
-    protected final Map<String, InterfaceMapping> interfaceApps = new ConcurrentHashMap<>();
+    protected final Map<String, InterfaceMapping> interfaceApps       = new ConcurrentHashMap<>();
 
     @Autowired
-    private InterfaceAppBatchQueryCallable interfaceAppBatchQueryCallable;
+    private InterfaceAppBatchQueryCallable        interfaceAppBatchQueryCallable;
 
     @Autowired
-    private InterfaceAppsIndexMapper interfaceAppsIndexMapper;
+    private InterfaceAppsIndexMapper              interfaceAppsIndexMapper;
 
-    private int refreshLimit;
+    private int                                   refreshLimit;
 
     @Autowired
-    private MetadataConfig metadataConfig;
+    private MetadataConfig                        metadataConfig;
 
     @PostConstruct
     public void postConstruct() {
@@ -85,17 +90,18 @@ public class InterfaceAppsJdbcRepository implements InterfaceAppsRepository, Jdb
         // and beyond refreshCount will not be load in this method, they will be load in next schedule
         final int total = interfaceAppsIndexMapper.getTotalCount(dataCenter);
         final int refreshCount = MathUtils.divideCeil(total, refreshLimit);
-        LOG.info("begin load metadata, total count mapping {}, rounds={}, dataCenter={}", total, refreshCount, dataCenter);
+        REFRESH_LOG.info("begin load metadata, total count mapping {}, rounds={}, dataCenter={}",
+            total, refreshCount, dataCenter);
         int refreshTotal = 0;
         for (int i = 0; i < refreshCount; i++) {
             final int num = this.refresh(dataCenter);
-            LOG.info("load metadata in round={}, num={}", i, num);
+            REFRESH_LOG.info("load metadata in round={}, num={}", i, num);
             refreshTotal += num;
             if (num == 0) {
                 break;
             }
         }
-        LOG.info("finish load metadata, total={}", refreshTotal);
+        REFRESH_LOG.info("finish load metadata, total={}", refreshTotal);
     }
 
     /**
@@ -111,7 +117,8 @@ public class InterfaceAppsJdbcRepository implements InterfaceAppsRepository, Jdb
             return appNames;
         }
 
-        final InterfaceAppIndexQueryModel query = new InterfaceAppIndexQueryModel(dataCenter, dataInfoId);
+        final InterfaceAppIndexQueryModel query = new InterfaceAppIndexQueryModel(dataCenter,
+            dataInfoId);
 
         TaskEvent task = interfaceAppBatchQueryCallable.new TaskEvent(query);
         InvokeFuture future = interfaceAppBatchQueryCallable.commit(task);
@@ -119,7 +126,6 @@ public class InterfaceAppsJdbcRepository implements InterfaceAppsRepository, Jdb
             if (future.isSuccess()) {
                 Object response = future.getResponse();
                 if (response == null) {
-                    // TODO  why response is null
                     appNames = new InterfaceMapping(-1);
                 } else {
                     appNames = (InterfaceMapping) response;
@@ -134,7 +140,7 @@ public class InterfaceAppsJdbcRepository implements InterfaceAppsRepository, Jdb
         } catch (Throwable e) {
             LOG.error("query appNames by interface: {} error.", dataInfoId, e);
             throw new RuntimeException(String.format("query appNames by interface: %s error.",
-                    dataInfoId), e);
+                dataInfoId), e);
         }
     }
 
@@ -159,7 +165,7 @@ public class InterfaceAppsJdbcRepository implements InterfaceAppsRepository, Jdb
      * refresh interfaceNames index
      */
     private synchronized void triggerRefreshCache(InterfaceAppsIndexDomain domain) {
-        InterfaceMapping mapping= interfaceApps.get(domain.getInterfaceName());
+        InterfaceMapping mapping = interfaceApps.get(domain.getInterfaceName());
         final long nanosLong = TimestampUtil.getNanosLong(domain.getGmtModify());
         if (mapping == null) {
             if (domain.isReference()) {
@@ -167,8 +173,10 @@ public class InterfaceAppsJdbcRepository implements InterfaceAppsRepository, Jdb
             } else {
                 mapping = new InterfaceMapping(nanosLong);
             }
-            LOG.info("refresh interface: {}, ref: {}, app: {}, mapping: {}",
+            if (REFRESH_LOG.isInfoEnabled()) {
+                REFRESH_LOG.info("refresh interface: {}, ref: {}, app: {}, mapping: {}",
                     domain.getInterfaceName(), domain.isReference(), domain.getAppName(), mapping);
+            }
             interfaceApps.put(domain.getInterfaceName(), mapping);
             return;
         }
@@ -181,23 +189,28 @@ public class InterfaceAppsJdbcRepository implements InterfaceAppsRepository, Jdb
                 prev.remove(domain.getAppName());
                 newMapping = new InterfaceMapping(nanosLong, prev, domain.getAppName());
             }
-            if (LOG.isInfoEnabled()) {
-                LOG.info("update interface mapping: {}, ref: {}, app: {}, newMapping: {}, oldMapping: {}",
-                        domain.getInterfaceName(), domain.isReference(), domain.getAppName(), newMapping, mapping);
+            if (REFRESH_LOG.isInfoEnabled()) {
+                REFRESH_LOG
+                    .info(
+                        "update interface mapping: {}, ref: {}, app: {}, newMapping: {}, oldMapping: {}",
+                        domain.getInterfaceName(), domain.isReference(), domain.getAppName(),
+                        newMapping, mapping);
             }
             interfaceApps.put(domain.getInterfaceName(), newMapping);
-        }else{
-            LOG.info("ignored refresh index {}, current mapping={}", domain, mapping);
+        } else {
+            REFRESH_LOG.info("ignored refresh index {}, current mapping={}", domain, mapping);
         }
     }
 
     public synchronized int refresh(String dataCenter) {
         final Timestamp last = lastModifyTimestamp;
-        List<InterfaceAppsIndexDomain> afters = interfaceAppsIndexMapper.queryModifyAfterThan(dataCenter, last,
-                refreshLimit);
-        List<InterfaceAppsIndexDomain> equals = interfaceAppsIndexMapper.queryModifyEquals(dataCenter, last);
-        if (LOG.isInfoEnabled()) {
-            LOG.info("refresh lastTimestamp={}, equals={}, afters={},", last, equals.size(), afters.size());
+        List<InterfaceAppsIndexDomain> afters = interfaceAppsIndexMapper.queryModifyAfterThan(
+            dataCenter, last, refreshLimit);
+        List<InterfaceAppsIndexDomain> equals = interfaceAppsIndexMapper.queryModifyEquals(
+            dataCenter, last);
+        if (REFRESH_LOG.isInfoEnabled()) {
+            REFRESH_LOG.info("refresh lastTimestamp={}, equals={}, afters={},", last,
+                equals.size(), afters.size());
         }
 
         equals.addAll(afters);
@@ -214,9 +227,10 @@ public class InterfaceAppsJdbcRepository implements InterfaceAppsRepository, Jdb
         InterfaceAppsIndexDomain max = equals.get(equals.size() - 1);
         if (lastModifyTimestamp.before(max.getGmtModify())) {
             this.lastModifyTimestamp = max.getGmtModify();
-            LOG.info("update lastModifyTimestamp {} to {}", last, lastModifyTimestamp);
-        }else{
-            LOG.info("skip update lastModifyTimestamp {}, got={}", lastModifyTimestamp, max.getGmtModify());
+            REFRESH_LOG.info("update lastModifyTimestamp {} to {}", last, lastModifyTimestamp);
+        } else {
+            REFRESH_LOG.info("skip update lastModifyTimestamp {}, got={}", lastModifyTimestamp,
+                max.getGmtModify());
         }
         return equals.size();
     }
