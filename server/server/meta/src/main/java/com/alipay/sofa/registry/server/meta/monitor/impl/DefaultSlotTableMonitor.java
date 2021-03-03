@@ -28,6 +28,7 @@ import com.alipay.sofa.registry.observer.Observable;
 import com.alipay.sofa.registry.observer.Observer;
 import com.alipay.sofa.registry.server.meta.monitor.SlotTableMonitor;
 import com.alipay.sofa.registry.server.meta.monitor.SlotTableStats;
+import com.alipay.sofa.registry.server.meta.monitor.data.DataSlotMetricsRecorder;
 import com.alipay.sofa.registry.server.meta.slot.manager.LocalSlotManager;
 import com.alipay.sofa.registry.server.shared.resource.SlotGenericResource;
 import com.alipay.sofa.registry.server.shared.slot.DiskSlotTableRecorder;
@@ -77,7 +78,7 @@ public class DefaultSlotTableMonitor extends AbstractLifecycle implements SlotTa
     @Override
     protected void doInitialize() throws InitializeException {
         super.doInitialize();
-        recorders = Lists.newArrayList(new DiskSlotTableRecorder(), slotGenericResource);
+        recorders = Lists.newArrayList(new DiskSlotTableRecorder(), slotGenericResource, new DataSlotMetricsRecorder());
         slotTableStats = new DefaultSlotTableStats(slotManager);
         slotTableStats.initialize();
         scheduledTask = new WakeUpLoopRunnable() {
