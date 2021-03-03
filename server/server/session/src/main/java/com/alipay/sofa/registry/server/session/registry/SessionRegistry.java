@@ -354,10 +354,12 @@ public class SessionRegistry implements Registry {
             SCAN_VER_LOGGER.warn("slot not assigned, {}", slotId);
             return;
         }
-        SCAN_VER_LOGGER.info("[fetchSlotVer]{},{},{},interests={}", slotId, dataCenter, leader,
-            interestVersions.size());
+
         Map<String/*datainfoid*/, DatumVersion> dataVersions = dataNodeService.fetchDataVersion(
             dataCenter, slotId, interestVersions);
+
+        SCAN_VER_LOGGER.info("[fetchSlotVer]{},{},{},interests={},gets={}", slotId, dataCenter,
+            leader, interestVersions.size(), dataVersions.size());
 
         if (CollectionUtils.isEmpty(dataVersions)) {
             SCAN_VER_LOGGER.warn("[fetchSlotVerEmpty]{},{}", slotId, leader);

@@ -24,6 +24,7 @@ import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.remoting.Channel;
 import com.alipay.sofa.registry.server.data.cache.DatumCache;
+import com.alipay.sofa.registry.server.data.cache.DatumStorage;
 import com.alipay.sofa.registry.util.ParaCheckUtil;
 
 import static com.alipay.sofa.registry.server.data.remoting.sessionserver.handler.HandlerMetrics.GetVersion.*;
@@ -45,6 +46,9 @@ public class GetDataVersionsHandler extends AbstractDataHandler<GetDataVersionRe
     private static final Logger LOGGER = LoggerFactory.getLogger("GET");
     @Autowired
     private DatumCache          datumCache;
+
+    @Autowired
+    private DatumStorage        localDatumStorage;
 
     @Autowired
     private ThreadPoolExecutor  getDataProcessorExecutor;
@@ -71,7 +75,8 @@ public class GetDataVersionsHandler extends AbstractDataHandler<GetDataVersionRe
         if (!slotAccessBefore.isAccept()) {
             return SlotAccessGenericResponse.failedResponse(slotAccessBefore);
         }
-        Map<String/*dataInfoId*/, DatumVersion> map = datumCache.getVersions(dataCenter, slotId);
+        Map<String/*dataInfoId*/, DatumVersion> getVersions = datumCache.getVersions(dataCenter,
+            slotId);
         // double check slot access, @see GetDataHandler
         final SlotAccess slotAccessAfter = checkAccess(slotId, request.getSlotTableEpoch(),
             request.getSlotLeaderEpoch());
@@ -79,15 +84,16 @@ public class GetDataVersionsHandler extends AbstractDataHandler<GetDataVersionRe
             return SlotAccessGenericResponse.failedResponse(slotAccessAfter,
                 "slotLeaderEpoch has change, prev=" + slotAccessBefore);
         }
+        final boolean localDataCenter = dataServerConfig.isLocalDataCenter(dataCenter);
         Map<String, DatumVersion> ret = Maps.newHashMapWithExpectedSize(request.getInterests()
             .size());
         for (Map.Entry<String, DatumVersion> e : request.getInterests().entrySet()) {
             final String dataInfoId = e.getKey();
-            final DatumVersion currentVer = map.get(dataInfoId);
+            final DatumVersion interestVer = e.getValue();
+            final DatumVersion currentVer = getVersions.get(dataInfoId);
             // contains the datum which is interested
             if (currentVer != null) {
                 ret.put(dataInfoId, currentVer);
-                final DatumVersion interestVer = e.getValue();
                 if (interestVer.getValue() > currentVer.getValue()) {
                     // the session.push version is bigger than datum.version. this may happens:
                     // 1. slot-1 own by data-A, balance slot-1, migrating from data-A to data-B.
@@ -103,10 +109,22 @@ public class GetDataVersionsHandler extends AbstractDataHandler<GetDataVersionRe
                     LOGGER.info("updateV,{},{},{},interestVer={},currentVer={},updateVer={}",
                         slotId, dataInfoId, dataCenter, interestVer, currentVer, updateVer);
                 }
+            } else {
+                if (localDataCenter) {
+                    // no datum in data node, this maybe happens an empty datum occurs migrating
+                    // there is subscriber subs the dataId. we create a empty datum to trace the version
+                    final DatumVersion v = localDatumStorage.createEmptyDatumIfAbsent(dataInfoId,
+                        dataCenter);
+                    if (v != null) {
+                        getVersions.put(dataInfoId, v);
+                    }
+                    LOGGER.info("createV,{},{},{},interestVer={},createV={}", slotId, dataInfoId,
+                        dataCenter, interestVer, v);
+                }
             }
         }
         LOGGER.info("getV,{},{},interests={},gets={},rets={}", slotId, dataCenter, request
-            .getInterests().size(), map.size(), ret.size());
+            .getInterests().size(), getVersions.size(), ret.size());
         GET_VERSION_COUNTER.inc();
         return SlotAccessGenericResponse.successResponse(slotAccessAfter, ret);
     }

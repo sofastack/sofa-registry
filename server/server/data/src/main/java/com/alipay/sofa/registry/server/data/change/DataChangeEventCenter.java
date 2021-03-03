@@ -180,7 +180,8 @@ public final class DataChangeEventCenter {
             try {
                 if (!connection.isFine()) {
                     CHANGE_FAIL_COUNTER.inc();
-                    LOGGER.info("change notify failed, conn is closed, {}", connection);
+                    LOGGER.info("change notify failed, conn is closed, {}",
+                        connection.getRemoteAddress());
                     return;
                 }
                 DataChangeRequest request = new DataChangeRequest(dataCenter, dataInfoIds);
