@@ -145,9 +145,8 @@ public class DefaultSlotTableMonitor extends AbstractLifecycle implements SlotTa
         long slotTableEpoch = heartbeat.getSlotTableEpoch();
         if (slotTableEpoch < slotManager.getSlotTable().getEpoch()) {
             logger
-                .warn(
-                    "[onHeartbeat] data slot-table[{}] is prev version(current [{}]), won't update slot stats",
-                    slotTableEpoch, slotManager.getSlotTable().getEpoch());
+                .error(
+                    "[onHeartbeat] data[{}] lag", heartbeat.getNode().getIp());
             return;
         }
         if (heartbeat.getSlotStatus() == null) {
