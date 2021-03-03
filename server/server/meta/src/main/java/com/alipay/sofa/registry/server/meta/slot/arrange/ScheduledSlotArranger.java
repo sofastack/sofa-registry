@@ -29,6 +29,7 @@ import com.alipay.sofa.registry.server.meta.cluster.node.NodeAdded;
 import com.alipay.sofa.registry.server.meta.cluster.node.NodeRemoved;
 import com.alipay.sofa.registry.server.meta.lease.data.DataManagerObserver;
 import com.alipay.sofa.registry.server.meta.lease.data.DefaultDataServerManager;
+import com.alipay.sofa.registry.server.meta.monitor.PrometheusMetrics;
 import com.alipay.sofa.registry.server.meta.monitor.SlotTableMonitor;
 import com.alipay.sofa.registry.server.meta.slot.SlotAssigner;
 import com.alipay.sofa.registry.server.meta.slot.SlotBalancer;
@@ -247,13 +248,17 @@ public class ScheduledSlotArranger extends AbstractLifecycleObservable implement
                 logger.warn("[arrangeSync] not start running, quit");
                 return false;
             }
+
             // the start arrange with the dataNodes snapshot
             final List<DataNode> dataNodes = dataServerManager.getClusterMembers();
             if (dataNodes.isEmpty()) {
                 logger.warn("[Arranger] empty data server list, continue");
                 return true;
             } else {
-                return tryArrangeSlots(dataNodes);
+                PrometheusMetrics.SlotArrange.begin();
+                boolean result = tryArrangeSlots(dataNodes);
+                PrometheusMetrics.SlotArrange.end();
+                return result;
             }
         } else {
             logger.info("not leader for arrange");

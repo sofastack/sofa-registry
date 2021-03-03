@@ -18,9 +18,11 @@ package com.alipay.sofa.registry.server.meta.lease.session;
 
 import com.alipay.sofa.registry.common.model.metaserver.nodes.SessionNode;
 import com.alipay.sofa.registry.jraft.LeaderAware;
+import com.alipay.sofa.registry.server.meta.lease.Lease;
 import com.alipay.sofa.registry.server.meta.lease.LeaseManager;
 import com.alipay.sofa.registry.server.meta.lease.impl.DefaultLeaseManager;
 import com.alipay.sofa.registry.jraft.annotation.RaftService;
+import com.alipay.sofa.registry.server.meta.monitor.PrometheusMetrics;
 
 /**
  * @author chen.zhu
@@ -49,6 +51,18 @@ public class SessionLeaseManager extends DefaultLeaseManager<SessionNode> implem
     @Override
     public void notLeader() {
 
+    }
+
+    @Override
+    public boolean renew(SessionNode renewal, int leaseDuration) {
+        PrometheusMetrics.Heartbeat.onSessionHeartbeat(renewal.getIp());
+        return super.renew(renewal, leaseDuration);
+    }
+
+    @Override
+    public boolean cancel(Lease<SessionNode> lease) {
+        PrometheusMetrics.Heartbeat.onSessionEvict(lease.getRenewal().getIp());
+        return super.cancel(lease);
     }
 
     private void renewAllNodes() {
