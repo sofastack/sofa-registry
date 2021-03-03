@@ -22,12 +22,16 @@ import com.alipay.sofa.registry.exception.InitializeException;
 import com.alipay.sofa.registry.server.meta.AbstractTest;
 import com.alipay.sofa.registry.server.meta.bootstrap.config.NodeConfig;
 import com.alipay.sofa.registry.server.meta.slot.manager.LocalSlotManager;
+import com.alipay.sofa.registry.server.shared.util.NodeUtils;
 import org.assertj.core.util.Lists;
+import org.assertj.core.util.Sets;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import static com.alipay.sofa.registry.server.meta.monitor.impl.DefaultSlotStats.MAX_SYNC_GAP;
 import static org.mockito.Mockito.*;
@@ -150,5 +154,33 @@ public class DefaultSlotTableStatsTest extends AbstractTest {
             slotTableStats.checkSlotStatuses(node, slotStatuses);
         }
         Assert.assertTrue(slotTableStats.isSlotFollowersStable());
+    }
+
+    @Test
+    public void testUpdateSlotTableWhenFollowerChangeOnly() {
+        Assert.assertFalse(slotTableStats.isSlotFollowersStable());
+        List<BaseSlotStatus> slotStatuses = Lists.newArrayList();
+        for (DataNode node : dataNodes) {
+            slotStatuses = Lists.newArrayList();
+            for (int slotId = 0; slotId < SlotConfig.SLOT_NUM; slotId++) {
+                slotStatuses.add(new FollowerSlotStatus(slotId, System.currentTimeMillis(), node
+                        .getIp(), System.currentTimeMillis(), System.currentTimeMillis() - 1000));
+            }
+            slotTableStats.checkSlotStatuses(node, slotStatuses);
+        }
+        Assert.assertTrue(slotTableStats.isSlotFollowersStable());
+
+        SlotTable prev = slotManager.getSlotTable();
+        Map<Integer, Slot> slotMap = prev.getSlotMap();
+        Slot prevSlot = slotMap.get(1);
+        Set<String> followers = Sets.newHashSet(prevSlot.getFollowers());
+        List<String> newFollowers = NodeUtils.transferNodeToIpList(dataNodes);
+        newFollowers.removeAll(followers);
+        slotMap.put(1, new Slot(1, prevSlot.getLeader(), prevSlot.getLeaderEpoch(), newFollowers));
+        SlotTable slotTable = new SlotTable(prev.getEpoch() + 1, slotMap.values());
+        slotManager.refresh(slotTable);
+        slotTableStats.updateSlotTable(slotTable);
+        Assert.assertFalse(slotTableStats.isSlotFollowersStable());
+
     }
 }
