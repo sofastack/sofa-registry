@@ -27,6 +27,7 @@ import com.google.common.collect.Maps;
 import org.apache.commons.lang.StringUtils;
 
 import java.util.Map;
+import java.util.Objects;
 
 /**
  * @author chen.zhu
@@ -83,6 +84,11 @@ public class DefaultSlotStats implements SlotStats {
         return leaderStatus.isHealthy();
     }
 
+    /**
+     * Is followers stable boolean.
+     *
+     * @return the boolean
+     */
     @Override
     public boolean isFollowersStable() {
         for (String dataServer : slot.getFollowers()) {
@@ -133,9 +139,40 @@ public class DefaultSlotStats implements SlotStats {
             followerSlotStatus.getLastLeaderSyncTime());
     }
 
+    /**
+     * To string string.
+     *
+     * @return the string
+     */
     @Override
     public String toString() {
         return "DefaultSlotStats{" + "slot=" + slot + ", leaderStatus=" + leaderStatus
                + ", followerOffsets=" + followerLastSyncTimes + '}';
+    }
+
+    /**
+     * Equals boolean.
+     *
+     * @param o the o
+     * @return the boolean
+     */
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        DefaultSlotStats that = (DefaultSlotStats) o;
+        return Objects.equals(slot, that.slot) &&
+                leaderStatus == that.leaderStatus &&
+                Objects.equals(followerLastSyncTimes, that.followerLastSyncTimes);
+    }
+
+    /**
+     * Hash code int.
+     *
+     * @return the int
+     */
+    @Override
+    public int hashCode() {
+        return Objects.hash(slot, leaderStatus, followerLastSyncTimes);
     }
 }
