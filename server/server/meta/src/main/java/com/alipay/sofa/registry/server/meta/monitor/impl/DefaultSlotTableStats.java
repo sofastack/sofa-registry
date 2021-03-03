@@ -28,6 +28,9 @@ import com.google.common.collect.Maps;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 /**
  * @author chen.zhu
@@ -39,6 +42,8 @@ public class DefaultSlotTableStats extends AbstractLifecycle implements SlotTabl
     private final SlotManager             slotManager;
 
     private final Map<Integer, SlotStats> slotStatses = Maps.newConcurrentMap();
+
+    private final ReadWriteLock lock = new ReentrantReadWriteLock();
 
     public DefaultSlotTableStats(SlotManager slotManager) {
         this.slotManager = slotManager;
@@ -58,58 +63,84 @@ public class DefaultSlotTableStats extends AbstractLifecycle implements SlotTabl
 
     @Override
     public boolean isSlotLeadersStable() {
-        for (Map.Entry<Integer, SlotStats> entry : slotStatses.entrySet()) {
-            SlotStats slotStats = entry.getValue();
-            if (!slotStats.isLeaderStable()) {
-                return false;
+        try {
+            lock.readLock().lock();
+            for (Map.Entry<Integer, SlotStats> entry : slotStatses.entrySet()) {
+                SlotStats slotStats = entry.getValue();
+                if (!slotStats.isLeaderStable()) {
+                    return false;
+                }
             }
+            return true;
+        } finally {
+            lock.readLock().unlock();
         }
-        return true;
     }
 
     @Override
     public boolean isSlotFollowersStable() {
-        for (Map.Entry<Integer, SlotStats> entry : slotStatses.entrySet()) {
-            if (!entry.getValue().isFollowersStable()) {
-                logger.info("[isSlotFollowersStable]slot[{}] follower not stable {}",
-                    entry.getKey(), entry.getValue());
-                return false;
+        try {
+            lock.readLock().lock();
+            for (Map.Entry<Integer, SlotStats> entry : slotStatses.entrySet()) {
+                Set<String> followers = slotManager.getSlotTable().getSlot(entry.getKey()).getFollowers();
+                for (String follower : followers) {
+                    if (!entry.getValue().isFollowerStable(follower)) {
+                        logger.warn("[isSlotFollowersStable]slot[{}] follower not stable {}",
+                                entry.getKey(), entry.getValue());
+                        return false;
+                    }
+                }
             }
+            return true;
+        } finally {
+            lock.readLock().unlock();
         }
-        return true;
     }
 
     @Override
     public void checkSlotStatuses(DataNode node, List<BaseSlotStatus> slotStatuses) {
-        for (BaseSlotStatus slotStatus : slotStatuses) {
-            int slotId = slotStatus.getSlotId();
-            SlotStats slotStats = slotStatses.get(slotId);
-            if (slotStats == null || slotStats.getSlot() == null) {
-                continue;
+        try {
+            lock.writeLock().lock();
+            for (BaseSlotStatus slotStatus : slotStatuses) {
+                int slotId = slotStatus.getSlotId();
+                SlotStats slotStats = slotStatses.get(slotId);
+                if (slotStats == null || slotStats.getSlot() == null) {
+                    continue;
+                }
+                if (slotStats.getSlot().getLeaderEpoch() > slotStatus.getSlotLeaderEpoch()) {
+                    logger
+                            .warn(
+                                    "[checkSlotStatuses] won't update slot status, slot[{}] leader-epoch[{}] is less than current[{}]",
+                                    slotId, slotStatus.getSlotLeaderEpoch(), slotStats.getSlot()
+                                            .getLeaderEpoch());
+                    continue;
+                }
+                if (slotStatus.getRole() == Slot.Role.Leader) {
+                    slotStats.updateLeaderState((LeaderSlotStatus) slotStatus);
+                } else {
+                    slotStats.updateFollowerState((FollowerSlotStatus) slotStatus);
+                }
             }
-            if (slotStats.getSlot().getLeaderEpoch() > slotStatus.getSlotLeaderEpoch()) {
-                logger
-                    .warn(
-                        "[checkSlotStatuses] won't update slot status, slot[{}] leader-epoch[{}] is less than current[{}]",
-                        slotId, slotStatus.getSlotLeaderEpoch(), slotStats.getSlot()
-                            .getLeaderEpoch());
-                continue;
-            }
-            if (slotStatus.getRole() == Slot.Role.Leader) {
-                slotStats.updateLeaderState((LeaderSlotStatus) slotStatus);
-            } else {
-                slotStats.updateFollowerState((FollowerSlotStatus) slotStatus);
-            }
+        } finally {
+            lock.writeLock().unlock();
         }
     }
 
     @Override
     public void updateSlotTable(SlotTable slotTable) {
-        slotTable.getSlotMap().forEach((slotId, slot) -> {
-            SlotStats slotStats = slotStatses.get(slotId);
-            if(slotStats.getSlot().getLeaderEpoch() < slot.getLeaderEpoch()) {
-                slotStatses.put(slotId, new DefaultSlotStats(slot));
-            }
-        });
+        try {
+            lock.writeLock().lock();
+            slotTable.getSlotMap().forEach((slotId, slot) -> {
+                SlotStats slotStats = slotStatses.get(slotId);
+                if (slotStats.getSlot().getLeaderEpoch() <= slot.getLeaderEpoch()) {
+                    slotStatses.put(slotId, new DefaultSlotStats(slot));
+                } else {
+                    logger.warn("[updateSlotTable]skip slot[{}] because leader epoch {} < {}",
+                            slotId, slot.getLeaderEpoch(), slotStats.getSlot().getLeaderEpoch());
+                }
+            });
+        } finally {
+            lock.writeLock().unlock();
+        }
     }
 }
