@@ -21,6 +21,7 @@ import com.alipay.sofa.registry.common.model.slot.*;
 import com.alipay.sofa.registry.exception.InitializeException;
 import com.alipay.sofa.registry.server.meta.AbstractTest;
 import com.alipay.sofa.registry.server.meta.bootstrap.config.NodeConfig;
+import com.alipay.sofa.registry.server.meta.monitor.SlotStats;
 import com.alipay.sofa.registry.server.meta.slot.manager.LocalSlotManager;
 import com.alipay.sofa.registry.server.shared.util.NodeUtils;
 import org.assertj.core.util.Lists;
@@ -179,8 +180,11 @@ public class DefaultSlotTableStatsTest extends AbstractTest {
         slotMap.put(1, new Slot(1, prevSlot.getLeader(), prevSlot.getLeaderEpoch(), newFollowers));
         SlotTable slotTable = new SlotTable(prev.getEpoch() + 1, slotMap.values());
         slotManager.refresh(slotTable);
+
+        SlotStats prevSlotStats = slotTableStats.getSlotStats(1);
         slotTableStats.updateSlotTable(slotTable);
         Assert.assertFalse(slotTableStats.isSlotFollowersStable());
-
+        SlotStats curSlotStats = slotTableStats.getSlotStats(1);
+        Assert.assertNotEquals(prevSlotStats, curSlotStats);
     }
 }

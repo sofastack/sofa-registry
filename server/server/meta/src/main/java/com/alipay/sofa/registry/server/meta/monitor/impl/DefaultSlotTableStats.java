@@ -23,6 +23,7 @@ import com.alipay.sofa.registry.lifecycle.impl.AbstractLifecycle;
 import com.alipay.sofa.registry.server.meta.monitor.SlotStats;
 import com.alipay.sofa.registry.server.meta.monitor.SlotTableStats;
 import com.alipay.sofa.registry.server.meta.slot.SlotManager;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Maps;
 
 import java.util.Collections;
@@ -132,15 +133,21 @@ public class DefaultSlotTableStats extends AbstractLifecycle implements SlotTabl
             lock.writeLock().lock();
             slotTable.getSlotMap().forEach((slotId, slot) -> {
                 SlotStats slotStats = slotStatses.get(slotId);
-                if (slotStats.getSlot().getLeaderEpoch() <= slot.getLeaderEpoch()) {
+                if (slotStats.getSlot().getLeaderEpoch() < slot.getLeaderEpoch()) {
+                    slotStatses.put(slotId, new DefaultSlotStats(slot));
+                } else if (slotStats.getSlot().getLeaderEpoch() == slot.getLeaderEpoch() && !slotStats.getSlot().equals(slot)) {
                     slotStatses.put(slotId, new DefaultSlotStats(slot));
                 } else {
-                    logger.warn("[updateSlotTable]skip slot[{}] because leader epoch {} < {}",
-                            slotId, slot.getLeaderEpoch(), slotStats.getSlot().getLeaderEpoch());
+                    logger.warn("[updateSlotTable]skip slot[{}]", slotId);
                 }
             });
         } finally {
             lock.writeLock().unlock();
         }
+    }
+
+    @VisibleForTesting
+    public SlotStats getSlotStats(int slotId) {
+        return slotStatses.get(slotId);
     }
 }
