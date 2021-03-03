@@ -90,11 +90,11 @@ public final class PushTrace {
         calc();
         LOGGER
             .info(
-                "{},{},{},{},pubTotal={},pubNew={},delay={},{},{},{},firstPubDelay={},lastPubDelay={},addr={}",
-                status, datum.getDataInfoId(), subApp, datum.getDataCenter(), datum.getPublishers()
-                    .size(), newPublisherNum, datumTotalDelayMillis, datumPushCommitSpanMillis,
-                datumPushStartSpanMillis, datumPushFinishSpanMillis, firstPubPushDelayMillis,
-                lastPubPushDelayMillis, subAddress);
+                "{},{},{},{},{},pubTotal={},pubNew={},delay={},{},{},{},firstPubDelay={},lastPubDelay={},addr={}",
+                status, datum.getDataInfoId(), datum.getVersion(), subApp, datum.getDataCenter(),
+                datum.getPublishers().size(), newPublisherNum, datumTotalDelayMillis,
+                datumPushCommitSpanMillis, datumPushStartSpanMillis, datumPushFinishSpanMillis,
+                firstPubPushDelayMillis, lastPubPushDelayMillis, subAddress);
     }
 
     private void calc() {
