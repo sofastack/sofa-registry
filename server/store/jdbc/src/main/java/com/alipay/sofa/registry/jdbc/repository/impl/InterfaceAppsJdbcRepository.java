@@ -86,8 +86,8 @@ public class InterfaceAppsJdbcRepository implements InterfaceAppsRepository, Jdb
         // and beyond refreshCount will not be load in this method, they will be load in next schedule
         final int total = interfaceAppsIndexMapper.getTotalCount(dataCenter);
         final int refreshCount = MathUtils.divideCeil(total, refreshLimit);
-        LOG.info("begin load metadata, total count mapping {}, rounds={}, dataCenter={}",
-            total, refreshCount, dataCenter);
+        LOG.info("begin load metadata, total count mapping {}, rounds={}, dataCenter={}", total,
+            refreshCount, dataCenter);
         int refreshTotal = 0;
         for (int i = 0; i < refreshCount; i++) {
             final int num = this.refresh(dataCenter);
@@ -186,11 +186,10 @@ public class InterfaceAppsJdbcRepository implements InterfaceAppsRepository, Jdb
                 newMapping = new InterfaceMapping(nanosLong, prev, domain.getAppName());
             }
             if (LOG.isInfoEnabled()) {
-                LOG
-                    .info(
-                        "update interface mapping: {}, ref: {}, app: {}, newMapping: {}, oldMapping: {}",
-                        domain.getInterfaceName(), domain.isReference(), domain.getAppName(),
-                        newMapping, mapping);
+                LOG.info(
+                    "update interface mapping: {}, ref: {}, app: {}, newMapping: {}, oldMapping: {}",
+                    domain.getInterfaceName(), domain.isReference(), domain.getAppName(),
+                    newMapping, mapping);
             }
             interfaceApps.put(domain.getInterfaceName(), newMapping);
         } else {
@@ -205,8 +204,8 @@ public class InterfaceAppsJdbcRepository implements InterfaceAppsRepository, Jdb
         List<InterfaceAppsIndexDomain> equals = interfaceAppsIndexMapper.queryModifyEquals(
             dataCenter, last);
         if (LOG.isInfoEnabled()) {
-            LOG.info("refresh lastTimestamp={}, equals={}, afters={},", last,
-                equals.size(), afters.size());
+            LOG.info("refresh lastTimestamp={}, equals={}, afters={},", last, equals.size(),
+                afters.size());
         }
 
         equals.addAll(afters);
