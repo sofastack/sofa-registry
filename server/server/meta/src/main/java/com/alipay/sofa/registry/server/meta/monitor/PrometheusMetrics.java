@@ -21,7 +21,7 @@ public class PrometheusMetrics {
         private static final Histogram SLOT_ARRANGE_HISTOGRAM    = Histogram
                 .build()
                 .namespace("meta")
-                .subsystem("slot.arrange")
+                .subsystem("slot_arrange")
                 .name(
                         "leader_migrating_secs")
                 .help(
@@ -102,9 +102,9 @@ public class PrometheusMetrics {
         private static final Gauge     HIGH_LEADER_MIGRATE        = Gauge
                 .build()
                 .namespace("meta")
-                .subsystem("slot.balancer")
+                .subsystem("slot_balancer")
                 .name(
-                        "high_leader_migrate_out")
+                        "high_leader_migrate")
                 .help(
                         "high leader migrate gauge")
                 .labelNames("from", "to", "slot")
@@ -113,9 +113,9 @@ public class PrometheusMetrics {
         private static final Gauge     HIGH_LEADER_UPGRADE        = Gauge
                 .build()
                 .namespace("meta")
-                .subsystem("slot.balancer")
+                .subsystem("slot_balancer")
                 .name(
-                        "high_leader_upgrade_out")
+                        "high_leader_upgrade")
                 .help(
                         "high leader upgrade gauge")
                 .labelNames("from", "to", "slot")
@@ -124,9 +124,9 @@ public class PrometheusMetrics {
         private static final Gauge     HIGH_FOLLOWER_BALANCE       = Gauge
                 .build()
                 .namespace("meta")
-                .subsystem("slot.balancer")
+                .subsystem("slot_balancer")
                 .name(
-                        "high_follower_out")
+                        "high_follower_balance")
                 .help(
                         "data to swap slot follower out")
                 .labelNames("from", "to", "slot")
@@ -135,9 +135,9 @@ public class PrometheusMetrics {
         private static final Gauge     LOW_FOLLOWER_BALANCE        = Gauge
                 .build()
                 .namespace("meta")
-                .subsystem("slot.balancer")
+                .subsystem("slot_balancer")
                 .name(
-                        "low_follower_in")
+                        "low_follower_balance")
                 .help(
                         "data to swap slot follower in")
                 .labelNames("from", "to", "slot")
@@ -146,9 +146,9 @@ public class PrometheusMetrics {
         private static final Gauge     LOW_LEADER_BALANCE       = Gauge
                 .build()
                 .namespace("meta")
-                .subsystem("slot.balancer")
+                .subsystem("slot_balancer")
                 .name(
-                        "low_leader_out")
+                        "low_leader_balance")
                 .help(
                         "data to swap slot leader out")
                 .labelNames("from", "to", "slot")
@@ -202,7 +202,7 @@ public class PrometheusMetrics {
         private static final Gauge     LEADER_ASSIGN_GAUGE           = Gauge
                 .build()
                 .namespace("meta")
-                .subsystem("slot.assign")
+                .subsystem("slot_assigner")
                 .name(
                         "assign_leader")
                 .help("leader assign")
@@ -212,7 +212,7 @@ public class PrometheusMetrics {
         private static final Gauge     FOLLOWER_ASSIGN_GAUGE         = Gauge
                 .build()
                 .namespace("meta")
-                .subsystem("slot.assign")
+                .subsystem("slot_assigner")
                 .name(
                         "assign_follower")
                 .help("follower assign")
