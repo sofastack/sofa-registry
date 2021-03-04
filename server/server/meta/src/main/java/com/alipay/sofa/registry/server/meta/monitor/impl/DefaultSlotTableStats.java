@@ -44,7 +44,7 @@ public class DefaultSlotTableStats extends AbstractLifecycle implements SlotTabl
 
     private final Map<Integer, SlotStats> slotStatses = Maps.newConcurrentMap();
 
-    private final ReadWriteLock lock = new ReentrantReadWriteLock();
+    private final ReadWriteLock           lock        = new ReentrantReadWriteLock();
 
     public DefaultSlotTableStats(SlotManager slotManager) {
         this.slotManager = slotManager;
@@ -83,11 +83,12 @@ public class DefaultSlotTableStats extends AbstractLifecycle implements SlotTabl
         try {
             lock.readLock().lock();
             for (Map.Entry<Integer, SlotStats> entry : slotStatses.entrySet()) {
-                Set<String> followers = slotManager.getSlotTable().getSlot(entry.getKey()).getFollowers();
+                Set<String> followers = slotManager.getSlotTable().getSlot(entry.getKey())
+                    .getFollowers();
                 for (String follower : followers) {
                     if (!entry.getValue().isFollowerStable(follower)) {
                         logger.warn("[isSlotFollowersStable]slot[{}] follower not stable {}",
-                                entry.getKey(), entry.getValue());
+                            entry.getKey(), entry.getValue());
                         return false;
                     }
                 }
@@ -110,10 +111,10 @@ public class DefaultSlotTableStats extends AbstractLifecycle implements SlotTabl
                 }
                 if (slotStats.getSlot().getLeaderEpoch() > slotStatus.getSlotLeaderEpoch()) {
                     logger
-                            .warn(
-                                    "[checkSlotStatuses] won't update slot status, slot[{}] leader-epoch[{}] is less than current[{}]",
-                                    slotId, slotStatus.getSlotLeaderEpoch(), slotStats.getSlot()
-                                            .getLeaderEpoch());
+                        .warn(
+                            "[checkSlotStatuses] won't update slot status, slot[{}] leader-epoch[{}] is less than current[{}]",
+                            slotId, slotStatus.getSlotLeaderEpoch(), slotStats.getSlot()
+                                .getLeaderEpoch());
                     continue;
                 }
                 if (slotStatus.getRole() == Slot.Role.Leader) {

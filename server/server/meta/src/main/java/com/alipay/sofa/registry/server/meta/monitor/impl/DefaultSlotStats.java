@@ -158,12 +158,13 @@ public class DefaultSlotStats implements SlotStats {
      */
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o)
+            return true;
+        if (o == null || getClass() != o.getClass())
+            return false;
         DefaultSlotStats that = (DefaultSlotStats) o;
-        return Objects.equals(slot, that.slot) &&
-                leaderStatus == that.leaderStatus &&
-                Objects.equals(followerLastSyncTimes, that.followerLastSyncTimes);
+        return Objects.equals(slot, that.slot) && leaderStatus == that.leaderStatus
+               && Objects.equals(followerLastSyncTimes, that.followerLastSyncTimes);
     }
 
     /**

@@ -78,7 +78,8 @@ public class DefaultSlotTableMonitor extends AbstractLifecycle implements SlotTa
     @Override
     protected void doInitialize() throws InitializeException {
         super.doInitialize();
-        recorders = Lists.newArrayList(new DiskSlotTableRecorder(), slotGenericResource, new DataSlotMetricsRecorder());
+        recorders = Lists.newArrayList(new DiskSlotTableRecorder(), slotGenericResource,
+            new DataSlotMetricsRecorder());
         slotTableStats = new DefaultSlotTableStats(slotManager);
         slotTableStats.initialize();
         scheduledTask = new WakeUpLoopRunnable() {
@@ -145,9 +146,7 @@ public class DefaultSlotTableMonitor extends AbstractLifecycle implements SlotTa
     public void onHeartbeat(HeartbeatRequest<DataNode> heartbeat) {
         long slotTableEpoch = heartbeat.getSlotTableEpoch();
         if (slotTableEpoch < slotManager.getSlotTable().getEpoch()) {
-            logger
-                .error(
-                    "[onHeartbeat] data[{}] lag", heartbeat.getNode().getIp());
+            logger.error("[onHeartbeat] data[{}] lag", heartbeat.getNode().getIp());
             return;
         }
         if (heartbeat.getSlotStatus() == null) {
