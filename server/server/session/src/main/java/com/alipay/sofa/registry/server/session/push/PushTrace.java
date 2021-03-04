@@ -40,6 +40,7 @@ public final class PushTrace {
     private long                    subscriberPushedVersion;
     private final String            subApp;
     private final InetSocketAddress subAddress;
+    private final boolean           noDelay;
 
     private long                    pushStartTimestamp;
 
@@ -62,16 +63,18 @@ public final class PushTrace {
     // push.finish - lastPub.registerTimestamp
     private long                    lastPubPushDelayMillis;
 
-    private PushTrace(SubDatum datum, InetSocketAddress address, String subApp) {
+    private PushTrace(SubDatum datum, InetSocketAddress address, String subApp, boolean noDelay) {
         this.datum = datum;
         this.modifyTimestamp = datum.getVersion() <= ValueConstants.DEFAULT_NO_DATUM_VERSION ? System
             .currentTimeMillis() : DatumVersionUtil.getRealTimestamp(datum.getVersion());
         this.subAddress = address;
         this.subApp = subApp;
+        this.noDelay = noDelay;
     }
 
-    public static PushTrace trace(SubDatum datum, InetSocketAddress address, String subApp) {
-        return new PushTrace(datum, address, subApp);
+    public static PushTrace trace(SubDatum datum, InetSocketAddress address, String subApp,
+                                  boolean noDelay) {
+        return new PushTrace(datum, address, subApp, noDelay);
     }
 
     public PushTrace startPush(long subscriberPushedVersion, long startPushTimestamp) {
@@ -90,9 +93,9 @@ public final class PushTrace {
         calc();
         LOGGER
             .info(
-                "{},{},{},{},{},pubTotal={},pubNew={},delay={},{},{},{},firstPubDelay={},lastPubDelay={},addr={}",
+                "{},{},{},{},{},noDelay={},pubTotal={},pubNew={},delay={},{},{},{},firstPubDelay={},lastPubDelay={},addr={}",
                 status, datum.getDataInfoId(), datum.getVersion(), subApp, datum.getDataCenter(),
-                datum.getPublishers().size(), newPublisherNum, datumTotalDelayMillis,
+                noDelay, datum.getPublishers().size(), newPublisherNum, datumTotalDelayMillis,
                 datumPushCommitSpanMillis, datumPushStartSpanMillis, datumPushFinishSpanMillis,
                 firstPubPushDelayMillis, lastPubPushDelayMillis, subAddress);
     }

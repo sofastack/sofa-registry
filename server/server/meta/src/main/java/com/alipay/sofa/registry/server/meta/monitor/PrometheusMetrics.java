@@ -1,3 +1,19 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package com.alipay.sofa.registry.server.meta.monitor;
 
 import com.alipay.sofa.registry.log.Logger;
@@ -14,21 +30,19 @@ public class PrometheusMetrics {
 
     public static final class SlotArrange {
 
-        private static final Logger LOGGER = LoggerFactory.getLogger(SlotArrange.class);
+        private static final Logger    LOGGER                 = LoggerFactory
+                                                                  .getLogger(SlotArrange.class);
 
-        private static long start = -1L;
+        private static long            start                  = -1L;
 
-        private static final Histogram SLOT_ARRANGE_HISTOGRAM    = Histogram
-                .build()
-                .namespace("meta")
-                .subsystem("slot_arrange")
-                .name(
-                        "leader_migrating_secs")
-                .help(
-                        "migrating in seconds.")
-                .buckets(3, 5, 10, 20, 30,
-                        60, 120, 180, 240)
-                .register();
+        private static final Histogram SLOT_ARRANGE_HISTOGRAM = Histogram
+                                                                  .build()
+                                                                  .namespace("meta")
+                                                                  .subsystem("slot_arrange")
+                                                                  .name("leader_migrating_secs")
+                                                                  .help("migrating in seconds.")
+                                                                  .buckets(3, 5, 10, 20, 30, 60,
+                                                                      120, 180, 240).register();
 
         public static void begin() {
             start = System.currentTimeMillis();
@@ -45,21 +59,22 @@ public class PrometheusMetrics {
 
     public static final class Heartbeat {
 
-        private static final Logger LOGGER = LoggerFactory.getLogger(Heartbeat.class);
+        private static final Logger LOGGER                   = LoggerFactory
+                                                                 .getLogger(Heartbeat.class);
 
-        private static final Gauge DATA_HEART_BEAT_GUAGE = Gauge.build().namespace("meta")
-                .subsystem("heartbeat")
-                .name("data_heartbeat")
-                .help("data heartbeat times")
-                .labelNames("data_server")
-                .register();
+        private static final Gauge  DATA_HEART_BEAT_GUAGE    = Gauge.build().namespace("meta")
+                                                                 .subsystem("heartbeat")
+                                                                 .name("data_heartbeat")
+                                                                 .help("data heartbeat times")
+                                                                 .labelNames("data_server")
+                                                                 .register();
 
-        private static final Gauge SESSION_HEART_BEAT_GUAGE = Gauge.build().namespace("meta")
-                .subsystem("heartbeat")
-                .name("session_heartbeat")
-                .help("session heartbeat times")
-                .labelNames("session_server")
-                .register();
+        private static final Gauge  SESSION_HEART_BEAT_GUAGE = Gauge.build().namespace("meta")
+                                                                 .subsystem("heartbeat")
+                                                                 .name("session_heartbeat")
+                                                                 .help("session heartbeat times")
+                                                                 .labelNames("session_server")
+                                                                 .register();
 
         public static void onDataHeartbeat(String dataServer) {
             try {
@@ -97,62 +112,48 @@ public class PrometheusMetrics {
 
     public static final class SlotBalance {
 
-        private static final Logger LOGGER = LoggerFactory.getLogger(SlotBalance.class);
+        private static final Logger LOGGER                = LoggerFactory
+                                                              .getLogger(SlotBalance.class);
 
-        private static final Gauge     HIGH_LEADER_MIGRATE        = Gauge
-                .build()
-                .namespace("meta")
-                .subsystem("slot_balancer")
-                .name(
-                        "high_leader_migrate")
-                .help(
-                        "high leader migrate gauge")
-                .labelNames("from", "to", "slot")
-                .register();
+        private static final Gauge  HIGH_LEADER_MIGRATE   = Gauge.build().namespace("meta")
+                                                              .subsystem("slot_balancer")
+                                                              .name("high_leader_migrate")
+                                                              .help("high leader migrate gauge")
+                                                              .labelNames("from", "to", "slot")
+                                                              .register();
 
-        private static final Gauge     HIGH_LEADER_UPGRADE        = Gauge
-                .build()
-                .namespace("meta")
-                .subsystem("slot_balancer")
-                .name(
-                        "high_leader_upgrade")
-                .help(
-                        "high leader upgrade gauge")
-                .labelNames("from", "to", "slot")
-                .register();
+        private static final Gauge  HIGH_LEADER_UPGRADE   = Gauge.build().namespace("meta")
+                                                              .subsystem("slot_balancer")
+                                                              .name("high_leader_upgrade")
+                                                              .help("high leader upgrade gauge")
+                                                              .labelNames("from", "to", "slot")
+                                                              .register();
 
-        private static final Gauge     HIGH_FOLLOWER_BALANCE       = Gauge
-                .build()
-                .namespace("meta")
-                .subsystem("slot_balancer")
-                .name(
-                        "high_follower_balance")
-                .help(
-                        "data to swap slot follower out")
-                .labelNames("from", "to", "slot")
-                .register();
+        private static final Gauge  HIGH_FOLLOWER_BALANCE = Gauge
+                                                              .build()
+                                                              .namespace("meta")
+                                                              .subsystem("slot_balancer")
+                                                              .name("high_follower_balance")
+                                                              .help(
+                                                                  "data to swap slot follower out")
+                                                              .labelNames("from", "to", "slot")
+                                                              .register();
 
-        private static final Gauge     LOW_FOLLOWER_BALANCE        = Gauge
-                .build()
-                .namespace("meta")
-                .subsystem("slot_balancer")
-                .name(
-                        "low_follower_balance")
-                .help(
-                        "data to swap slot follower in")
-                .labelNames("from", "to", "slot")
-                .register();
+        private static final Gauge  LOW_FOLLOWER_BALANCE  = Gauge
+                                                              .build()
+                                                              .namespace("meta")
+                                                              .subsystem("slot_balancer")
+                                                              .name("low_follower_balance")
+                                                              .help("data to swap slot follower in")
+                                                              .labelNames("from", "to", "slot")
+                                                              .register();
 
-        private static final Gauge     LOW_LEADER_BALANCE       = Gauge
-                .build()
-                .namespace("meta")
-                .subsystem("slot_balancer")
-                .name(
-                        "low_leader_balance")
-                .help(
-                        "data to swap slot leader out")
-                .labelNames("from", "to", "slot")
-                .register();
+        private static final Gauge  LOW_LEADER_BALANCE    = Gauge.build().namespace("meta")
+                                                              .subsystem("slot_balancer")
+                                                              .name("low_leader_balance")
+                                                              .help("data to swap slot leader out")
+                                                              .labelNames("from", "to", "slot")
+                                                              .register();
 
         public static void onLeaderUpgrade(String from, String to, int slotId) {
             try {
@@ -197,27 +198,22 @@ public class PrometheusMetrics {
 
     public static final class SlotAssign {
 
-        private static final Logger LOGGER = LoggerFactory.getLogger(SlotAssign.class);
+        private static final Logger LOGGER                = LoggerFactory
+                                                              .getLogger(SlotAssign.class);
 
-        private static final Gauge     LEADER_ASSIGN_GAUGE           = Gauge
-                .build()
-                .namespace("meta")
-                .subsystem("slot_assigner")
-                .name(
-                        "assign_leader")
-                .help("leader assign")
-                .labelNames("leader", "slot")
-                .register();
+        private static final Gauge  LEADER_ASSIGN_GAUGE   = Gauge.build().namespace("meta")
+                                                              .subsystem("slot_assigner")
+                                                              .name("assign_leader")
+                                                              .help("leader assign")
+                                                              .labelNames("leader", "slot")
+                                                              .register();
 
-        private static final Gauge     FOLLOWER_ASSIGN_GAUGE         = Gauge
-                .build()
-                .namespace("meta")
-                .subsystem("slot_assigner")
-                .name(
-                        "assign_follower")
-                .help("follower assign")
-                .labelNames("follower", "slot")
-                .register();
+        private static final Gauge  FOLLOWER_ASSIGN_GAUGE = Gauge.build().namespace("meta")
+                                                              .subsystem("slot_assigner")
+                                                              .name("assign_follower")
+                                                              .help("follower assign")
+                                                              .labelNames("follower", "slot")
+                                                              .register();
 
         public static void onSlotLeaderAssign(String dataServer, int slotId) {
             try {
@@ -238,27 +234,19 @@ public class PrometheusMetrics {
 
     public static final class DataSlot {
 
-        private static final Logger LOGGER = LoggerFactory.getLogger(DataSlot.class);
+        private static final Logger LOGGER                = LoggerFactory.getLogger(DataSlot.class);
 
-        private static final Gauge     LEADER_ASSIGN_GAUGE           = Gauge
-                .build()
-                .namespace("meta")
-                .subsystem("data")
-                .name(
-                        "leader_slot_number")
-                .help("leader slot number")
-                .labelNames("data_server")
-                .register();
+        private static final Gauge  LEADER_ASSIGN_GAUGE   = Gauge.build().namespace("meta")
+                                                              .subsystem("data")
+                                                              .name("leader_slot_number")
+                                                              .help("leader slot number")
+                                                              .labelNames("data_server").register();
 
-        private static final Gauge     FOLLOWER_ASSIGN_GAUGE         = Gauge
-                .build()
-                .namespace("meta")
-                .subsystem("data")
-                .name(
-                        "follower_slot_number")
-                .help("follower slot number")
-                .labelNames("data_server")
-                .register();
+        private static final Gauge  FOLLOWER_ASSIGN_GAUGE = Gauge.build().namespace("meta")
+                                                              .subsystem("data")
+                                                              .name("follower_slot_number")
+                                                              .help("follower slot number")
+                                                              .labelNames("data_server").register();
 
         public static void setLeaderNumbers(String dataServer, int leaderNum) {
             try {

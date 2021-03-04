@@ -153,7 +153,8 @@ public class DefaultSlotBalancer implements SlotBalancer {
                 slotTableBuilder.replaceLeader(slotId, newLeaderDataServer);
                 LOGGER.info("[upgradeHighLeaders] slotId={} leader balance from {} to {}", slotId,
                     highDataServer, newLeaderDataServer);
-                PrometheusMetrics.SlotBalance.onLeaderUpgrade(highDataServer, newLeaderDataServer, slotId);
+                PrometheusMetrics.SlotBalance.onLeaderUpgrade(highDataServer, newLeaderDataServer,
+                    slotId);
                 balanced++;
                 break;
             }
@@ -254,7 +255,8 @@ public class DefaultSlotBalancer implements SlotBalancer {
                         "upgradeLowLeaders, conflict leader=%d of %s and %s", slotId,
                         oldLeaderDataServer, replaceLeader));
                 }
-                PrometheusMetrics.SlotBalance.onLowLeaderReplace(oldLeaderDataServer, replaceLeader, slotId);
+                PrometheusMetrics.SlotBalance.onLowLeaderReplace(oldLeaderDataServer,
+                    replaceLeader, slotId);
                 LOGGER.info("[upgradeLowLeaders] slotId={} leader balance from {} to {}", slotId,
                     oldLeaderDataServer, lowDataServer);
                 balanced++;
@@ -442,7 +444,8 @@ public class DefaultSlotBalancer implements SlotBalancer {
                 slotTableBuilder.addFollower(followerSlot, newFollowerDataServer);
                 LOGGER.info("[balanceHighFollowerSlots] balance follower slotId={} from {} to {}",
                     followerSlot, highDataServer, newFollowerDataServer);
-                PrometheusMetrics.SlotBalance.onHighFollowerMigrate(highDataServer, newFollowerDataServer, followerSlot);
+                PrometheusMetrics.SlotBalance.onHighFollowerMigrate(highDataServer,
+                    newFollowerDataServer, followerSlot);
                 balanced++;
                 break;
             }
@@ -490,7 +493,8 @@ public class DefaultSlotBalancer implements SlotBalancer {
                 slotTableBuilder.addFollower(followerSlot, lowDataServer);
                 LOGGER.info("[balanceLowFollowerSlots] balance follower slotId={} from {} to {}",
                     followerSlot, oldFollowerDataServer, lowDataServer);
-                PrometheusMetrics.SlotBalance.onLowFollowerMigrate(oldFollowerDataServer, lowDataServer, followerSlot);
+                PrometheusMetrics.SlotBalance.onLowFollowerMigrate(oldFollowerDataServer,
+                    lowDataServer, followerSlot);
                 balanced++;
                 break;
             }

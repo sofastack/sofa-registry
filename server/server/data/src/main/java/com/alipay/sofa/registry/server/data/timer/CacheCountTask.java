@@ -22,6 +22,7 @@ import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.server.data.bootstrap.DataServerConfig;
 import com.alipay.sofa.registry.server.data.cache.DatumCache;
+import com.alipay.sofa.registry.util.ConcurrentUtils;
 import com.alipay.sofa.registry.util.NamedThreadFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -68,7 +69,10 @@ public class CacheCountTask {
                         for (List<Publisher> publishers : dataCenterEntry.getValue().values()) {
                             all.addAll(publishers);
                         }
-                        Map<String, Map<String, Map<String, Integer>>> counts = DataUtils.countGroupBy(all);
+                        Map<String, Map<String, Integer>> groupCounts = DataUtils.countGroupByInstanceIdGroup(all);
+                        printGroupCount(dataCenter, groupCounts);
+
+                        Map<String, Map<String, Map<String, Integer>>> counts = DataUtils.countGroupByInstanceIdGroupApp(all);
                         printCount(dataCenter, counts);
                     }
                 } else {
@@ -89,9 +93,22 @@ public class CacheCountTask {
                 final String group = groupCounts.getKey();
                 for (Entry<String, Integer> apps : groupCounts.getValue().entrySet()) {
                     final String app = apps.getKey();
-                    COUNT_LOGGER.info("{},{},{},{},{}", dataCenter, instanceId, group,
-                        app == null ? "" : app, apps.getValue());
+                    COUNT_LOGGER.info("[Pub]{},{},{},{},{}", dataCenter, instanceId, group, app,
+                        apps.getValue());
                 }
+                ConcurrentUtils.sleepUninterruptibly(100, TimeUnit.MILLISECONDS);
+            }
+        }
+    }
+
+    private static void printGroupCount(String dataCenter, Map<String, Map<String, Integer>> counts) {
+        for (Map.Entry<String, Map<String, Integer>> count : counts.entrySet()) {
+            final String instanceId = count.getKey();
+            Map<String, Integer> groupCounts = count.getValue();
+            for (Entry<String, Integer> groupCount : groupCounts.entrySet()) {
+                final String group = groupCount.getKey();
+                COUNT_LOGGER.info("[PubGroup]{},{},{},{},{}", dataCenter, instanceId, group,
+                    groupCount.getValue());
             }
         }
     }

@@ -26,6 +26,7 @@ import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
 import com.alipay.sofa.registry.server.session.store.DataStore;
 import com.alipay.sofa.registry.server.session.store.Interests;
 import com.alipay.sofa.registry.server.session.store.Watchers;
+import com.alipay.sofa.registry.util.ConcurrentUtils;
 import com.alipay.sofa.registry.util.NamedThreadFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -78,29 +79,59 @@ public class CacheCountTask {
 
     public void syncCount() {
         List<Publisher> pubs = sessionDataStore.getDataList();
-        Map<String, Map<String, Map<String, Integer>>> pubCounts = DataUtils.countGroupBy(pubs);
-        printCount("[Pub]", pubCounts);
-
         List<Subscriber> subs = sessionInterests.getDataList();
-        Map<String, Map<String, Map<String, Integer>>> subCounts = DataUtils.countGroupBy(subs);
-        printCount("[Sub]", subCounts);
-
         List<Watcher> wats = sessionWatchers.getDataList();
-        Map<String, Map<String, Map<String, Integer>>> watCounts = DataUtils.countGroupBy(wats);
-        printCount("[Wat]", watCounts);
+
+        Map<String, Map<String, Integer>> pubGroupCounts = DataUtils
+            .countGroupByInstanceIdGroup(pubs);
+        printInstanceIdGroupCount("[PubGroup]", pubGroupCounts);
+
+        Map<String, Map<String, Integer>> subGroupCounts = DataUtils
+            .countGroupByInstanceIdGroup(subs);
+        printInstanceIdGroupCount("[SubGroup]", subGroupCounts);
+
+        Map<String, Map<String, Integer>> watGroupCounts = DataUtils
+            .countGroupByInstanceIdGroup(wats);
+        printInstanceIdGroupCount("[WatGroup]", watGroupCounts);
+
+        Map<String, Map<String, Map<String, Integer>>> pubCounts = DataUtils
+            .countGroupByInstanceIdGroupApp(pubs);
+        printInstanceIdGroupAppCount("[Pub]", pubCounts);
+
+        Map<String, Map<String, Map<String, Integer>>> subCounts = DataUtils
+            .countGroupByInstanceIdGroupApp(subs);
+        printInstanceIdGroupAppCount("[Sub]", subCounts);
+
+        Map<String, Map<String, Map<String, Integer>>> watCounts = DataUtils
+            .countGroupByInstanceIdGroupApp(wats);
+        printInstanceIdGroupAppCount("[Wat]", watCounts);
+
     }
 
-    private static void printCount(String prefix,
-                                   Map<String, Map<String, Map<String, Integer>>> counts) {
+    private static void printInstanceIdGroupAppCount(String prefix,
+                                                     Map<String, Map<String, Map<String, Integer>>> counts) {
         for (Entry<String, Map<String, Map<String, Integer>>> count : counts.entrySet()) {
             final String instanceId = count.getKey();
             for (Entry<String, Map<String, Integer>> groupCounts : count.getValue().entrySet()) {
                 final String group = groupCounts.getKey();
                 for (Entry<String, Integer> apps : groupCounts.getValue().entrySet()) {
                     final String app = apps.getKey();
-                    COUNT_LOGGER.info("{},{},{},{},{}", prefix, instanceId, group, app == null ? ""
-                        : app, apps.getValue());
+                    COUNT_LOGGER.info("{}{},{},{},{}", prefix, instanceId, group, app,
+                        apps.getValue());
                 }
+                ConcurrentUtils.sleepUninterruptibly(100, TimeUnit.MILLISECONDS);
+            }
+        }
+    }
+
+    private static void printInstanceIdGroupCount(String prefix,
+                                                  Map<String, Map<String, Integer>> counts) {
+        for (Entry<String, Map<String, Integer>> count : counts.entrySet()) {
+            final String instanceId = count.getKey();
+            Map<String, Integer> groupCounts = count.getValue();
+            for (Entry<String, Integer> groups : groupCounts.entrySet()) {
+                final String group = groups.getKey();
+                COUNT_LOGGER.info("{}{},{},{}", prefix, instanceId, group, groups.getValue());
             }
         }
     }
