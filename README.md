@@ -1,6 +1,6 @@
 # SOFARegistry
 
-[![Java CI with Maven](https://github.com/sofastack/sofa-registry/actions/workflows/maven.yml/badge.svg)](https://github.com/NickNYU/sofa-registry/actions/workflows/maven.yml)
+[![Java CI with Maven](https://github.com/sofastack/sofa-registry/actions/workflows/maven.yml/badge.svg)](https://github.com/sofastack/sofa-registry/actions/workflows/maven.yml)
 ![license](https://img.shields.io/badge/license-Apache--2.0-green.svg)
 [![Coverage Status](https://codecov.io/gh/alipay/sofa-registry/branch/master/graph/badge.svg)](https://codecov.io/gh/sofastack/sofa-registry)
 ![maven](https://img.shields.io/github/release/sofastack/sofa-registry.svg)
