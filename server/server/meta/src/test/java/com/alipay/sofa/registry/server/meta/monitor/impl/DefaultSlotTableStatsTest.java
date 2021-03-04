@@ -165,7 +165,7 @@ public class DefaultSlotTableStatsTest extends AbstractTest {
             slotStatuses = Lists.newArrayList();
             for (int slotId = 0; slotId < SlotConfig.SLOT_NUM; slotId++) {
                 slotStatuses.add(new FollowerSlotStatus(slotId, System.currentTimeMillis(), node
-                        .getIp(), System.currentTimeMillis(), System.currentTimeMillis() - 1000));
+                    .getIp(), System.currentTimeMillis(), System.currentTimeMillis() - 1000));
             }
             slotTableStats.checkSlotStatuses(node, slotStatuses);
         }

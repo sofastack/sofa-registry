@@ -236,6 +236,12 @@ public class PushProcessor {
         return false;
     }
 
+    // check push empty, some group maybe could not tolerate push empty
+    protected boolean interruptOnPushEmpty(SubDatum datum, boolean noDelay, Subscriber sub,
+                                           InetSocketAddress addr) {
+        return false;
+    }
+
     class PushTask implements Runnable {
         final TraceID                 taskID;
         final long                    createTimestamp = System.currentTimeMillis();
@@ -262,7 +268,7 @@ public class PushProcessor {
             this.addr = addr;
             this.subscriberMap = subscriberMap;
             this.subscriber = subscriberMap.values().iterator().next();
-            this.trace = PushTrace.trace(datum, addr, subscriber.getAppName());
+            this.trace = PushTrace.trace(datum, addr, subscriber.getAppName(), noDelay);
             this.pushingTaskKey = new PushingTaskKey(subscriber.getDataInfoId(), addr,
                 subscriber.getScope(), subscriber.getClientVersion());
         }
@@ -291,6 +297,9 @@ public class PushProcessor {
 
             try {
                 if (!checkPushing(this, pushingTaskKey)) {
+                    return;
+                }
+                if (interruptOnPushEmpty(datum, noDelay, subscriber, addr)) {
                     return;
                 }
                 Object data = createPushData();
