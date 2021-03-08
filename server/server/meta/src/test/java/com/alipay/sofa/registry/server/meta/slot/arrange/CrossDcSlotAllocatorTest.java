@@ -140,36 +140,6 @@ public class CrossDcSlotAllocatorTest extends AbstractTest {
         verify(allocator, atLeast(2)).refreshSlotTable(anyInt());
     }
 
-    //run manually
-    @Test
-//    @Ignore
-    public void testRaftMechanismWorks() throws Exception {
-        RaftExchanger raftExchanger = startRaftExchanger();
-
-        allocator = spy(new CrossDcSlotAllocator(getDc(), scheduled, exchange, crossDcMetaServer, raftExchanger));
-        when(exchange.getClient(Exchange.META_SERVER_TYPE))
-                .thenReturn(getRpcClient(scheduled, 3, new TimeoutException("expected timeout")))
-                .thenReturn(getRpcClient(scheduled, 1,
-                        new SlotTable(System.currentTimeMillis(), Lists.newArrayList(
-                                new Slot(1, randomIp(), System.currentTimeMillis(), Lists.newArrayList(randomIp())),
-                                new Slot(2, randomIp(), System.currentTimeMillis(), Lists.newArrayList(randomIp())),
-                                new Slot(3, randomIp(), System.currentTimeMillis(), Lists.newArrayList(randomIp())),
-                                new Slot(4, randomIp(), System.currentTimeMillis(), Lists.newArrayList(randomIp()))
-                        ))));
-
-        LifecycleHelper.initializeIfPossible(allocator);
-        LifecycleHelper.startIfPossible(allocator);
-
-        allocator.refreshSlotTable(0);
-        waitConditionUntilTimeOut(()->allocator.getSlotTable() != null, 2000);
-        // wait for rpc safe quit
-        Thread.sleep(100);
-        Assert.assertNotNull(allocator.getSlotTable());
-        Assert.assertEquals(4, allocator.getSlotTable().getSlotIds().size());
-
-        raftExchanger.shutdown();
-    }
-
     @Test
     public void testDoInitialize() throws InitializeException {
         LifecycleHelper.initializeIfPossible(allocator);
