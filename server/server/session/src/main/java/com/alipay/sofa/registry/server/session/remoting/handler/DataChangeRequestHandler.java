@@ -23,7 +23,6 @@ import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.remoting.Channel;
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
-import com.alipay.sofa.registry.server.session.metadata.AppRevisionCacheRegistry;
 import com.alipay.sofa.registry.server.session.push.FirePushService;
 import com.alipay.sofa.registry.server.session.scheduler.ExecutorManager;
 import com.alipay.sofa.registry.server.session.store.Interests;
@@ -53,9 +52,6 @@ public class DataChangeRequestHandler extends AbstractClientHandler<DataChangeRe
 
     @Autowired
     private ExecutorManager          executorManager;
-
-    @Autowired
-    private AppRevisionCacheRegistry appRevisionCacheRegistry;
 
     @Autowired
     private FirePushService          firePushService;

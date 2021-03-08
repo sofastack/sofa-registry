@@ -107,7 +107,7 @@ public class CacheCountTask {
             Map<String, Integer> groupCounts = count.getValue();
             for (Entry<String, Integer> groupCount : groupCounts.entrySet()) {
                 final String group = groupCount.getKey();
-                COUNT_LOGGER.info("[PubGroup]{},{},{},{},{}", dataCenter, instanceId, group,
+                COUNT_LOGGER.info("[PubGroup]{},{},{},{}", dataCenter, instanceId, group,
                     groupCount.getValue());
             }
         }

@@ -60,9 +60,18 @@ public final class SubPublisher implements Serializable {
         return registerTimestamp;
     }
 
+    public int getDataBoxBytes() {
+        int bytes = 0;
+        for (ServerDataBox box : dataList) {
+            bytes += box.byteSize();
+        }
+        return bytes;
+    }
+
     @Override
     public String toString() {
-        return StringFormatter.format("SubPublisher{{},cell={},src={},datas={},ts={}}", clientId,
-            cell, srcAddressString, dataList.size(), registerTimestamp);
+        return StringFormatter
+            .format("SubPublisher{{},cell={},src={},datas={},bytes={},ts={}}", clientId, cell,
+                srcAddressString, dataList.size(), getDataBoxBytes(), registerTimestamp);
     }
 }
