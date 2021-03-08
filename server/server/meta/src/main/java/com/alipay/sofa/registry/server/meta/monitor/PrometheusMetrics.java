@@ -254,6 +254,12 @@ public class PrometheusMetrics {
                                                                 .help("data slot reporting stable data")
                                                                 .labelNames("data_server", "slot").register();
 
+        private static final Gauge DATA_SERVER_SLOT_LAG = Gauge.build().namespace("meta")
+                                                                .subsystem("data")
+                                                                .name("data_slot_epoch_lag")
+                                                                .help("data slot is lagging")
+                                                                .labelNames("data_server").register();
+
         public static void setLeaderNumbers(String dataServer, int leaderNum) {
             try {
                 LEADER_ASSIGN_GAUGE.labels(dataServer).set(leaderNum);
@@ -276,6 +282,18 @@ public class PrometheusMetrics {
             } catch (Throwable throwable) {
                 LOGGER.error("[setDataReportStable]", throwable);
             }
+        }
+
+        public static void setDataServerSlotLagTimes(String dataServer, int times) {
+            try {
+                DATA_SERVER_SLOT_LAG.labels(dataServer).set(times);
+            } catch (Throwable throwable) {
+                LOGGER.error("[setDataReportStable]", throwable);
+            }
+        }
+
+        public static int getDataServerSlotLagTimes(String dataServer) {
+            return (int) DATA_SERVER_SLOT_LAG.labels(dataServer).get();
         }
     }
 
