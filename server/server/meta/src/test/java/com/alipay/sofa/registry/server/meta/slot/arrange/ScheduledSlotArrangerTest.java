@@ -19,13 +19,22 @@ package com.alipay.sofa.registry.server.meta.slot.arrange;
 import com.alipay.sofa.registry.common.model.slot.SlotTable;
 import com.alipay.sofa.registry.exception.SofaRegistrySlotTableException;
 import com.alipay.sofa.registry.server.meta.AbstractTest;
+import com.alipay.sofa.registry.server.meta.lease.data.DataServerManager;
+import com.alipay.sofa.registry.server.meta.lease.data.DefaultDataServerManager;
+import com.alipay.sofa.registry.server.meta.monitor.SlotTableMonitor;
+import com.alipay.sofa.registry.server.meta.resource.SlotTableResource;
 import com.alipay.sofa.registry.server.meta.slot.SlotAssigner;
 import com.alipay.sofa.registry.server.meta.slot.SlotBalancer;
+import com.alipay.sofa.registry.server.meta.slot.manager.DefaultSlotManager;
+import com.alipay.sofa.registry.server.meta.slot.manager.LocalSlotManager;
 import com.alipay.sofa.registry.server.meta.slot.util.builder.SlotTableBuilder;
 import com.google.common.collect.Lists;
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.CyclicBarrier;
@@ -38,9 +47,26 @@ public class ScheduledSlotArrangerTest extends AbstractTest {
 
     private ScheduledSlotArranger slotArranger;
 
+    private SlotTableResource slotTableResource;
+
+    @Mock
+    private DefaultSlotManager defaultSlotManager;
+
+    @Mock
+    private DefaultDataServerManager dataServerManager;
+
+    @Mock
+    private LocalSlotManager localSlotManager;
+
+    @Mock
+    private SlotTableMonitor slotTableMonitor;
+
+
     @Before
     public void beforeScheduledSlotArrangerTest() {
-        slotArranger = spy(new ScheduledSlotArranger());
+        MockitoAnnotations.initMocks(this);
+        slotArranger = spy(new ScheduledSlotArranger(dataServerManager,
+                localSlotManager, defaultSlotManager, slotTableMonitor));
     }
 
     @Test
@@ -74,46 +100,36 @@ public class ScheduledSlotArrangerTest extends AbstractTest {
         Assert.assertEquals(1, counter.get());
     }
 
-    //    @Test(expected = SofaRegistrySlotTableException.class)
-    //    public void testAssignSlots() {
-    //        slotArranger = new ScheduledSlotArranger() {
-    //            @Override
-    //            protected SlotAssigner createSlotAssigner() {
-    //                return new SlotAssigner() {
-    //                    @Override
-    //                    public SlotTable assign() {
-    //                        SlotTable slotTable = randomSlotTable();
-    //                        SlotTableBuilder stb = new SlotTableBuilder(16, 2);
-    //                        stb.init(slotTable, Lists.newArrayList(slotTable.getDataServers()));
-    //                        stb.getOrCreate(0).getFollowers().clear();
-    //                        stb.getOrCreate(0).getFollowers().add(slotTable.getSlot(0).getLeader());
-    //                        return stb.build();
-    //                    }
-    //                };
-    //            }
-    //        };
-    //        slotArranger.assignSlots();
-    //    }
-    //
-    //    @Test(expected = SofaRegistrySlotTableException.class)
-    //    public void testBalanceSlots() {
-    //        slotArranger = new ScheduledSlotArranger() {
-    //            @Override
-    //            protected SlotBalancer createSlotBalancer() {
-    //                return new SlotBalancer() {
-    //                    @Override
-    //                    public SlotTable balance() {
-    //                        SlotTable slotTable = randomSlotTable();
-    //                        SlotTableBuilder stb = new SlotTableBuilder(16, 2);
-    //                        stb.init(slotTable, Lists.newArrayList(slotTable.getDataServers()));
-    //                        stb.getOrCreate(0).getFollowers().clear();
-    //                        stb.getOrCreate(0).getFollowers().add(slotTable.getSlot(0).getLeader());
-    //                        return stb.build();
-    //                    }
-    //                };
-    //            }
-    //        };
-    //        slotArranger.balanceSlots();
-    //    }
+    @Test
+    public void testStopStartReconcile() throws Exception {
+        slotTableResource = new SlotTableResource(defaultSlotManager,
+                localSlotManager, dataServerManager, slotArranger);
+        slotArranger.postConstruct();
+        Assert.assertEquals("running", slotTableResource.getReconcileStatus().getMessage());
+
+        slotTableResource.stopSlotTableReconcile();
+        Assert.assertEquals("stopped", slotTableResource.getReconcileStatus().getMessage());
+
+        slotTableResource.startSlotTableReconcile();
+        Assert.assertEquals("running", slotTableResource.getReconcileStatus().getMessage());
+    }
+
+    @Ignore
+    @Test
+    public void testLongTermStopped() throws Exception {
+        slotTableResource = new SlotTableResource(defaultSlotManager,
+                localSlotManager, dataServerManager, slotArranger);
+        slotArranger.postConstruct();
+        Assert.assertEquals("running", slotTableResource.getReconcileStatus().getMessage());
+
+        slotTableResource.stopSlotTableReconcile();
+        Assert.assertEquals("stopped", slotTableResource.getReconcileStatus().getMessage());
+
+        for(int i = 0; i < 100; i++) {
+            Thread.sleep(1000);
+            Assert.assertEquals("stopped", slotTableResource.getReconcileStatus().getMessage());
+        }
+
+    }
 
 }
