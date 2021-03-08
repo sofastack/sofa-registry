@@ -20,6 +20,7 @@ import com.alipay.sofa.registry.common.model.metaserver.nodes.DataNode;
 import com.alipay.sofa.registry.common.model.slot.*;
 import com.alipay.sofa.registry.exception.InitializeException;
 import com.alipay.sofa.registry.lifecycle.impl.AbstractLifecycle;
+import com.alipay.sofa.registry.server.meta.monitor.PrometheusMetrics;
 import com.alipay.sofa.registry.server.meta.monitor.SlotStats;
 import com.alipay.sofa.registry.server.meta.monitor.SlotTableStats;
 import com.alipay.sofa.registry.server.meta.slot.SlotManager;
@@ -66,9 +67,11 @@ public class DefaultSlotTableStats extends AbstractLifecycle implements SlotTabl
     public boolean isSlotLeadersStable() {
         try {
             lock.readLock().lock();
-            for (Map.Entry<Integer, SlotStats> entry : slotStatses.entrySet()) {
-                SlotStats slotStats = entry.getValue();
-                if (!slotStats.isLeaderStable()) {
+            for (int slotId = 0; slotId < SlotConfig.SLOT_NUM; slotId++) {
+                String leader = slotManager.getSlotTable().getSlot(slotId).getLeader();
+                SlotStats slotStats = slotStatses.get(slotId);
+                if (!slotStats.getSlot().getLeader().equals(leader) || !slotStatses.get(slotId).isLeaderStable()) {
+                    logger.warn("[isSlotLeadersStable]slot[{}] leader[{}] not stable", slotId, leader);
                     return false;
                 }
             }
@@ -117,9 +120,27 @@ public class DefaultSlotTableStats extends AbstractLifecycle implements SlotTabl
                                 .getLeaderEpoch());
                     continue;
                 }
+                if (!slotStats.getSlot().equals(slotManager.getSlotTable().getSlot(slotId))) {
+                    logger.error("[checkSlotStatuses] slot reported by data({}) is not equals with mine({}), not update",
+                            slotStats.getSlot(), slotManager.getSlotTable().getSlot(slotId));
+                    continue;
+                }
+
                 if (slotStatus.getRole() == Slot.Role.Leader) {
+                    if (!slotStats.getSlot().getLeader().equals(node.getIp())) {
+                        logger.error("[checkSlotStatuses] slot leader({}) is not equal with reported data-server({})",
+                                slotStats.getSlot().getLeader(), node.getIp());
+                        PrometheusMetrics.DataSlot.setDataReportStable(node.getIp(), slotId);
+                        continue;
+                    }
                     slotStats.updateLeaderState((LeaderSlotStatus) slotStatus);
                 } else {
+                    if (!slotStats.getSlot().getFollowers().contains(node.getIp())) {
+                        logger.error("[checkSlotStatuses] slot follower({}) is not containing reported data-server({})",
+                                slotStats.getSlot().getFollowers(), node.getIp());
+                        PrometheusMetrics.DataSlot.setDataReportStable(node.getIp(), slotId);
+                        continue;
+                    }
                     slotStats.updateFollowerState((FollowerSlotStatus) slotStatus);
                 }
             }

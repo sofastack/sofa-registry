@@ -108,8 +108,9 @@ public class ScheduledSlotArrangerTest extends AbstractTest {
         Assert.assertEquals("running", slotTableResource.getReconcileStatus().getMessage());
     }
 
-    @Ignore
-    @Test
+    //manually run
+//    @Ignore
+//    @Test
     public void testLongTermStopped() throws Exception {
         slotTableResource = new SlotTableResource(defaultSlotManager,
                 localSlotManager, dataServerManager, slotArranger);
