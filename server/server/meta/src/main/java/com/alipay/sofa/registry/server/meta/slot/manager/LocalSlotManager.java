@@ -20,7 +20,6 @@ import com.alipay.sofa.registry.common.model.metaserver.nodes.DataNode;
 import com.alipay.sofa.registry.common.model.slot.DataNodeSlot;
 import com.alipay.sofa.registry.common.model.slot.SlotConfig;
 import com.alipay.sofa.registry.common.model.slot.SlotTable;
-import com.alipay.sofa.registry.common.model.store.URL;
 import com.alipay.sofa.registry.exception.InitializeException;
 import com.alipay.sofa.registry.jraft.command.CommandCodec;
 import com.alipay.sofa.registry.jraft.processor.SnapshotProcess;
@@ -71,7 +70,7 @@ public class LocalSlotManager extends AbstractLifecycleObservable implements Slo
     private final AtomicReference<SlotTable> currentSlotTable   = new AtomicReference<>(
                                                                     SlotTable.INIT);
 
-    private Map<DataNode, DataNodeSlot>      reverseMap         = ImmutableMap.of();
+    private Map<String, DataNodeSlot>        reverseMap         = ImmutableMap.of();
 
     public LocalSlotManager() {
     }
@@ -122,11 +121,11 @@ public class LocalSlotManager extends AbstractLifecycleObservable implements Slo
     }
 
     private void refreshReverseMap(SlotTable slotTable) {
-        Map<DataNode, DataNodeSlot> newMap = Maps.newHashMap();
+        Map<String, DataNodeSlot> newMap = Maps.newHashMap();
         List<DataNodeSlot> dataNodeSlots = slotTable.transfer(null, false);
         dataNodeSlots.forEach(dataNodeSlot -> {
             try {
-                newMap.put(new DataNode(new URL(dataNodeSlot.getDataNode()), nodeConfig.getLocalDataCenter()), dataNodeSlot);
+                newMap.put(dataNodeSlot.getDataNode(), dataNodeSlot);
             } catch (Exception e) {
                 logger.error("[refreshReverseMap][{}]", dataNodeSlot.getDataNode(), e);
             }
@@ -150,8 +149,7 @@ public class LocalSlotManager extends AbstractLifecycleObservable implements Slo
         try {
             // here we ignore port for data-node, as when store the reverse-map, we lose the port information
             // besides, port is not matter here
-            DataNodeSlot target = reverseMap.get(new DataNode(new URL(dataNode.getIp()), dataNode
-                .getDataCenter()));
+            DataNodeSlot target = reverseMap.get(dataNode.getIp());
             if (target == null) {
                 return new DataNodeSlot(dataNode.getIp());
             }
