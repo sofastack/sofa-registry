@@ -172,10 +172,14 @@ public class DefaultSlotTableMonitorTest extends AbstractTest {
     @Test
     public void testReportDataServerLag() {
         String ip = randomIp();
-        monitor.onHeartbeat(new HeartbeatRequest<DataNode>(new DataNode(randomURL(ip), getDc()), -1L, getDc(), System.currentTimeMillis(),
-                new SlotConfig.SlotBasicInfo(SlotConfig.SLOT_NUM, SlotConfig.SLOT_REPLICAS, SlotConfig.FUNC), Lists.newArrayList()));
-        monitor.onHeartbeat(new HeartbeatRequest<DataNode>(new DataNode(randomURL(ip), getDc()), -1L, getDc(), System.currentTimeMillis(),
-                new SlotConfig.SlotBasicInfo(SlotConfig.SLOT_NUM, SlotConfig.SLOT_REPLICAS, SlotConfig.FUNC), Lists.newArrayList()));
+        monitor.onHeartbeat(new HeartbeatRequest<DataNode>(new DataNode(randomURL(ip), getDc()),
+            -1L, getDc(), System.currentTimeMillis(), new SlotConfig.SlotBasicInfo(
+                SlotConfig.SLOT_NUM, SlotConfig.SLOT_REPLICAS, SlotConfig.FUNC), Lists
+                .newArrayList()));
+        monitor.onHeartbeat(new HeartbeatRequest<DataNode>(new DataNode(randomURL(ip), getDc()),
+            -1L, getDc(), System.currentTimeMillis(), new SlotConfig.SlotBasicInfo(
+                SlotConfig.SLOT_NUM, SlotConfig.SLOT_REPLICAS, SlotConfig.FUNC), Lists
+                .newArrayList()));
         Assert.assertTrue(PrometheusMetrics.DataSlot.getDataServerSlotLagTimes(ip) > 1);
     }
 }
