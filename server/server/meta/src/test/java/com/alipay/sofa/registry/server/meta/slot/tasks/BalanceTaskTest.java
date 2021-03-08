@@ -17,13 +17,18 @@
 package com.alipay.sofa.registry.server.meta.slot.tasks;
 
 import com.alipay.sofa.registry.common.model.metaserver.nodes.DataNode;
+import com.alipay.sofa.registry.common.model.slot.SlotConfig;
 import com.alipay.sofa.registry.common.model.slot.SlotTable;
 import com.alipay.sofa.registry.common.model.store.URL;
 import com.alipay.sofa.registry.server.meta.AbstractTest;
 import com.alipay.sofa.registry.server.meta.bootstrap.config.NodeConfig;
 import com.alipay.sofa.registry.server.meta.lease.data.DefaultDataServerManager;
+import com.alipay.sofa.registry.server.meta.slot.SlotAssigner;
 import com.alipay.sofa.registry.server.meta.slot.SlotManager;
+import com.alipay.sofa.registry.server.meta.slot.assigner.DefaultSlotAssigner;
 import com.alipay.sofa.registry.server.meta.slot.manager.LocalSlotManager;
+import com.alipay.sofa.registry.server.meta.slot.util.builder.SlotTableBuilder;
+import com.alipay.sofa.registry.server.shared.util.NodeUtils;
 import com.alipay.sofa.registry.util.JsonUtils;
 import org.assertj.core.util.Lists;
 import org.junit.Assert;
@@ -94,5 +99,21 @@ public class BalanceTaskTest extends AbstractTest {
         task = new BalanceTask(localSlotManager, raftSlotManager, dataServerManager);
         task.run();
         verify(raftSlotManager, never()).refresh(any(SlotTable.class));
+    }
+
+    @Test
+    public void testSlotEpochCorrect() {
+        List<DataNode> dataNodes = randomDataNodes(3);
+        SlotTable prev = randomSlotTable(dataNodes);
+        localSlotManager.refresh(prev);
+
+        when(dataServerManager.getClusterMembers()).thenReturn(dataNodes);
+        task = new BalanceTask(localSlotManager, raftSlotManager, dataServerManager);
+        task.run();
+
+        SlotTable current = localSlotManager.getSlotTable();
+        for (int slotId = 0; slotId < SlotConfig.SLOT_NUM; slotId++) {
+            Assert.assertTrue(prev.getSlot(slotId).getLeaderEpoch() < current.getSlot(slotId).getLeaderEpoch());
+        }
     }
 }
