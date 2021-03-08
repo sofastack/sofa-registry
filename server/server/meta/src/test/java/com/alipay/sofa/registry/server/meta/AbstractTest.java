@@ -780,6 +780,16 @@ public class AbstractTest {
 
         private AtomicInteger nextFollower = new AtomicInteger(1);
 
+        public SlotTableGenerator setNextLeader(int nextLeader) {
+            this.nextLeader.set(nextLeader);
+            return this;
+        }
+
+        public SlotTableGenerator setNextFollower(int nextFollower) {
+            this.nextFollower.set(nextFollower);
+            return this;
+        }
+
         private DataNode getNextLeader() {
             return dataNodes.get(nextLeader.getAndIncrement() % dataNodes.size());
         }
