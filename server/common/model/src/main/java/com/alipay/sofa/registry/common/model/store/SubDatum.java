@@ -85,10 +85,18 @@ public final class SubDatum implements Serializable {
         return publishers.isEmpty();
     }
 
+    public int getDataBoxBytes() {
+        int bytes = 0;
+        for (SubPublisher p : publishers) {
+            bytes += p.getDataBoxBytes();
+        }
+        return bytes;
+    }
+
     @Override
     public String toString() {
-        return StringFormatter.format("SubDatum{{},{},{},{}}", dataInfoId, dataCenter, version,
-            publishers.size());
+        return StringFormatter.format("SubDatum{{},{},{},num={},bytes={}}", dataInfoId, dataCenter,
+            version, publishers.size(), getDataBoxBytes());
     }
 
     public static SubDatum intern(SubDatum datum) {

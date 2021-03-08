@@ -20,8 +20,6 @@ import com.alipay.sofa.registry.common.model.slot.BaseSlotStatus;
 import com.alipay.sofa.registry.common.model.slot.FollowerSlotStatus;
 import com.alipay.sofa.registry.common.model.slot.LeaderSlotStatus;
 import com.alipay.sofa.registry.common.model.slot.Slot;
-import com.alipay.sofa.registry.log.Logger;
-import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.server.meta.monitor.SlotStats;
 import com.google.common.collect.Maps;
 import org.apache.commons.lang.StringUtils;
@@ -35,9 +33,6 @@ import java.util.Objects;
  * Jan 28, 2021
  */
 public class DefaultSlotStats implements SlotStats {
-
-    private final static Logger                  LOGGER                = LoggerFactory
-                                                                           .getLogger(DefaultSlotStats.class);
 
     public final static long                     MAX_SYNC_GAP          = Long
                                                                            .getLong(
