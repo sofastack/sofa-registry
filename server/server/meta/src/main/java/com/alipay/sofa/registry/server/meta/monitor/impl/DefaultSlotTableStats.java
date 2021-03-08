@@ -119,6 +119,12 @@ public class DefaultSlotTableStats extends AbstractLifecycle implements SlotTabl
                             slotId, slotStatus.getSlotLeaderEpoch(), slotStats.getSlot()
                                 .getLeaderEpoch());
                     continue;
+                } else if (slotStats.getSlot().getLeaderEpoch() < slotStatus.getSlotLeaderEpoch()) {
+                    PrometheusMetrics.DataSlot.setDataSlotGreaterThanMeta(node.getIp(), slotId);
+                    logger.error(
+                                    "[checkSlotStatuses] won't update slot status, slot[{}] leader-epoch[{}] reported by data({}) is more than current[{}]",
+                                    slotId, slotStatus.getSlotLeaderEpoch(), node.getIp(), slotStats.getSlot().getLeaderEpoch());
+                    continue;
                 }
                 if (!slotStats.getSlot().equals(slotManager.getSlotTable().getSlot(slotId))) {
                     logger.error("[checkSlotStatuses] slot reported by data({}) is not equals with mine({}), not update",
