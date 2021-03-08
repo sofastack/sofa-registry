@@ -16,19 +16,13 @@
  */
 package com.alipay.sofa.registry.server.meta.slot.arrange;
 
-import com.alipay.sofa.registry.common.model.slot.SlotTable;
-import com.alipay.sofa.registry.exception.SofaRegistrySlotTableException;
 import com.alipay.sofa.registry.server.meta.AbstractTest;
-import com.alipay.sofa.registry.server.meta.lease.data.DataServerManager;
 import com.alipay.sofa.registry.server.meta.lease.data.DefaultDataServerManager;
 import com.alipay.sofa.registry.server.meta.monitor.SlotTableMonitor;
 import com.alipay.sofa.registry.server.meta.resource.SlotTableResource;
-import com.alipay.sofa.registry.server.meta.slot.SlotAssigner;
-import com.alipay.sofa.registry.server.meta.slot.SlotBalancer;
 import com.alipay.sofa.registry.server.meta.slot.manager.DefaultSlotManager;
 import com.alipay.sofa.registry.server.meta.slot.manager.LocalSlotManager;
-import com.alipay.sofa.registry.server.meta.slot.util.builder.SlotTableBuilder;
-import com.google.common.collect.Lists;
+
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Ignore;

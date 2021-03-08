@@ -90,7 +90,7 @@ public class SlotTableResource {
     public CommonResponse stopSlotTableReconcile() {
         logger.info("[stopSlotTableReconcile] begin");
         try {
-            slotArranger.stop();
+            slotArranger.suspend();
             logger.info("[stopSlotTableReconcile] end with succeed");
             return GenericResponse.buildSuccessResponse("succeed");
         } catch (Throwable throwable) {
@@ -105,7 +105,7 @@ public class SlotTableResource {
     public CommonResponse startSlotTableReconcile() {
         logger.info("[startSlotTableReconcile] begin");
         try {
-            slotArranger.start();
+            slotArranger.resume();
             logger.info("[startSlotTableReconcile] end with succeed");
             return GenericResponse.buildSuccessResponse("succeed");
         } catch (Throwable throwable) {
@@ -120,7 +120,7 @@ public class SlotTableResource {
     public CommonResponse getReconcileStatus() {
         logger.info("[getReconcileStatus] begin");
         try {
-            boolean result = slotArranger.getLifecycleState().isStarted();
+            boolean result = slotArranger.getLifecycleState().isStarted() && !slotArranger.isSuspended();
             logger.info("[getReconcileStatus] end with succeed");
             if (result) {
                 return GenericResponse.buildSuccessResponse("running");
