@@ -106,7 +106,7 @@ public class BalanceTask implements RebalanceTask {
     private Map<Integer, Slot> generateSlotMap() {
         Map<Integer, Slot> slotMap = Maps.newHashMap();
         for (int i = 0; i < localSlotManager.getSlotNums(); i++) {
-            long epoch = System.currentTimeMillis();
+            long epoch = DatumVersionUtil.nextId();
             String leader = getNextLeader().getIp();
             List<String> followers = Lists.newArrayList();
             for (int j = 0; j < localSlotManager.getSlotReplicaNums() - 1; j++) {
