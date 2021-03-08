@@ -234,37 +234,50 @@ public class PrometheusMetrics {
 
     public static final class DataSlot {
 
-        private static final Logger LOGGER                = LoggerFactory.getLogger(DataSlot.class);
+        private static final Logger LOGGER                       = LoggerFactory
+                                                                     .getLogger(DataSlot.class);
 
-        private static final Gauge  LEADER_ASSIGN_GAUGE   = Gauge.build().namespace("meta")
-                                                              .subsystem("data")
-                                                              .name("leader_slot_number")
-                                                              .help("leader slot number")
-                                                              .labelNames("data_server").register();
+        private static final Gauge  LEADER_ASSIGN_GAUGE          = Gauge.build().namespace("meta")
+                                                                     .subsystem("data")
+                                                                     .name("leader_slot_number")
+                                                                     .help("leader slot number")
+                                                                     .labelNames("data_server")
+                                                                     .register();
 
-        private static final Gauge  FOLLOWER_ASSIGN_GAUGE = Gauge.build().namespace("meta")
-                                                              .subsystem("data")
-                                                              .name("follower_slot_number")
-                                                              .help("follower slot number")
-                                                              .labelNames("data_server").register();
+        private static final Gauge  FOLLOWER_ASSIGN_GAUGE        = Gauge.build().namespace("meta")
+                                                                     .subsystem("data")
+                                                                     .name("follower_slot_number")
+                                                                     .help("follower slot number")
+                                                                     .labelNames("data_server")
+                                                                     .register();
 
-        private static final Gauge  STABLE_DATA_SLOT = Gauge.build().namespace("meta")
-                                                                .subsystem("data")
-                                                                .name("stable_data_slot")
-                                                                .help("data slot reporting stable data")
-                                                                .labelNames("data_server", "slot").register();
+        private static final Gauge  STABLE_DATA_SLOT             = Gauge
+                                                                     .build()
+                                                                     .namespace("meta")
+                                                                     .subsystem("data")
+                                                                     .name("stable_data_slot")
+                                                                     .help(
+                                                                         "data slot reporting stable data")
+                                                                     .labelNames("data_server",
+                                                                         "slot").register();
 
-        private static final Gauge DATA_SERVER_SLOT_LAG = Gauge.build().namespace("meta")
-                                                                .subsystem("data")
-                                                                .name("data_slot_epoch_lag")
-                                                                .help("data slot is lagging")
-                                                                .labelNames("data_server").register();
+        private static final Gauge  DATA_SERVER_SLOT_LAG         = Gauge.build().namespace("meta")
+                                                                     .subsystem("data")
+                                                                     .name("data_slot_epoch_lag")
+                                                                     .help("data slot is lagging")
+                                                                     .labelNames("data_server")
+                                                                     .register();
 
-        private static final Gauge DATA_EPOCH_GREATER_THAN_META = Gauge.build().namespace("meta")
-                .subsystem("data")
-                .name("epoch_greater_than_meta")
-                .help("data slot leader epoch is greater than meta")
-                .labelNames("data_server", "slot").register();
+        private static final Gauge  DATA_EPOCH_GREATER_THAN_META = Gauge
+                                                                     .build()
+                                                                     .namespace("meta")
+                                                                     .subsystem("data")
+                                                                     .name(
+                                                                         "epoch_greater_than_meta")
+                                                                     .help(
+                                                                         "data slot leader epoch is greater than meta")
+                                                                     .labelNames("data_server",
+                                                                         "slot").register();
 
         public static void setLeaderNumbers(String dataServer, int leaderNum) {
             try {
