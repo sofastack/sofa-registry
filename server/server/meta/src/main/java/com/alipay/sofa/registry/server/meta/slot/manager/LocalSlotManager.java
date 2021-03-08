@@ -20,7 +20,6 @@ import com.alipay.sofa.registry.common.model.metaserver.nodes.DataNode;
 import com.alipay.sofa.registry.common.model.slot.DataNodeSlot;
 import com.alipay.sofa.registry.common.model.slot.SlotConfig;
 import com.alipay.sofa.registry.common.model.slot.SlotTable;
-import com.alipay.sofa.registry.common.model.store.URL;
 import com.alipay.sofa.registry.exception.InitializeException;
 import com.alipay.sofa.registry.jraft.command.CommandCodec;
 import com.alipay.sofa.registry.jraft.processor.SnapshotProcess;
