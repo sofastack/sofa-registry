@@ -22,6 +22,7 @@ import com.alipay.sofa.registry.exception.DisposeException;
 import com.alipay.sofa.registry.exception.InitializeException;
 import com.alipay.sofa.registry.exception.SofaRegistrySlotTableException;
 import com.alipay.sofa.registry.jraft.bootstrap.ServiceStateMachine;
+import com.alipay.sofa.registry.lifecycle.Suspendable;
 import com.alipay.sofa.registry.lifecycle.impl.LifecycleHelper;
 import com.alipay.sofa.registry.observer.Observable;
 import com.alipay.sofa.registry.observer.impl.AbstractLifecycleObservable;
@@ -60,7 +61,7 @@ import java.util.concurrent.locks.ReentrantLock;
  * Jan 14, 2021
  */
 public class ScheduledSlotArranger extends AbstractLifecycleObservable implements
-                                                                      DataManagerObserver {
+                                                                      DataManagerObserver, Suspendable {
 
     @Autowired
     private DefaultDataServerManager dataServerManager;
@@ -190,6 +191,21 @@ public class ScheduledSlotArranger extends AbstractLifecycleObservable implement
         return new DefaultSlotBalancer(slotTableBuilder, currentDataServers);
     }
 
+    @Override
+    public void suspend() {
+        arranger.suspend();
+    }
+
+    @Override
+    public void resume() {
+        arranger.resume();
+    }
+
+    @Override
+    public boolean isSuspended() {
+        return arranger.isSuspended();
+    }
+
     private final class Arranger extends WakeUpLoopRunnable {
 
         private final int waitingMillis = Integer.getInteger("slot.arrange.interval.milli", 1000);
@@ -202,10 +218,6 @@ public class ScheduledSlotArranger extends AbstractLifecycleObservable implement
         @Override
         public void runUnthrowable() {
             try {
-                if (!getLifecycleState().isStarted() && !getLifecycleState().isStarting()) {
-                    logger.warn("[Arranger][runUnthrowable] not start running, quit");
-                    return;
-                }
                 arrangeSync();
             } catch (Throwable e) {
                 logger.error("failed to arrange", e);

@@ -16,6 +16,7 @@
  */
 package com.alipay.sofa.registry.util;
 
+import com.alipay.sofa.registry.lifecycle.Suspendable;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 
@@ -24,10 +25,12 @@ import com.alipay.sofa.registry.log.LoggerFactory;
  * @author yuzhi.lyz
  * @version v 0.1 2020-11-30 16:51 yuzhi.lyz Exp $
  */
-public abstract class LoopRunnable implements Runnable {
+public abstract class LoopRunnable implements Runnable, Suspendable {
     private static final Logger LOGGER   = LoggerFactory.getLogger(LoopRunnable.class);
 
     private volatile boolean    isClosed = false;
+
+    private volatile boolean    isSuspend = false;
 
     public abstract void runUnthrowable();
 
@@ -41,6 +44,21 @@ public abstract class LoopRunnable implements Runnable {
         isClosed = true;
     }
 
+    @Override
+    public void suspend() {
+        this.isSuspend = true;
+    }
+
+    @Override
+    public void resume() {
+        this.isSuspend = false;
+    }
+
+    @Override
+    public boolean isSuspended() {
+        return isSuspend;
+    }
+
     public void run() {
         LOGGER.info("loop-run started {}", this.getClass().getSimpleName());
         try {
@@ -48,6 +66,10 @@ public abstract class LoopRunnable implements Runnable {
                 if (isClosed) {
                     LOGGER.warn("[closed] quit");
                     return;
+                }
+                if (isSuspend) {
+                    LOGGER.warn("[suspend] break");
+                    break;
                 }
                 try {
                     runUnthrowable();
