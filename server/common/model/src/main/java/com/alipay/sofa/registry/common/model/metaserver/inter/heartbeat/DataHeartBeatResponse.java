@@ -16,6 +16,7 @@
  */
 package com.alipay.sofa.registry.common.model.metaserver.inter.heartbeat;
 
+import com.alipay.sofa.registry.common.model.metaserver.cluster.VersionedList;
 import com.alipay.sofa.registry.common.model.metaserver.nodes.MetaNode;
 import com.alipay.sofa.registry.common.model.metaserver.nodes.SessionNode;
 import com.alipay.sofa.registry.common.model.slot.SlotTable;
@@ -29,9 +30,13 @@ import java.util.List;
  */
 public class DataHeartBeatResponse extends BaseHeartBeatResponse {
 
-    public DataHeartBeatResponse(long metaServerEpoch, SlotTable slotTable,
-                                 List<MetaNode> metaNodes, long sessionServerEpoch,
-                                 List<SessionNode> sessionNodes) {
-        super(metaServerEpoch, slotTable, metaNodes, sessionServerEpoch, sessionNodes);
+
+    public DataHeartBeatResponse(VersionedList<MetaNode> metaNodes, SlotTable slotTable, String metaLeader, long metaLeaderEpoch) {
+        super(metaNodes, slotTable, metaLeader, metaLeaderEpoch);
+    }
+
+    public DataHeartBeatResponse(VersionedList<MetaNode> metaNodes, SlotTable slotTable, VersionedList<SessionNode> sessionNodes,
+                                 String metaLeader, long metaLeaderEpoch) {
+        super(metaNodes, slotTable, sessionNodes, metaLeader, metaLeaderEpoch);
     }
 }

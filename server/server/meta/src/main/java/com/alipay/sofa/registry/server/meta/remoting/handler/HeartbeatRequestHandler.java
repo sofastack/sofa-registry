@@ -18,6 +18,7 @@ package com.alipay.sofa.registry.server.meta.remoting.handler;
 
 import com.alipay.sofa.registry.common.model.GenericResponse;
 import com.alipay.sofa.registry.common.model.Node;
+import com.alipay.sofa.registry.common.model.metaserver.cluster.VersionedList;
 import com.alipay.sofa.registry.common.model.metaserver.inter.heartbeat.BaseHeartBeatResponse;
 import com.alipay.sofa.registry.common.model.metaserver.inter.heartbeat.DataHeartBeatResponse;
 import com.alipay.sofa.registry.common.model.metaserver.inter.heartbeat.HeartbeatRequest;
@@ -32,15 +33,20 @@ import com.alipay.sofa.registry.common.model.slot.SlotTable;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.remoting.Channel;
+import com.alipay.sofa.registry.server.meta.MetaLeaderService;
 import com.alipay.sofa.registry.server.meta.bootstrap.config.NodeConfig;
+import com.alipay.sofa.registry.server.meta.bootstrap.handler.DataServerHandler;
+import com.alipay.sofa.registry.server.meta.bootstrap.handler.SessionServerHandler;
 import com.alipay.sofa.registry.server.meta.metaserver.impl.DefaultCurrentDcMetaServer;
 import com.alipay.sofa.registry.server.meta.monitor.data.DataMessageListener;
 import com.alipay.sofa.registry.server.meta.monitor.heartbeat.HeartbeatListener;
 import com.alipay.sofa.registry.server.meta.monitor.session.SessionMessageListener;
+import com.alipay.sofa.registry.server.meta.slot.SlotManager;
 import com.alipay.sofa.registry.server.meta.slot.manager.DefaultSlotManager;
 import com.alipay.sofa.registry.server.shared.slot.SlotTableUtils;
 import org.glassfish.jersey.internal.guava.Sets;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
 import java.util.List;
 import java.util.Set;
@@ -50,16 +56,21 @@ import java.util.Set;
  * @author shangyu.wh
  * @version $Id: RenewNodesRequestHandler.java, v 0.1 2018-03-30 19:58 shangyu.wh Exp $
  */
-public class HeartbeatRequestHandler extends MetaServerHandler<HeartbeatRequest<Node>> {
+@Component
+public class HeartbeatRequestHandler extends BaseMetaServerHandler<HeartbeatRequest<Node>>
+        implements SessionServerHandler, DataServerHandler {
 
     private static final Logger          logger = LoggerFactory
                                                     .getLogger(HeartbeatRequestHandler.class);
 
     @Autowired
-    private DefaultCurrentDcMetaServer   currentDcMetaServer;
+    private DefaultCurrentDcMetaServer currentDcMetaServer;
 
     @Autowired
-    private DefaultSlotManager           defaultSlotManager;
+    private SlotManager slotManager;
+
+    @Autowired
+    private MetaLeaderService metaLeaderService;
 
     @Autowired(required = false)
     private List<DataMessageListener>    dataMessageListeners;
@@ -90,26 +101,24 @@ public class HeartbeatRequestHandler extends MetaServerHandler<HeartbeatRequest<
                     .fillFailed("slot-table not valid, check meta-server log for detail");
             }
             BaseHeartBeatResponse response = null;
-            // TODO the epoch and the nodes is not atomic
-            final long metaEpoch = currentDcMetaServer.getEpoch();
-            final List<MetaNode> metaNodes = currentDcMetaServer.getClusterMembers();
 
-            final long sessionEpoch = currentDcMetaServer.getSessionServerManager().getEpoch();
-            final List<SessionNode> sessionNodes = currentDcMetaServer.getSessionServerManager()
-                .getClusterMembers();
+            final VersionedList<MetaNode> metaServerInfo = currentDcMetaServer.getClusterMeta();
+            final VersionedList<SessionNode> sessionMetaInfo = currentDcMetaServer.getSessionServerManager()
+                .getSessionServerMetaInfo();
 
             switch (renewNode.getNodeType()) {
                 case SESSION:
-                    response = new SessionHeartBeatResponse(metaEpoch, slotTable, metaNodes,
-                        sessionEpoch, sessionNodes);
+                    response = new SessionHeartBeatResponse(metaServerInfo, slotTable, sessionMetaInfo,
+                            metaLeaderService.getLeader(), metaLeaderService.getLeaderEpoch());
                     break;
                 case DATA:
                     slotTable = transferDataNodeSlotToSlotTable((DataNode) renewNode, slotTable);
-                    response = new DataHeartBeatResponse(metaEpoch, slotTable, metaNodes,
-                        sessionEpoch, sessionNodes);
+                    response = new DataHeartBeatResponse(metaServerInfo, slotTable, sessionMetaInfo,
+                            metaLeaderService.getLeader(), metaLeaderService.getLeaderEpoch());
                     break;
                 case META:
-                    response = new BaseHeartBeatResponse(metaEpoch, slotTable, metaNodes);
+                    response = new BaseHeartBeatResponse(metaServerInfo, slotTable,
+                            metaLeaderService.getLeader(), metaLeaderService.getLeaderEpoch());
                     break;
                 default:
                     break;
@@ -174,7 +183,7 @@ public class HeartbeatRequestHandler extends MetaServerHandler<HeartbeatRequest<
     }
 
     private SlotTable transferDataNodeSlotToSlotTable(DataNode node, SlotTable slotTable) {
-        DataNodeSlot dataNodeSlot = defaultSlotManager.getDataNodeManagedSlot(node, false);
+        DataNodeSlot dataNodeSlot = slotManager.getDataNodeManagedSlot(node.getIp(), false);
         Set<Slot> result = Sets.newHashSet();
         dataNodeSlot.getLeaders().forEach(leaderSlotId->result.add(slotTable.getSlot(leaderSlotId)));
         dataNodeSlot.getFollowers().forEach(followerSlotId->result.add(slotTable.getSlot(followerSlotId)));
@@ -306,7 +315,7 @@ public class HeartbeatRequestHandler extends MetaServerHandler<HeartbeatRequest<
      * @return the set default slot manager
      */
     public HeartbeatRequestHandler setDefaultSlotManager(DefaultSlotManager defaultSlotManager) {
-        this.defaultSlotManager = defaultSlotManager;
+        this.slotManager = defaultSlotManager;
         return this;
     }
 
@@ -340,6 +349,28 @@ public class HeartbeatRequestHandler extends MetaServerHandler<HeartbeatRequest<
      */
     public HeartbeatRequestHandler setNodeConfig(NodeConfig nodeConfig) {
         this.nodeConfig = nodeConfig;
+        return this;
+    }
+
+    /**
+     * Sets set slot manager.
+     *
+     * @param slotManager the slot manager
+     * @return the set slot manager
+     */
+    public HeartbeatRequestHandler setSlotManager(SlotManager slotManager) {
+        this.slotManager = slotManager;
+        return this;
+    }
+
+    /**
+     * Sets set meta leader elector.
+     *
+     * @param metaLeaderElector the meta leader elector
+     * @return the set meta leader elector
+     */
+    public HeartbeatRequestHandler setMetaLeaderElector(MetaLeaderService metaLeaderElector) {
+        this.metaLeaderService = metaLeaderElector;
         return this;
     }
 }

@@ -28,10 +28,19 @@ import com.alipay.sofa.registry.server.meta.MetaApplication;
 import com.alipay.sofa.registry.server.meta.bootstrap.MetaServerBootstrap;
 import com.alipay.sofa.registry.server.session.SessionApplication;
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerBootstrap;
+import com.alipay.sofa.registry.util.FileUtils;
 import com.alipay.sofa.registry.util.PropertySplitter;
+import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang.StringUtils;
+import org.apache.logging.log4j.util.Strings;
 import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.context.ConfigurableApplicationContext;
 
+import java.io.*;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
 import java.util.Collection;
 
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
@@ -54,6 +63,8 @@ public class RegistryApplication {
     private static ConfigurableApplicationContext dataApplicationContext;
 
     public static void main(String[] args) throws Exception {
+        System.setProperty("spring.profiles.active", "integrate");
+        System.setProperty("lease.duration", "2");
         // setup DefaultUncaughtExceptionHandler
         Thread.setDefaultUncaughtExceptionHandler((t, e) -> {
             LOGGER.error(String.format("UncaughtException in Thread(%s): %s", t.getName(), e.getMessage()), e);
@@ -65,6 +76,11 @@ public class RegistryApplication {
 
         // get all server address list
         Collection<String> serverList = getServerList(commonContext);
+
+        String driver = commonContext.getEnvironment().getProperty("jdbc.driverClassName");
+        if ("org.h2.Driver".equals(driver)) {
+            createTables(commonContext);
+        }
 
         // start meta
         SpringApplicationBuilder springApplicationBuilder = new SpringApplicationBuilder(MetaApplication.class);
@@ -153,5 +169,127 @@ public class RegistryApplication {
 
     public static ConfigurableApplicationContext getDataApplicationContext() {
         return dataApplicationContext;
+    }
+
+    public static FileInputStream openInputStream(File file) throws IOException {
+        if (file.exists()) {
+            if (file.isDirectory()) {
+                throw new IOException("File '" + file
+                        + "' exists but is a directory");
+            }
+            if (!file.canRead()) {
+                throw new IOException("File '" + file + "' cannot be read");
+            }
+        } else {
+            throw new FileNotFoundException("File '" + file
+                    + "' does not exist");
+        }
+        return new FileInputStream(file);
+    }
+
+    private static void createTables(ConfigurableApplicationContext commonContext) throws ClassNotFoundException, SQLException, IOException {
+        String driver = commonContext.getEnvironment().getProperty("jdbc.driverClassName");
+        Class.forName(driver);
+        String url = commonContext.getEnvironment().getProperty("jdbc.url");
+        String username = commonContext.getEnvironment().getProperty("jdbc.username");
+        String password = commonContext.getEnvironment().getProperty("jdbc.password");
+        Connection connection = null;
+        try {
+            connection = DriverManager.getConnection(url, username, password);
+            executeSqlScript(connection, readFileAsString("sql/h2/create_table.sql"));
+        } finally {
+            if (connection != null) {
+                connection.close();
+            }
+        }
+    }
+
+    public static String readFileAsString(String fileName) throws IOException{
+
+        try(InputStream ins = getFileInputStream(fileName)){
+            String fileContent = IOUtils.toString(ins);
+            return fileContent;
+        }
+    }
+
+    public static InputStream getFileInputStream(String fileName) throws FileNotFoundException{
+
+        return getFileInputStream("./", fileName, FileUtils.class);
+    }
+
+    public static InputStream getFileInputStream(String path, String fileName, Class<?> clazz) throws FileNotFoundException{
+
+        File f = null;
+        if(path != null){
+            f = new File(path+ "/" + fileName);
+            if(f.exists()){
+                try {
+                    LOGGER.info("[getFileInputStream]{}", f.getAbsolutePath());
+                    return new FileInputStream(f);
+                } catch (IOException e) {
+                    throw new IllegalArgumentException("file load fail:" + f, e);
+                }
+            }
+        }
+
+        //try file
+        f = new File(fileName);
+        if(f.exists()){
+            try {
+                LOGGER.info("[getFileInputStream]{}", f.getAbsolutePath());
+                return new FileInputStream(f);
+            } catch (IOException e) {
+                throw new IllegalArgumentException("file load fail:" + f, e);
+            }
+        }
+
+        //try classpath
+        java.net.URL url = clazz.getResource(fileName);
+        if(url == null){
+            url = clazz.getClassLoader().getResource(fileName);
+        }
+        if(url != null){
+            try {
+                LOGGER.info("[load]{}", url);
+                return url.openStream();
+            } catch (IOException e) {
+                throw new IllegalArgumentException("classpath load fail:" + url, e);
+            }
+        }
+
+        throw new FileNotFoundException(path + ","  + fileName);
+    }
+
+    protected static void executeSqlScript(Connection connection, String prepareSql) throws SQLException {
+        if (StringUtils.isEmpty(prepareSql)) {
+            return;
+        }
+        java.sql.Connection conn = connection;
+        PreparedStatement stmt = null;
+        try {
+            conn.setAutoCommit(false);
+            if (!Strings.isEmpty(prepareSql)) {
+                for (String sql : prepareSql.split(";")) {
+                    LOGGER.debug("[setup][data]{}", sql.trim());
+                    stmt = conn.prepareStatement(sql);
+                    stmt.executeUpdate();
+                }
+            }
+            conn.commit();
+
+        } catch (Exception ex) {
+            LOGGER.error("[SetUpTestDataSource][fail]:", ex);
+            if (null != conn) {
+                conn.rollback();
+            }
+        } finally {
+            if (null != stmt) {
+                stmt.close();
+            }
+            if (null != conn) {
+                conn.setAutoCommit(true);
+                conn.close();
+            }
+        }
     }
 }

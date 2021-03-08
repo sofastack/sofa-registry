@@ -18,15 +18,19 @@ package com.alipay.sofa.registry.jdbc.config;
 
 import com.alibaba.druid.filter.logging.Slf4jLogFilter;
 import com.alibaba.druid.pool.DruidDataSourceFactory;
+import com.alipay.sofa.registry.jdbc.elector.MetaJdbcLeaderElector;
 import com.alipay.sofa.registry.jdbc.repository.batch.AppRevisionHeartbeatBatchCallable;
 import com.alipay.sofa.registry.jdbc.repository.batch.InterfaceAppBatchQueryCallable;
 import com.alipay.sofa.registry.jdbc.repository.batch.AppRevisionBatchQueryCallable;
 import com.alipay.sofa.registry.jdbc.repository.impl.AppRevisionHeartbeatJdbcRepository;
 import com.alipay.sofa.registry.jdbc.repository.impl.AppRevisionJdbcRepository;
 import com.alipay.sofa.registry.jdbc.repository.impl.InterfaceAppsJdbcRepository;
+import com.alipay.sofa.registry.jdbc.repository.impl.ProvideDataJdbcRepository;
+import com.alipay.sofa.registry.store.api.meta.ProvideDataRepository;
 import com.alipay.sofa.registry.store.api.repository.AppRevisionHeartbeatRepository;
 import com.alipay.sofa.registry.store.api.repository.AppRevisionRepository;
 import com.alipay.sofa.registry.store.api.repository.InterfaceAppsRepository;
+import com.alipay.sofa.registry.util.SystemUtils;
 import org.apache.ibatis.session.SqlSessionFactory;
 import org.mybatis.spring.SqlSessionFactoryBean;
 import org.mybatis.spring.annotation.MapperScan;
@@ -36,7 +40,6 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
 import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 import org.springframework.transaction.support.TransactionTemplate;
-
 import javax.sql.DataSource;
 import java.util.Properties;
 
@@ -82,10 +85,10 @@ public class JdbcConfiguration {
         public DataSource dataSource(JdbcDriverConfig jdbcDriverConfig, Slf4jLogFilter logFilter)
                                                                                                  throws Exception {
             Properties props = new Properties();
-            props.put(PROP_DRIVERCLASSNAME, jdbcDriverConfig.getDriverClassName());
-            props.put(PROP_URL, jdbcDriverConfig.getUrl());
-            props.put(PROP_USERNAME, jdbcDriverConfig.getUsername());
-            props.put(PROP_PASSWORD, jdbcDriverConfig.getPassword());
+            props.put(PROP_DRIVERCLASSNAME, SystemUtils.getSystem(PROP_DRIVERCLASSNAME, jdbcDriverConfig.getDriverClassName()));
+            props.put(PROP_URL, SystemUtils.getSystem(PROP_URL, jdbcDriverConfig.getUrl()));
+            props.put(PROP_USERNAME, SystemUtils.getSystem(PROP_USERNAME, jdbcDriverConfig.getUsername()));
+            props.put(PROP_PASSWORD, SystemUtils.getSystem(PROP_PASSWORD, jdbcDriverConfig.getPassword()));
 
             // todo connection pool config
             props.put(PROP_MINIDLE, jdbcDriverConfig.getMinIdle() + "");
@@ -144,6 +147,11 @@ public class JdbcConfiguration {
         public MetadataConfig metadataConfig() {
             return new MetadataConfigBean();
         }
+
+        @Bean
+        public MetaElectorConfig metaElectorConfig() {
+            return new MetaElectorConfigBean();
+        }
     }
 
     @Configuration
@@ -165,6 +173,30 @@ public class JdbcConfiguration {
         @Bean
         public AppRevisionHeartbeatRepository appRevisionHeartbeatJdbcRepository() {
             return new AppRevisionHeartbeatJdbcRepository();
+        }
+
+        @Bean
+        public MetaJdbcLeaderElector jdbcLeaderElector() {
+            return new MetaJdbcLeaderElector();
+        }
+
+        @Bean
+        public MetaJdbcLeaderElector.ElectorRoleService leaderService(MetaJdbcLeaderElector leaderElector) {
+            MetaJdbcLeaderElector.LeaderService leaderService = leaderElector.new LeaderService();
+            leaderElector.addElectorRoleService(leaderService);
+            return leaderService;
+        }
+
+        @Bean
+        public MetaJdbcLeaderElector.ElectorRoleService followService(MetaJdbcLeaderElector leaderElector) {
+            MetaJdbcLeaderElector.FollowService followService = leaderElector.new FollowService();
+            leaderElector.addElectorRoleService(followService);
+            return followService;
+        }
+
+        @Bean
+        public ProvideDataRepository provideDataJdbcRepository() {
+            return new ProvideDataJdbcRepository();
         }
 
         /**

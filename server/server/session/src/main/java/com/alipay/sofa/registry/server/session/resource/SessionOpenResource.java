@@ -41,7 +41,7 @@ public class SessionOpenResource {
     private SessionServerConfig sessionServerConfig;
 
     @Autowired
-    private MetaServerService   metaNodeService;
+    private MetaServerService metaNodeService;
 
     @Autowired
     private SlotTableCache      slotTableCache;

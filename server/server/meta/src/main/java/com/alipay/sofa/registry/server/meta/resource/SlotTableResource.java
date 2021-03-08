@@ -19,13 +19,12 @@ package com.alipay.sofa.registry.server.meta.resource;
 import com.alipay.sofa.registry.common.model.CommonResponse;
 import com.alipay.sofa.registry.common.model.GenericResponse;
 import com.alipay.sofa.registry.common.model.slot.SlotTable;
-import com.alipay.sofa.registry.jraft.bootstrap.ServiceStateMachine;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
-import com.alipay.sofa.registry.server.meta.lease.data.DefaultDataServerManager;
+import com.alipay.sofa.registry.server.meta.MetaLeaderService;
+import com.alipay.sofa.registry.server.meta.lease.data.DataServerManager;
+import com.alipay.sofa.registry.server.meta.slot.SlotManager;
 import com.alipay.sofa.registry.server.meta.slot.arrange.ScheduledSlotArranger;
-import com.alipay.sofa.registry.server.meta.slot.manager.DefaultSlotManager;
-import com.alipay.sofa.registry.server.meta.slot.manager.LocalSlotManager;
 import com.alipay.sofa.registry.server.meta.slot.tasks.BalanceTask;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -46,27 +45,26 @@ public class SlotTableResource {
     private final Logger             logger = LoggerFactory.getLogger(getClass());
 
     @Autowired
-    private DefaultSlotManager       defaultSlotManager;
+    private SlotManager slotManager;
 
     @Autowired
-    private LocalSlotManager         slotManager;
-
-    @Autowired
-    private DefaultDataServerManager dataServerManager;
+    private DataServerManager dataServerManager;
 
     @Autowired
     private ScheduledSlotArranger    slotArranger;
+
+    @Autowired
+    private MetaLeaderService metaLeaderService;
 
     @PUT
     @Path("force/refresh")
     @Produces(MediaType.APPLICATION_JSON)
     public GenericResponse<SlotTable> forceRefreshSlotTable() {
         logger.info("[forceRefreshSlotTable] begin");
-        if (ServiceStateMachine.getInstance().isLeader()) {
+        if (metaLeaderService.amILeader()) {
             if (slotArranger.tryLock()) {
                 try {
-                    BalanceTask task = new BalanceTask(slotManager,
-                        defaultSlotManager.getRaftSlotManager(), dataServerManager);
+                    BalanceTask task = new BalanceTask(slotManager, dataServerManager);
                     task.run();
                     logger.info("[forceRefreshSlotTable] end with succeed");
                     return new GenericResponse<SlotTable>().fillSucceed(slotManager.getSlotTable());
@@ -151,12 +149,13 @@ public class SlotTableResource {
     public SlotTableResource() {
     }
 
-    public SlotTableResource(DefaultSlotManager defaultSlotManager, LocalSlotManager slotManager,
-                             DefaultDataServerManager dataServerManager,
-                             ScheduledSlotArranger slotArranger) {
-        this.defaultSlotManager = defaultSlotManager;
+    public SlotTableResource(SlotManager slotManager,
+                             DataServerManager dataServerManager,
+                             ScheduledSlotArranger slotArranger,
+                             MetaLeaderService metaLeaderService) {
         this.slotManager = slotManager;
         this.dataServerManager = dataServerManager;
         this.slotArranger = slotArranger;
+        this.metaLeaderService = metaLeaderService;
     }
 }

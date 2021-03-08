@@ -23,16 +23,16 @@ import java.io.Serializable;
  * @version : LoadbalanceMetrics.java, v 0.1 2020年05月27日 2:29 下午 xiangxu Exp $
  */
 public class LoadbalanceMetrics implements Serializable {
-    private int connectionCount;
+	private int connectionCount;
 
-    public LoadbalanceMetrics() {
-    }
+	public LoadbalanceMetrics() {
+	}
 
-    public int getConnectionCount() {
-        return connectionCount;
-    }
+	public int getConnectionCount() {
+		return connectionCount;
+	}
 
-    public void setConnectionCount(int connectionCount) {
-        this.connectionCount = connectionCount;
-    }
+	public void setConnectionCount(int connectionCount) {
+		this.connectionCount = connectionCount;
+	}
 }

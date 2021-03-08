@@ -21,14 +21,16 @@ import com.alipay.sofa.registry.common.model.metaserver.inter.heartbeat.Heartbea
 import com.alipay.sofa.registry.common.model.metaserver.inter.heartbeat.SessionHeartBeatResponse;
 import com.alipay.sofa.registry.common.model.metaserver.nodes.SessionNode;
 import com.alipay.sofa.registry.common.model.slot.SlotConfig;
+import com.alipay.sofa.registry.common.model.slot.SlotTable;
 import com.alipay.sofa.registry.common.model.store.URL;
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
 import com.alipay.sofa.registry.server.session.remoting.DataNodeExchanger;
-import com.alipay.sofa.registry.server.session.remoting.MetaNodeExchanger;
 import com.alipay.sofa.registry.server.session.slot.SlotTableCache;
 import com.alipay.sofa.registry.server.shared.env.ServerEnv;
 import com.alipay.sofa.registry.server.shared.meta.AbstractMetaServerService;
 import org.springframework.beans.factory.annotation.Autowired;
+
+import java.util.Set;
 
 /**
  * @author yuzhi.lyz
@@ -46,9 +48,6 @@ public final class MetaServerServiceImpl extends
     @Autowired
     private DataNodeExchanger   dataNodeExchanger;
 
-    @Autowired
-    private MetaNodeExchanger   metaNodeExchanger;
-
     @Override
     protected long getCurrentSlotTableEpoch() {
         return slotTableCache.getEpoch();
@@ -56,11 +55,16 @@ public final class MetaServerServiceImpl extends
 
     @Override
     protected void handleRenewResult(SessionHeartBeatResponse result) {
-        metaNodeExchanger.setServerIps(result.getMetaNodesMap().keySet());
-        dataNodeExchanger.setServerIps(getDataServerList());
-        dataNodeExchanger.notifyConnectServerAsync();
-
-        slotTableCache.updateSlotTable(result.getSlotTable());
+        Set<String> dataServerList = getDataServerList();
+        if (dataServerList != null && !dataServerList.isEmpty()) {
+            dataNodeExchanger.setServerIps(dataServerList);
+            dataNodeExchanger.notifyConnectServerAsync();
+        }
+        if (result.getSlotTable() != null && result.getSlotTable() != SlotTable.INIT) {
+            slotTableCache.updateSlotTable(result.getSlotTable());
+        } else {
+            LOGGER.warn("[handleRenewResult] no slot table result");
+        }
     }
 
     @Override
@@ -68,7 +72,7 @@ public final class MetaServerServiceImpl extends
         return new HeartbeatRequest(createNode(), slotTableCache.getEpoch(),
             sessionServerConfig.getSessionServerDataCenter(), System.currentTimeMillis(),
             new SlotConfig.SlotBasicInfo(SlotConfig.SLOT_NUM, SlotConfig.SLOT_REPLICAS,
-                SlotConfig.FUNC));
+                SlotConfig.FUNC)).setSlotTable(slotTableCache.currentSlotTable());
     }
 
     private Node createNode() {

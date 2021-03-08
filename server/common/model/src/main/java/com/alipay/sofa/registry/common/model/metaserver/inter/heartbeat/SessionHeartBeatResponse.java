@@ -16,6 +16,7 @@
  */
 package com.alipay.sofa.registry.common.model.metaserver.inter.heartbeat;
 
+import com.alipay.sofa.registry.common.model.metaserver.cluster.VersionedList;
 import com.alipay.sofa.registry.common.model.metaserver.nodes.MetaNode;
 import com.alipay.sofa.registry.common.model.metaserver.nodes.SessionNode;
 import com.alipay.sofa.registry.common.model.slot.SlotTable;
@@ -29,19 +30,8 @@ import java.util.List;
  */
 public class SessionHeartBeatResponse extends BaseHeartBeatResponse {
 
-    /**
-     * Constructor.
-     *
-     * @param metaServerEpoch the meta server epoch
-     * @param slotTable       the slot table
-     * @param metaNodes       the meta nodes
-     * @param sessionNodes    the session nodes
-     * @param sessionServerEpoch    the session epoch
-     */
-    public SessionHeartBeatResponse(long metaServerEpoch, SlotTable slotTable,
-                                    List<MetaNode> metaNodes, long sessionServerEpoch,
-                                    List<SessionNode> sessionNodes) {
-        super(metaServerEpoch, slotTable, metaNodes, sessionServerEpoch, sessionNodes);
+    public SessionHeartBeatResponse(VersionedList<MetaNode> metaNodes, SlotTable slotTable,
+                                    VersionedList<SessionNode> sessionNodes, String metaLeader, long metaLeaderEpoch) {
+        super(metaNodes, slotTable, sessionNodes, metaLeader, metaLeaderEpoch);
     }
-
 }

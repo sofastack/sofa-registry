@@ -24,9 +24,10 @@ import com.alipay.sofa.registry.common.model.store.DataInfo;
 import com.alipay.sofa.registry.core.model.Result;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
+import com.alipay.sofa.registry.server.meta.bootstrap.config.NodeConfig;
 import com.alipay.sofa.registry.server.meta.provide.data.DefaultProvideDataNotifier;
-import com.alipay.sofa.registry.store.api.DBService;
-import com.alipay.sofa.registry.jraft.annotation.RaftReference;
+import com.alipay.sofa.registry.store.api.meta.ProvideDataRepository;
+import com.alipay.sofa.registry.util.JsonUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import javax.ws.rs.POST;
@@ -48,11 +49,14 @@ public class BlacklistDataResource {
     private static final Logger        TASK_LOGGER = LoggerFactory.getLogger(
                                                        BlacklistDataResource.class, "[Task]");
 
-    @RaftReference
-    private DBService                  persistenceDataDBService;
+    @Autowired
+    private ProvideDataRepository provideDataRepository;
 
     @Autowired
     private DefaultProvideDataNotifier provideDataNotifier;
+
+    @Autowired
+    private NodeConfig nodeConfig;
 
     /**
      * update blacklist
@@ -65,8 +69,8 @@ public class BlacklistDataResource {
         PersistenceData persistenceData = createDataInfo();
         persistenceData.setData(config);
         try {
-            boolean ret = persistenceDataDBService.update(ValueConstants.BLACK_LIST_DATA_ID,
-                persistenceData);
+            boolean ret = provideDataRepository.put(nodeConfig.getLocalDataCenter(), ValueConstants.BLACK_LIST_DATA_ID,
+                    JsonUtils.writeValueAsString(persistenceData));
             DB_LOGGER.info("Success update blacklist to DB result {}!", ret);
         } catch (Throwable e) {
             DB_LOGGER.error("Error update blacklist to DB!", e);

@@ -24,13 +24,12 @@ import com.alipay.sofa.registry.server.data.cache.DatumStorage;
 import com.alipay.sofa.registry.server.data.cache.LocalDatumStorage;
 import com.alipay.sofa.registry.server.data.change.DataChangeEventCenter;
 import com.alipay.sofa.registry.server.data.lease.SessionLeaseManager;
+import com.alipay.sofa.registry.server.data.remoting.DataMetaServerManager;
 import com.alipay.sofa.registry.server.data.remoting.DataNodeExchanger;
-import com.alipay.sofa.registry.server.data.remoting.MetaNodeExchanger;
 import com.alipay.sofa.registry.server.data.remoting.SessionNodeExchanger;
 import com.alipay.sofa.registry.server.data.remoting.dataserver.handler.SlotFollowerDiffDigestRequestHandler;
 import com.alipay.sofa.registry.server.data.remoting.dataserver.handler.SlotFollowerDiffPublisherRequestHandler;
 import com.alipay.sofa.registry.server.data.remoting.metaserver.MetaServerServiceImpl;
-import com.alipay.sofa.registry.server.data.remoting.metaserver.RaftClientManager;
 import com.alipay.sofa.registry.server.data.remoting.metaserver.handler.NotifyProvideDataChangeHandler;
 import com.alipay.sofa.registry.server.data.remoting.metaserver.provideData.ProvideDataProcessor;
 import com.alipay.sofa.registry.server.data.remoting.metaserver.provideData.ProvideDataProcessorManager;
@@ -47,6 +46,7 @@ import com.alipay.sofa.registry.server.data.slot.SlotManager;
 import com.alipay.sofa.registry.server.data.slot.SlotManagerImpl;
 import com.alipay.sofa.registry.server.data.timer.CacheCountTask;
 import com.alipay.sofa.registry.server.data.timer.CacheDigestTask;
+import com.alipay.sofa.registry.server.shared.meta.MetaServerManager;
 import com.alipay.sofa.registry.server.shared.remoting.AbstractClientHandler;
 import com.alipay.sofa.registry.server.shared.remoting.AbstractServerHandler;
 import com.alipay.sofa.registry.server.shared.remoting.SlotTableChangeEventHandler;
@@ -256,14 +256,10 @@ public class DataServerBeanConfiguration {
 
     @Configuration
     public static class DataServerRemotingBeanConfiguration {
-        @Bean
-        public RaftClientManager raftClientManager() {
-            return new RaftClientManager();
-        }
 
         @Bean
-        public MetaNodeExchanger metaNodeExchanger() {
-            return new MetaNodeExchanger();
+        public MetaServerManager metaServerManager() {
+            return new DataMetaServerManager();
         }
 
         @Bean

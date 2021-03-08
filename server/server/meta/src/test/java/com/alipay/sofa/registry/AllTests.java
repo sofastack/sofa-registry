@@ -26,28 +26,30 @@ import com.alipay.sofa.registry.common.model.slot.Crc32CSlotFunctionTest;
 import com.alipay.sofa.registry.server.meta.cluster.node.NodeModifiedTest;
 import com.alipay.sofa.registry.server.meta.cluster.node.TestAbstractNodeEventTest;
 import com.alipay.sofa.registry.server.meta.lease.LeaseTest;
-import com.alipay.sofa.registry.server.meta.lease.data.DataLeaseManagerTest;
 import com.alipay.sofa.registry.server.meta.lease.data.DefaultDataServerManagerTest;
 import com.alipay.sofa.registry.server.meta.lease.impl.CrossDcMetaServerManagerTest;
-import com.alipay.sofa.registry.server.meta.lease.impl.DefaultLeaseManagerTest;
-import com.alipay.sofa.registry.server.meta.lease.impl.TestAbstractRaftEnabledLeaseManager;
 import com.alipay.sofa.registry.server.meta.lease.session.DefaultSessionServerManagerTest;
-import com.alipay.sofa.registry.server.meta.lease.session.SessionLeaseManagerTest;
 import com.alipay.sofa.registry.server.meta.metaserver.impl.DefaultCrossDcMetaServerTest;
 import com.alipay.sofa.registry.server.meta.metaserver.impl.DefaultCurrentDcMetaServerTest;
-import com.alipay.sofa.registry.server.meta.metaserver.impl.DefaultLocalMetaServerTest;
 import com.alipay.sofa.registry.server.meta.metaserver.impl.DefaultMetaServerManagerTest;
+import com.alipay.sofa.registry.server.meta.metaserver.impl.LocalMetaServerTest;
 import com.alipay.sofa.registry.server.meta.monitor.DefaultSlotTableMonitorTest;
-import com.alipay.sofa.registry.server.meta.remoting.session.DefaultSessionServerServiceTest;
-import com.alipay.sofa.registry.server.meta.remoting.data.DefaultDataServerServiceTest;
 import com.alipay.sofa.registry.server.meta.provide.data.DefaultProvideDataNotifierTest;
+import com.alipay.sofa.registry.server.meta.remoting.data.DefaultDataServerServiceTest;
+import com.alipay.sofa.registry.server.meta.remoting.handler.HeartbeatRequestHandlerTest;
+import com.alipay.sofa.registry.server.meta.remoting.session.DefaultSessionServerServiceTest;
 import com.alipay.sofa.registry.server.meta.resource.SlotTableResourceTest;
-import com.alipay.sofa.registry.server.meta.slot.arrange.*;
+import com.alipay.sofa.registry.server.meta.slot.arrange.CrossDcSlotAllocatorTest;
+import com.alipay.sofa.registry.server.meta.slot.arrange.ScheduledSlotArrangerTest;
 import com.alipay.sofa.registry.server.meta.slot.balance.LeaderOnlyBalancerTest;
 import com.alipay.sofa.registry.server.meta.slot.manager.DefaultSlotManagerTest;
+import com.alipay.sofa.registry.server.meta.slot.manager.SimpleSlotManagerTest;
 import com.alipay.sofa.registry.server.meta.slot.tasks.BalanceTaskTest;
 import com.alipay.sofa.registry.server.meta.slot.tasks.SlotMigrationIntegrationTest;
-import com.alipay.sofa.registry.server.meta.slot.util.*;
+import com.alipay.sofa.registry.server.meta.slot.util.MigrateSlotGroupTest;
+import com.alipay.sofa.registry.server.meta.slot.util.NodeComparatorTest;
+import com.alipay.sofa.registry.server.meta.slot.util.SlotBuilderTest;
+import com.alipay.sofa.registry.server.meta.slot.util.SlotTableBuilderTest;
 import com.alipay.sofa.registry.server.shared.slot.DiskSlotTableRecorderTest;
 import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
@@ -56,18 +58,17 @@ import org.junit.runners.Suite;
 @Suite.SuiteClasses({ Crc32CSlotFunctionTest.class, DefaultCrossDcMetaServerTest.class,
                      CrossDcSlotAllocatorTest.class, DefaultCurrentDcMetaServerTest.class,
                      DefaultSessionServerManagerTest.class, DefaultDataServerManagerTest.class,
-                     DefaultLeaseManagerTest.class, CrossDcMetaServerManagerTest.class,
-                     TestAbstractRaftEnabledLeaseManager.class, LeaseTest.class,
+                     CrossDcMetaServerManagerTest.class,
+                     LeaseTest.class, HeartbeatRequestHandlerTest.class,
                      DefaultMetaServerManagerTest.class, DefaultDataServerServiceTest.class,
-                     DefaultLocalMetaServerTest.class, DataLeaseManagerTest.class,
-                     SessionLeaseManagerTest.class, DefaultSessionServerServiceTest.class,
-                     DefaultProvideDataNotifierTest.class, LocalSlotManagerTest.class,
+                     LocalMetaServerTest.class,  DefaultSessionServerServiceTest.class,
+                     DefaultProvideDataNotifierTest.class, SimpleSlotManagerTest.class,
                      NodeModifiedTest.class, BalanceTaskTest.class,
                      TestAbstractNodeEventTest.class, DefaultSlotManagerTest.class,
                      DefaultSlotTableMonitorTest.class, DiskSlotTableRecorderTest.class,
                      SlotTableResourceTest.class, SlotMigrationIntegrationTest.class,
                      SlotTableBuilderTest.class, SlotBuilderTest.class,
-                     DataNodeComparatorTest.class, MigrateSlotGroupTest.class,
+                     NodeComparatorTest.class, MigrateSlotGroupTest.class,
                      ScheduledSlotArrangerTest.class, LeaderOnlyBalancerTest.class })
 public class AllTests {
 }

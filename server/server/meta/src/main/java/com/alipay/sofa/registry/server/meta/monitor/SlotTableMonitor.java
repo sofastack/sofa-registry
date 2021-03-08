@@ -16,18 +16,18 @@
  */
 package com.alipay.sofa.registry.server.meta.monitor;
 
-import com.alipay.sofa.registry.observer.Observer;
+import com.alipay.sofa.registry.observer.UnblockingObserver;
 import com.alipay.sofa.registry.server.meta.monitor.data.DataMessageListener;
 
 /**
  * @author chen.zhu
- * <p>
- * Dec 25, 2020
+ *         <p>
+ *         Dec 25, 2020
  */
-public interface SlotTableMonitor extends DataMessageListener, Observer {
+public interface SlotTableMonitor extends DataMessageListener, UnblockingObserver {
 
-    void recordSlotTable();
+	void recordSlotTable();
 
-    boolean isStableTableStable();
+	boolean isStableTableStable();
 
 }

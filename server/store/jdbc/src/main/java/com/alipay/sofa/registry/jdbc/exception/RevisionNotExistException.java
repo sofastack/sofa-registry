@@ -17,13 +17,14 @@
 package com.alipay.sofa.registry.jdbc.exception;
 
 /**
- *
+ * 
  * @author xiaojian.xj
- * @version $Id: RevisionNotExistException.java, v 0.1 2021年02月03日 15:59 xiaojian.xj Exp $
+ * @version $Id: RevisionNotExistException.java, v 0.1 2021年02月03日 15:59
+ *          xiaojian.xj Exp $
  */
 public class RevisionNotExistException extends RuntimeException {
 
-    public RevisionNotExistException(String revision) {
-        super(String.format("revision: %s not exist.", revision));
-    }
+	public RevisionNotExistException(String revision) {
+		super(String.format("revision: %s not exist.", revision));
+	}
 }

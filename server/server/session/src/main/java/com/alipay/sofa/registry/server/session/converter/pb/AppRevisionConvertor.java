@@ -29,13 +29,14 @@ import java.util.Map.Entry;
 import java.util.Optional;
 
 /**
- *
+ * 
  * @author xiaojian.xj
- * @version $Id: AppRevisionConvertor.java, v 0.1 2021年02月04日 17:34 xiaojian.xj Exp $
+ * @version $Id: AppRevisionConvertor.java, v 0.1 2021年02月04日 17:34 xiaojian.xj
+ *          Exp $
  */
 public class AppRevisionConvertor {
 
-    public static AppRevision convert2Java(MetaRegister metaRegister) {
+	public static AppRevision convert2Java(MetaRegister metaRegister) {
 
         AppRevision revision = new AppRevision();
         String appName = metaRegister.getApplication();
@@ -58,8 +59,7 @@ public class AppRevisionConvertor {
         revision.setInterfaceMap(interfaceMap);
         return revision;
     }
-
-    public static MetaRegister convert2Pb(AppRevision appRevision) {
+	public static MetaRegister convert2Pb(AppRevision appRevision) {
         MetaRegister.Builder builder = MetaRegister.newBuilder();
 
         builder.setApplication(appRevision.getAppName());

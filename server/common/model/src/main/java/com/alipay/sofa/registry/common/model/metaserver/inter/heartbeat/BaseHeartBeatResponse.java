@@ -16,6 +16,7 @@
  */
 package com.alipay.sofa.registry.common.model.metaserver.inter.heartbeat;
 
+import com.alipay.sofa.registry.common.model.metaserver.cluster.VersionedList;
 import com.alipay.sofa.registry.common.model.metaserver.nodes.MetaNode;
 import com.alipay.sofa.registry.common.model.metaserver.nodes.SessionNode;
 import com.alipay.sofa.registry.common.model.slot.SlotTable;
@@ -32,65 +33,65 @@ import java.util.*;
  */
 public class BaseHeartBeatResponse implements Serializable {
 
-    private final long              metaServerEpoch;
+    private final SlotTable             slotTable;
 
-    private final long              sessionServerEpoch;
+    private final VersionedList<MetaNode> metaNodes;
 
-    private final SlotTable         slotTable;
+    private final VersionedList<SessionNode> sessionNodes;
 
-    private final List<MetaNode>    metaNodes;
+    private final String metaLeader;
 
-    private final List<SessionNode> sessionNodes;
+    private final long metaLeaderEpoch;
 
-    public BaseHeartBeatResponse(long metaServerEpoch, SlotTable slotTable, List<MetaNode> metaNodes) {
-        this(metaServerEpoch, slotTable, metaNodes, 0, Collections.emptyList());
+    public BaseHeartBeatResponse(VersionedList<MetaNode> metaNodes, SlotTable slotTable,
+                                 String metaLeader, long metaLeaderEpoch) {
+        this(metaNodes, slotTable, VersionedList.EMPTY, metaLeader, metaLeaderEpoch);
     }
 
-    public BaseHeartBeatResponse(long metaServerEpoch, SlotTable slotTable,
-                                 List<MetaNode> metaNodes, long sessionServerEpoch,
-                                 List<SessionNode> sessionNodes) {
-        this.metaServerEpoch = metaServerEpoch;
+    public BaseHeartBeatResponse(VersionedList<MetaNode> metaNodes, SlotTable slotTable,
+                                 VersionedList<SessionNode> sessionNodes, String metaLeader, long metaLeaderEpoch) {
         this.slotTable = slotTable;
-        this.metaNodes = Collections.unmodifiableList(metaNodes);
-        this.sessionServerEpoch = sessionServerEpoch;
-        this.sessionNodes = Collections.unmodifiableList(sessionNodes);
+        this.metaNodes = metaNodes;
+        this.sessionNodes = sessionNodes;
+        this.metaLeader = metaLeader;
+        this.metaLeaderEpoch = metaLeaderEpoch;
     }
 
     public SlotTable getSlotTable() {
         return slotTable;
     }
 
+
     public List<MetaNode> getMetaNodes() {
-        return metaNodes;
+        return metaNodes.getClusterMembers();
     }
 
-    public Map<String, MetaNode> getMetaNodesMap() {
-        final Map<String, MetaNode> m = Maps.newHashMapWithExpectedSize(metaNodes.size());
-        metaNodes.forEach(s -> m.put(s.getIp(), s));
+    public String getMetaLeader() {
+        return metaLeader;
+    }
+
+    public long getMetaLeaderEpoch() {
+        return metaLeaderEpoch;
+    }
+
+
+    public Map<String, SessionNode> getSessionNodesMap() {
+        final Map<String, SessionNode> m = new HashMap<>(sessionNodes.getClusterMembers().size());
+        sessionNodes.getClusterMembers().forEach(s -> m.put(s.getIp(), s));
         return m;
     }
 
     public Set<String> getDataCentersFromMetaNodes() {
         Set<String> dcs = Sets.newHashSet();
-        metaNodes.forEach(m -> dcs.add(m.getDataCenter()));
+        metaNodes.getClusterMembers().forEach(m -> dcs.add(m.getDataCenter()));
         return dcs;
     }
 
-    public List<SessionNode> getSessionNodes() {
-        return sessionNodes;
-    }
-
-    public Map<String, SessionNode> getSessionNodesMap() {
-        final Map<String, SessionNode> m = Maps.newHashMapWithExpectedSize(sessionNodes.size());
-        sessionNodes.forEach(s -> m.put(s.getIp(), s));
-        return m;
-    }
-
     public long getSessionServerEpoch() {
-        return sessionServerEpoch;
+        return sessionNodes.getEpoch();
     }
 
     public long getMetaServerEpoch() {
-        return metaServerEpoch;
+        return metaNodes.getEpoch();
     }
 }

@@ -21,8 +21,8 @@ import com.alipay.sofa.registry.server.meta.slot.SlotTableAware;
 
 /**
  * @author chen.zhu
- * <p>
- * Nov 13, 2020
+ *         <p>
+ *         Nov 13, 2020
  */
 public interface MetaServer extends SlotTableAware, Lifecycle {
 

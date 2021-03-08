@@ -20,14 +20,14 @@ import com.alipay.sofa.registry.exception.DisposeException;
 
 /**
  * @author chen.zhu
- * <p>
- * Nov 13, 2020
+ *         <p>
+ *         Nov 13, 2020
  */
 public interface Disposable {
 
-    public static final String PHASE_NAME_BEGIN = "disposing";
+	public static final String PHASE_NAME_BEGIN = "disposing";
 
-    public static final String PHASE_NAME_END   = "disposed";
+	public static final String PHASE_NAME_END = "disposed";
 
-    void dispose() throws DisposeException;
+	void dispose() throws DisposeException;
 }

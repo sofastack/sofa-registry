@@ -18,9 +18,11 @@ package com.alipay.sofa.registry.server.meta.resource;
 
 import com.alipay.sofa.registry.common.model.console.PersistenceData;
 import com.alipay.sofa.registry.common.model.constants.ValueConstants;
+import com.alipay.sofa.registry.server.meta.bootstrap.config.NodeConfig;
 import com.alipay.sofa.registry.store.api.DBResponse;
-import com.alipay.sofa.registry.store.api.DBService;
-import com.alipay.sofa.registry.jraft.annotation.RaftReference;
+import com.alipay.sofa.registry.store.api.meta.ProvideDataRepository;
+import com.alipay.sofa.registry.util.JsonUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -37,8 +39,11 @@ import java.util.Map;
 @Path("slotSync")
 public class SlotSyncResource {
 
-    @RaftReference
-    private DBService persistenceDataDBService;
+    @Autowired
+    private ProvideDataRepository provideDataRepository;
+
+    @Autowired
+    private NodeConfig nodeConfig;
 
     /**
      * get
@@ -48,10 +53,10 @@ public class SlotSyncResource {
     @Produces(MediaType.APPLICATION_JSON)
     public Map<String, Object> getSlotSync() throws Exception {
         Map<String, Object> resultMap = new HashMap<>(2);
-        DBResponse syncSessionIntervalSec = persistenceDataDBService
-            .get(ValueConstants.DATA_DATUM_SYNC_SESSION_INTERVAL_SEC);
-        DBResponse dataDatumExpire = persistenceDataDBService
-            .get(ValueConstants.DATA_SESSION_LEASE_SEC);
+        DBResponse syncSessionIntervalSec = provideDataRepository
+            .get(nodeConfig.getLocalDataCenter(), ValueConstants.DATA_DATUM_SYNC_SESSION_INTERVAL_SEC);
+        DBResponse dataDatumExpire = provideDataRepository
+            .get(nodeConfig.getLocalDataCenter(), ValueConstants.DATA_SESSION_LEASE_SEC);
 
         resultMap.put("syncSessionIntervalSec", getEntityData(syncSessionIntervalSec));
         resultMap.put("dataDatumExpire", getEntityData(dataDatumExpire));
@@ -59,8 +64,11 @@ public class SlotSyncResource {
     }
 
     private static String getEntityData(DBResponse resp) {
-        return resp != null && resp.getEntity() != null ? ((PersistenceData) resp.getEntity())
-            .getData() : "null";
+        if (resp != null && resp.getEntity() != null) {
+            PersistenceData data = JsonUtils.read((String) resp.getEntity(), PersistenceData.class);
+            return data.getData();
+        }
+        return "null";
     }
 
 }

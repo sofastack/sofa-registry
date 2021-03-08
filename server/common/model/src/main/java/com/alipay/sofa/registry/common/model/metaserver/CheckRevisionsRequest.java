@@ -19,9 +19,9 @@ package com.alipay.sofa.registry.common.model.metaserver;
 import java.io.Serializable;
 
 public class CheckRevisionsRequest implements Serializable {
-    public String keysDigest;
+	public String keysDigest;
 
-    public CheckRevisionsRequest(String keysDigest) {
-        this.keysDigest = keysDigest;
-    }
+	public CheckRevisionsRequest(String keysDigest) {
+		this.keysDigest = keysDigest;
+	}
 }

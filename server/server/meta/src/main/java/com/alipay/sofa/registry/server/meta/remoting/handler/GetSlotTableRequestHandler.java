@@ -36,7 +36,7 @@ import java.util.List;
  */
 
 // for cross-dc sync use only
-public final class GetSlotTableRequestHandler extends MetaServerHandler<GetSlotTableRequest> {
+public final class GetSlotTableRequestHandler extends BaseMetaServerHandler<GetSlotTableRequest> {
 
     private static final Logger LOGGER = LoggerFactory.getLogger("META-SLOT");
 

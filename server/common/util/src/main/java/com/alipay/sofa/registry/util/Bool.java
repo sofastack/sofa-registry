@@ -17,30 +17,30 @@
 package com.alipay.sofa.registry.util;
 
 /**
- *
+ * 
  * @author yuzhi.lyz
  * @version v 0.1 2020-10-30 16:52 yuzhi.lyz Exp $
  */
 public final class Bool {
-    private boolean bool;
+	private boolean bool;
 
-    private Bool(boolean b) {
-        this.bool = b;
-    }
+	private Bool(boolean b) {
+		this.bool = b;
+	}
 
-    public static Bool newTrue() {
-        return new Bool(true);
-    }
+	public static Bool newTrue() {
+		return new Bool(true);
+	}
 
-    public static Bool newFalse() {
-        return new Bool(false);
-    }
+	public static Bool newFalse() {
+		return new Bool(false);
+	}
 
-    public boolean isTrue() {
-        return bool;
-    }
+	public boolean isTrue() {
+		return bool;
+	}
 
-    public void setBool(boolean bool) {
-        this.bool = bool;
-    }
+	public void setBool(boolean bool) {
+		this.bool = bool;
+	}
 }

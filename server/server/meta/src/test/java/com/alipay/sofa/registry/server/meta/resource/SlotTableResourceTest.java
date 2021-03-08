@@ -17,19 +17,19 @@
 package com.alipay.sofa.registry.server.meta.resource;
 
 import com.alipay.sofa.registry.common.model.GenericResponse;
+import com.alipay.sofa.registry.common.model.metaserver.cluster.VersionedList;
 import com.alipay.sofa.registry.common.model.metaserver.nodes.DataNode;
 import com.alipay.sofa.registry.common.model.slot.SlotTable;
-import com.alipay.sofa.registry.exception.InitializeException;
 import com.alipay.sofa.registry.exception.SofaRegistryRuntimeException;
-import com.alipay.sofa.registry.exception.StartException;
-import com.alipay.sofa.registry.exception.StopException;
+import com.alipay.sofa.registry.server.meta.AbstractMetaServerTest;
 import com.alipay.sofa.registry.server.meta.AbstractTest;
 import com.alipay.sofa.registry.server.meta.bootstrap.config.NodeConfig;
 import com.alipay.sofa.registry.server.meta.lease.data.DefaultDataServerManager;
 import com.alipay.sofa.registry.server.meta.monitor.SlotTableMonitor;
+import com.alipay.sofa.registry.server.meta.slot.SlotManager;
 import com.alipay.sofa.registry.server.meta.slot.arrange.ScheduledSlotArranger;
-import com.alipay.sofa.registry.server.meta.slot.manager.DefaultSlotManager;
-import com.alipay.sofa.registry.server.meta.slot.manager.LocalSlotManager;
+import com.alipay.sofa.registry.server.meta.slot.manager.SimpleSlotManager;
+import com.alipay.sofa.registry.util.DatumVersionUtil;
 import org.assertj.core.util.Lists;
 import org.junit.Assert;
 import org.junit.Before;
@@ -44,11 +44,9 @@ import static org.mockito.Mockito.*;
  * @author zhuchen
  * @date Mar 2, 2021, 11:48:41 AM
  */
-public class SlotTableResourceTest extends AbstractTest {
+public class SlotTableResourceTest extends AbstractMetaServerTest {
 
-    private LocalSlotManager         slotManager;
-
-    private DefaultSlotManager       defaultSlotManager;
+    private SlotManager slotManager;
 
     private DefaultDataServerManager dataServerManager;
 
@@ -62,24 +60,21 @@ public class SlotTableResourceTest extends AbstractTest {
     public void beforeSlotTableResourceTest() {
         NodeConfig nodeConfig = mock(NodeConfig.class);
         when(nodeConfig.getLocalDataCenter()).thenReturn(getDc());
-        slotManager = new LocalSlotManager(nodeConfig);
-        defaultSlotManager = mock(DefaultSlotManager.class);
-        when(defaultSlotManager.getRaftSlotManager()).thenReturn(slotManager);
+        slotManager = new SimpleSlotManager();
         dataServerManager = mock(DefaultDataServerManager.class);
         slotTableMonitor = mock(SlotTableMonitor.class);
-        slotArranger = spy(new ScheduledSlotArranger(dataServerManager, slotManager,
-            defaultSlotManager, slotTableMonitor));
-        resource = new SlotTableResource(defaultSlotManager, slotManager, dataServerManager,
-            slotArranger);
+        slotArranger = spy(new ScheduledSlotArranger(dataServerManager, slotManager, slotTableMonitor, metaLeaderService));
+        resource = new SlotTableResource(slotManager, dataServerManager,
+            slotArranger, metaLeaderService);
     }
 
     @Test
     public void testForceRefreshSlotTable() throws TimeoutException, InterruptedException {
-        makeRaftLeader();
+        makeMetaLeader();
         List<DataNode> dataNodes = Lists.newArrayList(new DataNode(randomURL(randomIp()), getDc()),
             new DataNode(randomURL(randomIp()), getDc()), new DataNode(randomURL(randomIp()),
                 getDc()));
-        when(dataServerManager.getClusterMembers()).thenReturn(dataNodes);
+        when(dataServerManager.getDataServerMetaInfo()).thenReturn(new VersionedList<>(DatumVersionUtil.nextId(), dataNodes));
         SlotTable slotTable = new SlotTableGenerator(dataNodes).createLeaderUnBalancedSlotTable();
         slotManager.refresh(slotTable);
 

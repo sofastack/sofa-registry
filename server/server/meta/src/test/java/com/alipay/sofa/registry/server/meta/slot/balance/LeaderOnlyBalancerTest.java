@@ -17,15 +17,13 @@
 package com.alipay.sofa.registry.server.meta.slot.balance;
 
 import com.alipay.sofa.registry.common.model.metaserver.nodes.DataNode;
-import com.alipay.sofa.registry.common.model.slot.SlotConfig;
 import com.alipay.sofa.registry.common.model.slot.SlotTable;
 import com.alipay.sofa.registry.common.model.store.URL;
-import com.alipay.sofa.registry.server.meta.AbstractTest;
+import com.alipay.sofa.registry.server.meta.AbstractMetaServerTest;
 import com.alipay.sofa.registry.server.meta.bootstrap.config.NodeConfig;
-import com.alipay.sofa.registry.server.meta.slot.manager.LocalSlotManager;
+import com.alipay.sofa.registry.server.meta.slot.manager.SimpleSlotManager;
 import com.alipay.sofa.registry.server.meta.slot.util.builder.SlotTableBuilder;
 import com.alipay.sofa.registry.server.shared.util.NodeUtils;
-import com.google.common.collect.Sets;
 import org.assertj.core.util.Lists;
 import org.junit.Assert;
 import org.junit.Before;
@@ -33,14 +31,13 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import java.util.List;
-import java.util.Set;
 
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-public class LeaderOnlyBalancerTest extends AbstractTest {
+public class LeaderOnlyBalancerTest extends AbstractMetaServerTest {
 
-    private LocalSlotManager   slotManager;
+    private SimpleSlotManager slotManager;
 
     private List<String>       currentDataServers;
 
@@ -61,7 +58,7 @@ public class LeaderOnlyBalancerTest extends AbstractTest {
         when(nodeConfig.getLocalDataCenter()).thenReturn(getDc());
 
         currentDataServers = Lists.newArrayList("10.0.0.1", "10.0.0.2", "10.0.0.3");
-        slotManager = new LocalSlotManager(nodeConfig);
+        slotManager = new SimpleSlotManager();
         slotTableBuilder = new SlotTableBuilder(slotManager.getSlotTable(), 16, 1);
         balancer = new LeaderOnlyBalancer(slotTableBuilder, currentDataServers);
     }

@@ -96,11 +96,12 @@
         </dependency>
         <dependency>
             <groupId>com.alipay.sofa</groupId>
-            <artifactId>registry-store-jraft</artifactId>
+            <artifactId>registry-store-jdbc</artifactId>
         </dependency>
         <dependency>
-            <groupId>com.alipay.sofa</groupId>
-            <artifactId>registry-store-jdbc</artifactId>
+            <groupId>com.github.rholder</groupId>
+            <artifactId>guava-retrying</artifactId>
+            <version>1.0.7</version>
         </dependency>
     </dependencies>
 

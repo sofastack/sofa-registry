@@ -16,20 +16,22 @@
  */
 package com.alipay.sofa.registry.server.meta.lease.data;
 
+import com.alipay.sofa.registry.common.model.metaserver.Lease;
+import com.alipay.sofa.registry.common.model.metaserver.cluster.VersionedList;
 import com.alipay.sofa.registry.common.model.metaserver.inter.heartbeat.HeartbeatRequest;
 import com.alipay.sofa.registry.common.model.metaserver.nodes.DataNode;
-import com.alipay.sofa.registry.exception.InitializeException;
 import com.alipay.sofa.registry.lifecycle.impl.LifecycleHelper;
 import com.alipay.sofa.registry.server.meta.bootstrap.config.MetaServerConfig;
-import com.alipay.sofa.registry.server.meta.lease.AbstractRaftEnabledLeaseManager;
-import com.alipay.sofa.registry.server.meta.lease.LeaseManager;
-import com.alipay.sofa.registry.jraft.annotation.RaftReference;
-import com.alipay.sofa.registry.jraft.annotation.RaftReferenceContainer;
+import com.alipay.sofa.registry.server.meta.cluster.node.NodeAdded;
+import com.alipay.sofa.registry.server.meta.cluster.node.NodeRemoved;
+import com.alipay.sofa.registry.server.meta.lease.impl.AbstractEvictableLeaseManager;
+import com.alipay.sofa.registry.server.meta.monitor.Metrics;
 import com.alipay.sofa.registry.server.meta.monitor.data.DataServerStats;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
@@ -42,18 +44,13 @@ import java.util.Map;
  * <p>
  * Nov 24, 2020
  */
-@RaftReferenceContainer
-public class DefaultDataServerManager extends AbstractRaftEnabledLeaseManager<DataNode> implements
+@Component
+public class DefaultDataServerManager extends AbstractEvictableLeaseManager<DataNode> implements
                                                                                        DataServerManager {
 
-    @RaftReference(uniqueId = DataLeaseManager.DATA_LEASE_MANAGER, interfaceType = LeaseManager.class)
-    private LeaseManager<DataNode>             raftDataLeaseManager;
 
     @Autowired
-    private DataLeaseManager                   dataLeaseManager;
-
-    @Autowired
-    private MetaServerConfig                   metaServerConfig;
+    private MetaServerConfig    metaServerConfig;
 
     private final Map<String, DataServerStats> dataServerStatses = Maps.newConcurrentMap();
 
@@ -66,15 +63,9 @@ public class DefaultDataServerManager extends AbstractRaftEnabledLeaseManager<Da
     /**
      * Constructor.
      *
-     * @param raftDataLeaseManager the raft data lease manager
-     * @param dataLeaseManager     the data lease manager
      * @param metaServerConfig     the meta server config
      */
-    public DefaultDataServerManager(LeaseManager<DataNode> raftDataLeaseManager,
-                                    DataLeaseManager dataLeaseManager,
-                                    MetaServerConfig metaServerConfig) {
-        this.raftDataLeaseManager = raftDataLeaseManager;
-        this.dataLeaseManager = dataLeaseManager;
+    public DefaultDataServerManager(MetaServerConfig metaServerConfig) {
         this.metaServerConfig = metaServerConfig;
     }
 
@@ -101,19 +92,25 @@ public class DefaultDataServerManager extends AbstractRaftEnabledLeaseManager<Da
     }
 
     @Override
-    protected DataLeaseManager getLocalLeaseManager() {
-        return dataLeaseManager;
+    public void register(Lease<DataNode> lease) {
+        super.register(lease);
+        notifyObservers(new NodeAdded<>(lease.getRenewal()));
     }
 
     @Override
-    protected LeaseManager<DataNode> getRaftLeaseManager() {
-        return raftDataLeaseManager;
+    public boolean cancel(Lease<DataNode> lease) {
+        boolean result = super.cancel(lease);
+        if (result) {
+            notifyObservers(new NodeRemoved<>(lease.getRenewal()));
+            Metrics.Heartbeat.onDataEvict(lease.getRenewal().getIp());
+        }
+        return result;
     }
 
     @Override
-    protected void doInitialize() throws InitializeException {
-        super.doInitialize();
-        dataLeaseManager.setLogger(logger);
+    public boolean renew(DataNode renewal, int leaseDuration) {
+        Metrics.Heartbeat.onDataHeartbeat(renewal.getIp());
+        return super.renew(renewal, leaseDuration);
     }
 
     @Override
@@ -124,18 +121,6 @@ public class DefaultDataServerManager extends AbstractRaftEnabledLeaseManager<Da
     @Override
     protected long getEvictBetweenMilli() {
         return metaServerConfig.getExpireCheckIntervalMilli();
-    }
-
-    @VisibleForTesting
-    DefaultDataServerManager setRaftDataLeaseManager(LeaseManager<DataNode> raftDataLeaseManager) {
-        this.raftDataLeaseManager = raftDataLeaseManager;
-        return this;
-    }
-
-    @VisibleForTesting
-    DefaultDataServerManager setDataLeaseManager(DataLeaseManager dataLeaseManager) {
-        this.dataLeaseManager = dataLeaseManager;
-        return this;
     }
 
     @VisibleForTesting
@@ -172,4 +157,20 @@ public class DefaultDataServerManager extends AbstractRaftEnabledLeaseManager<Da
     public List<DataServerStats> getDataServersStats() {
         return Collections.unmodifiableList(Lists.newLinkedList(dataServerStatses.values()));
     }
+
+    @Override
+    public VersionedList<DataNode> getDataServerMetaInfo() {
+        VersionedList<Lease<DataNode>> leaseMetaInfo = getLeaseMeta();
+        List<DataNode> dataNodes = Lists.newArrayList();
+        leaseMetaInfo.getClusterMembers().forEach(lease -> {
+            dataNodes.add(lease.getRenewal());
+        });
+        return new VersionedList<>(leaseMetaInfo.getEpoch(), dataNodes);
+    }
+
+    @Override
+    public long getEpoch() {
+        return currentEpoch.get();
+    }
+
 }

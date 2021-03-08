@@ -18,6 +18,7 @@ package com.alipay.sofa.registry.server.data.bootstrap;
 
 import com.alipay.sofa.registry.common.model.constants.ValueConstants;
 import com.alipay.sofa.registry.common.model.metaserver.ProvideData;
+import com.alipay.sofa.registry.common.model.slot.SlotTable;
 import com.alipay.sofa.registry.common.model.store.URL;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
@@ -26,12 +27,14 @@ import com.alipay.sofa.registry.net.NetUtil;
 import com.alipay.sofa.registry.remoting.ChannelHandler;
 import com.alipay.sofa.registry.remoting.Server;
 import com.alipay.sofa.registry.remoting.exchange.Exchange;
+import com.alipay.sofa.registry.server.data.slot.SlotManager;
 import com.alipay.sofa.registry.server.shared.meta.MetaServerService;
 import com.alipay.sofa.registry.server.shared.remoting.AbstractServerHandler;
 import com.github.rholder.retry.Retryer;
 import com.github.rholder.retry.RetryerBuilder;
 import com.github.rholder.retry.StopStrategies;
 import com.github.rholder.retry.WaitStrategies;
+import com.google.common.base.Predicate;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -69,6 +72,9 @@ public class DataServerBootstrap {
     private ResourceConfig                    jerseyResourceConfig;
 
     @Autowired
+    private SlotManager                       slotManager;
+
+    @Autowired
     private Exchange                          jerseyExchange;
 
     @Autowired
@@ -97,6 +103,12 @@ public class DataServerBootstrap {
     private final Retryer<Boolean>            retryer                  = RetryerBuilder
                                                                            .<Boolean> newBuilder()
                                                                            .retryIfException()
+                                                                            .retryIfResult(new Predicate<Boolean>() {
+                                                                                @Override
+                                                                                public boolean apply(Boolean input) {
+                                                                                    return !input;
+                                                                                }
+                                                                            })
                                                                            .withWaitStrategy(
                                                                                WaitStrategies
                                                                                    .exponentialWait(
@@ -125,14 +137,13 @@ public class DataServerBootstrap {
 
             openHttpServer();
 
-
-            retryer.call(() -> {
-                startRaftClient();
-                return true;
-            });
-
             renewNode();
             fetchProviderData();
+
+            // wait until slot table is get
+            retryer.call(() -> {
+                return slotManager.getSlotTableEpoch() != SlotTable.INIT.getEpoch();
+            });
 
             startScheduler();
 
@@ -193,11 +204,6 @@ public class DataServerBootstrap {
                 .error("Open http server port {} error!", dataServerConfig.getHttpServerPort(), e);
             throw new RuntimeException("Open http server  error!", e);
         }
-    }
-
-    private void startRaftClient() {
-        metaServerService.startRaftClient();
-        LOGGER.info("raft client started!Leader is {}", metaServerService.getLeader());
     }
 
     private void renewNode() {

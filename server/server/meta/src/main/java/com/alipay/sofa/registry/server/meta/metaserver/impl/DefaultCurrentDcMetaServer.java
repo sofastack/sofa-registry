@@ -16,12 +16,11 @@
  */
 package com.alipay.sofa.registry.server.meta.metaserver.impl;
 
+import com.alipay.sofa.registry.common.model.metaserver.cluster.VersionedList;
 import com.alipay.sofa.registry.common.model.metaserver.nodes.MetaNode;
-import com.alipay.sofa.registry.common.model.slot.SlotTable;
 import com.alipay.sofa.registry.common.model.store.URL;
 import com.alipay.sofa.registry.exception.DisposeException;
 import com.alipay.sofa.registry.exception.InitializeException;
-import com.alipay.sofa.registry.jraft.bootstrap.ServiceStateMachine;
 import com.alipay.sofa.registry.lifecycle.impl.LifecycleHelper;
 import com.alipay.sofa.registry.server.meta.bootstrap.config.NodeConfig;
 import com.alipay.sofa.registry.server.meta.cluster.node.NodeAdded;
@@ -29,13 +28,12 @@ import com.alipay.sofa.registry.server.meta.cluster.node.NodeRemoved;
 import com.alipay.sofa.registry.server.meta.lease.data.DataServerManager;
 import com.alipay.sofa.registry.server.meta.lease.session.SessionServerManager;
 import com.alipay.sofa.registry.server.meta.metaserver.CurrentDcMetaServer;
-import com.alipay.sofa.registry.jraft.annotation.RaftReference;
-import com.alipay.sofa.registry.jraft.annotation.RaftReferenceContainer;
-import com.alipay.sofa.registry.store.api.annotation.ReadOnLeader;
+import com.alipay.sofa.registry.server.meta.slot.SlotManager;
 import com.alipay.sofa.registry.util.DatumVersionUtil;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
@@ -47,23 +45,20 @@ import java.util.List;
  * <p>
  * Nov 23, 2020
  */
-@RaftReferenceContainer
-public class DefaultCurrentDcMetaServer extends AbstractMetaServer implements CurrentDcMetaServer {
-
-    @Autowired
-    private SessionServerManager   sessionServerManager;
-
-    @Autowired
-    private DataServerManager      dataServerManager;
+@Component
+public class DefaultCurrentDcMetaServer extends LocalMetaServer implements CurrentDcMetaServer {
 
     @Autowired
     private NodeConfig             nodeConfig;
 
-    @RaftReference(uniqueId = DefaultLocalMetaServer.DEFAULT_LOCAL_META_SERVER, interfaceType = CurrentDcMetaServer.class)
-    private CurrentDcMetaServer    raftMetaServer;
+    public DefaultCurrentDcMetaServer() {
+    }
 
-    @Autowired
-    private DefaultLocalMetaServer localMetaServer;
+    public DefaultCurrentDcMetaServer(SlotManager slotManager,
+                                      DataServerManager dataServerManager,
+                                      SessionServerManager sessionServerManager) {
+        super(slotManager, dataServerManager, sessionServerManager);
+    }
 
     @PostConstruct
     public void postConstruct() throws Exception {
@@ -90,7 +85,7 @@ public class DefaultCurrentDcMetaServer extends AbstractMetaServer implements Cu
         for (String ip : metaIpAddresses) {
             metaNodes.add(new MetaNode(new URL(ip), nodeConfig.getLocalDataCenter()));
         }
-        localMetaServer.updateClusterMembers(metaNodes, DatumVersionUtil.nextId());
+        updateClusterMembers(new VersionedList<>(DatumVersionUtil.nextId(), metaNodes));
     }
 
     @Override
@@ -98,51 +93,16 @@ public class DefaultCurrentDcMetaServer extends AbstractMetaServer implements Cu
         super.doDispose();
     }
 
-    public DataServerManager getDataServerManager() {
-        return dataServerManager;
-    }
-
-    public SessionServerManager getSessionServerManager() {
-        return sessionServerManager;
-    }
-
     @Override
     public void renew(MetaNode metaNode) {
-        raftMetaServer.renew(metaNode);
+        super.renew(metaNode);
         notifyObservers(new NodeAdded<>(metaNode));
     }
 
     @Override
     public void cancel(MetaNode metaNode) {
-        raftMetaServer.cancel(metaNode);
+        super.cancel(metaNode);
         notifyObservers(new NodeRemoved<MetaNode>(metaNode));
-    }
-
-    @Override
-    public void updateClusterMembers(List<MetaNode> newMembers, long epoch) {
-        raftMetaServer.updateClusterMembers(newMembers, epoch);
-    }
-
-    @Override
-    public SlotTable getSlotTable() {
-        return getMetaServer().getSlotTable();
-    }
-
-    @Override
-    public List<MetaNode> getClusterMembers() {
-        return getMetaServer().getClusterMembers();
-    }
-
-    @ReadOnLeader
-    public long getEpoch() {
-        return getMetaServer().getEpoch();
-    }
-
-    private CurrentDcMetaServer getMetaServer() {
-        if (ServiceStateMachine.getInstance().isLeader()) {
-            return localMetaServer;
-        }
-        return raftMetaServer;
     }
 
     @VisibleForTesting
@@ -164,14 +124,13 @@ public class DefaultCurrentDcMetaServer extends AbstractMetaServer implements Cu
     }
 
     @VisibleForTesting
-    DefaultCurrentDcMetaServer setRaftMetaServer(CurrentDcMetaServer raftMetaServer) {
-        this.raftMetaServer = raftMetaServer;
+    DefaultCurrentDcMetaServer setSlotManager(SlotManager slotManager) {
+        this.slotManager = slotManager;
         return this;
     }
 
-    @VisibleForTesting
-    DefaultCurrentDcMetaServer setLocalMetaServer(DefaultLocalMetaServer localMetaServer) {
-        this.localMetaServer = localMetaServer;
-        return this;
+    @Override
+    public VersionedList<MetaNode> getClusterMeta() {
+        return new VersionedList<>(getEpoch(), getClusterMembers());
     }
 }

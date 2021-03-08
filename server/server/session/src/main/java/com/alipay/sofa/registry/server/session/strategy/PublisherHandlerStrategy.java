@@ -25,6 +25,7 @@ import com.alipay.sofa.registry.remoting.Channel;
  * @since 2019/2/15
  */
 public interface PublisherHandlerStrategy {
-    void handlePublisherRegister(Channel channel, PublisherRegister publisherRegister,
-                                 RegisterResponse registerResponse);
+	void handlePublisherRegister(Channel channel,
+			PublisherRegister publisherRegister,
+			RegisterResponse registerResponse);
 }

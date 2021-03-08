@@ -19,10 +19,10 @@ package com.alipay.sofa.registry.server.meta.slot;
 import com.alipay.sofa.registry.common.model.slot.SlotTable;
 
 /**
- *
+ * 
  * @author yuzhi.lyz
  * @version v 0.1 2020-11-11 11:31 yuzhi.lyz Exp $
  */
 public interface SlotAllocator {
-    SlotTable getSlotTable();
+	SlotTable getSlotTable();
 }

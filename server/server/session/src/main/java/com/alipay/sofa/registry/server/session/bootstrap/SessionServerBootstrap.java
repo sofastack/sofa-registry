@@ -21,6 +21,7 @@ import com.alipay.remoting.serialization.SerializerManager;
 import com.alipay.sofa.registry.common.model.client.pb.*;
 import com.alipay.sofa.registry.common.model.constants.ValueConstants;
 import com.alipay.sofa.registry.common.model.metaserver.ProvideData;
+import com.alipay.sofa.registry.common.model.slot.SlotTable;
 import com.alipay.sofa.registry.common.model.store.URL;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
@@ -37,11 +38,13 @@ import com.alipay.sofa.registry.server.session.metadata.AppRevisionCacheRegistry
 import com.alipay.sofa.registry.server.session.provideData.ProvideDataProcessor;
 import com.alipay.sofa.registry.server.session.registry.SessionRegistry;
 import com.alipay.sofa.registry.server.session.scheduler.ExecutorManager;
+import com.alipay.sofa.registry.server.session.slot.SlotTableCache;
 import com.alipay.sofa.registry.server.shared.env.ServerEnv;
 import com.alipay.sofa.registry.server.shared.meta.MetaServerService;
 import com.alipay.sofa.registry.server.shared.remoting.AbstractServerHandler;
 import com.alipay.sofa.registry.task.batcher.TaskDispatchers;
 import com.github.rholder.retry.*;
+import com.google.common.base.Predicate;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
@@ -102,6 +105,9 @@ public class SessionServerBootstrap {
     @Autowired
     private ProvideDataProcessor              provideDataProcessorManager;
 
+    @Autowired
+    private SlotTableCache                    slotTableCache;
+
     private Server                            server;
 
     private Server                            dataSyncServer;
@@ -129,6 +135,12 @@ public class SessionServerBootstrap {
     private final Retryer<Boolean>            retryer                   = RetryerBuilder
                                                                             .<Boolean> newBuilder()
                                                                             .retryIfRuntimeException()
+                                                                            .retryIfResult(new Predicate<Boolean>() {
+                                                                                @Override
+                                                                                public boolean apply(Boolean input) {
+                                                                                    return !input;
+                                                                                }
+                                                                            })
                                                                             .withWaitStrategy(
                                                                                 WaitStrategies
                                                                                     .exponentialWait(
@@ -156,6 +168,11 @@ public class SessionServerBootstrap {
             retryer.call(() -> {
                 connectMetaServer();
                 return true;
+            });
+
+            // wait until slot table is get
+            retryer.call(() -> {
+                return slotTableCache.currentSlotTable().getEpoch() != SlotTable.INIT.getEpoch();
             });
 
             // load metadata
@@ -273,7 +290,6 @@ public class SessionServerBootstrap {
 
     private void connectMetaServer() {
         try {
-            mataNodeService.startRaftClient();
             // register node as renew node
             mataNodeService.renewNode();
             // start sched renew

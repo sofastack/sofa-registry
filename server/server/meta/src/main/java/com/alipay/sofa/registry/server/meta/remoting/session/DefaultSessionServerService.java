@@ -17,14 +17,15 @@
 package com.alipay.sofa.registry.server.meta.remoting.session;
 
 import com.alipay.sofa.registry.common.model.metaserver.nodes.SessionNode;
-import com.alipay.sofa.registry.exception.SofaRegistryRuntimeException;
 import com.alipay.sofa.registry.remoting.exchange.NodeExchanger;
 import com.alipay.sofa.registry.server.meta.lease.session.SessionServerManager;
+import com.alipay.sofa.registry.server.meta.remoting.SessionNodeExchanger;
 import com.alipay.sofa.registry.server.meta.remoting.connection.NodeConnectManager;
+import com.alipay.sofa.registry.server.meta.remoting.connection.SessionConnectionHandler;
 import com.alipay.sofa.registry.server.meta.remoting.notifier.AbstractNotifier;
-import com.alipay.sofa.registry.server.shared.remoting.AbstractServerHandler;
 import com.google.common.annotations.VisibleForTesting;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
 import java.util.List;
 
@@ -33,14 +34,15 @@ import java.util.List;
  * <p>
  * Dec 03, 2020
  */
+@Component
 public class DefaultSessionServerService extends AbstractNotifier<SessionNode> implements
                                                                               SessionServerService {
 
     @Autowired
-    private NodeExchanger         sessionNodeExchanger;
+    private SessionNodeExchanger sessionNodeExchanger;
 
     @Autowired
-    private AbstractServerHandler sessionConnectionHandler;
+    private SessionConnectionHandler sessionConnectionHandler;
 
     @Autowired
     private SessionServerManager  sessionServerManager;
@@ -52,28 +54,22 @@ public class DefaultSessionServerService extends AbstractNotifier<SessionNode> i
 
     @Override
     protected List<SessionNode> getNodes() {
-        return sessionServerManager.getClusterMembers();
+        return sessionServerManager.getSessionServerMetaInfo().getClusterMembers();
     }
 
     @Override
     protected NodeConnectManager getNodeConnectManager() {
-        if (!(sessionConnectionHandler instanceof NodeConnectManager)) {
-            logger.error("sessionConnectionHandler inject is not NodeConnectManager instance!");
-            throw new SofaRegistryRuntimeException(
-                "sessionConnectionHandler inject is not NodeConnectManager instance!");
-        }
-
-        return (NodeConnectManager) sessionConnectionHandler;
+        return sessionConnectionHandler;
     }
 
     @VisibleForTesting
-    DefaultSessionServerService setSessionNodeExchanger(NodeExchanger sessionNodeExchanger) {
+    DefaultSessionServerService setSessionNodeExchanger(SessionNodeExchanger sessionNodeExchanger) {
         this.sessionNodeExchanger = sessionNodeExchanger;
         return this;
     }
 
     @VisibleForTesting
-    DefaultSessionServerService setSessionConnectionHandler(AbstractServerHandler sessionConnectionHandler) {
+    DefaultSessionServerService setSessionConnectionHandler(SessionConnectionHandler sessionConnectionHandler) {
         this.sessionConnectionHandler = sessionConnectionHandler;
         return this;
     }

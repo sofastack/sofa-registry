@@ -20,14 +20,14 @@ import com.alipay.sofa.registry.exception.StartException;
 
 /**
  * @author chen.zhu
- * <p>
- * Nov 13, 2020
+ *         <p>
+ *         Nov 13, 2020
  */
 public interface Startable {
 
-    public static final String PHASE_NAME_BEGIN = "starting";
+	public static final String PHASE_NAME_BEGIN = "starting";
 
-    public static final String PHASE_NAME_END   = "started";
+	public static final String PHASE_NAME_END = "started";
 
-    void start() throws StartException;
+	void start() throws StartException;
 }

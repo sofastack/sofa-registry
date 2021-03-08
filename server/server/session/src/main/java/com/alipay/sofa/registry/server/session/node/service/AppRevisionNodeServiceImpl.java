@@ -22,11 +22,11 @@ import com.alipay.sofa.registry.common.model.store.AppRevision;
 import com.alipay.sofa.registry.common.model.store.URL;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
-import com.alipay.sofa.registry.remoting.exchange.NodeExchanger;
 import com.alipay.sofa.registry.remoting.exchange.RequestException;
 import com.alipay.sofa.registry.remoting.exchange.message.Request;
 import com.alipay.sofa.registry.remoting.exchange.message.Response;
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
+import com.alipay.sofa.registry.server.shared.meta.MetaServerManager;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.List;
@@ -40,10 +40,7 @@ public class AppRevisionNodeServiceImpl implements AppRevisionNodeService {
     protected SessionServerConfig sessionServerConfig;
 
     @Autowired
-    protected NodeExchanger       metaNodeExchanger;
-
-    @Autowired
-    private RaftClientManager     raftClientManager;
+    private MetaServerManager metaServerManager;
 
     public void register(AppRevision appRevision) {
         Request<AppRevision> request = new Request<AppRevision>() {
@@ -54,12 +51,12 @@ public class AppRevisionNodeServiceImpl implements AppRevisionNodeService {
 
             @Override
             public URL getRequestUrl() {
-                return new URL(raftClientManager.getLeader().getIp(),
+                return new URL(metaServerManager.getMetaServerLeader(),
                     sessionServerConfig.getMetaServerPort());
             }
         };
         try {
-            metaNodeExchanger.request(request);
+            metaServerManager.sendRequest(request);
         } catch (RequestException e) {
             LOGGER.error("add app revision error! " + e.getMessage(), e);
             throw new RuntimeException("add app revision error! " + e.getMessage(), e);
@@ -75,12 +72,12 @@ public class AppRevisionNodeServiceImpl implements AppRevisionNodeService {
 
             @Override
             public URL getRequestUrl() {
-                return new URL(raftClientManager.getLeader().getIp(),
+                return new URL(metaServerManager.getMetaServerLeader(),
                     sessionServerConfig.getMetaServerPort());
             }
         };
         try {
-            Response response = metaNodeExchanger.request(request);
+            Response response = metaServerManager.sendRequest(request);
             return (List<String>) response.getResult();
         } catch (RequestException e) {
             LOGGER.error("check app revisions error! " + e.getMessage(), e);
@@ -98,12 +95,12 @@ public class AppRevisionNodeServiceImpl implements AppRevisionNodeService {
 
             @Override
             public URL getRequestUrl() {
-                return new URL(raftClientManager.getLeader().getIp(),
+                return new URL(metaServerManager.getMetaServerLeader(),
                     sessionServerConfig.getMetaServerPort());
             }
         };
         try {
-            Response response = metaNodeExchanger.request(request);
+            Response response = metaServerManager.sendRequest(request);
             Object result = response.getResult();
             return (List<AppRevision>) result;
         } catch (RequestException e) {

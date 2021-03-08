@@ -39,8 +39,8 @@ public final class AddressUtil {
     //        builder = new URIBuilder(address);
     //
     //        for (Map.Entry<String, Collection<String>> entry : params.entrySet()) {
-    //            String key = entry.getKey();
-    //            for (String value : entry.getValue()) {
+    //            String key = entry.getDataKey();
+    //            for (String value : entry.getDataValue()) {
     //                builder.addParameter(key, value);
     //
     //            }

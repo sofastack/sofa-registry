@@ -17,19 +17,20 @@
 package com.alipay.sofa.registry.server.session.cache;
 
 /**
- *
+ * 
  * @author shangyu.wh
  * @version $Id: EntityType.java, v 0.1 2017-12-06 15:52 shangyu.wh Exp $
  */
 public interface EntityType {
 
-    /** symbol : */
-    char COMMA = ',';
+	/** symbol : */
+	char COMMA = ',';
 
-    /**
-     * cache contents uniqueKey,use for make up Key' hash code
-     * @return
-     */
-    String getUniqueKey();
+	/**
+	 * cache contents uniqueKey,use for make up Key' hash code
+	 * 
+	 * @return
+	 */
+	String getUniqueKey();
 
 }

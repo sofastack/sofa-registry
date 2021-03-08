@@ -16,8 +16,9 @@
  */
 package com.alipay.sofa.registry.server.meta.cluster.node;
 
-import com.alipay.sofa.registry.server.meta.AbstractTest;
-import com.alipay.sofa.registry.server.meta.lease.impl.DefaultLeaseManagerTest;
+import com.alipay.sofa.registry.common.model.Node;
+import com.alipay.sofa.registry.common.model.store.URL;
+import com.alipay.sofa.registry.server.meta.AbstractMetaServerTest;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -27,16 +28,35 @@ import org.junit.Test;
  *
  * nothing here, simply increase unit test coverage
  */
-public class NodeModifiedTest extends AbstractTest {
+public class NodeModifiedTest extends AbstractMetaServerTest {
 
     @Test
     public void testGetOldNode() {
-        NodeModified<DefaultLeaseManagerTest.SimpleNode> event = new NodeModified<>(
-            new DefaultLeaseManagerTest.SimpleNode(randomIp()),
-            new DefaultLeaseManagerTest.SimpleNode(randomIp()));
+        NodeModified<SimpleNode> event = new NodeModified<>(
+            new SimpleNode(randomIp()),
+            new SimpleNode(randomIp()));
         Assert.assertNotNull(event.getNewNode());
         Assert.assertNotNull(event.getOldNode());
         Assert.assertNotEquals(event.getOldNode(), event.getNewNode());
+    }
+
+    public static class SimpleNode implements Node {
+
+        private String ip;
+
+        public SimpleNode(String ip) {
+            this.ip = ip;
+        }
+
+        @Override
+        public NodeType getNodeType() {
+            return NodeType.DATA;
+        }
+
+        @Override
+        public URL getNodeUrl() {
+            return new URL(ip);
+        }
     }
 
 }

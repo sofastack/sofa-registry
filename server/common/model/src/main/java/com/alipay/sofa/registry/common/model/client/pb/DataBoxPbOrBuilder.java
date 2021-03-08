@@ -21,15 +21,15 @@ package com.alipay.sofa.registry.common.model.client.pb;
 
 public interface DataBoxPbOrBuilder extends
 // @@protoc_insertion_point(interface_extends:DataBoxPb)
-                                   com.google.protobuf.MessageOrBuilder {
+			com.google.protobuf.MessageOrBuilder {
 
-    /**
-     * <code>string data = 1;</code>
-     */
-    java.lang.String getData();
+	/**
+	 * <code>string data = 1;</code>
+	 */
+	java.lang.String getData();
 
-    /**
-     * <code>string data = 1;</code>
-     */
-    com.google.protobuf.ByteString getDataBytes();
+	/**
+	 * <code>string data = 1;</code>
+	 */
+	com.google.protobuf.ByteString getDataBytes();
 }

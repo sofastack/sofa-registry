@@ -20,40 +20,47 @@
 package com.alipay.sofa.registry.common.model.client.pb;
 
 public final class DataBoxPbOuterClass {
-    private DataBoxPbOuterClass() {
-    }
+	private DataBoxPbOuterClass() {
+	}
 
-    public static void registerAllExtensions(com.google.protobuf.ExtensionRegistryLite registry) {
-    }
+	public static void registerAllExtensions(
+			com.google.protobuf.ExtensionRegistryLite registry) {
+	}
 
-    public static void registerAllExtensions(com.google.protobuf.ExtensionRegistry registry) {
-        registerAllExtensions((com.google.protobuf.ExtensionRegistryLite) registry);
-    }
+	public static void registerAllExtensions(
+			com.google.protobuf.ExtensionRegistry registry) {
+		registerAllExtensions((com.google.protobuf.ExtensionRegistryLite) registry);
+	}
 
-    static final com.google.protobuf.Descriptors.Descriptor                internal_static_DataBoxPb_descriptor;
-    static final com.google.protobuf.GeneratedMessageV3.FieldAccessorTable internal_static_DataBoxPb_fieldAccessorTable;
+	static final com.google.protobuf.Descriptors.Descriptor internal_static_DataBoxPb_descriptor;
+	static final com.google.protobuf.GeneratedMessageV3.FieldAccessorTable internal_static_DataBoxPb_fieldAccessorTable;
 
-    public static com.google.protobuf.Descriptors.FileDescriptor getDescriptor() {
-        return descriptor;
-    }
+	public static com.google.protobuf.Descriptors.FileDescriptor getDescriptor() {
+		return descriptor;
+	}
 
-    private static com.google.protobuf.Descriptors.FileDescriptor descriptor;
-    static {
-        java.lang.String[] descriptorData = { "\n\017DataBoxPb.proto\"\031\n\tDataBoxPb\022\014\n\004data\030\001"
-                                              + " \001(\tB7\n/com.alipay.sofa.registry.common."
-                                              + "model.client.pbP\001Z\002pbb\006proto3" };
-        com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner = new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {
-            public com.google.protobuf.ExtensionRegistry assignDescriptors(com.google.protobuf.Descriptors.FileDescriptor root) {
-                descriptor = root;
-                return null;
-            }
-        };
-        com.google.protobuf.Descriptors.FileDescriptor.internalBuildGeneratedFileFrom(
-            descriptorData, new com.google.protobuf.Descriptors.FileDescriptor[] {}, assigner);
-        internal_static_DataBoxPb_descriptor = getDescriptor().getMessageTypes().get(0);
-        internal_static_DataBoxPb_fieldAccessorTable = new com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
-            internal_static_DataBoxPb_descriptor, new java.lang.String[] { "Data", });
-    }
+	private static com.google.protobuf.Descriptors.FileDescriptor descriptor;
+	static {
+		java.lang.String[] descriptorData = {"\n\017DataBoxPb.proto\"\031\n\tDataBoxPb\022\014\n\004data\030\001"
+				+ " \001(\tB7\n/com.alipay.sofa.registry.common."
+				+ "model.client.pbP\001Z\002pbb\006proto3"};
+		com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner = new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {
+			public com.google.protobuf.ExtensionRegistry assignDescriptors(
+					com.google.protobuf.Descriptors.FileDescriptor root) {
+				descriptor = root;
+				return null;
+			}
+		};
+		com.google.protobuf.Descriptors.FileDescriptor
+				.internalBuildGeneratedFileFrom(descriptorData,
+						new com.google.protobuf.Descriptors.FileDescriptor[]{},
+						assigner);
+		internal_static_DataBoxPb_descriptor = getDescriptor()
+				.getMessageTypes().get(0);
+		internal_static_DataBoxPb_fieldAccessorTable = new com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+				internal_static_DataBoxPb_descriptor,
+				new java.lang.String[]{"Data",});
+	}
 
-    // @@protoc_insertion_point(outer_class_scope)
+	// @@protoc_insertion_point(outer_class_scope)
 }

@@ -18,11 +18,8 @@ package com.alipay.sofa.registry.server.meta.cluster.node;
 
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
-import com.alipay.sofa.registry.server.meta.lease.impl.DefaultLeaseManagerTest;
 import org.junit.Assert;
 import org.junit.Test;
-
-import static org.junit.Assert.*;
 
 public class TestAbstractNodeEventTest {
 
@@ -30,7 +27,7 @@ public class TestAbstractNodeEventTest {
 
     @Test
     public void testGetNode() {
-        DefaultLeaseManagerTest.SimpleNode simpleNode = new DefaultLeaseManagerTest.SimpleNode(
+        NodeModifiedTest.SimpleNode simpleNode = new NodeModifiedTest.SimpleNode(
             "127.0.0.1");
         AbstractNodeEvent event = new AbstractNodeEvent(simpleNode) {
         };

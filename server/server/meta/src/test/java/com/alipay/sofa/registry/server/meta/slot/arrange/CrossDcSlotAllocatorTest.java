@@ -22,14 +22,12 @@ import com.alipay.sofa.registry.common.model.slot.SlotTable;
 import com.alipay.sofa.registry.exception.InitializeException;
 import com.alipay.sofa.registry.exception.StartException;
 import com.alipay.sofa.registry.exception.StopException;
-import com.alipay.sofa.registry.jraft.bootstrap.ServiceStateMachine;
 import com.alipay.sofa.registry.lifecycle.LifecycleState;
 import com.alipay.sofa.registry.lifecycle.impl.LifecycleHelper;
 import com.alipay.sofa.registry.remoting.exchange.Exchange;
-import com.alipay.sofa.registry.server.meta.AbstractTest;
+import com.alipay.sofa.registry.server.meta.AbstractMetaServerTest;
+import com.alipay.sofa.registry.server.meta.MetaLeaderService;
 import com.alipay.sofa.registry.server.meta.metaserver.CrossDcMetaServer;
-import com.alipay.sofa.registry.server.meta.remoting.RaftExchanger;
-import com.google.common.collect.ImmutableMap;
 import org.assertj.core.util.Lists;
 import org.junit.After;
 import org.junit.Assert;
@@ -42,7 +40,7 @@ import java.util.concurrent.TimeoutException;
 
 import static org.mockito.Mockito.*;
 
-public class CrossDcSlotAllocatorTest extends AbstractTest {
+public class CrossDcSlotAllocatorTest extends AbstractMetaServerTest {
 
     private CrossDcSlotAllocator allocator;
 
@@ -53,21 +51,17 @@ public class CrossDcSlotAllocatorTest extends AbstractTest {
     private Exchange             exchange;
 
     @Mock
-    private RaftExchanger        raft;
-
-    private ServiceStateMachine  machine;
+    private MetaLeaderService leaderElector;
 
     @Before
     public void beforeCrossDcSlotAllocatorTest() throws Exception {
         MockitoAnnotations.initMocks(this);
-        machine = spy(ServiceStateMachine.getInstance());
-        when(machine.isLeader()).thenReturn(false);
         when(crossDcMetaServer.getClusterMembers()).thenReturn(
             Lists.newArrayList(new MetaNode(randomURL(), getDc())));
         when(crossDcMetaServer.getClusterMembers()).thenReturn(
             Lists.newArrayList(new MetaNode(randomURL(), getDc())));
         allocator = spy(new CrossDcSlotAllocator(getDc(), scheduled, exchange, crossDcMetaServer,
-            raft));
+                leaderElector));
     }
 
     @After
@@ -80,8 +74,6 @@ public class CrossDcSlotAllocatorTest extends AbstractTest {
     public void testGetSlotTable() throws TimeoutException, InterruptedException, InitializeException, StartException {
         LifecycleHelper.initializeIfPossible(allocator);
         LifecycleHelper.startIfPossible(allocator);
-        allocator.setRaftStorage(allocator.new LocalRaftSlotTableStorage());
-
         Assert.assertNull(allocator.getSlotTable());
 
         when(exchange.getClient(Exchange.META_SERVER_TYPE)).thenReturn(getRpcClient(scheduled, 1,
@@ -104,8 +96,6 @@ public class CrossDcSlotAllocatorTest extends AbstractTest {
     public void testRefreshSlotTableFirstFailure() throws TimeoutException, InterruptedException, StartException, InitializeException {
         LifecycleHelper.initializeIfPossible(allocator);
         LifecycleHelper.startIfPossible(allocator);
-        allocator.setRaftStorage(allocator.new LocalRaftSlotTableStorage());
-
         Assert.assertNull(allocator.getSlotTable());
 
         when(exchange.getClient(Exchange.META_SERVER_TYPE))
@@ -126,7 +116,6 @@ public class CrossDcSlotAllocatorTest extends AbstractTest {
                                                     StartException, InitializeException {
         LifecycleHelper.initializeIfPossible(allocator);
         LifecycleHelper.startIfPossible(allocator);
-        allocator.setRaftStorage(allocator.new LocalRaftSlotTableStorage());
 
         Assert.assertNull(allocator.getSlotTable());
 

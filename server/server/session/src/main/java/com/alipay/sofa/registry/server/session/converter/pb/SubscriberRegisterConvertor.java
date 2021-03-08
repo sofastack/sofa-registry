@@ -22,66 +22,88 @@ import com.alipay.sofa.registry.core.model.SubscriberRegister;
 
 /**
  * @author bystander
- * @version $Id: SubscriberRegisterConvertor.java, v 0.1 2018年03月21日 2:07 PM bystander Exp $
+ * @version $Id: SubscriberRegisterConvertor.java, v 0.1 2018年03月21日 2:07 PM
+ *          bystander Exp $
  */
 public class SubscriberRegisterConvertor {
 
-    public static SubscriberRegister convert2Java(SubscriberRegisterPb subscriberRegisterPb) {
+	public static SubscriberRegister convert2Java(
+			SubscriberRegisterPb subscriberRegisterPb) {
 
-        if (subscriberRegisterPb == null) {
-            return null;
-        }
+		if (subscriberRegisterPb == null) {
+			return null;
+		}
 
-        SubscriberRegister subscriberRegister = new SubscriberRegister();
+		SubscriberRegister subscriberRegister = new SubscriberRegister();
 
-        subscriberRegister.setAppName(subscriberRegisterPb.getBaseRegister().getAppName());
-        subscriberRegister.setClientId(subscriberRegisterPb.getBaseRegister().getClientId());
-        subscriberRegister.setDataId(subscriberRegisterPb.getBaseRegister().getDataId());
-        subscriberRegister.setDataInfoId(subscriberRegisterPb.getBaseRegister().getDataInfoId());
-        subscriberRegister.setEventType(subscriberRegisterPb.getBaseRegister().getEventType());
-        subscriberRegister.setGroup(subscriberRegisterPb.getBaseRegister().getGroup());
-        subscriberRegister.setZone(subscriberRegisterPb.getBaseRegister().getZone());
-        subscriberRegister.setInstanceId(subscriberRegisterPb.getBaseRegister().getInstanceId());
-        subscriberRegister.setIp(subscriberRegisterPb.getBaseRegister().getIp());
-        subscriberRegister.setPort(subscriberRegisterPb.getBaseRegister().getPort());
-        subscriberRegister.setProcessId(subscriberRegisterPb.getBaseRegister().getProcessId());
-        subscriberRegister.setRegistId(subscriberRegisterPb.getBaseRegister().getRegistId());
-        subscriberRegister.setTimestamp(subscriberRegisterPb.getBaseRegister().getTimestamp());
-        subscriberRegister.setVersion(subscriberRegisterPb.getBaseRegister().getVersion());
+		subscriberRegister.setAppName(subscriberRegisterPb.getBaseRegister()
+				.getAppName());
+		subscriberRegister.setClientId(subscriberRegisterPb.getBaseRegister()
+				.getClientId());
+		subscriberRegister.setDataId(subscriberRegisterPb.getBaseRegister()
+				.getDataId());
+		subscriberRegister.setDataInfoId(subscriberRegisterPb.getBaseRegister()
+				.getDataInfoId());
+		subscriberRegister.setEventType(subscriberRegisterPb.getBaseRegister()
+				.getEventType());
+		subscriberRegister.setGroup(subscriberRegisterPb.getBaseRegister()
+				.getGroup());
+		subscriberRegister.setZone(subscriberRegisterPb.getBaseRegister()
+				.getZone());
+		subscriberRegister.setInstanceId(subscriberRegisterPb.getBaseRegister()
+				.getInstanceId());
+		subscriberRegister
+				.setIp(subscriberRegisterPb.getBaseRegister().getIp());
+		subscriberRegister.setPort(subscriberRegisterPb.getBaseRegister()
+				.getPort());
+		subscriberRegister.setProcessId(subscriberRegisterPb.getBaseRegister()
+				.getProcessId());
+		subscriberRegister.setRegistId(subscriberRegisterPb.getBaseRegister()
+				.getRegistId());
+		subscriberRegister.setTimestamp(subscriberRegisterPb.getBaseRegister()
+				.getTimestamp());
+		subscriberRegister.setVersion(subscriberRegisterPb.getBaseRegister()
+				.getVersion());
 
-        subscriberRegister.setAttributes(subscriberRegisterPb.getBaseRegister().getAttributesMap());
+		subscriberRegister.setAttributes(subscriberRegisterPb.getBaseRegister()
+				.getAttributesMap());
 
-        subscriberRegister.setScope(subscriberRegisterPb.getScope());
-        return subscriberRegister;
-    }
+		subscriberRegister.setScope(subscriberRegisterPb.getScope());
+		return subscriberRegister;
+	}
 
-    public static SubscriberRegisterPb convert2Pb(SubscriberRegister subscriberRegisterJava) {
+	public static SubscriberRegisterPb convert2Pb(
+			SubscriberRegister subscriberRegisterJava) {
 
-        if (subscriberRegisterJava == null) {
-            return null;
-        }
+		if (subscriberRegisterJava == null) {
+			return null;
+		}
 
-        SubscriberRegisterPb.Builder builder = SubscriberRegisterPb.newBuilder();
+		SubscriberRegisterPb.Builder builder = SubscriberRegisterPb
+				.newBuilder();
 
-        BaseRegisterPb.Builder baseRegisterBuilder = BaseRegisterPb.newBuilder();
+		BaseRegisterPb.Builder baseRegisterBuilder = BaseRegisterPb
+				.newBuilder();
 
-        baseRegisterBuilder.setAppName(subscriberRegisterJava.getAppName())
-            .setClientId(subscriberRegisterJava.getClientId())
-            .setDataId(subscriberRegisterJava.getDataId())
-            .setDataInfoId(subscriberRegisterJava.getDataInfoId())
-            .setEventType(subscriberRegisterJava.getEventType())
-            .setGroup(subscriberRegisterJava.getGroup()).setZone(subscriberRegisterJava.getZone())
-            .setInstanceId(subscriberRegisterJava.getInstanceId())
-            .setIp(subscriberRegisterJava.getIp()).setPort(subscriberRegisterJava.getPort())
-            .setProcessId(subscriberRegisterJava.getProcessId())
-            .setRegistId(subscriberRegisterJava.getRegistId())
-            .setVersion(subscriberRegisterJava.getVersion())
-            .setTimestamp(subscriberRegisterJava.getTimestamp())
-            .putAllAttributes(subscriberRegisterJava.getAttributes());
+		baseRegisterBuilder.setAppName(subscriberRegisterJava.getAppName())
+				.setClientId(subscriberRegisterJava.getClientId())
+				.setDataId(subscriberRegisterJava.getDataId())
+				.setDataInfoId(subscriberRegisterJava.getDataInfoId())
+				.setEventType(subscriberRegisterJava.getEventType())
+				.setGroup(subscriberRegisterJava.getGroup())
+				.setZone(subscriberRegisterJava.getZone())
+				.setInstanceId(subscriberRegisterJava.getInstanceId())
+				.setIp(subscriberRegisterJava.getIp())
+				.setPort(subscriberRegisterJava.getPort())
+				.setProcessId(subscriberRegisterJava.getProcessId())
+				.setRegistId(subscriberRegisterJava.getRegistId())
+				.setVersion(subscriberRegisterJava.getVersion())
+				.setTimestamp(subscriberRegisterJava.getTimestamp())
+				.putAllAttributes(subscriberRegisterJava.getAttributes());
 
-        builder.setScope(subscriberRegisterJava.getScope()).setBaseRegister(
-            baseRegisterBuilder.build());
+		builder.setScope(subscriberRegisterJava.getScope()).setBaseRegister(
+				baseRegisterBuilder.build());
 
-        return builder.build();
-    }
+		return builder.build();
+	}
 }

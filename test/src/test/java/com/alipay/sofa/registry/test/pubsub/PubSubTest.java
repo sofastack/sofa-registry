@@ -24,7 +24,10 @@ import com.alipay.sofa.registry.test.BaseIntegrationTest;
 import com.alipay.sofa.registry.test.BaseIntegrationTest.MySubscriberDataObserver;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.test.context.junit4.SpringRunner;
+
+import java.util.concurrent.CountDownLatch;
 
 import static com.alipay.sofa.registry.client.constants.ValueConstants.DEFAULT_GROUP;
 import static org.junit.Assert.assertEquals;
@@ -32,8 +35,10 @@ import static org.junit.Assert.assertEquals;
 /**
  * @author xuanbe 18/12/2
  */
-@RunWith(SpringRunner.class)
+@RunWith(SpringJUnit4ClassRunner.class)
 public class PubSubTest extends BaseIntegrationTest {
+
+    private CountDownLatch countDownLatch = new CountDownLatch(1);
     /**
      * Publisher test.
      *
@@ -41,6 +46,7 @@ public class PubSubTest extends BaseIntegrationTest {
      */
     @Test
     public void publisherTest() throws InterruptedException {
+        LOGGER.info("--------------------------------splitter-----------------------------");
         String dataId = "test-dataId-publisherTest-" + System.nanoTime();
         String value = "test publish";
 
@@ -57,6 +63,8 @@ public class PubSubTest extends BaseIntegrationTest {
         subReg.setScopeEnum(ScopeEnum.dataCenter);
 
         registryClient1.register(subReg);
+
+        //countDownLatch.await();
 
         Thread.sleep(3 * 1000L);
         //        Thread.sleep(2000000L);

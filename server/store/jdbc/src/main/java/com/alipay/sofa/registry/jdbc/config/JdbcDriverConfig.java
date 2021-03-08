@@ -17,29 +17,30 @@
 package com.alipay.sofa.registry.jdbc.config;
 
 /**
- *
+ * 
  * @author xiaojian.xj
- * @version $Id: JdbcDriverConfig.java, v 0.1 2021年01月17日 17:28 xiaojian.xj Exp $
+ * @version $Id: JdbcDriverConfig.java, v 0.1 2021年01月17日 17:28 xiaojian.xj Exp
+ *          $
  */
 public interface JdbcDriverConfig {
 
-    String getDriverClassName();
+	String getDriverClassName();
 
-    String getUrl();
+	String getUrl();
 
-    String getUsername();
+	String getUsername();
 
-    String getPassword();
+	String getPassword();
 
-    //get domain path
-    String getTypeAliasesPackage();
+	// get domain path
+	String getTypeAliasesPackage();
 
-    //get mapper.xml path
-    String getMapperLocations();
+	// get mapper.xml path
+	String getMapperLocations();
 
-    int getMinIdle();
+	int getMinIdle();
 
-    int getMaxActive();
+	int getMaxActive();
 
-    int getMaxWait();
+	int getMaxWait();
 }
