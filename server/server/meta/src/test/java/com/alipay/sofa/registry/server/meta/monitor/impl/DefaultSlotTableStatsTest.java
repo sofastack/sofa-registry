@@ -133,16 +133,18 @@ public class DefaultSlotTableStatsTest extends AbstractTest {
         DataNode dataNode = new DataNode(randomURL(randomIp()), getDc());
         List<BaseSlotStatus> slotStatuses = Lists.newArrayList();
         for (int slotId = 0; slotId < SlotConfig.SLOT_NUM; slotId++) {
-            slotStatuses.add(new FollowerSlotStatus(slotId, slotManager.getSlotTable().getSlot(slotId).getLeaderEpoch(), dataNode
-                .getIp(), System.currentTimeMillis(), -1));
+            slotStatuses
+                .add(new FollowerSlotStatus(slotId, slotManager.getSlotTable().getSlot(slotId)
+                    .getLeaderEpoch(), dataNode.getIp(), System.currentTimeMillis(), -1));
         }
         slotTableStats.checkSlotStatuses(dataNode, slotStatuses);
         Assert.assertFalse(slotTableStats.isSlotFollowersStable());
 
         slotStatuses = Lists.newArrayList();
         for (int slotId = 0; slotId < SlotConfig.SLOT_NUM; slotId++) {
-            slotStatuses.add(new FollowerSlotStatus(slotId, slotManager.getSlotTable().getSlot(slotId).getLeaderEpoch(), dataNode
-                .getIp(), System.currentTimeMillis(), System.currentTimeMillis() - MAX_SYNC_GAP));
+            slotStatuses.add(new FollowerSlotStatus(slotId, slotManager.getSlotTable()
+                .getSlot(slotId).getLeaderEpoch(), dataNode.getIp(), System.currentTimeMillis(),
+                System.currentTimeMillis() - MAX_SYNC_GAP));
         }
         slotTableStats.checkSlotStatuses(dataNode, slotStatuses);
         Assert.assertFalse(slotTableStats.isSlotFollowersStable());
@@ -152,8 +154,9 @@ public class DefaultSlotTableStatsTest extends AbstractTest {
             slotStatuses = Lists.newArrayList();
             DataNodeSlot dataNodeSlot = slotManager.getDataNodeManagedSlot(node, false);
             for (int slotId : dataNodeSlot.getFollowers()) {
-                slotStatuses.add(new FollowerSlotStatus(slotId, slotManager.getSlotTable().getSlot(slotId).getLeaderEpoch(), node
-                    .getIp(), System.currentTimeMillis(), System.currentTimeMillis() - 1000));
+                slotStatuses.add(new FollowerSlotStatus(slotId, slotManager.getSlotTable()
+                    .getSlot(slotId).getLeaderEpoch(), node.getIp(), System.currentTimeMillis(),
+                    System.currentTimeMillis() - 1000));
             }
             slotTableStats.checkSlotStatuses(node, slotStatuses);
         }
@@ -168,8 +171,9 @@ public class DefaultSlotTableStatsTest extends AbstractTest {
             slotStatuses = Lists.newArrayList();
             DataNodeSlot dataNodeSlot = slotManager.getDataNodeManagedSlot(node, false);
             for (int slotId : dataNodeSlot.getFollowers()) {
-                slotStatuses.add(new FollowerSlotStatus(slotId, slotManager.getSlotTable().getSlot(slotId).getLeaderEpoch(), node
-                        .getIp(), System.currentTimeMillis(), System.currentTimeMillis() - 1000));
+                slotStatuses.add(new FollowerSlotStatus(slotId, slotManager.getSlotTable()
+                    .getSlot(slotId).getLeaderEpoch(), node.getIp(), System.currentTimeMillis(),
+                    System.currentTimeMillis() - 1000));
             }
             slotTableStats.checkSlotStatuses(node, slotStatuses);
         }

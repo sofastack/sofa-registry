@@ -70,8 +70,10 @@ public class DefaultSlotTableStats extends AbstractLifecycle implements SlotTabl
             for (int slotId = 0; slotId < SlotConfig.SLOT_NUM; slotId++) {
                 String leader = slotManager.getSlotTable().getSlot(slotId).getLeader();
                 SlotStats slotStats = slotStatses.get(slotId);
-                if (!slotStats.getSlot().getLeader().equals(leader) || !slotStatses.get(slotId).isLeaderStable()) {
-                    logger.warn("[isSlotLeadersStable]slot[{}] leader[{}] not stable", slotId, leader);
+                if (!slotStats.getSlot().getLeader().equals(leader)
+                    || !slotStatses.get(slotId).isLeaderStable()) {
+                    logger.warn("[isSlotLeadersStable]slot[{}] leader[{}] not stable", slotId,
+                        leader);
                     return false;
                 }
             }
@@ -121,20 +123,26 @@ public class DefaultSlotTableStats extends AbstractLifecycle implements SlotTabl
                     continue;
                 } else if (slotStats.getSlot().getLeaderEpoch() < slotStatus.getSlotLeaderEpoch()) {
                     PrometheusMetrics.DataSlot.setDataSlotGreaterThanMeta(node.getIp(), slotId);
-                    logger.error(
-                                    "[checkSlotStatuses] won't update slot status, slot[{}] leader-epoch[{}] reported by data({}) is more than current[{}]",
-                                    slotId, slotStatus.getSlotLeaderEpoch(), node.getIp(), slotStats.getSlot().getLeaderEpoch());
+                    logger
+                        .error(
+                            "[checkSlotStatuses] won't update slot status, slot[{}] leader-epoch[{}] reported by data({}) is more than current[{}]",
+                            slotId, slotStatus.getSlotLeaderEpoch(), node.getIp(), slotStats
+                                .getSlot().getLeaderEpoch());
                     continue;
                 }
                 if (!slotStats.getSlot().equals(slotManager.getSlotTable().getSlot(slotId))) {
-                    logger.error("[checkSlotStatuses] slot reported by data({}) is not equals with mine({}), not update",
+                    logger
+                        .error(
+                            "[checkSlotStatuses] slot reported by data({}) is not equals with mine({}), not update",
                             slotStats.getSlot(), slotManager.getSlotTable().getSlot(slotId));
                     continue;
                 }
 
                 if (slotStatus.getRole() == Slot.Role.Leader) {
                     if (!slotStats.getSlot().getLeader().equals(node.getIp())) {
-                        logger.error("[checkSlotStatuses] slot leader({}) is not equal with reported data-server({})",
+                        logger
+                            .error(
+                                "[checkSlotStatuses] slot leader({}) is not equal with reported data-server({})",
                                 slotStats.getSlot().getLeader(), node.getIp());
                         PrometheusMetrics.DataSlot.setDataReportStable(node.getIp(), slotId);
                         continue;
@@ -142,7 +150,9 @@ public class DefaultSlotTableStats extends AbstractLifecycle implements SlotTabl
                     slotStats.updateLeaderState((LeaderSlotStatus) slotStatus);
                 } else {
                     if (!slotStats.getSlot().getFollowers().contains(node.getIp())) {
-                        logger.error("[checkSlotStatuses] slot follower({}) is not containing reported data-server({})",
+                        logger
+                            .error(
+                                "[checkSlotStatuses] slot follower({}) is not containing reported data-server({})",
                                 slotStats.getSlot().getFollowers(), node.getIp());
                         PrometheusMetrics.DataSlot.setDataReportStable(node.getIp(), slotId);
                         continue;

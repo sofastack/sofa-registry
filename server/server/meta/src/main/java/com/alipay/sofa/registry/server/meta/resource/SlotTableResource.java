@@ -120,7 +120,8 @@ public class SlotTableResource {
     public CommonResponse getReconcileStatus() {
         logger.info("[getReconcileStatus] begin");
         try {
-            boolean result = slotArranger.getLifecycleState().isStarted() && !slotArranger.isSuspended();
+            boolean result = slotArranger.getLifecycleState().isStarted()
+                             && !slotArranger.isSuspended();
             logger.info("[getReconcileStatus] end with succeed");
             if (result) {
                 return GenericResponse.buildSuccessResponse("running");
