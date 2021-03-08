@@ -194,6 +194,9 @@ public final class SlotManagerImpl implements SlotManager {
                     slotStatuses.add(status);
                 } else {
                     KeyedTask syncLeaderTask = slotState.syncLeaderTask;
+                    if (syncLeaderTask == null) {
+                        continue;
+                    }
                     FollowerSlotStatus status = new FollowerSlotStatus(slotId,
                         slotState.slot.getLeaderEpoch(), ServerEnv.IP,
                         syncLeaderTask.getStartTime(), slotState.lastSuccessLeaderSyncTime);

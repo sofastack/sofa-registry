@@ -45,7 +45,6 @@ import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * @author chen.zhu
@@ -157,14 +156,14 @@ public class DefaultSlotTableMonitor extends AbstractLifecycle implements SlotTa
             // but the second time should be ok, otherwise, data has something un-common
             int times = dataServerLagCounter.getOrDefault(heartbeat.getNode().getIp(), 0) + 1;
             if (times > 1) {
-                logger.error("[onHeartbeat] data[{}] lag", heartbeat.getNode().getIp());
+                logger.error("[onHeartbeatLag] data[{}] lag", heartbeat.getNode().getIp());
             }
             PrometheusMetrics.DataSlot.setDataServerSlotLagTimes(heartbeat.getNode().getIp(), times);
             dataServerLagCounter.put(heartbeat.getNode().getIp(), times);
             return;
         }
         if (heartbeat.getSlotStatus() == null) {
-            logger.warn("[onHeartbeat] empty heartbeat");
+            logger.warn("[onHeartbeatEmpty] empty heartbeat");
             return;
         }
         dataServerLagCounter.put(heartbeat.getNode().getIp(), 0);
