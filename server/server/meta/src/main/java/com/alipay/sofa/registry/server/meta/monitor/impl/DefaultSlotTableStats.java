@@ -20,6 +20,8 @@ import com.alipay.sofa.registry.common.model.metaserver.nodes.DataNode;
 import com.alipay.sofa.registry.common.model.slot.*;
 import com.alipay.sofa.registry.exception.InitializeException;
 import com.alipay.sofa.registry.lifecycle.impl.AbstractLifecycle;
+import com.alipay.sofa.registry.log.Logger;
+import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.server.meta.monitor.PrometheusMetrics;
 import com.alipay.sofa.registry.server.meta.monitor.SlotStats;
 import com.alipay.sofa.registry.server.meta.monitor.SlotTableStats;
@@ -118,6 +120,12 @@ public class DefaultSlotTableStats extends AbstractLifecycle implements SlotTabl
                             "[checkSlotStatuses] won't update slot status, slot[{}] leader-epoch[{}] is less than current[{}]",
                             slotId, slotStatus.getSlotLeaderEpoch(), slotStats.getSlot()
                                 .getLeaderEpoch());
+                    continue;
+                } else if (slotStats.getSlot().getLeaderEpoch() < slotStatus.getSlotLeaderEpoch()) {
+                    PrometheusMetrics.DataSlot.setDataSlotGreaterThanMeta(node.getIp(), slotId);
+                    logger.error(
+                                    "[checkSlotStatuses] won't update slot status, slot[{}] leader-epoch[{}] reported by data({}) is more than current[{}]",
+                                    slotId, slotStatus.getSlotLeaderEpoch(), node.getIp(), slotStats.getSlot().getLeaderEpoch());
                     continue;
                 }
                 if (!slotStats.getSlot().equals(slotManager.getSlotTable().getSlot(slotId))) {
