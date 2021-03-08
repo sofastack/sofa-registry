@@ -69,12 +69,12 @@ public abstract class LoopRunnable implements Runnable, Suspendable {
                 }
                 if (isSuspend) {
                     LOGGER.warn("[suspend] break");
-                    break;
-                }
-                try {
-                    runUnthrowable();
-                } catch (Throwable unexpect) {
-                    LOGGER.error("run unexpect error", unexpect);
+                } else {
+                    try {
+                        runUnthrowable();
+                    } catch (Throwable unexpect) {
+                        LOGGER.error("run unexpect error", unexpect);
+                    }
                 }
                 try {
                     waitingUnthrowable();
