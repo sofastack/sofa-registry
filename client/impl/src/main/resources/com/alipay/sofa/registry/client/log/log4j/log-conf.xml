@@ -6,55 +6,55 @@
 
     <!-- appender -->
     <appender name="ERROR-APPENDER" class="org.apache.log4j.DailyRollingFileAppender">
-        <param name="file" value="${logging.path}/registry/common-error.log"/>
-        <param name="append" value="true"/>
-        <param name="encoding" value="${com.alipay.sofa.registry.client.log.encode}"/>
-        <param name="threshold" value="ERROR"/>
-        <param name="DatePattern" value="'.'yyyy-MM-dd"/>
+        <param name="file" dataValue="${logging.path}/registry/common-error.log"/>
+        <param name="append" dataValue="true"/>
+        <param name="encoding" dataValue="${com.alipay.sofa.registry.client.log.encode}"/>
+        <param name="threshold" dataValue="ERROR"/>
+        <param name="DatePattern" dataValue="'.'yyyy-MM-dd"/>
         <layout class="org.apache.log4j.PatternLayout">
-            <param name="ConversionPattern" value="%d %-5p %C{1}#%L %-32t - %m%n"/>
+            <param name="ConversionPattern" dataValue="%d %-5p %C{1}#%L %-32t - %m%n"/>
         </layout>
     </appender>
 
     <appender name="ROOT-APPENDER" class="org.apache.log4j.DailyRollingFileAppender">
-        <param name="file" value="${logging.path}/registry/common-default.log"/>
-        <param name="append" value="true"/>
-        <param name="encoding" value="${com.alipay.sofa.registry.client.log.encode}"/>
-        <param name="threshold" value="${com.alipay.sofa.registry.client.log.level}"/>
-        <param name="DatePattern" value="'.'yyyy-MM-dd"/>
+        <param name="file" dataValue="${logging.path}/registry/common-default.log"/>
+        <param name="append" dataValue="true"/>
+        <param name="encoding" dataValue="${com.alipay.sofa.registry.client.log.encode}"/>
+        <param name="threshold" dataValue="${com.alipay.sofa.registry.client.log.level}"/>
+        <param name="DatePattern" dataValue="'.'yyyy-MM-dd"/>
         <layout class="org.apache.log4j.PatternLayout">
-            <param name="ConversionPattern" value="%d %-5p %-32t - %m%n"/>
+            <param name="ConversionPattern" dataValue="%d %-5p %-32t - %m%n"/>
         </layout>
         <filter class="org.apache.log4j.varia.LevelRangeFilter">
-            <param name="LevelMin" value="INFO"/>
-            <param name="LevelMax" value="WARN"/>
+            <param name="LevelMin" dataValue="INFO"/>
+            <param name="LevelMax" dataValue="WARN"/>
         </filter>
     </appender>
 
     <appender name="DEFAULT-CLIENT-APPENDER" class="org.apache.log4j.DailyRollingFileAppender">
-        <param name="file" value="${logging.path}/registry/registry-client.log"/>
-        <param name="append" value="true"/>
-        <param name="encoding" value="${com.alipay.sofa.registry.client.log.encode}"/>
-        <param name="threshold" value="${com.alipay.sofa.registry.client.log.level}"/>
-        <param name="DatePattern" value="'.'yyyy-MM-dd"/>
+        <param name="file" dataValue="${logging.path}/registry/registry-client.log"/>
+        <param name="append" dataValue="true"/>
+        <param name="encoding" dataValue="${com.alipay.sofa.registry.client.log.encode}"/>
+        <param name="threshold" dataValue="${com.alipay.sofa.registry.client.log.level}"/>
+        <param name="DatePattern" dataValue="'.'yyyy-MM-dd"/>
         <layout class="org.apache.log4j.PatternLayout">
-            <param name="ConversionPattern" value="%d %-5p %-32t - %m%n"/>
+            <param name="ConversionPattern" dataValue="%d %-5p %-32t - %m%n"/>
         </layout>
         <filter class="org.apache.log4j.varia.LevelRangeFilter">
-            <param name="LevelMin" value="INFO"/>
-            <param name="LevelMax" value="WARN"/>
+            <param name="LevelMin" dataValue="INFO"/>
+            <param name="LevelMax" dataValue="WARN"/>
         </filter>
     </appender>
 
     <!-- logger -->
     <logger name="com.alipay.sofa.registry.client" additivity="false">
-        <level value="${com.alipay.sofa.registry.client.log.level}"/>
+        <level dataValue="${com.alipay.sofa.registry.client.log.level}"/>
         <appender-ref ref="DEFAULT-CLIENT-APPENDER"/>
         <appender-ref ref="ERROR-APPENDER"/>
     </logger>
 
     <root>
-        <level value="${com.alipay.sofa.registry.client.log.level}"/>
+        <level dataValue="${com.alipay.sofa.registry.client.log.level}"/>
         <appender-ref ref="ROOT-APPENDER"/>
         <appender-ref ref="ERROR-APPENDER"/>
     </root>

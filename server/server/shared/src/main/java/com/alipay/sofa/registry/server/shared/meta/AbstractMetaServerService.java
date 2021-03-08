@@ -16,8 +16,6 @@
  */
 package com.alipay.sofa.registry.server.shared.meta;
 
-import com.alipay.remoting.Connection;
-import com.alipay.sofa.jraft.entity.PeerId;
 import com.alipay.sofa.registry.common.model.GenericResponse;
 import com.alipay.sofa.registry.common.model.metaserver.FetchProvideDataRequest;
 import com.alipay.sofa.registry.common.model.metaserver.ProvideData;
@@ -28,10 +26,10 @@ import com.alipay.sofa.registry.common.model.metaserver.nodes.SessionNode;
 import com.alipay.sofa.registry.common.model.store.URL;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
-import com.alipay.sofa.registry.remoting.exchange.message.Request;
 import com.alipay.sofa.registry.remoting.exchange.message.Response;
 import com.alipay.sofa.registry.util.ConcurrentUtils;
 import com.alipay.sofa.registry.util.WakeUpLoopRunnable;
+import com.google.common.collect.Sets;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -44,12 +42,13 @@ import java.util.*;
  */
 public abstract class AbstractMetaServerService<T extends BaseHeartBeatResponse> implements
                                                                                  MetaServerService {
-    private static final Logger         LOGGER = LoggerFactory
-                                                   .getLogger(AbstractMetaServerService.class);
+    protected final Logger         LOGGER = LoggerFactory.getLogger(getClass());
 
     @Autowired
-    protected AbstractMetaNodeExchanger metaNodeExchanger;
+    protected MetaServerManager metaServerManager;
+
     protected volatile State            state  = State.NULL;
+
     private Renewer                     renewer;
 
     @Override
@@ -73,11 +72,11 @@ public abstract class AbstractMetaServerService<T extends BaseHeartBeatResponse>
         }
         LOGGER
             .info("[handleSlotTableChange] slot table is changed, run heart-beat to retrieve new version");
-        renewer.wakeup();
+        if (renewer != null) {
+            renewer.wakeup();
+        }
         return true;
     }
-
-    protected abstract long getCurrentSlotTableEpoch();
 
     private final class Renewer extends WakeUpLoopRunnable {
         final int intervalMs;
@@ -103,22 +102,13 @@ public abstract class AbstractMetaServerService<T extends BaseHeartBeatResponse>
 
     @Override
     public void renewNode() {
-        final String leaderIp = getLeader().getIp();
+        final String leaderIp = metaServerManager.getMetaServerLeader();
         try {
             HeartbeatRequest heartbeatRequest = createRequest();
-            GenericResponse<T> resp = (GenericResponse<T>) metaNodeExchanger.request(new Request() {
-                @Override
-                public Object getRequestBody() {
-                    return heartbeatRequest;
-                }
-
-                @Override
-                public URL getRequestUrl() {
-                    return new URL(leaderIp, metaNodeExchanger.getServerPort());
-                }
-            }).getResult();
+            GenericResponse<T> resp = (GenericResponse<T>) metaServerManager.sendRequest(heartbeatRequest).getResult();
             if (resp != null && resp.isSuccess()) {
                 updateState(resp.getData());
+                metaServerManager.refresh(resp.getData());
                 handleRenewResult(resp.getData());
             } else {
                 LOGGER.error("[RenewNodeTask] renew data node to metaServer error : {}, {}",
@@ -134,47 +124,17 @@ public abstract class AbstractMetaServerService<T extends BaseHeartBeatResponse>
 
     private void updateState(T response) {
         State s = new State(response.getDataCentersFromMetaNodes(), response.getSessionNodesMap(),
-            response.getSlotTable().getDataServers(), response.getSessionServerEpoch());
+            response.getSlotTable().getDataServers(), response.getSessionServerEpoch(), response.getMetaLeader(), response.getMetaLeaderEpoch());
         this.state = s;
-        LOGGER.info("update MetaStat, dataCenters={}, sessions={}/{}, datas={}", state.dataCenters,
-            s.sessionServerEpoch, s.sessionNodes.keySet(), s.dataNodes);
-    }
-
-    private static final class State {
-        static final State                       NULL = new State(Collections.emptySet(),
-                                                          Collections.emptyMap(),
-                                                          Collections.emptySet(), 0);
-        protected final long                     sessionServerEpoch;
-        protected final Set<String>              dataCenters;
-        protected final Map<String, SessionNode> sessionNodes;
-        protected final Set<String>              dataNodes;
-
-        State(Set<String> dataCenters, Map<String, SessionNode> sessionNodes,
-              Set<String> dataNodes, long sessionServerEpoch) {
-            this.sessionServerEpoch = sessionServerEpoch;
-            this.dataCenters = Collections.unmodifiableSet(new TreeSet<>(dataCenters));
-            this.sessionNodes = Collections.unmodifiableMap(new TreeMap<>(sessionNodes));
-            this.dataNodes = Collections.unmodifiableSet(new TreeSet<>(dataNodes));
-        }
+        LOGGER.info("update MetaStat, sessions={}/{}, datas={}, metaLeader: {}, metaLeaderEpoch: {}",
+            s.sessionServerEpoch, s.sessionNodes.keySet(), s.dataServers, s.metaLeader, s.metaLeaderEpoch);
     }
 
     @Override
     public ProvideData fetchData(String dataInfoId) {
-        final String leaderIp = getLeader().getIp();
+        final String leaderIp = metaServerManager.getMetaServerLeader();
         try {
-            Request<FetchProvideDataRequest> request = new Request<FetchProvideDataRequest>() {
-                @Override
-                public FetchProvideDataRequest getRequestBody() {
-                    return new FetchProvideDataRequest(dataInfoId);
-                }
-
-                @Override
-                public URL getRequestUrl() {
-                    return new URL(leaderIp, metaNodeExchanger.getServerPort());
-                }
-            };
-
-            Response response = metaNodeExchanger.request(request);
+            Response response = metaServerManager.sendRequest(new FetchProvideDataRequest(dataInfoId));
 
             Object result = response.getResult();
             if (result instanceof ProvideData) {
@@ -190,22 +150,6 @@ public abstract class AbstractMetaServerService<T extends BaseHeartBeatResponse>
 
     }
 
-    public Map<String, List<Connection>> getConnections() {
-        return metaNodeExchanger.getConnections();
-    }
-
-    public void startRaftClient() {
-        metaNodeExchanger.startRaftClient();
-    }
-
-    public PeerId getLeader() {
-        return metaNodeExchanger.getLeader();
-    }
-
-    public Set<String> getDataCenters() {
-        return state.dataCenters;
-    }
-
     public Map<String, SessionNode> getSessionNodes() {
         return state.sessionNodes;
     }
@@ -215,15 +159,11 @@ public abstract class AbstractMetaServerService<T extends BaseHeartBeatResponse>
     }
 
     public Set<String> getDataServerList() {
-        return state.dataNodes;
-    }
-
-    public long getSessionServerEpoch() {
-        return state.sessionServerEpoch;
+        return state.dataServers;
     }
 
     public Set<String> getMetaServerList() {
-        return metaNodeExchanger.getServerIps();
+        return Sets.newHashSet(metaServerManager.getRuntimeMetaServerList());
     }
 
     public List<String> getSessionServerList(String zonename) {
@@ -239,12 +179,42 @@ public abstract class AbstractMetaServerService<T extends BaseHeartBeatResponse>
         return serverList;
     }
 
-    public void connectServer() {
-        metaNodeExchanger.connectServer();
+    @Override
+    public long getSessionServerEpoch() {
+        return state.sessionServerEpoch;
+    }
+
+    @Override
+    public Set<String> getDataCenters() {
+        return state.dataCenters;
     }
 
     protected abstract void handleRenewResult(T result);
 
     protected abstract HeartbeatRequest createRequest();
+
+    protected abstract long getCurrentSlotTableEpoch();
+
+    private static final class State {
+        static final State                       NULL = new State(Collections.emptySet(), Collections.emptyMap(),
+                Collections.emptySet(), 0, null, -1L);
+        protected final long                     sessionServerEpoch;
+        protected final Map<String, SessionNode> sessionNodes;
+        protected final Set<String>              dataServers;
+        protected final String metaLeader;
+        protected final long metaLeaderEpoch;
+        protected final Set<String>              dataCenters;
+
+        State(Set<String> dataCenters, Map<String, SessionNode> sessionNodes,
+              Set<String> dataServers, long sessionServerEpoch,
+              String metaLeader, long metaLeaderEpoch) {
+            this.sessionServerEpoch = sessionServerEpoch;
+            this.dataCenters = Collections.unmodifiableSet(new TreeSet<>(dataCenters));
+            this.sessionNodes = Collections.unmodifiableMap(sessionNodes);
+            this.dataServers = Collections.unmodifiableSet(dataServers);
+            this.metaLeader = metaLeader;
+            this.metaLeaderEpoch = metaLeaderEpoch;
+        }
+    }
 
 }

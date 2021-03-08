@@ -19,10 +19,10 @@ package com.alipay.sofa.registry.server.meta.monitor;
 import com.alipay.sofa.registry.common.model.metaserver.inter.heartbeat.HeartbeatRequest;
 import com.alipay.sofa.registry.common.model.metaserver.nodes.DataNode;
 import com.alipay.sofa.registry.common.model.slot.*;
-import com.alipay.sofa.registry.server.meta.AbstractTest;
+import com.alipay.sofa.registry.server.meta.AbstractMetaServerTest;
 import com.alipay.sofa.registry.server.meta.bootstrap.config.NodeConfig;
 import com.alipay.sofa.registry.server.meta.monitor.impl.DefaultSlotTableMonitor;
-import com.alipay.sofa.registry.server.meta.slot.manager.LocalSlotManager;
+import com.alipay.sofa.registry.server.meta.slot.manager.SimpleSlotManager;
 import org.assertj.core.util.Lists;
 import org.junit.After;
 import org.junit.Assert;
@@ -33,11 +33,11 @@ import java.util.List;
 
 import static org.mockito.Mockito.*;
 
-public class DefaultSlotTableMonitorTest extends AbstractTest {
+public class DefaultSlotTableMonitorTest extends AbstractMetaServerTest {
 
     private DefaultSlotTableMonitor monitor = new DefaultSlotTableMonitor();
 
-    private LocalSlotManager        slotManager;
+    private SimpleSlotManager slotManager;
 
     private List<DataNode>          dataNodes;
 
@@ -45,13 +45,12 @@ public class DefaultSlotTableMonitorTest extends AbstractTest {
     public void beforeDefaultSlotTableMonitorTest() throws Exception {
         NodeConfig nodeConfig = mock(NodeConfig.class);
         when(nodeConfig.getLocalDataCenter()).thenReturn(getDc());
-        slotManager = new LocalSlotManager(nodeConfig);
+        slotManager = new SimpleSlotManager();
         dataNodes = Lists.newArrayList(new DataNode(randomURL(randomIp()), getDc()), new DataNode(
             randomURL(randomIp()), getDc()), new DataNode(randomURL(randomIp()), getDc()));
         slotManager.refresh(new SlotTableGenerator(dataNodes).createSlotTable());
         slotManager = spy(slotManager);
         monitor.setSlotManager(slotManager);
-        slotManager.postConstruct();
         monitor.postConstruct();
     }
 
@@ -172,10 +171,14 @@ public class DefaultSlotTableMonitorTest extends AbstractTest {
     @Test
     public void testReportDataServerLag() {
         String ip = randomIp();
-        monitor.onHeartbeat(new HeartbeatRequest<DataNode>(new DataNode(randomURL(ip), getDc()), -1L, getDc(), System.currentTimeMillis(),
-                new SlotConfig.SlotBasicInfo(SlotConfig.SLOT_NUM, SlotConfig.SLOT_REPLICAS, SlotConfig.FUNC), Lists.newArrayList()));
-        monitor.onHeartbeat(new HeartbeatRequest<DataNode>(new DataNode(randomURL(ip), getDc()), -1L, getDc(), System.currentTimeMillis(),
-                new SlotConfig.SlotBasicInfo(SlotConfig.SLOT_NUM, SlotConfig.SLOT_REPLICAS, SlotConfig.FUNC), Lists.newArrayList()));
-        Assert.assertTrue(PrometheusMetrics.DataSlot.getDataServerSlotLagTimes(ip) > 1);
+        monitor.onHeartbeat(new HeartbeatRequest<DataNode>(new DataNode(randomURL(ip), getDc()),
+            -1L, getDc(), System.currentTimeMillis(), new SlotConfig.SlotBasicInfo(
+                SlotConfig.SLOT_NUM, SlotConfig.SLOT_REPLICAS, SlotConfig.FUNC), Lists
+                .newArrayList()));
+        monitor.onHeartbeat(new HeartbeatRequest<DataNode>(new DataNode(randomURL(ip), getDc()),
+            -1L, getDc(), System.currentTimeMillis(), new SlotConfig.SlotBasicInfo(
+                SlotConfig.SLOT_NUM, SlotConfig.SLOT_REPLICAS, SlotConfig.FUNC), Lists
+                .newArrayList()));
+        Assert.assertTrue(Metrics.DataSlot.getDataServerSlotLagTimes(ip) > 1);
     }
 }

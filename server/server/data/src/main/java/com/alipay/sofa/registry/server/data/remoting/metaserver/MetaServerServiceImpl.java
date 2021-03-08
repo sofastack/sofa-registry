@@ -21,6 +21,7 @@ import com.alipay.sofa.registry.common.model.metaserver.inter.heartbeat.Heartbea
 import com.alipay.sofa.registry.common.model.metaserver.nodes.DataNode;
 import com.alipay.sofa.registry.common.model.slot.BaseSlotStatus;
 import com.alipay.sofa.registry.common.model.slot.SlotConfig;
+import com.alipay.sofa.registry.common.model.slot.SlotTable;
 import com.alipay.sofa.registry.common.model.store.URL;
 import com.alipay.sofa.registry.server.data.bootstrap.DataServerConfig;
 import com.alipay.sofa.registry.server.data.remoting.DataNodeExchanger;
@@ -31,6 +32,7 @@ import com.alipay.sofa.registry.server.shared.meta.AbstractMetaServerService;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.List;
+import java.util.Set;
 
 /**
  *
@@ -58,16 +60,22 @@ public class MetaServerServiceImpl extends AbstractMetaServerService<DataHeartBe
 
     @Override
     protected void handleRenewResult(DataHeartBeatResponse result) {
-        metaNodeExchanger.setServerIps(result.getMetaNodesMap().keySet());
-        metaNodeExchanger.notifyConnectServerAsync();
 
-        dataNodeExchanger.setServerIps(getDataServerList());
-        dataNodeExchanger.notifyConnectServerAsync();
-
-        sessionNodeExchanger.setServerIps(getSessionServerList());
-        sessionNodeExchanger.notifyConnectServerAsync();
-
-        slotManager.updateSlotTable(result.getSlotTable());
+        Set<String> dataServerList = getDataServerList();
+        if (dataServerList != null && !dataServerList.isEmpty()) {
+            dataNodeExchanger.setServerIps(dataServerList);
+            dataNodeExchanger.notifyConnectServerAsync();
+        }
+        Set<String> sessionServerList = getDataServerList();
+        if (sessionServerList != null && !sessionServerList.isEmpty()) {
+            sessionNodeExchanger.setServerIps(result.getSessionNodesMap().keySet());
+            sessionNodeExchanger.notifyConnectServerAsync();
+        }
+        if (result.getSlotTable() != null && result.getSlotTable() != SlotTable.INIT) {
+            slotManager.updateSlotTable(result.getSlotTable());
+        } else {
+            LOGGER.warn("[handleRenewResult] not slot table result");
+        }
     }
 
     @Override
@@ -88,6 +96,7 @@ public class MetaServerServiceImpl extends AbstractMetaServerService<DataHeartBe
     }
 
     private DataNode createNode() {
-        return new DataNode(new URL(ServerEnv.IP), metaNodeExchanger.getLocalDataCenter());
+        return new DataNode(new URL(ServerEnv.IP), dataServerConfig.getLocalDataCenter());
     }
+
 }

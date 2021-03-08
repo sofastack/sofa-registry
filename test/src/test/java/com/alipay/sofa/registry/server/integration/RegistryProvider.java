@@ -26,33 +26,35 @@ import com.alipay.sofa.registry.client.provider.DefaultRegistryClientConfigBuild
 
 /**
  * @author chen.zhu
- * <p>
- * Nov 18, 2020
+ *         <p>
+ *         Nov 18, 2020
  */
 public class RegistryProvider {
 
-    public static void main(String[] args) throws InterruptedException {
+	public static void main(String[] args) throws InterruptedException {
 
-        DefaultRegistryClient registryClient = new DefaultRegistryClient(
-            new DefaultRegistryClientConfigBuilder().setRegistryEndpoint("127.0.0.1")
-                .setRegistryEndpointPort(9603).build());
-        registryClient.init();
-        // 构造发布者注册表
-        String dataId = "com.alipay.test.demo.service:1.0@DEFAULT";
-        PublisherRegistration registration = new PublisherRegistration(dataId);
-        // 如需指定分组，可主动设置分组，未设置默认为 DEFAULT_GROUP
-        registration.setGroup("TEST_GROUP");
-        // 设置应用名，非必要条件
-        registration.setAppName("test-app");
+		DefaultRegistryClient registryClient = new DefaultRegistryClient(
+				new DefaultRegistryClientConfigBuilder()
+						.setRegistryEndpoint("127.0.0.1")
+						.setRegistryEndpointPort(9603).build());
+		registryClient.init();
+		// 构造发布者注册表
+		String dataId = "com.alipay.test.demo.service:1.0@DEFAULT";
+		PublisherRegistration registration = new PublisherRegistration(dataId);
+		// 如需指定分组，可主动设置分组，未设置默认为 DEFAULT_GROUP
+		registration.setGroup("TEST_GROUP");
+		// 设置应用名，非必要条件
+		registration.setAppName("test-app");
 
-        // 将注册表注册进客户端获取发布者模型，并发布数据
-        Publisher publisher = registryClient.register(registration, "127.0.0.1:12200?xx=zz");
+		// 将注册表注册进客户端获取发布者模型，并发布数据
+		Publisher publisher = registryClient.register(registration,
+				"127.0.0.1:12200?xx=zz");
 
-        while (!Thread.currentThread().isInterrupted()) {
-            Thread.sleep(10000);
-        }
-        // 如需覆盖上次发布的数据可以使用发布者模型重新发布数据
-        //        publisher.republish("10.10.1.1:12200?xx=zz");
-    }
+		while (!Thread.currentThread().isInterrupted()) {
+			Thread.sleep(10000);
+		}
+		// 如需覆盖上次发布的数据可以使用发布者模型重新发布数据
+		// publisher.republish("10.10.1.1:12200?xx=zz");
+	}
 
 }

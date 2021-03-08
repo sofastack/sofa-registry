@@ -21,25 +21,25 @@ package com.alipay.sofa.registry.common.model.client.pb;
 
 public interface SyncConfigRequestPbOrBuilder extends
 // @@protoc_insertion_point(interface_extends:SyncConfigRequestPb)
-                                             com.google.protobuf.MessageOrBuilder {
+			com.google.protobuf.MessageOrBuilder {
 
-    /**
-     * <code>string dataCenter = 1;</code>
-     */
-    java.lang.String getDataCenter();
+	/**
+	 * <code>string dataCenter = 1;</code>
+	 */
+	java.lang.String getDataCenter();
 
-    /**
-     * <code>string dataCenter = 1;</code>
-     */
-    com.google.protobuf.ByteString getDataCenterBytes();
+	/**
+	 * <code>string dataCenter = 1;</code>
+	 */
+	com.google.protobuf.ByteString getDataCenterBytes();
 
-    /**
-     * <code>string zone = 2;</code>
-     */
-    java.lang.String getZone();
+	/**
+	 * <code>string zone = 2;</code>
+	 */
+	java.lang.String getZone();
 
-    /**
-     * <code>string zone = 2;</code>
-     */
-    com.google.protobuf.ByteString getZoneBytes();
+	/**
+	 * <code>string zone = 2;</code>
+	 */
+	com.google.protobuf.ByteString getZoneBytes();
 }

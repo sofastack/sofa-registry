@@ -16,24 +16,23 @@
  */
 package com.alipay.sofa.registry.common.model.slot;
 
-import com.alipay.sofa.registry.server.meta.AbstractTest;
+import com.alipay.sofa.registry.server.meta.AbstractMetaServerTest;
 import com.alipay.sofa.registry.util.FileUtils;
 import com.alipay.sofa.registry.util.JsonUtils;
-import org.junit.Before;
 
 import java.io.File;
 import java.io.IOException;
 
 /**
  * @author chen.zhu
- * <p>
- * Jan 13, 2021
+ *         <p>
+ *         Jan 13, 2021
  */
-public class BaseSlotFunctionTest extends AbstractTest {
+public class BaseSlotFunctionTest extends AbstractMetaServerTest {
 
-    public String[] getDataInfoIds() throws IOException {
-        String fileContent = new String(FileUtils.readFileToByteArray(new File(
-            "src/test/resources/test/data_info_ids.json")));
-        return JsonUtils.read(fileContent, String[].class);
-    }
+	public String[] getDataInfoIds() throws IOException {
+		String fileContent = new String(FileUtils.readFileToByteArray(new File(
+				"src/test/resources/test/data_info_ids.json")));
+		return JsonUtils.read(fileContent, String[].class);
+	}
 }

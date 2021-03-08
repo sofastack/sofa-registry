@@ -19,10 +19,10 @@ package com.alipay.sofa.registry.server.meta.monitor.impl;
 import com.alipay.sofa.registry.common.model.metaserver.nodes.DataNode;
 import com.alipay.sofa.registry.common.model.slot.*;
 import com.alipay.sofa.registry.exception.InitializeException;
-import com.alipay.sofa.registry.server.meta.AbstractTest;
+import com.alipay.sofa.registry.server.meta.AbstractMetaServerTest;
 import com.alipay.sofa.registry.server.meta.bootstrap.config.NodeConfig;
 import com.alipay.sofa.registry.server.meta.monitor.SlotStats;
-import com.alipay.sofa.registry.server.meta.slot.manager.LocalSlotManager;
+import com.alipay.sofa.registry.server.meta.slot.manager.SimpleSlotManager;
 import com.alipay.sofa.registry.server.shared.util.NodeUtils;
 import com.alipay.sofa.registry.util.DatumVersionUtil;
 import org.assertj.core.util.Lists;
@@ -36,11 +36,12 @@ import java.util.Map;
 import java.util.Set;
 
 import static com.alipay.sofa.registry.server.meta.monitor.impl.DefaultSlotStats.MAX_SYNC_GAP;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
-public class DefaultSlotTableStatsTest extends AbstractTest {
+public class DefaultSlotTableStatsTest extends AbstractMetaServerTest {
 
-    private LocalSlotManager      slotManager;
+    private SimpleSlotManager slotManager;
 
     private List<DataNode>        dataNodes;
 
@@ -52,12 +53,11 @@ public class DefaultSlotTableStatsTest extends AbstractTest {
     public void beforeDefaultSlotTableMonitorTest() throws Exception {
         nodeConfig = mock(NodeConfig.class);
         when(nodeConfig.getLocalDataCenter()).thenReturn(getDc());
-        slotManager = new LocalSlotManager(nodeConfig);
+        slotManager = new SimpleSlotManager();
         slotTableStats = new DefaultSlotTableStats(slotManager);
         dataNodes = Lists.newArrayList(new DataNode(randomURL(randomIp()), getDc()), new DataNode(
             randomURL(randomIp()), getDc()), new DataNode(randomURL(randomIp()), getDc()));
         slotManager.refresh(new SlotTableGenerator(dataNodes).createSlotTable());
-        slotManager.postConstruct();
         slotTableStats.initialize();
     }
 
@@ -115,7 +115,7 @@ public class DefaultSlotTableStatsTest extends AbstractTest {
 
     @Test
     public void testDataReportHeartbeatWhenInit() throws InitializeException {
-        slotManager = new LocalSlotManager(nodeConfig);
+        slotManager = new SimpleSlotManager();
         slotTableStats = new DefaultSlotTableStats(slotManager);
         slotTableStats.initialize();
         List<BaseSlotStatus> slotStatuses = Lists.newArrayList();
@@ -133,25 +133,30 @@ public class DefaultSlotTableStatsTest extends AbstractTest {
         DataNode dataNode = new DataNode(randomURL(randomIp()), getDc());
         List<BaseSlotStatus> slotStatuses = Lists.newArrayList();
         for (int slotId = 0; slotId < SlotConfig.SLOT_NUM; slotId++) {
-            slotStatuses.add(new FollowerSlotStatus(slotId, System.currentTimeMillis(), dataNode
-                .getIp(), System.currentTimeMillis(), -1));
+            slotStatuses
+                .add(new FollowerSlotStatus(slotId, slotManager.getSlotTable().getSlot(slotId)
+                    .getLeaderEpoch(), dataNode.getIp(), System.currentTimeMillis(), -1));
         }
         slotTableStats.checkSlotStatuses(dataNode, slotStatuses);
         Assert.assertFalse(slotTableStats.isSlotFollowersStable());
 
         slotStatuses = Lists.newArrayList();
         for (int slotId = 0; slotId < SlotConfig.SLOT_NUM; slotId++) {
-            slotStatuses.add(new FollowerSlotStatus(slotId, System.currentTimeMillis(), dataNode
-                .getIp(), System.currentTimeMillis(), System.currentTimeMillis() - MAX_SYNC_GAP));
+            slotStatuses.add(new FollowerSlotStatus(slotId, slotManager.getSlotTable()
+                .getSlot(slotId).getLeaderEpoch(), dataNode.getIp(), System.currentTimeMillis(),
+                System.currentTimeMillis() - MAX_SYNC_GAP));
         }
         slotTableStats.checkSlotStatuses(dataNode, slotStatuses);
         Assert.assertFalse(slotTableStats.isSlotFollowersStable());
 
+        logger.info(remarkableMessage("[splitter]"));
         for (DataNode node : dataNodes) {
             slotStatuses = Lists.newArrayList();
-            for (int slotId = 0; slotId < SlotConfig.SLOT_NUM; slotId++) {
-                slotStatuses.add(new FollowerSlotStatus(slotId, DatumVersionUtil.nextId(), node
-                    .getIp(), System.currentTimeMillis(), System.currentTimeMillis() - 1000));
+            DataNodeSlot dataNodeSlot = slotManager.getDataNodeManagedSlot(node.getIp(), false);
+            for (int slotId : dataNodeSlot.getFollowers()) {
+                slotStatuses.add(new FollowerSlotStatus(slotId, slotManager.getSlotTable()
+                    .getSlot(slotId).getLeaderEpoch(), node.getIp(), System.currentTimeMillis(),
+                    System.currentTimeMillis() - 1000));
             }
             slotTableStats.checkSlotStatuses(node, slotStatuses);
         }
@@ -164,9 +169,11 @@ public class DefaultSlotTableStatsTest extends AbstractTest {
         List<BaseSlotStatus> slotStatuses = Lists.newArrayList();
         for (DataNode node : dataNodes) {
             slotStatuses = Lists.newArrayList();
-            for (int slotId = 0; slotId < SlotConfig.SLOT_NUM; slotId++) {
-                slotStatuses.add(new FollowerSlotStatus(slotId, DatumVersionUtil.nextId(), node
-                    .getIp(), System.currentTimeMillis(), System.currentTimeMillis() - 1000));
+            DataNodeSlot dataNodeSlot = slotManager.getDataNodeManagedSlot(node.getIp(), false);
+            for (int slotId : dataNodeSlot.getFollowers()) {
+                slotStatuses.add(new FollowerSlotStatus(slotId, slotManager.getSlotTable()
+                    .getSlot(slotId).getLeaderEpoch(), node.getIp(), System.currentTimeMillis(),
+                    System.currentTimeMillis() - 1000));
             }
             slotTableStats.checkSlotStatuses(node, slotStatuses);
         }

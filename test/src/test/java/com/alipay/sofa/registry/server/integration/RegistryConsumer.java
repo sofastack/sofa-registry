@@ -28,14 +28,15 @@ import com.alipay.sofa.registry.log.LoggerFactory;
 
 /**
  * @author chen.zhu
- * <p>
- * Nov 18, 2020
+ *         <p>
+ *         Nov 18, 2020
  */
 public class RegistryConsumer {
 
-    private final static Logger logger = LoggerFactory.getLogger(RegistryConsumer.class);
+	private final static Logger logger = LoggerFactory
+			.getLogger(RegistryConsumer.class);
 
-    public static void main(String[] args) throws InterruptedException {
+	public static void main(String[] args) throws InterruptedException {
         DefaultRegistryClient registryClient = new DefaultRegistryClient(
             new DefaultRegistryClientConfigBuilder().setRegistryEndpoint("127.0.0.1")
                 .setRegistryEndpointPort(9603).build());

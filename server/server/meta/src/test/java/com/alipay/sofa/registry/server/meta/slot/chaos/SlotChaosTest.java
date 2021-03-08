@@ -16,16 +16,18 @@
  */
 package com.alipay.sofa.registry.server.meta.slot.chaos;
 
+import com.alipay.sofa.registry.common.model.metaserver.cluster.VersionedList;
 import com.alipay.sofa.registry.common.model.metaserver.nodes.DataNode;
 import com.alipay.sofa.registry.common.model.slot.SlotTable;
-import com.alipay.sofa.registry.server.meta.AbstractTest;
+import com.alipay.sofa.registry.server.meta.AbstractMetaServerTest;
+import com.alipay.sofa.registry.server.meta.MetaLeaderService;
 import com.alipay.sofa.registry.server.meta.bootstrap.config.NodeConfig;
 import com.alipay.sofa.registry.server.meta.lease.data.DefaultDataServerManager;
 import com.alipay.sofa.registry.server.meta.monitor.SlotTableMonitor;
 import com.alipay.sofa.registry.server.meta.slot.SlotManager;
 import com.alipay.sofa.registry.server.meta.slot.arrange.ScheduledSlotArranger;
-import com.alipay.sofa.registry.server.meta.slot.manager.DefaultSlotManager;
-import com.alipay.sofa.registry.server.meta.slot.manager.LocalSlotManager;
+import com.alipay.sofa.registry.server.meta.slot.manager.SimpleSlotManager;
+import com.alipay.sofa.registry.util.DatumVersionUtil;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -45,15 +47,11 @@ import static org.mockito.Mockito.when;
  * @author xiaojian.xj
  * @version $Id: SlotChaosTest.java, v 0.1 2021年02月02日 11:47 xiaojian.xj Exp $
  */
-public class SlotChaosTest extends AbstractTest {
+public class SlotChaosTest extends AbstractMetaServerTest {
 
     private DataServerInjection      dataServerInjection;
 
-    private DefaultSlotManager       defaultSlotManager;
-
-    private SlotManager              raftSlotManager;
-
-    private LocalSlotManager         localSlotManager;
+    private SlotManager              slotManager;
 
     @Mock
     private DefaultDataServerManager dataServerManager;
@@ -80,37 +78,40 @@ public class SlotChaosTest extends AbstractTest {
     @Before
     public void beforeSlotMigrateChaosTest() throws Exception {
         MockitoAnnotations.initMocks(this);
+        makeMetaLeader();
 
         logger.info("[slot-chaos data-node] size: " + dataNodeNum);
         dataServerInjection = new DataServerInjection(dataNodeNum);
 
         NodeConfig nodeConfig = mock(NodeConfig.class);
         when(nodeConfig.getLocalDataCenter()).thenReturn(getDc());
-        raftSlotManager = localSlotManager = new LocalSlotManager(nodeConfig);
-        defaultSlotManager = new DefaultSlotManager(localSlotManager, raftSlotManager);
-        scheduledSlotArranger = new ScheduledSlotArranger(dataServerManager, localSlotManager,
-            defaultSlotManager, slotTableMonitor);
+        slotManager = new SimpleSlotManager();
+
+        scheduledSlotArranger = new ScheduledSlotArranger(dataServerManager,
+                slotManager, slotTableMonitor, metaLeaderService);
 
         when(slotTableMonitor.isStableTableStable()).thenReturn(true);
+        when(dataServerManager.getDataServerMetaInfo()).thenReturn(VersionedList.EMPTY);
         scheduledSlotArranger.postConstruct();
     }
 
     @Test
     public void testChaos() throws TimeoutException, InterruptedException {
-        logger.info("[slot-chaos slot] size: " + localSlotManager.getSlotNums());
+        logger.info("[slot-chaos slot] size: " + slotManager.getSlotNums());
 
         do {
             chaosRandom = random.nextInt(100);
         } while (chaosRandom < 30);
 
-        makeRaftLeader();
+        makeMetaLeader();
         logger.info("[slot-chaos slot] chaosRandom: " + chaosRandom);
 
         List<DataNode> running;
         for (int i = 1; i <= chaosRandom; i++) {
             // random up and down
             running = dataServerInjection.inject(i);
-            when(dataServerManager.getClusterMembers()).thenReturn(running);
+            when(dataServerManager.getDataServerMetaInfo())
+                    .thenReturn(new VersionedList<>(DatumVersionUtil.nextId(), running));
             scheduledSlotArranger.arrangeAsync();
             Thread.sleep(2000);
         }
@@ -118,7 +119,7 @@ public class SlotChaosTest extends AbstractTest {
             scheduledSlotArranger.arrangeAsync();
             Thread.sleep(20);
         }
-        SlotTable finalSlotTable = localSlotManager.getSlotTable();
+        SlotTable finalSlotTable = slotManager.getSlotTable();
         for (CheckEnum checker : CheckEnum.values()) {
             checker.getCheckerAction().doCheck(finalSlotTable);
         }

@@ -193,4 +193,78 @@ public final class SlotTable implements Serializable {
         return Objects.hash(epoch, slots);
     }
 
+    public final static class SlotTableBuilder {
+
+        private final long epoch;
+
+        private final Map<Integer, SlotBuilder> slotBuilderMap = Maps.newHashMap();
+
+        private SlotTableBuilder(long epoch) {
+            this.epoch = epoch;
+        }
+
+        public SlotTableBuilder slotLeader(int slotId, String leader) {
+            slotBuilderMap.putIfAbsent(slotId, new SlotBuilder(slotId));
+            slotBuilderMap.get(slotId).leader(leader);
+            return this;
+        }
+
+        public SlotTableBuilder slotFollower(int slotId, String follower) {
+            slotBuilderMap.putIfAbsent(slotId, new SlotBuilder(slotId));
+            slotBuilderMap.get(slotId).follower(follower);
+            return this;
+        }
+
+        public SlotTable build() {
+            Map<Integer, Slot> slotMap = Maps.newHashMap();
+            for (Map.Entry<Integer, SlotBuilder> entry : slotBuilderMap.entrySet()) {
+                slotMap.put(entry.getKey(), entry.getValue().build());
+            }
+            return new SlotTable(epoch, slotMap);
+        }
+    }
+
+    private final static class SlotBuilder {
+
+        private final int slotId;
+
+        private String leader;
+
+        private long leaderEpoch;
+
+        private final Set<String> followers = Sets.newHashSet();
+
+        public SlotBuilder(int slotId) {
+            this.slotId = slotId;
+        }
+
+        public SlotBuilder leader(String leader) {
+            if (this.leader != null) {
+                throw new IllegalStateException(String.format("leader is not null(%s), but try to set (%s)",
+                        this.leader, leader));
+            }
+            this.leader = leader;
+            return this;
+        }
+
+        public SlotBuilder followers(String ...follower) {
+            followers.addAll(Arrays.asList(follower));
+            return this;
+        }
+
+        public SlotBuilder follower(String foll) {
+            followers.add(foll);
+            return this;
+        }
+
+        public SlotBuilder leaderEpoch(long leaderEpoch) {
+            this.leaderEpoch = leaderEpoch;
+            return this;
+        }
+
+        public Slot build() {
+            return new Slot(slotId, leader, leaderEpoch, followers);
+        }
+    }
+
 }

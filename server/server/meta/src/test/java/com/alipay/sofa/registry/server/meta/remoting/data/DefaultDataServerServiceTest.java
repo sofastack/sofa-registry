@@ -20,18 +20,19 @@ import com.alipay.sofa.registry.common.model.Node;
 import com.alipay.sofa.registry.common.model.constants.ValueConstants;
 import com.alipay.sofa.registry.common.model.metaserver.DataOperator;
 import com.alipay.sofa.registry.common.model.metaserver.ProvideDataChangeEvent;
+import com.alipay.sofa.registry.common.model.metaserver.cluster.VersionedList;
 import com.alipay.sofa.registry.common.model.metaserver.nodes.DataNode;
 import com.alipay.sofa.registry.exception.SofaRegistryRuntimeException;
 import com.alipay.sofa.registry.remoting.Channel;
 import com.alipay.sofa.registry.remoting.Client;
 import com.alipay.sofa.registry.remoting.exchange.RequestException;
 import com.alipay.sofa.registry.remoting.exchange.message.Request;
-import com.alipay.sofa.registry.server.meta.AbstractTest;
+import com.alipay.sofa.registry.server.meta.AbstractMetaServerTest;
 import com.alipay.sofa.registry.server.meta.lease.data.DataServerManager;
 import com.alipay.sofa.registry.server.meta.remoting.DataNodeExchanger;
 import com.alipay.sofa.registry.server.meta.remoting.connection.DataConnectionHandler;
-import com.alipay.sofa.registry.server.meta.remoting.data.DefaultDataServerService;
 import com.alipay.sofa.registry.server.shared.remoting.AbstractServerHandler;
+import com.alipay.sofa.registry.util.DatumVersionUtil;
 import org.assertj.core.util.Lists;
 import org.junit.Before;
 import org.junit.Test;
@@ -45,7 +46,7 @@ import java.util.concurrent.TimeoutException;
 
 import static org.mockito.Mockito.*;
 
-public class DefaultDataServerServiceTest extends AbstractTest {
+public class DefaultDataServerServiceTest extends AbstractMetaServerTest {
 
     private DefaultDataServerService notifier = new DefaultDataServerService();
 
@@ -69,7 +70,7 @@ public class DefaultDataServerServiceTest extends AbstractTest {
     public void testNotify() throws RequestException {
         notifier.notifyProvideDataChange(new ProvideDataChangeEvent(
             ValueConstants.BLACK_LIST_DATA_ID, System.currentTimeMillis(), DataOperator.ADD));
-        verify(dataServerManager, never()).getClusterMembers();
+        verify(dataServerManager, never()).getDataServerMetaInfo();
         verify(dataNodeExchanger, never()).request(any(Request.class));
     }
 
@@ -79,9 +80,10 @@ public class DefaultDataServerServiceTest extends AbstractTest {
             Lists.newArrayList(new InetSocketAddress(randomIp(),
                 Math.abs(random.nextInt(65535)) % 65535),
                 new InetSocketAddress(randomIp(), Math.abs(random.nextInt(65535)) % 65535)));
+        when(dataServerManager.getDataServerMetaInfo()).thenReturn(new VersionedList<>(DatumVersionUtil.nextId(), Lists.newArrayList()));
         notifier.notifyProvideDataChange(new ProvideDataChangeEvent(
             ValueConstants.BLACK_LIST_DATA_ID, System.currentTimeMillis(), DataOperator.ADD));
-        verify(dataServerManager, times(1)).getClusterMembers();
+        verify(dataServerManager, times(1)).getDataServerMetaInfo();
         verify(dataNodeExchanger, never()).request(any(Request.class));
     }
 
@@ -90,7 +92,7 @@ public class DefaultDataServerServiceTest extends AbstractTest {
         when(dataConnectionHandler.getConnections(anyString()))
                 .thenReturn(Lists.newArrayList(new InetSocketAddress(randomIp(), Math.abs(random.nextInt(65535)) % 65535),
                         new InetSocketAddress(randomIp(), Math.abs(random.nextInt(65535)) % 65535 ) ));
-        when(dataServerManager.getClusterMembers()).thenReturn(randomDataNodes(3));
+        when(dataServerManager.getDataServerMetaInfo()).thenReturn(new VersionedList<>(DatumVersionUtil.nextId(), randomDataNodes(3)));
         when(dataNodeExchanger.request(any(Request.class))).thenReturn(()->{return null;});
         notifier.notifyProvideDataChange(new ProvideDataChangeEvent(ValueConstants.BLACK_LIST_DATA_ID,
                 System.currentTimeMillis(), DataOperator.ADD));
@@ -104,10 +106,10 @@ public class DefaultDataServerServiceTest extends AbstractTest {
                 .thenReturn(Lists.newArrayList(new InetSocketAddress(ip1, Math.abs(random.nextInt(65535)) % 65535),
                         new InetSocketAddress(ip2, Math.abs(random.nextInt(65535)) % 65535 ),
                         new InetSocketAddress(randomIp(), 1024)));
-        when(dataServerManager.getClusterMembers())
-                .thenReturn(Lists.newArrayList(new DataNode(randomURL(ip1), getDc()),
+        when(dataServerManager.getDataServerMetaInfo())
+                .thenReturn(new VersionedList<>(DatumVersionUtil.nextId(), Lists.newArrayList(new DataNode(randomURL(ip1), getDc()),
                         new DataNode(randomURL(ip2), getDc()),
-                        new DataNode(randomURL(randomIp()), getDc())));
+                        new DataNode(randomURL(randomIp()), getDc()))));
         when(dataNodeExchanger.request(any(Request.class))).thenReturn(()->{return null;});
         notifier.notifyProvideDataChange(new ProvideDataChangeEvent(ValueConstants.BLACK_LIST_DATA_ID,
                 System.currentTimeMillis(), DataOperator.ADD));
@@ -154,9 +156,9 @@ public class DefaultDataServerServiceTest extends AbstractTest {
             Lists.newArrayList(new InetSocketAddress(ip1, Math.abs(random.nextInt(65535)) % 65535),
                 new InetSocketAddress(ip2, Math.abs(random.nextInt(65535)) % 65535),
                 new InetSocketAddress(randomIp(), 1024)));
-        when(dataServerManager.getClusterMembers()).thenReturn(
+        when(dataServerManager.getDataServerMetaInfo()).thenReturn(new VersionedList<>(DatumVersionUtil.nextId(),
             Lists.newArrayList(new DataNode(randomURL(ip1), getDc()), new DataNode(randomURL(ip2),
-                getDc()), new DataNode(randomURL(randomIp()), getDc())));
+                getDc()), new DataNode(randomURL(randomIp()), getDc()))));
         notifier.notifyProvideDataChange(new ProvideDataChangeEvent(
             ValueConstants.BLACK_LIST_DATA_ID, System.currentTimeMillis(), DataOperator.ADD));
         Thread.sleep(100);
@@ -170,9 +172,9 @@ public class DefaultDataServerServiceTest extends AbstractTest {
             Lists.newArrayList(new InetSocketAddress(ip1, Math.abs(random.nextInt(65535)) % 65535),
                 new InetSocketAddress(ip2, Math.abs(random.nextInt(65535)) % 65535),
                 new InetSocketAddress(randomIp(), 1024)));
-        when(dataServerManager.getClusterMembers()).thenReturn(
+        when(dataServerManager.getDataServerMetaInfo()).thenReturn(new VersionedList<>(DatumVersionUtil.nextId(),
             Lists.newArrayList(new DataNode(randomURL(ip1), getDc()), new DataNode(randomURL(ip2),
-                getDc()), new DataNode(randomURL(randomIp()), getDc())));
+                getDc()), new DataNode(randomURL(randomIp()), getDc()))));
         Client client2 = spy(getRpcClient(scheduled, 10, "Response"));
         DataNodeExchanger otherNodeExchanger = mock(DataNodeExchanger.class);
         when(otherNodeExchanger.request(any(Request.class))).then(new Answer<Object>() {

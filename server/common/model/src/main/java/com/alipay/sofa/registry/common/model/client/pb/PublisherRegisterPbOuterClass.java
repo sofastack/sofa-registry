@@ -20,50 +20,58 @@
 package com.alipay.sofa.registry.common.model.client.pb;
 
 public final class PublisherRegisterPbOuterClass {
-    private PublisherRegisterPbOuterClass() {
-    }
+	private PublisherRegisterPbOuterClass() {
+	}
 
-    public static void registerAllExtensions(com.google.protobuf.ExtensionRegistryLite registry) {
-    }
+	public static void registerAllExtensions(
+			com.google.protobuf.ExtensionRegistryLite registry) {
+	}
 
-    public static void registerAllExtensions(com.google.protobuf.ExtensionRegistry registry) {
-        registerAllExtensions((com.google.protobuf.ExtensionRegistryLite) registry);
-    }
+	public static void registerAllExtensions(
+			com.google.protobuf.ExtensionRegistry registry) {
+		registerAllExtensions((com.google.protobuf.ExtensionRegistryLite) registry);
+	}
 
-    static final com.google.protobuf.Descriptors.Descriptor                internal_static_PublisherRegisterPb_descriptor;
-    static final com.google.protobuf.GeneratedMessageV3.FieldAccessorTable internal_static_PublisherRegisterPb_fieldAccessorTable;
+	static final com.google.protobuf.Descriptors.Descriptor internal_static_PublisherRegisterPb_descriptor;
+	static final com.google.protobuf.GeneratedMessageV3.FieldAccessorTable internal_static_PublisherRegisterPb_fieldAccessorTable;
 
-    public static com.google.protobuf.Descriptors.FileDescriptor getDescriptor() {
-        return descriptor;
-    }
+	public static com.google.protobuf.Descriptors.FileDescriptor getDescriptor() {
+		return descriptor;
+	}
 
-    private static com.google.protobuf.Descriptors.FileDescriptor descriptor;
-    static {
-        java.lang.String[] descriptorData = { "\n\031PublisherRegisterPb.proto\032\017DataBoxPb.p"
-                                              + "roto\032\024BaseRegisterPb.proto\"Z\n\023PublisherR"
-                                              + "egisterPb\022\034\n\010dataList\030\001 \003(\0132\n.DataBoxPb\022"
-                                              + "%\n\014baseRegister\030\002 \001(\0132\017.BaseRegisterPbB7"
-                                              + "\n/com.alipay.sofa.registry.common.model."
-                                              + "client.pbP\001Z\002pbb\006proto3" };
-        com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner = new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {
-            public com.google.protobuf.ExtensionRegistry assignDescriptors(com.google.protobuf.Descriptors.FileDescriptor root) {
-                descriptor = root;
-                return null;
-            }
-        };
-        com.google.protobuf.Descriptors.FileDescriptor.internalBuildGeneratedFileFrom(
-            descriptorData,
-            new com.google.protobuf.Descriptors.FileDescriptor[] {
-            com.alipay.sofa.registry.common.model.client.pb.DataBoxPbOuterClass.getDescriptor(),
-            com.alipay.sofa.registry.common.model.client.pb.BaseRegisterPbOuterClass
-                .getDescriptor(), }, assigner);
-        internal_static_PublisherRegisterPb_descriptor = getDescriptor().getMessageTypes().get(0);
-        internal_static_PublisherRegisterPb_fieldAccessorTable = new com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
-            internal_static_PublisherRegisterPb_descriptor, new java.lang.String[] { "DataList",
-            "BaseRegister", });
-        com.alipay.sofa.registry.common.model.client.pb.DataBoxPbOuterClass.getDescriptor();
-        com.alipay.sofa.registry.common.model.client.pb.BaseRegisterPbOuterClass.getDescriptor();
-    }
+	private static com.google.protobuf.Descriptors.FileDescriptor descriptor;
+	static {
+		java.lang.String[] descriptorData = {"\n\031PublisherRegisterPb.proto\032\017DataBoxPb.p"
+				+ "roto\032\024BaseRegisterPb.proto\"Z\n\023PublisherR"
+				+ "egisterPb\022\034\n\010dataList\030\001 \003(\0132\n.DataBoxPb\022"
+				+ "%\n\014baseRegister\030\002 \001(\0132\017.BaseRegisterPbB7"
+				+ "\n/com.alipay.sofa.registry.common.model."
+				+ "client.pbP\001Z\002pbb\006proto3"};
+		com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner = new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {
+			public com.google.protobuf.ExtensionRegistry assignDescriptors(
+					com.google.protobuf.Descriptors.FileDescriptor root) {
+				descriptor = root;
+				return null;
+			}
+		};
+		com.google.protobuf.Descriptors.FileDescriptor
+				.internalBuildGeneratedFileFrom(
+						descriptorData,
+						new com.google.protobuf.Descriptors.FileDescriptor[]{
+								com.alipay.sofa.registry.common.model.client.pb.DataBoxPbOuterClass
+										.getDescriptor(),
+								com.alipay.sofa.registry.common.model.client.pb.BaseRegisterPbOuterClass
+										.getDescriptor(),}, assigner);
+		internal_static_PublisherRegisterPb_descriptor = getDescriptor()
+				.getMessageTypes().get(0);
+		internal_static_PublisherRegisterPb_fieldAccessorTable = new com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+				internal_static_PublisherRegisterPb_descriptor,
+				new java.lang.String[]{"DataList", "BaseRegister",});
+		com.alipay.sofa.registry.common.model.client.pb.DataBoxPbOuterClass
+				.getDescriptor();
+		com.alipay.sofa.registry.common.model.client.pb.BaseRegisterPbOuterClass
+				.getDescriptor();
+	}
 
-    // @@protoc_insertion_point(outer_class_scope)
+	// @@protoc_insertion_point(outer_class_scope)
 }

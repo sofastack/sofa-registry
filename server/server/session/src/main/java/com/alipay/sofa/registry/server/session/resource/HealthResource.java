@@ -31,7 +31,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import com.alipay.sofa.registry.common.model.CommonResponse;
 import com.alipay.sofa.registry.metrics.ReporterUtils;
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerBootstrap;
-import com.alipay.sofa.registry.server.session.node.service.RaftClientManager;
 import com.codahale.metrics.Gauge;
 import com.codahale.metrics.MetricRegistry;
 
@@ -42,9 +41,6 @@ import com.codahale.metrics.MetricRegistry;
  */
 @Path("health")
 public class HealthResource {
-
-    @Autowired
-    private RaftClientManager      raftClientManager;
 
     @Autowired
     private SessionServerBootstrap sessionServerBootstrap;
@@ -72,35 +68,27 @@ public class HealthResource {
 
     protected StringBuilder getStatus(Bool result) {
         StringBuilder sb = new StringBuilder("SessionServerBoot ");
-        boolean start = raftClientManager.getClientStart();
-        boolean ret = start;
-        sb.append("RaftClientManager:").append(start);
+        boolean start = false;
 
         start = sessionServerBootstrap.getMetaStart();
-        ret = ret && start;
         sb.append(", MetaServerStart:").append(start);
 
         start = sessionServerBootstrap.getSchedulerStart();
-        ret = ret && start;
         sb.append(", SchedulerStart:").append(start);
 
         start = sessionServerBootstrap.getHttpStart();
-        ret = ret && start;
         sb.append(", HttpServerStart:").append(start);
 
         start = sessionServerBootstrap.getServerStart();
-        ret = ret && start;
         sb.append(", SessionServerStart:").append(start);
 
         start = sessionServerBootstrap.getServerForSessionSyncStart();
-        ret = ret && start;
         sb.append(", ServerForSessionSyncStart:").append(start);
 
         start = sessionServerBootstrap.getDataStart();
-        ret = ret && start;
         sb.append(", ConnectDataServer:").append(start);
 
-        result.setBool(ret);
+        result.setBool(start);
         return sb;
     }
 

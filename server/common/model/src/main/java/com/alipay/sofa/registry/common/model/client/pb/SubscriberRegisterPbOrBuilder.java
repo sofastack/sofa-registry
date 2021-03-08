@@ -21,30 +21,30 @@ package com.alipay.sofa.registry.common.model.client.pb;
 
 public interface SubscriberRegisterPbOrBuilder extends
 // @@protoc_insertion_point(interface_extends:SubscriberRegisterPb)
-                                              com.google.protobuf.MessageOrBuilder {
+			com.google.protobuf.MessageOrBuilder {
 
-    /**
-     * <code>string scope = 1;</code>
-     */
-    java.lang.String getScope();
+	/**
+	 * <code>string scope = 1;</code>
+	 */
+	java.lang.String getScope();
 
-    /**
-     * <code>string scope = 1;</code>
-     */
-    com.google.protobuf.ByteString getScopeBytes();
+	/**
+	 * <code>string scope = 1;</code>
+	 */
+	com.google.protobuf.ByteString getScopeBytes();
 
-    /**
-     * <code>.BaseRegisterPb baseRegister = 2;</code>
-     */
-    boolean hasBaseRegister();
+	/**
+	 * <code>.BaseRegisterPb baseRegister = 2;</code>
+	 */
+	boolean hasBaseRegister();
 
-    /**
-     * <code>.BaseRegisterPb baseRegister = 2;</code>
-     */
-    com.alipay.sofa.registry.common.model.client.pb.BaseRegisterPb getBaseRegister();
+	/**
+	 * <code>.BaseRegisterPb baseRegister = 2;</code>
+	 */
+	com.alipay.sofa.registry.common.model.client.pb.BaseRegisterPb getBaseRegister();
 
-    /**
-     * <code>.BaseRegisterPb baseRegister = 2;</code>
-     */
-    com.alipay.sofa.registry.common.model.client.pb.BaseRegisterPbOrBuilder getBaseRegisterOrBuilder();
+	/**
+	 * <code>.BaseRegisterPb baseRegister = 2;</code>
+	 */
+	com.alipay.sofa.registry.common.model.client.pb.BaseRegisterPbOrBuilder getBaseRegisterOrBuilder();
 }

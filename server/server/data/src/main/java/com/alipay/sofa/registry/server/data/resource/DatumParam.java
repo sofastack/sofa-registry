@@ -20,171 +20,179 @@ import java.io.Serializable;
 import java.util.UUID;
 
 /**
- *
+ * 
  * @author kezhu.wukz
  * @version $Id: DatumParam.java, v 0.1 2019-06-28 15:55 kezhu.wukz Exp $
  */
 public class DatumParam implements Serializable {
 
-    private static final long serialVersionUID           = -3747877410102014868L;
+	private static final long serialVersionUID = -3747877410102014868L;
 
-    private String            dataInfoId;
+	private String dataInfoId;
 
-    private String            dataCenter;
+	private String dataCenter;
 
-    private String            publisherRegisterId        = UUID.randomUUID().toString();
+	private String publisherRegisterId = UUID.randomUUID().toString();
 
-    private long              publisherVersion           = System.currentTimeMillis();
+	private long publisherVersion = System.currentTimeMillis();
 
-    private long              publisherRegisterTimestamp = System.currentTimeMillis();
+	private long publisherRegisterTimestamp = System.currentTimeMillis();
 
-    private String            publisherDataBox;
+	private String publisherDataBox;
 
-    private String            publisherConnectId;
+	private String publisherConnectId;
 
-    private String            publisherCell;
+	private String publisherCell;
 
-    /**
-     * Getter method for property <tt>publisherCell</tt>.
-     *
-     * @return property value of publisherCell
-     */
-    public String getPublisherCell() {
-        return publisherCell;
-    }
+	/**
+	 * Getter method for property <tt>publisherCell</tt>.
+	 * 
+	 * @return property value of publisherCell
+	 */
+	public String getPublisherCell() {
+		return publisherCell;
+	}
 
-    /**
-     * Setter method for property <tt>publisherCell </tt>.
-     *
-     * @param publisherCell  value to be assigned to property publisherCell
-     */
-    public void setPublisherCell(String publisherCell) {
-        this.publisherCell = publisherCell;
-    }
+	/**
+	 * Setter method for property <tt>publisherCell </tt>.
+	 * 
+	 * @param publisherCell
+	 *            value to be assigned to property publisherCell
+	 */
+	public void setPublisherCell(String publisherCell) {
+		this.publisherCell = publisherCell;
+	}
 
-    /**
-     * Getter method for property <tt>dataInfoId</tt>.
-     *
-     * @return property value of dataInfoId
-     */
-    public String getDataInfoId() {
-        return dataInfoId;
-    }
+	/**
+	 * Getter method for property <tt>dataInfoId</tt>.
+	 * 
+	 * @return property value of dataInfoId
+	 */
+	public String getDataInfoId() {
+		return dataInfoId;
+	}
 
-    /**
-     * Setter method for property <tt>dataInfoId </tt>.
-     *
-     * @param dataInfoId  value to be assigned to property dataInfoId
-     */
-    public void setDataInfoId(String dataInfoId) {
-        this.dataInfoId = dataInfoId;
-    }
+	/**
+	 * Setter method for property <tt>dataInfoId </tt>.
+	 * 
+	 * @param dataInfoId
+	 *            value to be assigned to property dataInfoId
+	 */
+	public void setDataInfoId(String dataInfoId) {
+		this.dataInfoId = dataInfoId;
+	}
 
-    /**
-     * Getter method for property <tt>dataCenter</tt>.
-     *
-     * @return property value of dataCenter
-     */
-    public String getDataCenter() {
-        return dataCenter;
-    }
+	/**
+	 * Getter method for property <tt>dataCenter</tt>.
+	 * 
+	 * @return property value of dataCenter
+	 */
+	public String getDataCenter() {
+		return dataCenter;
+	}
 
-    /**
-     * Setter method for property <tt>dataCenter </tt>.
-     *
-     * @param dataCenter  value to be assigned to property dataCenter
-     */
-    public void setDataCenter(String dataCenter) {
-        this.dataCenter = dataCenter;
-    }
+	/**
+	 * Setter method for property <tt>dataCenter </tt>.
+	 * 
+	 * @param dataCenter
+	 *            value to be assigned to property dataCenter
+	 */
+	public void setDataCenter(String dataCenter) {
+		this.dataCenter = dataCenter;
+	}
 
-    /**
-     * Getter method for property <tt>publisherRegisterId</tt>.
-     *
-     * @return property value of publisherRegisterId
-     */
-    public String getPublisherRegisterId() {
-        return publisherRegisterId;
-    }
+	/**
+	 * Getter method for property <tt>publisherRegisterId</tt>.
+	 * 
+	 * @return property value of publisherRegisterId
+	 */
+	public String getPublisherRegisterId() {
+		return publisherRegisterId;
+	}
 
-    /**
-     * Setter method for property <tt>publisherRegisterId </tt>.
-     *
-     * @param publisherRegisterId  value to be assigned to property publisherRegisterId
-     */
-    public void setPublisherRegisterId(String publisherRegisterId) {
-        this.publisherRegisterId = publisherRegisterId;
-    }
+	/**
+	 * Setter method for property <tt>publisherRegisterId </tt>.
+	 * 
+	 * @param publisherRegisterId
+	 *            value to be assigned to property publisherRegisterId
+	 */
+	public void setPublisherRegisterId(String publisherRegisterId) {
+		this.publisherRegisterId = publisherRegisterId;
+	}
 
-    /**
-     * Getter method for property <tt>publisherVersion</tt>.
-     *
-     * @return property value of publisherVersion
-     */
-    public long getPublisherVersion() {
-        return publisherVersion;
-    }
+	/**
+	 * Getter method for property <tt>publisherVersion</tt>.
+	 * 
+	 * @return property value of publisherVersion
+	 */
+	public long getPublisherVersion() {
+		return publisherVersion;
+	}
 
-    /**
-     * Setter method for property <tt>publisherVersion </tt>.
-     *
-     * @param publisherVersion  value to be assigned to property publisherVersion
-     */
-    public void setPublisherVersion(long publisherVersion) {
-        this.publisherVersion = publisherVersion;
-    }
+	/**
+	 * Setter method for property <tt>publisherVersion </tt>.
+	 * 
+	 * @param publisherVersion
+	 *            value to be assigned to property publisherVersion
+	 */
+	public void setPublisherVersion(long publisherVersion) {
+		this.publisherVersion = publisherVersion;
+	}
 
-    /**
-     * Getter method for property <tt>publisherRegisterTimestamp</tt>.
-     *
-     * @return property value of publisherRegisterTimestamp
-     */
-    public long getPublisherRegisterTimestamp() {
-        return publisherRegisterTimestamp;
-    }
+	/**
+	 * Getter method for property <tt>publisherRegisterTimestamp</tt>.
+	 * 
+	 * @return property value of publisherRegisterTimestamp
+	 */
+	public long getPublisherRegisterTimestamp() {
+		return publisherRegisterTimestamp;
+	}
 
-    /**
-     * Setter method for property <tt>publisherRegisterTimestamp </tt>.
-     *
-     * @param publisherRegisterTimestamp  value to be assigned to property publisherRegisterTimestamp
-     */
-    public void setPublisherRegisterTimestamp(long publisherRegisterTimestamp) {
-        this.publisherRegisterTimestamp = publisherRegisterTimestamp;
-    }
+	/**
+	 * Setter method for property <tt>publisherRegisterTimestamp </tt>.
+	 * 
+	 * @param publisherRegisterTimestamp
+	 *            value to be assigned to property publisherRegisterTimestamp
+	 */
+	public void setPublisherRegisterTimestamp(long publisherRegisterTimestamp) {
+		this.publisherRegisterTimestamp = publisherRegisterTimestamp;
+	}
 
-    /**
-     * Getter method for property <tt>publisherDataBox</tt>.
-     *
-     * @return property value of publisherDataBox
-     */
-    public String getPublisherDataBox() {
-        return publisherDataBox;
-    }
+	/**
+	 * Getter method for property <tt>publisherDataBox</tt>.
+	 * 
+	 * @return property value of publisherDataBox
+	 */
+	public String getPublisherDataBox() {
+		return publisherDataBox;
+	}
 
-    /**
-     * Setter method for property <tt>publisherDataBox </tt>.
-     *
-     * @param publisherDataBox  value to be assigned to property publisherDataBox
-     */
-    public void setPublisherDataBox(String publisherDataBox) {
-        this.publisherDataBox = publisherDataBox;
-    }
+	/**
+	 * Setter method for property <tt>publisherDataBox </tt>.
+	 * 
+	 * @param publisherDataBox
+	 *            value to be assigned to property publisherDataBox
+	 */
+	public void setPublisherDataBox(String publisherDataBox) {
+		this.publisherDataBox = publisherDataBox;
+	}
 
-    /**
-     * Getter method for property <tt>publisherConnectId</tt>.
-     *
-     * @return property value of publisherConnectId
-     */
-    public String getPublisherConnectId() {
-        return publisherConnectId;
-    }
+	/**
+	 * Getter method for property <tt>publisherConnectId</tt>.
+	 * 
+	 * @return property value of publisherConnectId
+	 */
+	public String getPublisherConnectId() {
+		return publisherConnectId;
+	}
 
-    /**
-     * Setter method for property <tt>publisherConnectId </tt>.
-     *
-     * @param publisherConnectId  value to be assigned to property publisherConnectId
-     */
-    public void setPublisherConnectId(String publisherConnectId) {
-        this.publisherConnectId = publisherConnectId;
-    }
+	/**
+	 * Setter method for property <tt>publisherConnectId </tt>.
+	 * 
+	 * @param publisherConnectId
+	 *            value to be assigned to property publisherConnectId
+	 */
+	public void setPublisherConnectId(String publisherConnectId) {
+		this.publisherConnectId = publisherConnectId;
+	}
 }

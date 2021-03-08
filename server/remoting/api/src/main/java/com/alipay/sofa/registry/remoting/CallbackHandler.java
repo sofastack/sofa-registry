@@ -19,31 +19,32 @@ package com.alipay.sofa.registry.remoting;
 import java.util.concurrent.Executor;
 
 /**
- *
+ * 
  * @author shangyu.wh
  * @version $Id: CallbackHandler.java, v 0.1 2017-11-22 15:16 shangyu.wh Exp $
  */
 public interface CallbackHandler {
 
-    /**
-     * callback handler
-     *
-     * @param channel
-     * @param message
-     */
-    void onCallback(Channel channel, Object message);
+	/**
+	 * callback handler
+	 * 
+	 * @param channel
+	 * @param message
+	 */
+	void onCallback(Channel channel, Object message);
 
-    /**
-     * callback exception handler
-     *
-     * @param channel
-     * @param exception
-     */
-    void onException(Channel channel, Throwable exception);
+	/**
+	 * callback exception handler
+	 * 
+	 * @param channel
+	 * @param exception
+	 */
+	void onException(Channel channel, Throwable exception);
 
-    /**
-     * override executor
-     * @return
-     */
-    Executor getExecutor();
+	/**
+	 * override executor
+	 * 
+	 * @return
+	 */
+	Executor getExecutor();
 }

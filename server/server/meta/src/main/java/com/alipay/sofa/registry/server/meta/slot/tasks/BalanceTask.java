@@ -21,10 +21,9 @@ import com.alipay.sofa.registry.common.model.slot.Slot;
 import com.alipay.sofa.registry.common.model.slot.SlotTable;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
-import com.alipay.sofa.registry.server.meta.lease.data.DefaultDataServerManager;
+import com.alipay.sofa.registry.server.meta.lease.data.DataServerManager;
 import com.alipay.sofa.registry.server.meta.slot.RebalanceTask;
 import com.alipay.sofa.registry.server.meta.slot.SlotManager;
-import com.alipay.sofa.registry.server.meta.slot.manager.LocalSlotManager;
 import com.alipay.sofa.registry.util.DatumVersionUtil;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -43,11 +42,9 @@ public class BalanceTask implements RebalanceTask {
     private static final Logger            logger            = LoggerFactory
                                                                  .getLogger(BalanceTask.class);
 
-    private final LocalSlotManager         localSlotManager;
+    private final SlotManager              slotManager;
 
-    private final SlotManager              raftSlotManager;
-
-    private final DefaultDataServerManager dataServerManager;
+    private final DataServerManager        dataServerManager;
 
     private long                           nextEpoch;
 
@@ -57,10 +54,9 @@ public class BalanceTask implements RebalanceTask {
 
     private List<DataNode>                 dataNodes;
 
-    public BalanceTask(LocalSlotManager localSlotManager, SlotManager raftSlotManager,
-                       DefaultDataServerManager dataServerManager) {
-        this.localSlotManager = localSlotManager;
-        this.raftSlotManager = raftSlotManager;
+    public BalanceTask(SlotManager slotManager,
+                       DataServerManager dataServerManager) {
+        this.slotManager = slotManager;
         this.dataServerManager = dataServerManager;
     }
 
@@ -79,14 +75,14 @@ public class BalanceTask implements RebalanceTask {
             logger.info("[run] end to init slot table");
         }
 
-        raftSlotManager.refresh(slotTable);
+        slotManager.refresh(slotTable);
         if (logger.isInfoEnabled()) {
             logger.info("[run] raft refreshed slot-table");
         }
     }
 
     private void initParameters() {
-        dataNodes = dataServerManager.getClusterMembers();
+        dataNodes = dataServerManager.getDataServerMetaInfo().getClusterMembers();
         if (dataNodes.isEmpty()) {
             if (logger.isInfoEnabled()) {
                 logger.info("[run] empty candidate, quit");
@@ -105,11 +101,11 @@ public class BalanceTask implements RebalanceTask {
 
     private Map<Integer, Slot> generateSlotMap() {
         Map<Integer, Slot> slotMap = Maps.newHashMap();
-        for (int i = 0; i < localSlotManager.getSlotNums(); i++) {
+        for (int i = 0; i < slotManager.getSlotNums(); i++) {
             long epoch = DatumVersionUtil.nextId();
             String leader = getNextLeader().getIp();
             List<String> followers = Lists.newArrayList();
-            for (int j = 0; j < localSlotManager.getSlotReplicaNums() - 1; j++) {
+            for (int j = 0; j < slotManager.getSlotReplicaNums() - 1; j++) {
                 followers.add(getNextFollower().getIp());
             }
             Slot slot = new Slot(i, leader, epoch, followers);

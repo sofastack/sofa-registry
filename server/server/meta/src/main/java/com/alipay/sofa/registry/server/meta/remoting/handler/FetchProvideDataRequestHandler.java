@@ -23,10 +23,15 @@ import com.alipay.sofa.registry.common.model.metaserver.ProvideData;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.remoting.Channel;
+import com.alipay.sofa.registry.server.meta.bootstrap.config.NodeConfig;
+import com.alipay.sofa.registry.server.meta.bootstrap.handler.DataServerHandler;
+import com.alipay.sofa.registry.server.meta.bootstrap.handler.SessionServerHandler;
 import com.alipay.sofa.registry.store.api.DBResponse;
-import com.alipay.sofa.registry.store.api.DBService;
 import com.alipay.sofa.registry.store.api.OperationStatus;
-import com.alipay.sofa.registry.jraft.annotation.RaftReference;
+import com.alipay.sofa.registry.store.api.meta.ProvideDataRepository;
+import com.alipay.sofa.registry.util.JsonUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
 /**
  * Handle session node's query request, such as get ProvideData by dataInfoId
@@ -34,25 +39,30 @@ import com.alipay.sofa.registry.jraft.annotation.RaftReference;
  * @author shangyu.wh
  * @version $Id: GetNodesRequestHandler.java, v 0.1 2018-03-02 15:12 shangyu.wh Exp $
  */
-public class FetchProvideDataRequestHandler extends MetaServerHandler<FetchProvideDataRequest> {
+@Component
+public class FetchProvideDataRequestHandler extends BaseMetaServerHandler<FetchProvideDataRequest>
+        implements SessionServerHandler, DataServerHandler {
 
     private static final Logger DB_LOGGER = LoggerFactory.getLogger(
                                               FetchProvideDataRequestHandler.class, "[DBService]");
 
-    @RaftReference
-    private DBService           persistenceDataDBService;
+    @Autowired
+    private ProvideDataRepository provideDataRepository;
+
+    @Autowired
+    private NodeConfig nodeConfig;
 
     @Override
     public Object doHandle(Channel channel, FetchProvideDataRequest fetchProvideDataRequest) {
         try {
-            DBResponse ret = persistenceDataDBService.get(fetchProvideDataRequest.getDataInfoId());
+            DBResponse ret = provideDataRepository.get(nodeConfig.getLocalDataCenter(), fetchProvideDataRequest.getDataInfoId());
             if (ret == null) {
                 DB_LOGGER.error("get null Data from db!");
                 throw new RuntimeException("Get null Data from db!");
             }
 
             if (ret.getOperationStatus() == OperationStatus.SUCCESS) {
-                PersistenceData data = (PersistenceData) ret.getEntity();
+                PersistenceData data = JsonUtils.read((String) ret.getEntity(), PersistenceData.class);
                 ProvideData provideData = new ProvideData(new ServerDataBox(data.getData()),
                     fetchProvideDataRequest.getDataInfoId(), data.getVersion());
                 DB_LOGGER.info("get ProvideData {} from DB success!", provideData);

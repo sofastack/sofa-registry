@@ -30,9 +30,9 @@ public class JdbcDriverConfigBean implements JdbcDriverConfig {
 
     private String             driverClassName = "com.mysql.jdbc.Driver";
 
-    private String             url             = "jdbc:mysql://100.83.53.146:3306/confregdb?zeroDateTimeBehavior=convertToNull&useUnicode=true&characterEncoding=utf-8";
+    private String             url             = "jdbc:mysql://127.0.0.1:2883/metadatadb?useUnicode=true&characterEncoding=utf8";
 
-    private String             username        = "confreg";
+    private String             username        = "username";
 
     private String             password        = "password";
 

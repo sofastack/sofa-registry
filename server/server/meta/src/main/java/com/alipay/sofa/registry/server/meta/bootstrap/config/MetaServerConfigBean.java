@@ -17,12 +17,14 @@
 package com.alipay.sofa.registry.server.meta.bootstrap.config;
 
 import com.alipay.sofa.registry.common.model.constants.ValueConstants;
+import com.alipay.sofa.registry.common.model.metaserver.Lease;
 import com.alipay.sofa.registry.util.OsUtils;
 import org.apache.commons.lang.builder.ToStringBuilder;
 import org.apache.commons.lang.builder.ToStringStyle;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 import java.io.File;
+import java.util.concurrent.TimeUnit;
 
 /**
  * @author shangyu.wh
@@ -97,6 +99,9 @@ public class MetaServerConfigBean implements MetaServerConfig {
     private double             sessionLoadbalanceThresholdRatio           = 1.1;
 
     private int                expireCheckIntervalMilli                   = 1000;
+
+    private long               metaLeaderWarmupMilli = Long.getLong("elector.warm.up.milli",
+            TimeUnit.SECONDS.toMillis(Lease.DEFAULT_DURATION_SECS * 3 / 2));
 
     /**
      * Gets get session server port.
@@ -809,5 +814,13 @@ public class MetaServerConfigBean implements MetaServerConfig {
 
     public void setAppRevisionRegisterExecutorQueueSize(int appRevisionRegisterExecutorQueueSize) {
         this.appRevisionRegisterExecutorQueueSize = appRevisionRegisterExecutorQueueSize;
+    }
+
+    public long getMetaLeaderWarmupMilli() {
+        return metaLeaderWarmupMilli;
+    }
+
+    public void setMetaLeaderWarmupMilli(long metaLeaderWarmupMilli) {
+        this.metaLeaderWarmupMilli = metaLeaderWarmupMilli;
     }
 }

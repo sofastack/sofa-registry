@@ -16,48 +16,43 @@
  */
 package com.alipay.sofa.registry.server.meta.lease.session;
 
+import com.alipay.sofa.registry.common.model.metaserver.Lease;
+import com.alipay.sofa.registry.common.model.metaserver.cluster.VersionedList;
 import com.alipay.sofa.registry.common.model.metaserver.inter.heartbeat.HeartbeatRequest;
 import com.alipay.sofa.registry.common.model.metaserver.nodes.SessionNode;
-import com.alipay.sofa.registry.exception.DisposeException;
-import com.alipay.sofa.registry.exception.InitializeException;
+import com.alipay.sofa.registry.common.model.slot.SlotTable;
 import com.alipay.sofa.registry.lifecycle.impl.LifecycleHelper;
 import com.alipay.sofa.registry.server.meta.bootstrap.config.MetaServerConfig;
+import com.alipay.sofa.registry.server.meta.cluster.node.NodeAdded;
 import com.alipay.sofa.registry.server.meta.cluster.node.NodeModified;
-import com.alipay.sofa.registry.server.meta.lease.AbstractRaftEnabledLeaseManager;
-import com.alipay.sofa.registry.server.meta.lease.Lease;
-import com.alipay.sofa.registry.server.meta.lease.LeaseManager;
-import com.alipay.sofa.registry.jraft.annotation.RaftReference;
-import com.alipay.sofa.registry.jraft.annotation.RaftReferenceContainer;
-import com.alipay.sofa.registry.util.DefaultExecutorFactory;
-import com.alipay.sofa.registry.util.OsUtils;
+import com.alipay.sofa.registry.server.meta.cluster.node.NodeRemoved;
+import com.alipay.sofa.registry.server.meta.lease.impl.AbstractEvictableLeaseManager;
+import com.alipay.sofa.registry.server.meta.monitor.Metrics;
+import com.alipay.sofa.registry.server.meta.slot.SlotManager;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.Lists;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
+import java.util.List;
 import java.util.Objects;
-import java.util.concurrent.ExecutorService;
 
 /**
  * @author chen.zhu
  * <p>
  * Nov 24, 2020
  */
-@RaftReferenceContainer
-public class DefaultSessionServerManager extends AbstractRaftEnabledLeaseManager<SessionNode>
-                                                                                             implements
-                                                                                             SessionServerManager {
-
-    @RaftReference(uniqueId = SessionLeaseManager.SESSION_LEASE_MANAGER, interfaceType = LeaseManager.class)
-    private LeaseManager<SessionNode> raftSessionLeaseManager;
-
-    @Autowired
-    private SessionLeaseManager       sessionLeaseManager;
+@Component
+public class DefaultSessionServerManager extends AbstractEvictableLeaseManager<SessionNode>
+        implements SessionServerManager {
 
     @Autowired
     private MetaServerConfig          metaServerConfig;
 
-    private ExecutorService           executors;
+    @Autowired
+    private SlotManager               slotManager;
 
     @PostConstruct
     public void postConstruct() throws Exception {
@@ -72,50 +67,41 @@ public class DefaultSessionServerManager extends AbstractRaftEnabledLeaseManager
     }
 
     @Override
-    protected SessionLeaseManager getLocalLeaseManager() {
-        return sessionLeaseManager;
+    public void register(Lease<SessionNode> lease) {
+        super.register(lease);
+        notifyObservers(new NodeAdded<>(lease.getRenewal()));
     }
-
-    @Override
-    protected LeaseManager<SessionNode> getRaftLeaseManager() {
-        return raftSessionLeaseManager;
-    }
-
-    @Override
-    protected void doInitialize() throws InitializeException {
-        super.doInitialize();
-        executors = DefaultExecutorFactory.createAllowCoreTimeout(getClass().getSimpleName(),
-            Math.min(4, OsUtils.getCpuCount())).create();
-        sessionLeaseManager.setExecutors(executors);
-        sessionLeaseManager.setLogger(logger);
-    }
-
-    @Override
-    protected void doDispose() throws DisposeException {
-        if (executors != null) {
-            executors.shutdownNow();
-        }
-        super.doDispose();
-    }
-
     /**
      * Different from data server, session node maintains a 'ProcessId' to be as unique Id for Session Process(not server)
      *
      * Once a restart event happened on the same session-server, an notification will be sent
      * */
     @Override
-    protected void tryRenewNode(Lease<SessionNode> lease, SessionNode renewal, int duration) {
-        if (renewal.getProcessId() != null
+    public boolean renew(SessionNode renewal, int duration) {
+        Metrics.Heartbeat.onSessionHeartbeat(renewal.getIp());
+        Lease<SessionNode> lease = getLease(renewal);
+        if (renewal.getProcessId() != null && lease != null && lease.getRenewal() != null
             && !Objects.equals(lease.getRenewal().getProcessId(), renewal.getProcessId())) {
             logger.warn("[renew] session node is restart, as process-Id change from {} to {}",
                 lease.getRenewal().getProcessId(), renewal.getProcessId());
             // replace the session node, as it has changed process-id already
             lease.setRenewal(renewal);
-            sessionLeaseManager.register(new Lease<>(renewal, duration));
+            super.register(new Lease<>(renewal, duration));
             notifyObservers(new NodeModified<>(lease.getRenewal(), renewal));
+            return false;
         } else {
-            sessionLeaseManager.renew(renewal, duration);
+            return super.renew(renewal, duration);
         }
+    }
+
+    @Override
+    public boolean cancel(Lease<SessionNode> lease) {
+        boolean result = super.cancel(lease);
+        if (result) {
+            Metrics.Heartbeat.onSessionEvict(lease.getRenewal().getIp());
+            notifyObservers(new NodeRemoved<>(lease.getRenewal()));
+        }
+        return result;
     }
 
     @Override
@@ -129,25 +115,35 @@ public class DefaultSessionServerManager extends AbstractRaftEnabledLeaseManager
     }
 
     @VisibleForTesting
-    DefaultSessionServerManager setRaftSessionLeaseManager(LeaseManager<SessionNode> raftSessionLeaseManager) {
-        this.raftSessionLeaseManager = raftSessionLeaseManager;
-        return this;
-    }
-
-    @VisibleForTesting
-    DefaultSessionServerManager setSessionLeaseManager(SessionLeaseManager sessionLeaseManager) {
-        this.sessionLeaseManager = sessionLeaseManager;
-        return this;
-    }
-
-    @VisibleForTesting
     DefaultSessionServerManager setMetaServerConfig(MetaServerConfig metaServerConfig) {
         this.metaServerConfig = metaServerConfig;
         return this;
     }
 
     @Override
-    public void handleHeartbeat(HeartbeatRequest<SessionNode> request) {
+    public VersionedList<SessionNode> getSessionServerMetaInfo() {
+        VersionedList<Lease<SessionNode>> leaseMetaInfo = getLeaseMeta();
+        List<SessionNode> sessionNodes = Lists.newArrayList();
+        leaseMetaInfo.getClusterMembers().forEach(lease -> {
+            sessionNodes.add(lease.getRenewal());
+        });
+        return new VersionedList<>(leaseMetaInfo.getEpoch(), sessionNodes);
+    }
 
+    @Override
+    public long getEpoch() {
+        return currentEpoch.get();
+    }
+
+    @Override
+    public void onHeartbeat(HeartbeatRequest<SessionNode> heartbeat) {
+        if (amILeader() && metaLeaderService.isWarmup()) {
+            learnFromSession(heartbeat);
+        }
+    }
+
+    protected void learnFromSession(HeartbeatRequest<SessionNode> heartbeat) {
+        SlotTable slotTable = heartbeat.getSlotTable();
+        slotManager.refresh(slotTable);
     }
 }

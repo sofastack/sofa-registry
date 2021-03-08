@@ -19,7 +19,9 @@ package com.alipay.sofa.registry.server.meta.remoting.connection;
 import com.alipay.sofa.registry.common.model.Node.NodeType;
 import com.alipay.sofa.registry.net.NetUtil;
 import com.alipay.sofa.registry.remoting.Channel;
+import com.alipay.sofa.registry.server.meta.bootstrap.handler.DataServerHandler;
 import com.alipay.sofa.registry.server.shared.remoting.ListenServerChannelHandler;
+import org.springframework.stereotype.Component;
 
 import java.net.InetSocketAddress;
 import java.util.Collection;
@@ -32,7 +34,8 @@ import java.util.concurrent.ConcurrentHashMap;
  * @author shangyu.wh
  * @version $Id: DataConnectionHandler.java, v 0.1 2018-01-24 16:04 shangyu.wh Exp $
  */
-public class DataConnectionHandler extends ListenServerChannelHandler implements NodeConnectManager {
+@Component
+public class DataConnectionHandler extends ListenServerChannelHandler implements NodeConnectManager, DataServerHandler {
 
     /**
      * key: connectId

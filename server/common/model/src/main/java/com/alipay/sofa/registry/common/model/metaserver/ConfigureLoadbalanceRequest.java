@@ -24,18 +24,18 @@ import java.util.Map;
  * @version : LoadbalanceConfig.java, v 0.1 2020年05月29日 10:19 上午 xiangxu Exp $
  */
 public class ConfigureLoadbalanceRequest implements Serializable {
-    private int maxConnections;
+	private int maxConnections;
 
-    public ConfigureLoadbalanceRequest(int maxConnections) {
-        this.maxConnections = maxConnections;
-    }
+	public ConfigureLoadbalanceRequest(int maxConnections) {
+		this.maxConnections = maxConnections;
+	}
 
-    public int getMaxConnections() {
-        return maxConnections;
-    }
+	public int getMaxConnections() {
+		return maxConnections;
+	}
 
-    public void setMaxConnections(int maxConnections) {
-        this.maxConnections = maxConnections;
-    }
+	public void setMaxConnections(int maxConnections) {
+		this.maxConnections = maxConnections;
+	}
 
 }

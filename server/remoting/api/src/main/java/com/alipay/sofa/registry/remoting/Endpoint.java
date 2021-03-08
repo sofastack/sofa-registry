@@ -20,30 +20,30 @@ import java.net.InetSocketAddress;
 
 /**
  * The interface Endpoint.
- *
+ * 
  * @author shangyu.wh
  * @author kezhu.wukz
  * @version $Id : Endpoint.java, v 0.1 2017-11-20 20:03 shangyu.wh Exp $
  */
 public interface Endpoint {
 
-    /**
-     * get local address.
-     *
-     * @return local address.
-     */
-    InetSocketAddress getLocalAddress();
+	/**
+	 * get local address.
+	 * 
+	 * @return local address.
+	 */
+	InetSocketAddress getLocalAddress();
 
-    /**
-     * close the channel.
-     */
-    void close();
+	/**
+	 * close the channel.
+	 */
+	void close();
 
-    /**
-     * is closed.
-     *
-     * @return closed boolean
-     */
-    boolean isClosed();
+	/**
+	 * is closed.
+	 * 
+	 * @return closed boolean
+	 */
+	boolean isClosed();
 
 }

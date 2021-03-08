@@ -17,21 +17,22 @@
 package com.alipay.sofa.registry.server.session.filter.blacklist;
 
 /**
- *
+ * 
  * @author shangyu.wh
- * @version 1.0: BlacklistConstants.java, v 0.1 2019-06-19 17:56 shangyu.wh Exp $
+ * @version 1.0: BlacklistConstants.java, v 0.1 2019-06-19 17:56 shangyu.wh Exp
+ *          $
  */
 public class BlacklistConstants {
 
-    //*********************** Blacklist type ***********************//
-    /** forbidden pub */
-    public static final String FORBIDDEN_PUB           = "FORBIDDEN_PUB";
+	// *********************** Blacklist type ***********************//
+	/** forbidden pub */
+	public static final String FORBIDDEN_PUB = "FORBIDDEN_PUB";
 
-    /** forbidden sub by prefix */
-    public static final String FORBIDDEN_SUB_BY_PREFIX = "FORBIDDEN_SUB_BY_PREFIX";
+	/** forbidden sub by prefix */
+	public static final String FORBIDDEN_SUB_BY_PREFIX = "FORBIDDEN_SUB_BY_PREFIX";
 
-    //*********************** match type ***********************//
+	// *********************** match type ***********************//
 
-    /** match full ip */
-    public static final String IP_FULL                 = "IP_FULL";
+	/** match full ip */
+	public static final String IP_FULL = "IP_FULL";
 }

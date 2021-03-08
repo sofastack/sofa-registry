@@ -16,11 +16,13 @@
  */
 package com.alipay.sofa.registry.server.meta.resource;
 
+import com.alipay.sofa.common.profile.StringUtil;
 import com.alipay.sofa.registry.common.model.CommonResponse;
-import com.alipay.sofa.registry.jraft.bootstrap.ServiceStateMachine;
 import com.alipay.sofa.registry.metrics.ReporterUtils;
+import com.alipay.sofa.registry.server.meta.MetaLeaderService;
 import com.alipay.sofa.registry.server.meta.bootstrap.MetaServerBootstrap;
-import com.alipay.sofa.registry.server.meta.remoting.RaftExchanger;
+import com.alipay.sofa.registry.server.meta.metaserver.CurrentDcMetaServer;
+import com.alipay.sofa.registry.store.api.elector.LeaderElector;
 import com.codahale.metrics.Gauge;
 import com.codahale.metrics.MetricRegistry;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -46,7 +48,13 @@ public class HealthResource {
     private MetaServerBootstrap metaServerBootstrap;
 
     @Autowired
-    private RaftExchanger       raftExchanger;
+    private MetaLeaderService metaLeaderService;
+
+    @Autowired
+    private CurrentDcMetaServer currentDcMetaServer;
+
+    @Autowired
+    private LeaderElector leaderElector;
 
     @PostConstruct
     public void init() {
@@ -87,31 +95,16 @@ public class HealthResource {
 
         start = metaServerBootstrap.getHttpStart();
         ret = ret && start;
+
+        boolean leaderNotEmpty = StringUtil.isNotBlank(leaderElector.getLeader());
+        ret = ret && leaderNotEmpty;
+
         sb.append(", httpServerStart:").append(start);
 
-        start = raftExchanger.getServerStart();
-        ret = ret && start;
-        sb.append(", raftServerStart:").append(start);
-
-        start = raftExchanger.getClientStart();
-        ret = ret && start;
-        sb.append(", raftClientStart:").append(start);
-
-        start = raftExchanger.getClsStart();
-        ret = ret && start;
-        sb.append(", raftManagerStart:").append(start);
-
-        start = ServiceStateMachine.getInstance().isLeader()
-                || ServiceStateMachine.getInstance().isfollower();
-        ret = ret && start;
-
-        if (ServiceStateMachine.getInstance().isLeader()) {
-            sb.append(", raftStatus:").append("Leader");
-        } else if (ServiceStateMachine.getInstance().isfollower()) {
-            sb.append(", raftStatus:").append("Follower");
-        } else {
-            sb.append(", raftStatus:").append(start);
-        }
+        sb.append(", role:").append(metaLeaderService.amILeader() ? "leader" : "follower");
+        sb.append(", leader:").append(metaLeaderService.getLeader());
+        sb.append(", meta-servers:").append(currentDcMetaServer.getClusterMembers());
+        sb.append(", leader:").append(leaderElector.getLeader());
 
         if (ret) {
             response = CommonResponse.buildSuccessResponse(sb.toString());

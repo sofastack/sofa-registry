@@ -22,7 +22,7 @@ package com.alipay.sofa.registry.observer;
  */
 public interface Observable {
 
-    void addObserver(Observer observer);
+	void addObserver(UnblockingObserver observer);
 
-    void removeObserver(Observer observer);
+	void removeObserver(UnblockingObserver observer);
 }

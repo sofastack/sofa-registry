@@ -22,6 +22,7 @@ import com.alipay.sofa.registry.server.meta.remoting.data.DefaultDataServerServi
 import com.alipay.sofa.registry.server.meta.remoting.session.DefaultSessionServerService;
 import com.google.common.annotations.VisibleForTesting;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
 import java.util.Set;
 
@@ -38,6 +39,7 @@ import java.util.Set;
  * And all these infos are madantorily persistenced to disk
  * So, by leveraging meta server's JRaft feature, infos are reliable and stable to be stored on MetaServer
  */
+@Component
 public class DefaultProvideDataNotifier implements ProvideDataNotifier {
 
     @Autowired

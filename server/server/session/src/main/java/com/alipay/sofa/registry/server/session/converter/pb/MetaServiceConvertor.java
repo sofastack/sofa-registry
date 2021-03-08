@@ -28,11 +28,12 @@ import java.util.Optional;
 
 /**
  * @author xiaojian.xj
- * @version $Id: MetaServiceConvertor.java, v 0.1 2021年02月04日 22:27 xiaojian.xj Exp $
+ * @version $Id: MetaServiceConvertor.java, v 0.1 2021年02月04日 22:27 xiaojian.xj
+ *          Exp $
  */
 public class MetaServiceConvertor {
 
-    public static MetaService convert2Pb(AppRevisionInterface service) {
+	public static MetaService convert2Pb(AppRevisionInterface service) {
 
         MetaService.Builder serviceBuilder = MetaService.newBuilder();
         serviceBuilder.setId(service.getId());
@@ -45,8 +46,7 @@ public class MetaServiceConvertor {
 
         return serviceBuilder.build();
     }
-
-    public static AppRevisionInterface convert2Java(MetaService metaService) {
+	public static AppRevisionInterface convert2Java(MetaService metaService) {
 
         AppRevisionInterface appRevisionInterface = new AppRevisionInterface();
         appRevisionInterface.setId(metaService.getId());

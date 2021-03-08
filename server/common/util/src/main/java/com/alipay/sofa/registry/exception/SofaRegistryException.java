@@ -18,22 +18,22 @@ package com.alipay.sofa.registry.exception;
 
 /**
  * @author chen.zhu
- * <p>
- * Nov 13, 2020
+ *         <p>
+ *         Nov 13, 2020
  */
 public class SofaRegistryException extends Exception {
 
-    private static final long serialVersionUID = 1L;
+	private static final long serialVersionUID = 1L;
 
-    public SofaRegistryException(String message) {
-        super(message);
-    }
+	public SofaRegistryException(String message) {
+		super(message);
+	}
 
-    public SofaRegistryException(String message, Throwable th) {
-        super(message, th);
-    }
+	public SofaRegistryException(String message, Throwable th) {
+		super(message, th);
+	}
 
-    public SofaRegistryException(Throwable th) {
-        super(th);
-    }
+	public SofaRegistryException(Throwable th) {
+		super(th);
+	}
 }

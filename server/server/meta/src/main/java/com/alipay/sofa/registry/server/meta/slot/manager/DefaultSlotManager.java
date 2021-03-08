@@ -16,108 +16,84 @@
  */
 package com.alipay.sofa.registry.server.meta.slot.manager;
 
-import com.alipay.sofa.registry.common.model.metaserver.nodes.DataNode;
-import com.alipay.sofa.registry.common.model.slot.DataNodeSlot;
 import com.alipay.sofa.registry.common.model.slot.SlotTable;
-import com.alipay.sofa.registry.jraft.bootstrap.ServiceStateMachine;
+import com.alipay.sofa.registry.exception.InitializeException;
+import com.alipay.sofa.registry.lifecycle.impl.LifecycleHelper;
+import com.alipay.sofa.registry.observer.Observable;
+import com.alipay.sofa.registry.observer.UnblockingObserver;
+import com.alipay.sofa.registry.server.meta.MetaLeaderService;
+import com.alipay.sofa.registry.server.meta.remoting.notifier.Notifier;
 import com.alipay.sofa.registry.server.meta.slot.SlotManager;
-import com.alipay.sofa.registry.jraft.annotation.RaftReference;
-import com.alipay.sofa.registry.jraft.annotation.RaftReferenceContainer;
+import com.google.common.annotations.VisibleForTesting;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+
+import javax.annotation.PostConstruct;
+import java.util.List;
 
 /**
  * @author chen.zhu
  * <p>
  * Dec 02, 2020
  */
-@RaftReferenceContainer
-public class DefaultSlotManager implements SlotManager {
+@Component
+public class DefaultSlotManager extends SimpleSlotManager implements SlotManager {
+
+    @Autowired(required = false)
+    private List<Notifier> notifiers;
 
     @Autowired
-    private LocalSlotManager localSlotManager;
-
-    @RaftReference(uniqueId = LocalSlotManager.LOCAL_SLOT_MANAGER, interfaceType = SlotManager.class)
-    private SlotManager      raftSlotManager;
+    private MetaLeaderService metaLeaderService;
 
     public DefaultSlotManager() {
     }
 
-    public DefaultSlotManager(LocalSlotManager localSlotManager, SlotManager raftSlotManager) {
-        this.localSlotManager = localSlotManager;
-        this.raftSlotManager = raftSlotManager;
+    public DefaultSlotManager(MetaLeaderService metaLeaderService) {
+        this.metaLeaderService = metaLeaderService;
     }
 
-    /**
-     * Refresh.
-     *
-     * @param slotTable the slot table
-     */
+    @PostConstruct
+    public void postConstruct() throws Exception {
+        LifecycleHelper.initializeIfPossible(this);
+    }
+
+    @Override
+    protected void doInitialize() throws InitializeException {
+        super.doInitialize();
+        addObserver(new SlotTableChangeNotification());
+    }
+
     @Override
     public void refresh(SlotTable slotTable) {
-        raftSlotManager.refresh(slotTable);
-    }
-
-    /**
-     * Gets get raft slot manager.
-     *
-     * @return the get raft slot manager
-     */
-    public SlotManager getRaftSlotManager() {
-        return raftSlotManager;
-    }
-
-    /**
-     * Gets get slot nums.
-     *
-     * @return the get slot nums
-     */
-    @Override
-    public int getSlotNums() {
-        return getSlotManager().getSlotNums();
-    }
-
-    /**
-     * Gets get slot replica nums.
-     *
-     * @return the get slot replica nums
-     */
-    @Override
-    public int getSlotReplicaNums() {
-        return getSlotManager().getSlotReplicaNums();
-    }
-
-    /**
-     * Gets get data node managed slot.
-     *
-     * @param dataNode        the data node
-     * @param ignoreFollowers the ignore followers
-     * @return the get data node managed slot
-     */
-    @Override
-    public DataNodeSlot getDataNodeManagedSlot(DataNode dataNode, boolean ignoreFollowers) {
-        return getSlotManager().getDataNodeManagedSlot(dataNode, ignoreFollowers);
-    }
-
-    /**
-     * Gets get slot table.
-     *
-     * @return the get slot table
-     */
-    @Override
-    public SlotTable getSlotTable() {
-        return getSlotManager().getSlotTable();
-    }
-
-    private SlotManager getSlotManager() {
-        if (isRaftLeader()) {
-            return localSlotManager;
-        } else {
-            return raftSlotManager;
+        super.refresh(slotTable);
+        if (metaLeaderService.amIStableAsLeader()) {
+            notifyObservers(slotTable);
         }
     }
 
-    private boolean isRaftLeader() {
-        return ServiceStateMachine.getInstance().isLeader();
+    private final class SlotTableChangeNotification implements UnblockingObserver {
+
+        @Override
+        public void update(Observable source, Object message) {
+            if (message instanceof SlotTable) {
+                if (notifiers == null || notifiers.isEmpty()) {
+                    return;
+                }
+                notifiers.forEach(notifier -> {
+                    try {
+                        notifier.notifySlotTableChange((SlotTable) message);
+                    } catch (Throwable th) {
+                        logger.error("[notify] notifier [{}]", notifier.getClass().getSimpleName(), th);
+                    }
+                });
+            }
+        }
+    }
+
+    @VisibleForTesting
+    public SimpleSlotManager setNotifiers(List<Notifier> notifiers) {
+        this.notifiers = notifiers;
+        return this;
     }
 
 }

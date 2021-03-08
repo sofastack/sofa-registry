@@ -16,24 +16,19 @@
  */
 package com.alipay.sofa.registry.server.meta.remoting.session;
 
-import com.alipay.sofa.registry.common.model.Node;
 import com.alipay.sofa.registry.common.model.constants.ValueConstants;
 import com.alipay.sofa.registry.common.model.metaserver.DataOperator;
 import com.alipay.sofa.registry.common.model.metaserver.ProvideDataChangeEvent;
+import com.alipay.sofa.registry.common.model.metaserver.cluster.VersionedList;
 import com.alipay.sofa.registry.common.model.metaserver.nodes.SessionNode;
-import com.alipay.sofa.registry.exception.SofaRegistryRuntimeException;
-import com.alipay.sofa.registry.remoting.Channel;
 import com.alipay.sofa.registry.remoting.Client;
-import com.alipay.sofa.registry.remoting.exchange.NodeExchanger;
 import com.alipay.sofa.registry.remoting.exchange.RequestException;
 import com.alipay.sofa.registry.remoting.exchange.message.Request;
-import com.alipay.sofa.registry.server.meta.AbstractTest;
+import com.alipay.sofa.registry.server.meta.AbstractMetaServerTest;
 import com.alipay.sofa.registry.server.meta.lease.session.SessionServerManager;
-import com.alipay.sofa.registry.server.meta.remoting.DataNodeExchanger;
+import com.alipay.sofa.registry.server.meta.remoting.SessionNodeExchanger;
 import com.alipay.sofa.registry.server.meta.remoting.connection.SessionConnectionHandler;
-import com.alipay.sofa.registry.server.meta.remoting.session.DefaultSessionServerService;
-import com.alipay.sofa.registry.server.shared.remoting.AbstractServerHandler;
-import com.google.common.util.concurrent.MoreExecutors;
+import com.alipay.sofa.registry.util.DatumVersionUtil;
 import org.assertj.core.util.Lists;
 import org.junit.Before;
 import org.junit.Test;
@@ -48,12 +43,12 @@ import java.util.concurrent.TimeoutException;
 import static org.mockito.Matchers.*;
 import static org.mockito.Mockito.*;
 
-public class DefaultSessionServerServiceTest extends AbstractTest {
+public class DefaultSessionServerServiceTest extends AbstractMetaServerTest {
 
     private DefaultSessionServerService notifier = new DefaultSessionServerService();
 
     @Mock
-    private NodeExchanger               sessionNodeExchanger;
+    private SessionNodeExchanger sessionNodeExchanger;
 
     @Mock
     private SessionConnectionHandler    sessionConnectionHandler;
@@ -67,27 +62,6 @@ public class DefaultSessionServerServiceTest extends AbstractTest {
         notifier.setSessionConnectionHandler(sessionConnectionHandler)
             .setSessionNodeExchanger(sessionNodeExchanger)
             .setSessionServerManager(sessionServerManager);
-    }
-
-    @Test(expected = SofaRegistryRuntimeException.class)
-    public void testExpectedException() {
-        notifier.setSessionConnectionHandler(new AbstractServerHandler() {
-            @Override
-            protected Node.NodeType getConnectNodeType() {
-                return Node.NodeType.SESSION;
-            }
-
-            @Override
-            public Object doHandle(Channel channel, Object request) {
-                return null;
-            }
-
-            @Override
-            public Class interest() {
-                return null;
-            }
-        });
-        notifier.getNodeConnectManager();
     }
 
     @Test
@@ -108,9 +82,9 @@ public class DefaultSessionServerServiceTest extends AbstractTest {
             Lists.newArrayList(new InetSocketAddress(ip1, Math.abs(random.nextInt(65535)) % 65535),
                 new InetSocketAddress(ip2, Math.abs(random.nextInt(65535)) % 65535),
                 new InetSocketAddress(randomIp(), 1024)));
-        when(sessionServerManager.getClusterMembers()).thenReturn(
+        when(sessionServerManager.getSessionServerMetaInfo()).thenReturn(new VersionedList<>(DatumVersionUtil.nextId(),
             Lists.newArrayList(new SessionNode(randomURL(ip1), getDc()), new SessionNode(
-                randomURL(ip2), getDc()), new SessionNode(randomURL(randomIp()), getDc())));
+                randomURL(ip2), getDc()), new SessionNode(randomURL(randomIp()), getDc()))));
         notifier.notifyProvideDataChange(new ProvideDataChangeEvent(
             ValueConstants.BLACK_LIST_DATA_ID, System.currentTimeMillis(), DataOperator.ADD));
         Thread.sleep(50);
@@ -124,11 +98,11 @@ public class DefaultSessionServerServiceTest extends AbstractTest {
             Lists.newArrayList(new InetSocketAddress(ip1, Math.abs(random.nextInt(65535)) % 65535),
                 new InetSocketAddress(ip2, Math.abs(random.nextInt(65535)) % 65535),
                 new InetSocketAddress(randomIp(), 1024)));
-        when(sessionServerManager.getClusterMembers()).thenReturn(
+        when(sessionServerManager.getSessionServerMetaInfo()).thenReturn(new VersionedList<>(DatumVersionUtil.nextId(),
             Lists.newArrayList(new SessionNode(randomURL(ip1), getDc()), new SessionNode(
-                randomURL(ip2), getDc()), new SessionNode(randomURL(randomIp()), getDc())));
+                randomURL(ip2), getDc()), new SessionNode(randomURL(randomIp()), getDc()))));
         Client client2 = spy(getRpcClient(scheduled, 10, "Response"));
-        DataNodeExchanger otherNodeExchanger = mock(DataNodeExchanger.class);
+        SessionNodeExchanger otherNodeExchanger = mock(SessionNodeExchanger.class);
         when(otherNodeExchanger.request(any(Request.class))).then(new Answer<Object>() {
             @Override
             public Object answer(InvocationOnMock invocationOnMock) throws Throwable {

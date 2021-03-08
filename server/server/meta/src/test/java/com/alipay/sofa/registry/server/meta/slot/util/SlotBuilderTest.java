@@ -18,7 +18,7 @@ package com.alipay.sofa.registry.server.meta.slot.util;
 
 import com.alipay.sofa.registry.common.model.slot.Slot;
 import com.alipay.sofa.registry.exception.SofaRegistryRuntimeException;
-import com.alipay.sofa.registry.server.meta.AbstractTest;
+import com.alipay.sofa.registry.server.meta.AbstractMetaServerTest;
 import com.alipay.sofa.registry.server.meta.slot.util.builder.SlotBuilder;
 import org.junit.Assert;
 import org.junit.Before;
@@ -29,7 +29,7 @@ import org.junit.Test;
  * <p>
  * Jan 15, 2021
  */
-public class SlotBuilderTest extends AbstractTest {
+public class SlotBuilderTest extends AbstractMetaServerTest {
 
     private SlotBuilder slotBuilder;
 

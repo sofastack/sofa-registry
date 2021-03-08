@@ -23,5 +23,5 @@ import com.alipay.sofa.registry.core.model.SyncConfigResponse;
  * @since 2019/2/15
  */
 public interface SyncConfigHandlerStrategy {
-    void handleSyncConfigResponse(SyncConfigResponse syncConfigResponse);
+	void handleSyncConfigResponse(SyncConfigResponse syncConfigResponse);
 }
