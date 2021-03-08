@@ -106,11 +106,30 @@ public class SlotTableResource {
     public CommonResponse startSlotTableReconcile() {
         logger.info("[startSlotTableReconcile] begin");
         try {
-            LifecycleHelper.startIfPossible(slotArranger);
+            slotArranger.start();
             logger.info("[startSlotTableReconcile] end with succeed");
             return GenericResponse.buildSuccessResponse("succeed");
         } catch (Throwable throwable) {
             logger.error("[startSlotTableReconcile] end", throwable);
+            return GenericResponse.buildFailedResponse(throwable.getMessage());
+        }
+    }
+
+    @GET
+    @Path("/reconcile/status")
+    @Produces(MediaType.APPLICATION_JSON)
+    public CommonResponse getReconcileStatus() {
+        logger.info("[getReconcileStatus] begin");
+        try {
+            boolean result = slotArranger.getLifecycleState().isStarted();
+            logger.info("[getReconcileStatus] end with succeed");
+            if (result) {
+                return GenericResponse.buildSuccessResponse("running");
+            } else {
+                return GenericResponse.buildSuccessResponse("stopped");
+            }
+        } catch (Throwable throwable) {
+            logger.error("[getReconcileStatus] end", throwable);
             return GenericResponse.buildFailedResponse(throwable.getMessage());
         }
     }
