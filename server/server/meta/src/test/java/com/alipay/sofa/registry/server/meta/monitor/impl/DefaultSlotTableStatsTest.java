@@ -24,6 +24,7 @@ import com.alipay.sofa.registry.server.meta.bootstrap.config.NodeConfig;
 import com.alipay.sofa.registry.server.meta.monitor.SlotStats;
 import com.alipay.sofa.registry.server.meta.slot.manager.LocalSlotManager;
 import com.alipay.sofa.registry.server.shared.util.NodeUtils;
+import com.alipay.sofa.registry.util.DatumVersionUtil;
 import org.assertj.core.util.Lists;
 import org.assertj.core.util.Sets;
 import org.junit.Assert;
@@ -149,7 +150,7 @@ public class DefaultSlotTableStatsTest extends AbstractTest {
         for (DataNode node : dataNodes) {
             slotStatuses = Lists.newArrayList();
             for (int slotId = 0; slotId < SlotConfig.SLOT_NUM; slotId++) {
-                slotStatuses.add(new FollowerSlotStatus(slotId, System.currentTimeMillis(), node
+                slotStatuses.add(new FollowerSlotStatus(slotId, DatumVersionUtil.nextId(), node
                     .getIp(), System.currentTimeMillis(), System.currentTimeMillis() - 1000));
             }
             slotTableStats.checkSlotStatuses(node, slotStatuses);
@@ -164,7 +165,7 @@ public class DefaultSlotTableStatsTest extends AbstractTest {
         for (DataNode node : dataNodes) {
             slotStatuses = Lists.newArrayList();
             for (int slotId = 0; slotId < SlotConfig.SLOT_NUM; slotId++) {
-                slotStatuses.add(new FollowerSlotStatus(slotId, System.currentTimeMillis(), node
+                slotStatuses.add(new FollowerSlotStatus(slotId, DatumVersionUtil.nextId(), node
                     .getIp(), System.currentTimeMillis(), System.currentTimeMillis() - 1000));
             }
             slotTableStats.checkSlotStatuses(node, slotStatuses);
