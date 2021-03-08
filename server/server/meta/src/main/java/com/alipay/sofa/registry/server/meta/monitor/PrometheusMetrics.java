@@ -260,6 +260,12 @@ public class PrometheusMetrics {
                                                                 .help("data slot is lagging")
                                                                 .labelNames("data_server").register();
 
+        private static final Gauge DATA_EPOCH_GREATER_THAN_META = Gauge.build().namespace("meta")
+                .subsystem("data")
+                .name("epoch_greater_than_meta")
+                .help("data slot leader epoch is greater than meta")
+                .labelNames("data_server", "slot").register();
+
         public static void setLeaderNumbers(String dataServer, int leaderNum) {
             try {
                 LEADER_ASSIGN_GAUGE.labels(dataServer).set(leaderNum);
@@ -288,12 +294,20 @@ public class PrometheusMetrics {
             try {
                 DATA_SERVER_SLOT_LAG.labels(dataServer).set(times);
             } catch (Throwable throwable) {
-                LOGGER.error("[setDataReportStable]", throwable);
+                LOGGER.error("[setDataServerSlotLagTimes]", throwable);
             }
         }
 
         public static int getDataServerSlotLagTimes(String dataServer) {
             return (int) DATA_SERVER_SLOT_LAG.labels(dataServer).get();
+        }
+
+        public static void setDataSlotGreaterThanMeta(String dataServer, int slotId) {
+            try {
+                DATA_EPOCH_GREATER_THAN_META.labels(dataServer, String.valueOf(slotId)).set(1);
+            } catch (Throwable throwable) {
+                LOGGER.error("[setDataSlotGreaterThanMeta]", throwable);
+            }
         }
     }
 
