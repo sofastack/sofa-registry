@@ -58,7 +58,7 @@ public class BlacklistManagerImpl extends AbstractLifecycle implements Blacklist
                                                              .getLogger("SESSION-EXCHANGE");
 
     @Autowired
-    protected MetaServerService      mataNodeService;
+    protected MetaServerService      metaNodeService;
 
     private List<BlacklistConfig>    blacklistConfigList = new ArrayList();
 
@@ -136,7 +136,7 @@ public class BlacklistManagerImpl extends AbstractLifecycle implements Blacklist
     }
 
     private void fetchStopPushSwitch() {
-        ProvideData provideData = mataNodeService.fetchData(ValueConstants.BLACK_LIST_DATA_ID);
+        ProvideData provideData = metaNodeService.fetchData(ValueConstants.BLACK_LIST_DATA_ID);
         if (provideData != null) {
             if (provideData.getProvideData() == null
                 || provideData.getProvideData().getObject() == null) {

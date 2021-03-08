@@ -23,22 +23,31 @@ import com.alipay.sofa.registry.metrics.ReporterUtils;
 import com.alipay.sofa.registry.net.NetUtil;
 import com.alipay.sofa.registry.remoting.ChannelHandler;
 import com.alipay.sofa.registry.remoting.Server;
-import com.alipay.sofa.registry.remoting.exchange.Exchange;
+import com.alipay.sofa.registry.remoting.bolt.exchange.BoltExchange;
+import com.alipay.sofa.registry.remoting.jersey.exchange.JerseyExchange;
 import com.alipay.sofa.registry.server.meta.bootstrap.config.MetaServerConfig;
-import com.alipay.sofa.registry.server.meta.remoting.RaftExchanger;
-import com.alipay.sofa.registry.server.meta.remoting.handler.MetaServerHandler;
-import com.alipay.sofa.registry.task.batcher.TaskDispatchers;
+import com.alipay.sofa.registry.server.meta.bootstrap.handler.DataServerHandler;
+import com.alipay.sofa.registry.server.meta.bootstrap.handler.MetaServerHandler;
+import com.alipay.sofa.registry.server.meta.bootstrap.handler.SessionServerHandler;
+import com.alipay.sofa.registry.store.api.elector.AbstractLeaderElector;
+import com.alipay.sofa.registry.store.api.elector.LeaderElector;
+import com.github.rholder.retry.Retryer;
+import com.github.rholder.retry.RetryerBuilder;
+import com.github.rholder.retry.StopStrategies;
+import com.github.rholder.retry.WaitStrategies;
+import com.google.common.base.Predicate;
+import org.apache.commons.lang.StringUtils;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 
-import javax.annotation.Resource;
 import javax.ws.rs.Path;
 import javax.ws.rs.ext.Provider;
 import java.lang.annotation.Annotation;
-import java.util.Collection;
 import java.util.Date;
+import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
@@ -55,22 +64,19 @@ public class MetaServerBootstrap {
     private MetaServerConfig              metaServerConfig;
 
     @Autowired
-    private Exchange                      boltExchange;
+    private BoltExchange boltExchange;
 
     @Autowired
-    private Exchange                      jerseyExchange;
+    private JerseyExchange jerseyExchange;
 
     @Autowired
-    private ExecutorManager               executorManager;
+    private List<SessionServerHandler> sessionServerHandlers;
 
-    @Resource(name = "sessionServerHandlers")
-    private Collection<MetaServerHandler> sessionServerHandlers;
+    @Autowired
+    private List<DataServerHandler> dataServerHandlers;
 
-    @Resource(name = "dataServerHandlers")
-    private Collection<MetaServerHandler> dataServerHandlers;
-
-    @Resource(name = "metaServerHandlers")
-    private Collection<MetaServerHandler> metaServerHandlers;
+    @Autowired
+    private List<MetaServerHandler> metaServerHandlers;
 
     @Autowired
     private ResourceConfig                jerseyResourceConfig;
@@ -79,7 +85,8 @@ public class MetaServerBootstrap {
     private ApplicationContext            applicationContext;
 
     @Autowired
-    private RaftExchanger                 raftExchanger;
+    private LeaderElector                 leaderElector;
+
 
     private Server                        sessionServer;
 
@@ -97,6 +104,25 @@ public class MetaServerBootstrap {
 
     private final AtomicBoolean           httpStart    = new AtomicBoolean(false);
 
+    private final Retryer<Boolean> retryer                  = RetryerBuilder
+            .<Boolean> newBuilder()
+            .retryIfException()
+            .retryIfResult(new Predicate<Boolean>() {
+                @Override
+                public boolean apply(Boolean input) {
+                    return !input;
+                }
+            })
+            .withWaitStrategy(
+                    WaitStrategies
+                            .exponentialWait(
+                                    1000,
+                                    10000,
+                                    TimeUnit.MILLISECONDS))
+            .withStopStrategy(
+                    StopStrategies
+                            .stopAfterAttempt(10))
+            .build();
     /**
      * Do initialized.
      */
@@ -113,8 +139,11 @@ public class MetaServerBootstrap {
 
             openHttpServer();
 
-            initRaft();
-
+            retryer.call(()->{
+                return !StringUtils.isEmpty(leaderElector.getLeader())
+                        && leaderElector.getLeaderEpoch() != AbstractLeaderElector.LeaderInfo.initEpoch;
+            });
+            LOGGER.warn("[MetaBootstrap] leader info: {}, [{}]", leaderElector.getLeader(), leaderElector.getLeaderEpoch());
             Runtime.getRuntime().addShutdownHook(new Thread(this::doStop));
         } catch (Throwable e) {
             LOGGER.error("Bootstrap Meta Server got error!", e);
@@ -129,10 +158,6 @@ public class MetaServerBootstrap {
     private void doStop() {
         try {
             LOGGER.info("{} Shutting down Meta Server..", new Date().toString());
-
-            executorManager.stopScheduler();
-
-            TaskDispatchers.stopDefaultSingleTaskDispatcher();
 
             stopServer();
 
@@ -228,19 +253,6 @@ public class MetaServerBootstrap {
         }
     }
 
-    private void initRaft() {
-        raftExchanger.startRaftServer(executorManager);
-        LOGGER.info("Raft server port {} start success!group {}",
-            metaServerConfig.getRaftServerPort(), metaServerConfig.getRaftGroup());
-
-        raftExchanger.startRaftClient();
-        LOGGER.info("Raft client connect success!");
-
-        raftExchanger.startCliService();
-        LOGGER.info("Raft start CliService success!");
-
-    }
-
     private void stopServer() {
         if (sessionServer != null && sessionServer.isOpen()) {
             sessionServer.close();
@@ -253,9 +265,6 @@ public class MetaServerBootstrap {
         }
         if (httpServer != null && httpServer.isOpen()) {
             httpServer.close();
-        }
-        if (raftExchanger != null) {
-            raftExchanger.shutdown();
         }
     }
 

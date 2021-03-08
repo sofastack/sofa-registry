@@ -29,6 +29,7 @@ import com.alipay.sofa.registry.client.task.WorkerThread;
 import com.alipay.sofa.registry.common.model.CommonResponse;
 import com.alipay.sofa.registry.common.model.ConnectId;
 import com.alipay.sofa.registry.common.model.constants.ValueConstants;
+import com.alipay.sofa.registry.common.model.metaserver.Lease;
 import com.alipay.sofa.registry.common.model.sessionserver.CancelAddressRequest;
 import com.alipay.sofa.registry.common.model.store.URL;
 import com.alipay.sofa.registry.log.Logger;
@@ -37,22 +38,30 @@ import com.alipay.sofa.registry.net.NetUtil;
 import com.alipay.sofa.registry.remoting.Channel;
 import com.alipay.sofa.registry.remoting.jersey.JerseyClient;
 import com.alipay.sofa.registry.server.test.TestRegistryMain;
+import com.alipay.sofa.registry.util.FileUtils;
+import org.apache.commons.lang.StringUtils;
+import org.apache.logging.log4j.util.Strings;
+import org.h2.tools.Server;
 import org.junit.Before;
 import org.junit.BeforeClass;
+import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.SpringBootConfiguration;
 import org.springframework.boot.logging.LoggingSystem;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.ApplicationContextAware;
 import org.springframework.context.ConfigurableApplicationContext;
+import org.springframework.test.context.ActiveProfiles;
 
+import javax.sql.DataSource;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.core.MediaType;
 import java.io.*;
 import java.lang.reflect.Field;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
@@ -63,7 +72,7 @@ import static org.junit.Assert.assertTrue;
  */
 @SpringBootConfiguration
 @SpringBootTest
-public class BaseIntegrationTest {
+public class BaseIntegrationTest extends AbstractTest {
     protected static final Logger                   LOGGER                   = LoggerFactory
                                                                                  .getLogger(BaseIntegrationTest.class);
     private static final AtomicBoolean              STARTED                  = new AtomicBoolean(
@@ -102,15 +111,20 @@ public class BaseIntegrationTest {
     @Value("${data.server.syncDataPort}")
     protected int                                   syncDataPort;
 
+    protected Server h2Server = new Server();
+
     @BeforeClass
     public static void beforeClass() throws Exception {
         System.setProperty(LoggingSystem.SYSTEM_PROPERTY,
             "org.springframework.boot.logging.log4j2.Log4J2LoggingSystem");
-
+        System.setProperty("spring.profiles.active", "integrate");
+        System.setProperty("lease.duration", "2");
     }
 
     @Before
     public void before() throws Exception {
+//        h2Server.start();
+//        Class.forName("org.h2.driver");
         startServerIfNecessary();
         initRegistryClientAndChannel();
     }

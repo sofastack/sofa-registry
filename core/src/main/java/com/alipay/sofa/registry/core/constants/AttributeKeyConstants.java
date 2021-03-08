@@ -17,26 +17,27 @@
 package com.alipay.sofa.registry.core.constants;
 
 /**
- *
+ * 
  * @author zhuoyu.sjw
- * @version $Id: AttributeKeyConstants.java, v 0.1 2018-03-30 20:18 zhuoyu.sjw Exp $$
+ * @version $Id: AttributeKeyConstants.java, v 0.1 2018-03-30 20:18 zhuoyu.sjw
+ *          Exp $$
  */
 public class AttributeKeyConstants {
 
-    /**
-     * Access Key
-     */
-    public static final String ATTRIBUTE_ACCESS_KEY = "!AccessKey";
-    /**
-     * Algorithm Key
-     */
-    public static final String ATTRIBUTE_ALGORITHM  = "!Algorithm";
-    /**
-     * Signature Key
-     */
-    public static final String ATTRIBUTE_SIGNATURE  = "!Signature";
-    /**
-     * Timestamp Key
-     */
-    public static final String ATTRIBUTE_TIMESTAMP  = "!Timestamp";
+	/**
+	 * Access Key
+	 */
+	public static final String ATTRIBUTE_ACCESS_KEY = "!AccessKey";
+	/**
+	 * Algorithm Key
+	 */
+	public static final String ATTRIBUTE_ALGORITHM = "!Algorithm";
+	/**
+	 * Signature Key
+	 */
+	public static final String ATTRIBUTE_SIGNATURE = "!Signature";
+	/**
+	 * Timestamp Key
+	 */
+	public static final String ATTRIBUTE_TIMESTAMP = "!Timestamp";
 }

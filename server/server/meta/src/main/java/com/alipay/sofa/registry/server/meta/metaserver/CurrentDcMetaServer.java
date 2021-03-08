@@ -16,12 +16,13 @@
  */
 package com.alipay.sofa.registry.server.meta.metaserver;
 
+import com.alipay.sofa.registry.common.model.metaserver.cluster.VersionedList;
 import com.alipay.sofa.registry.common.model.metaserver.nodes.MetaNode;
 import com.alipay.sofa.registry.observer.Observable;
 import com.alipay.sofa.registry.server.meta.MetaServer;
 import com.alipay.sofa.registry.server.meta.cluster.NodeCluster;
-
-import java.util.List;
+import com.alipay.sofa.registry.server.meta.lease.data.DataServerManager;
+import com.alipay.sofa.registry.server.meta.lease.session.SessionServerManager;
 
 /**
  * @author chen.zhu
@@ -34,6 +35,10 @@ public interface CurrentDcMetaServer extends MetaServer, NodeCluster<MetaNode>, 
 
     void cancel(MetaNode metaNode);
 
-    void updateClusterMembers(List<MetaNode> newMembers, long epoch);
+    void updateClusterMembers(VersionedList<MetaNode> metaNodes);
+
+    DataServerManager getDataServerManager();
+
+    SessionServerManager getSessionServerManager();
 
 }

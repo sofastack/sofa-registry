@@ -22,7 +22,6 @@ import com.alipay.sofa.registry.common.model.store.AppRevision;
 import com.alipay.sofa.registry.common.model.store.DataInfo;
 import com.alipay.sofa.registry.core.model.AppRevisionInterface;
 import com.alipay.sofa.registry.core.model.RegisterResponse;
-import com.alipay.sofa.registry.jdbc.domain.InterfaceAppsIndexDomain;
 import com.alipay.sofa.registry.jdbc.mapper.InterfaceAppsIndexMapper;
 import com.alipay.sofa.registry.server.session.metadata.AppRevisionCacheRegistry;
 import com.alipay.sofa.registry.server.session.metadata.AppRevisionHeartbeatRegistry;
@@ -34,8 +33,6 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.test.context.junit4.SpringRunner;
-
-import java.sql.Timestamp;
 import java.util.*;
 import java.util.concurrent.*;
 
@@ -69,9 +66,9 @@ public class MetadataTest extends BaseIntegrationTest {
             InterfaceAppsIndexMapper.class);
 
         appRevisionList = new ArrayList<>();
-        for (int i = 1; i <= 1; i++) {
+        for (int i = 1; i <= 1001; i++) {
             long l = System.currentTimeMillis();
-            String suffix = l + "—" + i;
+            String suffix = l + "-" + i;
 
             String appname = "foo" + suffix;
             String revision = "1111" + suffix;
@@ -102,7 +99,6 @@ public class MetadataTest extends BaseIntegrationTest {
             appRevision.setInterfaceMap(interfaceMap);
 
             inf1.setId("1");
-            inf1.setDataInfoId(dataInfo1);
             Map<String, List<String>> serviceParams1 = new HashMap<String, List<String>>();
             serviceParams1.put("metaParam2", new ArrayList<String>() {
                 {
@@ -112,7 +108,6 @@ public class MetadataTest extends BaseIntegrationTest {
             inf1.setServiceParams(serviceParams1);
 
             inf2.setId("2");
-            inf2.setDataInfoId(dataInfo2);
             Map<String, List<String>> serviceParams2 = new HashMap<String, List<String>>();
             serviceParams1.put("metaParam3", new ArrayList<String>() {
                 {
@@ -165,9 +160,9 @@ public class MetadataTest extends BaseIntegrationTest {
         // query by interface
         List<Future<Set<String>>> appsFuture = new ArrayList<>();
         for (AppRevision appRevisionRegister : appRevisionList) {
-            for (AppRevisionInterface appRevisionInterface : appRevisionRegister.getInterfaceMap().values()) {
+            for (Map.Entry<String, AppRevisionInterface> entry : appRevisionRegister.getInterfaceMap().entrySet()) {
                 Future<Set<String>> submit = fixedThreadPool.submit((Callable) () -> {
-                    String dataInfoId = appRevisionInterface.getDataInfoId();
+                    String dataInfoId = entry.getKey();
                     InterfaceMapping appNames = appRevisionCacheRegistry.getAppNames(dataInfoId);
                     Assert.assertTrue(appNames.getNanosVersion() > 0);
                     Assert.assertTrue(appNames.getApps().size() == 1);

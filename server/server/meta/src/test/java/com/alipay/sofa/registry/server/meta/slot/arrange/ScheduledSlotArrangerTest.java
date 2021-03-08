@@ -16,16 +16,13 @@
  */
 package com.alipay.sofa.registry.server.meta.slot.arrange;
 
-import com.alipay.sofa.registry.server.meta.AbstractTest;
+import com.alipay.sofa.registry.server.meta.AbstractMetaServerTest;
 import com.alipay.sofa.registry.server.meta.lease.data.DefaultDataServerManager;
 import com.alipay.sofa.registry.server.meta.monitor.SlotTableMonitor;
 import com.alipay.sofa.registry.server.meta.resource.SlotTableResource;
-import com.alipay.sofa.registry.server.meta.slot.manager.DefaultSlotManager;
-import com.alipay.sofa.registry.server.meta.slot.manager.LocalSlotManager;
-
+import com.alipay.sofa.registry.server.meta.slot.SlotManager;
 import org.junit.Assert;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
@@ -34,23 +31,20 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.CyclicBarrier;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.when;
 
-public class ScheduledSlotArrangerTest extends AbstractTest {
+public class ScheduledSlotArrangerTest extends AbstractMetaServerTest {
 
     private ScheduledSlotArranger slotArranger;
 
     private SlotTableResource slotTableResource;
 
     @Mock
-    private DefaultSlotManager defaultSlotManager;
-
-    @Mock
     private DefaultDataServerManager dataServerManager;
 
     @Mock
-    private LocalSlotManager localSlotManager;
+    private SlotManager slotManager;
 
     @Mock
     private SlotTableMonitor slotTableMonitor;
@@ -59,8 +53,10 @@ public class ScheduledSlotArrangerTest extends AbstractTest {
     @Before
     public void beforeScheduledSlotArrangerTest() {
         MockitoAnnotations.initMocks(this);
+        when(metaLeaderService.amILeader()).thenReturn(true);
+        when(metaLeaderService.amIStableAsLeader()).thenReturn(true);
         slotArranger = spy(new ScheduledSlotArranger(dataServerManager,
-                localSlotManager, defaultSlotManager, slotTableMonitor));
+                slotManager, slotTableMonitor, metaLeaderService));
     }
 
     @Test
@@ -96,8 +92,7 @@ public class ScheduledSlotArrangerTest extends AbstractTest {
 
     @Test
     public void testStopStartReconcile() throws Exception {
-        slotTableResource = new SlotTableResource(defaultSlotManager,
-                localSlotManager, dataServerManager, slotArranger);
+        slotTableResource = new SlotTableResource(slotManager, dataServerManager, slotArranger, metaLeaderService);
         slotArranger.postConstruct();
         Assert.assertEquals("running", slotTableResource.getReconcileStatus().getMessage());
 
@@ -107,24 +102,6 @@ public class ScheduledSlotArrangerTest extends AbstractTest {
         slotTableResource.startSlotTableReconcile();
         Assert.assertEquals("running", slotTableResource.getReconcileStatus().getMessage());
     }
-
-    //manually run
-//    @Ignore
-//    @Test
-    public void testLongTermStopped() throws Exception {
-        slotTableResource = new SlotTableResource(defaultSlotManager,
-                localSlotManager, dataServerManager, slotArranger);
-        slotArranger.postConstruct();
-        Assert.assertEquals("running", slotTableResource.getReconcileStatus().getMessage());
-
-        slotTableResource.stopSlotTableReconcile();
-        Assert.assertEquals("stopped", slotTableResource.getReconcileStatus().getMessage());
-
-        for(int i = 0; i < 100; i++) {
-            Thread.sleep(1000);
-            Assert.assertEquals("stopped", slotTableResource.getReconcileStatus().getMessage());
-        }
-
-    }
+    
 
 }

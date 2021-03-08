@@ -16,12 +16,12 @@
  */
 package com.alipay.sofa.registry.server.meta.metaserver;
 
-import com.alipay.sofa.registry.observer.Observer;
+import com.alipay.sofa.registry.observer.UnblockingObserver;
 
 /**
  * @author chen.zhu
- * <p>
- * Dec 15, 2020
+ *         <p>
+ *         Dec 15, 2020
  */
-public interface MetaServerObserver extends Observer {
+public interface MetaServerObserver extends UnblockingObserver {
 }

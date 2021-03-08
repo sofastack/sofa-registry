@@ -16,16 +16,18 @@
  */
 package com.alipay.sofa.registry.server.meta.slot.balance;
 
+import com.alipay.sofa.registry.common.model.metaserver.cluster.VersionedList;
 import com.alipay.sofa.registry.common.model.metaserver.nodes.DataNode;
 import com.alipay.sofa.registry.common.model.slot.SlotTable;
-import com.alipay.sofa.registry.server.meta.AbstractTest;
+import com.alipay.sofa.registry.server.meta.AbstractMetaServerTest;
 import com.alipay.sofa.registry.server.meta.bootstrap.config.NodeConfig;
 import com.alipay.sofa.registry.server.meta.lease.data.DataServerManager;
 import com.alipay.sofa.registry.server.meta.monitor.SlotTableMonitor;
-import com.alipay.sofa.registry.server.meta.slot.manager.LocalSlotManager;
+import com.alipay.sofa.registry.server.meta.slot.manager.SimpleSlotManager;
 import com.alipay.sofa.registry.server.meta.slot.util.builder.SlotBuilder;
 import com.alipay.sofa.registry.server.meta.slot.util.builder.SlotTableBuilder;
 import com.alipay.sofa.registry.server.shared.util.NodeUtils;
+import com.alipay.sofa.registry.util.DatumVersionUtil;
 import org.assertj.core.util.Lists;
 import org.junit.Assert;
 import org.junit.Before;
@@ -36,11 +38,11 @@ import java.util.List;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-public class DefaultSlotBalancerTest extends AbstractTest {
+public class DefaultSlotBalancerTest extends AbstractMetaServerTest {
 
     private DefaultSlotBalancer slotBalancer;
 
-    private LocalSlotManager    slotManager;
+    private SimpleSlotManager slotManager;
 
     private DataServerManager   dataServerManager;
 
@@ -50,7 +52,7 @@ public class DefaultSlotBalancerTest extends AbstractTest {
     public void beforeDefaultSlotBalancerTest() {
         NodeConfig nodeConfig = mock(NodeConfig.class);
         when(nodeConfig.getLocalDataCenter()).thenReturn(getDc());
-        slotManager = new LocalSlotManager(nodeConfig);
+        slotManager = new SimpleSlotManager();
         dataServerManager = mock(DataServerManager.class);
         slotTableMonitor = mock(SlotTableMonitor.class);
     }
@@ -60,7 +62,7 @@ public class DefaultSlotBalancerTest extends AbstractTest {
         List<DataNode> dataNodes = Lists.newArrayList(new DataNode(randomURL("10.0.0.1"), getDc()),
             new DataNode(randomURL("10.0.0.2"), getDc()), new DataNode(randomURL("10.0.0.3"),
                 getDc()));
-        when(dataServerManager.getClusterMembers()).thenReturn(dataNodes);
+        when(dataServerManager.getDataServerMetaInfo()).thenReturn(new VersionedList<>(DatumVersionUtil.nextId(),dataNodes));
 
         SlotTable slotTable = randomSlotTable(Lists.newArrayList(new DataNode(
             randomURL("10.0.0.1"), getDc()), new DataNode(randomURL("10.0.0.2"), getDc())));

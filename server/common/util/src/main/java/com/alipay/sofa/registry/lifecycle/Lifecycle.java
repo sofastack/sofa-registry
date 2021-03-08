@@ -18,9 +18,14 @@ package com.alipay.sofa.registry.lifecycle;
 
 /**
  * @author chen.zhu
- * <p>
- * Nov 13, 2020
+ *         <p>
+ *         Nov 13, 2020
  */
-public interface Lifecycle extends Initializable, Startable, Stoppable, Disposable,
-                          LifecycleStateAware {
+public interface Lifecycle
+		extends
+			Initializable,
+			Startable,
+			Stoppable,
+			Disposable,
+			LifecycleStateAware {
 }

@@ -20,37 +20,43 @@ import com.alipay.remoting.exception.RemotingException;
 
 /**
  * The interface Client.
+ * 
  * @author zhuoyu.sjw
  * @version $Id : Client.java, v 0.1 2018-03-06 20:43 zhuoyu.sjw Exp $$
  */
 public interface Client {
 
-    /**
-     * Init.
-     */
-    void init();
+	/**
+	 * Init.
+	 */
+	void init();
 
-    /**
-     * Is connected boolean.
-     *
-     * @return the boolean
-     */
-    boolean isConnected();
+	/**
+	 * Is connected boolean.
+	 * 
+	 * @return the boolean
+	 */
+	boolean isConnected();
 
-    /**
-     * Ensure connected.
-     *
-     * @throws InterruptedException the interrupted exception
-     */
-    void ensureConnected() throws InterruptedException;
+	/**
+	 * Ensure connected.
+	 * 
+	 * @throws InterruptedException
+	 *             the interrupted exception
+	 */
+	void ensureConnected() throws InterruptedException;
 
-    /**
-     * Invoke sync object.
-     *
-     * @param request the request   
-     * @return the object   
-     * @throws RemotingException the remoting exception   
-     * @throws InterruptedException the interrupted exception
-     */
-    Object invokeSync(Object request) throws RemotingException, InterruptedException;
+	/**
+	 * Invoke sync object.
+	 * 
+	 * @param request
+	 *            the request
+	 * @return the object
+	 * @throws RemotingException
+	 *             the remoting exception
+	 * @throws InterruptedException
+	 *             the interrupted exception
+	 */
+	Object invokeSync(Object request) throws RemotingException,
+			InterruptedException;
 }

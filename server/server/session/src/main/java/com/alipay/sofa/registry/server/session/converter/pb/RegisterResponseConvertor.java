@@ -21,45 +21,48 @@ import com.alipay.sofa.registry.core.model.RegisterResponse;
 
 /**
  * @author bystander
- * @version $Id: RegisterResponseConvertor.java, v 0.1 2018年03月21日 2:07 PM bystander Exp $
+ * @version $Id: RegisterResponseConvertor.java, v 0.1 2018年03月21日 2:07 PM
+ *          bystander Exp $
  */
 public class RegisterResponseConvertor {
 
-    public static RegisterResponse convert2Java(RegisterResponsePb registerResponsePb) {
+	public static RegisterResponse convert2Java(
+			RegisterResponsePb registerResponsePb) {
 
-        if (registerResponsePb == null) {
-            return null;
-        }
+		if (registerResponsePb == null) {
+			return null;
+		}
 
-        RegisterResponse registerResponse = new RegisterResponse();
+		RegisterResponse registerResponse = new RegisterResponse();
 
-        registerResponse.setMessage(registerResponsePb.getMessage());
-        registerResponse.setRefused(registerResponsePb.getRefused());
-        registerResponse.setRegistId(registerResponsePb.getRegistId());
-        registerResponse.setSuccess(registerResponsePb.getSuccess());
-        registerResponse.setVersion(registerResponsePb.getVersion());
+		registerResponse.setMessage(registerResponsePb.getMessage());
+		registerResponse.setRefused(registerResponsePb.getRefused());
+		registerResponse.setRegistId(registerResponsePb.getRegistId());
+		registerResponse.setSuccess(registerResponsePb.getSuccess());
+		registerResponse.setVersion(registerResponsePb.getVersion());
 
-        return registerResponse;
-    }
+		return registerResponse;
+	}
 
-    public static RegisterResponsePb convert2Pb(RegisterResponse registerResponseJava) {
+	public static RegisterResponsePb convert2Pb(
+			RegisterResponse registerResponseJava) {
 
-        if (registerResponseJava == null) {
-            return null;
-        }
+		if (registerResponseJava == null) {
+			return null;
+		}
 
-        RegisterResponsePb.Builder builder = RegisterResponsePb.newBuilder();
+		RegisterResponsePb.Builder builder = RegisterResponsePb.newBuilder();
 
-        if (null != registerResponseJava.getMessage()) {
-            builder.setMessage(registerResponseJava.getMessage());
-        }
-        if (null != registerResponseJava.getRegistId()) {
-            builder.setRegistId(registerResponseJava.getRegistId());
-        }
-        builder.setVersion(registerResponseJava.getVersion());
-        builder.setRefused(registerResponseJava.isRefused());
-        builder.setSuccess(registerResponseJava.isSuccess());
+		if (null != registerResponseJava.getMessage()) {
+			builder.setMessage(registerResponseJava.getMessage());
+		}
+		if (null != registerResponseJava.getRegistId()) {
+			builder.setRegistId(registerResponseJava.getRegistId());
+		}
+		builder.setVersion(registerResponseJava.getVersion());
+		builder.setRefused(registerResponseJava.isRefused());
+		builder.setSuccess(registerResponseJava.isSuccess());
 
-        return builder.build();
-    }
+		return builder.build();
+	}
 }

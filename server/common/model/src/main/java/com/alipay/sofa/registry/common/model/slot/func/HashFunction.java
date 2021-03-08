@@ -18,15 +18,18 @@ package com.alipay.sofa.registry.common.model.slot.func;
 
 /**
  * Hash Function
+ * 
  * @author zhuoyu.sjw
  * @version $Id: HashFunction.java, v 0.1 2016-11-01 15:19 zhuoyu.sjw Exp $$
  */
 public interface HashFunction {
 
-    /**
-     * return object's int hashCode
-     * @param o object
-     * @return int hashCode
-     */
-    int hash(Object o);
+	/**
+	 * return object's int hashCode
+	 * 
+	 * @param o
+	 *            object
+	 * @return int hashCode
+	 */
+	int hash(Object o);
 }

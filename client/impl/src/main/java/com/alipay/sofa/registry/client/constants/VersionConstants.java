@@ -17,11 +17,11 @@
 package com.alipay.sofa.registry.client.constants;
 
 /**
- *
+ * 
  * @author zhuoyu.sjw
  * @version $Id: VersionConstants.java, v 0.1 2017-11-23 22:36 zhuoyu.sjw Exp $$
  */
 public class VersionConstants {
 
-    public static final long UNINITIALIZED_VERSION = 0;
+	public static final long UNINITIALIZED_VERSION = 0;
 }

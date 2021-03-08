@@ -20,10 +20,10 @@ import com.alipay.sofa.registry.common.model.slot.SlotTable;
 
 /**
  * @author chen.zhu
- * <p>
- * Dec 25, 2020 
+ *         <p>
+ *         Dec 25, 2020
  */
 public interface SlotTableRecorder {
 
-    void record(SlotTable slotTable);
+	void record(SlotTable slotTable);
 }

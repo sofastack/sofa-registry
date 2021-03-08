@@ -118,4 +118,9 @@ public final class SlotTableCacheImpl implements SlotTableCache {
     public int slotNum() {
         return SlotConfig.SLOT_NUM;
     }
+
+    @Override
+    public SlotTable currentSlotTable() {
+        return new SlotTable(slotTable.getEpoch(), slotTable.getSlots());
+    }
 }

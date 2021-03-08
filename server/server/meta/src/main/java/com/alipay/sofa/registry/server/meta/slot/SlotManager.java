@@ -16,23 +16,48 @@
  */
 package com.alipay.sofa.registry.server.meta.slot;
 
-import com.alipay.sofa.registry.common.model.metaserver.nodes.DataNode;
 import com.alipay.sofa.registry.common.model.slot.DataNodeSlot;
 import com.alipay.sofa.registry.common.model.slot.SlotTable;
+import com.alipay.sofa.registry.observer.Observable;
 
 /**
  * @author chen.zhu
- * <p>
- * Nov 13, 2020
+ *         <p>
+ *         Nov 13, 2020
  */
-public interface SlotManager extends SlotTableAware {
+public interface SlotManager extends SlotTableAware, Observable {
 
-    void refresh(SlotTable slotTable);
+	/**
+	 * Refresh.
+	 * 
+	 * @param slotTable
+	 *            the slot table
+	 */
+	void refresh(SlotTable slotTable);
 
-    int getSlotNums();
+	/**
+	 * Gets get slot nums.
+	 * 
+	 * @return the get slot nums
+	 */
+	int getSlotNums();
 
-    int getSlotReplicaNums();
+	/**
+	 * Gets get slot replica nums.
+	 * 
+	 * @return the get slot replica nums
+	 */
+	int getSlotReplicaNums();
 
-    DataNodeSlot getDataNodeManagedSlot(DataNode dataNode, boolean ignoreFollowers);
+	/**
+	 * Gets get data node managed slot.
+	 * 
+	 * @param dataNode
+	 *            the data node
+	 * @param ignoreFollowers
+	 *            the ignore followers
+	 * @return the get data node managed slot
+	 */
+	DataNodeSlot getDataNodeManagedSlot(String dataNode, boolean ignoreFollowers);
 
 }

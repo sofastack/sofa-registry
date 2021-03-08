@@ -19,153 +19,162 @@ package com.alipay.sofa.registry.jraft.command;
 import java.io.Serializable;
 
 /**
- *
+ * 
  * @author shangyu.wh
  * @version $Id: Response.java, v 0.1 2018-05-21 14:22 shangyu.wh Exp $
  */
 public class ProcessResponse implements Serializable {
 
-    private final Object  entity;
+	private final Object entity;
 
-    private final Boolean success;
+	private final Boolean success;
 
-    private final String  redirect;
+	private final String redirect;
 
-    /**
-     * constructor
-     * @param entity
-     * @param success
-     * @param redirect
-     */
-    public ProcessResponse(Object entity, Boolean success, String redirect) {
-        this.entity = entity;
-        this.success = success;
-        this.redirect = redirect;
-    }
+	/**
+	 * constructor
+	 * 
+	 * @param entity
+	 * @param success
+	 * @param redirect
+	 */
+	public ProcessResponse(Object entity, Boolean success, String redirect) {
+		this.entity = entity;
+		this.success = success;
+		this.redirect = redirect;
+	}
 
-    /**
-     * response ok
-     * @return
-     */
-    public static ResponseBuilder ok() {
-        return setStatus(true);
-    }
+	/**
+	 * response ok
+	 * 
+	 * @return
+	 */
+	public static ResponseBuilder ok() {
+		return setStatus(true);
+	}
 
-    /**
-     * response ok
-     * @param entity
-     * @return
-     */
-    public static ResponseBuilder ok(Object entity) {
-        ResponseBuilder b = ok();
-        b.entity(entity);
-        return b;
-    }
+	/**
+	 * response ok
+	 * 
+	 * @param entity
+	 * @return
+	 */
+	public static ResponseBuilder ok(Object entity) {
+		ResponseBuilder b = ok();
+		b.entity(entity);
+		return b;
+	}
 
-    /**
-     * response fail
-     * @return
-     */
-    public static ResponseBuilder fail() {
-        return setStatus(false);
-    }
+	/**
+	 * response fail
+	 * 
+	 * @return
+	 */
+	public static ResponseBuilder fail() {
+		return setStatus(false);
+	}
 
-    /**
-     * response fail
-     * @param errorMsg
-     * @return
-     */
-    public static ResponseBuilder fail(String errorMsg) {
-        ResponseBuilder b = fail();
-        b.entity(errorMsg);
-        return b;
-    }
+	/**
+	 * response fail
+	 * 
+	 * @param errorMsg
+	 * @return
+	 */
+	public static ResponseBuilder fail(String errorMsg) {
+		ResponseBuilder b = fail();
+		b.entity(errorMsg);
+		return b;
+	}
 
-    /**
-     * response redirect
-     * @param leader
-     * @return
-     */
-    public static ResponseBuilder redirect(String leader) {
-        ResponseBuilder b = fail();
-        b.entity("Not leader");
-        b.redirect(leader);
-        return b;
-    }
+	/**
+	 * response redirect
+	 * 
+	 * @param leader
+	 * @return
+	 */
+	public static ResponseBuilder redirect(String leader) {
+		ResponseBuilder b = fail();
+		b.entity("Not leader");
+		b.redirect(leader);
+		return b;
+	}
 
-    protected static ResponseBuilder setStatus(Boolean status) {
-        ResponseBuilder b = new ResponseBuilder();
-        b.status(status);
-        return b;
-    }
+	protected static ResponseBuilder setStatus(Boolean status) {
+		ResponseBuilder b = new ResponseBuilder();
+		b.status(status);
+		return b;
+	}
 
-    /**
-     * Getter method for property <tt>entity</tt>.
-     *
-     * @return property value of entity
-     */
-    public Object getEntity() {
-        return entity;
-    }
+	/**
+	 * Getter method for property <tt>entity</tt>.
+	 * 
+	 * @return property value of entity
+	 */
+	public Object getEntity() {
+		return entity;
+	}
 
-    /**
-     * Getter method for property <tt>success</tt>.
-     *
-     * @return property value of success
-     */
-    public Boolean getSuccess() {
-        return success;
-    }
+	/**
+	 * Getter method for property <tt>success</tt>.
+	 * 
+	 * @return property value of success
+	 */
+	public Boolean getSuccess() {
+		return success;
+	}
 
-    /**
-     * Getter method for property <tt>redirect</tt>.
-     *
-     * @return property value of redirect
-     */
-    public String getRedirect() {
-        return redirect;
-    }
+	/**
+	 * Getter method for property <tt>redirect</tt>.
+	 * 
+	 * @return property value of redirect
+	 */
+	public String getRedirect() {
+		return redirect;
+	}
 
-    /**
-     * ResponseBuilder
-     */
-    public static class ResponseBuilder {
-        private Object  entity;
+	/**
+	 * ResponseBuilder
+	 */
+	public static class ResponseBuilder {
+		private Object entity;
 
-        private Boolean success;
-        private String  redirect;
+		private Boolean success;
+		private String redirect;
 
-        public ProcessResponse build() {
-            final ProcessResponse r = new ProcessResponse(entity, success, redirect);
-            reset();
-            return r;
-        }
+		public ProcessResponse build() {
+			final ProcessResponse r = new ProcessResponse(entity, success,
+					redirect);
+			reset();
+			return r;
+		}
 
-        private void reset() {
-            success = null;
-            entity = null;
-            redirect = null;
-        }
+		private void reset() {
+			success = null;
+			entity = null;
+			redirect = null;
+		}
 
-        public ResponseBuilder status(Boolean status) {
-            if (status == null) {
-                throw new IllegalArgumentException("response status can not be null!");
-            }
-            this.success = status;
-            return this;
-        }
+		public ResponseBuilder status(Boolean status) {
+			if (status == null) {
+				throw new IllegalArgumentException(
+						"response status can not be null!");
+			}
+			this.success = status;
+			return this;
+		}
 
-        public ResponseBuilder entity(Object entity) {
-            this.entity = entity;
-            return this;
-        }
+		public ResponseBuilder entity(Object entity) {
+			this.entity = entity;
+			return this;
+		}
 
-        public ResponseBuilder redirect(String redirect) {
-            if (redirect == null) {
-                throw new IllegalArgumentException("redirect leader can not be null!");
-            }
-            this.redirect = redirect;
-            return this;
-        }
-    }
+		public ResponseBuilder redirect(String redirect) {
+			if (redirect == null) {
+				throw new IllegalArgumentException(
+						"redirect leader can not be null!");
+			}
+			this.redirect = redirect;
+			return this;
+		}
+	}
 }

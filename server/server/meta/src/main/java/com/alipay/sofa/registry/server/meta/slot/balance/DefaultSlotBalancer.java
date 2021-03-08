@@ -23,7 +23,7 @@ import com.alipay.sofa.registry.common.model.slot.SlotTable;
 import com.alipay.sofa.registry.exception.SofaRegistryRuntimeException;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
-import com.alipay.sofa.registry.server.meta.monitor.PrometheusMetrics;
+import com.alipay.sofa.registry.server.meta.monitor.Metrics;
 import com.alipay.sofa.registry.server.meta.slot.SlotBalancer;
 import com.alipay.sofa.registry.server.meta.slot.util.builder.SlotTableBuilder;
 import com.alipay.sofa.registry.server.meta.slot.util.comparator.Comparators;
@@ -153,7 +153,7 @@ public class DefaultSlotBalancer implements SlotBalancer {
                 slotTableBuilder.replaceLeader(slotId, newLeaderDataServer);
                 LOGGER.info("[upgradeHighLeaders] slotId={} leader balance from {} to {}", slotId,
                     highDataServer, newLeaderDataServer);
-                PrometheusMetrics.SlotBalance.onLeaderUpgrade(highDataServer, newLeaderDataServer,
+                Metrics.SlotBalance.onLeaderUpgrade(highDataServer, newLeaderDataServer,
                     slotId);
                 balanced++;
                 break;
@@ -198,7 +198,7 @@ public class DefaultSlotBalancer implements SlotBalancer {
             newFollowerDataServers.add(newFollower);
             LOGGER.info("[migrateHighLeaders] slotId={}, follower balance from {} to {}", slotId,
                 oldFollower, newFollower);
-            PrometheusMetrics.SlotBalance.onLeaderMigrate(oldFollower, newFollower, slotId);
+            Metrics.SlotBalance.onLeaderMigrate(oldFollower, newFollower, slotId);
 
             balanced++;
             if (balanced >= maxMove) {
@@ -255,7 +255,7 @@ public class DefaultSlotBalancer implements SlotBalancer {
                         "upgradeLowLeaders, conflict leader=%d of %s and %s", slotId,
                         oldLeaderDataServer, replaceLeader));
                 }
-                PrometheusMetrics.SlotBalance.onLowLeaderReplace(oldLeaderDataServer,
+                Metrics.SlotBalance.onLowLeaderReplace(oldLeaderDataServer,
                     replaceLeader, slotId);
                 LOGGER.info("[upgradeLowLeaders] slotId={} leader balance from {} to {}", slotId,
                     oldLeaderDataServer, lowDataServer);
@@ -444,7 +444,7 @@ public class DefaultSlotBalancer implements SlotBalancer {
                 slotTableBuilder.addFollower(followerSlot, newFollowerDataServer);
                 LOGGER.info("[balanceHighFollowerSlots] balance follower slotId={} from {} to {}",
                     followerSlot, highDataServer, newFollowerDataServer);
-                PrometheusMetrics.SlotBalance.onHighFollowerMigrate(highDataServer,
+                Metrics.SlotBalance.onHighFollowerMigrate(highDataServer,
                     newFollowerDataServer, followerSlot);
                 balanced++;
                 break;
@@ -493,7 +493,7 @@ public class DefaultSlotBalancer implements SlotBalancer {
                 slotTableBuilder.addFollower(followerSlot, lowDataServer);
                 LOGGER.info("[balanceLowFollowerSlots] balance follower slotId={} from {} to {}",
                     followerSlot, oldFollowerDataServer, lowDataServer);
-                PrometheusMetrics.SlotBalance.onLowFollowerMigrate(oldFollowerDataServer,
+                Metrics.SlotBalance.onLowFollowerMigrate(oldFollowerDataServer,
                     lowDataServer, followerSlot);
                 balanced++;
                 break;

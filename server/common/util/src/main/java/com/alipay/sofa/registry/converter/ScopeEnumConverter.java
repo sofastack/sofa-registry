@@ -19,21 +19,23 @@ package com.alipay.sofa.registry.converter;
 import com.alipay.sofa.registry.core.model.ScopeEnum;
 
 /**
- *
+ * 
  * @author zhuoyu.sjw
- * @version $Id: ScopeEnumConverter.java, v 0.1 2018-03-01 21:08 zhuoyu.sjw Exp $$
+ * @version $Id: ScopeEnumConverter.java, v 0.1 2018-03-01 21:08 zhuoyu.sjw Exp
+ *          $$
  */
 public class ScopeEnumConverter {
 
-    /**
-     * scope convert func
-     * @param name
-     * @return
-     */
-    public static ScopeEnum convertToScope(String name) {
-        if (ScopeEnum.contains(name)) {
-            return ScopeEnum.valueOf(name);
-        }
-        return ScopeEnum.zone;
-    }
+	/**
+	 * scope convert func
+	 * 
+	 * @param name
+	 * @return
+	 */
+	public static ScopeEnum convertToScope(String name) {
+		if (ScopeEnum.contains(name)) {
+			return ScopeEnum.valueOf(name);
+		}
+		return ScopeEnum.zone;
+	}
 }

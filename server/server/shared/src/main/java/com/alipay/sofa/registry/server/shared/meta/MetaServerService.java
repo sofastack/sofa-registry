@@ -16,7 +16,6 @@
  */
 package com.alipay.sofa.registry.server.shared.meta;
 
-import com.alipay.sofa.jraft.entity.PeerId;
 import com.alipay.sofa.registry.common.model.metaserver.ProvideData;
 import com.alipay.sofa.registry.common.model.metaserver.SlotTableChangeEvent;
 
@@ -46,21 +45,6 @@ public interface MetaServerService {
     ProvideData fetchData(String dataInfoId);
 
     /**
-     * start raft client for get leader send request
-     */
-    void startRaftClient();
-
-    PeerId getLeader();
-
-    /**
-     * get all datacenters
-     * @return
-     */
-    Set<String> getDataCenters();
-
-    long getSessionServerEpoch();
-
-    /**
      * @param zonename zone is null, get all session
      * @return
      */
@@ -70,5 +54,11 @@ public interface MetaServerService {
 
     public Set<String> getMetaServerList();
 
-    void connectServer();
+    long getSessionServerEpoch();
+
+    /**
+     * get all datacenters
+     * @return
+     */
+    Set<String> getDataCenters();
 }

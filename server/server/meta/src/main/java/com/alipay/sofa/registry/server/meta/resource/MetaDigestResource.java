@@ -22,11 +22,12 @@ import com.alipay.sofa.registry.common.model.constants.ValueConstants;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.metrics.ReporterUtils;
+import com.alipay.sofa.registry.server.meta.bootstrap.config.NodeConfig;
 import com.alipay.sofa.registry.server.meta.metaserver.impl.DefaultMetaServerManager;
 import com.alipay.sofa.registry.store.api.DBResponse;
-import com.alipay.sofa.registry.store.api.DBService;
 import com.alipay.sofa.registry.store.api.OperationStatus;
-import com.alipay.sofa.registry.jraft.annotation.RaftReference;
+import com.alipay.sofa.registry.store.api.meta.ProvideDataRepository;
+import com.alipay.sofa.registry.util.JsonUtils;
 import com.codahale.metrics.Gauge;
 import com.codahale.metrics.MetricRegistry;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -57,8 +58,11 @@ public class MetaDigestResource {
     @Autowired
     private DefaultMetaServerManager metaServerManager;
 
-    @RaftReference
-    private DBService                persistenceDataDBService;
+    @Autowired
+    private ProvideDataRepository provideDataRepository;
+
+    @Autowired
+    private NodeConfig nodeConfig;
 
     @PostConstruct
     public void init() {
@@ -91,8 +95,8 @@ public class MetaDigestResource {
     public Map<String, Object> getPushSwitch() {
         Map<String, Object> resultMap = new HashMap<>(1);
         try {
-            DBResponse ret = persistenceDataDBService
-                .get(ValueConstants.STOP_PUSH_DATA_SWITCH_DATA_ID);
+            DBResponse ret = provideDataRepository
+                .get(nodeConfig.getLocalDataCenter(), ValueConstants.STOP_PUSH_DATA_SWITCH_DATA_ID);
 
             if (ret == null) {
                 //default push switch on
@@ -100,8 +104,7 @@ public class MetaDigestResource {
                 resultMap.put("msg", "get null Data from db!");
             } else {
                 if (ret.getOperationStatus() == OperationStatus.SUCCESS) {
-                    PersistenceData data = (PersistenceData) ret.getEntity();
-                    String result = data.getData();
+                    String result = getEntityData(ret);
                     if (result != null && !result.isEmpty()) {
                         resultMap.put("pushSwitch", "false".equalsIgnoreCase(result) ? "open"
                             : "closed");
@@ -125,5 +128,13 @@ public class MetaDigestResource {
         }
 
         return resultMap;
+    }
+
+    private static String getEntityData(DBResponse resp) {
+        if (resp != null && resp.getEntity() != null) {
+            PersistenceData data = JsonUtils.read((String) resp.getEntity(), PersistenceData.class);
+            return data.getData();
+        }
+        return null;
     }
 }

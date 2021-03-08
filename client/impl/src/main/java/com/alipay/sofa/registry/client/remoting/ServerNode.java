@@ -20,36 +20,37 @@ import java.util.Properties;
 
 /**
  * The interface Server node.
+ * 
  * @author zhuoyu.sjw
  * @version $Id : ServerNode.java, v 0.1 2018-03-01 17:07 zhuoyu.sjw Exp $$
  */
 public interface ServerNode {
 
-    /**
-     * Gets host.
-     *
-     * @return the host
-     */
-    String getHost();
+	/**
+	 * Gets host.
+	 * 
+	 * @return the host
+	 */
+	String getHost();
 
-    /**
-     * Gets port.
-     *
-     * @return the port
-     */
-    int getPort();
+	/**
+	 * Gets port.
+	 * 
+	 * @return the port
+	 */
+	int getPort();
 
-    /**
-     * Gets properties.
-     *
-     * @return the properties
-     */
-    Properties getProperties();
+	/**
+	 * Gets properties.
+	 * 
+	 * @return the properties
+	 */
+	Properties getProperties();
 
-    /**
-     * Gets url.
-     *
-     * @return the url
-     */
-    String getUrl();
+	/**
+	 * Gets url.
+	 * 
+	 * @return the url
+	 */
+	String getUrl();
 }

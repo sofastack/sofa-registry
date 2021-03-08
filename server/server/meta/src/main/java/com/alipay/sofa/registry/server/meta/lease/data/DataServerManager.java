@@ -16,10 +16,10 @@
  */
 package com.alipay.sofa.registry.server.meta.lease.data;
 
+import com.alipay.sofa.registry.common.model.metaserver.cluster.VersionedList;
 import com.alipay.sofa.registry.common.model.metaserver.nodes.DataNode;
 import com.alipay.sofa.registry.lifecycle.Lifecycle;
 import com.alipay.sofa.registry.observer.Observable;
-import com.alipay.sofa.registry.server.meta.cluster.NodeCluster;
 import com.alipay.sofa.registry.server.meta.lease.LeaseManager;
 import com.alipay.sofa.registry.server.meta.monitor.data.DataMessageListener;
 import com.alipay.sofa.registry.server.meta.monitor.data.DataServerStats;
@@ -31,9 +31,27 @@ import java.util.List;
  * <p>
  * Nov 19, 2020
  */
-public interface DataServerManager extends Lifecycle, Observable, NodeCluster<DataNode>,
+public interface DataServerManager extends Lifecycle, Observable,
                                   LeaseManager<DataNode>, DataMessageListener {
 
+    /**
+     * Gets get data servers stats.
+     *
+     * @return the get data servers stats
+     */
     List<DataServerStats> getDataServersStats();
 
+    /**
+     * Gets get data server meta info.
+     *
+     * @return the get data server meta info
+     */
+    VersionedList<DataNode> getDataServerMetaInfo();
+
+    /**
+     * Gets get epoch.
+     *
+     * @return the get epoch
+     */
+    long getEpoch();
 }

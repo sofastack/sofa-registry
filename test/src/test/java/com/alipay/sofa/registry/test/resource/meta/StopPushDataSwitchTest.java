@@ -87,7 +87,8 @@ public class StopPushDataSwitchTest extends BaseIntegrationTest {
         assertTrue(
                 metaChannel.getWebTarget().path("stopPushDataSwitch/close").request(APPLICATION_JSON).get(Result.class)
                         .isSuccess());
-        Thread.sleep(2000L);
+
+        waitConditionUntilTimeOut(()->dataIdResult.get() != null, 3000);
 
         // Subscriber get data, test data
         assertEquals(dataId, dataIdResult.get());

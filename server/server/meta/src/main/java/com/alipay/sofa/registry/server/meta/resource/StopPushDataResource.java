@@ -25,9 +25,10 @@ import com.alipay.sofa.registry.common.model.store.DataInfo;
 import com.alipay.sofa.registry.core.model.Result;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
+import com.alipay.sofa.registry.server.meta.bootstrap.config.NodeConfig;
 import com.alipay.sofa.registry.server.meta.provide.data.DefaultProvideDataNotifier;
-import com.alipay.sofa.registry.store.api.DBService;
-import com.alipay.sofa.registry.jraft.annotation.RaftReference;
+import com.alipay.sofa.registry.store.api.meta.ProvideDataRepository;
+import com.alipay.sofa.registry.util.JsonUtils;
 import com.google.common.collect.Sets;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -51,11 +52,14 @@ public class StopPushDataResource {
     private static final Logger        TASK_LOGGER = LoggerFactory.getLogger(
                                                        StopPushDataResource.class, "[Task]");
 
-    @RaftReference
-    private DBService                  persistenceDataDBService;
+    @Autowired
+    private ProvideDataRepository provideDataRepository;
 
     @Autowired
     private DefaultProvideDataNotifier provideDataNotifier;
+
+    @Autowired
+    private NodeConfig nodeConfig;
 
     /**
      * close push
@@ -68,8 +72,8 @@ public class StopPushDataResource {
         persistenceData.setData("true");
 
         try {
-            boolean ret = persistenceDataDBService.put(
-                ValueConstants.STOP_PUSH_DATA_SWITCH_DATA_ID, persistenceData);
+            boolean ret = provideDataRepository.put(nodeConfig.getLocalDataCenter(),
+                ValueConstants.STOP_PUSH_DATA_SWITCH_DATA_ID, JsonUtils.writeValueAsString(persistenceData));
             DB_LOGGER.info("open stop push data switch to DB result {}!", ret);
         } catch (Throwable e) {
             DB_LOGGER.error("error open stop push data switch to DB!", e);
@@ -94,8 +98,8 @@ public class StopPushDataResource {
         PersistenceData persistenceData = createPushDataInfo();
         persistenceData.setData("false");
         try {
-            boolean ret = persistenceDataDBService.update(
-                ValueConstants.STOP_PUSH_DATA_SWITCH_DATA_ID, persistenceData);
+            boolean ret = provideDataRepository.put(nodeConfig.getLocalDataCenter(),
+                ValueConstants.STOP_PUSH_DATA_SWITCH_DATA_ID, JsonUtils.writeValueAsString(persistenceData));
             DB_LOGGER.info("close stop push data switch to DB result {}!", ret);
         } catch (Exception e) {
             DB_LOGGER.error("error close stop push data switch from DB!");

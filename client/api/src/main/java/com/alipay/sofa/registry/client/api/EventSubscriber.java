@@ -20,22 +20,24 @@ import com.alipay.sofa.registry.client.api.model.Event;
 
 /**
  * The interface Event subscriber.
+ * 
  * @author zhuoyu.sjw
  * @version $Id : EventSubscriber.java, v 0.1 2018-07-12 21:12 zhuoyu.sjw Exp $$
  */
 public interface EventSubscriber {
 
-    /**
-     * Is sync boolean.
-     *
-     * @return the boolean
-     */
-    boolean isSync();
+	/**
+	 * Is sync boolean.
+	 * 
+	 * @return the boolean
+	 */
+	boolean isSync();
 
-    /**
-     * On event.
-     *
-     * @param event the event
-     */
-    void onEvent(Event event);
+	/**
+	 * On event.
+	 * 
+	 * @param event
+	 *            the event
+	 */
+	void onEvent(Event event);
 }

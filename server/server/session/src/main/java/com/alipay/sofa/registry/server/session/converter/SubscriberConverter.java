@@ -27,18 +27,21 @@ import com.alipay.sofa.registry.core.model.SubscriberRegister;
 
 /**
  * The type Subscriber converter.
+ * 
  * @author shangyu.wh
- * @version $Id : SubscriberConverter.java, v 0.1 2017-12-05 11:00 shangyu.wh Exp $
+ * @version $Id : SubscriberConverter.java, v 0.1 2017-12-05 11:00 shangyu.wh
+ *          Exp $
  */
 public class SubscriberConverter {
 
-    /**
-     * Convert subscriber.
-     *
-     * @param subscriberRegister the subscriber register 
-     * @return the subscriber
-     */
-    public static Subscriber convert(SubscriberRegister subscriberRegister) {
+	/**
+	 * Convert subscriber.
+	 * 
+	 * @param subscriberRegister
+	 *            the subscriber register
+	 * @return the subscriber
+	 */
+	public static Subscriber convert(SubscriberRegister subscriberRegister) {
 
         Converter<SubscriberRegister, Subscriber> converter = source -> {
             Subscriber subscriber = new Subscriber();
@@ -68,13 +71,13 @@ public class SubscriberConverter {
         };
         return converter.convert(subscriberRegister);
     }
-
-    /**
-     * Convert watcher.
-     * @param configuratorRegister
-     * @return
-     */
-    public static Watcher convert(ConfiguratorRegister configuratorRegister) {
+	/**
+	 * Convert watcher.
+	 * 
+	 * @param configuratorRegister
+	 * @return
+	 */
+	public static Watcher convert(ConfiguratorRegister configuratorRegister) {
         Converter<ConfiguratorRegister, Watcher> converter = source -> {
             Watcher watcher = new Watcher();
 

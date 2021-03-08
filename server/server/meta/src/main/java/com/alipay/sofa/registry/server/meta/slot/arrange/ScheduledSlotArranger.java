@@ -21,25 +21,24 @@ import com.alipay.sofa.registry.common.model.slot.SlotTable;
 import com.alipay.sofa.registry.exception.DisposeException;
 import com.alipay.sofa.registry.exception.InitializeException;
 import com.alipay.sofa.registry.exception.SofaRegistrySlotTableException;
-import com.alipay.sofa.registry.jraft.bootstrap.ServiceStateMachine;
 import com.alipay.sofa.registry.lifecycle.Suspendable;
 import com.alipay.sofa.registry.lifecycle.impl.LifecycleHelper;
 import com.alipay.sofa.registry.observer.Observable;
 import com.alipay.sofa.registry.observer.impl.AbstractLifecycleObservable;
+import com.alipay.sofa.registry.server.meta.MetaLeaderService;
 import com.alipay.sofa.registry.server.meta.cluster.node.NodeAdded;
 import com.alipay.sofa.registry.server.meta.cluster.node.NodeRemoved;
 import com.alipay.sofa.registry.server.meta.lease.data.DataManagerObserver;
 import com.alipay.sofa.registry.server.meta.lease.data.DefaultDataServerManager;
-import com.alipay.sofa.registry.server.meta.monitor.PrometheusMetrics;
+import com.alipay.sofa.registry.server.meta.monitor.Metrics;
 import com.alipay.sofa.registry.server.meta.monitor.SlotTableMonitor;
 import com.alipay.sofa.registry.server.meta.slot.SlotAssigner;
 import com.alipay.sofa.registry.server.meta.slot.SlotBalancer;
+import com.alipay.sofa.registry.server.meta.slot.SlotManager;
 import com.alipay.sofa.registry.server.meta.slot.assigner.DefaultSlotAssigner;
 import com.alipay.sofa.registry.server.meta.slot.balance.DefaultSlotBalancer;
-import com.alipay.sofa.registry.server.meta.slot.manager.DefaultSlotManager;
-import com.alipay.sofa.registry.server.meta.slot.manager.LocalSlotManager;
 import com.alipay.sofa.registry.server.meta.slot.util.builder.SlotTableBuilder;
-import com.alipay.sofa.registry.server.meta.slot.util.comparator.DataNodeComparator;
+import com.alipay.sofa.registry.server.shared.comparator.NodeComparator;
 import com.alipay.sofa.registry.server.shared.slot.SlotTableUtils;
 import com.alipay.sofa.registry.server.shared.util.NodeUtils;
 import com.alipay.sofa.registry.util.ConcurrentUtils;
@@ -47,6 +46,7 @@ import com.alipay.sofa.registry.util.JsonUtils;
 import com.alipay.sofa.registry.util.WakeUpLoopRunnable;
 import com.google.common.annotations.VisibleForTesting;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
@@ -60,21 +60,18 @@ import java.util.concurrent.locks.ReentrantLock;
  * <p>
  * Jan 14, 2021
  */
+@Component
 public class ScheduledSlotArranger extends AbstractLifecycleObservable implements
                                                                       DataManagerObserver,
                                                                       Suspendable {
 
-    @Autowired
     private DefaultDataServerManager dataServerManager;
 
-    @Autowired
-    private LocalSlotManager         slotManager;
+    private SlotManager slotManager;
 
-    @Autowired
-    private DefaultSlotManager       defaultSlotManager;
-
-    @Autowired
     private SlotTableMonitor         slotTableMonitor;
+
+    private MetaLeaderService metaLeaderService;
 
     private final Arranger           arranger = new Arranger();
 
@@ -83,14 +80,15 @@ public class ScheduledSlotArranger extends AbstractLifecycleObservable implement
     public ScheduledSlotArranger() {
     }
 
+    @Autowired
     public ScheduledSlotArranger(DefaultDataServerManager dataServerManager,
-                                 LocalSlotManager slotManager,
-                                 DefaultSlotManager defaultSlotManager,
-                                 SlotTableMonitor slotTableMonitor) {
+                                 SlotManager slotManager,
+                                 SlotTableMonitor slotTableMonitor,
+                                 MetaLeaderService metaLeaderService) {
         this.dataServerManager = dataServerManager;
         this.slotManager = slotManager;
-        this.defaultSlotManager = defaultSlotManager;
         this.slotTableMonitor = slotTableMonitor;
+        this.metaLeaderService = metaLeaderService;
     }
 
     @PostConstruct
@@ -139,13 +137,9 @@ public class ScheduledSlotArranger extends AbstractLifecycleObservable implement
         lock.unlock();
     }
 
-    private boolean isRaftLeader() {
-        return ServiceStateMachine.getInstance().isLeader();
-    }
-
     private SlotTableBuilder createSlotTableBuilder(SlotTable slotTable, List<String> currentDataNodeIps,
                                                     int slotNum, int replicas) {
-        DataNodeComparator comparator = new DataNodeComparator(slotTable.getDataServers(), currentDataNodeIps);
+        NodeComparator comparator = new NodeComparator(slotTable.getDataServers(), currentDataNodeIps);
         SlotTableBuilder slotTableBuilder = new SlotTableBuilder(slotTable, slotNum, replicas);
         slotTableBuilder.init(currentDataNodeIps);
 
@@ -180,7 +174,7 @@ public class ScheduledSlotArranger extends AbstractLifecycleObservable implement
                                                      + JsonUtils.writeValueAsString(slotTable));
         }
         if (slotTable.getEpoch() > slotManager.getSlotTable().getEpoch()) {
-            defaultSlotManager.refresh(slotTable);
+            slotManager.refresh(slotTable);
         } else {
             logger.warn("[refreshSlotTable] slot-table epoch not change: {}",
                 JsonUtils.writeValueAsString(slotTable));
@@ -264,17 +258,17 @@ public class ScheduledSlotArranger extends AbstractLifecycleObservable implement
 
     @VisibleForTesting
     public boolean arrangeSync() {
-        if (isRaftLeader()) {
+        if (metaLeaderService.amIStableAsLeader()) {
 
             // the start arrange with the dataNodes snapshot
-            final List<DataNode> dataNodes = dataServerManager.getClusterMembers();
+            final List<DataNode> dataNodes = dataServerManager.getDataServerMetaInfo().getClusterMembers();
             if (dataNodes.isEmpty()) {
                 logger.warn("[Arranger] empty data server list, continue");
                 return true;
             } else {
-                PrometheusMetrics.SlotArrange.begin();
+                Metrics.SlotArrange.begin();
                 boolean result = tryArrangeSlots(dataNodes);
-                PrometheusMetrics.SlotArrange.end();
+                Metrics.SlotArrange.end();
                 return result;
             }
         } else {

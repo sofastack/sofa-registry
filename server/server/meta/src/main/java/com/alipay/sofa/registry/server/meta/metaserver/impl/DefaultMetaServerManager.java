@@ -23,12 +23,13 @@ import com.alipay.sofa.registry.common.model.metaserver.nodes.MetaNode;
 import com.alipay.sofa.registry.common.model.metaserver.nodes.SessionNode;
 import com.alipay.sofa.registry.server.meta.bootstrap.config.NodeConfig;
 import com.alipay.sofa.registry.server.meta.lease.data.DataServerManager;
-import com.alipay.sofa.registry.server.meta.lease.impl.CrossDcMetaServerManager;
+import com.alipay.sofa.registry.server.meta.lease.impl.DefaultCrossDcMetaServerManager;
 import com.alipay.sofa.registry.server.meta.lease.session.SessionServerManager;
 import com.alipay.sofa.registry.server.meta.metaserver.CurrentDcMetaServer;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Maps;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
 import java.util.List;
 import java.util.Map;
@@ -38,10 +39,11 @@ import java.util.Map;
  * <p>
  * Nov 25, 2020
  */
+@Component
 public class DefaultMetaServerManager {
 
     @Autowired
-    private CrossDcMetaServerManager crossDcMetaServerManager;
+    private DefaultCrossDcMetaServerManager crossDcMetaServerManager;
 
     @Autowired
     private CurrentDcMetaServer      currentDcMetaServer;
@@ -96,7 +98,7 @@ public class DefaultMetaServerManager {
         Map<String, Map<String, SessionNode>> nodeMap = Maps.newHashMap();
         Map<String, Long> epochMap = Maps.newHashMap();
         nodeMap.put(nodeConfig.getLocalDataCenter(),
-            transform(sessionServerManager.getClusterMembers()));
+            transform(sessionServerManager.getSessionServerMetaInfo().getClusterMembers()));
         result.setNodes(nodeMap);
         result.setVersion(sessionServerManager.getEpoch());
         result.setDataCenterListVersions(epochMap);
@@ -109,7 +111,7 @@ public class DefaultMetaServerManager {
         Map<String, Map<String, DataNode>> nodeMap = Maps.newHashMap();
         Map<String, Long> epochMap = Maps.newHashMap();
         nodeMap.put(nodeConfig.getLocalDataCenter(),
-            transform(dataServerManager.getClusterMembers()));
+            transform(dataServerManager.getDataServerMetaInfo().getClusterMembers()));
         result.setNodes(nodeMap);
         result.setVersion(dataServerManager.getEpoch());
         result.setDataCenterListVersions(epochMap);
@@ -125,7 +127,7 @@ public class DefaultMetaServerManager {
     }
 
     @VisibleForTesting
-    DefaultMetaServerManager setCrossDcMetaServerManager(CrossDcMetaServerManager crossDcMetaServerManager) {
+    DefaultMetaServerManager setCrossDcMetaServerManager(DefaultCrossDcMetaServerManager crossDcMetaServerManager) {
         this.crossDcMetaServerManager = crossDcMetaServerManager;
         return this;
     }

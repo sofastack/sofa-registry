@@ -17,31 +17,16 @@
 package com.alipay.sofa.registry.server.meta.cluster;
 
 import com.alipay.sofa.registry.common.model.Node;
-import com.alipay.sofa.registry.store.api.annotation.ReadOnLeader;
-
-import java.util.List;
+import com.alipay.sofa.registry.common.model.metaserver.cluster.Cluster;
+import com.alipay.sofa.registry.common.model.metaserver.cluster.VersionedList;
 
 /**
  * @author chen.zhu
  * <p>
  * Nov 20, 2020
  */
-public interface NodeCluster<T extends Node> {
+public interface NodeCluster<T extends Node> extends Cluster<T> {
 
-    /**
-     * return current epoch.
-     *
-     * @return the get epoch
-     */
-    @ReadOnLeader
-    long getEpoch();
-
-    /**
-     * Gets cluster members(for instance, meta-servers, data-servers or session-servers).
-     *
-     * @return the get cluster members
-     */
-    @ReadOnLeader
-    List<T> getClusterMembers();
+    VersionedList<T> getClusterMeta();
 
 }

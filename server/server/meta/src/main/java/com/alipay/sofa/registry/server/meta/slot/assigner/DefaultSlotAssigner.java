@@ -21,7 +21,7 @@ import com.alipay.sofa.registry.common.model.slot.SlotTable;
 import com.alipay.sofa.registry.exception.SofaRegistryRuntimeException;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
-import com.alipay.sofa.registry.server.meta.monitor.PrometheusMetrics;
+import com.alipay.sofa.registry.server.meta.monitor.Metrics;
 import com.alipay.sofa.registry.server.meta.slot.SlotAssigner;
 import com.alipay.sofa.registry.server.meta.slot.util.MigrateSlotGroup;
 import com.alipay.sofa.registry.server.meta.slot.util.builder.SlotBuilder;
@@ -104,7 +104,7 @@ public class DefaultSlotAssigner implements SlotAssigner {
                 slotId, nextLeader, currentDataServers.size());
             boolean nextLeaderWasFollower = isNextLeaderFollowerOfSlot(slotId, nextLeader);
             slotTableBuilder.replaceLeader(slotId, nextLeader);
-            PrometheusMetrics.SlotAssign.onSlotLeaderAssign(nextLeader, slotId);
+            Metrics.SlotAssign.onSlotLeaderAssign(nextLeader, slotId);
             if (nextLeaderWasFollower) {
                 migrateSlotGroup.addFollower(slotId);
             }
@@ -137,7 +137,7 @@ public class DefaultSlotAssigner implements SlotAssigner {
                         continue;
                     }
                     slotTableBuilder.addFollower(slotId, candidate);
-                    PrometheusMetrics.SlotAssign.onSlotFollowerAssign(candidate, slotId);
+                    Metrics.SlotAssign.onSlotFollowerAssign(candidate, slotId);
                     assigned = true;
                     assignCount++;
                     logger

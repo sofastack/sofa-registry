@@ -32,6 +32,7 @@ public class MetadataConfigBean implements MetadataConfig {
 
     private int                revisionGcLimit           = 100;
 
+
     /**
      * Getter method for property <tt>interfaceAppsRefreshLimit</tt>.
      *

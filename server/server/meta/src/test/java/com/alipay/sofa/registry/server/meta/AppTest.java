@@ -27,7 +27,7 @@ import java.sql.SQLException;
 
 @SpringBootApplication
 @EnableScheduling
-public class AppTest extends AbstractTest {
+public class AppTest extends AbstractMetaServerTest {
 
     @Test
     public void startMetaServer() throws IOException, SQLException {

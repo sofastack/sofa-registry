@@ -18,15 +18,13 @@ package com.alipay.sofa.registry.server.shared.slot;
 
 import com.alipay.sofa.registry.common.model.metaserver.nodes.DataNode;
 import com.alipay.sofa.registry.common.model.slot.SlotTable;
-import com.alipay.sofa.registry.server.meta.AbstractTest;
+import com.alipay.sofa.registry.server.meta.AbstractMetaServerTest;
 import org.assertj.core.util.Lists;
 import org.junit.Test;
 
 import java.util.List;
 
-import static org.junit.Assert.*;
-
-public class DiskSlotTableRecorderTest extends AbstractTest {
+public class DiskSlotTableRecorderTest extends AbstractMetaServerTest {
 
     private DiskSlotTableRecorder recorder = new DiskSlotTableRecorder();
 

@@ -18,12 +18,11 @@ package com.alipay.sofa.registry.server.meta.lease.impl;
 
 import com.alipay.sofa.registry.exception.InitializeException;
 import com.alipay.sofa.registry.lifecycle.impl.LifecycleHelper;
-import com.alipay.sofa.registry.remoting.exchange.Exchange;
-import com.alipay.sofa.registry.server.meta.AbstractTest;
+import com.alipay.sofa.registry.remoting.bolt.exchange.BoltExchange;
+import com.alipay.sofa.registry.server.meta.AbstractMetaServerTest;
 import com.alipay.sofa.registry.server.meta.bootstrap.config.MetaServerConfig;
 import com.alipay.sofa.registry.server.meta.bootstrap.config.NodeConfig;
 import com.alipay.sofa.registry.server.meta.metaserver.CrossDcMetaServer;
-import com.alipay.sofa.registry.server.meta.remoting.RaftExchanger;
 import com.google.common.collect.ImmutableMap;
 import org.assertj.core.util.Lists;
 import org.assertj.core.util.Sets;
@@ -40,9 +39,9 @@ import java.util.concurrent.TimeoutException;
 
 import static org.mockito.Mockito.when;
 
-public class CrossDcMetaServerManagerTest extends AbstractTest {
+public class CrossDcMetaServerManagerTest extends AbstractMetaServerTest {
 
-    private CrossDcMetaServerManager crossDcMetaServerManager;
+    private DefaultCrossDcMetaServerManager crossDcMetaServerManager;
 
     @Mock
     private NodeConfig               nodeConfig;
@@ -51,18 +50,14 @@ public class CrossDcMetaServerManagerTest extends AbstractTest {
     private MetaServerConfig         metaServerConfig;
 
     @Mock
-    private RaftExchanger            raftExchanger;
-
-    @Mock
-    private Exchange                 boltExchange;
+    private BoltExchange boltExchange;
 
     @Before
     public void beforeCrossDcMetaServerManagerTest() {
         MockitoAnnotations.initMocks(this);
-        crossDcMetaServerManager = new CrossDcMetaServerManager()
+        crossDcMetaServerManager = new DefaultCrossDcMetaServerManager()
             .setMetaServerConfig(metaServerConfig).setBoltExchange(boltExchange)
-            .setExecutors(executors).setNodeConfig(nodeConfig).setScheduled(scheduled)
-            .setRaftExchanger(raftExchanger);
+            .setExecutors(executors).setNodeConfig(nodeConfig).setScheduled(scheduled);
         when(metaServerConfig.getCrossDcMetaSyncIntervalMilli()).thenReturn(10000);
     }
 
@@ -112,7 +107,7 @@ public class CrossDcMetaServerManagerTest extends AbstractTest {
                 "dc3", Lists.newArrayList(randomIp(), randomIp(), randomIp())
                 ));
         crossDcMetaServerManager.postConstruct();
-        crossDcMetaServerManager.isLeader();
+        crossDcMetaServerManager.becomeLeader();
         waitConditionUntilTimeOut(()->crossDcMetaServerManager.getOrCreate(getDc()).getLifecycleState().isStarted(), 1000);
         //wait for concurrent modification
         Thread.sleep(10);
@@ -131,12 +126,12 @@ public class CrossDcMetaServerManagerTest extends AbstractTest {
                 "dc3", Lists.newArrayList(randomIp(), randomIp(), randomIp())
         ));
         LifecycleHelper.initializeIfPossible(crossDcMetaServerManager);
-        crossDcMetaServerManager.isLeader();
+        crossDcMetaServerManager.becomeLeader();
         waitConditionUntilTimeOut(()->crossDcMetaServerManager.getOrCreate(getDc()).getLifecycleState().isStarted(), 1000);
         //wait for concurrent modification
         Thread.sleep(10);
         Assert.assertTrue(crossDcMetaServerManager.getOrCreate(getDc()).getLifecycleState().isStarted());
-        crossDcMetaServerManager.notLeader();
+        crossDcMetaServerManager.loseLeader();
         waitConditionUntilTimeOut(()->crossDcMetaServerManager.getOrCreate(getDc()).getLifecycleState().isStopped(), 1000);
         //wait for concurrent modification
         Thread.sleep(10);

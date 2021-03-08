@@ -18,51 +18,18 @@ package com.alipay.sofa.registry.server.meta.bootstrap;
 
 import com.alipay.sofa.registry.jdbc.config.JdbcConfiguration;
 import com.alipay.sofa.registry.jraft.config.RaftConfiguration;
-import com.alipay.sofa.registry.jraft.service.PersistenceDataDBService;
 import com.alipay.sofa.registry.remoting.bolt.exchange.BoltExchange;
-import com.alipay.sofa.registry.remoting.exchange.Exchange;
-import com.alipay.sofa.registry.remoting.exchange.NodeExchanger;
 import com.alipay.sofa.registry.remoting.jersey.exchange.JerseyExchange;
-import com.alipay.sofa.registry.server.meta.bootstrap.bean.lifecycle.RaftAnnotationBeanPostProcessor;
-import com.alipay.sofa.registry.server.meta.bootstrap.bean.lifecycle.RaftServiceLifecycleController;
 import com.alipay.sofa.registry.server.meta.bootstrap.config.MetaServerConfig;
 import com.alipay.sofa.registry.server.meta.bootstrap.config.MetaServerConfigBean;
 import com.alipay.sofa.registry.server.meta.bootstrap.config.NodeConfig;
 import com.alipay.sofa.registry.server.meta.bootstrap.config.NodeConfigBeanProperty;
-import com.alipay.sofa.registry.server.meta.lease.data.DataLeaseManager;
-import com.alipay.sofa.registry.server.meta.lease.data.DefaultDataServerManager;
-import com.alipay.sofa.registry.server.meta.lease.impl.CrossDcMetaServerManager;
-import com.alipay.sofa.registry.server.meta.lease.session.DefaultSessionServerManager;
-import com.alipay.sofa.registry.server.meta.lease.session.SessionLeaseManager;
-import com.alipay.sofa.registry.server.meta.metaserver.impl.DefaultCurrentDcMetaServer;
-import com.alipay.sofa.registry.server.meta.metaserver.impl.DefaultLocalMetaServer;
-import com.alipay.sofa.registry.server.meta.metaserver.impl.DefaultMetaServerManager;
-import com.alipay.sofa.registry.server.meta.monitor.impl.DefaultSlotTableMonitor;
-import com.alipay.sofa.registry.server.meta.provide.data.DefaultProvideDataNotifier;
-import com.alipay.sofa.registry.server.meta.remoting.DataNodeExchanger;
-import com.alipay.sofa.registry.server.meta.remoting.MetaServerExchanger;
-import com.alipay.sofa.registry.server.meta.remoting.RaftExchanger;
-import com.alipay.sofa.registry.server.meta.remoting.SessionNodeExchanger;
-import com.alipay.sofa.registry.server.meta.remoting.connection.DataConnectionHandler;
-import com.alipay.sofa.registry.server.meta.remoting.connection.MetaConnectionHandler;
-import com.alipay.sofa.registry.server.meta.remoting.connection.SessionConnectionHandler;
-import com.alipay.sofa.registry.server.meta.remoting.data.DefaultDataServerService;
-import com.alipay.sofa.registry.server.meta.remoting.handler.*;
-import com.alipay.sofa.registry.server.meta.remoting.session.DefaultSessionServerService;
-import com.alipay.sofa.registry.server.meta.repository.service.RaftAppRevisionService;
 import com.alipay.sofa.registry.server.meta.resource.*;
-import com.alipay.sofa.registry.server.meta.revision.AppRevisionRegistry;
-import com.alipay.sofa.registry.server.meta.revision.AppRevisionService;
-import com.alipay.sofa.registry.server.meta.slot.arrange.ScheduledSlotArranger;
-import com.alipay.sofa.registry.server.meta.slot.manager.DefaultSlotManager;
-import com.alipay.sofa.registry.server.meta.slot.manager.LocalSlotManager;
-import com.alipay.sofa.registry.server.shared.remoting.AbstractServerHandler;
 import com.alipay.sofa.registry.server.shared.resource.MetricsResource;
 import com.alipay.sofa.registry.server.shared.resource.SlotGenericResource;
-import com.alipay.sofa.registry.store.api.DBService;
-import com.alipay.sofa.registry.task.MetricsableThreadPoolExecutor;
 import com.alipay.sofa.registry.store.api.driver.RepositoryConfig;
-import com.alipay.sofa.registry.store.api.driver.RepositoryManager;
+import com.alipay.sofa.registry.store.api.spring.SpringContext;
+import com.alipay.sofa.registry.task.MetricsableThreadPoolExecutor;
 import com.alipay.sofa.registry.util.DefaultExecutorFactory;
 import com.alipay.sofa.registry.util.NamedThreadFactory;
 import com.alipay.sofa.registry.util.OsUtils;
@@ -74,9 +41,8 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
+import org.springframework.context.annotation.Profile;
 
-import java.util.ArrayList;
-import java.util.Collection;
 import java.util.concurrent.*;
 
 /**
@@ -89,7 +55,7 @@ import java.util.concurrent.*;
 @EnableConfigurationProperties
 public class MetaServerConfiguration {
 
-    public static final String SCHEDULED_EXECUTOR = "scheduledExecutor";
+    public static final String SHARED_SCHEDULE_EXECUTOR = "sharedScheduleExecutor";
     public static final String GLOBAL_EXECUTOR    = "globalExecutor";
 
     @Bean
@@ -118,26 +84,6 @@ public class MetaServerConfiguration {
     }
 
     @Configuration
-    public static class MetaServerRepositoryConfiguration {
-
-        @Bean
-        public RaftExchanger raftExchanger() {
-            return new RaftExchanger();
-        }
-
-        @Bean
-        public RaftAnnotationBeanPostProcessor raftAnnotationBeanPostProcessor() {
-            return new RaftAnnotationBeanPostProcessor();
-        }
-
-        @Bean
-        public RaftServiceLifecycleController raftServiceLifecycleController() {
-            return new RaftServiceLifecycleController();
-        }
-
-    }
-
-    @Configuration
     public static class ThreadPoolResourceConfiguration {
         @Bean(name = GLOBAL_EXECUTOR)
         public ExecutorService getGlobalExecutorService() {
@@ -148,7 +94,7 @@ public class MetaServerConfiguration {
             return executorFactory.create();
         }
 
-        @Bean(name = SCHEDULED_EXECUTOR)
+        @Bean(name = SHARED_SCHEDULE_EXECUTOR)
         public ScheduledExecutorService getScheduledService() {
             return new ScheduledThreadPoolExecutor(Math.min(OsUtils.getCpuCount() * 2, 12),
                 new NamedThreadFactory("MetaServerGlobalScheduler"));
@@ -156,204 +102,16 @@ public class MetaServerConfiguration {
     }
 
     @Configuration
-    public static class MetaServerManagementConfiguration {
-        @Bean
-        public CrossDcMetaServerManager crossDcMetaServerManager() {
-            return new CrossDcMetaServerManager();
-        }
-
-        @Bean
-        public DefaultMetaServerManager defaultMetaServerManager() {
-            return new DefaultMetaServerManager();
-        }
-
-        @Bean
-        public DataLeaseManager dataLeaseManager() {
-            return new DataLeaseManager();
-        }
-
-        @Bean
-        public DefaultDataServerManager dataServerManager() {
-            return new DefaultDataServerManager();
-        }
-
-        @Bean
-        public SessionLeaseManager sessionLeaseManager() {
-            return new SessionLeaseManager();
-        }
-
-        @Bean
-        public DefaultSessionServerManager defaultSessionManager() {
-            return new DefaultSessionServerManager();
-        }
-
-        @Bean
-        public DefaultLocalMetaServer localMetaServer() {
-            return new DefaultLocalMetaServer();
-        }
-
-        @Bean
-        public DefaultCurrentDcMetaServer currentDcMetaServer() {
-            return new DefaultCurrentDcMetaServer();
-        }
-
-    }
-
-    @Configuration
-    public static class SlotManagementConfiguration {
-
-        @Bean
-        public LocalSlotManager slotManager() {
-            return new LocalSlotManager();
-        }
-
-        @Bean
-        public DefaultSlotManager defaultSlotManager() {
-            return new DefaultSlotManager();
-        }
-
-        @Bean
-        public ScheduledSlotArranger scheduledSlotArranger() {
-            return new ScheduledSlotArranger();
-        }
-    }
-
-    @Configuration
-    public static class MetaServerMonitorConfiguration {
-
-        @Bean
-        public DefaultSlotTableMonitor slotTableMonitor() {
-            return new DefaultSlotTableMonitor();
-        }
-
-    }
-
-    @Configuration
-    public static class MetaServerProvideDataConfiguration {
-
-        @Bean
-        public DefaultProvideDataNotifier provideDataNotifier() {
-            return new DefaultProvideDataNotifier();
-        }
-
-        @Bean
-        public DefaultDataServerService dataServerProvideDataNotifier() {
-            return new DefaultDataServerService();
-        }
-
-        @Bean
-        public DefaultSessionServerService sessionServerProvideDataNotifier() {
-            return new DefaultSessionServerService();
-        }
-    }
-
-    @Configuration
-    public static class AppRevisionConfiguration {
-        @Bean
-        public AppRevisionService appRevisionService() {
-            return new RaftAppRevisionService();
-        }
-
-        @Bean
-        public AppRevisionRegistry appRevisionRegistry() {
-            return new AppRevisionRegistry();
-        }
-    }
-
-    @Configuration
     public static class MetaServerRemotingConfiguration {
 
         @Bean
-        public Exchange boltExchange() {
+        public BoltExchange boltExchange() {
             return new BoltExchange();
         }
 
         @Bean
-        public Exchange jerseyExchange() {
+        public JerseyExchange jerseyExchange() {
             return new JerseyExchange();
-        }
-
-        @Bean(name = "sessionServerHandlers")
-        public Collection<AbstractServerHandler> sessionServerHandlers() {
-            Collection<AbstractServerHandler> list = new ArrayList<>();
-            list.add(sessionConnectionHandler());
-            list.add(heartbeatRequestHandler());
-            list.add(fetchProvideDataRequestHandler());
-            list.add(appRevisionRegisterHandler());
-            list.add(checkRevisionsHandler());
-            list.add(fetchRevisionsHandler());
-            return list;
-        }
-
-        @Bean(name = "dataServerHandlers")
-        public Collection<AbstractServerHandler> dataServerHandlers() {
-            Collection<AbstractServerHandler> list = new ArrayList<>();
-            list.add(dataConnectionHandler());
-            list.add(heartbeatRequestHandler());
-            list.add(fetchProvideDataRequestHandler());
-            return list;
-        }
-
-        @Bean(name = "metaServerHandlers")
-        public Collection<AbstractServerHandler> metaServerHandlers() {
-            Collection<AbstractServerHandler> list = new ArrayList<>();
-            list.add(metaConnectionHandler());
-            return list;
-        }
-
-        @Bean
-        public AbstractServerHandler sessionConnectionHandler() {
-            return new SessionConnectionHandler();
-        }
-
-        @Bean
-        public AbstractServerHandler dataConnectionHandler() {
-            return new DataConnectionHandler();
-        }
-
-        @Bean
-        public AbstractServerHandler metaConnectionHandler() {
-            return new MetaConnectionHandler();
-        }
-
-        @Bean
-        public AbstractServerHandler heartbeatRequestHandler() {
-            return new HeartbeatRequestHandler();
-        }
-
-        @Bean
-        public AbstractServerHandler fetchProvideDataRequestHandler() {
-            return new FetchProvideDataRequestHandler();
-        }
-
-        @Bean
-        public AbstractServerHandler appRevisionRegisterHandler() {
-            return new AppRevisionRegisterHandler();
-        }
-
-        @Bean
-        public AbstractServerHandler checkRevisionsHandler() {
-            return new CheckRevisionsHandler();
-        }
-
-        @Bean
-        public AbstractServerHandler fetchRevisionsHandler() {
-            return new FetchRevisionsHandler();
-        }
-
-        @Bean
-        public NodeExchanger sessionNodeExchanger() {
-            return new SessionNodeExchanger();
-        }
-
-        @Bean
-        public NodeExchanger dataNodeExchanger() {
-            return new DataNodeExchanger();
-        }
-
-        @Bean
-        public NodeExchanger metaServerExchanger() {
-            return new MetaServerExchanger();
         }
 
     }
@@ -369,8 +127,8 @@ public class MetaServerConfiguration {
         }
 
         @Bean
-        public PersistentDataResource persistentDataResource() {
-            return new PersistentDataResource();
+        public ProvideDataResource provideDataResource() {
+            return new ProvideDataResource();
         }
 
         @Bean
@@ -384,11 +142,6 @@ public class MetaServerConfiguration {
         }
 
         @Bean
-        public MetaStoreResource metaStoreResource() {
-            return new MetaStoreResource();
-        }
-
-        @Bean
         @ConditionalOnMissingBean
         public StopPushDataResource stopPushDataResource() {
             return new StopPushDataResource();
@@ -396,7 +149,6 @@ public class MetaServerConfiguration {
 
         @Bean
         public BlacklistDataResource blacklistDataResource() {
-
             return new BlacklistDataResource();
         }
 
@@ -408,11 +160,6 @@ public class MetaServerConfiguration {
         @Bean
         public SlotTableResource slotTableResource() {
             return new SlotTableResource();
-        }
-
-        @Bean
-        public SessionLoadbalanceResource sessionLoadbalanceSwitchResource() {
-            return new SessionLoadbalanceResource();
         }
 
         @Bean
@@ -430,11 +177,6 @@ public class MetaServerConfiguration {
     public static class ExecutorConfiguation {
 
         @Bean
-        public ExecutorManager executorManager(MetaServerConfig metaServerConfig) {
-            return new ExecutorManager(metaServerConfig);
-        }
-
-        @Bean
         public ThreadPoolExecutor defaultRequestExecutor(MetaServerConfig metaServerConfig) {
             ThreadPoolExecutor defaultRequestExecutor = new MetricsableThreadPoolExecutor(
                 "MetaHandlerDefaultExecutor", metaServerConfig.getDefaultRequestExecutorMinSize(),
@@ -443,19 +185,6 @@ public class MetaServerConfiguration {
                 new NamedThreadFactory("MetaHandler-DefaultRequest"));
             defaultRequestExecutor.allowCoreThreadTimeOut(true);
             return defaultRequestExecutor;
-        }
-
-        @Bean
-        public ThreadPoolExecutor appRevisionExecutor(MetaServerConfig metaServerConfig) {
-            ThreadPoolExecutor appRevisionExecutor = new MetricsableThreadPoolExecutor(
-                "AppRevisionHandlerExecutor",
-                metaServerConfig.getAppRevisionRegisterExecutorMinSize(),
-                metaServerConfig.getAppRevisionRegisterExecutorMaxSize(), 300, TimeUnit.SECONDS,
-                new LinkedBlockingQueue<>(metaServerConfig
-                    .getAppRevisionRegisterExecutorQueueSize()), new NamedThreadFactory(
-                    "AppRevisionHandlerThread"));
-            appRevisionExecutor.allowCoreThreadTimeOut(true);
-            return appRevisionExecutor;
         }
     }
 
@@ -468,23 +197,15 @@ public class MetaServerConfiguration {
         }
 
         @Bean
-        public RepositoryManager repositoryManager() {
-            return new RepositoryManager();
-        }
-
-        @Bean
+        @Profile(SpringContext.META_STORE_API_JDBC)
         public JdbcConfiguration jdbcConfiguration() {
             return new JdbcConfiguration();
         }
 
         @Bean
+        @Profile(SpringContext.META_STORE_API_RAFT)
         public RaftConfiguration raftConfiguration() {
             return new RaftConfiguration();
-        }
-
-        @Bean
-        public DBService persistenceDataDBService() {
-            return new PersistenceDataDBService();
         }
     }
 }

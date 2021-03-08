@@ -18,9 +18,8 @@ package com.alipay.sofa.registry.server.meta.lease.session;
 
 import com.alipay.sofa.registry.common.model.ProcessId;
 import com.alipay.sofa.registry.common.model.metaserver.nodes.SessionNode;
-import com.alipay.sofa.registry.server.meta.AbstractTest;
+import com.alipay.sofa.registry.server.meta.AbstractMetaServerTest;
 import com.alipay.sofa.registry.server.meta.bootstrap.config.MetaServerConfig;
-import com.alipay.sofa.registry.server.meta.remoting.RaftExchanger;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -30,9 +29,9 @@ import org.mockito.MockitoAnnotations;
 
 import java.util.concurrent.TimeoutException;
 
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.when;
 
-public class DefaultSessionServerManagerTest extends AbstractTest {
+public class DefaultSessionServerManagerTest extends AbstractMetaServerTest {
 
     private DefaultSessionServerManager sessionManager;
 
@@ -42,11 +41,17 @@ public class DefaultSessionServerManagerTest extends AbstractTest {
     @Before
     public void beforeDefaultSessionManagerTest() throws Exception {
         MockitoAnnotations.initMocks(this);
-        sessionManager = new DefaultSessionServerManager();
-        SessionLeaseManager sessionLeaseManager = new SessionLeaseManager();
+        sessionManager = new DefaultSessionServerManager() {
+            @Override
+            protected boolean amILeader() {
+                return true;
+            }
+        };
+//        SessionLeaseManager sessionLeaseManager = new SessionLeaseManager();
         sessionManager.setMetaServerConfig(metaServerConfig)
-            .setSessionLeaseManager(sessionLeaseManager)
-            .setRaftSessionLeaseManager(sessionLeaseManager).setScheduled(scheduled);
+//            .setSessionLeaseManager(sessionLeaseManager)
+//            .setRaftSessionLeaseManager(sessionLeaseManager)
+               ;
         when(metaServerConfig.getExpireCheckIntervalMilli()).thenReturn(60);
         sessionManager.postConstruct();
     }
@@ -66,14 +71,14 @@ public class DefaultSessionServerManagerTest extends AbstractTest {
 
     @Test
     public void testGetClusterMembers() {
-        Assert.assertTrue(sessionManager.getClusterMembers().isEmpty());
+        Assert.assertTrue(sessionManager.getSessionServerMetaInfo().getClusterMembers().isEmpty());
     }
 
     @Test
     public void testRenew() throws TimeoutException, InterruptedException {
-        SessionLeaseManager leaseManager = spy(new SessionLeaseManager());
-        sessionManager.setRaftSessionLeaseManager(leaseManager)
-            .setSessionLeaseManager(leaseManager);
+//        SessionLeaseManager leaseManager = spy(new SessionLeaseManager());
+//        sessionManager.setRaftSessionLeaseManager(leaseManager)
+//            .setSessionLeaseManager(leaseManager);
         SessionNode sessionNode = new SessionNode(randomURL(randomIp()), getDc());
         long timestamp = System.currentTimeMillis();
         sessionNode
@@ -81,22 +86,22 @@ public class DefaultSessionServerManagerTest extends AbstractTest {
         NotifyObserversCounter counter = new NotifyObserversCounter();
         sessionManager.addObserver(counter);
 
-        makeRaftLeader();
+        makeMetaLeader();
 
         sessionManager.renew(sessionNode, 1);
-        verify(leaseManager, times(1)).register(any());
+//        verify(leaseManager, times(1)).register(any());
         Assert.assertEquals(1, counter.getCounter());
 
         sessionManager.renew(sessionNode, 1);
-        verify(leaseManager, times(1)).register(any());
+//        verify(leaseManager, times(1)).register(any());
         Assert.assertEquals(1, counter.getCounter());
 
         SessionNode sessionNode2 = new SessionNode(sessionNode.getNodeUrl(), getDc());
         sessionNode2
             .setProcessId(new ProcessId(sessionNode.getIp(), timestamp, 2, random.nextInt()));
-        Assert.assertTrue(sessionManager.renew(sessionNode2, 1));
-        verify(leaseManager, times(2)).register(any());
-        verify(leaseManager, times(1)).renew(any(), anyInt());
+        Assert.assertFalse(sessionManager.renew(sessionNode2, 1));
+//        verify(leaseManager, times(2)).register(any());
+//        verify(leaseManager, times(1)).renew(any(), anyInt());
         Assert.assertEquals(2, counter.getCounter());
     }
 
@@ -104,13 +109,13 @@ public class DefaultSessionServerManagerTest extends AbstractTest {
     public void testDataServerManagerRefreshEpochOnlyOnceWhenNewRegistered()
                                                                             throws TimeoutException,
                                                                             InterruptedException {
-        makeRaftLeader();
+        makeMetaLeader();
         SessionNode node = new SessionNode(randomURL(randomIp()), getDc());
-        SessionLeaseManager leaseManager = spy(new SessionLeaseManager());
-        sessionManager.setSessionLeaseManager(leaseManager)
-            .setRaftSessionLeaseManager(leaseManager);
+//        SessionLeaseManager leaseManager = spy(new SessionLeaseManager());
+//        sessionManager.setSessionLeaseManager(leaseManager)
+//            .setRaftSessionLeaseManager(leaseManager);
         sessionManager.renew(node, 1000);
-        Assert.assertEquals(1, sessionManager.getClusterMembers().size());
-        verify(leaseManager, times(1)).refreshEpoch(anyLong());
+        Assert.assertEquals(1, sessionManager.getSessionServerMetaInfo().getClusterMembers().size());
+//        verify(leaseManager, times(1)).refreshEpoch(anyLong());
     }
 }

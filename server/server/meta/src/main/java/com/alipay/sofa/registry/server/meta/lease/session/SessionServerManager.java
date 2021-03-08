@@ -16,20 +16,21 @@
  */
 package com.alipay.sofa.registry.server.meta.lease.session;
 
-import com.alipay.sofa.registry.common.model.metaserver.inter.heartbeat.HeartbeatRequest;
+import com.alipay.sofa.registry.common.model.metaserver.cluster.VersionedList;
 import com.alipay.sofa.registry.common.model.metaserver.nodes.SessionNode;
 import com.alipay.sofa.registry.lifecycle.Lifecycle;
 import com.alipay.sofa.registry.observer.Observable;
-import com.alipay.sofa.registry.server.meta.cluster.NodeCluster;
 import com.alipay.sofa.registry.server.meta.lease.LeaseManager;
+import com.alipay.sofa.registry.server.meta.monitor.session.SessionMessageListener;
 
 /**
  * @author chen.zhu
  * <p>
  * Nov 23, 2020
  */
-public interface SessionServerManager extends Observable, Lifecycle, LeaseManager<SessionNode>,
-                                     NodeCluster<SessionNode> {
+public interface SessionServerManager extends Observable, Lifecycle, LeaseManager<SessionNode>, SessionMessageListener {
 
-    void handleHeartbeat(HeartbeatRequest<SessionNode> request);
+    VersionedList<SessionNode> getSessionServerMetaInfo();
+
+    long getEpoch();
 }

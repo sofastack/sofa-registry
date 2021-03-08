@@ -42,7 +42,7 @@
     </select>
 
     <select id="getTotalCount" resultType="java.lang.Integer">
-        select count(1) from interface_apps_index
+        select count(1) from interface_apps_index where data_center = #{dataCenter}
     </select>
 
     <select id="queryModifyAfterThan" resultMap="interfaceAppsResultMap">

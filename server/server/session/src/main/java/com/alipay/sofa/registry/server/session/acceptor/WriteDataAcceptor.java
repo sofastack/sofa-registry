@@ -17,16 +17,17 @@
 package com.alipay.sofa.registry.server.session.acceptor;
 
 /**
- *
+ * 
  * @author kezhu.wukz
  * @author shangyu.wh
  * @version 1.0: WriteDataAcceptor.java, v 0.1 2019-06-11 15:08 shangyu.wh Exp $
  */
 public interface WriteDataAcceptor {
 
-    /**
-     * accept all write data request
-     * @param request
-     */
-    void accept(WriteDataRequest request);
+	/**
+	 * accept all write data request
+	 * 
+	 * @param request
+	 */
+	void accept(WriteDataRequest request);
 }

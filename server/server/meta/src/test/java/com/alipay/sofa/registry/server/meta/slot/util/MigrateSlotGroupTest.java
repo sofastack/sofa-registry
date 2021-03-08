@@ -16,7 +16,7 @@
  */
 package com.alipay.sofa.registry.server.meta.slot.util;
 
-import com.alipay.sofa.registry.server.meta.AbstractTest;
+import com.alipay.sofa.registry.server.meta.AbstractMetaServerTest;
 import com.alipay.sofa.registry.server.meta.slot.assigner.ScoreStrategy;
 import com.alipay.sofa.registry.server.meta.slot.util.comparator.SortType;
 import com.google.common.collect.ImmutableMap;
@@ -27,7 +27,7 @@ import org.junit.Test;
 
 import java.util.List;
 
-public class MigrateSlotGroupTest extends AbstractTest {
+public class MigrateSlotGroupTest extends AbstractMetaServerTest {
 
     private MigrateSlotGroup migrateSlotGroup = new MigrateSlotGroup();
 

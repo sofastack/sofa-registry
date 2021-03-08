@@ -24,5 +24,5 @@ import com.alipay.sofa.registry.core.model.ReceivedConfigData;
  * @since 2019/1/4
  */
 public interface ReceivedConfigDataPushTaskStrategy {
-    Object convert2PushData(ReceivedConfigData receivedConfigData, URL url);
+	Object convert2PushData(ReceivedConfigData receivedConfigData, URL url);
 }

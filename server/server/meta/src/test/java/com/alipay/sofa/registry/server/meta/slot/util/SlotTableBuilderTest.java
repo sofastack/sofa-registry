@@ -19,13 +19,12 @@ package com.alipay.sofa.registry.server.meta.slot.util;
 import com.alipay.sofa.registry.common.model.metaserver.nodes.DataNode;
 import com.alipay.sofa.registry.common.model.slot.DataNodeSlot;
 import com.alipay.sofa.registry.common.model.slot.SlotTable;
-import com.alipay.sofa.registry.server.meta.AbstractTest;
+import com.alipay.sofa.registry.server.meta.AbstractMetaServerTest;
 import com.alipay.sofa.registry.server.meta.slot.util.builder.SlotBuilder;
 import com.alipay.sofa.registry.server.meta.slot.util.builder.SlotTableBuilder;
 import com.alipay.sofa.registry.server.shared.util.NodeUtils;
 import com.google.common.collect.Lists;
 import org.junit.Assert;
-import org.junit.Before;
 import org.junit.Test;
 
 import java.util.ArrayList;
@@ -34,14 +33,14 @@ import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.CyclicBarrier;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertSame;
 
 /**
  * @author chen.zhu
  * <p>
  * Jan 15, 2021
  */
-public class SlotTableBuilderTest extends AbstractTest {
+public class SlotTableBuilderTest extends AbstractMetaServerTest {
 
     @Test
     public void testGetOrCreate() throws InterruptedException {

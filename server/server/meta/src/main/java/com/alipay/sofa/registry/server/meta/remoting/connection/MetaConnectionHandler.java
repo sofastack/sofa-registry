@@ -22,8 +22,10 @@ import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.net.NetUtil;
 import com.alipay.sofa.registry.remoting.Channel;
 import com.alipay.sofa.registry.server.meta.bootstrap.config.NodeConfig;
+import com.alipay.sofa.registry.server.meta.bootstrap.handler.MetaServerHandler;
 import com.alipay.sofa.registry.server.shared.remoting.ListenServerChannelHandler;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
 import java.net.InetSocketAddress;
 import java.util.Collection;
@@ -35,7 +37,8 @@ import java.util.concurrent.ConcurrentHashMap;
  * @author shangyu.wh
  * @version $Id: MetaConnectionHandler.java, v 0.1 2018-02-12 15:01 shangyu.wh Exp $
  */
-public class MetaConnectionHandler extends ListenServerChannelHandler implements NodeConnectManager {
+@Component
+public class MetaConnectionHandler extends ListenServerChannelHandler implements NodeConnectManager, MetaServerHandler {
 
     private static final Logger                                                            LOGGER      = LoggerFactory
                                                                                                            .getLogger(MetaConnectionHandler.class);

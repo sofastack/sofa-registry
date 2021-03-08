@@ -21,40 +21,40 @@ package com.alipay.sofa.registry.common.model.client.pb;
 
 public interface RegisterResponsePbOrBuilder extends
 // @@protoc_insertion_point(interface_extends:RegisterResponsePb)
-                                            com.google.protobuf.MessageOrBuilder {
+			com.google.protobuf.MessageOrBuilder {
 
-    /**
-     * <code>bool success = 1;</code>
-     */
-    boolean getSuccess();
+	/**
+	 * <code>bool success = 1;</code>
+	 */
+	boolean getSuccess();
 
-    /**
-     * <code>string registId = 2;</code>
-     */
-    java.lang.String getRegistId();
+	/**
+	 * <code>string registId = 2;</code>
+	 */
+	java.lang.String getRegistId();
 
-    /**
-     * <code>string registId = 2;</code>
-     */
-    com.google.protobuf.ByteString getRegistIdBytes();
+	/**
+	 * <code>string registId = 2;</code>
+	 */
+	com.google.protobuf.ByteString getRegistIdBytes();
 
-    /**
-     * <code>int64 version = 3;</code>
-     */
-    long getVersion();
+	/**
+	 * <code>int64 version = 3;</code>
+	 */
+	long getVersion();
 
-    /**
-     * <code>bool refused = 4;</code>
-     */
-    boolean getRefused();
+	/**
+	 * <code>bool refused = 4;</code>
+	 */
+	boolean getRefused();
 
-    /**
-     * <code>string message = 5;</code>
-     */
-    java.lang.String getMessage();
+	/**
+	 * <code>string message = 5;</code>
+	 */
+	java.lang.String getMessage();
 
-    /**
-     * <code>string message = 5;</code>
-     */
-    com.google.protobuf.ByteString getMessageBytes();
+	/**
+	 * <code>string message = 5;</code>
+	 */
+	com.google.protobuf.ByteString getMessageBytes();
 }

@@ -25,12 +25,12 @@ import com.alipay.sofa.registry.exception.StopException;
 import com.alipay.sofa.registry.lifecycle.impl.AbstractLifecycle;
 import com.alipay.sofa.registry.lifecycle.impl.LifecycleHelper;
 import com.alipay.sofa.registry.observer.Observable;
-import com.alipay.sofa.registry.observer.Observer;
-import com.alipay.sofa.registry.server.meta.monitor.PrometheusMetrics;
+import com.alipay.sofa.registry.observer.UnblockingObserver;
+import com.alipay.sofa.registry.server.meta.monitor.Metrics;
 import com.alipay.sofa.registry.server.meta.monitor.SlotTableMonitor;
 import com.alipay.sofa.registry.server.meta.monitor.SlotTableStats;
 import com.alipay.sofa.registry.server.meta.monitor.data.DataSlotMetricsRecorder;
-import com.alipay.sofa.registry.server.meta.slot.manager.LocalSlotManager;
+import com.alipay.sofa.registry.server.meta.slot.SlotManager;
 import com.alipay.sofa.registry.server.shared.resource.SlotGenericResource;
 import com.alipay.sofa.registry.server.shared.slot.DiskSlotTableRecorder;
 import com.alipay.sofa.registry.server.shared.slot.SlotTableRecorder;
@@ -40,30 +40,31 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * @author chen.zhu
  * <p>
  * Dec 25, 2020
  */
+@Component
 public class DefaultSlotTableMonitor extends AbstractLifecycle implements SlotTableMonitor,
-                                                              Observer {
+        UnblockingObserver {
 
     @Autowired
-    private LocalSlotManager        slotManager;
+    private SlotManager slotManager;
 
     @Autowired
     private SlotGenericResource     slotGenericResource;
 
-    private final Map<String, Integer>    dataServerLagCounter = Maps.newConcurrentMap();
+    private final Map<String, Integer> dataServerLagCounter = Maps.newConcurrentMap();
 
-    private SlotTableStats          slotTableStats;
+    private SlotTableStats             slotTableStats;
 
     private List<SlotTableRecorder> recorders;
 
@@ -143,7 +144,7 @@ public class DefaultSlotTableMonitor extends AbstractLifecycle implements SlotTa
     }
 
     @VisibleForTesting
-    public DefaultSlotTableMonitor setSlotManager(LocalSlotManager slotManager) {
+    public DefaultSlotTableMonitor setSlotManager(SlotManager slotManager) {
         this.slotManager = slotManager;
         return this;
     }
@@ -157,18 +158,19 @@ public class DefaultSlotTableMonitor extends AbstractLifecycle implements SlotTa
             // but the second time should be ok, otherwise, data has something un-common
             int times = dataServerLagCounter.getOrDefault(heartbeat.getNode().getIp(), 0) + 1;
             if (times > 1) {
-                logger.error("[onHeartbeat] data[{}] lag", heartbeat.getNode().getIp());
+                logger.error("[onHeartbeatLag] data[{}] lag", heartbeat.getNode().getIp());
             }
-            PrometheusMetrics.DataSlot.setDataServerSlotLagTimes(heartbeat.getNode().getIp(), times);
+            Metrics.DataSlot
+                .setDataServerSlotLagTimes(heartbeat.getNode().getIp(), times);
             dataServerLagCounter.put(heartbeat.getNode().getIp(), times);
             return;
         }
         if (heartbeat.getSlotStatus() == null) {
-            logger.warn("[onHeartbeat] empty heartbeat");
+            logger.warn("[onHeartbeatEmpty] empty heartbeat");
             return;
         }
         dataServerLagCounter.put(heartbeat.getNode().getIp(), 0);
-        PrometheusMetrics.DataSlot.setDataServerSlotLagTimes(heartbeat.getNode().getIp(), 0);
+        Metrics.DataSlot.setDataServerSlotLagTimes(heartbeat.getNode().getIp(), 0);
         slotTableStats.checkSlotStatuses(heartbeat.getNode(), heartbeat.getSlotStatus());
     }
 }

@@ -45,7 +45,7 @@ import java.util.*;
  */
 public abstract class ClientSideExchanger implements NodeExchanger {
     private static final Logger    LOGGER    = LoggerFactory.getLogger(ClientSideExchanger.class);
-    private final String           serverType;
+    protected final String           serverType;
 
     @Autowired
     protected Exchange             boltExchange;

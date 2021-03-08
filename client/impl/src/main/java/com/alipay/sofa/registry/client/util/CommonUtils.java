@@ -20,18 +20,20 @@ import java.util.Collection;
 
 /**
  * The type Common utils.
+ * 
  * @author zhuoyu.sjw
  * @version $Id : CommonUtils.java, v 0.1 2018-07-15 22:48 zhuoyu.sjw Exp $$
  */
 public class CommonUtils {
 
-    /**
-     * Is not empty boolean.
-     *
-     * @param collection the collection 
-     * @return the boolean
-     */
-    public static boolean isNotEmpty(Collection collection) {
-        return collection != null && !collection.isEmpty();
-    }
+	/**
+	 * Is not empty boolean.
+	 * 
+	 * @param collection
+	 *            the collection
+	 * @return the boolean
+	 */
+	public static boolean isNotEmpty(Collection collection) {
+		return collection != null && !collection.isEmpty();
+	}
 }

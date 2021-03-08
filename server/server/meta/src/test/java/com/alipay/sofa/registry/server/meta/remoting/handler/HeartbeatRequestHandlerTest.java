@@ -22,13 +22,13 @@ import com.alipay.sofa.registry.common.model.metaserver.inter.heartbeat.Heartbea
 import com.alipay.sofa.registry.common.model.metaserver.nodes.DataNode;
 import com.alipay.sofa.registry.common.model.slot.SlotConfig;
 import com.alipay.sofa.registry.remoting.Channel;
-import com.alipay.sofa.registry.server.meta.AbstractTest;
+import com.alipay.sofa.registry.server.meta.AbstractMetaServerTest;
+import com.alipay.sofa.registry.server.meta.MetaLeaderService;
 import com.alipay.sofa.registry.server.meta.bootstrap.config.NodeConfig;
 import com.alipay.sofa.registry.server.meta.lease.data.DataServerManager;
 import com.alipay.sofa.registry.server.meta.lease.session.SessionServerManager;
 import com.alipay.sofa.registry.server.meta.metaserver.impl.DefaultCurrentDcMetaServer;
 import com.alipay.sofa.registry.server.meta.slot.manager.DefaultSlotManager;
-import com.alipay.sofa.registry.server.meta.slot.manager.LocalSlotManager;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -37,10 +37,9 @@ import org.mockito.MockitoAnnotations;
 
 import java.util.concurrent.TimeoutException;
 
-import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
 
-public class HeartbeatRequestHandlerTest extends AbstractTest {
+public class HeartbeatRequestHandlerTest extends AbstractMetaServerTest {
 
     private HeartbeatRequestHandler    handler = new HeartbeatRequestHandler();
 
@@ -56,7 +55,10 @@ public class HeartbeatRequestHandlerTest extends AbstractTest {
     @Mock
     private DataServerManager          dataServerManager;
 
-    private LocalSlotManager           slotManager;
+    @Mock
+    private MetaLeaderService metaLeaderService;
+
+    private DefaultSlotManager slotManager;
 
     @Before
     public void beforeHeartbeatRequestHandlerTest() {
@@ -64,9 +66,10 @@ public class HeartbeatRequestHandlerTest extends AbstractTest {
         NodeConfig nodeConfig = mock(NodeConfig.class);
         handler.setNodeConfig(nodeConfig);
         when(nodeConfig.getLocalDataCenter()).thenReturn(getDc());
-        slotManager = new LocalSlotManager(nodeConfig);
-        handler.setDefaultSlotManager(new DefaultSlotManager(slotManager, slotManager));
-        handler.setCurrentDcMetaServer(currentDcMetaServer);
+        slotManager = new DefaultSlotManager(metaLeaderService);
+        handler.setDefaultSlotManager(slotManager)
+                .setCurrentDcMetaServer(currentDcMetaServer)
+                .setMetaLeaderElector(metaLeaderService);
         when(currentDcMetaServer.getDataServerManager()).thenReturn(dataServerManager);
         when(currentDcMetaServer.getSessionServerManager()).thenReturn(sessionServerManager);
         when(currentDcMetaServer.getSlotTable()).thenReturn(slotManager.getSlotTable());
@@ -74,8 +77,8 @@ public class HeartbeatRequestHandlerTest extends AbstractTest {
 
     @Test
     public void testDoHandle() throws TimeoutException, InterruptedException {
-        makeRaftLeader();
-        slotManager.refresh(randomSlotTable());
+        makeMetaLeader();
+        slotManager.refresh(randomSlotTable(randomDataNodes(3)));
         HeartbeatRequest<Node> heartbeat = new HeartbeatRequest<>(new DataNode(
             randomURL(randomIp()), getDc()), 0, getDc(), System.currentTimeMillis(),
             new SlotConfig.SlotBasicInfo(SlotConfig.SLOT_NUM, SlotConfig.SLOT_REPLICAS,
@@ -85,8 +88,8 @@ public class HeartbeatRequestHandlerTest extends AbstractTest {
 
     @Test
     public void testDoHandleWithErrDC() throws TimeoutException, InterruptedException {
-        makeRaftLeader();
-        slotManager.refresh(randomSlotTable());
+        makeMetaLeader();
+        slotManager.refresh(randomSlotTable(randomDataNodes(3)));
         HeartbeatRequest<Node> heartbeat = new HeartbeatRequest<>(new DataNode(
             randomURL(randomIp()), getDc()), 0, "ERROR_DC", System.currentTimeMillis(),
             new SlotConfig.SlotBasicInfo(SlotConfig.SLOT_NUM, SlotConfig.SLOT_REPLICAS,
@@ -97,8 +100,8 @@ public class HeartbeatRequestHandlerTest extends AbstractTest {
 
     @Test
     public void testDoHandleWithErrSlotConfig() throws TimeoutException, InterruptedException {
-        makeRaftLeader();
-        slotManager.refresh(randomSlotTable());
+        makeMetaLeader();
+        slotManager.refresh(randomSlotTable(randomDataNodes(3)));
         HeartbeatRequest<Node> heartbeat = new HeartbeatRequest<>(new DataNode(
             randomURL(randomIp()), getDc()), 0, getDc(), System.currentTimeMillis(),
             new SlotConfig.SlotBasicInfo(SlotConfig.SLOT_NUM - 1, SlotConfig.SLOT_REPLICAS,
