@@ -132,14 +132,14 @@ public class ServerDataBox implements Serializable {
             javaos = new ObjectOutputStream(bos);
             javaos.writeObject(object);
         } catch (IOException ioe) {
-            //do nothing
+            throw new RuntimeException(ioe);
         } finally {
             try {
                 if (null != javaos) {
                     javaos.close();
                 }
             } catch (IOException ioe) {
-                //do nothing
+                throw new RuntimeException(ioe);
             }
         }
         return bos.toByteArray();
@@ -166,13 +166,18 @@ public class ServerDataBox implements Serializable {
                 try {
                     javaos.close();
                 } catch (IOException ioe) {
-                    //do nothing
+                    throw new RuntimeException(ioe);
                 }
             }
             out.writeByte(SERIALIZED_BY_JAVA); // Write serialization type
             out.writeInt(bos.size()); // Write byte stream size
             out.write(bos.toByteArray()); // Write the byte stream
         }
+    }
+
+    public int byteSize() {
+        final byte[] b = bytes;
+        return b != null ? b.length : 0;
     }
 
     /**

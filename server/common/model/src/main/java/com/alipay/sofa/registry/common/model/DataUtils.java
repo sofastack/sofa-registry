@@ -42,7 +42,7 @@ public final class DataUtils {
             }
             Integer count = appCount.getOrDefault(appName, 0);
             count++;
-            appCount.put(info.getAppName(), count);
+            appCount.put(appName, count);
         }
         return counts;
     }

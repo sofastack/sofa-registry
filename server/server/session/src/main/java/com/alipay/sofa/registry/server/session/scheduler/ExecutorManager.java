@@ -62,10 +62,6 @@ public class ExecutorManager {
 
     private static final String               CONNECT_CLIENT_EXECUTOR            = "ConnectClientExecutor";
 
-    private static final String               REVISION_HEARTBEAT_EXECUTOR        = "RevisionHeartbeatExecutor";
-
-    private static final String               REVISION_GC_EXECUTOR               = "RevisionGcExecutor";
-
     public ExecutorManager(SessionServerConfig sessionServerConfig) {
         scheduler = new ScheduledThreadPoolExecutor(sessionServerConfig.getSessionSchedulerPoolSize(),
                 new NamedThreadFactory("SessionScheduler"));
