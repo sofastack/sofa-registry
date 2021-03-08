@@ -248,6 +248,12 @@ public class PrometheusMetrics {
                                                               .help("follower slot number")
                                                               .labelNames("data_server").register();
 
+        private static final Gauge  STABLE_DATA_SLOT = Gauge.build().namespace("meta")
+                                                                .subsystem("data")
+                                                                .name("stable_data_slot")
+                                                                .help("data slot reporting stable data")
+                                                                .labelNames("data_server", "slot").register();
+
         public static void setLeaderNumbers(String dataServer, int leaderNum) {
             try {
                 LEADER_ASSIGN_GAUGE.labels(dataServer).set(leaderNum);
@@ -261,6 +267,14 @@ public class PrometheusMetrics {
                 FOLLOWER_ASSIGN_GAUGE.labels(dataServer).set(followerNum);
             } catch (Throwable throwable) {
                 LOGGER.error("[setFollowerNumbers]", throwable);
+            }
+        }
+
+        public static void setDataReportStable(String dataServer, int slot) {
+            try {
+                STABLE_DATA_SLOT.labels(dataServer, String.valueOf(slot)).set(1);
+            } catch (Throwable throwable) {
+                LOGGER.error("[setDataReportStable]", throwable);
             }
         }
     }

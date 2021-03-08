@@ -188,4 +188,76 @@ public class DefaultSlotTableStatsTest extends AbstractTest {
         SlotStats curSlotStats = slotTableStats.getSlotStats(1);
         Assert.assertNotEquals(prevSlotStats, curSlotStats);
     }
+
+    @Test
+    public void testStableResultNotImpactByStableData() {
+        Assert.assertFalse(slotTableStats.isSlotLeadersStable());
+        SlotTable slotTable = slotManager.getSlotTable();
+        for(DataNode dataNode : dataNodes) {
+            List<BaseSlotStatus> slotStatuses = Lists.newArrayList();
+            DataNodeSlot dataNodeSlot = slotTable.transfer(dataNode.getIp(), false).get(0);
+            dataNodeSlot.getLeaders().forEach(slotId -> {
+                slotStatuses.add(new LeaderSlotStatus(slotId, slotTable.getSlot(slotId).getLeaderEpoch(),
+                        dataNode.getIp(), BaseSlotStatus.LeaderStatus.HEALTHY));
+            });
+            slotTableStats.checkSlotStatuses(dataNode, slotStatuses);
+        }
+        Assert.assertTrue(slotTableStats.isSlotLeadersStable());
+        // now, we add some stable data, that data-server is reporting slots it does not contains
+        DataNode dataNode1 = dataNodes.get(0);
+        DataNode dataNode2 = dataNodes.get(1);
+        List<BaseSlotStatus> slotStatuses = Lists.newArrayList();
+        DataNodeSlot dataNodeSlot = slotTable.transfer(dataNode1.getIp(), false).get(0);
+        dataNodeSlot.getLeaders().forEach(slotId -> {
+            slotStatuses.add(new LeaderSlotStatus(slotId, slotTable.getSlot(slotId).getLeaderEpoch(),
+                    dataNode2.getIp(), BaseSlotStatus.LeaderStatus.UNHEALTHY));
+        });
+        slotTableStats.checkSlotStatuses(dataNode2, slotStatuses);
+        Assert.assertTrue(slotTableStats.isSlotLeadersStable());
+    }
+
+    @Test
+    public void testSlotTableUpdateFollowerStableData() {
+        Assert.assertFalse(slotTableStats.isSlotLeadersStable());
+        SlotTable slotTable = slotManager.getSlotTable();
+        for(DataNode dataNode : dataNodes) {
+            List<BaseSlotStatus> slotStatuses = Lists.newArrayList();
+            DataNodeSlot dataNodeSlot = slotTable.transfer(dataNode.getIp(), false).get(0);
+            dataNodeSlot.getLeaders().forEach(slotId -> {
+                slotStatuses.add(new LeaderSlotStatus(slotId, slotTable.getSlot(slotId).getLeaderEpoch(),
+                        dataNode.getIp(), BaseSlotStatus.LeaderStatus.HEALTHY));
+            });
+            slotTableStats.checkSlotStatuses(dataNode, slotStatuses);
+        }
+        Assert.assertTrue(slotTableStats.isSlotLeadersStable());
+        // now, we add some stable data, that data-server is reporting slots it does not contains
+        DataNode dataNode1 = dataNodes.get(0);
+        DataNode dataNode2 = dataNodes.get(1);
+        List<BaseSlotStatus> slotStatuses = Lists.newArrayList();
+        DataNodeSlot dataNodeSlot = slotTable.transfer(dataNode1.getIp(), false).get(0);
+        dataNodeSlot.getLeaders().forEach(slotId -> {
+            slotStatuses.add(new FollowerSlotStatus(slotId, slotTable.getSlot(slotId).getLeaderEpoch(),
+                    dataNode2.getIp(), System.currentTimeMillis(), -1L));
+        });
+        slotTableStats.checkSlotStatuses(dataNode2, slotStatuses);
+        Assert.assertTrue(slotTableStats.isSlotLeadersStable());
+    }
+
+    @Test
+    public void testSlotNotEquals() {
+        Assert.assertFalse(slotTableStats.isSlotLeadersStable());
+        SlotTable slotTable = slotManager.getSlotTable();
+        for(DataNode dataNode : dataNodes) {
+            List<BaseSlotStatus> slotStatuses = Lists.newArrayList();
+            DataNodeSlot dataNodeSlot = slotTable.transfer(dataNode.getIp(), false).get(0);
+            dataNodeSlot.getLeaders().forEach(slotId -> {
+                slotStatuses.add(new LeaderSlotStatus(slotId, slotTable.getSlot(slotId).getLeaderEpoch(),
+                        dataNode.getIp(), BaseSlotStatus.LeaderStatus.HEALTHY));
+            });
+            slotTableStats.checkSlotStatuses(dataNode, slotStatuses);
+        }
+        Assert.assertTrue(slotTableStats.isSlotLeadersStable());
+        slotManager.refresh(new SlotTableGenerator(dataNodes).setNextLeader(1).setNextFollower(2).createSlotTable());
+        Assert.assertFalse(slotTableStats.isSlotLeadersStable());
+    }
 }
