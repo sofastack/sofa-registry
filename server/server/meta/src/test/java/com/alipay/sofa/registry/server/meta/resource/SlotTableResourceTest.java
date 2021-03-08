@@ -90,17 +90,18 @@ public class SlotTableResourceTest extends AbstractTest {
     }
 
     @Test
-    public void testStartReconcile() throws StartException, InitializeException {
-        slotArranger.initialize();
+    public void testStartReconcile() throws Exception {
+        slotArranger.postConstruct();
+        slotArranger.suspend();
         resource.startSlotTableReconcile();
-        verify(slotArranger, atLeast(1)).start();
+        Assert.assertEquals("running", resource.getReconcileStatus().getMessage());
     }
 
     @Test
     public void testStopReconcile() throws Exception {
         slotArranger.postConstruct();
         resource.stopSlotTableReconcile();
-        verify(slotArranger, atLeast(1)).stop();
+        Assert.assertEquals("stopped", resource.getReconcileStatus().getMessage());
     }
 
     @Test
