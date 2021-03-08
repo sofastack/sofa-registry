@@ -113,7 +113,8 @@ public class BalanceTaskTest extends AbstractTest {
 
         SlotTable current = localSlotManager.getSlotTable();
         for (int slotId = 0; slotId < SlotConfig.SLOT_NUM; slotId++) {
-            Assert.assertTrue(prev.getSlot(slotId).getLeaderEpoch() < current.getSlot(slotId).getLeaderEpoch());
+            Assert.assertTrue(prev.getSlot(slotId).getLeaderEpoch() < current.getSlot(slotId)
+                .getLeaderEpoch());
         }
     }
 }

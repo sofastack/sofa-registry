@@ -55,18 +55,18 @@ public class DefaultSlotTableMonitor extends AbstractLifecycle implements SlotTa
                                                               Observer {
 
     @Autowired
-    private LocalSlotManager        slotManager;
+    private LocalSlotManager           slotManager;
 
     @Autowired
-    private SlotGenericResource     slotGenericResource;
+    private SlotGenericResource        slotGenericResource;
 
-    private final Map<String, Integer>    dataServerLagCounter = Maps.newConcurrentMap();
+    private final Map<String, Integer> dataServerLagCounter = Maps.newConcurrentMap();
 
-    private SlotTableStats          slotTableStats;
+    private SlotTableStats             slotTableStats;
 
-    private List<SlotTableRecorder> recorders;
+    private List<SlotTableRecorder>    recorders;
 
-    private WakeUpLoopRunnable      scheduledTask;
+    private WakeUpLoopRunnable         scheduledTask;
 
     @PostConstruct
     public void postConstruct() throws Exception {
@@ -158,7 +158,8 @@ public class DefaultSlotTableMonitor extends AbstractLifecycle implements SlotTa
             if (times > 1) {
                 logger.error("[onHeartbeatLag] data[{}] lag", heartbeat.getNode().getIp());
             }
-            PrometheusMetrics.DataSlot.setDataServerSlotLagTimes(heartbeat.getNode().getIp(), times);
+            PrometheusMetrics.DataSlot
+                .setDataServerSlotLagTimes(heartbeat.getNode().getIp(), times);
             dataServerLagCounter.put(heartbeat.getNode().getIp(), times);
             return;
         }
