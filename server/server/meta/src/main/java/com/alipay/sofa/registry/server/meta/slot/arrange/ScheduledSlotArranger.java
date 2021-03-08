@@ -113,6 +113,7 @@ public class ScheduledSlotArranger extends AbstractLifecycleObservable implement
 
     @Override
     protected void doDispose() throws DisposeException {
+        arranger.close();
         dataServerManager.removeObserver(this);
         super.doDispose();
     }
@@ -201,6 +202,10 @@ public class ScheduledSlotArranger extends AbstractLifecycleObservable implement
         @Override
         public void runUnthrowable() {
             try {
+                if (!getLifecycleState().isStarted() && !getLifecycleState().isStarting()) {
+                    logger.warn("[Arranger][runUnthrowable] not start running, quit");
+                    return;
+                }
                 arrangeSync();
             } catch (Throwable e) {
                 logger.error("failed to arrange", e);
@@ -220,14 +225,17 @@ public class ScheduledSlotArranger extends AbstractLifecycleObservable implement
             final SlotTable curSlotTable = slotManager.getSlotTable();
             SlotTableBuilder tableBuilder = createSlotTableBuilder(curSlotTable,
                 currentDataNodeIps, slotManager.getSlotNums(), slotManager.getSlotReplicaNums());
+
             if (tableBuilder.hasNoAssignedSlots()) {
                 logger.info("[re-assign][begin] assign slots to data-server");
                 assignSlots(tableBuilder, currentDataNodeIps);
                 logger.info("[re-assign][end]");
+
             } else if (slotTableMonitor.isStableTableStable()) {
                 logger.info("[balance][begin] balance slots to data-server");
                 balanceSlots(tableBuilder, currentDataNodeIps);
                 logger.info("[balance][end]");
+
             } else {
                 logger.info("[tryArrangeSlots][end] no arrangement");
             }
@@ -244,10 +252,6 @@ public class ScheduledSlotArranger extends AbstractLifecycleObservable implement
     @VisibleForTesting
     public boolean arrangeSync() {
         if (isRaftLeader()) {
-            if (!getLifecycleState().isStarted() && !getLifecycleState().isStarting()) {
-                logger.warn("[arrangeSync] not start running, quit");
-                return false;
-            }
 
             // the start arrange with the dataNodes snapshot
             final List<DataNode> dataNodes = dataServerManager.getClusterMembers();
