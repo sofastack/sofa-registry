@@ -743,7 +743,7 @@ public class AbstractTest {
         private Map<Integer, Slot> generateSlotMap() {
             Map<Integer, Slot> slotMap = Maps.newHashMap();
             for (int i = 0; i < SlotConfig.SLOT_NUM; i++) {
-                long epoch = System.currentTimeMillis();
+                long epoch = DatumVersionUtil.nextId();
                 String leader = getNextLeader().getIp();
                 List<String> followers = Lists.newArrayList();
                 for (int j = 0; j < SlotConfig.SLOT_REPLICAS - 1; j++) {
@@ -760,7 +760,7 @@ public class AbstractTest {
             int leaderIndex = Math.abs(random.nextInt()) % dataNodes.size();
             String leader = dataNodes.get(leaderIndex).getIp();
             for (int i = 0; i < SlotConfig.SLOT_NUM; i++) {
-                long epoch = System.currentTimeMillis();
+                long epoch = DatumVersionUtil.nextId();
                 List<String> followers = Lists.newArrayList();
                 for (int j = 0; j < SlotConfig.SLOT_REPLICAS - 1; j++) {
                     DataNode follower = getNextFollower();
