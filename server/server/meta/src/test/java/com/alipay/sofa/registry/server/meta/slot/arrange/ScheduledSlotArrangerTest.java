@@ -39,28 +39,27 @@ import static org.mockito.Mockito.spy;
 
 public class ScheduledSlotArrangerTest extends AbstractTest {
 
-    private ScheduledSlotArranger slotArranger;
+    private ScheduledSlotArranger    slotArranger;
 
-    private SlotTableResource slotTableResource;
+    private SlotTableResource        slotTableResource;
 
     @Mock
-    private DefaultSlotManager defaultSlotManager;
+    private DefaultSlotManager       defaultSlotManager;
 
     @Mock
     private DefaultDataServerManager dataServerManager;
 
     @Mock
-    private LocalSlotManager localSlotManager;
+    private LocalSlotManager         localSlotManager;
 
     @Mock
-    private SlotTableMonitor slotTableMonitor;
-
+    private SlotTableMonitor         slotTableMonitor;
 
     @Before
     public void beforeScheduledSlotArrangerTest() {
         MockitoAnnotations.initMocks(this);
-        slotArranger = spy(new ScheduledSlotArranger(dataServerManager,
-                localSlotManager, defaultSlotManager, slotTableMonitor));
+        slotArranger = spy(new ScheduledSlotArranger(dataServerManager, localSlotManager,
+            defaultSlotManager, slotTableMonitor));
     }
 
     @Test
@@ -96,8 +95,8 @@ public class ScheduledSlotArrangerTest extends AbstractTest {
 
     @Test
     public void testStopStartReconcile() throws Exception {
-        slotTableResource = new SlotTableResource(defaultSlotManager,
-                localSlotManager, dataServerManager, slotArranger);
+        slotTableResource = new SlotTableResource(defaultSlotManager, localSlotManager,
+            dataServerManager, slotArranger);
         slotArranger.postConstruct();
         Assert.assertEquals("running", slotTableResource.getReconcileStatus().getMessage());
 
@@ -108,18 +107,18 @@ public class ScheduledSlotArrangerTest extends AbstractTest {
         Assert.assertEquals("running", slotTableResource.getReconcileStatus().getMessage());
     }
 
-    @Ignore
-    @Test
+//    @Test
+    // TODO
     public void testLongTermStopped() throws Exception {
-        slotTableResource = new SlotTableResource(defaultSlotManager,
-                localSlotManager, dataServerManager, slotArranger);
+        slotTableResource = new SlotTableResource(defaultSlotManager, localSlotManager,
+            dataServerManager, slotArranger);
         slotArranger.postConstruct();
         Assert.assertEquals("running", slotTableResource.getReconcileStatus().getMessage());
 
         slotTableResource.stopSlotTableReconcile();
         Assert.assertEquals("stopped", slotTableResource.getReconcileStatus().getMessage());
 
-        for(int i = 0; i < 100; i++) {
+        for (int i = 0; i < 100; i++) {
             Thread.sleep(1000);
             Assert.assertEquals("stopped", slotTableResource.getReconcileStatus().getMessage());
         }

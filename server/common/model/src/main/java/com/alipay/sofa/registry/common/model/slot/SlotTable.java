@@ -21,6 +21,7 @@ import com.alipay.sofa.registry.util.JsonUtils;
 import com.alipay.sofa.registry.util.StringFormatter;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 
 import java.io.Serializable;
 import java.util.*;
@@ -134,7 +135,7 @@ public final class SlotTable implements Serializable {
     }
 
     public Set<String> getDataServers() {
-        final Set<String> servers = new HashSet<>(64);
+        final Set<String> servers = Sets.newTreeSet();
         slots.values().forEach(s -> {
             servers.add(s.getLeader());
             servers.addAll(s.getFollowers());

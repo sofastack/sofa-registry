@@ -291,12 +291,7 @@ public final class SlotDiffSyncer {
     }
 
     @VisibleForTesting
-    DataChangeEventCenter getDataChangeEventCenter() {
-        return dataChangeEventCenter;
-    }
-
-    @VisibleForTesting
-    SessionLeaseManager getSessionLeaseManager() {
-        return sessionLeaseManager;
+    DataServerConfig getDataServerConfig() {
+        return dataServerConfig;
     }
 }

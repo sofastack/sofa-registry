@@ -191,12 +191,13 @@ public final class LocalDatumStorage implements DatumStorage {
     }
 
     @Override
-    public void updateVersion(int slotId) {
+    public boolean updateVersion(int slotId) {
         PublisherGroups groups = publisherGroupsMap.get(slotId);
         if (groups == null) {
-            return;
+            return false;
         }
         groups.updateVersion();
+        return true;
     }
 
     @Override
@@ -229,6 +230,7 @@ public final class LocalDatumStorage implements DatumStorage {
         this.dataServerConfig = dataServerConfig;
     }
 
+    @VisibleForTesting
     public DataServerConfig getDataServerConfig() {
         return dataServerConfig;
     }

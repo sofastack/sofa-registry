@@ -61,7 +61,8 @@ import java.util.concurrent.locks.ReentrantLock;
  * Jan 14, 2021
  */
 public class ScheduledSlotArranger extends AbstractLifecycleObservable implements
-                                                                      DataManagerObserver, Suspendable {
+                                                                      DataManagerObserver,
+                                                                      Suspendable {
 
     @Autowired
     private DefaultDataServerManager dataServerManager;
