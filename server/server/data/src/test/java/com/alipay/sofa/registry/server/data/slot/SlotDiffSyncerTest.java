@@ -49,12 +49,19 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 public class SlotDiffSyncerTest {
-    private static final SyncContinues TRUE = new SyncContinues() {
-                                                @Override
-                                                public boolean continues() {
-                                                    return true;
-                                                }
-                                            };
+    private static final SyncContinues TRUE  = new SyncContinues() {
+                                                 @Override
+                                                 public boolean continues() {
+                                                     return true;
+                                                 }
+                                             };
+
+    private static final SyncContinues FALSE = new SyncContinues() {
+                                                 @Override
+                                                 public boolean continues() {
+                                                     return false;
+                                                 }
+                                             };
 
     @Test
     public void testPick() {
@@ -173,7 +180,14 @@ public class SlotDiffSyncerTest {
 
     @Test
     public void testSyncSession() {
-        SlotDiffSyncer syncer = newSyncer();
+        MockSync mockSync = mockSync(10, "testDc");
+        SlotDiffSyncer syncer = mockSync.syncer;
+        LocalDatumStorage storage = (LocalDatumStorage) syncer.getDatumStorage();
+        List<Publisher> p1 = mockSync.p1;
+        List<Publisher> p2 = mockSync.p2;
+        List<Publisher> p3 = mockSync.p3;
+        List<Publisher> p4 = mockSync.p4;
+
         // sync failed or empty
         SessionNodeExchanger exchanger = mockExchange(SessionNodeExchanger.class, null,
             DataSlotDiffDigestRequest.class, null, null);
@@ -187,17 +201,6 @@ public class SlotDiffSyncerTest {
             DataSlotDiffDigestRequest.class, null, null);
         Assert.assertTrue(syncer.syncSession(10, ServerEnv.IP, exchanger, 10, TRUE));
 
-        // sync success
-        LocalDatumStorage storage = (LocalDatumStorage) syncer.getDatumStorage();
-        List<Publisher> p1 = TestBaseUtils.createTestPublishers(10, 3);
-        List<Publisher> p2 = TestBaseUtils.createTestPublishers(10, 2);
-        List<Publisher> p3 = TestBaseUtils.createTestPublishers(10, 2);
-        List<Publisher> p4 = TestBaseUtils.createTestPublishers(10, 2);
-        storage.put(p1.get(0).getDataInfoId(), p1);
-        storage.put(p2.get(0).getDataInfoId(), p2);
-        storage.put(p3.get(0).getDataInfoId(), p3);
-        // empty d4
-        storage.createEmptyDatumIfAbsent(p4.get(0).getDataInfoId(), "testDc");
         // update p1.0, remove p2.0, remove p3.all, add p4
         GenericResponse digestResp = newDigestResp(
             Lists.newArrayList(p1.get(0).getDataInfoId(), p2.get(0).getDataInfoId()),
@@ -243,8 +246,68 @@ public class SlotDiffSyncerTest {
     }
 
     @Test
+    public void testSyncBreak() {
+        MockSync mockSync = mockSync(10, "testDc");
+        SlotDiffSyncer syncer = mockSync.syncer;
+        LocalDatumStorage storage = (LocalDatumStorage) syncer.getDatumStorage();
+        List<Publisher> p1 = mockSync.p1;
+        List<Publisher> p2 = mockSync.p2;
+        List<Publisher> p3 = mockSync.p3;
+        List<Publisher> p4 = mockSync.p4;
+
+        // update p1.0, remove p2.0, remove p3.all, add p4
+        GenericResponse digestResp = newDigestResp(
+            Lists.newArrayList(p1.get(0).getDataInfoId(), p2.get(0).getDataInfoId()),
+            Collections.singletonList(p4.get(0).getDataInfoId()),
+            Collections.singletonList(p3.get(0).getDataInfoId()));
+
+        Publisher p1Update = TestBaseUtils.cloneBase(p1.get(0));
+        p1Update.setVersion(p1Update.getVersion() + 1);
+        Map<String, List<Publisher>> update = Maps.newHashMap();
+        update.put(p1Update.getDataInfoId(), Collections.singletonList(p1Update));
+        update.put(p4.get(0).getDataInfoId(), p4);
+        Map<String, List<String>> remove = Maps.newHashMap();
+        remove.put(p2.get(0).getDataInfoId(), Collections.singletonList(p2.get(0).getRegisterId()));
+
+        // sync publisher,
+        GenericResponse publisherResp = newPublishResp(false, update, remove);
+        SessionNodeExchanger exchanger = mockExchange(SessionNodeExchanger.class, digestResp,
+            DataSlotDiffDigestRequest.class, publisherResp, DataSlotDiffPublisherRequest.class);
+        boolean v = syncer.syncSession(10, ServerEnv.IP, exchanger, 10, FALSE);
+        Assert.assertTrue(v);
+
+        // sync break, only remove dataInfoIds
+        Datum datum1 = storage.get(p1Update.getDataInfoId());
+        Assert.assertEquals(datum1.publisherSize(), 3);
+        Assert.assertEquals(datum1.getPubMap().get(p1.get(0).getRegisterId()), p1.get(0));
+        Assert.assertEquals(datum1.getPubMap().get(p1.get(1).getRegisterId()), p1.get(1));
+        Assert.assertEquals(datum1.getPubMap().get(p1.get(2).getRegisterId()), p1.get(2));
+
+        // p2 remains 2
+        Datum datum2 = storage.get(p2.get(0).getDataInfoId());
+        Assert.assertEquals(datum2.publisherSize(), 2);
+        Assert.assertEquals(datum2.getPubMap().get(p2.get(0).getRegisterId()), p2.get(0));
+        Assert.assertEquals(datum2.getPubMap().get(p2.get(1).getRegisterId()), p2.get(1));
+
+        // p3 remove all
+        Datum datum3 = storage.get(p3.get(0).getDataInfoId());
+        Assert.assertEquals(datum3.publisherSize(), 0);
+
+        // p4 is empty
+        Datum datum4 = storage.get(p4.get(0).getDataInfoId());
+        Assert.assertEquals(datum4.publisherSize(), 0);
+    }
+
+    @Test
     public void testSyncLeader() {
-        SlotDiffSyncer syncer = newSyncer();
+        MockSync mockSync = mockSync(10, "testDc");
+        SlotDiffSyncer syncer = mockSync.syncer;
+        LocalDatumStorage storage = (LocalDatumStorage) syncer.getDatumStorage();
+        List<Publisher> p1 = mockSync.p1;
+        List<Publisher> p2 = mockSync.p2;
+        List<Publisher> p3 = mockSync.p3;
+        List<Publisher> p4 = mockSync.p4;
+
         // sync failed or empty
         DataNodeExchanger exchanger = mockExchange(DataNodeExchanger.class, null,
             DataSlotDiffDigestRequest.class, null, null);
@@ -259,16 +322,6 @@ public class SlotDiffSyncerTest {
         Assert.assertTrue(syncer.syncSlotLeader(10, ServerEnv.IP, exchanger, 10, TRUE));
 
         // sync success
-        LocalDatumStorage storage = (LocalDatumStorage) syncer.getDatumStorage();
-        List<Publisher> p1 = TestBaseUtils.createTestPublishers(10, 3);
-        List<Publisher> p2 = TestBaseUtils.createTestPublishers(10, 2);
-        List<Publisher> p3 = TestBaseUtils.createTestPublishers(10, 2);
-        List<Publisher> p4 = TestBaseUtils.createTestPublishers(10, 2);
-        storage.put(p1.get(0).getDataInfoId(), p1);
-        storage.put(p2.get(0).getDataInfoId(), p2);
-        storage.put(p3.get(0).getDataInfoId(), p3);
-        // empty d4
-        storage.createEmptyDatumIfAbsent(p4.get(0).getDataInfoId(), "testDc");
         // update p1.0, remove p2.0, remove p3.all, add p4
         GenericResponse digestResp = newDigestResp(
             Lists.newArrayList(p1.get(0).getDataInfoId(), p2.get(0).getDataInfoId()),
@@ -335,8 +388,12 @@ public class SlotDiffSyncerTest {
         return exchanger;
     }
 
-    private static SlotDiffSyncer newSyncer() {
-        LocalDatumStorage storage = TestBaseUtils.newLocalStorage("testDc", true);
+    static SlotDiffSyncer newSyncer() {
+        return newSyncer(true);
+    }
+
+    static SlotDiffSyncer newSyncer(boolean init) {
+        LocalDatumStorage storage = TestBaseUtils.newLocalStorage("testDc", init);
         DataChangeEventCenter eventCenter = new DataChangeEventCenter();
         SessionLeaseManager sessionLeaseManager = new SessionLeaseManager();
         SlotDiffSyncer syncer = new SlotDiffSyncer(storage.getDataServerConfig(), storage,
@@ -394,5 +451,40 @@ public class SlotDiffSyncerTest {
         result.setSessionProcessId(ServerEnv.PROCESS_ID);
         resp.fillSucceed(result);
         return resp;
+    }
+
+    static final class MockSync {
+        SlotDiffSyncer  syncer;
+        List<Publisher> p1;
+        List<Publisher> p2;
+        List<Publisher> p3;
+        List<Publisher> p4;
+    }
+
+    static MockSync mockSync(int slotId, String dc, boolean init) {
+        SlotDiffSyncer syncer = newSyncer(init);
+        MockSync ms = new MockSync();
+        if (init) {
+            LocalDatumStorage storage = (LocalDatumStorage) syncer.getDatumStorage();
+            List<Publisher> p1 = TestBaseUtils.createTestPublishers(slotId, 3);
+            List<Publisher> p2 = TestBaseUtils.createTestPublishers(slotId, 2);
+            List<Publisher> p3 = TestBaseUtils.createTestPublishers(slotId, 2);
+            List<Publisher> p4 = TestBaseUtils.createTestPublishers(slotId, 2);
+            storage.put(p1.get(0).getDataInfoId(), p1);
+            storage.put(p2.get(0).getDataInfoId(), p2);
+            storage.put(p3.get(0).getDataInfoId(), p3);
+            // empty d4
+            storage.createEmptyDatumIfAbsent(p4.get(0).getDataInfoId(), dc);
+            ms.p1 = p1;
+            ms.p2 = p2;
+            ms.p3 = p3;
+            ms.p4 = p4;
+        }
+        ms.syncer = syncer;
+        return ms;
+    }
+
+    static MockSync mockSync(int slotId, String dc) {
+        return mockSync(slotId, dc, true);
     }
 }

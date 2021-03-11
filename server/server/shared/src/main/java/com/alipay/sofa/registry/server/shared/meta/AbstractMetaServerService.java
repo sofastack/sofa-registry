@@ -137,7 +137,7 @@ public abstract class AbstractMetaServerService<T extends BaseHeartBeatResponse>
             response.getSlotTable().getDataServers(), response.getSessionServerEpoch());
         this.state = s;
         LOGGER.info("update MetaStat, dataCenters={}, sessions={}/{}, datas={}", state.dataCenters,
-            s.sessionServerEpoch, s.sessionNodes.keySet(), s.dataServers);
+            s.sessionServerEpoch, s.sessionNodes.keySet(), s.dataNodes);
     }
 
     private static final class State {
@@ -147,14 +147,14 @@ public abstract class AbstractMetaServerService<T extends BaseHeartBeatResponse>
         protected final long                     sessionServerEpoch;
         protected final Set<String>              dataCenters;
         protected final Map<String, SessionNode> sessionNodes;
-        protected final Set<String>              dataServers;
+        protected final Set<String>              dataNodes;
 
         State(Set<String> dataCenters, Map<String, SessionNode> sessionNodes,
-              Set<String> dataServers, long sessionServerEpoch) {
+              Set<String> dataNodes, long sessionServerEpoch) {
             this.sessionServerEpoch = sessionServerEpoch;
-            this.dataCenters = Collections.unmodifiableSet(dataCenters);
-            this.sessionNodes = Collections.unmodifiableMap(sessionNodes);
-            this.dataServers = Collections.unmodifiableSet(dataServers);
+            this.dataCenters = Collections.unmodifiableSet(new TreeSet<>(dataCenters));
+            this.sessionNodes = Collections.unmodifiableMap(new TreeMap<>(sessionNodes));
+            this.dataNodes = Collections.unmodifiableSet(new TreeSet<>(dataNodes));
         }
     }
 
@@ -211,7 +211,7 @@ public abstract class AbstractMetaServerService<T extends BaseHeartBeatResponse>
     }
 
     public Set<String> getDataServerList() {
-        return state.dataServers;
+        return state.dataNodes;
     }
 
     public long getSessionServerEpoch() {
