@@ -81,7 +81,7 @@ public interface DatumStorage {
 
     Map<String, Integer> compact(long tombstoneTimestamp);
 
-    void updateVersion(int slotId);
+    boolean updateVersion(int slotId);
 
     DatumVersion updateVersion(String dataInfoId);
 

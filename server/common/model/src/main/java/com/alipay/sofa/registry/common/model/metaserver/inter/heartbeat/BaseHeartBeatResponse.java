@@ -19,6 +19,7 @@ package com.alipay.sofa.registry.common.model.metaserver.inter.heartbeat;
 import com.alipay.sofa.registry.common.model.metaserver.nodes.MetaNode;
 import com.alipay.sofa.registry.common.model.metaserver.nodes.SessionNode;
 import com.alipay.sofa.registry.common.model.slot.SlotTable;
+import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 
 import java.io.Serializable;
@@ -64,7 +65,7 @@ public class BaseHeartBeatResponse implements Serializable {
     }
 
     public Map<String, MetaNode> getMetaNodesMap() {
-        final Map<String, MetaNode> m = new HashMap<>(metaNodes.size());
+        final Map<String, MetaNode> m = Maps.newHashMapWithExpectedSize(metaNodes.size());
         metaNodes.forEach(s -> m.put(s.getIp(), s));
         return m;
     }
@@ -80,7 +81,7 @@ public class BaseHeartBeatResponse implements Serializable {
     }
 
     public Map<String, SessionNode> getSessionNodesMap() {
-        final Map<String, SessionNode> m = new HashMap<>(sessionNodes.size());
+        final Map<String, SessionNode> m = Maps.newHashMapWithExpectedSize(sessionNodes.size());
         sessionNodes.forEach(s -> m.put(s.getIp(), s));
         return m;
     }
