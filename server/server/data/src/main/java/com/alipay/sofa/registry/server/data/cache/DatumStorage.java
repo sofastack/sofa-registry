@@ -25,6 +25,7 @@ import com.alipay.sofa.registry.common.model.dataserver.DatumVersion;
 import com.alipay.sofa.registry.common.model.store.Publisher;
 import com.alipay.sofa.registry.server.data.slot.SlotChangeListener;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -45,7 +46,7 @@ public interface DatumStorage {
 
     DatumVersion getVersion(String dataInfoId);
 
-    Map<String, DatumVersion> getVersions(int slotId);
+    Map<String, DatumVersion> getVersions(int slotId, Collection<String> targetDatInfoIds);
 
     Map<String, Publisher> getByConnectId(ConnectId connectId);
 

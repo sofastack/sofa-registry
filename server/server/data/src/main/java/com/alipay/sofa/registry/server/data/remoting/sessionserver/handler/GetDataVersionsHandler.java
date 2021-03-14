@@ -75,8 +75,9 @@ public class GetDataVersionsHandler extends AbstractDataHandler<GetDataVersionRe
         if (!slotAccessBefore.isAccept()) {
             return SlotAccessGenericResponse.failedResponse(slotAccessBefore);
         }
+        final Map<String, DatumVersion> interests = request.getInterests();
         Map<String/*dataInfoId*/, DatumVersion> getVersions = datumCache.getVersions(dataCenter,
-            slotId);
+            slotId, interests.keySet());
         // double check slot access, @see GetDataHandler
         final SlotAccess slotAccessAfter = checkAccess(slotId, request.getSlotTableEpoch(),
             request.getSlotLeaderEpoch());
@@ -85,16 +86,17 @@ public class GetDataVersionsHandler extends AbstractDataHandler<GetDataVersionRe
                 "slotLeaderEpoch has change, prev=" + slotAccessBefore);
         }
         final boolean localDataCenter = dataServerConfig.isLocalDataCenter(dataCenter);
-        Map<String, DatumVersion> ret = Maps.newHashMapWithExpectedSize(request.getInterests()
-            .size());
-        for (Map.Entry<String, DatumVersion> e : request.getInterests().entrySet()) {
+        Map<String, DatumVersion> ret = Maps.newHashMapWithExpectedSize(interests.size());
+        for (Map.Entry<String, DatumVersion> e : interests.entrySet()) {
             final String dataInfoId = e.getKey();
             final DatumVersion interestVer = e.getValue();
             final DatumVersion currentVer = getVersions.get(dataInfoId);
             // contains the datum which is interested
             if (currentVer != null) {
-                ret.put(dataInfoId, currentVer);
-                if (interestVer.getValue() > currentVer.getValue()) {
+                if (interestVer.getValue() < currentVer.getValue()) {
+                    // need to notify session
+                    ret.put(dataInfoId, currentVer);
+                } else if (interestVer.getValue() > currentVer.getValue()) {
                     // the session.push version is bigger than datum.version. this may happens:
                     // 1. slot-1 own by data-A, balance slot-1, migrating from data-A to data-B.
                     //    this need a very short time window to broadcast the information. e.g. a heartbeat interval time
@@ -106,17 +108,20 @@ public class GetDataVersionsHandler extends AbstractDataHandler<GetDataVersionRe
                     //    bigger than current datum.version=V1, the publisher-B would not push to subscriber-A.
                     // so, we need to compare the push.version and datum.version
                     DatumVersion updateVer = datumCache.updateVersion(dataCenter, dataInfoId);
+                    ret.put(dataInfoId, updateVer);
                     LOGGER.info("updateV,{},{},{},interestVer={},currentVer={},updateVer={}",
                         slotId, dataInfoId, dataCenter, interestVer, currentVer, updateVer);
                 }
+                // if equals, do not return the version to reduce network overhead
             } else {
                 if (localDataCenter) {
                     // no datum in data node, this maybe happens an empty datum occurs migrating
                     // there is subscriber subs the dataId. we create a empty datum to trace the version
+                    // the version will trigger the push after session.scan
                     final DatumVersion v = localDatumStorage.createEmptyDatumIfAbsent(dataInfoId,
                         dataCenter);
                     if (v != null) {
-                        getVersions.put(dataInfoId, v);
+                        ret.put(dataInfoId, v);
                     }
                     LOGGER.info("createV,{},{},{},interestVer={},createV={}", slotId, dataInfoId,
                         dataCenter, interestVer, v);

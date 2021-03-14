@@ -24,9 +24,7 @@ import com.alipay.sofa.registry.server.data.bootstrap.DataServerConfig;
 import com.google.common.annotations.VisibleForTesting;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * cache of datum, providing query function to the upper module
@@ -63,9 +61,10 @@ public class DatumCache {
         return version;
     }
 
-    public Map<String, DatumVersion> getVersions(String dataCenter, int slotId) {
+    public Map<String, DatumVersion> getVersions(String dataCenter, int slotId,
+                                                 Collection<String> targetDataInfoIds) {
         //local
-        return localDatumStorage.getVersions(slotId);
+        return localDatumStorage.getVersions(slotId, targetDataInfoIds);
     }
 
     public DatumVersion updateVersion(String dataCenter, String dataInfoId) {

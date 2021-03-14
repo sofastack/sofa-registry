@@ -28,6 +28,7 @@ import com.google.common.collect.Maps;
 import org.apache.commons.collections.CollectionUtils;
 import org.glassfish.jersey.internal.guava.Sets;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -54,9 +55,19 @@ public final class PublisherGroups {
         return group == null ? null : group.getVersion();
     }
 
-    Map<String, DatumVersion> getVersions() {
-        final Map<String, DatumVersion> ret = Maps.newHashMapWithExpectedSize(publisherGroupMap.size());
-        publisherGroupMap.forEach((k, v) -> ret.put(k, v.getVersion()));
+    Map<String, DatumVersion> getVersions(Collection<String> targetDataInfoIds) {
+        if (CollectionUtils.isEmpty(targetDataInfoIds)) {
+            final Map<String, DatumVersion> ret = Maps.newHashMapWithExpectedSize(publisherGroupMap.size());
+            publisherGroupMap.forEach((k, v) -> ret.put(k, v.getVersion()));
+            return ret;
+        }
+        final Map<String, DatumVersion> ret = Maps.newHashMapWithExpectedSize(targetDataInfoIds.size());
+        for (String dataInfoId : targetDataInfoIds) {
+            PublisherGroup group = publisherGroupMap.get(dataInfoId);
+            if (group != null) {
+                ret.put(dataInfoId, group.getVersion());
+            }
+        }
         return ret;
     }
 

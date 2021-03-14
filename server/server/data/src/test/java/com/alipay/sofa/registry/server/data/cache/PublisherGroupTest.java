@@ -28,11 +28,14 @@ import com.alipay.sofa.registry.server.data.TestBaseUtils;
 import com.alipay.sofa.registry.server.shared.env.ServerEnv;
 import com.alipay.sofa.registry.util.DatumVersionUtil;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import org.junit.Assert;
 import org.junit.Test;
 
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 public class PublisherGroupTest {
     @Test
@@ -254,4 +257,60 @@ public class PublisherGroupTest {
         Assert.assertEquals(conns.size(), 1);
         Assert.assertEquals(conns.get(newer.getRegisterId()), newer);
     }
+
+    //    public static void main(String[] args) {
+    //        Map<String, DatumVersion> m = Maps.newConcurrentMap();
+    //        Set<String> set = new HashSet<>();
+    //        int C = 2000;
+    //        int T = 100;
+    //        for (int i = 0; i < C; i++) {
+    //            String k = System.currentTimeMillis() + "_dasddsadasdadadasdasagagsdafagasfasfadsdsdsadadasdasf" + i;
+    //            m.put(k, new DatumVersion(System.currentTimeMillis()));
+    //            if (i < T) {
+    //                set.add(k);
+    //            }
+    //        }
+    //
+    //        System.out.println("" + m.size() + "@" + set.size());
+    //        for (int i = 0; i < 1000000; i++) {
+    //            scan(m, set);
+    //        }
+    //
+    //        for (int i = 0; i < 1000000; i++) {
+    //            get(m, set);
+    //        }
+    //
+    //        long start = System.currentTimeMillis();
+    //        for (int i = 0; i < 1000000; i++) {
+    //            scan(m, set);
+    //        }
+    //
+    //        System.out.println("" + (System.currentTimeMillis() - start));
+    //        start = System.currentTimeMillis();
+    //        for (int i = 0; i < 1000000; i++) {
+    //            get(m, set);
+    //        }
+    //        System.out.println("" + (System.currentTimeMillis() - start));
+    //    }
+    //
+    //    static Map<String, DatumVersion> scan(Map<String, DatumVersion> m, Set<String> targets) {
+    //        Map<String, DatumVersion> ret = Maps.newHashMapWithExpectedSize(targets.size());
+    //        for (Map.Entry<String, DatumVersion> e : m.entrySet()) {
+    //            if (targets.contains(e.getKey())) {
+    //                ret.put(e.getKey(), e.getValue());
+    //            }
+    //        }
+    //        return ret;
+    //    }
+    //
+    //    static Map<String, DatumVersion> get(Map<String, DatumVersion> m, Set<String> targets) {
+    //        Map<String, DatumVersion> ret = Maps.newHashMapWithExpectedSize(targets.size());
+    //        for (String k : targets) {
+    //            DatumVersion v = m.get(k);
+    //            if (v != null) {
+    //                ret.put(k, v);
+    //            }
+    //        }
+    //        return ret;
+    //    }
 }
