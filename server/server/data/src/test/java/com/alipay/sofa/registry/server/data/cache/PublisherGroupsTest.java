@@ -73,7 +73,7 @@ public class PublisherGroupsTest {
         TestBaseUtils.assertEquals(datum, publisher);
         v = groups.getVersion(publisher.getDataInfoId());
         Assert.assertEquals(datum.getVersion(), v.getValue());
-        Map<String, DatumVersion> vers = groups.getVersions();
+        Map<String, DatumVersion> vers = groups.getVersions(null);
         Assert.assertEquals(vers.size(), 1);
         Assert.assertEquals(vers.get(publisher.getDataInfoId()), v);
         Map<String, Publisher> publisherMap = groups.getByConnectId(publisher.connectId());
@@ -114,7 +114,7 @@ public class PublisherGroupsTest {
         TestBaseUtils.assertEquals(datum, publisher2);
         v = groups.getVersion(publisher2.getDataInfoId());
         Assert.assertEquals(datum.getVersion(), v.getValue());
-        vers = groups.getVersions();
+        vers = groups.getVersions(null);
         Assert.assertEquals(vers.size(), 2);
         Assert.assertEquals(vers.get(publisher2.getDataInfoId()), v);
         publisherMap = groups.getByConnectId(publisher.connectId());
@@ -377,7 +377,7 @@ public class PublisherGroupsTest {
     private void assertEmpty(PublisherGroups groups, String dataInfoId) {
         Assert.assertNull(groups.getDatum(dataInfoId));
         Assert.assertNull(groups.getVersion(dataInfoId));
-        Assert.assertTrue(groups.getVersions().isEmpty());
+        Assert.assertTrue(groups.getVersions(null).isEmpty());
         Assert.assertTrue(groups.getAllDatum().isEmpty());
         Assert.assertTrue(groups.getAllPublisher().isEmpty());
     }

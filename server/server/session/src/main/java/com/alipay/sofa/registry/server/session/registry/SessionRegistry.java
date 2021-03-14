@@ -361,10 +361,6 @@ public class SessionRegistry implements Registry {
         SCAN_VER_LOGGER.info("[fetchSlotVer]{},{},{},interests={},gets={}", slotId, dataCenter,
             leader, interestVersions.size(), dataVersions.size());
 
-        if (CollectionUtils.isEmpty(dataVersions)) {
-            SCAN_VER_LOGGER.warn("[fetchSlotVerEmpty]{},{}", slotId, leader);
-            return;
-        }
         for (Map.Entry<String, DatumVersion> version : dataVersions.entrySet()) {
             final String dataInfoId = version.getKey();
             final long verVal = version.getValue().getValue();
@@ -372,28 +368,6 @@ public class SessionRegistry implements Registry {
                 firePushService.fireOnChange(dataCenter, dataInfoId, verVal);
                 SCAN_VER_LOGGER.info("[fetchSlotVerNotify]{},{},{},{}", slotId, dataInfoId,
                     dataCenter, verVal);
-            }
-        }
-        // to check the dataInfoId has deleted or not exist
-        for (Map.Entry<String, DatumVersion> interestVersion : interestVersions.entrySet()) {
-            if (interestVersion.getValue().getValue() <= 0) {
-                // not pushed
-                continue;
-            }
-            // the subscriber has pushed, but the not find datum in data node.
-            // it may appear in the following scenarios:
-            // 1. at a time, all publishers of the dataId deleted and the data node crash(has not push to subscriber)
-            // 2. the slot migrate, because there is no publisher of the dataId in session, the data node contains no datum(version)
-            // 3. now, the data change notify lost and get versions return null
-            // so we should push empty to subscriber with bigger datum.version, but this is a dangerous operation
-            // now just waring, not handle this case. it is very low probability
-            // TODO need push empty
-            final String pushedDataInfoId = interestVersion.getKey();
-            if (!dataVersions.containsKey(pushedDataInfoId)) {
-                // EXCEPT_MIN_VERSION means the datum maybe is null
-                // after push null datum, the pushedDataInfoId will reset
-                // the next scan round, would not trigger this
-                SCAN_VER_LOGGER.warn("[cleanPushed]{}, slotId={}", pushedDataInfoId, slotId);
             }
         }
     }

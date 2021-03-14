@@ -56,7 +56,7 @@ public class DatumCacheTest {
         Assert.assertEquals(v.getValue(), datum.getVersion());
 
         final int slotId = SlotFunctionRegistry.getFunc().slotOf(publisher.getDataInfoId());
-        Map<String, DatumVersion> versionMap = cache.getVersions("xx", slotId);
+        Map<String, DatumVersion> versionMap = cache.getVersions("xx", slotId, null);
         Assert.assertEquals(versionMap.get(publisher.getDataInfoId()).getValue(),
             datum.getVersion());
         v = cache.updateVersion("xx", publisher.getDataInfoId());
