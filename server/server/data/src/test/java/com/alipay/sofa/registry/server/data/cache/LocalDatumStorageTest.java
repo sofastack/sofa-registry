@@ -58,7 +58,7 @@ public class LocalDatumStorageTest {
         Map<String, List<Publisher>> publisherMap = storage.getAllPublisher();
         Assert.assertTrue(publisherMap.isEmpty());
 
-        Map<String, DatumVersion> versionMap = storage.getVersions(0);
+        Map<String, DatumVersion> versionMap = storage.getVersions(0, null);
         Assert.assertTrue(versionMap.isEmpty());
 
         Map<String, Map<String, Publisher>> publisherMaps = storage.getPublishers(0);
@@ -104,15 +104,15 @@ public class LocalDatumStorageTest {
         Assert.assertEquals(slotMaps.get(publisher.getDataInfoId()).get(publisher.getRegisterId()),
             publisher);
 
-        Map<String, DatumVersion> versionMap = storage.getVersions(slotId);
+        Map<String, DatumVersion> versionMap = storage.getVersions(slotId, null);
         Assert.assertEquals(versionMap.size(), 1);
         Assert.assertEquals(versionMap.get(publisher.getDataInfoId()).getValue(),
             datum.getVersion());
 
-        versionMap = storage.getVersions(slotId + 1);
+        versionMap = storage.getVersions(slotId + 1, null);
         Assert.assertEquals(versionMap.size(), 0);
 
-        versionMap = storage.getVersions(slotId - 1);
+        versionMap = storage.getVersions(slotId - 1, null);
         Assert.assertEquals(versionMap.size(), 0);
 
         Set<ProcessId> processIds = storage.getSessionProcessIds();

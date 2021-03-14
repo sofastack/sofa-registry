@@ -84,9 +84,9 @@ public final class LocalDatumStorage implements DatumStorage {
     }
 
     @Override
-    public Map<String, DatumVersion> getVersions(int slotId) {
+    public Map<String, DatumVersion> getVersions(int slotId, Collection<String> targetDataInfoIds) {
         PublisherGroups groups = getPublisherGroups(slotId);
-        return groups == null ? Collections.emptyMap() : groups.getVersions();
+        return groups == null ? Collections.emptyMap() : groups.getVersions(targetDataInfoIds);
     }
 
     @Override
