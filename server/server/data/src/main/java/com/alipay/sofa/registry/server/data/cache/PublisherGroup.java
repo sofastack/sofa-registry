@@ -87,16 +87,20 @@ public final class PublisherGroup {
         datum.setGroup(group);
         datum.setInstanceId(instanceId);
         long ver;
-        List<PublisherEnvelope> list = new ArrayList<>(pubMap.size());
+        List<Publisher> list = new ArrayList<>(pubMap.size());
         lock.readLock().lock();
         try {
             ver = this.version;
-            list.addAll(pubMap.values());
+            for (PublisherEnvelope envelope : pubMap.values()) {
+                if (envelope.isPub()) {
+                    list.add(envelope.publisher);
+                }
+            }
         } finally {
             lock.readLock().unlock();
         }
         datum.setVersion(ver);
-        list.stream().filter(PublisherEnvelope::isPub).forEach(p -> datum.addPublisher(p.publisher));
+        list.forEach(p -> datum.addPublisher(p));
         return datum;
     }
 
@@ -258,7 +262,7 @@ public final class PublisherGroup {
     DatumSummary getSummary(String sessionIpAddress) {
         Map<String/*registerId*/, RegisterVersion> publisherVersions = Maps
             .newHashMapWithExpectedSize(64);
-        for (Map.Entry<String, PublisherEnvelope> e : Maps.newHashMap(pubMap).entrySet()) {
+        for (Map.Entry<String, PublisherEnvelope> e : pubMap.entrySet()) {
             PublisherEnvelope envelope = e.getValue();
             RegisterVersion v = envelope.getVersionIfPub();
             if (v == null) {
@@ -286,7 +290,7 @@ public final class PublisherGroup {
         // compact not modify the version, no need to lock
         int count = 0;
         Map<String, PublisherEnvelope> compacts = Maps.newHashMap();
-        for (Map.Entry<String, PublisherEnvelope> e : Maps.newHashMap(pubMap).entrySet()) {
+        for (Map.Entry<String, PublisherEnvelope> e : pubMap.entrySet()) {
             final PublisherEnvelope envelope = e.getValue();
             if (!envelope.isPub() && envelope.tombstoneTimestamp <= tombstoneTimestamp) {
                 compacts.put(e.getKey(), envelope);
