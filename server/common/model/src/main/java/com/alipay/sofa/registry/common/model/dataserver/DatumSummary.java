@@ -38,7 +38,7 @@ public class DatumSummary implements Serializable {
     public DatumSummary(String dataInfoId,
                         Map<String/*registerId*/, RegisterVersion> publisherVersions) {
         this.dataInfoId = dataInfoId;
-        this.publisherVersions = Collections.unmodifiableMap(Maps.newHashMap(publisherVersions));
+        this.publisherVersions = Collections.unmodifiableMap(publisherVersions);
     }
 
     public DatumSummary(String dataInfoId) {
