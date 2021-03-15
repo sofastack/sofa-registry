@@ -210,6 +210,10 @@ public abstract class AbstractMetaServerService<T extends BaseHeartBeatResponse>
         return state.sessionNodes;
     }
 
+    public Set<String> getSessionServerList() {
+        return state.sessionNodes.keySet();
+    }
+
     public Set<String> getDataServerList() {
         return state.dataNodes;
     }

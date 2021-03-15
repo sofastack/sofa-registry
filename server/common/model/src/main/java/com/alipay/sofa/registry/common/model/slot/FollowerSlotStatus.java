@@ -34,7 +34,6 @@ public class FollowerSlotStatus extends BaseSlotStatus implements Serializable {
      *
      * @param slotId                the slot id
      * @param slotLeaderEpoch       the slot leader epoch
-     * @param role                  the role
      * @param server                the server
      * @param lastSyncTaskStartTime the last sync task start time
      * @param lastLeaderSyncTime    the last leader sync time

@@ -64,7 +64,7 @@ public class MetaServerServiceImpl extends AbstractMetaServerService<DataHeartBe
         dataNodeExchanger.setServerIps(getDataServerList());
         dataNodeExchanger.notifyConnectServerAsync();
 
-        sessionNodeExchanger.setServerIps(getSessionNodes().keySet());
+        sessionNodeExchanger.setServerIps(getSessionServerList());
         sessionNodeExchanger.notifyConnectServerAsync();
 
         slotManager.updateSlotTable(result.getSlotTable());
