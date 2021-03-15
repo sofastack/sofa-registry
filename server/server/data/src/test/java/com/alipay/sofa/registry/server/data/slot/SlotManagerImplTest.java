@@ -16,26 +16,27 @@
  */
 package com.alipay.sofa.registry.server.data.slot;
 
-import com.alipay.sofa.registry.common.model.slot.Slot;
-import com.alipay.sofa.registry.common.model.slot.SlotAccess;
-import com.alipay.sofa.registry.common.model.slot.SlotTable;
+import com.alipay.sofa.registry.common.model.slot.*;
 import com.alipay.sofa.registry.server.data.cache.LocalDatumStorage;
 import com.alipay.sofa.registry.server.data.change.DataChangeEventCenter;
 import com.alipay.sofa.registry.server.data.lease.SessionLeaseManager;
+import com.alipay.sofa.registry.server.data.remoting.metaserver.MetaServerServiceImpl;
 import com.alipay.sofa.registry.server.shared.env.ServerEnv;
 import com.alipay.sofa.registry.server.shared.resource.SlotGenericResource;
+import com.alipay.sofa.registry.task.KeyedTask;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import org.junit.Assert;
 import org.junit.Test;
+import org.mockito.Mockito;
 
-import java.util.Collections;
-import java.util.Map;
+import java.util.*;
 
 public class SlotManagerImplTest {
 
     @Test
     public void testUpdate() {
-        SlotManagerImpl sm = mock(10, false, false).slotManager;
+        SlotManagerImpl sm = mockSM(10, false, false, Collections.EMPTY_SET).slotManager;
         SlotTable slotTable = new SlotTable(1, Collections.emptyList());
         Assert.assertTrue(sm.updateSlotTable(slotTable));
         Assert.assertFalse(sm.updateSlotTable(slotTable));
@@ -59,7 +60,7 @@ public class SlotManagerImplTest {
 
     @Test
     public void testSlots() {
-        Mock mock = mock(10, false, false);
+        Mock mock = mockSM(10, false, false, Collections.EMPTY_SET);
         SlotManagerImpl sm = mock.slotManager;
         SlotTable slotTable = newTable_0_1(3, 3);
         Assert.assertTrue(sm.updateSlotTable(slotTable));
@@ -95,7 +96,7 @@ public class SlotManagerImplTest {
 
     @Test
     public void testCheckAccess() {
-        Mock mock = mock(10, false, false);
+        Mock mock = mockSM(10, false, false, Collections.EMPTY_SET);
         SlotManagerImpl sm = mock.slotManager;
         SlotTable slotTable = newTable_0_1(3, 3);
         sm.updateSlotTable(slotTable);
@@ -109,7 +110,7 @@ public class SlotManagerImplTest {
 
     @Test
     public void testCheckAccessFull() {
-        Mock mock = mock(10, false, false);
+        Mock mock = mockSM(10, false, false, Collections.EMPTY_SET);
         SlotManagerImpl sm = mock.slotManager;
         SlotAccess access = sm.checkSlotAccess(0, 100, null, 100);
         Assert.assertTrue(access.isMoved());
@@ -130,6 +131,75 @@ public class SlotManagerImplTest {
         slotState.migrated = true;
         access = sm.checkSlotAccess(0, 100, slotState, 100);
         Assert.assertTrue(access.isAccept());
+    }
+
+    @Test
+    public void testSync() throws Exception {
+        Mock mock = mockSM(10, true, true, Sets.newHashSet("xx1", "xx2"));
+        SlotManagerImpl sm = mock.slotManager;
+        Assert.assertEquals(sm.slotOf(mock.mockSync.p1.get(0).getDataInfoId()), 10);
+        SlotTable slotTable = newTable_0_1(3, 3);
+        sm.updateSlotTable(slotTable);
+        sm.processUpdating();
+        SlotManagerImpl.SlotState slotState = new SlotManagerImpl.SlotState(createLeader(0, 3));
+        slotState.migrated = false;
+        // migrating
+        KeyedTask kt = Mockito.mock(KeyedTask.class);
+        slotState.syncLeaderTask = kt;
+
+        Mockito.when(kt.isFinished()).thenReturn(false);
+        boolean sync = sm.sync(slotState, 1000, 1000, 100);
+        Assert.assertFalse(sync);
+
+        Mockito.when(kt.isFinished()).thenReturn(true);
+        sync = sm.sync(slotState, 1000, 1000, 100);
+        Assert.assertTrue(sync);
+        Assert.assertFalse(slotState.migrated);
+        Assert.assertEquals(slotState.migratingTasks.size(), 2);
+        Mockito.when(kt.isSuccess()).thenReturn(true);
+        Thread.sleep(3000);
+        for (SlotManagerImpl.MigratingTask mt : slotState.migratingTasks.values()) {
+            Assert.assertTrue(mt.task.isFailed());
+            // mock the migrate task success
+            mt.task = kt;
+        }
+        Assert.assertEquals(slotState.syncSessionTasks.size(), 0);
+
+        sync = sm.sync(slotState, 1000, 1000, 100);
+        Assert.assertTrue(sync);
+        Assert.assertTrue(slotState.migrated);
+
+        sync = sm.sync(slotState, 1000, 1000, 100);
+        Assert.assertTrue(sync);
+        Thread.sleep(2000);
+
+        sync = sm.sync(slotState, 1000, 1000, 100);
+        Assert.assertTrue(sync);
+
+        // test sync leader
+        slotState = new SlotManagerImpl.SlotState(createFollower(1, 3));
+        slotState.syncLeaderTask = kt;
+        sync = sm.sync(slotState, 1000, 1000, 100);
+        Assert.assertTrue(sync);
+        Mockito.when(kt.isOverAfter(Mockito.anyInt())).thenReturn(true);
+        sync = sm.sync(slotState, 1000, 1000, 100);
+        Assert.assertTrue(sync);
+        Assert.assertTrue(slotState.syncLeaderTask != kt);
+        Thread.sleep(2000);
+        Assert.assertTrue(slotState.syncLeaderTask.isFailed());
+
+        sm.syncWatch();
+        Thread.sleep(1000);
+        List<BaseSlotStatus> list = sm.getSlotStatuses();
+        Assert.assertTrue(list.size() == 2);
+
+        LeaderSlotStatus leaderStatus = (LeaderSlotStatus) list.get(0);
+        Assert.assertEquals(leaderStatus.getLeaderStatus(), BaseSlotStatus.LeaderStatus.UNHEALTHY);
+
+        FollowerSlotStatus followerstatus = (FollowerSlotStatus) list.get(1);
+        Assert.assertTrue(followerstatus.getLastSyncTaskStartTime() > 0);
+        Assert.assertTrue(followerstatus.getLastLeaderSyncTime() <= 0);
+
     }
 
     static void slotEquals(SlotTable table, SlotManagerImpl sm) {
@@ -163,7 +233,7 @@ public class SlotManagerImplTest {
         return slotTable;
     }
 
-    static Mock mock(int slotId, boolean initSync, boolean initExecutor) {
+    static Mock mockSM(int slotId, boolean initSync, boolean initExecutor, Set<String> sessions) {
         SlotDiffSyncerTest.MockSync mockSync = SlotDiffSyncerTest.mockSync(slotId, "testDc",
             initSync);
         SlotDiffSyncer syncer = mockSync.syncer;
@@ -173,6 +243,9 @@ public class SlotManagerImplTest {
         slotManager.setSlotGenericResource(new SlotGenericResource());
         slotManager.setLocalDatumStorage(syncer.getDatumStorage());
         slotManager.setDataServerConfig(syncer.getDataServerConfig());
+        MetaServerServiceImpl mss = Mockito.mock(MetaServerServiceImpl.class);
+        Mockito.when(mss.getSessionServerList()).thenReturn(sessions);
+        slotManager.setMetaServerService(mss);
         slotManager.initSlotChangeListener();
         if (initExecutor) {
             slotManager.initExecutors();

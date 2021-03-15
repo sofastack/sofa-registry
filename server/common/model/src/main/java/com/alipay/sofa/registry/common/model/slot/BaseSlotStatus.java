@@ -83,7 +83,7 @@ public class BaseSlotStatus implements Serializable {
         return server;
     }
 
-    public static enum LeaderStatus {
+    public enum LeaderStatus {
         INIT, HEALTHY, UNHEALTHY;
 
         /**
