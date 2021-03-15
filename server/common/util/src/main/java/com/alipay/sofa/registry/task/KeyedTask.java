@@ -42,6 +42,7 @@ public class KeyedTask<T extends Runnable> implements Runnable {
     @Override
     public void run() {
         try {
+            this.startTime = System.currentTimeMillis();
             if (!canceled) {
                 runnable.run();
             }
