@@ -409,7 +409,8 @@ public final class SlotManagerImpl implements SlotManager {
             localDatumStorage.updateVersion(slot.getId());
             slotState.migrated = true;
             final long span = System.currentTimeMillis() - slotState.migratingStartTime;
-            LOGGER.info("slotId={}, migrating finish, span={}, slot={}, sessions={}", slot.getId(), span, slot, sessions);
+            LOGGER.info("slotId={}, migrating finish, span={}, slot={}, sessions={}", slot.getId(),
+                span, slot, sessions);
             slotState.migratingTasks.clear();
             observeLeaderMigratingFinish(slot.getId());
             observeLeaderMigratingHistogram(slot.getId(), span);

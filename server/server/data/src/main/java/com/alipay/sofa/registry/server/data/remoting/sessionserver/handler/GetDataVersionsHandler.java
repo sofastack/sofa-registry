@@ -128,8 +128,8 @@ public class GetDataVersionsHandler extends AbstractDataHandler<GetDataVersionRe
                 }
             }
         }
-        LOGGER.info("getV,{},{},interests={},gets={},rets={}", slotId, dataCenter, request
-            .getInterests().size(), getVersions.size(), ret.size());
+        LOGGER.info("getV,{},{},interests={},gets={},rets={}", slotId, dataCenter, interests,
+            getVersions.size(), ret.size());
         GET_VERSION_COUNTER.inc();
         return SlotAccessGenericResponse.successResponse(slotAccessAfter, ret);
     }

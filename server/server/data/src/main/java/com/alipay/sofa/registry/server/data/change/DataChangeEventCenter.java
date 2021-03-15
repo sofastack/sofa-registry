@@ -246,12 +246,18 @@ public final class DataChangeEventCenter {
     }
 
     private void notifyTempPub(Connection connection, Datum datum) {
+        // has temp pub, need to update the datum.version, we use the cache.datum.version as push.version
+        final DatumVersion v = datumCache.updateVersion(datum.getDataCenter(),
+            datum.getDataInfoId());
+        if (v == null) {
+            LOGGER.warn("not owns the DataInfoId when temp pub,{}", datum.getDataInfoId());
+            return;
+        }
         Datum existDatum = datumCache.get(datum.getDataCenter(), datum.getDataInfoId());
         if (existDatum != null) {
             datum.addPublishers(existDatum.getPubMap());
         }
-        // TODO the version maybe confict with the existing
-        datum.updateVersion();
+        datum.setVersion(v.getValue());
         DataPushRequest request = new DataPushRequest(datum);
         LOGGER.info("temp pub, {}", datum);
         doNotify(request, connection);
