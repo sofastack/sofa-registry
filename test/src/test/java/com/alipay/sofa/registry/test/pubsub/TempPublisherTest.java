@@ -35,6 +35,7 @@ import org.springframework.test.context.junit4.SpringRunner;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
 import static com.alipay.sofa.registry.client.constants.ValueConstants.DEFAULT_GROUP;
@@ -47,6 +48,8 @@ import static org.junit.Assert.assertEquals;
  */
 @RunWith(SpringRunner.class)
 public class TempPublisherTest extends BaseIntegrationTest {
+    static AtomicInteger count = new AtomicInteger();
+
     @Test
     public synchronized void doTest() throws Exception {
         String dataId = "test-dataId-" +this.getClass().getName()+ System.currentTimeMillis();
@@ -58,6 +61,7 @@ public class TempPublisherTest extends BaseIntegrationTest {
                 (dataIdIn, data) -> {
                     dataIdRef.set(dataIdIn);
                     userDataRef.set(data);
+                    System.out.println(count.getAndIncrement()+"-@@@:"+dataIdIn+":"+data);
                 });
 
         subReg.setScopeEnum(ScopeEnum.zone);
