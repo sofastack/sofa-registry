@@ -191,6 +191,15 @@ public final class LocalDatumStorage implements DatumStorage {
     }
 
     @Override
+    public int tombstoneNum() {
+        int count = 0;
+        for (PublisherGroups groups : publisherGroupsMap.values()) {
+            count += groups.tombstoneNum();
+        }
+        return count;
+    }
+
+    @Override
     public boolean updateVersion(int slotId) {
         PublisherGroups groups = publisherGroupsMap.get(slotId);
         if (groups == null) {

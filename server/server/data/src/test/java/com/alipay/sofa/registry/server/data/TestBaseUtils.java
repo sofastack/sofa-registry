@@ -138,14 +138,6 @@ public final class TestBaseUtils {
         return new DatumSummary(dataInfoId, versions);
     }
 
-    public static List<Publisher> createTestPublishers(String dataId, int count) {
-        List<Publisher> list = Lists.newArrayListWithCapacity(count);
-        for (int i = 0; i < count; i++) {
-            list.add(createTestPublisher(dataId));
-        }
-        return list;
-    }
-
     public static List<Publisher> createTestPublishers(int slotId, int count) {
         List<Publisher> list = Lists.newArrayListWithCapacity(count);
         for (int i = 0; i < Integer.MAX_VALUE; i++) {
