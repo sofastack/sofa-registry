@@ -89,7 +89,7 @@ public class CacheDigestTask {
                         LOGGER.info("[Datum]{},{},{},[{}]", dataInfoId,
                                 data.getVersion(), dataCenter, pubStr.toString());
                         // avoid io is busy
-                        ConcurrentUtils.sleepUninterruptibly(5, TimeUnit.MILLISECONDS);
+                        ConcurrentUtils.sleepUninterruptibly(2, TimeUnit.MILLISECONDS);
                     }
                     int pubCount = datumMap.values().stream().mapToInt(Datum::publisherSize).sum();
                     LOGGER.info("size of publisher in {} is {}", dataCenter, pubCount);

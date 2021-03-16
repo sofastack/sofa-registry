@@ -90,7 +90,7 @@ public class SessionCacheDigestTask {
                         publishers.size(), subscribers.size(),
                         logPubOrSub(publishers), logPubOrSub(subscribers));
                 // avoid io is too busy
-                ConcurrentUtils.sleepUninterruptibly(20, TimeUnit.MILLISECONDS);
+                ConcurrentUtils.sleepUninterruptibly(2, TimeUnit.MILLISECONDS);
             });
 
         } catch (Throwable t) {
