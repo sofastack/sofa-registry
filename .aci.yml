@@ -17,11 +17,15 @@ STC扫描:
   checkRule:
     - stc = 0
 
+# see https://yuque.antfin.com/linke/help/kg1p34#pBvc2
 单元测试:
   stage: 测试
   plugin: LINKQ-UT         # java单元测试插件
   checkRule:
     - passRate = 100
+  parameters:
+    encoding: UTF-8 # 编码设置
+    COVERAGE_EXCLUSIONS: '**/bootstrap/**,**/integration/**,**/client/pb/**' # 覆盖率排除
   pluginConfig:
     markdown: admin/result.md # 向页面输出一些自定义内容
 

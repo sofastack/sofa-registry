@@ -47,16 +47,16 @@ public class SessionServerConnectionFactory {
 
     private final Map<String, Channels> session2Connections = new ConcurrentHashMap<>();
 
-    public void registerSession(ProcessId processId, Channel channel) {
+    public boolean registerSession(ProcessId processId, Channel channel) {
         if (channel == null) {
             LOGGER.warn("registerSession with null channel, {}", processId);
-            return;
+            return false;
         }
         final InetSocketAddress remoteAddress = channel.getRemoteAddress();
         final Connection conn = ((BoltChannel) channel).getConnection();
         if (remoteAddress == null || conn == null) {
             LOGGER.warn("registerSession with null channel.connection, {}", processId);
-            return;
+            return false;
         }
 
         Channels channels = session2Connections
@@ -65,7 +65,7 @@ public class SessionServerConnectionFactory {
         if (exist != null) {
             if (exist.o1.equals(processId)) {
                 // the same
-                return;
+                return false;
             }
             LOGGER.warn("registerSession channel {} has conflict processId, exist={}, register={}",
                     channel, exist.o1, processId);
@@ -76,12 +76,13 @@ public class SessionServerConnectionFactory {
         synchronized (this) {
             if (!channel.isConnected()) {
                 LOGGER.warn("registerSession with unconnected channel, {}, {}", processId, remoteAddress);
-                return;
+                return false;
             }
             channels.channels.put(remoteAddress, new Tuple<>(processId, conn));
         }
 
         LOGGER.info("registerSession {}, processId={}, channelSize={}", channel, processId, channels.channels.size());
+        return true;
     }
 
     /**
