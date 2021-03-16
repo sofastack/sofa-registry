@@ -22,12 +22,13 @@ import com.alipay.sofa.registry.core.model.AppRevisionInterface;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.store.api.repository.InterfaceAppsRepository;
+import org.glassfish.jersey.jaxb.internal.XmlJaxbElementProvider;
+
 import java.util.Collection;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- *
  * @author xiaojian.xj
  * @version $Id: InterfaceAppsRaftRepository.java, v 0.1 2021年01月24日 19:44 xiaojian.xj Exp $
  */
@@ -58,10 +59,9 @@ public class InterfaceAppsRaftRepository implements InterfaceAppsRepository, Raf
             return;
         }
 
-        Collection<AppRevisionInterface> values = rev.getInterfaceMap().values();
-        for (AppRevisionInterface inf : values) {
-            InterfaceMapping interfaceMapping = interfaceApps.computeIfAbsent(inf.getDataInfoId(),
-                    k -> new InterfaceMapping(-1));
+        for (Map.Entry<String, AppRevisionInterface> entry : rev.getInterfaceMap().entrySet()) {
+            String serviceId = entry.getKey();
+            InterfaceMapping interfaceMapping = interfaceApps.computeIfAbsent(serviceId, k -> new InterfaceMapping(-1));
             interfaceMapping.getApps().add(rev.getAppName());
         }
 
