@@ -27,7 +27,6 @@ import java.util.Map.Entry;
 import java.util.Optional;
 
 /**
- *
  * @author xiaojian.xj
  * @version $Id: MetaServiceConvertor.java, v 0.1 2021年02月04日 22:27 xiaojian.xj Exp $
  */
@@ -37,7 +36,6 @@ public class MetaServiceConvertor {
 
         MetaService.Builder serviceBuilder = MetaService.newBuilder();
         serviceBuilder.setId(service.getId());
-        serviceBuilder.setServiceId(service.getDataInfoId());
 
         for (Entry<String, List<String>> entry : Optional.ofNullable(service.getServiceParams())
             .orElse(new HashMap<>()).entrySet()) {
@@ -52,7 +50,6 @@ public class MetaServiceConvertor {
 
         AppRevisionInterface appRevisionInterface = new AppRevisionInterface();
         appRevisionInterface.setId(metaService.getId());
-        appRevisionInterface.setDataInfoId(metaService.getServiceId());
         Map<String, List<String>> serviceParams = new HashMap<>();
         for (Entry<String, StringList> paramEntry : Optional.ofNullable(metaService.getParamsMap())
             .orElse(new HashMap<>()).entrySet()) {

@@ -25,8 +25,6 @@ public class AppRevisionInterface implements Serializable {
 
     private String                    id;
 
-    private String                    dataInfoId;
-
     private Map<String, List<String>> serviceParams = new HashMap<String, List<String>>();
 
     /**
@@ -45,24 +43,6 @@ public class AppRevisionInterface implements Serializable {
      */
     public void setId(String id) {
         this.id = id;
-    }
-
-    /**
-     * Getter method for property <tt>dataInfoId</tt>.
-     *
-     * @return property value of dataInfoId
-     */
-    public String getDataInfoId() {
-        return dataInfoId;
-    }
-
-    /**
-     * Setter method for property <tt>dataInfoId</tt>.
-     *
-     * @param dataInfoId value to be assigned to property dataInfoId
-     */
-    public void setDataInfoId(String dataInfoId) {
-        this.dataInfoId = dataInfoId;
     }
 
     /**

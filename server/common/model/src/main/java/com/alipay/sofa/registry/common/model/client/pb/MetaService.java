@@ -34,7 +34,6 @@ public final class MetaService extends com.google.protobuf.GeneratedMessageV3 im
 
     private MetaService() {
         id_ = "";
-        serviceId_ = "";
     }
 
     @java.lang.Override
@@ -72,17 +71,11 @@ public final class MetaService extends com.google.protobuf.GeneratedMessageV3 im
                         id_ = s;
                         break;
                     }
-                    case 18: {
-                        java.lang.String s = input.readStringRequireUtf8();
-
-                        serviceId_ = s;
-                        break;
-                    }
                     case 26: {
-                        if (!((mutable_bitField0_ & 0x00000004) == 0x00000004)) {
+                        if (!((mutable_bitField0_ & 0x00000002) == 0x00000002)) {
                             params_ = com.google.protobuf.MapField
                                 .newMapField(ParamsDefaultEntryHolder.defaultEntry);
-                            mutable_bitField0_ |= 0x00000004;
+                            mutable_bitField0_ |= 0x00000002;
                         }
                         com.google.protobuf.MapEntry<java.lang.String, com.alipay.sofa.registry.common.model.client.pb.StringList> params__ = input
                             .readMessage(ParamsDefaultEntryHolder.defaultEntry.getParserForType(),
@@ -152,39 +145,6 @@ public final class MetaService extends com.google.protobuf.GeneratedMessageV3 im
             com.google.protobuf.ByteString b = com.google.protobuf.ByteString
                 .copyFromUtf8((java.lang.String) ref);
             id_ = b;
-            return b;
-        } else {
-            return (com.google.protobuf.ByteString) ref;
-        }
-    }
-
-    public static final int           SERVICEID_FIELD_NUMBER = 2;
-    private volatile java.lang.Object serviceId_;
-
-    /**
-     * <code>string serviceId = 2;</code>
-     */
-    public java.lang.String getServiceId() {
-        java.lang.Object ref = serviceId_;
-        if (ref instanceof java.lang.String) {
-            return (java.lang.String) ref;
-        } else {
-            com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
-            java.lang.String s = bs.toStringUtf8();
-            serviceId_ = s;
-            return s;
-        }
-    }
-
-    /**
-     * <code>string serviceId = 2;</code>
-     */
-    public com.google.protobuf.ByteString getServiceIdBytes() {
-        java.lang.Object ref = serviceId_;
-        if (ref instanceof java.lang.String) {
-            com.google.protobuf.ByteString b = com.google.protobuf.ByteString
-                .copyFromUtf8((java.lang.String) ref);
-            serviceId_ = b;
             return b;
         } else {
             return (com.google.protobuf.ByteString) ref;
@@ -292,9 +252,6 @@ public final class MetaService extends com.google.protobuf.GeneratedMessageV3 im
         if (!getIdBytes().isEmpty()) {
             com.google.protobuf.GeneratedMessageV3.writeString(output, 1, id_);
         }
-        if (!getServiceIdBytes().isEmpty()) {
-            com.google.protobuf.GeneratedMessageV3.writeString(output, 2, serviceId_);
-        }
         com.google.protobuf.GeneratedMessageV3.serializeStringMapTo(output, internalGetParams(),
             ParamsDefaultEntryHolder.defaultEntry, 3);
         unknownFields.writeTo(output);
@@ -308,9 +265,6 @@ public final class MetaService extends com.google.protobuf.GeneratedMessageV3 im
         size = 0;
         if (!getIdBytes().isEmpty()) {
             size += com.google.protobuf.GeneratedMessageV3.computeStringSize(1, id_);
-        }
-        if (!getServiceIdBytes().isEmpty()) {
-            size += com.google.protobuf.GeneratedMessageV3.computeStringSize(2, serviceId_);
         }
         for (java.util.Map.Entry<java.lang.String, com.alipay.sofa.registry.common.model.client.pb.StringList> entry : internalGetParams()
             .getMap().entrySet()) {
@@ -335,7 +289,6 @@ public final class MetaService extends com.google.protobuf.GeneratedMessageV3 im
 
         boolean result = true;
         result = result && getId().equals(other.getId());
-        result = result && getServiceId().equals(other.getServiceId());
         result = result && internalGetParams().equals(other.internalGetParams());
         result = result && unknownFields.equals(other.unknownFields);
         return result;
@@ -350,8 +303,6 @@ public final class MetaService extends com.google.protobuf.GeneratedMessageV3 im
         hash = (19 * hash) + getDescriptor().hashCode();
         hash = (37 * hash) + ID_FIELD_NUMBER;
         hash = (53 * hash) + getId().hashCode();
-        hash = (37 * hash) + SERVICEID_FIELD_NUMBER;
-        hash = (53 * hash) + getServiceId().hashCode();
         if (!internalGetParams().getMap().isEmpty()) {
             hash = (37 * hash) + PARAMS_FIELD_NUMBER;
             hash = (53 * hash) + internalGetParams().hashCode();
@@ -510,8 +461,6 @@ public final class MetaService extends com.google.protobuf.GeneratedMessageV3 im
             super.clear();
             id_ = "";
 
-            serviceId_ = "";
-
             internalGetMutableParams().clear();
             return this;
         }
@@ -538,7 +487,6 @@ public final class MetaService extends com.google.protobuf.GeneratedMessageV3 im
             int from_bitField0_ = bitField0_;
             int to_bitField0_ = 0;
             result.id_ = id_;
-            result.serviceId_ = serviceId_;
             result.params_ = internalGetParams();
             result.params_.makeImmutable();
             result.bitField0_ = to_bitField0_;
@@ -588,10 +536,6 @@ public final class MetaService extends com.google.protobuf.GeneratedMessageV3 im
                 return this;
             if (!other.getId().isEmpty()) {
                 id_ = other.id_;
-                onChanged();
-            }
-            if (!other.getServiceId().isEmpty()) {
-                serviceId_ = other.serviceId_;
                 onChanged();
             }
             internalGetMutableParams().mergeFrom(other.internalGetParams());
@@ -689,75 +633,6 @@ public final class MetaService extends com.google.protobuf.GeneratedMessageV3 im
             checkByteStringIsUtf8(value);
 
             id_ = value;
-            onChanged();
-            return this;
-        }
-
-        private java.lang.Object serviceId_ = "";
-
-        /**
-         * <code>string serviceId = 2;</code>
-         */
-        public java.lang.String getServiceId() {
-            java.lang.Object ref = serviceId_;
-            if (!(ref instanceof java.lang.String)) {
-                com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
-                java.lang.String s = bs.toStringUtf8();
-                serviceId_ = s;
-                return s;
-            } else {
-                return (java.lang.String) ref;
-            }
-        }
-
-        /**
-         * <code>string serviceId = 2;</code>
-         */
-        public com.google.protobuf.ByteString getServiceIdBytes() {
-            java.lang.Object ref = serviceId_;
-            if (ref instanceof String) {
-                com.google.protobuf.ByteString b = com.google.protobuf.ByteString
-                    .copyFromUtf8((java.lang.String) ref);
-                serviceId_ = b;
-                return b;
-            } else {
-                return (com.google.protobuf.ByteString) ref;
-            }
-        }
-
-        /**
-         * <code>string serviceId = 2;</code>
-         */
-        public Builder setServiceId(java.lang.String value) {
-            if (value == null) {
-                throw new NullPointerException();
-            }
-
-            serviceId_ = value;
-            onChanged();
-            return this;
-        }
-
-        /**
-         * <code>string serviceId = 2;</code>
-         */
-        public Builder clearServiceId() {
-
-            serviceId_ = getDefaultInstance().getServiceId();
-            onChanged();
-            return this;
-        }
-
-        /**
-         * <code>string serviceId = 2;</code>
-         */
-        public Builder setServiceIdBytes(com.google.protobuf.ByteString value) {
-            if (value == null) {
-                throw new NullPointerException();
-            }
-            checkByteStringIsUtf8(value);
-
-            serviceId_ = value;
             onChanged();
             return this;
         }

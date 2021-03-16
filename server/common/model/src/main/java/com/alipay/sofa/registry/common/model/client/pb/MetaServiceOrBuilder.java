@@ -34,16 +34,6 @@ public interface MetaServiceOrBuilder extends
     com.google.protobuf.ByteString getIdBytes();
 
     /**
-     * <code>string serviceId = 2;</code>
-     */
-    java.lang.String getServiceId();
-
-    /**
-     * <code>string serviceId = 2;</code>
-     */
-    com.google.protobuf.ByteString getServiceIdBytes();
-
-    /**
      * <code>map&lt;string, .StringList&gt; params = 3;</code>
      */
     int getParamsCount();

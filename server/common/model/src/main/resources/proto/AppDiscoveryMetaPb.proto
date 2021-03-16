@@ -14,7 +14,6 @@ message MetaRegister {
 
 message MetaService{
   string id = 1;
-  string serviceId = 2;
   map<string, StringList> params = 3;
 }
 
