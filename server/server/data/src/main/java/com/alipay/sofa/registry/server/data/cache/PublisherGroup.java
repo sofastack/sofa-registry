@@ -305,6 +305,16 @@ public final class PublisherGroup {
         return count;
     }
 
+    int tombstoneNum() {
+        int count = 0;
+        for (PublisherEnvelope envelope : pubMap.values()) {
+            if (!envelope.isPub()) {
+                count++;
+            }
+        }
+        return count;
+    }
+
     @Override
     public String toString() {
         return StringFormatter.format("PubGroup{{},size={},ver={}}", dataInfoId, pubMap.size(),

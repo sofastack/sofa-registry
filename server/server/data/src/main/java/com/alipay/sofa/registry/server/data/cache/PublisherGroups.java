@@ -157,6 +157,14 @@ public final class PublisherGroups {
         return compacts;
     }
 
+    int tombstoneNum() {
+        int count = 0;
+        for (PublisherGroup group : publisherGroupMap.values()) {
+            count += group.tombstoneNum();
+        }
+        return count;
+    }
+
     void updateVersion() {
         publisherGroupMap.values().forEach(g -> g.updateVersion());
     }

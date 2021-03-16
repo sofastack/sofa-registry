@@ -26,6 +26,7 @@ import com.alipay.sofa.registry.server.data.cache.DatumStorage;
 import com.alipay.sofa.registry.server.data.remoting.sessionserver.SessionServerConnectionFactory;
 import com.alipay.sofa.registry.util.ConcurrentUtils;
 import com.alipay.sofa.registry.util.LoopRunnable;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -46,7 +47,7 @@ public final class SessionLeaseManager {
     private static final Logger            COMPACT_LOGGER             = LoggerFactory
                                                                           .getLogger("COMPACT");
 
-    public static final int                MIN_LEASE_SEC              = 5;
+    private static final int               MIN_LEASE_SEC              = 5;
 
     @Autowired
     private DataServerConfig               dataServerConfig;
@@ -75,39 +76,43 @@ public final class SessionLeaseManager {
         connectIdRenewTimestampMap.put(sessionProcessId, System.currentTimeMillis());
     }
 
-    public Map<ProcessId, Date> getExpireProcessId(int leaseMs) {
+    boolean contains(ProcessId sessionProcessId) {
+        return connectIdRenewTimestampMap.containsKey(sessionProcessId);
+    }
+
+    private Map<ProcessId, Date> getExpireProcessId(int leaseMs) {
         Map<ProcessId, Date> expires = Maps.newHashMap();
         final long lastRenew = System.currentTimeMillis() - leaseMs;
-        connectIdRenewTimestampMap.forEach((k, v) -> {
-            if (v < lastRenew) {
-                expires.put(k, new Date(v));
+        for (Map.Entry<ProcessId, Long> e : connectIdRenewTimestampMap.entrySet()) {
+            if (e.getValue() < lastRenew) {
+                expires.put(e.getKey(), new Date(e.getValue()));
             }
-        });
+        }
         return expires;
     }
 
     private List<ProcessId> cleanExpire(Collection<ProcessId> expires) {
         List<ProcessId> cleans = Lists.newArrayList();
-        expires.forEach(p -> {
+        for (ProcessId p : expires) {
             if (sessionServerConnectionFactory.containsConnection(p)) {
                 LOGGER.warn("expire session has conn, {}", p);
-                return;
+                continue;
             }
             connectIdRenewTimestampMap.remove(p);
             cleans.add(p);
-        });
+        }
         return cleans;
     }
 
     private void cleanStorage() {
         // make sure the existing processId be clean
         Set<ProcessId> stores = localDatumStorage.getSessionProcessIds();
-        stores.forEach(p -> {
+        for (ProcessId p : stores) {
             if (!connectIdRenewTimestampMap.containsKey(p)) {
                 Map<String, DatumVersion> versionMap = localDatumStorage.clean(p);
                 LOGGER.info("expire session correct, {}, datums={}", p, versionMap.size());
             }
-        });
+        }
     }
 
     private void renewByConnection() {
@@ -117,28 +122,46 @@ public final class SessionLeaseManager {
     private final class LeaseCleaner extends LoopRunnable {
         @Override
         public void runUnthrowable() {
-            renewByConnection();
-            Map<ProcessId, Date> expires = getExpireProcessId(dataServerConfig
-                .getSessionLeaseSecs() * 1000);
-            LOGGER.info("lease expire sessions, {}", expires);
-
-            if (!expires.isEmpty()) {
-                List<ProcessId> cleans = cleanExpire(expires.keySet());
-                LOGGER.info("expire sessions clean, {}", cleans);
-            }
-
-            cleanStorage();
-
-            // compact the unpub
-            long tombstoneTimestamp = System.currentTimeMillis()
-                                      - dataServerConfig.getDatumCompactDelaySecs() * 1000;
-            Map<String, Integer> compacted = localDatumStorage.compact(tombstoneTimestamp);
-            COMPACT_LOGGER.info("compact datum, {}", compacted);
+            clean();
         }
 
         @Override
         public void waitingUnthrowable() {
             ConcurrentUtils.sleepUninterruptibly(1, TimeUnit.SECONDS);
         }
+    }
+
+    void clean() {
+        renewByConnection();
+        Map<ProcessId, Date> expires = getExpireProcessId(dataServerConfig.getSessionLeaseSecs() * 1000);
+        LOGGER.info("lease expire sessions, {}", expires);
+
+        if (!expires.isEmpty()) {
+            List<ProcessId> cleans = cleanExpire(expires.keySet());
+            LOGGER.info("expire sessions clean, {}", cleans);
+        }
+
+        cleanStorage();
+
+        // compact the unpub
+        long tombstoneTimestamp = System.currentTimeMillis()
+                                  - dataServerConfig.getDatumCompactDelaySecs() * 1000;
+        Map<String, Integer> compacted = localDatumStorage.compact(tombstoneTimestamp);
+        COMPACT_LOGGER.info("compact datum, {}", compacted);
+    }
+
+    @VisibleForTesting
+    void setDataServerConfig(DataServerConfig dataServerConfig) {
+        this.dataServerConfig = dataServerConfig;
+    }
+
+    @VisibleForTesting
+    void setLocalDatumStorage(DatumStorage localDatumStorage) {
+        this.localDatumStorage = localDatumStorage;
+    }
+
+    @VisibleForTesting
+    void setSessionServerConnectionFactory(SessionServerConnectionFactory sessionServerConnectionFactory) {
+        this.sessionServerConnectionFactory = sessionServerConnectionFactory;
     }
 }

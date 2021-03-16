@@ -293,7 +293,9 @@ public class PublisherGroupsTest {
         Assert.assertTrue(publishers.get(publisher2.getDataInfoId()).contains(publisher2));
         Assert.assertEquals(publishers.get(publisher3.getDataInfoId()).size(), 0);
 
+        Assert.assertEquals(groups.tombstoneNum(), 1);
         Map<String, Integer> compacts = groups.compact(Long.MAX_VALUE);
+        Assert.assertEquals(groups.tombstoneNum(), 0);
         Assert.assertEquals(compacts.size(), 1);
         Assert.assertEquals(compacts.get(publisher1.getDataInfoId()).intValue(), 1);
 

@@ -33,13 +33,24 @@ import java.net.SocketAddress;
 public class SessionServerConnectionFactoryTest {
 
     @Test
+    public void testIllegal() {
+        SessionServerConnectionFactory factory = new SessionServerConnectionFactory();
+        Assert.assertFalse(factory.registerSession(ServerEnv.PROCESS_ID, null));
+        Assert.assertFalse(factory.registerSession(ServerEnv.PROCESS_ID, new BoltChannel()));
+        MockBlotChannel channel1 = new MockBlotChannel("66.66.66.66", 5550);
+        channel1.connected = false;
+        Assert.assertFalse(factory.registerSession(ServerEnv.PROCESS_ID, channel1));
+    }
+
+    @Test
     public void testConnection() throws Exception {
         SessionServerConnectionFactory factory = new SessionServerConnectionFactory();
         final String IP1 = "66.66.66.66";
         final String IP2 = "66.66.66.65";
 
         MockBlotChannel channel1 = new MockBlotChannel(IP1, 5550);
-        factory.registerSession(ServerEnv.PROCESS_ID, channel1);
+        Assert.assertTrue(factory.registerSession(ServerEnv.PROCESS_ID, channel1));
+        Assert.assertFalse(factory.registerSession(ServerEnv.PROCESS_ID, channel1));
 
         Assert.assertTrue(factory.containsConnection(ServerEnv.PROCESS_ID));
         Assert.assertEquals(1, factory.getSessionConnections().size());
@@ -86,13 +97,13 @@ public class SessionServerConnectionFactoryTest {
         Assert.assertEquals(0, factory.getAllSessionConnections().get(IP2).size());
     }
 
-    private static final class MockBlotChannel extends BoltChannel {
+    public static final class MockBlotChannel extends BoltChannel {
         final InetSocketAddress remote;
         final InetSocketAddress local     = new InetSocketAddress(ServerEnv.IP, 9602);
         boolean                 connected = true;
         final Connection        conn      = new Connection(new MockNettyChannel());
 
-        MockBlotChannel(String remoteAddress, int remotePort) {
+        public MockBlotChannel(String remoteAddress, int remotePort) {
             this.remote = new InetSocketAddress(remoteAddress, remotePort);
         }
 
