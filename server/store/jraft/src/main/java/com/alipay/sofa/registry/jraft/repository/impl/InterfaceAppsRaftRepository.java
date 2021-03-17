@@ -22,9 +22,7 @@ import com.alipay.sofa.registry.core.model.AppRevisionInterface;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.store.api.repository.InterfaceAppsRepository;
-import org.glassfish.jersey.jaxb.internal.XmlJaxbElementProvider;
 
-import java.util.Collection;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
