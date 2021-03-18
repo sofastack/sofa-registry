@@ -27,6 +27,7 @@ import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.server.meta.bootstrap.config.NodeConfig;
 import com.alipay.sofa.registry.server.meta.provide.data.DefaultProvideDataNotifier;
+import com.alipay.sofa.registry.server.meta.resource.filter.LeaderAwareRestController;
 import com.alipay.sofa.registry.store.api.meta.ProvideDataRepository;
 import com.alipay.sofa.registry.util.JsonUtils;
 import com.google.common.collect.Sets;
@@ -44,6 +45,7 @@ import java.util.Set;
  * @version $Id: StopPushDataResource.java, v 0.1 2018-07-25 11:40 shangyu.wh Exp $
  */
 @Path("stopPushDataSwitch")
+@LeaderAwareRestController
 public class StopPushDataResource {
 
     private static final Logger        DB_LOGGER   = LoggerFactory.getLogger(

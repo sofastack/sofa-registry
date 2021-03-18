@@ -109,7 +109,7 @@ public abstract class AbstractLeaderElector implements LeaderElector {
      */
     @Override
     public boolean amILeader() {
-        return StringUtil.equals(myself(), leaderInfo.leader)
+        return leaderInfo != null && StringUtil.equals(myself(), leaderInfo.leader)
                 && System.currentTimeMillis() < leaderInfo.expireTimestamp;
     }
 

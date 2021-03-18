@@ -24,6 +24,7 @@ import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.metrics.ReporterUtils;
 import com.alipay.sofa.registry.server.meta.bootstrap.config.NodeConfig;
 import com.alipay.sofa.registry.server.meta.metaserver.impl.DefaultMetaServerManager;
+import com.alipay.sofa.registry.server.meta.resource.filter.LeaderAwareRestController;
 import com.alipay.sofa.registry.store.api.DBResponse;
 import com.alipay.sofa.registry.store.api.OperationStatus;
 import com.alipay.sofa.registry.store.api.meta.ProvideDataRepository;
@@ -47,6 +48,7 @@ import java.util.Map;
  * @version $Id: MetaDigestResource.java, v 0.1 2018-06-25 21:13 shangyu.wh Exp $
  */
 @Path("digest")
+@LeaderAwareRestController
 public class MetaDigestResource {
 
     private static final Logger      TASK_LOGGER = LoggerFactory.getLogger(
