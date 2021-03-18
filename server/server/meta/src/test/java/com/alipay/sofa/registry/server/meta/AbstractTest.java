@@ -69,6 +69,7 @@ public class AbstractTest {
     @BeforeClass
     public static void beforeAbstractTestClass() {
         System.setProperty("spring.main.show_banner", "false");
+        System.setProperty("spring.profiles.active", "test");
     }
 
     @Before

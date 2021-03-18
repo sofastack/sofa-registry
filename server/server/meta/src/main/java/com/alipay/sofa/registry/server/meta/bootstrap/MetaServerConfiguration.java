@@ -25,6 +25,7 @@ import com.alipay.sofa.registry.server.meta.bootstrap.config.MetaServerConfigBea
 import com.alipay.sofa.registry.server.meta.bootstrap.config.NodeConfig;
 import com.alipay.sofa.registry.server.meta.bootstrap.config.NodeConfigBeanProperty;
 import com.alipay.sofa.registry.server.meta.resource.*;
+import com.alipay.sofa.registry.server.meta.resource.filter.LeaderAwareFilter;
 import com.alipay.sofa.registry.server.shared.resource.MetricsResource;
 import com.alipay.sofa.registry.server.shared.resource.SlotGenericResource;
 import com.alipay.sofa.registry.store.api.driver.RepositoryConfig;
@@ -124,6 +125,11 @@ public class MetaServerConfiguration {
             ResourceConfig resourceConfig = new ResourceConfig();
             resourceConfig.register(JacksonFeature.class);
             return resourceConfig;
+        }
+
+        @Bean
+        public LeaderAwareFilter leaderAwareFilter() {
+            return new LeaderAwareFilter();
         }
 
         @Bean

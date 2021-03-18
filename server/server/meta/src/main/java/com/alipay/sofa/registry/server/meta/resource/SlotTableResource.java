@@ -23,6 +23,7 @@ import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.server.meta.MetaLeaderService;
 import com.alipay.sofa.registry.server.meta.lease.data.DataServerManager;
+import com.alipay.sofa.registry.server.meta.resource.filter.LeaderAwareRestController;
 import com.alipay.sofa.registry.server.meta.slot.SlotManager;
 import com.alipay.sofa.registry.server.meta.slot.arrange.ScheduledSlotArranger;
 import com.alipay.sofa.registry.server.meta.slot.tasks.BalanceTask;
@@ -59,6 +60,7 @@ public class SlotTableResource {
     @PUT
     @Path("force/refresh")
     @Produces(MediaType.APPLICATION_JSON)
+    @LeaderAwareRestController
     public GenericResponse<SlotTable> forceRefreshSlotTable() {
         logger.info("[forceRefreshSlotTable] begin");
         if (metaLeaderService.amILeader()) {
@@ -135,6 +137,7 @@ public class SlotTableResource {
     @GET
     @Path("/data/slot/status")
     @Produces(MediaType.APPLICATION_JSON)
+    @LeaderAwareRestController
     public GenericResponse<Object> getDataSlotStatuses() {
         logger.info("[getDataSlotStatuses] begin");
         try {
