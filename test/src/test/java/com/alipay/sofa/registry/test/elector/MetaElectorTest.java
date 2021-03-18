@@ -23,7 +23,6 @@ import com.alipay.sofa.registry.jdbc.elector.MetaJdbcLeaderElector;
 import com.alipay.sofa.registry.jdbc.mapper.DistributeLockMapper;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
-import com.alipay.sofa.registry.store.api.elector.LeaderAware;
 import com.alipay.sofa.registry.test.BaseIntegrationTest;
 import com.alipay.sofa.registry.util.ConcurrentUtils;
 import com.alipay.sofa.registry.util.LoopRunnable;
@@ -113,9 +112,6 @@ public class MetaElectorTest extends BaseIntegrationTest {
         ExecutorService fixedThreadPool = Executors.newFixedThreadPool(1);
         ConcurrentUtils.createDaemonThread("LeaderElectorTrigger", new LeaderElectorTrigger()).start();
 
-        fixedThreadPool.submit(() -> {
-            LeaderAwareTest leaderAware = new LeaderAwareTest();
-        });
         leaderElector1.change2Follow();
         leaderElector2.change2Follow();
         leaderElector3.change2Follow();
@@ -165,19 +161,6 @@ public class MetaElectorTest extends BaseIntegrationTest {
         @Override
         public void waitingUnthrowable() {
             ConcurrentUtils.sleepUninterruptibly(1, TimeUnit.SECONDS);
-        }
-    }
-
-    class LeaderAwareTest implements LeaderAware {
-
-        @Override
-        public void leaderNotify() {
-            logger.info("become leader.");
-        }
-
-        @Override
-        public void followNotify() {
-            logger.info("become follow.");
         }
     }
 

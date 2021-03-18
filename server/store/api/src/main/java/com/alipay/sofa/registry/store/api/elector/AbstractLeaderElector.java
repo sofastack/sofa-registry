@@ -38,6 +38,12 @@ public abstract class AbstractLeaderElector implements LeaderElector {
 
     private volatile boolean isObserver = false;
 
+
+    @Override
+    public void registerLeaderAware(LeaderAware leaderAware) {
+        leaderAwares.add(leaderAware);
+    }
+
     @PostConstruct
     public void init() {
         ConcurrentUtils.createDaemonThread("LeaderElectorTrigger", new LeaderElectorTrigger()).start();
@@ -73,6 +79,10 @@ public abstract class AbstractLeaderElector implements LeaderElector {
         }
     }
 
+    @Override
+    public String myself() {
+        return NetUtil.getLocalAddress().getHostAddress();
+    }
     /**
      * start compete leader
      * @return
@@ -114,9 +124,8 @@ public abstract class AbstractLeaderElector implements LeaderElector {
     }
 
     protected boolean amILeader(String leader) {
-        long l = System.currentTimeMillis();
         return StringUtil.equals(myself(), leader)
-                && l < leaderInfo.expireTimestamp;
+                && System.currentTimeMillis() < leaderInfo.expireTimestamp;
     }
 
     /**
@@ -161,11 +170,6 @@ public abstract class AbstractLeaderElector implements LeaderElector {
         for(LeaderAware leaderAware : leaderAwares) {
             leaderAware.leaderNotify();
         }
-    }
-
-    @Override
-    public void registerLeaderAware(LeaderAware leaderAware) {
-        leaderAwares.add(leaderAware);
     }
 
     public static class LeaderInfo {
