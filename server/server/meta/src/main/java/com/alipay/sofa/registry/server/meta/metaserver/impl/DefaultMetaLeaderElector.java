@@ -60,12 +60,13 @@ public class DefaultMetaLeaderElector extends AbstractLifecycleObservable implem
     public void postConstruct() throws Exception {
         LifecycleHelper.initializeIfPossible(this);
         LifecycleHelper.startIfPossible(this);
+        leaderElector.registerLeaderAware(this);
+
     }
 
     @Override
     protected void doInitialize() throws InitializeException {
         super.doInitialize();
-        leaderElector.registerLeaderAware(this);
     }
 
     @Override
@@ -88,6 +89,7 @@ public class DefaultMetaLeaderElector extends AbstractLifecycleObservable implem
     public long getLeaderEpoch() {
         return leaderElector.getLeaderEpoch();
     }
+
 
     @Override
     public void leaderNotify() {
