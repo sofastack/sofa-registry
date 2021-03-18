@@ -360,8 +360,9 @@ public class SessionRegistry implements Registry {
 
         SCAN_VER_LOGGER.info("[fetchSlotVer]{},{},{},interests={},gets={}", slotId, dataCenter,
             leader, interestVersions.size(), dataVersions.size());
-
-        for (Map.Entry<String, DatumVersion> version : dataVersions.entrySet()) {
+        Map<String, DatumVersion> mergedVersions = new HashMap<>(interestVersions);
+        mergedVersions.putAll(dataVersions);
+        for (Map.Entry<String, DatumVersion> version : mergedVersions.entrySet()) {
             final String dataInfoId = version.getKey();
             final long verVal = version.getValue().getValue();
             if (sessionInterests.checkInterestVersion(dataCenter, dataInfoId, verVal).interested) {
