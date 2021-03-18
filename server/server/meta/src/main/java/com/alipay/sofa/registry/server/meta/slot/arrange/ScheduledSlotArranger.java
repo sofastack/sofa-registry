@@ -272,7 +272,7 @@ public class ScheduledSlotArranger extends AbstractLifecycleObservable implement
                 return result;
             }
         } else {
-            logger.info("not leader for arrange");
+            logger.info("not leader for arrange, leader:{}, isWarmup:{}", metaLeaderService.getLeader(), metaLeaderService.isWarmup());
             return false;
         }
     }
