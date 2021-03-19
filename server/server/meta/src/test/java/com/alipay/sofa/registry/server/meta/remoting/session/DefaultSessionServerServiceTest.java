@@ -97,7 +97,7 @@ public class DefaultSessionServerServiceTest extends AbstractMetaServerTest {
     notifier.notifyProvideDataChange(
         new ProvideDataChangeEvent(
             ValueConstants.BLACK_LIST_DATA_ID, System.currentTimeMillis(), DataOperator.ADD));
-    Thread.sleep(50);
+    Thread.sleep(100);
     verify(rpcClient, atLeast(1)).sendCallback(any(), any(), any(), anyInt());
   }
 
