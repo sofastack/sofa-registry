@@ -77,7 +77,7 @@ public class DefaultMetaLeaderElector extends AbstractLifecycleObservable
   }
 
   @Override
-  public boolean isWarmup() {
+  public boolean isWarmuped() {
     return leaderState.get() != null
         && System.currentTimeMillis() - leaderState.get().getStartTime() > getWarmupMilli();
   }

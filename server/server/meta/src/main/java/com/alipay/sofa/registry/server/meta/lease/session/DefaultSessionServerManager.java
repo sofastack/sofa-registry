@@ -141,7 +141,7 @@ public class DefaultSessionServerManager extends AbstractEvictableLeaseManager<S
 
   @Override
   public void onHeartbeat(HeartbeatRequest<SessionNode> heartbeat) {
-    if (amILeader() && metaLeaderService.isWarmup()) {
+    if (amILeader() && !metaLeaderService.isWarmuped()) {
       learnFromSession(heartbeat);
     }
   }
