@@ -55,6 +55,11 @@ import com.alipay.sofa.registry.server.shared.resource.SlotGenericResource;
 import com.alipay.sofa.registry.task.MetricsableThreadPoolExecutor;
 import com.alipay.sofa.registry.util.NamedThreadFactory;
 import com.alipay.sofa.registry.util.PropertySplitter;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 import org.glassfish.jersey.jackson.JacksonFeature;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -63,14 +68,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
-
 /**
- *
  * @author qian.lqlq
  * @version $Id: DataServerBeanConfiguration.java, v 0.1 2018-01-11 15:08 qian.lqlq Exp $
  */
@@ -79,282 +77,285 @@ import java.util.concurrent.TimeUnit;
 @EnableConfigurationProperties
 public class DataServerBeanConfiguration {
 
+  @Bean
+  @ConditionalOnMissingBean
+  public DataServerBootstrap dataServerBootstrap() {
+    return new DataServerBootstrap();
+  }
+
+  @Configuration
+  protected static class DataServerBootstrapConfigConfiguration {
+
+    @Bean
+    public CommonConfig commonConfig() {
+      return new CommonConfig();
+    }
+
     @Bean
     @ConditionalOnMissingBean
-    public DataServerBootstrap dataServerBootstrap() {
-        return new DataServerBootstrap();
+    public DataServerConfig dataServerConfig(CommonConfig commonConfig) {
+      return new DataServerConfig(commonConfig);
     }
 
-    @Configuration
-    protected static class DataServerBootstrapConfigConfiguration {
+    @Bean(name = "PropertySplitter")
+    public PropertySplitter propertySplitter() {
+      return new PropertySplitter();
+    }
+  }
 
-        @Bean
-        public CommonConfig commonConfig() {
-            return new CommonConfig();
-        }
+  @Configuration
+  public static class DataServerStorageConfiguration {
 
-        @Bean
-        @ConditionalOnMissingBean
-        public DataServerConfig dataServerConfig(CommonConfig commonConfig) {
-            return new DataServerConfig(commonConfig);
-        }
-
-        @Bean(name = "PropertySplitter")
-        public PropertySplitter propertySplitter() {
-            return new PropertySplitter();
-        }
-
+    @Bean
+    @ConditionalOnMissingBean
+    public DatumCache datumCache() {
+      return new DatumCache();
     }
 
-    @Configuration
-    public static class DataServerStorageConfiguration {
-
-        @Bean
-        @ConditionalOnMissingBean
-        public DatumCache datumCache() {
-            return new DatumCache();
-        }
-
-        @Bean
-        @ConditionalOnMissingBean
-        public DatumStorage localDatumStorage() {
-            return new LocalDatumStorage();
-        }
-
-        @Bean
-        @ConditionalOnMissingBean
-        public SlotManager slotManager() {
-            return new SlotManagerImpl();
-        }
-
-        @Bean
-        @ConditionalOnMissingBean
-        public SessionLeaseManager sessionLeaseManager() {
-            return new SessionLeaseManager();
-        }
+    @Bean
+    @ConditionalOnMissingBean
+    public DatumStorage localDatumStorage() {
+      return new LocalDatumStorage();
     }
 
-    @Configuration
-    public static class LogTaskConfigConfiguration {
-
-        @Bean
-        public CacheDigestTask cacheDigestTask() {
-            return new CacheDigestTask();
-        }
-
-        @Bean
-        public CacheCountTask cacheCountTask() {
-            return new CacheCountTask();
-        }
-
+    @Bean
+    @ConditionalOnMissingBean
+    public SlotManager slotManager() {
+      return new SlotManagerImpl();
     }
 
-    @Configuration
-    public static class SessionRemotingConfiguration {
+    @Bean
+    @ConditionalOnMissingBean
+    public SessionLeaseManager sessionLeaseManager() {
+      return new SessionLeaseManager();
+    }
+  }
 
-        @Bean
-        public Exchange jerseyExchange() {
-            return new JerseyExchange();
-        }
+  @Configuration
+  public static class LogTaskConfigConfiguration {
 
-        @Bean
-        public Exchange boltExchange() {
-            return new BoltExchange();
-        }
-
-        @Bean
-        public DataNodeExchanger dataNodeExchanger() {
-            return new DataNodeExchanger();
-        }
-
-        @Bean
-        public SessionNodeExchanger sessionNodeExchanger() {
-            return new SessionNodeExchanger();
-        }
-
-        @Bean
-        public SessionServerConnectionFactory sessionServerConnectionFactory() {
-            return new SessionServerConnectionFactory();
-        }
-
-        @Bean(name = "serverHandlers")
-        public Collection<AbstractServerHandler> serverHandlers() {
-            Collection<AbstractServerHandler> list = new ArrayList<>();
-            list.add(getDataHandler());
-            list.add(batchPutDataHandler());
-            list.add(getDataVersionsHandler());
-            list.add(dataServerConnectionHandler());
-            return list;
-        }
-
-        @Bean(name = "serverSyncHandlers")
-        public Collection<AbstractServerHandler> serverSyncHandlers() {
-            Collection<AbstractServerHandler> list = new ArrayList<>();
-            list.add(slotFollowerDiffDataInfoIdRequestHandler());
-            list.add(slotFollowerDiffPublisherRequestHandler());
-            return list;
-        }
-
-        @Bean(name = "metaClientHandlers")
-        public Collection<AbstractClientHandler> metaClientHandlers() {
-            Collection<AbstractClientHandler> list = new ArrayList<>();
-            list.add(notifyProvideDataChangeHandler());
-            list.add(slotTableChangeEventHandler());
-            return list;
-        }
-
-        @Bean
-        public AbstractServerHandler dataServerConnectionHandler() {
-            return new DataServerConnectionHandler();
-        }
-
-        @Bean
-        public AbstractServerHandler getDataHandler() {
-            return new GetDataHandler();
-        }
-
-        @Bean
-        public AbstractServerHandler slotFollowerDiffDataInfoIdRequestHandler() {
-            return new SlotFollowerDiffDigestRequestHandler();
-        }
-
-        @Bean
-        public AbstractServerHandler slotFollowerDiffPublisherRequestHandler() {
-            return new SlotFollowerDiffPublisherRequestHandler();
-        }
-
-        @Bean
-        public AbstractServerHandler getDataVersionsHandler() {
-            return new GetDataVersionsHandler();
-        }
-
-        @Bean
-        public AbstractServerHandler batchPutDataHandler() {
-            return new BatchPutDataHandler();
-        }
-
-        @Bean
-        public NotifyProvideDataChangeHandler notifyProvideDataChangeHandler() {
-            return new NotifyProvideDataChangeHandler();
-        }
-
-        @Bean
-        public SlotTableChangeEventHandler slotTableChangeEventHandler() {
-            return new SlotTableChangeEventHandler();
-        }
+    @Bean
+    public CacheDigestTask cacheDigestTask() {
+      return new CacheDigestTask();
     }
 
-    @Configuration
-    public static class DataServerEventBeanConfiguration {
+    @Bean
+    public CacheCountTask cacheCountTask() {
+      return new CacheCountTask();
+    }
+  }
 
-        @Bean
-        public DataChangeEventCenter dataChangeEventCenter() {
-            return new DataChangeEventCenter();
-        }
+  @Configuration
+  public static class SessionRemotingConfiguration {
 
+    @Bean
+    public Exchange jerseyExchange() {
+      return new JerseyExchange();
     }
 
-    @Configuration
-    public static class DataServerRemotingBeanConfiguration {
-
-        @Bean
-        public MetaServerManager metaServerManager() {
-            return new DataMetaServerManager();
-        }
-
-        @Bean
-        public MetaServerServiceImpl metaServerService() {
-            return new MetaServerServiceImpl();
-        }
+    @Bean
+    public Exchange boltExchange() {
+      return new BoltExchange();
     }
 
-    @Configuration
-    public static class ResourceConfiguration {
-
-        @Bean
-        public ResourceConfig jerseyResourceConfig() {
-            ResourceConfig resourceConfig = new ResourceConfig();
-            resourceConfig.register(JacksonFeature.class);
-            return resourceConfig;
-        }
-
-        @Bean
-        public HealthResource healthResource() {
-            return new HealthResource();
-        }
-
-        @Bean
-        public DatumApiResource datumApiResource() {
-            return new DatumApiResource();
-        }
-
-        @Bean
-        @ConditionalOnMissingBean
-        public DataDigestResource dataDigestResource() {
-            return new DataDigestResource();
-        }
-
-        @Bean
-        public SlotGenericResource slotGenericResource() {
-            return new SlotGenericResource();
-        }
-
-        @Bean
-        public MetricsResource metricsResource() {
-            return new MetricsResource();
-        }
-
+    @Bean
+    public DataNodeExchanger dataNodeExchanger() {
+      return new DataNodeExchanger();
     }
 
-    @Configuration
-    public static class ExecutorConfiguration {
-
-        @Bean(name = "publishProcessorExecutor")
-        public ThreadPoolExecutor publishProcessorExecutor(DataServerConfig dataServerConfig) {
-            return new MetricsableThreadPoolExecutor("PublishProcessorExecutor",
-                dataServerConfig.getPublishExecutorMinPoolSize(),
-                dataServerConfig.getPublishExecutorMaxPoolSize(), 300, TimeUnit.SECONDS,
-                new ArrayBlockingQueue<>(dataServerConfig.getPublishExecutorQueueSize()),
-                new NamedThreadFactory("PutExecutor", true));
-        }
-
-        @Bean(name = "getDataProcessorExecutor")
-        public ThreadPoolExecutor getDataProcessorExecutor(DataServerConfig dataServerConfig) {
-            return new MetricsableThreadPoolExecutor("GetDataProcessorExecutor",
-                dataServerConfig.getGetDataExecutorMinPoolSize(),
-                dataServerConfig.getGetDataExecutorMaxPoolSize(),
-                dataServerConfig.getGetDataExecutorKeepAliveTime(), TimeUnit.SECONDS,
-                new ArrayBlockingQueue<>(dataServerConfig.getGetDataExecutorQueueSize()),
-                new NamedThreadFactory("GetExecutor", true));
-        }
-
-        @Bean(name = "slotSyncRequestProcessorExecutor")
-        public ThreadPoolExecutor slotSyncRequestProcessorExecutor(DataServerConfig dataServerConfig) {
-            return new MetricsableThreadPoolExecutor("SlotSyncRequestProcessorExecutor",
-                dataServerConfig.getSlotSyncRequestExecutorMinPoolSize(),
-                dataServerConfig.getSlotSyncRequestExecutorMaxPoolSize(), 300, TimeUnit.SECONDS,
-                new ArrayBlockingQueue<>(dataServerConfig.getSlotSyncRequestExecutorQueueSize()),
-                new NamedThreadFactory("SyncExecutor", true));
-        }
-
+    @Bean
+    public SessionNodeExchanger sessionNodeExchanger() {
+      return new SessionNodeExchanger();
     }
 
-    @Configuration
-    public static class DataProvideDataConfiguration {
-
-        @Bean
-        public ProvideDataProcessor provideDataProcessorManager() {
-            return new ProvideDataProcessorManager();
-        }
-
-        @Bean
-        public ProvideDataProcessor sessionLeaseProvideDataProcessor(ProvideDataProcessor provideDataProcessorManager) {
-            ProvideDataProcessor sessionLeaseProvideDataProcessor = new SessionLeaseProvideDataProcessor();
-            ((ProvideDataProcessorManager) provideDataProcessorManager)
-                .addProvideDataProcessor(sessionLeaseProvideDataProcessor);
-            return sessionLeaseProvideDataProcessor;
-        }
-
+    @Bean
+    public SessionServerConnectionFactory sessionServerConnectionFactory() {
+      return new SessionServerConnectionFactory();
     }
 
+    @Bean(name = "serverHandlers")
+    public Collection<AbstractServerHandler> serverHandlers() {
+      Collection<AbstractServerHandler> list = new ArrayList<>();
+      list.add(getDataHandler());
+      list.add(batchPutDataHandler());
+      list.add(getDataVersionsHandler());
+      list.add(dataServerConnectionHandler());
+      return list;
+    }
+
+    @Bean(name = "serverSyncHandlers")
+    public Collection<AbstractServerHandler> serverSyncHandlers() {
+      Collection<AbstractServerHandler> list = new ArrayList<>();
+      list.add(slotFollowerDiffDataInfoIdRequestHandler());
+      list.add(slotFollowerDiffPublisherRequestHandler());
+      return list;
+    }
+
+    @Bean(name = "metaClientHandlers")
+    public Collection<AbstractClientHandler> metaClientHandlers() {
+      Collection<AbstractClientHandler> list = new ArrayList<>();
+      list.add(notifyProvideDataChangeHandler());
+      list.add(slotTableChangeEventHandler());
+      return list;
+    }
+
+    @Bean
+    public AbstractServerHandler dataServerConnectionHandler() {
+      return new DataServerConnectionHandler();
+    }
+
+    @Bean
+    public AbstractServerHandler getDataHandler() {
+      return new GetDataHandler();
+    }
+
+    @Bean
+    public AbstractServerHandler slotFollowerDiffDataInfoIdRequestHandler() {
+      return new SlotFollowerDiffDigestRequestHandler();
+    }
+
+    @Bean
+    public AbstractServerHandler slotFollowerDiffPublisherRequestHandler() {
+      return new SlotFollowerDiffPublisherRequestHandler();
+    }
+
+    @Bean
+    public AbstractServerHandler getDataVersionsHandler() {
+      return new GetDataVersionsHandler();
+    }
+
+    @Bean
+    public AbstractServerHandler batchPutDataHandler() {
+      return new BatchPutDataHandler();
+    }
+
+    @Bean
+    public NotifyProvideDataChangeHandler notifyProvideDataChangeHandler() {
+      return new NotifyProvideDataChangeHandler();
+    }
+
+    @Bean
+    public SlotTableChangeEventHandler slotTableChangeEventHandler() {
+      return new SlotTableChangeEventHandler();
+    }
+  }
+
+  @Configuration
+  public static class DataServerEventBeanConfiguration {
+
+    @Bean
+    public DataChangeEventCenter dataChangeEventCenter() {
+      return new DataChangeEventCenter();
+    }
+  }
+
+  @Configuration
+  public static class DataServerRemotingBeanConfiguration {
+
+    @Bean
+    public MetaServerManager metaServerManager() {
+      return new DataMetaServerManager();
+    }
+
+    @Bean
+    public MetaServerServiceImpl metaServerService() {
+      return new MetaServerServiceImpl();
+    }
+  }
+
+  @Configuration
+  public static class ResourceConfiguration {
+
+    @Bean
+    public ResourceConfig jerseyResourceConfig() {
+      ResourceConfig resourceConfig = new ResourceConfig();
+      resourceConfig.register(JacksonFeature.class);
+      return resourceConfig;
+    }
+
+    @Bean
+    public HealthResource healthResource() {
+      return new HealthResource();
+    }
+
+    @Bean
+    public DatumApiResource datumApiResource() {
+      return new DatumApiResource();
+    }
+
+    @Bean
+    @ConditionalOnMissingBean
+    public DataDigestResource dataDigestResource() {
+      return new DataDigestResource();
+    }
+
+    @Bean
+    public SlotGenericResource slotGenericResource() {
+      return new SlotGenericResource();
+    }
+
+    @Bean
+    public MetricsResource metricsResource() {
+      return new MetricsResource();
+    }
+  }
+
+  @Configuration
+  public static class ExecutorConfiguration {
+
+    @Bean(name = "publishProcessorExecutor")
+    public ThreadPoolExecutor publishProcessorExecutor(DataServerConfig dataServerConfig) {
+      return new MetricsableThreadPoolExecutor(
+          "PublishProcessorExecutor",
+          dataServerConfig.getPublishExecutorMinPoolSize(),
+          dataServerConfig.getPublishExecutorMaxPoolSize(),
+          300,
+          TimeUnit.SECONDS,
+          new ArrayBlockingQueue<>(dataServerConfig.getPublishExecutorQueueSize()),
+          new NamedThreadFactory("PutExecutor", true));
+    }
+
+    @Bean(name = "getDataProcessorExecutor")
+    public ThreadPoolExecutor getDataProcessorExecutor(DataServerConfig dataServerConfig) {
+      return new MetricsableThreadPoolExecutor(
+          "GetDataProcessorExecutor",
+          dataServerConfig.getGetDataExecutorMinPoolSize(),
+          dataServerConfig.getGetDataExecutorMaxPoolSize(),
+          dataServerConfig.getGetDataExecutorKeepAliveTime(),
+          TimeUnit.SECONDS,
+          new ArrayBlockingQueue<>(dataServerConfig.getGetDataExecutorQueueSize()),
+          new NamedThreadFactory("GetExecutor", true));
+    }
+
+    @Bean(name = "slotSyncRequestProcessorExecutor")
+    public ThreadPoolExecutor slotSyncRequestProcessorExecutor(DataServerConfig dataServerConfig) {
+      return new MetricsableThreadPoolExecutor(
+          "SlotSyncRequestProcessorExecutor",
+          dataServerConfig.getSlotSyncRequestExecutorMinPoolSize(),
+          dataServerConfig.getSlotSyncRequestExecutorMaxPoolSize(),
+          300,
+          TimeUnit.SECONDS,
+          new ArrayBlockingQueue<>(dataServerConfig.getSlotSyncRequestExecutorQueueSize()),
+          new NamedThreadFactory("SyncExecutor", true));
+    }
+  }
+
+  @Configuration
+  public static class DataProvideDataConfiguration {
+
+    @Bean
+    public ProvideDataProcessor provideDataProcessorManager() {
+      return new ProvideDataProcessorManager();
+    }
+
+    @Bean
+    public ProvideDataProcessor sessionLeaseProvideDataProcessor(
+        ProvideDataProcessor provideDataProcessorManager) {
+      ProvideDataProcessor sessionLeaseProvideDataProcessor =
+          new SessionLeaseProvideDataProcessor();
+      ((ProvideDataProcessorManager) provideDataProcessorManager)
+          .addProvideDataProcessor(sessionLeaseProvideDataProcessor);
+      return sessionLeaseProvideDataProcessor;
+    }
+  }
 }

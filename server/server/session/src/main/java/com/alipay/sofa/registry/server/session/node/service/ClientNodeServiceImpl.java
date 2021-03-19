@@ -16,40 +16,38 @@
  */
 package com.alipay.sofa.registry.server.session.node.service;
 
-import org.springframework.beans.factory.annotation.Autowired;
-
 import com.alipay.sofa.registry.common.model.store.URL;
 import com.alipay.sofa.registry.remoting.CallbackHandler;
 import com.alipay.sofa.registry.remoting.exchange.NodeExchanger;
 import com.alipay.sofa.registry.remoting.exchange.message.Request;
+import org.springframework.beans.factory.annotation.Autowired;
 
 /**
- *
  * @author shangyu.wh
  * @version $Id: ClientNode.java, v 0.1 2017-12-12 11:56 shangyu.wh Exp $
  */
 public class ClientNodeServiceImpl implements ClientNodeService {
-    @Autowired
-    private NodeExchanger clientNodeExchanger;
+  @Autowired private NodeExchanger clientNodeExchanger;
 
-    @Override
-    public void pushWithCallback(Object object, URL url, CallbackHandler callbackHandler) {
-        Request<Object> request = new Request<Object>() {
-            @Override
-            public Object getRequestBody() {
-                return object;
-            }
+  @Override
+  public void pushWithCallback(Object object, URL url, CallbackHandler callbackHandler) {
+    Request<Object> request =
+        new Request<Object>() {
+          @Override
+          public Object getRequestBody() {
+            return object;
+          }
 
-            @Override
-            public URL getRequestUrl() {
-                return url;
-            }
+          @Override
+          public URL getRequestUrl() {
+            return url;
+          }
 
-            @Override
-            public CallbackHandler getCallBackHandler() {
-                return callbackHandler;
-            }
+          @Override
+          public CallbackHandler getCallBackHandler() {
+            return callbackHandler;
+          }
         };
-        clientNodeExchanger.request(request);
-    }
+    clientNodeExchanger.request(request);
+  }
 }

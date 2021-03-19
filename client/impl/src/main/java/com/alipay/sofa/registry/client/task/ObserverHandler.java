@@ -21,25 +21,23 @@ import com.alipay.sofa.registry.client.api.Subscriber;
 
 /**
  * The interface Observer handler.
- * 
+ *
  * @author zhuoyu.sjw
  * @version $Id : ObserverHandler.java, v 0.1 2018-03-15 12:15 zhuoyu.sjw Exp $$
  */
 public interface ObserverHandler {
 
-	/**
-	 * Notify.
-	 * 
-	 * @param subscriber
-	 *            the subscriber
-	 */
-	void notify(Subscriber subscriber);
+  /**
+   * Notify.
+   *
+   * @param subscriber the subscriber
+   */
+  void notify(Subscriber subscriber);
 
-	/**
-	 * Notify.
-	 * 
-	 * @param configurator
-	 *            the configurator
-	 */
-	void notify(Configurator configurator);
+  /**
+   * Notify.
+   *
+   * @param configurator the configurator
+   */
+  void notify(Configurator configurator);
 }

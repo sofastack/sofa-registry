@@ -16,12 +16,10 @@
  */
 package com.alipay.sofa.registry.server.meta.bootstrap;
 
+import java.lang.annotation.*;
 import org.springframework.context.annotation.Import;
 
-import java.lang.annotation.*;
-
 /**
- *
  * @author shangyu.wh
  * @version $Id: EnableMetaServer.java, v 0.1 2018-01-16 11:26 shangyu.wh Exp $
  */
@@ -29,5 +27,4 @@ import java.lang.annotation.*;
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
 @Import(MetaServerConfiguration.class)
-public @interface EnableMetaServer {
-}
+public @interface EnableMetaServer {}

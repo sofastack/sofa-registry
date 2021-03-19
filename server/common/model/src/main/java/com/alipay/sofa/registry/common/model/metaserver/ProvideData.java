@@ -17,113 +17,111 @@
 package com.alipay.sofa.registry.common.model.metaserver;
 
 import com.alipay.sofa.registry.common.model.ServerDataBox;
-
 import java.io.Serializable;
 
 /**
- *
  * @author shangyu.wh
  * @version $Id: ProvideData.java, v 0.1 2018-04-17 20:13 shangyu.wh Exp $
  */
 public class ProvideData implements Serializable {
 
-    private ServerDataBox provideData;
+  private ServerDataBox provideData;
 
-    private String        dataInfoId;
+  private String dataInfoId;
 
-    private Long          version;
+  private Long version;
 
-    /**
-     * construtor
-     * @param provideData
-     * @param dataInfoId
-     * @param version
-     */
-    public ProvideData(ServerDataBox provideData, String dataInfoId, Long version) {
-        this.provideData = provideData;
-        this.dataInfoId = dataInfoId;
-        this.version = version;
+  /**
+   * construtor
+   *
+   * @param provideData
+   * @param dataInfoId
+   * @param version
+   */
+  public ProvideData(ServerDataBox provideData, String dataInfoId, Long version) {
+    this.provideData = provideData;
+    this.dataInfoId = dataInfoId;
+    this.version = version;
+  }
+
+  /**
+   * Getter method for property <tt>provideData</tt>.
+   *
+   * @return property value of provideData
+   */
+  public ServerDataBox getProvideData() {
+    return provideData;
+  }
+
+  /**
+   * Setter method for property <tt>provideData</tt>.
+   *
+   * @param provideData value to be assigned to property provideData
+   */
+  public void setProvideData(ServerDataBox provideData) {
+    this.provideData = provideData;
+  }
+
+  /**
+   * Getter method for property <tt>dataInfoId</tt>.
+   *
+   * @return property value of dataInfoId
+   */
+  public String getDataInfoId() {
+    return dataInfoId;
+  }
+
+  /**
+   * Setter method for property <tt>dataInfoId</tt>.
+   *
+   * @param dataInfoId value to be assigned to property dataInfoId
+   */
+  public void setDataInfoId(String dataInfoId) {
+    this.dataInfoId = dataInfoId;
+  }
+
+  /**
+   * Getter method for property <tt>version</tt>.
+   *
+   * @return property value of version
+   */
+  public Long getVersion() {
+    return version;
+  }
+
+  /**
+   * Setter method for property <tt>version</tt>.
+   *
+   * @param version value to be assigned to property version
+   */
+  public void setVersion(Long version) {
+    this.version = version;
+  }
+
+  public static String toString(ProvideData provideData) {
+    if (provideData == null || provideData.getProvideData() == null) {
+      return null;
     }
+    return (String) provideData.getProvideData().getObject();
+  }
 
-    /**
-     * Getter method for property <tt>provideData</tt>.
-     *
-     * @return property value of provideData
-     */
-    public ServerDataBox getProvideData() {
-        return provideData;
-    }
+  public static Boolean toBool(ProvideData provideData) {
+    String obj = ProvideData.toString(provideData);
+    return obj != null ? Boolean.parseBoolean(obj) : null;
+  }
 
-    /**
-     * Setter method for property <tt>provideData</tt>.
-     *
-     * @param provideData  value to be assigned to property provideData
-     */
-    public void setProvideData(ServerDataBox provideData) {
-        this.provideData = provideData;
-    }
+  public static Integer toInteger(ProvideData provideData) {
+    String obj = ProvideData.toString(provideData);
+    return obj != null ? Integer.valueOf(obj) : null;
+  }
 
-    /**
-     * Getter method for property <tt>dataInfoId</tt>.
-     *
-     * @return property value of dataInfoId
-     */
-    public String getDataInfoId() {
-        return dataInfoId;
-    }
-
-    /**
-     * Setter method for property <tt>dataInfoId</tt>.
-     *
-     * @param dataInfoId  value to be assigned to property dataInfoId
-     */
-    public void setDataInfoId(String dataInfoId) {
-        this.dataInfoId = dataInfoId;
-    }
-
-    /**
-     * Getter method for property <tt>version</tt>.
-     *
-     * @return property value of version
-     */
-    public Long getVersion() {
-        return version;
-    }
-
-    /**
-     * Setter method for property <tt>version</tt>.
-     *
-     * @param version  value to be assigned to property version
-     */
-    public void setVersion(Long version) {
-        this.version = version;
-    }
-
-    public static String toString(ProvideData provideData) {
-        if (provideData == null || provideData.getProvideData() == null) {
-            return null;
-        }
-        return (String) provideData.getProvideData().getObject();
-    }
-
-    public static Boolean toBool(ProvideData provideData) {
-        String obj = ProvideData.toString(provideData);
-        return obj != null ? Boolean.parseBoolean(obj) : null;
-    }
-
-    public static Integer toInteger(ProvideData provideData) {
-        String obj = ProvideData.toString(provideData);
-        return obj != null ? Integer.valueOf(obj) : null;
-    }
-
-    @Override
-    public String toString() {
-        final StringBuilder sb = new StringBuilder("ProvideData{");
-        sb.append("provideData=").append(provideData);
-        sb.append(", dataInfoId='").append(dataInfoId).append('\'');
-        sb.append(", version=").append(version);
-        sb.append('}');
-        return sb.toString();
-    }
-
+  @Override
+  public String toString() {
+    final StringBuilder sb = new StringBuilder("ProvideData{");
+    sb.append("provideData=").append(provideData);
+    sb.append(", dataInfoId='").append(dataInfoId).append('\'');
+    sb.append(", version=").append(version);
+    sb.append('}');
+    return sb.toString();
+  }
 }

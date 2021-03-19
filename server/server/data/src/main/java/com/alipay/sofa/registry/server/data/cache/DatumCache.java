@@ -22,9 +22,8 @@ import com.alipay.sofa.registry.common.model.dataserver.DatumVersion;
 import com.alipay.sofa.registry.common.model.store.Publisher;
 import com.alipay.sofa.registry.server.data.bootstrap.DataServerConfig;
 import com.google.common.annotations.VisibleForTesting;
-import org.springframework.beans.factory.annotation.Autowired;
-
 import java.util.*;
+import org.springframework.beans.factory.annotation.Autowired;
 
 /**
  * cache of datum, providing query function to the upper module
@@ -34,76 +33,74 @@ import java.util.*;
  * @version $Id: DatumCache.java, v 0.1 2017-12-06 20:50 qian.lqlq Exp $
  */
 public class DatumCache {
-    @Autowired
-    private DatumStorage     localDatumStorage;
+  @Autowired private DatumStorage localDatumStorage;
 
-    @Autowired
-    private DataServerConfig dataServerConfig;
+  @Autowired private DataServerConfig dataServerConfig;
 
-    /**
-     * get datum by specific dataCenter and dataInfoId
-     *
-     * @param dataCenter
-     * @param dataInfoId
-     * @return
-     */
-    public Datum get(String dataCenter, String dataInfoId) {
-        return localDatumStorage.get(dataInfoId);
-    }
+  /**
+   * get datum by specific dataCenter and dataInfoId
+   *
+   * @param dataCenter
+   * @param dataInfoId
+   * @return
+   */
+  public Datum get(String dataCenter, String dataInfoId) {
+    return localDatumStorage.get(dataInfoId);
+  }
 
-    public void clean(String dataCenter, String dataInfoId) {
-        localDatumStorage.remove(dataInfoId, null);
-    }
+  public void clean(String dataCenter, String dataInfoId) {
+    localDatumStorage.remove(dataInfoId, null);
+  }
 
-    public DatumVersion getVersion(String dataCenter, String dataInfoId) {
-        //TODO only get local datacenter
-        DatumVersion version = localDatumStorage.getVersion(dataInfoId);
-        return version;
-    }
+  public DatumVersion getVersion(String dataCenter, String dataInfoId) {
+    // TODO only get local datacenter
+    DatumVersion version = localDatumStorage.getVersion(dataInfoId);
+    return version;
+  }
 
-    public Map<String, DatumVersion> getVersions(String dataCenter, int slotId,
-                                                 Collection<String> targetDataInfoIds) {
-        //local
-        return localDatumStorage.getVersions(slotId, targetDataInfoIds);
-    }
+  public Map<String, DatumVersion> getVersions(
+      String dataCenter, int slotId, Collection<String> targetDataInfoIds) {
+    // local
+    return localDatumStorage.getVersions(slotId, targetDataInfoIds);
+  }
 
-    public DatumVersion updateVersion(String dataCenter, String dataInfoId) {
-        return localDatumStorage.updateVersion(dataInfoId);
-    }
+  public DatumVersion updateVersion(String dataCenter, String dataInfoId) {
+    return localDatumStorage.updateVersion(dataInfoId);
+  }
 
-    /**
-     * get all datum
-     *
-     * @return
-     */
-    public Map<String, Map<String, Datum>> getAll() {
-        Map<String, Map<String, Datum>> datumMap = new HashMap<>();
-        datumMap.put(dataServerConfig.getLocalDataCenter(), localDatumStorage.getAll());
-        return datumMap;
-    }
+  /**
+   * get all datum
+   *
+   * @return
+   */
+  public Map<String, Map<String, Datum>> getAll() {
+    Map<String, Map<String, Datum>> datumMap = new HashMap<>();
+    datumMap.put(dataServerConfig.getLocalDataCenter(), localDatumStorage.getAll());
+    return datumMap;
+  }
 
-    // get without datum.version, it's more efficient than getDatum
-    public Map<String, Map<String, List<Publisher>>> getAllPublisher() {
-        Map<String, Map<String, List<Publisher>>> datumMap = new HashMap<>();
-        datumMap.put(dataServerConfig.getLocalDataCenter(), localDatumStorage.getAllPublisher());
-        return datumMap;
-    }
+  // get without datum.version, it's more efficient than getDatum
+  public Map<String, Map<String, List<Publisher>>> getAllPublisher() {
+    Map<String, Map<String, List<Publisher>>> datumMap = new HashMap<>();
+    datumMap.put(dataServerConfig.getLocalDataCenter(), localDatumStorage.getAllPublisher());
+    return datumMap;
+  }
 
-    public Map<String, Publisher> getByConnectId(ConnectId connectId) {
-        return localDatumStorage.getByConnectId(connectId);
-    }
+  public Map<String, Publisher> getByConnectId(ConnectId connectId) {
+    return localDatumStorage.getByConnectId(connectId);
+  }
 
-    @VisibleForTesting
-    public void setLocalDatumStorage(DatumStorage localDatumStorage) {
-        this.localDatumStorage = localDatumStorage;
-    }
+  @VisibleForTesting
+  public void setLocalDatumStorage(DatumStorage localDatumStorage) {
+    this.localDatumStorage = localDatumStorage;
+  }
 
-    @VisibleForTesting
-    public void setDataServerConfig(DataServerConfig dataServerConfig) {
-        this.dataServerConfig = dataServerConfig;
-    }
+  @VisibleForTesting
+  public void setDataServerConfig(DataServerConfig dataServerConfig) {
+    this.dataServerConfig = dataServerConfig;
+  }
 
-    public DatumStorage getLocalDatumStorage() {
-        return localDatumStorage;
-    }
+  public DatumStorage getLocalDatumStorage() {
+    return localDatumStorage;
+  }
 }

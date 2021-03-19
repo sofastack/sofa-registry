@@ -20,20 +20,17 @@ import com.alipay.sofa.registry.client.api.model.UserData;
 
 /**
  * The interface Subscriber data observer multi.
- * 
+ *
  * @author zhuoyu.sjw
- * @version $Id : SubscriberDataObserver.java, v 0.1 2017-11-23 15:16 zhuoyu.sjw
- *          Exp $$
+ * @version $Id : SubscriberDataObserver.java, v 0.1 2017-11-23 15:16 zhuoyu.sjw Exp $$
  */
 public interface SubscriberDataObserver {
 
-	/**
-	 * Handle data.
-	 * 
-	 * @param dataId
-	 *            the data id
-	 * @param data
-	 *            the data
-	 */
-	void handleData(String dataId, UserData data);
+  /**
+   * Handle data.
+   *
+   * @param dataId the data id
+   * @param data the data
+   */
+  void handleData(String dataId, UserData data);
 }

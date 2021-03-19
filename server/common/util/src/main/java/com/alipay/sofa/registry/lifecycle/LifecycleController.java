@@ -18,16 +18,15 @@ package com.alipay.sofa.registry.lifecycle;
 
 /**
  * @author chen.zhu
- *         <p>
- *         Nov 13, 2020
+ *     <p>Nov 13, 2020
  */
 public interface LifecycleController {
 
-	boolean canInitialize(LifecycleState.LifecyclePhase phase);
+  boolean canInitialize(LifecycleState.LifecyclePhase phase);
 
-	boolean canStart(LifecycleState.LifecyclePhase phase);
+  boolean canStart(LifecycleState.LifecyclePhase phase);
 
-	boolean canStop(LifecycleState.LifecyclePhase phase);
+  boolean canStop(LifecycleState.LifecyclePhase phase);
 
-	boolean canDispose(LifecycleState.LifecyclePhase phase);
+  boolean canDispose(LifecycleState.LifecyclePhase phase);
 }

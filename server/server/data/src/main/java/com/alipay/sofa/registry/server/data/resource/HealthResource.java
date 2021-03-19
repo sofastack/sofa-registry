@@ -16,6 +16,11 @@
  */
 package com.alipay.sofa.registry.server.data.resource;
 
+import com.alipay.sofa.registry.common.model.CommonResponse;
+import com.alipay.sofa.registry.metrics.ReporterUtils;
+import com.alipay.sofa.registry.server.data.bootstrap.DataServerBootstrap;
+import com.codahale.metrics.Gauge;
+import com.codahale.metrics.MetricRegistry;
 import javax.annotation.PostConstruct;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -24,74 +29,65 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.ResponseBuilder;
 import javax.ws.rs.core.Response.Status;
-
 import org.springframework.beans.factory.annotation.Autowired;
 
-import com.alipay.sofa.registry.common.model.CommonResponse;
-import com.alipay.sofa.registry.metrics.ReporterUtils;
-import com.alipay.sofa.registry.server.data.bootstrap.DataServerBootstrap;
-import com.codahale.metrics.Gauge;
-import com.codahale.metrics.MetricRegistry;
-
 /**
- *
  * @author shangyu.wh
  * @version $Id: HealthResource.java, v 0.1 2018-10-19 14:56 shangyu.wh Exp $
  */
 @Path("health")
 public class HealthResource {
 
-    @Autowired
-    private DataServerBootstrap dataServerBootstrap;
+  @Autowired private DataServerBootstrap dataServerBootstrap;
 
-    @PostConstruct
-    public void init() {
-        MetricRegistry metrics = new MetricRegistry();
-        metrics.register("healthCheck", (Gauge<CommonResponse>) () -> getHealthCheckResult());
-        ReporterUtils.startSlf4jReporter(60, metrics);
+  @PostConstruct
+  public void init() {
+    MetricRegistry metrics = new MetricRegistry();
+    metrics.register("healthCheck", (Gauge<CommonResponse>) () -> getHealthCheckResult());
+    ReporterUtils.startSlf4jReporter(60, metrics);
+  }
+
+  @GET
+  @Path("check")
+  @Produces(MediaType.APPLICATION_JSON)
+  public Response checkHealth() {
+
+    ResponseBuilder builder = Response.status(Response.Status.OK);
+    CommonResponse response = getHealthCheckResult();
+    builder.entity(response);
+    if (!response.isSuccess()) {
+      builder.status(Status.INTERNAL_SERVER_ERROR);
     }
 
-    @GET
-    @Path("check")
-    @Produces(MediaType.APPLICATION_JSON)
-    public Response checkHealth() {
+    return builder.build();
+  }
 
-        ResponseBuilder builder = Response.status(Response.Status.OK);
-        CommonResponse response = getHealthCheckResult();
-        builder.entity(response);
-        if (!response.isSuccess()) {
-            builder.status(Status.INTERNAL_SERVER_ERROR);
-        }
+  private CommonResponse getHealthCheckResult() {
+    CommonResponse response;
 
-        return builder.build();
+    StringBuilder sb = new StringBuilder("DataServerBoot ");
+
+    boolean start = dataServerBootstrap.getServerForSessionStarted();
+    boolean ret = start;
+    sb.append("severForSession:").append(start);
+
+    start = dataServerBootstrap.getServerForDataSyncStarted();
+    ret = ret && start;
+    sb.append(", severForDataSync:").append(start);
+
+    start = dataServerBootstrap.getHttpServerStarted();
+    ret = ret && start;
+    sb.append(", httpServer:").append(start);
+
+    start = dataServerBootstrap.getSchedulerStarted();
+    ret = ret && start;
+    sb.append(", schedulerStarted:").append(start);
+
+    if (ret) {
+      response = CommonResponse.buildSuccessResponse(sb.toString());
+    } else {
+      response = CommonResponse.buildFailedResponse(sb.toString());
     }
-
-    private CommonResponse getHealthCheckResult() {
-        CommonResponse response;
-
-        StringBuilder sb = new StringBuilder("DataServerBoot ");
-
-        boolean start = dataServerBootstrap.getServerForSessionStarted();
-        boolean ret = start;
-        sb.append("severForSession:").append(start);
-
-        start = dataServerBootstrap.getServerForDataSyncStarted();
-        ret = ret && start;
-        sb.append(", severForDataSync:").append(start);
-
-        start = dataServerBootstrap.getHttpServerStarted();
-        ret = ret && start;
-        sb.append(", httpServer:").append(start);
-
-        start = dataServerBootstrap.getSchedulerStarted();
-        ret = ret && start;
-        sb.append(", schedulerStarted:").append(start);
-
-        if (ret) {
-            response = CommonResponse.buildSuccessResponse(sb.toString());
-        } else {
-            response = CommonResponse.buildFailedResponse(sb.toString());
-        }
-        return response;
-    }
+    return response;
+  }
 }

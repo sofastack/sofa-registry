@@ -20,14 +20,13 @@ import com.alipay.sofa.registry.exception.InitializeException;
 
 /**
  * @author chen.zhu
- *         <p>
- *         Nov 13, 2020
+ *     <p>Nov 13, 2020
  */
 public interface Initializable {
 
-	public static final String PHASE_NAME_BEGIN = "initializing";
+  public static final String PHASE_NAME_BEGIN = "initializing";
 
-	public static final String PHASE_NAME_END = "initialized";
+  public static final String PHASE_NAME_END = "initialized";
 
-	void initialize() throws InitializeException;
+  void initialize() throws InitializeException;
 }

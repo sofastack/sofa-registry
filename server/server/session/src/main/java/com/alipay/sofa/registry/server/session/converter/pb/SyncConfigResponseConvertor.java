@@ -22,54 +22,46 @@ import com.alipay.sofa.registry.core.model.SyncConfigResponse;
 
 /**
  * @author bystander
- * @version $Id: SyncConfigResponseConvertor.java, v 0.1 2018年03月21日 2:06 PM
- *          bystander Exp $
+ * @version $Id: SyncConfigResponseConvertor.java, v 0.1 2018年03月21日 2:06 PM bystander Exp $
  */
 public class SyncConfigResponseConvertor {
 
-	public static SyncConfigResponse convert2Java(
-			SyncConfigResponsePb syncConfigResponsePb) {
+  public static SyncConfigResponse convert2Java(SyncConfigResponsePb syncConfigResponsePb) {
 
-		if (syncConfigResponsePb == null) {
-			return null;
-		}
+    if (syncConfigResponsePb == null) {
+      return null;
+    }
 
-		SyncConfigResponse syncConfigResponse = new SyncConfigResponse();
+    SyncConfigResponse syncConfigResponse = new SyncConfigResponse();
 
-		syncConfigResponse.setAvailableSegments(ListStringConvertor
-				.convert2Java(syncConfigResponsePb.getAvailableSegmentsList()));
+    syncConfigResponse.setAvailableSegments(
+        ListStringConvertor.convert2Java(syncConfigResponsePb.getAvailableSegmentsList()));
 
-		syncConfigResponse.setRetryInterval(syncConfigResponsePb
-				.getRetryInterval());
-		syncConfigResponse.setMessage(syncConfigResponsePb.getResult()
-				.getMessage());
-		syncConfigResponse.setSuccess(syncConfigResponsePb.getResult()
-				.getSuccess());
+    syncConfigResponse.setRetryInterval(syncConfigResponsePb.getRetryInterval());
+    syncConfigResponse.setMessage(syncConfigResponsePb.getResult().getMessage());
+    syncConfigResponse.setSuccess(syncConfigResponsePb.getResult().getSuccess());
 
-		return syncConfigResponse;
-	}
+    return syncConfigResponse;
+  }
 
-	public static SyncConfigResponsePb convert2Pb(
-			SyncConfigResponse syncConfigResponseJava) {
+  public static SyncConfigResponsePb convert2Pb(SyncConfigResponse syncConfigResponseJava) {
 
-		if (syncConfigResponseJava == null) {
-			return null;
-		}
+    if (syncConfigResponseJava == null) {
+      return null;
+    }
 
-		SyncConfigResponsePb.Builder builder = SyncConfigResponsePb
-				.newBuilder();
-		builder.setRetryInterval(syncConfigResponseJava.getRetryInterval());
-		builder.addAllAvailableSegments(syncConfigResponseJava
-				.getAvailableSegments());
+    SyncConfigResponsePb.Builder builder = SyncConfigResponsePb.newBuilder();
+    builder.setRetryInterval(syncConfigResponseJava.getRetryInterval());
+    builder.addAllAvailableSegments(syncConfigResponseJava.getAvailableSegments());
 
-		ResultPb.Builder resultPbBuilder = ResultPb.newBuilder();
-		if (syncConfigResponseJava.getMessage() != null) {
-			resultPbBuilder.setMessage(syncConfigResponseJava.getMessage());
-		}
-		resultPbBuilder.setSuccess(syncConfigResponseJava.isSuccess());
+    ResultPb.Builder resultPbBuilder = ResultPb.newBuilder();
+    if (syncConfigResponseJava.getMessage() != null) {
+      resultPbBuilder.setMessage(syncConfigResponseJava.getMessage());
+    }
+    resultPbBuilder.setSuccess(syncConfigResponseJava.isSuccess());
 
-		builder.setResult(resultPbBuilder.build());
+    builder.setResult(resultPbBuilder.build());
 
-		return builder.build();
-	}
+    return builder.build();
+  }
 }

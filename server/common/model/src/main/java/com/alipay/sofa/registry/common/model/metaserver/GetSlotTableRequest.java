@@ -19,67 +19,77 @@ package com.alipay.sofa.registry.common.model.metaserver;
 import java.io.Serializable;
 
 /**
- *
  * @author yuzhi.lyz
  * @version v 0.1 2020-11-11 11:16 yuzhi.lyz Exp $
  */
 public class GetSlotTableRequest implements Serializable {
-    private static final long serialVersionUID = 2478663577413212315L;
-    private long              epochOfNode;
-    // session node not care the followers
-    private boolean           ignoredFollowers;
-    // data node only care self, if not set, get all
-    private String            targetDataNode;
+  private static final long serialVersionUID = 2478663577413212315L;
+  private long epochOfNode;
+  // session node not care the followers
+  private boolean ignoredFollowers;
+  // data node only care self, if not set, get all
+  private String targetDataNode;
 
-    public GetSlotTableRequest(long epochOfNode, String targetDataNode, boolean ignoredFollowers) {
-        this.epochOfNode = epochOfNode;
-        this.targetDataNode = targetDataNode;
-        this.ignoredFollowers = ignoredFollowers;
-    }
+  public GetSlotTableRequest(long epochOfNode, String targetDataNode, boolean ignoredFollowers) {
+    this.epochOfNode = epochOfNode;
+    this.targetDataNode = targetDataNode;
+    this.ignoredFollowers = ignoredFollowers;
+  }
 
-    /**
-     * Getter method for property <tt>epochOfNode</tt>.
-     * @return property value of epochOfNode
-     */
-    public long getEpochOfNode() {
-        return epochOfNode;
-    }
+  /**
+   * Getter method for property <tt>epochOfNode</tt>.
+   *
+   * @return property value of epochOfNode
+   */
+  public long getEpochOfNode() {
+    return epochOfNode;
+  }
 
-    /**
-     * Setter method for property <tt>epochOfNode</tt>.
-     * @param epochOfNode value to be assigned to property epochOfNode
-     */
-    public void setEpochOfNode(long epochOfNode) {
-        this.epochOfNode = epochOfNode;
-    }
+  /**
+   * Setter method for property <tt>epochOfNode</tt>.
+   *
+   * @param epochOfNode value to be assigned to property epochOfNode
+   */
+  public void setEpochOfNode(long epochOfNode) {
+    this.epochOfNode = epochOfNode;
+  }
 
-    /**
-     * Getter method for property <tt>targetDataNode</tt>.
-     * @return property value of targetDataNode
-     */
-    public String getTargetDataNode() {
-        return targetDataNode;
-    }
+  /**
+   * Getter method for property <tt>targetDataNode</tt>.
+   *
+   * @return property value of targetDataNode
+   */
+  public String getTargetDataNode() {
+    return targetDataNode;
+  }
 
-    /**
-     * Setter method for property <tt>targetDataNode</tt>.
-     * @param targetDataNode value to be assigned to property targetDataNode
-     */
-    public void setTargetDataNode(String targetDataNode) {
-        this.targetDataNode = targetDataNode;
-    }
+  /**
+   * Setter method for property <tt>targetDataNode</tt>.
+   *
+   * @param targetDataNode value to be assigned to property targetDataNode
+   */
+  public void setTargetDataNode(String targetDataNode) {
+    this.targetDataNode = targetDataNode;
+  }
 
-    public boolean isIgnoredFollowers() {
-        return ignoredFollowers;
-    }
+  public boolean isIgnoredFollowers() {
+    return ignoredFollowers;
+  }
 
-    public void setIgnoredFollowers(boolean v) {
-        this.ignoredFollowers = v;
-    }
+  public void setIgnoredFollowers(boolean v) {
+    this.ignoredFollowers = v;
+  }
 
-    @Override
-    public String toString() {
-        return "GetSlotTableRequest{" + "epochOfNode=" + epochOfNode + ", ignoredFollowers="
-               + ignoredFollowers + ", targetDataNode='" + targetDataNode + '\'' + '}';
-    }
+  @Override
+  public String toString() {
+    return "GetSlotTableRequest{"
+        + "epochOfNode="
+        + epochOfNode
+        + ", ignoredFollowers="
+        + ignoredFollowers
+        + ", targetDataNode='"
+        + targetDataNode
+        + '\''
+        + '}';
+  }
 }

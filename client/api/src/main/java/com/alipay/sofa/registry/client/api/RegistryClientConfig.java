@@ -18,157 +18,156 @@ package com.alipay.sofa.registry.client.api;
 
 /**
  * The interface Registry client config.
- * 
+ *
  * @author zhuoyu.sjw
- * @version $Id : RegistryClientConfig.java, v 0.1 2017-11-23 19:52 zhuoyu.sjw
- *          Exp $$
+ * @version $Id : RegistryClientConfig.java, v 0.1 2017-11-23 19:52 zhuoyu.sjw Exp $$
  */
 public interface RegistryClientConfig {
 
-	/**
-	 * Gets env.
-	 * 
-	 * @return the env
-	 */
-	String getEnv();
+  /**
+   * Gets env.
+   *
+   * @return the env
+   */
+  String getEnv();
 
-	/**
-	 * Gets instance id.
-	 * 
-	 * @return the instance id
-	 */
-	String getInstanceId();
+  /**
+   * Gets instance id.
+   *
+   * @return the instance id
+   */
+  String getInstanceId();
 
-	/**
-	 * Gets cell.
-	 * 
-	 * @return the cell
-	 */
-	String getZone();
+  /**
+   * Gets cell.
+   *
+   * @return the cell
+   */
+  String getZone();
 
-	/**
-	 * Gets registry endpoint.
-	 * 
-	 * @return the registry endpoint
-	 */
-	String getRegistryEndpoint();
+  /**
+   * Gets registry endpoint.
+   *
+   * @return the registry endpoint
+   */
+  String getRegistryEndpoint();
 
-	/**
-	 * Gets registry endpoint port.
-	 * 
-	 * @return the registry endpoint port
-	 */
-	int getRegistryEndpointPort();
+  /**
+   * Gets registry endpoint port.
+   *
+   * @return the registry endpoint port
+   */
+  int getRegistryEndpointPort();
 
-	/**
-	 * Gets data center.
-	 * 
-	 * @return the data center
-	 */
-	String getDataCenter();
+  /**
+   * Gets data center.
+   *
+   * @return the data center
+   */
+  String getDataCenter();
 
-	/**
-	 * Gets app name.
-	 * 
-	 * @return the app name
-	 */
-	String getAppName();
+  /**
+   * Gets app name.
+   *
+   * @return the app name
+   */
+  String getAppName();
 
-	/**
-	 * Gets connect timeout.
-	 * 
-	 * @return the connect timeout
-	 */
-	int getConnectTimeout();
+  /**
+   * Gets connect timeout.
+   *
+   * @return the connect timeout
+   */
+  int getConnectTimeout();
 
-	/**
-	 * Gets socket timeout.
-	 * 
-	 * @return the socket timeout
-	 */
-	int getSocketTimeout();
+  /**
+   * Gets socket timeout.
+   *
+   * @return the socket timeout
+   */
+  int getSocketTimeout();
 
-	/**
-	 * Gets invoke timeout.
-	 * 
-	 * @return the invoke timeout
-	 */
-	int getInvokeTimeout();
+  /**
+   * Gets invoke timeout.
+   *
+   * @return the invoke timeout
+   */
+  int getInvokeTimeout();
 
-	/**
-	 * Gets recheck interval.
-	 * 
-	 * @return the recheck interval
-	 */
-	int getRecheckInterval();
+  /**
+   * Gets recheck interval.
+   *
+   * @return the recheck interval
+   */
+  int getRecheckInterval();
 
-	/**
-	 * Gets observer thread core size.
-	 * 
-	 * @return the observer thread core size
-	 */
-	int getObserverThreadCoreSize();
+  /**
+   * Gets observer thread core size.
+   *
+   * @return the observer thread core size
+   */
+  int getObserverThreadCoreSize();
 
-	/**
-	 * Gets observer thread max size.
-	 * 
-	 * @return the observer thread max size
-	 */
-	int getObserverThreadMaxSize();
+  /**
+   * Gets observer thread max size.
+   *
+   * @return the observer thread max size
+   */
+  int getObserverThreadMaxSize();
 
-	/**
-	 * Gets observer thread queue length.
-	 * 
-	 * @return the observer thread queue length
-	 */
-	int getObserverThreadQueueLength();
+  /**
+   * Gets observer thread queue length.
+   *
+   * @return the observer thread queue length
+   */
+  int getObserverThreadQueueLength();
 
-	/**
-	 * Gets observer callback timeout.
-	 * 
-	 * @return the observer callback timeout
-	 */
-	int getObserverCallbackTimeout();
+  /**
+   * Gets observer callback timeout.
+   *
+   * @return the observer callback timeout
+   */
+  int getObserverCallbackTimeout();
 
-	/**
-	 * Gets sync config retry interval.
-	 * 
-	 * @return the sync config retry interval
-	 */
-	int getSyncConfigRetryInterval();
+  /**
+   * Gets sync config retry interval.
+   *
+   * @return the sync config retry interval
+   */
+  int getSyncConfigRetryInterval();
 
-	/**
-	 * Gets access key.
-	 * 
-	 * @return the access key
-	 */
-	String getAccessKey();
+  /**
+   * Gets access key.
+   *
+   * @return the access key
+   */
+  String getAccessKey();
 
-	/**
-	 * Gets secret key.
-	 * 
-	 * @return the secret key
-	 */
-	String getSecretKey();
+  /**
+   * Gets secret key.
+   *
+   * @return the secret key
+   */
+  String getSecretKey();
 
-	/**
-	 * Gets algorithm.
-	 * 
-	 * @return the algorithm
-	 */
-	String getAlgorithm();
+  /**
+   * Gets algorithm.
+   *
+   * @return the algorithm
+   */
+  String getAlgorithm();
 
-	/**
-	 * Gets auth cache interval.
-	 * 
-	 * @return the auth cache interval
-	 */
-	long getAuthCacheInterval();
+  /**
+   * Gets auth cache interval.
+   *
+   * @return the auth cache interval
+   */
+  long getAuthCacheInterval();
 
-	/**
-	 * Is event bus enable boolean.
-	 * 
-	 * @return the boolean
-	 */
-	boolean isEventBusEnable();
+  /**
+   * Is event bus enable boolean.
+   *
+   * @return the boolean
+   */
+  boolean isEventBusEnable();
 }

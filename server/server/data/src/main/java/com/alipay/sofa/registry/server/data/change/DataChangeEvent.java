@@ -17,7 +17,6 @@
 package com.alipay.sofa.registry.server.data.change;
 
 import com.google.common.collect.Lists;
-
 import java.util.Collections;
 import java.util.List;
 
@@ -28,29 +27,36 @@ import java.util.List;
  * @version $Id: DataChangeEvent.java, v 0.1 2017-12-07 18:44 qian.lqlq Exp $
  */
 public class DataChangeEvent implements IDataChangeEvent {
-    private final String       dataCenter;
-    private final List<String> dataInfoIds;
+  private final String dataCenter;
+  private final List<String> dataInfoIds;
 
-    public DataChangeEvent(String dataCenter, List<String> dataInfoIds) {
-        this.dataCenter = dataCenter;
-        this.dataInfoIds = Collections.unmodifiableList(Lists.newArrayList(dataInfoIds));
-    }
+  public DataChangeEvent(String dataCenter, List<String> dataInfoIds) {
+    this.dataCenter = dataCenter;
+    this.dataInfoIds = Collections.unmodifiableList(Lists.newArrayList(dataInfoIds));
+  }
 
-    /**
-     * Getter method for property <tt>dataCenter</tt>.
-     * @return property value of dataCenter
-     */
-    public String getDataCenter() {
-        return dataCenter;
-    }
+  /**
+   * Getter method for property <tt>dataCenter</tt>.
+   *
+   * @return property value of dataCenter
+   */
+  public String getDataCenter() {
+    return dataCenter;
+  }
 
-    public List<String> getDataInfoIds() {
-        return dataInfoIds;
-    }
+  public List<String> getDataInfoIds() {
+    return dataInfoIds;
+  }
 
-    @Override
-    public String toString() {
-        return "DataChangeEvent{" + "dataCenter='" + dataCenter + '\'' + ", dataInfoIds='"
-               + dataInfoIds + '\'' + '}';
-    }
+  @Override
+  public String toString() {
+    return "DataChangeEvent{"
+        + "dataCenter='"
+        + dataCenter
+        + '\''
+        + ", dataInfoIds='"
+        + dataInfoIds
+        + '\''
+        + '}';
+  }
 }

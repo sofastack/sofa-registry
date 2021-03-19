@@ -31,19 +31,17 @@ import com.alipay.sofa.registry.store.api.meta.ProvideDataRepository;
 import com.alipay.sofa.registry.util.JsonUtils;
 import com.codahale.metrics.Gauge;
 import com.codahale.metrics.MetricRegistry;
-import org.springframework.beans.factory.annotation.Autowired;
-
+import java.util.HashMap;
+import java.util.Map;
 import javax.annotation.PostConstruct;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
-import java.util.HashMap;
-import java.util.Map;
+import org.springframework.beans.factory.annotation.Autowired;
 
 /**
- *
  * @author shangyu.wh
  * @version $Id: MetaDigestResource.java, v 0.1 2018-06-25 21:13 shangyu.wh Exp $
  */
@@ -51,92 +49,92 @@ import java.util.Map;
 @LeaderAwareRestController
 public class MetaDigestResource {
 
-    private static final Logger      TASK_LOGGER = LoggerFactory.getLogger(
-                                                     MetaDigestResource.class, "[Resource]");
+  private static final Logger TASK_LOGGER =
+      LoggerFactory.getLogger(MetaDigestResource.class, "[Resource]");
 
-    private static final Logger      DB_LOGGER   = LoggerFactory.getLogger(
-                                                     MetaDigestResource.class, "[DBService]");
+  private static final Logger DB_LOGGER =
+      LoggerFactory.getLogger(MetaDigestResource.class, "[DBService]");
 
-    @Autowired
-    private DefaultMetaServerManager metaServerManager;
+  @Autowired private DefaultMetaServerManager metaServerManager;
 
-    @Autowired
-    private ProvideDataRepository provideDataRepository;
+  @Autowired private ProvideDataRepository provideDataRepository;
 
-    @Autowired
-    private NodeConfig nodeConfig;
+  @Autowired private NodeConfig nodeConfig;
 
-    @PostConstruct
-    public void init() {
-        MetricRegistry metrics = new MetricRegistry();
-        metrics.register("metaNodeList", (Gauge<Map>) () -> getRegisterNodeByType(NodeType.META.name()));
-        metrics.register("dataNodeList", (Gauge<Map>) () -> getRegisterNodeByType(NodeType.DATA.name()));
-        metrics.register("sessionNodeList", (Gauge<Map>) () -> getRegisterNodeByType(NodeType.SESSION.name()));
-        metrics.register("pushSwitch", (Gauge<Map>) () -> getPushSwitch());
-        ReporterUtils.startSlf4jReporter(60, metrics);
+  @PostConstruct
+  public void init() {
+    MetricRegistry metrics = new MetricRegistry();
+    metrics.register(
+        "metaNodeList", (Gauge<Map>) () -> getRegisterNodeByType(NodeType.META.name()));
+    metrics.register(
+        "dataNodeList", (Gauge<Map>) () -> getRegisterNodeByType(NodeType.DATA.name()));
+    metrics.register(
+        "sessionNodeList", (Gauge<Map>) () -> getRegisterNodeByType(NodeType.SESSION.name()));
+    metrics.register("pushSwitch", (Gauge<Map>) () -> getPushSwitch());
+    ReporterUtils.startSlf4jReporter(60, metrics);
+  }
+
+  @GET
+  @Path("{type}/node/query")
+  @Produces(MediaType.APPLICATION_JSON)
+  public Map getRegisterNodeByType(@PathParam("type") String type) {
+    try {
+      return metaServerManager.getSummary(NodeType.valueOf(type.toUpperCase())).getNodes();
+    } catch (Exception e) {
+      TASK_LOGGER.error("Fail get Register Node By Type:{}", type, e);
+      throw new RuntimeException("Fail get Register Node By Type:" + type, e);
     }
+  }
 
-    @GET
-    @Path("{type}/node/query")
-    @Produces(MediaType.APPLICATION_JSON)
-    public Map getRegisterNodeByType(@PathParam("type") String type) {
-        try {
-            return metaServerManager.getSummary(NodeType.valueOf(type.toUpperCase())).getNodes();
-        } catch (Exception e) {
-            TASK_LOGGER.error("Fail get Register Node By Type:{}", type, e);
-            throw new RuntimeException("Fail get Register Node By Type:" + type, e);
+  /** return true mean push switch on */
+  @GET
+  @Path("pushSwitch")
+  @Produces(MediaType.APPLICATION_JSON)
+  public Map<String, Object> getPushSwitch() {
+    Map<String, Object> resultMap = new HashMap<>(1);
+    try {
+      DBResponse ret =
+          provideDataRepository.get(
+              nodeConfig.getLocalDataCenter(), ValueConstants.STOP_PUSH_DATA_SWITCH_DATA_ID);
+
+      if (ret == null) {
+        // default push switch on
+        resultMap.put("pushSwitch", "open");
+        resultMap.put("msg", "get null Data from db!");
+      } else {
+        if (ret.getOperationStatus() == OperationStatus.SUCCESS) {
+          String result = getEntityData(ret);
+          if (result != null && !result.isEmpty()) {
+            resultMap.put("pushSwitch", "false".equalsIgnoreCase(result) ? "open" : "closed");
+          } else {
+            resultMap.put("pushSwitch", "open");
+            resultMap.put("msg", "data is empty");
+          }
+        } else if (ret.getOperationStatus() == OperationStatus.NOTFOUND) {
+          resultMap.put("pushSwitch", "open");
+          resultMap.put("msg", "OperationStatus is NOTFOUND");
+        } else {
+          DB_LOGGER.error("get Data DB status error!");
+          throw new RuntimeException("Get Data DB status error!");
         }
+      }
+      DB_LOGGER.info("getPushSwitch: {}", resultMap);
+    } catch (Exception e) {
+      DB_LOGGER.error(
+          "get persistence Data dataInfoId {} from db error!",
+          ValueConstants.STOP_PUSH_DATA_SWITCH_DATA_ID,
+          e);
+      throw new RuntimeException("Get persistence Data from db error!", e);
     }
 
-    /**
-     * return true mean push switch on
-     */
-    @GET
-    @Path("pushSwitch")
-    @Produces(MediaType.APPLICATION_JSON)
-    public Map<String, Object> getPushSwitch() {
-        Map<String, Object> resultMap = new HashMap<>(1);
-        try {
-            DBResponse ret = provideDataRepository
-                .get(nodeConfig.getLocalDataCenter(), ValueConstants.STOP_PUSH_DATA_SWITCH_DATA_ID);
+    return resultMap;
+  }
 
-            if (ret == null) {
-                //default push switch on
-                resultMap.put("pushSwitch", "open");
-                resultMap.put("msg", "get null Data from db!");
-            } else {
-                if (ret.getOperationStatus() == OperationStatus.SUCCESS) {
-                    String result = getEntityData(ret);
-                    if (result != null && !result.isEmpty()) {
-                        resultMap.put("pushSwitch", "false".equalsIgnoreCase(result) ? "open"
-                            : "closed");
-                    } else {
-                        resultMap.put("pushSwitch", "open");
-                        resultMap.put("msg", "data is empty");
-                    }
-                } else if (ret.getOperationStatus() == OperationStatus.NOTFOUND) {
-                    resultMap.put("pushSwitch", "open");
-                    resultMap.put("msg", "OperationStatus is NOTFOUND");
-                } else {
-                    DB_LOGGER.error("get Data DB status error!");
-                    throw new RuntimeException("Get Data DB status error!");
-                }
-            }
-            DB_LOGGER.info("getPushSwitch: {}", resultMap);
-        } catch (Exception e) {
-            DB_LOGGER.error("get persistence Data dataInfoId {} from db error!",
-                ValueConstants.STOP_PUSH_DATA_SWITCH_DATA_ID, e);
-            throw new RuntimeException("Get persistence Data from db error!", e);
-        }
-
-        return resultMap;
+  private static String getEntityData(DBResponse resp) {
+    if (resp != null && resp.getEntity() != null) {
+      PersistenceData data = JsonUtils.read((String) resp.getEntity(), PersistenceData.class);
+      return data.getData();
     }
-
-    private static String getEntityData(DBResponse resp) {
-        if (resp != null && resp.getEntity() != null) {
-            PersistenceData data = JsonUtils.read((String) resp.getEntity(), PersistenceData.class);
-            return data.getData();
-        }
-        return null;
-    }
+    return null;
+  }
 }

@@ -24,10 +24,10 @@ package com.alipay.sofa.registry.client.api;
  */
 public interface Publisher extends Register {
 
-    /**
-     * Publish.
-     *
-     * @param data the data
-     */
-    void republish(String... data);
+  /**
+   * Publish.
+   *
+   * @param data the data
+   */
+  void republish(String... data);
 }

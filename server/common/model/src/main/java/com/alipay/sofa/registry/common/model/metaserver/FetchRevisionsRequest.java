@@ -20,9 +20,9 @@ import java.io.Serializable;
 import java.util.List;
 
 public class FetchRevisionsRequest implements Serializable {
-    public List<String> keys;
+  public List<String> keys;
 
-    public FetchRevisionsRequest(List<String> keys) {
-        this.keys = keys;
-    }
+  public FetchRevisionsRequest(List<String> keys) {
+    this.keys = keys;
+  }
 }

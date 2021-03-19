@@ -20,27 +20,17 @@ import com.alipay.sofa.registry.task.listener.TaskEvent.TaskType;
 import com.google.common.collect.Multimap;
 
 /**
- *
  * @author shangyu.wh
  * @version $Id: TaskListenerManager.java, v 0.1 2017-12-07 18:14 shangyu.wh Exp $
  */
 public interface TaskListenerManager {
 
-    /**
-     *
-     * @return
-     */
-    Multimap<TaskType, TaskListener> getTaskListeners();
+  /** @return */
+  Multimap<TaskType, TaskListener> getTaskListeners();
 
-    /**
-     *
-     * @param taskListener
-     */
-    void addTaskListener(TaskListener taskListener);
+  /** @param taskListener */
+  void addTaskListener(TaskListener taskListener);
 
-    /**
-     *
-     * @param taskEvent
-     */
-    void sendTaskEvent(TaskEvent taskEvent);
+  /** @param taskEvent */
+  void sendTaskEvent(TaskEvent taskEvent);
 }

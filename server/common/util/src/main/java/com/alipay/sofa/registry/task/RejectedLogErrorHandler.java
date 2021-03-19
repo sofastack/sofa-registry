@@ -17,20 +17,19 @@
 package com.alipay.sofa.registry.task;
 
 import com.alipay.sofa.registry.log.Logger;
-
 import java.util.concurrent.RejectedExecutionHandler;
 import java.util.concurrent.ThreadPoolExecutor;
 
 public final class RejectedLogErrorHandler implements RejectedExecutionHandler {
-    private final Logger logger;
+  private final Logger logger;
 
-    public RejectedLogErrorHandler(Logger logger) {
-        this.logger = logger;
-    }
+  public RejectedLogErrorHandler(Logger logger) {
+    this.logger = logger;
+  }
 
-    @Override
-    public void rejectedExecution(Runnable r, ThreadPoolExecutor executor) {
-        String msg = String.format("Task(%s) %s rejected from %s", r.getClass(), r, executor);
-        logger.error(msg);
-    }
+  @Override
+  public void rejectedExecution(Runnable r, ThreadPoolExecutor executor) {
+    String msg = String.format("Task(%s) %s rejected from %s", r.getClass(), r, executor);
+    logger.error(msg);
+  }
 }

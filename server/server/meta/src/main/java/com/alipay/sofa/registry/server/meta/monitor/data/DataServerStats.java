@@ -17,57 +17,56 @@
 package com.alipay.sofa.registry.server.meta.monitor.data;
 
 import com.alipay.sofa.registry.common.model.slot.BaseSlotStatus;
-
 import java.util.List;
 
 /**
  * @author chen.zhu
- * <p>
- * Feb 24, 2021
+ *     <p>Feb 24, 2021
  */
 public class DataServerStats {
 
-    private final String               dataServer;
-    private final long                 slotTableEpoch;
-    private final List<BaseSlotStatus> slotStatuses;
+  private final String dataServer;
+  private final long slotTableEpoch;
+  private final List<BaseSlotStatus> slotStatuses;
 
-    /**
-     * Constructor.
-     *
-     * @param dataServer
-     * @param slotTableEpoch the slot table epoch
-     * @param slotStatuses     the slot status
-     */
-    public DataServerStats(String dataServer, long slotTableEpoch, List<BaseSlotStatus> slotStatuses) {
-        this.dataServer = dataServer;
-        this.slotTableEpoch = slotTableEpoch;
-        this.slotStatuses = slotStatuses;
-    }
+  /**
+   * Constructor.
+   *
+   * @param dataServer
+   * @param slotTableEpoch the slot table epoch
+   * @param slotStatuses the slot status
+   */
+  public DataServerStats(
+      String dataServer, long slotTableEpoch, List<BaseSlotStatus> slotStatuses) {
+    this.dataServer = dataServer;
+    this.slotTableEpoch = slotTableEpoch;
+    this.slotStatuses = slotStatuses;
+  }
 
-    /**
-     * Gets get slot table epoch.
-     *
-     * @return the get slot table epoch
-     */
-    public long getSlotTableEpoch() {
-        return slotTableEpoch;
-    }
+  /**
+   * Gets get slot table epoch.
+   *
+   * @return the get slot table epoch
+   */
+  public long getSlotTableEpoch() {
+    return slotTableEpoch;
+  }
 
-    /**
-     * Gets get slot status.
-     *
-     * @return the get slot status
-     */
-    public List<BaseSlotStatus> getSlotStatus() {
-        return slotStatuses;
-    }
+  /**
+   * Gets get slot status.
+   *
+   * @return the get slot status
+   */
+  public List<BaseSlotStatus> getSlotStatus() {
+    return slotStatuses;
+  }
 
-    /**
-     * Gets get data server.
-     *
-     * @return the get data server
-     */
-    public String getDataServer() {
-        return dataServer;
-    }
+  /**
+   * Gets get data server.
+   *
+   * @return the get data server
+   */
+  public String getDataServer() {
+    return dataServer;
+  }
 }

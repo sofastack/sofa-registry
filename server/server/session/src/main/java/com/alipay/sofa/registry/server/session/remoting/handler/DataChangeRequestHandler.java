@@ -27,10 +27,9 @@ import com.alipay.sofa.registry.server.session.push.FirePushService;
 import com.alipay.sofa.registry.server.session.scheduler.ExecutorManager;
 import com.alipay.sofa.registry.server.session.store.Interests;
 import com.alipay.sofa.registry.server.shared.remoting.AbstractClientHandler;
-import org.springframework.beans.factory.annotation.Autowired;
-
 import java.util.Map;
 import java.util.concurrent.Executor;
+import org.springframework.beans.factory.annotation.Autowired;
 
 /**
  * @author kezhu.wukz
@@ -39,58 +38,51 @@ import java.util.concurrent.Executor;
  */
 public class DataChangeRequestHandler extends AbstractClientHandler<DataChangeRequest> {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(DataChangeRequestHandler.class);
-    /**
-     * store subscribers
-     */
-    @Autowired
-    private Interests           sessionInterests;
+  private static final Logger LOGGER = LoggerFactory.getLogger(DataChangeRequestHandler.class);
+  /** store subscribers */
+  @Autowired private Interests sessionInterests;
 
-    @Autowired
-    private SessionServerConfig sessionServerConfig;
+  @Autowired private SessionServerConfig sessionServerConfig;
 
-    @Autowired
-    private ExecutorManager     executorManager;
+  @Autowired private ExecutorManager executorManager;
 
-    @Autowired
-    private FirePushService     firePushService;
+  @Autowired private FirePushService firePushService;
 
-    @Override
-    protected NodeType getConnectNodeType() {
-        return NodeType.DATA;
+  @Override
+  protected NodeType getConnectNodeType() {
+    return NodeType.DATA;
+  }
+
+  @Override
+  public Executor getExecutor() {
+    return executorManager.getDataChangeRequestExecutor();
+  }
+
+  @Override
+  public Object doHandle(Channel channel, DataChangeRequest dataChangeRequest) {
+    if (sessionServerConfig.isStopPushSwitch()) {
+      return null;
     }
-
-    @Override
-    public Executor getExecutor() {
-        return executorManager.getDataChangeRequestExecutor();
-    }
-
-    @Override
-    public Object doHandle(Channel channel, DataChangeRequest dataChangeRequest) {
-        if (sessionServerConfig.isStopPushSwitch()) {
-            return null;
+    final String dataCenter = dataChangeRequest.getDataCenter();
+    for (Map.Entry<String, DatumVersion> e : dataChangeRequest.getDataInfoIds().entrySet()) {
+      final String dataInfoId = e.getKey();
+      final DatumVersion version = e.getValue();
+      Interests.InterestVersionCheck check =
+          sessionInterests.checkInterestVersion(dataCenter, dataInfoId, version.getValue());
+      if (!check.interested) {
+        if (check != Interests.InterestVersionCheck.NoSub) {
+          // log exclude NoSub
+          LOGGER.info("[SkipChange]{},{}, ver={}, {}", dataInfoId, dataCenter, version, check);
         }
-        final String dataCenter = dataChangeRequest.getDataCenter();
-        for (Map.Entry<String, DatumVersion> e : dataChangeRequest.getDataInfoIds().entrySet()) {
-            final String dataInfoId = e.getKey();
-            final DatumVersion version = e.getValue();
-            Interests.InterestVersionCheck check = sessionInterests.checkInterestVersion(
-                dataCenter, dataInfoId, version.getValue());
-            if (!check.interested) {
-                if (check != Interests.InterestVersionCheck.NoSub) {
-                    // log exclude NoSub
-                    LOGGER.info("[SkipChange]{},{}, ver={}, {}", dataInfoId, dataCenter, version,
-                        check);
-                }
-                continue;
-            }
-            firePushService.fireOnChange(dataCenter, dataInfoId, version.getValue());
-        }
-        return null;
+        continue;
+      }
+      firePushService.fireOnChange(dataCenter, dataInfoId, version.getValue());
     }
+    return null;
+  }
 
-    @Override
-    public Class interest() {
-        return DataChangeRequest.class;
-    }
+  @Override
+  public Class interest() {
+    return DataChangeRequest.class;
+  }
 }

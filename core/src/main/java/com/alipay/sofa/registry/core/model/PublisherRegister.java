@@ -20,40 +20,41 @@ import java.util.List;
 
 /**
  * The type Publisher register.
+ *
  * @author zhuoyu.sjw
  * @version $Id : PublisherRegister.java, v 0.1 2017-11-28 15:39 zhuoyu.sjw Exp $$
  */
 public class PublisherRegister extends BaseRegister {
 
-    private static final long serialVersionUID = 17084511452627565L;
+  private static final long serialVersionUID = 17084511452627565L;
 
-    private List<DataBox>     dataList;
+  private List<DataBox> dataList;
 
-    /**
-     * Getter method for property <tt>dataList</tt>.
-     *
-     * @return property value of dataList
-     */
-    public List<DataBox> getDataList() {
-        return dataList;
-    }
+  /**
+   * Getter method for property <tt>dataList</tt>.
+   *
+   * @return property value of dataList
+   */
+  public List<DataBox> getDataList() {
+    return dataList;
+  }
 
-    /**
-     * Setter method for property <tt>dataList</tt>.
-     *
-     * @param dataList value to be assigned to property dataList
-     */
-    public void setDataList(List<DataBox> dataList) {
-        this.dataList = dataList;
-    }
+  /**
+   * Setter method for property <tt>dataList</tt>.
+   *
+   * @param dataList value to be assigned to property dataList
+   */
+  public void setDataList(List<DataBox> dataList) {
+    this.dataList = dataList;
+  }
 
-    /**
-     * To string string.
-     *
-     * @return the string
-     */
-    @Override
-    public String toString() {
-        return "PublisherRegister{" + "dataList=" + dataList + '}' + super.toString();
-    }
+  /**
+   * To string string.
+   *
+   * @return the string
+   */
+  @Override
+  public String toString() {
+    return "PublisherRegister{" + "dataList=" + dataList + '}' + super.toString();
+  }
 }

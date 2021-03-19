@@ -23,10 +23,8 @@ import com.alipay.sofa.registry.common.model.store.Publisher;
 import com.alipay.sofa.registry.common.model.store.URL;
 import com.alipay.sofa.registry.core.model.DataBox;
 import com.alipay.sofa.registry.core.model.PublisherRegister;
-
 import java.util.ArrayList;
 import java.util.List;
-
 
 /**
  * @author shangyu.wh
@@ -34,60 +32,59 @@ import java.util.List;
  */
 public class PublisherConverter {
 
-    private static final Converter<PublisherRegister, Publisher> publisherConverter = source -> {
+  private static final Converter<PublisherRegister, Publisher> publisherConverter =
+      source -> {
         Publisher publisher = new Publisher();
 
         fillCommonRegion(publisher, source);
         publisher.setDataList(convert(source.getDataList()));
 
         return publisher;
-    };
+      };
 
+  public static void fillCommonRegion(Publisher publisher, PublisherRegister source) {
+    publisher.setAppName(source.getAppName());
+    // ZONE MUST BE CURRENT SESSION ZONE
+    publisher.setCell(source.getZone());
+    publisher.setClientId(source.getClientId());
+    publisher.setDataId(source.getDataId());
+    publisher.setGroup(source.getGroup());
+    publisher.setInstanceId(source.getInstanceId());
+    publisher.setRegisterId(source.getRegistId());
+    publisher.setProcessId(source.getProcessId());
+    publisher.setVersion(source.getVersion());
 
-    public static void fillCommonRegion(Publisher publisher, PublisherRegister source) {
-        publisher.setAppName(source.getAppName());
-        //ZONE MUST BE CURRENT SESSION ZONE
-        publisher.setCell(source.getZone());
-        publisher.setClientId(source.getClientId());
-        publisher.setDataId(source.getDataId());
-        publisher.setGroup(source.getGroup());
-        publisher.setInstanceId(source.getInstanceId());
-        publisher.setRegisterId(source.getRegistId());
-        publisher.setProcessId(source.getProcessId());
-        publisher.setVersion(source.getVersion());
+    // registerTimestamp must happen from server,client time maybe different cause pub and
+    // unPublisher fail
+    publisher.setRegisterTimestamp(System.currentTimeMillis());
 
-        //registerTimestamp must happen from server,client time maybe different cause pub and unPublisher fail
-        publisher.setRegisterTimestamp(System.currentTimeMillis());
+    publisher.setClientRegisterTimestamp(source.getTimestamp());
+    publisher.setSourceAddress(new URL(source.getIp(), source.getPort()));
 
-        publisher.setClientRegisterTimestamp(source.getTimestamp());
-        publisher.setSourceAddress(new URL(source.getIp(), source.getPort()));
+    publisher.setClientVersion(ClientVersion.StoreData);
 
-        publisher.setClientVersion(ClientVersion.StoreData);
+    DataInfo dataInfo = new DataInfo(source.getInstanceId(), source.getDataId(), source.getGroup());
+    publisher.setDataInfoId(dataInfo.getDataInfoId());
+  }
 
-        DataInfo dataInfo = new DataInfo(source.getInstanceId(), source.getDataId(),
-                source.getGroup());
-        publisher.setDataInfoId(dataInfo.getDataInfoId());
+  /**
+   * PublisherRegister to Publisher
+   *
+   * @param publisherRegister
+   * @return
+   */
+  public static Publisher convert(PublisherRegister publisherRegister) {
+    return publisherConverter.convert(publisherRegister);
+  }
+
+  public static List<ServerDataBox> convert(List<DataBox> boxList) {
+    List<ServerDataBox> serverDataBoxes = new ArrayList<>();
+    if (null != boxList) {
+      for (DataBox dataBox : boxList) {
+        ServerDataBox serverDataBox = new ServerDataBox(ServerDataBox.getBytes(dataBox.getData()));
+        serverDataBoxes.add(serverDataBox);
+      }
     }
-
-    /**
-     * PublisherRegister to Publisher
-     *
-     * @param publisherRegister
-     * @return
-     */
-    public static Publisher convert(PublisherRegister publisherRegister) {
-        return publisherConverter.convert(publisherRegister);
-    }
-
-    public static List<ServerDataBox> convert(List<DataBox> boxList) {
-        List<ServerDataBox> serverDataBoxes = new ArrayList<>();
-        if (null != boxList) {
-            for (DataBox dataBox : boxList) {
-                ServerDataBox serverDataBox = new ServerDataBox(ServerDataBox.getBytes(dataBox
-                        .getData()));
-                serverDataBoxes.add(serverDataBox);
-            }
-        }
-        return serverDataBoxes;
-    }
+    return serverDataBoxes;
+  }
 }

@@ -16,125 +16,124 @@
  */
 package com.alipay.sofa.registry.common.model.metaserver;
 
+import com.alipay.sofa.registry.common.model.Node.NodeType;
+import com.google.common.collect.Sets;
 import java.io.Serializable;
 import java.util.Set;
 
-import com.alipay.sofa.registry.common.model.Node.NodeType;
-import com.google.common.collect.Sets;
-
 /**
- *
  * @author shangyu.wh
  * @version $Id: NotifyProvideDataChange.java, v 0.1 2018-04-18 15:18 shangyu.wh Exp $
  */
 public class ProvideDataChangeEvent implements Serializable {
 
-    private String        dataInfoId;
+  private String dataInfoId;
 
-    private Long          version;
+  private Long version;
 
-    private DataOperator  dataOperator;
+  private DataOperator dataOperator;
 
-    private Set<NodeType> nodeTypes;
+  private Set<NodeType> nodeTypes;
 
-    /**
-     * constructor
-     * @param dataInfoId
-     * @param version
-     * @param dataOperator
-     */
-    public ProvideDataChangeEvent(String dataInfoId, Long version, DataOperator dataOperator) {
-        this(dataInfoId, version, dataOperator, Sets.newHashSet(NodeType.SESSION));
-    }
+  /**
+   * constructor
+   *
+   * @param dataInfoId
+   * @param version
+   * @param dataOperator
+   */
+  public ProvideDataChangeEvent(String dataInfoId, Long version, DataOperator dataOperator) {
+    this(dataInfoId, version, dataOperator, Sets.newHashSet(NodeType.SESSION));
+  }
 
-    public ProvideDataChangeEvent(String dataInfoId, Long version, DataOperator dataOperator,
-                                  Set<NodeType> nodeTypes) {
-        this.dataInfoId = dataInfoId;
-        this.version = version;
-        this.dataOperator = dataOperator;
-        this.nodeTypes = nodeTypes;
-    }
+  public ProvideDataChangeEvent(
+      String dataInfoId, Long version, DataOperator dataOperator, Set<NodeType> nodeTypes) {
+    this.dataInfoId = dataInfoId;
+    this.version = version;
+    this.dataOperator = dataOperator;
+    this.nodeTypes = nodeTypes;
+  }
 
-    /**
-     * Getter method for property <tt>dataInfoId</tt>.
-     *
-     * @return property value of dataInfoId
-     */
-    public String getDataInfoId() {
-        return dataInfoId;
-    }
+  /**
+   * Getter method for property <tt>dataInfoId</tt>.
+   *
+   * @return property value of dataInfoId
+   */
+  public String getDataInfoId() {
+    return dataInfoId;
+  }
 
-    /**
-     * Setter method for property <tt>dataInfoId</tt>.
-     *
-     * @param dataInfoId  value to be assigned to property dataInfoId
-     */
-    public void setDataInfoId(String dataInfoId) {
-        this.dataInfoId = dataInfoId;
-    }
+  /**
+   * Setter method for property <tt>dataInfoId</tt>.
+   *
+   * @param dataInfoId value to be assigned to property dataInfoId
+   */
+  public void setDataInfoId(String dataInfoId) {
+    this.dataInfoId = dataInfoId;
+  }
 
-    /**
-     * Getter method for property <tt>version</tt>.
-     *
-     * @return property value of version
-     */
-    public Long getVersion() {
-        return version;
-    }
+  /**
+   * Getter method for property <tt>version</tt>.
+   *
+   * @return property value of version
+   */
+  public Long getVersion() {
+    return version;
+  }
 
-    /**
-     * Setter method for property <tt>version</tt>.
-     *
-     * @param version  value to be assigned to property version
-     */
-    public void setVersion(Long version) {
-        this.version = version;
-    }
+  /**
+   * Setter method for property <tt>version</tt>.
+   *
+   * @param version value to be assigned to property version
+   */
+  public void setVersion(Long version) {
+    this.version = version;
+  }
 
-    /**
-     * Getter method for property <tt>dataOperator</tt>.
-     *
-     * @return property value of dataOperator
-     */
-    public DataOperator getDataOperator() {
-        return dataOperator;
-    }
+  /**
+   * Getter method for property <tt>dataOperator</tt>.
+   *
+   * @return property value of dataOperator
+   */
+  public DataOperator getDataOperator() {
+    return dataOperator;
+  }
 
-    /**
-     * Setter method for property <tt>dataOperator</tt>.
-     *
-     * @param dataOperator  value to be assigned to property dataOperator
-     */
-    public void setDataOperator(DataOperator dataOperator) {
-        this.dataOperator = dataOperator;
-    }
+  /**
+   * Setter method for property <tt>dataOperator</tt>.
+   *
+   * @param dataOperator value to be assigned to property dataOperator
+   */
+  public void setDataOperator(DataOperator dataOperator) {
+    this.dataOperator = dataOperator;
+  }
 
-    /**
-     * Getter method for property <tt>nodeType</tt>.
-     *
-     * @return property value of nodeType
-     */
-    public Set<NodeType> getNodeTypes() {
-        return nodeTypes;
-    }
+  /**
+   * Getter method for property <tt>nodeType</tt>.
+   *
+   * @return property value of nodeType
+   */
+  public Set<NodeType> getNodeTypes() {
+    return nodeTypes;
+  }
 
-    /**
-     * Setter method for property <tt>nodeType</tt>.
-     *
-     * @param nodeTypes  value to be assigned to property nodeType
-     */
-    public void setNodeTypes(Set<NodeType> nodeTypes) {
-        this.nodeTypes = nodeTypes;
-    }
+  /**
+   * Setter method for property <tt>nodeType</tt>.
+   *
+   * @param nodeTypes value to be assigned to property nodeType
+   */
+  public void setNodeTypes(Set<NodeType> nodeTypes) {
+    this.nodeTypes = nodeTypes;
+  }
 
-    @Override
-    public String toString() {
-        final StringBuilder sb = new StringBuilder("NotifyProvideDataChange{");
-        sb.append("dataInfoId='").append(dataInfoId).append('\'');
-        sb.append(", version=").append(version);
-        sb.append(", dataOperator=").append(dataOperator);
-        sb.append(", nodeTypes=").append(nodeTypes);
-        sb.append('}');
-        return sb.toString();
-    }
+  @Override
+  public String toString() {
+    final StringBuilder sb = new StringBuilder("NotifyProvideDataChange{");
+    sb.append("dataInfoId='").append(dataInfoId).append('\'');
+    sb.append(", version=").append(version);
+    sb.append(", dataOperator=").append(dataOperator);
+    sb.append(", nodeTypes=").append(nodeTypes);
+    sb.append('}');
+    return sb.toString();
+  }
 }

@@ -28,46 +28,49 @@ import com.alipay.sofa.registry.log.LoggerFactory;
 
 /**
  * @author chen.zhu
- *         <p>
- *         Nov 18, 2020
+ *     <p>Nov 18, 2020
  */
 public class RegistryConsumer {
 
-	private final static Logger logger = LoggerFactory
-			.getLogger(RegistryConsumer.class);
+  private static final Logger logger = LoggerFactory.getLogger(RegistryConsumer.class);
 
-	public static void main(String[] args) throws InterruptedException {
-        DefaultRegistryClient registryClient = new DefaultRegistryClient(
-            new DefaultRegistryClientConfigBuilder().setRegistryEndpoint("127.0.0.1")
-                .setRegistryEndpointPort(9603).build());
-        registryClient.init();
+  public static void main(String[] args) throws InterruptedException {
+    DefaultRegistryClient registryClient =
+        new DefaultRegistryClient(
+            new DefaultRegistryClientConfigBuilder()
+                .setRegistryEndpoint("127.0.0.1")
+                .setRegistryEndpointPort(9603)
+                .build());
+    registryClient.init();
 
-        // 构造订阅者注册表
-        String dataId = "com.alipay.test.demo.service:1.0@DEFAULT";
-        SubscriberRegistration registration = new SubscriberRegistration(dataId,
+    // 构造订阅者注册表
+    String dataId = "com.alipay.test.demo.service:1.0@DEFAULT";
+    SubscriberRegistration registration =
+        new SubscriberRegistration(
+            dataId,
             new SubscriberDataObserver() {
-                @Override
-                public void handleData(String dataId, UserData userData) {
-                    // UserData 中包含有 zoneData 和 localZone，
-                    // zoneData 中是服务端推送过来的多个 zone 以及 zone 内发布的数据列表
-                    // localZone 表示当前应用处于哪个 zone。
-                    logger.info("receive data success, dataId: {}, data: {}", dataId, userData);
-                }
+              @Override
+              public void handleData(String dataId, UserData userData) {
+                // UserData 中包含有 zoneData 和 localZone，
+                // zoneData 中是服务端推送过来的多个 zone 以及 zone 内发布的数据列表
+                // localZone 表示当前应用处于哪个 zone。
+                logger.info("receive data success, dataId: {}, data: {}", dataId, userData);
+              }
             });
-        // 订阅者分组必须和发布者分组一致，未设置默认为 DEFAULT_GROUP
-        registration.setGroup("TEST_GROUP");
-        registration.setAppName("test-app");
-        // 设置订阅维度，ScopeEnum 共有三种级别 zone, dataCenter, global。
-        // zone: 逻辑机房内订阅，仅可订阅到应用所处逻辑机房内的发布者发布的数据
-        // dataCenter: 机房内订阅，可订阅到应用所处机房内的发布者发布的数据
-        // global: 全局订阅，可订阅到当前服务注册中心部署的所有机房内的发布者发布的数据
-        registration.setScopeEnum(ScopeEnum.global);
+    // 订阅者分组必须和发布者分组一致，未设置默认为 DEFAULT_GROUP
+    registration.setGroup("TEST_GROUP");
+    registration.setAppName("test-app");
+    // 设置订阅维度，ScopeEnum 共有三种级别 zone, dataCenter, global。
+    // zone: 逻辑机房内订阅，仅可订阅到应用所处逻辑机房内的发布者发布的数据
+    // dataCenter: 机房内订阅，可订阅到应用所处机房内的发布者发布的数据
+    // global: 全局订阅，可订阅到当前服务注册中心部署的所有机房内的发布者发布的数据
+    registration.setScopeEnum(ScopeEnum.global);
 
-        // 将注册表注册进客户端获取订阅者模型，订阅到的数据会以回调的方式通知 `SubscriberDataObserver`
-        Subscriber subscriber = registryClient.register(registration);
+    // 将注册表注册进客户端获取订阅者模型，订阅到的数据会以回调的方式通知 `SubscriberDataObserver`
+    Subscriber subscriber = registryClient.register(registration);
 
-        while (!Thread.currentThread().isInterrupted()) {
-            Thread.sleep(10000);
-        }
+    while (!Thread.currentThread().isInterrupted()) {
+      Thread.sleep(10000);
     }
+  }
 }

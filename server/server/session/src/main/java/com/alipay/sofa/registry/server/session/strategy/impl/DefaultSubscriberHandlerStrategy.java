@@ -16,6 +16,8 @@
  */
 package com.alipay.sofa.registry.server.session.strategy.impl;
 
+import static com.alipay.sofa.registry.common.model.constants.ValueConstants.DEFAULT_INSTANCE_ID;
+
 import com.alipay.sofa.registry.common.model.constants.ValueConstants;
 import com.alipay.sofa.registry.common.model.store.Subscriber;
 import com.alipay.sofa.registry.common.model.store.URL;
@@ -32,81 +34,91 @@ import com.alipay.sofa.registry.server.session.strategy.SubscriberHandlerStrateg
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import static com.alipay.sofa.registry.common.model.constants.ValueConstants.DEFAULT_INSTANCE_ID;
-
 /**
  * @author xuanbei
  * @since 2019/2/15
  */
 public class DefaultSubscriberHandlerStrategy implements SubscriberHandlerStrategy {
-    private static final Logger SUB_LOGGER = LoggerFactory.getLogger("SUB-RECEIVE");
+  private static final Logger SUB_LOGGER = LoggerFactory.getLogger("SUB-RECEIVE");
 
-    @Autowired
-    private Registry            sessionRegistry;
+  @Autowired private Registry sessionRegistry;
 
-    @Override
-    public void handleSubscriberRegister(Channel channel, SubscriberRegister subscriberRegister,
-                                         RegisterResponse registerResponse) {
-        Subscriber subscriber = null;
-        try {
-            String ip = channel.getRemoteAddress().getAddress().getHostAddress();
-            int port = channel.getRemoteAddress().getPort();
-            subscriberRegister.setIp(ip);
-            subscriberRegister.setPort(port);
+  @Override
+  public void handleSubscriberRegister(
+      Channel channel, SubscriberRegister subscriberRegister, RegisterResponse registerResponse) {
+    Subscriber subscriber = null;
+    try {
+      String ip = channel.getRemoteAddress().getAddress().getHostAddress();
+      int port = channel.getRemoteAddress().getPort();
+      subscriberRegister.setIp(ip);
+      subscriberRegister.setPort(port);
 
-            if (StringUtils.isBlank(subscriberRegister.getZone())) {
-                subscriberRegister.setZone(ValueConstants.DEFAULT_ZONE);
-            }
+      if (StringUtils.isBlank(subscriberRegister.getZone())) {
+        subscriberRegister.setZone(ValueConstants.DEFAULT_ZONE);
+      }
 
-            if (StringUtils.isBlank(subscriberRegister.getInstanceId())) {
-                subscriberRegister.setInstanceId(DEFAULT_INSTANCE_ID);
-            }
+      if (StringUtils.isBlank(subscriberRegister.getInstanceId())) {
+        subscriberRegister.setInstanceId(DEFAULT_INSTANCE_ID);
+      }
 
-            subscriber = SubscriberConverter.convert(subscriberRegister);
-            subscriber.setProcessId(ip + ":" + port);
+      subscriber = SubscriberConverter.convert(subscriberRegister);
+      subscriber.setProcessId(ip + ":" + port);
 
-            handle(subscriber, channel, subscriberRegister, registerResponse);
-        } catch (Throwable e) {
-            handleError(subscriberRegister, subscriber, registerResponse, e);
-        }
+      handle(subscriber, channel, subscriberRegister, registerResponse);
+    } catch (Throwable e) {
+      handleError(subscriberRegister, subscriber, registerResponse, e);
     }
+  }
 
-    protected void handle(Subscriber subscriber, Channel channel,
-                          SubscriberRegister subscriberRegister, RegisterResponse registerResponse) {
-        subscriber.setSourceAddress(new URL(channel.getRemoteAddress(), BoltChannelUtil
-            .getBoltCustomSerializer(channel)));
-        subscriber.setTargetAddress(new URL(channel.getLocalAddress()));
+  protected void handle(
+      Subscriber subscriber,
+      Channel channel,
+      SubscriberRegister subscriberRegister,
+      RegisterResponse registerResponse) {
+    subscriber.setSourceAddress(
+        new URL(channel.getRemoteAddress(), BoltChannelUtil.getBoltCustomSerializer(channel)));
+    subscriber.setTargetAddress(new URL(channel.getLocalAddress()));
 
-        final String eventType = subscriberRegister.getEventType();
-        if (EventTypeConstants.REGISTER.equals(eventType)) {
-            sessionRegistry.register(subscriber);
-        } else if (EventTypeConstants.UNREGISTER.equals(eventType)) {
-            sessionRegistry.unRegister(subscriber);
-        } else {
-            RegisterLogs.REGISTER_LOGGER.warn("unsupported subscriber.eventType:{}", eventType);
-        }
-        registerResponse.setVersion(subscriberRegister.getVersion());
-        registerResponse.setRegistId(subscriberRegister.getRegistId());
-        registerResponse.setSuccess(true);
-        registerResponse.setMessage("Subscriber register success!");
-        log(true, subscriberRegister, subscriber);
+    final String eventType = subscriberRegister.getEventType();
+    if (EventTypeConstants.REGISTER.equals(eventType)) {
+      sessionRegistry.register(subscriber);
+    } else if (EventTypeConstants.UNREGISTER.equals(eventType)) {
+      sessionRegistry.unRegister(subscriber);
+    } else {
+      RegisterLogs.REGISTER_LOGGER.warn("unsupported subscriber.eventType:{}", eventType);
     }
+    registerResponse.setVersion(subscriberRegister.getVersion());
+    registerResponse.setRegistId(subscriberRegister.getRegistId());
+    registerResponse.setSuccess(true);
+    registerResponse.setMessage("Subscriber register success!");
+    log(true, subscriberRegister, subscriber);
+  }
 
-    private void log(boolean success, SubscriberRegister subscriberRegister, Subscriber subscriber) {
-        //[Y|N],[R|U|N],app,zone,dataInfoId,registerId,scope,elementType,clientVersion,clientIp,clientPort
-        SUB_LOGGER.info("{},{},{},{},{},{},{},{},{},{},{},{},{}", success ? 'Y' : 'N',
-            EventTypeConstants.getEventTypeFlag(subscriberRegister.getEventType()),
-            subscriberRegister.getAppName(), subscriberRegister.getZone(),
-            subscriberRegister.getDataId(), subscriberRegister.getGroup(),
-            subscriberRegister.getInstanceId(), subscriberRegister.getRegistId(),
-            subscriberRegister.getScope(), subscriber == null ? "" : subscriber.getElementType(),
-            subscriber == null ? "" : subscriber.getClientVersion(), subscriberRegister.getIp(),
-            subscriberRegister.getPort());
-    }
+  private void log(boolean success, SubscriberRegister subscriberRegister, Subscriber subscriber) {
+    // [Y|N],[R|U|N],app,zone,dataInfoId,registerId,scope,elementType,clientVersion,clientIp,clientPort
+    SUB_LOGGER.info(
+        "{},{},{},{},{},{},{},{},{},{},{},{},{}",
+        success ? 'Y' : 'N',
+        EventTypeConstants.getEventTypeFlag(subscriberRegister.getEventType()),
+        subscriberRegister.getAppName(),
+        subscriberRegister.getZone(),
+        subscriberRegister.getDataId(),
+        subscriberRegister.getGroup(),
+        subscriberRegister.getInstanceId(),
+        subscriberRegister.getRegistId(),
+        subscriberRegister.getScope(),
+        subscriber == null ? "" : subscriber.getElementType(),
+        subscriber == null ? "" : subscriber.getClientVersion(),
+        subscriberRegister.getIp(),
+        subscriberRegister.getPort());
+  }
 
-    protected void handleError(SubscriberRegister subscriberRegister, Subscriber subscriber,
-                               RegisterResponse registerResponse, Throwable e) {
-        log(false, subscriberRegister, subscriber);
-        RegisterLogs.logError(subscriberRegister, "Subscriber", registerResponse, e);
-    }
+  protected void handleError(
+      SubscriberRegister subscriberRegister,
+      Subscriber subscriber,
+      RegisterResponse registerResponse,
+      Throwable e) {
+    log(false, subscriberRegister, subscriber);
+    RegisterLogs.logError(subscriberRegister, "Subscriber", registerResponse, e);
+  }
 }

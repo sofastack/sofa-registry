@@ -16,6 +16,9 @@
  */
 package com.alipay.sofa.registry.server.meta.remoting.session;
 
+import static org.mockito.Matchers.*;
+import static org.mockito.Mockito.*;
+
 import com.alipay.sofa.registry.common.model.constants.ValueConstants;
 import com.alipay.sofa.registry.common.model.metaserver.DataOperator;
 import com.alipay.sofa.registry.common.model.metaserver.ProvideDataChangeEvent;
@@ -29,6 +32,8 @@ import com.alipay.sofa.registry.server.meta.lease.session.SessionServerManager;
 import com.alipay.sofa.registry.server.meta.remoting.SessionNodeExchanger;
 import com.alipay.sofa.registry.server.meta.remoting.connection.SessionConnectionHandler;
 import com.alipay.sofa.registry.util.DatumVersionUtil;
+import java.net.InetSocketAddress;
+import java.util.concurrent.TimeoutException;
 import org.assertj.core.util.Lists;
 import org.junit.Before;
 import org.junit.Test;
@@ -37,85 +42,103 @@ import org.mockito.MockitoAnnotations;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 
-import java.net.InetSocketAddress;
-import java.util.concurrent.TimeoutException;
-
-import static org.mockito.Matchers.*;
-import static org.mockito.Mockito.*;
-
 public class DefaultSessionServerServiceTest extends AbstractMetaServerTest {
 
-    private DefaultSessionServerService notifier = new DefaultSessionServerService();
+  private DefaultSessionServerService notifier = new DefaultSessionServerService();
 
-    @Mock
-    private SessionNodeExchanger sessionNodeExchanger;
+  @Mock private SessionNodeExchanger sessionNodeExchanger;
 
-    @Mock
-    private SessionConnectionHandler    sessionConnectionHandler;
+  @Mock private SessionConnectionHandler sessionConnectionHandler;
 
-    @Mock
-    private SessionServerManager        sessionServerManager;
+  @Mock private SessionServerManager sessionServerManager;
 
-    @Before
-    public void beforeSessionServerProvideDataNotifierTest() {
-        MockitoAnnotations.initMocks(this);
-        notifier.setSessionConnectionHandler(sessionConnectionHandler)
-            .setSessionNodeExchanger(sessionNodeExchanger)
-            .setSessionServerManager(sessionServerManager);
-    }
+  @Before
+  public void beforeSessionServerProvideDataNotifierTest() {
+    MockitoAnnotations.initMocks(this);
+    notifier
+        .setSessionConnectionHandler(sessionConnectionHandler)
+        .setSessionNodeExchanger(sessionNodeExchanger)
+        .setSessionServerManager(sessionServerManager);
+  }
 
-    @Test
-    public void testBoltRequest() throws RequestException, InterruptedException {
-        String ip1 = randomIp(), ip2 = randomIp();
-        Client rpcClient = spy(getRpcClient(scheduled, 10, new TimeoutException("expected")));
-        when(sessionNodeExchanger.request(any(Request.class))).then(new Answer<Object>() {
-            @Override
-            public Object answer(InvocationOnMock invocationOnMock) throws Throwable {
+  @Test
+  public void testBoltRequest() throws RequestException, InterruptedException {
+    String ip1 = randomIp(), ip2 = randomIp();
+    Client rpcClient = spy(getRpcClient(scheduled, 10, new TimeoutException("expected")));
+    when(sessionNodeExchanger.request(any(Request.class)))
+        .then(
+            new Answer<Object>() {
+              @Override
+              public Object answer(InvocationOnMock invocationOnMock) throws Throwable {
                 Request request = invocationOnMock.getArgumentAt(0, Request.class);
-                rpcClient.sendCallback(request.getRequestUrl(), request.getRequestBody(),
-                    request.getCallBackHandler(), 100);
+                rpcClient.sendCallback(
+                    request.getRequestUrl(),
+                    request.getRequestBody(),
+                    request.getCallBackHandler(),
+                    100);
                 return null;
-            }
-        });
-        notifier.setSessionNodeExchanger(sessionNodeExchanger);
-        when(sessionConnectionHandler.getConnections(anyString())).thenReturn(
-            Lists.newArrayList(new InetSocketAddress(ip1, Math.abs(random.nextInt(65535)) % 65535),
+              }
+            });
+    notifier.setSessionNodeExchanger(sessionNodeExchanger);
+    when(sessionConnectionHandler.getConnections(anyString()))
+        .thenReturn(
+            Lists.newArrayList(
+                new InetSocketAddress(ip1, Math.abs(random.nextInt(65535)) % 65535),
                 new InetSocketAddress(ip2, Math.abs(random.nextInt(65535)) % 65535),
                 new InetSocketAddress(randomIp(), 1024)));
-        when(sessionServerManager.getSessionServerMetaInfo()).thenReturn(new VersionedList<>(DatumVersionUtil.nextId(),
-            Lists.newArrayList(new SessionNode(randomURL(ip1), getDc()), new SessionNode(
-                randomURL(ip2), getDc()), new SessionNode(randomURL(randomIp()), getDc()))));
-        notifier.notifyProvideDataChange(new ProvideDataChangeEvent(
+    when(sessionServerManager.getSessionServerMetaInfo())
+        .thenReturn(
+            new VersionedList<>(
+                DatumVersionUtil.nextId(),
+                Lists.newArrayList(
+                    new SessionNode(randomURL(ip1), getDc()),
+                    new SessionNode(randomURL(ip2), getDc()),
+                    new SessionNode(randomURL(randomIp()), getDc()))));
+    notifier.notifyProvideDataChange(
+        new ProvideDataChangeEvent(
             ValueConstants.BLACK_LIST_DATA_ID, System.currentTimeMillis(), DataOperator.ADD));
-        Thread.sleep(50);
-        verify(rpcClient, atLeast(1)).sendCallback(any(), any(), any(), anyInt());
-    }
+    Thread.sleep(50);
+    verify(rpcClient, atLeast(1)).sendCallback(any(), any(), any(), anyInt());
+  }
 
-    @Test
-    public void testBoltResponsePositive() throws InterruptedException, RequestException {
-        String ip1 = randomIp(), ip2 = randomIp();
-        when(sessionConnectionHandler.getConnections(anyString())).thenReturn(
-            Lists.newArrayList(new InetSocketAddress(ip1, Math.abs(random.nextInt(65535)) % 65535),
+  @Test
+  public void testBoltResponsePositive() throws InterruptedException, RequestException {
+    String ip1 = randomIp(), ip2 = randomIp();
+    when(sessionConnectionHandler.getConnections(anyString()))
+        .thenReturn(
+            Lists.newArrayList(
+                new InetSocketAddress(ip1, Math.abs(random.nextInt(65535)) % 65535),
                 new InetSocketAddress(ip2, Math.abs(random.nextInt(65535)) % 65535),
                 new InetSocketAddress(randomIp(), 1024)));
-        when(sessionServerManager.getSessionServerMetaInfo()).thenReturn(new VersionedList<>(DatumVersionUtil.nextId(),
-            Lists.newArrayList(new SessionNode(randomURL(ip1), getDc()), new SessionNode(
-                randomURL(ip2), getDc()), new SessionNode(randomURL(randomIp()), getDc()))));
-        Client client2 = spy(getRpcClient(scheduled, 10, "Response"));
-        SessionNodeExchanger otherNodeExchanger = mock(SessionNodeExchanger.class);
-        when(otherNodeExchanger.request(any(Request.class))).then(new Answer<Object>() {
-            @Override
-            public Object answer(InvocationOnMock invocationOnMock) throws Throwable {
+    when(sessionServerManager.getSessionServerMetaInfo())
+        .thenReturn(
+            new VersionedList<>(
+                DatumVersionUtil.nextId(),
+                Lists.newArrayList(
+                    new SessionNode(randomURL(ip1), getDc()),
+                    new SessionNode(randomURL(ip2), getDc()),
+                    new SessionNode(randomURL(randomIp()), getDc()))));
+    Client client2 = spy(getRpcClient(scheduled, 10, "Response"));
+    SessionNodeExchanger otherNodeExchanger = mock(SessionNodeExchanger.class);
+    when(otherNodeExchanger.request(any(Request.class)))
+        .then(
+            new Answer<Object>() {
+              @Override
+              public Object answer(InvocationOnMock invocationOnMock) throws Throwable {
                 Request request = invocationOnMock.getArgumentAt(0, Request.class);
                 logger.warn("[testBoltResponsePositive]");
-                client2.sendCallback(request.getRequestUrl(), request.getRequestBody(),
-                    request.getCallBackHandler(), 10000);
+                client2.sendCallback(
+                    request.getRequestUrl(),
+                    request.getRequestBody(),
+                    request.getCallBackHandler(),
+                    10000);
                 return null;
-            }
-        });
-        notifier.setSessionNodeExchanger(otherNodeExchanger);
-        notifier.notifyProvideDataChange(new ProvideDataChangeEvent(
+              }
+            });
+    notifier.setSessionNodeExchanger(otherNodeExchanger);
+    notifier.notifyProvideDataChange(
+        new ProvideDataChangeEvent(
             ValueConstants.BLACK_LIST_DATA_ID, System.currentTimeMillis(), DataOperator.ADD));
-        Thread.sleep(200);
-    }
+    Thread.sleep(200);
+  }
 }

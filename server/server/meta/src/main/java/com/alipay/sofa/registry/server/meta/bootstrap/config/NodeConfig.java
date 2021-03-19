@@ -21,43 +21,45 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- *
  * @author shangyu.wh
  * @version $Id: NodeConfig.java, v 0.1 2018-01-23 15:00 shangyu.wh Exp $
  */
 public interface NodeConfig {
 
-    /**
-     * get other metaServer node
-     *
-     * @return
-     */
-    Map<String, Collection<String>> getMetaNode();
+  /**
+   * get other metaServer node
+   *
+   * @return
+   */
+  Map<String, Collection<String>> getMetaNode();
 
-    /**
-     * get other metaServer node ip
-     * @return
-     */
-    Map<String, Collection<String>> getMetaNodeIP();
+  /**
+   * get other metaServer node ip
+   *
+   * @return
+   */
+  Map<String, Collection<String>> getMetaNodeIP();
 
-    /**
-     * local data Center id
-     * @return
-     */
-    String getLocalDataCenter();
+  /**
+   * local data Center id
+   *
+   * @return
+   */
+  String getLocalDataCenter();
 
-    /**
-     * get dataCenter by meta node ipAddress
-     * @param metaIpAddress
-     * @return
-     */
-    String getMetaDataCenter(String metaIpAddress);
+  /**
+   * get dataCenter by meta node ipAddress
+   *
+   * @param metaIpAddress
+   * @return
+   */
+  String getMetaDataCenter(String metaIpAddress);
 
-    /**
-     * get datacenter meta servers
-     * @param dataCenter
-     * @return
-     */
-    Set<String> getDataCenterMetaServers(String dataCenter);
-
+  /**
+   * get datacenter meta servers
+   *
+   * @param dataCenter
+   * @return
+   */
+  Set<String> getDataCenterMetaServers(String dataCenter);
 }

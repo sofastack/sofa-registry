@@ -26,7 +26,6 @@ import com.alipay.sofa.registry.core.model.ReceivedData;
 import com.alipay.sofa.registry.core.model.ScopeEnum;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -40,97 +39,98 @@ import java.util.function.Predicate;
  * @version $Id : ReceivedDataConverter.java, v 0.1 2017-12-13 13:42 shangyu.wh Exp $
  */
 public class ReceivedDataConverter {
-    private static final Logger LOGGER = LoggerFactory.getLogger(ReceivedDataConverter.class);
+  private static final Logger LOGGER = LoggerFactory.getLogger(ReceivedDataConverter.class);
 
-    /**
-     * Standard RunEnv
-     *
-     * @param datum                    the datum
-     * @param scope                    the scope
-     * @param subscriberRegisterIdList the subscriber register id list
-     * @param regionLocal              the region local
-     * @return received data multi
-     */
-    public static ReceivedData getReceivedDataMulti(SubDatum datum, ScopeEnum scope,
-                                                    List subscriberRegisterIdList,
-                                                    String regionLocal,
-                                                    Predicate<String> zonePredicate) {
+  /**
+   * Standard RunEnv
+   *
+   * @param datum the datum
+   * @param scope the scope
+   * @param subscriberRegisterIdList the subscriber register id list
+   * @param regionLocal the region local
+   * @return received data multi
+   */
+  public static ReceivedData getReceivedDataMulti(
+      SubDatum datum,
+      ScopeEnum scope,
+      List subscriberRegisterIdList,
+      String regionLocal,
+      Predicate<String> zonePredicate) {
 
-        if (null == datum) {
-            return null;
-        }
-
-        // todo judge server mode to decide local region
-        ReceivedData receivedData = new ReceivedData();
-        receivedData.setDataId(datum.getDataId());
-        receivedData.setGroup(datum.getGroup());
-        receivedData.setInstanceId(datum.getInstanceId());
-        receivedData.setSubscriberRegistIds(subscriberRegisterIdList);
-        receivedData.setSegment(datum.getDataCenter());
-        receivedData.setScope(scope.name());
-
-        receivedData.setVersion(datum.getVersion());
-
-        receivedData.setLocalZone(regionLocal);
-
-        Map<String/*zone*/, List<DataBox>> swizzMap = new HashMap<>();
-
-        List<SubPublisher> publishers = datum.getPublishers();
-        if (publishers.isEmpty()) {
-            receivedData.setData(swizzMap);
-            return receivedData;
-        }
-        for (SubPublisher publisher : publishers) {
-            List<ServerDataBox> datas = publisher.getDataList();
-
-            String region = publisher.getCell();
-
-            if (zonePredicate.test(region)) {
-                continue;
-            }
-
-            if (null == datas) {
-                datas = new ArrayList<>();
-            }
-
-            List<DataBox> regionDatas = swizzMap.computeIfAbsent(region, k -> new ArrayList<>());
-            fillRegionDatas(regionDatas, datas);
-
-        }
-
-        receivedData.setData(swizzMap);
-
-        return receivedData;
+    if (null == datum) {
+      return null;
     }
 
-    private static void fillRegionDatas(List<DataBox> regionDatas, List<ServerDataBox> datas) {
-        for (ServerDataBox data : datas) {
-            DataBox box = new DataBox();
-            try {
-                String dataString = (String) data.extract();
-                box.setData(dataString);
-                regionDatas.add(box);
-            } catch (Exception e) {
-                LOGGER.error("ReceivedData convert error", e);
-            }
-        }
+    // todo judge server mode to decide local region
+    ReceivedData receivedData = new ReceivedData();
+    receivedData.setDataId(datum.getDataId());
+    receivedData.setGroup(datum.getGroup());
+    receivedData.setInstanceId(datum.getInstanceId());
+    receivedData.setSubscriberRegistIds(subscriberRegisterIdList);
+    receivedData.setSegment(datum.getDataCenter());
+    receivedData.setScope(scope.name());
+
+    receivedData.setVersion(datum.getVersion());
+
+    receivedData.setLocalZone(regionLocal);
+
+    Map<String /*zone*/, List<DataBox>> swizzMap = new HashMap<>();
+
+    List<SubPublisher> publishers = datum.getPublishers();
+    if (publishers.isEmpty()) {
+      receivedData.setData(swizzMap);
+      return receivedData;
+    }
+    for (SubPublisher publisher : publishers) {
+      List<ServerDataBox> datas = publisher.getDataList();
+
+      String region = publisher.getCell();
+
+      if (zonePredicate.test(region)) {
+        continue;
+      }
+
+      if (null == datas) {
+        datas = new ArrayList<>();
+      }
+
+      List<DataBox> regionDatas = swizzMap.computeIfAbsent(region, k -> new ArrayList<>());
+      fillRegionDatas(regionDatas, datas);
     }
 
-    public static ReceivedConfigData getReceivedConfigData(ServerDataBox dataBox,
-                                                           DataInfo dataInfo, Long version) {
-        ReceivedConfigData receivedConfigData = new ReceivedConfigData();
+    receivedData.setData(swizzMap);
 
-        if (dataBox != null) {
-            DataBox box = new DataBox();
-            String dataString = (String) dataBox.getObject();
-            box.setData(dataString);
-            receivedConfigData.setDataBox(box);
-        }
-        receivedConfigData.setDataId(dataInfo.getDataId());
-        receivedConfigData.setGroup(dataInfo.getGroup());
-        receivedConfigData.setInstanceId(dataInfo.getInstanceId());
-        receivedConfigData.setVersion(version);
+    return receivedData;
+  }
 
-        return receivedConfigData;
+  private static void fillRegionDatas(List<DataBox> regionDatas, List<ServerDataBox> datas) {
+    for (ServerDataBox data : datas) {
+      DataBox box = new DataBox();
+      try {
+        String dataString = (String) data.extract();
+        box.setData(dataString);
+        regionDatas.add(box);
+      } catch (Exception e) {
+        LOGGER.error("ReceivedData convert error", e);
+      }
     }
+  }
+
+  public static ReceivedConfigData getReceivedConfigData(
+      ServerDataBox dataBox, DataInfo dataInfo, Long version) {
+    ReceivedConfigData receivedConfigData = new ReceivedConfigData();
+
+    if (dataBox != null) {
+      DataBox box = new DataBox();
+      String dataString = (String) dataBox.getObject();
+      box.setData(dataString);
+      receivedConfigData.setDataBox(box);
+    }
+    receivedConfigData.setDataId(dataInfo.getDataId());
+    receivedConfigData.setGroup(dataInfo.getGroup());
+    receivedConfigData.setInstanceId(dataInfo.getInstanceId());
+    receivedConfigData.setVersion(version);
+
+    return receivedConfigData;
+  }
 }

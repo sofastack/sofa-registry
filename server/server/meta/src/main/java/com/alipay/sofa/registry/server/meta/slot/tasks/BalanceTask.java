@@ -27,98 +27,94 @@ import com.alipay.sofa.registry.server.meta.slot.SlotManager;
 import com.alipay.sofa.registry.util.DatumVersionUtil;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * @author chen.zhu
- * <p>
- * Dec 01, 2020
+ *     <p>Dec 01, 2020
  */
 public class BalanceTask implements RebalanceTask {
 
-    private static final Logger            logger            = LoggerFactory
-                                                                 .getLogger(BalanceTask.class);
+  private static final Logger logger = LoggerFactory.getLogger(BalanceTask.class);
 
-    private final SlotManager              slotManager;
+  private final SlotManager slotManager;
 
-    private final DataServerManager        dataServerManager;
+  private final DataServerManager dataServerManager;
 
-    private long                           nextEpoch;
+  private long nextEpoch;
 
-    private final AtomicInteger            nextLeaderIndex   = new AtomicInteger();
+  private final AtomicInteger nextLeaderIndex = new AtomicInteger();
 
-    private final AtomicInteger            nextFollowerIndex = new AtomicInteger(1);
+  private final AtomicInteger nextFollowerIndex = new AtomicInteger(1);
 
-    private List<DataNode>                 dataNodes;
+  private List<DataNode> dataNodes;
 
-    public BalanceTask(SlotManager slotManager,
-                       DataServerManager dataServerManager) {
-        this.slotManager = slotManager;
-        this.dataServerManager = dataServerManager;
+  public BalanceTask(SlotManager slotManager, DataServerManager dataServerManager) {
+    this.slotManager = slotManager;
+    this.dataServerManager = dataServerManager;
+  }
+
+  @Override
+  public void run() {
+    initParameters();
+    if (dataNodes == null || dataNodes.isEmpty()) {
+      return;
+    }
+    if (logger.isInfoEnabled()) {
+      logger.info("[run] candidates({}): {}", dataNodes.size(), dataNodes);
     }
 
-    @Override
-    public void run() {
-        initParameters();
-        if (dataNodes == null || dataNodes.isEmpty()) {
-            return;
-        }
-        if (logger.isInfoEnabled()) {
-            logger.info("[run] candidates({}): {}", dataNodes.size(), dataNodes);
-        }
-
-        SlotTable slotTable = createSlotTable();
-        if (logger.isInfoEnabled()) {
-            logger.info("[run] end to init slot table");
-        }
-
-        slotManager.refresh(slotTable);
-        if (logger.isInfoEnabled()) {
-            logger.info("[run] raft refreshed slot-table");
-        }
+    SlotTable slotTable = createSlotTable();
+    if (logger.isInfoEnabled()) {
+      logger.info("[run] end to init slot table");
     }
 
-    private void initParameters() {
-        dataNodes = dataServerManager.getDataServerMetaInfo().getClusterMembers();
-        if (dataNodes.isEmpty()) {
-            if (logger.isInfoEnabled()) {
-                logger.info("[run] empty candidate, quit");
-            }
-            return;
-        }
-        nextLeaderIndex.set(0);
-        nextFollowerIndex.set(dataNodes.size() - 1);
-        nextEpoch = DatumVersionUtil.nextId();
+    slotManager.refresh(slotTable);
+    if (logger.isInfoEnabled()) {
+      logger.info("[run] raft refreshed slot-table");
     }
+  }
 
-    public SlotTable createSlotTable() {
-        Map<Integer, Slot> slotMap = generateSlotMap();
-        return new SlotTable(nextEpoch, slotMap.values());
+  private void initParameters() {
+    dataNodes = dataServerManager.getDataServerMetaInfo().getClusterMembers();
+    if (dataNodes.isEmpty()) {
+      if (logger.isInfoEnabled()) {
+        logger.info("[run] empty candidate, quit");
+      }
+      return;
     }
+    nextLeaderIndex.set(0);
+    nextFollowerIndex.set(dataNodes.size() - 1);
+    nextEpoch = DatumVersionUtil.nextId();
+  }
 
-    private Map<Integer, Slot> generateSlotMap() {
-        Map<Integer, Slot> slotMap = Maps.newHashMap();
-        for (int i = 0; i < slotManager.getSlotNums(); i++) {
-            long epoch = DatumVersionUtil.nextId();
-            String leader = getNextLeader().getIp();
-            List<String> followers = Lists.newArrayList();
-            for (int j = 0; j < slotManager.getSlotReplicaNums() - 1; j++) {
-                followers.add(getNextFollower().getIp());
-            }
-            Slot slot = new Slot(i, leader, epoch, followers);
-            slotMap.put(i, slot);
-        }
-        return slotMap;
-    }
+  public SlotTable createSlotTable() {
+    Map<Integer, Slot> slotMap = generateSlotMap();
+    return new SlotTable(nextEpoch, slotMap.values());
+  }
 
-    private DataNode getNextLeader() {
-        return dataNodes.get(nextLeaderIndex.getAndIncrement() % dataNodes.size());
+  private Map<Integer, Slot> generateSlotMap() {
+    Map<Integer, Slot> slotMap = Maps.newHashMap();
+    for (int i = 0; i < slotManager.getSlotNums(); i++) {
+      long epoch = DatumVersionUtil.nextId();
+      String leader = getNextLeader().getIp();
+      List<String> followers = Lists.newArrayList();
+      for (int j = 0; j < slotManager.getSlotReplicaNums() - 1; j++) {
+        followers.add(getNextFollower().getIp());
+      }
+      Slot slot = new Slot(i, leader, epoch, followers);
+      slotMap.put(i, slot);
     }
+    return slotMap;
+  }
 
-    private DataNode getNextFollower() {
-        return dataNodes.get(nextFollowerIndex.getAndIncrement() % dataNodes.size());
-    }
+  private DataNode getNextLeader() {
+    return dataNodes.get(nextLeaderIndex.getAndIncrement() % dataNodes.size());
+  }
+
+  private DataNode getNextFollower() {
+    return dataNodes.get(nextFollowerIndex.getAndIncrement() % dataNodes.size());
+  }
 }

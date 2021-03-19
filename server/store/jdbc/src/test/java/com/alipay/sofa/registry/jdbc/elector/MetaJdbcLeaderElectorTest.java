@@ -18,11 +18,10 @@ package com.alipay.sofa.registry.jdbc.elector;
 
 import com.alipay.sofa.registry.jdbc.AbstractH2DbTestBase;
 import com.alipay.sofa.registry.store.api.elector.AbstractLeaderElector;
+import java.util.concurrent.TimeoutException;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
-import java.util.concurrent.TimeoutException;
-
 
 /**
  * @author zhuchen
@@ -30,25 +29,25 @@ import java.util.concurrent.TimeoutException;
  */
 public class MetaJdbcLeaderElectorTest extends AbstractH2DbTestBase {
 
-    private MetaJdbcLeaderElector leaderElector;
+  private MetaJdbcLeaderElector leaderElector;
 
-    @Before
-    public void beforeMetaJdbcLeaderElectorTest() {
-        leaderElector = applicationContext.getBean(MetaJdbcLeaderElector.class);
-    }
+  @Before
+  public void beforeMetaJdbcLeaderElectorTest() {
+    leaderElector = applicationContext.getBean(MetaJdbcLeaderElector.class);
+  }
 
-    @Test
-    public void testDoElect() throws TimeoutException, InterruptedException {
-        Assert.assertNotNull(leaderElector);
-        leaderElector.change2Follow();
-        waitConditionUntilTimeOut(()->leaderElector.amILeader(), 5000);
-    }
+  @Test
+  public void testDoElect() throws TimeoutException, InterruptedException {
+    Assert.assertNotNull(leaderElector);
+    leaderElector.change2Follow();
+    waitConditionUntilTimeOut(() -> leaderElector.amILeader(), 5000);
+  }
 
-    @Test
-    public void testDoQuery() throws TimeoutException, InterruptedException {
-        leaderElector.change2Follow();
-        waitConditionUntilTimeOut(()->leaderElector.amILeader(), 5000);
-        AbstractLeaderElector.LeaderInfo leaderInfo = leaderElector.doQuery();
-        Assert.assertEquals(leaderInfo.getLeader(), leaderElector.myself());
-    }
+  @Test
+  public void testDoQuery() throws TimeoutException, InterruptedException {
+    leaderElector.change2Follow();
+    waitConditionUntilTimeOut(() -> leaderElector.amILeader(), 5000);
+    AbstractLeaderElector.LeaderInfo leaderInfo = leaderElector.doQuery();
+    Assert.assertEquals(leaderInfo.getLeader(), leaderElector.myself());
+  }
 }

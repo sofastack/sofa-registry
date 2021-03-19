@@ -17,9 +17,6 @@
 package com.alipay.sofa.registry.common.model.sessionserver;
 
 import com.alipay.sofa.registry.common.model.dataserver.DatumVersion;
-import com.alipay.sofa.registry.common.model.store.WordCache;
-import com.google.common.collect.Maps;
-
 import java.io.Serializable;
 import java.util.*;
 
@@ -31,28 +28,33 @@ import java.util.*;
  */
 public class DataChangeRequest implements Serializable {
 
-    private static final long               serialVersionUID = -7674982522990222894L;
+  private static final long serialVersionUID = -7674982522990222894L;
 
-    private final Map<String, DatumVersion> dataInfoIds;
+  private final Map<String, DatumVersion> dataInfoIds;
 
-    private final String                    dataCenter;
+  private final String dataCenter;
 
-    public DataChangeRequest(String dataCenter, Map<String, DatumVersion> dataInfoIds) {
-        this.dataCenter = dataCenter;
-        this.dataInfoIds = dataInfoIds;
-    }
+  public DataChangeRequest(String dataCenter, Map<String, DatumVersion> dataInfoIds) {
+    this.dataCenter = dataCenter;
+    this.dataInfoIds = dataInfoIds;
+  }
 
-    public Map<String, DatumVersion> getDataInfoIds() {
-        return Collections.unmodifiableMap(dataInfoIds);
-    }
+  public Map<String, DatumVersion> getDataInfoIds() {
+    return Collections.unmodifiableMap(dataInfoIds);
+  }
 
-    public String getDataCenter() {
-        return dataCenter;
-    }
+  public String getDataCenter() {
+    return dataCenter;
+  }
 
-    @Override
-    public String toString() {
-        return "DataChangeRequest{" + "dataInfoIds=" + dataInfoIds + ", dataCenter='" + dataCenter
-               + '\'' + '}';
-    }
+  @Override
+  public String toString() {
+    return "DataChangeRequest{"
+        + "dataInfoIds="
+        + dataInfoIds
+        + ", dataCenter='"
+        + dataCenter
+        + '\''
+        + '}';
+  }
 }

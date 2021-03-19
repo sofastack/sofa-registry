@@ -16,141 +16,138 @@
  */
 package com.alipay.sofa.registry.remoting.bolt;
 
-import java.net.InetSocketAddress;
-import java.util.HashMap;
-import java.util.Map;
-
-import javax.ws.rs.client.WebTarget;
-
 import com.alipay.remoting.AsyncContext;
 import com.alipay.remoting.BizContext;
 import com.alipay.remoting.Connection;
 import com.alipay.sofa.registry.remoting.Channel;
+import java.net.InetSocketAddress;
+import java.util.HashMap;
+import java.util.Map;
+import javax.ws.rs.client.WebTarget;
 
 /**
- *
  * @author shangyu.wh
  * @author kezhu.wukz
  * @version $Id: BoltChannel.java, v 0.1 2017-11-24 16:46 shangyu.wh Exp $
  */
 public class BoltChannel implements Channel {
 
-    private Connection          connection;
+  private Connection connection;
 
-    private AsyncContext        asyncContext;
+  private AsyncContext asyncContext;
 
-    private BizContext          bizContext;
+  private BizContext bizContext;
 
-    private Map<String, Object> attributes;
+  private Map<String, Object> attributes;
 
-    @Override
-    public InetSocketAddress getRemoteAddress() {
-        if (connection != null) {
-            return connection.getRemoteAddress();
-        }
-        return null;
+  @Override
+  public InetSocketAddress getRemoteAddress() {
+    if (connection != null) {
+      return connection.getRemoteAddress();
     }
+    return null;
+  }
 
-    @Override
-    public InetSocketAddress getLocalAddress() {
-        if (connection != null) {
-            return connection.getLocalAddress();
-        }
-        return null;
+  @Override
+  public InetSocketAddress getLocalAddress() {
+    if (connection != null) {
+      return connection.getLocalAddress();
     }
+    return null;
+  }
 
-    @Override
-    public boolean isConnected() {
-        if (connection != null) {
-            return connection.isFine();
-        }
-        return false;
+  @Override
+  public boolean isConnected() {
+    if (connection != null) {
+      return connection.isFine();
     }
+    return false;
+  }
 
-    @Override
-    public synchronized Object getAttribute(String key) {
-        return attributes == null ? null : attributes.get(key);
-    }
+  @Override
+  public synchronized Object getAttribute(String key) {
+    return attributes == null ? null : attributes.get(key);
+  }
 
-    @Override
-    public synchronized void setAttribute(String key, Object value) {
-        if (attributes == null) {
-            attributes = new HashMap<>();
-        }
-        if (value == null) { // The null value unallowed in the ConcurrentHashMap.
-            attributes.remove(key);
-        } else {
-            attributes.put(key, value);
-        }
+  @Override
+  public synchronized void setAttribute(String key, Object value) {
+    if (attributes == null) {
+      attributes = new HashMap<>();
     }
+    if (value == null) { // The null value unallowed in the ConcurrentHashMap.
+      attributes.remove(key);
+    } else {
+      attributes.put(key, value);
+    }
+  }
 
-    @Override
-    public WebTarget getWebTarget() {
-        return null;
-    }
+  @Override
+  public WebTarget getWebTarget() {
+    return null;
+  }
 
-    @Override
-    public void close() {
-        this.connection.close();
-    }
+  @Override
+  public void close() {
+    this.connection.close();
+  }
 
-    /**
-     * Getter method for property <tt>connection</tt>.
-     *
-     * @return property value of connection
-     */
-    public Connection getConnection() {
-        return connection;
-    }
+  /**
+   * Getter method for property <tt>connection</tt>.
+   *
+   * @return property value of connection
+   */
+  public Connection getConnection() {
+    return connection;
+  }
 
-    /**
-     * Setter method for property <tt>connection</tt>.
-     *
-     * @param connection  value to be assigned to property connection
-     */
-    public void setConnection(Connection connection) {
-        this.connection = connection;
-    }
+  /**
+   * Setter method for property <tt>connection</tt>.
+   *
+   * @param connection value to be assigned to property connection
+   */
+  public void setConnection(Connection connection) {
+    this.connection = connection;
+  }
 
-    /**
-     * Getter method for property <tt>asyncContext</tt>.
-     *
-     * @return property value of asyncContext
-     */
-    public AsyncContext getAsyncContext() {
-        return asyncContext;
-    }
+  /**
+   * Getter method for property <tt>asyncContext</tt>.
+   *
+   * @return property value of asyncContext
+   */
+  public AsyncContext getAsyncContext() {
+    return asyncContext;
+  }
 
-    /**
-     * Setter method for property <tt>asyncContext</tt>.
-     *
-     * @param asyncContext  value to be assigned to property asyncContext
-     */
-    public void setAsyncContext(AsyncContext asyncContext) {
-        this.asyncContext = asyncContext;
-    }
+  /**
+   * Setter method for property <tt>asyncContext</tt>.
+   *
+   * @param asyncContext value to be assigned to property asyncContext
+   */
+  public void setAsyncContext(AsyncContext asyncContext) {
+    this.asyncContext = asyncContext;
+  }
 
-    /**
-     * Getter method for property <tt>bizContext</tt>.
-     *
-     * @return property value of bizContext
-     */
-    public BizContext getBizContext() {
-        return bizContext;
-    }
+  /**
+   * Getter method for property <tt>bizContext</tt>.
+   *
+   * @return property value of bizContext
+   */
+  public BizContext getBizContext() {
+    return bizContext;
+  }
 
-    /**
-     * Setter method for property <tt>bizContext</tt>.
-     *
-     * @param bizContext  value to be assigned to property bizContext
-     */
-    public void setBizContext(BizContext bizContext) {
-        this.bizContext = bizContext;
-    }
+  /**
+   * Setter method for property <tt>bizContext</tt>.
+   *
+   * @param bizContext value to be assigned to property bizContext
+   */
+  public void setBizContext(BizContext bizContext) {
+    this.bizContext = bizContext;
+  }
 
-    @Override
-    public String toString() {
-        return String.format("connected=%s, remote=%s, local=%s", isConnected(),
-            getRemoteAddress(), getLocalAddress());
-    }
+  @Override
+  public String toString() {
+    return String.format(
+        "connected=%s, remote=%s, local=%s", isConnected(), getRemoteAddress(), getLocalAddress());
+  }
 }

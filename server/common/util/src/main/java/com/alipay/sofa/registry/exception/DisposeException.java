@@ -18,19 +18,18 @@ package com.alipay.sofa.registry.exception;
 
 /**
  * @author chen.zhu
- *         <p>
- *         Nov 13, 2020
+ *     <p>Nov 13, 2020
  */
 public class DisposeException extends SofaRegistryException {
-	public DisposeException(String message) {
-		super(message);
-	}
+  public DisposeException(String message) {
+    super(message);
+  }
 
-	public DisposeException(String message, Throwable th) {
-		super(message, th);
-	}
+  public DisposeException(String message, Throwable th) {
+    super(message, th);
+  }
 
-	public DisposeException(Throwable th) {
-		super(th);
-	}
+  public DisposeException(Throwable th) {
+    super(th);
+  }
 }

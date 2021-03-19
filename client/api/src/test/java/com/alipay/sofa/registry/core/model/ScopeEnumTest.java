@@ -19,14 +19,12 @@ package com.alipay.sofa.registry.core.model;
 import org.junit.Assert;
 import org.junit.Test;
 
-/**
- * @author <a href="mailto:zhanggeng.zg@antfin.com">GengZhang</a>
- */
+/** @author <a href="mailto:zhanggeng.zg@antfin.com">GengZhang</a> */
 public class ScopeEnumTest {
 
-    @Test
-    public void contains() {
-        Assert.assertTrue(ScopeEnum.contains("zone"));
-        Assert.assertFalse(ScopeEnum.contains("xxxx"));
-    }
+  @Test
+  public void contains() {
+    Assert.assertTrue(ScopeEnum.contains("zone"));
+    Assert.assertFalse(ScopeEnum.contains("xxxx"));
+  }
 }

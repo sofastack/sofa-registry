@@ -20,16 +20,15 @@ import com.alipay.sofa.registry.common.model.Tuple;
 
 /**
  * @author chen.zhu
- * <p>
- * Jan 12, 2021
+ *     <p>Jan 12, 2021
  */
 public interface ComparatorVisitor<T> {
 
-    void visitAdded(T added);
+  void visitAdded(T added);
 
-    void visitModified(Tuple<T, T> modified);
+  void visitModified(Tuple<T, T> modified);
 
-    void visitRemoved(T removed);
+  void visitRemoved(T removed);
 
-    void visitRemaining(T remain);
+  void visitRemaining(T remain);
 }

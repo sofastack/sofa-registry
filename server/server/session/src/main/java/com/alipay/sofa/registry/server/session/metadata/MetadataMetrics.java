@@ -19,40 +19,40 @@ package com.alipay.sofa.registry.server.session.metadata;
 import io.prometheus.client.Counter;
 
 /**
- * 
  * @author xiaojian.xj
  * @version $Id: MetadataMetrics.java, v 0.1 2021年02月25日 16:34 xiaojian.xj Exp $
  */
 public class MetadataMetrics {
 
-	private MetadataMetrics() {
+  private MetadataMetrics() {}
 
-	}
+  static final class Fetch {
+    static final Counter METADATA_FETCH_COUNTER =
+        Counter.build()
+            .namespace("metadata")
+            .subsystem("fetch")
+            .name("metadata_fetch_total")
+            .help("metadata query revision and apps")
+            .register();
 
-	static final class Fetch {
-		static final Counter METADATA_FETCH_COUNTER = Counter.build()
-				.namespace("metadata").subsystem("fetch")
-				.name("metadata_fetch_total")
-				.help("metadata query revision and apps").register();
+    static final Counter.Child FETCH_REVISION_COUNTER = METADATA_FETCH_COUNTER.labels("revision");
+    static final Counter.Child FETCH_APPS_COUNTER = METADATA_FETCH_COUNTER.labels("apps");
+  }
 
-		static final Counter.Child FETCH_REVISION_COUNTER = METADATA_FETCH_COUNTER
-				.labels("revision");
-		static final Counter.Child FETCH_APPS_COUNTER = METADATA_FETCH_COUNTER
-				.labels("apps");
-	}
+  static final class Register {
 
-	static final class Register {
+    static final Counter METADATA_REGISTER_COUNTER =
+        Counter.build()
+            .namespace("metadata")
+            .subsystem("register")
+            .name("metadata_register_total")
+            .help("metadata revision register and heartbeat")
+            .register();
 
-		static final Counter METADATA_REGISTER_COUNTER = Counter.build()
-				.namespace("metadata").subsystem("register")
-				.name("metadata_register_total")
-				.help("metadata revision register and heartbeat").register();
+    static final Counter.Child REVISION_REGISTER_COUNTER =
+        METADATA_REGISTER_COUNTER.labels("register");
 
-		static final Counter.Child REVISION_REGISTER_COUNTER = METADATA_REGISTER_COUNTER
-				.labels("register");
-
-		static final Counter.Child REVISION_HEARTBEAT_COUNTER = METADATA_REGISTER_COUNTER
-				.labels("heartbeat");
-
-	}
+    static final Counter.Child REVISION_HEARTBEAT_COUNTER =
+        METADATA_REGISTER_COUNTER.labels("heartbeat");
+  }
 }

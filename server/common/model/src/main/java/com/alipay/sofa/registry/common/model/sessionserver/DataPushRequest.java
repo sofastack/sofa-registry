@@ -17,53 +17,51 @@
 package com.alipay.sofa.registry.common.model.sessionserver;
 
 import com.alipay.sofa.registry.common.model.dataserver.Datum;
-
 import java.io.Serializable;
 
 /**
- *
  * @author shangyu.wh
  * @version $Id: DataPushRequest.java, v 0.1 2018-08-29 18:11 shangyu.wh Exp $
  */
 public class DataPushRequest implements Serializable {
 
-    private Datum datum;
+  private Datum datum;
 
-    /**
-     * constructor
-     * @param datum
-     */
-    public DataPushRequest(Datum datum) {
-        this.datum = datum;
-    }
+  /**
+   * constructor
+   *
+   * @param datum
+   */
+  public DataPushRequest(Datum datum) {
+    this.datum = datum;
+  }
 
-    /**
-     * Getter method for property <tt>datum</tt>.
-     *
-     * @return property value of datum
-     */
-    public Datum getDatum() {
-        return datum;
-    }
+  /**
+   * Getter method for property <tt>datum</tt>.
+   *
+   * @return property value of datum
+   */
+  public Datum getDatum() {
+    return datum;
+  }
 
-    /**
-     * Setter method for property <tt>datum</tt>.
-     *
-     * @param datum  value to be assigned to property datum
-     */
-    public void setDatum(Datum datum) {
-        this.datum = datum;
-    }
+  /**
+   * Setter method for property <tt>datum</tt>.
+   *
+   * @param datum value to be assigned to property datum
+   */
+  public void setDatum(Datum datum) {
+    this.datum = datum;
+  }
 
-    @Override
-    public String toString() {
-        final StringBuilder sb = new StringBuilder("DataPushRequest{");
-        sb.append("dataInfoId=").append(datum.getDataInfoId());
-        sb.append(", dataCenter=").append(datum.getDataCenter());
-        sb.append(", version=").append(datum.getVersion());
-        sb.append(", pubsize=").append(datum.publisherSize());
-        sb.append('}');
-        return sb.toString();
-    }
-
+  @Override
+  public String toString() {
+    final StringBuilder sb = new StringBuilder("DataPushRequest{");
+    sb.append("dataInfoId=").append(datum.getDataInfoId());
+    sb.append(", dataCenter=").append(datum.getDataCenter());
+    sb.append(", version=").append(datum.getVersion());
+    sb.append(", pubsize=").append(datum.publisherSize());
+    sb.append('}');
+    return sb.toString();
+  }
 }

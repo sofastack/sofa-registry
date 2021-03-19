@@ -24,22 +24,23 @@ package com.alipay.sofa.registry.server.session.cache;
  */
 public class Value<T> {
 
-    private final T payload;
+  private final T payload;
 
-    /**
-     * constructor
-     * @param payload
-     */
-    public Value(T payload) {
-        this.payload = payload;
-    }
+  /**
+   * constructor
+   *
+   * @param payload
+   */
+  public Value(T payload) {
+    this.payload = payload;
+  }
 
-    /**
-     * Getter method for property <tt>payload</tt>.
-     *
-     * @return property value of payload
-     */
-    public T getPayload() {
-        return payload;
-    }
+  /**
+   * Getter method for property <tt>payload</tt>.
+   *
+   * @return property value of payload
+   */
+  public T getPayload() {
+    return payload;
+  }
 }

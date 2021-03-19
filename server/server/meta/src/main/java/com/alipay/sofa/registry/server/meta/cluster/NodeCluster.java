@@ -22,11 +22,9 @@ import com.alipay.sofa.registry.common.model.metaserver.cluster.VersionedList;
 
 /**
  * @author chen.zhu
- * <p>
- * Nov 20, 2020
+ *     <p>Nov 20, 2020
  */
 public interface NodeCluster<T extends Node> extends Cluster<T> {
 
-    VersionedList<T> getClusterMeta();
-
+  VersionedList<T> getClusterMeta();
 }

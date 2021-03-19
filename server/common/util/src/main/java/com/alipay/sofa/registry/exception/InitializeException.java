@@ -18,20 +18,19 @@ package com.alipay.sofa.registry.exception;
 
 /**
  * @author chen.zhu
- *         <p>
- *         Nov 13, 2020
+ *     <p>Nov 13, 2020
  */
 public class InitializeException extends SofaRegistryException {
 
-	public InitializeException(String message) {
-		super(message);
-	}
+  public InitializeException(String message) {
+    super(message);
+  }
 
-	public InitializeException(String message, Throwable th) {
-		super(message, th);
-	}
+  public InitializeException(String message, Throwable th) {
+    super(message, th);
+  }
 
-	public InitializeException(Throwable th) {
-		super(th);
-	}
+  public InitializeException(Throwable th) {
+    super(th);
+  }
 }

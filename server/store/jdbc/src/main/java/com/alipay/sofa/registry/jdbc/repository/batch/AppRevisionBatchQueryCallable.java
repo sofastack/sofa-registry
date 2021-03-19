@@ -24,73 +24,76 @@ import com.alipay.sofa.registry.jdbc.mapper.AppRevisionMapper;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.util.BatchCallableRunnable;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.util.CollectionUtils;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.util.CollectionUtils;
 
 /**
- *
  * @author xiaojian.xj
  * @version $Id: AppRevisionBatchQueryCallable.java, v 0.1 2021年01月24日 14:01 xiaojian.xj Exp $
  */
-public class AppRevisionBatchQueryCallable extends
-                                          BatchCallableRunnable<AppRevisionQueryModel, AppRevision> {
+public class AppRevisionBatchQueryCallable
+    extends BatchCallableRunnable<AppRevisionQueryModel, AppRevision> {
 
-    private static final Logger LOG = LoggerFactory.getLogger("METADATA-EXCHANGE",
-                                        "[AppRevisionBatchQuery]");
-    @Autowired
-    private AppRevisionMapper   appRevisionMapper;
+  private static final Logger LOG =
+      LoggerFactory.getLogger("METADATA-EXCHANGE", "[AppRevisionBatchQuery]");
+  @Autowired private AppRevisionMapper appRevisionMapper;
 
-    /**
-     * batch query app_revision
-     * @param taskEvents
-     * @return
-     */
-    @Override
-    public boolean batchProcess(List<TaskEvent> taskEvents) {
+  /**
+   * batch query app_revision
+   *
+   * @param taskEvents
+   * @return
+   */
+  @Override
+  public boolean batchProcess(List<TaskEvent> taskEvents) {
 
-        if (CollectionUtils.isEmpty(taskEvents)) {
-            return true;
-        }
-        if (LOG.isInfoEnabled()) {
-            LOG.info("commit app_revision query, task size: " + taskEvents.size());
-        }
-        List<AppRevisionQueryModel> querys = taskEvents.stream().map(task -> task.getData()).collect(Collectors.toList());
-        List<AppRevisionDomain> domains = appRevisionMapper.batchQuery(querys);
+    if (CollectionUtils.isEmpty(taskEvents)) {
+      return true;
+    }
+    if (LOG.isInfoEnabled()) {
+      LOG.info("commit app_revision query, task size: " + taskEvents.size());
+    }
+    List<AppRevisionQueryModel> querys =
+        taskEvents.stream().map(task -> task.getData()).collect(Collectors.toList());
+    List<AppRevisionDomain> domains = appRevisionMapper.batchQuery(querys);
 
-        Map<String, AppRevision> queryResult = new HashMap<>();
-        domains.forEach(domain -> {
-            AppRevision appRevision = queryResult.get(domain.getRevision());
-            if (appRevision != null) {
-                return;
-            }
-            queryResult.putIfAbsent(domain.getRevision(), AppRevisionDomainConvertor.convert2Revision(domain));
+    Map<String, AppRevision> queryResult = new HashMap<>();
+    domains.forEach(
+        domain -> {
+          AppRevision appRevision = queryResult.get(domain.getRevision());
+          if (appRevision != null) {
+            return;
+          }
+          queryResult.putIfAbsent(
+              domain.getRevision(), AppRevisionDomainConvertor.convert2Revision(domain));
         });
 
-        taskEvents.forEach(taskEvent -> {
-            String revision = taskEvent.getData().getRevision();
-            InvokeFuture<AppRevision> future = taskEvent.getFuture();
-            future.putResponse(queryResult.get(revision));
+    taskEvents.forEach(
+        taskEvent -> {
+          String revision = taskEvent.getData().getRevision();
+          InvokeFuture<AppRevision> future = taskEvent.getFuture();
+          future.putResponse(queryResult.get(revision));
         });
-        return true;
-    }
+    return true;
+  }
 
-    @Override
-    protected void setBatchSize() {
-        this.batchSize = 200;
-    }
+  @Override
+  protected void setBatchSize() {
+    this.batchSize = 200;
+  }
 
-    @Override
-    protected void setTimeUnit() {
-        this.timeUnit = TimeUnit.MILLISECONDS;
-    }
+  @Override
+  protected void setTimeUnit() {
+    this.timeUnit = TimeUnit.MILLISECONDS;
+  }
 
-    @Override
-    protected void setSleep() {
-        this.sleep = 20;
-    }
+  @Override
+  protected void setSleep() {
+    this.sleep = 20;
+  }
 }

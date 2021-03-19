@@ -18,9 +18,8 @@ package com.alipay.sofa.registry.client.api.model;
 
 /**
  * The interface Event.
- * 
+ *
  * @author zhuoyu.sjw
  * @version $Id : Event.java, v 0.1 2018-07-12 21:10 zhuoyu.sjw Exp $$
  */
-public interface Event {
-}
+public interface Event {}

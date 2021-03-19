@@ -20,78 +20,80 @@ import com.alipay.sofa.registry.common.model.metaserver.cluster.VersionedList;
 import com.alipay.sofa.registry.common.model.metaserver.nodes.MetaNode;
 import com.alipay.sofa.registry.common.model.metaserver.nodes.SessionNode;
 import com.alipay.sofa.registry.common.model.slot.SlotTable;
-import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-
 import java.io.Serializable;
 import java.util.*;
 
 /**
  * @author chen.zhu
- * <p>
- * Nov 27, 2020
+ *     <p>Nov 27, 2020
  */
 public class BaseHeartBeatResponse implements Serializable {
 
-    private final SlotTable             slotTable;
+  private final SlotTable slotTable;
 
-    private final VersionedList<MetaNode> metaNodes;
+  private final VersionedList<MetaNode> metaNodes;
 
-    private final VersionedList<SessionNode> sessionNodes;
+  private final VersionedList<SessionNode> sessionNodes;
 
-    private final String metaLeader;
+  private final String metaLeader;
 
-    private final long metaLeaderEpoch;
+  private final long metaLeaderEpoch;
 
-    public BaseHeartBeatResponse(VersionedList<MetaNode> metaNodes, SlotTable slotTable,
-                                 String metaLeader, long metaLeaderEpoch) {
-        this(metaNodes, slotTable, VersionedList.EMPTY, metaLeader, metaLeaderEpoch);
-    }
+  public BaseHeartBeatResponse(
+      VersionedList<MetaNode> metaNodes,
+      SlotTable slotTable,
+      String metaLeader,
+      long metaLeaderEpoch) {
+    this(metaNodes, slotTable, VersionedList.EMPTY, metaLeader, metaLeaderEpoch);
+  }
 
-    public BaseHeartBeatResponse(VersionedList<MetaNode> metaNodes, SlotTable slotTable,
-                                 VersionedList<SessionNode> sessionNodes, String metaLeader, long metaLeaderEpoch) {
-        this.slotTable = slotTable;
-        this.metaNodes = metaNodes;
-        this.sessionNodes = sessionNodes;
-        this.metaLeader = metaLeader;
-        this.metaLeaderEpoch = metaLeaderEpoch;
-    }
+  public BaseHeartBeatResponse(
+      VersionedList<MetaNode> metaNodes,
+      SlotTable slotTable,
+      VersionedList<SessionNode> sessionNodes,
+      String metaLeader,
+      long metaLeaderEpoch) {
+    this.slotTable = slotTable;
+    this.metaNodes = metaNodes;
+    this.sessionNodes = sessionNodes;
+    this.metaLeader = metaLeader;
+    this.metaLeaderEpoch = metaLeaderEpoch;
+  }
 
-    public SlotTable getSlotTable() {
-        return slotTable;
-    }
+  public SlotTable getSlotTable() {
+    return slotTable;
+  }
 
+  public List<MetaNode> getMetaNodes() {
+    return metaNodes.getClusterMembers();
+  }
 
-    public List<MetaNode> getMetaNodes() {
-        return metaNodes.getClusterMembers();
-    }
+  public String getMetaLeader() {
+    return metaLeader;
+  }
 
-    public String getMetaLeader() {
-        return metaLeader;
-    }
+  public long getMetaLeaderEpoch() {
+    return metaLeaderEpoch;
+  }
 
-    public long getMetaLeaderEpoch() {
-        return metaLeaderEpoch;
-    }
+  public Map<String, SessionNode> getSessionNodesMap() {
+    final Map<String, SessionNode> m = new HashMap<>(sessionNodes.getClusterMembers().size());
+    sessionNodes.getClusterMembers().forEach(s -> m.put(s.getIp(), s));
+    return m;
+  }
 
+  public Set<String> getDataCentersFromMetaNodes() {
+    Set<String> dcs = Sets.newHashSet();
+    metaNodes.getClusterMembers().forEach(m -> dcs.add(m.getDataCenter()));
+    return dcs;
+  }
 
-    public Map<String, SessionNode> getSessionNodesMap() {
-        final Map<String, SessionNode> m = new HashMap<>(sessionNodes.getClusterMembers().size());
-        sessionNodes.getClusterMembers().forEach(s -> m.put(s.getIp(), s));
-        return m;
-    }
+  public long getSessionServerEpoch() {
+    return sessionNodes.getEpoch();
+  }
 
-    public Set<String> getDataCentersFromMetaNodes() {
-        Set<String> dcs = Sets.newHashSet();
-        metaNodes.getClusterMembers().forEach(m -> dcs.add(m.getDataCenter()));
-        return dcs;
-    }
-
-    public long getSessionServerEpoch() {
-        return sessionNodes.getEpoch();
-    }
-
-    public long getMetaServerEpoch() {
-        return metaNodes.getEpoch();
-    }
+  public long getMetaServerEpoch() {
+    return metaNodes.getEpoch();
+  }
 }

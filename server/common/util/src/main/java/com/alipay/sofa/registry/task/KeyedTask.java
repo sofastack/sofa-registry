@@ -20,83 +20,96 @@ import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 
 public class KeyedTask<T extends Runnable> implements Runnable {
-    private static final Logger LOGGER     = LoggerFactory.getLogger(KeyedTask.class);
-    final long                  createTime = System.currentTimeMillis();
-    final Object                key;
-    final T                     runnable;
+  private static final Logger LOGGER = LoggerFactory.getLogger(KeyedTask.class);
+  final long createTime = System.currentTimeMillis();
+  final Object key;
+  final T runnable;
 
-    volatile long               startTime;
-    volatile long               endTime;
-    volatile boolean            success;
-    volatile boolean            canceled;
+  volatile long startTime;
+  volatile long endTime;
+  volatile boolean success;
+  volatile boolean canceled;
 
-    KeyedTask(Object key, T runnable) {
-        this.key = key;
-        this.runnable = runnable;
+  KeyedTask(Object key, T runnable) {
+    this.key = key;
+    this.runnable = runnable;
+  }
+
+  public void cancel() {
+    this.canceled = true;
+  }
+
+  @Override
+  public void run() {
+    try {
+      this.startTime = System.currentTimeMillis();
+      if (!canceled) {
+        runnable.run();
+      }
+      this.success = true;
+    } catch (Throwable e) {
+      LOGGER.error("failed to run task {}, {}", key, runnable, e);
+    } finally {
+      this.endTime = System.currentTimeMillis();
     }
+  }
 
-    public void cancel() {
-        this.canceled = true;
-    }
+  public boolean isFinished() {
+    return this.endTime > 0;
+  }
 
-    @Override
-    public void run() {
-        try {
-            this.startTime = System.currentTimeMillis();
-            if (!canceled) {
-                runnable.run();
-            }
-            this.success = true;
-        } catch (Throwable e) {
-            LOGGER.error("failed to run task {}, {}", key, runnable, e);
-        } finally {
-            this.endTime = System.currentTimeMillis();
-        }
-    }
+  public boolean isSuccess() {
+    return isFinished() && success;
+  }
 
-    public boolean isFinished() {
-        return this.endTime > 0;
-    }
+  public boolean isFailed() {
+    return isFinished() && !success;
+  }
 
-    public boolean isSuccess() {
-        return isFinished() && success;
-    }
+  public long getCreateTime() {
+    return createTime;
+  }
 
-    public boolean isFailed() {
-        return isFinished() && !success;
-    }
+  public long getStartTime() {
+    return startTime;
+  }
 
-    public long getCreateTime() {
-        return createTime;
-    }
+  public long getEndTime() {
+    return endTime;
+  }
 
-    public long getStartTime() {
-        return startTime;
-    }
+  public Object key() {
+    return key;
+  }
 
-    public long getEndTime() {
-        return endTime;
-    }
+  public T getRunnable() {
+    return runnable;
+  }
 
-    public Object key() {
-        return key;
+  public boolean isOverAfter(int intervalMs) {
+    if (!isFinished()) {
+      return false;
     }
+    return canceled || System.currentTimeMillis() - endTime >= intervalMs;
+  }
 
-    public T getRunnable() {
-        return runnable;
-    }
-
-    public boolean isOverAfter(int intervalMs) {
-        if (!isFinished()) {
-            return false;
-        }
-        return canceled || System.currentTimeMillis() - endTime >= intervalMs;
-    }
-
-    @Override
-    public String toString() {
-        return "KeyedTask{" + "createTime=" + createTime + ", key=" + key + ", runnable="
-               + runnable + ", startTime=" + startTime + ", endTime=" + endTime + ", success="
-               + success + ", canceled=" + canceled + '}';
-    }
+  @Override
+  public String toString() {
+    return "KeyedTask{"
+        + "createTime="
+        + createTime
+        + ", key="
+        + key
+        + ", runnable="
+        + runnable
+        + ", startTime="
+        + startTime
+        + ", endTime="
+        + endTime
+        + ", success="
+        + success
+        + ", canceled="
+        + canceled
+        + '}';
+  }
 }

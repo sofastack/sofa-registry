@@ -16,35 +16,36 @@
  */
 package com.alipay.sofa.registry.util;
 
-import org.junit.Assert;
-import org.junit.Test;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import org.junit.Assert;
+import org.junit.Test;
 
 /**
  * @author xuanbei
  * @since 2018/12/28
  */
 public class CollectionUtilsTest {
-    Collection<String> stringCollection = new ArrayList<>(Arrays.asList("zhangsan", "lisi",
-                                            "wangwu", "zhaoliu", "sunqi", "zhouba"));
+  Collection<String> stringCollection =
+      new ArrayList<>(Arrays.asList("zhangsan", "lisi", "wangwu", "zhaoliu", "sunqi", "zhouba"));
 
-    @Test
-    public void testGetRandom() {
-        boolean allValueSame = true;
-        String firstValue = null;
-        for (int i = 0; i < 10; i++) {
-            String radomeValue = i % 2 == 0 ? CollectionUtils.getRandom(stringCollection).get()
-                : new CollectionUtils().getRandom(stringCollection).get();
-            Assert.assertTrue(stringCollection.contains(radomeValue));
-            if (firstValue == null) {
-                firstValue = radomeValue;
-            } else if (!radomeValue.equals(firstValue)) {
-                allValueSame = false;
-            }
-        }
-        Assert.assertFalse(allValueSame);
+  @Test
+  public void testGetRandom() {
+    boolean allValueSame = true;
+    String firstValue = null;
+    for (int i = 0; i < 10; i++) {
+      String radomeValue =
+          i % 2 == 0
+              ? CollectionUtils.getRandom(stringCollection).get()
+              : new CollectionUtils().getRandom(stringCollection).get();
+      Assert.assertTrue(stringCollection.contains(radomeValue));
+      if (firstValue == null) {
+        firstValue = radomeValue;
+      } else if (!radomeValue.equals(firstValue)) {
+        allValueSame = false;
+      }
     }
+    Assert.assertFalse(allValueSame);
+  }
 }

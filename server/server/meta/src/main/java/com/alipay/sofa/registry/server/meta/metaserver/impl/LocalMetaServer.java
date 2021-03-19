@@ -25,105 +25,107 @@ import com.alipay.sofa.registry.server.meta.metaserver.CurrentDcMetaServer;
 import com.alipay.sofa.registry.server.meta.slot.SlotManager;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
-import org.springframework.beans.factory.annotation.Autowired;
-
 import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
+import org.springframework.beans.factory.annotation.Autowired;
 
 /**
  * @author chen.zhu
- * <p>
- * Dec 14, 2020
+ *     <p>Dec 14, 2020
  */
 public class LocalMetaServer extends AbstractMetaServer implements CurrentDcMetaServer {
 
-    private final AtomicLong   currentEpoch              = new AtomicLong();
+  private final AtomicLong currentEpoch = new AtomicLong();
 
-    @Autowired
-    protected SlotManager        slotManager;
+  @Autowired protected SlotManager slotManager;
 
-    @Autowired
-    protected DataServerManager dataServerManager;
+  @Autowired protected DataServerManager dataServerManager;
 
-    @Autowired
-    protected SessionServerManager sessionServerManager;
+  @Autowired protected SessionServerManager sessionServerManager;
 
-    public LocalMetaServer() {
+  public LocalMetaServer() {}
+
+  public LocalMetaServer(
+      SlotManager slotManager,
+      DataServerManager dataServerManager,
+      SessionServerManager sessionServerManager) {
+    this.slotManager = slotManager;
+    this.dataServerManager = dataServerManager;
+    this.sessionServerManager = sessionServerManager;
+  }
+
+  @Override
+  public SlotTable getSlotTable() {
+    return slotManager.getSlotTable();
+  }
+
+  public long getEpoch() {
+    return currentEpoch.get();
+  }
+
+  @Override
+  public List<MetaNode> getClusterMembers() {
+    return Lists.newArrayList(metaServers);
+  }
+
+  @Override
+  public void updateClusterMembers(VersionedList<MetaNode> versionedMetaNodes) {
+    if (versionedMetaNodes.getEpoch() <= currentEpoch.get()) {
+      logger.warn(
+          "[updateClusterMembers]Epoch[{}] is less than current[{}], ignore: {}",
+          currentEpoch.get(),
+          versionedMetaNodes.getEpoch(),
+          versionedMetaNodes.getClusterMembers());
     }
-
-    public LocalMetaServer(SlotManager slotManager, DataServerManager dataServerManager,
-                           SessionServerManager sessionServerManager) {
-        this.slotManager = slotManager;
-        this.dataServerManager = dataServerManager;
-        this.sessionServerManager = sessionServerManager;
+    lock.writeLock().lock();
+    try {
+      logger.warn(
+          "[updateClusterMembers] update meta-servers, \nprevious[{}]: {} \ncurrent[{}]: {}",
+          currentEpoch.get(),
+          getClusterMembers(),
+          versionedMetaNodes.getEpoch(),
+          versionedMetaNodes.getClusterMembers());
+      currentEpoch.set(versionedMetaNodes.getEpoch());
+      metaServers = Sets.newHashSet(versionedMetaNodes.getClusterMembers());
+    } finally {
+      lock.writeLock().unlock();
     }
+  }
 
-    @Override
-    public SlotTable getSlotTable() {
-        return slotManager.getSlotTable();
-    }
+  @Override
+  public DataServerManager getDataServerManager() {
+    return dataServerManager;
+  }
 
-    public long getEpoch() {
-        return currentEpoch.get();
-    }
+  @Override
+  public SessionServerManager getSessionServerManager() {
+    return sessionServerManager;
+  }
 
-    @Override
-    public List<MetaNode> getClusterMembers() {
-        return Lists.newArrayList(metaServers);
+  @Override
+  public void renew(MetaNode metaNode) {
+    lock.writeLock().lock();
+    try {
+      logger.info("[renew]meta node [{}] renewed", metaNode);
+      metaServers.add(metaNode);
+    } finally {
+      lock.writeLock().unlock();
     }
+  }
 
-    @Override
-    public void updateClusterMembers(VersionedList<MetaNode> versionedMetaNodes) {
-        if (versionedMetaNodes.getEpoch() <= currentEpoch.get()) {
-            logger.warn("[updateClusterMembers]Epoch[{}] is less than current[{}], ignore: {}",
-                currentEpoch.get(), versionedMetaNodes.getEpoch(), versionedMetaNodes.getClusterMembers());
-        }
-        lock.writeLock().lock();
-        try {
-            logger.warn(
-                "[updateClusterMembers] update meta-servers, \nprevious[{}]: {} \ncurrent[{}]: {}",
-                currentEpoch.get(), getClusterMembers(), versionedMetaNodes.getEpoch(), versionedMetaNodes.getClusterMembers());
-            currentEpoch.set(versionedMetaNodes.getEpoch());
-            metaServers = Sets.newHashSet(versionedMetaNodes.getClusterMembers());
-        } finally {
-            lock.writeLock().unlock();
-        }
+  @Override
+  public void cancel(MetaNode renewal) {
+    lock.writeLock().lock();
+    try {
+      logger.info("[cancel]meta node [{}] removed", renewal);
+      metaServers.remove(renewal);
+    } finally {
+      lock.writeLock().unlock();
     }
+  }
 
-    @Override
-    public DataServerManager getDataServerManager() {
-        return dataServerManager;
-    }
-
-    @Override
-    public SessionServerManager getSessionServerManager() {
-        return sessionServerManager;
-    }
-
-    @Override
-    public void renew(MetaNode metaNode) {
-        lock.writeLock().lock();
-        try {
-            logger.info("[renew]meta node [{}] renewed", metaNode);
-            metaServers.add(metaNode);
-        } finally {
-            lock.writeLock().unlock();
-        }
-    }
-
-    @Override
-    public void cancel(MetaNode renewal) {
-        lock.writeLock().lock();
-        try {
-            logger.info("[cancel]meta node [{}] removed", renewal);
-            metaServers.remove(renewal);
-        } finally {
-            lock.writeLock().unlock();
-        }
-    }
-
-    @Override
-    public VersionedList<MetaNode> getClusterMeta() {
-        return new VersionedList<>(getEpoch(), getClusterMembers());
-    }
+  @Override
+  public VersionedList<MetaNode> getClusterMeta() {
+    return new VersionedList<>(getEpoch(), getClusterMembers());
+  }
 }

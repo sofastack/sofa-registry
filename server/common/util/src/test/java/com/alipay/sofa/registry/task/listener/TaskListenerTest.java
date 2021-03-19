@@ -18,47 +18,46 @@ package com.alipay.sofa.registry.task.listener;
 
 import static com.alipay.sofa.registry.task.listener.TaskEvent.TaskType.WATCHER_REGISTER_FETCH_TASK;
 
+import com.alipay.sofa.registry.task.listener.TaskEvent.TaskType;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
-
-import com.alipay.sofa.registry.task.listener.TaskEvent.TaskType;
 
 /**
  * @author xuanbei
  * @since 2018/12/28
  */
 public class TaskListenerTest {
-    private static final TaskListenerManager taskListenerManager                    = new DefaultTaskListenerManager();
-    private static volatile boolean          watcherRegisterFetchTaskListenerCalled = false;
+  private static final TaskListenerManager taskListenerManager = new DefaultTaskListenerManager();
+  private static volatile boolean watcherRegisterFetchTaskListenerCalled = false;
 
-    @BeforeClass
-    public static void beforeClass() {
+  @BeforeClass
+  public static void beforeClass() {
 
-        taskListenerManager.addTaskListener(new WatcherRegisterFetchTaskListener());
+    taskListenerManager.addTaskListener(new WatcherRegisterFetchTaskListener());
+  }
+
+  @Test
+  public void doTest() {
+    Assert.assertEquals(1, taskListenerManager.getTaskListeners().size());
+
+    Assert.assertFalse(watcherRegisterFetchTaskListenerCalled);
+
+    taskListenerManager.sendTaskEvent(new TaskEvent(WATCHER_REGISTER_FETCH_TASK));
+
+    Assert.assertTrue(watcherRegisterFetchTaskListenerCalled);
+    watcherRegisterFetchTaskListenerCalled = false;
+  }
+
+  private static class WatcherRegisterFetchTaskListener implements TaskListener {
+    @Override
+    public TaskType support() {
+      return TaskType.WATCHER_REGISTER_FETCH_TASK;
     }
 
-    @Test
-    public void doTest() {
-        Assert.assertEquals(1, taskListenerManager.getTaskListeners().size());
-
-        Assert.assertFalse(watcherRegisterFetchTaskListenerCalled);
-
-        taskListenerManager.sendTaskEvent(new TaskEvent(WATCHER_REGISTER_FETCH_TASK));
-
-        Assert.assertTrue(watcherRegisterFetchTaskListenerCalled);
-        watcherRegisterFetchTaskListenerCalled = false;
+    @Override
+    public void handleEvent(TaskEvent event) {
+      watcherRegisterFetchTaskListenerCalled = true;
     }
-
-    private static class WatcherRegisterFetchTaskListener implements TaskListener {
-        @Override
-        public TaskType support() {
-            return TaskType.WATCHER_REGISTER_FETCH_TASK;
-        }
-
-        @Override
-        public void handleEvent(TaskEvent event) {
-            watcherRegisterFetchTaskListenerCalled = true;
-        }
-    }
+  }
 }

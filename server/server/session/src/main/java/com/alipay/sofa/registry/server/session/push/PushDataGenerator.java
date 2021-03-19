@@ -24,38 +24,39 @@ import com.alipay.sofa.registry.server.session.converter.ReceivedDataConverter;
 import com.alipay.sofa.registry.server.session.converter.pb.ReceivedDataConvertor;
 import com.alipay.sofa.registry.server.session.predicate.ZonePredicate;
 import com.google.common.collect.Lists;
-import org.springframework.beans.factory.annotation.Autowired;
-
 import java.util.Map;
 import java.util.function.Predicate;
+import org.springframework.beans.factory.annotation.Autowired;
 
 public class PushDataGenerator {
 
-    @Autowired
-    private SessionServerConfig sessionServerConfig;
+  @Autowired private SessionServerConfig sessionServerConfig;
 
-    public Object createPushData(SubDatum datum, Map<String, Subscriber> subscriberMap) {
-        SubscriberUtils.getAndAssertHasSameScope(subscriberMap.values());
-        final Subscriber subscriber = subscriberMap.values().iterator().next();
-        BaseInfo.ClientVersion clientVersion = subscriber.getClientVersion();
-        // only supported 4.x
-        if (BaseInfo.ClientVersion.StoreData != clientVersion) {
-            throw new IllegalArgumentException("unsupported clientVersion:" + clientVersion);
-        }
-        String dataId = datum.getDataId();
-        String clientCell = sessionServerConfig.getClientCell(subscriber.getCell());
-        Predicate<String> zonePredicate = ZonePredicate.zonePredicate(dataId, clientCell,
-            subscriber.getScope(), sessionServerConfig);
-
-        ReceivedData receivedData = ReceivedDataConverter.getReceivedDataMulti(datum,
-            subscriber.getScope(), Lists.newArrayList(subscriberMap.keySet()), clientCell,
-            zonePredicate);
-        receivedData.setVersion(datum.getVersion());
-        final Byte serializerIndex = subscriber.getSourceAddress().getSerializerIndex();
-        if (serializerIndex != null && URL.PROTOBUF == serializerIndex.byteValue()) {
-            return ReceivedDataConvertor.convert2Pb(receivedData);
-        }
-        return receivedData;
+  public Object createPushData(SubDatum datum, Map<String, Subscriber> subscriberMap) {
+    SubscriberUtils.getAndAssertHasSameScope(subscriberMap.values());
+    final Subscriber subscriber = subscriberMap.values().iterator().next();
+    BaseInfo.ClientVersion clientVersion = subscriber.getClientVersion();
+    // only supported 4.x
+    if (BaseInfo.ClientVersion.StoreData != clientVersion) {
+      throw new IllegalArgumentException("unsupported clientVersion:" + clientVersion);
     }
+    String dataId = datum.getDataId();
+    String clientCell = sessionServerConfig.getClientCell(subscriber.getCell());
+    Predicate<String> zonePredicate =
+        ZonePredicate.zonePredicate(dataId, clientCell, subscriber.getScope(), sessionServerConfig);
 
+    ReceivedData receivedData =
+        ReceivedDataConverter.getReceivedDataMulti(
+            datum,
+            subscriber.getScope(),
+            Lists.newArrayList(subscriberMap.keySet()),
+            clientCell,
+            zonePredicate);
+    receivedData.setVersion(datum.getVersion());
+    final Byte serializerIndex = subscriber.getSourceAddress().getSerializerIndex();
+    if (serializerIndex != null && URL.PROTOBUF == serializerIndex.byteValue()) {
+      return ReceivedDataConvertor.convert2Pb(receivedData);
+    }
+    return receivedData;
+  }
 }

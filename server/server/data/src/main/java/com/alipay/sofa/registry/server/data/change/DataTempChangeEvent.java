@@ -19,27 +19,27 @@ package com.alipay.sofa.registry.server.data.change;
 import com.alipay.sofa.registry.common.model.dataserver.Datum;
 
 /**
- *
  * @author yuzhi.lyz
  * @version v 0.1 2020-12-08 19:54 yuzhi.lyz Exp $
  */
 public final class DataTempChangeEvent implements IDataChangeEvent {
-    private final Datum datum;
+  private final Datum datum;
 
-    public DataTempChangeEvent(Datum datum) {
-        this.datum = datum;
-    }
+  public DataTempChangeEvent(Datum datum) {
+    this.datum = datum;
+  }
 
-    /**
-     * Getter method for property <tt>datum</tt>.
-     * @return property value of datum
-     */
-    public Datum getDatum() {
-        return datum;
-    }
+  /**
+   * Getter method for property <tt>datum</tt>.
+   *
+   * @return property value of datum
+   */
+  public Datum getDatum() {
+    return datum;
+  }
 
-    @Override
-    public String toString() {
-        return "DataTempChangeEvent{" + "datum=" + datum + '}';
-    }
+  @Override
+  public String toString() {
+    return "DataTempChangeEvent{" + "datum=" + datum + '}';
+  }
 }

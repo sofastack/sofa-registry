@@ -26,8 +26,6 @@ import com.alipay.sofa.registry.store.api.repository.AppRevisionRepository;
 import com.alipay.sofa.registry.util.RevisionUtils;
 import com.alipay.sofa.registry.util.SingleFlight;
 import com.google.common.collect.Sets;
-import org.springframework.beans.factory.annotation.Autowired;
-import javax.annotation.Resource;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
@@ -36,103 +34,105 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import javax.annotation.Resource;
+import org.springframework.beans.factory.annotation.Autowired;
 
 /**
- *
  * @author xiaojian.xj
  * @version $Id: AppRevisionRaftRepository.java, v 0.1 2021年01月17日 15:57 xiaojian.xj Exp $
  */
 public class AppRevisionRaftRepository implements AppRevisionRepository, RaftRepository {
 
-    private static final Logger            LOG          = LoggerFactory
-                                                            .getLogger(AppRevisionRaftRepository.class);
+  private static final Logger LOG = LoggerFactory.getLogger(AppRevisionRaftRepository.class);
 
-    @Autowired
-    private AppRevisionNodeService         appRevisionNodeService;
+  @Autowired private AppRevisionNodeService appRevisionNodeService;
 
-    @Resource
-    private InterfaceAppsRaftRepository    interfaceAppsRaftRepository;
+  @Resource private InterfaceAppsRaftRepository interfaceAppsRaftRepository;
 
-    /**
-     * map: <revision, AppRevision>
-     */
-    private final Map<String, AppRevision> registry     = new ConcurrentHashMap<>();
+  /** map: <revision, AppRevision> */
+  private final Map<String, AppRevision> registry = new ConcurrentHashMap<>();
 
-    private volatile String                keysDigest   = "";
+  private volatile String keysDigest = "";
 
-    private SingleFlight                   singleFlight = new SingleFlight();
+  private SingleFlight singleFlight = new SingleFlight();
 
-    @Override
-    public void register(AppRevision appRevision) throws Exception {
-        if (this.registry.containsKey(appRevision.getRevision())) {
-            return;
-        }
+  @Override
+  public void register(AppRevision appRevision) throws Exception {
+    if (this.registry.containsKey(appRevision.getRevision())) {
+      return;
+    }
 
-        singleFlight.execute("revisionRegister" + appRevision.getRevision(), () -> {
-            appRevisionNodeService.register(appRevision);
-            interfaceAppsRaftRepository.onNewRevision(appRevision);
-            registry.putIfAbsent(appRevision.getRevision(), appRevision);
-            return null;
+    singleFlight.execute(
+        "revisionRegister" + appRevision.getRevision(),
+        () -> {
+          appRevisionNodeService.register(appRevision);
+          interfaceAppsRaftRepository.onNewRevision(appRevision);
+          registry.putIfAbsent(appRevision.getRevision(), appRevision);
+          return null;
         });
-    }
+  }
 
-    @Override
-    public void refresh(String dataCenter) {
-        try {
-            singleFlight.execute("refreshAll", () -> {
-                List<String> allRevisionIds = appRevisionNodeService.checkRevisions(keysDigest);
-                if (allRevisionIds == null || allRevisionIds.size() == 0) {
-                    return Collections.emptyList();
-                }
-                Set<String> newRevisionIds = Sets.difference(new HashSet<>(allRevisionIds), registry.keySet());
-                LOG.info("refresh revisions: {}, newRevisionIds: {} ", keysDigest, newRevisionIds);
-                List<AppRevision> query = appRevisionNodeService.fetchMulti(new ArrayList<>(newRevisionIds));
-                for (AppRevision rev : query) {
-                    interfaceAppsRaftRepository.onNewRevision(rev);
-                    registry.putIfAbsent(rev.getRevision(), rev);
-                }
-                if (query.size() > 0) {
-                    keysDigest = generateKeysDigest(query);
-                }
-                return query;
-            });
-
-        } catch (Exception e) {
-            LOG.error("refresh revisions failed ", e);
-            throw new RuntimeException("refresh revision failed", e);
-        }
-    }
-
-    @Override
-    public AppRevision queryRevision(String dataCenter, String revision) {
-
-        for (int i = 0; i < 2; i++) {
-            // 第一次可能会被前一个revision的请求合并到导致虽然在meta内没有fetch回来，第二个fetch肯定能拿到对应 revisipn
-            AppRevision revisionRegister = registry.get(revision);
-            if (revisionRegister != null) {
-                return revisionRegister;
+  @Override
+  public void refresh(String dataCenter) {
+    try {
+      singleFlight.execute(
+          "refreshAll",
+          () -> {
+            List<String> allRevisionIds = appRevisionNodeService.checkRevisions(keysDigest);
+            if (allRevisionIds == null || allRevisionIds.size() == 0) {
+              return Collections.emptyList();
             }
-            // sync from meta raftdata
-            refresh(dataCenter);
-        }
+            Set<String> newRevisionIds =
+                Sets.difference(new HashSet<>(allRevisionIds), registry.keySet());
+            LOG.info("refresh revisions: {}, newRevisionIds: {} ", keysDigest, newRevisionIds);
+            List<AppRevision> query =
+                appRevisionNodeService.fetchMulti(new ArrayList<>(newRevisionIds));
+            for (AppRevision rev : query) {
+              interfaceAppsRaftRepository.onNewRevision(rev);
+              registry.putIfAbsent(rev.getRevision(), rev);
+            }
+            if (query.size() > 0) {
+              keysDigest = generateKeysDigest(query);
+            }
+            return query;
+          });
 
-        return registry.get(revision);
+    } catch (Exception e) {
+      LOG.error("refresh revisions failed ", e);
+      throw new RuntimeException("refresh revision failed", e);
+    }
+  }
+
+  @Override
+  public AppRevision queryRevision(String dataCenter, String revision) {
+
+    for (int i = 0; i < 2; i++) {
+      // 第一次可能会被前一个revision的请求合并到导致虽然在meta内没有fetch回来，第二个fetch肯定能拿到对应 revisipn
+      AppRevision revisionRegister = registry.get(revision);
+      if (revisionRegister != null) {
+        return revisionRegister;
+      }
+      // sync from meta raftdata
+      refresh(dataCenter);
     }
 
-    @Override
-    public AppRevision heartbeat(String dataCenter, String revision) {
-        AppRevision appRevision = registry.get(revision);
-        if (appRevision != null) {
-            appRevision.setLastHeartbeat(new Date());
-        }
-        return appRevision;
-    }
+    return registry.get(revision);
+  }
 
-    private String generateKeysDigest(List<AppRevision> revisions) {
-        List<String> keys = new ArrayList<>();
-        for (AppRevision appRevision : revisions) {
-            keys.add(appRevision.getRevision());
-        }
-        return RevisionUtils.revisionsDigest(keys);
+  @Override
+  public AppRevision heartbeat(String dataCenter, String revision) {
+    AppRevision appRevision = registry.get(revision);
+    if (appRevision != null) {
+      appRevision.setLastHeartbeat(new Date());
     }
+    return appRevision;
+  }
+
+  private String generateKeysDigest(List<AppRevision> revisions) {
+    List<String> keys = new ArrayList<>();
+    for (AppRevision appRevision : revisions) {
+      keys.add(appRevision.getRevision());
+    }
+    return RevisionUtils.revisionsDigest(keys);
+  }
 }

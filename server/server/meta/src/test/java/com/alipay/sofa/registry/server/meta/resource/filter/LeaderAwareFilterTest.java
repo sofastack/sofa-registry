@@ -16,44 +16,36 @@
  */
 package com.alipay.sofa.registry.server.meta.resource.filter;
 
+import static org.junit.Assert.*;
+
 import com.alipay.sofa.registry.common.model.store.URL;
-import com.alipay.sofa.registry.core.model.Result;
 import com.alipay.sofa.registry.remoting.Channel;
 import com.alipay.sofa.registry.remoting.jersey.JerseyClient;
 import com.alipay.sofa.registry.server.meta.AbstractH2DbTestBase;
 import com.alipay.sofa.registry.server.meta.bootstrap.config.MetaServerConfig;
 import com.alipay.sofa.registry.server.shared.env.ServerEnv;
 import com.alipay.sofa.registry.store.api.elector.LeaderElector;
+import java.util.concurrent.TimeoutException;
+import javax.ws.rs.core.Response;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import javax.ws.rs.client.Entity;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
-import java.util.concurrent.TimeoutException;
-
-import static org.junit.Assert.*;
-
 public class LeaderAwareFilterTest extends AbstractH2DbTestBase {
 
-    @Autowired
-    private LeaderElector leaderElector;
+  @Autowired private LeaderElector leaderElector;
 
-    @Autowired
-    private MetaServerConfig metaServerConfig;
+  @Autowired private MetaServerConfig metaServerConfig;
 
-    private Channel channel;
+  private Channel channel;
 
-    @Test
-    public void testFilterWorks() throws TimeoutException, InterruptedException {
-        leaderElector.change2Observer();
-        channel = JerseyClient.getInstance().connect(new URL(ServerEnv.IP, metaServerConfig.getHttpServerPort()));
-        waitConditionUntilTimeOut(()->!leaderElector.amILeader(), 2000);
-        Response response = channel
-                .getWebTarget()
-                .path("stopPushDataSwitch/open")
-                .request()
-                .get();
-        logger.info("[response] {}", response);
-    }
+  @Test
+  public void testFilterWorks() throws TimeoutException, InterruptedException {
+    leaderElector.change2Observer();
+    channel =
+        JerseyClient.getInstance()
+            .connect(new URL(ServerEnv.IP, metaServerConfig.getHttpServerPort()));
+    waitConditionUntilTimeOut(() -> !leaderElector.amILeader(), 2000);
+    Response response = channel.getWebTarget().path("stopPushDataSwitch/open").request().get();
+    logger.info("[response] {}", response);
+  }
 }

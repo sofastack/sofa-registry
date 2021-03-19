@@ -17,10 +17,12 @@
 package com.alipay.sofa.registry.common.model.metaserver;
 
 /**
- *
  * @author shangyu.wh
  * @version $Id: DataOperator.java, v 0.1 2018-04-17 21:03 shangyu.wh Exp $
  */
 public enum DataOperator {
-    ADD, REMOVE, UPDATE, QUERY
+  ADD,
+  REMOVE,
+  UPDATE,
+  QUERY
 }

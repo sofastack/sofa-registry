@@ -19,33 +19,20 @@ package com.alipay.sofa.registry.task;
 import com.alipay.sofa.registry.task.listener.TaskEvent;
 
 /**
- * 
  * @author shangyu.wh
  * @version $Id: Task.java, v 0.1 2018-01-15 14:23 shangyu.wh Exp $
  */
 public interface Task {
 
-	/**
-	 * 
-	 * @return
-	 */
-	long getExpiryTime();
+  /** @return */
+  long getExpiryTime();
 
-	/**
-	 * 
-	 * @return
-	 */
-	String getTaskId();
+  /** @return */
+  String getTaskId();
 
-	/**
-	 * 
-	 * @param taskEvent
-	 */
-	void setTaskEvent(TaskEvent taskEvent);
+  /** @param taskEvent */
+  void setTaskEvent(TaskEvent taskEvent);
 
-	/**
-	 * 
-	 * @throws Throwable
-	 */
-	void execute() throws Throwable;
+  /** @throws Throwable */
+  void execute() throws Throwable;
 }

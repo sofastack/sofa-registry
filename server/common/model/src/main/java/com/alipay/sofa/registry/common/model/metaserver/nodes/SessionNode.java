@@ -18,152 +18,154 @@ package com.alipay.sofa.registry.common.model.metaserver.nodes;
 
 import com.alipay.sofa.registry.common.model.Node;
 import com.alipay.sofa.registry.common.model.ProcessId;
-import com.alipay.sofa.registry.common.model.metaserver.ProvideData;
 import com.alipay.sofa.registry.common.model.store.URL;
 
 /**
- *
  * @author shangyu.wh
  * @version $Id: SessionNodeRegister.java, v 0.1 2018-01-11 16:32 shangyu.wh Exp $
  */
 public class SessionNode implements Node {
 
-    private URL       nodeUrl;
+  private URL nodeUrl;
 
-    private String    regionId;
+  private String regionId;
 
-    private String    name;
+  private String name;
 
-    private ProcessId processId;
+  private ProcessId processId;
 
-    /**
-     * constructor
-     * @param nodeUrl
-     * @param regionId
-     */
-    public SessionNode(URL nodeUrl, String regionId) {
-        this.nodeUrl = nodeUrl;
-        this.regionId = regionId;
+  /**
+   * constructor
+   *
+   * @param nodeUrl
+   * @param regionId
+   */
+  public SessionNode(URL nodeUrl, String regionId) {
+    this.nodeUrl = nodeUrl;
+    this.regionId = regionId;
+  }
+
+  @Override
+  public NodeType getNodeType() {
+    return NodeType.SESSION;
+  }
+
+  @Override
+  public URL getNodeUrl() {
+    return nodeUrl;
+  }
+
+  /**
+   * get ip address from nodeUrl
+   *
+   * @return
+   */
+  public String getIp() {
+    return nodeUrl == null ? "" : nodeUrl.getIpAddress();
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) {
+      return true;
+    }
+    if (!(o instanceof SessionNode)) {
+      return false;
     }
 
-    @Override
-    public NodeType getNodeType() {
-        return NodeType.SESSION;
+    SessionNode that = (SessionNode) o;
+
+    if (name != null ? !name.equals(that.name) : that.name != null) {
+      return false;
     }
 
-    @Override
-    public URL getNodeUrl() {
-        return nodeUrl;
+    if (regionId != null ? !regionId.equals(that.regionId) : that.regionId != null) {
+      return false;
     }
 
-    /**
-     * get ip address from nodeUrl
-     * @return
-     */
-    public String getIp() {
-        return nodeUrl == null ? "" : nodeUrl.getIpAddress();
-    }
+    return nodeUrl != null
+        ? (nodeUrl.getAddressString() != null
+            ? nodeUrl.getAddressString().equals(that.nodeUrl.getAddressString())
+            : that.nodeUrl.getAddressString() != null)
+        : that.nodeUrl != null;
+  }
 
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) {
-            return true;
-        }
-        if (!(o instanceof SessionNode)) {
-            return false;
-        }
+  public ProcessId getProcessId() {
+    return processId;
+  }
 
-        SessionNode that = (SessionNode) o;
+  public SessionNode setProcessId(ProcessId processId) {
+    this.processId = processId;
+    return this;
+  }
 
-        if (name != null ? !name.equals(that.name) : that.name != null) {
-            return false;
-        }
+  /**
+   * Hash code int.
+   *
+   * @return the int
+   */
+  @Override
+  public int hashCode() {
+    int result = name != null ? name.hashCode() : 0;
+    result = 31 * result + (regionId != null ? regionId.hashCode() : 0);
+    result =
+        31 * result
+            + (nodeUrl != null
+                ? (nodeUrl.getAddressString() != null ? nodeUrl.getAddressString().hashCode() : 0)
+                : 0);
+    return result;
+  }
 
-        if (regionId != null ? !regionId.equals(that.regionId) : that.regionId != null) {
-            return false;
-        }
+  /**
+   * Setter method for property <tt>nodeUrl</tt>.
+   *
+   * @param nodeUrl value to be assigned to property nodeUrl
+   */
+  public void setNodeUrl(URL nodeUrl) {
+    this.nodeUrl = nodeUrl;
+  }
 
-        return nodeUrl != null ? (nodeUrl.getAddressString() != null ? nodeUrl.getAddressString()
-            .equals(that.nodeUrl.getAddressString()) : that.nodeUrl.getAddressString() != null)
-            : that.nodeUrl != null;
-    }
+  /**
+   * Getter method for property <tt>regionId</tt>.
+   *
+   * @return property value of regionId
+   */
+  public String getRegionId() {
+    return regionId;
+  }
 
-    public ProcessId getProcessId() {
-        return processId;
-    }
+  /**
+   * Setter method for property <tt>regionId</tt>.
+   *
+   * @param regionId value to be assigned to property regionId
+   */
+  public void setRegionId(String regionId) {
+    this.regionId = regionId;
+  }
 
-    public SessionNode setProcessId(ProcessId processId) {
-        this.processId = processId;
-        return this;
-    }
+  /**
+   * Getter method for property <tt>name</tt>.
+   *
+   * @return property value of name
+   */
+  public String getName() {
+    return name;
+  }
 
-    /**
-     * Hash code int.
-     *
-     * @return the int
-     */
-    @Override
-    public int hashCode() {
-        int result = name != null ? name.hashCode() : 0;
-        result = 31 * result + (regionId != null ? regionId.hashCode() : 0);
-        result = 31
-                 * result
-                 + (nodeUrl != null ? (nodeUrl.getAddressString() != null ? nodeUrl
-                     .getAddressString().hashCode() : 0) : 0);
-        return result;
-    }
+  /**
+   * Setter method for property <tt>name</tt>.
+   *
+   * @param name value to be assigned to property name
+   */
+  public void setName(String name) {
+    this.name = name;
+  }
 
-    /**
-     * Setter method for property <tt>nodeUrl</tt>.
-     *
-     * @param nodeUrl  value to be assigned to property nodeUrl
-     */
-    public void setNodeUrl(URL nodeUrl) {
-        this.nodeUrl = nodeUrl;
-    }
-
-    /**
-     * Getter method for property <tt>regionId</tt>.
-     *
-     * @return property value of regionId
-     */
-    public String getRegionId() {
-        return regionId;
-    }
-
-    /**
-     * Setter method for property <tt>regionId</tt>.
-     *
-     * @param regionId  value to be assigned to property regionId
-     */
-    public void setRegionId(String regionId) {
-        this.regionId = regionId;
-    }
-
-    /**
-     * Getter method for property <tt>name</tt>.
-     *
-     * @return property value of name
-     */
-    public String getName() {
-        return name;
-    }
-
-    /**
-     * Setter method for property <tt>name</tt>.
-     *
-     * @param name  value to be assigned to property name
-     */
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    @Override
-    public String toString() {
-        final StringBuilder sb = new StringBuilder("SessionNode{");
-        sb.append("ip=").append(getIp());
-        sb.append('}');
-        return sb.toString();
-    }
-
+  @Override
+  public String toString() {
+    final StringBuilder sb = new StringBuilder("SessionNode{");
+    sb.append("ip=").append(getIp());
+    sb.append('}');
+    return sb.toString();
+  }
 }

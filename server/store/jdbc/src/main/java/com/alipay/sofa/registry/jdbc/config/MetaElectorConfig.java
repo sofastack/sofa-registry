@@ -17,13 +17,12 @@
 package com.alipay.sofa.registry.jdbc.config;
 
 /**
- *
  * @author xiaojian.xj
  * @version $Id: MetaElectorConfig.java, v 0.1 2021年03月17日 16:49 xiaojian.xj Exp $
  */
 public interface MetaElectorConfig {
 
-    String getDataCenter();
+  String getDataCenter();
 
-    long getLockExpireDuration();
+  long getLockExpireDuration();
 }

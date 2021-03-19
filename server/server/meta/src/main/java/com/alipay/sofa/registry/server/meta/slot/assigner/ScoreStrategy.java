@@ -18,11 +18,9 @@ package com.alipay.sofa.registry.server.meta.slot.assigner;
 
 /**
  * @author chen.zhu
- * <p>
- * Jan 15, 2021
+ *     <p>Jan 15, 2021
  */
 public interface ScoreStrategy<T> {
 
-    int score(T t);
-
+  int score(T t);
 }

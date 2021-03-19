@@ -23,131 +23,153 @@ import com.alipay.sofa.registry.server.session.metadata.AppRevisionHeartbeatRegi
 import com.alipay.sofa.registry.server.shared.meta.MetaServerService;
 import com.alipay.sofa.registry.task.MetricsableThreadPoolExecutor;
 import com.alipay.sofa.registry.util.NamedThreadFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.*;
+import org.springframework.beans.factory.annotation.Autowired;
 
 /**
- *
  * @author shangyu.wh
  * @version $Id: ExecutorManager.java, v 0.1 2017-11-28 14:41 shangyu.wh Exp $
  */
 public class ExecutorManager {
 
-    private static final Logger               LOGGER                             = LoggerFactory
-                                                                                     .getLogger(ExecutorManager.class);
+  private static final Logger LOGGER = LoggerFactory.getLogger(ExecutorManager.class);
 
-    private final ScheduledThreadPoolExecutor scheduler;
+  private final ScheduledThreadPoolExecutor scheduler;
 
-    private final ThreadPoolExecutor          accessDataExecutor;
-    private final ThreadPoolExecutor          dataChangeRequestExecutor;
-    private final ThreadPoolExecutor          dataSlotSyncRequestExecutor;
-    private final ThreadPoolExecutor          connectClientExecutor;
+  private final ThreadPoolExecutor accessDataExecutor;
+  private final ThreadPoolExecutor dataChangeRequestExecutor;
+  private final ThreadPoolExecutor dataSlotSyncRequestExecutor;
+  private final ThreadPoolExecutor connectClientExecutor;
 
-    @Autowired
-    protected MetaServerService               metaServerService;
+  @Autowired protected MetaServerService metaServerService;
 
-    @Autowired
-    protected AppRevisionHeartbeatRegistry    appRevisionHeartbeatRegistry;
+  @Autowired protected AppRevisionHeartbeatRegistry appRevisionHeartbeatRegistry;
 
-    private Map<String, ThreadPoolExecutor>   reportExecutors                    = new HashMap<>();
+  private Map<String, ThreadPoolExecutor> reportExecutors = new HashMap<>();
 
-    private static final String               ACCESS_DATA_EXECUTOR               = "AccessDataExecutor";
+  private static final String ACCESS_DATA_EXECUTOR = "AccessDataExecutor";
 
-    private static final String               DATA_CHANGE_REQUEST_EXECUTOR       = "DataChangeRequestExecutor";
+  private static final String DATA_CHANGE_REQUEST_EXECUTOR = "DataChangeRequestExecutor";
 
-    private static final String               DATA_SLOT_MIGRATE_REQUEST_EXECUTOR = "DataSlotMigrateRequestExecutor";
+  private static final String DATA_SLOT_MIGRATE_REQUEST_EXECUTOR = "DataSlotMigrateRequestExecutor";
 
-    private static final String               CONNECT_CLIENT_EXECUTOR            = "ConnectClientExecutor";
+  private static final String CONNECT_CLIENT_EXECUTOR = "ConnectClientExecutor";
 
-    public ExecutorManager(SessionServerConfig sessionServerConfig) {
-        scheduler = new ScheduledThreadPoolExecutor(sessionServerConfig.getSessionSchedulerPoolSize(),
-                new NamedThreadFactory("SessionScheduler"));
+  public ExecutorManager(SessionServerConfig sessionServerConfig) {
+    scheduler =
+        new ScheduledThreadPoolExecutor(
+            sessionServerConfig.getSessionSchedulerPoolSize(),
+            new NamedThreadFactory("SessionScheduler"));
 
-        accessDataExecutor = reportExecutors.computeIfAbsent(ACCESS_DATA_EXECUTOR,
-                k -> new MetricsableThreadPoolExecutor(ACCESS_DATA_EXECUTOR,
-                        sessionServerConfig.getAccessDataExecutorMinPoolSize(),
-                        sessionServerConfig.getAccessDataExecutorMaxPoolSize(),
-                        sessionServerConfig.getAccessDataExecutorKeepAliveTime(), TimeUnit.SECONDS,
-                        new ArrayBlockingQueue<>(sessionServerConfig.getAccessDataExecutorQueueSize()),
-                        new NamedThreadFactory("AccessExecutor", true), (r, executor) -> {
-                    String msg = String
-                            .format("Task(%s) %s rejected from %s, just ignore it to let client timeout.", r.getClass(),
-                                    r, executor);
-                    LOGGER.error(msg);
-                }));
+    accessDataExecutor =
+        reportExecutors.computeIfAbsent(
+            ACCESS_DATA_EXECUTOR,
+            k ->
+                new MetricsableThreadPoolExecutor(
+                    ACCESS_DATA_EXECUTOR,
+                    sessionServerConfig.getAccessDataExecutorMinPoolSize(),
+                    sessionServerConfig.getAccessDataExecutorMaxPoolSize(),
+                    sessionServerConfig.getAccessDataExecutorKeepAliveTime(),
+                    TimeUnit.SECONDS,
+                    new ArrayBlockingQueue<>(sessionServerConfig.getAccessDataExecutorQueueSize()),
+                    new NamedThreadFactory("AccessExecutor", true),
+                    (r, executor) -> {
+                      String msg =
+                          String.format(
+                              "Task(%s) %s rejected from %s, just ignore it to let client timeout.",
+                              r.getClass(), r, executor);
+                      LOGGER.error(msg);
+                    }));
 
-        dataChangeRequestExecutor = reportExecutors.computeIfAbsent(DATA_CHANGE_REQUEST_EXECUTOR,
-                k -> new MetricsableThreadPoolExecutor(DATA_CHANGE_REQUEST_EXECUTOR,
-                        sessionServerConfig.getDataChangeExecutorMinPoolSize(),
-                        sessionServerConfig.getDataChangeExecutorMaxPoolSize(),
-                        sessionServerConfig.getDataChangeExecutorKeepAliveTime(), TimeUnit.SECONDS,
-                        new ArrayBlockingQueue<>(sessionServerConfig.getDataChangeExecutorQueueSize()),
-                        new NamedThreadFactory("DataChangeExecutor", true)));
+    dataChangeRequestExecutor =
+        reportExecutors.computeIfAbsent(
+            DATA_CHANGE_REQUEST_EXECUTOR,
+            k ->
+                new MetricsableThreadPoolExecutor(
+                    DATA_CHANGE_REQUEST_EXECUTOR,
+                    sessionServerConfig.getDataChangeExecutorMinPoolSize(),
+                    sessionServerConfig.getDataChangeExecutorMaxPoolSize(),
+                    sessionServerConfig.getDataChangeExecutorKeepAliveTime(),
+                    TimeUnit.SECONDS,
+                    new ArrayBlockingQueue<>(sessionServerConfig.getDataChangeExecutorQueueSize()),
+                    new NamedThreadFactory("DataChangeExecutor", true)));
 
-        dataSlotSyncRequestExecutor = reportExecutors.computeIfAbsent(DATA_SLOT_MIGRATE_REQUEST_EXECUTOR,
-                k -> new MetricsableThreadPoolExecutor(DATA_SLOT_MIGRATE_REQUEST_EXECUTOR,
-                        sessionServerConfig.getSlotSyncWorkerSize(),
-                        sessionServerConfig.getSlotSyncWorkerSize(),
-                        60, TimeUnit.SECONDS,
-                        new ArrayBlockingQueue<>(sessionServerConfig.getSlotSyncMaxBufferSize()),
-                        new NamedThreadFactory("SlotSyncExecutor", true)));
+    dataSlotSyncRequestExecutor =
+        reportExecutors.computeIfAbsent(
+            DATA_SLOT_MIGRATE_REQUEST_EXECUTOR,
+            k ->
+                new MetricsableThreadPoolExecutor(
+                    DATA_SLOT_MIGRATE_REQUEST_EXECUTOR,
+                    sessionServerConfig.getSlotSyncWorkerSize(),
+                    sessionServerConfig.getSlotSyncWorkerSize(),
+                    60,
+                    TimeUnit.SECONDS,
+                    new ArrayBlockingQueue<>(sessionServerConfig.getSlotSyncMaxBufferSize()),
+                    new NamedThreadFactory("SlotSyncExecutor", true)));
 
-        connectClientExecutor = reportExecutors.computeIfAbsent(CONNECT_CLIENT_EXECUTOR,
-                k -> new MetricsableThreadPoolExecutor(CONNECT_CLIENT_EXECUTOR,
-                        sessionServerConfig.getConnectClientExecutorMinPoolSize(),
-                        sessionServerConfig.getConnectClientExecutorMaxPoolSize(), 60L, TimeUnit.SECONDS,
-                        new LinkedBlockingQueue(sessionServerConfig.getConnectClientExecutorQueueSize()),
-                        new NamedThreadFactory("DisconnectCliExecutor", true)));
+    connectClientExecutor =
+        reportExecutors.computeIfAbsent(
+            CONNECT_CLIENT_EXECUTOR,
+            k ->
+                new MetricsableThreadPoolExecutor(
+                    CONNECT_CLIENT_EXECUTOR,
+                    sessionServerConfig.getConnectClientExecutorMinPoolSize(),
+                    sessionServerConfig.getConnectClientExecutorMaxPoolSize(),
+                    60L,
+                    TimeUnit.SECONDS,
+                    new LinkedBlockingQueue(
+                        sessionServerConfig.getConnectClientExecutorQueueSize()),
+                    new NamedThreadFactory("DisconnectCliExecutor", true)));
+  }
+
+  public void startScheduler() {
+    scheduler.scheduleWithFixedDelay(
+        () -> appRevisionHeartbeatRegistry.doRevisionHeartbeat(), 10, 10, TimeUnit.MINUTES);
+    scheduler.scheduleWithFixedDelay(
+        () -> appRevisionHeartbeatRegistry.doRevisionGc(), 60, 60, TimeUnit.SECONDS);
+  }
+
+  public void stopScheduler() {
+    if (scheduler != null && !scheduler.isShutdown()) {
+      scheduler.shutdown();
     }
 
-    public void startScheduler() {
-        scheduler.scheduleWithFixedDelay(() -> appRevisionHeartbeatRegistry.doRevisionHeartbeat(), 10, 10, TimeUnit.MINUTES);
-        scheduler.scheduleWithFixedDelay(() -> appRevisionHeartbeatRegistry.doRevisionGc(), 60, 60, TimeUnit.SECONDS);
+    if (accessDataExecutor != null && !accessDataExecutor.isShutdown()) {
+      accessDataExecutor.shutdown();
     }
 
-    public void stopScheduler() {
-        if (scheduler != null && !scheduler.isShutdown()) {
-            scheduler.shutdown();
-        }
-
-        if (accessDataExecutor != null && !accessDataExecutor.isShutdown()) {
-            accessDataExecutor.shutdown();
-        }
-
-        if (dataChangeRequestExecutor != null && !dataChangeRequestExecutor.isShutdown()) {
-            dataChangeRequestExecutor.shutdown();
-        }
-
-        if (dataSlotSyncRequestExecutor != null && !dataSlotSyncRequestExecutor.isShutdown()) {
-            dataSlotSyncRequestExecutor.shutdown();
-        }
-
-        if (connectClientExecutor != null && !connectClientExecutor.isShutdown()) {
-            connectClientExecutor.shutdown();
-        }
+    if (dataChangeRequestExecutor != null && !dataChangeRequestExecutor.isShutdown()) {
+      dataChangeRequestExecutor.shutdown();
     }
 
-    public Map<String, ThreadPoolExecutor> getReportExecutors() {
-        return reportExecutors;
+    if (dataSlotSyncRequestExecutor != null && !dataSlotSyncRequestExecutor.isShutdown()) {
+      dataSlotSyncRequestExecutor.shutdown();
     }
 
-    public ThreadPoolExecutor getAccessDataExecutor() {
-        return accessDataExecutor;
+    if (connectClientExecutor != null && !connectClientExecutor.isShutdown()) {
+      connectClientExecutor.shutdown();
     }
+  }
 
-    public ThreadPoolExecutor getDataChangeRequestExecutor() {
-        return dataChangeRequestExecutor;
-    }
+  public Map<String, ThreadPoolExecutor> getReportExecutors() {
+    return reportExecutors;
+  }
 
-    public ThreadPoolExecutor getDataSlotSyncRequestExecutor() {
-        return dataSlotSyncRequestExecutor;
-    }
+  public ThreadPoolExecutor getAccessDataExecutor() {
+    return accessDataExecutor;
+  }
 
-    public ThreadPoolExecutor getConnectClientExecutor() {
-        return connectClientExecutor;
-    }
+  public ThreadPoolExecutor getDataChangeRequestExecutor() {
+    return dataChangeRequestExecutor;
+  }
 
+  public ThreadPoolExecutor getDataSlotSyncRequestExecutor() {
+    return dataSlotSyncRequestExecutor;
+  }
+
+  public ThreadPoolExecutor getConnectClientExecutor() {
+    return connectClientExecutor;
+  }
 }

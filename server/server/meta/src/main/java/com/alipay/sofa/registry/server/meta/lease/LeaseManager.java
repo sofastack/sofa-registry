@@ -22,35 +22,32 @@ import com.alipay.sofa.registry.common.model.metaserver.cluster.VersionedList;
 
 /**
  * @author chen.zhu
- * <p>
- * Nov 19, 2020
+ *     <p>Nov 19, 2020
  */
 public interface LeaseManager<T extends Node> {
 
-    /**
-     * Renew Lease.
-     * Return true if the renewal has been existed and renew works
-     * Return false if the renewal is a new entry, we have to register it insteadof renew it
-     *
-     * @param renewal       the renewal
-     * @param leaseDuration the lease duration
-     * @return the boolean
-     */
-    boolean renew(T renewal, int leaseDuration);
+  /**
+   * Renew Lease. Return true if the renewal has been existed and renew works Return false if the
+   * renewal is a new entry, we have to register it insteadof renew it
+   *
+   * @param renewal the renewal
+   * @param leaseDuration the lease duration
+   * @return the boolean
+   */
+  boolean renew(T renewal, int leaseDuration);
 
-    /**
-     * Gets get lease.
-     *
-     * @param renewal the renewal
-     * @return the get lease
-     */
-    Lease<T> getLease(T renewal);
+  /**
+   * Gets get lease.
+   *
+   * @param renewal the renewal
+   * @return the get lease
+   */
+  Lease<T> getLease(T renewal);
 
-    /**
-     * Gets get lease meta.
-     *
-     * @return the get lease meta
-     */
-    VersionedList<Lease<T>> getLeaseMeta();
-
+  /**
+   * Gets get lease meta.
+   *
+   * @return the get lease meta
+   */
+  VersionedList<Lease<T>> getLeaseMeta();
 }

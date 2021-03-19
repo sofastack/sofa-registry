@@ -19,77 +19,75 @@ package com.alipay.sofa.registry.core.model;
 import java.io.Serializable;
 
 /**
- *
  * @author zhuoyu.sjw
  * @version $Id: Result.java, v 0.1 2017-11-30 15:48 zhuoyu.sjw Exp $$
  */
 public class Result implements Serializable {
 
-    private static final long serialVersionUID = -3861771860629530576L;
+  private static final long serialVersionUID = -3861771860629530576L;
 
-    private boolean           success;
+  private boolean success;
 
-    private String            message;
+  private String message;
 
-    public Result() {
-    }
+  public Result() {}
 
-    public Result(boolean success, String message) {
-        this.success = success;
-        this.message = message;
-    }
+  public Result(boolean success, String message) {
+    this.success = success;
+    this.message = message;
+  }
 
-    public static Result failed(String message) {
-        return new Result(false, message);
-    }
+  public static Result failed(String message) {
+    return new Result(false, message);
+  }
 
-    public static Result success() {
-        return new Result(true, null);
-    }
+  public static Result success() {
+    return new Result(true, null);
+  }
 
-    /**
-     * Getter method for property <tt>success</tt>.
-     *
-     * @return property value of success
-     */
-    public boolean isSuccess() {
-        return success;
-    }
+  /**
+   * Getter method for property <tt>success</tt>.
+   *
+   * @return property value of success
+   */
+  public boolean isSuccess() {
+    return success;
+  }
 
-    /**
-     * Setter method for property <tt>success</tt>.
-     *
-     * @param success value to be assigned to property success
-     */
-    public void setSuccess(boolean success) {
-        this.success = success;
-    }
+  /**
+   * Setter method for property <tt>success</tt>.
+   *
+   * @param success value to be assigned to property success
+   */
+  public void setSuccess(boolean success) {
+    this.success = success;
+  }
 
-    /**
-     * Getter method for property <tt>message</tt>.
-     *
-     * @return property value of message
-     */
-    public String getMessage() {
-        return message;
-    }
+  /**
+   * Getter method for property <tt>message</tt>.
+   *
+   * @return property value of message
+   */
+  public String getMessage() {
+    return message;
+  }
 
-    /**
-     * Setter method for property <tt>message</tt>.
-     *
-     * @param message value to be assigned to property message
-     */
-    public void setMessage(String message) {
-        this.message = message;
-    }
+  /**
+   * Setter method for property <tt>message</tt>.
+   *
+   * @param message value to be assigned to property message
+   */
+  public void setMessage(String message) {
+    this.message = message;
+  }
 
-    /**
-     * To string string.
-     *
-     * @return the string
-     */
-    @Override
-    public String toString() {
-        return "Result{" + "success=" + success + ", message='" + message + '\'' + '}';
-    }
+  /**
+   * To string string.
+   *
+   * @return the string
+   */
+  @Override
+  public String toString() {
+    return "Result{" + "success=" + success + ", message='" + message + '\'' + '}';
+  }
 }

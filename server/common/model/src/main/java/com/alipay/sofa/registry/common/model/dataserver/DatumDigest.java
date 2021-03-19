@@ -20,41 +20,46 @@ import java.io.Serializable;
 import java.util.Objects;
 
 public final class DatumDigest implements Serializable {
-    private final long publisherIdSign;
-    private final long publisherVerSign;
-    private final long publisherTimestampSign;
-    private final int  publisherNum;
+  private final long publisherIdSign;
+  private final long publisherVerSign;
+  private final long publisherTimestampSign;
+  private final int publisherNum;
 
-    public DatumDigest(int publisherNum, long publisherIdSign, long publisherVerSign,
-                       long publisherTimestampSign) {
-        this.publisherNum = publisherNum;
-        this.publisherIdSign = publisherIdSign;
-        this.publisherVerSign = publisherVerSign;
-        this.publisherTimestampSign = publisherTimestampSign;
-    }
+  public DatumDigest(
+      int publisherNum, long publisherIdSign, long publisherVerSign, long publisherTimestampSign) {
+    this.publisherNum = publisherNum;
+    this.publisherIdSign = publisherIdSign;
+    this.publisherVerSign = publisherVerSign;
+    this.publisherTimestampSign = publisherTimestampSign;
+  }
 
-    @Override
-    public boolean equals(Object o) {
-        if (this == o)
-            return true;
-        if (o == null || getClass() != o.getClass())
-            return false;
-        DatumDigest that = (DatumDigest) o;
-        return publisherNum == that.publisherNum && publisherIdSign == that.publisherIdSign
-               && publisherVerSign == that.publisherVerSign
-               && publisherTimestampSign == that.publisherTimestampSign;
-    }
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) return true;
+    if (o == null || getClass() != o.getClass()) return false;
+    DatumDigest that = (DatumDigest) o;
+    return publisherNum == that.publisherNum
+        && publisherIdSign == that.publisherIdSign
+        && publisherVerSign == that.publisherVerSign
+        && publisherTimestampSign == that.publisherTimestampSign;
+  }
 
-    @Override
-    public int hashCode() {
-        return Objects
-            .hash(publisherNum, publisherIdSign, publisherVerSign, publisherTimestampSign);
-    }
+  @Override
+  public int hashCode() {
+    return Objects.hash(publisherNum, publisherIdSign, publisherVerSign, publisherTimestampSign);
+  }
 
-    @Override
-    public String toString() {
-        return "DatumDigest{" + "publisherNum=" + publisherNum + ", publisherIdSign="
-               + publisherIdSign + ", publisherVerSign=" + publisherVerSign
-               + ", publisherTimestampSign=" + publisherTimestampSign + '}';
-    }
+  @Override
+  public String toString() {
+    return "DatumDigest{"
+        + "publisherNum="
+        + publisherNum
+        + ", publisherIdSign="
+        + publisherIdSign
+        + ", publisherVerSign="
+        + publisherVerSign
+        + ", publisherTimestampSign="
+        + publisherTimestampSign
+        + '}';
+  }
 }

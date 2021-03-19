@@ -23,35 +23,33 @@ import com.alipay.sofa.registry.observer.Observable;
 import com.alipay.sofa.registry.server.meta.lease.LeaseManager;
 import com.alipay.sofa.registry.server.meta.monitor.data.DataMessageListener;
 import com.alipay.sofa.registry.server.meta.monitor.data.DataServerStats;
-
 import java.util.List;
 
 /**
  * @author chen.zhu
- * <p>
- * Nov 19, 2020
+ *     <p>Nov 19, 2020
  */
-public interface DataServerManager extends Lifecycle, Observable,
-                                  LeaseManager<DataNode>, DataMessageListener {
+public interface DataServerManager
+    extends Lifecycle, Observable, LeaseManager<DataNode>, DataMessageListener {
 
-    /**
-     * Gets get data servers stats.
-     *
-     * @return the get data servers stats
-     */
-    List<DataServerStats> getDataServersStats();
+  /**
+   * Gets get data servers stats.
+   *
+   * @return the get data servers stats
+   */
+  List<DataServerStats> getDataServersStats();
 
-    /**
-     * Gets get data server meta info.
-     *
-     * @return the get data server meta info
-     */
-    VersionedList<DataNode> getDataServerMetaInfo();
+  /**
+   * Gets get data server meta info.
+   *
+   * @return the get data server meta info
+   */
+  VersionedList<DataNode> getDataServerMetaInfo();
 
-    /**
-     * Gets get epoch.
-     *
-     * @return the get epoch
-     */
-    long getEpoch();
+  /**
+   * Gets get epoch.
+   *
+   * @return the get epoch
+   */
+  long getEpoch();
 }

@@ -19,11 +19,10 @@ package com.alipay.sofa.registry.server.session.filter;
 import java.util.function.Supplier;
 
 /**
- *
  * @author shangyu.wh
  * @version 1.0: DataIdMatchStrategy.java, v 0.1 2019-06-19 22:12 shangyu.wh Exp $
  */
 public interface DataIdMatchStrategy<T> {
 
-    boolean match(String dataId, Supplier<T> getOperatorType);
+  boolean match(String dataId, Supplier<T> getOperatorType);
 }

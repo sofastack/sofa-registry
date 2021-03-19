@@ -22,45 +22,43 @@ import java.util.List;
 import java.util.Map;
 
 /**
- *
  * @author xiaojian.xj
  * @version $Id: AddressUtil.java, v 0.1 2020年12月13日 15:18 xiaojian.xj Exp $
  */
 public final class AddressUtil {
-    private AddressUtil() {
-    }
+  private AddressUtil() {}
 
-    //public static String buildURL(String address, Map<String, Collection<String>> params) {
-    //    if (CollectionUtils.isEmpty(params)) {
-    //        return address;
-    //    }
-    //    URIBuilder builder = null;
-    //    try {
-    //        builder = new URIBuilder(address);
-    //
-    //        for (Map.Entry<String, Collection<String>> entry : params.entrySet()) {
-    //            String key = entry.getDataKey();
-    //            for (String value : entry.getDataValue()) {
-    //                builder.addParameter(key, value);
-    //
-    //            }
-    //        }
-    //        return builder.build().toString();
-    //    } catch (URISyntaxException e) {
-    //        LOGGER.error("build url error.", e);
-    //        return null;
-    //    }
-    //}
+  // public static String buildURL(String address, Map<String, Collection<String>> params) {
+  //    if (CollectionUtils.isEmpty(params)) {
+  //        return address;
+  //    }
+  //    URIBuilder builder = null;
+  //    try {
+  //        builder = new URIBuilder(address);
+  //
+  //        for (Map.Entry<String, Collection<String>> entry : params.entrySet()) {
+  //            String key = entry.getDataKey();
+  //            for (String value : entry.getDataValue()) {
+  //                builder.addParameter(key, value);
+  //
+  //            }
+  //        }
+  //        return builder.build().toString();
+  //    } catch (URISyntaxException e) {
+  //        LOGGER.error("build url error.", e);
+  //        return null;
+  //    }
+  // }
 
-    public static String buildURL(String address, Map<String, Collection<String>> params) {
-        List<String> querys = new ArrayList<>();
-        for (Map.Entry<String, Collection<String>> entry : params.entrySet()) {
-            String key = entry.getKey();
-            for (String value : entry.getValue()) {
-                querys.add(key + "=" + value);
-            }
-        }
-        String queryStr = String.join("&", querys);
-        return address + "?" + queryStr;
+  public static String buildURL(String address, Map<String, Collection<String>> params) {
+    List<String> querys = new ArrayList<>();
+    for (Map.Entry<String, Collection<String>> entry : params.entrySet()) {
+      String key = entry.getKey();
+      for (String value : entry.getValue()) {
+        querys.add(key + "=" + value);
+      }
     }
+    String queryStr = String.join("&", querys);
+    return address + "?" + queryStr;
+  }
 }

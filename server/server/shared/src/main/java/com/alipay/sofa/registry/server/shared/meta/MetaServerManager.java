@@ -19,23 +19,21 @@ package com.alipay.sofa.registry.server.shared.meta;
 import com.alipay.sofa.registry.common.model.metaserver.inter.heartbeat.BaseHeartBeatResponse;
 import com.alipay.sofa.registry.remoting.exchange.RequestException;
 import com.alipay.sofa.registry.remoting.exchange.message.Response;
-
 import java.util.List;
 
 /**
  * @author chen.zhu
- * <p>
- * Mar 15, 2021
+ *     <p>Mar 15, 2021
  */
 public interface MetaServerManager {
 
-    List<String> getDefaultMetaServerList();
+  List<String> getDefaultMetaServerList();
 
-    List<String> getRuntimeMetaServerList();
+  List<String> getRuntimeMetaServerList();
 
-    String getMetaServerLeader();
+  String getMetaServerLeader();
 
-    void refresh(BaseHeartBeatResponse heartBeatResp);
+  void refresh(BaseHeartBeatResponse heartBeatResp);
 
-    Response sendRequest(Object requestBody) throws RequestException;
+  Response sendRequest(Object requestBody) throws RequestException;
 }

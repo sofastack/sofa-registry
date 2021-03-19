@@ -18,45 +18,46 @@ package com.alipay.sofa.registry.common.model;
 
 import com.alipay.sofa.registry.common.model.store.BaseInfo;
 import com.google.common.collect.Maps;
-import org.apache.commons.lang.StringUtils;
-
 import java.util.Collection;
 import java.util.Map;
+import org.apache.commons.lang.StringUtils;
 
 public final class DataUtils {
 
-    private DataUtils() {
-    }
+  private DataUtils() {}
 
-    public static <T extends BaseInfo> Map<String, Map<String, Map<String, Integer>>> countGroupByInstanceIdGroupApp(Collection<T> infos) {
-        // instanceId/group/app - > count
-        Map<String, Map<String, Map<String, Integer>>> counts = Maps.newHashMap();
-        for (T info : infos) {
-            Map<String, Map<String, Integer>> groupCount = counts.computeIfAbsent(
-                    info.getInstanceId(), k -> Maps.newHashMap());
-            Map<String, Integer> appCount = groupCount.computeIfAbsent(info.getGroup(),
-                    k -> Maps.newHashMap());
-            String appName = info.getAppName();
-            if (StringUtils.isBlank(appName)) {
-                appName = "";
-            }
-            Integer count = appCount.getOrDefault(appName, 0);
-            count++;
-            appCount.put(appName, count);
-        }
-        return counts;
+  public static <T extends BaseInfo>
+      Map<String, Map<String, Map<String, Integer>>> countGroupByInstanceIdGroupApp(
+          Collection<T> infos) {
+    // instanceId/group/app - > count
+    Map<String, Map<String, Map<String, Integer>>> counts = Maps.newHashMap();
+    for (T info : infos) {
+      Map<String, Map<String, Integer>> groupCount =
+          counts.computeIfAbsent(info.getInstanceId(), k -> Maps.newHashMap());
+      Map<String, Integer> appCount =
+          groupCount.computeIfAbsent(info.getGroup(), k -> Maps.newHashMap());
+      String appName = info.getAppName();
+      if (StringUtils.isBlank(appName)) {
+        appName = "";
+      }
+      Integer count = appCount.getOrDefault(appName, 0);
+      count++;
+      appCount.put(appName, count);
     }
+    return counts;
+  }
 
-    public static <T extends BaseInfo> Map<String, Map<String, Integer>> countGroupByInstanceIdGroup(Collection<T> infos) {
-        // instanceId/group - > count
-        Map<String, Map<String, Integer>> counts = Maps.newHashMap();
-        for (T info : infos) {
-            Map<String, Integer> groupCount = counts.computeIfAbsent(
-                    info.getInstanceId(), k -> Maps.newHashMap());
-            Integer count = groupCount.getOrDefault(info.getGroup(), 0);
-            count++;
-            groupCount.put(info.getGroup(), count);
-        }
-        return counts;
+  public static <T extends BaseInfo> Map<String, Map<String, Integer>> countGroupByInstanceIdGroup(
+      Collection<T> infos) {
+    // instanceId/group - > count
+    Map<String, Map<String, Integer>> counts = Maps.newHashMap();
+    for (T info : infos) {
+      Map<String, Integer> groupCount =
+          counts.computeIfAbsent(info.getInstanceId(), k -> Maps.newHashMap());
+      Integer count = groupCount.getOrDefault(info.getGroup(), 0);
+      count++;
+      groupCount.put(info.getGroup(), count);
     }
+    return counts;
+  }
 }

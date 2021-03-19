@@ -437,46 +437,45 @@
                 </executions>
             </plugin>
             <plugin>
-                <groupId>com.mycila</groupId>
-                <artifactId>license-maven-plugin</artifactId>
-                <version>3.0</version>
+              <groupId>com.diffplug.spotless</groupId>
+              <artifactId>spotless-maven-plugin</artifactId>
+              <version>1.20.0</version>
                 <executions>
-                    <execution>
-                        <phase>generate-sources</phase>
-                        <goals>
-                            <goal>remove</goal>
-                            <goal>format</goal>
-                        </goals>
-                    </execution>
+                  <execution>
+                    <goals>
+                      <goal>apply</goal>
+                    </goals>
+                    <phase>compile</phase>
+                  </execution>
                 </executions>
-                <configuration>
-                    <quiet>true</quiet>
-                    <header>${main.user.dir}/tools/codestyle/HEADER</header>
-                    <includes>
-                        <include>**/src/main/java/**</include>
-                        <include>**/src/test/java/**</include>
-                    </includes>
-                    <strictCheck>true</strictCheck>
-                    <mapping>
-                        <java>SLASHSTAR_STYLE</java>
-                    </mapping>
-                </configuration>
-            </plugin>
-            <plugin>
-                <groupId>com.googlecode.maven-java-formatter-plugin</groupId>
-                <artifactId>maven-java-formatter-plugin</artifactId>
-                <version>0.4</version>
-                <executions>
-                    <execution>
-                        <goals>
-                            <goal>format</goal>
-                        </goals>
-                    </execution>
-                </executions>
-                <configuration>
-                    <configFile>${main.user.dir}/tools/codestyle/formatter.xml</configFile>
-                    <encoding>UTF-8</encoding>
-                </configuration>
+              <configuration>
+               <formats>
+                    <format>
+                      <!-- define the files to apply to -->
+                      <includes>
+                        <include>.xml</include>
+                        <include>.gitignore</include>
+                        <include>.properties</include>
+                      </includes>
+                      <trimTrailingWhitespace/>
+                      <endWithNewline/>
+                    </format>
+              </formats>
+                <java>
+                  <!-- include all java files in "java" folders under "src" -->
+                  <includes>
+                    <include>src/**/java/**/*.java</include>
+                  </includes>
+                  <removeUnusedImports />
+                  <googleJavaFormat>
+                    <version>1.7</version>
+                    <style>GOOGLE</style>
+                  </googleJavaFormat>
+                  <licenseHeader>
+                     <file>${user.dir}/tools/codestyle/HEADER</file>
+                  </licenseHeader>
+                </java>
+              </configuration>
             </plugin>
             <plugin>
                 <groupId>org.jacoco</groupId>

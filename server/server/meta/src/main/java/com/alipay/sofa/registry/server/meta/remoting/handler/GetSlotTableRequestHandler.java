@@ -25,12 +25,10 @@ import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.remoting.Channel;
 import com.alipay.sofa.registry.server.meta.metaserver.CurrentDcMetaServer;
+import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import java.util.List;
-
 /**
- *
  * @author yuzhi.lyz
  * @version v 0.1 2020-11-11 11:23 yuzhi.lyz Exp $
  */
@@ -38,37 +36,39 @@ import java.util.List;
 // for cross-dc sync use only
 public final class GetSlotTableRequestHandler extends BaseMetaServerHandler<GetSlotTableRequest> {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger("META-SLOT");
+  private static final Logger LOGGER = LoggerFactory.getLogger("META-SLOT");
 
-    @Autowired
-    private CurrentDcMetaServer currentDcMetaServer;
+  @Autowired private CurrentDcMetaServer currentDcMetaServer;
 
-    @Override
-    public Object doHandle(Channel channel, GetSlotTableRequest getNodesRequest) {
-        final long epochOfNode = getNodesRequest.getEpochOfNode();
-        final SlotTable currentTable = currentDcMetaServer.getSlotTable();
-        if (epochOfNode == currentTable.getEpoch()) {
-            // not change, return null
-            return new GenericResponse().fillSucceed(null);
-        }
-        if (epochOfNode > currentTable.getEpoch()) {
-            // should not happen
-            LOGGER.error("[SLOT-EPOCH] meta's epoch={} should not less than node's epoch={}, {}",
-                currentTable.getEpoch(), epochOfNode, channel.getRemoteAddress().getAddress()
-                    .getHostAddress());
-            return new GenericResponse().fillFailed("illegal epoch of node");
-        }
-        if (getNodesRequest.getTargetDataNode() == null) {
-            return new GenericResponse<SlotTable>().fillSucceed(currentTable);
-        }
-        List<DataNodeSlot> dataNodeSlots = currentTable.transfer(
+  @Override
+  public Object doHandle(Channel channel, GetSlotTableRequest getNodesRequest) {
+    final long epochOfNode = getNodesRequest.getEpochOfNode();
+    final SlotTable currentTable = currentDcMetaServer.getSlotTable();
+    if (epochOfNode == currentTable.getEpoch()) {
+      // not change, return null
+      return new GenericResponse().fillSucceed(null);
+    }
+    if (epochOfNode > currentTable.getEpoch()) {
+      // should not happen
+      LOGGER.error(
+          "[SLOT-EPOCH] meta's epoch={} should not less than node's epoch={}, {}",
+          currentTable.getEpoch(),
+          epochOfNode,
+          channel.getRemoteAddress().getAddress().getHostAddress());
+      return new GenericResponse().fillFailed("illegal epoch of node");
+    }
+    if (getNodesRequest.getTargetDataNode() == null) {
+      return new GenericResponse<SlotTable>().fillSucceed(currentTable);
+    }
+    List<DataNodeSlot> dataNodeSlots =
+        currentTable.transfer(
             getNodesRequest.getTargetDataNode(), getNodesRequest.isIgnoredFollowers());
-        return new GenericResponse().fillSucceed(new GetSlotTableResult(currentTable.getEpoch(),
-            dataNodeSlots));
-    }
+    return new GenericResponse()
+        .fillSucceed(new GetSlotTableResult(currentTable.getEpoch(), dataNodeSlots));
+  }
 
-    @Override
-    public Class interest() {
-        return GetSlotTableRequest.class;
-    }
+  @Override
+  public Class interest() {
+    return GetSlotTableRequest.class;
+  }
 }

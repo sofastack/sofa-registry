@@ -18,99 +18,98 @@ package com.alipay.sofa.registry.remoting.jersey;
 
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 
-import java.net.InetSocketAddress;
-import java.util.concurrent.Executor;
-
-import org.glassfish.jersey.jackson.JacksonFeature;
-import org.glassfish.jersey.server.ResourceConfig;
-import org.junit.Assert;
-import org.junit.Test;
-
 import com.alipay.sofa.registry.common.model.store.URL;
 import com.alipay.sofa.registry.net.NetUtil;
 import com.alipay.sofa.registry.remoting.CallbackHandler;
 import com.alipay.sofa.registry.remoting.Channel;
 import com.alipay.sofa.registry.remoting.jersey.exchange.JerseyExchange;
+import java.net.InetSocketAddress;
+import java.util.concurrent.Executor;
+import org.glassfish.jersey.jackson.JacksonFeature;
+import org.glassfish.jersey.server.ResourceConfig;
+import org.junit.Assert;
+import org.junit.Test;
 
 /**
  * @author xuanbei
  * @since 2019/3/27
  */
 public class JerseyExchangeTest {
-    private static final int JERSEY_TEST_PORT = 9662;
+  private static final int JERSEY_TEST_PORT = 9662;
 
-    @Test
-    public void doTest() {
-        ResourceConfig resourceConfig = new ResourceConfig();
-        resourceConfig.register(JacksonFeature.class);
-        resourceConfig.registerInstances(new TestHttpResource());
+  @Test
+  public void doTest() {
+    ResourceConfig resourceConfig = new ResourceConfig();
+    resourceConfig.register(JacksonFeature.class);
+    resourceConfig.registerInstances(new TestHttpResource());
 
-        CallbackHandler callbackHandler = new CallbackHandler() {
-            @Override
-            public void onCallback(Channel channel, Object message) {
-            }
+    CallbackHandler callbackHandler =
+        new CallbackHandler() {
+          @Override
+          public void onCallback(Channel channel, Object message) {}
 
-            @Override
-            public void onException(Channel channel, Throwable exception) {
-            }
+          @Override
+          public void onException(Channel channel, Throwable exception) {}
 
-            @Override
-            public Executor getExecutor() {
-                return null;
-            }
+          @Override
+          public Executor getExecutor() {
+            return null;
+          }
         };
 
-        JerseyExchange jerseyExchange = new JerseyExchange();
-        URL url = new URL(NetUtil.getLocalAddress().getHostAddress(), JERSEY_TEST_PORT);
-        JerseyJettyServer jerseyJettyServer = (JerseyJettyServer) jerseyExchange.open(url,
-            new ResourceConfig[] { resourceConfig });
-        testJerseyJettyServer(url, jerseyJettyServer, jerseyExchange, callbackHandler);
+    JerseyExchange jerseyExchange = new JerseyExchange();
+    URL url = new URL(NetUtil.getLocalAddress().getHostAddress(), JERSEY_TEST_PORT);
+    JerseyJettyServer jerseyJettyServer =
+        (JerseyJettyServer) jerseyExchange.open(url, new ResourceConfig[] {resourceConfig});
+    testJerseyJettyServer(url, jerseyJettyServer, jerseyExchange, callbackHandler);
 
-        JerseyClient jerseyClient1 = (JerseyClient) jerseyExchange.getClient("jersey");
-        JerseyClient jerseyClient2 = (JerseyClient) jerseyExchange.connect("jersey", url);
-        Assert.assertEquals(jerseyClient1, jerseyClient2);
-        testJerseyClient(url, jerseyClient1, callbackHandler);
+    JerseyClient jerseyClient1 = (JerseyClient) jerseyExchange.getClient("jersey");
+    JerseyClient jerseyClient2 = (JerseyClient) jerseyExchange.connect("jersey", url);
+    Assert.assertEquals(jerseyClient1, jerseyClient2);
+    testJerseyClient(url, jerseyClient1, callbackHandler);
 
-        JerseyChannel jerseyChannel = (JerseyChannel) jerseyClient1.connect(url);
-        testJerseyChannel(jerseyChannel);
-        String result = jerseyChannel.getWebTarget().path("test").request(APPLICATION_JSON)
-            .get(String.class);
-        Assert.assertEquals("TestResource", result);
-        jerseyJettyServer.close();
-    }
+    JerseyChannel jerseyChannel = (JerseyChannel) jerseyClient1.connect(url);
+    testJerseyChannel(jerseyChannel);
+    String result =
+        jerseyChannel.getWebTarget().path("test").request(APPLICATION_JSON).get(String.class);
+    Assert.assertEquals("TestResource", result);
+    jerseyJettyServer.close();
+  }
 
-    private void testJerseyJettyServer(URL url, JerseyJettyServer jerseyJettyServer,
-                                       JerseyExchange jerseyExchange,
-                                       CallbackHandler callbackHandler) {
-        Assert.assertEquals(jerseyJettyServer, jerseyExchange.getServer(JERSEY_TEST_PORT));
-        Assert.assertTrue(jerseyJettyServer.isOpen());
-        Assert.assertNull(jerseyJettyServer.getChannels());
-        Assert.assertNull(jerseyJettyServer.getChannel(new InetSocketAddress(9663)));
-        Assert.assertNull(jerseyJettyServer.getChannel(url));
-        Assert.assertEquals(new InetSocketAddress(JERSEY_TEST_PORT),
-            jerseyJettyServer.getLocalAddress());
-        Assert.assertFalse(jerseyJettyServer.isClosed());
+  private void testJerseyJettyServer(
+      URL url,
+      JerseyJettyServer jerseyJettyServer,
+      JerseyExchange jerseyExchange,
+      CallbackHandler callbackHandler) {
+    Assert.assertEquals(jerseyJettyServer, jerseyExchange.getServer(JERSEY_TEST_PORT));
+    Assert.assertTrue(jerseyJettyServer.isOpen());
+    Assert.assertNull(jerseyJettyServer.getChannels());
+    Assert.assertNull(jerseyJettyServer.getChannel(new InetSocketAddress(9663)));
+    Assert.assertNull(jerseyJettyServer.getChannel(url));
+    Assert.assertEquals(
+        new InetSocketAddress(JERSEY_TEST_PORT), jerseyJettyServer.getLocalAddress());
+    Assert.assertFalse(jerseyJettyServer.isClosed());
 
-        jerseyJettyServer.sendCallback(new JerseyChannel(), new Object(), callbackHandler, 1000);
-        Assert.assertNull(jerseyJettyServer.sendSync(new JerseyChannel(), new Object(), 1000));
-    }
+    jerseyJettyServer.sendCallback(new JerseyChannel(), new Object(), callbackHandler, 1000);
+    Assert.assertNull(jerseyJettyServer.sendSync(new JerseyChannel(), new Object(), 1000));
+  }
 
-    private void testJerseyClient(URL url, JerseyClient jerseyClient,
-                                  CallbackHandler callbackHandler) {
-        Assert.assertEquals(NetUtil.getLocalSocketAddress(), jerseyClient.getLocalAddress());
-        Assert.assertFalse(jerseyClient.isClosed());
-        Assert.assertNull(jerseyClient.getChannel(url));
-        Assert.assertNull(jerseyClient.sendSync(new URL(), new Object(), 1000));
-        jerseyClient.close();
-        jerseyClient.sendCallback(new URL(), new Object(), callbackHandler, 1000);
-    }
+  private void testJerseyClient(
+      URL url, JerseyClient jerseyClient, CallbackHandler callbackHandler) {
+    Assert.assertEquals(NetUtil.getLocalSocketAddress(), jerseyClient.getLocalAddress());
+    Assert.assertFalse(jerseyClient.isClosed());
+    Assert.assertNull(jerseyClient.getChannel(url));
+    Assert.assertNull(jerseyClient.sendSync(new URL(), new Object(), 1000));
+    jerseyClient.close();
+    jerseyClient.sendCallback(new URL(), new Object(), callbackHandler, 1000);
+  }
 
-    private void testJerseyChannel(JerseyChannel jerseyChannel) {
-        Assert.assertEquals(new InetSocketAddress(NetUtil.getLocalAddress(), 9662),
-            jerseyChannel.getRemoteAddress());
-        Assert.assertEquals(NetUtil.getLocalSocketAddress(), jerseyChannel.getLocalAddress());
-        Assert.assertTrue(jerseyChannel.isConnected());
-        jerseyChannel.setAttribute("key", "value");
-        Assert.assertNull(jerseyChannel.getAttribute("key"));
-    }
+  private void testJerseyChannel(JerseyChannel jerseyChannel) {
+    Assert.assertEquals(
+        new InetSocketAddress(NetUtil.getLocalAddress(), 9662), jerseyChannel.getRemoteAddress());
+    Assert.assertEquals(NetUtil.getLocalSocketAddress(), jerseyChannel.getLocalAddress());
+    Assert.assertTrue(jerseyChannel.isConnected());
+    jerseyChannel.setAttribute("key", "value");
+    Assert.assertNull(jerseyChannel.getAttribute("key"));
+  }
 }

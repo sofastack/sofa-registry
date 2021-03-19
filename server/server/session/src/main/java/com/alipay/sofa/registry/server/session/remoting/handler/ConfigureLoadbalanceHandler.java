@@ -28,29 +28,29 @@ import org.springframework.beans.factory.annotation.Autowired;
  * @author xiangxu
  * @version : ConfigureLoadbalanceHandler.java, v 0.1 2020年05月29日 11:51 上午 xiangxu Exp $
  */
-public class ConfigureLoadbalanceHandler extends AbstractClientHandler<ConfigureLoadbalanceRequest> {
+public class ConfigureLoadbalanceHandler
+    extends AbstractClientHandler<ConfigureLoadbalanceRequest> {
 
-    @Autowired
-    private ConnectionsService connectionsService;
+  @Autowired private ConnectionsService connectionsService;
 
-    @Override
-    protected Node.NodeType getConnectNodeType() {
-        return Node.NodeType.META;
-    }
+  @Override
+  protected Node.NodeType getConnectNodeType() {
+    return Node.NodeType.META;
+  }
 
-    @Override
-    public Class interest() {
-        return ConfigureLoadbalanceRequest.class;
-    }
+  @Override
+  public Class interest() {
+    return ConfigureLoadbalanceRequest.class;
+  }
 
-    @Override
-    public void checkParam(ConfigureLoadbalanceRequest request) throws RuntimeException {
-        ParaCheckUtil.checkNonNegative(request.getMaxConnections(), "request.maxConnections");
-    }
+  @Override
+  public void checkParam(ConfigureLoadbalanceRequest request) throws RuntimeException {
+    ParaCheckUtil.checkNonNegative(request.getMaxConnections(), "request.maxConnections");
+  }
 
-    @Override
-    public Object doHandle(Channel channel, ConfigureLoadbalanceRequest request) {
-        connectionsService.setMaxConnections(request.getMaxConnections());
-        return null;
-    }
+  @Override
+  public Object doHandle(Channel channel, ConfigureLoadbalanceRequest request) {
+    connectionsService.setMaxConnections(request.getMaxConnections());
+    return null;
+  }
 }

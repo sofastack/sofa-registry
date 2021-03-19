@@ -24,59 +24,55 @@ import com.alipay.sofa.registry.server.meta.remoting.connection.NodeConnectManag
 import com.alipay.sofa.registry.server.meta.remoting.connection.SessionConnectionHandler;
 import com.alipay.sofa.registry.server.meta.remoting.notifier.AbstractNotifier;
 import com.google.common.annotations.VisibleForTesting;
+import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import java.util.List;
-
 /**
  * @author chen.zhu
- * <p>
- * Dec 03, 2020
+ *     <p>Dec 03, 2020
  */
 @Component
-public class DefaultSessionServerService extends AbstractNotifier<SessionNode> implements
-                                                                              SessionServerService {
+public class DefaultSessionServerService extends AbstractNotifier<SessionNode>
+    implements SessionServerService {
 
-    @Autowired
-    private SessionNodeExchanger sessionNodeExchanger;
+  @Autowired private SessionNodeExchanger sessionNodeExchanger;
 
-    @Autowired
-    private SessionConnectionHandler sessionConnectionHandler;
+  @Autowired private SessionConnectionHandler sessionConnectionHandler;
 
-    @Autowired
-    private SessionServerManager  sessionServerManager;
+  @Autowired private SessionServerManager sessionServerManager;
 
-    @Override
-    protected NodeExchanger getNodeExchanger() {
-        return sessionNodeExchanger;
-    }
+  @Override
+  protected NodeExchanger getNodeExchanger() {
+    return sessionNodeExchanger;
+  }
 
-    @Override
-    protected List<SessionNode> getNodes() {
-        return sessionServerManager.getSessionServerMetaInfo().getClusterMembers();
-    }
+  @Override
+  protected List<SessionNode> getNodes() {
+    return sessionServerManager.getSessionServerMetaInfo().getClusterMembers();
+  }
 
-    @Override
-    protected NodeConnectManager getNodeConnectManager() {
-        return sessionConnectionHandler;
-    }
+  @Override
+  protected NodeConnectManager getNodeConnectManager() {
+    return sessionConnectionHandler;
+  }
 
-    @VisibleForTesting
-    DefaultSessionServerService setSessionNodeExchanger(SessionNodeExchanger sessionNodeExchanger) {
-        this.sessionNodeExchanger = sessionNodeExchanger;
-        return this;
-    }
+  @VisibleForTesting
+  DefaultSessionServerService setSessionNodeExchanger(SessionNodeExchanger sessionNodeExchanger) {
+    this.sessionNodeExchanger = sessionNodeExchanger;
+    return this;
+  }
 
-    @VisibleForTesting
-    DefaultSessionServerService setSessionConnectionHandler(SessionConnectionHandler sessionConnectionHandler) {
-        this.sessionConnectionHandler = sessionConnectionHandler;
-        return this;
-    }
+  @VisibleForTesting
+  DefaultSessionServerService setSessionConnectionHandler(
+      SessionConnectionHandler sessionConnectionHandler) {
+    this.sessionConnectionHandler = sessionConnectionHandler;
+    return this;
+  }
 
-    @VisibleForTesting
-    DefaultSessionServerService setSessionServerManager(SessionServerManager sessionServerManager) {
-        this.sessionServerManager = sessionServerManager;
-        return this;
-    }
+  @VisibleForTesting
+  DefaultSessionServerService setSessionServerManager(SessionServerManager sessionServerManager) {
+    this.sessionServerManager = sessionServerManager;
+    return this;
+  }
 }

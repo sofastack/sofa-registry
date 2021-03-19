@@ -16,35 +16,33 @@
  */
 package com.alipay.sofa.registry.server.data.remoting.metaserver.provideData;
 
+import com.alipay.sofa.registry.common.model.metaserver.ProvideData;
 import java.util.ArrayList;
 import java.util.Collection;
 
-import com.alipay.sofa.registry.common.model.metaserver.ProvideData;
-
 /**
- *
  * @author kezhu.wukz
  * @version 1.0: ProvideDataProcessorManager.java, v 0.1 2019-12-25 17:39 kezhu.wukz Exp $
  */
 public class ProvideDataProcessorManager implements ProvideDataProcessor {
 
-    private Collection<ProvideDataProcessor> provideDataProcessors = new ArrayList<>();
+  private Collection<ProvideDataProcessor> provideDataProcessors = new ArrayList<>();
 
-    public void addProvideDataProcessor(ProvideDataProcessor provideDataProcessor) {
-        provideDataProcessors.add(provideDataProcessor);
-    }
+  public void addProvideDataProcessor(ProvideDataProcessor provideDataProcessor) {
+    provideDataProcessors.add(provideDataProcessor);
+  }
 
-    @Override
-    public void changeDataProcess(ProvideData provideData) {
-        for (ProvideDataProcessor provideDataProcessor : provideDataProcessors) {
-            if (provideDataProcessor.support(provideData)) {
-                provideDataProcessor.changeDataProcess(provideData);
-            }
-        }
+  @Override
+  public void changeDataProcess(ProvideData provideData) {
+    for (ProvideDataProcessor provideDataProcessor : provideDataProcessors) {
+      if (provideDataProcessor.support(provideData)) {
+        provideDataProcessor.changeDataProcess(provideData);
+      }
     }
+  }
 
-    @Override
-    public boolean support(ProvideData provideData) {
-        return false;
-    }
+  @Override
+  public boolean support(ProvideData provideData) {
+    return false;
+  }
 }

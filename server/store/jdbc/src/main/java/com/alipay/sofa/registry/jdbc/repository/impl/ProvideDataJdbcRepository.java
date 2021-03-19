@@ -25,44 +25,41 @@ import com.alipay.sofa.registry.store.api.meta.ProvideDataRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 
 /**
- *
  * @author xiaojian.xj
  * @version $Id: ProvideDataJdbcRepository.java, v 0.1 2021年03月13日 19:20 xiaojian.xj Exp $
  */
 public class ProvideDataJdbcRepository implements ProvideDataRepository {
 
-    private static final Logger LOG = LoggerFactory.getLogger("META-PROVIDEDATA",
-            "[ProvideData]");
+  private static final Logger LOG = LoggerFactory.getLogger("META-PROVIDEDATA", "[ProvideData]");
 
-    @Autowired
-    private ProvideDataMapper provideDataMapper;
+  @Autowired private ProvideDataMapper provideDataMapper;
 
-    @Override
-    public boolean put(String dataCenter, String key, String value) {
+  @Override
+  public boolean put(String dataCenter, String key, String value) {
 
-        ProvideDataDomain data = new ProvideDataDomain(dataCenter, key, value);
-        provideDataMapper.save(data);
-        if (LOG.isInfoEnabled()) {
-            LOG.info("put provideData, dataCenter: {}, key: {}, value: {}", dataCenter, key, value);
-        }
-        return true;
+    ProvideDataDomain data = new ProvideDataDomain(dataCenter, key, value);
+    provideDataMapper.save(data);
+    if (LOG.isInfoEnabled()) {
+      LOG.info("put provideData, dataCenter: {}, key: {}, value: {}", dataCenter, key, value);
     }
+    return true;
+  }
 
-    @Override
-    public DBResponse get(String dataCenter, String key) {
-        ProvideDataDomain data = provideDataMapper.query(dataCenter, key);
-        if (data == null) {
-            return DBResponse.notfound().build();
-        }
-        return DBResponse.ok(data.getDataValue()).build();
+  @Override
+  public DBResponse get(String dataCenter, String key) {
+    ProvideDataDomain data = provideDataMapper.query(dataCenter, key);
+    if (data == null) {
+      return DBResponse.notfound().build();
     }
+    return DBResponse.ok(data.getDataValue()).build();
+  }
 
-    @Override
-    public boolean remove(String dataCenter, String key) {
-        provideDataMapper.remove(dataCenter, key);
-        if (LOG.isInfoEnabled()) {
-            LOG.info("remove provideData, dataCenter: {}, key: {}", dataCenter, key);
-        }
-        return true;
+  @Override
+  public boolean remove(String dataCenter, String key) {
+    provideDataMapper.remove(dataCenter, key);
+    if (LOG.isInfoEnabled()) {
+      LOG.info("remove provideData, dataCenter: {}, key: {}", dataCenter, key);
     }
+    return true;
+  }
 }

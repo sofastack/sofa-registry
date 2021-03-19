@@ -29,30 +29,28 @@ import com.alipay.sofa.registry.server.shared.remoting.AbstractServerHandler;
 import org.springframework.beans.factory.annotation.Autowired;
 
 /**
- *
  * @author xiaojian.xj
  * @version $Id: MetadataRegisterPbHandler.java, v 0.1 2021年02月04日 17:13 xiaojian.xj Exp $
  */
 public class MetadataRegisterPbHandler extends AbstractServerHandler<MetaRegister> {
 
-    @Autowired
-    private AppRevisionHandlerStrategy appRevisionHandlerStrategy;
+  @Autowired private AppRevisionHandlerStrategy appRevisionHandlerStrategy;
 
-    @Override
-    protected NodeType getConnectNodeType() {
-        return Node.NodeType.CLIENT;
-    }
+  @Override
+  protected NodeType getConnectNodeType() {
+    return Node.NodeType.CLIENT;
+  }
 
-    @Override
-    public Object doHandle(Channel channel, MetaRegister request) {
-        RegisterResponse registerResponse = new RegisterResponse();
-        AppRevision appRevision = AppRevisionConvertor.convert2Java(request);
-        appRevisionHandlerStrategy.handleAppRevisionRegister(appRevision, registerResponse);
-        return RegisterResponseConvertor.convert2Pb(registerResponse);
-    }
+  @Override
+  public Object doHandle(Channel channel, MetaRegister request) {
+    RegisterResponse registerResponse = new RegisterResponse();
+    AppRevision appRevision = AppRevisionConvertor.convert2Java(request);
+    appRevisionHandlerStrategy.handleAppRevisionRegister(appRevision, registerResponse);
+    return RegisterResponseConvertor.convert2Pb(registerResponse);
+  }
 
-    @Override
-    public Class interest() {
-        return MetaRegister.class;
-    }
+  @Override
+  public Class interest() {
+    return MetaRegister.class;
+  }
 }

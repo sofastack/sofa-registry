@@ -25,71 +25,72 @@ import com.alipay.sofa.registry.remoting.ChannelHandler;
 
 /**
  * The type Connection event adapter.
+ *
  * @author shangyu.wh
  * @version $Id : ConnectionEventAdapter.java, v 0.1 2017-11-22 21:01 shangyu.wh Exp $
  */
 public class ConnectionEventAdapter implements ConnectionEventProcessor {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(ConnectionEventAdapter.class);
+  private static final Logger LOGGER = LoggerFactory.getLogger(ConnectionEventAdapter.class);
 
-    private ConnectionEventType connectionEventType;
+  private ConnectionEventType connectionEventType;
 
-    private ChannelHandler      connectionEventHandler;
+  private ChannelHandler connectionEventHandler;
 
-    private BoltServer          boltServer;
+  private BoltServer boltServer;
 
-    /**
-     * Instantiates a new Connection event adapter.
-     *
-     * @param connectionEventType the connection event type  
-     * @param connectionEventHandler the connection event handler  
-     * @param boltServer the bolt server
-     */
-    public ConnectionEventAdapter(ConnectionEventType connectionEventType,
-                                  ChannelHandler connectionEventHandler, BoltServer boltServer) {
-        this.connectionEventType = connectionEventType;
-        this.connectionEventHandler = connectionEventHandler;
-        this.boltServer = boltServer;
-    }
+  /**
+   * Instantiates a new Connection event adapter.
+   *
+   * @param connectionEventType the connection event type
+   * @param connectionEventHandler the connection event handler
+   * @param boltServer the bolt server
+   */
+  public ConnectionEventAdapter(
+      ConnectionEventType connectionEventType,
+      ChannelHandler connectionEventHandler,
+      BoltServer boltServer) {
+    this.connectionEventType = connectionEventType;
+    this.connectionEventHandler = connectionEventHandler;
+    this.boltServer = boltServer;
+  }
 
-    /**
-     * @see ConnectionEventProcessor#onEvent(String, Connection)
-     */
-    @Override
-    public void onEvent(String remoteAddr, Connection conn) {
-        try {
-            if (connectionEventHandler != null) {
-                switch (connectionEventType) {
-                    case CONNECT:
-                        BoltChannel boltChannel = new BoltChannel();
-                        boltChannel.setConnection(conn);
-                        if (boltServer != null) {
-                            boltServer.addChannel(boltChannel);
-                        }
-                        connectionEventHandler.connected(boltChannel);
-                        break;
-
-                    case CLOSE:
-                        BoltChannel boltChannelClose = new BoltChannel();
-                        boltChannelClose.setConnection(conn);
-                        if (boltServer != null) {
-                            boltServer.removeChannel(boltChannelClose);
-                        }
-                        connectionEventHandler.disconnected(boltChannelClose);
-                        break;
-
-                    case EXCEPTION:
-                        BoltChannel boltChannelException = new BoltChannel();
-                        boltChannelException.setConnection(conn);
-                        connectionEventHandler.caught(boltChannelException, null, null);
-                        break;
-                    default:
-                        break;
-                }
+  /** @see ConnectionEventProcessor#onEvent(String, Connection) */
+  @Override
+  public void onEvent(String remoteAddr, Connection conn) {
+    try {
+      if (connectionEventHandler != null) {
+        switch (connectionEventType) {
+          case CONNECT:
+            BoltChannel boltChannel = new BoltChannel();
+            boltChannel.setConnection(conn);
+            if (boltServer != null) {
+              boltServer.addChannel(boltChannel);
             }
-        } catch (Exception e) {
-            LOGGER.error("Connection process " + connectionEventType + " error!", e);
-            throw new RuntimeException("Connection process " + connectionEventType + " error!", e);
+            connectionEventHandler.connected(boltChannel);
+            break;
+
+          case CLOSE:
+            BoltChannel boltChannelClose = new BoltChannel();
+            boltChannelClose.setConnection(conn);
+            if (boltServer != null) {
+              boltServer.removeChannel(boltChannelClose);
+            }
+            connectionEventHandler.disconnected(boltChannelClose);
+            break;
+
+          case EXCEPTION:
+            BoltChannel boltChannelException = new BoltChannel();
+            boltChannelException.setConnection(conn);
+            connectionEventHandler.caught(boltChannelException, null, null);
+            break;
+          default:
+            break;
         }
+      }
+    } catch (Exception e) {
+      LOGGER.error("Connection process " + connectionEventType + " error!", e);
+      throw new RuntimeException("Connection process " + connectionEventType + " error!", e);
     }
+  }
 }

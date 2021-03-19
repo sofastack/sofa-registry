@@ -32,181 +32,175 @@ import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
-import org.springframework.beans.factory.annotation.Autowired;
-import javax.annotation.Resource;
 import java.util.Date;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
+import javax.annotation.Resource;
+import org.springframework.beans.factory.annotation.Autowired;
 
 /**
- *
  * @author xiaojian.xj
  * @version $Id: AppRevisionJdbcRepository.java, v 0.1 2021年01月17日 15:45 xiaojian.xj Exp $
  */
 public class AppRevisionJdbcRepository implements AppRevisionRepository, JdbcRepository {
 
-    private static final Logger                                    LOG              = LoggerFactory
-                                                                                        .getLogger(
-                                                                                            "METADATA-EXCHANGE",
-                                                                                            "[AppRevision]");
+  private static final Logger LOG = LoggerFactory.getLogger("METADATA-EXCHANGE", "[AppRevision]");
 
-    /**
-     * map: <revision, AppRevision>
-     */
-    private final LoadingCache<AppRevisionQueryModel, AppRevision> registry;
+  /** map: <revision, AppRevision> */
+  private final LoadingCache<AppRevisionQueryModel, AppRevision> registry;
 
-    private final Map<String, AppRevisionQueryModel>               revisionQueryMap = new ConcurrentHashMap<>();
+  private final Map<String, AppRevisionQueryModel> revisionQueryMap = new ConcurrentHashMap<>();
 
-    /**
-     * map: <revision, AppRevision>
-     */
-    private final Cache<AppRevisionQueryModel, AppRevision>        heartbeatMap;
+  /** map: <revision, AppRevision> */
+  private final Cache<AppRevisionQueryModel, AppRevision> heartbeatMap;
 
-    @Autowired
-    private AppRevisionMapper                                      appRevisionMapper;
+  @Autowired private AppRevisionMapper appRevisionMapper;
 
-    @Autowired
-    private AppRevisionBatchQueryCallable                          appRevisionBatchQueryCallable;
+  @Autowired private AppRevisionBatchQueryCallable appRevisionBatchQueryCallable;
 
-    @Resource
-    private InterfaceAppsJdbcRepository                            interfaceAppsJdbcRepository;
+  @Resource private InterfaceAppsJdbcRepository interfaceAppsJdbcRepository;
 
-    public AppRevisionJdbcRepository() {
-        this.registry = CacheBuilder.newBuilder().maximumSize(10000L)
+  public AppRevisionJdbcRepository() {
+    this.registry =
+        CacheBuilder.newBuilder()
+            .maximumSize(10000L)
             .expireAfterAccess(60, TimeUnit.MINUTES)
-            .build(new CacheLoader<AppRevisionQueryModel, AppRevision>() {
-                @Override
-                public AppRevision load(AppRevisionQueryModel query) throws InterruptedException {
+            .build(
+                new CacheLoader<AppRevisionQueryModel, AppRevision>() {
+                  @Override
+                  public AppRevision load(AppRevisionQueryModel query) throws InterruptedException {
 
                     TaskEvent task = appRevisionBatchQueryCallable.new TaskEvent(query);
                     InvokeFuture future = appRevisionBatchQueryCallable.commit(task);
 
                     if (future.isSuccess()) {
-                        Object response = future.getResponse();
-                        if (response == null) {
-                            throw new RevisionNotExistException(query.getRevision());
-                        }
-                        AppRevision appRevision = (AppRevision) response;
-                        return appRevision;
-                    } else {
+                      Object response = future.getResponse();
+                      if (response == null) {
                         throw new RevisionNotExistException(query.getRevision());
+                      }
+                      AppRevision appRevision = (AppRevision) response;
+                      return appRevision;
+                    } else {
+                      throw new RevisionNotExistException(query.getRevision());
                     }
-                }
-            });
+                  }
+                });
 
-        this.heartbeatMap = CacheBuilder.newBuilder().maximumSize(10000L)
-            .expireAfterAccess(60, TimeUnit.MINUTES).build();
+    this.heartbeatMap =
+        CacheBuilder.newBuilder()
+            .maximumSize(10000L)
+            .expireAfterAccess(60, TimeUnit.MINUTES)
+            .build();
+  }
+
+  @Override
+  public void register(AppRevision appRevision) throws Exception {
+    if (appRevision == null) {
+      throw new RuntimeException("jdbc register app revision error, appRevision is null.");
     }
+    AppRevisionQueryModel key =
+        new AppRevisionQueryModel(appRevision.getDataCenter(), appRevision.getRevision());
 
-    @Override
-    public void register(AppRevision appRevision) throws Exception {
-        if (appRevision == null) {
-            throw new RuntimeException("jdbc register app revision error, appRevision is null.");
-        }
-        AppRevisionQueryModel key = new AppRevisionQueryModel(appRevision.getDataCenter(),
-            appRevision.getRevision());
-
-        // query cache, if not exist then query database
-        try {
-            AppRevision revision = registry.get(key);
-            if (revision != null) {
-                heartbeatMap.put(key,
-                    new AppRevision(appRevision.getDataCenter(), appRevision.getRevision(),
-                        new Date()));
-                return;
-            }
-        } catch (Throwable e) {
-            if (e.getCause() instanceof RevisionNotExistException) {
-                LOG.info(String.format("new revision: %s register.", appRevision.getRevision()));
-            } else {
-                LOG.error(
-                    String.format("new revision: %s register error.", appRevision.getRevision()), e);
-                throw e;
-            }
-        }
-
-        // new revision, save into database
-
-        // it will ignore ON DUPLICATE KEY, return effect rows number
-        interfaceAppsJdbcRepository.batchSave(appRevision.getDataCenter(),
-            appRevision.getAppName(), appRevision.getInterfaceMap().keySet());
-
-        // it will ignore ON DUPLICATE KEY
-        appRevisionMapper.insert(AppRevisionDomainConvertor.convert2Domain(appRevision));
-
-        registry.put(key, appRevision);
-        heartbeatMap.put(key,
+    // query cache, if not exist then query database
+    try {
+      AppRevision revision = registry.get(key);
+      if (revision != null) {
+        heartbeatMap.put(
+            key,
             new AppRevision(appRevision.getDataCenter(), appRevision.getRevision(), new Date()));
-
+        return;
+      }
+    } catch (Throwable e) {
+      if (e.getCause() instanceof RevisionNotExistException) {
+        LOG.info(String.format("new revision: %s register.", appRevision.getRevision()));
+      } else {
+        LOG.error(String.format("new revision: %s register error.", appRevision.getRevision()), e);
+        throw e;
+      }
     }
 
-    @Override
-    public void refresh(String dataCenter) {
+    // new revision, save into database
 
-        try {
-            interfaceAppsJdbcRepository.refresh(dataCenter);
-        } catch (Throwable e) {
-            LOG.error("jdbc refresh revisions failed ", e);
-            throw new RuntimeException("jdbc refresh revision failed", e);
+    // it will ignore ON DUPLICATE KEY, return effect rows number
+    interfaceAppsJdbcRepository.batchSave(
+        appRevision.getDataCenter(),
+        appRevision.getAppName(),
+        appRevision.getInterfaceMap().keySet());
+
+    // it will ignore ON DUPLICATE KEY
+    appRevisionMapper.insert(AppRevisionDomainConvertor.convert2Domain(appRevision));
+
+    registry.put(key, appRevision);
+    heartbeatMap.put(
+        key, new AppRevision(appRevision.getDataCenter(), appRevision.getRevision(), new Date()));
+  }
+
+  @Override
+  public void refresh(String dataCenter) {
+
+    try {
+      interfaceAppsJdbcRepository.refresh(dataCenter);
+    } catch (Throwable e) {
+      LOG.error("jdbc refresh revisions failed ", e);
+      throw new RuntimeException("jdbc refresh revision failed", e);
+    }
+  }
+
+  @Override
+  public AppRevision queryRevision(String dataCenter, String revision) {
+
+    try {
+
+      AppRevisionQueryModel appRevisionQuery = revisionQueryMap.get(revision);
+      if (appRevisionQuery == null) {
+        appRevisionQuery = new AppRevisionQueryModel(dataCenter, revision);
+        revisionQueryMap.putIfAbsent(revision, appRevisionQuery);
+      }
+      return registry.get(appRevisionQuery);
+    } catch (ExecutionException e) {
+      LOG.error(String.format("jdbc refresh revision failed, revision: %s", revision), e);
+      throw new RuntimeException("jdbc refresh revision failed", e);
+    }
+  }
+
+  @Override
+  public AppRevision heartbeat(String dataCenter, String revision) {
+    try {
+      AppRevisionQueryModel appRevisionQuery = revisionQueryMap.get(revision);
+      if (appRevisionQuery == null) {
+        appRevisionQuery = new AppRevisionQueryModel(dataCenter, revision);
+        revisionQueryMap.putIfAbsent(revision, appRevisionQuery);
+      }
+
+      try {
+        AppRevision appRevision = heartbeatMap.getIfPresent(appRevisionQuery);
+        if (appRevision != null) {
+          appRevision.setLastHeartbeat(new Date());
+        } else {
+          appRevision = new AppRevision(dataCenter, revision, new Date());
         }
-    }
-
-    @Override
-    public AppRevision queryRevision(String dataCenter, String revision) {
-
-        try {
-
-            AppRevisionQueryModel appRevisionQuery = revisionQueryMap.get(revision);
-            if (appRevisionQuery == null) {
-                appRevisionQuery = new AppRevisionQueryModel(dataCenter, revision);
-                revisionQueryMap.putIfAbsent(revision, appRevisionQuery);
-            }
-            return registry.get(appRevisionQuery);
-        } catch (ExecutionException e) {
-            LOG.error(String.format("jdbc refresh revision failed, revision: %s", revision), e);
-            throw new RuntimeException("jdbc refresh revision failed", e);
+        heartbeatMap.put(appRevisionQuery, appRevision);
+        return appRevision;
+      } catch (Throwable e) {
+        if (e.getCause() instanceof RevisionNotExistException) {
+          LOG.info(String.format("revision: %s heartbeat, not exist in db.", revision));
         }
+        return null;
+      }
+    } catch (Exception e) {
+      LOG.error(String.format("jdbc revision heartbeat failed, revision: %s", revision), e);
+      return null;
     }
+  }
 
-    @Override
-    public AppRevision heartbeat(String dataCenter, String revision) {
-        try {
-            AppRevisionQueryModel appRevisionQuery = revisionQueryMap.get(revision);
-            if (appRevisionQuery == null) {
-                appRevisionQuery = new AppRevisionQueryModel(dataCenter, revision);
-                revisionQueryMap.putIfAbsent(revision, appRevisionQuery);
-            }
-
-            try {
-                AppRevision appRevision = heartbeatMap.getIfPresent(appRevisionQuery);
-                if (appRevision != null) {
-                    appRevision.setLastHeartbeat(new Date());
-                } else {
-                    appRevision = new AppRevision(dataCenter, revision, new Date());
-                }
-                heartbeatMap.put(appRevisionQuery, appRevision);
-                return appRevision;
-            } catch (Throwable e) {
-                if (e.getCause() instanceof RevisionNotExistException) {
-                    LOG.info(String.format("revision: %s heartbeat, not exist in db.", revision));
-                }
-                return null;
-            }
-        } catch (Exception e) {
-            LOG.error(String.format("jdbc revision heartbeat failed, revision: %s", revision), e);
-            return null;
-        }
-
-    }
-
-    /**
-     * Getter method for property <tt>heartbeatMap</tt>.
-     *
-     * @return property value of heartbeatMap
-     */
-    public Map<AppRevisionQueryModel, AppRevision> getHeartbeatMap() {
-        return heartbeatMap.asMap();
-    }
+  /**
+   * Getter method for property <tt>heartbeatMap</tt>.
+   *
+   * @return property value of heartbeatMap
+   */
+  public Map<AppRevisionQueryModel, AppRevision> getHeartbeatMap() {
+    return heartbeatMap.asMap();
+  }
 }

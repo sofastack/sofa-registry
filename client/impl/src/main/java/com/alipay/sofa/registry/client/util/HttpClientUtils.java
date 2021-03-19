@@ -17,7 +17,6 @@
 package com.alipay.sofa.registry.client.util;
 
 import com.alipay.sofa.registry.client.api.RegistryClientConfig;
-
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
@@ -28,97 +27,97 @@ import java.util.Map.Entry;
 
 /**
  * The type Http client utils.
+ *
  * @author zhuoyu.sjw
  * @version $Id : HttpClientUtils.java, v 0.1 2018-03-22 17:38 zhuoyu.sjw Exp $$
  */
 public class HttpClientUtils {
-    private static final char AND = '&';
+  private static final char AND = '&';
 
-    /**
-     * Get string.
-     *
-     * @param url the url  
-     * @param params the params  
-     * @param config the config  
-     * @return the string  
-     * @throws Exception the exception
-     */
-    public static String get(String url, Map<String, String> params, RegistryClientConfig config)
-                                                                                                 throws Exception {
-        HttpURLConnection httpURLConnection = create(getFullPath(url, params), config);
-        httpURLConnection.setRequestMethod("GET");
+  /**
+   * Get string.
+   *
+   * @param url the url
+   * @param params the params
+   * @param config the config
+   * @return the string
+   * @throws Exception the exception
+   */
+  public static String get(String url, Map<String, String> params, RegistryClientConfig config)
+      throws Exception {
+    HttpURLConnection httpURLConnection = create(getFullPath(url, params), config);
+    httpURLConnection.setRequestMethod("GET");
 
-        BufferedReader reader = null;
-        try {
-            StringBuilder stringBuffer = new StringBuilder();
+    BufferedReader reader = null;
+    try {
+      StringBuilder stringBuffer = new StringBuilder();
 
-            int responseCode = httpURLConnection.getResponseCode();
-            if (responseCode == HttpURLConnection.HTTP_OK) {
-                String charset = httpURLConnection.getContentEncoding();
-                if (charset != null) {
-                    reader = new BufferedReader(new InputStreamReader(
-                        httpURLConnection.getInputStream(), charset));
-                } else {
-                    reader = new BufferedReader(new InputStreamReader(
-                        httpURLConnection.getInputStream()));
-                }
-
-                String strCurrentLine;
-                while ((strCurrentLine = reader.readLine()) != null) {
-                    stringBuffer.append(strCurrentLine).append("\n");
-                }
-                if (stringBuffer.length() > 0
-                    && stringBuffer.charAt(stringBuffer.length() - 1) == '\n') {
-                    stringBuffer.deleteCharAt(stringBuffer.length() - 1);
-                }
-
-                return stringBuffer.toString();
-            }
-        } finally {
-            httpURLConnection.disconnect();
-            if (null != reader) {
-                reader.close();
-            }
+      int responseCode = httpURLConnection.getResponseCode();
+      if (responseCode == HttpURLConnection.HTTP_OK) {
+        String charset = httpURLConnection.getContentEncoding();
+        if (charset != null) {
+          reader =
+              new BufferedReader(
+                  new InputStreamReader(httpURLConnection.getInputStream(), charset));
+        } else {
+          reader = new BufferedReader(new InputStreamReader(httpURLConnection.getInputStream()));
         }
-        return null;
-    }
 
-    /**
-     * Create http url connection.
-     *
-     * @param httpUrl the http url 
-     * @param config the config 
-     * @return the http url connection 
-     * @throws Exception the exception
-     */
-    private static HttpURLConnection create(String httpUrl, RegistryClientConfig config)
-                                                                                        throws Exception {
-        URL url = new URL(httpUrl);
-        URLConnection urlConnection = url.openConnection();
-        HttpURLConnection httpConnection = (HttpURLConnection) urlConnection;
-        httpConnection.setDoOutput(true);
-        httpConnection.setDoInput(true);
-        httpConnection.setUseCaches(false);
-        httpConnection.setRequestProperty("Content-type", "text/plain");
-        httpConnection.setConnectTimeout(config.getConnectTimeout());
-        httpConnection.setReadTimeout(config.getSocketTimeout());
-        return httpConnection;
-    }
-
-    private static String getFullPath(String url, Map<String, String> params) {
-        StringBuilder sb = new StringBuilder(url);
-        if (params != null) {
-            sb.append("?");
-            for (Entry<String, String> param : params.entrySet()) {
-                sb.append(param.getKey());
-                sb.append("=");
-                sb.append(param.getValue());
-                sb.append("&");
-            }
-            if (sb.charAt(sb.length() - 1) == AND) {
-                sb.deleteCharAt(sb.length() - 1);
-            }
+        String strCurrentLine;
+        while ((strCurrentLine = reader.readLine()) != null) {
+          stringBuffer.append(strCurrentLine).append("\n");
         }
-        return sb.toString();
+        if (stringBuffer.length() > 0 && stringBuffer.charAt(stringBuffer.length() - 1) == '\n') {
+          stringBuffer.deleteCharAt(stringBuffer.length() - 1);
+        }
+
+        return stringBuffer.toString();
+      }
+    } finally {
+      httpURLConnection.disconnect();
+      if (null != reader) {
+        reader.close();
+      }
     }
+    return null;
+  }
+
+  /**
+   * Create http url connection.
+   *
+   * @param httpUrl the http url
+   * @param config the config
+   * @return the http url connection
+   * @throws Exception the exception
+   */
+  private static HttpURLConnection create(String httpUrl, RegistryClientConfig config)
+      throws Exception {
+    URL url = new URL(httpUrl);
+    URLConnection urlConnection = url.openConnection();
+    HttpURLConnection httpConnection = (HttpURLConnection) urlConnection;
+    httpConnection.setDoOutput(true);
+    httpConnection.setDoInput(true);
+    httpConnection.setUseCaches(false);
+    httpConnection.setRequestProperty("Content-type", "text/plain");
+    httpConnection.setConnectTimeout(config.getConnectTimeout());
+    httpConnection.setReadTimeout(config.getSocketTimeout());
+    return httpConnection;
+  }
+
+  private static String getFullPath(String url, Map<String, String> params) {
+    StringBuilder sb = new StringBuilder(url);
+    if (params != null) {
+      sb.append("?");
+      for (Entry<String, String> param : params.entrySet()) {
+        sb.append(param.getKey());
+        sb.append("=");
+        sb.append(param.getValue());
+        sb.append("&");
+      }
+      if (sb.charAt(sb.length() - 1) == AND) {
+        sb.deleteCharAt(sb.length() - 1);
+      }
+    }
+    return sb.toString();
+  }
 }

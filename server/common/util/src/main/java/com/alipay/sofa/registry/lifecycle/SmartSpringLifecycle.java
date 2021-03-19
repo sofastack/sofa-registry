@@ -24,11 +24,9 @@ import java.lang.annotation.Target;
 /**
  * @author zhuchen
  * @date Nov 24, 2020, 4:24:34 PM
- *
- * Annotation for whom install, an auto lifecycle start/end process
- * will triggered through spring PostConstruct and PreDestroy
+ *     <p>Annotation for whom install, an auto lifecycle start/end process will triggered through
+ *     spring PostConstruct and PreDestroy
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.TYPE)
-public @interface SmartSpringLifecycle {
-}
+public @interface SmartSpringLifecycle {}

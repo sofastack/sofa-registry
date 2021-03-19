@@ -17,19 +17,16 @@
 package com.alipay.sofa.registry.server.shared.remoting;
 
 import com.alipay.sofa.registry.remoting.Channel;
-
 import java.net.InetSocketAddress;
 
 /**
- * 
  * @author yuzhi.lyz
  * @version v 0.1 2020-12-14 11:39 yuzhi.lyz Exp $
  */
 public final class RemotingHelper {
-	private RemotingHelper() {
-	}
+  private RemotingHelper() {}
 
-	public static InetSocketAddress getChannelRemoteAddress(Channel channel) {
-		return channel == null ? null : channel.getRemoteAddress();
-	}
+  public static InetSocketAddress getChannelRemoteAddress(Channel channel) {
+    return channel == null ? null : channel.getRemoteAddress();
+  }
 }

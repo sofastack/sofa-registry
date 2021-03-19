@@ -24,22 +24,23 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration;
 
 /**
- *
  * @author zhuoyu.sjw
  * @version $Id: MetaApplication.java, v 0.1 2017-11-13 19:03 zhuoyu.sjw Exp $$
  */
 @EnableMetaServer
-@SpringBootApplication(exclude = { DataSourceAutoConfiguration.class })
+@SpringBootApplication(exclude = {DataSourceAutoConfiguration.class})
 public class MetaApplication {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(MetaApplication.class);
+  private static final Logger LOGGER = LoggerFactory.getLogger(MetaApplication.class);
 
-    public static void main(String[] args) {
-        // setup DefaultUncaughtExceptionHandler
-        Thread.setDefaultUncaughtExceptionHandler((t, e) -> {
-            LOGGER.error(String.format("UncaughtException in Thread(%s): %s", t.getName(), e.getMessage()), e);
+  public static void main(String[] args) {
+    // setup DefaultUncaughtExceptionHandler
+    Thread.setDefaultUncaughtExceptionHandler(
+        (t, e) -> {
+          LOGGER.error(
+              String.format("UncaughtException in Thread(%s): %s", t.getName(), e.getMessage()), e);
         });
 
-        SpringApplication.run(MetaApplication.class, args);
-    }
+    SpringApplication.run(MetaApplication.class, args);
+  }
 }

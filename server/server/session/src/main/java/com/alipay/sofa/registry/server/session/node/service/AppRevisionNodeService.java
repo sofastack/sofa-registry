@@ -17,14 +17,13 @@
 package com.alipay.sofa.registry.server.session.node.service;
 
 import com.alipay.sofa.registry.common.model.store.AppRevision;
-
 import java.util.List;
 
 public interface AppRevisionNodeService {
 
-    void register(AppRevision appRevision);
+  void register(AppRevision appRevision);
 
-    List<AppRevision> fetchMulti(List<String> keys);
+  List<AppRevision> fetchMulti(List<String> keys);
 
-    List<String> checkRevisions(String keysDigest);
+  List<String> checkRevisions(String keysDigest);
 }

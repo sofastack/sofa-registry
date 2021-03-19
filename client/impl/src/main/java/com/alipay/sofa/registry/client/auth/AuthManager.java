@@ -17,21 +17,21 @@
 package com.alipay.sofa.registry.client.auth;
 
 import com.alipay.sofa.registry.core.model.BaseRegister;
-
 import java.util.Map;
 
 /**
  * The interface Auth manager.
+ *
  * @author zhuoyu.sjw
  * @version $Id : AuthManager.java, v 0.1 2018-04-18 12:12 zhuoyu.sjw Exp $$
  */
 public interface AuthManager {
 
-    /**
-     * Gets auth content.
-     *
-     * @param register the register 
-     * @return the auth content
-     */
-    Map<String, String> getAuthContent(BaseRegister register);
+  /**
+   * Gets auth content.
+   *
+   * @param register the register
+   * @return the auth content
+   */
+  Map<String, String> getAuthContent(BaseRegister register);
 }

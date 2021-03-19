@@ -18,173 +18,178 @@ package com.alipay.sofa.registry.common.model.metaserver.inter.heartbeat;
 
 import com.alipay.sofa.registry.common.model.Node;
 import com.alipay.sofa.registry.common.model.slot.BaseSlotStatus;
-import com.alipay.sofa.registry.common.model.slot.DataNodeSlot;
 import com.alipay.sofa.registry.common.model.slot.SlotConfig;
 import com.alipay.sofa.registry.common.model.slot.SlotTable;
-
 import java.io.Serializable;
 import java.util.Collections;
 import java.util.List;
 
 /**
- *
  * @author shangyu.wh
  * @version $Id: RenewNodesRequest.java, v 0.1 2018-03-30 19:51 shangyu.wh Exp $
  */
 public class HeartbeatRequest<T extends Node> implements Serializable {
 
-    private int                            duration;
+  private int duration;
 
-    private final T                        node;
+  private final T node;
 
-    private final long                     slotTableEpoch;
+  private final long slotTableEpoch;
 
-    private final String                   dataCenter;
+  private final String dataCenter;
 
-    private final long                     timestamp;
+  private final long timestamp;
 
-    private final SlotConfig.SlotBasicInfo slotBasicInfo;
+  private final SlotConfig.SlotBasicInfo slotBasicInfo;
 
-    private final List<BaseSlotStatus>     slotStatuses;
+  private final List<BaseSlotStatus> slotStatuses;
 
-    private SlotTable                      slotTable;
+  private SlotTable slotTable;
 
-    /**
-     * constructor
-     * @param node
-     * @param slotTableEpoch
-     */
-    public HeartbeatRequest(T node, long slotTableEpoch, String dataCenter, long timestamp,
-                            SlotConfig.SlotBasicInfo slotBasicInfo) {
-        this.node = node;
-        this.slotTableEpoch = slotTableEpoch;
-        this.dataCenter = dataCenter;
-        this.timestamp = timestamp;
-        this.slotBasicInfo = slotBasicInfo;
-        this.slotStatuses = Collections.EMPTY_LIST;
-    }
+  /**
+   * constructor
+   *
+   * @param node
+   * @param slotTableEpoch
+   */
+  public HeartbeatRequest(
+      T node,
+      long slotTableEpoch,
+      String dataCenter,
+      long timestamp,
+      SlotConfig.SlotBasicInfo slotBasicInfo) {
+    this.node = node;
+    this.slotTableEpoch = slotTableEpoch;
+    this.dataCenter = dataCenter;
+    this.timestamp = timestamp;
+    this.slotBasicInfo = slotBasicInfo;
+    this.slotStatuses = Collections.EMPTY_LIST;
+  }
 
-    /**
-     * constructor
-     * @param node
-     * @param slotTableEpoch
-     */
-    public HeartbeatRequest(T node, long slotTableEpoch, String dataCenter, long timestamp,
-                            SlotConfig.SlotBasicInfo slotBasicInfo,
-                            final List<BaseSlotStatus> slotStatuses) {
-        this.node = node;
-        this.slotTableEpoch = slotTableEpoch;
-        this.dataCenter = dataCenter;
-        this.timestamp = timestamp;
-        this.slotBasicInfo = slotBasicInfo;
-        this.slotStatuses = slotStatuses;
-    }
+  /**
+   * constructor
+   *
+   * @param node
+   * @param slotTableEpoch
+   */
+  public HeartbeatRequest(
+      T node,
+      long slotTableEpoch,
+      String dataCenter,
+      long timestamp,
+      SlotConfig.SlotBasicInfo slotBasicInfo,
+      final List<BaseSlotStatus> slotStatuses) {
+    this.node = node;
+    this.slotTableEpoch = slotTableEpoch;
+    this.dataCenter = dataCenter;
+    this.timestamp = timestamp;
+    this.slotBasicInfo = slotBasicInfo;
+    this.slotStatuses = slotStatuses;
+  }
 
-    /**
-     * Getter method for property <tt>duration</tt>.
-     *
-     * @return property value of duration
-     */
-    public int getDuration() {
-        return duration;
-    }
+  /**
+   * Getter method for property <tt>duration</tt>.
+   *
+   * @return property value of duration
+   */
+  public int getDuration() {
+    return duration;
+  }
 
-    /**
-     * Setter method for property <tt>duration</tt>.
-     *
-     * @param duration  value to be assigned to property duration
-     */
-    public void setDuration(int duration) {
-        this.duration = duration;
-    }
+  /**
+   * Setter method for property <tt>duration</tt>.
+   *
+   * @param duration value to be assigned to property duration
+   */
+  public void setDuration(int duration) {
+    this.duration = duration;
+  }
 
-    /**
-     * Getter method for property <tt>node</tt>.
-     *
-     * @return property value of node
-     */
-    public T getNode() {
-        return node;
-    }
+  /**
+   * Getter method for property <tt>node</tt>.
+   *
+   * @return property value of node
+   */
+  public T getNode() {
+    return node;
+  }
 
-    /**
-     * Gets get data center.
-     *
-     * @return the get data center
-     */
-    public String getDataCenter() {
-        return dataCenter;
-    }
+  /**
+   * Gets get data center.
+   *
+   * @return the get data center
+   */
+  public String getDataCenter() {
+    return dataCenter;
+  }
 
-    /**
-     * Gets get timestamp.
-     *
-     * @return the get timestamp
-     */
-    public long getTimestamp() {
-        return timestamp;
-    }
+  /**
+   * Gets get timestamp.
+   *
+   * @return the get timestamp
+   */
+  public long getTimestamp() {
+    return timestamp;
+  }
 
-    /**
-     * Gets get slot basic info.
-     *
-     * @return the get slot basic info
-     */
-    public SlotConfig.SlotBasicInfo getSlotBasicInfo() {
-        return slotBasicInfo;
-    }
+  /**
+   * Gets get slot basic info.
+   *
+   * @return the get slot basic info
+   */
+  public SlotConfig.SlotBasicInfo getSlotBasicInfo() {
+    return slotBasicInfo;
+  }
 
-    /**
-     * Gets get slot table epoch.
-     *
-     * @return the get slot table epoch
-     */
-    public long getSlotTableEpoch() {
-        return slotTableEpoch;
-    }
+  /**
+   * Gets get slot table epoch.
+   *
+   * @return the get slot table epoch
+   */
+  public long getSlotTableEpoch() {
+    return slotTableEpoch;
+  }
 
-    /**
-     * Gets get slot status.
-     *
-     * @return the get slot status
-     */
-    public List<BaseSlotStatus> getSlotStatus() {
-        return slotStatuses;
-    }
+  /**
+   * Gets get slot status.
+   *
+   * @return the get slot status
+   */
+  public List<BaseSlotStatus> getSlotStatus() {
+    return slotStatuses;
+  }
 
+  /**
+   * Gets get slot table.
+   *
+   * @return the get slot table
+   */
+  public SlotTable getSlotTable() {
+    return slotTable;
+  }
 
-    /**
-     * Gets get slot table.
-     *
-     * @return the get slot table
-     */
-    public SlotTable getSlotTable() {
-        return slotTable;
-    }
+  /**
+   * Sets set slot table.
+   *
+   * @param slotTable the slot table
+   * @return the set slot table
+   */
+  public HeartbeatRequest<T> setSlotTable(SlotTable slotTable) {
+    this.slotTable = slotTable;
+    return this;
+  }
 
-
-    /**
-     * Sets set slot table.
-     *
-     * @param slotTable the slot table
-     * @return the set slot table
-     */
-    public HeartbeatRequest<T> setSlotTable(SlotTable slotTable) {
-        this.slotTable = slotTable;
-        return this;
-    }
-
-    /**
-     * To string string.
-     *
-     * @return the string
-     */
-    @Override
-    public String toString() {
-        final StringBuilder sb = new StringBuilder("RenewNodesRequest{");
-        sb.append("duration=").append(duration);
-        sb.append(", node=").append(node);
-        sb.append('}');
-        return sb.toString();
-    }
+  /**
+   * To string string.
+   *
+   * @return the string
+   */
+  @Override
+  public String toString() {
+    final StringBuilder sb = new StringBuilder("RenewNodesRequest{");
+    sb.append("duration=").append(duration);
+    sb.append(", node=").append(node);
+    sb.append('}');
+    return sb.toString();
+  }
 }

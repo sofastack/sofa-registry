@@ -16,44 +16,44 @@
  */
 package com.alipay.sofa.registry.server.meta.slot.util;
 
-import com.alipay.sofa.registry.common.model.metaserver.nodes.DataNode;
+import static java.util.stream.Collectors.toList;
 
+import com.alipay.sofa.registry.common.model.metaserver.nodes.DataNode;
 import java.util.Collections;
 import java.util.List;
 
-import static java.util.stream.Collectors.toList;
-
 /**
- *
  * @author xiaojian.xj
  * @version $Id: ListUtil.java, v 0.1 2021年02月02日 21:02 xiaojian.xj Exp $
  */
 public class ListUtil {
 
-    /**
-     * 取差集
-     * @param list1
-     * @param list2
-     * @return
-     */
-    public static List<DataNode> reduce(List<DataNode> list1, List<DataNode> list2) {
-        List<DataNode> reduce = list1.stream().filter(item -> !list2.contains(item)).collect(toList());
+  /**
+   * 取差集
+   *
+   * @param list1
+   * @param list2
+   * @return
+   */
+  public static List<DataNode> reduce(List<DataNode> list1, List<DataNode> list2) {
+    List<DataNode> reduce = list1.stream().filter(item -> !list2.contains(item)).collect(toList());
 
-        return reduce;
+    return reduce;
+  }
+
+  /**
+   * random pick
+   *
+   * @param list
+   * @param count
+   * @return
+   */
+  public static List<DataNode> randomPick(List<DataNode> list, int count) {
+    if (list.size() <= count) {
+      return list;
     }
 
-    /**
-     * random pick
-     * @param list
-     * @param count
-     * @return
-     */
-    public static List<DataNode> randomPick(List<DataNode> list, int count) {
-        if (list.size() <= count) {
-            return list;
-        }
-
-        Collections.shuffle(list);
-        return list.subList(0, count);
-    }
+    Collections.shuffle(list);
+    return list.subList(0, count);
+  }
 }

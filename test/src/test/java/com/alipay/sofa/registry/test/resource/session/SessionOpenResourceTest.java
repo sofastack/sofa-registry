@@ -16,16 +16,15 @@
  */
 package com.alipay.sofa.registry.test.resource.session;
 
+import static org.junit.Assert.assertEquals;
+
 import com.alipay.sofa.registry.test.BaseIntegrationTest;
+import java.util.List;
+import javax.ws.rs.core.GenericType;
+import javax.ws.rs.core.MediaType;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.test.context.junit4.SpringRunner;
-
-import javax.ws.rs.core.GenericType;
-import javax.ws.rs.core.MediaType;
-import java.util.List;
-
-import static org.junit.Assert.assertEquals;
 
 /**
  * @author xuanbei
@@ -33,27 +32,35 @@ import static org.junit.Assert.assertEquals;
  */
 @RunWith(SpringRunner.class)
 public class SessionOpenResourceTest extends BaseIntegrationTest {
-    @Test
-    public void testCheckAlive() {
-        String result = sessionChannel.getWebTarget().path("api/servers/alive").request()
+  @Test
+  public void testCheckAlive() {
+    String result =
+        sessionChannel.getWebTarget().path("api/servers/alive").request().get(String.class);
+    assertEquals("OK", result);
+  }
+
+  @Test
+  public void testGetSessionServerList() {
+    String result =
+        sessionChannel
+            .getWebTarget()
+            .path("api/servers/query")
+            .queryParam("zone", LOCAL_REGION)
+            .request()
             .get(String.class);
-        assertEquals("OK", result);
-    }
+    assertEquals(LOCAL_ADDRESS + ":" + sessionServerPort, result);
+  }
 
-    @Test
-    public void testGetSessionServerList() {
-        String result = sessionChannel.getWebTarget().path("api/servers/query")
-            .queryParam("zone", LOCAL_REGION).request().get(String.class);
-        assertEquals(LOCAL_ADDRESS + ":" + sessionServerPort, result);
-    }
-
-    @Test
-    public void testGetSessionServerListJson() {
-        List<String> result = sessionChannel.getWebTarget().path("api/servers/query.json")
-            .queryParam("zone", LOCAL_REGION).request(MediaType.APPLICATION_JSON)
-            .get(new GenericType<List<String>>() {
-            });
-        assertEquals(1, result.size());
-        assertEquals(LOCAL_ADDRESS + ":" + sessionServerPort, result.get(0));
-    }
+  @Test
+  public void testGetSessionServerListJson() {
+    List<String> result =
+        sessionChannel
+            .getWebTarget()
+            .path("api/servers/query.json")
+            .queryParam("zone", LOCAL_REGION)
+            .request(MediaType.APPLICATION_JSON)
+            .get(new GenericType<List<String>>() {});
+    assertEquals(1, result.size());
+    assertEquals(LOCAL_ADDRESS + ":" + sessionServerPort, result.get(0));
+  }
 }

@@ -16,310 +16,302 @@
  */
 package com.alipay.sofa.registry.log;
 
-import org.slf4j.LoggerFactory;
-
 import java.io.File;
 import java.io.Serializable;
+import org.slf4j.LoggerFactory;
 
 /**
- *
  * @author shangyu.wh
  * @version $Id: SLF4JLogger.java, v 0.1 2017-12-22 16:04 shangyu.wh Exp $
  */
 public class SLF4JLogger implements Logger, Serializable {
 
-    private static final long      serialVersionUID         = 1L;
+  private static final long serialVersionUID = 1L;
 
-    private static final String    LOG_PATH                 = "logging.path";
-    private static final String    LOG_PATH_DEFAULT         = System.getProperty("user.home")
-                                                              + File.separator + "logs";
-    private static final String    SERVER_LOG_LEVEL         = "com.alipay.sofa.registry.server.log.level";
-    private static final String    SERVER_LOG_LEVEL_DEFAULT = "INFO";
+  private static final String LOG_PATH = "logging.path";
+  private static final String LOG_PATH_DEFAULT =
+      System.getProperty("user.home") + File.separator + "logs";
+  private static final String SERVER_LOG_LEVEL = "com.alipay.sofa.registry.server.log.level";
+  private static final String SERVER_LOG_LEVEL_DEFAULT = "INFO";
 
-    private final String           name;
+  private final String name;
 
-    private final org.slf4j.Logger logger;
+  private final org.slf4j.Logger logger;
 
-    private final String           msgPrefix;
+  private final String msgPrefix;
 
-    /** symbol : */
-    public static final char       SPACE                    = ' ';
+  /** symbol : */
+  public static final char SPACE = ' ';
 
-    static {
-
-        String logPath = System.getProperty(LOG_PATH);
-        String logLevel = System.getProperty(SERVER_LOG_LEVEL);
-        if (logPath == null || logPath.isEmpty()) {
-            System.setProperty(LOG_PATH, LOG_PATH_DEFAULT);
-        }
-        if (logLevel == null || logLevel.isEmpty()) {
-            System.setProperty(SERVER_LOG_LEVEL, SERVER_LOG_LEVEL_DEFAULT);
-        }
-
+  static {
+    String logPath = System.getProperty(LOG_PATH);
+    String logLevel = System.getProperty(SERVER_LOG_LEVEL);
+    if (logPath == null || logPath.isEmpty()) {
+      System.setProperty(LOG_PATH, LOG_PATH_DEFAULT);
     }
-
-    /**
-     * @param name
-     */
-    public SLF4JLogger(String name) {
-        this.name = name;
-        this.msgPrefix = "";
-        this.logger = getLoggerBySpace(name);
+    if (logLevel == null || logLevel.isEmpty()) {
+      System.setProperty(SERVER_LOG_LEVEL, SERVER_LOG_LEVEL_DEFAULT);
     }
+  }
 
-    /**
-     * @param clazz
-     */
-    public SLF4JLogger(Class clazz) {
-        String loggerName = clazz.getCanonicalName();
-        if (loggerName == null) {
-            loggerName = clazz.getName();
-        }
-        this.name = loggerName;
-        this.msgPrefix = "";
-        this.logger = getLoggerBySpace(name);
-    }
+  /** @param name */
+  public SLF4JLogger(String name) {
+    this.name = name;
+    this.msgPrefix = "";
+    this.logger = getLoggerBySpace(name);
+  }
 
-    /**
-     * @param name
-     * @param msgPrefix
-     */
-    public SLF4JLogger(String name, String msgPrefix) {
-        this.name = name;
-        this.msgPrefix = msgPrefix;
-        this.logger = getLoggerBySpace(name);
+  /** @param clazz */
+  public SLF4JLogger(Class clazz) {
+    String loggerName = clazz.getCanonicalName();
+    if (loggerName == null) {
+      loggerName = clazz.getName();
     }
+    this.name = loggerName;
+    this.msgPrefix = "";
+    this.logger = getLoggerBySpace(name);
+  }
 
-    /**
-     * @param clazz
-     * @param msgPrefix
-     */
-    public SLF4JLogger(Class clazz, String msgPrefix) {
-        this.name = clazz.getCanonicalName();
-        this.msgPrefix = msgPrefix;
-        this.logger = getLoggerBySpace(name);
-    }
+  /**
+   * @param name
+   * @param msgPrefix
+   */
+  public SLF4JLogger(String name, String msgPrefix) {
+    this.name = name;
+    this.msgPrefix = msgPrefix;
+    this.logger = getLoggerBySpace(name);
+  }
 
-    /**
-     * @param name
-     * @return
-     */
-    public org.slf4j.Logger getLoggerBySpace(String name) {
-        if (name == null || name.isEmpty()) {
-            return null;
-        }
-        return LoggerFactory.getLogger(name);
-    }
+  /**
+   * @param clazz
+   * @param msgPrefix
+   */
+  public SLF4JLogger(Class clazz, String msgPrefix) {
+    this.name = clazz.getCanonicalName();
+    this.msgPrefix = msgPrefix;
+    this.logger = getLoggerBySpace(name);
+  }
 
-    @Override
-    public void trace(String msg) {
-        if (logger.isTraceEnabled()) {
-            logger.trace(processMsg(msg));
-        }
+  /**
+   * @param name
+   * @return
+   */
+  public org.slf4j.Logger getLoggerBySpace(String name) {
+    if (name == null || name.isEmpty()) {
+      return null;
     }
+    return LoggerFactory.getLogger(name);
+  }
 
-    @Override
-    public void trace(String format, Object arg) {
-        if (logger.isTraceEnabled()) {
-            logger.trace(processMsg(format), arg);
-        }
+  @Override
+  public void trace(String msg) {
+    if (logger.isTraceEnabled()) {
+      logger.trace(processMsg(msg));
     }
+  }
 
-    @Override
-    public void trace(String format, Object arg1, Object arg2) {
-        if (logger.isTraceEnabled()) {
-            logger.trace(processMsg(format), arg1, arg2);
-        }
+  @Override
+  public void trace(String format, Object arg) {
+    if (logger.isTraceEnabled()) {
+      logger.trace(processMsg(format), arg);
     }
+  }
 
-    @Override
-    public void trace(String format, Object... arguments) {
-        if (logger.isTraceEnabled()) {
-            logger.trace(processMsg(format), arguments);
-        }
+  @Override
+  public void trace(String format, Object arg1, Object arg2) {
+    if (logger.isTraceEnabled()) {
+      logger.trace(processMsg(format), arg1, arg2);
     }
+  }
 
-    @Override
-    public void trace(String msg, Throwable e) {
-        if (logger.isTraceEnabled()) {
-            logger.trace(processMsg(msg), e);
-        }
+  @Override
+  public void trace(String format, Object... arguments) {
+    if (logger.isTraceEnabled()) {
+      logger.trace(processMsg(format), arguments);
     }
+  }
 
-    @Override
-    public void debug(String msg) {
-        if (logger.isDebugEnabled()) {
-            logger.debug(processMsg(msg));
-        }
+  @Override
+  public void trace(String msg, Throwable e) {
+    if (logger.isTraceEnabled()) {
+      logger.trace(processMsg(msg), e);
     }
+  }
 
-    @Override
-    public void debug(String format, Object arg) {
-        if (logger.isDebugEnabled()) {
-            logger.debug(processMsg(format), arg);
-        }
+  @Override
+  public void debug(String msg) {
+    if (logger.isDebugEnabled()) {
+      logger.debug(processMsg(msg));
     }
+  }
 
-    @Override
-    public void debug(String format, Object arg1, Object arg2) {
-        if (logger.isDebugEnabled()) {
-            logger.debug(processMsg(format), arg1, arg2);
-        }
+  @Override
+  public void debug(String format, Object arg) {
+    if (logger.isDebugEnabled()) {
+      logger.debug(processMsg(format), arg);
     }
+  }
 
-    @Override
-    public void debug(String format, Object... arguments) {
-        if (logger.isDebugEnabled()) {
-            logger.debug(processMsg(format), arguments);
-        }
+  @Override
+  public void debug(String format, Object arg1, Object arg2) {
+    if (logger.isDebugEnabled()) {
+      logger.debug(processMsg(format), arg1, arg2);
     }
+  }
 
-    @Override
-    public void debug(String msg, Throwable e) {
-        if (logger.isDebugEnabled()) {
-            logger.debug(processMsg(msg), e);
-        }
+  @Override
+  public void debug(String format, Object... arguments) {
+    if (logger.isDebugEnabled()) {
+      logger.debug(processMsg(format), arguments);
     }
+  }
 
-    @Override
-    public void info(String msg) {
-        if (logger.isInfoEnabled()) {
-            logger.info(processMsg(msg));
-        }
+  @Override
+  public void debug(String msg, Throwable e) {
+    if (logger.isDebugEnabled()) {
+      logger.debug(processMsg(msg), e);
     }
+  }
 
-    @Override
-    public void info(String format, Object arg) {
-        if (logger.isInfoEnabled()) {
-            logger.info(processMsg(format), arg);
-        }
+  @Override
+  public void info(String msg) {
+    if (logger.isInfoEnabled()) {
+      logger.info(processMsg(msg));
     }
+  }
 
-    @Override
-    public void info(String format, Object arg1, Object arg2) {
-        if (logger.isInfoEnabled()) {
-            logger.info(processMsg(format), arg1, arg2);
-        }
+  @Override
+  public void info(String format, Object arg) {
+    if (logger.isInfoEnabled()) {
+      logger.info(processMsg(format), arg);
     }
+  }
 
-    @Override
-    public void info(String format, Object... arguments) {
-        if (logger.isInfoEnabled()) {
-            logger.info(processMsg(format), arguments);
-        }
+  @Override
+  public void info(String format, Object arg1, Object arg2) {
+    if (logger.isInfoEnabled()) {
+      logger.info(processMsg(format), arg1, arg2);
     }
+  }
 
-    @Override
-    public void info(String msg, Throwable e) {
-        if (logger.isInfoEnabled()) {
-            logger.info(processMsg(msg), e);
-        }
+  @Override
+  public void info(String format, Object... arguments) {
+    if (logger.isInfoEnabled()) {
+      logger.info(processMsg(format), arguments);
     }
+  }
 
-    @Override
-    public void warn(String msg) {
-        if (logger.isWarnEnabled()) {
-            logger.warn(processMsg(msg));
-        }
+  @Override
+  public void info(String msg, Throwable e) {
+    if (logger.isInfoEnabled()) {
+      logger.info(processMsg(msg), e);
     }
+  }
 
-    @Override
-    public void warn(String format, Object arg) {
-        if (logger.isWarnEnabled()) {
-            logger.warn(processMsg(format), arg);
-        }
+  @Override
+  public void warn(String msg) {
+    if (logger.isWarnEnabled()) {
+      logger.warn(processMsg(msg));
     }
+  }
 
-    @Override
-    public void warn(String format, Object... arguments) {
-        if (logger.isWarnEnabled()) {
-            logger.warn(processMsg(format), arguments);
-        }
+  @Override
+  public void warn(String format, Object arg) {
+    if (logger.isWarnEnabled()) {
+      logger.warn(processMsg(format), arg);
     }
+  }
 
-    @Override
-    public void warn(String format, Object arg1, Object arg2) {
-        if (logger.isWarnEnabled()) {
-            logger.warn(processMsg(format), arg1, arg2);
-        }
+  @Override
+  public void warn(String format, Object... arguments) {
+    if (logger.isWarnEnabled()) {
+      logger.warn(processMsg(format), arguments);
     }
+  }
 
-    @Override
-    public void warn(String msg, Throwable e) {
-        if (logger.isWarnEnabled()) {
-            logger.warn(processMsg(msg), e);
-        }
+  @Override
+  public void warn(String format, Object arg1, Object arg2) {
+    if (logger.isWarnEnabled()) {
+      logger.warn(processMsg(format), arg1, arg2);
     }
+  }
 
-    @Override
-    public void error(String msg) {
-        if (logger.isErrorEnabled()) {
-            logger.error(processMsg(msg));
-        }
+  @Override
+  public void warn(String msg, Throwable e) {
+    if (logger.isWarnEnabled()) {
+      logger.warn(processMsg(msg), e);
     }
+  }
 
-    @Override
-    public void error(String format, Object arg) {
-        if (logger.isErrorEnabled()) {
-            logger.error(processMsg(format), arg);
-        }
+  @Override
+  public void error(String msg) {
+    if (logger.isErrorEnabled()) {
+      logger.error(processMsg(msg));
     }
+  }
 
-    @Override
-    public void error(String format, Object arg1, Object arg2) {
-        if (logger.isErrorEnabled()) {
-            logger.error(processMsg(format), arg1, arg2);
-        }
+  @Override
+  public void error(String format, Object arg) {
+    if (logger.isErrorEnabled()) {
+      logger.error(processMsg(format), arg);
     }
+  }
 
-    @Override
-    public void error(String format, Object... arguments) {
-        if (logger.isErrorEnabled()) {
-            logger.error(processMsg(format), arguments);
-        }
+  @Override
+  public void error(String format, Object arg1, Object arg2) {
+    if (logger.isErrorEnabled()) {
+      logger.error(processMsg(format), arg1, arg2);
     }
+  }
 
-    @Override
-    public void error(String msg, Throwable e) {
-        if (logger.isErrorEnabled()) {
-            logger.error(processMsg(msg), e);
-        }
+  @Override
+  public void error(String format, Object... arguments) {
+    if (logger.isErrorEnabled()) {
+      logger.error(processMsg(format), arguments);
     }
+  }
 
-    @Override
-    public boolean isTraceEnabled() {
-        return logger.isTraceEnabled();
+  @Override
+  public void error(String msg, Throwable e) {
+    if (logger.isErrorEnabled()) {
+      logger.error(processMsg(msg), e);
     }
+  }
 
-    @Override
-    public boolean isDebugEnabled() {
-        return logger.isDebugEnabled();
-    }
+  @Override
+  public boolean isTraceEnabled() {
+    return logger.isTraceEnabled();
+  }
 
-    @Override
-    public boolean isInfoEnabled() {
-        return logger.isInfoEnabled();
-    }
+  @Override
+  public boolean isDebugEnabled() {
+    return logger.isDebugEnabled();
+  }
 
-    @Override
-    public boolean isWarnEnabled() {
-        return logger.isWarnEnabled();
-    }
+  @Override
+  public boolean isInfoEnabled() {
+    return logger.isInfoEnabled();
+  }
 
-    @Override
-    public boolean isErrorEnabled() {
-        return logger.isErrorEnabled();
-    }
+  @Override
+  public boolean isWarnEnabled() {
+    return logger.isWarnEnabled();
+  }
 
-    private String processMsg(String msg) {
-        if (msgPrefix.isEmpty()) {
-            return msg;
-        }
-        return msgPrefix + SPACE + msg;
-    }
+  @Override
+  public boolean isErrorEnabled() {
+    return logger.isErrorEnabled();
+  }
 
-    @Override
-    public Object getLogger() {
-        return logger;
+  private String processMsg(String msg) {
+    if (msgPrefix.isEmpty()) {
+      return msg;
     }
+    return msgPrefix + SPACE + msg;
+  }
+
+  @Override
+  public Object getLogger() {
+    return logger;
+  }
 }

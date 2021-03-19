@@ -16,50 +16,50 @@
  */
 package com.alipay.sofa.registry.remoting;
 
-import org.junit.Assert;
-import org.junit.Test;
-
 import com.alipay.sofa.registry.common.model.store.URL;
 import com.alipay.sofa.registry.remoting.exchange.RequestException;
 import com.alipay.sofa.registry.remoting.exchange.message.Request;
+import org.junit.Assert;
+import org.junit.Test;
 
 /**
  * @author xuanbei
  * @since 2019/1/16
  */
 public class RequestExceptionTest {
-    @Test
-    public void doTest() {
-        RequestException exception = new RequestException("error message");
-        Assert.assertEquals("error message", exception.getMessage());
+  @Test
+  public void doTest() {
+    RequestException exception = new RequestException("error message");
+    Assert.assertEquals("error message", exception.getMessage());
 
-        RuntimeException runtimeException = new RuntimeException("error message");
-        exception = new RequestException(runtimeException);
-        Assert.assertEquals("java.lang.RuntimeException: error message", exception.getMessage());
-        Assert.assertEquals(runtimeException, exception.getCause());
-        Assert.assertEquals("java.lang.RuntimeException: error message", exception.getMessage());
+    RuntimeException runtimeException = new RuntimeException("error message");
+    exception = new RequestException(runtimeException);
+    Assert.assertEquals("java.lang.RuntimeException: error message", exception.getMessage());
+    Assert.assertEquals(runtimeException, exception.getCause());
+    Assert.assertEquals("java.lang.RuntimeException: error message", exception.getMessage());
 
-        exception = new RequestException("error message", runtimeException);
-        Assert.assertEquals("error message", exception.getMessage());
-        Assert.assertEquals(runtimeException, exception.getCause());
+    exception = new RequestException("error message", runtimeException);
+    Assert.assertEquals("error message", exception.getMessage());
+    Assert.assertEquals(runtimeException, exception.getCause());
 
-        Request request = new Request() {
-            @Override
-            public Object getRequestBody() {
-                return "request body";
-            }
+    Request request =
+        new Request() {
+          @Override
+          public Object getRequestBody() {
+            return "request body";
+          }
 
-            @Override
-            public URL getRequestUrl() {
-                return null;
-            }
+          @Override
+          public URL getRequestUrl() {
+            return null;
+          }
         };
-        exception = new RequestException("error message", request);
-        Assert.assertEquals("request url: null, body: request body, error message",
-            exception.getMessage());
+    exception = new RequestException("error message", request);
+    Assert.assertEquals(
+        "request url: null, body: request body, error message", exception.getMessage());
 
-        exception = new RequestException("error message", request, runtimeException);
-        Assert.assertEquals("request url: null, body: request body, error message",
-            exception.getMessage());
-    }
+    exception = new RequestException("error message", request, runtimeException);
+    Assert.assertEquals(
+        "request url: null, body: request body, error message", exception.getMessage());
+  }
 }

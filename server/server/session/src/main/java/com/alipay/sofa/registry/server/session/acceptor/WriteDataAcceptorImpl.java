@@ -21,19 +21,17 @@ import com.alipay.sofa.registry.server.session.node.service.DataNodeService;
 import org.springframework.beans.factory.annotation.Autowired;
 
 /**
- *
  * @author kezhu.wukz
  * @author shangyu.wh
  * @version 1.0: WriteDataAcceptor.java, v 0.1 2019-06-06 12:45 shangyu.wh Exp $
  */
 public class WriteDataAcceptorImpl implements WriteDataAcceptor {
 
-    @Autowired
-    private DataNodeService dataNodeService;
+  @Autowired private DataNodeService dataNodeService;
 
-    public void accept(WriteDataRequest request) {
-        ConnectId connectId = request.getConnectId();
-        WriteDataProcessor writeDataProcessor = new WriteDataProcessor(connectId, dataNodeService);
-        writeDataProcessor.process(request);
-    }
+  public void accept(WriteDataRequest request) {
+    ConnectId connectId = request.getConnectId();
+    WriteDataProcessor writeDataProcessor = new WriteDataProcessor(connectId, dataNodeService);
+    writeDataProcessor.process(request);
+  }
 }

@@ -19,14 +19,12 @@ package com.alipay.sofa.registry.server.data.remoting.metaserver.provideData;
 import com.alipay.sofa.registry.common.model.metaserver.ProvideData;
 
 /**
- * 
  * @author kezhu.wukz
- * @version 1.0: ProvideDataProcessor.java, v 0.1 2019-12-25 17:26 kezhu.wukz
- *          Exp $
+ * @version 1.0: ProvideDataProcessor.java, v 0.1 2019-12-25 17:26 kezhu.wukz Exp $
  */
 public interface ProvideDataProcessor {
 
-	void changeDataProcess(ProvideData provideData);
+  void changeDataProcess(ProvideData provideData);
 
-	boolean support(ProvideData provideData);
+  boolean support(ProvideData provideData);
 }

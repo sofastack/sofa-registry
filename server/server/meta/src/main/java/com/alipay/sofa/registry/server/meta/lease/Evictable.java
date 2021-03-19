@@ -18,13 +18,10 @@ package com.alipay.sofa.registry.server.meta.lease;
 
 /**
  * @author chen.zhu
- *         <p>
- *         Mar 09, 2021
+ *     <p>Mar 09, 2021
  */
 public interface Evictable {
 
-	/**
-	 * Evict.
-	 */
-	void evict();
+  /** Evict. */
+  void evict();
 }

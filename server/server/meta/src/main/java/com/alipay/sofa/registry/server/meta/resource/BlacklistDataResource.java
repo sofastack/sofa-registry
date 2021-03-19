@@ -29,15 +29,13 @@ import com.alipay.sofa.registry.server.meta.provide.data.DefaultProvideDataNotif
 import com.alipay.sofa.registry.server.meta.resource.filter.LeaderAwareRestController;
 import com.alipay.sofa.registry.store.api.meta.ProvideDataRepository;
 import com.alipay.sofa.registry.util.JsonUtils;
-import org.springframework.beans.factory.annotation.Autowired;
-
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
+import org.springframework.beans.factory.annotation.Autowired;
 
 /**
- *
  * @author shangyu.wh
  * @version $Id: StopPushDataResource.java, v 0.1 2018-07-25 11:40 shangyu.wh Exp $
  */
@@ -45,68 +43,68 @@ import javax.ws.rs.core.MediaType;
 @LeaderAwareRestController
 public class BlacklistDataResource {
 
-    private static final Logger        DB_LOGGER   = LoggerFactory.getLogger(
-                                                       BlacklistDataResource.class, "[DBService]");
+  private static final Logger DB_LOGGER =
+      LoggerFactory.getLogger(BlacklistDataResource.class, "[DBService]");
 
-    private static final Logger        TASK_LOGGER = LoggerFactory.getLogger(
-                                                       BlacklistDataResource.class, "[Task]");
+  private static final Logger TASK_LOGGER =
+      LoggerFactory.getLogger(BlacklistDataResource.class, "[Task]");
 
-    @Autowired
-    private ProvideDataRepository provideDataRepository;
+  @Autowired private ProvideDataRepository provideDataRepository;
 
-    @Autowired
-    private DefaultProvideDataNotifier provideDataNotifier;
+  @Autowired private DefaultProvideDataNotifier provideDataNotifier;
 
-    @Autowired
-    private NodeConfig nodeConfig;
+  @Autowired private NodeConfig nodeConfig;
 
-    /**
-     * update blacklist
-     * e.g. curl -d '{"FORBIDDEN_PUB":{"IP_FULL":["1.1.1.1","10.15.233.150"]},"FORBIDDEN_SUB_BY_PREFIX":{"IP_FULL":["1.1.1.1"]}}' -H "Content-Type: application/json" -X POST http://localhost:9615/blacklist/update
-     */
-    @POST
-    @Path("update")
-    @Produces(MediaType.APPLICATION_JSON)
-    public Result blacklistPush(String config) {
-        PersistenceData persistenceData = createDataInfo();
-        persistenceData.setData(config);
-        try {
-            boolean ret = provideDataRepository.put(nodeConfig.getLocalDataCenter(), ValueConstants.BLACK_LIST_DATA_ID,
-                    JsonUtils.writeValueAsString(persistenceData));
-            DB_LOGGER.info("Success update blacklist to DB result {}!", ret);
-        } catch (Throwable e) {
-            DB_LOGGER.error("Error update blacklist to DB!", e);
-            throw new RuntimeException("Update blacklist to error!", e);
-        }
-
-        fireDataChangeNotify(persistenceData.getVersion(), ValueConstants.BLACK_LIST_DATA_ID,
-            DataOperator.UPDATE);
-
-        Result result = new Result();
-        result.setSuccess(true);
-        return result;
+  /**
+   * update blacklist e.g. curl -d
+   * '{"FORBIDDEN_PUB":{"IP_FULL":["1.1.1.1","10.15.233.150"]},"FORBIDDEN_SUB_BY_PREFIX":{"IP_FULL":["1.1.1.1"]}}'
+   * -H "Content-Type: application/json" -X POST http://localhost:9615/blacklist/update
+   */
+  @POST
+  @Path("update")
+  @Produces(MediaType.APPLICATION_JSON)
+  public Result blacklistPush(String config) {
+    PersistenceData persistenceData = createDataInfo();
+    persistenceData.setData(config);
+    try {
+      boolean ret =
+          provideDataRepository.put(
+              nodeConfig.getLocalDataCenter(),
+              ValueConstants.BLACK_LIST_DATA_ID,
+              JsonUtils.writeValueAsString(persistenceData));
+      DB_LOGGER.info("Success update blacklist to DB result {}!", ret);
+    } catch (Throwable e) {
+      DB_LOGGER.error("Error update blacklist to DB!", e);
+      throw new RuntimeException("Update blacklist to error!", e);
     }
 
-    private PersistenceData createDataInfo() {
-        DataInfo dataInfo = DataInfo.valueOf(ValueConstants.BLACK_LIST_DATA_ID);
-        PersistenceData persistenceData = new PersistenceData();
-        persistenceData.setDataId(dataInfo.getDataId());
-        persistenceData.setGroup(dataInfo.getGroup());
-        persistenceData.setInstanceId(dataInfo.getInstanceId());
-        persistenceData.setVersion(System.currentTimeMillis());
-        return persistenceData;
+    fireDataChangeNotify(
+        persistenceData.getVersion(), ValueConstants.BLACK_LIST_DATA_ID, DataOperator.UPDATE);
+
+    Result result = new Result();
+    result.setSuccess(true);
+    return result;
+  }
+
+  private PersistenceData createDataInfo() {
+    DataInfo dataInfo = DataInfo.valueOf(ValueConstants.BLACK_LIST_DATA_ID);
+    PersistenceData persistenceData = new PersistenceData();
+    persistenceData.setDataId(dataInfo.getDataId());
+    persistenceData.setGroup(dataInfo.getGroup());
+    persistenceData.setInstanceId(dataInfo.getInstanceId());
+    persistenceData.setVersion(System.currentTimeMillis());
+    return persistenceData;
+  }
+
+  private void fireDataChangeNotify(Long version, String dataInfoId, DataOperator dataOperator) {
+
+    ProvideDataChangeEvent provideDataChangeEvent =
+        new ProvideDataChangeEvent(dataInfoId, version, dataOperator);
+    if (TASK_LOGGER.isInfoEnabled()) {
+      TASK_LOGGER.info(
+          "send PERSISTENCE_DATA_CHANGE_NOTIFY_TASK notifyProvideDataChange: {}",
+          provideDataChangeEvent);
     }
-
-    private void fireDataChangeNotify(Long version, String dataInfoId, DataOperator dataOperator) {
-
-        ProvideDataChangeEvent provideDataChangeEvent = new ProvideDataChangeEvent(dataInfoId,
-            version, dataOperator);
-        if (TASK_LOGGER.isInfoEnabled()) {
-            TASK_LOGGER.info(
-                "send PERSISTENCE_DATA_CHANGE_NOTIFY_TASK notifyProvideDataChange: {}",
-                provideDataChangeEvent);
-        }
-        provideDataNotifier.notifyProvideDataChange(provideDataChangeEvent);
-    }
-
+    provideDataNotifier.notifyProvideDataChange(provideDataChangeEvent);
+  }
 }

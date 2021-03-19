@@ -24,92 +24,89 @@ import com.alipay.sofa.registry.server.meta.lease.Evictable;
 import com.alipay.sofa.registry.util.ConcurrentUtils;
 import com.alipay.sofa.registry.util.WakeUpLoopRunnable;
 import com.google.common.collect.Lists;
-
 import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * @author chen.zhu
- * <p>
- * Mar 09, 2021
+ *     <p>Mar 09, 2021
  */
 public abstract class AbstractEvictableLeaseManager<T extends Node>
-        extends LeaderAwareLeaseManager<T> implements Evictable {
+    extends LeaderAwareLeaseManager<T> implements Evictable {
 
-    private final AtomicLong lastEvictTime = new AtomicLong();
+  private final AtomicLong lastEvictTime = new AtomicLong();
 
-    private final EvictTask evictTask = new EvictTask();
+  private final EvictTask evictTask = new EvictTask();
+
+  @Override
+  public void doInitialize() throws InitializeException {
+    super.doInitialize();
+    ConcurrentUtils.createDaemonThread(getClass().getSimpleName(), evictTask).start();
+  }
+
+  @Override
+  public void doDispose() throws DisposeException {
+    evictTask.close();
+    super.doDispose();
+  }
+
+  @Override
+  public void evict() {
+    if (lastEvictTime.get() + getEvictBetweenMilli() > System.currentTimeMillis()) {
+      logger.warn("[evict][too quick] last evict time: {}", lastEvictTime.get());
+      return;
+    }
+    lastEvictTime.set(System.currentTimeMillis());
+    List<Lease<T>> expirations = getExpiredLeases();
+    if (expirations.isEmpty()) {
+      return;
+    }
+
+    for (Lease<T> lease : expirations) {
+      Lease<T> doubleCheck = getLease(lease.getRenewal());
+      // at this point of view, entry might be deleted through cancel method
+      if (doubleCheck == null) {
+        continue;
+      }
+      if (doubleCheck.isExpired()) {
+        logger.warn("[evict] node evict [{}], cancel it and refresh epoch", doubleCheck);
+        try {
+          cancel(lease);
+        } catch (Throwable th) {
+          logger.error("[evict] node cancel failure", th);
+        }
+      }
+    }
+  }
+
+  protected List<Lease<T>> getExpiredLeases() {
+    List<Lease<T>> expires = Lists.newLinkedList();
+    for (Lease<T> lease : getLeaseMeta().getClusterMembers()) {
+      if (lease.isExpired()) {
+        expires.add(lease);
+      }
+    }
+    return expires;
+  }
+
+  protected abstract long getEvictBetweenMilli();
+
+  protected abstract long getIntervalMilli();
+
+  private final class EvictTask extends WakeUpLoopRunnable {
 
     @Override
-    public void doInitialize() throws InitializeException {
-        super.doInitialize();
-        ConcurrentUtils.createDaemonThread(getClass().getSimpleName(), evictTask).start();
+    public int getWaitingMillis() {
+      return (int) getIntervalMilli();
     }
 
     @Override
-    public void doDispose() throws DisposeException {
-        evictTask.close();
-        super.doDispose();
+    public void runUnthrowable() {
+      if (metaLeaderService.amIStableAsLeader()) {
+        logger.debug("[evict] begin");
+        evict();
+        logger.debug("[evict] end");
+      }
     }
-
-    @Override
-    public void evict() {
-        if (lastEvictTime.get() + getEvictBetweenMilli() > System.currentTimeMillis()) {
-            logger.warn("[evict][too quick] last evict time: {}", lastEvictTime.get());
-            return;
-        }
-        lastEvictTime.set(System.currentTimeMillis());
-        List<Lease<T>> expirations = getExpiredLeases();
-        if (expirations.isEmpty()) {
-            return;
-        }
-
-        for (Lease<T> lease : expirations) {
-            Lease<T> doubleCheck = getLease(lease.getRenewal());
-            // at this point of view, entry might be deleted through cancel method
-            if (doubleCheck == null) {
-                continue;
-            }
-            if (doubleCheck.isExpired()) {
-                logger
-                        .warn("[evict] node evict [{}], cancel it and refresh epoch", doubleCheck);
-                try {
-                    cancel(lease);
-                } catch (Throwable th) {
-                    logger.error("[evict] node cancel failure", th);
-                }
-            }
-        }
-    }
-
-    protected List<Lease<T>> getExpiredLeases() {
-        List<Lease<T>> expires = Lists.newLinkedList();
-        for (Lease<T> lease : getLeaseMeta().getClusterMembers()) {
-            if (lease.isExpired()) {
-                expires.add(lease);
-            }
-        }
-        return expires;
-    }
-
-    protected abstract long getEvictBetweenMilli();
-
-    protected abstract long getIntervalMilli();
-
-    private final class EvictTask extends WakeUpLoopRunnable {
-
-        @Override
-        public int getWaitingMillis() {
-            return (int) getIntervalMilli();
-        }
-
-        @Override
-        public void runUnthrowable() {
-            if (metaLeaderService.amIStableAsLeader()) {
-                logger.debug("[evict] begin");
-                evict();
-                logger.debug("[evict] end");
-            }
-        }
-    }
+  }
 }

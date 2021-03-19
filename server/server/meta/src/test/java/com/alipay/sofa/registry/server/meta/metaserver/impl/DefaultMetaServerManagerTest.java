@@ -16,6 +16,8 @@
  */
 package com.alipay.sofa.registry.server.meta.metaserver.impl;
 
+import static org.mockito.Mockito.*;
+
 import com.alipay.sofa.registry.common.model.Node;
 import com.alipay.sofa.registry.common.model.metaserver.cluster.VersionedList;
 import com.alipay.sofa.registry.server.meta.AbstractMetaServerTest;
@@ -31,56 +33,54 @@ import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
-import static org.mockito.Mockito.*;
-
 public class DefaultMetaServerManagerTest extends AbstractMetaServerTest {
 
-    @Mock
-    private DefaultCrossDcMetaServerManager crossDcMetaServerManager;
+  @Mock private DefaultCrossDcMetaServerManager crossDcMetaServerManager;
 
-    @Mock
-    private CurrentDcMetaServer      currentDcMetaServer;
+  @Mock private CurrentDcMetaServer currentDcMetaServer;
 
-    @Mock
-    private SessionServerManager     sessionServerManager;
+  @Mock private SessionServerManager sessionServerManager;
 
-    @Mock
-    private DataServerManager        dataServerManager;
+  @Mock private DataServerManager dataServerManager;
 
-    @Mock
-    private NodeConfig               nodeConfig;
+  @Mock private NodeConfig nodeConfig;
 
-    private DefaultMetaServerManager manager;
+  private DefaultMetaServerManager manager;
 
-    @Before
-    public void beforeDefaultMetaServerManagerTest() {
-        MockitoAnnotations.initMocks(this);
-        manager = new DefaultMetaServerManager();
-        manager.setCrossDcMetaServerManager(crossDcMetaServerManager)
-            .setCurrentDcMetaServer(currentDcMetaServer).setSessionManager(sessionServerManager)
-            .setDataServerManager(dataServerManager).setNodeConfig(nodeConfig);
-    }
+  @Before
+  public void beforeDefaultMetaServerManagerTest() {
+    MockitoAnnotations.initMocks(this);
+    manager = new DefaultMetaServerManager();
+    manager
+        .setCrossDcMetaServerManager(crossDcMetaServerManager)
+        .setCurrentDcMetaServer(currentDcMetaServer)
+        .setSessionManager(sessionServerManager)
+        .setDataServerManager(dataServerManager)
+        .setNodeConfig(nodeConfig);
+  }
 
-    @Test
-    public void testGetSummary() {
-        when(dataServerManager.getDataServerMetaInfo()).thenReturn(new VersionedList<>(DatumVersionUtil.nextId(), Lists.newArrayList()));
-        manager.getSummary(Node.NodeType.DATA);
-        verify(dataServerManager, times(1)).getDataServerMetaInfo();
-        verify(sessionServerManager, never()).getSessionServerMetaInfo();
-    }
+  @Test
+  public void testGetSummary() {
+    when(dataServerManager.getDataServerMetaInfo())
+        .thenReturn(new VersionedList<>(DatumVersionUtil.nextId(), Lists.newArrayList()));
+    manager.getSummary(Node.NodeType.DATA);
+    verify(dataServerManager, times(1)).getDataServerMetaInfo();
+    verify(sessionServerManager, never()).getSessionServerMetaInfo();
+  }
 
-    @Test
-    public void testGetSummary2() {
-        when(sessionServerManager.getSessionServerMetaInfo()).thenReturn(new VersionedList<>(DatumVersionUtil.nextId(), Lists.newArrayList()));
-        manager.getSummary(Node.NodeType.SESSION);
-        //        verify(sessionManager, times(1)).getClusterMembers();
-        verify(dataServerManager, never()).getDataServerMetaInfo();
-    }
+  @Test
+  public void testGetSummary2() {
+    when(sessionServerManager.getSessionServerMetaInfo())
+        .thenReturn(new VersionedList<>(DatumVersionUtil.nextId(), Lists.newArrayList()));
+    manager.getSummary(Node.NodeType.SESSION);
+    //        verify(sessionManager, times(1)).getClusterMembers();
+    verify(dataServerManager, never()).getDataServerMetaInfo();
+  }
 
-    @Test
-    public void testGetSummary3() {
-        manager.getSummary(Node.NodeType.META);
-        verify(currentDcMetaServer, times(1)).getClusterMembers();
-        verify(sessionServerManager, never()).getSessionServerMetaInfo();
-    }
+  @Test
+  public void testGetSummary3() {
+    manager.getSummary(Node.NodeType.META);
+    verify(currentDcMetaServer, times(1)).getClusterMembers();
+    verify(sessionServerManager, never()).getSessionServerMetaInfo();
+  }
 }

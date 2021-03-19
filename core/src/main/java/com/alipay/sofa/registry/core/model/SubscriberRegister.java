@@ -21,35 +21,35 @@ package com.alipay.sofa.registry.core.model;
  * @version $Id: SubscriberRegister.java, v 0.1 2017-11-28 15:40 zhuoyu.sjw Exp $$
  */
 public class SubscriberRegister extends BaseRegister {
-    private static final long serialVersionUID = 5884257055097046886L;
+  private static final long serialVersionUID = 5884257055097046886L;
 
-    private String            scope;
+  private String scope;
 
-    /**
-     * Getter method for property <tt>scope</tt>.
-     *
-     * @return property value of scope
-     */
-    public String getScope() {
-        return scope;
-    }
+  /**
+   * Getter method for property <tt>scope</tt>.
+   *
+   * @return property value of scope
+   */
+  public String getScope() {
+    return scope;
+  }
 
-    /**
-     * Setter method for property <tt>scope</tt>.
-     *
-     * @param scope value to be assigned to property scope
-     */
-    public void setScope(String scope) {
-        this.scope = scope;
-    }
+  /**
+   * Setter method for property <tt>scope</tt>.
+   *
+   * @param scope value to be assigned to property scope
+   */
+  public void setScope(String scope) {
+    this.scope = scope;
+  }
 
-    /**
-     * To string string.
-     *
-     * @return the string
-     */
-    @Override
-    public String toString() {
-        return "SubscriberRegister{" + "scope='" + scope + '\'' + '}' + super.toString();
-    }
+  /**
+   * To string string.
+   *
+   * @return the string
+   */
+  @Override
+  public String toString() {
+    return "SubscriberRegister{" + "scope='" + scope + '\'' + '}' + super.toString();
+  }
 }

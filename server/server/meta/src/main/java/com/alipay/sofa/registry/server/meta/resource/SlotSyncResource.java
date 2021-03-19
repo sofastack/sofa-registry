@@ -23,17 +23,15 @@ import com.alipay.sofa.registry.server.meta.resource.filter.LeaderAwareRestContr
 import com.alipay.sofa.registry.store.api.DBResponse;
 import com.alipay.sofa.registry.store.api.meta.ProvideDataRepository;
 import com.alipay.sofa.registry.util.JsonUtils;
-import org.springframework.beans.factory.annotation.Autowired;
-
+import java.util.HashMap;
+import java.util.Map;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
-import java.util.HashMap;
-import java.util.Map;
+import org.springframework.beans.factory.annotation.Autowired;
 
 /**
- *
  * @author shangyu.wh
  * @version $Id: RenewSwitchResource.java, v 0.1 2018-07-25 11:40 shangyu.wh Exp $
  */
@@ -41,36 +39,33 @@ import java.util.Map;
 @LeaderAwareRestController
 public class SlotSyncResource {
 
-    @Autowired
-    private ProvideDataRepository provideDataRepository;
+  @Autowired private ProvideDataRepository provideDataRepository;
 
-    @Autowired
-    private NodeConfig nodeConfig;
+  @Autowired private NodeConfig nodeConfig;
 
-    /**
-     * get
-     */
-    @GET
-    @Path("get")
-    @Produces(MediaType.APPLICATION_JSON)
-    public Map<String, Object> getSlotSync() throws Exception {
-        Map<String, Object> resultMap = new HashMap<>(2);
-        DBResponse syncSessionIntervalSec = provideDataRepository
-            .get(nodeConfig.getLocalDataCenter(), ValueConstants.DATA_DATUM_SYNC_SESSION_INTERVAL_SEC);
-        DBResponse dataDatumExpire = provideDataRepository
-            .get(nodeConfig.getLocalDataCenter(), ValueConstants.DATA_SESSION_LEASE_SEC);
+  /** get */
+  @GET
+  @Path("get")
+  @Produces(MediaType.APPLICATION_JSON)
+  public Map<String, Object> getSlotSync() throws Exception {
+    Map<String, Object> resultMap = new HashMap<>(2);
+    DBResponse syncSessionIntervalSec =
+        provideDataRepository.get(
+            nodeConfig.getLocalDataCenter(), ValueConstants.DATA_DATUM_SYNC_SESSION_INTERVAL_SEC);
+    DBResponse dataDatumExpire =
+        provideDataRepository.get(
+            nodeConfig.getLocalDataCenter(), ValueConstants.DATA_SESSION_LEASE_SEC);
 
-        resultMap.put("syncSessionIntervalSec", getEntityData(syncSessionIntervalSec));
-        resultMap.put("dataDatumExpire", getEntityData(dataDatumExpire));
-        return resultMap;
+    resultMap.put("syncSessionIntervalSec", getEntityData(syncSessionIntervalSec));
+    resultMap.put("dataDatumExpire", getEntityData(dataDatumExpire));
+    return resultMap;
+  }
+
+  private static String getEntityData(DBResponse resp) {
+    if (resp != null && resp.getEntity() != null) {
+      PersistenceData data = JsonUtils.read((String) resp.getEntity(), PersistenceData.class);
+      return data.getData();
     }
-
-    private static String getEntityData(DBResponse resp) {
-        if (resp != null && resp.getEntity() != null) {
-            PersistenceData data = JsonUtils.read((String) resp.getEntity(), PersistenceData.class);
-            return data.getData();
-        }
-        return "null";
-    }
-
+    return "null";
+  }
 }

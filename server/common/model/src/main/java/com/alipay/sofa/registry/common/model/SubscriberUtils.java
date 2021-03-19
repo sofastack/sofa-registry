@@ -22,66 +22,67 @@ import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-
 import java.net.InetSocketAddress;
 import java.util.*;
 
 public final class SubscriberUtils {
-    private static final Logger LOGGER = LoggerFactory.getLogger(SubscriberUtils.class);
+  private static final Logger LOGGER = LoggerFactory.getLogger(SubscriberUtils.class);
 
-    private SubscriberUtils() {
+  private SubscriberUtils() {}
+
+  public static Map<InetSocketAddress, Map<String, Subscriber>> groupBySourceAddress(
+      Collection<Subscriber> subscribers) {
+    if (subscribers.isEmpty()) {
+      return Collections.emptyMap();
     }
-
-    public static Map<InetSocketAddress, Map<String, Subscriber>> groupBySourceAddress(Collection<Subscriber> subscribers) {
-        if (subscribers.isEmpty()) {
-            return Collections.emptyMap();
-        }
-        Map<InetSocketAddress, Map<String, Subscriber>> ret = Maps.newHashMap();
-        subscribers.forEach(s -> {
-            InetSocketAddress address = new InetSocketAddress(s.getSourceAddress()
-                    .getIpAddress(), s.getSourceAddress().getPort());
-            Map<String, Subscriber> subs = ret.computeIfAbsent(address, k -> Maps.newHashMap());
-            subs.put(s.getRegisterId(), s);
+    Map<InetSocketAddress, Map<String, Subscriber>> ret = Maps.newHashMap();
+    subscribers.forEach(
+        s -> {
+          InetSocketAddress address =
+              new InetSocketAddress(
+                  s.getSourceAddress().getIpAddress(), s.getSourceAddress().getPort());
+          Map<String, Subscriber> subs = ret.computeIfAbsent(address, k -> Maps.newHashMap());
+          subs.put(s.getRegisterId(), s);
         });
-        return ret;
-    }
+    return ret;
+  }
 
-    public static Map<ScopeEnum, List<Subscriber>> groupByScope(Collection<Subscriber> subscribers) {
-        if (subscribers.isEmpty()) {
-            return Collections.emptyMap();
-        }
-        Map<ScopeEnum, List<Subscriber>> ret = Maps.newHashMap();
-        for (Subscriber subscriber : subscribers) {
-            final ScopeEnum scopeEnum = subscriber.getScope();
-            if (scopeEnum == null) {
-                LOGGER.warn("Nil ScopeEnum, {}", subscriber);
-                continue;
-            }
-            List<Subscriber> subList = ret.computeIfAbsent(scopeEnum, k -> Lists.newArrayList());
-            subList.add(subscriber);
-        }
-        return ret;
+  public static Map<ScopeEnum, List<Subscriber>> groupByScope(Collection<Subscriber> subscribers) {
+    if (subscribers.isEmpty()) {
+      return Collections.emptyMap();
     }
+    Map<ScopeEnum, List<Subscriber>> ret = Maps.newHashMap();
+    for (Subscriber subscriber : subscribers) {
+      final ScopeEnum scopeEnum = subscriber.getScope();
+      if (scopeEnum == null) {
+        LOGGER.warn("Nil ScopeEnum, {}", subscriber);
+        continue;
+      }
+      List<Subscriber> subList = ret.computeIfAbsent(scopeEnum, k -> Lists.newArrayList());
+      subList.add(subscriber);
+    }
+    return ret;
+  }
 
-    public static ScopeEnum getAndAssertHasSameScope(Collection<Subscriber> subscribers) {
-        ScopeEnum scope = subscribers.stream().findFirst().get().getScope();
-        for (Subscriber subscriber : subscribers) {
-            if (scope != subscriber.getScope()) {
-                throw new RuntimeException(String.format("conflict scope, first={}, one is {}",
-                    scope, subscriber));
-            }
-        }
-        return scope;
+  public static ScopeEnum getAndAssertHasSameScope(Collection<Subscriber> subscribers) {
+    ScopeEnum scope = subscribers.stream().findFirst().get().getScope();
+    for (Subscriber subscriber : subscribers) {
+      if (scope != subscriber.getScope()) {
+        throw new RuntimeException(
+            String.format("conflict scope, first={}, one is {}", scope, subscriber));
+      }
     }
+    return scope;
+  }
 
-    public static long getMaxPushedVersion(String dataCenter, Collection<Subscriber> subscribers) {
-        long max = 0;
-        for (Subscriber sub : subscribers) {
-            long v = sub.getPushVersion(dataCenter);
-            if (max < v) {
-                max = v;
-            }
-        }
-        return max;
+  public static long getMaxPushedVersion(String dataCenter, Collection<Subscriber> subscribers) {
+    long max = 0;
+    for (Subscriber sub : subscribers) {
+      long v = sub.getPushVersion(dataCenter);
+      if (max < v) {
+        max = v;
+      }
     }
+    return max;
+  }
 }

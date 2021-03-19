@@ -18,25 +18,24 @@ package com.alipay.sofa.registry.jraft.revision;
 
 import com.alipay.sofa.registry.common.model.store.AppRevision;
 import com.alipay.sofa.registry.store.api.annotation.ReadOnLeader;
-
 import java.util.List;
 
 public interface AppRevisionService {
 
-    @ReadOnLeader
-    AppRevision get(String revision);
+  @ReadOnLeader
+  AppRevision get(String revision);
 
-    @ReadOnLeader
-    boolean existed(String revision);
+  @ReadOnLeader
+  boolean existed(String revision);
 
-    void add(AppRevision appRevision);
+  void add(AppRevision appRevision);
 
-    @ReadOnLeader
-    String getKeysDigest();
+  @ReadOnLeader
+  String getKeysDigest();
 
-    @ReadOnLeader
-    List<String> getKeys();
+  @ReadOnLeader
+  List<String> getKeys();
 
-    @ReadOnLeader
-    List<AppRevision> getMulti(List<String> keys);
+  @ReadOnLeader
+  List<AppRevision> getMulti(List<String> keys);
 }

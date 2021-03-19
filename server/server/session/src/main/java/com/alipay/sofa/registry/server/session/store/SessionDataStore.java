@@ -22,7 +22,6 @@ import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.util.ParaCheckUtil;
 import com.google.common.collect.Maps;
-
 import java.util.Map;
 
 /**
@@ -31,49 +30,51 @@ import java.util.Map;
  */
 public class SessionDataStore extends AbstractDataManager<Publisher> implements DataStore {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(SessionDataStore.class);
+  private static final Logger LOGGER = LoggerFactory.getLogger(SessionDataStore.class);
 
-    public SessionDataStore() {
-        super(LOGGER);
-    }
+  public SessionDataStore() {
+    super(LOGGER);
+  }
 
-    @Override
-    public boolean add(Publisher publisher) {
-        ParaCheckUtil.checkNotNull(publisher.getVersion(), "publisher.version");
-        ParaCheckUtil.checkNotNull(publisher.getRegisterTimestamp(), "publisher.registerTimestamp");
+  @Override
+  public boolean add(Publisher publisher) {
+    ParaCheckUtil.checkNotNull(publisher.getVersion(), "publisher.version");
+    ParaCheckUtil.checkNotNull(publisher.getRegisterTimestamp(), "publisher.registerTimestamp");
 
-        PublisherUtils.internPublisher(publisher);
-        Map<String, Publisher> publishers = stores.computeIfAbsent(publisher.getDataInfoId(), k -> Maps
-                .newConcurrentMap());
+    PublisherUtils.internPublisher(publisher);
+    Map<String, Publisher> publishers =
+        stores.computeIfAbsent(publisher.getDataInfoId(), k -> Maps.newConcurrentMap());
 
-        boolean toAdd = true;
-        Publisher existingPublisher = null;
-        write.lock();
-        try {
-            existingPublisher = publishers.get(publisher.getRegisterId());
-            if (existingPublisher != null) {
-                if (!existingPublisher.registerVersion().orderThan(publisher.registerVersion())) {
-                    toAdd = false;
-                }
-            }
-            if (toAdd) {
-                publishers.put(publisher.getRegisterId(), publisher);
-            }
-        } finally {
-            write.unlock();
+    boolean toAdd = true;
+    Publisher existingPublisher = null;
+    write.lock();
+    try {
+      existingPublisher = publishers.get(publisher.getRegisterId());
+      if (existingPublisher != null) {
+        if (!existingPublisher.registerVersion().orderThan(publisher.registerVersion())) {
+          toAdd = false;
         }
-        // log without lock
-        if (existingPublisher != null && !toAdd) {
-            LOGGER.warn("conflict publisher {}, {}, exist={}, input={}",
-                    publisher.getDataInfoId(), publisher.getRegisterId(),
-                    existingPublisher.registerVersion(), publisher.registerVersion());
-        }
-        return toAdd;
-
+      }
+      if (toAdd) {
+        publishers.put(publisher.getRegisterId(), publisher);
+      }
+    } finally {
+      write.unlock();
     }
-
-    @Override
-    public Map<String, Map<String, Publisher>> getDataInfoIdPublishers(int slotId) {
-        throw new UnsupportedOperationException();
+    // log without lock
+    if (existingPublisher != null && !toAdd) {
+      LOGGER.warn(
+          "conflict publisher {}, {}, exist={}, input={}",
+          publisher.getDataInfoId(),
+          publisher.getRegisterId(),
+          existingPublisher.registerVersion(),
+          publisher.registerVersion());
     }
+    return toAdd;
+  }
+
+  @Override
+  public Map<String, Map<String, Publisher>> getDataInfoIdPublishers(int slotId) {
+    throw new UnsupportedOperationException();
+  }
 }

@@ -20,52 +20,50 @@ import java.io.Serializable;
 
 /**
  * The type DataBox.
+ *
  * @author zhuoyu.sjw
  * @version $Id : DataBox.java, v 0.1 2017-11-28 17:47 zhuoyu.sjw Exp $$
  */
 public class DataBox implements Serializable {
 
-    /** UID */
-    private static final long serialVersionUID = 2817539491173993030L;
+  /** UID */
+  private static final long serialVersionUID = 2817539491173993030L;
 
-    /** Actual data */
-    private String            data;
+  /** Actual data */
+  private String data;
 
-    /**
-     * Instantiates a new DataBox.
-     */
-    public DataBox() {
-    }
+  /** Instantiates a new DataBox. */
+  public DataBox() {}
 
-    /**
-     * Instantiates a new Data box.
-     *
-     * @param data the data
-     */
-    public DataBox(String data) {
-        this.data = data;
-    }
+  /**
+   * Instantiates a new Data box.
+   *
+   * @param data the data
+   */
+  public DataBox(String data) {
+    this.data = data;
+  }
 
-    /**
-     * Getter method for property <tt>data</tt>.
-     *
-     * @return property value of data
-     */
-    public String getData() {
-        return data;
-    }
+  /**
+   * Getter method for property <tt>data</tt>.
+   *
+   * @return property value of data
+   */
+  public String getData() {
+    return data;
+  }
 
-    /**
-     * Setter method for property <tt>data</tt>.
-     *
-     * @param data value to be assigned to property data
-     */
-    public void setData(String data) {
-        this.data = data;
-    }
+  /**
+   * Setter method for property <tt>data</tt>.
+   *
+   * @param data value to be assigned to property data
+   */
+  public void setData(String data) {
+    this.data = data;
+  }
 
-    @Override
-    public String toString() {
-        return "DataBox{data='" + data + "'}";
-    }
+  @Override
+  public String toString() {
+    return "DataBox{data='" + data + "'}";
+  }
 }

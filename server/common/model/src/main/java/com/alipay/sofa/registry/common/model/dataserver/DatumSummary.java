@@ -19,89 +19,86 @@ package com.alipay.sofa.registry.common.model.dataserver;
 import com.alipay.sofa.registry.common.model.RegisterVersion;
 import com.alipay.sofa.registry.common.model.store.Publisher;
 import com.google.common.collect.Maps;
-
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.Map;
 
 /**
- *
  * @author yuzhi.lyz
  * @version v 0.1 2020-11-05 14:27 yuzhi.lyz Exp $
  */
 public class DatumSummary implements Serializable {
-    private final String                                      dataInfoId;
-    private final Map<String/*registerId*/, RegisterVersion> publisherVersions;
+  private final String dataInfoId;
+  private final Map<String /*registerId*/, RegisterVersion> publisherVersions;
 
-    public DatumSummary(String dataInfoId,
-                        Map<String/*registerId*/, RegisterVersion> publisherVersions) {
-        this.dataInfoId = dataInfoId;
-        this.publisherVersions = Collections.unmodifiableMap(publisherVersions);
+  public DatumSummary(
+      String dataInfoId, Map<String /*registerId*/, RegisterVersion> publisherVersions) {
+    this.dataInfoId = dataInfoId;
+    this.publisherVersions = Collections.unmodifiableMap(publisherVersions);
+  }
+
+  public DatumSummary(String dataInfoId) {
+    this.dataInfoId = dataInfoId;
+    this.publisherVersions = Collections.emptyMap();
+  }
+
+  public static DatumSummary of(String dataInfoId, Map<String, Publisher> publisherMap) {
+    Map<String, RegisterVersion> versionMap = Maps.newHashMapWithExpectedSize(publisherMap.size());
+    for (Map.Entry<String, Publisher> e : publisherMap.entrySet()) {
+      versionMap.put(e.getKey(), e.getValue().registerVersion());
     }
+    return new DatumSummary(dataInfoId, versionMap);
+  }
 
-    public DatumSummary(String dataInfoId) {
-        this.dataInfoId = dataInfoId;
-        this.publisherVersions = Collections.emptyMap();
+  /**
+   * Getter method for property <tt>dataInfoId</tt>.
+   *
+   * @return property value of dataInfoId
+   */
+  public String getDataInfoId() {
+    return dataInfoId;
+  }
+
+  /**
+   * Getter method for property <tt>publisherVersions</tt>.
+   *
+   * @return property value of publisherVersions
+   */
+  public Map<String, RegisterVersion> getPublisherVersions() {
+    return publisherVersions;
+  }
+
+  public Map<String, RegisterVersion> getPublisherVersions(Collection<String> registerIds) {
+    Map<String, RegisterVersion> m = Maps.newHashMapWithExpectedSize(registerIds.size());
+    for (String registerId : registerIds) {
+      RegisterVersion v = publisherVersions.get(registerId);
+      if (v == null) {
+        throw new IllegalArgumentException("not contains registerId:" + registerId);
+      }
+      m.put(registerId, v);
     }
+    return m;
+  }
 
-    public static DatumSummary of(String dataInfoId, Map<String, Publisher> publisherMap) {
-        Map<String, RegisterVersion> versionMap = Maps.newHashMapWithExpectedSize(publisherMap
-            .size());
-        for (Map.Entry<String, Publisher> e : publisherMap.entrySet()) {
-            versionMap.put(e.getKey(), e.getValue().registerVersion());
-        }
-        return new DatumSummary(dataInfoId, versionMap);
+  public boolean isEmpty() {
+    return publisherVersions.isEmpty();
+  }
+
+  public int size() {
+    return publisherVersions.size();
+  }
+
+  public static int countPublisherSize(Collection<DatumSummary> summaries) {
+    int count = 0;
+    for (DatumSummary summary : summaries) {
+      count += summary.size();
     }
+    return count;
+  }
 
-    /**
-     * Getter method for property <tt>dataInfoId</tt>.
-     * @return property value of dataInfoId
-     */
-    public String getDataInfoId() {
-        return dataInfoId;
-    }
-
-    /**
-     * Getter method for property <tt>publisherVersions</tt>.
-     * @return property value of publisherVersions
-     */
-    public Map<String, RegisterVersion> getPublisherVersions() {
-        return publisherVersions;
-    }
-
-    public Map<String, RegisterVersion> getPublisherVersions(Collection<String> registerIds) {
-        Map<String, RegisterVersion> m = Maps.newHashMapWithExpectedSize(registerIds.size());
-        for (String registerId : registerIds) {
-            RegisterVersion v = publisherVersions.get(registerId);
-            if (v == null) {
-                throw new IllegalArgumentException("not contains registerId:" + registerId);
-            }
-            m.put(registerId, v);
-        }
-        return m;
-    }
-
-    public boolean isEmpty() {
-        return publisherVersions.isEmpty();
-    }
-
-    public int size() {
-        return publisherVersions.size();
-    }
-
-    public static int countPublisherSize(Collection<DatumSummary> summaries) {
-        int count = 0;
-        for (DatumSummary summary : summaries) {
-            count += summary.size();
-        }
-        return count;
-    }
-
-    @Override
-    public String toString() {
-        return String.format("Summary={%s=%d}", dataInfoId, size());
-    }
-
+  @Override
+  public String toString() {
+    return String.format("Summary={%s=%d}", dataInfoId, size());
+  }
 }

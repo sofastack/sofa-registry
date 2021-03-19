@@ -23,9 +23,8 @@ import com.alipay.sofa.registry.remoting.Channel;
 import com.alipay.sofa.registry.server.session.scheduler.ExecutorManager;
 import com.alipay.sofa.registry.server.session.strategy.PublisherHandlerStrategy;
 import com.alipay.sofa.registry.server.shared.remoting.AbstractServerHandler;
-import org.springframework.beans.factory.annotation.Autowired;
-
 import java.util.concurrent.Executor;
+import org.springframework.beans.factory.annotation.Autowired;
 
 /**
  * TODO
@@ -35,36 +34,34 @@ import java.util.concurrent.Executor;
  */
 public class PublisherHandler extends AbstractServerHandler<PublisherRegister> {
 
-    @Autowired
-    private ExecutorManager          executorManager;
+  @Autowired private ExecutorManager executorManager;
 
-    @Autowired
-    private PublisherHandlerStrategy publisherHandlerStrategy;
+  @Autowired private PublisherHandlerStrategy publisherHandlerStrategy;
 
-    @Override
-    protected Node.NodeType getConnectNodeType() {
-        return Node.NodeType.CLIENT;
-    }
+  @Override
+  protected Node.NodeType getConnectNodeType() {
+    return Node.NodeType.CLIENT;
+  }
 
-    @Override
-    public Object doHandle(Channel channel, PublisherRegister publisherRegister) {
-        RegisterResponse result = new RegisterResponse();
-        publisherHandlerStrategy.handlePublisherRegister(channel, publisherRegister, result);
-        return result;
-    }
+  @Override
+  public Object doHandle(Channel channel, PublisherRegister publisherRegister) {
+    RegisterResponse result = new RegisterResponse();
+    publisherHandlerStrategy.handlePublisherRegister(channel, publisherRegister, result);
+    return result;
+  }
 
-    @Override
-    protected void logRequest(Channel channel, PublisherRegister request) {
-        // not log
-    }
+  @Override
+  protected void logRequest(Channel channel, PublisherRegister request) {
+    // not log
+  }
 
-    @Override
-    public Class interest() {
-        return PublisherRegister.class;
-    }
+  @Override
+  public Class interest() {
+    return PublisherRegister.class;
+  }
 
-    @Override
-    public Executor getExecutor() {
-        return executorManager.getAccessDataExecutor();
-    }
+  @Override
+  public Executor getExecutor() {
+    return executorManager.getAccessDataExecutor();
+  }
 }

@@ -23,80 +23,70 @@ import com.alipay.sofa.registry.core.model.ReceivedData;
 
 /**
  * @author bystander
- * @version $Id: ReceivedDataConvertor.java, v 0.1 2018年03月21日 2:07 PM bystander
- *          Exp $
+ * @version $Id: ReceivedDataConvertor.java, v 0.1 2018年03月21日 2:07 PM bystander Exp $
  */
 public class ReceivedDataConvertor {
 
-	public static ReceivedData convert2Java(ReceivedDataPb receivedDataPb) {
+  public static ReceivedData convert2Java(ReceivedDataPb receivedDataPb) {
 
-		if (receivedDataPb == null) {
-			return null;
-		}
+    if (receivedDataPb == null) {
+      return null;
+    }
 
-		ReceivedData receivedData = new ReceivedData();
+    ReceivedData receivedData = new ReceivedData();
 
-		receivedData.setData(DataBoxConvertor.convert2JavaMaps(receivedDataPb
-				.getDataMap()));
-		receivedData.setDataId(receivedDataPb.getDataId());
-		receivedData.setGroup(receivedDataPb.getGroup());
-		receivedData.setInstanceId(receivedDataPb.getInstanceId());
-		receivedData.setLocalZone(receivedDataPb.getLocalZone());
-		receivedData.setScope(receivedDataPb.getScope());
-		receivedData.setSegment(receivedDataPb.getSegment());
-		receivedData.setSubscriberRegistIds(ListStringConvertor
-				.convert2Java(receivedDataPb.getSubscriberRegistIdsList()));
-		receivedData.setVersion(receivedDataPb.getVersion());
+    receivedData.setData(DataBoxConvertor.convert2JavaMaps(receivedDataPb.getDataMap()));
+    receivedData.setDataId(receivedDataPb.getDataId());
+    receivedData.setGroup(receivedDataPb.getGroup());
+    receivedData.setInstanceId(receivedDataPb.getInstanceId());
+    receivedData.setLocalZone(receivedDataPb.getLocalZone());
+    receivedData.setScope(receivedDataPb.getScope());
+    receivedData.setSegment(receivedDataPb.getSegment());
+    receivedData.setSubscriberRegistIds(
+        ListStringConvertor.convert2Java(receivedDataPb.getSubscriberRegistIdsList()));
+    receivedData.setVersion(receivedDataPb.getVersion());
 
-		return receivedData;
-	}
+    return receivedData;
+  }
 
-	public static ReceivedDataPb convert2Pb(ReceivedData receivedDataJava) {
+  public static ReceivedDataPb convert2Pb(ReceivedData receivedDataJava) {
 
-		if (receivedDataJava == null) {
-			return null;
-		}
+    if (receivedDataJava == null) {
+      return null;
+    }
 
-		ReceivedDataPb.Builder builder = ReceivedDataPb.newBuilder();
+    ReceivedDataPb.Builder builder = ReceivedDataPb.newBuilder();
 
-		builder.setDataId(receivedDataJava.getDataId())
-				.setGroup(receivedDataJava.getGroup())
-				.setInstanceId(receivedDataJava.getInstanceId())
-				.setLocalZone(receivedDataJava.getLocalZone())
-				.setScope(receivedDataJava.getScope())
-				.setSegment(receivedDataJava.getSegment())
-				.setVersion(receivedDataJava.getVersion())
-				.addAllSubscriberRegistIds(
-						receivedDataJava.getSubscriberRegistIds())
-				.putAllData(
-						DataBoxConvertor.convert2PbMaps(receivedDataJava
-								.getData()));
+    builder
+        .setDataId(receivedDataJava.getDataId())
+        .setGroup(receivedDataJava.getGroup())
+        .setInstanceId(receivedDataJava.getInstanceId())
+        .setLocalZone(receivedDataJava.getLocalZone())
+        .setScope(receivedDataJava.getScope())
+        .setSegment(receivedDataJava.getSegment())
+        .setVersion(receivedDataJava.getVersion())
+        .addAllSubscriberRegistIds(receivedDataJava.getSubscriberRegistIds())
+        .putAllData(DataBoxConvertor.convert2PbMaps(receivedDataJava.getData()));
 
-		return builder.build();
+    return builder.build();
+  }
 
-	}
+  public static ReceivedConfigDataPb convert2Pb(ReceivedConfigData receivedConfigData) {
 
-	public static ReceivedConfigDataPb convert2Pb(
-			ReceivedConfigData receivedConfigData) {
+    if (receivedConfigData == null) {
+      return null;
+    }
 
-		if (receivedConfigData == null) {
-			return null;
-		}
+    ReceivedConfigDataPb.Builder builder = ReceivedConfigDataPb.newBuilder();
 
-		ReceivedConfigDataPb.Builder builder = ReceivedConfigDataPb
-				.newBuilder();
+    builder
+        .setDataId(receivedConfigData.getDataId())
+        .setGroup(receivedConfigData.getGroup())
+        .setInstanceId(receivedConfigData.getInstanceId())
+        .setVersion(receivedConfigData.getVersion())
+        .addAllConfiguratorRegistIds(receivedConfigData.getConfiguratorRegistIds())
+        .setDataBox(DataBoxConvertor.convert2Pb(receivedConfigData.getDataBox()));
 
-		builder.setDataId(receivedConfigData.getDataId())
-				.setGroup(receivedConfigData.getGroup())
-				.setInstanceId(receivedConfigData.getInstanceId())
-				.setVersion(receivedConfigData.getVersion())
-				.addAllConfiguratorRegistIds(
-						receivedConfigData.getConfiguratorRegistIds())
-				.setDataBox(
-						DataBoxConvertor.convert2Pb(receivedConfigData
-								.getDataBox()));
-
-		return builder.build();
-
-	}
+    return builder.build();
+  }
 }

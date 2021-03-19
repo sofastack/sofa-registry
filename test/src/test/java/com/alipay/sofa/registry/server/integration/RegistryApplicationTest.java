@@ -18,6 +18,4 @@ package com.alipay.sofa.registry.server.integration;
 
 import static org.junit.Assert.*;
 
-public class RegistryApplicationTest {
-
-}
+public class RegistryApplicationTest {}

@@ -19,94 +19,91 @@ package com.alipay.sofa.registry.common.model.slot;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.util.SystemUtils;
-
 import java.io.Serializable;
 
 /**
- * 
  * @author yuzhi.lyz
  * @version v 0.1 2020-12-13 20:00 yuzhi.lyz Exp $
  */
 public final class SlotConfig {
 
-	private static final Logger LOGGER = LoggerFactory
-			.getLogger(SlotConfig.class);
+  private static final Logger LOGGER = LoggerFactory.getLogger(SlotConfig.class);
 
-	private static final String KEY_DATA_SLOT_NUM = "data.slot.num";
-	private static final String KEY_DATA_SLOT_FUNC = "data.slot.func";
-	private static final String KEY_DATA_SLOT_REPLICAS = "data.slot.replicas";
-	public static final int SLOT_NUM;
-	public static final int SLOT_REPLICAS;
-	public static final String FUNC;
+  private static final String KEY_DATA_SLOT_NUM = "data.slot.num";
+  private static final String KEY_DATA_SLOT_FUNC = "data.slot.func";
+  private static final String KEY_DATA_SLOT_REPLICAS = "data.slot.replicas";
+  public static final int SLOT_NUM;
+  public static final int SLOT_REPLICAS;
+  public static final String FUNC;
 
-	private SlotConfig() {
-	}
+  private SlotConfig() {}
 
-	static {
-		SLOT_NUM = SystemUtils.getSystemInteger(KEY_DATA_SLOT_NUM, 16);
-		if (SLOT_NUM <= 0) {
-			throw new IllegalArgumentException("illegal " + KEY_DATA_SLOT_NUM
-					+ ":" + SLOT_NUM);
-		}
-		SLOT_REPLICAS = SystemUtils.getSystemInteger(KEY_DATA_SLOT_REPLICAS, 2);
-		if (SLOT_REPLICAS <= 0) {
-			throw new IllegalArgumentException("illegal "
-					+ KEY_DATA_SLOT_REPLICAS + ":" + SLOT_REPLICAS);
-		}
-		FUNC = SystemUtils.getSystem(KEY_DATA_SLOT_FUNC, "crc32c");
-		LOGGER.info("{}={}, {}={}, {}={}", KEY_DATA_SLOT_NUM, SLOT_NUM,
-				KEY_DATA_SLOT_REPLICAS, SLOT_REPLICAS, KEY_DATA_SLOT_FUNC, FUNC);
-	}
+  static {
+    SLOT_NUM = SystemUtils.getSystemInteger(KEY_DATA_SLOT_NUM, 16);
+    if (SLOT_NUM <= 0) {
+      throw new IllegalArgumentException("illegal " + KEY_DATA_SLOT_NUM + ":" + SLOT_NUM);
+    }
+    SLOT_REPLICAS = SystemUtils.getSystemInteger(KEY_DATA_SLOT_REPLICAS, 2);
+    if (SLOT_REPLICAS <= 0) {
+      throw new IllegalArgumentException("illegal " + KEY_DATA_SLOT_REPLICAS + ":" + SLOT_REPLICAS);
+    }
+    FUNC = SystemUtils.getSystem(KEY_DATA_SLOT_FUNC, "crc32c");
+    LOGGER.info(
+        "{}={}, {}={}, {}={}",
+        KEY_DATA_SLOT_NUM,
+        SLOT_NUM,
+        KEY_DATA_SLOT_REPLICAS,
+        SLOT_REPLICAS,
+        KEY_DATA_SLOT_FUNC,
+        FUNC);
+  }
 
-	public static class SlotBasicInfo implements Serializable {
+  public static class SlotBasicInfo implements Serializable {
 
-		private final int slotNum;
+    private final int slotNum;
 
-		private final int slotReplicas;
+    private final int slotReplicas;
 
-		private final String slotFunc;
+    private final String slotFunc;
 
-		/**
-		 * Constructor.
-		 * 
-		 * @param slotNum
-		 *            the slot num
-		 * @param slotReplicas
-		 *            the slot replicas
-		 * @param slotFunc
-		 *            the slot func
-		 */
-		public SlotBasicInfo(int slotNum, int slotReplicas, String slotFunc) {
-			this.slotNum = slotNum;
-			this.slotReplicas = slotReplicas;
-			this.slotFunc = slotFunc;
-		}
+    /**
+     * Constructor.
+     *
+     * @param slotNum the slot num
+     * @param slotReplicas the slot replicas
+     * @param slotFunc the slot func
+     */
+    public SlotBasicInfo(int slotNum, int slotReplicas, String slotFunc) {
+      this.slotNum = slotNum;
+      this.slotReplicas = slotReplicas;
+      this.slotFunc = slotFunc;
+    }
 
-		/**
-		 * Gets get slot num.
-		 * 
-		 * @return the get slot num
-		 */
-		public int getSlotNum() {
-			return slotNum;
-		}
+    /**
+     * Gets get slot num.
+     *
+     * @return the get slot num
+     */
+    public int getSlotNum() {
+      return slotNum;
+    }
 
-		/**
-		 * Gets get slot replicas.
-		 * 
-		 * @return the get slot replicas
-		 */
-		public int getSlotReplicas() {
-			return slotReplicas;
-		}
+    /**
+     * Gets get slot replicas.
+     *
+     * @return the get slot replicas
+     */
+    public int getSlotReplicas() {
+      return slotReplicas;
+    }
 
-		/**
-		 * Gets get slot func.
-		 * 
-		 * @return the get slot func
-		 */
-		public String getSlotFunc() {
-			return slotFunc;
-		}
-	}
+    /**
+     * Gets get slot func.
+     *
+     * @return the get slot func
+     */
+    public String getSlotFunc() {
+      return slotFunc;
+    }
+  }
 }

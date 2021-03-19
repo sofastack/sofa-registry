@@ -20,146 +20,143 @@ import java.io.Serializable;
 
 /**
  * DBResponse
- * 
+ *
  * @author shangyu.wh
  * @version $Id: DBResponse.java, v 0.1 2018-04-18 16:35 shangyu.wh Exp $
  */
 public class DBResponse implements Serializable {
 
-	private final Object entity;
+  private final Object entity;
 
-	private final OperationStatus operationStatus;
+  private final OperationStatus operationStatus;
 
-	/**
-	 * @param entity
-	 * @param operationStatus
-	 */
-	public DBResponse(Object entity, OperationStatus operationStatus) {
-		this.entity = entity;
-		this.operationStatus = operationStatus;
-	}
+  /**
+   * @param entity
+   * @param operationStatus
+   */
+  public DBResponse(Object entity, OperationStatus operationStatus) {
+    this.entity = entity;
+    this.operationStatus = operationStatus;
+  }
 
-	/**
-	 * generate response ok
-	 * 
-	 * @return
-	 */
-	public static DBResponseBuilder ok() {
-		return setStatus(OperationStatus.SUCCESS);
-	}
+  /**
+   * generate response ok
+   *
+   * @return
+   */
+  public static DBResponseBuilder ok() {
+    return setStatus(OperationStatus.SUCCESS);
+  }
 
-	/**
-	 * generate response ok
-	 * 
-	 * @param entity
-	 * @return
-	 */
-	public static DBResponseBuilder ok(Object entity) {
-		DBResponseBuilder b = ok();
-		b.entity(entity);
-		return b;
-	}
+  /**
+   * generate response ok
+   *
+   * @param entity
+   * @return
+   */
+  public static DBResponseBuilder ok(Object entity) {
+    DBResponseBuilder b = ok();
+    b.entity(entity);
+    return b;
+  }
 
-	/**
-	 * set operationStatus to NOTFOUND
-	 * 
-	 * @return
-	 */
-	public static DBResponseBuilder notfound() {
-		return setStatus(OperationStatus.NOTFOUND);
-	}
+  /**
+   * set operationStatus to NOTFOUND
+   *
+   * @return
+   */
+  public static DBResponseBuilder notfound() {
+    return setStatus(OperationStatus.NOTFOUND);
+  }
 
-	/**
-	 * set operationStatus
-	 * 
-	 * @param status
-	 * @return
-	 */
-	protected static DBResponseBuilder setStatus(OperationStatus status) {
-		DBResponseBuilder b = DBResponseBuilder.getInstance();
-		b.status(status);
-		return b;
-	}
+  /**
+   * set operationStatus
+   *
+   * @param status
+   * @return
+   */
+  protected static DBResponseBuilder setStatus(OperationStatus status) {
+    DBResponseBuilder b = DBResponseBuilder.getInstance();
+    b.status(status);
+    return b;
+  }
 
-	/**
-	 * Getter method for property <tt>entity</tt>.
-	 * 
-	 * @return property value of entity
-	 */
-	public Object getEntity() {
-		return entity;
-	}
+  /**
+   * Getter method for property <tt>entity</tt>.
+   *
+   * @return property value of entity
+   */
+  public Object getEntity() {
+    return entity;
+  }
 
-	/**
-	 * Getter method for property <tt>operationStatus</tt>.
-	 * 
-	 * @return property value of operationStatus
-	 */
-	public OperationStatus getOperationStatus() {
-		return operationStatus;
-	}
+  /**
+   * Getter method for property <tt>operationStatus</tt>.
+   *
+   * @return property value of operationStatus
+   */
+  public OperationStatus getOperationStatus() {
+    return operationStatus;
+  }
 
-	/**
-	 * DBResponseBuilder
-	 */
-	public static class DBResponseBuilder {
-		private static final DBResponseBuilder instance = new DBResponseBuilder();
+  /** DBResponseBuilder */
+  public static class DBResponseBuilder {
+    private static final DBResponseBuilder instance = new DBResponseBuilder();
 
-		private DBResponseBuilder() {
-		}
+    private DBResponseBuilder() {}
 
-		/**
-		 * get DBResponseBuilder instance
-		 * 
-		 * @return
-		 */
-		public static DBResponseBuilder getInstance() {
-			return instance;
-		}
+    /**
+     * get DBResponseBuilder instance
+     *
+     * @return
+     */
+    public static DBResponseBuilder getInstance() {
+      return instance;
+    }
 
-		private Object entity;
+    private Object entity;
 
-		private OperationStatus operationStatus;
+    private OperationStatus operationStatus;
 
-		/**
-		 * build func
-		 * 
-		 * @return
-		 */
-		public DBResponse build() {
-			final DBResponse r = new DBResponse(entity, operationStatus);
-			reset();
-			return r;
-		}
+    /**
+     * build func
+     *
+     * @return
+     */
+    public DBResponse build() {
+      final DBResponse r = new DBResponse(entity, operationStatus);
+      reset();
+      return r;
+    }
 
-		private void reset() {
-			operationStatus = null;
-			entity = null;
-		}
+    private void reset() {
+      operationStatus = null;
+      entity = null;
+    }
 
-		/**
-		 * set operationStatus status
-		 * 
-		 * @param status
-		 * @return
-		 */
-		public DBResponseBuilder status(OperationStatus status) {
-			if (status == null) {
-				throw new IllegalArgumentException();
-			}
-			this.operationStatus = status;
-			return this;
-		}
+    /**
+     * set operationStatus status
+     *
+     * @param status
+     * @return
+     */
+    public DBResponseBuilder status(OperationStatus status) {
+      if (status == null) {
+        throw new IllegalArgumentException();
+      }
+      this.operationStatus = status;
+      return this;
+    }
 
-		/**
-		 * set entity
-		 * 
-		 * @param entity
-		 * @return
-		 */
-		public DBResponseBuilder entity(Object entity) {
-			this.entity = entity;
-			return this;
-		}
-	}
+    /**
+     * set entity
+     *
+     * @param entity
+     * @return
+     */
+    public DBResponseBuilder entity(Object entity) {
+      this.entity = entity;
+      return this;
+    }
+  }
 }

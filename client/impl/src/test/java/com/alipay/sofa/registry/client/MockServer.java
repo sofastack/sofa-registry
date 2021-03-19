@@ -27,198 +27,189 @@ import com.alipay.sofa.registry.core.model.PublisherRegister;
 import com.alipay.sofa.registry.core.model.RegisterResponse;
 import com.alipay.sofa.registry.core.model.Result;
 import com.alipay.sofa.registry.core.model.SubscriberRegister;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * The type Mock server.
+ *
  * @author zhuoyu.sjw
  * @version $Id : MockServer.java, v 0.1 2017-12-25 22:39 zhuoyu.sjw Exp $$
  */
 public class MockServer {
 
-    /** LOGGER */
-    private static final Logger               LOGGER          = LoggerFactory
-                                                                  .getLogger(MockServer.class);
+  /** LOGGER */
+  private static final Logger LOGGER = LoggerFactory.getLogger(MockServer.class);
 
-    private RpcServer                         rpcServer;
+  private RpcServer rpcServer;
 
-    private String                            ip              = "127.0.0.1";
+  private String ip = "127.0.0.1";
 
-    private int                               port            = 9600;
+  private int port = 9600;
 
-    private Map<String, PublisherRegister>    publisherMap    = new HashMap<String, PublisherRegister>();
-    private Map<String, SubscriberRegister>   subscriberMap   = new HashMap<String, SubscriberRegister>();
-    private Map<String, ConfiguratorRegister> configuratorMap = new HashMap<String, ConfiguratorRegister>();
+  private Map<String, PublisherRegister> publisherMap = new HashMap<String, PublisherRegister>();
+  private Map<String, SubscriberRegister> subscriberMap = new HashMap<String, SubscriberRegister>();
+  private Map<String, ConfiguratorRegister> configuratorMap =
+      new HashMap<String, ConfiguratorRegister>();
 
-    /**
-     * Start.
-     */
-    public void start() {
-        rpcServer = new RpcServer(port);
-        rpcServer.registerUserProcessor(new MockSubscriberRegisterProcessor());
-        rpcServer.registerUserProcessor(new MockPublisherRegisterProcessor());
-        rpcServer.registerUserProcessor(new MockConfiguratorRegisterProcesor());
-        rpcServer.start();
+  /** Start. */
+  public void start() {
+    rpcServer = new RpcServer(port);
+    rpcServer.registerUserProcessor(new MockSubscriberRegisterProcessor());
+    rpcServer.registerUserProcessor(new MockPublisherRegisterProcessor());
+    rpcServer.registerUserProcessor(new MockConfiguratorRegisterProcesor());
+    rpcServer.start();
+  }
+
+  /** Stop. */
+  public void stop() {
+    rpcServer.stop();
+  }
+
+  /**
+   * Getter method for property <tt>ip</tt>.
+   *
+   * @return property value of ip
+   */
+  public String getIp() {
+    return ip;
+  }
+
+  /**
+   * Setter method for property <tt>ip</tt>.
+   *
+   * @param ip value to be assigned to property ip
+   */
+  public void setIp(String ip) {
+    this.ip = ip;
+  }
+
+  /**
+   * Getter method for property <tt>port</tt>.
+   *
+   * @return property value of port
+   */
+  public int getPort() {
+    return port;
+  }
+
+  /**
+   * Setter method for property <tt>port</tt>.
+   *
+   * @param port value to be assigned to property port
+   */
+  public void setPort(int port) {
+    this.port = port;
+  }
+
+  /**
+   * Query publisher by registId
+   *
+   * @param registId
+   * @return
+   */
+  public PublisherRegister queryPubliser(String registId) {
+    return publisherMap.get(registId);
+  }
+
+  /**
+   * Query subscriber by registId
+   *
+   * @param registId
+   * @return
+   */
+  public SubscriberRegister querySubscriber(String registId) {
+    return subscriberMap.get(registId);
+  }
+
+  /** The type Mock subscriber register processor. */
+  class MockSubscriberRegisterProcessor extends SyncUserProcessor<SubscriberRegister> {
+
+    @Override
+    public Object handleRequest(BizContext bizCtx, SubscriberRegister request) throws Exception {
+      if ("subscribeAndRefused".equals(request.getDataId())) {
+        return response(request, true);
+      }
+
+      Result result = new Result();
+      result.setSuccess(true);
+      String registId = request.getRegistId();
+      if (EventTypeConstants.REGISTER.equals(request.getEventType())) {
+        subscriberMap.put(registId, request);
+      } else if (EventTypeConstants.UNREGISTER.equals(request.getEventType())) {
+        subscriberMap.remove(registId);
+      }
+      return response(request);
     }
 
-    /**
-     * Stop.
-     */
-    public void stop() {
-        rpcServer.stop();
+    @Override
+    public String interest() {
+      return SubscriberRegister.class.getName();
+    }
+  }
+
+  /** The type Mock publisher register processor. */
+  class MockPublisherRegisterProcessor extends SyncUserProcessor<PublisherRegister> {
+
+    @Override
+    public Object handleRequest(BizContext bizCtx, PublisherRegister request) throws Exception {
+      if ("publishAndRefused".equals(request.getDataId())) {
+        return response(request, true);
+      }
+      String registId = request.getRegistId();
+      List<DataBox> dataList = request.getDataList();
+      LOGGER.info(registId + " " + request.getEventType() + " " + dataList);
+      if (EventTypeConstants.REGISTER.equals(request.getEventType())) {
+        publisherMap.put(registId, request);
+      } else if (EventTypeConstants.UNREGISTER.equals(request.getEventType())) {
+        publisherMap.remove(registId);
+      }
+      return response(request);
     }
 
-    /**
-     * Getter method for property <tt>ip</tt>.
-     *
-     * @return property value of ip
-     */
-    public String getIp() {
-        return ip;
+    @Override
+    public String interest() {
+      return PublisherRegister.class.getName();
+    }
+  }
+
+  private RegisterResponse response(BaseRegister register) {
+    return response(register, false);
+  }
+
+  private RegisterResponse response(BaseRegister register, boolean refused) {
+    RegisterResponse response = new RegisterResponse();
+    response.setSuccess(true);
+    response.setVersion(register.getVersion());
+    response.setRegistId(register.getRegistId());
+    response.setRefused(refused);
+    return response;
+  }
+
+  class MockConfiguratorRegisterProcesor extends SyncUserProcessor<ConfiguratorRegister> {
+
+    @Override
+    public Object handleRequest(BizContext bizCtx, ConfiguratorRegister request) throws Exception {
+      if ("subscribeAndRefused".equals(request.getDataId())) {
+        return response(request, true);
+      }
+
+      String registId = request.getRegistId();
+      LOGGER.info("dataId: {} registId: {}", request.getDataId(), registId);
+      if (EventTypeConstants.REGISTER.equals(request.getEventType())) {
+        configuratorMap.put(registId, request);
+      } else if (EventTypeConstants.UNREGISTER.equals(request.getEventType())) {
+        configuratorMap.remove(registId);
+      }
+      return response(request);
     }
 
-    /**
-     * Setter method for property <tt>ip</tt>.
-     *
-     * @param ip value to be assigned to property ip
-     */
-    public void setIp(String ip) {
-        this.ip = ip;
+    @Override
+    public String interest() {
+      return ConfiguratorRegister.class.getName();
     }
-
-    /**
-     * Getter method for property <tt>port</tt>.
-     *
-     * @return property value of port
-     */
-    public int getPort() {
-        return port;
-    }
-
-    /**
-     * Setter method for property <tt>port</tt>.
-     *
-     * @param port value to be assigned to property port
-     */
-    public void setPort(int port) {
-        this.port = port;
-    }
-
-    /**
-     * Query publisher by registId
-     *
-     * @param registId
-     * @return
-     */
-    public PublisherRegister queryPubliser(String registId) {
-        return publisherMap.get(registId);
-    }
-
-    /**
-     * Query subscriber by registId
-     *
-     * @param registId
-     * @return
-     */
-    public SubscriberRegister querySubscriber(String registId) {
-        return subscriberMap.get(registId);
-    }
-
-    /**
-     * The type Mock subscriber register processor.
-     */
-    class MockSubscriberRegisterProcessor extends SyncUserProcessor<SubscriberRegister> {
-
-        @Override
-        public Object handleRequest(BizContext bizCtx, SubscriberRegister request) throws Exception {
-            if ("subscribeAndRefused".equals(request.getDataId())) {
-                return response(request, true);
-            }
-
-            Result result = new Result();
-            result.setSuccess(true);
-            String registId = request.getRegistId();
-            if (EventTypeConstants.REGISTER.equals(request.getEventType())) {
-                subscriberMap.put(registId, request);
-            } else if (EventTypeConstants.UNREGISTER.equals(request.getEventType())) {
-                subscriberMap.remove(registId);
-            }
-            return response(request);
-        }
-
-        @Override
-        public String interest() {
-            return SubscriberRegister.class.getName();
-        }
-    }
-
-    /**
-     * The type Mock publisher register processor.
-     */
-    class MockPublisherRegisterProcessor extends SyncUserProcessor<PublisherRegister> {
-
-        @Override
-        public Object handleRequest(BizContext bizCtx, PublisherRegister request) throws Exception {
-            if ("publishAndRefused".equals(request.getDataId())) {
-                return response(request, true);
-            }
-            String registId = request.getRegistId();
-            List<DataBox> dataList = request.getDataList();
-            LOGGER.info(registId + " " + request.getEventType() + " " + dataList);
-            if (EventTypeConstants.REGISTER.equals(request.getEventType())) {
-                publisherMap.put(registId, request);
-            } else if (EventTypeConstants.UNREGISTER.equals(request.getEventType())) {
-                publisherMap.remove(registId);
-            }
-            return response(request);
-        }
-
-        @Override
-        public String interest() {
-            return PublisherRegister.class.getName();
-        }
-    }
-
-    private RegisterResponse response(BaseRegister register) {
-        return response(register, false);
-    }
-
-    private RegisterResponse response(BaseRegister register, boolean refused) {
-        RegisterResponse response = new RegisterResponse();
-        response.setSuccess(true);
-        response.setVersion(register.getVersion());
-        response.setRegistId(register.getRegistId());
-        response.setRefused(refused);
-        return response;
-    }
-
-    class MockConfiguratorRegisterProcesor extends SyncUserProcessor<ConfiguratorRegister> {
-
-        @Override
-        public Object handleRequest(BizContext bizCtx, ConfiguratorRegister request)
-                                                                                    throws Exception {
-            if ("subscribeAndRefused".equals(request.getDataId())) {
-                return response(request, true);
-            }
-
-            String registId = request.getRegistId();
-            LOGGER.info("dataId: {} registId: {}", request.getDataId(), registId);
-            if (EventTypeConstants.REGISTER.equals(request.getEventType())) {
-                configuratorMap.put(registId, request);
-            } else if (EventTypeConstants.UNREGISTER.equals(request.getEventType())) {
-                configuratorMap.remove(registId);
-            }
-            return response(request);
-        }
-
-        @Override
-        public String interest() {
-            return ConfiguratorRegister.class.getName();
-        }
-    }
+  }
 }

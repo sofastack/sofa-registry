@@ -16,18 +16,16 @@
  */
 package com.alipay.sofa.registry.store.api.annotation;
 
+import static java.lang.annotation.RetentionPolicy.RUNTIME;
+
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 
-import static java.lang.annotation.RetentionPolicy.RUNTIME;
-
 /**
- *
  * @author shangyu.wh
  * @version $Id: ReadOnLeader.java, v 0.1 2018-05-29 22:25 shangyu.wh Exp $
  */
-@Target({ ElementType.METHOD })
+@Target({ElementType.METHOD})
 @Retention(RUNTIME)
-public @interface ReadOnLeader {
-}
+public @interface ReadOnLeader {}

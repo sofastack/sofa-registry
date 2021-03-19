@@ -19,7 +19,6 @@ package com.alipay.sofa.registry.server.session.converter.pb;
 import com.alipay.sofa.registry.common.model.client.pb.MetaService;
 import com.alipay.sofa.registry.common.model.client.pb.StringList;
 import com.alipay.sofa.registry.core.model.AppRevisionInterface;
-
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -28,37 +27,37 @@ import java.util.Optional;
 
 /**
  * @author xiaojian.xj
- * @version $Id: MetaServiceConvertor.java, v 0.1 2021年02月04日 22:27 xiaojian.xj
- *          Exp $
+ * @version $Id: MetaServiceConvertor.java, v 0.1 2021年02月04日 22:27 xiaojian.xj Exp $
  */
 public class MetaServiceConvertor {
 
-	public static MetaService convert2Pb(AppRevisionInterface service) {
+  public static MetaService convert2Pb(AppRevisionInterface service) {
 
-        MetaService.Builder serviceBuilder = MetaService.newBuilder();
-        serviceBuilder.setId(service.getId());
+    MetaService.Builder serviceBuilder = MetaService.newBuilder();
+    serviceBuilder.setId(service.getId());
 
-        for (Entry<String, List<String>> entry : Optional.ofNullable(service.getServiceParams())
-            .orElse(new HashMap<>()).entrySet()) {
-            StringList.Builder listBuilder = StringList.newBuilder().addAllValues(entry.getValue());
-            serviceBuilder.putParams(entry.getKey(), listBuilder.build());
-        }
-
-        return serviceBuilder.build();
+    for (Entry<String, List<String>> entry :
+        Optional.ofNullable(service.getServiceParams()).orElse(new HashMap<>()).entrySet()) {
+      StringList.Builder listBuilder = StringList.newBuilder().addAllValues(entry.getValue());
+      serviceBuilder.putParams(entry.getKey(), listBuilder.build());
     }
-	public static AppRevisionInterface convert2Java(MetaService metaService) {
 
-        AppRevisionInterface appRevisionInterface = new AppRevisionInterface();
-        appRevisionInterface.setId(metaService.getId());
-        Map<String, List<String>> serviceParams = new HashMap<>();
-        for (Entry<String, StringList> paramEntry : Optional.ofNullable(metaService.getParamsMap())
-            .orElse(new HashMap<>()).entrySet()) {
-            StringList value = paramEntry.getValue();
-            serviceParams.put(paramEntry.getKey(),
-                value.getValuesList().subList(0, value.getValuesCount()));
-        }
-        appRevisionInterface.setServiceParams(serviceParams);
+    return serviceBuilder.build();
+  }
 
-        return appRevisionInterface;
+  public static AppRevisionInterface convert2Java(MetaService metaService) {
+
+    AppRevisionInterface appRevisionInterface = new AppRevisionInterface();
+    appRevisionInterface.setId(metaService.getId());
+    Map<String, List<String>> serviceParams = new HashMap<>();
+    for (Entry<String, StringList> paramEntry :
+        Optional.ofNullable(metaService.getParamsMap()).orElse(new HashMap<>()).entrySet()) {
+      StringList value = paramEntry.getValue();
+      serviceParams.put(
+          paramEntry.getKey(), value.getValuesList().subList(0, value.getValuesCount()));
     }
+    appRevisionInterface.setServiceParams(serviceParams);
+
+    return appRevisionInterface;
+  }
 }

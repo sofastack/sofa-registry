@@ -20,61 +20,59 @@ import java.util.Objects;
 
 /**
  * @author chen.zhu
- * <p>
- * Jan 12, 2021
+ *     <p>Jan 12, 2021
  */
 public final class Triple<F, M, L> {
 
-    private final F first;
+  private final F first;
 
-    private final M middle;
+  private final M middle;
 
-    private final L last;
+  private final L last;
 
-    public Triple(F first, M middle, L last) {
-        this.first = first;
-        this.middle = middle;
-        this.last = last;
-    }
+  public Triple(F first, M middle, L last) {
+    this.first = first;
+    this.middle = middle;
+    this.last = last;
+  }
 
-    public static <F, M, L> Triple<F, M, L> from(F first, M middle, L last) {
-        return new Triple<F, M, L>(first, middle, last);
-    }
+  public static <F, M, L> Triple<F, M, L> from(F first, M middle, L last) {
+    return new Triple<F, M, L>(first, middle, last);
+  }
 
-    public F getFirst() {
-        return this.first;
-    }
+  public F getFirst() {
+    return this.first;
+  }
 
-    public L getLast() {
-        return this.last;
-    }
+  public L getLast() {
+    return this.last;
+  }
 
-    public M getMiddle() {
-        return this.middle;
-    }
+  public M getMiddle() {
+    return this.middle;
+  }
 
-    @Override
-    public boolean equals(Object o) {
-        if (this == o)
-            return true;
-        if (o == null || getClass() != o.getClass())
-            return false;
-        Triple<?, ?, ?> triple = (Triple<?, ?, ?>) o;
-        return Objects.equals(first, triple.first) && Objects.equals(middle, triple.middle)
-               && Objects.equals(last, triple.last);
-    }
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) return true;
+    if (o == null || getClass() != o.getClass()) return false;
+    Triple<?, ?, ?> triple = (Triple<?, ?, ?>) o;
+    return Objects.equals(first, triple.first)
+        && Objects.equals(middle, triple.middle)
+        && Objects.equals(last, triple.last);
+  }
 
-    @Override
-    public int hashCode() {
-        return Objects.hash(first, middle, last);
-    }
+  @Override
+  public int hashCode() {
+    return Objects.hash(first, middle, last);
+  }
 
-    public int size() {
-        return 3;
-    }
+  public int size() {
+    return 3;
+  }
 
-    public String toString() {
-        return String.format("Triple[first=%s, middle=%s, last=%s]", this.first, this.middle,
-            this.last);
-    }
+  public String toString() {
+    return String.format(
+        "Triple[first=%s, middle=%s, last=%s]", this.first, this.middle, this.last);
+  }
 }

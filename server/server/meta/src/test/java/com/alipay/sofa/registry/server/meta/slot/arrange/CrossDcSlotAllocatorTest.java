@@ -16,6 +16,8 @@
  */
 package com.alipay.sofa.registry.server.meta.slot.arrange;
 
+import static org.mockito.Mockito.*;
+
 import com.alipay.sofa.registry.common.model.metaserver.nodes.MetaNode;
 import com.alipay.sofa.registry.common.model.slot.Slot;
 import com.alipay.sofa.registry.common.model.slot.SlotTable;
@@ -28,6 +30,7 @@ import com.alipay.sofa.registry.remoting.exchange.Exchange;
 import com.alipay.sofa.registry.server.meta.AbstractMetaServerTest;
 import com.alipay.sofa.registry.server.meta.MetaLeaderService;
 import com.alipay.sofa.registry.server.meta.metaserver.CrossDcMetaServer;
+import java.util.concurrent.TimeoutException;
 import org.assertj.core.util.Lists;
 import org.junit.After;
 import org.junit.Assert;
@@ -36,122 +39,133 @@ import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
-import java.util.concurrent.TimeoutException;
-
-import static org.mockito.Mockito.*;
-
 public class CrossDcSlotAllocatorTest extends AbstractMetaServerTest {
 
-    private CrossDcSlotAllocator allocator;
+  private CrossDcSlotAllocator allocator;
 
-    @Mock
-    private CrossDcMetaServer    crossDcMetaServer;
+  @Mock private CrossDcMetaServer crossDcMetaServer;
 
-    @Mock
-    private Exchange             exchange;
+  @Mock private Exchange exchange;
 
-    @Mock
-    private MetaLeaderService leaderElector;
+  @Mock private MetaLeaderService leaderElector;
 
-    @Before
-    public void beforeCrossDcSlotAllocatorTest() throws Exception {
-        MockitoAnnotations.initMocks(this);
-        when(crossDcMetaServer.getClusterMembers()).thenReturn(
-            Lists.newArrayList(new MetaNode(randomURL(), getDc())));
-        when(crossDcMetaServer.getClusterMembers()).thenReturn(
-            Lists.newArrayList(new MetaNode(randomURL(), getDc())));
-        allocator = spy(new CrossDcSlotAllocator(getDc(), scheduled, exchange, crossDcMetaServer,
-                leaderElector));
-    }
+  @Before
+  public void beforeCrossDcSlotAllocatorTest() throws Exception {
+    MockitoAnnotations.initMocks(this);
+    when(crossDcMetaServer.getClusterMembers())
+        .thenReturn(Lists.newArrayList(new MetaNode(randomURL(), getDc())));
+    when(crossDcMetaServer.getClusterMembers())
+        .thenReturn(Lists.newArrayList(new MetaNode(randomURL(), getDc())));
+    allocator =
+        spy(
+            new CrossDcSlotAllocator(
+                getDc(), scheduled, exchange, crossDcMetaServer, leaderElector));
+  }
 
-    @After
-    public void afterCrossDcSlotAllocatorTest() throws Exception {
-        LifecycleHelper.stopIfPossible(allocator);
-        LifecycleHelper.disposeIfPossible(allocator);
-    }
+  @After
+  public void afterCrossDcSlotAllocatorTest() throws Exception {
+    LifecycleHelper.stopIfPossible(allocator);
+    LifecycleHelper.disposeIfPossible(allocator);
+  }
 
-    @Test
-    public void testGetSlotTable() throws TimeoutException, InterruptedException, InitializeException, StartException {
-        LifecycleHelper.initializeIfPossible(allocator);
-        LifecycleHelper.startIfPossible(allocator);
-        Assert.assertNull(allocator.getSlotTable());
+  @Test
+  public void testGetSlotTable()
+      throws TimeoutException, InterruptedException, InitializeException, StartException {
+    LifecycleHelper.initializeIfPossible(allocator);
+    LifecycleHelper.startIfPossible(allocator);
+    Assert.assertNull(allocator.getSlotTable());
 
-        when(exchange.getClient(Exchange.META_SERVER_TYPE)).thenReturn(getRpcClient(scheduled, 1,
-                new SlotTable(System.currentTimeMillis(), Lists.newArrayList(
-                        new Slot(1, "10.0.0.1", System.currentTimeMillis(), Lists.newArrayList("10.0.0.2"))
-                ))));
-        allocator.refreshSlotTable(0);
-        waitConditionUntilTimeOut(()->allocator.getSlotTable() != null, 1000);
+    when(exchange.getClient(Exchange.META_SERVER_TYPE))
+        .thenReturn(
+            getRpcClient(
+                scheduled,
+                1,
+                new SlotTable(
+                    System.currentTimeMillis(),
+                    Lists.newArrayList(
+                        new Slot(
+                            1,
+                            "10.0.0.1",
+                            System.currentTimeMillis(),
+                            Lists.newArrayList("10.0.0.2"))))));
+    allocator.refreshSlotTable(0);
+    waitConditionUntilTimeOut(() -> allocator.getSlotTable() != null, 1000);
 
-        Assert.assertNotNull(allocator.getSlotTable());
-        Assert.assertEquals("10.0.0.1", allocator.getSlotTable().getSlot(1).getLeader());
-    }
+    Assert.assertNotNull(allocator.getSlotTable());
+    Assert.assertEquals("10.0.0.1", allocator.getSlotTable().getSlot(1).getLeader());
+  }
 
-    @Test
-    public void testTestGetDc() {
-        Assert.assertEquals(getDc(), allocator.getDc());
-    }
+  @Test
+  public void testTestGetDc() {
+    Assert.assertEquals(getDc(), allocator.getDc());
+  }
 
-    @Test
-    public void testRefreshSlotTableFirstFailure() throws TimeoutException, InterruptedException, StartException, InitializeException {
-        LifecycleHelper.initializeIfPossible(allocator);
-        LifecycleHelper.startIfPossible(allocator);
-        Assert.assertNull(allocator.getSlotTable());
+  @Test
+  public void testRefreshSlotTableFirstFailure()
+      throws TimeoutException, InterruptedException, StartException, InitializeException {
+    LifecycleHelper.initializeIfPossible(allocator);
+    LifecycleHelper.startIfPossible(allocator);
+    Assert.assertNull(allocator.getSlotTable());
 
-        when(exchange.getClient(Exchange.META_SERVER_TYPE))
-                .thenReturn(getRpcClient(scheduled, 3, new TimeoutException("expected timeout")))
-                .thenReturn(getRpcClient(scheduled, 1,
-                new SlotTable(System.currentTimeMillis(), Lists.newArrayList(
-                        new Slot(1, "10.0.0.1", System.currentTimeMillis(), Lists.newArrayList("10.0.0.2"))
-                ))));
-        allocator.refreshSlotTable(0);
-        waitConditionUntilTimeOut(()->allocator.getSlotTable() != null, 1000);
+    when(exchange.getClient(Exchange.META_SERVER_TYPE))
+        .thenReturn(getRpcClient(scheduled, 3, new TimeoutException("expected timeout")))
+        .thenReturn(
+            getRpcClient(
+                scheduled,
+                1,
+                new SlotTable(
+                    System.currentTimeMillis(),
+                    Lists.newArrayList(
+                        new Slot(
+                            1,
+                            "10.0.0.1",
+                            System.currentTimeMillis(),
+                            Lists.newArrayList("10.0.0.2"))))));
+    allocator.refreshSlotTable(0);
+    waitConditionUntilTimeOut(() -> allocator.getSlotTable() != null, 1000);
 
-        Assert.assertNotNull(allocator.getSlotTable());
-        Assert.assertEquals("10.0.0.1", allocator.getSlotTable().getSlot(1).getLeader());
-    }
+    Assert.assertNotNull(allocator.getSlotTable());
+    Assert.assertEquals("10.0.0.1", allocator.getSlotTable().getSlot(1).getLeader());
+  }
 
-    @Test
-    public void testRefreshSlotTableRetryOverTimes() throws TimeoutException, InterruptedException,
-                                                    StartException, InitializeException {
-        LifecycleHelper.initializeIfPossible(allocator);
-        LifecycleHelper.startIfPossible(allocator);
+  @Test
+  public void testRefreshSlotTableRetryOverTimes()
+      throws TimeoutException, InterruptedException, StartException, InitializeException {
+    LifecycleHelper.initializeIfPossible(allocator);
+    LifecycleHelper.startIfPossible(allocator);
 
-        Assert.assertNull(allocator.getSlotTable());
+    Assert.assertNull(allocator.getSlotTable());
 
-        when(exchange.getClient(Exchange.META_SERVER_TYPE)).thenReturn(
-            getRpcClient(scheduled, 3, new TimeoutException("expected timeout")));
+    when(exchange.getClient(Exchange.META_SERVER_TYPE))
+        .thenReturn(getRpcClient(scheduled, 3, new TimeoutException("expected timeout")));
 
-        allocator.refreshSlotTable(0);
-        Thread.sleep(100);
+    allocator.refreshSlotTable(0);
+    Thread.sleep(100);
 
-        Assert.assertNull(allocator.getSlotTable());
-        verify(allocator, atLeast(2)).refreshSlotTable(anyInt());
-    }
+    Assert.assertNull(allocator.getSlotTable());
+    verify(allocator, atLeast(2)).refreshSlotTable(anyInt());
+  }
 
-    @Test
-    public void testDoInitialize() throws InitializeException {
-        LifecycleHelper.initializeIfPossible(allocator);
-        Assert.assertEquals(LifecycleState.LifecyclePhase.INITIALIZED, allocator
-            .getLifecycleState().getPhase());
-    }
+  @Test
+  public void testDoInitialize() throws InitializeException {
+    LifecycleHelper.initializeIfPossible(allocator);
+    Assert.assertEquals(
+        LifecycleState.LifecyclePhase.INITIALIZED, allocator.getLifecycleState().getPhase());
+  }
 
-    @Test
-    public void testDoStart() throws InitializeException, StopException, StartException {
-        LifecycleHelper.initializeIfPossible(allocator);
-        LifecycleHelper.startIfPossible(allocator);
-        Assert.assertEquals(LifecycleState.LifecyclePhase.STARTED, allocator.getLifecycleState()
-            .getPhase());
-        verify(allocator, never()).refreshSlotTable(anyInt());
-        verify(allocator, times(1)).doStart();
-    }
+  @Test
+  public void testDoStart() throws InitializeException, StopException, StartException {
+    LifecycleHelper.initializeIfPossible(allocator);
+    LifecycleHelper.startIfPossible(allocator);
+    Assert.assertEquals(
+        LifecycleState.LifecyclePhase.STARTED, allocator.getLifecycleState().getPhase());
+    verify(allocator, never()).refreshSlotTable(anyInt());
+    verify(allocator, times(1)).doStart();
+  }
 
-    @Test
-    public void testDoStop() {
+  @Test
+  public void testDoStop() {}
 
-    }
-
-    @Test
-    public void testDoDispose() {
-    }
+  @Test
+  public void testDoDispose() {}
 }

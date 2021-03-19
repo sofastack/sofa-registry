@@ -24,42 +24,40 @@ import java.io.Serializable;
  */
 public final class DatumVersion implements Serializable {
 
-    private final long value;
+  private final long value;
 
-    public DatumVersion(long v) {
-        this.value = v;
-    }
+  public DatumVersion(long v) {
+    this.value = v;
+  }
 
-    /**
-     * Getter method for property <tt>value</tt>.
-     *
-     * @return property value of value
-     */
-    public long getValue() {
-        return value;
-    }
+  /**
+   * Getter method for property <tt>value</tt>.
+   *
+   * @return property value of value
+   */
+  public long getValue() {
+    return value;
+  }
 
-    @Override
-    public String toString() {
-        return Long.valueOf(value).toString();
-    }
+  @Override
+  public String toString() {
+    return Long.valueOf(value).toString();
+  }
 
-    @Override
-    public boolean equals(Object o) {
-        if (this == o)
-            return true;
-        if (o == null || getClass() != o.getClass())
-            return false;
-        DatumVersion that = (DatumVersion) o;
-        return value == that.value;
-    }
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) return true;
+    if (o == null || getClass() != o.getClass()) return false;
+    DatumVersion that = (DatumVersion) o;
+    return value == that.value;
+  }
 
-    @Override
-    public int hashCode() {
-        return Long.valueOf(value).hashCode();
-    }
+  @Override
+  public int hashCode() {
+    return Long.valueOf(value).hashCode();
+  }
 
-    public static DatumVersion of(long v) {
-        return new DatumVersion(v);
-    }
+  public static DatumVersion of(long v) {
+    return new DatumVersion(v);
+  }
 }

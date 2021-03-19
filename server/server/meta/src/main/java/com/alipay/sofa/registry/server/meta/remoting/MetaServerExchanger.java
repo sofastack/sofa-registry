@@ -22,23 +22,21 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 /**
- *
  * @author shangyu.wh
  * @version $Id: MetaNodeExchanger.java, v 0.1 2018-02-12 14:22 shangyu.wh Exp $
  */
 @Component
 public class MetaServerExchanger extends ServerSideExchanger {
 
-    @Autowired
-    private MetaServerConfig metaServerConfig;
+  @Autowired private MetaServerConfig metaServerConfig;
 
-    @Override
-    public int getRpcTimeoutMillis() {
-        return metaServerConfig.getMetaNodeExchangeTimeout();
-    }
+  @Override
+  public int getRpcTimeoutMillis() {
+    return metaServerConfig.getMetaNodeExchangeTimeout();
+  }
 
-    @Override
-    public int getServerPort() {
-        return metaServerConfig.getMetaServerPort();
-    }
+  @Override
+  public int getServerPort() {
+    return metaServerConfig.getMetaServerPort();
+  }
 }

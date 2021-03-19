@@ -16,6 +16,9 @@
  */
 package com.alipay.sofa.registry.server.meta.provide.data;
 
+import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.*;
+
 import com.alipay.sofa.registry.common.model.Node;
 import com.alipay.sofa.registry.common.model.metaserver.DataOperator;
 import com.alipay.sofa.registry.common.model.metaserver.ProvideDataChangeEvent;
@@ -27,43 +30,49 @@ import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
-import static org.mockito.Matchers.any;
-import static org.mockito.Mockito.*;
-
 public class DefaultProvideDataNotifierTest {
 
-    private DefaultProvideDataNotifier  notifier = new DefaultProvideDataNotifier();
+  private DefaultProvideDataNotifier notifier = new DefaultProvideDataNotifier();
 
-    @Mock
-    private DefaultDataServerService    defaultDataServerService;
+  @Mock private DefaultDataServerService defaultDataServerService;
 
-    @Mock
-    private DefaultSessionServerService defaultSessionServerService;
+  @Mock private DefaultSessionServerService defaultSessionServerService;
 
-    @Before
-    public void beforeDefaultProvideDataNotifierTest() {
-        MockitoAnnotations.initMocks(this);
-        notifier.setDataServerProvideDataNotifier(defaultDataServerService)
-            .setSessionServerProvideDataNotifier(defaultSessionServerService);
-    }
+  @Before
+  public void beforeDefaultProvideDataNotifierTest() {
+    MockitoAnnotations.initMocks(this);
+    notifier
+        .setDataServerProvideDataNotifier(defaultDataServerService)
+        .setSessionServerProvideDataNotifier(defaultSessionServerService);
+  }
 
-    @Test
-    public void testNotifyProvideDataChange() {
-        notifier.notifyProvideDataChange(new ProvideDataChangeEvent("message", System
-            .currentTimeMillis(), DataOperator.ADD, Sets.newHashSet(Node.NodeType.DATA)));
-        verify(defaultDataServerService, times(1)).notifyProvideDataChange(any());
-        verify(defaultSessionServerService, never()).notifyProvideDataChange(any());
+  @Test
+  public void testNotifyProvideDataChange() {
+    notifier.notifyProvideDataChange(
+        new ProvideDataChangeEvent(
+            "message",
+            System.currentTimeMillis(),
+            DataOperator.ADD,
+            Sets.newHashSet(Node.NodeType.DATA)));
+    verify(defaultDataServerService, times(1)).notifyProvideDataChange(any());
+    verify(defaultSessionServerService, never()).notifyProvideDataChange(any());
 
-        notifier.notifyProvideDataChange(new ProvideDataChangeEvent("message", System
-            .currentTimeMillis(), DataOperator.ADD, Sets.newHashSet(Node.NodeType.SESSION)));
-        verify(defaultDataServerService, times(1)).notifyProvideDataChange(any());
-        verify(defaultSessionServerService, times(1)).notifyProvideDataChange(any());
+    notifier.notifyProvideDataChange(
+        new ProvideDataChangeEvent(
+            "message",
+            System.currentTimeMillis(),
+            DataOperator.ADD,
+            Sets.newHashSet(Node.NodeType.SESSION)));
+    verify(defaultDataServerService, times(1)).notifyProvideDataChange(any());
+    verify(defaultSessionServerService, times(1)).notifyProvideDataChange(any());
 
-        notifier.notifyProvideDataChange(new ProvideDataChangeEvent("message", System
-            .currentTimeMillis(), DataOperator.ADD, Sets.newHashSet(Node.NodeType.SESSION,
-            Node.NodeType.DATA)));
-        verify(defaultDataServerService, times(2)).notifyProvideDataChange(any());
-        verify(defaultSessionServerService, times(2)).notifyProvideDataChange(any());
-
-    }
+    notifier.notifyProvideDataChange(
+        new ProvideDataChangeEvent(
+            "message",
+            System.currentTimeMillis(),
+            DataOperator.ADD,
+            Sets.newHashSet(Node.NodeType.SESSION, Node.NodeType.DATA)));
+    verify(defaultDataServerService, times(2)).notifyProvideDataChange(any());
+    verify(defaultSessionServerService, times(2)).notifyProvideDataChange(any());
+  }
 }

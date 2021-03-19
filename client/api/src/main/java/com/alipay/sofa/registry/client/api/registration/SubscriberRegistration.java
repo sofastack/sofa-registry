@@ -27,66 +27,78 @@ import com.alipay.sofa.registry.core.model.ScopeEnum;
  */
 public class SubscriberRegistration extends BaseRegistration {
 
-    private ScopeEnum              scopeEnum;
+  private ScopeEnum scopeEnum;
 
-    private SubscriberDataObserver subscriberDataObserver;
+  private SubscriberDataObserver subscriberDataObserver;
 
-    /**
-     * Instantiates a new Subscriber registration.
-     *
-     * @param dataId the data id 
-     * @param subscriberDataObserver the subscriber data observer
-     */
-    public SubscriberRegistration(String dataId, SubscriberDataObserver subscriberDataObserver) {
-        this.dataId = dataId;
-        this.subscriberDataObserver = subscriberDataObserver;
-    }
+  /**
+   * Instantiates a new Subscriber registration.
+   *
+   * @param dataId the data id
+   * @param subscriberDataObserver the subscriber data observer
+   */
+  public SubscriberRegistration(String dataId, SubscriberDataObserver subscriberDataObserver) {
+    this.dataId = dataId;
+    this.subscriberDataObserver = subscriberDataObserver;
+  }
 
-    /**
-     * Getter method for property <tt>scopeEnum</tt>.
-     *
-     * @return property value of scopeEnum
-     */
-    public ScopeEnum getScopeEnum() {
-        return scopeEnum;
-    }
+  /**
+   * Getter method for property <tt>scopeEnum</tt>.
+   *
+   * @return property value of scopeEnum
+   */
+  public ScopeEnum getScopeEnum() {
+    return scopeEnum;
+  }
 
-    /**
-     * Setter method for property <tt>scopeEnum</tt>.
-     *
-     * @param scopeEnum value to be assigned to property scopeEnum
-     */
-    public void setScopeEnum(ScopeEnum scopeEnum) {
-        this.scopeEnum = scopeEnum;
-    }
+  /**
+   * Setter method for property <tt>scopeEnum</tt>.
+   *
+   * @param scopeEnum value to be assigned to property scopeEnum
+   */
+  public void setScopeEnum(ScopeEnum scopeEnum) {
+    this.scopeEnum = scopeEnum;
+  }
 
-    /**
-     * Getter method for property <tt>subscriberDataObserver</tt>.
-     *
-     * @return property value of subscriberDataObserver
-     */
-    public SubscriberDataObserver getSubscriberDataObserver() {
-        return subscriberDataObserver;
-    }
+  /**
+   * Getter method for property <tt>subscriberDataObserver</tt>.
+   *
+   * @return property value of subscriberDataObserver
+   */
+  public SubscriberDataObserver getSubscriberDataObserver() {
+    return subscriberDataObserver;
+  }
 
-    /**
-     * Setter method for property <tt>subscriberDataObserver</tt>.
-     *
-     * @param subscriberDataObserver value to be assigned to property subscriberDataObserver
-     */
-    public void setSubscriberDataObserver(SubscriberDataObserver subscriberDataObserver) {
-        this.subscriberDataObserver = subscriberDataObserver;
-    }
+  /**
+   * Setter method for property <tt>subscriberDataObserver</tt>.
+   *
+   * @param subscriberDataObserver value to be assigned to property subscriberDataObserver
+   */
+  public void setSubscriberDataObserver(SubscriberDataObserver subscriberDataObserver) {
+    this.subscriberDataObserver = subscriberDataObserver;
+  }
 
-    /**
-     * To string string.
-     *
-     * @return the string
-     */
-    @Override
-    public String toString() {
-        return "SubscriberRegistration{" + "dataId='" + dataId + '\'' + ", group='" + group + '\''
-               + ", appName='" + appName + '\'' + ", scopeEnum=" + scopeEnum
-               + ", subscriberDataObserver=" + subscriberDataObserver + '}';
-    }
+  /**
+   * To string string.
+   *
+   * @return the string
+   */
+  @Override
+  public String toString() {
+    return "SubscriberRegistration{"
+        + "dataId='"
+        + dataId
+        + '\''
+        + ", group='"
+        + group
+        + '\''
+        + ", appName='"
+        + appName
+        + '\''
+        + ", scopeEnum="
+        + scopeEnum
+        + ", subscriberDataObserver="
+        + subscriberDataObserver
+        + '}';
+  }
 }

@@ -19,46 +19,43 @@ package com.alipay.sofa.registry.client.log;
 import org.junit.Assert;
 import org.junit.Test;
 
-/**
- * @author <a href="mailto:zhanggeng.zg@antfin.com">GengZhang</a>
- */
+/** @author <a href="mailto:zhanggeng.zg@antfin.com">GengZhang</a> */
 public class LoggerFactoryTest {
 
-    @Test
-    public void getLogger() {
-        Assert.assertNull(LoggerFactory.getLogger((String) null));
-        Assert.assertNull(LoggerFactory.getLogger((Class) null));
-        Assert.assertEquals(LoggerFactory.getLogger(LoggerFactoryTest.class),
-            LoggerFactory.getLogger(LoggerFactoryTest.class.getCanonicalName()));
+  @Test
+  public void getLogger() {
+    Assert.assertNull(LoggerFactory.getLogger((String) null));
+    Assert.assertNull(LoggerFactory.getLogger((Class) null));
+    Assert.assertEquals(
+        LoggerFactory.getLogger(LoggerFactoryTest.class),
+        LoggerFactory.getLogger(LoggerFactoryTest.class.getCanonicalName()));
+  }
 
+  @Test
+  public void getLogSpace() {
+    Assert.assertEquals("com.alipay.sofa.registry.client", LoggerFactory.getLogSpace());
+    String key = "registry.client.log.space";
+    String old = System.getProperty(key); //
+    try {
+      System.setProperty(key, "xxx");
+      Assert.assertEquals("xxx", LoggerFactory.getLogSpace());
+    } finally {
+      if (old == null) {
+        System.clearProperty(key);
+      } else {
+        System.setProperty(key, old);
+      }
     }
+    Assert.assertEquals("com.alipay.sofa.registry.client", LoggerFactory.getLogSpace());
+  }
 
-    @Test
-    public void getLogSpace() {
-        Assert.assertEquals("com.alipay.sofa.registry.client", LoggerFactory.getLogSpace());
-        String key = "registry.client.log.space";
-        String old = System.getProperty(key); //
-        try {
-            System.setProperty(key, "xxx");
-            Assert.assertEquals("xxx", LoggerFactory.getLogSpace());
-        } finally {
-            if (old == null) {
-                System.clearProperty(key);
-            } else {
-                System.setProperty(key, old);
-            }
-        }
-        Assert.assertEquals("com.alipay.sofa.registry.client", LoggerFactory.getLogSpace());
-    }
-
-    @Test
-    public void testIsBlank() {
-        Assert.assertFalse(LoggerFactory.isBlank("123"));
-        Assert.assertTrue(LoggerFactory.isBlank(" "));
-        Assert.assertTrue(LoggerFactory.isBlank(""));
-        Assert.assertTrue(LoggerFactory.isBlank(null));
-        Assert.assertTrue(LoggerFactory.isBlank("   "));
-        Assert.assertTrue(LoggerFactory.isBlank("\r\t"));
-    }
-
+  @Test
+  public void testIsBlank() {
+    Assert.assertFalse(LoggerFactory.isBlank("123"));
+    Assert.assertTrue(LoggerFactory.isBlank(" "));
+    Assert.assertTrue(LoggerFactory.isBlank(""));
+    Assert.assertTrue(LoggerFactory.isBlank(null));
+    Assert.assertTrue(LoggerFactory.isBlank("   "));
+    Assert.assertTrue(LoggerFactory.isBlank("\r\t"));
+  }
 }

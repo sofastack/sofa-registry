@@ -26,19 +26,17 @@ import com.alipay.sofa.registry.server.meta.lease.session.SessionServerManager;
 
 /**
  * @author chen.zhu
- * <p>
- * Nov 23, 2020
+ *     <p>Nov 23, 2020
  */
 public interface CurrentDcMetaServer extends MetaServer, NodeCluster<MetaNode>, Observable {
 
-    void renew(MetaNode metaNode);
+  void renew(MetaNode metaNode);
 
-    void cancel(MetaNode metaNode);
+  void cancel(MetaNode metaNode);
 
-    void updateClusterMembers(VersionedList<MetaNode> metaNodes);
+  void updateClusterMembers(VersionedList<MetaNode> metaNodes);
 
-    DataServerManager getDataServerManager();
+  DataServerManager getDataServerManager();
 
-    SessionServerManager getSessionServerManager();
-
+  SessionServerManager getSessionServerManager();
 }

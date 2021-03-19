@@ -17,13 +17,12 @@
 package com.alipay.sofa.registry.jdbc.config;
 
 /**
- * 
  * @author xiaojian.xj
  * @version $Id: MetadataConfig.java, v 0.1 2021年02月24日 15:20 xiaojian.xj Exp $
  */
 public interface MetadataConfig {
 
-	int getInterfaceAppsRefreshLimit();
+  int getInterfaceAppsRefreshLimit();
 
-	int getRevisionGcLimit();
+  int getRevisionGcLimit();
 }

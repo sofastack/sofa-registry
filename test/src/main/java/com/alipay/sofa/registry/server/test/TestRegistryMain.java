@@ -16,61 +16,59 @@
  */
 package com.alipay.sofa.registry.server.test;
 
-import com.alipay.sofa.registry.net.NetUtil;
-import com.alipay.sofa.registry.server.integration.RegistryApplication;
-import com.alipay.sofa.registry.util.FileUtils;
-import org.springframework.context.ConfigurableApplicationContext;
-
-import java.io.File;
-import java.util.HashMap;
-import java.util.Map;
-
 import static com.alipay.sofa.registry.common.model.constants.ValueConstants.DEFAULT_DATA_CENTER;
 import static com.alipay.sofa.registry.common.model.constants.ValueConstants.DEFAULT_ZONE;
 
+import com.alipay.sofa.registry.net.NetUtil;
+import com.alipay.sofa.registry.server.integration.RegistryApplication;
+import com.alipay.sofa.registry.util.FileUtils;
+import java.io.File;
+import java.util.HashMap;
+import java.util.Map;
+import org.springframework.context.ConfigurableApplicationContext;
+
 /**
- @author xuanbei
- @since 2019/3/9
+ * @author xuanbei
+ * @since 2019/3/9
  */
 public class TestRegistryMain {
-    public static final String  LOCAL_ADDRESS = NetUtil.getLocalAddress().getHostAddress();
+  public static final String LOCAL_ADDRESS = NetUtil.getLocalAddress().getHostAddress();
 
-    private Map<String, String> configs       = new HashMap<>();
+  private Map<String, String> configs = new HashMap<>();
 
-    public TestRegistryMain() {
-        configs.put("nodes.metaNode", DEFAULT_DATA_CENTER + ":" + LOCAL_ADDRESS);
-        configs.put("nodes.localDataCenter", DEFAULT_DATA_CENTER);
-        configs.put("nodes.localRegion", DEFAULT_ZONE);
+  public TestRegistryMain() {
+    configs.put("nodes.metaNode", DEFAULT_DATA_CENTER + ":" + LOCAL_ADDRESS);
+    configs.put("nodes.localDataCenter", DEFAULT_DATA_CENTER);
+    configs.put("nodes.localRegion", DEFAULT_ZONE);
+  }
+
+  public void startRegistry() throws Exception {
+    for (Map.Entry<String, String> entry : configs.entrySet()) {
+      System.setProperty(entry.getKey(), entry.getValue());
     }
+    FileUtils.forceDelete(new File(System.getProperty("user.home") + File.separator + "raftData"));
+    RegistryApplication.main(new String[] {});
+    Thread.sleep(3000);
+  }
 
-    public void startRegistry() throws Exception {
-        for (Map.Entry<String, String> entry : configs.entrySet()) {
-            System.setProperty(entry.getKey(), entry.getValue());
-        }
-        FileUtils.forceDelete(new File(System.getProperty("user.home") + File.separator
-                                       + "raftData"));
-        RegistryApplication.main(new String[] {});
-        Thread.sleep(3000);
-    }
+  public void stopRegistry() throws Exception {
+    RegistryApplication.stop();
+  }
 
-    public void stopRegistry() throws Exception {
-        RegistryApplication.stop();
-    }
+  public void startRegistryWithConfig(Map<String, String> configs) throws Exception {
+    this.configs.putAll(configs);
+    this.startRegistry();
+  }
 
-    public void startRegistryWithConfig(Map<String, String> configs) throws Exception {
-        this.configs.putAll(configs);
-        this.startRegistry();
-    }
+  public ConfigurableApplicationContext getMetaApplicationContext() {
+    return RegistryApplication.getMetaApplicationContext();
+  }
 
-    public ConfigurableApplicationContext getMetaApplicationContext() {
-        return RegistryApplication.getMetaApplicationContext();
-    }
+  public ConfigurableApplicationContext getSessionApplicationContext() {
+    return RegistryApplication.getSessionApplicationContext();
+  }
 
-    public ConfigurableApplicationContext getSessionApplicationContext() {
-        return RegistryApplication.getSessionApplicationContext();
-    }
-
-    public ConfigurableApplicationContext getDataApplicationContext() {
-        return RegistryApplication.getDataApplicationContext();
-    }
+  public ConfigurableApplicationContext getDataApplicationContext() {
+    return RegistryApplication.getDataApplicationContext();
+  }
 }

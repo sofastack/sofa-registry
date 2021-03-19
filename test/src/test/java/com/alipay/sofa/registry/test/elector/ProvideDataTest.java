@@ -17,7 +17,6 @@
 package com.alipay.sofa.registry.test.elector;
 
 import com.alipay.sofa.common.profile.StringUtil;
-import com.alipay.sofa.registry.jdbc.domain.ProvideDataDomain;
 import com.alipay.sofa.registry.store.api.DBResponse;
 import com.alipay.sofa.registry.store.api.meta.ProvideDataRepository;
 import com.alipay.sofa.registry.test.BaseIntegrationTest;
@@ -29,32 +28,30 @@ import org.mockito.MockitoAnnotations;
 import org.springframework.test.context.junit4.SpringRunner;
 
 /**
- *
  * @author xiaojian.xj
  * @version $Id: ProvideDataTest.java, v 0.1 2021年03月15日 15:32 xiaojian.xj Exp $
  */
 @RunWith(SpringRunner.class)
 public class ProvideDataTest extends BaseIntegrationTest {
 
-    private ProvideDataRepository provideDataRepository;
+  private ProvideDataRepository provideDataRepository;
 
-    @Before
-    public void beforeProvideDataTest() {
-        MockitoAnnotations.initMocks(this);
+  @Before
+  public void beforeProvideDataTest() {
+    MockitoAnnotations.initMocks(this);
 
-        provideDataRepository = metaApplicationContext.getBean("provideDataJdbcRepository",
-                ProvideDataRepository.class);
-    }
+    provideDataRepository =
+        metaApplicationContext.getBean("provideDataJdbcRepository", ProvideDataRepository.class);
+  }
 
-    @Test
-    public void testProvideData() {
-        String dataCenter = "DefaultDataCenter:ProvideDataTest";
-        String key = "keyA" + System.currentTimeMillis();
-        String value = "valueA" + System.currentTimeMillis();
-        provideDataRepository.put(dataCenter, key, value);
+  @Test
+  public void testProvideData() {
+    String dataCenter = "DefaultDataCenter:ProvideDataTest";
+    String key = "keyA" + System.currentTimeMillis();
+    String value = "valueA" + System.currentTimeMillis();
+    provideDataRepository.put(dataCenter, key, value);
 
-        DBResponse dbResponse = provideDataRepository.get(dataCenter, key);
-        Assert.assertTrue(StringUtil.equals(value, (String) dbResponse.getEntity()));
-    }
-
+    DBResponse dbResponse = provideDataRepository.get(dataCenter, key);
+    Assert.assertTrue(StringUtil.equals(value, (String) dbResponse.getEntity()));
+  }
 }

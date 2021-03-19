@@ -33,31 +33,29 @@ import org.springframework.beans.factory.annotation.Autowired;
  */
 public class ClientCheckWrapperInterceptor implements WrapperInterceptor<StoreData, Boolean> {
 
-    @Autowired
-    private SessionServerConfig sessionServerConfig;
+  @Autowired private SessionServerConfig sessionServerConfig;
 
-    @Autowired
-    private Exchange            boltExchange;
+  @Autowired private Exchange boltExchange;
 
-    @Override
-    public Boolean invokeCodeWrapper(WrapperInvocation<StoreData, Boolean> invocation)
-                                                                                      throws Exception {
+  @Override
+  public Boolean invokeCodeWrapper(WrapperInvocation<StoreData, Boolean> invocation)
+      throws Exception {
 
-        BaseInfo baseInfo = (BaseInfo) invocation.getParameterSupplier().get();
+    BaseInfo baseInfo = (BaseInfo) invocation.getParameterSupplier().get();
 
-        Server sessionServer = boltExchange.getServer(sessionServerConfig.getServerPort());
+    Server sessionServer = boltExchange.getServer(sessionServerConfig.getServerPort());
 
-        Channel channel = sessionServer.getChannel(baseInfo.getSourceAddress());
+    Channel channel = sessionServer.getChannel(baseInfo.getSourceAddress());
 
-        if (channel == null) {
-            throw new RequestChannelClosedException(String.format(
-                "Register address %s  channel closed", baseInfo.getSourceAddress()));
-        }
-        return invocation.proceed();
+    if (channel == null) {
+      throw new RequestChannelClosedException(
+          String.format("Register address %s  channel closed", baseInfo.getSourceAddress()));
     }
+    return invocation.proceed();
+  }
 
-    @Override
-    public int getOrder() {
-        return 100;
-    }
+  @Override
+  public int getOrder() {
+    return 100;
+  }
 }

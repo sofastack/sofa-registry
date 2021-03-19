@@ -24,22 +24,23 @@ import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration;
 import org.springframework.scheduling.annotation.EnableScheduling;
 
 /**
- *
  * @author zhuoyu.sjw
  * @version $Id: SessionApplication.java, v 0.1 2017-11-13 20:19 zhuoyu.sjw Exp $$
  */
-@SpringBootApplication(exclude = { DataSourceAutoConfiguration.class })
+@SpringBootApplication(exclude = {DataSourceAutoConfiguration.class})
 @EnableScheduling
 public class SessionApplication {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(SessionApplication.class);
+  private static final Logger LOGGER = LoggerFactory.getLogger(SessionApplication.class);
 
-    public static void main(String[] args) {
-        // setup DefaultUncaughtExceptionHandler
-        Thread.setDefaultUncaughtExceptionHandler((t, e) -> {
-            LOGGER.error(String.format("UncaughtException in Thread(%s): %s", t.getName(), e.getMessage()), e);
+  public static void main(String[] args) {
+    // setup DefaultUncaughtExceptionHandler
+    Thread.setDefaultUncaughtExceptionHandler(
+        (t, e) -> {
+          LOGGER.error(
+              String.format("UncaughtException in Thread(%s): %s", t.getName(), e.getMessage()), e);
         });
 
-        SpringApplication.run(SessionApplication.class, args);
-    }
+    SpringApplication.run(SessionApplication.class, args);
+  }
 }

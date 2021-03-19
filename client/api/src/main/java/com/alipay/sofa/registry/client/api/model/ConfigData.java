@@ -18,16 +18,16 @@ package com.alipay.sofa.registry.client.api.model;
 
 /**
  * The interface Persistence data.
- * 
+ *
  * @author zhuoyu.sjw
  * @version $Id : ConfigData.java, v 0.1 2018-04-17 17:15 zhuoyu.sjw Exp $$
  */
 public interface ConfigData {
 
-	/**
-	 * Gets data.
-	 * 
-	 * @return the data
-	 */
-	String getData();
+  /**
+   * Gets data.
+   *
+   * @return the data
+   */
+  String getData();
 }

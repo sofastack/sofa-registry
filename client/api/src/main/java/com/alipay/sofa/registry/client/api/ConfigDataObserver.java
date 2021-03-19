@@ -20,20 +20,17 @@ import com.alipay.sofa.registry.client.api.model.ConfigData;
 
 /**
  * The interface Persistence data observer.
- * 
+ *
  * @author zhuoyu.sjw
- * @version $Id : ConfigDataObserver.java, v 0.1 2018-04-17 17:02 zhuoyu.sjw Exp
- *          $$
+ * @version $Id : ConfigDataObserver.java, v 0.1 2018-04-17 17:02 zhuoyu.sjw Exp $$
  */
 public interface ConfigDataObserver {
 
-	/**
-	 * Handle data.
-	 * 
-	 * @param dataId
-	 *            the data id
-	 * @param configData
-	 *            the persistence data
-	 */
-	void handleData(String dataId, ConfigData configData);
+  /**
+   * Handle data.
+   *
+   * @param dataId the data id
+   * @param configData the persistence data
+   */
+  void handleData(String dataId, ConfigData configData);
 }

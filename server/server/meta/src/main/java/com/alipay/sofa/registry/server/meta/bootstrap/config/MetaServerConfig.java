@@ -21,87 +21,87 @@ package com.alipay.sofa.registry.server.meta.bootstrap.config;
  * @version $Id: MetaServerConfig.java, v 0.1 2018-01-16 10:58 shangyu.wh Exp $
  */
 public interface MetaServerConfig {
-	int getSessionServerPort();
+  int getSessionServerPort();
 
-	int getDataServerPort();
+  int getDataServerPort();
 
-	int getMetaServerPort();
+  int getMetaServerPort();
 
-	int getHttpServerPort();
+  int getHttpServerPort();
 
-	int getRaftServerPort();
+  int getRaftServerPort();
 
-	int getCrossDcMetaSyncIntervalMilli();
+  int getCrossDcMetaSyncIntervalMilli();
 
-	int getExpireCheckIntervalMilli();
+  int getExpireCheckIntervalMilli();
 
-	int getSchedulerCheckNodeListChangePushTimeout();
+  int getSchedulerCheckNodeListChangePushTimeout();
 
-	int getSchedulerCheckNodeListChangePushFirstDelay();
+  int getSchedulerCheckNodeListChangePushFirstDelay();
 
-	int getDataNodeExchangeTimeout();
+  int getDataNodeExchangeTimeout();
 
-	int getSessionNodeExchangeTimeout();
+  int getSessionNodeExchangeTimeout();
 
-	int getMetaNodeExchangeTimeout();
+  int getMetaNodeExchangeTimeout();
 
-	String getRaftGroup();
+  String getRaftGroup();
 
-	String getRaftDataPath();
+  String getRaftDataPath();
 
-	boolean isEnableMetrics();
+  boolean isEnableMetrics();
 
-	int getRockDBCacheSize();
+  int getRockDBCacheSize();
 
-	int getConnectMetaServerExecutorMinSize();
+  int getConnectMetaServerExecutorMinSize();
 
-	int getConnectMetaServerExecutorMaxSize();
+  int getConnectMetaServerExecutorMaxSize();
 
-	int getConnectMetaServerExecutorQueueSize();
+  int getConnectMetaServerExecutorQueueSize();
 
-	int getRaftClientRefreshExecutorMinSize();
+  int getRaftClientRefreshExecutorMinSize();
 
-	int getRaftClientRefreshExecutorMaxSize();
+  int getRaftClientRefreshExecutorMaxSize();
 
-	int getRaftClientRefreshExecutorQueueSize();
+  int getRaftClientRefreshExecutorQueueSize();
 
-	int getMetaSchedulerPoolSize();
+  int getMetaSchedulerPoolSize();
 
-	int getDefaultRequestExecutorMinSize();
+  int getDefaultRequestExecutorMinSize();
 
-	int getDefaultRequestExecutorMaxSize();
+  int getDefaultRequestExecutorMaxSize();
 
-	int getDefaultRequestExecutorQueueSize();
+  int getDefaultRequestExecutorQueueSize();
 
-	int getAppRevisionRegisterExecutorMinSize();
+  int getAppRevisionRegisterExecutorMinSize();
 
-	int getAppRevisionRegisterExecutorMaxSize();
+  int getAppRevisionRegisterExecutorMaxSize();
 
-	int getAppRevisionRegisterExecutorQueueSize();
+  int getAppRevisionRegisterExecutorQueueSize();
 
-	int getRaftExecutorMinSize();
+  int getRaftExecutorMinSize();
 
-	int getRaftExecutorQueueSize();
+  int getRaftExecutorQueueSize();
 
-	int getRaftExecutorMaxSize();
+  int getRaftExecutorMaxSize();
 
-	int getRaftServerExecutorMinSize();
+  int getRaftServerExecutorMinSize();
 
-	int getRaftServerExecutorMaxSize();
+  int getRaftServerExecutorMaxSize();
 
-	int getRaftServerExecutorQueueSize();
+  int getRaftServerExecutorQueueSize();
 
-	int getRaftFsmExecutorMinSize();
+  int getRaftFsmExecutorMinSize();
 
-	int getRaftFsmExecutorMaxSize();
+  int getRaftFsmExecutorMaxSize();
 
-	int getRaftFsmExecutorQueueSize();
+  int getRaftFsmExecutorQueueSize();
 
-	int getRaftElectionTimeout();
+  int getRaftElectionTimeout();
 
-	double getSessionLoadbalanceThresholdRatio();
+  double getSessionLoadbalanceThresholdRatio();
 
-	long getMetaLeaderWarmupMilli();
+  long getMetaLeaderWarmupMilli();
 
-	void setMetaLeaderWarmupMilli(long warmupMilli);
+  void setMetaLeaderWarmupMilli(long warmupMilli);
 }

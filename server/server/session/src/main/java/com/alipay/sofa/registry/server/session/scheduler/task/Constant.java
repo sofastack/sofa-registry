@@ -17,15 +17,14 @@
 package com.alipay.sofa.registry.server.session.scheduler.task;
 
 /**
- * 
  * @author shangyu.wh
  * @version $Id: Constant.java, v 0.1 2018-08-17 17:07 shangyu.wh Exp $
  */
 public class Constant {
 
-	public final static String PUSH_CLIENT_SUBSCRIBERS = "PUSH_CLIENT_SUBSCRIBERS";
+  public static final String PUSH_CLIENT_SUBSCRIBERS = "PUSH_CLIENT_SUBSCRIBERS";
 
-	public final static String PUSH_CLIENT_DATUM = "PUSH_CLIENT_DATUM";
+  public static final String PUSH_CLIENT_DATUM = "PUSH_CLIENT_DATUM";
 
-	public final static String PUSH_CLIENT_URL = "PUSH_CLIENT_URL";
+  public static final String PUSH_CLIENT_URL = "PUSH_CLIENT_URL";
 }

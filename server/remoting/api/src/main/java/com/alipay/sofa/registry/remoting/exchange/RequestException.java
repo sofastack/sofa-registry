@@ -19,79 +19,87 @@ package com.alipay.sofa.registry.remoting.exchange;
 import com.alipay.sofa.registry.remoting.exchange.message.Request;
 
 /**
- *
  * @author shangyu.wh
  * @version $Id: RequestException.java, v 0.1 2018-01-15 18:16 shangyu.wh Exp $
  */
 public class RequestException extends RuntimeException {
 
-    private Request request;
+  private Request request;
 
-    /**
-     * constructor
-     * @param message
-     * @param request
-     */
-    public RequestException(String message, Request request) {
-        super(message);
-        this.request = request;
-    }
+  /**
+   * constructor
+   *
+   * @param message
+   * @param request
+   */
+  public RequestException(String message, Request request) {
+    super(message);
+    this.request = request;
+  }
 
-    /**
-     * constructor
-     * @param message
-     * @param request
-     * @param cause
-     */
-    public RequestException(String message, Request request, Throwable cause) {
-        super(message, cause);
-        this.request = request;
-    }
+  /**
+   * constructor
+   *
+   * @param message
+   * @param request
+   * @param cause
+   */
+  public RequestException(String message, Request request, Throwable cause) {
+    super(message, cause);
+    this.request = request;
+  }
 
-    /**
-     * constructor
-     * @param message
-     */
-    public RequestException(String message) {
-        super(message);
-    }
+  /**
+   * constructor
+   *
+   * @param message
+   */
+  public RequestException(String message) {
+    super(message);
+  }
 
-    /**
-     * constructor
-     * @param message
-     * @param cause
-     */
-    public RequestException(String message, Throwable cause) {
-        super(message, cause);
-    }
+  /**
+   * constructor
+   *
+   * @param message
+   * @param cause
+   */
+  public RequestException(String message, Throwable cause) {
+    super(message, cause);
+  }
 
-    /**
-     * constructor
-     * @param cause
-     */
-    public RequestException(Throwable cause) {
-        super(cause);
-    }
+  /**
+   * constructor
+   *
+   * @param cause
+   */
+  public RequestException(Throwable cause) {
+    super(cause);
+  }
 
-    /**
-     * get requestInfo from Request
-     * @return
-     */
-    @Override
-    public String getMessage() {
-        StringBuilder sb = new StringBuilder(256);
-        if (request != null) {
-            final Object requestBody = request.getRequestBody();
-            String requestBodyStr = null;
-            if (requestBody instanceof String) {
-                requestBodyStr = requestBody.toString();
-            } else if (requestBody != null) {
-                requestBodyStr = request.getRequestBody().getClass().getSimpleName();
-            }
-            sb.append("request url: ").append(request.getRequestUrl()).append(", body: ")
-                .append(requestBodyStr).append(", ");
-        }
-        sb.append(super.getMessage());
-        return sb.toString();
+  /**
+   * get requestInfo from Request
+   *
+   * @return
+   */
+  @Override
+  public String getMessage() {
+    StringBuilder sb = new StringBuilder(256);
+    if (request != null) {
+      final Object requestBody = request.getRequestBody();
+      String requestBodyStr = null;
+      if (requestBody instanceof String) {
+        requestBodyStr = requestBody.toString();
+      } else if (requestBody != null) {
+        requestBodyStr = request.getRequestBody().getClass().getSimpleName();
+      }
+      sb.append("request url: ")
+          .append(request.getRequestUrl())
+          .append(", body: ")
+          .append(requestBodyStr)
+          .append(", ");
     }
+    sb.append(super.getMessage());
+    return sb.toString();
+  }
 }

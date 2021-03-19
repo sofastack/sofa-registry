@@ -19,20 +19,15 @@ package com.alipay.sofa.registry.jraft.repository.impl;
 import com.alipay.sofa.registry.store.api.repository.AppRevisionHeartbeatRepository;
 
 /**
- *
  * @author xiaojian.xj
  * @version $Id: AppRevisionHeartbeatRaftRepository.java, v 0.1 2021年02月09日 17:15 xiaojian.xj Exp $
  */
-public class AppRevisionHeartbeatRaftRepository implements AppRevisionHeartbeatRepository,
-                                               RaftRepository {
+public class AppRevisionHeartbeatRaftRepository
+    implements AppRevisionHeartbeatRepository, RaftRepository {
 
-    @Override
-    public void doAppRevisionHeartbeat() {
+  @Override
+  public void doAppRevisionHeartbeat() {}
 
-    }
-
-    @Override
-    public void doAppRevisionGc(String dataCenter, int silenceHour) {
-
-    }
+  @Override
+  public void doAppRevisionGc(String dataCenter, int silenceHour) {}
 }
