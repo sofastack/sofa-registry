@@ -41,7 +41,6 @@ import com.alipay.sofa.registry.server.meta.slot.util.builder.SlotTableBuilder;
 import com.alipay.sofa.registry.server.shared.comparator.NodeComparator;
 import com.alipay.sofa.registry.server.shared.slot.SlotTableUtils;
 import com.alipay.sofa.registry.server.shared.util.NodeUtils;
-import com.alipay.sofa.registry.store.api.elector.LeaderElector;
 import com.alipay.sofa.registry.util.ConcurrentUtils;
 import com.alipay.sofa.registry.util.JsonUtils;
 import com.alipay.sofa.registry.util.WakeUpLoopRunnable;
