@@ -1,10 +1,29 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package com.alipay.sofa.registry.server.meta.metaserver.impl;
+
+import static org.mockito.Mockito.when;
 
 import com.alipay.sofa.registry.server.meta.AbstractMetaServerTest;
 import com.alipay.sofa.registry.server.meta.MetaLeaderService;
 import com.alipay.sofa.registry.server.meta.bootstrap.config.MetaServerConfig;
 import com.alipay.sofa.registry.server.shared.env.ServerEnv;
 import com.alipay.sofa.registry.store.api.elector.LeaderElector;
+import java.util.concurrent.atomic.AtomicInteger;
 import org.assertj.core.util.Lists;
 import org.junit.Assert;
 import org.junit.Before;
@@ -12,20 +31,13 @@ import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
-import java.util.concurrent.atomic.AtomicInteger;
-
-import static org.mockito.Mockito.when;
-
-
 public class DefaultMetaLeaderElectorTest extends AbstractMetaServerTest {
 
   private DefaultMetaLeaderElector metaLeaderElector;
 
-  @Mock
-  private LeaderElector leaderElector;
+  @Mock private LeaderElector leaderElector;
 
-  @Mock
-  private MetaServerConfig metaServerConfig;
+  @Mock private MetaServerConfig metaServerConfig;
 
   @Before
   public void beforeDefaultMetaLeaderElectorTest() {
@@ -69,17 +81,22 @@ public class DefaultMetaLeaderElectorTest extends AbstractMetaServerTest {
   public void testLeaderNotify() {
     AtomicInteger leaderCounter = new AtomicInteger(0);
     AtomicInteger followerCounter = new AtomicInteger(0);
-    metaLeaderElector = new DefaultMetaLeaderElector(leaderElector, metaServerConfig, Lists.newArrayList(new MetaLeaderService.MetaLeaderElectorListener() {
-      @Override
-      public void becomeLeader() {
-        leaderCounter.incrementAndGet();
-      }
+    metaLeaderElector =
+        new DefaultMetaLeaderElector(
+            leaderElector,
+            metaServerConfig,
+            Lists.newArrayList(
+                new MetaLeaderService.MetaLeaderElectorListener() {
+                  @Override
+                  public void becomeLeader() {
+                    leaderCounter.incrementAndGet();
+                  }
 
-      @Override
-      public void loseLeader() {
-        followerCounter.incrementAndGet();
-      }
-    }));
+                  @Override
+                  public void loseLeader() {
+                    followerCounter.incrementAndGet();
+                  }
+                }));
     metaLeaderElector.leaderNotify();
     Assert.assertEquals(1, leaderCounter.get());
     Assert.assertEquals(0, followerCounter.get());
@@ -94,17 +111,22 @@ public class DefaultMetaLeaderElectorTest extends AbstractMetaServerTest {
   public void testFollowNotify() {
     AtomicInteger leaderCounter = new AtomicInteger(0);
     AtomicInteger followerCounter = new AtomicInteger(0);
-    metaLeaderElector = new DefaultMetaLeaderElector(leaderElector, metaServerConfig, Lists.newArrayList(new MetaLeaderService.MetaLeaderElectorListener() {
-      @Override
-      public void becomeLeader() {
-        leaderCounter.incrementAndGet();
-      }
+    metaLeaderElector =
+        new DefaultMetaLeaderElector(
+            leaderElector,
+            metaServerConfig,
+            Lists.newArrayList(
+                new MetaLeaderService.MetaLeaderElectorListener() {
+                  @Override
+                  public void becomeLeader() {
+                    leaderCounter.incrementAndGet();
+                  }
 
-      @Override
-      public void loseLeader() {
-        followerCounter.incrementAndGet();
-      }
-    }));
+                  @Override
+                  public void loseLeader() {
+                    followerCounter.incrementAndGet();
+                  }
+                }));
     metaLeaderElector.leaderNotify();
     Assert.assertEquals(1, leaderCounter.get());
     Assert.assertEquals(0, followerCounter.get());
@@ -120,5 +142,4 @@ public class DefaultMetaLeaderElectorTest extends AbstractMetaServerTest {
     Assert.assertEquals(1, leaderCounter.get());
     Assert.assertEquals(1, followerCounter.get());
   }
-
 }
