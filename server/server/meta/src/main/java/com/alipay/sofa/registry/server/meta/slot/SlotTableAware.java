@@ -21,17 +21,15 @@ import com.alipay.sofa.registry.store.api.annotation.ReadOnLeader;
 
 /**
  * @author chen.zhu
- * <p>
- * Nov 13, 2020
+ *     <p>Nov 13, 2020
  */
 public interface SlotTableAware {
 
-    /**
-     * Gets get slot table.
-     *
-     * @return the get slot table
-     */
-    @ReadOnLeader
-    SlotTable getSlotTable();
-
+  /**
+   * Gets get slot table.
+   *
+   * @return the get slot table
+   */
+  @ReadOnLeader
+  SlotTable getSlotTable();
 }

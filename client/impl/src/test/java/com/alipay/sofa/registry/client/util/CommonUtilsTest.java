@@ -16,20 +16,17 @@
  */
 package com.alipay.sofa.registry.client.util;
 
+import java.util.Collections;
 import org.junit.Assert;
 import org.junit.Test;
 
-import java.util.Collections;
-
-/**
- * @author <a href="mailto:zhanggeng.zg@antfin.com">GengZhang</a>
- */
+/** @author <a href="mailto:zhanggeng.zg@antfin.com">GengZhang</a> */
 public class CommonUtilsTest {
 
-    @Test
-    public void isNotEmpty() {
-        Assert.assertTrue(CommonUtils.isNotEmpty(Collections.singletonList("xxx")));
-        Assert.assertFalse(CommonUtils.isNotEmpty(null));
-        Assert.assertFalse(CommonUtils.isNotEmpty(Collections.emptyList()));
-    }
+  @Test
+  public void isNotEmpty() {
+    Assert.assertTrue(CommonUtils.isNotEmpty(Collections.singletonList("xxx")));
+    Assert.assertFalse(CommonUtils.isNotEmpty(null));
+    Assert.assertFalse(CommonUtils.isNotEmpty(Collections.emptyList()));
+  }
 }

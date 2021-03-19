@@ -18,25 +18,24 @@ package com.alipay.sofa.registry.exception;
 
 /**
  * @author chen.zhu
- *         <p>
- *         Nov 13, 2020
+ *     <p>Nov 13, 2020
  */
 public class SofaRegistryRuntimeException extends RuntimeException {
 
-	public SofaRegistryRuntimeException(String message) {
-		super(message);
-	}
+  public SofaRegistryRuntimeException(String message) {
+    super(message);
+  }
 
-	public SofaRegistryRuntimeException(String message, Throwable cause) {
-		super(message, cause);
-	}
+  public SofaRegistryRuntimeException(String message, Throwable cause) {
+    super(message, cause);
+  }
 
-	public SofaRegistryRuntimeException(Throwable cause) {
-		super(cause);
-	}
+  public SofaRegistryRuntimeException(Throwable cause) {
+    super(cause);
+  }
 
-	public SofaRegistryRuntimeException(String message, Throwable cause,
-			boolean enableSuppression, boolean writableStackTrace) {
-		super(message, cause, enableSuppression, writableStackTrace);
-	}
+  public SofaRegistryRuntimeException(
+      String message, Throwable cause, boolean enableSuppression, boolean writableStackTrace) {
+    super(message, cause, enableSuppression, writableStackTrace);
+  }
 }

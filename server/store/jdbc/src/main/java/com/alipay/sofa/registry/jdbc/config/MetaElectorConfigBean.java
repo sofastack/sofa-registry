@@ -19,44 +19,43 @@ package com.alipay.sofa.registry.jdbc.config;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**
- *
  * @author xiaojian.xj
  * @version $Id: MetaElectorConfigBean.java, v 0.1 2021年03月17日 16:49 xiaojian.xj Exp $
  */
 @ConfigurationProperties(prefix = MetaElectorConfigBean.PRE_FIX)
 public class MetaElectorConfigBean implements MetaElectorConfig {
 
-    public static final String PRE_FIX = "meta.server.elector";
+  public static final String PRE_FIX = "meta.server.elector";
 
-    private String dataCenter;
+  private String dataCenter;
 
-    private long lockExpireDuration = 20 * 1000;
+  private long lockExpireDuration = 20 * 1000;
 
-    @Override
-    public String getDataCenter() {
-        return dataCenter;
-    }
+  @Override
+  public String getDataCenter() {
+    return dataCenter;
+  }
 
-    @Override
-    public long getLockExpireDuration() {
-        return lockExpireDuration;
-    }
+  @Override
+  public long getLockExpireDuration() {
+    return lockExpireDuration;
+  }
 
-    /**
-     * Setter method for property <tt>dataCenter</tt>.
-     *
-     * @param dataCenter value to be assigned to property dataCenter
-     */
-    public void setDataCenter(String dataCenter) {
-        this.dataCenter = dataCenter;
-    }
+  /**
+   * Setter method for property <tt>dataCenter</tt>.
+   *
+   * @param dataCenter value to be assigned to property dataCenter
+   */
+  public void setDataCenter(String dataCenter) {
+    this.dataCenter = dataCenter;
+  }
 
-    /**
-     * Setter method for property <tt>lockExpireDuration</tt>.
-     *
-     * @param lockExpireDuration value to be assigned to property lockExpireDuration
-     */
-    public void setLockExpireDuration(long lockExpireDuration) {
-        this.lockExpireDuration = lockExpireDuration;
-    }
+  /**
+   * Setter method for property <tt>lockExpireDuration</tt>.
+   *
+   * @param lockExpireDuration value to be assigned to property lockExpireDuration
+   */
+  public void setLockExpireDuration(long lockExpireDuration) {
+    this.lockExpireDuration = lockExpireDuration;
+  }
 }

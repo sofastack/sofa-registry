@@ -16,49 +16,50 @@
  */
 package com.alipay.sofa.registry.util;
 
-import org.junit.Test;
-
-import java.io.File;
-import java.io.IOException;
-
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
+
+import java.io.File;
+import java.io.IOException;
+import org.junit.Test;
 
 /**
  * @author xuanbei
  * @since 2019/1/16
  */
 public class FileUtilsTest {
-    @Test
-    public void doTest() throws Exception {
-        File dir = new File(System.getProperty("user.home") + File.separator + "FileUtilsTestDir");
-        File file = new File(dir, "FileUtilsTest");
-        FileUtils.forceDelete(dir);
+  @Test
+  public void doTest() throws Exception {
+    File dir = new File(System.getProperty("user.home") + File.separator + "FileUtilsTestDir");
+    File file = new File(dir, "FileUtilsTest");
+    FileUtils.forceDelete(dir);
 
-        String data = "FileUtilsTest";
-        new FileUtils().writeByteArrayToFile(file, data.getBytes(), true);
-        byte[] readByte = FileUtils.readFileToByteArray(file);
-        assertEquals(data, new String(readByte));
+    String data = "FileUtilsTest";
+    new FileUtils().writeByteArrayToFile(file, data.getBytes(), true);
+    byte[] readByte = FileUtils.readFileToByteArray(file);
+    assertEquals(data, new String(readByte));
 
-        boolean throwException = false;
-        try {
-            FileUtils.forceMkdir(file);
-        } catch (Exception e) {
-            throwException = true;
-            assertTrue(e.getClass() == IOException.class);
-            assertTrue(e.getMessage().contains(
-                "FileUtilsTest exists and is not a directory. Unable to create directory."));
-        }
-        if (!throwException) {
-            fail("should throw Exception.");
-        }
-        FileUtils.forceDelete(file);
-        FileUtils.forceDelete(dir);
-
-        FileUtils.forceMkdir(dir);
-        assertTrue(dir.exists());
-        assertTrue(dir.isDirectory());
-        FileUtils.forceDelete(dir);
+    boolean throwException = false;
+    try {
+      FileUtils.forceMkdir(file);
+    } catch (Exception e) {
+      throwException = true;
+      assertTrue(e.getClass() == IOException.class);
+      assertTrue(
+          e.getMessage()
+              .contains(
+                  "FileUtilsTest exists and is not a directory. Unable to create directory."));
     }
+    if (!throwException) {
+      fail("should throw Exception.");
+    }
+    FileUtils.forceDelete(file);
+    FileUtils.forceDelete(dir);
+
+    FileUtils.forceMkdir(dir);
+    assertTrue(dir.exists());
+    assertTrue(dir.isDirectory());
+    FileUtils.forceDelete(dir);
+  }
 }

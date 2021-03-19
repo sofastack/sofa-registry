@@ -28,44 +28,45 @@ import org.junit.Test;
 
 public class PublisherEnvelopeTest {
 
-    @Test(expected = IllegalArgumentException.class)
-    public void testErrorType() {
-        Publisher p = new Publisher() {
-            public DataType getDataType() {
-                return DataType.SUBSCRIBER;
-            }
+  @Test(expected = IllegalArgumentException.class)
+  public void testErrorType() {
+    Publisher p =
+        new Publisher() {
+          public DataType getDataType() {
+            return DataType.SUBSCRIBER;
+          }
 
-            public ProcessId getSessionProcessId() {
-                return ServerEnv.PROCESS_ID;
-            }
+          public ProcessId getSessionProcessId() {
+            return ServerEnv.PROCESS_ID;
+          }
         };
-        PublisherEnvelope.of(p);
-    }
+    PublisherEnvelope.of(p);
+  }
 
-    @Test
-    public void test() {
-        Publisher publisher = TestBaseUtils.createTestPublisher("testDataInfoId");
-        PublisherEnvelope envelope = PublisherEnvelope.of(publisher);
-        ParaCheckUtil.checkNotBlank(envelope.toString(), "tostring");
-        Assert.assertTrue(publisher == envelope.publisher);
-        Assert.assertEquals(publisher.registerVersion(), envelope.registerVersion);
-        Assert.assertEquals(publisher.registerVersion(), envelope.getVersionIfPub());
-        Assert.assertEquals(publisher.getSessionProcessId(), ServerEnv.PROCESS_ID);
-        Assert.assertEquals(Long.MAX_VALUE, envelope.tombstoneTimestamp);
-        Assert.assertTrue(envelope.isPub());
-        Assert.assertTrue(envelope.isConnectId(publisher.connectId()));
-        Assert.assertFalse(envelope.isConnectId(ConnectId.of("127.0.0.1:9999", "xxx:9997")));
+  @Test
+  public void test() {
+    Publisher publisher = TestBaseUtils.createTestPublisher("testDataInfoId");
+    PublisherEnvelope envelope = PublisherEnvelope.of(publisher);
+    ParaCheckUtil.checkNotBlank(envelope.toString(), "tostring");
+    Assert.assertTrue(publisher == envelope.publisher);
+    Assert.assertEquals(publisher.registerVersion(), envelope.registerVersion);
+    Assert.assertEquals(publisher.registerVersion(), envelope.getVersionIfPub());
+    Assert.assertEquals(publisher.getSessionProcessId(), ServerEnv.PROCESS_ID);
+    Assert.assertEquals(Long.MAX_VALUE, envelope.tombstoneTimestamp);
+    Assert.assertTrue(envelope.isPub());
+    Assert.assertTrue(envelope.isConnectId(publisher.connectId()));
+    Assert.assertFalse(envelope.isConnectId(ConnectId.of("127.0.0.1:9999", "xxx:9997")));
 
-        UnPublisher unPublisher = UnPublisher.of(publisher);
-        envelope = PublisherEnvelope.of(unPublisher);
+    UnPublisher unPublisher = UnPublisher.of(publisher);
+    envelope = PublisherEnvelope.of(unPublisher);
 
-        Assert.assertNull(envelope.publisher);
-        Assert.assertEquals(unPublisher.registerVersion(), envelope.registerVersion);
-        Assert.assertNull(envelope.getVersionIfPub());
-        Assert.assertEquals(unPublisher.getSessionProcessId(), ServerEnv.PROCESS_ID);
-        Assert.assertTrue(envelope.tombstoneTimestamp <= System.currentTimeMillis());
-        Assert.assertFalse(envelope.isPub());
-        Assert.assertFalse(envelope.isConnectId(publisher.connectId()));
-        Assert.assertFalse(envelope.isConnectId(ConnectId.of("127.0.0.1:9999", "xxx:9997")));
-    }
+    Assert.assertNull(envelope.publisher);
+    Assert.assertEquals(unPublisher.registerVersion(), envelope.registerVersion);
+    Assert.assertNull(envelope.getVersionIfPub());
+    Assert.assertEquals(unPublisher.getSessionProcessId(), ServerEnv.PROCESS_ID);
+    Assert.assertTrue(envelope.tombstoneTimestamp <= System.currentTimeMillis());
+    Assert.assertFalse(envelope.isPub());
+    Assert.assertFalse(envelope.isConnectId(publisher.connectId()));
+    Assert.assertFalse(envelope.isConnectId(ConnectId.of("127.0.0.1:9999", "xxx:9997")));
+  }
 }

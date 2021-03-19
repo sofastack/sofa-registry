@@ -21,35 +21,33 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- *
  * @author shangyu.wh
  * @version 1.0: BlacklistManager.java, v 0.1 2019-06-19 18:27 shangyu.wh Exp $
  */
 public interface BlacklistManager {
-    /**
-     * load list first
-     */
-    void load();
+  /** load list first */
+  void load();
 
-    /**
-     * get list
-     * @return
-     */
-    List<BlacklistConfig> getBlacklistConfigList();
+  /**
+   * get list
+   *
+   * @return
+   */
+  List<BlacklistConfig> getBlacklistConfigList();
 
-    /**
-     * set list
-     * @param blacklistConfigList
-     */
-    void setBlacklistConfigList(List<BlacklistConfig> blacklistConfigList);
+  /**
+   * set list
+   *
+   * @param blacklistConfigList
+   */
+  void setBlacklistConfigList(List<BlacklistConfig> blacklistConfigList);
 
-    /**
-     * convert blacklist map to blacklist config list
-     * @param config
-     * @return
-     * blacklistConfigMap key:blacklist type
-     * Map<String, Set<String>> key:MatchType
-     * set:match patterns
-     */
-    Map<String, Map<String, Set<String>>> convertBlacklistConfig(String config);
+  /**
+   * convert blacklist map to blacklist config list
+   *
+   * @param config
+   * @return blacklistConfigMap key:blacklist type Map<String, Set<String>> key:MatchType set:match
+   *     patterns
+   */
+  Map<String, Map<String, Set<String>>> convertBlacklistConfig(String config);
 }

@@ -20,32 +20,31 @@ import com.alipay.sofa.registry.client.api.model.ConfigData;
 
 /**
  * The type Default config data.
+ *
  * @author zhuoyu.sjw
  * @version $Id : DefaultConfigData.java, v 0.1 2018-04-18 15:29 zhuoyu.sjw Exp $$
  */
 public class DefaultConfigData implements ConfigData {
 
-    private String data;
+  private String data;
 
-    /**
-     * Instantiates a new Default config data.
-     *
-     * @param data the data
-     */
-    public DefaultConfigData(String data) {
-        this.data = data;
-    }
+  /**
+   * Instantiates a new Default config data.
+   *
+   * @param data the data
+   */
+  public DefaultConfigData(String data) {
+    this.data = data;
+  }
 
-    /**
-     * @see ConfigData#getData()
-     */
-    @Override
-    public String getData() {
-        return data;
-    }
+  /** @see ConfigData#getData() */
+  @Override
+  public String getData() {
+    return data;
+  }
 
-    @Override
-    public String toString() {
-        return "DefaultConfigData{" + "data='" + data + '\'' + '}';
-    }
+  @Override
+  public String toString() {
+    return "DefaultConfigData{" + "data='" + data + '\'' + '}';
+  }
 }

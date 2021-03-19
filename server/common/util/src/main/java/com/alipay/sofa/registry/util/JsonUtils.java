@@ -20,41 +20,41 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 /**
- *
  * @author yuzhi.lyz
  * @version v 0.1 2020-12-22 17:30 yuzhi.lyz Exp $
  */
 public final class JsonUtils {
-    public static final ThreadLocal<ObjectMapper> JACKSON_MAPPER = ThreadLocal.withInitial(() -> new ObjectMapper());
+  public static final ThreadLocal<ObjectMapper> JACKSON_MAPPER =
+      ThreadLocal.withInitial(() -> new ObjectMapper());
 
-    private JsonUtils() {
-    }
+  private JsonUtils() {}
 
-    public static ObjectMapper getJacksonObjectMapper() {
-        return JACKSON_MAPPER.get();
-    }
+  public static ObjectMapper getJacksonObjectMapper() {
+    return JACKSON_MAPPER.get();
+  }
 
-    public static <T> T read(String str, Class<T> clazz) {
-        try {
-            return JACKSON_MAPPER.get().readValue(str, clazz);
-        } catch (Throwable e) {
-            throw new RuntimeException("failed to read json to " + clazz.getName() + ", " + str, e);
-        }
+  public static <T> T read(String str, Class<T> clazz) {
+    try {
+      return JACKSON_MAPPER.get().readValue(str, clazz);
+    } catch (Throwable e) {
+      throw new RuntimeException("failed to read json to " + clazz.getName() + ", " + str, e);
     }
+  }
 
-    public static <T> T read(String str, TypeReference typeReference) {
-        try {
-            return JACKSON_MAPPER.get().readValue(str, typeReference);
-        } catch (Throwable e) {
-            throw new RuntimeException("failed to read json to " + typeReference.toString() + ", " + str, e);
-        }
+  public static <T> T read(String str, TypeReference typeReference) {
+    try {
+      return JACKSON_MAPPER.get().readValue(str, typeReference);
+    } catch (Throwable e) {
+      throw new RuntimeException(
+          "failed to read json to " + typeReference.toString() + ", " + str, e);
     }
+  }
 
-    public static String writeValueAsString(Object o) {
-        try {
-            return JACKSON_MAPPER.get().writeValueAsString(o);
-        } catch (Throwable e) {
-            throw new RuntimeException("failed to write json: " + o, e);
-        }
+  public static String writeValueAsString(Object o) {
+    try {
+      return JACKSON_MAPPER.get().writeValueAsString(o);
+    } catch (Throwable e) {
+      throw new RuntimeException("failed to write json: " + o, e);
     }
+  }
 }

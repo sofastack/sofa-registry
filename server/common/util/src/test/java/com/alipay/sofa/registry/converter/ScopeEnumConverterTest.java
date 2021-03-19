@@ -25,11 +25,11 @@ import org.junit.Test;
  * @since 2018/12/28
  */
 public class ScopeEnumConverterTest {
-    @Test
-    public void doTest() {
-        Assert.assertEquals(ScopeEnum.zone, new ScopeEnumConverter().convertToScope("zone"));
-        Assert.assertEquals(ScopeEnum.dataCenter, ScopeEnumConverter.convertToScope("dataCenter"));
-        Assert.assertEquals(ScopeEnum.global, ScopeEnumConverter.convertToScope("global"));
-        Assert.assertEquals(ScopeEnum.zone, ScopeEnumConverter.convertToScope("other value"));
-    }
+  @Test
+  public void doTest() {
+    Assert.assertEquals(ScopeEnum.zone, new ScopeEnumConverter().convertToScope("zone"));
+    Assert.assertEquals(ScopeEnum.dataCenter, ScopeEnumConverter.convertToScope("dataCenter"));
+    Assert.assertEquals(ScopeEnum.global, ScopeEnumConverter.convertToScope("global"));
+    Assert.assertEquals(ScopeEnum.zone, ScopeEnumConverter.convertToScope("other value"));
+  }
 }

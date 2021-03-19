@@ -19,7 +19,6 @@ package com.alipay.sofa.registry.common.model;
 import com.alipay.sofa.registry.common.model.dataserver.DatumSummary;
 import com.alipay.sofa.registry.common.model.store.Publisher;
 import com.google.common.collect.Maps;
-
 import java.util.*;
 
 /**
@@ -27,34 +26,34 @@ import java.util.*;
  * @version $Id: PublisherUtils.java, v 0.1 2020年11月12日 16:53 xiaojian.xj Exp $
  */
 public final class PublisherUtils {
-    private PublisherUtils() {
-    }
+  private PublisherUtils() {}
 
-    /**
-     * change publisher word cache
-     *
-     * @param publisher
-     * @return
-     */
-    public static Publisher internPublisher(Publisher publisher) {
-        publisher.setRegisterId(publisher.getRegisterId());
-        publisher.setDataInfoId(publisher.getDataInfoId());
-        publisher.setInstanceId(publisher.getInstanceId());
-        publisher.setGroup(publisher.getGroup());
-        publisher.setDataId(publisher.getDataId());
-        publisher.setClientId(publisher.getClientId());
-        publisher.setCell(publisher.getCell());
-        publisher.setProcessId(publisher.getProcessId());
-        publisher.setAppName(publisher.getAppName());
-        return publisher;
-    }
+  /**
+   * change publisher word cache
+   *
+   * @param publisher
+   * @return
+   */
+  public static Publisher internPublisher(Publisher publisher) {
+    publisher.setRegisterId(publisher.getRegisterId());
+    publisher.setDataInfoId(publisher.getDataInfoId());
+    publisher.setInstanceId(publisher.getInstanceId());
+    publisher.setGroup(publisher.getGroup());
+    publisher.setDataId(publisher.getDataId());
+    publisher.setClientId(publisher.getClientId());
+    publisher.setCell(publisher.getCell());
+    publisher.setProcessId(publisher.getProcessId());
+    publisher.setAppName(publisher.getAppName());
+    return publisher;
+  }
 
-    public static Map<String, DatumSummary> getDatumSummary(Map<String, Map<String, Publisher>> publisherMap) {
-        Map<String, DatumSummary> sourceSummaryMap = Maps.newHashMapWithExpectedSize(publisherMap
-            .size());
-        for (Map.Entry<String, Map<String, Publisher>> e : publisherMap.entrySet()) {
-            sourceSummaryMap.put(e.getKey(), DatumSummary.of(e.getKey(), e.getValue()));
-        }
-        return sourceSummaryMap;
+  public static Map<String, DatumSummary> getDatumSummary(
+      Map<String, Map<String, Publisher>> publisherMap) {
+    Map<String, DatumSummary> sourceSummaryMap =
+        Maps.newHashMapWithExpectedSize(publisherMap.size());
+    for (Map.Entry<String, Map<String, Publisher>> e : publisherMap.entrySet()) {
+      sourceSummaryMap.put(e.getKey(), DatumSummary.of(e.getKey(), e.getValue()));
     }
+    return sourceSummaryMap;
+  }
 }

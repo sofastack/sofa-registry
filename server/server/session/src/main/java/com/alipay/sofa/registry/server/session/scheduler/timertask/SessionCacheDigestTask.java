@@ -26,13 +26,12 @@ import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
 import com.alipay.sofa.registry.server.session.store.DataStore;
 import com.alipay.sofa.registry.server.session.store.Interests;
 import com.alipay.sofa.registry.util.ConcurrentUtils;
-import org.apache.commons.lang.time.DateUtils;
-import org.springframework.beans.factory.annotation.Autowired;
-
-import javax.annotation.PostConstruct;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
+import javax.annotation.PostConstruct;
+import org.apache.commons.lang.time.DateUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 
 /**
  * @author xiaojian.xj
@@ -40,74 +39,77 @@ import java.util.stream.Collectors;
  */
 public class SessionCacheDigestTask {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger("CACHE-DIGEST");
+  private static final Logger LOGGER = LoggerFactory.getLogger("CACHE-DIGEST");
 
-    @Autowired
-    private DataStore           sessionDataStore;
+  @Autowired private DataStore sessionDataStore;
 
-    @Autowired
-    private Interests           sessionInterests;
+  @Autowired private Interests sessionInterests;
 
-    @Autowired
-    private SessionServerConfig sessionServerConfig;
+  @Autowired private SessionServerConfig sessionServerConfig;
 
-    @PostConstruct
-    public void init() {
-        final int intervalMinutes = sessionServerConfig.getCacheDigestIntervalMinutes();
-        if (intervalMinutes <= 0) {
-            LOGGER.info("cache digest off with intervalMinutes={}", intervalMinutes);
-            return;
-        }
-        Date firstDate = new Date();
-        firstDate = DateUtils.round(firstDate, Calendar.MINUTE);
-        firstDate.setMinutes(firstDate.getMinutes() / intervalMinutes * intervalMinutes
-                             + intervalMinutes);
-        Timer timer = new Timer("CacheDigestTask", true);
-        TimerTask task = new TimerTask() {
-            @Override
-            public void run() {
-                dump();
-            }
-        };
-        timer.scheduleAtFixedRate(task, firstDate, intervalMinutes * 60 * 1000);
+  @PostConstruct
+  public void init() {
+    final int intervalMinutes = sessionServerConfig.getCacheDigestIntervalMinutes();
+    if (intervalMinutes <= 0) {
+      LOGGER.info("cache digest off with intervalMinutes={}", intervalMinutes);
+      return;
     }
+    Date firstDate = new Date();
+    firstDate = DateUtils.round(firstDate, Calendar.MINUTE);
+    firstDate.setMinutes(
+        firstDate.getMinutes() / intervalMinutes * intervalMinutes + intervalMinutes);
+    Timer timer = new Timer("CacheDigestTask", true);
+    TimerTask task =
+        new TimerTask() {
+          @Override
+          public void run() {
+            dump();
+          }
+        };
+    timer.scheduleAtFixedRate(task, firstDate, intervalMinutes * 60 * 1000);
+  }
 
-    private void dump() {
-        try {
-            Collection<String> storeDataInfoIds = sessionDataStore.getDataInfoIds();
-            Collection<String> interestDataInfoIds = sessionInterests.getDataInfoIds();
-            Set<String> dataInfoIds = new HashSet<>(storeDataInfoIds.size() + interestDataInfoIds.size());
+  private void dump() {
+    try {
+      Collection<String> storeDataInfoIds = sessionDataStore.getDataInfoIds();
+      Collection<String> interestDataInfoIds = sessionInterests.getDataInfoIds();
+      Set<String> dataInfoIds = new HashSet<>(storeDataInfoIds.size() + interestDataInfoIds.size());
 
-            dataInfoIds.addAll(storeDataInfoIds);
-            dataInfoIds.addAll(interestDataInfoIds);
+      dataInfoIds.addAll(storeDataInfoIds);
+      dataInfoIds.addAll(interestDataInfoIds);
 
-            dataInfoIds.stream().forEach(dataInfoId -> {
+      dataInfoIds.stream()
+          .forEach(
+              dataInfoId -> {
                 Collection<Publisher> publishers = sessionDataStore.getDatas(dataInfoId);
                 Collection<Subscriber> subscribers = sessionInterests.getDatas(dataInfoId);
 
-                LOGGER.info("[dataInfo] {}; {}; {}; {}; [{}]; [{}]",
-                        sessionServerConfig.getSessionServerDataCenter(), dataInfoId,
-                        publishers.size(), subscribers.size(),
-                        logPubOrSub(publishers), logPubOrSub(subscribers));
+                LOGGER.info(
+                    "[dataInfo] {}; {}; {}; {}; [{}]; [{}]",
+                    sessionServerConfig.getSessionServerDataCenter(),
+                    dataInfoId,
+                    publishers.size(),
+                    subscribers.size(),
+                    logPubOrSub(publishers),
+                    logPubOrSub(subscribers));
                 // avoid io is too busy
                 ConcurrentUtils.sleepUninterruptibly(2, TimeUnit.MILLISECONDS);
-            });
+              });
 
-        } catch (Throwable t) {
-            LOGGER.error("[CacheDigestTask] cache digest error", t);
-        }
-
+    } catch (Throwable t) {
+      LOGGER.error("[CacheDigestTask] cache digest error", t);
     }
+  }
 
-    private String logPubOrSub(Collection<? extends BaseInfo> infos) {
+  private String logPubOrSub(Collection<? extends BaseInfo> infos) {
 
-        return Optional.ofNullable(infos).orElse(new ArrayList<>()).stream()
-                .filter(info -> info != null).map(info -> logUrl(info.getSourceAddress()))
-                .collect(Collectors.joining(","));
-    }
+    return Optional.ofNullable(infos).orElse(new ArrayList<>()).stream()
+        .filter(info -> info != null)
+        .map(info -> logUrl(info.getSourceAddress()))
+        .collect(Collectors.joining(","));
+  }
 
-    private String logUrl(URL url) {
-        return url == null ? "null" : url.getAddressString();
-    }
-
+  private String logUrl(URL url) {
+    return url == null ? "null" : url.getAddressString();
+  }
 }

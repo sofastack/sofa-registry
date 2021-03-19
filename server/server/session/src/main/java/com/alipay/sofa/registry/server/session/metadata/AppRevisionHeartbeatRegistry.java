@@ -24,38 +24,37 @@ import com.alipay.sofa.registry.store.api.repository.AppRevisionRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 
 /**
- *
  * @author xiaojian.xj
  * @version $Id: AppRevisionHeartbeatRegistry.java, v 0.1 2021年02月09日 15:47 xiaojian.xj Exp $
  */
 public class AppRevisionHeartbeatRegistry {
 
-    private AppRevisionRepository          appRevisionRepository;
+  private AppRevisionRepository appRevisionRepository;
 
-    private AppRevisionHeartbeatRepository appRevisionHeartbeatRepository;
+  private AppRevisionHeartbeatRepository appRevisionHeartbeatRepository;
 
-    @Autowired
-    private SessionServerConfig            sessionServerConfig;
+  @Autowired private SessionServerConfig sessionServerConfig;
 
-    public AppRevisionHeartbeatRegistry(RepositoryManager repositoryManager) {
-        appRevisionRepository = (AppRevisionRepository) repositoryManager
-            .getRepository(AppRevisionRepository.class);
-        appRevisionHeartbeatRepository = (AppRevisionHeartbeatRepository) repositoryManager
-            .getRepository(AppRevisionHeartbeatRepository.class);
-    }
+  public AppRevisionHeartbeatRegistry(RepositoryManager repositoryManager) {
+    appRevisionRepository =
+        (AppRevisionRepository) repositoryManager.getRepository(AppRevisionRepository.class);
+    appRevisionHeartbeatRepository =
+        (AppRevisionHeartbeatRepository)
+            repositoryManager.getRepository(AppRevisionHeartbeatRepository.class);
+  }
 
-    public AppRevision heartbeat(String revision) {
-        return appRevisionRepository.heartbeat(sessionServerConfig.getSessionServerDataCenter(),
-            revision);
-    }
+  public AppRevision heartbeat(String revision) {
+    return appRevisionRepository.heartbeat(
+        sessionServerConfig.getSessionServerDataCenter(), revision);
+  }
 
-    public void doRevisionHeartbeat() {
-        appRevisionHeartbeatRepository.doAppRevisionHeartbeat();
-    }
+  public void doRevisionHeartbeat() {
+    appRevisionHeartbeatRepository.doAppRevisionHeartbeat();
+  }
 
-    public void doRevisionGc() {
-        appRevisionHeartbeatRepository.doAppRevisionGc(
-            sessionServerConfig.getSessionServerDataCenter(),
-            sessionServerConfig.getAppRevisionGcSilenceHour());
-    }
+  public void doRevisionGc() {
+    appRevisionHeartbeatRepository.doAppRevisionGc(
+        sessionServerConfig.getSessionServerDataCenter(),
+        sessionServerConfig.getAppRevisionGcSilenceHour());
+  }
 }

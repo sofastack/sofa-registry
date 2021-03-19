@@ -24,21 +24,22 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration;
 
 /**
- *
  * @author zhuoyu.sjw
  * @version $Id: DataApplication.java, v 0.1 2017-11-13 19:04 zhuoyu.sjw Exp $$
  */
 @EnableDataServer
-@SpringBootApplication(exclude = { DataSourceAutoConfiguration.class })
+@SpringBootApplication(exclude = {DataSourceAutoConfiguration.class})
 public class DataApplication {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(DataApplication.class);
+  private static final Logger LOGGER = LoggerFactory.getLogger(DataApplication.class);
 
-    public static void main(String[] args) {
-        // setup DefaultUncaughtExceptionHandler
-        Thread.setDefaultUncaughtExceptionHandler((t, e) -> {
-            LOGGER.error(String.format("UncaughtException in Thread(%s): %s", t.getName(), e.getMessage()), e);
+  public static void main(String[] args) {
+    // setup DefaultUncaughtExceptionHandler
+    Thread.setDefaultUncaughtExceptionHandler(
+        (t, e) -> {
+          LOGGER.error(
+              String.format("UncaughtException in Thread(%s): %s", t.getName(), e.getMessage()), e);
         });
-        SpringApplication.run(DataApplication.class, args);
-    }
+    SpringApplication.run(DataApplication.class, args);
+  }
 }

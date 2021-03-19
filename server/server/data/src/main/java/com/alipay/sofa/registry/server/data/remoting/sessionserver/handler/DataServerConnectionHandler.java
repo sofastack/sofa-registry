@@ -24,25 +24,24 @@ import com.alipay.sofa.registry.server.shared.remoting.ListenServerChannelHandle
 import org.springframework.beans.factory.annotation.Autowired;
 
 /**
- *
  * Connection handler for session connect data server
  *
- * fix shangyu.wh
+ * <p>fix shangyu.wh
+ *
  * @author xuanbei
  * @since 2019/2/15
  */
 public class DataServerConnectionHandler extends ListenServerChannelHandler {
-    @Autowired
-    private SessionServerConnectionFactory sessionServerConnectionFactory;
+  @Autowired private SessionServerConnectionFactory sessionServerConnectionFactory;
 
-    @Override
-    public void disconnected(Channel channel) {
-        super.disconnected(channel);
-        sessionServerConnectionFactory.sessionDisconnected(channel);
-    }
+  @Override
+  public void disconnected(Channel channel) {
+    super.disconnected(channel);
+    sessionServerConnectionFactory.sessionDisconnected(channel);
+  }
 
-    @Override
-    protected Node.NodeType getConnectNodeType() {
-        return NodeType.SESSION;
-    }
+  @Override
+  protected Node.NodeType getConnectNodeType() {
+    return NodeType.SESSION;
+  }
 }

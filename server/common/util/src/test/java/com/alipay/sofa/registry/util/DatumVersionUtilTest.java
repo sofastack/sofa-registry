@@ -16,27 +16,26 @@
  */
 package com.alipay.sofa.registry.util;
 
+import static org.junit.Assert.*;
+
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import org.junit.Test;
 
-import static org.junit.Assert.*;
-
 public class DatumVersionUtilTest {
 
-    private final Logger logger = LoggerFactory.getLogger(DatumVersionUtilTest.class);
+  private final Logger logger = LoggerFactory.getLogger(DatumVersionUtilTest.class);
 
-    @Test
-    public void testNextId() {
-        long epoch = DatumVersionUtil.nextId();
-        long timestamp = System.currentTimeMillis();
-        System.out.println(epoch);
-        System.out.println(timestamp);
-        logger.info("[epoch] {}", epoch);
-        logger.info("[timestamp] {}", timestamp);
-    }
+  @Test
+  public void testNextId() {
+    long epoch = DatumVersionUtil.nextId();
+    long timestamp = System.currentTimeMillis();
+    System.out.println(epoch);
+    System.out.println(timestamp);
+    logger.info("[epoch] {}", epoch);
+    logger.info("[timestamp] {}", timestamp);
+  }
 
-    @Test
-    public void testGetRealTimestamp() {
-    }
+  @Test
+  public void testGetRealTimestamp() {}
 }

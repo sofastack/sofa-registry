@@ -30,122 +30,125 @@ import com.alipay.sofa.registry.server.shared.meta.MetaServerService;
 import com.alipay.sofa.registry.task.listener.TaskEvent;
 import com.alipay.sofa.registry.task.listener.TaskEvent.TaskType;
 import com.alipay.sofa.registry.task.listener.TaskListenerManager;
-
 import java.util.*;
 
 /**
- *
  * @author shangyu.wh
  * @version $Id: SubscriberRegisterFetchTask.java, v 0.1 2017-12-07 16:23 shangyu.wh Exp $
  */
 public class WatcherRegisterFetchTask extends AbstractSessionTask {
 
-    private static final Logger       taskLogger = LoggerFactory.getLogger(
-                                                     WatcherRegisterFetchTask.class, "[Task]");
+  private static final Logger taskLogger =
+      LoggerFactory.getLogger(WatcherRegisterFetchTask.class, "[Task]");
 
-    private final SessionServerConfig sessionServerConfig;
-    /**
-     * trigger push client process
-     */
-    private final TaskListenerManager taskListenerManager;
-    /**
-     * Meta Node service
-     */
-    private final MetaServerService   metaServerService;
+  private final SessionServerConfig sessionServerConfig;
+  /** trigger push client process */
+  private final TaskListenerManager taskListenerManager;
+  /** Meta Node service */
+  private final MetaServerService metaServerService;
 
-    private Watcher                   watcher;
+  private Watcher watcher;
 
-    private static final int          TRY_COUNT  = 3;
+  private static final int TRY_COUNT = 3;
 
-    public WatcherRegisterFetchTask(SessionServerConfig sessionServerConfig,
-                                    TaskListenerManager taskListenerManager,
-                                    MetaServerService metaServerService) {
-        this.sessionServerConfig = sessionServerConfig;
-        this.taskListenerManager = taskListenerManager;
-        this.metaServerService = metaServerService;
+  public WatcherRegisterFetchTask(
+      SessionServerConfig sessionServerConfig,
+      TaskListenerManager taskListenerManager,
+      MetaServerService metaServerService) {
+    this.sessionServerConfig = sessionServerConfig;
+    this.taskListenerManager = taskListenerManager;
+    this.metaServerService = metaServerService;
+  }
+
+  @Override
+  public void setTaskEvent(TaskEvent taskEvent) {
+
+    // taskId create from event
+    if (taskEvent.getTaskId() != null) {
+      setTaskId(taskEvent.getTaskId());
     }
 
-    @Override
-    public void setTaskEvent(TaskEvent taskEvent) {
+    Object obj = taskEvent.getEventObj();
 
-        //taskId create from event
-        if (taskEvent.getTaskId() != null) {
-            setTaskId(taskEvent.getTaskId());
-        }
-
-        Object obj = taskEvent.getEventObj();
-
-        if (!(obj instanceof Watcher)) {
-            throw new IllegalArgumentException("Input task event object error!");
-        }
-
-        this.watcher = (Watcher) obj;
+    if (!(obj instanceof Watcher)) {
+      throw new IllegalArgumentException("Input task event object error!");
     }
 
-    @Override
-    public void execute() {
+    this.watcher = (Watcher) obj;
+  }
 
-        if (watcher == null) {
-            throw new IllegalArgumentException("watcher can not be null!");
-        }
+  @Override
+  public void execute() {
 
-        List<String> subscriberRegisterIdList = Collections.singletonList(watcher.getRegisterId());
-
-        boolean isOldVersion = !ClientVersion.StoreData.equals(watcher.getClientVersion());
-
-        ProvideData provideData = null;
-
-        for (int tryCount = 0; tryCount < TRY_COUNT; tryCount++) {
-            try {
-                provideData = metaServerService.fetchData(watcher.getDataInfoId());
-                break;
-            } catch (Exception e) {
-                randomDelay(3000);
-            }
-        }
-
-        if (provideData == null) {
-            taskLogger.error("Fetch provider data error,set null value return.dataInfoId={}",
-                watcher.getDataId());
-            provideData = new ProvideData(null, watcher.getDataInfoId(), null);
-        }
-
-        if (!isOldVersion) {
-            DataInfo dataInfo = DataInfo.valueOf(provideData.getDataInfoId());
-            ReceivedConfigData receivedConfigData = ReceivedDataConverter.getReceivedConfigData(
-                provideData.getProvideData(), dataInfo, provideData.getVersion());
-            receivedConfigData.setConfiguratorRegistIds(subscriberRegisterIdList);
-            firePushTask(receivedConfigData);
-        }
+    if (watcher == null) {
+      throw new IllegalArgumentException("watcher can not be null!");
     }
 
-    private void firePushTask(ReceivedConfigData receivedConfigData) {
-        Map<ReceivedConfigData, URL> parameter = new HashMap<>();
-        parameter.put(receivedConfigData, watcher.getSourceAddress());
-        TaskEvent taskEvent = new TaskEvent(parameter, TaskType.RECEIVED_DATA_CONFIG_PUSH_TASK);
-        taskLogger.info("send " + taskEvent.getTaskType() + " taskEvent:{}", taskEvent);
-        taskListenerManager.sendTaskEvent(taskEvent);
+    List<String> subscriberRegisterIdList = Collections.singletonList(watcher.getRegisterId());
+
+    boolean isOldVersion = !ClientVersion.StoreData.equals(watcher.getClientVersion());
+
+    ProvideData provideData = null;
+
+    for (int tryCount = 0; tryCount < TRY_COUNT; tryCount++) {
+      try {
+        provideData = metaServerService.fetchData(watcher.getDataInfoId());
+        break;
+      } catch (Exception e) {
+        randomDelay(3000);
+      }
     }
 
-    @Override
-    public boolean checkRetryTimes() {
-        return checkRetryTimes(sessionServerConfig.getSubscriberRegisterFetchRetryTimes());
+    if (provideData == null) {
+      taskLogger.error(
+          "Fetch provider data error,set null value return.dataInfoId={}", watcher.getDataId());
+      provideData = new ProvideData(null, watcher.getDataInfoId(), null);
     }
 
-    private void randomDelay(int max) {
-        Random random = new Random();
-        int randomNum = random.nextInt(max);
-        try {
-            Thread.sleep(randomNum);
-        } catch (InterruptedException e) {
-            taskLogger.error("[TimeUtil] random delay error", e);
-        }
+    if (!isOldVersion) {
+      DataInfo dataInfo = DataInfo.valueOf(provideData.getDataInfoId());
+      ReceivedConfigData receivedConfigData =
+          ReceivedDataConverter.getReceivedConfigData(
+              provideData.getProvideData(), dataInfo, provideData.getVersion());
+      receivedConfigData.setConfiguratorRegistIds(subscriberRegisterIdList);
+      firePushTask(receivedConfigData);
     }
+  }
 
-    @Override
-    public String toString() {
-        return "WATCHER_REGISTER_FETCH_TASK{" + "taskId='" + getTaskId() + '\'' + ", watcher="
-               + watcher + ", retryTimes='"
-               + sessionServerConfig.getSubscriberRegisterFetchRetryTimes() + '\'' + '}';
+  private void firePushTask(ReceivedConfigData receivedConfigData) {
+    Map<ReceivedConfigData, URL> parameter = new HashMap<>();
+    parameter.put(receivedConfigData, watcher.getSourceAddress());
+    TaskEvent taskEvent = new TaskEvent(parameter, TaskType.RECEIVED_DATA_CONFIG_PUSH_TASK);
+    taskLogger.info("send " + taskEvent.getTaskType() + " taskEvent:{}", taskEvent);
+    taskListenerManager.sendTaskEvent(taskEvent);
+  }
+
+  @Override
+  public boolean checkRetryTimes() {
+    return checkRetryTimes(sessionServerConfig.getSubscriberRegisterFetchRetryTimes());
+  }
+
+  private void randomDelay(int max) {
+    Random random = new Random();
+    int randomNum = random.nextInt(max);
+    try {
+      Thread.sleep(randomNum);
+    } catch (InterruptedException e) {
+      taskLogger.error("[TimeUtil] random delay error", e);
     }
+  }
+
+  @Override
+  public String toString() {
+    return "WATCHER_REGISTER_FETCH_TASK{"
+        + "taskId='"
+        + getTaskId()
+        + '\''
+        + ", watcher="
+        + watcher
+        + ", retryTimes='"
+        + sessionServerConfig.getSubscriberRegisterFetchRetryTimes()
+        + '\''
+        + '}';
+  }
 }

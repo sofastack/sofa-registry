@@ -17,17 +17,13 @@
 package com.alipay.sofa.registry.store.api;
 
 /**
- @author xuanbei
- @since 2019/2/12
+ * @author xuanbei
+ * @since 2019/2/12
  */
 public enum OperationStatus {
-    /**
-     * The operation was successful.
-     */
-    SUCCESS,
+  /** The operation was successful. */
+  SUCCESS,
 
-    /**
-     * The requested key/data pair was not found.
-     */
-    NOTFOUND
+  /** The requested key/data pair was not found. */
+  NOTFOUND
 }

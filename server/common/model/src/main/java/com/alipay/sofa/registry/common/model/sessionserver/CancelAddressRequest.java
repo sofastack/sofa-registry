@@ -17,51 +17,50 @@
 package com.alipay.sofa.registry.common.model.sessionserver;
 
 import com.alipay.sofa.registry.common.model.ConnectId;
-
 import java.io.Serializable;
 import java.util.List;
 
 /**
  * The type Cancel address request.
+ *
  * @author shangyu.wh
  * @version $Id : CancelAddressRequest.java, v 0.1 2017-12-22 17:04 shangyu.wh Exp $
  */
 public class CancelAddressRequest implements Serializable {
 
-    private static final long serialVersionUID = -4398310292728124256L;
+  private static final long serialVersionUID = -4398310292728124256L;
 
-    private List<ConnectId>   connectIds;
+  private List<ConnectId> connectIds;
 
-    public CancelAddressRequest() {
-    }
+  public CancelAddressRequest() {}
 
-    /**
-     * Constructor.
-     *
-     * @param connectIds the connect ids
-     */
-    public CancelAddressRequest(List<ConnectId> connectIds) {
-        this.connectIds = connectIds;
-    }
+  /**
+   * Constructor.
+   *
+   * @param connectIds the connect ids
+   */
+  public CancelAddressRequest(List<ConnectId> connectIds) {
+    this.connectIds = connectIds;
+  }
 
-    /**
-     * Getter method for property <tt>connectIds</tt>.
-     *
-     * @return property value of connectIds
-     */
-    public List<ConnectId> getConnectIds() {
-        return connectIds;
-    }
+  /**
+   * Getter method for property <tt>connectIds</tt>.
+   *
+   * @return property value of connectIds
+   */
+  public List<ConnectId> getConnectIds() {
+    return connectIds;
+  }
 
-    public void setConnectIds(List<ConnectId> connectIds) {
-        this.connectIds = connectIds;
-    }
+  public void setConnectIds(List<ConnectId> connectIds) {
+    this.connectIds = connectIds;
+  }
 
-    @Override
-    public String toString() {
-        final StringBuilder sb = new StringBuilder("CancelAddressRequest{");
-        sb.append("connectIds=").append(connectIds);
-        sb.append('}');
-        return sb.toString();
-    }
+  @Override
+  public String toString() {
+    final StringBuilder sb = new StringBuilder("CancelAddressRequest{");
+    sb.append("connectIds=").append(connectIds);
+    sb.append('}');
+    return sb.toString();
+  }
 }

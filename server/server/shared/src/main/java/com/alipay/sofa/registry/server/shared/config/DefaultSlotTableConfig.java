@@ -18,26 +18,25 @@ package com.alipay.sofa.registry.server.shared.config;
 
 /**
  * @author chen.zhu
- * <p>
- * Dec 15, 2020
+ *     <p>Dec 15, 2020
  */
 public class DefaultSlotTableConfig implements SlotTableConfig {
 
-    public static final String SLOT_NUMS         = "slot.nums";
+  public static final String SLOT_NUMS = "slot.nums";
 
-    public static final String SLOT_REPLICA_NUMS = "slot.replica.nums";
+  public static final String SLOT_REPLICA_NUMS = "slot.replica.nums";
 
-    private final int          slotNums          = Integer.getInteger(SLOT_NUMS, 2);
+  private final int slotNums = Integer.getInteger(SLOT_NUMS, 2);
 
-    private final int          slotReplicaNums   = Integer.getInteger(SLOT_REPLICA_NUMS, 1);
+  private final int slotReplicaNums = Integer.getInteger(SLOT_REPLICA_NUMS, 1);
 
-    @Override
-    public int getSlotNums() {
-        return slotNums;
-    }
+  @Override
+  public int getSlotNums() {
+    return slotNums;
+  }
 
-    @Override
-    public int getSlotReplicaNums() {
-        return slotReplicaNums;
-    }
+  @Override
+  public int getSlotReplicaNums() {
+    return slotReplicaNums;
+  }
 }

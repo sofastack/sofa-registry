@@ -34,29 +34,28 @@ import org.springframework.beans.factory.annotation.Autowired;
  */
 public class DataPushRequestHandler extends AbstractClientHandler<DataPushRequest> {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(DataPushRequestHandler.class);
+  private static final Logger LOGGER = LoggerFactory.getLogger(DataPushRequestHandler.class);
 
-    @Autowired
-    private FirePushService     firePushService;
+  @Autowired private FirePushService firePushService;
 
-    @Override
-    protected NodeType getConnectNodeType() {
-        return NodeType.DATA;
+  @Override
+  protected NodeType getConnectNodeType() {
+    return NodeType.DATA;
+  }
+
+  @Override
+  public Object doHandle(Channel channel, DataPushRequest request) {
+    try {
+      firePushService.fireOnDatum(DatumUtils.of(request.getDatum()));
+    } catch (Throwable e) {
+      LOGGER.error("DataPush Request error!", e);
+      throw new RuntimeException("DataPush Request error!", e);
     }
+    return null;
+  }
 
-    @Override
-    public Object doHandle(Channel channel, DataPushRequest request) {
-        try {
-            firePushService.fireOnDatum(DatumUtils.of(request.getDatum()));
-        } catch (Throwable e) {
-            LOGGER.error("DataPush Request error!", e);
-            throw new RuntimeException("DataPush Request error!", e);
-        }
-        return null;
-    }
-
-    @Override
-    public Class interest() {
-        return DataPushRequest.class;
-    }
+  @Override
+  public Class interest() {
+    return DataPushRequest.class;
+  }
 }

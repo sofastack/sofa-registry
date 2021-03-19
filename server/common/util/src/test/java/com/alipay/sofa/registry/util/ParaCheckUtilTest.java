@@ -16,52 +16,51 @@
  */
 package com.alipay.sofa.registry.util;
 
-import org.junit.Assert;
-import org.junit.Test;
+import static junit.framework.TestCase.fail;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-
-import static junit.framework.TestCase.fail;
+import org.junit.Assert;
+import org.junit.Test;
 
 /**
  * @author xuanbei
  * @since 2018/12/28
  */
 public class ParaCheckUtilTest {
-    @Test
-    public void testCheckNotNull() {
-        ParaCheckUtil.checkNotNull("zhangsan", "name");
-        try {
-            ParaCheckUtil.checkNotNull(null, "name");
-            fail("cannot access here.");
-        } catch (Exception e) {
-            Assert.assertTrue(e instanceof RuntimeException);
-            Assert.assertEquals("name is not allowed to be null", e.getMessage());
-        }
+  @Test
+  public void testCheckNotNull() {
+    ParaCheckUtil.checkNotNull("zhangsan", "name");
+    try {
+      ParaCheckUtil.checkNotNull(null, "name");
+      fail("cannot access here.");
+    } catch (Exception e) {
+      Assert.assertTrue(e instanceof RuntimeException);
+      Assert.assertEquals("name is not allowed to be null", e.getMessage());
     }
+  }
 
-    @Test
-    public void testCheckNotBlank() {
-        ParaCheckUtil.checkNotBlank("zhangsan", "name");
-        try {
-            ParaCheckUtil.checkNotBlank("", "name");
-            fail("cannot access here.");
-        } catch (Exception e) {
-            Assert.assertTrue(e instanceof RuntimeException);
-            Assert.assertEquals("name is not allowed to be blank", e.getMessage());
-        }
+  @Test
+  public void testCheckNotBlank() {
+    ParaCheckUtil.checkNotBlank("zhangsan", "name");
+    try {
+      ParaCheckUtil.checkNotBlank("", "name");
+      fail("cannot access here.");
+    } catch (Exception e) {
+      Assert.assertTrue(e instanceof RuntimeException);
+      Assert.assertEquals("name is not allowed to be blank", e.getMessage());
     }
+  }
 
-    @Test
-    public void testCheckNotEmpty() {
-        ParaCheckUtil.checkNotEmpty(Arrays.asList("zhangsan", "lisi"), "names");
-        try {
-            ParaCheckUtil.checkNotEmpty(new ArrayList<>(), "names");
-            fail("cannot access here.");
-        } catch (Exception e) {
-            Assert.assertTrue(e instanceof RuntimeException);
-            Assert.assertEquals("names is not allowed to be empty", e.getMessage());
-        }
+  @Test
+  public void testCheckNotEmpty() {
+    ParaCheckUtil.checkNotEmpty(Arrays.asList("zhangsan", "lisi"), "names");
+    try {
+      ParaCheckUtil.checkNotEmpty(new ArrayList<>(), "names");
+      fail("cannot access here.");
+    } catch (Exception e) {
+      Assert.assertTrue(e instanceof RuntimeException);
+      Assert.assertEquals("names is not allowed to be empty", e.getMessage());
     }
+  }
 }

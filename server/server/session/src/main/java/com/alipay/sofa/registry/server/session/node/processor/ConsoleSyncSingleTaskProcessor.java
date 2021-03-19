@@ -21,40 +21,36 @@ import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.server.session.scheduler.task.SessionTask;
 import com.alipay.sofa.registry.task.Retryable;
 import com.alipay.sofa.registry.task.batcher.TaskProcessor;
-
 import java.util.List;
 
 /**
- *
  * @author zhuoyu.sjw
  * @version $Id: ConsoleSyncSingleTaskProcessor.java, v 0.1 2018-03-31 16:46 zhuoyu.sjw Exp $$
  */
 public class ConsoleSyncSingleTaskProcessor implements TaskProcessor<SessionTask> {
-    private static final Logger CONSOLE_LOGGER = LoggerFactory.getLogger("SESSION-CONSOLE",
-                                                   "[Sync]");
+  private static final Logger CONSOLE_LOGGER = LoggerFactory.getLogger("SESSION-CONSOLE", "[Sync]");
 
-    @Override
-    public ProcessingResult process(SessionTask task) {
-        try {
-            CONSOLE_LOGGER.info("execute {}", task);
-            task.execute();
-            CONSOLE_LOGGER.info("end {}", task);
-            return ProcessingResult.Success;
-        } catch (Throwable throwable) {
-            CONSOLE_LOGGER.error("Sync to console SingleTask Process error! Task:" + task,
-                throwable);
-            if (task instanceof Retryable) {
-                Retryable retryAbleTask = (Retryable) task;
-                if (retryAbleTask.checkRetryTimes()) {
-                    return ProcessingResult.TransientError;
-                }
-            }
-            return ProcessingResult.PermanentError;
+  @Override
+  public ProcessingResult process(SessionTask task) {
+    try {
+      CONSOLE_LOGGER.info("execute {}", task);
+      task.execute();
+      CONSOLE_LOGGER.info("end {}", task);
+      return ProcessingResult.Success;
+    } catch (Throwable throwable) {
+      CONSOLE_LOGGER.error("Sync to console SingleTask Process error! Task:" + task, throwable);
+      if (task instanceof Retryable) {
+        Retryable retryAbleTask = (Retryable) task;
+        if (retryAbleTask.checkRetryTimes()) {
+          return ProcessingResult.TransientError;
         }
+      }
+      return ProcessingResult.PermanentError;
     }
+  }
 
-    @Override
-    public ProcessingResult process(List<SessionTask> tasks) {
-        return null;
-    }
+  @Override
+  public ProcessingResult process(List<SessionTask> tasks) {
+    return null;
+  }
 }

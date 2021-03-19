@@ -19,95 +19,93 @@ package com.alipay.sofa.registry.store.api.driver;
 import com.alipay.sofa.common.profile.StringUtil;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import org.springframework.beans.factory.annotation.Autowired;
 
 /**
- *
  * @author xiaojian.xj
  * @version $Id: RepositoryManager.java, v 0.1 2021年01月15日 12:03 xiaojian.xj Exp $
  */
 public class RepositoryManager {
 
-    private static final Logger                         REPOSITORY_LOGGER       = LoggerFactory
-                                                                                    .getLogger(
-                                                                                        RepositoryManager.class,
-                                                                                        "[RepositoryManager]");
+  private static final Logger REPOSITORY_LOGGER =
+      LoggerFactory.getLogger(RepositoryManager.class, "[RepositoryManager]");
 
-    private final static Map<Class, RegistryRepository> raftRegisterRepositorys = new ConcurrentHashMap<>();
+  private static final Map<Class, RegistryRepository> raftRegisterRepositorys =
+      new ConcurrentHashMap<>();
 
-    private final static Map<Class, RegistryRepository> jdbcRegisterRepositorys = new ConcurrentHashMap<>();
+  private static final Map<Class, RegistryRepository> jdbcRegisterRepositorys =
+      new ConcurrentHashMap<>();
 
-    @Autowired
-    private RepositoryConfig                            repositoryConfig;
+  @Autowired private RepositoryConfig repositoryConfig;
 
-    public static synchronized void registerRepository(RegistryRepository repository) {
+  public static synchronized void registerRepository(RegistryRepository repository) {
 
-        if (repository == null) {
-            throw new RuntimeException("register repository is null.");
-        }
-
-        if (repository.accept(RepositoryType.RAFT)) {
-            raftRegisterRepositorys.putIfAbsent(repository.getInterfaceClass(), repository);
-            REPOSITORY_LOGGER.info("raft registerRaftRepository: " + repository);
-        } else if (repository.accept(RepositoryType.JDBC)) {
-            jdbcRegisterRepositorys.putIfAbsent(repository.getInterfaceClass(), repository);
-            REPOSITORY_LOGGER.info("jdbc registerRaftRepository: " + repository);
-        } else {
-            throw new RuntimeException("register repository accept is invalid.");
-        }
+    if (repository == null) {
+      throw new RuntimeException("register repository is null.");
     }
 
-    public RegistryRepository getRepository(Class clazz) {
+    if (repository.accept(RepositoryType.RAFT)) {
+      raftRegisterRepositorys.putIfAbsent(repository.getInterfaceClass(), repository);
+      REPOSITORY_LOGGER.info("raft registerRaftRepository: " + repository);
+    } else if (repository.accept(RepositoryType.JDBC)) {
+      jdbcRegisterRepositorys.putIfAbsent(repository.getInterfaceClass(), repository);
+      REPOSITORY_LOGGER.info("jdbc registerRaftRepository: " + repository);
+    } else {
+      throw new RuntimeException("register repository accept is invalid.");
+    }
+  }
 
-        RepositoryType driver = repositoryConfig.getRepositoryType(clazz);
-        RegistryRepository registryRepository = null;
-        if (driver == RepositoryType.JDBC) {
-            registryRepository = jdbcRegisterRepositorys.get(clazz);
-        } else if (driver == RepositoryType.RAFT) {
-            registryRepository = raftRegisterRepositorys.get(clazz);
-        }
-        if (registryRepository == null) {
-            REPOSITORY_LOGGER.error("repository not exist for class: " + clazz);
-            throw new RuntimeException("repository not exist.");
-        }
-        return registryRepository;
+  public RegistryRepository getRepository(Class clazz) {
+
+    RepositoryType driver = repositoryConfig.getRepositoryType(clazz);
+    RegistryRepository registryRepository = null;
+    if (driver == RepositoryType.JDBC) {
+      registryRepository = jdbcRegisterRepositorys.get(clazz);
+    } else if (driver == RepositoryType.RAFT) {
+      registryRepository = raftRegisterRepositorys.get(clazz);
+    }
+    if (registryRepository == null) {
+      REPOSITORY_LOGGER.error("repository not exist for class: " + clazz);
+      throw new RuntimeException("repository not exist.");
+    }
+    return registryRepository;
+  }
+
+  public enum RepositoryType {
+    RAFT("raft:driver"),
+
+    JDBC("jdbc:driver"),
+    ;
+
+    private String code;
+
+    RepositoryType(String code) {
+      this.code = code;
     }
 
-    public enum RepositoryType {
+    public static RepositoryType getByCode(String code) {
+      if (StringUtil.isBlank(code)) {
+        return null;
+      }
 
-        RAFT("raft:driver"),
-
-        JDBC("jdbc:driver"), ;
-
-        private String code;
-
-        RepositoryType(String code) {
-            this.code = code;
+      for (RepositoryType value : RepositoryType.values()) {
+        if (StringUtil.equals(value.getCode(), code)) {
+          return value;
         }
-
-        public static RepositoryType getByCode(String code) {
-            if (StringUtil.isBlank(code)) {
-                return null;
-            }
-
-            for (RepositoryType value : RepositoryType.values()) {
-                if (StringUtil.equals(value.getCode(), code)) {
-                    return value;
-                }
-            }
-            REPOSITORY_LOGGER.error("error repository type: " + code);
-            return null;
-        }
-
-        /**
-         * Getter method for property <tt>code</tt>.
-         *
-         * @return property value of code
-         */
-        public String getCode() {
-            return code;
-        }
+      }
+      REPOSITORY_LOGGER.error("error repository type: " + code);
+      return null;
     }
+
+    /**
+     * Getter method for property <tt>code</tt>.
+     *
+     * @return property value of code
+     */
+    public String getCode() {
+      return code;
+    }
+  }
 }

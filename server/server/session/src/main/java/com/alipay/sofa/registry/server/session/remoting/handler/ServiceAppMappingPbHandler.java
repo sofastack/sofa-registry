@@ -23,35 +23,32 @@ import com.alipay.sofa.registry.common.model.client.pb.ServiceAppMappingResponse
 import com.alipay.sofa.registry.remoting.Channel;
 import com.alipay.sofa.registry.server.session.strategy.AppRevisionHandlerStrategy;
 import com.alipay.sofa.registry.server.shared.remoting.AbstractServerHandler;
-import org.springframework.beans.factory.annotation.Autowired;
 import java.util.List;
+import org.springframework.beans.factory.annotation.Autowired;
 
 /**
- *
  * @author xiaojian.xj
  * @version $Id: ServiceAppMappingPbHandler.java, v 0.1 2021年02月04日 20:18 xiaojian.xj Exp $
  */
 public class ServiceAppMappingPbHandler extends AbstractServerHandler<ServiceAppMappingRequest> {
 
-    @Autowired
-    private AppRevisionHandlerStrategy appRevisionHandlerStrategy;
+  @Autowired private AppRevisionHandlerStrategy appRevisionHandlerStrategy;
 
-    @Override
-    protected NodeType getConnectNodeType() {
-        return Node.NodeType.CLIENT;
-    }
+  @Override
+  protected NodeType getConnectNodeType() {
+    return Node.NodeType.CLIENT;
+  }
 
-    @Override
-    public Object doHandle(Channel channel, ServiceAppMappingRequest request) {
+  @Override
+  public Object doHandle(Channel channel, ServiceAppMappingRequest request) {
 
-        List<String> services = request.getServiceIdsList()
-            .subList(0, request.getServiceIdsCount());
-        ServiceAppMappingResponse response = appRevisionHandlerStrategy.queryApps(services);
-        return response;
-    }
+    List<String> services = request.getServiceIdsList().subList(0, request.getServiceIdsCount());
+    ServiceAppMappingResponse response = appRevisionHandlerStrategy.queryApps(services);
+    return response;
+  }
 
-    @Override
-    public Class interest() {
-        return ServiceAppMappingRequest.class;
-    }
+  @Override
+  public Class interest() {
+    return ServiceAppMappingRequest.class;
+  }
 }

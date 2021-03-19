@@ -21,9 +21,8 @@ import com.alipay.sofa.registry.common.model.metaserver.inter.heartbeat.Heartbea
 
 /**
  * @author chen.zhu
- * <p>
- * Feb 24, 2021
+ *     <p>Feb 24, 2021
  */
 public interface HeartbeatListener<T extends Node> {
-    void onHeartbeat(HeartbeatRequest<T> heartbeat);
+  void onHeartbeat(HeartbeatRequest<T> heartbeat);
 }

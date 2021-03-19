@@ -17,35 +17,33 @@
 package com.alipay.sofa.registry.server.session.resource;
 
 import com.alipay.sofa.registry.server.session.connections.ConnectionsService;
-import org.springframework.beans.factory.annotation.Autowired;
-
+import java.util.List;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.ResponseBuilder;
-import java.util.List;
+import org.springframework.beans.factory.annotation.Autowired;
 
 @Path("connections")
 public class ConnectionsResource {
-    @Autowired
-    private ConnectionsService connectionsService;
+  @Autowired private ConnectionsService connectionsService;
 
-    @POST
-    @Path("setMax")
-    @Produces(MediaType.APPLICATION_JSON)
-    public Response setMax(@FormParam("connections") int connections) {
-        ResponseBuilder build = Response.status(Response.Status.OK);
-        connectionsService.setMaxConnections(connections);
-        return build.build();
-    }
+  @POST
+  @Path("setMax")
+  @Produces(MediaType.APPLICATION_JSON)
+  public Response setMax(@FormParam("connections") int connections) {
+    ResponseBuilder build = Response.status(Response.Status.OK);
+    connectionsService.setMaxConnections(connections);
+    return build.build();
+  }
 
-    @GET
-    @Path("query")
-    @Produces(MediaType.APPLICATION_JSON)
-    public Response query() {
-        ResponseBuilder builder = Response.status(Response.Status.OK);
-        List<String> connectionsSet = connectionsService.getConnections();
-        builder.entity(connectionsSet.toArray());
-        return builder.build();
-    }
+  @GET
+  @Path("query")
+  @Produces(MediaType.APPLICATION_JSON)
+  public Response query() {
+    ResponseBuilder builder = Response.status(Response.Status.OK);
+    List<String> connectionsSet = connectionsService.getConnections();
+    builder.entity(connectionsSet.toArray());
+    return builder.build();
+  }
 }

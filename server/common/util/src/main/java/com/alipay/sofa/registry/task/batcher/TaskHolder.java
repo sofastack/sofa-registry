@@ -18,63 +18,63 @@ package com.alipay.sofa.registry.task.batcher;
 
 /**
  * @author Tomasz Bak
- *
  * @author shangyu.wh modify
  * @version $Id: TaskHolder.java, v 0.1 2017-11-14 14:57 shangyu.wh Exp $
  */
 public class TaskHolder<ID, T> {
 
-    private final ID   id;
-    private final T    task;
-    private final long expiryTime;
-    private final long submitTimestamp;
+  private final ID id;
+  private final T task;
+  private final long expiryTime;
+  private final long submitTimestamp;
 
-    /**
-     * constructor
-     * @param id
-     * @param task
-     * @param expiryTime
-     */
-    TaskHolder(ID id, T task, long expiryTime) {
-        this.id = id;
-        this.expiryTime = expiryTime;
-        this.task = task;
-        this.submitTimestamp = System.currentTimeMillis();
-    }
+  /**
+   * constructor
+   *
+   * @param id
+   * @param task
+   * @param expiryTime
+   */
+  TaskHolder(ID id, T task, long expiryTime) {
+    this.id = id;
+    this.expiryTime = expiryTime;
+    this.task = task;
+    this.submitTimestamp = System.currentTimeMillis();
+  }
 
-    /**
-     * Getter method for property <tt>id</tt>.
-     *
-     * @return property value of id
-     */
-    public ID getId() {
-        return id;
-    }
+  /**
+   * Getter method for property <tt>id</tt>.
+   *
+   * @return property value of id
+   */
+  public ID getId() {
+    return id;
+  }
 
-    /**
-     * Getter method for property <tt>task</tt>.
-     *
-     * @return property value of task
-     */
-    public T getTask() {
-        return task;
-    }
+  /**
+   * Getter method for property <tt>task</tt>.
+   *
+   * @return property value of task
+   */
+  public T getTask() {
+    return task;
+  }
 
-    /**
-     * Getter method for property <tt>expiryTime</tt>.
-     *
-     * @return property value of expiryTime
-     */
-    public long getExpiryTime() {
-        return expiryTime;
-    }
+  /**
+   * Getter method for property <tt>expiryTime</tt>.
+   *
+   * @return property value of expiryTime
+   */
+  public long getExpiryTime() {
+    return expiryTime;
+  }
 
-    /**
-     * Getter method for property <tt>submitTimestamp</tt>.
-     *
-     * @return property value of submitTimestamp
-     */
-    public long getSubmitTimestamp() {
-        return submitTimestamp;
-    }
+  /**
+   * Getter method for property <tt>submitTimestamp</tt>.
+   *
+   * @return property value of submitTimestamp
+   */
+  public long getSubmitTimestamp() {
+    return submitTimestamp;
+  }
 }

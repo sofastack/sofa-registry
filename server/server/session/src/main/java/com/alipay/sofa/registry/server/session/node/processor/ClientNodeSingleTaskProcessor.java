@@ -20,32 +20,30 @@ import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.server.session.scheduler.task.SessionTask;
 import com.alipay.sofa.registry.task.batcher.TaskProcessor;
-
 import java.util.List;
 
 /**
- *
  * @author shangyu.wh
  * @version $Id: ClientNodeSingleTaskProcessor.java, v 0.1 2017-12-11 19:47 shangyu.wh Exp $
  */
 public class ClientNodeSingleTaskProcessor implements TaskProcessor<SessionTask> {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger("SESSION-PUSH", "[Task]");
+  private static final Logger LOGGER = LoggerFactory.getLogger("SESSION-PUSH", "[Task]");
 
-    @Override
-    public ProcessingResult process(SessionTask task) {
-        try {
-            task.execute();
-            return ProcessingResult.Success;
-        } catch (Throwable throwable) {
-            LOGGER.error("Client node SingleTask Process error! Task:" + task, throwable);
+  @Override
+  public ProcessingResult process(SessionTask task) {
+    try {
+      task.execute();
+      return ProcessingResult.Success;
+    } catch (Throwable throwable) {
+      LOGGER.error("Client node SingleTask Process error! Task:" + task, throwable);
 
-            return ProcessingResult.PermanentError;
-        }
+      return ProcessingResult.PermanentError;
     }
+  }
 
-    @Override
-    public ProcessingResult process(List<SessionTask> tasks) {
-        return null;
-    }
+  @Override
+  public ProcessingResult process(List<SessionTask> tasks) {
+    return null;
+  }
 }

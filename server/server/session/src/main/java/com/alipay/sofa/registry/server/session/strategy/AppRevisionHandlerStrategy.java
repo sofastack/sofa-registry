@@ -25,31 +25,35 @@ import java.util.List;
 
 public interface AppRevisionHandlerStrategy {
 
-    /**
-     * appRevision register
-     * @param appRevision
-     * @param response
-     */
-    void handleAppRevisionRegister(AppRevision appRevision, RegisterResponse response);
+  /**
+   * appRevision register
+   *
+   * @param appRevision
+   * @param response
+   */
+  void handleAppRevisionRegister(AppRevision appRevision, RegisterResponse response);
 
-    /**
-     * query apps by services
-     * @param services
-     * @return
-     */
-    ServiceAppMappingResponse queryApps(List<String> services);
+  /**
+   * query apps by services
+   *
+   * @param services
+   * @return
+   */
+  ServiceAppMappingResponse queryApps(List<String> services);
 
-    /**
-     * query appRevision
-     * @param revisions
-     * @return
-     */
-    GetRevisionsResponse queryRevision(List<String> revisions);
+  /**
+   * query appRevision
+   *
+   * @param revisions
+   * @return
+   */
+  GetRevisionsResponse queryRevision(List<String> revisions);
 
-    /**
-     * revision heartbeat
-     * @param revisions
-     * @return
-     */
-    MetaHeartbeatResponse heartbeat(List<String> revisions);
+  /**
+   * revision heartbeat
+   *
+   * @param revisions
+   * @return
+   */
+  MetaHeartbeatResponse heartbeat(List<String> revisions);
 }

@@ -17,20 +17,15 @@
 package com.alipay.sofa.registry.common.model;
 
 /**
- *
  * @author shangyu.wh
  * @version $Id: ElementType.java, v 0.1 2018-08-17 16:22 shangyu.wh Exp $
  */
 public enum ElementType {
 
-    /**
-     * sub zone scope,@see DefaultSubscriber
-     */
-    SUBSCRIBER,
-    /**
-     * multiple zone sub，@see DefaultSubscriberMulti
-     */
-    MULTISUBSCRIBER,
-    /**  */
-    PUBLISHER
+  /** sub zone scope,@see DefaultSubscriber */
+  SUBSCRIBER,
+  /** multiple zone sub，@see DefaultSubscriberMulti */
+  MULTISUBSCRIBER,
+  /** */
+  PUBLISHER
 }

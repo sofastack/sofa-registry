@@ -23,43 +23,38 @@ import com.alipay.sofa.registry.remoting.Channel;
 import com.alipay.sofa.registry.server.session.scheduler.ExecutorManager;
 import com.alipay.sofa.registry.server.session.strategy.WatcherHandlerStrategy;
 import com.alipay.sofa.registry.server.shared.remoting.AbstractServerHandler;
+import java.util.concurrent.Executor;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import java.util.concurrent.Executor;
-
 /**
- *
  * @author shangyu.wh
  * @version $Id: SubscriberHandler.java, v 0.1 2017-11-30 15:01 shangyu.wh Exp $
  */
 public class WatcherHandler extends AbstractServerHandler<ConfiguratorRegister> {
-    @Autowired
-    private ExecutorManager        executorManager;
+  @Autowired private ExecutorManager executorManager;
 
-    @Autowired
-    private WatcherHandlerStrategy watcherHandlerStrategy;
+  @Autowired private WatcherHandlerStrategy watcherHandlerStrategy;
 
-    @Override
-    public Object doHandle(Channel channel, ConfiguratorRegister message) {
-        RegisterResponse result = new RegisterResponse();
-        ConfiguratorRegister configuratorRegister = (ConfiguratorRegister) message;
-        watcherHandlerStrategy.handleConfiguratorRegister(channel, configuratorRegister, result);
-        return result;
-    }
+  @Override
+  public Object doHandle(Channel channel, ConfiguratorRegister message) {
+    RegisterResponse result = new RegisterResponse();
+    ConfiguratorRegister configuratorRegister = (ConfiguratorRegister) message;
+    watcherHandlerStrategy.handleConfiguratorRegister(channel, configuratorRegister, result);
+    return result;
+  }
 
-    @Override
-    public Class interest() {
-        return ConfiguratorRegister.class;
-    }
+  @Override
+  public Class interest() {
+    return ConfiguratorRegister.class;
+  }
 
-    @Override
-    public Executor getExecutor() {
-        return executorManager.getAccessDataExecutor();
-    }
+  @Override
+  public Executor getExecutor() {
+    return executorManager.getAccessDataExecutor();
+  }
 
-    @Override
-    protected Node.NodeType getConnectNodeType() {
-        return Node.NodeType.CLIENT;
-    }
-
+  @Override
+  protected Node.NodeType getConnectNodeType() {
+    return Node.NodeType.CLIENT;
+  }
 }

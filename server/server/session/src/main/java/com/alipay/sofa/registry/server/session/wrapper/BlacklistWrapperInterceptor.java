@@ -32,41 +32,37 @@ import org.springframework.beans.factory.annotation.Autowired;
  */
 public class BlacklistWrapperInterceptor implements WrapperInterceptor<StoreData, Boolean> {
 
-    @Autowired
-    private FirePushService         firePushService;
-    /**
-     * blacklist filter
-     */
-    @Autowired
-    private ProcessFilter<BaseInfo> processFilter;
+  @Autowired private FirePushService firePushService;
+  /** blacklist filter */
+  @Autowired private ProcessFilter<BaseInfo> processFilter;
 
-    @Override
-    public Boolean invokeCodeWrapper(WrapperInvocation<StoreData, Boolean> invocation)
-                                                                                      throws Exception {
+  @Override
+  public Boolean invokeCodeWrapper(WrapperInvocation<StoreData, Boolean> invocation)
+      throws Exception {
 
-        BaseInfo storeData = (BaseInfo) invocation.getParameterSupplier().get();
+    BaseInfo storeData = (BaseInfo) invocation.getParameterSupplier().get();
 
-        if (processFilter.match(storeData)) {
-            if (DataType.PUBLISHER == storeData.getDataType()) {
-                // match blacklist stop pub.
-                return true;
-            }
+    if (processFilter.match(storeData)) {
+      if (DataType.PUBLISHER == storeData.getDataType()) {
+        // match blacklist stop pub.
+        return true;
+      }
 
-            if (DataType.SUBSCRIBER == storeData.getDataType()) {
-                fireSubscriberPushEmptyTask((Subscriber) storeData);
-                return true;
-            }
-        }
-        return invocation.proceed();
+      if (DataType.SUBSCRIBER == storeData.getDataType()) {
+        fireSubscriberPushEmptyTask((Subscriber) storeData);
+        return true;
+      }
     }
+    return invocation.proceed();
+  }
 
-    @Override
-    public int getOrder() {
-        return 200;
-    }
+  @Override
+  public int getOrder() {
+    return 200;
+  }
 
-    private void fireSubscriberPushEmptyTask(Subscriber subscriber) {
-        //trigger empty data push
-        firePushService.fireOnPushEmpty(subscriber);
-    }
+  private void fireSubscriberPushEmptyTask(Subscriber subscriber) {
+    // trigger empty data push
+    firePushService.fireOnPushEmpty(subscriber);
+  }
 }

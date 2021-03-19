@@ -16,30 +16,29 @@
  */
 package com.alipay.sofa.registry.server.meta;
 
+import java.io.IOException;
+import java.sql.SQLException;
 import org.junit.After;
 import org.junit.Test;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.scheduling.annotation.EnableScheduling;
 
-import java.io.IOException;
-import java.sql.SQLException;
-
 @SpringBootApplication
 @EnableScheduling
 public class AppTest extends AbstractMetaServerTest {
 
-    @Test
-    public void startMetaServer() throws IOException, SQLException {
-        //        start();
-    }
+  @Test
+  public void startMetaServer() throws IOException, SQLException {
+    //        start();
+  }
 
-    private void start() throws IOException, SQLException {
-        SpringApplication.run(AppTest.class);
-    }
+  private void start() throws IOException, SQLException {
+    SpringApplication.run(AppTest.class);
+  }
 
-    @After
-    public void afterAppTest() throws IOException {
-        //        waitForAnyKeyToExit();
-    }
+  @After
+  public void afterAppTest() throws IOException {
+    //        waitForAnyKeyToExit();
+  }
 }

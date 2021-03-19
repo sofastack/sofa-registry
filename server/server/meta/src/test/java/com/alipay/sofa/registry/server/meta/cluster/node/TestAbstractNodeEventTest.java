@@ -23,15 +23,13 @@ import org.junit.Test;
 
 public class TestAbstractNodeEventTest {
 
-    private Logger logger = LoggerFactory.getLogger(TestAbstractNodeEventTest.class);
+  private Logger logger = LoggerFactory.getLogger(TestAbstractNodeEventTest.class);
 
-    @Test
-    public void testGetNode() {
-        NodeModifiedTest.SimpleNode simpleNode = new NodeModifiedTest.SimpleNode(
-            "127.0.0.1");
-        AbstractNodeEvent event = new AbstractNodeEvent(simpleNode) {
-        };
-        Assert.assertEquals(simpleNode, event.getNode());
-        logger.info("[testGetNode] {}", event);
-    }
+  @Test
+  public void testGetNode() {
+    NodeModifiedTest.SimpleNode simpleNode = new NodeModifiedTest.SimpleNode("127.0.0.1");
+    AbstractNodeEvent event = new AbstractNodeEvent(simpleNode) {};
+    Assert.assertEquals(simpleNode, event.getNode());
+    logger.info("[testGetNode] {}", event);
+  }
 }

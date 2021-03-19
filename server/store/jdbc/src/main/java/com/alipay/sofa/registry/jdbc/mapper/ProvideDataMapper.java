@@ -20,29 +20,27 @@ import com.alipay.sofa.registry.jdbc.domain.ProvideDataDomain;
 import org.apache.ibatis.annotations.Param;
 
 /**
- *
  * @author xiaojian.xj
  * @version $Id: ProvideDataMapper.java, v 0.1 2021年03月12日 11:05 xiaojian.xj Exp $
  */
 public interface ProvideDataMapper {
 
-    /**
-     * insert or update provideData
-     * @param data
-     */
-    public void save(ProvideDataDomain data);
+  /**
+   * insert or update provideData
+   *
+   * @param data
+   */
+  public void save(ProvideDataDomain data);
 
-    /**
-     * query provideData
-     */
-    public ProvideDataDomain query(@Param("dataCenter") String dataCenter,
-                                   @Param("dataKey") String dataKey);
+  /** query provideData */
+  public ProvideDataDomain query(
+      @Param("dataCenter") String dataCenter, @Param("dataKey") String dataKey);
 
-    /**
-     * remove provideData
-     * @param dataCenter
-     * @param dataKey
-     */
-    public void remove(@Param("dataCenter") String dataCenter,
-                       @Param("dataKey") String dataKey);
+  /**
+   * remove provideData
+   *
+   * @param dataCenter
+   * @param dataKey
+   */
+  public void remove(@Param("dataCenter") String dataCenter, @Param("dataKey") String dataKey);
 }

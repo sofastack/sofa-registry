@@ -26,98 +26,97 @@ import java.io.Serializable;
  */
 public class CommonResponse implements Serializable {
 
-    private static final long serialVersionUID = 8269764971983130557L;
+  private static final long serialVersionUID = 8269764971983130557L;
 
-    private boolean           success;
+  private boolean success;
 
-    private String            message;
+  private String message;
 
-    /**
-     * constructor
-     */
-    public CommonResponse() {
-    }
+  /** constructor */
+  public CommonResponse() {}
 
-    /**
-     * constructor
-     * @param success
-     * @param message
-     */
-    public CommonResponse(boolean success, String message) {
-        this.success = success;
-        this.message = message;
-    }
+  /**
+   * constructor
+   *
+   * @param success
+   * @param message
+   */
+  public CommonResponse(boolean success, String message) {
+    this.success = success;
+    this.message = message;
+  }
 
-    /**
-     * build success resp
-     * @return
-     */
-    public static CommonResponse buildSuccessResponse() {
-        return new CommonResponse(true, "");
-    }
+  /**
+   * build success resp
+   *
+   * @return
+   */
+  public static CommonResponse buildSuccessResponse() {
+    return new CommonResponse(true, "");
+  }
 
-    /**
-     * build success resp
-     * @return
-     */
-    public static CommonResponse buildSuccessResponse(String msg) {
-        return new CommonResponse(true, msg);
-    }
+  /**
+   * build success resp
+   *
+   * @return
+   */
+  public static CommonResponse buildSuccessResponse(String msg) {
+    return new CommonResponse(true, msg);
+  }
 
-    /**
-     * build fail resp
-     * @param msg
-     * @return
-     */
-    public static CommonResponse buildFailedResponse(String msg) {
-        return new CommonResponse(false, msg);
-    }
+  /**
+   * build fail resp
+   *
+   * @param msg
+   * @return
+   */
+  public static CommonResponse buildFailedResponse(String msg) {
+    return new CommonResponse(false, msg);
+  }
 
-    /**
-     * Getter method for property <tt>success</tt>.
-     *
-     * @return property value of success
-     */
-    public boolean isSuccess() {
-        return success;
-    }
+  /**
+   * Getter method for property <tt>success</tt>.
+   *
+   * @return property value of success
+   */
+  public boolean isSuccess() {
+    return success;
+  }
 
-    /**
-     * Setter method for property <tt>success</tt>.
-     *
-     * @param success value to be assigned to property success
-     */
-    public void setSuccess(boolean success) {
-        this.success = success;
-    }
+  /**
+   * Setter method for property <tt>success</tt>.
+   *
+   * @param success value to be assigned to property success
+   */
+  public void setSuccess(boolean success) {
+    this.success = success;
+  }
 
-    /**
-     * Getter method for property <tt>message</tt>.
-     *
-     * @return property value of message
-     */
-    public String getMessage() {
-        return message;
-    }
+  /**
+   * Getter method for property <tt>message</tt>.
+   *
+   * @return property value of message
+   */
+  public String getMessage() {
+    return message;
+  }
 
-    /**
-     * Setter method for property <tt>message</tt>.
-     *
-     * @param message value to be assigned to property message
-     */
-    public void setMessage(String message) {
-        this.message = message;
-    }
+  /**
+   * Setter method for property <tt>message</tt>.
+   *
+   * @param message value to be assigned to property message
+   */
+  public void setMessage(String message) {
+    this.message = message;
+  }
 
-    /**
-     * @see Object#toString()
-     */
-    @Override
-    public String toString() {
-        final StringBuilder sb = new StringBuilder("CommonResponse{");
-        sb.append("success=").append(success);
-        sb.append(", message='").append(message).append('\'');
-        sb.append('}');
-        return sb.toString();
-    }
+  /** @see Object#toString() */
+  @Override
+  public String toString() {
+    final StringBuilder sb = new StringBuilder("CommonResponse{");
+    sb.append("success=").append(success);
+    sb.append(", message='").append(message).append('\'');
+    sb.append('}');
+    return sb.toString();
+  }
 }

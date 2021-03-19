@@ -21,51 +21,48 @@ import com.alipay.sofa.registry.common.model.dataserver.DatumVersion;
 import com.alipay.sofa.registry.common.model.slot.func.SlotFunctionRegistry;
 import com.alipay.sofa.registry.common.model.store.Publisher;
 import com.alipay.sofa.registry.server.data.TestBaseUtils;
+import java.util.List;
+import java.util.Map;
 import org.junit.Assert;
 import org.junit.Test;
 
-import java.util.List;
-import java.util.Map;
-
 public class DatumCacheTest {
-    private static final String testDataId     = TestBaseUtils.TEST_DATA_ID;
-    private static final String testDataInfoId = TestBaseUtils.TEST_DATA_INFO_ID;
-    private static final String testDc         = "localDc";
+  private static final String testDataId = TestBaseUtils.TEST_DATA_ID;
+  private static final String testDataInfoId = TestBaseUtils.TEST_DATA_INFO_ID;
+  private static final String testDc = "localDc";
 
-    @Test
-    public void test() {
-        DatumCache cache = TestBaseUtils.newLocalDatumCache(testDc, true);
-        LocalDatumStorage storage = (LocalDatumStorage) cache.getLocalDatumStorage();
+  @Test
+  public void test() {
+    DatumCache cache = TestBaseUtils.newLocalDatumCache(testDc, true);
+    LocalDatumStorage storage = (LocalDatumStorage) cache.getLocalDatumStorage();
 
-        Publisher publisher = TestBaseUtils.createTestPublisher(testDataId);
-        storage.put(publisher);
+    Publisher publisher = TestBaseUtils.createTestPublisher(testDataId);
+    storage.put(publisher);
 
-        Datum datum = cache.get("xx", publisher.getDataInfoId());
-        TestBaseUtils.assertEquals(datum, publisher);
-        Map<String, Map<String, Datum>> datumMap = cache.getAll();
-        TestBaseUtils.assertEquals(datumMap.get(testDc).get(publisher.getDataInfoId()), publisher);
+    Datum datum = cache.get("xx", publisher.getDataInfoId());
+    TestBaseUtils.assertEquals(datum, publisher);
+    Map<String, Map<String, Datum>> datumMap = cache.getAll();
+    TestBaseUtils.assertEquals(datumMap.get(testDc).get(publisher.getDataInfoId()), publisher);
 
-        Map<String, Map<String, List<Publisher>>> publisherMaps = cache.getAllPublisher();
-        Assert.assertTrue(publisherMaps.get(testDc).get(publisher.getDataInfoId())
-            .contains(publisher));
+    Map<String, Map<String, List<Publisher>>> publisherMaps = cache.getAllPublisher();
+    Assert.assertTrue(publisherMaps.get(testDc).get(publisher.getDataInfoId()).contains(publisher));
 
-        Map<String, Publisher> publisherMap = cache.getByConnectId(publisher.connectId());
-        Assert.assertTrue(publisherMap.get(publisher.getRegisterId()) == publisher);
+    Map<String, Publisher> publisherMap = cache.getByConnectId(publisher.connectId());
+    Assert.assertTrue(publisherMap.get(publisher.getRegisterId()) == publisher);
 
-        DatumVersion v = cache.getVersion("xx", publisher.getDataInfoId());
-        Assert.assertEquals(v.getValue(), datum.getVersion());
+    DatumVersion v = cache.getVersion("xx", publisher.getDataInfoId());
+    Assert.assertEquals(v.getValue(), datum.getVersion());
 
-        final int slotId = SlotFunctionRegistry.getFunc().slotOf(publisher.getDataInfoId());
-        Map<String, DatumVersion> versionMap = cache.getVersions("xx", slotId, null);
-        Assert.assertEquals(versionMap.get(publisher.getDataInfoId()).getValue(),
-            datum.getVersion());
-        v = cache.updateVersion("xx", publisher.getDataInfoId());
-        Assert.assertTrue(v.getValue() > datum.getVersion());
+    final int slotId = SlotFunctionRegistry.getFunc().slotOf(publisher.getDataInfoId());
+    Map<String, DatumVersion> versionMap = cache.getVersions("xx", slotId, null);
+    Assert.assertEquals(versionMap.get(publisher.getDataInfoId()).getValue(), datum.getVersion());
+    v = cache.updateVersion("xx", publisher.getDataInfoId());
+    Assert.assertTrue(v.getValue() > datum.getVersion());
 
-        cache.clean("xx", publisher.getDataInfoId());
+    cache.clean("xx", publisher.getDataInfoId());
 
-        datum = cache.get("xx", publisher.getDataInfoId());
-        Assert.assertTrue(datum.getPubMap().isEmpty());
-        Assert.assertTrue(v.getValue() < datum.getVersion());
-    }
+    datum = cache.get("xx", publisher.getDataInfoId());
+    Assert.assertTrue(datum.getPubMap().isEmpty());
+    Assert.assertTrue(v.getValue() < datum.getVersion());
+  }
 }

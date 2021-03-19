@@ -19,67 +19,66 @@ package com.alipay.sofa.registry.server.session.cache;
 import com.alipay.sofa.registry.common.model.store.WordCache;
 
 /**
- *
  * @author shangyu.wh
  * @version $Id: DatumKey.java, v 0.1 2018-11-19 16:08 shangyu.wh Exp $
  */
 public class DatumKey implements EntityType {
 
-    private final String dataInfoId;
+  private final String dataInfoId;
 
-    private final String dataCenter;
+  private final String dataCenter;
 
-    public DatumKey(String dataInfoId, String dataCenter) {
-        this.dataInfoId = WordCache.getWordCache(dataInfoId);
-        this.dataCenter = WordCache.getWordCache(dataCenter);
+  public DatumKey(String dataInfoId, String dataCenter) {
+    this.dataInfoId = WordCache.getWordCache(dataInfoId);
+    this.dataCenter = WordCache.getWordCache(dataCenter);
+  }
+
+  @Override
+  public String getUniqueKey() {
+    StringBuilder sb = new StringBuilder(dataCenter);
+    sb.append(COMMA).append(dataInfoId);
+    return sb.toString();
+  }
+
+  @Override
+  public int hashCode() {
+    String hashKey = getUniqueKey();
+    return hashKey.hashCode();
+  }
+
+  @Override
+  public boolean equals(Object other) {
+    if (other instanceof DatumKey) {
+      return getUniqueKey().equals(((DatumKey) other).getUniqueKey());
+    } else {
+      return false;
     }
+  }
 
-    @Override
-    public String getUniqueKey() {
-        StringBuilder sb = new StringBuilder(dataCenter);
-        sb.append(COMMA).append(dataInfoId);
-        return sb.toString();
-    }
+  /**
+   * Getter method for property <tt>dataInfoId</tt>.
+   *
+   * @return property value of dataInfoId
+   */
+  public String getDataInfoId() {
+    return dataInfoId;
+  }
 
-    @Override
-    public int hashCode() {
-        String hashKey = getUniqueKey();
-        return hashKey.hashCode();
-    }
+  /**
+   * Getter method for property <tt>dataCenter</tt>.
+   *
+   * @return property value of dataCenter
+   */
+  public String getDataCenter() {
+    return dataCenter;
+  }
 
-    @Override
-    public boolean equals(Object other) {
-        if (other instanceof DatumKey) {
-            return getUniqueKey().equals(((DatumKey) other).getUniqueKey());
-        } else {
-            return false;
-        }
-    }
-
-    /**
-     * Getter method for property <tt>dataInfoId</tt>.
-     *
-     * @return property value of dataInfoId
-     */
-    public String getDataInfoId() {
-        return dataInfoId;
-    }
-
-    /**
-     * Getter method for property <tt>dataCenter</tt>.
-     *
-     * @return property value of dataCenter
-     */
-    public String getDataCenter() {
-        return dataCenter;
-    }
-
-    @Override
-    public String toString() {
-        final StringBuilder sb = new StringBuilder("DatumKey{");
-        sb.append("dataInfoId='").append(dataInfoId).append('\'');
-        sb.append(", dataCenter='").append(dataCenter).append('\'');
-        sb.append('}');
-        return sb.toString();
-    }
+  @Override
+  public String toString() {
+    final StringBuilder sb = new StringBuilder("DatumKey{");
+    sb.append("dataInfoId='").append(dataInfoId).append('\'');
+    sb.append(", dataCenter='").append(dataCenter).append('\'');
+    sb.append('}');
+    return sb.toString();
+  }
 }

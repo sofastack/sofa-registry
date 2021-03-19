@@ -20,24 +20,22 @@ import com.alipay.sofa.registry.common.model.Node;
 
 /**
  * @author chen.zhu
- * <p>
- * Nov 25, 2020
+ *     <p>Nov 25, 2020
  */
 public class NodeModified<T extends Node> implements NodeEvent<T> {
 
-    private final T oldNode, newNode;
+  private final T oldNode, newNode;
 
-    public NodeModified(T oldNode, T newNode) {
-        this.oldNode = oldNode;
-        this.newNode = newNode;
-    }
+  public NodeModified(T oldNode, T newNode) {
+    this.oldNode = oldNode;
+    this.newNode = newNode;
+  }
 
-    public T getOldNode() {
-        return oldNode;
-    }
+  public T getOldNode() {
+    return oldNode;
+  }
 
-    public T getNewNode() {
-        return newNode;
-    }
-
+  public T getNewNode() {
+    return newNode;
+  }
 }

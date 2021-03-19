@@ -16,14 +16,14 @@
  */
 package com.alipay.sofa.registry.test.resource.session;
 
+import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
+import static org.junit.Assert.assertTrue;
+
 import com.alipay.sofa.registry.client.api.registration.PublisherRegistration;
 import com.alipay.sofa.registry.test.BaseIntegrationTest;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.test.context.junit4.SpringRunner;
-
-import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
-import static org.junit.Assert.assertTrue;
 
 /**
  * @author xuanbei
@@ -31,22 +31,30 @@ import static org.junit.Assert.assertTrue;
  */
 @RunWith(SpringRunner.class)
 public class ClientsOpenResourceTest extends BaseIntegrationTest {
-    @Test
-    public void testClientOff() throws Exception {
-        clientOff();
-        String dataId = "test-dataId-" + System.currentTimeMillis();
-        String value = "test client off";
-        PublisherRegistration registration = new PublisherRegistration(dataId);
-        registryClient1.register(registration, value);
-        Thread.sleep(2000L);
+  @Test
+  public void testClientOff() throws Exception {
+    clientOff();
+    String dataId = "test-dataId-" + System.currentTimeMillis();
+    String value = "test client off";
+    PublisherRegistration registration = new PublisherRegistration(dataId);
+    registryClient1.register(registration, value);
+    Thread.sleep(2000L);
 
-        String countResult = dataChannel.getWebTarget().path("digest/datum/count")
-            .request(APPLICATION_JSON).get(String.class);
-        assertTrue(countResult.contains("[Publisher] size of publisher in DefaultDataCenter is 1"));
+    String countResult =
+        dataChannel
+            .getWebTarget()
+            .path("digest/datum/count")
+            .request(APPLICATION_JSON)
+            .get(String.class);
+    assertTrue(countResult.contains("[Publisher] size of publisher in DefaultDataCenter is 1"));
 
-        clientOff();
-        countResult = dataChannel.getWebTarget().path("digest/datum/count")
-            .request(APPLICATION_JSON).get(String.class);
-        assertTrue(countResult.contains("[Publisher] size of publisher in DefaultDataCenter is 0"));
-    }
+    clientOff();
+    countResult =
+        dataChannel
+            .getWebTarget()
+            .path("digest/datum/count")
+            .request(APPLICATION_JSON)
+            .get(String.class);
+    assertTrue(countResult.contains("[Publisher] size of publisher in DefaultDataCenter is 0"));
+  }
 }

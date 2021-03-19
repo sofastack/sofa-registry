@@ -35,6 +35,7 @@ import com.alipay.sofa.registry.util.DefaultExecutorFactory;
 import com.alipay.sofa.registry.util.NamedThreadFactory;
 import com.alipay.sofa.registry.util.OsUtils;
 import com.alipay.sofa.registry.util.PropertySplitter;
+import java.util.concurrent.*;
 import org.glassfish.jersey.jackson.JacksonFeature;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -44,174 +45,180 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 import org.springframework.context.annotation.Profile;
 
-import java.util.concurrent.*;
-
 /**
  * @author shangyu.wh
  * @version $Id: MetaServerConfiguration.java, v 0.1 2018-01-12 14:53 shangyu.wh Exp $
  */
 @Configuration
-@Import({ MetaServerInitializerConfiguration.class, JdbcConfiguration.class,
-         RaftConfiguration.class })
+@Import({
+  MetaServerInitializerConfiguration.class,
+  JdbcConfiguration.class,
+  RaftConfiguration.class
+})
 @EnableConfigurationProperties
 public class MetaServerConfiguration {
 
-    public static final String SHARED_SCHEDULE_EXECUTOR = "sharedScheduleExecutor";
-    public static final String GLOBAL_EXECUTOR    = "globalExecutor";
+  public static final String SHARED_SCHEDULE_EXECUTOR = "sharedScheduleExecutor";
+  public static final String GLOBAL_EXECUTOR = "globalExecutor";
+
+  @Bean
+  @ConditionalOnMissingBean
+  public MetaServerBootstrap metaServerBootstrap() {
+    return new MetaServerBootstrap();
+  }
+
+  @Configuration
+  protected static class MetaServerConfigBeanConfiguration {
+    @Bean
+    @ConditionalOnMissingBean
+    public MetaServerConfig metaServerConfig() {
+      return new MetaServerConfigBean();
+    }
+
+    @Bean
+    public NodeConfig nodeConfig() {
+      return new NodeConfigBeanProperty();
+    }
+
+    @Bean(name = "PropertySplitter")
+    public PropertySplitter propertySplitter() {
+      return new PropertySplitter();
+    }
+  }
+
+  @Configuration
+  public static class ThreadPoolResourceConfiguration {
+    @Bean(name = GLOBAL_EXECUTOR)
+    public ExecutorService getGlobalExecutorService() {
+      int corePoolSize = Math.min(OsUtils.getCpuCount() * 2, 8);
+      int maxPoolSize = 50 * OsUtils.getCpuCount();
+      DefaultExecutorFactory executorFactory =
+          new DefaultExecutorFactory(
+              GLOBAL_EXECUTOR, corePoolSize, maxPoolSize, new ThreadPoolExecutor.AbortPolicy());
+      return executorFactory.create();
+    }
+
+    @Bean(name = SHARED_SCHEDULE_EXECUTOR)
+    public ScheduledExecutorService getScheduledService() {
+      return new ScheduledThreadPoolExecutor(
+          Math.min(OsUtils.getCpuCount() * 2, 12),
+          new NamedThreadFactory("MetaServerGlobalScheduler"));
+    }
+  }
+
+  @Configuration
+  public static class MetaServerRemotingConfiguration {
+
+    @Bean
+    public BoltExchange boltExchange() {
+      return new BoltExchange();
+    }
+
+    @Bean
+    public JerseyExchange jerseyExchange() {
+      return new JerseyExchange();
+    }
+  }
+
+  @Configuration
+  public static class ResourceConfiguration {
+
+    @Bean
+    public ResourceConfig jerseyResourceConfig() {
+      ResourceConfig resourceConfig = new ResourceConfig();
+      resourceConfig.register(JacksonFeature.class);
+      return resourceConfig;
+    }
+
+    @Bean
+    public LeaderAwareFilter leaderAwareFilter() {
+      return new LeaderAwareFilter();
+    }
+
+    @Bean
+    public ProvideDataResource provideDataResource() {
+      return new ProvideDataResource();
+    }
+
+    @Bean
+    public MetaDigestResource metaDigestResource() {
+      return new MetaDigestResource();
+    }
+
+    @Bean
+    public HealthResource healthResource() {
+      return new HealthResource();
+    }
 
     @Bean
     @ConditionalOnMissingBean
-    public MetaServerBootstrap metaServerBootstrap() {
-        return new MetaServerBootstrap();
+    public StopPushDataResource stopPushDataResource() {
+      return new StopPushDataResource();
     }
 
-    @Configuration
-    protected static class MetaServerConfigBeanConfiguration {
-        @Bean
-        @ConditionalOnMissingBean
-        public MetaServerConfig metaServerConfig() {
-            return new MetaServerConfigBean();
-        }
-
-        @Bean
-        public NodeConfig nodeConfig() {
-            return new NodeConfigBeanProperty();
-        }
-
-        @Bean(name = "PropertySplitter")
-        public PropertySplitter propertySplitter() {
-            return new PropertySplitter();
-        }
+    @Bean
+    public BlacklistDataResource blacklistDataResource() {
+      return new BlacklistDataResource();
     }
 
-    @Configuration
-    public static class ThreadPoolResourceConfiguration {
-        @Bean(name = GLOBAL_EXECUTOR)
-        public ExecutorService getGlobalExecutorService() {
-            int corePoolSize = Math.min(OsUtils.getCpuCount() * 2, 8);
-            int maxPoolSize = 50 * OsUtils.getCpuCount();
-            DefaultExecutorFactory executorFactory = new DefaultExecutorFactory(GLOBAL_EXECUTOR,
-                corePoolSize, maxPoolSize, new ThreadPoolExecutor.AbortPolicy());
-            return executorFactory.create();
-        }
-
-        @Bean(name = SHARED_SCHEDULE_EXECUTOR)
-        public ScheduledExecutorService getScheduledService() {
-            return new ScheduledThreadPoolExecutor(Math.min(OsUtils.getCpuCount() * 2, 12),
-                new NamedThreadFactory("MetaServerGlobalScheduler"));
-        }
+    @Bean
+    public SlotSyncResource renewSwitchResource() {
+      return new SlotSyncResource();
     }
 
-    @Configuration
-    public static class MetaServerRemotingConfiguration {
-
-        @Bean
-        public BoltExchange boltExchange() {
-            return new BoltExchange();
-        }
-
-        @Bean
-        public JerseyExchange jerseyExchange() {
-            return new JerseyExchange();
-        }
-
+    @Bean
+    public SlotTableResource slotTableResource() {
+      return new SlotTableResource();
     }
 
-    @Configuration
-    public static class ResourceConfiguration {
-
-        @Bean
-        public ResourceConfig jerseyResourceConfig() {
-            ResourceConfig resourceConfig = new ResourceConfig();
-            resourceConfig.register(JacksonFeature.class);
-            return resourceConfig;
-        }
-
-        @Bean
-        public LeaderAwareFilter leaderAwareFilter() {
-            return new LeaderAwareFilter();
-        }
-
-        @Bean
-        public ProvideDataResource provideDataResource() {
-            return new ProvideDataResource();
-        }
-
-        @Bean
-        public MetaDigestResource metaDigestResource() {
-            return new MetaDigestResource();
-        }
-
-        @Bean
-        public HealthResource healthResource() {
-            return new HealthResource();
-        }
-
-        @Bean
-        @ConditionalOnMissingBean
-        public StopPushDataResource stopPushDataResource() {
-            return new StopPushDataResource();
-        }
-
-        @Bean
-        public BlacklistDataResource blacklistDataResource() {
-            return new BlacklistDataResource();
-        }
-
-        @Bean
-        public SlotSyncResource renewSwitchResource() {
-            return new SlotSyncResource();
-        }
-
-        @Bean
-        public SlotTableResource slotTableResource() {
-            return new SlotTableResource();
-        }
-
-        @Bean
-        public SlotGenericResource slotResource() {
-            return new SlotGenericResource();
-        }
-
-        @Bean
-        public MetricsResource metricsResource() {
-            return new MetricsResource();
-        }
+    @Bean
+    public SlotGenericResource slotResource() {
+      return new SlotGenericResource();
     }
 
-    @Configuration
-    public static class ExecutorConfiguation {
+    @Bean
+    public MetricsResource metricsResource() {
+      return new MetricsResource();
+    }
+  }
 
-        @Bean
-        public ThreadPoolExecutor defaultRequestExecutor(MetaServerConfig metaServerConfig) {
-            ThreadPoolExecutor defaultRequestExecutor = new MetricsableThreadPoolExecutor(
-                "MetaHandlerDefaultExecutor", metaServerConfig.getDefaultRequestExecutorMinSize(),
-                metaServerConfig.getDefaultRequestExecutorMaxSize(), 300, TimeUnit.SECONDS,
-                new LinkedBlockingQueue<>(metaServerConfig.getDefaultRequestExecutorQueueSize()),
-                new NamedThreadFactory("MetaHandler-DefaultRequest"));
-            defaultRequestExecutor.allowCoreThreadTimeOut(true);
-            return defaultRequestExecutor;
-        }
+  @Configuration
+  public static class ExecutorConfiguation {
+
+    @Bean
+    public ThreadPoolExecutor defaultRequestExecutor(MetaServerConfig metaServerConfig) {
+      ThreadPoolExecutor defaultRequestExecutor =
+          new MetricsableThreadPoolExecutor(
+              "MetaHandlerDefaultExecutor",
+              metaServerConfig.getDefaultRequestExecutorMinSize(),
+              metaServerConfig.getDefaultRequestExecutorMaxSize(),
+              300,
+              TimeUnit.SECONDS,
+              new LinkedBlockingQueue<>(metaServerConfig.getDefaultRequestExecutorQueueSize()),
+              new NamedThreadFactory("MetaHandler-DefaultRequest"));
+      defaultRequestExecutor.allowCoreThreadTimeOut(true);
+      return defaultRequestExecutor;
+    }
+  }
+
+  @Configuration
+  public static class MetaPersistenceConfiguration {
+
+    @Bean
+    public RepositoryConfig repositoryConfig() {
+      return new RepositoryConfig();
     }
 
-    @Configuration
-    public static class MetaPersistenceConfiguration {
-
-        @Bean
-        public RepositoryConfig repositoryConfig() {
-            return new RepositoryConfig();
-        }
-
-        @Bean
-        @Profile(SpringContext.META_STORE_API_JDBC)
-        public JdbcConfiguration jdbcConfiguration() {
-            return new JdbcConfiguration();
-        }
-
-        @Bean
-        @Profile(SpringContext.META_STORE_API_RAFT)
-        public RaftConfiguration raftConfiguration() {
-            return new RaftConfiguration();
-        }
+    @Bean
+    @Profile(SpringContext.META_STORE_API_JDBC)
+    public JdbcConfiguration jdbcConfiguration() {
+      return new JdbcConfiguration();
     }
+
+    @Bean
+    @Profile(SpringContext.META_STORE_API_RAFT)
+    public RaftConfiguration raftConfiguration() {
+      return new RaftConfiguration();
+    }
+  }
 }

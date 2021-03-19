@@ -27,9 +27,9 @@ import javax.ws.rs.core.MediaType;
  */
 @Path("test")
 public class TestHttpResource {
-    @GET
-    @Produces(MediaType.APPLICATION_JSON)
-    public String test() {
-        return "TestResource";
-    }
+  @GET
+  @Produces(MediaType.APPLICATION_JSON)
+  public String test() {
+    return "TestResource";
+  }
 }

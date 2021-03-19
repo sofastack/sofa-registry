@@ -30,81 +30,80 @@ import com.alipay.sofa.registry.server.data.cache.DatumStorage;
 import com.alipay.sofa.registry.server.data.slot.SlotManager;
 import com.alipay.sofa.registry.server.shared.remoting.AbstractServerHandler;
 import com.alipay.sofa.registry.util.ParaCheckUtil;
-import org.springframework.beans.factory.annotation.Autowired;
-
 import java.util.Map;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ThreadPoolExecutor;
+import org.springframework.beans.factory.annotation.Autowired;
 
 /**
- *
  * @author yuzhi.lyz
  * @version v 0.1 2020-11-06 15:41 yuzhi.lyz Exp $
  */
-public class SlotFollowerDiffDigestRequestHandler extends
-                                                 AbstractServerHandler<DataSlotDiffDigestRequest> {
-    private static final Logger LOGGER = LoggerFactory
-                                           .getLogger(SlotFollowerDiffDigestRequestHandler.class);
+public class SlotFollowerDiffDigestRequestHandler
+    extends AbstractServerHandler<DataSlotDiffDigestRequest> {
+  private static final Logger LOGGER =
+      LoggerFactory.getLogger(SlotFollowerDiffDigestRequestHandler.class);
 
-    @Autowired
-    private ThreadPoolExecutor  slotSyncRequestProcessorExecutor;
+  @Autowired private ThreadPoolExecutor slotSyncRequestProcessorExecutor;
 
-    @Autowired
-    private DatumStorage        localDatumStorage;
+  @Autowired private DatumStorage localDatumStorage;
 
-    @Autowired
-    private SlotManager         slotManager;
+  @Autowired private SlotManager slotManager;
 
-    @Override
-    public Object doHandle(Channel channel, DataSlotDiffDigestRequest request) {
-        try {
-            slotManager.triggerUpdateSlotTable(request.getSlotTableEpoch());
-            final int slotId = request.getSlotId();
-            if (!slotManager.isLeader(slotId)) {
-                LOGGER.warn("not leader of {}", slotId);
-                return new GenericResponse().fillFailed("not leader of " + slotId);
-            }
-            DataSlotDiffDigestResult result = calcDiffResult(slotId, request.getDatumDigest(),
-                localDatumStorage.getPublishers(request.getSlotId()));
-            result.setSlotTableEpoch(slotManager.getSlotTableEpoch());
-            return new GenericResponse().fillSucceed(result);
-        } catch (Throwable e) {
-            LOGGER.error("DiffSync dataInfoIds Request error for slot {}", request.getSlotId(), e);
-            throw new RuntimeException("DiffSync Request error!", e);
-        }
+  @Override
+  public Object doHandle(Channel channel, DataSlotDiffDigestRequest request) {
+    try {
+      slotManager.triggerUpdateSlotTable(request.getSlotTableEpoch());
+      final int slotId = request.getSlotId();
+      if (!slotManager.isLeader(slotId)) {
+        LOGGER.warn("not leader of {}", slotId);
+        return new GenericResponse().fillFailed("not leader of " + slotId);
+      }
+      DataSlotDiffDigestResult result =
+          calcDiffResult(
+              slotId,
+              request.getDatumDigest(),
+              localDatumStorage.getPublishers(request.getSlotId()));
+      result.setSlotTableEpoch(slotManager.getSlotTableEpoch());
+      return new GenericResponse().fillSucceed(result);
+    } catch (Throwable e) {
+      LOGGER.error("DiffSync dataInfoIds Request error for slot {}", request.getSlotId(), e);
+      throw new RuntimeException("DiffSync Request error!", e);
     }
+  }
 
-    private DataSlotDiffDigestResult calcDiffResult(int targetSlot,
-                                                    Map<String, DatumDigest> targetDigestMap,
-                                                    Map<String, Map<String, Publisher>> existingPublishers) {
-        DataSlotDiffDigestResult result = DataSlotDiffUtils.diffDigestPublishers(targetDigestMap,
-            existingPublishers);
-        DataSlotDiffUtils.logDiffResult(result, targetSlot);
-        return result;
-    }
+  private DataSlotDiffDigestResult calcDiffResult(
+      int targetSlot,
+      Map<String, DatumDigest> targetDigestMap,
+      Map<String, Map<String, Publisher>> existingPublishers) {
+    DataSlotDiffDigestResult result =
+        DataSlotDiffUtils.diffDigestPublishers(targetDigestMap, existingPublishers);
+    DataSlotDiffUtils.logDiffResult(result, targetSlot);
+    return result;
+  }
 
-    @Override
-    protected Node.NodeType getConnectNodeType() {
-        return Node.NodeType.DATA;
-    }
+  @Override
+  protected Node.NodeType getConnectNodeType() {
+    return Node.NodeType.DATA;
+  }
 
-    @Override
-    public Class interest() {
-        return DataSlotDiffDigestRequest.class;
-    }
+  @Override
+  public Class interest() {
+    return DataSlotDiffDigestRequest.class;
+  }
 
-    @Override
-    public void checkParam(DataSlotDiffDigestRequest request) throws RuntimeException {
-        ParaCheckUtil.checkNonNegative(request.getSlotId(), "request.slotId");
-    }
+  @Override
+  public void checkParam(DataSlotDiffDigestRequest request) throws RuntimeException {
+    ParaCheckUtil.checkNonNegative(request.getSlotId(), "request.slotId");
+  }
 
-    @Override
-    public Object buildFailedResponse(String msg) {
-        return new GenericResponse().fillFailed(msg);
-    }
+  @Override
+  public Object buildFailedResponse(String msg) {
+    return new GenericResponse().fillFailed(msg);
+  }
 
-    @Override
-    public Executor getExecutor() {
-        return slotSyncRequestProcessorExecutor;
-    }
+  @Override
+  public Executor getExecutor() {
+    return slotSyncRequestProcessorExecutor;
+  }
 }

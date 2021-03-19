@@ -18,19 +18,18 @@ package com.alipay.sofa.registry.exception;
 
 /**
  * @author chen.zhu
- *         <p>
- *         Mar 05, 2021
+ *     <p>Mar 05, 2021
  */
 public class SofaRegistryIOException extends SofaRegistryException {
-	public SofaRegistryIOException(String message) {
-		super(message);
-	}
+  public SofaRegistryIOException(String message) {
+    super(message);
+  }
 
-	public SofaRegistryIOException(String message, Throwable th) {
-		super(message, th);
-	}
+  public SofaRegistryIOException(String message, Throwable th) {
+    super(message, th);
+  }
 
-	public SofaRegistryIOException(Throwable th) {
-		super(th);
-	}
+  public SofaRegistryIOException(Throwable th) {
+    super(th);
+  }
 }

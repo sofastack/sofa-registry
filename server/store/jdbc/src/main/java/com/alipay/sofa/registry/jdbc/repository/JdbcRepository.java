@@ -20,14 +20,13 @@ import com.alipay.sofa.registry.store.api.driver.RegistryRepository;
 import com.alipay.sofa.registry.store.api.driver.RepositoryManager.RepositoryType;
 
 /**
- *
  * @author xiaojian.xj
  * @version $Id: JdbcRepository.java, v 0.1 2021年01月17日 15:50 xiaojian.xj Exp $
  */
 public interface JdbcRepository extends RegistryRepository {
 
-    @Override
-    default boolean accept(RepositoryType repositoryType) {
-        return repositoryType == RepositoryType.JDBC;
-    }
+  @Override
+  default boolean accept(RepositoryType repositoryType) {
+    return repositoryType == RepositoryType.JDBC;
+  }
 }

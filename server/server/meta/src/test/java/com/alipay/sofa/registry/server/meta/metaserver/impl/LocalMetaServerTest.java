@@ -16,6 +16,8 @@
  */
 package com.alipay.sofa.registry.server.meta.metaserver.impl;
 
+import static org.mockito.Mockito.*;
+
 import com.alipay.sofa.registry.common.model.metaserver.cluster.VersionedList;
 import com.alipay.sofa.registry.common.model.metaserver.nodes.MetaNode;
 import com.alipay.sofa.registry.common.model.slot.SlotTable;
@@ -26,6 +28,12 @@ import com.alipay.sofa.registry.server.meta.lease.session.SessionServerManager;
 import com.alipay.sofa.registry.server.meta.slot.SlotManager;
 import com.alipay.sofa.registry.server.meta.slot.manager.SimpleSlotManager;
 import com.alipay.sofa.registry.util.DatumVersionUtil;
+import java.util.Collections;
+import java.util.List;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.CyclicBarrier;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import org.assertj.core.util.Lists;
 import org.junit.After;
 import org.junit.Assert;
@@ -34,154 +42,146 @@ import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
-import java.io.IOException;
-import java.util.Collections;
-import java.util.List;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.CyclicBarrier;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
-
-import static org.mockito.Mockito.*;
-
 public class LocalMetaServerTest extends AbstractMetaServerTest {
 
-    private LocalMetaServer metaServer ;
+  private LocalMetaServer metaServer;
 
-    private SlotManager slotManager;
+  private SlotManager slotManager;
 
-    @Mock
-    private DataServerManager dataServerManager;
+  @Mock private DataServerManager dataServerManager;
 
-    @Mock
-    private SessionServerManager sessionServerManager;
+  @Mock private SessionServerManager sessionServerManager;
 
-    @Before
-    public void beforeDefaultLocalMetaServerTest() throws Exception {
-        MockitoAnnotations.initMocks(this);
-        slotManager = spy(new SimpleSlotManager());
-        metaServer = spy(new LocalMetaServer(slotManager, dataServerManager, sessionServerManager));
-        LifecycleHelper.initializeIfPossible(metaServer);
-        LifecycleHelper.startIfPossible(metaServer);
+  @Before
+  public void beforeDefaultLocalMetaServerTest() throws Exception {
+    MockitoAnnotations.initMocks(this);
+    slotManager = spy(new SimpleSlotManager());
+    metaServer = spy(new LocalMetaServer(slotManager, dataServerManager, sessionServerManager));
+    LifecycleHelper.initializeIfPossible(metaServer);
+    LifecycleHelper.startIfPossible(metaServer);
+  }
+
+  @After
+  public void afterDefaultLocalMetaServerTest() throws Exception {
+    LifecycleHelper.stopIfPossible(metaServer);
+    LifecycleHelper.disposeIfPossible(metaServer);
+  }
+
+  @Test
+  public void testGetSlotTable() {
+    when(slotManager.getSlotTable()).thenReturn(new SlotTable(0L, Collections.emptyList()));
+    metaServer.getSlotTable();
+    verify(slotManager, times(1)).getSlotTable();
+  }
+
+  @Test
+  public void testGetClusterMembers() throws TimeoutException, InterruptedException {
+    List<MetaNode> metaNodeList =
+        Lists.newArrayList(
+            new MetaNode(randomURL(randomIp()), getDc()),
+            new MetaNode(randomURL(randomIp()), getDc()),
+            new MetaNode(randomURL(randomIp()), getDc()));
+    metaServer.updateClusterMembers(new VersionedList<>(DatumVersionUtil.nextId(), metaNodeList));
+    waitConditionUntilTimeOut(() -> !metaServer.getClusterMembers().isEmpty(), 100);
+    metaNodeList.sort(new NodeComparator());
+    List<MetaNode> actual = metaServer.getClusterMembers();
+    actual.sort(new NodeComparator());
+    Assert.assertEquals(metaNodeList, actual);
+  }
+
+  @Test
+  public void testUpdateClusterMembers() throws InterruptedException {
+    int tasks = 1000;
+    CyclicBarrier barrier = new CyclicBarrier(tasks);
+    CountDownLatch latch = new CountDownLatch(tasks);
+    for (int i = 0; i < tasks; i++) {
+      executors.execute(
+          new Runnable() {
+            @Override
+            public void run() {
+              try {
+                barrier.await();
+              } catch (Exception ignore) {
+              }
+
+              metaServer.updateClusterMembers(
+                  new VersionedList<>(
+                      DatumVersionUtil.nextId(),
+                      Lists.newArrayList(
+                          new MetaNode(randomURL(), getDc()),
+                          new MetaNode(randomURL(), getDc()),
+                          new MetaNode(randomURL(), getDc()))));
+              latch.countDown();
+            }
+          });
     }
+    latch.await(2, TimeUnit.SECONDS);
+    verify(metaServer, times(tasks)).updateClusterMembers(any());
+  }
 
-    @After
-    public void afterDefaultLocalMetaServerTest() throws Exception {
-        LifecycleHelper.stopIfPossible(metaServer);
-        LifecycleHelper.disposeIfPossible(metaServer);
+  @Test
+  public void testRenew() throws InterruptedException {
+    int tasks = 1000;
+    CyclicBarrier barrier = new CyclicBarrier(tasks);
+    CountDownLatch latch = new CountDownLatch(tasks);
+    for (int i = 0; i < tasks; i++) {
+      executors.execute(
+          new Runnable() {
+            @Override
+            public void run() {
+              try {
+                barrier.await();
+              } catch (Exception ignore) {
+              }
+              metaServer.renew(new MetaNode(randomURL(), getDc()));
+              latch.countDown();
+            }
+          });
     }
+    latch.await(2, TimeUnit.SECONDS);
+    verify(metaServer, times(tasks)).renew(any());
+  }
 
-    @Test
-    public void testGetSlotTable() {
-        when(slotManager.getSlotTable()).thenReturn(new SlotTable(0L, Collections.emptyList()));
-        metaServer.getSlotTable();
-        verify(slotManager, times(1)).getSlotTable();
+  @Test
+  public void testCancel() throws InterruptedException {
+    int tasks = 1000;
+    CyclicBarrier barrier = new CyclicBarrier(tasks);
+    CountDownLatch latch = new CountDownLatch(tasks);
+    for (int i = 0; i < tasks; i++) {
+      executors.execute(
+          new Runnable() {
+            @Override
+            public void run() {
+              try {
+                barrier.await();
+              } catch (Exception ignore) {
+              }
+              metaServer.renew(new MetaNode(randomURL(), getDc()));
+              latch.countDown();
+            }
+          });
     }
+    latch.await(2, TimeUnit.SECONDS);
+    verify(metaServer, times(tasks)).renew(any());
 
-    @Test
-    public void testGetClusterMembers() throws TimeoutException, InterruptedException {
-        List<MetaNode> metaNodeList = Lists.newArrayList(new MetaNode(randomURL(randomIp()), getDc()),
-            new MetaNode(randomURL(randomIp()), getDc()), new MetaNode(randomURL(randomIp()), getDc()));
-        metaServer.updateClusterMembers(new VersionedList<>(DatumVersionUtil.nextId(), metaNodeList));
-        waitConditionUntilTimeOut(()->!metaServer.getClusterMembers().isEmpty(), 100);
-        metaNodeList.sort(new NodeComparator());
-        List<MetaNode> actual = metaServer.getClusterMembers();
-        actual.sort(new NodeComparator());
-        Assert.assertEquals(metaNodeList, actual);
+    CyclicBarrier barrier2 = new CyclicBarrier(tasks);
+    CountDownLatch latch2 = new CountDownLatch(tasks);
+    for (int i = 0; i < tasks; i++) {
+      executors.execute(
+          new Runnable() {
+            @Override
+            public void run() {
+              try {
+                barrier2.await();
+              } catch (Exception ignore) {
+              }
+              metaServer.cancel(new MetaNode(randomURL(), getDc()));
+              latch2.countDown();
+            }
+          });
     }
-
-    @Test
-    public void testUpdateClusterMembers() throws InterruptedException {
-        int tasks = 1000;
-        CyclicBarrier barrier = new CyclicBarrier(tasks);
-        CountDownLatch latch = new CountDownLatch(tasks);
-        for (int i = 0; i < tasks; i++) {
-            executors.execute(new Runnable() {
-                @Override
-                public void run() {
-                    try {
-                        barrier.await();
-                    } catch (Exception ignore) {
-                    }
-
-                    metaServer.updateClusterMembers(new VersionedList<>(
-                            DatumVersionUtil.nextId(),Lists.newArrayList(new MetaNode(randomURL(),
-                        getDc()), new MetaNode(randomURL(), getDc()), new MetaNode(randomURL(),
-                        getDc()))));
-                    latch.countDown();
-                }
-            });
-
-        }
-        latch.await(2, TimeUnit.SECONDS);
-        verify(metaServer, times(tasks)).updateClusterMembers(any());
-
-    }
-
-    @Test
-    public void testRenew() throws InterruptedException {
-        int tasks = 1000;
-        CyclicBarrier barrier = new CyclicBarrier(tasks);
-        CountDownLatch latch = new CountDownLatch(tasks);
-        for (int i = 0; i < tasks; i++) {
-            executors.execute(new Runnable() {
-                @Override
-                public void run() {
-                    try {
-                        barrier.await();
-                    } catch (Exception ignore) {
-                    }
-                    metaServer.renew(new MetaNode(randomURL(), getDc()));
-                    latch.countDown();
-                }
-            });
-
-        }
-        latch.await(2, TimeUnit.SECONDS);
-        verify(metaServer, times(tasks)).renew(any());
-    }
-
-    @Test
-    public void testCancel() throws InterruptedException {
-        int tasks = 1000;
-        CyclicBarrier barrier = new CyclicBarrier(tasks);
-        CountDownLatch latch = new CountDownLatch(tasks);
-        for (int i = 0; i < tasks; i++) {
-            executors.execute(new Runnable() {
-                @Override
-                public void run() {
-                    try {
-                        barrier.await();
-                    } catch (Exception ignore) {
-                    }
-                    metaServer.renew(new MetaNode(randomURL(), getDc()));
-                    latch.countDown();
-                }
-            });
-
-        }
-        latch.await(2, TimeUnit.SECONDS);
-        verify(metaServer, times(tasks)).renew(any());
-
-        CyclicBarrier barrier2 = new CyclicBarrier(tasks);
-        CountDownLatch latch2 = new CountDownLatch(tasks);
-        for (int i = 0; i < tasks; i++) {
-            executors.execute(new Runnable() {
-                @Override
-                public void run() {
-                    try {
-                        barrier2.await();
-                    } catch (Exception ignore) {
-                    }
-                    metaServer.cancel(new MetaNode(randomURL(), getDc()));
-                    latch2.countDown();
-                }
-            });
-
-        }
-        latch2.await(2, TimeUnit.SECONDS);
-        Thread.sleep(50);
-        verify(metaServer, times(tasks)).cancel(any());
-    }
-
+    latch2.await(2, TimeUnit.SECONDS);
+    Thread.sleep(50);
+    verify(metaServer, times(tasks)).cancel(any());
+  }
 }

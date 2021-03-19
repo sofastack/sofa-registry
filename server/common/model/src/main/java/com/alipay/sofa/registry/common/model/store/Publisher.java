@@ -16,116 +16,113 @@
  */
 package com.alipay.sofa.registry.common.model.store;
 
-import java.util.List;
-
 import com.alipay.sofa.registry.common.model.*;
-import com.fasterxml.jackson.annotation.JsonIgnore;
-
 import com.alipay.sofa.registry.common.model.PublishType;
 import com.alipay.sofa.registry.common.model.ServerDataBox;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import java.util.List;
 
 /**
- *
  * @author shangyu.wh
  * @version $Id: Publisher.java, v 0.1 2017-11-30 16:04 shangyu.wh Exp $
  */
 public class Publisher extends BaseInfo {
 
-    /** UID */
-    private static final long   serialVersionUID = 5859214992132895021L;
+  /** UID */
+  private static final long serialVersionUID = 5859214992132895021L;
 
-    private List<ServerDataBox> dataList;
+  private List<ServerDataBox> dataList;
 
-    private PublishType         publishType      = PublishType.NORMAL;
+  private PublishType publishType = PublishType.NORMAL;
 
-    @JsonIgnore
-    private ProcessId           sessionProcessId;
+  @JsonIgnore private ProcessId sessionProcessId;
 
-    public Publisher() {
+  public Publisher() {}
+
+  /**
+   * Getter method for property <tt>sessionProcessId</tt>.
+   *
+   * @return property value of sessionProcessId
+   */
+  public ProcessId getSessionProcessId() {
+    return sessionProcessId;
+  }
+
+  /**
+   * Setter method for property <tt>sessionProcessId</tt>.
+   *
+   * @param sessionProcessId value to be assigned to property sessionProcessId
+   */
+  public void setSessionProcessId(ProcessId sessionProcessId) {
+    this.sessionProcessId = sessionProcessId;
+  }
+
+  /**
+   * Getter method for property <tt>dataList</tt>.
+   *
+   * @return property value of dataList
+   */
+  public List<ServerDataBox> getDataList() {
+    return dataList;
+  }
+
+  /**
+   * Setter method for property <tt>dataList</tt>.
+   *
+   * @param dataList value to be assigned to property dataList
+   */
+  public void setDataList(List<ServerDataBox> dataList) {
+    this.dataList = dataList;
+  }
+
+  public PublishType getPublishType() {
+    return publishType;
+  }
+
+  /**
+   * Setter method for property <tt>publishType</tt>.
+   *
+   * @param publishType value to be assigned to property publishType
+   */
+  public void setPublishType(PublishType publishType) {
+    this.publishType = publishType;
+  }
+
+  @Override
+  @JsonIgnore
+  public DataType getDataType() {
+    return DataType.PUBLISHER;
+  }
+
+  @Override
+  protected String getOtherInfo() {
+    final StringBuilder sb = new StringBuilder("dataList=");
+    if (dataList != null) {
+      sb.append(dataList.size());
+    } else {
+      sb.append("null");
     }
+    sb.append(",").append("publishType=").append(publishType);
+    return sb.toString();
+  }
 
-    /**
-     * Getter method for property <tt>sessionProcessId</tt>.
-     * @return property value of sessionProcessId
-     */
-    public ProcessId getSessionProcessId() {
-        return sessionProcessId;
-    }
+  /**
+   * change publisher word cache
+   *
+   * @param publisher
+   * @return
+   */
+  public static Publisher internPublisher(Publisher publisher) {
+    publisher.setRegisterId(publisher.getRegisterId());
+    publisher.setDataInfoId(publisher.getDataInfoId());
+    publisher.setInstanceId(publisher.getInstanceId());
+    publisher.setGroup(publisher.getGroup());
+    publisher.setDataId(publisher.getDataId());
+    publisher.setClientId(publisher.getClientId());
+    publisher.setCell(publisher.getCell());
+    publisher.setProcessId(publisher.getProcessId());
+    publisher.setAppName(publisher.getAppName());
 
-    /**
-     * Setter method for property <tt>sessionProcessId</tt>.
-     * @param sessionProcessId value to be assigned to property sessionProcessId
-     */
-    public void setSessionProcessId(ProcessId sessionProcessId) {
-        this.sessionProcessId = sessionProcessId;
-    }
-
-    /**
-     * Getter method for property <tt>dataList</tt>.
-     *
-     * @return property value of dataList
-     */
-    public List<ServerDataBox> getDataList() {
-        return dataList;
-    }
-
-    /**
-     * Setter method for property <tt>dataList</tt>.
-     *
-     * @param dataList value to be assigned to property dataList
-     */
-    public void setDataList(List<ServerDataBox> dataList) {
-        this.dataList = dataList;
-    }
-
-    public PublishType getPublishType() {
-        return publishType;
-    }
-
-    /**
-     * Setter method for property <tt>publishType</tt>.
-     *
-     * @param publishType  value to be assigned to property publishType
-     */
-    public void setPublishType(PublishType publishType) {
-        this.publishType = publishType;
-    }
-
-    @Override
-    @JsonIgnore
-    public DataType getDataType() {
-        return DataType.PUBLISHER;
-    }
-
-    @Override
-    protected String getOtherInfo() {
-        final StringBuilder sb = new StringBuilder("dataList=");
-        if (dataList != null) {
-            sb.append(dataList.size());
-        } else {
-            sb.append("null");
-        }
-        sb.append(",").append("publishType=").append(publishType);
-        return sb.toString();
-    }
-
-    /**
-     * change publisher word cache
-     * @param publisher
-     * @return
-     */
-    public static Publisher internPublisher(Publisher publisher) {
-        publisher.setRegisterId(publisher.getRegisterId());
-        publisher.setDataInfoId(publisher.getDataInfoId());
-        publisher.setInstanceId(publisher.getInstanceId());
-        publisher.setGroup(publisher.getGroup());
-        publisher.setDataId(publisher.getDataId());
-        publisher.setClientId(publisher.getClientId());
-        publisher.setCell(publisher.getCell());
-        publisher.setProcessId(publisher.getProcessId());
-        publisher.setAppName(publisher.getAppName());
-
-        return publisher;
-    }
-
+    return publisher;
+  }
 }

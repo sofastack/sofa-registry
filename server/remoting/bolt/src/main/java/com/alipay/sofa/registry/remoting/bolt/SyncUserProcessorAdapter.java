@@ -20,53 +20,52 @@ import com.alipay.remoting.AsyncContext;
 import com.alipay.remoting.BizContext;
 import com.alipay.remoting.rpc.protocol.SyncUserProcessor;
 import com.alipay.sofa.registry.remoting.ChannelHandler;
-
 import java.util.concurrent.Executor;
 
 /**
- *
  * @author shangyu.wh
  * @version $Id: UserProcessorAdapter.java, v 0.1 2017-11-24 17:10 shangyu.wh Exp $
  */
 public class SyncUserProcessorAdapter extends SyncUserProcessor {
 
-    private ChannelHandler userProcessorHandler;
+  private ChannelHandler userProcessorHandler;
 
-    /**
-     * constructor
-     * @param userProcessorHandler
-     */
-    public SyncUserProcessorAdapter(ChannelHandler userProcessorHandler) {
-        this.userProcessorHandler = userProcessorHandler;
+  /**
+   * constructor
+   *
+   * @param userProcessorHandler
+   */
+  public SyncUserProcessorAdapter(ChannelHandler userProcessorHandler) {
+    this.userProcessorHandler = userProcessorHandler;
+  }
+
+  @Override
+  public void handleRequest(BizContext bizCtx, AsyncContext asyncCtx, Object request) {
+    super.handleRequest(bizCtx, asyncCtx, request);
+  }
+
+  @Override
+  public Object handleRequest(BizContext bizCtx, Object request) throws Exception {
+    BoltChannel boltChannel = new BoltChannel();
+    boltChannel.setBizContext(bizCtx);
+    boltChannel.setConnection(bizCtx.getConnection());
+    if (userProcessorHandler != null) {
+      return userProcessorHandler.reply(boltChannel, request);
+    }
+    return null;
+  }
+
+  @Override
+  public String interest() {
+    if (userProcessorHandler != null && userProcessorHandler.interest() != null) {
+      return userProcessorHandler.interest().getName();
     }
 
-    @Override
-    public void handleRequest(BizContext bizCtx, AsyncContext asyncCtx, Object request) {
-        super.handleRequest(bizCtx, asyncCtx, request);
-    }
+    return null;
+  }
 
-    @Override
-    public Object handleRequest(BizContext bizCtx, Object request) throws Exception {
-        BoltChannel boltChannel = new BoltChannel();
-        boltChannel.setBizContext(bizCtx);
-        boltChannel.setConnection(bizCtx.getConnection());
-        if (userProcessorHandler != null) {
-            return userProcessorHandler.reply(boltChannel, request);
-        }
-        return null;
-    }
-
-    @Override
-    public String interest() {
-        if (userProcessorHandler != null && userProcessorHandler.interest() != null) {
-            return userProcessorHandler.interest().getName();
-        }
-
-        return null;
-    }
-
-    @Override
-    public Executor getExecutor() {
-        return userProcessorHandler.getExecutor();
-    }
+  @Override
+  public Executor getExecutor() {
+    return userProcessorHandler.getExecutor();
+  }
 }

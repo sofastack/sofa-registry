@@ -16,6 +16,8 @@
  */
 package com.alipay.sofa.registry.server.meta.slot.tasks;
 
+import static org.mockito.Mockito.*;
+
 import com.alipay.sofa.registry.common.model.metaserver.cluster.VersionedList;
 import com.alipay.sofa.registry.common.model.metaserver.nodes.DataNode;
 import com.alipay.sofa.registry.common.model.slot.SlotConfig;
@@ -27,6 +29,8 @@ import com.alipay.sofa.registry.server.meta.lease.data.DataServerManager;
 import com.alipay.sofa.registry.server.meta.slot.SlotManager;
 import com.alipay.sofa.registry.server.meta.slot.manager.SimpleSlotManager;
 import com.alipay.sofa.registry.util.DatumVersionUtil;
+import java.util.List;
+import java.util.concurrent.TimeoutException;
 import org.assertj.core.util.Lists;
 import org.junit.Assert;
 import org.junit.Before;
@@ -34,81 +38,84 @@ import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
-import java.util.List;
-import java.util.concurrent.TimeoutException;
-
-import static org.mockito.Mockito.*;
-
 public class BalanceTaskTest extends AbstractMetaServerTest {
 
-    private BalanceTask task;
+  private BalanceTask task;
 
-    private SlotManager slotManager;
+  private SlotManager slotManager;
 
-    @Mock
-    private DataServerManager dataServerManager;
+  @Mock private DataServerManager dataServerManager;
 
-    @Before
-    public void beforeInitReshardingTaskTest() throws Exception {
-        MockitoAnnotations.initMocks(this);
-        List<DataNode> dataNodes = Lists.newArrayList(new DataNode(randomURL(randomIp()), getDc()),
-            new DataNode(randomURL(randomIp()), getDc()), new DataNode(randomURL(randomIp()),
-                getDc()), new DataNode(randomURL(randomIp()), getDc()));
-        when(dataServerManager.getDataServerMetaInfo())
-                .thenReturn(new VersionedList<>(DatumVersionUtil.nextId(),dataNodes));
-        NodeConfig nodeConfig = mock(NodeConfig.class);
-        when(nodeConfig.getLocalDataCenter()).thenReturn(getDc());
-        slotManager = new SimpleSlotManager();
+  @Before
+  public void beforeInitReshardingTaskTest() throws Exception {
+    MockitoAnnotations.initMocks(this);
+    List<DataNode> dataNodes =
+        Lists.newArrayList(
+            new DataNode(randomURL(randomIp()), getDc()),
+            new DataNode(randomURL(randomIp()), getDc()),
+            new DataNode(randomURL(randomIp()), getDc()),
+            new DataNode(randomURL(randomIp()), getDc()));
+    when(dataServerManager.getDataServerMetaInfo())
+        .thenReturn(new VersionedList<>(DatumVersionUtil.nextId(), dataNodes));
+    NodeConfig nodeConfig = mock(NodeConfig.class);
+    when(nodeConfig.getLocalDataCenter()).thenReturn(getDc());
+    slotManager = new SimpleSlotManager();
+  }
+
+  @Test
+  public void testRun() throws TimeoutException, InterruptedException {
+    Assert.assertEquals(SlotTable.INIT, slotManager.getSlotTable());
+    task = new BalanceTask(slotManager, dataServerManager);
+    task.run();
+    Assert.assertNotEquals(SlotTable.INIT, slotManager.getSlotTable());
+    printSlotTable(slotManager.getSlotTable());
+  }
+
+  @Test
+  public void testNoDupLeaderAndFollower() throws Exception {
+    List<DataNode> dataNodes =
+        Lists.newArrayList(
+            new DataNode(new URL("100.88.142.32"), getDc()),
+            new DataNode(new URL("100.88.142.36"), getDc()),
+            new DataNode(new URL("100.88.142.19"), getDc()));
+    when(dataServerManager.getDataServerMetaInfo())
+        .thenReturn(new VersionedList<>(DatumVersionUtil.nextId(), dataNodes));
+    task = new BalanceTask(slotManager, dataServerManager);
+    task.run();
+    SlotTable slotTable = slotManager.getSlotTable();
+    slotTable
+        .getSlotMap()
+        .forEach(
+            (slotId, slot) -> {
+              Assert.assertFalse(slot.getFollowers().contains(slot.getLeader()));
+            });
+  }
+
+  @Test
+  public void nonExecutionDueToEmptyDataSet() {
+    when(dataServerManager.getDataServerMetaInfo())
+        .thenReturn(new VersionedList<>(DatumVersionUtil.nextId(), Lists.newArrayList()));
+    slotManager = spy(slotManager);
+    task = new BalanceTask(slotManager, dataServerManager);
+    task.run();
+    verify(slotManager, never()).refresh(any(SlotTable.class));
+  }
+
+  @Test
+  public void testSlotEpochCorrect() {
+    List<DataNode> dataNodes = randomDataNodes(3);
+    SlotTable prev = randomSlotTable(dataNodes);
+    slotManager.refresh(prev);
+
+    when(dataServerManager.getDataServerMetaInfo())
+        .thenReturn(new VersionedList<>(DatumVersionUtil.nextId(), dataNodes));
+    task = new BalanceTask(slotManager, dataServerManager);
+    task.run();
+
+    SlotTable current = slotManager.getSlotTable();
+    for (int slotId = 0; slotId < SlotConfig.SLOT_NUM; slotId++) {
+      Assert.assertTrue(
+          prev.getSlot(slotId).getLeaderEpoch() < current.getSlot(slotId).getLeaderEpoch());
     }
-
-    @Test
-    public void testRun() throws TimeoutException, InterruptedException {
-        Assert.assertEquals(SlotTable.INIT, slotManager.getSlotTable());
-        task = new BalanceTask(slotManager, dataServerManager);
-        task.run();
-        Assert.assertNotEquals(SlotTable.INIT, slotManager.getSlotTable());
-        printSlotTable(slotManager.getSlotTable());
-    }
-
-    @Test
-    public void testNoDupLeaderAndFollower() throws Exception {
-        List<DataNode> dataNodes = Lists.newArrayList(
-                new DataNode(new URL("100.88.142.32"), getDc()),
-                new DataNode(new URL("100.88.142.36"), getDc()),
-                new DataNode(new URL("100.88.142.19"), getDc()));
-        when(dataServerManager.getDataServerMetaInfo()).thenReturn(new VersionedList<>(DatumVersionUtil.nextId(),dataNodes));
-        task = new BalanceTask(slotManager, dataServerManager);
-        task.run();
-        SlotTable slotTable = slotManager.getSlotTable();
-        slotTable.getSlotMap().forEach((slotId, slot) -> {
-            Assert.assertFalse(slot.getFollowers().contains(slot.getLeader()));
-        });
-    }
-
-    @Test
-    public void nonExecutionDueToEmptyDataSet() {
-        when(dataServerManager.getDataServerMetaInfo())
-                .thenReturn(new VersionedList<>(DatumVersionUtil.nextId(), Lists.newArrayList()));
-        slotManager = spy(slotManager);
-        task = new BalanceTask(slotManager, dataServerManager);
-        task.run();
-        verify(slotManager, never()).refresh(any(SlotTable.class));
-    }
-
-    @Test
-    public void testSlotEpochCorrect() {
-        List<DataNode> dataNodes = randomDataNodes(3);
-        SlotTable prev = randomSlotTable(dataNodes);
-        slotManager.refresh(prev);
-
-        when(dataServerManager.getDataServerMetaInfo()).thenReturn(new VersionedList<>(DatumVersionUtil.nextId(),dataNodes));
-        task = new BalanceTask(slotManager, dataServerManager);
-        task.run();
-
-        SlotTable current = slotManager.getSlotTable();
-        for (int slotId = 0; slotId < SlotConfig.SLOT_NUM; slotId++) {
-            Assert.assertTrue(prev.getSlot(slotId).getLeaderEpoch() < current.getSlot(slotId)
-                .getLeaderEpoch());
-        }
-    }
+  }
 }

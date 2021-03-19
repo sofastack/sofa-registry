@@ -20,22 +20,21 @@ import java.util.List;
 
 /**
  * @author chen.zhu
- * <p>
- * Mar 09, 2021
+ *     <p>Mar 09, 2021
  */
 public interface Cluster<T> {
 
-    /**
-     * Epoch long.
-     *
-     * @return the long
-     */
-    long getEpoch();
+  /**
+   * Epoch long.
+   *
+   * @return the long
+   */
+  long getEpoch();
 
-    /**
-     * Gets get cluster members.
-     *
-     * @return the get cluster members
-     */
-    List<T> getClusterMembers();
+  /**
+   * Gets get cluster members.
+   *
+   * @return the get cluster members
+   */
+  List<T> getClusterMembers();
 }

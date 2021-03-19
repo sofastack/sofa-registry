@@ -22,20 +22,19 @@ import com.alipay.sofa.registry.common.model.slot.Slot;
 
 /**
  * @author chen.zhu
- *         <p>
- *         Jan 28, 2021
+ *     <p>Jan 28, 2021
  */
 public interface SlotStats {
 
-	Slot getSlot();
+  Slot getSlot();
 
-	boolean isLeaderStable();
+  boolean isLeaderStable();
 
-	boolean isFollowersStable();
+  boolean isFollowersStable();
 
-	boolean isFollowerStable(String dataServer);
+  boolean isFollowerStable(String dataServer);
 
-	void updateLeaderState(LeaderSlotStatus leaderSlotStatus);
+  void updateLeaderState(LeaderSlotStatus leaderSlotStatus);
 
-	void updateFollowerState(FollowerSlotStatus followerSlotStatus);
+  void updateFollowerState(FollowerSlotStatus followerSlotStatus);
 }

@@ -16,52 +16,52 @@
  */
 package com.alipay.sofa.registry.remoting.exchange.message;
 
-import java.util.concurrent.atomic.AtomicInteger;
-
 import com.alipay.sofa.registry.common.model.store.URL;
 import com.alipay.sofa.registry.remoting.CallbackHandler;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * The interface Request.
  *
- * @param <T>  the type parameter
+ * @param <T> the type parameter
  * @author shangyu.wh
  * @version $Id : Request.java, v 0.1 2017-11-30 17:33 shangyu.wh Exp $
  */
 public interface Request<T> {
 
-    /**
-     * Gets request body.
-     *
-     * @return the request body
-     */
-    T getRequestBody();
+  /**
+   * Gets request body.
+   *
+   * @return the request body
+   */
+  T getRequestBody();
 
-    /**
-     * Gets request url.
-     *
-     * @return the request url
-     */
-    URL getRequestUrl();
+  /**
+   * Gets request url.
+   *
+   * @return the request url
+   */
+  URL getRequestUrl();
 
-    /**
-     * Gets call back handler.
-     *
-     * @return the call back handler
-     */
-    default CallbackHandler getCallBackHandler() {
-        return null;
-    }
+  /**
+   * Gets call back handler.
+   *
+   * @return the call back handler
+   */
+  default CallbackHandler getCallBackHandler() {
+    return null;
+  }
 
-    /**
-     * request send by retry some times
-     * @return
-     */
-    default AtomicInteger getRetryTimes() {
-        return new AtomicInteger();
-    }
+  /**
+   * request send by retry some times
+   *
+   * @return
+   */
+  default AtomicInteger getRetryTimes() {
+    return new AtomicInteger();
+  }
 
-    default Integer getTimeout() {
-        return null;
-    }
+  default Integer getTimeout() {
+    return null;
+  }
 }

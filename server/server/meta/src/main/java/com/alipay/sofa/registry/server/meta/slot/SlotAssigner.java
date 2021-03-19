@@ -20,11 +20,9 @@ import com.alipay.sofa.registry.common.model.slot.SlotTable;
 
 /**
  * @author chen.zhu
- *         <p>
- *         Jan 15, 2021
+ *     <p>Jan 15, 2021
  */
 public interface SlotAssigner {
 
-	SlotTable assign();
-
+  SlotTable assign();
 }

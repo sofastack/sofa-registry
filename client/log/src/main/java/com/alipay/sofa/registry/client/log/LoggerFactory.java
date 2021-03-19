@@ -17,85 +17,85 @@
 package com.alipay.sofa.registry.client.log;
 
 import com.alipay.sofa.common.log.LoggerSpaceManager;
-import org.slf4j.Logger;
-
 import java.io.File;
+import org.slf4j.Logger;
 
 /**
  * The type Logger factory.
+ *
  * @author zhuoyu.sjw
  * @version $Id : LoggerFactory.java, v 0.1 2018-03-24 12:06 zhuoyu.sjw Exp $$
  */
 public class LoggerFactory {
 
-    private static final String LOG_SPACE_PROPERTY        = "registry.client.log.space";
-    private static final String LOG_PATH                  = "logging.path";
-    private static final String LOG_PATH_DEFAULT          = System.getProperty("user.home")
-                                                            + File.separator + "logs";
-    private static final String CLIENT_LOG_LEVEL          = "com.alipay.sofa.registry.client.log.level";
-    private static final String CLIENT_LOG_LEVEL_DEFAULT  = "INFO";
-    private static final String CLIENT_LOG_ENCODE         = "com.alipay.sofa.registry.client.log.encode";
-    private static final String CLIENT_LOG_ENCODE_DEFAULT = "UTF-8";
-    private static String       logSpace                  = "com.alipay.sofa.registry.client";
+  private static final String LOG_SPACE_PROPERTY = "registry.client.log.space";
+  private static final String LOG_PATH = "logging.path";
+  private static final String LOG_PATH_DEFAULT =
+      System.getProperty("user.home") + File.separator + "logs";
+  private static final String CLIENT_LOG_LEVEL = "com.alipay.sofa.registry.client.log.level";
+  private static final String CLIENT_LOG_LEVEL_DEFAULT = "INFO";
+  private static final String CLIENT_LOG_ENCODE = "com.alipay.sofa.registry.client.log.encode";
+  private static final String CLIENT_LOG_ENCODE_DEFAULT = "UTF-8";
+  private static String logSpace = "com.alipay.sofa.registry.client";
 
-    static {
-        LoggerFactory.logSpace = getLogSpace();
+  static {
+    LoggerFactory.logSpace = getLogSpace();
 
-        String logPath = System.getProperty(LOG_PATH);
-        String logLevel = System.getProperty(CLIENT_LOG_LEVEL);
-        String logEncode = System.getProperty(CLIENT_LOG_ENCODE);
-        if (isBlank(logPath)) {
-            System.setProperty(LOG_PATH, LOG_PATH_DEFAULT);
-        }
-        if (isBlank(logLevel)) {
-            System.setProperty(CLIENT_LOG_LEVEL, CLIENT_LOG_LEVEL_DEFAULT);
-        }
-        if (isBlank(logEncode)) {
-            System.setProperty(CLIENT_LOG_ENCODE, CLIENT_LOG_ENCODE_DEFAULT);
-        }
+    String logPath = System.getProperty(LOG_PATH);
+    String logLevel = System.getProperty(CLIENT_LOG_LEVEL);
+    String logEncode = System.getProperty(CLIENT_LOG_ENCODE);
+    if (isBlank(logPath)) {
+      System.setProperty(LOG_PATH, LOG_PATH_DEFAULT);
     }
-
-    static String getLogSpace() {
-        String sysLogSpace = System.getProperty(LOG_SPACE_PROPERTY);
-        return (null != sysLogSpace && !sysLogSpace.isEmpty()) ? sysLogSpace : logSpace;
+    if (isBlank(logLevel)) {
+      System.setProperty(CLIENT_LOG_LEVEL, CLIENT_LOG_LEVEL_DEFAULT);
     }
-
-    /**
-     * Gets logger.
-     *
-     * @param clazz the clazz  
-     * @return the logger
-     */
-    public static Logger getLogger(Class<?> clazz) {
-        if (clazz == null) {
-            return null;
-        }
-        return getLogger(clazz.getCanonicalName());
+    if (isBlank(logEncode)) {
+      System.setProperty(CLIENT_LOG_ENCODE, CLIENT_LOG_ENCODE_DEFAULT);
     }
+  }
 
-    /**
-     * Gets logger.
-     *
-     * @param name the name  
-     * @return the logger
-     */
-    public static Logger getLogger(String name) {
-        if (name == null || name.isEmpty()) {
-            return null;
-        }
-        return LoggerSpaceManager.getLoggerBySpace(name, logSpace);
-    }
+  static String getLogSpace() {
+    String sysLogSpace = System.getProperty(LOG_SPACE_PROPERTY);
+    return (null != sysLogSpace && !sysLogSpace.isEmpty()) ? sysLogSpace : logSpace;
+  }
 
-    static boolean isBlank(CharSequence cs) {
-        int strLen;
-        if (cs == null || (strLen = cs.length()) == 0) {
-            return true;
-        }
-        for (int i = 0; i < strLen; i++) {
-            if (!Character.isWhitespace(cs.charAt(i))) {
-                return false;
-            }
-        }
-        return true;
+  /**
+   * Gets logger.
+   *
+   * @param clazz the clazz
+   * @return the logger
+   */
+  public static Logger getLogger(Class<?> clazz) {
+    if (clazz == null) {
+      return null;
     }
+    return getLogger(clazz.getCanonicalName());
+  }
+
+  /**
+   * Gets logger.
+   *
+   * @param name the name
+   * @return the logger
+   */
+  public static Logger getLogger(String name) {
+    if (name == null || name.isEmpty()) {
+      return null;
+    }
+    return LoggerSpaceManager.getLoggerBySpace(name, logSpace);
+  }
+
+  static boolean isBlank(CharSequence cs) {
+    int strLen;
+    if (cs == null || (strLen = cs.length()) == 0) {
+      return true;
+    }
+    for (int i = 0; i < strLen; i++) {
+      if (!Character.isWhitespace(cs.charAt(i))) {
+        return false;
+      }
+    }
+    return true;
+  }
 }

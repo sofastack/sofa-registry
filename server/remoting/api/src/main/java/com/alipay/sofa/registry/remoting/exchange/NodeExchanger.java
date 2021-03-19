@@ -21,19 +21,17 @@ import com.alipay.sofa.registry.remoting.exchange.message.Request;
 import com.alipay.sofa.registry.remoting.exchange.message.Response;
 
 /**
- * 
  * @author shangyu.wh
  * @version $Id: NodeExchanger.java, v 0.1 2017-12-01 11:48 shangyu.wh Exp $
  */
 public interface NodeExchanger {
 
-	/**
-	 * 
-	 * @param request
-	 * @return
-	 * @throws RequestException
-	 */
-	Response request(Request request) throws RequestException;
+  /**
+   * @param request
+   * @return
+   * @throws RequestException
+   */
+  Response request(Request request) throws RequestException;
 
-	Client connectServer();
+  Client connectServer();
 }

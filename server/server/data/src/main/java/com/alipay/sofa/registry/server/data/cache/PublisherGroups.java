@@ -25,161 +25,170 @@ import com.alipay.sofa.registry.common.model.dataserver.DatumVersion;
 import com.alipay.sofa.registry.common.model.store.Publisher;
 import com.alipay.sofa.registry.util.StringFormatter;
 import com.google.common.collect.Maps;
-import org.apache.commons.collections.CollectionUtils;
-import org.glassfish.jersey.internal.guava.Sets;
-
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import org.apache.commons.collections.CollectionUtils;
+import org.glassfish.jersey.internal.guava.Sets;
 
 /**
  * @author yuzhi.lyz
  * @version v 0.1 2020-12-02 21:52 yuzhi.lyz Exp $
  */
 public final class PublisherGroups {
-    private final Map<String, PublisherGroup> publisherGroupMap = Maps.newConcurrentMap();
-    private final String                      dataCenter;
+  private final Map<String, PublisherGroup> publisherGroupMap = Maps.newConcurrentMap();
+  private final String dataCenter;
 
-    PublisherGroups(String dataCenter) {
-        this.dataCenter = dataCenter;
+  PublisherGroups(String dataCenter) {
+    this.dataCenter = dataCenter;
+  }
+
+  Datum getDatum(String dataInfoId) {
+    PublisherGroup group = publisherGroupMap.get(dataInfoId);
+    return group == null ? null : group.toDatum();
+  }
+
+  DatumVersion getVersion(String dataInfoId) {
+    PublisherGroup group = publisherGroupMap.get(dataInfoId);
+    return group == null ? null : group.getVersion();
+  }
+
+  Map<String, DatumVersion> getVersions(Collection<String> targetDataInfoIds) {
+    if (CollectionUtils.isEmpty(targetDataInfoIds)) {
+      final Map<String, DatumVersion> ret =
+          Maps.newHashMapWithExpectedSize(publisherGroupMap.size());
+      publisherGroupMap.forEach((k, v) -> ret.put(k, v.getVersion()));
+      return ret;
     }
-
-    Datum getDatum(String dataInfoId) {
-        PublisherGroup group = publisherGroupMap.get(dataInfoId);
-        return group == null ? null : group.toDatum();
+    final Map<String, DatumVersion> ret = Maps.newHashMapWithExpectedSize(targetDataInfoIds.size());
+    for (String dataInfoId : targetDataInfoIds) {
+      PublisherGroup group = publisherGroupMap.get(dataInfoId);
+      if (group != null) {
+        ret.put(dataInfoId, group.getVersion());
+      }
     }
+    return ret;
+  }
 
-    DatumVersion getVersion(String dataInfoId) {
-        PublisherGroup group = publisherGroupMap.get(dataInfoId);
-        return group == null ? null : group.getVersion();
-    }
-
-    Map<String, DatumVersion> getVersions(Collection<String> targetDataInfoIds) {
-        if (CollectionUtils.isEmpty(targetDataInfoIds)) {
-            final Map<String, DatumVersion> ret = Maps.newHashMapWithExpectedSize(publisherGroupMap.size());
-            publisherGroupMap.forEach((k, v) -> ret.put(k, v.getVersion()));
-            return ret;
-        }
-        final Map<String, DatumVersion> ret = Maps.newHashMapWithExpectedSize(targetDataInfoIds.size());
-        for (String dataInfoId : targetDataInfoIds) {
-            PublisherGroup group = publisherGroupMap.get(dataInfoId);
-            if (group != null) {
-                ret.put(dataInfoId, group.getVersion());
-            }
-        }
-        return ret;
-    }
-
-    Map<String, Datum> getAllDatum() {
-        Map<String, Datum> map = Maps.newHashMapWithExpectedSize(publisherGroupMap.size());
-        publisherGroupMap.forEach((k, v) -> {
-            map.put(k, v.toDatum());
+  Map<String, Datum> getAllDatum() {
+    Map<String, Datum> map = Maps.newHashMapWithExpectedSize(publisherGroupMap.size());
+    publisherGroupMap.forEach(
+        (k, v) -> {
+          map.put(k, v.toDatum());
         });
-        return map;
-    }
+    return map;
+  }
 
-    Map<String, List<Publisher>> getAllPublisher() {
-        Map<String, List<Publisher>> map = Maps.newHashMapWithExpectedSize(publisherGroupMap.size());
-        publisherGroupMap.forEach((k, v) -> {
-            map.put(k, v.getPublishers());
+  Map<String, List<Publisher>> getAllPublisher() {
+    Map<String, List<Publisher>> map = Maps.newHashMapWithExpectedSize(publisherGroupMap.size());
+    publisherGroupMap.forEach(
+        (k, v) -> {
+          map.put(k, v.getPublishers());
         });
-        return map;
-    }
+    return map;
+  }
 
-    Map<String, Publisher> getByConnectId(ConnectId connectId) {
-        Map<String, Publisher> map = Maps.newHashMapWithExpectedSize(64);
-        publisherGroupMap.values().forEach(v -> map.putAll(v.getByConnectId(connectId)));
-        return map;
-    }
+  Map<String, Publisher> getByConnectId(ConnectId connectId) {
+    Map<String, Publisher> map = Maps.newHashMapWithExpectedSize(64);
+    publisherGroupMap.values().forEach(v -> map.putAll(v.getByConnectId(connectId)));
+    return map;
+  }
 
-    PublisherGroup createGroupIfAbsent(String dataInfoId) {
-        return publisherGroupMap
-                .computeIfAbsent(dataInfoId,
-                        k -> new PublisherGroup(dataInfoId, dataCenter));
-    }
+  PublisherGroup createGroupIfAbsent(String dataInfoId) {
+    return publisherGroupMap.computeIfAbsent(
+        dataInfoId, k -> new PublisherGroup(dataInfoId, dataCenter));
+  }
 
-    Map<String, DatumVersion> clean(ProcessId sessionProcessId) {
-        Map<String, DatumVersion> versionMap = Maps.newHashMapWithExpectedSize(64);
-        publisherGroupMap.values().forEach(g -> {
-            DatumVersion ver = g.clean(sessionProcessId);
-            if (ver != null) {
+  Map<String, DatumVersion> clean(ProcessId sessionProcessId) {
+    Map<String, DatumVersion> versionMap = Maps.newHashMapWithExpectedSize(64);
+    publisherGroupMap
+        .values()
+        .forEach(
+            g -> {
+              DatumVersion ver = g.clean(sessionProcessId);
+              if (ver != null) {
                 versionMap.put(g.dataInfoId, ver);
-            }
+              }
+            });
+    return versionMap;
+  }
+
+  DatumVersion remove(String dataInfoId, ProcessId sessionProcessId) {
+    PublisherGroup group = publisherGroupMap.get(dataInfoId);
+    return group == null ? null : group.clean(sessionProcessId);
+  }
+
+  DatumVersion put(String dataInfoId, List<Publisher> publishers) {
+    if (CollectionUtils.isEmpty(publishers)) {
+      return null;
+    }
+    PublisherGroup group = createGroupIfAbsent(dataInfoId);
+    return group.put(publishers);
+  }
+
+  DatumVersion remove(
+      String dataInfoId,
+      ProcessId sessionProcessId,
+      Map<String, RegisterVersion> removedPublishers) {
+    PublisherGroup group = publisherGroupMap.get(dataInfoId);
+    return group == null ? null : group.remove(sessionProcessId, removedPublishers);
+  }
+
+  Map<String, DatumSummary> getSummary(String sessionIpAddress) {
+    Map<String, DatumSummary> summaries = Maps.newHashMap();
+    publisherGroupMap.forEach(
+        (k, g) -> {
+          DatumSummary summary = g.getSummary(sessionIpAddress);
+          if (!summary.isEmpty()) {
+            summaries.put(k, summary);
+          }
         });
-        return versionMap;
-    }
+    return summaries;
+  }
 
-    DatumVersion remove(String dataInfoId, ProcessId sessionProcessId) {
-        PublisherGroup group = publisherGroupMap.get(dataInfoId);
-        return group == null ? null : group.clean(sessionProcessId);
-    }
+  Set<ProcessId> getSessionProcessIds() {
+    Set<ProcessId> ids = Sets.newHashSet();
+    publisherGroupMap.values().forEach(g -> ids.addAll(g.getSessionProcessIds()));
+    return ids;
+  }
 
-    DatumVersion put(String dataInfoId, List<Publisher> publishers) {
-        if (CollectionUtils.isEmpty(publishers)) {
-            return null;
-        }
-        PublisherGroup group = createGroupIfAbsent(dataInfoId);
-        return group.put(publishers);
-    }
-
-    DatumVersion remove(String dataInfoId, ProcessId sessionProcessId,
-                        Map<String, RegisterVersion> removedPublishers) {
-        PublisherGroup group = publisherGroupMap.get(dataInfoId);
-        return group == null ? null : group.remove(sessionProcessId, removedPublishers);
-    }
-
-    Map<String, DatumSummary> getSummary(String sessionIpAddress) {
-        Map<String, DatumSummary> summaries = Maps.newHashMap();
-        publisherGroupMap.forEach((k, g) -> {
-            DatumSummary summary = g.getSummary(sessionIpAddress);
-            if (!summary.isEmpty()) {
-                summaries.put(k, summary);
-            }
-        });
-        return summaries;
-    }
-
-    Set<ProcessId> getSessionProcessIds() {
-        Set<ProcessId> ids = Sets.newHashSet();
-        publisherGroupMap.values().forEach(g -> ids.addAll(g.getSessionProcessIds()));
-        return ids;
-    }
-
-    Map<String, Integer> compact(long tombstoneTimestamp) {
-        Map<String, Integer> compacts = Maps.newHashMap();
-        publisherGroupMap.values().forEach(g -> {
-            int count = g.compact(tombstoneTimestamp);
-            if (count != 0) {
+  Map<String, Integer> compact(long tombstoneTimestamp) {
+    Map<String, Integer> compacts = Maps.newHashMap();
+    publisherGroupMap
+        .values()
+        .forEach(
+            g -> {
+              int count = g.compact(tombstoneTimestamp);
+              if (count != 0) {
                 compacts.put(g.dataInfoId, count);
-            }
-        });
-        return compacts;
-    }
+              }
+            });
+    return compacts;
+  }
 
-    int tombstoneNum() {
-        int count = 0;
-        for (PublisherGroup group : publisherGroupMap.values()) {
-            count += group.tombstoneNum();
-        }
-        return count;
+  int tombstoneNum() {
+    int count = 0;
+    for (PublisherGroup group : publisherGroupMap.values()) {
+      count += group.tombstoneNum();
     }
+    return count;
+  }
 
-    void updateVersion() {
-        publisherGroupMap.values().forEach(g -> g.updateVersion());
-    }
+  void updateVersion() {
+    publisherGroupMap.values().forEach(g -> g.updateVersion());
+  }
 
-    DatumVersion updateVersion(String dataInfoId) {
-        PublisherGroup group = publisherGroupMap.get(dataInfoId);
-        if (group == null) {
-            return null;
-        }
-        return group.updateVersion();
+  DatumVersion updateVersion(String dataInfoId) {
+    PublisherGroup group = publisherGroupMap.get(dataInfoId);
+    if (group == null) {
+      return null;
     }
+    return group.updateVersion();
+  }
 
-    @Override
-    public String toString() {
-        return StringFormatter
-            .format("PubGroups{{},size={}}", dataCenter, publisherGroupMap.size());
-    }
+  @Override
+  public String toString() {
+    return StringFormatter.format("PubGroups{{},size={}}", dataCenter, publisherGroupMap.size());
+  }
 }

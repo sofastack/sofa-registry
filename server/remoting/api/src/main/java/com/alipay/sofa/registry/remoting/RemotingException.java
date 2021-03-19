@@ -17,18 +17,17 @@
 package com.alipay.sofa.registry.remoting;
 
 /**
- * 
  * @author shangyu.wh
  * @version $Id: RemotingException.java, v 0.1 2017-11-20 20:43 shangyu.wh Exp $
  */
 public class RemotingException extends Exception {
 
-	/**
-	 * constructor
-	 * 
-	 * @param s
-	 */
-	public RemotingException(String s) {
-		super(s);
-	}
+  /**
+   * constructor
+   *
+   * @param s
+   */
+  public RemotingException(String s) {
+    super(s);
+  }
 }

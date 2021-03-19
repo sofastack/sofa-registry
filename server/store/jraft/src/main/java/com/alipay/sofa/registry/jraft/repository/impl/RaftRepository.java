@@ -20,14 +20,13 @@ import com.alipay.sofa.registry.store.api.driver.RegistryRepository;
 import com.alipay.sofa.registry.store.api.driver.RepositoryManager.RepositoryType;
 
 /**
- *
  * @author xiaojian.xj
  * @version $Id: RaftRepository.java, v 0.1 2021年01月17日 15:56 xiaojian.xj Exp $
  */
 public interface RaftRepository extends RegistryRepository {
 
-    @Override
-    default boolean accept(RepositoryType repositoryType) {
-        return repositoryType == RepositoryType.RAFT;
-    }
+  @Override
+  default boolean accept(RepositoryType repositoryType) {
+    return repositoryType == RepositoryType.RAFT;
+  }
 }

@@ -16,19 +16,18 @@
  */
 package com.alipay.sofa.registry.test.resource.meta;
 
-import com.alipay.sofa.registry.common.model.console.PersistenceData;
-import com.alipay.sofa.registry.core.model.Result;
-import com.alipay.sofa.registry.test.BaseIntegrationTest;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.springframework.test.context.junit4.SpringRunner;
-
-import javax.ws.rs.client.Entity;
-import javax.ws.rs.core.MediaType;
-
 import static com.alipay.sofa.registry.client.constants.ValueConstants.DEFAULT_GROUP;
 import static com.alipay.sofa.registry.common.model.constants.ValueConstants.DEFAULT_INSTANCE_ID;
 import static org.junit.Assert.assertTrue;
+
+import com.alipay.sofa.registry.common.model.console.PersistenceData;
+import com.alipay.sofa.registry.core.model.Result;
+import com.alipay.sofa.registry.test.BaseIntegrationTest;
+import javax.ws.rs.client.Entity;
+import javax.ws.rs.core.MediaType;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.springframework.test.context.junit4.SpringRunner;
 
 /**
  * @author xuanbei
@@ -36,22 +35,30 @@ import static org.junit.Assert.assertTrue;
  */
 @RunWith(SpringRunner.class)
 public class ProvideDataResourceTest extends BaseIntegrationTest {
-    @Test
-    public void testPersistentDataResource() throws Exception {
-        PersistenceData persistenceData = new PersistenceData();
-        persistenceData.setData("PersistentDataResourceTest");
-        persistenceData.setVersion(1024L);
-        persistenceData.setDataId("PersistentDataResourceTest");
-        persistenceData.setGroup(DEFAULT_GROUP);
-        persistenceData.setInstanceId(DEFAULT_INSTANCE_ID);
+  @Test
+  public void testPersistentDataResource() throws Exception {
+    PersistenceData persistenceData = new PersistenceData();
+    persistenceData.setData("PersistentDataResourceTest");
+    persistenceData.setVersion(1024L);
+    persistenceData.setDataId("PersistentDataResourceTest");
+    persistenceData.setGroup(DEFAULT_GROUP);
+    persistenceData.setInstanceId(DEFAULT_INSTANCE_ID);
 
-        Result response = metaChannel.getWebTarget().path("persistentData/put").request()
+    Result response =
+        metaChannel
+            .getWebTarget()
+            .path("persistentData/put")
+            .request()
             .post(Entity.entity(persistenceData, MediaType.APPLICATION_JSON), Result.class);
-        assertTrue(response.isSuccess());
-        Thread.sleep(500);
+    assertTrue(response.isSuccess());
+    Thread.sleep(500);
 
-        response = metaChannel.getWebTarget().path("persistentData/remove").request()
+    response =
+        metaChannel
+            .getWebTarget()
+            .path("persistentData/remove")
+            .request()
             .post(Entity.entity(persistenceData, MediaType.APPLICATION_JSON), Result.class);
-        assertTrue(response.isSuccess());
-    }
+    assertTrue(response.isSuccess());
+  }
 }

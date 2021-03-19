@@ -21,39 +21,38 @@ import java.util.List;
 import java.util.function.Supplier;
 
 /**
- *
  * @author shangyu.wh
  * @version 1.0: WrapperInvocation.java, v 0.1 2019-06-18 11:43 shangyu.wh Exp $
  */
 public class WrapperInvocation<T, R> {
 
-    private final Wrapper<T, R>          target;
+  private final Wrapper<T, R> target;
 
-    private List<WrapperInterceptor>     interceptorChain;
+  private List<WrapperInterceptor> interceptorChain;
 
-    private Iterator<WrapperInterceptor> iterator;
+  private Iterator<WrapperInterceptor> iterator;
 
-    public WrapperInvocation(Wrapper<T, R> target,
-                             WrapperInterceptorManager wrapperInterceptorManager) {
-        this.interceptorChain = wrapperInterceptorManager.getInterceptorChain();
-        this.iterator = this.interceptorChain.iterator();
-        this.target = target;
+  public WrapperInvocation(
+      Wrapper<T, R> target, WrapperInterceptorManager wrapperInterceptorManager) {
+    this.interceptorChain = wrapperInterceptorManager.getInterceptorChain();
+    this.iterator = this.interceptorChain.iterator();
+    this.target = target;
+  }
+
+  public R proceed() throws Exception {
+    if (iterator.hasNext()) {
+      WrapperInterceptor<T, R> interceptor = iterator.next();
+      return interceptor.invokeCodeWrapper(this);
     }
+    return target.call();
+  }
 
-    public R proceed() throws Exception {
-        if (iterator.hasNext()) {
-            WrapperInterceptor<T, R> interceptor = iterator.next();
-            return interceptor.invokeCodeWrapper(this);
-        }
-        return target.call();
-    }
-
-    /**
-     * Getter method for property <tt>ParameterSupplier</tt>.
-     *
-     * @return property value of ParameterSupplier
-     */
-    public Supplier<T> getParameterSupplier() {
-        return target.getParameterSupplier();
-    }
+  /**
+   * Getter method for property <tt>ParameterSupplier</tt>.
+   *
+   * @return property value of ParameterSupplier
+   */
+  public Supplier<T> getParameterSupplier() {
+    return target.getParameterSupplier();
+  }
 }

@@ -17,24 +17,24 @@
 package com.alipay.sofa.registry.server.session.wrapper;
 
 /**
- *
  * @author shangyu.wh
  * @version 1.0: WrapperInterceptor.java, v 0.1 2019-06-18 11:45 shangyu.wh Exp $
  */
 public interface WrapperInterceptor<T, R> {
 
-    /**
-     * invoke inside function
-     *
-     * @param invocation
-     * @return
-     * @throws Exception
-     */
-    R invokeCodeWrapper(WrapperInvocation<T, R> invocation) throws Exception;
+  /**
+   * invoke inside function
+   *
+   * @param invocation
+   * @return
+   * @throws Exception
+   */
+  R invokeCodeWrapper(WrapperInvocation<T, R> invocation) throws Exception;
 
-    /**
-     * Interceptor order
-     * @return
-     */
-    int getOrder();
+  /**
+   * Interceptor order
+   *
+   * @return
+   */
+  int getOrder();
 }

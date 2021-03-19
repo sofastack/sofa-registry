@@ -22,108 +22,112 @@ import com.alipay.sofa.registry.remoting.Channel;
 import com.alipay.sofa.registry.remoting.ChannelHandler;
 
 /**
- *
  * @author yuzhi.lyz
  * @version v 0.1 2020-12-14 13:57 yuzhi.lyz Exp $
  */
 public abstract class AbstractChannelHandler<T> implements ChannelHandler<T> {
-    private final Logger   connectLog;
-    protected final Logger exchangeLog;
+  private final Logger connectLog;
+  protected final Logger exchangeLog;
 
-    protected AbstractChannelHandler(Logger connectLog, Logger exchangeLog) {
-        this.connectLog = connectLog;
-        this.exchangeLog = exchangeLog;
+  protected AbstractChannelHandler(Logger connectLog, Logger exchangeLog) {
+    this.connectLog = connectLog;
+    this.exchangeLog = exchangeLog;
+  }
+
+  @Override
+  public void connected(Channel channel) {
+    connectLog.info("{} node connected, channel {}", getConnectNodeType(), channel);
+  }
+
+  @Override
+  public void disconnected(Channel channel) {
+    connectLog.info("{} node disconnected, channel {}", getConnectNodeType(), channel);
+  }
+
+  protected abstract Node.NodeType getConnectNodeType();
+
+  @Override
+  public void caught(Channel channel, T message, Throwable exception) {
+    exchangeLog.error(
+        "{} caughtException, channel {}, msg={}",
+        getConnectNodeType(),
+        channel,
+        message,
+        exception);
+  }
+
+  @Override
+  public void received(Channel channel, T message) {
+    // only support as async
+    throw new UnsupportedOperationException();
+  }
+
+  @Override
+  public Object reply(Channel channel, T request) {
+    try {
+      logRequest(channel, request);
+      checkParam(request);
+      return doHandle(channel, request);
+    } catch (Throwable e) {
+      exchangeLog.error("[{}] handle request failed", getClassName(), e);
+      return buildFailedResponse(e.getMessage());
     }
+  }
 
-    @Override
-    public void connected(Channel channel) {
-        connectLog.info("{} node connected, channel {}", getConnectNodeType(), channel);
+  /**
+   * check params if valid
+   *
+   * @param request
+   * @throws RuntimeException
+   */
+  public void checkParam(T request) throws RuntimeException {}
+
+  /**
+   * execute
+   *
+   * @param request
+   * @return
+   */
+  public abstract Object doHandle(Channel channel, T request);
+
+  /**
+   * build failed response
+   *
+   * @param msg
+   * @return
+   */
+  public Object buildFailedResponse(String msg) {
+    throw new RuntimeException(msg);
+  }
+
+  /**
+   * print request
+   *
+   * @param request
+   */
+  protected void logRequest(Channel channel, T request) {
+    if (exchangeLog.isInfoEnabled()) {
+      StringBuilder sb = new StringBuilder(256);
+      sb.append("[").append(getClassName()).append("] ");
+      sb.append("Remote:")
+          .append(RemotingHelper.getChannelRemoteAddress(channel))
+          .append(" Request:")
+          .append(request);
+      exchangeLog.info(sb.toString());
     }
+  }
 
-    @Override
-    public void disconnected(Channel channel) {
-        connectLog.info("{} node disconnected, channel {}", getConnectNodeType(), channel);
-    }
+  /**
+   * get simple name of this class
+   *
+   * @return
+   */
+  private String getClassName() {
+    return this.getClass().getSimpleName();
+  }
 
-    protected abstract Node.NodeType getConnectNodeType();
-
-    @Override
-    public void caught(Channel channel, T message, Throwable exception) {
-        exchangeLog.error("{} caughtException, channel {}, msg={}", getConnectNodeType(), channel,
-            message, exception);
-    }
-
-    @Override
-    public void received(Channel channel, T message) {
-        // only support as async
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public Object reply(Channel channel, T request) {
-        try {
-            logRequest(channel, request);
-            checkParam(request);
-            return doHandle(channel, request);
-        } catch (Throwable e) {
-            exchangeLog.error("[{}] handle request failed", getClassName(), e);
-            return buildFailedResponse(e.getMessage());
-        }
-    }
-
-    /**
-     * check params if valid
-     *
-     * @param request
-     * @throws RuntimeException
-     */
-    public void checkParam(T request) throws RuntimeException {
-    }
-
-    /**
-     * execute
-     *
-     * @param request
-     * @return
-     */
-    public abstract Object doHandle(Channel channel, T request);
-
-    /**
-     * build failed response
-     *
-     * @param msg
-     * @return
-     */
-    public Object buildFailedResponse(String msg) {
-        throw new RuntimeException(msg);
-    }
-
-    /**
-     * print request
-     *
-     * @param request
-     */
-    protected void logRequest(Channel channel, T request) {
-        if (exchangeLog.isInfoEnabled()) {
-            StringBuilder sb = new StringBuilder(256);
-            sb.append("[").append(getClassName()).append("] ");
-            sb.append("Remote:").append(RemotingHelper.getChannelRemoteAddress(channel))
-                .append(" Request:").append(request);
-            exchangeLog.info(sb.toString());
-        }
-    }
-
-    /**
-     * get simple name of this class
-     *
-     * @return
-     */
-    private String getClassName() {
-        return this.getClass().getSimpleName();
-    }
-
-    @Override
-    public HandlerType getType() {
-        return HandlerType.PROCESSER;
-    }
+  @Override
+  public HandlerType getType() {
+    return HandlerType.PROCESSER;
+  }
 }

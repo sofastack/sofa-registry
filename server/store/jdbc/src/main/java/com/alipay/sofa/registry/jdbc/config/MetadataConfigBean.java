@@ -19,54 +19,52 @@ package com.alipay.sofa.registry.jdbc.config;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**
- *
  * @author xiaojian.xj
  * @version $Id: MetadataConfigBean.java, v 0.1 2021年02月24日 15:21 xiaojian.xj Exp $
  */
 @ConfigurationProperties(prefix = MetadataConfigBean.PRE_FIX)
 public class MetadataConfigBean implements MetadataConfig {
 
-    public static final String PRE_FIX                   = "metadata.server";
+  public static final String PRE_FIX = "metadata.server";
 
-    private int                interfaceAppsRefreshLimit = 1000;
+  private int interfaceAppsRefreshLimit = 1000;
 
-    private int                revisionGcLimit           = 100;
+  private int revisionGcLimit = 100;
 
+  /**
+   * Getter method for property <tt>interfaceAppsRefreshLimit</tt>.
+   *
+   * @return property value of interfaceAppsRefreshLimit
+   */
+  public int getInterfaceAppsRefreshLimit() {
+    return interfaceAppsRefreshLimit;
+  }
 
-    /**
-     * Getter method for property <tt>interfaceAppsRefreshLimit</tt>.
-     *
-     * @return property value of interfaceAppsRefreshLimit
-     */
-    public int getInterfaceAppsRefreshLimit() {
-        return interfaceAppsRefreshLimit;
-    }
+  /**
+   * Setter method for property <tt>interfaceAppsRefreshLimit</tt>.
+   *
+   * @param interfaceAppsRefreshLimit value to be assigned to property interfaceAppsRefreshLimit
+   */
+  public void setInterfaceAppsRefreshLimit(int interfaceAppsRefreshLimit) {
+    this.interfaceAppsRefreshLimit = interfaceAppsRefreshLimit;
+  }
 
-    /**
-     * Setter method for property <tt>interfaceAppsRefreshLimit</tt>.
-     *
-     * @param interfaceAppsRefreshLimit value to be assigned to property interfaceAppsRefreshLimit
-     */
-    public void setInterfaceAppsRefreshLimit(int interfaceAppsRefreshLimit) {
-        this.interfaceAppsRefreshLimit = interfaceAppsRefreshLimit;
-    }
+  /**
+   * Getter method for property <tt>revisionGcLimit</tt>.
+   *
+   * @return property value of revisionGcLimit
+   */
+  @Override
+  public int getRevisionGcLimit() {
+    return revisionGcLimit;
+  }
 
-    /**
-     * Getter method for property <tt>revisionGcLimit</tt>.
-     *
-     * @return property value of revisionGcLimit
-     */
-    @Override
-    public int getRevisionGcLimit() {
-        return revisionGcLimit;
-    }
-
-    /**
-     * Setter method for property <tt>revisionGcLimit</tt>.
-     *
-     * @param revisionGcLimit value to be assigned to property revisionGcLimit
-     */
-    public void setRevisionGcLimit(int revisionGcLimit) {
-        this.revisionGcLimit = revisionGcLimit;
-    }
+  /**
+   * Setter method for property <tt>revisionGcLimit</tt>.
+   *
+   * @param revisionGcLimit value to be assigned to property revisionGcLimit
+   */
+  public void setRevisionGcLimit(int revisionGcLimit) {
+    this.revisionGcLimit = revisionGcLimit;
+  }
 }

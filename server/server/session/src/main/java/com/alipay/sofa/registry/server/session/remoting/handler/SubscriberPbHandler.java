@@ -28,9 +28,8 @@ import com.alipay.sofa.registry.remoting.bolt.serializer.ProtobufSerializer;
 import com.alipay.sofa.registry.server.session.converter.pb.RegisterResponseConvertor;
 import com.alipay.sofa.registry.server.session.converter.pb.SubscriberRegisterConvertor;
 import com.alipay.sofa.registry.server.shared.remoting.AbstractServerHandler;
-import org.springframework.beans.factory.annotation.Autowired;
-
 import java.util.concurrent.Executor;
+import org.springframework.beans.factory.annotation.Autowired;
 
 /**
  * @author zhuoyu.sjw
@@ -38,66 +37,65 @@ import java.util.concurrent.Executor;
  */
 public class SubscriberPbHandler extends AbstractServerHandler<SubscriberRegisterPb> {
 
-    @Autowired
-    private SubscriberHandler subscriberHandler;
+  @Autowired private SubscriberHandler subscriberHandler;
 
-    @Override
-    protected Node.NodeType getConnectNodeType() {
-        return subscriberHandler.getConnectNodeType();
-    }
+  @Override
+  protected Node.NodeType getConnectNodeType() {
+    return subscriberHandler.getConnectNodeType();
+  }
 
-    /**
-     * Reply object.
-     *
-     * @param channel the channel
-     * @param message the message
-     * @return the object
-     * @throws RemotingException the remoting exception
-     */
-    @Override
-    public Object doHandle(Channel channel, SubscriberRegisterPb message) {
-        RegisterResponsePb.Builder builder = RegisterResponsePb.newBuilder();
+  /**
+   * Reply object.
+   *
+   * @param channel the channel
+   * @param message the message
+   * @return the object
+   * @throws RemotingException the remoting exception
+   */
+  @Override
+  public Object doHandle(Channel channel, SubscriberRegisterPb message) {
+    RegisterResponsePb.Builder builder = RegisterResponsePb.newBuilder();
 
-        if (channel instanceof BoltChannel) {
-            BoltChannel boltChannel = (BoltChannel) channel;
-            InvokeContext invokeContext = boltChannel.getBizContext().getInvokeContext();
+    if (channel instanceof BoltChannel) {
+      BoltChannel boltChannel = (BoltChannel) channel;
+      InvokeContext invokeContext = boltChannel.getBizContext().getInvokeContext();
 
-            if (null != invokeContext) {
-                // set client custom codec for request command if not null
-                Object clientCustomCodec = invokeContext.get(InvokeContext.BOLT_CUSTOM_SERIALIZER);
-                if (null == clientCustomCodec) {
-                    invokeContext.put(InvokeContext.BOLT_CUSTOM_SERIALIZER,
-                        ProtobufSerializer.PROTOCOL_PROTOBUF);
-                }
-            }
+      if (null != invokeContext) {
+        // set client custom codec for request command if not null
+        Object clientCustomCodec = invokeContext.get(InvokeContext.BOLT_CUSTOM_SERIALIZER);
+        if (null == clientCustomCodec) {
+          invokeContext.put(
+              InvokeContext.BOLT_CUSTOM_SERIALIZER, ProtobufSerializer.PROTOCOL_PROTOBUF);
         }
-
-        Object response = subscriberHandler.doHandle(channel,
-            SubscriberRegisterConvertor.convert2Java(message));
-        if (!(response instanceof RegisterResponse)) {
-            return builder.setSuccess(false).setMessage("Unknown response type").build();
-        }
-
-        return RegisterResponseConvertor.convert2Pb((RegisterResponse) response);
+      }
     }
 
-    @Override
-    protected void logRequest(Channel channel, SubscriberRegisterPb request) {
-        // not log
+    Object response =
+        subscriberHandler.doHandle(channel, SubscriberRegisterConvertor.convert2Java(message));
+    if (!(response instanceof RegisterResponse)) {
+      return builder.setSuccess(false).setMessage("Unknown response type").build();
     }
 
-    /**
-     * Interest class.
-     *
-     * @return the class
-     */
-    @Override
-    public Class interest() {
-        return SubscriberRegisterPb.class;
-    }
+    return RegisterResponseConvertor.convert2Pb((RegisterResponse) response);
+  }
 
-    @Override
-    public Executor getExecutor() {
-        return subscriberHandler.getExecutor();
-    }
+  @Override
+  protected void logRequest(Channel channel, SubscriberRegisterPb request) {
+    // not log
+  }
+
+  /**
+   * Interest class.
+   *
+   * @return the class
+   */
+  @Override
+  public Class interest() {
+    return SubscriberRegisterPb.class;
+  }
+
+  @Override
+  public Executor getExecutor() {
+    return subscriberHandler.getExecutor();
+  }
 }

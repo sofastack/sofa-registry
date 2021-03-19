@@ -17,23 +17,21 @@
 package com.alipay.sofa.registry.remoting.exchange.message;
 
 /**
- *
  * @author shangyu.wh
  * @version $Id: Response.java, v 0.1 2017-11-30 17:39 shangyu.wh Exp $
  */
 public interface Response<T> {
 
-    /**
-     * The enum for response status
-     */
-    enum ResultStatus {
-        SUCCESSFUL, FAILED
-    }
+  /** The enum for response status */
+  enum ResultStatus {
+    SUCCESSFUL,
+    FAILED
+  }
 
-    /**
-     * Get response result
-     * @return
-     */
-    T getResult();
-
+  /**
+   * Get response result
+   *
+   * @return
+   */
+  T getResult();
 }

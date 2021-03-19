@@ -20,11 +20,10 @@ import org.slf4j.helpers.FormattingTuple;
 import org.slf4j.helpers.MessageFormatter;
 
 public final class StringFormatter {
-    private StringFormatter() {
-    }
+  private StringFormatter() {}
 
-    public static String format(String messagePattern, Object... argArray) {
-        FormattingTuple tuple = MessageFormatter.arrayFormat(messagePattern, argArray);
-        return tuple.getMessage();
-    }
+  public static String format(String messagePattern, Object... argArray) {
+    FormattingTuple tuple = MessageFormatter.arrayFormat(messagePattern, argArray);
+    return tuple.getMessage();
+  }
 }

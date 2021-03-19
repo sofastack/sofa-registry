@@ -18,53 +18,51 @@ package com.alipay.sofa.registry.server.meta;
 
 /**
  * @author chen.zhu
- * <p>
- * Mar 10, 2021
+ *     <p>Mar 10, 2021
  */
 public interface MetaLeaderService {
 
-    /**
-     * Am i elector boolean.
-     *
-     * @return the boolean
-     */
-    boolean amILeader();
+  /**
+   * Am i elector boolean.
+   *
+   * @return the boolean
+   */
+  boolean amILeader();
 
-    /**
-     * Gets get elector.
-     *
-     * @return the get elector
-     */
-    String getLeader();
+  /**
+   * Gets get elector.
+   *
+   * @return the get elector
+   */
+  String getLeader();
 
+  /**
+   * Gets get elector epoch.
+   *
+   * @return the get elector epoch
+   */
+  long getLeaderEpoch();
 
-    /**
-     * Gets get elector epoch.
-     *
-     * @return the get elector epoch
-     */
-    long getLeaderEpoch();
+  /**
+   * Gets get meta server elector state.
+   *
+   * @return the get meta server elector state
+   */
+  boolean isWarmup();
 
-    /**
-     * Gets get meta server elector state.
-     *
-     * @return the get meta server elector state
-     */
-    boolean isWarmup();
+  /**
+   * Am i stable as elector boolean.
+   *
+   * @return the boolean
+   */
+  default boolean amIStableAsLeader() {
+    return amILeader() && !isWarmup();
+  }
 
-    /**
-     * Am i stable as elector boolean.
-     *
-     * @return the boolean
-     */
-    default boolean amIStableAsLeader() {
-        return amILeader() && !isWarmup();
-    }
+  public interface MetaLeaderElectorListener {
 
-    public interface MetaLeaderElectorListener {
+    void becomeLeader();
 
-        void becomeLeader();
-
-        void loseLeader();
-    }
+    void loseLeader();
+  }
 }

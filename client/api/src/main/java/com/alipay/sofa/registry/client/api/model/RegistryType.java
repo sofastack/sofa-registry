@@ -17,11 +17,11 @@
 package com.alipay.sofa.registry.client.api.model;
 
 /**
- *
  * @author zhuoyu.sjw
  * @version $Id: RegistryType.java, v 0.1 2018-03-13 15:22 zhuoyu.sjw Exp $$
  */
 public enum RegistryType {
-
-    PUBLISHER, SUBSCRIBER, CONFIGURATOR
+  PUBLISHER,
+  SUBSCRIBER,
+  CONFIGURATOR
 }

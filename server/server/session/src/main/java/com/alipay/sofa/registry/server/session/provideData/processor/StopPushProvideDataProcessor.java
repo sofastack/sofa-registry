@@ -26,52 +26,50 @@ import com.alipay.sofa.registry.server.session.registry.Registry;
 import org.springframework.beans.factory.annotation.Autowired;
 
 /**
- *
  * @author shangyu.wh
  * @version 1.0: StopPushProvideDataProcessor.java, v 0.1 2019-10-09 18:53 shangyu.wh Exp $
  */
 public class StopPushProvideDataProcessor implements ProvideDataProcessor {
 
-    private static final Logger LOGGER = LoggerFactory
-                                           .getLogger(StopPushProvideDataProcessor.class);
+  private static final Logger LOGGER = LoggerFactory.getLogger(StopPushProvideDataProcessor.class);
 
-    @Autowired
-    private SessionServerConfig sessionServerConfig;
+  @Autowired private SessionServerConfig sessionServerConfig;
 
-    @Autowired
-    private Registry            sessionRegistry;
+  @Autowired private Registry sessionRegistry;
 
-    @Override
-    public void changeDataProcess(ProvideData provideData) {
-        if (provideData == null) {
-            LOGGER.info("Fetch session stopPushSwitch null");
-            return;
-        }
-
-        //push stop switch
-        final Boolean stop = ProvideData.toBool(provideData);
-        if (stop == null) {
-            LOGGER.info("Fetch session stopPushSwitch content null");
-            return;
-        }
-        boolean prev = sessionServerConfig.isStopPushSwitch();
-        sessionServerConfig.setStopPushSwitch(stop);
-        if (prev && !stop) {
-            // prev is stop, now close stop, trigger push
-            sessionRegistry.fetchChangDataProcess();
-        }
-        LOGGER.info("Fetch session stopPushSwitch={}, prev={}, current={}", stop, prev,
-            sessionServerConfig.isStopPushSwitch());
-
+  @Override
+  public void changeDataProcess(ProvideData provideData) {
+    if (provideData == null) {
+      LOGGER.info("Fetch session stopPushSwitch null");
+      return;
     }
 
-    @Override
-    public void fetchDataProcess(ProvideData provideData) {
-        changeDataProcess(provideData);
+    // push stop switch
+    final Boolean stop = ProvideData.toBool(provideData);
+    if (stop == null) {
+      LOGGER.info("Fetch session stopPushSwitch content null");
+      return;
     }
+    boolean prev = sessionServerConfig.isStopPushSwitch();
+    sessionServerConfig.setStopPushSwitch(stop);
+    if (prev && !stop) {
+      // prev is stop, now close stop, trigger push
+      sessionRegistry.fetchChangDataProcess();
+    }
+    LOGGER.info(
+        "Fetch session stopPushSwitch={}, prev={}, current={}",
+        stop,
+        prev,
+        sessionServerConfig.isStopPushSwitch());
+  }
 
-    @Override
-    public boolean support(ProvideData provideData) {
-        return ValueConstants.STOP_PUSH_DATA_SWITCH_DATA_ID.equals(provideData.getDataInfoId());
-    }
+  @Override
+  public void fetchDataProcess(ProvideData provideData) {
+    changeDataProcess(provideData);
+  }
+
+  @Override
+  public boolean support(ProvideData provideData) {
+    return ValueConstants.STOP_PUSH_DATA_SWITCH_DATA_ID.equals(provideData.getDataInfoId());
+  }
 }

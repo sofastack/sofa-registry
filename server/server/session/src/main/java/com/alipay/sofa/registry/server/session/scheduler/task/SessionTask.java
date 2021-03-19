@@ -19,10 +19,7 @@ package com.alipay.sofa.registry.server.session.scheduler.task;
 import com.alipay.sofa.registry.task.Task;
 
 /**
- * 
  * @author shangyu.wh
  * @version $Id: SessionTask.java, v 0.1 2017-12-07 20:57 shangyu.wh Exp $
  */
-public interface SessionTask extends Task {
-
-}
+public interface SessionTask extends Task {}

@@ -24,61 +24,58 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 /**
  * @author chen.zhu
- * <p>
- * Mar 09, 2021
+ *     <p>Mar 09, 2021
  */
 public class LeaderAwareLeaseManager<T extends Node> extends SimpleLeaseManager<T> {
 
-    @Autowired
-    protected MetaLeaderService metaLeaderService;
+  @Autowired protected MetaLeaderService metaLeaderService;
 
-    /**
-     * Register.
-     *
-     * @param lease the lease
-     */
-    @Override
-    public void register(Lease<T> lease) {
-        if (!amILeader()) {
-            throw new SofaRegistryMetaLeaderException(metaLeaderService.getLeader(), metaLeaderService.getLeaderEpoch(),
-                    "leader mismatch");
-        }
-        super.register(lease);
+  /**
+   * Register.
+   *
+   * @param lease the lease
+   */
+  @Override
+  public void register(Lease<T> lease) {
+    if (!amILeader()) {
+      throw new SofaRegistryMetaLeaderException(
+          metaLeaderService.getLeader(), metaLeaderService.getLeaderEpoch(), "leader mismatch");
     }
+    super.register(lease);
+  }
 
-    /**
-     * Cancel boolean.
-     *
-     * @param lease the lease
-     * @return the boolean
-     */
-    @Override
-    public boolean cancel(Lease<T> lease) {
-        if (!amILeader()) {
-            throw new SofaRegistryMetaLeaderException(metaLeaderService.getLeader(), metaLeaderService.getLeaderEpoch(),
-                    "leader mismatch");
-        }
-        return super.cancel(lease);
+  /**
+   * Cancel boolean.
+   *
+   * @param lease the lease
+   * @return the boolean
+   */
+  @Override
+  public boolean cancel(Lease<T> lease) {
+    if (!amILeader()) {
+      throw new SofaRegistryMetaLeaderException(
+          metaLeaderService.getLeader(), metaLeaderService.getLeaderEpoch(), "leader mismatch");
     }
+    return super.cancel(lease);
+  }
 
-    /**
-     * Renew boolean.
-     *
-     * @param renewal       the renewal
-     * @param leaseDuration the lease duration
-     * @return the boolean
-     */
-    @Override
-    public boolean renew(T renewal, int leaseDuration) {
-        if (!amILeader()) {
-            throw new SofaRegistryMetaLeaderException(metaLeaderService.getLeader(), metaLeaderService.getLeaderEpoch(),
-                    "leader mismatch");
-        }
-        return super.renew(renewal, leaseDuration);
+  /**
+   * Renew boolean.
+   *
+   * @param renewal the renewal
+   * @param leaseDuration the lease duration
+   * @return the boolean
+   */
+  @Override
+  public boolean renew(T renewal, int leaseDuration) {
+    if (!amILeader()) {
+      throw new SofaRegistryMetaLeaderException(
+          metaLeaderService.getLeader(), metaLeaderService.getLeaderEpoch(), "leader mismatch");
     }
+    return super.renew(renewal, leaseDuration);
+  }
 
-    protected boolean amILeader() {
-        return metaLeaderService.amILeader();
-    }
-
+  protected boolean amILeader() {
+    return metaLeaderService.amILeader();
+  }
 }

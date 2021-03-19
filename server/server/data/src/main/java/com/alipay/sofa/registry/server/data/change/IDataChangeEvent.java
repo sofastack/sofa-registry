@@ -17,10 +17,7 @@
 package com.alipay.sofa.registry.server.data.change;
 
 /**
- * 
  * @author qian.lqlq
  * @version $Id: IDataChangeEvent.java, v 0.1 2018-05-10 17:11 qian.lqlq Exp $
  */
-public interface IDataChangeEvent {
-
-}
+public interface IDataChangeEvent {}

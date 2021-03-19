@@ -19,24 +19,27 @@ package com.alipay.sofa.registry.common.model.dataserver;
 import com.alipay.sofa.registry.common.model.ProcessId;
 import com.alipay.sofa.registry.util.StringFormatter;
 import com.google.common.collect.Lists;
-
 import java.util.List;
 
 public class BatchRequest extends AbstractSlotRequest {
-    private final List<Object> request;
+  private final List<Object> request;
 
-    public BatchRequest(ProcessId sessionProcessId, int slotId, List<Object> request) {
-        super(slotId, sessionProcessId);
-        this.request = Lists.newArrayList(request);
-    }
+  public BatchRequest(ProcessId sessionProcessId, int slotId, List<Object> request) {
+    super(slotId, sessionProcessId);
+    this.request = Lists.newArrayList(request);
+  }
 
-    public List<Object> getRequest() {
-        return request;
-    }
+  public List<Object> getRequest() {
+    return request;
+  }
 
-    @Override
-    public String toString() {
-        return StringFormatter.format("Batch:{},{},{},{}", getSlotId(), request.size(),
-            getSlotLeaderEpoch(), getSlotTableEpoch());
-    }
+  @Override
+  public String toString() {
+    return StringFormatter.format(
+        "Batch:{},{},{},{}",
+        getSlotId(),
+        request.size(),
+        getSlotLeaderEpoch(),
+        getSlotTableEpoch());
+  }
 }

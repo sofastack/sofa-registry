@@ -16,6 +16,8 @@
  */
 package com.alipay.sofa.registry.server.meta.metaserver.impl;
 
+import static org.mockito.Mockito.*;
+
 import com.alipay.sofa.registry.common.model.metaserver.cluster.VersionedList;
 import com.alipay.sofa.registry.common.model.metaserver.nodes.MetaNode;
 import com.alipay.sofa.registry.common.model.metaserver.nodes.SessionNode;
@@ -29,6 +31,8 @@ import com.alipay.sofa.registry.server.meta.lease.session.SessionServerManager;
 import com.alipay.sofa.registry.server.meta.slot.SlotManager;
 import com.alipay.sofa.registry.util.DatumVersionUtil;
 import com.google.common.collect.ImmutableMap;
+import java.util.List;
+import java.util.concurrent.TimeoutException;
 import org.assertj.core.util.Lists;
 import org.junit.After;
 import org.junit.Assert;
@@ -37,140 +41,146 @@ import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
-import java.util.List;
-import java.util.concurrent.TimeoutException;
-
-import static org.mockito.Mockito.*;
-
 public class DefaultCurrentDcMetaServerTest extends AbstractMetaServerTest {
 
-    private DefaultCurrentDcMetaServer metaServer;
+  private DefaultCurrentDcMetaServer metaServer;
 
-    @Mock
-    private SessionServerManager       sessionServerManager;
+  @Mock private SessionServerManager sessionServerManager;
 
-    @Mock
-    private DataServerManager          dataServerManager;
+  @Mock private DataServerManager dataServerManager;
 
-    @Mock
-    private SlotManager                slotManager;
+  @Mock private SlotManager slotManager;
 
-    @Mock
-    private NodeConfig                 nodeConfig;
+  @Mock private NodeConfig nodeConfig;
 
-    @Before
-    public void beforeDefaultCurrentDcMetaServerTest() throws Exception {
-        MockitoAnnotations.initMocks(this);
-        metaServer = new DefaultCurrentDcMetaServer().setDataServerManager(dataServerManager)
-            .setSessionManager(sessionServerManager).setNodeConfig(nodeConfig).setSlotManager(slotManager);
-        when(nodeConfig.getLocalDataCenter()).thenReturn(getDc());
-        when(nodeConfig.getMetaNodeIP()).thenReturn(
+  @Before
+  public void beforeDefaultCurrentDcMetaServerTest() throws Exception {
+    MockitoAnnotations.initMocks(this);
+    metaServer =
+        new DefaultCurrentDcMetaServer()
+            .setDataServerManager(dataServerManager)
+            .setSessionManager(sessionServerManager)
+            .setNodeConfig(nodeConfig)
+            .setSlotManager(slotManager);
+    when(nodeConfig.getLocalDataCenter()).thenReturn(getDc());
+    when(nodeConfig.getMetaNodeIP())
+        .thenReturn(
             ImmutableMap.of(getDc(), Lists.newArrayList(randomIp(), randomIp(), randomIp())));
-        metaServer.postConstruct();
-    }
+    metaServer.postConstruct();
+  }
 
-    @After
-    public void afterDefaultCurrentDcMetaServerTest() throws Exception {
-        metaServer.preDestory();
-    }
+  @After
+  public void afterDefaultCurrentDcMetaServerTest() throws Exception {
+    metaServer.preDestory();
+  }
 
-    @Test
-    public void testGetSessionServers() {
-        when(sessionServerManager.getSessionServerMetaInfo()).thenReturn(new VersionedList<>(DatumVersionUtil.nextId(),
-            Lists.newArrayList(new SessionNode(randomURL(), getDc()), new SessionNode(randomURL(),
-                getDc()))));
-        Assert.assertEquals(2, metaServer.getSessionServerManager().getSessionServerMetaInfo().getClusterMembers().size());
-        verify(sessionServerManager, times(1)).getSessionServerMetaInfo();
-    }
+  @Test
+  public void testGetSessionServers() {
+    when(sessionServerManager.getSessionServerMetaInfo())
+        .thenReturn(
+            new VersionedList<>(
+                DatumVersionUtil.nextId(),
+                Lists.newArrayList(
+                    new SessionNode(randomURL(), getDc()), new SessionNode(randomURL(), getDc()))));
+    Assert.assertEquals(
+        2,
+        metaServer.getSessionServerManager().getSessionServerMetaInfo().getClusterMembers().size());
+    verify(sessionServerManager, times(1)).getSessionServerMetaInfo();
+  }
 
-    @Test
-    public void testUpdateClusterMembers() throws Exception {
+  @Test
+  public void testUpdateClusterMembers() throws Exception {
 
-        List<MetaNode> prevClusterNodes = metaServer.getClusterMembers();
-        long prevEpoch = metaServer.getEpoch();
-        metaServer.updateClusterMembers(new VersionedList<>(DatumVersionUtil.nextId(),
-                Lists.newArrayList(new MetaNode(randomURL(randomIp()),
-            getDc()), new MetaNode(randomURL(randomIp()), getDc()), new MetaNode(
-            randomURL(randomIp()), getDc()), new MetaNode(randomURL(randomIp()), getDc()),
-            new MetaNode(randomURL(randomIp()), getDc()), new MetaNode(randomURL(randomIp()),
-                getDc()))));
-        long currentEpoch = metaServer.getEpoch();
-        // wait for raft communication
-        Thread.sleep(100);
-        List<MetaNode> currentClusterNodes = metaServer.getClusterMembers();
+    List<MetaNode> prevClusterNodes = metaServer.getClusterMembers();
+    long prevEpoch = metaServer.getEpoch();
+    metaServer.updateClusterMembers(
+        new VersionedList<>(
+            DatumVersionUtil.nextId(),
+            Lists.newArrayList(
+                new MetaNode(randomURL(randomIp()), getDc()),
+                new MetaNode(randomURL(randomIp()), getDc()),
+                new MetaNode(randomURL(randomIp()), getDc()),
+                new MetaNode(randomURL(randomIp()), getDc()),
+                new MetaNode(randomURL(randomIp()), getDc()),
+                new MetaNode(randomURL(randomIp()), getDc()))));
+    long currentEpoch = metaServer.getEpoch();
+    // wait for raft communication
+    Thread.sleep(100);
+    List<MetaNode> currentClusterNodes = metaServer.getClusterMembers();
 
-        LifecycleHelper.stopIfPossible(metaServer);
-        LifecycleHelper.disposeIfPossible(metaServer);
+    LifecycleHelper.stopIfPossible(metaServer);
+    LifecycleHelper.disposeIfPossible(metaServer);
 
-        Assert.assertTrue(currentEpoch > prevEpoch);
-        Assert.assertNotEquals(currentClusterNodes.size(), prevClusterNodes.size());
-    }
+    Assert.assertTrue(currentEpoch > prevEpoch);
+    Assert.assertNotEquals(currentClusterNodes.size(), prevClusterNodes.size());
+  }
 
-    @Test
-    public void testGetClusterMembers() throws TimeoutException, InterruptedException {
-        makeMetaLeader();
-        metaServer.getClusterMembers();
+  @Test
+  public void testGetClusterMembers() throws TimeoutException, InterruptedException {
+    makeMetaLeader();
+    metaServer.getClusterMembers();
 
-        makeMetaNonLeader();
-        metaServer.getClusterMembers();
-    }
+    makeMetaNonLeader();
+    metaServer.getClusterMembers();
+  }
 
-    @Test
-    public void testGetSlotTable() throws TimeoutException, InterruptedException {
-        when(slotManager.getSlotTable()).thenReturn(
-            new SlotTable(DatumVersionUtil.nextId(), Lists.newArrayList(new Slot(1, randomIp(), 2,
-                Lists.newArrayList(randomIp())))));
+  @Test
+  public void testGetSlotTable() throws TimeoutException, InterruptedException {
+    when(slotManager.getSlotTable())
+        .thenReturn(
+            new SlotTable(
+                DatumVersionUtil.nextId(),
+                Lists.newArrayList(new Slot(1, randomIp(), 2, Lists.newArrayList(randomIp())))));
 
-        makeMetaLeader();
-        SlotTable slotTable = metaServer.getSlotTable();
-        verify(slotManager, times(1)).getSlotTable();
-        Assert.assertEquals(1, slotTable.getSlotIds().size());
+    makeMetaLeader();
+    SlotTable slotTable = metaServer.getSlotTable();
+    verify(slotManager, times(1)).getSlotTable();
+    Assert.assertEquals(1, slotTable.getSlotIds().size());
 
-        makeMetaNonLeader();
-        slotTable = metaServer.getSlotTable();
-        verify(slotManager, times(2)).getSlotTable();
-        Assert.assertEquals(1, slotTable.getSlotIds().size());
-    }
+    makeMetaNonLeader();
+    slotTable = metaServer.getSlotTable();
+    verify(slotManager, times(2)).getSlotTable();
+    Assert.assertEquals(1, slotTable.getSlotIds().size());
+  }
 
-    @Test
-    public void testCancel() throws InterruptedException, TimeoutException {
-        MetaNode metaNode = new MetaNode(randomURL(), getDc());
-        metaServer.renew(metaNode);
+  @Test
+  public void testCancel() throws InterruptedException, TimeoutException {
+    MetaNode metaNode = new MetaNode(randomURL(), getDc());
+    metaServer.renew(metaNode);
 
-        makeMetaLeader();
-        metaServer.cancel(metaNode);
-        metaServer.renew(metaNode);
+    makeMetaLeader();
+    metaServer.cancel(metaNode);
+    metaServer.renew(metaNode);
 
-        makeMetaNonLeader();
-        metaServer.cancel(metaNode);
-    }
+    makeMetaNonLeader();
+    metaServer.cancel(metaNode);
+  }
 
-    @Test
-    public void testGetEpoch() throws TimeoutException, InterruptedException {
-        metaServer.renew(new MetaNode(randomURL(), getDc()));
-        makeMetaLeader();
-        Assert.assertTrue(metaServer.getEpoch() <= DatumVersionUtil.nextId());
+  @Test
+  public void testGetEpoch() throws TimeoutException, InterruptedException {
+    metaServer.renew(new MetaNode(randomURL(), getDc()));
+    makeMetaLeader();
+    Assert.assertTrue(metaServer.getEpoch() <= DatumVersionUtil.nextId());
 
-        makeMetaNonLeader();
-        metaServer.getEpoch();
-    }
+    makeMetaNonLeader();
+    metaServer.getEpoch();
+  }
 
-    @Test
-    public void testRenew() {
-        NotifyObserversCounter notifyCounter = new NotifyObserversCounter();
-        metaServer.addObserver(notifyCounter);
-        MetaNode metaNode = new MetaNode(randomURL(), getDc());
+  @Test
+  public void testRenew() {
+    NotifyObserversCounter notifyCounter = new NotifyObserversCounter();
+    metaServer.addObserver(notifyCounter);
+    MetaNode metaNode = new MetaNode(randomURL(), getDc());
 
-        metaServer.renew(metaNode);
-        metaServer.renew(metaNode);
+    metaServer.renew(metaNode);
+    metaServer.renew(metaNode);
 
-        Assert.assertEquals(2, notifyCounter.getCounter());
-    }
+    Assert.assertEquals(2, notifyCounter.getCounter());
+  }
 
-    @Test
-    public void testGetDataManager() {
-        DataServerManager manager = metaServer.getDataServerManager();
-        Assert.assertEquals(dataServerManager, manager);
-    }
-
+  @Test
+  public void testGetDataManager() {
+    DataServerManager manager = metaServer.getDataServerManager();
+    Assert.assertEquals(dataServerManager, manager);
+  }
 }

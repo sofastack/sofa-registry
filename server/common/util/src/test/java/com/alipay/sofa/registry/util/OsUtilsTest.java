@@ -16,18 +16,18 @@
  */
 package com.alipay.sofa.registry.util;
 
+import static org.junit.Assert.*;
+
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import org.junit.Test;
 
-import static org.junit.Assert.*;
-
 public class OsUtilsTest {
 
-    private Logger logger = LoggerFactory.getLogger(OsUtilsTest.class);
+  private Logger logger = LoggerFactory.getLogger(OsUtilsTest.class);
 
-    @Test
-    public void getCpuCount() {
-        logger.info("cpu cores: {}", OsUtils.getCpuCount());
-    }
+  @Test
+  public void getCpuCount() {
+    logger.info("cpu cores: {}", OsUtils.getCpuCount());
+  }
 }

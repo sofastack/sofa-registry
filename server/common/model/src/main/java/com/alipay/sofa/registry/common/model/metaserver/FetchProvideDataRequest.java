@@ -19,36 +19,36 @@ package com.alipay.sofa.registry.common.model.metaserver;
 import java.io.Serializable;
 
 /**
- *
  * @author shangyu.wh
  * @version $Id: FetchProvideDataRequest.java, v 0.1 2018-04-17 21:19 shangyu.wh Exp $
  */
 public class FetchProvideDataRequest implements Serializable {
 
-    private final String dataInfoId;
+  private final String dataInfoId;
 
-    /**
-     * construtor
-     * @param dataInfoId
-     */
-    public FetchProvideDataRequest(String dataInfoId) {
-        this.dataInfoId = dataInfoId;
-    }
+  /**
+   * construtor
+   *
+   * @param dataInfoId
+   */
+  public FetchProvideDataRequest(String dataInfoId) {
+    this.dataInfoId = dataInfoId;
+  }
 
-    /**
-     * Getter method for property <tt>dataInfoId</tt>.
-     *
-     * @return property value of dataInfoId
-     */
-    public String getDataInfoId() {
-        return dataInfoId;
-    }
+  /**
+   * Getter method for property <tt>dataInfoId</tt>.
+   *
+   * @return property value of dataInfoId
+   */
+  public String getDataInfoId() {
+    return dataInfoId;
+  }
 
-    @Override
-    public String toString() {
-        final StringBuilder sb = new StringBuilder("FetchProvideDataRequest{");
-        sb.append("dataInfoId='").append(dataInfoId).append('\'');
-        sb.append('}');
-        return sb.toString();
-    }
+  @Override
+  public String toString() {
+    final StringBuilder sb = new StringBuilder("FetchProvideDataRequest{");
+    sb.append("dataInfoId='").append(dataInfoId).append('\'');
+    sb.append('}');
+    return sb.toString();
+  }
 }

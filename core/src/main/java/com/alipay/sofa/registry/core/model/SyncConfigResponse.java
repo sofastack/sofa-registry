@@ -20,62 +20,65 @@ import java.io.Serializable;
 import java.util.List;
 
 /**
- *
  * @author zhuoyu.sjw
  * @version $Id: SyncConfigResponse.java, v 0.1 2018-03-14 23:08 zhuoyu.sjw Exp $$
  */
 public class SyncConfigResponse extends Result implements Serializable {
 
-    private static final long serialVersionUID = 5407436619633166827L;
+  private static final long serialVersionUID = 5407436619633166827L;
 
-    private List<String>      availableSegments;
+  private List<String> availableSegments;
 
-    private int               retryInterval;
+  private int retryInterval;
 
-    /**
-     * Getter method for property <tt>availableSegments</tt>.
-     *
-     * @return property value of availableSegments
-     */
-    public List<String> getAvailableSegments() {
-        return availableSegments;
-    }
+  /**
+   * Getter method for property <tt>availableSegments</tt>.
+   *
+   * @return property value of availableSegments
+   */
+  public List<String> getAvailableSegments() {
+    return availableSegments;
+  }
 
-    /**
-     * Setter method for property <tt>availableSegments</tt>.
-     *
-     * @param availableSegments value to be assigned to property availableSegments
-     */
-    public void setAvailableSegments(List<String> availableSegments) {
-        this.availableSegments = availableSegments;
-    }
+  /**
+   * Setter method for property <tt>availableSegments</tt>.
+   *
+   * @param availableSegments value to be assigned to property availableSegments
+   */
+  public void setAvailableSegments(List<String> availableSegments) {
+    this.availableSegments = availableSegments;
+  }
 
-    /**
-     * Getter method for property <tt>retryInterval</tt>.
-     *
-     * @return property value of retryInterval
-     */
-    public int getRetryInterval() {
-        return retryInterval;
-    }
+  /**
+   * Getter method for property <tt>retryInterval</tt>.
+   *
+   * @return property value of retryInterval
+   */
+  public int getRetryInterval() {
+    return retryInterval;
+  }
 
-    /**
-     * Setter method for property <tt>retryInterval</tt>.
-     *
-     * @param retryInterval value to be assigned to property retryInterval
-     */
-    public void setRetryInterval(int retryInterval) {
-        this.retryInterval = retryInterval;
-    }
+  /**
+   * Setter method for property <tt>retryInterval</tt>.
+   *
+   * @param retryInterval value to be assigned to property retryInterval
+   */
+  public void setRetryInterval(int retryInterval) {
+    this.retryInterval = retryInterval;
+  }
 
-    /**
-     * To string string.
-     *
-     * @return the string
-     */
-    @Override
-    public String toString() {
-        return "SyncConfigResponse{" + "availableSegments=" + availableSegments
-               + ", retryInterval=" + retryInterval + '}';
-    }
+  /**
+   * To string string.
+   *
+   * @return the string
+   */
+  @Override
+  public String toString() {
+    return "SyncConfigResponse{"
+        + "availableSegments="
+        + availableSegments
+        + ", retryInterval="
+        + retryInterval
+        + '}';
+  }
 }

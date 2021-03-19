@@ -26,39 +26,36 @@ import com.alipay.sofa.registry.util.ParaCheckUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 
 /**
- *
  * @author shangyu.wh
  * @version $Id: CancelHandler.java, v 0.1 2017-11-30 15:29 shangyu.wh Exp $
  */
 public class CancelAddressRequestHandler extends AbstractServerHandler<CancelAddressRequest> {
 
-    @Autowired
-    private Registry sessionRegistry;
+  @Autowired private Registry sessionRegistry;
 
-    @Override
-    public Class interest() {
-        return CancelAddressRequest.class;
-    }
+  @Override
+  public Class interest() {
+    return CancelAddressRequest.class;
+  }
 
-    @Override
-    protected NodeType getConnectNodeType() {
-        return NodeType.CLIENT;
-    }
+  @Override
+  protected NodeType getConnectNodeType() {
+    return NodeType.CLIENT;
+  }
 
-    @Override
-    public void checkParam(CancelAddressRequest request) throws RuntimeException {
-        ParaCheckUtil.checkNotEmpty(request.getConnectIds(), "request.connectIds");
-    }
+  @Override
+  public void checkParam(CancelAddressRequest request) throws RuntimeException {
+    ParaCheckUtil.checkNotEmpty(request.getConnectIds(), "request.connectIds");
+  }
 
-    @Override
-    public Object doHandle(Channel channel, CancelAddressRequest request) {
-        sessionRegistry.cancel(request.getConnectIds());
-        return Result.success();
-    }
+  @Override
+  public Object doHandle(Channel channel, CancelAddressRequest request) {
+    sessionRegistry.cancel(request.getConnectIds());
+    return Result.success();
+  }
 
-    @Override
-    public Object buildFailedResponse(String msg) {
-        return Result.failed(msg);
-    }
-
+  @Override
+  public Object buildFailedResponse(String msg) {
+    return Result.failed(msg);
+  }
 }

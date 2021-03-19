@@ -21,56 +21,57 @@ import com.alipay.sofa.registry.net.NetUtil;
 import com.alipay.sofa.registry.remoting.Channel;
 import com.alipay.sofa.registry.server.meta.bootstrap.handler.SessionServerHandler;
 import com.alipay.sofa.registry.server.shared.remoting.ListenServerChannelHandler;
-import org.springframework.stereotype.Component;
-
 import java.net.InetSocketAddress;
 import java.util.Collection;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import org.springframework.stereotype.Component;
 
 /**
  * Handle session node's connect request
+ *
  * @author shangyu.wh
  * @version $Id: ServerConnectionHandler.java, v 0.1 2018-01-24 11:42 shangyu.wh Exp $
  */
 @Component
-public class SessionConnectionHandler extends ListenServerChannelHandler implements
-                                                                        NodeConnectManager, SessionServerHandler {
+public class SessionConnectionHandler extends ListenServerChannelHandler
+    implements NodeConnectManager, SessionServerHandler {
 
-    private final Map<String/*connectId*/, InetSocketAddress> connections = new ConcurrentHashMap<>();
+  private final Map<String /*connectId*/, InetSocketAddress> connections =
+      new ConcurrentHashMap<>();
 
-    @Override
-    public void connected(Channel channel) {
-        super.connected(channel);
-        addConnection(channel);
-    }
+  @Override
+  public void connected(Channel channel) {
+    super.connected(channel);
+    addConnection(channel);
+  }
 
-    @Override
-    public void disconnected(Channel channel) {
-        super.disconnected(channel);
-        removeConnection(channel);
-    }
+  @Override
+  public void disconnected(Channel channel) {
+    super.disconnected(channel);
+    removeConnection(channel);
+  }
 
-    @Override
-    public NodeType getConnectNodeType() {
-        return NodeType.SESSION;
-    }
+  @Override
+  public NodeType getConnectNodeType() {
+    return NodeType.SESSION;
+  }
 
-    @Override
-    public void addConnection(Channel channel) {
-        InetSocketAddress remoteAddress = channel.getRemoteAddress();
-        String connectId = NetUtil.toAddressString(remoteAddress);
-        connections.putIfAbsent(connectId, remoteAddress);
-    }
+  @Override
+  public void addConnection(Channel channel) {
+    InetSocketAddress remoteAddress = channel.getRemoteAddress();
+    String connectId = NetUtil.toAddressString(remoteAddress);
+    connections.putIfAbsent(connectId, remoteAddress);
+  }
 
-    @Override
-    public boolean removeConnection(Channel channel) {
-        String connectId = NetUtil.toAddressString(channel.getRemoteAddress());
-        return connections.remove(connectId) != null;
-    }
+  @Override
+  public boolean removeConnection(Channel channel) {
+    String connectId = NetUtil.toAddressString(channel.getRemoteAddress());
+    return connections.remove(connectId) != null;
+  }
 
-    @Override
-    public Collection<InetSocketAddress> getConnections(String dataCenter) {
-        return connections.values();
-    }
+  @Override
+  public Collection<InetSocketAddress> getConnections(String dataCenter) {
+    return connections.values();
+  }
 }

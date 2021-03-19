@@ -18,24 +18,23 @@ package com.alipay.sofa.registry.server.shared.config;
 
 /**
  * @author chen.zhu
- *         <p>
- *         Dec 15, 2020
+ *     <p>Dec 15, 2020
  */
 public interface SlotTableConfig {
 
-	/**
-	 * Gets get slot nums.
-	 * 
-	 * @return the get total slot nums
-	 */
-	int getSlotNums();
+  /**
+   * Gets get slot nums.
+   *
+   * @return the get total slot nums
+   */
+  int getSlotNums();
 
-	/**
-	 * Gets get slot replica nums.
-	 * 
-	 * @return the get slot replica nums
-	 */
-	int getSlotReplicaNums();
+  /**
+   * Gets get slot replica nums.
+   *
+   * @return the get slot replica nums
+   */
+  int getSlotReplicaNums();
 
-	SlotTableConfig DEFAULT = new DefaultSlotTableConfig();
+  SlotTableConfig DEFAULT = new DefaultSlotTableConfig();
 }

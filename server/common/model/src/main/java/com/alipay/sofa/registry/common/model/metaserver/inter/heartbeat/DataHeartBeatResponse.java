@@ -21,22 +21,26 @@ import com.alipay.sofa.registry.common.model.metaserver.nodes.MetaNode;
 import com.alipay.sofa.registry.common.model.metaserver.nodes.SessionNode;
 import com.alipay.sofa.registry.common.model.slot.SlotTable;
 
-import java.util.List;
-
 /**
  * @author chen.zhu
- * <p>
- * Nov 27, 2020
+ *     <p>Nov 27, 2020
  */
 public class DataHeartBeatResponse extends BaseHeartBeatResponse {
 
+  public DataHeartBeatResponse(
+      VersionedList<MetaNode> metaNodes,
+      SlotTable slotTable,
+      String metaLeader,
+      long metaLeaderEpoch) {
+    super(metaNodes, slotTable, metaLeader, metaLeaderEpoch);
+  }
 
-    public DataHeartBeatResponse(VersionedList<MetaNode> metaNodes, SlotTable slotTable, String metaLeader, long metaLeaderEpoch) {
-        super(metaNodes, slotTable, metaLeader, metaLeaderEpoch);
-    }
-
-    public DataHeartBeatResponse(VersionedList<MetaNode> metaNodes, SlotTable slotTable, VersionedList<SessionNode> sessionNodes,
-                                 String metaLeader, long metaLeaderEpoch) {
-        super(metaNodes, slotTable, sessionNodes, metaLeader, metaLeaderEpoch);
-    }
+  public DataHeartBeatResponse(
+      VersionedList<MetaNode> metaNodes,
+      SlotTable slotTable,
+      VersionedList<SessionNode> sessionNodes,
+      String metaLeader,
+      long metaLeaderEpoch) {
+    super(metaNodes, slotTable, sessionNodes, metaLeader, metaLeaderEpoch);
+  }
 }

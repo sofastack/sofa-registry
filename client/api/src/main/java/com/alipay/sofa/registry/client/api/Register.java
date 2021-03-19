@@ -18,61 +18,57 @@ package com.alipay.sofa.registry.client.api;
 
 /**
  * The interface Register.
- * 
+ *
  * @author zhuoyu.sjw
  * @version $Id : Register.java, v 0.1 2017-11-22 16:00 zhuoyu.sjw Exp $$
  */
 public interface Register {
 
-	/**
-	 * Reset.
-	 */
-	void reset();
+  /** Reset. */
+  void reset();
 
-	/**
-	 * Is registered boolean.
-	 * 
-	 * @return the boolean
-	 */
-	boolean isRegistered();
+  /**
+   * Is registered boolean.
+   *
+   * @return the boolean
+   */
+  boolean isRegistered();
 
-	/**
-	 * Unregister.
-	 */
-	void unregister();
+  /** Unregister. */
+  void unregister();
 
-	/**
-	 * Gets data id.
-	 * 
-	 * @return String data id
-	 */
-	String getDataId();
+  /**
+   * Gets data id.
+   *
+   * @return String data id
+   */
+  String getDataId();
 
-	/**
-	 * Gets group.
-	 * 
-	 * @return the group
-	 */
-	String getGroup();
+  /**
+   * Gets group.
+   *
+   * @return the group
+   */
+  String getGroup();
 
-	/**
-	 * Gets regist id.
-	 * 
-	 * @return the regist id
-	 */
-	String getRegistId();
+  /**
+   * Gets regist id.
+   *
+   * @return the regist id
+   */
+  String getRegistId();
 
-	/**
-	 * Is enabled boolean.
-	 * 
-	 * @return boolean boolean
-	 */
-	boolean isEnabled();
+  /**
+   * Is enabled boolean.
+   *
+   * @return boolean boolean
+   */
+  boolean isEnabled();
 
-	/**
-	 * Gets timestamp.
-	 * 
-	 * @return the timestamp
-	 */
-	long getTimestamp();
+  /**
+   * Gets timestamp.
+   *
+   * @return the timestamp
+   */
+  long getTimestamp();
 }

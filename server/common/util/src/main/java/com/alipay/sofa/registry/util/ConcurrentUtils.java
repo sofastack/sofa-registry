@@ -20,7 +20,6 @@ import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.google.common.collect.Lists;
 import com.google.common.util.concurrent.MoreExecutors;
-
 import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.BlockingQueue;
@@ -29,89 +28,87 @@ import java.util.concurrent.TimeUnit;
 
 /**
  * @author chen.zhu
- * <p>
- * Nov 23, 2020
+ *     <p>Nov 23, 2020
  */
 public final class ConcurrentUtils {
-    private static final Logger LOGGER = LoggerFactory.getLogger(ConcurrentUtils.class);
+  private static final Logger LOGGER = LoggerFactory.getLogger(ConcurrentUtils.class);
 
-    private ConcurrentUtils() {
+  private ConcurrentUtils() {}
+
+  public abstract static class SafeParaLoop<T> {
+
+    private static final Logger logger = LoggerFactory.getLogger(SafeParaLoop.class);
+
+    private List<T> list;
+
+    private Executor executors;
+
+    public SafeParaLoop(Collection<T> list) {
+      this(MoreExecutors.directExecutor(), list);
     }
 
-    public static abstract class SafeParaLoop<T> {
-
-        private static final Logger logger = LoggerFactory.getLogger(SafeParaLoop.class);
-
-        private List<T>             list;
-
-        private Executor            executors;
-
-        public SafeParaLoop(Collection<T> list) {
-            this(MoreExecutors.directExecutor(), list);
-        }
-
-        public SafeParaLoop(Executor executors, Collection<T> src) {
-            this.executors = executors;
-            this.list = src == null ? null : Lists.newLinkedList(src);
-        }
-
-        public void run() {
-            if (list == null) {
-                return;
-            }
-            for (T t : list) {
-                executors.execute(new Runnable() {
-                    @Override
-                    public void run() {
-                        try {
-                            doRun0(t);
-                        } catch (Throwable e) {
-                            logger.error("[SafeParaLoop][{}]", getInfo(t), e);
-                        }
-                    }
-                });
-
-            }
-        }
-
-        protected abstract void doRun0(T t) throws Exception;
-
-        String getInfo(T t) {
-            return t.toString();
-        }
+    public SafeParaLoop(Executor executors, Collection<T> src) {
+      this.executors = executors;
+      this.list = src == null ? null : Lists.newLinkedList(src);
     }
 
-    public static Thread createDaemonThread(String name, Runnable r) {
-        Thread t = new Thread(r, name);
-        t.setDaemon(true);
-        return t;
+    public void run() {
+      if (list == null) {
+        return;
+      }
+      for (T t : list) {
+        executors.execute(
+            new Runnable() {
+              @Override
+              public void run() {
+                try {
+                  doRun0(t);
+                } catch (Throwable e) {
+                  logger.error("[SafeParaLoop][{}]", getInfo(t), e);
+                }
+              }
+            });
+      }
     }
 
-    public static void objectWaitUninterruptibly(Object o, int timeoutMs) {
-        try {
-            o.wait(timeoutMs);
-        } catch (InterruptedException ignored) {
-            // no need to remark Thread.currentThread().interrupt();
-            LOGGER.warn("Interrupted waiting", ignored);
-        }
-    }
+    protected abstract void doRun0(T t) throws Exception;
 
-    public static void sleepUninterruptibly(long sleepFor, TimeUnit unit) {
-        try {
-            unit.sleep(sleepFor);
-        } catch (InterruptedException ignored) {
-            // no need to remark Thread.currentThread().interrupt();
-            LOGGER.warn("Interrupted sleeping", ignored);
-        }
+    String getInfo(T t) {
+      return t.toString();
     }
+  }
 
-    public static <T> T pollUninterruptibly(BlockingQueue<T> queue, long wait, TimeUnit unit) {
-        try {
-            return queue.poll(wait, unit);
-        } catch (InterruptedException ignored) {
-            // no need to remark Thread.currentThread().interrupt();
-            LOGGER.warn("Interrupted polling", ignored);
-        }
-        return null;
+  public static Thread createDaemonThread(String name, Runnable r) {
+    Thread t = new Thread(r, name);
+    t.setDaemon(true);
+    return t;
+  }
+
+  public static void objectWaitUninterruptibly(Object o, int timeoutMs) {
+    try {
+      o.wait(timeoutMs);
+    } catch (InterruptedException ignored) {
+      // no need to remark Thread.currentThread().interrupt();
+      LOGGER.warn("Interrupted waiting", ignored);
     }
+  }
+
+  public static void sleepUninterruptibly(long sleepFor, TimeUnit unit) {
+    try {
+      unit.sleep(sleepFor);
+    } catch (InterruptedException ignored) {
+      // no need to remark Thread.currentThread().interrupt();
+      LOGGER.warn("Interrupted sleeping", ignored);
+    }
+  }
+
+  public static <T> T pollUninterruptibly(BlockingQueue<T> queue, long wait, TimeUnit unit) {
+    try {
+      return queue.poll(wait, unit);
+    } catch (InterruptedException ignored) {
+      // no need to remark Thread.currentThread().interrupt();
+      LOGGER.warn("Interrupted polling", ignored);
+    }
+    return null;
+  }
 }

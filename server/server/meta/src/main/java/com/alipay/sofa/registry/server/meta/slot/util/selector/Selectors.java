@@ -19,134 +19,129 @@ package com.alipay.sofa.registry.server.meta.slot.util.selector;
 import com.alipay.sofa.registry.server.meta.slot.util.builder.SlotTableBuilder;
 import com.alipay.sofa.registry.server.meta.slot.util.comparator.Comparators;
 import com.google.common.collect.Lists;
-
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 
 /**
  * @author chen.zhu
- * <p>
- * Jan 27, 2021
+ *     <p>Jan 27, 2021
  */
 public class Selectors {
 
-    public static DefaultSlotLeaderSelector slotLeaderSelector(SlotTableBuilder slotTableBuilder,
-                                                               int slotId) {
-        return new DefaultSlotLeaderSelector(slotTableBuilder, slotId);
+  public static DefaultSlotLeaderSelector slotLeaderSelector(
+      SlotTableBuilder slotTableBuilder, int slotId) {
+    return new DefaultSlotLeaderSelector(slotTableBuilder, slotId);
+  }
+
+  public static MostLeaderFirstSelector mostLeaderFirst(SlotTableBuilder slotTableBuilder) {
+    return new MostLeaderFirstSelector(slotTableBuilder);
+  }
+
+  public abstract static class AbstractSlotTableBuilderAwareSelector<T> implements Selector<T> {
+
+    protected final SlotTableBuilder slotTableBuilder;
+
+    public AbstractSlotTableBuilderAwareSelector(SlotTableBuilder slotTableBuilder) {
+      this.slotTableBuilder = slotTableBuilder;
+    }
+  }
+
+  public abstract static class AbstractDataServerSelector
+      extends AbstractSlotTableBuilderAwareSelector<String> {
+
+    public AbstractDataServerSelector(SlotTableBuilder slotTableBuilder) {
+      super(slotTableBuilder);
     }
 
-    public static MostLeaderFirstSelector mostLeaderFirst(SlotTableBuilder slotTableBuilder) {
-        return new MostLeaderFirstSelector(slotTableBuilder);
+    @Override
+    public String select(Collection<String> candidates) {
+      List<String> sortedCandidates = Lists.newArrayList(candidates);
+      sortedCandidates.sort(getDataServerComparator());
+      return sortedCandidates.isEmpty() ? null : sortedCandidates.get(0);
     }
 
-    public static abstract class AbstractSlotTableBuilderAwareSelector<T> implements Selector<T> {
+    protected abstract Comparators.AbstractDataServerComparator getDataServerComparator();
+  }
 
-        protected final SlotTableBuilder slotTableBuilder;
+  public static class MostFollowerFirstSelector extends AbstractDataServerSelector {
 
-        public AbstractSlotTableBuilderAwareSelector(SlotTableBuilder slotTableBuilder) {
-            this.slotTableBuilder = slotTableBuilder;
-        }
+    private final Comparators.AbstractDataServerComparator comparator;
+
+    public MostFollowerFirstSelector(SlotTableBuilder slotTableBuilder) {
+      super(slotTableBuilder);
+      this.comparator = Comparators.mostFollowersFirst(slotTableBuilder);
     }
 
-    public static abstract class AbstractDataServerSelector
-                                                           extends
-                                                           AbstractSlotTableBuilderAwareSelector<String> {
+    @Override
+    protected Comparators.AbstractDataServerComparator getDataServerComparator() {
+      return comparator;
+    }
+  }
 
-        public AbstractDataServerSelector(SlotTableBuilder slotTableBuilder) {
-            super(slotTableBuilder);
-        }
+  public static class LeastFollowerFirstSelector extends AbstractDataServerSelector {
 
-        @Override
-        public String select(Collection<String> candidates) {
-            List<String> sortedCandidates = Lists.newArrayList(candidates);
-            sortedCandidates.sort(getDataServerComparator());
-            return sortedCandidates.isEmpty() ? null : sortedCandidates.get(0);
-        }
+    private final Comparators.AbstractDataServerComparator comparator;
 
-        protected abstract Comparators.AbstractDataServerComparator getDataServerComparator();
-
+    public LeastFollowerFirstSelector(SlotTableBuilder slotTableBuilder) {
+      super(slotTableBuilder);
+      this.comparator = Comparators.leastFollowersFirst(slotTableBuilder);
     }
 
-    public static class MostFollowerFirstSelector extends AbstractDataServerSelector {
+    @Override
+    protected Comparators.AbstractDataServerComparator getDataServerComparator() {
+      return comparator;
+    }
+  }
 
-        private final Comparators.AbstractDataServerComparator comparator;
+  public static class LeastLeaderFirstSelector extends AbstractDataServerSelector {
 
-        public MostFollowerFirstSelector(SlotTableBuilder slotTableBuilder) {
-            super(slotTableBuilder);
-            this.comparator = Comparators.mostFollowersFirst(slotTableBuilder);
-        }
+    private final Comparators.AbstractDataServerComparator comparator;
 
-        @Override
-        protected Comparators.AbstractDataServerComparator getDataServerComparator() {
-            return comparator;
-        }
+    public LeastLeaderFirstSelector(SlotTableBuilder slotTableBuilder) {
+      super(slotTableBuilder);
+      this.comparator = Comparators.leastLeadersFirst(slotTableBuilder);
     }
 
-    public static class LeastFollowerFirstSelector extends AbstractDataServerSelector {
+    @Override
+    protected Comparators.AbstractDataServerComparator getDataServerComparator() {
+      return comparator;
+    }
+  }
 
-        private final Comparators.AbstractDataServerComparator comparator;
+  public static class MostLeaderFirstSelector extends AbstractDataServerSelector {
 
-        public LeastFollowerFirstSelector(SlotTableBuilder slotTableBuilder) {
-            super(slotTableBuilder);
-            this.comparator = Comparators.leastFollowersFirst(slotTableBuilder);
-        }
+    private final Comparators.AbstractDataServerComparator comparator;
 
-        @Override
-        protected Comparators.AbstractDataServerComparator getDataServerComparator() {
-            return comparator;
-        }
+    public MostLeaderFirstSelector(SlotTableBuilder slotTableBuilder) {
+      super(slotTableBuilder);
+      comparator = Comparators.mostLeadersFirst(slotTableBuilder);
     }
 
-    public static class LeastLeaderFirstSelector extends AbstractDataServerSelector {
+    @Override
+    protected Comparators.AbstractDataServerComparator getDataServerComparator() {
+      return comparator;
+    }
+  }
 
-        private final Comparators.AbstractDataServerComparator comparator;
+  public static class DefaultSlotLeaderSelector implements Selector<String> {
 
-        public LeastLeaderFirstSelector(SlotTableBuilder slotTableBuilder) {
-            super(slotTableBuilder);
-            this.comparator = Comparators.leastLeadersFirst(slotTableBuilder);
-        }
+    private final SlotTableBuilder slotTableBuilder;
 
-        @Override
-        protected Comparators.AbstractDataServerComparator getDataServerComparator() {
-            return comparator;
-        }
+    private final int slotId;
+
+    public DefaultSlotLeaderSelector(SlotTableBuilder slotTableBuilder, int slotId) {
+      this.slotTableBuilder = slotTableBuilder;
+      this.slotId = slotId;
     }
 
-    public static class MostLeaderFirstSelector extends AbstractDataServerSelector {
-
-        private final Comparators.AbstractDataServerComparator comparator;
-
-        public MostLeaderFirstSelector(SlotTableBuilder slotTableBuilder) {
-            super(slotTableBuilder);
-            comparator = Comparators.mostLeadersFirst(slotTableBuilder);
-        }
-
-        @Override
-        protected Comparators.AbstractDataServerComparator getDataServerComparator() {
-            return comparator;
-        }
+    @Override
+    public String select(Collection<String> candidates) {
+      Set<String> currentFollowers = slotTableBuilder.getOrCreate(slotId).getFollowers();
+      Collection<String> followerCandidates = Lists.newArrayList(candidates);
+      followerCandidates.retainAll(currentFollowers);
+      followerCandidates = followerCandidates.isEmpty() ? candidates : followerCandidates;
+      return new LeastLeaderFirstSelector(slotTableBuilder).select(followerCandidates);
     }
-
-    public static class DefaultSlotLeaderSelector implements Selector<String> {
-
-        private final SlotTableBuilder slotTableBuilder;
-
-        private final int              slotId;
-
-        public DefaultSlotLeaderSelector(SlotTableBuilder slotTableBuilder, int slotId) {
-            this.slotTableBuilder = slotTableBuilder;
-            this.slotId = slotId;
-        }
-
-        @Override
-        public String select(Collection<String> candidates) {
-            Set<String> currentFollowers = slotTableBuilder.getOrCreate(slotId).getFollowers();
-            Collection<String> followerCandidates = Lists.newArrayList(candidates);
-            followerCandidates.retainAll(currentFollowers);
-            followerCandidates = followerCandidates.isEmpty() ? candidates : followerCandidates;
-            return new LeastLeaderFirstSelector(slotTableBuilder).select(followerCandidates);
-        }
-
-    }
+  }
 }

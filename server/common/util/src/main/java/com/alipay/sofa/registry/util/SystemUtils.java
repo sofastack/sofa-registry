@@ -17,22 +17,21 @@
 package com.alipay.sofa.registry.util;
 
 public final class SystemUtils {
-	private SystemUtils() {
-	}
+  private SystemUtils() {}
 
-	public static int getSystemInteger(String name, int def) {
-		String v = System.getProperty(name);
-		if (v == null) {
-			v = System.getenv(name);
-		}
-		return v == null ? def : Integer.valueOf(v);
-	}
+  public static int getSystemInteger(String name, int def) {
+    String v = System.getProperty(name);
+    if (v == null) {
+      v = System.getenv(name);
+    }
+    return v == null ? def : Integer.valueOf(v);
+  }
 
-	public static String getSystem(String name, String def) {
-		String v = System.getProperty(name);
-		if (v == null) {
-			v = System.getenv(name);
-		}
-		return v == null ? def : v;
-	}
+  public static String getSystem(String name, String def) {
+    String v = System.getProperty(name);
+    if (v == null) {
+      v = System.getenv(name);
+    }
+    return v == null ? def : v;
+  }
 }

@@ -18,8 +18,6 @@ package com.alipay.sofa.registry.server.meta.bootstrap.handler;
 
 /**
  * @author chen.zhu
- *         <p>
- *         Mar 11, 2021
+ *     <p>Mar 11, 2021
  */
-public interface DataServerHandler {
-}
+public interface DataServerHandler {}

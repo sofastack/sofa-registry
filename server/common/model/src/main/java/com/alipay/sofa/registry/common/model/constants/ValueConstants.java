@@ -22,66 +22,55 @@ package com.alipay.sofa.registry.common.model.constants;
  */
 public class ValueConstants {
 
-	/**
-	 * connectId: sourceAddress_targetAddress
-	 */
-	public static final String CONNECT_ID_SPLIT = "_";
+  /** connectId: sourceAddress_targetAddress */
+  public static final String CONNECT_ID_SPLIT = "_";
 
-	/**
-	 * The constant DEFAULT_GROUP.
-	 */
-	public static final String DEFAULT_GROUP = "DEFAULT_GROUP";
+  /** The constant DEFAULT_GROUP. */
+  public static final String DEFAULT_GROUP = "DEFAULT_GROUP";
 
-	/**
-	 * The constant DEFAULT_ZONE.
-	 */
-	public static final String DEFAULT_ZONE = "DEFAULT_ZONE";
+  /** The constant DEFAULT_ZONE. */
+  public static final String DEFAULT_ZONE = "DEFAULT_ZONE";
 
-	public static final String DEFAULT_INSTANCE_ID = "DEFAULT_INSTANCE_ID";
+  public static final String DEFAULT_INSTANCE_ID = "DEFAULT_INSTANCE_ID";
 
-	/**
-	 * The constant DEFAULT_DATA_CENTER.
-	 */
-	public static final String DEFAULT_DATA_CENTER = "DefaultDataCenter";
+  /** The constant DEFAULT_DATA_CENTER. */
+  public static final String DEFAULT_DATA_CENTER = "DefaultDataCenter";
 
-	public static final long DEFAULT_NO_DATUM_VERSION = 1L;
+  public static final long DEFAULT_NO_DATUM_VERSION = 1L;
 
-	private static final Integer SYSTEM_RAFT_PORT = Integer
-			.getInteger("RAFT_SERVER_PORT");
+  private static final Integer SYSTEM_RAFT_PORT = Integer.getInteger("RAFT_SERVER_PORT");
 
-	public static final int RAFT_SERVER_PORT = SYSTEM_RAFT_PORT != null
-			? SYSTEM_RAFT_PORT
-			: 9614;
+  public static final int RAFT_SERVER_PORT = SYSTEM_RAFT_PORT != null ? SYSTEM_RAFT_PORT : 9614;
 
-	public static final int CROSS_DC_META_SYNC_INTERVAL_MILLI = Integer
-			.getInteger("CROSS_DC_META_SYNC_INTERVAL_MILLI", 60 * 1000);
+  public static final int CROSS_DC_META_SYNC_INTERVAL_MILLI =
+      Integer.getInteger("CROSS_DC_META_SYNC_INTERVAL_MILLI", 60 * 1000);
 
-	private static final String SYSTEM_RAFT_GROUP = System
-			.getProperty("RAFT_SERVER_GROUP");
+  private static final String SYSTEM_RAFT_GROUP = System.getProperty("RAFT_SERVER_GROUP");
 
-	public static final String RAFT_SERVER_GROUP = SYSTEM_RAFT_GROUP != null
-			? SYSTEM_RAFT_GROUP
-			: "RegistryGroup";
+  public static final String RAFT_SERVER_GROUP =
+      SYSTEM_RAFT_GROUP != null ? SYSTEM_RAFT_GROUP : "RegistryGroup";
 
-	public static final String STOP_PUSH_DATA_SWITCH_DATA_ID = "session.stop.push.data.switch#@#9600#@#CONFIG";
+  public static final String STOP_PUSH_DATA_SWITCH_DATA_ID =
+      "session.stop.push.data.switch#@#9600#@#CONFIG";
 
-	public static final String BLACK_LIST_DATA_ID = "session.blacklist.data#@#9600#@#CONFIG";
+  public static final String BLACK_LIST_DATA_ID = "session.blacklist.data#@#9600#@#CONFIG";
 
-	public static final String DATA_DATUM_SYNC_SESSION_INTERVAL_SEC = "data.datum.sync.session.interval.sec#@#9600#@#CONFIG";
+  public static final String DATA_DATUM_SYNC_SESSION_INTERVAL_SEC =
+      "data.datum.sync.session.interval.sec#@#9600#@#CONFIG";
 
-	public static final String DATA_SESSION_LEASE_SEC = "data.session.lease.sec#@#9600#@#CONFIG";
+  public static final String DATA_SESSION_LEASE_SEC = "data.session.lease.sec#@#9600#@#CONFIG";
 
-	public static final String DISABLE_DATA_ID_CASE_SENSITIVE_SWITCH = "disable.dataId.case.sensitive";
-	/**
-	 * switch for dataId sensitive is disable or not, default value is false
-	 * which means dataId is case sensitive
-	 */
-	public static final boolean DISABLE_DATA_ID_CASE_SENSITIVE = Boolean
-			.parseBoolean(System
-					.getProperty(DISABLE_DATA_ID_CASE_SENSITIVE_SWITCH));
+  public static final String DISABLE_DATA_ID_CASE_SENSITIVE_SWITCH =
+      "disable.dataId.case.sensitive";
+  /**
+   * switch for dataId sensitive is disable or not, default value is false which means dataId is
+   * case sensitive
+   */
+  public static final boolean DISABLE_DATA_ID_CASE_SENSITIVE =
+      Boolean.parseBoolean(System.getProperty(DISABLE_DATA_ID_CASE_SENSITIVE_SWITCH));
 
-	// response status code
-	public static final int METADATA_STATUS_PROCESS_SUCCESS = 200;
-	public static final int METADATA_STATUS_DATA_NOT_FOUND = 404;
-	public static final int METADATA_STATUS_PROCESS_ERROR = 500;
+  // response status code
+  public static final int METADATA_STATUS_PROCESS_SUCCESS = 200;
+  public static final int METADATA_STATUS_DATA_NOT_FOUND = 404;
+  public static final int METADATA_STATUS_PROCESS_ERROR = 500;
 }

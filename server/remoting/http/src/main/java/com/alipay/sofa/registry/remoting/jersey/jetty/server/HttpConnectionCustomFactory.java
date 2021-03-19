@@ -23,21 +23,24 @@ import org.eclipse.jetty.server.HttpConfiguration;
 import org.eclipse.jetty.server.HttpConnectionFactory;
 
 /**
- *
  * @author shangyu.wh
  * @version $Id: HttpConnectionOverFactory.java, v 0.1 2018-09-26 16:40 shangyu.wh Exp $
  */
 public class HttpConnectionCustomFactory extends HttpConnectionFactory {
 
-    public HttpConnectionCustomFactory() {
-        super(new HttpConfiguration());
-    }
+  public HttpConnectionCustomFactory() {
+    super(new HttpConfiguration());
+  }
 
-    @Override
-    public Connection newConnection(Connector connector, EndPoint endPoint) {
-        HttpConnectionCustom conn = new HttpConnectionCustom(getHttpConfiguration(), connector,
-            endPoint, getHttpCompliance(), isRecordHttpComplianceViolations());
-        return configure(conn, connector, endPoint);
-    }
-
+  @Override
+  public Connection newConnection(Connector connector, EndPoint endPoint) {
+    HttpConnectionCustom conn =
+        new HttpConnectionCustom(
+            getHttpConfiguration(),
+            connector,
+            endPoint,
+            getHttpCompliance(),
+            isRecordHttpComplianceViolations());
+    return configure(conn, connector, endPoint);
+  }
 }

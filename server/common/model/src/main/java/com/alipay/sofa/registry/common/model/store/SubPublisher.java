@@ -19,59 +19,67 @@ package com.alipay.sofa.registry.common.model.store;
 import com.alipay.sofa.registry.common.model.ServerDataBox;
 import com.alipay.sofa.registry.util.StringFormatter;
 import com.google.common.collect.Lists;
-
 import java.io.Serializable;
 import java.util.Collections;
 import java.util.List;
 
 public final class SubPublisher implements Serializable {
-    private final String              cell;
-    private final String              clientId;
-    private final String              srcAddressString;
-    private final List<ServerDataBox> dataList;
-    private final long                registerTimestamp;
+  private final String cell;
+  private final String clientId;
+  private final String srcAddressString;
+  private final List<ServerDataBox> dataList;
+  private final long registerTimestamp;
 
-    public SubPublisher(String cell, List<ServerDataBox> dataList, String clientId,
-                        String srcAddressString, long registerTimestamp) {
-        this.cell = cell;
-        this.clientId = clientId;
-        this.srcAddressString = srcAddressString;
-        this.dataList = Collections.unmodifiableList(Lists.newArrayList(dataList));
-        this.registerTimestamp = registerTimestamp;
-    }
+  public SubPublisher(
+      String cell,
+      List<ServerDataBox> dataList,
+      String clientId,
+      String srcAddressString,
+      long registerTimestamp) {
+    this.cell = cell;
+    this.clientId = clientId;
+    this.srcAddressString = srcAddressString;
+    this.dataList = Collections.unmodifiableList(Lists.newArrayList(dataList));
+    this.registerTimestamp = registerTimestamp;
+  }
 
-    public String getCell() {
-        return cell;
-    }
+  public String getCell() {
+    return cell;
+  }
 
-    public List<ServerDataBox> getDataList() {
-        return dataList;
-    }
+  public List<ServerDataBox> getDataList() {
+    return dataList;
+  }
 
-    public String getClientId() {
-        return clientId;
-    }
+  public String getClientId() {
+    return clientId;
+  }
 
-    public String getSrcAddressString() {
-        return srcAddressString;
-    }
+  public String getSrcAddressString() {
+    return srcAddressString;
+  }
 
-    public long getRegisterTimestamp() {
-        return registerTimestamp;
-    }
+  public long getRegisterTimestamp() {
+    return registerTimestamp;
+  }
 
-    public int getDataBoxBytes() {
-        int bytes = 0;
-        for (ServerDataBox box : dataList) {
-            bytes += box.byteSize();
-        }
-        return bytes;
+  public int getDataBoxBytes() {
+    int bytes = 0;
+    for (ServerDataBox box : dataList) {
+      bytes += box.byteSize();
     }
+    return bytes;
+  }
 
-    @Override
-    public String toString() {
-        return StringFormatter
-            .format("SubPublisher{{},cell={},src={},datas={},bytes={},ts={}}", clientId, cell,
-                srcAddressString, dataList.size(), getDataBoxBytes(), registerTimestamp);
-    }
+  @Override
+  public String toString() {
+    return StringFormatter.format(
+        "SubPublisher{{},cell={},src={},datas={},bytes={},ts={}}",
+        clientId,
+        cell,
+        srcAddressString,
+        dataList.size(),
+        getDataBoxBytes(),
+        registerTimestamp);
+  }
 }

@@ -17,99 +17,93 @@
 package com.alipay.sofa.registry.common.model.slot;
 
 import com.alipay.sofa.registry.common.model.ProcessId;
-import com.alipay.sofa.registry.common.model.store.Publisher;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
-import org.apache.commons.collections.CollectionUtils;
-import org.apache.commons.collections.MapUtils;
-
 import java.io.Serializable;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import org.apache.commons.collections.CollectionUtils;
 
 /**
  * @author yuzhi.lyz
  * @version v 0.1 2020-11-05 17:04 yuzhi.lyz Exp $
  */
 public class DataSlotDiffDigestResult implements Serializable {
-    private long               slotTableEpoch;
-    private final List<String> updatedDataInfoIds;
-    private final List<String> addedDataInfoIds;
-    private final List<String> removedDataInfoIds;
-    // if from session, return the sessionProcessId for lease
-    private ProcessId          sessionProcessId;
+  private long slotTableEpoch;
+  private final List<String> updatedDataInfoIds;
+  private final List<String> addedDataInfoIds;
+  private final List<String> removedDataInfoIds;
+  // if from session, return the sessionProcessId for lease
+  private ProcessId sessionProcessId;
 
-    public DataSlotDiffDigestResult(List<String> updatedDataInfoIds, List<String> addedDataInfoIds,
-                                    List<String> removedDataInfoIds) {
-        this.updatedDataInfoIds = Lists.newArrayList(updatedDataInfoIds);
-        this.addedDataInfoIds = Lists.newArrayList(addedDataInfoIds);
-        this.removedDataInfoIds = Lists.newArrayList(removedDataInfoIds);
-    }
+  public DataSlotDiffDigestResult(
+      List<String> updatedDataInfoIds,
+      List<String> addedDataInfoIds,
+      List<String> removedDataInfoIds) {
+    this.updatedDataInfoIds = Lists.newArrayList(updatedDataInfoIds);
+    this.addedDataInfoIds = Lists.newArrayList(addedDataInfoIds);
+    this.removedDataInfoIds = Lists.newArrayList(removedDataInfoIds);
+  }
 
-    /**
-     * Getter method for property <tt>slotTableEpoch</tt>.
-     *
-     * @return property value of slotTableEpoch
-     */
-    public long getSlotTableEpoch() {
-        return slotTableEpoch;
-    }
+  /**
+   * Getter method for property <tt>slotTableEpoch</tt>.
+   *
+   * @return property value of slotTableEpoch
+   */
+  public long getSlotTableEpoch() {
+    return slotTableEpoch;
+  }
 
-    /**
-     * Setter method for property <tt>slotTableEpoch</tt>.
-     *
-     * @param slotTableEpoch value to be assigned to property slotTableEpoch
-     */
-    public void setSlotTableEpoch(long slotTableEpoch) {
-        this.slotTableEpoch = slotTableEpoch;
-    }
+  /**
+   * Setter method for property <tt>slotTableEpoch</tt>.
+   *
+   * @param slotTableEpoch value to be assigned to property slotTableEpoch
+   */
+  public void setSlotTableEpoch(long slotTableEpoch) {
+    this.slotTableEpoch = slotTableEpoch;
+  }
 
-    public List<String> getUpdatedDataInfoIds() {
-        return Collections.unmodifiableList(updatedDataInfoIds);
-    }
+  public List<String> getUpdatedDataInfoIds() {
+    return Collections.unmodifiableList(updatedDataInfoIds);
+  }
 
-    /**
-     * Getter method for property <tt>removedDataInfoIds</tt>.
-     *
-     * @return property value of removedDataInfoIds
-     */
-    public List<String> getRemovedDataInfoIds() {
-        return Collections.unmodifiableList(removedDataInfoIds);
-    }
+  /**
+   * Getter method for property <tt>removedDataInfoIds</tt>.
+   *
+   * @return property value of removedDataInfoIds
+   */
+  public List<String> getRemovedDataInfoIds() {
+    return Collections.unmodifiableList(removedDataInfoIds);
+  }
 
-    public List<String> getAddedDataInfoIds() {
-        return Collections.unmodifiableList(addedDataInfoIds);
-    }
+  public List<String> getAddedDataInfoIds() {
+    return Collections.unmodifiableList(addedDataInfoIds);
+  }
 
-    /**
-     * Getter method for property <tt>sessionProcessId</tt>.
-     *
-     * @return property value of sessionProcessId
-     */
-    public ProcessId getSessionProcessId() {
-        return sessionProcessId;
-    }
+  /**
+   * Getter method for property <tt>sessionProcessId</tt>.
+   *
+   * @return property value of sessionProcessId
+   */
+  public ProcessId getSessionProcessId() {
+    return sessionProcessId;
+  }
 
-    /**
-     * Setter method for property <tt>sessionProcessId</tt>.
-     *
-     * @param sessionProcessId value to be assigned to property sessionProcessId
-     */
-    public void setSessionProcessId(ProcessId sessionProcessId) {
-        this.sessionProcessId = sessionProcessId;
-    }
+  /**
+   * Setter method for property <tt>sessionProcessId</tt>.
+   *
+   * @param sessionProcessId value to be assigned to property sessionProcessId
+   */
+  public void setSessionProcessId(ProcessId sessionProcessId) {
+    this.sessionProcessId = sessionProcessId;
+  }
 
-    public boolean isEmpty() {
-        return CollectionUtils.isEmpty(updatedDataInfoIds)
-               && CollectionUtils.isEmpty(removedDataInfoIds)
-               && CollectionUtils.isEmpty(addedDataInfoIds);
-    }
+  public boolean isEmpty() {
+    return CollectionUtils.isEmpty(updatedDataInfoIds)
+        && CollectionUtils.isEmpty(removedDataInfoIds)
+        && CollectionUtils.isEmpty(addedDataInfoIds);
+  }
 
-    public int getUpdateAndAddSize() {
-        return updatedDataInfoIds.size() + addedDataInfoIds.size();
-    }
-
+  public int getUpdateAndAddSize() {
+    return updatedDataInfoIds.size() + addedDataInfoIds.size();
+  }
 }

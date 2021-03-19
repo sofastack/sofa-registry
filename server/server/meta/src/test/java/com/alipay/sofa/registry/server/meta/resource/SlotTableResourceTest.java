@@ -16,13 +16,14 @@
  */
 package com.alipay.sofa.registry.server.meta.resource;
 
+import static org.mockito.Mockito.*;
+
 import com.alipay.sofa.registry.common.model.GenericResponse;
 import com.alipay.sofa.registry.common.model.metaserver.cluster.VersionedList;
 import com.alipay.sofa.registry.common.model.metaserver.nodes.DataNode;
 import com.alipay.sofa.registry.common.model.slot.SlotTable;
 import com.alipay.sofa.registry.exception.SofaRegistryRuntimeException;
 import com.alipay.sofa.registry.server.meta.AbstractMetaServerTest;
-import com.alipay.sofa.registry.server.meta.AbstractTest;
 import com.alipay.sofa.registry.server.meta.bootstrap.config.NodeConfig;
 import com.alipay.sofa.registry.server.meta.lease.data.DefaultDataServerManager;
 import com.alipay.sofa.registry.server.meta.monitor.SlotTableMonitor;
@@ -30,15 +31,12 @@ import com.alipay.sofa.registry.server.meta.slot.SlotManager;
 import com.alipay.sofa.registry.server.meta.slot.arrange.ScheduledSlotArranger;
 import com.alipay.sofa.registry.server.meta.slot.manager.SimpleSlotManager;
 import com.alipay.sofa.registry.util.DatumVersionUtil;
+import java.util.List;
+import java.util.concurrent.TimeoutException;
 import org.assertj.core.util.Lists;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
-
-import java.util.List;
-import java.util.concurrent.TimeoutException;
-
-import static org.mockito.Mockito.*;
 
 /**
  * @author zhuchen
@@ -46,65 +44,70 @@ import static org.mockito.Mockito.*;
  */
 public class SlotTableResourceTest extends AbstractMetaServerTest {
 
-    private SlotManager slotManager;
+  private SlotManager slotManager;
 
-    private DefaultDataServerManager dataServerManager;
+  private DefaultDataServerManager dataServerManager;
 
-    private SlotTableResource        resource;
+  private SlotTableResource resource;
 
-    private ScheduledSlotArranger    slotArranger;
+  private ScheduledSlotArranger slotArranger;
 
-    private SlotTableMonitor         slotTableMonitor;
+  private SlotTableMonitor slotTableMonitor;
 
-    @Before
-    public void beforeSlotTableResourceTest() {
-        NodeConfig nodeConfig = mock(NodeConfig.class);
-        when(nodeConfig.getLocalDataCenter()).thenReturn(getDc());
-        slotManager = new SimpleSlotManager();
-        dataServerManager = mock(DefaultDataServerManager.class);
-        slotTableMonitor = mock(SlotTableMonitor.class);
-        slotArranger = spy(new ScheduledSlotArranger(dataServerManager, slotManager, slotTableMonitor, metaLeaderService));
-        resource = new SlotTableResource(slotManager, dataServerManager,
-            slotArranger, metaLeaderService);
-    }
+  @Before
+  public void beforeSlotTableResourceTest() {
+    NodeConfig nodeConfig = mock(NodeConfig.class);
+    when(nodeConfig.getLocalDataCenter()).thenReturn(getDc());
+    slotManager = new SimpleSlotManager();
+    dataServerManager = mock(DefaultDataServerManager.class);
+    slotTableMonitor = mock(SlotTableMonitor.class);
+    slotArranger =
+        spy(
+            new ScheduledSlotArranger(
+                dataServerManager, slotManager, slotTableMonitor, metaLeaderService));
+    resource =
+        new SlotTableResource(slotManager, dataServerManager, slotArranger, metaLeaderService);
+  }
 
-    @Test
-    public void testForceRefreshSlotTable() throws TimeoutException, InterruptedException {
-        makeMetaLeader();
-        List<DataNode> dataNodes = Lists.newArrayList(new DataNode(randomURL(randomIp()), getDc()),
-            new DataNode(randomURL(randomIp()), getDc()), new DataNode(randomURL(randomIp()),
-                getDc()));
-        when(dataServerManager.getDataServerMetaInfo()).thenReturn(new VersionedList<>(DatumVersionUtil.nextId(), dataNodes));
-        SlotTable slotTable = new SlotTableGenerator(dataNodes).createLeaderUnBalancedSlotTable();
-        slotManager.refresh(slotTable);
+  @Test
+  public void testForceRefreshSlotTable() throws TimeoutException, InterruptedException {
+    makeMetaLeader();
+    List<DataNode> dataNodes =
+        Lists.newArrayList(
+            new DataNode(randomURL(randomIp()), getDc()),
+            new DataNode(randomURL(randomIp()), getDc()),
+            new DataNode(randomURL(randomIp()), getDc()));
+    when(dataServerManager.getDataServerMetaInfo())
+        .thenReturn(new VersionedList<>(DatumVersionUtil.nextId(), dataNodes));
+    SlotTable slotTable = new SlotTableGenerator(dataNodes).createLeaderUnBalancedSlotTable();
+    slotManager.refresh(slotTable);
 
-        when(slotArranger.tryLock()).thenReturn(true);
-        GenericResponse<SlotTable> current = resource.forceRefreshSlotTable();
-        printSlotTable(current.getData());
-        Assert.assertTrue(isSlotTableBalanced(slotManager.getSlotTable(), dataNodes));
-    }
+    when(slotArranger.tryLock()).thenReturn(true);
+    GenericResponse<SlotTable> current = resource.forceRefreshSlotTable();
+    printSlotTable(current.getData());
+    Assert.assertTrue(isSlotTableBalanced(slotManager.getSlotTable(), dataNodes));
+  }
 
-    @Test
-    public void testStartReconcile() throws Exception {
-        slotArranger.postConstruct();
-        slotArranger.suspend();
-        resource.startSlotTableReconcile();
-        Assert.assertEquals("running", resource.getReconcileStatus().getMessage());
-    }
+  @Test
+  public void testStartReconcile() throws Exception {
+    slotArranger.postConstruct();
+    slotArranger.suspend();
+    resource.startSlotTableReconcile();
+    Assert.assertEquals("running", resource.getReconcileStatus().getMessage());
+  }
 
-    @Test
-    public void testStopReconcile() throws Exception {
-        slotArranger.postConstruct();
-        resource.stopSlotTableReconcile();
-        Assert.assertEquals("stopped", resource.getReconcileStatus().getMessage());
-    }
+  @Test
+  public void testStopReconcile() throws Exception {
+    slotArranger.postConstruct();
+    resource.stopSlotTableReconcile();
+    Assert.assertEquals("stopped", resource.getReconcileStatus().getMessage());
+  }
 
-    @Test
-    public void testGetDataStats() {
-        when(dataServerManager.getDataServersStats()).thenThrow(
-            new SofaRegistryRuntimeException("expected exception"));
-        GenericResponse<Object> response = resource.getDataSlotStatuses();
-        Assert.assertEquals("expected exception", response.getMessage());
-    }
-
+  @Test
+  public void testGetDataStats() {
+    when(dataServerManager.getDataServersStats())
+        .thenThrow(new SofaRegistryRuntimeException("expected exception"));
+    GenericResponse<Object> response = resource.getDataSlotStatuses();
+    Assert.assertEquals("expected exception", response.getMessage());
+  }
 }

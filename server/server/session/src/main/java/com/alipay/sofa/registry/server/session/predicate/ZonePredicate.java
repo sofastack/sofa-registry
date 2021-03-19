@@ -18,35 +18,36 @@ package com.alipay.sofa.registry.server.session.predicate;
 
 import com.alipay.sofa.registry.core.model.ScopeEnum;
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
-
 import java.util.function.Predicate;
 
 /**
- *
  * @author xiaojian.xj
  * @version $Id: ZonePredicate.java, v 0.1 2020年11月12日 21:57 xiaojian.xj Exp $
  */
 public class ZonePredicate {
 
-    public static Predicate<String> zonePredicate(String dataId, String clientCell,
-                                                  ScopeEnum scopeEnum, SessionServerConfig sessionServerConfig) {
-        Predicate<String> zonePredicate = (zone) -> {
-            if (!clientCell.equals(zone)) {
-                if (ScopeEnum.zone == scopeEnum) {
-                    // zone scope subscribe only return zone list
-                    return true;
+  public static Predicate<String> zonePredicate(
+      String dataId,
+      String clientCell,
+      ScopeEnum scopeEnum,
+      SessionServerConfig sessionServerConfig) {
+    Predicate<String> zonePredicate =
+        (zone) -> {
+          if (!clientCell.equals(zone)) {
+            if (ScopeEnum.zone == scopeEnum) {
+              // zone scope subscribe only return zone list
+              return true;
 
-                } else if (ScopeEnum.dataCenter == scopeEnum || ScopeEnum.global == scopeEnum) {
-                    // disable zone config
-                    if (sessionServerConfig.isInvalidForeverZone(zone) && !sessionServerConfig
-                            .isInvalidIgnored(dataId)) {
-                        return true;
-                    }
-                }
+            } else if (ScopeEnum.dataCenter == scopeEnum || ScopeEnum.global == scopeEnum) {
+              // disable zone config
+              if (sessionServerConfig.isInvalidForeverZone(zone)
+                  && !sessionServerConfig.isInvalidIgnored(dataId)) {
+                return true;
+              }
             }
-            return false;
-
+          }
+          return false;
         };
-        return zonePredicate;
-    }
+    return zonePredicate;
+  }
 }

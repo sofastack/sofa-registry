@@ -16,32 +16,28 @@
  */
 package com.alipay.sofa.registry.core.model;
 
+import java.util.Arrays;
 import org.junit.Assert;
 import org.junit.Test;
 
-import java.util.Arrays;
-
-/**
- * @author <a href="mailto:zhanggeng.zg@antfin.com">GengZhang</a>
- */
+/** @author <a href="mailto:zhanggeng.zg@antfin.com">GengZhang</a> */
 public class ReceivedConfigDataTest {
 
-    @Test
-    public void testAll() {
-        ReceivedConfigData data = new ReceivedConfigData();
-        data.setDataId("dataIdd");
-        data.setGroup("groupp");
-        data.setInstanceId("instanceIdd");
-        data.setConfiguratorRegistIds(Arrays.asList("id1", "id2"));
-        data.setDataBox(new DataBox());
-        data.setVersion(1234L);
-        Assert.assertEquals("dataIdd", data.getDataId());
-        Assert.assertEquals("groupp", data.getGroup());
-        Assert.assertEquals("instanceIdd", data.getInstanceId());
-        Assert.assertEquals(2, data.getConfiguratorRegistIds().size());
-        Assert.assertNotNull(data.getDataBox());
-        Assert.assertEquals(1234L, (long) data.getVersion());
-        Assert.assertTrue(data.toString().contains("instanceIdd"));
-    }
-
+  @Test
+  public void testAll() {
+    ReceivedConfigData data = new ReceivedConfigData();
+    data.setDataId("dataIdd");
+    data.setGroup("groupp");
+    data.setInstanceId("instanceIdd");
+    data.setConfiguratorRegistIds(Arrays.asList("id1", "id2"));
+    data.setDataBox(new DataBox());
+    data.setVersion(1234L);
+    Assert.assertEquals("dataIdd", data.getDataId());
+    Assert.assertEquals("groupp", data.getGroup());
+    Assert.assertEquals("instanceIdd", data.getInstanceId());
+    Assert.assertEquals(2, data.getConfiguratorRegistIds().size());
+    Assert.assertNotNull(data.getDataBox());
+    Assert.assertEquals(1234L, (long) data.getVersion());
+    Assert.assertTrue(data.toString().contains("instanceIdd"));
+  }
 }

@@ -20,22 +20,23 @@ import java.util.List;
 
 /**
  * The interface Server manager.
+ *
  * @author zhuoyu.sjw
  * @version $Id : ServerManager.java, v 0.1 2017-12-25 11:42 zhuoyu.sjw Exp $$
  */
 public interface ServerManager {
 
-    /**
-     * Gets server list.
-     *
-     * @return the server list
-     */
-    List<ServerNode> getServerList();
+  /**
+   * Gets server list.
+   *
+   * @return the server list
+   */
+  List<ServerNode> getServerList();
 
-    /**
-     * Random url.
-     *
-     * @return the url
-     */
-    ServerNode random();
+  /**
+   * Random url.
+   *
+   * @return the url
+   */
+  ServerNode random();
 }

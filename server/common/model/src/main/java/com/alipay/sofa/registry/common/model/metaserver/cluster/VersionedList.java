@@ -22,29 +22,28 @@ import java.util.List;
 
 /**
  * @author chen.zhu
- * <p>
- * Mar 09, 2021
+ *     <p>Mar 09, 2021
  */
 public class VersionedList<T> implements Cluster<T>, Serializable {
 
-    public final static VersionedList EMPTY = new VersionedList(-1L, Collections.EMPTY_LIST);
+  public static final VersionedList EMPTY = new VersionedList(-1L, Collections.EMPTY_LIST);
 
-    private final long epoch;
+  private final long epoch;
 
-    private final List<T> members;
+  private final List<T> members;
 
-    public VersionedList(long epoch, List<T> members) {
-        this.epoch = epoch;
-        this.members = members;
-    }
+  public VersionedList(long epoch, List<T> members) {
+    this.epoch = epoch;
+    this.members = members;
+  }
 
-    @Override
-    public long getEpoch() {
-        return epoch;
-    }
+  @Override
+  public long getEpoch() {
+    return epoch;
+  }
 
-    @Override
-    public List<T> getClusterMembers() {
-        return members;
-    }
+  @Override
+  public List<T> getClusterMembers() {
+    return members;
+  }
 }

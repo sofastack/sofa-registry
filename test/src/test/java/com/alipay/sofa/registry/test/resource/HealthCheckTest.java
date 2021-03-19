@@ -16,14 +16,14 @@
  */
 package com.alipay.sofa.registry.test.resource;
 
+import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
+import static org.junit.Assert.assertTrue;
+
 import com.alipay.sofa.registry.common.model.CommonResponse;
 import com.alipay.sofa.registry.test.BaseIntegrationTest;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.test.context.junit4.SpringRunner;
-
-import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
-import static org.junit.Assert.assertTrue;
 
 /**
  * @author xuanbei
@@ -31,21 +31,36 @@ import static org.junit.Assert.assertTrue;
  */
 @RunWith(SpringRunner.class)
 public class HealthCheckTest extends BaseIntegrationTest {
-    @Test
-    public void metaHealthCheckTest() {
-        assertTrue(metaChannel.getWebTarget().path("health/check").request(APPLICATION_JSON)
-            .get(CommonResponse.class).isSuccess());
-    }
+  @Test
+  public void metaHealthCheckTest() {
+    assertTrue(
+        metaChannel
+            .getWebTarget()
+            .path("health/check")
+            .request(APPLICATION_JSON)
+            .get(CommonResponse.class)
+            .isSuccess());
+  }
 
-    @Test
-    public void dataHealthCheckTest() {
-        assertTrue(dataChannel.getWebTarget().path("health/check").request(APPLICATION_JSON)
-            .get(CommonResponse.class).isSuccess());
-    }
+  @Test
+  public void dataHealthCheckTest() {
+    assertTrue(
+        dataChannel
+            .getWebTarget()
+            .path("health/check")
+            .request(APPLICATION_JSON)
+            .get(CommonResponse.class)
+            .isSuccess());
+  }
 
-    @Test
-    public void sessionHealthCheckTest() {
-        assertTrue(sessionChannel.getWebTarget().path("health/check").request(APPLICATION_JSON)
-            .get(CommonResponse.class).isSuccess());
-    }
+  @Test
+  public void sessionHealthCheckTest() {
+    assertTrue(
+        sessionChannel
+            .getWebTarget()
+            .path("health/check")
+            .request(APPLICATION_JSON)
+            .get(CommonResponse.class)
+            .isSuccess());
+  }
 }

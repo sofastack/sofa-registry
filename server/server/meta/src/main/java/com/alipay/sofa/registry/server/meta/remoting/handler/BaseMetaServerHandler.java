@@ -18,10 +18,9 @@ package com.alipay.sofa.registry.server.meta.remoting.handler;
 
 import com.alipay.sofa.registry.common.model.Node;
 import com.alipay.sofa.registry.server.shared.remoting.AbstractServerHandler;
-import org.springframework.beans.factory.annotation.Autowired;
-
 import java.util.concurrent.Executor;
 import java.util.concurrent.ThreadPoolExecutor;
+import org.springframework.beans.factory.annotation.Autowired;
 
 /**
  * @author shangyu.wh
@@ -29,16 +28,15 @@ import java.util.concurrent.ThreadPoolExecutor;
  */
 public abstract class BaseMetaServerHandler<T> extends AbstractServerHandler<T> {
 
-    @Autowired
-    private ThreadPoolExecutor defaultRequestExecutor;
+  @Autowired private ThreadPoolExecutor defaultRequestExecutor;
 
-    @Override
-    public Executor getExecutor() {
-        return defaultRequestExecutor;
-    }
+  @Override
+  public Executor getExecutor() {
+    return defaultRequestExecutor;
+  }
 
-    @Override
-    protected Node.NodeType getConnectNodeType() {
-        return null;
-    }
+  @Override
+  protected Node.NodeType getConnectNodeType() {
+    return null;
+  }
 }

@@ -16,67 +16,66 @@
  */
 package com.alipay.sofa.registry.client.event;
 
-import com.alipay.sofa.registry.client.api.Configurator;
-import com.alipay.sofa.registry.client.api.Subscriber;
-import com.alipay.sofa.registry.client.provider.DefaultRegistryClientConfigBuilder;
-import org.junit.Test;
-
 import static org.junit.Assert.assertFalse;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.alipay.sofa.registry.client.api.Configurator;
+import com.alipay.sofa.registry.client.api.Subscriber;
+import com.alipay.sofa.registry.client.provider.DefaultRegistryClientConfigBuilder;
+import org.junit.Test;
+
 /**
- *
  * @author zhuoyu.sjw
  * @version $Id: LookoutSubscriberTest.java, v 0.1 2018-07-15 23:04 zhuoyu.sjw Exp $$
  */
 public class LookoutSubscriberTest {
 
-    private LookoutSubscriber lookoutSubscriber;
+  private LookoutSubscriber lookoutSubscriber;
 
-    @Test
-    public void isSync() {
-        lookoutSubscriber = new LookoutSubscriber();
-        assertFalse(lookoutSubscriber.isSync());
-    }
+  @Test
+  public void isSync() {
+    lookoutSubscriber = new LookoutSubscriber();
+    assertFalse(lookoutSubscriber.isSync());
+  }
 
-    @Test
-    public void onSubscriberProcessEvent() {
-        lookoutSubscriber = new LookoutSubscriber();
+  @Test
+  public void onSubscriberProcessEvent() {
+    lookoutSubscriber = new LookoutSubscriber();
 
-        SubscriberProcessEvent event = new SubscriberProcessEvent();
-        Subscriber subscriber = mock(Subscriber.class);
-        event.setSubscriber(subscriber);
-        event.setConfig(DefaultRegistryClientConfigBuilder.start().setInstanceId("000001").build());
-        event.setStart(System.currentTimeMillis());
-        event.setEnd(System.currentTimeMillis() + 1);
-        event.setThrowable(null);
+    SubscriberProcessEvent event = new SubscriberProcessEvent();
+    Subscriber subscriber = mock(Subscriber.class);
+    event.setSubscriber(subscriber);
+    event.setConfig(DefaultRegistryClientConfigBuilder.start().setInstanceId("000001").build());
+    event.setStart(System.currentTimeMillis());
+    event.setEnd(System.currentTimeMillis() + 1);
+    event.setThrowable(null);
 
-        when(subscriber.getDataId()).thenReturn("test-dataId");
+    when(subscriber.getDataId()).thenReturn("test-dataId");
 
-        lookoutSubscriber.onEvent(event);
+    lookoutSubscriber.onEvent(event);
 
-        verify(subscriber, times(1)).getDataId();
-    }
+    verify(subscriber, times(1)).getDataId();
+  }
 
-    @Test
-    public void onConfiguratorProcessEvent() {
-        lookoutSubscriber = new LookoutSubscriber();
+  @Test
+  public void onConfiguratorProcessEvent() {
+    lookoutSubscriber = new LookoutSubscriber();
 
-        ConfiguratorProcessEvent event = new ConfiguratorProcessEvent();
-        Configurator configurator = mock(Configurator.class);
-        event.setConfigurator(configurator);
-        event.setConfig(DefaultRegistryClientConfigBuilder.start().setInstanceId("000001").build());
-        event.setStart(System.currentTimeMillis());
-        event.setEnd(System.currentTimeMillis() + 1);
-        event.setThrowable(null);
+    ConfiguratorProcessEvent event = new ConfiguratorProcessEvent();
+    Configurator configurator = mock(Configurator.class);
+    event.setConfigurator(configurator);
+    event.setConfig(DefaultRegistryClientConfigBuilder.start().setInstanceId("000001").build());
+    event.setStart(System.currentTimeMillis());
+    event.setEnd(System.currentTimeMillis() + 1);
+    event.setThrowable(null);
 
-        when(configurator.getDataId()).thenReturn("test-dataId");
+    when(configurator.getDataId()).thenReturn("test-dataId");
 
-        lookoutSubscriber.onEvent(event);
+    lookoutSubscriber.onEvent(event);
 
-        verify(configurator, times(1)).getDataId();
-    }
+    verify(configurator, times(1)).getDataId();
+  }
 }

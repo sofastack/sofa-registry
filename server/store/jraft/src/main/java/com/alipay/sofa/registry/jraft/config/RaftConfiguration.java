@@ -25,7 +25,6 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 /**
- *
  * @author xiaojian.xj
  * @version $Id: JdbcConfiguration.java, v 0.1 2021年01月17日 16:28 xiaojian.xj Exp $
  */
@@ -33,17 +32,16 @@ import org.springframework.context.annotation.Configuration;
 @EnableConfigurationProperties
 public class RaftConfiguration {
 
-    @Configuration
-    public static class RepositoryBeanConfiguration {
-        @Bean
-        public InterfaceAppsRepository interfaceAppsRaftRepository() {
-            return new InterfaceAppsRaftRepository();
-        }
-
-        @Bean
-        public AppRevisionHeartbeatRepository appRevisionHeartbeatRaftRepository() {
-            return new AppRevisionHeartbeatRaftRepository();
-        }
+  @Configuration
+  public static class RepositoryBeanConfiguration {
+    @Bean
+    public InterfaceAppsRepository interfaceAppsRaftRepository() {
+      return new InterfaceAppsRaftRepository();
     }
 
+    @Bean
+    public AppRevisionHeartbeatRepository appRevisionHeartbeatRaftRepository() {
+      return new AppRevisionHeartbeatRaftRepository();
+    }
+  }
 }

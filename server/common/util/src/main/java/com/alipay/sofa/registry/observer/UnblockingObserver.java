@@ -22,5 +22,5 @@ package com.alipay.sofa.registry.observer;
  */
 public interface UnblockingObserver {
 
-	void update(Observable source, Object message);
+  void update(Observable source, Object message);
 }

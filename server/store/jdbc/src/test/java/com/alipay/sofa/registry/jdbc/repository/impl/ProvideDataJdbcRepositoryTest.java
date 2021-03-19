@@ -25,20 +25,21 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 public class ProvideDataJdbcRepositoryTest extends AbstractH2DbTestBase {
 
-    @Autowired
-    private ProvideDataRepository provideDataJdbcRepository;
+  @Autowired private ProvideDataRepository provideDataJdbcRepository;
 
-    @Test
-    public void testPut() {
-        provideDataJdbcRepository.put(getDc(), "key", "val");
-        Assert.assertEquals("val", provideDataJdbcRepository.get(getDc(), "key").getEntity());
-    }
+  @Test
+  public void testPut() {
+    provideDataJdbcRepository.put(getDc(), "key", "val");
+    Assert.assertEquals("val", provideDataJdbcRepository.get(getDc(), "key").getEntity());
+  }
 
-    @Test
-    public void testRemove() {
-        provideDataJdbcRepository.put(getDc(), "key", "val");
-        Assert.assertEquals("val", provideDataJdbcRepository.get(getDc(), "key").getEntity());
-        provideDataJdbcRepository.remove(getDc(), "key");
-        Assert.assertEquals(OperationStatus.NOTFOUND, provideDataJdbcRepository.get(getDc(), "key").getOperationStatus());
-    }
+  @Test
+  public void testRemove() {
+    provideDataJdbcRepository.put(getDc(), "key", "val");
+    Assert.assertEquals("val", provideDataJdbcRepository.get(getDc(), "key").getEntity());
+    provideDataJdbcRepository.remove(getDc(), "key");
+    Assert.assertEquals(
+        OperationStatus.NOTFOUND,
+        provideDataJdbcRepository.get(getDc(), "key").getOperationStatus());
+  }
 }

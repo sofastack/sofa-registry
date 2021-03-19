@@ -25,12 +25,12 @@ import com.alipay.sofa.registry.server.meta.monitor.session.SessionMessageListen
 
 /**
  * @author chen.zhu
- * <p>
- * Nov 23, 2020
+ *     <p>Nov 23, 2020
  */
-public interface SessionServerManager extends Observable, Lifecycle, LeaseManager<SessionNode>, SessionMessageListener {
+public interface SessionServerManager
+    extends Observable, Lifecycle, LeaseManager<SessionNode>, SessionMessageListener {
 
-    VersionedList<SessionNode> getSessionServerMetaInfo();
+  VersionedList<SessionNode> getSessionServerMetaInfo();
 
-    long getEpoch();
+  long getEpoch();
 }

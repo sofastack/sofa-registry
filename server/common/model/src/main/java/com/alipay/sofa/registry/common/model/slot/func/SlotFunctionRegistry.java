@@ -18,28 +18,25 @@ package com.alipay.sofa.registry.common.model.slot.func;
 
 import com.alipay.sofa.registry.common.model.slot.SlotConfig;
 import com.google.common.collect.Maps;
-
 import java.util.Map;
 
 /**
- *
  * @author yuzhi.lyz
  * @version v 0.1 2020-11-28 12:24 yuzhi.lyz Exp $
  */
 public final class SlotFunctionRegistry {
-    private static final Map<String, SlotFunction> funcs = Maps.newConcurrentMap();
+  private static final Map<String, SlotFunction> funcs = Maps.newConcurrentMap();
 
-    static {
-        register(Crc32cSlotFunction.INSTANCE);
-        register(MD5SlotFunction.INSTANCE);
-    }
+  static {
+    register(Crc32cSlotFunction.INSTANCE);
+    register(MD5SlotFunction.INSTANCE);
+  }
 
-    public static void register(SlotFunction func) {
-        funcs.put(func.name(), func);
-    }
+  public static void register(SlotFunction func) {
+    funcs.put(func.name(), func);
+  }
 
-    public static SlotFunction getFunc() {
-        return funcs.get(SlotConfig.FUNC);
-    }
-
+  public static SlotFunction getFunc() {
+    return funcs.get(SlotConfig.FUNC);
+  }
 }

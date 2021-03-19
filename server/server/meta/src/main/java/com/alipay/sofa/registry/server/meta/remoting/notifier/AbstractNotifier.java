@@ -33,7 +33,6 @@ import com.alipay.sofa.registry.util.DefaultExecutorFactory;
 import com.alipay.sofa.registry.util.OsUtils;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Sets;
-
 import java.net.InetSocketAddress;
 import java.util.Collection;
 import java.util.List;
@@ -44,126 +43,129 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * @author chen.zhu
- * <p>
- * Feb 23, 2021 
+ *     <p>Feb 23, 2021
  */
 public abstract class AbstractNotifier<T extends Node> implements Notifier {
 
-    protected final Logger logger    = LoggerFactory.getLogger(getClass());
+  protected final Logger logger = LoggerFactory.getLogger(getClass());
 
-    private Executor       executors = DefaultExecutorFactory.createCachedThreadPoolFactory(
-                                         getClass().getSimpleName(),
-                                         Math.min(4, OsUtils.getCpuCount()), 60 * 1000,
-                                         TimeUnit.MILLISECONDS).create();
+  private Executor executors =
+      DefaultExecutorFactory.createCachedThreadPoolFactory(
+              getClass().getSimpleName(),
+              Math.min(4, OsUtils.getCpuCount()),
+              60 * 1000,
+              TimeUnit.MILLISECONDS)
+          .create();
+
+  @Override
+  public void notifySlotTableChange(SlotTable slotTable) {
+    new NotifyTemplate<SlotTableChangeEvent>()
+        .broadcast(new SlotTableChangeEvent(slotTable.getEpoch()));
+  }
+
+  @Override
+  public void notifyProvideDataChange(ProvideDataChangeEvent event) {
+    new NotifyTemplate<ProvideDataChangeEvent>().broadcast(event);
+  }
+
+  @VisibleForTesting
+  public AbstractNotifier<T> setExecutors(Executor executors) {
+    this.executors = executors;
+    return this;
+  }
+
+  protected abstract NodeExchanger getNodeExchanger();
+
+  protected abstract List<T> getNodes();
+
+  protected abstract NodeConnectManager getNodeConnectManager();
+
+  public final class NotifyTemplate<E> {
+
+    public void broadcast(E event) {
+      NodeConnectManager nodeConnectManager = getNodeConnectManager();
+      Collection<InetSocketAddress> connections = nodeConnectManager.getConnections(null);
+
+      if (connections == null || connections.isEmpty()) {
+        logger.error("Push Node list error! No node connected!");
+        return;
+      }
+
+      List<T> nodes = getNodes();
+
+      if (nodes == null || nodes.isEmpty()) {
+        logger.error("Node list error! No node registered!");
+        return;
+      }
+      Set<String> ipAddresses = Sets.newHashSet();
+      nodes.forEach(node -> ipAddresses.add(node.getNodeUrl().getIpAddress()));
+      new ConcurrentUtils.SafeParaLoop<InetSocketAddress>(executors, connections) {
+        @Override
+        protected void doRun0(InetSocketAddress connection) throws Exception {
+          if (!ipAddresses.contains(connection.getAddress().getHostAddress())) {
+            return;
+          }
+          getNodeExchanger().request(new SimpleRequest<E>(event, connection, executors));
+        }
+      }.run();
+    }
+  }
+
+  private static final class SimpleRequest<E> implements Request<E> {
+
+    private static final Logger logger = LoggerFactory.getLogger(SimpleRequest.class);
+
+    private final E event;
+
+    private final InetSocketAddress connection;
+
+    private final Executor executors;
+
+    public SimpleRequest(E event, InetSocketAddress connection, Executor executors) {
+      this.event = event;
+      this.connection = connection;
+      this.executors = executors;
+    }
 
     @Override
-    public void notifySlotTableChange(SlotTable slotTable) {
-        new NotifyTemplate<SlotTableChangeEvent>().broadcast(new SlotTableChangeEvent(slotTable
-            .getEpoch()));
+    public E getRequestBody() {
+      return event;
     }
 
     @Override
-    public void notifyProvideDataChange(ProvideDataChangeEvent event) {
-        new NotifyTemplate<ProvideDataChangeEvent>().broadcast(event);
-
+    public URL getRequestUrl() {
+      return new URL(connection);
     }
 
-    @VisibleForTesting
-    public AbstractNotifier<T> setExecutors(Executor executors) {
-        this.executors = executors;
-        return this;
-    }
-
-    protected abstract NodeExchanger getNodeExchanger();
-
-    protected abstract List<T> getNodes();
-
-    protected abstract NodeConnectManager getNodeConnectManager();
-
-    public final class NotifyTemplate<E> {
-
-        public void broadcast(E event) {
-            NodeConnectManager nodeConnectManager = getNodeConnectManager();
-            Collection<InetSocketAddress> connections = nodeConnectManager.getConnections(null);
-
-            if (connections == null || connections.isEmpty()) {
-                logger.error("Push Node list error! No node connected!");
-                return;
-            }
-
-            List<T> nodes = getNodes();
-
-            if (nodes == null || nodes.isEmpty()) {
-                logger.error("Node list error! No node registered!");
-                return;
-            }
-            Set<String> ipAddresses = Sets.newHashSet();
-            nodes.forEach(node -> ipAddresses.add(node.getNodeUrl().getIpAddress()));
-            new ConcurrentUtils.SafeParaLoop<InetSocketAddress>(executors, connections) {
-                @Override
-                protected void doRun0(InetSocketAddress connection) throws Exception {
-                    if (!ipAddresses.contains(connection.getAddress().getHostAddress())) {
-                        return;
-                    }
-                    getNodeExchanger().request(new SimpleRequest<E>(event, connection, executors));
-                }
-            }.run();
-        }
-    }
-
-    private final static class SimpleRequest<E> implements Request<E> {
-
-        private final static Logger     logger = LoggerFactory.getLogger(SimpleRequest.class);
-
-        private final E                 event;
-
-        private final InetSocketAddress connection;
-
-        private final Executor          executors;
-
-        public SimpleRequest(E event, InetSocketAddress connection, Executor executors) {
-            this.event = event;
-            this.connection = connection;
-            this.executors = executors;
+    @Override
+    public CallbackHandler getCallBackHandler() {
+      return new CallbackHandler() {
+        @Override
+        public void onCallback(Channel channel, Object message) {
+          logger.info(
+              "[onCallback] notify slot-change succeed, ({}): [{}]",
+              channel != null ? channel.getRemoteAddress() : "unknown channel",
+              message);
         }
 
         @Override
-        public E getRequestBody() {
-            return event;
+        public void onException(Channel channel, Throwable exception) {
+          logger.error(
+              "[onException] notify slot-change failed, ({})",
+              channel != null ? channel.getRemoteAddress() : "unknown channel",
+              exception);
         }
 
         @Override
-        public URL getRequestUrl() {
-            return new URL(connection);
+        public Executor getExecutor() {
+          return executors;
         }
-
-        @Override
-        public CallbackHandler getCallBackHandler() {
-            return new CallbackHandler() {
-                @Override
-                public void onCallback(Channel channel, Object message) {
-                    logger.info("[onCallback] notify slot-change succeed, ({}): [{}]",
-                        channel != null ? channel.getRemoteAddress() : "unknown channel", message);
-                }
-
-                @Override
-                public void onException(Channel channel, Throwable exception) {
-                    logger
-                        .error("[onException] notify slot-change failed, ({})",
-                            channel != null ? channel.getRemoteAddress() : "unknown channel",
-                            exception);
-                }
-
-                @Override
-                public Executor getExecutor() {
-                    return executors;
-                }
-            };
-        }
-
-        @Override
-        public AtomicInteger getRetryTimes() {
-            return new AtomicInteger(3);
-        }
+      };
     }
+
+    @Override
+    public AtomicInteger getRetryTimes() {
+      return new AtomicInteger(3);
+    }
+  }
 }

@@ -16,25 +16,23 @@
  */
 package com.alipay.sofa.registry.util;
 
-import org.junit.Assert;
-import org.junit.Test;
-
 import java.util.HashMap;
 import java.util.Map;
+import org.junit.Assert;
+import org.junit.Test;
 
 /**
  * @author xuanbei
  * @since 2019/3/27
  */
 public class VersionsMapUtilsTest {
-    @Test
-    public void doTest() {
-        Map<String, Long> versionsMap = new HashMap<>();
-        Assert.assertTrue(VersionsMapUtils.checkAndUpdateVersions(versionsMap, "mockDataInfoId",
-            20L));
-        Assert.assertTrue(new VersionsMapUtils().checkAndUpdateVersions(versionsMap,
-            "mockDataInfoId", 30L));
-        Assert.assertFalse(new VersionsMapUtils().checkAndUpdateVersions(versionsMap,
-            "mockDataInfoId", 10L));
-    }
+  @Test
+  public void doTest() {
+    Map<String, Long> versionsMap = new HashMap<>();
+    Assert.assertTrue(VersionsMapUtils.checkAndUpdateVersions(versionsMap, "mockDataInfoId", 20L));
+    Assert.assertTrue(
+        new VersionsMapUtils().checkAndUpdateVersions(versionsMap, "mockDataInfoId", 30L));
+    Assert.assertFalse(
+        new VersionsMapUtils().checkAndUpdateVersions(versionsMap, "mockDataInfoId", 10L));
+  }
 }

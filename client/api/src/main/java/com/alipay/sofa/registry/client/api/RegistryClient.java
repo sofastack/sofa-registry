@@ -23,43 +23,44 @@ import com.alipay.sofa.registry.client.api.registration.SubscriberRegistration;
 
 /**
  * The interface Registry client.
+ *
  * @author zhuoyu.sjw
  * @version $Id : RegistryClient.java, v 0.1 2017-11-20 18:16 zhuoyu.sjw Exp $$
  */
 public interface RegistryClient {
 
-    /**
-     * Register publisher.
-     *
-     * @param registration the registration        
-     * @param data the data     
-     * @return the publisher
-     */
-    Publisher register(PublisherRegistration registration, String... data);
+  /**
+   * Register publisher.
+   *
+   * @param registration the registration
+   * @param data the data
+   * @return the publisher
+   */
+  Publisher register(PublisherRegistration registration, String... data);
 
-    /**
-     * Register multi subscriber multi.
-     *
-     * @param registration the registration        
-     * @return the subscriber multi
-     */
-    Subscriber register(SubscriberRegistration registration);
+  /**
+   * Register multi subscriber multi.
+   *
+   * @param registration the registration
+   * @return the subscriber multi
+   */
+  Subscriber register(SubscriberRegistration registration);
 
-    /**
-     * Register configurator.
-     *
-     * @param registration the registration 
-     * @return the configurator
-     */
-    Configurator register(ConfiguratorRegistration registration);
+  /**
+   * Register configurator.
+   *
+   * @param registration the registration
+   * @return the configurator
+   */
+  Configurator register(ConfiguratorRegistration registration);
 
-    /**
-     * Unregister all publishers or subscribers belong to dataId.
-     *
-     * @param dataId the data id    
-     * @param group registration group, use default group if null   
-     * @param registryType the registry type, publisher or subscriber    
-     * @return unregister total registers
-     */
-    int unregister(String dataId, String group, RegistryType registryType);
+  /**
+   * Unregister all publishers or subscribers belong to dataId.
+   *
+   * @param dataId the data id
+   * @param group registration group, use default group if null
+   * @param registryType the registry type, publisher or subscriber
+   * @return unregister total registers
+   */
+  int unregister(String dataId, String group, RegistryType registryType);
 }

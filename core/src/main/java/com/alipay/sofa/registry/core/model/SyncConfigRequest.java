@@ -19,62 +19,67 @@ package com.alipay.sofa.registry.core.model;
 import java.io.Serializable;
 
 /**
- *
  * @author zhuoyu.sjw
  * @version $Id: SyncConfigRequest.java, v 0.1 2018-03-14 23:06 zhuoyu.sjw Exp $$
  */
 public class SyncConfigRequest implements Serializable {
 
-    private static final long serialVersionUID = -843642420869816713L;
+  private static final long serialVersionUID = -843642420869816713L;
 
-    private String            dataCenter;
+  private String dataCenter;
 
-    private String            zone;
+  private String zone;
 
-    /**
-     * Getter method for property <tt>dataCenter</tt>.
-     *
-     * @return property value of dataCenter
-     */
-    public String getDataCenter() {
-        return dataCenter;
-    }
+  /**
+   * Getter method for property <tt>dataCenter</tt>.
+   *
+   * @return property value of dataCenter
+   */
+  public String getDataCenter() {
+    return dataCenter;
+  }
 
-    /**
-     * Setter method for property <tt>dataCenter</tt>.
-     *
-     * @param dataCenter value to be assigned to property dataCenter
-     */
-    public void setDataCenter(String dataCenter) {
-        this.dataCenter = dataCenter;
-    }
+  /**
+   * Setter method for property <tt>dataCenter</tt>.
+   *
+   * @param dataCenter value to be assigned to property dataCenter
+   */
+  public void setDataCenter(String dataCenter) {
+    this.dataCenter = dataCenter;
+  }
 
-    /**
-     * Getter method for property <tt>zone</tt>.
-     *
-     * @return property value of zone
-     */
-    public String getZone() {
-        return zone;
-    }
+  /**
+   * Getter method for property <tt>zone</tt>.
+   *
+   * @return property value of zone
+   */
+  public String getZone() {
+    return zone;
+  }
 
-    /**
-     * Setter method for property <tt>zone</tt>.
-     *
-     * @param zone value to be assigned to property zone
-     */
-    public void setZone(String zone) {
-        this.zone = zone;
-    }
+  /**
+   * Setter method for property <tt>zone</tt>.
+   *
+   * @param zone value to be assigned to property zone
+   */
+  public void setZone(String zone) {
+    this.zone = zone;
+  }
 
-    /**
-     * To string string.
-     *
-     * @return the string
-     */
-    @Override
-    public String toString() {
-        return "SyncConfigRequest{" + "dataCenter='" + dataCenter + '\'' + ", zone='" + zone + '\''
-               + '}';
-    }
+  /**
+   * To string string.
+   *
+   * @return the string
+   */
+  @Override
+  public String toString() {
+    return "SyncConfigRequest{"
+        + "dataCenter='"
+        + dataCenter
+        + '\''
+        + ", zone='"
+        + zone
+        + '\''
+        + '}';
+  }
 }

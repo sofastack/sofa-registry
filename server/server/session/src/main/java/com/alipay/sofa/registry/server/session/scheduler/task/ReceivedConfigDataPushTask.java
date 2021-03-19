@@ -26,119 +26,133 @@ import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
 import com.alipay.sofa.registry.server.session.node.service.ClientNodeService;
 import com.alipay.sofa.registry.server.session.strategy.ReceivedConfigDataPushTaskStrategy;
 import com.alipay.sofa.registry.task.listener.TaskEvent;
-
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.Executor;
 
 /**
- *
  * @author shangyu.wh
  * @version $Id: SubscriberRegisterPushTask.java, v 0.1 2017-12-11 20:57 shangyu.wh Exp $
  */
 public class ReceivedConfigDataPushTask extends AbstractSessionTask {
 
-    private static final Logger                LOGGER = LoggerFactory.getLogger(
-                                                          ReceivedConfigDataPushTask.class,
-                                                          "[Task]");
+  private static final Logger LOGGER =
+      LoggerFactory.getLogger(ReceivedConfigDataPushTask.class, "[Task]");
 
-    private final SessionServerConfig          sessionServerConfig;
-    private final ClientNodeService            clientNodeService;
-    private ReceivedConfigData                 receivedConfigData;
-    private URL                                url;
-    private ReceivedConfigDataPushTaskStrategy receivedConfigDataPushTaskStrategy;
+  private final SessionServerConfig sessionServerConfig;
+  private final ClientNodeService clientNodeService;
+  private ReceivedConfigData receivedConfigData;
+  private URL url;
+  private ReceivedConfigDataPushTaskStrategy receivedConfigDataPushTaskStrategy;
 
-    public ReceivedConfigDataPushTask(SessionServerConfig sessionServerConfig,
-                                      ClientNodeService clientNodeService,
-                                      ReceivedConfigDataPushTaskStrategy receivedConfigDataPushTaskStrategy) {
-        this.sessionServerConfig = sessionServerConfig;
-        this.clientNodeService = clientNodeService;
-        this.receivedConfigDataPushTaskStrategy = receivedConfigDataPushTaskStrategy;
+  public ReceivedConfigDataPushTask(
+      SessionServerConfig sessionServerConfig,
+      ClientNodeService clientNodeService,
+      ReceivedConfigDataPushTaskStrategy receivedConfigDataPushTaskStrategy) {
+    this.sessionServerConfig = sessionServerConfig;
+    this.clientNodeService = clientNodeService;
+    this.receivedConfigDataPushTaskStrategy = receivedConfigDataPushTaskStrategy;
+  }
+
+  @Override
+  public void execute() {
+
+    if (sessionServerConfig.isStopPushSwitch()) {
+      LOGGER.info(
+          "Stop Push receivedConfigData with switch on! dataId: {},group: {},Instance: {}, url: {}",
+          receivedConfigData.getDataId(),
+          receivedConfigData.getGroup(),
+          receivedConfigData.getInstanceId(),
+          url);
+      return;
     }
 
-    @Override
-    public void execute() {
+    CallbackHandler callbackHandler =
+        new CallbackHandler() {
+          @Override
+          public void onCallback(Channel channel, Object message) {
+            LOGGER.info(
+                "Push receivedConfigData success! dataId: {},group: {},Instance: {}, url: {}",
+                receivedConfigData.getDataId(),
+                receivedConfigData.getGroup(),
+                receivedConfigData.getInstanceId(),
+                url);
+          }
 
-        if (sessionServerConfig.isStopPushSwitch()) {
-            LOGGER
-                .info(
-                    "Stop Push receivedConfigData with switch on! dataId: {},group: {},Instance: {}, url: {}",
-                    receivedConfigData.getDataId(), receivedConfigData.getGroup(),
-                    receivedConfigData.getInstanceId(), url);
-            return;
-        }
+          @Override
+          public void onException(Channel channel, Throwable exception) {
+            LOGGER.error(
+                "Push receivedConfigData error! dataId: {},group: {},Instance: {}, url: {}",
+                receivedConfigData.getDataId(),
+                receivedConfigData.getGroup(),
+                receivedConfigData.getInstanceId(),
+                url);
+          }
 
-        CallbackHandler callbackHandler = new CallbackHandler() {
-            @Override
-            public void onCallback(Channel channel, Object message) {
-                LOGGER.info(
-                    "Push receivedConfigData success! dataId: {},group: {},Instance: {}, url: {}",
-                    receivedConfigData.getDataId(), receivedConfigData.getGroup(),
-                    receivedConfigData.getInstanceId(), url);
-            }
-
-            @Override
-            public void onException(Channel channel, Throwable exception) {
-                LOGGER.error(
-                    "Push receivedConfigData error! dataId: {},group: {},Instance: {}, url: {}",
-                    receivedConfigData.getDataId(), receivedConfigData.getGroup(),
-                    receivedConfigData.getInstanceId(), url);
-            }
-
-            @Override
-            public Executor getExecutor() {
-                return null;
-            }
+          @Override
+          public Executor getExecutor() {
+            return null;
+          }
         };
 
-        clientNodeService.pushWithCallback(
-            receivedConfigDataPushTaskStrategy.convert2PushData(receivedConfigData, url), url,
-            callbackHandler);
+    clientNodeService.pushWithCallback(
+        receivedConfigDataPushTaskStrategy.convert2PushData(receivedConfigData, url),
+        url,
+        callbackHandler);
+  }
+
+  @Override
+  public long getExpiryTime() {
+    // TODO CONFIG
+    return -1;
+  }
+
+  @Override
+  public void setTaskEvent(TaskEvent taskEvent) {
+
+    // taskId create from event
+    if (taskEvent.getTaskId() != null) {
+      setTaskId(taskEvent.getTaskId());
     }
 
-    @Override
-    public long getExpiryTime() {
-        //TODO CONFIG
-        return -1;
+    Object obj = taskEvent.getEventObj();
+
+    if (obj instanceof Map) {
+
+      Map<ReceivedConfigData, URL> parameter = (Map<ReceivedConfigData, URL>) obj;
+
+      if (parameter.size() == 1) {
+
+        Entry<ReceivedConfigData, URL> entry = (parameter.entrySet()).iterator().next();
+        ReceivedConfigData receivedData = entry.getKey();
+        URL url = entry.getValue();
+
+        this.receivedConfigData = receivedData;
+        this.url = url;
+      } else {
+        throw new IllegalArgumentException("Input task event object error!");
+      }
     }
+  }
 
-    @Override
-    public void setTaskEvent(TaskEvent taskEvent) {
+  @Override
+  public String toString() {
+    return "RECEIVED_DATA_CONFIG_PUSH_TASK{"
+        + "taskId='"
+        + getTaskId()
+        + '\''
+        + ", receivedConfigData="
+        + receivedConfigData
+        + ", url="
+        + url
+        + ", retry='"
+        + sessionServerConfig.getPushTaskRetryTimes()
+        + '\''
+        + '}';
+  }
 
-        //taskId create from event
-        if (taskEvent.getTaskId() != null) {
-            setTaskId(taskEvent.getTaskId());
-        }
-
-        Object obj = taskEvent.getEventObj();
-
-        if (obj instanceof Map) {
-
-            Map<ReceivedConfigData, URL> parameter = (Map<ReceivedConfigData, URL>) obj;
-
-            if (parameter.size() == 1) {
-
-                Entry<ReceivedConfigData, URL> entry = (parameter.entrySet()).iterator().next();
-                ReceivedConfigData receivedData = entry.getKey();
-                URL url = entry.getValue();
-
-                this.receivedConfigData = receivedData;
-                this.url = url;
-            } else {
-                throw new IllegalArgumentException("Input task event object error!");
-            }
-        }
-    }
-
-    @Override
-    public String toString() {
-        return "RECEIVED_DATA_CONFIG_PUSH_TASK{" + "taskId='" + getTaskId() + '\''
-               + ", receivedConfigData=" + receivedConfigData + ", url=" + url + ", retry='"
-               + sessionServerConfig.getPushTaskRetryTimes() + '\'' + '}';
-    }
-
-    @Override
-    public boolean checkRetryTimes() {
-        return checkRetryTimes(sessionServerConfig.getPushTaskRetryTimes());
-    }
+  @Override
+  public boolean checkRetryTimes() {
+    return checkRetryTimes(sessionServerConfig.getPushTaskRetryTimes());
+  }
 }

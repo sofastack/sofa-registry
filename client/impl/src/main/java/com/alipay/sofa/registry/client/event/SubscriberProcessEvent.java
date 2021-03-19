@@ -22,117 +22,124 @@ import com.alipay.sofa.registry.client.api.model.Event;
 
 /**
  * The type Subscriber process event.
+ *
  * @author zhuoyu.sjw
  * @version $Id : SubscriberProcessEvent.java, v 0.1 2018-07-13 18:40 zhuoyu.sjw Exp $$
  */
 public class SubscriberProcessEvent implements Event {
 
-    private Subscriber           subscriber;
+  private Subscriber subscriber;
 
-    private RegistryClientConfig config;
+  private RegistryClientConfig config;
 
-    private long                 start;
+  private long start;
 
-    private long                 end;
+  private long end;
 
-    private Throwable            throwable;
+  private Throwable throwable;
 
-    /**
-     * Getter method for property <tt>subscriber</tt>.
-     *
-     * @return property value of subscriber
-     */
-    public Subscriber getSubscriber() {
-        return subscriber;
-    }
+  /**
+   * Getter method for property <tt>subscriber</tt>.
+   *
+   * @return property value of subscriber
+   */
+  public Subscriber getSubscriber() {
+    return subscriber;
+  }
 
-    /**
-     * Setter method for property <tt>subscriber</tt>.
-     *
-     * @param subscriber value to be assigned to property subscriber
-     */
-    public void setSubscriber(Subscriber subscriber) {
-        this.subscriber = subscriber;
-    }
+  /**
+   * Setter method for property <tt>subscriber</tt>.
+   *
+   * @param subscriber value to be assigned to property subscriber
+   */
+  public void setSubscriber(Subscriber subscriber) {
+    this.subscriber = subscriber;
+  }
 
-    /**
-     * Getter method for property <tt>config</tt>.
-     *
-     * @return property value of config
-     */
-    public RegistryClientConfig getConfig() {
-        return config;
-    }
+  /**
+   * Getter method for property <tt>config</tt>.
+   *
+   * @return property value of config
+   */
+  public RegistryClientConfig getConfig() {
+    return config;
+  }
 
-    /**
-     * Setter method for property <tt>config</tt>.
-     *
-     * @param config value to be assigned to property config
-     */
-    public void setConfig(RegistryClientConfig config) {
-        this.config = config;
-    }
+  /**
+   * Setter method for property <tt>config</tt>.
+   *
+   * @param config value to be assigned to property config
+   */
+  public void setConfig(RegistryClientConfig config) {
+    this.config = config;
+  }
 
-    /**
-     * Getter method for property <tt>start</tt>.
-     *
-     * @return property value of start
-     */
-    public long getStart() {
-        return start;
-    }
+  /**
+   * Getter method for property <tt>start</tt>.
+   *
+   * @return property value of start
+   */
+  public long getStart() {
+    return start;
+  }
 
-    /**
-     * Setter method for property <tt>start</tt>.
-     *
-     * @param start value to be assigned to property start
-     */
-    public void setStart(long start) {
-        this.start = start;
-    }
+  /**
+   * Setter method for property <tt>start</tt>.
+   *
+   * @param start value to be assigned to property start
+   */
+  public void setStart(long start) {
+    this.start = start;
+  }
 
-    /**
-     * Getter method for property <tt>end</tt>.
-     *
-     * @return property value of end
-     */
-    public long getEnd() {
-        return end;
-    }
+  /**
+   * Getter method for property <tt>end</tt>.
+   *
+   * @return property value of end
+   */
+  public long getEnd() {
+    return end;
+  }
 
-    /**
-     * Setter method for property <tt>end</tt>.
-     *
-     * @param end value to be assigned to property end
-     */
-    public void setEnd(long end) {
-        this.end = end;
-    }
+  /**
+   * Setter method for property <tt>end</tt>.
+   *
+   * @param end value to be assigned to property end
+   */
+  public void setEnd(long end) {
+    this.end = end;
+  }
 
-    /**
-     * Getter method for property <tt>throwable</tt>.
-     *
-     * @return property value of throwable
-     */
-    public Throwable getThrowable() {
-        return throwable;
-    }
+  /**
+   * Getter method for property <tt>throwable</tt>.
+   *
+   * @return property value of throwable
+   */
+  public Throwable getThrowable() {
+    return throwable;
+  }
 
-    /**
-     * Setter method for property <tt>throwable</tt>.
-     *
-     * @param throwable value to be assigned to property throwable
-     */
-    public void setThrowable(Throwable throwable) {
-        this.throwable = throwable;
-    }
+  /**
+   * Setter method for property <tt>throwable</tt>.
+   *
+   * @param throwable value to be assigned to property throwable
+   */
+  public void setThrowable(Throwable throwable) {
+    this.throwable = throwable;
+  }
 
-    /**
-     * @see Object#toString()
-     */
-    @Override
-    public String toString() {
-        return "SubscriberProcessEvent{" + "subscriber=" + subscriber + ", start=" + start
-               + ", end=" + end + ", throwable=" + throwable + '}';
-    }
+  /** @see Object#toString() */
+  @Override
+  public String toString() {
+    return "SubscriberProcessEvent{"
+        + "subscriber="
+        + subscriber
+        + ", start="
+        + start
+        + ", end="
+        + end
+        + ", throwable="
+        + throwable
+        + '}';
+  }
 }

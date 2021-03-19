@@ -20,34 +20,34 @@ import com.alipay.remoting.BizContext;
 import com.alipay.remoting.DefaultBizContext;
 import com.alipay.remoting.InvokeContext;
 import com.alipay.remoting.RemotingContext;
+import java.util.concurrent.ConcurrentHashMap;
 import org.junit.Assert;
 import org.junit.Test;
-
-import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * @author xuanbei
  * @since 2019/3/26
  */
 public class BoltChannelUtilTest {
-    @Test
-    public void testGetBoltCustomSerializer() {
-        Assert.assertNull(BoltChannelUtil.getBoltCustomSerializer(new MockChannel()));
-        BoltChannel boltChannel = new BoltChannel();
-        InvokeContext invokeContext = new InvokeContext();
-        invokeContext.put(InvokeContext.BOLT_CUSTOM_SERIALIZER, new Object());
-        RemotingContext remotingContext = new RemotingContext(new MockChannelHandlerContext(),
-            invokeContext, false, new ConcurrentHashMap<>());
-        BizContext bizContext = new DefaultBizContext(remotingContext);
-        boltChannel.setBizContext(bizContext);
-        boolean isException = false;
-        try {
-            BoltChannelUtil.getBoltCustomSerializer(boltChannel);
-        } catch (Throwable r) {
-            isException = true;
-        }
-        Assert.assertTrue(isException);
-        invokeContext.put(InvokeContext.BOLT_CUSTOM_SERIALIZER, new Byte("3"));
-        Assert.assertEquals(new Byte("3"), BoltChannelUtil.getBoltCustomSerializer(boltChannel));
+  @Test
+  public void testGetBoltCustomSerializer() {
+    Assert.assertNull(BoltChannelUtil.getBoltCustomSerializer(new MockChannel()));
+    BoltChannel boltChannel = new BoltChannel();
+    InvokeContext invokeContext = new InvokeContext();
+    invokeContext.put(InvokeContext.BOLT_CUSTOM_SERIALIZER, new Object());
+    RemotingContext remotingContext =
+        new RemotingContext(
+            new MockChannelHandlerContext(), invokeContext, false, new ConcurrentHashMap<>());
+    BizContext bizContext = new DefaultBizContext(remotingContext);
+    boltChannel.setBizContext(bizContext);
+    boolean isException = false;
+    try {
+      BoltChannelUtil.getBoltCustomSerializer(boltChannel);
+    } catch (Throwable r) {
+      isException = true;
     }
+    Assert.assertTrue(isException);
+    invokeContext.put(InvokeContext.BOLT_CUSTOM_SERIALIZER, new Byte("3"));
+    Assert.assertEquals(new Byte("3"), BoltChannelUtil.getBoltCustomSerializer(boltChannel));
+  }
 }

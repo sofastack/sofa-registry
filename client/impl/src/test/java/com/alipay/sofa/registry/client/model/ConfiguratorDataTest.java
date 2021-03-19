@@ -20,18 +20,15 @@ import com.alipay.sofa.registry.core.model.DataBox;
 import org.junit.Assert;
 import org.junit.Test;
 
-/**
- * @author <a href="mailto:zhanggeng.zg@antfin.com">GengZhang</a>
- */
+/** @author <a href="mailto:zhanggeng.zg@antfin.com">GengZhang</a> */
 public class ConfiguratorDataTest {
 
-    @Test
-    public void testAll() {
-        ConfiguratorData data = new ConfiguratorData();
-        data.setDataBox(new DataBox());
-        data.setVersion(1234L);
-        Assert.assertNotNull(data.getDataBox());
-        Assert.assertTrue(1234L == data.getVersion());
-    }
-
+  @Test
+  public void testAll() {
+    ConfiguratorData data = new ConfiguratorData();
+    data.setDataBox(new DataBox());
+    data.setVersion(1234L);
+    Assert.assertNotNull(data.getDataBox());
+    Assert.assertTrue(1234L == data.getVersion());
+  }
 }

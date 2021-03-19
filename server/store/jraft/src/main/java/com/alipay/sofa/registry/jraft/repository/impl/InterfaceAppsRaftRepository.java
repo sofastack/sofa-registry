@@ -22,7 +22,6 @@ import com.alipay.sofa.registry.core.model.AppRevisionInterface;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.store.api.repository.InterfaceAppsRepository;
-
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -31,37 +30,34 @@ import java.util.concurrent.ConcurrentHashMap;
  * @version $Id: InterfaceAppsRaftRepository.java, v 0.1 2021年01月24日 19:44 xiaojian.xj Exp $
  */
 public class InterfaceAppsRaftRepository implements InterfaceAppsRepository, RaftRepository {
-    protected static final Logger                 LOG           = LoggerFactory
-                                                                    .getLogger(InterfaceAppsRaftRepository.class);
+  protected static final Logger LOG = LoggerFactory.getLogger(InterfaceAppsRaftRepository.class);
 
-    /**
-     * map: <interface, appNames>
-     */
-    protected final Map<String, InterfaceMapping> interfaceApps = new ConcurrentHashMap<>();
+  /** map: <interface, appNames> */
+  protected final Map<String, InterfaceMapping> interfaceApps = new ConcurrentHashMap<>();
 
-    @Override
-    public void loadMetadata(String dataCenter) {
-        //FIXME
+  @Override
+  public void loadMetadata(String dataCenter) {
+    // FIXME
+  }
+
+  @Override
+  public InterfaceMapping getAppNames(String dataCenter, String dataInfoId) {
+    final InterfaceMapping ret = interfaceApps.get(dataInfoId);
+    return ret;
+  }
+
+  public void onNewRevision(AppRevision rev) {
+
+    if (rev.getInterfaceMap() == null) {
+      LOG.warn("AppRevision no interface, {}", rev);
+      return;
     }
 
-    @Override
-    public InterfaceMapping getAppNames(String dataCenter, String dataInfoId) {
-        final InterfaceMapping ret = interfaceApps.get(dataInfoId);
-        return ret;
+    for (Map.Entry<String, AppRevisionInterface> entry : rev.getInterfaceMap().entrySet()) {
+      String serviceId = entry.getKey();
+      InterfaceMapping interfaceMapping =
+          interfaceApps.computeIfAbsent(serviceId, k -> new InterfaceMapping(-1));
+      interfaceMapping.getApps().add(rev.getAppName());
     }
-
-    public void onNewRevision(AppRevision rev) {
-
-        if (rev.getInterfaceMap() == null) {
-            LOG.warn("AppRevision no interface, {}", rev);
-            return;
-        }
-
-        for (Map.Entry<String, AppRevisionInterface> entry : rev.getInterfaceMap().entrySet()) {
-            String serviceId = entry.getKey();
-            InterfaceMapping interfaceMapping = interfaceApps.computeIfAbsent(serviceId, k -> new InterfaceMapping(-1));
-            interfaceMapping.getApps().add(rev.getAppName());
-        }
-
-    }
+  }
 }

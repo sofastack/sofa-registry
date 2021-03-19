@@ -18,100 +18,97 @@ package com.alipay.sofa.registry.lifecycle;
 
 /**
  * @author chen.zhu
- * <p>
- * Nov 13, 2020
+ *     <p>Nov 13, 2020
  */
 public interface LifecycleState {
 
-    boolean isEmpty();
+  boolean isEmpty();
 
-    boolean isInitializing();
+  boolean isInitializing();
 
-    boolean isInitialized();
+  boolean isInitialized();
 
-    boolean isStarting();
+  boolean isStarting();
 
-    boolean isStarted();
+  boolean isStarted();
 
-    boolean isStopping();
+  boolean isStopping();
 
-    boolean isStopped();
+  boolean isStopped();
 
-    boolean isPositivelyStopped();
+  boolean isPositivelyStopped();
 
-    boolean isDisposing();
+  boolean isDisposing();
 
-    boolean isDisposed();
+  boolean isDisposed();
 
-    boolean isPositivelyDisposed();
+  boolean isPositivelyDisposed();
 
-    LifecyclePhase getPhase();
+  LifecyclePhase getPhase();
 
-    void setPhase(LifecyclePhase phase);
+  void setPhase(LifecyclePhase phase);
 
-    /**
-     * rollback to previous state
-     */
-    void rollback(Exception e);
+  /** rollback to previous state */
+  void rollback(Exception e);
 
-    boolean canInitialize();
+  boolean canInitialize();
 
-    boolean canStart();
+  boolean canStart();
 
-    boolean canStop();
+  boolean canStop();
 
-    boolean canDispose();
+  boolean canDispose();
 
-    enum LifecyclePhase {
-        INITIALIZING {
-            @Override
-            LifecyclePhase next() {
-                return INITIALIZED;
-            }
-        },
-        INITIALIZED {
-            @Override
-            LifecyclePhase next() {
-                return STARTING;
-            }
-        },
-        STARTING {
-            @Override
-            LifecyclePhase next() {
-                return STARTED;
-            }
-        },
-        STARTED {
-            @Override
-            LifecyclePhase next() {
-                return STOPPING;
-            }
-        },
-        STOPPING {
-            @Override
-            LifecyclePhase next() {
-                return STOPPED;
-            }
-        },
-        STOPPED {
-            @Override
-            LifecyclePhase next() {
-                return DISPOSING;
-            }
-        },
-        DISPOSING {
-            @Override
-            LifecyclePhase next() {
-                return DISPOSED;
-            }
-        },
-        DISPOSED {
-            @Override
-            LifecyclePhase next() {
-                return INITIALIZING;
-            }
-        };
+  enum LifecyclePhase {
+    INITIALIZING {
+      @Override
+      LifecyclePhase next() {
+        return INITIALIZED;
+      }
+    },
+    INITIALIZED {
+      @Override
+      LifecyclePhase next() {
+        return STARTING;
+      }
+    },
+    STARTING {
+      @Override
+      LifecyclePhase next() {
+        return STARTED;
+      }
+    },
+    STARTED {
+      @Override
+      LifecyclePhase next() {
+        return STOPPING;
+      }
+    },
+    STOPPING {
+      @Override
+      LifecyclePhase next() {
+        return STOPPED;
+      }
+    },
+    STOPPED {
+      @Override
+      LifecyclePhase next() {
+        return DISPOSING;
+      }
+    },
+    DISPOSING {
+      @Override
+      LifecyclePhase next() {
+        return DISPOSED;
+      }
+    },
+    DISPOSED {
+      @Override
+      LifecyclePhase next() {
+        return INITIALIZING;
+      }
+    };
 
-        abstract LifecyclePhase next();
-    }
+    abstract LifecyclePhase next();
+  }
 }

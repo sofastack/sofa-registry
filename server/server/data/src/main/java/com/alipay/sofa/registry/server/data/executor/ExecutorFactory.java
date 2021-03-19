@@ -16,6 +16,7 @@
  */
 package com.alipay.sofa.registry.server.data.executor;
 
+import com.alipay.sofa.registry.util.NamedThreadFactory;
 import java.util.concurrent.Executor;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ScheduledExecutorService;
@@ -23,48 +24,49 @@ import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
-import com.alipay.sofa.registry.util.NamedThreadFactory;
-
 /**
  * the factory to create executor
- * 
+ *
  * @author qian.lqlq
  * @version $Id: ExecutorFactory.java, v 0.1 2018-03-08 14:50 qian.lqlq Exp $
  */
 public class ExecutorFactory {
 
-	/**
-	 * new thread pool
-	 * 
-	 * @param size
-	 * @param name
-	 * @return
-	 */
-	public static Executor newFixedThreadPool(int size, String name) {
-        return new ThreadPoolExecutor(size, size, 0L, TimeUnit.MILLISECONDS,
-            new LinkedBlockingQueue<>(), new NamedThreadFactory(name));
-    }
-	/**
-	 * new scheduled thread pool
-	 * 
-	 * @param size
-	 * @param name
-	 * @return
-	 */
-	public static ScheduledExecutorService newScheduledThreadPool(int size,
-			String name) {
-		return new ScheduledThreadPoolExecutor(size, new NamedThreadFactory(
-				name));
-	}
+  /**
+   * new thread pool
+   *
+   * @param size
+   * @param name
+   * @return
+   */
+  public static Executor newFixedThreadPool(int size, String name) {
+    return new ThreadPoolExecutor(
+        size,
+        size,
+        0L,
+        TimeUnit.MILLISECONDS,
+        new LinkedBlockingQueue<>(),
+        new NamedThreadFactory(name));
+  }
+  /**
+   * new scheduled thread pool
+   *
+   * @param size
+   * @param name
+   * @return
+   */
+  public static ScheduledExecutorService newScheduledThreadPool(int size, String name) {
+    return new ScheduledThreadPoolExecutor(size, new NamedThreadFactory(name));
+  }
 
-	/**
-	 * new single thread executor
-	 * 
-	 * @param name
-	 * @return
-	 */
-	public static Executor newSingleThreadExecutor(String name) {
-        return new ThreadPoolExecutor(1, 1, 0L, TimeUnit.MILLISECONDS, new LinkedBlockingQueue<>(),
-            new NamedThreadFactory(name));
-    }
+  /**
+   * new single thread executor
+   *
+   * @param name
+   * @return
+   */
+  public static Executor newSingleThreadExecutor(String name) {
+    return new ThreadPoolExecutor(
+        1, 1, 0L, TimeUnit.MILLISECONDS, new LinkedBlockingQueue<>(), new NamedThreadFactory(name));
+  }
 }

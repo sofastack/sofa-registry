@@ -31,67 +31,65 @@ import com.alipay.sofa.registry.server.session.slot.SlotTableCache;
 import com.alipay.sofa.registry.server.session.store.DataStore;
 import com.alipay.sofa.registry.server.shared.env.ServerEnv;
 import com.alipay.sofa.registry.server.shared.remoting.AbstractServerHandler;
-import org.springframework.beans.factory.annotation.Autowired;
-
 import java.util.Map;
 import java.util.concurrent.Executor;
+import org.springframework.beans.factory.annotation.Autowired;
 
 /**
- *
  * @author yuzhi.lyz
  * @version v 0.1 2020-11-06 15:41 yuzhi.lyz Exp $
  */
-public class DataSlotDiffDigestRequestHandler extends
-                                             AbstractServerHandler<DataSlotDiffDigestRequest> {
-    private static final Logger LOGGER = LoggerFactory
-                                           .getLogger(DataSlotDiffDigestRequestHandler.class);
+public class DataSlotDiffDigestRequestHandler
+    extends AbstractServerHandler<DataSlotDiffDigestRequest> {
+  private static final Logger LOGGER =
+      LoggerFactory.getLogger(DataSlotDiffDigestRequestHandler.class);
 
-    @Autowired
-    private ExecutorManager     executorManager;
+  @Autowired private ExecutorManager executorManager;
 
-    @Autowired
-    private DataStore           sessionDataStore;
+  @Autowired private DataStore sessionDataStore;
 
-    @Autowired
-    private SlotTableCache      slotTableCache;
+  @Autowired private SlotTableCache slotTableCache;
 
-    @Override
-    public Object doHandle(Channel channel, DataSlotDiffDigestRequest request) {
-        try {
-            DataSlotDiffDigestResult result = calcDiffResult(request.getSlotId(),
-                request.getDatumDigest(),
-                sessionDataStore.getDataInfoIdPublishers(request.getSlotId()));
-            result.setSlotTableEpoch(slotTableCache.getEpoch());
-            result.setSessionProcessId(ServerEnv.PROCESS_ID);
-            return new GenericResponse().fillSucceed(result);
-        } catch (Throwable e) {
-            LOGGER.error("DiffSync dataInfoIds Request error for slot {}", request.getSlotId(), e);
-            throw new RuntimeException("DiffSync Request error!", e);
-        }
+  @Override
+  public Object doHandle(Channel channel, DataSlotDiffDigestRequest request) {
+    try {
+      DataSlotDiffDigestResult result =
+          calcDiffResult(
+              request.getSlotId(),
+              request.getDatumDigest(),
+              sessionDataStore.getDataInfoIdPublishers(request.getSlotId()));
+      result.setSlotTableEpoch(slotTableCache.getEpoch());
+      result.setSessionProcessId(ServerEnv.PROCESS_ID);
+      return new GenericResponse().fillSucceed(result);
+    } catch (Throwable e) {
+      LOGGER.error("DiffSync dataInfoIds Request error for slot {}", request.getSlotId(), e);
+      throw new RuntimeException("DiffSync Request error!", e);
     }
+  }
 
-    private DataSlotDiffDigestResult calcDiffResult(int targetSlot,
-                                                    Map<String, DatumDigest> digestMap,
-                                                    Map<String, Map<String, Publisher>> existingPublishers) {
+  private DataSlotDiffDigestResult calcDiffResult(
+      int targetSlot,
+      Map<String, DatumDigest> digestMap,
+      Map<String, Map<String, Publisher>> existingPublishers) {
 
-        DataSlotDiffDigestResult result = DataSlotDiffUtils.diffDigestPublishers(digestMap,
-            existingPublishers);
-        DataSlotDiffUtils.logDiffResult(result, targetSlot);
-        return result;
-    }
+    DataSlotDiffDigestResult result =
+        DataSlotDiffUtils.diffDigestPublishers(digestMap, existingPublishers);
+    DataSlotDiffUtils.logDiffResult(result, targetSlot);
+    return result;
+  }
 
-    @Override
-    protected Node.NodeType getConnectNodeType() {
-        return Node.NodeType.DATA;
-    }
+  @Override
+  protected Node.NodeType getConnectNodeType() {
+    return Node.NodeType.DATA;
+  }
 
-    @Override
-    public Executor getExecutor() {
-        return executorManager.getDataSlotSyncRequestExecutor();
-    }
+  @Override
+  public Executor getExecutor() {
+    return executorManager.getDataSlotSyncRequestExecutor();
+  }
 
-    @Override
-    public Class interest() {
-        return DataSlotDiffDigestRequest.class;
-    }
+  @Override
+  public Class interest() {
+    return DataSlotDiffDigestRequest.class;
+  }
 }

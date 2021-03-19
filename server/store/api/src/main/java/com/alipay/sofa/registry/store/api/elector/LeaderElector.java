@@ -20,59 +20,61 @@ import com.alipay.sofa.registry.net.NetUtil;
 
 /**
  * @author chen.zhu
- * <p>
- * Mar 09, 2021
+ *     <p>Mar 09, 2021
  */
 public interface LeaderElector {
 
-    void registerLeaderAware(LeaderAware leaderAware);
+  void registerLeaderAware(LeaderAware leaderAware);
 
-    default String myself() {
-        return NetUtil.getLocalAddress().getHostAddress();
-    }
+  default String myself() {
+    return NetUtil.getLocalAddress().getHostAddress();
+  }
 
-    /**
-     * start compete leader
-     * @return
-     */
-    void change2Follow();
+  /**
+   * start compete leader
+   *
+   * @return
+   */
+  void change2Follow();
 
-    /**
-     * stop compete leader
-     * @return
-     */
-    void change2Observer();
+  /**
+   * stop compete leader
+   *
+   * @return
+   */
+  void change2Observer();
 
-    /**
-     * Am i elector boolean.
-     *
-     * @return the boolean
-     */
-    boolean amILeader();
+  /**
+   * Am i elector boolean.
+   *
+   * @return the boolean
+   */
+  boolean amILeader();
 
-    /**
-     * Gets get elector.
-     *
-     * @return the get elector
-     */
-    String getLeader();
+  /**
+   * Gets get elector.
+   *
+   * @return the get elector
+   */
+  String getLeader();
 
+  /**
+   * Gets get elector epoch.
+   *
+   * @return the get elector epoch
+   */
+  long getLeaderEpoch();
 
-    /**
-     * Gets get elector epoch.
-     *
-     * @return the get elector epoch
-     */
-    long getLeaderEpoch();
+  enum ElectorRole {
+    LEADER,
+    FOLLOWER,
+    ;
+  }
 
-
-    enum ElectorRole {
-        LEADER, FOLLOWER,;
-    }
-
-    enum ElectorState {
-        INIT, COMPETING, STOP,;
-    }
-
-
+  enum ElectorState {
+    INIT,
+    COMPETING,
+    STOP,
+    ;
+  }
 }

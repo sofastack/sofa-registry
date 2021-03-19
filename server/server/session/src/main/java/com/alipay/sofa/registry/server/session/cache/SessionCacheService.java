@@ -16,119 +16,113 @@
  */
 package com.alipay.sofa.registry.server.session.cache;
 
-import java.util.Map;
-import java.util.concurrent.TimeUnit;
-
-import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
-import com.google.common.cache.*;
-import org.springframework.beans.factory.annotation.Autowired;
-
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
-
+import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
+import com.google.common.cache.*;
+import java.util.Map;
+import java.util.concurrent.TimeUnit;
 import javax.annotation.PostConstruct;
+import org.springframework.beans.factory.annotation.Autowired;
 
 /**
- *
  * @author shangyu.wh
  * @version $Id: CacheService.java, v 0.1 2017-12-06 18:22 shangyu.wh Exp $
  */
 public class SessionCacheService implements CacheService {
-    private static final Logger         CACHE_LOGGER = LoggerFactory.getLogger("CACHE-GEN");
-    private static final Logger         LOGGER       = LoggerFactory
-                                                         .getLogger(SessionCacheService.class);
+  private static final Logger CACHE_LOGGER = LoggerFactory.getLogger("CACHE-GEN");
+  private static final Logger LOGGER = LoggerFactory.getLogger(SessionCacheService.class);
 
-    private LoadingCache<Key, Value>    readWriteCacheMap;
-    @Autowired
-    private SessionServerConfig         sessionServerConfig;
-    /**
-     * injectQ
-     */
-    private Map<String, CacheGenerator> cacheGenerators;
+  private LoadingCache<Key, Value> readWriteCacheMap;
+  @Autowired private SessionServerConfig sessionServerConfig;
+  /** injectQ */
+  private Map<String, CacheGenerator> cacheGenerators;
 
-    @PostConstruct
-    public void init() {
-        this.readWriteCacheMap = CacheBuilder.newBuilder()
+  @PostConstruct
+  public void init() {
+    this.readWriteCacheMap =
+        CacheBuilder.newBuilder()
             .maximumSize(sessionServerConfig.getCacheDatumMaxNums())
             .expireAfterWrite(sessionServerConfig.getCacheDatumExpireSecs(), TimeUnit.SECONDS)
-            .removalListener(new RemoveListener()).build(new CacheLoader<Key, Value>() {
-                @Override
-                public Value load(Key key) {
+            .removalListener(new RemoveListener())
+            .build(
+                new CacheLoader<Key, Value>() {
+                  @Override
+                  public Value load(Key key) {
                     return generatePayload(key);
-                }
-            });
-    }
+                  }
+                });
+  }
 
-    private final class RemoveListener implements RemovalListener<Key, Value> {
+  private final class RemoveListener implements RemovalListener<Key, Value> {
 
-        @Override
-        public void onRemoval(RemovalNotification<Key, Value> notification) {
-            final RemovalCause cause = notification.getCause();
-            if (cause == RemovalCause.SIZE || cause == RemovalCause.COLLECTED) {
-                Key key = notification.getKey();
-                EntityType entityType = key.getEntityType();
-                if (entityType instanceof DatumKey) {
-                    DatumKey datumKey = (DatumKey) entityType;
-                    CACHE_LOGGER.info("remove,{},{},{}", datumKey.getDataInfoId(),
-                        datumKey.getDataCenter(), cause);
-                }
-            }
-        }
-    }
-
-    private Value generatePayload(Key key) {
-        if (key == null || key.getEntityType() == null) {
-            throw new IllegalArgumentException("Generator key input error!");
-        }
-
+    @Override
+    public void onRemoval(RemovalNotification<Key, Value> notification) {
+      final RemovalCause cause = notification.getCause();
+      if (cause == RemovalCause.SIZE || cause == RemovalCause.COLLECTED) {
+        Key key = notification.getKey();
         EntityType entityType = key.getEntityType();
-        CacheGenerator cacheGenerator = cacheGenerators.get(entityType.getClass().getName());
-        return cacheGenerator.generatePayload(key);
-    }
-
-    @Override
-    public Value getValue(final Key key) throws CacheAccessException {
-        try {
-            return readWriteCacheMap.get(key);
-        } catch (Throwable e) {
-            String msg = "Cannot get value for key is:" + key;
-            throw new CacheAccessException(msg, e);
+        if (entityType instanceof DatumKey) {
+          DatumKey datumKey = (DatumKey) entityType;
+          CACHE_LOGGER.info(
+              "remove,{},{},{}", datumKey.getDataInfoId(), datumKey.getDataCenter(), cause);
         }
+      }
+    }
+  }
+
+  private Value generatePayload(Key key) {
+    if (key == null || key.getEntityType() == null) {
+      throw new IllegalArgumentException("Generator key input error!");
     }
 
-    @Override
-    public Value getValueIfPresent(Key key) {
-        return readWriteCacheMap.getIfPresent(key);
-    }
+    EntityType entityType = key.getEntityType();
+    CacheGenerator cacheGenerator = cacheGenerators.get(entityType.getClass().getName());
+    return cacheGenerator.generatePayload(key);
+  }
 
-    @Override
-    public Map<Key, Value> getValues(final Iterable<Key> keys) throws CacheAccessException {
-        try {
-            return readWriteCacheMap.getAll(keys);
-        } catch (Throwable e) {
-            String msg = "Cannot get value for keys are:" + keys;
-            throw new CacheAccessException(msg, e);
-        }
+  @Override
+  public Value getValue(final Key key) throws CacheAccessException {
+    try {
+      return readWriteCacheMap.get(key);
+    } catch (Throwable e) {
+      String msg = "Cannot get value for key is:" + key;
+      throw new CacheAccessException(msg, e);
     }
+  }
 
-    @Override
-    public void invalidate(Key... keys) {
-        for (Key key : keys) {
-            if (LOGGER.isDebugEnabled()) {
-                LOGGER.debug("Invalidating cache key: {} {}", key.getEntityType(),
-                    key.getEntityName());
-            }
-            readWriteCacheMap.invalidate(key);
-        }
-    }
+  @Override
+  public Value getValueIfPresent(Key key) {
+    return readWriteCacheMap.getIfPresent(key);
+  }
 
-    /**
-     * Setter method for property <tt>cacheGenerators</tt>.
-     *
-     * @param cacheGenerators  value to be assigned to property cacheGenerators
-     */
-    @Autowired
-    public void setCacheGenerators(Map<String, CacheGenerator> cacheGenerators) {
-        this.cacheGenerators = cacheGenerators;
+  @Override
+  public Map<Key, Value> getValues(final Iterable<Key> keys) throws CacheAccessException {
+    try {
+      return readWriteCacheMap.getAll(keys);
+    } catch (Throwable e) {
+      String msg = "Cannot get value for keys are:" + keys;
+      throw new CacheAccessException(msg, e);
     }
+  }
+
+  @Override
+  public void invalidate(Key... keys) {
+    for (Key key : keys) {
+      if (LOGGER.isDebugEnabled()) {
+        LOGGER.debug("Invalidating cache key: {} {}", key.getEntityType(), key.getEntityName());
+      }
+      readWriteCacheMap.invalidate(key);
+    }
+  }
+
+  /**
+   * Setter method for property <tt>cacheGenerators</tt>.
+   *
+   * @param cacheGenerators value to be assigned to property cacheGenerators
+   */
+  @Autowired
+  public void setCacheGenerators(Map<String, CacheGenerator> cacheGenerators) {
+    this.cacheGenerators = cacheGenerators;
+  }
 }

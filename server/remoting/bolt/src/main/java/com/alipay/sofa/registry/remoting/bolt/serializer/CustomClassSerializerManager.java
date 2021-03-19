@@ -21,33 +21,34 @@ import java.util.concurrent.ConcurrentMap;
 
 /**
  * The type Custom class serializer manager.
+ *
  * @author zhuoyu.sjw
  * @version $Id : CustomClassSerializerManager.java, v 0.1 2018-05-05 23:43 zhuoyu.sjw Exp $$
  */
 public class CustomClassSerializerManager {
 
-    private static ConcurrentMap<Class, Byte> serializerMap = new ConcurrentHashMap<>();
+  private static ConcurrentMap<Class, Byte> serializerMap = new ConcurrentHashMap<>();
 
-    /**
-     * Register serializer.
-     *
-     * @param clazz the clazz  
-     * @param serializer the serializer
-     */
-    public static void registerSerializer(Class clazz, Byte serializer) {
-        if (clazz == null || serializer == null) {
-            throw new IllegalArgumentException("class and serializer can not be null");
-        }
-        serializerMap.put(clazz, serializer);
+  /**
+   * Register serializer.
+   *
+   * @param clazz the clazz
+   * @param serializer the serializer
+   */
+  public static void registerSerializer(Class clazz, Byte serializer) {
+    if (clazz == null || serializer == null) {
+      throw new IllegalArgumentException("class and serializer can not be null");
     }
+    serializerMap.put(clazz, serializer);
+  }
 
-    /**
-     * Gets protocol.
-     *
-     * @param clazz the clazz 
-     * @return the protocol
-     */
-    public static Byte getClassSerializer(Class clazz) {
-        return serializerMap.get(clazz);
-    }
+  /**
+   * Gets protocol.
+   *
+   * @param clazz the clazz
+   * @return the protocol
+   */
+  public static Byte getClassSerializer(Class clazz) {
+    return serializerMap.get(clazz);
+  }
 }

@@ -16,18 +16,17 @@
  */
 package com.alipay.sofa.registry.server.session.strategy.impl;
 
-import com.alipay.sofa.registry.server.session.push.FirePushService;
-import org.springframework.beans.factory.annotation.Autowired;
-
 import com.alipay.sofa.registry.common.model.store.Publisher;
 import com.alipay.sofa.registry.common.model.store.Subscriber;
 import com.alipay.sofa.registry.common.model.store.Watcher;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
+import com.alipay.sofa.registry.server.session.push.FirePushService;
 import com.alipay.sofa.registry.server.session.strategy.SessionRegistryStrategy;
 import com.alipay.sofa.registry.task.listener.TaskEvent;
 import com.alipay.sofa.registry.task.listener.TaskListenerManager;
+import org.springframework.beans.factory.annotation.Autowired;
 
 /**
  * @author kezhu.wukz
@@ -35,57 +34,44 @@ import com.alipay.sofa.registry.task.listener.TaskListenerManager;
  * @since 2019/2/15
  */
 public class DefaultSessionRegistryStrategy implements SessionRegistryStrategy {
-    private static final Logger taskLogger = LoggerFactory.getLogger(
-                                               DefaultSessionRegistryStrategy.class, "[Task]");
+  private static final Logger taskLogger =
+      LoggerFactory.getLogger(DefaultSessionRegistryStrategy.class, "[Task]");
 
-    /**
-     * trigger task com.alipay.sofa.registry.server.meta.listener process
-     */
-    @Autowired
-    private TaskListenerManager taskListenerManager;
+  /** trigger task com.alipay.sofa.registry.server.meta.listener process */
+  @Autowired private TaskListenerManager taskListenerManager;
 
-    @Autowired
-    private FirePushService     firePushService;
+  @Autowired private FirePushService firePushService;
 
-    @Autowired
-    private SessionServerConfig sessionServerConfig;
+  @Autowired private SessionServerConfig sessionServerConfig;
 
-    @Override
-    public void afterPublisherRegister(Publisher publisher) {
+  @Override
+  public void afterPublisherRegister(Publisher publisher) {}
 
+  @Override
+  public void afterSubscriberRegister(Subscriber subscriber) {
+    if (!sessionServerConfig.isStopPushSwitch()) {
+      firePushService.fireOnRegister(subscriber);
     }
+  }
 
-    @Override
-    public void afterSubscriberRegister(Subscriber subscriber) {
-        if (!sessionServerConfig.isStopPushSwitch()) {
-            firePushService.fireOnRegister(subscriber);
-        }
-    }
+  @Override
+  public void afterWatcherRegister(Watcher watcher) {
+    fireWatcherRegisterFetchTask(watcher);
+  }
 
-    @Override
-    public void afterWatcherRegister(Watcher watcher) {
-        fireWatcherRegisterFetchTask(watcher);
-    }
+  @Override
+  public void afterPublisherUnRegister(Publisher publisher) {}
 
-    @Override
-    public void afterPublisherUnRegister(Publisher publisher) {
+  @Override
+  public void afterSubscriberUnRegister(Subscriber subscriber) {}
 
-    }
+  @Override
+  public void afterWatcherUnRegister(Watcher watcher) {}
 
-    @Override
-    public void afterSubscriberUnRegister(Subscriber subscriber) {
-
-    }
-
-    @Override
-    public void afterWatcherUnRegister(Watcher watcher) {
-
-    }
-
-    private void fireWatcherRegisterFetchTask(Watcher watcher) {
-        //trigger fetch data for watcher,and push to client node
-        TaskEvent taskEvent = new TaskEvent(watcher, TaskEvent.TaskType.WATCHER_REGISTER_FETCH_TASK);
-        taskLogger.info("send " + taskEvent.getTaskType() + " taskEvent:{}", taskEvent);
-        taskListenerManager.sendTaskEvent(taskEvent);
-    }
+  private void fireWatcherRegisterFetchTask(Watcher watcher) {
+    // trigger fetch data for watcher,and push to client node
+    TaskEvent taskEvent = new TaskEvent(watcher, TaskEvent.TaskType.WATCHER_REGISTER_FETCH_TASK);
+    taskLogger.info("send " + taskEvent.getTaskType() + " taskEvent:{}", taskEvent);
+    taskListenerManager.sendTaskEvent(taskEvent);
+  }
 }

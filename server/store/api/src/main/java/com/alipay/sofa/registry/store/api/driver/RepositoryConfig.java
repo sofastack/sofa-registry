@@ -17,51 +17,47 @@
 package com.alipay.sofa.registry.store.api.driver;
 
 import com.alipay.sofa.registry.store.api.driver.RepositoryManager.RepositoryType;
-import org.springframework.boot.context.properties.ConfigurationProperties;
-
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**
- *
  * @author xiaojian.xj
  * @version $Id: RepositoryConfig.java, v 0.1 2021年01月17日 14:08 xiaojian.xj Exp $
  */
 @ConfigurationProperties(prefix = RepositoryConfig.PRE_FIX)
 public class RepositoryConfig {
 
-    public static final String                      PRE_FIX          = "jdbc";
+  public static final String PRE_FIX = "jdbc";
 
-    //application.properties
-    private String                                  globalRepositoryType;
-    /**
-     * set RepositoryType config to Repository
-     */
-    private static final Map<Class, RepositoryType> repositoryConfig = new ConcurrentHashMap<>();
+  // application.properties
+  private String globalRepositoryType;
+  /** set RepositoryType config to Repository */
+  private static final Map<Class, RepositoryType> repositoryConfig = new ConcurrentHashMap<>();
 
-    public RepositoryType getRepositoryType(Class clazz) {
+  public RepositoryType getRepositoryType(Class clazz) {
 
-        if (repositoryConfig.containsKey(clazz)) {
-            return repositoryConfig.get(clazz);
-        }
-        return RepositoryType.getByCode(globalRepositoryType);
+    if (repositoryConfig.containsKey(clazz)) {
+      return repositoryConfig.get(clazz);
     }
+    return RepositoryType.getByCode(globalRepositoryType);
+  }
 
-    /**
-     * Getter method for property <tt>globalRepositoryType</tt>.
-     *
-     * @return property value of globalRepositoryType
-     */
-    public String getGlobalRepositoryType() {
-        return globalRepositoryType;
-    }
+  /**
+   * Getter method for property <tt>globalRepositoryType</tt>.
+   *
+   * @return property value of globalRepositoryType
+   */
+  public String getGlobalRepositoryType() {
+    return globalRepositoryType;
+  }
 
-    /**
-     * Setter method for property <tt>globalRepositoryType</tt>.
-     *
-     * @param globalRepositoryType value to be assigned to property globalRepositoryType
-     */
-    public void setGlobalRepositoryType(String globalRepositoryType) {
-        this.globalRepositoryType = globalRepositoryType;
-    }
+  /**
+   * Setter method for property <tt>globalRepositoryType</tt>.
+   *
+   * @param globalRepositoryType value to be assigned to property globalRepositoryType
+   */
+  public void setGlobalRepositoryType(String globalRepositoryType) {
+    this.globalRepositoryType = globalRepositoryType;
+  }
 }

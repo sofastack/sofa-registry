@@ -19,11 +19,10 @@ package com.alipay.sofa.registry.server.session.filter;
 import java.util.function.Supplier;
 
 /**
- *
  * @author shangyu.wh
  * @version 1.0: IPMatchStrategy.java, v 0.1 2019-06-19 22:14 shangyu.wh Exp $
  */
 public interface IPMatchStrategy<T> {
 
-    boolean match(String IP, Supplier<T> getOperatorType);
+  boolean match(String IP, Supplier<T> getOperatorType);
 }

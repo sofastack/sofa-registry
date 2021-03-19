@@ -27,43 +27,46 @@ import com.alipay.sofa.registry.util.StringFormatter;
  */
 public class GetDataRequest extends AbstractSlotRequest {
 
-    private static final long serialVersionUID = 8133437572926931258L;
+  private static final long serialVersionUID = 8133437572926931258L;
 
-    private final String      dataInfoId;
+  private final String dataInfoId;
 
-    /**
-     * if datacenter is null, means all datacenters
-     */
-    private final String      dataCenter;
+  /** if datacenter is null, means all datacenters */
+  private final String dataCenter;
 
-    public GetDataRequest(ProcessId sessionProcessId, String dataInfoId, String dataCenter,
-                          int slotId) {
-        super(slotId, sessionProcessId);
-        this.dataInfoId = dataInfoId;
-        this.dataCenter = dataCenter;
-    }
+  public GetDataRequest(
+      ProcessId sessionProcessId, String dataInfoId, String dataCenter, int slotId) {
+    super(slotId, sessionProcessId);
+    this.dataInfoId = dataInfoId;
+    this.dataCenter = dataCenter;
+  }
 
-    /**
-     * Getter method for property <tt>dataInfoId</tt>.
-     *
-     * @return property value of dataInfoId
-     */
-    public String getDataInfoId() {
-        return dataInfoId;
-    }
+  /**
+   * Getter method for property <tt>dataInfoId</tt>.
+   *
+   * @return property value of dataInfoId
+   */
+  public String getDataInfoId() {
+    return dataInfoId;
+  }
 
-    /**
-     * Getter method for property <tt>dataCenter</tt>.
-     *
-     * @return property value of dataCenter
-     */
-    public String getDataCenter() {
-        return dataCenter;
-    }
+  /**
+   * Getter method for property <tt>dataCenter</tt>.
+   *
+   * @return property value of dataCenter
+   */
+  public String getDataCenter() {
+    return dataCenter;
+  }
 
-    @Override
-    public String toString() {
-        return StringFormatter.format("GetData:{},{},{},{},{}", dataInfoId, dataCenter,
-            getSlotId(), getSlotLeaderEpoch(), getSlotTableEpoch());
-    }
+  @Override
+  public String toString() {
+    return StringFormatter.format(
+        "GetData:{},{},{},{},{}",
+        dataInfoId,
+        dataCenter,
+        getSlotId(),
+        getSlotLeaderEpoch(),
+        getSlotTableEpoch());
+  }
 }

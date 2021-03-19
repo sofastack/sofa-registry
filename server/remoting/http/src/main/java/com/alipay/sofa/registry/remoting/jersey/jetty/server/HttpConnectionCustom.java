@@ -24,20 +24,23 @@ import org.eclipse.jetty.server.HttpConfiguration;
 import org.eclipse.jetty.server.HttpConnection;
 
 /**
- *
  * @author shangyu.wh
  * @version $Id: HttpConnectionOver.java, v 0.1 2018-09-26 16:46 shangyu.wh Exp $
  */
 public class HttpConnectionCustom extends HttpConnection {
 
-    public HttpConnectionCustom(HttpConfiguration config, Connector connector, EndPoint endPoint,
-                                HttpCompliance compliance, boolean recordComplianceViolations) {
-        super(config, connector, endPoint, compliance, recordComplianceViolations);
-    }
+  public HttpConnectionCustom(
+      HttpConfiguration config,
+      Connector connector,
+      EndPoint endPoint,
+      HttpCompliance compliance,
+      boolean recordComplianceViolations) {
+    super(config, connector, endPoint, compliance, recordComplianceViolations);
+  }
 
-    @Override
-    protected HttpChannelOverHttp newHttpChannel() {
-        return new HttpChannelOverHttpCustom(this, getConnector(), getHttpConfiguration(),
-            getEndPoint(), this);
-    }
+  @Override
+  protected HttpChannelOverHttp newHttpChannel() {
+    return new HttpChannelOverHttpCustom(
+        this, getConnector(), getHttpConfiguration(), getEndPoint(), this);
+  }
 }

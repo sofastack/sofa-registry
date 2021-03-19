@@ -20,59 +20,73 @@ import java.io.Serializable;
 
 /**
  * @author chen.zhu
- * <p>
- * Mar 01, 2021
+ *     <p>Mar 01, 2021
  */
 public class FollowerSlotStatus extends BaseSlotStatus implements Serializable {
 
-    private final long lastSyncTaskStartTime;
+  private final long lastSyncTaskStartTime;
 
-    private final long lastLeaderSyncTime;
+  private final long lastLeaderSyncTime;
 
-    /**
-     * Constructor.
-     *
-     * @param slotId                the slot id
-     * @param slotLeaderEpoch       the slot leader epoch
-     * @param server                the server
-     * @param lastSyncTaskStartTime the last sync task start time
-     * @param lastLeaderSyncTime    the last leader sync time
-     */
-    public FollowerSlotStatus(int slotId, long slotLeaderEpoch, String server,
-                              long lastSyncTaskStartTime, long lastLeaderSyncTime) {
-        super(slotId, slotLeaderEpoch, Slot.Role.Follower, server);
-        this.lastSyncTaskStartTime = lastSyncTaskStartTime;
-        this.lastLeaderSyncTime = lastLeaderSyncTime;
-    }
+  /**
+   * Constructor.
+   *
+   * @param slotId the slot id
+   * @param slotLeaderEpoch the slot leader epoch
+   * @param server the server
+   * @param lastSyncTaskStartTime the last sync task start time
+   * @param lastLeaderSyncTime the last leader sync time
+   */
+  public FollowerSlotStatus(
+      int slotId,
+      long slotLeaderEpoch,
+      String server,
+      long lastSyncTaskStartTime,
+      long lastLeaderSyncTime) {
+    super(slotId, slotLeaderEpoch, Slot.Role.Follower, server);
+    this.lastSyncTaskStartTime = lastSyncTaskStartTime;
+    this.lastLeaderSyncTime = lastLeaderSyncTime;
+  }
 
-    /**
-     * Gets get last sync task start time.
-     *
-     * @return the get last sync task start time
-     */
-    public long getLastSyncTaskStartTime() {
-        return lastSyncTaskStartTime;
-    }
+  /**
+   * Gets get last sync task start time.
+   *
+   * @return the get last sync task start time
+   */
+  public long getLastSyncTaskStartTime() {
+    return lastSyncTaskStartTime;
+  }
 
-    /**
-     * Gets get last follower sync time.
-     *
-     * @return the get last follower sync time
-     */
-    public long getLastLeaderSyncTime() {
-        return lastLeaderSyncTime;
-    }
+  /**
+   * Gets get last follower sync time.
+   *
+   * @return the get last follower sync time
+   */
+  public long getLastLeaderSyncTime() {
+    return lastLeaderSyncTime;
+  }
 
-    /**
-     * To string string.
-     *
-     * @return the string
-     */
-    @Override
-    public String toString() {
-        return "FollowerSlotStatus{" + "lastSyncTaskStartTime=" + lastSyncTaskStartTime
-               + ", lastLeaderSyncTime=" + lastLeaderSyncTime + ", slotId=" + slotId
-               + ", slotLeaderEpoch=" + slotLeaderEpoch + ", role=" + role + ", server='" + server
-               + '\'' + '}';
-    }
+  /**
+   * To string string.
+   *
+   * @return the string
+   */
+  @Override
+  public String toString() {
+    return "FollowerSlotStatus{"
+        + "lastSyncTaskStartTime="
+        + lastSyncTaskStartTime
+        + ", lastLeaderSyncTime="
+        + lastLeaderSyncTime
+        + ", slotId="
+        + slotId
+        + ", slotLeaderEpoch="
+        + slotLeaderEpoch
+        + ", role="
+        + role
+        + ", server='"
+        + server
+        + '\''
+        + '}';
+  }
 }

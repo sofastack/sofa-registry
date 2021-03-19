@@ -20,7 +20,6 @@ import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.observer.Observable;
 import com.alipay.sofa.registry.observer.UnblockingObserver;
-
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
@@ -30,38 +29,36 @@ import java.util.concurrent.CopyOnWriteArrayList;
  */
 public abstract class AbstractObservable implements Observable {
 
-    protected Logger       logger    = LoggerFactory.getLogger(getClass());
+  protected Logger logger = LoggerFactory.getLogger(getClass());
 
-    private List<UnblockingObserver> observers = new CopyOnWriteArrayList<>();
+  private List<UnblockingObserver> observers = new CopyOnWriteArrayList<>();
 
-    public AbstractObservable() {
+  public AbstractObservable() {}
+
+  public AbstractObservable setLogger(Logger logger) {
+    this.logger = logger;
+    return this;
+  }
+
+  @Override
+  public void addObserver(UnblockingObserver observer) {
+    observers.add(observer);
+  }
+
+  @Override
+  public void removeObserver(UnblockingObserver observer) {
+    observers.remove(observer);
+  }
+
+  protected void notifyObservers(final Object message) {
+
+    for (final Object observer : observers) {
+
+      try {
+        ((UnblockingObserver) observer).update(AbstractObservable.this, message);
+      } catch (Exception e) {
+        logger.error("[notifyObservers][{}]", observer, e);
+      }
     }
-
-    public AbstractObservable setLogger(Logger logger) {
-        this.logger = logger;
-        return this;
-    }
-
-    @Override
-    public void addObserver(UnblockingObserver observer) {
-        observers.add(observer);
-    }
-
-    @Override
-    public void removeObserver(UnblockingObserver observer) {
-        observers.remove(observer);
-    }
-
-    protected void notifyObservers(final Object message) {
-
-        for (final Object observer : observers) {
-
-            try {
-                ((UnblockingObserver) observer).update(AbstractObservable.this, message);
-            } catch (Exception e) {
-                logger.error("[notifyObservers][{}]", observer, e);
-            }
-
-        }
-    }
+  }
 }

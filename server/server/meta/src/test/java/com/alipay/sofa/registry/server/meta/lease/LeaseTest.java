@@ -19,68 +19,67 @@ package com.alipay.sofa.registry.server.meta.lease;
 import com.alipay.sofa.registry.common.model.metaserver.Lease;
 import com.alipay.sofa.registry.common.model.metaserver.nodes.DataNode;
 import com.alipay.sofa.registry.server.meta.AbstractMetaServerTest;
+import java.util.concurrent.TimeUnit;
 import org.junit.Assert;
 import org.junit.Test;
 
-import java.util.concurrent.TimeUnit;
-
 public class LeaseTest extends AbstractMetaServerTest {
 
-    private Lease<Object> lease;
+  private Lease<Object> lease;
 
-    @Test
-    public void testIsExpired() throws InterruptedException {
-        lease = new Lease<>(new Object(), 1, TimeUnit.MILLISECONDS);
-        Thread.sleep(2);
-        Assert.assertTrue(lease.isExpired());
-        lease.renew(1);
-        Assert.assertFalse(lease.isExpired());
-    }
+  @Test
+  public void testIsExpired() throws InterruptedException {
+    lease = new Lease<>(new Object(), 1, TimeUnit.MILLISECONDS);
+    Thread.sleep(2);
+    Assert.assertTrue(lease.isExpired());
+    lease.renew(1);
+    Assert.assertFalse(lease.isExpired());
+  }
 
-    @Test
-    public void testGetBeginTimestamp() throws InterruptedException {
-        lease = new Lease<>(new Object(), 1);
-        long begin = lease.getBeginTimestamp();
-        lease.renew();
-        Thread.sleep(5);
-        lease.renew();
-        Assert.assertEquals(begin, lease.getBeginTimestamp());
-    }
+  @Test
+  public void testGetBeginTimestamp() throws InterruptedException {
+    lease = new Lease<>(new Object(), 1);
+    long begin = lease.getBeginTimestamp();
+    lease.renew();
+    Thread.sleep(5);
+    lease.renew();
+    Assert.assertEquals(begin, lease.getBeginTimestamp());
+  }
 
-    @Test
-    public void testGetLastUpdateTimestamp() throws InterruptedException {
-        lease = new Lease<>(new Object(), 1);
-        long firstUpdate = lease.getLastUpdateTimestamp();
-        lease.renew();
-        Thread.sleep(5);
-        lease.renew();
-        Assert.assertNotEquals(firstUpdate, lease.getLastUpdateTimestamp());
-    }
+  @Test
+  public void testGetLastUpdateTimestamp() throws InterruptedException {
+    lease = new Lease<>(new Object(), 1);
+    long firstUpdate = lease.getLastUpdateTimestamp();
+    lease.renew();
+    Thread.sleep(5);
+    lease.renew();
+    Assert.assertNotEquals(firstUpdate, lease.getLastUpdateTimestamp());
+  }
 
-    @Test
-    public void testSetRenewal() {
-        Object first = new Object();
-        lease = new Lease<>(first, 1);
-        lease.renew();
-        Object second = new Object();
-        lease.setRenewal(second);
-        Assert.assertNotEquals(first, lease.getRenewal());
-    }
+  @Test
+  public void testSetRenewal() {
+    Object first = new Object();
+    lease = new Lease<>(first, 1);
+    lease.renew();
+    Object second = new Object();
+    lease.setRenewal(second);
+    Assert.assertNotEquals(first, lease.getRenewal());
+  }
 
-    @Test
-    public void testEquals() throws InterruptedException {
-        DataNode sample = new DataNode(randomURL(randomIp()), getDc());
-        Lease<Object> lease1 = new Lease<>(new Object(), 1, TimeUnit.MILLISECONDS);
-        Lease<Object> lease2 = new Lease<>(sample, 1, TimeUnit.MILLISECONDS);
-        Thread.sleep(5);
-        Lease<DataNode> lease3 = new Lease<>(new DataNode(sample.getNodeUrl(), getDc()), 1,
-            TimeUnit.MILLISECONDS);
-        Lease<Object> lease4 = lease2;
-        lease4.setRenewal(lease3.getRenewal());
+  @Test
+  public void testEquals() throws InterruptedException {
+    DataNode sample = new DataNode(randomURL(randomIp()), getDc());
+    Lease<Object> lease1 = new Lease<>(new Object(), 1, TimeUnit.MILLISECONDS);
+    Lease<Object> lease2 = new Lease<>(sample, 1, TimeUnit.MILLISECONDS);
+    Thread.sleep(5);
+    Lease<DataNode> lease3 =
+        new Lease<>(new DataNode(sample.getNodeUrl(), getDc()), 1, TimeUnit.MILLISECONDS);
+    Lease<Object> lease4 = lease2;
+    lease4.setRenewal(lease3.getRenewal());
 
-        Assert.assertNotEquals(lease1, lease2);
-        Assert.assertNotEquals(lease2, lease3);
-        Assert.assertEquals(lease2, lease4);
-        Assert.assertNotEquals(lease2.hashCode(), lease3.hashCode());
-    }
+    Assert.assertNotEquals(lease1, lease2);
+    Assert.assertNotEquals(lease2, lease3);
+    Assert.assertEquals(lease2, lease4);
+    Assert.assertNotEquals(lease2.hashCode(), lease3.hashCode());
+  }
 }

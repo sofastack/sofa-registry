@@ -19,10 +19,8 @@ package com.alipay.sofa.registry.server.session.store;
 import org.springframework.boot.SpringBootConfiguration;
 
 /**
- *
  * @author shangyu.wh
  * @version $Id: BaseTest.java, v 0.1 2017-12-14 21:47 shangyu.wh Exp $
  */
 @SpringBootConfiguration
-public class BaseTest {
-}
+public class BaseTest {}

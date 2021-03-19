@@ -16,59 +16,56 @@
  */
 package com.alipay.sofa.registry.server.session.scheduler.task;
 
-import java.util.UUID;
-import java.util.concurrent.atomic.AtomicInteger;
-
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.task.Retryable;
+import java.util.UUID;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
- *
  * @author shangyu.wh
  * @author kezhu.wukz
  * @version $Id: AbstractSessionTask.java, v 0.1 2018-01-15 14:35 shangyu.wh Exp $
  */
 public abstract class AbstractSessionTask implements SessionTask, Retryable {
 
-    private final static Logger LOGGER    = LoggerFactory.getLogger(AbstractSessionTask.class,
-                                              "[Task]");
+  private static final Logger LOGGER = LoggerFactory.getLogger(AbstractSessionTask.class, "[Task]");
 
-    protected volatile String   taskId;
+  protected volatile String taskId;
 
-    private AtomicInteger       execCount = new AtomicInteger(1);
+  private AtomicInteger execCount = new AtomicInteger(1);
 
-    @Override
-    public synchronized String getTaskId() {
-        if (taskId == null) {
-            taskId = UUID.randomUUID().toString();
-        }
-
-        return taskId;
+  @Override
+  public synchronized String getTaskId() {
+    if (taskId == null) {
+      taskId = UUID.randomUUID().toString();
     }
 
-    protected synchronized void setTaskId(String taskId) {
-        this.taskId = taskId;
-    }
+    return taskId;
+  }
 
-    protected boolean checkRetryTimes(int configTimes) {
-        if (configTimes > 0) {
-            if (execCount.incrementAndGet() > configTimes) {
-                LOGGER.info(" info:{} retry times more than {}", this, configTimes);
-                return false;
-            } else {
-                return true;
-            }
-        }
+  protected synchronized void setTaskId(String taskId) {
+    this.taskId = taskId;
+  }
+
+  protected boolean checkRetryTimes(int configTimes) {
+    if (configTimes > 0) {
+      if (execCount.incrementAndGet() > configTimes) {
+        LOGGER.info(" info:{} retry times more than {}", this, configTimes);
         return false;
+      } else {
+        return true;
+      }
     }
+    return false;
+  }
 
-    protected int getExecCount() {
-        return execCount.get();
-    }
+  protected int getExecCount() {
+    return execCount.get();
+  }
 
-    @Override
-    public long getExpiryTime() {
-        return -1;
-    }
+  @Override
+  public long getExpiryTime() {
+    return -1;
+  }
 }

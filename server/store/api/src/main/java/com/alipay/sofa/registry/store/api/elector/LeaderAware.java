@@ -18,17 +18,12 @@ package com.alipay.sofa.registry.store.api.elector;
 
 /**
  * @author chen.zhu
- * <p>
- * Nov 21, 2020
+ *     <p>Nov 21, 2020
  */
 public interface LeaderAware {
-    /**
-     * notify listeners when I'm elector.
-     */
-    void leaderNotify();
+  /** notify listeners when I'm elector. */
+  void leaderNotify();
 
-    /**
-     * notify listeners when I'm not elector.
-     */
-    void followNotify();
+  /** notify listeners when I'm not elector. */
+  void followNotify();
 }

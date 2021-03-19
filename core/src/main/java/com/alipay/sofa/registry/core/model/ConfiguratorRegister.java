@@ -17,12 +17,9 @@
 package com.alipay.sofa.registry.core.model;
 
 /**
- * 
  * @author zhuoyu.sjw
- * @version $Id: ConfiguratorRegister.java, v 0.1 2018-04-17 17:45 zhuoyu.sjw
- *          Exp $$
+ * @version $Id: ConfiguratorRegister.java, v 0.1 2018-04-17 17:45 zhuoyu.sjw Exp $$
  */
 public class ConfiguratorRegister extends BaseRegister {
-	private static final long serialVersionUID = 3636660681387698721L;
-
+  private static final long serialVersionUID = 3636660681387698721L;
 }

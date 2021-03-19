@@ -16,43 +16,40 @@
  */
 package com.alipay.sofa.registry.core.model;
 
-import org.junit.Assert;
-import org.junit.Test;
-
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
+import org.junit.Assert;
+import org.junit.Test;
 
-/**
- * @author <a href="mailto:zhanggeng.zg@antfin.com">GengZhang</a>
- */
+/** @author <a href="mailto:zhanggeng.zg@antfin.com">GengZhang</a> */
 public class ReceivedDataTest {
 
-    @Test
-    public void testAll() {
+  @Test
+  public void testAll() {
 
-        ReceivedData data = new ReceivedData();
-        data.setDataId("dataIdd");
-        data.setGroup("groupp");
-        data.setInstanceId("instanceIdd");
-        data.setSubscriberRegistIds(Arrays.asList("id1", "id2"));
-        data.setLocalZone("local");
-        data.setScope("zone");
-        data.setData(new HashMap<String, List<DataBox>>());
-        data.setSegment("seg1");
-        data.setVersion(1234L);
-        Assert.assertEquals("dataIdd", data.getDataId());
-        Assert.assertEquals("groupp", data.getGroup());
-        Assert.assertEquals("instanceIdd", data.getInstanceId());
-        Assert.assertEquals(2, data.getSubscriberRegistIds().size());
-        Assert.assertEquals("zone", data.getScope());
-        Assert.assertEquals("seg1", data.getSegment());
-        Assert.assertEquals("local", data.getLocalZone());
-        Assert.assertEquals(1234L, (long) data.getVersion());
-        Assert.assertEquals(0, data.getData().size());
-        Assert.assertTrue(data.toString().contains("instanceIdd"));
+    ReceivedData data = new ReceivedData();
+    data.setDataId("dataIdd");
+    data.setGroup("groupp");
+    data.setInstanceId("instanceIdd");
+    data.setSubscriberRegistIds(Arrays.asList("id1", "id2"));
+    data.setLocalZone("local");
+    data.setScope("zone");
+    data.setData(new HashMap<String, List<DataBox>>());
+    data.setSegment("seg1");
+    data.setVersion(1234L);
+    Assert.assertEquals("dataIdd", data.getDataId());
+    Assert.assertEquals("groupp", data.getGroup());
+    Assert.assertEquals("instanceIdd", data.getInstanceId());
+    Assert.assertEquals(2, data.getSubscriberRegistIds().size());
+    Assert.assertEquals("zone", data.getScope());
+    Assert.assertEquals("seg1", data.getSegment());
+    Assert.assertEquals("local", data.getLocalZone());
+    Assert.assertEquals(1234L, (long) data.getVersion());
+    Assert.assertEquals(0, data.getData().size());
+    Assert.assertTrue(data.toString().contains("instanceIdd"));
 
-        ReceivedData data1 = new ReceivedData(null, null, null, null, null, null, null);
-        Assert.assertNull(data1.getVersion());
-    }
+    ReceivedData data1 = new ReceivedData(null, null, null, null, null, null, null);
+    Assert.assertNull(data1.getVersion());
+  }
 }

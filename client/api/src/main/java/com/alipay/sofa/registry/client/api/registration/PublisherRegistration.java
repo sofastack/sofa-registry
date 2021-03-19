@@ -24,23 +24,32 @@ package com.alipay.sofa.registry.client.api.registration;
  */
 public class PublisherRegistration extends BaseRegistration {
 
-    /**
-     * Instantiates a new Publisher registration.
-     *
-     * @param dataId the data id
-     */
-    public PublisherRegistration(String dataId) {
-        this.dataId = dataId;
-    }
+  /**
+   * Instantiates a new Publisher registration.
+   *
+   * @param dataId the data id
+   */
+  public PublisherRegistration(String dataId) {
+    this.dataId = dataId;
+  }
 
-    /**
-     * To string string.
-     *
-     * @return the string
-     */
-    @Override
-    public String toString() {
-        return "PublisherRegistration{" + "dataId='" + dataId + '\'' + ", group='" + group + '\''
-               + ", appName='" + appName + '\'' + '}';
-    }
+  /**
+   * To string string.
+   *
+   * @return the string
+   */
+  @Override
+  public String toString() {
+    return "PublisherRegistration{"
+        + "dataId='"
+        + dataId
+        + '\''
+        + ", group='"
+        + group
+        + '\''
+        + ", appName='"
+        + appName
+        + '\''
+        + '}';
+  }
 }

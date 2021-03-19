@@ -16,6 +16,9 @@
  */
 package com.alipay.sofa.registry.server.meta.slot.manager;
 
+import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.*;
+
 import com.alipay.sofa.registry.exception.SofaRegistryRuntimeException;
 import com.alipay.sofa.registry.server.meta.AbstractMetaServerTest;
 import com.alipay.sofa.registry.server.meta.remoting.notifier.Notifier;
@@ -24,44 +27,41 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.MockitoAnnotations;
 
-import static org.mockito.Matchers.any;
-import static org.mockito.Mockito.*;
-
 public class DefaultSlotManagerTest extends AbstractMetaServerTest {
 
+  private DefaultSlotManager slotManager;
 
-    private DefaultSlotManager slotManager;
+  @Before
+  public void beforeDefaultSlotManagerTest() throws Exception {
+    MockitoAnnotations.initMocks(this);
+    when(metaLeaderService.amIStableAsLeader()).thenReturn(true);
+    when(metaLeaderService.amILeader()).thenReturn(true);
+    slotManager = new DefaultSlotManager(metaLeaderService);
+    slotManager.postConstruct();
+  }
 
-    @Before
-    public void beforeDefaultSlotManagerTest() throws Exception {
-        MockitoAnnotations.initMocks(this);
-        when(metaLeaderService.amIStableAsLeader()).thenReturn(true);
-        when(metaLeaderService.amILeader()).thenReturn(true);
-        slotManager = new DefaultSlotManager(metaLeaderService);
-        slotManager.postConstruct();
-    }
+  @Test
+  public void testSlotChangeNotification() throws InterruptedException {
+    Notifier notifier = mock(Notifier.class);
+    slotManager.setNotifiers(Lists.newArrayList(notifier));
+    slotManager.refresh(randomSlotTable());
+    Thread.sleep(100);
+    verify(notifier, atLeast(1)).notifySlotTableChange(any());
+  }
 
-    @Test
-    public void testSlotChangeNotification() throws InterruptedException {
-        Notifier notifier = mock(Notifier.class);
-        slotManager.setNotifiers(Lists.newArrayList(notifier));
-        slotManager.refresh(randomSlotTable());
-        Thread.sleep(100);
-        verify(notifier, atLeast(1)).notifySlotTableChange(any());
-    }
+  @Test
+  public void testSlotChangeNotifyOneFailWontAffectOthers() throws InterruptedException {
+    Notifier notifier1 = mock(Notifier.class);
+    Notifier notifier2 = mock(Notifier.class);
+    Notifier notifier3 = mock(Notifier.class);
+    doThrow(new SofaRegistryRuntimeException("expected"))
+        .when(notifier2)
+        .notifySlotTableChange(any());
+    slotManager.setNotifiers(Lists.newArrayList(notifier1, notifier2, notifier3));
 
-    @Test
-    public void testSlotChangeNotifyOneFailWontAffectOthers() throws InterruptedException {
-        Notifier notifier1 = mock(Notifier.class);
-        Notifier notifier2 = mock(Notifier.class);
-        Notifier notifier3 = mock(Notifier.class);
-        doThrow(new SofaRegistryRuntimeException("expected")).when(notifier2)
-                .notifySlotTableChange(any());
-        slotManager.setNotifiers(Lists.newArrayList(notifier1, notifier2, notifier3));
-
-        slotManager.refresh(randomSlotTable());
-        Thread.sleep(100);
-        verify(notifier1, atLeast(1)).notifySlotTableChange(any());
-        verify(notifier3, atLeast(1)).notifySlotTableChange(any());
-    }
+    slotManager.refresh(randomSlotTable());
+    Thread.sleep(100);
+    verify(notifier1, atLeast(1)).notifySlotTableChange(any());
+    verify(notifier3, atLeast(1)).notifySlotTableChange(any());
+  }
 }

@@ -20,16 +20,16 @@ import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.TimeUnit;
 
 public abstract class WakeUpLoopRunnable extends LoopRunnable {
-    private final SynchronousQueue<Object> bell = new SynchronousQueue<>();
+  private final SynchronousQueue<Object> bell = new SynchronousQueue<>();
 
-    @Override
-    public void waitingUnthrowable() {
-        ConcurrentUtils.pollUninterruptibly(bell, getWaitingMillis(), TimeUnit.MILLISECONDS);
-    }
+  @Override
+  public void waitingUnthrowable() {
+    ConcurrentUtils.pollUninterruptibly(bell, getWaitingMillis(), TimeUnit.MILLISECONDS);
+  }
 
-    public abstract int getWaitingMillis();
+  public abstract int getWaitingMillis();
 
-    public void wakeup() {
-        bell.offer(this);
-    }
+  public void wakeup() {
+    bell.offer(this);
+  }
 }

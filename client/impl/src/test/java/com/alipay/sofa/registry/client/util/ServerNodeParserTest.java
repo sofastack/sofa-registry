@@ -20,87 +20,84 @@ import com.alipay.sofa.registry.client.remoting.ServerNode;
 import org.junit.Assert;
 import org.junit.Test;
 
-/**
- * @author <a href="mailto:zhanggeng.zg@antfin.com">GengZhang</a>
- */
+/** @author <a href="mailto:zhanggeng.zg@antfin.com">GengZhang</a> */
 public class ServerNodeParserTest {
 
-    @Test
-    public void parse() {
-        boolean error = false;
-        try {
-            ServerNodeParser.parse(null);
-        } catch (Exception e) {
-            Assert.assertTrue(e instanceof IllegalArgumentException);
-            error = true;
-        }
-        Assert.assertTrue(error);
-
-        error = false;
-        try {
-            ServerNodeParser.parse("127.0.0.1:");
-        } catch (Exception e) {
-            Assert.assertTrue(e instanceof IllegalArgumentException);
-            error = true;
-        }
-        Assert.assertTrue(error);
-
-        error = false;
-        try {
-            ServerNodeParser.parse("127.0.0.1");
-        } catch (Exception e) {
-            Assert.assertTrue(e instanceof IllegalArgumentException);
-            error = true;
-        }
-        Assert.assertTrue(error);
-
-        error = false;
-        try {
-            ServerNodeParser.parse("127.0.0.1:12345?");
-        } catch (Exception e) {
-            Assert.assertTrue(e instanceof IllegalArgumentException);
-            error = true;
-        }
-        Assert.assertTrue(error);
-
-        error = false;
-        try {
-            ServerNodeParser.parse("127.0.0.1:12345?x");
-        } catch (Exception e) {
-            Assert.assertTrue(e instanceof IllegalArgumentException);
-            error = true;
-        }
-        Assert.assertTrue(error);
-
-        error = false;
-        try {
-            ServerNodeParser.parse("127.0.0.1:12345?x=");
-        } catch (Exception e) {
-            Assert.assertTrue(e instanceof IllegalArgumentException);
-            error = true;
-        }
-        Assert.assertTrue(error);
-
-        error = false;
-        try {
-            ServerNodeParser.parse("127.0.0.1:12345?x=1&");
-        } catch (Exception e) {
-            Assert.assertTrue(e instanceof IllegalArgumentException);
-            error = true;
-        }
-        Assert.assertTrue(error);
-
-        error = false;
-        String url = "127.0.0.2:12345";
-        ServerNode node = ServerNodeParser.parse(url);
-
-        Assert.assertEquals("127.0.0.2", node.getHost());
-        Assert.assertEquals(12345, node.getPort());
-
-        url = "127.0.0.3:23456?x=1&y=2&z=3";
-        node = ServerNodeParser.parse(url);
-        Assert.assertEquals("127.0.0.3", node.getHost());
-        Assert.assertEquals(23456, node.getPort());
-
+  @Test
+  public void parse() {
+    boolean error = false;
+    try {
+      ServerNodeParser.parse(null);
+    } catch (Exception e) {
+      Assert.assertTrue(e instanceof IllegalArgumentException);
+      error = true;
     }
+    Assert.assertTrue(error);
+
+    error = false;
+    try {
+      ServerNodeParser.parse("127.0.0.1:");
+    } catch (Exception e) {
+      Assert.assertTrue(e instanceof IllegalArgumentException);
+      error = true;
+    }
+    Assert.assertTrue(error);
+
+    error = false;
+    try {
+      ServerNodeParser.parse("127.0.0.1");
+    } catch (Exception e) {
+      Assert.assertTrue(e instanceof IllegalArgumentException);
+      error = true;
+    }
+    Assert.assertTrue(error);
+
+    error = false;
+    try {
+      ServerNodeParser.parse("127.0.0.1:12345?");
+    } catch (Exception e) {
+      Assert.assertTrue(e instanceof IllegalArgumentException);
+      error = true;
+    }
+    Assert.assertTrue(error);
+
+    error = false;
+    try {
+      ServerNodeParser.parse("127.0.0.1:12345?x");
+    } catch (Exception e) {
+      Assert.assertTrue(e instanceof IllegalArgumentException);
+      error = true;
+    }
+    Assert.assertTrue(error);
+
+    error = false;
+    try {
+      ServerNodeParser.parse("127.0.0.1:12345?x=");
+    } catch (Exception e) {
+      Assert.assertTrue(e instanceof IllegalArgumentException);
+      error = true;
+    }
+    Assert.assertTrue(error);
+
+    error = false;
+    try {
+      ServerNodeParser.parse("127.0.0.1:12345?x=1&");
+    } catch (Exception e) {
+      Assert.assertTrue(e instanceof IllegalArgumentException);
+      error = true;
+    }
+    Assert.assertTrue(error);
+
+    error = false;
+    String url = "127.0.0.2:12345";
+    ServerNode node = ServerNodeParser.parse(url);
+
+    Assert.assertEquals("127.0.0.2", node.getHost());
+    Assert.assertEquals(12345, node.getPort());
+
+    url = "127.0.0.3:23456?x=1&y=2&z=3";
+    node = ServerNodeParser.parse(url);
+    Assert.assertEquals("127.0.0.3", node.getHost());
+    Assert.assertEquals(23456, node.getPort());
+  }
 }

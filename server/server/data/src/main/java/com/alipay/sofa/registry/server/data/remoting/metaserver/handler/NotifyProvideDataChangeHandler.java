@@ -28,41 +28,37 @@ import com.alipay.sofa.registry.server.shared.remoting.AbstractClientHandler;
 import org.springframework.beans.factory.annotation.Autowired;
 
 /**
- *
  * @author shangyu.wh
  * @version $Id: DataChangeRequestHandler.java, v 0.1 2017-12-12 15:09 shangyu.wh Exp $
  */
 public class NotifyProvideDataChangeHandler extends AbstractClientHandler<ProvideDataChangeEvent> {
 
-    @Autowired
-    private MetaServerService    metaServerService;
+  @Autowired private MetaServerService metaServerService;
 
-    @Autowired
-    private ProvideDataProcessor provideDataProcessorManager;
+  @Autowired private ProvideDataProcessor provideDataProcessorManager;
 
-    @Override
-    protected NodeType getConnectNodeType() {
-        return NodeType.META;
+  @Override
+  protected NodeType getConnectNodeType() {
+    return NodeType.META;
+  }
+
+  @Override
+  public Object doHandle(Channel channel, ProvideDataChangeEvent request) {
+    String dataInfoId = request.getDataInfoId();
+    if (request.getDataOperator() != DataOperator.REMOVE) {
+      ProvideData provideData = metaServerService.fetchData(dataInfoId);
+      provideDataProcessorManager.changeDataProcess(provideData);
     }
+    return null;
+  }
 
-    @Override
-    public Object doHandle(Channel channel, ProvideDataChangeEvent request) {
-        String dataInfoId = request.getDataInfoId();
-        if (request.getDataOperator() != DataOperator.REMOVE) {
-            ProvideData provideData = metaServerService.fetchData(dataInfoId);
-            provideDataProcessorManager.changeDataProcess(provideData);
-        }
-        return null;
-    }
+  @Override
+  public Class interest() {
+    return ProvideDataChangeEvent.class;
+  }
 
-    @Override
-    public Class interest() {
-        return ProvideDataChangeEvent.class;
-    }
-
-    @Override
-    public CommonResponse buildFailedResponse(String msg) {
-        return CommonResponse.buildFailedResponse(msg);
-    }
-
+  @Override
+  public CommonResponse buildFailedResponse(String msg) {
+    return CommonResponse.buildFailedResponse(msg);
+  }
 }

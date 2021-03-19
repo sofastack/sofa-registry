@@ -18,32 +18,29 @@ package com.alipay.sofa.registry.server.data.remoting;
 
 import com.alipay.sofa.registry.server.data.bootstrap.DataServerConfig;
 import com.alipay.sofa.registry.server.shared.meta.AbstractMetaServerManager;
-import org.springframework.beans.factory.annotation.Autowired;
-
 import java.util.Collection;
+import org.springframework.beans.factory.annotation.Autowired;
 
 /**
  * @author chen.zhu
- * <p>
- * Mar 15, 2021
+ *     <p>Mar 15, 2021
  */
 public class DataMetaServerManager extends AbstractMetaServerManager {
 
-    @Autowired
-    private DataServerConfig dataServerConfig;
+  @Autowired private DataServerConfig dataServerConfig;
 
-    @Override
-    protected Collection<String> getConfiguredMetaServerDomains() {
-        return dataServerConfig.getMetaServerAddresses();
-    }
+  @Override
+  protected Collection<String> getConfiguredMetaServerDomains() {
+    return dataServerConfig.getMetaServerAddresses();
+  }
 
-    @Override
-    public int getRpcTimeoutMillis() {
-        return dataServerConfig.getRpcTimeoutMillis();
-    }
+  @Override
+  public int getRpcTimeoutMillis() {
+    return dataServerConfig.getRpcTimeoutMillis();
+  }
 
-    @Override
-    public int getServerPort() {
-        return dataServerConfig.getMetaServerPort();
-    }
+  @Override
+  public int getServerPort() {
+    return dataServerConfig.getMetaServerPort();
+  }
 }

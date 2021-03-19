@@ -18,32 +18,29 @@ package com.alipay.sofa.registry.server.session.node.service;
 
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
 import com.alipay.sofa.registry.server.shared.meta.AbstractMetaServerManager;
-import org.springframework.beans.factory.annotation.Autowired;
-
 import java.util.Collection;
+import org.springframework.beans.factory.annotation.Autowired;
 
 /**
  * @author chen.zhu
- * <p>
- * Mar 15, 2021
+ *     <p>Mar 15, 2021
  */
 public class SessionMetaServerManager extends AbstractMetaServerManager {
 
-    @Autowired
-    private SessionServerConfig sessionServerConfig;
+  @Autowired private SessionServerConfig sessionServerConfig;
 
-    @Override
-    protected Collection<String> getConfiguredMetaServerDomains() {
-        return sessionServerConfig.getMetaServerAddresses();
-    }
+  @Override
+  protected Collection<String> getConfiguredMetaServerDomains() {
+    return sessionServerConfig.getMetaServerAddresses();
+  }
 
-    @Override
-    public int getRpcTimeoutMillis() {
-        return sessionServerConfig.getMetaNodeExchangeTimeoutMillis();
-    }
+  @Override
+  public int getRpcTimeoutMillis() {
+    return sessionServerConfig.getMetaNodeExchangeTimeoutMillis();
+  }
 
-    @Override
-    public int getServerPort() {
-        return sessionServerConfig.getMetaServerPort();
-    }
+  @Override
+  public int getServerPort() {
+    return sessionServerConfig.getMetaServerPort();
+  }
 }

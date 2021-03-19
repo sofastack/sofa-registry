@@ -25,75 +25,71 @@ import com.alipay.sofa.registry.server.meta.MetaLeaderService;
 import com.alipay.sofa.registry.server.meta.remoting.notifier.Notifier;
 import com.alipay.sofa.registry.server.meta.slot.SlotManager;
 import com.google.common.annotations.VisibleForTesting;
+import java.util.List;
+import javax.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import javax.annotation.PostConstruct;
-import java.util.List;
-
 /**
  * @author chen.zhu
- * <p>
- * Dec 02, 2020
+ *     <p>Dec 02, 2020
  */
 @Component
 public class DefaultSlotManager extends SimpleSlotManager implements SlotManager {
 
-    @Autowired(required = false)
-    private List<Notifier> notifiers;
+  @Autowired(required = false)
+  private List<Notifier> notifiers;
 
-    @Autowired
-    private MetaLeaderService metaLeaderService;
+  @Autowired private MetaLeaderService metaLeaderService;
 
-    public DefaultSlotManager() {
+  public DefaultSlotManager() {}
+
+  public DefaultSlotManager(MetaLeaderService metaLeaderService) {
+    this.metaLeaderService = metaLeaderService;
+  }
+
+  @PostConstruct
+  public void postConstruct() throws Exception {
+    LifecycleHelper.initializeIfPossible(this);
+  }
+
+  @Override
+  protected void doInitialize() throws InitializeException {
+    super.doInitialize();
+    addObserver(new SlotTableChangeNotification());
+  }
+
+  @Override
+  public void refresh(SlotTable slotTable) {
+    super.refresh(slotTable);
+    if (metaLeaderService.amIStableAsLeader()) {
+      notifyObservers(slotTable);
     }
+  }
 
-    public DefaultSlotManager(MetaLeaderService metaLeaderService) {
-        this.metaLeaderService = metaLeaderService;
-    }
-
-    @PostConstruct
-    public void postConstruct() throws Exception {
-        LifecycleHelper.initializeIfPossible(this);
-    }
+  private final class SlotTableChangeNotification implements UnblockingObserver {
 
     @Override
-    protected void doInitialize() throws InitializeException {
-        super.doInitialize();
-        addObserver(new SlotTableChangeNotification());
-    }
-
-    @Override
-    public void refresh(SlotTable slotTable) {
-        super.refresh(slotTable);
-        if (metaLeaderService.amIStableAsLeader()) {
-            notifyObservers(slotTable);
+    public void update(Observable source, Object message) {
+      if (message instanceof SlotTable) {
+        if (notifiers == null || notifiers.isEmpty()) {
+          return;
         }
+        notifiers.forEach(
+            notifier -> {
+              try {
+                notifier.notifySlotTableChange((SlotTable) message);
+              } catch (Throwable th) {
+                logger.error("[notify] notifier [{}]", notifier.getClass().getSimpleName(), th);
+              }
+            });
+      }
     }
+  }
 
-    private final class SlotTableChangeNotification implements UnblockingObserver {
-
-        @Override
-        public void update(Observable source, Object message) {
-            if (message instanceof SlotTable) {
-                if (notifiers == null || notifiers.isEmpty()) {
-                    return;
-                }
-                notifiers.forEach(notifier -> {
-                    try {
-                        notifier.notifySlotTableChange((SlotTable) message);
-                    } catch (Throwable th) {
-                        logger.error("[notify] notifier [{}]", notifier.getClass().getSimpleName(), th);
-                    }
-                });
-            }
-        }
-    }
-
-    @VisibleForTesting
-    public SimpleSlotManager setNotifiers(List<Notifier> notifiers) {
-        this.notifiers = notifiers;
-        return this;
-    }
-
+  @VisibleForTesting
+  public SimpleSlotManager setNotifiers(List<Notifier> notifiers) {
+    this.notifiers = notifiers;
+    return this;
+  }
 }

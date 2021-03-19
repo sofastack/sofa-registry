@@ -17,28 +17,30 @@
 package com.alipay.sofa.registry.common.model.store;
 
 /**
- *
  * @author shangyu.wh
  * @version $Id: StoreData.java, v 0.1 2017-11-30 19:48 shangyu.wh Exp $
  */
 public interface StoreData<ID> {
 
-    /**
-     * DataType enum
-     */
-    enum DataType {
-        SUBSCRIBER, PUBLISHER, WATCHER, UN_PUBLISHER
-    }
+  /** DataType enum */
+  enum DataType {
+    SUBSCRIBER,
+    PUBLISHER,
+    WATCHER,
+    UN_PUBLISHER
+  }
 
-    /**
-     * get store dataType
-     * @return
-     */
-    DataType getDataType();
+  /**
+   * get store dataType
+   *
+   * @return
+   */
+  DataType getDataType();
 
-    /**
-     * get store data ID
-     * @return
-     */
-    ID getId();
+  /**
+   * get store data ID
+   *
+   * @return
+   */
+  ID getId();
 }
