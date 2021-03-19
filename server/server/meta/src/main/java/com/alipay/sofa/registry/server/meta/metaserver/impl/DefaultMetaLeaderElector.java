@@ -25,21 +25,20 @@ import com.alipay.sofa.registry.server.meta.MetaLeaderService;
 import com.alipay.sofa.registry.server.meta.bootstrap.config.MetaServerConfig;
 import com.alipay.sofa.registry.store.api.elector.LeaderAware;
 import com.alipay.sofa.registry.store.api.elector.LeaderElector;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
-
-import javax.annotation.PostConstruct;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
+import javax.annotation.PostConstruct;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
 /**
  * @author chen.zhu
- * <p>
- * Mar 10, 2021
+ *     <p>Mar 10, 2021
  */
 @Component
-public class DefaultMetaLeaderElector extends AbstractLifecycleObservable implements MetaLeaderService, LeaderAware {
+public class DefaultMetaLeaderElector extends AbstractLifecycleObservable
+    implements MetaLeaderService, LeaderAware {
 
   private final Logger logger = LoggerFactory.getLogger(DefaultMetaLeaderElector.class);
 
@@ -47,21 +46,19 @@ public class DefaultMetaLeaderElector extends AbstractLifecycleObservable implem
 
   private final AtomicReference<LeaderState> leaderState = new AtomicReference<>();
 
-  @Autowired
-  private LeaderElector leaderElector;
+  @Autowired private LeaderElector leaderElector;
 
-  @Autowired
-  private MetaServerConfig metaServerConfig;
+  @Autowired private MetaServerConfig metaServerConfig;
 
   @Autowired(required = false)
   private List<MetaLeaderElectorListener> listeners;
 
-  public DefaultMetaLeaderElector() {
-  }
+  public DefaultMetaLeaderElector() {}
 
-  public DefaultMetaLeaderElector(LeaderElector leaderElector,
-                                  MetaServerConfig metaServerConfig,
-                                  List<MetaLeaderElectorListener> listeners) {
+  public DefaultMetaLeaderElector(
+      LeaderElector leaderElector,
+      MetaServerConfig metaServerConfig,
+      List<MetaLeaderElectorListener> listeners) {
     this.leaderElector = leaderElector;
     this.metaServerConfig = metaServerConfig;
     this.listeners = listeners;
@@ -82,7 +79,7 @@ public class DefaultMetaLeaderElector extends AbstractLifecycleObservable implem
   @Override
   public boolean isWarmup() {
     return leaderState.get() != null
-            && System.currentTimeMillis() - leaderState.get().getStartTime() > getWarmupMilli();
+        && System.currentTimeMillis() - leaderState.get().getStartTime() > getWarmupMilli();
   }
 
   @Override
@@ -103,7 +100,8 @@ public class DefaultMetaLeaderElector extends AbstractLifecycleObservable implem
   @Override
   public void leaderNotify() {
     if (wasLeader.compareAndSet(false, true)) {
-      leaderState.set(new LeaderState(LeaderElector.ElectorRole.LEADER, System.currentTimeMillis()));
+      leaderState.set(
+          new LeaderState(LeaderElector.ElectorRole.LEADER, System.currentTimeMillis()));
       becomeLeader();
     }
   }
@@ -111,7 +109,8 @@ public class DefaultMetaLeaderElector extends AbstractLifecycleObservable implem
   @Override
   public void followNotify() {
     if (wasLeader.compareAndSet(true, false)) {
-      leaderState.set(new LeaderState(LeaderElector.ElectorRole.FOLLOWER, System.currentTimeMillis()));
+      leaderState.set(
+          new LeaderState(LeaderElector.ElectorRole.FOLLOWER, System.currentTimeMillis()));
       loseLeader();
     }
   }
@@ -121,9 +120,10 @@ public class DefaultMetaLeaderElector extends AbstractLifecycleObservable implem
       logger.info("[becomeLeader] change from follower to elector");
     }
     if (listeners != null && !listeners.isEmpty()) {
-      listeners.forEach(listener -> {
-        listener.becomeLeader();
-      });
+      listeners.forEach(
+          listener -> {
+            listener.becomeLeader();
+          });
     }
   }
 
@@ -136,9 +136,10 @@ public class DefaultMetaLeaderElector extends AbstractLifecycleObservable implem
       logger.info("[becomeFollow] change from elector to follower");
     }
     if (listeners != null && !listeners.isEmpty()) {
-      listeners.forEach(listener -> {
-        listener.loseLeader();
-      });
+      listeners.forEach(
+          listener -> {
+            listener.loseLeader();
+          });
     }
   }
 
@@ -161,10 +162,7 @@ public class DefaultMetaLeaderElector extends AbstractLifecycleObservable implem
 
     @Override
     public String toString() {
-      return "LeaderState{" +
-              "state=" + state +
-              ", startTime=" + startTime +
-              '}';
+      return "LeaderState{" + "state=" + state + ", startTime=" + startTime + '}';
     }
   }
 }
