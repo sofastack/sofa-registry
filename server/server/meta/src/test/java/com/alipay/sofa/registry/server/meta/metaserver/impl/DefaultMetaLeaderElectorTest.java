@@ -51,10 +51,10 @@ public class DefaultMetaLeaderElectorTest extends AbstractMetaServerTest {
     when(metaServerConfig.getMetaLeaderWarmupMilli()).thenReturn(2000L);
     when(leaderElector.amILeader()).thenReturn(true);
     metaLeaderElector.leaderNotify();
-    Assert.assertFalse(metaLeaderElector.isWarmup());
+    Assert.assertFalse(metaLeaderElector.isWarmuped());
     when(metaServerConfig.getMetaLeaderWarmupMilli()).thenReturn(1L);
     Thread.sleep(1);
-    Assert.assertTrue(metaLeaderElector.isWarmup());
+    Assert.assertTrue(metaLeaderElector.isWarmuped());
   }
 
   @Test

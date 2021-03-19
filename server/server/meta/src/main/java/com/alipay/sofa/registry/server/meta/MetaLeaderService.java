@@ -48,7 +48,7 @@ public interface MetaLeaderService {
    *
    * @return the get meta server elector state
    */
-  boolean isWarmup();
+  boolean isWarmuped();
 
   /**
    * Am i stable as elector boolean.
@@ -56,7 +56,7 @@ public interface MetaLeaderService {
    * @return the boolean
    */
   default boolean amIStableAsLeader() {
-    return amILeader() && !isWarmup();
+    return amILeader() && isWarmuped();
   }
 
   public interface MetaLeaderElectorListener {
