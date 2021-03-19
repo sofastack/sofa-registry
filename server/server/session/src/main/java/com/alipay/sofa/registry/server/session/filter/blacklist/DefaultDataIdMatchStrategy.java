@@ -17,23 +17,21 @@
 package com.alipay.sofa.registry.server.session.filter.blacklist;
 
 import com.alipay.sofa.registry.server.session.filter.DataIdMatchStrategy;
-import org.springframework.util.StringUtils;
-
 import java.util.function.Supplier;
 import java.util.regex.Pattern;
+import org.springframework.util.StringUtils;
 
 /**
- *
  * @author shangyu.wh
  * @version 1.0: DefaultDataIdMatchStrategy.java, v 0.1 2019-06-19 22:15 shangyu.wh Exp $
  */
 public class DefaultDataIdMatchStrategy implements DataIdMatchStrategy<String> {
 
-    @Override
-    public boolean match(String dataId, Supplier<String> getOperatorType) {
-        if (StringUtils.hasText(dataId) && StringUtils.hasText(getOperatorType.get())) {
-            return Pattern.matches(getOperatorType.get(), dataId);
-        }
-        return true;
+  @Override
+  public boolean match(String dataId, Supplier<String> getOperatorType) {
+    if (StringUtils.hasText(dataId) && StringUtils.hasText(getOperatorType.get())) {
+      return Pattern.matches(getOperatorType.get(), dataId);
     }
+    return true;
+  }
 }

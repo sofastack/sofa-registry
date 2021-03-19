@@ -16,6 +16,8 @@
  */
 package com.alipay.sofa.registry.server.meta.lease.impl;
 
+import static org.mockito.Mockito.when;
+
 import com.alipay.sofa.registry.exception.InitializeException;
 import com.alipay.sofa.registry.lifecycle.impl.LifecycleHelper;
 import com.alipay.sofa.registry.remoting.bolt.exchange.BoltExchange;
@@ -24,6 +26,9 @@ import com.alipay.sofa.registry.server.meta.bootstrap.config.MetaServerConfig;
 import com.alipay.sofa.registry.server.meta.bootstrap.config.NodeConfig;
 import com.alipay.sofa.registry.server.meta.metaserver.CrossDcMetaServer;
 import com.google.common.collect.ImmutableMap;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.CyclicBarrier;
+import java.util.concurrent.TimeoutException;
 import org.assertj.core.util.Lists;
 import org.assertj.core.util.Sets;
 import org.junit.After;
@@ -33,110 +38,119 @@ import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.CyclicBarrier;
-import java.util.concurrent.TimeoutException;
-
-import static org.mockito.Mockito.when;
-
 public class CrossDcMetaServerManagerTest extends AbstractMetaServerTest {
 
-    private DefaultCrossDcMetaServerManager crossDcMetaServerManager;
+  private DefaultCrossDcMetaServerManager crossDcMetaServerManager;
 
-    @Mock
-    private NodeConfig               nodeConfig;
+  @Mock private NodeConfig nodeConfig;
 
-    @Mock
-    private MetaServerConfig         metaServerConfig;
+  @Mock private MetaServerConfig metaServerConfig;
 
-    @Mock
-    private BoltExchange boltExchange;
+  @Mock private BoltExchange boltExchange;
 
-    @Before
-    public void beforeCrossDcMetaServerManagerTest() {
-        MockitoAnnotations.initMocks(this);
-        crossDcMetaServerManager = new DefaultCrossDcMetaServerManager()
-            .setMetaServerConfig(metaServerConfig).setBoltExchange(boltExchange)
-            .setExecutors(executors).setNodeConfig(nodeConfig).setScheduled(scheduled);
-        when(metaServerConfig.getCrossDcMetaSyncIntervalMilli()).thenReturn(10000);
+  @Before
+  public void beforeCrossDcMetaServerManagerTest() {
+    MockitoAnnotations.initMocks(this);
+    crossDcMetaServerManager =
+        new DefaultCrossDcMetaServerManager()
+            .setMetaServerConfig(metaServerConfig)
+            .setBoltExchange(boltExchange)
+            .setExecutors(executors)
+            .setNodeConfig(nodeConfig)
+            .setScheduled(scheduled);
+    when(metaServerConfig.getCrossDcMetaSyncIntervalMilli()).thenReturn(10000);
+  }
+
+  @After
+  public void afterCrossDcMetaServerManagerTest() throws Exception {
+    crossDcMetaServerManager.preDestory();
+  }
+
+  @Test
+  public void testGetOrCreate() throws InterruptedException {
+    int tasks = 100;
+    when(nodeConfig.getDataCenterMetaServers(getDc()))
+        .thenReturn(Sets.newLinkedHashSet(randomIp(), randomIp(), randomIp()));
+    CountDownLatch latch = new CountDownLatch(tasks);
+    CyclicBarrier barrier = new CyclicBarrier(tasks);
+    for (int i = 0; i < tasks; i++) {
+      executors.execute(
+          new Runnable() {
+            @Override
+            public void run() {
+              try {
+                barrier.await();
+              } catch (Exception ignore) {
+              }
+              crossDcMetaServerManager.getOrCreate(getDc());
+              latch.countDown();
+            }
+          });
     }
+    latch.await();
+    Assert.assertEquals(1, crossDcMetaServerManager.getCrossDcMetaServers().size());
+    Assert.assertTrue(crossDcMetaServerManager.getOrCreate(getDc()).getLifecycleState().canStart());
+    Assert.assertTrue(
+        crossDcMetaServerManager.getOrCreate(getDc()).getLifecycleState().isInitialized());
+  }
 
-    @After
-    public void afterCrossDcMetaServerManagerTest() throws Exception {
-        crossDcMetaServerManager.preDestory();
-    }
+  @Test
+  public void testRemove() {}
 
-    @Test
-    public void testGetOrCreate() throws InterruptedException {
-        int tasks = 100;
-        when(nodeConfig.getDataCenterMetaServers(getDc())).thenReturn(
-            Sets.newLinkedHashSet(randomIp(), randomIp(), randomIp()));
-        CountDownLatch latch = new CountDownLatch(tasks);
-        CyclicBarrier barrier = new CyclicBarrier(tasks);
-        for (int i = 0; i < tasks; i++) {
-            executors.execute(new Runnable() {
-                @Override
-                public void run() {
-                    try {
-                        barrier.await();
-                    } catch (Exception ignore) {
-                    }
-                    crossDcMetaServerManager.getOrCreate(getDc());
-                    latch.countDown();
-                }
-            });
-        }
-        latch.await();
-        Assert.assertEquals(1, crossDcMetaServerManager.getCrossDcMetaServers().size());
-        Assert.assertTrue(crossDcMetaServerManager.getOrCreate(getDc()).getLifecycleState()
-            .canStart());
-        Assert.assertTrue(crossDcMetaServerManager.getOrCreate(getDc()).getLifecycleState()
-            .isInitialized());
+  @Test
+  public void testIsLeader() throws Exception {
+    when(nodeConfig.getDataCenterMetaServers(getDc()))
+        .thenReturn(Sets.newLinkedHashSet(randomIp(), randomIp(), randomIp()));
+    when(nodeConfig.getMetaNodeIP())
+        .thenReturn(
+            ImmutableMap.of(
+                getDc(),
+                Lists.newArrayList(randomIp(), randomIp(), randomIp()),
+                "dc2",
+                Lists.newArrayList(randomIp(), randomIp(), randomIp()),
+                "dc3",
+                Lists.newArrayList(randomIp(), randomIp(), randomIp())));
+    crossDcMetaServerManager.postConstruct();
+    crossDcMetaServerManager.becomeLeader();
+    waitConditionUntilTimeOut(
+        () -> crossDcMetaServerManager.getOrCreate(getDc()).getLifecycleState().isStarted(), 1000);
+    // wait for concurrent modification
+    Thread.sleep(10);
+    Assert.assertTrue(
+        crossDcMetaServerManager.getOrCreate(getDc()).getLifecycleState().isStarted());
+    for (CrossDcMetaServer metaServer : crossDcMetaServerManager.getCrossDcMetaServers().values()) {
+      Assert.assertTrue(metaServer.getLifecycleState().isStarted());
     }
+  }
 
-    @Test
-    public void testRemove() {
+  @Test
+  public void testNotLeader() throws InitializeException, TimeoutException, InterruptedException {
+    when(nodeConfig.getDataCenterMetaServers(getDc()))
+        .thenReturn(Sets.newLinkedHashSet(randomIp(), randomIp(), randomIp()));
+    when(nodeConfig.getMetaNodeIP())
+        .thenReturn(
+            ImmutableMap.of(
+                getDc(),
+                Lists.newArrayList(randomIp(), randomIp(), randomIp()),
+                "dc2",
+                Lists.newArrayList(randomIp(), randomIp(), randomIp()),
+                "dc3",
+                Lists.newArrayList(randomIp(), randomIp(), randomIp())));
+    LifecycleHelper.initializeIfPossible(crossDcMetaServerManager);
+    crossDcMetaServerManager.becomeLeader();
+    waitConditionUntilTimeOut(
+        () -> crossDcMetaServerManager.getOrCreate(getDc()).getLifecycleState().isStarted(), 1000);
+    // wait for concurrent modification
+    Thread.sleep(10);
+    Assert.assertTrue(
+        crossDcMetaServerManager.getOrCreate(getDc()).getLifecycleState().isStarted());
+    crossDcMetaServerManager.loseLeader();
+    waitConditionUntilTimeOut(
+        () -> crossDcMetaServerManager.getOrCreate(getDc()).getLifecycleState().isStopped(), 1000);
+    // wait for concurrent modification
+    Thread.sleep(10);
+    for (CrossDcMetaServer metaServer : crossDcMetaServerManager.getCrossDcMetaServers().values()) {
+      Assert.assertTrue(metaServer.getLifecycleState().isStopped());
     }
-
-    @Test
-    public void testIsLeader() throws Exception {
-        when(nodeConfig.getDataCenterMetaServers(getDc())).thenReturn(Sets.newLinkedHashSet(randomIp(), randomIp(), randomIp()));
-        when(nodeConfig.getMetaNodeIP()).thenReturn(ImmutableMap.of(
-                getDc(), Lists.newArrayList(randomIp(), randomIp(), randomIp()),
-                "dc2", Lists.newArrayList(randomIp(), randomIp(), randomIp()),
-                "dc3", Lists.newArrayList(randomIp(), randomIp(), randomIp())
-                ));
-        crossDcMetaServerManager.postConstruct();
-        crossDcMetaServerManager.becomeLeader();
-        waitConditionUntilTimeOut(()->crossDcMetaServerManager.getOrCreate(getDc()).getLifecycleState().isStarted(), 1000);
-        //wait for concurrent modification
-        Thread.sleep(10);
-        Assert.assertTrue(crossDcMetaServerManager.getOrCreate(getDc()).getLifecycleState().isStarted());
-        for(CrossDcMetaServer metaServer : crossDcMetaServerManager.getCrossDcMetaServers().values()) {
-            Assert.assertTrue(metaServer.getLifecycleState().isStarted());
-        }
-    }
-
-    @Test
-    public void testNotLeader() throws InitializeException, TimeoutException, InterruptedException {
-        when(nodeConfig.getDataCenterMetaServers(getDc())).thenReturn(Sets.newLinkedHashSet(randomIp(), randomIp(), randomIp()));
-        when(nodeConfig.getMetaNodeIP()).thenReturn(ImmutableMap.of(
-                getDc(), Lists.newArrayList(randomIp(), randomIp(), randomIp()),
-                "dc2", Lists.newArrayList(randomIp(), randomIp(), randomIp()),
-                "dc3", Lists.newArrayList(randomIp(), randomIp(), randomIp())
-        ));
-        LifecycleHelper.initializeIfPossible(crossDcMetaServerManager);
-        crossDcMetaServerManager.becomeLeader();
-        waitConditionUntilTimeOut(()->crossDcMetaServerManager.getOrCreate(getDc()).getLifecycleState().isStarted(), 1000);
-        //wait for concurrent modification
-        Thread.sleep(10);
-        Assert.assertTrue(crossDcMetaServerManager.getOrCreate(getDc()).getLifecycleState().isStarted());
-        crossDcMetaServerManager.loseLeader();
-        waitConditionUntilTimeOut(()->crossDcMetaServerManager.getOrCreate(getDc()).getLifecycleState().isStopped(), 1000);
-        //wait for concurrent modification
-        Thread.sleep(10);
-        for(CrossDcMetaServer metaServer : crossDcMetaServerManager.getCrossDcMetaServers().values()) {
-            Assert.assertTrue(metaServer.getLifecycleState().isStopped());
-        }
-    }
+  }
 }

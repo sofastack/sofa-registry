@@ -24,67 +24,76 @@ import com.alipay.sofa.registry.common.model.store.StoreData;
 import com.alipay.sofa.registry.util.ParaCheckUtil;
 
 /**
- *
  * @author yuzhi.lyz
  * @version v 0.1 2020-12-02 19:47 yuzhi.lyz Exp $
  */
 public final class PublisherEnvelope {
-    final Publisher       publisher;
-    final ProcessId       sessionProcessId;
-    final RegisterVersion registerVersion;
-    final long            tombstoneTimestamp;
+  final Publisher publisher;
+  final ProcessId sessionProcessId;
+  final RegisterVersion registerVersion;
+  final long tombstoneTimestamp;
 
-    private PublisherEnvelope(Publisher publisher, ProcessId sessionProcessId,
-                              RegisterVersion registerVersion, long tombstoneTimestamp) {
-        this.publisher = publisher;
-        this.sessionProcessId = sessionProcessId;
-        this.registerVersion = registerVersion;
-        this.tombstoneTimestamp = tombstoneTimestamp;
+  private PublisherEnvelope(
+      Publisher publisher,
+      ProcessId sessionProcessId,
+      RegisterVersion registerVersion,
+      long tombstoneTimestamp) {
+    this.publisher = publisher;
+    this.sessionProcessId = sessionProcessId;
+    this.registerVersion = registerVersion;
+    this.tombstoneTimestamp = tombstoneTimestamp;
+  }
+
+  static PublisherEnvelope of(Publisher publisher) {
+    ParaCheckUtil.checkNotNull(publisher.getSessionProcessId(), "publisher.sessionProcessId");
+    switch (publisher.getDataType()) {
+      case PUBLISHER:
+        return pubOf(publisher, publisher.getSessionProcessId());
+      case UN_PUBLISHER:
+        return unpubOf(publisher.registerVersion(), publisher.getSessionProcessId());
+      default:
+        throw new IllegalArgumentException("not accept Publisher Type:" + publisher.getDataType());
     }
+  }
 
-    static PublisherEnvelope of(Publisher publisher) {
-        ParaCheckUtil.checkNotNull(publisher.getSessionProcessId(), "publisher.sessionProcessId");
-        switch (publisher.getDataType()) {
-            case PUBLISHER:
-                return pubOf(publisher, publisher.getSessionProcessId());
-            case UN_PUBLISHER:
-                return unpubOf(publisher.registerVersion(), publisher.getSessionProcessId());
-            default:
-                throw new IllegalArgumentException("not accept Publisher Type:"
-                                                   + publisher.getDataType());
-        }
-    }
-
-    static PublisherEnvelope pubOf(Publisher publisher, ProcessId sessionProcessId) {
-        ParaCheckUtil.checkEquals(publisher.getDataType(), StoreData.DataType.PUBLISHER,
-            "Publisher.dataType");
-        return new PublisherEnvelope(publisher, sessionProcessId, publisher.registerVersion(),
+  static PublisherEnvelope pubOf(Publisher publisher, ProcessId sessionProcessId) {
+    ParaCheckUtil.checkEquals(
+        publisher.getDataType(), StoreData.DataType.PUBLISHER, "Publisher.dataType");
+    return new PublisherEnvelope(
+        publisher,
+        sessionProcessId,
+        publisher.registerVersion(),
         // Long.max means pub never compact
-            Long.MAX_VALUE);
-    }
+        Long.MAX_VALUE);
+  }
 
-    static PublisherEnvelope unpubOf(RegisterVersion version, ProcessId sessionProcessId) {
-        return new PublisherEnvelope(null, sessionProcessId, version, System.currentTimeMillis());
-    }
+  static PublisherEnvelope unpubOf(RegisterVersion version, ProcessId sessionProcessId) {
+    return new PublisherEnvelope(null, sessionProcessId, version, System.currentTimeMillis());
+  }
 
-    boolean isPub() {
-        return publisher != null;
-    }
+  boolean isPub() {
+    return publisher != null;
+  }
 
-    RegisterVersion getVersionIfPub() {
-        return isPub() ? registerVersion : null;
-    }
+  RegisterVersion getVersionIfPub() {
+    return isPub() ? registerVersion : null;
+  }
 
-    boolean isConnectId(ConnectId connectId) {
-        return isPub() && publisher.connectId().equals(connectId);
-    }
+  boolean isConnectId(ConnectId connectId) {
+    return isPub() && publisher.connectId().equals(connectId);
+  }
 
-    @Override
-    public String toString() {
-        StringBuilder sb = new StringBuilder(128);
-        sb.append("pub=").append(isPub()).append(", connectId=")
-            .append(publisher != null ? publisher.connectId() : "null").append(", ver=")
-            .append(registerVersion).append(", ts=").append(tombstoneTimestamp);
-        return sb.toString();
-    }
+  @Override
+  public String toString() {
+    StringBuilder sb = new StringBuilder(128);
+    sb.append("pub=")
+        .append(isPub())
+        .append(", connectId=")
+        .append(publisher != null ? publisher.connectId() : "null")
+        .append(", ver=")
+        .append(registerVersion)
+        .append(", ts=")
+        .append(tombstoneTimestamp);
+    return sb.toString();
+  }
 }

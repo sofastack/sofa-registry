@@ -26,44 +26,41 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 /**
  * @author chen.zhu
- * <p>
- * Feb 24, 2021
+ *     <p>Feb 24, 2021
  */
 public class SlotTableChangeEventHandler extends AbstractClientHandler<SlotTableChangeEvent> {
 
-    @Autowired
-    private MetaServerService metaServerService;
+  @Autowired private MetaServerService metaServerService;
 
-    @Override
-    protected Node.NodeType getConnectNodeType() {
-        return Node.NodeType.META;
-    }
+  @Override
+  protected Node.NodeType getConnectNodeType() {
+    return Node.NodeType.META;
+  }
 
-    @Override
-    public void checkParam(SlotTableChangeEvent request) throws RuntimeException {
-        super.checkParam(request);
-        ParaCheckUtil.checkNotNull(request, "SlotTableChangeEvent");
-    }
+  @Override
+  public void checkParam(SlotTableChangeEvent request) throws RuntimeException {
+    super.checkParam(request);
+    ParaCheckUtil.checkNotNull(request, "SlotTableChangeEvent");
+  }
 
-    @Override
-    public Object doHandle(Channel channel, SlotTableChangeEvent request) {
-        boolean result = metaServerService.handleSlotTableChange(request);
-        if (result) {
-            return CommonResponse
-                .buildSuccessResponse("successfully triggered slot-table retrieval");
-        } else {
-            return CommonResponse
-                .buildFailedResponse("won't update slot-table, check [AbstractMetaServerService] log");
-        }
+  @Override
+  public Object doHandle(Channel channel, SlotTableChangeEvent request) {
+    boolean result = metaServerService.handleSlotTableChange(request);
+    if (result) {
+      return CommonResponse.buildSuccessResponse("successfully triggered slot-table retrieval");
+    } else {
+      return CommonResponse.buildFailedResponse(
+          "won't update slot-table, check [AbstractMetaServerService] log");
     }
+  }
 
-    @Override
-    public Object buildFailedResponse(String msg) {
-        return CommonResponse.buildFailedResponse(msg);
-    }
+  @Override
+  public Object buildFailedResponse(String msg) {
+    return CommonResponse.buildFailedResponse(msg);
+  }
 
-    @Override
-    public Class interest() {
-        return SlotTableChangeEvent.class;
-    }
+  @Override
+  public Class interest() {
+    return SlotTableChangeEvent.class;
+  }
 }

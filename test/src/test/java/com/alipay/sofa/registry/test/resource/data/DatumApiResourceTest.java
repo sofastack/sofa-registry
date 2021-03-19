@@ -16,6 +16,10 @@
  */
 package com.alipay.sofa.registry.test.resource.data;
 
+import static com.alipay.sofa.registry.client.constants.ValueConstants.DEFAULT_GROUP;
+import static com.alipay.sofa.registry.common.model.constants.ValueConstants.DEFAULT_INSTANCE_ID;
+import static org.junit.Assert.assertEquals;
+
 import com.alipay.sofa.registry.client.api.model.RegistryType;
 import com.alipay.sofa.registry.client.api.registration.PublisherRegistration;
 import com.alipay.sofa.registry.client.api.registration.SubscriberRegistration;
@@ -24,6 +28,9 @@ import com.alipay.sofa.registry.common.model.store.DataInfo;
 import com.alipay.sofa.registry.core.model.ScopeEnum;
 import com.alipay.sofa.registry.server.data.resource.DatumParam;
 import com.alipay.sofa.registry.test.BaseIntegrationTest;
+import java.util.Map;
+import javax.ws.rs.client.Entity;
+import javax.ws.rs.core.MediaType;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -32,15 +39,6 @@ import org.junit.runner.RunWith;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.test.context.junit4.SpringRunner;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-
-import javax.ws.rs.client.Entity;
-import javax.ws.rs.core.MediaType;
-import java.util.Map;
-
-import static com.alipay.sofa.registry.client.constants.ValueConstants.DEFAULT_GROUP;
-import static com.alipay.sofa.registry.common.model.constants.ValueConstants.DEFAULT_INSTANCE_ID;
 
 /**
  * @author kezhu.wukz
@@ -49,237 +47,275 @@ import static com.alipay.sofa.registry.common.model.constants.ValueConstants.DEF
 @RunWith(SpringRunner.class)
 public class DatumApiResourceTest extends BaseIntegrationTest {
 
-    private static final Logger LOGGER              = LoggerFactory
-                                                        .getLogger(DatumApiResourceTest.class);
+  private static final Logger LOGGER = LoggerFactory.getLogger(DatumApiResourceTest.class);
 
-    private static String       publisherRegisterId = "registerId-123456789";
+  private static String publisherRegisterId = "registerId-123456789";
 
-    private String              dataId              = "test-dataId-" + System.currentTimeMillis();
-    private String              value               = "DataDigestResourceTest";
-    private String              dataInfoId          = DataInfo.toDataInfoId(dataId,
-                                                        DEFAULT_INSTANCE_ID, DEFAULT_GROUP);
+  private String dataId = "test-dataId-" + System.currentTimeMillis();
+  private String value = "DataDigestResourceTest";
+  private String dataInfoId = DataInfo.toDataInfoId(dataId, DEFAULT_INSTANCE_ID, DEFAULT_GROUP);
 
-    @Before
-    public void before() throws Exception {
-        clientOff();
-        Thread.sleep(2000L);
+  @Before
+  public void before() throws Exception {
+    clientOff();
+    Thread.sleep(2000L);
 
-        PublisherRegistration registration = new PublisherRegistration(dataId);
-        registryClient1.register(registration, value);
-        Thread.sleep(2000L);
+    PublisherRegistration registration = new PublisherRegistration(dataId);
+    registryClient1.register(registration, value);
+    Thread.sleep(2000L);
 
-        MySubscriberDataObserver observer = new MySubscriberDataObserver();
-        SubscriberRegistration subReg = new SubscriberRegistration(dataId, observer);
-        subReg.setScopeEnum(ScopeEnum.dataCenter);
-        registryClient1.register(subReg);
-        Thread.sleep(2000L);
+    MySubscriberDataObserver observer = new MySubscriberDataObserver();
+    SubscriberRegistration subReg = new SubscriberRegistration(dataId, observer);
+    subReg.setScopeEnum(ScopeEnum.dataCenter);
+    registryClient1.register(subReg);
+    Thread.sleep(2000L);
 
-        assertEquals(dataId, observer.dataId);
-        assertEquals(LOCAL_REGION, observer.userData.getLocalZone());
-        assertEquals(1, observer.userData.getZoneData().size());
-        assertEquals(1, observer.userData.getZoneData().values().size());
-        assertEquals(true, observer.userData.getZoneData().containsKey(LOCAL_REGION));
-        assertEquals(1, observer.userData.getZoneData().get(LOCAL_REGION).size());
-        assertEquals(value, observer.userData.getZoneData().get(LOCAL_REGION).get(0));
+    assertEquals(dataId, observer.dataId);
+    assertEquals(LOCAL_REGION, observer.userData.getLocalZone());
+    assertEquals(1, observer.userData.getZoneData().size());
+    assertEquals(1, observer.userData.getZoneData().values().size());
+    assertEquals(true, observer.userData.getZoneData().containsKey(LOCAL_REGION));
+    assertEquals(1, observer.userData.getZoneData().get(LOCAL_REGION).size());
+    assertEquals(value, observer.userData.getZoneData().get(LOCAL_REGION).get(0));
+  }
+
+  @After
+  public void after() throws Exception {
+    registryClient1.unregister(dataId, DEFAULT_GROUP, RegistryType.SUBSCRIBER);
+    registryClient1.unregister(dataId, DEFAULT_GROUP, RegistryType.PUBLISHER);
+    //        clientOff();
+  }
+
+  @Test
+  public void testException() {
+    DatumParam datumParam = new DatumParam();
+
+    {
+      CommonResponse response =
+          dataChannel
+              .getWebTarget()
+              .path("datum/api/get")
+              .request()
+              .post(Entity.entity(datumParam, MediaType.APPLICATION_JSON), CommonResponse.class);
+      LOGGER.info("testException for datum/api/get:" + response);
+      Assert.assertTrue(response.getMessage().contains("empty"));
     }
 
-    @After
-    public void after() throws Exception {
-        registryClient1.unregister(dataId, DEFAULT_GROUP, RegistryType.SUBSCRIBER);
-        registryClient1.unregister(dataId, DEFAULT_GROUP, RegistryType.PUBLISHER);
-        //        clientOff();
+    {
+      CommonResponse response =
+          dataChannel
+              .getWebTarget()
+              .path("datum/api/delete")
+              .request()
+              .post(Entity.entity(datumParam, MediaType.APPLICATION_JSON), CommonResponse.class);
+      LOGGER.info("testException for datum/api/delete:" + response);
+      Assert.assertTrue(response.getMessage().contains("empty"));
+    }
+    {
+      CommonResponse response =
+          dataChannel
+              .getWebTarget()
+              .path("datum/api/pub/add")
+              .request()
+              .post(Entity.entity(datumParam, MediaType.APPLICATION_JSON), CommonResponse.class);
+      LOGGER.info("testException for datum/api/pub/add:" + response);
+      Assert.assertTrue(response.getMessage().contains("empty"));
+    }
+    {
+      CommonResponse response =
+          dataChannel
+              .getWebTarget()
+              .path("datum/api/pub/delete")
+              .request()
+              .post(Entity.entity(datumParam, MediaType.APPLICATION_JSON), CommonResponse.class);
+      LOGGER.info("testException for datum/api/pub/delete:" + response);
+      Assert.assertTrue(response.getMessage().contains("empty"));
+    }
+  }
+
+  @Test
+  public void testGet() {
+    // test get
+    {
+      DatumParam datumParam = new DatumParam();
+      datumParam.setDataInfoId(dataInfoId);
+      CommonResponse response =
+          dataChannel
+              .getWebTarget()
+              .path("datum/api/get")
+              .request()
+              .post(Entity.entity(datumParam, MediaType.APPLICATION_JSON), CommonResponse.class);
+
+      LOGGER.info("testGet:" + response);
+      Assert.assertTrue(response.getMessage().contains(dataId));
+    }
+    // test get not found
+    {
+      DatumParam datumParam = new DatumParam();
+      datumParam.setDataInfoId(dataInfoId + System.currentTimeMillis());
+      CommonResponse response =
+          dataChannel
+              .getWebTarget()
+              .path("datum/api/get")
+              .request()
+              .post(Entity.entity(datumParam, MediaType.APPLICATION_JSON), CommonResponse.class);
+
+      LOGGER.info("testGet:" + response);
+      Assert.assertTrue(response.getMessage().contains("not found"));
+    }
+  }
+
+  @Test
+  public void testAddDeletePub() {
+    // add
+    {
+      DatumParam datumParam = new DatumParam();
+      datumParam.setDataInfoId(dataInfoId);
+      String testZone = "testZone";
+      datumParam.setPublisherCell(testZone);
+      datumParam.setPublisherDataBox("test");
+      datumParam.setPublisherConnectId(LOCAL_ADDRESS + ":12345_" + LOCAL_ADDRESS + ":9600");
+      datumParam.setPublisherRegisterId(publisherRegisterId);
+      CommonResponse response =
+          dataChannel
+              .getWebTarget()
+              .path("datum/api/pub/add")
+              .request()
+              .post(Entity.entity(datumParam, MediaType.APPLICATION_JSON), CommonResponse.class);
+
+      LOGGER.info("testAddPub:" + response);
+      Assert.assertTrue(response.getMessage().contains(dataId));
+      Assert.assertTrue(response.getMessage().contains(testZone));
+    }
+    // delete
+    {
+      DatumParam datumParam = new DatumParam();
+      datumParam.setDataInfoId(dataInfoId);
+      String testZone = "testZone";
+      datumParam.setPublisherCell(testZone);
+      datumParam.setPublisherRegisterId(publisherRegisterId);
+      CommonResponse response =
+          dataChannel
+              .getWebTarget()
+              .path("datum/api/pub/delete")
+              .request()
+              .post(Entity.entity(datumParam, MediaType.APPLICATION_JSON), CommonResponse.class);
+      LOGGER.info("testDeletePub:" + response);
+      Assert.assertFalse(response.getMessage().contains(publisherRegisterId));
+    }
+  }
+
+  @Test
+  public void testDelete() {
+    // add
+    {
+      DatumParam datumParam = new DatumParam();
+      datumParam.setDataInfoId(dataInfoId);
+      String testZone = "testZone";
+      datumParam.setPublisherCell(testZone);
+      datumParam.setPublisherDataBox("test");
+      datumParam.setPublisherConnectId(LOCAL_ADDRESS + ":12345_" + LOCAL_ADDRESS + ":9600");
+      datumParam.setPublisherRegisterId(publisherRegisterId);
+      CommonResponse response =
+          dataChannel
+              .getWebTarget()
+              .path("datum/api/pub/add")
+              .request()
+              .post(Entity.entity(datumParam, MediaType.APPLICATION_JSON), CommonResponse.class);
+
+      LOGGER.info("testAddPub:" + response);
+      Assert.assertTrue(response.getMessage().contains(dataId));
+      Assert.assertTrue(response.getMessage().contains(testZone));
+    }
+    // delete
+    {
+      DatumParam datumParam = new DatumParam();
+      datumParam.setDataInfoId(dataInfoId);
+      CommonResponse response =
+          dataChannel
+              .getWebTarget()
+              .path("datum/api/delete")
+              .request()
+              .post(Entity.entity(datumParam, MediaType.APPLICATION_JSON), CommonResponse.class);
+      LOGGER.info("testDelete:" + response);
+      Assert.assertFalse(response.getMessage().contains(publisherRegisterId));
+    }
+  }
+
+  @Test
+  public void testGetDatumVersions() {
+    // test
+    {
+      DatumParam datumParam = new DatumParam();
+      datumParam.setDataCenter(LOCAL_DATACENTER);
+      Map<String, Integer> response =
+          dataChannel
+              .getWebTarget()
+              .path("datum/api/getDatumVersions")
+              .request()
+              .post(Entity.entity(datumParam, MediaType.APPLICATION_JSON), Map.class);
+
+      LOGGER.info("testGetDatumVersions:" + response);
+      Assert.assertTrue(response.get(dataInfoId) != null);
+    }
+    // test not found
+    {
+      DatumParam datumParam = new DatumParam();
+      datumParam.setDataCenter(LOCAL_DATACENTER + System.currentTimeMillis());
+      Map<String, Integer> response =
+          dataChannel
+              .getWebTarget()
+              .path("datum/api/getDatumVersions")
+              .request()
+              .post(Entity.entity(datumParam, MediaType.APPLICATION_JSON), Map.class);
+
+      LOGGER.info("testGetDatumVersions:" + response);
+      Assert.assertTrue(response.get(dataInfoId) == null);
+    }
+  }
+
+  @Test
+  public void testGetDatumVersion() {
+    {
+      DatumParam datumParam = new DatumParam();
+      datumParam.setDataCenter(LOCAL_DATACENTER);
+      datumParam.setDataInfoId(dataInfoId);
+      String response =
+          dataChannel
+              .getWebTarget()
+              .path("datum/api/getDatumVersion")
+              .request()
+              .post(Entity.entity(datumParam, MediaType.APPLICATION_JSON), String.class);
+
+      LOGGER.info("testGetDatumVersions:" + response);
+      Assert.assertTrue(response.contains(dataInfoId));
     }
 
-    @Test
-    public void testException() {
-        DatumParam datumParam = new DatumParam();
+    {
+      DatumParam datumParam = new DatumParam();
+      datumParam.setDataCenter(LOCAL_DATACENTER + System.currentTimeMillis());
+      datumParam.setDataInfoId(dataInfoId);
+      String response =
+          dataChannel
+              .getWebTarget()
+              .path("datum/api/getDatumVersion")
+              .request()
+              .post(Entity.entity(datumParam, MediaType.APPLICATION_JSON), String.class);
 
-        {
-            CommonResponse response = dataChannel.getWebTarget().path("datum/api/get").request()
-                .post(Entity.entity(datumParam, MediaType.APPLICATION_JSON), CommonResponse.class);
-            LOGGER.info("testException for datum/api/get:" + response);
-            Assert.assertTrue(response.getMessage().contains("empty"));
-        }
-
-        {
-            CommonResponse response = dataChannel.getWebTarget().path("datum/api/delete").request()
-                .post(Entity.entity(datumParam, MediaType.APPLICATION_JSON), CommonResponse.class);
-            LOGGER.info("testException for datum/api/delete:" + response);
-            Assert.assertTrue(response.getMessage().contains("empty"));
-        }
-        {
-            CommonResponse response = dataChannel.getWebTarget().path("datum/api/pub/add")
-                .request()
-                .post(Entity.entity(datumParam, MediaType.APPLICATION_JSON), CommonResponse.class);
-            LOGGER.info("testException for datum/api/pub/add:" + response);
-            Assert.assertTrue(response.getMessage().contains("empty"));
-        }
-        {
-            CommonResponse response = dataChannel.getWebTarget().path("datum/api/pub/delete")
-                .request()
-                .post(Entity.entity(datumParam, MediaType.APPLICATION_JSON), CommonResponse.class);
-            LOGGER.info("testException for datum/api/pub/delete:" + response);
-            Assert.assertTrue(response.getMessage().contains("empty"));
-        }
-
+      LOGGER.info("testGetDatumVersions:" + response);
+      Assert.assertTrue(response.contains(dataInfoId));
     }
+  }
 
-    @Test
-    public void testGet() {
-        //test get
-        {
-            DatumParam datumParam = new DatumParam();
-            datumParam.setDataInfoId(dataInfoId);
-            CommonResponse response = dataChannel.getWebTarget().path("datum/api/get").request()
-                .post(Entity.entity(datumParam, MediaType.APPLICATION_JSON), CommonResponse.class);
+  @Test
+  public void testGetDatumSize() {
+    DatumParam datumParam = new DatumParam();
+    datumParam.setDataCenter(LOCAL_DATACENTER);
+    datumParam.setDataInfoId(dataInfoId);
+    Map<String, Integer> response =
+        dataChannel.getWebTarget().path("datum/api/getDatumSizes").request().get(Map.class);
 
-            LOGGER.info("testGet:" + response);
-            Assert.assertTrue(response.getMessage().contains(dataId));
-        }
-        //test get not found
-        {
-            DatumParam datumParam = new DatumParam();
-            datumParam.setDataInfoId(dataInfoId + System.currentTimeMillis());
-            CommonResponse response = dataChannel.getWebTarget().path("datum/api/get").request()
-                .post(Entity.entity(datumParam, MediaType.APPLICATION_JSON), CommonResponse.class);
-
-            LOGGER.info("testGet:" + response);
-            Assert.assertTrue(response.getMessage().contains("not found"));
-        }
-
-    }
-
-    @Test
-    public void testAddDeletePub() {
-        //add
-        {
-            DatumParam datumParam = new DatumParam();
-            datumParam.setDataInfoId(dataInfoId);
-            String testZone = "testZone";
-            datumParam.setPublisherCell(testZone);
-            datumParam.setPublisherDataBox("test");
-            datumParam.setPublisherConnectId(LOCAL_ADDRESS + ":12345_" + LOCAL_ADDRESS + ":9600");
-            datumParam.setPublisherRegisterId(publisherRegisterId);
-            CommonResponse response = dataChannel.getWebTarget().path("datum/api/pub/add")
-                .request()
-                .post(Entity.entity(datumParam, MediaType.APPLICATION_JSON), CommonResponse.class);
-
-            LOGGER.info("testAddPub:" + response);
-            Assert.assertTrue(response.getMessage().contains(dataId));
-            Assert.assertTrue(response.getMessage().contains(testZone));
-        }
-        //delete
-        {
-            DatumParam datumParam = new DatumParam();
-            datumParam.setDataInfoId(dataInfoId);
-            String testZone = "testZone";
-            datumParam.setPublisherCell(testZone);
-            datumParam.setPublisherRegisterId(publisherRegisterId);
-            CommonResponse response = dataChannel.getWebTarget().path("datum/api/pub/delete")
-                .request()
-                .post(Entity.entity(datumParam, MediaType.APPLICATION_JSON), CommonResponse.class);
-            LOGGER.info("testDeletePub:" + response);
-            Assert.assertFalse(response.getMessage().contains(publisherRegisterId));
-        }
-
-    }
-
-    @Test
-    public void testDelete() {
-        //add
-        {
-            DatumParam datumParam = new DatumParam();
-            datumParam.setDataInfoId(dataInfoId);
-            String testZone = "testZone";
-            datumParam.setPublisherCell(testZone);
-            datumParam.setPublisherDataBox("test");
-            datumParam.setPublisherConnectId(LOCAL_ADDRESS + ":12345_" + LOCAL_ADDRESS + ":9600");
-            datumParam.setPublisherRegisterId(publisherRegisterId);
-            CommonResponse response = dataChannel.getWebTarget().path("datum/api/pub/add")
-                .request()
-                .post(Entity.entity(datumParam, MediaType.APPLICATION_JSON), CommonResponse.class);
-
-            LOGGER.info("testAddPub:" + response);
-            Assert.assertTrue(response.getMessage().contains(dataId));
-            Assert.assertTrue(response.getMessage().contains(testZone));
-        }
-        //delete
-        {
-            DatumParam datumParam = new DatumParam();
-            datumParam.setDataInfoId(dataInfoId);
-            CommonResponse response = dataChannel.getWebTarget().path("datum/api/delete").request()
-                .post(Entity.entity(datumParam, MediaType.APPLICATION_JSON), CommonResponse.class);
-            LOGGER.info("testDelete:" + response);
-            Assert.assertFalse(response.getMessage().contains(publisherRegisterId));
-        }
-
-    }
-
-    @Test
-    public void testGetDatumVersions() {
-        //test
-        {
-            DatumParam datumParam = new DatumParam();
-            datumParam.setDataCenter(LOCAL_DATACENTER);
-            Map<String, Integer> response = dataChannel.getWebTarget()
-                .path("datum/api/getDatumVersions").request()
-                .post(Entity.entity(datumParam, MediaType.APPLICATION_JSON), Map.class);
-
-            LOGGER.info("testGetDatumVersions:" + response);
-            Assert.assertTrue(response.get(dataInfoId) != null);
-        }
-        //test not found
-        {
-            DatumParam datumParam = new DatumParam();
-            datumParam.setDataCenter(LOCAL_DATACENTER + System.currentTimeMillis());
-            Map<String, Integer> response = dataChannel.getWebTarget()
-                .path("datum/api/getDatumVersions").request()
-                .post(Entity.entity(datumParam, MediaType.APPLICATION_JSON), Map.class);
-
-            LOGGER.info("testGetDatumVersions:" + response);
-            Assert.assertTrue(response.get(dataInfoId) == null);
-        }
-    }
-
-    @Test
-    public void testGetDatumVersion() {
-        {
-            DatumParam datumParam = new DatumParam();
-            datumParam.setDataCenter(LOCAL_DATACENTER);
-            datumParam.setDataInfoId(dataInfoId);
-            String response = dataChannel.getWebTarget().path("datum/api/getDatumVersion")
-                .request()
-                .post(Entity.entity(datumParam, MediaType.APPLICATION_JSON), String.class);
-
-            LOGGER.info("testGetDatumVersions:" + response);
-            Assert.assertTrue(response.contains(dataInfoId));
-        }
-
-        {
-            DatumParam datumParam = new DatumParam();
-            datumParam.setDataCenter(LOCAL_DATACENTER + System.currentTimeMillis());
-            datumParam.setDataInfoId(dataInfoId);
-            String response = dataChannel.getWebTarget().path("datum/api/getDatumVersion")
-                .request()
-                .post(Entity.entity(datumParam, MediaType.APPLICATION_JSON), String.class);
-
-            LOGGER.info("testGetDatumVersions:" + response);
-            Assert.assertTrue(response.contains(dataInfoId));
-        }
-
-    }
-
-    @Test
-    public void testGetDatumSize() {
-        DatumParam datumParam = new DatumParam();
-        datumParam.setDataCenter(LOCAL_DATACENTER);
-        datumParam.setDataInfoId(dataInfoId);
-        Map<String, Integer> response = dataChannel.getWebTarget().path("datum/api/getDatumSizes")
-            .request().get(Map.class);
-
-        LOGGER.info("testGetDatumSize:" + response);
-        Assert.assertTrue(response.get(LOCAL_DATACENTER).intValue() > 0);
-
-    }
-
+    LOGGER.info("testGetDatumSize:" + response);
+    Assert.assertTrue(response.get(LOCAL_DATACENTER).intValue() > 0);
+  }
 }

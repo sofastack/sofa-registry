@@ -17,7 +17,6 @@
 package com.alipay.sofa.registry.server.session.store;
 
 import com.alipay.sofa.registry.common.model.ConnectId;
-
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -26,66 +25,64 @@ import java.util.Set;
 /**
  * Session Data store manager,according base data function
  *
- * Session Data struct
+ * <p>Session Data struct
  *
- * - DataInfo ID
- *  |
- *   - Publisher List
- *  |
- *   - Subscriber List
+ * <p>- DataInfo ID | - Publisher List | - Subscriber List
  *
  * @author shangyu.wh
  * @version $Id: DataManager.java, v 0.1 2017-11-30 17:57 shangyu.wh Exp $
  */
 public interface DataManager<DATA, ID, DATAINFOID> {
 
-    /**
-     * new publisher and subscriber data add
-     *
-     * @param data
-     */
-    boolean add(DATA data);
+  /**
+   * new publisher and subscriber data add
+   *
+   * @param data
+   */
+  boolean add(DATA data);
 
-    /**
-     * query data by client node connectId
-     *
-     * @param connectId
-     * @return
-     */
-    Map<ID, DATA> queryByConnectId(ConnectId connectId);
+  /**
+   * query data by client node connectId
+   *
+   * @param connectId
+   * @return
+   */
+  Map<ID, DATA> queryByConnectId(ConnectId connectId);
 
-    /**
-     * remove data by client node connectId
-     *
-     * @param connectId
-     */
-    Map<ID, DATA> deleteByConnectId(ConnectId connectId);
+  /**
+   * remove data by client node connectId
+   *
+   * @param connectId
+   */
+  Map<ID, DATA> deleteByConnectId(ConnectId connectId);
 
-    DATA queryById(ID registerId, DATAINFOID dataInfoId);
+  DATA queryById(ID registerId, DATAINFOID dataInfoId);
 
-    /**
-     * remove single data by register id
-     * @param registerId
-     * @param dataInfoId
-     * @return
-     */
-    boolean deleteById(ID registerId, DATAINFOID dataInfoId);
+  /**
+   * remove single data by register id
+   *
+   * @param registerId
+   * @param dataInfoId
+   * @return
+   */
+  boolean deleteById(ID registerId, DATAINFOID dataInfoId);
 
-    /**
-     * count pub and sub number
-     * @return
-     */
-    long count();
+  /**
+   * count pub and sub number
+   *
+   * @return
+   */
+  long count();
 
-    Set<ConnectId> getConnectIds();
+  Set<ConnectId> getConnectIds();
 
-    Collection<DATA> getDatas(DATAINFOID dataInfoId);
+  Collection<DATA> getDatas(DATAINFOID dataInfoId);
 
-    List<DATA> getDataList();
+  List<DATA> getDataList();
 
-    Map<DATAINFOID, Map<ID, DATA>> getDatas();
+  Map<DATAINFOID, Map<ID, DATA>> getDatas();
 
-    Set<String> collectProcessIds();
+  Set<String> collectProcessIds();
 
-    Collection<DATAINFOID> getDataInfoIds();
+  Collection<DATAINFOID> getDataInfoIds();
 }

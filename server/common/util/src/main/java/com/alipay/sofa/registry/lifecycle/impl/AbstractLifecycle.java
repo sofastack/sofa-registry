@@ -26,111 +26,106 @@ import com.alipay.sofa.registry.log.LoggerFactory;
 
 /**
  * @author chen.zhu
- * <p>
- * Nov 13, 2020
+ *     <p>Nov 13, 2020
  */
 public abstract class AbstractLifecycle implements Lifecycle, LifecycleStateAware {
 
-    protected Logger                  logger = LoggerFactory.getLogger(getClass());
+  protected Logger logger = LoggerFactory.getLogger(getClass());
 
-    private final LifecycleState      lifecycleState;
-    private final LifecycleController lifecycleController;
+  private final LifecycleState lifecycleState;
+  private final LifecycleController lifecycleController;
 
-    public AbstractLifecycle() {
-        this.lifecycleController = new DefaultLifecycleController();
-        this.lifecycleState = new DefaultLifecycleState(this, lifecycleController, logger);
+  public AbstractLifecycle() {
+    this.lifecycleController = new DefaultLifecycleController();
+    this.lifecycleState = new DefaultLifecycleState(this, lifecycleController, logger);
+  }
+
+  public AbstractLifecycle(LifecycleState lifecycleState, LifecycleController lifecycleController) {
+    this.lifecycleState = lifecycleState;
+    this.lifecycleController = lifecycleController;
+  }
+
+  @Override
+  public void initialize() throws InitializeException {
+    LifecycleState.LifecyclePhase phaseName = lifecycleState.getPhase();
+    if (!lifecycleController.canInitialize(phaseName)) {
+      logger.error("[initialize][can not init]{}, {}", phaseName, this);
+      throw new IllegalStateException("can not initialize:" + phaseName + "," + this);
     }
 
-    public AbstractLifecycle(LifecycleState lifecycleState, LifecycleController lifecycleController) {
-        this.lifecycleState = lifecycleState;
-        this.lifecycleController = lifecycleController;
+    try {
+      lifecycleState.setPhase(LifecycleState.LifecyclePhase.INITIALIZING);
+      doInitialize();
+      lifecycleState.setPhase(LifecycleState.LifecyclePhase.INITIALIZED);
+    } catch (Exception e) {
+      lifecycleState.rollback(e);
+      throw new InitializeException(e);
+    }
+  }
+
+  protected void doInitialize() throws InitializeException {}
+
+  @Override
+  public void start() throws StartException {
+    LifecycleState.LifecyclePhase phaseName = lifecycleState.getPhase();
+    if (!lifecycleController.canStart(phaseName)) {
+      logger.error("[initialize][can not start]{},{}", phaseName, this);
+      throw new IllegalStateException("can not start:" + phaseName + ", " + this);
     }
 
-    @Override
-    public void initialize() throws InitializeException {
-        LifecycleState.LifecyclePhase phaseName = lifecycleState.getPhase();
-        if (!lifecycleController.canInitialize(phaseName)) {
-            logger.error("[initialize][can not init]{}, {}", phaseName, this);
-            throw new IllegalStateException("can not initialize:" + phaseName + "," + this);
-        }
+    try {
+      lifecycleState.setPhase(LifecycleState.LifecyclePhase.STARTING);
+      doStart();
+      lifecycleState.setPhase(LifecycleState.LifecyclePhase.STARTED);
+    } catch (Exception e) {
+      lifecycleState.rollback(e);
+      throw new StartException(e);
+    }
+  }
 
-        try {
-            lifecycleState.setPhase(LifecycleState.LifecyclePhase.INITIALIZING);
-            doInitialize();
-            lifecycleState.setPhase(LifecycleState.LifecyclePhase.INITIALIZED);
-        } catch (Exception e) {
-            lifecycleState.rollback(e);
-            throw new InitializeException(e);
-        }
+  protected void doStart() throws StartException {}
+
+  @Override
+  public void stop() throws StopException {
+    LifecycleState.LifecyclePhase phaseName = lifecycleState.getPhase();
+    if (!lifecycleController.canStop(phaseName)) {
+      logger.error("[initialize][can not stop]{}, {}", phaseName, this);
+      throw new IllegalStateException("can not stop:" + phaseName + "," + this);
     }
 
-    protected void doInitialize() throws InitializeException {
+    try {
+      lifecycleState.setPhase(LifecycleState.LifecyclePhase.STOPPING);
+      doStop();
+      lifecycleState.setPhase(LifecycleState.LifecyclePhase.STOPPED);
+    } catch (Exception e) {
+      lifecycleState.rollback(e);
+      throw new StopException(e);
     }
+  }
 
-    @Override
-    public void start() throws StartException {
-        LifecycleState.LifecyclePhase phaseName = lifecycleState.getPhase();
-        if (!lifecycleController.canStart(phaseName)) {
-            logger.error("[initialize][can not start]{},{}", phaseName, this);
-            throw new IllegalStateException("can not start:" + phaseName + ", " + this);
-        }
+  protected void doStop() throws StopException {}
 
-        try {
-            lifecycleState.setPhase(LifecycleState.LifecyclePhase.STARTING);
-            doStart();
-            lifecycleState.setPhase(LifecycleState.LifecyclePhase.STARTED);
-        } catch (Exception e) {
-            lifecycleState.rollback(e);
-            throw new StartException(e);
-        }
+  @Override
+  public void dispose() throws DisposeException {
+    LifecycleState.LifecyclePhase phaseName = lifecycleState.getPhase();
+    if (!lifecycleController.canDispose(phaseName)) {
+      logger.error("[initialize][can not stop]{}, {}", phaseName, this);
+      throw new IllegalStateException("can not dispose:" + phaseName + "," + this);
     }
-
-    protected void doStart() throws StartException {
+    try {
+      lifecycleState.setPhase(LifecycleState.LifecyclePhase.DISPOSING);
+      doDispose();
+      lifecycleState.setPhase(LifecycleState.LifecyclePhase.DISPOSED);
+    } catch (Exception e) {
+      lifecycleState.rollback(e);
+      throw new DisposeException(e);
     }
+  }
 
-    @Override
-    public void stop() throws StopException {
-        LifecycleState.LifecyclePhase phaseName = lifecycleState.getPhase();
-        if (!lifecycleController.canStop(phaseName)) {
-            logger.error("[initialize][can not stop]{}, {}", phaseName, this);
-            throw new IllegalStateException("can not stop:" + phaseName + "," + this);
-        }
+  protected void doDispose() throws DisposeException {}
 
-        try {
-            lifecycleState.setPhase(LifecycleState.LifecyclePhase.STOPPING);
-            doStop();
-            lifecycleState.setPhase(LifecycleState.LifecyclePhase.STOPPED);
-        } catch (Exception e) {
-            lifecycleState.rollback(e);
-            throw new StopException(e);
-        }
-    }
-
-    protected void doStop() throws StopException {
-    }
-
-    @Override
-    public void dispose() throws DisposeException {
-        LifecycleState.LifecyclePhase phaseName = lifecycleState.getPhase();
-        if (!lifecycleController.canDispose(phaseName)) {
-            logger.error("[initialize][can not stop]{}, {}", phaseName, this);
-            throw new IllegalStateException("can not dispose:" + phaseName + "," + this);
-        }
-        try {
-            lifecycleState.setPhase(LifecycleState.LifecyclePhase.DISPOSING);
-            doDispose();
-            lifecycleState.setPhase(LifecycleState.LifecyclePhase.DISPOSED);
-        } catch (Exception e) {
-            lifecycleState.rollback(e);
-            throw new DisposeException(e);
-        }
-    }
-
-    protected void doDispose() throws DisposeException {
-    }
-
-    @Override
-    public LifecycleState getLifecycleState() {
-        return this.lifecycleState;
-    }
+  @Override
+  public LifecycleState getLifecycleState() {
+    return this.lifecycleState;
+  }
 }

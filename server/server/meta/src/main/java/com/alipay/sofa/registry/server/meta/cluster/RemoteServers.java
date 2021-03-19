@@ -20,9 +20,6 @@ import com.alipay.sofa.registry.common.model.Node;
 
 /**
  * @author chen.zhu
- * <p>
- * Nov 20, 2020
+ *     <p>Nov 20, 2020
  */
-public interface RemoteServers<T extends Node> {
-
-}
+public interface RemoteServers<T extends Node> {}

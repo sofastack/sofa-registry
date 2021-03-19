@@ -19,22 +19,19 @@ package com.alipay.sofa.registry.client.api.registration;
 import org.junit.Assert;
 import org.junit.Test;
 
-/**
- * @author <a href="mailto:zhanggeng.zg@antfin.com">GengZhang</a>
- */
+/** @author <a href="mailto:zhanggeng.zg@antfin.com">GengZhang</a> */
 public class BaseRegistrationTest {
 
-    @Test
-    public void testAll() {
-        BaseRegistration registration = new BaseRegistration();
-        registration.setAppName("app");
-        registration.setDataId("dataId");
-        registration.setGroup("group");
-        Assert.assertEquals("app", registration.getAppName());
-        Assert.assertEquals("dataId", registration.getDataId());
-        Assert.assertEquals("group", registration.getGroup());
-        Assert.assertEquals("BaseRegistration{dataId='dataId', group='group', appName='app'}",
-            registration.toString());
-    }
-
+  @Test
+  public void testAll() {
+    BaseRegistration registration = new BaseRegistration();
+    registration.setAppName("app");
+    registration.setDataId("dataId");
+    registration.setGroup("group");
+    Assert.assertEquals("app", registration.getAppName());
+    Assert.assertEquals("dataId", registration.getDataId());
+    Assert.assertEquals("group", registration.getGroup());
+    Assert.assertEquals(
+        "BaseRegistration{dataId='dataId', group='group', appName='app'}", registration.toString());
+  }
 }

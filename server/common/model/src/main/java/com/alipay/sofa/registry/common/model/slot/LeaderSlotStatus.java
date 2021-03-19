@@ -20,40 +20,49 @@ import java.io.Serializable;
 
 /**
  * @author chen.zhu
- * <p>
- * Mar 01, 2021
+ *     <p>Mar 01, 2021
  */
 public class LeaderSlotStatus extends BaseSlotStatus implements Serializable {
 
-    private LeaderStatus leaderStatus = LeaderStatus.INIT;
+  private LeaderStatus leaderStatus = LeaderStatus.INIT;
 
-    /**
-     * Constructor.
-     *
-     * @param slotId          the slot id
-     * @param slotLeaderEpoch the slot leader epoch
-     * @param server          the server
-     * @param leaderStatus    the leader status
-     */
-    public LeaderSlotStatus(int slotId, long slotLeaderEpoch, String server,
-                            LeaderStatus leaderStatus) {
-        super(slotId, slotLeaderEpoch, Slot.Role.Leader, server);
-        this.leaderStatus = leaderStatus;
-    }
+  /**
+   * Constructor.
+   *
+   * @param slotId the slot id
+   * @param slotLeaderEpoch the slot leader epoch
+   * @param server the server
+   * @param leaderStatus the leader status
+   */
+  public LeaderSlotStatus(
+      int slotId, long slotLeaderEpoch, String server, LeaderStatus leaderStatus) {
+    super(slotId, slotLeaderEpoch, Slot.Role.Leader, server);
+    this.leaderStatus = leaderStatus;
+  }
 
-    /**
-     * Gets get leader status.
-     *
-     * @return the get leader status
-     */
-    public LeaderStatus getLeaderStatus() {
-        return leaderStatus;
-    }
+  /**
+   * Gets get leader status.
+   *
+   * @return the get leader status
+   */
+  public LeaderStatus getLeaderStatus() {
+    return leaderStatus;
+  }
 
-    @Override
-    public String toString() {
-        return "LeaderSlotStatus{" + "leaderStatus=" + leaderStatus + ", slotId=" + slotId
-               + ", slotLeaderEpoch=" + slotLeaderEpoch + ", role=" + role + ", server='" + server
-               + '\'' + '}';
-    }
+  @Override
+  public String toString() {
+    return "LeaderSlotStatus{"
+        + "leaderStatus="
+        + leaderStatus
+        + ", slotId="
+        + slotId
+        + ", slotLeaderEpoch="
+        + slotLeaderEpoch
+        + ", role="
+        + role
+        + ", server='"
+        + server
+        + '\''
+        + '}';
+  }
 }

@@ -18,91 +18,90 @@ package com.alipay.sofa.registry.server.meta.slot.chaos;
 
 import com.alipay.sofa.registry.common.model.metaserver.nodes.DataNode;
 import com.alipay.sofa.registry.server.meta.slot.util.ListUtil;
-import org.springframework.util.CollectionUtils;
-
 import java.util.List;
 import java.util.Random;
+import org.springframework.util.CollectionUtils;
 
 public interface InjectionAction {
 
-    Random random = new Random();
+  Random random = new Random();
 
-    void doInject(List<DataNode> total, List<DataNode> running);
+  void doInject(List<DataNode> total, List<DataNode> running);
 }
 
 enum InjectionEnum {
-    FIRST(0, new FirstInjectionAction()), START(70, new StartInjectionAction()), STOP(
-                                                                                      30,
-                                                                                      new StopInjectionAction()), FINAL(
-                                                                                                                        0,
-                                                                                                                        new FinalInjectionAction()), ;
+  FIRST(0, new FirstInjectionAction()),
+  START(70, new StartInjectionAction()),
+  STOP(30, new StopInjectionAction()),
+  FINAL(0, new FinalInjectionAction()),
+  ;
 
-    private int                percent;
+  private int percent;
 
-    private InjectionAction    injectionAction;
+  private InjectionAction injectionAction;
 
-    public static final Random random = new Random();
+  public static final Random random = new Random();
 
-    InjectionEnum(int percent, InjectionAction injectionAction) {
-        this.percent = percent;
-        this.injectionAction = injectionAction;
+  InjectionEnum(int percent, InjectionAction injectionAction) {
+    this.percent = percent;
+    this.injectionAction = injectionAction;
+  }
+
+  public static InjectionEnum pickInject() {
+    int percent = random.nextInt(100);
+    if (percent < STOP.percent) {
+      return STOP;
+    } else {
+      return START;
     }
+  }
 
-    public static InjectionEnum pickInject() {
-        int percent = random.nextInt(100);
-        if (percent < STOP.percent) {
-            return STOP;
-        } else {
-            return START;
-        }
-    }
-
-    /**
-     * Getter method for property <tt>injectionAction</tt>.
-     *
-     * @return property value of injectionAction
-     */
-    public InjectionAction getInjectionAction() {
-        return injectionAction;
-    }
+  /**
+   * Getter method for property <tt>injectionAction</tt>.
+   *
+   * @return property value of injectionAction
+   */
+  public InjectionAction getInjectionAction() {
+    return injectionAction;
+  }
 }
 
 class FirstInjectionAction implements InjectionAction {
 
-    @Override
-    public void doInject(List<DataNode> total, List<DataNode> running) {
-        running.addAll(ListUtil.randomPick(total, 1));
-    }
+  @Override
+  public void doInject(List<DataNode> total, List<DataNode> running) {
+    running.addAll(ListUtil.randomPick(total, 1));
+  }
 }
 
 class StartInjectionAction implements InjectionAction {
 
-    @Override
-    public void doInject(List<DataNode> total, List<DataNode> running) {
-        List<DataNode> reduce = ListUtil.reduce(total, running);
+  @Override
+  public void doInject(List<DataNode> total, List<DataNode> running) {
+    List<DataNode> reduce = ListUtil.reduce(total, running);
 
-        if (CollectionUtils.isEmpty(reduce)) {
-            return;
-        }
-
-        int count = Math.min(total.size() / 3, random.nextInt(reduce.size()) + 1);
-        running.addAll(ListUtil.randomPick(reduce, count));
+    if (CollectionUtils.isEmpty(reduce)) {
+      return;
     }
+
+    int count = Math.min(total.size() / 3, random.nextInt(reduce.size()) + 1);
+    running.addAll(ListUtil.randomPick(reduce, count));
+  }
 }
 
 class StopInjectionAction implements InjectionAction {
 
-    @Override
-    public void doInject(List<DataNode> total, List<DataNode> running) {
-        running.removeAll(ListUtil.randomPick(running, random.nextInt(running.size()) / 3 + 1));
-    }
+  @Override
+  public void doInject(List<DataNode> total, List<DataNode> running) {
+    running.removeAll(ListUtil.randomPick(running, random.nextInt(running.size()) / 3 + 1));
+  }
 }
 
 class FinalInjectionAction implements InjectionAction {
 
-    @Override
-    public void doInject(List<DataNode> total, List<DataNode> running) {
-        List<DataNode> reduce = ListUtil.reduce(total, running);
-        running.addAll(reduce);
-    }
+  @Override
+  public void doInject(List<DataNode> total, List<DataNode> running) {
+    List<DataNode> reduce = ListUtil.reduce(total, running);
+    running.addAll(reduce);
+  }
 }

@@ -20,26 +20,25 @@ import com.alipay.sofa.registry.common.model.slot.Slot;
 import com.alipay.sofa.registry.common.model.slot.SlotTable;
 
 /**
- * 
  * @author yuzhi.lyz
  * @version v 0.1 2020-11-06 16:21 yuzhi.lyz Exp $
  */
 public interface SlotTableCache {
-	int slotOf(String dataInfoId);
+  int slotOf(String dataInfoId);
 
-	Slot getSlot(String dataInfoId);
+  Slot getSlot(String dataInfoId);
 
-	Slot getSlot(int slotId);
+  Slot getSlot(int slotId);
 
-	String getLeader(String dataInfoId);
+  String getLeader(String dataInfoId);
 
-	String getLeader(int slotId);
+  String getLeader(int slotId);
 
-	long getEpoch();
+  long getEpoch();
 
-	boolean updateSlotTable(SlotTable slotTable);
+  boolean updateSlotTable(SlotTable slotTable);
 
-	int slotNum();
+  int slotNum();
 
-	SlotTable currentSlotTable();
+  SlotTable currentSlotTable();
 }

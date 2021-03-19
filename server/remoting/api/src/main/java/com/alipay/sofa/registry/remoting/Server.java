@@ -16,75 +16,76 @@
  */
 package com.alipay.sofa.registry.remoting;
 
+import com.alipay.sofa.registry.common.model.store.URL;
 import java.net.InetSocketAddress;
 import java.util.Collection;
 
-import com.alipay.sofa.registry.common.model.store.URL;
-
 /**
- *
  * @author shangyu.wh
  * @version $Id: Server.java, v 0.1 2017-11-20 21:05 shangyu.wh Exp $
  */
 public interface Server extends Endpoint {
 
-    /**
-     * get Server status
-     *
-     * @return
-     */
-    boolean isOpen();
+  /**
+   * get Server status
+   *
+   * @return
+   */
+  boolean isOpen();
 
-    /**
-     * get channels.
-     *
-     * @return channels
-     */
-    Collection<Channel> getChannels();
+  /**
+   * get channels.
+   *
+   * @return channels
+   */
+  Collection<Channel> getChannels();
 
-    /**
-     * get channel.
-     *
-     * @param remoteAddress
-     * @return channel
-     */
-    Channel getChannel(InetSocketAddress remoteAddress);
+  /**
+   * get channel.
+   *
+   * @param remoteAddress
+   * @return channel
+   */
+  Channel getChannel(InetSocketAddress remoteAddress);
 
-    /**
-     * get channel by url
-     *
-     * @param url
-     * @return channel
-     */
-    Channel getChannel(URL url);
+  /**
+   * get channel by url
+   *
+   * @param url
+   * @return channel
+   */
+  Channel getChannel(URL url);
 
-    /**
-     * close the channel.
-     *
-     * @param channel
-     */
-    void close(Channel channel);
+  /**
+   * close the channel.
+   *
+   * @param channel
+   */
+  void close(Channel channel);
 
-    int getChannelCount();
+  int getChannelCount();
 
-    /**
-     * send with callback handler
-     *
-     * @param channel the channel
-     * @param message the message
-     * @param callbackHandler the callback handler
-     * @param timeoutMillis the timeout millis
-     */
-    void sendCallback(final Channel channel, final Object message, CallbackHandler callbackHandler,
-                      final int timeoutMillis);
+  /**
+   * send with callback handler
+   *
+   * @param channel the channel
+   * @param message the message
+   * @param callbackHandler the callback handler
+   * @param timeoutMillis the timeout millis
+   */
+  void sendCallback(
+      final Channel channel,
+      final Object message,
+      CallbackHandler callbackHandler,
+      final int timeoutMillis);
 
-    /**
-     * Sync send
-     *
-     * @param channel the channel
-     * @param message the message
-     * @param timeoutMillis the timeout millis
-     * @return object
-     */
-    Object sendSync(final Channel channel, final Object message, final int timeoutMillis);
+  /**
+   * Sync send
+   *
+   * @param channel the channel
+   * @param message the message
+   * @param timeoutMillis the timeout millis
+   * @return object
+   */
+  Object sendSync(final Channel channel, final Object message, final int timeoutMillis);
 }

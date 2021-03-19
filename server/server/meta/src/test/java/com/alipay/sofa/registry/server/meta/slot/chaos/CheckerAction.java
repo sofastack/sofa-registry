@@ -22,7 +22,6 @@ import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.server.shared.slot.SlotTableUtils;
 import com.alipay.sofa.registry.util.MathUtils;
-
 import java.util.Comparator;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -30,92 +29,102 @@ import java.util.Optional;
 import java.util.OptionalDouble;
 
 /**
- *
  * @author xiaojian.xj
  * @version $Id: CheckerAction.java, v 0.1 2021年02月03日 10:25 xiaojian.xj Exp $
  */
-
 public interface CheckerAction {
 
-    boolean doCheck(SlotTable slotTable);
+  boolean doCheck(SlotTable slotTable);
 
-    default Tuple<String, Integer> max(Map<String, Integer> count) {
-        Optional<Entry<String, Integer>> max = count.entrySet().stream().max((Comparator.comparing(Entry::getValue)));
-        return new Tuple<>(max.get().getKey(), max.get().getValue());
-    }
+  default Tuple<String, Integer> max(Map<String, Integer> count) {
+    Optional<Entry<String, Integer>> max =
+        count.entrySet().stream().max((Comparator.comparing(Entry::getValue)));
+    return new Tuple<>(max.get().getKey(), max.get().getValue());
+  }
 
-    default Tuple<String, Integer> min(Map<String, Integer> count) {
-        Optional<Entry<String, Integer>> max = count.entrySet().stream().min((Comparator.comparing(Entry::getValue)));
-        return new Tuple<>(max.get().getKey(), max.get().getValue());
-    }
+  default Tuple<String, Integer> min(Map<String, Integer> count) {
+    Optional<Entry<String, Integer>> max =
+        count.entrySet().stream().min((Comparator.comparing(Entry::getValue)));
+    return new Tuple<>(max.get().getKey(), max.get().getValue());
+  }
 
-    default double average(Map<String, Integer> count) {
-        OptionalDouble average = count.entrySet().stream().mapToInt(entry -> entry.getValue()).average();
-        return average.getAsDouble();
-    }
+  default double average(Map<String, Integer> count) {
+    OptionalDouble average =
+        count.entrySet().stream().mapToInt(entry -> entry.getValue()).average();
+    return average.getAsDouble();
+  }
 
-    default int sum(Map<String, Integer> count) {
-        return (int)count.entrySet().stream().mapToInt(entry -> entry.getValue()).sum();
-    }
+  default int sum(Map<String, Integer> count) {
+    return (int) count.entrySet().stream().mapToInt(entry -> entry.getValue()).sum();
+  }
 }
 
 class SlotLeaderChecker implements CheckerAction {
 
-    private final Logger logger = LoggerFactory.getLogger(getClass());
+  private final Logger logger = LoggerFactory.getLogger(getClass());
 
-    @Override
-    public boolean doCheck(SlotTable slotTable) {
+  @Override
+  public boolean doCheck(SlotTable slotTable) {
 
-        Map<String, Integer> leaderCount = SlotTableUtils.getSlotTableLeaderCount(slotTable);
-        logger.info("[slot leader checker] leaderCount: " + leaderCount);
-        Tuple<String, Integer> max = max(leaderCount);
-        Tuple<String, Integer> min = min(leaderCount);
-        int average = MathUtils.divideCeil(sum(leaderCount), leaderCount.size());
-        logger.info("[slot leader checker] max-ip: {}, max-count:{}, min-ip: {}, min-count:{}, average: {}",
-                max.getFirst(), max.getSecond(), min.getFirst(), min.getSecond(), (int) average);
+    Map<String, Integer> leaderCount = SlotTableUtils.getSlotTableLeaderCount(slotTable);
+    logger.info("[slot leader checker] leaderCount: " + leaderCount);
+    Tuple<String, Integer> max = max(leaderCount);
+    Tuple<String, Integer> min = min(leaderCount);
+    int average = MathUtils.divideCeil(sum(leaderCount), leaderCount.size());
+    logger.info(
+        "[slot leader checker] max-ip: {}, max-count:{}, min-ip: {}, min-count:{}, average: {}",
+        max.getFirst(),
+        max.getSecond(),
+        min.getFirst(),
+        min.getSecond(),
+        (int) average);
 
-        return max.getSecond() < min.getSecond() * 2;
-    }
+    return max.getSecond() < min.getSecond() * 2;
+  }
 }
 
 class SlotChecker implements CheckerAction {
 
-    private final Logger logger = LoggerFactory.getLogger(getClass());
+  private final Logger logger = LoggerFactory.getLogger(getClass());
 
-    @Override
-    public boolean doCheck(SlotTable slotTable) {
-        Map<String, Integer> slotCount = SlotTableUtils.getSlotTableSlotCount(slotTable);
-        logger.info("[slot checker] slotCount: " + slotCount);
+  @Override
+  public boolean doCheck(SlotTable slotTable) {
+    Map<String, Integer> slotCount = SlotTableUtils.getSlotTableSlotCount(slotTable);
+    logger.info("[slot checker] slotCount: " + slotCount);
 
-        Tuple<String, Integer> max = max(slotCount);
-        Tuple<String, Integer> min = min(slotCount);
-        double average = average(slotCount);
-        logger.info("[slot checker] max-ip: {}, max-count:{}, min-ip: {}, min-count:{}, average: {}",
-                max.getFirst(), max.getSecond(), min.getFirst(), min.getSecond(), (int) average);
+    Tuple<String, Integer> max = max(slotCount);
+    Tuple<String, Integer> min = min(slotCount);
+    double average = average(slotCount);
+    logger.info(
+        "[slot checker] max-ip: {}, max-count:{}, min-ip: {}, min-count:{}, average: {}",
+        max.getFirst(),
+        max.getSecond(),
+        min.getFirst(),
+        min.getSecond(),
+        (int) average);
 
-        return max.getSecond() < min.getSecond() * 2;
-    }
+    return max.getSecond() < min.getSecond() * 2;
+  }
 }
 
 enum CheckEnum {
+  SLOT_LEADER_CHECKER(new SlotLeaderChecker()),
 
-    SLOT_LEADER_CHECKER(new SlotLeaderChecker()),
+  SLOT_CHECKER(new SlotChecker()),
+  ;
 
-    SLOT_CHECKER(new SlotChecker()),
-    ;
+  private CheckerAction checkerAction;
 
-    private CheckerAction checkerAction;
+  CheckEnum(CheckerAction checkerAction) {
+    this.checkerAction = checkerAction;
+  }
 
-    CheckEnum(CheckerAction checkerAction) {
-        this.checkerAction = checkerAction;
-    }
-
-    /**
-     * Getter method for property <tt>checkerAction</tt>.
-     *
-     * @return property value of checkerAction
-     */
-    public CheckerAction getCheckerAction() {
-        return checkerAction;
-    }
+  /**
+   * Getter method for property <tt>checkerAction</tt>.
+   *
+   * @return property value of checkerAction
+   */
+  public CheckerAction getCheckerAction() {
+    return checkerAction;
+  }
 }

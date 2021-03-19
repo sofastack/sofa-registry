@@ -28,56 +28,55 @@ import com.alipay.sofa.registry.server.session.remoting.DataNodeExchanger;
 import com.alipay.sofa.registry.server.session.slot.SlotTableCache;
 import com.alipay.sofa.registry.server.shared.env.ServerEnv;
 import com.alipay.sofa.registry.server.shared.meta.AbstractMetaServerService;
-import org.springframework.beans.factory.annotation.Autowired;
-
 import java.util.Set;
+import org.springframework.beans.factory.annotation.Autowired;
 
 /**
  * @author yuzhi.lyz
  * @version v 0.1 2020-11-28 20:05 yuzhi.lyz Exp $
  */
-public final class MetaServerServiceImpl extends
-                                        AbstractMetaServerService<SessionHeartBeatResponse> {
+public final class MetaServerServiceImpl
+    extends AbstractMetaServerService<SessionHeartBeatResponse> {
 
-    @Autowired
-    private SessionServerConfig sessionServerConfig;
+  @Autowired private SessionServerConfig sessionServerConfig;
 
-    @Autowired
-    private SlotTableCache      slotTableCache;
+  @Autowired private SlotTableCache slotTableCache;
 
-    @Autowired
-    private DataNodeExchanger   dataNodeExchanger;
+  @Autowired private DataNodeExchanger dataNodeExchanger;
 
-    @Override
-    protected long getCurrentSlotTableEpoch() {
-        return slotTableCache.getEpoch();
+  @Override
+  protected long getCurrentSlotTableEpoch() {
+    return slotTableCache.getEpoch();
+  }
+
+  @Override
+  protected void handleRenewResult(SessionHeartBeatResponse result) {
+    Set<String> dataServerList = getDataServerList();
+    if (dataServerList != null && !dataServerList.isEmpty()) {
+      dataNodeExchanger.setServerIps(dataServerList);
+      dataNodeExchanger.notifyConnectServerAsync();
     }
-
-    @Override
-    protected void handleRenewResult(SessionHeartBeatResponse result) {
-        Set<String> dataServerList = getDataServerList();
-        if (dataServerList != null && !dataServerList.isEmpty()) {
-            dataNodeExchanger.setServerIps(dataServerList);
-            dataNodeExchanger.notifyConnectServerAsync();
-        }
-        if (result.getSlotTable() != null && result.getSlotTable() != SlotTable.INIT) {
-            slotTableCache.updateSlotTable(result.getSlotTable());
-        } else {
-            LOGGER.warn("[handleRenewResult] no slot table result");
-        }
+    if (result.getSlotTable() != null && result.getSlotTable() != SlotTable.INIT) {
+      slotTableCache.updateSlotTable(result.getSlotTable());
+    } else {
+      LOGGER.warn("[handleRenewResult] no slot table result");
     }
+  }
 
-    @Override
-    protected HeartbeatRequest createRequest() {
-        return new HeartbeatRequest(createNode(), slotTableCache.getEpoch(),
-            sessionServerConfig.getSessionServerDataCenter(), System.currentTimeMillis(),
-            new SlotConfig.SlotBasicInfo(SlotConfig.SLOT_NUM, SlotConfig.SLOT_REPLICAS,
-                SlotConfig.FUNC)).setSlotTable(slotTableCache.currentSlotTable());
-    }
+  @Override
+  protected HeartbeatRequest createRequest() {
+    return new HeartbeatRequest(
+            createNode(),
+            slotTableCache.getEpoch(),
+            sessionServerConfig.getSessionServerDataCenter(),
+            System.currentTimeMillis(),
+            new SlotConfig.SlotBasicInfo(
+                SlotConfig.SLOT_NUM, SlotConfig.SLOT_REPLICAS, SlotConfig.FUNC))
+        .setSlotTable(slotTableCache.currentSlotTable());
+  }
 
-    private Node createNode() {
-        return new SessionNode(new URL(ServerEnv.IP), sessionServerConfig.getSessionServerRegion())
-            .setProcessId(ServerEnv.PROCESS_ID);
-    }
-
+  private Node createNode() {
+    return new SessionNode(new URL(ServerEnv.IP), sessionServerConfig.getSessionServerRegion())
+        .setProcessId(ServerEnv.PROCESS_ID);
+  }
 }

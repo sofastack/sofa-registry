@@ -21,12 +21,11 @@ import com.alipay.sofa.registry.common.model.slot.SlotTable;
 
 /**
  * @author chen.zhu
- *         <p>
- *         Feb 23, 2021
+ *     <p>Feb 23, 2021
  */
 public interface Notifier {
 
-	void notifySlotTableChange(SlotTable slotTable);
+  void notifySlotTableChange(SlotTable slotTable);
 
-	void notifyProvideDataChange(ProvideDataChangeEvent event);
+  void notifyProvideDataChange(ProvideDataChangeEvent event);
 }

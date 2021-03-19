@@ -19,18 +19,16 @@ package com.alipay.sofa.registry.core.model;
 import org.junit.Assert;
 import org.junit.Test;
 
-/**
- * @author <a href="mailto:zhanggeng.zg@antfin.com">GengZhang</a>
- */
+/** @author <a href="mailto:zhanggeng.zg@antfin.com">GengZhang</a> */
 public class ResultTest {
 
-    @Test
-    public void testAll() {
-        Result result = new Result();
-        result.setSuccess(false);
-        result.setMessage("xxx");
-        Assert.assertFalse(result.isSuccess());
-        Assert.assertEquals("xxx", result.getMessage());
-        Assert.assertTrue(result.toString().contains("xxx"));
-    }
+  @Test
+  public void testAll() {
+    Result result = new Result();
+    result.setSuccess(false);
+    result.setMessage("xxx");
+    Assert.assertFalse(result.isSuccess());
+    Assert.assertEquals("xxx", result.getMessage());
+    Assert.assertTrue(result.toString().contains("xxx"));
+  }
 }

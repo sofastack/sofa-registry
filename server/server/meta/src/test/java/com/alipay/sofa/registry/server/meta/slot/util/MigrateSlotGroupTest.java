@@ -22,63 +22,67 @@ import com.alipay.sofa.registry.server.meta.slot.util.comparator.SortType;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
+import java.util.List;
 import org.junit.Assert;
 import org.junit.Test;
 
-import java.util.List;
-
 public class MigrateSlotGroupTest extends AbstractMetaServerTest {
 
-    private MigrateSlotGroup migrateSlotGroup = new MigrateSlotGroup();
+  private MigrateSlotGroup migrateSlotGroup = new MigrateSlotGroup();
 
-    @Test
-    public void testAddLeader() {
-        migrateSlotGroup.addLeader(1);
-        migrateSlotGroup.addLeader(2);
-        Assert.assertEquals(Sets.newHashSet(1, 2), migrateSlotGroup.getLeaders());
-    }
+  @Test
+  public void testAddLeader() {
+    migrateSlotGroup.addLeader(1);
+    migrateSlotGroup.addLeader(2);
+    Assert.assertEquals(Sets.newHashSet(1, 2), migrateSlotGroup.getLeaders());
+  }
 
-    @Test
-    public void testAddFollower() {
-        migrateSlotGroup.addFollower(1);
-        migrateSlotGroup.addFollower(2);
-        Assert.assertEquals(ImmutableMap.of(1, 1, 2, 1), migrateSlotGroup.getLackFollowers());
-    }
+  @Test
+  public void testAddFollower() {
+    migrateSlotGroup.addFollower(1);
+    migrateSlotGroup.addFollower(2);
+    Assert.assertEquals(ImmutableMap.of(1, 1, 2, 1), migrateSlotGroup.getLackFollowers());
+  }
 
-    @Test
-    public void testTestAddFollower() {
-        migrateSlotGroup.addFollower(1, 2);
-        migrateSlotGroup.addFollower(2, 3);
-        Assert.assertEquals(ImmutableMap.of(1, 2, 2, 3), migrateSlotGroup.getLackFollowers());
-        logger.info("[migrate slot group] {}", migrateSlotGroup.toString());
-    }
+  @Test
+  public void testTestAddFollower() {
+    migrateSlotGroup.addFollower(1, 2);
+    migrateSlotGroup.addFollower(2, 3);
+    Assert.assertEquals(ImmutableMap.of(1, 2, 2, 3), migrateSlotGroup.getLackFollowers());
+    logger.info("[migrate slot group] {}", migrateSlotGroup.toString());
+  }
 
-    @Test
-    public void testGetLeadersByScore() {
-        migrateSlotGroup.addLeader(1).addLeader(2).addLeader(3).addLeader(4).addLeader(5);
-        List<Integer> result = migrateSlotGroup.getLeadersByScore(new ScoreStrategy<Integer>() {
-            @Override
-            public int score(Integer slotId) {
+  @Test
+  public void testGetLeadersByScore() {
+    migrateSlotGroup.addLeader(1).addLeader(2).addLeader(3).addLeader(4).addLeader(5);
+    List<Integer> result =
+        migrateSlotGroup.getLeadersByScore(
+            new ScoreStrategy<Integer>() {
+              @Override
+              public int score(Integer slotId) {
                 return SortType.DES.getScore(slotId);
-            }
-        });
-        Assert.assertEquals(Lists.newArrayList(5, 4, 3, 2, 1), result);
-    }
-
-    @Test
-    public void testGetFollowersByScore() {
-        migrateSlotGroup.addFollower(1, 2).addFollower(2, 3).addFollower(3, 4).addFollower(4, 5);
-        List<MigrateSlotGroup.FollowerToAssign> result = migrateSlotGroup
-            .getFollowersByScore(new ScoreStrategy<MigrateSlotGroup.FollowerToAssign>() {
-                @Override
-                public int score(MigrateSlotGroup.FollowerToAssign followerToAssign) {
-                    return SortType.ASC.getScore(followerToAssign.getAssigneeNums());
-                }
+              }
             });
-        Assert.assertEquals(Lists.newArrayList(new MigrateSlotGroup.FollowerToAssign(1, 2),
+    Assert.assertEquals(Lists.newArrayList(5, 4, 3, 2, 1), result);
+  }
+
+  @Test
+  public void testGetFollowersByScore() {
+    migrateSlotGroup.addFollower(1, 2).addFollower(2, 3).addFollower(3, 4).addFollower(4, 5);
+    List<MigrateSlotGroup.FollowerToAssign> result =
+        migrateSlotGroup.getFollowersByScore(
+            new ScoreStrategy<MigrateSlotGroup.FollowerToAssign>() {
+              @Override
+              public int score(MigrateSlotGroup.FollowerToAssign followerToAssign) {
+                return SortType.ASC.getScore(followerToAssign.getAssigneeNums());
+              }
+            });
+    Assert.assertEquals(
+        Lists.newArrayList(
+            new MigrateSlotGroup.FollowerToAssign(1, 2),
             new MigrateSlotGroup.FollowerToAssign(2, 3),
             new MigrateSlotGroup.FollowerToAssign(3, 4),
-            new MigrateSlotGroup.FollowerToAssign(4, 5)), result);
-    }
-
+            new MigrateSlotGroup.FollowerToAssign(4, 5)),
+        result);
+  }
 }

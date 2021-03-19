@@ -17,70 +17,67 @@
 package com.alipay.sofa.registry.client.provider;
 
 import com.alipay.sofa.registry.client.api.model.UserData;
-
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- *
  * @author zhuoyu.sjw
  * @version $Id: DefaultUserData.java, v 0.1 2017-11-30 21:01 zhuoyu.sjw Exp $$
  */
 public class DefaultUserData implements UserData {
 
-    /** zone, List */
-    private Map<String, List<String>> zoneData = new ConcurrentHashMap<String, List<String>>();
+  /** zone, List */
+  private Map<String, List<String>> zoneData = new ConcurrentHashMap<String, List<String>>();
 
-    /** The current client`s zone */
-    private String                    localZone;
+  /** The current client`s zone */
+  private String localZone;
 
-    /**
-     * Getter method for property <tt>zoneData</tt>.
-     *
-     * @return property value of zoneData
-     */
-    @Override
-    public Map<String, List<String>> getZoneData() {
-        return zoneData;
-    }
+  /**
+   * Getter method for property <tt>zoneData</tt>.
+   *
+   * @return property value of zoneData
+   */
+  @Override
+  public Map<String, List<String>> getZoneData() {
+    return zoneData;
+  }
 
-    /**
-     * Setter method for property <tt>zoneData</tt>.
-     *
-     * @param zoneData value to be assigned to property zoneData
-     */
-    public void setZoneData(Map<String, List<String>> zoneData) {
-        this.zoneData = zoneData;
-    }
+  /**
+   * Setter method for property <tt>zoneData</tt>.
+   *
+   * @param zoneData value to be assigned to property zoneData
+   */
+  public void setZoneData(Map<String, List<String>> zoneData) {
+    this.zoneData = zoneData;
+  }
 
-    /**
-     * Getter method for property <tt>localZone</tt>.
-     *
-     * @return property value of localZone
-     */
-    @Override
-    public String getLocalZone() {
-        return localZone;
-    }
+  /**
+   * Getter method for property <tt>localZone</tt>.
+   *
+   * @return property value of localZone
+   */
+  @Override
+  public String getLocalZone() {
+    return localZone;
+  }
 
-    /**
-     * Setter method for property <tt>localZone</tt>.
-     *
-     * @param localZone value to be assigned to property localZone
-     */
-    public void setLocalZone(String localZone) {
-        this.localZone = localZone;
-    }
+  /**
+   * Setter method for property <tt>localZone</tt>.
+   *
+   * @param localZone value to be assigned to property localZone
+   */
+  public void setLocalZone(String localZone) {
+    this.localZone = localZone;
+  }
 
-    /**
-     * To string string.
-     *
-     * @return the string
-     */
-    @Override
-    public String toString() {
-        return "DefaultUserData{" + "zoneData=" + zoneData + ", localZone='" + localZone + '\''
-               + '}';
-    }
+  /**
+   * To string string.
+   *
+   * @return the string
+   */
+  @Override
+  public String toString() {
+    return "DefaultUserData{" + "zoneData=" + zoneData + ", localZone='" + localZone + '\'' + '}';
+  }
 }

@@ -20,21 +20,19 @@ import com.alipay.sofa.registry.common.model.metaserver.nodes.DataNode;
 import com.alipay.sofa.registry.common.model.slot.BaseSlotStatus;
 import com.alipay.sofa.registry.common.model.slot.SlotTable;
 import com.alipay.sofa.registry.lifecycle.Initializable;
-
 import java.util.List;
 
 /**
  * @author chen.zhu
- * <p>
- * Jan 28, 2021
+ *     <p>Jan 28, 2021
  */
 public interface SlotTableStats extends Initializable {
 
-    boolean isSlotLeadersStable();
+  boolean isSlotLeadersStable();
 
-    boolean isSlotFollowersStable();
+  boolean isSlotFollowersStable();
 
-    void updateSlotTable(SlotTable slotTable);
+  void updateSlotTable(SlotTable slotTable);
 
-    void checkSlotStatuses(DataNode node, List<BaseSlotStatus> slotStatuses);
+  void checkSlotStatuses(DataNode node, List<BaseSlotStatus> slotStatuses);
 }

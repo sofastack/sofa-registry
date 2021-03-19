@@ -23,43 +23,43 @@ import java.util.Map;
 
 public class AppRevisionInterface implements Serializable {
 
-    private String                    id;
+  private String id;
 
-    private Map<String, List<String>> serviceParams = new HashMap<String, List<String>>();
+  private Map<String, List<String>> serviceParams = new HashMap<String, List<String>>();
 
-    /**
-     * Getter method for property <tt>id</tt>.
-     *
-     * @return property value of id
-     */
-    public String getId() {
-        return id;
-    }
+  /**
+   * Getter method for property <tt>id</tt>.
+   *
+   * @return property value of id
+   */
+  public String getId() {
+    return id;
+  }
 
-    /**
-     * Setter method for property <tt>id</tt>.
-     *
-     * @param id value to be assigned to property id
-     */
-    public void setId(String id) {
-        this.id = id;
-    }
+  /**
+   * Setter method for property <tt>id</tt>.
+   *
+   * @param id value to be assigned to property id
+   */
+  public void setId(String id) {
+    this.id = id;
+  }
 
-    /**
-     * Getter method for property <tt>serviceParams</tt>.
-     *
-     * @return property value of serviceParams
-     */
-    public Map<String, List<String>> getServiceParams() {
-        return serviceParams;
-    }
+  /**
+   * Getter method for property <tt>serviceParams</tt>.
+   *
+   * @return property value of serviceParams
+   */
+  public Map<String, List<String>> getServiceParams() {
+    return serviceParams;
+  }
 
-    /**
-     * Setter method for property <tt>serviceParams</tt>.
-     *
-     * @param serviceParams value to be assigned to property serviceParams
-     */
-    public void setServiceParams(Map<String, List<String>> serviceParams) {
-        this.serviceParams = serviceParams;
-    }
+  /**
+   * Setter method for property <tt>serviceParams</tt>.
+   *
+   * @param serviceParams value to be assigned to property serviceParams
+   */
+  public void setServiceParams(Map<String, List<String>> serviceParams) {
+    this.serviceParams = serviceParams;
+  }
 }

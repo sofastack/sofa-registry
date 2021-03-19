@@ -20,38 +20,37 @@ import com.alipay.sofa.registry.client.api.EventSubscriber;
 import com.alipay.sofa.registry.client.api.model.Event;
 
 /**
- *
  * @author zhuoyu.sjw
  * @version $Id: TestEventSubscriber.java, v 0.1 2018-07-15 22:39 zhuoyu.sjw Exp $$
  */
 public class TestEventSubscriber implements EventSubscriber {
 
-    private boolean sync;
+  private boolean sync;
 
-    private String  cache;
+  private String cache;
 
-    public TestEventSubscriber(boolean sync) {
-        this.sync = sync;
+  public TestEventSubscriber(boolean sync) {
+    this.sync = sync;
+  }
+
+  @Override
+  public boolean isSync() {
+    return sync;
+  }
+
+  @Override
+  public void onEvent(Event event) {
+    if (event instanceof TestEvent) {
+      cache = ((TestEvent) event).getData();
     }
+  }
 
-    @Override
-    public boolean isSync() {
-        return sync;
-    }
-
-    @Override
-    public void onEvent(Event event) {
-        if (event instanceof TestEvent) {
-            cache = ((TestEvent) event).getData();
-        }
-    }
-
-    /**
-     * Getter method for property <tt>cache</tt>.
-     *
-     * @return property value of cache
-     */
-    public String getCache() {
-        return cache;
-    }
+  /**
+   * Getter method for property <tt>cache</tt>.
+   *
+   * @return property value of cache
+   */
+  public String getCache() {
+    return cache;
+  }
 }

@@ -21,20 +21,19 @@ import com.alipay.sofa.registry.common.model.store.Subscriber;
 import org.junit.Test;
 
 /**
- @author xuanbei
- @since 2019/2/12
+ * @author xuanbei
+ * @since 2019/2/12
  */
 public class DatumUtilsTest {
-    @Test
-    public void testNewDatumIfNull() {
-        Datum datum = new Datum();
-        datum.setVersion(19092L);
-        datum.setDataId("test-dataId");
-        datum.setDataCenter("test-dataCenter");
+  @Test
+  public void testNewDatumIfNull() {
+    Datum datum = new Datum();
+    datum.setVersion(19092L);
+    datum.setDataId("test-dataId");
+    datum.setDataCenter("test-dataCenter");
 
-        Subscriber subscriber = new Subscriber();
-        subscriber.setDataId("subscriber-dataId");
-        subscriber.setGroup("DEFAULT_GROUP");
-
-    }
+    Subscriber subscriber = new Subscriber();
+    subscriber.setDataId("subscriber-dataId");
+    subscriber.setGroup("DEFAULT_GROUP");
+  }
 }

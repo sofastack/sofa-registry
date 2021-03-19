@@ -17,25 +17,22 @@
 package com.alipay.sofa.registry.core.constants;
 
 /**
- * 
  * @author zhuoyu.sjw
- * @version $Id: EventTypeConstants.java, v 0.1 2018-03-01 19:15 zhuoyu.sjw Exp
- *          $$
+ * @version $Id: EventTypeConstants.java, v 0.1 2018-03-01 19:15 zhuoyu.sjw Exp $$
  */
 public final class EventTypeConstants {
-	private EventTypeConstants() {
-	}
+  private EventTypeConstants() {}
 
-	public static final String REGISTER = "REGISTER";
+  public static final String REGISTER = "REGISTER";
 
-	public static final String UNREGISTER = "UNREGISTER";
+  public static final String UNREGISTER = "UNREGISTER";
 
-	public static char getEventTypeFlag(String eventType) {
-		if (EventTypeConstants.REGISTER.equals(eventType)) {
-			return 'R';
-		} else if (EventTypeConstants.UNREGISTER.equals(eventType)) {
-			return 'U';
-		}
-		return 'N';
-	}
+  public static char getEventTypeFlag(String eventType) {
+    if (EventTypeConstants.REGISTER.equals(eventType)) {
+      return 'R';
+    } else if (EventTypeConstants.UNREGISTER.equals(eventType)) {
+      return 'U';
+    }
+    return 'N';
+  }
 }

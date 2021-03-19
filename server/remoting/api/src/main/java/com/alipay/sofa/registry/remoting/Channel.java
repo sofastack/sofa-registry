@@ -17,62 +17,57 @@
 package com.alipay.sofa.registry.remoting;
 
 import java.net.InetSocketAddress;
-
 import javax.ws.rs.client.WebTarget;
 
 /**
- * 
  * @author shangyu.wh
  * @version $Id: Channel.java, v 0.1 2017-11-20 20:39 shangyu.wh Exp $
  */
 public interface Channel {
 
-	/**
-	 * get remote address.
-	 * 
-	 * @return remote address.
-	 */
-	InetSocketAddress getRemoteAddress();
+  /**
+   * get remote address.
+   *
+   * @return remote address.
+   */
+  InetSocketAddress getRemoteAddress();
 
-	/**
-	 * get local address.
-	 * 
-	 * @return local address.
-	 */
-	InetSocketAddress getLocalAddress();
+  /**
+   * get local address.
+   *
+   * @return local address.
+   */
+  InetSocketAddress getLocalAddress();
 
-	/**
-	 * is connected.
-	 * 
-	 * @return connected
-	 */
-	boolean isConnected();
+  /**
+   * is connected.
+   *
+   * @return connected
+   */
+  boolean isConnected();
 
-	/**
-	 * get attribute.
-	 * 
-	 * @param key
-	 *            key.
-	 * @return value.
-	 */
-	Object getAttribute(String key);
+  /**
+   * get attribute.
+   *
+   * @param key key.
+   * @return value.
+   */
+  Object getAttribute(String key);
 
-	/**
-	 * set attribute.
-	 * 
-	 * @param key
-	 *            key.
-	 * @param value
-	 *            value.
-	 */
-	void setAttribute(String key, Object value);
+  /**
+   * set attribute.
+   *
+   * @param key key.
+   * @param value value.
+   */
+  void setAttribute(String key, Object value);
 
-	/**
-	 * for rest api
-	 * 
-	 * @return
-	 */
-	WebTarget getWebTarget();
+  /**
+   * for rest api
+   *
+   * @return
+   */
+  WebTarget getWebTarget();
 
-	void close();
+  void close();
 }

@@ -21,15 +21,14 @@ import com.google.common.collect.Interner;
 import com.google.common.collect.Interners;
 
 public final class ProcessIdCache {
-    private static final Interner<ProcessId> interners = Interners.newWeakInterner();
+  private static final Interner<ProcessId> interners = Interners.newWeakInterner();
 
-    private ProcessIdCache() {
-    }
+  private ProcessIdCache() {}
 
-    public static ProcessId cache(ProcessId pid) {
-        if (pid == null) {
-            return null;
-        }
-        return interners.intern(pid);
+  public static ProcessId cache(ProcessId pid) {
+    if (pid == null) {
+      return null;
     }
+    return interners.intern(pid);
+  }
 }

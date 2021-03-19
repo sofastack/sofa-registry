@@ -19,29 +19,27 @@ package com.alipay.sofa.registry.server.session.acceptor;
 import com.alipay.sofa.registry.common.model.ConnectId;
 
 /**
- *
  * @author kezhu.wukz
  * @author shangyu.wh
  * @version 1.0: WriteDataRequest.java, v 0.1 2019-06-06 18:42 shangyu.wh Exp $
  */
 public interface WriteDataRequest<T> {
 
-    /**
-     * The enum for request type
-     */
-    enum WriteDataRequestType {
-        PUBLISHER, UN_PUBLISHER, CLIENT_OFF
-    }
+  /** The enum for request type */
+  enum WriteDataRequestType {
+    PUBLISHER,
+    UN_PUBLISHER,
+    CLIENT_OFF
+  }
 
-    /**
-     * Gets request body.
-     *
-     * @return the request body
-     */
-    T getRequestBody();
+  /**
+   * Gets request body.
+   *
+   * @return the request body
+   */
+  T getRequestBody();
 
-    WriteDataRequestType getRequestType();
+  WriteDataRequestType getRequestType();
 
-    ConnectId getConnectId();
-
+  ConnectId getConnectId();
 }

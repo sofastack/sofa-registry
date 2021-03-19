@@ -18,25 +18,25 @@ package com.alipay.sofa.registry.server.meta.slot.util;
 
 import com.alipay.sofa.registry.server.meta.AbstractMetaServerTest;
 import com.alipay.sofa.registry.server.shared.util.NodeUtils;
+import java.util.HashSet;
+import java.util.List;
 import org.assertj.core.util.Lists;
 import org.junit.Assert;
 import org.junit.Test;
 
-import java.util.HashSet;
-import java.util.List;
-
 public class NodeComparatorTest extends AbstractMetaServerTest {
 
-    @Test
-    public void testCompare() {
-        List<String> prev = NodeUtils.transferNodeToIpList(randomDataNodes(6));
-        List<String> current = Lists.newArrayList(prev);
-        List<String> added = NodeUtils.transferNodeToIpList(randomDataNodes(2));
-        current.addAll(added);
-        List<String> removed = prev.subList(0, 3);
-        current.removeAll(removed);
-        com.alipay.sofa.registry.server.shared.comparator.NodeComparator comparator = new com.alipay.sofa.registry.server.shared.comparator.NodeComparator(prev, current);
-        Assert.assertEquals(new HashSet<>(added), comparator.getAdded());
-        Assert.assertEquals(new HashSet<>(removed), comparator.getRemoved());
-    }
+  @Test
+  public void testCompare() {
+    List<String> prev = NodeUtils.transferNodeToIpList(randomDataNodes(6));
+    List<String> current = Lists.newArrayList(prev);
+    List<String> added = NodeUtils.transferNodeToIpList(randomDataNodes(2));
+    current.addAll(added);
+    List<String> removed = prev.subList(0, 3);
+    current.removeAll(removed);
+    com.alipay.sofa.registry.server.shared.comparator.NodeComparator comparator =
+        new com.alipay.sofa.registry.server.shared.comparator.NodeComparator(prev, current);
+    Assert.assertEquals(new HashSet<>(added), comparator.getAdded());
+    Assert.assertEquals(new HashSet<>(removed), comparator.getRemoved());
+  }
 }

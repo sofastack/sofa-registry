@@ -29,98 +29,101 @@ import com.alipay.sofa.registry.store.api.repository.AppRevisionHeartbeatReposit
 import com.alipay.sofa.registry.util.BatchCallableRunnable.InvokeFuture;
 import com.alipay.sofa.registry.util.BatchCallableRunnable.TaskEvent;
 import com.alipay.sofa.registry.util.SingleFlight;
-import org.springframework.beans.factory.annotation.Autowired;
-import javax.annotation.PostConstruct;
-import javax.annotation.Resource;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import javax.annotation.PostConstruct;
+import javax.annotation.Resource;
+import org.springframework.beans.factory.annotation.Autowired;
 
 /**
- *
  * @author xiaojian.xj
  * @version $Id: AppRevisionHeartbeatJdbcRepository.java, v 0.1 2021年02月09日 17:14 xiaojian.xj Exp $
  */
-public class AppRevisionHeartbeatJdbcRepository implements AppRevisionHeartbeatRepository,
-                                               JdbcRepository {
+public class AppRevisionHeartbeatJdbcRepository
+    implements AppRevisionHeartbeatRepository, JdbcRepository {
 
-    private static final Logger               LOG          = LoggerFactory.getLogger(
-                                                               "METADATA-EXCHANGE",
-                                                               "[AppRevisionHeartbeat]");
+  private static final Logger LOG =
+      LoggerFactory.getLogger("METADATA-EXCHANGE", "[AppRevisionHeartbeat]");
 
-    @Resource
-    private AppRevisionJdbcRepository         appRevisionJdbcRepository;
+  @Resource private AppRevisionJdbcRepository appRevisionJdbcRepository;
 
-    @Autowired
-    private AppRevisionMapper                 appRevisionMapper;
+  @Autowired private AppRevisionMapper appRevisionMapper;
 
-    @Autowired
-    private AppRevisionHeartbeatBatchCallable appRevisionHeartbeatBatchCallable;
+  @Autowired private AppRevisionHeartbeatBatchCallable appRevisionHeartbeatBatchCallable;
 
-    @Autowired
-    private MetadataConfig                    metadataConfig;
+  @Autowired private MetadataConfig metadataConfig;
 
-    private SingleFlight                      singleFlight = new SingleFlight();
+  private SingleFlight singleFlight = new SingleFlight();
 
-    private Integer                           REVISION_GC_LIMIT;
+  private Integer REVISION_GC_LIMIT;
 
-    @PostConstruct
-    public void postConstruct() {
-        REVISION_GC_LIMIT = metadataConfig.getRevisionGcLimit();
+  @PostConstruct
+  public void postConstruct() {
+    REVISION_GC_LIMIT = metadataConfig.getRevisionGcLimit();
+  }
+
+  @Override
+  public void doAppRevisionHeartbeat() {
+
+    try {
+      singleFlight.execute(
+          "app_revision_heartbeat",
+          () -> {
+            Map<AppRevisionQueryModel, AppRevision> heartbeatMap =
+                appRevisionJdbcRepository.getHeartbeatMap();
+
+            Map<AppRevisionQueryModel, InvokeFuture> futureMap = new HashMap<>();
+            for (Entry<AppRevisionQueryModel, AppRevision> entry : heartbeatMap.entrySet()) {
+              TaskEvent taskEvent =
+                  appRevisionHeartbeatBatchCallable.new TaskEvent(entry.getValue());
+              InvokeFuture future = appRevisionHeartbeatBatchCallable.commit(taskEvent);
+              futureMap.put(entry.getKey(), future);
+            }
+
+            for (Entry<AppRevisionQueryModel, InvokeFuture> entry : futureMap.entrySet()) {
+
+              InvokeFuture future = entry.getValue();
+              try {
+                future.getResponse();
+              } catch (InterruptedException e) {
+                LOG.error(
+                    String.format(
+                        "app_revision: %s heartbeat error.", entry.getKey().getRevision()),
+                    e);
+              }
+            }
+            return null;
+          });
+    } catch (Exception e) {
+      LOG.error("app_revision heartbeat error.", e);
     }
+  }
 
-    @Override
-    public void doAppRevisionHeartbeat() {
+  @Override
+  public void doAppRevisionGc(String dataCenter, int silenceHour) {
 
-        try {
-            singleFlight.execute("app_revision_heartbeat", () -> {
-                Map<AppRevisionQueryModel, AppRevision> heartbeatMap = appRevisionJdbcRepository.getHeartbeatMap();
+    try {
+      singleFlight.execute(
+          "app_revision_gc",
+          () -> {
+            List<AppRevision> appRevisions =
+                AppRevisionDomainConvertor.convert2Revisions(
+                    appRevisionMapper.queryGcRevision(dataCenter, silenceHour, REVISION_GC_LIMIT));
 
-                Map<AppRevisionQueryModel, InvokeFuture> futureMap = new HashMap<>();
-                for (Entry<AppRevisionQueryModel, AppRevision> entry : heartbeatMap.entrySet()) {
-                    TaskEvent taskEvent = appRevisionHeartbeatBatchCallable.new TaskEvent(entry.getValue());
-                    InvokeFuture future = appRevisionHeartbeatBatchCallable.commit(taskEvent);
-                    futureMap.put(entry.getKey(), future);
-                }
+            if (LOG.isInfoEnabled()) {
+              LOG.info("app_revision tobe gc size: " + appRevisions.size());
+            }
+            for (AppRevision appRevision : appRevisions) {
+              // delete app_revision
+              appRevisionMapper.deleteAppRevision(dataCenter, appRevision.getRevision());
+            }
 
-                for (Entry<AppRevisionQueryModel, InvokeFuture> entry : futureMap.entrySet()) {
-
-                    InvokeFuture future = entry.getValue();
-                    try {
-                        future.getResponse();
-                    } catch (InterruptedException e) {
-                        LOG.error(String.format("app_revision: %s heartbeat error.", entry.getKey().getRevision()), e);
-                    }
-                }
-                return null;
-            });
-        } catch (Exception e) {
-            LOG.error("app_revision heartbeat error.", e);
-        }
-
+            return null;
+          });
+    } catch (Exception e) {
+      LOG.error("app_revision gc error.", e);
     }
-
-    @Override
-    public void doAppRevisionGc(String dataCenter, int silenceHour) {
-
-        try {
-            singleFlight.execute("app_revision_gc", () -> {
-
-                List<AppRevision> appRevisions = AppRevisionDomainConvertor.convert2Revisions(appRevisionMapper.queryGcRevision(dataCenter, silenceHour, REVISION_GC_LIMIT));
-
-                if (LOG.isInfoEnabled()) {
-                    LOG.info("app_revision tobe gc size: " + appRevisions.size());
-                }
-                for (AppRevision appRevision : appRevisions) {
-                    // delete app_revision
-                    appRevisionMapper.deleteAppRevision(dataCenter, appRevision.getRevision());
-                }
-
-                return null;
-            });
-        } catch (Exception e) {
-            LOG.error("app_revision gc error.", e);
-        }
-    }
+  }
 }

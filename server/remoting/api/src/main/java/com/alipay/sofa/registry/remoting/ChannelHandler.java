@@ -19,99 +19,97 @@ package com.alipay.sofa.registry.remoting;
 import java.util.concurrent.Executor;
 
 /**
- *
  * @author shangyu.wh
  * @version $Id: ChannelHandler.java, v 0.1 2017-11-20 20:45 shangyu.wh Exp $
  */
 public interface ChannelHandler<T> {
 
-    /**
-     * The enum Handler type.
-     */
-    enum HandlerType {
-        LISENTER,
-        PROCESSER
-    }
+  /** The enum Handler type. */
+  enum HandlerType {
+    LISENTER,
+    PROCESSER
+  }
 
-    /**
-     * The enum Invoke type.
-     */
-    enum InvokeType {
-        SYNC,
-        ASYNC
-    }
+  /** The enum Invoke type. */
+  enum InvokeType {
+    SYNC,
+    ASYNC
+  }
 
-    /**
-     * on channel connected.
-     *
-     * @param channel
-     * @throws RemotingException
-     */
-    void connected(Channel channel) throws RemotingException;
+  /**
+   * on channel connected.
+   *
+   * @param channel
+   * @throws RemotingException
+   */
+  void connected(Channel channel) throws RemotingException;
 
-    /**
-     * on channel disconnected.
-     *
-     * @param channel channel.
-     * @throws RemotingException
-     */
-    void disconnected(Channel channel) throws RemotingException;
+  /**
+   * on channel disconnected.
+   *
+   * @param channel channel.
+   * @throws RemotingException
+   */
+  void disconnected(Channel channel) throws RemotingException;
 
-    /**
-     * on message received.
-     *
-     * @param channel channel.
-     * @param message message.
-     * @throws RemotingException
-     */
-    void received(Channel channel, T message) throws RemotingException;
+  /**
+   * on message received.
+   *
+   * @param channel channel.
+   * @param message message.
+   * @throws RemotingException
+   */
+  void received(Channel channel, T message) throws RemotingException;
 
-    /**
-     * on message reply.
-     *
-     * @param channel
-     * @param message
-     * @return
-     * @throws RemotingException
-     */
-    Object reply(Channel channel, T message) throws RemotingException;
+  /**
+   * on message reply.
+   *
+   * @param channel
+   * @param message
+   * @return
+   * @throws RemotingException
+   */
+  Object reply(Channel channel, T message) throws RemotingException;
 
-    /**
-     * on exception caught.
-     * @param channel channel.
-     * @param message message.
-     * @param exception exception.
-     * @throws RemotingException
-     */
-    void caught(Channel channel, T message, Throwable exception) throws RemotingException;
+  /**
+   * on exception caught.
+   *
+   * @param channel channel.
+   * @param message message.
+   * @param exception exception.
+   * @throws RemotingException
+   */
+  void caught(Channel channel, T message, Throwable exception) throws RemotingException;
 
-    /**
-     * check handlerType
-     *
-     * @return
-     */
-    HandlerType getType();
+  /**
+   * check handlerType
+   *
+   * @return
+   */
+  HandlerType getType();
 
-    /**
-     * return processor request class name
-     *
-     * @return
-     */
-    Class interest();
+  /**
+   * return processor request class name
+   *
+   * @return
+   */
+  Class interest();
 
-    /**
-     * Select Sync process by reply or Async process by received
-     * @return
-     */
-    default InvokeType getInvokeType() {
-        return InvokeType.SYNC;
-    }
+  /**
+   * Select Sync process by reply or Async process by received
+   *
+   * @return
+   */
+  default InvokeType getInvokeType() {
+    return InvokeType.SYNC;
+  }
 
-    /**
-     * specify executor for processor handler
-     * @return
-     */
-    default Executor getExecutor() {
-        return null;
-    }
+  /**
+   * specify executor for processor handler
+   *
+   * @return
+   */
+  default Executor getExecutor() {
+    return null;
+  }
 }

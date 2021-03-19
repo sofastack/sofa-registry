@@ -22,32 +22,31 @@ import com.alipay.sofa.registry.server.session.limit.AccessLimitService;
 import org.springframework.beans.factory.annotation.Autowired;
 
 /**
- *
  * @author shangyu.wh
  * @version 1.0: AccessLimitWrapperInterceptor.java, v 0.1 2019-08-26 20:29 shangyu.wh Exp $
  */
 public class AccessLimitWrapperInterceptor implements WrapperInterceptor<StoreData, Boolean> {
 
-    @Autowired
-    private AccessLimitService accessLimitService;
+  @Autowired private AccessLimitService accessLimitService;
 
-    @Override
-    public Boolean invokeCodeWrapper(WrapperInvocation<StoreData, Boolean> invocation)
-                                                                                      throws Exception {
+  @Override
+  public Boolean invokeCodeWrapper(WrapperInvocation<StoreData, Boolean> invocation)
+      throws Exception {
 
-        BaseInfo baseInfo = (BaseInfo) invocation.getParameterSupplier().get();
+    BaseInfo baseInfo = (BaseInfo) invocation.getParameterSupplier().get();
 
-        if (!accessLimitService.tryAcquire()) {
-            throw new RuntimeException(String.format(
-                "Register access limit for session server!dataInfoId=%s,connectId=%s",
-                baseInfo.getDataInfoId(), baseInfo.getSourceAddress()));
-        }
-
-        return invocation.proceed();
+    if (!accessLimitService.tryAcquire()) {
+      throw new RuntimeException(
+          String.format(
+              "Register access limit for session server!dataInfoId=%s,connectId=%s",
+              baseInfo.getDataInfoId(), baseInfo.getSourceAddress()));
     }
 
-    @Override
-    public int getOrder() {
-        return 0;
-    }
+    return invocation.proceed();
+  }
+
+  @Override
+  public int getOrder() {
+    return 0;
+  }
 }

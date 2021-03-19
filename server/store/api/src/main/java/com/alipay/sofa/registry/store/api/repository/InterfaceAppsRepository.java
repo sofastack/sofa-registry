@@ -16,41 +16,43 @@
  */
 package com.alipay.sofa.registry.store.api.repository;
 
-
 import com.alipay.sofa.registry.common.model.appmeta.InterfaceMapping;
 import com.alipay.sofa.registry.store.api.driver.RegistryRepository;
-
 import java.util.Set;
 
 /**
- *
  * @author xiaojian.xj
  * @version $Id: InterfaceAppsRepository.java, v 0.1 2021年01月24日 19:33 xiaojian.xj Exp $
  */
 public interface InterfaceAppsRepository extends RegistryRepository {
 
-    @Override
-    default Class<?> getInterfaceClass() {
-        return InterfaceAppsRepository.class;
-    }
+  @Override
+  default Class<?> getInterfaceClass() {
+    return InterfaceAppsRepository.class;
+  }
 
-    /**
-     * get revisions by interfaceName
-     * @param dataInfoId
-     * @return return <appName, revisions>
-     */
-    InterfaceMapping getAppNames(String dataCenter, String dataInfoId);
-    /**
-     * insert
-     * @param dataCenter
-     * @param appName
-     * @return
-     */
-    default int batchSave(String dataCenter, String appName, Set<String> interfaceName) {return 0;}
+  /**
+   * get revisions by interfaceName
+   *
+   * @param dataInfoId
+   * @return return <appName, revisions>
+   */
+  InterfaceMapping getAppNames(String dataCenter, String dataInfoId);
+  /**
+   * insert
+   *
+   * @param dataCenter
+   * @param appName
+   * @return
+   */
+  default int batchSave(String dataCenter, String appName, Set<String> interfaceName) {
+    return 0;
+  }
 
-    /**
-     * refresh when startup
-     * @param dataCenter
-     */
-    void loadMetadata(String dataCenter);
+  /**
+   * refresh when startup
+   *
+   * @param dataCenter
+   */
+  void loadMetadata(String dataCenter);
 }

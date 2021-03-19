@@ -22,45 +22,43 @@ import com.alipay.sofa.registry.lifecycle.LifecycleState;
 import com.alipay.sofa.registry.lifecycle.impl.AbstractLifecycle;
 import com.alipay.sofa.registry.observer.Observable;
 import com.alipay.sofa.registry.observer.UnblockingObserver;
-
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
  * @author chen.zhu
- * <p>
- * Nov 25, 2020
+ *     <p>Nov 25, 2020
  */
-public class AbstractLifecycleObservable extends AbstractLifecycle implements Observable, Lifecycle {
+public class AbstractLifecycleObservable extends AbstractLifecycle
+    implements Observable, Lifecycle {
 
-    private List<UnblockingObserver> observers = new CopyOnWriteArrayList<>();
+  private List<UnblockingObserver> observers = new CopyOnWriteArrayList<>();
 
-    public AbstractLifecycleObservable() {
+  public AbstractLifecycleObservable() {}
+
+  public AbstractLifecycleObservable(
+      LifecycleState lifecycleState, LifecycleController lifecycleController) {
+    super(lifecycleState, lifecycleController);
+  }
+
+  @Override
+  public void addObserver(UnblockingObserver observer) {
+    observers.add(observer);
+  }
+
+  @Override
+  public void removeObserver(UnblockingObserver observer) {
+    observers.remove(observer);
+  }
+
+  protected void notifyObservers(final Object message) {
+
+    for (final Object observer : observers) {
+      try {
+        ((UnblockingObserver) observer).update(AbstractLifecycleObservable.this, message);
+      } catch (Exception e) {
+        logger.error("[notifyObservers][{}]", observer, e);
+      }
     }
-
-    public AbstractLifecycleObservable(LifecycleState lifecycleState, LifecycleController lifecycleController) {
-        super(lifecycleState, lifecycleController);
-    }
-
-    @Override
-    public void addObserver(UnblockingObserver observer) {
-        observers.add(observer);
-    }
-
-    @Override
-    public void removeObserver(UnblockingObserver observer) {
-        observers.remove(observer);
-    }
-
-    protected void notifyObservers(final Object message) {
-
-        for (final Object observer : observers) {
-            try {
-                ((UnblockingObserver) observer).update(AbstractLifecycleObservable.this, message);
-            } catch (Exception e) {
-                logger.error("[notifyObservers][{}]", observer, e);
-            }
-
-        }
-    }
+  }
 }

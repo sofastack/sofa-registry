@@ -21,53 +21,49 @@ import com.alipay.sofa.registry.common.model.metaserver.ProvideDataChangeEvent;
 import com.alipay.sofa.registry.server.meta.remoting.data.DefaultDataServerService;
 import com.alipay.sofa.registry.server.meta.remoting.session.DefaultSessionServerService;
 import com.google.common.annotations.VisibleForTesting;
+import java.util.Set;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import java.util.Set;
-
 /**
  * @author chen.zhu
- * <p>
- * Dec 03, 2020
- * <p>
- * Provide Data is designed for two scenerio, as below:
- * 1. Dynamic Configs inside Sofa-Registry itself
- * 2. Service Gaven (or say 'Watcher') are subscring messages through Session-Server
- * <p>
- * All above user cases stages a Config Center role by Sofa-Registry
- * And all these infos are madantorily persistenced to disk
- * So, by leveraging meta server's JRaft feature, infos are reliable and stable to be stored on MetaServer
+ *     <p>Dec 03, 2020
+ *     <p>Provide Data is designed for two scenerio, as below: 1. Dynamic Configs inside
+ *     Sofa-Registry itself 2. Service Gaven (or say 'Watcher') are subscring messages through
+ *     Session-Server
+ *     <p>All above user cases stages a Config Center role by Sofa-Registry And all these infos are
+ *     madantorily persistenced to disk So, by leveraging meta server's JRaft feature, infos are
+ *     reliable and stable to be stored on MetaServer
  */
 @Component
 public class DefaultProvideDataNotifier implements ProvideDataNotifier {
 
-    @Autowired
-    private DefaultDataServerService    defaultDataServerService;
+  @Autowired private DefaultDataServerService defaultDataServerService;
 
-    @Autowired
-    private DefaultSessionServerService defaultSessionServerService;
+  @Autowired private DefaultSessionServerService defaultSessionServerService;
 
-    @Override
-    public void notifyProvideDataChange(ProvideDataChangeEvent event) {
-        Set<Node.NodeType> notifyTypes = event.getNodeTypes();
-        if (notifyTypes.contains(Node.NodeType.DATA)) {
-            defaultDataServerService.notifyProvideDataChange(event);
-        }
-        if (notifyTypes.contains(Node.NodeType.SESSION)) {
-            defaultSessionServerService.notifyProvideDataChange(event);
-        }
+  @Override
+  public void notifyProvideDataChange(ProvideDataChangeEvent event) {
+    Set<Node.NodeType> notifyTypes = event.getNodeTypes();
+    if (notifyTypes.contains(Node.NodeType.DATA)) {
+      defaultDataServerService.notifyProvideDataChange(event);
     }
-
-    @VisibleForTesting
-    DefaultProvideDataNotifier setDataServerProvideDataNotifier(DefaultDataServerService defaultDataServerService) {
-        this.defaultDataServerService = defaultDataServerService;
-        return this;
+    if (notifyTypes.contains(Node.NodeType.SESSION)) {
+      defaultSessionServerService.notifyProvideDataChange(event);
     }
+  }
 
-    @VisibleForTesting
-    DefaultProvideDataNotifier setSessionServerProvideDataNotifier(DefaultSessionServerService defaultSessionServerService) {
-        this.defaultSessionServerService = defaultSessionServerService;
-        return this;
-    }
+  @VisibleForTesting
+  DefaultProvideDataNotifier setDataServerProvideDataNotifier(
+      DefaultDataServerService defaultDataServerService) {
+    this.defaultDataServerService = defaultDataServerService;
+    return this;
+  }
+
+  @VisibleForTesting
+  DefaultProvideDataNotifier setSessionServerProvideDataNotifier(
+      DefaultSessionServerService defaultSessionServerService) {
+    this.defaultSessionServerService = defaultSessionServerService;
+    return this;
+  }
 }

@@ -19,67 +19,70 @@ package com.alipay.sofa.registry.jdbc.mapper;
 import com.alipay.sofa.registry.common.model.store.AppRevision;
 import com.alipay.sofa.registry.jdbc.domain.AppRevisionDomain;
 import com.alipay.sofa.registry.jdbc.domain.AppRevisionQueryModel;
-import org.apache.ibatis.annotations.Param;
 import java.util.List;
+import org.apache.ibatis.annotations.Param;
 
 /**
- *
  * @author xiaojian.xj
  * @version $Id: AppRevisionMapper.java, v 0.1 2021年01月18日 17:49 xiaojian.xj Exp $
  */
 public interface AppRevisionMapper {
 
-    /**
-     * save record
-     * @param appRevision
-     * @return effect record count
-     */
-    public int insert(AppRevisionDomain appRevision);
+  /**
+   * save record
+   *
+   * @param appRevision
+   * @return effect record count
+   */
+  public int insert(AppRevisionDomain appRevision);
 
-    /**
-     * query revision
-     * @param dataCenter
-     * @param revision
-     * @return
-     */
-    public AppRevisionDomain queryRevision(@Param("dataCenter") String dataCenter,
-                                           @Param("revision") String revision);
+  /**
+   * query revision
+   *
+   * @param dataCenter
+   * @param revision
+   * @return
+   */
+  public AppRevisionDomain queryRevision(
+      @Param("dataCenter") String dataCenter, @Param("revision") String revision);
 
-    /**
-     * batch query
-     * @param querys
-     * @return
-     */
-    public List<AppRevisionDomain> batchQuery(List<AppRevisionQueryModel> querys);
+  /**
+   * batch query
+   *
+   * @param querys
+   * @return
+   */
+  public List<AppRevisionDomain> batchQuery(List<AppRevisionQueryModel> querys);
 
-    /**
-     * check if revision exist
-     * @param query
-     * @return revision
-     */
-    AppRevisionDomain checkExist(AppRevisionQueryModel query);
+  /**
+   * check if revision exist
+   *
+   * @param query
+   * @return revision
+   */
+  AppRevisionDomain checkExist(AppRevisionQueryModel query);
 
-    /**
-     *
-     * @param heartbeats
-     */
-    void batchHeartbeat(List<AppRevision> heartbeats);
+  /** @param heartbeats */
+  void batchHeartbeat(List<AppRevision> heartbeats);
 
-    /**
-     * query app_revision silence beyond silenceHour
-     * @param dataCenter
-     * @param silenceHour
-     * @return
-     */
-    public List<AppRevisionDomain> queryGcRevision(@Param("dataCenter") String dataCenter,
-                                                   @Param("silenceHour") int silenceHour,
-                                                   @Param("limitCount") int limitCount);
+  /**
+   * query app_revision silence beyond silenceHour
+   *
+   * @param dataCenter
+   * @param silenceHour
+   * @return
+   */
+  public List<AppRevisionDomain> queryGcRevision(
+      @Param("dataCenter") String dataCenter,
+      @Param("silenceHour") int silenceHour,
+      @Param("limitCount") int limitCount);
 
-    /**
-     * delete
-     * @param dataCenter
-     * @param revision
-     */
-    public void deleteAppRevision(@Param("dataCenter") String dataCenter,
-                                  @Param("revision") String revision);
+  /**
+   * delete
+   *
+   * @param dataCenter
+   * @param revision
+   */
+  public void deleteAppRevision(
+      @Param("dataCenter") String dataCenter, @Param("revision") String revision);
 }

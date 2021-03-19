@@ -31,87 +31,85 @@ import com.alipay.sofa.registry.server.data.cache.DatumStorage;
 import com.alipay.sofa.registry.server.data.slot.SlotManager;
 import com.alipay.sofa.registry.server.shared.remoting.AbstractServerHandler;
 import com.alipay.sofa.registry.util.ParaCheckUtil;
-import org.springframework.beans.factory.annotation.Autowired;
-
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ThreadPoolExecutor;
+import org.springframework.beans.factory.annotation.Autowired;
 
 /**
- *
  * @author yuzhi.lyz
  * @version v 0.1 2020-11-06 15:41 yuzhi.lyz Exp $
  */
 public class SlotFollowerDiffPublisherRequestHandler
-                                                    extends
-                                                    AbstractServerHandler<DataSlotDiffPublisherRequest> {
+    extends AbstractServerHandler<DataSlotDiffPublisherRequest> {
 
-    private static final Logger LOGGER = LoggerFactory
-                                           .getLogger(SlotFollowerDiffPublisherRequestHandler.class);
+  private static final Logger LOGGER =
+      LoggerFactory.getLogger(SlotFollowerDiffPublisherRequestHandler.class);
 
-    @Autowired
-    private ThreadPoolExecutor  slotSyncRequestProcessorExecutor;
+  @Autowired private ThreadPoolExecutor slotSyncRequestProcessorExecutor;
 
-    @Autowired
-    private DataServerConfig    dataServerConfig;
+  @Autowired private DataServerConfig dataServerConfig;
 
-    @Autowired
-    private DatumStorage        localDatumStorage;
+  @Autowired private DatumStorage localDatumStorage;
 
-    @Autowired
-    private SlotManager         slotManager;
+  @Autowired private SlotManager slotManager;
 
-    @Override
-    public void checkParam(DataSlotDiffPublisherRequest request) throws RuntimeException {
-        ParaCheckUtil.checkNonNegative(request.getSlotId(), "request.slotId");
+  @Override
+  public void checkParam(DataSlotDiffPublisherRequest request) throws RuntimeException {
+    ParaCheckUtil.checkNonNegative(request.getSlotId(), "request.slotId");
+  }
+
+  @Override
+  public Object doHandle(Channel channel, DataSlotDiffPublisherRequest request) {
+    try {
+      slotManager.triggerUpdateSlotTable(request.getSlotTableEpoch());
+      final int slotId = request.getSlotId();
+      if (!slotManager.isLeader(slotId)) {
+        LOGGER.warn("not leader of {}", slotId);
+        return new GenericResponse().fillFailed("not leader of " + slotId);
+      }
+      DataSlotDiffPublisherResult result =
+          calcDiffResult(
+              slotId,
+              request.getDatumSummaries(),
+              localDatumStorage.getPublishers(request.getSlotId()));
+      result.setSlotTableEpoch(slotManager.getSlotTableEpoch());
+      return new GenericResponse().fillSucceed(result);
+    } catch (Throwable e) {
+      LOGGER.error("DiffSync publisher Request error for slot {}", request.getSlotId(), e);
+      throw new RuntimeException("DiffSync Request error!", e);
     }
+  }
 
-    @Override
-    public Object doHandle(Channel channel, DataSlotDiffPublisherRequest request) {
-        try {
-            slotManager.triggerUpdateSlotTable(request.getSlotTableEpoch());
-            final int slotId = request.getSlotId();
-            if (!slotManager.isLeader(slotId)) {
-                LOGGER.warn("not leader of {}", slotId);
-                return new GenericResponse().fillFailed("not leader of " + slotId);
-            }
-            DataSlotDiffPublisherResult result = calcDiffResult(slotId,
-                request.getDatumSummaries(), localDatumStorage.getPublishers(request.getSlotId()));
-            result.setSlotTableEpoch(slotManager.getSlotTableEpoch());
-            return new GenericResponse().fillSucceed(result);
-        } catch (Throwable e) {
-            LOGGER.error("DiffSync publisher Request error for slot {}", request.getSlotId(), e);
-            throw new RuntimeException("DiffSync Request error!", e);
-        }
-    }
+  private DataSlotDiffPublisherResult calcDiffResult(
+      int targetSlot,
+      List<DatumSummary> datumSummaries,
+      Map<String, Map<String, Publisher>> existingPublishers) {
+    DataSlotDiffPublisherResult result =
+        DataSlotDiffUtils.diffPublishersResult(
+            datumSummaries, existingPublishers, dataServerConfig.getSlotSyncPublisherMaxNum());
+    DataSlotDiffUtils.logDiffResult(result, targetSlot);
+    return result;
+  }
 
-    private DataSlotDiffPublisherResult calcDiffResult(int targetSlot,
-                                                       List<DatumSummary> datumSummaries,
-                                                       Map<String, Map<String, Publisher>> existingPublishers) {
-        DataSlotDiffPublisherResult result = DataSlotDiffUtils.diffPublishersResult(datumSummaries,
-            existingPublishers, dataServerConfig.getSlotSyncPublisherMaxNum());
-        DataSlotDiffUtils.logDiffResult(result, targetSlot);
-        return result;
-    }
+  @Override
+  protected Node.NodeType getConnectNodeType() {
+    return Node.NodeType.DATA;
+  }
 
-    @Override
-    protected Node.NodeType getConnectNodeType() {
-        return Node.NodeType.DATA;
-    }
+  @Override
+  public Class interest() {
+    return DataSlotDiffPublisherRequest.class;
+  }
 
-    @Override
-    public Class interest() {
-        return DataSlotDiffPublisherRequest.class;
-    }
+  @Override
+  public Object buildFailedResponse(String msg) {
+    return new GenericResponse().fillFailed(msg);
+  }
 
-    @Override
-    public Object buildFailedResponse(String msg) {
-        return new GenericResponse().fillFailed(msg);
-    }
-
-    @Override
-    public Executor getExecutor() {
-        return slotSyncRequestProcessorExecutor;
-    }
+  @Override
+  public Executor getExecutor() {
+    return slotSyncRequestProcessorExecutor;
+  }
 }

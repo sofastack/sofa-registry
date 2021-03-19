@@ -16,88 +16,83 @@
  */
 package com.alipay.sofa.registry.remoting.jersey;
 
+import com.alipay.sofa.registry.net.NetUtil;
+import com.alipay.sofa.registry.remoting.Channel;
 import java.net.InetSocketAddress;
 import java.net.URI;
-
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.WebTarget;
 
-import com.alipay.sofa.registry.net.NetUtil;
-import com.alipay.sofa.registry.remoting.Channel;
-
 /**
- *
  * @author shangyu.wh
  * @version $Id: JerseyChannel.java, v 0.1 2018-02-01 11:35 shangyu.wh Exp $
  */
 public class JerseyChannel implements Channel {
 
-    private WebTarget webTarget;
+  private WebTarget webTarget;
 
-    private Client    client;
+  private Client client;
 
-    @Override
-    public InetSocketAddress getRemoteAddress() {
-        if (webTarget != null) {
-            URI uri = webTarget.getUri();
-            return new InetSocketAddress(uri.getHost(), uri.getPort());
-        }
-        return null;
+  @Override
+  public InetSocketAddress getRemoteAddress() {
+    if (webTarget != null) {
+      URI uri = webTarget.getUri();
+      return new InetSocketAddress(uri.getHost(), uri.getPort());
     }
+    return null;
+  }
 
-    @Override
-    public InetSocketAddress getLocalAddress() {
-        return NetUtil.getLocalSocketAddress();
+  @Override
+  public InetSocketAddress getLocalAddress() {
+    return NetUtil.getLocalSocketAddress();
+  }
+
+  @Override
+  public boolean isConnected() {
+    if (client instanceof org.glassfish.jersey.client.JerseyClient) {
+      return !((org.glassfish.jersey.client.JerseyClient) client).isClosed();
     }
+    return false;
+  }
 
-    @Override
-    public boolean isConnected() {
-        if (client instanceof org.glassfish.jersey.client.JerseyClient) {
-            return !((org.glassfish.jersey.client.JerseyClient) client).isClosed();
-        }
-        return false;
-    }
+  @Override
+  public Object getAttribute(String key) {
+    return null;
+  }
 
-    @Override
-    public Object getAttribute(String key) {
-        return null;
-    }
+  @Override
+  public void setAttribute(String key, Object value) {}
 
-    @Override
-    public void setAttribute(String key, Object value) {
+  /**
+   * Getter method for property <tt>webTarget</tt>.
+   *
+   * @return property value of webTarget
+   */
+  @Override
+  public WebTarget getWebTarget() {
+    return webTarget;
+  }
 
-    }
+  @Override
+  public void close() {
+    client.close();
+  }
 
-    /**
-     * Getter method for property <tt>webTarget</tt>.
-     *
-     * @return property value of webTarget
-     */
-    @Override
-    public WebTarget getWebTarget() {
-        return webTarget;
-    }
+  /**
+   * Setter method for property <tt>webTarget</tt>.
+   *
+   * @param webTarget value to be assigned to property webTarget
+   */
+  public void setWebTarget(WebTarget webTarget) {
+    this.webTarget = webTarget;
+  }
 
-    @Override
-    public void close() {
-        client.close();
-    }
-
-    /**
-     * Setter method for property <tt>webTarget</tt>.
-     *
-     * @param webTarget  value to be assigned to property webTarget
-     */
-    public void setWebTarget(WebTarget webTarget) {
-        this.webTarget = webTarget;
-    }
-
-    /**
-     * Setter method for property <tt>client</tt>.
-     *
-     * @param client  value to be assigned to property client
-     */
-    public void setClient(Client client) {
-        this.client = client;
-    }
+  /**
+   * Setter method for property <tt>client</tt>.
+   *
+   * @param client value to be assigned to property client
+   */
+  public void setClient(Client client) {
+    this.client = client;
+  }
 }

@@ -17,61 +17,60 @@
 package com.alipay.sofa.registry.jraft.command;
 
 import com.alipay.sofa.jraft.entity.PeerId;
-
 import java.io.Serializable;
 
 /**
- *
  * @author shangyu.wh
  * @version $Id: NotifyLeaderChange.java, v 0.1 2018-06-23 14:32 shangyu.wh Exp $
  */
 public class NotifyLeaderChange implements Serializable {
 
-    private final PeerId leader;
+  private final PeerId leader;
 
-    private String       sender;
+  private String sender;
 
-    /**
-     * constructor
-     * @param leader
-     */
-    public NotifyLeaderChange(PeerId leader) {
-        this.leader = leader;
-    }
+  /**
+   * constructor
+   *
+   * @param leader
+   */
+  public NotifyLeaderChange(PeerId leader) {
+    this.leader = leader;
+  }
 
-    /**
-     * Getter method for property <tt>leader</tt>.
-     *
-     * @return property value of leader
-     */
-    public PeerId getLeader() {
-        return leader;
-    }
+  /**
+   * Getter method for property <tt>leader</tt>.
+   *
+   * @return property value of leader
+   */
+  public PeerId getLeader() {
+    return leader;
+  }
 
-    /**
-     * Getter method for property <tt>sender</tt>.
-     *
-     * @return property value of sender
-     */
-    public String getSender() {
-        return sender;
-    }
+  /**
+   * Getter method for property <tt>sender</tt>.
+   *
+   * @return property value of sender
+   */
+  public String getSender() {
+    return sender;
+  }
 
-    /**
-     * Setter method for property <tt>sender</tt>.
-     *
-     * @param sender  value to be assigned to property sender
-     */
-    public void setSender(String sender) {
-        this.sender = sender;
-    }
+  /**
+   * Setter method for property <tt>sender</tt>.
+   *
+   * @param sender value to be assigned to property sender
+   */
+  public void setSender(String sender) {
+    this.sender = sender;
+  }
 
-    @Override
-    public String toString() {
-        final StringBuilder sb = new StringBuilder("NotifyLeaderChange{");
-        sb.append("leader=").append(leader);
-        sb.append(", sender='").append(sender).append('\'');
-        sb.append('}');
-        return sb.toString();
-    }
+  @Override
+  public String toString() {
+    final StringBuilder sb = new StringBuilder("NotifyLeaderChange{");
+    sb.append("leader=").append(leader);
+    sb.append(", sender='").append(sender).append('\'');
+    sb.append('}');
+    return sb.toString();
+  }
 }

@@ -17,53 +17,58 @@
 package com.alipay.sofa.registry.common.model.slot;
 
 import com.alipay.sofa.registry.common.model.dataserver.DatumDigest;
-
 import java.io.Serializable;
 import java.util.Collections;
 import java.util.Map;
-import java.util.Set;
 
 /**
- *
  * @author yuzhi.lyz
  * @version v 0.1 2020-11-05 14:24 yuzhi.lyz Exp $
  */
 public class DataSlotDiffDigestRequest implements Serializable {
-    private final long                     slotTableEpoch;
-    // all dataInfoIds, diff by digest
-    private final Map<String, DatumDigest> datumDigest;
-    private final int                      slotId;
+  private final long slotTableEpoch;
+  // all dataInfoIds, diff by digest
+  private final Map<String, DatumDigest> datumDigest;
+  private final int slotId;
 
-    public DataSlotDiffDigestRequest(long slotTableEpoch, int slotId,
-                                     Map<String, DatumDigest> datumDigest) {
-        this.slotTableEpoch = slotTableEpoch;
-        this.slotId = slotId;
-        this.datumDigest = datumDigest;
-    }
+  public DataSlotDiffDigestRequest(
+      long slotTableEpoch, int slotId, Map<String, DatumDigest> datumDigest) {
+    this.slotTableEpoch = slotTableEpoch;
+    this.slotId = slotId;
+    this.datumDigest = datumDigest;
+  }
 
-    /**
-     * Getter method for property <tt>slotId</tt>.
-     * @return property value of slotId
-     */
-    public int getSlotId() {
-        return slotId;
-    }
+  /**
+   * Getter method for property <tt>slotId</tt>.
+   *
+   * @return property value of slotId
+   */
+  public int getSlotId() {
+    return slotId;
+  }
 
-    /**
-     * Getter method for property <tt>slotTableEpoch</tt>.
-     * @return property value of slotTableEpoch
-     */
-    public long getSlotTableEpoch() {
-        return slotTableEpoch;
-    }
+  /**
+   * Getter method for property <tt>slotTableEpoch</tt>.
+   *
+   * @return property value of slotTableEpoch
+   */
+  public long getSlotTableEpoch() {
+    return slotTableEpoch;
+  }
 
-    public Map<String, DatumDigest> getDatumDigest() {
-        return Collections.unmodifiableMap(datumDigest);
-    }
+  public Map<String, DatumDigest> getDatumDigest() {
+    return Collections.unmodifiableMap(datumDigest);
+  }
 
-    @Override
-    public String toString() {
-        return "SlotDiffDigestRequest{" + "slotTableEpoch=" + slotTableEpoch + ", slotId=" + slotId
-               + ", digests=" + datumDigest.size() + '}';
-    }
+  @Override
+  public String toString() {
+    return "SlotDiffDigestRequest{"
+        + "slotTableEpoch="
+        + slotTableEpoch
+        + ", slotId="
+        + slotId
+        + ", digests="
+        + datumDigest.size()
+        + '}';
+  }
 }

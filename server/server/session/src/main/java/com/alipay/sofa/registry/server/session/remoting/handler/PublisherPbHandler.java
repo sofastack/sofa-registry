@@ -25,9 +25,8 @@ import com.alipay.sofa.registry.remoting.RemotingException;
 import com.alipay.sofa.registry.server.session.converter.pb.PublisherRegisterConvertor;
 import com.alipay.sofa.registry.server.session.converter.pb.RegisterResponseConvertor;
 import com.alipay.sofa.registry.server.shared.remoting.AbstractServerHandler;
-import org.springframework.beans.factory.annotation.Autowired;
-
 import java.util.concurrent.Executor;
+import org.springframework.beans.factory.annotation.Autowired;
 
 /**
  * TODO
@@ -37,52 +36,51 @@ import java.util.concurrent.Executor;
  */
 public class PublisherPbHandler extends AbstractServerHandler<PublisherRegisterPb> {
 
-    @Autowired
-    private PublisherHandler publisherHandler;
+  @Autowired private PublisherHandler publisherHandler;
 
-    @Override
-    protected Node.NodeType getConnectNodeType() {
-        return publisherHandler.getConnectNodeType();
+  @Override
+  protected Node.NodeType getConnectNodeType() {
+    return publisherHandler.getConnectNodeType();
+  }
+
+  /**
+   * Reply object.
+   *
+   * @param channel the channel
+   * @param message the message
+   * @return the object
+   * @throws RemotingException the remoting exception
+   */
+  @Override
+  public Object doHandle(Channel channel, PublisherRegisterPb message) {
+    RegisterResponsePb.Builder builder = RegisterResponsePb.newBuilder();
+
+    Object response =
+        publisherHandler.doHandle(channel, PublisherRegisterConvertor.convert2Java(message));
+    if (!(response instanceof RegisterResponse)) {
+      return builder.setSuccess(false).setMessage("Unknown response type").build();
     }
 
-    /**
-     * Reply object.
-     *
-     * @param channel the channel 
-     * @param message the message 
-     * @return the object 
-     * @throws RemotingException the remoting exception
-     */
-    @Override
-    public Object doHandle(Channel channel, PublisherRegisterPb message) {
-        RegisterResponsePb.Builder builder = RegisterResponsePb.newBuilder();
+    return RegisterResponseConvertor.convert2Pb((RegisterResponse) response);
+  }
 
-        Object response = publisherHandler.doHandle(channel,
-            PublisherRegisterConvertor.convert2Java(message));
-        if (!(response instanceof RegisterResponse)) {
-            return builder.setSuccess(false).setMessage("Unknown response type").build();
-        }
+  @Override
+  protected void logRequest(Channel channel, PublisherRegisterPb request) {
+    // not log
+  }
 
-        return RegisterResponseConvertor.convert2Pb((RegisterResponse) response);
-    }
+  /**
+   * Interest class.
+   *
+   * @return the class
+   */
+  @Override
+  public Class interest() {
+    return PublisherRegisterPb.class;
+  }
 
-    @Override
-    protected void logRequest(Channel channel, PublisherRegisterPb request) {
-        // not log
-    }
-
-    /**
-     * Interest class.
-     *
-     * @return the class
-     */
-    @Override
-    public Class interest() {
-        return PublisherRegisterPb.class;
-    }
-
-    @Override
-    public Executor getExecutor() {
-        return publisherHandler.getExecutor();
-    }
+  @Override
+  public Executor getExecutor() {
+    return publisherHandler.getExecutor();
+  }
 }

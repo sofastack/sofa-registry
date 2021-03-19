@@ -16,16 +16,14 @@
  */
 package com.alipay.sofa.registry.server.data.bootstrap;
 
-import org.springframework.context.annotation.Import;
-
 import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
+import org.springframework.context.annotation.Import;
 
 /**
- *
  * @author shangyu.wh
  * @version $Id: EnableSessionServer.java, v 0.1 2017-11-14 11:38 synex Exp $
  */
@@ -33,5 +31,4 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
 @Import(DataServerBeanConfiguration.class)
-public @interface EnableDataServer {
-}
+public @interface EnableDataServer {}

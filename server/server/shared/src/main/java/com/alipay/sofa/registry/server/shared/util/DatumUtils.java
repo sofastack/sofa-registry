@@ -22,7 +22,6 @@ import com.alipay.sofa.registry.common.model.dataserver.DatumVersion;
 import com.alipay.sofa.registry.common.model.store.*;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -32,46 +31,67 @@ import java.util.Map;
  * @since 2019/2/12
  */
 public final class DatumUtils {
-    private DatumUtils() {
-    }
+  private DatumUtils() {}
 
-    public static Map<String, DatumVersion> intern(Map<String, DatumVersion> versionMap) {
-        Map<String, DatumVersion> ret = Maps.newHashMapWithExpectedSize(versionMap.size());
-        versionMap.forEach((k, v) -> ret.put(WordCache.getWordCache(k), v));
-        return ret;
-    }
+  public static Map<String, DatumVersion> intern(Map<String, DatumVersion> versionMap) {
+    Map<String, DatumVersion> ret = Maps.newHashMapWithExpectedSize(versionMap.size());
+    versionMap.forEach((k, v) -> ret.put(WordCache.getWordCache(k), v));
+    return ret;
+  }
 
-    public static Map<String, Long> getVersions(Map<String, Datum> datumMap) {
-        Map<String, Long> versions = Maps.newHashMapWithExpectedSize(datumMap.size());
-        datumMap.forEach((k, v) -> versions.put(k, v.getVersion()));
-        return versions;
-    }
+  public static Map<String, Long> getVersions(Map<String, Datum> datumMap) {
+    Map<String, Long> versions = Maps.newHashMapWithExpectedSize(datumMap.size());
+    datumMap.forEach((k, v) -> versions.put(k, v.getVersion()));
+    return versions;
+  }
 
-    public static SubDatum newEmptySubDatum(Subscriber subscriber, String datacenter) {
-        SubDatum datum = new SubDatum(subscriber.getDataInfoId(), datacenter,
-            ValueConstants.DEFAULT_NO_DATUM_VERSION, Collections.emptyList(),
-            subscriber.getDataId(), subscriber.getInstanceId(), subscriber.getGroup());
-        return datum;
-    }
+  public static SubDatum newEmptySubDatum(Subscriber subscriber, String datacenter) {
+    SubDatum datum =
+        new SubDatum(
+            subscriber.getDataInfoId(),
+            datacenter,
+            ValueConstants.DEFAULT_NO_DATUM_VERSION,
+            Collections.emptyList(),
+            subscriber.getDataId(),
+            subscriber.getInstanceId(),
+            subscriber.getGroup());
+    return datum;
+  }
 
-    public static SubDatum newEmptySubDatum(DataInfo dataInfo, String datacenter) {
-        SubDatum datum = new SubDatum(dataInfo.getDataInfoId(), datacenter,
-            ValueConstants.DEFAULT_NO_DATUM_VERSION, Collections.emptyList(), dataInfo.getDataId(),
-            dataInfo.getInstanceId(), dataInfo.getGroup());
-        return datum;
-    }
+  public static SubDatum newEmptySubDatum(DataInfo dataInfo, String datacenter) {
+    SubDatum datum =
+        new SubDatum(
+            dataInfo.getDataInfoId(),
+            datacenter,
+            ValueConstants.DEFAULT_NO_DATUM_VERSION,
+            Collections.emptyList(),
+            dataInfo.getDataId(),
+            dataInfo.getInstanceId(),
+            dataInfo.getGroup());
+    return datum;
+  }
 
-    public static SubDatum of(Datum datum) {
-        List<SubPublisher> publishers = Lists.newArrayListWithCapacity(datum.publisherSize());
-        for (Publisher publisher : datum.getPubMap().values()) {
-            final URL srcAddress = publisher.getSourceAddress();
-            // temp publisher the srcAddress maybe null
-            final String srcAddressString = srcAddress == null ? null : srcAddress
-                .getAddressString();
-            publishers.add(new SubPublisher(publisher.getCell(), publisher.getDataList(), publisher
-                .getClientId(), srcAddressString, publisher.getRegisterTimestamp()));
-        }
-        return new SubDatum(datum.getDataInfoId(), datum.getDataCenter(), datum.getVersion(),
-            publishers, datum.getDataId(), datum.getInstanceId(), datum.getGroup());
+  public static SubDatum of(Datum datum) {
+    List<SubPublisher> publishers = Lists.newArrayListWithCapacity(datum.publisherSize());
+    for (Publisher publisher : datum.getPubMap().values()) {
+      final URL srcAddress = publisher.getSourceAddress();
+      // temp publisher the srcAddress maybe null
+      final String srcAddressString = srcAddress == null ? null : srcAddress.getAddressString();
+      publishers.add(
+          new SubPublisher(
+              publisher.getCell(),
+              publisher.getDataList(),
+              publisher.getClientId(),
+              srcAddressString,
+              publisher.getRegisterTimestamp()));
     }
+    return new SubDatum(
+        datum.getDataInfoId(),
+        datum.getDataCenter(),
+        datum.getVersion(),
+        publishers,
+        datum.getDataId(),
+        datum.getInstanceId(),
+        datum.getGroup());
+  }
 }

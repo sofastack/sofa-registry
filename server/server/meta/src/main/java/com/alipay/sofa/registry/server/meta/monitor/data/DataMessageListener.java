@@ -21,9 +21,6 @@ import com.alipay.sofa.registry.server.meta.monitor.heartbeat.HeartbeatListener;
 
 /**
  * @author chen.zhu
- * <p>
- * Feb 23, 2021
+ *     <p>Feb 23, 2021
  */
-public interface DataMessageListener extends HeartbeatListener<DataNode> {
-
-}
+public interface DataMessageListener extends HeartbeatListener<DataNode> {}

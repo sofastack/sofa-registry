@@ -18,7 +18,6 @@ package com.alipay.sofa.registry.server.session.store;
 
 import com.alipay.sofa.registry.common.model.dataserver.DatumVersion;
 import com.alipay.sofa.registry.common.model.store.Subscriber;
-
 import java.util.Collection;
 import java.util.Map;
 
@@ -28,31 +27,33 @@ import java.util.Map;
  */
 public interface Interests extends DataManager<Subscriber, String, String> {
 
-    /**
-     * check subscribers interest dataInfoId version,very dataCenter dataInfoId version different
-     * if return false
-     * else check return bigger version
-     *
-     * @param dataCenter
-     * @param datumDataInfoId
-     * @param version
-     * @return
-     */
-    InterestVersionCheck checkInterestVersion(String dataCenter, String datumDataInfoId,
-                                              long version);
+  /**
+   * check subscribers interest dataInfoId version,very dataCenter dataInfoId version different if
+   * return false else check return bigger version
+   *
+   * @param dataCenter
+   * @param datumDataInfoId
+   * @param version
+   * @return
+   */
+  InterestVersionCheck checkInterestVersion(
+      String dataCenter, String datumDataInfoId, long version);
 
-    Collection<Subscriber> getInterests(String datumDataInfoId);
+  Collection<Subscriber> getInterests(String datumDataInfoId);
 
-    Map<String, DatumVersion> getInterestVersions(String dataCenter);
+  Map<String, DatumVersion> getInterestVersions(String dataCenter);
 
-    Collection<Subscriber> getInterestsNeverPushed();
+  Collection<Subscriber> getInterestsNeverPushed();
 
-    enum InterestVersionCheck {
-        NoSub(false), Obsolete(false), Interested(true), ;
-        public final boolean interested;
+  enum InterestVersionCheck {
+    NoSub(false),
+    Obsolete(false),
+    Interested(true),
+    ;
+    public final boolean interested;
 
-        private InterestVersionCheck(boolean Interested) {
-            this.interested = Interested;
-        }
+    private InterestVersionCheck(boolean Interested) {
+      this.interested = Interested;
     }
+  }
 }

@@ -16,57 +16,54 @@
  */
 package com.alipay.sofa.registry.server.session.registry;
 
-import java.util.List;
-
 import com.alipay.sofa.registry.common.model.ConnectId;
 import com.alipay.sofa.registry.common.model.store.StoreData;
+import java.util.List;
 
 /**
- *
  * @author shangyu.wh
  * @version $Id: SessionRegistry.java, v 0.1 2017-11-27 19:49 shangyu.wh Exp $
  */
 public interface Registry {
 
-    /**
-     * register new publisher or subscriber data
-     *
-     * @param data
-     */
-    void register(StoreData<String> data);
+  /**
+   * register new publisher or subscriber data
+   *
+   * @param data
+   */
+  void register(StoreData<String> data);
 
-    /**
-     * cancel publisher or subscriber data by client ip address and port(ip:port),one ip address has more than one processId
-     * when disconnection between client node and session node,disconnect event fire remove all pub and sub info on session and data node
-     * this function always use in Console manage Client node list,input ip list must transform to connectId through connect manage
-     *
-     * @param connectIds
-     */
-    void cancel(List<ConnectId> connectIds);
+  /**
+   * cancel publisher or subscriber data by client ip address and port(ip:port),one ip address has
+   * more than one processId when disconnection between client node and session node,disconnect
+   * event fire remove all pub and sub info on session and data node this function always use in
+   * Console manage Client node list,input ip list must transform to connectId through connect
+   * manage
+   *
+   * @param connectIds
+   */
+  void cancel(List<ConnectId> connectIds);
 
-    /**
-     * remove publisher or subscriber data by client ip address and port(ip:port)
-     * this function always use in rest api Console manage ,the run mode is standard
-     * remove subscriber data will push empty datum to some one who has dataInfoId begin with pushEmptyDataDataIdPrefixes config
-     *
-     * @param connectIds
-     */
-    void remove(List<ConnectId> connectIds);
+  /**
+   * remove publisher or subscriber data by client ip address and port(ip:port) this function always
+   * use in rest api Console manage ,the run mode is standard remove subscriber data will push empty
+   * datum to some one who has dataInfoId begin with pushEmptyDataDataIdPrefixes config
+   *
+   * @param connectIds
+   */
+  void remove(List<ConnectId> connectIds);
 
-    /**
-     * message mode com.alipay.sofa.registry.client.provider for client node to unregister single subscriber or publisher data
-     *
-     * @param data
-     */
-    void unRegister(StoreData<String> data);
+  /**
+   * message mode com.alipay.sofa.registry.client.provider for client node to unregister single
+   * subscriber or publisher data
+   *
+   * @param data
+   */
+  void unRegister(StoreData<String> data);
 
-    /**
-     * for fetchChangData first invoke
-     */
-    void fetchChangDataProcess();
+  /** for fetchChangData first invoke */
+  void fetchChangDataProcess();
 
-    /**
-     * for scheduler clean no connect client
-     */
-    void cleanClientConnect();
+  /** for scheduler clean no connect client */
+  void cleanClientConnect();
 }

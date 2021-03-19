@@ -30,64 +30,57 @@ import com.alipay.sofa.registry.task.listener.TaskListenerManager;
 import org.springframework.beans.factory.annotation.Autowired;
 
 /**
- *
  * @author shangyu.wh
  * @version $Id: SubscriberRegisterFetchTaskListener.java, v 0.1 2017-12-07 19:53 shangyu.wh Exp $
  */
 public class WatcherRegisterFetchTaskListener implements TaskListener {
 
-    @Autowired
-    private SessionServerConfig                          sessionServerConfig;
+  @Autowired private SessionServerConfig sessionServerConfig;
 
-    /**
-     * trigger push client process
-     */
-    @Autowired
-    private TaskListenerManager                          taskListenerManager;
+  /** trigger push client process */
+  @Autowired private TaskListenerManager taskListenerManager;
 
-    /**
-     * MetaNode service
-     */
-    @Autowired
-    private MetaServerService                            metaServerService;
+  /** MetaNode service */
+  @Autowired private MetaServerService metaServerService;
 
-    private volatile TaskDispatcher<String, SessionTask> singleTaskDispatcher;
+  private volatile TaskDispatcher<String, SessionTask> singleTaskDispatcher;
 
-    private TaskProcessor                                dataNodeSingleTaskProcessor;
+  private TaskProcessor dataNodeSingleTaskProcessor;
 
-    public WatcherRegisterFetchTaskListener(TaskProcessor dataNodeSingleTaskProcessor) {
-        this.dataNodeSingleTaskProcessor = dataNodeSingleTaskProcessor;
-    }
+  public WatcherRegisterFetchTaskListener(TaskProcessor dataNodeSingleTaskProcessor) {
+    this.dataNodeSingleTaskProcessor = dataNodeSingleTaskProcessor;
+  }
 
-    public TaskDispatcher<String, SessionTask> getSingleTaskDispatcher() {
+  public TaskDispatcher<String, SessionTask> getSingleTaskDispatcher() {
+    if (singleTaskDispatcher == null) {
+      synchronized (this) {
         if (singleTaskDispatcher == null) {
-            synchronized (this) {
-                if (singleTaskDispatcher == null) {
-                    singleTaskDispatcher = TaskDispatchers
-                        .createDefaultSingleTaskDispatcher(
-                            TaskType.WATCHER_REGISTER_FETCH_TASK.getName(),
-                            dataNodeSingleTaskProcessor);
-                }
-            }
+          singleTaskDispatcher =
+              TaskDispatchers.createDefaultSingleTaskDispatcher(
+                  TaskType.WATCHER_REGISTER_FETCH_TASK.getName(), dataNodeSingleTaskProcessor);
         }
-        return singleTaskDispatcher;
+      }
     }
+    return singleTaskDispatcher;
+  }
 
-    @Override
-    public TaskType support() {
-        return TaskType.WATCHER_REGISTER_FETCH_TASK;
-    }
+  @Override
+  public TaskType support() {
+    return TaskType.WATCHER_REGISTER_FETCH_TASK;
+  }
 
-    @Override
-    public void handleEvent(TaskEvent event) {
+  @Override
+  public void handleEvent(TaskEvent event) {
 
-        SessionTask watcherRegisterFetchTask = new WatcherRegisterFetchTask(sessionServerConfig,
-            taskListenerManager, metaServerService);
+    SessionTask watcherRegisterFetchTask =
+        new WatcherRegisterFetchTask(sessionServerConfig, taskListenerManager, metaServerService);
 
-        watcherRegisterFetchTask.setTaskEvent(event);
+    watcherRegisterFetchTask.setTaskEvent(event);
 
-        getSingleTaskDispatcher().dispatch(watcherRegisterFetchTask.getTaskId(),
-            watcherRegisterFetchTask, watcherRegisterFetchTask.getExpiryTime());
-    }
-
+    getSingleTaskDispatcher()
+        .dispatch(
+            watcherRegisterFetchTask.getTaskId(),
+            watcherRegisterFetchTask,
+            watcherRegisterFetchTask.getExpiryTime());
+  }
 }

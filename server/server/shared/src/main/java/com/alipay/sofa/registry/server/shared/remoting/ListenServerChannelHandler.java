@@ -19,29 +19,28 @@ package com.alipay.sofa.registry.server.shared.remoting;
 import com.alipay.sofa.registry.remoting.Channel;
 
 /**
- *
  * @author yuzhi.lyz
  * @version v 0.1 2020-12-14 14:42 yuzhi.lyz Exp $
  */
 public abstract class ListenServerChannelHandler extends AbstractServerHandler {
 
-    @Override
-    public Object doHandle(Channel channel, Object request) {
-        throw new UnsupportedOperationException();
-    }
+  @Override
+  public Object doHandle(Channel channel, Object request) {
+    throw new UnsupportedOperationException();
+  }
 
-    @Override
-    public Object buildFailedResponse(String msg) {
-        throw new UnsupportedOperationException();
-    }
+  @Override
+  public Object buildFailedResponse(String msg) {
+    throw new UnsupportedOperationException();
+  }
 
-    @Override
-    public Class interest() {
-        return null;
-    }
+  @Override
+  public Class interest() {
+    return null;
+  }
 
-    @Override
-    public HandlerType getType() {
-        return HandlerType.LISENTER;
-    }
+  @Override
+  public HandlerType getType() {
+    return HandlerType.LISENTER;
+  }
 }

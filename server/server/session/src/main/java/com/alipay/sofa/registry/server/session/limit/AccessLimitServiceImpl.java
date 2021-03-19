@@ -20,20 +20,19 @@ import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
 import com.google.common.util.concurrent.RateLimiter;
 
 /**
- *
  * @author shangyu.wh
  * @version 1.0: AccessLimitServiceImpl.java, v 0.1 2019-08-26 20:37 shangyu.wh Exp $
  */
 public class AccessLimitServiceImpl implements AccessLimitService {
 
-    private RateLimiter rateLimiter;
+  private RateLimiter rateLimiter;
 
-    public AccessLimitServiceImpl(SessionServerConfig sessionServerConfig) {
-        rateLimiter = RateLimiter.create(sessionServerConfig.getAccessLimitRate());
-    }
+  public AccessLimitServiceImpl(SessionServerConfig sessionServerConfig) {
+    rateLimiter = RateLimiter.create(sessionServerConfig.getAccessLimitRate());
+  }
 
-    @Override
-    public boolean tryAcquire() {
-        return rateLimiter.tryAcquire();
-    }
+  @Override
+  public boolean tryAcquire() {
+    return rateLimiter.tryAcquire();
+  }
 }

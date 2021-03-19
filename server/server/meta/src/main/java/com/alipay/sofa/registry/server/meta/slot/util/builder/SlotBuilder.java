@@ -20,121 +20,132 @@ import com.alipay.sofa.registry.common.model.slot.Slot;
 import com.alipay.sofa.registry.exception.SofaRegistryRuntimeException;
 import com.alipay.sofa.registry.util.DatumVersionUtil;
 import com.google.common.collect.Sets;
-import org.apache.commons.lang.StringUtils;
-
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Set;
+import org.apache.commons.lang.StringUtils;
 
 /**
  * @author chen.zhu
- * <p>
- * Jan 12, 2021
+ *     <p>Jan 12, 2021
  */
 public class SlotBuilder implements Builder<Slot> {
 
-    private final int         slotId;
+  private final int slotId;
 
-    private final int         followerNums;
+  private final int followerNums;
 
-    private String            leader;
+  private String leader;
 
-    private final Set<String> followers = Sets.newHashSet();
+  private final Set<String> followers = Sets.newHashSet();
 
-    private long              epoch;
+  private long epoch;
 
-    public SlotBuilder(int slotId, int followerNums) {
-        this.slotId = slotId;
-        this.followerNums = followerNums;
+  public SlotBuilder(int slotId, int followerNums) {
+    this.slotId = slotId;
+    this.followerNums = followerNums;
+  }
+
+  public SlotBuilder(int slotId, int followerNums, String leader, long epoch) {
+    this.slotId = slotId;
+    this.followerNums = followerNums;
+    this.leader = leader;
+    this.epoch = epoch;
+  }
+
+  public SlotBuilder setLeader(String leader) {
+    if (!StringUtils.equals(this.leader, leader)) {
+      this.leader = leader;
+      epoch = DatumVersionUtil.nextId();
     }
+    return this;
+  }
 
-    public SlotBuilder(int slotId, int followerNums, String leader, long epoch) {
-        this.slotId = slotId;
-        this.followerNums = followerNums;
-        this.leader = leader;
-        this.epoch = epoch;
+  public boolean addFollower(String follower) {
+    if (StringUtils.isBlank(follower)) {
+      throw new IllegalArgumentException("add empty follower");
     }
+    if (followers.contains(follower)) {
+      return true;
+    }
+    if (followers.size() >= followerNums) {
+      return false;
+    }
+    followers.add(follower);
+    return true;
+  }
 
-    public SlotBuilder setLeader(String leader) {
-        if (!StringUtils.equals(this.leader, leader)) {
-            this.leader = leader;
-            epoch = DatumVersionUtil.nextId();
-        }
-        return this;
+  public boolean addFollower(Collection<String> followerCollection) {
+    for (String follower : followerCollection) {
+      if (!addFollower(follower)) {
+        return false;
+      }
     }
+    return true;
+  }
 
-    public boolean addFollower(String follower) {
-        if (StringUtils.isBlank(follower)) {
-            throw new IllegalArgumentException("add empty follower");
-        }
-        if (followers.contains(follower)) {
-            return true;
-        }
-        if (followers.size() >= followerNums) {
-            return false;
-        }
-        followers.add(follower);
-        return true;
-    }
+  public boolean removeFollower(String follower) {
+    return followers.remove(follower);
+  }
 
-    public boolean addFollower(Collection<String> followerCollection) {
-        for (String follower : followerCollection) {
-            if (!addFollower(follower)) {
-                return false;
-            }
-        }
-        return true;
-    }
+  public int getFollowerSize() {
+    return followers.size();
+  }
 
-    public boolean removeFollower(String follower) {
-        return followers.remove(follower);
-    }
+  public boolean containsFollower(String follower) {
+    return followers.contains(follower);
+  }
 
-    public int getFollowerSize() {
-        return followers.size();
-    }
+  private boolean isReady() {
+    return leader != null;
+  }
 
-    public boolean containsFollower(String follower) {
-        return followers.contains(follower);
-    }
+  public String getLeader() {
+    return leader;
+  }
 
-    private boolean isReady() {
-        return leader != null;
-    }
+  public int getSlotId() {
+    return slotId;
+  }
 
-    public String getLeader() {
-        return leader;
-    }
+  public Set<String> getFollowers() {
+    return Collections.unmodifiableSet(Sets.newHashSet(followers));
+  }
 
-    public int getSlotId() {
-        return slotId;
-    }
+  public long getEpoch() {
+    return epoch;
+  }
 
-    public Set<String> getFollowers() {
-        return Collections.unmodifiableSet(Sets.newHashSet(followers));
+  @Override
+  public Slot build() {
+    if (!isReady()) {
+      throw new SofaRegistryRuntimeException(
+          "slot builder is not ready for build: leader["
+              + leader
+              + "], followers["
+              + StringUtils.join(followers, ",")
+              + "]");
     }
+    if (epoch <= 0) {
+      this.epoch = DatumVersionUtil.nextId();
+    }
+    return new Slot(slotId, leader, epoch, followers);
+  }
 
-    public long getEpoch() {
-        return epoch;
-    }
-
-    @Override
-    public Slot build() {
-        if (!isReady()) {
-            throw new SofaRegistryRuntimeException("slot builder is not ready for build: leader["
-                                                   + leader + "], followers["
-                                                   + StringUtils.join(followers, ",") + "]");
-        }
-        if (epoch <= 0) {
-            this.epoch = DatumVersionUtil.nextId();
-        }
-        return new Slot(slotId, leader, epoch, followers);
-    }
-
-    @Override
-    public String toString() {
-        return "SlotBuilder{" + "slotId=" + slotId + ", followerNums=" + followerNums
-               + ", leader='" + leader + '\'' + ", followers=" + followers + ", epoch=" + epoch
-               + '}';
-    }
+  @Override
+  public String toString() {
+    return "SlotBuilder{"
+        + "slotId="
+        + slotId
+        + ", followerNums="
+        + followerNums
+        + ", leader='"
+        + leader
+        + '\''
+        + ", followers="
+        + followers
+        + ", epoch="
+        + epoch
+        + '}';
+  }
 }

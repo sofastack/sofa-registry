@@ -20,37 +20,35 @@ import com.alipay.sofa.registry.store.api.DBResponse;
 
 /**
  * @author chen.zhu
- *         <p>
- *         Mar 09, 2021
+ *     <p>Mar 09, 2021
  */
 public interface ProvideDataRepository {
 
-	/**
-	 * save or update provideData
-	 * 
-	 * @param dataCenter
-	 * @param key
-	 * @param value
-	 * @return
-	 */
-	boolean put(String dataCenter, String key, String value);
+  /**
+   * save or update provideData
+   *
+   * @param dataCenter
+   * @param key
+   * @param value
+   * @return
+   */
+  boolean put(String dataCenter, String key, String value);
 
-	/**
-	 * query provideData by key
-	 * 
-	 * @param dataCenter
-	 * @param key
-	 * @return
-	 */
-	DBResponse get(String dataCenter, String key);
+  /**
+   * query provideData by key
+   *
+   * @param dataCenter
+   * @param key
+   * @return
+   */
+  DBResponse get(String dataCenter, String key);
 
-	/**
-	 * delete provideData
-	 * 
-	 * @param dataCenter
-	 * @param key
-	 * @return
-	 */
-	boolean remove(String dataCenter, String key);
-
+  /**
+   * delete provideData
+   *
+   * @param dataCenter
+   * @param key
+   * @return
+   */
+  boolean remove(String dataCenter, String key);
 }

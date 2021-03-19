@@ -20,130 +20,131 @@ import java.util.Collection;
 
 /**
  * SessionServerConfig Interface
+ *
  * @author shangyu.wh
  * @version $Id: SessionServerConfig.java, v 0.1 2017-11-14 11:47 synex Exp $
  */
 public interface SessionServerConfig {
 
-    int getServerPort();
+  int getServerPort();
 
-    int getSyncSessionPort();
+  int getSyncSessionPort();
 
-    int getMetaServerPort();
+  int getMetaServerPort();
 
-    int getDataServerPort();
+  int getDataServerPort();
 
-    int getHttpServerPort();
+  int getHttpServerPort();
 
-    int getSchedulerHeartbeatIntervalSecs();
+  int getSchedulerHeartbeatIntervalSecs();
 
-    int getSchedulerScanVersionIntervalMillis();
+  int getSchedulerScanVersionIntervalMillis();
 
-    int getClientNodeExchangeTimeoutMillis();
+  int getClientNodeExchangeTimeoutMillis();
 
-    int getDataNodeExchangeTimeoutMillis();
+  int getDataNodeExchangeTimeoutMillis();
 
-    int getDataNodeExchangeForFetchDatumTimeoutMillis();
+  int getDataNodeExchangeForFetchDatumTimeoutMillis();
 
-    int getMetaNodeExchangeTimeoutMillis();
+  int getMetaNodeExchangeTimeoutMillis();
 
-    String getSessionServerRegion();
+  String getSessionServerRegion();
 
-    String getClientCell(String clientCell);
+  String getClientCell(String clientCell);
 
-    String getSessionServerDataCenter();
+  String getSessionServerDataCenter();
 
-    int getSubscriberRegisterFetchRetryTimes();
+  int getSubscriberRegisterFetchRetryTimes();
 
-    int getAccessDataExecutorMinPoolSize();
+  int getAccessDataExecutorMinPoolSize();
 
-    int getAccessDataExecutorMaxPoolSize();
+  int getAccessDataExecutorMaxPoolSize();
 
-    int getAccessDataExecutorQueueSize();
+  int getAccessDataExecutorQueueSize();
 
-    long getAccessDataExecutorKeepAliveTime();
+  long getAccessDataExecutorKeepAliveTime();
 
-    int getDataChangeExecutorMinPoolSize();
+  int getDataChangeExecutorMinPoolSize();
 
-    int getDataChangeExecutorMaxPoolSize();
+  int getDataChangeExecutorMaxPoolSize();
 
-    int getDataChangeExecutorQueueSize();
+  int getDataChangeExecutorQueueSize();
 
-    long getDataChangeExecutorKeepAliveTime();
+  long getDataChangeExecutorKeepAliveTime();
 
-    int getDataChangeDebouncingMillis();
+  int getDataChangeDebouncingMillis();
 
-    int getDataChangeMaxDebouncingMillis();
+  int getDataChangeMaxDebouncingMillis();
 
-    int getPushTaskExecutorPoolSize();
+  int getPushTaskExecutorPoolSize();
 
-    int getPushTaskExecutorQueueSize();
+  int getPushTaskExecutorQueueSize();
 
-    int getPushTaskRetryTimes();
+  int getPushTaskRetryTimes();
 
-    int getPushDataTaskRetryFirstDelayMillis();
+  int getPushDataTaskRetryFirstDelayMillis();
 
-    int getPushDataTaskRetryIncrementDelayMillis();
+  int getPushDataTaskRetryIncrementDelayMillis();
 
-    int getPushDataTaskDebouncingMillis();
+  int getPushDataTaskDebouncingMillis();
 
-    int getConnectClientExecutorMinPoolSize();
+  int getConnectClientExecutorMinPoolSize();
 
-    int getConnectClientExecutorMaxPoolSize();
+  int getConnectClientExecutorMaxPoolSize();
 
-    int getConnectClientExecutorQueueSize();
+  int getConnectClientExecutorQueueSize();
 
-    int getDataChangeFetchTaskMaxBufferSize();
+  int getDataChangeFetchTaskMaxBufferSize();
 
-    int getDataChangeFetchTaskWorkerSize();
+  int getDataChangeFetchTaskWorkerSize();
 
-    String getBlacklistPubDataIdRegex();
+  String getBlacklistPubDataIdRegex();
 
-    String getBlacklistSubDataIdRegex();
+  String getBlacklistSubDataIdRegex();
 
-    boolean isStopPushSwitch();
+  boolean isStopPushSwitch();
 
-    void setStopPushSwitch(boolean stopPushSwitch);
+  void setStopPushSwitch(boolean stopPushSwitch);
 
-    boolean isInvalidForeverZone(String zoneId);
+  boolean isInvalidForeverZone(String zoneId);
 
-    boolean isInvalidIgnored(String dataId);
+  boolean isInvalidIgnored(String dataId);
 
-    int getDataNodeRetryQueueSize();
+  int getDataNodeRetryQueueSize();
 
-    int getDataNodeRetryTimes();
+  int getDataNodeRetryTimes();
 
-    int getDataNodeRetryBackoffMillis();
+  int getDataNodeRetryBackoffMillis();
 
-    int getDataNodeExecutorWorkerSize();
+  int getDataNodeExecutorWorkerSize();
 
-    int getDataNodeExecutorQueueSize();
+  int getDataNodeExecutorQueueSize();
 
-    int getDataNodeMaxBatchSize();
+  int getDataNodeMaxBatchSize();
 
-    double getAccessLimitRate();
+  double getAccessLimitRate();
 
-    int getDataClientConnNum();
+  int getDataClientConnNum();
 
-    int getSessionSchedulerPoolSize();
+  int getSessionSchedulerPoolSize();
 
-    int getSlotSyncPublisherMaxNum();
+  int getSlotSyncPublisherMaxNum();
 
-    Collection<String> getMetaServerAddresses();
+  Collection<String> getMetaServerAddresses();
 
-    boolean isEnableSessionLoadbalancePolicy();
+  boolean isEnableSessionLoadbalancePolicy();
 
-    int getSlotSyncMaxBufferSize();
+  int getSlotSyncMaxBufferSize();
 
-    int getSlotSyncWorkerSize();
+  int getSlotSyncWorkerSize();
 
-    int getCacheDigestIntervalMinutes();
+  int getCacheDigestIntervalMinutes();
 
-    int getCacheCountIntervalSecs();
+  int getCacheCountIntervalSecs();
 
-    int getCacheDatumMaxNums();
+  int getCacheDatumMaxNums();
 
-    int getCacheDatumExpireSecs();
+  int getCacheDatumExpireSecs();
 
-    int getAppRevisionGcSilenceHour();
+  int getAppRevisionGcSilenceHour();
 }

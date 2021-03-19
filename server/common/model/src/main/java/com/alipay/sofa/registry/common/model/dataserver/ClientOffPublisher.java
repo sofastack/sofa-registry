@@ -17,11 +17,9 @@
 package com.alipay.sofa.registry.common.model.dataserver;
 
 import com.alipay.sofa.registry.common.model.ConnectId;
-import com.alipay.sofa.registry.common.model.ProcessId;
 import com.alipay.sofa.registry.common.model.RegisterVersion;
 import com.alipay.sofa.registry.common.model.store.Publisher;
 import com.google.common.collect.Maps;
-
 import java.io.Serializable;
 import java.util.*;
 
@@ -32,36 +30,40 @@ import java.util.*;
  * @version $Id: ClientOffPublisher.java, v 0.1 2017-12-01 15:48 qian.lqlq Exp $
  */
 public final class ClientOffPublisher implements Serializable {
-    private static final long                               serialVersionUID = -3547806571058756207L;
+  private static final long serialVersionUID = -3547806571058756207L;
 
-    private final ConnectId                                 connectId;
-    private final Map<String, Map<String, RegisterVersion>> publisherMap     = Maps.newHashMap();
+  private final ConnectId connectId;
+  private final Map<String, Map<String, RegisterVersion>> publisherMap = Maps.newHashMap();
 
-    public ClientOffPublisher(ConnectId connectId) {
-        this.connectId = connectId;
-    }
+  public ClientOffPublisher(ConnectId connectId) {
+    this.connectId = connectId;
+  }
 
-    public void addPublisher(Publisher publisher) {
-        Map<String, RegisterVersion> publishers = publisherMap.computeIfAbsent(
-                publisher.getDataInfoId(), k -> Maps.newHashMap());
-        publishers.put(publisher.getRegisterId(), publisher.registerVersion());
-    }
+  public void addPublisher(Publisher publisher) {
+    Map<String, RegisterVersion> publishers =
+        publisherMap.computeIfAbsent(publisher.getDataInfoId(), k -> Maps.newHashMap());
+    publishers.put(publisher.getRegisterId(), publisher.registerVersion());
+  }
 
-    public ConnectId getConnectId() {
-        return connectId;
-    }
+  public ConnectId getConnectId() {
+    return connectId;
+  }
 
-    public Map<String, Map<String, RegisterVersion>> getPublisherMap() {
-        return publisherMap;
-    }
+  public Map<String, Map<String, RegisterVersion>> getPublisherMap() {
+    return publisherMap;
+  }
 
-    public boolean isEmpty() {
-        return publisherMap.isEmpty();
-    }
+  public boolean isEmpty() {
+    return publisherMap.isEmpty();
+  }
 
-    @Override
-    public String toString() {
-        return "ClientOffPublisher{" + "connectId=" + connectId + ", publisherMap=" + publisherMap
-               + '}';
-    }
+  @Override
+  public String toString() {
+    return "ClientOffPublisher{"
+        + "connectId="
+        + connectId
+        + ", publisherMap="
+        + publisherMap
+        + '}';
+  }
 }

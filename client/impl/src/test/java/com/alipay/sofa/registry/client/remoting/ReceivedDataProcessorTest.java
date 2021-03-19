@@ -16,6 +16,10 @@
  */
 package com.alipay.sofa.registry.client.remoting;
 
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+
 import com.alipay.sofa.registry.client.api.Subscriber;
 import com.alipay.sofa.registry.client.provider.DefaultSubscriber;
 import com.alipay.sofa.registry.client.provider.RegisterCache;
@@ -23,69 +27,62 @@ import com.alipay.sofa.registry.client.task.ObserverHandler;
 import com.alipay.sofa.registry.core.model.DataBox;
 import com.alipay.sofa.registry.core.model.ReceivedData;
 import com.alipay.sofa.registry.core.model.Result;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-
-import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
-
-/**
- * @author <a href="mailto:zhanggeng.zg@antfin.com">GengZhang</a>
- */
+/** @author <a href="mailto:zhanggeng.zg@antfin.com">GengZhang</a> */
 public class ReceivedDataProcessorTest {
 
-    private static ReceivedDataProcessor processor;
+  private static ReceivedDataProcessor processor;
 
-    @BeforeClass
-    public static void init() {
-        RegisterCache registerCache = mock(RegisterCache.class);
-        ObserverHandler handler = mock(ObserverHandler.class);
-        Subscriber configurator2 = mock(Subscriber.class);
-        when(registerCache.getSubscriberByRegistId("11")).thenReturn(null);
-        when(registerCache.getSubscriberByRegistId("22")).thenReturn(configurator2);
-        DefaultSubscriber configurator3 = mock(DefaultSubscriber.class);
-        when(registerCache.getSubscriberByRegistId("33")).thenReturn(configurator3);
-        doThrow(new RuntimeException()).when(handler).notify(configurator3);
+  @BeforeClass
+  public static void init() {
+    RegisterCache registerCache = mock(RegisterCache.class);
+    ObserverHandler handler = mock(ObserverHandler.class);
+    Subscriber configurator2 = mock(Subscriber.class);
+    when(registerCache.getSubscriberByRegistId("11")).thenReturn(null);
+    when(registerCache.getSubscriberByRegistId("22")).thenReturn(configurator2);
+    DefaultSubscriber configurator3 = mock(DefaultSubscriber.class);
+    when(registerCache.getSubscriberByRegistId("33")).thenReturn(configurator3);
+    doThrow(new RuntimeException()).when(handler).notify(configurator3);
 
-        processor = new ReceivedDataProcessor(registerCache, handler);
-    }
+    processor = new ReceivedDataProcessor(registerCache, handler);
+  }
 
-    @Test
-    public void handleRequest() {
-        Result result = (Result) processor.handleRequest(null, null);
-        Assert.assertTrue(result.isSuccess());
-        Assert.assertNull(result.getMessage());
+  @Test
+  public void handleRequest() {
+    Result result = (Result) processor.handleRequest(null, null);
+    Assert.assertTrue(result.isSuccess());
+    Assert.assertNull(result.getMessage());
 
-        ReceivedData request = new ReceivedData();
-        result = (Result) processor.handleRequest(null, request);
-        Assert.assertTrue(result.isSuccess());
-        Assert.assertNull(result.getMessage());
+    ReceivedData request = new ReceivedData();
+    result = (Result) processor.handleRequest(null, request);
+    Assert.assertTrue(result.isSuccess());
+    Assert.assertNull(result.getMessage());
 
-        request = new ReceivedData();
-        request.setSubscriberRegistIds(null);
-        request.setData(new HashMap<String, List<DataBox>>());
-        request.setVersion(1234L);
-        request.setSegment("seg1");
-        request.setLocalZone("local");
+    request = new ReceivedData();
+    request.setSubscriberRegistIds(null);
+    request.setData(new HashMap<String, List<DataBox>>());
+    request.setVersion(1234L);
+    request.setSegment("seg1");
+    request.setLocalZone("local");
 
-        result = (Result) processor.handleRequest(null, request);
-        Assert.assertFalse(result.isSuccess());
-        Assert.assertEquals("", result.getMessage());
+    result = (Result) processor.handleRequest(null, request);
+    Assert.assertFalse(result.isSuccess());
+    Assert.assertEquals("", result.getMessage());
 
-        request.setSubscriberRegistIds(Arrays.asList("11", "22", "33"));
-        result = (Result) processor.handleRequest(null, request);
-        Assert.assertTrue(result.isSuccess());
-        Assert.assertNull(result.getMessage());
-    }
+    request.setSubscriberRegistIds(Arrays.asList("11", "22", "33"));
+    result = (Result) processor.handleRequest(null, request);
+    Assert.assertTrue(result.isSuccess());
+    Assert.assertNull(result.getMessage());
+  }
 
-    @Test
-    public void interest() {
-        Assert.assertEquals(ReceivedData.class.getName(), processor.interest());
-    }
+  @Test
+  public void interest() {
+    Assert.assertEquals(ReceivedData.class.getName(), processor.interest());
+  }
 }

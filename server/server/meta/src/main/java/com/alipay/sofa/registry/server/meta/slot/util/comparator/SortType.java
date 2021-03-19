@@ -18,23 +18,21 @@ package com.alipay.sofa.registry.server.meta.slot.util.comparator;
 
 /**
  * @author chen.zhu
- * <p>
- * Jan 18, 2021
+ *     <p>Jan 18, 2021
  */
 public enum SortType {
+  ASC {
+    @Override
+    public int getScore(int score) {
+      return score;
+    }
+  },
+  DES {
+    @Override
+    public int getScore(int score) {
+      return -score;
+    }
+  };
 
-    ASC {
-        @Override
-        public int getScore(int score) {
-            return score;
-        }
-    },
-    DES {
-        @Override
-        public int getScore(int score) {
-            return -score;
-        }
-    };
-
-    public abstract int getScore(int score);
+  public abstract int getScore(int score);
 }

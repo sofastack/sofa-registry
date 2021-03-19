@@ -17,7 +17,6 @@
 package com.alipay.sofa.registry.server.session.converter.pb;
 
 import com.google.protobuf.ProtocolStringList;
-
 import java.util.ArrayList;
 import java.util.List;
 
@@ -27,12 +26,12 @@ import java.util.List;
  */
 public class ListStringConvertor {
 
-    public static List<String> convert2Java(ProtocolStringList list) {
+  public static List<String> convert2Java(ProtocolStringList list) {
 
-        if (list == null) {
-            return null;
-        } else {
-            return new ArrayList<>(list);
-        }
+    if (list == null) {
+      return null;
+    } else {
+      return new ArrayList<>(list);
     }
+  }
 }

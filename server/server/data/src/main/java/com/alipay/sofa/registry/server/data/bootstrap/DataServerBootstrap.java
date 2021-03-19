@@ -35,20 +35,19 @@ import com.github.rholder.retry.RetryerBuilder;
 import com.github.rholder.retry.StopStrategies;
 import com.github.rholder.retry.WaitStrategies;
 import com.google.common.base.Predicate;
-import org.glassfish.jersey.server.ResourceConfig;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.context.properties.EnableConfigurationProperties;
-import org.springframework.context.ApplicationContext;
-
-import javax.annotation.Resource;
-import javax.ws.rs.Path;
-import javax.ws.rs.ext.Provider;
 import java.lang.annotation.Annotation;
 import java.util.Collection;
 import java.util.Date;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
+import javax.annotation.Resource;
+import javax.ws.rs.Path;
+import javax.ws.rs.ext.Provider;
+import org.glassfish.jersey.server.ResourceConfig;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.context.ApplicationContext;
 
 /**
  * @author qian.lqlq
@@ -56,242 +55,227 @@ import java.util.concurrent.atomic.AtomicBoolean;
  */
 @EnableConfigurationProperties
 public class DataServerBootstrap {
-    private static final Logger               LOGGER                   = LoggerFactory
-                                                                           .getLogger(DataServerBootstrap.class);
+  private static final Logger LOGGER = LoggerFactory.getLogger(DataServerBootstrap.class);
 
-    @Autowired
-    private DataServerConfig                  dataServerConfig;
+  @Autowired private DataServerConfig dataServerConfig;
 
-    @Autowired
-    private MetaServerService                 metaServerService;
+  @Autowired private MetaServerService metaServerService;
 
-    @Autowired
-    private ApplicationContext                applicationContext;
+  @Autowired private ApplicationContext applicationContext;
 
-    @Autowired
-    private ResourceConfig                    jerseyResourceConfig;
+  @Autowired private ResourceConfig jerseyResourceConfig;
 
-    @Autowired
-    private SlotManager                       slotManager;
+  @Autowired private SlotManager slotManager;
 
-    @Autowired
-    private Exchange                          jerseyExchange;
+  @Autowired private Exchange jerseyExchange;
 
-    @Autowired
-    private Exchange                          boltExchange;
+  @Autowired private Exchange boltExchange;
 
-    @Resource(name = "serverHandlers")
-    private Collection<AbstractServerHandler> serverHandlers;
+  @Resource(name = "serverHandlers")
+  private Collection<AbstractServerHandler> serverHandlers;
 
-    @Resource(name = "serverSyncHandlers")
-    private Collection<AbstractServerHandler> serverSyncHandlers;
+  @Resource(name = "serverSyncHandlers")
+  private Collection<AbstractServerHandler> serverSyncHandlers;
 
-    private Server                            server;
+  private Server server;
 
-    private Server                            dataSyncServer;
+  private Server dataSyncServer;
 
-    private Server                            httpServer;
+  private Server httpServer;
 
-    private final AtomicBoolean               httpServerStarted        = new AtomicBoolean(false);
+  private final AtomicBoolean httpServerStarted = new AtomicBoolean(false);
 
-    private final AtomicBoolean               schedulerStarted         = new AtomicBoolean(false);
+  private final AtomicBoolean schedulerStarted = new AtomicBoolean(false);
 
-    private final AtomicBoolean               serverForSessionStarted  = new AtomicBoolean(false);
+  private final AtomicBoolean serverForSessionStarted = new AtomicBoolean(false);
 
-    private final AtomicBoolean               serverForDataSyncStarted = new AtomicBoolean(false);
+  private final AtomicBoolean serverForDataSyncStarted = new AtomicBoolean(false);
 
-    private final Retryer<Boolean>            retryer                  = RetryerBuilder
-                                                                           .<Boolean> newBuilder()
-                                                                           .retryIfException()
-                                                                            .retryIfResult(new Predicate<Boolean>() {
-                                                                                @Override
-                                                                                public boolean apply(Boolean input) {
-                                                                                    return !input;
-                                                                                }
-                                                                            })
-                                                                           .withWaitStrategy(
-                                                                               WaitStrategies
-                                                                                   .exponentialWait(
-                                                                                       1000,
-                                                                                       10000,
-                                                                                       TimeUnit.MILLISECONDS))
-                                                                           .withStopStrategy(
-                                                                               StopStrategies
-                                                                                   .stopAfterAttempt(10))
-                                                                           .build();
+  private final Retryer<Boolean> retryer =
+      RetryerBuilder.<Boolean>newBuilder()
+          .retryIfException()
+          .retryIfResult(
+              new Predicate<Boolean>() {
+                @Override
+                public boolean apply(Boolean input) {
+                  return !input;
+                }
+              })
+          .withWaitStrategy(WaitStrategies.exponentialWait(1000, 10000, TimeUnit.MILLISECONDS))
+          .withStopStrategy(StopStrategies.stopAfterAttempt(10))
+          .build();
 
-    /**
-     * start dataserver
-     */
-    public void start() {
-        try {
-            LOGGER.info("begin start server");
+  /** start dataserver */
+  public void start() {
+    try {
+      LOGGER.info("begin start server");
 
-            LOGGER.info("the configuration items are as follows: " + dataServerConfig.toString());
+      LOGGER.info("the configuration items are as follows: " + dataServerConfig.toString());
 
-            ReporterUtils.enablePrometheusDefaultExports();
+      ReporterUtils.enablePrometheusDefaultExports();
 
-            openDataServer();
+      openDataServer();
 
-            openDataSyncServer();
+      openDataSyncServer();
 
-            openHttpServer();
+      openHttpServer();
 
-            renewNode();
-            fetchProviderData();
+      renewNode();
+      fetchProviderData();
 
-            // wait until slot table is get
-            retryer.call(() -> {
-                return slotManager.getSlotTableEpoch() != SlotTable.INIT.getEpoch();
-            });
+      // wait until slot table is get
+      retryer.call(
+          () -> {
+            return slotManager.getSlotTableEpoch() != SlotTable.INIT.getEpoch();
+          });
 
-            startScheduler();
+      startScheduler();
 
+      Runtime.getRuntime().addShutdownHook(new Thread(this::doStop));
 
-            Runtime.getRuntime().addShutdownHook(new Thread(this::doStop));
+      LOGGER.info("start server success");
+    } catch (Exception e) {
+      throw new RuntimeException("start server error", e);
+    }
+  }
 
-            LOGGER.info("start server success");
-        } catch (Exception e) {
-            throw new RuntimeException("start server error", e);
-        }
+  private void openDataServer() {
+    try {
+      if (serverForSessionStarted.compareAndSet(false, true)) {
+        server =
+            boltExchange.open(
+                new URL(NetUtil.getLocalAddress().getHostAddress(), dataServerConfig.getPort()),
+                serverHandlers.toArray(new ChannelHandler[serverHandlers.size()]));
+        LOGGER.info("Data server for session started! port:{}", dataServerConfig.getPort());
+      }
+    } catch (Exception e) {
+      serverForSessionStarted.set(false);
+      LOGGER.error("Data server start error! port:{}", dataServerConfig.getPort(), e);
+      throw new RuntimeException("Data server start error!", e);
+    }
+  }
+
+  private void openDataSyncServer() {
+    try {
+      if (serverForDataSyncStarted.compareAndSet(false, true)) {
+        dataSyncServer =
+            boltExchange.open(
+                new URL(
+                    NetUtil.getLocalAddress().getHostAddress(), dataServerConfig.getSyncDataPort()),
+                serverSyncHandlers.toArray(new ChannelHandler[serverSyncHandlers.size()]));
+        LOGGER.info("Data server for sync started! port:{}", dataServerConfig.getSyncDataPort());
+      }
+    } catch (Exception e) {
+      serverForDataSyncStarted.set(false);
+      LOGGER.error("Data sync server start error! port:{}", dataServerConfig.getSyncDataPort(), e);
+      throw new RuntimeException("Data sync server start error!", e);
+    }
+  }
+
+  private void openHttpServer() {
+    try {
+      if (httpServerStarted.compareAndSet(false, true)) {
+        bindResourceConfig();
+        httpServer =
+            jerseyExchange.open(
+                new URL(
+                    NetUtil.getLocalAddress().getHostAddress(),
+                    dataServerConfig.getHttpServerPort()),
+                new ResourceConfig[] {jerseyResourceConfig});
+        LOGGER.info("Open http server port {} success!", dataServerConfig.getHttpServerPort());
+      }
+    } catch (Exception e) {
+      httpServerStarted.set(false);
+      LOGGER.error("Open http server port {} error!", dataServerConfig.getHttpServerPort(), e);
+      throw new RuntimeException("Open http server  error!", e);
+    }
+  }
+
+  private void renewNode() {
+    metaServerService.renewNode();
+    metaServerService.startRenewer(dataServerConfig.getSchedulerHeartbeatIntervalSecs() * 1000);
+  }
+
+  private void fetchProviderData() {
+    ProvideData provideData = metaServerService.fetchData(ValueConstants.DATA_SESSION_LEASE_SEC);
+    Integer expireSec = ProvideData.toInteger(provideData);
+    if (expireSec != null) {
+      dataServerConfig.setSessionLeaseSecs(expireSec);
+      LOGGER.info(
+          "Fetch {}={}, update current config", ValueConstants.DATA_SESSION_LEASE_SEC, expireSec);
     }
 
-    private void openDataServer() {
-        try {
-            if (serverForSessionStarted.compareAndSet(false, true)) {
-                server = boltExchange.open(new URL(NetUtil.getLocalAddress().getHostAddress(),
-                    dataServerConfig.getPort()), serverHandlers
-                    .toArray(new ChannelHandler[serverHandlers.size()]));
-                LOGGER.info("Data server for session started! port:{}", dataServerConfig.getPort());
-            }
-        } catch (Exception e) {
-            serverForSessionStarted.set(false);
-            LOGGER.error("Data server start error! port:{}", dataServerConfig.getPort(), e);
-            throw new RuntimeException("Data server start error!", e);
-        }
+    provideData = metaServerService.fetchData(ValueConstants.DATA_DATUM_SYNC_SESSION_INTERVAL_SEC);
+    Integer syncSessionIntervalSec = ProvideData.toInteger(provideData);
+    if (syncSessionIntervalSec != null) {
+      dataServerConfig.setSlotLeaderSyncSessionIntervalSecs(syncSessionIntervalSec);
+      LOGGER.info(
+          "Fetch {}={}, update current config",
+          ValueConstants.DATA_DATUM_SYNC_SESSION_INTERVAL_SEC,
+          syncSessionIntervalSec);
     }
+  }
 
-    private void openDataSyncServer() {
-        try {
-            if (serverForDataSyncStarted.compareAndSet(false, true)) {
-                dataSyncServer = boltExchange.open(new URL(NetUtil.getLocalAddress()
-                    .getHostAddress(), dataServerConfig.getSyncDataPort()), serverSyncHandlers
-                    .toArray(new ChannelHandler[serverSyncHandlers.size()]));
-                LOGGER.info("Data server for sync started! port:{}",
-                    dataServerConfig.getSyncDataPort());
-            }
-        } catch (Exception e) {
-            serverForDataSyncStarted.set(false);
-            LOGGER.error("Data sync server start error! port:{}",
-                dataServerConfig.getSyncDataPort(), e);
-            throw new RuntimeException("Data sync server start error!", e);
-        }
+  private void startScheduler() {
+    try {
+      schedulerStarted.compareAndSet(false, true);
+    } catch (Exception e) {
+      schedulerStarted.set(false);
+      LOGGER.error("Data Scheduler start error!", e);
+      throw new RuntimeException("Data Scheduler start error!", e);
     }
+  }
 
-    private void openHttpServer() {
-        try {
-            if (httpServerStarted.compareAndSet(false, true)) {
-                bindResourceConfig();
-                httpServer = jerseyExchange.open(
-                    new URL(NetUtil.getLocalAddress().getHostAddress(), dataServerConfig
-                        .getHttpServerPort()), new ResourceConfig[] { jerseyResourceConfig });
-                LOGGER.info("Open http server port {} success!",
-                    dataServerConfig.getHttpServerPort());
-            }
-        } catch (Exception e) {
-            httpServerStarted.set(false);
-            LOGGER
-                .error("Open http server port {} error!", dataServerConfig.getHttpServerPort(), e);
-            throw new RuntimeException("Open http server  error!", e);
-        }
+  public void destroy() {
+    doStop();
+  }
+
+  private void doStop() {
+    try {
+      LOGGER.info("{} Shutting down Data Server..", new Date().toString());
+
+      if (httpServer != null && httpServer.isOpen()) {
+        httpServer.close();
+      }
+
+      if (server != null && server.isOpen()) {
+        server.close();
+      }
+
+      if (dataSyncServer != null && dataSyncServer.isOpen()) {
+        dataSyncServer.close();
+      }
+    } catch (Throwable e) {
+      LOGGER.error("Shutting down Data Server error!", e);
     }
+    LOGGER.info("{} Data server is now shutdown...", new Date().toString());
+  }
 
-    private void renewNode() {
-        metaServerService.renewNode();
-        metaServerService.startRenewer(dataServerConfig.getSchedulerHeartbeatIntervalSecs() * 1000);
+  private void bindResourceConfig() {
+    registerInstances(Path.class);
+    registerInstances(Provider.class);
+  }
 
+  private void registerInstances(Class<? extends Annotation> annotationType) {
+    Map<String, Object> beans = applicationContext.getBeansWithAnnotation(annotationType);
+    if (beans != null && !beans.isEmpty()) {
+      beans.forEach((beanName, bean) -> jerseyResourceConfig.registerInstances(bean));
     }
+  }
 
-    private void fetchProviderData() {
-        ProvideData provideData = metaServerService
-            .fetchData(ValueConstants.DATA_SESSION_LEASE_SEC);
-        Integer expireSec = ProvideData.toInteger(provideData);
-        if (expireSec != null) {
-            dataServerConfig.setSessionLeaseSecs(expireSec);
-            LOGGER.info("Fetch {}={}, update current config",
-                ValueConstants.DATA_SESSION_LEASE_SEC, expireSec);
-        }
+  public boolean getHttpServerStarted() {
+    return httpServerStarted.get();
+  }
 
-        provideData = metaServerService
-            .fetchData(ValueConstants.DATA_DATUM_SYNC_SESSION_INTERVAL_SEC);
-        Integer syncSessionIntervalSec = ProvideData.toInteger(provideData);
-        if (syncSessionIntervalSec != null) {
-            dataServerConfig.setSlotLeaderSyncSessionIntervalSecs(syncSessionIntervalSec);
-            LOGGER.info("Fetch {}={}, update current config",
-                ValueConstants.DATA_DATUM_SYNC_SESSION_INTERVAL_SEC, syncSessionIntervalSec);
-        }
-    }
+  public boolean getSchedulerStarted() {
+    return schedulerStarted.get();
+  }
 
-    private void startScheduler() {
-        try {
-            schedulerStarted.compareAndSet(false, true);
-        } catch (Exception e) {
-            schedulerStarted.set(false);
-            LOGGER.error("Data Scheduler start error!", e);
-            throw new RuntimeException("Data Scheduler start error!", e);
-        }
-    }
+  public boolean getServerForSessionStarted() {
+    return serverForSessionStarted.get();
+  }
 
-    public void destroy() {
-        doStop();
-    }
-
-    private void doStop() {
-        try {
-            LOGGER.info("{} Shutting down Data Server..", new Date().toString());
-
-            if (httpServer != null && httpServer.isOpen()) {
-                httpServer.close();
-            }
-
-            if (server != null && server.isOpen()) {
-                server.close();
-            }
-
-            if (dataSyncServer != null && dataSyncServer.isOpen()) {
-                dataSyncServer.close();
-            }
-        } catch (Throwable e) {
-            LOGGER.error("Shutting down Data Server error!", e);
-        }
-        LOGGER.info("{} Data server is now shutdown...", new Date().toString());
-    }
-
-    private void bindResourceConfig() {
-        registerInstances(Path.class);
-        registerInstances(Provider.class);
-    }
-
-    private void registerInstances(Class<? extends Annotation> annotationType) {
-        Map<String, Object> beans = applicationContext.getBeansWithAnnotation(annotationType);
-        if (beans != null && !beans.isEmpty()) {
-            beans.forEach((beanName, bean) -> jerseyResourceConfig.registerInstances(bean));
-        }
-    }
-
-    public boolean getHttpServerStarted() {
-        return httpServerStarted.get();
-    }
-
-    public boolean getSchedulerStarted() {
-        return schedulerStarted.get();
-    }
-
-    public boolean getServerForSessionStarted() {
-        return serverForSessionStarted.get();
-    }
-
-    public boolean getServerForDataSyncStarted() {
-        return serverForDataSyncStarted.get();
-    }
+  public boolean getServerForDataSyncStarted() {
+    return serverForDataSyncStarted.get();
+  }
 }

@@ -29,74 +29,71 @@ import com.alipay.sofa.registry.server.data.remoting.SessionNodeExchanger;
 import com.alipay.sofa.registry.server.data.slot.SlotManager;
 import com.alipay.sofa.registry.server.shared.env.ServerEnv;
 import com.alipay.sofa.registry.server.shared.meta.AbstractMetaServerService;
-import org.springframework.beans.factory.annotation.Autowired;
-
 import java.util.List;
 import java.util.Set;
+import org.springframework.beans.factory.annotation.Autowired;
 
 /**
- *
  * @author qian.lqlq
  * @version $Id: MetaServiceImpl.java, v 0.1 2018－03－07 20:41 qian.lqlq Exp $
  */
 public class MetaServerServiceImpl extends AbstractMetaServerService<DataHeartBeatResponse> {
 
-    @Autowired
-    private SlotManager          slotManager;
+  @Autowired private SlotManager slotManager;
 
-    @Autowired
-    private DataNodeExchanger    dataNodeExchanger;
+  @Autowired private DataNodeExchanger dataNodeExchanger;
 
-    @Autowired
-    private SessionNodeExchanger sessionNodeExchanger;
+  @Autowired private SessionNodeExchanger sessionNodeExchanger;
 
-    @Autowired
-    private DataServerConfig     dataServerConfig;
+  @Autowired private DataServerConfig dataServerConfig;
 
-    @Override
-    protected long getCurrentSlotTableEpoch() {
-        return slotManager.getSlotTableEpoch();
+  @Override
+  protected long getCurrentSlotTableEpoch() {
+    return slotManager.getSlotTableEpoch();
+  }
+
+  @Override
+  protected void handleRenewResult(DataHeartBeatResponse result) {
+
+    Set<String> dataServerList = getDataServerList();
+    if (dataServerList != null && !dataServerList.isEmpty()) {
+      dataNodeExchanger.setServerIps(dataServerList);
+      dataNodeExchanger.notifyConnectServerAsync();
     }
-
-    @Override
-    protected void handleRenewResult(DataHeartBeatResponse result) {
-
-        Set<String> dataServerList = getDataServerList();
-        if (dataServerList != null && !dataServerList.isEmpty()) {
-            dataNodeExchanger.setServerIps(dataServerList);
-            dataNodeExchanger.notifyConnectServerAsync();
-        }
-        Set<String> sessionServerList = getDataServerList();
-        if (sessionServerList != null && !sessionServerList.isEmpty()) {
-            sessionNodeExchanger.setServerIps(result.getSessionNodesMap().keySet());
-            sessionNodeExchanger.notifyConnectServerAsync();
-        }
-        if (result.getSlotTable() != null && result.getSlotTable() != SlotTable.INIT) {
-            slotManager.updateSlotTable(result.getSlotTable());
-        } else {
-            LOGGER.warn("[handleRenewResult] not slot table result");
-        }
+    Set<String> sessionServerList = getDataServerList();
+    if (sessionServerList != null && !sessionServerList.isEmpty()) {
+      sessionNodeExchanger.setServerIps(result.getSessionNodesMap().keySet());
+      sessionNodeExchanger.notifyConnectServerAsync();
     }
-
-    @Override
-    protected HeartbeatRequest createRequest() {
-        long slotTableEpoch = -1L;
-        List<BaseSlotStatus> slotStatuses;
-        try {
-            slotManager.readLock().lock();
-            slotTableEpoch = slotManager.getSlotTableEpoch();
-            slotStatuses = slotManager.getSlotStatuses();
-        } finally {
-            slotManager.readLock().unlock();
-        }
-        return new HeartbeatRequest<>(createNode(), slotTableEpoch,
-            dataServerConfig.getLocalDataCenter(), System.currentTimeMillis(),
-            new SlotConfig.SlotBasicInfo(SlotConfig.SLOT_NUM, SlotConfig.SLOT_REPLICAS,
-                SlotConfig.FUNC), slotStatuses);
+    if (result.getSlotTable() != null && result.getSlotTable() != SlotTable.INIT) {
+      slotManager.updateSlotTable(result.getSlotTable());
+    } else {
+      LOGGER.warn("[handleRenewResult] not slot table result");
     }
+  }
 
-    private DataNode createNode() {
-        return new DataNode(new URL(ServerEnv.IP), dataServerConfig.getLocalDataCenter());
+  @Override
+  protected HeartbeatRequest createRequest() {
+    long slotTableEpoch = -1L;
+    List<BaseSlotStatus> slotStatuses;
+    try {
+      slotManager.readLock().lock();
+      slotTableEpoch = slotManager.getSlotTableEpoch();
+      slotStatuses = slotManager.getSlotStatuses();
+    } finally {
+      slotManager.readLock().unlock();
     }
+    return new HeartbeatRequest<>(
+        createNode(),
+        slotTableEpoch,
+        dataServerConfig.getLocalDataCenter(),
+        System.currentTimeMillis(),
+        new SlotConfig.SlotBasicInfo(
+            SlotConfig.SLOT_NUM, SlotConfig.SLOT_REPLICAS, SlotConfig.FUNC),
+        slotStatuses);
+  }
 
+  private DataNode createNode() {
+    return new DataNode(new URL(ServerEnv.IP), dataServerConfig.getLocalDataCenter());
+  }
 }

@@ -24,10 +24,7 @@ import com.alipay.sofa.registry.server.meta.cluster.RemoteServers;
 
 /**
  * @author chen.zhu
- * <p>
- * Nov 20, 2020
+ *     <p>Nov 20, 2020
  */
-public interface CrossDcMetaServer extends DataCenterAware, NodeCluster<MetaNode>,
-                                  RemoteServers<MetaNode>, MetaServer {
-
-}
+public interface CrossDcMetaServer
+    extends DataCenterAware, NodeCluster<MetaNode>, RemoteServers<MetaNode>, MetaServer {}

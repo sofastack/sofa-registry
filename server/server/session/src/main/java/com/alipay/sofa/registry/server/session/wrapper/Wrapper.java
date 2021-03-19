@@ -19,13 +19,12 @@ package com.alipay.sofa.registry.server.session.wrapper;
 import java.util.function.Supplier;
 
 /**
- *
  * @author shangyu.wh
  * @version 1.0: Wrapper.java, v 0.1 2019-06-18 19:33 shangyu.wh Exp $
  */
 public interface Wrapper<T, R> {
 
-    R call();
+  R call();
 
-    Supplier<T> getParameterSupplier();
+  Supplier<T> getParameterSupplier();
 }

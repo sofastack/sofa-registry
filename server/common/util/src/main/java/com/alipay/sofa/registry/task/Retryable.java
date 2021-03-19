@@ -17,15 +17,11 @@
 package com.alipay.sofa.registry.task;
 
 /**
- * 
  * @author shangyu.wh
  * @version $Id: Retryable.java, v 0.1 2018-02-07 11:31 shangyu.wh Exp $
  */
 public interface Retryable {
 
-	/**
-	 * 
-	 * @return
-	 */
-	boolean checkRetryTimes();
+  /** @return */
+  boolean checkRetryTimes();
 }

@@ -25,7 +25,8 @@ import com.alipay.sofa.registry.remoting.Channel;
  * @since 2019/2/15
  */
 public interface WatcherHandlerStrategy {
-	void handleConfiguratorRegister(Channel channel,
-			ConfiguratorRegister configuratorRegister,
-			RegisterResponse registerResponse);
+  void handleConfiguratorRegister(
+      Channel channel,
+      ConfiguratorRegister configuratorRegister,
+      RegisterResponse registerResponse);
 }

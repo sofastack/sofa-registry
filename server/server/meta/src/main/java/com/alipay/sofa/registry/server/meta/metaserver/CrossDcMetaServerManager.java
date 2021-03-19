@@ -22,21 +22,16 @@ import com.alipay.sofa.registry.server.meta.MetaServer;
 
 /**
  * @author chen.zhu
- *         <p>
- *         Nov 19, 2020
+ *     <p>Nov 19, 2020
  */
 public interface CrossDcMetaServerManager
-		extends
-			Lifecycle,
-			MetaLeaderService.MetaLeaderElectorListener {
+    extends Lifecycle, MetaLeaderService.MetaLeaderElectorListener {
 
-	/**
-	 * Gets get or create.
-	 * 
-	 * @param dc
-	 *            the dc
-	 * @return the get or create
-	 */
-	MetaServer getOrCreate(String dc);
-
+  /**
+   * Gets get or create.
+   *
+   * @param dc the dc
+   * @return the get or create
+   */
+  MetaServer getOrCreate(String dc);
 }

@@ -16,15 +16,14 @@
  */
 package com.alipay.sofa.registry.test.resource.meta;
 
+import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
+import static org.junit.Assert.assertTrue;
+
 import com.alipay.sofa.registry.test.BaseIntegrationTest;
+import java.util.Map;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.test.context.junit4.SpringRunner;
-
-import java.util.Map;
-
-import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
-import static org.junit.Assert.assertTrue;
 
 /**
  * @author xuanbei
@@ -32,28 +31,44 @@ import static org.junit.Assert.assertTrue;
  */
 @RunWith(SpringRunner.class)
 public class MetaDigestResourceTest extends BaseIntegrationTest {
-    @Test
-    public void testGetRegisterNodeByType() {
-        Map map = metaChannel.getWebTarget().path("digest/data/node/query")
-            .request(APPLICATION_JSON).get(Map.class);
-        assertTrue(map.size() == 1);
-        assertTrue(((Map) map.get(LOCAL_DATACENTER)).containsKey(LOCAL_ADDRESS));
-
-        map = metaChannel.getWebTarget().path("digest/meta/node/query").request(APPLICATION_JSON)
+  @Test
+  public void testGetRegisterNodeByType() {
+    Map map =
+        metaChannel
+            .getWebTarget()
+            .path("digest/data/node/query")
+            .request(APPLICATION_JSON)
             .get(Map.class);
-        assertTrue(map.size() == 1);
-        assertTrue(((Map) map.get(LOCAL_DATACENTER)).containsKey(LOCAL_ADDRESS));
+    assertTrue(map.size() == 1);
+    assertTrue(((Map) map.get(LOCAL_DATACENTER)).containsKey(LOCAL_ADDRESS));
 
-        map = metaChannel.getWebTarget().path("digest/session/node/query")
-            .request(APPLICATION_JSON).get(Map.class);
-        assertTrue(map.size() == 1);
-        assertTrue(((Map) map.get(LOCAL_DATACENTER)).containsKey(LOCAL_ADDRESS));
-    }
-
-    @Test
-    public void testGetPushSwitch() {
-        Map map = metaChannel.getWebTarget().path("digest/pushSwitch").request(APPLICATION_JSON)
+    map =
+        metaChannel
+            .getWebTarget()
+            .path("digest/meta/node/query")
+            .request(APPLICATION_JSON)
             .get(Map.class);
-        assertTrue("open".equals(map.get("pushSwitch")));
-    }
+    assertTrue(map.size() == 1);
+    assertTrue(((Map) map.get(LOCAL_DATACENTER)).containsKey(LOCAL_ADDRESS));
+
+    map =
+        metaChannel
+            .getWebTarget()
+            .path("digest/session/node/query")
+            .request(APPLICATION_JSON)
+            .get(Map.class);
+    assertTrue(map.size() == 1);
+    assertTrue(((Map) map.get(LOCAL_DATACENTER)).containsKey(LOCAL_ADDRESS));
+  }
+
+  @Test
+  public void testGetPushSwitch() {
+    Map map =
+        metaChannel
+            .getWebTarget()
+            .path("digest/pushSwitch")
+            .request(APPLICATION_JSON)
+            .get(Map.class);
+    assertTrue("open".equals(map.get("pushSwitch")));
+  }
 }

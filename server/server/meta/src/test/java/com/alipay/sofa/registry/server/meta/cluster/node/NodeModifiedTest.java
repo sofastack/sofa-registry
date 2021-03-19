@@ -25,38 +25,35 @@ import org.junit.Test;
 /**
  * @author zhuchen
  * @date Dec 15, 2020, 8:02:29 PM
- *
- * nothing here, simply increase unit test coverage
+ *     <p>nothing here, simply increase unit test coverage
  */
 public class NodeModifiedTest extends AbstractMetaServerTest {
 
-    @Test
-    public void testGetOldNode() {
-        NodeModified<SimpleNode> event = new NodeModified<>(
-            new SimpleNode(randomIp()),
-            new SimpleNode(randomIp()));
-        Assert.assertNotNull(event.getNewNode());
-        Assert.assertNotNull(event.getOldNode());
-        Assert.assertNotEquals(event.getOldNode(), event.getNewNode());
+  @Test
+  public void testGetOldNode() {
+    NodeModified<SimpleNode> event =
+        new NodeModified<>(new SimpleNode(randomIp()), new SimpleNode(randomIp()));
+    Assert.assertNotNull(event.getNewNode());
+    Assert.assertNotNull(event.getOldNode());
+    Assert.assertNotEquals(event.getOldNode(), event.getNewNode());
+  }
+
+  public static class SimpleNode implements Node {
+
+    private String ip;
+
+    public SimpleNode(String ip) {
+      this.ip = ip;
     }
 
-    public static class SimpleNode implements Node {
-
-        private String ip;
-
-        public SimpleNode(String ip) {
-            this.ip = ip;
-        }
-
-        @Override
-        public NodeType getNodeType() {
-            return NodeType.DATA;
-        }
-
-        @Override
-        public URL getNodeUrl() {
-            return new URL(ip);
-        }
+    @Override
+    public NodeType getNodeType() {
+      return NodeType.DATA;
     }
 
+    @Override
+    public URL getNodeUrl() {
+      return new URL(ip);
+    }
+  }
 }

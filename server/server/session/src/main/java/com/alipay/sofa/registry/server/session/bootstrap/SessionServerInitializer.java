@@ -16,13 +16,11 @@
  */
 package com.alipay.sofa.registry.server.session.bootstrap;
 
-import java.util.concurrent.atomic.AtomicBoolean;
-
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.SmartLifecycle;
-
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
+import java.util.concurrent.atomic.AtomicBoolean;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.SmartLifecycle;
 
 /**
  * SmartLifecycle for SessionServerBootstrap
@@ -32,52 +30,50 @@ import com.alipay.sofa.registry.log.LoggerFactory;
  */
 public class SessionServerInitializer implements SmartLifecycle {
 
-    private static final Logger    LOGGER  = LoggerFactory
-                                               .getLogger(SessionServerInitializer.class);
+  private static final Logger LOGGER = LoggerFactory.getLogger(SessionServerInitializer.class);
 
-    @Autowired
-    private SessionServerBootstrap sessionServerBootstrap;
+  @Autowired private SessionServerBootstrap sessionServerBootstrap;
 
-    private AtomicBoolean          running = new AtomicBoolean(false);
+  private AtomicBoolean running = new AtomicBoolean(false);
 
-    @Override
-    public boolean isAutoStartup() {
-        return true;
+  @Override
+  public boolean isAutoStartup() {
+    return true;
+  }
+
+  @Override
+  public void start() {
+    try {
+      sessionServerBootstrap.start();
+      LOGGER.info("Started SessionServer");
+
+      SessionServerInitializer.this.running.set(true);
+    } catch (Throwable ex) {
+      SessionServerInitializer.this.running.set(false);
+      LOGGER.error("Could not initialize Session server!", ex);
+      System.exit(-1);
     }
+  }
 
-    @Override
-    public void start() {
-        try {
-            sessionServerBootstrap.start();
-            LOGGER.info("Started SessionServer");
+  @Override
+  public void stop() {
+    this.running.set(false);
+    sessionServerBootstrap.destroy();
+  }
 
-            SessionServerInitializer.this.running.set(true);
-        } catch (Throwable ex) {
-            SessionServerInitializer.this.running.set(false);
-            LOGGER.error("Could not initialize Session server!", ex);
-            System.exit(-1);
-        }
-    }
+  @Override
+  public boolean isRunning() {
+    return this.running.get();
+  }
 
-    @Override
-    public void stop() {
-        this.running.set(false);
-        sessionServerBootstrap.destroy();
-    }
+  @Override
+  public int getPhase() {
+    return 0;
+  }
 
-    @Override
-    public boolean isRunning() {
-        return this.running.get();
-    }
-
-    @Override
-    public int getPhase() {
-        return 0;
-    }
-
-    @Override
-    public void stop(Runnable callback) {
-        callback.run();
-        this.running.set(false);
-    }
+  @Override
+  public void stop(Runnable callback) {
+    callback.run();
+    this.running.set(false);
+  }
 }

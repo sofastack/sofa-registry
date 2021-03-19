@@ -16,6 +16,7 @@
  */
 package com.alipay.sofa.registry.common.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -23,197 +24,192 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-
 /**
- *
  * @author zhuoyu.sjw
  * @version $Id: ServerDataBox.java, v 0.1 2018-03-03 17:44 zhuoyu.sjw Exp $$
  */
 public class ServerDataBox implements Serializable {
 
-    /** UID */
-    private static final long serialVersionUID   = 2817539491173993030L;
-    /**  */
-    private static final int  SERIALIZED_BY_JAVA = 1;
-    /** Null for locally instantiated, otherwise for internalized */
-    private byte[]            bytes;
-    /** Only available if bytes != null */
-    private int               serialization;
-    /** Actual object, lazy deserialized */
-    private Object            object;
+  /** UID */
+  private static final long serialVersionUID = 2817539491173993030L;
+  /** */
+  private static final int SERIALIZED_BY_JAVA = 1;
+  /** Null for locally instantiated, otherwise for internalized */
+  private byte[] bytes;
+  /** Only available if bytes != null */
+  private int serialization;
+  /** Actual object, lazy deserialized */
+  private Object object;
 
-    /**
-     * Instantiates a new DataBox.
-     */
-    public ServerDataBox() {
-    }
+  /** Instantiates a new DataBox. */
+  public ServerDataBox() {}
 
-    /**
-     * Instantiates a new DataBox.
-     *
-     * @param object the object
-     */
-    public ServerDataBox(Object object) {
-        this.object = object;
-    }
+  /**
+   * Instantiates a new DataBox.
+   *
+   * @param object the object
+   */
+  public ServerDataBox(Object object) {
+    this.object = object;
+  }
 
-    /**
-     * Instantiates a new DataBox.
-     *
-     * @param bytes the bytes
-     */
-    public ServerDataBox(byte[] bytes) {
-        this.bytes = bytes;
-        this.serialization = SERIALIZED_BY_JAVA;
-    }
+  /**
+   * Instantiates a new DataBox.
+   *
+   * @param bytes the bytes
+   */
+  public ServerDataBox(byte[] bytes) {
+    this.bytes = bytes;
+    this.serialization = SERIALIZED_BY_JAVA;
+  }
 
-    /**
-     * Is in bytes boolean.
-     *
-     * @return boolean boolean
-     */
-    @JsonIgnore
-    public boolean isInBytes() {
-        return bytes != null;
-    }
+  /**
+   * Is in bytes boolean.
+   *
+   * @return boolean boolean
+   */
+  @JsonIgnore
+  public boolean isInBytes() {
+    return bytes != null;
+  }
 
-    /**
-     * Only when isInBytes() == false
-     * @return Object object
-     */
-    public Object getObject() {
-        return object;
-    }
+  /**
+   * Only when isInBytes() == false
+   *
+   * @return Object object
+   */
+  public Object getObject() {
+    return object;
+  }
 
-    /**
-     * transfer bytes to object
-     * @return Object object 
-     * @throws IOException the io exception 
-     * @throws ClassNotFoundException the class not found exception
-     */
-    public Object extract() throws IOException, ClassNotFoundException {
-        if (object == null && isInBytes()) {
-            ByteArrayInputStream bis = new ByteArrayInputStream(bytes);
-            if (serialization != SERIALIZED_BY_JAVA) {
-                throw new IOException("Unsupported serialization type: " + serialization);
-            }
-            ServerDataBoxInputStream input = null;
-            try {
-                input = new ServerDataBoxInputStream(bis);
-                object = input.readObject();
-            } finally {
-                if (input != null) {
-                    input.close();
-                }
-            }
+  /**
+   * transfer bytes to object
+   *
+   * @return Object object
+   * @throws IOException the io exception
+   * @throws ClassNotFoundException the class not found exception
+   */
+  public Object extract() throws IOException, ClassNotFoundException {
+    if (object == null && isInBytes()) {
+      ByteArrayInputStream bis = new ByteArrayInputStream(bytes);
+      if (serialization != SERIALIZED_BY_JAVA) {
+        throw new IOException("Unsupported serialization type: " + serialization);
+      }
+      ServerDataBoxInputStream input = null;
+      try {
+        input = new ServerDataBoxInputStream(bis);
+        object = input.readObject();
+      } finally {
+        if (input != null) {
+          input.close();
         }
-
-        return object;
+      }
     }
 
-    /**
-     * change object to bytes
-     *
-     * @return NSwizzle swizzle
-     */
-    public ServerDataBox object2bytes() {
-        if (!isInBytes()) {
-            bytes = getBytes(object);
-            serialization = SERIALIZED_BY_JAVA;
+    return object;
+  }
+
+  /**
+   * change object to bytes
+   *
+   * @return NSwizzle swizzle
+   */
+  public ServerDataBox object2bytes() {
+    if (!isInBytes()) {
+      bytes = getBytes(object);
+      serialization = SERIALIZED_BY_JAVA;
+    }
+    return this;
+  }
+
+  public static byte[] getBytes(Object object) {
+    ByteArrayOutputStream bos = new ByteArrayOutputStream();
+    ObjectOutputStream javaos = null;
+    try {
+      javaos = new ObjectOutputStream(bos);
+      javaos.writeObject(object);
+    } catch (IOException ioe) {
+      throw new RuntimeException(ioe);
+    } finally {
+      try {
+        if (null != javaos) {
+          javaos.close();
         }
-        return this;
+      } catch (IOException ioe) {
+        throw new RuntimeException(ioe);
+      }
     }
+    return bos.toByteArray();
+  }
 
-    public static byte[] getBytes(Object object) {
-        ByteArrayOutputStream bos = new ByteArrayOutputStream();
-        ObjectOutputStream javaos = null;
+  private void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException {
+    serialization = in.readByte(); // Read serialization type
+    int size = in.readInt(); // Read byte stream size
+    bytes = new byte[size];
+    in.readFully(bytes); // Read the byte stream
+  }
+
+  private void writeObject(ObjectOutputStream out) throws IOException {
+    if (isInBytes()) {
+      out.writeByte(serialization); // Write serialization type
+      out.writeInt(bytes.length); // Write byte stream size
+      out.write(bytes); // Write the byte stream
+    } else {
+      ByteArrayOutputStream bos = new ByteArrayOutputStream();
+      ObjectOutputStream javaos = new ObjectOutputStream(bos);
+      try {
+        javaos.writeObject(object);
+      } finally {
         try {
-            javaos = new ObjectOutputStream(bos);
-            javaos.writeObject(object);
+          javaos.close();
         } catch (IOException ioe) {
-            throw new RuntimeException(ioe);
-        } finally {
-            try {
-                if (null != javaos) {
-                    javaos.close();
-                }
-            } catch (IOException ioe) {
-                throw new RuntimeException(ioe);
-            }
+          throw new RuntimeException(ioe);
         }
-        return bos.toByteArray();
+      }
+      out.writeByte(SERIALIZED_BY_JAVA); // Write serialization type
+      out.writeInt(bos.size()); // Write byte stream size
+      out.write(bos.toByteArray()); // Write the byte stream
     }
+  }
 
-    private void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException {
-        serialization = in.readByte(); // Read serialization type
-        int size = in.readInt(); // Read byte stream size
-        bytes = new byte[size];
-        in.readFully(bytes); // Read the byte stream
-    }
+  public int byteSize() {
+    final byte[] b = bytes;
+    return b != null ? b.length : 0;
+  }
 
-    private void writeObject(ObjectOutputStream out) throws IOException {
-        if (isInBytes()) {
-            out.writeByte(serialization); // Write serialization type
-            out.writeInt(bytes.length); // Write byte stream size
-            out.write(bytes); // Write the byte stream
-        } else {
-            ByteArrayOutputStream bos = new ByteArrayOutputStream();
-            ObjectOutputStream javaos = new ObjectOutputStream(bos);
-            try {
-                javaos.writeObject(object);
-            } finally {
-                try {
-                    javaos.close();
-                } catch (IOException ioe) {
-                    throw new RuntimeException(ioe);
-                }
-            }
-            out.writeByte(SERIALIZED_BY_JAVA); // Write serialization type
-            out.writeInt(bos.size()); // Write byte stream size
-            out.write(bos.toByteArray()); // Write the byte stream
-        }
-    }
+  /**
+   * Get bytes byte [ ].
+   *
+   * @return byte[] byte [ ]
+   */
+  public byte[] getBytes() {
+    return bytes;
+  }
 
-    public int byteSize() {
-        final byte[] b = bytes;
-        return b != null ? b.length : 0;
-    }
+  /**
+   * Set bytes byte [ ].
+   *
+   * @return byte[] byte [ ]
+   */
+  public void setBytes(byte[] bytes) {
+    this.bytes = bytes;
+  }
 
-    /**
-     * Get bytes byte [ ].
-     *
-     * @return byte[] byte [ ]
-     */
-    public byte[] getBytes() {
-        return bytes;
-    }
+  /**
+   * Gets serialization.
+   *
+   * @return int serialization
+   */
+  public int getSerialization() {
+    return this.serialization;
+  }
 
-    /**
-     * Set bytes byte [ ].
-     *
-     * @return byte[] byte [ ]
-     */
-    public void setBytes(byte[] bytes) {
-        this.bytes = bytes;
-    }
-
-    /**
-     * Gets serialization.
-     *
-     * @return int serialization
-     */
-    public int getSerialization() {
-        return this.serialization;
-    }
-
-    /**
-     * Sets serialization.
-     *
-     * @param serial the serial
-     */
-    public void setSerialization(int serial) {
-        this.serialization = serial;
-    }
-
+  /**
+   * Sets serialization.
+   *
+   * @param serial the serial
+   */
+  public void setSerialization(int serial) {
+    this.serialization = serial;
+  }
 }

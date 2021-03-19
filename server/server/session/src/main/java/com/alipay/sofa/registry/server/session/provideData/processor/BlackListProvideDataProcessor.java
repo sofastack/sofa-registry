@@ -29,106 +29,95 @@ import com.alipay.sofa.registry.server.session.filter.blacklist.BlacklistConstan
 import com.alipay.sofa.registry.server.session.filter.blacklist.BlacklistManager;
 import com.alipay.sofa.registry.server.session.provideData.ProvideDataProcessor;
 import com.alipay.sofa.registry.server.session.registry.Registry;
+import java.util.*;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import java.util.*;
-
 /**
- *
  * @author shangyu.wh
  * @version 1.0: BlackListProvideDataProcessor.java, v 0.1 2019-10-09 20:21 shangyu.wh Exp $
  */
 public class BlackListProvideDataProcessor implements ProvideDataProcessor {
 
-    private static final Logger LOGGER = LoggerFactory
-                                           .getLogger(BlackListProvideDataProcessor.class);
+  private static final Logger LOGGER = LoggerFactory.getLogger(BlackListProvideDataProcessor.class);
 
-    @Autowired
-    private SessionServerConfig sessionServerConfig;
+  @Autowired private SessionServerConfig sessionServerConfig;
 
-    @Autowired
-    private Registry            sessionRegistry;
+  @Autowired private Registry sessionRegistry;
 
-    @Autowired
-    private Exchange            boltExchange;
+  @Autowired private Exchange boltExchange;
 
-    @Autowired
-    private BlacklistManager    blacklistManager;
+  @Autowired private BlacklistManager blacklistManager;
 
-    @Override
-    public void changeDataProcess(ProvideData provideData) {
-        if (provideData == null) {
-            LOGGER.warn("Fetch session blacklist data null");
-            return;
-        }
-        //black list data
-        final String data = ProvideData.toString(provideData);
-        if (data == null) {
-            LOGGER.warn("Fetch session blacklist content null");
-            return;
-        }
-        LOGGER.info("Fetch session blacklist {}", data);
-
-        Map<String, Map<String, Set<String>>> blacklistConfigMap = blacklistManager
-            .convertBlacklistConfig(data);
-        clientOffBlackIp(blacklistConfigMap);
-        LOGGER.info("update BlacklistConfig", blacklistConfigMap);
+  @Override
+  public void changeDataProcess(ProvideData provideData) {
+    if (provideData == null) {
+      LOGGER.warn("Fetch session blacklist data null");
+      return;
     }
+    // black list data
+    final String data = ProvideData.toString(provideData);
+    if (data == null) {
+      LOGGER.warn("Fetch session blacklist content null");
+      return;
+    }
+    LOGGER.info("Fetch session blacklist {}", data);
 
-    private void clientOffBlackIp(Map<String, Map<String, Set<String>>> blacklistConfigMap) {
+    Map<String, Map<String, Set<String>>> blacklistConfigMap =
+        blacklistManager.convertBlacklistConfig(data);
+    clientOffBlackIp(blacklistConfigMap);
+    LOGGER.info("update BlacklistConfig", blacklistConfigMap);
+  }
 
-        if (blacklistConfigMap != null) {
-            Set<String> ipSet = new HashSet();
+  private void clientOffBlackIp(Map<String, Map<String, Set<String>>> blacklistConfigMap) {
 
-            for (Map.Entry<String, Map<String, Set<String>>> configEntry : blacklistConfigMap
-                .entrySet()) {
-                if (BlacklistConstants.FORBIDDEN_PUB.equals(configEntry.getKey())
-                    || BlacklistConstants.FORBIDDEN_SUB_BY_PREFIX.equals(configEntry.getKey())) {
-                    Map<String, Set<String>> typeMap = configEntry.getValue();
-                    if (typeMap != null) {
-                        for (Map.Entry<String, Set<String>> typeEntry : typeMap.entrySet()) {
-                            if (BlacklistConstants.IP_FULL.equals(typeEntry.getKey())) {
-                                if (typeEntry.getValue() != null) {
-                                    ipSet.addAll(typeEntry.getValue());
-                                }
-                            }
-                        }
-                    }
+    if (blacklistConfigMap != null) {
+      Set<String> ipSet = new HashSet();
+
+      for (Map.Entry<String, Map<String, Set<String>>> configEntry :
+          blacklistConfigMap.entrySet()) {
+        if (BlacklistConstants.FORBIDDEN_PUB.equals(configEntry.getKey())
+            || BlacklistConstants.FORBIDDEN_SUB_BY_PREFIX.equals(configEntry.getKey())) {
+          Map<String, Set<String>> typeMap = configEntry.getValue();
+          if (typeMap != null) {
+            for (Map.Entry<String, Set<String>> typeEntry : typeMap.entrySet()) {
+              if (BlacklistConstants.IP_FULL.equals(typeEntry.getKey())) {
+                if (typeEntry.getValue() != null) {
+                  ipSet.addAll(typeEntry.getValue());
                 }
-
+              }
             }
-
-            sessionRegistry.remove(getIpConnects(ipSet));
+          }
         }
+      }
+
+      sessionRegistry.remove(getIpConnects(ipSet));
     }
+  }
 
-    public List<ConnectId> getIpConnects(Set<String> _ipList) {
+  public List<ConnectId> getIpConnects(Set<String> _ipList) {
 
-        Server sessionServer = boltExchange.getServer(sessionServerConfig.getServerPort());
+    Server sessionServer = boltExchange.getServer(sessionServerConfig.getServerPort());
 
-        List<ConnectId> connections = new ArrayList<>();
+    List<ConnectId> connections = new ArrayList<>();
 
-        if (sessionServer != null) {
-            Collection<Channel> channels = sessionServer.getChannels();
-            for (Channel channel : channels) {
-                String ip = channel.getRemoteAddress().getAddress().getHostAddress();
-                if (_ipList.contains(ip)) {
-                    connections.add(ConnectId.of(channel.getRemoteAddress(),
-                        channel.getLocalAddress()));
-                }
-            }
+    if (sessionServer != null) {
+      Collection<Channel> channels = sessionServer.getChannels();
+      for (Channel channel : channels) {
+        String ip = channel.getRemoteAddress().getAddress().getHostAddress();
+        if (_ipList.contains(ip)) {
+          connections.add(ConnectId.of(channel.getRemoteAddress(), channel.getLocalAddress()));
         }
-
-        return connections;
+      }
     }
 
-    @Override
-    public void fetchDataProcess(ProvideData provideData) {
+    return connections;
+  }
 
-    }
+  @Override
+  public void fetchDataProcess(ProvideData provideData) {}
 
-    @Override
-    public boolean support(ProvideData provideData) {
-        return ValueConstants.BLACK_LIST_DATA_ID.equals(provideData.getDataInfoId());
-    }
+  @Override
+  public boolean support(ProvideData provideData) {
+    return ValueConstants.BLACK_LIST_DATA_ID.equals(provideData.getDataInfoId());
+  }
 }

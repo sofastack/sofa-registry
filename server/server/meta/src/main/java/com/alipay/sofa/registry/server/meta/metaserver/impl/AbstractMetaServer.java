@@ -20,20 +20,17 @@ import com.alipay.sofa.registry.common.model.metaserver.nodes.MetaNode;
 import com.alipay.sofa.registry.observer.impl.AbstractLifecycleObservable;
 import com.alipay.sofa.registry.server.meta.MetaServer;
 import com.google.common.collect.Sets;
-
 import java.util.Set;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 /**
  * @author chen.zhu
- * <p>
- * Nov 20, 2020
+ *     <p>Nov 20, 2020
  */
 public abstract class AbstractMetaServer extends AbstractLifecycleObservable implements MetaServer {
 
-    protected volatile Set<MetaNode> metaServers = Sets.newHashSet();
+  protected volatile Set<MetaNode> metaServers = Sets.newHashSet();
 
-    protected final ReadWriteLock    lock        = new ReentrantReadWriteLock();
-
+  protected final ReadWriteLock lock = new ReentrantReadWriteLock();
 }

@@ -26,67 +26,75 @@ import com.alipay.sofa.registry.server.session.resource.ConnectionsResource;
 import com.alipay.sofa.registry.server.session.store.DataStore;
 import com.alipay.sofa.registry.server.session.store.Interests;
 import com.alipay.sofa.registry.server.session.store.Watchers;
-import org.springframework.beans.factory.annotation.Autowired;
-
 import java.net.InetSocketAddress;
 import java.util.*;
 import java.util.stream.Collectors;
+import org.springframework.beans.factory.annotation.Autowired;
 
 public class ConnectionsService {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(ConnectionsResource.class);
+  private static final Logger LOGGER = LoggerFactory.getLogger(ConnectionsResource.class);
 
-    @Autowired
-    private Exchange            boltExchange;
+  @Autowired private Exchange boltExchange;
 
-    @Autowired
-    private DataStore           sessionDataStore;
+  @Autowired private DataStore sessionDataStore;
 
-    @Autowired
-    private Interests           sessionInterests;
+  @Autowired private Interests sessionInterests;
 
-    @Autowired
-    private Watchers            sessionWatchers;
+  @Autowired private Watchers sessionWatchers;
 
-    @Autowired
-    private SessionServerConfig sessionServerConfig;
+  @Autowired private SessionServerConfig sessionServerConfig;
 
-    public List<String> getConnections() {
-        Server server = boltExchange.getServer(sessionServerConfig.getServerPort());
-        Set<String> boltConnectIds = server.getChannels().stream().map(
-                channel -> channel.getRemoteAddress().getAddress().getHostAddress() + ":" + channel.getRemoteAddress().getPort()
-        ).collect(Collectors.toSet());
-        Set<String> connectIds = new HashSet<>();
-        connectIds.addAll(sessionDataStore.getConnectIds().stream().map(connectId -> connectId.clientAddress()).collect(Collectors.toList()));
-        connectIds.addAll(sessionInterests.getConnectIds().stream().map(connectId -> connectId.clientAddress()).collect(Collectors.toList()));
-        connectIds.addAll(sessionWatchers.getConnectIds().stream().map(connectId -> connectId.clientAddress()).collect(Collectors.toList()));
-        connectIds.retainAll(boltConnectIds);
-        return new ArrayList<>(connectIds);
+  public List<String> getConnections() {
+    Server server = boltExchange.getServer(sessionServerConfig.getServerPort());
+    Set<String> boltConnectIds =
+        server.getChannels().stream()
+            .map(
+                channel ->
+                    channel.getRemoteAddress().getAddress().getHostAddress()
+                        + ":"
+                        + channel.getRemoteAddress().getPort())
+            .collect(Collectors.toSet());
+    Set<String> connectIds = new HashSet<>();
+    connectIds.addAll(
+        sessionDataStore.getConnectIds().stream()
+            .map(connectId -> connectId.clientAddress())
+            .collect(Collectors.toList()));
+    connectIds.addAll(
+        sessionInterests.getConnectIds().stream()
+            .map(connectId -> connectId.clientAddress())
+            .collect(Collectors.toList()));
+    connectIds.addAll(
+        sessionWatchers.getConnectIds().stream()
+            .map(connectId -> connectId.clientAddress())
+            .collect(Collectors.toList()));
+    connectIds.retainAll(boltConnectIds);
+    return new ArrayList<>(connectIds);
+  }
+
+  public void setMaxConnections(int connections) {
+    if (!sessionServerConfig.isEnableSessionLoadbalancePolicy()) {
+      throw new RuntimeException("drop connections is not allowed");
     }
+    List<String> connectionIds = getConnections();
 
-    public void setMaxConnections(int connections) {
-        if (!sessionServerConfig.isEnableSessionLoadbalancePolicy()) {
-            throw new RuntimeException("drop connections is not allowed");
-        }
-        List<String> connectionIds = getConnections();
-
-        int needDropped = connectionIds.size() - connections;
-        if (needDropped <= 0) {
-            return;
-        }
-        Collections.shuffle(connectionIds);
-        connectionIds = connectionIds.subList(0, needDropped);
-        for (String ipAddress : connectionIds) {
-            Server server = boltExchange.getServer(sessionServerConfig.getServerPort());
-            String[] parts = ipAddress.split(":");
-            String host = parts[0];
-            int port = Integer.parseInt(parts[1]);
-            InetSocketAddress address = new InetSocketAddress(host, port);
-            Channel connection = server.getChannel(address);
-            if (connection != null && connection.isConnected()) {
-                LOGGER.info("close connection {}", ipAddress);
-                server.close(connection);
-            }
-        }
+    int needDropped = connectionIds.size() - connections;
+    if (needDropped <= 0) {
+      return;
     }
+    Collections.shuffle(connectionIds);
+    connectionIds = connectionIds.subList(0, needDropped);
+    for (String ipAddress : connectionIds) {
+      Server server = boltExchange.getServer(sessionServerConfig.getServerPort());
+      String[] parts = ipAddress.split(":");
+      String host = parts[0];
+      int port = Integer.parseInt(parts[1]);
+      InetSocketAddress address = new InetSocketAddress(host, port);
+      Channel connection = server.getChannel(address);
+      if (connection != null && connection.isConnected()) {
+        LOGGER.info("close connection {}", ipAddress);
+        server.close(connection);
+      }
+    }
+  }
 }

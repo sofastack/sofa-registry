@@ -17,19 +17,13 @@
 package com.alipay.sofa.registry.common.model;
 
 /**
- *
  * @author shangyu.wh
  * @version $Id: PublishType.java, v 0.1 2018-08-29 17:11 shangyu.wh Exp $
  */
 public enum PublishType {
 
-    /**
-     * normally publisher
-     */
-    NORMAL,
-    /**
-     * TEMPORARY publisher
-     */
-    TEMPORARY
-
+  /** normally publisher */
+  NORMAL,
+  /** TEMPORARY publisher */
+  TEMPORARY
 }

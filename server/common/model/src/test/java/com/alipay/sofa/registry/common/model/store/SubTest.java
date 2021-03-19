@@ -17,8 +17,6 @@
 package com.alipay.sofa.registry.common.model.store;
 
 import com.google.common.collect.Maps;
-
-import java.util.Collections;
 import java.util.Map;
 
 /**
@@ -27,40 +25,40 @@ import java.util.Map;
  */
 public class SubTest {
 
-    static final int    count      = 500;
-    static final int    tests      = 1000000;
-    static final String dataCenter = "abcdefgaaaaaaa";
-    static final int    ver        = 0;
+  static final int count = 500;
+  static final int tests = 1000000;
+  static final String dataCenter = "abcdefgaaaaaaa";
+  static final int ver = 0;
 
-    public static void main(String[] args) {
-        Map<String, Subscriber> subs = Maps.newConcurrentMap();
-        initMap(subs, count);
-        for (int i = 0; i < tests; i++) {
-            test1(subs, dataCenter, ver);
-        }
-        long start = System.currentTimeMillis();
-        for (int i = 0; i < tests; i++) {
-            test1(subs, dataCenter, ver);
-        }
-        long end = System.currentTimeMillis();
-        System.out.println("@@" + (end - start));
+  public static void main(String[] args) {
+    Map<String, Subscriber> subs = Maps.newConcurrentMap();
+    initMap(subs, count);
+    for (int i = 0; i < tests; i++) {
+      test1(subs, dataCenter, ver);
     }
+    long start = System.currentTimeMillis();
+    for (int i = 0; i < tests; i++) {
+      test1(subs, dataCenter, ver);
+    }
+    long end = System.currentTimeMillis();
+    System.out.println("@@" + (end - start));
+  }
 
-    private static boolean test1(Map<String, Subscriber> map, String dataCenter, long ver) {
-        for (Subscriber s : map.values()) {
-            if (s.checkVersion(dataCenter, ver)) {
-                return true;
-            }
-        }
-        return false;
+  private static boolean test1(Map<String, Subscriber> map, String dataCenter, long ver) {
+    for (Subscriber s : map.values()) {
+      if (s.checkVersion(dataCenter, ver)) {
+        return true;
+      }
     }
+    return false;
+  }
 
-    private static void initMap(Map<String, Subscriber> map, int count) {
-        String key = String.valueOf(System.currentTimeMillis());
-        for (int i = 0; i < count; i++) {
-            Subscriber sub = new Subscriber();
-            sub.checkVersion(dataCenter, 10L);
-            map.put(key + "_" + i, sub);
-        }
+  private static void initMap(Map<String, Subscriber> map, int count) {
+    String key = String.valueOf(System.currentTimeMillis());
+    for (int i = 0; i < count; i++) {
+      Subscriber sub = new Subscriber();
+      sub.checkVersion(dataCenter, 10L);
+      map.put(key + "_" + i, sub);
     }
+  }
 }

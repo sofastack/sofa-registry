@@ -19,78 +19,73 @@ package com.alipay.sofa.registry.jdbc.domain;
 import com.google.common.base.Objects;
 
 /**
- *
  * @author xiaojian.xj
  * @version $Id: InterfaceAppIndexQueryModel.java, v 0.1 2021年01月24日 19:07 xiaojian.xj Exp $
  */
 public class InterfaceAppIndexQueryModel {
 
-    /**
-     * local data center
-     */
-    private String dataCenter;
+  /** local data center */
+  private String dataCenter;
 
-    /**
-     * interfaceName
-     */
-    private String interfaceName;
+  /** interfaceName */
+  private String interfaceName;
 
-    public InterfaceAppIndexQueryModel(String dataCenter, String interfaceName) {
-        this.dataCenter = dataCenter;
-        this.interfaceName = interfaceName;
+  public InterfaceAppIndexQueryModel(String dataCenter, String interfaceName) {
+    this.dataCenter = dataCenter;
+    this.interfaceName = interfaceName;
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) {
+      return true;
     }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) {
-            return true;
-        }
-        if (!(o instanceof InterfaceAppIndexQueryModel)) {
-            return false;
-        }
-        InterfaceAppIndexQueryModel that = (InterfaceAppIndexQueryModel) o;
-        return Objects.equal(dataCenter, that.dataCenter)
-               && Objects.equal(interfaceName, that.interfaceName);
+    if (!(o instanceof InterfaceAppIndexQueryModel)) {
+      return false;
     }
+    InterfaceAppIndexQueryModel that = (InterfaceAppIndexQueryModel) o;
+    return Objects.equal(dataCenter, that.dataCenter)
+        && Objects.equal(interfaceName, that.interfaceName);
+  }
 
-    @Override
-    public int hashCode() {
-        return Objects.hashCode(dataCenter, interfaceName);
-    }
+  @Override
+  public int hashCode() {
+    return Objects.hashCode(dataCenter, interfaceName);
+  }
 
-    /**
-     * Getter method for property <tt>dataCenter</tt>.
-     *
-     * @return property value of dataCenter
-     */
-    public String getDataCenter() {
-        return dataCenter;
-    }
+  /**
+   * Getter method for property <tt>dataCenter</tt>.
+   *
+   * @return property value of dataCenter
+   */
+  public String getDataCenter() {
+    return dataCenter;
+  }
 
-    /**
-     * Setter method for property <tt>dataCenter</tt>.
-     *
-     * @param dataCenter value to be assigned to property dataCenter
-     */
-    public void setDataCenter(String dataCenter) {
-        this.dataCenter = dataCenter;
-    }
+  /**
+   * Setter method for property <tt>dataCenter</tt>.
+   *
+   * @param dataCenter value to be assigned to property dataCenter
+   */
+  public void setDataCenter(String dataCenter) {
+    this.dataCenter = dataCenter;
+  }
 
-    /**
-     * Getter method for property <tt>interfaceName</tt>.
-     *
-     * @return property value of interfaceName
-     */
-    public String getInterfaceName() {
-        return interfaceName;
-    }
+  /**
+   * Getter method for property <tt>interfaceName</tt>.
+   *
+   * @return property value of interfaceName
+   */
+  public String getInterfaceName() {
+    return interfaceName;
+  }
 
-    /**
-     * Setter method for property <tt>interfaceName</tt>.
-     *
-     * @param interfaceName value to be assigned to property interfaceName
-     */
-    public void setInterfaceName(String interfaceName) {
-        this.interfaceName = interfaceName;
-    }
+  /**
+   * Setter method for property <tt>interfaceName</tt>.
+   *
+   * @param interfaceName value to be assigned to property interfaceName
+   */
+  public void setInterfaceName(String interfaceName) {
+    this.interfaceName = interfaceName;
+  }
 }

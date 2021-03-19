@@ -30,23 +30,22 @@ import org.springframework.beans.factory.annotation.Autowired;
  */
 public class LoadbalanceMetricsHandler extends AbstractClientHandler {
 
-    @Autowired
-    private ConnectionsService connectionsService;
+  @Autowired private ConnectionsService connectionsService;
 
-    @Override
-    protected NodeType getConnectNodeType() {
-        return NodeType.META;
-    }
+  @Override
+  protected NodeType getConnectNodeType() {
+    return NodeType.META;
+  }
 
-    @Override
-    public Object doHandle(Channel channel, Object request) {
-        LoadbalanceMetrics m = new LoadbalanceMetrics();
-        m.setConnectionCount(connectionsService.getConnections().size());
-        return m;
-    }
+  @Override
+  public Object doHandle(Channel channel, Object request) {
+    LoadbalanceMetrics m = new LoadbalanceMetrics();
+    m.setConnectionCount(connectionsService.getConnections().size());
+    return m;
+  }
 
-    @Override
-    public Class interest() {
-        return GetLoadbalanceMetricsRequest.class;
-    }
+  @Override
+  public Class interest() {
+    return GetLoadbalanceMetricsRequest.class;
+  }
 }

@@ -19,21 +19,22 @@ package com.alipay.sofa.registry.server.shared.slot;
 import com.alipay.sofa.registry.common.model.metaserver.nodes.DataNode;
 import com.alipay.sofa.registry.common.model.slot.SlotTable;
 import com.alipay.sofa.registry.server.meta.AbstractMetaServerTest;
+import java.util.List;
 import org.assertj.core.util.Lists;
 import org.junit.Test;
 
-import java.util.List;
-
 public class DiskSlotTableRecorderTest extends AbstractMetaServerTest {
 
-    private DiskSlotTableRecorder recorder = new DiskSlotTableRecorder();
+  private DiskSlotTableRecorder recorder = new DiskSlotTableRecorder();
 
-    @Test
-    public void testRecord() {
-        List<DataNode> dataNodes = Lists.newArrayList(new DataNode(randomURL(randomIp()), getDc()),
-            new DataNode(randomURL(randomIp()), getDc()), new DataNode(randomURL(randomIp()),
-                getDc()));
-        SlotTable slotTable = new SlotTableGenerator(dataNodes).createSlotTable();
-        recorder.record(slotTable);
-    }
+  @Test
+  public void testRecord() {
+    List<DataNode> dataNodes =
+        Lists.newArrayList(
+            new DataNode(randomURL(randomIp()), getDc()),
+            new DataNode(randomURL(randomIp()), getDc()),
+            new DataNode(randomURL(randomIp()), getDc()));
+    SlotTable slotTable = new SlotTableGenerator(dataNodes).createSlotTable();
+    recorder.record(slotTable);
+  }
 }

@@ -20,7 +20,6 @@ import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.util.ConcurrentUtils;
 import io.prometheus.client.Counter;
-
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.TimeUnit;
 
@@ -31,121 +30,122 @@ import java.util.concurrent.TimeUnit;
  * @version v 0.1 2020-12-15 13:38 yuzhi.lyz Exp $
  */
 public class KeyedThreadPoolExecutor {
-    private static final Logger    LOGGER = LoggerFactory.getLogger(KeyedThreadPoolExecutor.class);
-    private final AbstractWorker[] workers;
-    protected final String         executorName;
-    protected final int            coreBufferSize;
+  private static final Logger LOGGER = LoggerFactory.getLogger(KeyedThreadPoolExecutor.class);
+  private final AbstractWorker[] workers;
+  protected final String executorName;
+  protected final int coreBufferSize;
 
-    private final Counter          taskCounter;
+  private final Counter taskCounter;
 
-    public KeyedThreadPoolExecutor(String executorName, int coreSize, int coreBufferSize) {
-        this.executorName = executorName;
-        this.coreBufferSize = coreBufferSize;
-        this.taskCounter = Counter.build().namespace("keyedExecutor")
+  public KeyedThreadPoolExecutor(String executorName, int coreSize, int coreBufferSize) {
+    this.executorName = executorName;
+    this.coreBufferSize = coreBufferSize;
+    this.taskCounter =
+        Counter.build()
+            .namespace("keyedExecutor")
             .help("metrics for keyed executor")
-            .name(executorName.replace('-', '_') + "_task_total").labelNames("idx", "type")
+            .name(executorName.replace('-', '_') + "_task_total")
+            .labelNames("idx", "type")
             .register();
 
-        workers = createWorkers(coreSize, coreBufferSize);
-        for (int i = 0; i < coreSize; i++) {
-            ConcurrentUtils.createDaemonThread(executorName + "_" + i, workers[i]).start();
-        }
+    workers = createWorkers(coreSize, coreBufferSize);
+    for (int i = 0; i < coreSize; i++) {
+      ConcurrentUtils.createDaemonThread(executorName + "_" + i, workers[i]).start();
+    }
+  }
+
+  protected AbstractWorker[] createWorkers(int coreSize, int coreBufferSize) {
+    BlockingQueues<KeyedTask> queues = new BlockingQueues<>(coreSize, coreBufferSize, false);
+    AbstractWorker[] workers = new AbstractWorker[coreSize];
+    for (int i = 0; i < coreSize; i++) {
+      workers[i] = new WorkerImpl(i, queues);
+    }
+    return workers;
+  }
+
+  protected interface Worker extends Runnable {
+    int size();
+
+    KeyedTask poll() throws InterruptedException;
+
+    boolean offer(KeyedTask task);
+  }
+
+  private final class WorkerImpl extends AbstractWorker {
+    final BlockingQueues<KeyedTask> queues;
+    final BlockingQueue<KeyedTask> queue;
+
+    WorkerImpl(int idx, BlockingQueues<KeyedTask> queues) {
+      super(idx);
+      this.queues = queues;
+      this.queue = queues.getQueue(idx);
     }
 
-    protected AbstractWorker[] createWorkers(int coreSize, int coreBufferSize) {
-        BlockingQueues<KeyedTask> queues = new BlockingQueues<>(coreSize, coreBufferSize, false);
-        AbstractWorker[] workers = new AbstractWorker[coreSize];
-        for (int i = 0; i < coreSize; i++) {
-            workers[i] = new WorkerImpl(i, queues);
-        }
-        return workers;
+    public int size() {
+      return queue.size();
     }
 
-    protected interface Worker extends Runnable {
-        int size();
-
-        KeyedTask poll() throws InterruptedException;
-
-        boolean offer(KeyedTask task);
-
+    public KeyedTask poll() throws InterruptedException {
+      return queue.poll(180, TimeUnit.SECONDS);
     }
 
-    private final class WorkerImpl extends AbstractWorker {
-        final BlockingQueues<KeyedTask> queues;
-        final BlockingQueue<KeyedTask>  queue;
+    public boolean offer(KeyedTask task) {
+      return queues.offer(idx, task);
+    }
+  }
 
-        WorkerImpl(int idx, BlockingQueues<KeyedTask> queues) {
-            super(idx);
-            this.queues = queues;
-            this.queue = queues.getQueue(idx);
-        }
+  protected abstract class AbstractWorker<T> implements Worker {
+    final int idx;
+    final Counter.Child workerExecCounter;
+    final Counter.Child workerCommitCounter;
 
-        public int size() {
-            return queue.size();
-        }
-
-        public KeyedTask poll() throws InterruptedException {
-            return queue.poll(180, TimeUnit.SECONDS);
-        }
-
-        public boolean offer(KeyedTask task) {
-            return queues.offer(idx, task);
-        }
-
+    protected AbstractWorker(int idx) {
+      this.idx = idx;
+      this.workerExecCounter = taskCounter.labels(String.valueOf(idx), "exec");
+      this.workerCommitCounter = taskCounter.labels(String.valueOf(idx), "commit");
     }
 
-    protected abstract class AbstractWorker<T> implements Worker {
-        final int           idx;
-        final Counter.Child workerExecCounter;
-        final Counter.Child workerCommitCounter;
-
-        protected AbstractWorker(int idx) {
-            this.idx = idx;
-            this.workerExecCounter = taskCounter.labels(String.valueOf(idx), "exec");
-            this.workerCommitCounter = taskCounter.labels(String.valueOf(idx), "commit");
+    @Override
+    public void run() {
+      for (; ; ) {
+        try {
+          final KeyedTask task = poll();
+          if (task == null) {
+            LOGGER.info("{}_{} idle", executorName, idx);
+            continue;
+          }
+          task.run();
+          workerExecCounter.inc();
+        } catch (Throwable e) {
+          LOGGER.error("{}_{} run task error", executorName, idx, e);
         }
-
-        @Override
-        public void run() {
-            for (;;) {
-                try {
-                    final KeyedTask task = poll();
-                    if (task == null) {
-                        LOGGER.info("{}_{} idle", executorName, idx);
-                        continue;
-                    }
-                    task.run();
-                    workerExecCounter.inc();
-                } catch (Throwable e) {
-                    LOGGER.error("{}_{} run task error", executorName, idx, e);
-                }
-            }
-        }
+      }
     }
+  }
 
-    protected int getQueueSize() {
-        int size = 0;
-        for (Worker w : workers) {
-            size += w.size();
-        }
-        return size;
+  protected int getQueueSize() {
+    int size = 0;
+    for (Worker w : workers) {
+      size += w.size();
     }
+    return size;
+  }
 
-    public <T extends Runnable> KeyedTask<T> execute(Object key, T runnable) {
-        KeyedTask task = new KeyedTask(key, runnable);
-        AbstractWorker w = workerOf(key);
-        // should not happen,
-        if (!w.offer(task)) {
-            throw new FastRejectedExecutionException(String.format("%s_%d full, max=%d, now=%d",
-                executorName, w.idx, coreBufferSize, w.size()));
-        }
-        w.workerCommitCounter.inc();
-        return task;
+  public <T extends Runnable> KeyedTask<T> execute(Object key, T runnable) {
+    KeyedTask task = new KeyedTask(key, runnable);
+    AbstractWorker w = workerOf(key);
+    // should not happen,
+    if (!w.offer(task)) {
+      throw new FastRejectedExecutionException(
+          String.format(
+              "%s_%d full, max=%d, now=%d", executorName, w.idx, coreBufferSize, w.size()));
     }
+    w.workerCommitCounter.inc();
+    return task;
+  }
 
-    private AbstractWorker workerOf(Object key) {
-        int n = (key.hashCode() & 0x7fffffff) % workers.length;
-        return workers[n];
-    }
-
+  private AbstractWorker workerOf(Object key) {
+    int n = (key.hashCode() & 0x7fffffff) % workers.length;
+    return workers[n];
+  }
 }

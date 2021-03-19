@@ -16,12 +16,11 @@
  */
 package com.alipay.sofa.registry.common.model.store;
 
-import java.util.*;
-
 import com.alipay.sofa.registry.common.model.ElementType;
 import com.alipay.sofa.registry.core.model.ScopeEnum;
 import com.alipay.sofa.registry.util.StringFormatter;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import java.util.*;
 
 /**
  * @author shangyu.wh
@@ -29,140 +28,129 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
  */
 public class Subscriber extends BaseInfo {
 
-    /**
-     * UID
-     */
-    private static final long                             serialVersionUID = 98433360274932292L;
-    /**
-     *
-     */
-    private ScopeEnum                                     scope;
-    /**
-     *
-     */
-    private ElementType                                   elementType;
-    /**
-     *
-     */
+  /** UID */
+  private static final long serialVersionUID = 98433360274932292L;
+  /** */
+  private ScopeEnum scope;
+  /** */
+  private ElementType elementType;
+  /** */
 
-    /**
-     * last push context
-     */
-    private final Map<String/*dataCenter*/, PushContext> lastPushContexts = new HashMap<>(4);
+  /** last push context */
+  private final Map<String /*dataCenter*/, PushContext> lastPushContexts = new HashMap<>(4);
 
-    /**
-     * Getter method for property <tt>scope</tt>.
-     *
-     * @return property value of scope
-     */
-    public ScopeEnum getScope() {
-        return scope;
+  /**
+   * Getter method for property <tt>scope</tt>.
+   *
+   * @return property value of scope
+   */
+  public ScopeEnum getScope() {
+    return scope;
+  }
+
+  /**
+   * Setter method for property <tt>scope</tt>.
+   *
+   * @param scope value to be assigned to property scope
+   */
+  public void setScope(ScopeEnum scope) {
+    this.scope = scope;
+  }
+
+  public ElementType getElementType() {
+    return elementType;
+  }
+
+  // check the version
+  public synchronized boolean checkVersion(String dataCenter, long version) {
+    final PushContext ctx = lastPushContexts.get(dataCenter);
+    if (ctx == null) {
+      return true;
     }
+    return ctx.pushVersion < version;
+  }
 
-    /**
-     * Setter method for property <tt>scope</tt>.
-     *
-     * @param scope value to be assigned to property scope
-     */
-    public void setScope(ScopeEnum scope) {
-        this.scope = scope;
+  public synchronized boolean checkAndUpdateVersion(String dataCenter, long pushVersion) {
+    final PushContext ctx = lastPushContexts.computeIfAbsent(dataCenter, k -> new PushContext());
+
+    if (ctx.pushVersion < pushVersion) {
+      ctx.pushVersion = pushVersion;
+      return true;
     }
+    return false;
+  }
 
-    public ElementType getElementType() {
-        return elementType;
+  public synchronized boolean hasPushed() {
+    // TODO now not care multi-datacenter
+    if (lastPushContexts.isEmpty()) {
+      return false;
     }
-
-    // check the version
-    public synchronized boolean checkVersion(String dataCenter, long version) {
-        final PushContext ctx = lastPushContexts.get(dataCenter);
-        if (ctx == null) {
-            return true;
-        }
-        return ctx.pushVersion < version;
+    for (PushContext ctx : lastPushContexts.values()) {
+      if (ctx.pushVersion != 0) {
+        return true;
+      }
     }
+    return false;
+  }
 
-    public synchronized boolean checkAndUpdateVersion(String dataCenter, long pushVersion) {
-        final PushContext ctx = lastPushContexts.computeIfAbsent(dataCenter, k -> new PushContext());
+  /**
+   * Setter method for property <tt>elementType</tt>.
+   *
+   * @param elementType value to be assigned to property elementType
+   */
+  public void setElementType(ElementType elementType) {
+    this.elementType = elementType;
+  }
 
-        if (ctx.pushVersion < pushVersion) {
-            ctx.pushVersion = pushVersion;
-            return true;
-        }
-        return false;
-    }
+  @Override
+  @JsonIgnore
+  public DataType getDataType() {
+    return DataType.SUBSCRIBER;
+  }
 
-    public synchronized boolean hasPushed() {
-        // TODO now not care multi-datacenter
-        if (lastPushContexts.isEmpty()) {
-            return false;
-        }
-        for (PushContext ctx : lastPushContexts.values()) {
-            if (ctx.pushVersion != 0) {
-                return true;
-            }
-        }
-        return false;
-    }
+  @Override
+  protected String getOtherInfo() {
+    final StringBuilder sb = new StringBuilder("scope=");
+    sb.append(scope).append(",");
+    sb.append("elementType=").append(elementType).append(",");
+    sb.append("ctx=").append(lastPushContexts);
+    return sb.toString();
+  }
 
-    /**
-     * Setter method for property <tt>elementType</tt>.
-     *
-     * @param elementType value to be assigned to property elementType
-     */
-    public void setElementType(ElementType elementType) {
-        this.elementType = elementType;
-    }
+  public String printPushContext() {
+    final StringBuilder sb = new StringBuilder(128);
+    return sb.append(lastPushContexts).toString();
+  }
+
+  public synchronized long getPushVersion(String dataCenter) {
+    PushContext ctx = lastPushContexts.get(dataCenter);
+    return ctx == null ? 0 : ctx.pushVersion;
+  }
+
+  /**
+   * change subscriber word cache
+   *
+   * @param subscriber
+   * @return
+   */
+  public static Subscriber internSubscriber(Subscriber subscriber) {
+    subscriber.setDataInfoId(subscriber.getDataInfoId());
+    subscriber.setInstanceId(subscriber.getInstanceId());
+    subscriber.setGroup(subscriber.getGroup());
+    subscriber.setDataId(subscriber.getDataId());
+    subscriber.setCell(subscriber.getCell());
+    subscriber.setProcessId(subscriber.getProcessId());
+    subscriber.setAppName(subscriber.getAppName());
+
+    return subscriber;
+  }
+
+  private static class PushContext {
+    long pushVersion;
 
     @Override
-    @JsonIgnore
-    public DataType getDataType() {
-        return DataType.SUBSCRIBER;
+    public String toString() {
+      return StringFormatter.format("PushCtx{{}}", pushVersion);
     }
-
-    @Override
-    protected String getOtherInfo() {
-        final StringBuilder sb = new StringBuilder("scope=");
-        sb.append(scope).append(",");
-        sb.append("elementType=").append(elementType).append(",");
-        sb.append("ctx=").append(lastPushContexts);
-        return sb.toString();
-    }
-
-    public String printPushContext() {
-        final StringBuilder sb = new StringBuilder(128);
-        return sb.append(lastPushContexts).toString();
-    }
-
-    public synchronized long getPushVersion(String dataCenter) {
-        PushContext ctx = lastPushContexts.get(dataCenter);
-        return ctx == null ? 0 : ctx.pushVersion;
-    }
-
-    /**
-     * change subscriber word cache
-     *
-     * @param subscriber
-     * @return
-     */
-    public static Subscriber internSubscriber(Subscriber subscriber) {
-        subscriber.setDataInfoId(subscriber.getDataInfoId());
-        subscriber.setInstanceId(subscriber.getInstanceId());
-        subscriber.setGroup(subscriber.getGroup());
-        subscriber.setDataId(subscriber.getDataId());
-        subscriber.setCell(subscriber.getCell());
-        subscriber.setProcessId(subscriber.getProcessId());
-        subscriber.setAppName(subscriber.getAppName());
-
-        return subscriber;
-    }
-
-    private static class PushContext {
-        long pushVersion;
-
-        @Override
-        public String toString() {
-            return StringFormatter.format("PushCtx{{}}", pushVersion);
-        }
-    }
-
+  }
 }

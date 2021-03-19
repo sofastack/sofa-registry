@@ -20,10 +20,9 @@ import java.util.Collection;
 
 /**
  * @author chen.zhu
- * <p>
- * Jan 15, 2021
+ *     <p>Jan 15, 2021
  */
 public interface Selector<T> {
 
-    T select(Collection<T> candidates);
+  T select(Collection<T> candidates);
 }

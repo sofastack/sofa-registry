@@ -18,81 +18,81 @@ package com.alipay.sofa.registry.server.shared.env;
 
 import com.alipay.sofa.registry.common.model.ProcessId;
 import com.alipay.sofa.registry.net.NetUtil;
-import org.apache.commons.lang.StringUtils;
-import org.glassfish.jersey.internal.guava.Sets;
-
 import java.util.Collection;
 import java.util.Map;
 import java.util.Random;
 import java.util.Set;
+import org.apache.commons.lang.StringUtils;
+import org.glassfish.jersey.internal.guava.Sets;
 
 /**
  * @author yuzhi.lyz
  * @version v 0.1 2020-11-28 15:25 yuzhi.lyz Exp $
  */
 public final class ServerEnv {
-    private ServerEnv() {
+  private ServerEnv() {}
+
+  public static final String IP = NetUtil.getLocalAddress().getHostAddress();
+  public static final int PID = getPID();
+  public static final ProcessId PROCESS_ID = createProcessId();
+
+  private static ProcessId createProcessId() {
+    Random random = new Random();
+    return new ProcessId(IP, System.currentTimeMillis(), PID, random.nextInt(1024 * 8));
+  }
+
+  static int getPID() {
+    String processName = java.lang.management.ManagementFactory.getRuntimeMXBean().getName();
+    if (StringUtils.isBlank(processName)) {
+      throw new RuntimeException("failed to get processName");
     }
 
-    public static final String    IP         = NetUtil.getLocalAddress().getHostAddress();
-    public static final int       PID        = getPID();
-    public static final ProcessId PROCESS_ID = createProcessId();
-
-    private static ProcessId createProcessId() {
-        Random random = new Random();
-        return new ProcessId(IP, System.currentTimeMillis(), PID, random.nextInt(1024 * 8));
+    String[] processSplitName = processName.split("@");
+    if (processSplitName.length == 0) {
+      throw new RuntimeException("failed to get processName");
     }
+    String pid = processSplitName[0];
+    return Integer.parseInt(pid);
+  }
 
-    static int getPID() {
-        String processName = java.lang.management.ManagementFactory.getRuntimeMXBean().getName();
-        if (StringUtils.isBlank(processName)) {
-            throw new RuntimeException("failed to get processName");
-        }
+  public static boolean isLocalServer(String ip) {
+    return IP.equals(ip);
+  }
 
-        String[] processSplitName = processName.split("@");
-        if (processSplitName.length == 0) {
-            throw new RuntimeException("failed to get processName");
-        }
-        String pid = processSplitName[0];
-        return Integer.parseInt(pid);
+  public static Collection<String> getMetaAddresses(
+      Map<String, Collection<String>> metaMap, String localDataCenter) {
+    if (metaMap == null) {
+      throw new RuntimeException("metaNodes is null");
     }
-
-    public static boolean isLocalServer(String ip) {
-        return IP.equals(ip);
+    if (localDataCenter == null) {
+      throw new RuntimeException("local datacenter is null");
     }
-
-    public static Collection<String> getMetaAddresses(Map<String, Collection<String>> metaMap,
-                                                      String localDataCenter) {
-        if (metaMap == null) {
-            throw new RuntimeException("metaNodes is null");
-        }
-        if (localDataCenter == null) {
-            throw new RuntimeException("local datacenter is null");
-        }
-        Collection<String> addresses = metaMap.get(localDataCenter);
-        if (addresses == null || addresses.isEmpty()) {
-            throw new RuntimeException(String.format("LocalDataCenter(%s) is not in metaNode",
-                localDataCenter));
-        }
-        return addresses;
+    Collection<String> addresses = metaMap.get(localDataCenter);
+    if (addresses == null || addresses.isEmpty()) {
+      throw new RuntimeException(
+          String.format("LocalDataCenter(%s) is not in metaNode", localDataCenter));
     }
+    return addresses;
+  }
 
-    public static Set<String> transferMetaIps(Map<String, Collection<String>> metaMap, String localDataCenter) {
-        Set<String> metaIps = Sets.newHashSet();
-        if (metaMap != null && !metaMap.isEmpty()) {
-            if (localDataCenter != null && !localDataCenter.isEmpty()) {
-                Collection<String> metas = metaMap.get(localDataCenter);
-                if (metas != null && !metas.isEmpty()) {
-                    metas.forEach(domain -> {
-                        String ip = NetUtil.getIPAddressFromDomain(domain);
-                        if (ip == null) {
-                            throw new RuntimeException("Meta convert domain {" + domain + "} error!");
-                        }
-                        metaIps.add(ip);
-                    });
+  public static Set<String> transferMetaIps(
+      Map<String, Collection<String>> metaMap, String localDataCenter) {
+    Set<String> metaIps = Sets.newHashSet();
+    if (metaMap != null && !metaMap.isEmpty()) {
+      if (localDataCenter != null && !localDataCenter.isEmpty()) {
+        Collection<String> metas = metaMap.get(localDataCenter);
+        if (metas != null && !metas.isEmpty()) {
+          metas.forEach(
+              domain -> {
+                String ip = NetUtil.getIPAddressFromDomain(domain);
+                if (ip == null) {
+                  throw new RuntimeException("Meta convert domain {" + domain + "} error!");
                 }
-            }
+                metaIps.add(ip);
+              });
         }
-        return metaIps;
+      }
     }
+    return metaIps;
+  }
 }

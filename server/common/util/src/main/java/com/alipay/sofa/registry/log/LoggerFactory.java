@@ -17,51 +17,50 @@
 package com.alipay.sofa.registry.log;
 
 /**
- * 
  * @author shangyu.wh
  * @version $Id: LoggerFactory.java, v 0.1 2017-12-22 15:55 shangyu.wh Exp $
  */
 public class LoggerFactory {
 
-	/**
-	 * get logger
-	 * 
-	 * @param name
-	 * @return
-	 */
-	public static Logger getLogger(String name) {
-		return new SLF4JLogger(name);
-	}
+  /**
+   * get logger
+   *
+   * @param name
+   * @return
+   */
+  public static Logger getLogger(String name) {
+    return new SLF4JLogger(name);
+  }
 
-	/**
-	 * get logger
-	 * 
-	 * @param clazz
-	 * @return
-	 */
-	public static Logger getLogger(Class clazz) {
-		return new SLF4JLogger(clazz);
-	}
+  /**
+   * get logger
+   *
+   * @param clazz
+   * @return
+   */
+  public static Logger getLogger(Class clazz) {
+    return new SLF4JLogger(clazz);
+  }
 
-	/**
-	 * get logger
-	 * 
-	 * @param name
-	 * @param prefix
-	 * @return
-	 */
-	public static Logger getLogger(String name, String prefix) {
-		return new SLF4JLogger(name, prefix);
-	}
+  /**
+   * get logger
+   *
+   * @param name
+   * @param prefix
+   * @return
+   */
+  public static Logger getLogger(String name, String prefix) {
+    return new SLF4JLogger(name, prefix);
+  }
 
-	/**
-	 * get logger
-	 * 
-	 * @param clazz
-	 * @param prefix
-	 * @return
-	 */
-	public static Logger getLogger(Class clazz, String prefix) {
-		return new SLF4JLogger(clazz, prefix);
-	}
+  /**
+   * get logger
+   *
+   * @param clazz
+   * @param prefix
+   * @return
+   */
+  public static Logger getLogger(Class clazz, String prefix) {
+    return new SLF4JLogger(clazz, prefix);
+  }
 }

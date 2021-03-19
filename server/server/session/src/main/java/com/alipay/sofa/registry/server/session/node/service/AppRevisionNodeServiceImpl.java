@@ -27,85 +27,83 @@ import com.alipay.sofa.registry.remoting.exchange.message.Request;
 import com.alipay.sofa.registry.remoting.exchange.message.Response;
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
 import com.alipay.sofa.registry.server.shared.meta.MetaServerManager;
+import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import java.util.List;
-
 public class AppRevisionNodeServiceImpl implements AppRevisionNodeService {
-    private static final Logger   LOGGER = LoggerFactory.getLogger(
-                                             AppRevisionNodeServiceImpl.class,
-                                             "[AppRevisionService]");
+  private static final Logger LOGGER =
+      LoggerFactory.getLogger(AppRevisionNodeServiceImpl.class, "[AppRevisionService]");
 
-    @Autowired
-    protected SessionServerConfig sessionServerConfig;
+  @Autowired protected SessionServerConfig sessionServerConfig;
 
-    @Autowired
-    private MetaServerManager metaServerManager;
+  @Autowired private MetaServerManager metaServerManager;
 
-    public void register(AppRevision appRevision) {
-        Request<AppRevision> request = new Request<AppRevision>() {
-            @Override
-            public AppRevision getRequestBody() {
-                return appRevision;
-            }
+  public void register(AppRevision appRevision) {
+    Request<AppRevision> request =
+        new Request<AppRevision>() {
+          @Override
+          public AppRevision getRequestBody() {
+            return appRevision;
+          }
 
-            @Override
-            public URL getRequestUrl() {
-                return new URL(metaServerManager.getMetaServerLeader(),
-                    sessionServerConfig.getMetaServerPort());
-            }
+          @Override
+          public URL getRequestUrl() {
+            return new URL(
+                metaServerManager.getMetaServerLeader(), sessionServerConfig.getMetaServerPort());
+          }
         };
-        try {
-            metaServerManager.sendRequest(request);
-        } catch (RequestException e) {
-            LOGGER.error("add app revision error! " + e.getMessage(), e);
-            throw new RuntimeException("add app revision error! " + e.getMessage(), e);
-        }
+    try {
+      metaServerManager.sendRequest(request);
+    } catch (RequestException e) {
+      LOGGER.error("add app revision error! " + e.getMessage(), e);
+      throw new RuntimeException("add app revision error! " + e.getMessage(), e);
     }
+  }
 
-    public List<String> checkRevisions(String keysDigest) {
-        Request<CheckRevisionsRequest> request = new Request<CheckRevisionsRequest>() {
-            @Override
-            public CheckRevisionsRequest getRequestBody() {
-                return new CheckRevisionsRequest(keysDigest);
-            }
+  public List<String> checkRevisions(String keysDigest) {
+    Request<CheckRevisionsRequest> request =
+        new Request<CheckRevisionsRequest>() {
+          @Override
+          public CheckRevisionsRequest getRequestBody() {
+            return new CheckRevisionsRequest(keysDigest);
+          }
 
-            @Override
-            public URL getRequestUrl() {
-                return new URL(metaServerManager.getMetaServerLeader(),
-                    sessionServerConfig.getMetaServerPort());
-            }
+          @Override
+          public URL getRequestUrl() {
+            return new URL(
+                metaServerManager.getMetaServerLeader(), sessionServerConfig.getMetaServerPort());
+          }
         };
-        try {
-            Response response = metaServerManager.sendRequest(request);
-            return (List<String>) response.getResult();
-        } catch (RequestException e) {
-            LOGGER.error("check app revisions error! " + e.getMessage(), e);
-            throw new RuntimeException("check app revisions error! " + e.getMessage(), e);
-        }
-
+    try {
+      Response response = metaServerManager.sendRequest(request);
+      return (List<String>) response.getResult();
+    } catch (RequestException e) {
+      LOGGER.error("check app revisions error! " + e.getMessage(), e);
+      throw new RuntimeException("check app revisions error! " + e.getMessage(), e);
     }
+  }
 
-    public List<AppRevision> fetchMulti(List<String> keys) {
-        Request<FetchRevisionsRequest> request = new Request<FetchRevisionsRequest>() {
-            @Override
-            public FetchRevisionsRequest getRequestBody() {
-                return new FetchRevisionsRequest(keys);
-            }
+  public List<AppRevision> fetchMulti(List<String> keys) {
+    Request<FetchRevisionsRequest> request =
+        new Request<FetchRevisionsRequest>() {
+          @Override
+          public FetchRevisionsRequest getRequestBody() {
+            return new FetchRevisionsRequest(keys);
+          }
 
-            @Override
-            public URL getRequestUrl() {
-                return new URL(metaServerManager.getMetaServerLeader(),
-                    sessionServerConfig.getMetaServerPort());
-            }
+          @Override
+          public URL getRequestUrl() {
+            return new URL(
+                metaServerManager.getMetaServerLeader(), sessionServerConfig.getMetaServerPort());
+          }
         };
-        try {
-            Response response = metaServerManager.sendRequest(request);
-            Object result = response.getResult();
-            return (List<AppRevision>) result;
-        } catch (RequestException e) {
-            LOGGER.error("fetch app revision error! " + e.getMessage(), e);
-            throw new RuntimeException("fetch app revision error! " + e.getMessage(), e);
-        }
+    try {
+      Response response = metaServerManager.sendRequest(request);
+      Object result = response.getResult();
+      return (List<AppRevision>) result;
+    } catch (RequestException e) {
+      LOGGER.error("fetch app revision error! " + e.getMessage(), e);
+      throw new RuntimeException("fetch app revision error! " + e.getMessage(), e);
     }
+  }
 }

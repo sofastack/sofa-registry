@@ -31,16 +31,14 @@ import com.alipay.sofa.registry.server.meta.resource.filter.LeaderAwareRestContr
 import com.alipay.sofa.registry.store.api.meta.ProvideDataRepository;
 import com.alipay.sofa.registry.util.JsonUtils;
 import com.google.common.collect.Sets;
-import org.springframework.beans.factory.annotation.Autowired;
-
+import java.util.Set;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
-import java.util.Set;
+import org.springframework.beans.factory.annotation.Autowired;
 
 /**
- *
  * @author shangyu.wh
  * @version $Id: StopPushDataResource.java, v 0.1 2018-07-25 11:40 shangyu.wh Exp $
  */
@@ -48,98 +46,100 @@ import java.util.Set;
 @LeaderAwareRestController
 public class StopPushDataResource {
 
-    private static final Logger        DB_LOGGER   = LoggerFactory.getLogger(
-                                                       StopPushDataResource.class, "[DBService]");
+  private static final Logger DB_LOGGER =
+      LoggerFactory.getLogger(StopPushDataResource.class, "[DBService]");
 
-    private static final Logger        TASK_LOGGER = LoggerFactory.getLogger(
-                                                       StopPushDataResource.class, "[Task]");
+  private static final Logger TASK_LOGGER =
+      LoggerFactory.getLogger(StopPushDataResource.class, "[Task]");
 
-    @Autowired
-    private ProvideDataRepository provideDataRepository;
+  @Autowired private ProvideDataRepository provideDataRepository;
 
-    @Autowired
-    private DefaultProvideDataNotifier provideDataNotifier;
+  @Autowired private DefaultProvideDataNotifier provideDataNotifier;
 
-    @Autowired
-    private NodeConfig nodeConfig;
+  @Autowired private NodeConfig nodeConfig;
 
-    /**
-     * close push
-     */
-    @GET
-    @Path("open")
-    @Produces(MediaType.APPLICATION_JSON)
-    public Result closePush() {
-        PersistenceData persistenceData = createPushDataInfo();
-        persistenceData.setData("true");
+  /** close push */
+  @GET
+  @Path("open")
+  @Produces(MediaType.APPLICATION_JSON)
+  public Result closePush() {
+    PersistenceData persistenceData = createPushDataInfo();
+    persistenceData.setData("true");
 
-        try {
-            boolean ret = provideDataRepository.put(nodeConfig.getLocalDataCenter(),
-                ValueConstants.STOP_PUSH_DATA_SWITCH_DATA_ID, JsonUtils.writeValueAsString(persistenceData));
-            DB_LOGGER.info("open stop push data switch to DB result {}!", ret);
-        } catch (Throwable e) {
-            DB_LOGGER.error("error open stop push data switch to DB!", e);
-            throw new RuntimeException("open stop push data switch to DB error!", e);
-        }
-
-        fireDataChangeNotify(persistenceData.getVersion(),
-            ValueConstants.STOP_PUSH_DATA_SWITCH_DATA_ID, DataOperator.ADD);
-
-        Result result = new Result();
-        result.setSuccess(true);
-        return result;
+    try {
+      boolean ret =
+          provideDataRepository.put(
+              nodeConfig.getLocalDataCenter(),
+              ValueConstants.STOP_PUSH_DATA_SWITCH_DATA_ID,
+              JsonUtils.writeValueAsString(persistenceData));
+      DB_LOGGER.info("open stop push data switch to DB result {}!", ret);
+    } catch (Throwable e) {
+      DB_LOGGER.error("error open stop push data switch to DB!", e);
+      throw new RuntimeException("open stop push data switch to DB error!", e);
     }
 
-    /**
-     * open push
-     */
-    @GET
-    @Path("close")
-    @Produces(MediaType.APPLICATION_JSON)
-    public Result openPush() {
-        PersistenceData persistenceData = createPushDataInfo();
-        persistenceData.setData("false");
-        try {
-            boolean ret = provideDataRepository.put(nodeConfig.getLocalDataCenter(),
-                ValueConstants.STOP_PUSH_DATA_SWITCH_DATA_ID, JsonUtils.writeValueAsString(persistenceData));
-            DB_LOGGER.info("close stop push data switch to DB result {}!", ret);
-        } catch (Exception e) {
-            DB_LOGGER.error("error close stop push data switch from DB!");
-            throw new RuntimeException("Close stop push data switch from DB error!");
-        }
+    fireDataChangeNotify(
+        persistenceData.getVersion(),
+        ValueConstants.STOP_PUSH_DATA_SWITCH_DATA_ID,
+        DataOperator.ADD);
 
-        fireDataChangeNotify(persistenceData.getVersion(),
-            ValueConstants.STOP_PUSH_DATA_SWITCH_DATA_ID, DataOperator.UPDATE);
+    Result result = new Result();
+    result.setSuccess(true);
+    return result;
+  }
 
-        Result result = new Result();
-        result.setSuccess(true);
-        return result;
+  /** open push */
+  @GET
+  @Path("close")
+  @Produces(MediaType.APPLICATION_JSON)
+  public Result openPush() {
+    PersistenceData persistenceData = createPushDataInfo();
+    persistenceData.setData("false");
+    try {
+      boolean ret =
+          provideDataRepository.put(
+              nodeConfig.getLocalDataCenter(),
+              ValueConstants.STOP_PUSH_DATA_SWITCH_DATA_ID,
+              JsonUtils.writeValueAsString(persistenceData));
+      DB_LOGGER.info("close stop push data switch to DB result {}!", ret);
+    } catch (Exception e) {
+      DB_LOGGER.error("error close stop push data switch from DB!");
+      throw new RuntimeException("Close stop push data switch from DB error!");
     }
 
-    private PersistenceData createPushDataInfo() {
-        DataInfo dataInfo = DataInfo.valueOf(ValueConstants.STOP_PUSH_DATA_SWITCH_DATA_ID);
-        PersistenceData persistenceData = new PersistenceData();
-        persistenceData.setDataId(dataInfo.getDataId());
-        persistenceData.setGroup(dataInfo.getGroup());
-        persistenceData.setInstanceId(dataInfo.getInstanceId());
-        persistenceData.setVersion(System.currentTimeMillis());
-        return persistenceData;
+    fireDataChangeNotify(
+        persistenceData.getVersion(),
+        ValueConstants.STOP_PUSH_DATA_SWITCH_DATA_ID,
+        DataOperator.UPDATE);
+
+    Result result = new Result();
+    result.setSuccess(true);
+    return result;
+  }
+
+  private PersistenceData createPushDataInfo() {
+    DataInfo dataInfo = DataInfo.valueOf(ValueConstants.STOP_PUSH_DATA_SWITCH_DATA_ID);
+    PersistenceData persistenceData = new PersistenceData();
+    persistenceData.setDataId(dataInfo.getDataId());
+    persistenceData.setGroup(dataInfo.getGroup());
+    persistenceData.setInstanceId(dataInfo.getInstanceId());
+    persistenceData.setVersion(System.currentTimeMillis());
+    return persistenceData;
+  }
+
+  private void fireDataChangeNotify(Long version, String dataInfoId, DataOperator dataOperator) {
+
+    ProvideDataChangeEvent provideDataChangeEvent =
+        new ProvideDataChangeEvent(dataInfoId, version, dataOperator, getNodeTypes());
+    if (TASK_LOGGER.isInfoEnabled()) {
+      TASK_LOGGER.info(
+          "send PERSISTENCE_DATA_CHANGE_NOTIFY_TASK notifyProvideDataChange: {}",
+          provideDataChangeEvent);
     }
+    provideDataNotifier.notifyProvideDataChange(provideDataChangeEvent);
+  }
 
-    private void fireDataChangeNotify(Long version, String dataInfoId, DataOperator dataOperator) {
-
-        ProvideDataChangeEvent provideDataChangeEvent = new ProvideDataChangeEvent(dataInfoId,
-            version, dataOperator, getNodeTypes());
-        if (TASK_LOGGER.isInfoEnabled()) {
-            TASK_LOGGER.info(
-                "send PERSISTENCE_DATA_CHANGE_NOTIFY_TASK notifyProvideDataChange: {}",
-                provideDataChangeEvent);
-        }
-        provideDataNotifier.notifyProvideDataChange(provideDataChangeEvent);
-    }
-
-    protected Set<NodeType> getNodeTypes() {
-        return Sets.newHashSet(NodeType.SESSION);
-    }
-
+  protected Set<NodeType> getNodeTypes() {
+    return Sets.newHashSet(NodeType.SESSION);
+  }
 }

@@ -20,8 +20,6 @@ import java.io.Serializable;
 
 /**
  * @author xiangxu
- * @version : SessionLoadbalanceMetrics.java, v 0.1 2020年05月27日 11:13 上午 xiangxu
- *          Exp $
+ * @version : SessionLoadbalanceMetrics.java, v 0.1 2020年05月27日 11:13 上午 xiangxu Exp $
  */
-public class GetLoadbalanceMetricsRequest implements Serializable {
-}
+public class GetLoadbalanceMetricsRequest implements Serializable {}

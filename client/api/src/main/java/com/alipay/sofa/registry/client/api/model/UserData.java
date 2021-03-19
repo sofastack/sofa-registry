@@ -27,17 +27,17 @@ import java.util.Map;
  */
 public interface UserData {
 
-    /**
-     * Getter method for property <tt>zoneData</tt>.
-     *
-     * @return property value of zoneData
-     */
-    Map<String, List<String>> getZoneData();
+  /**
+   * Getter method for property <tt>zoneData</tt>.
+   *
+   * @return property value of zoneData
+   */
+  Map<String, List<String>> getZoneData();
 
-    /**
-     * Gets local zone.
-     *
-     * @return the local zone
-     */
-    String getLocalZone();
+  /**
+   * Gets local zone.
+   *
+   * @return the local zone
+   */
+  String getLocalZone();
 }

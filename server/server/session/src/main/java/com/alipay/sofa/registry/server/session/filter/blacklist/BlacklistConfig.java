@@ -20,57 +20,56 @@ import java.io.Serializable;
 import java.util.List;
 
 /**
- *
  * @author shangyu.wh
  * @version 1.0: BlacklistConfig.java, v 0.1 2019-06-19 17:23 shangyu.wh Exp $
  */
 public class BlacklistConfig implements Serializable {
 
-    /** UID*/
-    private static final long serialVersionUID = -7607561981062791932L;
+  /** UID */
+  private static final long serialVersionUID = -7607561981062791932L;
 
-    /** blacklist type */
-    private String            type;
+  /** blacklist type */
+  private String type;
 
-    /** match type */
-    @SuppressWarnings("rawtypes")
-    private List<MatchType>   matchTypes;
+  /** match type */
+  @SuppressWarnings("rawtypes")
+  private List<MatchType> matchTypes;
 
-    /**
-     * Getter method for property <tt>type</tt>.
-     *
-     * @return property value of type
-     */
-    public String getType() {
-        return type;
-    }
+  /**
+   * Getter method for property <tt>type</tt>.
+   *
+   * @return property value of type
+   */
+  public String getType() {
+    return type;
+  }
 
-    /**
-     * Setter method for property <tt>type</tt>.
-     *
-     * @param type value to be assigned to property type
-     */
-    public void setType(String type) {
-        this.type = type;
-    }
+  /**
+   * Setter method for property <tt>type</tt>.
+   *
+   * @param type value to be assigned to property type
+   */
+  public void setType(String type) {
+    this.type = type;
+  }
 
-    /**
-     * Getter method for property <tt>matchTypes</tt>.
-     *
-     * @return property value of matchTypes
-     */
-    @SuppressWarnings("rawtypes")
-    public List<MatchType> getMatchTypes() {
-        return matchTypes;
-    }
+  /**
+   * Getter method for property <tt>matchTypes</tt>.
+   *
+   * @return property value of matchTypes
+   */
+  @SuppressWarnings("rawtypes")
+  public List<MatchType> getMatchTypes() {
+    return matchTypes;
+  }
 
-    /**
-     * Setter method for property <tt>matchTypes</tt>.
-     *
-     * @param matchTypes value to be assigned to property matchTypes
-     */
-    @SuppressWarnings("rawtypes")
-    public void setMatchTypes(List<MatchType> matchTypes) {
-        this.matchTypes = matchTypes;
-    }
+  /**
+   * Setter method for property <tt>matchTypes</tt>.
+   *
+   * @param matchTypes value to be assigned to property matchTypes
+   */
+  @SuppressWarnings("rawtypes")
+  public void setMatchTypes(List<MatchType> matchTypes) {
+    this.matchTypes = matchTypes;
+  }
 }

@@ -20,31 +20,30 @@ import com.alipay.sofa.registry.client.api.model.ConfigData;
 
 /**
  * The interface Configurator.
- * 
+ *
  * @author zhuoyu.sjw
  * @version $Id : Configurator.java, v 0.1 2018-04-17 17:26 zhuoyu.sjw Exp $$
  */
 public interface Configurator extends Register {
 
-	/**
-	 * Gets data observer.
-	 * 
-	 * @return the data observer
-	 */
-	ConfigDataObserver getDataObserver();
+  /**
+   * Gets data observer.
+   *
+   * @return the data observer
+   */
+  ConfigDataObserver getDataObserver();
 
-	/**
-	 * Sets config data observer.
-	 * 
-	 * @param configDataObserver
-	 *            the config data observer
-	 */
-	void setDataObserver(ConfigDataObserver configDataObserver);
+  /**
+   * Sets config data observer.
+   *
+   * @param configDataObserver the config data observer
+   */
+  void setDataObserver(ConfigDataObserver configDataObserver);
 
-	/**
-	 * Peek data config data.
-	 * 
-	 * @return the config data
-	 */
-	ConfigData peekData();
+  /**
+   * Peek data config data.
+   *
+   * @return the config data
+   */
+  ConfigData peekData();
 }

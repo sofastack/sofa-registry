@@ -20,61 +20,58 @@ import java.io.Serializable;
 import java.util.Set;
 
 /**
- *
  * @author shangyu.wh
  * @version 1.0: MatchType.java, v 0.1 2019-06-19 17:25 shangyu.wh Exp $
  */
 public class MatchType<T> implements Serializable {
-    /** UID */
-    private static final long serialVersionUID = 4015181538538056685L;
+  /** UID */
+  private static final long serialVersionUID = 4015181538538056685L;
 
-    /** match type */
-    private String            type;
+  /** match type */
+  private String type;
 
-    /** match patterns */
-    private Set<T>            patternSet;
+  /** match patterns */
+  private Set<T> patternSet;
 
-    /**
-     * Getter method for property <tt>type</tt>.
-     *
-     * @return property value of type
-     */
-    public String getType() {
-        return type;
-    }
+  /**
+   * Getter method for property <tt>type</tt>.
+   *
+   * @return property value of type
+   */
+  public String getType() {
+    return type;
+  }
 
-    /**
-     * Setter method for property <tt>type</tt>.
-     *
-     * @param type value to be assigned to property type
-     */
-    public void setType(String type) {
-        this.type = type;
-    }
+  /**
+   * Setter method for property <tt>type</tt>.
+   *
+   * @param type value to be assigned to property type
+   */
+  public void setType(String type) {
+    this.type = type;
+  }
 
-    /**
-     * Getter method for property <tt>patternSet</tt>.
-     *
-     * @return property value of patternSet
-     */
-    public Set<T> getPatternSet() {
-        return patternSet;
-    }
+  /**
+   * Getter method for property <tt>patternSet</tt>.
+   *
+   * @return property value of patternSet
+   */
+  public Set<T> getPatternSet() {
+    return patternSet;
+  }
 
-    /**
-     * Setter method for property <tt>patternSet</tt>.
-     *
-     * @param patternSet value to be assigned to property patternSet
-     */
-    public void setPatternSet(Set<T> patternSet) {
-        this.patternSet = patternSet;
-    }
+  /**
+   * Setter method for property <tt>patternSet</tt>.
+   *
+   * @param patternSet value to be assigned to property patternSet
+   */
+  public void setPatternSet(Set<T> patternSet) {
+    this.patternSet = patternSet;
+  }
 
-    /**
-     * @see Object#toString()
-     */
-    @Override
-    public String toString() {
-        return "MatchType{" + "type='" + type + '\'' + ", patternSet=" + patternSet + '}';
-    }
+  /** @see Object#toString() */
+  @Override
+  public String toString() {
+    return "MatchType{" + "type='" + type + '\'' + ", patternSet=" + patternSet + '}';
+  }
 }

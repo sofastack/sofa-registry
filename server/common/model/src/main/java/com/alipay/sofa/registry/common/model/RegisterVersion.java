@@ -20,83 +20,86 @@ import java.io.Serializable;
 import java.util.Objects;
 
 /**
- *
  * @author yuzhi.lyz
  * @version v 0.1 2020-12-02 21:44 yuzhi.lyz Exp $
  */
 public final class RegisterVersion implements Serializable, Comparable<RegisterVersion> {
-    private final long version;
-    private final long registerTimestamp;
+  private final long version;
+  private final long registerTimestamp;
 
-    public RegisterVersion(long version, long registerTimestamp) {
-        this.version = version;
-        this.registerTimestamp = registerTimestamp;
+  public RegisterVersion(long version, long registerTimestamp) {
+    this.version = version;
+    this.registerTimestamp = registerTimestamp;
+  }
+
+  public static RegisterVersion of(long version, long registerTimestamp) {
+    return new RegisterVersion(version, registerTimestamp);
+  }
+
+  /**
+   * Getter method for property <tt>version</tt>.
+   *
+   * @return property value of version
+   */
+  public long getVersion() {
+    return version;
+  }
+
+  /**
+   * Getter method for property <tt>registerTimestamp</tt>.
+   *
+   * @return property value of registerTimestamp
+   */
+  public long getRegisterTimestamp() {
+    return registerTimestamp;
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) return true;
+    if (!(o instanceof RegisterVersion)) return false;
+    RegisterVersion that = (RegisterVersion) o;
+    return version == that.version && registerTimestamp == that.registerTimestamp;
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(version, registerTimestamp);
+  }
+
+  @Override
+  public int compareTo(RegisterVersion o) {
+    if (version < o.version) {
+      return -1;
+    }
+    if (version > o.version) {
+      return 1;
     }
 
-    public static RegisterVersion of(long version, long registerTimestamp) {
-        return new RegisterVersion(version, registerTimestamp);
+    if (registerTimestamp < o.registerTimestamp) {
+      return -1;
     }
-
-    /**
-     * Getter method for property <tt>version</tt>.
-     * @return property value of version
-     */
-    public long getVersion() {
-        return version;
+    if (registerTimestamp > o.registerTimestamp) {
+      return 1;
     }
+    return 0;
+  }
 
-    /**
-     * Getter method for property <tt>registerTimestamp</tt>.
-     * @return property value of registerTimestamp
-     */
-    public long getRegisterTimestamp() {
-        return registerTimestamp;
-    }
+  public boolean orderThan(RegisterVersion o) {
+    return compareTo(o) < 0;
+  }
 
-    @Override
-    public boolean equals(Object o) {
-        if (this == o)
-            return true;
-        if (!(o instanceof RegisterVersion))
-            return false;
-        RegisterVersion that = (RegisterVersion) o;
-        return version == that.version && registerTimestamp == that.registerTimestamp;
-    }
+  @Override
+  public String toString() {
+    return "RegisterVersion{"
+        + "version="
+        + version
+        + ", registerTimestamp="
+        + registerTimestamp
+        + '}';
+  }
 
-    @Override
-    public int hashCode() {
-        return Objects.hash(version, registerTimestamp);
-    }
-
-    @Override
-    public int compareTo(RegisterVersion o) {
-        if (version < o.version) {
-            return -1;
-        }
-        if (version > o.version) {
-            return 1;
-        }
-
-        if (registerTimestamp < o.registerTimestamp) {
-            return -1;
-        }
-        if (registerTimestamp > o.registerTimestamp) {
-            return 1;
-        }
-        return 0;
-    }
-
-    public boolean orderThan(RegisterVersion o) {
-        return compareTo(o) < 0;
-    }
-
-    @Override
-    public String toString() {
-        return "RegisterVersion{" + "version=" + version + ", registerTimestamp="
-               + registerTimestamp + '}';
-    }
-
-    public RegisterVersion incrRegisterTimestamp() {
-        return RegisterVersion.of(this.version, this.registerTimestamp + 1);
-    }
+  public RegisterVersion incrRegisterTimestamp() {
+    return RegisterVersion.of(this.version, this.registerTimestamp + 1);
+  }
 }

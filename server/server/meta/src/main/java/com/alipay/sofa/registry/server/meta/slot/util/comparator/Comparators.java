@@ -18,152 +18,152 @@ package com.alipay.sofa.registry.server.meta.slot.util.comparator;
 
 import com.alipay.sofa.registry.common.model.slot.DataNodeSlot;
 import com.alipay.sofa.registry.server.meta.slot.util.builder.SlotTableBuilder;
-
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 
 /**
  * @author chen.zhu
- * <p>
- * Jan 27, 2021
+ *     <p>Jan 27, 2021
  */
 public class Comparators {
 
-    public static DataServerFollowerSizeComparator mostFollowersFirst(SlotTableBuilder slotTableBuilder) {
-        return new DataServerFollowerSizeComparator(slotTableBuilder, SortType.DES);
+  public static DataServerFollowerSizeComparator mostFollowersFirst(
+      SlotTableBuilder slotTableBuilder) {
+    return new DataServerFollowerSizeComparator(slotTableBuilder, SortType.DES);
+  }
+
+  public static DataServerFollowerSizeComparator leastFollowersFirst(
+      SlotTableBuilder slotTableBuilder) {
+    return new DataServerFollowerSizeComparator(slotTableBuilder, SortType.ASC);
+  }
+
+  public static DataServerLeaderSizeComparator mostLeadersFirst(SlotTableBuilder slotTableBuilder) {
+    return new DataServerLeaderSizeComparator(slotTableBuilder, SortType.DES);
+  }
+
+  public static DataServerLeaderSizeComparator leastLeadersFirst(
+      SlotTableBuilder slotTableBuilder) {
+    return new DataServerLeaderSizeComparator(slotTableBuilder, SortType.ASC);
+  }
+
+  public static SlotLeaderRelateDataServerLeaderSizeComparator slotLeaderHasMostLeaderSlots(
+      SlotTableBuilder slotTableBuilder) {
+    return new SlotLeaderRelateDataServerLeaderSizeComparator(slotTableBuilder, SortType.DES);
+  }
+
+  public abstract static class AbstractSlotComparator<T> implements Comparator<T> {
+
+    protected SlotTableBuilder slotTableBuilder;
+
+    protected SortType sortType;
+
+    public AbstractSlotComparator(SlotTableBuilder slotTableBuilder, SortType sortType) {
+      this.slotTableBuilder = slotTableBuilder;
+      this.sortType = sortType;
+    }
+  }
+
+  /**
+   * ---------------------------------- Data Server Comparators
+   * --------------------------------------------
+   */
+  public abstract static class AbstractDataServerComparator extends AbstractSlotComparator<String> {
+
+    public AbstractDataServerComparator(SlotTableBuilder slotTableBuilder, SortType sortType) {
+      super(slotTableBuilder, sortType);
     }
 
-    public static DataServerFollowerSizeComparator leastFollowersFirst(SlotTableBuilder slotTableBuilder) {
-        return new DataServerFollowerSizeComparator(slotTableBuilder, SortType.ASC);
+    @Override
+    public int compare(String dataServer1, String dataServer2) {
+      DataNodeSlot dataNodeSlot1 = slotTableBuilder.getDataNodeSlot(dataServer1);
+      DataNodeSlot dataNodeSlot2 = slotTableBuilder.getDataNodeSlot(dataServer2);
+      int score =
+          getFirstClassMember(dataNodeSlot1).size() - getFirstClassMember(dataNodeSlot2).size();
+      if (score == 0) {
+        score = getEconomyMember(dataNodeSlot1).size() - getEconomyMember(dataNodeSlot2).size();
+      }
+      return sortType.getScore(score);
     }
 
-    public static DataServerLeaderSizeComparator mostLeadersFirst(SlotTableBuilder slotTableBuilder) {
-        return new DataServerLeaderSizeComparator(slotTableBuilder, SortType.DES);
+    protected Collection<Integer> getFirstClassMember(DataNodeSlot dataNodeSlot) {
+      return Collections.emptyList();
     }
 
-    public static DataServerLeaderSizeComparator leastLeadersFirst(SlotTableBuilder slotTableBuilder) {
-        return new DataServerLeaderSizeComparator(slotTableBuilder, SortType.ASC);
+    protected Collection<Integer> getEconomyMember(DataNodeSlot dataNodeSlot) {
+      return Collections.emptyList();
+    };
+  }
+
+  public static class DataServerFollowerSizeComparator extends AbstractDataServerComparator {
+
+    public DataServerFollowerSizeComparator(SlotTableBuilder slotTableBuilder, SortType sortType) {
+      super(slotTableBuilder, sortType);
     }
 
-    public static SlotLeaderRelateDataServerLeaderSizeComparator slotLeaderHasMostLeaderSlots(SlotTableBuilder slotTableBuilder) {
-        return new SlotLeaderRelateDataServerLeaderSizeComparator(slotTableBuilder, SortType.DES);
+    @Override
+    protected Collection<Integer> getFirstClassMember(DataNodeSlot dataNodeSlot) {
+      return dataNodeSlot.getFollowers();
     }
 
-    public static abstract class AbstractSlotComparator<T> implements Comparator<T> {
+    @Override
+    protected Collection<Integer> getEconomyMember(DataNodeSlot dataNodeSlot) {
+      return dataNodeSlot.getLeaders();
+    }
+  }
 
-        protected SlotTableBuilder slotTableBuilder;
+  public static class DataServerLeaderSizeComparator extends AbstractDataServerComparator {
 
-        protected SortType         sortType;
-
-        public AbstractSlotComparator(SlotTableBuilder slotTableBuilder, SortType sortType) {
-            this.slotTableBuilder = slotTableBuilder;
-            this.sortType = sortType;
-        }
-
+    public DataServerLeaderSizeComparator(SlotTableBuilder slotTableBuilder, SortType sortType) {
+      super(slotTableBuilder, sortType);
     }
 
-    /**
-     * ---------------------------------- Data Server Comparators --------------------------------------------
-     * */
-    public static abstract class AbstractDataServerComparator extends
-                                                             AbstractSlotComparator<String> {
-
-        public AbstractDataServerComparator(SlotTableBuilder slotTableBuilder, SortType sortType) {
-            super(slotTableBuilder, sortType);
-        }
-
-        @Override
-        public int compare(String dataServer1, String dataServer2) {
-            DataNodeSlot dataNodeSlot1 = slotTableBuilder.getDataNodeSlot(dataServer1);
-            DataNodeSlot dataNodeSlot2 = slotTableBuilder.getDataNodeSlot(dataServer2);
-            int score = getFirstClassMember(dataNodeSlot1).size()
-                        - getFirstClassMember(dataNodeSlot2).size();
-            if (score == 0) {
-                score = getEconomyMember(dataNodeSlot1).size()
-                        - getEconomyMember(dataNodeSlot2).size();
-            }
-            return sortType.getScore(score);
-        }
-
-        protected Collection<Integer> getFirstClassMember(DataNodeSlot dataNodeSlot) {
-            return Collections.emptyList();
-        }
-
-        protected Collection<Integer> getEconomyMember(DataNodeSlot dataNodeSlot) {
-            return Collections.emptyList();
-        };
+    @Override
+    protected Collection<Integer> getFirstClassMember(DataNodeSlot dataNodeSlot) {
+      return dataNodeSlot.getLeaders();
     }
 
-    public static class DataServerFollowerSizeComparator extends AbstractDataServerComparator {
+    @Override
+    protected Collection<Integer> getEconomyMember(DataNodeSlot dataNodeSlot) {
+      return dataNodeSlot.getFollowers();
+    }
+  }
 
-        public DataServerFollowerSizeComparator(SlotTableBuilder slotTableBuilder, SortType sortType) {
-            super(slotTableBuilder, sortType);
-        }
+  /**
+   * ---------------------------------- Slot Comparators
+   * --------------------------------------------
+   */
+  public abstract static class AbstractSlotNumberComparator
+      extends AbstractSlotComparator<Integer> {
 
-        @Override
-        protected Collection<Integer> getFirstClassMember(DataNodeSlot dataNodeSlot) {
-            return dataNodeSlot.getFollowers();
-        }
-
-        @Override
-        protected Collection<Integer> getEconomyMember(DataNodeSlot dataNodeSlot) {
-            return dataNodeSlot.getLeaders();
-        }
+    public AbstractSlotNumberComparator(SlotTableBuilder slotTableBuilder, SortType sortType) {
+      super(slotTableBuilder, sortType);
     }
 
-    public static class DataServerLeaderSizeComparator extends AbstractDataServerComparator {
-
-        public DataServerLeaderSizeComparator(SlotTableBuilder slotTableBuilder, SortType sortType) {
-            super(slotTableBuilder, sortType);
-        }
-
-        @Override
-        protected Collection<Integer> getFirstClassMember(DataNodeSlot dataNodeSlot) {
-            return dataNodeSlot.getLeaders();
-        }
-
-        @Override
-        protected Collection<Integer> getEconomyMember(DataNodeSlot dataNodeSlot) {
-            return dataNodeSlot.getFollowers();
-        }
+    @Override
+    public int compare(Integer slotId1, Integer slotId2) {
+      String dataServer1 = slotTableBuilder.getOrCreate(slotId1).getLeader();
+      String dataServer2 = slotTableBuilder.getOrCreate(slotId2).getLeader();
+      return getDataServerComparator().compare(dataServer1, dataServer2);
     }
 
-    /**
-     * ---------------------------------- Slot Comparators --------------------------------------------
-     * */
+    protected abstract AbstractDataServerComparator getDataServerComparator();
+  }
 
-    public static abstract class AbstractSlotNumberComparator extends
-                                                             AbstractSlotComparator<Integer> {
+  public static class SlotLeaderRelateDataServerLeaderSizeComparator
+      extends AbstractSlotNumberComparator {
 
-        public AbstractSlotNumberComparator(SlotTableBuilder slotTableBuilder, SortType sortType) {
-            super(slotTableBuilder, sortType);
-        }
+    private final AbstractDataServerComparator dataServerComparator;
 
-        @Override
-        public int compare(Integer slotId1, Integer slotId2) {
-            String dataServer1 = slotTableBuilder.getOrCreate(slotId1).getLeader();
-            String dataServer2 = slotTableBuilder.getOrCreate(slotId2).getLeader();
-            return getDataServerComparator().compare(dataServer1, dataServer2);
-        }
-
-        protected abstract AbstractDataServerComparator getDataServerComparator();
+    public SlotLeaderRelateDataServerLeaderSizeComparator(
+        SlotTableBuilder slotTableBuilder, SortType sortType) {
+      super(slotTableBuilder, sortType);
+      dataServerComparator = new DataServerLeaderSizeComparator(slotTableBuilder, sortType);
     }
 
-    public static class SlotLeaderRelateDataServerLeaderSizeComparator extends
-                                                                      AbstractSlotNumberComparator {
-
-        private final AbstractDataServerComparator dataServerComparator;
-
-        public SlotLeaderRelateDataServerLeaderSizeComparator(SlotTableBuilder slotTableBuilder,
-                                                              SortType sortType) {
-            super(slotTableBuilder, sortType);
-            dataServerComparator = new DataServerLeaderSizeComparator(slotTableBuilder, sortType);
-        }
-
-        @Override
-        protected AbstractDataServerComparator getDataServerComparator() {
-            return dataServerComparator;
-        }
+    @Override
+    protected AbstractDataServerComparator getDataServerComparator() {
+      return dataServerComparator;
     }
+  }
 }

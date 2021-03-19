@@ -17,18 +17,16 @@
 package com.alipay.sofa.registry.server.session.cache;
 
 /**
- * 
  * @author shangyu.wh
  * @version $Id: CacheGenerator.java, v 0.1 2017-12-06 17:29 shangyu.wh Exp $
  */
 public interface CacheGenerator {
 
-	/**
-	 * generator cache on write request
-	 * 
-	 * @param key
-	 * @return
-	 */
-	Value generatePayload(Key key);
-
+  /**
+   * generator cache on write request
+   *
+   * @param key
+   * @return
+   */
+  Value generatePayload(Key key);
 }

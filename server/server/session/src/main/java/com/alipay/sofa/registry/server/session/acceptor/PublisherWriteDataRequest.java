@@ -20,32 +20,30 @@ import com.alipay.sofa.registry.common.model.ConnectId;
 import com.alipay.sofa.registry.common.model.store.Publisher;
 
 /**
- *
  * @author yuzhi.lyz
  * @version v 0.1 2020-12-12 15:14 yuzhi.lyz Exp $
  */
 public final class PublisherWriteDataRequest implements WriteDataRequest<Publisher> {
-    private final Publisher            publisher;
-    private final WriteDataRequestType type;
+  private final Publisher publisher;
+  private final WriteDataRequestType type;
 
-    public PublisherWriteDataRequest(Publisher publisher, WriteDataRequestType type) {
-        this.publisher = publisher;
-        this.type = type;
-    }
+  public PublisherWriteDataRequest(Publisher publisher, WriteDataRequestType type) {
+    this.publisher = publisher;
+    this.type = type;
+  }
 
-    @Override
-    public Publisher getRequestBody() {
-        return publisher;
-    }
+  @Override
+  public Publisher getRequestBody() {
+    return publisher;
+  }
 
-    @Override
-    public WriteDataRequestType getRequestType() {
-        return type;
-    }
+  @Override
+  public WriteDataRequestType getRequestType() {
+    return type;
+  }
 
-    @Override
-    public ConnectId getConnectId() {
-        return publisher.connectId();
-    }
-
+  @Override
+  public ConnectId getConnectId() {
+    return publisher.connectId();
+  }
 }

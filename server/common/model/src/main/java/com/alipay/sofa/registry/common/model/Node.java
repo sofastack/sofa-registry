@@ -17,32 +17,34 @@
 package com.alipay.sofa.registry.common.model;
 
 import com.alipay.sofa.registry.common.model.store.URL;
-
 import java.io.Serializable;
 
 /**
- *
  * @author shangyu.wh
  * @version $Id: node.java, v 0.1 2017-11-28 11:59 shangyu.wh Exp $
  */
 public interface Node extends Serializable {
 
-    /**
-     * node type enum
-     */
-    enum NodeType {
-        CLIENT, SESSION, META, DATA, CONSOLE
-    }
+  /** node type enum */
+  enum NodeType {
+    CLIENT,
+    SESSION,
+    META,
+    DATA,
+    CONSOLE
+  }
 
-    /**
-     * get node type
-     * @return
-     */
-    NodeType getNodeType();
+  /**
+   * get node type
+   *
+   * @return
+   */
+  NodeType getNodeType();
 
-    /**
-     * get node url
-     * @return
-     */
-    URL getNodeUrl();
+  /**
+   * get node url
+   *
+   * @return
+   */
+  URL getNodeUrl();
 }

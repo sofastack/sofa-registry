@@ -36,99 +36,94 @@ import com.alipay.sofa.registry.server.data.slot.SlotManager;
 import com.alipay.sofa.registry.server.shared.remoting.AbstractServerHandler;
 import com.alipay.sofa.registry.util.ParaCheckUtil;
 import com.google.common.collect.Sets;
-import org.springframework.beans.factory.annotation.Autowired;
-
 import java.util.Collections;
 import java.util.Set;
+import org.springframework.beans.factory.annotation.Autowired;
 
 /**
  * @author yuzhi.lyz
  * @version v 0.1 2020-12-04 14:59 yuzhi.lyz Exp $
  */
 public abstract class AbstractDataHandler<T> extends AbstractServerHandler<T> {
-    private static final Logger              LOGGER_SLOT_ACCESS = LoggerFactory
-                                                                    .getLogger("SLOT-ACCESS");
+  private static final Logger LOGGER_SLOT_ACCESS = LoggerFactory.getLogger("SLOT-ACCESS");
 
-    private final Set<StoreData.DataType>    DATA_TYPES         = Collections
-                                                                    .unmodifiableSet(Sets
-                                                                        .newHashSet(
-                                                                            StoreData.DataType.PUBLISHER,
-                                                                            StoreData.DataType.UN_PUBLISHER));
+  private final Set<StoreData.DataType> DATA_TYPES =
+      Collections.unmodifiableSet(
+          Sets.newHashSet(StoreData.DataType.PUBLISHER, StoreData.DataType.UN_PUBLISHER));
 
-    @Autowired
-    protected DataChangeEventCenter          dataChangeEventCenter;
+  @Autowired protected DataChangeEventCenter dataChangeEventCenter;
 
-    @Autowired
-    protected DataServerConfig               dataServerConfig;
+  @Autowired protected DataServerConfig dataServerConfig;
 
-    @Autowired
-    protected SlotManager                    slotManager;
+  @Autowired protected SlotManager slotManager;
 
-    @Autowired
-    protected DatumStorage                   localDatumStorage;
+  @Autowired protected DatumStorage localDatumStorage;
 
-    @Autowired
-    protected SessionLeaseManager            sessionLeaseManager;
+  @Autowired protected SessionLeaseManager sessionLeaseManager;
 
-    @Autowired
-    protected SessionServerConnectionFactory sessionServerConnectionFactory;
+  @Autowired protected SessionServerConnectionFactory sessionServerConnectionFactory;
 
-    protected void checkPublisher(Publisher publisher) {
-        ParaCheckUtil.checkNotNull(publisher, "publisher");
-        ParaCheckUtil.checkNotBlank(publisher.getDataId(), "publisher.dataId");
-        ParaCheckUtil.checkNotBlank(publisher.getInstanceId(), "publisher.instanceId");
-        ParaCheckUtil.checkNotBlank(publisher.getGroup(), "publisher.group");
-        ParaCheckUtil.checkNotBlank(publisher.getDataInfoId(), "publisher.dataInfoId");
-        ParaCheckUtil.checkNotNull(publisher.getVersion(), "publisher.version");
-        ParaCheckUtil.checkNotBlank(publisher.getRegisterId(), "publisher.registerId");
-        if (publisher.getPublishType() != PublishType.TEMPORARY
-            && publisher.getDataType() == StoreData.DataType.PUBLISHER) {
-            ParaCheckUtil.checkNotNull(publisher.getSourceAddress(), "publisher.sourceAddress");
-        }
-        ParaCheckUtil.checkContains(DATA_TYPES, publisher.getDataType(), "publisher.dataType");
+  protected void checkPublisher(Publisher publisher) {
+    ParaCheckUtil.checkNotNull(publisher, "publisher");
+    ParaCheckUtil.checkNotBlank(publisher.getDataId(), "publisher.dataId");
+    ParaCheckUtil.checkNotBlank(publisher.getInstanceId(), "publisher.instanceId");
+    ParaCheckUtil.checkNotBlank(publisher.getGroup(), "publisher.group");
+    ParaCheckUtil.checkNotBlank(publisher.getDataInfoId(), "publisher.dataInfoId");
+    ParaCheckUtil.checkNotNull(publisher.getVersion(), "publisher.version");
+    ParaCheckUtil.checkNotBlank(publisher.getRegisterId(), "publisher.registerId");
+    if (publisher.getPublishType() != PublishType.TEMPORARY
+        && publisher.getDataType() == StoreData.DataType.PUBLISHER) {
+      ParaCheckUtil.checkNotNull(publisher.getSourceAddress(), "publisher.sourceAddress");
+    }
+    ParaCheckUtil.checkContains(DATA_TYPES, publisher.getDataType(), "publisher.dataType");
+  }
+
+  protected void checkSessionProcessId(ProcessId sessionProcessId) {
+    ParaCheckUtil.checkNotNull(sessionProcessId, "request.sessionProcessId");
+  }
+
+  protected SlotAccess checkAccess(String dataInfoId, long slotTableEpoch, long slotLeaderEpoch) {
+    final int slotId = slotManager.slotOf(dataInfoId);
+    return checkAccess(slotId, slotTableEpoch, slotLeaderEpoch);
+  }
+
+  protected SlotAccess checkAccess(int slotId, long slotTableEpoch, long slotLeaderEpoch) {
+    final SlotAccess slotAccess =
+        slotManager.checkSlotAccess(slotId, slotTableEpoch, slotLeaderEpoch);
+    if (slotAccess.isMoved()) {
+      LOGGER_SLOT_ACCESS.warn(
+          "[moved]{}, leaderEpoch={}, tableEpoch={}", slotAccess, slotLeaderEpoch, slotTableEpoch);
     }
 
-    protected void checkSessionProcessId(ProcessId sessionProcessId) {
-        ParaCheckUtil.checkNotNull(sessionProcessId, "request.sessionProcessId");
+    if (slotAccess.isMigrating()) {
+      LOGGER_SLOT_ACCESS.warn(
+          "[migrating]{}, leaderEpoch={}, tableEpoch={}",
+          slotAccess,
+          slotLeaderEpoch,
+          slotTableEpoch);
     }
-
-    protected SlotAccess checkAccess(String dataInfoId, long slotTableEpoch, long slotLeaderEpoch) {
-        final int slotId = slotManager.slotOf(dataInfoId);
-        return checkAccess(slotId, slotTableEpoch, slotLeaderEpoch);
+    if (slotAccess.isMisMatch()) {
+      LOGGER_SLOT_ACCESS.warn(
+          "[mismatch]{}, leaderEpoch={}, tableEpoch={}",
+          slotAccess,
+          slotLeaderEpoch,
+          slotTableEpoch);
     }
+    return slotAccess;
+  }
 
-    protected SlotAccess checkAccess(int slotId, long slotTableEpoch, long slotLeaderEpoch) {
-        final SlotAccess slotAccess = slotManager.checkSlotAccess(slotId, slotTableEpoch,
-            slotLeaderEpoch);
-        if (slotAccess.isMoved()) {
-            LOGGER_SLOT_ACCESS.warn("[moved]{}, leaderEpoch={}, tableEpoch={}", slotAccess,
-                slotLeaderEpoch, slotTableEpoch);
-        }
+  protected void processSessionProcessId(Channel channel, ProcessId sessionProcessId) {
+    sessionServerConnectionFactory.registerSession(sessionProcessId, channel);
+    sessionLeaseManager.renewSession(sessionProcessId);
+  }
 
-        if (slotAccess.isMigrating()) {
-            LOGGER_SLOT_ACCESS.warn("[migrating]{}, leaderEpoch={}, tableEpoch={}", slotAccess,
-                slotLeaderEpoch, slotTableEpoch);
-        }
-        if (slotAccess.isMisMatch()) {
-            LOGGER_SLOT_ACCESS.warn("[mismatch]{}, leaderEpoch={}, tableEpoch={}", slotAccess,
-                slotLeaderEpoch, slotTableEpoch);
-        }
-        return slotAccess;
-    }
+  @Override
+  public CommonResponse buildFailedResponse(String msg) {
+    return SlotAccessGenericResponse.failedResponse(msg);
+  }
 
-    protected void processSessionProcessId(Channel channel, ProcessId sessionProcessId) {
-        sessionServerConnectionFactory.registerSession(sessionProcessId, channel);
-        sessionLeaseManager.renewSession(sessionProcessId);
-    }
-
-    @Override
-    public CommonResponse buildFailedResponse(String msg) {
-        return SlotAccessGenericResponse.failedResponse(msg);
-    }
-
-    @Override
-    protected Node.NodeType getConnectNodeType() {
-        return Node.NodeType.SESSION;
-    }
-
+  @Override
+  protected Node.NodeType getConnectNodeType() {
+    return Node.NodeType.SESSION;
+  }
 }

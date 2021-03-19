@@ -20,132 +20,139 @@ import com.alipay.sofa.registry.common.model.ConnectId;
 import com.alipay.sofa.registry.common.model.store.Publisher;
 import com.alipay.sofa.registry.server.session.slot.SlotTableCache;
 import com.google.common.collect.Maps;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import org.glassfish.jersey.internal.guava.Sets;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.CollectionUtils;
 
-import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
-
 /**
- *
  * @author yuzhi.lyz
  * @version v 0.1 2020-11-06 16:24 yuzhi.lyz Exp $
  */
 public class SlotSessionDataStore implements DataStore {
 
-    @Autowired
-    private SlotTableCache                slotTableCache;
+  @Autowired private SlotTableCache slotTableCache;
 
-    private final Map<Integer, DataStore> slot2DataStores = new ConcurrentHashMap<>();
+  private final Map<Integer, DataStore> slot2DataStores = new ConcurrentHashMap<>();
 
-    private DataStore getOrCreateDataStore(String dataInfoId) {
-        int slotId = slotTableCache.slotOf(dataInfoId);
-        return slot2DataStores.computeIfAbsent(slotId, k -> new SessionDataStore());
+  private DataStore getOrCreateDataStore(String dataInfoId) {
+    int slotId = slotTableCache.slotOf(dataInfoId);
+    return slot2DataStores.computeIfAbsent(slotId, k -> new SessionDataStore());
+  }
+
+  @Override
+  public Collection<Publisher> getDatas(String dataInfoId) {
+    DataStore ds = getOrCreateDataStore(dataInfoId);
+    return ds.getDatas(dataInfoId);
+  }
+
+  @Override
+  public List<Publisher> getDataList() {
+    List<Publisher> ret = new ArrayList<>(2048);
+    slot2DataStores
+        .values()
+        .forEach(
+            ds -> {
+              ret.addAll(ds.getDataList());
+            });
+    return ret;
+  }
+
+  @Override
+  public Publisher queryById(String registerId, String dataInfoId) {
+    DataStore ds = getOrCreateDataStore(dataInfoId);
+    return ds.queryById(registerId, dataInfoId);
+  }
+
+  @Override
+  public Collection<String> getDataInfoIds() {
+    Set<String> set = new HashSet<>(128);
+    slot2DataStores
+        .values()
+        .forEach(
+            ds -> {
+              set.addAll(ds.getDataInfoIds());
+            });
+    return set;
+  }
+
+  @Override
+  public Set<ConnectId> getConnectIds() {
+    Set<ConnectId> ret = Sets.newHashSet();
+    slot2DataStores.values().forEach(d -> ret.addAll(d.getConnectIds()));
+    return ret;
+  }
+
+  @Override
+  public Set<String> collectProcessIds() {
+    Set<String> ret = Sets.newHashSet();
+    slot2DataStores.values().forEach(d -> ret.addAll(d.collectProcessIds()));
+    return ret;
+  }
+
+  @Override
+  public Map<String, Map<String, Publisher>> getDatas() {
+    Map<String, Map<String, Publisher>> ret = new HashMap<>(512);
+    for (DataStore ds : slot2DataStores.values()) {
+      Map<String, Map<String, Publisher>> m = ds.getDatas();
+      for (Map.Entry<String, Map<String, Publisher>> e : m.entrySet()) {
+        Map<String, Publisher> publisherMap =
+            ret.computeIfAbsent(e.getKey(), k -> new HashMap<>(128));
+        publisherMap.putAll(e.getValue());
+      }
     }
+    return ret;
+  }
 
-    @Override
-    public Collection<Publisher> getDatas(String dataInfoId) {
-        DataStore ds = getOrCreateDataStore(dataInfoId);
-        return ds.getDatas(dataInfoId);
-    }
+  @Override
+  public Map<String, Map<String, Publisher>> getDataInfoIdPublishers(int slotId) {
+    DataStore ds = slot2DataStores.computeIfAbsent(slotId, k -> new SessionDataStore());
+    return ds.getDatas();
+  }
 
-    @Override
-    public List<Publisher> getDataList() {
-        List<Publisher> ret = new ArrayList<>(2048);
-        slot2DataStores.values().forEach(ds -> {
-            ret.addAll(ds.getDataList());
-        });
-        return ret;
-    }
+  @Override
+  public boolean add(Publisher publisher) {
+    DataStore ds = getOrCreateDataStore(publisher.getDataInfoId());
+    return ds.add(publisher);
+  }
 
-    @Override
-    public Publisher queryById(String registerId, String dataInfoId) {
-        DataStore ds = getOrCreateDataStore(dataInfoId);
-        return ds.queryById(registerId, dataInfoId);
-    }
+  @Override
+  public boolean deleteById(String registerId, String dataInfoId) {
+    DataStore ds = getOrCreateDataStore(dataInfoId);
+    return ds.deleteById(registerId, dataInfoId);
+  }
 
-    @Override
-    public Collection<String> getDataInfoIds() {
-        Set<String> set = new HashSet<>(128);
-        slot2DataStores.values().forEach(ds -> {
-            set.addAll(ds.getDataInfoIds());
-        });
-        return set;
-    }
-
-    @Override
-    public Set<ConnectId> getConnectIds() {
-        Set<ConnectId> ret = Sets.newHashSet();
-        slot2DataStores.values().forEach(d -> ret.addAll(d.getConnectIds()));
-        return ret;
-    }
-
-    @Override
-    public Set<String> collectProcessIds() {
-        Set<String> ret = Sets.newHashSet();
-        slot2DataStores.values().forEach(d -> ret.addAll(d.collectProcessIds()));
-        return ret;
-    }
-
-    @Override
-    public Map<String, Map<String, Publisher>> getDatas() {
-        Map<String, Map<String, Publisher>> ret = new HashMap<>(512);
-        for (DataStore ds : slot2DataStores.values()) {
-            Map<String, Map<String, Publisher>> m = ds.getDatas();
-            for (Map.Entry<String, Map<String, Publisher>> e : m.entrySet()) {
-                Map<String, Publisher> publisherMap = ret.computeIfAbsent(e.getKey(), k -> new HashMap<>(128));
-                publisherMap.putAll(e.getValue());
-            }
-        }
-        return ret;
-    }
-
-    @Override
-    public Map<String, Map<String, Publisher>> getDataInfoIdPublishers(int slotId) {
-        DataStore ds = slot2DataStores.computeIfAbsent(slotId, k -> new SessionDataStore());
-        return ds.getDatas();
-    }
-
-    @Override
-    public boolean add(Publisher publisher) {
-        DataStore ds = getOrCreateDataStore(publisher.getDataInfoId());
-        return ds.add(publisher);
-    }
-
-    @Override
-    public boolean deleteById(String registerId, String dataInfoId) {
-        DataStore ds = getOrCreateDataStore(dataInfoId);
-        return ds.deleteById(registerId, dataInfoId);
-    }
-
-    @Override
-    public Map<String, Publisher> queryByConnectId(ConnectId connectId) {
-        Map<String, Publisher> ret = new HashMap<>(128);
-        slot2DataStores.values().forEach(ds -> {
-            Map<String, Publisher> m = ds.queryByConnectId(connectId);
-            if (!CollectionUtils.isEmpty(m)) {
+  @Override
+  public Map<String, Publisher> queryByConnectId(ConnectId connectId) {
+    Map<String, Publisher> ret = new HashMap<>(128);
+    slot2DataStores
+        .values()
+        .forEach(
+            ds -> {
+              Map<String, Publisher> m = ds.queryByConnectId(connectId);
+              if (!CollectionUtils.isEmpty(m)) {
                 ret.putAll(m);
-            }
-        });
-        return ret;
-    }
+              }
+            });
+    return ret;
+  }
 
-    @Override
-    public Map<String, Publisher> deleteByConnectId(ConnectId connectId) {
-        Map<String, Publisher> ret = Maps.newHashMap();
-        for (DataStore ds : slot2DataStores.values()) {
-            ret.putAll(ds.deleteByConnectId(connectId));
-        }
-        return ret;
+  @Override
+  public Map<String, Publisher> deleteByConnectId(ConnectId connectId) {
+    Map<String, Publisher> ret = Maps.newHashMap();
+    for (DataStore ds : slot2DataStores.values()) {
+      ret.putAll(ds.deleteByConnectId(connectId));
     }
+    return ret;
+  }
 
-    @Override
-    public long count() {
-        long count = 0;
-        for (DataStore ds : slot2DataStores.values()) {
-            count += ds.count();
-        }
-        return count;
+  @Override
+  public long count() {
+    long count = 0;
+    for (DataStore ds : slot2DataStores.values()) {
+      count += ds.count();
     }
+    return count;
+  }
 }

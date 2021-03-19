@@ -17,11 +17,10 @@
 package com.alipay.sofa.registry.server.session.filter;
 
 /**
- *
  * @author shangyu.wh
  * @version 1.0: ProcessFilter.java, v 0.1 2019-06-19 17:01 shangyu.wh Exp $
  */
 public interface ProcessFilter<T> {
 
-    boolean match(T input);
+  boolean match(T input);
 }

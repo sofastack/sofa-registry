@@ -18,43 +18,42 @@ package com.alipay.sofa.registry.exception;
 
 /**
  * @author chen.zhu
- *         <p>
- *         Mar 09, 2021
+ *     <p>Mar 09, 2021
  */
-public class SofaRegistryMetaLeaderException
-		extends
-			SofaRegistryRuntimeException {
+public class SofaRegistryMetaLeaderException extends SofaRegistryRuntimeException {
 
-	private final String leader;
+  private final String leader;
 
-	private final long epoch;
+  private final long epoch;
 
-	public SofaRegistryMetaLeaderException(String leader, long epoch,
-			String message) {
-		super(message);
-		this.leader = leader;
-		this.epoch = epoch;
-	}
+  public SofaRegistryMetaLeaderException(String leader, long epoch, String message) {
+    super(message);
+    this.leader = leader;
+    this.epoch = epoch;
+  }
 
-	public SofaRegistryMetaLeaderException(String leader, long epoch,
-			String message, Throwable cause) {
-		super(message, cause);
-		this.leader = leader;
-		this.epoch = epoch;
-	}
+  public SofaRegistryMetaLeaderException(
+      String leader, long epoch, String message, Throwable cause) {
+    super(message, cause);
+    this.leader = leader;
+    this.epoch = epoch;
+  }
 
-	public SofaRegistryMetaLeaderException(String leader, long epoch,
-			Throwable cause) {
-		super(cause);
-		this.leader = leader;
-		this.epoch = epoch;
-	}
+  public SofaRegistryMetaLeaderException(String leader, long epoch, Throwable cause) {
+    super(cause);
+    this.leader = leader;
+    this.epoch = epoch;
+  }
 
-	public SofaRegistryMetaLeaderException(String leader, long epoch,
-			String message, Throwable cause, boolean enableSuppression,
-			boolean writableStackTrace) {
-		super(message, cause, enableSuppression, writableStackTrace);
-		this.leader = leader;
-		this.epoch = epoch;
-	}
+  public SofaRegistryMetaLeaderException(
+      String leader,
+      long epoch,
+      String message,
+      Throwable cause,
+      boolean enableSuppression,
+      boolean writableStackTrace) {
+    super(message, cause, enableSuppression, writableStackTrace);
+    this.leader = leader;
+    this.epoch = epoch;
+  }
 }

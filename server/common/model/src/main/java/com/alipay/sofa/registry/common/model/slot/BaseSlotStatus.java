@@ -20,85 +20,96 @@ import java.io.Serializable;
 
 /**
  * @author chen.zhu
- * <p>
- * Feb 24, 2021
+ *     <p>Feb 24, 2021
  */
 public class BaseSlotStatus implements Serializable {
 
-    protected final int       slotId;
+  protected final int slotId;
 
-    protected final long      slotLeaderEpoch;
+  protected final long slotLeaderEpoch;
 
-    protected final Slot.Role role;
+  protected final Slot.Role role;
 
-    protected final String    server;
+  protected final String server;
+
+  /**
+   * Constructor.
+   *
+   * @param slotId the slot id
+   * @param slotLeaderEpoch the slot leader epoch
+   * @param role the role
+   * @param server
+   */
+  public BaseSlotStatus(int slotId, long slotLeaderEpoch, Slot.Role role, String server) {
+    this.slotId = slotId;
+    this.slotLeaderEpoch = slotLeaderEpoch;
+    this.role = role;
+    this.server = server;
+  }
+
+  /**
+   * Gets get slot id.
+   *
+   * @return the get slot id
+   */
+  public int getSlotId() {
+    return slotId;
+  }
+
+  /**
+   * Gets get slot leader epoch.
+   *
+   * @return the get slot leader epoch
+   */
+  public long getSlotLeaderEpoch() {
+    return slotLeaderEpoch;
+  }
+
+  /**
+   * Gets get role.
+   *
+   * @return the get role
+   */
+  public Slot.Role getRole() {
+    return role;
+  }
+
+  /**
+   * Gets get data server.
+   *
+   * @return the get data server
+   */
+  public String getServer() {
+    return server;
+  }
+
+  public enum LeaderStatus {
+    INIT,
+    HEALTHY,
+    UNHEALTHY;
 
     /**
-     * Constructor.
-     *  @param slotId          the slot id
-     * @param slotLeaderEpoch the slot leader epoch
-     * @param role            the role
-     * @param server
-     */
-    public BaseSlotStatus(int slotId, long slotLeaderEpoch, Slot.Role role, String server) {
-        this.slotId = slotId;
-        this.slotLeaderEpoch = slotLeaderEpoch;
-        this.role = role;
-        this.server = server;
-    }
-
-    /**
-     * Gets get slot id.
+     * Is healthy boolean.
      *
-     * @return the get slot id
+     * @return the boolean
      */
-    public int getSlotId() {
-        return slotId;
+    public boolean isHealthy() {
+      return this == HEALTHY;
     }
+  }
 
-    /**
-     * Gets get slot leader epoch.
-     *
-     * @return the get slot leader epoch
-     */
-    public long getSlotLeaderEpoch() {
-        return slotLeaderEpoch;
-    }
-
-    /**
-     * Gets get role.
-     *
-     * @return the get role
-     */
-    public Slot.Role getRole() {
-        return role;
-    }
-
-    /**
-     * Gets get data server.
-     *
-     * @return the get data server
-     */
-    public String getServer() {
-        return server;
-    }
-
-    public enum LeaderStatus {
-        INIT, HEALTHY, UNHEALTHY;
-
-        /**
-         * Is healthy boolean.
-         *
-         * @return the boolean
-         */
-        public boolean isHealthy() {
-            return this == HEALTHY;
-        }
-    }
-
-    @Override
-    public String toString() {
-        return "BaseSlotStatus{" + "slotId=" + slotId + ", slotLeaderEpoch=" + slotLeaderEpoch
-               + ", role=" + role + ", server='" + server + '\'' + '}';
-    }
+  @Override
+  public String toString() {
+    return "BaseSlotStatus{"
+        + "slotId="
+        + slotId
+        + ", slotLeaderEpoch="
+        + slotLeaderEpoch
+        + ", role="
+        + role
+        + ", server='"
+        + server
+        + '\''
+        + '}';
+  }
 }

@@ -25,13 +25,13 @@ import com.alipay.sofa.registry.server.session.strategy.ReceivedConfigDataPushTa
  * @author xuanbei
  * @since 2019/1/4
  */
-public class DefaultReceivedConfigDataPushTaskStrategy implements
-                                                      ReceivedConfigDataPushTaskStrategy {
-    @Override
-    public Object convert2PushData(ReceivedConfigData receivedConfigData, URL url) {
-        if (url.getSerializerIndex() != null && URL.PROTOBUF == url.getSerializerIndex()) {
-            return ReceivedDataConvertor.convert2Pb(receivedConfigData);
-        }
-        return receivedConfigData;
+public class DefaultReceivedConfigDataPushTaskStrategy
+    implements ReceivedConfigDataPushTaskStrategy {
+  @Override
+  public Object convert2PushData(ReceivedConfigData receivedConfigData, URL url) {
+    if (url.getSerializerIndex() != null && URL.PROTOBUF == url.getSerializerIndex()) {
+      return ReceivedDataConvertor.convert2Pb(receivedConfigData);
     }
+    return receivedConfigData;
+  }
 }

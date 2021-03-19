@@ -23,24 +23,24 @@ import java.util.Map;
  * @since 2019/2/12
  */
 public class VersionsMapUtils {
-    public static boolean checkAndUpdateVersions(Map<String, Long> versionsMap, String versionKey,
-                                                 Long version) {
-        while (true) {
-            Long oldValue = versionsMap.get(versionKey);
-            if (oldValue == null) {
-                // Add firstly
-                if (versionsMap.putIfAbsent(versionKey, version) == null) {
-                    return true;
-                }
-            } else {
-                if (version > oldValue) {
-                    if (versionsMap.replace(versionKey, oldValue, version)) {
-                        return true;
-                    }
-                } else {
-                    return false;
-                }
-            }
+  public static boolean checkAndUpdateVersions(
+      Map<String, Long> versionsMap, String versionKey, Long version) {
+    while (true) {
+      Long oldValue = versionsMap.get(versionKey);
+      if (oldValue == null) {
+        // Add firstly
+        if (versionsMap.putIfAbsent(versionKey, version) == null) {
+          return true;
         }
+      } else {
+        if (version > oldValue) {
+          if (versionsMap.replace(versionKey, oldValue, version)) {
+            return true;
+          }
+        } else {
+          return false;
+        }
+      }
     }
+  }
 }

@@ -20,7 +20,6 @@ import com.alipay.sofa.registry.client.api.Configurator;
 import com.alipay.sofa.registry.client.api.Publisher;
 import com.alipay.sofa.registry.client.api.Subscriber;
 import com.alipay.sofa.registry.client.util.StringUtils;
-
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Map;
@@ -28,130 +27,125 @@ import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * The type Register cache.
+ *
  * @author zhuoyu.sjw
  * @version $Id : RegisterCache.java, v 0.1 2017-11-30 18:18 zhuoyu.sjw Exp $$
  */
 public class RegisterCache {
 
-    /**
-     * publisher register cache Map<registId,Publisher>
-     */
-    private Map<String, Publisher>    publisherMap    = new ConcurrentHashMap<String, Publisher>();
-    /**
-     * subscriber register cache Map<registId,Register>
-     */
-    private Map<String, Subscriber>   subscriberMap   = new ConcurrentHashMap<String, Subscriber>();
-    /**
-     * configurator register cache Map<registId,Register>
-     */
-    private Map<String, Configurator> configuratorMap = new ConcurrentHashMap<String, Configurator>();
+  /** publisher register cache Map<registId,Publisher> */
+  private Map<String, Publisher> publisherMap = new ConcurrentHashMap<String, Publisher>();
+  /** subscriber register cache Map<registId,Register> */
+  private Map<String, Subscriber> subscriberMap = new ConcurrentHashMap<String, Subscriber>();
+  /** configurator register cache Map<registId,Register> */
+  private Map<String, Configurator> configuratorMap = new ConcurrentHashMap<String, Configurator>();
 
-    /**
-     * Add register.
-     *
-     * @param publisher the publisher
-     */
-    public void addRegister(Publisher publisher) {
-        if (null == publisher || StringUtils.isEmpty(publisher.getDataId())) {
-            return;
-        }
-
-        publisherMap.put(publisher.getRegistId(), publisher);
+  /**
+   * Add register.
+   *
+   * @param publisher the publisher
+   */
+  public void addRegister(Publisher publisher) {
+    if (null == publisher || StringUtils.isEmpty(publisher.getDataId())) {
+      return;
     }
 
-    /**
-     * Add register.
-     *
-     * @param subscriber the subscriber
-     */
-    public void addRegister(Subscriber subscriber) {
-        if (null == subscriber || StringUtils.isEmpty(subscriber.getDataId())) {
-            return;
-        }
+    publisherMap.put(publisher.getRegistId(), publisher);
+  }
 
-        subscriberMap.put(subscriber.getRegistId(), subscriber);
+  /**
+   * Add register.
+   *
+   * @param subscriber the subscriber
+   */
+  public void addRegister(Subscriber subscriber) {
+    if (null == subscriber || StringUtils.isEmpty(subscriber.getDataId())) {
+      return;
     }
 
-    /**
-     * Add register.
-     *
-     * @param configurator the configurator
-     */
-    public void addRegister(Configurator configurator) {
-        if (null == configurator || StringUtils.isEmpty(configurator.getDataId())) {
-            return;
-        }
+    subscriberMap.put(subscriber.getRegistId(), subscriber);
+  }
 
-        configuratorMap.put(configurator.getRegistId(), configurator);
+  /**
+   * Add register.
+   *
+   * @param configurator the configurator
+   */
+  public void addRegister(Configurator configurator) {
+    if (null == configurator || StringUtils.isEmpty(configurator.getDataId())) {
+      return;
     }
 
-    /**
-     * Remove.
-     *
-     * @param registId the regist id
-     */
-    public void remove(String registId) {
-        if (publisherMap.remove(registId) == null) {
-            if (subscriberMap.remove(registId) == null) {
-                configuratorMap.remove(registId);
-            }
-        }
-    }
+    configuratorMap.put(configurator.getRegistId(), configurator);
+  }
 
-    /**
-     * Gets publisher by regist id.
-     *
-     * @param registId the regist id    
-     * @return the publisher by regist id
-     */
-    public Publisher getPublisherByRegistId(String registId) {
-        return publisherMap.get(registId);
+  /**
+   * Remove.
+   *
+   * @param registId the regist id
+   */
+  public void remove(String registId) {
+    if (publisherMap.remove(registId) == null) {
+      if (subscriberMap.remove(registId) == null) {
+        configuratorMap.remove(registId);
+      }
     }
+  }
 
-    /**
-     * Gets subscriber by regist id.
-     *
-     * @param registId the regist id   
-     * @return the subscriber by regist id
-     */
-    public Subscriber getSubscriberByRegistId(String registId) {
-        return subscriberMap.get(registId);
-    }
+  /**
+   * Gets publisher by regist id.
+   *
+   * @param registId the regist id
+   * @return the publisher by regist id
+   */
+  public Publisher getPublisherByRegistId(String registId) {
+    return publisherMap.get(registId);
+  }
 
-    /**
-     * Gets configurator by data id.
-     *
-     * @param registId the regist id  
-     * @return the configurator by data id
-     */
-    public Configurator getConfiguratorByRegistId(String registId) {
-        return configuratorMap.get(registId);
-    }
+  /**
+   * Gets subscriber by regist id.
+   *
+   * @param registId the regist id
+   * @return the subscriber by regist id
+   */
+  public Subscriber getSubscriberByRegistId(String registId) {
+    return subscriberMap.get(registId);
+  }
 
-    /**
-     * Gets all publishers.
-     *
-     * @return the all publishers
-     */
-    public Collection<Publisher> getAllPublishers() {
-        return new ArrayList<Publisher>(publisherMap.values());
-    }
+  /**
+   * Gets configurator by data id.
+   *
+   * @param registId the regist id
+   * @return the configurator by data id
+   */
+  public Configurator getConfiguratorByRegistId(String registId) {
+    return configuratorMap.get(registId);
+  }
 
-    /**
-     * Gets all subscribers.
-     *
-     * @return the all subscribers
-     */
-    public Collection<Subscriber> getAllSubscribers() {
-        return new ArrayList<Subscriber>(subscriberMap.values());
-    }
+  /**
+   * Gets all publishers.
+   *
+   * @return the all publishers
+   */
+  public Collection<Publisher> getAllPublishers() {
+    return new ArrayList<Publisher>(publisherMap.values());
+  }
 
-    /**
-     * Gets all configurator.
-     *
-     * @return the all configurator
-     */
-    public Collection<Configurator> getAllConfigurator() {
-        return new ArrayList<Configurator>(configuratorMap.values());
-    }
+  /**
+   * Gets all subscribers.
+   *
+   * @return the all subscribers
+   */
+  public Collection<Subscriber> getAllSubscribers() {
+    return new ArrayList<Subscriber>(subscriberMap.values());
+  }
+
+  /**
+   * Gets all configurator.
+   *
+   * @return the all configurator
+   */
+  public Collection<Configurator> getAllConfigurator() {
+    return new ArrayList<Configurator>(configuratorMap.values());
+  }
 }

@@ -20,29 +20,23 @@ import com.google.common.collect.Interner;
 import com.google.common.collect.Interners;
 
 /**
- *
  * @author shangyu.wh
  * @version $Id: WordCache.java, v 0.1 2018-11-06 12:01 shangyu.wh Exp $
  */
 public final class WordCache {
-    private WordCache() {
+  private WordCache() {}
+
+  /** word cache map */
+  private static final Interner<String> interners = Interners.newWeakInterner();
+
+  /**
+   * @param s
+   * @return String
+   */
+  public static String getWordCache(String s) {
+    if (s == null) {
+      return null;
     }
-
-    /**
-     * word cache map
-     */
-    private static final Interner<String> interners = Interners.newWeakInterner();
-
-    /**
-     *
-     * @param s
-     * @return String
-     */
-    public static String getWordCache(String s) {
-        if (s == null) {
-            return null;
-        }
-        return interners.intern(s);
-    }
-
+    return interners.intern(s);
+  }
 }

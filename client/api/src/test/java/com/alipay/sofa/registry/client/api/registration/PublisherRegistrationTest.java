@@ -19,15 +19,13 @@ package com.alipay.sofa.registry.client.api.registration;
 import org.junit.Assert;
 import org.junit.Test;
 
-/**
- * @author <a href="mailto:zhanggeng.zg@antfin.com">GengZhang</a>
- */
+/** @author <a href="mailto:zhanggeng.zg@antfin.com">GengZhang</a> */
 public class PublisherRegistrationTest {
 
-    @Test
-    public void testAll() {
-        PublisherRegistration registration = new PublisherRegistration("xxx");
-        Assert.assertEquals("xxx", registration.getDataId());
-        Assert.assertTrue(registration.toString().contains("xxx"));
-    }
+  @Test
+  public void testAll() {
+    PublisherRegistration registration = new PublisherRegistration("xxx");
+    Assert.assertEquals("xxx", registration.getDataId());
+    Assert.assertTrue(registration.toString().contains("xxx"));
+  }
 }

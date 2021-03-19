@@ -17,38 +17,33 @@
 package com.alipay.sofa.registry.server.shared.comparator;
 
 import com.alipay.sofa.registry.common.model.Triple;
-import com.alipay.sofa.registry.server.shared.comparator.AbstractComparator;
-
 import java.util.Collection;
 import java.util.Set;
 
 /**
  * @author chen.zhu
- * <p>
- * Jan 12, 2021
- *
- * String stands for data node ip
- *
- * as the situation is mainly about rebalance the slot-table
- * which, data node is stored just as IP address (String)
+ *     <p>Jan 12, 2021
+ *     <p>String stands for data node ip
+ *     <p>as the situation is mainly about rebalance the slot-table which, data node is stored just
+ *     as IP address (String)
  */
 public class NodeComparator extends AbstractComparator<String> {
 
-    private Collection<String> prev;
+  private Collection<String> prev;
 
-    private Collection<String> current;
+  private Collection<String> current;
 
-    public NodeComparator(Collection<String> prev, Collection<String> current) {
-        this.prev = prev;
-        this.current = current;
-        compare();
-    }
+  public NodeComparator(Collection<String> prev, Collection<String> current) {
+    this.prev = prev;
+    this.current = current;
+    compare();
+  }
 
-    public void compare() {
-        Triple<Set<String>, Set<String>, Set<String>> triple = getDiff(prev, current);
-        this.added = triple.getFirst();
-        this.remainings = triple.getMiddle();
-        this.removed = triple.getLast();
-        this.count = this.added.size() + this.removed.size();
-    }
+  public void compare() {
+    Triple<Set<String>, Set<String>, Set<String>> triple = getDiff(prev, current);
+    this.added = triple.getFirst();
+    this.remainings = triple.getMiddle();
+    this.removed = triple.getLast();
+    this.count = this.added.size() + this.removed.size();
+  }
 }

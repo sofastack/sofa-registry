@@ -28,32 +28,33 @@ import org.springframework.beans.factory.annotation.Autowired;
  * @version $Id: DatumCacheGenerator.java, v 0.1 2018-11-19 16:15 shangyu.wh Exp $
  */
 public class DatumCacheGenerator implements CacheGenerator {
-    private static final Logger LOGGER = LoggerFactory.getLogger("CACHE-GEN");
-    /**
-     * DataNode service
-     */
-    @Autowired
-    private DataNodeService     dataNodeService;
+  private static final Logger LOGGER = LoggerFactory.getLogger("CACHE-GEN");
+  /** DataNode service */
+  @Autowired private DataNodeService dataNodeService;
 
-    @Override
-    public Value generatePayload(Key key) {
-        EntityType entityType = key.getEntityType();
-        if (entityType instanceof DatumKey) {
-            DatumKey datumKey = (DatumKey) entityType;
+  @Override
+  public Value generatePayload(Key key) {
+    EntityType entityType = key.getEntityType();
+    if (entityType instanceof DatumKey) {
+      DatumKey datumKey = (DatumKey) entityType;
 
-            final String dataCenter = datumKey.getDataCenter();
-            final String dataInfoId = datumKey.getDataInfoId();
-            ParaCheckUtil.checkNotBlank(dataCenter, "dataCenter");
-            ParaCheckUtil.checkNotBlank(dataInfoId, "dataInfoId");
-            SubDatum datum = dataNodeService.fetch(dataInfoId, dataCenter);
-            if (datum == null) {
-                LOGGER.info("loadNil,{},{}", dataInfoId, dataCenter);
-            } else {
-                LOGGER.info("load,{},{},{},{}", dataInfoId, dataCenter, datum.getPublishers()
-                    .size(), datum.getVersion());
-            }
-            return new Value(datum);
-        }
-        throw new IllegalArgumentException("unsupported key type:" + entityType);
+      final String dataCenter = datumKey.getDataCenter();
+      final String dataInfoId = datumKey.getDataInfoId();
+      ParaCheckUtil.checkNotBlank(dataCenter, "dataCenter");
+      ParaCheckUtil.checkNotBlank(dataInfoId, "dataInfoId");
+      SubDatum datum = dataNodeService.fetch(dataInfoId, dataCenter);
+      if (datum == null) {
+        LOGGER.info("loadNil,{},{}", dataInfoId, dataCenter);
+      } else {
+        LOGGER.info(
+            "load,{},{},{},{}",
+            dataInfoId,
+            dataCenter,
+            datum.getPublishers().size(),
+            datum.getVersion());
+      }
+      return new Value(datum);
     }
+    throw new IllegalArgumentException("unsupported key type:" + entityType);
+  }
 }

@@ -17,14 +17,11 @@
 package com.alipay.sofa.registry.server.session.converter;
 
 /**
- *
  * @author shangyu.wh
  * @version $Id: Converter.java, v 0.1 2017-11-29 11:55 shangyu.wh Exp $
- *
- * <S> source type
- * <T> target type
+ *     <p><S> source type <T> target type
  */
 public interface Converter<S, T> {
 
-    T convert(S source);
+  T convert(S source);
 }

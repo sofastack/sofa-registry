@@ -20,54 +20,51 @@ import com.alipay.sofa.registry.common.model.ClientOffPublishers;
 import com.alipay.sofa.registry.common.model.dataserver.DatumVersion;
 import com.alipay.sofa.registry.common.model.store.Publisher;
 import com.alipay.sofa.registry.common.model.store.SubDatum;
-
 import java.util.Map;
 
 /**
- *
  * @author shangyu.wh
  * @version $Id: NodeService.java, v 0.1 2017-11-28 11:09 shangyu.wh Exp $
  */
 public interface DataNodeService {
 
-    /**
-     * new publisher data transform to data server
-     *
-     * @param publisher
-     */
-    void register(Publisher publisher);
+  /**
+   * new publisher data transform to data server
+   *
+   * @param publisher
+   */
+  void register(Publisher publisher);
 
-    /**
-     * remove publisher data from data server
-     *
-     * @param publisher
-     */
-    void unregister(Publisher publisher);
+  /**
+   * remove publisher data from data server
+   *
+   * @param publisher
+   */
+  void unregister(Publisher publisher);
 
-    /**
-     * session server support api to stop some client node,all register data on data server will be removed
-     * data on session server will be remove too
-     *
-     * @param clientOffPublishers
-     */
-    void clientOff(ClientOffPublishers clientOffPublishers);
+  /**
+   * session server support api to stop some client node,all register data on data server will be
+   * removed data on session server will be remove too
+   *
+   * @param clientOffPublishers
+   */
+  void clientOff(ClientOffPublishers clientOffPublishers);
 
-    /**
-     * Get some dataInfoId version from one data server
-     *
-     * @param slotId
-     * @return
-     */
-    Map<String/*datainfoid*/, DatumVersion> fetchDataVersion(String dataCenter, int slotId,
-                                                              Map<String, DatumVersion> interests);
+  /**
+   * Get some dataInfoId version from one data server
+   *
+   * @param slotId
+   * @return
+   */
+  Map<String /*datainfoid*/, DatumVersion> fetchDataVersion(
+      String dataCenter, int slotId, Map<String, DatumVersion> interests);
 
-    /**
-     * fetch one dataCenter publisher data from data server
-     *
-     * @param dataInfoId
-     * @param dataCenterId
-     * @return
-     */
-    SubDatum fetch(String dataInfoId, String dataCenterId);
-
+  /**
+   * fetch one dataCenter publisher data from data server
+   *
+   * @param dataInfoId
+   * @param dataCenterId
+   * @return
+   */
+  SubDatum fetch(String dataInfoId, String dataCenterId);
 }

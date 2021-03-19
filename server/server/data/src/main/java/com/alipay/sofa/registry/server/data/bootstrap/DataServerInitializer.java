@@ -26,48 +26,47 @@ import org.springframework.context.SmartLifecycle;
  * @version $Id: DataServerInitializer.java, v 0.1 2018年01月04日 11:08 qian.lqlq Exp $
  */
 public class DataServerInitializer implements SmartLifecycle {
-    private static final Logger LOGGER = LoggerFactory.getLogger(DataServerInitializer.class);
+  private static final Logger LOGGER = LoggerFactory.getLogger(DataServerInitializer.class);
 
-    @Autowired
-    private DataServerBootstrap dataServerBootstrap;
+  @Autowired private DataServerBootstrap dataServerBootstrap;
 
-    private volatile boolean    isRunning;
+  private volatile boolean isRunning;
 
-    @Override
-    public boolean isAutoStartup() {
-        return true;
+  @Override
+  public boolean isAutoStartup() {
+    return true;
+  }
+
+  @Override
+  public void stop(Runnable runnable) {
+    runnable.run();
+    this.isRunning = false;
+  }
+
+  @Override
+  public void start() {
+    try {
+      dataServerBootstrap.start();
+      this.isRunning = true;
+    } catch (Throwable ex) {
+      this.isRunning = false;
+      LOGGER.error("Could not initalized Data server", ex);
+      System.exit(-1);
     }
+  }
 
-    @Override
-    public void stop(Runnable runnable) {
-        runnable.run();
-        this.isRunning = false;
-    }
+  @Override
+  public void stop() {
+    this.isRunning = false;
+  }
 
-    @Override
-    public void start() {
-        try {
-            dataServerBootstrap.start();
-            this.isRunning = true;
-        } catch (Throwable ex) {
-            this.isRunning = false;
-            LOGGER.error("Could not initalized Data server", ex);
-            System.exit(-1);
-        }
-    }
+  @Override
+  public boolean isRunning() {
+    return this.isRunning;
+  }
 
-    @Override
-    public void stop() {
-        this.isRunning = false;
-    }
-
-    @Override
-    public boolean isRunning() {
-        return this.isRunning;
-    }
-
-    @Override
-    public int getPhase() {
-        return 0;
-    }
+  @Override
+  public int getPhase() {
+    return 0;
+  }
 }

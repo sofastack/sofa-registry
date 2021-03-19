@@ -17,66 +17,63 @@
 package com.alipay.sofa.registry.common.model.metaserver.rpc;
 
 import com.alipay.sofa.registry.common.model.Node.NodeType;
-
 import java.io.Serializable;
 
 /**
- *
  * @author shangyu.wh
  * @version $Id: GetChangeListRequest.java, v 0.1 2018-02-12 11:02 shangyu.wh Exp $
  */
 public class NodeClusterViewRequest implements Serializable {
 
-    private final NodeType nodeType;
+  private final NodeType nodeType;
 
-    /**
-     * get list data dataCenter
-     */
-    private String         dataCenterId;
+  /** get list data dataCenter */
+  private String dataCenterId;
 
-    /**
-     * constructor
-     * @param nodeType
-     * @param dataCenterId
-     */
-    public NodeClusterViewRequest(NodeType nodeType, String dataCenterId) {
-        this.nodeType = nodeType;
-        this.dataCenterId = dataCenterId;
-    }
+  /**
+   * constructor
+   *
+   * @param nodeType
+   * @param dataCenterId
+   */
+  public NodeClusterViewRequest(NodeType nodeType, String dataCenterId) {
+    this.nodeType = nodeType;
+    this.dataCenterId = dataCenterId;
+  }
 
-    /**
-     * Getter method for property <tt>dataCenterId</tt>.
-     *
-     * @return property value of dataCenterId
-     */
-    public String getDataCenterId() {
-        return dataCenterId;
-    }
+  /**
+   * Getter method for property <tt>dataCenterId</tt>.
+   *
+   * @return property value of dataCenterId
+   */
+  public String getDataCenterId() {
+    return dataCenterId;
+  }
 
-    /**
-     * Setter method for property <tt>dataCenterId</tt>.
-     *
-     * @param dataCenterId  value to be assigned to property dataCenterId
-     */
-    public void setDataCenterId(String dataCenterId) {
-        this.dataCenterId = dataCenterId;
-    }
+  /**
+   * Setter method for property <tt>dataCenterId</tt>.
+   *
+   * @param dataCenterId value to be assigned to property dataCenterId
+   */
+  public void setDataCenterId(String dataCenterId) {
+    this.dataCenterId = dataCenterId;
+  }
 
-    /**
-     * Getter method for property <tt>nodeType</tt>.
-     *
-     * @return property value of nodeType
-     */
-    public NodeType getNodeType() {
-        return nodeType;
-    }
+  /**
+   * Getter method for property <tt>nodeType</tt>.
+   *
+   * @return property value of nodeType
+   */
+  public NodeType getNodeType() {
+    return nodeType;
+  }
 
-    @Override
-    public String toString() {
-        final StringBuilder sb = new StringBuilder("GetChangeListRequest{");
-        sb.append("nodeType=").append(nodeType);
-        sb.append(", dataCenterId='").append(dataCenterId).append('\'');
-        sb.append('}');
-        return sb.toString();
-    }
+  @Override
+  public String toString() {
+    final StringBuilder sb = new StringBuilder("GetChangeListRequest{");
+    sb.append("nodeType=").append(nodeType);
+    sb.append(", dataCenterId='").append(dataCenterId).append('\'');
+    sb.append('}');
+    return sb.toString();
+  }
 }

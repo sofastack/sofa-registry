@@ -16,8 +16,6 @@
  */
 package com.alipay.sofa.registry.server.session.listener;
 
-import org.springframework.beans.factory.annotation.Autowired;
-
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
 import com.alipay.sofa.registry.server.session.node.service.ClientNodeService;
 import com.alipay.sofa.registry.server.session.scheduler.task.ReceivedConfigDataPushTask;
@@ -29,58 +27,58 @@ import com.alipay.sofa.registry.task.batcher.TaskProcessor;
 import com.alipay.sofa.registry.task.listener.TaskEvent;
 import com.alipay.sofa.registry.task.listener.TaskEvent.TaskType;
 import com.alipay.sofa.registry.task.listener.TaskListener;
+import org.springframework.beans.factory.annotation.Autowired;
 
 /**
- *
  * @author shangyu.wh
  * @version $Id: SubscriberRegisterPushTaskListener.java, v 0.1 2017-12-11 20:44 shangyu.wh Exp $
  */
 public class ReceivedConfigDataPushTaskListener implements TaskListener {
 
-    @Autowired
-    private SessionServerConfig                          sessionServerConfig;
+  @Autowired private SessionServerConfig sessionServerConfig;
 
-    @Autowired
-    private ClientNodeService                            clientNodeService;
+  @Autowired private ClientNodeService clientNodeService;
 
-    @Autowired
-    private ReceivedConfigDataPushTaskStrategy           receivedConfigDataPushTaskStrategy;
+  @Autowired private ReceivedConfigDataPushTaskStrategy receivedConfigDataPushTaskStrategy;
 
-    private volatile TaskDispatcher<String, SessionTask> singleTaskDispatcher;
+  private volatile TaskDispatcher<String, SessionTask> singleTaskDispatcher;
 
-    private TaskProcessor                                clientNodeSingleTaskProcessor;
+  private TaskProcessor clientNodeSingleTaskProcessor;
 
-    public ReceivedConfigDataPushTaskListener(TaskProcessor clientNodeSingleTaskProcessor) {
+  public ReceivedConfigDataPushTaskListener(TaskProcessor clientNodeSingleTaskProcessor) {
 
-        this.clientNodeSingleTaskProcessor = clientNodeSingleTaskProcessor;
-    }
+    this.clientNodeSingleTaskProcessor = clientNodeSingleTaskProcessor;
+  }
 
-    public TaskDispatcher<String, SessionTask> getSingleTaskDispatcher() {
+  public TaskDispatcher<String, SessionTask> getSingleTaskDispatcher() {
+    if (singleTaskDispatcher == null) {
+      synchronized (this) {
         if (singleTaskDispatcher == null) {
-            synchronized (this) {
-                if (singleTaskDispatcher == null) {
-                    singleTaskDispatcher = TaskDispatchers.createDefaultSingleTaskDispatcher(
-                        TaskType.RECEIVED_DATA_CONFIG_PUSH_TASK.getName(),
-                        clientNodeSingleTaskProcessor);
-                }
-            }
+          singleTaskDispatcher =
+              TaskDispatchers.createDefaultSingleTaskDispatcher(
+                  TaskType.RECEIVED_DATA_CONFIG_PUSH_TASK.getName(), clientNodeSingleTaskProcessor);
         }
-        return singleTaskDispatcher;
+      }
     }
+    return singleTaskDispatcher;
+  }
 
-    @Override
-    public TaskType support() {
-        return TaskType.RECEIVED_DATA_CONFIG_PUSH_TASK;
-    }
+  @Override
+  public TaskType support() {
+    return TaskType.RECEIVED_DATA_CONFIG_PUSH_TASK;
+  }
 
-    @Override
-    public void handleEvent(TaskEvent event) {
+  @Override
+  public void handleEvent(TaskEvent event) {
 
-        SessionTask receivedConfigDataPushTask = new ReceivedConfigDataPushTask(
+    SessionTask receivedConfigDataPushTask =
+        new ReceivedConfigDataPushTask(
             sessionServerConfig, clientNodeService, receivedConfigDataPushTaskStrategy);
-        receivedConfigDataPushTask.setTaskEvent(event);
-        getSingleTaskDispatcher().dispatch(receivedConfigDataPushTask.getTaskId(),
-            receivedConfigDataPushTask, receivedConfigDataPushTask.getExpiryTime());
-
-    }
+    receivedConfigDataPushTask.setTaskEvent(event);
+    getSingleTaskDispatcher()
+        .dispatch(
+            receivedConfigDataPushTask.getTaskId(),
+            receivedConfigDataPushTask,
+            receivedConfigDataPushTask.getExpiryTime());
+  }
 }

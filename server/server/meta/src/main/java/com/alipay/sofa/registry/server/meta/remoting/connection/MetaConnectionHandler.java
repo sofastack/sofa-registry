@@ -24,92 +24,91 @@ import com.alipay.sofa.registry.remoting.Channel;
 import com.alipay.sofa.registry.server.meta.bootstrap.config.NodeConfig;
 import com.alipay.sofa.registry.server.meta.bootstrap.handler.MetaServerHandler;
 import com.alipay.sofa.registry.server.shared.remoting.ListenServerChannelHandler;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
-
 import java.net.InetSocketAddress;
 import java.util.Collection;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
 /**
  * Handle meta node's connect request
+ *
  * @author shangyu.wh
  * @version $Id: MetaConnectionHandler.java, v 0.1 2018-02-12 15:01 shangyu.wh Exp $
  */
 @Component
-public class MetaConnectionHandler extends ListenServerChannelHandler implements NodeConnectManager, MetaServerHandler {
+public class MetaConnectionHandler extends ListenServerChannelHandler
+    implements NodeConnectManager, MetaServerHandler {
 
-    private static final Logger                                                            LOGGER      = LoggerFactory
-                                                                                                           .getLogger(MetaConnectionHandler.class);
+  private static final Logger LOGGER = LoggerFactory.getLogger(MetaConnectionHandler.class);
 
-    @Autowired
-    private NodeConfig                                                                     nodeConfig;
+  @Autowired private NodeConfig nodeConfig;
 
-    private final Map<String/*dataCenter*/, Map<String/*connectId*/, InetSocketAddress>> connections = new ConcurrentHashMap<>();
+  private final Map<String /*dataCenter*/, Map<String /*connectId*/, InetSocketAddress>>
+      connections = new ConcurrentHashMap<>();
 
-    @Override
-    public void connected(Channel channel) {
-        super.connected(channel);
-        addConnection(channel);
-    }
+  @Override
+  public void connected(Channel channel) {
+    super.connected(channel);
+    addConnection(channel);
+  }
 
-    @Override
-    public void disconnected(Channel channel) {
-        super.disconnected(channel);
-        removeConnection(channel);
-    }
+  @Override
+  public void disconnected(Channel channel) {
+    super.disconnected(channel);
+    removeConnection(channel);
+  }
 
-    @Override
-    public void addConnection(Channel channel) {
-        InetSocketAddress remoteAddress = channel.getRemoteAddress();
-        String connectId = NetUtil.toAddressString(remoteAddress);
-        String ipAddress = remoteAddress.getAddress().getHostAddress();
+  @Override
+  public void addConnection(Channel channel) {
+    InetSocketAddress remoteAddress = channel.getRemoteAddress();
+    String connectId = NetUtil.toAddressString(remoteAddress);
+    String ipAddress = remoteAddress.getAddress().getHostAddress();
 
-        String dataCenter = nodeConfig.getMetaDataCenter(ipAddress);
-        if (dataCenter != null) {
-            Map<String/*connectId*/, InetSocketAddress> connectMap = connections.get(dataCenter);
-            if (connectMap == null) {
-                final Map<String, InetSocketAddress> newMap = new ConcurrentHashMap<>();
-                connectMap = connections.putIfAbsent(dataCenter, newMap);
-                if (connectMap == null) {
-                    connectMap = newMap;
-                }
-            }
-            connectMap.putIfAbsent(connectId, remoteAddress);
+    String dataCenter = nodeConfig.getMetaDataCenter(ipAddress);
+    if (dataCenter != null) {
+      Map<String /*connectId*/, InetSocketAddress> connectMap = connections.get(dataCenter);
+      if (connectMap == null) {
+        final Map<String, InetSocketAddress> newMap = new ConcurrentHashMap<>();
+        connectMap = connections.putIfAbsent(dataCenter, newMap);
+        if (connectMap == null) {
+          connectMap = newMap;
         }
+      }
+      connectMap.putIfAbsent(connectId, remoteAddress);
     }
+  }
 
-    @Override
-    public boolean removeConnection(Channel channel) {
-        InetSocketAddress remoteAddress = channel.getRemoteAddress();
-        String connectId = NetUtil.toAddressString(remoteAddress);
-        String ipAddress = remoteAddress.getAddress().getHostAddress();
+  @Override
+  public boolean removeConnection(Channel channel) {
+    InetSocketAddress remoteAddress = channel.getRemoteAddress();
+    String connectId = NetUtil.toAddressString(remoteAddress);
+    String ipAddress = remoteAddress.getAddress().getHostAddress();
 
-        String dataCenter = nodeConfig.getMetaDataCenter(ipAddress);
-        if (dataCenter != null) {
-            Map<String/*connectId*/, InetSocketAddress> connectMap = connections.get(dataCenter);
-            if (connectMap != null) {
-                connectMap.remove(connectId);
-                return true;
-            }
-        }
-        return false;
+    String dataCenter = nodeConfig.getMetaDataCenter(ipAddress);
+    if (dataCenter != null) {
+      Map<String /*connectId*/, InetSocketAddress> connectMap = connections.get(dataCenter);
+      if (connectMap != null) {
+        connectMap.remove(connectId);
+        return true;
+      }
     }
+    return false;
+  }
 
-    @Override
-    public Collection<InetSocketAddress> getConnections(String dataCenter) {
-        Map<String/*connectId*/, InetSocketAddress> connectMap = connections.get(dataCenter);
-        if (connectMap == null || connectMap.isEmpty()) {
-            LOGGER.error("Can not find connection of dataCenter {}", dataCenter);
-            throw new RuntimeException("Can not find connection of dataCenter:" + dataCenter);
-        }
-        return connectMap.values();
+  @Override
+  public Collection<InetSocketAddress> getConnections(String dataCenter) {
+    Map<String /*connectId*/, InetSocketAddress> connectMap = connections.get(dataCenter);
+    if (connectMap == null || connectMap.isEmpty()) {
+      LOGGER.error("Can not find connection of dataCenter {}", dataCenter);
+      throw new RuntimeException("Can not find connection of dataCenter:" + dataCenter);
     }
+    return connectMap.values();
+  }
 
-    @Override
-    public NodeType getConnectNodeType() {
-        return NodeType.META;
-    }
-
+  @Override
+  public NodeType getConnectNodeType() {
+    return NodeType.META;
+  }
 }

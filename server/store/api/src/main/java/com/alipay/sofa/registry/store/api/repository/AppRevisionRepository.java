@@ -20,35 +20,34 @@ import com.alipay.sofa.registry.common.model.store.AppRevision;
 import com.alipay.sofa.registry.store.api.driver.RegistryRepository;
 
 /**
- *
  * @author xiaojian.xj
  * @version $Id: AppRevisionRepository.java, v 0.1 2021年01月17日 13:54 xiaojian.xj Exp $
  */
 public interface AppRevisionRepository extends RegistryRepository {
 
-    @Override
-    default Class<?> getInterfaceClass() {
-        return AppRevisionRepository.class;
-    }
+  @Override
+  default Class<?> getInterfaceClass() {
+    return AppRevisionRepository.class;
+  }
 
-    /**
-     * persistence appRevision
-     * @param appRevision
-     */
-    public void register(AppRevision appRevision) throws Exception;
+  /**
+   * persistence appRevision
+   *
+   * @param appRevision
+   */
+  public void register(AppRevision appRevision) throws Exception;
 
-    /**
-     * refresh
-     */
-    public void refresh(String dataCenter);
+  /** refresh */
+  public void refresh(String dataCenter);
 
-    /**
-     * get AppRevision
-     * @param dataCenter
-     * @param revision
-     * @return
-     */
-    public AppRevision queryRevision(String dataCenter, String revision);
+  /**
+   * get AppRevision
+   *
+   * @param dataCenter
+   * @param revision
+   * @return
+   */
+  public AppRevision queryRevision(String dataCenter, String revision);
 
-    public AppRevision heartbeat(String dataCenter, String revision);
+  public AppRevision heartbeat(String dataCenter, String revision);
 }

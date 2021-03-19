@@ -41,54 +41,56 @@ import org.springframework.stereotype.Component;
  */
 @Component
 public class FetchProvideDataRequestHandler extends BaseMetaServerHandler<FetchProvideDataRequest>
-        implements SessionServerHandler, DataServerHandler {
+    implements SessionServerHandler, DataServerHandler {
 
-    private static final Logger DB_LOGGER = LoggerFactory.getLogger(
-                                              FetchProvideDataRequestHandler.class, "[DBService]");
+  private static final Logger DB_LOGGER =
+      LoggerFactory.getLogger(FetchProvideDataRequestHandler.class, "[DBService]");
 
-    @Autowired
-    private ProvideDataRepository provideDataRepository;
+  @Autowired private ProvideDataRepository provideDataRepository;
 
-    @Autowired
-    private NodeConfig nodeConfig;
+  @Autowired private NodeConfig nodeConfig;
 
-    @Override
-    public Object doHandle(Channel channel, FetchProvideDataRequest fetchProvideDataRequest) {
-        try {
-            DBResponse ret = provideDataRepository.get(nodeConfig.getLocalDataCenter(), fetchProvideDataRequest.getDataInfoId());
-            if (ret == null) {
-                DB_LOGGER.error("get null Data from db!");
-                throw new RuntimeException("Get null Data from db!");
-            }
+  @Override
+  public Object doHandle(Channel channel, FetchProvideDataRequest fetchProvideDataRequest) {
+    try {
+      DBResponse ret =
+          provideDataRepository.get(
+              nodeConfig.getLocalDataCenter(), fetchProvideDataRequest.getDataInfoId());
+      if (ret == null) {
+        DB_LOGGER.error("get null Data from db!");
+        throw new RuntimeException("Get null Data from db!");
+      }
 
-            if (ret.getOperationStatus() == OperationStatus.SUCCESS) {
-                PersistenceData data = JsonUtils.read((String) ret.getEntity(), PersistenceData.class);
-                ProvideData provideData = new ProvideData(new ServerDataBox(data.getData()),
-                    fetchProvideDataRequest.getDataInfoId(), data.getVersion());
-                DB_LOGGER.info("get ProvideData {} from DB success!", provideData);
-                return provideData;
-            } else if (ret.getOperationStatus() == OperationStatus.NOTFOUND) {
-                ProvideData provideData = new ProvideData(null,
-                    fetchProvideDataRequest.getDataInfoId(), null);
-                DB_LOGGER.warn("has not found data from DB dataInfoId:{}",
-                    fetchProvideDataRequest.getDataInfoId());
-                return provideData;
-            } else {
-                DB_LOGGER.error("get Data DB status error!");
-                throw new RuntimeException("Get Data DB status error!");
-            }
+      if (ret.getOperationStatus() == OperationStatus.SUCCESS) {
+        PersistenceData data = JsonUtils.read((String) ret.getEntity(), PersistenceData.class);
+        ProvideData provideData =
+            new ProvideData(
+                new ServerDataBox(data.getData()),
+                fetchProvideDataRequest.getDataInfoId(),
+                data.getVersion());
+        DB_LOGGER.info("get ProvideData {} from DB success!", provideData);
+        return provideData;
+      } else if (ret.getOperationStatus() == OperationStatus.NOTFOUND) {
+        ProvideData provideData =
+            new ProvideData(null, fetchProvideDataRequest.getDataInfoId(), null);
+        DB_LOGGER.warn(
+            "has not found data from DB dataInfoId:{}", fetchProvideDataRequest.getDataInfoId());
+        return provideData;
+      } else {
+        DB_LOGGER.error("get Data DB status error!");
+        throw new RuntimeException("Get Data DB status error!");
+      }
 
-        } catch (Exception e) {
-            DB_LOGGER.error("get persistence Data dataInfoId {} from db error!",
-                fetchProvideDataRequest.getDataInfoId());
-            throw new RuntimeException("Get persistence Data from db error!", e);
-        }
-
+    } catch (Exception e) {
+      DB_LOGGER.error(
+          "get persistence Data dataInfoId {} from db error!",
+          fetchProvideDataRequest.getDataInfoId());
+      throw new RuntimeException("Get persistence Data from db error!", e);
     }
+  }
 
-    @Override
-    public Class interest() {
-        return FetchProvideDataRequest.class;
-    }
-
+  @Override
+  public Class interest() {
+    return FetchProvideDataRequest.class;
+  }
 }

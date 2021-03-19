@@ -17,33 +17,33 @@
 package com.alipay.sofa.registry.common.model.store;
 
 /**
- *
  * @author shangyu.wh
  * @version $Id: Watcher.java, v 0.1 2018-04-17 18:22 shangyu.wh Exp $
  */
 public class Watcher extends BaseInfo {
 
-    @Override
-    public DataType getDataType() {
-        return DataType.WATCHER;
-    }
+  @Override
+  public DataType getDataType() {
+    return DataType.WATCHER;
+  }
 
-    /**
-     * change watcher word cache
-     * @param watcher
-     * @return
-     */
-    public static Watcher internWatcher(Watcher watcher) {
-        watcher.setRegisterId(watcher.getRegisterId());
-        watcher.setDataInfoId(watcher.getDataInfoId());
-        watcher.setInstanceId(watcher.getInstanceId());
-        watcher.setGroup(watcher.getGroup());
-        watcher.setDataId(watcher.getDataId());
-        watcher.setClientId(watcher.getClientId());
-        watcher.setCell(watcher.getCell());
-        watcher.setProcessId(watcher.getProcessId());
-        watcher.setAppName(watcher.getAppName());
+  /**
+   * change watcher word cache
+   *
+   * @param watcher
+   * @return
+   */
+  public static Watcher internWatcher(Watcher watcher) {
+    watcher.setRegisterId(watcher.getRegisterId());
+    watcher.setDataInfoId(watcher.getDataInfoId());
+    watcher.setInstanceId(watcher.getInstanceId());
+    watcher.setGroup(watcher.getGroup());
+    watcher.setDataId(watcher.getDataId());
+    watcher.setClientId(watcher.getClientId());
+    watcher.setCell(watcher.getCell());
+    watcher.setProcessId(watcher.getProcessId());
+    watcher.setAppName(watcher.getAppName());
 
-        return watcher;
-    }
+    return watcher;
+  }
 }

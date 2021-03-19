@@ -20,27 +20,26 @@ import java.util.List;
 
 /**
  * The interface Worker.
+ *
  * @author zhuoyu.sjw
  * @version $Id : Worker.java, v 0.1 2018-02-28 22:45 zhuoyu.sjw Exp $$
  */
 public interface Worker {
 
-    /**
-     * Schedule.
-     *
-     * @param event the event
-     */
-    void schedule(TaskEvent event);
+  /**
+   * Schedule.
+   *
+   * @param event the event
+   */
+  void schedule(TaskEvent event);
 
-    /**
-     * Schedule.
-     *
-     * @param events the events
-     */
-    void schedule(List<TaskEvent> events);
+  /**
+   * Schedule.
+   *
+   * @param events the events
+   */
+  void schedule(List<TaskEvent> events);
 
-    /**
-     * Handle.
-     */
-    void handle();
+  /** Handle. */
+  void handle();
 }

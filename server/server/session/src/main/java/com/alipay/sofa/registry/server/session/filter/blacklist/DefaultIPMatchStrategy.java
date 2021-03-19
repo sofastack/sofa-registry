@@ -17,66 +17,62 @@
 package com.alipay.sofa.registry.server.session.filter.blacklist;
 
 import com.alipay.sofa.registry.server.session.filter.IPMatchStrategy;
-import org.apache.commons.lang.StringUtils;
-import org.springframework.beans.factory.annotation.Autowired;
-
 import java.util.List;
 import java.util.Set;
 import java.util.function.Supplier;
+import org.apache.commons.lang.StringUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 
 /**
- *
  * @author shangyu.wh
  * @version 1.0: DefaultIPMatchStrategy.java, v 0.1 2019-06-19 22:16 shangyu.wh Exp $
  */
 public class DefaultIPMatchStrategy implements IPMatchStrategy<String> {
 
-    @Autowired
-    private BlacklistManager blacklistManager;
+  @Autowired private BlacklistManager blacklistManager;
 
-    @Override
-    public boolean match(String IP, Supplier<String> getOperatorType) {
-        return match(getOperatorType.get(), IP);
-    }
+  @Override
+  public boolean match(String IP, Supplier<String> getOperatorType) {
+    return match(getOperatorType.get(), IP);
+  }
 
-    private boolean match(String type, String matchPattern) {
+  private boolean match(String type, String matchPattern) {
 
-        List<BlacklistConfig> configList = blacklistManager.getBlacklistConfigList();
-        for (BlacklistConfig blacklistConfig : configList) {
+    List<BlacklistConfig> configList = blacklistManager.getBlacklistConfigList();
+    for (BlacklistConfig blacklistConfig : configList) {
 
-            // 如黑名单类型不匹配则跳过
-            if (!StringUtils.equals(type, blacklistConfig.getType())) {
-                continue;
-            }
+      // 如黑名单类型不匹配则跳过
+      if (!StringUtils.equals(type, blacklistConfig.getType())) {
+        continue;
+      }
 
-            List<MatchType> matchTypeList = blacklistConfig.getMatchTypes();
+      List<MatchType> matchTypeList = blacklistConfig.getMatchTypes();
 
-            // 匹配规则为空跳过
-            if (null == matchTypeList || matchTypeList.size() == 0) {
-                continue;
-            }
+      // 匹配规则为空跳过
+      if (null == matchTypeList || matchTypeList.size() == 0) {
+        continue;
+      }
 
-            for (MatchType matchType : matchTypeList) {
-                if (null == matchType) {
-                    continue;
-                }
-
-                if (BlacklistConstants.IP_FULL.equals(matchType.getType())) {
-                    // IP 全匹配时判断当前发布者IP是否在IP列表中，如命中则拒绝发布
-                    @SuppressWarnings("unchecked")
-                    Set<String> patterns = matchType.getPatternSet();
-
-                    if (null == patterns || patterns.size() == 0) {
-                        continue;
-                    }
-
-                    if (patterns.contains(matchPattern)) {
-                        return true;
-                    }
-                }
-            }
+      for (MatchType matchType : matchTypeList) {
+        if (null == matchType) {
+          continue;
         }
-        return false;
-    }
 
+        if (BlacklistConstants.IP_FULL.equals(matchType.getType())) {
+          // IP 全匹配时判断当前发布者IP是否在IP列表中，如命中则拒绝发布
+          @SuppressWarnings("unchecked")
+          Set<String> patterns = matchType.getPatternSet();
+
+          if (null == patterns || patterns.size() == 0) {
+            continue;
+          }
+
+          if (patterns.contains(matchPattern)) {
+            return true;
+          }
+        }
+      }
+    }
+    return false;
+  }
 }

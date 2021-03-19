@@ -18,47 +18,45 @@ package com.alipay.sofa.registry.server.shared.meta;
 
 import com.alipay.sofa.registry.common.model.metaserver.ProvideData;
 import com.alipay.sofa.registry.common.model.metaserver.SlotTableChangeEvent;
-
 import java.util.List;
 import java.util.Set;
 
 /**
- *
  * @author yuzhi.lyz
  * @version v 0.1 2020-11-28 15:19 yuzhi.lyz Exp $
  */
 public interface MetaServerService {
-    void startRenewer(int intervalMs);
+  void startRenewer(int intervalMs);
 
-    /**
-     * update data server expireTime
-     */
-    void renewNode();
+  /** update data server expireTime */
+  void renewNode();
 
-    boolean handleSlotTableChange(SlotTableChangeEvent event);
+  boolean handleSlotTableChange(SlotTableChangeEvent event);
 
-    /**
-     * get provider data
-     * @param dataInfoId
-     * @return
-     */
-    ProvideData fetchData(String dataInfoId);
+  /**
+   * get provider data
+   *
+   * @param dataInfoId
+   * @return
+   */
+  ProvideData fetchData(String dataInfoId);
 
-    /**
-     * @param zonename zone is null, get all session
-     * @return
-     */
-    public List<String> getSessionServerList(String zonename);
+  /**
+   * @param zonename zone is null, get all session
+   * @return
+   */
+  public List<String> getSessionServerList(String zonename);
 
-    public Set<String> getDataServerList();
+  public Set<String> getDataServerList();
 
-    public Set<String> getMetaServerList();
+  public Set<String> getMetaServerList();
 
-    long getSessionServerEpoch();
+  long getSessionServerEpoch();
 
-    /**
-     * get all datacenters
-     * @return
-     */
-    Set<String> getDataCenters();
+  /**
+   * get all datacenters
+   *
+   * @return
+   */
+  Set<String> getDataCenters();
 }

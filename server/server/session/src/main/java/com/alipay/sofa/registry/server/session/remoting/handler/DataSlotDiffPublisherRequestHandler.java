@@ -32,71 +32,70 @@ import com.alipay.sofa.registry.server.session.slot.SlotTableCache;
 import com.alipay.sofa.registry.server.session.store.DataStore;
 import com.alipay.sofa.registry.server.shared.env.ServerEnv;
 import com.alipay.sofa.registry.server.shared.remoting.AbstractServerHandler;
-import org.springframework.beans.factory.annotation.Autowired;
-
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Executor;
+import org.springframework.beans.factory.annotation.Autowired;
 
 /**
- *
  * @author yuzhi.lyz
  * @version v 0.1 2020-11-06 15:41 yuzhi.lyz Exp $
  */
-public class DataSlotDiffPublisherRequestHandler extends
-                                                AbstractServerHandler<DataSlotDiffPublisherRequest> {
+public class DataSlotDiffPublisherRequestHandler
+    extends AbstractServerHandler<DataSlotDiffPublisherRequest> {
 
-    private static final Logger LOGGER = LoggerFactory
-                                           .getLogger(DataSlotDiffPublisherRequestHandler.class);
+  private static final Logger LOGGER =
+      LoggerFactory.getLogger(DataSlotDiffPublisherRequestHandler.class);
 
-    @Autowired
-    private SessionServerConfig sessionServerConfig;
+  @Autowired private SessionServerConfig sessionServerConfig;
 
-    @Autowired
-    private ExecutorManager     executorManager;
+  @Autowired private ExecutorManager executorManager;
 
-    @Autowired
-    private DataStore           sessionDataStore;
+  @Autowired private DataStore sessionDataStore;
 
-    @Autowired
-    private SlotTableCache      slotTableCache;
+  @Autowired private SlotTableCache slotTableCache;
 
-    @Override
-    public Object doHandle(Channel channel, DataSlotDiffPublisherRequest request) {
-        try {
-            final int slotId = request.getSlotId();
-            DataSlotDiffPublisherResult result = calcDiffResult(slotId,
-                request.getDatumSummaries(), sessionDataStore.getDataInfoIdPublishers(slotId));
-            result.setSlotTableEpoch(slotTableCache.getEpoch());
-            result.setSessionProcessId(ServerEnv.PROCESS_ID);
-            return new GenericResponse().fillSucceed(result);
-        } catch (Throwable e) {
-            LOGGER.error("DiffSync publisher Request error for slot {}", request.getSlotId(), e);
-            throw new RuntimeException("DiffSync Request error!", e);
-        }
+  @Override
+  public Object doHandle(Channel channel, DataSlotDiffPublisherRequest request) {
+    try {
+      final int slotId = request.getSlotId();
+      DataSlotDiffPublisherResult result =
+          calcDiffResult(
+              slotId,
+              request.getDatumSummaries(),
+              sessionDataStore.getDataInfoIdPublishers(slotId));
+      result.setSlotTableEpoch(slotTableCache.getEpoch());
+      result.setSessionProcessId(ServerEnv.PROCESS_ID);
+      return new GenericResponse().fillSucceed(result);
+    } catch (Throwable e) {
+      LOGGER.error("DiffSync publisher Request error for slot {}", request.getSlotId(), e);
+      throw new RuntimeException("DiffSync Request error!", e);
     }
+  }
 
-    private DataSlotDiffPublisherResult calcDiffResult(int targetSlot,
-                                                       List<DatumSummary> datumSummaries,
-                                                       Map<String, Map<String, Publisher>> existingPublishers) {
-        DataSlotDiffPublisherResult result = DataSlotDiffUtils.diffPublishersResult(datumSummaries,
-            existingPublishers, sessionServerConfig.getSlotSyncPublisherMaxNum());
-        DataSlotDiffUtils.logDiffResult(result, targetSlot);
-        return result;
-    }
+  private DataSlotDiffPublisherResult calcDiffResult(
+      int targetSlot,
+      List<DatumSummary> datumSummaries,
+      Map<String, Map<String, Publisher>> existingPublishers) {
+    DataSlotDiffPublisherResult result =
+        DataSlotDiffUtils.diffPublishersResult(
+            datumSummaries, existingPublishers, sessionServerConfig.getSlotSyncPublisherMaxNum());
+    DataSlotDiffUtils.logDiffResult(result, targetSlot);
+    return result;
+  }
 
-    @Override
-    protected Node.NodeType getConnectNodeType() {
-        return Node.NodeType.DATA;
-    }
+  @Override
+  protected Node.NodeType getConnectNodeType() {
+    return Node.NodeType.DATA;
+  }
 
-    @Override
-    public Executor getExecutor() {
-        return executorManager.getDataSlotSyncRequestExecutor();
-    }
+  @Override
+  public Executor getExecutor() {
+    return executorManager.getDataSlotSyncRequestExecutor();
+  }
 
-    @Override
-    public Class interest() {
-        return DataSlotDiffPublisherRequest.class;
-    }
+  @Override
+  public Class interest() {
+    return DataSlotDiffPublisherRequest.class;
+  }
 }

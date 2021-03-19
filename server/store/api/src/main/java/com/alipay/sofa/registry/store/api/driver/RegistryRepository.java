@@ -17,22 +17,20 @@
 package com.alipay.sofa.registry.store.api.driver;
 
 import com.alipay.sofa.registry.store.api.driver.RepositoryManager.RepositoryType;
-
 import javax.annotation.PostConstruct;
 
 /**
- *
  * @author xiaojian.xj
  * @version $Id: RegistryRepository.java, v 0.1 2021年01月15日 13:52 xiaojian.xj Exp $
  */
 public interface RegistryRepository {
 
-    public boolean accept(RepositoryType repositoryType);
+  public boolean accept(RepositoryType repositoryType);
 
-    public Class<?> getInterfaceClass();
+  public Class<?> getInterfaceClass();
 
-    @PostConstruct
-    default void init() {
-        RepositoryManager.registerRepository(this);
-    }
+  @PostConstruct
+  default void init() {
+    RepositoryManager.registerRepository(this);
+  }
 }

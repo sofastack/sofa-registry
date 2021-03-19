@@ -21,19 +21,20 @@ import java.util.Optional;
 
 /**
  * The type Collection utils.
+ *
  * @author zhuoyu.sjw
  * @version $Id : CollectionUtils.java, v 0.1 2018-04-12 14:54 zhuoyu.sjw Exp $$
  */
 public class CollectionUtils {
 
-    /**
-     * Gets random.
-     *
-     * @param <E>  the type parameter 
-     * @param e the e 
-     * @return the random
-     */
-    public static <E> Optional<E> getRandom(Collection<E> e) {
-        return e.stream().skip((int) (e.size() * Math.random())).findFirst();
-    }
+  /**
+   * Gets random.
+   *
+   * @param <E> the type parameter
+   * @param e the e
+   * @return the random
+   */
+  public static <E> Optional<E> getRandom(Collection<E> e) {
+    return e.stream().skip((int) (e.size() * Math.random())).findFirst();
+  }
 }

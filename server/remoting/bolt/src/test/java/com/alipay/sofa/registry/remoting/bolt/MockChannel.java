@@ -16,49 +16,43 @@
  */
 package com.alipay.sofa.registry.remoting.bolt;
 
-import java.net.InetSocketAddress;
-
-import javax.ws.rs.client.WebTarget;
-
 import com.alipay.sofa.registry.remoting.Channel;
+import java.net.InetSocketAddress;
+import javax.ws.rs.client.WebTarget;
 
 /**
  * @author xuanbei
  * @since 2019/3/26
  */
 public class MockChannel implements Channel {
-    @Override
-    public InetSocketAddress getRemoteAddress() {
-        return null;
-    }
+  @Override
+  public InetSocketAddress getRemoteAddress() {
+    return null;
+  }
 
-    @Override
-    public InetSocketAddress getLocalAddress() {
-        return null;
-    }
+  @Override
+  public InetSocketAddress getLocalAddress() {
+    return null;
+  }
 
-    @Override
-    public boolean isConnected() {
-        return false;
-    }
+  @Override
+  public boolean isConnected() {
+    return false;
+  }
 
-    @Override
-    public Object getAttribute(String key) {
-        return null;
-    }
+  @Override
+  public Object getAttribute(String key) {
+    return null;
+  }
 
-    @Override
-    public void setAttribute(String key, Object value) {
+  @Override
+  public void setAttribute(String key, Object value) {}
 
-    }
+  @Override
+  public WebTarget getWebTarget() {
+    return null;
+  }
 
-    @Override
-    public WebTarget getWebTarget() {
-        return null;
-    }
-
-    @Override
-    public void close() {
-
-    }
+  @Override
+  public void close() {}
 }

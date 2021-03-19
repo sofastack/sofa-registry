@@ -20,9 +20,6 @@ import com.alipay.sofa.registry.server.meta.remoting.notifier.Notifier;
 
 /**
  * @author chen.zhu
- *         <p>
- *         Feb 23, 2021
+ *     <p>Feb 23, 2021
  */
-public interface SessionServerService extends Notifier {
-
-}
+public interface SessionServerService extends Notifier {}

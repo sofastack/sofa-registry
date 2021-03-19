@@ -19,26 +19,27 @@ package com.alipay.sofa.registry.server.session.cache;
 import java.util.Map;
 
 /**
- *
  * @author shangyu.wh
  * @version $Id: CacheService.java, v 0.1 2017-12-06 20:19 shangyu.wh Exp $
  */
 public interface CacheService {
 
-    /**
-     * get cache by key
-     * @param key
-     * @return
-     */
-    Value getValue(Key key) throws CacheAccessException;
+  /**
+   * get cache by key
+   *
+   * @param key
+   * @return
+   */
+  Value getValue(Key key) throws CacheAccessException;
 
-    Value getValueIfPresent(Key key);
+  Value getValueIfPresent(Key key);
 
-    Map<Key, Value> getValues(final Iterable<Key> keys) throws CacheAccessException;
+  Map<Key, Value> getValues(final Iterable<Key> keys) throws CacheAccessException;
 
-    /**
-     * invalidate cache by keys
-     * @param keys
-     */
-    void invalidate(Key... keys);
+  /**
+   * invalidate cache by keys
+   *
+   * @param keys
+   */
+  void invalidate(Key... keys);
 }

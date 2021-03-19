@@ -18,77 +18,85 @@ package com.alipay.sofa.registry.client.api.registration;
 
 /**
  * Base registration.
+ *
  * @author yeqing.yq
  * @version $Id : BaseRegistration.java, v 0.1 2018-09-04 11:36 yeqing.yq Exp $$
  */
 public class BaseRegistration {
 
-    protected String dataId;
+  protected String dataId;
 
-    protected String group;
+  protected String group;
 
-    protected String appName;
+  protected String appName;
 
-    /**
-     * Getter method for property <tt>dataId</tt>.
-     *
-     * @return property value of dataId
-     */
-    public String getDataId() {
-        return dataId;
-    }
+  /**
+   * Getter method for property <tt>dataId</tt>.
+   *
+   * @return property value of dataId
+   */
+  public String getDataId() {
+    return dataId;
+  }
 
-    /**
-     * Setter method for property <tt>dataId</tt>.
-     *
-     * @param dataId  value to be assigned to property dataId
-     */
-    public void setDataId(String dataId) {
-        this.dataId = dataId;
-    }
+  /**
+   * Setter method for property <tt>dataId</tt>.
+   *
+   * @param dataId value to be assigned to property dataId
+   */
+  public void setDataId(String dataId) {
+    this.dataId = dataId;
+  }
 
-    /**
-     * Getter method for property <tt>group</tt>.
-     *
-     * @return property value of group
-     */
-    public String getGroup() {
-        return group;
-    }
+  /**
+   * Getter method for property <tt>group</tt>.
+   *
+   * @return property value of group
+   */
+  public String getGroup() {
+    return group;
+  }
 
-    /**
-     * Setter method for property <tt>group</tt>.
-     *
-     * @param group  value to be assigned to property group
-     */
-    public void setGroup(String group) {
-        this.group = group;
-    }
+  /**
+   * Setter method for property <tt>group</tt>.
+   *
+   * @param group value to be assigned to property group
+   */
+  public void setGroup(String group) {
+    this.group = group;
+  }
 
-    /**
-     * Getter method for property <tt>appName</tt>.
-     *
-     * @return property value of appName
-     */
-    public String getAppName() {
-        return appName;
-    }
+  /**
+   * Getter method for property <tt>appName</tt>.
+   *
+   * @return property value of appName
+   */
+  public String getAppName() {
+    return appName;
+  }
 
-    /**
-     * Setter method for property <tt>appName</tt>.
-     *
-     * @param appName  value to be assigned to property appName
-     */
-    public void setAppName(String appName) {
-        this.appName = appName;
-    }
+  /**
+   * Setter method for property <tt>appName</tt>.
+   *
+   * @param appName value to be assigned to property appName
+   */
+  public void setAppName(String appName) {
+    this.appName = appName;
+  }
 
-    /**
-     * @see Object#toString()
-     */
-    @Override
-    public String toString() {
-        return "BaseRegistration{" + "dataId='" + dataId + '\'' + ", group='" + group + '\''
-               + ", appName='" + appName + '\'' + '}';
-    }
+  /** @see Object#toString() */
+  @Override
+  public String toString() {
+    return "BaseRegistration{"
+        + "dataId='"
+        + dataId
+        + '\''
+        + ", group='"
+        + group
+        + '\''
+        + ", appName='"
+        + appName
+        + '\''
+        + '}';
+  }
 }

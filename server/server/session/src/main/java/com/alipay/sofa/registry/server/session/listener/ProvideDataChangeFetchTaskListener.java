@@ -30,71 +30,66 @@ import com.alipay.sofa.registry.task.listener.TaskEvent;
 import com.alipay.sofa.registry.task.listener.TaskEvent.TaskType;
 import com.alipay.sofa.registry.task.listener.TaskListener;
 import com.alipay.sofa.registry.task.listener.TaskListenerManager;
+import javax.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import javax.annotation.PostConstruct;
-
 /**
- *
  * @author shangyu.wh
  * @version $Id: SubscriberRegisterFetchTaskListener.java, v 0.1 2017-12-07 19:53 shangyu.wh Exp $
  */
 public class ProvideDataChangeFetchTaskListener implements TaskListener {
 
-    @Autowired
-    private SessionServerConfig                 sessionServerConfig;
+  @Autowired private SessionServerConfig sessionServerConfig;
 
-    /**
-     * trigger push client process
-     */
-    @Autowired
-    private TaskListenerManager                 taskListenerManager;
+  /** trigger push client process */
+  @Autowired private TaskListenerManager taskListenerManager;
 
-    /**
-     * MetaNode service
-     */
-    @Autowired
-    private MetaServerService                   metaServerService;
+  /** MetaNode service */
+  @Autowired private MetaServerService metaServerService;
 
-    @Autowired
-    private Exchange                            boltExchange;
+  @Autowired private Exchange boltExchange;
 
-    @Autowired
-    private Watchers                            sessionWatchers;
+  @Autowired private Watchers sessionWatchers;
 
-    @Autowired
-    private ProvideDataProcessor                provideDataProcessorManager;
+  @Autowired private ProvideDataProcessor provideDataProcessorManager;
 
-    private TaskDispatcher<String, SessionTask> singleTaskDispatcher;
+  private TaskDispatcher<String, SessionTask> singleTaskDispatcher;
 
-    private TaskProcessor                       dataNodeSingleTaskProcessor;
+  private TaskProcessor dataNodeSingleTaskProcessor;
 
-    public ProvideDataChangeFetchTaskListener(TaskProcessor dataNodeSingleTaskProcessor) {
-        this.dataNodeSingleTaskProcessor = dataNodeSingleTaskProcessor;
-    }
+  public ProvideDataChangeFetchTaskListener(TaskProcessor dataNodeSingleTaskProcessor) {
+    this.dataNodeSingleTaskProcessor = dataNodeSingleTaskProcessor;
+  }
 
-    @PostConstruct
-    public void init() {
-        singleTaskDispatcher = TaskDispatchers.createDefaultSingleTaskDispatcher(
+  @PostConstruct
+  public void init() {
+    singleTaskDispatcher =
+        TaskDispatchers.createDefaultSingleTaskDispatcher(
             TaskType.PROVIDE_DATA_CHANGE_FETCH_TASK.getName(), dataNodeSingleTaskProcessor);
-    }
+  }
 
-    @Override
-    public TaskType support() {
-        return TaskType.PROVIDE_DATA_CHANGE_FETCH_TASK;
-    }
+  @Override
+  public TaskType support() {
+    return TaskType.PROVIDE_DATA_CHANGE_FETCH_TASK;
+  }
 
-    @Override
-    public void handleEvent(TaskEvent event) {
+  @Override
+  public void handleEvent(TaskEvent event) {
 
-        SessionTask provideDataChangeFetchTask = new ProvideDataChangeFetchTask(
-            sessionServerConfig, taskListenerManager, metaServerService, sessionWatchers,
-            boltExchange, provideDataProcessorManager);
+    SessionTask provideDataChangeFetchTask =
+        new ProvideDataChangeFetchTask(
+            sessionServerConfig,
+            taskListenerManager,
+            metaServerService,
+            sessionWatchers,
+            boltExchange,
+            provideDataProcessorManager);
 
-        provideDataChangeFetchTask.setTaskEvent(event);
+    provideDataChangeFetchTask.setTaskEvent(event);
 
-        singleTaskDispatcher.dispatch(provideDataChangeFetchTask.getTaskId(),
-            provideDataChangeFetchTask, provideDataChangeFetchTask.getExpiryTime());
-    }
-
+    singleTaskDispatcher.dispatch(
+        provideDataChangeFetchTask.getTaskId(),
+        provideDataChangeFetchTask,
+        provideDataChangeFetchTask.getExpiryTime());
+  }
 }

@@ -18,47 +18,45 @@ package com.alipay.sofa.registry.metrics;
 
 import com.codahale.metrics.Gauge;
 import com.codahale.metrics.MetricRegistry;
-
 import java.util.concurrent.ThreadPoolExecutor;
 
 /**
- * 
  * @author shangyu.wh
  * @version $Id: ThreadMetrics.java, v 0.1 2018-11-18 15:19 shangyu.wh Exp $
  */
 public class TaskMetrics {
 
-	private final MetricRegistry metrics = new MetricRegistry();
+  private final MetricRegistry metrics = new MetricRegistry();
 
-	private TaskMetrics() {
-	}
+  private TaskMetrics() {}
 
-	private final static TaskMetrics instance = new TaskMetrics();
+  private static final TaskMetrics instance = new TaskMetrics();
 
-	public static TaskMetrics getInstance() {
-		return instance;
-	}
+  public static TaskMetrics getInstance() {
+    return instance;
+  }
 
-	public MetricRegistry getMetricRegistry() {
-		return this.metrics;
-	}
+  public MetricRegistry getMetricRegistry() {
+    return this.metrics;
+  }
 
-	public void registerThreadExecutor(String executorName, ThreadPoolExecutor executor) {
+  public void registerThreadExecutor(String executorName, ThreadPoolExecutor executor) {
 
-        metrics.register(MetricRegistry.name(executorName, "queue"),
-                (Gauge<Integer>) () -> executor.getQueue().size());
+    metrics.register(
+        MetricRegistry.name(executorName, "queue"),
+        (Gauge<Integer>) () -> executor.getQueue().size());
 
-        metrics.register(MetricRegistry.name(executorName, "current"),
-                (Gauge<Integer>) executor::getPoolSize);
+    metrics.register(
+        MetricRegistry.name(executorName, "current"), (Gauge<Integer>) executor::getPoolSize);
 
-        metrics.register(MetricRegistry.name(executorName, "active"),
-                (Gauge<Integer>) executor::getActiveCount);
+    metrics.register(
+        MetricRegistry.name(executorName, "active"), (Gauge<Integer>) executor::getActiveCount);
 
-        metrics.register(MetricRegistry.name(executorName, "completed"),
-                (Gauge<Long>) executor::getCompletedTaskCount);
+    metrics.register(
+        MetricRegistry.name(executorName, "completed"),
+        (Gauge<Long>) executor::getCompletedTaskCount);
 
-        metrics.register(MetricRegistry.name(executorName, "task"),
-                (Gauge<Long>) executor::getTaskCount);
-
-    }
+    metrics.register(
+        MetricRegistry.name(executorName, "task"), (Gauge<Long>) executor::getTaskCount);
+  }
 }

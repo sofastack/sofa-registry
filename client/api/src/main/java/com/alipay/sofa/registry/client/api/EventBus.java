@@ -20,46 +20,47 @@ import com.alipay.sofa.registry.client.api.model.Event;
 
 /**
  * The interface Event bus.
+ *
  * @author zhuoyu.sjw
  * @version $Id : EventBus.java, v 0.1 2018-07-12 21:11 zhuoyu.sjw Exp $$
  */
 public interface EventBus {
 
-    /**
-     * Is enable boolean.
-     *
-     * @return the boolean
-     */
-    boolean isEnable();
+  /**
+   * Is enable boolean.
+   *
+   * @return the boolean
+   */
+  boolean isEnable();
 
-    /**
-     * Is enable boolean.
-     *
-     * @param eventClass the event class 
-     * @return the boolean
-     */
-    boolean isEnable(Class<? extends Event> eventClass);
+  /**
+   * Is enable boolean.
+   *
+   * @param eventClass the event class
+   * @return the boolean
+   */
+  boolean isEnable(Class<? extends Event> eventClass);
 
-    /**
-     * Register.
-     *
-     * @param eventClass the event class     
-     * @param eventSubscriber the event subscriber
-     */
-    void register(Class<? extends Event> eventClass, EventSubscriber eventSubscriber);
+  /**
+   * Register.
+   *
+   * @param eventClass the event class
+   * @param eventSubscriber the event subscriber
+   */
+  void register(Class<? extends Event> eventClass, EventSubscriber eventSubscriber);
 
-    /**
-     * Un register.
-     *
-     * @param eventClass the event class    
-     * @param eventSubscriber the event subscriber
-     */
-    void unRegister(Class<? extends Event> eventClass, EventSubscriber eventSubscriber);
+  /**
+   * Un register.
+   *
+   * @param eventClass the event class
+   * @param eventSubscriber the event subscriber
+   */
+  void unRegister(Class<? extends Event> eventClass, EventSubscriber eventSubscriber);
 
-    /**
-     * Post event.
-     *
-     * @param event the event
-     */
-    void post(final Event event);
+  /**
+   * Post event.
+   *
+   * @param event the event
+   */
+  void post(final Event event);
 }

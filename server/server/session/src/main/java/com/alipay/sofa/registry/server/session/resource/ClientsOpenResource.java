@@ -20,18 +20,18 @@ import com.alipay.sofa.registry.common.model.CommonResponse;
 import com.alipay.sofa.registry.common.model.ConnectId;
 import com.alipay.sofa.registry.common.model.sessionserver.CancelAddressRequest;
 import com.alipay.sofa.registry.server.session.registry.Registry;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.util.CollectionUtils;
-
+import java.util.List;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
-import java.util.List;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.util.CollectionUtils;
 
 /**
  * The type Clients open resource.
+ *
  * @author zhuoyu.sjw
  * @version $Id : ClientsResource.java, v 0.1 2018-04-11 19:04 zhuoyu.sjw Exp $$
  */
@@ -40,29 +40,28 @@ import java.util.List;
 @Produces(MediaType.APPLICATION_JSON)
 public class ClientsOpenResource {
 
-    @Autowired
-    private Registry sessionRegistry;
+  @Autowired private Registry sessionRegistry;
 
-    /**
-     * Client off common response.
-     *
-     * @param request the request  
-     * @return the common response
-     */
-    @POST
-    @Path("/off")
-    public CommonResponse clientOff(CancelAddressRequest request) {
+  /**
+   * Client off common response.
+   *
+   * @param request the request
+   * @return the common response
+   */
+  @POST
+  @Path("/off")
+  public CommonResponse clientOff(CancelAddressRequest request) {
 
-        if (null == request) {
-            return CommonResponse.buildFailedResponse("Request can not be null.");
-        }
-
-        if (CollectionUtils.isEmpty(request.getConnectIds())) {
-            return CommonResponse.buildFailedResponse("ConnectIds can not be null.");
-        }
-
-        final List<ConnectId> connectIds = request.getConnectIds();
-        sessionRegistry.cancel(connectIds);
-        return CommonResponse.buildSuccessResponse();
+    if (null == request) {
+      return CommonResponse.buildFailedResponse("Request can not be null.");
     }
+
+    if (CollectionUtils.isEmpty(request.getConnectIds())) {
+      return CommonResponse.buildFailedResponse("ConnectIds can not be null.");
+    }
+
+    final List<ConnectId> connectIds = request.getConnectIds();
+    sessionRegistry.cancel(connectIds);
+    return CommonResponse.buildSuccessResponse();
+  }
 }

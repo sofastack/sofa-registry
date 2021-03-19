@@ -17,63 +17,61 @@
 package com.alipay.sofa.registry.common.model;
 
 import com.alipay.sofa.registry.util.ParaCheckUtil;
-
 import java.io.Serializable;
 import java.util.Objects;
 
 /**
- *
  * @author yuzhi.lyz
  * @version v 0.1 2020-12-21 11:14 yuzhi.lyz Exp $
  */
 public final class IPPort implements Serializable {
-    private final String ip;
-    private final int    port;
+  private final String ip;
+  private final int port;
 
-    private IPPort(String ip, int port) {
-        this.ip = ip;
-        this.port = port;
-    }
+  private IPPort(String ip, int port) {
+    this.ip = ip;
+    this.port = port;
+  }
 
-    /**
-     * Getter method for property <tt>ip</tt>.
-     * @return property value of ip
-     */
-    public String getIp() {
-        return ip;
-    }
+  /**
+   * Getter method for property <tt>ip</tt>.
+   *
+   * @return property value of ip
+   */
+  public String getIp() {
+    return ip;
+  }
 
-    /**
-     * Getter method for property <tt>port</tt>.
-     * @return property value of port
-     */
-    public int getPort() {
-        return port;
-    }
+  /**
+   * Getter method for property <tt>port</tt>.
+   *
+   * @return property value of port
+   */
+  public int getPort() {
+    return port;
+  }
 
-    @Override
-    public boolean equals(Object o) {
-        if (this == o)
-            return true;
-        if (!(o instanceof IPPort))
-            return false;
-        IPPort ipPort = (IPPort) o;
-        return port == ipPort.port && Objects.equals(ip, ipPort.ip);
-    }
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) return true;
+    if (!(o instanceof IPPort)) return false;
+    IPPort ipPort = (IPPort) o;
+    return port == ipPort.port && Objects.equals(ip, ipPort.ip);
+  }
 
-    @Override
-    public int hashCode() {
-        return Objects.hash(ip, port);
-    }
+  @Override
+  public int hashCode() {
+    return Objects.hash(ip, port);
+  }
 
-    @Override
-    public String toString() {
-        return ip + ":" + port;
-    }
+  @Override
+  public String toString() {
+    return ip + ":" + port;
+  }
 
-    public static IPPort of(String ip, int port) {
-        ParaCheckUtil.checkNotBlank(ip, "ip");
-        ParaCheckUtil.checkIsPositive(port, "port");
-        return new IPPort(ip, port);
-    }
+  public static IPPort of(String ip, int port) {
+    ParaCheckUtil.checkNotBlank(ip, "ip");
+    ParaCheckUtil.checkIsPositive(port, "port");
+    return new IPPort(ip, port);
+  }
 }

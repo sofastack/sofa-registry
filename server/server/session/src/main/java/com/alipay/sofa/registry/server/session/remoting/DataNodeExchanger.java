@@ -27,80 +27,75 @@ import com.alipay.sofa.registry.remoting.exchange.message.Request;
 import com.alipay.sofa.registry.remoting.exchange.message.Response;
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
 import com.alipay.sofa.registry.server.shared.remoting.ClientSideExchanger;
-import org.springframework.beans.factory.annotation.Autowired;
-
-import javax.annotation.Resource;
 import java.util.Collection;
 import java.util.Set;
+import javax.annotation.Resource;
+import org.springframework.beans.factory.annotation.Autowired;
 
 /**
  * The type Data node exchanger.
+ *
  * @author shangyu.wh
  * @version $Id : DataNodeExchanger.java, v 0.1 2017-12-01 11:51 shangyu.wh Exp $
  */
 public class DataNodeExchanger extends ClientSideExchanger {
 
-    private static final Logger        LOGGER          = LoggerFactory
-                                                           .getLogger(DataNodeExchanger.class);
-    private static final Logger        EXCHANGE_LOGGER = LoggerFactory
-                                                           .getLogger("SESSION-EXCHANGE");
+  private static final Logger LOGGER = LoggerFactory.getLogger(DataNodeExchanger.class);
+  private static final Logger EXCHANGE_LOGGER = LoggerFactory.getLogger("SESSION-EXCHANGE");
 
-    @Autowired
-    private SessionServerConfig        sessionServerConfig;
+  @Autowired private SessionServerConfig sessionServerConfig;
 
-    @Resource(name = "dataClientHandlers")
-    private Collection<ChannelHandler> dataClientHandlers;
+  @Resource(name = "dataClientHandlers")
+  private Collection<ChannelHandler> dataClientHandlers;
 
-    public DataNodeExchanger() {
-        super(Exchange.DATA_SERVER_TYPE);
+  public DataNodeExchanger() {
+    super(Exchange.DATA_SERVER_TYPE);
+  }
+
+  /** @see DataNodeExchanger#request(Request) */
+  @Override
+  public Response request(Request request) throws RequestException {
+    URL url = request.getRequestUrl();
+    EXCHANGE_LOGGER.info("DataNode Exchanger request={}, url={}", request.getRequestBody(), url);
+
+    try {
+      return super.request(request);
+    } catch (RequestException e) {
+      LOGGER.error(
+          String.format(
+              "Error when request DataNode! Request url=%s, request=%s",
+              url, request.getRequestBody(), e));
+      throw e;
     }
+  }
 
-    /**
-     * @see DataNodeExchanger#request(Request)
-     */
-    @Override
-    public Response request(Request request) throws RequestException {
-        URL url = request.getRequestUrl();
-        EXCHANGE_LOGGER
-            .info("DataNode Exchanger request={}, url={}", request.getRequestBody(), url);
-
-        try {
-            return super.request(request);
-        } catch (RequestException e) {
-            LOGGER.error(String.format("Error when request DataNode! Request url=%s, request=%s",
-                url, request.getRequestBody(), e));
-            throw e;
-        }
+  @Override
+  public Client connectServer() {
+    Set<String> ips = serverIps;
+    int count = tryConnectAllServer(ips);
+    if (count != ips.size()) {
+      throw new RuntimeException("failed to connect all dataServers: " + ips);
     }
+    return getClient();
+  }
 
-    @Override
-    public Client connectServer() {
-        Set<String> ips = serverIps;
-        int count = tryConnectAllServer(ips);
-        if (count != ips.size()) {
-            throw new RuntimeException("failed to connect all dataServers: " + ips);
-        }
-        return getClient();
-    }
+  @Override
+  protected Collection<ChannelHandler> getClientHandlers() {
+    return dataClientHandlers;
+  }
 
-    @Override
-    protected Collection<ChannelHandler> getClientHandlers() {
-        return dataClientHandlers;
-    }
+  @Override
+  public int getRpcTimeoutMillis() {
+    return sessionServerConfig.getDataNodeExchangeTimeoutMillis();
+  }
 
-    @Override
-    public int getRpcTimeoutMillis() {
-        return sessionServerConfig.getDataNodeExchangeTimeoutMillis();
-    }
+  @Override
+  public int getServerPort() {
+    return sessionServerConfig.getDataServerPort();
+  }
 
-    @Override
-    public int getServerPort() {
-        return sessionServerConfig.getDataServerPort();
-    }
-
-    @Override
-    public int getConnNum() {
-        return sessionServerConfig.getDataClientConnNum();
-    }
-
+  @Override
+  public int getConnNum() {
+    return sessionServerConfig.getDataClientConnNum();
+  }
 }

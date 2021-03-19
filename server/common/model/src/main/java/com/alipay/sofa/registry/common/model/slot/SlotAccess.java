@@ -23,57 +23,68 @@ import java.io.Serializable;
  * @version v 0.1 2020-10-30 10:34 yuzhi.lyz Exp $
  */
 public final class SlotAccess implements Serializable {
-    public enum Status {
-        Accept, Migrating, Moved, MisMatch,
-    }
+  public enum Status {
+    Accept,
+    Migrating,
+    Moved,
+    MisMatch,
+  }
 
-    private final int    slotId;
-    private final Status status;
-    private final long   slotTableEpoch;
-    private final long   slotLeaderEpoch;
+  private final int slotId;
+  private final Status status;
+  private final long slotTableEpoch;
+  private final long slotLeaderEpoch;
 
-    public SlotAccess(int slotId, long slotTableEpoch, Status status, long slotLeaderEpoch) {
-        this.slotTableEpoch = slotTableEpoch;
-        this.slotId = slotId;
-        this.status = status;
-        this.slotLeaderEpoch = slotLeaderEpoch;
-    }
+  public SlotAccess(int slotId, long slotTableEpoch, Status status, long slotLeaderEpoch) {
+    this.slotTableEpoch = slotTableEpoch;
+    this.slotId = slotId;
+    this.status = status;
+    this.slotLeaderEpoch = slotLeaderEpoch;
+  }
 
-    public boolean isMoved() {
-        return status == Status.Moved;
-    }
+  public boolean isMoved() {
+    return status == Status.Moved;
+  }
 
-    public boolean isMigrating() {
-        return status == Status.Migrating;
-    }
+  public boolean isMigrating() {
+    return status == Status.Migrating;
+  }
 
-    public boolean isAccept() {
-        return status == Status.Accept;
-    }
+  public boolean isAccept() {
+    return status == Status.Accept;
+  }
 
-    public boolean isMisMatch() {
-        return status == Status.MisMatch;
-    }
+  public boolean isMisMatch() {
+    return status == Status.MisMatch;
+  }
 
-    public Status getStatus() {
-        return status;
-    }
+  public Status getStatus() {
+    return status;
+  }
 
-    public int getSlotId() {
-        return slotId;
-    }
+  public int getSlotId() {
+    return slotId;
+  }
 
-    public long getSlotTableEpoch() {
-        return slotTableEpoch;
-    }
+  public long getSlotTableEpoch() {
+    return slotTableEpoch;
+  }
 
-    public long getSlotLeaderEpoch() {
-        return slotLeaderEpoch;
-    }
+  public long getSlotLeaderEpoch() {
+    return slotLeaderEpoch;
+  }
 
-    @Override
-    public String toString() {
-        return "SlotAccess{" + "slotId=" + slotId + ", status=" + status + ", tableEpoch="
-               + slotTableEpoch + ", leaderEpoch=" + slotLeaderEpoch + '}';
-    }
+  @Override
+  public String toString() {
+    return "SlotAccess{"
+        + "slotId="
+        + slotId
+        + ", status="
+        + status
+        + ", tableEpoch="
+        + slotTableEpoch
+        + ", leaderEpoch="
+        + slotLeaderEpoch
+        + '}';
+  }
 }

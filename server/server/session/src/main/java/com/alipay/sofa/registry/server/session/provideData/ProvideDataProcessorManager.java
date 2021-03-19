@@ -17,43 +17,41 @@
 package com.alipay.sofa.registry.server.session.provideData;
 
 import com.alipay.sofa.registry.common.model.metaserver.ProvideData;
-
 import java.util.ArrayList;
 import java.util.Collection;
 
 /**
- *
  * @author shangyu.wh
  * @version 1.0: ProvideDataProcessorManager.java, v 0.1 2019-10-09 17:39 shangyu.wh Exp $
  */
 public class ProvideDataProcessorManager implements ProvideDataProcessor {
 
-    private Collection<ProvideDataProcessor> provideDataProcessors = new ArrayList<>();
+  private Collection<ProvideDataProcessor> provideDataProcessors = new ArrayList<>();
 
-    public void addProvideDataProcessor(ProvideDataProcessor provideDataProcessor) {
-        provideDataProcessors.add(provideDataProcessor);
-    }
+  public void addProvideDataProcessor(ProvideDataProcessor provideDataProcessor) {
+    provideDataProcessors.add(provideDataProcessor);
+  }
 
-    @Override
-    public void changeDataProcess(ProvideData provideData) {
-        for (ProvideDataProcessor provideDataProcessor : provideDataProcessors) {
-            if (provideDataProcessor.support(provideData)) {
-                provideDataProcessor.changeDataProcess(provideData);
-            }
-        }
+  @Override
+  public void changeDataProcess(ProvideData provideData) {
+    for (ProvideDataProcessor provideDataProcessor : provideDataProcessors) {
+      if (provideDataProcessor.support(provideData)) {
+        provideDataProcessor.changeDataProcess(provideData);
+      }
     }
+  }
 
-    @Override
-    public void fetchDataProcess(ProvideData provideData) {
-        for (ProvideDataProcessor provideDataProcessor : provideDataProcessors) {
-            if (provideDataProcessor.support(provideData)) {
-                provideDataProcessor.fetchDataProcess(provideData);
-            }
-        }
+  @Override
+  public void fetchDataProcess(ProvideData provideData) {
+    for (ProvideDataProcessor provideDataProcessor : provideDataProcessors) {
+      if (provideDataProcessor.support(provideData)) {
+        provideDataProcessor.fetchDataProcess(provideData);
+      }
     }
+  }
 
-    @Override
-    public boolean support(ProvideData provideData) {
-        return false;
-    }
+  @Override
+  public boolean support(ProvideData provideData) {
+    return false;
+  }
 }

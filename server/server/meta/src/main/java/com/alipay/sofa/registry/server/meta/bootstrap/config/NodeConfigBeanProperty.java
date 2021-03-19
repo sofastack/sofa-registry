@@ -16,37 +16,34 @@
  */
 package com.alipay.sofa.registry.server.meta.bootstrap.config;
 
-import org.springframework.beans.factory.annotation.Value;
-
 import java.util.Collection;
 import java.util.Map;
+import org.springframework.beans.factory.annotation.Value;
 
 /**
- *
  * @author shangyu.wh
  * @version $Id: NodeConfigBeanProperty.java, v 0.1 2018-05-03 16:21 shangyu.wh Exp $
  */
 public class NodeConfigBeanProperty extends AbstractNodeConfigBean {
 
-    @Value("#{PropertySplitter.mapOfList('${nodes.metaNode}')}")
-    private Map<String/*dataCenterId*/, Collection<String>> metaNode;
+  @Value("#{PropertySplitter.mapOfList('${nodes.metaNode}')}")
+  private Map<String /*dataCenterId*/, Collection<String>> metaNode;
 
-    @Value("${nodes.localDataCenter}")
-    private String                                           localDataCenter;
+  @Value("${nodes.localDataCenter}")
+  private String localDataCenter;
 
-    @Override
-    public Map<String, Collection<String>> getMetaNode() {
-        return metaNode;
-    }
+  @Override
+  public Map<String, Collection<String>> getMetaNode() {
+    return metaNode;
+  }
 
-    /**
-     * Getter method for property <tt>localDataCenter</tt>.
-     *
-     * @return property value of localDataCenter
-     */
-    @Override
-    public String getLocalDataCenter() {
-        return localDataCenter;
-    }
-
+  /**
+   * Getter method for property <tt>localDataCenter</tt>.
+   *
+   * @return property value of localDataCenter
+   */
+  @Override
+  public String getLocalDataCenter() {
+    return localDataCenter;
+  }
 }

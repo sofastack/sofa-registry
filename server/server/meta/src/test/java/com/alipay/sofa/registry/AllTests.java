@@ -18,10 +18,8 @@ package com.alipay.sofa.registry;
 
 /**
  * @author chen.zhu
- * <p>
- * Nov 13, 2020
+ *     <p>Nov 13, 2020
  */
-
 import com.alipay.sofa.registry.common.model.slot.Crc32CSlotFunctionTest;
 import com.alipay.sofa.registry.server.meta.cluster.node.NodeModifiedTest;
 import com.alipay.sofa.registry.server.meta.cluster.node.TestAbstractNodeEventTest;
@@ -55,20 +53,35 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
 
 @RunWith(Suite.class)
-@Suite.SuiteClasses({ Crc32CSlotFunctionTest.class, DefaultCrossDcMetaServerTest.class,
-                     CrossDcSlotAllocatorTest.class, DefaultCurrentDcMetaServerTest.class,
-                     DefaultSessionServerManagerTest.class, DefaultDataServerManagerTest.class,
-                     CrossDcMetaServerManagerTest.class,
-                     LeaseTest.class, HeartbeatRequestHandlerTest.class,
-                     DefaultMetaServerManagerTest.class, DefaultDataServerServiceTest.class,
-                     LocalMetaServerTest.class,  DefaultSessionServerServiceTest.class,
-                     DefaultProvideDataNotifierTest.class, SimpleSlotManagerTest.class,
-                     NodeModifiedTest.class, BalanceTaskTest.class,
-                     TestAbstractNodeEventTest.class, DefaultSlotManagerTest.class,
-                     DefaultSlotTableMonitorTest.class, DiskSlotTableRecorderTest.class,
-                     SlotTableResourceTest.class, SlotMigrationIntegrationTest.class,
-                     SlotTableBuilderTest.class, SlotBuilderTest.class,
-                     NodeComparatorTest.class, MigrateSlotGroupTest.class,
-                     ScheduledSlotArrangerTest.class, LeaderOnlyBalancerTest.class })
-public class AllTests {
-}
+@Suite.SuiteClasses({
+  Crc32CSlotFunctionTest.class,
+  DefaultCrossDcMetaServerTest.class,
+  CrossDcSlotAllocatorTest.class,
+  DefaultCurrentDcMetaServerTest.class,
+  DefaultSessionServerManagerTest.class,
+  DefaultDataServerManagerTest.class,
+  CrossDcMetaServerManagerTest.class,
+  LeaseTest.class,
+  HeartbeatRequestHandlerTest.class,
+  DefaultMetaServerManagerTest.class,
+  DefaultDataServerServiceTest.class,
+  LocalMetaServerTest.class,
+  DefaultSessionServerServiceTest.class,
+  DefaultProvideDataNotifierTest.class,
+  SimpleSlotManagerTest.class,
+  NodeModifiedTest.class,
+  BalanceTaskTest.class,
+  TestAbstractNodeEventTest.class,
+  DefaultSlotManagerTest.class,
+  DefaultSlotTableMonitorTest.class,
+  DiskSlotTableRecorderTest.class,
+  SlotTableResourceTest.class,
+  SlotMigrationIntegrationTest.class,
+  SlotTableBuilderTest.class,
+  SlotBuilderTest.class,
+  NodeComparatorTest.class,
+  MigrateSlotGroupTest.class,
+  ScheduledSlotArrangerTest.class,
+  LeaderOnlyBalancerTest.class
+})
+public class AllTests {}

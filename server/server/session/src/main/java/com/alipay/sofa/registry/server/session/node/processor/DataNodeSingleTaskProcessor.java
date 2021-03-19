@@ -21,40 +21,38 @@ import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.server.session.scheduler.task.SessionTask;
 import com.alipay.sofa.registry.task.Retryable;
 import com.alipay.sofa.registry.task.batcher.TaskProcessor;
-
 import java.util.List;
 
 /**
- *
  * @author shangyu.wh
  * @version $Id: DataNodeSingleTaskProcessor.java, v 0.1 2017-12-11 19:35 shangyu.wh Exp $
  */
 public class DataNodeSingleTaskProcessor implements TaskProcessor<SessionTask> {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(DataNodeSingleTaskProcessor.class,
-                                           "[Task]");
+  private static final Logger LOGGER =
+      LoggerFactory.getLogger(DataNodeSingleTaskProcessor.class, "[Task]");
 
-    @Override
-    public ProcessingResult process(SessionTask task) {
-        try {
-            LOGGER.info("execute " + task);
-            task.execute();
-            LOGGER.info("end " + task);
-            return ProcessingResult.Success;
-        } catch (Throwable throwable) {
-            LOGGER.error("Data node SingleTask Process error! Task:" + task, throwable);
-            if (task instanceof Retryable) {
-                Retryable retryAbleTask = (Retryable) task;
-                if (retryAbleTask.checkRetryTimes()) {
-                    return ProcessingResult.TransientError;
-                }
-            }
-            return ProcessingResult.PermanentError;
+  @Override
+  public ProcessingResult process(SessionTask task) {
+    try {
+      LOGGER.info("execute " + task);
+      task.execute();
+      LOGGER.info("end " + task);
+      return ProcessingResult.Success;
+    } catch (Throwable throwable) {
+      LOGGER.error("Data node SingleTask Process error! Task:" + task, throwable);
+      if (task instanceof Retryable) {
+        Retryable retryAbleTask = (Retryable) task;
+        if (retryAbleTask.checkRetryTimes()) {
+          return ProcessingResult.TransientError;
         }
+      }
+      return ProcessingResult.PermanentError;
     }
+  }
 
-    @Override
-    public ProcessingResult process(List<SessionTask> tasks) {
-        return null;
-    }
+  @Override
+  public ProcessingResult process(List<SessionTask> tasks) {
+    return null;
+  }
 }

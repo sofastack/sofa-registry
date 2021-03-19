@@ -25,6 +25,5 @@ import com.alipay.sofa.registry.remoting.CallbackHandler;
  */
 public interface ClientNodeService {
 
-	void pushWithCallback(Object object, URL url,
-			CallbackHandler callbackHandler);
+  void pushWithCallback(Object object, URL url, CallbackHandler callbackHandler);
 }

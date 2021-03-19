@@ -20,14 +20,13 @@ import com.alipay.sofa.registry.exception.StopException;
 
 /**
  * @author chen.zhu
- *         <p>
- *         Nov 13, 2020
+ *     <p>Nov 13, 2020
  */
 public interface Stoppable {
 
-	public static final String PHASE_NAME_BEGIN = "stopping";
+  public static final String PHASE_NAME_BEGIN = "stopping";
 
-	public static final String PHASE_NAME_END = "stopped";
+  public static final String PHASE_NAME_END = "stopped";
 
-	void stop() throws StopException;
+  void stop() throws StopException;
 }

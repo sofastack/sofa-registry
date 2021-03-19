@@ -29,82 +29,85 @@ import com.alipay.sofa.registry.remoting.exchange.RequestException;
 import com.alipay.sofa.registry.remoting.exchange.message.Request;
 import com.alipay.sofa.registry.remoting.exchange.message.Response;
 import com.alipay.sofa.registry.util.CollectionUtils;
-import org.springframework.beans.factory.annotation.Autowired;
-
 import java.util.Collection;
 import java.util.Optional;
+import org.springframework.beans.factory.annotation.Autowired;
 
 /**
- *
  * @author yuzhi.lyz
  * @version v 0.1 2020-12-18 11:40 yuzhi.lyz Exp $
  */
 public abstract class ServerSideExchanger implements NodeExchanger {
-    private static final Logger LOGGER = LoggerFactory.getLogger(ServerSideExchanger.class);
+  private static final Logger LOGGER = LoggerFactory.getLogger(ServerSideExchanger.class);
 
-    @Autowired
-    protected Exchange          boltExchange;
+  @Autowired protected Exchange boltExchange;
 
-    @Override
-    public Response request(Request request) throws RequestException {
-        final URL url = request.getRequestUrl();
-        if (url == null) {
-            throw new RequestException("null url", request);
-        }
-        return request(url, request);
+  @Override
+  public Response request(Request request) throws RequestException {
+    final URL url = request.getRequestUrl();
+    if (url == null) {
+      throw new RequestException("null url", request);
+    }
+    return request(url, request);
+  }
+
+  public Response request(URL url, Request request) throws RequestException {
+    if (LOGGER.isDebugEnabled()) {
+      LOGGER.debug(
+          "serverPort={} to client, url:{}, request body:{} ",
+          getServerPort(),
+          url,
+          request.getRequestBody());
+    }
+    final Server server = boltExchange.getServer(getServerPort());
+    if (server == null) {
+      throw new RequestException("no server for " + url + "," + getServerPort(), request);
+    }
+    final int timeout = request.getTimeout() != null ? request.getTimeout() : getRpcTimeoutMillis();
+    Channel channel = null;
+    if (url == null) {
+      channel = choseChannel(server);
+    } else {
+      channel = server.getChannel(url);
     }
 
-    public Response request(URL url, Request request) throws RequestException {
-        if (LOGGER.isDebugEnabled()) {
-            LOGGER.debug("serverPort={} to client, url:{}, request body:{} ", getServerPort(), url,
-                    request.getRequestBody());
-        }
-        final Server server = boltExchange.getServer(getServerPort());
-        if (server == null) {
-            throw new RequestException("no server for " + url + "," + getServerPort(), request);
-        }
-        final int timeout = request.getTimeout() != null ? request.getTimeout() : getRpcTimeoutMillis();
-        Channel channel = null;
-        if (url == null) {
-            channel = choseChannel(server);
-        } else {
-            channel = server.getChannel(url);
-        }
-
-        if (channel == null || !channel.isConnected()) {
-            throw new RequestChannelClosedException(getServerPort() + ", channel may be closed, " + url, request);
-        }
-        try {
-            if (request.getCallBackHandler() != null) {
-                server.sendCallback(channel, request.getRequestBody(), request.getCallBackHandler(), timeout);
-                return () -> Response.ResultStatus.SUCCESSFUL;
-            } else {
-                final Object result = server.sendSync(channel, request.getRequestBody(), timeout);
-                return () -> result;
-            }
-        } catch (Throwable e) {
-            throw new RequestException(getServerPort() + ", Exchanger request error! Request url:" + url, request, e);
-        }
+    if (channel == null || !channel.isConnected()) {
+      throw new RequestChannelClosedException(
+          getServerPort() + ", channel may be closed, " + url, request);
     }
-
-    private Channel choseChannel(Server server) {
-        Collection<Channel> channels = server.getChannels();
-        Optional<Channel> channelOptional = CollectionUtils.getRandom(channels);
-        if (channelOptional.isPresent()) {
-            Channel channel = channelOptional.get();
-            if (channel.isConnected()) {
-                return channel;
-            }
-        }
-        return null;
+    try {
+      if (request.getCallBackHandler() != null) {
+        server.sendCallback(
+            channel, request.getRequestBody(), request.getCallBackHandler(), timeout);
+        return () -> Response.ResultStatus.SUCCESSFUL;
+      } else {
+        final Object result = server.sendSync(channel, request.getRequestBody(), timeout);
+        return () -> result;
+      }
+    } catch (Throwable e) {
+      throw new RequestException(
+          getServerPort() + ", Exchanger request error! Request url:" + url, request, e);
     }
+  }
 
-    @Override
-    public Client connectServer() {
-        throw new UnsupportedOperationException();
+  private Channel choseChannel(Server server) {
+    Collection<Channel> channels = server.getChannels();
+    Optional<Channel> channelOptional = CollectionUtils.getRandom(channels);
+    if (channelOptional.isPresent()) {
+      Channel channel = channelOptional.get();
+      if (channel.isConnected()) {
+        return channel;
+      }
     }
+    return null;
+  }
 
-    public abstract int getRpcTimeoutMillis();
+  @Override
+  public Client connectServer() {
+    throw new UnsupportedOperationException();
+  }
 
-    public abstract int getServerPort();
+  public abstract int getRpcTimeoutMillis();
+
+  public abstract int getServerPort();
 }

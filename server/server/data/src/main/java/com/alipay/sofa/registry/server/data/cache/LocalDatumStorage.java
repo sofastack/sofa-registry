@@ -34,213 +34,214 @@ import com.alipay.sofa.registry.util.ParaCheckUtil;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-import org.springframework.beans.factory.annotation.Autowired;
-
 import java.util.*;
+import org.springframework.beans.factory.annotation.Autowired;
 
 /**
  * @author yuzhi.lyz
  * @version v 0.1 2020-12-02 19:40 yuzhi.lyz Exp $
  */
 public final class LocalDatumStorage implements DatumStorage {
-    private static final Logger                 LOGGER             = LoggerFactory
-                                                                       .getLogger(LocalDatumStorage.class);
+  private static final Logger LOGGER = LoggerFactory.getLogger(LocalDatumStorage.class);
 
-    private final SlotFunction                  slotFunction       = SlotFunctionRegistry.getFunc();
-    private final Map<Integer, PublisherGroups> publisherGroupsMap = Maps.newConcurrentMap();
+  private final SlotFunction slotFunction = SlotFunctionRegistry.getFunc();
+  private final Map<Integer, PublisherGroups> publisherGroupsMap = Maps.newConcurrentMap();
 
-    @Autowired
-    private DataServerConfig                    dataServerConfig;
+  @Autowired private DataServerConfig dataServerConfig;
 
-    private PublisherGroups getPublisherGroups(String dataInfoId) {
-        final Integer slotId = slotFunction.slotOf(dataInfoId);
-        PublisherGroups groups = publisherGroupsMap.get(slotId);
-        if (groups == null) {
-            LOGGER.warn("[nullGroups] {}, {}", slotId, dataInfoId);
-
-        }
-        return groups;
+  private PublisherGroups getPublisherGroups(String dataInfoId) {
+    final Integer slotId = slotFunction.slotOf(dataInfoId);
+    PublisherGroups groups = publisherGroupsMap.get(slotId);
+    if (groups == null) {
+      LOGGER.warn("[nullGroups] {}, {}", slotId, dataInfoId);
     }
+    return groups;
+  }
 
-    private PublisherGroups getPublisherGroups(int slotId) {
-        PublisherGroups groups = publisherGroupsMap.get(slotId);
-        if (groups == null) {
-            LOGGER.warn("[nullGroups] {}", slotId);
+  private PublisherGroups getPublisherGroups(int slotId) {
+    PublisherGroups groups = publisherGroupsMap.get(slotId);
+    if (groups == null) {
+      LOGGER.warn("[nullGroups] {}", slotId);
+    }
+    return groups;
+  }
 
-        }
-        return groups;
+  @Override
+  public Datum get(String dataInfoId) {
+    final PublisherGroups groups = getPublisherGroups(dataInfoId);
+    return groups == null ? null : groups.getDatum(dataInfoId);
+  }
+
+  @Override
+  public DatumVersion getVersion(String dataInfoId) {
+    PublisherGroups groups = getPublisherGroups(dataInfoId);
+    return groups == null ? null : groups.getVersion(dataInfoId);
+  }
+
+  @Override
+  public Map<String, DatumVersion> getVersions(int slotId, Collection<String> targetDataInfoIds) {
+    PublisherGroups groups = getPublisherGroups(slotId);
+    return groups == null ? Collections.emptyMap() : groups.getVersions(targetDataInfoIds);
+  }
+
+  @Override
+  public Map<String, Datum> getAll() {
+    Map<String, Datum> m = Maps.newHashMapWithExpectedSize(128);
+    publisherGroupsMap.values().forEach(g -> m.putAll(g.getAllDatum()));
+    return m;
+  }
+
+  @Override
+  public Map<String, List<Publisher>> getAllPublisher() {
+    Map<String, List<Publisher>> m = Maps.newHashMapWithExpectedSize(128);
+    publisherGroupsMap.values().forEach(g -> m.putAll(g.getAllPublisher()));
+    return m;
+  }
+
+  @Override
+  public Map<String, Publisher> getByConnectId(ConnectId connectId) {
+    Map<String, Publisher> m = Maps.newHashMapWithExpectedSize(64);
+    publisherGroupsMap.values().forEach(g -> m.putAll(g.getByConnectId(connectId)));
+    return m;
+  }
+
+  @Override
+  public Map<String, Map<String, Publisher>> getPublishers(int slotId) {
+    PublisherGroups groups = getPublisherGroups(slotId);
+    if (groups == null) {
+      return Collections.emptyMap();
+    }
+    Map<String, Map<String, Publisher>> map = Maps.newHashMap();
+    Map<String, Datum> datumMap = groups.getAllDatum();
+    datumMap.values().forEach(d -> map.put(d.getDataInfoId(), d.getPubMap()));
+    return map;
+  }
+
+  @Override
+  public DatumVersion createEmptyDatumIfAbsent(String dataInfoId, String dataCenter) {
+    PublisherGroups groups = getPublisherGroups(dataInfoId);
+    return groups == null ? null : groups.createGroupIfAbsent(dataInfoId).getVersion();
+  }
+
+  @Override
+  public Map<String, DatumVersion> clean(ProcessId sessionProcessId) {
+    // clean by sessionProcessId, the sessionProcessId could not be null
+    ParaCheckUtil.checkNotNull(sessionProcessId, "sessionProcessId");
+    Map<String, DatumVersion> versionMap = Maps.newHashMapWithExpectedSize(32);
+    publisherGroupsMap.values().forEach(g -> versionMap.putAll(g.clean(sessionProcessId)));
+    return versionMap;
+  }
+
+  // only for http testapi
+  @Override
+  public DatumVersion remove(String dataInfoId, ProcessId sessionProcessId) {
+    // the sessionProcessId is null when the call from sync leader
+    PublisherGroups groups = getPublisherGroups(dataInfoId);
+    return groups == null ? null : groups.remove(dataInfoId, sessionProcessId);
+  }
+
+  @Override
+  public DatumVersion put(String dataInfoId, List<Publisher> publishers) {
+    PublisherGroups groups = getPublisherGroups(dataInfoId);
+    return groups == null ? null : groups.put(dataInfoId, publishers);
+  }
+
+  @Override
+  public DatumVersion put(Publisher publisher) {
+    return put(publisher.getDataInfoId(), Collections.singletonList(publisher));
+  }
+
+  @Override
+  public DatumVersion remove(
+      String dataInfoId,
+      ProcessId sessionProcessId,
+      Map<String, RegisterVersion> removedPublishers) {
+    // the sessionProcessId is null when the call from sync leader
+    PublisherGroups groups = getPublisherGroups(dataInfoId);
+    return groups == null ? null : groups.remove(dataInfoId, sessionProcessId, removedPublishers);
+  }
+
+  @Override
+  public Map<String, DatumSummary> getDatumSummary(int slotId, String sessionIpAddress) {
+    final PublisherGroups groups = publisherGroupsMap.get(slotId);
+    return groups != null ? groups.getSummary(sessionIpAddress) : Collections.emptyMap();
+  }
+
+  @Override
+  public SlotChangeListener getSlotChangeListener() {
+    return new SlotListener();
+  }
+
+  @Override
+  public Set<ProcessId> getSessionProcessIds() {
+    Set<ProcessId> ids = Sets.newHashSet();
+    publisherGroupsMap.values().forEach(g -> ids.addAll(g.getSessionProcessIds()));
+    return ids;
+  }
+
+  @Override
+  public Map<String, Integer> compact(long tombstoneTimestamp) {
+    Map<String, Integer> compacts = Maps.newHashMap();
+    publisherGroupsMap.values().forEach(g -> compacts.putAll(g.compact(tombstoneTimestamp)));
+    return compacts;
+  }
+
+  @Override
+  public int tombstoneNum() {
+    int count = 0;
+    for (PublisherGroups groups : publisherGroupsMap.values()) {
+      count += groups.tombstoneNum();
+    }
+    return count;
+  }
+
+  @Override
+  public boolean updateVersion(int slotId) {
+    PublisherGroups groups = publisherGroupsMap.get(slotId);
+    if (groups == null) {
+      return false;
+    }
+    groups.updateVersion();
+    return true;
+  }
+
+  @Override
+  public DatumVersion updateVersion(String dataInfoId) {
+    PublisherGroups groups = getPublisherGroups(dataInfoId);
+    return groups == null ? null : groups.updateVersion(dataInfoId);
+  }
+
+  private final class SlotListener implements SlotChangeListener {
+
+    @Override
+    public void onSlotAdd(int slotId, Slot.Role role) {
+      publisherGroupsMap.computeIfAbsent(
+          slotId,
+          k -> {
+            PublisherGroups groups = new PublisherGroups(dataServerConfig.getLocalDataCenter());
+            LOGGER.info("{} add publisherGroup {}", dataServerConfig.getLocalDataCenter(), slotId);
+            return groups;
+          });
     }
 
     @Override
-    public Datum get(String dataInfoId) {
-        final PublisherGroups groups = getPublisherGroups(dataInfoId);
-        return groups == null ? null : groups.getDatum(dataInfoId);
+    public void onSlotRemove(int slotId, Slot.Role role) {
+      boolean removed = publisherGroupsMap.remove(slotId) != null;
+      LOGGER.info(
+          "{}, remove publisherGroup {}, removed={}",
+          dataServerConfig.getLocalDataCenter(),
+          slotId,
+          removed);
     }
+  }
 
-    @Override
-    public DatumVersion getVersion(String dataInfoId) {
-        PublisherGroups groups = getPublisherGroups(dataInfoId);
-        return groups == null ? null : groups.getVersion(dataInfoId);
-    }
+  @VisibleForTesting
+  public void setDataServerConfig(DataServerConfig dataServerConfig) {
+    this.dataServerConfig = dataServerConfig;
+  }
 
-    @Override
-    public Map<String, DatumVersion> getVersions(int slotId, Collection<String> targetDataInfoIds) {
-        PublisherGroups groups = getPublisherGroups(slotId);
-        return groups == null ? Collections.emptyMap() : groups.getVersions(targetDataInfoIds);
-    }
-
-    @Override
-    public Map<String, Datum> getAll() {
-        Map<String, Datum> m = Maps.newHashMapWithExpectedSize(128);
-        publisherGroupsMap.values().forEach(g -> m.putAll(g.getAllDatum()));
-        return m;
-    }
-
-    @Override
-    public Map<String, List<Publisher>> getAllPublisher() {
-        Map<String, List<Publisher>> m = Maps.newHashMapWithExpectedSize(128);
-        publisherGroupsMap.values().forEach(g -> m.putAll(g.getAllPublisher()));
-        return m;
-    }
-
-    @Override
-    public Map<String, Publisher> getByConnectId(ConnectId connectId) {
-        Map<String, Publisher> m = Maps.newHashMapWithExpectedSize(64);
-        publisherGroupsMap.values().forEach(g -> m.putAll(g.getByConnectId(connectId)));
-        return m;
-    }
-
-    @Override
-    public Map<String, Map<String, Publisher>> getPublishers(int slotId) {
-        PublisherGroups groups = getPublisherGroups(slotId);
-        if (groups == null) {
-            return Collections.emptyMap();
-        }
-        Map<String, Map<String, Publisher>> map = Maps.newHashMap();
-        Map<String, Datum> datumMap = groups.getAllDatum();
-        datumMap.values().forEach(d -> map.put(d.getDataInfoId(), d.getPubMap()));
-        return map;
-    }
-
-    @Override
-    public DatumVersion createEmptyDatumIfAbsent(String dataInfoId, String dataCenter) {
-        PublisherGroups groups = getPublisherGroups(dataInfoId);
-        return groups == null ? null : groups.createGroupIfAbsent(dataInfoId).getVersion();
-    }
-
-    @Override
-    public Map<String, DatumVersion> clean(ProcessId sessionProcessId) {
-        // clean by sessionProcessId, the sessionProcessId could not be null
-        ParaCheckUtil.checkNotNull(sessionProcessId, "sessionProcessId");
-        Map<String, DatumVersion> versionMap = Maps.newHashMapWithExpectedSize(32);
-        publisherGroupsMap.values().forEach(g -> versionMap.putAll(g.clean(sessionProcessId)));
-        return versionMap;
-    }
-
-    // only for http testapi
-    @Override
-    public DatumVersion remove(String dataInfoId, ProcessId sessionProcessId) {
-        // the sessionProcessId is null when the call from sync leader
-        PublisherGroups groups = getPublisherGroups(dataInfoId);
-        return groups == null ? null : groups.remove(dataInfoId, sessionProcessId);
-    }
-
-    @Override
-    public DatumVersion put(String dataInfoId, List<Publisher> publishers) {
-        PublisherGroups groups = getPublisherGroups(dataInfoId);
-        return groups == null ? null : groups.put(dataInfoId, publishers);
-    }
-
-    @Override
-    public DatumVersion put(Publisher publisher) {
-        return put(publisher.getDataInfoId(), Collections.singletonList(publisher));
-    }
-
-    @Override
-    public DatumVersion remove(String dataInfoId, ProcessId sessionProcessId,
-                               Map<String, RegisterVersion> removedPublishers) {
-        // the sessionProcessId is null when the call from sync leader
-        PublisherGroups groups = getPublisherGroups(dataInfoId);
-        return groups == null ? null : groups.remove(dataInfoId, sessionProcessId,
-            removedPublishers);
-    }
-
-    @Override
-    public Map<String, DatumSummary> getDatumSummary(int slotId, String sessionIpAddress) {
-        final PublisherGroups groups = publisherGroupsMap.get(slotId);
-        return groups != null ? groups.getSummary(sessionIpAddress) : Collections.emptyMap();
-    }
-
-    @Override
-    public SlotChangeListener getSlotChangeListener() {
-        return new SlotListener();
-    }
-
-    @Override
-    public Set<ProcessId> getSessionProcessIds() {
-        Set<ProcessId> ids = Sets.newHashSet();
-        publisherGroupsMap.values().forEach(g -> ids.addAll(g.getSessionProcessIds()));
-        return ids;
-    }
-
-    @Override
-    public Map<String, Integer> compact(long tombstoneTimestamp) {
-        Map<String, Integer> compacts = Maps.newHashMap();
-        publisherGroupsMap.values().forEach(g -> compacts.putAll(g.compact(tombstoneTimestamp)));
-        return compacts;
-    }
-
-    @Override
-    public int tombstoneNum() {
-        int count = 0;
-        for (PublisherGroups groups : publisherGroupsMap.values()) {
-            count += groups.tombstoneNum();
-        }
-        return count;
-    }
-
-    @Override
-    public boolean updateVersion(int slotId) {
-        PublisherGroups groups = publisherGroupsMap.get(slotId);
-        if (groups == null) {
-            return false;
-        }
-        groups.updateVersion();
-        return true;
-    }
-
-    @Override
-    public DatumVersion updateVersion(String dataInfoId) {
-        PublisherGroups groups = getPublisherGroups(dataInfoId);
-        return groups == null ? null : groups.updateVersion(dataInfoId);
-    }
-
-    private final class SlotListener implements SlotChangeListener {
-
-        @Override
-        public void onSlotAdd(int slotId, Slot.Role role) {
-            publisherGroupsMap.computeIfAbsent(slotId, k -> {
-                PublisherGroups groups = new PublisherGroups(dataServerConfig.getLocalDataCenter());
-                LOGGER.info("{} add publisherGroup {}", dataServerConfig.getLocalDataCenter(), slotId);
-                return groups;
-            });
-        }
-
-        @Override
-        public void onSlotRemove(int slotId, Slot.Role role) {
-            boolean removed = publisherGroupsMap.remove(slotId) != null;
-            LOGGER.info("{}, remove publisherGroup {}, removed={}",
-                dataServerConfig.getLocalDataCenter(), slotId, removed);
-        }
-    }
-
-    @VisibleForTesting
-    public void setDataServerConfig(DataServerConfig dataServerConfig) {
-        this.dataServerConfig = dataServerConfig;
-    }
-
-    @VisibleForTesting
-    public DataServerConfig getDataServerConfig() {
-        return dataServerConfig;
-    }
+  @VisibleForTesting
+  public DataServerConfig getDataServerConfig() {
+    return dataServerConfig;
+  }
 }

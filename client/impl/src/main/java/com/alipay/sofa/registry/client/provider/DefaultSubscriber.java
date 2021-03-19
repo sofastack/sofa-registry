@@ -31,7 +31,6 @@ import com.alipay.sofa.registry.core.constants.EventTypeConstants;
 import com.alipay.sofa.registry.core.model.DataBox;
 import com.alipay.sofa.registry.core.model.ScopeEnum;
 import com.alipay.sofa.registry.core.model.SubscriberRegister;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -50,270 +49,262 @@ import java.util.concurrent.atomic.AtomicBoolean;
  */
 public class DefaultSubscriber extends AbstractInternalRegister implements Subscriber {
 
-    private final String                           REGIST_ID;
-    private SubscriberDataObserver                 dataObserver;
-    private ConcurrentHashMap<String, SegmentData> data              = new ConcurrentHashMap<String, SegmentData>();
-    private AtomicBoolean                          init              = new AtomicBoolean(false);
-    private RegistryClientConfig                   config;
-    private SubscriberRegistration                 registration;
-    private Worker                                 worker;
-    private volatile String                        localZone;
-    private List<String>                           availableSegments = new ArrayList<String>();
+  private final String REGIST_ID;
+  private SubscriberDataObserver dataObserver;
+  private ConcurrentHashMap<String, SegmentData> data =
+      new ConcurrentHashMap<String, SegmentData>();
+  private AtomicBoolean init = new AtomicBoolean(false);
+  private RegistryClientConfig config;
+  private SubscriberRegistration registration;
+  private Worker worker;
+  private volatile String localZone;
+  private List<String> availableSegments = new ArrayList<String>();
 
-    /**
-     * Instantiates a new Default subscriber multi.
-     *
-     * @param registration the registration
-     */
-    DefaultSubscriber(SubscriberRegistration registration, Worker worker,
-                      RegistryClientConfig config) {
-        if (null != registration) {
-            this.dataObserver = registration.getSubscriberDataObserver();
+  /**
+   * Instantiates a new Default subscriber multi.
+   *
+   * @param registration the registration
+   */
+  DefaultSubscriber(
+      SubscriberRegistration registration, Worker worker, RegistryClientConfig config) {
+    if (null != registration) {
+      this.dataObserver = registration.getSubscriberDataObserver();
+    }
+    this.registration = registration;
+    this.worker = worker;
+    this.config = config;
+    this.REGIST_ID = UUID.randomUUID().toString();
+    this.localZone = config.getZone();
+    this.getPubVersion().incrementAndGet();
+  }
+
+  /** @see Subscriber#getDataObserver() */
+  @Override
+  public SubscriberDataObserver getDataObserver() {
+    return dataObserver;
+  }
+
+  /** @see Subscriber#setDataObserver(SubscriberDataObserver) */
+  @Override
+  public void setDataObserver(SubscriberDataObserver dataObserver) {
+    this.dataObserver = dataObserver;
+  }
+
+  /** @see Subscriber#peekData() */
+  @Override
+  public UserData peekData() {
+    readLock.lock();
+    try {
+      if (!init.get()) {
+        // todo sync read from server
+        return new DefaultUserData();
+      }
+      Set<Entry<String, SegmentData>> values = data.entrySet();
+      DefaultUserData userData = new DefaultUserData();
+      if (null == localZone) {
+        userData.setLocalZone(config.getZone());
+      } else {
+        userData.setLocalZone(localZone);
+      }
+      Map<String, List<String>> zoneMap = new HashMap<String, List<String>>();
+      for (Entry<String, SegmentData> segmentDataEntry : values) {
+        String segment = segmentDataEntry.getKey();
+
+        // only accept available segments, when available segments is empty accept all
+        if (CommonUtils.isNotEmpty(availableSegments) && !availableSegments.contains(segment)) {
+          continue;
         }
-        this.registration = registration;
-        this.worker = worker;
-        this.config = config;
-        this.REGIST_ID = UUID.randomUUID().toString();
-        this.localZone = config.getZone();
-        this.getPubVersion().incrementAndGet();
-    }
 
-    /**
-     * @see Subscriber#getDataObserver()
-     */
-    @Override
-    public SubscriberDataObserver getDataObserver() {
-        return dataObserver;
-    }
+        SegmentData segmentData = segmentDataEntry.getValue();
 
-    /**
-     * @see Subscriber#setDataObserver(SubscriberDataObserver)
-     */
-    @Override
-    public void setDataObserver(SubscriberDataObserver dataObserver) {
-        this.dataObserver = dataObserver;
-    }
-
-    /**
-     * @see Subscriber#peekData()
-     */
-    @Override
-    public UserData peekData() {
-        readLock.lock();
-        try {
-            if (!init.get()) {
-                //todo sync read from server
-                return new DefaultUserData();
-            }
-            Set<Entry<String, SegmentData>> values = data.entrySet();
-            DefaultUserData userData = new DefaultUserData();
-            if (null == localZone) {
-                userData.setLocalZone(config.getZone());
-            } else {
-                userData.setLocalZone(localZone);
-            }
-            Map<String, List<String>> zoneMap = new HashMap<String, List<String>>();
-            for (Entry<String, SegmentData> segmentDataEntry : values) {
-                String segment = segmentDataEntry.getKey();
-
-                // only accept available segments, when available segments is empty accept all
-                if (CommonUtils.isNotEmpty(availableSegments)
-                    && !availableSegments.contains(segment)) {
-                    continue;
-                }
-
-                SegmentData segmentData = segmentDataEntry.getValue();
-
-                if (null == segmentData) {
-                    continue;
-                }
-
-                Map<String, List<DataBox>> data = segmentData.getData();
-                for (Entry<String, List<DataBox>> entry : data.entrySet()) {
-                    String zone = entry.getKey();
-                    List<String> resultList = zoneMap.get(zone);
-                    if (null == resultList) {
-                        resultList = new ArrayList<String>();
-                        zoneMap.put(zone, resultList);
-                    }
-                    List<DataBox> dataList = entry.getValue();
-                    for (DataBox dataBox : dataList) {
-                        resultList.add(dataBox.getData());
-                    }
-                }
-            }
-            userData.setZoneData(zoneMap);
-            return userData;
-        } finally {
-            readLock.unlock();
+        if (null == segmentData) {
+          continue;
         }
-    }
 
-    /**
-     * Gets scope enum.
-     *
-     * @return the scope enum
-     */
-    @Override
-    public ScopeEnum getScopeEnum() {
-        return registration.getScopeEnum();
-    }
-
-    /**
-     * Unregister.
-     */
-    @Override
-    public void unregister() {
-        if (isEnabled()) {
-            super.unregister();
-            worker.schedule(new TaskEvent(this));
+        Map<String, List<DataBox>> data = segmentData.getData();
+        for (Entry<String, List<DataBox>> entry : data.entrySet()) {
+          String zone = entry.getKey();
+          List<String> resultList = zoneMap.get(zone);
+          if (null == resultList) {
+            resultList = new ArrayList<String>();
+            zoneMap.put(zone, resultList);
+          }
+          List<DataBox> dataList = entry.getValue();
+          for (DataBox dataBox : dataList) {
+            resultList.add(dataBox.getData());
+          }
         }
+      }
+      userData.setZoneData(zoneMap);
+      return userData;
+    } finally {
+      readLock.unlock();
     }
+  }
 
-    /**
-     * Assembly subscriber register.
-     *
-     * @return the subscriber register
-     */
-    @Override
-    public SubscriberRegister assembly() {
-        readLock.lock();
-        SubscriberRegister register;
-        try {
-            if (null == registration.getScopeEnum()) {
-                registration.setScopeEnum(ScopeEnum.zone);
-            }
+  /**
+   * Gets scope enum.
+   *
+   * @return the scope enum
+   */
+  @Override
+  public ScopeEnum getScopeEnum() {
+    return registration.getScopeEnum();
+  }
 
-            register = new SubscriberRegister();
-            register.setInstanceId(config.getInstanceId());
-            if (StringUtils.isNotEmpty(config.getZone())) {
-                register.setZone(config.getZone());
-            } else {
-                register.setZone(ValueConstants.DEFAULT_ZONE);
-            }
-            if (StringUtils.isNotEmpty(registration.getAppName())) {
-                register.setAppName(registration.getAppName());
-            } else {
-                register.setAppName(config.getAppName());
-            }
-            register.setDataId(registration.getDataId());
-            register.setGroup(registration.getGroup());
-            register.setRegistId(REGIST_ID);
-            register.setVersion(this.getPubVersion().get());
-            register.setTimestamp(this.getTimestamp());
-            register.setScope(registration.getScopeEnum().name());
+  /** Unregister. */
+  @Override
+  public void unregister() {
+    if (isEnabled()) {
+      super.unregister();
+      worker.schedule(new TaskEvent(this));
+    }
+  }
 
-            // auth signature
-            setAuthSignature(register);
+  /**
+   * Assembly subscriber register.
+   *
+   * @return the subscriber register
+   */
+  @Override
+  public SubscriberRegister assembly() {
+    readLock.lock();
+    SubscriberRegister register;
+    try {
+      if (null == registration.getScopeEnum()) {
+        registration.setScopeEnum(ScopeEnum.zone);
+      }
 
-            if (isEnabled()) {
-                register.setEventType(EventTypeConstants.REGISTER);
-            } else {
-                register.setEventType(EventTypeConstants.UNREGISTER);
-            }
-        } finally {
-            readLock.unlock();
+      register = new SubscriberRegister();
+      register.setInstanceId(config.getInstanceId());
+      if (StringUtils.isNotEmpty(config.getZone())) {
+        register.setZone(config.getZone());
+      } else {
+        register.setZone(ValueConstants.DEFAULT_ZONE);
+      }
+      if (StringUtils.isNotEmpty(registration.getAppName())) {
+        register.setAppName(registration.getAppName());
+      } else {
+        register.setAppName(config.getAppName());
+      }
+      register.setDataId(registration.getDataId());
+      register.setGroup(registration.getGroup());
+      register.setRegistId(REGIST_ID);
+      register.setVersion(this.getPubVersion().get());
+      register.setTimestamp(this.getTimestamp());
+      register.setScope(registration.getScopeEnum().name());
+
+      // auth signature
+      setAuthSignature(register);
+
+      if (isEnabled()) {
+        register.setEventType(EventTypeConstants.REGISTER);
+      } else {
+        register.setEventType(EventTypeConstants.UNREGISTER);
+      }
+    } finally {
+      readLock.unlock();
+    }
+    return register;
+  }
+
+  public void putReceivedData(SegmentData segmentData, String localZone) {
+    writeLock.lock();
+    try {
+      putSegmentData(segmentData);
+      this.localZone = localZone;
+    } finally {
+      writeLock.unlock();
+    }
+  }
+
+  private void putSegmentData(SegmentData segmentData) {
+    if (null != segmentData) {
+
+      SegmentData existsData = data.putIfAbsent(segmentData.getSegment(), segmentData);
+      if (null == existsData) {
+        init.compareAndSet(false, true);
+        return;
+      }
+
+      if (existsData.getVersion() < segmentData.getVersion()) {
+        boolean result = data.replace(segmentData.getSegment(), existsData, segmentData);
+        if (!result) {
+          putSegmentData(segmentData);
         }
-        return register;
+        init.compareAndSet(false, true);
+      }
     }
+  }
 
-    public void putReceivedData(SegmentData segmentData, String localZone) {
-        writeLock.lock();
-        try {
-            putSegmentData(segmentData);
-            this.localZone = localZone;
-        } finally {
-            writeLock.unlock();
-        }
+  /**
+   * Gets data id.
+   *
+   * @return the data id
+   */
+  @Override
+  public String getDataId() {
+    return registration.getDataId();
+  }
+
+  /**
+   * Gets group.
+   *
+   * @return the group
+   */
+  @Override
+  public String getGroup() {
+    return registration.getGroup();
+  }
+
+  /**
+   * Gets regist id.
+   *
+   * @return the regist id
+   */
+  @Override
+  public String getRegistId() {
+    return REGIST_ID;
+  }
+
+  /**
+   * Getter method for property <tt>availableSegments</tt>.
+   *
+   * @return property value of availableSegments
+   */
+  public List<String> getAvailableSegments() {
+    readLock.lock();
+    try {
+      return new ArrayList<String>(availableSegments);
+    } finally {
+      readLock.unlock();
     }
+  }
 
-    private void putSegmentData(SegmentData segmentData) {
-        if (null != segmentData) {
-
-            SegmentData existsData = data.putIfAbsent(segmentData.getSegment(), segmentData);
-            if (null == existsData) {
-                init.compareAndSet(false, true);
-                return;
-            }
-
-            if (existsData.getVersion() < segmentData.getVersion()) {
-                boolean result = data.replace(segmentData.getSegment(), existsData, segmentData);
-                if (!result) {
-                    putSegmentData(segmentData);
-                }
-                init.compareAndSet(false, true);
-            }
-        }
+  /**
+   * Setter method for property <tt>availableSegments</tt>.
+   *
+   * @param availableSegments value to be assigned to property availableSegments
+   */
+  public void setAvailableSegments(List<String> availableSegments) {
+    writeLock.lock();
+    try {
+      if (null == availableSegments) {
+        this.availableSegments = new ArrayList<String>();
+      } else {
+        this.availableSegments = new ArrayList<String>(availableSegments);
+      }
+    } finally {
+      writeLock.unlock();
     }
+  }
 
-    /**
-     * Gets data id.
-     *
-     * @return the data id
-     */
-    @Override
-    public String getDataId() {
-        return registration.getDataId();
-    }
+  public boolean isInited() {
+    return init.get();
+  }
 
-    /**
-     * Gets group.
-     *
-     * @return the group
-     */
-    @Override
-    public String getGroup() {
-        return registration.getGroup();
-    }
-
-    /**
-     * Gets regist id.
-     *
-     * @return the regist id
-     */
-    @Override
-    public String getRegistId() {
-        return REGIST_ID;
-    }
-
-    /**
-     * Getter method for property <tt>availableSegments</tt>.
-     *
-     * @return property value of availableSegments
-     */
-    public List<String> getAvailableSegments() {
-        readLock.lock();
-        try {
-            return new ArrayList<String>(availableSegments);
-        } finally {
-            readLock.unlock();
-        }
-    }
-
-    /**
-     * Setter method for property <tt>availableSegments</tt>.
-     *
-     * @param availableSegments value to be assigned to property availableSegments
-     */
-    public void setAvailableSegments(List<String> availableSegments) {
-        writeLock.lock();
-        try {
-            if (null == availableSegments) {
-                this.availableSegments = new ArrayList<String>();
-            } else {
-                this.availableSegments = new ArrayList<String>(availableSegments);
-            }
-        } finally {
-            writeLock.unlock();
-        }
-    }
-
-    public boolean isInited() {
-        return init.get();
-    }
-
-    @Override
-    public String toString() {
-        return "DefaultSubscriber{" + "registration=" + registration + '}' + super.toString();
-    }
+  @Override
+  public String toString() {
+    return "DefaultSubscriber{" + "registration=" + registration + '}' + super.toString();
+  }
 }

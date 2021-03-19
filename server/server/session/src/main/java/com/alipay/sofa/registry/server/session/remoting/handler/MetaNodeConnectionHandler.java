@@ -20,13 +20,12 @@ import com.alipay.sofa.registry.common.model.Node.NodeType;
 import com.alipay.sofa.registry.server.shared.remoting.ListenClientChannelHandler;
 
 /**
- *
  * @author shangyu.wh
  * @version $Id: ClientConnectionHandler.java, v 0.1 2017-12-08 20:17 shangyu.wh Exp $
  */
 public class MetaNodeConnectionHandler extends ListenClientChannelHandler {
-    @Override
-    protected NodeType getConnectNodeType() {
-        return NodeType.META;
-    }
+  @Override
+  protected NodeType getConnectNodeType() {
+    return NodeType.META;
+  }
 }

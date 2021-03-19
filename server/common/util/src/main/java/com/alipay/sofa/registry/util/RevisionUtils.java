@@ -21,15 +21,14 @@ import java.util.Collections;
 import java.util.List;
 
 public class RevisionUtils {
-    private static final Charset UTF8 = Charset.forName("utf-8");
+  private static final Charset UTF8 = Charset.forName("utf-8");
 
-    public static String revisionsDigest(List<String> keys) {
-        Collections.sort(keys);
-        StringBuffer sb = new StringBuffer();
-        for (String key : keys) {
-            sb.append(key);
-        }
-        return MessageDigests
-            .toHexString(MessageDigests.md5().digest(sb.toString().getBytes(UTF8)));
+  public static String revisionsDigest(List<String> keys) {
+    Collections.sort(keys);
+    StringBuffer sb = new StringBuffer();
+    for (String key : keys) {
+      sb.append(key);
     }
+    return MessageDigests.toHexString(MessageDigests.md5().digest(sb.toString().getBytes(UTF8)));
+  }
 }

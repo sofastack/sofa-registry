@@ -24,68 +24,67 @@ import com.alipay.sofa.registry.common.model.dataserver.DatumSummary;
 import com.alipay.sofa.registry.common.model.dataserver.DatumVersion;
 import com.alipay.sofa.registry.common.model.store.Publisher;
 import com.alipay.sofa.registry.server.data.slot.SlotChangeListener;
-
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 /**
- *
  * @author yuzhi.lyz
  * @version v 0.1 2020-12-02 19:52 yuzhi.lyz Exp $
  */
 public interface DatumStorage {
-    /**
-     * get datum by specific dataInfoId
-     *
-     * @param dataInfoId
-     * @return
-     */
-    Datum get(String dataInfoId);
+  /**
+   * get datum by specific dataInfoId
+   *
+   * @param dataInfoId
+   * @return
+   */
+  Datum get(String dataInfoId);
 
-    DatumVersion getVersion(String dataInfoId);
+  DatumVersion getVersion(String dataInfoId);
 
-    Map<String, DatumVersion> getVersions(int slotId, Collection<String> targetDatInfoIds);
+  Map<String, DatumVersion> getVersions(int slotId, Collection<String> targetDatInfoIds);
 
-    Map<String, Publisher> getByConnectId(ConnectId connectId);
+  Map<String, Publisher> getByConnectId(ConnectId connectId);
 
-    Map<String, Map<String, Publisher>> getPublishers(int slot);
+  Map<String, Map<String, Publisher>> getPublishers(int slot);
 
-    /**
-     * get all datum
-     *
-     * @return
-     */
-    Map<String, Datum> getAll();
+  /**
+   * get all datum
+   *
+   * @return
+   */
+  Map<String, Datum> getAll();
 
-    Map<String, List<Publisher>> getAllPublisher();
+  Map<String, List<Publisher>> getAllPublisher();
 
-    DatumVersion put(Publisher publisher);
+  DatumVersion put(Publisher publisher);
 
-    DatumVersion createEmptyDatumIfAbsent(String dataInfoId, String dataCenter);
+  DatumVersion createEmptyDatumIfAbsent(String dataInfoId, String dataCenter);
 
-    Map<String, DatumVersion> clean(ProcessId sessionProcessId);
+  Map<String, DatumVersion> clean(ProcessId sessionProcessId);
 
-    DatumVersion remove(String dataInfoId, ProcessId sessionProcessId);
+  DatumVersion remove(String dataInfoId, ProcessId sessionProcessId);
 
-    DatumVersion remove(String dataInfoId, ProcessId sessionProcessId,
-                        Map<String, RegisterVersion> removedPublishers);
+  DatumVersion remove(
+      String dataInfoId,
+      ProcessId sessionProcessId,
+      Map<String, RegisterVersion> removedPublishers);
 
-    DatumVersion put(String dataInfoId, List<Publisher> updatedPublishers);
+  DatumVersion put(String dataInfoId, List<Publisher> updatedPublishers);
 
-    Map<String, DatumSummary> getDatumSummary(int slotId, String sessionIpAddress);
+  Map<String, DatumSummary> getDatumSummary(int slotId, String sessionIpAddress);
 
-    SlotChangeListener getSlotChangeListener();
+  SlotChangeListener getSlotChangeListener();
 
-    Set<ProcessId> getSessionProcessIds();
+  Set<ProcessId> getSessionProcessIds();
 
-    Map<String, Integer> compact(long tombstoneTimestamp);
+  Map<String, Integer> compact(long tombstoneTimestamp);
 
-    int tombstoneNum();
+  int tombstoneNum();
 
-    boolean updateVersion(int slotId);
+  boolean updateVersion(int slotId);
 
-    DatumVersion updateVersion(String dataInfoId);
-
+  DatumVersion updateVersion(String dataInfoId);
 }

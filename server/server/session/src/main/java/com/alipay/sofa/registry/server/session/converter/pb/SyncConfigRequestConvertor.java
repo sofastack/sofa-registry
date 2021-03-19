@@ -21,36 +21,33 @@ import com.alipay.sofa.registry.core.model.SyncConfigRequest;
 
 /**
  * @author bystander
- * @version $Id: SyncConfigRequestConvertor.java, v 0.1 2018年03月21日 2:07 PM
- *          bystander Exp $
+ * @version $Id: SyncConfigRequestConvertor.java, v 0.1 2018年03月21日 2:07 PM bystander Exp $
  */
 public class SyncConfigRequestConvertor {
 
-	public static SyncConfigRequest convert2Java(
-			SyncConfigRequestPb syncConfigRequestPb) {
+  public static SyncConfigRequest convert2Java(SyncConfigRequestPb syncConfigRequestPb) {
 
-		if (syncConfigRequestPb == null) {
-			return null;
-		}
+    if (syncConfigRequestPb == null) {
+      return null;
+    }
 
-		SyncConfigRequest syncConfigRequest = new SyncConfigRequest();
-		syncConfigRequest.setZone(syncConfigRequestPb.getZone());
-		syncConfigRequest.setDataCenter(syncConfigRequestPb.getDataCenter());
+    SyncConfigRequest syncConfigRequest = new SyncConfigRequest();
+    syncConfigRequest.setZone(syncConfigRequestPb.getZone());
+    syncConfigRequest.setDataCenter(syncConfigRequestPb.getDataCenter());
 
-		return syncConfigRequest;
-	}
+    return syncConfigRequest;
+  }
 
-	public static SyncConfigRequestPb convert2Pb(
-			SyncConfigRequest syncConfigRequestJava) {
+  public static SyncConfigRequestPb convert2Pb(SyncConfigRequest syncConfigRequestJava) {
 
-		if (syncConfigRequestJava == null) {
-			return null;
-		}
+    if (syncConfigRequestJava == null) {
+      return null;
+    }
 
-		SyncConfigRequestPb.Builder builder = SyncConfigRequestPb.newBuilder();
-		builder.setZone(syncConfigRequestJava.getZone());
-		builder.setDataCenter(syncConfigRequestJava.getDataCenter());
+    SyncConfigRequestPb.Builder builder = SyncConfigRequestPb.newBuilder();
+    builder.setZone(syncConfigRequestJava.getZone());
+    builder.setDataCenter(syncConfigRequestJava.getDataCenter());
 
-		return builder.build();
-	}
+    return builder.build();
+  }
 }

@@ -22,111 +22,108 @@ import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
 import com.alipay.sofa.registry.server.session.filter.DataIdMatchStrategy;
 import com.alipay.sofa.registry.server.session.filter.IPMatchStrategy;
 import com.alipay.sofa.registry.server.session.filter.ProcessFilter;
+import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import java.util.List;
-
 /**
- *
  * @author shangyu.wh
  * @version 1.0: BlacklistMatchProcessFilter.java, v 0.1 2019-06-19 22:01 shangyu.wh Exp $
  */
 public class BlacklistMatchProcessFilter implements ProcessFilter<BaseInfo> {
 
-    @Autowired
-    private DataIdMatchStrategy dataIdMatchStrategy;
+  @Autowired private DataIdMatchStrategy dataIdMatchStrategy;
 
-    @Autowired
-    private IPMatchStrategy     ipMatchStrategy;
+  @Autowired private IPMatchStrategy ipMatchStrategy;
 
-    @Autowired
-    private BlacklistManager    blacklistManager;
+  @Autowired private BlacklistManager blacklistManager;
 
-    @Autowired
-    private SessionServerConfig sessionServerConfig;
+  @Autowired private SessionServerConfig sessionServerConfig;
 
-    @Override
-    public boolean match(BaseInfo storeData) {
+  @Override
+  public boolean match(BaseInfo storeData) {
 
-        final List<BlacklistConfig> configList = blacklistManager.getBlacklistConfigList();
+    final List<BlacklistConfig> configList = blacklistManager.getBlacklistConfigList();
 
-        // empty list proceed
-        if (null == configList || configList.size() == 0) {
-            return false;
-        }
-
-        URL url = storeData.getSourceAddress();
-
-        if (url != null) {
-
-            switch (storeData.getDataType()) {
-                case PUBLISHER:
-                    if(dataIdMatchStrategy.match(storeData.getDataId(),()-> sessionServerConfig.getBlacklistPubDataIdRegex())){
-                        return  ipMatchStrategy.match(url.getIpAddress(),()-> BlacklistConstants.FORBIDDEN_PUB);
-                    }
-                case SUBSCRIBER:
-                    if(dataIdMatchStrategy.match(storeData.getDataId(),()-> sessionServerConfig.getBlacklistSubDataIdRegex())){
-                        return  ipMatchStrategy.match(url.getIpAddress(),()-> BlacklistConstants.FORBIDDEN_SUB_BY_PREFIX);
-                    }
-                default:
-                    return false;
-            }
-
-        }
-        return false;
+    // empty list proceed
+    if (null == configList || configList.size() == 0) {
+      return false;
     }
 
-    /**
-     * Getter method for property <tt>dataIdMatchStrategy</tt>.
-     *
-     * @return property value of dataIdMatchStrategy
-     */
-    public DataIdMatchStrategy getDataIdMatchStrategy() {
-        return dataIdMatchStrategy;
-    }
+    URL url = storeData.getSourceAddress();
 
-    /**
-     * Setter method for property <tt>dataIdMatchStrategy</tt>.
-     *
-     * @param dataIdMatchStrategy  value to be assigned to property dataIdMatchStrategy
-     */
-    public void setDataIdMatchStrategy(DataIdMatchStrategy dataIdMatchStrategy) {
-        this.dataIdMatchStrategy = dataIdMatchStrategy;
-    }
+    if (url != null) {
 
-    /**
-     * Getter method for property <tt>ipMatchStrategy</tt>.
-     *
-     * @return property value of ipMatchStrategy
-     */
-    public IPMatchStrategy getIpMatchStrategy() {
-        return ipMatchStrategy;
+      switch (storeData.getDataType()) {
+        case PUBLISHER:
+          if (dataIdMatchStrategy.match(
+              storeData.getDataId(), () -> sessionServerConfig.getBlacklistPubDataIdRegex())) {
+            return ipMatchStrategy.match(
+                url.getIpAddress(), () -> BlacklistConstants.FORBIDDEN_PUB);
+          }
+        case SUBSCRIBER:
+          if (dataIdMatchStrategy.match(
+              storeData.getDataId(), () -> sessionServerConfig.getBlacklistSubDataIdRegex())) {
+            return ipMatchStrategy.match(
+                url.getIpAddress(), () -> BlacklistConstants.FORBIDDEN_SUB_BY_PREFIX);
+          }
+        default:
+          return false;
+      }
     }
+    return false;
+  }
 
-    /**
-     * Setter method for property <tt>ipMatchStrategy</tt>.
-     *
-     * @param ipMatchStrategy  value to be assigned to property ipMatchStrategy
-     */
-    public void setIpMatchStrategy(IPMatchStrategy ipMatchStrategy) {
-        this.ipMatchStrategy = ipMatchStrategy;
-    }
+  /**
+   * Getter method for property <tt>dataIdMatchStrategy</tt>.
+   *
+   * @return property value of dataIdMatchStrategy
+   */
+  public DataIdMatchStrategy getDataIdMatchStrategy() {
+    return dataIdMatchStrategy;
+  }
 
-    /**
-     * Getter method for property <tt>blacklistManager</tt>.
-     *
-     * @return property value of blacklistManager
-     */
-    public BlacklistManager getBlacklistManager() {
-        return blacklistManager;
-    }
+  /**
+   * Setter method for property <tt>dataIdMatchStrategy</tt>.
+   *
+   * @param dataIdMatchStrategy value to be assigned to property dataIdMatchStrategy
+   */
+  public void setDataIdMatchStrategy(DataIdMatchStrategy dataIdMatchStrategy) {
+    this.dataIdMatchStrategy = dataIdMatchStrategy;
+  }
 
-    /**
-     * Setter method for property <tt>blacklistManager</tt>.
-     *
-     * @param blacklistManager  value to be assigned to property blacklistManager
-     */
-    public void setBlacklistManager(BlacklistManager blacklistManager) {
-        this.blacklistManager = blacklistManager;
-    }
+  /**
+   * Getter method for property <tt>ipMatchStrategy</tt>.
+   *
+   * @return property value of ipMatchStrategy
+   */
+  public IPMatchStrategy getIpMatchStrategy() {
+    return ipMatchStrategy;
+  }
+
+  /**
+   * Setter method for property <tt>ipMatchStrategy</tt>.
+   *
+   * @param ipMatchStrategy value to be assigned to property ipMatchStrategy
+   */
+  public void setIpMatchStrategy(IPMatchStrategy ipMatchStrategy) {
+    this.ipMatchStrategy = ipMatchStrategy;
+  }
+
+  /**
+   * Getter method for property <tt>blacklistManager</tt>.
+   *
+   * @return property value of blacklistManager
+   */
+  public BlacklistManager getBlacklistManager() {
+    return blacklistManager;
+  }
+
+  /**
+   * Setter method for property <tt>blacklistManager</tt>.
+   *
+   * @param blacklistManager value to be assigned to property blacklistManager
+   */
+  public void setBlacklistManager(BlacklistManager blacklistManager) {
+    this.blacklistManager = blacklistManager;
+  }
 }

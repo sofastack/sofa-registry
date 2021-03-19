@@ -17,14 +17,13 @@
 package com.alipay.sofa.registry.common.model.slot.func;
 
 /**
- * 
  * @author yuzhi.lyz
  * @version v 0.1 2020-11-02 15:35 yuzhi.lyz Exp $
  */
 public interface SlotFunction {
-	String name();
+  String name();
 
-	int maxSlots();
+  int maxSlots();
 
-	int slotOf(Object o);
+  int slotOf(Object o);
 }

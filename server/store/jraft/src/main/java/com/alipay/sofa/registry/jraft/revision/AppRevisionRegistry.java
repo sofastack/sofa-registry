@@ -19,31 +19,29 @@ package com.alipay.sofa.registry.jraft.revision;
 import com.alipay.sofa.registry.common.model.store.AppRevision;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
+import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import java.util.List;
-
 public class AppRevisionRegistry {
-    @Autowired
-    private AppRevisionService  appRevisionService;
-    private static final Logger LOGGER = LoggerFactory.getLogger(AppRevisionService.class);
+  @Autowired private AppRevisionService appRevisionService;
+  private static final Logger LOGGER = LoggerFactory.getLogger(AppRevisionService.class);
 
-    public void register(AppRevision appRevision) {
-        if (appRevisionService.existed(appRevision.getRevision())) {
-            return;
-        }
-        appRevisionService.add(appRevision);
-        LOGGER.info("register new revision: {}", appRevision.getRevision());
+  public void register(AppRevision appRevision) {
+    if (appRevisionService.existed(appRevision.getRevision())) {
+      return;
     }
+    appRevisionService.add(appRevision);
+    LOGGER.info("register new revision: {}", appRevision.getRevision());
+  }
 
-    public List<String> checkRevisions(String keysDigest) {
-        if (keysDigest.equals(appRevisionService.getKeysDigest())) {
-            return null;
-        }
-        return appRevisionService.getKeys();
+  public List<String> checkRevisions(String keysDigest) {
+    if (keysDigest.equals(appRevisionService.getKeysDigest())) {
+      return null;
     }
+    return appRevisionService.getKeys();
+  }
 
-    public List<AppRevision> fetchRevisions(List<String> keys) {
-        return appRevisionService.getMulti(keys);
-    }
+  public List<AppRevision> fetchRevisions(List<String> keys) {
+    return appRevisionService.getMulti(keys);
+  }
 }

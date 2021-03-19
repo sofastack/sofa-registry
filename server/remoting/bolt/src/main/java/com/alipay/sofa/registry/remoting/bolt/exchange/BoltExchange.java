@@ -16,10 +16,6 @@
  */
 package com.alipay.sofa.registry.remoting.bolt.exchange;
 
-import java.util.Arrays;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-
 import com.alipay.sofa.registry.common.model.store.URL;
 import com.alipay.sofa.registry.remoting.ChannelHandler;
 import com.alipay.sofa.registry.remoting.Client;
@@ -27,75 +23,80 @@ import com.alipay.sofa.registry.remoting.Server;
 import com.alipay.sofa.registry.remoting.bolt.BoltClient;
 import com.alipay.sofa.registry.remoting.bolt.BoltServer;
 import com.alipay.sofa.registry.remoting.exchange.Exchange;
+import java.util.Arrays;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
- *
  * @author shangyu.wh
  * @version $Id: BoltExchange.java, v 0.1 2017-11-27 15:47 shangyu.wh Exp $
  */
 public class BoltExchange implements Exchange<ChannelHandler> {
 
-    private Map<String, Client>                clients   = new ConcurrentHashMap<>();
+  private Map<String, Client> clients = new ConcurrentHashMap<>();
 
-    private ConcurrentHashMap<Integer, Server> serverMap = new ConcurrentHashMap<>();
+  private ConcurrentHashMap<Integer, Server> serverMap = new ConcurrentHashMap<>();
 
-    @Override
-    public Client connect(String serverType, URL serverUrl, ChannelHandler... channelHandlers) {
-        return this.connect(serverType, 1, serverUrl, channelHandlers);
+  @Override
+  public Client connect(String serverType, URL serverUrl, ChannelHandler... channelHandlers) {
+    return this.connect(serverType, 1, serverUrl, channelHandlers);
+  }
+
+  @Override
+  public Client connect(
+      String serverType, int connNum, URL serverUrl, ChannelHandler... channelHandlers) {
+    if (channelHandlers == null) {
+      throw new IllegalArgumentException("channelHandlers cannot be null!");
+    }
+    Client client =
+        clients.computeIfAbsent(serverType, key -> newBoltClient(connNum, channelHandlers));
+    client.connect(serverUrl);
+    return client;
+  }
+
+  @Override
+  public Server open(URL url, ChannelHandler... channelHandlers) {
+    if (channelHandlers == null) {
+      throw new IllegalArgumentException("channelHandlers cannot be null!");
     }
 
-    @Override
-    public Client connect(String serverType, int connNum, URL serverUrl, ChannelHandler... channelHandlers) {
-        if (channelHandlers == null) {
-            throw new IllegalArgumentException("channelHandlers cannot be null!");
-        }
-        Client client = clients.computeIfAbsent(serverType, key -> newBoltClient(connNum, channelHandlers));
-        client.connect(serverUrl);
-        return client;
-    }
+    BoltServer server = createBoltServer(url, channelHandlers);
+    setServer(server, url);
+    server.startServer();
+    return server;
+  }
 
-    @Override
-    public Server open(URL url, ChannelHandler... channelHandlers) {
-        if (channelHandlers == null) {
-            throw new IllegalArgumentException("channelHandlers cannot be null!");
-        }
+  @Override
+  public Client getClient(String serverType) {
+    return clients.get(serverType);
+  }
 
-        BoltServer server = createBoltServer(url, channelHandlers);
-        setServer(server, url);
-        server.startServer();
-        return server;
-    }
+  @Override
+  public Server getServer(Integer port) {
+    return serverMap.get(port);
+  }
 
-    @Override
-    public Client getClient(String serverType) {
-        return clients.get(serverType);
-    }
+  /**
+   * add server into serverMap
+   *
+   * @param server
+   * @param url
+   */
+  public void setServer(Server server, URL url) {
+    serverMap.putIfAbsent(url.getPort(), server);
+  }
 
-    @Override
-    public Server getServer(Integer port) {
-        return serverMap.get(port);
-    }
+  private BoltClient newBoltClient(int connNum, ChannelHandler[] channelHandlers) {
+    BoltClient boltClient = createBoltClient(connNum);
+    boltClient.initHandlers(Arrays.asList(channelHandlers));
+    return boltClient;
+  }
 
-    /**
-     * add server into serverMap
-     * @param server
-     * @param url
-     */
-    public void setServer(Server server, URL url) {
-        serverMap.putIfAbsent(url.getPort(), server);
-    }
+  protected BoltClient createBoltClient(int connNum) {
+    return new BoltClient(connNum);
+  }
 
-    private BoltClient newBoltClient(int connNum, ChannelHandler[] channelHandlers) {
-        BoltClient boltClient = createBoltClient(connNum);
-        boltClient.initHandlers(Arrays.asList(channelHandlers));
-        return boltClient;
-    }
-
-    protected BoltClient createBoltClient(int connNum) {
-        return new BoltClient(connNum);
-    }
-
-    protected BoltServer createBoltServer(URL url, ChannelHandler[] channelHandlers) {
-        return new BoltServer(url, Arrays.asList(channelHandlers));
-    }
+  protected BoltServer createBoltServer(URL url, ChannelHandler[] channelHandlers) {
+    return new BoltServer(url, Arrays.asList(channelHandlers));
+  }
 }

@@ -20,9 +20,6 @@ import com.alipay.sofa.registry.common.model.Node;
 
 /**
  * @author chen.zhu
- * <p>
- * Nov 25, 2020
+ *     <p>Nov 25, 2020
  */
-public interface NodeEvent<T extends Node> {
-
-}
+public interface NodeEvent<T extends Node> {}

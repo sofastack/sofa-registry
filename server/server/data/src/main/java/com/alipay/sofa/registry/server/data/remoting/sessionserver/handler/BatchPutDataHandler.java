@@ -31,126 +31,134 @@ import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.remoting.Channel;
 import com.alipay.sofa.registry.util.ParaCheckUtil;
 import com.google.common.collect.Sets;
-import org.springframework.beans.factory.annotation.Autowired;
-
 import java.util.*;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ThreadPoolExecutor;
+import org.springframework.beans.factory.annotation.Autowired;
 
 public class BatchPutDataHandler extends AbstractDataHandler<BatchRequest> {
-    private static final Logger LOGGER = LoggerFactory.getLogger("PUT");
-    @Autowired
-    private ThreadPoolExecutor  publishProcessorExecutor;
+  private static final Logger LOGGER = LoggerFactory.getLogger("PUT");
+  @Autowired private ThreadPoolExecutor publishProcessorExecutor;
 
-    @Override
-    public void checkParam(BatchRequest request) throws RuntimeException {
-        checkSessionProcessId(request.getSessionProcessId());
-        for (Object req : request.getRequest()) {
-            if (req instanceof Publisher) {
-                checkPublisher((Publisher) req);
-            } else if (req instanceof ClientOffPublisher) {
-                ParaCheckUtil.checkNotNull(((ClientOffPublisher) req).getConnectId(),
-                    "ClientOffPublisher.connectIds");
-                ParaCheckUtil.checkNotNull(((ClientOffPublisher) req).getPublisherMap(),
-                    "ClientOffPublisher.publisherMap");
-            } else {
-                throw new IllegalArgumentException("unsupported item in batch:" + req);
-            }
-        }
+  @Override
+  public void checkParam(BatchRequest request) throws RuntimeException {
+    checkSessionProcessId(request.getSessionProcessId());
+    for (Object req : request.getRequest()) {
+      if (req instanceof Publisher) {
+        checkPublisher((Publisher) req);
+      } else if (req instanceof ClientOffPublisher) {
+        ParaCheckUtil.checkNotNull(
+            ((ClientOffPublisher) req).getConnectId(), "ClientOffPublisher.connectIds");
+        ParaCheckUtil.checkNotNull(
+            ((ClientOffPublisher) req).getPublisherMap(), "ClientOffPublisher.publisherMap");
+      } else {
+        throw new IllegalArgumentException("unsupported item in batch:" + req);
+      }
     }
+  }
 
-    @Override
-    public Object doHandle(Channel channel, BatchRequest request) {
-        final ProcessId sessionProcessId = request.getSessionProcessId();
-        processSessionProcessId(channel, sessionProcessId);
-        final SlotAccess slotAccess = checkAccess(request.getSlotId(), request.getSlotTableEpoch(),
-            request.getSlotLeaderEpoch());
-        if (slotAccess.isMoved() || slotAccess.isMisMatch()) {
-            // only reject the when moved
-            return SlotAccessGenericResponse.failedResponse(slotAccess);
-        }
-        final String slotIdStr = String.valueOf(request.getSlotId());
-        final Set<String> changeDataInfoIds = Sets.newHashSetWithExpectedSize(128);
-        try {
-            for (Object req : request.getRequest()) {
-                // contains publisher and unPublisher
-                if (req instanceof Publisher) {
-                    Publisher publisher = (Publisher) req;
-                    changeDataInfoIds.addAll(doHandle(publisher));
-                    if (publisher instanceof UnPublisher) {
-                        LOGGER.info("unpub,{},{},{},{},{}", slotIdStr, publisher.getDataInfoId(),
-                            publisher.getRegisterId(), publisher.getVersion(),
-                            publisher.getRegisterTimestamp());
-                    } else {
-                        LOGGER.info("pub,{},{},{},{},{}", slotIdStr, publisher.getDataInfoId(),
-                            publisher.getRegisterId(), publisher.getVersion(),
-                            publisher.getRegisterTimestamp());
-                    }
-                } else if (req instanceof ClientOffPublisher) {
-                    ClientOffPublisher clientOff = (ClientOffPublisher) req;
-                    changeDataInfoIds.addAll(doHandle(clientOff, sessionProcessId));
-                    for (Map.Entry<String, Map<String, RegisterVersion>> e : clientOff
-                        .getPublisherMap().entrySet()) {
-                        final String dataInfoId = e.getKey();
-                        for (Map.Entry<String, RegisterVersion> ver : e.getValue().entrySet()) {
-                            RegisterVersion version = ver.getValue();
-                            LOGGER.info("off,{},{},{},{},{}", slotIdStr, dataInfoId, ver.getKey(),
-                                version.getVersion(), version.getRegisterTimestamp());
-                        }
-                    }
-                } else {
-                    throw new IllegalArgumentException("unsupported item in batch:" + req);
-                }
-            }
-        } finally {
-            // if has exception, try to notify the req which was handled
-            if (!changeDataInfoIds.isEmpty()) {
-                dataChangeEventCenter.onChange(changeDataInfoIds,
-                    dataServerConfig.getLocalDataCenter());
-            }
-        }
-
-        return SlotAccessGenericResponse.successResponse(slotAccess, null);
+  @Override
+  public Object doHandle(Channel channel, BatchRequest request) {
+    final ProcessId sessionProcessId = request.getSessionProcessId();
+    processSessionProcessId(channel, sessionProcessId);
+    final SlotAccess slotAccess =
+        checkAccess(request.getSlotId(), request.getSlotTableEpoch(), request.getSlotLeaderEpoch());
+    if (slotAccess.isMoved() || slotAccess.isMisMatch()) {
+      // only reject the when moved
+      return SlotAccessGenericResponse.failedResponse(slotAccess);
     }
-
-    private List<String> doHandle(Publisher publisher) {
-        publisher = Publisher.internPublisher(publisher);
-        if (publisher.getPublishType() == PublishType.TEMPORARY) {
-            // create datum for the temp publisher, we need the datum.version for check ver
-            localDatumStorage.createEmptyDatumIfAbsent(publisher.getDataInfoId(),
-                dataServerConfig.getLocalDataCenter());
-            // temporary only notify session, not store
-            dataChangeEventCenter.onTempPubChange(publisher, dataServerConfig.getLocalDataCenter());
+    final String slotIdStr = String.valueOf(request.getSlotId());
+    final Set<String> changeDataInfoIds = Sets.newHashSetWithExpectedSize(128);
+    try {
+      for (Object req : request.getRequest()) {
+        // contains publisher and unPublisher
+        if (req instanceof Publisher) {
+          Publisher publisher = (Publisher) req;
+          changeDataInfoIds.addAll(doHandle(publisher));
+          if (publisher instanceof UnPublisher) {
+            LOGGER.info(
+                "unpub,{},{},{},{},{}",
+                slotIdStr,
+                publisher.getDataInfoId(),
+                publisher.getRegisterId(),
+                publisher.getVersion(),
+                publisher.getRegisterTimestamp());
+          } else {
+            LOGGER.info(
+                "pub,{},{},{},{},{}",
+                slotIdStr,
+                publisher.getDataInfoId(),
+                publisher.getRegisterId(),
+                publisher.getVersion(),
+                publisher.getRegisterTimestamp());
+          }
+        } else if (req instanceof ClientOffPublisher) {
+          ClientOffPublisher clientOff = (ClientOffPublisher) req;
+          changeDataInfoIds.addAll(doHandle(clientOff, sessionProcessId));
+          for (Map.Entry<String, Map<String, RegisterVersion>> e :
+              clientOff.getPublisherMap().entrySet()) {
+            final String dataInfoId = e.getKey();
+            for (Map.Entry<String, RegisterVersion> ver : e.getValue().entrySet()) {
+              RegisterVersion version = ver.getValue();
+              LOGGER.info(
+                  "off,{},{},{},{},{}",
+                  slotIdStr,
+                  dataInfoId,
+                  ver.getKey(),
+                  version.getVersion(),
+                  version.getRegisterTimestamp());
+            }
+          }
         } else {
-            DatumVersion version = localDatumStorage.put(publisher);
-            if (version != null) {
-                return Collections.singletonList(publisher.getDataInfoId());
-            }
+          throw new IllegalArgumentException("unsupported item in batch:" + req);
         }
-        return Collections.emptyList();
+      }
+    } finally {
+      // if has exception, try to notify the req which was handled
+      if (!changeDataInfoIds.isEmpty()) {
+        dataChangeEventCenter.onChange(changeDataInfoIds, dataServerConfig.getLocalDataCenter());
+      }
     }
 
-    public List<String> doHandle(ClientOffPublisher request, ProcessId sessionProcessId) {
-        Map<String, Map<String, RegisterVersion>> publisherMap = request.getPublisherMap();
-        List<String> dataInfoIds = new ArrayList<>(publisherMap.size());
-        for (Map.Entry<String, Map<String, RegisterVersion>> e : publisherMap.entrySet()) {
-            DatumVersion version = localDatumStorage.remove(e.getKey(), sessionProcessId,
-                e.getValue());
-            if (version != null) {
-                dataInfoIds.add(e.getKey());
-            }
-        }
-        return dataInfoIds;
-    }
+    return SlotAccessGenericResponse.successResponse(slotAccess, null);
+  }
 
-    @Override
-    public Class interest() {
-        return BatchRequest.class;
+  private List<String> doHandle(Publisher publisher) {
+    publisher = Publisher.internPublisher(publisher);
+    if (publisher.getPublishType() == PublishType.TEMPORARY) {
+      // create datum for the temp publisher, we need the datum.version for check ver
+      localDatumStorage.createEmptyDatumIfAbsent(
+          publisher.getDataInfoId(), dataServerConfig.getLocalDataCenter());
+      // temporary only notify session, not store
+      dataChangeEventCenter.onTempPubChange(publisher, dataServerConfig.getLocalDataCenter());
+    } else {
+      DatumVersion version = localDatumStorage.put(publisher);
+      if (version != null) {
+        return Collections.singletonList(publisher.getDataInfoId());
+      }
     }
+    return Collections.emptyList();
+  }
 
-    @Override
-    public Executor getExecutor() {
-        return publishProcessorExecutor;
+  public List<String> doHandle(ClientOffPublisher request, ProcessId sessionProcessId) {
+    Map<String, Map<String, RegisterVersion>> publisherMap = request.getPublisherMap();
+    List<String> dataInfoIds = new ArrayList<>(publisherMap.size());
+    for (Map.Entry<String, Map<String, RegisterVersion>> e : publisherMap.entrySet()) {
+      DatumVersion version = localDatumStorage.remove(e.getKey(), sessionProcessId, e.getValue());
+      if (version != null) {
+        dataInfoIds.add(e.getKey());
+      }
     }
+    return dataInfoIds;
+  }
 
+  @Override
+  public Class interest() {
+    return BatchRequest.class;
+  }
+
+  @Override
+  public Executor getExecutor() {
+    return publishProcessorExecutor;
+  }
 }

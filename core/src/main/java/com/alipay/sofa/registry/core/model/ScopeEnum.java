@@ -24,19 +24,19 @@ package com.alipay.sofa.registry.core.model;
  */
 public enum ScopeEnum {
 
-    /** zone scope: only can receive pub list at same zone */
-    zone,
-    /** dataCenter scope: only can receive pub list at same dataCenter (multi zone) */
-    dataCenter,
-    /** global scope: can receive pub list at all dataCenter (multi zone) */
-    global;
+  /** zone scope: only can receive pub list at same zone */
+  zone,
+  /** dataCenter scope: only can receive pub list at same dataCenter (multi zone) */
+  dataCenter,
+  /** global scope: can receive pub list at all dataCenter (multi zone) */
+  global;
 
-    public static boolean contains(String name) {
-        for (ScopeEnum scopeEnum : values()) {
-            if (scopeEnum.name().equals(name)) {
-                return true;
-            }
-        }
-        return false;
+  public static boolean contains(String name) {
+    for (ScopeEnum scopeEnum : values()) {
+      if (scopeEnum.name().equals(name)) {
+        return true;
+      }
     }
+    return false;
+  }
 }

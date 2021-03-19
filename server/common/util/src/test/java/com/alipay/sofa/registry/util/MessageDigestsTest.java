@@ -16,74 +16,96 @@
  */
 package com.alipay.sofa.registry.util;
 
-import org.junit.Test;
+import static org.junit.Assert.assertEquals;
 
 import java.security.MessageDigest;
-
-import static org.junit.Assert.assertEquals;
+import org.junit.Test;
 
 /**
  * The type Message digests test.
+ *
  * @author zhuoyu.sjw
  * @version $Id : MessageDigestsTest.java, v 0.1 2018-03-07 11:19 zhuoyu.sjw Exp $$
  */
 public class MessageDigestsTest {
 
-    /**
-     * Md 5.
-     */
-    @Test
-    public void md5() {
-        assertHash("d41d8cd98f00b204e9800998ecf8427e", "", MessageDigests.md5());
-        assertHash("900150983cd24fb0d6963f7d28e17f72", "abc", MessageDigests.md5());
-        assertHash("8215ef0796a20bcaaae116d3876c664a",
-            "abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq", MessageDigests.md5());
-        assertHash("7707d6ae4e027c70eea2a935c2296f21",
-            new String(new char[1000000]).replace("\0", "a"), MessageDigests.md5());
-        assertHash("9e107d9d372bb6826bd81d3542a419d6",
-            "The quick brown fox jumps over the lazy dog", MessageDigests.md5());
-        assertHash("1055d3e698d289f2af8663725127bd4b",
-            "The quick brown fox jumps over the lazy cog", MessageDigests.md5());
-    }
+  /** Md 5. */
+  @Test
+  public void md5() {
+    assertHash("d41d8cd98f00b204e9800998ecf8427e", "", MessageDigests.md5());
+    assertHash("900150983cd24fb0d6963f7d28e17f72", "abc", MessageDigests.md5());
+    assertHash(
+        "8215ef0796a20bcaaae116d3876c664a",
+        "abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq",
+        MessageDigests.md5());
+    assertHash(
+        "7707d6ae4e027c70eea2a935c2296f21",
+        new String(new char[1000000]).replace("\0", "a"),
+        MessageDigests.md5());
+    assertHash(
+        "9e107d9d372bb6826bd81d3542a419d6",
+        "The quick brown fox jumps over the lazy dog",
+        MessageDigests.md5());
+    assertHash(
+        "1055d3e698d289f2af8663725127bd4b",
+        "The quick brown fox jumps over the lazy cog",
+        MessageDigests.md5());
+  }
 
-    /**
-     * Sha 1.
-     */
-    @Test
-    public void sha1() {
-        assertHash("da39a3ee5e6b4b0d3255bfef95601890afd80709", "", MessageDigests.sha1());
-        assertHash("a9993e364706816aba3e25717850c26c9cd0d89d", "abc", MessageDigests.sha1());
-        assertHash("84983e441c3bd26ebaae4aa1f95129e5e54670f1",
-            "abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq", MessageDigests.sha1());
-        assertHash("34aa973cd4c4daa4f61eeb2bdbad27316534016f",
-            new String(new char[1000000]).replace("\0", "a"), MessageDigests.sha1());
-        assertHash("2fd4e1c67a2d28fced849ee1bb76e7391b93eb12",
-            "The quick brown fox jumps over the lazy dog", MessageDigests.sha1());
-        assertHash("de9f2c7fd25e1b3afad3e85a0bd17d9b100db4b3",
-            "The quick brown fox jumps over the lazy cog", MessageDigests.sha1());
-    }
+  /** Sha 1. */
+  @Test
+  public void sha1() {
+    assertHash("da39a3ee5e6b4b0d3255bfef95601890afd80709", "", MessageDigests.sha1());
+    assertHash("a9993e364706816aba3e25717850c26c9cd0d89d", "abc", MessageDigests.sha1());
+    assertHash(
+        "84983e441c3bd26ebaae4aa1f95129e5e54670f1",
+        "abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq",
+        MessageDigests.sha1());
+    assertHash(
+        "34aa973cd4c4daa4f61eeb2bdbad27316534016f",
+        new String(new char[1000000]).replace("\0", "a"),
+        MessageDigests.sha1());
+    assertHash(
+        "2fd4e1c67a2d28fced849ee1bb76e7391b93eb12",
+        "The quick brown fox jumps over the lazy dog",
+        MessageDigests.sha1());
+    assertHash(
+        "de9f2c7fd25e1b3afad3e85a0bd17d9b100db4b3",
+        "The quick brown fox jumps over the lazy cog",
+        MessageDigests.sha1());
+  }
 
-    /**
-     * Sha 256.
-     */
-    @Test
-    public void sha256() {
-        assertHash("e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855", "",
-            MessageDigests.sha256());
-        assertHash("ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad", "abc",
-            MessageDigests.sha256());
-        assertHash("248d6a61d20638b8e5c026930c3e6039a33ce45964ff2167f6ecedd419db06c1",
-            "abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq", MessageDigests.sha256());
-        assertHash("cdc76e5c9914fb9281a1c7e284d73e67f1809a48a497200e046d39ccc7112cd0", new String(
-            new char[1000000]).replace("\0", "a"), MessageDigests.sha256());
-        assertHash("d7a8fbb307d7809469ca9abcb0082e4f8d5651e46d3cdb762d02d0bf37c9e592",
-            "The quick brown fox jumps over the lazy dog", MessageDigests.sha256());
-        assertHash("e4c4d8f3bf76b692de791a173e05321150f7a345b46484fe427f6acc7ecc81be",
-            "The quick brown fox jumps over the lazy cog", MessageDigests.sha256());
-    }
+  /** Sha 256. */
+  @Test
+  public void sha256() {
+    assertHash(
+        "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "",
+        MessageDigests.sha256());
+    assertHash(
+        "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad",
+        "abc",
+        MessageDigests.sha256());
+    assertHash(
+        "248d6a61d20638b8e5c026930c3e6039a33ce45964ff2167f6ecedd419db06c1",
+        "abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq",
+        MessageDigests.sha256());
+    assertHash(
+        "cdc76e5c9914fb9281a1c7e284d73e67f1809a48a497200e046d39ccc7112cd0",
+        new String(new char[1000000]).replace("\0", "a"),
+        MessageDigests.sha256());
+    assertHash(
+        "d7a8fbb307d7809469ca9abcb0082e4f8d5651e46d3cdb762d02d0bf37c9e592",
+        "The quick brown fox jumps over the lazy dog",
+        MessageDigests.sha256());
+    assertHash(
+        "e4c4d8f3bf76b692de791a173e05321150f7a345b46484fe427f6acc7ecc81be",
+        "The quick brown fox jumps over the lazy cog",
+        MessageDigests.sha256());
+  }
 
-    private void assertHash(String expected, String test, MessageDigest messageDigest) {
-        String actual = MessageDigests.toHexString(messageDigest.digest(test.getBytes()));
-        assertEquals(expected, actual);
-    }
+  private void assertHash(String expected, String test, MessageDigest messageDigest) {
+    String actual = MessageDigests.toHexString(messageDigest.digest(test.getBytes()));
+    assertEquals(expected, actual);
+  }
 }

@@ -18,12 +18,8 @@ package com.alipay.sofa.registry.common.model.dataserver;
 
 import com.alipay.sofa.registry.common.model.ProcessId;
 import com.alipay.sofa.registry.util.StringFormatter;
-import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-
-import java.io.Serializable;
 import java.util.Collections;
-import java.util.List;
 import java.util.Map;
 
 /**
@@ -34,33 +30,39 @@ import java.util.Map;
  */
 public class GetDataVersionRequest extends AbstractSlotRequest {
 
-    private static final long               serialVersionUID = 8942977145684175886L;
+  private static final long serialVersionUID = 8942977145684175886L;
 
-    private final String                    dataCenter;
-    // dataInfoId:max(push.version)
-    private final Map<String, DatumVersion> interests;
+  private final String dataCenter;
+  // dataInfoId:max(push.version)
+  private final Map<String, DatumVersion> interests;
 
-    /**
-     * constructor
-     */
-    public GetDataVersionRequest(String dataCenter, ProcessId sessionProcessId, int slotId,
-                                 Map<String, DatumVersion> interests) {
-        super(slotId, sessionProcessId);
-        this.dataCenter = dataCenter;
-        this.interests = Collections.unmodifiableMap(Maps.newHashMap(interests));
-    }
+  /** constructor */
+  public GetDataVersionRequest(
+      String dataCenter,
+      ProcessId sessionProcessId,
+      int slotId,
+      Map<String, DatumVersion> interests) {
+    super(slotId, sessionProcessId);
+    this.dataCenter = dataCenter;
+    this.interests = Collections.unmodifiableMap(Maps.newHashMap(interests));
+  }
 
-    public Map<String, DatumVersion> getInterests() {
-        return interests;
-    }
+  public Map<String, DatumVersion> getInterests() {
+    return interests;
+  }
 
-    public String getDataCenter() {
-        return dataCenter;
-    }
+  public String getDataCenter() {
+    return dataCenter;
+  }
 
-    @Override
-    public String toString() {
-        return StringFormatter.format("GetDataVer:{},{},{},{},interests={}", getSlotId(),
-            dataCenter, getSlotLeaderEpoch(), getSlotTableEpoch(), interests.size());
-    }
+  @Override
+  public String toString() {
+    return StringFormatter.format(
+        "GetDataVer:{},{},{},{},interests={}",
+        getSlotId(),
+        dataCenter,
+        getSlotLeaderEpoch(),
+        getSlotTableEpoch(),
+        interests.size());
+  }
 }

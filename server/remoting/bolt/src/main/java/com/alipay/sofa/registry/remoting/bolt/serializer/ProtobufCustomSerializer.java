@@ -29,130 +29,129 @@ import com.alipay.sofa.registry.log.LoggerFactory;
 
 /**
  * The type Protobuf custom serializer.
+ *
  * @author zhuoyu.sjw
  * @version $Id : ProtobufCustomSerializer.java, v 0.1 2018年03月21日 6:14 PM bystander Exp $
  */
 public class ProtobufCustomSerializer implements CustomSerializer {
-    private static final Logger LOGGER            = LoggerFactory
-                                                      .getLogger(ProtobufCustomSerializer.class);
+  private static final Logger LOGGER = LoggerFactory.getLogger(ProtobufCustomSerializer.class);
 
-    /**
-     * The constant PROTOCOL_PROTOBUF.
-     */
-    public static final byte    PROTOCOL_PROTOBUF = 11;
+  /** The constant PROTOCOL_PROTOBUF. */
+  public static final byte PROTOCOL_PROTOBUF = 11;
 
-    @Override
-    public <T extends RequestCommand> boolean serializeHeader(T request, InvokeContext invokeContext) {
-        return false;
+  @Override
+  public <T extends RequestCommand> boolean serializeHeader(
+      T request, InvokeContext invokeContext) {
+    return false;
+  }
+
+  @Override
+  public <T extends ResponseCommand> boolean serializeHeader(T response) {
+    return false;
+  }
+
+  @Override
+  public <T extends RequestCommand> boolean deserializeHeader(T request) {
+    return false;
+  }
+
+  @Override
+  public <T extends ResponseCommand> boolean deserializeHeader(
+      T response, InvokeContext invokeContext) {
+    return false;
+  }
+
+  @Override
+  public <T extends RequestCommand> boolean serializeContent(
+      T request, InvokeContext invokeContext) {
+    if (request instanceof RpcRequestCommand) {
+      try {
+        RpcRequestCommand requestCommand = (RpcRequestCommand) request;
+        Object requestObject = requestCommand.getRequestObject();
+        request.setContent(ProtobufSerializer.getInstance().serialize(requestObject));
+        return true;
+      } catch (CodecException e) {
+        LOGGER.error("[bolt] encode request error, {}", request, e);
+      }
     }
+    return false;
+  }
 
-    @Override
-    public <T extends ResponseCommand> boolean serializeHeader(T response) {
-        return false;
-    }
-
-    @Override
-    public <T extends RequestCommand> boolean deserializeHeader(T request) {
-        return false;
-    }
-
-    @Override
-    public <T extends ResponseCommand> boolean deserializeHeader(T response,
-                                                                 InvokeContext invokeContext) {
-        return false;
-    }
-
-    @Override
-    public <T extends RequestCommand> boolean serializeContent(T request,
-                                                               InvokeContext invokeContext) {
-        if (request instanceof RpcRequestCommand) {
-            try {
-                RpcRequestCommand requestCommand = (RpcRequestCommand) request;
-                Object requestObject = requestCommand.getRequestObject();
-                request.setContent(ProtobufSerializer.getInstance().serialize(requestObject));
-                return true;
-            } catch (CodecException e) {
-                LOGGER.error("[bolt] encode request error, {}", request, e);
-            }
+  @Override
+  public <T extends ResponseCommand> boolean serializeContent(T response) {
+    if (response instanceof RpcResponseCommand) {
+      if (response.getSerializer() == PROTOCOL_PROTOBUF) {
+        try {
+          Object appResponse = ((RpcResponseCommand) response).getResponseObject();
+          if (appResponse instanceof Throwable) {
+            // 业务异常序列化的是错误字符串
+            response.setContent(
+                ProtobufSerializer.getInstance().serialize(((Throwable) appResponse).getMessage()));
+            return false;
+          } else {
+            response.setContent(ProtobufSerializer.getInstance().serialize(appResponse));
+            return true;
+          }
+        } catch (CodecException e) {
+          LOGGER.error("[bolt] encode response error, {}", response, e);
         }
-        return false;
+      }
     }
 
-    @Override
-    public <T extends ResponseCommand> boolean serializeContent(T response) {
-        if (response instanceof RpcResponseCommand) {
-            if (response.getSerializer() == PROTOCOL_PROTOBUF) {
-                try {
-                    Object appResponse = ((RpcResponseCommand) response).getResponseObject();
-                    if (appResponse instanceof Throwable) {
-                        // 业务异常序列化的是错误字符串
-                        response.setContent(ProtobufSerializer.getInstance().serialize(
-                            ((Throwable) appResponse).getMessage()));
-                        return false;
-                    } else {
-                        response
-                            .setContent(ProtobufSerializer.getInstance().serialize(appResponse));
-                        return true;
-                    }
-                } catch (CodecException e) {
-                    LOGGER.error("[bolt] encode response error, {}", response, e);
-                }
-            }
+    return false;
+  }
+
+  @Override
+  public <T extends RequestCommand> boolean deserializeContent(T request)
+      throws DeserializationException {
+    if (request instanceof RpcRequestCommand) {
+      RpcRequestCommand requestCommand = (RpcRequestCommand) request;
+      if (requestCommand.getSerializer() == PROTOCOL_PROTOBUF) {
+        try {
+          Object pbReq = null;
+          byte[] content = requestCommand.getContent();
+          if (content != null && content.length != 0) {
+            pbReq =
+                ProtobufSerializer.getInstance()
+                    .deserialize(content, requestCommand.getRequestClass());
+          }
+          requestCommand.setRequestObject(pbReq);
+          return true;
+        } catch (DeserializationException e) {
+          throw e;
+        } catch (Exception e) {
+          throw new DeserializationException(e.getMessage(), e);
         }
-
-        return false;
+      }
     }
+    return false;
+  }
 
-    @Override
-    public <T extends RequestCommand> boolean deserializeContent(T request)
-                                                                           throws DeserializationException {
-        if (request instanceof RpcRequestCommand) {
-            RpcRequestCommand requestCommand = (RpcRequestCommand) request;
-            if (requestCommand.getSerializer() == PROTOCOL_PROTOBUF) {
-                try {
-                    Object pbReq = null;
-                    byte[] content = requestCommand.getContent();
-                    if (content != null && content.length != 0) {
-                        pbReq = ProtobufSerializer.getInstance().deserialize(content,
-                            requestCommand.getRequestClass());
-                    }
-                    requestCommand.setRequestObject(pbReq);
-                    return true;
-                } catch (DeserializationException e) {
-                    throw e;
-                } catch (Exception e) {
-                    throw new DeserializationException(e.getMessage(), e);
-                }
-            }
+  @Override
+  public <T extends ResponseCommand> boolean deserializeContent(
+      T response, InvokeContext invokeContext) throws DeserializationException {
+    if (response instanceof RpcResponseCommand) {
+      RpcResponseCommand responseCommand = (RpcResponseCommand) response;
+      if (response.getSerializer() == PROTOCOL_PROTOBUF) {
+        try {
+          Object pbReq = null;
+
+          byte[] content = responseCommand.getContent();
+          if (content != null && content.length != 0) {
+            pbReq =
+                ProtobufSerializer.getInstance()
+                    .deserialize(content, ((RpcResponseCommand) response).getResponseClass());
+          }
+          responseCommand.setResponseObject(pbReq);
+          return true;
+        } catch (DeserializationException e) {
+          throw e;
+        } catch (Exception e) {
+          throw new DeserializationException(e.getMessage(), e);
         }
-        return false;
+      }
     }
 
-    @Override
-    public <T extends ResponseCommand> boolean deserializeContent(T response,
-                                                                  InvokeContext invokeContext)
-                                                                                              throws DeserializationException {
-        if (response instanceof RpcResponseCommand) {
-            RpcResponseCommand responseCommand = (RpcResponseCommand) response;
-            if (response.getSerializer() == PROTOCOL_PROTOBUF) {
-                try {
-                    Object pbReq = null;
-
-                    byte[] content = responseCommand.getContent();
-                    if (content != null && content.length != 0) {
-                        pbReq = ProtobufSerializer.getInstance().deserialize(content,
-                            ((RpcResponseCommand) response).getResponseClass());
-                    }
-                    responseCommand.setResponseObject(pbReq);
-                    return true;
-                } catch (DeserializationException e) {
-                    throw e;
-                } catch (Exception e) {
-                    throw new DeserializationException(e.getMessage(), e);
-                }
-            }
-        }
-
-        return false;
-    }
+    return false;
+  }
 }

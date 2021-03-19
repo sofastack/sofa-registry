@@ -17,14 +17,12 @@
 package com.alipay.sofa.registry.jdbc.exception;
 
 /**
- * 
  * @author xiaojian.xj
- * @version $Id: RevisionNotExistException.java, v 0.1 2021年02月03日 15:59
- *          xiaojian.xj Exp $
+ * @version $Id: RevisionNotExistException.java, v 0.1 2021年02月03日 15:59 xiaojian.xj Exp $
  */
 public class InterfaceAppQueryException extends RuntimeException {
 
-	public InterfaceAppQueryException(String service) {
-		super(String.format("query apps by service: %s error.", service));
-	}
+  public InterfaceAppQueryException(String service) {
+    super(String.format("query apps by service: %s error.", service));
+  }
 }
