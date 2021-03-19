@@ -281,7 +281,7 @@ public class ScheduledSlotArranger extends AbstractLifecycleObservable
           "[arrangeSync] not stable leader for arrange, leader: [{}], is-leader: [{}], isWarmup [{}]",
           metaLeaderService.getLeader(),
           metaLeaderService.amILeader(),
-          metaLeaderService.isWarmup());
+          metaLeaderService.isWarmuped());
       return false;
     }
   }
