@@ -16,7 +16,6 @@
  */
 package com.alipay.sofa.registry.server.shared.meta;
 
-import com.alipay.sofa.registry.common.model.Tuple;
 import com.alipay.sofa.registry.common.model.metaserver.inter.heartbeat.BaseHeartBeatResponse;
 import com.alipay.sofa.registry.common.model.store.URL;
 import com.alipay.sofa.registry.exception.SofaRegistryRuntimeException;
@@ -30,11 +29,7 @@ import com.alipay.sofa.registry.remoting.exchange.Exchange;
 import com.alipay.sofa.registry.remoting.exchange.RequestException;
 import com.alipay.sofa.registry.remoting.exchange.message.Request;
 import com.alipay.sofa.registry.remoting.exchange.message.Response;
-import com.alipay.sofa.registry.server.shared.comparator.ComparatorVisitor;
-import com.alipay.sofa.registry.server.shared.comparator.NodeComparator;
 import com.alipay.sofa.registry.server.shared.remoting.ClientSideExchanger;
-import com.alipay.sofa.registry.server.shared.util.NodeUtils;
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import java.util.Collection;
@@ -46,6 +41,7 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
 import org.apache.commons.lang.StringUtils;
+import org.springframework.util.CollectionUtils;
 
 /**
  * @author chen.zhu
@@ -67,7 +63,7 @@ public abstract class AbstractMetaServerManager extends ClientSideExchanger
 
   protected volatile List<String> defaultMetaServers;
 
-  protected volatile List<String> runtimeMetaServers;
+  // protected volatile List<String> runtimeMetaServers;
 
   protected volatile String metaLeader;
 
@@ -86,12 +82,12 @@ public abstract class AbstractMetaServerManager extends ClientSideExchanger
   @Override
   public void initialize() {
     defaultMetaServers = getConfiguredMetaIp();
-    this.runtimeMetaServers = Lists.newArrayList(defaultMetaServers);
+    // this.runtimeMetaServers = Lists.newArrayList(defaultMetaServers);
   }
 
   @Override
   public void start() {
-    this.serverIps = Sets.newHashSet(runtimeMetaServers);
+    // this.serverIps = Sets.newHashSet(runtimeMetaServers);
     connectServer();
   }
 
@@ -105,15 +101,15 @@ public abstract class AbstractMetaServerManager extends ClientSideExchanger
     }
   }
 
-  @Override
-  public List<String> getRuntimeMetaServerList() {
-    try {
-      lock.readLock().lock();
-      return Lists.newArrayList(runtimeMetaServers);
-    } finally {
-      lock.readLock().unlock();
-    }
-  }
+  // @Override
+  // public List<String> getRuntimeMetaServerList() {
+  //  try {
+  //    lock.readLock().lock();
+  //    return Lists.newArrayList(runtimeMetaServers);
+  //  } finally {
+  //    lock.readLock().unlock();
+  //  }
+  // }
 
   @Override
   public String getMetaServerLeader() {
@@ -138,57 +134,62 @@ public abstract class AbstractMetaServerManager extends ClientSideExchanger
         lock.writeLock().unlock();
       }
     }
-    List<String> metaServers = NodeUtils.transferNodeToIpList(heartBeatResp.getMetaNodes());
-    lock.writeLock().lock();
-    try {
-      this.runtimeMetaServers = metaServers;
-    } finally {
-      lock.writeLock().unlock();
+
+    // heartbeat on follow, does not return metaNodes;
+    if (CollectionUtils.isEmpty(heartBeatResp.getMetaNodes())) {
+      return;
     }
-    doRefreshConnections();
+    // List<String> metaServers = NodeUtils.transferNodeToIpList(heartBeatResp.getMetaNodes());
+    // lock.writeLock().lock();
+    // try {
+    //  this.runtimeMetaServers = metaServers;
+    // } finally {
+    //  lock.writeLock().unlock();
+    // }
+    // doRefreshConnections();
   }
 
-  @VisibleForTesting
-  protected void doRefreshConnections() {
-    Set<String> future = Sets.newHashSet(this.runtimeMetaServers);
-    NodeComparator diff = new NodeComparator(this.serverIps, future);
-    diff.accept(
-        new ComparatorVisitor<String>() {
-          @Override
-          public void visitAdded(String added) {
-            try {
-              LOGGER.info("[visitAdded] connect new meta-server: {}", added);
-              URL url = new URL(added, getServerPort());
-              connect(url);
-            } catch (Throwable th) {
-              LOGGER.error("[visitAdded]", th);
-            }
-          }
-
-          @Override
-          public void visitModified(Tuple<String, String> modified) {
-            // do nothing
-          }
-
-          @Override
-          public void visitRemoved(String removed) {
-            try {
-              LOGGER.info("[visitRemoved] close meta-server connection: {}", removed);
-              boltExchange
-                  .getClient(serverType)
-                  .getChannel(new URL(removed, getServerPort()))
-                  .close();
-            } catch (Throwable th) {
-              LOGGER.error("[visitRemoved]", th);
-            }
-          }
-
-          @Override
-          public void visitRemaining(String remain) {
-            // do nothing
-          }
-        });
-  }
+  // @VisibleForTesting
+  // protected void doRefreshConnections() {
+  //  Set<String> future = Sets.newHashSet(this.runtimeMetaServers);
+  //  NodeComparator diff = new NodeComparator(this.serverIps, future);
+  //  diff.accept(
+  //      new ComparatorVisitor<String>() {
+  //        @Override
+  //        public void visitAdded(String added) {
+  //          try {
+  //            LOGGER.info("[visitAdded] connect new meta-server: {}", added);
+  //            URL url = new URL(added, getServerPort());
+  //            connect(url);
+  //          } catch (Throwable th) {
+  //            LOGGER.error("[visitAdded]", th);
+  //          }
+  //        }
+  //
+  //        @Override
+  //        public void visitModified(Tuple<String, String> modified) {
+  //          // do nothing
+  //        }
+  //
+  //        @Override
+  //        public void visitRemoved(String removed) {
+  //          try {
+  //            LOGGER.info("[visitRemoved] close meta-server connection: {}", removed);
+  //            boltExchange
+  //                .getClient(serverType)
+  //                .getChannel(new URL(removed, getServerPort()))
+  //                .close();
+  //          } catch (Throwable th) {
+  //            LOGGER.error("[visitRemoved]", th);
+  //          }
+  //        }
+  //
+  //        @Override
+  //        public void visitRemaining(String remain) {
+  //          // do nothing
+  //        }
+  //      });
+  // }
 
   @Override
   public Response sendRequest(Object requestBody) throws RequestException {

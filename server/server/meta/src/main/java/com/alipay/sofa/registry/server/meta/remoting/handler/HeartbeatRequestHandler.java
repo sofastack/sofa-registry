@@ -30,6 +30,7 @@ import com.alipay.sofa.registry.common.model.slot.DataNodeSlot;
 import com.alipay.sofa.registry.common.model.slot.Slot;
 import com.alipay.sofa.registry.common.model.slot.SlotConfig;
 import com.alipay.sofa.registry.common.model.slot.SlotTable;
+import com.alipay.sofa.registry.exception.SofaRegistryMetaLeaderException;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.remoting.Channel;
@@ -124,6 +125,7 @@ public class HeartbeatRequestHandler extends BaseMetaServerHandler<HeartbeatRequ
         case META:
           response =
               new BaseHeartBeatResponse(
+                  true,
                   metaServerInfo,
                   slotTable,
                   metaLeaderService.getLeader(),
@@ -135,6 +137,12 @@ public class HeartbeatRequestHandler extends BaseMetaServerHandler<HeartbeatRequ
 
       return new GenericResponse<BaseHeartBeatResponse>().fillSucceed(response);
     } catch (Throwable e) {
+      if (e instanceof SofaRegistryMetaLeaderException) {
+        SofaRegistryMetaLeaderException exception = (SofaRegistryMetaLeaderException) e;
+        BaseHeartBeatResponse response = new BaseHeartBeatResponse(false, exception.getLeader());
+        return new GenericResponse<BaseHeartBeatResponse>().fillFailed(response);
+      }
+
       logger.error("Node {} renew error!", renewNode, e);
       return new GenericResponse<BaseHeartBeatResponse>()
           .fillFailed("Node " + renewNode + "renew error!");

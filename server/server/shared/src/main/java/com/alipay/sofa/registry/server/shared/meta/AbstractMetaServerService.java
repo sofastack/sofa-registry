@@ -29,7 +29,6 @@ import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.remoting.exchange.message.Response;
 import com.alipay.sofa.registry.util.ConcurrentUtils;
 import com.alipay.sofa.registry.util.WakeUpLoopRunnable;
-import com.google.common.collect.Sets;
 import java.util.*;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -110,6 +109,10 @@ public abstract class AbstractMetaServerService<T extends BaseHeartBeatResponse>
         updateState(resp.getData());
         metaServerManager.refresh(resp.getData());
         handleRenewResult(resp.getData());
+      } else if (resp != null && !resp.isSuccess()) {
+        // heartbeat on follow, refresh leader;
+        // it will renewNode on leader next time;
+        metaServerManager.refresh(resp.getData());
       } else {
         LOGGER.error(
             "[RenewNodeTask] renew data node to metaServer error : {}, {}", leaderIp, resp);
@@ -172,8 +175,8 @@ public abstract class AbstractMetaServerService<T extends BaseHeartBeatResponse>
     return state.dataServers;
   }
 
-  public Set<String> getMetaServerList() {
-    return Sets.newHashSet(metaServerManager.getRuntimeMetaServerList());
+  public String getMetaServerLeader() {
+    return metaServerManager.getMetaServerLeader();
   }
 
   public List<String> getSessionServerList(String zonename) {

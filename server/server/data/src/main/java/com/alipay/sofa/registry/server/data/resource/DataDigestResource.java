@@ -140,7 +140,7 @@ public class DataDigestResource {
           }
           break;
         case META:
-          List<String> metaList = getMetaServerList();
+          List<String> metaList = getMetaServerLeader();
           if (metaList != null) {
             map.put(dataServerConfig.getLocalDataCenter(), metaList);
           }
@@ -162,7 +162,7 @@ public class DataDigestResource {
     return connections;
   }
 
-  public List<String> getMetaServerList() {
-    return Lists.newArrayList(metaServerService.getMetaServerList());
+  public List<String> getMetaServerLeader() {
+    return Lists.newArrayList(metaServerService.getMetaServerLeader());
   }
 }
