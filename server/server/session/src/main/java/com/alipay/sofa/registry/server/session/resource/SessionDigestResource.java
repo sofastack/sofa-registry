@@ -32,6 +32,7 @@ import com.alipay.sofa.registry.server.session.store.Watchers;
 import com.alipay.sofa.registry.server.shared.meta.MetaServerService;
 import com.codahale.metrics.Gauge;
 import com.codahale.metrics.MetricRegistry;
+import com.google.common.collect.Lists;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -256,7 +257,7 @@ public class SessionDigestResource {
           serverList = getDataServerList();
           break;
         case META:
-          serverList = getMetaServerList();
+          serverList = getMetaServerLeader();
           break;
         default:
           serverList = new ArrayList<>();
@@ -274,7 +275,7 @@ public class SessionDigestResource {
     return new ArrayList<>(mataNodeService.getDataServerList());
   }
 
-  public List<String> getMetaServerList() {
-    return new ArrayList<>(mataNodeService.getMetaServerList());
+  public List<String> getMetaServerLeader() {
+    return Lists.newArrayList(mataNodeService.getMetaServerLeader());
   }
 }

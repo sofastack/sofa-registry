@@ -33,6 +33,6 @@ public class SessionHeartBeatResponse extends BaseHeartBeatResponse {
       VersionedList<SessionNode> sessionNodes,
       String metaLeader,
       long metaLeaderEpoch) {
-    super(metaNodes, slotTable, sessionNodes, metaLeader, metaLeaderEpoch);
+    super(true, metaNodes, slotTable, sessionNodes, metaLeader, metaLeaderEpoch);
   }
 }

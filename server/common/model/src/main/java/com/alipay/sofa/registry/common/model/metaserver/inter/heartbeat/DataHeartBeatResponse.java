@@ -32,7 +32,7 @@ public class DataHeartBeatResponse extends BaseHeartBeatResponse {
       SlotTable slotTable,
       String metaLeader,
       long metaLeaderEpoch) {
-    super(metaNodes, slotTable, metaLeader, metaLeaderEpoch);
+    super(true, metaNodes, slotTable, metaLeader, metaLeaderEpoch);
   }
 
   public DataHeartBeatResponse(
@@ -41,6 +41,6 @@ public class DataHeartBeatResponse extends BaseHeartBeatResponse {
       VersionedList<SessionNode> sessionNodes,
       String metaLeader,
       long metaLeaderEpoch) {
-    super(metaNodes, slotTable, sessionNodes, metaLeader, metaLeaderEpoch);
+    super(true, metaNodes, slotTable, sessionNodes, metaLeader, metaLeaderEpoch);
   }
 }
