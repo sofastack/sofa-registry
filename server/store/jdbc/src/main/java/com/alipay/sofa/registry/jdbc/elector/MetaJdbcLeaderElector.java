@@ -61,11 +61,16 @@ public class MetaJdbcLeaderElector extends AbstractLeaderElector {
 
     ElectorRole role = amILeader(lock.getOwner()) ? ElectorRole.LEADER : ElectorRole.FOLLOWER;
     lock = electorRoleMap.get(role).onWorking(lock, myself());
-    return new LeaderInfo(
-        lock.getGmtModified().getTime(),
-        lock.getOwner(),
-        lock.getGmtModified(),
-        lock.getDuration());
+    LeaderInfo result =
+        new LeaderInfo(
+            lock.getGmtModified().getTime(),
+            lock.getOwner(),
+            lock.getGmtModified(),
+            lock.getDuration());
+    if (LOG.isInfoEnabled()) {
+      LOG.info("meta role : {}, leaderInfo: {}", role, result);
+    }
+    return result;
   }
 
   /**

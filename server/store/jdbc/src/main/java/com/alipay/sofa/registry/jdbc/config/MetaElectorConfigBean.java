@@ -16,6 +16,7 @@
  */
 package com.alipay.sofa.registry.jdbc.config;
 
+import com.alipay.sofa.registry.util.SystemUtils;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**
@@ -27,27 +28,20 @@ public class MetaElectorConfigBean implements MetaElectorConfig {
 
   public static final String PRE_FIX = "meta.server.elector";
 
-  private String dataCenter;
+  private String dataCenter = SystemUtils.getSystem("nodes.localDataCenter", "DefaultDataCenter");
+
+  private String clusterName = SystemUtils.getSystem("nodes.clusterName", "");
 
   private long lockExpireDuration = 20 * 1000;
 
   @Override
   public String getDataCenter() {
-    return dataCenter;
+    return dataCenter + clusterName;
   }
 
   @Override
   public long getLockExpireDuration() {
     return lockExpireDuration;
-  }
-
-  /**
-   * Setter method for property <tt>dataCenter</tt>.
-   *
-   * @param dataCenter value to be assigned to property dataCenter
-   */
-  public void setDataCenter(String dataCenter) {
-    this.dataCenter = dataCenter;
   }
 
   /**

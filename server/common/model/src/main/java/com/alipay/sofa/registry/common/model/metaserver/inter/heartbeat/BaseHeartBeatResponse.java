@@ -30,6 +30,10 @@ import java.util.*;
  */
 public class BaseHeartBeatResponse implements Serializable {
 
+  private static final long INIT_META_LEADER_EPOCH = -1L;
+
+  private final boolean heartbeatOnLeader;
+
   private final SlotTable slotTable;
 
   private final VersionedList<MetaNode> metaNodes;
@@ -40,20 +44,27 @@ public class BaseHeartBeatResponse implements Serializable {
 
   private final long metaLeaderEpoch;
 
+  public BaseHeartBeatResponse(boolean heartbeatOnLeader, String metaLeader) {
+    this(heartbeatOnLeader, null, null, metaLeader, INIT_META_LEADER_EPOCH);
+  }
+
   public BaseHeartBeatResponse(
+      boolean heartbeatOnLeader,
       VersionedList<MetaNode> metaNodes,
       SlotTable slotTable,
       String metaLeader,
       long metaLeaderEpoch) {
-    this(metaNodes, slotTable, VersionedList.EMPTY, metaLeader, metaLeaderEpoch);
+    this(heartbeatOnLeader, metaNodes, slotTable, VersionedList.EMPTY, metaLeader, metaLeaderEpoch);
   }
 
   public BaseHeartBeatResponse(
+      boolean heartbeatOnLeader,
       VersionedList<MetaNode> metaNodes,
       SlotTable slotTable,
       VersionedList<SessionNode> sessionNodes,
       String metaLeader,
       long metaLeaderEpoch) {
+    this.heartbeatOnLeader = heartbeatOnLeader;
     this.slotTable = slotTable;
     this.metaNodes = metaNodes;
     this.sessionNodes = sessionNodes;
@@ -95,5 +106,9 @@ public class BaseHeartBeatResponse implements Serializable {
 
   public long getMetaServerEpoch() {
     return metaNodes.getEpoch();
+  }
+
+  public boolean isHeartbeatOnLeader() {
+    return this.heartbeatOnLeader;
   }
 }

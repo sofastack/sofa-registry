@@ -49,7 +49,7 @@ public interface MetaServerService {
 
   public Set<String> getDataServerList();
 
-  public Set<String> getMetaServerList();
+  public String getMetaServerLeader();
 
   long getSessionServerEpoch();
 

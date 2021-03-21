@@ -29,7 +29,7 @@ public interface MetaServerManager {
 
   List<String> getDefaultMetaServerList();
 
-  List<String> getRuntimeMetaServerList();
+  // List<String> getRuntimeMetaServerList();
 
   String getMetaServerLeader();
 

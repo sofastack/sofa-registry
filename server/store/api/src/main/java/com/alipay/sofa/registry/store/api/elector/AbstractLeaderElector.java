@@ -17,6 +17,8 @@
 package com.alipay.sofa.registry.store.api.elector;
 
 import com.alipay.sofa.common.profile.StringUtil;
+import com.alipay.sofa.registry.log.Logger;
+import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.net.NetUtil;
 import com.alipay.sofa.registry.util.ConcurrentUtils;
 import com.alipay.sofa.registry.util.LoopRunnable;
@@ -31,6 +33,9 @@ import javax.annotation.PostConstruct;
  *     <p>Mar 10, 2021
  */
 public abstract class AbstractLeaderElector implements LeaderElector {
+  private static final Logger LOG =
+      LoggerFactory.getLogger("META-ELECTOR", "[MetaJdbcLeaderElector]");
+
   private final List<LeaderAware> leaderAwares = Lists.newCopyOnWriteArrayList();
 
   private volatile LeaderInfo leaderInfo = LeaderInfo.hasNoLeader;
@@ -126,8 +131,16 @@ public abstract class AbstractLeaderElector implements LeaderElector {
   }
 
   protected boolean amILeader(String leader) {
-    return StringUtil.equals(myself(), leader)
-        && System.currentTimeMillis() < leaderInfo.expireTimestamp;
+    long current = System.currentTimeMillis();
+    if (LOG.isInfoEnabled()) {
+      LOG.info(
+          "myself is: {}, current timestamp: {}, leader is: {}, leader expireTimestamp: {}",
+          myself(),
+          current,
+          leader,
+          leaderInfo.expireTimestamp);
+    }
+    return StringUtil.equals(myself(), leader) && current < leaderInfo.expireTimestamp;
   }
 
   /**
@@ -216,6 +229,19 @@ public abstract class AbstractLeaderElector implements LeaderElector {
      */
     public long getExpireTimestamp() {
       return expireTimestamp;
+    }
+
+    @Override
+    public String toString() {
+      return "LeaderInfo{"
+          + "epoch="
+          + epoch
+          + ", leader='"
+          + leader
+          + '\''
+          + ", expireTimestamp="
+          + expireTimestamp
+          + '}';
     }
   }
 }
