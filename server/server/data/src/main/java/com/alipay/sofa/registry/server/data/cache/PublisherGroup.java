@@ -31,7 +31,6 @@ import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.util.DatumVersionUtil;
 import com.alipay.sofa.registry.util.ParaCheckUtil;
 import com.alipay.sofa.registry.util.StringFormatter;
-import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import java.util.*;
@@ -104,7 +103,7 @@ public final class PublisherGroup {
 
   List<Publisher> getPublishers() {
     List<Publisher> list = new ArrayList<>(pubMap.size());
-    for (PublisherEnvelope envelope : Lists.newArrayList(pubMap.values())) {
+    for (PublisherEnvelope envelope : pubMap.values()) {
       if (envelope.isPub()) {
         list.add(envelope.publisher);
       }
@@ -114,14 +113,11 @@ public final class PublisherGroup {
 
   Map<String, Publisher> getByConnectId(ConnectId connectId) {
     Map<String, Publisher> map = Maps.newHashMap();
-    pubMap
-        .values()
-        .forEach(
-            p -> {
-              if (p.isConnectId(connectId)) {
-                map.put(p.publisher.getRegisterId(), p.publisher);
-              }
-            });
+    for (PublisherEnvelope p : pubMap.values()) {
+      if (p.isConnectId(connectId)) {
+        map.put(p.publisher.getRegisterId(), p.publisher);
+      }
+    }
     return map;
   }
 

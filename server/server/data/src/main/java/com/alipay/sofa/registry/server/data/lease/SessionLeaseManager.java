@@ -121,7 +121,9 @@ public final class SessionLeaseManager {
 
     @Override
     public void waitingUnthrowable() {
-      ConcurrentUtils.sleepUninterruptibly(1, TimeUnit.SECONDS);
+      // CPU overhead is high
+      ConcurrentUtils.sleepUninterruptibly(
+          dataServerConfig.getSessionLeaseCheckIntervalSecs(), TimeUnit.SECONDS);
     }
   }
 

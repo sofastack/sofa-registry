@@ -41,6 +41,7 @@ public class SessionLeaseManagerTest {
     LocalDatumStorage storage = TestBaseUtils.newLocalStorage("testDc", true);
     slm.setLocalDatumStorage(storage);
     DataServerConfig config = storage.getDataServerConfig();
+    config.setSessionLeaseCheckIntervalSecs(1);
     config.setDatumCompactDelaySecs(1);
     config.setSessionLeaseSecs(1);
     slm.setDataServerConfig(config);
@@ -83,6 +84,7 @@ public class SessionLeaseManagerTest {
     LocalDatumStorage storage = TestBaseUtils.newLocalStorage("testDc", true);
     slm.setLocalDatumStorage(storage);
     DataServerConfig config = storage.getDataServerConfig();
+    config.setSessionLeaseCheckIntervalSecs(1);
     config.setDatumCompactDelaySecs(1);
     config.setSessionLeaseSecs(5);
     slm.setDataServerConfig(config);
