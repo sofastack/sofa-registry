@@ -14,29 +14,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alipay.sofa.registry.server.shared.meta;
-
-import com.alipay.sofa.registry.common.model.elector.LeaderInfo;
-import com.alipay.sofa.registry.common.model.metaserver.inter.heartbeat.BaseHeartBeatResponse;
-import com.alipay.sofa.registry.remoting.exchange.RequestException;
-import com.alipay.sofa.registry.remoting.exchange.message.Response;
-import java.util.List;
+package com.alipay.sofa.registry.exception;
 
 /**
- * @author chen.zhu
- *     <p>Mar 15, 2021
+ * @author xiaojian.xj
+ * @version $Id: MetaLeaderQueryException.java, v 0.1 2021年03月22日 14:30 xiaojian.xj Exp $
  */
-public interface MetaServerManager {
+public class MetaLeaderQueryException extends SofaRegistryRuntimeException {
+  public MetaLeaderQueryException(String message) {
+    super(message);
+  }
 
-  List<String> getDefaultMetaServerList();
+  public MetaLeaderQueryException(String message, Throwable th) {
+    super(message, th);
+  }
 
-  // List<String> getRuntimeMetaServerList();
-
-  LeaderInfo resetLeaderFromRestServer();
-
-  String getMetaServerLeader();
-
-  void refresh(BaseHeartBeatResponse heartBeatResp);
-
-  Response sendRequest(Object requestBody) throws RequestException;
+  public MetaLeaderQueryException(Throwable th) {
+    super(th);
+  }
 }
