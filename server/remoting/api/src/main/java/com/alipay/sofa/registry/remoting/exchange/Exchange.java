@@ -63,6 +63,8 @@ public interface Exchange<T> {
    */
   Server open(URL url, T... channelHandlers);
 
+  Server open(URL url, int lowWaterMark, int highWaterMark, T... channelHandlers);
+
   /**
    * * get Client instance by serverType,very client instance has different channels match different
    * server ip

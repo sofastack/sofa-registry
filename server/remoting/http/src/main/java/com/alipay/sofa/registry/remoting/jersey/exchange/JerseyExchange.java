@@ -72,6 +72,12 @@ public class JerseyExchange implements Exchange<ResourceConfig> {
   }
 
   @Override
+  public Server open(
+      URL url, int lowWaterMark, int highWaterMark, ResourceConfig... channelHandlers) {
+    return open(url, channelHandlers);
+  }
+
+  @Override
   public Client getClient(String serverType) {
     if (null == client) {
       synchronized (JerseyExchange.class) {

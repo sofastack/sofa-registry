@@ -81,6 +81,7 @@ public class DataServerConfig {
   private int publishExecutorQueueSize = 10000;
 
   private volatile int sessionLeaseSecs = 30;
+  private int sessionLeaseCheckIntervalSecs = 5;
 
   private int datumCompactDelaySecs = 60 * 3;
 
@@ -110,6 +111,9 @@ public class DataServerConfig {
   private int cacheDigestIntervalMinutes = 15;
 
   private int cacheCountIntervalSecs = 30;
+
+  private int lowWaterMark = 1024 * 128;
+  private int highWaterMark = 1024 * 256;
 
   /**
    * constructor
@@ -767,6 +771,30 @@ public class DataServerConfig {
 
   public void setNotifyRetryBackoffMillis(int notifyRetryBackoffMillis) {
     this.notifyRetryBackoffMillis = notifyRetryBackoffMillis;
+  }
+
+  public int getLowWaterMark() {
+    return lowWaterMark;
+  }
+
+  public void setLowWaterMark(int lowWaterMark) {
+    this.lowWaterMark = lowWaterMark;
+  }
+
+  public int getHighWaterMark() {
+    return highWaterMark;
+  }
+
+  public void setHighWaterMark(int highWaterMark) {
+    this.highWaterMark = highWaterMark;
+  }
+
+  public int getSessionLeaseCheckIntervalSecs() {
+    return sessionLeaseCheckIntervalSecs;
+  }
+
+  public void setSessionLeaseCheckIntervalSecs(int sessionLeaseCheckIntervalSecs) {
+    this.sessionLeaseCheckIntervalSecs = sessionLeaseCheckIntervalSecs;
   }
 
   @Override

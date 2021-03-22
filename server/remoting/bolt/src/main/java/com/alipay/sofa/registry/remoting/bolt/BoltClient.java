@@ -16,11 +16,7 @@
  */
 package com.alipay.sofa.registry.remoting.bolt;
 
-import com.alipay.remoting.Connection;
-import com.alipay.remoting.ConnectionEventProcessor;
-import com.alipay.remoting.ConnectionEventType;
-import com.alipay.remoting.InvokeCallback;
-import com.alipay.remoting.Url;
+import com.alipay.remoting.*;
 import com.alipay.remoting.config.Configs;
 import com.alipay.remoting.exception.RemotingException;
 import com.alipay.remoting.rpc.RpcClient;
@@ -70,8 +66,9 @@ public class BoltClient implements Client {
   }
 
   private void configIO() {
-    final int low = Integer.getInteger(Configs.NETTY_BUFFER_LOW_WATERMARK, 1024 * 128);
-    final int high = Integer.getInteger(Configs.NETTY_BUFFER_HIGH_WATERMARK, 1024 * 256);
+    final int max = 1024 * (128 + 256);
+    final int low = Integer.getInteger(Configs.NETTY_BUFFER_LOW_WATERMARK, max / 2);
+    final int high = Integer.getInteger(Configs.NETTY_BUFFER_HIGH_WATERMARK, max);
     rpcClient.initWriteBufferWaterMark(low, high);
     LOGGER.info("config watermark, low={}, high={}", low, high);
   }

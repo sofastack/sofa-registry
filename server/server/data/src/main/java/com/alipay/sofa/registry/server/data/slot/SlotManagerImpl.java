@@ -37,9 +37,9 @@ import com.alipay.sofa.registry.server.shared.slot.DiskSlotTableRecorder;
 import com.alipay.sofa.registry.server.shared.slot.SlotTableRecorder;
 import com.alipay.sofa.registry.task.KeyedTask;
 import com.alipay.sofa.registry.task.KeyedThreadPoolExecutor;
+import com.alipay.sofa.registry.task.TaskErrorSilenceException;
 import com.alipay.sofa.registry.util.ConcurrentUtils;
 import com.alipay.sofa.registry.util.ParaCheckUtil;
-import com.alipay.sofa.registry.util.StringFormatter;
 import com.alipay.sofa.registry.util.WakeUpLoopRunnable;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
@@ -61,7 +61,9 @@ public final class SlotManagerImpl implements SlotManager {
 
   private static final Logger MIGRATING_LOGGER = LoggerFactory.getLogger("MIGRATING");
 
-  private static final Logger ERROR_LOGGER = LoggerFactory.getLogger("MIGRATING-ERROR");
+  private static final Logger SYNC_ERROR_LOGGER = LoggerFactory.getLogger("SYNC-ERROR");
+
+  private static final Logger SYNC_DIGEST_LOGGER = LoggerFactory.getLogger("SYNC-DIGEST");
 
   private final SlotFunction slotFunction = SlotFunctionRegistry.getFunc();
 
@@ -263,12 +265,9 @@ public final class SlotManagerImpl implements SlotManager {
   }
 
   private void recordSlotTable(SlotTable slotTable) {
-    recorders.forEach(
-        recorder -> {
-          if (recorder != null) {
-            recorder.record(slotTable);
-          }
-        });
+    for (SlotTableRecorder recorder : recorders) {
+      recorder.record(slotTable);
+    }
   }
 
   private void updateSlotState(SlotTable updating) {
@@ -290,8 +289,7 @@ public final class SlotManagerImpl implements SlotManager {
       if (updating.getSlot(e.getKey()) == null) {
         final Slot slot = e.getValue().slot;
         it.remove();
-        // import
-        // first remove the slot for GetData Access check, then clean the data
+        // important, first remove the slot for GetData Access check, then clean the data
         listenRemove(slot);
         observeLeaderMigratingFinish(slot.getId());
         LOGGER.info("remove slot, slot={}", slot);
@@ -347,7 +345,7 @@ public final class SlotManagerImpl implements SlotManager {
         processUpdating();
         syncWatch();
       } catch (Throwable e) {
-        ERROR_LOGGER.error("[syncWatch]failed to do sync watching", e);
+        SYNC_ERROR_LOGGER.error("[syncWatch]failed to do sync watching", e);
       }
     }
 
@@ -367,7 +365,7 @@ public final class SlotManagerImpl implements SlotManager {
       try {
         sync(slotState, syncSessionIntervalMs, syncLeaderIntervalMs, slotTableEpoch);
       } catch (Throwable e) {
-        ERROR_LOGGER.error(
+        SYNC_ERROR_LOGGER.error(
             "[syncCommit]failed to do sync slot {}, migrated={}",
             slotState.slot,
             slotState.migrated,
@@ -482,7 +480,6 @@ public final class SlotManagerImpl implements SlotManager {
           slotState.migratingTasks.put(sessionIp, mtask);
         } else {
           // fail
-          observeLeaderMigratingFail(slot.getId(), sessionIp);
           mtask.task = ktask;
         }
         // TODO add max trycount, avoid the unhealth session block the migrating
@@ -564,14 +561,14 @@ public final class SlotManagerImpl implements SlotManager {
         };
     SyncSessionTask task =
         new SyncSessionTask(
-            slotTableEpoch, slot, sessionIp, syncer, sessionNodeExchanger, continues);
+            migrate, slotTableEpoch, slot, sessionIp, syncer, sessionNodeExchanger, continues);
     if (migrate) {
       // group by slotId and session
       return migrateSessionExecutor.execute(new Tuple(slot.getId(), sessionIp), task);
     } else {
-      // to a session node, at most there is 8 tasks running, avoid too many task hit the same
+      // to a session node, at most there is 4 tasks running, avoid too many tasks hit the same
       // session
-      return syncSessionExecutor.execute(new Tuple((slot.getId() % 8), sessionIp), task);
+      return syncSessionExecutor.execute(new Tuple((slot.getId() % 4), sessionIp), task);
     }
   }
 
@@ -641,6 +638,8 @@ public final class SlotManagerImpl implements SlotManager {
   }
 
   private static final class SyncSessionTask implements Runnable {
+    final long startTimestamp = System.currentTimeMillis();
+    final boolean migrating;
     final long slotTableEpoch;
     final Slot slot;
     final String sessionIp;
@@ -649,12 +648,14 @@ public final class SlotManagerImpl implements SlotManager {
     final SyncContinues continues;
 
     SyncSessionTask(
+        boolean migrating,
         long slotTableEpoch,
         Slot slot,
         String sessionIp,
         SlotDiffSyncer syncer,
         SessionNodeExchanger sessionNodeExchanger,
         SyncContinues continues) {
+      this.migrating = migrating;
       this.slotTableEpoch = slotTableEpoch;
       this.slot = slot;
       this.sessionIp = sessionIp;
@@ -664,27 +665,41 @@ public final class SlotManagerImpl implements SlotManager {
     }
 
     public void run() {
+      boolean success = false;
       try {
-        if (!syncer.syncSession(
-            slot.getId(), sessionIp, sessionNodeExchanger, slotTableEpoch, continues)) {
+        success =
+            syncer.syncSession(
+                slot.getId(), sessionIp, sessionNodeExchanger, slotTableEpoch, continues);
+        if (!success) {
           // sync failed
           throw new RuntimeException("sync session failed");
         }
       } catch (Throwable e) {
-        ERROR_LOGGER.error("[syncSession]sync failed: {}, slot={}", sessionIp, slot.getId(), e);
-        throw new RuntimeException(
-            StringFormatter.format("sync session failed: {}, slot={}", sessionIp, slot.getId()), e);
+        if (migrating) {
+          observeLeaderMigratingFail(slot.getId(), sessionIp);
+          SYNC_ERROR_LOGGER.error("[migrating]failed: {}, slot={}", sessionIp, slot.getId(), e);
+        } else {
+          SYNC_ERROR_LOGGER.error("[syncSession]failed: {}, slot={}", sessionIp, slot.getId(), e);
+        }
+        // rethrow silence exception, notify the task is failed
+        throw TaskErrorSilenceException.INSTANCE;
+      } finally {
+        SYNC_DIGEST_LOGGER.info(
+            "{},{},{},{},span={}",
+            success ? 'Y' : 'N',
+            migrating ? 'M' : 'S',
+            slot.getId(),
+            sessionIp,
+            System.currentTimeMillis() - startTimestamp);
       }
     }
 
     @Override
     public String toString() {
-      return "SyncSessionTask{"
-          + "slotTableEpoch="
+      return "SyncSession{epoch="
           + slotTableEpoch
-          + ", sessionIp='"
+          + ", session="
           + sessionIp
-          + '\''
           + ", slot="
           + slot
           + '}';
@@ -692,6 +707,7 @@ public final class SlotManagerImpl implements SlotManager {
   }
 
   private static final class SyncLeaderTask implements Runnable {
+    final long startTimestamp = System.currentTimeMillis();
     final long slotTableEpoch;
     final Slot slot;
     final SlotDiffSyncer syncer;
@@ -713,24 +729,32 @@ public final class SlotManagerImpl implements SlotManager {
 
     @Override
     public void run() {
+      boolean success = false;
       try {
-        if (!syncer.syncSlotLeader(
-            slot.getId(), slot.getLeader(), dataNodeExchanger, slotTableEpoch, continues)) {
+        success =
+            syncer.syncSlotLeader(
+                slot.getId(), slot.getLeader(), dataNodeExchanger, slotTableEpoch, continues);
+        if (!success) {
           throw new RuntimeException("sync leader failed");
         }
       } catch (Throwable e) {
-        ERROR_LOGGER.error(
-            "[syncLeader]sync failed: {}, slot={}", slot.getLeader(), slot.getId(), e);
-        throw new RuntimeException(
-            StringFormatter.format(
-                "sync leader failed: {}, slot={}", slot.getLeader(), slot.getId()),
-            e);
+        SYNC_ERROR_LOGGER.error(
+            "[syncLeader]failed: {}, slot={}", slot.getLeader(), slot.getId(), e);
+        // rethrow silence exception, notify the task is failed
+        throw TaskErrorSilenceException.INSTANCE;
+      } finally {
+        SYNC_DIGEST_LOGGER.info(
+            "{},L,{},{},span={}",
+            success ? 'Y' : 'N',
+            slot.getId(),
+            slot.getLeader(),
+            System.currentTimeMillis() - startTimestamp);
       }
     }
 
     @Override
     public String toString() {
-      return "SyncLeaderTask{" + "slotTableEpoch=" + slotTableEpoch + ", slot=" + slot + '}';
+      return "SyncLeader{epoch=" + slotTableEpoch + ", slot=" + slot + '}';
     }
   }
 

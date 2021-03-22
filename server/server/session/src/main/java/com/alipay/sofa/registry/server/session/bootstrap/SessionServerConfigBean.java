@@ -42,6 +42,10 @@ public class SessionServerConfigBean implements SessionServerConfig {
 
   private int syncSessionPort = 9602;
 
+  private int syncSessionIOLowWaterMark = 1024 * 128;
+
+  private int syncSessionIOHighWaterMark = 1024 * 256;
+
   private int metaServerPort = 9610;
 
   private int dataServerPort = 9620;
@@ -1121,5 +1125,23 @@ public class SessionServerConfigBean implements SessionServerConfig {
    */
   public void setSilenceHour(int silenceHour) {
     this.silenceHour = silenceHour;
+  }
+
+  @Override
+  public int getSyncSessionIOLowWaterMark() {
+    return syncSessionIOLowWaterMark;
+  }
+
+  public void setSyncSessionIOLowWaterMark(int syncSessionIOLowWaterMark) {
+    this.syncSessionIOLowWaterMark = syncSessionIOLowWaterMark;
+  }
+
+  @Override
+  public int getSyncSessionIOHighWaterMark() {
+    return syncSessionIOHighWaterMark;
+  }
+
+  public void setSyncSessionIOHighWaterMark(int syncSessionIOHighWaterMark) {
+    this.syncSessionIOHighWaterMark = syncSessionIOHighWaterMark;
   }
 }

@@ -75,6 +75,11 @@ public class BoltServer implements Server {
     this.boltServer = createRpcServer();
   }
 
+  public void configWaterMark(int low, int high) {
+    boltServer.initWriteBufferWaterMark(low, high);
+    LOGGER.info("config watermark, low={}, high={}", low, high);
+  }
+
   /** start bolt server */
   public void startServer() {
     if (isStarted.compareAndSet(false, true)) {

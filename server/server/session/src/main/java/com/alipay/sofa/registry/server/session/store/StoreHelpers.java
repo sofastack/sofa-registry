@@ -56,18 +56,13 @@ public final class StoreHelpers {
   public static <T extends BaseInfo> Map<String, T> getByConnectId(
       ConnectId connectId, Map<String, Map<String, T>> maps) {
     Map<String, T> retMap = Maps.newHashMap();
-    maps.values()
-        .forEach(
-            m -> {
-              m.values()
-                  .forEach(
-                      r -> {
-                        if (connectId.equals(r.connectId())) {
-                          retMap.put(r.getRegisterId(), r);
-                        }
-                      });
-            });
-
+    for (Map<String, T> m : maps.values()) {
+      for (T r : m.values()) {
+        if (connectId.equals(r.connectId())) {
+          retMap.put(r.getRegisterId(), r);
+        }
+      }
+    }
     return retMap;
   }
 

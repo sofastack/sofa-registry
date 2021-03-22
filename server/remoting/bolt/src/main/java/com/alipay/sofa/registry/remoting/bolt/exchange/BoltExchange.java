@@ -56,12 +56,25 @@ public class BoltExchange implements Exchange<ChannelHandler> {
 
   @Override
   public Server open(URL url, ChannelHandler... channelHandlers) {
+    BoltServer server = createServer(url, channelHandlers);
+    server.startServer();
+    return server;
+  }
+
+  private BoltServer createServer(URL url, ChannelHandler... channelHandlers) {
     if (channelHandlers == null) {
       throw new IllegalArgumentException("channelHandlers cannot be null!");
     }
-
     BoltServer server = createBoltServer(url, channelHandlers);
     setServer(server, url);
+    return server;
+  }
+
+  @Override
+  public Server open(
+      URL url, int lowWaterMark, int highWaterMark, ChannelHandler... channelHandlers) {
+    BoltServer server = createServer(url, channelHandlers);
+    server.configWaterMark(lowWaterMark, highWaterMark);
     server.startServer();
     return server;
   }
