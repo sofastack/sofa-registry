@@ -32,14 +32,6 @@ public class SofaRegistryMetaLeaderException extends SofaRegistryRuntimeExceptio
     this.epoch = epoch;
   }
 
-  public String getLeader() {
-    return leader;
-  }
-
-  public long getEpoch() {
-    return epoch;
-  }
-
   /**
    * Getter method for property <tt>leader</tt>.
    *
