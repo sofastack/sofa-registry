@@ -145,6 +145,8 @@ public class DataServerBootstrap {
         server =
             boltExchange.open(
                 new URL(NetUtil.getLocalAddress().getHostAddress(), dataServerConfig.getPort()),
+                dataServerConfig.getLowWaterMark(),
+                dataServerConfig.getHighWaterMark(),
                 serverHandlers.toArray(new ChannelHandler[serverHandlers.size()]));
         LOGGER.info("Data server for session started! port:{}", dataServerConfig.getPort());
       }
@@ -162,6 +164,8 @@ public class DataServerBootstrap {
             boltExchange.open(
                 new URL(
                     NetUtil.getLocalAddress().getHostAddress(), dataServerConfig.getSyncDataPort()),
+                dataServerConfig.getLowWaterMark(),
+                dataServerConfig.getHighWaterMark(),
                 serverSyncHandlers.toArray(new ChannelHandler[serverSyncHandlers.size()]));
         LOGGER.info("Data server for sync started! port:{}", dataServerConfig.getSyncDataPort());
       }

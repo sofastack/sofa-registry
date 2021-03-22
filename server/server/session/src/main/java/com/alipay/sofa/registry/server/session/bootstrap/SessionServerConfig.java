@@ -30,6 +30,10 @@ public interface SessionServerConfig {
 
   int getSyncSessionPort();
 
+  int getSyncSessionIOLowWaterMark();
+
+  int getSyncSessionIOHighWaterMark();
+
   int getMetaServerPort();
 
   int getDataServerPort();

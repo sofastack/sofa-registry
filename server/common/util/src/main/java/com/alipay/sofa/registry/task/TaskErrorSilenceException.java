@@ -14,29 +14,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alipay.sofa.registry.exception;
+package com.alipay.sofa.registry.task;
 
-/**
- * @author chen.zhu
- *     <p>Mar 09, 2021
- */
-public class SofaRegistryMetaLeaderException extends SofaRegistryRuntimeException {
-
-  private final String leader;
-
-  private final long epoch;
-
-  public SofaRegistryMetaLeaderException(String leader, long epoch, String message) {
-    super(message);
-    this.leader = leader;
-    this.epoch = epoch;
-  }
-
-  public String getLeader() {
-    return leader;
-  }
-
-  public long getEpoch() {
-    return epoch;
-  }
+public class TaskErrorSilenceException extends RuntimeException {
+  public static final TaskErrorSilenceException INSTANCE = new TaskErrorSilenceException();
 }

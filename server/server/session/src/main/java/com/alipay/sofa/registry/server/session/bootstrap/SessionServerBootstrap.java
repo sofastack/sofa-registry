@@ -247,6 +247,8 @@ public class SessionServerBootstrap {
                 new URL(
                     NetUtil.getLocalAddress().getHostAddress(),
                     sessionServerConfig.getSyncSessionPort()),
+                sessionServerConfig.getSyncSessionIOLowWaterMark(),
+                sessionServerConfig.getSyncSessionIOHighWaterMark(),
                 sessionSyncHandlers.toArray(new ChannelHandler[sessionSyncHandlers.size()]));
         LOGGER.info(
             "Data server for sync started! port:{}", sessionServerConfig.getSyncSessionPort());
