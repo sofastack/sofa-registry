@@ -151,6 +151,11 @@ public class MetaServerConfiguration {
     }
 
     @Bean
+    public MetaLeaderResource metaLeaderResource() {
+      return new MetaLeaderResource();
+    }
+
+    @Bean
     @ConditionalOnMissingBean
     public StopPushDataResource stopPushDataResource() {
       return new StopPushDataResource();

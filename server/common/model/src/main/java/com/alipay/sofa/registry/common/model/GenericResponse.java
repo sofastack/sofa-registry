@@ -58,7 +58,7 @@ public class GenericResponse<T> extends CommonResponse {
    * @param data
    * @return
    */
-  public GenericResponse<T> fillFailed(T data) {
+  public GenericResponse<T> fillFailData(T data) {
     this.setSuccess(false);
     this.setData(data);
     return this;

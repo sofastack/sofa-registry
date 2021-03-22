@@ -29,7 +29,13 @@ import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.remoting.exchange.message.Response;
 import com.alipay.sofa.registry.util.ConcurrentUtils;
 import com.alipay.sofa.registry.util.WakeUpLoopRunnable;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.TreeSet;
+import java.util.concurrent.atomic.AtomicInteger;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -46,6 +52,9 @@ public abstract class AbstractMetaServerService<T extends BaseHeartBeatResponse>
   protected volatile State state = State.NULL;
 
   private Renewer renewer;
+
+  private AtomicInteger renewFailCounter = new AtomicInteger(0);
+  private static final Integer maxRenewFailCoune = 3;
 
   @Override
   public synchronized void startRenewer(int intervalMs) {
@@ -86,6 +95,11 @@ public abstract class AbstractMetaServerService<T extends BaseHeartBeatResponse>
     @Override
     public void runUnthrowable() {
       try {
+        if (renewFailCounter.get() >= maxRenewFailCoune) {
+          metaServerManager.resetLeaderFromRestServer();
+          renewFailCounter.set(0);
+        }
+
         renewNode();
       } catch (Throwable e) {
         LOGGER.error("failed to renewNode", e);
@@ -109,17 +123,27 @@ public abstract class AbstractMetaServerService<T extends BaseHeartBeatResponse>
         updateState(resp.getData());
         metaServerManager.refresh(resp.getData());
         handleRenewResult(resp.getData());
+
+        renewFailCounter.set(0);
       } else if (resp != null && !resp.isSuccess()) {
         // heartbeat on follow, refresh leader;
         // it will renewNode on leader next time;
-        metaServerManager.refresh(resp.getData());
+        if (!resp.getData().isHeartbeatOnLeader()) {
+          metaServerManager.refresh(resp.getData());
+
+          renewFailCounter.set(0);
+        }
       } else {
+        renewFailCounter.incrementAndGet();
+
         LOGGER.error(
             "[RenewNodeTask] renew data node to metaServer error : {}, {}", leaderIp, resp);
         throw new RuntimeException(
             "[RenewNodeTask] renew data node to metaServer error : " + leaderIp);
       }
     } catch (Throwable e) {
+      renewFailCounter.incrementAndGet();
+
       LOGGER.error("renew node error from {}", leaderIp, e);
       throw new RuntimeException("renew node error! " + e.getMessage(), e);
     }

@@ -185,22 +185,6 @@ public class JdbcConfiguration {
     }
 
     @Bean
-    public MetaJdbcLeaderElector.ElectorRoleService leaderService(
-        MetaJdbcLeaderElector leaderElector) {
-      MetaJdbcLeaderElector.LeaderService leaderService = leaderElector.new LeaderService();
-      leaderElector.addElectorRoleService(leaderService);
-      return leaderService;
-    }
-
-    @Bean
-    public MetaJdbcLeaderElector.ElectorRoleService followService(
-        MetaJdbcLeaderElector leaderElector) {
-      MetaJdbcLeaderElector.FollowService followService = leaderElector.new FollowService();
-      leaderElector.addElectorRoleService(followService);
-      return followService;
-    }
-
-    @Bean
     public ProvideDataRepository provideDataJdbcRepository() {
       return new ProvideDataJdbcRepository();
     }
