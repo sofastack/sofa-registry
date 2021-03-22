@@ -17,6 +17,7 @@
 package com.alipay.sofa.registry.jdbc.repository.impl;
 
 import com.alipay.sofa.registry.common.model.store.AppRevision;
+import com.alipay.sofa.registry.jdbc.config.DefaultCommonConfig;
 import com.alipay.sofa.registry.jdbc.config.MetadataConfig;
 import com.alipay.sofa.registry.jdbc.convertor.AppRevisionDomainConvertor;
 import com.alipay.sofa.registry.jdbc.domain.AppRevisionQueryModel;
@@ -54,6 +55,8 @@ public class AppRevisionHeartbeatJdbcRepository
   @Autowired private AppRevisionHeartbeatBatchCallable appRevisionHeartbeatBatchCallable;
 
   @Autowired private MetadataConfig metadataConfig;
+
+  @Autowired private DefaultCommonConfig defaultCommonConfig;
 
   private SingleFlight singleFlight = new SingleFlight();
 
@@ -102,7 +105,7 @@ public class AppRevisionHeartbeatJdbcRepository
   }
 
   @Override
-  public void doAppRevisionGc(String dataCenter, int silenceHour) {
+  public void doAppRevisionGc(int silenceHour) {
 
     try {
       singleFlight.execute(
@@ -110,14 +113,16 @@ public class AppRevisionHeartbeatJdbcRepository
           () -> {
             List<AppRevision> appRevisions =
                 AppRevisionDomainConvertor.convert2Revisions(
-                    appRevisionMapper.queryGcRevision(dataCenter, silenceHour, REVISION_GC_LIMIT));
+                    appRevisionMapper.queryGcRevision(
+                        defaultCommonConfig.getClusterId(), silenceHour, REVISION_GC_LIMIT));
 
             if (LOG.isInfoEnabled()) {
               LOG.info("app_revision tobe gc size: " + appRevisions.size());
             }
             for (AppRevision appRevision : appRevisions) {
               // delete app_revision
-              appRevisionMapper.deleteAppRevision(dataCenter, appRevision.getRevision());
+              appRevisionMapper.deleteAppRevision(
+                  defaultCommonConfig.getClusterId(), appRevision.getRevision());
             }
 
             return null;

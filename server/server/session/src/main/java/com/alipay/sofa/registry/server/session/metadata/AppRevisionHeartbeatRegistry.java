@@ -44,8 +44,7 @@ public class AppRevisionHeartbeatRegistry {
   }
 
   public AppRevision heartbeat(String revision) {
-    return appRevisionRepository.heartbeat(
-        sessionServerConfig.getSessionServerDataCenter(), revision);
+    return appRevisionRepository.heartbeat(revision);
   }
 
   public void doRevisionHeartbeat() {
@@ -54,7 +53,6 @@ public class AppRevisionHeartbeatRegistry {
 
   public void doRevisionGc() {
     appRevisionHeartbeatRepository.doAppRevisionGc(
-        sessionServerConfig.getSessionServerDataCenter(),
         sessionServerConfig.getAppRevisionGcSilenceHour());
   }
 }

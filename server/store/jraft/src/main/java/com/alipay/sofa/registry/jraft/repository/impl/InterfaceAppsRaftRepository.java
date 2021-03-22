@@ -36,12 +36,12 @@ public class InterfaceAppsRaftRepository implements InterfaceAppsRepository, Raf
   protected final Map<String, InterfaceMapping> interfaceApps = new ConcurrentHashMap<>();
 
   @Override
-  public void loadMetadata(String dataCenter) {
+  public void loadMetadata() {
     // FIXME
   }
 
   @Override
-  public InterfaceMapping getAppNames(String dataCenter, String dataInfoId) {
+  public InterfaceMapping getAppNames(String dataInfoId) {
     final InterfaceMapping ret = interfaceApps.get(dataInfoId);
     return ret;
   }

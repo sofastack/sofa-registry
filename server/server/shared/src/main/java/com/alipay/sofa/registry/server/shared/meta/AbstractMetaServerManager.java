@@ -316,7 +316,10 @@ public abstract class AbstractMetaServerManager extends ClientSideExchanger
 
               if (resp.getStatus() != javax.ws.rs.core.Response.Status.OK.getStatusCode()) {
                 if (LOGGER.isInfoEnabled()) {
-                  LOGGER.info("[resetLeaderFromRestServer] query from url: {}, resp status: {}", url, resp.getStatus());
+                  LOGGER.info(
+                      "[resetLeaderFromRestServer] query from url: {}, resp status: {}",
+                      url,
+                      resp.getStatus());
                 }
                 continue;
               }
@@ -325,7 +328,10 @@ public abstract class AbstractMetaServerManager extends ClientSideExchanger
 
               if (!genericResponse.isSuccess() || genericResponse.getData() == null) {
                 if (LOGGER.isInfoEnabled()) {
-                  LOGGER.info("[resetLeaderFromRestServer] query from url: {}, resp: {}", url, JsonUtils.writeValueAsString(genericResponse));
+                  LOGGER.info(
+                      "[resetLeaderFromRestServer] query from url: {}, resp: {}",
+                      url,
+                      JsonUtils.writeValueAsString(genericResponse));
                 }
                 continue;
               }

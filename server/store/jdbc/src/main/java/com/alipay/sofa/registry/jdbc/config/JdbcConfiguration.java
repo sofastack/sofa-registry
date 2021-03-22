@@ -149,6 +149,12 @@ public class JdbcConfiguration {
 
   @Configuration
   public static class MetadataBeanConfiguration {
+
+    @Bean
+    public DefaultCommonConfig defaultCommonConfig() {
+      return new DefaultCommonConfigBean();
+    }
+
     @Bean
     public MetadataConfig metadataConfig() {
       return new MetadataConfigBean();

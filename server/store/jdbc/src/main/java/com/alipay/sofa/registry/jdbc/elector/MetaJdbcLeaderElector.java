@@ -16,6 +16,7 @@
  */
 package com.alipay.sofa.registry.jdbc.elector;
 
+import com.alipay.sofa.registry.jdbc.config.DefaultCommonConfig;
 import com.alipay.sofa.registry.jdbc.config.MetaElectorConfig;
 import com.alipay.sofa.registry.jdbc.domain.DistributeLockDomain;
 import com.alipay.sofa.registry.jdbc.domain.FollowCompeteLockDomain;
@@ -40,6 +41,8 @@ public class MetaJdbcLeaderElector extends AbstractLeaderElector {
 
   @Autowired private MetaElectorConfig metaElectorConfig;
 
+  @Autowired private DefaultCommonConfig defaultCommonConfig;
+
   /**
    * start elect, return current leader
    *
@@ -48,11 +51,11 @@ public class MetaJdbcLeaderElector extends AbstractLeaderElector {
   @Override
   protected LeaderInfo doElect() {
     DistributeLockDomain lock =
-        distributeLockMapper.queryDistLock(metaElectorConfig.getDataCenter(), lockName);
+        distributeLockMapper.queryDistLock(defaultCommonConfig.getClusterId(), lockName);
 
     /** compete and return leader */
     if (lock == null) {
-      return competeLeader(metaElectorConfig.getDataCenter());
+      return competeLeader(defaultCommonConfig.getClusterId());
     }
 
     ElectorRole role = amILeader(lock.getOwner()) ? ElectorRole.LEADER : ElectorRole.FOLLOWER;
@@ -115,7 +118,7 @@ public class MetaJdbcLeaderElector extends AbstractLeaderElector {
   @Override
   protected LeaderInfo doQuery() {
     DistributeLockDomain lock =
-        distributeLockMapper.queryDistLock(metaElectorConfig.getDataCenter(), lockName);
+        distributeLockMapper.queryDistLock(defaultCommonConfig.getClusterId(), lockName);
     if (lock == null) {
       return LeaderInfo.hasNoLeader;
     }
@@ -180,5 +183,14 @@ public class MetaJdbcLeaderElector extends AbstractLeaderElector {
    */
   public void setMetaElectorConfig(MetaElectorConfig metaElectorConfig) {
     this.metaElectorConfig = metaElectorConfig;
+  }
+
+  /**
+   * Setter method for property <tt>defaultCommonConfig</tt>.
+   *
+   * @param defaultCommonConfig value to be assigned to property defaultCommonConfig
+   */
+  public void setDefaultCommonConfig(DefaultCommonConfig defaultCommonConfig) {
+    this.defaultCommonConfig = defaultCommonConfig;
   }
 }

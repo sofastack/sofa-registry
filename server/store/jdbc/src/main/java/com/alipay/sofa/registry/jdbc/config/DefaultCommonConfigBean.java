@@ -14,22 +14,35 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alipay.sofa.registry.store.api.repository;
+package com.alipay.sofa.registry.jdbc.config;
 
-import com.alipay.sofa.registry.store.api.driver.RegistryRepository;
+import com.alipay.sofa.common.profile.StringUtil;
+import com.alipay.sofa.registry.util.SystemUtils;
 
 /**
  * @author xiaojian.xj
- * @version $Id: AppRevisionHeartbeatRepository.java, v 0.1 2021年02月09日 17:09 xiaojian.xj Exp $
+ * @version $Id: DefaultCommonConfigBean.java, v 0.1 2021年03月22日 21:06 xiaojian.xj Exp $
  */
-public interface AppRevisionHeartbeatRepository extends RegistryRepository {
+public class DefaultCommonConfigBean implements DefaultCommonConfig {
+
+  private String dataCenter = SystemUtils.getSystem("nodes.localDataCenter", "DefaultDataCenter");
+
+  private String clusterId = SystemUtils.getSystem("nodes.clusterId", "");
 
   @Override
-  default Class<?> getInterfaceClass() {
-    return AppRevisionHeartbeatRepository.class;
+  public String getClusterId() {
+    if (StringUtil.isNotEmpty(clusterId)) {
+      return clusterId;
+    }
+    return dataCenter;
   }
 
-  public void doAppRevisionHeartbeat();
-
-  public void doAppRevisionGc(int silenceHour);
+  /**
+   * Setter method for property <tt>clusterId</tt>.
+   *
+   * @param clusterId value to be assigned to property clusterId
+   */
+  public void setClusterId(String clusterId) {
+    this.clusterId = clusterId;
+  }
 }

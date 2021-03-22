@@ -54,7 +54,7 @@ public abstract class AbstractMetaServerService<T extends BaseHeartBeatResponse>
   private Renewer renewer;
 
   private AtomicInteger renewFailCounter = new AtomicInteger(0);
-  private static final Integer maxRenewFailCoune = 3;
+  private static final Integer maxRenewFailCount = 3;
 
   @Override
   public synchronized void startRenewer(int intervalMs) {
@@ -95,7 +95,7 @@ public abstract class AbstractMetaServerService<T extends BaseHeartBeatResponse>
     @Override
     public void runUnthrowable() {
       try {
-        if (renewFailCounter.get() >= maxRenewFailCoune) {
+        if (renewFailCounter.get() >= maxRenewFailCount) {
           metaServerManager.resetLeaderFromRestServer();
           renewFailCounter.set(0);
         }

@@ -18,7 +18,6 @@ package com.alipay.sofa.registry.server.meta.resource;
 
 import com.alipay.sofa.registry.common.model.console.PersistenceData;
 import com.alipay.sofa.registry.common.model.constants.ValueConstants;
-import com.alipay.sofa.registry.server.meta.bootstrap.config.NodeConfig;
 import com.alipay.sofa.registry.server.meta.resource.filter.LeaderAwareRestController;
 import com.alipay.sofa.registry.store.api.DBResponse;
 import com.alipay.sofa.registry.store.api.meta.ProvideDataRepository;
@@ -41,8 +40,6 @@ public class SlotSyncResource {
 
   @Autowired private ProvideDataRepository provideDataRepository;
 
-  @Autowired private NodeConfig nodeConfig;
-
   /** get */
   @GET
   @Path("get")
@@ -50,11 +47,8 @@ public class SlotSyncResource {
   public Map<String, Object> getSlotSync() throws Exception {
     Map<String, Object> resultMap = new HashMap<>(2);
     DBResponse syncSessionIntervalSec =
-        provideDataRepository.get(
-            nodeConfig.getLocalDataCenter(), ValueConstants.DATA_DATUM_SYNC_SESSION_INTERVAL_SEC);
-    DBResponse dataDatumExpire =
-        provideDataRepository.get(
-            nodeConfig.getLocalDataCenter(), ValueConstants.DATA_SESSION_LEASE_SEC);
+        provideDataRepository.get(ValueConstants.DATA_DATUM_SYNC_SESSION_INTERVAL_SEC);
+    DBResponse dataDatumExpire = provideDataRepository.get(ValueConstants.DATA_SESSION_LEASE_SEC);
 
     resultMap.put("syncSessionIntervalSec", getEntityData(syncSessionIntervalSec));
     resultMap.put("dataDatumExpire", getEntityData(dataDatumExpire));
