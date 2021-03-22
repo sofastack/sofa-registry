@@ -17,6 +17,7 @@
 package com.alipay.sofa.registry.jdbc.repository.impl;
 
 import com.alipay.sofa.registry.common.model.store.AppRevision;
+import com.alipay.sofa.registry.jdbc.config.DefaultCommonConfig;
 import com.alipay.sofa.registry.jdbc.convertor.AppRevisionDomainConvertor;
 import com.alipay.sofa.registry.jdbc.domain.AppRevisionQueryModel;
 import com.alipay.sofa.registry.jdbc.exception.RevisionNotExistException;
@@ -62,6 +63,8 @@ public class AppRevisionJdbcRepository implements AppRevisionRepository, JdbcRep
 
   @Resource private InterfaceAppsJdbcRepository interfaceAppsJdbcRepository;
 
+  @Autowired private DefaultCommonConfig defaultCommonConfig;
+
   public AppRevisionJdbcRepository() {
     this.registry =
         CacheBuilder.newBuilder()
@@ -101,7 +104,7 @@ public class AppRevisionJdbcRepository implements AppRevisionRepository, JdbcRep
       throw new RuntimeException("jdbc register app revision error, appRevision is null.");
     }
     AppRevisionQueryModel key =
-        new AppRevisionQueryModel(appRevision.getDataCenter(), appRevision.getRevision());
+        new AppRevisionQueryModel(defaultCommonConfig.getClusterId(), appRevision.getRevision());
 
     // query cache, if not exist then query database
     try {
@@ -109,7 +112,8 @@ public class AppRevisionJdbcRepository implements AppRevisionRepository, JdbcRep
       if (revision != null) {
         heartbeatMap.put(
             key,
-            new AppRevision(appRevision.getDataCenter(), appRevision.getRevision(), new Date()));
+            new AppRevision(
+                defaultCommonConfig.getClusterId(), appRevision.getRevision(), new Date()));
         return;
       }
     } catch (Throwable e) {
@@ -125,23 +129,22 @@ public class AppRevisionJdbcRepository implements AppRevisionRepository, JdbcRep
 
     // it will ignore ON DUPLICATE KEY, return effect rows number
     interfaceAppsJdbcRepository.batchSave(
-        appRevision.getDataCenter(),
-        appRevision.getAppName(),
-        appRevision.getInterfaceMap().keySet());
+        appRevision.getAppName(), appRevision.getInterfaceMap().keySet());
 
     // it will ignore ON DUPLICATE KEY
     appRevisionMapper.insert(AppRevisionDomainConvertor.convert2Domain(appRevision));
 
     registry.put(key, appRevision);
     heartbeatMap.put(
-        key, new AppRevision(appRevision.getDataCenter(), appRevision.getRevision(), new Date()));
+        key,
+        new AppRevision(defaultCommonConfig.getClusterId(), appRevision.getRevision(), new Date()));
   }
 
   @Override
-  public void refresh(String dataCenter) {
+  public void refresh() {
 
     try {
-      interfaceAppsJdbcRepository.refresh(dataCenter);
+      interfaceAppsJdbcRepository.refresh(defaultCommonConfig.getClusterId());
     } catch (Throwable e) {
       LOG.error("jdbc refresh revisions failed ", e);
       throw new RuntimeException("jdbc refresh revision failed", e);
@@ -149,13 +152,13 @@ public class AppRevisionJdbcRepository implements AppRevisionRepository, JdbcRep
   }
 
   @Override
-  public AppRevision queryRevision(String dataCenter, String revision) {
+  public AppRevision queryRevision(String revision) {
 
     try {
 
       AppRevisionQueryModel appRevisionQuery = revisionQueryMap.get(revision);
       if (appRevisionQuery == null) {
-        appRevisionQuery = new AppRevisionQueryModel(dataCenter, revision);
+        appRevisionQuery = new AppRevisionQueryModel(defaultCommonConfig.getClusterId(), revision);
         revisionQueryMap.putIfAbsent(revision, appRevisionQuery);
       }
       return registry.get(appRevisionQuery);
@@ -166,11 +169,11 @@ public class AppRevisionJdbcRepository implements AppRevisionRepository, JdbcRep
   }
 
   @Override
-  public AppRevision heartbeat(String dataCenter, String revision) {
+  public AppRevision heartbeat(String revision) {
     try {
       AppRevisionQueryModel appRevisionQuery = revisionQueryMap.get(revision);
       if (appRevisionQuery == null) {
-        appRevisionQuery = new AppRevisionQueryModel(dataCenter, revision);
+        appRevisionQuery = new AppRevisionQueryModel(defaultCommonConfig.getClusterId(), revision);
         revisionQueryMap.putIfAbsent(revision, appRevisionQuery);
       }
 
@@ -179,7 +182,7 @@ public class AppRevisionJdbcRepository implements AppRevisionRepository, JdbcRep
         if (appRevision != null) {
           appRevision.setLastHeartbeat(new Date());
         } else {
-          appRevision = new AppRevision(dataCenter, revision, new Date());
+          appRevision = new AppRevision(defaultCommonConfig.getClusterId(), revision, new Date());
         }
         heartbeatMap.put(appRevisionQuery, appRevision);
         return appRevision;

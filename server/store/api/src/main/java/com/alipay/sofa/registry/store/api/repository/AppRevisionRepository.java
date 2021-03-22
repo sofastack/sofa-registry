@@ -38,16 +38,15 @@ public interface AppRevisionRepository extends RegistryRepository {
   public void register(AppRevision appRevision) throws Exception;
 
   /** refresh */
-  public void refresh(String dataCenter);
+  public void refresh();
 
   /**
    * get AppRevision
    *
-   * @param dataCenter
    * @param revision
    * @return
    */
-  public AppRevision queryRevision(String dataCenter, String revision);
+  public AppRevision queryRevision(String revision);
 
-  public AppRevision heartbeat(String dataCenter, String revision);
+  public AppRevision heartbeat(String revision);
 }

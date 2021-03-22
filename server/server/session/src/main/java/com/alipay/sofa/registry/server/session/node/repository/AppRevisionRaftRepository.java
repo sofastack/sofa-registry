@@ -73,7 +73,7 @@ public class AppRevisionRaftRepository implements AppRevisionRepository, RaftRep
   }
 
   @Override
-  public void refresh(String dataCenter) {
+  public void refresh() {
     try {
       singleFlight.execute(
           "refreshAll",
@@ -104,7 +104,7 @@ public class AppRevisionRaftRepository implements AppRevisionRepository, RaftRep
   }
 
   @Override
-  public AppRevision queryRevision(String dataCenter, String revision) {
+  public AppRevision queryRevision(String revision) {
 
     for (int i = 0; i < 2; i++) {
       // 第一次可能会被前一个revision的请求合并到导致虽然在meta内没有fetch回来，第二个fetch肯定能拿到对应 revisipn
@@ -113,14 +113,14 @@ public class AppRevisionRaftRepository implements AppRevisionRepository, RaftRep
         return revisionRegister;
       }
       // sync from meta raftdata
-      refresh(dataCenter);
+      refresh();
     }
 
     return registry.get(revision);
   }
 
   @Override
-  public AppRevision heartbeat(String dataCenter, String revision) {
+  public AppRevision heartbeat(String revision) {
     AppRevision appRevision = registry.get(revision);
     if (appRevision != null) {
       appRevision.setLastHeartbeat(new Date());

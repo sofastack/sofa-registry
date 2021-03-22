@@ -27,28 +27,25 @@ public interface ProvideDataRepository {
   /**
    * save or update provideData
    *
-   * @param dataCenter
    * @param key
    * @param value
    * @return
    */
-  boolean put(String dataCenter, String key, String value);
+  boolean put(String key, String value);
 
   /**
    * query provideData by key
    *
-   * @param dataCenter
    * @param key
    * @return
    */
-  DBResponse get(String dataCenter, String key);
+  DBResponse get(String key);
 
   /**
    * delete provideData
    *
-   * @param dataCenter
    * @param key
    * @return
    */
-  boolean remove(String dataCenter, String key);
+  boolean remove(String key);
 }

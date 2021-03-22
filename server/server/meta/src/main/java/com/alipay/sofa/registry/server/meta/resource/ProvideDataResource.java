@@ -23,7 +23,6 @@ import com.alipay.sofa.registry.common.model.store.DataInfo;
 import com.alipay.sofa.registry.core.model.Result;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
-import com.alipay.sofa.registry.server.meta.bootstrap.config.NodeConfig;
 import com.alipay.sofa.registry.server.meta.provide.data.DefaultProvideDataNotifier;
 import com.alipay.sofa.registry.server.meta.resource.filter.LeaderAwareRestController;
 import com.alipay.sofa.registry.store.api.meta.ProvideDataRepository;
@@ -52,8 +51,6 @@ public class ProvideDataResource {
 
   @Autowired private DefaultProvideDataNotifier provideDataNotifier;
 
-  @Autowired private NodeConfig nodeConfig;
-
   @POST
   @Path("put")
   @Produces(MediaType.APPLICATION_JSON)
@@ -67,9 +64,7 @@ public class ProvideDataResource {
         DataInfo.toDataInfoId(data.getDataId(), data.getInstanceId(), data.getGroup());
 
     try {
-      boolean ret =
-          provideDataRepository.put(
-              nodeConfig.getLocalDataCenter(), dataInfoId, JsonUtils.writeValueAsString(data));
+      boolean ret = provideDataRepository.put(dataInfoId, JsonUtils.writeValueAsString(data));
       DB_LOGGER.info("put Persistence Data {} to DB result {}!", data, ret);
     } catch (Throwable e) {
       DB_LOGGER.error("error put Persistence Data {} to DB!", data, e);
@@ -95,7 +90,7 @@ public class ProvideDataResource {
         DataInfo.toDataInfoId(data.getDataId(), data.getInstanceId(), data.getGroup());
 
     try {
-      boolean ret = provideDataRepository.remove(nodeConfig.getLocalDataCenter(), dataInfoId);
+      boolean ret = provideDataRepository.remove(dataInfoId);
       DB_LOGGER.info("remove Persistence Data {} from DB result {}!", data, ret);
     } catch (Exception e) {
       DB_LOGGER.error("error remove Persistence Data {} from DB!", data);

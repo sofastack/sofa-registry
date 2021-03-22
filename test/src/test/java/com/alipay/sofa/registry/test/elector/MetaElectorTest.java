@@ -21,6 +21,7 @@ import static org.mockito.Mockito.when;
 
 import com.alipay.sofa.common.profile.StringUtil;
 import com.alipay.sofa.registry.common.model.store.URL;
+import com.alipay.sofa.registry.jdbc.config.DefaultCommonConfigBean;
 import com.alipay.sofa.registry.jdbc.config.MetaElectorConfigBean;
 import com.alipay.sofa.registry.jdbc.elector.MetaJdbcLeaderElector;
 import com.alipay.sofa.registry.jdbc.mapper.DistributeLockMapper;
@@ -65,6 +66,8 @@ public class MetaElectorTest extends BaseIntegrationTest {
 
   private CountDownLatch countDownLatch = new CountDownLatch(1);
 
+  private DefaultCommonConfigBean defaultCommonConfigBean;
+
   @Before
   public void beforeMetaElectorTest() {
     MockitoAnnotations.initMocks(this);
@@ -73,6 +76,8 @@ public class MetaElectorTest extends BaseIntegrationTest {
         metaApplicationContext.getBean("distributeLockMapper", DistributeLockMapper.class);
     metaElectorConfigBean =
         metaApplicationContext.getBean("metaElectorConfig", MetaElectorConfigBean.class);
+    defaultCommonConfigBean =
+        metaApplicationContext.getBean("defaultCommonConfig", DefaultCommonConfigBean.class);
 
     leaderElector1 = buildLeaderElector();
     leaderElector2 = buildLeaderElector();
@@ -86,9 +91,10 @@ public class MetaElectorTest extends BaseIntegrationTest {
   private MetaJdbcLeaderElector buildLeaderElector() {
     MetaJdbcLeaderElector leaderElector = spy(new MetaJdbcLeaderElector());
     metaElectorConfigBean.setLockExpireDuration(3000L);
-    metaElectorConfigBean.setDataCenter(dataCenter);
+    defaultCommonConfigBean.setClusterId(dataCenter);
     leaderElector.setDistributeLockMapper(distributeLockMapper);
     leaderElector.setMetaElectorConfig(metaElectorConfigBean);
+    leaderElector.setDefaultCommonConfig(defaultCommonConfigBean);
     return leaderElector;
   }
 

@@ -17,6 +17,7 @@
 package com.alipay.sofa.registry.jdbc.repository.impl;
 
 import com.alipay.sofa.registry.common.model.appmeta.InterfaceMapping;
+import com.alipay.sofa.registry.jdbc.config.DefaultCommonConfig;
 import com.alipay.sofa.registry.jdbc.config.MetadataConfig;
 import com.alipay.sofa.registry.jdbc.domain.InterfaceAppIndexQueryModel;
 import com.alipay.sofa.registry.jdbc.domain.InterfaceAppsIndexDomain;
@@ -63,29 +64,31 @@ public class InterfaceAppsJdbcRepository implements InterfaceAppsRepository, Jdb
 
   @Autowired private MetadataConfig metadataConfig;
 
+  @Autowired private DefaultCommonConfig defaultCommonConfig;
+
   @PostConstruct
   public void postConstruct() {
     refreshLimit = metadataConfig.getInterfaceAppsRefreshLimit();
   }
 
   @Override
-  public void loadMetadata(String dataCenter) {
+  public void loadMetadata() {
     // load interface_apps_version when session server startup,
     // in order to avoid large request on database after session startup,
     // it will load almost all record of this dataCenter,
     // but not promise load 100% records of this dataCenter,
     // eg: records insert or update after interfaceAppsIndexMapper.getTotalCount
     // and beyond refreshCount will not be load in this method, they will be load in next schedule
-    final int total = interfaceAppsIndexMapper.getTotalCount(dataCenter);
+    final int total = interfaceAppsIndexMapper.getTotalCount(defaultCommonConfig.getClusterId());
     final int refreshCount = MathUtils.divideCeil(total, refreshLimit);
     LOG.info(
         "begin load metadata, total count mapping {}, rounds={}, dataCenter={}",
         total,
         refreshCount,
-        dataCenter);
+        defaultCommonConfig.getClusterId());
     int refreshTotal = 0;
     for (int i = 0; i < refreshCount; i++) {
-      final int num = this.refresh(dataCenter);
+      final int num = this.refresh(defaultCommonConfig.getClusterId());
       LOG.info("load metadata in round={}, num={}", i, num);
       refreshTotal += num;
       if (num == 0) {
@@ -102,14 +105,14 @@ public class InterfaceAppsJdbcRepository implements InterfaceAppsRepository, Jdb
    * @return return appNames
    */
   @Override
-  public InterfaceMapping getAppNames(String dataCenter, String dataInfoId) {
+  public InterfaceMapping getAppNames(String dataInfoId) {
     InterfaceMapping appNames = interfaceApps.get(dataInfoId);
     if (appNames != null) {
       return appNames;
     }
 
     final InterfaceAppIndexQueryModel query =
-        new InterfaceAppIndexQueryModel(dataCenter, dataInfoId);
+        new InterfaceAppIndexQueryModel(defaultCommonConfig.getClusterId(), dataInfoId);
 
     TaskEvent task = interfaceAppBatchQueryCallable.new TaskEvent(query);
     InvokeFuture future = interfaceAppBatchQueryCallable.commit(task);
@@ -138,15 +141,15 @@ public class InterfaceAppsJdbcRepository implements InterfaceAppsRepository, Jdb
   /**
    * insert
    *
-   * @param dataCenter
    * @param appName
    * @param interfaceNames
    */
   @Override
-  public int batchSave(String dataCenter, String appName, Set<String> interfaceNames) {
+  public int batchSave(String appName, Set<String> interfaceNames) {
     List<InterfaceAppsIndexDomain> saves = new ArrayList<>();
     for (String interfaceName : interfaceNames) {
-      saves.add(new InterfaceAppsIndexDomain(dataCenter, interfaceName, appName));
+      saves.add(
+          new InterfaceAppsIndexDomain(defaultCommonConfig.getClusterId(), interfaceName, appName));
     }
 
     return interfaceAppsIndexMapper.insert(saves);

@@ -93,9 +93,7 @@ public class MetaDigestResource {
   public Map<String, Object> getPushSwitch() {
     Map<String, Object> resultMap = new HashMap<>(1);
     try {
-      DBResponse ret =
-          provideDataRepository.get(
-              nodeConfig.getLocalDataCenter(), ValueConstants.STOP_PUSH_DATA_SWITCH_DATA_ID);
+      DBResponse ret = provideDataRepository.get(ValueConstants.STOP_PUSH_DATA_SWITCH_DATA_ID);
 
       if (ret == null) {
         // default push switch on

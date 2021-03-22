@@ -16,6 +16,7 @@
  */
 package com.alipay.sofa.registry.jdbc.repository.impl;
 
+import com.alipay.sofa.registry.jdbc.config.DefaultCommonConfig;
 import com.alipay.sofa.registry.jdbc.domain.ProvideDataDomain;
 import com.alipay.sofa.registry.jdbc.mapper.ProvideDataMapper;
 import com.alipay.sofa.registry.log.Logger;
@@ -34,20 +35,26 @@ public class ProvideDataJdbcRepository implements ProvideDataRepository {
 
   @Autowired private ProvideDataMapper provideDataMapper;
 
-  @Override
-  public boolean put(String dataCenter, String key, String value) {
+  @Autowired private DefaultCommonConfig defaultCommonConfig;
 
-    ProvideDataDomain data = new ProvideDataDomain(dataCenter, key, value);
+  @Override
+  public boolean put(String key, String value) {
+
+    ProvideDataDomain data = new ProvideDataDomain(defaultCommonConfig.getClusterId(), key, value);
     provideDataMapper.save(data);
     if (LOG.isInfoEnabled()) {
-      LOG.info("put provideData, dataCenter: {}, key: {}, value: {}", dataCenter, key, value);
+      LOG.info(
+          "put provideData, dataCenter: {}, key: {}, value: {}",
+          defaultCommonConfig.getClusterId(),
+          key,
+          value);
     }
     return true;
   }
 
   @Override
-  public DBResponse get(String dataCenter, String key) {
-    ProvideDataDomain data = provideDataMapper.query(dataCenter, key);
+  public DBResponse get(String key) {
+    ProvideDataDomain data = provideDataMapper.query(defaultCommonConfig.getClusterId(), key);
     if (data == null) {
       return DBResponse.notfound().build();
     }
@@ -55,10 +62,11 @@ public class ProvideDataJdbcRepository implements ProvideDataRepository {
   }
 
   @Override
-  public boolean remove(String dataCenter, String key) {
-    provideDataMapper.remove(dataCenter, key);
+  public boolean remove(String key) {
+    provideDataMapper.remove(defaultCommonConfig.getClusterId(), key);
     if (LOG.isInfoEnabled()) {
-      LOG.info("remove provideData, dataCenter: {}, key: {}", dataCenter, key);
+      LOG.info(
+          "remove provideData, dataCenter: {}, key: {}", defaultCommonConfig.getClusterId(), key);
     }
     return true;
   }
