@@ -139,8 +139,9 @@ public class HeartbeatRequestHandler extends BaseMetaServerHandler<HeartbeatRequ
     } catch (Throwable e) {
       if (e instanceof SofaRegistryMetaLeaderException) {
         SofaRegistryMetaLeaderException exception = (SofaRegistryMetaLeaderException) e;
-        BaseHeartBeatResponse response = new BaseHeartBeatResponse(false, exception.getLeader());
-        return new GenericResponse<BaseHeartBeatResponse>().fillFailed(response);
+        BaseHeartBeatResponse response =
+            new BaseHeartBeatResponse(false, exception.getLeader(), exception.getEpoch());
+        return new GenericResponse<BaseHeartBeatResponse>().fillFailData(response);
       }
 
       logger.error("Node {} renew error!", renewNode, e);

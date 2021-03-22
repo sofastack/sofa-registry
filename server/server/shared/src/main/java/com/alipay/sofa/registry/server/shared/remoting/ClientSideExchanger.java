@@ -209,7 +209,7 @@ public abstract class ClientSideExchanger implements NodeExchanger {
     return serverIps;
   }
 
-  public void setServerIps(Collection<String> serverIps) {
+  public synchronized void setServerIps(Collection<String> serverIps) {
     this.serverIps = Collections.unmodifiableSet(Sets.newHashSet(serverIps));
   }
 }

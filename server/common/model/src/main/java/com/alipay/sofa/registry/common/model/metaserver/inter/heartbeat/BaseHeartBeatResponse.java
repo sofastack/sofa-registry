@@ -30,8 +30,6 @@ import java.util.*;
  */
 public class BaseHeartBeatResponse implements Serializable {
 
-  private static final long INIT_META_LEADER_EPOCH = -1L;
-
   private final boolean heartbeatOnLeader;
 
   private final SlotTable slotTable;
@@ -44,8 +42,8 @@ public class BaseHeartBeatResponse implements Serializable {
 
   private final long metaLeaderEpoch;
 
-  public BaseHeartBeatResponse(boolean heartbeatOnLeader, String metaLeader) {
-    this(heartbeatOnLeader, null, null, metaLeader, INIT_META_LEADER_EPOCH);
+  public BaseHeartBeatResponse(boolean heartbeatOnLeader, String metaLeader, long metaLeaderEpoch) {
+    this(heartbeatOnLeader, null, null, metaLeader, metaLeaderEpoch);
   }
 
   public BaseHeartBeatResponse(

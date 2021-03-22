@@ -23,8 +23,6 @@ import com.alipay.sofa.registry.jdbc.mapper.DistributeLockMapper;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.store.api.elector.AbstractLeaderElector;
-import com.google.common.collect.Maps;
-import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
 
 /**
@@ -42,8 +40,6 @@ public class MetaJdbcLeaderElector extends AbstractLeaderElector {
 
   @Autowired private MetaElectorConfig metaElectorConfig;
 
-  private Map<ElectorRole, ElectorRoleService> electorRoleMap = Maps.newConcurrentMap();
-
   /**
    * start elect, return current leader
    *
@@ -60,7 +56,12 @@ public class MetaJdbcLeaderElector extends AbstractLeaderElector {
     }
 
     ElectorRole role = amILeader(lock.getOwner()) ? ElectorRole.LEADER : ElectorRole.FOLLOWER;
-    lock = electorRoleMap.get(role).onWorking(lock, myself());
+    if (role == ElectorRole.LEADER) {
+      lock = onLeaderWorking(lock, myself());
+    } else {
+      lock = onFollowWorking(lock, myself());
+    }
+
     LeaderInfo result =
         new LeaderInfo(
             lock.getGmtModified().getTime(),
@@ -126,80 +127,43 @@ public class MetaJdbcLeaderElector extends AbstractLeaderElector {
         lock.getDuration());
   }
 
-  public interface ElectorRoleService {
-    DistributeLockDomain onWorking(DistributeLockDomain lock, String myself);
+  private DistributeLockDomain onLeaderWorking(DistributeLockDomain lock, String myself) {
 
-    ElectorRole support();
-  }
-
-  public class LeaderService implements ElectorRoleService {
-
-    private final Logger LOG = LoggerFactory.getLogger("META-ELECTOR", "[Leader]");
-
-    @Autowired private DistributeLockMapper distributeLockMapper;
-
-    @Override
-    public DistributeLockDomain onWorking(DistributeLockDomain lock, String myself) {
-
-      try {
-        /** as leader, do heartbeat */
-        distributeLockMapper.ownerHeartbeat(lock);
-        if (LOG.isInfoEnabled()) {
-          LOG.info("leader heartbeat: {}", myself);
-        }
-        return distributeLockMapper.queryDistLock(lock.getDataCenter(), lock.getLockName());
-      } catch (Throwable t) {
-        LOG.error("leader:{} heartbeat error.", myself, t);
+    try {
+      /** as leader, do heartbeat */
+      distributeLockMapper.ownerHeartbeat(lock);
+      if (LOG.isInfoEnabled()) {
+        LOG.info("leader heartbeat: {}", myself);
       }
-      return lock;
+      return distributeLockMapper.queryDistLock(lock.getDataCenter(), lock.getLockName());
+    } catch (Throwable t) {
+      LOG.error("leader:{} heartbeat error.", myself, t);
     }
-
-    @Override
-    public ElectorRole support() {
-      return ElectorRole.LEADER;
-    }
+    return lock;
   }
 
-  public class FollowService implements ElectorRoleService {
-
-    private final Logger LOG = LoggerFactory.getLogger("META-ELECTOR", "[FOLLOW]");
-
-    @Autowired private DistributeLockMapper distributeLockMapper;
-
-    @Override
-    public DistributeLockDomain onWorking(DistributeLockDomain lock, String myself) {
-      /** as follow, do compete if lock expire */
-      if (lock.expire()) {
-        if (LOG.isInfoEnabled()) {
-          LOG.info("lock expire: {}, meta elector start: {}", lock, myself);
-        }
-        distributeLockMapper.competeLockOnUpdate(
-            new FollowCompeteLockDomain(
-                lock.getDataCenter(),
-                lock.getLockName(),
-                lock.getOwner(),
-                lock.getGmtModified(),
-                myself));
-        DistributeLockDomain newLock =
-            distributeLockMapper.queryDistLock(lock.getDataCenter(), lock.getLockName());
-        if (LOG.isInfoEnabled()) {
-          LOG.info("elector finish, new lock: {}", lock);
-        }
-        return newLock;
+  public DistributeLockDomain onFollowWorking(DistributeLockDomain lock, String myself) {
+    /** as follow, do compete if lock expire */
+    if (lock.expire()) {
+      if (LOG.isInfoEnabled()) {
+        LOG.info("lock expire: {}, meta elector start: {}", lock, myself);
       }
-      return lock;
+      distributeLockMapper.competeLockOnUpdate(
+          new FollowCompeteLockDomain(
+              lock.getDataCenter(),
+              lock.getLockName(),
+              lock.getOwner(),
+              lock.getGmtModified(),
+              myself));
+      DistributeLockDomain newLock =
+          distributeLockMapper.queryDistLock(lock.getDataCenter(), lock.getLockName());
+      if (LOG.isInfoEnabled()) {
+        LOG.info("elector finish, new lock: {}", lock);
+      }
+      return newLock;
     }
-
-    @Override
-    public ElectorRole support() {
-      return ElectorRole.FOLLOWER;
-    }
+    return lock;
   }
-
-  public void addElectorRoleService(ElectorRoleService service) {
-    electorRoleMap.put(service.support(), service);
-  }
-
   /**
    * Setter method for property <tt>distributeLockMapper</tt>.
    *

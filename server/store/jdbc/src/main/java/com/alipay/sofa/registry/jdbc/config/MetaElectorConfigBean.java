@@ -52,4 +52,8 @@ public class MetaElectorConfigBean implements MetaElectorConfig {
   public void setLockExpireDuration(long lockExpireDuration) {
     this.lockExpireDuration = lockExpireDuration;
   }
+
+  public void setDataCenter(String dataCenter) {
+    this.dataCenter = dataCenter;
+  }
 }
