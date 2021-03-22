@@ -46,12 +46,11 @@ public class ProvideDataTest extends BaseIntegrationTest {
 
   @Test
   public void testProvideData() {
-    String dataCenter = "DefaultDataCenter:ProvideDataTest";
     String key = "keyA" + System.currentTimeMillis();
     String value = "valueA" + System.currentTimeMillis();
-    provideDataRepository.put(dataCenter, key, value);
+    provideDataRepository.put(key, value);
 
-    DBResponse dbResponse = provideDataRepository.get(dataCenter, key);
+    DBResponse dbResponse = provideDataRepository.get(key);
     Assert.assertTrue(StringUtil.equals(value, (String) dbResponse.getEntity()));
   }
 }

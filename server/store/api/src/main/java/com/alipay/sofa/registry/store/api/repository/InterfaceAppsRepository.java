@@ -37,22 +37,17 @@ public interface InterfaceAppsRepository extends RegistryRepository {
    * @param dataInfoId
    * @return return <appName, revisions>
    */
-  InterfaceMapping getAppNames(String dataCenter, String dataInfoId);
+  InterfaceMapping getAppNames(String dataInfoId);
   /**
    * insert
    *
-   * @param dataCenter
    * @param appName
    * @return
    */
-  default int batchSave(String dataCenter, String appName, Set<String> interfaceName) {
+  default int batchSave(String appName, Set<String> interfaceName) {
     return 0;
   }
 
-  /**
-   * refresh when startup
-   *
-   * @param dataCenter
-   */
-  void loadMetadata(String dataCenter);
+  /** refresh when startup */
+  void loadMetadata();
 }

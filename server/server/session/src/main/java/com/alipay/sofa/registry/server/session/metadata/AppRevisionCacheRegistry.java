@@ -20,7 +20,6 @@ import com.alipay.sofa.registry.common.model.appmeta.InterfaceMapping;
 import com.alipay.sofa.registry.common.model.store.AppRevision;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
-import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
 import com.alipay.sofa.registry.store.api.driver.RepositoryManager;
 import com.alipay.sofa.registry.store.api.repository.AppRevisionRepository;
 import com.alipay.sofa.registry.store.api.repository.InterfaceAppsRepository;
@@ -28,15 +27,12 @@ import com.alipay.sofa.registry.util.ConcurrentUtils;
 import com.alipay.sofa.registry.util.LoopRunnable;
 import java.util.concurrent.TimeUnit;
 import javax.annotation.PostConstruct;
-import org.springframework.beans.factory.annotation.Autowired;
 
 public class AppRevisionCacheRegistry {
   private static final Logger LOGGER = LoggerFactory.getLogger(AppRevisionCacheRegistry.class);
   private final AppRevisionRepository appRevisionRepository;
 
   private final InterfaceAppsRepository interfaceAppsRepository;
-
-  @Autowired private SessionServerConfig sessionServerConfig;
 
   private volatile boolean startWatch;
 
@@ -48,7 +44,7 @@ public class AppRevisionCacheRegistry {
         return;
       }
       try {
-        appRevisionRepository.refresh(sessionServerConfig.getSessionServerDataCenter());
+        appRevisionRepository.refresh();
       } catch (Throwable e) {
         LOGGER.error("failed to watch", e);
       }
@@ -75,22 +71,19 @@ public class AppRevisionCacheRegistry {
   }
 
   public void loadMetadata() {
-    interfaceAppsRepository.loadMetadata(sessionServerConfig.getSessionServerDataCenter());
+    interfaceAppsRepository.loadMetadata();
     startWatch = true;
   }
 
   public void register(AppRevision appRevision) throws Exception {
-    appRevision.setDataCenter(sessionServerConfig.getSessionServerDataCenter());
     appRevisionRepository.register(appRevision);
   }
 
   public InterfaceMapping getAppNames(String dataInfoId) {
-    return interfaceAppsRepository.getAppNames(
-        sessionServerConfig.getSessionServerDataCenter(), dataInfoId);
+    return interfaceAppsRepository.getAppNames(dataInfoId);
   }
 
   public AppRevision getRevision(String revision) {
-    return appRevisionRepository.queryRevision(
-        sessionServerConfig.getSessionServerDataCenter(), revision);
+    return appRevisionRepository.queryRevision(revision);
   }
 }

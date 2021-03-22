@@ -29,17 +29,16 @@ public class ProvideDataJdbcRepositoryTest extends AbstractH2DbTestBase {
 
   @Test
   public void testPut() {
-    provideDataJdbcRepository.put(getDc(), "key", "val");
-    Assert.assertEquals("val", provideDataJdbcRepository.get(getDc(), "key").getEntity());
+    provideDataJdbcRepository.put("key", "val");
+    Assert.assertEquals("val", provideDataJdbcRepository.get("key").getEntity());
   }
 
   @Test
   public void testRemove() {
-    provideDataJdbcRepository.put(getDc(), "key", "val");
-    Assert.assertEquals("val", provideDataJdbcRepository.get(getDc(), "key").getEntity());
-    provideDataJdbcRepository.remove(getDc(), "key");
+    provideDataJdbcRepository.put("key", "val");
+    Assert.assertEquals("val", provideDataJdbcRepository.get("key").getEntity());
+    provideDataJdbcRepository.remove("key");
     Assert.assertEquals(
-        OperationStatus.NOTFOUND,
-        provideDataJdbcRepository.get(getDc(), "key").getOperationStatus());
+        OperationStatus.NOTFOUND, provideDataJdbcRepository.get("key").getOperationStatus());
   }
 }

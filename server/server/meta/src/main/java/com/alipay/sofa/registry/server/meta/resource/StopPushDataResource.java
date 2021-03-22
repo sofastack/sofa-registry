@@ -25,7 +25,6 @@ import com.alipay.sofa.registry.common.model.store.DataInfo;
 import com.alipay.sofa.registry.core.model.Result;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
-import com.alipay.sofa.registry.server.meta.bootstrap.config.NodeConfig;
 import com.alipay.sofa.registry.server.meta.provide.data.DefaultProvideDataNotifier;
 import com.alipay.sofa.registry.server.meta.resource.filter.LeaderAwareRestController;
 import com.alipay.sofa.registry.store.api.meta.ProvideDataRepository;
@@ -56,8 +55,6 @@ public class StopPushDataResource {
 
   @Autowired private DefaultProvideDataNotifier provideDataNotifier;
 
-  @Autowired private NodeConfig nodeConfig;
-
   /** close push */
   @GET
   @Path("open")
@@ -69,7 +66,6 @@ public class StopPushDataResource {
     try {
       boolean ret =
           provideDataRepository.put(
-              nodeConfig.getLocalDataCenter(),
               ValueConstants.STOP_PUSH_DATA_SWITCH_DATA_ID,
               JsonUtils.writeValueAsString(persistenceData));
       DB_LOGGER.info("open stop push data switch to DB result {}!", ret);
@@ -98,7 +94,6 @@ public class StopPushDataResource {
     try {
       boolean ret =
           provideDataRepository.put(
-              nodeConfig.getLocalDataCenter(),
               ValueConstants.STOP_PUSH_DATA_SWITCH_DATA_ID,
               JsonUtils.writeValueAsString(persistenceData));
       DB_LOGGER.info("close stop push data switch to DB result {}!", ret);

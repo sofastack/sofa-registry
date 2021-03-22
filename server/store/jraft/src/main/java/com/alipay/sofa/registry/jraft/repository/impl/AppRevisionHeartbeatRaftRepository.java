@@ -29,5 +29,5 @@ public class AppRevisionHeartbeatRaftRepository
   public void doAppRevisionHeartbeat() {}
 
   @Override
-  public void doAppRevisionGc(String dataCenter, int silenceHour) {}
+  public void doAppRevisionGc(int silenceHour) {}
 }

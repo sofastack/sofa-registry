@@ -23,7 +23,6 @@ import com.alipay.sofa.registry.common.model.metaserver.ProvideData;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.remoting.Channel;
-import com.alipay.sofa.registry.server.meta.bootstrap.config.NodeConfig;
 import com.alipay.sofa.registry.server.meta.bootstrap.handler.DataServerHandler;
 import com.alipay.sofa.registry.server.meta.bootstrap.handler.SessionServerHandler;
 import com.alipay.sofa.registry.store.api.DBResponse;
@@ -48,14 +47,10 @@ public class FetchProvideDataRequestHandler extends BaseMetaServerHandler<FetchP
 
   @Autowired private ProvideDataRepository provideDataRepository;
 
-  @Autowired private NodeConfig nodeConfig;
-
   @Override
   public Object doHandle(Channel channel, FetchProvideDataRequest fetchProvideDataRequest) {
     try {
-      DBResponse ret =
-          provideDataRepository.get(
-              nodeConfig.getLocalDataCenter(), fetchProvideDataRequest.getDataInfoId());
+      DBResponse ret = provideDataRepository.get(fetchProvideDataRequest.getDataInfoId());
       if (ret == null) {
         DB_LOGGER.error("get null Data from db!");
         throw new RuntimeException("Get null Data from db!");

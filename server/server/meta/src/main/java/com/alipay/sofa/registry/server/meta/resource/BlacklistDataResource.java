@@ -24,7 +24,6 @@ import com.alipay.sofa.registry.common.model.store.DataInfo;
 import com.alipay.sofa.registry.core.model.Result;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
-import com.alipay.sofa.registry.server.meta.bootstrap.config.NodeConfig;
 import com.alipay.sofa.registry.server.meta.provide.data.DefaultProvideDataNotifier;
 import com.alipay.sofa.registry.server.meta.resource.filter.LeaderAwareRestController;
 import com.alipay.sofa.registry.store.api.meta.ProvideDataRepository;
@@ -53,8 +52,6 @@ public class BlacklistDataResource {
 
   @Autowired private DefaultProvideDataNotifier provideDataNotifier;
 
-  @Autowired private NodeConfig nodeConfig;
-
   /**
    * update blacklist e.g. curl -d
    * '{"FORBIDDEN_PUB":{"IP_FULL":["1.1.1.1","10.15.233.150"]},"FORBIDDEN_SUB_BY_PREFIX":{"IP_FULL":["1.1.1.1"]}}'
@@ -69,9 +66,7 @@ public class BlacklistDataResource {
     try {
       boolean ret =
           provideDataRepository.put(
-              nodeConfig.getLocalDataCenter(),
-              ValueConstants.BLACK_LIST_DATA_ID,
-              JsonUtils.writeValueAsString(persistenceData));
+              ValueConstants.BLACK_LIST_DATA_ID, JsonUtils.writeValueAsString(persistenceData));
       DB_LOGGER.info("Success update blacklist to DB result {}!", ret);
     } catch (Throwable e) {
       DB_LOGGER.error("Error update blacklist to DB!", e);
