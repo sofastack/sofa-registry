@@ -132,7 +132,8 @@ public class AppRevisionJdbcRepository implements AppRevisionRepository, JdbcRep
         appRevision.getAppName(), appRevision.getInterfaceMap().keySet());
 
     // it will ignore ON DUPLICATE KEY
-    appRevisionMapper.insert(AppRevisionDomainConvertor.convert2Domain(appRevision));
+    appRevisionMapper.insert(
+        AppRevisionDomainConvertor.convert2Domain(defaultCommonConfig.getClusterId(), appRevision));
 
     registry.put(key, appRevision);
     heartbeatMap.put(

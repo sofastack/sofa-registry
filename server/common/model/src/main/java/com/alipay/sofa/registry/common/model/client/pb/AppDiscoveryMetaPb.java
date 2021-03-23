@@ -98,29 +98,28 @@ public final class AppDiscoveryMetaPb {
           + "try\032>\n\017BaseParamsEntry\022\013\n\003key\030\001 \001(\t\022\032\n\005v"
           + "alue\030\002 \001(\0132\013.StringList:\0028\001\032=\n\rServicesE"
           + "ntry\022\013\n\003key\030\001 \001(\t\022\033\n\005value\030\002 \001(\0132\014.MetaS"
-          + "ervice:\0028\001\"\222\001\n\013MetaService\022\n\n\002id\030\001 \001(\t\022\021"
-          + "\n\tserviceId\030\002 \001(\t\022(\n\006params\030\003 \003(\0132\030.Meta"
-          + "Service.ParamsEntry\032:\n\013ParamsEntry\022\013\n\003ke"
-          + "y\030\001 \001(\t\022\032\n\005value\030\002 \001(\0132\013.StringList:\0028\001\""
-          + "\034\n\nStringList\022\016\n\006values\030\001 \003(\t\"(\n\007AppList"
-          + "\022\017\n\007version\030\001 \001(\003\022\014\n\004apps\030\002 \003(\t\".\n\030Servi"
-          + "ceAppMappingRequest\022\022\n\nserviceIds\030\001 \003(\t\""
-          + "\322\001\n\031ServiceAppMappingResponse\022L\n\021service"
-          + "AppMapping\030\001 \003(\01321.ServiceAppMappingResp"
-          + "onse.ServiceAppMappingEntry\022\022\n\nstatusCod"
-          + "e\030\002 \001(\005\022\017\n\007message\030\003 \001(\t\032B\n\026ServiceAppMa"
-          + "ppingEntry\022\013\n\003key\030\001 \001(\t\022\027\n\005value\030\002 \001(\0132\010"
-          + ".AppList:\0028\001\"(\n\023GetRevisionsRequest\022\021\n\tr"
-          + "evisions\030\001 \003(\t\"\265\001\n\024GetRevisionsResponse\022"
-          + "7\n\trevisions\030\001 \003(\0132$.GetRevisionsRespons"
-          + "e.RevisionsEntry\022\022\n\nstatusCode\030\002 \001(\005\022\017\n\007"
-          + "message\030\003 \001(\t\032?\n\016RevisionsEntry\022\013\n\003key\030\001"
-          + " \001(\t\022\034\n\005value\030\002 \001(\0132\r.MetaRegister:\0028\001\")"
-          + "\n\024MetaHeartbeatRequest\022\021\n\trevisions\030\001 \003("
-          + "\t\"<\n\025MetaHeartbeatResponse\022\022\n\nstatusCode"
-          + "\030\001 \001(\005\022\017\n\007message\030\002 \001(\tB:\n/com.alipay.so"
-          + "fa.registry.common.model.client.pbP\001Z\005pr"
-          + "otob\006proto3"
+          + "ervice:\0028\001\"\177\n\013MetaService\022\n\n\002id\030\001 \001(\t\022(\n"
+          + "\006params\030\003 \003(\0132\030.MetaService.ParamsEntry\032"
+          + ":\n\013ParamsEntry\022\013\n\003key\030\001 \001(\t\022\032\n\005value\030\002 \001"
+          + "(\0132\013.StringList:\0028\001\"\034\n\nStringList\022\016\n\006val"
+          + "ues\030\001 \003(\t\"(\n\007AppList\022\017\n\007version\030\001 \001(\003\022\014\n"
+          + "\004apps\030\002 \003(\t\".\n\030ServiceAppMappingRequest\022"
+          + "\022\n\nserviceIds\030\001 \003(\t\"\322\001\n\031ServiceAppMappin"
+          + "gResponse\022L\n\021serviceAppMapping\030\001 \003(\01321.S"
+          + "erviceAppMappingResponse.ServiceAppMappi"
+          + "ngEntry\022\022\n\nstatusCode\030\002 \001(\005\022\017\n\007message\030\003"
+          + " \001(\t\032B\n\026ServiceAppMappingEntry\022\013\n\003key\030\001 "
+          + "\001(\t\022\027\n\005value\030\002 \001(\0132\010.AppList:\0028\001\"(\n\023GetR"
+          + "evisionsRequest\022\021\n\trevisions\030\001 \003(\t\"\265\001\n\024G"
+          + "etRevisionsResponse\0227\n\trevisions\030\001 \003(\0132$"
+          + ".GetRevisionsResponse.RevisionsEntry\022\022\n\n"
+          + "statusCode\030\002 \001(\005\022\017\n\007message\030\003 \001(\t\032?\n\016Rev"
+          + "isionsEntry\022\013\n\003key\030\001 \001(\t\022\034\n\005value\030\002 \001(\0132"
+          + "\r.MetaRegister:\0028\001\")\n\024MetaHeartbeatReque"
+          + "st\022\021\n\trevisions\030\001 \003(\t\"<\n\025MetaHeartbeatRe"
+          + "sponse\022\022\n\nstatusCode\030\001 \001(\005\022\017\n\007message\030\002 "
+          + "\001(\tB:\n/com.alipay.sofa.registry.common.m"
+          + "odel.client.pbP\001Z\005protob\006proto3"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
         new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {
@@ -160,7 +159,7 @@ public final class AppDiscoveryMetaPb {
         new com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
             internal_static_MetaService_descriptor,
             new java.lang.String[] {
-              "Id", "ServiceId", "Params",
+              "Id", "Params",
             });
     internal_static_MetaService_ParamsEntry_descriptor =
         internal_static_MetaService_descriptor.getNestedTypes().get(0);

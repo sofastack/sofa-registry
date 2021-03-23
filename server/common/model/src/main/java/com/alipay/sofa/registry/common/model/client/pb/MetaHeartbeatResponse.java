@@ -22,7 +22,6 @@ public final class MetaHeartbeatResponse extends com.google.protobuf.GeneratedMe
     // @@protoc_insertion_point(message_implements:MetaHeartbeatResponse)
     MetaHeartbeatResponseOrBuilder {
   private static final long serialVersionUID = 0L;
-
   // Use MetaHeartbeatResponse.newBuilder() to construct.
   private MetaHeartbeatResponse(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
     super(builder);
@@ -104,7 +103,6 @@ public final class MetaHeartbeatResponse extends com.google.protobuf.GeneratedMe
 
   public static final int STATUSCODE_FIELD_NUMBER = 1;
   private int statusCode_;
-
   /** <code>int32 statusCode = 1;</code> */
   public int getStatusCode() {
     return statusCode_;
@@ -112,7 +110,6 @@ public final class MetaHeartbeatResponse extends com.google.protobuf.GeneratedMe
 
   public static final int MESSAGE_FIELD_NUMBER = 2;
   private volatile java.lang.Object message_;
-
   /** <code>string message = 2;</code> */
   public java.lang.String getMessage() {
     java.lang.Object ref = message_;
@@ -125,7 +122,6 @@ public final class MetaHeartbeatResponse extends com.google.protobuf.GeneratedMe
       return s;
     }
   }
-
   /** <code>string message = 2;</code> */
   public com.google.protobuf.ByteString getMessageBytes() {
     java.lang.Object ref = message_;
@@ -305,7 +301,6 @@ public final class MetaHeartbeatResponse extends com.google.protobuf.GeneratedMe
     Builder builder = new Builder(parent);
     return builder;
   }
-
   /** Protobuf type {@code MetaHeartbeatResponse} */
   public static final class Builder extends com.google.protobuf.GeneratedMessageV3.Builder<Builder>
       implements
@@ -456,12 +451,10 @@ public final class MetaHeartbeatResponse extends com.google.protobuf.GeneratedMe
     }
 
     private int statusCode_;
-
     /** <code>int32 statusCode = 1;</code> */
     public int getStatusCode() {
       return statusCode_;
     }
-
     /** <code>int32 statusCode = 1;</code> */
     public Builder setStatusCode(int value) {
 
@@ -469,7 +462,6 @@ public final class MetaHeartbeatResponse extends com.google.protobuf.GeneratedMe
       onChanged();
       return this;
     }
-
     /** <code>int32 statusCode = 1;</code> */
     public Builder clearStatusCode() {
 
@@ -479,7 +471,6 @@ public final class MetaHeartbeatResponse extends com.google.protobuf.GeneratedMe
     }
 
     private java.lang.Object message_ = "";
-
     /** <code>string message = 2;</code> */
     public java.lang.String getMessage() {
       java.lang.Object ref = message_;
@@ -492,7 +483,6 @@ public final class MetaHeartbeatResponse extends com.google.protobuf.GeneratedMe
         return (java.lang.String) ref;
       }
     }
-
     /** <code>string message = 2;</code> */
     public com.google.protobuf.ByteString getMessageBytes() {
       java.lang.Object ref = message_;
@@ -505,7 +495,6 @@ public final class MetaHeartbeatResponse extends com.google.protobuf.GeneratedMe
         return (com.google.protobuf.ByteString) ref;
       }
     }
-
     /** <code>string message = 2;</code> */
     public Builder setMessage(java.lang.String value) {
       if (value == null) {
@@ -516,7 +505,6 @@ public final class MetaHeartbeatResponse extends com.google.protobuf.GeneratedMe
       onChanged();
       return this;
     }
-
     /** <code>string message = 2;</code> */
     public Builder clearMessage() {
 
@@ -524,7 +512,6 @@ public final class MetaHeartbeatResponse extends com.google.protobuf.GeneratedMe
       onChanged();
       return this;
     }
-
     /** <code>string message = 2;</code> */
     public Builder setMessageBytes(com.google.protobuf.ByteString value) {
       if (value == null) {

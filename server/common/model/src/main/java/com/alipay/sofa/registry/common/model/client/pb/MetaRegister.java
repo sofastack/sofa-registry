@@ -22,7 +22,6 @@ public final class MetaRegister extends com.google.protobuf.GeneratedMessageV3
     // @@protoc_insertion_point(message_implements:MetaRegister)
     MetaRegisterOrBuilder {
   private static final long serialVersionUID = 0L;
-
   // Use MetaRegister.newBuilder() to construct.
   private MetaRegister(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
     super(builder);
@@ -161,7 +160,6 @@ public final class MetaRegister extends com.google.protobuf.GeneratedMessageV3
   private int bitField0_;
   public static final int APPLICATION_FIELD_NUMBER = 1;
   private volatile java.lang.Object application_;
-
   /** <code>string application = 1;</code> */
   public java.lang.String getApplication() {
     java.lang.Object ref = application_;
@@ -174,7 +172,6 @@ public final class MetaRegister extends com.google.protobuf.GeneratedMessageV3
       return s;
     }
   }
-
   /** <code>string application = 1;</code> */
   public com.google.protobuf.ByteString getApplicationBytes() {
     java.lang.Object ref = application_;
@@ -190,7 +187,6 @@ public final class MetaRegister extends com.google.protobuf.GeneratedMessageV3
 
   public static final int REVISION_FIELD_NUMBER = 2;
   private volatile java.lang.Object revision_;
-
   /** <code>string revision = 2;</code> */
   public java.lang.String getRevision() {
     java.lang.Object ref = revision_;
@@ -203,7 +199,6 @@ public final class MetaRegister extends com.google.protobuf.GeneratedMessageV3
       return s;
     }
   }
-
   /** <code>string revision = 2;</code> */
   public com.google.protobuf.ByteString getRevisionBytes() {
     java.lang.Object ref = revision_;
@@ -219,7 +214,6 @@ public final class MetaRegister extends com.google.protobuf.GeneratedMessageV3
 
   public static final int CLIENTVERSION_FIELD_NUMBER = 3;
   private volatile java.lang.Object clientVersion_;
-
   /** <code>string clientVersion = 3;</code> */
   public java.lang.String getClientVersion() {
     java.lang.Object ref = clientVersion_;
@@ -232,7 +226,6 @@ public final class MetaRegister extends com.google.protobuf.GeneratedMessageV3
       return s;
     }
   }
-
   /** <code>string clientVersion = 3;</code> */
   public com.google.protobuf.ByteString getClientVersionBytes() {
     java.lang.Object ref = clientVersion_;
@@ -280,7 +273,6 @@ public final class MetaRegister extends com.google.protobuf.GeneratedMessageV3
   public int getBaseParamsCount() {
     return internalGetBaseParams().getMap().size();
   }
-
   /** <code>map&lt;string, .StringList&gt; baseParams = 4;</code> */
   public boolean containsBaseParams(java.lang.String key) {
     if (key == null) {
@@ -288,20 +280,17 @@ public final class MetaRegister extends com.google.protobuf.GeneratedMessageV3
     }
     return internalGetBaseParams().getMap().containsKey(key);
   }
-
   /** Use {@link #getBaseParamsMap()} instead. */
   @java.lang.Deprecated
   public java.util.Map<java.lang.String, com.alipay.sofa.registry.common.model.client.pb.StringList>
       getBaseParams() {
     return getBaseParamsMap();
   }
-
   /** <code>map&lt;string, .StringList&gt; baseParams = 4;</code> */
   public java.util.Map<java.lang.String, com.alipay.sofa.registry.common.model.client.pb.StringList>
       getBaseParamsMap() {
     return internalGetBaseParams().getMap();
   }
-
   /** <code>map&lt;string, .StringList&gt; baseParams = 4;</code> */
   public com.alipay.sofa.registry.common.model.client.pb.StringList getBaseParamsOrDefault(
       java.lang.String key,
@@ -313,7 +302,6 @@ public final class MetaRegister extends com.google.protobuf.GeneratedMessageV3
         map = internalGetBaseParams().getMap();
     return map.containsKey(key) ? map.get(key) : defaultValue;
   }
-
   /** <code>map&lt;string, .StringList&gt; baseParams = 4;</code> */
   public com.alipay.sofa.registry.common.model.client.pb.StringList getBaseParamsOrThrow(
       java.lang.String key) {
@@ -362,7 +350,6 @@ public final class MetaRegister extends com.google.protobuf.GeneratedMessageV3
   public int getServicesCount() {
     return internalGetServices().getMap().size();
   }
-
   /** <code>map&lt;string, .MetaService&gt; services = 5;</code> */
   public boolean containsServices(java.lang.String key) {
     if (key == null) {
@@ -370,7 +357,6 @@ public final class MetaRegister extends com.google.protobuf.GeneratedMessageV3
     }
     return internalGetServices().getMap().containsKey(key);
   }
-
   /** Use {@link #getServicesMap()} instead. */
   @java.lang.Deprecated
   public java.util.Map<
@@ -378,14 +364,12 @@ public final class MetaRegister extends com.google.protobuf.GeneratedMessageV3
       getServices() {
     return getServicesMap();
   }
-
   /** <code>map&lt;string, .MetaService&gt; services = 5;</code> */
   public java.util.Map<
           java.lang.String, com.alipay.sofa.registry.common.model.client.pb.MetaService>
       getServicesMap() {
     return internalGetServices().getMap();
   }
-
   /** <code>map&lt;string, .MetaService&gt; services = 5;</code> */
   public com.alipay.sofa.registry.common.model.client.pb.MetaService getServicesOrDefault(
       java.lang.String key,
@@ -397,7 +381,6 @@ public final class MetaRegister extends com.google.protobuf.GeneratedMessageV3
         map = internalGetServices().getMap();
     return map.containsKey(key) ? map.get(key) : defaultValue;
   }
-
   /** <code>map&lt;string, .MetaService&gt; services = 5;</code> */
   public com.alipay.sofa.registry.common.model.client.pb.MetaService getServicesOrThrow(
       java.lang.String key) {
@@ -626,7 +609,6 @@ public final class MetaRegister extends com.google.protobuf.GeneratedMessageV3
     Builder builder = new Builder(parent);
     return builder;
   }
-
   /** Protobuf type {@code MetaRegister} */
   public static final class Builder extends com.google.protobuf.GeneratedMessageV3.Builder<Builder>
       implements
@@ -817,7 +799,6 @@ public final class MetaRegister extends com.google.protobuf.GeneratedMessageV3
     private int bitField0_;
 
     private java.lang.Object application_ = "";
-
     /** <code>string application = 1;</code> */
     public java.lang.String getApplication() {
       java.lang.Object ref = application_;
@@ -830,7 +811,6 @@ public final class MetaRegister extends com.google.protobuf.GeneratedMessageV3
         return (java.lang.String) ref;
       }
     }
-
     /** <code>string application = 1;</code> */
     public com.google.protobuf.ByteString getApplicationBytes() {
       java.lang.Object ref = application_;
@@ -843,7 +823,6 @@ public final class MetaRegister extends com.google.protobuf.GeneratedMessageV3
         return (com.google.protobuf.ByteString) ref;
       }
     }
-
     /** <code>string application = 1;</code> */
     public Builder setApplication(java.lang.String value) {
       if (value == null) {
@@ -854,7 +833,6 @@ public final class MetaRegister extends com.google.protobuf.GeneratedMessageV3
       onChanged();
       return this;
     }
-
     /** <code>string application = 1;</code> */
     public Builder clearApplication() {
 
@@ -862,7 +840,6 @@ public final class MetaRegister extends com.google.protobuf.GeneratedMessageV3
       onChanged();
       return this;
     }
-
     /** <code>string application = 1;</code> */
     public Builder setApplicationBytes(com.google.protobuf.ByteString value) {
       if (value == null) {
@@ -876,7 +853,6 @@ public final class MetaRegister extends com.google.protobuf.GeneratedMessageV3
     }
 
     private java.lang.Object revision_ = "";
-
     /** <code>string revision = 2;</code> */
     public java.lang.String getRevision() {
       java.lang.Object ref = revision_;
@@ -889,7 +865,6 @@ public final class MetaRegister extends com.google.protobuf.GeneratedMessageV3
         return (java.lang.String) ref;
       }
     }
-
     /** <code>string revision = 2;</code> */
     public com.google.protobuf.ByteString getRevisionBytes() {
       java.lang.Object ref = revision_;
@@ -902,7 +877,6 @@ public final class MetaRegister extends com.google.protobuf.GeneratedMessageV3
         return (com.google.protobuf.ByteString) ref;
       }
     }
-
     /** <code>string revision = 2;</code> */
     public Builder setRevision(java.lang.String value) {
       if (value == null) {
@@ -913,7 +887,6 @@ public final class MetaRegister extends com.google.protobuf.GeneratedMessageV3
       onChanged();
       return this;
     }
-
     /** <code>string revision = 2;</code> */
     public Builder clearRevision() {
 
@@ -921,7 +894,6 @@ public final class MetaRegister extends com.google.protobuf.GeneratedMessageV3
       onChanged();
       return this;
     }
-
     /** <code>string revision = 2;</code> */
     public Builder setRevisionBytes(com.google.protobuf.ByteString value) {
       if (value == null) {
@@ -935,7 +907,6 @@ public final class MetaRegister extends com.google.protobuf.GeneratedMessageV3
     }
 
     private java.lang.Object clientVersion_ = "";
-
     /** <code>string clientVersion = 3;</code> */
     public java.lang.String getClientVersion() {
       java.lang.Object ref = clientVersion_;
@@ -948,7 +919,6 @@ public final class MetaRegister extends com.google.protobuf.GeneratedMessageV3
         return (java.lang.String) ref;
       }
     }
-
     /** <code>string clientVersion = 3;</code> */
     public com.google.protobuf.ByteString getClientVersionBytes() {
       java.lang.Object ref = clientVersion_;
@@ -961,7 +931,6 @@ public final class MetaRegister extends com.google.protobuf.GeneratedMessageV3
         return (com.google.protobuf.ByteString) ref;
       }
     }
-
     /** <code>string clientVersion = 3;</code> */
     public Builder setClientVersion(java.lang.String value) {
       if (value == null) {
@@ -972,7 +941,6 @@ public final class MetaRegister extends com.google.protobuf.GeneratedMessageV3
       onChanged();
       return this;
     }
-
     /** <code>string clientVersion = 3;</code> */
     public Builder clearClientVersion() {
 
@@ -980,7 +948,6 @@ public final class MetaRegister extends com.google.protobuf.GeneratedMessageV3
       onChanged();
       return this;
     }
-
     /** <code>string clientVersion = 3;</code> */
     public Builder setClientVersionBytes(com.google.protobuf.ByteString value) {
       if (value == null) {
@@ -1025,7 +992,6 @@ public final class MetaRegister extends com.google.protobuf.GeneratedMessageV3
     public int getBaseParamsCount() {
       return internalGetBaseParams().getMap().size();
     }
-
     /** <code>map&lt;string, .StringList&gt; baseParams = 4;</code> */
     public boolean containsBaseParams(java.lang.String key) {
       if (key == null) {
@@ -1033,7 +999,6 @@ public final class MetaRegister extends com.google.protobuf.GeneratedMessageV3
       }
       return internalGetBaseParams().getMap().containsKey(key);
     }
-
     /** Use {@link #getBaseParamsMap()} instead. */
     @java.lang.Deprecated
     public java.util.Map<
@@ -1041,14 +1006,12 @@ public final class MetaRegister extends com.google.protobuf.GeneratedMessageV3
         getBaseParams() {
       return getBaseParamsMap();
     }
-
     /** <code>map&lt;string, .StringList&gt; baseParams = 4;</code> */
     public java.util.Map<
             java.lang.String, com.alipay.sofa.registry.common.model.client.pb.StringList>
         getBaseParamsMap() {
       return internalGetBaseParams().getMap();
     }
-
     /** <code>map&lt;string, .StringList&gt; baseParams = 4;</code> */
     public com.alipay.sofa.registry.common.model.client.pb.StringList getBaseParamsOrDefault(
         java.lang.String key,
@@ -1060,7 +1023,6 @@ public final class MetaRegister extends com.google.protobuf.GeneratedMessageV3
           map = internalGetBaseParams().getMap();
       return map.containsKey(key) ? map.get(key) : defaultValue;
     }
-
     /** <code>map&lt;string, .StringList&gt; baseParams = 4;</code> */
     public com.alipay.sofa.registry.common.model.client.pb.StringList getBaseParamsOrThrow(
         java.lang.String key) {
@@ -1079,7 +1041,6 @@ public final class MetaRegister extends com.google.protobuf.GeneratedMessageV3
       internalGetMutableBaseParams().getMutableMap().clear();
       return this;
     }
-
     /** <code>map&lt;string, .StringList&gt; baseParams = 4;</code> */
     public Builder removeBaseParams(java.lang.String key) {
       if (key == null) {
@@ -1088,7 +1049,6 @@ public final class MetaRegister extends com.google.protobuf.GeneratedMessageV3
       internalGetMutableBaseParams().getMutableMap().remove(key);
       return this;
     }
-
     /** Use alternate mutation accessors instead. */
     @java.lang.Deprecated
     public java.util.Map<
@@ -1096,7 +1056,6 @@ public final class MetaRegister extends com.google.protobuf.GeneratedMessageV3
         getMutableBaseParams() {
       return internalGetMutableBaseParams().getMutableMap();
     }
-
     /** <code>map&lt;string, .StringList&gt; baseParams = 4;</code> */
     public Builder putBaseParams(
         java.lang.String key, com.alipay.sofa.registry.common.model.client.pb.StringList value) {
@@ -1109,7 +1068,6 @@ public final class MetaRegister extends com.google.protobuf.GeneratedMessageV3
       internalGetMutableBaseParams().getMutableMap().put(key, value);
       return this;
     }
-
     /** <code>map&lt;string, .StringList&gt; baseParams = 4;</code> */
     public Builder putAllBaseParams(
         java.util.Map<java.lang.String, com.alipay.sofa.registry.common.model.client.pb.StringList>
@@ -1149,7 +1107,6 @@ public final class MetaRegister extends com.google.protobuf.GeneratedMessageV3
     public int getServicesCount() {
       return internalGetServices().getMap().size();
     }
-
     /** <code>map&lt;string, .MetaService&gt; services = 5;</code> */
     public boolean containsServices(java.lang.String key) {
       if (key == null) {
@@ -1157,7 +1114,6 @@ public final class MetaRegister extends com.google.protobuf.GeneratedMessageV3
       }
       return internalGetServices().getMap().containsKey(key);
     }
-
     /** Use {@link #getServicesMap()} instead. */
     @java.lang.Deprecated
     public java.util.Map<
@@ -1165,14 +1121,12 @@ public final class MetaRegister extends com.google.protobuf.GeneratedMessageV3
         getServices() {
       return getServicesMap();
     }
-
     /** <code>map&lt;string, .MetaService&gt; services = 5;</code> */
     public java.util.Map<
             java.lang.String, com.alipay.sofa.registry.common.model.client.pb.MetaService>
         getServicesMap() {
       return internalGetServices().getMap();
     }
-
     /** <code>map&lt;string, .MetaService&gt; services = 5;</code> */
     public com.alipay.sofa.registry.common.model.client.pb.MetaService getServicesOrDefault(
         java.lang.String key,
@@ -1184,7 +1138,6 @@ public final class MetaRegister extends com.google.protobuf.GeneratedMessageV3
           map = internalGetServices().getMap();
       return map.containsKey(key) ? map.get(key) : defaultValue;
     }
-
     /** <code>map&lt;string, .MetaService&gt; services = 5;</code> */
     public com.alipay.sofa.registry.common.model.client.pb.MetaService getServicesOrThrow(
         java.lang.String key) {
@@ -1203,7 +1156,6 @@ public final class MetaRegister extends com.google.protobuf.GeneratedMessageV3
       internalGetMutableServices().getMutableMap().clear();
       return this;
     }
-
     /** <code>map&lt;string, .MetaService&gt; services = 5;</code> */
     public Builder removeServices(java.lang.String key) {
       if (key == null) {
@@ -1212,7 +1164,6 @@ public final class MetaRegister extends com.google.protobuf.GeneratedMessageV3
       internalGetMutableServices().getMutableMap().remove(key);
       return this;
     }
-
     /** Use alternate mutation accessors instead. */
     @java.lang.Deprecated
     public java.util.Map<
@@ -1220,7 +1171,6 @@ public final class MetaRegister extends com.google.protobuf.GeneratedMessageV3
         getMutableServices() {
       return internalGetMutableServices().getMutableMap();
     }
-
     /** <code>map&lt;string, .MetaService&gt; services = 5;</code> */
     public Builder putServices(
         java.lang.String key, com.alipay.sofa.registry.common.model.client.pb.MetaService value) {
@@ -1233,7 +1183,6 @@ public final class MetaRegister extends com.google.protobuf.GeneratedMessageV3
       internalGetMutableServices().getMutableMap().put(key, value);
       return this;
     }
-
     /** <code>map&lt;string, .MetaService&gt; services = 5;</code> */
     public Builder putAllServices(
         java.util.Map<java.lang.String, com.alipay.sofa.registry.common.model.client.pb.MetaService>

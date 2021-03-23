@@ -22,7 +22,6 @@ public final class AppList extends com.google.protobuf.GeneratedMessageV3
     // @@protoc_insertion_point(message_implements:AppList)
     AppListOrBuilder {
   private static final long serialVersionUID = 0L;
-
   // Use AppList.newBuilder() to construct.
   private AppList(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
     super(builder);
@@ -111,7 +110,6 @@ public final class AppList extends com.google.protobuf.GeneratedMessageV3
   private int bitField0_;
   public static final int VERSION_FIELD_NUMBER = 1;
   private long version_;
-
   /** <code>int64 version = 1;</code> */
   public long getVersion() {
     return version_;
@@ -119,22 +117,18 @@ public final class AppList extends com.google.protobuf.GeneratedMessageV3
 
   public static final int APPS_FIELD_NUMBER = 2;
   private com.google.protobuf.LazyStringList apps_;
-
   /** <code>repeated string apps = 2;</code> */
   public com.google.protobuf.ProtocolStringList getAppsList() {
     return apps_;
   }
-
   /** <code>repeated string apps = 2;</code> */
   public int getAppsCount() {
     return apps_.size();
   }
-
   /** <code>repeated string apps = 2;</code> */
   public java.lang.String getApps(int index) {
     return apps_.get(index);
   }
-
   /** <code>repeated string apps = 2;</code> */
   public com.google.protobuf.ByteString getAppsBytes(int index) {
     return apps_.getByteString(index);
@@ -312,7 +306,6 @@ public final class AppList extends com.google.protobuf.GeneratedMessageV3
     Builder builder = new Builder(parent);
     return builder;
   }
-
   /** Protobuf type {@code AppList} */
   public static final class Builder extends com.google.protobuf.GeneratedMessageV3.Builder<Builder>
       implements
@@ -471,12 +464,10 @@ public final class AppList extends com.google.protobuf.GeneratedMessageV3
     private int bitField0_;
 
     private long version_;
-
     /** <code>int64 version = 1;</code> */
     public long getVersion() {
       return version_;
     }
-
     /** <code>int64 version = 1;</code> */
     public Builder setVersion(long value) {
 
@@ -484,7 +475,6 @@ public final class AppList extends com.google.protobuf.GeneratedMessageV3
       onChanged();
       return this;
     }
-
     /** <code>int64 version = 1;</code> */
     public Builder clearVersion() {
 
@@ -502,27 +492,22 @@ public final class AppList extends com.google.protobuf.GeneratedMessageV3
         bitField0_ |= 0x00000002;
       }
     }
-
     /** <code>repeated string apps = 2;</code> */
     public com.google.protobuf.ProtocolStringList getAppsList() {
       return apps_.getUnmodifiableView();
     }
-
     /** <code>repeated string apps = 2;</code> */
     public int getAppsCount() {
       return apps_.size();
     }
-
     /** <code>repeated string apps = 2;</code> */
     public java.lang.String getApps(int index) {
       return apps_.get(index);
     }
-
     /** <code>repeated string apps = 2;</code> */
     public com.google.protobuf.ByteString getAppsBytes(int index) {
       return apps_.getByteString(index);
     }
-
     /** <code>repeated string apps = 2;</code> */
     public Builder setApps(int index, java.lang.String value) {
       if (value == null) {
@@ -533,7 +518,6 @@ public final class AppList extends com.google.protobuf.GeneratedMessageV3
       onChanged();
       return this;
     }
-
     /** <code>repeated string apps = 2;</code> */
     public Builder addApps(java.lang.String value) {
       if (value == null) {
@@ -544,7 +528,6 @@ public final class AppList extends com.google.protobuf.GeneratedMessageV3
       onChanged();
       return this;
     }
-
     /** <code>repeated string apps = 2;</code> */
     public Builder addAllApps(java.lang.Iterable<java.lang.String> values) {
       ensureAppsIsMutable();
@@ -552,7 +535,6 @@ public final class AppList extends com.google.protobuf.GeneratedMessageV3
       onChanged();
       return this;
     }
-
     /** <code>repeated string apps = 2;</code> */
     public Builder clearApps() {
       apps_ = com.google.protobuf.LazyStringArrayList.EMPTY;
@@ -560,7 +542,6 @@ public final class AppList extends com.google.protobuf.GeneratedMessageV3
       onChanged();
       return this;
     }
-
     /** <code>repeated string apps = 2;</code> */
     public Builder addAppsBytes(com.google.protobuf.ByteString value) {
       if (value == null) {

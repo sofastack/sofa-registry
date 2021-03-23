@@ -22,7 +22,6 @@ public final class PublisherRegisterPb extends com.google.protobuf.GeneratedMess
     // @@protoc_insertion_point(message_implements:PublisherRegisterPb)
     PublisherRegisterPbOrBuilder {
   private static final long serialVersionUID = 0L;
-
   // Use PublisherRegisterPb.newBuilder() to construct.
   private PublisherRegisterPb(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
     super(builder);
@@ -127,30 +126,25 @@ public final class PublisherRegisterPb extends com.google.protobuf.GeneratedMess
   private int bitField0_;
   public static final int DATALIST_FIELD_NUMBER = 1;
   private java.util.List<com.alipay.sofa.registry.common.model.client.pb.DataBoxPb> dataList_;
-
   /** <code>repeated .DataBoxPb dataList = 1;</code> */
   public java.util.List<com.alipay.sofa.registry.common.model.client.pb.DataBoxPb>
       getDataListList() {
     return dataList_;
   }
-
   /** <code>repeated .DataBoxPb dataList = 1;</code> */
   public java.util.List<
           ? extends com.alipay.sofa.registry.common.model.client.pb.DataBoxPbOrBuilder>
       getDataListOrBuilderList() {
     return dataList_;
   }
-
   /** <code>repeated .DataBoxPb dataList = 1;</code> */
   public int getDataListCount() {
     return dataList_.size();
   }
-
   /** <code>repeated .DataBoxPb dataList = 1;</code> */
   public com.alipay.sofa.registry.common.model.client.pb.DataBoxPb getDataList(int index) {
     return dataList_.get(index);
   }
-
   /** <code>repeated .DataBoxPb dataList = 1;</code> */
   public com.alipay.sofa.registry.common.model.client.pb.DataBoxPbOrBuilder getDataListOrBuilder(
       int index) {
@@ -159,19 +153,16 @@ public final class PublisherRegisterPb extends com.google.protobuf.GeneratedMess
 
   public static final int BASEREGISTER_FIELD_NUMBER = 2;
   private com.alipay.sofa.registry.common.model.client.pb.BaseRegisterPb baseRegister_;
-
   /** <code>.BaseRegisterPb baseRegister = 2;</code> */
   public boolean hasBaseRegister() {
     return baseRegister_ != null;
   }
-
   /** <code>.BaseRegisterPb baseRegister = 2;</code> */
   public com.alipay.sofa.registry.common.model.client.pb.BaseRegisterPb getBaseRegister() {
     return baseRegister_ == null
         ? com.alipay.sofa.registry.common.model.client.pb.BaseRegisterPb.getDefaultInstance()
         : baseRegister_;
   }
-
   /** <code>.BaseRegisterPb baseRegister = 2;</code> */
   public com.alipay.sofa.registry.common.model.client.pb.BaseRegisterPbOrBuilder
       getBaseRegisterOrBuilder() {
@@ -351,7 +342,6 @@ public final class PublisherRegisterPb extends com.google.protobuf.GeneratedMess
     Builder builder = new Builder(parent);
     return builder;
   }
-
   /** Protobuf type {@code PublisherRegisterPb} */
   public static final class Builder extends com.google.protobuf.GeneratedMessageV3.Builder<Builder>
       implements
@@ -578,7 +568,6 @@ public final class PublisherRegisterPb extends com.google.protobuf.GeneratedMess
         return dataListBuilder_.getMessageList();
       }
     }
-
     /** <code>repeated .DataBoxPb dataList = 1;</code> */
     public int getDataListCount() {
       if (dataListBuilder_ == null) {
@@ -587,7 +576,6 @@ public final class PublisherRegisterPb extends com.google.protobuf.GeneratedMess
         return dataListBuilder_.getCount();
       }
     }
-
     /** <code>repeated .DataBoxPb dataList = 1;</code> */
     public com.alipay.sofa.registry.common.model.client.pb.DataBoxPb getDataList(int index) {
       if (dataListBuilder_ == null) {
@@ -596,7 +584,6 @@ public final class PublisherRegisterPb extends com.google.protobuf.GeneratedMess
         return dataListBuilder_.getMessage(index);
       }
     }
-
     /** <code>repeated .DataBoxPb dataList = 1;</code> */
     public Builder setDataList(
         int index, com.alipay.sofa.registry.common.model.client.pb.DataBoxPb value) {
@@ -612,7 +599,6 @@ public final class PublisherRegisterPb extends com.google.protobuf.GeneratedMess
       }
       return this;
     }
-
     /** <code>repeated .DataBoxPb dataList = 1;</code> */
     public Builder setDataList(
         int index,
@@ -626,7 +612,6 @@ public final class PublisherRegisterPb extends com.google.protobuf.GeneratedMess
       }
       return this;
     }
-
     /** <code>repeated .DataBoxPb dataList = 1;</code> */
     public Builder addDataList(com.alipay.sofa.registry.common.model.client.pb.DataBoxPb value) {
       if (dataListBuilder_ == null) {
@@ -641,7 +626,6 @@ public final class PublisherRegisterPb extends com.google.protobuf.GeneratedMess
       }
       return this;
     }
-
     /** <code>repeated .DataBoxPb dataList = 1;</code> */
     public Builder addDataList(
         int index, com.alipay.sofa.registry.common.model.client.pb.DataBoxPb value) {
@@ -657,7 +641,6 @@ public final class PublisherRegisterPb extends com.google.protobuf.GeneratedMess
       }
       return this;
     }
-
     /** <code>repeated .DataBoxPb dataList = 1;</code> */
     public Builder addDataList(
         com.alipay.sofa.registry.common.model.client.pb.DataBoxPb.Builder builderForValue) {
@@ -670,7 +653,6 @@ public final class PublisherRegisterPb extends com.google.protobuf.GeneratedMess
       }
       return this;
     }
-
     /** <code>repeated .DataBoxPb dataList = 1;</code> */
     public Builder addDataList(
         int index,
@@ -684,7 +666,6 @@ public final class PublisherRegisterPb extends com.google.protobuf.GeneratedMess
       }
       return this;
     }
-
     /** <code>repeated .DataBoxPb dataList = 1;</code> */
     public Builder addAllDataList(
         java.lang.Iterable<? extends com.alipay.sofa.registry.common.model.client.pb.DataBoxPb>
@@ -698,7 +679,6 @@ public final class PublisherRegisterPb extends com.google.protobuf.GeneratedMess
       }
       return this;
     }
-
     /** <code>repeated .DataBoxPb dataList = 1;</code> */
     public Builder clearDataList() {
       if (dataListBuilder_ == null) {
@@ -710,7 +690,6 @@ public final class PublisherRegisterPb extends com.google.protobuf.GeneratedMess
       }
       return this;
     }
-
     /** <code>repeated .DataBoxPb dataList = 1;</code> */
     public Builder removeDataList(int index) {
       if (dataListBuilder_ == null) {
@@ -722,13 +701,11 @@ public final class PublisherRegisterPb extends com.google.protobuf.GeneratedMess
       }
       return this;
     }
-
     /** <code>repeated .DataBoxPb dataList = 1;</code> */
     public com.alipay.sofa.registry.common.model.client.pb.DataBoxPb.Builder getDataListBuilder(
         int index) {
       return getDataListFieldBuilder().getBuilder(index);
     }
-
     /** <code>repeated .DataBoxPb dataList = 1;</code> */
     public com.alipay.sofa.registry.common.model.client.pb.DataBoxPbOrBuilder getDataListOrBuilder(
         int index) {
@@ -738,7 +715,6 @@ public final class PublisherRegisterPb extends com.google.protobuf.GeneratedMess
         return dataListBuilder_.getMessageOrBuilder(index);
       }
     }
-
     /** <code>repeated .DataBoxPb dataList = 1;</code> */
     public java.util.List<
             ? extends com.alipay.sofa.registry.common.model.client.pb.DataBoxPbOrBuilder>
@@ -749,14 +725,12 @@ public final class PublisherRegisterPb extends com.google.protobuf.GeneratedMess
         return java.util.Collections.unmodifiableList(dataList_);
       }
     }
-
     /** <code>repeated .DataBoxPb dataList = 1;</code> */
     public com.alipay.sofa.registry.common.model.client.pb.DataBoxPb.Builder addDataListBuilder() {
       return getDataListFieldBuilder()
           .addBuilder(
               com.alipay.sofa.registry.common.model.client.pb.DataBoxPb.getDefaultInstance());
     }
-
     /** <code>repeated .DataBoxPb dataList = 1;</code> */
     public com.alipay.sofa.registry.common.model.client.pb.DataBoxPb.Builder addDataListBuilder(
         int index) {
@@ -765,7 +739,6 @@ public final class PublisherRegisterPb extends com.google.protobuf.GeneratedMess
               index,
               com.alipay.sofa.registry.common.model.client.pb.DataBoxPb.getDefaultInstance());
     }
-
     /** <code>repeated .DataBoxPb dataList = 1;</code> */
     public java.util.List<com.alipay.sofa.registry.common.model.client.pb.DataBoxPb.Builder>
         getDataListBuilderList() {
@@ -798,12 +771,10 @@ public final class PublisherRegisterPb extends com.google.protobuf.GeneratedMess
             com.alipay.sofa.registry.common.model.client.pb.BaseRegisterPb.Builder,
             com.alipay.sofa.registry.common.model.client.pb.BaseRegisterPbOrBuilder>
         baseRegisterBuilder_;
-
     /** <code>.BaseRegisterPb baseRegister = 2;</code> */
     public boolean hasBaseRegister() {
       return baseRegisterBuilder_ != null || baseRegister_ != null;
     }
-
     /** <code>.BaseRegisterPb baseRegister = 2;</code> */
     public com.alipay.sofa.registry.common.model.client.pb.BaseRegisterPb getBaseRegister() {
       if (baseRegisterBuilder_ == null) {
@@ -814,7 +785,6 @@ public final class PublisherRegisterPb extends com.google.protobuf.GeneratedMess
         return baseRegisterBuilder_.getMessage();
       }
     }
-
     /** <code>.BaseRegisterPb baseRegister = 2;</code> */
     public Builder setBaseRegister(
         com.alipay.sofa.registry.common.model.client.pb.BaseRegisterPb value) {
@@ -830,7 +800,6 @@ public final class PublisherRegisterPb extends com.google.protobuf.GeneratedMess
 
       return this;
     }
-
     /** <code>.BaseRegisterPb baseRegister = 2;</code> */
     public Builder setBaseRegister(
         com.alipay.sofa.registry.common.model.client.pb.BaseRegisterPb.Builder builderForValue) {
@@ -843,7 +812,6 @@ public final class PublisherRegisterPb extends com.google.protobuf.GeneratedMess
 
       return this;
     }
-
     /** <code>.BaseRegisterPb baseRegister = 2;</code> */
     public Builder mergeBaseRegister(
         com.alipay.sofa.registry.common.model.client.pb.BaseRegisterPb value) {
@@ -864,7 +832,6 @@ public final class PublisherRegisterPb extends com.google.protobuf.GeneratedMess
 
       return this;
     }
-
     /** <code>.BaseRegisterPb baseRegister = 2;</code> */
     public Builder clearBaseRegister() {
       if (baseRegisterBuilder_ == null) {
@@ -877,7 +844,6 @@ public final class PublisherRegisterPb extends com.google.protobuf.GeneratedMess
 
       return this;
     }
-
     /** <code>.BaseRegisterPb baseRegister = 2;</code> */
     public com.alipay.sofa.registry.common.model.client.pb.BaseRegisterPb.Builder
         getBaseRegisterBuilder() {
@@ -885,7 +851,6 @@ public final class PublisherRegisterPb extends com.google.protobuf.GeneratedMess
       onChanged();
       return getBaseRegisterFieldBuilder().getBuilder();
     }
-
     /** <code>.BaseRegisterPb baseRegister = 2;</code> */
     public com.alipay.sofa.registry.common.model.client.pb.BaseRegisterPbOrBuilder
         getBaseRegisterOrBuilder() {
@@ -897,7 +862,6 @@ public final class PublisherRegisterPb extends com.google.protobuf.GeneratedMess
             : baseRegister_;
       }
     }
-
     /** <code>.BaseRegisterPb baseRegister = 2;</code> */
     private com.google.protobuf.SingleFieldBuilderV3<
             com.alipay.sofa.registry.common.model.client.pb.BaseRegisterPb,

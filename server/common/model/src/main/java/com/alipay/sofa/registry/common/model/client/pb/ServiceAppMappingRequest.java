@@ -22,7 +22,6 @@ public final class ServiceAppMappingRequest extends com.google.protobuf.Generate
     // @@protoc_insertion_point(message_implements:ServiceAppMappingRequest)
     ServiceAppMappingRequestOrBuilder {
   private static final long serialVersionUID = 0L;
-
   // Use ServiceAppMappingRequest.newBuilder() to construct.
   private ServiceAppMappingRequest(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
     super(builder);
@@ -104,22 +103,18 @@ public final class ServiceAppMappingRequest extends com.google.protobuf.Generate
 
   public static final int SERVICEIDS_FIELD_NUMBER = 1;
   private com.google.protobuf.LazyStringList serviceIds_;
-
   /** <code>repeated string serviceIds = 1;</code> */
   public com.google.protobuf.ProtocolStringList getServiceIdsList() {
     return serviceIds_;
   }
-
   /** <code>repeated string serviceIds = 1;</code> */
   public int getServiceIdsCount() {
     return serviceIds_.size();
   }
-
   /** <code>repeated string serviceIds = 1;</code> */
   public java.lang.String getServiceIds(int index) {
     return serviceIds_.get(index);
   }
-
   /** <code>repeated string serviceIds = 1;</code> */
   public com.google.protobuf.ByteString getServiceIdsBytes(int index) {
     return serviceIds_.getByteString(index);
@@ -290,7 +285,6 @@ public final class ServiceAppMappingRequest extends com.google.protobuf.Generate
     Builder builder = new Builder(parent);
     return builder;
   }
-
   /** Protobuf type {@code ServiceAppMappingRequest} */
   public static final class Builder extends com.google.protobuf.GeneratedMessageV3.Builder<Builder>
       implements
@@ -459,27 +453,22 @@ public final class ServiceAppMappingRequest extends com.google.protobuf.Generate
         bitField0_ |= 0x00000001;
       }
     }
-
     /** <code>repeated string serviceIds = 1;</code> */
     public com.google.protobuf.ProtocolStringList getServiceIdsList() {
       return serviceIds_.getUnmodifiableView();
     }
-
     /** <code>repeated string serviceIds = 1;</code> */
     public int getServiceIdsCount() {
       return serviceIds_.size();
     }
-
     /** <code>repeated string serviceIds = 1;</code> */
     public java.lang.String getServiceIds(int index) {
       return serviceIds_.get(index);
     }
-
     /** <code>repeated string serviceIds = 1;</code> */
     public com.google.protobuf.ByteString getServiceIdsBytes(int index) {
       return serviceIds_.getByteString(index);
     }
-
     /** <code>repeated string serviceIds = 1;</code> */
     public Builder setServiceIds(int index, java.lang.String value) {
       if (value == null) {
@@ -490,7 +479,6 @@ public final class ServiceAppMappingRequest extends com.google.protobuf.Generate
       onChanged();
       return this;
     }
-
     /** <code>repeated string serviceIds = 1;</code> */
     public Builder addServiceIds(java.lang.String value) {
       if (value == null) {
@@ -501,7 +489,6 @@ public final class ServiceAppMappingRequest extends com.google.protobuf.Generate
       onChanged();
       return this;
     }
-
     /** <code>repeated string serviceIds = 1;</code> */
     public Builder addAllServiceIds(java.lang.Iterable<java.lang.String> values) {
       ensureServiceIdsIsMutable();
@@ -509,7 +496,6 @@ public final class ServiceAppMappingRequest extends com.google.protobuf.Generate
       onChanged();
       return this;
     }
-
     /** <code>repeated string serviceIds = 1;</code> */
     public Builder clearServiceIds() {
       serviceIds_ = com.google.protobuf.LazyStringArrayList.EMPTY;
@@ -517,7 +503,6 @@ public final class ServiceAppMappingRequest extends com.google.protobuf.Generate
       onChanged();
       return this;
     }
-
     /** <code>repeated string serviceIds = 1;</code> */
     public Builder addServiceIdsBytes(com.google.protobuf.ByteString value) {
       if (value == null) {

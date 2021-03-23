@@ -23,40 +23,32 @@ public interface ReceivedConfigDataPbOrBuilder
 
   /** <code>string dataId = 1;</code> */
   java.lang.String getDataId();
-
   /** <code>string dataId = 1;</code> */
   com.google.protobuf.ByteString getDataIdBytes();
 
   /** <code>string group = 2;</code> */
   java.lang.String getGroup();
-
   /** <code>string group = 2;</code> */
   com.google.protobuf.ByteString getGroupBytes();
 
   /** <code>string instanceId = 3;</code> */
   java.lang.String getInstanceId();
-
   /** <code>string instanceId = 3;</code> */
   com.google.protobuf.ByteString getInstanceIdBytes();
 
   /** <code>repeated string configuratorRegistIds = 4;</code> */
   java.util.List<java.lang.String> getConfiguratorRegistIdsList();
-
   /** <code>repeated string configuratorRegistIds = 4;</code> */
   int getConfiguratorRegistIdsCount();
-
   /** <code>repeated string configuratorRegistIds = 4;</code> */
   java.lang.String getConfiguratorRegistIds(int index);
-
   /** <code>repeated string configuratorRegistIds = 4;</code> */
   com.google.protobuf.ByteString getConfiguratorRegistIdsBytes(int index);
 
   /** <code>.DataBoxPb dataBox = 5;</code> */
   boolean hasDataBox();
-
   /** <code>.DataBoxPb dataBox = 5;</code> */
   com.alipay.sofa.registry.common.model.client.pb.DataBoxPb getDataBox();
-
   /** <code>.DataBoxPb dataBox = 5;</code> */
   com.alipay.sofa.registry.common.model.client.pb.DataBoxPbOrBuilder getDataBoxOrBuilder();
 
