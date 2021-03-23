@@ -22,7 +22,6 @@ public final class DataBoxesPb extends com.google.protobuf.GeneratedMessageV3
     // @@protoc_insertion_point(message_implements:DataBoxesPb)
     DataBoxesPbOrBuilder {
   private static final long serialVersionUID = 0L;
-
   // Use DataBoxesPb.newBuilder() to construct.
   private DataBoxesPb(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
     super(builder);
@@ -108,29 +107,24 @@ public final class DataBoxesPb extends com.google.protobuf.GeneratedMessageV3
 
   public static final int DATA_FIELD_NUMBER = 1;
   private java.util.List<com.alipay.sofa.registry.common.model.client.pb.DataBoxPb> data_;
-
   /** <code>repeated .DataBoxPb data = 1;</code> */
   public java.util.List<com.alipay.sofa.registry.common.model.client.pb.DataBoxPb> getDataList() {
     return data_;
   }
-
   /** <code>repeated .DataBoxPb data = 1;</code> */
   public java.util.List<
           ? extends com.alipay.sofa.registry.common.model.client.pb.DataBoxPbOrBuilder>
       getDataOrBuilderList() {
     return data_;
   }
-
   /** <code>repeated .DataBoxPb data = 1;</code> */
   public int getDataCount() {
     return data_.size();
   }
-
   /** <code>repeated .DataBoxPb data = 1;</code> */
   public com.alipay.sofa.registry.common.model.client.pb.DataBoxPb getData(int index) {
     return data_.get(index);
   }
-
   /** <code>repeated .DataBoxPb data = 1;</code> */
   public com.alipay.sofa.registry.common.model.client.pb.DataBoxPbOrBuilder getDataOrBuilder(
       int index) {
@@ -295,7 +289,6 @@ public final class DataBoxesPb extends com.google.protobuf.GeneratedMessageV3
     Builder builder = new Builder(parent);
     return builder;
   }
-
   /** Protobuf type {@code DataBoxesPb} */
   public static final class Builder extends com.google.protobuf.GeneratedMessageV3.Builder<Builder>
       implements
@@ -498,7 +491,6 @@ public final class DataBoxesPb extends com.google.protobuf.GeneratedMessageV3
         return dataBuilder_.getMessageList();
       }
     }
-
     /** <code>repeated .DataBoxPb data = 1;</code> */
     public int getDataCount() {
       if (dataBuilder_ == null) {
@@ -507,7 +499,6 @@ public final class DataBoxesPb extends com.google.protobuf.GeneratedMessageV3
         return dataBuilder_.getCount();
       }
     }
-
     /** <code>repeated .DataBoxPb data = 1;</code> */
     public com.alipay.sofa.registry.common.model.client.pb.DataBoxPb getData(int index) {
       if (dataBuilder_ == null) {
@@ -516,7 +507,6 @@ public final class DataBoxesPb extends com.google.protobuf.GeneratedMessageV3
         return dataBuilder_.getMessage(index);
       }
     }
-
     /** <code>repeated .DataBoxPb data = 1;</code> */
     public Builder setData(
         int index, com.alipay.sofa.registry.common.model.client.pb.DataBoxPb value) {
@@ -532,7 +522,6 @@ public final class DataBoxesPb extends com.google.protobuf.GeneratedMessageV3
       }
       return this;
     }
-
     /** <code>repeated .DataBoxPb data = 1;</code> */
     public Builder setData(
         int index,
@@ -546,7 +535,6 @@ public final class DataBoxesPb extends com.google.protobuf.GeneratedMessageV3
       }
       return this;
     }
-
     /** <code>repeated .DataBoxPb data = 1;</code> */
     public Builder addData(com.alipay.sofa.registry.common.model.client.pb.DataBoxPb value) {
       if (dataBuilder_ == null) {
@@ -561,7 +549,6 @@ public final class DataBoxesPb extends com.google.protobuf.GeneratedMessageV3
       }
       return this;
     }
-
     /** <code>repeated .DataBoxPb data = 1;</code> */
     public Builder addData(
         int index, com.alipay.sofa.registry.common.model.client.pb.DataBoxPb value) {
@@ -577,7 +564,6 @@ public final class DataBoxesPb extends com.google.protobuf.GeneratedMessageV3
       }
       return this;
     }
-
     /** <code>repeated .DataBoxPb data = 1;</code> */
     public Builder addData(
         com.alipay.sofa.registry.common.model.client.pb.DataBoxPb.Builder builderForValue) {
@@ -590,7 +576,6 @@ public final class DataBoxesPb extends com.google.protobuf.GeneratedMessageV3
       }
       return this;
     }
-
     /** <code>repeated .DataBoxPb data = 1;</code> */
     public Builder addData(
         int index,
@@ -604,7 +589,6 @@ public final class DataBoxesPb extends com.google.protobuf.GeneratedMessageV3
       }
       return this;
     }
-
     /** <code>repeated .DataBoxPb data = 1;</code> */
     public Builder addAllData(
         java.lang.Iterable<? extends com.alipay.sofa.registry.common.model.client.pb.DataBoxPb>
@@ -618,7 +602,6 @@ public final class DataBoxesPb extends com.google.protobuf.GeneratedMessageV3
       }
       return this;
     }
-
     /** <code>repeated .DataBoxPb data = 1;</code> */
     public Builder clearData() {
       if (dataBuilder_ == null) {
@@ -630,7 +613,6 @@ public final class DataBoxesPb extends com.google.protobuf.GeneratedMessageV3
       }
       return this;
     }
-
     /** <code>repeated .DataBoxPb data = 1;</code> */
     public Builder removeData(int index) {
       if (dataBuilder_ == null) {
@@ -642,13 +624,11 @@ public final class DataBoxesPb extends com.google.protobuf.GeneratedMessageV3
       }
       return this;
     }
-
     /** <code>repeated .DataBoxPb data = 1;</code> */
     public com.alipay.sofa.registry.common.model.client.pb.DataBoxPb.Builder getDataBuilder(
         int index) {
       return getDataFieldBuilder().getBuilder(index);
     }
-
     /** <code>repeated .DataBoxPb data = 1;</code> */
     public com.alipay.sofa.registry.common.model.client.pb.DataBoxPbOrBuilder getDataOrBuilder(
         int index) {
@@ -658,7 +638,6 @@ public final class DataBoxesPb extends com.google.protobuf.GeneratedMessageV3
         return dataBuilder_.getMessageOrBuilder(index);
       }
     }
-
     /** <code>repeated .DataBoxPb data = 1;</code> */
     public java.util.List<
             ? extends com.alipay.sofa.registry.common.model.client.pb.DataBoxPbOrBuilder>
@@ -669,14 +648,12 @@ public final class DataBoxesPb extends com.google.protobuf.GeneratedMessageV3
         return java.util.Collections.unmodifiableList(data_);
       }
     }
-
     /** <code>repeated .DataBoxPb data = 1;</code> */
     public com.alipay.sofa.registry.common.model.client.pb.DataBoxPb.Builder addDataBuilder() {
       return getDataFieldBuilder()
           .addBuilder(
               com.alipay.sofa.registry.common.model.client.pb.DataBoxPb.getDefaultInstance());
     }
-
     /** <code>repeated .DataBoxPb data = 1;</code> */
     public com.alipay.sofa.registry.common.model.client.pb.DataBoxPb.Builder addDataBuilder(
         int index) {
@@ -685,7 +662,6 @@ public final class DataBoxesPb extends com.google.protobuf.GeneratedMessageV3
               index,
               com.alipay.sofa.registry.common.model.client.pb.DataBoxPb.getDefaultInstance());
     }
-
     /** <code>repeated .DataBoxPb data = 1;</code> */
     public java.util.List<com.alipay.sofa.registry.common.model.client.pb.DataBoxPb.Builder>
         getDataBuilderList() {

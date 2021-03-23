@@ -23,13 +23,10 @@ public interface StringListOrBuilder
 
   /** <code>repeated string values = 1;</code> */
   java.util.List<java.lang.String> getValuesList();
-
   /** <code>repeated string values = 1;</code> */
   int getValuesCount();
-
   /** <code>repeated string values = 1;</code> */
   java.lang.String getValues(int index);
-
   /** <code>repeated string values = 1;</code> */
   com.google.protobuf.ByteString getValuesBytes(int index);
 }

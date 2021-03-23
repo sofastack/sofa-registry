@@ -23,7 +23,6 @@ public interface DataBoxPbOrBuilder
 
   /** <code>string data = 1;</code> */
   java.lang.String getData();
-
   /** <code>string data = 1;</code> */
   com.google.protobuf.ByteString getDataBytes();
 }

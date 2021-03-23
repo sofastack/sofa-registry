@@ -23,17 +23,13 @@ public interface DataBoxesPbOrBuilder
 
   /** <code>repeated .DataBoxPb data = 1;</code> */
   java.util.List<com.alipay.sofa.registry.common.model.client.pb.DataBoxPb> getDataList();
-
   /** <code>repeated .DataBoxPb data = 1;</code> */
   com.alipay.sofa.registry.common.model.client.pb.DataBoxPb getData(int index);
-
   /** <code>repeated .DataBoxPb data = 1;</code> */
   int getDataCount();
-
   /** <code>repeated .DataBoxPb data = 1;</code> */
   java.util.List<? extends com.alipay.sofa.registry.common.model.client.pb.DataBoxPbOrBuilder>
       getDataOrBuilderList();
-
   /** <code>repeated .DataBoxPb data = 1;</code> */
   com.alipay.sofa.registry.common.model.client.pb.DataBoxPbOrBuilder getDataOrBuilder(int index);
 }

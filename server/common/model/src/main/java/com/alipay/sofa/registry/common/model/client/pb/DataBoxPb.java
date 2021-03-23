@@ -22,7 +22,6 @@ public final class DataBoxPb extends com.google.protobuf.GeneratedMessageV3
     // @@protoc_insertion_point(message_implements:DataBoxPb)
     DataBoxPbOrBuilder {
   private static final long serialVersionUID = 0L;
-
   // Use DataBoxPb.newBuilder() to construct.
   private DataBoxPb(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
     super(builder);
@@ -98,7 +97,6 @@ public final class DataBoxPb extends com.google.protobuf.GeneratedMessageV3
 
   public static final int DATA_FIELD_NUMBER = 1;
   private volatile java.lang.Object data_;
-
   /** <code>string data = 1;</code> */
   public java.lang.String getData() {
     java.lang.Object ref = data_;
@@ -111,7 +109,6 @@ public final class DataBoxPb extends com.google.protobuf.GeneratedMessageV3
       return s;
     }
   }
-
   /** <code>string data = 1;</code> */
   public com.google.protobuf.ByteString getDataBytes() {
     java.lang.Object ref = data_;
@@ -281,7 +278,6 @@ public final class DataBoxPb extends com.google.protobuf.GeneratedMessageV3
     Builder builder = new Builder(parent);
     return builder;
   }
-
   /** Protobuf type {@code DataBoxPb} */
   public static final class Builder extends com.google.protobuf.GeneratedMessageV3.Builder<Builder>
       implements
@@ -419,7 +415,6 @@ public final class DataBoxPb extends com.google.protobuf.GeneratedMessageV3
     }
 
     private java.lang.Object data_ = "";
-
     /** <code>string data = 1;</code> */
     public java.lang.String getData() {
       java.lang.Object ref = data_;
@@ -432,7 +427,6 @@ public final class DataBoxPb extends com.google.protobuf.GeneratedMessageV3
         return (java.lang.String) ref;
       }
     }
-
     /** <code>string data = 1;</code> */
     public com.google.protobuf.ByteString getDataBytes() {
       java.lang.Object ref = data_;
@@ -445,7 +439,6 @@ public final class DataBoxPb extends com.google.protobuf.GeneratedMessageV3
         return (com.google.protobuf.ByteString) ref;
       }
     }
-
     /** <code>string data = 1;</code> */
     public Builder setData(java.lang.String value) {
       if (value == null) {
@@ -456,7 +449,6 @@ public final class DataBoxPb extends com.google.protobuf.GeneratedMessageV3
       onChanged();
       return this;
     }
-
     /** <code>string data = 1;</code> */
     public Builder clearData() {
 
@@ -464,7 +456,6 @@ public final class DataBoxPb extends com.google.protobuf.GeneratedMessageV3
       onChanged();
       return this;
     }
-
     /** <code>string data = 1;</code> */
     public Builder setDataBytes(com.google.protobuf.ByteString value) {
       if (value == null) {

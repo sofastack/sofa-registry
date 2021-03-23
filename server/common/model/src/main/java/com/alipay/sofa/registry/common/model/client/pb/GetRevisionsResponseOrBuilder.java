@@ -23,24 +23,19 @@ public interface GetRevisionsResponseOrBuilder
 
   /** <code>map&lt;string, .MetaRegister&gt; revisions = 1;</code> */
   int getRevisionsCount();
-
   /** <code>map&lt;string, .MetaRegister&gt; revisions = 1;</code> */
   boolean containsRevisions(java.lang.String key);
-
   /** Use {@link #getRevisionsMap()} instead. */
   @java.lang.Deprecated
   java.util.Map<java.lang.String, com.alipay.sofa.registry.common.model.client.pb.MetaRegister>
       getRevisions();
-
   /** <code>map&lt;string, .MetaRegister&gt; revisions = 1;</code> */
   java.util.Map<java.lang.String, com.alipay.sofa.registry.common.model.client.pb.MetaRegister>
       getRevisionsMap();
-
   /** <code>map&lt;string, .MetaRegister&gt; revisions = 1;</code> */
   com.alipay.sofa.registry.common.model.client.pb.MetaRegister getRevisionsOrDefault(
       java.lang.String key,
       com.alipay.sofa.registry.common.model.client.pb.MetaRegister defaultValue);
-
   /** <code>map&lt;string, .MetaRegister&gt; revisions = 1;</code> */
   com.alipay.sofa.registry.common.model.client.pb.MetaRegister getRevisionsOrThrow(
       java.lang.String key);
@@ -50,7 +45,6 @@ public interface GetRevisionsResponseOrBuilder
 
   /** <code>string message = 3;</code> */
   java.lang.String getMessage();
-
   /** <code>string message = 3;</code> */
   com.google.protobuf.ByteString getMessageBytes();
 }

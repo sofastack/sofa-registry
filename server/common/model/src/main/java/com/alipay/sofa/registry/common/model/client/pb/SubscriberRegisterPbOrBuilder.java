@@ -23,16 +23,13 @@ public interface SubscriberRegisterPbOrBuilder
 
   /** <code>string scope = 1;</code> */
   java.lang.String getScope();
-
   /** <code>string scope = 1;</code> */
   com.google.protobuf.ByteString getScopeBytes();
 
   /** <code>.BaseRegisterPb baseRegister = 2;</code> */
   boolean hasBaseRegister();
-
   /** <code>.BaseRegisterPb baseRegister = 2;</code> */
   com.alipay.sofa.registry.common.model.client.pb.BaseRegisterPb getBaseRegister();
-
   /** <code>.BaseRegisterPb baseRegister = 2;</code> */
   com.alipay.sofa.registry.common.model.client.pb.BaseRegisterPbOrBuilder
       getBaseRegisterOrBuilder();

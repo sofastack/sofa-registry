@@ -23,22 +23,17 @@ public interface SyncConfigResponsePbOrBuilder
 
   /** <code>.ResultPb result = 1;</code> */
   boolean hasResult();
-
   /** <code>.ResultPb result = 1;</code> */
   com.alipay.sofa.registry.common.model.client.pb.ResultPb getResult();
-
   /** <code>.ResultPb result = 1;</code> */
   com.alipay.sofa.registry.common.model.client.pb.ResultPbOrBuilder getResultOrBuilder();
 
   /** <code>repeated string availableSegments = 2;</code> */
   java.util.List<java.lang.String> getAvailableSegmentsList();
-
   /** <code>repeated string availableSegments = 2;</code> */
   int getAvailableSegmentsCount();
-
   /** <code>repeated string availableSegments = 2;</code> */
   java.lang.String getAvailableSegments(int index);
-
   /** <code>repeated string availableSegments = 2;</code> */
   com.google.protobuf.ByteString getAvailableSegmentsBytes(int index);
 

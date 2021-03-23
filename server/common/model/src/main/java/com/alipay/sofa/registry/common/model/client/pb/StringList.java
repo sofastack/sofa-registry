@@ -22,7 +22,6 @@ public final class StringList extends com.google.protobuf.GeneratedMessageV3
     // @@protoc_insertion_point(message_implements:StringList)
     StringListOrBuilder {
   private static final long serialVersionUID = 0L;
-
   // Use StringList.newBuilder() to construct.
   private StringList(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
     super(builder);
@@ -104,22 +103,18 @@ public final class StringList extends com.google.protobuf.GeneratedMessageV3
 
   public static final int VALUES_FIELD_NUMBER = 1;
   private com.google.protobuf.LazyStringList values_;
-
   /** <code>repeated string values = 1;</code> */
   public com.google.protobuf.ProtocolStringList getValuesList() {
     return values_;
   }
-
   /** <code>repeated string values = 1;</code> */
   public int getValuesCount() {
     return values_.size();
   }
-
   /** <code>repeated string values = 1;</code> */
   public java.lang.String getValues(int index) {
     return values_.get(index);
   }
-
   /** <code>repeated string values = 1;</code> */
   public com.google.protobuf.ByteString getValuesBytes(int index) {
     return values_.getByteString(index);
@@ -288,7 +283,6 @@ public final class StringList extends com.google.protobuf.GeneratedMessageV3
     Builder builder = new Builder(parent);
     return builder;
   }
-
   /** Protobuf type {@code StringList} */
   public static final class Builder extends com.google.protobuf.GeneratedMessageV3.Builder<Builder>
       implements
@@ -447,27 +441,22 @@ public final class StringList extends com.google.protobuf.GeneratedMessageV3
         bitField0_ |= 0x00000001;
       }
     }
-
     /** <code>repeated string values = 1;</code> */
     public com.google.protobuf.ProtocolStringList getValuesList() {
       return values_.getUnmodifiableView();
     }
-
     /** <code>repeated string values = 1;</code> */
     public int getValuesCount() {
       return values_.size();
     }
-
     /** <code>repeated string values = 1;</code> */
     public java.lang.String getValues(int index) {
       return values_.get(index);
     }
-
     /** <code>repeated string values = 1;</code> */
     public com.google.protobuf.ByteString getValuesBytes(int index) {
       return values_.getByteString(index);
     }
-
     /** <code>repeated string values = 1;</code> */
     public Builder setValues(int index, java.lang.String value) {
       if (value == null) {
@@ -478,7 +467,6 @@ public final class StringList extends com.google.protobuf.GeneratedMessageV3
       onChanged();
       return this;
     }
-
     /** <code>repeated string values = 1;</code> */
     public Builder addValues(java.lang.String value) {
       if (value == null) {
@@ -489,7 +477,6 @@ public final class StringList extends com.google.protobuf.GeneratedMessageV3
       onChanged();
       return this;
     }
-
     /** <code>repeated string values = 1;</code> */
     public Builder addAllValues(java.lang.Iterable<java.lang.String> values) {
       ensureValuesIsMutable();
@@ -497,7 +484,6 @@ public final class StringList extends com.google.protobuf.GeneratedMessageV3
       onChanged();
       return this;
     }
-
     /** <code>repeated string values = 1;</code> */
     public Builder clearValues() {
       values_ = com.google.protobuf.LazyStringArrayList.EMPTY;
@@ -505,7 +491,6 @@ public final class StringList extends com.google.protobuf.GeneratedMessageV3
       onChanged();
       return this;
     }
-
     /** <code>repeated string values = 1;</code> */
     public Builder addValuesBytes(com.google.protobuf.ByteString value) {
       if (value == null) {

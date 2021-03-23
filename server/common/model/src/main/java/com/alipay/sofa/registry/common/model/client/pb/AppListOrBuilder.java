@@ -26,13 +26,10 @@ public interface AppListOrBuilder
 
   /** <code>repeated string apps = 2;</code> */
   java.util.List<java.lang.String> getAppsList();
-
   /** <code>repeated string apps = 2;</code> */
   int getAppsCount();
-
   /** <code>repeated string apps = 2;</code> */
   java.lang.String getApps(int index);
-
   /** <code>repeated string apps = 2;</code> */
   com.google.protobuf.ByteString getAppsBytes(int index);
 }

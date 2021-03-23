@@ -38,13 +38,13 @@ public class AppRevisionDomainConvertor {
   public static final TypeReference SERVICE_FORMAT =
       new TypeReference<HashMap<String, AppRevisionInterface>>() {};
 
-  public static AppRevisionDomain convert2Domain(AppRevision appRevision) {
+  public static AppRevisionDomain convert2Domain(String dataCenter, AppRevision appRevision) {
     if (appRevision == null) {
       return null;
     }
     AppRevisionDomain domain = new AppRevisionDomain();
     domain.setAppName(appRevision.getAppName());
-    domain.setDataCenter(appRevision.getDataCenter());
+    domain.setDataCenter(dataCenter);
     domain.setRevision(appRevision.getRevision());
     domain.setClientVersion(appRevision.getClientVersion());
     domain.setBaseParams(JsonUtils.writeValueAsString(appRevision.getBaseParams()));

@@ -22,7 +22,6 @@ public final class ReceivedConfigDataPb extends com.google.protobuf.GeneratedMes
     // @@protoc_insertion_point(message_implements:ReceivedConfigDataPb)
     ReceivedConfigDataPbOrBuilder {
   private static final long serialVersionUID = 0L;
-
   // Use ReceivedConfigDataPb.newBuilder() to construct.
   private ReceivedConfigDataPb(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
     super(builder);
@@ -152,7 +151,6 @@ public final class ReceivedConfigDataPb extends com.google.protobuf.GeneratedMes
   private int bitField0_;
   public static final int DATAID_FIELD_NUMBER = 1;
   private volatile java.lang.Object dataId_;
-
   /** <code>string dataId = 1;</code> */
   public java.lang.String getDataId() {
     java.lang.Object ref = dataId_;
@@ -165,7 +163,6 @@ public final class ReceivedConfigDataPb extends com.google.protobuf.GeneratedMes
       return s;
     }
   }
-
   /** <code>string dataId = 1;</code> */
   public com.google.protobuf.ByteString getDataIdBytes() {
     java.lang.Object ref = dataId_;
@@ -181,7 +178,6 @@ public final class ReceivedConfigDataPb extends com.google.protobuf.GeneratedMes
 
   public static final int GROUP_FIELD_NUMBER = 2;
   private volatile java.lang.Object group_;
-
   /** <code>string group = 2;</code> */
   public java.lang.String getGroup() {
     java.lang.Object ref = group_;
@@ -194,7 +190,6 @@ public final class ReceivedConfigDataPb extends com.google.protobuf.GeneratedMes
       return s;
     }
   }
-
   /** <code>string group = 2;</code> */
   public com.google.protobuf.ByteString getGroupBytes() {
     java.lang.Object ref = group_;
@@ -210,7 +205,6 @@ public final class ReceivedConfigDataPb extends com.google.protobuf.GeneratedMes
 
   public static final int INSTANCEID_FIELD_NUMBER = 3;
   private volatile java.lang.Object instanceId_;
-
   /** <code>string instanceId = 3;</code> */
   public java.lang.String getInstanceId() {
     java.lang.Object ref = instanceId_;
@@ -223,7 +217,6 @@ public final class ReceivedConfigDataPb extends com.google.protobuf.GeneratedMes
       return s;
     }
   }
-
   /** <code>string instanceId = 3;</code> */
   public com.google.protobuf.ByteString getInstanceIdBytes() {
     java.lang.Object ref = instanceId_;
@@ -239,22 +232,18 @@ public final class ReceivedConfigDataPb extends com.google.protobuf.GeneratedMes
 
   public static final int CONFIGURATORREGISTIDS_FIELD_NUMBER = 4;
   private com.google.protobuf.LazyStringList configuratorRegistIds_;
-
   /** <code>repeated string configuratorRegistIds = 4;</code> */
   public com.google.protobuf.ProtocolStringList getConfiguratorRegistIdsList() {
     return configuratorRegistIds_;
   }
-
   /** <code>repeated string configuratorRegistIds = 4;</code> */
   public int getConfiguratorRegistIdsCount() {
     return configuratorRegistIds_.size();
   }
-
   /** <code>repeated string configuratorRegistIds = 4;</code> */
   public java.lang.String getConfiguratorRegistIds(int index) {
     return configuratorRegistIds_.get(index);
   }
-
   /** <code>repeated string configuratorRegistIds = 4;</code> */
   public com.google.protobuf.ByteString getConfiguratorRegistIdsBytes(int index) {
     return configuratorRegistIds_.getByteString(index);
@@ -262,19 +251,16 @@ public final class ReceivedConfigDataPb extends com.google.protobuf.GeneratedMes
 
   public static final int DATABOX_FIELD_NUMBER = 5;
   private com.alipay.sofa.registry.common.model.client.pb.DataBoxPb dataBox_;
-
   /** <code>.DataBoxPb dataBox = 5;</code> */
   public boolean hasDataBox() {
     return dataBox_ != null;
   }
-
   /** <code>.DataBoxPb dataBox = 5;</code> */
   public com.alipay.sofa.registry.common.model.client.pb.DataBoxPb getDataBox() {
     return dataBox_ == null
         ? com.alipay.sofa.registry.common.model.client.pb.DataBoxPb.getDefaultInstance()
         : dataBox_;
   }
-
   /** <code>.DataBoxPb dataBox = 5;</code> */
   public com.alipay.sofa.registry.common.model.client.pb.DataBoxPbOrBuilder getDataBoxOrBuilder() {
     return getDataBox();
@@ -282,7 +268,6 @@ public final class ReceivedConfigDataPb extends com.google.protobuf.GeneratedMes
 
   public static final int VERSION_FIELD_NUMBER = 6;
   private long version_;
-
   /** <code>int64 version = 6;</code> */
   public long getVersion() {
     return version_;
@@ -503,7 +488,6 @@ public final class ReceivedConfigDataPb extends com.google.protobuf.GeneratedMes
     Builder builder = new Builder(parent);
     return builder;
   }
-
   /** Protobuf type {@code ReceivedConfigDataPb} */
   public static final class Builder extends com.google.protobuf.GeneratedMessageV3.Builder<Builder>
       implements
@@ -704,7 +688,6 @@ public final class ReceivedConfigDataPb extends com.google.protobuf.GeneratedMes
     private int bitField0_;
 
     private java.lang.Object dataId_ = "";
-
     /** <code>string dataId = 1;</code> */
     public java.lang.String getDataId() {
       java.lang.Object ref = dataId_;
@@ -717,7 +700,6 @@ public final class ReceivedConfigDataPb extends com.google.protobuf.GeneratedMes
         return (java.lang.String) ref;
       }
     }
-
     /** <code>string dataId = 1;</code> */
     public com.google.protobuf.ByteString getDataIdBytes() {
       java.lang.Object ref = dataId_;
@@ -730,7 +712,6 @@ public final class ReceivedConfigDataPb extends com.google.protobuf.GeneratedMes
         return (com.google.protobuf.ByteString) ref;
       }
     }
-
     /** <code>string dataId = 1;</code> */
     public Builder setDataId(java.lang.String value) {
       if (value == null) {
@@ -741,7 +722,6 @@ public final class ReceivedConfigDataPb extends com.google.protobuf.GeneratedMes
       onChanged();
       return this;
     }
-
     /** <code>string dataId = 1;</code> */
     public Builder clearDataId() {
 
@@ -749,7 +729,6 @@ public final class ReceivedConfigDataPb extends com.google.protobuf.GeneratedMes
       onChanged();
       return this;
     }
-
     /** <code>string dataId = 1;</code> */
     public Builder setDataIdBytes(com.google.protobuf.ByteString value) {
       if (value == null) {
@@ -763,7 +742,6 @@ public final class ReceivedConfigDataPb extends com.google.protobuf.GeneratedMes
     }
 
     private java.lang.Object group_ = "";
-
     /** <code>string group = 2;</code> */
     public java.lang.String getGroup() {
       java.lang.Object ref = group_;
@@ -776,7 +754,6 @@ public final class ReceivedConfigDataPb extends com.google.protobuf.GeneratedMes
         return (java.lang.String) ref;
       }
     }
-
     /** <code>string group = 2;</code> */
     public com.google.protobuf.ByteString getGroupBytes() {
       java.lang.Object ref = group_;
@@ -789,7 +766,6 @@ public final class ReceivedConfigDataPb extends com.google.protobuf.GeneratedMes
         return (com.google.protobuf.ByteString) ref;
       }
     }
-
     /** <code>string group = 2;</code> */
     public Builder setGroup(java.lang.String value) {
       if (value == null) {
@@ -800,7 +776,6 @@ public final class ReceivedConfigDataPb extends com.google.protobuf.GeneratedMes
       onChanged();
       return this;
     }
-
     /** <code>string group = 2;</code> */
     public Builder clearGroup() {
 
@@ -808,7 +783,6 @@ public final class ReceivedConfigDataPb extends com.google.protobuf.GeneratedMes
       onChanged();
       return this;
     }
-
     /** <code>string group = 2;</code> */
     public Builder setGroupBytes(com.google.protobuf.ByteString value) {
       if (value == null) {
@@ -822,7 +796,6 @@ public final class ReceivedConfigDataPb extends com.google.protobuf.GeneratedMes
     }
 
     private java.lang.Object instanceId_ = "";
-
     /** <code>string instanceId = 3;</code> */
     public java.lang.String getInstanceId() {
       java.lang.Object ref = instanceId_;
@@ -835,7 +808,6 @@ public final class ReceivedConfigDataPb extends com.google.protobuf.GeneratedMes
         return (java.lang.String) ref;
       }
     }
-
     /** <code>string instanceId = 3;</code> */
     public com.google.protobuf.ByteString getInstanceIdBytes() {
       java.lang.Object ref = instanceId_;
@@ -848,7 +820,6 @@ public final class ReceivedConfigDataPb extends com.google.protobuf.GeneratedMes
         return (com.google.protobuf.ByteString) ref;
       }
     }
-
     /** <code>string instanceId = 3;</code> */
     public Builder setInstanceId(java.lang.String value) {
       if (value == null) {
@@ -859,7 +830,6 @@ public final class ReceivedConfigDataPb extends com.google.protobuf.GeneratedMes
       onChanged();
       return this;
     }
-
     /** <code>string instanceId = 3;</code> */
     public Builder clearInstanceId() {
 
@@ -867,7 +837,6 @@ public final class ReceivedConfigDataPb extends com.google.protobuf.GeneratedMes
       onChanged();
       return this;
     }
-
     /** <code>string instanceId = 3;</code> */
     public Builder setInstanceIdBytes(com.google.protobuf.ByteString value) {
       if (value == null) {
@@ -890,27 +859,22 @@ public final class ReceivedConfigDataPb extends com.google.protobuf.GeneratedMes
         bitField0_ |= 0x00000008;
       }
     }
-
     /** <code>repeated string configuratorRegistIds = 4;</code> */
     public com.google.protobuf.ProtocolStringList getConfiguratorRegistIdsList() {
       return configuratorRegistIds_.getUnmodifiableView();
     }
-
     /** <code>repeated string configuratorRegistIds = 4;</code> */
     public int getConfiguratorRegistIdsCount() {
       return configuratorRegistIds_.size();
     }
-
     /** <code>repeated string configuratorRegistIds = 4;</code> */
     public java.lang.String getConfiguratorRegistIds(int index) {
       return configuratorRegistIds_.get(index);
     }
-
     /** <code>repeated string configuratorRegistIds = 4;</code> */
     public com.google.protobuf.ByteString getConfiguratorRegistIdsBytes(int index) {
       return configuratorRegistIds_.getByteString(index);
     }
-
     /** <code>repeated string configuratorRegistIds = 4;</code> */
     public Builder setConfiguratorRegistIds(int index, java.lang.String value) {
       if (value == null) {
@@ -921,7 +885,6 @@ public final class ReceivedConfigDataPb extends com.google.protobuf.GeneratedMes
       onChanged();
       return this;
     }
-
     /** <code>repeated string configuratorRegistIds = 4;</code> */
     public Builder addConfiguratorRegistIds(java.lang.String value) {
       if (value == null) {
@@ -932,7 +895,6 @@ public final class ReceivedConfigDataPb extends com.google.protobuf.GeneratedMes
       onChanged();
       return this;
     }
-
     /** <code>repeated string configuratorRegistIds = 4;</code> */
     public Builder addAllConfiguratorRegistIds(java.lang.Iterable<java.lang.String> values) {
       ensureConfiguratorRegistIdsIsMutable();
@@ -940,7 +902,6 @@ public final class ReceivedConfigDataPb extends com.google.protobuf.GeneratedMes
       onChanged();
       return this;
     }
-
     /** <code>repeated string configuratorRegistIds = 4;</code> */
     public Builder clearConfiguratorRegistIds() {
       configuratorRegistIds_ = com.google.protobuf.LazyStringArrayList.EMPTY;
@@ -948,7 +909,6 @@ public final class ReceivedConfigDataPb extends com.google.protobuf.GeneratedMes
       onChanged();
       return this;
     }
-
     /** <code>repeated string configuratorRegistIds = 4;</code> */
     public Builder addConfiguratorRegistIdsBytes(com.google.protobuf.ByteString value) {
       if (value == null) {
@@ -967,12 +927,10 @@ public final class ReceivedConfigDataPb extends com.google.protobuf.GeneratedMes
             com.alipay.sofa.registry.common.model.client.pb.DataBoxPb.Builder,
             com.alipay.sofa.registry.common.model.client.pb.DataBoxPbOrBuilder>
         dataBoxBuilder_;
-
     /** <code>.DataBoxPb dataBox = 5;</code> */
     public boolean hasDataBox() {
       return dataBoxBuilder_ != null || dataBox_ != null;
     }
-
     /** <code>.DataBoxPb dataBox = 5;</code> */
     public com.alipay.sofa.registry.common.model.client.pb.DataBoxPb getDataBox() {
       if (dataBoxBuilder_ == null) {
@@ -983,7 +941,6 @@ public final class ReceivedConfigDataPb extends com.google.protobuf.GeneratedMes
         return dataBoxBuilder_.getMessage();
       }
     }
-
     /** <code>.DataBoxPb dataBox = 5;</code> */
     public Builder setDataBox(com.alipay.sofa.registry.common.model.client.pb.DataBoxPb value) {
       if (dataBoxBuilder_ == null) {
@@ -998,7 +955,6 @@ public final class ReceivedConfigDataPb extends com.google.protobuf.GeneratedMes
 
       return this;
     }
-
     /** <code>.DataBoxPb dataBox = 5;</code> */
     public Builder setDataBox(
         com.alipay.sofa.registry.common.model.client.pb.DataBoxPb.Builder builderForValue) {
@@ -1011,7 +967,6 @@ public final class ReceivedConfigDataPb extends com.google.protobuf.GeneratedMes
 
       return this;
     }
-
     /** <code>.DataBoxPb dataBox = 5;</code> */
     public Builder mergeDataBox(com.alipay.sofa.registry.common.model.client.pb.DataBoxPb value) {
       if (dataBoxBuilder_ == null) {
@@ -1030,7 +985,6 @@ public final class ReceivedConfigDataPb extends com.google.protobuf.GeneratedMes
 
       return this;
     }
-
     /** <code>.DataBoxPb dataBox = 5;</code> */
     public Builder clearDataBox() {
       if (dataBoxBuilder_ == null) {
@@ -1043,14 +997,12 @@ public final class ReceivedConfigDataPb extends com.google.protobuf.GeneratedMes
 
       return this;
     }
-
     /** <code>.DataBoxPb dataBox = 5;</code> */
     public com.alipay.sofa.registry.common.model.client.pb.DataBoxPb.Builder getDataBoxBuilder() {
 
       onChanged();
       return getDataBoxFieldBuilder().getBuilder();
     }
-
     /** <code>.DataBoxPb dataBox = 5;</code> */
     public com.alipay.sofa.registry.common.model.client.pb.DataBoxPbOrBuilder
         getDataBoxOrBuilder() {
@@ -1062,7 +1014,6 @@ public final class ReceivedConfigDataPb extends com.google.protobuf.GeneratedMes
             : dataBox_;
       }
     }
-
     /** <code>.DataBoxPb dataBox = 5;</code> */
     private com.google.protobuf.SingleFieldBuilderV3<
             com.alipay.sofa.registry.common.model.client.pb.DataBoxPb,
@@ -1082,12 +1033,10 @@ public final class ReceivedConfigDataPb extends com.google.protobuf.GeneratedMes
     }
 
     private long version_;
-
     /** <code>int64 version = 6;</code> */
     public long getVersion() {
       return version_;
     }
-
     /** <code>int64 version = 6;</code> */
     public Builder setVersion(long value) {
 
@@ -1095,7 +1044,6 @@ public final class ReceivedConfigDataPb extends com.google.protobuf.GeneratedMes
       onChanged();
       return this;
     }
-
     /** <code>int64 version = 6;</code> */
     public Builder clearVersion() {
 
