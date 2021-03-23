@@ -23,13 +23,10 @@ public interface MetaHeartbeatRequestOrBuilder
 
   /** <code>repeated string revisions = 1;</code> */
   java.util.List<java.lang.String> getRevisionsList();
-
   /** <code>repeated string revisions = 1;</code> */
   int getRevisionsCount();
-
   /** <code>repeated string revisions = 1;</code> */
   java.lang.String getRevisions(int index);
-
   /** <code>repeated string revisions = 1;</code> */
   com.google.protobuf.ByteString getRevisionsBytes(int index);
 }

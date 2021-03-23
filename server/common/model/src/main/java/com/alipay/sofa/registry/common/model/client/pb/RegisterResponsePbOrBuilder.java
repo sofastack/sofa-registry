@@ -26,7 +26,6 @@ public interface RegisterResponsePbOrBuilder
 
   /** <code>string registId = 2;</code> */
   java.lang.String getRegistId();
-
   /** <code>string registId = 2;</code> */
   com.google.protobuf.ByteString getRegistIdBytes();
 
@@ -38,7 +37,6 @@ public interface RegisterResponsePbOrBuilder
 
   /** <code>string message = 5;</code> */
   java.lang.String getMessage();
-
   /** <code>string message = 5;</code> */
   com.google.protobuf.ByteString getMessageBytes();
 }

@@ -22,7 +22,6 @@ public final class SyncConfigRequestPb extends com.google.protobuf.GeneratedMess
     // @@protoc_insertion_point(message_implements:SyncConfigRequestPb)
     SyncConfigRequestPbOrBuilder {
   private static final long serialVersionUID = 0L;
-
   // Use SyncConfigRequestPb.newBuilder() to construct.
   private SyncConfigRequestPb(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
     super(builder);
@@ -106,7 +105,6 @@ public final class SyncConfigRequestPb extends com.google.protobuf.GeneratedMess
 
   public static final int DATACENTER_FIELD_NUMBER = 1;
   private volatile java.lang.Object dataCenter_;
-
   /** <code>string dataCenter = 1;</code> */
   public java.lang.String getDataCenter() {
     java.lang.Object ref = dataCenter_;
@@ -119,7 +117,6 @@ public final class SyncConfigRequestPb extends com.google.protobuf.GeneratedMess
       return s;
     }
   }
-
   /** <code>string dataCenter = 1;</code> */
   public com.google.protobuf.ByteString getDataCenterBytes() {
     java.lang.Object ref = dataCenter_;
@@ -135,7 +132,6 @@ public final class SyncConfigRequestPb extends com.google.protobuf.GeneratedMess
 
   public static final int ZONE_FIELD_NUMBER = 2;
   private volatile java.lang.Object zone_;
-
   /** <code>string zone = 2;</code> */
   public java.lang.String getZone() {
     java.lang.Object ref = zone_;
@@ -148,7 +144,6 @@ public final class SyncConfigRequestPb extends com.google.protobuf.GeneratedMess
       return s;
     }
   }
-
   /** <code>string zone = 2;</code> */
   public com.google.protobuf.ByteString getZoneBytes() {
     java.lang.Object ref = zone_;
@@ -328,7 +323,6 @@ public final class SyncConfigRequestPb extends com.google.protobuf.GeneratedMess
     Builder builder = new Builder(parent);
     return builder;
   }
-
   /** Protobuf type {@code SyncConfigRequestPb} */
   public static final class Builder extends com.google.protobuf.GeneratedMessageV3.Builder<Builder>
       implements
@@ -480,7 +474,6 @@ public final class SyncConfigRequestPb extends com.google.protobuf.GeneratedMess
     }
 
     private java.lang.Object dataCenter_ = "";
-
     /** <code>string dataCenter = 1;</code> */
     public java.lang.String getDataCenter() {
       java.lang.Object ref = dataCenter_;
@@ -493,7 +486,6 @@ public final class SyncConfigRequestPb extends com.google.protobuf.GeneratedMess
         return (java.lang.String) ref;
       }
     }
-
     /** <code>string dataCenter = 1;</code> */
     public com.google.protobuf.ByteString getDataCenterBytes() {
       java.lang.Object ref = dataCenter_;
@@ -506,7 +498,6 @@ public final class SyncConfigRequestPb extends com.google.protobuf.GeneratedMess
         return (com.google.protobuf.ByteString) ref;
       }
     }
-
     /** <code>string dataCenter = 1;</code> */
     public Builder setDataCenter(java.lang.String value) {
       if (value == null) {
@@ -517,7 +508,6 @@ public final class SyncConfigRequestPb extends com.google.protobuf.GeneratedMess
       onChanged();
       return this;
     }
-
     /** <code>string dataCenter = 1;</code> */
     public Builder clearDataCenter() {
 
@@ -525,7 +515,6 @@ public final class SyncConfigRequestPb extends com.google.protobuf.GeneratedMess
       onChanged();
       return this;
     }
-
     /** <code>string dataCenter = 1;</code> */
     public Builder setDataCenterBytes(com.google.protobuf.ByteString value) {
       if (value == null) {
@@ -539,7 +528,6 @@ public final class SyncConfigRequestPb extends com.google.protobuf.GeneratedMess
     }
 
     private java.lang.Object zone_ = "";
-
     /** <code>string zone = 2;</code> */
     public java.lang.String getZone() {
       java.lang.Object ref = zone_;
@@ -552,7 +540,6 @@ public final class SyncConfigRequestPb extends com.google.protobuf.GeneratedMess
         return (java.lang.String) ref;
       }
     }
-
     /** <code>string zone = 2;</code> */
     public com.google.protobuf.ByteString getZoneBytes() {
       java.lang.Object ref = zone_;
@@ -565,7 +552,6 @@ public final class SyncConfigRequestPb extends com.google.protobuf.GeneratedMess
         return (com.google.protobuf.ByteString) ref;
       }
     }
-
     /** <code>string zone = 2;</code> */
     public Builder setZone(java.lang.String value) {
       if (value == null) {
@@ -576,7 +562,6 @@ public final class SyncConfigRequestPb extends com.google.protobuf.GeneratedMess
       onChanged();
       return this;
     }
-
     /** <code>string zone = 2;</code> */
     public Builder clearZone() {
 
@@ -584,7 +569,6 @@ public final class SyncConfigRequestPb extends com.google.protobuf.GeneratedMess
       onChanged();
       return this;
     }
-
     /** <code>string zone = 2;</code> */
     public Builder setZoneBytes(com.google.protobuf.ByteString value) {
       if (value == null) {

@@ -22,7 +22,6 @@ public final class RegisterResponsePb extends com.google.protobuf.GeneratedMessa
     // @@protoc_insertion_point(message_implements:RegisterResponsePb)
     RegisterResponsePbOrBuilder {
   private static final long serialVersionUID = 0L;
-
   // Use RegisterResponsePb.newBuilder() to construct.
   private RegisterResponsePb(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
     super(builder);
@@ -124,7 +123,6 @@ public final class RegisterResponsePb extends com.google.protobuf.GeneratedMessa
 
   public static final int SUCCESS_FIELD_NUMBER = 1;
   private boolean success_;
-
   /** <code>bool success = 1;</code> */
   public boolean getSuccess() {
     return success_;
@@ -132,7 +130,6 @@ public final class RegisterResponsePb extends com.google.protobuf.GeneratedMessa
 
   public static final int REGISTID_FIELD_NUMBER = 2;
   private volatile java.lang.Object registId_;
-
   /** <code>string registId = 2;</code> */
   public java.lang.String getRegistId() {
     java.lang.Object ref = registId_;
@@ -145,7 +142,6 @@ public final class RegisterResponsePb extends com.google.protobuf.GeneratedMessa
       return s;
     }
   }
-
   /** <code>string registId = 2;</code> */
   public com.google.protobuf.ByteString getRegistIdBytes() {
     java.lang.Object ref = registId_;
@@ -161,7 +157,6 @@ public final class RegisterResponsePb extends com.google.protobuf.GeneratedMessa
 
   public static final int VERSION_FIELD_NUMBER = 3;
   private long version_;
-
   /** <code>int64 version = 3;</code> */
   public long getVersion() {
     return version_;
@@ -169,7 +164,6 @@ public final class RegisterResponsePb extends com.google.protobuf.GeneratedMessa
 
   public static final int REFUSED_FIELD_NUMBER = 4;
   private boolean refused_;
-
   /** <code>bool refused = 4;</code> */
   public boolean getRefused() {
     return refused_;
@@ -177,7 +171,6 @@ public final class RegisterResponsePb extends com.google.protobuf.GeneratedMessa
 
   public static final int MESSAGE_FIELD_NUMBER = 5;
   private volatile java.lang.Object message_;
-
   /** <code>string message = 5;</code> */
   public java.lang.String getMessage() {
     java.lang.Object ref = message_;
@@ -190,7 +183,6 @@ public final class RegisterResponsePb extends com.google.protobuf.GeneratedMessa
       return s;
     }
   }
-
   /** <code>string message = 5;</code> */
   public com.google.protobuf.ByteString getMessageBytes() {
     java.lang.Object ref = message_;
@@ -397,7 +389,6 @@ public final class RegisterResponsePb extends com.google.protobuf.GeneratedMessa
     Builder builder = new Builder(parent);
     return builder;
   }
-
   /** Protobuf type {@code RegisterResponsePb} */
   public static final class Builder extends com.google.protobuf.GeneratedMessageV3.Builder<Builder>
       implements
@@ -567,12 +558,10 @@ public final class RegisterResponsePb extends com.google.protobuf.GeneratedMessa
     }
 
     private boolean success_;
-
     /** <code>bool success = 1;</code> */
     public boolean getSuccess() {
       return success_;
     }
-
     /** <code>bool success = 1;</code> */
     public Builder setSuccess(boolean value) {
 
@@ -580,7 +569,6 @@ public final class RegisterResponsePb extends com.google.protobuf.GeneratedMessa
       onChanged();
       return this;
     }
-
     /** <code>bool success = 1;</code> */
     public Builder clearSuccess() {
 
@@ -590,7 +578,6 @@ public final class RegisterResponsePb extends com.google.protobuf.GeneratedMessa
     }
 
     private java.lang.Object registId_ = "";
-
     /** <code>string registId = 2;</code> */
     public java.lang.String getRegistId() {
       java.lang.Object ref = registId_;
@@ -603,7 +590,6 @@ public final class RegisterResponsePb extends com.google.protobuf.GeneratedMessa
         return (java.lang.String) ref;
       }
     }
-
     /** <code>string registId = 2;</code> */
     public com.google.protobuf.ByteString getRegistIdBytes() {
       java.lang.Object ref = registId_;
@@ -616,7 +602,6 @@ public final class RegisterResponsePb extends com.google.protobuf.GeneratedMessa
         return (com.google.protobuf.ByteString) ref;
       }
     }
-
     /** <code>string registId = 2;</code> */
     public Builder setRegistId(java.lang.String value) {
       if (value == null) {
@@ -627,7 +612,6 @@ public final class RegisterResponsePb extends com.google.protobuf.GeneratedMessa
       onChanged();
       return this;
     }
-
     /** <code>string registId = 2;</code> */
     public Builder clearRegistId() {
 
@@ -635,7 +619,6 @@ public final class RegisterResponsePb extends com.google.protobuf.GeneratedMessa
       onChanged();
       return this;
     }
-
     /** <code>string registId = 2;</code> */
     public Builder setRegistIdBytes(com.google.protobuf.ByteString value) {
       if (value == null) {
@@ -649,12 +632,10 @@ public final class RegisterResponsePb extends com.google.protobuf.GeneratedMessa
     }
 
     private long version_;
-
     /** <code>int64 version = 3;</code> */
     public long getVersion() {
       return version_;
     }
-
     /** <code>int64 version = 3;</code> */
     public Builder setVersion(long value) {
 
@@ -662,7 +643,6 @@ public final class RegisterResponsePb extends com.google.protobuf.GeneratedMessa
       onChanged();
       return this;
     }
-
     /** <code>int64 version = 3;</code> */
     public Builder clearVersion() {
 
@@ -672,12 +652,10 @@ public final class RegisterResponsePb extends com.google.protobuf.GeneratedMessa
     }
 
     private boolean refused_;
-
     /** <code>bool refused = 4;</code> */
     public boolean getRefused() {
       return refused_;
     }
-
     /** <code>bool refused = 4;</code> */
     public Builder setRefused(boolean value) {
 
@@ -685,7 +663,6 @@ public final class RegisterResponsePb extends com.google.protobuf.GeneratedMessa
       onChanged();
       return this;
     }
-
     /** <code>bool refused = 4;</code> */
     public Builder clearRefused() {
 
@@ -695,7 +672,6 @@ public final class RegisterResponsePb extends com.google.protobuf.GeneratedMessa
     }
 
     private java.lang.Object message_ = "";
-
     /** <code>string message = 5;</code> */
     public java.lang.String getMessage() {
       java.lang.Object ref = message_;
@@ -708,7 +684,6 @@ public final class RegisterResponsePb extends com.google.protobuf.GeneratedMessa
         return (java.lang.String) ref;
       }
     }
-
     /** <code>string message = 5;</code> */
     public com.google.protobuf.ByteString getMessageBytes() {
       java.lang.Object ref = message_;
@@ -721,7 +696,6 @@ public final class RegisterResponsePb extends com.google.protobuf.GeneratedMessa
         return (com.google.protobuf.ByteString) ref;
       }
     }
-
     /** <code>string message = 5;</code> */
     public Builder setMessage(java.lang.String value) {
       if (value == null) {
@@ -732,7 +706,6 @@ public final class RegisterResponsePb extends com.google.protobuf.GeneratedMessa
       onChanged();
       return this;
     }
-
     /** <code>string message = 5;</code> */
     public Builder clearMessage() {
 
@@ -740,7 +713,6 @@ public final class RegisterResponsePb extends com.google.protobuf.GeneratedMessa
       onChanged();
       return this;
     }
-
     /** <code>string message = 5;</code> */
     public Builder setMessageBytes(com.google.protobuf.ByteString value) {
       if (value == null) {

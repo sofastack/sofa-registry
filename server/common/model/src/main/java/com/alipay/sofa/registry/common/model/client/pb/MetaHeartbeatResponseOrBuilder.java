@@ -26,7 +26,6 @@ public interface MetaHeartbeatResponseOrBuilder
 
   /** <code>string message = 2;</code> */
   java.lang.String getMessage();
-
   /** <code>string message = 2;</code> */
   com.google.protobuf.ByteString getMessageBytes();
 }

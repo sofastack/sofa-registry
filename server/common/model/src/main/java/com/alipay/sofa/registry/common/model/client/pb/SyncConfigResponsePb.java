@@ -22,7 +22,6 @@ public final class SyncConfigResponsePb extends com.google.protobuf.GeneratedMes
     // @@protoc_insertion_point(message_implements:SyncConfigResponsePb)
     SyncConfigResponsePbOrBuilder {
   private static final long serialVersionUID = 0L;
-
   // Use SyncConfigResponsePb.newBuilder() to construct.
   private SyncConfigResponsePb(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
     super(builder);
@@ -128,19 +127,16 @@ public final class SyncConfigResponsePb extends com.google.protobuf.GeneratedMes
   private int bitField0_;
   public static final int RESULT_FIELD_NUMBER = 1;
   private com.alipay.sofa.registry.common.model.client.pb.ResultPb result_;
-
   /** <code>.ResultPb result = 1;</code> */
   public boolean hasResult() {
     return result_ != null;
   }
-
   /** <code>.ResultPb result = 1;</code> */
   public com.alipay.sofa.registry.common.model.client.pb.ResultPb getResult() {
     return result_ == null
         ? com.alipay.sofa.registry.common.model.client.pb.ResultPb.getDefaultInstance()
         : result_;
   }
-
   /** <code>.ResultPb result = 1;</code> */
   public com.alipay.sofa.registry.common.model.client.pb.ResultPbOrBuilder getResultOrBuilder() {
     return getResult();
@@ -148,22 +144,18 @@ public final class SyncConfigResponsePb extends com.google.protobuf.GeneratedMes
 
   public static final int AVAILABLESEGMENTS_FIELD_NUMBER = 2;
   private com.google.protobuf.LazyStringList availableSegments_;
-
   /** <code>repeated string availableSegments = 2;</code> */
   public com.google.protobuf.ProtocolStringList getAvailableSegmentsList() {
     return availableSegments_;
   }
-
   /** <code>repeated string availableSegments = 2;</code> */
   public int getAvailableSegmentsCount() {
     return availableSegments_.size();
   }
-
   /** <code>repeated string availableSegments = 2;</code> */
   public java.lang.String getAvailableSegments(int index) {
     return availableSegments_.get(index);
   }
-
   /** <code>repeated string availableSegments = 2;</code> */
   public com.google.protobuf.ByteString getAvailableSegmentsBytes(int index) {
     return availableSegments_.getByteString(index);
@@ -171,7 +163,6 @@ public final class SyncConfigResponsePb extends com.google.protobuf.GeneratedMes
 
   public static final int RETRYINTERVAL_FIELD_NUMBER = 3;
   private int retryInterval_;
-
   /** <code>int32 retryInterval = 3;</code> */
   public int getRetryInterval() {
     return retryInterval_;
@@ -364,7 +355,6 @@ public final class SyncConfigResponsePb extends com.google.protobuf.GeneratedMes
     Builder builder = new Builder(parent);
     return builder;
   }
-
   /** Protobuf type {@code SyncConfigResponsePb} */
   public static final class Builder extends com.google.protobuf.GeneratedMessageV3.Builder<Builder>
       implements
@@ -549,12 +539,10 @@ public final class SyncConfigResponsePb extends com.google.protobuf.GeneratedMes
             com.alipay.sofa.registry.common.model.client.pb.ResultPb.Builder,
             com.alipay.sofa.registry.common.model.client.pb.ResultPbOrBuilder>
         resultBuilder_;
-
     /** <code>.ResultPb result = 1;</code> */
     public boolean hasResult() {
       return resultBuilder_ != null || result_ != null;
     }
-
     /** <code>.ResultPb result = 1;</code> */
     public com.alipay.sofa.registry.common.model.client.pb.ResultPb getResult() {
       if (resultBuilder_ == null) {
@@ -565,7 +553,6 @@ public final class SyncConfigResponsePb extends com.google.protobuf.GeneratedMes
         return resultBuilder_.getMessage();
       }
     }
-
     /** <code>.ResultPb result = 1;</code> */
     public Builder setResult(com.alipay.sofa.registry.common.model.client.pb.ResultPb value) {
       if (resultBuilder_ == null) {
@@ -580,7 +567,6 @@ public final class SyncConfigResponsePb extends com.google.protobuf.GeneratedMes
 
       return this;
     }
-
     /** <code>.ResultPb result = 1;</code> */
     public Builder setResult(
         com.alipay.sofa.registry.common.model.client.pb.ResultPb.Builder builderForValue) {
@@ -593,7 +579,6 @@ public final class SyncConfigResponsePb extends com.google.protobuf.GeneratedMes
 
       return this;
     }
-
     /** <code>.ResultPb result = 1;</code> */
     public Builder mergeResult(com.alipay.sofa.registry.common.model.client.pb.ResultPb value) {
       if (resultBuilder_ == null) {
@@ -612,7 +597,6 @@ public final class SyncConfigResponsePb extends com.google.protobuf.GeneratedMes
 
       return this;
     }
-
     /** <code>.ResultPb result = 1;</code> */
     public Builder clearResult() {
       if (resultBuilder_ == null) {
@@ -625,14 +609,12 @@ public final class SyncConfigResponsePb extends com.google.protobuf.GeneratedMes
 
       return this;
     }
-
     /** <code>.ResultPb result = 1;</code> */
     public com.alipay.sofa.registry.common.model.client.pb.ResultPb.Builder getResultBuilder() {
 
       onChanged();
       return getResultFieldBuilder().getBuilder();
     }
-
     /** <code>.ResultPb result = 1;</code> */
     public com.alipay.sofa.registry.common.model.client.pb.ResultPbOrBuilder getResultOrBuilder() {
       if (resultBuilder_ != null) {
@@ -643,7 +625,6 @@ public final class SyncConfigResponsePb extends com.google.protobuf.GeneratedMes
             : result_;
       }
     }
-
     /** <code>.ResultPb result = 1;</code> */
     private com.google.protobuf.SingleFieldBuilderV3<
             com.alipay.sofa.registry.common.model.client.pb.ResultPb,
@@ -671,27 +652,22 @@ public final class SyncConfigResponsePb extends com.google.protobuf.GeneratedMes
         bitField0_ |= 0x00000002;
       }
     }
-
     /** <code>repeated string availableSegments = 2;</code> */
     public com.google.protobuf.ProtocolStringList getAvailableSegmentsList() {
       return availableSegments_.getUnmodifiableView();
     }
-
     /** <code>repeated string availableSegments = 2;</code> */
     public int getAvailableSegmentsCount() {
       return availableSegments_.size();
     }
-
     /** <code>repeated string availableSegments = 2;</code> */
     public java.lang.String getAvailableSegments(int index) {
       return availableSegments_.get(index);
     }
-
     /** <code>repeated string availableSegments = 2;</code> */
     public com.google.protobuf.ByteString getAvailableSegmentsBytes(int index) {
       return availableSegments_.getByteString(index);
     }
-
     /** <code>repeated string availableSegments = 2;</code> */
     public Builder setAvailableSegments(int index, java.lang.String value) {
       if (value == null) {
@@ -702,7 +678,6 @@ public final class SyncConfigResponsePb extends com.google.protobuf.GeneratedMes
       onChanged();
       return this;
     }
-
     /** <code>repeated string availableSegments = 2;</code> */
     public Builder addAvailableSegments(java.lang.String value) {
       if (value == null) {
@@ -713,7 +688,6 @@ public final class SyncConfigResponsePb extends com.google.protobuf.GeneratedMes
       onChanged();
       return this;
     }
-
     /** <code>repeated string availableSegments = 2;</code> */
     public Builder addAllAvailableSegments(java.lang.Iterable<java.lang.String> values) {
       ensureAvailableSegmentsIsMutable();
@@ -721,7 +695,6 @@ public final class SyncConfigResponsePb extends com.google.protobuf.GeneratedMes
       onChanged();
       return this;
     }
-
     /** <code>repeated string availableSegments = 2;</code> */
     public Builder clearAvailableSegments() {
       availableSegments_ = com.google.protobuf.LazyStringArrayList.EMPTY;
@@ -729,7 +702,6 @@ public final class SyncConfigResponsePb extends com.google.protobuf.GeneratedMes
       onChanged();
       return this;
     }
-
     /** <code>repeated string availableSegments = 2;</code> */
     public Builder addAvailableSegmentsBytes(com.google.protobuf.ByteString value) {
       if (value == null) {
@@ -743,12 +715,10 @@ public final class SyncConfigResponsePb extends com.google.protobuf.GeneratedMes
     }
 
     private int retryInterval_;
-
     /** <code>int32 retryInterval = 3;</code> */
     public int getRetryInterval() {
       return retryInterval_;
     }
-
     /** <code>int32 retryInterval = 3;</code> */
     public Builder setRetryInterval(int value) {
 
@@ -756,7 +726,6 @@ public final class SyncConfigResponsePb extends com.google.protobuf.GeneratedMes
       onChanged();
       return this;
     }
-
     /** <code>int32 retryInterval = 3;</code> */
     public Builder clearRetryInterval() {
 

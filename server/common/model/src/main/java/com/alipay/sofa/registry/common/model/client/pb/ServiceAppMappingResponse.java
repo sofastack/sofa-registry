@@ -22,7 +22,6 @@ public final class ServiceAppMappingResponse extends com.google.protobuf.Generat
     // @@protoc_insertion_point(message_implements:ServiceAppMappingResponse)
     ServiceAppMappingResponseOrBuilder {
   private static final long serialVersionUID = 0L;
-
   // Use ServiceAppMappingResponse.newBuilder() to construct.
   private ServiceAppMappingResponse(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
     super(builder);
@@ -168,7 +167,6 @@ public final class ServiceAppMappingResponse extends com.google.protobuf.Generat
   public int getServiceAppMappingCount() {
     return internalGetServiceAppMapping().getMap().size();
   }
-
   /** <code>map&lt;string, .AppList&gt; serviceAppMapping = 1;</code> */
   public boolean containsServiceAppMapping(java.lang.String key) {
     if (key == null) {
@@ -176,20 +174,17 @@ public final class ServiceAppMappingResponse extends com.google.protobuf.Generat
     }
     return internalGetServiceAppMapping().getMap().containsKey(key);
   }
-
   /** Use {@link #getServiceAppMappingMap()} instead. */
   @java.lang.Deprecated
   public java.util.Map<java.lang.String, com.alipay.sofa.registry.common.model.client.pb.AppList>
       getServiceAppMapping() {
     return getServiceAppMappingMap();
   }
-
   /** <code>map&lt;string, .AppList&gt; serviceAppMapping = 1;</code> */
   public java.util.Map<java.lang.String, com.alipay.sofa.registry.common.model.client.pb.AppList>
       getServiceAppMappingMap() {
     return internalGetServiceAppMapping().getMap();
   }
-
   /** <code>map&lt;string, .AppList&gt; serviceAppMapping = 1;</code> */
   public com.alipay.sofa.registry.common.model.client.pb.AppList getServiceAppMappingOrDefault(
       java.lang.String key, com.alipay.sofa.registry.common.model.client.pb.AppList defaultValue) {
@@ -200,7 +195,6 @@ public final class ServiceAppMappingResponse extends com.google.protobuf.Generat
         internalGetServiceAppMapping().getMap();
     return map.containsKey(key) ? map.get(key) : defaultValue;
   }
-
   /** <code>map&lt;string, .AppList&gt; serviceAppMapping = 1;</code> */
   public com.alipay.sofa.registry.common.model.client.pb.AppList getServiceAppMappingOrThrow(
       java.lang.String key) {
@@ -217,7 +211,6 @@ public final class ServiceAppMappingResponse extends com.google.protobuf.Generat
 
   public static final int STATUSCODE_FIELD_NUMBER = 2;
   private int statusCode_;
-
   /** <code>int32 statusCode = 2;</code> */
   public int getStatusCode() {
     return statusCode_;
@@ -225,7 +218,6 @@ public final class ServiceAppMappingResponse extends com.google.protobuf.Generat
 
   public static final int MESSAGE_FIELD_NUMBER = 3;
   private volatile java.lang.Object message_;
-
   /** <code>string message = 3;</code> */
   public java.lang.String getMessage() {
     java.lang.Object ref = message_;
@@ -238,7 +230,6 @@ public final class ServiceAppMappingResponse extends com.google.protobuf.Generat
       return s;
     }
   }
-
   /** <code>string message = 3;</code> */
   public com.google.protobuf.ByteString getMessageBytes() {
     java.lang.Object ref = message_;
@@ -442,7 +433,6 @@ public final class ServiceAppMappingResponse extends com.google.protobuf.Generat
     Builder builder = new Builder(parent);
     return builder;
   }
-
   /** Protobuf type {@code ServiceAppMappingResponse} */
   public static final class Builder extends com.google.protobuf.GeneratedMessageV3.Builder<Builder>
       implements
@@ -659,7 +649,6 @@ public final class ServiceAppMappingResponse extends com.google.protobuf.Generat
     public int getServiceAppMappingCount() {
       return internalGetServiceAppMapping().getMap().size();
     }
-
     /** <code>map&lt;string, .AppList&gt; serviceAppMapping = 1;</code> */
     public boolean containsServiceAppMapping(java.lang.String key) {
       if (key == null) {
@@ -667,20 +656,17 @@ public final class ServiceAppMappingResponse extends com.google.protobuf.Generat
       }
       return internalGetServiceAppMapping().getMap().containsKey(key);
     }
-
     /** Use {@link #getServiceAppMappingMap()} instead. */
     @java.lang.Deprecated
     public java.util.Map<java.lang.String, com.alipay.sofa.registry.common.model.client.pb.AppList>
         getServiceAppMapping() {
       return getServiceAppMappingMap();
     }
-
     /** <code>map&lt;string, .AppList&gt; serviceAppMapping = 1;</code> */
     public java.util.Map<java.lang.String, com.alipay.sofa.registry.common.model.client.pb.AppList>
         getServiceAppMappingMap() {
       return internalGetServiceAppMapping().getMap();
     }
-
     /** <code>map&lt;string, .AppList&gt; serviceAppMapping = 1;</code> */
     public com.alipay.sofa.registry.common.model.client.pb.AppList getServiceAppMappingOrDefault(
         java.lang.String key,
@@ -692,7 +678,6 @@ public final class ServiceAppMappingResponse extends com.google.protobuf.Generat
           internalGetServiceAppMapping().getMap();
       return map.containsKey(key) ? map.get(key) : defaultValue;
     }
-
     /** <code>map&lt;string, .AppList&gt; serviceAppMapping = 1;</code> */
     public com.alipay.sofa.registry.common.model.client.pb.AppList getServiceAppMappingOrThrow(
         java.lang.String key) {
@@ -711,7 +696,6 @@ public final class ServiceAppMappingResponse extends com.google.protobuf.Generat
       internalGetMutableServiceAppMapping().getMutableMap().clear();
       return this;
     }
-
     /** <code>map&lt;string, .AppList&gt; serviceAppMapping = 1;</code> */
     public Builder removeServiceAppMapping(java.lang.String key) {
       if (key == null) {
@@ -720,14 +704,12 @@ public final class ServiceAppMappingResponse extends com.google.protobuf.Generat
       internalGetMutableServiceAppMapping().getMutableMap().remove(key);
       return this;
     }
-
     /** Use alternate mutation accessors instead. */
     @java.lang.Deprecated
     public java.util.Map<java.lang.String, com.alipay.sofa.registry.common.model.client.pb.AppList>
         getMutableServiceAppMapping() {
       return internalGetMutableServiceAppMapping().getMutableMap();
     }
-
     /** <code>map&lt;string, .AppList&gt; serviceAppMapping = 1;</code> */
     public Builder putServiceAppMapping(
         java.lang.String key, com.alipay.sofa.registry.common.model.client.pb.AppList value) {
@@ -740,7 +722,6 @@ public final class ServiceAppMappingResponse extends com.google.protobuf.Generat
       internalGetMutableServiceAppMapping().getMutableMap().put(key, value);
       return this;
     }
-
     /** <code>map&lt;string, .AppList&gt; serviceAppMapping = 1;</code> */
     public Builder putAllServiceAppMapping(
         java.util.Map<java.lang.String, com.alipay.sofa.registry.common.model.client.pb.AppList>
@@ -750,12 +731,10 @@ public final class ServiceAppMappingResponse extends com.google.protobuf.Generat
     }
 
     private int statusCode_;
-
     /** <code>int32 statusCode = 2;</code> */
     public int getStatusCode() {
       return statusCode_;
     }
-
     /** <code>int32 statusCode = 2;</code> */
     public Builder setStatusCode(int value) {
 
@@ -763,7 +742,6 @@ public final class ServiceAppMappingResponse extends com.google.protobuf.Generat
       onChanged();
       return this;
     }
-
     /** <code>int32 statusCode = 2;</code> */
     public Builder clearStatusCode() {
 
@@ -773,7 +751,6 @@ public final class ServiceAppMappingResponse extends com.google.protobuf.Generat
     }
 
     private java.lang.Object message_ = "";
-
     /** <code>string message = 3;</code> */
     public java.lang.String getMessage() {
       java.lang.Object ref = message_;
@@ -786,7 +763,6 @@ public final class ServiceAppMappingResponse extends com.google.protobuf.Generat
         return (java.lang.String) ref;
       }
     }
-
     /** <code>string message = 3;</code> */
     public com.google.protobuf.ByteString getMessageBytes() {
       java.lang.Object ref = message_;
@@ -799,7 +775,6 @@ public final class ServiceAppMappingResponse extends com.google.protobuf.Generat
         return (com.google.protobuf.ByteString) ref;
       }
     }
-
     /** <code>string message = 3;</code> */
     public Builder setMessage(java.lang.String value) {
       if (value == null) {
@@ -810,7 +785,6 @@ public final class ServiceAppMappingResponse extends com.google.protobuf.Generat
       onChanged();
       return this;
     }
-
     /** <code>string message = 3;</code> */
     public Builder clearMessage() {
 
@@ -818,7 +792,6 @@ public final class ServiceAppMappingResponse extends com.google.protobuf.Generat
       onChanged();
       return this;
     }
-
     /** <code>string message = 3;</code> */
     public Builder setMessageBytes(com.google.protobuf.ByteString value) {
       if (value == null) {

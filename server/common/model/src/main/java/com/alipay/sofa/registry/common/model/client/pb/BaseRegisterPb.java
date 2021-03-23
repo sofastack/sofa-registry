@@ -22,7 +22,6 @@ public final class BaseRegisterPb extends com.google.protobuf.GeneratedMessageV3
     // @@protoc_insertion_point(message_implements:BaseRegisterPb)
     BaseRegisterPbOrBuilder {
   private static final long serialVersionUID = 0L;
-
   // Use BaseRegisterPb.newBuilder() to construct.
   private BaseRegisterPb(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
     super(builder);
@@ -222,7 +221,6 @@ public final class BaseRegisterPb extends com.google.protobuf.GeneratedMessageV3
   private int bitField0_;
   public static final int INSTANCEID_FIELD_NUMBER = 1;
   private volatile java.lang.Object instanceId_;
-
   /** <code>string instanceId = 1;</code> */
   public java.lang.String getInstanceId() {
     java.lang.Object ref = instanceId_;
@@ -235,7 +233,6 @@ public final class BaseRegisterPb extends com.google.protobuf.GeneratedMessageV3
       return s;
     }
   }
-
   /** <code>string instanceId = 1;</code> */
   public com.google.protobuf.ByteString getInstanceIdBytes() {
     java.lang.Object ref = instanceId_;
@@ -251,7 +248,6 @@ public final class BaseRegisterPb extends com.google.protobuf.GeneratedMessageV3
 
   public static final int ZONE_FIELD_NUMBER = 2;
   private volatile java.lang.Object zone_;
-
   /** <code>string zone = 2;</code> */
   public java.lang.String getZone() {
     java.lang.Object ref = zone_;
@@ -264,7 +260,6 @@ public final class BaseRegisterPb extends com.google.protobuf.GeneratedMessageV3
       return s;
     }
   }
-
   /** <code>string zone = 2;</code> */
   public com.google.protobuf.ByteString getZoneBytes() {
     java.lang.Object ref = zone_;
@@ -280,7 +275,6 @@ public final class BaseRegisterPb extends com.google.protobuf.GeneratedMessageV3
 
   public static final int APPNAME_FIELD_NUMBER = 3;
   private volatile java.lang.Object appName_;
-
   /** <code>string appName = 3;</code> */
   public java.lang.String getAppName() {
     java.lang.Object ref = appName_;
@@ -293,7 +287,6 @@ public final class BaseRegisterPb extends com.google.protobuf.GeneratedMessageV3
       return s;
     }
   }
-
   /** <code>string appName = 3;</code> */
   public com.google.protobuf.ByteString getAppNameBytes() {
     java.lang.Object ref = appName_;
@@ -309,7 +302,6 @@ public final class BaseRegisterPb extends com.google.protobuf.GeneratedMessageV3
 
   public static final int DATAID_FIELD_NUMBER = 4;
   private volatile java.lang.Object dataId_;
-
   /** <code>string dataId = 4;</code> */
   public java.lang.String getDataId() {
     java.lang.Object ref = dataId_;
@@ -322,7 +314,6 @@ public final class BaseRegisterPb extends com.google.protobuf.GeneratedMessageV3
       return s;
     }
   }
-
   /** <code>string dataId = 4;</code> */
   public com.google.protobuf.ByteString getDataIdBytes() {
     java.lang.Object ref = dataId_;
@@ -338,7 +329,6 @@ public final class BaseRegisterPb extends com.google.protobuf.GeneratedMessageV3
 
   public static final int GROUP_FIELD_NUMBER = 5;
   private volatile java.lang.Object group_;
-
   /** <code>string group = 5;</code> */
   public java.lang.String getGroup() {
     java.lang.Object ref = group_;
@@ -351,7 +341,6 @@ public final class BaseRegisterPb extends com.google.protobuf.GeneratedMessageV3
       return s;
     }
   }
-
   /** <code>string group = 5;</code> */
   public com.google.protobuf.ByteString getGroupBytes() {
     java.lang.Object ref = group_;
@@ -367,7 +356,6 @@ public final class BaseRegisterPb extends com.google.protobuf.GeneratedMessageV3
 
   public static final int PROCESSID_FIELD_NUMBER = 6;
   private volatile java.lang.Object processId_;
-
   /** <code>string processId = 6;</code> */
   public java.lang.String getProcessId() {
     java.lang.Object ref = processId_;
@@ -380,7 +368,6 @@ public final class BaseRegisterPb extends com.google.protobuf.GeneratedMessageV3
       return s;
     }
   }
-
   /** <code>string processId = 6;</code> */
   public com.google.protobuf.ByteString getProcessIdBytes() {
     java.lang.Object ref = processId_;
@@ -396,7 +383,6 @@ public final class BaseRegisterPb extends com.google.protobuf.GeneratedMessageV3
 
   public static final int REGISTID_FIELD_NUMBER = 7;
   private volatile java.lang.Object registId_;
-
   /** <code>string registId = 7;</code> */
   public java.lang.String getRegistId() {
     java.lang.Object ref = registId_;
@@ -409,7 +395,6 @@ public final class BaseRegisterPb extends com.google.protobuf.GeneratedMessageV3
       return s;
     }
   }
-
   /** <code>string registId = 7;</code> */
   public com.google.protobuf.ByteString getRegistIdBytes() {
     java.lang.Object ref = registId_;
@@ -425,7 +410,6 @@ public final class BaseRegisterPb extends com.google.protobuf.GeneratedMessageV3
 
   public static final int CLIENTID_FIELD_NUMBER = 8;
   private volatile java.lang.Object clientId_;
-
   /** <code>string clientId = 8;</code> */
   public java.lang.String getClientId() {
     java.lang.Object ref = clientId_;
@@ -438,7 +422,6 @@ public final class BaseRegisterPb extends com.google.protobuf.GeneratedMessageV3
       return s;
     }
   }
-
   /** <code>string clientId = 8;</code> */
   public com.google.protobuf.ByteString getClientIdBytes() {
     java.lang.Object ref = clientId_;
@@ -454,7 +437,6 @@ public final class BaseRegisterPb extends com.google.protobuf.GeneratedMessageV3
 
   public static final int DATAINFOID_FIELD_NUMBER = 9;
   private volatile java.lang.Object dataInfoId_;
-
   /** <code>string dataInfoId = 9;</code> */
   public java.lang.String getDataInfoId() {
     java.lang.Object ref = dataInfoId_;
@@ -467,7 +449,6 @@ public final class BaseRegisterPb extends com.google.protobuf.GeneratedMessageV3
       return s;
     }
   }
-
   /** <code>string dataInfoId = 9;</code> */
   public com.google.protobuf.ByteString getDataInfoIdBytes() {
     java.lang.Object ref = dataInfoId_;
@@ -483,7 +464,6 @@ public final class BaseRegisterPb extends com.google.protobuf.GeneratedMessageV3
 
   public static final int IP_FIELD_NUMBER = 10;
   private volatile java.lang.Object ip_;
-
   /** <code>string ip = 10;</code> */
   public java.lang.String getIp() {
     java.lang.Object ref = ip_;
@@ -496,7 +476,6 @@ public final class BaseRegisterPb extends com.google.protobuf.GeneratedMessageV3
       return s;
     }
   }
-
   /** <code>string ip = 10;</code> */
   public com.google.protobuf.ByteString getIpBytes() {
     java.lang.Object ref = ip_;
@@ -512,7 +491,6 @@ public final class BaseRegisterPb extends com.google.protobuf.GeneratedMessageV3
 
   public static final int PORT_FIELD_NUMBER = 11;
   private int port_;
-
   /** <code>int32 port = 11;</code> */
   public int getPort() {
     return port_;
@@ -520,7 +498,6 @@ public final class BaseRegisterPb extends com.google.protobuf.GeneratedMessageV3
 
   public static final int EVENTTYPE_FIELD_NUMBER = 12;
   private volatile java.lang.Object eventType_;
-
   /** <code>string eventType = 12;</code> */
   public java.lang.String getEventType() {
     java.lang.Object ref = eventType_;
@@ -533,7 +510,6 @@ public final class BaseRegisterPb extends com.google.protobuf.GeneratedMessageV3
       return s;
     }
   }
-
   /** <code>string eventType = 12;</code> */
   public com.google.protobuf.ByteString getEventTypeBytes() {
     java.lang.Object ref = eventType_;
@@ -549,7 +525,6 @@ public final class BaseRegisterPb extends com.google.protobuf.GeneratedMessageV3
 
   public static final int VERSION_FIELD_NUMBER = 13;
   private long version_;
-
   /** <code>int64 version = 13;</code> */
   public long getVersion() {
     return version_;
@@ -557,7 +532,6 @@ public final class BaseRegisterPb extends com.google.protobuf.GeneratedMessageV3
 
   public static final int TIMESTAMP_FIELD_NUMBER = 14;
   private long timestamp_;
-
   /** <code>int64 timestamp = 14;</code> */
   public long getTimestamp() {
     return timestamp_;
@@ -588,7 +562,6 @@ public final class BaseRegisterPb extends com.google.protobuf.GeneratedMessageV3
   public int getAttributesCount() {
     return internalGetAttributes().getMap().size();
   }
-
   /** <code>map&lt;string, string&gt; attributes = 15;</code> */
   public boolean containsAttributes(java.lang.String key) {
     if (key == null) {
@@ -596,18 +569,15 @@ public final class BaseRegisterPb extends com.google.protobuf.GeneratedMessageV3
     }
     return internalGetAttributes().getMap().containsKey(key);
   }
-
   /** Use {@link #getAttributesMap()} instead. */
   @java.lang.Deprecated
   public java.util.Map<java.lang.String, java.lang.String> getAttributes() {
     return getAttributesMap();
   }
-
   /** <code>map&lt;string, string&gt; attributes = 15;</code> */
   public java.util.Map<java.lang.String, java.lang.String> getAttributesMap() {
     return internalGetAttributes().getMap();
   }
-
   /** <code>map&lt;string, string&gt; attributes = 15;</code> */
   public java.lang.String getAttributesOrDefault(
       java.lang.String key, java.lang.String defaultValue) {
@@ -617,7 +587,6 @@ public final class BaseRegisterPb extends com.google.protobuf.GeneratedMessageV3
     java.util.Map<java.lang.String, java.lang.String> map = internalGetAttributes().getMap();
     return map.containsKey(key) ? map.get(key) : defaultValue;
   }
-
   /** <code>map&lt;string, string&gt; attributes = 15;</code> */
   public java.lang.String getAttributesOrThrow(java.lang.String key) {
     if (key == null) {
@@ -920,7 +889,6 @@ public final class BaseRegisterPb extends com.google.protobuf.GeneratedMessageV3
     Builder builder = new Builder(parent);
     return builder;
   }
-
   /** Protobuf type {@code BaseRegisterPb} */
   public static final class Builder extends com.google.protobuf.GeneratedMessageV3.Builder<Builder>
       implements
@@ -1178,7 +1146,6 @@ public final class BaseRegisterPb extends com.google.protobuf.GeneratedMessageV3
     private int bitField0_;
 
     private java.lang.Object instanceId_ = "";
-
     /** <code>string instanceId = 1;</code> */
     public java.lang.String getInstanceId() {
       java.lang.Object ref = instanceId_;
@@ -1191,7 +1158,6 @@ public final class BaseRegisterPb extends com.google.protobuf.GeneratedMessageV3
         return (java.lang.String) ref;
       }
     }
-
     /** <code>string instanceId = 1;</code> */
     public com.google.protobuf.ByteString getInstanceIdBytes() {
       java.lang.Object ref = instanceId_;
@@ -1204,7 +1170,6 @@ public final class BaseRegisterPb extends com.google.protobuf.GeneratedMessageV3
         return (com.google.protobuf.ByteString) ref;
       }
     }
-
     /** <code>string instanceId = 1;</code> */
     public Builder setInstanceId(java.lang.String value) {
       if (value == null) {
@@ -1215,7 +1180,6 @@ public final class BaseRegisterPb extends com.google.protobuf.GeneratedMessageV3
       onChanged();
       return this;
     }
-
     /** <code>string instanceId = 1;</code> */
     public Builder clearInstanceId() {
 
@@ -1223,7 +1187,6 @@ public final class BaseRegisterPb extends com.google.protobuf.GeneratedMessageV3
       onChanged();
       return this;
     }
-
     /** <code>string instanceId = 1;</code> */
     public Builder setInstanceIdBytes(com.google.protobuf.ByteString value) {
       if (value == null) {
@@ -1237,7 +1200,6 @@ public final class BaseRegisterPb extends com.google.protobuf.GeneratedMessageV3
     }
 
     private java.lang.Object zone_ = "";
-
     /** <code>string zone = 2;</code> */
     public java.lang.String getZone() {
       java.lang.Object ref = zone_;
@@ -1250,7 +1212,6 @@ public final class BaseRegisterPb extends com.google.protobuf.GeneratedMessageV3
         return (java.lang.String) ref;
       }
     }
-
     /** <code>string zone = 2;</code> */
     public com.google.protobuf.ByteString getZoneBytes() {
       java.lang.Object ref = zone_;
@@ -1263,7 +1224,6 @@ public final class BaseRegisterPb extends com.google.protobuf.GeneratedMessageV3
         return (com.google.protobuf.ByteString) ref;
       }
     }
-
     /** <code>string zone = 2;</code> */
     public Builder setZone(java.lang.String value) {
       if (value == null) {
@@ -1274,7 +1234,6 @@ public final class BaseRegisterPb extends com.google.protobuf.GeneratedMessageV3
       onChanged();
       return this;
     }
-
     /** <code>string zone = 2;</code> */
     public Builder clearZone() {
 
@@ -1282,7 +1241,6 @@ public final class BaseRegisterPb extends com.google.protobuf.GeneratedMessageV3
       onChanged();
       return this;
     }
-
     /** <code>string zone = 2;</code> */
     public Builder setZoneBytes(com.google.protobuf.ByteString value) {
       if (value == null) {
@@ -1296,7 +1254,6 @@ public final class BaseRegisterPb extends com.google.protobuf.GeneratedMessageV3
     }
 
     private java.lang.Object appName_ = "";
-
     /** <code>string appName = 3;</code> */
     public java.lang.String getAppName() {
       java.lang.Object ref = appName_;
@@ -1309,7 +1266,6 @@ public final class BaseRegisterPb extends com.google.protobuf.GeneratedMessageV3
         return (java.lang.String) ref;
       }
     }
-
     /** <code>string appName = 3;</code> */
     public com.google.protobuf.ByteString getAppNameBytes() {
       java.lang.Object ref = appName_;
@@ -1322,7 +1278,6 @@ public final class BaseRegisterPb extends com.google.protobuf.GeneratedMessageV3
         return (com.google.protobuf.ByteString) ref;
       }
     }
-
     /** <code>string appName = 3;</code> */
     public Builder setAppName(java.lang.String value) {
       if (value == null) {
@@ -1333,7 +1288,6 @@ public final class BaseRegisterPb extends com.google.protobuf.GeneratedMessageV3
       onChanged();
       return this;
     }
-
     /** <code>string appName = 3;</code> */
     public Builder clearAppName() {
 
@@ -1341,7 +1295,6 @@ public final class BaseRegisterPb extends com.google.protobuf.GeneratedMessageV3
       onChanged();
       return this;
     }
-
     /** <code>string appName = 3;</code> */
     public Builder setAppNameBytes(com.google.protobuf.ByteString value) {
       if (value == null) {
@@ -1355,7 +1308,6 @@ public final class BaseRegisterPb extends com.google.protobuf.GeneratedMessageV3
     }
 
     private java.lang.Object dataId_ = "";
-
     /** <code>string dataId = 4;</code> */
     public java.lang.String getDataId() {
       java.lang.Object ref = dataId_;
@@ -1368,7 +1320,6 @@ public final class BaseRegisterPb extends com.google.protobuf.GeneratedMessageV3
         return (java.lang.String) ref;
       }
     }
-
     /** <code>string dataId = 4;</code> */
     public com.google.protobuf.ByteString getDataIdBytes() {
       java.lang.Object ref = dataId_;
@@ -1381,7 +1332,6 @@ public final class BaseRegisterPb extends com.google.protobuf.GeneratedMessageV3
         return (com.google.protobuf.ByteString) ref;
       }
     }
-
     /** <code>string dataId = 4;</code> */
     public Builder setDataId(java.lang.String value) {
       if (value == null) {
@@ -1392,7 +1342,6 @@ public final class BaseRegisterPb extends com.google.protobuf.GeneratedMessageV3
       onChanged();
       return this;
     }
-
     /** <code>string dataId = 4;</code> */
     public Builder clearDataId() {
 
@@ -1400,7 +1349,6 @@ public final class BaseRegisterPb extends com.google.protobuf.GeneratedMessageV3
       onChanged();
       return this;
     }
-
     /** <code>string dataId = 4;</code> */
     public Builder setDataIdBytes(com.google.protobuf.ByteString value) {
       if (value == null) {
@@ -1414,7 +1362,6 @@ public final class BaseRegisterPb extends com.google.protobuf.GeneratedMessageV3
     }
 
     private java.lang.Object group_ = "";
-
     /** <code>string group = 5;</code> */
     public java.lang.String getGroup() {
       java.lang.Object ref = group_;
@@ -1427,7 +1374,6 @@ public final class BaseRegisterPb extends com.google.protobuf.GeneratedMessageV3
         return (java.lang.String) ref;
       }
     }
-
     /** <code>string group = 5;</code> */
     public com.google.protobuf.ByteString getGroupBytes() {
       java.lang.Object ref = group_;
@@ -1440,7 +1386,6 @@ public final class BaseRegisterPb extends com.google.protobuf.GeneratedMessageV3
         return (com.google.protobuf.ByteString) ref;
       }
     }
-
     /** <code>string group = 5;</code> */
     public Builder setGroup(java.lang.String value) {
       if (value == null) {
@@ -1451,7 +1396,6 @@ public final class BaseRegisterPb extends com.google.protobuf.GeneratedMessageV3
       onChanged();
       return this;
     }
-
     /** <code>string group = 5;</code> */
     public Builder clearGroup() {
 
@@ -1459,7 +1403,6 @@ public final class BaseRegisterPb extends com.google.protobuf.GeneratedMessageV3
       onChanged();
       return this;
     }
-
     /** <code>string group = 5;</code> */
     public Builder setGroupBytes(com.google.protobuf.ByteString value) {
       if (value == null) {
@@ -1473,7 +1416,6 @@ public final class BaseRegisterPb extends com.google.protobuf.GeneratedMessageV3
     }
 
     private java.lang.Object processId_ = "";
-
     /** <code>string processId = 6;</code> */
     public java.lang.String getProcessId() {
       java.lang.Object ref = processId_;
@@ -1486,7 +1428,6 @@ public final class BaseRegisterPb extends com.google.protobuf.GeneratedMessageV3
         return (java.lang.String) ref;
       }
     }
-
     /** <code>string processId = 6;</code> */
     public com.google.protobuf.ByteString getProcessIdBytes() {
       java.lang.Object ref = processId_;
@@ -1499,7 +1440,6 @@ public final class BaseRegisterPb extends com.google.protobuf.GeneratedMessageV3
         return (com.google.protobuf.ByteString) ref;
       }
     }
-
     /** <code>string processId = 6;</code> */
     public Builder setProcessId(java.lang.String value) {
       if (value == null) {
@@ -1510,7 +1450,6 @@ public final class BaseRegisterPb extends com.google.protobuf.GeneratedMessageV3
       onChanged();
       return this;
     }
-
     /** <code>string processId = 6;</code> */
     public Builder clearProcessId() {
 
@@ -1518,7 +1457,6 @@ public final class BaseRegisterPb extends com.google.protobuf.GeneratedMessageV3
       onChanged();
       return this;
     }
-
     /** <code>string processId = 6;</code> */
     public Builder setProcessIdBytes(com.google.protobuf.ByteString value) {
       if (value == null) {
@@ -1532,7 +1470,6 @@ public final class BaseRegisterPb extends com.google.protobuf.GeneratedMessageV3
     }
 
     private java.lang.Object registId_ = "";
-
     /** <code>string registId = 7;</code> */
     public java.lang.String getRegistId() {
       java.lang.Object ref = registId_;
@@ -1545,7 +1482,6 @@ public final class BaseRegisterPb extends com.google.protobuf.GeneratedMessageV3
         return (java.lang.String) ref;
       }
     }
-
     /** <code>string registId = 7;</code> */
     public com.google.protobuf.ByteString getRegistIdBytes() {
       java.lang.Object ref = registId_;
@@ -1558,7 +1494,6 @@ public final class BaseRegisterPb extends com.google.protobuf.GeneratedMessageV3
         return (com.google.protobuf.ByteString) ref;
       }
     }
-
     /** <code>string registId = 7;</code> */
     public Builder setRegistId(java.lang.String value) {
       if (value == null) {
@@ -1569,7 +1504,6 @@ public final class BaseRegisterPb extends com.google.protobuf.GeneratedMessageV3
       onChanged();
       return this;
     }
-
     /** <code>string registId = 7;</code> */
     public Builder clearRegistId() {
 
@@ -1577,7 +1511,6 @@ public final class BaseRegisterPb extends com.google.protobuf.GeneratedMessageV3
       onChanged();
       return this;
     }
-
     /** <code>string registId = 7;</code> */
     public Builder setRegistIdBytes(com.google.protobuf.ByteString value) {
       if (value == null) {
@@ -1591,7 +1524,6 @@ public final class BaseRegisterPb extends com.google.protobuf.GeneratedMessageV3
     }
 
     private java.lang.Object clientId_ = "";
-
     /** <code>string clientId = 8;</code> */
     public java.lang.String getClientId() {
       java.lang.Object ref = clientId_;
@@ -1604,7 +1536,6 @@ public final class BaseRegisterPb extends com.google.protobuf.GeneratedMessageV3
         return (java.lang.String) ref;
       }
     }
-
     /** <code>string clientId = 8;</code> */
     public com.google.protobuf.ByteString getClientIdBytes() {
       java.lang.Object ref = clientId_;
@@ -1617,7 +1548,6 @@ public final class BaseRegisterPb extends com.google.protobuf.GeneratedMessageV3
         return (com.google.protobuf.ByteString) ref;
       }
     }
-
     /** <code>string clientId = 8;</code> */
     public Builder setClientId(java.lang.String value) {
       if (value == null) {
@@ -1628,7 +1558,6 @@ public final class BaseRegisterPb extends com.google.protobuf.GeneratedMessageV3
       onChanged();
       return this;
     }
-
     /** <code>string clientId = 8;</code> */
     public Builder clearClientId() {
 
@@ -1636,7 +1565,6 @@ public final class BaseRegisterPb extends com.google.protobuf.GeneratedMessageV3
       onChanged();
       return this;
     }
-
     /** <code>string clientId = 8;</code> */
     public Builder setClientIdBytes(com.google.protobuf.ByteString value) {
       if (value == null) {
@@ -1650,7 +1578,6 @@ public final class BaseRegisterPb extends com.google.protobuf.GeneratedMessageV3
     }
 
     private java.lang.Object dataInfoId_ = "";
-
     /** <code>string dataInfoId = 9;</code> */
     public java.lang.String getDataInfoId() {
       java.lang.Object ref = dataInfoId_;
@@ -1663,7 +1590,6 @@ public final class BaseRegisterPb extends com.google.protobuf.GeneratedMessageV3
         return (java.lang.String) ref;
       }
     }
-
     /** <code>string dataInfoId = 9;</code> */
     public com.google.protobuf.ByteString getDataInfoIdBytes() {
       java.lang.Object ref = dataInfoId_;
@@ -1676,7 +1602,6 @@ public final class BaseRegisterPb extends com.google.protobuf.GeneratedMessageV3
         return (com.google.protobuf.ByteString) ref;
       }
     }
-
     /** <code>string dataInfoId = 9;</code> */
     public Builder setDataInfoId(java.lang.String value) {
       if (value == null) {
@@ -1687,7 +1612,6 @@ public final class BaseRegisterPb extends com.google.protobuf.GeneratedMessageV3
       onChanged();
       return this;
     }
-
     /** <code>string dataInfoId = 9;</code> */
     public Builder clearDataInfoId() {
 
@@ -1695,7 +1619,6 @@ public final class BaseRegisterPb extends com.google.protobuf.GeneratedMessageV3
       onChanged();
       return this;
     }
-
     /** <code>string dataInfoId = 9;</code> */
     public Builder setDataInfoIdBytes(com.google.protobuf.ByteString value) {
       if (value == null) {
@@ -1709,7 +1632,6 @@ public final class BaseRegisterPb extends com.google.protobuf.GeneratedMessageV3
     }
 
     private java.lang.Object ip_ = "";
-
     /** <code>string ip = 10;</code> */
     public java.lang.String getIp() {
       java.lang.Object ref = ip_;
@@ -1722,7 +1644,6 @@ public final class BaseRegisterPb extends com.google.protobuf.GeneratedMessageV3
         return (java.lang.String) ref;
       }
     }
-
     /** <code>string ip = 10;</code> */
     public com.google.protobuf.ByteString getIpBytes() {
       java.lang.Object ref = ip_;
@@ -1735,7 +1656,6 @@ public final class BaseRegisterPb extends com.google.protobuf.GeneratedMessageV3
         return (com.google.protobuf.ByteString) ref;
       }
     }
-
     /** <code>string ip = 10;</code> */
     public Builder setIp(java.lang.String value) {
       if (value == null) {
@@ -1746,7 +1666,6 @@ public final class BaseRegisterPb extends com.google.protobuf.GeneratedMessageV3
       onChanged();
       return this;
     }
-
     /** <code>string ip = 10;</code> */
     public Builder clearIp() {
 
@@ -1754,7 +1673,6 @@ public final class BaseRegisterPb extends com.google.protobuf.GeneratedMessageV3
       onChanged();
       return this;
     }
-
     /** <code>string ip = 10;</code> */
     public Builder setIpBytes(com.google.protobuf.ByteString value) {
       if (value == null) {
@@ -1768,12 +1686,10 @@ public final class BaseRegisterPb extends com.google.protobuf.GeneratedMessageV3
     }
 
     private int port_;
-
     /** <code>int32 port = 11;</code> */
     public int getPort() {
       return port_;
     }
-
     /** <code>int32 port = 11;</code> */
     public Builder setPort(int value) {
 
@@ -1781,7 +1697,6 @@ public final class BaseRegisterPb extends com.google.protobuf.GeneratedMessageV3
       onChanged();
       return this;
     }
-
     /** <code>int32 port = 11;</code> */
     public Builder clearPort() {
 
@@ -1791,7 +1706,6 @@ public final class BaseRegisterPb extends com.google.protobuf.GeneratedMessageV3
     }
 
     private java.lang.Object eventType_ = "";
-
     /** <code>string eventType = 12;</code> */
     public java.lang.String getEventType() {
       java.lang.Object ref = eventType_;
@@ -1804,7 +1718,6 @@ public final class BaseRegisterPb extends com.google.protobuf.GeneratedMessageV3
         return (java.lang.String) ref;
       }
     }
-
     /** <code>string eventType = 12;</code> */
     public com.google.protobuf.ByteString getEventTypeBytes() {
       java.lang.Object ref = eventType_;
@@ -1817,7 +1730,6 @@ public final class BaseRegisterPb extends com.google.protobuf.GeneratedMessageV3
         return (com.google.protobuf.ByteString) ref;
       }
     }
-
     /** <code>string eventType = 12;</code> */
     public Builder setEventType(java.lang.String value) {
       if (value == null) {
@@ -1828,7 +1740,6 @@ public final class BaseRegisterPb extends com.google.protobuf.GeneratedMessageV3
       onChanged();
       return this;
     }
-
     /** <code>string eventType = 12;</code> */
     public Builder clearEventType() {
 
@@ -1836,7 +1747,6 @@ public final class BaseRegisterPb extends com.google.protobuf.GeneratedMessageV3
       onChanged();
       return this;
     }
-
     /** <code>string eventType = 12;</code> */
     public Builder setEventTypeBytes(com.google.protobuf.ByteString value) {
       if (value == null) {
@@ -1850,12 +1760,10 @@ public final class BaseRegisterPb extends com.google.protobuf.GeneratedMessageV3
     }
 
     private long version_;
-
     /** <code>int64 version = 13;</code> */
     public long getVersion() {
       return version_;
     }
-
     /** <code>int64 version = 13;</code> */
     public Builder setVersion(long value) {
 
@@ -1863,7 +1771,6 @@ public final class BaseRegisterPb extends com.google.protobuf.GeneratedMessageV3
       onChanged();
       return this;
     }
-
     /** <code>int64 version = 13;</code> */
     public Builder clearVersion() {
 
@@ -1873,12 +1780,10 @@ public final class BaseRegisterPb extends com.google.protobuf.GeneratedMessageV3
     }
 
     private long timestamp_;
-
     /** <code>int64 timestamp = 14;</code> */
     public long getTimestamp() {
       return timestamp_;
     }
-
     /** <code>int64 timestamp = 14;</code> */
     public Builder setTimestamp(long value) {
 
@@ -1886,7 +1791,6 @@ public final class BaseRegisterPb extends com.google.protobuf.GeneratedMessageV3
       onChanged();
       return this;
     }
-
     /** <code>int64 timestamp = 14;</code> */
     public Builder clearTimestamp() {
 
@@ -1923,7 +1827,6 @@ public final class BaseRegisterPb extends com.google.protobuf.GeneratedMessageV3
     public int getAttributesCount() {
       return internalGetAttributes().getMap().size();
     }
-
     /** <code>map&lt;string, string&gt; attributes = 15;</code> */
     public boolean containsAttributes(java.lang.String key) {
       if (key == null) {
@@ -1931,18 +1834,15 @@ public final class BaseRegisterPb extends com.google.protobuf.GeneratedMessageV3
       }
       return internalGetAttributes().getMap().containsKey(key);
     }
-
     /** Use {@link #getAttributesMap()} instead. */
     @java.lang.Deprecated
     public java.util.Map<java.lang.String, java.lang.String> getAttributes() {
       return getAttributesMap();
     }
-
     /** <code>map&lt;string, string&gt; attributes = 15;</code> */
     public java.util.Map<java.lang.String, java.lang.String> getAttributesMap() {
       return internalGetAttributes().getMap();
     }
-
     /** <code>map&lt;string, string&gt; attributes = 15;</code> */
     public java.lang.String getAttributesOrDefault(
         java.lang.String key, java.lang.String defaultValue) {
@@ -1952,7 +1852,6 @@ public final class BaseRegisterPb extends com.google.protobuf.GeneratedMessageV3
       java.util.Map<java.lang.String, java.lang.String> map = internalGetAttributes().getMap();
       return map.containsKey(key) ? map.get(key) : defaultValue;
     }
-
     /** <code>map&lt;string, string&gt; attributes = 15;</code> */
     public java.lang.String getAttributesOrThrow(java.lang.String key) {
       if (key == null) {
@@ -1969,7 +1868,6 @@ public final class BaseRegisterPb extends com.google.protobuf.GeneratedMessageV3
       internalGetMutableAttributes().getMutableMap().clear();
       return this;
     }
-
     /** <code>map&lt;string, string&gt; attributes = 15;</code> */
     public Builder removeAttributes(java.lang.String key) {
       if (key == null) {
@@ -1978,13 +1876,11 @@ public final class BaseRegisterPb extends com.google.protobuf.GeneratedMessageV3
       internalGetMutableAttributes().getMutableMap().remove(key);
       return this;
     }
-
     /** Use alternate mutation accessors instead. */
     @java.lang.Deprecated
     public java.util.Map<java.lang.String, java.lang.String> getMutableAttributes() {
       return internalGetMutableAttributes().getMutableMap();
     }
-
     /** <code>map&lt;string, string&gt; attributes = 15;</code> */
     public Builder putAttributes(java.lang.String key, java.lang.String value) {
       if (key == null) {
@@ -1996,7 +1892,6 @@ public final class BaseRegisterPb extends com.google.protobuf.GeneratedMessageV3
       internalGetMutableAttributes().getMutableMap().put(key, value);
       return this;
     }
-
     /** <code>map&lt;string, string&gt; attributes = 15;</code> */
     public Builder putAllAttributes(java.util.Map<java.lang.String, java.lang.String> values) {
       internalGetMutableAttributes().getMutableMap().putAll(values);

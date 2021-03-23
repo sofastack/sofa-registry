@@ -23,27 +23,21 @@ public interface PublisherRegisterPbOrBuilder
 
   /** <code>repeated .DataBoxPb dataList = 1;</code> */
   java.util.List<com.alipay.sofa.registry.common.model.client.pb.DataBoxPb> getDataListList();
-
   /** <code>repeated .DataBoxPb dataList = 1;</code> */
   com.alipay.sofa.registry.common.model.client.pb.DataBoxPb getDataList(int index);
-
   /** <code>repeated .DataBoxPb dataList = 1;</code> */
   int getDataListCount();
-
   /** <code>repeated .DataBoxPb dataList = 1;</code> */
   java.util.List<? extends com.alipay.sofa.registry.common.model.client.pb.DataBoxPbOrBuilder>
       getDataListOrBuilderList();
-
   /** <code>repeated .DataBoxPb dataList = 1;</code> */
   com.alipay.sofa.registry.common.model.client.pb.DataBoxPbOrBuilder getDataListOrBuilder(
       int index);
 
   /** <code>.BaseRegisterPb baseRegister = 2;</code> */
   boolean hasBaseRegister();
-
   /** <code>.BaseRegisterPb baseRegister = 2;</code> */
   com.alipay.sofa.registry.common.model.client.pb.BaseRegisterPb getBaseRegister();
-
   /** <code>.BaseRegisterPb baseRegister = 2;</code> */
   com.alipay.sofa.registry.common.model.client.pb.BaseRegisterPbOrBuilder
       getBaseRegisterOrBuilder();

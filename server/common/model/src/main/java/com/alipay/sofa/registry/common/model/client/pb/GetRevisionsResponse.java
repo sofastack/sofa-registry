@@ -22,7 +22,6 @@ public final class GetRevisionsResponse extends com.google.protobuf.GeneratedMes
     // @@protoc_insertion_point(message_implements:GetRevisionsResponse)
     GetRevisionsResponseOrBuilder {
   private static final long serialVersionUID = 0L;
-
   // Use GetRevisionsResponse.newBuilder() to construct.
   private GetRevisionsResponse(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
     super(builder);
@@ -165,7 +164,6 @@ public final class GetRevisionsResponse extends com.google.protobuf.GeneratedMes
   public int getRevisionsCount() {
     return internalGetRevisions().getMap().size();
   }
-
   /** <code>map&lt;string, .MetaRegister&gt; revisions = 1;</code> */
   public boolean containsRevisions(java.lang.String key) {
     if (key == null) {
@@ -173,7 +171,6 @@ public final class GetRevisionsResponse extends com.google.protobuf.GeneratedMes
     }
     return internalGetRevisions().getMap().containsKey(key);
   }
-
   /** Use {@link #getRevisionsMap()} instead. */
   @java.lang.Deprecated
   public java.util.Map<
@@ -181,14 +178,12 @@ public final class GetRevisionsResponse extends com.google.protobuf.GeneratedMes
       getRevisions() {
     return getRevisionsMap();
   }
-
   /** <code>map&lt;string, .MetaRegister&gt; revisions = 1;</code> */
   public java.util.Map<
           java.lang.String, com.alipay.sofa.registry.common.model.client.pb.MetaRegister>
       getRevisionsMap() {
     return internalGetRevisions().getMap();
   }
-
   /** <code>map&lt;string, .MetaRegister&gt; revisions = 1;</code> */
   public com.alipay.sofa.registry.common.model.client.pb.MetaRegister getRevisionsOrDefault(
       java.lang.String key,
@@ -200,7 +195,6 @@ public final class GetRevisionsResponse extends com.google.protobuf.GeneratedMes
         map = internalGetRevisions().getMap();
     return map.containsKey(key) ? map.get(key) : defaultValue;
   }
-
   /** <code>map&lt;string, .MetaRegister&gt; revisions = 1;</code> */
   public com.alipay.sofa.registry.common.model.client.pb.MetaRegister getRevisionsOrThrow(
       java.lang.String key) {
@@ -217,7 +211,6 @@ public final class GetRevisionsResponse extends com.google.protobuf.GeneratedMes
 
   public static final int STATUSCODE_FIELD_NUMBER = 2;
   private int statusCode_;
-
   /** <code>int32 statusCode = 2;</code> */
   public int getStatusCode() {
     return statusCode_;
@@ -225,7 +218,6 @@ public final class GetRevisionsResponse extends com.google.protobuf.GeneratedMes
 
   public static final int MESSAGE_FIELD_NUMBER = 3;
   private volatile java.lang.Object message_;
-
   /** <code>string message = 3;</code> */
   public java.lang.String getMessage() {
     java.lang.Object ref = message_;
@@ -238,7 +230,6 @@ public final class GetRevisionsResponse extends com.google.protobuf.GeneratedMes
       return s;
     }
   }
-
   /** <code>string message = 3;</code> */
   public com.google.protobuf.ByteString getMessageBytes() {
     java.lang.Object ref = message_;
@@ -438,7 +429,6 @@ public final class GetRevisionsResponse extends com.google.protobuf.GeneratedMes
     Builder builder = new Builder(parent);
     return builder;
   }
-
   /** Protobuf type {@code GetRevisionsResponse} */
   public static final class Builder extends com.google.protobuf.GeneratedMessageV3.Builder<Builder>
       implements
@@ -648,7 +638,6 @@ public final class GetRevisionsResponse extends com.google.protobuf.GeneratedMes
     public int getRevisionsCount() {
       return internalGetRevisions().getMap().size();
     }
-
     /** <code>map&lt;string, .MetaRegister&gt; revisions = 1;</code> */
     public boolean containsRevisions(java.lang.String key) {
       if (key == null) {
@@ -656,7 +645,6 @@ public final class GetRevisionsResponse extends com.google.protobuf.GeneratedMes
       }
       return internalGetRevisions().getMap().containsKey(key);
     }
-
     /** Use {@link #getRevisionsMap()} instead. */
     @java.lang.Deprecated
     public java.util.Map<
@@ -664,14 +652,12 @@ public final class GetRevisionsResponse extends com.google.protobuf.GeneratedMes
         getRevisions() {
       return getRevisionsMap();
     }
-
     /** <code>map&lt;string, .MetaRegister&gt; revisions = 1;</code> */
     public java.util.Map<
             java.lang.String, com.alipay.sofa.registry.common.model.client.pb.MetaRegister>
         getRevisionsMap() {
       return internalGetRevisions().getMap();
     }
-
     /** <code>map&lt;string, .MetaRegister&gt; revisions = 1;</code> */
     public com.alipay.sofa.registry.common.model.client.pb.MetaRegister getRevisionsOrDefault(
         java.lang.String key,
@@ -683,7 +669,6 @@ public final class GetRevisionsResponse extends com.google.protobuf.GeneratedMes
           map = internalGetRevisions().getMap();
       return map.containsKey(key) ? map.get(key) : defaultValue;
     }
-
     /** <code>map&lt;string, .MetaRegister&gt; revisions = 1;</code> */
     public com.alipay.sofa.registry.common.model.client.pb.MetaRegister getRevisionsOrThrow(
         java.lang.String key) {
@@ -702,7 +687,6 @@ public final class GetRevisionsResponse extends com.google.protobuf.GeneratedMes
       internalGetMutableRevisions().getMutableMap().clear();
       return this;
     }
-
     /** <code>map&lt;string, .MetaRegister&gt; revisions = 1;</code> */
     public Builder removeRevisions(java.lang.String key) {
       if (key == null) {
@@ -711,7 +695,6 @@ public final class GetRevisionsResponse extends com.google.protobuf.GeneratedMes
       internalGetMutableRevisions().getMutableMap().remove(key);
       return this;
     }
-
     /** Use alternate mutation accessors instead. */
     @java.lang.Deprecated
     public java.util.Map<
@@ -719,7 +702,6 @@ public final class GetRevisionsResponse extends com.google.protobuf.GeneratedMes
         getMutableRevisions() {
       return internalGetMutableRevisions().getMutableMap();
     }
-
     /** <code>map&lt;string, .MetaRegister&gt; revisions = 1;</code> */
     public Builder putRevisions(
         java.lang.String key, com.alipay.sofa.registry.common.model.client.pb.MetaRegister value) {
@@ -732,7 +714,6 @@ public final class GetRevisionsResponse extends com.google.protobuf.GeneratedMes
       internalGetMutableRevisions().getMutableMap().put(key, value);
       return this;
     }
-
     /** <code>map&lt;string, .MetaRegister&gt; revisions = 1;</code> */
     public Builder putAllRevisions(
         java.util.Map<
@@ -743,12 +724,10 @@ public final class GetRevisionsResponse extends com.google.protobuf.GeneratedMes
     }
 
     private int statusCode_;
-
     /** <code>int32 statusCode = 2;</code> */
     public int getStatusCode() {
       return statusCode_;
     }
-
     /** <code>int32 statusCode = 2;</code> */
     public Builder setStatusCode(int value) {
 
@@ -756,7 +735,6 @@ public final class GetRevisionsResponse extends com.google.protobuf.GeneratedMes
       onChanged();
       return this;
     }
-
     /** <code>int32 statusCode = 2;</code> */
     public Builder clearStatusCode() {
 
@@ -766,7 +744,6 @@ public final class GetRevisionsResponse extends com.google.protobuf.GeneratedMes
     }
 
     private java.lang.Object message_ = "";
-
     /** <code>string message = 3;</code> */
     public java.lang.String getMessage() {
       java.lang.Object ref = message_;
@@ -779,7 +756,6 @@ public final class GetRevisionsResponse extends com.google.protobuf.GeneratedMes
         return (java.lang.String) ref;
       }
     }
-
     /** <code>string message = 3;</code> */
     public com.google.protobuf.ByteString getMessageBytes() {
       java.lang.Object ref = message_;
@@ -792,7 +768,6 @@ public final class GetRevisionsResponse extends com.google.protobuf.GeneratedMes
         return (com.google.protobuf.ByteString) ref;
       }
     }
-
     /** <code>string message = 3;</code> */
     public Builder setMessage(java.lang.String value) {
       if (value == null) {
@@ -803,7 +778,6 @@ public final class GetRevisionsResponse extends com.google.protobuf.GeneratedMes
       onChanged();
       return this;
     }
-
     /** <code>string message = 3;</code> */
     public Builder clearMessage() {
 
@@ -811,7 +785,6 @@ public final class GetRevisionsResponse extends com.google.protobuf.GeneratedMes
       onChanged();
       return this;
     }
-
     /** <code>string message = 3;</code> */
     public Builder setMessageBytes(com.google.protobuf.ByteString value) {
       if (value == null) {

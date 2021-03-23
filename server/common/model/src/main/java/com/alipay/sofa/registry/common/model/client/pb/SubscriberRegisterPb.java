@@ -22,7 +22,6 @@ public final class SubscriberRegisterPb extends com.google.protobuf.GeneratedMes
     // @@protoc_insertion_point(message_implements:SubscriberRegisterPb)
     SubscriberRegisterPbOrBuilder {
   private static final long serialVersionUID = 0L;
-
   // Use SubscriberRegisterPb.newBuilder() to construct.
   private SubscriberRegisterPb(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
     super(builder);
@@ -116,7 +115,6 @@ public final class SubscriberRegisterPb extends com.google.protobuf.GeneratedMes
 
   public static final int SCOPE_FIELD_NUMBER = 1;
   private volatile java.lang.Object scope_;
-
   /** <code>string scope = 1;</code> */
   public java.lang.String getScope() {
     java.lang.Object ref = scope_;
@@ -129,7 +127,6 @@ public final class SubscriberRegisterPb extends com.google.protobuf.GeneratedMes
       return s;
     }
   }
-
   /** <code>string scope = 1;</code> */
   public com.google.protobuf.ByteString getScopeBytes() {
     java.lang.Object ref = scope_;
@@ -145,19 +142,16 @@ public final class SubscriberRegisterPb extends com.google.protobuf.GeneratedMes
 
   public static final int BASEREGISTER_FIELD_NUMBER = 2;
   private com.alipay.sofa.registry.common.model.client.pb.BaseRegisterPb baseRegister_;
-
   /** <code>.BaseRegisterPb baseRegister = 2;</code> */
   public boolean hasBaseRegister() {
     return baseRegister_ != null;
   }
-
   /** <code>.BaseRegisterPb baseRegister = 2;</code> */
   public com.alipay.sofa.registry.common.model.client.pb.BaseRegisterPb getBaseRegister() {
     return baseRegister_ == null
         ? com.alipay.sofa.registry.common.model.client.pb.BaseRegisterPb.getDefaultInstance()
         : baseRegister_;
   }
-
   /** <code>.BaseRegisterPb baseRegister = 2;</code> */
   public com.alipay.sofa.registry.common.model.client.pb.BaseRegisterPbOrBuilder
       getBaseRegisterOrBuilder() {
@@ -335,7 +329,6 @@ public final class SubscriberRegisterPb extends com.google.protobuf.GeneratedMes
     Builder builder = new Builder(parent);
     return builder;
   }
-
   /** Protobuf type {@code SubscriberRegisterPb} */
   public static final class Builder extends com.google.protobuf.GeneratedMessageV3.Builder<Builder>
       implements
@@ -494,7 +487,6 @@ public final class SubscriberRegisterPb extends com.google.protobuf.GeneratedMes
     }
 
     private java.lang.Object scope_ = "";
-
     /** <code>string scope = 1;</code> */
     public java.lang.String getScope() {
       java.lang.Object ref = scope_;
@@ -507,7 +499,6 @@ public final class SubscriberRegisterPb extends com.google.protobuf.GeneratedMes
         return (java.lang.String) ref;
       }
     }
-
     /** <code>string scope = 1;</code> */
     public com.google.protobuf.ByteString getScopeBytes() {
       java.lang.Object ref = scope_;
@@ -520,7 +511,6 @@ public final class SubscriberRegisterPb extends com.google.protobuf.GeneratedMes
         return (com.google.protobuf.ByteString) ref;
       }
     }
-
     /** <code>string scope = 1;</code> */
     public Builder setScope(java.lang.String value) {
       if (value == null) {
@@ -531,7 +521,6 @@ public final class SubscriberRegisterPb extends com.google.protobuf.GeneratedMes
       onChanged();
       return this;
     }
-
     /** <code>string scope = 1;</code> */
     public Builder clearScope() {
 
@@ -539,7 +528,6 @@ public final class SubscriberRegisterPb extends com.google.protobuf.GeneratedMes
       onChanged();
       return this;
     }
-
     /** <code>string scope = 1;</code> */
     public Builder setScopeBytes(com.google.protobuf.ByteString value) {
       if (value == null) {
@@ -558,12 +546,10 @@ public final class SubscriberRegisterPb extends com.google.protobuf.GeneratedMes
             com.alipay.sofa.registry.common.model.client.pb.BaseRegisterPb.Builder,
             com.alipay.sofa.registry.common.model.client.pb.BaseRegisterPbOrBuilder>
         baseRegisterBuilder_;
-
     /** <code>.BaseRegisterPb baseRegister = 2;</code> */
     public boolean hasBaseRegister() {
       return baseRegisterBuilder_ != null || baseRegister_ != null;
     }
-
     /** <code>.BaseRegisterPb baseRegister = 2;</code> */
     public com.alipay.sofa.registry.common.model.client.pb.BaseRegisterPb getBaseRegister() {
       if (baseRegisterBuilder_ == null) {
@@ -574,7 +560,6 @@ public final class SubscriberRegisterPb extends com.google.protobuf.GeneratedMes
         return baseRegisterBuilder_.getMessage();
       }
     }
-
     /** <code>.BaseRegisterPb baseRegister = 2;</code> */
     public Builder setBaseRegister(
         com.alipay.sofa.registry.common.model.client.pb.BaseRegisterPb value) {
@@ -590,7 +575,6 @@ public final class SubscriberRegisterPb extends com.google.protobuf.GeneratedMes
 
       return this;
     }
-
     /** <code>.BaseRegisterPb baseRegister = 2;</code> */
     public Builder setBaseRegister(
         com.alipay.sofa.registry.common.model.client.pb.BaseRegisterPb.Builder builderForValue) {
@@ -603,7 +587,6 @@ public final class SubscriberRegisterPb extends com.google.protobuf.GeneratedMes
 
       return this;
     }
-
     /** <code>.BaseRegisterPb baseRegister = 2;</code> */
     public Builder mergeBaseRegister(
         com.alipay.sofa.registry.common.model.client.pb.BaseRegisterPb value) {
@@ -624,7 +607,6 @@ public final class SubscriberRegisterPb extends com.google.protobuf.GeneratedMes
 
       return this;
     }
-
     /** <code>.BaseRegisterPb baseRegister = 2;</code> */
     public Builder clearBaseRegister() {
       if (baseRegisterBuilder_ == null) {
@@ -637,7 +619,6 @@ public final class SubscriberRegisterPb extends com.google.protobuf.GeneratedMes
 
       return this;
     }
-
     /** <code>.BaseRegisterPb baseRegister = 2;</code> */
     public com.alipay.sofa.registry.common.model.client.pb.BaseRegisterPb.Builder
         getBaseRegisterBuilder() {
@@ -645,7 +626,6 @@ public final class SubscriberRegisterPb extends com.google.protobuf.GeneratedMes
       onChanged();
       return getBaseRegisterFieldBuilder().getBuilder();
     }
-
     /** <code>.BaseRegisterPb baseRegister = 2;</code> */
     public com.alipay.sofa.registry.common.model.client.pb.BaseRegisterPbOrBuilder
         getBaseRegisterOrBuilder() {
@@ -657,7 +637,6 @@ public final class SubscriberRegisterPb extends com.google.protobuf.GeneratedMes
             : baseRegister_;
       }
     }
-
     /** <code>.BaseRegisterPb baseRegister = 2;</code> */
     private com.google.protobuf.SingleFieldBuilderV3<
             com.alipay.sofa.registry.common.model.client.pb.BaseRegisterPb,

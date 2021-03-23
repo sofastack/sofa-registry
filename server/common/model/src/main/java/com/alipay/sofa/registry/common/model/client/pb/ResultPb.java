@@ -22,7 +22,6 @@ public final class ResultPb extends com.google.protobuf.GeneratedMessageV3
     // @@protoc_insertion_point(message_implements:ResultPb)
     ResultPbOrBuilder {
   private static final long serialVersionUID = 0L;
-
   // Use ResultPb.newBuilder() to construct.
   private ResultPb(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
     super(builder);
@@ -104,7 +103,6 @@ public final class ResultPb extends com.google.protobuf.GeneratedMessageV3
 
   public static final int SUCCESS_FIELD_NUMBER = 1;
   private boolean success_;
-
   /** <code>bool success = 1;</code> */
   public boolean getSuccess() {
     return success_;
@@ -112,7 +110,6 @@ public final class ResultPb extends com.google.protobuf.GeneratedMessageV3
 
   public static final int MESSAGE_FIELD_NUMBER = 2;
   private volatile java.lang.Object message_;
-
   /** <code>string message = 2;</code> */
   public java.lang.String getMessage() {
     java.lang.Object ref = message_;
@@ -125,7 +122,6 @@ public final class ResultPb extends com.google.protobuf.GeneratedMessageV3
       return s;
     }
   }
-
   /** <code>string message = 2;</code> */
   public com.google.protobuf.ByteString getMessageBytes() {
     java.lang.Object ref = message_;
@@ -304,7 +300,6 @@ public final class ResultPb extends com.google.protobuf.GeneratedMessageV3
     Builder builder = new Builder(parent);
     return builder;
   }
-
   /** Protobuf type {@code ResultPb} */
   public static final class Builder extends com.google.protobuf.GeneratedMessageV3.Builder<Builder>
       implements
@@ -448,12 +443,10 @@ public final class ResultPb extends com.google.protobuf.GeneratedMessageV3
     }
 
     private boolean success_;
-
     /** <code>bool success = 1;</code> */
     public boolean getSuccess() {
       return success_;
     }
-
     /** <code>bool success = 1;</code> */
     public Builder setSuccess(boolean value) {
 
@@ -461,7 +454,6 @@ public final class ResultPb extends com.google.protobuf.GeneratedMessageV3
       onChanged();
       return this;
     }
-
     /** <code>bool success = 1;</code> */
     public Builder clearSuccess() {
 
@@ -471,7 +463,6 @@ public final class ResultPb extends com.google.protobuf.GeneratedMessageV3
     }
 
     private java.lang.Object message_ = "";
-
     /** <code>string message = 2;</code> */
     public java.lang.String getMessage() {
       java.lang.Object ref = message_;
@@ -484,7 +475,6 @@ public final class ResultPb extends com.google.protobuf.GeneratedMessageV3
         return (java.lang.String) ref;
       }
     }
-
     /** <code>string message = 2;</code> */
     public com.google.protobuf.ByteString getMessageBytes() {
       java.lang.Object ref = message_;
@@ -497,7 +487,6 @@ public final class ResultPb extends com.google.protobuf.GeneratedMessageV3
         return (com.google.protobuf.ByteString) ref;
       }
     }
-
     /** <code>string message = 2;</code> */
     public Builder setMessage(java.lang.String value) {
       if (value == null) {
@@ -508,7 +497,6 @@ public final class ResultPb extends com.google.protobuf.GeneratedMessageV3
       onChanged();
       return this;
     }
-
     /** <code>string message = 2;</code> */
     public Builder clearMessage() {
 
@@ -516,7 +504,6 @@ public final class ResultPb extends com.google.protobuf.GeneratedMessageV3
       onChanged();
       return this;
     }
-
     /** <code>string message = 2;</code> */
     public Builder setMessageBytes(com.google.protobuf.ByteString value) {
       if (value == null) {

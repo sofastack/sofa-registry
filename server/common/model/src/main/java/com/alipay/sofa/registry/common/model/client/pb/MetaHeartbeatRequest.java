@@ -22,7 +22,6 @@ public final class MetaHeartbeatRequest extends com.google.protobuf.GeneratedMes
     // @@protoc_insertion_point(message_implements:MetaHeartbeatRequest)
     MetaHeartbeatRequestOrBuilder {
   private static final long serialVersionUID = 0L;
-
   // Use MetaHeartbeatRequest.newBuilder() to construct.
   private MetaHeartbeatRequest(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
     super(builder);
@@ -104,22 +103,18 @@ public final class MetaHeartbeatRequest extends com.google.protobuf.GeneratedMes
 
   public static final int REVISIONS_FIELD_NUMBER = 1;
   private com.google.protobuf.LazyStringList revisions_;
-
   /** <code>repeated string revisions = 1;</code> */
   public com.google.protobuf.ProtocolStringList getRevisionsList() {
     return revisions_;
   }
-
   /** <code>repeated string revisions = 1;</code> */
   public int getRevisionsCount() {
     return revisions_.size();
   }
-
   /** <code>repeated string revisions = 1;</code> */
   public java.lang.String getRevisions(int index) {
     return revisions_.get(index);
   }
-
   /** <code>repeated string revisions = 1;</code> */
   public com.google.protobuf.ByteString getRevisionsBytes(int index) {
     return revisions_.getByteString(index);
@@ -289,7 +284,6 @@ public final class MetaHeartbeatRequest extends com.google.protobuf.GeneratedMes
     Builder builder = new Builder(parent);
     return builder;
   }
-
   /** Protobuf type {@code MetaHeartbeatRequest} */
   public static final class Builder extends com.google.protobuf.GeneratedMessageV3.Builder<Builder>
       implements
@@ -455,27 +449,22 @@ public final class MetaHeartbeatRequest extends com.google.protobuf.GeneratedMes
         bitField0_ |= 0x00000001;
       }
     }
-
     /** <code>repeated string revisions = 1;</code> */
     public com.google.protobuf.ProtocolStringList getRevisionsList() {
       return revisions_.getUnmodifiableView();
     }
-
     /** <code>repeated string revisions = 1;</code> */
     public int getRevisionsCount() {
       return revisions_.size();
     }
-
     /** <code>repeated string revisions = 1;</code> */
     public java.lang.String getRevisions(int index) {
       return revisions_.get(index);
     }
-
     /** <code>repeated string revisions = 1;</code> */
     public com.google.protobuf.ByteString getRevisionsBytes(int index) {
       return revisions_.getByteString(index);
     }
-
     /** <code>repeated string revisions = 1;</code> */
     public Builder setRevisions(int index, java.lang.String value) {
       if (value == null) {
@@ -486,7 +475,6 @@ public final class MetaHeartbeatRequest extends com.google.protobuf.GeneratedMes
       onChanged();
       return this;
     }
-
     /** <code>repeated string revisions = 1;</code> */
     public Builder addRevisions(java.lang.String value) {
       if (value == null) {
@@ -497,7 +485,6 @@ public final class MetaHeartbeatRequest extends com.google.protobuf.GeneratedMes
       onChanged();
       return this;
     }
-
     /** <code>repeated string revisions = 1;</code> */
     public Builder addAllRevisions(java.lang.Iterable<java.lang.String> values) {
       ensureRevisionsIsMutable();
@@ -505,7 +492,6 @@ public final class MetaHeartbeatRequest extends com.google.protobuf.GeneratedMes
       onChanged();
       return this;
     }
-
     /** <code>repeated string revisions = 1;</code> */
     public Builder clearRevisions() {
       revisions_ = com.google.protobuf.LazyStringArrayList.EMPTY;
@@ -513,7 +499,6 @@ public final class MetaHeartbeatRequest extends com.google.protobuf.GeneratedMes
       onChanged();
       return this;
     }
-
     /** <code>repeated string revisions = 1;</code> */
     public Builder addRevisionsBytes(com.google.protobuf.ByteString value) {
       if (value == null) {
