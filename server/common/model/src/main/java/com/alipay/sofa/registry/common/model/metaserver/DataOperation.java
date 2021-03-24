@@ -14,10 +14,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alipay.sofa.registry.server.meta.bootstrap.handler;
+package com.alipay.sofa.registry.common.model.metaserver;
 
 /**
- * @author chen.zhu
- *     <p>Mar 11, 2021
+ * @author shangyu.wh
+ * @version $Id: DataOperator.java, v 0.1 2018-04-17 21:03 shangyu.wh Exp $
  */
-public interface SessionServerHandler {}
+public enum DataOperation {
+  ADD,
+  REMOVE,
+  UPDATE,
+  QUERY
+}

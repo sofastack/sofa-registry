@@ -14,10 +14,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alipay.sofa.registry.server.meta.bootstrap.handler;
+package com.alipay.sofa.registry.server.meta.lease.filter;
+
+import com.alipay.sofa.registry.common.model.Node;
+import com.alipay.sofa.registry.server.meta.lease.LeaseFilter;
 
 /**
  * @author chen.zhu
- *     <p>Mar 11, 2021
+ *     <p>Mar 18, 2021
  */
-public interface MetaServerHandler {}
+public interface RegistryBlacklistManager extends LeaseFilter<Node> {
+
+  void addToBlacklist(String ip);
+
+  void removeFromBlacklist(String ip);
+}

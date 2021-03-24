@@ -20,7 +20,7 @@ import static org.mockito.Matchers.*;
 import static org.mockito.Mockito.*;
 
 import com.alipay.sofa.registry.common.model.constants.ValueConstants;
-import com.alipay.sofa.registry.common.model.metaserver.DataOperator;
+import com.alipay.sofa.registry.common.model.metaserver.DataOperation;
 import com.alipay.sofa.registry.common.model.metaserver.ProvideDataChangeEvent;
 import com.alipay.sofa.registry.common.model.metaserver.cluster.VersionedList;
 import com.alipay.sofa.registry.common.model.metaserver.nodes.SessionNode;
@@ -96,7 +96,7 @@ public class DefaultSessionServerServiceTest extends AbstractMetaServerTest {
                     new SessionNode(randomURL(randomIp()), getDc()))));
     notifier.notifyProvideDataChange(
         new ProvideDataChangeEvent(
-            ValueConstants.BLACK_LIST_DATA_ID, System.currentTimeMillis(), DataOperator.ADD));
+            ValueConstants.BLACK_LIST_DATA_ID, System.currentTimeMillis(), DataOperation.ADD));
     Thread.sleep(100);
     verify(rpcClient, atLeast(1)).sendCallback(any(), any(), any(), anyInt());
   }
@@ -138,7 +138,7 @@ public class DefaultSessionServerServiceTest extends AbstractMetaServerTest {
     notifier.setSessionNodeExchanger(otherNodeExchanger);
     notifier.notifyProvideDataChange(
         new ProvideDataChangeEvent(
-            ValueConstants.BLACK_LIST_DATA_ID, System.currentTimeMillis(), DataOperator.ADD));
+            ValueConstants.BLACK_LIST_DATA_ID, System.currentTimeMillis(), DataOperation.ADD));
     Thread.sleep(200);
   }
 }

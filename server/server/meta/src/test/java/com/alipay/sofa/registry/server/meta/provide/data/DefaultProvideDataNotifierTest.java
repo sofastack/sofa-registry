@@ -20,7 +20,7 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.*;
 
 import com.alipay.sofa.registry.common.model.Node;
-import com.alipay.sofa.registry.common.model.metaserver.DataOperator;
+import com.alipay.sofa.registry.common.model.metaserver.DataOperation;
 import com.alipay.sofa.registry.common.model.metaserver.ProvideDataChangeEvent;
 import com.alipay.sofa.registry.server.meta.remoting.data.DefaultDataServerService;
 import com.alipay.sofa.registry.server.meta.remoting.session.DefaultSessionServerService;
@@ -52,7 +52,7 @@ public class DefaultProvideDataNotifierTest {
         new ProvideDataChangeEvent(
             "message",
             System.currentTimeMillis(),
-            DataOperator.ADD,
+            DataOperation.ADD,
             Sets.newHashSet(Node.NodeType.DATA)));
     verify(defaultDataServerService, times(1)).notifyProvideDataChange(any());
     verify(defaultSessionServerService, never()).notifyProvideDataChange(any());
@@ -61,7 +61,7 @@ public class DefaultProvideDataNotifierTest {
         new ProvideDataChangeEvent(
             "message",
             System.currentTimeMillis(),
-            DataOperator.ADD,
+            DataOperation.ADD,
             Sets.newHashSet(Node.NodeType.SESSION)));
     verify(defaultDataServerService, times(1)).notifyProvideDataChange(any());
     verify(defaultSessionServerService, times(1)).notifyProvideDataChange(any());
@@ -70,7 +70,7 @@ public class DefaultProvideDataNotifierTest {
         new ProvideDataChangeEvent(
             "message",
             System.currentTimeMillis(),
-            DataOperator.ADD,
+            DataOperation.ADD,
             Sets.newHashSet(Node.NodeType.SESSION, Node.NodeType.DATA)));
     verify(defaultDataServerService, times(2)).notifyProvideDataChange(any());
     verify(defaultSessionServerService, times(2)).notifyProvideDataChange(any());

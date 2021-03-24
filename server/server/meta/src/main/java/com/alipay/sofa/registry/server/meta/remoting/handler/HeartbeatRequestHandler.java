@@ -36,8 +36,6 @@ import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.remoting.Channel;
 import com.alipay.sofa.registry.server.meta.MetaLeaderService;
 import com.alipay.sofa.registry.server.meta.bootstrap.config.NodeConfig;
-import com.alipay.sofa.registry.server.meta.bootstrap.handler.DataServerHandler;
-import com.alipay.sofa.registry.server.meta.bootstrap.handler.SessionServerHandler;
 import com.alipay.sofa.registry.server.meta.metaserver.impl.DefaultCurrentDcMetaServer;
 import com.alipay.sofa.registry.server.meta.monitor.data.DataMessageListener;
 import com.alipay.sofa.registry.server.meta.monitor.heartbeat.HeartbeatListener;
@@ -58,8 +56,7 @@ import org.springframework.stereotype.Component;
  * @version $Id: RenewNodesRequestHandler.java, v 0.1 2018-03-30 19:58 shangyu.wh Exp $
  */
 @Component
-public class HeartbeatRequestHandler extends BaseMetaServerHandler<HeartbeatRequest<Node>>
-    implements SessionServerHandler, DataServerHandler {
+public class HeartbeatRequestHandler extends BaseMetaServerHandler<HeartbeatRequest<Node>> {
 
   private static final Logger logger = LoggerFactory.getLogger(HeartbeatRequestHandler.class);
 

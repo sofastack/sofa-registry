@@ -26,11 +26,21 @@ import java.util.Set;
  * @version v 0.1 2020-11-28 15:19 yuzhi.lyz Exp $
  */
 public interface MetaServerService {
+  /** Start renewer. */
   void startRenewer(int intervalMs);
+
+  /** Stop renewer. */
+  void stopRenewer();
 
   /** update data server expireTime */
   void renewNode();
 
+  /**
+   * Handle slot table change boolean.
+   *
+   * @param event the event
+   * @return the boolean
+   */
   boolean handleSlotTableChange(SlotTableChangeEvent event);
 
   /**
@@ -41,16 +51,32 @@ public interface MetaServerService {
    */
   ProvideData fetchData(String dataInfoId);
 
+  /** Add self to meta blacklist. */
+  void addSelfToMetaBlacklist();
+
+  /** Remove self from meta blacklist. */
+  void removeSelfFromMetaBlacklist();
+
   /**
    * @param zonename zone is null, get all session
    * @return
    */
   public List<String> getSessionServerList(String zonename);
 
+  /**
+   * Gets get data server list.
+   *
+   * @return the get data server list
+   */
   public Set<String> getDataServerList();
 
   public String getMetaServerLeader();
 
+  /**
+   * Gets get session server epoch.
+   *
+   * @return the get session server epoch
+   */
   long getSessionServerEpoch();
 
   /**
