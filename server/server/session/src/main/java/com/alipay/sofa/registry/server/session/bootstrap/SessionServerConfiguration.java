@@ -88,6 +88,7 @@ import com.alipay.sofa.registry.server.shared.remoting.AbstractClientHandler;
 import com.alipay.sofa.registry.server.shared.remoting.AbstractServerHandler;
 import com.alipay.sofa.registry.server.shared.remoting.SlotTableChangeEventHandler;
 import com.alipay.sofa.registry.server.shared.resource.MetricsResource;
+import com.alipay.sofa.registry.server.shared.resource.RegistryOpsResource;
 import com.alipay.sofa.registry.server.shared.resource.SlotGenericResource;
 import com.alipay.sofa.registry.store.api.driver.RepositoryConfig;
 import com.alipay.sofa.registry.store.api.driver.RepositoryManager;
@@ -379,6 +380,11 @@ public class SessionServerConfiguration {
     @Bean
     public MetricsResource metricsResource() {
       return new MetricsResource();
+    }
+
+    @Bean
+    public RegistryOpsResource opsResource() {
+      return new RegistryOpsResource();
     }
   }
 

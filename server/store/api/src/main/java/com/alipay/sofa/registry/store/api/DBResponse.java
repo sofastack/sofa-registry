@@ -26,7 +26,7 @@ import java.io.Serializable;
  */
 public class DBResponse implements Serializable {
 
-  private final Object entity;
+  private final String entity;
 
   private final OperationStatus operationStatus;
 
@@ -34,7 +34,7 @@ public class DBResponse implements Serializable {
    * @param entity
    * @param operationStatus
    */
-  public DBResponse(Object entity, OperationStatus operationStatus) {
+  public DBResponse(String entity, OperationStatus operationStatus) {
     this.entity = entity;
     this.operationStatus = operationStatus;
   }
@@ -54,7 +54,7 @@ public class DBResponse implements Serializable {
    * @param entity
    * @return
    */
-  public static DBResponseBuilder ok(Object entity) {
+  public static DBResponseBuilder ok(String entity) {
     DBResponseBuilder b = ok();
     b.entity(entity);
     return b;
@@ -86,7 +86,7 @@ public class DBResponse implements Serializable {
    *
    * @return property value of entity
    */
-  public Object getEntity() {
+  public String getEntity() {
     return entity;
   }
 
@@ -114,7 +114,7 @@ public class DBResponse implements Serializable {
       return instance;
     }
 
-    private Object entity;
+    private String entity;
 
     private OperationStatus operationStatus;
 
@@ -154,7 +154,7 @@ public class DBResponse implements Serializable {
      * @param entity
      * @return
      */
-    public DBResponseBuilder entity(Object entity) {
+    public DBResponseBuilder entity(String entity) {
       this.entity = entity;
       return this;
     }

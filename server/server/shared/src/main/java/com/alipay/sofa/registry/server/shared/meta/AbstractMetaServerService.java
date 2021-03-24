@@ -17,9 +17,11 @@
 package com.alipay.sofa.registry.server.shared.meta;
 
 import com.alipay.sofa.registry.common.model.GenericResponse;
+import com.alipay.sofa.registry.common.model.metaserver.DataOperation;
 import com.alipay.sofa.registry.common.model.metaserver.FetchProvideDataRequest;
 import com.alipay.sofa.registry.common.model.metaserver.ProvideData;
 import com.alipay.sofa.registry.common.model.metaserver.SlotTableChangeEvent;
+import com.alipay.sofa.registry.common.model.metaserver.blacklist.RegistryBlacklistRequest;
 import com.alipay.sofa.registry.common.model.metaserver.inter.heartbeat.BaseHeartBeatResponse;
 import com.alipay.sofa.registry.common.model.metaserver.inter.heartbeat.HeartbeatRequest;
 import com.alipay.sofa.registry.common.model.metaserver.nodes.SessionNode;
@@ -27,6 +29,7 @@ import com.alipay.sofa.registry.common.model.store.URL;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.remoting.exchange.message.Response;
+import com.alipay.sofa.registry.server.shared.env.ServerEnv;
 import com.alipay.sofa.registry.util.ConcurrentUtils;
 import com.alipay.sofa.registry.util.WakeUpLoopRunnable;
 import java.util.ArrayList;
@@ -66,6 +69,13 @@ public abstract class AbstractMetaServerService<T extends BaseHeartBeatResponse>
   }
 
   @Override
+  public void stopRenewer() {
+    if (renewer != null) {
+      renewer.close();
+    }
+  }
+
+  @Override
   public boolean handleSlotTableChange(SlotTableChangeEvent event) {
     long epoch = event.getSlotTableEpoch();
     long currentEpoch = getCurrentSlotTableEpoch();
@@ -83,6 +93,16 @@ public abstract class AbstractMetaServerService<T extends BaseHeartBeatResponse>
       renewer.wakeup();
     }
     return true;
+  }
+
+  @Override
+  public void addSelfToMetaBlacklist() {
+    metaServerManager.sendRequest(new RegistryBlacklistRequest(DataOperation.ADD, ServerEnv.IP));
+  }
+
+  @Override
+  public void removeSelfFromMetaBlacklist() {
+    metaServerManager.sendRequest(new RegistryBlacklistRequest(DataOperation.REMOVE, ServerEnv.IP));
   }
 
   private final class Renewer extends WakeUpLoopRunnable {

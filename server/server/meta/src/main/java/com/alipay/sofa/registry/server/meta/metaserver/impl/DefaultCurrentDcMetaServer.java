@@ -125,9 +125,4 @@ public class DefaultCurrentDcMetaServer extends LocalMetaServer implements Curre
     this.slotManager = slotManager;
     return this;
   }
-
-  @Override
-  public VersionedList<MetaNode> getClusterMeta() {
-    return new VersionedList<>(getEpoch(), getClusterMembers());
-  }
 }

@@ -14,15 +14,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alipay.sofa.registry.common.model.metaserver;
+package com.alipay.sofa.registry.server.meta.lease;
+
+import com.alipay.sofa.registry.common.model.Node;
+import com.alipay.sofa.registry.common.model.metaserver.Lease;
 
 /**
- * @author shangyu.wh
- * @version $Id: DataOperator.java, v 0.1 2018-04-17 21:03 shangyu.wh Exp $
+ * @author chen.zhu
+ *     <p>Mar 18, 2021
  */
-public enum DataOperator {
-  ADD,
-  REMOVE,
-  UPDATE,
-  QUERY
+public interface LeaseFilter<T extends Node> {
+
+  boolean allowSelect(Lease<T> lease);
 }

@@ -24,8 +24,18 @@ import com.alipay.sofa.registry.server.meta.bootstrap.config.MetaServerConfig;
 import com.alipay.sofa.registry.server.meta.bootstrap.config.MetaServerConfigBean;
 import com.alipay.sofa.registry.server.meta.bootstrap.config.NodeConfig;
 import com.alipay.sofa.registry.server.meta.bootstrap.config.NodeConfigBeanProperty;
+import com.alipay.sofa.registry.server.meta.remoting.DataNodeExchanger;
+import com.alipay.sofa.registry.server.meta.remoting.MetaServerExchanger;
+import com.alipay.sofa.registry.server.meta.remoting.SessionNodeExchanger;
+import com.alipay.sofa.registry.server.meta.remoting.connection.DataConnectionHandler;
+import com.alipay.sofa.registry.server.meta.remoting.connection.MetaConnectionHandler;
+import com.alipay.sofa.registry.server.meta.remoting.connection.SessionConnectionHandler;
+import com.alipay.sofa.registry.server.meta.remoting.handler.FetchProvideDataRequestHandler;
+import com.alipay.sofa.registry.server.meta.remoting.handler.HeartbeatRequestHandler;
+import com.alipay.sofa.registry.server.meta.remoting.handler.RegistryBlacklistHandler;
 import com.alipay.sofa.registry.server.meta.resource.*;
 import com.alipay.sofa.registry.server.meta.resource.filter.LeaderAwareFilter;
+import com.alipay.sofa.registry.server.shared.remoting.AbstractServerHandler;
 import com.alipay.sofa.registry.server.shared.resource.MetricsResource;
 import com.alipay.sofa.registry.server.shared.resource.SlotGenericResource;
 import com.alipay.sofa.registry.store.api.driver.RepositoryConfig;
@@ -35,6 +45,8 @@ import com.alipay.sofa.registry.util.DefaultExecutorFactory;
 import com.alipay.sofa.registry.util.NamedThreadFactory;
 import com.alipay.sofa.registry.util.OsUtils;
 import com.alipay.sofa.registry.util.PropertySplitter;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.concurrent.*;
 import org.glassfish.jersey.jackson.JacksonFeature;
 import org.glassfish.jersey.server.ResourceConfig;
@@ -118,6 +130,78 @@ public class MetaServerConfiguration {
     public JerseyExchange jerseyExchange() {
       return new JerseyExchange();
     }
+
+    @Bean(name = "sessionServerHandlers")
+    public Collection<AbstractServerHandler> sessionServerHandlers() {
+      Collection<AbstractServerHandler> list = new ArrayList<>();
+      list.add(sessionConnectionHandler());
+      list.add(heartbeatRequestHandler());
+      list.add(fetchProvideDataRequestHandler());
+      list.add(registryBlacklistHandler());
+      return list;
+    }
+
+    @Bean(name = "dataServerHandlers")
+    public Collection<AbstractServerHandler> dataServerHandlers() {
+      Collection<AbstractServerHandler> list = new ArrayList<>();
+      list.add(dataConnectionHandler());
+      list.add(heartbeatRequestHandler());
+      list.add(fetchProvideDataRequestHandler());
+      list.add(registryBlacklistHandler());
+      return list;
+    }
+
+    @Bean(name = "metaServerHandlers")
+    public Collection<AbstractServerHandler> metaServerHandlers() {
+      Collection<AbstractServerHandler> list = new ArrayList<>();
+      list.add(metaConnectionHandler());
+      return list;
+    }
+
+    @Bean
+    public SessionConnectionHandler sessionConnectionHandler() {
+      return new SessionConnectionHandler();
+    }
+
+    @Bean
+    public DataConnectionHandler dataConnectionHandler() {
+      return new DataConnectionHandler();
+    }
+
+    @Bean
+    public MetaConnectionHandler metaConnectionHandler() {
+      return new MetaConnectionHandler();
+    }
+
+    @Bean
+    public HeartbeatRequestHandler heartbeatRequestHandler() {
+      return new HeartbeatRequestHandler();
+    }
+
+    @Bean
+    public FetchProvideDataRequestHandler fetchProvideDataRequestHandler() {
+      return new FetchProvideDataRequestHandler();
+    }
+
+    @Bean
+    public SessionNodeExchanger sessionNodeExchanger() {
+      return new SessionNodeExchanger();
+    }
+
+    @Bean
+    public DataNodeExchanger dataNodeExchanger() {
+      return new DataNodeExchanger();
+    }
+
+    @Bean
+    public MetaServerExchanger metaServerExchanger() {
+      return new MetaServerExchanger();
+    }
+
+    @Bean
+    public RegistryBlacklistHandler registryBlacklistHandler() {
+      return new RegistryBlacklistHandler();
+    }
   }
 
   @Configuration
@@ -184,6 +268,11 @@ public class MetaServerConfiguration {
     @Bean
     public MetricsResource metricsResource() {
       return new MetricsResource();
+    }
+
+    @Bean
+    public RegistryCoreOpsResource registryCoreOpsResource() {
+      return new RegistryCoreOpsResource();
     }
   }
 

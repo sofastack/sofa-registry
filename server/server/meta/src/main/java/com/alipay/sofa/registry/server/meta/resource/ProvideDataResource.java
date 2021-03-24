@@ -17,7 +17,7 @@
 package com.alipay.sofa.registry.server.meta.resource;
 
 import com.alipay.sofa.registry.common.model.console.PersistenceData;
-import com.alipay.sofa.registry.common.model.metaserver.DataOperator;
+import com.alipay.sofa.registry.common.model.metaserver.DataOperation;
 import com.alipay.sofa.registry.common.model.metaserver.ProvideDataChangeEvent;
 import com.alipay.sofa.registry.common.model.store.DataInfo;
 import com.alipay.sofa.registry.core.model.Result;
@@ -71,7 +71,7 @@ public class ProvideDataResource {
       throw new RuntimeException("Put Persistence Data " + data + " to DB error!", e);
     }
 
-    fireDataChangeNotify(data.getVersion(), dataInfoId, DataOperator.ADD);
+    fireDataChangeNotify(data.getVersion(), dataInfoId, DataOperation.ADD);
 
     Result result = new Result();
     result.setSuccess(true);
@@ -97,17 +97,17 @@ public class ProvideDataResource {
       throw new RuntimeException("Remove Persistence Data " + data + " from DB error!");
     }
 
-    fireDataChangeNotify(data.getVersion(), dataInfoId, DataOperator.REMOVE);
+    fireDataChangeNotify(data.getVersion(), dataInfoId, DataOperation.REMOVE);
 
     Result result = new Result();
     result.setSuccess(true);
     return result;
   }
 
-  private void fireDataChangeNotify(Long version, String dataInfoId, DataOperator dataOperator) {
+  private void fireDataChangeNotify(Long version, String dataInfoId, DataOperation dataOperation) {
 
     ProvideDataChangeEvent provideDataChangeEvent =
-        new ProvideDataChangeEvent(dataInfoId, version, dataOperator);
+        new ProvideDataChangeEvent(dataInfoId, version, dataOperation);
 
     if (taskLogger.isInfoEnabled()) {
       taskLogger.info(

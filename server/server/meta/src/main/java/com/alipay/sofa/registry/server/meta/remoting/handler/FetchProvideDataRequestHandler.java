@@ -23,14 +23,11 @@ import com.alipay.sofa.registry.common.model.metaserver.ProvideData;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.remoting.Channel;
-import com.alipay.sofa.registry.server.meta.bootstrap.handler.DataServerHandler;
-import com.alipay.sofa.registry.server.meta.bootstrap.handler.SessionServerHandler;
 import com.alipay.sofa.registry.store.api.DBResponse;
 import com.alipay.sofa.registry.store.api.OperationStatus;
 import com.alipay.sofa.registry.store.api.meta.ProvideDataRepository;
 import com.alipay.sofa.registry.util.JsonUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
 
 /**
  * Handle session node's query request, such as get ProvideData by dataInfoId
@@ -38,9 +35,7 @@ import org.springframework.stereotype.Component;
  * @author shangyu.wh
  * @version $Id: GetNodesRequestHandler.java, v 0.1 2018-03-02 15:12 shangyu.wh Exp $
  */
-@Component
-public class FetchProvideDataRequestHandler extends BaseMetaServerHandler<FetchProvideDataRequest>
-    implements SessionServerHandler, DataServerHandler {
+public class FetchProvideDataRequestHandler extends BaseMetaServerHandler<FetchProvideDataRequest> {
 
   private static final Logger DB_LOGGER =
       LoggerFactory.getLogger(FetchProvideDataRequestHandler.class, "[DBService]");

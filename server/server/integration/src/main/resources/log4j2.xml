@@ -526,6 +526,7 @@
         <root level="${LOG_LEVEL}">
             <appender-ref ref="COMMON-DEFAULT-APPENDER"/>
             <appender-ref ref="COMMON-ERROR-APPENDER"/>
+            <appender-ref ref="STDOUT-APPENDER"/>
         </root>
     </loggers>
 </configuration>

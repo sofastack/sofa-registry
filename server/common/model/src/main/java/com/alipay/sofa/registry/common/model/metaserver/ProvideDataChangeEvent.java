@@ -31,7 +31,7 @@ public class ProvideDataChangeEvent implements Serializable {
 
   private Long version;
 
-  private DataOperator dataOperator;
+  private DataOperation dataOperation;
 
   private Set<NodeType> nodeTypes;
 
@@ -40,17 +40,17 @@ public class ProvideDataChangeEvent implements Serializable {
    *
    * @param dataInfoId
    * @param version
-   * @param dataOperator
+   * @param dataOperation
    */
-  public ProvideDataChangeEvent(String dataInfoId, Long version, DataOperator dataOperator) {
-    this(dataInfoId, version, dataOperator, Sets.newHashSet(NodeType.SESSION));
+  public ProvideDataChangeEvent(String dataInfoId, Long version, DataOperation dataOperation) {
+    this(dataInfoId, version, dataOperation, Sets.newHashSet(NodeType.SESSION));
   }
 
   public ProvideDataChangeEvent(
-      String dataInfoId, Long version, DataOperator dataOperator, Set<NodeType> nodeTypes) {
+      String dataInfoId, Long version, DataOperation dataOperation, Set<NodeType> nodeTypes) {
     this.dataInfoId = dataInfoId;
     this.version = version;
-    this.dataOperator = dataOperator;
+    this.dataOperation = dataOperation;
     this.nodeTypes = nodeTypes;
   }
 
@@ -95,17 +95,17 @@ public class ProvideDataChangeEvent implements Serializable {
    *
    * @return property value of dataOperator
    */
-  public DataOperator getDataOperator() {
-    return dataOperator;
+  public DataOperation getDataOperator() {
+    return dataOperation;
   }
 
   /**
    * Setter method for property <tt>dataOperator</tt>.
    *
-   * @param dataOperator value to be assigned to property dataOperator
+   * @param dataOperation value to be assigned to property dataOperator
    */
-  public void setDataOperator(DataOperator dataOperator) {
-    this.dataOperator = dataOperator;
+  public void setDataOperator(DataOperation dataOperation) {
+    this.dataOperation = dataOperation;
   }
 
   /**
@@ -131,7 +131,7 @@ public class ProvideDataChangeEvent implements Serializable {
     final StringBuilder sb = new StringBuilder("NotifyProvideDataChange{");
     sb.append("dataInfoId='").append(dataInfoId).append('\'');
     sb.append(", version=").append(version);
-    sb.append(", dataOperator=").append(dataOperator);
+    sb.append(", dataOperator=").append(dataOperation);
     sb.append(", nodeTypes=").append(nodeTypes);
     sb.append('}');
     return sb.toString();
