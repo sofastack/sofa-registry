@@ -29,13 +29,13 @@ import javax.ws.rs.core.MediaType;
  * @author chen.zhu
  *     <p>Jan 12, 2021
  */
-@Path("openapi/v1/slot")
+@Path("openapi/v1/slot/table")
 public class SlotGenericResource implements SlotTableRecorder {
 
   private AtomicReference<SlotTable> slotTableRef = new AtomicReference<>(SlotTable.INIT);
 
   @GET
-  @Path("/table")
+  @Path("/content")
   @Produces(MediaType.APPLICATION_JSON)
   public GenericResponse<SlotTable> slotTable() {
     SlotTable slotTable = slotTableRef.get();

@@ -29,8 +29,12 @@ import com.alipay.sofa.registry.exception.SofaRegistryRuntimeException;
 import com.alipay.sofa.registry.remoting.CallbackHandler;
 import com.alipay.sofa.registry.remoting.Channel;
 import com.alipay.sofa.registry.remoting.Client;
+import com.alipay.sofa.registry.server.meta.bootstrap.config.NodeConfig;
 import com.alipay.sofa.registry.server.meta.slot.balance.BalancePolicy;
 import com.alipay.sofa.registry.server.meta.slot.balance.NaiveBalancePolicy;
+import com.alipay.sofa.registry.store.api.DBResponse;
+import com.alipay.sofa.registry.store.api.OperationStatus;
+import com.alipay.sofa.registry.store.api.meta.ProvideDataRepository;
 import com.alipay.sofa.registry.util.DatumVersionUtil;
 import com.alipay.sofa.registry.util.JsonUtils;
 import com.alipay.sofa.registry.util.MathUtils;
@@ -47,11 +51,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BooleanSupplier;
+import org.apache.commons.lang.StringUtils;
 import org.assertj.core.util.Lists;
 import org.junit.Assert;
 import org.junit.Before;
@@ -66,6 +72,8 @@ public class AbstractMetaServerTest extends AbstractTest {
 
   protected MetaLeaderService metaLeaderService;
 
+  protected NodeConfig nodeConfig;
+
   @Rule public TestName name = new TestName();
 
   private BalancePolicy balancePolicy = new NaiveBalancePolicy();
@@ -73,6 +81,8 @@ public class AbstractMetaServerTest extends AbstractTest {
   @Before
   public void beforeAbstractMetaServerTest() {
     metaLeaderService = mock(MetaLeaderService.class);
+    nodeConfig = mock(NodeConfig.class);
+    when(nodeConfig.getLocalDataCenter()).thenReturn(getDc());
   }
 
   public static void setFinalStatic(Field field, Object newValue) throws Exception {
@@ -591,6 +601,31 @@ public class AbstractMetaServerTest extends AbstractTest {
     @Override
     public int compare(Node o1, Node o2) {
       return o1.getNodeUrl().getIpAddress().compareTo(o2.getNodeUrl().getIpAddress());
+    }
+  }
+
+  public static class InMemoryProvideDataRepo implements ProvideDataRepository {
+
+    private Map<String, String> localRepo = new ConcurrentHashMap<>();
+
+    @Override
+    public boolean put(String key, String value) {
+      return StringUtils.isNotEmpty(localRepo.put(key, value));
+    }
+
+    @Override
+    public DBResponse get(String key) {
+      String value = localRepo.get(key);
+      if (StringUtils.isNotEmpty(value)) {
+        return new DBResponse(value, OperationStatus.SUCCESS);
+      } else {
+        return new DBResponse(null, OperationStatus.NOTFOUND);
+      }
+    }
+
+    @Override
+    public boolean remove(String key) {
+      return StringUtils.isNotEmpty(localRepo.remove(key));
     }
   }
 }

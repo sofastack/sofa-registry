@@ -26,9 +26,7 @@ import com.alipay.sofa.registry.remoting.Server;
 import com.alipay.sofa.registry.remoting.bolt.exchange.BoltExchange;
 import com.alipay.sofa.registry.remoting.jersey.exchange.JerseyExchange;
 import com.alipay.sofa.registry.server.meta.bootstrap.config.MetaServerConfig;
-import com.alipay.sofa.registry.server.meta.bootstrap.handler.DataServerHandler;
-import com.alipay.sofa.registry.server.meta.bootstrap.handler.MetaServerHandler;
-import com.alipay.sofa.registry.server.meta.bootstrap.handler.SessionServerHandler;
+import com.alipay.sofa.registry.server.shared.remoting.AbstractServerHandler;
 import com.alipay.sofa.registry.store.api.elector.AbstractLeaderElector;
 import com.alipay.sofa.registry.store.api.elector.LeaderElector;
 import com.github.rholder.retry.Retryer;
@@ -37,11 +35,12 @@ import com.github.rholder.retry.StopStrategies;
 import com.github.rholder.retry.WaitStrategies;
 import com.google.common.base.Predicate;
 import java.lang.annotation.Annotation;
+import java.util.Collection;
 import java.util.Date;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
+import javax.annotation.Resource;
 import javax.ws.rs.Path;
 import javax.ws.rs.ext.Provider;
 import org.apache.commons.lang.StringUtils;
@@ -63,11 +62,14 @@ public class MetaServerBootstrap {
 
   @Autowired private JerseyExchange jerseyExchange;
 
-  @Autowired private List<SessionServerHandler> sessionServerHandlers;
+  @Resource(name = "sessionServerHandlers")
+  private Collection<AbstractServerHandler> sessionServerHandlers;
 
-  @Autowired private List<DataServerHandler> dataServerHandlers;
+  @Resource(name = "dataServerHandlers")
+  private Collection<AbstractServerHandler> dataServerHandlers;
 
-  @Autowired private List<MetaServerHandler> metaServerHandlers;
+  @Resource(name = "metaServerHandlers")
+  private Collection<AbstractServerHandler> metaServerHandlers;
 
   @Autowired private ResourceConfig jerseyResourceConfig;
 

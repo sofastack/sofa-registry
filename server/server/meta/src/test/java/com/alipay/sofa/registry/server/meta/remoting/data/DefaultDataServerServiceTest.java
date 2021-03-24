@@ -20,7 +20,7 @@ import static org.mockito.Mockito.*;
 
 import com.alipay.sofa.registry.common.model.Node;
 import com.alipay.sofa.registry.common.model.constants.ValueConstants;
-import com.alipay.sofa.registry.common.model.metaserver.DataOperator;
+import com.alipay.sofa.registry.common.model.metaserver.DataOperation;
 import com.alipay.sofa.registry.common.model.metaserver.ProvideDataChangeEvent;
 import com.alipay.sofa.registry.common.model.metaserver.cluster.VersionedList;
 import com.alipay.sofa.registry.common.model.metaserver.nodes.DataNode;
@@ -68,7 +68,7 @@ public class DefaultDataServerServiceTest extends AbstractMetaServerTest {
   public void testNotify() throws RequestException {
     notifier.notifyProvideDataChange(
         new ProvideDataChangeEvent(
-            ValueConstants.BLACK_LIST_DATA_ID, System.currentTimeMillis(), DataOperator.ADD));
+            ValueConstants.BLACK_LIST_DATA_ID, System.currentTimeMillis(), DataOperation.ADD));
     verify(dataServerManager, never()).getDataServerMetaInfo();
     verify(dataNodeExchanger, never()).request(any(Request.class));
   }
@@ -84,7 +84,7 @@ public class DefaultDataServerServiceTest extends AbstractMetaServerTest {
         .thenReturn(new VersionedList<>(DatumVersionUtil.nextId(), Lists.newArrayList()));
     notifier.notifyProvideDataChange(
         new ProvideDataChangeEvent(
-            ValueConstants.BLACK_LIST_DATA_ID, System.currentTimeMillis(), DataOperator.ADD));
+            ValueConstants.BLACK_LIST_DATA_ID, System.currentTimeMillis(), DataOperation.ADD));
     verify(dataServerManager, times(1)).getDataServerMetaInfo();
     verify(dataNodeExchanger, never()).request(any(Request.class));
   }
@@ -105,7 +105,7 @@ public class DefaultDataServerServiceTest extends AbstractMetaServerTest {
             });
     notifier.notifyProvideDataChange(
         new ProvideDataChangeEvent(
-            ValueConstants.BLACK_LIST_DATA_ID, System.currentTimeMillis(), DataOperator.ADD));
+            ValueConstants.BLACK_LIST_DATA_ID, System.currentTimeMillis(), DataOperation.ADD));
     verify(dataNodeExchanger, never()).request(any(Request.class));
   }
 
@@ -133,7 +133,7 @@ public class DefaultDataServerServiceTest extends AbstractMetaServerTest {
             });
     notifier.notifyProvideDataChange(
         new ProvideDataChangeEvent(
-            ValueConstants.BLACK_LIST_DATA_ID, System.currentTimeMillis(), DataOperator.ADD));
+            ValueConstants.BLACK_LIST_DATA_ID, System.currentTimeMillis(), DataOperation.ADD));
     Thread.sleep(50);
     verify(dataNodeExchanger, times(2)).request(any(Request.class));
   }
@@ -195,7 +195,7 @@ public class DefaultDataServerServiceTest extends AbstractMetaServerTest {
                     new DataNode(randomURL(randomIp()), getDc()))));
     notifier.notifyProvideDataChange(
         new ProvideDataChangeEvent(
-            ValueConstants.BLACK_LIST_DATA_ID, System.currentTimeMillis(), DataOperator.ADD));
+            ValueConstants.BLACK_LIST_DATA_ID, System.currentTimeMillis(), DataOperation.ADD));
     Thread.sleep(100);
     verify(rpcClient, atLeast(1)).sendCallback(any(), any(), any(), anyInt());
   }
@@ -237,7 +237,7 @@ public class DefaultDataServerServiceTest extends AbstractMetaServerTest {
     notifier.setDataNodeExchanger(otherNodeExchanger);
     notifier.notifyProvideDataChange(
         new ProvideDataChangeEvent(
-            ValueConstants.BLACK_LIST_DATA_ID, System.currentTimeMillis(), DataOperator.ADD));
+            ValueConstants.BLACK_LIST_DATA_ID, System.currentTimeMillis(), DataOperation.ADD));
     Thread.sleep(200);
   }
 }

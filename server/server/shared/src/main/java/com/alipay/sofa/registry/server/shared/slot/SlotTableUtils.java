@@ -41,6 +41,16 @@ public class SlotTableUtils {
     return leaderCounter;
   }
 
+  public static Map<String, Integer> getSlotTableFollowerCount(SlotTable slotTable) {
+    Map<String, Integer> followerCounter = Maps.newHashMap();
+    for (Slot slot : slotTable.getSlots()) {
+      for (String follower : slot.getFollowers()) {
+        incrCount(followerCounter, follower);
+      }
+    }
+    return followerCounter;
+  }
+
   public static Map<String, Integer> getSlotTableSlotCount(SlotTable slotTable) {
     Map<String, Integer> slotCounter = Maps.newHashMap();
     for (Map.Entry<Integer, Slot> entry : slotTable.getSlotMap().entrySet()) {

@@ -18,15 +18,23 @@ package com.alipay.sofa.registry.server.meta.resource;
 
 import com.alipay.sofa.registry.common.model.CommonResponse;
 import com.alipay.sofa.registry.common.model.GenericResponse;
+import com.alipay.sofa.registry.common.model.metaserver.nodes.DataNode;
 import com.alipay.sofa.registry.common.model.slot.SlotTable;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.server.meta.MetaLeaderService;
 import com.alipay.sofa.registry.server.meta.lease.data.DataServerManager;
+import com.alipay.sofa.registry.server.meta.monitor.SlotTableMonitor;
 import com.alipay.sofa.registry.server.meta.resource.filter.LeaderAwareRestController;
 import com.alipay.sofa.registry.server.meta.slot.SlotManager;
 import com.alipay.sofa.registry.server.meta.slot.arrange.ScheduledSlotArranger;
+import com.alipay.sofa.registry.server.meta.slot.balance.BalancePolicy;
+import com.alipay.sofa.registry.server.meta.slot.balance.NaiveBalancePolicy;
 import com.alipay.sofa.registry.server.meta.slot.tasks.BalanceTask;
+import com.alipay.sofa.registry.server.shared.slot.SlotTableUtils;
+import com.alipay.sofa.registry.util.MathUtils;
+import java.util.List;
+import java.util.Map;
 import javax.ws.rs.GET;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
@@ -44,6 +52,8 @@ public class SlotTableResource {
   private final Logger logger = LoggerFactory.getLogger(getClass());
 
   @Autowired private SlotManager slotManager;
+
+  @Autowired private SlotTableMonitor slotTableMonitor;
 
   @Autowired private DataServerManager dataServerManager;
 
@@ -138,6 +148,116 @@ public class SlotTableResource {
       return new GenericResponse<>().fillFailed(throwable.getMessage());
     } finally {
       logger.info("[getDataSlotStatuses] end");
+    }
+  }
+
+  @GET
+  @Path("/status")
+  @Produces(MediaType.APPLICATION_JSON)
+  @LeaderAwareRestController
+  public GenericResponse<Object> getSlotTableStatus() {
+    logger.info("[getSlotTableStatus] begin");
+    try {
+      boolean isSlotStable = slotTableMonitor.isStableTableStable();
+      SlotTable slotTable = slotManager.getSlotTable();
+      Map<String, Integer> leaderCounter = SlotTableUtils.getSlotTableLeaderCount(slotTable);
+      Map<String, Integer> followerCounter = SlotTableUtils.getSlotTableSlotCount(slotTable);
+      boolean isSlotBalanced =
+          isSlotTableBalanced(
+              leaderCounter,
+              followerCounter,
+              dataServerManager.getDataServerMetaInfo().getClusterMembers());
+      return new GenericResponse<>()
+          .fillSucceed(
+              new SlotTableStatusResponse(
+                  slotTable.getEpoch(),
+                  isSlotBalanced,
+                  isSlotStable,
+                  leaderCounter,
+                  followerCounter));
+    } catch (Throwable th) {
+      logger.error("[getSlotTableStatus]", th);
+      return new GenericResponse<>().fillFailed(th.getMessage());
+    } finally {
+      logger.info("[getSlotTableStatus] end");
+    }
+  }
+
+  public boolean isSlotTableBalanced(
+      Map<String, Integer> leaderCounter,
+      Map<String, Integer> followerCounter,
+      List<DataNode> dataNodes) {
+
+    BalancePolicy balancePolicy = new NaiveBalancePolicy();
+    int leaderTotal = slotManager.getSlotNums();
+    int leaderAverage = MathUtils.divideCeil(leaderTotal, dataNodes.size());
+    int leaderHighWaterMark = balancePolicy.getHighWaterMarkSlotLeaderNums(leaderAverage);
+    int leaderLowWaterMark = balancePolicy.getLowWaterMarkSlotLeaderNums(leaderAverage);
+
+    int followerTotal = slotManager.getSlotNums() * (slotManager.getSlotReplicaNums() - 1);
+    int followerAverage = MathUtils.divideCeil(followerTotal, dataNodes.size());
+    int followerHighWaterMark = balancePolicy.getHighWaterMarkSlotFollowerNums(followerAverage);
+    int followerLowWaterMark = balancePolicy.getLowWaterMarkSlotFollowerNums(followerAverage);
+
+    for (DataNode dataNode : dataNodes) {
+      String dataIp = dataNode.getIp();
+      if (leaderCounter.get(dataIp) == null) {
+        return false;
+      }
+      if (leaderCounter.get(dataIp) > leaderHighWaterMark) {
+        return false;
+      } else if (leaderCounter.get(dataIp) < leaderLowWaterMark) {
+        return false;
+      }
+
+      if (followerCounter.get(dataIp) > followerHighWaterMark) {
+        return false;
+      } else if (followerCounter.get(dataIp) < followerLowWaterMark) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  public static class SlotTableStatusResponse {
+
+    private final long slotTableEpoch;
+
+    private final boolean isSlotTableBalanced;
+
+    private final boolean isSlotTableStable;
+
+    private final Map<String, Integer> leaderCount;
+
+    private final Map<String, Integer> followerCount;
+
+    public SlotTableStatusResponse(
+        long slotTableEpoch,
+        boolean slotTableBalanced,
+        boolean slotTableStable,
+        Map<String, Integer> leaderCount,
+        Map<String, Integer> followerCount) {
+      this.slotTableEpoch = slotTableEpoch;
+      this.isSlotTableBalanced = slotTableBalanced;
+      this.isSlotTableStable = slotTableStable;
+      this.leaderCount = leaderCount;
+      this.followerCount = followerCount;
+    }
+
+    public boolean isSlotTableBalanced() {
+      return isSlotTableBalanced;
+    }
+
+    public boolean isSlotTableStable() {
+      return isSlotTableStable;
+    }
+
+    public Map<String, Integer> getLeaderCount() {
+      return leaderCount;
+    }
+
+    public Map<String, Integer> getFollowerCount() {
+      return followerCount;
     }
   }
 

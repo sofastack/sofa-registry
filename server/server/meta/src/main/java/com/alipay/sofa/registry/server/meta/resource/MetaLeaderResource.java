@@ -16,13 +16,16 @@
  */
 package com.alipay.sofa.registry.server.meta.resource;
 
+import com.alipay.sofa.registry.common.model.CommonResponse;
 import com.alipay.sofa.registry.common.model.GenericResponse;
 import com.alipay.sofa.registry.common.model.elector.LeaderInfo;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.server.meta.MetaLeaderService;
 import com.alipay.sofa.registry.server.meta.resource.filter.LeaderAwareRestController;
+import com.alipay.sofa.registry.store.api.elector.LeaderElector;
 import javax.ws.rs.GET;
+import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
@@ -39,6 +42,8 @@ public class MetaLeaderResource {
 
   @Autowired private MetaLeaderService metaLeaderService;
 
+  @Autowired private LeaderElector leaderElector;
+
   @GET
   @Path("query")
   @Produces(MediaType.APPLICATION_JSON)
@@ -54,6 +59,21 @@ public class MetaLeaderResource {
     } catch (Throwable throwable) {
       logger.error("[queryLeader] error.", throwable);
       return new GenericResponse<LeaderInfo>().fillFailed(throwable.getMessage());
+    }
+  }
+
+  @PUT
+  @Path("/quit/election")
+  @Produces(MediaType.APPLICATION_JSON)
+  public CommonResponse quitElection() {
+    logger.info("[quitElection] begin");
+
+    try {
+      leaderElector.change2Observer();
+      return GenericResponse.buildSuccessResponse();
+    } catch (Throwable throwable) {
+      logger.error("[quitElection] error.", throwable);
+      return GenericResponse.buildFailedResponse(throwable.getMessage());
     }
   }
 }

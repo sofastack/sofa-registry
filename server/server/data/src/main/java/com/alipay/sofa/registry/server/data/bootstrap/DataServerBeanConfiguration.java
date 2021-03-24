@@ -42,6 +42,7 @@ import com.alipay.sofa.registry.server.data.remoting.sessionserver.handler.GetDa
 import com.alipay.sofa.registry.server.data.resource.DataDigestResource;
 import com.alipay.sofa.registry.server.data.resource.DatumApiResource;
 import com.alipay.sofa.registry.server.data.resource.HealthResource;
+import com.alipay.sofa.registry.server.data.resource.SlotTableStatusResource;
 import com.alipay.sofa.registry.server.data.slot.SlotManager;
 import com.alipay.sofa.registry.server.data.slot.SlotManagerImpl;
 import com.alipay.sofa.registry.server.data.timer.CacheCountTask;
@@ -51,6 +52,7 @@ import com.alipay.sofa.registry.server.shared.remoting.AbstractClientHandler;
 import com.alipay.sofa.registry.server.shared.remoting.AbstractServerHandler;
 import com.alipay.sofa.registry.server.shared.remoting.SlotTableChangeEventHandler;
 import com.alipay.sofa.registry.server.shared.resource.MetricsResource;
+import com.alipay.sofa.registry.server.shared.resource.RegistryOpsResource;
 import com.alipay.sofa.registry.server.shared.resource.SlotGenericResource;
 import com.alipay.sofa.registry.task.MetricsableThreadPoolExecutor;
 import com.alipay.sofa.registry.util.NamedThreadFactory;
@@ -297,6 +299,16 @@ public class DataServerBeanConfiguration {
     @Bean
     public MetricsResource metricsResource() {
       return new MetricsResource();
+    }
+
+    @Bean
+    public RegistryOpsResource opsResource() {
+      return new RegistryOpsResource();
+    }
+
+    @Bean
+    public SlotTableStatusResource slotTableResource() {
+      return new SlotTableStatusResource();
     }
   }
 

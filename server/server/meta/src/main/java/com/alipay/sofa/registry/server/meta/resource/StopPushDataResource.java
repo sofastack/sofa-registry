@@ -19,7 +19,7 @@ package com.alipay.sofa.registry.server.meta.resource;
 import com.alipay.sofa.registry.common.model.Node.NodeType;
 import com.alipay.sofa.registry.common.model.console.PersistenceData;
 import com.alipay.sofa.registry.common.model.constants.ValueConstants;
-import com.alipay.sofa.registry.common.model.metaserver.DataOperator;
+import com.alipay.sofa.registry.common.model.metaserver.DataOperation;
 import com.alipay.sofa.registry.common.model.metaserver.ProvideDataChangeEvent;
 import com.alipay.sofa.registry.common.model.store.DataInfo;
 import com.alipay.sofa.registry.core.model.Result;
@@ -77,7 +77,7 @@ public class StopPushDataResource {
     fireDataChangeNotify(
         persistenceData.getVersion(),
         ValueConstants.STOP_PUSH_DATA_SWITCH_DATA_ID,
-        DataOperator.ADD);
+        DataOperation.ADD);
 
     Result result = new Result();
     result.setSuccess(true);
@@ -105,7 +105,7 @@ public class StopPushDataResource {
     fireDataChangeNotify(
         persistenceData.getVersion(),
         ValueConstants.STOP_PUSH_DATA_SWITCH_DATA_ID,
-        DataOperator.UPDATE);
+        DataOperation.UPDATE);
 
     Result result = new Result();
     result.setSuccess(true);
@@ -122,10 +122,10 @@ public class StopPushDataResource {
     return persistenceData;
   }
 
-  private void fireDataChangeNotify(Long version, String dataInfoId, DataOperator dataOperator) {
+  private void fireDataChangeNotify(Long version, String dataInfoId, DataOperation dataOperation) {
 
     ProvideDataChangeEvent provideDataChangeEvent =
-        new ProvideDataChangeEvent(dataInfoId, version, dataOperator, getNodeTypes());
+        new ProvideDataChangeEvent(dataInfoId, version, dataOperation, getNodeTypes());
     if (TASK_LOGGER.isInfoEnabled()) {
       TASK_LOGGER.info(
           "send PERSISTENCE_DATA_CHANGE_NOTIFY_TASK notifyProvideDataChange: {}",

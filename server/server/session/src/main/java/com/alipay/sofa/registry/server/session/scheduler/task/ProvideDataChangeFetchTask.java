@@ -17,7 +17,7 @@
 package com.alipay.sofa.registry.server.session.scheduler.task;
 
 import com.alipay.sofa.registry.common.model.ConnectId;
-import com.alipay.sofa.registry.common.model.metaserver.DataOperator;
+import com.alipay.sofa.registry.common.model.metaserver.DataOperation;
 import com.alipay.sofa.registry.common.model.metaserver.ProvideData;
 import com.alipay.sofa.registry.common.model.metaserver.ProvideDataChangeEvent;
 import com.alipay.sofa.registry.common.model.store.DataInfo;
@@ -104,7 +104,7 @@ public class ProvideDataChangeFetchTask extends AbstractSessionTask {
 
     ProvideData provideData = null;
     String dataInfoId = provideDataChangeEvent.getDataInfoId();
-    if (provideDataChangeEvent.getDataOperator() != DataOperator.REMOVE) {
+    if (provideDataChangeEvent.getDataOperator() != DataOperation.REMOVE) {
       provideData = metaServerService.fetchData(dataInfoId);
 
       if (provideData == null) {
@@ -133,7 +133,7 @@ public class ProvideDataChangeFetchTask extends AbstractSessionTask {
             });
         if (!registerIds.isEmpty()) {
           ReceivedConfigData receivedConfigData;
-          if (provideDataChangeEvent.getDataOperator() == DataOperator.REMOVE) {
+          if (provideDataChangeEvent.getDataOperator() == DataOperation.REMOVE) {
             receivedConfigData =
                 ReceivedDataConverter.getReceivedConfigData(
                     null, dataInfo, provideDataChangeEvent.getVersion());
