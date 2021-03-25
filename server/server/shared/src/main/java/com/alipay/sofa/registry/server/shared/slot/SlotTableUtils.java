@@ -33,7 +33,8 @@ public class SlotTableUtils {
   private static final Logger logger = LoggerFactory.getLogger(SlotTableUtils.class);
 
   public static Map<String, Integer> getSlotTableLeaderCount(SlotTable slotTable) {
-    Map<String, Integer> leaderCounter = Maps.newHashMap();
+    Map<String, Integer> leaderCounter =
+        Maps.newHashMapWithExpectedSize(slotTable.getSlots().size());
     for (Map.Entry<Integer, Slot> entry : slotTable.getSlotMap().entrySet()) {
       Slot slot = entry.getValue();
       incrCount(leaderCounter, slot.getLeader());
@@ -52,7 +53,7 @@ public class SlotTableUtils {
   }
 
   public static Map<String, Integer> getSlotTableSlotCount(SlotTable slotTable) {
-    Map<String, Integer> slotCounter = Maps.newHashMap();
+    Map<String, Integer> slotCounter = Maps.newHashMapWithExpectedSize(slotTable.getSlots().size());
     for (Map.Entry<Integer, Slot> entry : slotTable.getSlotMap().entrySet()) {
       Slot slot = entry.getValue();
       incrCount(slotCounter, slot.getLeader());

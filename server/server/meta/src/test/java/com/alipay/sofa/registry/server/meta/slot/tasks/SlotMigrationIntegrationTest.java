@@ -33,6 +33,7 @@ import com.alipay.sofa.registry.server.meta.lease.data.DefaultDataServerManager;
 import com.alipay.sofa.registry.server.meta.monitor.SlotTableMonitor;
 import com.alipay.sofa.registry.server.meta.slot.SlotManager;
 import com.alipay.sofa.registry.server.meta.slot.arrange.ScheduledSlotArranger;
+import com.alipay.sofa.registry.server.meta.slot.balance.NaiveBalancePolicy;
 import com.alipay.sofa.registry.server.meta.slot.manager.DefaultSlotManager;
 import com.alipay.sofa.registry.server.meta.slot.util.builder.SlotTableBuilder;
 import com.alipay.sofa.registry.util.DatumVersionUtil;
@@ -92,15 +93,15 @@ public class SlotMigrationIntegrationTest extends AbstractMetaServerTestBase {
 
   @Test
   public void testDataServerAddedOneByOne() throws Exception {
-    System.setProperty("slot.leader.max.move", SlotConfig.SLOT_NUM + "");
-    ScheduledSlotArranger assigner =
+    System.setProperty(NaiveBalancePolicy.PROP_LEADER_MAX_MOVE, SlotConfig.SLOT_NUM + "");
+    ScheduledSlotArranger arranger =
         new ScheduledSlotArranger(dataServerManager, slotManager, slotTableMonitor, leaderElector);
-    assigner.getLifecycleState().setPhase(LifecycleState.LifecyclePhase.STARTED);
+    arranger.getLifecycleState().setPhase(LifecycleState.LifecyclePhase.STARTED);
     List<DataNode> dataNodes = Lists.newArrayList(new DataNode(new URL("100.88.142.32"), getDc()));
     when(dataServerManager.getDataServerMetaInfo())
         .thenReturn(new VersionedList<>(DatumVersionUtil.nextId(), dataNodes));
     makeMetaLeader();
-    assigner.arrangeSync();
+    arranger.arrangeSync();
 
     dataNodes =
         Lists.newArrayList(
@@ -108,7 +109,7 @@ public class SlotMigrationIntegrationTest extends AbstractMetaServerTestBase {
             new DataNode(new URL("100.88.142.36"), getDc()));
     when(dataServerManager.getDataServerMetaInfo())
         .thenReturn(new VersionedList<>(DatumVersionUtil.nextId(), dataNodes));
-    loopArrange(assigner);
+    loopArrange(arranger);
     Assert.assertTrue(
         isSlotTableBalanced(
             slotManager.getSlotTable(),
@@ -116,7 +117,7 @@ public class SlotMigrationIntegrationTest extends AbstractMetaServerTestBase {
     assertSlotTableNoDupLeaderFollower(slotManager.getSlotTable());
 
     Thread.sleep(2);
-    loopArrange(assigner);
+    loopArrange(arranger);
     Assert.assertTrue(
         isSlotTableBalanced(
             slotManager.getSlotTable(),
@@ -135,7 +136,7 @@ public class SlotMigrationIntegrationTest extends AbstractMetaServerTestBase {
             new DataNode(new URL("100.88.142.19"), getDc()));
     when(dataServerManager.getDataServerMetaInfo())
         .thenReturn(new VersionedList<>(DatumVersionUtil.nextId(), dataNodes));
-    loopArrange(assigner);
+    loopArrange(arranger);
     logger.info(
         JsonUtils.getJacksonObjectMapper()
             .writerWithDefaultPrettyPrinter()
@@ -154,7 +155,7 @@ public class SlotMigrationIntegrationTest extends AbstractMetaServerTestBase {
             new DataNode(new URL("100.88.142.19"), getDc()));
     when(dataServerManager.getDataServerMetaInfo())
         .thenReturn(new VersionedList<>(DatumVersionUtil.nextId(), dataNodes));
-    loopArrange(assigner);
+    loopArrange(arranger);
     logger.info(
         JsonUtils.getJacksonObjectMapper()
             .writerWithDefaultPrettyPrinter()
@@ -173,15 +174,15 @@ public class SlotMigrationIntegrationTest extends AbstractMetaServerTestBase {
   @Test
   public void testDataServerAddedAndDeleted() throws Exception {
     System.setProperty("slot.leader.max.move", SlotConfig.SLOT_NUM + "");
-    ScheduledSlotArranger assigner =
+    ScheduledSlotArranger arranger =
         new ScheduledSlotArranger(dataServerManager, slotManager, slotTableMonitor, leaderElector);
-    assigner.getLifecycleState().setPhase(LifecycleState.LifecyclePhase.STARTED);
+    arranger.getLifecycleState().setPhase(LifecycleState.LifecyclePhase.STARTED);
 
     List<DataNode> dataNodes = Lists.newArrayList(new DataNode(new URL("100.88.142.32"), getDc()));
     when(dataServerManager.getDataServerMetaInfo())
         .thenReturn(new VersionedList<>(DatumVersionUtil.nextId(), dataNodes));
     makeMetaLeader();
-    assigner.arrangeSync();
+    arranger.arrangeSync();
     logger.info(
         JsonUtils.getJacksonObjectMapper()
             .writerWithDefaultPrettyPrinter()
@@ -193,14 +194,14 @@ public class SlotMigrationIntegrationTest extends AbstractMetaServerTestBase {
             new DataNode(new URL("100.88.142.36"), getDc()));
     when(dataServerManager.getDataServerMetaInfo())
         .thenReturn(new VersionedList<>(DatumVersionUtil.nextId(), dataNodes));
-    assigner.arrangeSync();
+    arranger.arrangeSync();
     logger.info(
         JsonUtils.getJacksonObjectMapper()
             .writerWithDefaultPrettyPrinter()
             .writeValueAsString(slotManager.getSlotTable()));
     assertSlotTableNoDupLeaderFollower(slotManager.getSlotTable());
 
-    loopArrange(assigner);
+    loopArrange(arranger);
 
     logger.info(
         JsonUtils.getJacksonObjectMapper()
@@ -224,7 +225,7 @@ public class SlotMigrationIntegrationTest extends AbstractMetaServerTestBase {
             new DataNode(new URL("100.88.142.19"), getDc()));
     when(dataServerManager.getDataServerMetaInfo())
         .thenReturn(new VersionedList<>(DatumVersionUtil.nextId(), dataNodes));
-    loopArrange(assigner);
+    loopArrange(arranger);
     logger.info(
         JsonUtils.getJacksonObjectMapper()
             .writerWithDefaultPrettyPrinter()
@@ -243,7 +244,7 @@ public class SlotMigrationIntegrationTest extends AbstractMetaServerTestBase {
             new DataNode(new URL("100.88.142.19"), getDc()));
     when(dataServerManager.getDataServerMetaInfo())
         .thenReturn(new VersionedList<>(DatumVersionUtil.nextId(), dataNodes));
-    loopArrange(assigner);
+    loopArrange(arranger);
     logger.info(
         JsonUtils.getJacksonObjectMapper()
             .writerWithDefaultPrettyPrinter()
@@ -265,7 +266,7 @@ public class SlotMigrationIntegrationTest extends AbstractMetaServerTestBase {
             new DataNode(new URL("100.88.142.36"), getDc()));
     when(dataServerManager.getDataServerMetaInfo())
         .thenReturn(new VersionedList<>(DatumVersionUtil.nextId(), dataNodes));
-    loopArrange(assigner);
+    loopArrange(arranger);
     logger.info(
         JsonUtils.getJacksonObjectMapper()
             .writerWithDefaultPrettyPrinter()
@@ -288,7 +289,7 @@ public class SlotMigrationIntegrationTest extends AbstractMetaServerTestBase {
             new DataNode(new URL("100.88.142.19"), getDc()));
     when(dataServerManager.getDataServerMetaInfo())
         .thenReturn(new VersionedList<>(DatumVersionUtil.nextId(), dataNodes));
-    loopArrange(assigner);
+    loopArrange(arranger);
     logger.info(
         JsonUtils.getJacksonObjectMapper()
             .writerWithDefaultPrettyPrinter()
@@ -307,7 +308,7 @@ public class SlotMigrationIntegrationTest extends AbstractMetaServerTestBase {
             new DataNode(new URL("100.88.142.19"), getDc()));
     when(dataServerManager.getDataServerMetaInfo())
         .thenReturn(new VersionedList<>(DatumVersionUtil.nextId(), dataNodes));
-    loopArrange(assigner);
+    loopArrange(arranger);
     logger.info(
         JsonUtils.getJacksonObjectMapper()
             .writerWithDefaultPrettyPrinter()
@@ -325,9 +326,9 @@ public class SlotMigrationIntegrationTest extends AbstractMetaServerTestBase {
 
   @Test
   public void testDataLeaderBalance() throws Exception {
-    ScheduledSlotArranger assigner =
+    ScheduledSlotArranger arranger =
         new ScheduledSlotArranger(dataServerManager, slotManager, slotTableMonitor, leaderElector);
-    assigner.getLifecycleState().setPhase(LifecycleState.LifecyclePhase.STARTED);
+    arranger.getLifecycleState().setPhase(LifecycleState.LifecyclePhase.STARTED);
 
     byte[] bytes =
         FileUtils.readFileToByteArray(new File("src/test/resources/test/slot-table.json"));
@@ -343,7 +344,7 @@ public class SlotMigrationIntegrationTest extends AbstractMetaServerTestBase {
         .thenReturn(new VersionedList<>(DatumVersionUtil.nextId(), dataNodes));
     makeMetaLeader();
 
-    loopArrange(assigner);
+    loopArrange(arranger);
 
     logger.info(
         JsonUtils.getJacksonObjectMapper()
@@ -358,9 +359,9 @@ public class SlotMigrationIntegrationTest extends AbstractMetaServerTestBase {
 
   @Test
   public void testDataLeaderBalance2() throws Exception {
-    ScheduledSlotArranger assigner =
+    ScheduledSlotArranger arranger =
         new ScheduledSlotArranger(dataServerManager, slotManager, slotTableMonitor, leaderElector);
-    assigner.getLifecycleState().setPhase(LifecycleState.LifecyclePhase.STARTED);
+    arranger.getLifecycleState().setPhase(LifecycleState.LifecyclePhase.STARTED);
     byte[] bytes =
         FileUtils.readFileToByteArray(new File("src/test/resources/test/slot-table-2.json"));
     SlotTable prevSlotTable =
@@ -375,7 +376,7 @@ public class SlotMigrationIntegrationTest extends AbstractMetaServerTestBase {
         .thenReturn(new VersionedList<>(DatumVersionUtil.nextId(), dataNodes));
     makeMetaLeader();
 
-    loopArrange(assigner);
+    loopArrange(arranger);
 
     Assert.assertTrue(
         isSlotTableLeaderBalanced(

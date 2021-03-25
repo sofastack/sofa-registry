@@ -21,12 +21,11 @@ import com.alipay.sofa.registry.common.model.slot.SlotTable;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.server.shared.slot.SlotTableUtils;
+import com.alipay.sofa.registry.test.TestUtils;
 import com.alipay.sofa.registry.util.MathUtils;
-import java.util.Comparator;
-import java.util.Map;
+import java.util.*;
 import java.util.Map.Entry;
-import java.util.Optional;
-import java.util.OptionalDouble;
+import org.junit.Assert;
 
 /**
  * @author xiaojian.xj
@@ -34,7 +33,7 @@ import java.util.OptionalDouble;
  */
 public interface CheckerAction {
 
-  boolean doCheck(SlotTable slotTable);
+  boolean doCheck(SlotTable slotTable, List<String> dataNodes, int slotNum, int replicas);
 
   default Tuple<String, Integer> max(Map<String, Integer> count) {
     Optional<Entry<String, Integer>> max =
@@ -64,10 +63,12 @@ class SlotLeaderChecker implements CheckerAction {
   private final Logger logger = LoggerFactory.getLogger(getClass());
 
   @Override
-  public boolean doCheck(SlotTable slotTable) {
+  public boolean doCheck(SlotTable slotTable, List<String> dataNodes, int slotNum, int replicas) {
 
     Map<String, Integer> leaderCount = SlotTableUtils.getSlotTableLeaderCount(slotTable);
     logger.info("[slot leader checker] leaderCount: " + leaderCount);
+    Assert.assertEquals(dataNodes.size(), leaderCount.size());
+    Assert.assertTrue(leaderCount.keySet().containsAll(dataNodes));
     Tuple<String, Integer> max = max(leaderCount);
     Tuple<String, Integer> min = min(leaderCount);
     int average = MathUtils.divideCeil(sum(leaderCount), leaderCount.size());
@@ -78,7 +79,7 @@ class SlotLeaderChecker implements CheckerAction {
         min.getFirst(),
         min.getSecond(),
         (int) average);
-
+    TestUtils.assertBalance(slotTable, dataNodes, slotNum, replicas, true, "");
     return max.getSecond() < min.getSecond() * 2;
   }
 }
@@ -88,10 +89,11 @@ class SlotChecker implements CheckerAction {
   private final Logger logger = LoggerFactory.getLogger(getClass());
 
   @Override
-  public boolean doCheck(SlotTable slotTable) {
+  public boolean doCheck(SlotTable slotTable, List<String> dataNodes, int slotNum, int replicas) {
     Map<String, Integer> slotCount = SlotTableUtils.getSlotTableSlotCount(slotTable);
     logger.info("[slot checker] slotCount: " + slotCount);
-
+    Assert.assertEquals(dataNodes.size(), slotCount.size());
+    Assert.assertTrue(slotCount.keySet().containsAll(dataNodes));
     Tuple<String, Integer> max = max(slotCount);
     Tuple<String, Integer> min = min(slotCount);
     double average = average(slotCount);
@@ -102,7 +104,7 @@ class SlotChecker implements CheckerAction {
         min.getFirst(),
         min.getSecond(),
         (int) average);
-
+    TestUtils.assertBalance(slotTable, dataNodes, slotNum, replicas, true, "");
     return max.getSecond() < min.getSecond() * 2;
   }
 }
