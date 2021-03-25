@@ -70,7 +70,9 @@ public class SlotTableResource {
     if (metaLeaderService.amILeader()) {
       if (slotArranger.tryLock()) {
         try {
-          BalanceTask task = new BalanceTask(slotManager, dataServerManager);
+          BalanceTask task =
+              new BalanceTask(
+                  slotManager, dataServerManager.getDataServerMetaInfo().getClusterMembers());
           task.run();
           logger.info("[forceRefreshSlotTable] end with succeed");
           return new GenericResponse<SlotTable>().fillSucceed(slotManager.getSlotTable());

@@ -31,7 +31,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
-import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 
 /**
@@ -97,9 +96,6 @@ public class SlotTableBuilder implements Builder<SlotTable> {
             reverseMap.computeIfAbsent(follower, k -> new DataNodeSlot(follower));
         dataNodeSlot.addFollower(slotId);
       }
-    }
-    if (CollectionUtils.isEmpty(dataServers)) {
-      return;
     }
     dataServers.forEach(
         dataServer -> reverseMap.putIfAbsent(dataServer, new DataNodeSlot(dataServer)));

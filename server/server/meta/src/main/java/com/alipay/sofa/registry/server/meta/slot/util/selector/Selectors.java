@@ -16,6 +16,7 @@
  */
 package com.alipay.sofa.registry.server.meta.slot.util.selector;
 
+import com.alipay.sofa.registry.common.model.slot.DataNodeSlot;
 import com.alipay.sofa.registry.server.meta.slot.util.builder.SlotTableBuilder;
 import com.alipay.sofa.registry.server.meta.slot.util.comparator.Comparators;
 import com.google.common.collect.Lists;
@@ -29,16 +30,12 @@ import java.util.Set;
  */
 public class Selectors {
 
-  public static DefaultSlotLeaderSelector slotLeaderSelector(
-      SlotTableBuilder slotTableBuilder, int slotId) {
-    return new DefaultSlotLeaderSelector(slotTableBuilder, slotId);
+  public static Selector<String> slotLeaderSelector(
+      int highWaterMark, SlotTableBuilder slotTableBuilder, int slotId) {
+    return new DefaultSlotLeaderSelector(highWaterMark, slotTableBuilder, slotId);
   }
 
-  public static MostLeaderFirstSelector mostLeaderFirst(SlotTableBuilder slotTableBuilder) {
-    return new MostLeaderFirstSelector(slotTableBuilder);
-  }
-
-  public abstract static class AbstractSlotTableBuilderAwareSelector<T> implements Selector<T> {
+  abstract static class AbstractSlotTableBuilderAwareSelector<T> implements Selector<T> {
 
     protected final SlotTableBuilder slotTableBuilder;
 
@@ -47,7 +44,7 @@ public class Selectors {
     }
   }
 
-  public abstract static class AbstractDataServerSelector
+  abstract static class AbstractDataServerSelector
       extends AbstractSlotTableBuilderAwareSelector<String> {
 
     public AbstractDataServerSelector(SlotTableBuilder slotTableBuilder) {
@@ -64,37 +61,7 @@ public class Selectors {
     protected abstract Comparators.AbstractDataServerComparator getDataServerComparator();
   }
 
-  public static class MostFollowerFirstSelector extends AbstractDataServerSelector {
-
-    private final Comparators.AbstractDataServerComparator comparator;
-
-    public MostFollowerFirstSelector(SlotTableBuilder slotTableBuilder) {
-      super(slotTableBuilder);
-      this.comparator = Comparators.mostFollowersFirst(slotTableBuilder);
-    }
-
-    @Override
-    protected Comparators.AbstractDataServerComparator getDataServerComparator() {
-      return comparator;
-    }
-  }
-
-  public static class LeastFollowerFirstSelector extends AbstractDataServerSelector {
-
-    private final Comparators.AbstractDataServerComparator comparator;
-
-    public LeastFollowerFirstSelector(SlotTableBuilder slotTableBuilder) {
-      super(slotTableBuilder);
-      this.comparator = Comparators.leastFollowersFirst(slotTableBuilder);
-    }
-
-    @Override
-    protected Comparators.AbstractDataServerComparator getDataServerComparator() {
-      return comparator;
-    }
-  }
-
-  public static class LeastLeaderFirstSelector extends AbstractDataServerSelector {
+  static class LeastLeaderFirstSelector extends AbstractDataServerSelector {
 
     private final Comparators.AbstractDataServerComparator comparator;
 
@@ -109,28 +76,15 @@ public class Selectors {
     }
   }
 
-  public static class MostLeaderFirstSelector extends AbstractDataServerSelector {
-
-    private final Comparators.AbstractDataServerComparator comparator;
-
-    public MostLeaderFirstSelector(SlotTableBuilder slotTableBuilder) {
-      super(slotTableBuilder);
-      comparator = Comparators.mostLeadersFirst(slotTableBuilder);
-    }
-
-    @Override
-    protected Comparators.AbstractDataServerComparator getDataServerComparator() {
-      return comparator;
-    }
-  }
-
-  public static class DefaultSlotLeaderSelector implements Selector<String> {
+  static class DefaultSlotLeaderSelector implements Selector<String> {
 
     private final SlotTableBuilder slotTableBuilder;
-
+    private final int highWaterMark;
     private final int slotId;
 
-    public DefaultSlotLeaderSelector(SlotTableBuilder slotTableBuilder, int slotId) {
+    public DefaultSlotLeaderSelector(
+        int highWaterMark, SlotTableBuilder slotTableBuilder, int slotId) {
+      this.highWaterMark = highWaterMark;
       this.slotTableBuilder = slotTableBuilder;
       this.slotId = slotId;
     }
@@ -140,8 +94,17 @@ public class Selectors {
       Set<String> currentFollowers = slotTableBuilder.getOrCreate(slotId).getFollowers();
       Collection<String> followerCandidates = Lists.newArrayList(candidates);
       followerCandidates.retainAll(currentFollowers);
-      followerCandidates = followerCandidates.isEmpty() ? candidates : followerCandidates;
-      return new LeastLeaderFirstSelector(slotTableBuilder).select(followerCandidates);
+      // first, try to select the candidate which is the follower
+      String leader = new LeastLeaderFirstSelector(slotTableBuilder).select(followerCandidates);
+      if (leader != null) {
+        // check the num of leaders
+        DataNodeSlot dataNodeSlot = slotTableBuilder.getDataNodeSlot(leader);
+        if (dataNodeSlot.getLeaders().size() < highWaterMark) {
+          return leader;
+        }
+      }
+      // second, find other candidate
+      return new LeastLeaderFirstSelector(slotTableBuilder).select(candidates);
     }
   }
 }

@@ -26,7 +26,6 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
@@ -36,18 +35,19 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
  */
 public class SimpleSlotManager extends AbstractLifecycleObservable implements SlotManager {
 
-  public static final String LOCAL_SLOT_MANAGER = "LocalSlotManager";
-
   private final ReadWriteLock lock = new ReentrantReadWriteLock();
 
-  private final AtomicReference<SlotTableCacheWrapper> localRepo =
-      new AtomicReference<>(new SlotTableCacheWrapper(SlotTable.INIT, ImmutableMap.of()));
+  private volatile SlotTableCacheWrapper localRepo =
+      new SlotTableCacheWrapper(SlotTable.INIT, ImmutableMap.of());
+
+  private int slotNums = SlotConfig.SLOT_NUM;
+  private int slotReplicas = SlotConfig.SLOT_REPLICAS;
 
   @Override
   public SlotTable getSlotTable() {
     lock.readLock().lock();
     try {
-      return localRepo.get().slotTable;
+      return localRepo.slotTable;
     } finally {
       lock.readLock().unlock();
     }
@@ -57,12 +57,12 @@ public class SimpleSlotManager extends AbstractLifecycleObservable implements Sl
   public void refresh(SlotTable slotTable) {
     lock.writeLock().lock();
     try {
-      if (slotTable.getEpoch() <= localRepo.get().slotTable.getEpoch()) {
+      if (slotTable.getEpoch() <= localRepo.slotTable.getEpoch()) {
         if (logger.isWarnEnabled()) {
           logger.warn(
               "[refresh]receive slot table,but epoch({}) is smaller than current({})",
               slotTable.getEpoch(),
-              localRepo.get().slotTable.getEpoch());
+              localRepo.slotTable.getEpoch());
         }
         return;
       }
@@ -83,12 +83,22 @@ public class SimpleSlotManager extends AbstractLifecycleObservable implements Sl
 
   @Override
   public int getSlotNums() {
-    return SlotConfig.SLOT_NUM;
+    return slotNums;
   }
 
   @Override
   public int getSlotReplicaNums() {
-    return SlotConfig.SLOT_REPLICAS;
+    return slotReplicas;
+  }
+
+  @VisibleForTesting
+  public void setSlotNums(int slotNums) {
+    this.slotNums = slotNums;
+  }
+
+  @VisibleForTesting
+  public void setSlotReplicas(int slotReplicas) {
+    this.slotReplicas = slotReplicas;
   }
 
   @Override
@@ -98,7 +108,7 @@ public class SimpleSlotManager extends AbstractLifecycleObservable implements Sl
       // here we ignore port for data-node, as when store the reverse-map, we lose the port
       // information
       // besides, port is not matter here
-      DataNodeSlot target = localRepo.get().reverseMap.get(dataNode);
+      DataNodeSlot target = localRepo.reverseMap.get(dataNode);
       if (target == null) {
         return new DataNodeSlot(dataNode);
       }
@@ -108,9 +118,8 @@ public class SimpleSlotManager extends AbstractLifecycleObservable implements Sl
     }
   }
 
-  @VisibleForTesting
-  protected void setSlotTableCacheWrapper(SlotTableCacheWrapper wrapper) {
-    this.localRepo.set(wrapper);
+  private void setSlotTableCacheWrapper(SlotTableCacheWrapper wrapper) {
+    this.localRepo = wrapper;
   }
 
   private static final class SlotTableCacheWrapper {

@@ -23,12 +23,15 @@ import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.server.meta.monitor.Metrics;
 import com.alipay.sofa.registry.server.meta.slot.SlotAssigner;
+import com.alipay.sofa.registry.server.meta.slot.balance.BalancePolicy;
+import com.alipay.sofa.registry.server.meta.slot.balance.NaiveBalancePolicy;
 import com.alipay.sofa.registry.server.meta.slot.util.MigrateSlotGroup;
 import com.alipay.sofa.registry.server.meta.slot.util.builder.SlotBuilder;
 import com.alipay.sofa.registry.server.meta.slot.util.builder.SlotTableBuilder;
 import com.alipay.sofa.registry.server.meta.slot.util.comparator.Comparators;
 import com.alipay.sofa.registry.server.meta.slot.util.comparator.SortType;
 import com.alipay.sofa.registry.server.meta.slot.util.selector.Selectors;
+import com.alipay.sofa.registry.util.MathUtils;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import java.util.Collection;
@@ -62,8 +65,18 @@ public class DefaultSlotAssigner implements SlotAssigner {
       throw new SofaRegistryRuntimeException(
           "no pending slot or available dataServers for reassignment");
     }
-    logger.info("[assign][assignLeaderSlots] begin, migrate={}", migrateSlotGroup);
-    if (tryAssignLeaderSlots()) {
+    // TODO get the high water mark of leader
+    BalancePolicy balancePolicy = new NaiveBalancePolicy();
+    final int ceilAvg =
+        MathUtils.divideCeil(slotTableBuilder.getSlotNums(), currentDataServers.size());
+    final int high = balancePolicy.getHighWaterMarkSlotLeaderNums(ceilAvg);
+    logger.info(
+        "[assign][assignLeaderSlots] begin, dataServers={}, avg={}, high={}, migrate={}",
+        currentDataServers.size(),
+        ceilAvg,
+        high,
+        migrateSlotGroup);
+    if (tryAssignLeaderSlots(high)) {
       logger.info("[assign][after assignLeaderSlots] end -- leader changed");
       slotTableBuilder.incrEpoch();
     } else {
@@ -80,7 +93,7 @@ public class DefaultSlotAssigner implements SlotAssigner {
     return slotTableBuilder.build();
   }
 
-  private boolean tryAssignLeaderSlots() {
+  private boolean tryAssignLeaderSlots(int highWatermark) {
     /**
      * our strategy(assign leader) is to swap follower to leader when follower is enabled if no
      * followers, we select a new data-server to assign, that's simple and low prioritized so,
@@ -97,13 +110,15 @@ public class DefaultSlotAssigner implements SlotAssigner {
     for (int slotId : leaders) {
       List<String> currentDataNodes = Lists.newArrayList(currentDataServers);
       String nextLeader =
-          Selectors.slotLeaderSelector(slotTableBuilder, slotId).select(currentDataNodes);
+          Selectors.slotLeaderSelector(highWatermark, slotTableBuilder, slotId)
+              .select(currentDataNodes);
+      boolean nextLeaderWasFollower = isNextLeaderFollowerOfSlot(slotId, nextLeader);
       logger.info(
-          "[assignLeaderSlots]assign slot[{}] leader as [{}], dataServers={}",
+          "[assignLeaderSlots]assign slot[{}] leader as [{}], upgrade={}, dataServers={}",
           slotId,
           nextLeader,
+          nextLeaderWasFollower,
           currentDataServers.size());
-      boolean nextLeaderWasFollower = isNextLeaderFollowerOfSlot(slotId, nextLeader);
       slotTableBuilder.replaceLeader(slotId, nextLeader);
       Metrics.SlotAssign.onSlotLeaderAssign(nextLeader, slotId);
       if (nextLeaderWasFollower) {

@@ -62,19 +62,17 @@ import org.springframework.stereotype.Component;
 public class ScheduledSlotArranger extends AbstractLifecycleObservable
     implements DataManagerObserver, Suspendable {
 
-  private DefaultDataServerManager dataServerManager;
+  private final DefaultDataServerManager dataServerManager;
 
-  private SlotManager slotManager;
+  private final SlotManager slotManager;
 
-  private SlotTableMonitor slotTableMonitor;
+  private final SlotTableMonitor slotTableMonitor;
 
-  private MetaLeaderService metaLeaderService;
+  private final MetaLeaderService metaLeaderService;
 
   private final Arranger arranger = new Arranger();
 
   private final Lock lock = new ReentrantLock();
-
-  public ScheduledSlotArranger() {}
 
   @Autowired
   public ScheduledSlotArranger(
@@ -144,10 +142,10 @@ public class ScheduledSlotArranger extends AbstractLifecycleObservable
     return slotTableBuilder;
   }
 
-  protected void assignSlots(
+  protected boolean assignSlots(
       SlotTableBuilder slotTableBuilder, Collection<String> currentDataServers) {
     SlotTable slotTable = createSlotAssigner(slotTableBuilder, currentDataServers).assign();
-    refreshSlotTable(slotTable);
+    return refreshSlotTable(slotTable);
   }
 
   protected SlotAssigner createSlotAssigner(
@@ -155,16 +153,16 @@ public class ScheduledSlotArranger extends AbstractLifecycleObservable
     return new DefaultSlotAssigner(slotTableBuilder, currentDataServers);
   }
 
-  protected void balanceSlots(
+  protected boolean balanceSlots(
       SlotTableBuilder slotTableBuilder, Collection<String> currentDataServers) {
     SlotTable slotTable = createSlotBalancer(slotTableBuilder, currentDataServers).balance();
-    refreshSlotTable(slotTable);
+    return refreshSlotTable(slotTable);
   }
 
-  private void refreshSlotTable(SlotTable slotTable) {
+  private boolean refreshSlotTable(SlotTable slotTable) {
     if (slotTable == null) {
       logger.info("[refreshSlotTable] slot-table not change");
-      return;
+      return false;
     }
     if (!SlotTableUtils.isValidSlotTable(slotTable)) {
       throw new SofaRegistrySlotTableException(
@@ -172,10 +170,12 @@ public class ScheduledSlotArranger extends AbstractLifecycleObservable
     }
     if (slotTable.getEpoch() > slotManager.getSlotTable().getEpoch()) {
       slotManager.refresh(slotTable);
+      return true;
     } else {
       logger.warn(
           "[refreshSlotTable] slot-table epoch not change: {}",
           JsonUtils.writeValueAsString(slotTable));
+      return false;
     }
   }
 
@@ -223,6 +223,7 @@ public class ScheduledSlotArranger extends AbstractLifecycleObservable
       logger.warn("[tryArrangeSlots] tryLock failed");
       return false;
     }
+    boolean modified = false;
     try {
       List<String> currentDataNodeIps = NodeUtils.transferNodeToIpList(dataNodes);
       logger.info(
@@ -239,25 +240,19 @@ public class ScheduledSlotArranger extends AbstractLifecycleObservable
 
       if (tableBuilder.hasNoAssignedSlots()) {
         logger.info("[re-assign][begin] assign slots to data-server");
-        assignSlots(tableBuilder, currentDataNodeIps);
-        logger.info("[re-assign][end]");
-
+        modified = assignSlots(tableBuilder, currentDataNodeIps);
+        logger.info("[re-assign][end] modified={}", modified);
       } else if (slotTableMonitor.isStableTableStable()) {
         logger.info("[balance][begin] balance slots to data-server");
-        balanceSlots(tableBuilder, currentDataNodeIps);
-        logger.info("[balance][end]");
-
+        modified = balanceSlots(tableBuilder, currentDataNodeIps);
+        logger.info("[balance][end] modified={}", modified);
       } else {
         logger.info("[tryArrangeSlots][end] no arrangement");
       }
     } finally {
       unlock();
     }
-    return true;
-  }
-
-  public void arrangeAsync() {
-    arranger.wakeup();
+    return modified;
   }
 
   @VisibleForTesting
@@ -268,13 +263,15 @@ public class ScheduledSlotArranger extends AbstractLifecycleObservable
       final List<DataNode> dataNodes =
           dataServerManager.getDataServerMetaInfo().getClusterMembers();
       if (dataNodes.isEmpty()) {
-        logger.warn("[Arranger] empty data server list, continue");
-        return true;
+        logger.warn("[Arranger] empty data server list");
+        return false;
       } else {
         Metrics.SlotArrange.begin();
-        boolean result = tryArrangeSlots(dataNodes);
-        Metrics.SlotArrange.end();
-        return result;
+        try {
+          return tryArrangeSlots(dataNodes);
+        } finally {
+          Metrics.SlotArrange.end();
+        }
       }
     } else {
       logger.info(
