@@ -65,7 +65,8 @@ public class BalanceTaskTest extends AbstractMetaServerTestBase {
   @Test
   public void testRun() throws TimeoutException, InterruptedException {
     Assert.assertEquals(SlotTable.INIT, slotManager.getSlotTable());
-    task = new BalanceTask(slotManager, dataServerManager);
+    task =
+        new BalanceTask(slotManager, dataServerManager.getDataServerMetaInfo().getClusterMembers());
     task.run();
     Assert.assertNotEquals(SlotTable.INIT, slotManager.getSlotTable());
     printSlotTable(slotManager.getSlotTable());
@@ -80,7 +81,8 @@ public class BalanceTaskTest extends AbstractMetaServerTestBase {
             new DataNode(new URL("100.88.142.19"), getDc()));
     when(dataServerManager.getDataServerMetaInfo())
         .thenReturn(new VersionedList<>(DatumVersionUtil.nextId(), dataNodes));
-    task = new BalanceTask(slotManager, dataServerManager);
+    task =
+        new BalanceTask(slotManager, dataServerManager.getDataServerMetaInfo().getClusterMembers());
     task.run();
     SlotTable slotTable = slotManager.getSlotTable();
     slotTable
@@ -96,7 +98,8 @@ public class BalanceTaskTest extends AbstractMetaServerTestBase {
     when(dataServerManager.getDataServerMetaInfo())
         .thenReturn(new VersionedList<>(DatumVersionUtil.nextId(), Lists.newArrayList()));
     slotManager = spy(slotManager);
-    task = new BalanceTask(slotManager, dataServerManager);
+    task =
+        new BalanceTask(slotManager, dataServerManager.getDataServerMetaInfo().getClusterMembers());
     task.run();
     verify(slotManager, never()).refresh(any(SlotTable.class));
   }
@@ -109,7 +112,8 @@ public class BalanceTaskTest extends AbstractMetaServerTestBase {
 
     when(dataServerManager.getDataServerMetaInfo())
         .thenReturn(new VersionedList<>(DatumVersionUtil.nextId(), dataNodes));
-    task = new BalanceTask(slotManager, dataServerManager);
+    task =
+        new BalanceTask(slotManager, dataServerManager.getDataServerMetaInfo().getClusterMembers());
     task.run();
 
     SlotTable current = slotManager.getSlotTable();

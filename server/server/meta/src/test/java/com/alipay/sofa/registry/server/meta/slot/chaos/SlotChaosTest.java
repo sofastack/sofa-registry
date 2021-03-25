@@ -26,17 +26,14 @@ import com.alipay.sofa.registry.server.meta.AbstractMetaServerTestBase;
 import com.alipay.sofa.registry.server.meta.bootstrap.config.NodeConfig;
 import com.alipay.sofa.registry.server.meta.lease.data.DefaultDataServerManager;
 import com.alipay.sofa.registry.server.meta.monitor.SlotTableMonitor;
-import com.alipay.sofa.registry.server.meta.slot.SlotManager;
 import com.alipay.sofa.registry.server.meta.slot.arrange.ScheduledSlotArranger;
 import com.alipay.sofa.registry.server.meta.slot.manager.SimpleSlotManager;
+import com.alipay.sofa.registry.server.shared.util.NodeUtils;
 import com.alipay.sofa.registry.util.DatumVersionUtil;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.concurrent.TimeoutException;
+import org.junit.Assert;
 import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
@@ -49,7 +46,7 @@ public class SlotChaosTest extends AbstractMetaServerTestBase {
 
   private DataServerInjection dataServerInjection;
 
-  private SlotManager slotManager;
+  private SimpleSlotManager slotManager;
 
   @Mock private DefaultDataServerManager dataServerManager;
 
@@ -60,13 +57,6 @@ public class SlotChaosTest extends AbstractMetaServerTestBase {
   private int dataNodeNum = 20;
 
   private int chaosRandom;
-
-  @BeforeClass
-  public static void beforeSlotMigrateChaosTestClass() throws Exception {
-    System.setProperty("data.slot.num", "512");
-    System.setProperty("data.slot.replicas", "2");
-    System.setProperty("slot.leader.max.move", "2");
-  }
 
   @Before
   public void beforeSlotMigrateChaosTest() throws Exception {
@@ -79,18 +69,25 @@ public class SlotChaosTest extends AbstractMetaServerTestBase {
     NodeConfig nodeConfig = mock(NodeConfig.class);
     when(nodeConfig.getLocalDataCenter()).thenReturn(getDc());
     slotManager = new SimpleSlotManager();
-
+    slotManager.setSlotNums(256);
+    slotManager.setSlotReplicas(2);
     scheduledSlotArranger =
         new ScheduledSlotArranger(
             dataServerManager, slotManager, slotTableMonitor, metaLeaderService);
 
     when(slotTableMonitor.isStableTableStable()).thenReturn(true);
     when(dataServerManager.getDataServerMetaInfo()).thenReturn(VersionedList.EMPTY);
-    scheduledSlotArranger.postConstruct();
   }
 
   @Test
-  public void testChaos() throws TimeoutException, InterruptedException {
+  public void testChaosLoop() throws Exception {
+    for (int i = 0; i < 50; i++) {
+      testChaos();
+    }
+  }
+
+  @Test
+  public void testChaos() throws Exception {
     logger.info("[slot-chaos slot] size: " + slotManager.getSlotNums());
 
     do {
@@ -100,22 +97,29 @@ public class SlotChaosTest extends AbstractMetaServerTestBase {
     makeMetaLeader();
     logger.info("[slot-chaos slot] chaosRandom: " + chaosRandom);
 
-    List<DataNode> running;
+    List<DataNode> running = null;
+
     for (int i = 1; i <= chaosRandom; i++) {
       // random up and down
       running = dataServerInjection.inject(i);
       when(dataServerManager.getDataServerMetaInfo())
           .thenReturn(new VersionedList<>(DatumVersionUtil.nextId(), running));
-      scheduledSlotArranger.arrangeAsync();
-      Thread.sleep(2000);
+      scheduledSlotArranger.arrangeSync();
     }
-    for (int i = 0; i < 500; i++) {
-      scheduledSlotArranger.arrangeAsync();
-      Thread.sleep(20);
+
+    for (int i = 0; i < slotManager.getSlotNums(); i++) {
+      if (!scheduledSlotArranger.arrangeSync()) {
+        break;
+      }
     }
+    Assert.assertFalse(scheduledSlotArranger.arrangeSync());
     SlotTable finalSlotTable = slotManager.getSlotTable();
+    List<String> datas = NodeUtils.transferNodeToIpList(running);
     for (CheckEnum checker : CheckEnum.values()) {
-      checker.getCheckerAction().doCheck(finalSlotTable);
+      checker
+          .getCheckerAction()
+          .doCheck(
+              finalSlotTable, datas, slotManager.getSlotNums(), slotManager.getSlotReplicaNums());
     }
   }
 

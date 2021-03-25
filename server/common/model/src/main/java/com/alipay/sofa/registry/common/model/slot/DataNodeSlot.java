@@ -16,6 +16,7 @@
  */
 package com.alipay.sofa.registry.common.model.slot;
 
+import com.alipay.sofa.registry.util.StringFormatter;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import java.io.Serializable;
@@ -146,15 +147,13 @@ public final class DataNodeSlot implements Serializable {
 
   @Override
   public String toString() {
-    return "DataNodeSlot{"
-        + "dataNode='"
-        + dataNode
-        + '\''
-        + ", leaders="
-        + leaders
-        + ", followers="
-        + followers
-        + '}';
+    return StringFormatter.format(
+        "DataNodeSlot{{},leaders={}/{},followers={}/{}",
+        dataNode,
+        leaders.size(),
+        leaders,
+        followers.size(),
+        followers);
   }
 
   public static List<String> collectDataNodes(Collection<DataNodeSlot> dataNodeSlots) {

@@ -230,8 +230,7 @@ public class DefaultSlotBalancer implements SlotBalancer {
             "[upgradeLowLeaders] could not found followers to upgrade for {}", lowDataServers);
         break;
       }
-      // 2. find the dataNode which could not remove a leader
-      // exclude the low
+      // 2. find the dataNode which could not remove a leader exclude the low
       final Set<String> excludes = Sets.newHashSet(lowDataServers);
       // exclude the dataNode which could not remove any leader
       excludes.addAll(findDataServersLeaderLowWaterMark(threshold + 1));
@@ -368,26 +367,32 @@ public class DefaultSlotBalancer implements SlotBalancer {
       String followerDataServer, Set<String> excludes) {
     final DataNodeSlot dataNodeSlot = slotTableBuilder.getDataNodeSlot(followerDataServer);
     Set<Integer> followerSlots = dataNodeSlot.getFollowers();
+    LOGGER.info(
+        "[LeaderUpgradeIn] {} find follower to upgrade, {}/{}",
+        followerDataServer,
+        followerSlots.size(),
+        followerSlots);
     Map<String, List<Integer>> dataServers2Leaders = Maps.newHashMap();
     for (int slot : followerSlots) {
-      final String leaderDataServers = slotTableBuilder.getDataServersOwnsLeader(slot);
-      if (StringUtils.isBlank(leaderDataServers)) {
+      final String leaderDataServer = slotTableBuilder.getDataServersOwnsLeader(slot);
+      if (StringUtils.isBlank(leaderDataServer)) {
         // no leader, should not happen
         LOGGER.error("[LeaderUpgradeIn] no leader for slotId={} in {}", slot, followerDataServer);
         continue;
       }
-      if (excludes.contains(leaderDataServers)) {
-        final DataNodeSlot leaderDataNodeSlot = slotTableBuilder.getDataNodeSlot(leaderDataServers);
+      if (excludes.contains(leaderDataServer)) {
+        final DataNodeSlot leaderDataNodeSlot = slotTableBuilder.getDataNodeSlot(leaderDataServer);
         LOGGER.info(
-            "[LeaderUpgradeIn] {} not owns enough leader to downgrade, leaderSize={}, leaders={}",
-            leaderDataServers,
-            leaderDataNodeSlot.getLeaders().size(),
-            leaderDataNodeSlot.getLeaders());
+            "[LeaderUpgradeIn] {} not owns enough leader to downgrade slotId={} for {}, leaderSize={}",
+            leaderDataServer,
+            slot,
+            followerDataServer,
+            leaderDataNodeSlot.getLeaders().size());
         continue;
       }
 
       List<Integer> leaders =
-          dataServers2Leaders.computeIfAbsent(leaderDataServers, k -> Lists.newArrayList());
+          dataServers2Leaders.computeIfAbsent(leaderDataServer, k -> Lists.newArrayList());
       leaders.add(slot);
     }
     if (dataServers2Leaders.isEmpty()) {

@@ -24,13 +24,17 @@ import com.alipay.sofa.registry.util.MathUtils;
  */
 public class NaiveBalancePolicy implements BalancePolicy {
 
-  // "final" instead of "static final" to make it dynamic and flexible
-  private final int threshold = Integer.getInteger("slot.threshold", 10);
+  public static final String PROP_LEADER_MAX_MOVE = "registry.slot.leader.max.move";
+  public static final String PROP_FOLLOWER_MAX_MOVE = "registry.slot.follower.max.move";
+  public static final String PROP_BALANCE_THRESHOLD = "registry.slot.balance.threshold";
 
   // "final" instead of "static final" to make it dynamic and flexible
-  private final int maxMoveLeaderSlots = Integer.getInteger("slot.leader.max.move", 2);
+  private final int threshold = Integer.getInteger(PROP_BALANCE_THRESHOLD, 10);
 
-  private final int maxMoveFollowerSlots = Integer.getInteger("slot.follower.max.move", 10);
+  // "final" instead of "static final" to make it dynamic and flexible
+  private final int maxMoveLeaderSlots = Integer.getInteger(PROP_LEADER_MAX_MOVE, 2);
+
+  private final int maxMoveFollowerSlots = Integer.getInteger(PROP_FOLLOWER_MAX_MOVE, 10);
 
   @Override
   public int getLowWaterMarkSlotLeaderNums(int average) {

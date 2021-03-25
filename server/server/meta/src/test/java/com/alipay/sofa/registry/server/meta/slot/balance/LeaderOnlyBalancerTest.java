@@ -31,7 +31,6 @@ import java.util.List;
 import org.assertj.core.util.Lists;
 import org.junit.Assert;
 import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Test;
 
 public class LeaderOnlyBalancerTest extends AbstractMetaServerTestBase {
@@ -44,13 +43,6 @@ public class LeaderOnlyBalancerTest extends AbstractMetaServerTestBase {
 
   private LeaderOnlyBalancer balancer;
 
-  @BeforeClass
-  public static void beforeLeaderOnlyBalancerTestClass() {
-    System.setProperty("data.slot.num", "16");
-    System.setProperty("data.slot.replicas", "1");
-    System.setProperty("slot.leader.max.move", "2");
-  }
-
   @Before
   public void beforeLeaderOnlyBalancerTest() {
     NodeConfig nodeConfig = mock(NodeConfig.class);
@@ -58,6 +50,8 @@ public class LeaderOnlyBalancerTest extends AbstractMetaServerTestBase {
 
     currentDataServers = Lists.newArrayList("10.0.0.1", "10.0.0.2", "10.0.0.3");
     slotManager = new SimpleSlotManager();
+    slotManager.setSlotNums(16);
+    slotManager.setSlotReplicas(1);
     slotTableBuilder = new SlotTableBuilder(slotManager.getSlotTable(), 16, 1);
     balancer = new LeaderOnlyBalancer(slotTableBuilder, currentDataServers);
   }

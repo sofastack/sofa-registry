@@ -120,11 +120,11 @@ public class AbstractMetaServerTestBase extends AbstractTestBase {
     }
   }
 
-  protected URL randomURL() {
+  public static URL randomURL() {
     return randomURL("127.0.0.1");
   }
 
-  protected URL randomURL(String ip) {
+  public static URL randomURL(String ip) {
     return new URL(ip, randomPort());
   }
 
@@ -440,7 +440,7 @@ public class AbstractMetaServerTestBase extends AbstractTestBase {
     }
   }
 
-  protected List<DataNode> randomDataNodes(int num) {
+  protected static List<DataNode> randomDataNodes(int num) {
     List<DataNode> result = Lists.newArrayList();
     for (int i = 0; i < num; i++) {
       result.add(new DataNode(randomURL(randomIp()), getDc()));
@@ -448,12 +448,16 @@ public class AbstractMetaServerTestBase extends AbstractTestBase {
     return result;
   }
 
-  protected SlotTable randomSlotTable() {
+  public static SlotTable randomSlotTable() {
     return new SlotTableGenerator(randomDataNodes(3)).createSlotTable();
   }
 
-  protected SlotTable randomSlotTable(List<DataNode> dataNodes) {
-    return new SlotTableGenerator(dataNodes).createSlotTable();
+  public static SlotTable randomSlotTable(List<DataNode> dataNodes) {
+    return randomSlotTable(dataNodes, SlotConfig.SLOT_NUM, SlotConfig.SLOT_REPLICAS);
+  }
+
+  public static SlotTable randomSlotTable(List<DataNode> dataNodes, int slotNum, int slotReplicas) {
+    return new SlotTableGenerator(dataNodes).createSlotTable(slotNum, slotReplicas);
   }
 
   protected SlotTable randomUnBalancedSlotTable(List<DataNode> dataNodes) {
@@ -481,7 +485,7 @@ public class AbstractMetaServerTestBase extends AbstractTestBase {
     return maxLeaderGapBefore > maxLeaderGapCurrent || maxSlotsGapBefore > maxSlotsGapCurrent;
   }
 
-  private int maxLeaderGap(SlotTable slotTable, List<DataNode> dataNodes) {
+  public static int maxLeaderGap(SlotTable slotTable, List<DataNode> dataNodes) {
     Map<String, Integer> counter = new HashMap<>(dataNodes.size());
     dataNodes.forEach(dataNode -> counter.put(dataNode.getIp(), 0));
     for (Map.Entry<Integer, Slot> entry : slotTable.getSlotMap().entrySet()) {
@@ -491,7 +495,7 @@ public class AbstractMetaServerTestBase extends AbstractTestBase {
     return maxGap(counter);
   }
 
-  private int maxSlotGap(SlotTable slotTable, List<DataNode> dataNodes) {
+  public static int maxSlotGap(SlotTable slotTable, List<DataNode> dataNodes) {
     Map<String, Integer> counter = new HashMap<>(dataNodes.size());
     dataNodes.forEach(dataNode -> counter.put(dataNode.getIp(), 0));
     for (Map.Entry<Integer, Slot> entry : slotTable.getSlotMap().entrySet()) {
@@ -505,7 +509,7 @@ public class AbstractMetaServerTestBase extends AbstractTestBase {
     return maxGap(counter);
   }
 
-  private int maxGap(Map<String, Integer> stats) {
+  public static int maxGap(Map<String, Integer> stats) {
     int min = Integer.MAX_VALUE, max = Integer.MIN_VALUE;
     for (int count : stats.values()) {
       min = Math.min(count, min);
@@ -522,10 +526,14 @@ public class AbstractMetaServerTestBase extends AbstractTestBase {
       this.dataNodes = dataNodes;
     }
 
-    public SlotTable createSlotTable() {
+    public SlotTable createSlotTable(int slotNum, int slotReplicas) {
       long epoch = DatumVersionUtil.nextId();
-      Map<Integer, Slot> slotMap = generateSlotMap();
+      Map<Integer, Slot> slotMap = generateSlotMap(slotNum, slotReplicas);
       return new SlotTable(epoch, slotMap.values());
+    }
+
+    public SlotTable createSlotTable() {
+      return createSlotTable(SlotConfig.SLOT_NUM, SlotConfig.SLOT_REPLICAS);
     }
 
     public SlotTable createLeaderUnBalancedSlotTable() {
@@ -534,13 +542,13 @@ public class AbstractMetaServerTestBase extends AbstractTestBase {
       return new SlotTable(epoch, slotMap.values());
     }
 
-    private Map<Integer, Slot> generateSlotMap() {
+    private Map<Integer, Slot> generateSlotMap(int slotNum, int slotReplicas) {
       Map<Integer, Slot> slotMap = Maps.newHashMap();
-      for (int i = 0; i < SlotConfig.SLOT_NUM; i++) {
+      for (int i = 0; i < slotNum; i++) {
         long epoch = DatumVersionUtil.nextId();
         String leader = getNextLeader().getIp();
         List<String> followers = Lists.newArrayList();
-        for (int j = 0; j < SlotConfig.SLOT_REPLICAS - 1; j++) {
+        for (int j = 0; j < slotReplicas - 1; j++) {
           followers.add(getNextFollower().getIp());
         }
         Slot slot = new Slot(i, leader, epoch, followers);
