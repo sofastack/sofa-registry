@@ -27,6 +27,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import javax.annotation.PostConstruct;
+import javax.annotation.PreDestroy;
 
 /**
  * @author chen.zhu
@@ -42,6 +43,8 @@ public abstract class AbstractLeaderElector implements LeaderElector {
 
   private volatile boolean isObserver = false;
 
+  private final LeaderElectorTrigger leaderElectorTrigger = new LeaderElectorTrigger();
+
   @Override
   public void registerLeaderAware(LeaderAware leaderAware) {
     leaderAwares.add(leaderAware);
@@ -49,7 +52,16 @@ public abstract class AbstractLeaderElector implements LeaderElector {
 
   @PostConstruct
   public void init() {
-    ConcurrentUtils.createDaemonThread("LeaderElectorTrigger", new LeaderElectorTrigger()).start();
+    ConcurrentUtils.createDaemonThread("LeaderElectorTrigger", leaderElectorTrigger).start();
+  }
+
+  @PreDestroy
+  public void dispose() {
+    try {
+      leaderElectorTrigger.close();
+    } catch (Throwable throwable) {
+      LOG.error("[dispose]", throwable);
+    }
   }
 
   private class LeaderElectorTrigger extends LoopRunnable {

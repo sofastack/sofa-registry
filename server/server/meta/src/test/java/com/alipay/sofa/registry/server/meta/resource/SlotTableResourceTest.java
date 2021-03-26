@@ -23,7 +23,7 @@ import com.alipay.sofa.registry.common.model.metaserver.cluster.VersionedList;
 import com.alipay.sofa.registry.common.model.metaserver.nodes.DataNode;
 import com.alipay.sofa.registry.common.model.slot.SlotTable;
 import com.alipay.sofa.registry.exception.SofaRegistryRuntimeException;
-import com.alipay.sofa.registry.server.meta.AbstractMetaServerTest;
+import com.alipay.sofa.registry.server.meta.AbstractMetaServerTestBase;
 import com.alipay.sofa.registry.server.meta.bootstrap.config.NodeConfig;
 import com.alipay.sofa.registry.server.meta.lease.data.DefaultDataServerManager;
 import com.alipay.sofa.registry.server.meta.monitor.SlotTableMonitor;
@@ -42,7 +42,7 @@ import org.junit.Test;
  * @author zhuchen
  * @date Mar 2, 2021, 11:48:41 AM
  */
-public class SlotTableResourceTest extends AbstractMetaServerTest {
+public class SlotTableResourceTest extends AbstractMetaServerTestBase {
 
   private SlotManager slotManager;
 

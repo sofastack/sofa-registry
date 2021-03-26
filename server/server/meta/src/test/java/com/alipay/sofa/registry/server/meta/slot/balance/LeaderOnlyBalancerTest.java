@@ -22,7 +22,7 @@ import static org.mockito.Mockito.when;
 import com.alipay.sofa.registry.common.model.metaserver.nodes.DataNode;
 import com.alipay.sofa.registry.common.model.slot.SlotTable;
 import com.alipay.sofa.registry.common.model.store.URL;
-import com.alipay.sofa.registry.server.meta.AbstractMetaServerTest;
+import com.alipay.sofa.registry.server.meta.AbstractMetaServerTestBase;
 import com.alipay.sofa.registry.server.meta.bootstrap.config.NodeConfig;
 import com.alipay.sofa.registry.server.meta.slot.manager.SimpleSlotManager;
 import com.alipay.sofa.registry.server.meta.slot.util.builder.SlotTableBuilder;
@@ -34,7 +34,7 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-public class LeaderOnlyBalancerTest extends AbstractMetaServerTest {
+public class LeaderOnlyBalancerTest extends AbstractMetaServerTestBase {
 
   private SimpleSlotManager slotManager;
 

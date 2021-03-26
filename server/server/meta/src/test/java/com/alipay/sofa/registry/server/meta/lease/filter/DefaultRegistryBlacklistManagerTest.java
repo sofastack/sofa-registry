@@ -21,14 +21,14 @@ import static org.mockito.Mockito.*;
 
 import com.alipay.sofa.registry.common.model.metaserver.Lease;
 import com.alipay.sofa.registry.exception.SofaRegistryRuntimeException;
-import com.alipay.sofa.registry.server.meta.AbstractMetaServerTest;
+import com.alipay.sofa.registry.server.meta.AbstractMetaServerTestBase;
 import com.alipay.sofa.registry.server.meta.cluster.node.NodeModifiedTest;
 import com.alipay.sofa.registry.store.api.meta.ProvideDataRepository;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
-public class DefaultRegistryBlacklistManagerTest extends AbstractMetaServerTest {
+public class DefaultRegistryBlacklistManagerTest extends AbstractMetaServerTestBase {
 
   private RegistryBlacklistManager blacklistManager;
 

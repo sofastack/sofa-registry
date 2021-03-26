@@ -52,7 +52,6 @@ public class DefaultProvideDataNotifierTest {
         new ProvideDataChangeEvent(
             "message",
             System.currentTimeMillis(),
-            DataOperation.ADD,
             Sets.newHashSet(Node.NodeType.DATA)));
     verify(defaultDataServerService, times(1)).notifyProvideDataChange(any());
     verify(defaultSessionServerService, never()).notifyProvideDataChange(any());
@@ -61,7 +60,6 @@ public class DefaultProvideDataNotifierTest {
         new ProvideDataChangeEvent(
             "message",
             System.currentTimeMillis(),
-            DataOperation.ADD,
             Sets.newHashSet(Node.NodeType.SESSION)));
     verify(defaultDataServerService, times(1)).notifyProvideDataChange(any());
     verify(defaultSessionServerService, times(1)).notifyProvideDataChange(any());
@@ -70,7 +68,6 @@ public class DefaultProvideDataNotifierTest {
         new ProvideDataChangeEvent(
             "message",
             System.currentTimeMillis(),
-            DataOperation.ADD,
             Sets.newHashSet(Node.NodeType.SESSION, Node.NodeType.DATA)));
     verify(defaultDataServerService, times(2)).notifyProvideDataChange(any());
     verify(defaultSessionServerService, times(2)).notifyProvideDataChange(any());

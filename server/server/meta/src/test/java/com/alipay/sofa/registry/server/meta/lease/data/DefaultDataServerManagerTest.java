@@ -19,7 +19,7 @@ package com.alipay.sofa.registry.server.meta.lease.data;
 import static org.mockito.Mockito.when;
 
 import com.alipay.sofa.registry.common.model.metaserver.nodes.DataNode;
-import com.alipay.sofa.registry.server.meta.AbstractMetaServerTest;
+import com.alipay.sofa.registry.server.meta.AbstractMetaServerTestBase;
 import com.alipay.sofa.registry.server.meta.bootstrap.config.MetaServerConfig;
 import java.util.concurrent.TimeoutException;
 import org.junit.After;
@@ -29,7 +29,7 @@ import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
-public class DefaultDataServerManagerTest extends AbstractMetaServerTest {
+public class DefaultDataServerManagerTest extends AbstractMetaServerTestBase {
 
   private DefaultDataServerManager dataServerManager;
 

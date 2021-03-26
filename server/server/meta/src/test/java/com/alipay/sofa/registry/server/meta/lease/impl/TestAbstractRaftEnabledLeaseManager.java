@@ -16,9 +16,9 @@
  */
 package com.alipay.sofa.registry.server.meta.lease.impl;
 
-import com.alipay.sofa.registry.server.meta.AbstractMetaServerTest;
+import com.alipay.sofa.registry.server.meta.AbstractMetaServerTestBase;
 
-public class TestAbstractRaftEnabledLeaseManager extends AbstractMetaServerTest {
+public class TestAbstractRaftEnabledLeaseManager extends AbstractMetaServerTestBase {
 
   private String snapshotFile = "TEST-SERVICE-ID";
 

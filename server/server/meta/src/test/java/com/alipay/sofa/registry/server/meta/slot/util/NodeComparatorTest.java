@@ -16,7 +16,7 @@
  */
 package com.alipay.sofa.registry.server.meta.slot.util;
 
-import com.alipay.sofa.registry.server.meta.AbstractMetaServerTest;
+import com.alipay.sofa.registry.server.meta.AbstractMetaServerTestBase;
 import com.alipay.sofa.registry.server.shared.util.NodeUtils;
 import java.util.HashSet;
 import java.util.List;
@@ -24,7 +24,7 @@ import org.assertj.core.util.Lists;
 import org.junit.Assert;
 import org.junit.Test;
 
-public class NodeComparatorTest extends AbstractMetaServerTest {
+public class NodeComparatorTest extends AbstractMetaServerTestBase {
 
   @Test
   public void testCompare() {

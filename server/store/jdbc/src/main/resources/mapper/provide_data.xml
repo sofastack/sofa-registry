@@ -58,7 +58,7 @@
     </select>
 
     <delete id="remove">
-        update provide_data set data_key = "" where data_center = #{dataCenter} and data_key = #{dataKey}
+        delete from provide_data where data_center = #{dataCenter} and data_key = #{dataKey}
     </delete>
 
 </mapper>
