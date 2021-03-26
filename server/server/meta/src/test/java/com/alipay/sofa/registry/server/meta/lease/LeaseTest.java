@@ -18,12 +18,12 @@ package com.alipay.sofa.registry.server.meta.lease;
 
 import com.alipay.sofa.registry.common.model.metaserver.Lease;
 import com.alipay.sofa.registry.common.model.metaserver.nodes.DataNode;
-import com.alipay.sofa.registry.server.meta.AbstractMetaServerTest;
+import com.alipay.sofa.registry.server.meta.AbstractMetaServerTestBase;
 import java.util.concurrent.TimeUnit;
 import org.junit.Assert;
 import org.junit.Test;
 
-public class LeaseTest extends AbstractMetaServerTest {
+public class LeaseTest extends AbstractMetaServerTestBase {
 
   private Lease<Object> lease;
 

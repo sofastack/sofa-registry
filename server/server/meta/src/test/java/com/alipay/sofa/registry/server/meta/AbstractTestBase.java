@@ -51,7 +51,7 @@ import org.junit.rules.TestName;
  * @author chen.zhu
  *     <p>Mar 15, 2021
  */
-public class AbstractTest {
+public class AbstractTestBase {
 
   protected final Logger logger = LoggerFactory.getLogger(getClass());
 

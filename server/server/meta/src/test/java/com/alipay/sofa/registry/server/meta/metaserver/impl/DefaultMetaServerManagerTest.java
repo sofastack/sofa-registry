@@ -20,7 +20,7 @@ import static org.mockito.Mockito.*;
 
 import com.alipay.sofa.registry.common.model.Node;
 import com.alipay.sofa.registry.common.model.metaserver.cluster.VersionedList;
-import com.alipay.sofa.registry.server.meta.AbstractMetaServerTest;
+import com.alipay.sofa.registry.server.meta.AbstractMetaServerTestBase;
 import com.alipay.sofa.registry.server.meta.bootstrap.config.NodeConfig;
 import com.alipay.sofa.registry.server.meta.lease.data.DataServerManager;
 import com.alipay.sofa.registry.server.meta.lease.impl.DefaultCrossDcMetaServerManager;
@@ -33,7 +33,7 @@ import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
-public class DefaultMetaServerManagerTest extends AbstractMetaServerTest {
+public class DefaultMetaServerManagerTest extends AbstractMetaServerTestBase {
 
   @Mock private DefaultCrossDcMetaServerManager crossDcMetaServerManager;
 

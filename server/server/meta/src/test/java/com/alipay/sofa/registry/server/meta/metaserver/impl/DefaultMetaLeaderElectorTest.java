@@ -18,7 +18,7 @@ package com.alipay.sofa.registry.server.meta.metaserver.impl;
 
 import static org.mockito.Mockito.when;
 
-import com.alipay.sofa.registry.server.meta.AbstractMetaServerTest;
+import com.alipay.sofa.registry.server.meta.AbstractMetaServerTestBase;
 import com.alipay.sofa.registry.server.meta.MetaLeaderService;
 import com.alipay.sofa.registry.server.meta.bootstrap.config.MetaServerConfig;
 import com.alipay.sofa.registry.server.shared.env.ServerEnv;
@@ -31,7 +31,7 @@ import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
-public class DefaultMetaLeaderElectorTest extends AbstractMetaServerTest {
+public class DefaultMetaLeaderElectorTest extends AbstractMetaServerTestBase {
 
   private DefaultMetaLeaderElector metaLeaderElector;
 
@@ -53,7 +53,7 @@ public class DefaultMetaLeaderElectorTest extends AbstractMetaServerTest {
     metaLeaderElector.leaderNotify();
     Assert.assertFalse(metaLeaderElector.isWarmuped());
     when(metaServerConfig.getMetaLeaderWarmupMilli()).thenReturn(1L);
-    Thread.sleep(1);
+    Thread.sleep(30);
     Assert.assertTrue(metaLeaderElector.isWarmuped());
   }
 

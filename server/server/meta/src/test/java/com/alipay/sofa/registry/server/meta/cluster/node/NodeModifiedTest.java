@@ -18,7 +18,7 @@ package com.alipay.sofa.registry.server.meta.cluster.node;
 
 import com.alipay.sofa.registry.common.model.Node;
 import com.alipay.sofa.registry.common.model.store.URL;
-import com.alipay.sofa.registry.server.meta.AbstractMetaServerTest;
+import com.alipay.sofa.registry.server.meta.AbstractMetaServerTestBase;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -27,7 +27,7 @@ import org.junit.Test;
  * @date Dec 15, 2020, 8:02:29 PM
  *     <p>nothing here, simply increase unit test coverage
  */
-public class NodeModifiedTest extends AbstractMetaServerTest {
+public class NodeModifiedTest extends AbstractMetaServerTestBase {
 
   @Test
   public void testGetOldNode() {

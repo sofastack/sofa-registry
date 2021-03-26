@@ -41,7 +41,7 @@ import org.springframework.test.context.junit4.SpringRunner;
  * @version $Id: MetadataTest.java, v 0.1 2021年02月03日 19:50 xiaojian.xj Exp $
  */
 @RunWith(SpringRunner.class)
-public class MetadataTest extends BaseIntegrationTest {
+public class MetadataTestIgnore extends BaseIntegrationTest {
 
   private AppRevisionHandlerStrategy appRevisionHandlerStrategy;
 

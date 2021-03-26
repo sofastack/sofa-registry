@@ -36,7 +36,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 @Path("openapi/v1/slot/table")
 public class SlotTableStatusResource {
 
-  private static final long THREE_MINUTES = 3 * 60 * 1000L;
+  public static final long MAX_SYNC_GAP = Long.getLong("data.replicate.max.gap", 3 * 60 * 1000);
 
   @Autowired private SlotManager slotManager;
 
@@ -62,7 +62,7 @@ public class SlotTableStatusResource {
         }
       } else {
         if (System.currentTimeMillis() - ((FollowerSlotStatus) slotStatus).getLastLeaderSyncTime()
-            > THREE_MINUTES) {
+            > MAX_SYNC_GAP) {
           isCurrentSlotStable = false;
           break;
         }

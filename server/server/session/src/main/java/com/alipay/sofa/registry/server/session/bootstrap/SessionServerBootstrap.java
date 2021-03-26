@@ -81,7 +81,7 @@ public class SessionServerBootstrap {
   @Resource(name = "serverHandlers")
   private Collection<AbstractServerHandler> serverHandlers;
 
-  @Autowired protected MetaServerService mataNodeService;
+  @Autowired protected MetaServerService metaNodeService;
   @Autowired private NodeExchanger dataNodeExchanger;
 
   @Autowired private ResourceConfig jerseyResourceConfig;
@@ -278,9 +278,9 @@ public class SessionServerBootstrap {
   private void connectMetaServer() {
     try {
       // register node as renew node
-      mataNodeService.renewNode();
+      metaNodeService.renewNode();
       // start sched renew
-      mataNodeService.startRenewer(sessionServerConfig.getSchedulerHeartbeatIntervalSecs() * 1000);
+      metaNodeService.startRenewer(sessionServerConfig.getSchedulerHeartbeatIntervalSecs() * 1000);
       fetchStopPushSwitch();
 
       fetchBlackList();
@@ -297,7 +297,7 @@ public class SessionServerBootstrap {
   }
 
   private void fetchStopPushSwitch() {
-    ProvideData data = mataNodeService.fetchData(ValueConstants.STOP_PUSH_DATA_SWITCH_DATA_ID);
+    ProvideData data = metaNodeService.fetchData(ValueConstants.STOP_PUSH_DATA_SWITCH_DATA_ID);
     if (data != null) {
       provideDataProcessorManager.fetchDataProcess(data);
     } else {

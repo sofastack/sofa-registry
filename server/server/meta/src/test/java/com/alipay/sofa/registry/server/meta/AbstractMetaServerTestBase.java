@@ -68,7 +68,7 @@ import org.junit.rules.TestName;
  * @author chen.zhu
  *     <p>Nov 18, 2020
  */
-public class AbstractMetaServerTest extends AbstractTest {
+public class AbstractMetaServerTestBase extends AbstractTestBase {
 
   protected MetaLeaderService metaLeaderService;
 

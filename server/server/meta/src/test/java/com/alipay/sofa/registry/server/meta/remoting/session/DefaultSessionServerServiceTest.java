@@ -27,7 +27,7 @@ import com.alipay.sofa.registry.common.model.metaserver.nodes.SessionNode;
 import com.alipay.sofa.registry.remoting.Client;
 import com.alipay.sofa.registry.remoting.exchange.RequestException;
 import com.alipay.sofa.registry.remoting.exchange.message.Request;
-import com.alipay.sofa.registry.server.meta.AbstractMetaServerTest;
+import com.alipay.sofa.registry.server.meta.AbstractMetaServerTestBase;
 import com.alipay.sofa.registry.server.meta.lease.session.SessionServerManager;
 import com.alipay.sofa.registry.server.meta.remoting.SessionNodeExchanger;
 import com.alipay.sofa.registry.server.meta.remoting.connection.SessionConnectionHandler;
@@ -42,7 +42,7 @@ import org.mockito.MockitoAnnotations;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 
-public class DefaultSessionServerServiceTest extends AbstractMetaServerTest {
+public class DefaultSessionServerServiceTest extends AbstractMetaServerTestBase {
 
   private DefaultSessionServerService notifier = new DefaultSessionServerService();
 
@@ -96,7 +96,7 @@ public class DefaultSessionServerServiceTest extends AbstractMetaServerTest {
                     new SessionNode(randomURL(randomIp()), getDc()))));
     notifier.notifyProvideDataChange(
         new ProvideDataChangeEvent(
-            ValueConstants.BLACK_LIST_DATA_ID, System.currentTimeMillis(), DataOperation.ADD));
+            ValueConstants.BLACK_LIST_DATA_ID, System.currentTimeMillis()));
     Thread.sleep(100);
     verify(rpcClient, atLeast(1)).sendCallback(any(), any(), any(), anyInt());
   }
@@ -138,7 +138,7 @@ public class DefaultSessionServerServiceTest extends AbstractMetaServerTest {
     notifier.setSessionNodeExchanger(otherNodeExchanger);
     notifier.notifyProvideDataChange(
         new ProvideDataChangeEvent(
-            ValueConstants.BLACK_LIST_DATA_ID, System.currentTimeMillis(), DataOperation.ADD));
+            ValueConstants.BLACK_LIST_DATA_ID, System.currentTimeMillis()));
     Thread.sleep(200);
   }
 }

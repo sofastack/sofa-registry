@@ -19,7 +19,7 @@ package com.alipay.sofa.registry.server.meta.slot.arrange;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
 
-import com.alipay.sofa.registry.server.meta.AbstractMetaServerTest;
+import com.alipay.sofa.registry.server.meta.AbstractMetaServerTestBase;
 import com.alipay.sofa.registry.server.meta.lease.data.DefaultDataServerManager;
 import com.alipay.sofa.registry.server.meta.monitor.SlotTableMonitor;
 import com.alipay.sofa.registry.server.meta.resource.SlotTableResource;
@@ -33,7 +33,7 @@ import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
-public class ScheduledSlotArrangerTest extends AbstractMetaServerTest {
+public class ScheduledSlotArrangerTest extends AbstractMetaServerTestBase {
 
   private ScheduledSlotArranger slotArranger;
 

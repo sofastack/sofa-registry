@@ -21,7 +21,7 @@ import static org.junit.Assert.assertSame;
 import com.alipay.sofa.registry.common.model.metaserver.nodes.DataNode;
 import com.alipay.sofa.registry.common.model.slot.DataNodeSlot;
 import com.alipay.sofa.registry.common.model.slot.SlotTable;
-import com.alipay.sofa.registry.server.meta.AbstractMetaServerTest;
+import com.alipay.sofa.registry.server.meta.AbstractMetaServerTestBase;
 import com.alipay.sofa.registry.server.meta.slot.util.builder.SlotBuilder;
 import com.alipay.sofa.registry.server.meta.slot.util.builder.SlotTableBuilder;
 import com.alipay.sofa.registry.server.shared.util.NodeUtils;
@@ -38,7 +38,7 @@ import org.junit.Test;
  * @author chen.zhu
  *     <p>Jan 15, 2021
  */
-public class SlotTableBuilderTest extends AbstractMetaServerTest {
+public class SlotTableBuilderTest extends AbstractMetaServerTestBase {
 
   @Test
   public void testGetOrCreate() throws InterruptedException {
