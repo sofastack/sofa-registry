@@ -27,7 +27,7 @@ import com.alipay.sofa.registry.exception.StopException;
 import com.alipay.sofa.registry.lifecycle.LifecycleState;
 import com.alipay.sofa.registry.lifecycle.impl.LifecycleHelper;
 import com.alipay.sofa.registry.remoting.exchange.Exchange;
-import com.alipay.sofa.registry.server.meta.AbstractMetaServerTest;
+import com.alipay.sofa.registry.server.meta.AbstractMetaServerTestBase;
 import com.alipay.sofa.registry.server.meta.MetaLeaderService;
 import com.alipay.sofa.registry.server.meta.metaserver.CrossDcMetaServer;
 import java.util.concurrent.TimeoutException;
@@ -39,7 +39,7 @@ import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
-public class CrossDcSlotAllocatorTest extends AbstractMetaServerTest {
+public class CrossDcSlotAllocatorTest extends AbstractMetaServerTestBase {
 
   private CrossDcSlotAllocator allocator;
 

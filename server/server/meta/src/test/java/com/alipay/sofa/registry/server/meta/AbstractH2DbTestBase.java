@@ -45,7 +45,7 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 @ActiveProfiles("test")
 @SpringBootTest(classes = AbstractH2DbTestBase.JdbcTestConfig.class)
 @RunWith(SpringJUnit4ClassRunner.class)
-public class AbstractH2DbTestBase extends AbstractTest implements ApplicationContextAware {
+public class AbstractH2DbTestBase extends AbstractTestBase implements ApplicationContextAware {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(AbstractH2DbTestBase.class);
   public static final String TABLE_STRUCTURE = "sql/h2/create_table.sql";

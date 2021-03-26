@@ -26,7 +26,7 @@ import com.alipay.sofa.registry.common.model.slot.SlotConfig;
 import com.alipay.sofa.registry.common.model.slot.SlotTable;
 import com.alipay.sofa.registry.common.model.store.URL;
 import com.alipay.sofa.registry.lifecycle.LifecycleState;
-import com.alipay.sofa.registry.server.meta.AbstractMetaServerTest;
+import com.alipay.sofa.registry.server.meta.AbstractMetaServerTestBase;
 import com.alipay.sofa.registry.server.meta.MetaLeaderService;
 import com.alipay.sofa.registry.server.meta.bootstrap.config.NodeConfig;
 import com.alipay.sofa.registry.server.meta.lease.data.DefaultDataServerManager;
@@ -56,7 +56,7 @@ import org.mockito.MockitoAnnotations;
  * @author chen.zhu
  *     <p>Jan 14, 2021
  */
-public class SlotMigrationIntegrationTest extends AbstractMetaServerTest {
+public class SlotMigrationIntegrationTest extends AbstractMetaServerTestBase {
 
   private SlotManager slotManager;
 

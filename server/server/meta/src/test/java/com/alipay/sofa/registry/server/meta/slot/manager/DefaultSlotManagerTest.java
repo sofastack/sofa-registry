@@ -20,14 +20,14 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.*;
 
 import com.alipay.sofa.registry.exception.SofaRegistryRuntimeException;
-import com.alipay.sofa.registry.server.meta.AbstractMetaServerTest;
+import com.alipay.sofa.registry.server.meta.AbstractMetaServerTestBase;
 import com.alipay.sofa.registry.server.meta.remoting.notifier.Notifier;
 import org.assertj.core.util.Lists;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.MockitoAnnotations;
 
-public class DefaultSlotManagerTest extends AbstractMetaServerTest {
+public class DefaultSlotManagerTest extends AbstractMetaServerTestBase {
 
   private DefaultSlotManager slotManager;
 

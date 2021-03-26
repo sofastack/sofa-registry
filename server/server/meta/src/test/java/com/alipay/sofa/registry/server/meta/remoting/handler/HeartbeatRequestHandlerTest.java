@@ -24,7 +24,7 @@ import com.alipay.sofa.registry.common.model.metaserver.inter.heartbeat.Heartbea
 import com.alipay.sofa.registry.common.model.metaserver.nodes.DataNode;
 import com.alipay.sofa.registry.common.model.slot.SlotConfig;
 import com.alipay.sofa.registry.remoting.Channel;
-import com.alipay.sofa.registry.server.meta.AbstractMetaServerTest;
+import com.alipay.sofa.registry.server.meta.AbstractMetaServerTestBase;
 import com.alipay.sofa.registry.server.meta.MetaLeaderService;
 import com.alipay.sofa.registry.server.meta.bootstrap.config.NodeConfig;
 import com.alipay.sofa.registry.server.meta.lease.data.DataServerManager;
@@ -38,7 +38,7 @@ import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
-public class HeartbeatRequestHandlerTest extends AbstractMetaServerTest {
+public class HeartbeatRequestHandlerTest extends AbstractMetaServerTestBase {
 
   private HeartbeatRequestHandler handler = new HeartbeatRequestHandler();
 

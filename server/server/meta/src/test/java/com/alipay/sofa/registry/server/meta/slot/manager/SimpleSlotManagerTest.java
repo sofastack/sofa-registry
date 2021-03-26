@@ -23,7 +23,7 @@ import com.alipay.sofa.registry.common.model.metaserver.nodes.DataNode;
 import com.alipay.sofa.registry.common.model.slot.DataNodeSlot;
 import com.alipay.sofa.registry.common.model.slot.SlotConfig;
 import com.alipay.sofa.registry.common.model.slot.SlotTable;
-import com.alipay.sofa.registry.server.meta.AbstractMetaServerTest;
+import com.alipay.sofa.registry.server.meta.AbstractMetaServerTestBase;
 import com.alipay.sofa.registry.server.meta.bootstrap.config.NodeConfig;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
@@ -36,7 +36,7 @@ import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
-public class SimpleSlotManagerTest extends AbstractMetaServerTest {
+public class SimpleSlotManagerTest extends AbstractMetaServerTestBase {
 
   private SimpleSlotManager slotManager;
 

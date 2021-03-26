@@ -18,7 +18,6 @@ package com.alipay.sofa.registry.server.data.remoting.metaserver.handler;
 
 import com.alipay.sofa.registry.common.model.CommonResponse;
 import com.alipay.sofa.registry.common.model.Node.NodeType;
-import com.alipay.sofa.registry.common.model.metaserver.DataOperation;
 import com.alipay.sofa.registry.common.model.metaserver.ProvideData;
 import com.alipay.sofa.registry.common.model.metaserver.ProvideDataChangeEvent;
 import com.alipay.sofa.registry.remoting.Channel;
@@ -45,10 +44,8 @@ public class NotifyProvideDataChangeHandler extends AbstractClientHandler<Provid
   @Override
   public Object doHandle(Channel channel, ProvideDataChangeEvent request) {
     String dataInfoId = request.getDataInfoId();
-    if (request.getDataOperator() != DataOperation.REMOVE) {
-      ProvideData provideData = metaServerService.fetchData(dataInfoId);
-      provideDataProcessorManager.changeDataProcess(provideData);
-    }
+    ProvideData provideData = metaServerService.fetchData(dataInfoId);
+    provideDataProcessorManager.changeDataProcess(provideData);
     return null;
   }
 

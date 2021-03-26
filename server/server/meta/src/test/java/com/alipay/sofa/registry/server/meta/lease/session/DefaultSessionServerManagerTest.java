@@ -20,7 +20,7 @@ import static org.mockito.Mockito.when;
 
 import com.alipay.sofa.registry.common.model.ProcessId;
 import com.alipay.sofa.registry.common.model.metaserver.nodes.SessionNode;
-import com.alipay.sofa.registry.server.meta.AbstractMetaServerTest;
+import com.alipay.sofa.registry.server.meta.AbstractMetaServerTestBase;
 import com.alipay.sofa.registry.server.meta.bootstrap.config.MetaServerConfig;
 import java.util.concurrent.TimeoutException;
 import org.junit.After;
@@ -30,7 +30,7 @@ import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
-public class DefaultSessionServerManagerTest extends AbstractMetaServerTest {
+public class DefaultSessionServerManagerTest extends AbstractMetaServerTestBase {
 
   private DefaultSessionServerManager sessionManager;
 

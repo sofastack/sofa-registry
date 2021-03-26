@@ -42,6 +42,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import javax.annotation.PreDestroy;
+
 /**
  * @author yuzhi.lyz
  * @version v 0.1 2020-11-28 15:21 yuzhi.lyz Exp $
@@ -58,6 +60,13 @@ public abstract class AbstractMetaServerService<T extends BaseHeartBeatResponse>
 
   private AtomicInteger renewFailCounter = new AtomicInteger(0);
   private static final Integer maxRenewFailCount = 3;
+
+  @PreDestroy
+  public void dispose() {
+    if (renewer != null) {
+      renewer.close();
+    }
+  }
 
   @Override
   public synchronized void startRenewer(int intervalMs) {

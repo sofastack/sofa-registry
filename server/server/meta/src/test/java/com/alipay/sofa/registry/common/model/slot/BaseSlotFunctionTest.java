@@ -16,7 +16,7 @@
  */
 package com.alipay.sofa.registry.common.model.slot;
 
-import com.alipay.sofa.registry.server.meta.AbstractMetaServerTest;
+import com.alipay.sofa.registry.server.meta.AbstractMetaServerTestBase;
 import com.alipay.sofa.registry.util.FileUtils;
 import com.alipay.sofa.registry.util.JsonUtils;
 import java.io.File;
@@ -26,7 +26,7 @@ import java.io.IOException;
  * @author chen.zhu
  *     <p>Jan 13, 2021
  */
-public class BaseSlotFunctionTest extends AbstractMetaServerTest {
+public class BaseSlotFunctionTest extends AbstractMetaServerTestBase {
 
   public String[] getDataInfoIds() throws IOException {
     String fileContent =

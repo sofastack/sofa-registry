@@ -22,7 +22,7 @@ import static org.mockito.Mockito.when;
 import com.alipay.sofa.registry.common.model.metaserver.cluster.VersionedList;
 import com.alipay.sofa.registry.common.model.metaserver.nodes.DataNode;
 import com.alipay.sofa.registry.common.model.slot.SlotTable;
-import com.alipay.sofa.registry.server.meta.AbstractMetaServerTest;
+import com.alipay.sofa.registry.server.meta.AbstractMetaServerTestBase;
 import com.alipay.sofa.registry.server.meta.bootstrap.config.NodeConfig;
 import com.alipay.sofa.registry.server.meta.lease.data.DefaultDataServerManager;
 import com.alipay.sofa.registry.server.meta.monitor.SlotTableMonitor;
@@ -45,7 +45,7 @@ import org.mockito.MockitoAnnotations;
  * @author xiaojian.xj
  * @version $Id: SlotChaosTest.java, v 0.1 2021年02月02日 11:47 xiaojian.xj Exp $
  */
-public class SlotChaosTest extends AbstractMetaServerTest {
+public class SlotChaosTest extends AbstractMetaServerTestBase {
 
   private DataServerInjection dataServerInjection;
 
@@ -63,12 +63,9 @@ public class SlotChaosTest extends AbstractMetaServerTest {
 
   @BeforeClass
   public static void beforeSlotMigrateChaosTestClass() throws Exception {
-    Map<String, String> env = new HashMap<>();
-
-    env.put("data.slot.num", "512");
-    env.put("data.slot.replicas", "2");
-    env.put("slot.leader.max.move", "2");
-    setEnv(env);
+    System.setProperty("data.slot.num", "512");
+    System.setProperty("data.slot.replicas", "2");
+    System.setProperty("slot.leader.max.move", "2");
   }
 
   @Before
