@@ -16,17 +16,21 @@
  */
 package com.alipay.sofa.registry.server.session.connections;
 
+import com.alipay.sofa.registry.common.model.ConnectId;
+import com.alipay.sofa.registry.common.model.constants.ValueConstants;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
+import com.alipay.sofa.registry.net.NetUtil;
 import com.alipay.sofa.registry.remoting.Channel;
 import com.alipay.sofa.registry.remoting.Server;
 import com.alipay.sofa.registry.remoting.exchange.Exchange;
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
+import com.alipay.sofa.registry.server.session.mapper.ConnectionMapper;
 import com.alipay.sofa.registry.server.session.resource.ConnectionsResource;
 import com.alipay.sofa.registry.server.session.store.DataStore;
 import com.alipay.sofa.registry.server.session.store.Interests;
 import com.alipay.sofa.registry.server.session.store.Watchers;
-import java.net.InetSocketAddress;
+import com.google.common.collect.Lists;
 import java.util.*;
 import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -44,6 +48,8 @@ public class ConnectionsService {
   @Autowired private Watchers sessionWatchers;
 
   @Autowired private SessionServerConfig sessionServerConfig;
+
+  @Autowired private ConnectionMapper connectionMapper;
 
   public List<String> getConnections() {
     Server server = boltExchange.getServer(sessionServerConfig.getServerPort());
@@ -71,30 +77,67 @@ public class ConnectionsService {
     connectIds.retainAll(boltConnectIds);
     return new ArrayList<>(connectIds);
   }
+  /**
+   * get connectIds by ip list
+   *
+   * @param _ipList ip list
+   * @return
+   */
+  public List<ConnectId> getIpConnects(List<String> _ipList) {
 
-  public void setMaxConnections(int connections) {
-    if (!sessionServerConfig.isEnableSessionLoadbalancePolicy()) {
-      throw new RuntimeException("drop connections is not allowed");
-    }
-    List<String> connectionIds = getConnections();
+    Server sessionServer = boltExchange.getServer(sessionServerConfig.getServerPort());
 
-    int needDropped = connectionIds.size() - connections;
-    if (needDropped <= 0) {
-      return;
-    }
-    Collections.shuffle(connectionIds);
-    connectionIds = connectionIds.subList(0, needDropped);
-    for (String ipAddress : connectionIds) {
-      Server server = boltExchange.getServer(sessionServerConfig.getServerPort());
-      String[] parts = ipAddress.split(":");
-      String host = parts[0];
-      int port = Integer.parseInt(parts[1]);
-      InetSocketAddress address = new InetSocketAddress(host, port);
-      Channel connection = server.getChannel(address);
-      if (connection != null && connection.isConnected()) {
-        LOGGER.info("close connection {}", ipAddress);
-        server.close(connection);
+    List<ConnectId> connections = Lists.newArrayList();
+
+    if (sessionServer != null) {
+      Collection<Channel> channels = sessionServer.getChannels();
+      for (Channel channel : channels) {
+        String key = NetUtil.toAddressString(channel.getRemoteAddress());
+        String ip = getIpFromConnectId(key);
+        if (_ipList.contains(ip)) {
+          connections.add(ConnectId.of(key, NetUtil.toAddressString(channel.getLocalAddress())));
+        }
       }
+    }
+
+    return connections;
+  }
+
+  /**
+   * close ip connects
+   *
+   * @param _ipList ip list
+   * @return
+   */
+  public List<String> closeIpConnects(List<String> _ipList) {
+
+    Server sessionServer = boltExchange.getServer(sessionServerConfig.getServerPort());
+
+    List<String> connections = new ArrayList<>();
+
+    if (sessionServer != null) {
+      Collection<Channel> channels = sessionServer.getChannels();
+      for (Channel channel : channels) {
+        String key = NetUtil.toAddressString(channel.getRemoteAddress());
+        String ip = getIpFromConnectId(key);
+        if (_ipList.contains(ip)) {
+          sessionServer.close(channel);
+          connections.add(
+              key
+                  + ValueConstants.CONNECT_ID_SPLIT
+                  + NetUtil.toAddressString(channel.getLocalAddress()));
+        }
+      }
+    }
+
+    return connections;
+  }
+
+  private String getIpFromConnectId(String connectId) {
+    if (connectionMapper.contains(connectId)) {
+      return connectionMapper.get(connectId);
+    } else {
+      return connectId.substring(0, connectId.indexOf(':'));
     }
   }
 }

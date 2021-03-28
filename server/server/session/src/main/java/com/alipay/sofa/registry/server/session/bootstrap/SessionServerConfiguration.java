@@ -36,6 +36,7 @@ import com.alipay.sofa.registry.server.session.filter.blacklist.*;
 import com.alipay.sofa.registry.server.session.limit.AccessLimitService;
 import com.alipay.sofa.registry.server.session.limit.AccessLimitServiceImpl;
 import com.alipay.sofa.registry.server.session.listener.*;
+import com.alipay.sofa.registry.server.session.mapper.ConnectionMapper;
 import com.alipay.sofa.registry.server.session.metadata.AppRevisionCacheRegistry;
 import com.alipay.sofa.registry.server.session.metadata.AppRevisionHeartbeatRegistry;
 import com.alipay.sofa.registry.server.session.node.processor.ClientNodeSingleTaskProcessor;
@@ -293,8 +294,6 @@ public class SessionServerConfiguration {
       Collection<AbstractClientHandler> list = new ArrayList<>();
       list.add(metaNodeConnectionHandler());
       list.add(notifyProvideDataChangeHandler());
-      list.add(loadbalanceMetricsHandler());
-      list.add(configureLoadbalanceHandler());
       list.add(slotTableChangeEventHandler());
       return list;
     }
@@ -317,16 +316,6 @@ public class SessionServerConfiguration {
     @Bean
     public AbstractClientHandler notifyProvideDataChangeHandler() {
       return new NotifyProvideDataChangeHandler();
-    }
-
-    @Bean
-    public AbstractClientHandler loadbalanceMetricsHandler() {
-      return new LoadbalanceMetricsHandler();
-    }
-
-    @Bean
-    public AbstractClientHandler configureLoadbalanceHandler() {
-      return new ConfigureLoadbalanceHandler();
     }
 
     @Bean
@@ -385,6 +374,11 @@ public class SessionServerConfiguration {
     @Bean
     public RegistryOpsResource opsResource() {
       return new RegistryOpsResource();
+    }
+
+    @Bean
+    public ClientManagerResource clientManagerResource() {
+      return new ClientManagerResource();
     }
   }
 
@@ -708,6 +702,11 @@ public class SessionServerConfiguration {
     @Bean
     public ConnectionsService connectionsService() {
       return new ConnectionsService();
+    }
+
+    @Bean
+    public ConnectionMapper connectionMapper() {
+      return new ConnectionMapper();
     }
   }
 
