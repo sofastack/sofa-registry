@@ -99,8 +99,6 @@ public interface MetaServerConfig {
 
   int getRaftElectionTimeout();
 
-  double getSessionLoadbalanceThresholdRatio();
-
   long getMetaLeaderWarmupMilli();
 
   void setMetaLeaderWarmupMilli(long warmupMilli);

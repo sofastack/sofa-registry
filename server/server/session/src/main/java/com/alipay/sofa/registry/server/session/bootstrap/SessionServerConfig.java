@@ -136,8 +136,6 @@ public interface SessionServerConfig {
 
   Collection<String> getMetaServerAddresses();
 
-  boolean isEnableSessionLoadbalancePolicy();
-
   int getSlotSyncMaxBufferSize();
 
   int getSlotSyncWorkerSize();

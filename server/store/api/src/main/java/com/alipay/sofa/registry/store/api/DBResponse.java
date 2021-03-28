@@ -24,9 +24,9 @@ import java.io.Serializable;
  * @author shangyu.wh
  * @version $Id: DBResponse.java, v 0.1 2018-04-18 16:35 shangyu.wh Exp $
  */
-public class DBResponse implements Serializable {
+public class DBResponse<T> implements Serializable {
 
-  private final String entity;
+  private final T entity;
 
   private final OperationStatus operationStatus;
 
@@ -34,7 +34,7 @@ public class DBResponse implements Serializable {
    * @param entity
    * @param operationStatus
    */
-  public DBResponse(String entity, OperationStatus operationStatus) {
+  public DBResponse(T entity, OperationStatus operationStatus) {
     this.entity = entity;
     this.operationStatus = operationStatus;
   }
@@ -54,7 +54,7 @@ public class DBResponse implements Serializable {
    * @param entity
    * @return
    */
-  public static DBResponseBuilder ok(String entity) {
+  public static <T> DBResponseBuilder ok(T entity) {
     DBResponseBuilder b = ok();
     b.entity(entity);
     return b;
@@ -86,7 +86,7 @@ public class DBResponse implements Serializable {
    *
    * @return property value of entity
    */
-  public String getEntity() {
+  public T getEntity() {
     return entity;
   }
 
@@ -100,7 +100,7 @@ public class DBResponse implements Serializable {
   }
 
   /** DBResponseBuilder */
-  public static class DBResponseBuilder {
+  public static class DBResponseBuilder<T> {
     private static final DBResponseBuilder instance = new DBResponseBuilder();
 
     private DBResponseBuilder() {}
@@ -114,7 +114,7 @@ public class DBResponse implements Serializable {
       return instance;
     }
 
-    private String entity;
+    private T entity;
 
     private OperationStatus operationStatus;
 
@@ -154,7 +154,7 @@ public class DBResponse implements Serializable {
      * @param entity
      * @return
      */
-    public DBResponseBuilder entity(String entity) {
+    public DBResponseBuilder entity(T entity) {
       this.entity = entity;
       return this;
     }

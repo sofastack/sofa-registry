@@ -28,15 +28,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 public class ConnectionsResource {
   @Autowired private ConnectionsService connectionsService;
 
-  @POST
-  @Path("setMax")
-  @Produces(MediaType.APPLICATION_JSON)
-  public Response setMax(@FormParam("connections") int connections) {
-    ResponseBuilder build = Response.status(Response.Status.OK);
-    connectionsService.setMaxConnections(connections);
-    return build.build();
-  }
-
   @GET
   @Path("query")
   @Produces(MediaType.APPLICATION_JSON)
