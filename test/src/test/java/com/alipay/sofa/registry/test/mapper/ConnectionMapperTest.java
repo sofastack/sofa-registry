@@ -14,12 +14,30 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alipay.sofa.registry.common.model.metaserver;
+package com.alipay.sofa.registry.test.mapper;
 
-import java.io.Serializable;
+import com.alipay.sofa.registry.server.session.mapper.ConnectionMapper;
+import org.junit.Assert;
+import org.junit.Test;
 
 /**
- * @author xiangxu
- * @version : SessionLoadbalanceMetrics.java, v 0.1 2020年05月27日 11:13 上午 xiangxu Exp $
+ * @author ruoshan
+ * @since 5.4.1
  */
-public class GetLoadbalanceMetricsRequest implements Serializable {}
+public class ConnectionMapperTest {
+
+  @Test
+  public void simpleTestForMap() {
+    String connectId = "1.1.1.1:1234";
+    String clientIp = "2.2.2.2";
+    ConnectionMapper connectionMapper = new ConnectionMapper();
+    // add
+
+    connectionMapper.add(connectId, clientIp);
+    Assert.assertTrue(connectionMapper.contains(connectId));
+    Assert.assertEquals(clientIp, connectionMapper.get(connectId));
+    // remove
+    connectionMapper.remove(connectId);
+    Assert.assertFalse(connectionMapper.contains(connectId));
+  }
+}

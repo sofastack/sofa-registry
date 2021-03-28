@@ -74,7 +74,7 @@ public class DefaultRegistryBlacklistManager implements RegistryBlacklistManager
   }
 
   protected void load() {
-    DBResponse response = repository.get(ValueConstants.REGISTRY_SERVER_BLACK_LIST_DATA_ID);
+    DBResponse<String> response = repository.get(ValueConstants.REGISTRY_SERVER_BLACK_LIST_DATA_ID);
     Set<String> current;
     if (response.getOperationStatus() == OperationStatus.NOTFOUND) {
       current = Sets.newHashSet();
