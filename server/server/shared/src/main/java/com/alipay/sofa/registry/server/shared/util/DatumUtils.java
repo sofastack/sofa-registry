@@ -79,9 +79,11 @@ public final class DatumUtils {
       final String srcAddressString = srcAddress == null ? null : srcAddress.getAddressString();
       publishers.add(
           new SubPublisher(
+              publisher.getRegisterId(),
               publisher.getCell(),
               publisher.getDataList(),
               publisher.getClientId(),
+              publisher.getVersion(),
               srcAddressString,
               publisher.getRegisterTimestamp()));
     }

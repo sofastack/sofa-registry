@@ -69,7 +69,7 @@ public class DataSlotDiffSyncResultTest {
 
     Map<String, DatumDigest> test = Maps.newHashMap(digestMap);
 
-    test.put("c", new DatumDigest(1, 0, 0, 0));
+    test.put("c", new DatumDigest(1, 0, 0, 0, (short) 0, (short) 0));
     result = DataSlotDiffUtils.diffDigestPublishers(test, publishers);
     Assert.assertTrue(result.getAddedDataInfoIds().isEmpty());
     Assert.assertFalse(result.getRemovedDataInfoIds().isEmpty());
@@ -78,7 +78,7 @@ public class DataSlotDiffSyncResultTest {
 
     test = Maps.newHashMap(digestMap);
     test.remove("b");
-    test.put("c", new DatumDigest(1, 0, 0, 0));
+    test.put("c", new DatumDigest(1, 0, 0, 0, (short) 0, (short) 0));
     result = DataSlotDiffUtils.diffDigestPublishers(test, publishers);
     // add "b"
     Assert.assertEquals(result.getAddedDataInfoIds(), Lists.newArrayList("b"));
