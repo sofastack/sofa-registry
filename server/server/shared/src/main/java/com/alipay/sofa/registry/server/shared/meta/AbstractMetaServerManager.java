@@ -340,6 +340,9 @@ public abstract class AbstractMetaServerManager extends ClientSideExchanger
               String leader = (String) data.get(leaderKey);
               leaderInfo.setEpoch(epoch);
               leaderInfo.setLeader(leader);
+              if (LOGGER.isInfoEnabled()) {
+                LOGGER.info("[resetLeaderFromRestServer] query from url: {}, meta leader:{}", url, leaderInfo);
+              }
               return StringUtil.isNotEmpty(leader);
             }
             return false;
@@ -347,9 +350,7 @@ public abstract class AbstractMetaServerManager extends ClientSideExchanger
     } catch (Exception e) {
       LOGGER.error("query meta leader error.");
     }
-    if (LOGGER.isInfoEnabled()) {
-      LOGGER.info("query meta leader:{}", leaderInfo);
-    }
+
     // connect to meta leader
     connect(new URL(leaderInfo.getLeader(), getServerPort()));
     setLeader(leaderInfo.getLeader(), leaderInfo.getEpoch());
