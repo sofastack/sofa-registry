@@ -28,7 +28,7 @@ import java.util.concurrent.TimeUnit;
  */
 public class Lease<T> implements Serializable {
 
-  public static final String LEASE_DURATION = "lease.duration";
+  public static final String LEASE_DURATION = "registry.lease.duration.secs";
   public static final int DEFAULT_DURATION_SECS = Integer.getInteger(LEASE_DURATION, 30);
 
   private T renewal;

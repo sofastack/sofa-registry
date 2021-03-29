@@ -29,43 +29,15 @@ public interface MetaServerConfig {
 
   int getHttpServerPort();
 
-  int getRaftServerPort();
+  int getCrossDcMetaSyncIntervalMillis();
 
-  int getCrossDcMetaSyncIntervalMilli();
+  int getExpireCheckIntervalMillis();
 
-  int getExpireCheckIntervalMilli();
+  int getDataNodeExchangeTimeoutMillis();
 
-  int getSchedulerCheckNodeListChangePushTimeout();
+  int getSessionNodeExchangeTimeoutMillis();
 
-  int getSchedulerCheckNodeListChangePushFirstDelay();
-
-  int getDataNodeExchangeTimeout();
-
-  int getSessionNodeExchangeTimeout();
-
-  int getMetaNodeExchangeTimeout();
-
-  String getRaftGroup();
-
-  String getRaftDataPath();
-
-  boolean isEnableMetrics();
-
-  int getRockDBCacheSize();
-
-  int getConnectMetaServerExecutorMinSize();
-
-  int getConnectMetaServerExecutorMaxSize();
-
-  int getConnectMetaServerExecutorQueueSize();
-
-  int getRaftClientRefreshExecutorMinSize();
-
-  int getRaftClientRefreshExecutorMaxSize();
-
-  int getRaftClientRefreshExecutorQueueSize();
-
-  int getMetaSchedulerPoolSize();
+  int getMetaNodeExchangeTimeoutMillis();
 
   int getDefaultRequestExecutorMinSize();
 
@@ -73,37 +45,9 @@ public interface MetaServerConfig {
 
   int getDefaultRequestExecutorQueueSize();
 
-  int getAppRevisionRegisterExecutorMinSize();
-
-  int getAppRevisionRegisterExecutorMaxSize();
-
-  int getAppRevisionRegisterExecutorQueueSize();
-
-  int getRaftExecutorMinSize();
-
-  int getRaftExecutorQueueSize();
-
-  int getRaftExecutorMaxSize();
-
-  int getRaftServerExecutorMinSize();
-
-  int getRaftServerExecutorMaxSize();
-
-  int getRaftServerExecutorQueueSize();
-
-  int getRaftFsmExecutorMinSize();
-
-  int getRaftFsmExecutorMaxSize();
-
-  int getRaftFsmExecutorQueueSize();
-
-  int getRaftElectionTimeout();
-
-  long getMetaLeaderWarmupMilli();
-
-  void setMetaLeaderWarmupMilli(long warmupMilli);
+  long getMetaLeaderWarmupMillis();
 
   int getSchedulerHeartbeatIntervalSecs();
 
-  void setSchedulerHeartbeatIntervalSecs(int schedulerHeartbeatIntervalSecs);
+  long getDataReplicateMaxGapMillis();
 }

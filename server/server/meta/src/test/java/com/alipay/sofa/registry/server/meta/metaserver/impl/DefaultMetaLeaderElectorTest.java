@@ -43,16 +43,16 @@ public class DefaultMetaLeaderElectorTest extends AbstractMetaServerTestBase {
   public void beforeDefaultMetaLeaderElectorTest() {
     MockitoAnnotations.initMocks(this);
     metaLeaderElector = new DefaultMetaLeaderElector(leaderElector, metaServerConfig, null);
-    when(metaServerConfig.getMetaLeaderWarmupMilli()).thenReturn(200L);
+    when(metaServerConfig.getMetaLeaderWarmupMillis()).thenReturn(200L);
   }
 
   @Test
   public void testIsWarmup() throws InterruptedException {
-    when(metaServerConfig.getMetaLeaderWarmupMilli()).thenReturn(2000L);
+    when(metaServerConfig.getMetaLeaderWarmupMillis()).thenReturn(2000L);
     when(leaderElector.amILeader()).thenReturn(true);
     metaLeaderElector.leaderNotify();
     Assert.assertFalse(metaLeaderElector.isWarmuped());
-    when(metaServerConfig.getMetaLeaderWarmupMilli()).thenReturn(1L);
+    when(metaServerConfig.getMetaLeaderWarmupMillis()).thenReturn(1L);
     Thread.sleep(30);
     Assert.assertTrue(metaLeaderElector.isWarmuped());
   }

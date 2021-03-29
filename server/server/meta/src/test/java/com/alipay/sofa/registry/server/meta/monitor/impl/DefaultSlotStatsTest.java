@@ -40,7 +40,7 @@ public class DefaultSlotStatsTest {
     slot =
         new Slot(
             1, "10.0.0.1", System.currentTimeMillis(), Lists.newArrayList("10.0.0.2", "10.0.0.3"));
-    slotStats = new DefaultSlotStats(slot);
+    slotStats = new DefaultSlotStats(slot, 1000 * 60 * 3);
   }
 
   @Test

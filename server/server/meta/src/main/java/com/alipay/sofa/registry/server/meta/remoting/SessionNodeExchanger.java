@@ -32,7 +32,7 @@ public class SessionNodeExchanger extends ServerSideExchanger {
 
   @Override
   public int getRpcTimeoutMillis() {
-    return metaServerConfig.getSessionNodeExchangeTimeout();
+    return metaServerConfig.getSessionNodeExchangeTimeoutMillis();
   }
 
   @Override
