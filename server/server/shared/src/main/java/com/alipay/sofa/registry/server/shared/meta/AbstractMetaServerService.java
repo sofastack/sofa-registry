@@ -124,6 +124,7 @@ public abstract class AbstractMetaServerService<T extends BaseHeartBeatResponse>
     public void runUnthrowable() {
       try {
         if (renewFailCounter.get() >= maxRenewFailCount) {
+          LOGGER.error("renewNode failed [{}] times, prepare to reset leader from rest api.", renewFailCounter.get());
           metaServerManager.resetLeaderFromRestServer();
           renewFailCounter.set(0);
         }
@@ -165,14 +166,14 @@ public abstract class AbstractMetaServerService<T extends BaseHeartBeatResponse>
         renewFailCounter.incrementAndGet();
 
         LOGGER.error(
-            "[RenewNodeTask] renew data node to metaServer error : {}, {}", leaderIp, resp);
+            "[RenewNodeTask] renew data node to metaLeader error, fail count:{}, leader: {}, resp: {}", renewFailCounter.get(), leaderIp, resp);
         throw new RuntimeException(
             "[RenewNodeTask] renew data node to metaServer error : " + leaderIp);
       }
     } catch (Throwable e) {
       renewFailCounter.incrementAndGet();
 
-      LOGGER.error("renew node error from {}", leaderIp, e);
+      LOGGER.error("[RenewNodeTask] renew data node to metaLeader error, fail count:{}, leader: {}, resp: {}", renewFailCounter.get(), leaderIp, e);
       throw new RuntimeException("renew node error! " + e.getMessage(), e);
     }
   }

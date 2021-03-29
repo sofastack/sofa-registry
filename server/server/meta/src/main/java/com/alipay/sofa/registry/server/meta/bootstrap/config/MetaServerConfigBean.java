@@ -46,6 +46,8 @@ public class MetaServerConfigBean implements MetaServerConfig {
 
   private int schedulerCheckNodeListChangePushFirstDelay = 1;
 
+  private int schedulerHeartbeatIntervalSecs = 1;
+
   private int dataNodeExchangeTimeout = 3000;
 
   private int sessionNodeExchangeTimeout = 3000;
@@ -807,5 +809,23 @@ public class MetaServerConfigBean implements MetaServerConfig {
 
   public void setMetaLeaderWarmupMilli(long metaLeaderWarmupMilli) {
     this.metaLeaderWarmupMilli = metaLeaderWarmupMilli;
+  }
+
+  /**
+   * Getter method for property <tt>schedulerHeartbeatIntervalSecs</tt>.
+   *
+   * @return property value of schedulerHeartbeatIntervalSecs
+   */
+  public int getSchedulerHeartbeatIntervalSecs() {
+    return schedulerHeartbeatIntervalSecs;
+  }
+
+  /**
+   * Setter method for property <tt>schedulerHeartbeatIntervalSecs</tt>.
+   *
+   * @param schedulerHeartbeatIntervalSecs value to be assigned to property schedulerHeartbeatIntervalSecs
+   */
+  public void setSchedulerHeartbeatIntervalSecs(int schedulerHeartbeatIntervalSecs) {
+    this.schedulerHeartbeatIntervalSecs = schedulerHeartbeatIntervalSecs;
   }
 }
