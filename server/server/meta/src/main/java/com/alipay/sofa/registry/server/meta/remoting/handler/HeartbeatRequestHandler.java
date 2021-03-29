@@ -163,7 +163,7 @@ public class HeartbeatRequestHandler extends BaseMetaServerHandler<HeartbeatRequ
         onDataHeartbeat(heartbeat);
         return;
       case META:
-        throw new IllegalArgumentException("node type not correct: " + node.getNodeType());
+        currentDcMetaServer.renew((MetaNode)node);
       default:
         break;
     }
@@ -275,6 +275,10 @@ public class HeartbeatRequestHandler extends BaseMetaServerHandler<HeartbeatRequ
     }
 
     private void checkIfSlotBasicInfoMatched(HeartbeatRequest<Node> heartbeat) {
+
+      if (heartbeat.getNode() instanceof MetaNode) {
+        return;
+      }
 
       SlotConfig.SlotBasicInfo slotBasicInfo = heartbeat.getSlotBasicInfo();
       if (!SlotConfig.FUNC.equals(slotBasicInfo.getSlotFunc())) {

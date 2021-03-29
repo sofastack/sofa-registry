@@ -102,4 +102,8 @@ public interface MetaServerConfig {
   long getMetaLeaderWarmupMilli();
 
   void setMetaLeaderWarmupMilli(long warmupMilli);
+
+  int getSchedulerHeartbeatIntervalSecs();
+
+  void setSchedulerHeartbeatIntervalSecs(int schedulerHeartbeatIntervalSecs);
 }

@@ -24,6 +24,8 @@ import com.alipay.sofa.registry.server.meta.bootstrap.config.MetaServerConfig;
 import com.alipay.sofa.registry.server.meta.bootstrap.config.MetaServerConfigBean;
 import com.alipay.sofa.registry.server.meta.bootstrap.config.NodeConfig;
 import com.alipay.sofa.registry.server.meta.bootstrap.config.NodeConfigBeanProperty;
+import com.alipay.sofa.registry.server.meta.remoting.meta.MetaNodeExchange;
+import com.alipay.sofa.registry.server.meta.remoting.meta.MetaServerRenewService;
 import com.alipay.sofa.registry.server.meta.remoting.DataNodeExchanger;
 import com.alipay.sofa.registry.server.meta.remoting.MetaServerExchanger;
 import com.alipay.sofa.registry.server.meta.remoting.SessionNodeExchanger;
@@ -201,6 +203,16 @@ public class MetaServerConfiguration {
     @Bean
     public RegistryBlacklistHandler registryBlacklistHandler() {
       return new RegistryBlacklistHandler();
+    }
+
+    @Bean
+    public MetaNodeExchange metaNodeExchange() {
+      return new MetaNodeExchange();
+    }
+
+    @Bean
+    public MetaServerRenewService metaServerRenewService() {
+      return new MetaServerRenewService();
     }
   }
 
