@@ -53,7 +53,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import javax.annotation.PostConstruct;
@@ -132,7 +131,6 @@ public abstract class AbstractMetaServerManager extends ClientSideExchanger
       lock.readLock().unlock();
     }
   }
-
 
   @Override
   public String getMetaServerLeader() {
@@ -322,7 +320,10 @@ public abstract class AbstractMetaServerManager extends ClientSideExchanger
               leaderInfo.setEpoch(epoch);
               leaderInfo.setLeader(leader);
               if (LOGGER.isInfoEnabled()) {
-                LOGGER.info("[resetLeaderFromRestServer] query from url: {}, meta leader:{}", url, leaderInfo);
+                LOGGER.info(
+                    "[resetLeaderFromRestServer] query from url: {}, meta leader:{}",
+                    url,
+                    leaderInfo);
               }
               return StringUtil.isNotEmpty(leader);
             }
