@@ -34,7 +34,7 @@ public class DataNodeExchanger extends ServerSideExchanger {
 
   @Override
   public int getRpcTimeoutMillis() {
-    return metaServerConfig.getDataNodeExchangeTimeout();
+    return metaServerConfig.getDataNodeExchangeTimeoutMillis();
   }
 
   @Override

@@ -35,8 +35,9 @@ import org.springframework.beans.factory.annotation.Autowired;
  */
 @Path("openapi/v1/slot/table")
 public class SlotTableStatusResource {
-
-  public static final long MAX_SYNC_GAP = Long.getLong("data.replicate.max.gap", 3 * 60 * 1000);
+  // TODO this should be config in serverConfig
+  public static final long MAX_SYNC_GAP =
+      Long.getLong("registry.data.replicate.max.gap.millis", 3 * 60 * 1000);
 
   @Autowired private SlotManager slotManager;
 

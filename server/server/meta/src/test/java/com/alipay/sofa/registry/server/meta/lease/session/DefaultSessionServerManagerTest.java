@@ -51,7 +51,7 @@ public class DefaultSessionServerManagerTest extends AbstractMetaServerTestBase 
     //            .setSessionLeaseManager(sessionLeaseManager)
     //            .setRaftSessionLeaseManager(sessionLeaseManager)
     ;
-    when(metaServerConfig.getExpireCheckIntervalMilli()).thenReturn(60);
+    when(metaServerConfig.getExpireCheckIntervalMillis()).thenReturn(60);
     sessionManager.postConstruct();
   }
 

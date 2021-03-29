@@ -52,7 +52,7 @@ public class DefaultCrossDcMetaServerTest extends AbstractMetaServerTestBase {
   @Before
   public void beforeDefaultCrossDcMetaServerTest() {
     MockitoAnnotations.initMocks(this);
-    when(metaServerConfig.getCrossDcMetaSyncIntervalMilli()).thenReturn(60 * 1000);
+    when(metaServerConfig.getCrossDcMetaSyncIntervalMillis()).thenReturn(60 * 1000);
     Collection<String> collection = Lists.newArrayList("10.0.0.1", "10.0.0.2");
     server =
         spy(

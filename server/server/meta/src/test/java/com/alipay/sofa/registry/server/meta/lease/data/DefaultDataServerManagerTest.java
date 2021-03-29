@@ -47,7 +47,7 @@ public class DefaultDataServerManagerTest extends AbstractMetaServerTestBase {
           }
         };
     dataServerManager.setMetaServerConfig(metaServerConfig);
-    when(metaServerConfig.getExpireCheckIntervalMilli()).thenReturn(60);
+    when(metaServerConfig.getExpireCheckIntervalMillis()).thenReturn(60);
     dataServerManager.postConstruct();
   }
 

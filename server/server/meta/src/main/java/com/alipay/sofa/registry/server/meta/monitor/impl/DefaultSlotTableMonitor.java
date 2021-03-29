@@ -26,6 +26,7 @@ import com.alipay.sofa.registry.lifecycle.impl.AbstractLifecycle;
 import com.alipay.sofa.registry.lifecycle.impl.LifecycleHelper;
 import com.alipay.sofa.registry.observer.Observable;
 import com.alipay.sofa.registry.observer.UnblockingObserver;
+import com.alipay.sofa.registry.server.meta.bootstrap.config.MetaServerConfig;
 import com.alipay.sofa.registry.server.meta.monitor.Metrics;
 import com.alipay.sofa.registry.server.meta.monitor.SlotTableMonitor;
 import com.alipay.sofa.registry.server.meta.monitor.SlotTableStats;
@@ -58,6 +59,8 @@ public class DefaultSlotTableMonitor extends AbstractLifecycle
 
   @Autowired private SlotGenericResource slotGenericResource;
 
+  @Autowired private MetaServerConfig metaServerConfig;
+
   private final Map<String, Integer> dataServerLagCounter = Maps.newConcurrentMap();
 
   private SlotTableStats slotTableStats;
@@ -84,7 +87,7 @@ public class DefaultSlotTableMonitor extends AbstractLifecycle
     recorders =
         Lists.newArrayList(
             new DiskSlotTableRecorder(), slotGenericResource, new DataSlotMetricsRecorder());
-    slotTableStats = new DefaultSlotTableStats(slotManager);
+    slotTableStats = new DefaultSlotTableStats(slotManager, metaServerConfig);
     slotTableStats.initialize();
     scheduledTask =
         new WakeUpLoopRunnable() {

@@ -29,9 +29,9 @@ public final class SlotConfig {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(SlotConfig.class);
 
-  private static final String KEY_DATA_SLOT_NUM = "data.slot.num";
-  private static final String KEY_DATA_SLOT_FUNC = "data.slot.func";
-  private static final String KEY_DATA_SLOT_REPLICAS = "data.slot.replicas";
+  private static final String KEY_DATA_SLOT_NUM = "registry.data.slot.num";
+  private static final String KEY_DATA_SLOT_FUNC = "registry.data.slot.func";
+  private static final String KEY_DATA_SLOT_REPLICAS = "registry.data.slot.replicas";
   public static final int SLOT_NUM;
   public static final int SLOT_REPLICAS;
   public static final String FUNC;

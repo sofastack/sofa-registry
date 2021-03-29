@@ -20,6 +20,7 @@ import com.alipay.sofa.registry.common.model.metaserver.nodes.DataNode;
 import com.alipay.sofa.registry.common.model.slot.*;
 import com.alipay.sofa.registry.exception.InitializeException;
 import com.alipay.sofa.registry.lifecycle.impl.AbstractLifecycle;
+import com.alipay.sofa.registry.server.meta.bootstrap.config.MetaServerConfig;
 import com.alipay.sofa.registry.server.meta.monitor.Metrics;
 import com.alipay.sofa.registry.server.meta.monitor.SlotStats;
 import com.alipay.sofa.registry.server.meta.monitor.SlotTableStats;
@@ -45,8 +46,11 @@ public class DefaultSlotTableStats extends AbstractLifecycle implements SlotTabl
 
   private final ReadWriteLock lock = new ReentrantReadWriteLock();
 
-  public DefaultSlotTableStats(SlotManager slotManager) {
+  private final MetaServerConfig metaServerConfig;
+
+  public DefaultSlotTableStats(SlotManager slotManager, MetaServerConfig metaServerConfig) {
     this.slotManager = slotManager;
+    this.metaServerConfig = metaServerConfig;
   }
 
   @Override
@@ -57,7 +61,8 @@ public class DefaultSlotTableStats extends AbstractLifecycle implements SlotTabl
       if (slot == null) {
         slot = new Slot(slotId, null, 0L, Collections.emptyList());
       }
-      slotStatses.put(slotId, new DefaultSlotStats(slot));
+      slotStatses.put(
+          slotId, new DefaultSlotStats(slot, metaServerConfig.getDataReplicateMaxGapMillis()));
     }
   }
 
@@ -175,10 +180,14 @@ public class DefaultSlotTableStats extends AbstractLifecycle implements SlotTabl
               (slotId, slot) -> {
                 SlotStats slotStats = slotStatses.get(slotId);
                 if (slotStats.getSlot().getLeaderEpoch() < slot.getLeaderEpoch()) {
-                  slotStatses.put(slotId, new DefaultSlotStats(slot));
+                  slotStatses.put(
+                      slotId,
+                      new DefaultSlotStats(slot, metaServerConfig.getDataReplicateMaxGapMillis()));
                 } else if (slotStats.getSlot().getLeaderEpoch() == slot.getLeaderEpoch()
                     && !slotStats.getSlot().equals(slot)) {
-                  slotStatses.put(slotId, new DefaultSlotStats(slot));
+                  slotStatses.put(
+                      slotId,
+                      new DefaultSlotStats(slot, metaServerConfig.getDataReplicateMaxGapMillis()));
                 } else {
                   logger.warn("[updateSlotTable]skip slot[{}]", slotId);
                 }

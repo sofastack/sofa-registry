@@ -107,12 +107,12 @@ public class DefaultSessionServerManager extends AbstractEvictableLeaseManager<S
 
   @Override
   protected long getIntervalMilli() {
-    return metaServerConfig.getExpireCheckIntervalMilli();
+    return metaServerConfig.getExpireCheckIntervalMillis();
   }
 
   @Override
   protected long getEvictBetweenMilli() {
-    return metaServerConfig.getExpireCheckIntervalMilli();
+    return metaServerConfig.getExpireCheckIntervalMillis();
   }
 
   @VisibleForTesting
