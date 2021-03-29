@@ -33,35 +33,42 @@ public final class PublisherDigestUtil {
     if (summaryMap.isEmpty()) {
       return Collections.emptyMap();
     }
-    Map<String, Map<String, RegisterVersion>> sorted = Maps.newTreeMap();
-    for (Map.Entry<String, DatumSummary> summaryEntry : summaryMap.entrySet()) {
-      sorted.put(
-          summaryEntry.getKey(), new TreeMap<>(summaryEntry.getValue().getPublisherVersions()));
-    }
 
     final Map<String, DatumDigest> ret = Maps.newHashMapWithExpectedSize(summaryMap.size());
-    for (Map.Entry<String, Map<String, RegisterVersion>> e : sorted.entrySet()) {
-      int publisherNum = 0;
-      long publisherIdSign = 0;
-      long publisherVerSign = 0;
-      long publisherTimestampSign = 0;
-
+    for (Map.Entry<String, DatumSummary> e : summaryMap.entrySet()) {
       final String dataInfoId = e.getKey();
-      publisherNum += e.getValue().size();
-
-      for (Map.Entry<String, RegisterVersion> pub : e.getValue().entrySet()) {
-        final String registerId = pub.getKey();
-        final long digestRegisterId = digest(registerId);
-        publisherIdSign = publisherIdSign * 31 + digestRegisterId;
-        final RegisterVersion ver = pub.getValue();
-        publisherVerSign = 31 * publisherVerSign + ver.getVersion();
-        publisherTimestampSign = 31 * publisherTimestampSign + ver.getRegisterTimestamp();
-      }
-      ret.put(
-          dataInfoId,
-          new DatumDigest(publisherNum, publisherIdSign, publisherVerSign, publisherTimestampSign));
+      ret.put(dataInfoId, digest(e.getValue()));
     }
     return ret;
+  }
+
+  public static DatumDigest digest(DatumSummary summary) {
+    int publisherNum = summary.size();
+    long publisherIdSign = 0;
+    long publisherVerSign = 0;
+    long publisherTimestampSign = 0;
+    final TreeMap<String, RegisterVersion> sorted = new TreeMap<>(summary.getPublisherVersions());
+    long maxTimestamp = 0;
+    long minTimestamp = Long.MAX_VALUE;
+    for (Map.Entry<String, RegisterVersion> pub : sorted.entrySet()) {
+      final String registerId = pub.getKey();
+      final long digestRegisterId = digest(registerId);
+      publisherIdSign = publisherIdSign * 31 + digestRegisterId;
+      final RegisterVersion ver = pub.getValue();
+      publisherVerSign = 31 * publisherVerSign + ver.getVersion();
+      publisherTimestampSign = 31 * publisherTimestampSign + ver.getRegisterTimestamp();
+      if (minTimestamp > ver.getRegisterTimestamp()) {
+        minTimestamp = ver.getRegisterTimestamp();
+      }
+      if (maxTimestamp < ver.getRegisterTimestamp()) {
+        maxTimestamp = ver.getRegisterTimestamp();
+      }
+    }
+    // save 16bits
+    final short max = (short) maxTimestamp;
+    final short min = (short) minTimestamp;
+    return new DatumDigest(
+        publisherNum, publisherIdSign, publisherVerSign, publisherTimestampSign, max, min);
   }
 
   private static int digest(String str) {

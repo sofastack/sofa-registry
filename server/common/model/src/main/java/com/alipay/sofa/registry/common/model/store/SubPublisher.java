@@ -16,6 +16,7 @@
  */
 package com.alipay.sofa.registry.common.model.store;
 
+import com.alipay.sofa.registry.common.model.RegisterVersion;
 import com.alipay.sofa.registry.common.model.ServerDataBox;
 import com.alipay.sofa.registry.util.StringFormatter;
 import com.google.common.collect.Lists;
@@ -24,20 +25,26 @@ import java.util.Collections;
 import java.util.List;
 
 public final class SubPublisher implements Serializable {
+  private final String registerId;
   private final String cell;
   private final String clientId;
   private final String srcAddressString;
   private final List<ServerDataBox> dataList;
   private final long registerTimestamp;
+  private final long version;
 
   public SubPublisher(
+      String registerId,
       String cell,
       List<ServerDataBox> dataList,
       String clientId,
+      long version,
       String srcAddressString,
       long registerTimestamp) {
+    this.registerId = registerId;
     this.cell = cell;
     this.clientId = clientId;
+    this.version = version;
     this.srcAddressString = srcAddressString;
     this.dataList = Collections.unmodifiableList(Lists.newArrayList(dataList));
     this.registerTimestamp = registerTimestamp;
@@ -71,15 +78,28 @@ public final class SubPublisher implements Serializable {
     return bytes;
   }
 
+  public long getVersion() {
+    return version;
+  }
+
+  public RegisterVersion registerVersion() {
+    return RegisterVersion.of(version, registerTimestamp);
+  }
+
+  public String getRegisterId() {
+    return registerId;
+  }
+
   @Override
   public String toString() {
     return StringFormatter.format(
-        "SubPublisher{{},cell={},src={},datas={},bytes={},ts={}}",
-        clientId,
+        "SubPublisher{{},cell={},src={},datas={},bytes={},ver={},ts={}}",
+        registerId,
         cell,
         srcAddressString,
         dataList.size(),
         getDataBoxBytes(),
+        version,
         registerTimestamp);
   }
 }

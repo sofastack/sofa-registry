@@ -100,7 +100,7 @@ public final class SubDatum implements Serializable {
   @Override
   public String toString() {
     return StringFormatter.format(
-        "SubDatum{{},{},{},num={},bytes={}}",
+        "SubDatum{{},{},ver={},num={},bytes={}}",
         dataInfoId,
         dataCenter,
         version,
@@ -124,9 +124,11 @@ public final class SubDatum implements Serializable {
       final String cell = WordCache.getWordCache(publisher.getCell());
       publishers.add(
           new SubPublisher(
+              publisher.getRegisterId(),
               cell,
               publisher.getDataList(),
               publisher.getClientId(),
+              publisher.getVersion(),
               publisher.getSrcAddressString(),
               publisher.getRegisterTimestamp()));
     }

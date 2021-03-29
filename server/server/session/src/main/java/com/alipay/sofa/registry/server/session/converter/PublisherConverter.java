@@ -52,7 +52,9 @@ public class PublisherConverter {
     publisher.setInstanceId(source.getInstanceId());
     publisher.setRegisterId(source.getRegistId());
     publisher.setProcessId(source.getProcessId());
-    publisher.setVersion(source.getVersion());
+    if (source.getVersion() != null) {
+      publisher.setVersion(source.getVersion());
+    }
 
     // registerTimestamp must happen from server,client time maybe different cause pub and
     // unPublisher fail
