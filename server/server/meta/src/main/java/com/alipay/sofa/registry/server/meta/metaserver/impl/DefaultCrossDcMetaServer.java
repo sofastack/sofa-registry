@@ -189,7 +189,7 @@ public class DefaultCrossDcMetaServer extends AbstractMetaServer
   }
 
   private int getIntervalMilli() {
-    return metaServerConfig.getCrossDcMetaSyncIntervalMilli();
+    return metaServerConfig.getCrossDcMetaSyncIntervalMillis();
   }
 
   @VisibleForTesting

@@ -58,7 +58,7 @@ public class CrossDcMetaServerManagerTest extends AbstractMetaServerTestBase {
             .setExecutors(executors)
             .setNodeConfig(nodeConfig)
             .setScheduled(scheduled);
-    when(metaServerConfig.getCrossDcMetaSyncIntervalMilli()).thenReturn(10000);
+    when(metaServerConfig.getCrossDcMetaSyncIntervalMillis()).thenReturn(10000);
   }
 
   @After

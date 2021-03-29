@@ -128,7 +128,7 @@ public class DefaultMetaLeaderElector extends AbstractLifecycleObservable
   }
 
   private long getWarmupMilli() {
-    return metaServerConfig.getMetaLeaderWarmupMilli();
+    return metaServerConfig.getMetaLeaderWarmupMillis();
   }
 
   protected void loseLeader() {

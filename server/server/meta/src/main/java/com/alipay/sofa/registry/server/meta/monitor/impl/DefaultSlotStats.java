@@ -32,9 +32,8 @@ import org.apache.commons.lang.StringUtils;
  */
 public class DefaultSlotStats implements SlotStats {
 
-  public static final long MAX_SYNC_GAP = Long.getLong("data.replicate.max.gap", 3 * 60 * 1000);
-
   private final Slot slot;
+  private final long maxSyncGap;
 
   private volatile BaseSlotStatus.LeaderStatus leaderStatus = BaseSlotStatus.LeaderStatus.INIT;
 
@@ -50,8 +49,9 @@ public class DefaultSlotStats implements SlotStats {
    *
    * @param slot the slot
    */
-  public DefaultSlotStats(Slot slot) {
+  public DefaultSlotStats(Slot slot, long maxSyncGap) {
     this.slot = slot;
+    this.maxSyncGap = maxSyncGap;
   }
 
   /**
@@ -104,7 +104,7 @@ public class DefaultSlotStats implements SlotStats {
       return false;
     }
     Long offset = followerLastSyncTimes.get(dataServer);
-    return offset != null && System.currentTimeMillis() - offset < MAX_SYNC_GAP;
+    return offset != null && System.currentTimeMillis() - offset < maxSyncGap;
   }
 
   /**
