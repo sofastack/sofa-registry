@@ -30,9 +30,6 @@ import com.alipay.sofa.registry.util.ConcurrentUtils;
 import com.alipay.sofa.registry.util.WakeUpLoopRunnable;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import java.util.concurrent.locks.ReadWriteLock;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
-
 /**
  * @author xiaojian.xj
  * @version $Id: MetaServerRenewService.java, v 0.1 2021年03月26日 20:29 xiaojian.xj Exp $

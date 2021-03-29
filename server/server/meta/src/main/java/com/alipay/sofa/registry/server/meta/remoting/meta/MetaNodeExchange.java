@@ -28,101 +28,92 @@ import com.alipay.sofa.registry.remoting.exchange.message.Response;
 import com.alipay.sofa.registry.server.meta.MetaLeaderService;
 import com.alipay.sofa.registry.server.meta.bootstrap.config.MetaServerConfig;
 import com.alipay.sofa.registry.server.shared.remoting.ClientSideExchanger;
-import org.springframework.beans.factory.annotation.Autowired;
-
 import java.util.Collection;
 import java.util.Collections;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
+import org.springframework.beans.factory.annotation.Autowired;
 
 /**
- *
  * @author xiaojian.xj
  * @version $Id: MetaNodeExchange.java, v 0.1 2021年03月29日 16:08 xiaojian.xj Exp $
  */
 public class MetaNodeExchange extends ClientSideExchanger {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(MetaNodeExchange.class);
+  private static final Logger LOGGER = LoggerFactory.getLogger(MetaNodeExchange.class);
 
-    @Autowired
-    private MetaServerConfig metaServerConfig;
+  @Autowired private MetaServerConfig metaServerConfig;
 
-    @Autowired private MetaLeaderService metaLeaderService;
+  @Autowired private MetaLeaderService metaLeaderService;
 
-    protected volatile String metaLeader;
+  protected volatile String metaLeader;
 
-    private final ReadWriteLock lock = new ReentrantReadWriteLock();
+  private final ReadWriteLock lock = new ReentrantReadWriteLock();
 
+  public MetaNodeExchange() {
+    super(Exchange.META_SERVER_TYPE);
+  }
 
-    public MetaNodeExchange() {
-        super(Exchange.META_SERVER_TYPE);
+  @Override
+  public int getRpcTimeoutMillis() {
+    return metaServerConfig.getMetaNodeExchangeTimeout();
+  }
+
+  @Override
+  public int getServerPort() {
+    return metaServerConfig.getMetaServerPort();
+  }
+
+  @Override
+  protected Collection<ChannelHandler> getClientHandlers() {
+    return Collections.emptyList();
+  }
+
+  @Override
+  public int getConnNum() {
+    return 3;
+  }
+
+  public Response sendRequest(Object requestBody) throws RequestException {
+    if (!StringUtil.equals(metaLeader, metaLeaderService.getLeader())
+        || boltExchange.getClient(serverType) == null) {
+      setLeaderAndConnect(metaLeaderService.getLeader());
     }
 
-    @Override
-    public int getRpcTimeoutMillis() {
-        return metaServerConfig.getMetaNodeExchangeTimeout();
+    Request request =
+        new Request() {
+          @Override
+          public Object getRequestBody() {
+            return requestBody;
+          }
+
+          @Override
+          public URL getRequestUrl() {
+            return new URL(metaLeaderService.getLeader(), getServerPort());
+          }
+        };
+    return request(request);
+  }
+
+  private void setLeaderAndConnect(String newLeader) {
+    String removed = metaLeader;
+    try {
+      lock.writeLock().lock();
+      metaLeader = newLeader;
+    } finally {
+      lock.writeLock().unlock();
     }
 
-    @Override
-    public int getServerPort() {
-        return metaServerConfig.getMetaServerPort();
+    try {
+      LOGGER.info(
+          "[setLeaderAndConnect][reset leader when heartbeat] connect meta leader: {}, close meta-server connection: {}",
+          newLeader,
+          removed);
+      connect(new URL(newLeader, metaServerConfig.getMetaServerPort()));
+
+      boltExchange.getClient(serverType).getChannel(new URL(removed, getServerPort())).close();
+    } catch (Throwable th) {
+      LOGGER.error("[setLeaderAndConnect]", th);
     }
-
-    @Override
-    protected Collection<ChannelHandler> getClientHandlers() {
-        return Collections.emptyList();
-    }
-
-    @Override
-    public int getConnNum() {
-        return 3;
-    }
-
-
-
-    public Response sendRequest(Object requestBody) throws RequestException {
-        if (!StringUtil.equals(metaLeader, metaLeaderService.getLeader())
-            || boltExchange.getClient(serverType) == null) {
-            setLeaderAndConnect(metaLeaderService.getLeader());
-        }
-
-        Request request =
-                new Request() {
-                    @Override
-                    public Object getRequestBody() {
-                        return requestBody;
-                    }
-
-                    @Override
-                    public URL getRequestUrl() {
-                        return new URL(metaLeaderService.getLeader(), getServerPort());
-                    }
-                };
-        return request(request);
-    }
-
-    private void setLeaderAndConnect(String newLeader) {
-        String removed = metaLeader;
-        try {
-            lock.writeLock().lock();
-            metaLeader = newLeader;
-        } finally {
-            lock.writeLock().unlock();
-        }
-
-        try {
-            LOGGER.info("[setLeaderAndConnect][reset leader when heartbeat] connect meta leader: {}, close meta-server connection: {}",
-                    newLeader, removed);
-            connect(new URL(newLeader, metaServerConfig.getMetaServerPort()));
-
-            boltExchange
-                    .getClient(serverType)
-                    .getChannel(new URL(removed, getServerPort()))
-                    .close();
-        } catch (Throwable th) {
-            LOGGER.error("[setLeaderAndConnect]", th);
-        }
-
-
-    }
+  }
 }
