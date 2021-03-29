@@ -41,6 +41,8 @@ public abstract class AbstractLeaderElector implements LeaderElector {
 
   private volatile LeaderInfo leaderInfo = LeaderInfo.hasNoLeader;
 
+  private volatile boolean startElector = false;
+
   private volatile boolean isObserver = false;
 
   private final LeaderElectorTrigger leaderElectorTrigger = new LeaderElectorTrigger();
@@ -68,7 +70,9 @@ public abstract class AbstractLeaderElector implements LeaderElector {
 
     @Override
     public void runUnthrowable() {
-      elect();
+      if (startElector) {
+        elect();
+      }
     }
 
     @Override
@@ -104,6 +108,7 @@ public abstract class AbstractLeaderElector implements LeaderElector {
    */
   @Override
   public synchronized void change2Follow() {
+    this.startElector = true;
     this.isObserver = false;
   }
 

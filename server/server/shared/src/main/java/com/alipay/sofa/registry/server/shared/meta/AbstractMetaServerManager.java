@@ -76,11 +76,7 @@ public abstract class AbstractMetaServerManager extends ClientSideExchanger
 
   private final ReadWriteLock lock = new ReentrantReadWriteLock();
 
-  private final AtomicInteger metaServerIndex = new AtomicInteger(0);
-
   protected volatile List<String> defaultMetaServers;
-
-  // protected volatile List<String> runtimeMetaServers;
 
   protected volatile String metaLeader;
 
@@ -137,15 +133,6 @@ public abstract class AbstractMetaServerManager extends ClientSideExchanger
     }
   }
 
-  // @Override
-  // public List<String> getRuntimeMetaServerList() {
-  //  try {
-  //    lock.readLock().lock();
-  //    return Lists.newArrayList(runtimeMetaServers);
-  //  } finally {
-  //    lock.readLock().unlock();
-  //  }
-  // }
 
   @Override
   public String getMetaServerLeader() {
@@ -166,12 +153,6 @@ public abstract class AbstractMetaServerManager extends ClientSideExchanger
 
     List<String> metaServers = new ArrayList<>();
     metaServers.add(heartBeatResp.getMetaLeader());
-    // lock.writeLock().lock();
-    // try {
-    // this.runtimeMetaServers = metaServers;
-    // } finally {
-    // lock.writeLock().unlock();
-    // }
     doRefreshConnections(metaServers);
 
     // set leader

@@ -28,6 +28,7 @@ import com.alipay.sofa.registry.jdbc.repository.impl.AppRevisionHeartbeatJdbcRep
 import com.alipay.sofa.registry.jdbc.repository.impl.AppRevisionJdbcRepository;
 import com.alipay.sofa.registry.jdbc.repository.impl.InterfaceAppsJdbcRepository;
 import com.alipay.sofa.registry.jdbc.repository.impl.ProvideDataJdbcRepository;
+import com.alipay.sofa.registry.store.api.elector.LeaderElector;
 import com.alipay.sofa.registry.store.api.meta.ProvideDataRepository;
 import com.alipay.sofa.registry.store.api.repository.AppRevisionHeartbeatRepository;
 import com.alipay.sofa.registry.store.api.repository.AppRevisionRepository;
@@ -186,7 +187,7 @@ public class JdbcConfiguration {
     }
 
     @Bean
-    public MetaJdbcLeaderElector jdbcLeaderElector() {
+    public LeaderElector leaderElector() {
       return new MetaJdbcLeaderElector();
     }
 

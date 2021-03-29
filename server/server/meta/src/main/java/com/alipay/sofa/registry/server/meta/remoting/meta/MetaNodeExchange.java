@@ -16,7 +16,10 @@
  */
 package com.alipay.sofa.registry.server.meta.remoting.meta;
 
+import com.alipay.sofa.common.profile.StringUtil;
 import com.alipay.sofa.registry.common.model.store.URL;
+import com.alipay.sofa.registry.log.Logger;
+import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.remoting.ChannelHandler;
 import com.alipay.sofa.registry.remoting.exchange.Exchange;
 import com.alipay.sofa.registry.remoting.exchange.RequestException;
@@ -28,6 +31,9 @@ import com.alipay.sofa.registry.server.shared.remoting.ClientSideExchanger;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.Collection;
+import java.util.Collections;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 /**
  *
@@ -36,10 +42,16 @@ import java.util.Collection;
  */
 public class MetaNodeExchange extends ClientSideExchanger {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(MetaNodeExchange.class);
+
     @Autowired
     private MetaServerConfig metaServerConfig;
 
     @Autowired private MetaLeaderService metaLeaderService;
+
+    protected volatile String metaLeader;
+
+    private final ReadWriteLock lock = new ReentrantReadWriteLock();
 
 
     public MetaNodeExchange() {
@@ -58,7 +70,7 @@ public class MetaNodeExchange extends ClientSideExchanger {
 
     @Override
     protected Collection<ChannelHandler> getClientHandlers() {
-        return null;
+        return Collections.emptyList();
     }
 
     @Override
@@ -66,7 +78,13 @@ public class MetaNodeExchange extends ClientSideExchanger {
         return 3;
     }
 
+
+
     public Response sendRequest(Object requestBody) throws RequestException {
+        if (!StringUtil.equals(metaLeader, metaLeaderService.getLeader())
+            || boltExchange.getClient(serverType) == null) {
+            setLeaderAndConnect(metaLeaderService.getLeader());
+        }
 
         Request request =
                 new Request() {
@@ -81,5 +99,30 @@ public class MetaNodeExchange extends ClientSideExchanger {
                     }
                 };
         return request(request);
+    }
+
+    private void setLeaderAndConnect(String newLeader) {
+        String removed = metaLeader;
+        try {
+            lock.writeLock().lock();
+            metaLeader = newLeader;
+        } finally {
+            lock.writeLock().unlock();
+        }
+
+        try {
+            LOGGER.info("[setLeaderAndConnect][reset leader when heartbeat] connect meta leader: {}, close meta-server connection: {}",
+                    newLeader, removed);
+            connect(new URL(newLeader, metaServerConfig.getMetaServerPort()));
+
+            boltExchange
+                    .getClient(serverType)
+                    .getChannel(new URL(removed, getServerPort()))
+                    .close();
+        } catch (Throwable th) {
+            LOGGER.error("[setLeaderAndConnect]", th);
+        }
+
+
     }
 }
