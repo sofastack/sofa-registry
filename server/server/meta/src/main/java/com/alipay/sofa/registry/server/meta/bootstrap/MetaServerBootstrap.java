@@ -123,13 +123,16 @@ public class MetaServerBootstrap {
 
       openHttpServer();
 
-      renewNode();
+      // meta start loop to elector leader
+      startElectorLoop();
 
       retryer.call(
           () -> {
             return !StringUtils.isEmpty(leaderElector.getLeader())
                 && leaderElector.getLeaderEpoch() != AbstractLeaderElector.LeaderInfo.initEpoch;
           });
+
+      renewNode();
       LOGGER.warn(
           "[MetaBootstrap] leader info: {}, [{}]",
           leaderElector.getLeader(),
@@ -139,6 +142,10 @@ public class MetaServerBootstrap {
       LOGGER.error("Bootstrap Meta Server got error!", e);
       throw new RuntimeException("Bootstrap Meta Server got error!", e);
     }
+  }
+
+  private void startElectorLoop() {
+    leaderElector.change2Follow();
   }
 
   public void destroy() {

@@ -23,11 +23,15 @@ import com.alipay.sofa.registry.common.model.store.URL;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.server.meta.MetaLeaderService;
+import com.alipay.sofa.registry.server.meta.bootstrap.config.MetaServerConfig;
 import com.alipay.sofa.registry.server.meta.bootstrap.config.NodeConfig;
 import com.alipay.sofa.registry.server.shared.env.ServerEnv;
 import com.alipay.sofa.registry.util.ConcurrentUtils;
 import com.alipay.sofa.registry.util.WakeUpLoopRunnable;
 import org.springframework.beans.factory.annotation.Autowired;
+
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 /**
  * @author xiaojian.xj
@@ -42,6 +46,8 @@ public class MetaServerRenewService {
   @Autowired private NodeConfig nodeConfig;
 
   @Autowired protected MetaNodeExchange metaNodeExchange;
+
+  @Autowired protected MetaServerConfig metaServerConfig;
 
   private Renewer renewer;
 
@@ -66,6 +72,7 @@ public class MetaServerRenewService {
       try {
 
         // heartbeat on leader
+
         renewNode();
       } catch (Throwable e) {
         LOGGER.error("failed to renewNode", e);
