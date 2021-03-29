@@ -823,7 +823,8 @@ public class MetaServerConfigBean implements MetaServerConfig {
   /**
    * Setter method for property <tt>schedulerHeartbeatIntervalSecs</tt>.
    *
-   * @param schedulerHeartbeatIntervalSecs value to be assigned to property schedulerHeartbeatIntervalSecs
+   * @param schedulerHeartbeatIntervalSecs value to be assigned to property
+   *     schedulerHeartbeatIntervalSecs
    */
   public void setSchedulerHeartbeatIntervalSecs(int schedulerHeartbeatIntervalSecs) {
     this.schedulerHeartbeatIntervalSecs = schedulerHeartbeatIntervalSecs;

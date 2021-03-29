@@ -26,8 +26,8 @@ import com.alipay.sofa.registry.remoting.Server;
 import com.alipay.sofa.registry.remoting.bolt.exchange.BoltExchange;
 import com.alipay.sofa.registry.remoting.jersey.exchange.JerseyExchange;
 import com.alipay.sofa.registry.server.meta.bootstrap.config.MetaServerConfig;
-import com.alipay.sofa.registry.server.shared.remoting.AbstractServerHandler;
 import com.alipay.sofa.registry.server.meta.remoting.meta.MetaServerRenewService;
+import com.alipay.sofa.registry.server.shared.remoting.AbstractServerHandler;
 import com.alipay.sofa.registry.store.api.elector.AbstractLeaderElector;
 import com.alipay.sofa.registry.store.api.elector.LeaderElector;
 import com.github.rholder.retry.Retryer;
@@ -166,7 +166,8 @@ public class MetaServerBootstrap {
 
   private void renewNode() {
     metaServerRenewService.renewNode();
-    metaServerRenewService.startRenewer(metaServerConfig.getSchedulerHeartbeatIntervalSecs() * 1000);
+    metaServerRenewService.startRenewer(
+        metaServerConfig.getSchedulerHeartbeatIntervalSecs() * 1000);
   }
 
   private void openSessionRegisterServer() {
