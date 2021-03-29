@@ -16,6 +16,7 @@
  */
 package com.alipay.sofa.registry.common.model.dataserver;
 
+import com.alipay.sofa.registry.util.StringFormatter;
 import java.io.Serializable;
 import java.util.Objects;
 
@@ -24,13 +25,22 @@ public final class DatumDigest implements Serializable {
   private final long publisherVerSign;
   private final long publisherTimestampSign;
   private final int publisherNum;
+  private final short maxTimestamp;
+  private final short minTimestamp;
 
   public DatumDigest(
-      int publisherNum, long publisherIdSign, long publisherVerSign, long publisherTimestampSign) {
+      int publisherNum,
+      long publisherIdSign,
+      long publisherVerSign,
+      long publisherTimestampSign,
+      short maxTimestamp,
+      short minTimestamp) {
     this.publisherNum = publisherNum;
     this.publisherIdSign = publisherIdSign;
     this.publisherVerSign = publisherVerSign;
     this.publisherTimestampSign = publisherTimestampSign;
+    this.maxTimestamp = maxTimestamp;
+    this.minTimestamp = minTimestamp;
   }
 
   @Override
@@ -38,28 +48,34 @@ public final class DatumDigest implements Serializable {
     if (this == o) return true;
     if (o == null || getClass() != o.getClass()) return false;
     DatumDigest that = (DatumDigest) o;
-    return publisherNum == that.publisherNum
-        && publisherIdSign == that.publisherIdSign
+    return publisherIdSign == that.publisherIdSign
         && publisherVerSign == that.publisherVerSign
-        && publisherTimestampSign == that.publisherTimestampSign;
+        && publisherTimestampSign == that.publisherTimestampSign
+        && publisherNum == that.publisherNum
+        && maxTimestamp == that.maxTimestamp
+        && minTimestamp == that.minTimestamp;
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(publisherNum, publisherIdSign, publisherVerSign, publisherTimestampSign);
+    return Objects.hash(
+        publisherIdSign,
+        publisherVerSign,
+        publisherTimestampSign,
+        publisherNum,
+        maxTimestamp,
+        minTimestamp);
   }
 
   @Override
   public String toString() {
-    return "DatumDigest{"
-        + "publisherNum="
-        + publisherNum
-        + ", publisherIdSign="
-        + publisherIdSign
-        + ", publisherVerSign="
-        + publisherVerSign
-        + ", publisherTimestampSign="
-        + publisherTimestampSign
-        + '}';
+    return StringFormatter.format(
+        "Digest{num={},idSign={},verSign={},tsSign={},maxTs={},minTs={}",
+        publisherNum,
+        publisherIdSign,
+        publisherVerSign,
+        publisherTimestampSign,
+        maxTimestamp,
+        minTimestamp);
   }
 }

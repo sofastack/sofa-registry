@@ -48,7 +48,7 @@ public abstract class BaseInfo implements Serializable, StoreData<String> {
 
   private String registerId;
 
-  private Long version;
+  private long version;
 
   private URL sourceAddress;
 
@@ -146,7 +146,7 @@ public abstract class BaseInfo implements Serializable, StoreData<String> {
    *
    * @return property value of version
    */
-  public Long getVersion() {
+  public long getVersion() {
     return version;
   }
 
@@ -155,7 +155,7 @@ public abstract class BaseInfo implements Serializable, StoreData<String> {
    *
    * @param version value to be assigned to property version
    */
-  public void setVersion(Long version) {
+  public void setVersion(long version) {
     this.version = version;
   }
 

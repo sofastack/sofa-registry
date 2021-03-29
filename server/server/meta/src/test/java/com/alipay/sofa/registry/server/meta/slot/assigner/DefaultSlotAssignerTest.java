@@ -40,7 +40,7 @@ public class DefaultSlotAssignerTest {
   public void testAssign() {
     for (int slotNum = 2; slotNum <= 256; slotNum++) {
       for (int slotReplicas = 2; slotReplicas <= 2; slotReplicas++) {
-        for (int dataNum = 2; dataNum < 26 && dataNum < slotNum; dataNum++) {
+        for (int dataNum = 2; dataNum < 20 && dataNum < slotNum; dataNum++) {
           for (int downNum = 1; downNum < dataNum / 2; downNum++) {
             testAssign(downNum, dataNum, slotNum, slotReplicas, false);
             testAssign(downNum, dataNum, slotNum, slotReplicas, true);
