@@ -111,9 +111,20 @@ public class MetaNodeExchange extends ClientSideExchanger {
           removed);
       connect(new URL(newLeader, metaServerConfig.getMetaServerPort()));
 
-      boltExchange.getClient(serverType).getChannel(new URL(removed, getServerPort())).close();
+      if (StringUtil.isNotEmpty(removed)) {
+        boltExchange.getClient(serverType).getChannel(new URL(removed, getServerPort())).close();
+      }
     } catch (Throwable th) {
       LOGGER.error("[setLeaderAndConnect]", th);
     }
+  }
+
+  /**
+   * Getter method for property <tt>metaLeader</tt>.
+   *
+   * @return property value of metaLeader
+   */
+  public String getMetaLeader() {
+    return metaLeader;
   }
 }

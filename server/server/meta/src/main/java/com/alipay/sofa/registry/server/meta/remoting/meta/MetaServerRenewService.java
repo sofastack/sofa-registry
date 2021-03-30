@@ -54,7 +54,7 @@ public class MetaServerRenewService {
       throw new IllegalStateException("has started renewer");
     }
     this.renewer = new Renewer(intervalMs);
-    ConcurrentUtils.createDaemonThread("metaFollower-renewer", this.renewer).start();
+    ConcurrentUtils.createDaemonThread("metaNode-renewer", this.renewer).start();
   }
 
   private final class Renewer extends WakeUpLoopRunnable {
@@ -69,7 +69,6 @@ public class MetaServerRenewService {
       try {
 
         // heartbeat on leader
-
         renewNode();
       } catch (Throwable e) {
         LOGGER.error("failed to renewNode", e);

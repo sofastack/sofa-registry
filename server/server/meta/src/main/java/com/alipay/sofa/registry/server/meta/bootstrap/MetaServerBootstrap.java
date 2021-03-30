@@ -16,6 +16,7 @@
  */
 package com.alipay.sofa.registry.server.meta.bootstrap;
 
+import com.alipay.sofa.common.profile.StringUtil;
 import com.alipay.sofa.registry.common.model.store.URL;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
@@ -26,6 +27,7 @@ import com.alipay.sofa.registry.remoting.Server;
 import com.alipay.sofa.registry.remoting.bolt.exchange.BoltExchange;
 import com.alipay.sofa.registry.remoting.jersey.exchange.JerseyExchange;
 import com.alipay.sofa.registry.server.meta.bootstrap.config.MetaServerConfig;
+import com.alipay.sofa.registry.server.meta.remoting.meta.MetaNodeExchange;
 import com.alipay.sofa.registry.server.meta.remoting.meta.MetaServerRenewService;
 import com.alipay.sofa.registry.server.shared.remoting.AbstractServerHandler;
 import com.alipay.sofa.registry.store.api.elector.AbstractLeaderElector;
@@ -80,6 +82,8 @@ public class MetaServerBootstrap {
 
   @Autowired private MetaServerRenewService metaServerRenewService;
 
+  @Autowired private MetaNodeExchange metaNodeExchange;
+
   private Server sessionServer;
 
   private Server dataServer;
@@ -132,7 +136,13 @@ public class MetaServerBootstrap {
                 && leaderElector.getLeaderEpoch() != AbstractLeaderElector.LeaderInfo.initEpoch;
           });
 
-      renewNode();
+      retryer.call(
+          () -> {
+            renewNode();
+            return StringUtil.isNotEmpty(metaNodeExchange.getMetaLeader())
+                && metaNodeExchange.getClient() != null;
+          });
+
       LOGGER.warn(
           "[MetaBootstrap] leader info: {}, [{}]",
           leaderElector.getLeader(),
@@ -165,7 +175,6 @@ public class MetaServerBootstrap {
   }
 
   private void renewNode() {
-    metaServerRenewService.renewNode();
     metaServerRenewService.startRenewer(
         metaServerConfig.getSchedulerHeartbeatIntervalSecs() * 1000);
   }
