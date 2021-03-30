@@ -164,6 +164,7 @@ public class HeartbeatRequestHandler extends BaseMetaServerHandler<HeartbeatRequ
         return;
       case META:
         currentDcMetaServer.renew((MetaNode) node);
+        return;
       default:
         break;
     }
