@@ -111,9 +111,6 @@ public class MetaNodeExchange extends ClientSideExchanger {
           removed);
       connect(new URL(newLeader, metaServerConfig.getMetaServerPort()));
 
-      if (StringUtil.isNotEmpty(removed)) {
-        boltExchange.getClient(serverType).getChannel(new URL(removed, getServerPort())).close();
-      }
     } catch (Throwable th) {
       LOGGER.error("[setLeaderAndConnect]", th);
     }
