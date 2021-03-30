@@ -76,8 +76,7 @@ public class MetaNodeExchange extends ClientSideExchanger {
 
   public Response sendRequest(Object requestBody) throws RequestException {
     final String newLeader = metaLeaderService.getLeader();
-    if (!StringUtil.equals(metaLeader, newLeader)
-        || boltExchange.getClient(serverType) == null) {
+    if (!StringUtil.equals(metaLeader, newLeader) || boltExchange.getClient(serverType) == null) {
       setLeaderAndConnect(newLeader);
     }
 
