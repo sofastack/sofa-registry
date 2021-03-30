@@ -157,6 +157,7 @@ public class MetaServerConfiguration {
     public Collection<AbstractServerHandler> metaServerHandlers() {
       Collection<AbstractServerHandler> list = new ArrayList<>();
       list.add(metaConnectionHandler());
+      list.add(heartbeatRequestHandler());
       return list;
     }
 
