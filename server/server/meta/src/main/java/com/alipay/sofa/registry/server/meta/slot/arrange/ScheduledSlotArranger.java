@@ -201,7 +201,8 @@ public class ScheduledSlotArranger extends AbstractLifecycleObservable
 
   private final class Arranger extends WakeUpLoopRunnable {
 
-    private final int waitingMillis = Integer.getInteger("slot.arrange.interval.milli", 1000);
+    private final int waitingMillis =
+        Integer.getInteger("registry.slot.arrange.interval.millis", 1000);
 
     @Override
     public int getWaitingMillis() {

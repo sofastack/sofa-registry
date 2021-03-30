@@ -81,7 +81,7 @@ public class SlotChaosTest extends AbstractMetaServerTestBase {
 
   @Test
   public void testChaosLoop() throws Exception {
-    for (int i = 0; i < 50; i++) {
+    for (int i = 0; i < 100; i++) {
       testChaos();
     }
   }
@@ -106,13 +106,14 @@ public class SlotChaosTest extends AbstractMetaServerTestBase {
           .thenReturn(new VersionedList<>(DatumVersionUtil.nextId(), running));
       scheduledSlotArranger.arrangeSync();
     }
-
-    for (int i = 0; i < slotManager.getSlotNums(); i++) {
+    logger.info("[slot-chaos slot] begin balance");
+    int count = 0;
+    for (; count < slotManager.getSlotNums() * 2; count++) {
       if (!scheduledSlotArranger.arrangeSync()) {
         break;
       }
     }
-    Assert.assertFalse(scheduledSlotArranger.arrangeSync());
+    Assert.assertFalse("unbalance after:" + count, scheduledSlotArranger.arrangeSync());
     SlotTable finalSlotTable = slotManager.getSlotTable();
     List<String> datas = NodeUtils.transferNodeToIpList(running);
     for (CheckEnum checker : CheckEnum.values()) {

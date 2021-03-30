@@ -27,6 +27,7 @@ import com.alipay.sofa.registry.server.meta.bootstrap.config.NodeConfig;
 import com.alipay.sofa.registry.server.meta.slot.manager.SimpleSlotManager;
 import com.alipay.sofa.registry.server.meta.slot.util.builder.SlotTableBuilder;
 import com.alipay.sofa.registry.server.shared.util.NodeUtils;
+import com.alipay.sofa.registry.util.StringFormatter;
 import java.util.List;
 import org.assertj.core.util.Lists;
 import org.junit.Assert;
@@ -54,6 +55,7 @@ public class LeaderOnlyBalancerTest extends AbstractMetaServerTestBase {
     slotManager.setSlotReplicas(1);
     slotTableBuilder = new SlotTableBuilder(slotManager.getSlotTable(), 16, 1);
     balancer = new LeaderOnlyBalancer(slotTableBuilder, currentDataServers);
+    balancer.setMaxMoveLeaderSlots(2);
   }
 
   @Test
@@ -65,10 +67,15 @@ public class LeaderOnlyBalancerTest extends AbstractMetaServerTestBase {
     slotTableBuilder.init(currentDataServers);
     SlotTable prev = slotTableBuilder.build();
     SlotTable slotTable = balancer.balance();
+    System.out.println("@@@" + slotTable);
     Assert.assertEquals(
-        1, slotTable.transfer(currentDataServers.get(1), false).get(0).totalSlotNum());
+        StringFormatter.format("servers={}, slots={}", currentDataServers, slotTable),
+        1,
+        slotTable.transfer(currentDataServers.get(1), false).get(0).totalSlotNum());
     Assert.assertEquals(
-        1, slotTable.transfer(currentDataServers.get(2), false).get(0).totalSlotNum());
+        StringFormatter.format("servers={}, slots={}", currentDataServers, slotTable),
+        1,
+        slotTable.transfer(currentDataServers.get(2), false).get(0).totalSlotNum());
 
     Assert.assertTrue(
         isMoreBalanced(
@@ -81,9 +88,13 @@ public class LeaderOnlyBalancerTest extends AbstractMetaServerTestBase {
 
     slotTable = balancer.balance();
     Assert.assertEquals(
-        2, slotTable.transfer(currentDataServers.get(1), false).get(0).totalSlotNum());
+        StringFormatter.format("servers={}, slots={}", currentDataServers, slotTable),
+        2,
+        slotTable.transfer(currentDataServers.get(1), false).get(0).totalSlotNum());
     Assert.assertEquals(
-        2, slotTable.transfer(currentDataServers.get(2), false).get(0).totalSlotNum());
+        StringFormatter.format("servers={}, slots={}", currentDataServers, slotTable),
+        2,
+        slotTable.transfer(currentDataServers.get(2), false).get(0).totalSlotNum());
 
     Assert.assertTrue(
         isMoreBalanced(
