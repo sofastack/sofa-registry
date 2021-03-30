@@ -16,7 +16,6 @@
  */
 package com.alipay.sofa.registry.server.meta.monitor.impl;
 
-import static com.alipay.sofa.registry.server.meta.monitor.impl.DefaultSlotStats.MAX_SYNC_GAP;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -24,6 +23,7 @@ import com.alipay.sofa.registry.common.model.metaserver.nodes.DataNode;
 import com.alipay.sofa.registry.common.model.slot.*;
 import com.alipay.sofa.registry.exception.InitializeException;
 import com.alipay.sofa.registry.server.meta.AbstractMetaServerTestBase;
+import com.alipay.sofa.registry.server.meta.bootstrap.config.MetaServerConfigBean;
 import com.alipay.sofa.registry.server.meta.bootstrap.config.NodeConfig;
 import com.alipay.sofa.registry.server.meta.monitor.SlotStats;
 import com.alipay.sofa.registry.server.meta.slot.manager.SimpleSlotManager;
@@ -52,7 +52,7 @@ public class DefaultSlotTableStatsTest extends AbstractMetaServerTestBase {
     nodeConfig = mock(NodeConfig.class);
     when(nodeConfig.getLocalDataCenter()).thenReturn(getDc());
     slotManager = new SimpleSlotManager();
-    slotTableStats = new DefaultSlotTableStats(slotManager);
+    slotTableStats = new DefaultSlotTableStats(slotManager, new MetaServerConfigBean());
     dataNodes =
         Lists.newArrayList(
             new DataNode(randomURL(randomIp()), getDc()),
@@ -138,7 +138,7 @@ public class DefaultSlotTableStatsTest extends AbstractMetaServerTestBase {
   @Test
   public void testDataReportHeartbeatWhenInit() throws InitializeException {
     slotManager = new SimpleSlotManager();
-    slotTableStats = new DefaultSlotTableStats(slotManager);
+    slotTableStats = new DefaultSlotTableStats(slotManager, new MetaServerConfigBean());
     slotTableStats.initialize();
     List<BaseSlotStatus> slotStatuses = Lists.newArrayList();
     for (int slotId = 0; slotId < SlotConfig.SLOT_NUM; slotId++) {
@@ -150,6 +150,7 @@ public class DefaultSlotTableStatsTest extends AbstractMetaServerTestBase {
 
   @Test
   public void testFollowerStatus() {
+    MetaServerConfigBean configBean = new MetaServerConfigBean();
     Assert.assertFalse(slotTableStats.isSlotFollowersStable());
     DataNode dataNode = new DataNode(randomURL(randomIp()), getDc());
     List<BaseSlotStatus> slotStatuses = Lists.newArrayList();
@@ -173,7 +174,7 @@ public class DefaultSlotTableStatsTest extends AbstractMetaServerTestBase {
               slotManager.getSlotTable().getSlot(slotId).getLeaderEpoch(),
               dataNode.getIp(),
               System.currentTimeMillis(),
-              System.currentTimeMillis() - MAX_SYNC_GAP));
+              System.currentTimeMillis() - configBean.getDataReplicateMaxGapMillis()));
     }
     slotTableStats.checkSlotStatuses(dataNode, slotStatuses);
     Assert.assertFalse(slotTableStats.isSlotFollowersStable());
