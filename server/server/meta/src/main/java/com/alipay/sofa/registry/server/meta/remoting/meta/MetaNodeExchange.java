@@ -75,9 +75,10 @@ public class MetaNodeExchange extends ClientSideExchanger {
   }
 
   public Response sendRequest(Object requestBody) throws RequestException {
-    if (!StringUtil.equals(metaLeader, metaLeaderService.getLeader())
+    final String newLeader = metaLeaderService.getLeader();
+    if (!StringUtil.equals(metaLeader, newLeader)
         || boltExchange.getClient(serverType) == null) {
-      setLeaderAndConnect(metaLeaderService.getLeader());
+      setLeaderAndConnect(newLeader);
     }
 
     Request request =
@@ -89,7 +90,7 @@ public class MetaNodeExchange extends ClientSideExchanger {
 
           @Override
           public URL getRequestUrl() {
-            return new URL(metaLeaderService.getLeader(), getServerPort());
+            return new URL(newLeader, getServerPort());
           }
         };
     return request(request);
@@ -106,7 +107,7 @@ public class MetaNodeExchange extends ClientSideExchanger {
 
     try {
       LOGGER.info(
-          "[setLeaderAndConnect][reset leader when heartbeat] connect meta leader: {}, close meta-server connection: {}",
+          "[setLeaderAndConnect][reset leader when heartbeat] connect meta leader: {}",
           newLeader,
           removed);
       connect(new URL(newLeader, metaServerConfig.getMetaServerPort()));
