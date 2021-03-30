@@ -136,9 +136,10 @@ public class MetaServerBootstrap {
                 && leaderElector.getLeaderEpoch() != AbstractLeaderElector.LeaderInfo.initEpoch;
           });
 
+      // start renew node
+      renewNode();
       retryer.call(
           () -> {
-            renewNode();
             return StringUtil.isNotEmpty(metaNodeExchange.getMetaLeader())
                 && metaNodeExchange.getClient() != null;
           });
