@@ -132,9 +132,10 @@ public class MetaServerBootstrap {
 
       retryer.call(
           () -> {
-            LOGGER.info("[MetaBootstrap] retry elector meta leader: {}, epoch:{}",
-                    leaderElector.getLeader(),
-                    leaderElector.getLeaderEpoch());
+            LOGGER.info(
+                "[MetaBootstrap] retry elector meta leader: {}, epoch:{}",
+                leaderElector.getLeader(),
+                leaderElector.getLeaderEpoch());
             return !StringUtils.isEmpty(leaderElector.getLeader())
                 && leaderElector.getLeaderEpoch() != AbstractLeaderElector.LeaderInfo.initEpoch;
           });
@@ -143,9 +144,10 @@ public class MetaServerBootstrap {
       renewNode();
       retryer.call(
           () -> {
-            LOGGER.info("[MetaBootstrap] retry connect to meta leader: {}, client:{}",
-                    metaNodeExchange.getMetaLeader(),
-                    metaNodeExchange.getClient());
+            LOGGER.info(
+                "[MetaBootstrap] retry connect to meta leader: {}, client:{}",
+                metaNodeExchange.getMetaLeader(),
+                metaNodeExchange.getClient());
             return StringUtil.isNotEmpty(metaNodeExchange.getMetaLeader())
                 && metaNodeExchange.getClient() != null;
           });

@@ -87,7 +87,8 @@ public class MetaServerRenewService {
         new HeartbeatRequest<>(
             createNode(), -1L, nodeConfig.getLocalDataCenter(), System.currentTimeMillis(), null);
 
-    LOGGER.info("[MetaServerRenewService] renew to meta leader:{} request:{}", leaderIp, heartbeatRequest);
+    LOGGER.info(
+        "[MetaServerRenewService] renew to meta leader:{} request:{}", leaderIp, heartbeatRequest);
     GenericResponse resp =
         (GenericResponse) metaNodeExchange.sendRequest(heartbeatRequest).getResult();
 
