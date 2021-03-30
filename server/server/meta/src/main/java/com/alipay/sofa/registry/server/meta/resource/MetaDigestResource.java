@@ -59,8 +59,6 @@ public class MetaDigestResource {
 
   @Autowired private ProvideDataRepository provideDataRepository;
 
-  @Autowired private NodeConfig nodeConfig;
-
   @PostConstruct
   public void init() {
     MetricRegistry metrics = new MetricRegistry();
