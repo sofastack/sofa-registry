@@ -151,6 +151,12 @@ public class DefaultSlotTableMonitor extends AbstractLifecycle
     return this;
   }
 
+  @VisibleForTesting
+  public DefaultSlotTableMonitor setMetaServerConfig(MetaServerConfig metaServerConfig) {
+    this.metaServerConfig = metaServerConfig;
+    return this;
+  }
+
   @Override
   public void onHeartbeat(HeartbeatRequest<DataNode> heartbeat) {
     long slotTableEpoch = heartbeat.getSlotTableEpoch();

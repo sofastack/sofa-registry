@@ -422,7 +422,11 @@ public class DefaultSlotBalancer implements SlotBalancer {
     List<DataNodeSlot> dataNodeSlots = slotTableBuilder.getDataNodeSlotsLeaderBeyond(threshold);
     List<String> dataServers = DataNodeSlot.collectDataNodes(dataNodeSlots);
     dataServers.sort(Comparators.mostLeadersFirst(slotTableBuilder));
-    LOGGER.info("[LeaderHighWaterMark] threshold={}, dataServers={}", threshold, dataServers);
+    LOGGER.info(
+        "[LeaderHighWaterMark] threshold={}, dataServers={}/{}",
+        threshold,
+        dataServers.size(),
+        dataServers);
     return dataServers;
   }
 
@@ -430,7 +434,11 @@ public class DefaultSlotBalancer implements SlotBalancer {
     List<DataNodeSlot> dataNodeSlots = slotTableBuilder.getDataNodeSlotsLeaderBelow(threshold);
     List<String> dataServers = DataNodeSlot.collectDataNodes(dataNodeSlots);
     dataServers.sort(Comparators.leastLeadersFirst(slotTableBuilder));
-    LOGGER.info("[LeaderLowWaterMark] threshold={}, dataServers={}", threshold, dataServers);
+    LOGGER.info(
+        "[LeaderLowWaterMark] threshold={}, dataServers={}/{}",
+        threshold,
+        dataServers.size(),
+        dataServers);
     return dataServers;
   }
 
@@ -438,7 +446,11 @@ public class DefaultSlotBalancer implements SlotBalancer {
     List<DataNodeSlot> dataNodeSlots = slotTableBuilder.getDataNodeSlotsFollowerBeyond(threshold);
     List<String> dataServers = DataNodeSlot.collectDataNodes(dataNodeSlots);
     dataServers.sort(Comparators.mostFollowersFirst(slotTableBuilder));
-    LOGGER.info("[FollowerHighWaterMark] threshold={}, dataServers={}", threshold, dataServers);
+    LOGGER.info(
+        "[FollowerHighWaterMark] threshold={}, dataServers={}/{}",
+        threshold,
+        dataServers.size(),
+        dataServers);
     return dataServers;
   }
 
@@ -446,7 +458,11 @@ public class DefaultSlotBalancer implements SlotBalancer {
     List<DataNodeSlot> dataNodeSlots = slotTableBuilder.getDataNodeSlotsFollowerBelow(threshold);
     List<String> dataServers = DataNodeSlot.collectDataNodes(dataNodeSlots);
     dataServers.sort(Comparators.leastFollowersFirst(slotTableBuilder));
-    LOGGER.info("[FollowerLowWaterMark] threshold={}, dataServers={}", threshold, dataServers);
+    LOGGER.info(
+        "[FollowerLowWaterMark] threshold={}, dataServers={}/{}",
+        threshold,
+        dataServers.size(),
+        dataServers);
     return dataServers;
   }
 

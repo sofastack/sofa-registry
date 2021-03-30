@@ -46,10 +46,7 @@ import java.io.File;
 import java.util.List;
 import java.util.Map;
 import org.assertj.core.util.Lists;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.*;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
@@ -89,6 +86,13 @@ public class SlotMigrationIntegrationTest extends AbstractMetaServerTestBase {
     when(leaderElector.amILeader()).thenReturn(true);
     slotManager = new DefaultSlotManager(leaderElector);
     when(slotTableMonitor.isStableTableStable()).thenReturn(true);
+  }
+
+  @After
+  public void afterSlotMigrationIntegrationTest() throws Exception {
+    System.setProperty(
+        NaiveBalancePolicy.PROP_LEADER_MAX_MOVE,
+        String.valueOf(NaiveBalancePolicy.DEF_LEADER_MAX_MOVE));
   }
 
   @Test
@@ -173,7 +177,7 @@ public class SlotMigrationIntegrationTest extends AbstractMetaServerTestBase {
 
   @Test
   public void testDataServerAddedAndDeleted() throws Exception {
-    System.setProperty("slot.leader.max.move", SlotConfig.SLOT_NUM + "");
+    System.setProperty(NaiveBalancePolicy.PROP_LEADER_MAX_MOVE, SlotConfig.SLOT_NUM + "");
     ScheduledSlotArranger arranger =
         new ScheduledSlotArranger(dataServerManager, slotManager, slotTableMonitor, leaderElector);
     arranger.getLifecycleState().setPhase(LifecycleState.LifecyclePhase.STARTED);

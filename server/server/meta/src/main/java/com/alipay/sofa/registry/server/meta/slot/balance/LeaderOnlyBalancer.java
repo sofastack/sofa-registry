@@ -26,6 +26,7 @@ import com.alipay.sofa.registry.server.meta.slot.util.builder.SlotTableBuilder;
 import com.alipay.sofa.registry.server.meta.slot.util.comparator.Comparators;
 import com.alipay.sofa.registry.server.shared.slot.SlotTableUtils;
 import com.alipay.sofa.registry.util.MathUtils;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import java.util.*;
@@ -44,7 +45,7 @@ public class LeaderOnlyBalancer implements SlotBalancer {
 
   private final Set<String> currentDataServers;
 
-  private final BalancePolicy balancePolicy = new NaiveBalancePolicy();
+  private final NaiveBalancePolicy balancePolicy = new NaiveBalancePolicy();
 
   public LeaderOnlyBalancer(
       SlotTableBuilder slotTableBuilder, Collection<String> currentDataServers) {
@@ -133,5 +134,11 @@ public class LeaderOnlyBalancer implements SlotBalancer {
       ret.sort(comp);
     }
     return ret;
+  }
+
+  @VisibleForTesting
+  public LeaderOnlyBalancer setMaxMoveLeaderSlots(int max) {
+    this.balancePolicy.setMaxMoveLeaderSlots(max);
+    return this;
   }
 }
