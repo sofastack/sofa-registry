@@ -28,24 +28,24 @@ public class NaiveBalancePolicy implements BalancePolicy {
   public static final String PROP_FOLLOWER_MAX_MOVE = "registry.slot.follower.max.move";
   public static final String PROP_BALANCE_THRESHOLD = "registry.slot.balance.threshold";
 
-  // "final" instead of "static final" to make it dynamic and flexible
-  private final int threshold = Integer.getInteger(PROP_BALANCE_THRESHOLD, 10);
+  public static final int DEF_LEADER_MAX_MOVE = 4;
 
-  // "final" instead of "static final" to make it dynamic and flexible
-  private final int maxMoveLeaderSlots = Integer.getInteger(PROP_LEADER_MAX_MOVE, 2);
+  private int balanceThreshold = Integer.getInteger(PROP_BALANCE_THRESHOLD, 10);
 
-  private final int maxMoveFollowerSlots = Integer.getInteger(PROP_FOLLOWER_MAX_MOVE, 10);
+  private int maxMoveLeaderSlots = Integer.getInteger(PROP_LEADER_MAX_MOVE, DEF_LEADER_MAX_MOVE);
+
+  private int maxMoveFollowerSlots = Integer.getInteger(PROP_FOLLOWER_MAX_MOVE, 16);
 
   @Override
   public int getLowWaterMarkSlotLeaderNums(int average) {
     // round down
-    return average * (100 - threshold) / 100;
+    return average * (100 - balanceThreshold) / 100;
   }
 
   @Override
   public int getHighWaterMarkSlotLeaderNums(int average) {
     // round up
-    return MathUtils.divideCeil(average * (100 + threshold), 100);
+    return MathUtils.divideCeil(average * (100 + balanceThreshold), 100);
   }
 
   @Override
@@ -68,5 +68,17 @@ public class NaiveBalancePolicy implements BalancePolicy {
   @Override
   public int getMaxMoveFollowerSlots() {
     return maxMoveFollowerSlots;
+  }
+
+  public void setBalanceThreshold(int balanceThreshold) {
+    this.balanceThreshold = balanceThreshold;
+  }
+
+  public void setMaxMoveLeaderSlots(int maxMoveLeaderSlots) {
+    this.maxMoveLeaderSlots = maxMoveLeaderSlots;
+  }
+
+  public void setMaxMoveFollowerSlots(int maxMoveFollowerSlots) {
+    this.maxMoveFollowerSlots = maxMoveFollowerSlots;
   }
 }

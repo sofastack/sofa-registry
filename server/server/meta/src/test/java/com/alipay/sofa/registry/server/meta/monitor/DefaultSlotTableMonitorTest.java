@@ -22,6 +22,7 @@ import com.alipay.sofa.registry.common.model.metaserver.inter.heartbeat.Heartbea
 import com.alipay.sofa.registry.common.model.metaserver.nodes.DataNode;
 import com.alipay.sofa.registry.common.model.slot.*;
 import com.alipay.sofa.registry.server.meta.AbstractMetaServerTestBase;
+import com.alipay.sofa.registry.server.meta.bootstrap.config.MetaServerConfigBean;
 import com.alipay.sofa.registry.server.meta.bootstrap.config.NodeConfig;
 import com.alipay.sofa.registry.server.meta.monitor.impl.DefaultSlotTableMonitor;
 import com.alipay.sofa.registry.server.meta.slot.manager.SimpleSlotManager;
@@ -53,6 +54,7 @@ public class DefaultSlotTableMonitorTest extends AbstractMetaServerTestBase {
     slotManager.refresh(new SlotTableGenerator(dataNodes).createSlotTable());
     slotManager = spy(slotManager);
     monitor.setSlotManager(slotManager);
+    monitor.setMetaServerConfig(new MetaServerConfigBean());
     monitor.postConstruct();
   }
 

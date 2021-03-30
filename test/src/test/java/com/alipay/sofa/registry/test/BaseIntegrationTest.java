@@ -84,9 +84,6 @@ public class BaseIntegrationTest extends AbstractTest {
   protected static int metaPort = 9615;
   protected static int dataPort = 9622;
 
-  @Value("${meta.server.raftServerPort}")
-  protected int raftPort;
-
   @Value("${session.server.serverPort}")
   protected int sessionServerPort;
 
