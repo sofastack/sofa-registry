@@ -66,7 +66,7 @@ public class SlotMigrationIntegrationTest extends AbstractMetaServerTestBase {
 
   @BeforeClass
   public static void beforeSlotMigrationIntegrationTestClass() {
-    System.setProperty("slot.frozen.milli", "1");
+
   }
 
   @Before

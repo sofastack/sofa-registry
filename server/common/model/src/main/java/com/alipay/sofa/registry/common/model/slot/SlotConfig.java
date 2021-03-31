@@ -29,7 +29,7 @@ public final class SlotConfig {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(SlotConfig.class);
 
-  private static final String KEY_DATA_SLOT_NUM = "registry.data.slot.num";
+  public static final String KEY_DATA_SLOT_NUM = "registry.data.slot.num";
   private static final String KEY_DATA_SLOT_FUNC = "registry.data.slot.func";
   private static final String KEY_DATA_SLOT_REPLICAS = "registry.data.slot.replicas";
   public static final int SLOT_NUM;
@@ -39,7 +39,7 @@ public final class SlotConfig {
   private SlotConfig() {}
 
   static {
-    SLOT_NUM = SystemUtils.getSystemInteger(KEY_DATA_SLOT_NUM, 16);
+    SLOT_NUM = SystemUtils.getSystemInteger(KEY_DATA_SLOT_NUM, 256);
     if (SLOT_NUM <= 0) {
       throw new IllegalArgumentException("illegal " + KEY_DATA_SLOT_NUM + ":" + SLOT_NUM);
     }
@@ -49,7 +49,7 @@ public final class SlotConfig {
     }
     FUNC = SystemUtils.getSystem(KEY_DATA_SLOT_FUNC, "crc32c");
     LOGGER.info(
-        "{}={}, {}={}, {}={}",
+        "int slot config, {}={}, {}={}, {}={}",
         KEY_DATA_SLOT_NUM,
         SLOT_NUM,
         KEY_DATA_SLOT_REPLICAS,

@@ -16,6 +16,7 @@
  */
 package com.alipay.sofa.registry.server.meta;
 
+import com.alipay.sofa.registry.common.model.slot.SlotConfig;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.observer.Observable;
@@ -67,6 +68,7 @@ public class AbstractTestBase {
   public static void beforeAbstractTestClass() {
     System.setProperty("spring.main.show_banner", "false");
     System.setProperty("spring.profiles.active", "test");
+    System.setProperty(SlotConfig.KEY_DATA_SLOT_NUM, "16");
   }
 
   @Before

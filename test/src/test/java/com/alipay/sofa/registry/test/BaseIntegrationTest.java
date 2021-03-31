@@ -32,7 +32,9 @@ import com.alipay.sofa.registry.client.task.WorkerThread;
 import com.alipay.sofa.registry.common.model.CommonResponse;
 import com.alipay.sofa.registry.common.model.ConnectId;
 import com.alipay.sofa.registry.common.model.constants.ValueConstants;
+import com.alipay.sofa.registry.common.model.metaserver.Lease;
 import com.alipay.sofa.registry.common.model.sessionserver.CancelAddressRequest;
+import com.alipay.sofa.registry.common.model.slot.SlotConfig;
 import com.alipay.sofa.registry.common.model.store.URL;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
@@ -98,7 +100,8 @@ public class BaseIntegrationTest extends AbstractTest {
         LoggingSystem.SYSTEM_PROPERTY,
         "org.springframework.boot.logging.log4j2.Log4J2LoggingSystem");
     System.setProperty("spring.profiles.active", "integrate");
-    System.setProperty("lease.duration", "2");
+    System.setProperty(Lease.LEASE_DURATION, "2");
+    System.setProperty(SlotConfig.KEY_DATA_SLOT_NUM, "16");
   }
 
   @Before
