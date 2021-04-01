@@ -29,6 +29,7 @@ import com.alipay.sofa.registry.remoting.Channel;
 import com.alipay.sofa.registry.server.data.cache.DatumCache;
 import com.alipay.sofa.registry.server.shared.util.DatumUtils;
 import com.alipay.sofa.registry.util.ParaCheckUtil;
+import com.google.common.annotations.VisibleForTesting;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ThreadPoolExecutor;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -112,5 +113,10 @@ public class GetDataHandler extends AbstractDataHandler<GetDataRequest> {
   @Override
   public Class interest() {
     return GetDataRequest.class;
+  }
+
+  @VisibleForTesting
+  void setDatumCache(DatumCache datumCache) {
+    this.datumCache = datumCache;
   }
 }

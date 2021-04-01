@@ -25,6 +25,7 @@ import com.alipay.sofa.registry.common.model.dataserver.DatumVersion;
 import com.alipay.sofa.registry.common.model.sessionserver.DataChangeRequest;
 import com.alipay.sofa.registry.common.model.sessionserver.DataPushRequest;
 import com.alipay.sofa.registry.common.model.store.Publisher;
+import com.alipay.sofa.registry.common.model.store.SubDatum;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.remoting.Server;
@@ -32,6 +33,7 @@ import com.alipay.sofa.registry.remoting.exchange.Exchange;
 import com.alipay.sofa.registry.server.data.bootstrap.DataServerConfig;
 import com.alipay.sofa.registry.server.data.cache.DatumCache;
 import com.alipay.sofa.registry.server.data.remoting.sessionserver.SessionServerConnectionFactory;
+import com.alipay.sofa.registry.server.shared.util.DatumUtils;
 import com.alipay.sofa.registry.task.KeyedThreadPoolExecutor;
 import com.alipay.sofa.registry.util.ConcurrentUtils;
 import com.alipay.sofa.registry.util.LoopRunnable;
@@ -69,8 +71,8 @@ public final class DataChangeEventCenter {
   private final Map<String, Map<String, Datum>> dataCenter2TempChanges = Maps.newConcurrentMap();
   private final ReadWriteLock tempLock = new ReentrantReadWriteLock();
 
-  private TempChangeMerger tempChangeMerger;
-  private ChangeMerger changeMerger;
+  private final TempChangeMerger tempChangeMerger = new TempChangeMerger();
+  private final ChangeMerger changeMerger = new ChangeMerger();
 
   private KeyedThreadPoolExecutor notifyExecutor;
   private KeyedThreadPoolExecutor notifyTempExecutor;
@@ -86,15 +88,14 @@ public final class DataChangeEventCenter {
         new KeyedThreadPoolExecutor(
             "notifyTemp",
             dataServerConfig.getNotifyTempExecutorPoolSize(),
-            dataServerConfig.getNotifyExecutorQueueSize());
-
-    this.changeMerger = new ChangeMerger();
-    this.tempChangeMerger = new TempChangeMerger();
+            dataServerConfig.getNotifyTempExecutorQueueSize());
 
     ConcurrentUtils.createDaemonThread("changeMerger", changeMerger).start();
     ConcurrentUtils.createDaemonThread("tempChangeMerger", tempChangeMerger).start();
-
-    LOGGER.info("start DataChange NotifyIntervalMs={}", dataServerConfig.getNotifyIntervalMillis());
+    LOGGER.info(
+        "start DataChange NotifyIntervalMs={}, NotifyTempIntervalMs={}",
+        dataServerConfig.getNotifyIntervalMillis(),
+        dataServerConfig.getNotifyTempDataIntervalMillis());
   }
 
   public void onTempPubChange(Publisher publisher, String dataCenter) {
@@ -158,13 +159,13 @@ public final class DataChangeEventCenter {
     }
   }
 
-  private final class ChangeNotifier implements Runnable {
+  final class ChangeNotifier implements Runnable {
     final Connection connection;
     final String dataCenter;
     final Map<String, DatumVersion> dataInfoIds;
     volatile int retryCount;
 
-    public ChangeNotifier(
+    private ChangeNotifier(
         Connection connection, String dataCenter, Map<String, DatumVersion> dataInfoIds) {
       this.dataCenter = dataCenter;
       this.connection = connection;
@@ -192,8 +193,8 @@ public final class DataChangeEventCenter {
     @Override
     public String toString() {
       return "ChangeNotifier{"
-          + "connection="
-          + connection
+          + "conn="
+          + connection.getRemoteAddress()
           + ", dataCenter='"
           + dataCenter
           + '\''
@@ -207,7 +208,7 @@ public final class DataChangeEventCenter {
 
   private void retry(ChangeNotifier notifier) {
     notifier.retryCount++;
-    if (notifier.retryCount < dataServerConfig.getNotifyRetryTimes()) {
+    if (notifier.retryCount <= dataServerConfig.getNotifyRetryTimes()) {
       if (commitRetry(notifier)) {
         CHANGE_RETRY_COUNTER.inc();
         return;
@@ -217,7 +218,7 @@ public final class DataChangeEventCenter {
     LOGGER.warn("skip retry of full, {}", notifier);
   }
 
-  private boolean commitRetry(ChangeNotifier retry) {
+  boolean commitRetry(ChangeNotifier retry) {
     final int maxSize = dataServerConfig.getNotifyRetryQueueSize();
     final long expireTimestamp =
         System.currentTimeMillis() + dataServerConfig.getNotifyRetryBackoffMillis();
@@ -231,7 +232,7 @@ public final class DataChangeEventCenter {
     return true;
   }
 
-  private List<ChangeNotifier> getExpires() {
+  List<ChangeNotifier> getExpires() {
     final List<ChangeNotifier> expires = Lists.newLinkedList();
     final long now = System.currentTimeMillis();
     synchronized (retryNotifiers) {
@@ -252,7 +253,10 @@ public final class DataChangeEventCenter {
     // push.version
     final DatumVersion v = datumCache.updateVersion(datum.getDataCenter(), datum.getDataInfoId());
     if (v == null) {
-      LOGGER.warn("not owns the DataInfoId when temp pub,{}", datum.getDataInfoId());
+      LOGGER.warn(
+          "not owns the DataInfoId when temp pub to {},{}",
+          connection.getRemoteAddress(),
+          datum.getDataInfoId());
       return;
     }
     Datum existDatum = datumCache.get(datum.getDataCenter(), datum.getDataInfoId());
@@ -260,8 +264,9 @@ public final class DataChangeEventCenter {
       datum.addPublishers(existDatum.getPubMap());
     }
     datum.setVersion(v.getValue());
-    DataPushRequest request = new DataPushRequest(datum);
-    LOGGER.info("temp pub, {}", datum);
+    SubDatum subDatum = DatumUtils.of(datum);
+    DataPushRequest request = new DataPushRequest(subDatum);
+    LOGGER.info("temp pub to {}, {}", connection.getRemoteAddress(), subDatum);
     doNotify(request, connection);
   }
 
@@ -273,51 +278,56 @@ public final class DataChangeEventCenter {
         dataServerConfig.getRpcTimeoutMillis());
   }
 
+  boolean handleTempChanges(List<Connection> connections) {
+    // first clean the event
+    List<Datum> datums = Lists.newArrayList();
+    tempLock.writeLock().lock();
+    try {
+      for (Map<String, Datum> change : dataCenter2TempChanges.values()) {
+        datums.addAll(change.values());
+        change.clear();
+      }
+    } finally {
+      tempLock.writeLock().unlock();
+    }
+    if (datums.isEmpty()) {
+      return false;
+    }
+    if (connections.isEmpty()) {
+      LOGGER.warn("session conn is empty when temp change");
+      return false;
+    }
+    for (Datum datum : datums) {
+      for (Connection connection : connections) {
+        try {
+          // group by connect && dataInfoId
+          notifyTempExecutor.execute(
+              Tuple.of(datum.getDataInfoId(), connection.getRemoteAddress()),
+              new TempNotifier(connection, datum));
+          CHANGETEMP_COMMIT_COUNTER.inc();
+        } catch (RejectedExecutionException e) {
+          CHANGETEMP_SKIP_COUNTER.inc();
+          LOGGER.warn(
+              "commit notify temp full, {}, {}, {}",
+              connection.getRemoteAddress(),
+              datum,
+              e.getMessage());
+        } catch (Throwable e) {
+          CHANGETEMP_SKIP_COUNTER.inc();
+          LOGGER.error(
+              "commit notify temp failed, {}, {}", connection.getRemoteAddress(), datum, e);
+        }
+      }
+    }
+    return true;
+  }
+
   private final class TempChangeMerger extends LoopRunnable {
 
     @Override
     public void runUnthrowable() {
-      final List<DataTempChangeEvent> events = Lists.newArrayList();
-      tempLock.writeLock().lock();
-      try {
-        for (Map<String, Datum> change : dataCenter2TempChanges.values()) {
-          change
-              .values()
-              .forEach(
-                  d -> {
-                    events.add(new DataTempChangeEvent(d));
-                  });
-          change.clear();
-        }
-      } finally {
-        tempLock.writeLock().unlock();
-      }
-      if (events.isEmpty()) {
-        return;
-      }
       final List<Connection> connections = sessionServerConnectionFactory.getSessionConnections();
-      if (connections.isEmpty()) {
-        LOGGER.warn("session conn is empty when temp change");
-        return;
-      }
-      for (Connection connection : connections) {
-        for (DataTempChangeEvent event : events) {
-          Datum datum = event.getDatum();
-          try {
-            // group by connect && dataInfoId
-            notifyTempExecutor.execute(
-                Tuple.of(datum.getDataInfoId(), connection.getRemoteAddress()),
-                new TempNotifier(connection, datum));
-            CHANGETEMP_COMMIT_COUNTER.inc();
-          } catch (RejectedExecutionException e) {
-            CHANGETEMP_SKIP_COUNTER.inc();
-            LOGGER.warn("commit notify temp full, {}, {}", datum, e.getMessage());
-          } catch (Throwable e) {
-            CHANGETEMP_SKIP_COUNTER.inc();
-            LOGGER.error("commit notify temp failed, {}", datum, e);
-          }
-        }
-      }
+      handleTempChanges(connections);
     }
 
     @Override
@@ -327,68 +337,103 @@ public final class DataChangeEventCenter {
     }
   }
 
+  boolean handleChanges(List<Connection> connections) {
+    // first clean the event
+    final int maxItems = dataServerConfig.getNotifyMaxItems();
+    final List<DataChangeEvent> events = transferChangeEvent(maxItems);
+    if (events.isEmpty()) {
+      return false;
+    }
+    if (connections.isEmpty()) {
+      LOGGER.error("session conn is empty when change");
+      return false;
+    }
+    for (DataChangeEvent event : events) {
+      final Map<String, DatumVersion> changes = new HashMap<>(events.size());
+      final String dataCenter = event.getDataCenter();
+      for (String dataInfoId : event.getDataInfoIds()) {
+        DatumVersion datumVersion = datumCache.getVersion(dataCenter, dataInfoId);
+        if (datumVersion != null) {
+          changes.put(dataInfoId, datumVersion);
+        }
+      }
+      if (changes.isEmpty()) {
+        continue;
+      }
+      for (Connection connection : connections) {
+        try {
+          notifyExecutor.execute(
+              connection.getRemoteAddress(),
+              new ChangeNotifier(connection, event.getDataCenter(), changes));
+          CHANGE_COMMIT_COUNTER.inc();
+        } catch (RejectedExecutionException e) {
+          CHANGE_SKIP_COUNTER.inc();
+          LOGGER.warn(
+              "commit notify full, {}, {}, {}",
+              connection.getRemoteAddress(),
+              changes.size(),
+              e.getMessage());
+        } catch (Throwable e) {
+          CHANGE_SKIP_COUNTER.inc();
+          LOGGER.error(
+              "commit notify failed, {}, {}, {}", connection.getRemoteAddress(), changes.size(), e);
+        }
+      }
+    }
+    return true;
+  }
+
+  void handleExpire() {
+    final List<ChangeNotifier> retries = getExpires();
+    // commit retry
+    for (ChangeNotifier retry : retries) {
+      try {
+        notifyExecutor.execute(retry.connection.getRemoteAddress(), retry);
+        CHANGE_COMMIT_COUNTER.inc();
+      } catch (RejectedExecutionException e) {
+        CHANGE_SKIP_COUNTER.inc();
+        LOGGER.warn(
+            "commit retry notify full, {}, {}, {}",
+            retry.connection.getRemoteAddress(),
+            retry.dataInfoIds.size(),
+            e.getMessage());
+      } catch (Throwable e) {
+        CHANGE_SKIP_COUNTER.inc();
+        LOGGER.error(
+            "commit retry notify failed, {}, {}, {}",
+            retry.connection.getRemoteAddress(),
+            retry.dataInfoIds.size(),
+            e);
+      }
+    }
+  }
+
+  List<DataChangeEvent> transferChangeEvent(int maxItems) {
+    final List<DataChangeEvent> events = Lists.newArrayList();
+    lock.writeLock().lock();
+    try {
+      for (Map.Entry<String, Set<String>> change : dataCenter2Changes.entrySet()) {
+        final String dataCenter = change.getKey();
+        List<String> dataInfoIds = Lists.newArrayList(change.getValue());
+        change.getValue().clear();
+        List<List<String>> parts = Lists.partition(dataInfoIds, maxItems);
+        for (int i = 0; i < parts.size(); i++) {
+          events.add(new DataChangeEvent(dataCenter, parts.get(i)));
+        }
+      }
+    } finally {
+      lock.writeLock().unlock();
+    }
+    return events;
+  }
+
   private final class ChangeMerger extends LoopRunnable {
 
     @Override
     public void runUnthrowable() {
-      final List<DataChangeEvent> events = Lists.newArrayList();
-      final int maxItems = dataServerConfig.getNotifyMaxItems();
-      lock.writeLock().lock();
-      try {
-        for (Map.Entry<String, Set<String>> change : dataCenter2Changes.entrySet()) {
-          final String dataCenter = change.getKey();
-          List<String> dataInfoIds = Lists.newArrayList(change.getValue());
-          change.getValue().clear();
-          List<List<String>> parts = Lists.partition(dataInfoIds, maxItems);
-          for (int i = 0; i < parts.size(); i++) {
-            events.add(new DataChangeEvent(dataCenter, parts.get(i)));
-          }
-        }
-      } finally {
-        lock.writeLock().unlock();
-      }
-
-      if (!events.isEmpty()) {
-        final List<Connection> connections = sessionServerConnectionFactory.getSessionConnections();
-        if (connections.isEmpty()) {
-          LOGGER.error("session conn is empty when change");
-          return;
-        }
-        for (DataChangeEvent event : events) {
-          final Map<String, DatumVersion> changes = new HashMap<>(events.size());
-          final String dataCenter = event.getDataCenter();
-          for (String dataInfoId : event.getDataInfoIds()) {
-            DatumVersion datumVersion = datumCache.getVersion(dataCenter, dataInfoId);
-            if (datumVersion != null) {
-              changes.put(dataInfoId, datumVersion);
-            }
-          }
-          if (changes.isEmpty()) {
-            continue;
-          }
-          for (Connection connection : connections) {
-            // group by connection
-            try {
-              notifyExecutor.execute(
-                  connection.getRemoteAddress(),
-                  new ChangeNotifier(connection, event.getDataCenter(), changes));
-              CHANGE_COMMIT_COUNTER.inc();
-            } catch (RejectedExecutionException e) {
-              CHANGE_SKIP_COUNTER.inc();
-              LOGGER.warn("commit notify full, {}, {}", connection, changes.size(), e.getMessage());
-            } catch (Throwable e) {
-              CHANGE_SKIP_COUNTER.inc();
-              LOGGER.error("commit notify failed, {}, {}", connection, changes.size(), e);
-            }
-          }
-        }
-      }
-
-      final List<ChangeNotifier> retries = getExpires();
-      // commit retry
-      for (ChangeNotifier retry : retries) {
-        notifyExecutor.execute(retry.connection.getRemoteAddress(), retry);
-      }
+      final List<Connection> connections = sessionServerConnectionFactory.getSessionConnections();
+      handleChanges(connections);
+      handleExpire();
     }
 
     @Override
@@ -399,8 +444,41 @@ public final class DataChangeEventCenter {
   }
 
   @VisibleForTesting
-  public Set<String> getOnChanges(String dataCenter) {
+  Set<String> getOnChanges(String dataCenter) {
     Set<String> changes = dataCenter2Changes.get(dataCenter);
     return changes == null ? Collections.emptySet() : Sets.newHashSet(changes);
+  }
+
+  @VisibleForTesting
+  Map<String, Datum> getOnTempPubChanges(String dataCenter) {
+    Map<String, Datum> changes = dataCenter2TempChanges.get(dataCenter);
+    return changes == null ? Collections.emptyMap() : Maps.newHashMap(changes);
+  }
+
+  @VisibleForTesting
+  void setDataServerConfig(DataServerConfig dataServerConfig) {
+    this.dataServerConfig = dataServerConfig;
+  }
+
+  @VisibleForTesting
+  void setDatumCache(DatumCache datumCache) {
+    this.datumCache = datumCache;
+  }
+
+  @VisibleForTesting
+  void setSessionServerConnectionFactory(
+      SessionServerConnectionFactory sessionServerConnectionFactory) {
+    this.sessionServerConnectionFactory = sessionServerConnectionFactory;
+  }
+
+  @VisibleForTesting
+  void setBoltExchange(Exchange boltExchange) {
+    this.boltExchange = boltExchange;
+  }
+
+  @VisibleForTesting
+  ChangeNotifier newChangeNotifier(
+      Connection connection, String dataCenter, Map<String, DatumVersion> dataInfoIds) {
+    return new ChangeNotifier(connection, dataCenter, dataInfoIds);
   }
 }

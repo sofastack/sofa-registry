@@ -21,7 +21,6 @@ import com.alipay.sofa.registry.server.data.TestBaseUtils;
 import com.alipay.sofa.registry.server.data.bootstrap.DataServerConfig;
 import com.alipay.sofa.registry.server.data.cache.LocalDatumStorage;
 import com.alipay.sofa.registry.server.data.remoting.sessionserver.SessionServerConnectionFactory;
-import com.alipay.sofa.registry.server.data.remoting.sessionserver.SessionServerConnectionFactoryTest;
 import com.alipay.sofa.registry.server.shared.env.ServerEnv;
 import org.junit.Assert;
 import org.junit.Test;
@@ -46,8 +45,7 @@ public class SessionLeaseManagerTest {
     config.setSessionLeaseSecs(1);
     slm.setDataServerConfig(config);
     ssc.registerSession(
-        ServerEnv.PROCESS_ID,
-        new SessionServerConnectionFactoryTest.MockBlotChannel(ServerEnv.IP, 1000));
+        ServerEnv.PROCESS_ID, new TestBaseUtils.MockBlotChannel(9602, ServerEnv.IP, 1000));
     slm.renewSession(ServerEnv.PROCESS_ID);
     Assert.assertTrue(slm.contains(ServerEnv.PROCESS_ID));
     Publisher p = TestBaseUtils.createTestPublisher("dataId");

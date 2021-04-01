@@ -49,7 +49,7 @@ public final class SlotConfig {
     }
     FUNC = SystemUtils.getSystem(KEY_DATA_SLOT_FUNC, "crc32c");
     LOGGER.info(
-        "int slot config, {}={}, {}={}, {}={}",
+        "init slot config, {}={}, {}={}, {}={}",
         KEY_DATA_SLOT_NUM,
         SLOT_NUM,
         KEY_DATA_SLOT_REPLICAS,

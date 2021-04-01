@@ -566,8 +566,7 @@ public final class SlotManagerImpl implements SlotManager {
       // group by slotId and session
       return migrateSessionExecutor.execute(new Tuple(slot.getId(), sessionIp), task);
     } else {
-      // to a session node, at most there is 4 tasks running, avoid too many tasks hit the same
-      // session
+      // at most there is 4 tasks for a session, avoid too many tasks hit the same session
       return syncSessionExecutor.execute(new Tuple((slot.getId() % 4), sessionIp), task);
     }
   }

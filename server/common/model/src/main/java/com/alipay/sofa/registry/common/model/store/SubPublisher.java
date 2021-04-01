@@ -46,7 +46,10 @@ public final class SubPublisher implements Serializable {
     this.clientId = clientId;
     this.version = version;
     this.srcAddressString = srcAddressString;
-    this.dataList = Collections.unmodifiableList(Lists.newArrayList(dataList));
+    this.dataList =
+        dataList == null
+            ? Collections.emptyList()
+            : Collections.unmodifiableList(Lists.newArrayList(dataList));
     this.registerTimestamp = registerTimestamp;
   }
 
