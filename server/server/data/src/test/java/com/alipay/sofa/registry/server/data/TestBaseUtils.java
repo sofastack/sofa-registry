@@ -19,16 +19,19 @@ package com.alipay.sofa.registry.server.data;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import com.alipay.remoting.Connection;
 import com.alipay.sofa.registry.common.model.ConnectId;
 import com.alipay.sofa.registry.common.model.RegisterVersion;
 import com.alipay.sofa.registry.common.model.dataserver.Datum;
 import com.alipay.sofa.registry.common.model.dataserver.DatumSummary;
 import com.alipay.sofa.registry.common.model.slot.Slot;
+import com.alipay.sofa.registry.common.model.slot.SlotAccess;
 import com.alipay.sofa.registry.common.model.slot.SlotConfig;
 import com.alipay.sofa.registry.common.model.slot.func.SlotFunctionRegistry;
 import com.alipay.sofa.registry.common.model.store.DataInfo;
 import com.alipay.sofa.registry.common.model.store.Publisher;
 import com.alipay.sofa.registry.common.model.store.URL;
+import com.alipay.sofa.registry.remoting.bolt.BoltChannel;
 import com.alipay.sofa.registry.server.data.bootstrap.CommonConfig;
 import com.alipay.sofa.registry.server.data.bootstrap.DataServerConfig;
 import com.alipay.sofa.registry.server.data.cache.DatumCache;
@@ -36,10 +39,18 @@ import com.alipay.sofa.registry.server.data.cache.LocalDatumStorage;
 import com.alipay.sofa.registry.server.shared.env.ServerEnv;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import io.netty.channel.Channel;
+import io.netty.util.Attribute;
+import io.netty.util.AttributeKey;
+import java.net.InetSocketAddress;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 import org.junit.Assert;
+import org.mockito.Mockito;
+import org.mockito.invocation.InvocationOnMock;
+import org.mockito.stubbing.Answer;
 
 public final class TestBaseUtils {
   private static final AtomicLong REGISTER_ID_SEQ = new AtomicLong();
@@ -101,9 +112,7 @@ public final class TestBaseUtils {
   }
 
   public static LocalDatumStorage newLocalStorage(String dataCenter, boolean init) {
-    CommonConfig commonConfig = mock(CommonConfig.class);
-    when(commonConfig.getLocalDataCenter()).thenReturn(dataCenter);
-    DataServerConfig dataServerConfig = new DataServerConfig(commonConfig);
+    DataServerConfig dataServerConfig = newDataConfig(dataCenter);
     LocalDatumStorage storage = new LocalDatumStorage();
     storage.setDataServerConfig(dataServerConfig);
     if (init) {
@@ -112,6 +121,12 @@ public final class TestBaseUtils {
       }
     }
     return storage;
+  }
+
+  public static DataServerConfig newDataConfig(String dataCenter) {
+    CommonConfig commonConfig = mock(CommonConfig.class);
+    when(commonConfig.getLocalDataCenter()).thenReturn(dataCenter);
+    return new DataServerConfig(commonConfig);
   }
 
   public static DatumCache newLocalDatumCache(String localDataCenter, boolean init) {
@@ -154,5 +169,92 @@ public final class TestBaseUtils {
       }
     }
     return list;
+  }
+
+  public static MockBlotChannel newChannel(int localPort, String remoteAddress, int remotePort) {
+    return new MockBlotChannel(localPort, remoteAddress, remotePort);
+  }
+
+  public static final class MockBlotChannel extends BoltChannel {
+    final InetSocketAddress remote;
+    final InetSocketAddress local;
+    public volatile boolean connected = true;
+    private final AtomicBoolean active = new AtomicBoolean(true);
+
+    public final Connection conn;
+
+    public MockBlotChannel(int localPort, String remoteAddress, int remotePort) {
+      this.local = new InetSocketAddress(ServerEnv.IP, localPort);
+      this.remote = new InetSocketAddress(remoteAddress, remotePort);
+      Channel chn = Mockito.mock(io.netty.channel.Channel.class);
+      Mockito.when(chn.attr(Mockito.any(AttributeKey.class)))
+          .thenReturn(Mockito.mock(Attribute.class));
+      Mockito.when(chn.remoteAddress()).thenReturn(remote);
+      Mockito.when(chn.isActive())
+          .thenAnswer(
+              new Answer<Boolean>() {
+                public Boolean answer(InvocationOnMock var1) throws Throwable {
+                  return active.get();
+                }
+              });
+      conn = new Connection(chn);
+    }
+
+    @Override
+    public InetSocketAddress getRemoteAddress() {
+      return remote;
+    }
+
+    @Override
+    public InetSocketAddress getLocalAddress() {
+      return local;
+    }
+
+    @Override
+    public boolean isConnected() {
+      return connected;
+    }
+
+    public void setActive(boolean b) {
+      active.set(b);
+    }
+
+    @Override
+    public Connection getConnection() {
+      return conn;
+    }
+  }
+
+  public static SlotAccess moved() {
+    return new SlotAccess(1, 1, SlotAccess.Status.Moved, 1);
+  }
+
+  public static SlotAccess accept() {
+    return accept(1, 1, 1);
+  }
+
+  public static SlotAccess accept(int slotId, long tableEpoch, long leaderEpoch) {
+    return new SlotAccess(slotId, 1, SlotAccess.Status.Accept, leaderEpoch);
+  }
+
+  public static SlotAccess migrating() {
+    return migrating(1, 1, 1);
+  }
+
+  public static SlotAccess migrating(int slotId, long tableEpoch, long leaderEpoch) {
+    return new SlotAccess(slotId, 1, SlotAccess.Status.Migrating, leaderEpoch);
+  }
+
+  public static SlotAccess misMatch() {
+    return new SlotAccess(1, 1, SlotAccess.Status.MisMatch, 1);
+  }
+
+  public static void assertException(Class<? extends Throwable> eclazz, Runnable runnable) {
+    try {
+      runnable.run();
+      Assert.assertTrue(false);
+    } catch (Throwable exception) {
+      Assert.assertEquals(exception.getClass(), eclazz);
+    }
   }
 }

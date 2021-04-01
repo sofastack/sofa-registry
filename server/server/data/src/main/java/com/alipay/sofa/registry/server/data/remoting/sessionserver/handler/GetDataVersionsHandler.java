@@ -26,8 +26,8 @@ import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.remoting.Channel;
 import com.alipay.sofa.registry.server.data.cache.DatumCache;
-import com.alipay.sofa.registry.server.data.cache.DatumStorage;
 import com.alipay.sofa.registry.util.ParaCheckUtil;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Maps;
 import java.util.Map;
 import java.util.concurrent.Executor;
@@ -43,8 +43,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 public class GetDataVersionsHandler extends AbstractDataHandler<GetDataVersionRequest> {
   private static final Logger LOGGER = LoggerFactory.getLogger("GET");
   @Autowired private DatumCache datumCache;
-
-  @Autowired private DatumStorage localDatumStorage;
 
   @Autowired private ThreadPoolExecutor getDataProcessorExecutor;
 
@@ -81,7 +79,7 @@ public class GetDataVersionsHandler extends AbstractDataHandler<GetDataVersionRe
           slotAccessAfter, "slotLeaderEpoch has change, prev=" + slotAccessBefore);
     }
     final boolean localDataCenter = dataServerConfig.isLocalDataCenter(dataCenter);
-    Map<String, DatumVersion> ret = Maps.newHashMapWithExpectedSize(interests.size());
+    Map<String, DatumVersion> ret = Maps.newHashMapWithExpectedSize(64);
     for (Map.Entry<String, DatumVersion> e : interests.entrySet()) {
       final String dataInfoId = e.getKey();
       final DatumVersion interestVer = e.getValue();
@@ -152,5 +150,10 @@ public class GetDataVersionsHandler extends AbstractDataHandler<GetDataVersionRe
   @Override
   public Class interest() {
     return GetDataVersionRequest.class;
+  }
+
+  @VisibleForTesting
+  void setDatumCache(DatumCache datumCache) {
+    this.datumCache = datumCache;
   }
 }

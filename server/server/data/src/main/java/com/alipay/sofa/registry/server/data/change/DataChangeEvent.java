@@ -26,7 +26,7 @@ import java.util.List;
  * @author qian.lqlq
  * @version $Id: DataChangeEvent.java, v 0.1 2017-12-07 18:44 qian.lqlq Exp $
  */
-public class DataChangeEvent implements IDataChangeEvent {
+public class DataChangeEvent {
   private final String dataCenter;
   private final List<String> dataInfoIds;
 

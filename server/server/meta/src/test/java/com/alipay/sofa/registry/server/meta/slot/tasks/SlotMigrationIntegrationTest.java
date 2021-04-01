@@ -64,11 +64,6 @@ public class SlotMigrationIntegrationTest extends AbstractMetaServerTestBase {
 
   @Mock private MetaLeaderService leaderElector;
 
-  @BeforeClass
-  public static void beforeSlotMigrationIntegrationTestClass() {
-
-  }
-
   @Before
   public void beforeSlotMigrationIntegrationTest() throws Exception {
     MockitoAnnotations.initMocks(this);
