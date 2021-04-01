@@ -21,6 +21,7 @@ import com.alipay.sofa.registry.common.model.Node.NodeType;
 import com.alipay.sofa.registry.remoting.Channel;
 import com.alipay.sofa.registry.server.data.remoting.sessionserver.SessionServerConnectionFactory;
 import com.alipay.sofa.registry.server.shared.remoting.ListenServerChannelHandler;
+import com.google.common.annotations.VisibleForTesting;
 import org.springframework.beans.factory.annotation.Autowired;
 
 /**
@@ -43,5 +44,11 @@ public class DataServerConnectionHandler extends ListenServerChannelHandler {
   @Override
   protected Node.NodeType getConnectNodeType() {
     return NodeType.SESSION;
+  }
+
+  @VisibleForTesting
+  void setSessionServerConnectionFactory(
+      SessionServerConnectionFactory sessionServerConnectionFactory) {
+    this.sessionServerConnectionFactory = sessionServerConnectionFactory;
   }
 }

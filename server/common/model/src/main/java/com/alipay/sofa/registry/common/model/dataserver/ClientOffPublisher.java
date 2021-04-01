@@ -59,11 +59,6 @@ public final class ClientOffPublisher implements Serializable {
 
   @Override
   public String toString() {
-    return "ClientOffPublisher{"
-        + "connectId="
-        + connectId
-        + ", publisherMap="
-        + publisherMap
-        + '}';
+    return "ClientOff{" + "connId=" + connectId + ", pubs=" + publisherMap + '}';
   }
 }

@@ -48,7 +48,7 @@ public class BatchPutDataHandler extends AbstractDataHandler<BatchRequest> {
         checkPublisher((Publisher) req);
       } else if (req instanceof ClientOffPublisher) {
         ParaCheckUtil.checkNotNull(
-            ((ClientOffPublisher) req).getConnectId(), "ClientOffPublisher.connectIds");
+            ((ClientOffPublisher) req).getConnectId(), "ClientOffPublisher.connectId");
         ParaCheckUtil.checkNotNull(
             ((ClientOffPublisher) req).getPublisherMap(), "ClientOffPublisher.publisherMap");
       } else {

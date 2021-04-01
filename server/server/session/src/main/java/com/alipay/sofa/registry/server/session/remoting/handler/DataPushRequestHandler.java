@@ -23,7 +23,6 @@ import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.remoting.Channel;
 import com.alipay.sofa.registry.server.session.push.FirePushService;
 import com.alipay.sofa.registry.server.shared.remoting.AbstractClientHandler;
-import com.alipay.sofa.registry.server.shared.util.DatumUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 
 /**
@@ -46,7 +45,7 @@ public class DataPushRequestHandler extends AbstractClientHandler<DataPushReques
   @Override
   public Object doHandle(Channel channel, DataPushRequest request) {
     try {
-      firePushService.fireOnDatum(DatumUtils.of(request.getDatum()));
+      firePushService.fireOnDatum(request.getDatum());
     } catch (Throwable e) {
       LOGGER.error("DataPush Request error!", e);
       throw new RuntimeException("DataPush Request error!", e);

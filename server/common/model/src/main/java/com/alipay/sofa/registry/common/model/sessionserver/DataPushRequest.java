@@ -16,7 +16,8 @@
  */
 package com.alipay.sofa.registry.common.model.sessionserver;
 
-import com.alipay.sofa.registry.common.model.dataserver.Datum;
+import com.alipay.sofa.registry.common.model.store.SubDatum;
+import com.alipay.sofa.registry.util.StringFormatter;
 import java.io.Serializable;
 
 /**
@@ -25,43 +26,29 @@ import java.io.Serializable;
  */
 public class DataPushRequest implements Serializable {
 
-  private Datum datum;
+  private final SubDatum datum;
 
   /**
    * constructor
    *
    * @param datum
    */
-  public DataPushRequest(Datum datum) {
+  public DataPushRequest(SubDatum datum) {
     this.datum = datum;
   }
 
-  /**
-   * Getter method for property <tt>datum</tt>.
-   *
-   * @return property value of datum
-   */
-  public Datum getDatum() {
+  public SubDatum getDatum() {
     return datum;
-  }
-
-  /**
-   * Setter method for property <tt>datum</tt>.
-   *
-   * @param datum value to be assigned to property datum
-   */
-  public void setDatum(Datum datum) {
-    this.datum = datum;
   }
 
   @Override
   public String toString() {
-    final StringBuilder sb = new StringBuilder("DataPushRequest{");
-    sb.append("dataInfoId=").append(datum.getDataInfoId());
-    sb.append(", dataCenter=").append(datum.getDataCenter());
-    sb.append(", version=").append(datum.getVersion());
-    sb.append(", pubsize=").append(datum.publisherSize());
-    sb.append('}');
-    return sb.toString();
+    return StringFormatter.format(
+        "DataPushRequest{{},{},ver={},num={},bs={}}",
+        datum.getDataInfoId(),
+        datum.getDataCenter(),
+        datum.getVersion(),
+        datum.getPublishers().size(),
+        datum.getDataBoxBytes());
   }
 }

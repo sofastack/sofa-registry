@@ -25,7 +25,6 @@ import com.alipay.sofa.registry.server.meta.cluster.node.NodeModifiedTest;
 import com.alipay.sofa.registry.server.meta.cluster.node.TestAbstractNodeEventTest;
 import com.alipay.sofa.registry.server.meta.lease.LeaseTest;
 import com.alipay.sofa.registry.server.meta.lease.data.DefaultDataServerManagerTest;
-import com.alipay.sofa.registry.server.meta.lease.impl.CrossDcMetaServerManagerTest;
 import com.alipay.sofa.registry.server.meta.lease.session.DefaultSessionServerManagerTest;
 import com.alipay.sofa.registry.server.meta.metaserver.impl.DefaultCrossDcMetaServerTest;
 import com.alipay.sofa.registry.server.meta.metaserver.impl.DefaultCurrentDcMetaServerTest;
@@ -60,7 +59,7 @@ import org.junit.runners.Suite;
   DefaultCurrentDcMetaServerTest.class,
   DefaultSessionServerManagerTest.class,
   DefaultDataServerManagerTest.class,
-  CrossDcMetaServerManagerTest.class,
+  //  CrossDcMetaServerManagerTest.class,
   LeaseTest.class,
   HeartbeatRequestHandlerTest.class,
   DefaultMetaServerManagerTest.class,

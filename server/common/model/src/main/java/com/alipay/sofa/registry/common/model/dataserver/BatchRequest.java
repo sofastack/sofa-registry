@@ -36,7 +36,7 @@ public class BatchRequest extends AbstractSlotRequest {
   @Override
   public String toString() {
     return StringFormatter.format(
-        "Batch:{},{},{},{}",
+        "Batch:slotId={},num={},leaderEpoch={},tableEpoch={}",
         getSlotId(),
         request.size(),
         getSlotLeaderEpoch(),
