@@ -93,4 +93,24 @@ public class MetricsableThreadPoolExecutor extends ThreadPoolExecutor {
         new NamedThreadFactory(executorName, true),
         handler);
   }
+
+  public static MetricsableThreadPoolExecutor newExecutor(
+      String executorName, int corePoolSize, int size) {
+    return new MetricsableThreadPoolExecutor(
+        executorName,
+        corePoolSize,
+        corePoolSize,
+        60,
+        TimeUnit.SECONDS,
+        size <= 1024 * 4 ? new ArrayBlockingQueue<>(size) : new LinkedBlockingQueue<>(size),
+        new NamedThreadFactory(executorName, true),
+        (r, executor) -> {
+          String msg =
+              String.format(
+                  "Task(%s) %s rejected from %s, throw RejectedExecutionException.",
+                  r.getClass(), r, executor);
+          LOGGER.error(msg);
+          throw new RejectedExecutionException(msg);
+        });
+  }
 }

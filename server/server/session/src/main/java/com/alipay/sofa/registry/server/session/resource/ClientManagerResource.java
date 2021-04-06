@@ -28,6 +28,9 @@ import com.alipay.sofa.registry.server.session.connections.ConnectionsService;
 import com.alipay.sofa.registry.server.session.mapper.ConnectionMapper;
 import com.alipay.sofa.registry.server.session.registry.SessionRegistry;
 import com.alipay.sofa.registry.server.shared.meta.MetaServerService;
+import com.alipay.sofa.registry.task.MetricsableThreadPoolExecutor;
+import java.net.ConnectException;
+import java.net.SocketTimeoutException;
 import java.net.URI;
 import java.util.*;
 import java.util.concurrent.*;
@@ -60,6 +63,9 @@ public class ClientManagerResource {
   @Autowired private ConnectionsService connectionsService;
 
   @Autowired private ConnectionMapper connectionMapper;
+
+  private final ThreadPoolExecutor zoneSdkExecutor =
+      MetricsableThreadPoolExecutor.newExecutor("ZoneSdkExecutor", 20, 200);
 
   /** Client off */
   @POST
@@ -106,47 +112,29 @@ public class ClientManagerResource {
     if (StringUtils.isEmpty(ips)) {
       return CommonResponse.buildFailedResponse("ips is empty");
     }
+    CommonResponse resp = clientOff(ips);
+    if (!resp.isSuccess()) {
+      return resp;
+    }
     List<URL> servers = getOtherServersCurrentZone();
-    List<CommonResponse> responses = new ArrayList<>(servers.size() + 1);
-    responses.add(clientOff(ips));
-    final CountDownLatch latch = new CountDownLatch(servers.size());
     if (servers.size() > 0) {
-      ExecutorService es = Executors.newFixedThreadPool(servers.size());
-      servers.forEach(
-          url ->
-              es.submit(
-                  () -> {
-                    try {
-                      JerseyClient jerseyClient = JerseyClient.getInstance();
-                      MultivaluedMap formData = new MultivaluedHashMap();
-                      formData.add("ips", ips);
-                      responses.add(
-                          jerseyClient
-                              .getClient()
-                              .target(
-                                  new URI(
-                                      String.format(
-                                          "http://%s:%d", url.getIpAddress(), url.getPort())))
-                              .path("/api/clientManager/clientOff")
-                              .request()
-                              .buildPost(Entity.form(formData))
-                              .invoke(CommonResponse.class));
-                    } catch (Exception e) {
-                      LOGGER.error("send clientoff other session error!url={}", url, e);
-                      responses.add(new CommonResponse(false, e.getMessage()));
-                    } finally {
-                      latch.countDown();
-                    }
-                  }));
+      return concurrentSdkSend(
+          servers,
+          (URL url) -> {
+            JerseyClient jerseyClient = JerseyClient.getInstance();
+            MultivaluedMap formData = new MultivaluedHashMap();
+            formData.add("ips", ips);
+            return jerseyClient
+                .getClient()
+                .target(new URI(String.format("http://%s:%d", url.getIpAddress(), url.getPort())))
+                .path("/api/clientManager/clientOff")
+                .request()
+                .buildPost(Entity.form(formData))
+                .invoke(CommonResponse.class);
+          },
+          3000);
     }
-    try {
-      latch.await(3000, TimeUnit.MILLISECONDS);
-    } catch (InterruptedException e) {
-      return CommonResponse.buildFailedResponse("client off timeout");
-    }
-    Optional<CommonResponse> failedResponses =
-        responses.stream().filter(r -> !r.isSuccess()).findFirst();
-    return failedResponses.orElseGet(CommonResponse::buildSuccessResponse);
+    return CommonResponse.buildSuccessResponse();
   }
 
   /** Client on */
@@ -156,50 +144,32 @@ public class ClientManagerResource {
     if (StringUtils.isEmpty(ips)) {
       return CommonResponse.buildFailedResponse("ips is empty");
     }
+    CommonResponse resp = clientOn(ips);
+    if (!resp.isSuccess()) {
+      return resp;
+    }
     List<URL> servers = getOtherServersCurrentZone();
-    List<CommonResponse> responses = new ArrayList<>(servers.size() + 1);
-    responses.add(clientOn(ips));
-    final CountDownLatch latch = new CountDownLatch(servers.size());
     if (servers.size() > 0) {
-      ExecutorService es = Executors.newFixedThreadPool(servers.size());
-      servers.forEach(
-          url ->
-              es.submit(
-                  () -> {
-                    try {
-                      JerseyClient jerseyClient = JerseyClient.getInstance();
-                      MultivaluedMap formData = new MultivaluedHashMap();
-                      formData.add("ips", ips);
-                      responses.add(
-                          jerseyClient
-                              .getClient()
-                              .target(
-                                  new URI(
-                                      String.format(
-                                          "http://%s:%d", url.getIpAddress(), url.getPort())))
-                              .path("/api/clientManager/clientOpen")
-                              .request()
-                              .buildPost(Entity.form(formData))
-                              .invoke(CommonResponse.class));
-                    } catch (Exception e) {
-                      LOGGER.error("send clientOpen other session error!url={}", url, e);
-                      responses.add(new CommonResponse(false, e.getMessage()));
-                    } finally {
-                      latch.countDown();
-                    }
-                  }));
+      return concurrentSdkSend(
+          servers,
+          (URL url) -> {
+            JerseyClient jerseyClient = JerseyClient.getInstance();
+            MultivaluedMap formData = new MultivaluedHashMap();
+            formData.add("ips", ips);
+            return jerseyClient
+                .getClient()
+                .target(new URI(String.format("http://%s:%d", url.getIpAddress(), url.getPort())))
+                .path("/api/clientManager/clientOpen")
+                .request()
+                .buildPost(Entity.form(formData))
+                .invoke(CommonResponse.class);
+          },
+          3000);
     }
-    try {
-      latch.await(3000, TimeUnit.MILLISECONDS);
-    } catch (InterruptedException e) {
-      return CommonResponse.buildFailedResponse("client open timeout");
-    }
-    Optional<CommonResponse> failedResponses =
-        responses.stream().filter(r -> !r.isSuccess()).findFirst();
-    return failedResponses.orElseGet(CommonResponse::buildSuccessResponse);
+    return CommonResponse.buildSuccessResponse();
   }
 
-  private List<URL> getOtherServersCurrentZone() {
+  public List<URL> getOtherServersCurrentZone() {
     String localZone = sessionServerConfig.getSessionServerRegion();
     if (StringUtils.isNotBlank(localZone)) {
       localZone = localZone.toUpperCase();
@@ -216,5 +186,45 @@ public class ClientManagerResource {
   @Path("/connectionMapper.json")
   public Map<String, String> connectionMapper() {
     return connectionMapper.get();
+  }
+
+  private CommonResponse concurrentSdkSend(List<URL> servers, SdkExecutor executor, int timeoutMs) {
+    List<CommonResponse> responses = new ArrayList<>(servers.size());
+    final CountDownLatch latch = new CountDownLatch(servers.size());
+    servers.forEach(
+        url ->
+            zoneSdkExecutor.submit(
+                () -> {
+                  CommonResponse resp = null;
+                  try {
+                    resp = executor.execute(url);
+                  } catch (Exception e) {
+                    if (e.getCause() instanceof ConnectException) {
+                      resp = new CommonResponse(true, "ignored error: connection refused");
+                      return;
+                    }
+                    if (e.getCause() instanceof SocketTimeoutException) {
+                      resp = new CommonResponse(true, "ignored error: connect timeout");
+                      return;
+                    }
+                    LOGGER.error("send clientoff other session error!url={}", url, e);
+                    resp = new CommonResponse(false, e.getMessage());
+                  } finally {
+                    responses.add(resp);
+                    latch.countDown();
+                  }
+                }));
+    try {
+      latch.await(timeoutMs, TimeUnit.MILLISECONDS);
+    } catch (InterruptedException e) {
+      return CommonResponse.buildFailedResponse("execute timeout");
+    }
+    Optional<CommonResponse> failedResponses =
+        responses.stream().filter(r -> !r.isSuccess()).findFirst();
+    return failedResponses.orElseGet(CommonResponse::buildSuccessResponse);
+  }
+
+  interface SdkExecutor {
+    CommonResponse execute(URL url) throws Exception;
   }
 }
