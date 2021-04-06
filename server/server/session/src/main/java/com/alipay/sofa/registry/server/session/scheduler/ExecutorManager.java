@@ -126,6 +126,8 @@ public class ExecutorManager {
 
   public void startScheduler() {
     scheduler.scheduleWithFixedDelay(
+        () -> appRevisionHeartbeatRegistry.doHeartbeatCacheChecker(), 60, 60, TimeUnit.SECONDS);
+    scheduler.scheduleWithFixedDelay(
         () -> appRevisionHeartbeatRegistry.doRevisionHeartbeat(), 10, 10, TimeUnit.MINUTES);
     scheduler.scheduleWithFixedDelay(
         () -> appRevisionHeartbeatRegistry.doRevisionGc(), 60, 60, TimeUnit.SECONDS);

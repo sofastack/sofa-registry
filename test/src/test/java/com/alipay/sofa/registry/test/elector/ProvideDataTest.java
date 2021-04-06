@@ -17,6 +17,7 @@
 package com.alipay.sofa.registry.test.elector;
 
 import com.alipay.sofa.common.profile.StringUtil;
+import com.alipay.sofa.registry.server.meta.provide.data.ProvideDataService;
 import com.alipay.sofa.registry.store.api.DBResponse;
 import com.alipay.sofa.registry.store.api.meta.ProvideDataRepository;
 import com.alipay.sofa.registry.test.BaseIntegrationTest;
@@ -36,21 +37,36 @@ public class ProvideDataTest extends BaseIntegrationTest {
 
   private ProvideDataRepository provideDataRepository;
 
+  private ProvideDataService provideDataService;
+
   @Before
   public void beforeProvideDataTest() {
     MockitoAnnotations.initMocks(this);
 
     provideDataRepository =
         metaApplicationContext.getBean("provideDataJdbcRepository", ProvideDataRepository.class);
+
+    provideDataService =
+        metaApplicationContext.getBean("provideDataService", ProvideDataService.class);
   }
 
   @Test
-  public void testProvideData() {
+  public void testProvideData() throws InterruptedException {
+
     String key = "keyA" + System.currentTimeMillis();
     String value = "valueA" + System.currentTimeMillis();
-    provideDataRepository.put(key, value);
+    provideDataService.saveProvideData(key, value);
+    Assert.assertEquals(value, provideDataService.queryProvideData(key).getEntity());
 
-    DBResponse dbResponse = provideDataRepository.get(key);
-    Assert.assertTrue(StringUtil.equals(value, (String) dbResponse.getEntity()));
+    provideDataService.loseLeader();
+    String newValue = "new valueA";
+    provideDataRepository.put(key, newValue);
+
+    Thread.sleep(5000);
+    Assert.assertEquals(value,  provideDataService.queryProvideData(key).getEntity());
+
+    provideDataService.becomeLeader();
+    Thread.sleep(5000);
+    Assert.assertEquals(newValue, provideDataService.queryProvideData(key).getEntity());
   }
 }

@@ -23,6 +23,11 @@ import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.store.api.DBResponse;
 import com.alipay.sofa.registry.store.api.meta.ProvideDataRepository;
+import com.alipay.sofa.registry.util.MathUtils;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
 
 /**
@@ -36,6 +41,8 @@ public class ProvideDataJdbcRepository implements ProvideDataRepository {
   @Autowired private ProvideDataMapper provideDataMapper;
 
   @Autowired private DefaultCommonConfig defaultCommonConfig;
+
+  private static final Integer batchQuerySize = 1000;
 
   @Override
   public boolean put(String key, String value) {
@@ -69,5 +76,28 @@ public class ProvideDataJdbcRepository implements ProvideDataRepository {
           "remove provideData, dataCenter: {}, key: {}", defaultCommonConfig.getClusterId(), key);
     }
     return true;
+  }
+
+  @Override
+  public Map<String, DBResponse> getAll() {
+
+    List<ProvideDataDomain> responses = new ArrayList<>();
+    int total = provideDataMapper.selectTotalCount(defaultCommonConfig.getClusterId());
+    int round = MathUtils.divideCeil(total, batchQuerySize);
+    for (int i = 0; i < round; i++) {
+      int start = i * batchQuerySize;
+      List<ProvideDataDomain> provideDataDomains =
+          provideDataMapper.queryByPage(defaultCommonConfig.getClusterId(), start, batchQuerySize);
+      responses.addAll(provideDataDomains);
+    }
+
+    Map<String, DBResponse> result = new HashMap<>(total);
+    responses.stream()
+        .forEach(
+            provideData ->
+                result.put(
+                    provideData.getDataKey(), DBResponse.ok(provideData.getDataValue()).build()));
+
+    return result;
   }
 }

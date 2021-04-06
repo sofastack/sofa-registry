@@ -31,5 +31,7 @@ public interface AppRevisionHeartbeatRepository extends RegistryRepository {
 
   public void doAppRevisionHeartbeat();
 
+  public void doHeartbeatCacheChecker();
+
   public void doAppRevisionGc(int silenceHour);
 }

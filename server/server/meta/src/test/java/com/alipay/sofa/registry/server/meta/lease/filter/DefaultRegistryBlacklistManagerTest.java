@@ -23,7 +23,7 @@ import com.alipay.sofa.registry.common.model.metaserver.Lease;
 import com.alipay.sofa.registry.exception.SofaRegistryRuntimeException;
 import com.alipay.sofa.registry.server.meta.AbstractMetaServerTestBase;
 import com.alipay.sofa.registry.server.meta.cluster.node.NodeModifiedTest;
-import com.alipay.sofa.registry.store.api.meta.ProvideDataRepository;
+import com.alipay.sofa.registry.server.meta.provide.data.ProvideDataService;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -32,12 +32,12 @@ public class DefaultRegistryBlacklistManagerTest extends AbstractMetaServerTestB
 
   private RegistryBlacklistManager blacklistManager;
 
-  private ProvideDataRepository repository;
+  private ProvideDataService provideDataService;
 
   @Before
   public void beforeDefaultRegistryBlacklistManagerTest() {
-    repository = spy(new InMemoryProvideDataRepo());
-    blacklistManager = new DefaultRegistryBlacklistManager(repository);
+    provideDataService = spy(new InMemoryProvideDataRepo());
+    blacklistManager = new DefaultRegistryBlacklistManager(provideDataService);
   }
 
   @Test
@@ -57,10 +57,10 @@ public class DefaultRegistryBlacklistManagerTest extends AbstractMetaServerTestB
     Assert.assertTrue(
         blacklistManager.allowSelect(
             new Lease<>(new NodeModifiedTest.SimpleNode("127.0.0.1"), System.currentTimeMillis())));
-    repository = mock(ProvideDataRepository.class);
-    when(repository.get(anyString()))
+    provideDataService = mock(ProvideDataService.class);
+    when(provideDataService.queryProvideData(anyString()))
         .thenThrow(new SofaRegistryRuntimeException("expected io exception"));
-    blacklistManager = new DefaultRegistryBlacklistManager(repository);
+    blacklistManager = new DefaultRegistryBlacklistManager(provideDataService);
     Assert.assertTrue(
         blacklistManager.allowSelect(
             new Lease<>(new NodeModifiedTest.SimpleNode("127.0.0.1"), System.currentTimeMillis())));

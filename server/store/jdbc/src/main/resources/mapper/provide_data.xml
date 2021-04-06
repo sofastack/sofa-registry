@@ -61,4 +61,14 @@
         delete from provide_data where data_center = #{dataCenter} and data_key = #{dataKey}
     </delete>
 
+    <select id="selectTotalCount" resultType="java.lang.Integer">
+        select count(1) from provide_data where data_center = #{dataCenter}
+    </select>
+
+    <select id="queryByPage" resultMap="provideDataResultMap">
+        <![CDATA[ select * from provide_data
+                  where data_center = #{dataCenter} limit #{start}, #{limit}
+        ]]>
+    </select>
+
 </mapper>

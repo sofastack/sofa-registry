@@ -25,8 +25,8 @@ import com.alipay.sofa.registry.core.model.Result;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.server.meta.provide.data.DefaultProvideDataNotifier;
+import com.alipay.sofa.registry.server.meta.provide.data.ProvideDataService;
 import com.alipay.sofa.registry.server.meta.resource.filter.LeaderAwareRestController;
-import com.alipay.sofa.registry.store.api.meta.ProvideDataRepository;
 import com.alipay.sofa.registry.util.JsonUtils;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Sets;
@@ -51,7 +51,7 @@ public class StopPushDataResource {
   private static final Logger TASK_LOGGER =
       LoggerFactory.getLogger(StopPushDataResource.class, "[Task]");
 
-  @Autowired private ProvideDataRepository provideDataRepository;
+  @Autowired private ProvideDataService provideDataService;
 
   @Autowired private DefaultProvideDataNotifier provideDataNotifier;
 
@@ -65,7 +65,7 @@ public class StopPushDataResource {
 
     try {
       boolean ret =
-          provideDataRepository.put(
+          provideDataService.saveProvideData(
               ValueConstants.STOP_PUSH_DATA_SWITCH_DATA_ID,
               JsonUtils.writeValueAsString(persistenceData));
       DB_LOGGER.info("open stop push data switch to DB result {}!", ret);
@@ -91,7 +91,7 @@ public class StopPushDataResource {
     persistenceData.setData("false");
     try {
       boolean ret =
-          provideDataRepository.put(
+          provideDataService.saveProvideData(
               ValueConstants.STOP_PUSH_DATA_SWITCH_DATA_ID,
               JsonUtils.writeValueAsString(persistenceData));
       DB_LOGGER.info("close stop push data switch to DB result {}!", ret);

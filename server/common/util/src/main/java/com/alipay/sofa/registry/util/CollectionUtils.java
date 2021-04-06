@@ -16,6 +16,8 @@
  */
 package com.alipay.sofa.registry.util;
 
+import static java.util.stream.Collectors.toList;
+
 import java.util.Collection;
 import java.util.Optional;
 
@@ -36,5 +38,19 @@ public class CollectionUtils {
    */
   public static <E> Optional<E> getRandom(Collection<E> e) {
     return e.stream().skip((int) (e.size() * Math.random())).findFirst();
+  }
+
+  /**
+   * 取差集
+   *
+   * @param collection1
+   * @param collection2
+   * @return
+   */
+  public static <E> Collection<E> reduce(Collection<E> collection1, Collection<E> collection2) {
+    Collection<E> reduce =
+        collection1.stream().filter(item -> !collection2.contains(item)).collect(toList());
+
+    return reduce;
   }
 }

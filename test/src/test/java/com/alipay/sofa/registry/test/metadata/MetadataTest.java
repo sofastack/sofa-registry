@@ -17,19 +17,30 @@
 package com.alipay.sofa.registry.test.metadata;
 
 import com.alipay.sofa.registry.common.model.appmeta.InterfaceMapping;
+import com.alipay.sofa.registry.common.model.client.pb.MetaHeartbeatResponse;
 import com.alipay.sofa.registry.common.model.constants.ValueConstants;
 import com.alipay.sofa.registry.common.model.store.AppRevision;
 import com.alipay.sofa.registry.common.model.store.DataInfo;
 import com.alipay.sofa.registry.core.model.AppRevisionInterface;
 import com.alipay.sofa.registry.core.model.RegisterResponse;
-import com.alipay.sofa.registry.jdbc.mapper.InterfaceAppsIndexMapper;
+import com.alipay.sofa.registry.jdbc.config.DefaultCommonConfig;
+import com.alipay.sofa.registry.jdbc.mapper.AppRevisionMapper;
 import com.alipay.sofa.registry.server.session.metadata.AppRevisionCacheRegistry;
 import com.alipay.sofa.registry.server.session.metadata.AppRevisionHeartbeatRegistry;
 import com.alipay.sofa.registry.server.session.strategy.AppRevisionHandlerStrategy;
 import com.alipay.sofa.registry.test.BaseIntegrationTest;
 import com.google.common.collect.Maps;
-import java.util.*;
-import java.util.concurrent.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -41,17 +52,19 @@ import org.springframework.test.context.junit4.SpringRunner;
  * @version $Id: MetadataTest.java, v 0.1 2021年02月03日 19:50 xiaojian.xj Exp $
  */
 @RunWith(SpringRunner.class)
-public class MetadataTestIgnore extends BaseIntegrationTest {
+public class MetadataTest extends BaseIntegrationTest {
 
-  private AppRevisionHandlerStrategy appRevisionHandlerStrategy;
+  protected AppRevisionHandlerStrategy appRevisionHandlerStrategy;
 
-  private AppRevisionCacheRegistry appRevisionCacheRegistry;
+  protected AppRevisionCacheRegistry appRevisionCacheRegistry;
 
-  private AppRevisionHeartbeatRegistry appRevisionHeartbeatRegistry;
+  protected AppRevisionHeartbeatRegistry appRevisionHeartbeatRegistry;
 
-  private List<AppRevision> appRevisionList;
+  protected List<AppRevision> appRevisionList;
 
-  private InterfaceAppsIndexMapper interfaceAppsIndexMapper;
+  protected AppRevisionMapper appRevisionMapper;
+
+  protected DefaultCommonConfig defaultCommonConfig;
 
   @Before
   public void buildAppRevision() {
@@ -64,12 +77,13 @@ public class MetadataTestIgnore extends BaseIntegrationTest {
     appRevisionHeartbeatRegistry =
         sessionApplicationContext.getBean(
             "appRevisionHeartbeatRegistry", AppRevisionHeartbeatRegistry.class);
-    interfaceAppsIndexMapper =
-        sessionApplicationContext.getBean(
-            "interfaceAppsIndexMapper", InterfaceAppsIndexMapper.class);
+    appRevisionMapper =
+        sessionApplicationContext.getBean("appRevisionMapper", AppRevisionMapper.class);
+    defaultCommonConfig =
+        sessionApplicationContext.getBean("defaultCommonConfig", DefaultCommonConfig.class);
 
     appRevisionList = new ArrayList<>();
-    for (int i = 1; i <= 1001; i++) {
+    for (int i = 1; i <= 1; i++) {
       long l = System.currentTimeMillis();
       String suffix = l + "-" + i;
 
@@ -210,5 +224,111 @@ public class MetadataTestIgnore extends BaseIntegrationTest {
           });
     }
     appRevisionHeartbeatRegistry.doRevisionHeartbeat();
+  }
+
+  @Test
+  public void heartbeat() throws ExecutionException, InterruptedException {
+    ExecutorService fixedThreadPool = Executors.newFixedThreadPool(1);
+
+    // query app_revision
+    for (AppRevision appRevisionRegister : appRevisionList) {
+      fixedThreadPool.submit(
+          () -> {
+            AppRevision revision =
+                appRevisionCacheRegistry.getRevision(appRevisionRegister.getRevision());
+            Assert.assertTrue(revision == null);
+          });
+    }
+
+    // query by interface
+    for (AppRevision appRevisionRegister : appRevisionList) {
+      for (Map.Entry<String, AppRevisionInterface> entry :
+          appRevisionRegister.getInterfaceMap().entrySet()) {
+        fixedThreadPool.submit(
+            () -> {
+              String dataInfoId = entry.getKey();
+              InterfaceMapping appNames = appRevisionCacheRegistry.getAppNames(dataInfoId);
+              Assert.assertTrue(appNames.getNanosVersion() == -1);
+              Assert.assertTrue(appNames.getApps().size() == 0);
+            });
+      }
+    }
+
+    List<Future<MetaHeartbeatResponse>> responseFutures = new ArrayList<>();
+    for (AppRevision appRevisionRegister : appRevisionList) {
+      Future<MetaHeartbeatResponse> responseFuture =
+          fixedThreadPool.submit(
+              (Callable)
+                  () -> {
+                    MetaHeartbeatResponse response =
+                        appRevisionHandlerStrategy.heartbeat(
+                            Collections.singletonList(appRevisionRegister.getRevision()));
+                    return response;
+                  });
+      responseFutures.add(responseFuture);
+    }
+
+    // assert not found
+    for (Future<MetaHeartbeatResponse> responseFuture : responseFutures) {
+      MetaHeartbeatResponse metaHeartbeatResponse = responseFuture.get();
+      Assert.assertEquals(
+          metaHeartbeatResponse.getStatusCode(), ValueConstants.METADATA_STATUS_DATA_NOT_FOUND);
+    }
+
+    // register
+    List<Future<RegisterResponse>> responses = new ArrayList<>();
+    for (AppRevision appRevisionRegister : appRevisionList) {
+      Future<RegisterResponse> response =
+          fixedThreadPool.submit(
+              (Callable)
+                  () -> {
+                    RegisterResponse result = new RegisterResponse();
+                    appRevisionHandlerStrategy.handleAppRevisionRegister(
+                        appRevisionRegister, result);
+                    return result;
+                  });
+      responses.add(response);
+    }
+
+    for (Future<RegisterResponse> future : responses) {
+      Assert.assertTrue(future.get().isSuccess());
+    }
+
+    // query app_revision
+    List<Future<AppRevision>> appRevisions = new ArrayList<>();
+    for (AppRevision appRevisionRegister : appRevisionList) {
+      Future appRevision =
+          fixedThreadPool.submit(
+              (Callable)
+                  () -> {
+                    AppRevision revision =
+                        appRevisionCacheRegistry.getRevision(appRevisionRegister.getRevision());
+                    Assert.assertEquals(revision.getRevision(), appRevisionRegister.getRevision());
+                    return revision;
+                  });
+      appRevisions.add(appRevision);
+    }
+
+    // query by interface
+    List<Future<Set<String>>> appsFuture = new ArrayList<>();
+    for (AppRevision appRevisionRegister : appRevisionList) {
+      for (Map.Entry<String, AppRevisionInterface> entry :
+          appRevisionRegister.getInterfaceMap().entrySet()) {
+        Future<Set<String>> submit =
+            fixedThreadPool.submit(
+                (Callable)
+                    () -> {
+                      String dataInfoId = entry.getKey();
+                      InterfaceMapping appNames = appRevisionCacheRegistry.getAppNames(dataInfoId);
+                      Assert.assertTrue(appNames.getNanosVersion() > 0);
+                      Assert.assertTrue(appNames.getApps().size() == 1);
+                      Assert.assertTrue(
+                          appNames.getApps().contains(appRevisionRegister.getAppName()));
+                      return appNames;
+                    });
+
+        appsFuture.add(submit);
+      }
+    }
   }
 }

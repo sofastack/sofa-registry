@@ -29,11 +29,16 @@ import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.store.api.repository.AppRevisionHeartbeatRepository;
 import com.alipay.sofa.registry.util.BatchCallableRunnable.InvokeFuture;
 import com.alipay.sofa.registry.util.BatchCallableRunnable.TaskEvent;
+import com.alipay.sofa.registry.util.CollectionUtils;
+import com.alipay.sofa.registry.util.MathUtils;
 import com.alipay.sofa.registry.util.SingleFlight;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.concurrent.ConcurrentHashMap;
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -62,6 +67,8 @@ public class AppRevisionHeartbeatJdbcRepository
 
   private Integer REVISION_GC_LIMIT;
 
+  private static final Integer heartbeatCheckerSize = 1000;
+
   @PostConstruct
   public void postConstruct() {
     REVISION_GC_LIMIT = metadataConfig.getRevisionGcLimit();
@@ -75,7 +82,7 @@ public class AppRevisionHeartbeatJdbcRepository
           "app_revision_heartbeat",
           () -> {
             Map<AppRevisionQueryModel, AppRevision> heartbeatMap =
-                appRevisionJdbcRepository.getHeartbeatMap();
+                new ConcurrentHashMap<>(appRevisionJdbcRepository.getHeartbeatMap());
 
             Map<AppRevisionQueryModel, InvokeFuture> futureMap = new HashMap<>();
             for (Entry<AppRevisionQueryModel, AppRevision> entry : heartbeatMap.entrySet()) {
@@ -101,6 +108,37 @@ public class AppRevisionHeartbeatJdbcRepository
           });
     } catch (Exception e) {
       LOG.error("app_revision heartbeat error.", e);
+    }
+  }
+
+  @Override
+  public void doHeartbeatCacheChecker() {
+    try {
+      singleFlight.execute(
+          "app_revision_heartbeat_cache_checker",
+          () -> {
+            List<AppRevisionQueryModel> revisions =
+                new ArrayList(appRevisionJdbcRepository.getHeartbeatMap().keySet());
+
+            List<AppRevisionQueryModel> exists = new ArrayList<>();
+            int round = MathUtils.divideCeil(revisions.size(), heartbeatCheckerSize);
+            for (int i = 0; i < round; i++) {
+              int start = i * heartbeatCheckerSize;
+              int end =
+                  start + heartbeatCheckerSize < revisions.size()
+                      ? start + heartbeatCheckerSize
+                      : revisions.size();
+              List<AppRevisionQueryModel> subRevisions = revisions.subList(start, end);
+              exists.addAll(appRevisionMapper.batchCheck(subRevisions));
+            }
+
+            Collection<AppRevisionQueryModel> reduces = CollectionUtils.reduce(revisions, exists);
+            LOG.info("[doHeartbeatCacheChecker] reduces heartbeat size: {}", reduces.size());
+            appRevisionJdbcRepository.invalidateHeartbeat(reduces);
+            return null;
+          });
+    } catch (Exception e) {
+      LOG.error("app_revision heartbeat cache checker error.", e);
     }
   }
 

@@ -17,6 +17,7 @@
 package com.alipay.sofa.registry.jdbc.mapper;
 
 import com.alipay.sofa.registry.jdbc.domain.ProvideDataDomain;
+import java.util.List;
 import org.apache.ibatis.annotations.Param;
 
 /**
@@ -43,4 +44,23 @@ public interface ProvideDataMapper {
    * @param dataKey
    */
   public void remove(@Param("dataCenter") String dataCenter, @Param("dataKey") String dataKey);
+
+  /**
+   * query by page
+   *
+   * @param dataCenter
+   * @param start
+   * @param limit
+   * @return
+   */
+  List<ProvideDataDomain> queryByPage(
+      @Param("dataCenter") String dataCenter, @Param("start") int start, @Param("limit") int limit);
+
+  /**
+   * query total count
+   *
+   * @param dataCenter
+   * @return
+   */
+  int selectTotalCount(@Param("dataCenter") String dataCenter);
 }
