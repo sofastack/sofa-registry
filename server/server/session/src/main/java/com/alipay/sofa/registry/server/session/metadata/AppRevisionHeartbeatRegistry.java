@@ -51,6 +51,10 @@ public class AppRevisionHeartbeatRegistry {
     appRevisionHeartbeatRepository.doAppRevisionHeartbeat();
   }
 
+  public void doHeartbeatCacheChecker() {
+    appRevisionHeartbeatRepository.doHeartbeatCacheChecker();
+  }
+
   public void doRevisionGc() {
     appRevisionHeartbeatRepository.doAppRevisionGc(
         sessionServerConfig.getAppRevisionGcSilenceHour());

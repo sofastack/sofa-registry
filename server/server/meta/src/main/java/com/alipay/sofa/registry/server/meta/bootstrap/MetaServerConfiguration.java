@@ -20,10 +20,13 @@ import com.alipay.sofa.registry.jdbc.config.JdbcConfiguration;
 import com.alipay.sofa.registry.jraft.config.RaftConfiguration;
 import com.alipay.sofa.registry.remoting.bolt.exchange.BoltExchange;
 import com.alipay.sofa.registry.remoting.jersey.exchange.JerseyExchange;
+import com.alipay.sofa.registry.server.meta.MetaLeaderService.MetaLeaderElectorListener;
 import com.alipay.sofa.registry.server.meta.bootstrap.config.MetaServerConfig;
 import com.alipay.sofa.registry.server.meta.bootstrap.config.MetaServerConfigBean;
 import com.alipay.sofa.registry.server.meta.bootstrap.config.NodeConfig;
 import com.alipay.sofa.registry.server.meta.bootstrap.config.NodeConfigBeanProperty;
+import com.alipay.sofa.registry.server.meta.provide.data.DefaultProvideDataService;
+import com.alipay.sofa.registry.server.meta.provide.data.ProvideDataService;
 import com.alipay.sofa.registry.server.meta.remoting.DataNodeExchanger;
 import com.alipay.sofa.registry.server.meta.remoting.MetaServerExchanger;
 import com.alipay.sofa.registry.server.meta.remoting.SessionNodeExchanger;
@@ -161,6 +164,13 @@ public class MetaServerConfiguration {
       return list;
     }
 
+    @Bean(name = "metaLeaderListeners")
+    public Collection<MetaLeaderElectorListener> metaLeaderListeners() {
+      Collection<MetaLeaderElectorListener> list = new ArrayList<>();
+      list.add(provideDataService());
+      return list;
+    }
+
     @Bean
     public SessionConnectionHandler sessionConnectionHandler() {
       return new SessionConnectionHandler();
@@ -214,6 +224,11 @@ public class MetaServerConfiguration {
     @Bean
     public MetaServerRenewService metaServerRenewService() {
       return new MetaServerRenewService();
+    }
+
+    @Bean
+    public ProvideDataService provideDataService() {
+      return new DefaultProvideDataService();
     }
   }
 

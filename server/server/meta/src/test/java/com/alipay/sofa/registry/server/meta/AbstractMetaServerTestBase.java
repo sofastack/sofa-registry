@@ -31,11 +31,11 @@ import com.alipay.sofa.registry.remoting.Channel;
 import com.alipay.sofa.registry.remoting.Client;
 import com.alipay.sofa.registry.server.meta.bootstrap.config.MetaServerConfig;
 import com.alipay.sofa.registry.server.meta.bootstrap.config.NodeConfig;
+import com.alipay.sofa.registry.server.meta.provide.data.ProvideDataService;
 import com.alipay.sofa.registry.server.meta.slot.balance.BalancePolicy;
 import com.alipay.sofa.registry.server.meta.slot.balance.NaiveBalancePolicy;
 import com.alipay.sofa.registry.store.api.DBResponse;
 import com.alipay.sofa.registry.store.api.OperationStatus;
-import com.alipay.sofa.registry.store.api.meta.ProvideDataRepository;
 import com.alipay.sofa.registry.util.DatumVersionUtil;
 import com.alipay.sofa.registry.util.JsonUtils;
 import com.alipay.sofa.registry.util.MathUtils;
@@ -616,17 +616,17 @@ public class AbstractMetaServerTestBase extends AbstractTestBase {
     }
   }
 
-  public static class InMemoryProvideDataRepo implements ProvideDataRepository {
+  public static class InMemoryProvideDataRepo implements ProvideDataService {
 
     private Map<String, String> localRepo = new ConcurrentHashMap<>();
 
     @Override
-    public boolean put(String key, String value) {
+    public boolean saveProvideData(String key, String value) {
       return StringUtils.isNotEmpty(localRepo.put(key, value));
     }
 
     @Override
-    public DBResponse get(String key) {
+    public DBResponse queryProvideData(String key) {
       String value = localRepo.get(key);
       if (StringUtils.isNotEmpty(value)) {
         return new DBResponse(value, OperationStatus.SUCCESS);
@@ -636,9 +636,15 @@ public class AbstractMetaServerTestBase extends AbstractTestBase {
     }
 
     @Override
-    public boolean remove(String key) {
+    public boolean removeProvideData(String key) {
       return StringUtils.isNotEmpty(localRepo.remove(key));
     }
+
+    @Override
+    public void becomeLeader() {}
+
+    @Override
+    public void loseLeader() {}
   }
 
   public static class SimpleNode implements Node {

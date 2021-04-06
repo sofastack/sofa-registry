@@ -85,4 +85,10 @@ public interface AppRevisionMapper {
    */
   public void deleteAppRevision(
       @Param("dataCenter") String dataCenter, @Param("revision") String revision);
+
+  /**
+   * @param revisions
+   * @return
+   */
+  List<AppRevisionQueryModel> batchCheck(List<AppRevisionQueryModel> revisions);
 }
