@@ -14,23 +14,39 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alipay.sofa.registry.jraft.repository.impl;
+package com.alipay.sofa.registry.server.meta.provide.data;
 
-import com.alipay.sofa.registry.store.api.repository.AppRevisionHeartbeatRepository;
+import com.alipay.sofa.registry.server.meta.MetaLeaderService.MetaLeaderElectorListener;
+import com.alipay.sofa.registry.store.api.DBResponse;
 
 /**
  * @author xiaojian.xj
- * @version $Id: AppRevisionHeartbeatRaftRepository.java, v 0.1 2021年02月09日 17:15 xiaojian.xj Exp $
+ * @version $Id: ProvideDataService.java, v 0.1 2021年04月06日 16:17 xiaojian.xj Exp $
  */
-public class AppRevisionHeartbeatRaftRepository
-    implements AppRevisionHeartbeatRepository, RaftRepository {
+public interface ProvideDataService extends MetaLeaderElectorListener {
 
-  @Override
-  public void doAppRevisionHeartbeat() {}
+  /**
+   * save or update provideData
+   *
+   * @param key
+   * @param value
+   * @return
+   */
+  boolean saveProvideData(String key, String value);
 
-  @Override
-  public void doHeartbeatCacheChecker() {}
+  /**
+   * query provideData by key
+   *
+   * @param key
+   * @return
+   */
+  DBResponse queryProvideData(String key);
 
-  @Override
-  public void doAppRevisionGc(int silenceHour) {}
+  /**
+   * delete provideData
+   *
+   * @param key
+   * @return
+   */
+  boolean removeProvideData(String key);
 }

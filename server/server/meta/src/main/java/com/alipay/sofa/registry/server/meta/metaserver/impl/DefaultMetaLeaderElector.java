@@ -29,6 +29,7 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 import javax.annotation.PostConstruct;
+import javax.annotation.Resource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -50,7 +51,7 @@ public class DefaultMetaLeaderElector extends AbstractLifecycleObservable
 
   @Autowired private MetaServerConfig metaServerConfig;
 
-  @Autowired(required = false)
+  @Resource(name = "metaLeaderListeners")
   private List<MetaLeaderElectorListener> listeners;
 
   public DefaultMetaLeaderElector() {}

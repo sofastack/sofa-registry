@@ -17,6 +17,7 @@
 package com.alipay.sofa.registry.store.api.meta;
 
 import com.alipay.sofa.registry.store.api.DBResponse;
+import java.util.Map;
 
 /**
  * @author chen.zhu
@@ -48,4 +49,11 @@ public interface ProvideDataRepository {
    * @return
    */
   boolean remove(String key);
+
+  /**
+   * query all provide data
+   *
+   * @return
+   */
+  Map<String, DBResponse> getAll();
 }

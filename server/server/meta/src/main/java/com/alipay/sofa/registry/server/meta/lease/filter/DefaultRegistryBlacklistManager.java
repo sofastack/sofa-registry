@@ -21,9 +21,9 @@ import com.alipay.sofa.registry.common.model.console.PersistenceData;
 import com.alipay.sofa.registry.common.model.constants.ValueConstants;
 import com.alipay.sofa.registry.common.model.metaserver.Lease;
 import com.alipay.sofa.registry.common.model.store.DataInfo;
+import com.alipay.sofa.registry.server.meta.provide.data.ProvideDataService;
 import com.alipay.sofa.registry.store.api.DBResponse;
 import com.alipay.sofa.registry.store.api.OperationStatus;
-import com.alipay.sofa.registry.store.api.meta.ProvideDataRepository;
 import com.alipay.sofa.registry.util.JsonUtils;
 import com.google.common.collect.Sets;
 import java.util.Collections;
@@ -40,7 +40,7 @@ import org.springframework.stereotype.Component;
 @Component
 public class DefaultRegistryBlacklistManager implements RegistryBlacklistManager {
 
-  @Autowired private ProvideDataRepository repository;
+  @Autowired private ProvideDataService provideDataService;
 
   private final ReadWriteLock lock = new ReentrantReadWriteLock();
 
@@ -48,8 +48,8 @@ public class DefaultRegistryBlacklistManager implements RegistryBlacklistManager
 
   public DefaultRegistryBlacklistManager() {}
 
-  public DefaultRegistryBlacklistManager(ProvideDataRepository repository) {
-    this.repository = repository;
+  public DefaultRegistryBlacklistManager(ProvideDataService provideDataService) {
+    this.provideDataService = provideDataService;
   }
 
   @Override
@@ -74,7 +74,8 @@ public class DefaultRegistryBlacklistManager implements RegistryBlacklistManager
   }
 
   protected void load() {
-    DBResponse<String> response = repository.get(ValueConstants.REGISTRY_SERVER_BLACK_LIST_DATA_ID);
+    DBResponse<String> response =
+        provideDataService.queryProvideData(ValueConstants.REGISTRY_SERVER_BLACK_LIST_DATA_ID);
     Set<String> current;
     if (response.getOperationStatus() == OperationStatus.NOTFOUND) {
       current = Sets.newHashSet();
@@ -93,7 +94,7 @@ public class DefaultRegistryBlacklistManager implements RegistryBlacklistManager
   protected void store(Set<String> newBlacklist) {
     PersistenceData persistence = createDataInfo();
     persistence.setData(JsonUtils.writeValueAsString(newBlacklist));
-    repository.put(
+    provideDataService.saveProvideData(
         ValueConstants.REGISTRY_SERVER_BLACK_LIST_DATA_ID,
         JsonUtils.writeValueAsString(persistence));
     lock.writeLock().lock();

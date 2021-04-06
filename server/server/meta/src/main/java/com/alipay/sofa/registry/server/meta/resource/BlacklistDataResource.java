@@ -24,8 +24,8 @@ import com.alipay.sofa.registry.core.model.Result;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.server.meta.provide.data.DefaultProvideDataNotifier;
+import com.alipay.sofa.registry.server.meta.provide.data.ProvideDataService;
 import com.alipay.sofa.registry.server.meta.resource.filter.LeaderAwareRestController;
-import com.alipay.sofa.registry.store.api.meta.ProvideDataRepository;
 import com.alipay.sofa.registry.util.JsonUtils;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
@@ -49,7 +49,7 @@ public class BlacklistDataResource {
   private static final Logger TASK_LOGGER =
       LoggerFactory.getLogger(BlacklistDataResource.class, "[Task]");
 
-  @Autowired private ProvideDataRepository provideDataRepository;
+  @Autowired private ProvideDataService provideDataService;
 
   @Autowired private DefaultProvideDataNotifier provideDataNotifier;
 
@@ -66,7 +66,7 @@ public class BlacklistDataResource {
     persistenceData.setData(config);
     try {
       boolean ret =
-          provideDataRepository.put(
+          provideDataService.saveProvideData(
               ValueConstants.BLACK_LIST_DATA_ID, JsonUtils.writeValueAsString(persistenceData));
       DB_LOGGER.info("Success update blacklist to DB result {}!", ret);
     } catch (Throwable e) {
