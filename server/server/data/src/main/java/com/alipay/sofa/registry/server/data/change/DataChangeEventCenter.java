@@ -18,7 +18,6 @@ package com.alipay.sofa.registry.server.data.change;
 
 import static com.alipay.sofa.registry.server.data.change.ChangeMetrics.*;
 
-import com.alipay.remoting.Connection;
 import com.alipay.sofa.registry.common.model.Tuple;
 import com.alipay.sofa.registry.common.model.dataserver.Datum;
 import com.alipay.sofa.registry.common.model.dataserver.DatumVersion;
@@ -28,15 +27,16 @@ import com.alipay.sofa.registry.common.model.store.Publisher;
 import com.alipay.sofa.registry.common.model.store.SubDatum;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
+import com.alipay.sofa.registry.remoting.Channel;
 import com.alipay.sofa.registry.remoting.Server;
 import com.alipay.sofa.registry.remoting.exchange.Exchange;
 import com.alipay.sofa.registry.server.data.bootstrap.DataServerConfig;
 import com.alipay.sofa.registry.server.data.cache.DatumCache;
-import com.alipay.sofa.registry.server.data.remoting.sessionserver.SessionServerConnectionFactory;
 import com.alipay.sofa.registry.server.shared.util.DatumUtils;
 import com.alipay.sofa.registry.task.KeyedThreadPoolExecutor;
 import com.alipay.sofa.registry.util.ConcurrentUtils;
 import com.alipay.sofa.registry.util.LoopRunnable;
+import com.alipay.sofa.registry.util.StringFormatter;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -46,7 +46,6 @@ import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
-import javax.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Autowired;
 
 /**
@@ -59,8 +58,6 @@ public final class DataChangeEventCenter {
   @Autowired private DataServerConfig dataServerConfig;
 
   @Autowired private DatumCache datumCache;
-
-  @Autowired private SessionServerConnectionFactory sessionServerConnectionFactory;
 
   @Autowired private Exchange boltExchange;
 
@@ -77,7 +74,6 @@ public final class DataChangeEventCenter {
   private KeyedThreadPoolExecutor notifyExecutor;
   private KeyedThreadPoolExecutor notifyTempExecutor;
 
-  @PostConstruct
   public void init() {
     this.notifyExecutor =
         new KeyedThreadPoolExecutor(
@@ -123,28 +119,27 @@ public final class DataChangeEventCenter {
   }
 
   private final class TempNotifier implements Runnable {
-    final Connection connection;
+    final Channel channel;
     final Datum datum;
 
-    TempNotifier(Connection connection, Datum datum) {
-      this.connection = connection;
+    TempNotifier(Channel connection, Datum datum) {
+      this.channel = connection;
       this.datum = datum;
     }
 
     @Override
     public void run() {
       try {
-        if (!connection.isFine()) {
+        if (!channel.isConnected()) {
           CHANGETEMP_FAIL_COUNTER.inc();
-          LOGGER.info(
-              "temp change notify failed, conn is closed, {}", connection.getRemoteAddress());
+          LOGGER.info("temp change notify failed, conn is closed, {}", channel);
           return;
         }
-        notifyTempPub(connection, datum);
+        notifyTempPub(channel, datum);
         CHANGETEMP_SUCCESS_COUNTER.inc();
       } catch (Throwable e) {
         CHANGETEMP_FAIL_COUNTER.inc();
-        LOGGER.error("failed to notify temp {}, {}", connection.getRemoteAddress(), datum, e);
+        LOGGER.error("failed to notify temp {}, {}", channel, datum, e);
       }
     }
   }
@@ -160,49 +155,52 @@ public final class DataChangeEventCenter {
   }
 
   final class ChangeNotifier implements Runnable {
-    final Connection connection;
+    final Channel channel;
     final String dataCenter;
     final Map<String, DatumVersion> dataInfoIds;
     volatile int retryCount;
 
     private ChangeNotifier(
-        Connection connection, String dataCenter, Map<String, DatumVersion> dataInfoIds) {
+        Channel channel, String dataCenter, Map<String, DatumVersion> dataInfoIds) {
       this.dataCenter = dataCenter;
-      this.connection = connection;
+      this.channel = channel;
       this.dataInfoIds = dataInfoIds;
     }
 
     @Override
     public void run() {
       try {
-        if (!connection.isFine()) {
+        if (!channel.isConnected()) {
           CHANGE_FAIL_COUNTER.inc();
-          LOGGER.info("change notify failed, conn is closed, {}", connection.getRemoteAddress());
+          LOGGER.info("change notify failed, conn is closed, {}", channel);
           return;
         }
         DataChangeRequest request = new DataChangeRequest(dataCenter, dataInfoIds);
-        doNotify(request, connection);
+        doNotify(request, channel);
         CHANGE_SUCCESS_COUNTER.inc();
       } catch (Throwable e) {
         CHANGE_FAIL_COUNTER.inc();
-        LOGGER.error("failed to notify {}", this, e);
+        LOGGER.error("failed to notify {}, {}", channel, this, e);
         retry(this);
       }
     }
 
+    int size() {
+      int size = 0;
+      for (String dataInfoIds : dataInfoIds.keySet()) {
+        size += dataInfoIds.length();
+      }
+      return size;
+    }
+
     @Override
     public String toString() {
-      return "ChangeNotifier{"
-          + "conn="
-          + connection.getRemoteAddress()
-          + ", dataCenter='"
-          + dataCenter
-          + '\''
-          + ", dataInfoIds="
-          + dataInfoIds.size()
-          + ", retryCount="
-          + retryCount
-          + '}';
+      return StringFormatter.format(
+          "ChangeNotifier{{},num={},size={},retry={}}",
+          dataCenter,
+          dataInfoIds.size(),
+          size(),
+          retryCount);
     }
   }
 
@@ -248,15 +246,12 @@ public final class DataChangeEventCenter {
     return expires;
   }
 
-  private void notifyTempPub(Connection connection, Datum datum) {
+  private void notifyTempPub(Channel channel, Datum datum) {
     // has temp pub, need to update the datum.version, we use the cache.datum.version as
     // push.version
     final DatumVersion v = datumCache.updateVersion(datum.getDataCenter(), datum.getDataInfoId());
     if (v == null) {
-      LOGGER.warn(
-          "not owns the DataInfoId when temp pub to {},{}",
-          connection.getRemoteAddress(),
-          datum.getDataInfoId());
+      LOGGER.warn("not owns the DataInfoId when temp pub to {},{}", channel, datum.getDataInfoId());
       return;
     }
     Datum existDatum = datumCache.get(datum.getDataCenter(), datum.getDataInfoId());
@@ -266,19 +261,16 @@ public final class DataChangeEventCenter {
     datum.setVersion(v.getValue());
     SubDatum subDatum = DatumUtils.of(datum);
     DataPushRequest request = new DataPushRequest(subDatum);
-    LOGGER.info("temp pub to {}, {}", connection.getRemoteAddress(), subDatum);
-    doNotify(request, connection);
+    LOGGER.info("temp pub to {}, {}", channel, subDatum);
+    doNotify(request, channel);
   }
 
-  private void doNotify(Object request, Connection connection) {
-    Server sessionServer = boltExchange.getServer(dataServerConfig.getPort());
-    sessionServer.sendSync(
-        sessionServer.getChannel(connection.getRemoteAddress()),
-        request,
-        dataServerConfig.getRpcTimeoutMillis());
+  private void doNotify(Object request, Channel channel) {
+    Server sessionServer = boltExchange.getServer(dataServerConfig.getNotifyPort());
+    sessionServer.sendSync(channel, request, dataServerConfig.getRpcTimeoutMillis());
   }
 
-  boolean handleTempChanges(List<Connection> connections) {
+  boolean handleTempChanges(List<Channel> channels) {
     // first clean the event
     List<Datum> datums = Lists.newArrayList();
     tempLock.writeLock().lock();
@@ -293,29 +285,24 @@ public final class DataChangeEventCenter {
     if (datums.isEmpty()) {
       return false;
     }
-    if (connections.isEmpty()) {
+    if (channels.isEmpty()) {
       LOGGER.warn("session conn is empty when temp change");
       return false;
     }
     for (Datum datum : datums) {
-      for (Connection connection : connections) {
+      for (Channel channel : channels) {
         try {
           // group by connect && dataInfoId
           notifyTempExecutor.execute(
-              Tuple.of(datum.getDataInfoId(), connection.getRemoteAddress()),
-              new TempNotifier(connection, datum));
+              Tuple.of(datum.getDataInfoId(), channel.getRemoteAddress()),
+              new TempNotifier(channel, datum));
           CHANGETEMP_COMMIT_COUNTER.inc();
         } catch (RejectedExecutionException e) {
           CHANGETEMP_SKIP_COUNTER.inc();
-          LOGGER.warn(
-              "commit notify temp full, {}, {}, {}",
-              connection.getRemoteAddress(),
-              datum,
-              e.getMessage());
+          LOGGER.warn("commit notify temp full, {}, {}, {}", channel, datum, e.getMessage());
         } catch (Throwable e) {
           CHANGETEMP_SKIP_COUNTER.inc();
-          LOGGER.error(
-              "commit notify temp failed, {}, {}", connection.getRemoteAddress(), datum, e);
+          LOGGER.error("commit notify temp failed, {}, {}", channel, datum, e);
         }
       }
     }
@@ -326,8 +313,13 @@ public final class DataChangeEventCenter {
 
     @Override
     public void runUnthrowable() {
-      final List<Connection> connections = sessionServerConnectionFactory.getSessionConnections();
-      handleTempChanges(connections);
+      try {
+        Server server = boltExchange.getServer(dataServerConfig.getNotifyPort());
+        Map<String, Channel> channelMap = server.selectAvailableChannelsForHostAddress();
+        handleTempChanges(Lists.newArrayList(channelMap.values()));
+      } catch (Throwable e) {
+        LOGGER.error("failed to merge temp change", e);
+      }
     }
 
     @Override
@@ -337,14 +329,14 @@ public final class DataChangeEventCenter {
     }
   }
 
-  boolean handleChanges(List<Connection> connections) {
+  boolean handleChanges(List<Channel> channels) {
     // first clean the event
     final int maxItems = dataServerConfig.getNotifyMaxItems();
     final List<DataChangeEvent> events = transferChangeEvent(maxItems);
     if (events.isEmpty()) {
       return false;
     }
-    if (connections.isEmpty()) {
+    if (channels.isEmpty()) {
       LOGGER.error("session conn is empty when change");
       return false;
     }
@@ -360,23 +352,18 @@ public final class DataChangeEventCenter {
       if (changes.isEmpty()) {
         continue;
       }
-      for (Connection connection : connections) {
+      for (Channel channel : channels) {
         try {
           notifyExecutor.execute(
-              connection.getRemoteAddress(),
-              new ChangeNotifier(connection, event.getDataCenter(), changes));
+              channel.getRemoteAddress(),
+              new ChangeNotifier(channel, event.getDataCenter(), changes));
           CHANGE_COMMIT_COUNTER.inc();
         } catch (RejectedExecutionException e) {
           CHANGE_SKIP_COUNTER.inc();
-          LOGGER.warn(
-              "commit notify full, {}, {}, {}",
-              connection.getRemoteAddress(),
-              changes.size(),
-              e.getMessage());
+          LOGGER.warn("commit notify full, {}, {}, {}", channel, changes.size(), e.getMessage());
         } catch (Throwable e) {
           CHANGE_SKIP_COUNTER.inc();
-          LOGGER.error(
-              "commit notify failed, {}, {}, {}", connection.getRemoteAddress(), changes.size(), e);
+          LOGGER.error("commit notify failed, {}, {}", channel, changes.size(), e);
         }
       }
     }
@@ -388,22 +375,19 @@ public final class DataChangeEventCenter {
     // commit retry
     for (ChangeNotifier retry : retries) {
       try {
-        notifyExecutor.execute(retry.connection.getRemoteAddress(), retry);
+        notifyExecutor.execute(retry.channel.getRemoteAddress(), retry);
         CHANGE_COMMIT_COUNTER.inc();
       } catch (RejectedExecutionException e) {
         CHANGE_SKIP_COUNTER.inc();
         LOGGER.warn(
             "commit retry notify full, {}, {}, {}",
-            retry.connection.getRemoteAddress(),
+            retry.channel,
             retry.dataInfoIds.size(),
             e.getMessage());
       } catch (Throwable e) {
         CHANGE_SKIP_COUNTER.inc();
         LOGGER.error(
-            "commit retry notify failed, {}, {}, {}",
-            retry.connection.getRemoteAddress(),
-            retry.dataInfoIds.size(),
-            e);
+            "commit retry notify failed, {}, {}", retry.channel, retry.dataInfoIds.size(), e);
       }
     }
   }
@@ -431,9 +415,14 @@ public final class DataChangeEventCenter {
 
     @Override
     public void runUnthrowable() {
-      final List<Connection> connections = sessionServerConnectionFactory.getSessionConnections();
-      handleChanges(connections);
-      handleExpire();
+      try {
+        Server server = boltExchange.getServer(dataServerConfig.getNotifyPort());
+        Map<String, Channel> channelMap = server.selectAvailableChannelsForHostAddress();
+        handleChanges(Lists.newArrayList(channelMap.values()));
+        handleExpire();
+      } catch (Throwable e) {
+        LOGGER.error("failed to merge change", e);
+      }
     }
 
     @Override
@@ -466,19 +455,13 @@ public final class DataChangeEventCenter {
   }
 
   @VisibleForTesting
-  void setSessionServerConnectionFactory(
-      SessionServerConnectionFactory sessionServerConnectionFactory) {
-    this.sessionServerConnectionFactory = sessionServerConnectionFactory;
-  }
-
-  @VisibleForTesting
   void setBoltExchange(Exchange boltExchange) {
     this.boltExchange = boltExchange;
   }
 
   @VisibleForTesting
   ChangeNotifier newChangeNotifier(
-      Connection connection, String dataCenter, Map<String, DatumVersion> dataInfoIds) {
-    return new ChangeNotifier(connection, dataCenter, dataInfoIds);
+      Channel channel, String dataCenter, Map<String, DatumVersion> dataInfoIds) {
+    return new ChangeNotifier(channel, dataCenter, dataInfoIds);
   }
 }

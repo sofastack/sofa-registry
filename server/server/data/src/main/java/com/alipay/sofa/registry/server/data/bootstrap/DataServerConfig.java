@@ -33,7 +33,8 @@ public class DataServerConfig {
   public static final String PRE_FIX = "data.server";
 
   private int port = 9620;
-
+  // data change notify
+  private int notifyPort = 9623;
   private int syncDataPort = 9621;
   private int syncSessionPort = 9602;
 
@@ -795,6 +796,14 @@ public class DataServerConfig {
 
   public void setSessionLeaseCheckIntervalSecs(int sessionLeaseCheckIntervalSecs) {
     this.sessionLeaseCheckIntervalSecs = sessionLeaseCheckIntervalSecs;
+  }
+
+  public int getNotifyPort() {
+    return notifyPort;
+  }
+
+  public void setNotifyPort(int notifyPort) {
+    this.notifyPort = notifyPort;
   }
 
   @Override

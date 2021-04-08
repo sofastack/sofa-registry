@@ -83,6 +83,7 @@ public class SessionServerBootstrap {
 
   @Autowired protected MetaServerService metaNodeService;
   @Autowired private NodeExchanger dataNodeExchanger;
+  @Autowired private NodeExchanger dataNodeNotifyExchanger;
 
   @Autowired private ResourceConfig jerseyResourceConfig;
 
@@ -263,6 +264,7 @@ public class SessionServerBootstrap {
 
   private void connectDataServer() {
     try {
+      dataNodeNotifyExchanger.connectServer();
       dataNodeExchanger.connectServer();
       dataStart.set(true);
     } catch (Exception e) {

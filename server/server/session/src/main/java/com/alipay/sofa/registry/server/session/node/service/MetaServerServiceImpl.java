@@ -25,6 +25,7 @@ import com.alipay.sofa.registry.common.model.slot.SlotTable;
 import com.alipay.sofa.registry.common.model.store.URL;
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
 import com.alipay.sofa.registry.server.session.remoting.DataNodeExchanger;
+import com.alipay.sofa.registry.server.session.remoting.DataNodeNotifyExchanger;
 import com.alipay.sofa.registry.server.session.slot.SlotTableCache;
 import com.alipay.sofa.registry.server.shared.env.ServerEnv;
 import com.alipay.sofa.registry.server.shared.meta.AbstractMetaServerService;
@@ -44,6 +45,8 @@ public final class MetaServerServiceImpl
 
   @Autowired private DataNodeExchanger dataNodeExchanger;
 
+  @Autowired private DataNodeNotifyExchanger dataNodeNotifyExchanger;
+
   @Override
   protected long getCurrentSlotTableEpoch() {
     return slotTableCache.getEpoch();
@@ -53,6 +56,8 @@ public final class MetaServerServiceImpl
   protected void handleRenewResult(SessionHeartBeatResponse result) {
     Set<String> dataServerList = getDataServerList();
     if (dataServerList != null && !dataServerList.isEmpty()) {
+      dataNodeNotifyExchanger.setServerIps(dataServerList);
+      dataNodeNotifyExchanger.notifyConnectServerAsync();
       dataNodeExchanger.setServerIps(dataServerList);
       dataNodeExchanger.notifyConnectServerAsync();
     }

@@ -184,11 +184,11 @@ public final class TestBaseUtils {
     public final Connection conn;
 
     public MockBlotChannel(int localPort, String remoteAddress, int remotePort) {
+      super(new Connection(createChn()));
+      this.conn = getConnection();
       this.local = new InetSocketAddress(ServerEnv.IP, localPort);
       this.remote = new InetSocketAddress(remoteAddress, remotePort);
-      Channel chn = Mockito.mock(io.netty.channel.Channel.class);
-      Mockito.when(chn.attr(Mockito.any(AttributeKey.class)))
-          .thenReturn(Mockito.mock(Attribute.class));
+      Channel chn = conn.getChannel();
       Mockito.when(chn.remoteAddress()).thenReturn(remote);
       Mockito.when(chn.isActive())
           .thenAnswer(
@@ -197,7 +197,13 @@ public final class TestBaseUtils {
                   return active.get();
                 }
               });
-      conn = new Connection(chn);
+    }
+
+    private static Channel createChn() {
+      Channel chn = Mockito.mock(io.netty.channel.Channel.class);
+      Mockito.when(chn.attr(Mockito.any(AttributeKey.class)))
+          .thenReturn(Mockito.mock(Attribute.class));
+      return chn;
     }
 
     @Override
@@ -217,11 +223,6 @@ public final class TestBaseUtils {
 
     public void setActive(boolean b) {
       active.set(b);
-    }
-
-    @Override
-    public Connection getConnection() {
-      return conn;
     }
   }
 

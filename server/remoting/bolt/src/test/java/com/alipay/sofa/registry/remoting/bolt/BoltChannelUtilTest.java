@@ -32,7 +32,7 @@ public class BoltChannelUtilTest {
   @Test
   public void testGetBoltCustomSerializer() {
     Assert.assertNull(BoltChannelUtil.getBoltCustomSerializer(new MockChannel()));
-    BoltChannel boltChannel = new BoltChannel();
+    BoltChannel boltChannel = new BoltChannel(null);
     InvokeContext invokeContext = new InvokeContext();
     invokeContext.put(InvokeContext.BOLT_CUSTOM_SERIALIZER, new Object());
     RemotingContext remotingContext =
