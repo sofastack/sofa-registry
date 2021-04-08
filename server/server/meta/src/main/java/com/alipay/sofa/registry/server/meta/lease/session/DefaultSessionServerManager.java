@@ -22,14 +22,14 @@ import com.alipay.sofa.registry.common.model.metaserver.inter.heartbeat.Heartbea
 import com.alipay.sofa.registry.common.model.metaserver.nodes.SessionNode;
 import com.alipay.sofa.registry.common.model.slot.SlotTable;
 import com.alipay.sofa.registry.lifecycle.impl.LifecycleHelper;
+import com.alipay.sofa.registry.server.meta.MetaLeaderService;
 import com.alipay.sofa.registry.server.meta.bootstrap.config.MetaServerConfig;
 import com.alipay.sofa.registry.server.meta.cluster.node.NodeAdded;
 import com.alipay.sofa.registry.server.meta.cluster.node.NodeModified;
 import com.alipay.sofa.registry.server.meta.cluster.node.NodeRemoved;
-import com.alipay.sofa.registry.server.meta.lease.impl.AbstractEvictableLeaseManager;
+import com.alipay.sofa.registry.server.meta.lease.impl.AbstractEvictableFilterableLeaseManager;
 import com.alipay.sofa.registry.server.meta.monitor.Metrics;
 import com.alipay.sofa.registry.server.meta.slot.SlotManager;
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import java.util.List;
 import java.util.Objects;
@@ -43,12 +43,22 @@ import org.springframework.stereotype.Component;
  *     <p>Nov 24, 2020
  */
 @Component
-public class DefaultSessionServerManager extends AbstractEvictableLeaseManager<SessionNode>
+public class DefaultSessionServerManager extends AbstractEvictableFilterableLeaseManager<SessionNode>
     implements SessionServerManager {
 
   @Autowired private MetaServerConfig metaServerConfig;
 
   @Autowired private SlotManager slotManager;
+
+  public DefaultSessionServerManager() {
+  }
+
+  public DefaultSessionServerManager(MetaServerConfig metaServerConfig, SlotManager slotManager,
+                                     MetaLeaderService metaLeaderService) {
+    this.metaServerConfig = metaServerConfig;
+    this.slotManager = slotManager;
+    this.metaLeaderService = metaLeaderService;
+  }
 
   @PostConstruct
   public void postConstruct() throws Exception {
@@ -113,12 +123,6 @@ public class DefaultSessionServerManager extends AbstractEvictableLeaseManager<S
   @Override
   protected long getEvictBetweenMilli() {
     return metaServerConfig.getExpireCheckIntervalMillis();
-  }
-
-  @VisibleForTesting
-  DefaultSessionServerManager setMetaServerConfig(MetaServerConfig metaServerConfig) {
-    this.metaServerConfig = metaServerConfig;
-    return this;
   }
 
   @Override

@@ -20,6 +20,7 @@ import com.alipay.sofa.registry.common.model.slot.BaseSlotStatus;
 import com.alipay.sofa.registry.common.model.slot.FollowerSlotStatus;
 import com.alipay.sofa.registry.common.model.slot.LeaderSlotStatus;
 import com.alipay.sofa.registry.common.model.slot.Slot;
+import com.alipay.sofa.registry.server.meta.monitor.SlotStats;
 import org.assertj.core.util.Lists;
 import org.junit.Assert;
 import org.junit.Before;
@@ -73,6 +74,17 @@ public class DefaultSlotStatsTest {
             System.currentTimeMillis(),
             System.currentTimeMillis() - 3000));
     Assert.assertTrue(slotStats.isFollowerStable("10.0.0.2"));
+
+    Assert.assertFalse(slotStats.isFollowersStable());
+
+    slotStats.updateFollowerState(
+            new FollowerSlotStatus(
+                    1,
+                    System.currentTimeMillis(),
+                    "10.0.0.3",
+                    System.currentTimeMillis(),
+                    System.currentTimeMillis() - 3000));
+    Assert.assertTrue(slotStats.isFollowersStable());
   }
 
   @Test
@@ -81,4 +93,13 @@ public class DefaultSlotStatsTest {
         new FollowerSlotStatus(1, System.currentTimeMillis(), "10.0.0.2", -1, -1));
     Assert.assertFalse(slotStats.isFollowerStable("10.0.0.2"));
   }
+
+  @Test
+  public void testEuqals() {
+    SlotStats slotStatsCopy = new DefaultSlotStats(slotStats.getSlot(), 3000);
+    slotStats.updateFollowerState(
+            new FollowerSlotStatus(1, System.currentTimeMillis(), "10.0.0.2", -1, -1));
+    Assert.assertNotEquals(slotStatsCopy, slotStats);
+  }
+
 }

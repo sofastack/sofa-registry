@@ -30,6 +30,8 @@ import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
+
+import com.google.common.annotations.VisibleForTesting;
 import org.springframework.beans.factory.annotation.Autowired;
 
 /**
@@ -125,5 +127,17 @@ public class ProvideDataResource {
     if (input == null) {
       throw new IllegalArgumentException("Error null Object " + objName + " data input!");
     }
+  }
+
+  @VisibleForTesting
+  protected ProvideDataResource setProvideDataRepository(ProvideDataRepository provideDataRepository) {
+    this.provideDataRepository = provideDataRepository;
+    return this;
+  }
+
+  @VisibleForTesting
+  protected ProvideDataResource setProvideDataNotifier(DefaultProvideDataNotifier provideDataNotifier) {
+    this.provideDataNotifier = provideDataNotifier;
+    return this;
   }
 }

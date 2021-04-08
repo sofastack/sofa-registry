@@ -69,4 +69,13 @@ public class DataServerStats {
   public String getDataServer() {
     return dataServer;
   }
+
+  @Override
+  public String toString() {
+    return "DataServerStats{" +
+            "dataServer='" + dataServer + '\'' +
+            ", slotTableEpoch=" + slotTableEpoch +
+            ", slotStatuses=" + slotStatuses +
+            '}';
+  }
 }

@@ -88,8 +88,7 @@ public class MetaServerServiceImpl extends AbstractMetaServerService<DataHeartBe
         slotTableEpoch,
         dataServerConfig.getLocalDataCenter(),
         System.currentTimeMillis(),
-        new SlotConfig.SlotBasicInfo(
-            SlotConfig.SLOT_NUM, SlotConfig.SLOT_REPLICAS, SlotConfig.FUNC),
+        SlotConfig.slotBasicInfo(),
         slotStatuses);
   }
 

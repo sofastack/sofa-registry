@@ -20,6 +20,7 @@ import com.alipay.sofa.registry.common.model.Node;
 import com.alipay.sofa.registry.common.model.metaserver.Lease;
 import com.alipay.sofa.registry.common.model.metaserver.cluster.VersionedList;
 import com.alipay.sofa.registry.server.meta.lease.LeaseFilter;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -55,5 +56,11 @@ public abstract class AbstractEvictableFilterableLeaseManager<T extends Node>
       }
     }
     return leases;
+  }
+
+  @VisibleForTesting
+  protected AbstractEvictableFilterableLeaseManager<T> setLeaseFilters(List<LeaseFilter<T>> leaseFilters) {
+    this.leaseFilters = leaseFilters;
+    return this;
   }
 }

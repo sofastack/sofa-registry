@@ -92,13 +92,13 @@ public class MetaServerBootstrap {
 
   private Server httpServer;
 
-  private final AtomicBoolean sessionStart = new AtomicBoolean(false);
+  private final AtomicBoolean rpcServerForSessionStarted = new AtomicBoolean(false);
 
-  private final AtomicBoolean dataStart = new AtomicBoolean(false);
+  private final AtomicBoolean rpcServerForDataStarted = new AtomicBoolean(false);
 
-  private final AtomicBoolean metaStart = new AtomicBoolean(false);
+  private final AtomicBoolean rpcServerForMetaStarted = new AtomicBoolean(false);
 
-  private final AtomicBoolean httpStart = new AtomicBoolean(false);
+  private final AtomicBoolean httpServerStarted = new AtomicBoolean(false);
 
   private final Retryer<Boolean> retryer =
       RetryerBuilder.<Boolean>newBuilder()
@@ -190,7 +190,7 @@ public class MetaServerBootstrap {
 
   private void openSessionRegisterServer() {
     try {
-      if (sessionStart.compareAndSet(false, true)) {
+      if (rpcServerForSessionStarted.compareAndSet(false, true)) {
         sessionServer =
             boltExchange.open(
                 new URL(
@@ -203,7 +203,7 @@ public class MetaServerBootstrap {
             metaServerConfig.getSessionServerPort());
       }
     } catch (Exception e) {
-      sessionStart.set(false);
+      rpcServerForSessionStarted.set(false);
       LOGGER.error(
           "Open session node register server port {} error!",
           metaServerConfig.getSessionServerPort(),
@@ -214,7 +214,7 @@ public class MetaServerBootstrap {
 
   private void openDataRegisterServer() {
     try {
-      if (dataStart.compareAndSet(false, true)) {
+      if (rpcServerForDataStarted.compareAndSet(false, true)) {
         dataServer =
             boltExchange.open(
                 new URL(
@@ -227,7 +227,7 @@ public class MetaServerBootstrap {
             metaServerConfig.getDataServerPort());
       }
     } catch (Exception e) {
-      dataStart.set(false);
+      rpcServerForDataStarted.set(false);
       LOGGER.error(
           "Open data node register server port {} error!", metaServerConfig.getDataServerPort(), e);
       throw new RuntimeException("Open data node register server error!", e);
@@ -236,7 +236,7 @@ public class MetaServerBootstrap {
 
   private void openMetaRegisterServer() {
     try {
-      if (metaStart.compareAndSet(false, true)) {
+      if (rpcServerForMetaStarted.compareAndSet(false, true)) {
         metaServer =
             boltExchange.open(
                 new URL(
@@ -247,7 +247,7 @@ public class MetaServerBootstrap {
         LOGGER.info("Open meta server port {} success!", metaServerConfig.getMetaServerPort());
       }
     } catch (Exception e) {
-      metaStart.set(false);
+      rpcServerForMetaStarted.set(false);
       LOGGER.error("Open meta server port {} error!", metaServerConfig.getMetaServerPort(), e);
       throw new RuntimeException("Open meta server error!", e);
     }
@@ -255,7 +255,7 @@ public class MetaServerBootstrap {
 
   private void openHttpServer() {
     try {
-      if (httpStart.compareAndSet(false, true)) {
+      if (httpServerStarted.compareAndSet(false, true)) {
         bindResourceConfig();
         httpServer =
             jerseyExchange.open(
@@ -266,7 +266,7 @@ public class MetaServerBootstrap {
         LOGGER.info("Open http server port {} success!", metaServerConfig.getHttpServerPort());
       }
     } catch (Exception e) {
-      httpStart.set(false);
+      httpServerStarted.set(false);
       LOGGER.error("Open http server port {} error!", metaServerConfig.getHttpServerPort(), e);
       throw new RuntimeException("Open http server error!", e);
     }
@@ -304,8 +304,8 @@ public class MetaServerBootstrap {
    *
    * @return property value of sessionStart
    */
-  public boolean getSessionStart() {
-    return sessionStart.get();
+  public boolean isRpcServerForSessionStarted() {
+    return rpcServerForSessionStarted.get();
   }
 
   /**
@@ -313,8 +313,8 @@ public class MetaServerBootstrap {
    *
    * @return property value of dataStart
    */
-  public boolean getDataStart() {
-    return dataStart.get();
+  public boolean isRpcServerForDataStarted() {
+    return rpcServerForDataStarted.get();
   }
 
   /**
@@ -322,8 +322,8 @@ public class MetaServerBootstrap {
    *
    * @return property value of metaStart
    */
-  public boolean getMetaStart() {
-    return metaStart.get();
+  public boolean isRpcServerForMetaStarted() {
+    return rpcServerForMetaStarted.get();
   }
 
   /**
@@ -331,7 +331,7 @@ public class MetaServerBootstrap {
    *
    * @return property value of httpStart
    */
-  public boolean getHttpStart() {
-    return httpStart.get();
+  public boolean isHttpServerStarted() {
+    return httpServerStarted.get();
   }
 }

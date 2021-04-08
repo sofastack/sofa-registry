@@ -21,10 +21,11 @@ import com.alipay.sofa.registry.common.model.metaserver.cluster.VersionedList;
 import com.alipay.sofa.registry.common.model.metaserver.inter.heartbeat.HeartbeatRequest;
 import com.alipay.sofa.registry.common.model.metaserver.nodes.DataNode;
 import com.alipay.sofa.registry.lifecycle.impl.LifecycleHelper;
+import com.alipay.sofa.registry.server.meta.MetaLeaderService;
 import com.alipay.sofa.registry.server.meta.bootstrap.config.MetaServerConfig;
 import com.alipay.sofa.registry.server.meta.cluster.node.NodeAdded;
 import com.alipay.sofa.registry.server.meta.cluster.node.NodeRemoved;
-import com.alipay.sofa.registry.server.meta.lease.impl.AbstractEvictableLeaseManager;
+import com.alipay.sofa.registry.server.meta.lease.impl.AbstractEvictableFilterableLeaseManager;
 import com.alipay.sofa.registry.server.meta.monitor.Metrics;
 import com.alipay.sofa.registry.server.meta.monitor.data.DataServerStats;
 import com.google.common.annotations.VisibleForTesting;
@@ -43,7 +44,7 @@ import org.springframework.stereotype.Component;
  *     <p>Nov 24, 2020
  */
 @Component
-public class DefaultDataServerManager extends AbstractEvictableLeaseManager<DataNode>
+public class DefaultDataServerManager extends AbstractEvictableFilterableLeaseManager<DataNode>
     implements DataServerManager {
 
   @Autowired private MetaServerConfig metaServerConfig;
@@ -58,8 +59,9 @@ public class DefaultDataServerManager extends AbstractEvictableLeaseManager<Data
    *
    * @param metaServerConfig the meta server config
    */
-  public DefaultDataServerManager(MetaServerConfig metaServerConfig) {
+  public DefaultDataServerManager(MetaServerConfig metaServerConfig, MetaLeaderService metaLeaderService) {
     this.metaServerConfig = metaServerConfig;
+    this.metaLeaderService = metaLeaderService;
   }
 
   /**
