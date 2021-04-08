@@ -72,10 +72,14 @@ public class DataServerStats {
 
   @Override
   public String toString() {
-    return "DataServerStats{" +
-            "dataServer='" + dataServer + '\'' +
-            ", slotTableEpoch=" + slotTableEpoch +
-            ", slotStatuses=" + slotStatuses +
-            '}';
+    return "DataServerStats{"
+        + "dataServer='"
+        + dataServer
+        + '\''
+        + ", slotTableEpoch="
+        + slotTableEpoch
+        + ", slotStatuses="
+        + slotStatuses
+        + '}';
   }
 }

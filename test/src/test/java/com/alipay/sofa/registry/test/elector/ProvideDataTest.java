@@ -16,9 +16,10 @@
  */
 package com.alipay.sofa.registry.test.elector;
 
-import com.alipay.sofa.common.profile.StringUtil;
+import com.alipay.sofa.registry.common.model.console.PersistenceData;
+import com.alipay.sofa.registry.common.model.console.PersistenceDataBuilder;
+import com.alipay.sofa.registry.common.model.store.DataInfo;
 import com.alipay.sofa.registry.server.meta.provide.data.ProvideDataService;
-import com.alipay.sofa.registry.store.api.DBResponse;
 import com.alipay.sofa.registry.store.api.meta.ProvideDataRepository;
 import com.alipay.sofa.registry.test.BaseIntegrationTest;
 import org.junit.Assert;
@@ -26,6 +27,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.MockitoAnnotations;
+import org.springframework.beans.BeanUtils;
 import org.springframework.test.context.junit4.SpringRunner;
 
 /**
@@ -55,18 +57,28 @@ public class ProvideDataTest extends BaseIntegrationTest {
 
     String key = "keyA" + System.currentTimeMillis();
     String value = "valueA" + System.currentTimeMillis();
-    provideDataService.saveProvideData(key, value);
-    Assert.assertEquals(value, provideDataService.queryProvideData(key).getEntity());
 
+    String dataInfoId = DataInfo.toDataInfoId(key, "DEFAULT", "DEFAULT");
+    PersistenceData data = PersistenceDataBuilder.createPersistenceData(dataInfoId, value);
+    boolean save = provideDataService.saveProvideData(data);
+    Assert.assertTrue(save);
+    Assert.assertEquals(value, provideDataService.queryProvideData(dataInfoId).getEntity().getData());
+
+    PersistenceData newData = new PersistenceData();
+    BeanUtils.copyProperties(data, newData);
     provideDataService.loseLeader();
-    String newValue = "new valueA";
-    provideDataRepository.put(key, newValue);
+    long exceptVersion = newData.getVersion();
+    newData.setData("new valueA");
+    newData.setVersion(System.currentTimeMillis());
+    boolean put = provideDataRepository.put(newData, exceptVersion);
+    Assert.assertTrue(put);
 
     Thread.sleep(5000);
-    Assert.assertEquals(value,  provideDataService.queryProvideData(key).getEntity());
+    Assert.assertEquals(value, provideDataService.queryProvideData(dataInfoId).getEntity().getData());
 
     provideDataService.becomeLeader();
     Thread.sleep(5000);
-    Assert.assertEquals(newValue, provideDataService.queryProvideData(key).getEntity());
+    Assert.assertEquals(
+        newData.getData(), provideDataService.queryProvideData(dataInfoId).getEntity().getData());
   }
 }

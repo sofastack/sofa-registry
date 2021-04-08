@@ -18,16 +18,15 @@ package com.alipay.sofa.registry.server.meta.resource;
 
 import com.alipay.sofa.registry.common.model.Node.NodeType;
 import com.alipay.sofa.registry.common.model.console.PersistenceData;
+import com.alipay.sofa.registry.common.model.console.PersistenceDataBuilder;
 import com.alipay.sofa.registry.common.model.constants.ValueConstants;
 import com.alipay.sofa.registry.common.model.metaserver.ProvideDataChangeEvent;
-import com.alipay.sofa.registry.common.model.store.DataInfo;
 import com.alipay.sofa.registry.core.model.Result;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.server.meta.provide.data.DefaultProvideDataNotifier;
 import com.alipay.sofa.registry.server.meta.provide.data.ProvideDataService;
 import com.alipay.sofa.registry.server.meta.resource.filter.LeaderAwareRestController;
-import com.alipay.sofa.registry.util.JsonUtils;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Sets;
 import java.util.Set;
@@ -60,14 +59,12 @@ public class StopPushDataResource {
   @Path("open")
   @Produces(MediaType.APPLICATION_JSON)
   public Result closePush() {
-    PersistenceData persistenceData = createPushDataInfo();
-    persistenceData.setData("true");
+    PersistenceData persistenceData =
+        PersistenceDataBuilder.createPersistenceData(
+            ValueConstants.STOP_PUSH_DATA_SWITCH_DATA_ID, "true");
 
     try {
-      boolean ret =
-          provideDataService.saveProvideData(
-              ValueConstants.STOP_PUSH_DATA_SWITCH_DATA_ID,
-              JsonUtils.writeValueAsString(persistenceData));
+      boolean ret = provideDataService.saveProvideData(persistenceData);
       DB_LOGGER.info("open stop push data switch to DB result {}!", ret);
     } catch (Throwable e) {
       DB_LOGGER.error("error open stop push data switch to DB!", e);
@@ -87,13 +84,12 @@ public class StopPushDataResource {
   @Path("close")
   @Produces(MediaType.APPLICATION_JSON)
   public Result openPush() {
-    PersistenceData persistenceData = createPushDataInfo();
+    PersistenceData persistenceData =
+        PersistenceDataBuilder.createPersistenceData(
+            ValueConstants.STOP_PUSH_DATA_SWITCH_DATA_ID, "false");
     persistenceData.setData("false");
     try {
-      boolean ret =
-          provideDataService.saveProvideData(
-              ValueConstants.STOP_PUSH_DATA_SWITCH_DATA_ID,
-              JsonUtils.writeValueAsString(persistenceData));
+      boolean ret = provideDataService.saveProvideData(persistenceData);
       DB_LOGGER.info("close stop push data switch to DB result {}!", ret);
     } catch (Exception e) {
       DB_LOGGER.error("error close stop push data switch from DB!");
@@ -106,16 +102,6 @@ public class StopPushDataResource {
     Result result = new Result();
     result.setSuccess(true);
     return result;
-  }
-
-  private PersistenceData createPushDataInfo() {
-    DataInfo dataInfo = DataInfo.valueOf(ValueConstants.STOP_PUSH_DATA_SWITCH_DATA_ID);
-    PersistenceData persistenceData = new PersistenceData();
-    persistenceData.setDataId(dataInfo.getDataId());
-    persistenceData.setGroup(dataInfo.getGroup());
-    persistenceData.setInstanceId(dataInfo.getInstanceId());
-    persistenceData.setVersion(System.currentTimeMillis());
-    return persistenceData;
   }
 
   private void fireDataChangeNotify(Long version, String dataInfoId) {
@@ -135,13 +121,14 @@ public class StopPushDataResource {
   }
 
   @VisibleForTesting
-  protected StopPushDataResource setProvideDataRepository(ProvideDataRepository provideDataRepository) {
-    this.provideDataRepository = provideDataRepository;
+  protected StopPushDataResource setProvideDataService(ProvideDataService provideDataService) {
+    this.provideDataService = provideDataService;
     return this;
   }
 
   @VisibleForTesting
-  protected StopPushDataResource setProvideDataNotifier(DefaultProvideDataNotifier provideDataNotifier) {
+  protected StopPushDataResource setProvideDataNotifier(
+      DefaultProvideDataNotifier provideDataNotifier) {
     this.provideDataNotifier = provideDataNotifier;
     return this;
   }

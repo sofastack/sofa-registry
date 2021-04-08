@@ -1,24 +1,35 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package com.alipay.sofa.registry.server.meta.resource;
 
+import static org.mockito.Mockito.*;
+
 import com.alipay.sofa.registry.common.model.console.PersistenceData;
-import com.alipay.sofa.registry.common.model.metaserver.ProvideDataChangeEvent;
 import com.alipay.sofa.registry.common.model.store.DataInfo;
-import com.alipay.sofa.registry.jdbc.domain.ProvideDataDomain;
 import com.alipay.sofa.registry.server.meta.AbstractMetaServerTestBase;
 import com.alipay.sofa.registry.server.meta.provide.data.DefaultProvideDataNotifier;
-import com.alipay.sofa.registry.server.meta.provide.data.ProvideDataNotifier;
+import com.alipay.sofa.registry.server.meta.provide.data.ProvideDataService;
 import com.alipay.sofa.registry.store.api.DBResponse;
 import com.alipay.sofa.registry.store.api.OperationStatus;
-import com.alipay.sofa.registry.store.api.meta.ProvideDataRepository;
 import com.alipay.sofa.registry.util.JsonUtils;
+import java.util.concurrent.TimeoutException;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
-
-import java.util.concurrent.TimeoutException;
-
-import static org.junit.Assert.*;
-import static org.mockito.Mockito.*;
 
 /**
  * @author zhuchen
@@ -30,14 +41,15 @@ public class ProvideDataResourceTest extends AbstractMetaServerTestBase {
 
   private DefaultProvideDataNotifier dataNotifier;
 
-  private ProvideDataRepository provideDataRepository = spy(new InMemoryProvideDataRepo());
+  private ProvideDataService provideDataService = spy(new InMemoryProvideDataRepo());
 
   @Before
   public void beforeProvideDataResourceTest() {
     dataNotifier = mock(DefaultProvideDataNotifier.class);
-    provideDataResource = new ProvideDataResource()
+    provideDataResource =
+        new ProvideDataResource()
             .setProvideDataNotifier(dataNotifier)
-            .setProvideDataRepository(provideDataRepository);
+            .setProvideDataService(provideDataService);
   }
 
   @Test
@@ -50,12 +62,14 @@ public class ProvideDataResourceTest extends AbstractMetaServerTestBase {
     persistenceData.setVersion(1000L);
     provideDataResource.put(persistenceData);
     String dataInfoId =
-            DataInfo.toDataInfoId(persistenceData.getDataId(), persistenceData.getInstanceId(), persistenceData.getGroup());
+        DataInfo.toDataInfoId(
+            persistenceData.getDataId(),
+            persistenceData.getInstanceId(),
+            persistenceData.getGroup());
     verify(dataNotifier, times(1)).notifyProvideDataChange(any());
-    DBResponse response = provideDataRepository.get(dataInfoId);
+    DBResponse response = provideDataService.queryProvideData(dataInfoId);
     Assert.assertEquals(OperationStatus.SUCCESS, response.getOperationStatus());
-    PersistenceData read = JsonUtils.read((String)response.getEntity(), PersistenceData.class);
-    Assert.assertEquals(persistenceData, read);
+    Assert.assertEquals(persistenceData, response.getEntity());
   }
 
   @Test
@@ -68,8 +82,11 @@ public class ProvideDataResourceTest extends AbstractMetaServerTestBase {
     persistenceData.setVersion(1000L);
     provideDataResource.put(persistenceData);
     String dataInfoId =
-            DataInfo.toDataInfoId(persistenceData.getDataId(), persistenceData.getInstanceId(), persistenceData.getGroup());
-    DBResponse response = provideDataRepository.get(dataInfoId);
+        DataInfo.toDataInfoId(
+            persistenceData.getDataId(),
+            persistenceData.getInstanceId(),
+            persistenceData.getGroup());
+    DBResponse response = provideDataService.queryProvideData(dataInfoId);
     Assert.assertEquals(OperationStatus.SUCCESS, response.getOperationStatus());
 
     PersistenceData other = new PersistenceData();
@@ -79,14 +96,16 @@ public class ProvideDataResourceTest extends AbstractMetaServerTestBase {
     other.setInstanceId(persistenceData.getInstanceId());
     other.setVersion(persistenceData.getVersion());
     provideDataResource.remove(other);
-    response = provideDataRepository.get(dataInfoId);
+    response = provideDataService.queryProvideData(dataInfoId);
     verify(dataNotifier, atLeast(1)).notifyProvideDataChange(any());
     Assert.assertEquals(OperationStatus.NOTFOUND, response.getOperationStatus());
   }
 
   @Test(expected = RuntimeException.class)
   public void testWhenProvideDataAccessFail() {
-    when(provideDataRepository.put(anyString(), anyString())).thenThrow(new TimeoutException("expected exception"));
+
+    when(provideDataService.saveProvideData(mockPersistenceData()))
+        .thenThrow(new TimeoutException("expected exception"));
     PersistenceData persistenceData = new PersistenceData();
     persistenceData.setData("SampleWord");
     persistenceData.setDataId("dataId");
@@ -94,6 +113,5 @@ public class ProvideDataResourceTest extends AbstractMetaServerTestBase {
     persistenceData.setInstanceId("InstanceId");
     persistenceData.setVersion(1000L);
     provideDataResource.put(persistenceData);
-
   }
 }

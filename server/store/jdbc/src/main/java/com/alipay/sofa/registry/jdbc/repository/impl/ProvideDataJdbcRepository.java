@@ -16,18 +16,19 @@
  */
 package com.alipay.sofa.registry.jdbc.repository.impl;
 
+import com.alipay.sofa.registry.common.model.console.PersistenceData;
+import com.alipay.sofa.registry.common.model.console.PersistenceDataBuilder;
 import com.alipay.sofa.registry.jdbc.config.DefaultCommonConfig;
+import com.alipay.sofa.registry.jdbc.convertor.ProvideDataDomainConvertor;
 import com.alipay.sofa.registry.jdbc.domain.ProvideDataDomain;
 import com.alipay.sofa.registry.jdbc.mapper.ProvideDataMapper;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
-import com.alipay.sofa.registry.store.api.DBResponse;
 import com.alipay.sofa.registry.store.api.meta.ProvideDataRepository;
 import com.alipay.sofa.registry.util.MathUtils;
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.Collection;
 import java.util.List;
-import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
 
 /**
@@ -45,59 +46,68 @@ public class ProvideDataJdbcRepository implements ProvideDataRepository {
   private static final Integer batchQuerySize = 1000;
 
   @Override
-  public boolean put(String key, String value) {
+  public boolean put(PersistenceData persistenceData, long expectVersion) {
 
-    ProvideDataDomain data = new ProvideDataDomain(defaultCommonConfig.getClusterId(), key, value);
-    provideDataMapper.save(data);
+    ProvideDataDomain exist =
+        provideDataMapper.query(
+            defaultCommonConfig.getClusterId(), PersistenceDataBuilder.getDataInfoId(persistenceData));
+
+    ProvideDataDomain domain =
+        ProvideDataDomainConvertor.convert2ProvideData(
+            persistenceData, defaultCommonConfig.getClusterId());
+    int affect;
+    try {
+      if (exist == null) {
+        affect = provideDataMapper.save(domain);
+        if (LOG.isInfoEnabled()) {
+          LOG.info("save provideData: {}, affect rows: {}", persistenceData, affect);
+        }
+      } else {
+        affect = provideDataMapper.update(domain, expectVersion);
+        if (LOG.isInfoEnabled()) {
+          LOG.info("update provideData: {}, affect rows: {}", domain, affect);
+        }
+      }
+    } catch (Throwable t) {
+      LOG.error("put provideData: {} error.", domain, t);
+      return false;
+    }
+
+    return affect > 0;
+  }
+
+  @Override
+  public PersistenceData get(String key) {
+    return ProvideDataDomainConvertor.convert2PersistenceData(
+        provideDataMapper.query(defaultCommonConfig.getClusterId(), key));
+  }
+
+  @Override
+  public boolean remove(String key, long version) {
+    int affect = provideDataMapper.remove(defaultCommonConfig.getClusterId(), key, version);
     if (LOG.isInfoEnabled()) {
       LOG.info(
-          "put provideData, dataCenter: {}, key: {}, value: {}",
+          "remove provideData, dataCenter: {}, key: {}, version: {}, affect rows: {}",
           defaultCommonConfig.getClusterId(),
           key,
-          value);
+          version,
+          affect);
     }
-    return true;
+    return affect > 0;
   }
 
   @Override
-  public DBResponse get(String key) {
-    ProvideDataDomain data = provideDataMapper.query(defaultCommonConfig.getClusterId(), key);
-    if (data == null) {
-      return DBResponse.notfound().build();
-    }
-    return DBResponse.ok(data.getDataValue()).build();
-  }
+  public Collection<PersistenceData> getAll() {
 
-  @Override
-  public boolean remove(String key) {
-    provideDataMapper.remove(defaultCommonConfig.getClusterId(), key);
-    if (LOG.isInfoEnabled()) {
-      LOG.info(
-          "remove provideData, dataCenter: {}, key: {}", defaultCommonConfig.getClusterId(), key);
-    }
-    return true;
-  }
-
-  @Override
-  public Map<String, DBResponse> getAll() {
-
-    List<ProvideDataDomain> responses = new ArrayList<>();
+    Collection<PersistenceData> responses = new ArrayList<>();
     int total = provideDataMapper.selectTotalCount(defaultCommonConfig.getClusterId());
     int round = MathUtils.divideCeil(total, batchQuerySize);
     for (int i = 0; i < round; i++) {
       int start = i * batchQuerySize;
       List<ProvideDataDomain> provideDataDomains =
           provideDataMapper.queryByPage(defaultCommonConfig.getClusterId(), start, batchQuerySize);
-      responses.addAll(provideDataDomains);
+      responses.addAll(ProvideDataDomainConvertor.convert2PersistenceDatas(provideDataDomains));
     }
-
-    Map<String, DBResponse> result = new HashMap<>(total);
-    responses.stream()
-        .forEach(
-            provideData ->
-                result.put(
-                    provideData.getDataKey(), DBResponse.ok(provideData.getDataValue()).build()));
-
-    return result;
+    return responses;
   }
 }

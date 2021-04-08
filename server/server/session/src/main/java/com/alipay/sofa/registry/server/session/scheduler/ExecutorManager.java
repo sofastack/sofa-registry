@@ -25,7 +25,11 @@ import com.alipay.sofa.registry.task.MetricsableThreadPoolExecutor;
 import com.alipay.sofa.registry.util.NamedThreadFactory;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.*;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 import org.springframework.beans.factory.annotation.Autowired;
 
 /**
@@ -42,6 +46,8 @@ public class ExecutorManager {
   private final ThreadPoolExecutor dataChangeRequestExecutor;
   private final ThreadPoolExecutor dataSlotSyncRequestExecutor;
   private final ThreadPoolExecutor connectClientExecutor;
+
+  @Autowired protected SessionServerConfig sessionServerConfig;
 
   @Autowired protected MetaServerService metaServerService;
 
@@ -126,11 +132,20 @@ public class ExecutorManager {
 
   public void startScheduler() {
     scheduler.scheduleWithFixedDelay(
-        () -> appRevisionHeartbeatRegistry.doHeartbeatCacheChecker(), 60, 60, TimeUnit.SECONDS);
+        () -> appRevisionHeartbeatRegistry.doHeartbeatCacheChecker(),
+        sessionServerConfig.getHeartbeatCacheCheckerInitialDelaySecs(),
+        sessionServerConfig.getHeartbeatCacheCheckerSecs(),
+        TimeUnit.SECONDS);
     scheduler.scheduleWithFixedDelay(
-        () -> appRevisionHeartbeatRegistry.doRevisionHeartbeat(), 10, 10, TimeUnit.MINUTES);
+        () -> appRevisionHeartbeatRegistry.doRevisionHeartbeat(),
+        sessionServerConfig.getRevisionHeartbeatInitialDelayMinutes(),
+        sessionServerConfig.getRevisionHeartbeatMinutes(),
+        TimeUnit.MINUTES);
     scheduler.scheduleWithFixedDelay(
-        () -> appRevisionHeartbeatRegistry.doRevisionGc(), 60, 60, TimeUnit.SECONDS);
+        () -> appRevisionHeartbeatRegistry.doRevisionGc(),
+        sessionServerConfig.getRevisionGcInitialDelaySecs(),
+        sessionServerConfig.getRevisionGcSecs(),
+        TimeUnit.SECONDS);
   }
 
   public void stopScheduler() {

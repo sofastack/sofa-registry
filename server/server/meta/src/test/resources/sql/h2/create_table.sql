@@ -47,6 +47,7 @@ CREATE TABLE provide_data (
   data_value mediumtext DEFAULT NULL ,
   gmt_create timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   gmt_modified timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `data_version` bigint(20) NOT NULL DEFAULT '0' COMMENT '版本号',
   UNIQUE KEY `uk_data_center_key` (`data_center`, `data_key`)
 );
 

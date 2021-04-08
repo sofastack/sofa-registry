@@ -31,7 +31,15 @@ public interface ProvideDataMapper {
    *
    * @param data
    */
-  public void save(ProvideDataDomain data);
+  public int save(ProvideDataDomain data);
+
+  /**
+   * insert or update provideData
+   *
+   * @param data
+   */
+  public int update(
+      @Param("data") ProvideDataDomain data, @Param("exceptVersion") long exceptVersion);
 
   /** query provideData */
   public ProvideDataDomain query(
@@ -43,7 +51,10 @@ public interface ProvideDataMapper {
    * @param dataCenter
    * @param dataKey
    */
-  public void remove(@Param("dataCenter") String dataCenter, @Param("dataKey") String dataKey);
+  public int remove(
+      @Param("dataCenter") String dataCenter,
+      @Param("dataKey") String dataKey,
+      @Param("dataVersion") long dataVersion);
 
   /**
    * query by page

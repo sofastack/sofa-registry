@@ -23,7 +23,7 @@ import java.io.Serializable;
  * @author chen.zhu
  *     <p>Mar 18, 2021
  */
-public class RegistryBlacklistRequest implements Serializable {
+public class RegistryForbiddenServerRequest implements Serializable {
 
   private DataOperation operation;
 
@@ -35,7 +35,7 @@ public class RegistryBlacklistRequest implements Serializable {
    * @param operation the operation
    * @param ip the ip
    */
-  public RegistryBlacklistRequest(DataOperation operation, String ip) {
+  public RegistryForbiddenServerRequest(DataOperation operation, String ip) {
     this.operation = operation;
     this.ip = ip;
   }
@@ -55,7 +55,7 @@ public class RegistryBlacklistRequest implements Serializable {
    * @param operation the operation
    * @return the set operation
    */
-  public RegistryBlacklistRequest setOperation(DataOperation operation) {
+  public RegistryForbiddenServerRequest setOperation(DataOperation operation) {
     this.operation = operation;
     return this;
   }
@@ -75,7 +75,7 @@ public class RegistryBlacklistRequest implements Serializable {
    * @param ip the ip
    * @return the set ip
    */
-  public RegistryBlacklistRequest setIp(String ip) {
+  public RegistryForbiddenServerRequest setIp(String ip) {
     this.ip = ip;
     return this;
   }

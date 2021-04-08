@@ -18,24 +18,16 @@ package com.alipay.sofa.registry.server.meta.lease.data;
 
 import static org.mockito.Mockito.when;
 
-import com.alipay.sofa.registry.common.model.metaserver.Lease;
 import com.alipay.sofa.registry.common.model.metaserver.inter.heartbeat.HeartbeatRequest;
 import com.alipay.sofa.registry.common.model.metaserver.nodes.DataNode;
 import com.alipay.sofa.registry.common.model.slot.BaseSlotStatus;
 import com.alipay.sofa.registry.common.model.slot.SlotConfig;
 import com.alipay.sofa.registry.common.model.slot.SlotTable;
-import com.alipay.sofa.registry.observer.Observable;
 import com.alipay.sofa.registry.server.meta.AbstractMetaServerTestBase;
 import com.alipay.sofa.registry.server.meta.bootstrap.config.MetaServerConfig;
-
-import java.io.IOException;
-import java.net.InetSocketAddress;
-import java.net.Socket;
+import com.alipay.sofa.registry.server.meta.monitor.data.DataServerStats;
 import java.util.List;
 import java.util.concurrent.TimeoutException;
-import java.util.concurrent.atomic.AtomicInteger;
-
-import com.alipay.sofa.registry.server.meta.monitor.data.DataServerStats;
 import org.assertj.core.util.Lists;
 import org.junit.After;
 import org.junit.Assert;
@@ -54,8 +46,7 @@ public class DefaultDataServerManagerTest extends AbstractMetaServerTestBase {
   public void beforeDefaultdataServerManagerTest() throws Exception {
     MockitoAnnotations.initMocks(this);
     makeMetaLeader();
-    dataServerManager =
-        new DefaultDataServerManager(metaServerConfig, metaLeaderService);
+    dataServerManager = new DefaultDataServerManager(metaServerConfig, metaLeaderService);
     dataServerManager.setMetaServerConfig(metaServerConfig);
     when(metaServerConfig.getExpireCheckIntervalMillis()).thenReturn(60);
   }
@@ -96,8 +87,14 @@ public class DefaultDataServerManagerTest extends AbstractMetaServerTestBase {
     dataNodes.add(dataNode);
     SlotTable slotTable = randomSlotTable(dataNodes);
     List<BaseSlotStatus> slotStatuses = Lists.newArrayList();
-    HeartbeatRequest<DataNode> heartbeat = new HeartbeatRequest<>(dataNode, slotTable.getEpoch(), getDc(),
-            System.currentTimeMillis(), SlotConfig.slotBasicInfo(), slotStatuses);
+    HeartbeatRequest<DataNode> heartbeat =
+        new HeartbeatRequest<>(
+            dataNode,
+            slotTable.getEpoch(),
+            getDc(),
+            System.currentTimeMillis(),
+            SlotConfig.slotBasicInfo(),
+            slotStatuses);
     dataServerManager.onHeartbeat(heartbeat);
     List<DataServerStats> dataServerStats = dataServerManager.getDataServersStats();
     Assert.assertFalse(dataServerStats.isEmpty());
@@ -127,5 +124,4 @@ public class DefaultDataServerManagerTest extends AbstractMetaServerTestBase {
     }
     Assert.assertEquals(10, counter.getCounter());
   }
-
 }

@@ -25,13 +25,11 @@ import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.server.meta.provide.data.DefaultProvideDataNotifier;
 import com.alipay.sofa.registry.server.meta.provide.data.ProvideDataService;
 import com.alipay.sofa.registry.server.meta.resource.filter.LeaderAwareRestController;
-import com.alipay.sofa.registry.util.JsonUtils;
+import com.google.common.annotations.VisibleForTesting;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
-
-import com.google.common.annotations.VisibleForTesting;
 import org.springframework.beans.factory.annotation.Autowired;
 
 /**
@@ -65,8 +63,7 @@ public class ProvideDataResource {
         DataInfo.toDataInfoId(data.getDataId(), data.getInstanceId(), data.getGroup());
 
     try {
-      boolean ret =
-          provideDataService.saveProvideData(dataInfoId, JsonUtils.writeValueAsString(data));
+      boolean ret = provideDataService.saveProvideData(data);
       DB_LOGGER.info("put Persistence Data {} to DB result {}!", data, ret);
     } catch (Throwable e) {
       DB_LOGGER.error("error put Persistence Data {} to DB!", data, e);
@@ -131,13 +128,14 @@ public class ProvideDataResource {
   }
 
   @VisibleForTesting
-  protected ProvideDataResource setProvideDataRepository(ProvideDataRepository provideDataRepository) {
-    this.provideDataRepository = provideDataRepository;
+  protected ProvideDataResource setProvideDataService(ProvideDataService provideDataService) {
+    this.provideDataService = provideDataService;
     return this;
   }
 
   @VisibleForTesting
-  protected ProvideDataResource setProvideDataNotifier(DefaultProvideDataNotifier provideDataNotifier) {
+  protected ProvideDataResource setProvideDataNotifier(
+      DefaultProvideDataNotifier provideDataNotifier) {
     this.provideDataNotifier = provideDataNotifier;
     return this;
   }

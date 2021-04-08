@@ -37,7 +37,8 @@ import org.springframework.stereotype.Component;
 @Component
 public class DefaultSlotManager extends SimpleSlotManager implements SlotManager {
 
-  @Autowired(required = false) private List<Notifier> notifiers;
+  @Autowired(required = false)
+  private List<Notifier> notifiers;
 
   @Autowired private MetaLeaderService metaLeaderService;
 

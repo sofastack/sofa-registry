@@ -59,7 +59,8 @@ public class DefaultDataServerManager extends AbstractEvictableFilterableLeaseMa
    *
    * @param metaServerConfig the meta server config
    */
-  public DefaultDataServerManager(MetaServerConfig metaServerConfig, MetaLeaderService metaLeaderService) {
+  public DefaultDataServerManager(
+      MetaServerConfig metaServerConfig, MetaLeaderService metaLeaderService) {
     this.metaServerConfig = metaServerConfig;
     this.metaLeaderService = metaLeaderService;
   }

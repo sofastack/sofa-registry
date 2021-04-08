@@ -16,8 +16,6 @@
  */
 package com.alipay.sofa.registry.server.meta.cluster.node;
 
-import com.alipay.sofa.registry.common.model.Node;
-import com.alipay.sofa.registry.common.model.store.URL;
 import com.alipay.sofa.registry.server.meta.AbstractMetaServerTestBase;
 import org.junit.Assert;
 import org.junit.Test;

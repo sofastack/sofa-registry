@@ -29,12 +29,13 @@ import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.store.api.repository.AppRevisionHeartbeatRepository;
 import com.alipay.sofa.registry.util.BatchCallableRunnable.InvokeFuture;
 import com.alipay.sofa.registry.util.BatchCallableRunnable.TaskEvent;
-import com.alipay.sofa.registry.util.CollectionUtils;
 import com.alipay.sofa.registry.util.MathUtils;
 import com.alipay.sofa.registry.util.SingleFlight;
+import com.google.common.collect.Sets;
+import com.google.common.collect.Sets.SetView;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -114,29 +115,27 @@ public class AppRevisionHeartbeatJdbcRepository
   @Override
   public void doHeartbeatCacheChecker() {
     try {
-      singleFlight.execute(
-          "app_revision_heartbeat_cache_checker",
-          () -> {
-            List<AppRevisionQueryModel> revisions =
-                new ArrayList(appRevisionJdbcRepository.getHeartbeatMap().keySet());
 
-            List<AppRevisionQueryModel> exists = new ArrayList<>();
-            int round = MathUtils.divideCeil(revisions.size(), heartbeatCheckerSize);
-            for (int i = 0; i < round; i++) {
-              int start = i * heartbeatCheckerSize;
-              int end =
-                  start + heartbeatCheckerSize < revisions.size()
-                      ? start + heartbeatCheckerSize
-                      : revisions.size();
-              List<AppRevisionQueryModel> subRevisions = revisions.subList(start, end);
-              exists.addAll(appRevisionMapper.batchCheck(subRevisions));
-            }
+      List<AppRevisionQueryModel> revisions =
+          new ArrayList(appRevisionJdbcRepository.getHeartbeatMap().keySet());
 
-            Collection<AppRevisionQueryModel> reduces = CollectionUtils.reduce(revisions, exists);
-            LOG.info("[doHeartbeatCacheChecker] reduces heartbeat size: {}", reduces.size());
-            appRevisionJdbcRepository.invalidateHeartbeat(reduces);
-            return null;
-          });
+      List<AppRevisionQueryModel> exists = new ArrayList<>();
+      int round = MathUtils.divideCeil(revisions.size(), heartbeatCheckerSize);
+      for (int i = 0; i < round; i++) {
+        int start = i * heartbeatCheckerSize;
+        int end =
+            start + heartbeatCheckerSize < revisions.size()
+                ? start + heartbeatCheckerSize
+                : revisions.size();
+        List<AppRevisionQueryModel> subRevisions = revisions.subList(start, end);
+        exists.addAll(appRevisionMapper.batchCheck(subRevisions));
+      }
+
+      SetView<AppRevisionQueryModel> difference =
+          Sets.difference(new HashSet<>(revisions), new HashSet<>(exists));
+      LOG.info("[doHeartbeatCacheChecker] reduces heartbeat size: {}", difference.size());
+      appRevisionJdbcRepository.invalidateHeartbeat(difference);
+
     } catch (Exception e) {
       LOG.error("app_revision heartbeat cache checker error.", e);
     }
