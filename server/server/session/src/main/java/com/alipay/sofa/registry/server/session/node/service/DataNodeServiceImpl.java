@@ -319,7 +319,8 @@ public class DataNodeServiceImpl implements DataNodeService {
           final Req firstReq = queue.poll(200, TimeUnit.MILLISECONDS);
           if (firstReq != null) {
             // TODO config max
-            Map<Integer, LinkedList<Object>> reqs = drainReq(queue, 100);
+            Map<Integer, LinkedList<Object>> reqs =
+                drainReq(queue, sessionServerConfig.getDataNodeMaxBatchSize());
             // send by order, firstReq.slotId is the first one
             LinkedList<Object> firstBatch = reqs.remove(firstReq.slotId);
             if (firstBatch == null) {

@@ -26,6 +26,7 @@ import com.alipay.sofa.registry.remoting.jersey.jetty.server.HttpConnectionCusto
 import java.net.InetSocketAddress;
 import java.net.URI;
 import java.util.Collection;
+import java.util.Map;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.atomic.AtomicBoolean;
 import javax.ws.rs.ProcessingException;
@@ -141,6 +142,11 @@ public class JerseyJettyServer implements Server {
   @Override
   public Collection<Channel> getChannels() {
     return null;
+  }
+
+  @Override
+  public Map<String, Channel> selectAvailableChannelsForHostAddress() {
+    throw new UnsupportedOperationException();
   }
 
   @Override

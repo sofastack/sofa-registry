@@ -29,7 +29,7 @@ public class SessionServerConnectionFactoryTest {
   public void testIllegal() {
     SessionServerConnectionFactory factory = new SessionServerConnectionFactory();
     Assert.assertFalse(factory.registerSession(ServerEnv.PROCESS_ID, null));
-    Assert.assertFalse(factory.registerSession(ServerEnv.PROCESS_ID, new BoltChannel()));
+    Assert.assertFalse(factory.registerSession(ServerEnv.PROCESS_ID, new BoltChannel(null)));
     TestBaseUtils.MockBlotChannel channel1 =
         new TestBaseUtils.MockBlotChannel(9602, "66.66.66.66", 5550);
     channel1.connected = false;

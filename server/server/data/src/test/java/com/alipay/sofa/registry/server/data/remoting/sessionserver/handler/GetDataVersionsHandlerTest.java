@@ -86,7 +86,7 @@ public class GetDataVersionsHandlerTest {
 
     // get status change
     when(handler.slotManager.checkSlotAccess(anyInt(), anyLong(), anyLong()))
-            .thenReturn(TestBaseUtils.accept(), TestBaseUtils.migrating(1,10,10));
+        .thenReturn(TestBaseUtils.accept(), TestBaseUtils.migrating(1, 10, 10));
 
     SlotAccessGenericResponse resp = (SlotAccessGenericResponse) handler.doHandle(channel, request);
     Assert.assertFalse(resp.isSuccess());

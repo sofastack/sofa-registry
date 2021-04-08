@@ -38,6 +38,8 @@ public interface SessionServerConfig {
 
   int getDataServerPort();
 
+  int getDataServerNotifyPort();
+
   int getHttpServerPort();
 
   int getSchedulerHeartbeatIntervalSecs();
@@ -129,6 +131,8 @@ public interface SessionServerConfig {
   double getAccessLimitRate();
 
   int getDataClientConnNum();
+
+  int getDataNotifyClientConnNum();
 
   int getSessionSchedulerPoolSize();
 

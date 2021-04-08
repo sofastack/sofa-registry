@@ -33,11 +33,11 @@ public class ConnectionEventAdapter implements ConnectionEventProcessor {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(ConnectionEventAdapter.class);
 
-  private ConnectionEventType connectionEventType;
+  private final ConnectionEventType connectionEventType;
 
-  private ChannelHandler connectionEventHandler;
+  private final ChannelHandler connectionEventHandler;
 
-  private BoltServer boltServer;
+  private final BoltServer boltServer;
 
   /**
    * Instantiates a new Connection event adapter.
@@ -51,7 +51,9 @@ public class ConnectionEventAdapter implements ConnectionEventProcessor {
       ChannelHandler connectionEventHandler,
       BoltServer boltServer) {
     this.connectionEventType = connectionEventType;
+    // the connect event handler maybe is null
     this.connectionEventHandler = connectionEventHandler;
+    // boltClient, the blotServer is null
     this.boltServer = boltServer;
   }
 
@@ -62,8 +64,7 @@ public class ConnectionEventAdapter implements ConnectionEventProcessor {
       if (connectionEventHandler != null) {
         switch (connectionEventType) {
           case CONNECT:
-            BoltChannel boltChannel = new BoltChannel();
-            boltChannel.setConnection(conn);
+            BoltChannel boltChannel = new BoltChannel(conn);
             if (boltServer != null) {
               boltServer.addChannel(boltChannel);
             }
@@ -71,8 +72,7 @@ public class ConnectionEventAdapter implements ConnectionEventProcessor {
             break;
 
           case CLOSE:
-            BoltChannel boltChannelClose = new BoltChannel();
-            boltChannelClose.setConnection(conn);
+            BoltChannel boltChannelClose = new BoltChannel(conn);
             if (boltServer != null) {
               boltServer.removeChannel(boltChannelClose);
             }
@@ -80,8 +80,7 @@ public class ConnectionEventAdapter implements ConnectionEventProcessor {
             break;
 
           case EXCEPTION:
-            BoltChannel boltChannelException = new BoltChannel();
-            boltChannelException.setConnection(conn);
+            BoltChannel boltChannelException = new BoltChannel(conn);
             connectionEventHandler.caught(boltChannelException, null, null);
             break;
           default:

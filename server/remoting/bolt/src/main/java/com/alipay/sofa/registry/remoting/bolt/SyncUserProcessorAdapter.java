@@ -46,9 +46,8 @@ public class SyncUserProcessorAdapter extends SyncUserProcessor {
 
   @Override
   public Object handleRequest(BizContext bizCtx, Object request) throws Exception {
-    BoltChannel boltChannel = new BoltChannel();
+    BoltChannel boltChannel = new BoltChannel(bizCtx.getConnection());
     boltChannel.setBizContext(bizCtx);
-    boltChannel.setConnection(bizCtx.getConnection());
     if (userProcessorHandler != null) {
       return userProcessorHandler.reply(boltChannel, request);
     }

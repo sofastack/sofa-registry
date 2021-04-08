@@ -25,7 +25,6 @@ import com.alipay.sofa.registry.remoting.exchange.Exchange;
 import com.alipay.sofa.registry.server.data.TestBaseUtils;
 import com.alipay.sofa.registry.server.data.bootstrap.DataServerConfig;
 import com.alipay.sofa.registry.server.data.cache.DatumCache;
-import com.alipay.sofa.registry.server.data.remoting.sessionserver.SessionServerConnectionFactory;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import java.util.Collections;
@@ -38,16 +37,13 @@ import org.mockito.Mockito;
 public class DataChangeEventCenterTest {
   private static final String DC = "testDc";
   private DataChangeEventCenter center;
-  private SessionServerConnectionFactory sessionServerConnectionFactory;
   private DataServerConfig dataServerConfig;
   private DatumCache datumCache;
 
   private void setCenter() {
     this.center = new DataChangeEventCenter();
-    this.sessionServerConnectionFactory = new SessionServerConnectionFactory();
     this.dataServerConfig = TestBaseUtils.newDataConfig(DC);
     this.datumCache = TestBaseUtils.newLocalDatumCache(DC, true);
-    center.setSessionServerConnectionFactory(sessionServerConnectionFactory);
     center.setDataServerConfig(dataServerConfig);
     center.setDatumCache(datumCache);
   }
@@ -62,7 +58,7 @@ public class DataChangeEventCenterTest {
 
     TestBaseUtils.MockBlotChannel channel = TestBaseUtils.newChannel(9620, "localhost", 1000);
     center.onTempPubChange(pub, DC);
-    Assert.assertTrue(center.handleTempChanges(Lists.newArrayList(channel.getConnection())));
+    Assert.assertTrue(center.handleTempChanges(Lists.newArrayList(channel)));
   }
 
   @Test
@@ -75,7 +71,7 @@ public class DataChangeEventCenterTest {
 
     TestBaseUtils.MockBlotChannel channel = TestBaseUtils.newChannel(9620, "localhost", 1000);
     center.onChange(changes1, DC);
-    Assert.assertTrue(center.handleChanges(Lists.newArrayList(channel.getConnection())));
+    Assert.assertTrue(center.handleChanges(Lists.newArrayList(channel)));
   }
 
   @Test
@@ -90,10 +86,12 @@ public class DataChangeEventCenterTest {
     for (int i = 0; i < dataServerConfig.getNotifyRetryQueueSize(); i++) {
       center.commitRetry(
           center.newChangeNotifier(
-              conn, DC, Collections.singletonMap(String.valueOf(i), new DatumVersion(100))));
+              channel, DC, Collections.singletonMap(String.valueOf(i), new DatumVersion(100))));
       list.add(
           center.newChangeNotifier(
-              conn, DC, Collections.singletonMap(String.valueOf(i + 100), new DatumVersion(200))));
+              channel,
+              DC,
+              Collections.singletonMap(String.valueOf(i + 100), new DatumVersion(200))));
     }
     List<DataChangeEventCenter.ChangeNotifier> expires = center.getExpires();
     Assert.assertTrue(expires.isEmpty());
@@ -194,13 +192,22 @@ public class DataChangeEventCenterTest {
   @Test
   public void testInit() throws Exception {
     setCenter();
-    sessionServerConnectionFactory = Mockito.mock(SessionServerConnectionFactory.class);
-    center.setSessionServerConnectionFactory(sessionServerConnectionFactory);
+    // set center exchange
+    Exchange exchange = Mockito.mock(Exchange.class);
+    Server server = Mockito.mock(Server.class);
+    Mockito.when(exchange.getServer(dataServerConfig.getNotifyPort())).thenReturn(server);
+
+    center.setBoltExchange(exchange);
     TestBaseUtils.MockBlotChannel channel = TestBaseUtils.newChannel(9620, "localhost", 1000);
     channel.setActive(false);
     Assert.assertFalse(channel.conn.isFine());
-    Mockito.when(sessionServerConnectionFactory.getSessionConnections())
-        .thenReturn(Lists.newArrayList(channel.getConnection()));
+
+    Mockito.when(server.selectAvailableChannelsForHostAddress())
+        .thenReturn(
+            Collections.singletonMap(
+                channel.getRemoteAddress().getAddress().getHostAddress(), channel));
+    Mockito.when(server.sendSync(Mockito.anyObject(), Mockito.anyObject(), Mockito.anyInt()))
+        .thenThrow(new UnsupportedOperationException());
 
     Publisher pub = TestBaseUtils.createTestPublisher("testDataId");
     datumCache.getLocalDatumStorage().put(pub);
@@ -220,15 +227,10 @@ public class DataChangeEventCenterTest {
     center.onTempPubChange(pub, DC);
     Thread.sleep(2000);
 
-    // set center exchange
-    Exchange exchange = Mockito.mock(Exchange.class);
-    Server server = Mockito.mock(Server.class);
-    Mockito.when(exchange.getServer(dataServerConfig.getPort())).thenReturn(server);
-    center.setBoltExchange(exchange);
-    Thread.sleep(100);
     center.onChange(Lists.newArrayList(pub.getDataInfoId()), DC);
     center.onTempPubChange(pub, DC);
     Thread.sleep(2000);
-    Mockito.verify(exchange, Mockito.times(2)).getServer(dataServerConfig.getPort());
+    Mockito.verify(server, Mockito.times(9))
+        .sendSync(Mockito.anyObject(), Mockito.anyObject(), Mockito.anyInt());
   }
 }

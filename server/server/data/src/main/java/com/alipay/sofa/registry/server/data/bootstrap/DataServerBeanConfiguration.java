@@ -35,10 +35,7 @@ import com.alipay.sofa.registry.server.data.remoting.metaserver.provideData.Prov
 import com.alipay.sofa.registry.server.data.remoting.metaserver.provideData.ProvideDataProcessorManager;
 import com.alipay.sofa.registry.server.data.remoting.metaserver.provideData.processor.SessionLeaseProvideDataProcessor;
 import com.alipay.sofa.registry.server.data.remoting.sessionserver.SessionServerConnectionFactory;
-import com.alipay.sofa.registry.server.data.remoting.sessionserver.handler.BatchPutDataHandler;
-import com.alipay.sofa.registry.server.data.remoting.sessionserver.handler.DataServerConnectionHandler;
-import com.alipay.sofa.registry.server.data.remoting.sessionserver.handler.GetDataHandler;
-import com.alipay.sofa.registry.server.data.remoting.sessionserver.handler.GetDataVersionsHandler;
+import com.alipay.sofa.registry.server.data.remoting.sessionserver.handler.*;
 import com.alipay.sofa.registry.server.data.resource.DataDigestResource;
 import com.alipay.sofa.registry.server.data.resource.DatumApiResource;
 import com.alipay.sofa.registry.server.data.resource.HealthResource;
@@ -185,6 +182,13 @@ public class DataServerBeanConfiguration {
       return list;
     }
 
+    @Bean(name = "serverNotifyHandlers")
+    public Collection<AbstractServerHandler> serverNotifyHandlers() {
+      Collection<AbstractServerHandler> list = new ArrayList<>();
+      list.add(dataServerNotifyConnectionHandler());
+      return list;
+    }
+
     @Bean(name = "serverSyncHandlers")
     public Collection<AbstractServerHandler> serverSyncHandlers() {
       Collection<AbstractServerHandler> list = new ArrayList<>();
@@ -204,6 +208,11 @@ public class DataServerBeanConfiguration {
     @Bean
     public AbstractServerHandler dataServerConnectionHandler() {
       return new DataServerConnectionHandler();
+    }
+
+    @Bean
+    public AbstractServerHandler dataServerNotifyConnectionHandler() {
+      return new DataServerNotifyConnectionHandler();
     }
 
     @Bean

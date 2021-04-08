@@ -27,8 +27,12 @@ import com.alipay.sofa.registry.remoting.bolt.BoltChannel;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+
 import java.net.InetSocketAddress;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
@@ -51,13 +55,13 @@ public class SessionServerConnectionFactory {
       LOGGER.warn("registerSession with null channel, {}", processId);
       return false;
     }
-    final InetSocketAddress remoteAddress = channel.getRemoteAddress();
+
     final Connection conn = ((BoltChannel) channel).getConnection();
-    if (remoteAddress == null || conn == null) {
+    if (conn == null) {
       LOGGER.warn("registerSession with null channel.connection, {}", processId);
       return false;
     }
-
+    final InetSocketAddress remoteAddress = conn.getRemoteAddress();
     Channels channels =
         session2Connections.computeIfAbsent(
             remoteAddress.getAddress().getHostAddress(), k -> new Channels());

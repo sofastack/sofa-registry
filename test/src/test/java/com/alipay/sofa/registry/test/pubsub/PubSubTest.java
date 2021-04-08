@@ -117,8 +117,8 @@ public class PubSubTest extends BaseIntegrationTest {
   public void multiClientTest() throws InterruptedException {
 
     // registryClient1 publish data, registryClient2 subscriber
-    String dataId = "test-dataId-multiClientTest-" + System.nanoTime();
-    String value = "test multi client publish";
+    String dataId = "test-dataId-multiClientTest-1-" + System.nanoTime();
+    String value = "test multi client publish1";
 
     PublisherRegistration registration = new PublisherRegistration(dataId);
     registryClient1.register(registration, value);
@@ -143,8 +143,8 @@ public class PubSubTest extends BaseIntegrationTest {
     registryClient1.unregister(dataId, DEFAULT_GROUP, RegistryType.PUBLISHER);
 
     // registryClient1 subscriber, registryClient2 publish data
-    dataId = "test-dataId-" + System.nanoTime();
-    value = "test multi client subscriber";
+    dataId = "test-dataId-multiClientTest-2-" + System.nanoTime();
+    value = "test multi client subscriber2";
 
     observer = new MySubscriberDataObserver();
     subReg = new SubscriberRegistration(dataId, observer);
@@ -168,8 +168,8 @@ public class PubSubTest extends BaseIntegrationTest {
     registryClient2.unregister(dataId, DEFAULT_GROUP, RegistryType.PUBLISHER);
 
     // registryClient1 subscriber, registryClient1 and registryClient2 both publish data
-    dataId = "test-dataId-" + System.currentTimeMillis();
-    value = "test multi client subscriber";
+    dataId = "test-dataId-multiClientTest-3-" + System.currentTimeMillis();
+    value = "test multi client subscriber3";
 
     observer = new MySubscriberDataObserver();
     subReg = new SubscriberRegistration(dataId, observer);

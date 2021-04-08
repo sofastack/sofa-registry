@@ -32,7 +32,7 @@ import javax.ws.rs.client.WebTarget;
  */
 public class BoltChannel implements Channel {
 
-  private Connection connection;
+  private final Connection connection;
 
   private AsyncContext asyncContext;
 
@@ -40,28 +40,23 @@ public class BoltChannel implements Channel {
 
   private Map<String, Object> attributes;
 
+  public BoltChannel(Connection conn) {
+    this.connection = conn;
+  }
+
   @Override
   public InetSocketAddress getRemoteAddress() {
-    if (connection != null) {
-      return connection.getRemoteAddress();
-    }
-    return null;
+    return connection.getRemoteAddress();
   }
 
   @Override
   public InetSocketAddress getLocalAddress() {
-    if (connection != null) {
-      return connection.getLocalAddress();
-    }
-    return null;
+    return connection.getLocalAddress();
   }
 
   @Override
   public boolean isConnected() {
-    if (connection != null) {
-      return connection.isFine();
-    }
-    return false;
+    return connection.isFine();
   }
 
   @Override
@@ -98,15 +93,6 @@ public class BoltChannel implements Channel {
    */
   public Connection getConnection() {
     return connection;
-  }
-
-  /**
-   * Setter method for property <tt>connection</tt>.
-   *
-   * @param connection value to be assigned to property connection
-   */
-  public void setConnection(Connection connection) {
-    this.connection = connection;
   }
 
   /**
