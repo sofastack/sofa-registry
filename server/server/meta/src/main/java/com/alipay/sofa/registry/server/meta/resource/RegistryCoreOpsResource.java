@@ -27,6 +27,8 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
+
+import com.google.common.annotations.VisibleForTesting;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import sun.net.util.IPAddressUtil;
@@ -82,5 +84,11 @@ public class RegistryCoreOpsResource {
     } finally {
       LOGGER.info("[kickoffServer][end] server [{}]", ip);
     }
+  }
+
+  @VisibleForTesting
+  protected RegistryCoreOpsResource setRegistryBlacklistManager(RegistryBlacklistManager registryBlacklistManager) {
+    this.registryBlacklistManager = registryBlacklistManager;
+    return this;
   }
 }

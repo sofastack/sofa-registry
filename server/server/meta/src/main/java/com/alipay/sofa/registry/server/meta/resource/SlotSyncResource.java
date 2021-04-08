@@ -28,6 +28,8 @@ import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
+
+import com.google.common.annotations.VisibleForTesting;
 import org.springframework.beans.factory.annotation.Autowired;
 
 /**
@@ -61,5 +63,11 @@ public class SlotSyncResource {
       return data.getData();
     }
     return "null";
+  }
+
+  @VisibleForTesting
+  protected SlotSyncResource setProvideDataRepository(ProvideDataRepository provideDataRepository) {
+    this.provideDataRepository = provideDataRepository;
+    return this;
   }
 }

@@ -122,6 +122,7 @@ public class SlotTableResource {
   @GET
   @Path("/reconcile/status")
   @Produces(MediaType.APPLICATION_JSON)
+  @LeaderAwareRestController
   public CommonResponse getReconcileStatus() {
     logger.info("[getReconcileStatus] begin");
     try {
@@ -206,15 +207,12 @@ public class SlotTableResource {
       if (leaderCounter.get(dataIp) == null) {
         return false;
       }
-      if (leaderCounter.get(dataIp) > leaderHighWaterMark) {
-        return false;
-      } else if (leaderCounter.get(dataIp) < leaderLowWaterMark) {
+      int leaderCount = leaderCounter.getOrDefault(dataIp, 0);
+      if (leaderCount > leaderHighWaterMark || leaderCount < leaderLowWaterMark) {
         return false;
       }
-
-      if (followerCounter.get(dataIp) > followerHighWaterMark) {
-        return false;
-      } else if (followerCounter.get(dataIp) < followerLowWaterMark) {
+      int followerCount = followerCounter.getOrDefault(dataIp, 0);
+      if (followerCount > followerHighWaterMark || followerCount < followerLowWaterMark) {
         return false;
       }
     }
@@ -265,12 +263,11 @@ public class SlotTableResource {
 
   public SlotTableResource() {}
 
-  public SlotTableResource(
-      SlotManager slotManager,
-      DataServerManager dataServerManager,
-      ScheduledSlotArranger slotArranger,
-      MetaLeaderService metaLeaderService) {
+  public SlotTableResource(SlotManager slotManager, SlotTableMonitor slotTableMonitor,
+                           DataServerManager dataServerManager, ScheduledSlotArranger slotArranger,
+                           MetaLeaderService metaLeaderService) {
     this.slotManager = slotManager;
+    this.slotTableMonitor = slotTableMonitor;
     this.dataServerManager = dataServerManager;
     this.slotArranger = slotArranger;
     this.metaLeaderService = metaLeaderService;

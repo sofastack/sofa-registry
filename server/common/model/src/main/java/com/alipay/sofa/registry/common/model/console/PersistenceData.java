@@ -17,6 +17,7 @@
 package com.alipay.sofa.registry.common.model.console;
 
 import java.io.Serializable;
+import java.util.Objects;
 
 /**
  * @author shangyu.wh
@@ -142,5 +143,22 @@ public class PersistenceData implements Serializable {
         + data
         + '\''
         + '}';
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) return true;
+    if (o == null || getClass() != o.getClass()) return false;
+    PersistenceData that = (PersistenceData) o;
+    return Objects.equals(dataId, that.dataId) &&
+            Objects.equals(group, that.group) &&
+            Objects.equals(instanceId, that.instanceId) &&
+            Objects.equals(version, that.version) &&
+            data.equals(that.data);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(dataId, group, instanceId, version, data);
   }
 }

@@ -117,7 +117,7 @@ public class DefaultMetaLeaderElector extends AbstractLifecycleObservable
 
   protected void becomeLeader() {
     if (logger.isInfoEnabled()) {
-      logger.info("[becomeLeader] change from follower to elector");
+      logger.info("[becomeLeader] change from follower to elector, {}", this.leaderState.get());
     }
     if (listeners != null && !listeners.isEmpty()) {
       listeners.forEach(
@@ -133,7 +133,7 @@ public class DefaultMetaLeaderElector extends AbstractLifecycleObservable
 
   protected void loseLeader() {
     if (logger.isInfoEnabled()) {
-      logger.info("[becomeFollow] change from elector to follower");
+      logger.info("[becomeFollow] change from elector to follower, {}", this.leaderState.get());
     }
     if (listeners != null && !listeners.isEmpty()) {
       listeners.forEach(
@@ -150,10 +150,6 @@ public class DefaultMetaLeaderElector extends AbstractLifecycleObservable
     public LeaderState(LeaderElector.ElectorRole state, long startTime) {
       this.state = state;
       this.startTime = startTime;
-    }
-
-    public LeaderElector.ElectorRole getState() {
-      return state;
     }
 
     public long getStartTime() {

@@ -28,6 +28,7 @@ import com.alipay.sofa.registry.server.meta.provide.data.DefaultProvideDataNotif
 import com.alipay.sofa.registry.server.meta.resource.filter.LeaderAwareRestController;
 import com.alipay.sofa.registry.store.api.meta.ProvideDataRepository;
 import com.alipay.sofa.registry.util.JsonUtils;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Sets;
 import java.util.Set;
 import javax.ws.rs.GET;
@@ -131,5 +132,17 @@ public class StopPushDataResource {
 
   protected Set<NodeType> getNodeTypes() {
     return Sets.newHashSet(NodeType.SESSION);
+  }
+
+  @VisibleForTesting
+  protected StopPushDataResource setProvideDataRepository(ProvideDataRepository provideDataRepository) {
+    this.provideDataRepository = provideDataRepository;
+    return this;
+  }
+
+  @VisibleForTesting
+  protected StopPushDataResource setProvideDataNotifier(DefaultProvideDataNotifier provideDataNotifier) {
+    this.provideDataNotifier = provideDataNotifier;
+    return this;
   }
 }
