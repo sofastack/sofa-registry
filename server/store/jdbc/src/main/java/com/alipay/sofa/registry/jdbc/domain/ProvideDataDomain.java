@@ -42,12 +42,16 @@ public class ProvideDataDomain {
   /** last update time */
   private Date gmtModified;
 
+  /** data version */
+  private long dataVersion;
+
   public ProvideDataDomain() {}
 
-  public ProvideDataDomain(String dataCenter, String key, String value) {
+  public ProvideDataDomain(String dataCenter, String dataKey, String dataValue, long dataVersion) {
     this.dataCenter = dataCenter;
-    this.dataKey = key;
-    this.dataValue = value;
+    this.dataKey = dataKey;
+    this.dataValue = dataValue;
+    this.dataVersion = dataVersion;
   }
 
   /**
@@ -156,5 +160,44 @@ public class ProvideDataDomain {
    */
   public void setGmtModified(Date gmtModified) {
     this.gmtModified = gmtModified;
+  }
+
+  /**
+   * Getter method for property <tt>dataVersion</tt>.
+   *
+   * @return property value of dataVersion
+   */
+  public long getDataVersion() {
+    return dataVersion;
+  }
+
+  /**
+   * Setter method for property <tt>dataVersion</tt>.
+   *
+   * @param dataVersion value to be assigned to property dataVersion
+   */
+  public void setDataVersion(long dataVersion) {
+    this.dataVersion = dataVersion;
+  }
+
+  @Override
+  public String toString() {
+    return "ProvideDataDomain{"
+        + "dataCenter='"
+        + dataCenter
+        + '\''
+        + ", dataKey='"
+        + dataKey
+        + '\''
+        + ", dataValue='"
+        + dataValue
+        + '\''
+        + ", gmtCreate="
+        + gmtCreate
+        + ", gmtModified="
+        + gmtModified
+        + ", dataVersion="
+        + dataVersion
+        + '}';
   }
 }

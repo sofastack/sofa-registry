@@ -20,6 +20,7 @@ import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.server.meta.MetaLeaderService;
 import com.alipay.sofa.registry.server.meta.bootstrap.config.MetaServerConfig;
+import com.google.common.annotations.VisibleForTesting;
 import java.io.IOException;
 import java.net.URI;
 import javax.annotation.Priority;
@@ -28,8 +29,6 @@ import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.container.ContainerRequestFilter;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.Provider;
-
-import com.google.common.annotations.VisibleForTesting;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -92,8 +91,7 @@ public class LeaderAwareFilter implements ContainerRequestFilter {
     return "unknown";
   }
 
-  public LeaderAwareFilter() {
-  }
+  public LeaderAwareFilter() {}
 
   public LeaderAwareFilter(MetaLeaderService metaLeaderService, MetaServerConfig metaServerConfig) {
     this.metaLeaderService = metaLeaderService;

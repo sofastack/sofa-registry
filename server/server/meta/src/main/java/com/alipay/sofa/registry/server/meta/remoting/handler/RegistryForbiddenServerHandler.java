@@ -18,10 +18,12 @@ package com.alipay.sofa.registry.server.meta.remoting.handler;
 
 import com.alipay.sofa.registry.common.model.GenericResponse;
 import com.alipay.sofa.registry.common.model.metaserver.DataOperation;
-import com.alipay.sofa.registry.common.model.metaserver.blacklist.RegistryBlacklistRequest;
+import com.alipay.sofa.registry.common.model.metaserver.blacklist.RegistryForbiddenServerRequest;
+import com.alipay.sofa.registry.log.Logger;
+import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.remoting.Channel;
 import com.alipay.sofa.registry.server.meta.MetaLeaderService;
-import com.alipay.sofa.registry.server.meta.lease.filter.RegistryBlacklistManager;
+import com.alipay.sofa.registry.server.meta.lease.filter.RegistryForbiddenServerManager;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -30,34 +32,46 @@ import org.springframework.stereotype.Component;
  *     <p>Mar 18, 2021
  */
 @Component
-public class RegistryBlacklistHandler extends BaseMetaServerHandler<RegistryBlacklistRequest> {
+public class RegistryForbiddenServerHandler
+    extends BaseMetaServerHandler<RegistryForbiddenServerRequest> {
 
-  @Autowired private RegistryBlacklistManager registryBlacklistManager;
+  private static final Logger LOGGER =
+      LoggerFactory.getLogger(RegistryForbiddenServerHandler.class);
+
+  @Autowired private RegistryForbiddenServerManager registryForbiddenServerManager;
 
   @Autowired private MetaLeaderService metaLeaderService;
 
   @Override
-  public Object doHandle(Channel channel, RegistryBlacklistRequest request) {
+  public Object doHandle(Channel channel, RegistryForbiddenServerRequest request) {
     if (!metaLeaderService.amILeader()) {
       buildFailedResponse("not leader");
     }
     DataOperation operation = request.getOperation();
     String ip = request.getIp();
+
+    boolean success = false;
     switch (operation) {
       case ADD:
-        registryBlacklistManager.addToBlacklist(ip);
+        success = registryForbiddenServerManager.addToBlacklist(ip);
         break;
       case REMOVE:
-        registryBlacklistManager.removeFromBlacklist(ip);
+        success = registryForbiddenServerManager.removeFromBlacklist(ip);
         break;
       default:
         break;
     }
-    return GenericResponse.buildSuccessResponse();
+
+    if (success) {
+      return GenericResponse.buildSuccessResponse();
+    }
+
+    LOGGER.error("forbidden server: {} operation:{} fail.", ip, operation);
+    return GenericResponse.buildFailedResponse("handle forbidden server fail.");
   }
 
   @Override
   public Class interest() {
-    return RegistryBlacklistRequest.class;
+    return RegistryForbiddenServerRequest.class;
   }
 }

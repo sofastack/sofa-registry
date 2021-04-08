@@ -20,19 +20,16 @@ import static org.mockito.Mockito.when;
 
 import com.alipay.sofa.registry.common.model.ProcessId;
 import com.alipay.sofa.registry.common.model.metaserver.inter.heartbeat.HeartbeatRequest;
-import com.alipay.sofa.registry.common.model.metaserver.nodes.DataNode;
 import com.alipay.sofa.registry.common.model.metaserver.nodes.SessionNode;
 import com.alipay.sofa.registry.common.model.slot.SlotConfig;
 import com.alipay.sofa.registry.common.model.slot.SlotTable;
 import com.alipay.sofa.registry.common.model.store.URL;
 import com.alipay.sofa.registry.server.meta.AbstractMetaServerTestBase;
 import com.alipay.sofa.registry.server.meta.bootstrap.config.MetaServerConfig;
-
-import java.util.List;
-import java.util.concurrent.TimeoutException;
-
 import com.alipay.sofa.registry.server.meta.slot.SlotManager;
 import com.alipay.sofa.registry.server.meta.slot.manager.SimpleSlotManager;
+import java.util.List;
+import java.util.concurrent.TimeoutException;
 import org.assertj.core.util.Lists;
 import org.junit.After;
 import org.junit.Assert;
@@ -53,7 +50,8 @@ public class DefaultSessionServerManagerTest extends AbstractMetaServerTestBase 
   public void beforeDefaultSessionManagerTest() throws Exception {
     MockitoAnnotations.initMocks(this);
     makeMetaLeader();
-    sessionManager = new DefaultSessionServerManager(metaServerConfig, slotManager, metaLeaderService);
+    sessionManager =
+        new DefaultSessionServerManager(metaServerConfig, slotManager, metaLeaderService);
     when(metaServerConfig.getExpireCheckIntervalMillis()).thenReturn(60);
   }
 
@@ -141,8 +139,14 @@ public class DefaultSessionServerManagerTest extends AbstractMetaServerTestBase 
     SlotTable slotTable = randomSlotTable();
 
     Assert.assertEquals(SlotTable.INIT, slotManager.getSlotTable());
-    sessionManager.onHeartbeat(new HeartbeatRequest<>(sessionNode, slotTable.getEpoch(), getDc(),
-            System.currentTimeMillis(), SlotConfig.slotBasicInfo()).setSlotTable(slotTable));
+    sessionManager.onHeartbeat(
+        new HeartbeatRequest<>(
+                sessionNode,
+                slotTable.getEpoch(),
+                getDc(),
+                System.currentTimeMillis(),
+                SlotConfig.slotBasicInfo())
+            .setSlotTable(slotTable));
     Assert.assertNotEquals(SlotTable.INIT, slotManager.getSlotTable());
   }
 }

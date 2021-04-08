@@ -23,9 +23,9 @@ import com.alipay.sofa.registry.server.meta.lease.LeaseFilter;
  * @author chen.zhu
  *     <p>Mar 18, 2021
  */
-public interface RegistryBlacklistManager extends LeaseFilter<Node> {
+public interface RegistryForbiddenServerManager extends LeaseFilter<Node> {
 
-  void addToBlacklist(String ip);
+  boolean addToBlacklist(String ip);
 
-  void removeFromBlacklist(String ip);
+  boolean removeFromBlacklist(String ip);
 }

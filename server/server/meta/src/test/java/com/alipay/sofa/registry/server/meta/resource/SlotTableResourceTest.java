@@ -67,7 +67,8 @@ public class SlotTableResourceTest extends AbstractMetaServerTestBase {
             new ScheduledSlotArranger(
                 dataServerManager, slotManager, slotTableMonitor, metaLeaderService));
     resource =
-        new SlotTableResource(slotManager, slotTableMonitor, dataServerManager, slotArranger, metaLeaderService);
+        new SlotTableResource(
+            slotManager, slotTableMonitor, dataServerManager, slotArranger, metaLeaderService);
   }
 
   @Test
@@ -93,12 +94,12 @@ public class SlotTableResourceTest extends AbstractMetaServerTestBase {
   public void testForceRefreshSlotTableWithoutLock() throws TimeoutException, InterruptedException {
     makeMetaLeader();
     List<DataNode> dataNodes =
-            Lists.newArrayList(
-                    new DataNode(randomURL(randomIp()), getDc()),
-                    new DataNode(randomURL(randomIp()), getDc()),
-                    new DataNode(randomURL(randomIp()), getDc()));
+        Lists.newArrayList(
+            new DataNode(randomURL(randomIp()), getDc()),
+            new DataNode(randomURL(randomIp()), getDc()),
+            new DataNode(randomURL(randomIp()), getDc()));
     when(dataServerManager.getDataServerMetaInfo())
-            .thenReturn(new VersionedList<>(DatumVersionUtil.nextId(), dataNodes));
+        .thenReturn(new VersionedList<>(DatumVersionUtil.nextId(), dataNodes));
     SlotTable slotTable = new SlotTableGenerator(dataNodes).createLeaderUnBalancedSlotTable();
     slotManager.refresh(slotTable);
 
@@ -112,7 +113,6 @@ public class SlotTableResourceTest extends AbstractMetaServerTestBase {
     current = resource.forceRefreshSlotTable();
     Assert.assertFalse(current.isSuccess());
     Assert.assertEquals("not the meta-server leader", current.getMessage());
-
   }
 
   @Test
@@ -157,10 +157,12 @@ public class SlotTableResourceTest extends AbstractMetaServerTestBase {
     List<DataNode> dataNodes = randomDataNodes(3);
     SlotTable slotTable = randomUnBalancedSlotTable(dataNodes);
     slotManager.refresh(slotTable);
-    when(dataServerManager.getDataServerMetaInfo()).thenReturn(new VersionedList<>(DatumVersionUtil.nextId(), dataNodes));
+    when(dataServerManager.getDataServerMetaInfo())
+        .thenReturn(new VersionedList<>(DatumVersionUtil.nextId(), dataNodes));
     GenericResponse<Object> response = resource.getSlotTableStatus();
     Assert.assertTrue(response.isSuccess());
-    SlotTableResource.SlotTableStatusResponse slotTableStatus = (SlotTableResource.SlotTableStatusResponse) response.getData();
+    SlotTableResource.SlotTableStatusResponse slotTableStatus =
+        (SlotTableResource.SlotTableStatusResponse) response.getData();
     Assert.assertFalse(slotTableStatus.isSlotTableBalanced());
     Assert.assertTrue(slotTableStatus.isSlotTableStable());
 
@@ -168,7 +170,8 @@ public class SlotTableResourceTest extends AbstractMetaServerTestBase {
     slotTable = randomUnBalancedSlotTable(dataNodes);
     slotManager.refresh(slotTable);
     dataNodes.add(new DataNode(randomURL(randomIp()), getDc()));
-    when(dataServerManager.getDataServerMetaInfo()).thenReturn(new VersionedList<>(DatumVersionUtil.nextId(), dataNodes));
+    when(dataServerManager.getDataServerMetaInfo())
+        .thenReturn(new VersionedList<>(DatumVersionUtil.nextId(), dataNodes));
     response = resource.getSlotTableStatus();
     Assert.assertTrue(response.isSuccess());
     slotTableStatus = (SlotTableResource.SlotTableStatusResponse) response.getData();
@@ -182,10 +185,12 @@ public class SlotTableResourceTest extends AbstractMetaServerTestBase {
     List<DataNode> dataNodes = randomDataNodes(3);
     SlotTable slotTable = randomUnBalancedSlotTable(dataNodes);
     slotManager.refresh(slotTable);
-    when(dataServerManager.getDataServerMetaInfo()).thenReturn(new VersionedList<>(DatumVersionUtil.nextId(), dataNodes));
+    when(dataServerManager.getDataServerMetaInfo())
+        .thenReturn(new VersionedList<>(DatumVersionUtil.nextId(), dataNodes));
     GenericResponse<Object> response = resource.getSlotTableStatus();
     Assert.assertTrue(response.isSuccess());
-    SlotTableResource.SlotTableStatusResponse slotTableStatus = (SlotTableResource.SlotTableStatusResponse) response.getData();
+    SlotTableResource.SlotTableStatusResponse slotTableStatus =
+        (SlotTableResource.SlotTableStatusResponse) response.getData();
     Assert.assertFalse(slotTableStatus.isSlotTableBalanced());
     Assert.assertTrue(slotTableStatus.isSlotTableStable());
   }

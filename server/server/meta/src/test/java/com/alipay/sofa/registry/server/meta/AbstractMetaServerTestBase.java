@@ -16,14 +16,14 @@
  */
 package com.alipay.sofa.registry.server.meta;
 
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
-
 import com.alipay.sofa.registry.common.model.Node;
+import com.alipay.sofa.registry.common.model.console.PersistenceData;
+import com.alipay.sofa.registry.common.model.console.PersistenceDataBuilder;
 import com.alipay.sofa.registry.common.model.metaserver.nodes.DataNode;
 import com.alipay.sofa.registry.common.model.slot.Slot;
 import com.alipay.sofa.registry.common.model.slot.SlotConfig;
 import com.alipay.sofa.registry.common.model.slot.SlotTable;
+import com.alipay.sofa.registry.common.model.store.DataInfo;
 import com.alipay.sofa.registry.common.model.store.URL;
 import com.alipay.sofa.registry.exception.SofaRegistryRuntimeException;
 import com.alipay.sofa.registry.remoting.CallbackHandler;
@@ -41,6 +41,12 @@ import com.alipay.sofa.registry.util.JsonUtils;
 import com.alipay.sofa.registry.util.MathUtils;
 import com.alipay.sofa.registry.util.ObjectFactory;
 import com.google.common.collect.Maps;
+import org.assertj.core.util.Lists;
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.rules.TestName;
+
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
@@ -58,12 +64,9 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BooleanSupplier;
-import org.apache.commons.lang.StringUtils;
-import org.assertj.core.util.Lists;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.rules.TestName;
+
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 /**
  * @author chen.zhu
@@ -80,6 +83,13 @@ public class AbstractMetaServerTestBase extends AbstractTestBase {
   @Rule public TestName name = new TestName();
 
   private BalancePolicy balancePolicy = new NaiveBalancePolicy();
+
+  protected PersistenceData mockPersistenceData() {
+    String dataInfoId =
+        DataInfo.toDataInfoId("dataId" + System.currentTimeMillis(), "DEFAULT", "DEFAULT");
+    return PersistenceDataBuilder.createPersistenceData(
+        dataInfoId, "val" + System.currentTimeMillis());
+  }
 
   @Before
   public void beforeAbstractMetaServerTest() {
@@ -618,17 +628,32 @@ public class AbstractMetaServerTestBase extends AbstractTestBase {
 
   public static class InMemoryProvideDataRepo implements ProvideDataService {
 
-    private Map<String, String> localRepo = new ConcurrentHashMap<>();
+    private Map<String, PersistenceData> localRepo = new ConcurrentHashMap<>();
 
     @Override
-    public boolean saveProvideData(String key, String value) {
-      return StringUtils.isNotEmpty(localRepo.put(key, value));
+    public boolean saveProvideData(PersistenceData data) {
+      PersistenceData put = localRepo.put(PersistenceDataBuilder.getDataInfoId(data), data);
+      return put != null;
     }
 
     @Override
-    public DBResponse queryProvideData(String key) {
-      String value = localRepo.get(key);
-      if (StringUtils.isNotEmpty(value)) {
+    public boolean saveProvideData(PersistenceData data, long expectVersion) {
+
+      PersistenceData exist = localRepo.get(PersistenceDataBuilder.getDataInfoId(data));
+      if (exist == null) {
+        localRepo.put(PersistenceDataBuilder.getDataInfoId(data), data);
+        return true;
+      } else if (exist.getVersion() == expectVersion) {
+        localRepo.put(PersistenceDataBuilder.getDataInfoId(data), data);
+        return true;
+      }
+      return false;
+    }
+
+    @Override
+    public DBResponse<PersistenceData> queryProvideData(String key) {
+      PersistenceData value = localRepo.get(key);
+      if (value != null) {
         return new DBResponse(value, OperationStatus.SUCCESS);
       } else {
         return new DBResponse(null, OperationStatus.NOTFOUND);
@@ -637,7 +662,8 @@ public class AbstractMetaServerTestBase extends AbstractTestBase {
 
     @Override
     public boolean removeProvideData(String key) {
-      return StringUtils.isNotEmpty(localRepo.remove(key));
+      PersistenceData remove = localRepo.remove(key);
+      return remove != null;
     }
 
     @Override

@@ -17,22 +17,20 @@
 package com.alipay.sofa.registry.server.meta.resource;
 
 import com.alipay.sofa.registry.common.model.console.PersistenceData;
+import com.alipay.sofa.registry.common.model.console.PersistenceDataBuilder;
 import com.alipay.sofa.registry.common.model.constants.ValueConstants;
 import com.alipay.sofa.registry.common.model.metaserver.ProvideDataChangeEvent;
-import com.alipay.sofa.registry.common.model.store.DataInfo;
 import com.alipay.sofa.registry.core.model.Result;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.server.meta.provide.data.DefaultProvideDataNotifier;
 import com.alipay.sofa.registry.server.meta.provide.data.ProvideDataService;
 import com.alipay.sofa.registry.server.meta.resource.filter.LeaderAwareRestController;
-import com.alipay.sofa.registry.util.JsonUtils;
+import com.google.common.annotations.VisibleForTesting;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
-
-import com.google.common.annotations.VisibleForTesting;
 import org.springframework.beans.factory.annotation.Autowired;
 
 /**
@@ -62,12 +60,11 @@ public class BlacklistDataResource {
   @Path("update")
   @Produces(MediaType.APPLICATION_JSON)
   public Result blacklistPush(String config) {
-    PersistenceData persistenceData = createDataInfo();
-    persistenceData.setData(config);
+    PersistenceData persistenceData =
+        PersistenceDataBuilder.createPersistenceData(ValueConstants.BLACK_LIST_DATA_ID, config);
     try {
-      boolean ret =
-          provideDataService.saveProvideData(
-              ValueConstants.BLACK_LIST_DATA_ID, JsonUtils.writeValueAsString(persistenceData));
+
+      boolean ret = provideDataService.saveProvideData(persistenceData);
       DB_LOGGER.info("Success update blacklist to DB result {}!", ret);
     } catch (Throwable e) {
       DB_LOGGER.error("Error update blacklist to DB!", e);
@@ -79,16 +76,6 @@ public class BlacklistDataResource {
     Result result = new Result();
     result.setSuccess(true);
     return result;
-  }
-
-  private PersistenceData createDataInfo() {
-    DataInfo dataInfo = DataInfo.valueOf(ValueConstants.BLACK_LIST_DATA_ID);
-    PersistenceData persistenceData = new PersistenceData();
-    persistenceData.setDataId(dataInfo.getDataId());
-    persistenceData.setGroup(dataInfo.getGroup());
-    persistenceData.setInstanceId(dataInfo.getInstanceId());
-    persistenceData.setVersion(System.currentTimeMillis());
-    return persistenceData;
   }
 
   private void fireDataChangeNotify(Long version, String dataInfoId) {
@@ -103,13 +90,14 @@ public class BlacklistDataResource {
   }
 
   @VisibleForTesting
-  protected BlacklistDataResource setProvideDataRepository(ProvideDataRepository provideDataRepository) {
-    this.provideDataRepository = provideDataRepository;
+  protected BlacklistDataResource setProvideDataService(ProvideDataService provideDataService) {
+    this.provideDataService = provideDataService;
     return this;
   }
 
   @VisibleForTesting
-  protected BlacklistDataResource setProvideDataNotifier(DefaultProvideDataNotifier provideDataNotifier) {
+  protected BlacklistDataResource setProvideDataNotifier(
+      DefaultProvideDataNotifier provideDataNotifier) {
     this.provideDataNotifier = provideDataNotifier;
     return this;
   }

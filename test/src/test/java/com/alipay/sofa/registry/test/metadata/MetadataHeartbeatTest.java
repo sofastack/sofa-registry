@@ -74,11 +74,12 @@ public class MetadataHeartbeatTest extends MetadataTest {
       Assert.assertTrue(r == null);
     }
 
-    Thread.sleep(3000);
     ConcurrentUtils.createDaemonThread("heartbeat-runner-test", new HeartbeatRunner()).start();
+    Thread.sleep(3000);
     for (AppRevision appRevision : appRevisionList) {
 
       AppRevision r = appRevisionHeartbeatRegistry.heartbeat(appRevision.getRevision());
+      Assert.assertTrue(r != null);
       Assert.assertEquals(appRevision.getRevision(), r.getRevision());
       appRevisionMapper.deleteAppRevision(
           defaultCommonConfig.getClusterId(), appRevision.getRevision());

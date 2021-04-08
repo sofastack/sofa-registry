@@ -16,16 +16,22 @@
  */
 package com.alipay.sofa.registry.server.meta.provide.data;
 
+import com.alipay.sofa.registry.common.model.console.PersistenceData;
+import com.alipay.sofa.registry.common.model.console.PersistenceDataBuilder;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.store.api.DBResponse;
 import com.alipay.sofa.registry.store.api.meta.ProvideDataRepository;
 import com.alipay.sofa.registry.util.ConcurrentUtils;
-import com.alipay.sofa.registry.util.WakeUpLoopRunnable;
+import com.alipay.sofa.registry.util.LoopRunnable;
+import java.util.Collection;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
+import javax.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Autowired;
 
 /**
@@ -36,36 +42,46 @@ public class DefaultProvideDataService implements ProvideDataService {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(DefaultProvideDataService.class);
 
-  private Map<String, DBResponse> provideDataCache = new ConcurrentHashMap<>();
+  private Map<String, PersistenceData> provideDataCache = new ConcurrentHashMap<>();
 
-  private static final ReadWriteLock lock = new ReentrantReadWriteLock();
+  private final ReadWriteLock lock = new ReentrantReadWriteLock();
 
-  private ProvideDataRefresh refresher;
+  private final ProvideDataRefresh refresher = new ProvideDataRefresh();
 
   @Autowired private ProvideDataRepository provideDataRepository;
 
-  private final class ProvideDataRefresh extends WakeUpLoopRunnable {
+  @PostConstruct
+  public void init() {
+    ConcurrentUtils.createDaemonThread("provideData_refresh", refresher).start();
+    // resume when become leader
+    refresher.suspend();
+  }
 
-    @Override
-    public int getWaitingMillis() {
-      return 3000;
-    }
+  private final class ProvideDataRefresh extends LoopRunnable {
 
     @Override
     public void runUnthrowable() {
       provideDataRefresh();
     }
+
+    @Override
+    public void waitingUnthrowable() {
+      ConcurrentUtils.sleepUninterruptibly(3000, TimeUnit.MILLISECONDS);
+    }
   }
 
   private void provideDataRefresh() {
-    Map<String, DBResponse> provideDataMap = provideDataRepository.getAll();
+    Collection<PersistenceData> provideDatas = provideDataRepository.getAll();
+    Map<String, PersistenceData> newCache = new HashMap<>();
+    provideDatas.stream().forEach(data -> newCache.put(PersistenceDataBuilder.getDataInfoId(data), data));
+
+    lock.writeLock().lock();
     try {
       LOGGER.info(
           "refresh provide data, old size: {}, new size: {}",
           provideDataCache.size(),
-          provideDataMap.size());
-      lock.writeLock().lock();
-      provideDataCache = provideDataMap;
+          newCache.size());
+      provideDataCache = newCache;
     } catch (Throwable t) {
       LOGGER.error("refresh provide data error.", t);
     } finally {
@@ -75,63 +91,125 @@ public class DefaultProvideDataService implements ProvideDataService {
 
   @Override
   public void becomeLeader() {
-    refresher = new ProvideDataRefresh();
-    ConcurrentUtils.createDaemonThread("provideData_refresh", refresher).start();
+    refresher.resume();
   }
 
   @Override
   public void loseLeader() {
-    refresher.close();
+    refresher.suspend();
   }
 
+  /**
+   * save or update provideData
+   *
+   * @param persistenceData
+   * @return
+   */
   @Override
-  public boolean saveProvideData(String key, String value) {
+  public boolean saveProvideData(PersistenceData persistenceData) {
 
-    try {
-      provideDataRepository.put(key, value);
-      lock.writeLock().lock();
-      provideDataCache.put(key, DBResponse.ok(value).build());
-    } catch (Throwable t) {
-      LOGGER.error("save provide data: {} error.", key, t);
+    long expectVersion = getExpectVersion(PersistenceDataBuilder.getDataInfoId(persistenceData));
+    return saveProvideData(persistenceData, expectVersion);
+  }
+
+  /**
+   * save or update provideData with expectVersion
+   *
+   * @param persistenceData
+   * @return
+   */
+  @Override
+  public boolean saveProvideData(PersistenceData persistenceData, long expectVersion) {
+    if (persistenceData.getVersion() <= expectVersion) {
+      LOGGER.error(
+          "save provide data: {} fail. new version: {} is smaller than old version: {}",
+          persistenceData,
+          persistenceData.getVersion(),
+          expectVersion);
       return false;
-    } finally {
-      lock.writeLock().unlock();
     }
-    return true;
+
+    // save with cas
+    boolean success = provideDataRepository.put(persistenceData, expectVersion);
+
+    if (success) {
+      lock.writeLock().lock();
+      try {
+        // update local cache
+        provideDataCache.put(PersistenceDataBuilder.getDataInfoId(persistenceData), persistenceData);
+      } catch (Throwable t) {
+        LOGGER.error("save provide data: {} error.", persistenceData, t);
+        return false;
+      } finally {
+        lock.writeLock().unlock();
+      }
+    }
+    return success;
   }
 
+  /**
+   * get except version
+   *
+   * @param key
+   * @return
+   */
+  private long getExpectVersion(String key) {
+    long expectVersion = 0;
+    DBResponse<PersistenceData> response = queryProvideData(key);
+
+    if (response.getEntity() != null) {
+      expectVersion = response.getEntity().getVersion();
+    }
+    return expectVersion;
+  }
+
+  /**
+   * query provideData by key
+   *
+   * @param key
+   * @return
+   */
   @Override
-  public DBResponse queryProvideData(String key) {
-    DBResponse response = null;
+  public DBResponse<PersistenceData> queryProvideData(String key) {
+    PersistenceData data = null;
+    lock.readLock().lock();
     try {
-      lock.readLock().lock();
-      response = provideDataCache.get(key);
+      data = provideDataCache.get(key);
     } catch (Throwable t) {
       LOGGER.error("query provide data: {} error.", key, t);
     } finally {
       lock.readLock().unlock();
     }
 
-    if (response == null && !provideDataCache.containsKey(key)) {
+    if (data == null && !provideDataCache.containsKey(key)) {
       return DBResponse.notfound().build();
-    } else if (response == null) {
-      response = provideDataRepository.get(key);
     }
-    return response;
+    if (data == null) {
+      // not expect to visit this code;
+      // if happen, query from persistent and print error log;
+      data = provideDataRepository.get(key);
+      LOGGER.error("dataKey: {} not exist in cache, response from persistent: {}", key, data);
+    }
+    return data == null ? DBResponse.notfound().build() : DBResponse.ok(data).build();
   }
 
   @Override
   public boolean removeProvideData(String key) {
-    try {
-      provideDataRepository.remove(key);
+    long expectVersion = getExpectVersion(key);
+
+    boolean success = provideDataRepository.remove(key, expectVersion);
+
+    if (success) {
       lock.writeLock().lock();
-      provideDataCache.remove(key);
-    } catch (Throwable t) {
-      LOGGER.error("remove provide data: {} error.", key, t);
-      return false;
-    } finally {
-      lock.writeLock().unlock();
+      try {
+        provideDataCache.remove(key);
+      } catch (Throwable t) {
+        LOGGER.error("remove provide data: {} error.", key, t);
+        return false;
+      } finally {
+        lock.writeLock().unlock();
+      }
     }
-    return true;
+    return success;
   }
 }

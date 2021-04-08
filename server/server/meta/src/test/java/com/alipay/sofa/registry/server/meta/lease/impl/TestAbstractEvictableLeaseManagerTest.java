@@ -1,16 +1,31 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package com.alipay.sofa.registry.server.meta.lease.impl;
+
+import static org.mockito.Mockito.*;
 
 import com.alipay.sofa.registry.common.model.metaserver.Lease;
 import com.alipay.sofa.registry.server.meta.AbstractMetaServerTestBase;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
-
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicInteger;
-
-import static org.mockito.Mockito.*;
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Test;
 
 /**
  * @author zhuchen
@@ -23,19 +38,21 @@ public class TestAbstractEvictableLeaseManagerTest extends AbstractMetaServerTes
   private AtomicInteger evictTime = new AtomicInteger(10);
 
   @Before
-  public void beforeTestAbstractEvictableLeaseManagerTest() throws TimeoutException, InterruptedException {
+  public void beforeTestAbstractEvictableLeaseManagerTest()
+      throws TimeoutException, InterruptedException {
     makeMetaNonLeader();
-    leaseManager = new AbstractEvictableFilterableLeaseManager<SimpleNode>() {
-      @Override
-      protected long getEvictBetweenMilli() {
-        return evictTime.get();
-      }
+    leaseManager =
+        new AbstractEvictableFilterableLeaseManager<SimpleNode>() {
+          @Override
+          protected long getEvictBetweenMilli() {
+            return evictTime.get();
+          }
 
-      @Override
-      protected long getIntervalMilli() {
-        return 60 * 1000;
-      }
-    };
+          @Override
+          protected long getIntervalMilli() {
+            return 60 * 1000;
+          }
+        };
     leaseManager.metaLeaderService = metaLeaderService;
   }
 
@@ -43,7 +60,8 @@ public class TestAbstractEvictableLeaseManagerTest extends AbstractMetaServerTes
   public void testEvict() throws TimeoutException, InterruptedException {
     makeMetaLeader();
     leaseManager = spy(leaseManager);
-    leaseManager.register(new Lease<SimpleNode>(new SimpleNode(randomIp()), 2, TimeUnit.MILLISECONDS));
+    leaseManager.register(
+        new Lease<SimpleNode>(new SimpleNode(randomIp()), 2, TimeUnit.MILLISECONDS));
     Thread.sleep(3);
     Assert.assertFalse(leaseManager.getLeaseMeta().getClusterMembers().isEmpty());
     Assert.assertFalse(leaseManager.getExpiredLeases().isEmpty());
@@ -59,7 +77,8 @@ public class TestAbstractEvictableLeaseManagerTest extends AbstractMetaServerTes
     makeMetaLeader();
     evictTime.set(60 * 1000);
     leaseManager = spy(leaseManager);
-    leaseManager.register(new Lease<SimpleNode>(new SimpleNode(randomIp()), 2, TimeUnit.MILLISECONDS));
+    leaseManager.register(
+        new Lease<SimpleNode>(new SimpleNode(randomIp()), 2, TimeUnit.MILLISECONDS));
     Thread.sleep(3);
     Assert.assertFalse(leaseManager.getLeaseMeta().getClusterMembers().isEmpty());
     Assert.assertFalse(leaseManager.getExpiredLeases().isEmpty());
@@ -69,7 +88,8 @@ public class TestAbstractEvictableLeaseManagerTest extends AbstractMetaServerTes
     verify(leaseManager, atLeast(2)).refreshEpoch(anyLong());
     verify(leaseManager, atLeast(1)).cancel(any());
 
-    leaseManager.register(new Lease<SimpleNode>(new SimpleNode(randomIp()), 2, TimeUnit.MILLISECONDS));
+    leaseManager.register(
+        new Lease<SimpleNode>(new SimpleNode(randomIp()), 2, TimeUnit.MILLISECONDS));
     Thread.sleep(3);
     leaseManager.evict();
     Assert.assertFalse(leaseManager.getLeaseMeta().getClusterMembers().isEmpty());
@@ -93,13 +113,13 @@ public class TestAbstractEvictableLeaseManagerTest extends AbstractMetaServerTes
   public void testScheduledEvict() throws Exception {
     makeMetaLeader();
     evictTime.set(10);
-    leaseManager.register(new Lease<SimpleNode>(new SimpleNode(randomIp()), 2, TimeUnit.MILLISECONDS));
+    leaseManager.register(
+        new Lease<SimpleNode>(new SimpleNode(randomIp()), 2, TimeUnit.MILLISECONDS));
     Thread.sleep(3);
     leaseManager.initialize();
     leaseManager.start();
-    waitConditionUntilTimeOut(()->leaseManager.localRepo.isEmpty(), 100);
+    waitConditionUntilTimeOut(() -> leaseManager.localRepo.isEmpty(), 100);
     leaseManager.stop();
     leaseManager.dispose();
   }
-
 }

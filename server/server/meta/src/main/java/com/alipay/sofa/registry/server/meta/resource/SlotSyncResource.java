@@ -18,18 +18,16 @@ package com.alipay.sofa.registry.server.meta.resource;
 
 import com.alipay.sofa.registry.common.model.console.PersistenceData;
 import com.alipay.sofa.registry.common.model.constants.ValueConstants;
+import com.alipay.sofa.registry.server.meta.provide.data.ProvideDataService;
 import com.alipay.sofa.registry.server.meta.resource.filter.LeaderAwareRestController;
 import com.alipay.sofa.registry.store.api.DBResponse;
-import com.alipay.sofa.registry.store.api.meta.ProvideDataRepository;
-import com.alipay.sofa.registry.util.JsonUtils;
+import com.google.common.annotations.VisibleForTesting;
 import java.util.HashMap;
 import java.util.Map;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
-
-import com.google.common.annotations.VisibleForTesting;
 import org.springframework.beans.factory.annotation.Autowired;
 
 /**
@@ -40,7 +38,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 @LeaderAwareRestController
 public class SlotSyncResource {
 
-  @Autowired private ProvideDataRepository provideDataRepository;
+  @Autowired private ProvideDataService provideDataService;
 
   /** get */
   @GET
@@ -48,26 +46,26 @@ public class SlotSyncResource {
   @Produces(MediaType.APPLICATION_JSON)
   public Map<String, Object> getSlotSync() throws Exception {
     Map<String, Object> resultMap = new HashMap<>(2);
-    DBResponse syncSessionIntervalSec =
-        provideDataRepository.get(ValueConstants.DATA_DATUM_SYNC_SESSION_INTERVAL_SEC);
-    DBResponse dataDatumExpire = provideDataRepository.get(ValueConstants.DATA_SESSION_LEASE_SEC);
+    DBResponse<PersistenceData> syncSessionIntervalSec =
+        provideDataService.queryProvideData(ValueConstants.DATA_DATUM_SYNC_SESSION_INTERVAL_SEC);
+    DBResponse<PersistenceData> dataDatumExpire =
+        provideDataService.queryProvideData(ValueConstants.DATA_SESSION_LEASE_SEC);
 
     resultMap.put("syncSessionIntervalSec", getEntityData(syncSessionIntervalSec));
     resultMap.put("dataDatumExpire", getEntityData(dataDatumExpire));
     return resultMap;
   }
 
-  private static String getEntityData(DBResponse resp) {
+  private static String getEntityData(DBResponse<PersistenceData> resp) {
     if (resp != null && resp.getEntity() != null) {
-      PersistenceData data = JsonUtils.read((String) resp.getEntity(), PersistenceData.class);
-      return data.getData();
+      return resp.getEntity().getData();
     }
     return "null";
   }
 
   @VisibleForTesting
-  protected SlotSyncResource setProvideDataRepository(ProvideDataRepository provideDataRepository) {
-    this.provideDataRepository = provideDataRepository;
+  protected SlotSyncResource setProvideDataService(ProvideDataService provideDataService) {
+    this.provideDataService = provideDataService;
     return this;
   }
 }

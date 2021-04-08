@@ -16,6 +16,8 @@
  */
 package com.alipay.sofa.registry.server.meta.metaserver.impl;
 
+import static org.mockito.Mockito.*;
+
 import com.alipay.sofa.registry.server.meta.AbstractMetaServerTestBase;
 import com.alipay.sofa.registry.server.meta.MetaLeaderService;
 import com.alipay.sofa.registry.server.meta.bootstrap.config.MetaServerConfig;
@@ -28,8 +30,6 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
-
-import static org.mockito.Mockito.*;
 
 public class DefaultMetaLeaderElectorTest extends AbstractMetaServerTestBase {
 

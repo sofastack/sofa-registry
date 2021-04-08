@@ -25,7 +25,7 @@ import com.alipay.sofa.registry.server.meta.cluster.node.NodeModifiedTest;
 import com.alipay.sofa.registry.server.meta.cluster.node.TestAbstractNodeEventTest;
 import com.alipay.sofa.registry.server.meta.lease.LeaseTest;
 import com.alipay.sofa.registry.server.meta.lease.data.DefaultDataServerManagerTest;
-import com.alipay.sofa.registry.server.meta.lease.filter.DefaultRegistryBlacklistManagerTest;
+import com.alipay.sofa.registry.server.meta.lease.filter.DefaultForbiddenServerManager;
 import com.alipay.sofa.registry.server.meta.lease.impl.*;
 import com.alipay.sofa.registry.server.meta.lease.session.DefaultSessionServerManagerTest;
 import com.alipay.sofa.registry.server.meta.metaserver.impl.*;
@@ -85,7 +85,7 @@ import org.junit.runners.Suite;
   MigrateSlotGroupTest.class,
   ScheduledSlotArrangerTest.class,
   LeaderOnlyBalancerTest.class,
-  DefaultRegistryBlacklistManagerTest.class,
+  DefaultForbiddenServerManager.class,
   TestAbstractEvictableLeaseManagerTest.class,
   SimpleLeaseManagerTest.class,
   LeaderAwareLeaseManagerTest.class,

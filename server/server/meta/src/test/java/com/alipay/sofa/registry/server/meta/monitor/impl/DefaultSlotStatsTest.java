@@ -78,12 +78,12 @@ public class DefaultSlotStatsTest {
     Assert.assertFalse(slotStats.isFollowersStable());
 
     slotStats.updateFollowerState(
-            new FollowerSlotStatus(
-                    1,
-                    System.currentTimeMillis(),
-                    "10.0.0.3",
-                    System.currentTimeMillis(),
-                    System.currentTimeMillis() - 3000));
+        new FollowerSlotStatus(
+            1,
+            System.currentTimeMillis(),
+            "10.0.0.3",
+            System.currentTimeMillis(),
+            System.currentTimeMillis() - 3000));
     Assert.assertTrue(slotStats.isFollowersStable());
   }
 
@@ -98,8 +98,7 @@ public class DefaultSlotStatsTest {
   public void testEuqals() {
     SlotStats slotStatsCopy = new DefaultSlotStats(slotStats.getSlot(), 3000);
     slotStats.updateFollowerState(
-            new FollowerSlotStatus(1, System.currentTimeMillis(), "10.0.0.2", -1, -1));
+        new FollowerSlotStatus(1, System.currentTimeMillis(), "10.0.0.2", -1, -1));
     Assert.assertNotEquals(slotStatsCopy, slotStats);
   }
-
 }
