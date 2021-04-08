@@ -57,6 +57,7 @@ import com.alipay.sofa.registry.server.session.registry.Registry;
 import com.alipay.sofa.registry.server.session.registry.SessionRegistry;
 import com.alipay.sofa.registry.server.session.remoting.ClientNodeExchanger;
 import com.alipay.sofa.registry.server.session.remoting.DataNodeExchanger;
+import com.alipay.sofa.registry.server.session.remoting.DataNodeNotifyExchanger;
 import com.alipay.sofa.registry.server.session.remoting.handler.*;
 import com.alipay.sofa.registry.server.session.resource.*;
 import com.alipay.sofa.registry.server.session.scheduler.ExecutorManager;
@@ -166,6 +167,11 @@ public class SessionServerConfiguration {
     @Bean
     public DataNodeExchanger dataNodeExchanger() {
       return new DataNodeExchanger();
+    }
+
+    @Bean
+    public DataNodeNotifyExchanger dataNodeNotifyExchanger() {
+      return new DataNodeNotifyExchanger();
     }
 
     @Bean
@@ -281,7 +287,7 @@ public class SessionServerConfiguration {
       return new SyncConfigPbHandler();
     }
 
-    @Bean(name = "dataClientHandlers")
+    @Bean(name = "dataNotifyClientHandlers")
     public Collection<AbstractClientHandler> dataClientHandlers() {
       Collection<AbstractClientHandler> list = new ArrayList<>();
       list.add(dataChangeRequestHandler());

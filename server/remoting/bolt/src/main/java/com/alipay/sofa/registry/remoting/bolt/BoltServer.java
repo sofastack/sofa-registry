@@ -31,12 +31,10 @@ import com.alipay.sofa.registry.remoting.ChannelHandler;
 import com.alipay.sofa.registry.remoting.ChannelHandler.HandlerType;
 import com.alipay.sofa.registry.remoting.ChannelHandler.InvokeType;
 import com.alipay.sofa.registry.remoting.Server;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import java.net.InetSocketAddress;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executor;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -178,18 +176,39 @@ public class BoltServer implements Server {
 
   @Override
   public Collection<Channel> getChannels() {
-    Collection<Channel> chs = new HashSet<>();
-    if (!this.channels.isEmpty()) {
-      for (Iterator<Channel> it = this.channels.values().iterator(); it.hasNext(); ) {
-        Channel channel = it.next();
-        if (channel.isConnected()) {
-          chs.add(channel);
-        } else {
-          it.remove();
-        }
+    List<Channel> ret = Lists.newArrayListWithCapacity(channels.size());
+    for (Iterator<Channel> it = this.channels.values().iterator(); it.hasNext(); ) {
+      Channel channel = it.next();
+      if (channel.isConnected()) {
+        ret.add(channel);
+      } else {
+        it.remove();
       }
     }
-    return chs;
+    return ret;
+  }
+
+  @Override
+  public Map<String, Channel> selectAvailableChannelsForHostAddress() {
+    Collection<Channel> chnList = getChannels();
+    if (chnList.isEmpty()) {
+      return Collections.emptyMap();
+    }
+    Map<String, List<Channel>> chns = Maps.newHashMapWithExpectedSize(128);
+    for (Channel chn : chnList) {
+      List<Channel> list =
+          chns.computeIfAbsent(
+              chn.getRemoteAddress().getAddress().getHostAddress(), k -> Lists.newArrayList());
+      list.add(chn);
+    }
+    long now = System.currentTimeMillis();
+    Map<String, Channel> ret = Maps.newHashMapWithExpectedSize(chns.size());
+    for (Map.Entry<String, List<Channel>> e : chns.entrySet()) {
+      List<Channel> list = e.getValue();
+      int idx = (int) (now % list.size());
+      ret.put(e.getKey(), list.get(idx));
+    }
+    return ret;
   }
 
   @Override
@@ -228,7 +247,7 @@ public class BoltServer implements Server {
       channels.remove(NetUtil.toAddressString(channel.getRemoteAddress()));
       BoltChannel boltChannel = (BoltChannel) channel;
       Connection connection = boltChannel.getConnection();
-      if (null != connection && connection.isFine()) {
+      if (connection.isFine()) {
         connection.close();
       }
     }

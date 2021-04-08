@@ -66,6 +66,7 @@ public abstract class ServerSideExchanger implements NodeExchanger {
     final int timeout = request.getTimeout() != null ? request.getTimeout() : getRpcTimeoutMillis();
     Channel channel = null;
     if (url == null) {
+      // now use in dsr console sync case
       channel = choseChannel(server);
     } else {
       channel = server.getChannel(url);

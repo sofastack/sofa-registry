@@ -132,8 +132,7 @@ public class BoltClient implements Client {
     }
     try {
       Connection connection = getBoltConnection(rpcClient, url);
-      BoltChannel channel = new BoltChannel();
-      channel.setConnection(connection);
+      BoltChannel channel = new BoltChannel(connection);
       return channel;
 
     } catch (RemotingException e) {
@@ -171,8 +170,7 @@ public class BoltClient implements Client {
   public Channel getChannel(URL url) {
     try {
       Connection connection = getBoltConnection(rpcClient, url);
-      BoltChannel channel = new BoltChannel();
-      channel.setConnection(connection);
+      BoltChannel channel = new BoltChannel(connection);
       return channel;
     } catch (RemotingException e) {
       LOGGER.error("Bolt client connect server got a RemotingException! target url:" + url, e);
@@ -242,8 +240,7 @@ public class BoltClient implements Client {
       URL url, Object message, CallbackHandler callbackHandler, int timeoutMillis) {
     try {
       Connection connection = getBoltConnection(rpcClient, url);
-      BoltChannel channel = new BoltChannel();
-      channel.setConnection(connection);
+      BoltChannel channel = new BoltChannel(connection);
       rpcClient.invokeWithCallback(
           connection,
           message,

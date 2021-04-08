@@ -44,7 +44,7 @@ public class DataPushRequest implements Serializable {
   @Override
   public String toString() {
     return StringFormatter.format(
-        "DataPushRequest{{},{},ver={},num={},bs={}}",
+        "DataPushRequest{{},{},ver={},num={},bytes={}}",
         datum.getDataInfoId(),
         datum.getDataCenter(),
         datum.getVersion(),

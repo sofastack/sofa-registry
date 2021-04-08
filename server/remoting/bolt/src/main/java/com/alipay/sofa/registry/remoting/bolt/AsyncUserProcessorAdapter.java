@@ -46,9 +46,8 @@ public class AsyncUserProcessorAdapter extends AsyncUserProcessor {
   @Override
   public void handleRequest(BizContext bizCtx, AsyncContext asyncCtx, Object request) {
 
-    BoltChannel boltChannel = new BoltChannel();
+    BoltChannel boltChannel = new BoltChannel(bizCtx.getConnection());
     boltChannel.setAsyncContext(asyncCtx);
-    boltChannel.setConnection(bizCtx.getConnection());
     try {
       if (userProcessorHandler != null) {
         userProcessorHandler.received(boltChannel, request);

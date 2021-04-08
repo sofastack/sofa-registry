@@ -27,6 +27,7 @@ import com.alipay.sofa.registry.net.NetUtil;
 import com.alipay.sofa.registry.remoting.ChannelHandler;
 import com.alipay.sofa.registry.remoting.Server;
 import com.alipay.sofa.registry.remoting.exchange.Exchange;
+import com.alipay.sofa.registry.server.data.change.DataChangeEventCenter;
 import com.alipay.sofa.registry.server.data.slot.SlotManager;
 import com.alipay.sofa.registry.server.shared.meta.MetaServerService;
 import com.alipay.sofa.registry.server.shared.remoting.AbstractServerHandler;
@@ -71,13 +72,20 @@ public class DataServerBootstrap {
 
   @Autowired private Exchange boltExchange;
 
+  @Autowired private DataChangeEventCenter dataChangeEventCenter;
+
   @Resource(name = "serverHandlers")
   private Collection<AbstractServerHandler> serverHandlers;
+
+  @Resource(name = "serverNotifyHandlers")
+  private Collection<AbstractServerHandler> serverNotifyHandlers;
 
   @Resource(name = "serverSyncHandlers")
   private Collection<AbstractServerHandler> serverSyncHandlers;
 
   private Server server;
+
+  private Server notifyServer;
 
   private Server dataSyncServer;
 
@@ -142,13 +150,25 @@ public class DataServerBootstrap {
   private void openDataServer() {
     try {
       if (serverForSessionStarted.compareAndSet(false, true)) {
+        // open notify port first
+        notifyServer =
+            boltExchange.open(
+                new URL(
+                    NetUtil.getLocalAddress().getHostAddress(), dataServerConfig.getNotifyPort()),
+                dataServerConfig.getLowWaterMark(),
+                dataServerConfig.getHighWaterMark(),
+                serverNotifyHandlers.toArray(new ChannelHandler[serverNotifyHandlers.size()]));
         server =
             boltExchange.open(
                 new URL(NetUtil.getLocalAddress().getHostAddress(), dataServerConfig.getPort()),
                 dataServerConfig.getLowWaterMark(),
                 dataServerConfig.getHighWaterMark(),
                 serverHandlers.toArray(new ChannelHandler[serverHandlers.size()]));
-        LOGGER.info("Data server for session started! port:{}", dataServerConfig.getPort());
+        dataChangeEventCenter.init();
+        LOGGER.info(
+            "Data server for session started! port:{}, notifyPort:{}",
+            dataServerConfig.getPort(),
+            dataServerConfig.getNotifyPort());
       }
     } catch (Exception e) {
       serverForSessionStarted.set(false);
@@ -248,6 +268,10 @@ public class DataServerBootstrap {
 
       if (dataSyncServer != null && dataSyncServer.isOpen()) {
         dataSyncServer.close();
+      }
+
+      if (notifyServer != null && notifyServer.isOpen()) {
+        notifyServer.close();
       }
     } catch (Throwable e) {
       LOGGER.error("Shutting down Data Server error!", e);

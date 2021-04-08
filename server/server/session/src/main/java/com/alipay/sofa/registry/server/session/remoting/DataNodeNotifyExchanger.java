@@ -16,7 +16,6 @@
  */
 package com.alipay.sofa.registry.server.session.remoting;
 
-import com.alipay.sofa.registry.common.model.store.URL;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.remoting.ChannelHandler;
@@ -28,43 +27,32 @@ import com.alipay.sofa.registry.remoting.exchange.message.Response;
 import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfig;
 import com.alipay.sofa.registry.server.shared.remoting.ClientSideExchanger;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Set;
+import javax.annotation.Resource;
 import org.springframework.beans.factory.annotation.Autowired;
 
 /**
- * The type Data node exchanger.
+ * use for dataNode notify
  *
- * @author shangyu.wh
- * @version $Id : DataNodeExchanger.java, v 0.1 2017-12-01 11:51 shangyu.wh Exp $
+ * @author yuzhi.lyz
  */
-public class DataNodeExchanger extends ClientSideExchanger {
-
-  private static final Logger LOGGER = LoggerFactory.getLogger(DataNodeExchanger.class);
-  private static final Logger EXCHANGE_LOGGER = LoggerFactory.getLogger("SESSION-EXCHANGE");
+public class DataNodeNotifyExchanger extends ClientSideExchanger {
+  private static final Logger LOGGER = LoggerFactory.getLogger(DataNodeNotifyExchanger.class);
 
   @Autowired private SessionServerConfig sessionServerConfig;
 
-  public DataNodeExchanger() {
-    super(Exchange.DATA_SERVER_TYPE);
+  @Resource(name = "dataNotifyClientHandlers")
+  private Collection<ChannelHandler> dataNotifyClientHandlers;
+
+  public DataNodeNotifyExchanger() {
+    super(Exchange.DATA_SERVER_NOTIFY_TYPE);
   }
 
-  /** @see DataNodeExchanger#request(Request) */
+  /** @see DataNodeNotifyExchanger#request(Request) */
   @Override
   public Response request(Request request) throws RequestException {
-    URL url = request.getRequestUrl();
-    EXCHANGE_LOGGER.info("DataNode Exchanger request={}, url={}", request.getRequestBody(), url);
-
-    try {
-      return super.request(request);
-    } catch (RequestException e) {
-      LOGGER.error(
-          "Error when request DataNode! Request url={}, request={}",
-          url,
-          request.getRequestBody(),
-          e);
-      throw e;
-    }
+    // dataNode notify unsupported request to data server
+    throw new UnsupportedOperationException();
   }
 
   @Override
@@ -79,7 +67,7 @@ public class DataNodeExchanger extends ClientSideExchanger {
 
   @Override
   protected Collection<ChannelHandler> getClientHandlers() {
-    return Collections.emptyList();
+    return dataNotifyClientHandlers;
   }
 
   @Override
@@ -89,11 +77,11 @@ public class DataNodeExchanger extends ClientSideExchanger {
 
   @Override
   public int getServerPort() {
-    return sessionServerConfig.getDataServerPort();
+    return sessionServerConfig.getDataServerNotifyPort();
   }
 
   @Override
   public int getConnNum() {
-    return sessionServerConfig.getDataClientConnNum();
+    return sessionServerConfig.getDataNotifyClientConnNum();
   }
 }

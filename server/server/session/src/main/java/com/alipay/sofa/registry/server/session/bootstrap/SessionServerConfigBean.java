@@ -50,7 +50,9 @@ public class SessionServerConfigBean implements SessionServerConfig {
 
   private int dataServerPort = 9620;
 
-  private int httpServerPort;
+  private int dataServerNotifyPort = 9623;
+
+  private int httpServerPort = 9603;
 
   private int schedulerHeartbeatIntervalSecs = 1;
 
@@ -148,7 +150,7 @@ public class SessionServerConfigBean implements SessionServerConfig {
   private String blacklistSubDataIdRegex = "";
 
   private int dataClientConnNum = 10;
-
+  private int dataNotifyClientConnNum = 2;
   private int sessionSchedulerPoolSize = OsUtils.getCpuCount();
 
   private int slotSyncPublisherMaxNum = 512;
@@ -397,6 +399,15 @@ public class SessionServerConfigBean implements SessionServerConfig {
    */
   public void setDataServerPort(int dataServerPort) {
     this.dataServerPort = dataServerPort;
+  }
+
+  @Override
+  public int getDataServerNotifyPort() {
+    return dataServerNotifyPort;
+  }
+
+  public void setDataServerNotifyPort(int dataServerNotifyPort) {
+    this.dataServerNotifyPort = dataServerNotifyPort;
   }
 
   /**
@@ -875,6 +886,15 @@ public class SessionServerConfigBean implements SessionServerConfig {
    */
   public void setDataClientConnNum(int dataClientConnNum) {
     this.dataClientConnNum = dataClientConnNum;
+  }
+
+  @Override
+  public int getDataNotifyClientConnNum() {
+    return dataNotifyClientConnNum;
+  }
+
+  public void setDataNotifyClientConnNum(int dataNotifyClientConnNum) {
+    this.dataNotifyClientConnNum = dataNotifyClientConnNum;
   }
 
   @Override

@@ -49,7 +49,7 @@ public abstract class AbstractEvictableFilterableLeaseManager<T extends Node>
   }
 
   protected List<Lease<T>> filterOut(List<Lease<T>> inputs, LeaseFilter<T> filter) {
-    List<Lease<T>> leases = Lists.newArrayListWithExpectedSize(inputs.size());
+    List<Lease<T>> leases = Lists.newArrayListWithCapacity(inputs.size());
     for (Lease<T> lease : inputs) {
       if (filter.allowSelect(lease)) {
         leases.add(lease);
