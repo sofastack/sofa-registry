@@ -56,7 +56,6 @@ public class AppRevisionHeartbeatRegistry {
   }
 
   public void doRevisionGc() {
-    appRevisionHeartbeatRepository.doAppRevisionGc(
-        sessionServerConfig.getAppRevisionGcSilenceHour());
+    appRevisionHeartbeatRepository.doAppRevisionGc(sessionServerConfig.getRevisionGcSilenceHour());
   }
 }

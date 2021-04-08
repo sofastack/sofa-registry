@@ -16,8 +16,10 @@
  */
 package com.alipay.sofa.registry.jdbc.repository.impl;
 
+import com.alipay.sofa.registry.common.model.console.PersistenceData;
+import com.alipay.sofa.registry.common.model.console.PersistenceDataBuilder;
+import com.alipay.sofa.registry.common.model.store.DataInfo;
 import com.alipay.sofa.registry.jdbc.AbstractH2DbTestBase;
-import com.alipay.sofa.registry.store.api.OperationStatus;
 import com.alipay.sofa.registry.store.api.meta.ProvideDataRepository;
 import org.junit.Assert;
 import org.junit.Test;
@@ -29,16 +31,32 @@ public class ProvideDataJdbcRepositoryTest extends AbstractH2DbTestBase {
 
   @Test
   public void testPut() {
-    provideDataJdbcRepository.put("key", "val");
-    Assert.assertEquals("val", provideDataJdbcRepository.get("key").getEntity());
+    long version = System.currentTimeMillis();
+
+    String dataInfoId = DataInfo.toDataInfoId("key" + version, "DEFAULT", "DEFAULT");
+    PersistenceData persistenceData =
+        PersistenceDataBuilder.createPersistenceData(dataInfoId, "val");
+    boolean success = provideDataJdbcRepository.put(persistenceData, persistenceData.getVersion());
+    Assert.assertTrue(success);
+    Assert.assertEquals("val", provideDataJdbcRepository.get(dataInfoId).getData());
+    Assert.assertEquals(persistenceData.getVersion(), provideDataJdbcRepository.get(dataInfoId).getVersion());
   }
 
   @Test
   public void testRemove() {
-    provideDataJdbcRepository.put("key", "val");
-    Assert.assertEquals("val", provideDataJdbcRepository.get("key").getEntity());
-    provideDataJdbcRepository.remove("key");
-    Assert.assertEquals(
-        OperationStatus.NOTFOUND, provideDataJdbcRepository.get("key").getOperationStatus());
+    long version = System.currentTimeMillis();
+
+    String dataInfoId = DataInfo.toDataInfoId("key" + version, "DEFAULT", "DEFAULT");
+    PersistenceData persistenceData =
+        PersistenceDataBuilder.createPersistenceData(dataInfoId, "val");
+
+    boolean success = provideDataJdbcRepository.put(persistenceData, version);
+    Assert.assertTrue(success);
+    Assert.assertEquals("val", provideDataJdbcRepository.get(dataInfoId).getData());
+    Assert.assertEquals(version, provideDataJdbcRepository.get(dataInfoId).getVersion());
+    boolean remove = provideDataJdbcRepository.remove(dataInfoId, version);
+
+    Assert.assertTrue(remove);
+    Assert.assertTrue(provideDataJdbcRepository.get(dataInfoId) == null);
   }
 }

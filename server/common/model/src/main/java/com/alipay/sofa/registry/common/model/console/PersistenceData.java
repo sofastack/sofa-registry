@@ -31,7 +31,7 @@ public class PersistenceData implements Serializable {
 
   private String instanceId;
 
-  private Long version;
+  private long version;
 
   private String data;
 
@@ -40,7 +40,7 @@ public class PersistenceData implements Serializable {
    *
    * @return property value of version
    */
-  public Long getVersion() {
+  public long getVersion() {
     return version;
   }
 
@@ -49,7 +49,7 @@ public class PersistenceData implements Serializable {
    *
    * @param version value to be assigned to property version
    */
-  public void setVersion(Long version) {
+  public void setVersion(long version) {
     this.version = version;
   }
 
@@ -150,11 +150,11 @@ public class PersistenceData implements Serializable {
     if (this == o) return true;
     if (o == null || getClass() != o.getClass()) return false;
     PersistenceData that = (PersistenceData) o;
-    return Objects.equals(dataId, that.dataId) &&
-            Objects.equals(group, that.group) &&
-            Objects.equals(instanceId, that.instanceId) &&
-            Objects.equals(version, that.version) &&
-            data.equals(that.data);
+    return Objects.equals(dataId, that.dataId)
+        && Objects.equals(group, that.group)
+        && Objects.equals(instanceId, that.instanceId)
+        && Objects.equals(version, that.version)
+        && data.equals(that.data);
   }
 
   @Override

@@ -35,7 +35,7 @@ import com.alipay.sofa.registry.server.meta.remoting.connection.MetaConnectionHa
 import com.alipay.sofa.registry.server.meta.remoting.connection.SessionConnectionHandler;
 import com.alipay.sofa.registry.server.meta.remoting.handler.FetchProvideDataRequestHandler;
 import com.alipay.sofa.registry.server.meta.remoting.handler.HeartbeatRequestHandler;
-import com.alipay.sofa.registry.server.meta.remoting.handler.RegistryBlacklistHandler;
+import com.alipay.sofa.registry.server.meta.remoting.handler.RegistryForbiddenServerHandler;
 import com.alipay.sofa.registry.server.meta.remoting.meta.MetaNodeExchange;
 import com.alipay.sofa.registry.server.meta.remoting.meta.MetaServerRenewService;
 import com.alipay.sofa.registry.server.meta.resource.*;
@@ -50,6 +50,7 @@ import com.alipay.sofa.registry.util.DefaultExecutorFactory;
 import com.alipay.sofa.registry.util.NamedThreadFactory;
 import com.alipay.sofa.registry.util.OsUtils;
 import com.alipay.sofa.registry.util.PropertySplitter;
+import com.google.common.collect.Lists;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.concurrent.*;
@@ -142,7 +143,7 @@ public class MetaServerConfiguration {
       list.add(sessionConnectionHandler());
       list.add(heartbeatRequestHandler());
       list.add(fetchProvideDataRequestHandler());
-      list.add(registryBlacklistHandler());
+      list.add(registryForbiddenServerHandler());
       return list;
     }
 
@@ -152,7 +153,7 @@ public class MetaServerConfiguration {
       list.add(dataConnectionHandler());
       list.add(heartbeatRequestHandler());
       list.add(fetchProvideDataRequestHandler());
-      list.add(registryBlacklistHandler());
+      list.add(registryForbiddenServerHandler());
       return list;
     }
 
@@ -166,9 +167,7 @@ public class MetaServerConfiguration {
 
     @Bean(name = "metaLeaderListeners")
     public Collection<MetaLeaderElectorListener> metaLeaderListeners() {
-      Collection<MetaLeaderElectorListener> list = new ArrayList<>();
-      list.add(provideDataService());
-      return list;
+      return Lists.newArrayList(provideDataService());
     }
 
     @Bean
@@ -212,8 +211,8 @@ public class MetaServerConfiguration {
     }
 
     @Bean
-    public RegistryBlacklistHandler registryBlacklistHandler() {
-      return new RegistryBlacklistHandler();
+    public RegistryForbiddenServerHandler registryForbiddenServerHandler() {
+      return new RegistryForbiddenServerHandler();
     }
 
     @Bean

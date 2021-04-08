@@ -152,5 +152,17 @@ public interface SessionServerConfig {
 
   int getCacheDatumExpireSecs();
 
-  int getAppRevisionGcSilenceHour();
+  int getRevisionGcSilenceHour();
+
+  int getHeartbeatCacheCheckerInitialDelaySecs();
+
+  int getHeartbeatCacheCheckerSecs();
+
+  int getRevisionHeartbeatInitialDelayMinutes();
+
+  int getRevisionHeartbeatMinutes();
+
+  int getRevisionGcInitialDelaySecs();
+
+  int getRevisionGcSecs();
 }

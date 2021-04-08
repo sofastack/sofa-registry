@@ -28,42 +28,42 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
-public class DefaultRegistryBlacklistManagerTest extends AbstractMetaServerTestBase {
+public class DefaultRegistryForbiddenServerManagerTest extends AbstractMetaServerTestBase {
 
-  private RegistryBlacklistManager blacklistManager;
+  private RegistryForbiddenServerManager registryForbiddenServerManager;
 
   private ProvideDataService provideDataService;
 
   @Before
-  public void beforeDefaultRegistryBlacklistManagerTest() {
+  public void beforeDefaultRegistryForbiddenServerManagerTest() {
     provideDataService = spy(new InMemoryProvideDataRepo());
-    blacklistManager = new DefaultRegistryBlacklistManager(provideDataService);
+    registryForbiddenServerManager = new DefaultForbiddenServerManager(provideDataService);
   }
 
   @Test
   public void testNormalCase() {
-    blacklistManager.addToBlacklist("127.0.0.1");
+    registryForbiddenServerManager.addToBlacklist("127.0.0.1");
     Assert.assertFalse(
-        blacklistManager.allowSelect(
+        registryForbiddenServerManager.allowSelect(
             new Lease<>(new NodeModifiedTest.SimpleNode("127.0.0.1"), System.currentTimeMillis())));
-    blacklistManager.removeFromBlacklist("127.0.0.1");
+    registryForbiddenServerManager.removeFromBlacklist("127.0.0.1");
     Assert.assertTrue(
-        blacklistManager.allowSelect(
+        registryForbiddenServerManager.allowSelect(
             new Lease<>(new NodeModifiedTest.SimpleNode("127.0.0.1"), System.currentTimeMillis())));
   }
 
   @Test(expected = SofaRegistryRuntimeException.class)
   public void testException() {
     Assert.assertTrue(
-        blacklistManager.allowSelect(
+        registryForbiddenServerManager.allowSelect(
             new Lease<>(new NodeModifiedTest.SimpleNode("127.0.0.1"), System.currentTimeMillis())));
     provideDataService = mock(ProvideDataService.class);
     when(provideDataService.queryProvideData(anyString()))
         .thenThrow(new SofaRegistryRuntimeException("expected io exception"));
-    blacklistManager = new DefaultRegistryBlacklistManager(provideDataService);
+    registryForbiddenServerManager = new DefaultForbiddenServerManager(provideDataService);
     Assert.assertTrue(
-        blacklistManager.allowSelect(
+        registryForbiddenServerManager.allowSelect(
             new Lease<>(new NodeModifiedTest.SimpleNode("127.0.0.1"), System.currentTimeMillis())));
-    blacklistManager.addToBlacklist("127.0.0.1");
+    registryForbiddenServerManager.addToBlacklist("127.0.0.1");
   }
 }

@@ -16,8 +16,8 @@
  */
 package com.alipay.sofa.registry.store.api.meta;
 
-import com.alipay.sofa.registry.store.api.DBResponse;
-import java.util.Map;
+import com.alipay.sofa.registry.common.model.console.PersistenceData;
+import java.util.Collection;
 
 /**
  * @author chen.zhu
@@ -28,11 +28,10 @@ public interface ProvideDataRepository {
   /**
    * save or update provideData
    *
-   * @param key
-   * @param value
+   * @param persistenceData
    * @return
    */
-  boolean put(String key, String value);
+  boolean put(PersistenceData persistenceData, long expectVersion);
 
   /**
    * query provideData by key
@@ -40,7 +39,7 @@ public interface ProvideDataRepository {
    * @param key
    * @return
    */
-  DBResponse get(String key);
+  PersistenceData get(String key);
 
   /**
    * delete provideData
@@ -48,12 +47,12 @@ public interface ProvideDataRepository {
    * @param key
    * @return
    */
-  boolean remove(String key);
+  boolean remove(String key, long version);
 
   /**
    * query all provide data
    *
    * @return
    */
-  Map<String, DBResponse> getAll();
+  Collection<PersistenceData> getAll();
 }

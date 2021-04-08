@@ -59,7 +59,8 @@ public abstract class AbstractEvictableFilterableLeaseManager<T extends Node>
   }
 
   @VisibleForTesting
-  protected AbstractEvictableFilterableLeaseManager<T> setLeaseFilters(List<LeaseFilter<T>> leaseFilters) {
+  protected AbstractEvictableFilterableLeaseManager<T> setLeaseFilters(
+      List<LeaseFilter<T>> leaseFilters) {
     this.leaseFilters = leaseFilters;
     return this;
   }

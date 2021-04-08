@@ -1,3 +1,19 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package com.alipay.sofa.registry.server.meta.resource;
 
 import com.alipay.sofa.registry.common.model.Node;
@@ -6,18 +22,19 @@ import com.alipay.sofa.registry.common.model.constants.ValueConstants;
 import com.alipay.sofa.registry.common.model.store.DataInfo;
 import com.alipay.sofa.registry.server.meta.AbstractMetaServerTestBase;
 import com.alipay.sofa.registry.server.meta.provide.data.DefaultProvideDataNotifier;
+import com.alipay.sofa.registry.server.meta.provide.data.ProvideDataService;
 import com.alipay.sofa.registry.store.api.DBResponse;
 import com.alipay.sofa.registry.store.api.OperationStatus;
-import com.alipay.sofa.registry.store.api.meta.ProvideDataRepository;
-import com.alipay.sofa.registry.util.JsonUtils;
-import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
-import static org.junit.Assert.*;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 
 public class StopPushDataResourceTest {
 
@@ -25,24 +42,27 @@ public class StopPushDataResourceTest {
 
   private DefaultProvideDataNotifier dataNotifier;
 
-  private ProvideDataRepository provideDataRepository = spy(new AbstractMetaServerTestBase.InMemoryProvideDataRepo());
+  private ProvideDataService provideDataService =
+      spy(new AbstractMetaServerTestBase.InMemoryProvideDataRepo());
 
   @Before
   public void beforeStopPushDataResourceTest() {
     dataNotifier = mock(DefaultProvideDataNotifier.class);
-    stopPushDataResource = new StopPushDataResource()
+    stopPushDataResource =
+        new StopPushDataResource()
             .setProvideDataNotifier(dataNotifier)
-            .setProvideDataRepository(provideDataRepository);
+            .setProvideDataService(provideDataService);
   }
 
   @Test
   public void testClosePush() {
     stopPushDataResource.closePush();
     verify(dataNotifier, times(1)).notifyProvideDataChange(any());
-    DBResponse dbResponse = provideDataRepository
-            .get(DataInfo.valueOf(ValueConstants.STOP_PUSH_DATA_SWITCH_DATA_ID).getDataInfoId());
+    DBResponse<PersistenceData> dbResponse =
+        provideDataService.queryProvideData(
+            DataInfo.valueOf(ValueConstants.STOP_PUSH_DATA_SWITCH_DATA_ID).getDataInfoId());
     Assert.assertEquals(OperationStatus.SUCCESS, dbResponse.getOperationStatus());
-    PersistenceData persistenceData = JsonUtils.read((String)dbResponse.getEntity(), PersistenceData.class);
+    PersistenceData persistenceData = dbResponse.getEntity();
     Assert.assertTrue(Boolean.parseBoolean(persistenceData.getData()));
   }
 
@@ -50,15 +70,17 @@ public class StopPushDataResourceTest {
   public void testOpenPush() {
     stopPushDataResource.openPush();
     verify(dataNotifier, times(1)).notifyProvideDataChange(any());
-    DBResponse dbResponse = provideDataRepository
-            .get(DataInfo.valueOf(ValueConstants.STOP_PUSH_DATA_SWITCH_DATA_ID).getDataInfoId());
+    DBResponse<PersistenceData> dbResponse =
+        provideDataService.queryProvideData(
+            DataInfo.valueOf(ValueConstants.STOP_PUSH_DATA_SWITCH_DATA_ID).getDataInfoId());
     Assert.assertEquals(OperationStatus.SUCCESS, dbResponse.getOperationStatus());
-    PersistenceData persistenceData = JsonUtils.read((String)dbResponse.getEntity(), PersistenceData.class);
+    PersistenceData persistenceData = dbResponse.getEntity();
     Assert.assertFalse(Boolean.parseBoolean(persistenceData.getData()));
   }
 
   @Test
   public void testGetNodeTypes() {
-    Assert.assertEquals(Sets.newHashSet(Node.NodeType.SESSION), stopPushDataResource.getNodeTypes());
+    Assert.assertEquals(
+        Sets.newHashSet(Node.NodeType.SESSION), stopPushDataResource.getNodeTypes());
   }
 }

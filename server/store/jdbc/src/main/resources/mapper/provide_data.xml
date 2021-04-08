@@ -27,6 +27,7 @@
         <result property="dataValue" column="data_value" javaType="java.lang.String" jdbcType="LONGVARCHAR"/>
         <result property="gmtCreate" column="gmt_create" javaType="java.util.Date" jdbcType="TIMESTAMP"/>
         <result property="gmtModified" column="gmt_modified" javaType="java.util.Date" jdbcType="TIMESTAMP"/>
+        <result property="dataVersion" column="data_version" javaType="long" jdbcType="BIGINT"/>
     </resultMap>
 
     <insert id="save" parameterType="com.alipay.sofa.registry.jdbc.domain.ProvideDataDomain">
@@ -36,6 +37,7 @@
            data_center,
            data_key,
            data_value,
+           data_version,
            gmt_create,
            gmt_modified
        )
@@ -44,12 +46,19 @@
            #{dataCenter},
            #{dataKey},
            #{dataValue},
+           #{dataVersion},
            CURRENT_TIMESTAMP,
            CURRENT_TIMESTAMP
        )
-       ON DUPLICATE KEY UPDATE data_value = #{dataValue}, gmt_modified = CURRENT_TIMESTAMP
        ]]>
     </insert>
+
+    <update id="update">
+        <![CDATA[
+       update provide_data set data_value = #{data.dataValue}, data_version = #{data.dataVersion}, gmt_modified = CURRENT_TIMESTAMP
+       where data_key = #{data.dataKey} and data_version = #{exceptVersion}
+       ]]>
+    </update>
 
     <select id="query" resultMap="provideDataResultMap">
         <![CDATA[ select * from provide_data
@@ -59,6 +68,7 @@
 
     <delete id="remove">
         delete from provide_data where data_center = #{dataCenter} and data_key = #{dataKey}
+        and data_version = #{dataVersion}
     </delete>
 
     <select id="selectTotalCount" resultType="java.lang.Integer">

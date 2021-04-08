@@ -23,10 +23,9 @@ import com.alipay.sofa.registry.common.model.metaserver.ProvideData;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.remoting.Channel;
+import com.alipay.sofa.registry.server.meta.provide.data.ProvideDataService;
 import com.alipay.sofa.registry.store.api.DBResponse;
 import com.alipay.sofa.registry.store.api.OperationStatus;
-import com.alipay.sofa.registry.store.api.meta.ProvideDataRepository;
-import com.alipay.sofa.registry.util.JsonUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 
 /**
@@ -40,19 +39,16 @@ public class FetchProvideDataRequestHandler extends BaseMetaServerHandler<FetchP
   private static final Logger DB_LOGGER =
       LoggerFactory.getLogger(FetchProvideDataRequestHandler.class, "[DBService]");
 
-  @Autowired private ProvideDataRepository provideDataRepository;
+  @Autowired private ProvideDataService provideDataService;
 
   @Override
   public Object doHandle(Channel channel, FetchProvideDataRequest fetchProvideDataRequest) {
     try {
-      DBResponse ret = provideDataRepository.get(fetchProvideDataRequest.getDataInfoId());
-      if (ret == null) {
-        DB_LOGGER.error("get null Data from db!");
-        throw new RuntimeException("Get null Data from db!");
-      }
+      DBResponse<PersistenceData> ret =
+          provideDataService.queryProvideData(fetchProvideDataRequest.getDataInfoId());
 
       if (ret.getOperationStatus() == OperationStatus.SUCCESS) {
-        PersistenceData data = JsonUtils.read((String) ret.getEntity(), PersistenceData.class);
+        PersistenceData data = ret.getEntity();
         ProvideData provideData =
             new ProvideData(
                 new ServerDataBox(data.getData()),

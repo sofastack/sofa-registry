@@ -263,9 +263,12 @@ public class SlotTableResource {
 
   public SlotTableResource() {}
 
-  public SlotTableResource(SlotManager slotManager, SlotTableMonitor slotTableMonitor,
-                           DataServerManager dataServerManager, ScheduledSlotArranger slotArranger,
-                           MetaLeaderService metaLeaderService) {
+  public SlotTableResource(
+      SlotManager slotManager,
+      SlotTableMonitor slotTableMonitor,
+      DataServerManager dataServerManager,
+      ScheduledSlotArranger slotArranger,
+      MetaLeaderService metaLeaderService) {
     this.slotManager = slotManager;
     this.slotTableMonitor = slotTableMonitor;
     this.dataServerManager = dataServerManager;

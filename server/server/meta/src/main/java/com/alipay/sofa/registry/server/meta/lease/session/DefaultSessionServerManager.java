@@ -43,18 +43,19 @@ import org.springframework.stereotype.Component;
  *     <p>Nov 24, 2020
  */
 @Component
-public class DefaultSessionServerManager extends AbstractEvictableFilterableLeaseManager<SessionNode>
-    implements SessionServerManager {
+public class DefaultSessionServerManager
+    extends AbstractEvictableFilterableLeaseManager<SessionNode> implements SessionServerManager {
 
   @Autowired private MetaServerConfig metaServerConfig;
 
   @Autowired private SlotManager slotManager;
 
-  public DefaultSessionServerManager() {
-  }
+  public DefaultSessionServerManager() {}
 
-  public DefaultSessionServerManager(MetaServerConfig metaServerConfig, SlotManager slotManager,
-                                     MetaLeaderService metaLeaderService) {
+  public DefaultSessionServerManager(
+      MetaServerConfig metaServerConfig,
+      SlotManager slotManager,
+      MetaLeaderService metaLeaderService) {
     this.metaServerConfig = metaServerConfig;
     this.slotManager = slotManager;
     this.metaLeaderService = metaLeaderService;

@@ -23,13 +23,13 @@ import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.metrics.ReporterUtils;
 import com.alipay.sofa.registry.server.meta.metaserver.impl.DefaultMetaServerManager;
+import com.alipay.sofa.registry.server.meta.provide.data.ProvideDataService;
 import com.alipay.sofa.registry.server.meta.resource.filter.LeaderAwareRestController;
 import com.alipay.sofa.registry.store.api.DBResponse;
 import com.alipay.sofa.registry.store.api.OperationStatus;
-import com.alipay.sofa.registry.store.api.meta.ProvideDataRepository;
-import com.alipay.sofa.registry.util.JsonUtils;
 import com.codahale.metrics.Gauge;
 import com.codahale.metrics.MetricRegistry;
+import com.google.common.annotations.VisibleForTesting;
 import java.util.HashMap;
 import java.util.Map;
 import javax.annotation.PostConstruct;
@@ -38,8 +38,6 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
-
-import com.google.common.annotations.VisibleForTesting;
 import org.springframework.beans.factory.annotation.Autowired;
 
 /**
@@ -58,7 +56,7 @@ public class MetaDigestResource {
 
   @Autowired private DefaultMetaServerManager metaServerManager;
 
-  @Autowired private ProvideDataRepository provideDataRepository;
+  @Autowired private ProvideDataService provideDataService;
 
   @PostConstruct
   public void init() {
@@ -92,7 +90,9 @@ public class MetaDigestResource {
   public Map<String, String> getPushSwitch() {
     Map<String, String> resultMap = new HashMap<>(1);
     try {
-      DBResponse ret = provideDataRepository.get(ValueConstants.STOP_PUSH_DATA_SWITCH_DATA_ID);
+      DBResponse<PersistenceData> ret =
+          provideDataService.queryProvideData(ValueConstants.STOP_PUSH_DATA_SWITCH_DATA_ID);
+
       if (ret.getOperationStatus() == OperationStatus.SUCCESS) {
         String result = getEntityData(ret);
         if (result != null && !result.isEmpty()) {
@@ -104,7 +104,6 @@ public class MetaDigestResource {
       } else if (ret.getOperationStatus() == OperationStatus.NOTFOUND) {
         resultMap.put("pushSwitch", "open");
         resultMap.put("msg", "OperationStatus is NOTFOUND");
-
       }
       DB_LOGGER.info("[getPushSwitch] {}", resultMap);
     } catch (Exception e) {
@@ -118,10 +117,9 @@ public class MetaDigestResource {
     return resultMap;
   }
 
-  private static String getEntityData(DBResponse resp) {
+  private static String getEntityData(DBResponse<PersistenceData> resp) {
     if (resp != null && resp.getEntity() != null) {
-      PersistenceData data = JsonUtils.read((String) resp.getEntity(), PersistenceData.class);
-      return data.getData();
+      return resp.getEntity().getData();
     }
     return null;
   }
@@ -133,8 +131,8 @@ public class MetaDigestResource {
   }
 
   @VisibleForTesting
-  protected MetaDigestResource setProvideDataRepository(ProvideDataRepository provideDataRepository) {
-    this.provideDataRepository = provideDataRepository;
+  protected MetaDigestResource setProvideDataService(ProvideDataService provideDataService) {
+    this.provideDataService = provideDataService;
     return this;
   }
 }

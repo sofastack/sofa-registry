@@ -24,13 +24,12 @@ import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.server.meta.MetaLeaderService;
 import com.alipay.sofa.registry.server.meta.resource.filter.LeaderAwareRestController;
 import com.alipay.sofa.registry.store.api.elector.LeaderElector;
+import com.google.common.annotations.VisibleForTesting;
 import javax.ws.rs.GET;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
-
-import com.google.common.annotations.VisibleForTesting;
 import org.springframework.beans.factory.annotation.Autowired;
 
 /**

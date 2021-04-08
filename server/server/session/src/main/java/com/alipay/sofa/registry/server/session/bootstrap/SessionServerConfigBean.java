@@ -162,7 +162,23 @@ public class SessionServerConfigBean implements SessionServerConfig {
   private int cacheDatumMaxNums = 2000;
 
   private int cacheDatumExpireSecs = 60 * 3;
-  private int silenceHour = 24;
+
+  // metadata config start
+  private int revisionGcSilenceHour = 24;
+
+  private int heartbeatCacheCheckerInitialDelaySecs = 60;
+
+  private int heartbeatCacheCheckerSecs = 60;
+
+  private int revisionHeartbeatInitialDelayMinutes = 10;
+
+  private int revisionHeartbeatMinutes = 10;
+
+  private int revisionGcInitialDelaySecs = 60;
+
+  private int revisionGcSecs = 60;
+
+  // metadata config end
 
   // end config for enterprise version
 
@@ -1124,19 +1140,6 @@ public class SessionServerConfigBean implements SessionServerConfig {
     this.cacheDatumExpireSecs = cacheDatumExpireSecs;
   }
 
-  public int getAppRevisionGcSilenceHour() {
-    return silenceHour;
-  }
-
-  /**
-   * Setter method for property <tt>silenceHour</tt>.
-   *
-   * @param silenceHour value to be assigned to property silenceHour
-   */
-  public void setSilenceHour(int silenceHour) {
-    this.silenceHour = silenceHour;
-  }
-
   @Override
   public int getSyncSessionIOLowWaterMark() {
     return syncSessionIOLowWaterMark;
@@ -1153,5 +1156,133 @@ public class SessionServerConfigBean implements SessionServerConfig {
 
   public void setSyncSessionIOHighWaterMark(int syncSessionIOHighWaterMark) {
     this.syncSessionIOHighWaterMark = syncSessionIOHighWaterMark;
+  }
+
+  /**
+   * Getter method for property <tt>revisionGcSilenceHour</tt>.
+   *
+   * @return property value of revisionGcSilenceHour
+   */
+  public int getRevisionGcSilenceHour() {
+    return revisionGcSilenceHour;
+  }
+
+  /**
+   * Setter method for property <tt>revisionGcSilenceHour</tt>.
+   *
+   * @param revisionGcSilenceHour value to be assigned to property revisionGcSilenceHour
+   */
+  public void setRevisionGcSilenceHour(int revisionGcSilenceHour) {
+    this.revisionGcSilenceHour = revisionGcSilenceHour;
+  }
+
+  /**
+   * Getter method for property <tt>heartbeatCacheCheckerInitialDelaySecs</tt>.
+   *
+   * @return property value of heartbeatCacheCheckerInitialDelaySecs
+   */
+  public int getHeartbeatCacheCheckerInitialDelaySecs() {
+    return heartbeatCacheCheckerInitialDelaySecs;
+  }
+
+  /**
+   * Setter method for property <tt>heartbeatCacheCheckerInitialDelaySecs</tt>.
+   *
+   * @param heartbeatCacheCheckerInitialDelaySecs value to be assigned to property
+   *     heartbeatCacheCheckerInitialDelaySecs
+   */
+  public void setHeartbeatCacheCheckerInitialDelaySecs(int heartbeatCacheCheckerInitialDelaySecs) {
+    this.heartbeatCacheCheckerInitialDelaySecs = heartbeatCacheCheckerInitialDelaySecs;
+  }
+
+  /**
+   * Getter method for property <tt>heartbeatCacheCheckerSecs</tt>.
+   *
+   * @return property value of heartbeatCacheCheckerSecs
+   */
+  public int getHeartbeatCacheCheckerSecs() {
+    return heartbeatCacheCheckerSecs;
+  }
+
+  /**
+   * Setter method for property <tt>heartbeatCacheCheckerSecs</tt>.
+   *
+   * @param heartbeatCacheCheckerSecs value to be assigned to property heartbeatCacheCheckerSecs
+   */
+  public void setHeartbeatCacheCheckerSecs(int heartbeatCacheCheckerSecs) {
+    this.heartbeatCacheCheckerSecs = heartbeatCacheCheckerSecs;
+  }
+
+  /**
+   * Getter method for property <tt>revisionHeartbeatInitialDelayMinutes</tt>.
+   *
+   * @return property value of revisionHeartbeatInitialDelayMinutes
+   */
+  public int getRevisionHeartbeatInitialDelayMinutes() {
+    return revisionHeartbeatInitialDelayMinutes;
+  }
+
+  /**
+   * Setter method for property <tt>revisionHeartbeatInitialDelayMinutes</tt>.
+   *
+   * @param revisionHeartbeatInitialDelayMinutes value to be assigned to property
+   *     revisionHeartbeatInitialDelayMinutes
+   */
+  public void setRevisionHeartbeatInitialDelayMinutes(int revisionHeartbeatInitialDelayMinutes) {
+    this.revisionHeartbeatInitialDelayMinutes = revisionHeartbeatInitialDelayMinutes;
+  }
+
+  /**
+   * Getter method for property <tt>revisionHeartbeatMinutes</tt>.
+   *
+   * @return property value of revisionHeartbeatMinutes
+   */
+  public int getRevisionHeartbeatMinutes() {
+    return revisionHeartbeatMinutes;
+  }
+
+  /**
+   * Setter method for property <tt>revisionHeartbeatMinutes</tt>.
+   *
+   * @param revisionHeartbeatMinutes value to be assigned to property revisionHeartbeatMinutes
+   */
+  public void setRevisionHeartbeatMinutes(int revisionHeartbeatMinutes) {
+    this.revisionHeartbeatMinutes = revisionHeartbeatMinutes;
+  }
+
+  /**
+   * Getter method for property <tt>revisionGcInitialDelaySecs</tt>.
+   *
+   * @return property value of revisionGcInitialDelaySecs
+   */
+  public int getRevisionGcInitialDelaySecs() {
+    return revisionGcInitialDelaySecs;
+  }
+
+  /**
+   * Setter method for property <tt>revisionGcInitialDelaySecs</tt>.
+   *
+   * @param revisionGcInitialDelaySecs value to be assigned to property revisionGcInitialDelaySecs
+   */
+  public void setRevisionGcInitialDelaySecs(int revisionGcInitialDelaySecs) {
+    this.revisionGcInitialDelaySecs = revisionGcInitialDelaySecs;
+  }
+
+  /**
+   * Getter method for property <tt>revisionGcSecs</tt>.
+   *
+   * @return property value of revisionGcSecs
+   */
+  public int getRevisionGcSecs() {
+    return revisionGcSecs;
+  }
+
+  /**
+   * Setter method for property <tt>revisionGcSecs</tt>.
+   *
+   * @param revisionGcSecs value to be assigned to property revisionGcSecs
+   */
+  public void setRevisionGcSecs(int revisionGcSecs) {
+    this.revisionGcSecs = revisionGcSecs;
   }
 }

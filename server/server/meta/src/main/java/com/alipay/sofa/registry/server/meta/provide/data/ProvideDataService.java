@@ -16,6 +16,7 @@
  */
 package com.alipay.sofa.registry.server.meta.provide.data;
 
+import com.alipay.sofa.registry.common.model.console.PersistenceData;
 import com.alipay.sofa.registry.server.meta.MetaLeaderService.MetaLeaderElectorListener;
 import com.alipay.sofa.registry.store.api.DBResponse;
 
@@ -28,11 +29,18 @@ public interface ProvideDataService extends MetaLeaderElectorListener {
   /**
    * save or update provideData
    *
-   * @param key
-   * @param value
+   * @param persistenceData
    * @return
    */
-  boolean saveProvideData(String key, String value);
+  boolean saveProvideData(PersistenceData persistenceData);
+
+  /**
+   * save or update provideData with expectVersion
+   *
+   * @param persistenceData
+   * @return
+   */
+  boolean saveProvideData(PersistenceData persistenceData, long expectVersion);
 
   /**
    * query provideData by key
@@ -40,7 +48,7 @@ public interface ProvideDataService extends MetaLeaderElectorListener {
    * @param key
    * @return
    */
-  DBResponse queryProvideData(String key);
+  DBResponse<PersistenceData> queryProvideData(String key);
 
   /**
    * delete provideData
