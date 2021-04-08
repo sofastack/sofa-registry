@@ -29,6 +29,8 @@ import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
+
+import com.google.common.annotations.VisibleForTesting;
 import org.springframework.beans.factory.annotation.Autowired;
 
 /**
@@ -75,5 +77,17 @@ public class MetaLeaderResource {
       logger.error("[quitElection] error.", throwable);
       return GenericResponse.buildFailedResponse(throwable.getMessage());
     }
+  }
+
+  @VisibleForTesting
+  protected MetaLeaderResource setMetaLeaderService(MetaLeaderService metaLeaderService) {
+    this.metaLeaderService = metaLeaderService;
+    return this;
+  }
+
+  @VisibleForTesting
+  protected MetaLeaderResource setLeaderElector(LeaderElector leaderElector) {
+    this.leaderElector = leaderElector;
+    return this;
   }
 }

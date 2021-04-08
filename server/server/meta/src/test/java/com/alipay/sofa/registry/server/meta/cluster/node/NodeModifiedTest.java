@@ -37,23 +37,4 @@ public class NodeModifiedTest extends AbstractMetaServerTestBase {
     Assert.assertNotNull(event.getOldNode());
     Assert.assertNotEquals(event.getOldNode(), event.getNewNode());
   }
-
-  public static class SimpleNode implements Node {
-
-    private String ip;
-
-    public SimpleNode(String ip) {
-      this.ip = ip;
-    }
-
-    @Override
-    public NodeType getNodeType() {
-      return NodeType.DATA;
-    }
-
-    @Override
-    public URL getNodeUrl() {
-      return new URL(ip);
-    }
-  }
 }

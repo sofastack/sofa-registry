@@ -29,6 +29,7 @@ import com.alipay.sofa.registry.exception.SofaRegistryRuntimeException;
 import com.alipay.sofa.registry.remoting.CallbackHandler;
 import com.alipay.sofa.registry.remoting.Channel;
 import com.alipay.sofa.registry.remoting.Client;
+import com.alipay.sofa.registry.server.meta.bootstrap.config.MetaServerConfig;
 import com.alipay.sofa.registry.server.meta.bootstrap.config.NodeConfig;
 import com.alipay.sofa.registry.server.meta.slot.balance.BalancePolicy;
 import com.alipay.sofa.registry.server.meta.slot.balance.NaiveBalancePolicy;
@@ -72,6 +73,8 @@ public class AbstractMetaServerTestBase extends AbstractTestBase {
 
   protected MetaLeaderService metaLeaderService;
 
+  protected MetaServerConfig metaServerConfig;
+
   protected NodeConfig nodeConfig;
 
   @Rule public TestName name = new TestName();
@@ -82,6 +85,7 @@ public class AbstractMetaServerTestBase extends AbstractTestBase {
   public void beforeAbstractMetaServerTest() {
     metaLeaderService = mock(MetaLeaderService.class);
     nodeConfig = mock(NodeConfig.class);
+    metaServerConfig = mock(MetaServerConfig.class);
     when(nodeConfig.getLocalDataCenter()).thenReturn(getDc());
   }
 
@@ -634,6 +638,25 @@ public class AbstractMetaServerTestBase extends AbstractTestBase {
     @Override
     public boolean remove(String key) {
       return StringUtils.isNotEmpty(localRepo.remove(key));
+    }
+  }
+
+  public static class SimpleNode implements Node {
+
+    private String ip;
+
+    public SimpleNode(String ip) {
+      this.ip = ip;
+    }
+
+    @Override
+    public NodeType getNodeType() {
+      return NodeType.DATA;
+    }
+
+    @Override
+    public URL getNodeUrl() {
+      return new URL(ip);
     }
   }
 }

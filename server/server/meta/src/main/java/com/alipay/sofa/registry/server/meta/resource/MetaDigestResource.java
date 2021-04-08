@@ -38,6 +38,8 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
+
+import com.google.common.annotations.VisibleForTesting;
 import org.springframework.beans.factory.annotation.Autowired;
 
 /**
@@ -87,33 +89,24 @@ public class MetaDigestResource {
   @GET
   @Path("pushSwitch")
   @Produces(MediaType.APPLICATION_JSON)
-  public Map<String, Object> getPushSwitch() {
-    Map<String, Object> resultMap = new HashMap<>(1);
+  public Map<String, String> getPushSwitch() {
+    Map<String, String> resultMap = new HashMap<>(1);
     try {
       DBResponse ret = provideDataRepository.get(ValueConstants.STOP_PUSH_DATA_SWITCH_DATA_ID);
-
-      if (ret == null) {
-        // default push switch on
-        resultMap.put("pushSwitch", "open");
-        resultMap.put("msg", "get null Data from db!");
-      } else {
-        if (ret.getOperationStatus() == OperationStatus.SUCCESS) {
-          String result = getEntityData(ret);
-          if (result != null && !result.isEmpty()) {
-            resultMap.put("pushSwitch", "false".equalsIgnoreCase(result) ? "open" : "closed");
-          } else {
-            resultMap.put("pushSwitch", "open");
-            resultMap.put("msg", "data is empty");
-          }
-        } else if (ret.getOperationStatus() == OperationStatus.NOTFOUND) {
-          resultMap.put("pushSwitch", "open");
-          resultMap.put("msg", "OperationStatus is NOTFOUND");
+      if (ret.getOperationStatus() == OperationStatus.SUCCESS) {
+        String result = getEntityData(ret);
+        if (result != null && !result.isEmpty()) {
+          resultMap.put("pushSwitch", "false".equalsIgnoreCase(result) ? "open" : "closed");
         } else {
-          DB_LOGGER.error("get Data DB status error!");
-          throw new RuntimeException("Get Data DB status error!");
+          resultMap.put("pushSwitch", "open");
+          resultMap.put("msg", "data is empty");
         }
+      } else if (ret.getOperationStatus() == OperationStatus.NOTFOUND) {
+        resultMap.put("pushSwitch", "open");
+        resultMap.put("msg", "OperationStatus is NOTFOUND");
+
       }
-      DB_LOGGER.info("getPushSwitch: {}", resultMap);
+      DB_LOGGER.info("[getPushSwitch] {}", resultMap);
     } catch (Exception e) {
       DB_LOGGER.error(
           "get persistence Data dataInfoId {} from db error!",
@@ -131,5 +124,17 @@ public class MetaDigestResource {
       return data.getData();
     }
     return null;
+  }
+
+  @VisibleForTesting
+  protected MetaDigestResource setMetaServerManager(DefaultMetaServerManager metaServerManager) {
+    this.metaServerManager = metaServerManager;
+    return this;
+  }
+
+  @VisibleForTesting
+  protected MetaDigestResource setProvideDataRepository(ProvideDataRepository provideDataRepository) {
+    this.provideDataRepository = provideDataRepository;
+    return this;
   }
 }

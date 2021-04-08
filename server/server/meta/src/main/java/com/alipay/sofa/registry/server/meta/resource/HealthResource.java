@@ -22,7 +22,6 @@ import com.alipay.sofa.registry.metrics.ReporterUtils;
 import com.alipay.sofa.registry.server.meta.MetaLeaderService;
 import com.alipay.sofa.registry.server.meta.bootstrap.MetaServerBootstrap;
 import com.alipay.sofa.registry.server.meta.metaserver.CurrentDcMetaServer;
-import com.alipay.sofa.registry.store.api.elector.LeaderElector;
 import com.codahale.metrics.Gauge;
 import com.codahale.metrics.MetricRegistry;
 import javax.annotation.PostConstruct;
@@ -33,6 +32,8 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.ResponseBuilder;
 import javax.ws.rs.core.Response.Status;
+
+import com.google.common.annotations.VisibleForTesting;
 import org.springframework.beans.factory.annotation.Autowired;
 
 /**
@@ -47,8 +48,6 @@ public class HealthResource {
   @Autowired private MetaLeaderService metaLeaderService;
 
   @Autowired private CurrentDcMetaServer currentDcMetaServer;
-
-  @Autowired private LeaderElector leaderElector;
 
   @PostConstruct
   public void init() {
@@ -75,30 +74,27 @@ public class HealthResource {
 
     StringBuilder sb = new StringBuilder("MetaServerBoot ");
 
-    boolean start = metaServerBootstrap.getSessionStart();
+    boolean start = metaServerBootstrap.isRpcServerForSessionStarted();
     boolean ret = start;
     sb.append("sessionRegisterServer:").append(start);
 
-    start = metaServerBootstrap.getDataStart();
+    start = metaServerBootstrap.isRpcServerForDataStarted();
     ret = ret && start;
     sb.append(", dataRegisterServerStart:").append(start);
 
-    start = metaServerBootstrap.getMetaStart();
+    start = metaServerBootstrap.isRpcServerForMetaStarted();
     ret = ret && start;
     sb.append(", otherMetaRegisterServerStart:").append(start);
 
-    start = metaServerBootstrap.getHttpStart();
+    start = metaServerBootstrap.isHttpServerStarted();
     ret = ret && start;
-
-    boolean leaderNotEmpty = StringUtil.isNotBlank(leaderElector.getLeader());
-    ret = ret && leaderNotEmpty;
-
     sb.append(", httpServerStart:").append(start);
 
+    boolean leaderNotEmpty = StringUtil.isNotBlank(metaLeaderService.getLeader());
+    ret = ret && leaderNotEmpty;
     sb.append(", role:").append(metaLeaderService.amILeader() ? "leader" : "follower");
     sb.append(", leader:").append(metaLeaderService.getLeader());
     sb.append(", meta-servers:").append(currentDcMetaServer.getClusterMembers());
-    sb.append(", leader:").append(leaderElector.getLeader());
 
     if (ret) {
       response = CommonResponse.buildSuccessResponse(sb.toString());
@@ -106,5 +102,23 @@ public class HealthResource {
       response = CommonResponse.buildFailedResponse(sb.toString());
     }
     return response;
+  }
+
+  @VisibleForTesting
+  protected HealthResource setMetaServerBootstrap(MetaServerBootstrap metaServerBootstrap) {
+    this.metaServerBootstrap = metaServerBootstrap;
+    return this;
+  }
+
+  @VisibleForTesting
+  protected HealthResource setMetaLeaderService(MetaLeaderService metaLeaderService) {
+    this.metaLeaderService = metaLeaderService;
+    return this;
+  }
+
+  @VisibleForTesting
+  protected HealthResource setCurrentDcMetaServer(CurrentDcMetaServer currentDcMetaServer) {
+    this.currentDcMetaServer = currentDcMetaServer;
+    return this;
   }
 }

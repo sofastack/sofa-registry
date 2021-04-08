@@ -25,17 +25,20 @@ import com.alipay.sofa.registry.server.meta.cluster.node.NodeModifiedTest;
 import com.alipay.sofa.registry.server.meta.cluster.node.TestAbstractNodeEventTest;
 import com.alipay.sofa.registry.server.meta.lease.LeaseTest;
 import com.alipay.sofa.registry.server.meta.lease.data.DefaultDataServerManagerTest;
+import com.alipay.sofa.registry.server.meta.lease.filter.DefaultRegistryBlacklistManagerTest;
+import com.alipay.sofa.registry.server.meta.lease.impl.*;
 import com.alipay.sofa.registry.server.meta.lease.session.DefaultSessionServerManagerTest;
-import com.alipay.sofa.registry.server.meta.metaserver.impl.DefaultCrossDcMetaServerTest;
-import com.alipay.sofa.registry.server.meta.metaserver.impl.DefaultCurrentDcMetaServerTest;
-import com.alipay.sofa.registry.server.meta.metaserver.impl.DefaultMetaServerManagerTest;
-import com.alipay.sofa.registry.server.meta.metaserver.impl.LocalMetaServerTest;
+import com.alipay.sofa.registry.server.meta.metaserver.impl.*;
 import com.alipay.sofa.registry.server.meta.monitor.DefaultSlotTableMonitorTest;
+import com.alipay.sofa.registry.server.meta.monitor.data.DataServerStatsTest;
+import com.alipay.sofa.registry.server.meta.monitor.impl.DefaultSlotStatsTest;
+import com.alipay.sofa.registry.server.meta.monitor.impl.DefaultSlotTableStatsTest;
 import com.alipay.sofa.registry.server.meta.provide.data.DefaultProvideDataNotifierTest;
 import com.alipay.sofa.registry.server.meta.remoting.data.DefaultDataServerServiceTest;
 import com.alipay.sofa.registry.server.meta.remoting.handler.HeartbeatRequestHandlerTest;
 import com.alipay.sofa.registry.server.meta.remoting.session.DefaultSessionServerServiceTest;
-import com.alipay.sofa.registry.server.meta.resource.SlotTableResourceTest;
+import com.alipay.sofa.registry.server.meta.resource.*;
+import com.alipay.sofa.registry.server.meta.resource.filter.LeaderAwareFilterTest;
 import com.alipay.sofa.registry.server.meta.slot.arrange.CrossDcSlotAllocatorTest;
 import com.alipay.sofa.registry.server.meta.slot.arrange.ScheduledSlotArrangerTest;
 import com.alipay.sofa.registry.server.meta.slot.balance.LeaderOnlyBalancerTest;
@@ -59,7 +62,7 @@ import org.junit.runners.Suite;
   DefaultCurrentDcMetaServerTest.class,
   DefaultSessionServerManagerTest.class,
   DefaultDataServerManagerTest.class,
-  //  CrossDcMetaServerManagerTest.class,
+  CrossDcMetaServerManagerTest.class,
   LeaseTest.class,
   HeartbeatRequestHandlerTest.class,
   DefaultMetaServerManagerTest.class,
@@ -81,6 +84,25 @@ import org.junit.runners.Suite;
   NodeComparatorTest.class,
   MigrateSlotGroupTest.class,
   ScheduledSlotArrangerTest.class,
-  LeaderOnlyBalancerTest.class
+  LeaderOnlyBalancerTest.class,
+  DefaultRegistryBlacklistManagerTest.class,
+  TestAbstractEvictableLeaseManagerTest.class,
+  SimpleLeaseManagerTest.class,
+  LeaderAwareLeaseManagerTest.class,
+  AbstractEvictableFilterableLeaseManagerTest.class,
+  DefaultMetaLeaderElectorTest.class,
+  DataServerStatsTest.class,
+  DataServerStatsTest.class,
+  DefaultSlotStatsTest.class,
+  DefaultSlotTableStatsTest.class,
+  LeaderAwareFilterTest.class,
+  ProvideDataResourceTest.class,
+  StopPushDataResourceTest.class,
+  MetaDigestResourceTest.class,
+  HealthResourceTest.class,
+  MetaLeaderResourceTest.class,
+  BlacklistDataResourceTest.class,
+  RegistryCoreOpsResourceTest.class,
+  SlotSyncResourceTest.class
 })
 public class AllTests {}

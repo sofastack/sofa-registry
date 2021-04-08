@@ -31,6 +31,8 @@ import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
+
+import com.google.common.annotations.VisibleForTesting;
 import org.springframework.beans.factory.annotation.Autowired;
 
 /**
@@ -98,5 +100,17 @@ public class BlacklistDataResource {
           provideDataChangeEvent);
     }
     provideDataNotifier.notifyProvideDataChange(provideDataChangeEvent);
+  }
+
+  @VisibleForTesting
+  protected BlacklistDataResource setProvideDataRepository(ProvideDataRepository provideDataRepository) {
+    this.provideDataRepository = provideDataRepository;
+    return this;
+  }
+
+  @VisibleForTesting
+  protected BlacklistDataResource setProvideDataNotifier(DefaultProvideDataNotifier provideDataNotifier) {
+    this.provideDataNotifier = provideDataNotifier;
+    return this;
   }
 }

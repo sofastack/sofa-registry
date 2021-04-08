@@ -58,6 +58,10 @@ public final class SlotConfig {
         FUNC);
   }
 
+  public static SlotBasicInfo slotBasicInfo() {
+    return new SlotBasicInfo(SLOT_NUM, SLOT_REPLICAS, FUNC);
+  }
+
   public static class SlotBasicInfo implements Serializable {
 
     private final int slotNum;

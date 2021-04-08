@@ -64,10 +64,6 @@ public abstract class AbstractEvictableLeaseManager<T extends Node>
 
     for (Lease<T> lease : expirations) {
       Lease<T> doubleCheck = getLease(lease.getRenewal());
-      // at this point of view, entry might be deleted through cancel method
-      if (doubleCheck == null) {
-        continue;
-      }
       if (doubleCheck.isExpired()) {
         logger.warn("[evict] node evict [{}], cancel it and refresh epoch", doubleCheck);
         try {
@@ -102,7 +98,7 @@ public abstract class AbstractEvictableLeaseManager<T extends Node>
 
     @Override
     public void runUnthrowable() {
-      if (metaLeaderService.amIStableAsLeader()) {
+      if (amILeader() && metaLeaderService.amIStableAsLeader()) {
         logger.debug("[evict] begin");
         evict();
         logger.debug("[evict] end");

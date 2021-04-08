@@ -91,7 +91,7 @@ public class ScheduledSlotArrangerTest extends AbstractMetaServerTestBase {
   @Test
   public void testStopStartReconcile() throws Exception {
     slotTableResource =
-        new SlotTableResource(slotManager, dataServerManager, slotArranger, metaLeaderService);
+        new SlotTableResource(slotManager, slotTableMonitor, dataServerManager, slotArranger, metaLeaderService);
     slotArranger.postConstruct();
     Assert.assertEquals("running", slotTableResource.getReconcileStatus().getMessage());
 

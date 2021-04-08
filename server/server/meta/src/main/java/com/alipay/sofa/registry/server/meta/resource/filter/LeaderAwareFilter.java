@@ -28,6 +28,8 @@ import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.container.ContainerRequestFilter;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.Provider;
+
+import com.google.common.annotations.VisibleForTesting;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -60,7 +62,7 @@ public class LeaderAwareFilter implements ContainerRequestFilter {
         try {
           LOGGER.warn(
               "[filter]request: [{}][{}] need to redirect to {}",
-              getRemortIP(context),
+              getRemoteIP(context),
               context.getMethod(),
               leaderIp);
           response =
@@ -82,11 +84,25 @@ public class LeaderAwareFilter implements ContainerRequestFilter {
     }
   }
 
-  public String getRemortIP(ContainerRequestContext context) {
+  public String getRemoteIP(ContainerRequestContext context) {
     String remote = context.getHeaderString("x-forwarded-for");
     if (StringUtils.isNotBlank(remote)) {
       return remote;
     }
     return "unknown";
+  }
+
+  public LeaderAwareFilter() {
+  }
+
+  public LeaderAwareFilter(MetaLeaderService metaLeaderService, MetaServerConfig metaServerConfig) {
+    this.metaLeaderService = metaLeaderService;
+    this.metaServerConfig = metaServerConfig;
+  }
+
+  @VisibleForTesting
+  protected LeaderAwareFilter setMetaLeaderService(MetaLeaderService metaLeaderService) {
+    this.metaLeaderService = metaLeaderService;
+    return this;
   }
 }

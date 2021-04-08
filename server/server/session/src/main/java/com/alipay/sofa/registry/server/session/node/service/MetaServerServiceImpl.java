@@ -70,8 +70,7 @@ public final class MetaServerServiceImpl
             slotTableCache.getEpoch(),
             sessionServerConfig.getSessionServerDataCenter(),
             System.currentTimeMillis(),
-            new SlotConfig.SlotBasicInfo(
-                SlotConfig.SLOT_NUM, SlotConfig.SLOT_REPLICAS, SlotConfig.FUNC))
+            SlotConfig.slotBasicInfo())
         .setSlotTable(slotTableCache.currentSlotTable());
   }
 
