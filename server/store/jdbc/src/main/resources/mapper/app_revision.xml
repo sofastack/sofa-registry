@@ -64,7 +64,7 @@
     </select>
 
     <select id="checkExist" parameterType="com.alipay.sofa.registry.jdbc.domain.AppRevisionDomain" resultMap="appRevisionResultMap">
-        select data_center, revision, gmtModify from app_revision where data_center = #{dataCenter} and revision = #{revision}
+        select data_center, revision, gmt_modified from app_revision where data_center = #{dataCenter} and revision = #{revision}
     </select>
 
 

@@ -38,7 +38,7 @@ public class JdbcDriverConfigBean implements JdbcDriverConfig {
 
   private String typeAliasesPackage;
 
-  private String mapperLocations = "classpath:mapper/*.xml";
+  private String[] mapperLocations = {"classpath:mapper/*.xml"};
 
   private int minIdle = 3;
 
@@ -146,7 +146,7 @@ public class JdbcDriverConfigBean implements JdbcDriverConfig {
    * @return property value of mapperLocations
    */
   @Override
-  public String getMapperLocations() {
+  public String[] getMapperLocations() {
     return mapperLocations;
   }
 
@@ -155,7 +155,7 @@ public class JdbcDriverConfigBean implements JdbcDriverConfig {
    *
    * @param mapperLocations value to be assigned to property mapperLocations
    */
-  public void setMapperLocations(String mapperLocations) {
+  public void setMapperLocations(String[] mapperLocations) {
     this.mapperLocations = mapperLocations;
   }
 
