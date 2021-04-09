@@ -29,6 +29,9 @@ public class AppRevisionQueryModel {
   /** revision */
   private String revision;
 
+  public AppRevisionQueryModel() {
+  }
+
   public AppRevisionQueryModel(String dataCenter, String revision) {
     this.dataCenter = dataCenter;
     this.revision = revision;
