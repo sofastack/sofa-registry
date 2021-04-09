@@ -18,7 +18,7 @@ package com.alipay.sofa.registry.remoting;
 
 import com.alipay.sofa.registry.common.model.store.URL;
 import java.net.InetSocketAddress;
-import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -39,7 +39,7 @@ public interface Server extends Endpoint {
    *
    * @return channels
    */
-  Collection<Channel> getChannels();
+  List<Channel> getChannels();
 
   /** select one available channel for every ip */
   Map<String, Channel> selectAvailableChannelsForHostAddress();

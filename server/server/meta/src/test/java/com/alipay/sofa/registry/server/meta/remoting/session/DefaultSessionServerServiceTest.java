@@ -29,7 +29,7 @@ import com.alipay.sofa.registry.remoting.exchange.message.Request;
 import com.alipay.sofa.registry.server.meta.AbstractMetaServerTestBase;
 import com.alipay.sofa.registry.server.meta.lease.session.SessionServerManager;
 import com.alipay.sofa.registry.server.meta.remoting.SessionNodeExchanger;
-import com.alipay.sofa.registry.server.meta.remoting.connection.SessionConnectionHandler;
+import com.alipay.sofa.registry.server.meta.remoting.connection.SessionConnectionManager;
 import com.alipay.sofa.registry.util.DatumVersionUtil;
 import java.net.InetSocketAddress;
 import java.util.concurrent.TimeoutException;
@@ -47,7 +47,7 @@ public class DefaultSessionServerServiceTest extends AbstractMetaServerTestBase 
 
   @Mock private SessionNodeExchanger sessionNodeExchanger;
 
-  @Mock private SessionConnectionHandler sessionConnectionHandler;
+  @Mock private SessionConnectionManager sessionConnectionManager;
 
   @Mock private SessionServerManager sessionServerManager;
 
@@ -55,7 +55,7 @@ public class DefaultSessionServerServiceTest extends AbstractMetaServerTestBase 
   public void beforeSessionServerProvideDataNotifierTest() {
     MockitoAnnotations.initMocks(this);
     notifier
-        .setSessionConnectionHandler(sessionConnectionHandler)
+        .setSessionConnectionHandler(sessionConnectionManager)
         .setSessionNodeExchanger(sessionNodeExchanger)
         .setSessionServerManager(sessionServerManager);
   }
@@ -79,7 +79,7 @@ public class DefaultSessionServerServiceTest extends AbstractMetaServerTestBase 
               }
             });
     notifier.setSessionNodeExchanger(sessionNodeExchanger);
-    when(sessionConnectionHandler.getConnections(anyString()))
+    when(sessionConnectionManager.getConnections(anyString()))
         .thenReturn(
             Lists.newArrayList(
                 new InetSocketAddress(ip1, Math.abs(random.nextInt(65535)) % 65535),
@@ -102,7 +102,7 @@ public class DefaultSessionServerServiceTest extends AbstractMetaServerTestBase 
   @Test
   public void testBoltResponsePositive() throws InterruptedException, RequestException {
     String ip1 = randomIp(), ip2 = randomIp();
-    when(sessionConnectionHandler.getConnections(anyString()))
+    when(sessionConnectionManager.getConnections(anyString()))
         .thenReturn(
             Lists.newArrayList(
                 new InetSocketAddress(ip1, Math.abs(random.nextInt(65535)) % 65535),

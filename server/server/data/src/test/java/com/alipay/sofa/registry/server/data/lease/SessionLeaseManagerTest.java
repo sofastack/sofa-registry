@@ -16,14 +16,21 @@
  */
 package com.alipay.sofa.registry.server.data.lease;
 
+import com.alipay.sofa.registry.common.model.ProcessId;
+import com.alipay.sofa.registry.common.model.constants.ValueConstants;
 import com.alipay.sofa.registry.common.model.store.Publisher;
+import com.alipay.sofa.registry.remoting.Server;
+import com.alipay.sofa.registry.remoting.bolt.exchange.BoltExchange;
 import com.alipay.sofa.registry.server.data.TestBaseUtils;
 import com.alipay.sofa.registry.server.data.bootstrap.DataServerConfig;
 import com.alipay.sofa.registry.server.data.cache.LocalDatumStorage;
-import com.alipay.sofa.registry.server.data.remoting.sessionserver.SessionServerConnectionFactory;
 import com.alipay.sofa.registry.server.shared.env.ServerEnv;
+import com.google.common.collect.Lists;
+import java.util.Collections;
+import java.util.Set;
 import org.junit.Assert;
 import org.junit.Test;
+import org.mockito.Mockito;
 
 public class SessionLeaseManagerTest {
   @Test(expected = IllegalArgumentException.class)
@@ -35,8 +42,24 @@ public class SessionLeaseManagerTest {
   @Test
   public void test() throws Exception {
     SessionLeaseManager slm = new SessionLeaseManager();
-    SessionServerConnectionFactory ssc = new SessionServerConnectionFactory();
-    slm.setSessionServerConnectionFactory(ssc);
+    DataServerConfig cfg = TestBaseUtils.newDataConfig("testDc");
+    slm.setDataServerConfig(cfg);
+    BoltExchange boltExchange = Mockito.mock(BoltExchange.class);
+    slm.setBoltExchange(boltExchange);
+    Set<ProcessId> processIds = slm.getProcessIdsInConnection();
+    Assert.assertTrue(processIds.isEmpty());
+
+    Server server = Mockito.mock(Server.class);
+    Mockito.when(boltExchange.getServer(Mockito.anyInt())).thenReturn(server);
+    TestBaseUtils.MockBlotChannel channel = TestBaseUtils.newChannel(9620, "localhost", 2222);
+    channel.setActive(true);
+    channel.conn.setAttribute(ValueConstants.ATTR_RPC_CHANNEL_PROCESS_ID, ServerEnv.PROCESS_ID);
+    Mockito.when(server.getChannels()).thenReturn(Lists.newArrayList(channel));
+
+    processIds = slm.getProcessIdsInConnection();
+    Assert.assertEquals(processIds.size(), 1);
+    Assert.assertTrue(processIds.contains(ServerEnv.PROCESS_ID));
+
     LocalDatumStorage storage = TestBaseUtils.newLocalStorage("testDc", true);
     slm.setLocalDatumStorage(storage);
     DataServerConfig config = storage.getDataServerConfig();
@@ -44,8 +67,6 @@ public class SessionLeaseManagerTest {
     config.setDatumCompactDelaySecs(1);
     config.setSessionLeaseSecs(1);
     slm.setDataServerConfig(config);
-    ssc.registerSession(
-        ServerEnv.PROCESS_ID, new TestBaseUtils.MockBlotChannel(9602, ServerEnv.IP, 1000));
     slm.renewSession(ServerEnv.PROCESS_ID);
     Assert.assertTrue(slm.contains(ServerEnv.PROCESS_ID));
     Publisher p = TestBaseUtils.createTestPublisher("dataId");
@@ -59,7 +80,7 @@ public class SessionLeaseManagerTest {
     Assert.assertEquals(storage.get(p.getDataInfoId()).getPubMap().get(p.getRegisterId()), p);
 
     // reset the connections
-    slm.setSessionServerConnectionFactory(new SessionServerConnectionFactory());
+    Mockito.when(server.getChannels()).thenReturn(Collections.emptyList());
     Thread.sleep(1500);
     // wait to clean
     slm.clean();
@@ -77,8 +98,14 @@ public class SessionLeaseManagerTest {
   @Test
   public void testLoop() throws Exception {
     SessionLeaseManager slm = new SessionLeaseManager();
-    SessionServerConnectionFactory ssc = new SessionServerConnectionFactory();
-    slm.setSessionServerConnectionFactory(ssc);
+    BoltExchange boltExchange = Mockito.mock(BoltExchange.class);
+    slm.setBoltExchange(boltExchange);
+    DataServerConfig cfg = TestBaseUtils.newDataConfig("testDc");
+    slm.setDataServerConfig(cfg);
+    Server server = Mockito.mock(Server.class);
+    Mockito.when(boltExchange.getServer(Mockito.anyInt())).thenReturn(server);
+    Mockito.when(server.getChannels()).thenReturn(Collections.emptyList());
+
     LocalDatumStorage storage = TestBaseUtils.newLocalStorage("testDc", true);
     slm.setLocalDatumStorage(storage);
     DataServerConfig config = storage.getDataServerConfig();
@@ -94,7 +121,6 @@ public class SessionLeaseManagerTest {
     Assert.assertEquals(storage.get(p.getDataInfoId()).getPubMap().get(p.getRegisterId()), p);
     // wait to clean
     config.setSessionLeaseSecs(1);
-    slm.setSessionServerConnectionFactory(new SessionServerConnectionFactory());
     Thread.sleep(2000);
     Assert.assertEquals(storage.tombstoneNum(), 0);
     Assert.assertEquals(storage.get(p.getDataInfoId()).publisherSize(), 0);

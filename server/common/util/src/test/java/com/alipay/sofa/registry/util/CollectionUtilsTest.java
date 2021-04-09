@@ -18,7 +18,7 @@ package com.alipay.sofa.registry.util;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
+import java.util.List;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -27,7 +27,7 @@ import org.junit.Test;
  * @since 2018/12/28
  */
 public class CollectionUtilsTest {
-  Collection<String> stringCollection =
+  List<String> stringCollection =
       new ArrayList<>(Arrays.asList("zhangsan", "lisi", "wangwu", "zhaoliu", "sunqi", "zhouba"));
 
   @Test
@@ -37,8 +37,8 @@ public class CollectionUtilsTest {
     for (int i = 0; i < 10; i++) {
       String radomeValue =
           i % 2 == 0
-              ? CollectionUtils.getRandom(stringCollection).get()
-              : new CollectionUtils().getRandom(stringCollection).get();
+              ? CollectionUtils.getRandom(stringCollection)
+              : new CollectionUtils().getRandom(stringCollection);
       Assert.assertTrue(stringCollection.contains(radomeValue));
       if (firstValue == null) {
         firstValue = radomeValue;

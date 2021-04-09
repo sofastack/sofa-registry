@@ -21,7 +21,7 @@ import com.alipay.sofa.registry.remoting.exchange.NodeExchanger;
 import com.alipay.sofa.registry.server.meta.lease.session.SessionServerManager;
 import com.alipay.sofa.registry.server.meta.remoting.SessionNodeExchanger;
 import com.alipay.sofa.registry.server.meta.remoting.connection.NodeConnectManager;
-import com.alipay.sofa.registry.server.meta.remoting.connection.SessionConnectionHandler;
+import com.alipay.sofa.registry.server.meta.remoting.connection.SessionConnectionManager;
 import com.alipay.sofa.registry.server.meta.remoting.notifier.AbstractNotifier;
 import com.google.common.annotations.VisibleForTesting;
 import java.util.List;
@@ -38,7 +38,7 @@ public class DefaultSessionServerService extends AbstractNotifier<SessionNode>
 
   @Autowired private SessionNodeExchanger sessionNodeExchanger;
 
-  @Autowired private SessionConnectionHandler sessionConnectionHandler;
+  @Autowired private SessionConnectionManager sessionConnectionManager;
 
   @Autowired private SessionServerManager sessionServerManager;
 
@@ -54,7 +54,7 @@ public class DefaultSessionServerService extends AbstractNotifier<SessionNode>
 
   @Override
   protected NodeConnectManager getNodeConnectManager() {
-    return sessionConnectionHandler;
+    return sessionConnectionManager;
   }
 
   @VisibleForTesting
@@ -65,8 +65,8 @@ public class DefaultSessionServerService extends AbstractNotifier<SessionNode>
 
   @VisibleForTesting
   DefaultSessionServerService setSessionConnectionHandler(
-      SessionConnectionHandler sessionConnectionHandler) {
-    this.sessionConnectionHandler = sessionConnectionHandler;
+      SessionConnectionManager sessionConnectionManager) {
+    this.sessionConnectionManager = sessionConnectionManager;
     return this;
   }
 

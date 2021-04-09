@@ -25,7 +25,7 @@ import com.alipay.sofa.registry.remoting.Server;
 import com.alipay.sofa.registry.remoting.jersey.jetty.server.HttpConnectionCustomFactory;
 import java.net.InetSocketAddress;
 import java.net.URI;
-import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -140,7 +140,7 @@ public class JerseyJettyServer implements Server {
   }
 
   @Override
-  public Collection<Channel> getChannels() {
+  public List<Channel> getChannels() {
     return null;
   }
 
