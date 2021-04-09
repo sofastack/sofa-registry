@@ -49,16 +49,16 @@ public class DefaultExecutorFactory implements ObjectFactory<ExecutorService> {
       int corePoolTimeAlive,
       TimeUnit corePoolTimeAliveUnit) {
     return new DefaultExecutorFactory(
-            new NamedThreadFactory(threadNamePrefix),
-            corePoolSize,
-            true,
-            Integer.MAX_VALUE,
-            new ObjectFactory<BlockingQueue<Runnable>>() {
-              @Override
-              public BlockingQueue<Runnable> create() {
-                return new SynchronousQueue<Runnable>();
-              }
-            },
+        new NamedThreadFactory(threadNamePrefix),
+        corePoolSize,
+        true,
+        Integer.MAX_VALUE,
+        new ObjectFactory<BlockingQueue<Runnable>>() {
+          @Override
+          public BlockingQueue<Runnable> create() {
+            return new SynchronousQueue<Runnable>();
+          }
+        },
         corePoolTimeAlive,
         corePoolTimeAliveUnit,
         DEFAULT_HANDLER);
@@ -166,32 +166,50 @@ public class DefaultExecutorFactory implements ObjectFactory<ExecutorService> {
 
     public Builder queueSize(int queueSize) {
       if (workQueueFactory != null) {
-        throw new IllegalArgumentException("work queue has been set, queueSize should not be called");
+        throw new IllegalArgumentException(
+            "work queue has been set, queueSize should not be called");
       }
       this.queueSize = queueSize;
       return this;
     }
 
     public DefaultExecutorFactory build() {
-      ThreadFactory threadFactory = this.threadFactory != null ? this.threadFactory : new NamedThreadFactory(threadNamePrefix);
+      ThreadFactory threadFactory =
+          this.threadFactory != null
+              ? this.threadFactory
+              : new NamedThreadFactory(threadNamePrefix);
       if (workQueueFactory == null) {
-        return new DefaultExecutorFactory(threadFactory, corePoolSize, allowCoreThreadTimeOut, maxPoolSize,
-                queueSize, corePoolTimeAlive, corePoolTimeAliveUnit, rejectedExecutionHandler);
+        return new DefaultExecutorFactory(
+            threadFactory,
+            corePoolSize,
+            allowCoreThreadTimeOut,
+            maxPoolSize,
+            queueSize,
+            corePoolTimeAlive,
+            corePoolTimeAliveUnit,
+            rejectedExecutionHandler);
       } else {
-        return new DefaultExecutorFactory(threadFactory, corePoolSize, allowCoreThreadTimeOut,
-                maxPoolSize, workQueueFactory, corePoolTimeAlive, corePoolTimeAliveUnit, rejectedExecutionHandler);
+        return new DefaultExecutorFactory(
+            threadFactory,
+            corePoolSize,
+            allowCoreThreadTimeOut,
+            maxPoolSize,
+            workQueueFactory,
+            corePoolTimeAlive,
+            corePoolTimeAliveUnit,
+            rejectedExecutionHandler);
       }
     }
   }
-
-
 
   @Override
   public ExecutorService create() {
     // core pool size must be less or equal to max size
     int useMaxPoolSize = Math.max(corePoolSize, maxPoolSize);
-    BlockingQueue<Runnable> workQueue = blockingQueueObjectFactory == null ?
-            new LinkedBlockingQueue<Runnable>(queueSize) : blockingQueueObjectFactory.create();
+    BlockingQueue<Runnable> workQueue =
+        blockingQueueObjectFactory == null
+            ? new LinkedBlockingQueue<Runnable>(queueSize)
+            : blockingQueueObjectFactory.create();
     ThreadPoolExecutor executor =
         new ThreadPoolExecutor(
             corePoolSize,

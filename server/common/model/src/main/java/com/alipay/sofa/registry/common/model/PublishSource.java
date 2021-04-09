@@ -14,31 +14,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alipay.sofa.registry.jdbc.config;
+package com.alipay.sofa.registry.common.model;
 
-/**
- * @author xiaojian.xj
- * @version $Id: JdbcDriverConfig.java, v 0.1 2021年01月17日 17:28 xiaojian.xj Exp $
- */
-public interface JdbcDriverConfig {
-
-  String getDriverClassName();
-
-  String getUrl();
-
-  String getUsername();
-
-  String getPassword();
-
-  // get domain path
-  String getTypeAliasesPackage();
-
-  // get mapper.xml path
-  String[] getMapperLocations();
-
-  int getMinIdle();
-
-  int getMaxActive();
-
-  int getMaxWait();
+public enum PublishSource {
+  CLIENT,
+  DATUM_SYNCER,
 }

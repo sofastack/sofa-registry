@@ -41,6 +41,7 @@ import java.util.Collection;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.logging.log4j.util.Strings;
+import org.h2.tools.Server;
 import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.context.ConfigurableApplicationContext;
 
@@ -81,6 +82,7 @@ public class RegistryApplication {
     String driver = commonContext.getEnvironment().getProperty("jdbc.driverClassName");
     if ("org.h2.Driver".equals(driver)) {
       createTables(commonContext);
+      Server.createWebServer("-web", "-webAllowOthers", "-webPort", "9630").start();
     }
 
     // start meta

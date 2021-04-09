@@ -21,6 +21,7 @@ import com.alipay.sofa.registry.common.model.Node;
 import com.alipay.sofa.registry.common.model.client.pb.RegisterResponsePb;
 import com.alipay.sofa.registry.common.model.client.pb.SubscriberRegisterPb;
 import com.alipay.sofa.registry.core.model.RegisterResponse;
+import com.alipay.sofa.registry.core.model.SubscriberRegister;
 import com.alipay.sofa.registry.remoting.Channel;
 import com.alipay.sofa.registry.remoting.RemotingException;
 import com.alipay.sofa.registry.remoting.bolt.BoltChannel;
@@ -70,8 +71,8 @@ public class SubscriberPbHandler extends AbstractServerHandler<SubscriberRegiste
       }
     }
 
-    Object response =
-        subscriberHandler.doHandle(channel, SubscriberRegisterConvertor.convert2Java(message));
+    SubscriberRegister register = SubscriberRegisterConvertor.convert2Java(message);
+    Object response = subscriberHandler.doHandle(channel, register);
     if (!(response instanceof RegisterResponse)) {
       return builder.setSuccess(false).setMessage("Unknown response type").build();
     }
