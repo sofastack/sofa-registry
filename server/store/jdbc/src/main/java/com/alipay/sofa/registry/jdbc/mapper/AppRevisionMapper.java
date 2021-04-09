@@ -19,6 +19,8 @@ package com.alipay.sofa.registry.jdbc.mapper;
 import com.alipay.sofa.registry.common.model.store.AppRevision;
 import com.alipay.sofa.registry.jdbc.domain.AppRevisionDomain;
 import com.alipay.sofa.registry.jdbc.domain.AppRevisionQueryModel;
+
+import java.util.Date;
 import java.util.List;
 import org.apache.ibatis.annotations.Param;
 
@@ -69,12 +71,12 @@ public interface AppRevisionMapper {
    * query app_revision silence beyond silenceHour
    *
    * @param dataCenter
-   * @param silenceHour
+   * @param date
    * @return
    */
   public List<AppRevisionDomain> queryGcRevision(
       @Param("dataCenter") String dataCenter,
-      @Param("silenceHour") int silenceHour,
+      @Param("date") Date date,
       @Param("limitCount") int limitCount);
 
   /**
