@@ -85,7 +85,8 @@ public final class DatumUtils {
               publisher.getClientId(),
               publisher.getVersion(),
               srcAddressString,
-              publisher.getRegisterTimestamp()));
+              publisher.getRegisterTimestamp(),
+              publisher.getPublishSource()));
     }
     return new SubDatum(
         datum.getDataInfoId(),

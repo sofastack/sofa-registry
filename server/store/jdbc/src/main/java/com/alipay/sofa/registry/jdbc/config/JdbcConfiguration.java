@@ -34,6 +34,9 @@ import com.alipay.sofa.registry.store.api.repository.AppRevisionHeartbeatReposit
 import com.alipay.sofa.registry.store.api.repository.AppRevisionRepository;
 import com.alipay.sofa.registry.store.api.repository.InterfaceAppsRepository;
 import com.alipay.sofa.registry.util.SystemUtils;
+import com.google.common.collect.Lists;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Properties;
 import javax.sql.DataSource;
 import org.apache.ibatis.session.SqlSessionFactory;
@@ -42,7 +45,9 @@ import org.mybatis.spring.annotation.MapperScan;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.io.Resource;
 import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
+import org.springframework.core.io.support.ResourcePatternResolver;
 import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 import org.springframework.transaction.support.TransactionTemplate;
 
@@ -125,10 +130,14 @@ public class JdbcConfiguration {
       SqlSessionFactoryBean factoryBean = new SqlSessionFactoryBean();
       factoryBean.setDataSource(dataSource);
       // factoryBean.setTypeAliasesPackage(jdbcDriverConfig.getTypeAliasesPackage());
-      factoryBean.setMapperLocations(
-          new PathMatchingResourcePatternResolver()
-              .getResources(jdbcDriverConfig.getMapperLocations()));
+      ResourcePatternResolver resolver = new PathMatchingResourcePatternResolver();
 
+      List<Resource> resources = Lists.newArrayList();
+      for (String location : jdbcDriverConfig.getMapperLocations()) {
+        resources.addAll(Arrays.asList(resolver.getResources(location)));
+      }
+
+      factoryBean.setMapperLocations(resources.toArray(new Resource[0]));
       return factoryBean.getObject();
     }
 

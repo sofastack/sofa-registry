@@ -16,6 +16,8 @@
  */
 package com.alipay.sofa.registry.common.model.constants;
 
+import com.alipay.sofa.registry.common.model.store.DataInfo;
+
 /**
  * @author zhuoyu.sjw
  * @version $Id: ValueConstants.java, v 0.1 2018-03-28 23:07 zhuoyu.sjw Exp $$
@@ -50,18 +52,34 @@ public class ValueConstants {
   public static final String RAFT_SERVER_GROUP =
       SYSTEM_RAFT_GROUP != null ? SYSTEM_RAFT_GROUP : "RegistryGroup";
 
-  public static final String STOP_PUSH_DATA_SWITCH_DATA_ID =
-      "session.stop.push.data.switch#@#9600#@#CONFIG";
+  public static final String SESSION_PROVIDE_DATA_GROUP = "CONFIG";
+  public static final String SESSION_PROVIDE_DATA_INSTANCE_ID = "9600";
 
-  public static final String BLACK_LIST_DATA_ID = "session.blacklist.data#@#9600#@#CONFIG";
+  public static final String STOP_PUSH_DATA_SWITCH_DATA_ID =
+      DataInfo.toDataInfoId(
+          "session.stop.push.data.switch",
+          SESSION_PROVIDE_DATA_INSTANCE_ID,
+          SESSION_PROVIDE_DATA_GROUP);
+
+  public static final String BLACK_LIST_DATA_ID =
+      DataInfo.toDataInfoId(
+          "session.blacklist.data", SESSION_PROVIDE_DATA_INSTANCE_ID, SESSION_PROVIDE_DATA_GROUP);
 
   public static final String DATA_DATUM_SYNC_SESSION_INTERVAL_SEC =
-      "data.datum.sync.session.interval.sec#@#9600#@#CONFIG";
+      DataInfo.toDataInfoId(
+          "data.datum.sync.session.interval.sec",
+          SESSION_PROVIDE_DATA_INSTANCE_ID,
+          SESSION_PROVIDE_DATA_GROUP);
 
-  public static final String DATA_SESSION_LEASE_SEC = "data.session.lease.sec#@#9600#@#CONFIG";
+  public static final String DATA_SESSION_LEASE_SEC =
+      DataInfo.toDataInfoId(
+          "data.session.lease.sec", SESSION_PROVIDE_DATA_INSTANCE_ID, SESSION_PROVIDE_DATA_GROUP);
 
   public static final String REGISTRY_SERVER_BLACK_LIST_DATA_ID =
-      "registry.server.black.list#@#9600#@#CONFIG";
+      DataInfo.toDataInfoId(
+          "registry.server.black.list",
+          SESSION_PROVIDE_DATA_INSTANCE_ID,
+          SESSION_PROVIDE_DATA_GROUP);
 
   public static final String DISABLE_DATA_ID_CASE_SENSITIVE_SWITCH =
       "disable.dataId.case.sensitive";

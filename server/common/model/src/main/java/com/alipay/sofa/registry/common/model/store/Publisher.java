@@ -35,6 +35,8 @@ public class Publisher extends BaseInfo {
 
   private PublishType publishType = PublishType.NORMAL;
 
+  private PublishSource publishSource = PublishSource.CLIENT;
+
   @JsonIgnore private ProcessId sessionProcessId;
 
   public Publisher() {}
@@ -124,5 +126,13 @@ public class Publisher extends BaseInfo {
     publisher.setAppName(publisher.getAppName());
 
     return publisher;
+  }
+
+  public PublishSource getPublishSource() {
+    return publishSource;
+  }
+
+  public void setPublishSource(PublishSource publishSource) {
+    this.publishSource = publishSource;
   }
 }

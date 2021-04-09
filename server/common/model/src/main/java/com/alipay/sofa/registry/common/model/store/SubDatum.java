@@ -130,7 +130,8 @@ public final class SubDatum implements Serializable {
               publisher.getClientId(),
               publisher.getVersion(),
               publisher.getSrcAddressString(),
-              publisher.getRegisterTimestamp()));
+              publisher.getRegisterTimestamp(),
+              publisher.getPublishSource()));
     }
     return new SubDatum(
         dataInfoId, dataCenter, datum.version, publishers, dataId, instanceId, group);

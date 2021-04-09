@@ -16,6 +16,7 @@
  */
 package com.alipay.sofa.registry.common.model.store;
 
+import com.alipay.sofa.registry.common.model.PublishSource;
 import com.alipay.sofa.registry.common.model.RegisterVersion;
 import com.alipay.sofa.registry.common.model.ServerDataBox;
 import com.alipay.sofa.registry.util.StringFormatter;
@@ -32,6 +33,7 @@ public final class SubPublisher implements Serializable {
   private final List<ServerDataBox> dataList;
   private final long registerTimestamp;
   private final long version;
+  private final PublishSource publishSource;
 
   public SubPublisher(
       String registerId,
@@ -40,7 +42,8 @@ public final class SubPublisher implements Serializable {
       String clientId,
       long version,
       String srcAddressString,
-      long registerTimestamp) {
+      long registerTimestamp,
+      PublishSource publishSource) {
     this.registerId = registerId;
     this.cell = cell;
     this.clientId = clientId;
@@ -51,6 +54,7 @@ public final class SubPublisher implements Serializable {
             ? Collections.emptyList()
             : Collections.unmodifiableList(Lists.newArrayList(dataList));
     this.registerTimestamp = registerTimestamp;
+    this.publishSource = publishSource;
   }
 
   public String getCell() {
@@ -104,5 +108,9 @@ public final class SubPublisher implements Serializable {
         getDataBoxBytes(),
         version,
         registerTimestamp);
+  }
+
+  public PublishSource getPublishSource() {
+    return publishSource;
   }
 }

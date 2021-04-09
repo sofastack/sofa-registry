@@ -23,12 +23,6 @@ import com.alipay.sofa.registry.observer.UnblockingObserver;
 import com.alipay.sofa.registry.util.DefaultExecutorFactory;
 import com.alipay.sofa.registry.util.NamedThreadFactory;
 import io.netty.util.ResourceLeakDetector;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Rule;
-import org.junit.rules.TestName;
-
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
@@ -42,6 +36,11 @@ import java.util.Set;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BooleanSupplier;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.BeforeClass;
+import org.junit.Rule;
+import org.junit.rules.TestName;
 
 /**
  * @author chen.zhu
@@ -70,13 +69,14 @@ public class AbstractTestBase {
     ResourceLeakDetector.setLevel(ResourceLeakDetector.Level.PARANOID);
     Thread.interrupted(); // clear interrupt
 
-    executors = DefaultExecutorFactory
-            .createCachedThreadPoolFactory(name.getMethodName(), 1, 100, TimeUnit.MILLISECONDS)
+    executors =
+        DefaultExecutorFactory.createCachedThreadPoolFactory(
+                name.getMethodName(), 1, 100, TimeUnit.MILLISECONDS)
             .create();
     scheduled =
-            Executors.newScheduledThreadPool(
-                    Runtime.getRuntime().availableProcessors(),
-                    new NamedThreadFactory("sched-" + name.getMethodName()));
+        Executors.newScheduledThreadPool(
+            Runtime.getRuntime().availableProcessors(),
+            new NamedThreadFactory("sched-" + name.getMethodName()));
     logger.info(remarkableMessage("[begin test][{}]"), name.getMethodName());
   }
 
