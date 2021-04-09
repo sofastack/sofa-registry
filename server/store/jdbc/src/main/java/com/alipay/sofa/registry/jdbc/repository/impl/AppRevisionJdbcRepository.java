@@ -30,17 +30,17 @@ import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.store.api.repository.AppRevisionRepository;
 import com.alipay.sofa.registry.util.BatchCallableRunnable.InvokeFuture;
 import com.alipay.sofa.registry.util.BatchCallableRunnable.TaskEvent;
-import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
+import org.springframework.beans.factory.annotation.Autowired;
+
+import javax.annotation.Resource;
 import java.util.Collection;
 import java.util.Date;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
-import javax.annotation.Resource;
-import org.springframework.beans.factory.annotation.Autowired;
 
 /**
  * @author xiaojian.xj
@@ -52,8 +52,6 @@ public class AppRevisionJdbcRepository implements AppRevisionRepository, JdbcRep
 
   /** map: <revision, AppRevision> */
   private final LoadingCache<AppRevisionQueryModel, AppRevision> registry;
-
-  private final Cache<String, AppRevisionQueryModel> revisionQueryMap;
 
   /** map: <revision, AppRevision> */
   private final LoadingCache<AppRevisionQueryModel, AppRevision> heartbeatMap;
@@ -111,12 +109,6 @@ public class AppRevisionJdbcRepository implements AppRevisionRepository, JdbcRep
                     }
                   }
                 });
-
-    this.revisionQueryMap =
-        CacheBuilder.newBuilder()
-            .maximumSize(10000L)
-            .expireAfterAccess(60, TimeUnit.MINUTES)
-            .build();
   }
 
   @Override
@@ -177,13 +169,7 @@ public class AppRevisionJdbcRepository implements AppRevisionRepository, JdbcRep
   public AppRevision queryRevision(String revision) {
 
     try {
-
-      AppRevisionQueryModel appRevisionQuery = revisionQueryMap.getIfPresent(revision);
-      if (appRevisionQuery == null) {
-        appRevisionQuery = new AppRevisionQueryModel(defaultCommonConfig.getClusterId(), revision);
-        revisionQueryMap.put(revision, appRevisionQuery);
-      }
-      return registry.get(appRevisionQuery);
+      return registry.get(new AppRevisionQueryModel(defaultCommonConfig.getClusterId(), revision));
     } catch (ExecutionException e) {
       LOG.error(String.format("jdbc refresh revision failed, revision: %s", revision), e);
       throw new RuntimeException("jdbc refresh revision failed", e);
@@ -192,27 +178,20 @@ public class AppRevisionJdbcRepository implements AppRevisionRepository, JdbcRep
 
   @Override
   public AppRevision heartbeat(String revision) {
-    try {
-      AppRevisionQueryModel appRevisionQuery = revisionQueryMap.getIfPresent(revision);
-      if (appRevisionQuery == null) {
-        appRevisionQuery = new AppRevisionQueryModel(defaultCommonConfig.getClusterId(), revision);
-        revisionQueryMap.put(revision, appRevisionQuery);
-      }
 
-      try {
-        AppRevision appRevision = heartbeatMap.get(appRevisionQuery);
-        if (appRevision != null) {
-          appRevision.setLastHeartbeat(new Date());
-          heartbeatMap.put(appRevisionQuery, appRevision);
-        }
-        return appRevision;
-      } catch (Throwable e) {
-        if (e.getCause() instanceof RevisionNotExistException) {
-          LOG.info(String.format("revision: %s heartbeat, not exist in db.", revision));
-        }
-        return null;
+    try {
+      AppRevisionQueryModel query =
+          new AppRevisionQueryModel(defaultCommonConfig.getClusterId(), revision);
+      AppRevision appRevision = heartbeatMap.get(query);
+      if (appRevision != null) {
+        appRevision.setLastHeartbeat(new Date());
+        heartbeatMap.put(query, appRevision);
       }
-    } catch (Exception e) {
+      return appRevision;
+    } catch (Throwable e) {
+      if (e.getCause() instanceof RevisionNotExistException) {
+        LOG.info(String.format("revision: %s heartbeat, not exist in db.", revision));
+      }
       LOG.error(String.format("jdbc revision heartbeat failed, revision: %s", revision), e);
       return null;
     }

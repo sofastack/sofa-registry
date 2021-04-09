@@ -90,7 +90,7 @@
 
     <select id="queryGcRevision" resultMap="appRevisionResultMap">
         <![CDATA[ select * from app_revision
-                  where data_center = #{dataCenter} and gmt_modified < DATE_SUB(NOW(),INTERVAL #{silenceHour} HOUR) limit #{limitCount}
+                  where data_center = #{dataCenter} and gmt_modified < #{date} limit #{limitCount}
         ]]>
     </select>
 

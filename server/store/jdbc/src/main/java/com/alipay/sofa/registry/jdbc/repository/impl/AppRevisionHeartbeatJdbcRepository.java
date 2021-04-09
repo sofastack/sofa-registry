@@ -34,14 +34,18 @@ import com.alipay.sofa.registry.util.SingleFlight;
 import com.google.common.collect.Sets;
 import com.google.common.collect.Sets.SetView;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
+
+import org.apache.commons.lang.time.DateUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 
 /**
@@ -148,10 +152,11 @@ public class AppRevisionHeartbeatJdbcRepository
       singleFlight.execute(
           "app_revision_gc",
           () -> {
-            List<AppRevision> appRevisions =
+              Date date = DateUtils.addHours(new Date(), -silenceHour);
+              List<AppRevision> appRevisions =
                 AppRevisionDomainConvertor.convert2Revisions(
                     appRevisionMapper.queryGcRevision(
-                        defaultCommonConfig.getClusterId(), silenceHour, REVISION_GC_LIMIT));
+                        defaultCommonConfig.getClusterId(), date, REVISION_GC_LIMIT));
 
             if (LOG.isInfoEnabled()) {
               LOG.info("app_revision tobe gc size: " + appRevisions.size());
