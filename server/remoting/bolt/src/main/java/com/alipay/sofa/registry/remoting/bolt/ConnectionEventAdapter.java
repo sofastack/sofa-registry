@@ -22,6 +22,7 @@ import com.alipay.remoting.ConnectionEventType;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.remoting.ChannelHandler;
+import com.alipay.sofa.registry.util.StringFormatter;
 
 /**
  * The type Connection event adapter.
@@ -37,59 +38,60 @@ public class ConnectionEventAdapter implements ConnectionEventProcessor {
 
   private final ChannelHandler connectionEventHandler;
 
-  private final BoltServer boltServer;
-
   /**
    * Instantiates a new Connection event adapter.
    *
    * @param connectionEventType the connection event type
    * @param connectionEventHandler the connection event handler
-   * @param boltServer the bolt server
    */
   public ConnectionEventAdapter(
-      ConnectionEventType connectionEventType,
-      ChannelHandler connectionEventHandler,
-      BoltServer boltServer) {
+      ConnectionEventType connectionEventType, ChannelHandler connectionEventHandler) {
     this.connectionEventType = connectionEventType;
     // the connect event handler maybe is null
     this.connectionEventHandler = connectionEventHandler;
-    // boltClient, the blotServer is null
-    this.boltServer = boltServer;
   }
 
   /** @see ConnectionEventProcessor#onEvent(String, Connection) */
   @Override
   public void onEvent(String remoteAddr, Connection conn) {
     try {
-      if (connectionEventHandler != null) {
-        switch (connectionEventType) {
-          case CONNECT:
-            BoltChannel boltChannel = new BoltChannel(conn);
-            if (boltServer != null) {
-              boltServer.addChannel(boltChannel);
-            }
-            connectionEventHandler.connected(boltChannel);
-            break;
+      switch (connectionEventType) {
+        case CONNECT:
+          if (connectionEventHandler != null) {
+            connectionEventHandler.connected(new BoltChannel(conn));
+          }
+          LOGGER.info("[connect]local={},remote={}", conn.getLocalPort(), remoteAddr);
+          break;
 
-          case CLOSE:
-            BoltChannel boltChannelClose = new BoltChannel(conn);
-            if (boltServer != null) {
-              boltServer.removeChannel(boltChannelClose);
-            }
-            connectionEventHandler.disconnected(boltChannelClose);
-            break;
+        case CLOSE:
+          if (connectionEventHandler != null) {
+            connectionEventHandler.disconnected(new BoltChannel(conn));
+          }
+          LOGGER.info("[close]local={},remote={}", conn.getLocalPort(), remoteAddr);
+          break;
 
-          case EXCEPTION:
-            BoltChannel boltChannelException = new BoltChannel(conn);
-            connectionEventHandler.caught(boltChannelException, null, null);
-            break;
-          default:
-            break;
-        }
+        case EXCEPTION:
+          if (connectionEventHandler != null) {
+            connectionEventHandler.caught(new BoltChannel(conn), null, null);
+          }
+          LOGGER.error("[exception]local={},remote={}", conn.getLocalPort(), remoteAddr);
+          break;
+        case CONNECT_FAILED:
+          LOGGER.error("[connectFailed]local={},remote={}", conn.getLocalPort(), remoteAddr);
+          break;
+        default:
+          break;
       }
-    } catch (Exception e) {
-      LOGGER.error("Connection process " + connectionEventType + " error!", e);
-      throw new RuntimeException("Connection process " + connectionEventType + " error!", e);
+    } catch (Throwable e) {
+      String err =
+          StringFormatter.format(
+              "failed to process connection, type={}, local={}, remote={}, conn={}",
+              connectionEventType,
+              conn.getLocalPort(),
+              remoteAddr,
+              conn);
+      LOGGER.error(err, e);
+      throw new RuntimeException(err, e);
     }
   }
 }

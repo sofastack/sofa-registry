@@ -24,18 +24,18 @@ import com.alipay.remoting.rpc.protocol.SyncUserProcessor;
 import com.alipay.sofa.registry.common.model.store.URL;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
-import com.alipay.sofa.registry.net.NetUtil;
 import com.alipay.sofa.registry.remoting.CallbackHandler;
 import com.alipay.sofa.registry.remoting.Channel;
 import com.alipay.sofa.registry.remoting.ChannelHandler;
 import com.alipay.sofa.registry.remoting.ChannelHandler.HandlerType;
 import com.alipay.sofa.registry.remoting.ChannelHandler.InvokeType;
 import com.alipay.sofa.registry.remoting.Server;
+import com.alipay.sofa.registry.util.CollectionUtils;
+import com.alipay.sofa.registry.util.StringFormatter;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import java.net.InetSocketAddress;
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executor;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -44,10 +44,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * @version $Id: BoltServer.java, v 0.1 2017-11-24 18:05 shangyu.wh Exp $
  */
 public class BoltServer implements Server {
-
   private static final Logger LOGGER = LoggerFactory.getLogger(BoltServer.class);
 
-  protected static final Logger PUSH_LOGGER = LoggerFactory.getLogger("SESSION-PUSH", "[Server]");
   /** accoding server port can not be null */
   protected final URL url;
 
@@ -56,8 +54,6 @@ public class BoltServer implements Server {
   private final RpcServer boltServer;
   /** started status */
   private final AtomicBoolean isStarted = new AtomicBoolean(false);
-
-  private final Map<String, Channel> channels = new ConcurrentHashMap<>();
 
   private final AtomicBoolean initHandler = new AtomicBoolean(false);
 
@@ -133,7 +129,7 @@ public class BoltServer implements Server {
   }
 
   protected ConnectionEventProcessor newConnectionEventProcessor(ConnectionEventType type) {
-    return new ConnectionEventAdapter(type, getConnectionEventHandler(), this);
+    return new ConnectionEventAdapter(type, getConnectionEventHandler());
   }
 
   protected ChannelHandler getConnectionEventHandler() {
@@ -175,14 +171,18 @@ public class BoltServer implements Server {
   }
 
   @Override
-  public Collection<Channel> getChannels() {
-    List<Channel> ret = Lists.newArrayListWithCapacity(channels.size());
-    for (Iterator<Channel> it = this.channels.values().iterator(); it.hasNext(); ) {
-      Channel channel = it.next();
-      if (channel.isConnected()) {
-        ret.add(channel);
-      } else {
-        it.remove();
+  public List<Channel> getChannels() {
+    Map<String, List<Connection>> conns = boltServer.getConnectionManager().getAll();
+    if (conns.isEmpty()) {
+      return Collections.emptyList();
+    }
+    List<Channel> ret = Lists.newArrayListWithCapacity(128);
+    for (List<Connection> list : conns.values()) {
+      for (Connection conn : list) {
+        if (conn.isFine()) {
+          BoltChannel boltChannel = new BoltChannel(conn);
+          ret.add(boltChannel);
+        }
       }
     }
     return ret;
@@ -201,32 +201,28 @@ public class BoltServer implements Server {
               chn.getRemoteAddress().getAddress().getHostAddress(), k -> Lists.newArrayList());
       list.add(chn);
     }
-    long now = System.currentTimeMillis();
     Map<String, Channel> ret = Maps.newHashMapWithExpectedSize(chns.size());
     for (Map.Entry<String, List<Channel>> e : chns.entrySet()) {
       List<Channel> list = e.getValue();
-      int idx = (int) (now % list.size());
-      ret.put(e.getKey(), list.get(idx));
+      ret.put(e.getKey(), CollectionUtils.getRandom(list));
     }
     return ret;
   }
 
   @Override
   public Channel getChannel(InetSocketAddress remoteAddress) {
-    Channel channel = channels.get(NetUtil.toAddressString(remoteAddress));
-    if (channel != null && channel.isConnected()) {
-      return channel;
-    }
-    return null;
+    URL url = new URL(remoteAddress.getAddress().getHostAddress(), remoteAddress.getPort());
+    return getChannel(url);
   }
 
   @Override
   public Channel getChannel(URL url) {
-    Channel channel = channels.get(url.getAddressString());
-    if (channel != null && channel.isConnected()) {
-      return channel;
+    Url key = new Url(url.getIpAddress(), url.getPort());
+    Connection conn = boltServer.getConnectionManager().get(key.getUniqueKey());
+    if (conn == null) {
+      return null;
     }
-    return null;
+    return new BoltChannel(conn);
   }
 
   @Override
@@ -243,19 +239,37 @@ public class BoltServer implements Server {
 
   @Override
   public void close(Channel channel) {
-    if (null != channel) {
-      channels.remove(NetUtil.toAddressString(channel.getRemoteAddress()));
-      BoltChannel boltChannel = (BoltChannel) channel;
-      Connection connection = boltChannel.getConnection();
-      if (connection.isFine()) {
-        connection.close();
-      }
+    if (channel == null) {
+      return;
+    }
+    BoltChannel boltChannel = (BoltChannel) channel;
+    Connection connection = boltChannel.getConnection();
+    if (connection.isFine()) {
+      connection.close();
     }
   }
 
   @Override
   public boolean isClosed() {
     return !isStarted.get();
+  }
+
+  private void handleException(Url boltUrl, Throwable e, String op) {
+    if (e instanceof RemotingException) {
+      String msg =
+          StringFormatter.format("Bolt Server {} RemotingException! target url:{}", op, boltUrl);
+      LOGGER.error(msg, e);
+      throw new RuntimeException(msg, e);
+    }
+    if (e instanceof InterruptedException) {
+      String msg =
+          StringFormatter.format("Bolt Server {} InterruptedException! target url:{}", op, boltUrl);
+      LOGGER.error(msg, e);
+      throw new RuntimeException(msg, e);
+    }
+    String msg = StringFormatter.format("Bolt Server {} Exception! target url:{}", op, boltUrl);
+    LOGGER.error(msg, e);
+    throw new RuntimeException(msg, e);
   }
 
   @Override
@@ -273,12 +287,8 @@ public class BoltServer implements Server {
         }
 
         return boltServer.invokeSync(boltUrl, message, newInvokeContext(message), timeoutMillis);
-      } catch (RemotingException e) {
-        LOGGER.error("Bolt Server sendSync message RemotingException! target url:" + boltUrl, e);
-        throw new RuntimeException("Bolt Server sendSync message RemotingException!", e);
-      } catch (InterruptedException e) {
-        LOGGER.error("Bolt Server sendSync message InterruptedException! target url:" + boltUrl, e);
-        throw new RuntimeException("Bolt Server sendSync message InterruptedException!", e);
+      } catch (Throwable e) {
+        handleException(boltUrl, e, "sendSync");
       }
     }
     throw new IllegalArgumentException(
@@ -321,28 +331,16 @@ public class BoltServer implements Server {
             },
             timeoutMillis);
         return;
-      } catch (RemotingException e) {
-        throw new RuntimeException("Bolt Server invoke with callback RemotingException!", e);
-      } catch (InterruptedException e) {
-        PUSH_LOGGER.error(
-            "Bolt Server invoke with callback InterruptedException! target url:" + boltUrl, e);
-        throw new RuntimeException("Bolt Server invoke with callback InterruptedException!", e);
+      } catch (Throwable e) {
+        handleException(boltUrl, e, "invokeCallback");
       }
     }
     throw new IllegalArgumentException(
-        "Send message connection can not be null or connection not be connected!");
+        "InvokeCallback message connection can not be null or connection not be connected!");
   }
 
   protected InvokeContext newInvokeContext(Object request) {
     return null;
-  }
-
-  public void addChannel(Channel channel) {
-    channels.putIfAbsent(NetUtil.toAddressString(channel.getRemoteAddress()), channel);
-  }
-
-  public void removeChannel(Channel channel) {
-    channels.remove(NetUtil.toAddressString(channel.getRemoteAddress()));
   }
 
   public RpcServer getRpcServer() {
@@ -351,6 +349,15 @@ public class BoltServer implements Server {
 
   @Override
   public int getChannelCount() {
-    return channels.size();
+    Map<String, List<Connection>> conns = boltServer.getConnectionManager().getAll();
+    int count = 0;
+    for (List<Connection> list : conns.values()) {
+      for (Connection conn : list) {
+        if (conn.isFine()) {
+          count++;
+        }
+      }
+    }
+    return count;
   }
 }

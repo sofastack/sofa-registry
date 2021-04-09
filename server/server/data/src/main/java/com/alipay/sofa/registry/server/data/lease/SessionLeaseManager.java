@@ -17,18 +17,23 @@
 package com.alipay.sofa.registry.server.data.lease;
 
 import com.alipay.sofa.registry.common.model.ProcessId;
+import com.alipay.sofa.registry.common.model.constants.ValueConstants;
 import com.alipay.sofa.registry.common.model.dataserver.DatumVersion;
 import com.alipay.sofa.registry.common.model.store.ProcessIdCache;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
+import com.alipay.sofa.registry.remoting.Channel;
+import com.alipay.sofa.registry.remoting.Server;
+import com.alipay.sofa.registry.remoting.bolt.BoltChannel;
+import com.alipay.sofa.registry.remoting.bolt.exchange.BoltExchange;
 import com.alipay.sofa.registry.server.data.bootstrap.DataServerConfig;
 import com.alipay.sofa.registry.server.data.cache.DatumStorage;
-import com.alipay.sofa.registry.server.data.remoting.sessionserver.SessionServerConnectionFactory;
 import com.alipay.sofa.registry.util.ConcurrentUtils;
 import com.alipay.sofa.registry.util.LoopRunnable;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
@@ -48,7 +53,8 @@ public final class SessionLeaseManager {
 
   @Autowired private DataServerConfig dataServerConfig;
   @Autowired private DatumStorage localDatumStorage;
-  @Autowired private SessionServerConnectionFactory sessionServerConnectionFactory;
+
+  @Autowired private BoltExchange boltExchange;
 
   private final Map<ProcessId, Long> connectIdRenewTimestampMap = new ConcurrentHashMap<>();
 
@@ -85,10 +91,11 @@ public final class SessionLeaseManager {
     return expires;
   }
 
-  private List<ProcessId> cleanExpire(Collection<ProcessId> expires) {
+  private List<ProcessId> cleanExpire(
+      Set<ProcessId> connProcessIds, Collection<ProcessId> expires) {
     List<ProcessId> cleans = Lists.newArrayList();
     for (ProcessId p : expires) {
-      if (sessionServerConnectionFactory.containsConnection(p)) {
+      if (connProcessIds.contains(p)) {
         LOGGER.warn("expire session has conn, {}", p);
         continue;
       }
@@ -109,8 +116,30 @@ public final class SessionLeaseManager {
     }
   }
 
-  private void renewByConnection() {
-    sessionServerConnectionFactory.getProcessIds().forEach(p -> renewSession(p));
+  private void renewByConnection(Set<ProcessId> connProcessIds) {
+    for (ProcessId processId : connProcessIds) {
+      renewSession(processId);
+    }
+  }
+
+  Set<ProcessId> getProcessIdsInConnection() {
+    Server server = boltExchange.getServer(dataServerConfig.getPort());
+    if (server == null) {
+      LOGGER.warn("Server not init when check session lease");
+      return Collections.emptySet();
+    }
+    List<Channel> channels = server.getChannels();
+    Set<ProcessId> ret = Sets.newHashSetWithExpectedSize(128);
+    for (Channel channel : channels) {
+      BoltChannel boltChannel = (BoltChannel) channel;
+      ProcessId processId =
+          (ProcessId)
+              boltChannel.getConnection().getAttribute(ValueConstants.ATTR_RPC_CHANNEL_PROCESS_ID);
+      if (processId != null) {
+        ret.add(processId);
+      }
+    }
+    return ret;
   }
 
   private final class LeaseCleaner extends LoopRunnable {
@@ -128,13 +157,14 @@ public final class SessionLeaseManager {
   }
 
   void clean() {
-    renewByConnection();
+    Set<ProcessId> processIds = getProcessIdsInConnection();
+    renewByConnection(processIds);
     Map<ProcessId, Date> expires =
         getExpireProcessId(dataServerConfig.getSessionLeaseSecs() * 1000);
     LOGGER.info("lease expire sessions, {}", expires);
 
     if (!expires.isEmpty()) {
-      List<ProcessId> cleans = cleanExpire(expires.keySet());
+      List<ProcessId> cleans = cleanExpire(processIds, expires.keySet());
       LOGGER.info("expire sessions clean, {}", cleans);
     }
 
@@ -158,8 +188,7 @@ public final class SessionLeaseManager {
   }
 
   @VisibleForTesting
-  void setSessionServerConnectionFactory(
-      SessionServerConnectionFactory sessionServerConnectionFactory) {
-    this.sessionServerConnectionFactory = sessionServerConnectionFactory;
+  void setBoltExchange(BoltExchange boltExchange) {
+    this.boltExchange = boltExchange;
   }
 }

@@ -18,21 +18,17 @@ package com.alipay.sofa.registry.server.meta.remoting.data;
 
 import static org.mockito.Mockito.*;
 
-import com.alipay.sofa.registry.common.model.Node;
 import com.alipay.sofa.registry.common.model.constants.ValueConstants;
 import com.alipay.sofa.registry.common.model.metaserver.ProvideDataChangeEvent;
 import com.alipay.sofa.registry.common.model.metaserver.cluster.VersionedList;
 import com.alipay.sofa.registry.common.model.metaserver.nodes.DataNode;
-import com.alipay.sofa.registry.exception.SofaRegistryRuntimeException;
-import com.alipay.sofa.registry.remoting.Channel;
 import com.alipay.sofa.registry.remoting.Client;
 import com.alipay.sofa.registry.remoting.exchange.RequestException;
 import com.alipay.sofa.registry.remoting.exchange.message.Request;
 import com.alipay.sofa.registry.server.meta.AbstractMetaServerTestBase;
 import com.alipay.sofa.registry.server.meta.lease.data.DataServerManager;
 import com.alipay.sofa.registry.server.meta.remoting.DataNodeExchanger;
-import com.alipay.sofa.registry.server.meta.remoting.connection.DataConnectionHandler;
-import com.alipay.sofa.registry.server.shared.remoting.AbstractServerHandler;
+import com.alipay.sofa.registry.server.meta.remoting.connection.DataConnectionManager;
 import com.alipay.sofa.registry.util.DatumVersionUtil;
 import java.net.InetSocketAddress;
 import java.util.concurrent.TimeoutException;
@@ -52,13 +48,13 @@ public class DefaultDataServerServiceTest extends AbstractMetaServerTestBase {
 
   @Mock private DataNodeExchanger dataNodeExchanger;
 
-  @Mock private DataConnectionHandler dataConnectionHandler;
+  @Mock private DataConnectionManager dataConnectionManager;
 
   @Before
   public void beforeDataServerProvideDataNotifierTest() {
     MockitoAnnotations.initMocks(this);
     notifier
-        .setDataConnectionHandler(dataConnectionHandler)
+        .setDataConnectionManager(dataConnectionManager)
         .setDataNodeExchanger(dataNodeExchanger)
         .setDataServerManager(dataServerManager);
   }
@@ -73,7 +69,7 @@ public class DefaultDataServerServiceTest extends AbstractMetaServerTestBase {
 
   @Test
   public void testNotifyWithNoDataNodes() throws RequestException {
-    when(dataConnectionHandler.getConnections(anyString()))
+    when(dataConnectionManager.getConnections(anyString()))
         .thenReturn(
             Lists.newArrayList(
                 new InetSocketAddress(randomIp(), Math.abs(random.nextInt(65535)) % 65535),
@@ -88,7 +84,7 @@ public class DefaultDataServerServiceTest extends AbstractMetaServerTestBase {
 
   @Test
   public void testNotifyNoMatchingDataNodesWithConnect() throws RequestException {
-    when(dataConnectionHandler.getConnections(anyString()))
+    when(dataConnectionManager.getConnections(anyString()))
         .thenReturn(
             Lists.newArrayList(
                 new InetSocketAddress(randomIp(), Math.abs(random.nextInt(65535)) % 65535),
@@ -108,7 +104,7 @@ public class DefaultDataServerServiceTest extends AbstractMetaServerTestBase {
   @Test
   public void testNotifyNormal() throws RequestException, InterruptedException {
     String ip1 = randomIp(), ip2 = randomIp();
-    when(dataConnectionHandler.getConnections(anyString()))
+    when(dataConnectionManager.getConnections(anyString()))
         .thenReturn(
             Lists.newArrayList(
                 new InetSocketAddress(ip1, Math.abs(random.nextInt(65535)) % 65535),
@@ -133,25 +129,9 @@ public class DefaultDataServerServiceTest extends AbstractMetaServerTestBase {
     verify(dataNodeExchanger, times(2)).request(any(Request.class));
   }
 
-  @Test(expected = SofaRegistryRuntimeException.class)
+  @Test
   public void testExpectedException() {
-    notifier.setDataConnectionHandler(
-        new AbstractServerHandler() {
-          @Override
-          protected Node.NodeType getConnectNodeType() {
-            return Node.NodeType.DATA;
-          }
-
-          @Override
-          public Object doHandle(Channel channel, Object request) {
-            return null;
-          }
-
-          @Override
-          public Class interest() {
-            return null;
-          }
-        });
+    notifier.setDataConnectionManager(new DataConnectionManager());
     notifier.getNodeConnectManager();
   }
 
@@ -174,7 +154,7 @@ public class DefaultDataServerServiceTest extends AbstractMetaServerTestBase {
               }
             });
     notifier.setDataNodeExchanger(dataNodeExchanger);
-    when(dataConnectionHandler.getConnections(anyString()))
+    when(dataConnectionManager.getConnections(anyString()))
         .thenReturn(
             Lists.newArrayList(
                 new InetSocketAddress(ip1, Math.abs(random.nextInt(65535)) % 65535),
@@ -197,7 +177,7 @@ public class DefaultDataServerServiceTest extends AbstractMetaServerTestBase {
   @Test
   public void testBoltResponsePositive() throws InterruptedException, RequestException {
     String ip1 = randomIp(), ip2 = randomIp();
-    when(dataConnectionHandler.getConnections(anyString()))
+    when(dataConnectionManager.getConnections(anyString()))
         .thenReturn(
             Lists.newArrayList(
                 new InetSocketAddress(ip1, Math.abs(random.nextInt(65535)) % 65535),

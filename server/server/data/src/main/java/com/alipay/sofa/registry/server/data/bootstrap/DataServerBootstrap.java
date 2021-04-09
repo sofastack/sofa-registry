@@ -77,9 +77,6 @@ public class DataServerBootstrap {
   @Resource(name = "serverHandlers")
   private Collection<AbstractServerHandler> serverHandlers;
 
-  @Resource(name = "serverNotifyHandlers")
-  private Collection<AbstractServerHandler> serverNotifyHandlers;
-
   @Resource(name = "serverSyncHandlers")
   private Collection<AbstractServerHandler> serverSyncHandlers;
 
@@ -157,7 +154,7 @@ public class DataServerBootstrap {
                     NetUtil.getLocalAddress().getHostAddress(), dataServerConfig.getNotifyPort()),
                 dataServerConfig.getLowWaterMark(),
                 dataServerConfig.getHighWaterMark(),
-                serverNotifyHandlers.toArray(new ChannelHandler[serverNotifyHandlers.size()]));
+                new ChannelHandler[0]);
         server =
             boltExchange.open(
                 new URL(NetUtil.getLocalAddress().getHostAddress(), dataServerConfig.getPort()),

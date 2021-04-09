@@ -34,7 +34,6 @@ import com.alipay.sofa.registry.server.data.remoting.metaserver.handler.NotifyPr
 import com.alipay.sofa.registry.server.data.remoting.metaserver.provideData.ProvideDataProcessor;
 import com.alipay.sofa.registry.server.data.remoting.metaserver.provideData.ProvideDataProcessorManager;
 import com.alipay.sofa.registry.server.data.remoting.metaserver.provideData.processor.SessionLeaseProvideDataProcessor;
-import com.alipay.sofa.registry.server.data.remoting.sessionserver.SessionServerConnectionFactory;
 import com.alipay.sofa.registry.server.data.remoting.sessionserver.handler.*;
 import com.alipay.sofa.registry.server.data.resource.DataDigestResource;
 import com.alipay.sofa.registry.server.data.resource.DatumApiResource;
@@ -167,25 +166,12 @@ public class DataServerBeanConfiguration {
       return new SessionNodeExchanger();
     }
 
-    @Bean
-    public SessionServerConnectionFactory sessionServerConnectionFactory() {
-      return new SessionServerConnectionFactory();
-    }
-
     @Bean(name = "serverHandlers")
     public Collection<AbstractServerHandler> serverHandlers() {
       Collection<AbstractServerHandler> list = new ArrayList<>();
       list.add(getDataHandler());
       list.add(batchPutDataHandler());
       list.add(getDataVersionsHandler());
-      list.add(dataServerConnectionHandler());
-      return list;
-    }
-
-    @Bean(name = "serverNotifyHandlers")
-    public Collection<AbstractServerHandler> serverNotifyHandlers() {
-      Collection<AbstractServerHandler> list = new ArrayList<>();
-      list.add(dataServerNotifyConnectionHandler());
       return list;
     }
 
@@ -203,16 +189,6 @@ public class DataServerBeanConfiguration {
       list.add(notifyProvideDataChangeHandler());
       list.add(slotTableChangeEventHandler());
       return list;
-    }
-
-    @Bean
-    public AbstractServerHandler dataServerConnectionHandler() {
-      return new DataServerConnectionHandler();
-    }
-
-    @Bean
-    public AbstractServerHandler dataServerNotifyConnectionHandler() {
-      return new DataServerNotifyConnectionHandler();
     }
 
     @Bean

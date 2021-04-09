@@ -14,22 +14,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alipay.sofa.registry.server.data.remoting.sessionserver.handler;
+package com.alipay.sofa.registry.server.meta.remoting.connection;
 
 import com.alipay.sofa.registry.common.model.Node.NodeType;
-import com.alipay.sofa.registry.server.shared.remoting.ListenServerChannelHandler;
 
 /**
- * Connection handler for session connect data server
+ * Handle data node's connect request
  *
- * <p>fix shangyu.wh
- *
- * @author xuanbei
- * @since 2019/2/15
+ * @author shangyu.wh
+ * @version $Id: DataConnectionManager.java, v 0.1 2018-01-24 16:04 shangyu.wh Exp $
  */
-public class DataServerNotifyConnectionHandler extends ListenServerChannelHandler {
+public class DataConnectionManager extends AbstractNodeConnectManager {
+
   @Override
-  protected NodeType getConnectNodeType() {
-    return NodeType.SESSION;
+  public NodeType getConnectNodeType() {
+    return NodeType.DATA;
+  }
+
+  @Override
+  protected int getServerPort() {
+    return metaServerConfig.getDataServerPort();
   }
 }

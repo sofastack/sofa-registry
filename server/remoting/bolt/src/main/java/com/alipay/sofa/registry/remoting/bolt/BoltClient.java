@@ -114,7 +114,7 @@ public class BoltClient implements Client {
 
   protected ConnectionEventProcessor newConnectionEventAdapter(
       ChannelHandler connectionEventHandler, ConnectionEventType connectEventType) {
-    return new ConnectionEventAdapter(connectEventType, connectionEventHandler, null);
+    return new ConnectionEventAdapter(connectEventType, connectionEventHandler);
   }
 
   protected AsyncUserProcessorAdapter newAsyncProcessor(ChannelHandler channelHandler) {

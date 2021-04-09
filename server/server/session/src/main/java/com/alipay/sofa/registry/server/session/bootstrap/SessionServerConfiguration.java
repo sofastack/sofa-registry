@@ -298,15 +298,9 @@ public class SessionServerConfiguration {
     @Bean(name = "metaClientHandlers")
     public Collection<AbstractClientHandler> metaClientHandlers() {
       Collection<AbstractClientHandler> list = new ArrayList<>();
-      list.add(metaNodeConnectionHandler());
       list.add(notifyProvideDataChangeHandler());
       list.add(slotTableChangeEventHandler());
       return list;
-    }
-
-    @Bean
-    public AbstractClientHandler metaNodeConnectionHandler() {
-      return new MetaNodeConnectionHandler();
     }
 
     @Bean

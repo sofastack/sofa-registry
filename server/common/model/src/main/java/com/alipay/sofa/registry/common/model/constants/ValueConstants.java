@@ -77,4 +77,6 @@ public class ValueConstants {
   public static final int METADATA_STATUS_PROCESS_SUCCESS = 200;
   public static final int METADATA_STATUS_DATA_NOT_FOUND = 404;
   public static final int METADATA_STATUS_PROCESS_ERROR = 500;
+
+  public static final String ATTR_RPC_CHANNEL_PROCESS_ID = "attr.registry.rpc.channel.processId";
 }

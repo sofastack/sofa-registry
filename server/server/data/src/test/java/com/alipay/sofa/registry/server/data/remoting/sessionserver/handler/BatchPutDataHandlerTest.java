@@ -33,7 +33,6 @@ import com.alipay.sofa.registry.remoting.ChannelHandler;
 import com.alipay.sofa.registry.server.data.TestBaseUtils;
 import com.alipay.sofa.registry.server.data.change.DataChangeEventCenter;
 import com.alipay.sofa.registry.server.data.lease.SessionLeaseManager;
-import com.alipay.sofa.registry.server.data.remoting.sessionserver.SessionServerConnectionFactory;
 import com.alipay.sofa.registry.server.data.slot.SlotManager;
 import com.alipay.sofa.registry.server.shared.env.ServerEnv;
 import com.google.common.collect.Lists;
@@ -76,7 +75,6 @@ public class BatchPutDataHandlerTest {
     handler.sessionLeaseManager = new SessionLeaseManager();
     SlotManager slotManager = mock(SlotManager.class);
     handler.slotManager = slotManager;
-    handler.sessionServerConnectionFactory = new SessionServerConnectionFactory();
     handler.localDatumStorage = TestBaseUtils.newLocalStorage("testDc", true);
     handler.dataChangeEventCenter = new DataChangeEventCenter();
     handler.dataServerConfig = TestBaseUtils.newDataConfig("testDc");

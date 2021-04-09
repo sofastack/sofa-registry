@@ -19,8 +19,10 @@ package com.alipay.sofa.registry.remoting.bolt;
 import com.alipay.sofa.registry.common.model.store.URL;
 import com.alipay.sofa.registry.remoting.Channel;
 import java.net.InetSocketAddress;
-import javax.ws.rs.client.WebTarget;
+import java.util.Map;
+import org.junit.AfterClass;
 import org.junit.Assert;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 /**
@@ -28,52 +30,49 @@ import org.junit.Test;
  * @version $Id: BoltServerTest.java, v 0.1 2018-05-14 19:34 shangyu.wh Exp $
  */
 public class BoltServerTest {
+  private static URL url = new URL("0.0.0.0", 12345);
+  private static BoltServer server = new BoltServer(url, null);
+
+  @BeforeClass
+  public static void before() {
+    server.startServer();
+  }
+
+  @AfterClass
+  public static void after() {
+    server.close();
+  }
 
   @Test
-  public void testGetChannel() {
-    BoltServer sessionServer = new BoltServer(new URL(), null);
-    for (int i = 0; i < 30; i++) {
+  public void testChannel() throws Exception {
+    BoltClient client1 = new BoltClient(2);
+    client1.connect(url);
 
-      int finalI = i;
-      sessionServer.addChannel(
-          new Channel() {
-            @Override
-            public InetSocketAddress getRemoteAddress() {
-              return new InetSocketAddress("192.168.1." + finalI, 9000);
-            }
+    BoltClient client2 = new BoltClient(3);
+    client2.connect(url);
+    Thread.sleep(1000);
+    Assert.assertEquals(5, server.getChannelCount());
+    Assert.assertEquals(5, server.getChannels().size());
+    Map<String, Channel> map = server.selectAvailableChannelsForHostAddress();
+    Assert.assertEquals(1, map.size());
+    Channel chn = map.values().iterator().next();
+    Assert.assertTrue(chn.isConnected());
+    Assert.assertEquals(
+        chn.getLocalAddress().getAddress().getHostAddress(), map.keySet().iterator().next());
 
-            @Override
-            public InetSocketAddress getLocalAddress() {
-              return null;
-            }
-
-            @Override
-            public boolean isConnected() {
-              return finalI % 2 == 0;
-            }
-
-            @Override
-            public Object getAttribute(String key) {
-              return null;
-            }
-
-            @Override
-            public void setAttribute(String key, Object value) {}
-
-            @Override
-            public WebTarget getWebTarget() {
-              return null;
-            }
-
-            @Override
-            public void close() {}
-          });
-    }
-    sessionServer.getChannels();
-    Channel channel = sessionServer.getChannel(new InetSocketAddress("192.168.1.1", 9000));
+    Channel channel = server.getChannel(new InetSocketAddress("192.168.1.1", 9000));
     Assert.assertNull(channel);
 
-    channel = sessionServer.getChannel(new InetSocketAddress("192.168.1.18", 9000));
+    channel = server.getChannel(chn.getRemoteAddress());
     Assert.assertNotNull(channel);
+    Assert.assertTrue(channel.isConnected());
+
+    channel =
+        server.getChannel(
+            new URL(
+                chn.getRemoteAddress().getAddress().getHostAddress(),
+                chn.getRemoteAddress().getPort()));
+    Assert.assertNotNull(channel);
+    Assert.assertTrue(channel.isConnected());
   }
 }

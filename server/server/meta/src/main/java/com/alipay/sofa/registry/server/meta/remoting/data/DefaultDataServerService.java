@@ -17,13 +17,11 @@
 package com.alipay.sofa.registry.server.meta.remoting.data;
 
 import com.alipay.sofa.registry.common.model.metaserver.nodes.DataNode;
-import com.alipay.sofa.registry.exception.SofaRegistryRuntimeException;
 import com.alipay.sofa.registry.remoting.exchange.NodeExchanger;
 import com.alipay.sofa.registry.server.meta.lease.data.DataServerManager;
 import com.alipay.sofa.registry.server.meta.remoting.DataNodeExchanger;
 import com.alipay.sofa.registry.server.meta.remoting.connection.NodeConnectManager;
 import com.alipay.sofa.registry.server.meta.remoting.notifier.AbstractNotifier;
-import com.alipay.sofa.registry.server.shared.remoting.AbstractServerHandler;
 import com.google.common.annotations.VisibleForTesting;
 import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -39,7 +37,7 @@ public class DefaultDataServerService extends AbstractNotifier<DataNode>
 
   @Autowired private DataNodeExchanger dataNodeExchanger;
 
-  @Autowired private AbstractServerHandler dataConnectionHandler;
+  @Autowired private NodeConnectManager dataConnectionManager;
 
   @Autowired private DataServerManager dataServerManager;
 
@@ -55,13 +53,7 @@ public class DefaultDataServerService extends AbstractNotifier<DataNode>
 
   @Override
   protected NodeConnectManager getNodeConnectManager() {
-    if (!(dataConnectionHandler instanceof NodeConnectManager)) {
-      logger.error("dataConnectionHandler inject is not NodeConnectManager instance!");
-      throw new SofaRegistryRuntimeException(
-          "dataConnectionHandler inject is not NodeConnectManager instance!");
-    }
-
-    return (NodeConnectManager) dataConnectionHandler;
+    return dataConnectionManager;
   }
 
   @VisibleForTesting
@@ -71,8 +63,8 @@ public class DefaultDataServerService extends AbstractNotifier<DataNode>
   }
 
   @VisibleForTesting
-  DefaultDataServerService setDataConnectionHandler(AbstractServerHandler dataConnectionHandler) {
-    this.dataConnectionHandler = dataConnectionHandler;
+  DefaultDataServerService setDataConnectionManager(NodeConnectManager dataConnectionManager) {
+    this.dataConnectionManager = dataConnectionManager;
     return this;
   }
 

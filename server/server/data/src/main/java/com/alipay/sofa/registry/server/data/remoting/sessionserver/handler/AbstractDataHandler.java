@@ -16,22 +16,25 @@
  */
 package com.alipay.sofa.registry.server.data.remoting.sessionserver.handler;
 
+import com.alipay.remoting.Connection;
 import com.alipay.sofa.registry.common.model.CommonResponse;
 import com.alipay.sofa.registry.common.model.Node;
 import com.alipay.sofa.registry.common.model.ProcessId;
 import com.alipay.sofa.registry.common.model.PublishType;
+import com.alipay.sofa.registry.common.model.constants.ValueConstants;
 import com.alipay.sofa.registry.common.model.slot.SlotAccess;
 import com.alipay.sofa.registry.common.model.slot.SlotAccessGenericResponse;
+import com.alipay.sofa.registry.common.model.store.ProcessIdCache;
 import com.alipay.sofa.registry.common.model.store.Publisher;
 import com.alipay.sofa.registry.common.model.store.StoreData;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.remoting.Channel;
+import com.alipay.sofa.registry.remoting.bolt.BoltChannel;
 import com.alipay.sofa.registry.server.data.bootstrap.DataServerConfig;
 import com.alipay.sofa.registry.server.data.cache.DatumStorage;
 import com.alipay.sofa.registry.server.data.change.DataChangeEventCenter;
 import com.alipay.sofa.registry.server.data.lease.SessionLeaseManager;
-import com.alipay.sofa.registry.server.data.remoting.sessionserver.SessionServerConnectionFactory;
 import com.alipay.sofa.registry.server.data.slot.SlotManager;
 import com.alipay.sofa.registry.server.shared.remoting.AbstractServerHandler;
 import com.alipay.sofa.registry.util.ParaCheckUtil;
@@ -60,8 +63,6 @@ public abstract class AbstractDataHandler<T> extends AbstractServerHandler<T> {
   @Autowired protected DatumStorage localDatumStorage;
 
   @Autowired protected SessionLeaseManager sessionLeaseManager;
-
-  @Autowired protected SessionServerConnectionFactory sessionServerConnectionFactory;
 
   protected void checkPublisher(Publisher publisher) {
     ParaCheckUtil.checkNotNull(publisher, "publisher");
@@ -113,7 +114,13 @@ public abstract class AbstractDataHandler<T> extends AbstractServerHandler<T> {
   }
 
   protected void processSessionProcessId(Channel channel, ProcessId sessionProcessId) {
-    sessionServerConnectionFactory.registerSession(sessionProcessId, channel);
+    // the channel is null when caller is xxx-Resource
+    if (channel != null) {
+      // bind the processId with the conn
+      sessionProcessId = ProcessIdCache.cache(sessionProcessId);
+      final Connection conn = ((BoltChannel) channel).getConnection();
+      conn.setAttributeIfAbsent(ValueConstants.ATTR_RPC_CHANNEL_PROCESS_ID, sessionProcessId);
+    }
     sessionLeaseManager.renewSession(sessionProcessId);
   }
 
