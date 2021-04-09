@@ -30,9 +30,9 @@ import com.alipay.sofa.registry.server.meta.provide.data.ProvideDataService;
 import com.alipay.sofa.registry.server.meta.remoting.DataNodeExchanger;
 import com.alipay.sofa.registry.server.meta.remoting.MetaServerExchanger;
 import com.alipay.sofa.registry.server.meta.remoting.SessionNodeExchanger;
-import com.alipay.sofa.registry.server.meta.remoting.connection.DataConnectionHandler;
-import com.alipay.sofa.registry.server.meta.remoting.connection.MetaConnectionHandler;
-import com.alipay.sofa.registry.server.meta.remoting.connection.SessionConnectionHandler;
+import com.alipay.sofa.registry.server.meta.remoting.connection.DataConnectionManager;
+import com.alipay.sofa.registry.server.meta.remoting.connection.MetaConnectionManager;
+import com.alipay.sofa.registry.server.meta.remoting.connection.SessionConnectionManager;
 import com.alipay.sofa.registry.server.meta.remoting.handler.FetchProvideDataRequestHandler;
 import com.alipay.sofa.registry.server.meta.remoting.handler.HeartbeatRequestHandler;
 import com.alipay.sofa.registry.server.meta.remoting.handler.RegistryForbiddenServerHandler;
@@ -140,7 +140,6 @@ public class MetaServerConfiguration {
     @Bean(name = "sessionServerHandlers")
     public Collection<AbstractServerHandler> sessionServerHandlers() {
       Collection<AbstractServerHandler> list = new ArrayList<>();
-      list.add(sessionConnectionHandler());
       list.add(heartbeatRequestHandler());
       list.add(fetchProvideDataRequestHandler());
       list.add(registryForbiddenServerHandler());
@@ -150,7 +149,6 @@ public class MetaServerConfiguration {
     @Bean(name = "dataServerHandlers")
     public Collection<AbstractServerHandler> dataServerHandlers() {
       Collection<AbstractServerHandler> list = new ArrayList<>();
-      list.add(dataConnectionHandler());
       list.add(heartbeatRequestHandler());
       list.add(fetchProvideDataRequestHandler());
       list.add(registryForbiddenServerHandler());
@@ -160,7 +158,6 @@ public class MetaServerConfiguration {
     @Bean(name = "metaServerHandlers")
     public Collection<AbstractServerHandler> metaServerHandlers() {
       Collection<AbstractServerHandler> list = new ArrayList<>();
-      list.add(metaConnectionHandler());
       list.add(heartbeatRequestHandler());
       return list;
     }
@@ -171,18 +168,18 @@ public class MetaServerConfiguration {
     }
 
     @Bean
-    public SessionConnectionHandler sessionConnectionHandler() {
-      return new SessionConnectionHandler();
+    public SessionConnectionManager sessionConnectionManager() {
+      return new SessionConnectionManager();
     }
 
     @Bean
-    public DataConnectionHandler dataConnectionHandler() {
-      return new DataConnectionHandler();
+    public DataConnectionManager dataConnectionManager() {
+      return new DataConnectionManager();
     }
 
     @Bean
-    public MetaConnectionHandler metaConnectionHandler() {
-      return new MetaConnectionHandler();
+    public MetaConnectionManager metaConnectionManager() {
+      return new MetaConnectionManager();
     }
 
     @Bean

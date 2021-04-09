@@ -16,8 +16,8 @@
  */
 package com.alipay.sofa.registry.util;
 
-import java.util.Collection;
-import java.util.Optional;
+import java.util.List;
+import java.util.concurrent.ThreadLocalRandom;
 
 /**
  * The type Collection utils.
@@ -34,7 +34,11 @@ public class CollectionUtils {
    * @param e the e
    * @return the random
    */
-  public static <E> Optional<E> getRandom(Collection<E> e) {
-    return e.stream().skip((int) (e.size() * Math.random())).findFirst();
+  public static <E> E getRandom(List<E> e) {
+    if (e.isEmpty()) {
+      return null;
+    }
+    int idx = ThreadLocalRandom.current().nextInt(e.size());
+    return e.get(idx);
   }
 }

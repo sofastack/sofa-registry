@@ -40,7 +40,7 @@ public class MetaDigestResourceTest extends BaseIntegrationTest {
             .request(APPLICATION_JSON)
             .get(Map.class);
     assertTrue(map.size() == 1);
-    assertTrue(((Map) map.get(LOCAL_DATACENTER)).containsKey(LOCAL_ADDRESS));
+    assertTrue(map.toString(), ((Map) map.get(LOCAL_DATACENTER)).containsKey(LOCAL_ADDRESS));
 
     map =
         metaChannel
@@ -49,7 +49,7 @@ public class MetaDigestResourceTest extends BaseIntegrationTest {
             .request(APPLICATION_JSON)
             .get(Map.class);
     assertTrue(map.size() == 1);
-    assertTrue(((Map) map.get(LOCAL_DATACENTER)).containsKey(LOCAL_ADDRESS));
+    assertTrue(map.toString(), ((Map) map.get(LOCAL_DATACENTER)).containsKey(LOCAL_ADDRESS));
 
     map =
         metaChannel
@@ -58,7 +58,7 @@ public class MetaDigestResourceTest extends BaseIntegrationTest {
             .request(APPLICATION_JSON)
             .get(Map.class);
     assertTrue(map.size() == 1);
-    assertTrue(((Map) map.get(LOCAL_DATACENTER)).containsKey(LOCAL_ADDRESS));
+    assertTrue(map.toString(), ((Map) map.get(LOCAL_DATACENTER)).containsKey(LOCAL_ADDRESS));
   }
 
   @Test

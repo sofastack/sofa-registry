@@ -16,21 +16,25 @@
  */
 package com.alipay.sofa.registry.server.data.resource;
 
+import com.alipay.remoting.Connection;
 import com.alipay.sofa.registry.common.model.ConnectId;
 import com.alipay.sofa.registry.common.model.dataserver.Datum;
 import com.alipay.sofa.registry.common.model.store.DataInfo;
 import com.alipay.sofa.registry.common.model.store.Publisher;
+import com.alipay.sofa.registry.remoting.Channel;
+import com.alipay.sofa.registry.remoting.Server;
+import com.alipay.sofa.registry.remoting.bolt.BoltChannel;
+import com.alipay.sofa.registry.remoting.bolt.exchange.BoltExchange;
 import com.alipay.sofa.registry.server.data.bootstrap.DataServerConfig;
 import com.alipay.sofa.registry.server.data.cache.DatumCache;
 import com.alipay.sofa.registry.server.data.remoting.metaserver.MetaServerServiceImpl;
-import com.alipay.sofa.registry.server.data.remoting.sessionserver.SessionServerConnectionFactory;
 import com.alipay.sofa.registry.util.ParaCheckUtil;
 import com.google.common.collect.Lists;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.stream.Collectors;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -46,7 +50,7 @@ public class DataDigestResource {
 
   private static final String META = "META";
 
-  @Autowired private SessionServerConnectionFactory sessionServerConnectionFactory;
+  @Autowired private BoltExchange boltExchange;
 
   @Autowired private MetaServerServiceImpl metaServerService;
 
@@ -154,12 +158,18 @@ public class DataDigestResource {
   }
 
   public List<String> getSessionServerList() {
-    List<String> connections =
-        sessionServerConnectionFactory.getSessionConnections().stream()
-            .filter(connection -> connection != null && connection.isFine())
-            .map(connection -> connection.getRemoteIP() + ":" + connection.getRemotePort())
-            .collect(Collectors.toList());
-    return connections;
+    Server server = boltExchange.getServer(dataServerConfig.getPort());
+    if (server == null) {
+      return Collections.emptyList();
+    }
+    Map<String, Channel> channels = server.selectAvailableChannelsForHostAddress();
+    List<String> ret = Lists.newArrayListWithCapacity(channels.size());
+    for (Channel channel : channels.values()) {
+      BoltChannel boltChannel = (BoltChannel) channel;
+      Connection conn = boltChannel.getConnection();
+      ret.add(conn.getRemoteIP() + ":" + conn.getRemoteIP());
+    }
+    return ret;
   }
 
   public List<String> getMetaServerLeader() {

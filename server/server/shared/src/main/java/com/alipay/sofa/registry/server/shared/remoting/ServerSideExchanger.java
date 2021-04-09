@@ -29,8 +29,7 @@ import com.alipay.sofa.registry.remoting.exchange.RequestException;
 import com.alipay.sofa.registry.remoting.exchange.message.Request;
 import com.alipay.sofa.registry.remoting.exchange.message.Response;
 import com.alipay.sofa.registry.util.CollectionUtils;
-import java.util.Collection;
-import java.util.Optional;
+import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 
 /**
@@ -67,7 +66,7 @@ public abstract class ServerSideExchanger implements NodeExchanger {
     Channel channel = null;
     if (url == null) {
       // now use in dsr console sync case
-      channel = choseChannel(server);
+      channel = chooseChannel(server);
     } else {
       channel = server.getChannel(url);
     }
@@ -91,16 +90,9 @@ public abstract class ServerSideExchanger implements NodeExchanger {
     }
   }
 
-  private Channel choseChannel(Server server) {
-    Collection<Channel> channels = server.getChannels();
-    Optional<Channel> channelOptional = CollectionUtils.getRandom(channels);
-    if (channelOptional.isPresent()) {
-      Channel channel = channelOptional.get();
-      if (channel.isConnected()) {
-        return channel;
-      }
-    }
-    return null;
+  private Channel chooseChannel(Server server) {
+    List<Channel> channels = server.getChannels();
+    return CollectionUtils.getRandom(channels);
   }
 
   @Override

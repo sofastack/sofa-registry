@@ -14,33 +14,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alipay.sofa.registry.server.shared.remoting;
+package com.alipay.sofa.registry.server.meta.remoting.connection;
 
-import com.alipay.sofa.registry.remoting.Channel;
+import com.alipay.sofa.registry.common.model.Node.NodeType;
 
 /**
- * @author yuzhi.lyz
- * @version v 0.1 2020-12-14 15:09 yuzhi.lyz Exp $
+ * Handle session node's connect request
+ *
+ * @author shangyu.wh
+ * @version $Id: ServerConnectionHandler.java, v 0.1 2018-01-24 11:42 shangyu.wh Exp $
  */
-public abstract class ListenClientChannelHandler extends AbstractClientHandler {
+public class SessionConnectionManager extends AbstractNodeConnectManager {
 
   @Override
-  public Object doHandle(Channel channel, Object request) {
-    throw new UnsupportedOperationException();
+  public NodeType getConnectNodeType() {
+    return NodeType.SESSION;
   }
 
   @Override
-  public Object buildFailedResponse(String msg) {
-    throw new UnsupportedOperationException();
-  }
-
-  @Override
-  public Class interest() {
-    return null;
-  }
-
-  @Override
-  public HandlerType getType() {
-    return HandlerType.LISENTER;
+  protected int getServerPort() {
+    return metaServerConfig.getSessionServerPort();
   }
 }
