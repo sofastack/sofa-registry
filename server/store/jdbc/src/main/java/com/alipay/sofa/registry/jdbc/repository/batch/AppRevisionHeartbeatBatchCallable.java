@@ -17,6 +17,7 @@
 package com.alipay.sofa.registry.jdbc.repository.batch;
 
 import com.alipay.sofa.registry.common.model.store.AppRevision;
+import com.alipay.sofa.registry.jdbc.config.DefaultCommonConfig;
 import com.alipay.sofa.registry.jdbc.mapper.AppRevisionMapper;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
@@ -39,6 +40,8 @@ public class AppRevisionHeartbeatBatchCallable
 
   @Autowired private AppRevisionMapper appRevisionMapper;
 
+  @Autowired private DefaultCommonConfig defaultCommonConfig;
+
   /**
    * batch update gmt_modified
    *
@@ -54,13 +57,10 @@ public class AppRevisionHeartbeatBatchCallable
     if (LOG.isInfoEnabled()) {
       LOG.info("update app_revision gmt_modified, task size: " + tasks.size());
     }
-    List<AppRevision> heartbeats =
-        tasks.stream()
-            .map(task -> task.getData())
-            .filter(appRevision -> appRevision.getLastHeartbeat() != null)
-            .collect(Collectors.toList());
+    List<String> revisions =
+        tasks.stream().map(task -> task.getData().getRevision()).collect(Collectors.toList());
 
-    appRevisionMapper.batchHeartbeat(heartbeats);
+    appRevisionMapper.batchHeartbeat(defaultCommonConfig.getClusterId(), revisions);
     tasks.forEach(
         taskEvent -> {
           InvokeFuture<AppRevision> future = taskEvent.getFuture();

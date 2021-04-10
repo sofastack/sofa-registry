@@ -59,7 +59,9 @@ public class RegistryCoreOpsResource {
       if (!success) {
         LOGGER.error("[kickoffServer] add ip: {} to blacklist fail.", ip);
       }
-      return success ? GenericResponse.buildSuccessResponse() : GenericResponse.buildFailedResponse("kickoffServer: " + ip + " fail.");
+      return success
+          ? GenericResponse.buildSuccessResponse()
+          : GenericResponse.buildFailedResponse("kickoffServer: " + ip + " fail.");
     } catch (Throwable th) {
       LOGGER.error("[kickoffServer]", th);
       return GenericResponse.buildFailedResponse(th.getMessage());
@@ -83,7 +85,9 @@ public class RegistryCoreOpsResource {
       if (!success) {
         LOGGER.error("[rejoinServerGroup] remove ip: {} to blacklist fail.", ip);
       }
-      return success ? GenericResponse.buildSuccessResponse() : GenericResponse.buildFailedResponse("rejoinServerGroup: " + ip + " fail.");
+      return success
+          ? GenericResponse.buildSuccessResponse()
+          : GenericResponse.buildFailedResponse("rejoinServerGroup: " + ip + " fail.");
     } catch (Throwable th) {
       LOGGER.error("[rejoinServerGroup]", th);
       return GenericResponse.buildFailedResponse(th.getMessage());

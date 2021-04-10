@@ -62,7 +62,8 @@ public class ProvideDataTest extends BaseIntegrationTest {
     PersistenceData data = PersistenceDataBuilder.createPersistenceData(dataInfoId, value);
     boolean save = provideDataService.saveProvideData(data);
     Assert.assertTrue(save);
-    Assert.assertEquals(value, provideDataService.queryProvideData(dataInfoId).getEntity().getData());
+    Assert.assertEquals(
+        value, provideDataService.queryProvideData(dataInfoId).getEntity().getData());
 
     PersistenceData newData = new PersistenceData();
     BeanUtils.copyProperties(data, newData);
@@ -74,7 +75,8 @@ public class ProvideDataTest extends BaseIntegrationTest {
     Assert.assertTrue(put);
 
     Thread.sleep(5000);
-    Assert.assertEquals(value, provideDataService.queryProvideData(dataInfoId).getEntity().getData());
+    Assert.assertEquals(
+        value, provideDataService.queryProvideData(dataInfoId).getEntity().getData());
 
     provideDataService.becomeLeader();
     Thread.sleep(5000);
