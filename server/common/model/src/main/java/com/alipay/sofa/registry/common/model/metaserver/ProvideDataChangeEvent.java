@@ -19,6 +19,7 @@ package com.alipay.sofa.registry.common.model.metaserver;
 import com.alipay.sofa.registry.common.model.Node.NodeType;
 import com.google.common.collect.Sets;
 import java.io.Serializable;
+import java.util.Collections;
 import java.util.Set;
 
 /**
@@ -27,11 +28,11 @@ import java.util.Set;
  */
 public class ProvideDataChangeEvent implements Serializable {
 
-  private String dataInfoId;
+  private final String dataInfoId;
 
-  private Long version;
+  private final long version;
 
-  private Set<NodeType> nodeTypes;
+  private final Set<NodeType> nodeTypes;
 
   /**
    * constructor
@@ -39,14 +40,14 @@ public class ProvideDataChangeEvent implements Serializable {
    * @param dataInfoId
    * @param version
    */
-  public ProvideDataChangeEvent(String dataInfoId, Long version) {
+  public ProvideDataChangeEvent(String dataInfoId, long version) {
     this(dataInfoId, version, Sets.newHashSet(NodeType.SESSION));
   }
 
-  public ProvideDataChangeEvent(String dataInfoId, Long version, Set<NodeType> nodeTypes) {
+  public ProvideDataChangeEvent(String dataInfoId, long version, Set<NodeType> nodeTypes) {
     this.dataInfoId = dataInfoId;
     this.version = version;
-    this.nodeTypes = nodeTypes;
+    this.nodeTypes = Collections.unmodifiableSet(nodeTypes);
   }
 
   /**
@@ -59,30 +60,12 @@ public class ProvideDataChangeEvent implements Serializable {
   }
 
   /**
-   * Setter method for property <tt>dataInfoId</tt>.
-   *
-   * @param dataInfoId value to be assigned to property dataInfoId
-   */
-  public void setDataInfoId(String dataInfoId) {
-    this.dataInfoId = dataInfoId;
-  }
-
-  /**
    * Getter method for property <tt>version</tt>.
    *
    * @return property value of version
    */
-  public Long getVersion() {
+  public long getVersion() {
     return version;
-  }
-
-  /**
-   * Setter method for property <tt>version</tt>.
-   *
-   * @param version value to be assigned to property version
-   */
-  public void setVersion(Long version) {
-    this.version = version;
   }
 
   /**
@@ -92,15 +75,6 @@ public class ProvideDataChangeEvent implements Serializable {
    */
   public Set<NodeType> getNodeTypes() {
     return nodeTypes;
-  }
-
-  /**
-   * Setter method for property <tt>nodeType</tt>.
-   *
-   * @param nodeTypes value to be assigned to property nodeType
-   */
-  public void setNodeTypes(Set<NodeType> nodeTypes) {
-    this.nodeTypes = nodeTypes;
   }
 
   @Override

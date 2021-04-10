@@ -41,7 +41,7 @@ public class BatchPutDataHandler extends AbstractDataHandler<BatchRequest> {
   @Autowired private ThreadPoolExecutor publishProcessorExecutor;
 
   @Override
-  public void checkParam(BatchRequest request) throws RuntimeException {
+  public void checkParam(BatchRequest request) {
     checkSessionProcessId(request.getSessionProcessId());
     for (Object req : request.getRequest()) {
       if (req instanceof Publisher) {

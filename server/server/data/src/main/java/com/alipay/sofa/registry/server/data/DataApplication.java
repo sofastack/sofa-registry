@@ -37,8 +37,7 @@ public class DataApplication {
     // setup DefaultUncaughtExceptionHandler
     Thread.setDefaultUncaughtExceptionHandler(
         (t, e) -> {
-          LOGGER.error(
-              String.format("UncaughtException in Thread(%s): %s", t.getName(), e.getMessage()), e);
+          LOGGER.error("UncaughtException in Thread {}", t.getName(), e);
         });
     SpringApplication.run(DataApplication.class, args);
   }

@@ -63,14 +63,6 @@ public abstract class ClientSideExchanger implements NodeExchanger {
 
   @Override
   public Response request(Request request) throws RequestException {
-    if (LOGGER.isDebugEnabled()) {
-      LOGGER.debug(
-          "serverPort={} to server, url:{}, request body:{} ",
-          getServerPort(),
-          request.getRequestUrl(),
-          request.getRequestBody());
-    }
-
     final URL url = request.getRequestUrl();
     if (url == null) {
       throw new RequestException("null url", request);

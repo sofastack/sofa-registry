@@ -17,47 +17,89 @@
 package com.alipay.sofa.registry.common.model;
 
 import com.alipay.sofa.registry.common.model.store.BaseInfo;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import org.apache.commons.lang.StringUtils;
+import org.glassfish.jersey.internal.guava.Sets;
 
 public final class DataUtils {
 
   private DataUtils() {}
 
+  /** instanceId/group/app - > {info.count,dataInfoId.count} */
   public static <T extends BaseInfo>
-      Map<String, Map<String, Map<String, Integer>>> countGroupByInstanceIdGroupApp(
+      Map<String, Map<String, Map<String, Tuple<Integer, Integer>>>> countGroupByInstanceIdGroupApp(
           Collection<T> infos) {
-    // instanceId/group/app - > count
-    Map<String, Map<String, Map<String, Integer>>> counts = Maps.newHashMap();
+    Map<String, Map<String, Map<String, List<T>>>> groupBys = Maps.newHashMap();
     for (T info : infos) {
-      Map<String, Map<String, Integer>> groupCount =
-          counts.computeIfAbsent(info.getInstanceId(), k -> Maps.newHashMap());
-      Map<String, Integer> appCount =
+      Map<String, Map<String, List<T>>> groupCount =
+          groupBys.computeIfAbsent(info.getInstanceId(), k -> Maps.newHashMap());
+      Map<String, List<T>> appCount =
           groupCount.computeIfAbsent(info.getGroup(), k -> Maps.newHashMap());
       String appName = info.getAppName();
       if (StringUtils.isBlank(appName)) {
         appName = "";
       }
-      Integer count = appCount.getOrDefault(appName, 0);
-      count++;
-      appCount.put(appName, count);
+      List<T> list = appCount.computeIfAbsent(appName, k -> Lists.newLinkedList());
+      list.add(info);
     }
-    return counts;
+    Map<String, Map<String, Map<String, Tuple<Integer, Integer>>>> ret = Maps.newHashMap();
+    for (Map.Entry<String, Map<String, Map<String, List<T>>>> count : groupBys.entrySet()) {
+      final String instanceId = count.getKey();
+      Map<String, Map<String, Tuple<Integer, Integer>>> instanceCount =
+          ret.computeIfAbsent(instanceId, k -> Maps.newHashMap());
+      for (Map.Entry<String, Map<String, List<T>>> e : count.getValue().entrySet()) {
+        final String group = e.getKey();
+        Map<String, Tuple<Integer, Integer>> groupCount =
+            instanceCount.computeIfAbsent(group, k -> Maps.newHashMap());
+        for (Map.Entry<String, List<T>> apps : e.getValue().entrySet()) {
+          List<T> list = apps.getValue();
+          final int infoCount = list.size();
+          Set<String> dataInfoIds = Sets.newHashSetWithExpectedSize(64);
+          for (T t : list) {
+            dataInfoIds.add(t.getDataInfoId());
+          }
+          final int dataInfoIdCount = dataInfoIds.size();
+          groupCount.put(apps.getKey(), Tuple.of(infoCount, dataInfoIdCount));
+        }
+      }
+    }
+    return ret;
   }
 
-  public static <T extends BaseInfo> Map<String, Map<String, Integer>> countGroupByInstanceIdGroup(
-      Collection<T> infos) {
-    // instanceId/group - > count
-    Map<String, Map<String, Integer>> counts = Maps.newHashMap();
+  /** instanceId/group - > {info.count,dataInfoId.count} */
+  public static <T extends BaseInfo>
+      Map<String, Map<String, Tuple<Integer, Integer>>> countGroupByInstanceIdGroup(
+          Collection<T> infos) {
+
+    Map<String, Map<String, List<T>>> groupBys = Maps.newHashMap();
     for (T info : infos) {
-      Map<String, Integer> groupCount =
-          counts.computeIfAbsent(info.getInstanceId(), k -> Maps.newHashMap());
-      Integer count = groupCount.getOrDefault(info.getGroup(), 0);
-      count++;
-      groupCount.put(info.getGroup(), count);
+      Map<String, List<T>> groupCount =
+          groupBys.computeIfAbsent(info.getInstanceId(), k -> Maps.newHashMap());
+      List<T> infoList = groupCount.computeIfAbsent(info.getGroup(), k -> Lists.newLinkedList());
+      infoList.add(info);
     }
-    return counts;
+    Map<String, Map<String, Tuple<Integer, Integer>>> ret = Maps.newHashMap();
+    for (Map.Entry<String, Map<String, List<T>>> instances : groupBys.entrySet()) {
+      final String instanceId = instances.getKey();
+      for (Map.Entry<String, List<T>> groups : instances.getValue().entrySet()) {
+        final String group = groups.getKey();
+        List<T> list = groups.getValue();
+        final int infoCount = list.size();
+        Set<String> dataInfoIds = Sets.newHashSetWithExpectedSize(256);
+        for (T t : list) {
+          dataInfoIds.add(t.getDataInfoId());
+        }
+        final int dataInfoIdCount = dataInfoIds.size();
+        Map<String, Tuple<Integer, Integer>> groupCount =
+            ret.computeIfAbsent(instanceId, k -> Maps.newHashMap());
+        groupCount.put(group, Tuple.of(infoCount, dataInfoIdCount));
+      }
+    }
+    return ret;
   }
 }

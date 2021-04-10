@@ -35,7 +35,7 @@ public class DataSlotDiffDigestRequest implements Serializable {
       long slotTableEpoch, int slotId, Map<String, DatumDigest> datumDigest) {
     this.slotTableEpoch = slotTableEpoch;
     this.slotId = slotId;
-    this.datumDigest = datumDigest;
+    this.datumDigest = datumDigest == null ? Collections.emptyMap() : datumDigest;
   }
 
   /**

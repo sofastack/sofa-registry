@@ -25,11 +25,11 @@ import java.io.Serializable;
  */
 public class ProvideData implements Serializable {
 
-  private ServerDataBox provideData;
+  private final ServerDataBox provideData;
 
-  private String dataInfoId;
+  private final String dataInfoId;
 
-  private Long version;
+  private final Long version;
 
   /**
    * construtor
@@ -54,15 +54,6 @@ public class ProvideData implements Serializable {
   }
 
   /**
-   * Setter method for property <tt>provideData</tt>.
-   *
-   * @param provideData value to be assigned to property provideData
-   */
-  public void setProvideData(ServerDataBox provideData) {
-    this.provideData = provideData;
-  }
-
-  /**
    * Getter method for property <tt>dataInfoId</tt>.
    *
    * @return property value of dataInfoId
@@ -72,30 +63,12 @@ public class ProvideData implements Serializable {
   }
 
   /**
-   * Setter method for property <tt>dataInfoId</tt>.
-   *
-   * @param dataInfoId value to be assigned to property dataInfoId
-   */
-  public void setDataInfoId(String dataInfoId) {
-    this.dataInfoId = dataInfoId;
-  }
-
-  /**
    * Getter method for property <tt>version</tt>.
    *
    * @return property value of version
    */
   public Long getVersion() {
     return version;
-  }
-
-  /**
-   * Setter method for property <tt>version</tt>.
-   *
-   * @param version value to be assigned to property version
-   */
-  public void setVersion(Long version) {
-    this.version = version;
   }
 
   public static String toString(ProvideData provideData) {

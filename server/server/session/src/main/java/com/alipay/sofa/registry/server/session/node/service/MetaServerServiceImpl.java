@@ -29,6 +29,7 @@ import com.alipay.sofa.registry.server.session.remoting.DataNodeNotifyExchanger;
 import com.alipay.sofa.registry.server.session.slot.SlotTableCache;
 import com.alipay.sofa.registry.server.shared.env.ServerEnv;
 import com.alipay.sofa.registry.server.shared.meta.AbstractMetaServerService;
+import com.google.common.annotations.VisibleForTesting;
 import java.util.Set;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -50,6 +51,11 @@ public final class MetaServerServiceImpl
   @Override
   protected long getCurrentSlotTableEpoch() {
     return slotTableCache.getEpoch();
+  }
+
+  @Override
+  public int getRenewIntervalSecs() {
+    return sessionServerConfig.getSchedulerHeartbeatIntervalSecs();
   }
 
   @Override
@@ -82,5 +88,25 @@ public final class MetaServerServiceImpl
   private Node createNode() {
     return new SessionNode(new URL(ServerEnv.IP), sessionServerConfig.getSessionServerRegion())
         .setProcessId(ServerEnv.PROCESS_ID);
+  }
+
+  @VisibleForTesting
+  void setSessionServerConfig(SessionServerConfig sessionServerConfig) {
+    this.sessionServerConfig = sessionServerConfig;
+  }
+
+  @VisibleForTesting
+  void setSlotTableCache(SlotTableCache slotTableCache) {
+    this.slotTableCache = slotTableCache;
+  }
+
+  @VisibleForTesting
+  void setDataNodeExchanger(DataNodeExchanger dataNodeExchanger) {
+    this.dataNodeExchanger = dataNodeExchanger;
+  }
+
+  @VisibleForTesting
+  void setDataNodeNotifyExchanger(DataNodeNotifyExchanger dataNodeNotifyExchanger) {
+    this.dataNodeNotifyExchanger = dataNodeNotifyExchanger;
   }
 }

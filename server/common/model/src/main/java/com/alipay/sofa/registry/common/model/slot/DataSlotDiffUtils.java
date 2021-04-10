@@ -37,7 +37,7 @@ public final class DataSlotDiffUtils {
 
   private DataSlotDiffUtils() {}
 
-  public static DataSlotDiffDigestResult diffDigestPublishers(
+  public static DataSlotDiffDigestResult diffDigestResult(
       Map<String, DatumDigest> targetDigestMap,
       Map<String, Map<String, Publisher>> sourcePublishers) {
     Map<String, DatumSummary> sourceSummaryMap = PublisherUtils.getDatumSummary(sourcePublishers);

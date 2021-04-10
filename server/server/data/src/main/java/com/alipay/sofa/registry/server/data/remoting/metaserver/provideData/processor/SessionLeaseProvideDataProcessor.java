@@ -23,6 +23,7 @@ import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.server.data.bootstrap.DataServerConfig;
 import com.alipay.sofa.registry.server.data.lease.SessionLeaseManager;
 import com.alipay.sofa.registry.server.data.remoting.metaserver.provideData.ProvideDataProcessor;
+import com.google.common.annotations.VisibleForTesting;
 import org.springframework.beans.factory.annotation.Autowired;
 
 /**
@@ -56,5 +57,10 @@ public class SessionLeaseProvideDataProcessor implements ProvideDataProcessor {
   @Override
   public boolean support(ProvideData provideData) {
     return ValueConstants.DATA_SESSION_LEASE_SEC.equals(provideData.getDataInfoId());
+  }
+
+  @VisibleForTesting
+  void setDataServerConfig(DataServerConfig dataServerConfig) {
+    this.dataServerConfig = dataServerConfig;
   }
 }

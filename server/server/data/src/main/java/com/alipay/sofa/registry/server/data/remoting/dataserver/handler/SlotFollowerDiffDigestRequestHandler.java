@@ -30,6 +30,8 @@ import com.alipay.sofa.registry.server.data.cache.DatumStorage;
 import com.alipay.sofa.registry.server.data.slot.SlotManager;
 import com.alipay.sofa.registry.server.shared.remoting.AbstractServerHandler;
 import com.alipay.sofa.registry.util.ParaCheckUtil;
+import com.alipay.sofa.registry.util.StringFormatter;
+import com.google.common.annotations.VisibleForTesting;
 import java.util.Map;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -67,8 +69,10 @@ public class SlotFollowerDiffDigestRequestHandler
       result.setSlotTableEpoch(slotManager.getSlotTableEpoch());
       return new GenericResponse().fillSucceed(result);
     } catch (Throwable e) {
-      LOGGER.error("DiffSync dataInfoIds Request error for slot {}", request.getSlotId(), e);
-      throw new RuntimeException("DiffSync Request error!", e);
+      String msg =
+          StringFormatter.format("DiffSyncDigest request error for slot {}", request.getSlotId());
+      LOGGER.error(msg, e);
+      return new GenericResponse().fillFailed(msg);
     }
   }
 
@@ -77,7 +81,7 @@ public class SlotFollowerDiffDigestRequestHandler
       Map<String, DatumDigest> targetDigestMap,
       Map<String, Map<String, Publisher>> existingPublishers) {
     DataSlotDiffDigestResult result =
-        DataSlotDiffUtils.diffDigestPublishers(targetDigestMap, existingPublishers);
+        DataSlotDiffUtils.diffDigestResult(targetDigestMap, existingPublishers);
     DataSlotDiffUtils.logDiffResult(result, targetSlot);
     return result;
   }
@@ -93,8 +97,9 @@ public class SlotFollowerDiffDigestRequestHandler
   }
 
   @Override
-  public void checkParam(DataSlotDiffDigestRequest request) throws RuntimeException {
+  public void checkParam(DataSlotDiffDigestRequest request) {
     ParaCheckUtil.checkNonNegative(request.getSlotId(), "request.slotId");
+    ParaCheckUtil.checkNotNull(request.getDatumDigest(), "request.datumDigest");
   }
 
   @Override
@@ -105,5 +110,25 @@ public class SlotFollowerDiffDigestRequestHandler
   @Override
   public Executor getExecutor() {
     return slotSyncRequestProcessorExecutor;
+  }
+
+  @VisibleForTesting
+  void setLocalDatumStorage(DatumStorage localDatumStorage) {
+    this.localDatumStorage = localDatumStorage;
+  }
+
+  @VisibleForTesting
+  void setSlotManager(SlotManager slotManager) {
+    this.slotManager = slotManager;
+  }
+
+  @VisibleForTesting
+  DatumStorage getLocalDatumStorage() {
+    return localDatumStorage;
+  }
+
+  @VisibleForTesting
+  SlotManager getSlotManager() {
+    return slotManager;
   }
 }

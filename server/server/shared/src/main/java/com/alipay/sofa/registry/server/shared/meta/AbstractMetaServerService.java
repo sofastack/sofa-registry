@@ -55,33 +55,27 @@ public abstract class AbstractMetaServerService<T extends BaseHeartBeatResponse>
 
   protected volatile State state = State.NULL;
 
-  private Renewer renewer;
+  private final Renewer renewer = new Renewer();
 
-  private AtomicInteger renewFailCounter = new AtomicInteger(0);
-  private static final Integer maxRenewFailCount = 3;
+  private final AtomicInteger renewFailCounter = new AtomicInteger(0);
+  private static final int MAX_RENEW_FAIL_COUNT = 3;
 
   @PreDestroy
   public void dispose() {
-    if (renewer != null) {
-      renewer.close();
-    }
+    stopRenewer();
   }
 
   @Override
-  public synchronized void startRenewer(int intervalMs) {
-    if (renewer != null) {
-      throw new IllegalStateException("has started renewer");
-    }
-    this.renewer = new Renewer(intervalMs);
+  public synchronized void startRenewer() {
     ConcurrentUtils.createDaemonThread("meta-renewer", this.renewer).start();
   }
 
   @Override
   public void stopRenewer() {
-    if (renewer != null) {
-      renewer.close();
-    }
+    renewer.close();
   }
+
+  public abstract int getRenewIntervalSecs();
 
   @Override
   public boolean handleSlotTableChange(SlotTableChangeEvent event) {
@@ -97,9 +91,7 @@ public abstract class AbstractMetaServerService<T extends BaseHeartBeatResponse>
     }
     LOGGER.info(
         "[handleSlotTableChange] slot table is changed, run heart-beat to retrieve new version");
-    if (renewer != null) {
-      renewer.wakeup();
-    }
+    renewer.wakeup();
     return true;
   }
 
@@ -116,16 +108,10 @@ public abstract class AbstractMetaServerService<T extends BaseHeartBeatResponse>
   }
 
   private final class Renewer extends WakeUpLoopRunnable {
-    final int intervalMs;
-
-    Renewer(int intervalMs) {
-      this.intervalMs = intervalMs;
-    }
-
     @Override
     public void runUnthrowable() {
       try {
-        if (renewFailCounter.get() >= maxRenewFailCount) {
+        if (renewFailCounter.get() >= MAX_RENEW_FAIL_COUNT) {
           LOGGER.error(
               "renewNode failed [{}] times, prepare to reset leader from rest api.",
               renewFailCounter.get());
@@ -141,7 +127,7 @@ public abstract class AbstractMetaServerService<T extends BaseHeartBeatResponse>
 
     @Override
     public int getWaitingMillis() {
-      return intervalMs;
+      return getRenewIntervalSecs() * 1000;
     }
   }
 
