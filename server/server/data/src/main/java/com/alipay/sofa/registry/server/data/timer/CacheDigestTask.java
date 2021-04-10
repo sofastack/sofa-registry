@@ -25,6 +25,7 @@ import com.alipay.sofa.registry.server.data.bootstrap.DataServerConfig;
 import com.alipay.sofa.registry.server.data.cache.DatumCache;
 import com.alipay.sofa.registry.util.ConcurrentUtils;
 import com.alipay.sofa.registry.util.StringFormatter;
+import com.google.common.annotations.VisibleForTesting;
 import java.util.*;
 import java.util.Map.Entry;
 import java.util.concurrent.TimeUnit;
@@ -45,11 +46,11 @@ public class CacheDigestTask {
   @Autowired private DataServerConfig dataServerConfig;
 
   @PostConstruct
-  public void init() {
+  public boolean init() {
     final int intervalMinutes = dataServerConfig.getCacheDigestIntervalMinutes();
     if (intervalMinutes <= 0) {
       LOGGER.info("cache digest off with intervalMinutes={}", intervalMinutes);
-      return;
+      return false;
     }
     Date firstDate = new Date();
     firstDate = DateUtils.round(firstDate, Calendar.MINUTE);
@@ -64,9 +65,10 @@ public class CacheDigestTask {
           }
         };
     timer.scheduleAtFixedRate(task, firstDate, intervalMinutes * 60 * 1000);
+    return true;
   }
 
-  private void dump() {
+  boolean dump() {
     try {
       Map<String, Map<String, Datum>> allMap = datumCache.getAll();
       if (!allMap.isEmpty()) {
@@ -99,10 +101,11 @@ public class CacheDigestTask {
       } else {
         LOGGER.info("datum cache is empty");
       }
-
+      return true;
     } catch (Throwable t) {
       LOGGER.error("cache digest error", t);
     }
+    return false;
   }
 
   private String logPublisher(Publisher publisher) {
@@ -117,5 +120,15 @@ public class CacheDigestTask {
           publisher.getVersion());
     }
     return "";
+  }
+
+  @VisibleForTesting
+  void setDatumCache(DatumCache datumCache) {
+    this.datumCache = datumCache;
+  }
+
+  @VisibleForTesting
+  void setDataServerConfig(DataServerConfig dataServerConfig) {
+    this.dataServerConfig = dataServerConfig;
   }
 }

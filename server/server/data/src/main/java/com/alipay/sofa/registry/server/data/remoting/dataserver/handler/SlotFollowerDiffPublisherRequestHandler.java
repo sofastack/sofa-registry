@@ -31,6 +31,8 @@ import com.alipay.sofa.registry.server.data.cache.DatumStorage;
 import com.alipay.sofa.registry.server.data.slot.SlotManager;
 import com.alipay.sofa.registry.server.shared.remoting.AbstractServerHandler;
 import com.alipay.sofa.registry.util.ParaCheckUtil;
+import com.alipay.sofa.registry.util.StringFormatter;
+import com.google.common.annotations.VisibleForTesting;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Executor;
@@ -56,8 +58,9 @@ public class SlotFollowerDiffPublisherRequestHandler
   @Autowired private SlotManager slotManager;
 
   @Override
-  public void checkParam(DataSlotDiffPublisherRequest request) throws RuntimeException {
+  public void checkParam(DataSlotDiffPublisherRequest request) {
     ParaCheckUtil.checkNonNegative(request.getSlotId(), "request.slotId");
+    ParaCheckUtil.checkNotNull(request.getDatumSummaries(), "request.datumSummaries");
   }
 
   @Override
@@ -77,8 +80,11 @@ public class SlotFollowerDiffPublisherRequestHandler
       result.setSlotTableEpoch(slotManager.getSlotTableEpoch());
       return new GenericResponse().fillSucceed(result);
     } catch (Throwable e) {
-      LOGGER.error("DiffSync publisher Request error for slot {}", request.getSlotId(), e);
-      throw new RuntimeException("DiffSync Request error!", e);
+      String msg =
+          StringFormatter.format(
+              "DiffSyncPublisher request error for slot {}", request.getSlotId());
+      LOGGER.error(msg, e);
+      return new GenericResponse().fillFailed(msg);
     }
   }
 
@@ -111,5 +117,25 @@ public class SlotFollowerDiffPublisherRequestHandler
   @Override
   public Executor getExecutor() {
     return slotSyncRequestProcessorExecutor;
+  }
+
+  @VisibleForTesting
+  void setDataServerConfig(DataServerConfig dataServerConfig) {
+    this.dataServerConfig = dataServerConfig;
+  }
+
+  @VisibleForTesting
+  void setLocalDatumStorage(DatumStorage localDatumStorage) {
+    this.localDatumStorage = localDatumStorage;
+  }
+
+  @VisibleForTesting
+  SlotManager getSlotManager() {
+    return slotManager;
+  }
+
+  @VisibleForTesting
+  void setSlotManager(SlotManager slotManager) {
+    this.slotManager = slotManager;
   }
 }

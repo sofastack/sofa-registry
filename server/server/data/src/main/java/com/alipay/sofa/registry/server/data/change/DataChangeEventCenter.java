@@ -118,12 +118,12 @@ public final class DataChangeEventCenter {
     }
   }
 
-  private final class TempNotifier implements Runnable {
+  final class TempNotifier implements Runnable {
     final Channel channel;
     final Datum datum;
 
-    TempNotifier(Channel connection, Datum datum) {
-      this.channel = connection;
+    TempNotifier(Channel channel, Datum datum) {
+      this.channel = channel;
       this.datum = datum;
     }
 
@@ -341,7 +341,7 @@ public final class DataChangeEventCenter {
       return false;
     }
     for (DataChangeEvent event : events) {
-      final Map<String, DatumVersion> changes = new HashMap<>(events.size());
+      final Map<String, DatumVersion> changes = Maps.newHashMapWithExpectedSize(events.size());
       final String dataCenter = event.getDataCenter();
       for (String dataInfoId : event.getDataInfoIds()) {
         DatumVersion datumVersion = datumCache.getVersion(dataCenter, dataInfoId);
@@ -463,5 +463,20 @@ public final class DataChangeEventCenter {
   ChangeNotifier newChangeNotifier(
       Channel channel, String dataCenter, Map<String, DatumVersion> dataInfoIds) {
     return new ChangeNotifier(channel, dataCenter, dataInfoIds);
+  }
+
+  @VisibleForTesting
+  TempNotifier newTempNotifier(Channel channel, Datum datum) {
+    return new TempNotifier(channel, datum);
+  }
+
+  @VisibleForTesting
+  void setNotifyExecutor(KeyedThreadPoolExecutor notifyExecutor) {
+    this.notifyExecutor = notifyExecutor;
+  }
+
+  @VisibleForTesting
+  void setNotifyTempExecutor(KeyedThreadPoolExecutor notifyTempExecutor) {
+    this.notifyTempExecutor = notifyTempExecutor;
   }
 }

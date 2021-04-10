@@ -52,7 +52,7 @@ public class GetDataVersionsHandler extends AbstractDataHandler<GetDataVersionRe
   }
 
   @Override
-  public void checkParam(GetDataVersionRequest request) throws RuntimeException {
+  public void checkParam(GetDataVersionRequest request) {
     ParaCheckUtil.checkNonNegative(request.getSlotId(), "GetDataVersionRequest.slotId");
     ParaCheckUtil.checkNotBlank(request.getDataCenter(), "GetDataVersionRequest.dataCenter");
     checkSessionProcessId(request.getSessionProcessId());

@@ -38,7 +38,7 @@ public class SlotTableChangeEventHandler extends AbstractClientHandler<SlotTable
   }
 
   @Override
-  public void checkParam(SlotTableChangeEvent request) throws RuntimeException {
+  public void checkParam(SlotTableChangeEvent request) {
     super.checkParam(request);
     ParaCheckUtil.checkNotNull(request, "SlotTableChangeEvent");
   }

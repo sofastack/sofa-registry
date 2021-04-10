@@ -14,25 +14,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alipay.sofa.registry.common.model.metaserver.inter.heartbeat;
+package com.alipay.sofa.registry.server.data.remoting;
 
-import com.alipay.sofa.registry.common.model.metaserver.cluster.VersionedList;
-import com.alipay.sofa.registry.common.model.metaserver.nodes.MetaNode;
-import com.alipay.sofa.registry.common.model.metaserver.nodes.SessionNode;
-import com.alipay.sofa.registry.common.model.slot.SlotTable;
-
-/**
- * @author chen.zhu
- *     <p>Nov 27, 2020
- */
-public class DataHeartBeatResponse extends BaseHeartBeatResponse {
-
-  public DataHeartBeatResponse(
-      VersionedList<MetaNode> metaNodes,
-      SlotTable slotTable,
-      VersionedList<SessionNode> sessionNodes,
-      String metaLeader,
-      long metaLeaderEpoch) {
-    super(true, metaNodes, slotTable, sessionNodes, metaLeader, metaLeaderEpoch);
-  }
-}
+public class DataNodeExchangerTest {}

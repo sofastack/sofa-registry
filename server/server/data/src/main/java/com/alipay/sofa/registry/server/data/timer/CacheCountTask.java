@@ -17,6 +17,7 @@
 package com.alipay.sofa.registry.server.data.timer;
 
 import com.alipay.sofa.registry.common.model.DataUtils;
+import com.alipay.sofa.registry.common.model.Tuple;
 import com.alipay.sofa.registry.common.model.store.Publisher;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
@@ -24,6 +25,7 @@ import com.alipay.sofa.registry.server.data.bootstrap.DataServerConfig;
 import com.alipay.sofa.registry.server.data.cache.DatumCache;
 import com.alipay.sofa.registry.util.ConcurrentUtils;
 import com.alipay.sofa.registry.util.NamedThreadFactory;
+import com.google.common.annotations.VisibleForTesting;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -48,72 +50,97 @@ public class CacheCountTask {
   @Autowired private DataServerConfig dataServerConfig;
 
   @PostConstruct
-  public void init() {
+  public boolean init() {
     final int intervalSec = dataServerConfig.getCacheCountIntervalSecs();
     if (intervalSec <= 0) {
       LOGGER.info("cache count off with intervalSecs={}", intervalSec);
-      return;
+      return false;
     }
     ScheduledExecutorService executor =
         new ScheduledThreadPoolExecutor(1, new NamedThreadFactory("CacheCountTask"));
-    executor.scheduleWithFixedDelay(
-        () -> {
-          try {
-            Map<String, Map<String, List<Publisher>>> allMap = datumCache.getAllPublisher();
-            if (!allMap.isEmpty()) {
-              for (Entry<String, Map<String, List<Publisher>>> dataCenterEntry :
-                  allMap.entrySet()) {
-                final String dataCenter = dataCenterEntry.getKey();
-                List<Publisher> all = new ArrayList<>(512);
-                for (List<Publisher> publishers : dataCenterEntry.getValue().values()) {
-                  all.addAll(publishers);
-                }
-                Map<String, Map<String, Integer>> groupCounts =
-                    DataUtils.countGroupByInstanceIdGroup(all);
-                printGroupCount(dataCenter, groupCounts);
-
-                Map<String, Map<String, Map<String, Integer>>> counts =
-                    DataUtils.countGroupByInstanceIdGroupApp(all);
-                printCount(dataCenter, counts);
-              }
-            } else {
-              LOGGER.info("datum cache is empty");
-            }
-
-          } catch (Throwable t) {
-            LOGGER.error("cache count error", t);
-          }
-        },
-        intervalSec,
-        intervalSec,
-        TimeUnit.SECONDS);
+    executor.scheduleWithFixedDelay(() -> count(), intervalSec, intervalSec, TimeUnit.SECONDS);
+    return true;
   }
 
-  private static void printCount(
-      String dataCenter, Map<String, Map<String, Map<String, Integer>>> counts) {
-    for (Entry<String, Map<String, Map<String, Integer>>> count : counts.entrySet()) {
+  boolean count() {
+    try {
+      Map<String, Map<String, List<Publisher>>> allMap = datumCache.getAllPublisher();
+      if (!allMap.isEmpty()) {
+        for (Entry<String, Map<String, List<Publisher>>> dataCenterEntry : allMap.entrySet()) {
+          final String dataCenter = dataCenterEntry.getKey();
+          List<Publisher> all = new ArrayList<>(512);
+          for (List<Publisher> publishers : dataCenterEntry.getValue().values()) {
+            all.addAll(publishers);
+          }
+          Map<String, Map<String, Tuple<Integer, Integer>>> groupCounts =
+              DataUtils.countGroupByInstanceIdGroup(all);
+          printGroupCount(dataCenter, groupCounts);
+
+          Map<String, Map<String, Map<String, Tuple<Integer, Integer>>>> counts =
+              DataUtils.countGroupByInstanceIdGroupApp(all);
+          printGroupAppCount(dataCenter, counts);
+        }
+      } else {
+        LOGGER.info("datum cache is empty");
+      }
+      return true;
+    } catch (Throwable t) {
+      LOGGER.error("cache count error", t);
+    }
+    return false;
+  }
+
+  private static void printGroupAppCount(
+      String dataCenter, Map<String, Map<String, Map<String, Tuple<Integer, Integer>>>> counts) {
+    for (Entry<String, Map<String, Map<String, Tuple<Integer, Integer>>>> count :
+        counts.entrySet()) {
       final String instanceId = count.getKey();
-      for (Entry<String, Map<String, Integer>> groupCounts : count.getValue().entrySet()) {
+      for (Entry<String, Map<String, Tuple<Integer, Integer>>> groupCounts :
+          count.getValue().entrySet()) {
         final String group = groupCounts.getKey();
-        for (Entry<String, Integer> apps : groupCounts.getValue().entrySet()) {
+        for (Entry<String, Tuple<Integer, Integer>> apps : groupCounts.getValue().entrySet()) {
           final String app = apps.getKey();
+          Tuple<Integer, Integer> tupleCount = apps.getValue();
           COUNT_LOGGER.info(
-              "[Pub]{},{},{},{},{}", dataCenter, instanceId, group, app, apps.getValue());
+              "[Pub]{},{},{},{},{},{}",
+              dataCenter,
+              instanceId,
+              group,
+              app,
+              tupleCount.o1,
+              tupleCount.o2);
         }
         ConcurrentUtils.sleepUninterruptibly(100, TimeUnit.MILLISECONDS);
       }
     }
   }
 
-  private static void printGroupCount(String dataCenter, Map<String, Map<String, Integer>> counts) {
-    for (Map.Entry<String, Map<String, Integer>> count : counts.entrySet()) {
+  private static void printGroupCount(
+      String dataCenter, Map<String, Map<String, Tuple<Integer, Integer>>> counts) {
+    for (Map.Entry<String, Map<String, Tuple<Integer, Integer>>> count : counts.entrySet()) {
       final String instanceId = count.getKey();
-      Map<String, Integer> groupCounts = count.getValue();
-      for (Entry<String, Integer> groupCount : groupCounts.entrySet()) {
+      Map<String, Tuple<Integer, Integer>> groupCounts = count.getValue();
+      for (Entry<String, Tuple<Integer, Integer>> groupCount : groupCounts.entrySet()) {
         final String group = groupCount.getKey();
+        Tuple<Integer, Integer> tupleCount = groupCount.getValue();
         COUNT_LOGGER.info(
-            "[PubGroup]{},{},{},{}", dataCenter, instanceId, group, groupCount.getValue());
+            "[PubGroup]{},{},{},{},{}",
+            dataCenter,
+            instanceId,
+            group,
+            tupleCount.o1,
+            tupleCount.o2);
       }
     }
+  }
+
+  @VisibleForTesting
+  void setDatumCache(DatumCache datumCache) {
+    this.datumCache = datumCache;
+  }
+
+  @VisibleForTesting
+  void setDataServerConfig(DataServerConfig dataServerConfig) {
+    this.dataServerConfig = dataServerConfig;
   }
 }

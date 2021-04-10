@@ -17,6 +17,7 @@
 package com.alipay.sofa.registry.server.session.scheduler.timertask;
 
 import com.alipay.sofa.registry.common.model.DataUtils;
+import com.alipay.sofa.registry.common.model.Tuple;
 import com.alipay.sofa.registry.common.model.store.Publisher;
 import com.alipay.sofa.registry.common.model.store.Subscriber;
 import com.alipay.sofa.registry.common.model.store.Watcher;
@@ -81,37 +82,44 @@ public class CacheCountTask {
     List<Subscriber> subs = sessionInterests.getDataList();
     List<Watcher> wats = sessionWatchers.getDataList();
 
-    Map<String, Map<String, Integer>> pubGroupCounts = DataUtils.countGroupByInstanceIdGroup(pubs);
+    Map<String, Map<String, Tuple<Integer, Integer>>> pubGroupCounts =
+        DataUtils.countGroupByInstanceIdGroup(pubs);
     printInstanceIdGroupCount("[PubGroup]", pubGroupCounts);
 
-    Map<String, Map<String, Integer>> subGroupCounts = DataUtils.countGroupByInstanceIdGroup(subs);
+    Map<String, Map<String, Tuple<Integer, Integer>>> subGroupCounts =
+        DataUtils.countGroupByInstanceIdGroup(subs);
     printInstanceIdGroupCount("[SubGroup]", subGroupCounts);
 
-    Map<String, Map<String, Integer>> watGroupCounts = DataUtils.countGroupByInstanceIdGroup(wats);
+    Map<String, Map<String, Tuple<Integer, Integer>>> watGroupCounts =
+        DataUtils.countGroupByInstanceIdGroup(wats);
     printInstanceIdGroupCount("[WatGroup]", watGroupCounts);
 
-    Map<String, Map<String, Map<String, Integer>>> pubCounts =
+    Map<String, Map<String, Map<String, Tuple<Integer, Integer>>>> pubCounts =
         DataUtils.countGroupByInstanceIdGroupApp(pubs);
     printInstanceIdGroupAppCount("[Pub]", pubCounts);
 
-    Map<String, Map<String, Map<String, Integer>>> subCounts =
+    Map<String, Map<String, Map<String, Tuple<Integer, Integer>>>> subCounts =
         DataUtils.countGroupByInstanceIdGroupApp(subs);
     printInstanceIdGroupAppCount("[Sub]", subCounts);
 
-    Map<String, Map<String, Map<String, Integer>>> watCounts =
+    Map<String, Map<String, Map<String, Tuple<Integer, Integer>>>> watCounts =
         DataUtils.countGroupByInstanceIdGroupApp(wats);
     printInstanceIdGroupAppCount("[Wat]", watCounts);
   }
 
   private static void printInstanceIdGroupAppCount(
-      String prefix, Map<String, Map<String, Map<String, Integer>>> counts) {
-    for (Entry<String, Map<String, Map<String, Integer>>> count : counts.entrySet()) {
+      String prefix, Map<String, Map<String, Map<String, Tuple<Integer, Integer>>>> counts) {
+    for (Entry<String, Map<String, Map<String, Tuple<Integer, Integer>>>> count :
+        counts.entrySet()) {
       final String instanceId = count.getKey();
-      for (Entry<String, Map<String, Integer>> groupCounts : count.getValue().entrySet()) {
+      for (Entry<String, Map<String, Tuple<Integer, Integer>>> groupCounts :
+          count.getValue().entrySet()) {
         final String group = groupCounts.getKey();
-        for (Entry<String, Integer> apps : groupCounts.getValue().entrySet()) {
+        for (Entry<String, Tuple<Integer, Integer>> apps : groupCounts.getValue().entrySet()) {
           final String app = apps.getKey();
-          COUNT_LOGGER.info("{}{},{},{},{}", prefix, instanceId, group, app, apps.getValue());
+          Tuple<Integer, Integer> tupleCount = apps.getValue();
+          COUNT_LOGGER.info(
+              "{}{},{},{},{},{}", prefix, instanceId, group, app, tupleCount.o1, tupleCount.o2);
         }
         ConcurrentUtils.sleepUninterruptibly(100, TimeUnit.MILLISECONDS);
       }
@@ -119,13 +127,13 @@ public class CacheCountTask {
   }
 
   private static void printInstanceIdGroupCount(
-      String prefix, Map<String, Map<String, Integer>> counts) {
-    for (Entry<String, Map<String, Integer>> count : counts.entrySet()) {
+      String prefix, Map<String, Map<String, Tuple<Integer, Integer>>> counts) {
+    for (Entry<String, Map<String, Tuple<Integer, Integer>>> count : counts.entrySet()) {
       final String instanceId = count.getKey();
-      Map<String, Integer> groupCounts = count.getValue();
-      for (Entry<String, Integer> groups : groupCounts.entrySet()) {
+      for (Entry<String, Tuple<Integer, Integer>> groups : count.getValue().entrySet()) {
         final String group = groups.getKey();
-        COUNT_LOGGER.info("{}{},{},{}", prefix, instanceId, group, groups.getValue());
+        Tuple<Integer, Integer> tupleCount = groups.getValue();
+        COUNT_LOGGER.info("{}{},{},{},{}", prefix, instanceId, group, tupleCount.o1, tupleCount.o2);
       }
     }
   }
