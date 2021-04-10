@@ -25,7 +25,6 @@ import com.alipay.sofa.registry.server.meta.provide.data.DefaultProvideDataNotif
 import com.alipay.sofa.registry.server.meta.provide.data.ProvideDataService;
 import com.alipay.sofa.registry.store.api.DBResponse;
 import com.alipay.sofa.registry.store.api.OperationStatus;
-import com.alipay.sofa.registry.util.JsonUtils;
 import java.util.concurrent.TimeoutException;
 import org.junit.Assert;
 import org.junit.Before;

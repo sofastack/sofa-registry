@@ -36,6 +36,7 @@ public class PersistenceDataBuilder {
   }
 
   public static String getDataInfoId(PersistenceData persistenceData) {
-    return DataInfo.toDataInfoId(persistenceData.getDataId(), persistenceData.getInstanceId(), persistenceData.getGroup());
+    return DataInfo.toDataInfoId(
+        persistenceData.getDataId(), persistenceData.getInstanceId(), persistenceData.getGroup());
   }
 }

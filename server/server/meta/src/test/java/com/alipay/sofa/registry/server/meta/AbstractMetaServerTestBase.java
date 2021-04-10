@@ -16,6 +16,9 @@
  */
 package com.alipay.sofa.registry.server.meta;
 
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+
 import com.alipay.sofa.registry.common.model.Node;
 import com.alipay.sofa.registry.common.model.console.PersistenceData;
 import com.alipay.sofa.registry.common.model.console.PersistenceDataBuilder;
@@ -41,12 +44,6 @@ import com.alipay.sofa.registry.util.JsonUtils;
 import com.alipay.sofa.registry.util.MathUtils;
 import com.alipay.sofa.registry.util.ObjectFactory;
 import com.google.common.collect.Maps;
-import org.assertj.core.util.Lists;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.rules.TestName;
-
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
@@ -64,9 +61,11 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BooleanSupplier;
-
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+import org.assertj.core.util.Lists;
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.rules.TestName;
 
 /**
  * @author chen.zhu

@@ -17,9 +17,9 @@
 package com.alipay.sofa.registry.jdbc.repository.batch;
 
 import com.alipay.sofa.registry.common.model.store.AppRevision;
+import com.alipay.sofa.registry.jdbc.config.DefaultCommonConfig;
 import com.alipay.sofa.registry.jdbc.convertor.AppRevisionDomainConvertor;
 import com.alipay.sofa.registry.jdbc.domain.AppRevisionDomain;
-import com.alipay.sofa.registry.jdbc.domain.AppRevisionQueryModel;
 import com.alipay.sofa.registry.jdbc.mapper.AppRevisionMapper;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
@@ -36,12 +36,14 @@ import org.springframework.util.CollectionUtils;
  * @author xiaojian.xj
  * @version $Id: AppRevisionBatchQueryCallable.java, v 0.1 2021年01月24日 14:01 xiaojian.xj Exp $
  */
-public class AppRevisionBatchQueryCallable
-    extends BatchCallableRunnable<AppRevisionQueryModel, AppRevision> {
+public class AppRevisionBatchQueryCallable extends BatchCallableRunnable<String, AppRevision> {
 
   private static final Logger LOG =
       LoggerFactory.getLogger("METADATA-EXCHANGE", "[AppRevisionBatchQuery]");
+
   @Autowired private AppRevisionMapper appRevisionMapper;
+
+  @Autowired private DefaultCommonConfig defaultCommonConfig;
 
   /**
    * batch query app_revision
@@ -58,9 +60,10 @@ public class AppRevisionBatchQueryCallable
     if (LOG.isInfoEnabled()) {
       LOG.info("commit app_revision query, task size: " + taskEvents.size());
     }
-    List<AppRevisionQueryModel> querys =
+    List<String> revisions =
         taskEvents.stream().map(task -> task.getData()).collect(Collectors.toList());
-    List<AppRevisionDomain> domains = appRevisionMapper.batchQuery(querys);
+    List<AppRevisionDomain> domains =
+        appRevisionMapper.batchQuery(defaultCommonConfig.getClusterId(), revisions);
 
     Map<String, AppRevision> queryResult = new HashMap<>();
     domains.forEach(
@@ -75,7 +78,7 @@ public class AppRevisionBatchQueryCallable
 
     taskEvents.forEach(
         taskEvent -> {
-          String revision = taskEvent.getData().getRevision();
+          String revision = taskEvent.getData();
           InvokeFuture<AppRevision> future = taskEvent.getFuture();
           future.putResponse(queryResult.get(revision));
         });

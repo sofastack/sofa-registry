@@ -16,10 +16,7 @@
  */
 package com.alipay.sofa.registry.jdbc.mapper;
 
-import com.alipay.sofa.registry.common.model.store.AppRevision;
 import com.alipay.sofa.registry.jdbc.domain.AppRevisionDomain;
-import com.alipay.sofa.registry.jdbc.domain.AppRevisionQueryModel;
-
 import java.util.Date;
 import java.util.List;
 import org.apache.ibatis.annotations.Param;
@@ -51,21 +48,29 @@ public interface AppRevisionMapper {
   /**
    * batch query
    *
-   * @param querys
+   * @param revisions
    * @return
    */
-  public List<AppRevisionDomain> batchQuery(List<AppRevisionQueryModel> querys);
+  public List<AppRevisionDomain> batchQuery(
+      @Param("dataCenter") String dataCenter, @Param("revisions") List<String> revisions);
 
   /**
    * check if revision exist
    *
-   * @param query
+   * @param dataCenter
    * @return revision
    */
-  AppRevisionDomain checkExist(AppRevisionQueryModel query);
+  AppRevisionDomain checkExist(
+      @Param("dataCenter") String dataCenter, @Param("revision") String revision);
 
-  /** @param heartbeats */
-  void batchHeartbeat(List<AppRevision> heartbeats);
+  /**
+   * batchHeartbeat
+   *
+   * @param dataCenter
+   * @param revisions
+   */
+  void batchHeartbeat(
+      @Param("dataCenter") String dataCenter, @Param("revisions") List<String> revisions);
 
   /**
    * query app_revision silence beyond silenceHour
@@ -92,5 +97,6 @@ public interface AppRevisionMapper {
    * @param revisions
    * @return
    */
-  List<AppRevisionQueryModel> batchCheck(List<AppRevisionQueryModel> revisions);
+  List<String> batchCheck(
+      @Param("dataCenter") String dataCenter, @Param("revisions") List<String> revisions);
 }

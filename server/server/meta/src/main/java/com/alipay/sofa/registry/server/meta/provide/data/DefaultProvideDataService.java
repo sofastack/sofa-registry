@@ -73,7 +73,8 @@ public class DefaultProvideDataService implements ProvideDataService {
   private void provideDataRefresh() {
     Collection<PersistenceData> provideDatas = provideDataRepository.getAll();
     Map<String, PersistenceData> newCache = new HashMap<>();
-    provideDatas.stream().forEach(data -> newCache.put(PersistenceDataBuilder.getDataInfoId(data), data));
+    provideDatas.stream()
+        .forEach(data -> newCache.put(PersistenceDataBuilder.getDataInfoId(data), data));
 
     lock.writeLock().lock();
     try {
@@ -136,7 +137,8 @@ public class DefaultProvideDataService implements ProvideDataService {
       lock.writeLock().lock();
       try {
         // update local cache
-        provideDataCache.put(PersistenceDataBuilder.getDataInfoId(persistenceData), persistenceData);
+        provideDataCache.put(
+            PersistenceDataBuilder.getDataInfoId(persistenceData), persistenceData);
       } catch (Throwable t) {
         LOGGER.error("save provide data: {} error.", persistenceData, t);
         return false;
