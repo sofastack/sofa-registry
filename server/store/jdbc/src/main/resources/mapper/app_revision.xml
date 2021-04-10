@@ -15,51 +15,50 @@
         <result property="gmtModify" column="gmt_modified" javaType="java.util.Date" jdbcType="TIMESTAMP"/>
     </resultMap>
 
-    <resultMap type="com.alipay.sofa.registry.jdbc.domain.AppRevisionQueryModel" id="appRevisionQueryMap">
-        <result property="dataCenter" column="data_center" javaType="java.lang.String" jdbcType="VARCHAR"/>
-        <result property="revision" column="revision" javaType="java.lang.String" jdbcType="VARCHAR"/>
-    </resultMap>
-
     <insert id="insert" parameterType="com.alipay.sofa.registry.jdbc.domain.AppRevisionDomain">
         <![CDATA[
-       INSERT INTO app_revision
-       (
-           data_center,
-           revision,
-           app_name,
-           client_version,
-           base_params,
-           service_params,
-           gmt_create,
-           gmt_modified
-       )
-       VALUES
-       (
-           #{dataCenter},
-           #{revision},
-           #{appName},
-           #{clientVersion},
-           #{baseParams},
-           #{serviceParams},
-           CURRENT_TIMESTAMP,
-           CURRENT_TIMESTAMP
-       )
-       ON DUPLICATE KEY UPDATE gmt_modified = CURRENT_TIMESTAMP
-       ]]>
+
+               INSERT INTO app_revision
+               (
+                   data_center,
+                   revision,
+                   app_name,
+                   client_version,
+                   base_params,
+                   service_params,
+                   gmt_create,
+                   gmt_modified
+               )
+               VALUES
+               (
+                   #{dataCenter},
+                   #{revision},
+                   #{appName},
+                   #{clientVersion},
+                   #{baseParams},
+                   #{serviceParams},
+                   CURRENT_TIMESTAMP,
+                   CURRENT_TIMESTAMP
+               )
+               ON DUPLICATE KEY UPDATE gmt_modified = CURRENT_TIMESTAMP
+
+        ]]>
     </insert>
 
     <select id="queryRevision" resultMap="appRevisionResultMap">
-        <![CDATA[ select * from app_revision
-                  where data_center = #{dataCenter} and revision = #{revision}
+        <![CDATA[
+         select * from app_revision
+                          where data_center = #{dataCenter} and revision = #{revision}
+
         ]]>
     </select>
 
     <select id="batchQuery" parameterType="java.util.List" resultMap="appRevisionResultMap">
-        select * from app_revision
-        <if test="list != null and list.size() > 0">
-            where
-            <foreach  collection="list" item="appRevision" open="(" close=")" separator=" or ">
-               ( data_center = #{appRevision.dataCenter} and revision = #{appRevision.revision})
+        select * from app_revision where data_center = #{dataCenter}
+        <if test="revisions != null and revisions.size() > 0">
+            and revision in
+            <foreach collection="revisions" index="index" item="item" open="(" separator="," close=")">
+                #{item}
             </foreach>
         </if>
     </select>
@@ -70,36 +69,31 @@
 
 
     <update id="batchHeartbeat" parameterType="java.util.List">
-        update app_revision
-        <trim prefix="set" suffixOverrides=",">
-            <trim prefix="gmt_modified = case" suffix="end,">
-                <foreach collection="list" item="item" index="index">
-                    <if test="item.lastHeartbeat != null">
-                        when data_center=#{item.dataCenter} and revision=#{item.revision} then #{item.lastHeartbeat}
-                    </if>
-                </foreach>
-            </trim>
-        </trim>
-        where
-        <foreach collection="list" separator="or" item="item" index="index">
-            <![CDATA[
-              data_center=#{item.dataCenter} and revision=#{item.revision} and gmt_modified < #{item.lastHeartbeat}
-            ]]>
-        </foreach>
+        update app_revision set gmt_modified = CURRENT_TIMESTAMP
+        where data_center=#{item.dataCenter}
+        <if test="revisions != null and revisions.size() > 0">
+            and revision in
+            <foreach collection="revisions" index="index" item="item" open="(" separator="," close=")">
+                #{item}
+            </foreach>
+        </if>
     </update>
 
+
     <select id="queryGcRevision" resultMap="appRevisionResultMap">
-        <![CDATA[ select * from app_revision
-                  where data_center = #{dataCenter} and gmt_modified < #{date} limit #{limitCount}
+        <![CDATA[
+         select * from app_revision
+                          where data_center = #{dataCenter} and gmt_modified < #{date} limit #{limitCount}
+
         ]]>
     </select>
 
-    <select id="batchCheck" parameterType="java.util.List" resultMap="appRevisionQueryMap">
-        select data_center,revision from app_revision
-        <if test="list != null and list.size() > 0">
-            where
-            <foreach  collection="list" item="appRevision" open="(" close=")" separator=" or ">
-                ( data_center = #{appRevision.dataCenter} and revision = #{appRevision.revision})
+    <select id="batchCheck" parameterType="java.util.List" resultType="java.lang.String">
+        select revision from app_revision where data_center = #{dataCenter}
+        <if test="revisions != null and revisions.size() > 0">
+            and revision in
+            <foreach collection="revisions" index="index" item="item" open="(" separator="," close=")">
+                #{item}
             </foreach>
         </if>
     </select>

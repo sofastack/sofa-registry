@@ -30,7 +30,6 @@ import com.alipay.sofa.registry.server.meta.lease.filter.DefaultForbiddenServerM
 import com.alipay.sofa.registry.server.meta.lease.filter.RegistryForbiddenServerManager;
 import com.alipay.sofa.registry.server.meta.provide.data.ProvideDataService;
 import com.alipay.sofa.registry.store.api.DBResponse;
-import com.alipay.sofa.registry.store.api.DBResponse.DBResponseBuilder;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -68,12 +67,11 @@ public class RegistryCoreOpsResourceTest extends AbstractMetaServerTestBase {
     ProvideDataService provideDataService = mock(ProvideDataService.class);
     registryForbiddenServerManager = new DefaultForbiddenServerManager(provideDataService);
     resource =
-            new RegistryCoreOpsResource()
-                    .setRegistryForbiddenServerManager(registryForbiddenServerManager);
-
+        new RegistryCoreOpsResource()
+            .setRegistryForbiddenServerManager(registryForbiddenServerManager);
 
     when(provideDataService.queryProvideData(ValueConstants.REGISTRY_SERVER_BLACK_LIST_DATA_ID))
-            .thenReturn(DBResponse.notfound().build());
+        .thenReturn(DBResponse.notfound().build());
 
     doThrow(new SofaRegistryRuntimeException("expected"))
         .when(provideDataService)
@@ -101,5 +99,4 @@ public class RegistryCoreOpsResourceTest extends AbstractMetaServerTestBase {
     Assert.assertTrue(
         registryForbiddenServerManager.allowSelect(new Lease<>(new SimpleNode("127.0.0.1"), 100)));
   }
-
 }

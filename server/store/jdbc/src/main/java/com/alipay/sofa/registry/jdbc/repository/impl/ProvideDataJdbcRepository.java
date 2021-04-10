@@ -50,7 +50,8 @@ public class ProvideDataJdbcRepository implements ProvideDataRepository {
 
     ProvideDataDomain exist =
         provideDataMapper.query(
-            defaultCommonConfig.getClusterId(), PersistenceDataBuilder.getDataInfoId(persistenceData));
+            defaultCommonConfig.getClusterId(),
+            PersistenceDataBuilder.getDataInfoId(persistenceData));
 
     ProvideDataDomain domain =
         ProvideDataDomainConvertor.convert2ProvideData(

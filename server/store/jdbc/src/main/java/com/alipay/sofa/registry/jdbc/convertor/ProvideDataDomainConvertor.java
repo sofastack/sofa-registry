@@ -20,11 +20,10 @@ import com.alipay.sofa.registry.common.model.console.PersistenceData;
 import com.alipay.sofa.registry.common.model.console.PersistenceDataBuilder;
 import com.alipay.sofa.registry.common.model.store.DataInfo;
 import com.alipay.sofa.registry.jdbc.domain.ProvideDataDomain;
-import org.springframework.util.CollectionUtils;
-
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
+import org.springframework.util.CollectionUtils;
 
 /**
  * @author xiaojian.xj

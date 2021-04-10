@@ -19,7 +19,6 @@ package com.alipay.sofa.registry.server.meta.resource;
 import static org.mockito.Mockito.*;
 
 import com.alipay.sofa.registry.common.model.constants.ValueConstants;
-import com.alipay.sofa.registry.exception.SofaRegistryRuntimeException;
 import com.alipay.sofa.registry.server.meta.AbstractMetaServerTestBase;
 import com.alipay.sofa.registry.server.meta.provide.data.DefaultProvideDataNotifier;
 import com.alipay.sofa.registry.server.meta.provide.data.ProvideDataService;

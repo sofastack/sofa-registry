@@ -20,7 +20,6 @@ import com.alipay.sofa.registry.common.model.store.AppRevision;
 import com.alipay.sofa.registry.jdbc.config.DefaultCommonConfig;
 import com.alipay.sofa.registry.jdbc.config.MetadataConfig;
 import com.alipay.sofa.registry.jdbc.convertor.AppRevisionDomainConvertor;
-import com.alipay.sofa.registry.jdbc.domain.AppRevisionQueryModel;
 import com.alipay.sofa.registry.jdbc.mapper.AppRevisionMapper;
 import com.alipay.sofa.registry.jdbc.repository.JdbcRepository;
 import com.alipay.sofa.registry.jdbc.repository.batch.AppRevisionHeartbeatBatchCallable;
@@ -43,7 +42,6 @@ import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
-
 import org.apache.commons.lang.time.DateUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -85,27 +83,24 @@ public class AppRevisionHeartbeatJdbcRepository
       singleFlight.execute(
           "app_revision_heartbeat",
           () -> {
-            Map<AppRevisionQueryModel, AppRevision> heartbeatMap =
+            Map<String, AppRevision> heartbeatMap =
                 new ConcurrentHashMap<>(appRevisionJdbcRepository.getHeartbeatMap());
 
-            Map<AppRevisionQueryModel, InvokeFuture> futureMap = new HashMap<>();
-            for (Entry<AppRevisionQueryModel, AppRevision> entry : heartbeatMap.entrySet()) {
+            Map<String, InvokeFuture> futureMap = new HashMap<>();
+            for (Entry<String, AppRevision> entry : heartbeatMap.entrySet()) {
               TaskEvent taskEvent =
                   appRevisionHeartbeatBatchCallable.new TaskEvent(entry.getValue());
               InvokeFuture future = appRevisionHeartbeatBatchCallable.commit(taskEvent);
               futureMap.put(entry.getKey(), future);
             }
 
-            for (Entry<AppRevisionQueryModel, InvokeFuture> entry : futureMap.entrySet()) {
+            for (Entry<String, InvokeFuture> entry : futureMap.entrySet()) {
 
               InvokeFuture future = entry.getValue();
               try {
                 future.getResponse();
               } catch (InterruptedException e) {
-                LOG.error(
-                    String.format(
-                        "app_revision: %s heartbeat error.", entry.getKey().getRevision()),
-                    e);
+                LOG.error(String.format("app_revision: %s heartbeat error.", entry.getKey()), e);
               }
             }
             return null;
@@ -119,10 +114,9 @@ public class AppRevisionHeartbeatJdbcRepository
   public void doHeartbeatCacheChecker() {
     try {
 
-      List<AppRevisionQueryModel> revisions =
-          new ArrayList(appRevisionJdbcRepository.getHeartbeatMap().keySet());
+      List<String> revisions = new ArrayList(appRevisionJdbcRepository.getHeartbeatMap().keySet());
 
-      List<AppRevisionQueryModel> exists = new ArrayList<>();
+      List<String> exists = new ArrayList<>();
       int round = MathUtils.divideCeil(revisions.size(), heartbeatCheckerSize);
       for (int i = 0; i < round; i++) {
         int start = i * heartbeatCheckerSize;
@@ -130,12 +124,12 @@ public class AppRevisionHeartbeatJdbcRepository
             start + heartbeatCheckerSize < revisions.size()
                 ? start + heartbeatCheckerSize
                 : revisions.size();
-        List<AppRevisionQueryModel> subRevisions = revisions.subList(start, end);
-        exists.addAll(appRevisionMapper.batchCheck(subRevisions));
+        List<String> subRevisions = revisions.subList(start, end);
+        exists.addAll(
+            appRevisionMapper.batchCheck(defaultCommonConfig.getClusterId(), subRevisions));
       }
 
-      SetView<AppRevisionQueryModel> difference =
-          Sets.difference(new HashSet<>(revisions), new HashSet<>(exists));
+      SetView<String> difference = Sets.difference(new HashSet<>(revisions), new HashSet<>(exists));
       LOG.info("[doHeartbeatCacheChecker] reduces heartbeat size: {}", difference.size());
       appRevisionJdbcRepository.invalidateHeartbeat(difference);
 
@@ -151,8 +145,8 @@ public class AppRevisionHeartbeatJdbcRepository
       singleFlight.execute(
           "app_revision_gc",
           () -> {
-              Date date = DateUtils.addHours(new Date(), -silenceHour);
-              List<AppRevision> appRevisions =
+            Date date = DateUtils.addHours(new Date(), -silenceHour);
+            List<AppRevision> appRevisions =
                 AppRevisionDomainConvertor.convert2Revisions(
                     appRevisionMapper.queryGcRevision(
                         defaultCommonConfig.getClusterId(), date, REVISION_GC_LIMIT));
