@@ -18,7 +18,7 @@ package com.alipay.sofa.registry.server.data.remoting.metaserver.provideData;
 
 import com.alipay.sofa.registry.common.model.metaserver.ProvideData;
 import java.util.ArrayList;
-import java.util.Collection;
+import java.util.List;
 
 /**
  * @author kezhu.wukz
@@ -26,7 +26,7 @@ import java.util.Collection;
  */
 public class ProvideDataProcessorManager implements ProvideDataProcessor {
 
-  private Collection<ProvideDataProcessor> provideDataProcessors = new ArrayList<>();
+  private final List<ProvideDataProcessor> provideDataProcessors = new ArrayList<>();
 
   public void addProvideDataProcessor(ProvideDataProcessor provideDataProcessor) {
     provideDataProcessors.add(provideDataProcessor);

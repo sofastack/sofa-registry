@@ -41,7 +41,7 @@ public class MetaRevisionHeartbeatPbHandler extends AbstractServerHandler<MetaHe
   }
 
   @Override
-  public void checkParam(MetaHeartbeatRequest request) throws RuntimeException {
+  public void checkParam(MetaHeartbeatRequest request) {
     ParaCheckUtil.checkNotNull(request, "metaHeartbeatRequest");
     ParaCheckUtil.checkNotEmpty(request.getRevisionsList(), "metaHeartbeatRequest revisions");
   }

@@ -78,9 +78,8 @@ public abstract class AbstractChannelHandler<T> implements ChannelHandler<T> {
    * check params if valid
    *
    * @param request
-   * @throws RuntimeException
    */
-  public void checkParam(T request) throws RuntimeException {}
+  public void checkParam(T request) {}
 
   /**
    * execute

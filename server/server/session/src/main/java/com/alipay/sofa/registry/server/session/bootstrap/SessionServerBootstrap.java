@@ -282,7 +282,7 @@ public class SessionServerBootstrap {
       // register node as renew node
       metaNodeService.renewNode();
       // start sched renew
-      metaNodeService.startRenewer(sessionServerConfig.getSchedulerHeartbeatIntervalSecs() * 1000);
+      metaNodeService.startRenewer();
       fetchStopPushSwitch();
 
       fetchBlackList();

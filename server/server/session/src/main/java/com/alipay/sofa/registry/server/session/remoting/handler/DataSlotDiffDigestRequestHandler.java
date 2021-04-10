@@ -73,7 +73,7 @@ public class DataSlotDiffDigestRequestHandler
       Map<String, Map<String, Publisher>> existingPublishers) {
 
     DataSlotDiffDigestResult result =
-        DataSlotDiffUtils.diffDigestPublishers(digestMap, existingPublishers);
+        DataSlotDiffUtils.diffDigestResult(digestMap, existingPublishers);
     DataSlotDiffUtils.logDiffResult(result, targetSlot);
     return result;
   }

@@ -214,7 +214,7 @@ public class DataServerBootstrap {
 
   private void renewNode() {
     metaServerService.renewNode();
-    metaServerService.startRenewer(dataServerConfig.getSchedulerHeartbeatIntervalSecs() * 1000);
+    metaServerService.startRenewer();
   }
 
   private void fetchProviderData() {

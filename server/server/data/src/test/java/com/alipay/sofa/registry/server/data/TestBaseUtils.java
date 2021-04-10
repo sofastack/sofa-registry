@@ -37,6 +37,8 @@ import com.alipay.sofa.registry.server.data.bootstrap.DataServerConfig;
 import com.alipay.sofa.registry.server.data.cache.DatumCache;
 import com.alipay.sofa.registry.server.data.cache.LocalDatumStorage;
 import com.alipay.sofa.registry.server.shared.env.ServerEnv;
+import com.alipay.sofa.registry.task.FastRejectedExecutionException;
+import com.alipay.sofa.registry.task.KeyedThreadPoolExecutor;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import io.netty.channel.Channel;
@@ -218,7 +220,7 @@ public final class TestBaseUtils {
 
     @Override
     public boolean isConnected() {
-      return connected;
+      return active.get();
     }
 
     public void setActive(boolean b) {
@@ -257,5 +259,12 @@ public final class TestBaseUtils {
     } catch (Throwable exception) {
       Assert.assertEquals(exception.getClass(), eclazz);
     }
+  }
+
+  public static KeyedThreadPoolExecutor rejectExecutor() {
+    KeyedThreadPoolExecutor executor = Mockito.mock(KeyedThreadPoolExecutor.class);
+    Mockito.when(executor.execute(Mockito.anyObject(), Mockito.anyObject()))
+        .thenThrow(new FastRejectedExecutionException("reject"));
+    return executor;
   }
 }

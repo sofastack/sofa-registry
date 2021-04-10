@@ -24,7 +24,7 @@ import java.io.Serializable;
  */
 public class LeaderSlotStatus extends BaseSlotStatus implements Serializable {
 
-  private LeaderStatus leaderStatus = LeaderStatus.INIT;
+  private final LeaderStatus leaderStatus;
 
   /**
    * Constructor.

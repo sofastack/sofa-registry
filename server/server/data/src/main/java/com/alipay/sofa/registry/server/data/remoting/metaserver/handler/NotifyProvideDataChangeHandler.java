@@ -24,6 +24,8 @@ import com.alipay.sofa.registry.remoting.Channel;
 import com.alipay.sofa.registry.server.data.remoting.metaserver.provideData.ProvideDataProcessor;
 import com.alipay.sofa.registry.server.shared.meta.MetaServerService;
 import com.alipay.sofa.registry.server.shared.remoting.AbstractClientHandler;
+import com.alipay.sofa.registry.util.ParaCheckUtil;
+import com.google.common.annotations.VisibleForTesting;
 import org.springframework.beans.factory.annotation.Autowired;
 
 /**
@@ -42,6 +44,11 @@ public class NotifyProvideDataChangeHandler extends AbstractClientHandler<Provid
   }
 
   @Override
+  public void checkParam(ProvideDataChangeEvent request) {
+    ParaCheckUtil.checkNotBlank(request.getDataInfoId(), "request.dataInfoId");
+  }
+
+  @Override
   public Object doHandle(Channel channel, ProvideDataChangeEvent request) {
     String dataInfoId = request.getDataInfoId();
     ProvideData provideData = metaServerService.fetchData(dataInfoId);
@@ -57,5 +64,15 @@ public class NotifyProvideDataChangeHandler extends AbstractClientHandler<Provid
   @Override
   public CommonResponse buildFailedResponse(String msg) {
     return CommonResponse.buildFailedResponse(msg);
+  }
+
+  @VisibleForTesting
+  void setMetaServerService(MetaServerService metaServerService) {
+    this.metaServerService = metaServerService;
+  }
+
+  @VisibleForTesting
+  void setProvideDataProcessorManager(ProvideDataProcessor provideDataProcessorManager) {
+    this.provideDataProcessorManager = provideDataProcessorManager;
   }
 }

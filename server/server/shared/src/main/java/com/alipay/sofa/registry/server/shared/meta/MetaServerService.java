@@ -27,7 +27,7 @@ import java.util.Set;
  */
 public interface MetaServerService {
   /** Start renewer. */
-  void startRenewer(int intervalMs);
+  void startRenewer();
 
   /** Stop renewer. */
   void stopRenewer();
@@ -61,16 +61,16 @@ public interface MetaServerService {
    * @param zonename zone is null, get all session
    * @return
    */
-  public List<String> getSessionServerList(String zonename);
+  List<String> getSessionServerList(String zonename);
 
   /**
    * Gets get data server list.
    *
    * @return the get data server list
    */
-  public Set<String> getDataServerList();
+  Set<String> getDataServerList();
 
-  public String getMetaServerLeader();
+  String getMetaServerLeader();
 
   /**
    * Gets get session server epoch.

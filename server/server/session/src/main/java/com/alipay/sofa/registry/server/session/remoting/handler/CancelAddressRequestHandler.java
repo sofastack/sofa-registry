@@ -44,7 +44,7 @@ public class CancelAddressRequestHandler extends AbstractServerHandler<CancelAdd
   }
 
   @Override
-  public void checkParam(CancelAddressRequest request) throws RuntimeException {
+  public void checkParam(CancelAddressRequest request) {
     ParaCheckUtil.checkNotEmpty(request.getConnectIds(), "request.connectIds");
   }
 

@@ -52,7 +52,7 @@ public class GetDataHandler extends AbstractDataHandler<GetDataRequest> {
   }
 
   @Override
-  public void checkParam(GetDataRequest request) throws RuntimeException {
+  public void checkParam(GetDataRequest request) {
     ParaCheckUtil.checkNotBlank(request.getDataInfoId(), "GetDataRequest.dataInfoId");
     ParaCheckUtil.checkNotBlank(request.getDataCenter(), "GetDataRequest.dataCenter");
     checkSessionProcessId(request.getSessionProcessId());

@@ -16,11 +16,13 @@
  */
 package com.alipay.sofa.registry.server.data.change;
 
-import com.alipay.remoting.Connection;
+import static com.alipay.sofa.registry.server.data.change.ChangeMetrics.*;
+
 import com.alipay.sofa.registry.common.model.dataserver.Datum;
 import com.alipay.sofa.registry.common.model.dataserver.DatumVersion;
 import com.alipay.sofa.registry.common.model.store.Publisher;
 import com.alipay.sofa.registry.remoting.Server;
+import com.alipay.sofa.registry.remoting.bolt.exchange.BoltExchange;
 import com.alipay.sofa.registry.remoting.exchange.Exchange;
 import com.alipay.sofa.registry.server.data.TestBaseUtils;
 import com.alipay.sofa.registry.server.data.bootstrap.DataServerConfig;
@@ -58,13 +60,22 @@ public class DataChangeEventCenterTest {
 
     TestBaseUtils.MockBlotChannel channel = TestBaseUtils.newChannel(9620, "localhost", 1000);
     center.onTempPubChange(pub, DC);
+    // npe
     Assert.assertTrue(center.handleTempChanges(Lists.newArrayList(channel)));
+
+    // reject
+    center.setNotifyTempExecutor(TestBaseUtils.rejectExecutor());
+    center.onTempPubChange(pub, DC);
+    double pre = ChangeMetrics.CHANGETEMP_SKIP_COUNTER.get();
+    Assert.assertTrue(center.handleTempChanges(Lists.newArrayList(channel)));
+    Assert.assertTrue(ChangeMetrics.CHANGETEMP_SKIP_COUNTER.get() == (pre + 1));
   }
 
   @Test
   public void testHandleChangeNotInit() {
     setCenter();
     Assert.assertFalse(center.handleChanges(Collections.EMPTY_LIST));
+
     List<String> changes1 = Lists.newArrayList("1", "2");
     center.onChange(changes1, DC);
     Assert.assertFalse(center.handleChanges(Collections.EMPTY_LIST));
@@ -72,16 +83,98 @@ public class DataChangeEventCenterTest {
     TestBaseUtils.MockBlotChannel channel = TestBaseUtils.newChannel(9620, "localhost", 1000);
     center.onChange(changes1, DC);
     Assert.assertTrue(center.handleChanges(Lists.newArrayList(channel)));
+
+    Publisher pub = TestBaseUtils.createTestPublisher("testDataId");
+    center.onChange(Lists.newArrayList(pub.getDataInfoId()), DC);
+    datumCache.getLocalDatumStorage().put(pub);
+    // npe
+    Assert.assertTrue(center.handleChanges(Lists.newArrayList(channel)));
+
+    // reject
+    center.setNotifyExecutor(TestBaseUtils.rejectExecutor());
+    center.onChange(Lists.newArrayList(pub.getDataInfoId()), DC);
+    double pre = ChangeMetrics.CHANGE_SKIP_COUNTER.get();
+    Assert.assertTrue(center.handleChanges(Lists.newArrayList(channel)));
+    Assert.assertTrue(ChangeMetrics.CHANGE_SKIP_COUNTER.get() == (pre + 1));
   }
 
   @Test
-  public void testHandleExpire() {
+  public void testNotify() {
+    setCenter();
+    TestBaseUtils.MockBlotChannel channel = TestBaseUtils.newChannel(9620, "localhost", 1000);
+    channel.setActive(false);
+    DataChangeEventCenter.ChangeNotifier notifier =
+        center.newChangeNotifier(
+            channel, DC, Collections.singletonMap(String.valueOf(100), new DatumVersion(100)));
+
+    double pre = CHANGE_FAIL_COUNTER.get();
+    notifier.run();
+    Assert.assertTrue(CHANGE_FAIL_COUNTER.get() == (pre + 1));
+
+    channel.setActive(true);
+    BoltExchange exchange = Mockito.mock(BoltExchange.class);
+    Mockito.when(exchange.getServer(Mockito.anyInt())).thenReturn(Mockito.mock(Server.class));
+    center.setBoltExchange(exchange);
+
+    pre = CHANGE_FAIL_COUNTER.get();
+    double spre = CHANGE_SUCCESS_COUNTER.get();
+    notifier.run();
+    Assert.assertTrue(CHANGE_FAIL_COUNTER.get() == (pre));
+    Assert.assertTrue(CHANGE_SUCCESS_COUNTER.get() == (spre + 1));
+  }
+
+  @Test
+  public void testTempNotify() {
+    setCenter();
+    TestBaseUtils.MockBlotChannel channel = TestBaseUtils.newChannel(9620, "localhost", 1000);
+
+    DataChangeEventCenter.TempNotifier notifier = center.newTempNotifier(channel, null);
+
+    // channel close
+    channel.setActive(false);
+    double pre = CHANGETEMP_FAIL_COUNTER.get();
+    notifier.run();
+    System.out.println(pre + ":" + CHANGETEMP_FAIL_COUNTER.get());
+    Assert.assertTrue(CHANGETEMP_FAIL_COUNTER.get() == (pre + 1));
+
+    channel.setActive(true);
+
+    // npe
+    pre = CHANGETEMP_FAIL_COUNTER.get();
+    notifier.run();
+    Assert.assertTrue(CHANGETEMP_FAIL_COUNTER.get() == (pre + 1));
+
+    // success
+    Datum datum = new Datum();
+    datum.setDataCenter("testDc");
+    datum.setDataInfoId("testDataInfoId");
+    notifier = center.newTempNotifier(channel, datum);
+    pre = CHANGETEMP_FAIL_COUNTER.get();
+    double spre = CHANGETEMP_SUCCESS_COUNTER.get();
+    notifier.run();
+    Assert.assertTrue(CHANGETEMP_FAIL_COUNTER.get() == (pre));
+    Assert.assertTrue(CHANGETEMP_SUCCESS_COUNTER.get() == (spre + 1));
+  }
+
+  @Test
+  public void testHandleExpire_npe() {
+    initHandleExpire();
+    center.handleExpire();
+  }
+
+  @Test
+  public void testHandleExpire_reject() {
+    initHandleExpire();
+    center.setNotifyExecutor(TestBaseUtils.rejectExecutor());
+    center.handleExpire();
+  }
+
+  private void initHandleExpire() {
     setCenter();
     dataServerConfig.setNotifyRetryQueueSize(10);
     // not expire
     dataServerConfig.setNotifyRetryBackoffMillis(100000);
     TestBaseUtils.MockBlotChannel channel = TestBaseUtils.newChannel(9620, "localhost", 1000);
-    Connection conn = channel.conn;
     List<DataChangeEventCenter.ChangeNotifier> list = Lists.newArrayList();
     for (int i = 0; i < dataServerConfig.getNotifyRetryQueueSize(); i++) {
       center.commitRetry(
@@ -106,7 +199,6 @@ public class DataChangeEventCenterTest {
     for (DataChangeEventCenter.ChangeNotifier n : list) {
       center.commitRetry(n);
     }
-    center.handleExpire();
   }
 
   @Test
@@ -200,7 +292,7 @@ public class DataChangeEventCenterTest {
     center.setBoltExchange(exchange);
     TestBaseUtils.MockBlotChannel channel = TestBaseUtils.newChannel(9620, "localhost", 1000);
     channel.setActive(false);
-    Assert.assertFalse(channel.conn.isFine());
+    Assert.assertFalse(channel.isConnected());
 
     Mockito.when(server.selectAvailableChannelsForHostAddress())
         .thenReturn(
@@ -221,7 +313,7 @@ public class DataChangeEventCenterTest {
     Thread.sleep(2000);
 
     channel.setActive(true);
-    Assert.assertTrue(channel.conn.isFine());
+    Assert.assertTrue(channel.isConnected());
 
     center.onChange(Lists.newArrayList(pub.getDataInfoId()), DC);
     center.onTempPubChange(pub, DC);
@@ -230,7 +322,7 @@ public class DataChangeEventCenterTest {
     center.onChange(Lists.newArrayList(pub.getDataInfoId()), DC);
     center.onTempPubChange(pub, DC);
     Thread.sleep(2000);
-    Mockito.verify(server, Mockito.times(9))
+    Mockito.verify(server, Mockito.times(6))
         .sendSync(Mockito.anyObject(), Mockito.anyObject(), Mockito.anyInt());
   }
 }

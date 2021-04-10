@@ -49,7 +49,7 @@ public class DataSlotDiffSyncResultTest {
     m.put("b", 200);
     Map<String, Map<String, Publisher>> publishers = randPublishers(m);
     DataSlotDiffDigestResult result =
-        DataSlotDiffUtils.diffDigestPublishers(Collections.emptyMap(), publishers);
+        DataSlotDiffUtils.diffDigestResult(Collections.emptyMap(), publishers);
     Assert.assertFalse(result.getAddedDataInfoIds().isEmpty());
     Assert.assertEquals(result.getAddedDataInfoIds(), Lists.newArrayList("a", "b"));
     Assert.assertTrue(result.getRemovedDataInfoIds().isEmpty());
@@ -63,14 +63,14 @@ public class DataSlotDiffSyncResultTest {
     Map<String, Map<String, Publisher>> publishers = randPublishers(m);
     Map<String, DatumSummary> summaryMap = PublisherUtils.getDatumSummary(publishers);
     Map<String, DatumDigest> digestMap = PublisherDigestUtil.digest(summaryMap);
-    DataSlotDiffDigestResult result = DataSlotDiffUtils.diffDigestPublishers(digestMap, publishers);
+    DataSlotDiffDigestResult result = DataSlotDiffUtils.diffDigestResult(digestMap, publishers);
     Assert.assertTrue(result.getAddedDataInfoIds().isEmpty());
     Assert.assertTrue(result.getRemovedDataInfoIds().isEmpty());
 
     Map<String, DatumDigest> test = Maps.newHashMap(digestMap);
 
     test.put("c", new DatumDigest(1, 0, 0, 0, (short) 0, (short) 0));
-    result = DataSlotDiffUtils.diffDigestPublishers(test, publishers);
+    result = DataSlotDiffUtils.diffDigestResult(test, publishers);
     Assert.assertTrue(result.getAddedDataInfoIds().isEmpty());
     Assert.assertFalse(result.getRemovedDataInfoIds().isEmpty());
 
@@ -79,7 +79,7 @@ public class DataSlotDiffSyncResultTest {
     test = Maps.newHashMap(digestMap);
     test.remove("b");
     test.put("c", new DatumDigest(1, 0, 0, 0, (short) 0, (short) 0));
-    result = DataSlotDiffUtils.diffDigestPublishers(test, publishers);
+    result = DataSlotDiffUtils.diffDigestResult(test, publishers);
     // add "b"
     Assert.assertEquals(result.getAddedDataInfoIds(), Lists.newArrayList("b"));
 
