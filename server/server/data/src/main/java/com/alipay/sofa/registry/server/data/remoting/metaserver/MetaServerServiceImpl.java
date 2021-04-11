@@ -16,6 +16,7 @@
  */
 package com.alipay.sofa.registry.server.data.remoting.metaserver;
 
+import com.alipay.sofa.registry.common.model.Tuple;
 import com.alipay.sofa.registry.common.model.metaserver.inter.heartbeat.DataHeartBeatResponse;
 import com.alipay.sofa.registry.common.model.metaserver.inter.heartbeat.HeartbeatRequest;
 import com.alipay.sofa.registry.common.model.metaserver.nodes.DataNode;
@@ -82,15 +83,9 @@ public class MetaServerServiceImpl extends AbstractMetaServerService<DataHeartBe
 
   @Override
   protected HeartbeatRequest createRequest() {
-    long slotTableEpoch = -1L;
-    List<BaseSlotStatus> slotStatuses;
-    try {
-      slotManager.readLock().lock();
-      slotTableEpoch = slotManager.getSlotTableEpoch();
-      slotStatuses = slotManager.getSlotStatuses();
-    } finally {
-      slotManager.readLock().unlock();
-    }
+    Tuple<Long, List<BaseSlotStatus>> tuple = slotManager.getSlotTableEpochAndStatuses();
+    final long slotTableEpoch = tuple.o1;
+    final List<BaseSlotStatus> slotStatuses = tuple.o2;
     return new HeartbeatRequest<>(
         createNode(),
         slotTableEpoch,

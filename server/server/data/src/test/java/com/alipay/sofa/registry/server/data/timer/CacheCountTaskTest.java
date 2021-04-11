@@ -31,15 +31,21 @@ public class CacheCountTaskTest {
     DataServerConfig cfg = TestBaseUtils.newDataConfig("testDc");
     task.setDataServerConfig(cfg);
 
+    // npe
+    Assert.assertFalse(task.count());
+
     DatumCache datumCache = TestBaseUtils.newLocalDatumCache("testDc", true);
     task.setDatumCache(datumCache);
 
     cfg.setCacheCountIntervalSecs(0);
     Assert.assertFalse(task.init());
+    // empty
+    Assert.assertTrue(task.count());
 
     cfg.setCacheCountIntervalSecs(1);
     Publisher pub = TestBaseUtils.createTestPublisher("testDataId");
     datumCache.getLocalDatumStorage().put(pub);
+    // has item
     Assert.assertTrue(task.count());
     Assert.assertTrue(task.init());
   }

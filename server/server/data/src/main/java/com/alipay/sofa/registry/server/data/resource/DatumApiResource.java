@@ -57,15 +57,15 @@ public class DatumApiResource {
 
   private static final ProcessId TEMP_SESSION_PROCESSID = ServerEnv.PROCESS_ID;
 
-  @Autowired private DataServerConfig dataServerConfig;
+  @Autowired DataServerConfig dataServerConfig;
 
-  @Autowired private DatumCache datumCache;
+  @Autowired DatumCache datumCache;
 
-  @Autowired private DatumStorage localDatumStorage;
+  @Autowired DatumStorage localDatumStorage;
 
-  @Autowired private AbstractServerHandler batchPutDataHandler;
+  @Autowired AbstractServerHandler batchPutDataHandler;
 
-  @Autowired private SlotManager slotManager;
+  @Autowired SlotManager slotManager;
 
   /**
    * curl -i -d '{"dataInfoId":"testDataId#@#DEFAULT_INSTANCE_ID#@#DEFAULT_GROUP"}' -H
@@ -129,7 +129,7 @@ public class DatumApiResource {
   @POST
   @Path("/pub/add")
   @Produces(MediaType.APPLICATION_JSON)
-  public CommonResponse addPub(DatumParam datumParam) throws InterruptedException {
+  public CommonResponse addPub(DatumParam datumParam) {
     try {
       checkTestApiEnable();
       validateAndCorrect(datumParam);
@@ -167,7 +167,7 @@ public class DatumApiResource {
   @POST
   @Path("/pub/delete")
   @Produces(MediaType.APPLICATION_JSON)
-  public CommonResponse deletePub(DatumParam datumParam) throws InterruptedException {
+  public CommonResponse deletePub(DatumParam datumParam) {
     try {
       checkTestApiEnable();
       validateAndCorrect(datumParam);
@@ -289,7 +289,7 @@ public class DatumApiResource {
     }
   }
 
-  private Publisher buildPublisher(Datum datum, DatumParam datumParam) {
+  Publisher buildPublisher(Datum datum, DatumParam datumParam) {
     Validate.notNull(datumParam.getPublisherRegisterId(), "datumParam.publisherRegisterId is null");
     Validate.notNull(datumParam.getPublisherCell(), "datumParam.publisherCell is null");
     Validate.notNull(datumParam.getPublisherDataBox(), "datumParam.publisherDataBox is null");
@@ -327,9 +327,6 @@ public class DatumApiResource {
 
   private UnPublisher buildUnPublisher(Datum datum, DatumParam datumParam) {
     Validate.notNull(datumParam.getPublisherRegisterId(), "datumParam.publisherRegisterId is null");
-    Validate.notNull(
-        datumParam.getPublisherRegisterTimestamp(),
-        "datumParam.publisherRegisterTimestamp is null");
 
     UnPublisher publisher =
         new UnPublisher(

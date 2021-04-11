@@ -16,6 +16,7 @@
  */
 package com.alipay.sofa.registry.server.data.remoting.metaserver;
 
+import com.alipay.sofa.registry.common.model.Tuple;
 import com.alipay.sofa.registry.common.model.metaserver.cluster.VersionedList;
 import com.alipay.sofa.registry.common.model.metaserver.inter.heartbeat.DataHeartBeatResponse;
 import com.alipay.sofa.registry.common.model.metaserver.inter.heartbeat.HeartbeatRequest;
@@ -35,7 +36,7 @@ import com.alipay.sofa.registry.server.shared.env.ServerEnv;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import java.util.Collections;
-import java.util.concurrent.locks.Lock;
+import java.util.List;
 import org.junit.Assert;
 import org.junit.Test;
 import org.mockito.Mockito;
@@ -49,15 +50,15 @@ public class MetaServerServiceImplTest {
   @Test
   public void testCreateRequest() {
     init();
-    Mockito.when(slotManager.getSlotTableEpoch()).thenReturn(100L);
     LeaderSlotStatus leaderSlotStatus =
         new LeaderSlotStatus(10, 20, "xxx", BaseSlotStatus.LeaderStatus.HEALTHY);
     FollowerSlotStatus followerSlotStatus =
         new FollowerSlotStatus(
             11, 30, "yyy", System.currentTimeMillis(), System.currentTimeMillis());
     LOGGER.info("leaderStatus={}, followerStatus={}", leaderSlotStatus, followerSlotStatus);
-    Mockito.when(slotManager.getSlotStatuses())
-        .thenReturn(Lists.newArrayList(leaderSlotStatus, followerSlotStatus));
+
+    List<BaseSlotStatus> list = Lists.newArrayList(leaderSlotStatus, followerSlotStatus);
+    Mockito.when(slotManager.getSlotTableEpochAndStatuses()).thenReturn(Tuple.of(100L, list));
 
     Assert.assertEquals(impl.getCurrentSlotTableEpoch(), slotManager.getSlotTableEpoch());
     final long now = System.currentTimeMillis();
@@ -73,7 +74,7 @@ public class MetaServerServiceImplTest {
     Assert.assertTrue(heartbeatRequest.getTimestamp() >= now);
     Assert.assertTrue(heartbeatRequest.getTimestamp() <= System.currentTimeMillis());
 
-    Assert.assertEquals(heartbeatRequest.getSlotTableEpoch(), slotManager.getSlotTableEpoch());
+    Assert.assertEquals(heartbeatRequest.getSlotTableEpoch(), 100);
     Assert.assertEquals(heartbeatRequest.getSlotStatus().get(0), leaderSlotStatus);
     Assert.assertEquals(heartbeatRequest.getSlotStatus().get(1), followerSlotStatus);
 
@@ -127,8 +128,6 @@ public class MetaServerServiceImplTest {
         impl.getRenewIntervalSecs(), dataServerConfig.getSchedulerHeartbeatIntervalSecs());
 
     slotManager = Mockito.mock(SlotManager.class);
-    Lock lock = Mockito.mock(Lock.class);
-    Mockito.when(slotManager.readLock()).thenReturn(lock);
     impl.setSlotManager(slotManager);
   }
 }
