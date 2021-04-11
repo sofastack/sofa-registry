@@ -45,6 +45,9 @@ public class AppRevisionBatchQueryCallable extends BatchCallableRunnable<String,
 
   @Autowired private DefaultCommonConfig defaultCommonConfig;
 
+  public AppRevisionBatchQueryCallable() {
+    super(20, TimeUnit.MILLISECONDS, 200);
+  }
   /**
    * batch query app_revision
    *
@@ -83,20 +86,5 @@ public class AppRevisionBatchQueryCallable extends BatchCallableRunnable<String,
           future.putResponse(queryResult.get(revision));
         });
     return true;
-  }
-
-  @Override
-  protected void setBatchSize() {
-    this.batchSize = 200;
-  }
-
-  @Override
-  protected void setTimeUnit() {
-    this.timeUnit = TimeUnit.MILLISECONDS;
-  }
-
-  @Override
-  protected void setSleep() {
-    this.sleep = 20;
   }
 }

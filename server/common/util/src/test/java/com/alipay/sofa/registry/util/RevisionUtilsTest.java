@@ -16,25 +16,20 @@
  */
 package com.alipay.sofa.registry.util;
 
+import com.google.common.collect.Lists;
+import java.nio.charset.StandardCharsets;
+import java.util.List;
 import org.junit.Assert;
 import org.junit.Test;
 
-public class DatumVersionUtilTest {
-
+public class RevisionUtilsTest {
   @Test
-  public void testNextId() {
-    long timestamp = System.currentTimeMillis();
-    long epoch = DatumVersionUtil.nextId();
-    long ts = DatumVersionUtil.getRealTimestamp(epoch);
-    Assert.assertTrue(ts >= timestamp);
-    Assert.assertTrue(ts <= System.currentTimeMillis());
-  }
-
-  @Test
-  public void testUnit() {
-    long timestamp = System.currentTimeMillis();
-    long millis = DatumVersionUtil.untilNextMillis(timestamp + 100);
-    Assert.assertTrue(millis >= timestamp + 100);
-    Assert.assertTrue(millis <= System.currentTimeMillis());
+  public void test() {
+    List<String> list = Lists.newArrayList("xx1", "yy2");
+    String digest1 = RevisionUtils.revisionsDigest(list);
+    String digest2 =
+        MessageDigests.toHexString(
+            MessageDigests.md5().digest("xx1yy2".getBytes(StandardCharsets.UTF_8)));
+    Assert.assertEquals(digest1, digest2);
   }
 }

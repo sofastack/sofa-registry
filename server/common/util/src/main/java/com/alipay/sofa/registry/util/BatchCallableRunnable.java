@@ -18,11 +18,12 @@ package com.alipay.sofa.registry.util;
 
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
-import java.util.ArrayList;
+import com.google.common.collect.Lists;
 import java.util.List;
 import java.util.Queue;
-import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.TimeUnit;
 import javax.annotation.PostConstruct;
 
@@ -33,44 +34,50 @@ import javax.annotation.PostConstruct;
  * @version $Id: BatchCallableRunnable.java, v 0.1 2021年01月22日 22:00 xiaojian.xj Exp $
  */
 public abstract class BatchCallableRunnable<T, E> {
+  private final Logger LOGGER = LoggerFactory.getLogger(this.getClass());
+  protected final int sleep;
 
-  protected Integer sleep;
-
-  protected TimeUnit timeUnit;
+  protected final TimeUnit timeUnit;
 
   // must have
-  protected int batchSize;
+  protected final int batchSize;
 
   // no blocking
-  private final Queue<TaskEvent> queue = new ConcurrentLinkedQueue();
+  private final Queue<TaskEvent> queue = new LinkedBlockingQueue<>(1024 * 100);
+  private final BatchCallableWatchDog watchDog = new BatchCallableWatchDog();
+
+  protected BatchCallableRunnable(int sleep, TimeUnit timeUnit, int batchSize) {
+    this.sleep = sleep;
+    this.timeUnit = timeUnit;
+    this.batchSize = batchSize;
+  }
 
   public InvokeFuture commit(TaskEvent task) {
-    queue.offer(task);
+    if (!queue.offer(task)) {
+      throw new RejectedExecutionException("queue is full:" + queue.size());
+    }
     return task.future;
   }
 
-  public abstract boolean batchProcess(List<TaskEvent> tasks);
+  protected abstract boolean batchProcess(List<TaskEvent> tasks);
 
   @PostConstruct
   public void init() {
-    setBatchSize();
-    setTimeUnit();
-    setSleep();
-    ConcurrentUtils.createDaemonThread(
-            this.getClass().getSimpleName() + "WatchDog", new BatchCallableWatchDog())
+    ConcurrentUtils.createDaemonThread(this.getClass().getSimpleName() + "WatchDog", watchDog)
         .start();
   }
 
   private class BatchCallableWatchDog extends LoopRunnable {
 
-    private final Logger LOG = LoggerFactory.getLogger(BatchCallableWatchDog.class);
-
     @Override
     public void runUnthrowable() {
-      List<TaskEvent> tasks = new ArrayList<>();
+      List<TaskEvent> tasks = Lists.newLinkedList();
 
-      for (int i = 0; i < batchSize && !queue.isEmpty(); i++) {
+      for (int i = 0; i < batchSize; i++) {
         TaskEvent task = queue.poll();
+        if (task == null) {
+          break;
+        }
         tasks.add(task);
       }
       try {
@@ -85,9 +92,9 @@ public abstract class BatchCallableRunnable<T, E> {
         }
       } catch (Throwable t) {
         // TODO failed the task
-        LOG.error("batch run task error.", t);
+        LOGGER.error("batch run task error.", t);
         for (TaskEvent task : tasks) {
-          task.future.error(t.getMessage());
+          task.future.error(t.getClass().getName() + ", msg=" + t.getMessage());
         }
       }
     }
@@ -100,9 +107,9 @@ public abstract class BatchCallableRunnable<T, E> {
 
   public final class TaskEvent {
 
-    private T data;
+    private final T data;
 
-    private InvokeFuture<E> future;
+    private final InvokeFuture<E> future;
 
     public TaskEvent(T data) {
       this.data = data;
@@ -119,15 +126,6 @@ public abstract class BatchCallableRunnable<T, E> {
     }
 
     /**
-     * Setter method for property <tt>data</tt>.
-     *
-     * @param data value to be assigned to property data
-     */
-    public void setData(T data) {
-      this.data = data;
-    }
-
-    /**
      * Getter method for property <tt>future</tt>.
      *
      * @return property value of future
@@ -135,37 +133,28 @@ public abstract class BatchCallableRunnable<T, E> {
     public InvokeFuture<E> getFuture() {
       return future;
     }
-
-    /**
-     * Setter method for property <tt>future</tt>.
-     *
-     * @param future value to be assigned to property future
-     */
-    public void setFuture(InvokeFuture<E> future) {
-      this.future = future;
-    }
   }
 
-  public class InvokeFuture<E> {
+  public static class InvokeFuture<E> {
 
-    private boolean success;
+    private volatile boolean success;
 
-    private String message;
+    private volatile String message;
 
-    private E response;
+    private volatile E response;
 
     private final CountDownLatch countDownLatch = new CountDownLatch(1);
 
-    public void finish() {
+    void finish() {
       this.countDownLatch.countDown();
     }
 
-    public void fail() {
+    void fail() {
       this.success = false;
       this.countDownLatch.countDown();
     }
 
-    public void error(String message) {
+    void error(String message) {
       this.success = false;
       this.message = message;
       this.countDownLatch.countDown();
@@ -195,13 +184,4 @@ public abstract class BatchCallableRunnable<T, E> {
       return message;
     }
   }
-
-  /** Setter method for property <tt>sleep</tt>. */
-  protected abstract void setSleep();
-
-  /** Setter method for property <tt>timeUnit</tt>. */
-  protected abstract void setTimeUnit();
-
-  /** Setter method for property <tt>batchSize</tt>. */
-  protected abstract void setBatchSize();
 }

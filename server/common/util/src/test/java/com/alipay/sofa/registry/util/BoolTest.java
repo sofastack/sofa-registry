@@ -19,22 +19,18 @@ package com.alipay.sofa.registry.util;
 import org.junit.Assert;
 import org.junit.Test;
 
-public class DatumVersionUtilTest {
-
+public class BoolTest {
   @Test
-  public void testNextId() {
-    long timestamp = System.currentTimeMillis();
-    long epoch = DatumVersionUtil.nextId();
-    long ts = DatumVersionUtil.getRealTimestamp(epoch);
-    Assert.assertTrue(ts >= timestamp);
-    Assert.assertTrue(ts <= System.currentTimeMillis());
-  }
+  public void test() {
+    Bool b = Bool.newFalse();
+    Assert.assertFalse(b.isTrue());
 
-  @Test
-  public void testUnit() {
-    long timestamp = System.currentTimeMillis();
-    long millis = DatumVersionUtil.untilNextMillis(timestamp + 100);
-    Assert.assertTrue(millis >= timestamp + 100);
-    Assert.assertTrue(millis <= System.currentTimeMillis());
+    b = Bool.newTrue();
+    Assert.assertTrue(b.isTrue());
+
+    b.setBool(false);
+    Assert.assertFalse(b.isTrue());
+    b.setBool(true);
+    Assert.assertTrue(b.isTrue());
   }
 }
