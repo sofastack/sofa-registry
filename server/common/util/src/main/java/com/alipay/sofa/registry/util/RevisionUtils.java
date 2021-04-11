@@ -16,19 +16,20 @@
  */
 package com.alipay.sofa.registry.util;
 
-import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.List;
 
-public class RevisionUtils {
-  private static final Charset UTF8 = Charset.forName("utf-8");
+public final class RevisionUtils {
+  private RevisionUtils() {}
 
   public static String revisionsDigest(List<String> keys) {
     Collections.sort(keys);
-    StringBuffer sb = new StringBuffer();
+    StringBuilder sb = new StringBuilder(keys.size() * 64);
     for (String key : keys) {
       sb.append(key);
     }
-    return MessageDigests.toHexString(MessageDigests.md5().digest(sb.toString().getBytes(UTF8)));
+    return MessageDigests.toHexString(
+        MessageDigests.md5().digest(sb.toString().getBytes(StandardCharsets.UTF_8)));
   }
 }

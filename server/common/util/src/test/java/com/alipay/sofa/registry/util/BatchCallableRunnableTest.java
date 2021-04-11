@@ -34,7 +34,7 @@ public class BatchCallableRunnableTest {
   @org.junit.Test
   public void testBatchRunnable() throws InterruptedException {
     Test test = new Test();
-
+    test.init();
     Map<Integer, InvokeFuture> futures = new HashMap<>();
     for (int i = 0; i <= 255; i++) {
       TaskEvent taskEvent = test.new TaskEvent(i);
@@ -50,10 +50,54 @@ public class BatchCallableRunnableTest {
     }
   }
 
+  @org.junit.Test
+  public void testBatchRunnable_False() throws InterruptedException {
+    Test test = new Test();
+    test.retFalse = true;
+    test.init();
+    InvokeFuture future = test.commit(test.new TaskEvent(10));
+    Assert.assertFalse(future.isSuccess());
+  }
+
+  @org.junit.Test
+  public void testBatchRunnable_Exception() throws InterruptedException {
+    Test test = new Test();
+    test.exception = true;
+    test.init();
+    InvokeFuture future = test.commit(test.new TaskEvent(10));
+    Assert.assertFalse(future.isSuccess());
+    Assert.assertTrue("@@@" + future.getMessage(), future.getMessage() != null);
+  }
+
+  @org.junit.Test
+  public void testFuture() throws Exception {
+    InvokeFuture future = new InvokeFuture();
+    future.fail();
+    Assert.assertFalse(future.isSuccess());
+
+    future = new InvokeFuture();
+    future.error("xxx");
+    Assert.assertFalse(future.isSuccess());
+    Assert.assertEquals(future.getMessage(), "xxx");
+
+    future = new InvokeFuture();
+    future.finish();
+    Assert.assertFalse(future.isSuccess());
+
+    future = new InvokeFuture();
+    Object obj = new Object();
+    future.putResponse(obj);
+    future.finish();
+    Assert.assertTrue(future.isSuccess());
+    Assert.assertEquals(future.getResponse(), obj);
+  }
+
   public class Test extends BatchCallableRunnable<Integer, String> {
+    boolean exception;
+    boolean retFalse;
 
     public Test() {
-      init();
+      super(1, TimeUnit.SECONDS, 100);
     }
 
     @Override
@@ -62,26 +106,19 @@ public class BatchCallableRunnableTest {
         return true;
       }
 
+      if (retFalse) {
+        return false;
+      }
+
+      if (exception) {
+        throw new RuntimeException();
+      }
+
       for (TaskEvent taskEvent : taskEvents) {
         Integer data = taskEvent.getData();
         taskEvent.getFuture().putResponse("hello " + data);
       }
       return true;
-    }
-
-    @Override
-    protected void setSleep() {
-      this.sleep = 1;
-    }
-
-    @Override
-    protected void setTimeUnit() {
-      this.timeUnit = TimeUnit.SECONDS;
-    }
-
-    @Override
-    protected void setBatchSize() {
-      this.batchSize = 100;
     }
   }
 }

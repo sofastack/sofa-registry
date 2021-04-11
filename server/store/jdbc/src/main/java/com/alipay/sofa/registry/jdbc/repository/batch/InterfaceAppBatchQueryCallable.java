@@ -46,6 +46,10 @@ public class InterfaceAppBatchQueryCallable
 
   @Autowired private InterfaceAppsIndexMapper interfaceAppsIndexMapper;
 
+  public InterfaceAppBatchQueryCallable() {
+    super(20, TimeUnit.MILLISECONDS, 200);
+  }
+
   @Override
   public boolean batchProcess(List<TaskEvent> taskEvents) {
 
@@ -102,20 +106,5 @@ public class InterfaceAppBatchQueryCallable
           }
         });
     return true;
-  }
-
-  @Override
-  protected void setBatchSize() {
-    this.batchSize = 200;
-  }
-
-  @Override
-  protected void setTimeUnit() {
-    this.timeUnit = TimeUnit.MILLISECONDS;
-  }
-
-  @Override
-  protected void setSleep() {
-    this.sleep = 20;
   }
 }

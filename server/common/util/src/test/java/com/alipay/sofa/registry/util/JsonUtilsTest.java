@@ -16,25 +16,31 @@
  */
 package com.alipay.sofa.registry.util;
 
+import com.alipay.sofa.registry.TestUtils;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.google.common.collect.Maps;
+import java.util.HashMap;
 import org.junit.Assert;
 import org.junit.Test;
 
-public class DatumVersionUtilTest {
+public class JsonUtilsTest {
 
   @Test
-  public void testNextId() {
-    long timestamp = System.currentTimeMillis();
-    long epoch = DatumVersionUtil.nextId();
-    long ts = DatumVersionUtil.getRealTimestamp(epoch);
-    Assert.assertTrue(ts >= timestamp);
-    Assert.assertTrue(ts <= System.currentTimeMillis());
+  public void testIllegal() {
+    TestUtils.assertException(RuntimeException.class, () -> JsonUtils.read("", HashMap.class));
+    TestUtils.assertException(
+        RuntimeException.class, () -> JsonUtils.read("", new TypeReference<HashMap>() {}));
   }
 
   @Test
-  public void testUnit() {
-    long timestamp = System.currentTimeMillis();
-    long millis = DatumVersionUtil.untilNextMillis(timestamp + 100);
-    Assert.assertTrue(millis >= timestamp + 100);
-    Assert.assertTrue(millis <= System.currentTimeMillis());
+  public void test() {
+    HashMap<String, String> m = Maps.newHashMap();
+    m.put("x", "y");
+    String v = JsonUtils.writeValueAsString(m);
+    HashMap m1 = JsonUtils.read(v, HashMap.class);
+    HashMap m2 = JsonUtils.read(v, new TypeReference<HashMap>() {});
+
+    Assert.assertEquals(m, m1);
+    Assert.assertEquals(m, m2);
   }
 }

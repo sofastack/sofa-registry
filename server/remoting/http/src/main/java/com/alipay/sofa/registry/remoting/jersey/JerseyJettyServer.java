@@ -25,6 +25,7 @@ import com.alipay.sofa.registry.remoting.Server;
 import com.alipay.sofa.registry.remoting.jersey.jetty.server.HttpConnectionCustomFactory;
 import java.net.InetSocketAddress;
 import java.net.URI;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ThreadFactory;
@@ -55,7 +56,7 @@ public class JerseyJettyServer implements Server {
 
   private org.eclipse.jetty.server.Server server;
   /** started status */
-  private AtomicBoolean isStarted = new AtomicBoolean(false);
+  private final AtomicBoolean isStarted = new AtomicBoolean(false);
 
   /**
    * constructor
@@ -72,10 +73,8 @@ public class JerseyJettyServer implements Server {
   public void startServer() {
     if (isStarted.compareAndSet(false, true)) {
       try {
-
         server = createServer(getBaseUri(), resourceConfig, true);
-
-      } catch (Exception e) {
+      } catch (Throwable e) {
         isStarted.set(false);
         LOGGER.error("Start Jetty jersey server error!", e);
         throw new RuntimeException("Start Jetty jersey server error!", e);
@@ -111,7 +110,7 @@ public class JerseyJettyServer implements Server {
       try {
         // Start the server.
         server.start();
-      } catch (final Exception e) {
+      } catch (Throwable e) {
         throw new ProcessingException(LocalizationMessages.ERROR_WHEN_CREATING_SERVER(), e);
       }
     }
@@ -141,7 +140,7 @@ public class JerseyJettyServer implements Server {
 
   @Override
   public List<Channel> getChannels() {
-    return null;
+    return Collections.emptyList();
   }
 
   @Override
@@ -174,7 +173,7 @@ public class JerseyJettyServer implements Server {
     if (server != null) {
       try {
         server.stop();
-      } catch (Exception e) {
+      } catch (Throwable e) {
         LOGGER.error("Jersey Jetty Server stop error!", e);
         throw new RuntimeException("Jersey Jetty Server stop error!", e);
       }

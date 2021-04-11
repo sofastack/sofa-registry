@@ -66,7 +66,7 @@ public final class DatumVersionUtil {
     return (id >> timestampLeftShift) + twepoch;
   }
 
-  private static long untilNextMillis(long lastTimestamp) {
+  static long untilNextMillis(long lastTimestamp) {
     long timestamp = timeGen();
     while (timestamp <= lastTimestamp) {
       timestamp = timeGen();

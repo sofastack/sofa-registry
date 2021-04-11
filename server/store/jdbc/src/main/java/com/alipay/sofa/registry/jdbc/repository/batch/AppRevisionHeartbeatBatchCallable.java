@@ -42,6 +42,9 @@ public class AppRevisionHeartbeatBatchCallable
 
   @Autowired private DefaultCommonConfig defaultCommonConfig;
 
+  public AppRevisionHeartbeatBatchCallable() {
+    super(100, TimeUnit.MILLISECONDS, 200);
+  }
   /**
    * batch update gmt_modified
    *
@@ -68,20 +71,5 @@ public class AppRevisionHeartbeatBatchCallable
         });
 
     return true;
-  }
-
-  @Override
-  protected void setBatchSize() {
-    this.batchSize = 200;
-  }
-
-  @Override
-  protected void setSleep() {
-    this.sleep = 100;
-  }
-
-  @Override
-  protected void setTimeUnit() {
-    this.timeUnit = TimeUnit.MILLISECONDS;
   }
 }

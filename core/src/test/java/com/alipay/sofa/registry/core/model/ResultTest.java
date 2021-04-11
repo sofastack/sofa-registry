@@ -14,27 +14,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alipay.sofa.registry.util;
+package com.alipay.sofa.registry.core.model;
 
 import org.junit.Assert;
 import org.junit.Test;
 
-public class DatumVersionUtilTest {
-
+public class ResultTest {
   @Test
-  public void testNextId() {
-    long timestamp = System.currentTimeMillis();
-    long epoch = DatumVersionUtil.nextId();
-    long ts = DatumVersionUtil.getRealTimestamp(epoch);
-    Assert.assertTrue(ts >= timestamp);
-    Assert.assertTrue(ts <= System.currentTimeMillis());
-  }
+  public void test() {
+    Result result = new Result(false, "xxx");
+    Assert.assertFalse(result.isSuccess());
+    Assert.assertEquals(result.getMessage(), "xxx");
 
-  @Test
-  public void testUnit() {
-    long timestamp = System.currentTimeMillis();
-    long millis = DatumVersionUtil.untilNextMillis(timestamp + 100);
-    Assert.assertTrue(millis >= timestamp + 100);
-    Assert.assertTrue(millis <= System.currentTimeMillis());
+    result = Result.failed("yyy");
+    Assert.assertFalse(result.isSuccess());
+    Assert.assertEquals(result.getMessage(), "yyy");
+
+    result = Result.success();
+    Assert.assertTrue(result.isSuccess());
   }
 }

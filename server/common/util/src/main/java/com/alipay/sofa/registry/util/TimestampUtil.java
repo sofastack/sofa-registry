@@ -22,7 +22,8 @@ import java.sql.Timestamp;
  * @author xiaojian.xj
  * @version $Id: TimestampUtil.java, v 0.1 2021年03月01日 15:55 xiaojian.xj Exp $
  */
-public class TimestampUtil {
+public final class TimestampUtil {
+  private TimestampUtil() {}
 
   public static long getNanosLong(Timestamp timestamp) {
     return timestamp.getTime() / 1000 * 1000000000 + timestamp.getNanos();
