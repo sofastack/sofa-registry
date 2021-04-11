@@ -18,6 +18,7 @@ package com.alipay.sofa.registry.server.data.remoting;
 
 import com.alipay.sofa.registry.server.data.bootstrap.DataServerConfig;
 import com.alipay.sofa.registry.server.shared.meta.AbstractMetaServerManager;
+import com.google.common.annotations.VisibleForTesting;
 import java.util.Collection;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -42,5 +43,10 @@ public class DataMetaServerManager extends AbstractMetaServerManager {
   @Override
   public int getServerPort() {
     return dataServerConfig.getMetaServerPort();
+  }
+
+  @VisibleForTesting
+  void setDataServerConfig(DataServerConfig dataServerConfig) {
+    this.dataServerConfig = dataServerConfig;
   }
 }

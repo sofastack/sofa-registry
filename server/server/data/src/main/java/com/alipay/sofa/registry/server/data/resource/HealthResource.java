@@ -38,7 +38,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 @Path("health")
 public class HealthResource {
 
-  @Autowired private DataServerBootstrap dataServerBootstrap;
+  @Autowired DataServerBootstrap dataServerBootstrap;
 
   @PostConstruct
   public void init() {

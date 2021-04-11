@@ -46,7 +46,6 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import javax.annotation.PostConstruct;
@@ -298,16 +297,6 @@ public final class SlotManagerImpl implements SlotManager {
     slotTableStates.table = updating;
     observeLeaderAssignGauge(slotTableStates.table.getLeaderNum(ServerEnv.IP));
     observeFollowerAssignGauge(slotTableStates.table.getFollowerNum(ServerEnv.IP));
-  }
-
-  @Override
-  public Lock readLock() {
-    return updateLock.readLock();
-  }
-
-  @Override
-  public Lock writeLock() {
-    return updateLock.writeLock();
   }
 
   private static final class SlotTableStates {
@@ -760,6 +749,18 @@ public final class SlotManagerImpl implements SlotManager {
   @Override
   public void triggerUpdateSlotTable(long expectEpoch) {
     // TODO
+  }
+
+  @Override
+  public Tuple<Long, List<BaseSlotStatus>> getSlotTableEpochAndStatuses() {
+    updateLock.readLock().lock();
+    try {
+      long slotTableEpoch = getSlotTableEpoch();
+      List<BaseSlotStatus> slotStatuses = getSlotStatuses();
+      return Tuple.of(slotTableEpoch, slotStatuses);
+    } finally {
+      updateLock.readLock().unlock();
+    }
   }
 
   @Override
