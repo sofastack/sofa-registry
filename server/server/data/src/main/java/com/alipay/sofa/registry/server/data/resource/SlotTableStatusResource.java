@@ -17,6 +17,7 @@
 package com.alipay.sofa.registry.server.data.resource;
 
 import com.alipay.sofa.registry.common.model.GenericResponse;
+import com.alipay.sofa.registry.common.model.Tuple;
 import com.alipay.sofa.registry.common.model.slot.BaseSlotStatus;
 import com.alipay.sofa.registry.common.model.slot.FollowerSlotStatus;
 import com.alipay.sofa.registry.common.model.slot.LeaderSlotStatus;
@@ -39,21 +40,16 @@ public class SlotTableStatusResource {
   public static final long MAX_SYNC_GAP =
       Long.getLong("registry.data.replicate.max.gap.millis", 3 * 60 * 1000);
 
-  @Autowired private SlotManager slotManager;
+  @Autowired SlotManager slotManager;
 
   @GET
   @Path("/sync/task/status")
   @Produces(MediaType.APPLICATION_JSON)
   public GenericResponse<Object> getSlotTableSyncTaskStatus() {
-    long epoch;
-    List<BaseSlotStatus> slotStatuses;
-    slotManager.readLock().lock();
-    try {
-      epoch = slotManager.getSlotTableEpoch();
-      slotStatuses = slotManager.getSlotStatuses();
-    } finally {
-      slotManager.readLock().unlock();
-    }
+    Tuple<Long, List<BaseSlotStatus>> tuple = slotManager.getSlotTableEpochAndStatuses();
+    final long epoch = tuple.o1;
+    final List<BaseSlotStatus> slotStatuses = tuple.o2;
+
     boolean isCurrentSlotStable = true;
     for (BaseSlotStatus slotStatus : slotStatuses) {
       if (slotStatus.getRole() == Slot.Role.Leader) {

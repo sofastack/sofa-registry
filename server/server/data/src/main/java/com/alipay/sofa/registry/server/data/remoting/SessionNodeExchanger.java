@@ -20,6 +20,7 @@ import com.alipay.sofa.registry.remoting.ChannelHandler;
 import com.alipay.sofa.registry.remoting.exchange.Exchange;
 import com.alipay.sofa.registry.server.data.bootstrap.DataServerConfig;
 import com.alipay.sofa.registry.server.shared.remoting.ClientSideExchanger;
+import com.google.common.annotations.VisibleForTesting;
 import java.util.Collection;
 import java.util.Collections;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -48,11 +49,16 @@ public class SessionNodeExchanger extends ClientSideExchanger {
 
   @Override
   public int getConnNum() {
-    return 5;
+    return dataServerConfig.getSyncSessionConnNum();
   }
 
   @Override
   protected Collection<ChannelHandler> getClientHandlers() {
     return Collections.emptyList();
+  }
+
+  @VisibleForTesting
+  void setDataServerConfig(DataServerConfig dataServerConfig) {
+    this.dataServerConfig = dataServerConfig;
   }
 }

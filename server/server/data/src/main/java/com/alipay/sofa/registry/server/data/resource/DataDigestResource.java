@@ -37,6 +37,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
+import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 
 /**
@@ -50,13 +51,13 @@ public class DataDigestResource {
 
   private static final String META = "META";
 
-  @Autowired private BoltExchange boltExchange;
+  @Autowired BoltExchange boltExchange;
 
-  @Autowired private MetaServerServiceImpl metaServerService;
+  @Autowired MetaServerServiceImpl metaServerService;
 
-  @Autowired private DataServerConfig dataServerConfig;
+  @Autowired DataServerConfig dataServerConfig;
 
-  @Autowired private DatumCache datumCache;
+  @Autowired DatumCache datumCache;
 
   @GET
   @Path("datum/query")
@@ -133,21 +134,17 @@ public class DataDigestResource {
   @Produces(MediaType.APPLICATION_JSON)
   public Map<String, List<String>> getServerListAll(@PathParam("type") String type) {
     Map<String, List<String>> map = new HashMap<>();
-    if (type != null && !type.isEmpty()) {
-      String inputType = type.toUpperCase();
+    if (StringUtils.isNotBlank(type)) {
+      String inputType = type.trim().toUpperCase();
 
       switch (inputType) {
         case SESSION:
           List<String> sessionList = getSessionServerList();
-          if (sessionList != null) {
-            map.put(dataServerConfig.getLocalDataCenter(), sessionList);
-          }
+          map.put(dataServerConfig.getLocalDataCenter(), sessionList);
           break;
         case META:
           List<String> metaList = getMetaServerLeader();
-          if (metaList != null) {
-            map.put(dataServerConfig.getLocalDataCenter(), metaList);
-          }
+          map.put(dataServerConfig.getLocalDataCenter(), metaList);
           break;
         default:
           throw new IllegalArgumentException("unsupported server type:" + type);
@@ -157,7 +154,7 @@ public class DataDigestResource {
     return map;
   }
 
-  public List<String> getSessionServerList() {
+  List<String> getSessionServerList() {
     Server server = boltExchange.getServer(dataServerConfig.getPort());
     if (server == null) {
       return Collections.emptyList();
@@ -167,12 +164,17 @@ public class DataDigestResource {
     for (Channel channel : channels.values()) {
       BoltChannel boltChannel = (BoltChannel) channel;
       Connection conn = boltChannel.getConnection();
-      ret.add(conn.getRemoteIP() + ":" + conn.getRemoteIP());
+      ret.add(conn.getRemoteIP() + ":" + conn.getRemotePort());
     }
     return ret;
   }
 
-  public List<String> getMetaServerLeader() {
-    return Lists.newArrayList(metaServerService.getMetaServerLeader());
+  List<String> getMetaServerLeader() {
+    String leader = metaServerService.getMetaServerLeader();
+    if (StringUtils.isNotBlank(leader)) {
+      return Lists.newArrayList(leader);
+    } else {
+      return Collections.emptyList();
+    }
   }
 }

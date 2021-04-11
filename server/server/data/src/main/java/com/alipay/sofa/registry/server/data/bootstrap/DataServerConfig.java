@@ -36,8 +36,9 @@ public class DataServerConfig {
   // data change notify
   private int notifyPort = 9623;
   private int syncDataPort = 9621;
+  private int syncDataConnNum = 3;
   private int syncSessionPort = 9602;
-
+  private int syncSessionConnNum = 6;
   private int metaServerPort = 9611;
 
   private int httpServerPort = 9622;
@@ -804,6 +805,22 @@ public class DataServerConfig {
 
   public void setNotifyPort(int notifyPort) {
     this.notifyPort = notifyPort;
+  }
+
+  public int getSyncDataConnNum() {
+    return syncDataConnNum;
+  }
+
+  public void setSyncDataConnNum(int syncDataConnNum) {
+    this.syncDataConnNum = syncDataConnNum;
+  }
+
+  public int getSyncSessionConnNum() {
+    return syncSessionConnNum;
+  }
+
+  public void setSyncSessionConnNum(int syncSessionConnNum) {
+    this.syncSessionConnNum = syncSessionConnNum;
   }
 
   @Override

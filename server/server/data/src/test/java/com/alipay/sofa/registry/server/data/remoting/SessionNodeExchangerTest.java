@@ -14,39 +14,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alipay.sofa.registry.server.data.timer;
+package com.alipay.sofa.registry.server.data.remoting;
 
-import com.alipay.sofa.registry.common.model.store.Publisher;
 import com.alipay.sofa.registry.server.data.TestBaseUtils;
 import com.alipay.sofa.registry.server.data.bootstrap.DataServerConfig;
-import com.alipay.sofa.registry.server.data.cache.DatumCache;
 import org.junit.Assert;
 import org.junit.Test;
 
-public class CacheDigestTaskTest {
+public class SessionNodeExchangerTest {
   @Test
-  public void test() throws Exception {
-    CacheDigestTask task = new CacheDigestTask();
+  public void test() {
+    SessionNodeExchanger sessionNodeExchanger = new SessionNodeExchanger();
     DataServerConfig cfg = TestBaseUtils.newDataConfig("testDc");
-    task.setDataServerConfig(cfg);
+    sessionNodeExchanger.setDataServerConfig(cfg);
 
-    // npe error
-    Assert.assertFalse(task.dump());
-
-    DatumCache datumCache = TestBaseUtils.newLocalDatumCache("testDc", true);
-    task.setDatumCache(datumCache);
-
-    cfg.setCacheDigestIntervalMinutes(0);
-    Assert.assertFalse(task.init());
-
-    // empty
-    Assert.assertTrue(task.dump());
-
-    cfg.setCacheDigestIntervalMinutes(1);
-    Publisher pub = TestBaseUtils.createTestPublisher("testDataId");
-    datumCache.getLocalDatumStorage().put(pub);
-    // has item
-    Assert.assertTrue(task.dump());
-    Assert.assertTrue(task.init());
+    Assert.assertEquals(cfg.getSyncSessionConnNum(), sessionNodeExchanger.getConnNum());
+    Assert.assertEquals(cfg.getSyncSessionPort(), sessionNodeExchanger.getServerPort());
+    Assert.assertEquals(cfg.getRpcTimeoutMillis(), sessionNodeExchanger.getRpcTimeoutMillis());
+    Assert.assertEquals(0, sessionNodeExchanger.getClientHandlers().size());
   }
 }
