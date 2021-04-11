@@ -56,7 +56,7 @@ public class BaseRegister implements Serializable {
 
   private Long timestamp;
 
-  private Map<String, String> attributes = new HashMap<String, String>();
+  private volatile Map<String, String> attributes;
 
   /**
    * Getter method for property <tt>instanceId</tt>.
@@ -315,7 +315,10 @@ public class BaseRegister implements Serializable {
    *
    * @return property value of attributes
    */
-  public Map<String, String> getAttributes() {
+  public synchronized Map<String, String> getAttributes() {
+    if (this.attributes == null) {
+      this.attributes = new HashMap<String, String>();
+    }
     return attributes;
   }
 
@@ -324,7 +327,7 @@ public class BaseRegister implements Serializable {
    *
    * @param attributes value to be assigned to property attributes
    */
-  public void setAttributes(Map<String, String> attributes) {
+  public synchronized void setAttributes(Map<String, String> attributes) {
     this.attributes = attributes;
   }
 

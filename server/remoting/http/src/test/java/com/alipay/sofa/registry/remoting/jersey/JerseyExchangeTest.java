@@ -76,6 +76,24 @@ public class JerseyExchangeTest {
     jerseyJettyServer.close();
   }
 
+  @Test
+  public void testServer() {
+    ResourceConfig resourceConfig = new ResourceConfig();
+    JerseyJettyServer server = new JerseyJettyServer(resourceConfig, null);
+
+    assertException(RuntimeException.class, () -> server.startServer());
+    Assert.assertFalse(server.isOpen());
+    Assert.assertTrue(server.isClosed());
+
+    assertException(RuntimeException.class, () -> server.close());
+
+    assertException(
+        UnsupportedOperationException.class, () -> server.selectAvailableChannelsForHostAddress());
+    assertException(UnsupportedOperationException.class, () -> server.close(null));
+
+    Assert.assertEquals(server.getChannelCount(), server.getChannels().size());
+  }
+
   private void testJerseyJettyServer(
       URL url,
       JerseyJettyServer jerseyJettyServer,
@@ -83,7 +101,7 @@ public class JerseyExchangeTest {
       CallbackHandler callbackHandler) {
     Assert.assertEquals(jerseyJettyServer, jerseyExchange.getServer(JERSEY_TEST_PORT));
     Assert.assertTrue(jerseyJettyServer.isOpen());
-    Assert.assertNull(jerseyJettyServer.getChannels());
+    Assert.assertEquals(jerseyJettyServer.getChannels().size(), 0);
     Assert.assertNull(jerseyJettyServer.getChannel(new InetSocketAddress(9663)));
     Assert.assertNull(jerseyJettyServer.getChannel(url));
     Assert.assertEquals(
@@ -111,5 +129,14 @@ public class JerseyExchangeTest {
     Assert.assertTrue(jerseyChannel.isConnected());
     jerseyChannel.setAttribute("key", "value");
     Assert.assertNull(jerseyChannel.getAttribute("key"));
+  }
+
+  public static void assertException(Class<? extends Throwable> eclazz, Runnable runnable) {
+    try {
+      runnable.run();
+      Assert.assertTrue(false);
+    } catch (Throwable exception) {
+      Assert.assertEquals(exception.getClass(), eclazz);
+    }
   }
 }

@@ -16,25 +16,27 @@
  */
 package com.alipay.sofa.registry.util;
 
-import org.junit.Assert;
+import java.util.concurrent.SynchronousQueue;
+import java.util.concurrent.TimeUnit;
 import org.junit.Test;
 
-public class DatumVersionUtilTest {
+public class ConcurrentUtilsTest {
 
   @Test
-  public void testNextId() {
-    long timestamp = System.currentTimeMillis();
-    long epoch = DatumVersionUtil.nextId();
-    long ts = DatumVersionUtil.getRealTimestamp(epoch);
-    Assert.assertTrue(ts >= timestamp);
-    Assert.assertTrue(ts <= System.currentTimeMillis());
-  }
+  public void testInterrupt() {
+    // init env
+    ConcurrentUtils.sleepUninterruptibly(1, TimeUnit.MILLISECONDS);
 
-  @Test
-  public void testUnit() {
-    long timestamp = System.currentTimeMillis();
-    long millis = DatumVersionUtil.untilNextMillis(timestamp + 100);
-    Assert.assertTrue(millis >= timestamp + 100);
-    Assert.assertTrue(millis <= System.currentTimeMillis());
+    Thread.currentThread().interrupt();
+    ConcurrentUtils.sleepUninterruptibly(1, TimeUnit.MILLISECONDS);
+
+    Thread.currentThread().interrupt();
+    Object sync = new Object();
+    synchronized (sync) {
+      ConcurrentUtils.objectWaitUninterruptibly(sync, 1);
+    }
+
+    Thread.currentThread().interrupt();
+    ConcurrentUtils.pollUninterruptibly(new SynchronousQueue(), 1, TimeUnit.MILLISECONDS);
   }
 }

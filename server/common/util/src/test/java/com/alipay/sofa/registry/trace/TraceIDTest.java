@@ -14,27 +14,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alipay.sofa.registry.util;
+package com.alipay.sofa.registry.trace;
 
 import org.junit.Assert;
 import org.junit.Test;
 
-public class DatumVersionUtilTest {
-
+public class TraceIDTest {
   @Test
-  public void testNextId() {
-    long timestamp = System.currentTimeMillis();
-    long epoch = DatumVersionUtil.nextId();
-    long ts = DatumVersionUtil.getRealTimestamp(epoch);
-    Assert.assertTrue(ts >= timestamp);
-    Assert.assertTrue(ts <= System.currentTimeMillis());
-  }
-
-  @Test
-  public void testUnit() {
-    long timestamp = System.currentTimeMillis();
-    long millis = DatumVersionUtil.untilNextMillis(timestamp + 100);
-    Assert.assertTrue(millis >= timestamp + 100);
-    Assert.assertTrue(millis <= System.currentTimeMillis());
+  public void test() {
+    TraceID id = TraceID.newTraceID();
+    for (int i = 0; i < 100; i++) {
+      TraceID other = TraceID.newTraceID();
+      Assert.assertNotEquals(id.toString(), other.toString());
+    }
   }
 }
