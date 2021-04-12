@@ -110,9 +110,12 @@ public class MetaServerConfiguration {
     public ExecutorService getGlobalExecutorService() {
       int corePoolSize = Math.min(OsUtils.getCpuCount() * 2, 8);
       int maxPoolSize = 50 * OsUtils.getCpuCount();
-      DefaultExecutorFactory executorFactory =
-          new DefaultExecutorFactory(
-              GLOBAL_EXECUTOR, corePoolSize, maxPoolSize, new ThreadPoolExecutor.AbortPolicy());
+      DefaultExecutorFactory executorFactory = DefaultExecutorFactory.builder()
+              .threadNamePrefix(GLOBAL_EXECUTOR)
+              .corePoolSize(corePoolSize)
+              .maxPoolSize(maxPoolSize)
+              .rejectedExecutionHandler(new ThreadPoolExecutor.AbortPolicy())
+              .build();
       return executorFactory.create();
     }
 
