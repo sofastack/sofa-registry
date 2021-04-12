@@ -26,7 +26,8 @@ import com.alipay.sofa.registry.lifecycle.Lifecycle;
  * @author chen.zhu
  *     <p>Nov 20, 2020
  */
-public class LifecycleHelper {
+public final class LifecycleHelper {
+  private LifecycleHelper() {}
 
   public static void initializeIfPossible(Object obj) throws InitializeException {
 

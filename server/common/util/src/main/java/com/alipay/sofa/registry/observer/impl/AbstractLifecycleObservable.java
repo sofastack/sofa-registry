@@ -32,7 +32,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 public class AbstractLifecycleObservable extends AbstractLifecycle
     implements Observable, Lifecycle {
 
-  private List<UnblockingObserver> observers = new CopyOnWriteArrayList<>();
+  final List<UnblockingObserver> observers = new CopyOnWriteArrayList<>();
 
   public AbstractLifecycleObservable() {}
 
@@ -56,7 +56,7 @@ public class AbstractLifecycleObservable extends AbstractLifecycle
     for (final Object observer : observers) {
       try {
         ((UnblockingObserver) observer).update(AbstractLifecycleObservable.this, message);
-      } catch (Exception e) {
+      } catch (Throwable e) {
         logger.error("[notifyObservers][{}]", observer, e);
       }
     }

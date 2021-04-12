@@ -24,9 +24,5 @@ import com.alipay.sofa.registry.exception.StopException;
  */
 public interface Stoppable {
 
-  public static final String PHASE_NAME_BEGIN = "stopping";
-
-  public static final String PHASE_NAME_END = "stopped";
-
   void stop() throws StopException;
 }

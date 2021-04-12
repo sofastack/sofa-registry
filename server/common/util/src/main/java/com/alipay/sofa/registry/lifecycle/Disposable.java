@@ -24,9 +24,5 @@ import com.alipay.sofa.registry.exception.DisposeException;
  */
 public interface Disposable {
 
-  public static final String PHASE_NAME_BEGIN = "disposing";
-
-  public static final String PHASE_NAME_END = "disposed";
-
   void dispose() throws DisposeException;
 }

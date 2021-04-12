@@ -24,9 +24,5 @@ import com.alipay.sofa.registry.exception.StartException;
  */
 public interface Startable {
 
-  public static final String PHASE_NAME_BEGIN = "starting";
-
-  public static final String PHASE_NAME_END = "started";
-
   void start() throws StartException;
 }

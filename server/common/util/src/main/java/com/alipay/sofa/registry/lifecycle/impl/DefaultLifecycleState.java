@@ -18,7 +18,6 @@ package com.alipay.sofa.registry.lifecycle.impl;
 
 import com.alipay.sofa.registry.lifecycle.*;
 import com.alipay.sofa.registry.log.Logger;
-import com.alipay.sofa.registry.log.LoggerFactory;
 import java.util.concurrent.atomic.AtomicReference;
 
 /**
@@ -29,17 +28,13 @@ public class DefaultLifecycleState implements LifecycleState {
 
   private final Logger logger;
 
-  private AtomicReference<LifecyclePhase> phase = new AtomicReference<>();
+  private final AtomicReference<LifecyclePhase> phase = new AtomicReference<>();
 
-  private AtomicReference<LifecyclePhase> previoisPhase = new AtomicReference<>();
+  private final AtomicReference<LifecyclePhase> previoisPhase = new AtomicReference<>();
 
-  private Lifecycle lifecycle;
+  private final Lifecycle lifecycle;
 
-  private LifecycleController lifecycleController;
-
-  public DefaultLifecycleState(Lifecycle lifecycle, LifecycleController lifecycleController) {
-    this(lifecycle, lifecycleController, LoggerFactory.getLogger(lifecycle.getClass()));
-  }
+  private final LifecycleController lifecycleController;
 
   public DefaultLifecycleState(
       Lifecycle lifecycle, LifecycleController lifecycleController, Logger logger) {
@@ -64,7 +59,7 @@ public class DefaultLifecycleState implements LifecycleState {
   public boolean isInitialized() {
 
     LifecyclePhase currentPhase = getPhase();
-    return phase != null
+    return currentPhase != null
         && phaseNameIn(
             currentPhase,
             LifecyclePhase.INITIALIZED,

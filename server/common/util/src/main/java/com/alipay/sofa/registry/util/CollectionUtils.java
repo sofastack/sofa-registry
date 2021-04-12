@@ -25,8 +25,8 @@ import java.util.concurrent.ThreadLocalRandom;
  * @author zhuoyu.sjw
  * @version $Id : CollectionUtils.java, v 0.1 2018-04-12 14:54 zhuoyu.sjw Exp $$
  */
-public class CollectionUtils {
-
+public final class CollectionUtils {
+  private CollectionUtils() {}
   /**
    * Gets random.
    *

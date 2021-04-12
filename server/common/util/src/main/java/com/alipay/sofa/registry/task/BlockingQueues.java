@@ -43,7 +43,7 @@ public final class BlockingQueues<T> {
 
   public boolean offer(int idx, T t) {
     BlockingQueue<T> q = queues[idx];
-    if (q.size() <= avgQueueBufferSize) {
+    if (q.size() < avgQueueBufferSize) {
       // not reach avg, add
       return q.offer(t);
     } else {
@@ -63,10 +63,6 @@ public final class BlockingQueues<T> {
               "BlockingQueues.put overflow, idx=%d, totalSize=%d, queueSize=%d",
               idx, getTotalQueueSize(), queues[idx].size()));
     }
-  }
-
-  public BlockingQueue<T>[] getQueues() {
-    return queues.clone();
   }
 
   public BlockingQueue<T> getQueue(int idx) {

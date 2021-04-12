@@ -39,23 +39,23 @@ import org.springframework.beans.factory.annotation.Autowired;
  */
 public class ProvideDataChangeFetchTaskListener implements TaskListener {
 
-  @Autowired private SessionServerConfig sessionServerConfig;
+  @Autowired SessionServerConfig sessionServerConfig;
 
   /** trigger push client process */
-  @Autowired private TaskListenerManager taskListenerManager;
+  @Autowired TaskListenerManager taskListenerManager;
 
   /** MetaNode service */
-  @Autowired private MetaServerService metaServerService;
+  @Autowired MetaServerService metaServerService;
 
-  @Autowired private Exchange boltExchange;
+  @Autowired Exchange boltExchange;
 
-  @Autowired private Watchers sessionWatchers;
+  @Autowired Watchers sessionWatchers;
 
-  @Autowired private ProvideDataProcessor provideDataProcessorManager;
+  @Autowired ProvideDataProcessor provideDataProcessorManager;
 
   private TaskDispatcher<String, SessionTask> singleTaskDispatcher;
 
-  private TaskProcessor dataNodeSingleTaskProcessor;
+  private final TaskProcessor dataNodeSingleTaskProcessor;
 
   public ProvideDataChangeFetchTaskListener(TaskProcessor dataNodeSingleTaskProcessor) {
     this.dataNodeSingleTaskProcessor = dataNodeSingleTaskProcessor;
