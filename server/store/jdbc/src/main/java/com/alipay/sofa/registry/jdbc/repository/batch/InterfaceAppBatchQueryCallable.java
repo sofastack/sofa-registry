@@ -25,15 +25,14 @@ import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.util.BatchCallableRunnable;
 import com.alipay.sofa.registry.util.TimestampUtil;
 import com.google.common.collect.Sets;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.util.CollectionUtils;
-
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.util.CollectionUtils;
 
 /**
  * @author xiaojian.xj

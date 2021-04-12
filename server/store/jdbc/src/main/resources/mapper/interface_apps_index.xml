@@ -14,14 +14,26 @@
         <result property="gmtModify" column="gmt_modified" javaType="java.sql.Timestamp" jdbcType="TIMESTAMP"/>
     </resultMap>
 
-    <insert id="insert" parameterType="com.alipay.sofa.registry.jdbc.domain.InterfaceAppsIndexDomain">
-      INSERT INTO interface_apps_index(data_center, interface_name, app_name, reference, hashcode, gmt_create, gmt_modified)
-      VALUES(#{dataCenter},#{interfaceName},#{appName}, true , #{hashcode}, NOW(6),  NOW(6))
-      ON DUPLICATE KEY UPDATE reference = true
+    <update id="update" parameterType="com.alipay.sofa.registry.jdbc.domain.InterfaceAppsIndexDomain">
+      <![CDATA[
+
+              update interface_apps_index set gmt_modified = NOW(6)
+              WHERE data_center = #{dataCenter} AND app_name = #{appName} AND hashcode = #{hashcode} AND reference = true
+
+        ]]>
+    </update>
+
+    <insert id="insertOnReplace" parameterType="com.alipay.sofa.registry.jdbc.domain.InterfaceAppsIndexDomain">
+      <![CDATA[
+
+              replace into interface_apps_index(data_center, interface_name, app_name, reference, hashcode, gmt_create, gmt_modified)
+              values (#{dataCenter},#{interfaceName},#{appName}, true , #{hashcode}, NOW(6),  NOW(6))
+
+        ]]>
     </insert>
 
     <select id="batchQueryByInterface" resultMap="interfaceAppsResultMap">
-         select * from interface_apps_index where data_center = #{dataCenter}
+        select * from interface_apps_index where data_center = #{dataCenter}
         <if test="interfaceNames != null and interfaceNames.size() > 0">
             and interface_name in
             <foreach collection="interfaceNames" index="index" item="item" open="(" separator="," close=")">
@@ -32,8 +44,10 @@
 
     <select id="queryByInterfaceName" resultMap="interfaceAppsResultMap">
         <![CDATA[
-         select * from interface_apps_index
-         where data_center = #{dataCenter} and interface_name = #{interfaceName}
+
+                 select * from interface_apps_index
+                 where data_center = #{dataCenter} and interface_name = #{interfaceName}
+
         ]]>
     </select>
 
@@ -41,14 +55,9 @@
         select count(1) from interface_apps_index where data_center = #{dataCenter}
     </select>
 
-    <select id="queryModifyAfterThan" resultMap="interfaceAppsResultMap">
-        select * from interface_apps_index where data_center = #{dataCenter} and gmt_modified > #{maxUpdate}
-        order by gmt_modified limit #{limitCount}
+    <select id="queryLargeThan" resultMap="interfaceAppsResultMap">
+        select * from interface_apps_index where data_center = #{dataCenter} and id > #{maxId}
+        order by id limit #{limitCount}
     </select>
-
-    <select id="queryModifyEquals" resultMap="interfaceAppsResultMap">
-        select * from interface_apps_index where data_center = #{dataCenter} and gmt_modified = #{maxUpdate}
-    </select>
-
 
 </mapper>
