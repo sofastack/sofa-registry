@@ -16,23 +16,19 @@
 
     <insert id="insert" parameterType="com.alipay.sofa.registry.jdbc.domain.InterfaceAppsIndexDomain">
       INSERT INTO interface_apps_index(data_center, interface_name, app_name, reference, hashcode, gmt_create, gmt_modified)
-      VALUES
-      <foreach collection="list" item="domain" separator=",">
-      (#{domain.dataCenter},#{domain.interfaceName},#{domain.appName}, true , #{domain.hashcode}, NOW(6),  NOW(6))
-      </foreach>
-        ON DUPLICATE KEY UPDATE reference = true
+      VALUES(#{dataCenter},#{interfaceName},#{appName}, true , #{hashcode}, NOW(6),  NOW(6))
+      ON DUPLICATE KEY UPDATE reference = true
     </insert>
 
     <select id="batchQueryByInterface" resultMap="interfaceAppsResultMap">
-         select * from interface_apps_index
-        <if test="list != null and list.size() > 0">
-            where
-             <foreach  collection="list" item="query" open="(" close=")" separator=" or ">
-               ( data_center = #{query.dataCenter} and interface_name = #{query.interfaceName})
+         select * from interface_apps_index where data_center = #{dataCenter}
+        <if test="interfaceNames != null and interfaceNames.size() > 0">
+            and interface_name in
+            <foreach collection="interfaceNames" index="index" item="item" open="(" separator="," close=")">
+                #{item}
             </foreach>
         </if>
     </select>
-
 
     <select id="queryByInterfaceName" resultMap="interfaceAppsResultMap">
         <![CDATA[

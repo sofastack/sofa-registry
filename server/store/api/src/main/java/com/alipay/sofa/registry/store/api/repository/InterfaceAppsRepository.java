@@ -44,9 +44,7 @@ public interface InterfaceAppsRepository extends RegistryRepository {
    * @param appName
    * @return
    */
-  default int batchSave(String appName, Set<String> interfaceName) {
-    return 0;
-  }
+  default void batchSave(String appName, Set<String> interfaceName) {}
 
   /** refresh when startup */
   void loadMetadata();
