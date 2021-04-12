@@ -42,7 +42,7 @@ public class NamedThreadFactory implements ThreadFactory {
   public NamedThreadFactory(String prefix, boolean daemon) {
     SecurityManager s = System.getSecurityManager();
     group = (s != null) ? s.getThreadGroup() : Thread.currentThread().getThreadGroup();
-    namePrefix = prefix + "-" + POOL_NUMBER.getAndIncrement() + "-T-";
+    namePrefix = prefix + "-" + POOL_NUMBER.getAndIncrement();
     isDaemon = daemon;
   }
 
@@ -59,5 +59,9 @@ public class NamedThreadFactory implements ThreadFactory {
       t.setPriority(Thread.NORM_PRIORITY);
     }
     return t;
+  }
+
+  public String getNamePrefix() {
+    return namePrefix;
   }
 }
