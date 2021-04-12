@@ -49,6 +49,25 @@ public class TaskListenerTest {
     watcherRegisterFetchTaskListenerCalled = false;
   }
 
+  @Test
+  public void doTestEvent() {
+    Object o = new Object();
+    long now = System.currentTimeMillis();
+    TaskEvent event = new TaskEvent(o, WATCHER_REGISTER_FETCH_TASK);
+    Assert.assertTrue(event.getCreateTime() >= now);
+    Assert.assertNotNull(event.getTaskId());
+    Assert.assertEquals(event.getEventObj(), o);
+    event.setEventObj(new Object());
+    Assert.assertNotEquals(event.getEventObj(), o);
+    event.setSendTimeStamp(now);
+    Assert.assertEquals(event.getSendTimeStamp(), now);
+
+    event.setAttribute("k", "v");
+    Assert.assertEquals(event.getAttribute("k"), "v");
+    event.setAttribute("k", null);
+    Assert.assertNull(event.getAttribute("k"));
+  }
+
   private static class WatcherRegisterFetchTaskListener implements TaskListener {
     @Override
     public TaskType support() {

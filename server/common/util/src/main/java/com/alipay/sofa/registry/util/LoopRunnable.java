@@ -27,46 +27,46 @@ import com.alipay.sofa.registry.log.LoggerFactory;
 public abstract class LoopRunnable implements Runnable, Suspendable {
   private static final Logger LOGGER = LoggerFactory.getLogger(LoopRunnable.class);
 
-  private volatile boolean isClosed = false;
+  private volatile boolean closed = false;
 
-  private volatile boolean isSuspend = false;
+  private volatile boolean suspend = false;
 
   public abstract void runUnthrowable();
 
   public abstract void waitingUnthrowable();
 
-  public void unexpectExit(Throwable e) {
-    LOGGER.error("unexpect exit in LoopRunnable {}", this.getClass().getSimpleName(), e);
-  }
-
   public void close() {
-    isClosed = true;
+    closed = true;
   }
 
   @Override
   public void suspend() {
-    this.isSuspend = true;
+    this.suspend = true;
   }
 
   @Override
   public void resume() {
-    this.isSuspend = false;
+    this.suspend = false;
   }
 
   @Override
   public boolean isSuspended() {
-    return isSuspend;
+    return suspend;
+  }
+
+  public boolean isClosed() {
+    return closed;
   }
 
   public void run() {
     LOGGER.info("loop-run started {}", this.getClass().getSimpleName());
-    try {
-      for (; ; ) {
-        if (isClosed) {
+    for (; ; ) {
+      try {
+        if (closed) {
           LOGGER.warn("[closed] quit");
-          return;
+          break;
         }
-        if (isSuspend) {
+        if (suspend) {
           LOGGER.warn("[suspend] break");
         } else {
           try {
@@ -80,10 +80,14 @@ public abstract class LoopRunnable implements Runnable, Suspendable {
         } catch (Throwable unexpect) {
           LOGGER.error("waiting unexpect error", unexpect);
         }
+      } catch (Throwable e) {
+        // log oom, this may be happen
+        try {
+          LOGGER.error("loop unexpect error", e);
+        } catch (Throwable ignored) { // NOPMD
+        }
       }
-    } catch (Throwable e) {
-      // in oom, this may be happen
-      unexpectExit(e);
     }
+    LOGGER.info("loop-run exit {}, closed={}", this.getClass().getSimpleName(), closed);
   }
 }

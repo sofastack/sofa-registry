@@ -16,6 +16,7 @@
  */
 package com.alipay.sofa.registry;
 
+import com.alipay.sofa.registry.util.StringFormatter;
 import org.junit.Assert;
 
 public class TestUtils {
@@ -26,5 +27,10 @@ public class TestUtils {
     } catch (Throwable exception) {
       Assert.assertEquals(exception.getClass(), eclazz);
     }
+  }
+
+  public static void assertBetween(long v, long low, long high) {
+    Assert.assertTrue(StringFormatter.format("v={}, low={}"), v >= low);
+    Assert.assertTrue(StringFormatter.format("v={}, high={}"), v <= high);
   }
 }

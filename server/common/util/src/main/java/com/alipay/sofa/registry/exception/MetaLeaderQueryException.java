@@ -24,12 +24,4 @@ public class MetaLeaderQueryException extends SofaRegistryRuntimeException {
   public MetaLeaderQueryException(String message) {
     super(message);
   }
-
-  public MetaLeaderQueryException(String message, Throwable th) {
-    super(message, th);
-  }
-
-  public MetaLeaderQueryException(Throwable th) {
-    super(th);
-  }
 }

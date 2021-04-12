@@ -17,29 +17,33 @@
 package com.alipay.sofa.registry.task;
 
 import com.alipay.sofa.registry.TestUtils;
+import com.alipay.sofa.registry.log.LoggerFactory;
+import java.util.concurrent.RejectedExecutionException;
 import org.junit.Assert;
 import org.junit.Test;
 
-public class BlockingQueuesTest {
+public class MetricsableThreadPoolExecutorTest {
+
   @Test
   public void test() {
-    BlockingQueues queues = new BlockingQueues(2, 2, true);
-    Assert.assertEquals(queues.queueNum(), 2);
-    Assert.assertEquals(queues.getTotalQueueSize(), 0);
-    // avgSize=1
-    // size<avg
-    queues.put(0, new Object());
-    // totalSize<buffer
-    queues.put(0, new Object());
-    TestUtils.assertException(
-        FastRejectedExecutionException.class, () -> queues.put(0, new Object()));
+    MetricsableThreadPoolExecutor executor =
+        MetricsableThreadPoolExecutor.newExecutor("test" + System.currentTimeMillis(), 1, 1);
+    Assert.assertNotNull(executor.toString());
 
-    // size<avg
-    queues.put(1, new Object());
+    final RejectedLogErrorHandler handler =
+        (RejectedLogErrorHandler) executor.getRejectedExecutionHandler();
     TestUtils.assertException(
-        FastRejectedExecutionException.class, () -> queues.put(1, new Object()));
-    Assert.assertEquals(queues.getTotalQueueSize(), 3);
-    Assert.assertEquals(queues.getQueue(0).size(), 2);
-    Assert.assertEquals(queues.getQueue(1).size(), 1);
+        RejectedExecutionException.class,
+        () ->
+            handler.rejectedExecution(
+                () -> {
+                  throw new RuntimeException();
+                },
+                executor));
+
+    RejectedLogErrorHandler handlerNoException =
+        new RejectedLogErrorHandler(
+            LoggerFactory.getLogger(MetricsableThreadPoolExecutorTest.class), false);
+    handlerNoException.rejectedExecution(() -> {}, executor);
   }
 }

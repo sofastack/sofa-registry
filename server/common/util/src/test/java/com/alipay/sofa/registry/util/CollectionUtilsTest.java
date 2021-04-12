@@ -18,6 +18,7 @@ package com.alipay.sofa.registry.util;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import org.junit.Assert;
 import org.junit.Test;
@@ -32,13 +33,12 @@ public class CollectionUtilsTest {
 
   @Test
   public void testGetRandom() {
+    Object obj = CollectionUtils.getRandom(Collections.emptyList());
+    Assert.assertNull(obj);
     boolean allValueSame = true;
     String firstValue = null;
     for (int i = 0; i < 10; i++) {
-      String radomeValue =
-          i % 2 == 0
-              ? CollectionUtils.getRandom(stringCollection)
-              : new CollectionUtils().getRandom(stringCollection);
+      String radomeValue = CollectionUtils.getRandom(stringCollection);
       Assert.assertTrue(stringCollection.contains(radomeValue));
       if (firstValue == null) {
         firstValue = radomeValue;

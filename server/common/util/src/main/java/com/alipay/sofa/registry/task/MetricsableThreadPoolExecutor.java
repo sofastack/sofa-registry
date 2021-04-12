@@ -20,6 +20,7 @@ import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.metrics.TaskMetrics;
 import com.alipay.sofa.registry.util.NamedThreadFactory;
+import com.alipay.sofa.registry.util.StringFormatter;
 import java.util.concurrent.*;
 
 /**
@@ -62,14 +63,7 @@ public class MetricsableThreadPoolExecutor extends ThreadPoolExecutor {
         unit,
         workQueue,
         threadFactory,
-        (r, executor) -> {
-          String msg =
-              String.format(
-                  "Task(%s) %s rejected from %s, throw RejectedExecutionException.",
-                  r.getClass(), r, executor);
-          LOGGER.error(msg);
-          throw new RejectedExecutionException(msg);
-        });
+        new RejectedLogErrorHandler(LOGGER, true));
   }
 
   private void registerTaskMetrics() {
@@ -78,7 +72,7 @@ public class MetricsableThreadPoolExecutor extends ThreadPoolExecutor {
 
   @Override
   public String toString() {
-    return (new StringBuilder(executorName).append(" ").append(super.toString())).toString();
+    return StringFormatter.format("{}:{}", executorName, super.toString());
   }
 
   public static MetricsableThreadPoolExecutor newExecutor(
@@ -96,21 +90,6 @@ public class MetricsableThreadPoolExecutor extends ThreadPoolExecutor {
 
   public static MetricsableThreadPoolExecutor newExecutor(
       String executorName, int corePoolSize, int size) {
-    return new MetricsableThreadPoolExecutor(
-        executorName,
-        corePoolSize,
-        corePoolSize,
-        60,
-        TimeUnit.SECONDS,
-        size <= 1024 * 4 ? new ArrayBlockingQueue<>(size) : new LinkedBlockingQueue<>(size),
-        new NamedThreadFactory(executorName, true),
-        (r, executor) -> {
-          String msg =
-              String.format(
-                  "Task(%s) %s rejected from %s, throw RejectedExecutionException.",
-                  r.getClass(), r, executor);
-          LOGGER.error(msg);
-          throw new RejectedExecutionException(msg);
-        });
+    return newExecutor(executorName, corePoolSize, size, new RejectedLogErrorHandler(LOGGER, true));
   }
 }
