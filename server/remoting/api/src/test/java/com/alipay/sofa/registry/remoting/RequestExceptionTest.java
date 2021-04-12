@@ -17,6 +17,7 @@
 package com.alipay.sofa.registry.remoting;
 
 import com.alipay.sofa.registry.common.model.store.URL;
+import com.alipay.sofa.registry.remoting.exchange.RequestChannelClosedException;
 import com.alipay.sofa.registry.remoting.exchange.RequestException;
 import com.alipay.sofa.registry.remoting.exchange.message.Request;
 import org.junit.Assert;
@@ -28,7 +29,7 @@ import org.junit.Test;
  */
 public class RequestExceptionTest {
   @Test
-  public void doTest() {
+  public void doRequestExceptionTest() {
     RequestException exception = new RequestException("error message");
     Assert.assertEquals("error message", exception.getMessage());
 
@@ -61,5 +62,43 @@ public class RequestExceptionTest {
     exception = new RequestException("error message", request, runtimeException);
     Assert.assertEquals(
         "request url: null, body: request body, error message", exception.getMessage());
+
+    exception =
+        new RequestException(
+            "test",
+            new Request() {
+              @Override
+              public Object getRequestBody() {
+                return 1;
+              }
+
+              @Override
+              public URL getRequestUrl() {
+                return null;
+              }
+            });
+
+    Assert.assertTrue(exception.getMessage().contains(Integer.class.getSimpleName()));
+  }
+
+  public void requestChannelClosedExceptionTest() {
+    RequestChannelClosedException exception =
+        new RequestChannelClosedException(
+            "test",
+            new Request() {
+              @Override
+              public Object getRequestBody() {
+                return 1;
+              }
+
+              @Override
+              public URL getRequestUrl() {
+                return null;
+              }
+            });
+    Assert.assertTrue(exception.getMessage().contains(Integer.class.getSimpleName()));
+
+    exception = new RequestChannelClosedException("test");
+    Assert.assertTrue(exception.getMessage().contains("test"));
   }
 }

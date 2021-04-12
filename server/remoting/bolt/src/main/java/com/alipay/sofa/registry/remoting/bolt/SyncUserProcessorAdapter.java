@@ -16,7 +16,6 @@
  */
 package com.alipay.sofa.registry.remoting.bolt;
 
-import com.alipay.remoting.AsyncContext;
 import com.alipay.remoting.BizContext;
 import com.alipay.remoting.rpc.protocol.SyncUserProcessor;
 import com.alipay.sofa.registry.remoting.ChannelHandler;
@@ -28,7 +27,7 @@ import java.util.concurrent.Executor;
  */
 public class SyncUserProcessorAdapter extends SyncUserProcessor {
 
-  private ChannelHandler userProcessorHandler;
+  private final ChannelHandler userProcessorHandler;
 
   /**
    * constructor
@@ -40,23 +39,15 @@ public class SyncUserProcessorAdapter extends SyncUserProcessor {
   }
 
   @Override
-  public void handleRequest(BizContext bizCtx, AsyncContext asyncCtx, Object request) {
-    super.handleRequest(bizCtx, asyncCtx, request);
-  }
-
-  @Override
   public Object handleRequest(BizContext bizCtx, Object request) throws Exception {
     BoltChannel boltChannel = new BoltChannel(bizCtx.getConnection());
     boltChannel.setBizContext(bizCtx);
-    if (userProcessorHandler != null) {
-      return userProcessorHandler.reply(boltChannel, request);
-    }
-    return null;
+    return userProcessorHandler.reply(boltChannel, request);
   }
 
   @Override
   public String interest() {
-    if (userProcessorHandler != null && userProcessorHandler.interest() != null) {
+    if (userProcessorHandler.interest() != null) {
       return userProcessorHandler.interest().getName();
     }
 

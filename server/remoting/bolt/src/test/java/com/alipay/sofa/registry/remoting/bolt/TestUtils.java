@@ -14,24 +14,30 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alipay.sofa.registry.remoting.bolt.serializer;
+package com.alipay.sofa.registry.remoting.bolt;
 
-import com.alipay.sofa.registry.remoting.bolt.TestUtils;
 import org.junit.Assert;
-import org.junit.Test;
 
-public class CustomClassSerializerManagerTest {
-  @Test
-  public void test() {
-    TestUtils.assertException(
-        IllegalArgumentException.class,
-        () -> CustomClassSerializerManager.registerSerializer(null, (byte) 1));
-    TestUtils.assertException(
-        IllegalArgumentException.class,
-        () -> CustomClassSerializerManager.registerSerializer(Integer.class, null));
-    CustomClassSerializerManager.registerSerializer(Integer.class, (byte) 1);
-    Assert.assertEquals(
-        CustomClassSerializerManager.getClassSerializer(Integer.class).byteValue(), 1);
-    Assert.assertNull(CustomClassSerializerManager.getClassSerializer(Long.class));
+public class TestUtils {
+  public static void assertException(Class<? extends Throwable> eclazz, Runnable runnable) {
+    try {
+      runnable.run();
+      Assert.fail();
+    } catch (Throwable exception) {
+      Assert.assertEquals(exception.getClass(), eclazz);
+    }
+  }
+
+  public static void assertRunException(Class<? extends Throwable> eclazz, RunError runnable) {
+    try {
+      runnable.run();
+      Assert.fail();
+    } catch (Throwable exception) {
+      Assert.assertEquals(exception.getClass(), eclazz);
+    }
+  }
+
+  public interface RunError {
+    void run() throws Exception;
   }
 }
