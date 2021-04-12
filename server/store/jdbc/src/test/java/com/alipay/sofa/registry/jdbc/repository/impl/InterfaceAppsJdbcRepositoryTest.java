@@ -19,13 +19,12 @@ package com.alipay.sofa.registry.jdbc.repository.impl;
 import com.alipay.sofa.registry.common.model.appmeta.InterfaceMapping;
 import com.alipay.sofa.registry.jdbc.AbstractH2DbTestBase;
 import com.alipay.sofa.registry.store.api.repository.InterfaceAppsRepository;
-import org.junit.Assert;
-import org.junit.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import org.junit.Assert;
+import org.junit.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 
 /**
  * @author xiaojian.xj
@@ -42,22 +41,10 @@ public class InterfaceAppsJdbcRepositoryTest extends AbstractH2DbTestBase {
     for (int i = 0; i < 100; i++) {
       services.add(i + "batchSaveService-" + System.currentTimeMillis());
     }
-    HashSet<String> sets = new HashSet<>(services.subList(0, 1));
-    interfaceAppsJdbcRepository.batchSave(app, sets);
-    for (String service : services) {
-      InterfaceMapping appNames = interfaceAppsJdbcRepository.getAppNames(service);
-      if (sets.contains(service)) {
-        Assert.assertEquals(1, appNames.getApps().size());
-        Assert.assertTrue(appNames.getApps().contains(app));
-      } else {
-        Assert.assertTrue(appNames.getNanosVersion() == -1);
-      }
-    }
 
     interfaceAppsJdbcRepository.batchSave(app, new HashSet<>(services));
     for (String service : services) {
       InterfaceMapping appNames = interfaceAppsJdbcRepository.getAppNames(service);
-      System.out.println(service);
       Assert.assertEquals(1, appNames.getApps().size());
       Assert.assertTrue(appNames.getApps().contains(app));
     }
