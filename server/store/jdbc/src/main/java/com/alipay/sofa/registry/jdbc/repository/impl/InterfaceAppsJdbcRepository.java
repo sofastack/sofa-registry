@@ -19,7 +19,6 @@ package com.alipay.sofa.registry.jdbc.repository.impl;
 import com.alipay.sofa.registry.common.model.appmeta.InterfaceMapping;
 import com.alipay.sofa.registry.jdbc.config.DefaultCommonConfig;
 import com.alipay.sofa.registry.jdbc.config.MetadataConfig;
-import com.alipay.sofa.registry.jdbc.domain.InterfaceAppIndexQueryModel;
 import com.alipay.sofa.registry.jdbc.domain.InterfaceAppsIndexDomain;
 import com.alipay.sofa.registry.jdbc.exception.InterfaceAppQueryException;
 import com.alipay.sofa.registry.jdbc.mapper.InterfaceAppsIndexMapper;
@@ -34,7 +33,6 @@ import com.alipay.sofa.registry.util.MathUtils;
 import com.alipay.sofa.registry.util.TimestampUtil;
 import com.google.common.collect.Sets;
 import java.sql.Timestamp;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -111,10 +109,7 @@ public class InterfaceAppsJdbcRepository implements InterfaceAppsRepository, Jdb
       return appNames;
     }
 
-    final InterfaceAppIndexQueryModel query =
-        new InterfaceAppIndexQueryModel(defaultCommonConfig.getClusterId(), dataInfoId);
-
-    TaskEvent task = interfaceAppBatchQueryCallable.new TaskEvent(query);
+    TaskEvent task = interfaceAppBatchQueryCallable.new TaskEvent(dataInfoId);
     InvokeFuture future = interfaceAppBatchQueryCallable.commit(task);
     try {
       if (future.isSuccess()) {
@@ -145,14 +140,11 @@ public class InterfaceAppsJdbcRepository implements InterfaceAppsRepository, Jdb
    * @param interfaceNames
    */
   @Override
-  public int batchSave(String appName, Set<String> interfaceNames) {
-    List<InterfaceAppsIndexDomain> saves = new ArrayList<>();
+  public void batchSave(String appName, Set<String> interfaceNames) {
     for (String interfaceName : interfaceNames) {
-      saves.add(
-          new InterfaceAppsIndexDomain(defaultCommonConfig.getClusterId(), interfaceName, appName));
+      interfaceAppsIndexMapper.insert(
+              new InterfaceAppsIndexDomain(defaultCommonConfig.getClusterId(), interfaceName, appName));
     }
-
-    return interfaceAppsIndexMapper.insert(saves);
   }
 
   /** refresh interfaceNames index */

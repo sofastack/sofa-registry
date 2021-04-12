@@ -16,7 +16,6 @@
  */
 package com.alipay.sofa.registry.jdbc.mapper;
 
-import com.alipay.sofa.registry.jdbc.domain.InterfaceAppIndexQueryModel;
 import com.alipay.sofa.registry.jdbc.domain.InterfaceAppsIndexDomain;
 import java.sql.Timestamp;
 import java.util.List;
@@ -41,19 +40,20 @@ public interface InterfaceAppsIndexMapper {
   /**
    * batch query by interfaceName
    *
-   * @param querys
+   * @param dataCenter
+   * @param interfaceNames
    * @return
    */
-  public List<InterfaceAppsIndexDomain> batchQueryByInterface(
-      List<InterfaceAppIndexQueryModel> querys);
+  public List<InterfaceAppsIndexDomain> batchQueryByInterface(@Param("dataCenter") String dataCenter,
+                                                              @Param("interfaceNames")List<String> interfaceNames);
 
   /**
    * insert
    *
-   * @param domains
+   * @param domain
    * @return effect rows number
    */
-  public int insert(List<InterfaceAppsIndexDomain> domains);
+  public int insert(InterfaceAppsIndexDomain domain);
 
   /**
    * query domains which gmt_modified is after than maxUpdate
