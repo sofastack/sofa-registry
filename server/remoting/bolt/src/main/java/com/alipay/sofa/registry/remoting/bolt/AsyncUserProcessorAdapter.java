@@ -32,7 +32,7 @@ public class AsyncUserProcessorAdapter extends AsyncUserProcessor {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(AsyncUserProcessorAdapter.class);
 
-  private ChannelHandler userProcessorHandler;
+  private final ChannelHandler userProcessorHandler;
 
   /**
    * constructor
@@ -45,27 +45,19 @@ public class AsyncUserProcessorAdapter extends AsyncUserProcessor {
 
   @Override
   public void handleRequest(BizContext bizCtx, AsyncContext asyncCtx, Object request) {
-
-    BoltChannel boltChannel = new BoltChannel(bizCtx.getConnection());
-    boltChannel.setAsyncContext(asyncCtx);
     try {
-      if (userProcessorHandler != null) {
-        userProcessorHandler.received(boltChannel, request);
-      }
-    } catch (Exception e) {
+      BoltChannel boltChannel = new BoltChannel(bizCtx.getConnection());
+      boltChannel.setAsyncContext(asyncCtx);
+      userProcessorHandler.received(boltChannel, request);
+    } catch (Throwable e) {
       LOGGER.error("Handle request error!", e);
       throw new RuntimeException("Handle request error!", e);
     }
   }
 
   @Override
-  public Object handleRequest(BizContext bizCtx, Object request) throws Exception {
-    return super.handleRequest(bizCtx, request);
-  }
-
-  @Override
   public String interest() {
-    if (userProcessorHandler != null && userProcessorHandler.interest() != null) {
+    if (userProcessorHandler.interest() != null) {
       return userProcessorHandler.interest().getName();
     }
 
