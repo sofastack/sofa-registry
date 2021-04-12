@@ -32,7 +32,6 @@ import com.alipay.sofa.registry.util.BatchCallableRunnable.TaskEvent;
 import com.alipay.sofa.registry.util.MathUtils;
 import com.alipay.sofa.registry.util.TimestampUtil;
 import com.google.common.collect.Sets;
-import java.sql.Timestamp;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -49,7 +48,7 @@ public class InterfaceAppsJdbcRepository implements InterfaceAppsRepository, Jdb
 
   private static final Logger LOG = LoggerFactory.getLogger("METADATA-EXCHANGE", "[InterfaceApps]");
 
-  private volatile Timestamp lastModifyTimestamp = new Timestamp(-1);
+  private volatile long maxId = 0L;
 
   /** map: <interface, appNames> */
   protected final Map<String, InterfaceMapping> interfaceApps = new ConcurrentHashMap<>();
@@ -75,7 +74,7 @@ public class InterfaceAppsJdbcRepository implements InterfaceAppsRepository, Jdb
     // in order to avoid large request on database after session startup,
     // it will load almost all record of this dataCenter,
     // but not promise load 100% records of this dataCenter,
-    // eg: records insert or update after interfaceAppsIndexMapper.getTotalCount
+    // eg: records insert after interfaceAppsIndexMapper.getTotalCount
     // and beyond refreshCount will not be load in this method, they will be load in next schedule
     final int total = interfaceAppsIndexMapper.getTotalCount(defaultCommonConfig.getClusterId());
     final int refreshCount = MathUtils.divideCeil(total, refreshLimit);
@@ -142,8 +141,12 @@ public class InterfaceAppsJdbcRepository implements InterfaceAppsRepository, Jdb
   @Override
   public void batchSave(String appName, Set<String> interfaceNames) {
     for (String interfaceName : interfaceNames) {
-      interfaceAppsIndexMapper.insert(
-              new InterfaceAppsIndexDomain(defaultCommonConfig.getClusterId(), interfaceName, appName));
+      InterfaceAppsIndexDomain interfaceApps =
+          new InterfaceAppsIndexDomain(defaultCommonConfig.getClusterId(), interfaceName, appName);
+      int effectRows = interfaceAppsIndexMapper.update(interfaceApps);
+      if (effectRows == 0) {
+        interfaceAppsIndexMapper.insertOnReplace(interfaceApps);
+      }
     }
   }
 
@@ -193,35 +196,31 @@ public class InterfaceAppsJdbcRepository implements InterfaceAppsRepository, Jdb
   }
 
   public synchronized int refresh(String dataCenter) {
-    final Timestamp last = lastModifyTimestamp;
+    final long last = maxId;
     List<InterfaceAppsIndexDomain> afters =
-        interfaceAppsIndexMapper.queryModifyAfterThan(dataCenter, last, refreshLimit);
-    List<InterfaceAppsIndexDomain> equals =
-        interfaceAppsIndexMapper.queryModifyEquals(dataCenter, last);
+        interfaceAppsIndexMapper.queryLargeThan(dataCenter, last, refreshLimit);
+
     if (LOG.isInfoEnabled()) {
-      LOG.info(
-          "refresh lastTimestamp={}, equals={}, afters={},", last, equals.size(), afters.size());
+      LOG.info("refresh madId={}, afters={},", last, afters.size());
     }
 
-    equals.addAll(afters);
-    if (CollectionUtils.isEmpty(equals)) {
+    if (CollectionUtils.isEmpty(afters)) {
       return 0;
     }
 
-    // trigger refresh interface index, must be sorted by gmtModify
-    for (InterfaceAppsIndexDomain interfaceApps : equals) {
+    // trigger refresh interface index, must be sorted by id
+    for (InterfaceAppsIndexDomain interfaceApps : afters) {
       triggerRefreshCache(interfaceApps);
     }
 
-    // update MAX_MODIFY_TIMESTAMP
-    InterfaceAppsIndexDomain max = equals.get(equals.size() - 1);
-    if (lastModifyTimestamp.before(max.getGmtModify())) {
-      this.lastModifyTimestamp = max.getGmtModify();
-      LOG.info("update lastModifyTimestamp {} to {}", last, lastModifyTimestamp);
+    // update madId
+    InterfaceAppsIndexDomain max = afters.get(afters.size() - 1);
+    if (maxId < max.getId()) {
+      this.maxId = max.getId();
+      LOG.info("update maxId {} to {}", last, maxId);
     } else {
-      LOG.info(
-          "skip update lastModifyTimestamp {}, got={}", lastModifyTimestamp, max.getGmtModify());
+      LOG.info("skip update maxId {}, got={}", maxId, max.getId());
     }
-    return equals.size();
+    return afters.size();
   }
 }

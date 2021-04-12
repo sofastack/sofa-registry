@@ -17,7 +17,6 @@
 package com.alipay.sofa.registry.jdbc.mapper;
 
 import com.alipay.sofa.registry.jdbc.domain.InterfaceAppsIndexDomain;
-import java.sql.Timestamp;
 import java.util.List;
 import org.apache.ibatis.annotations.Param;
 
@@ -44,8 +43,16 @@ public interface InterfaceAppsIndexMapper {
    * @param interfaceNames
    * @return
    */
-  public List<InterfaceAppsIndexDomain> batchQueryByInterface(@Param("dataCenter") String dataCenter,
-                                                              @Param("interfaceNames")List<String> interfaceNames);
+  public List<InterfaceAppsIndexDomain> batchQueryByInterface(
+      @Param("dataCenter") String dataCenter, @Param("interfaceNames") List<String> interfaceNames);
+
+  /**
+   * insert on replace
+   *
+   * @param domain
+   * @return
+   */
+  int insertOnReplace(InterfaceAppsIndexDomain domain);
 
   /**
    * insert
@@ -53,29 +60,19 @@ public interface InterfaceAppsIndexMapper {
    * @param domain
    * @return effect rows number
    */
-  public int insert(InterfaceAppsIndexDomain domain);
+  public int update(InterfaceAppsIndexDomain domain);
 
   /**
    * query domains which gmt_modified is after than maxUpdate
    *
    * @param dataCenter
-   * @param maxUpdate
+   * @param maxId
    * @returns
    */
-  List<InterfaceAppsIndexDomain> queryModifyAfterThan(
+  List<InterfaceAppsIndexDomain> queryLargeThan(
       @Param("dataCenter") String dataCenter,
-      @Param("maxUpdate") Timestamp maxUpdate,
+      @Param("maxId") long maxId,
       @Param("limitCount") int limitCount);
-
-  /**
-   * query domains which gmt_modified equal maxUpdate
-   *
-   * @param dataCenter
-   * @param maxUpdate
-   * @returns
-   */
-  List<InterfaceAppsIndexDomain> queryModifyEquals(
-      @Param("dataCenter") String dataCenter, @Param("maxUpdate") Timestamp maxUpdate);
 
   int getTotalCount(@Param("dataCenter") String dataCenter);
 }

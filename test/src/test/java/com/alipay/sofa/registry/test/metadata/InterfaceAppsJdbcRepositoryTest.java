@@ -20,13 +20,12 @@ import com.alipay.sofa.registry.common.model.appmeta.InterfaceMapping;
 import com.alipay.sofa.registry.server.session.metadata.AppRevisionCacheRegistry;
 import com.alipay.sofa.registry.store.api.repository.InterfaceAppsRepository;
 import com.alipay.sofa.registry.test.BaseIntegrationTest;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
-
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Test;
 
 /**
  * @author xiaojian.xj
@@ -44,8 +43,8 @@ public class InterfaceAppsJdbcRepositoryTest extends BaseIntegrationTest {
             "interfaceAppsJdbcRepository", InterfaceAppsRepository.class);
 
     appRevisionCacheRegistry =
-            sessionApplicationContext.getBean(
-                    "appRevisionCacheRegistry", AppRevisionCacheRegistry.class);
+        sessionApplicationContext.getBean(
+            "appRevisionCacheRegistry", AppRevisionCacheRegistry.class);
   }
 
   @Test

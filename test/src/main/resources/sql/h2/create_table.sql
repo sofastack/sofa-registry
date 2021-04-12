@@ -21,6 +21,7 @@ CREATE TABLE interface_apps_index (
   gmt_modified timestamp(6) NOT NULL COMMENT '修改时间',
   hashcode varchar(128) NOT NULL COMMENT '唯一索引hashcode',
   reference tinyint(4) NOT NULL COMMENT '是否被引用',
+  PRIMARY KEY(id),
   UNIQUE KEY `uk_hashcode` (`data_center`, `app_name`, `hashcode`),
   KEY `idx_data_center_interface` (`interface_name`)
 );
