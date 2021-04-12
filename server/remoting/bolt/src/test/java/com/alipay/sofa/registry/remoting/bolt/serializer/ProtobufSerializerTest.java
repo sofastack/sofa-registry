@@ -16,22 +16,26 @@
  */
 package com.alipay.sofa.registry.remoting.bolt.serializer;
 
+import com.alipay.remoting.exception.DeserializationException;
+import com.alipay.remoting.exception.SerializationException;
 import com.alipay.sofa.registry.remoting.bolt.TestUtils;
 import org.junit.Assert;
 import org.junit.Test;
 
-public class CustomClassSerializerManagerTest {
+public class ProtobufSerializerTest {
   @Test
-  public void test() {
-    TestUtils.assertException(
-        IllegalArgumentException.class,
-        () -> CustomClassSerializerManager.registerSerializer(null, (byte) 1));
-    TestUtils.assertException(
-        IllegalArgumentException.class,
-        () -> CustomClassSerializerManager.registerSerializer(Integer.class, null));
-    CustomClassSerializerManager.registerSerializer(Integer.class, (byte) 1);
-    Assert.assertEquals(
-        CustomClassSerializerManager.getClassSerializer(Integer.class).byteValue(), 1);
-    Assert.assertNull(CustomClassSerializerManager.getClassSerializer(Long.class));
+  public void testException() {
+    ProtobufSerializer serializer = ProtobufSerializer.getInstance();
+    TestUtils.assertRunException(SerializationException.class, () -> serializer.serialize(null));
+    TestUtils.assertRunException(
+        SerializationException.class, () -> serializer.serialize(new Integer(10)));
+    TestUtils.assertRunException(
+        SerializationException.class, () -> serializer.deserialize(null, "classNotExist"));
+    TestUtils.assertRunException(
+        DeserializationException.class, () -> serializer.decode(null, Integer.class));
+
+    Assert.assertFalse(ProtobufSerializer.isProtoBufMessageLite(null));
+    Assert.assertFalse(ProtobufSerializer.isProtoBufMessageLite(new Integer(10)));
+    Assert.assertFalse(ProtobufSerializer.isProtoBufMessageLite("xx"));
   }
 }

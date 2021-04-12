@@ -16,8 +16,6 @@
  */
 package com.alipay.sofa.registry.server.session.remoting;
 
-import com.alipay.sofa.registry.log.Logger;
-import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.remoting.ChannelHandler;
 import com.alipay.sofa.registry.remoting.Client;
 import com.alipay.sofa.registry.remoting.exchange.Exchange;
@@ -37,8 +35,6 @@ import org.springframework.beans.factory.annotation.Autowired;
  * @author yuzhi.lyz
  */
 public class DataNodeNotifyExchanger extends ClientSideExchanger {
-  private static final Logger LOGGER = LoggerFactory.getLogger(DataNodeNotifyExchanger.class);
-
   @Autowired private SessionServerConfig sessionServerConfig;
 
   @Resource(name = "dataNotifyClientHandlers")

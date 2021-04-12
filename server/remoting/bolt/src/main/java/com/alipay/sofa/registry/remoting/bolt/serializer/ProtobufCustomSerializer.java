@@ -84,9 +84,10 @@ public class ProtobufCustomSerializer implements CustomSerializer {
         try {
           Object appResponse = ((RpcResponseCommand) response).getResponseObject();
           if (appResponse instanceof Throwable) {
-            // 业务异常序列化的是错误字符串
+            // return throwable.message as result
             response.setContent(
                 ProtobufSerializer.getInstance().serialize(((Throwable) appResponse).getMessage()));
+            // TODO should return true ?
             return false;
           } else {
             response.setContent(ProtobufSerializer.getInstance().serialize(appResponse));

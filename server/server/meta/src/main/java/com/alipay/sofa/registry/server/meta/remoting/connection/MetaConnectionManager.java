@@ -17,8 +17,6 @@
 package com.alipay.sofa.registry.server.meta.remoting.connection;
 
 import com.alipay.sofa.registry.common.model.Node.NodeType;
-import com.alipay.sofa.registry.log.Logger;
-import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.server.meta.bootstrap.config.NodeConfig;
 import com.google.common.collect.Lists;
 import java.net.InetSocketAddress;
@@ -34,8 +32,6 @@ import org.springframework.beans.factory.annotation.Autowired;
  * @version $Id: MetaConnectionManager.java, v 0.1 2018-02-12 15:01 shangyu.wh Exp $
  */
 public class MetaConnectionManager extends AbstractNodeConnectManager {
-
-  private static final Logger LOGGER = LoggerFactory.getLogger(MetaConnectionManager.class);
 
   @Autowired private NodeConfig nodeConfig;
 

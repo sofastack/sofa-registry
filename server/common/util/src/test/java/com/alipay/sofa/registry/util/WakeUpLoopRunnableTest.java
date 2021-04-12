@@ -28,24 +28,24 @@ public class WakeUpLoopRunnableTest {
     Thread t = ConcurrentUtils.createDaemonThread("loop-test", loop);
     t.start();
     loop.wakeup();
-    Thread.sleep(50);
+    Thread.sleep(100);
     Assert.assertEquals(0, loop.count.get());
     Assert.assertTrue(loop.isSuspended());
     loop.resume();
     loop.wakeup();
     Assert.assertFalse(loop.isSuspended());
-    Thread.sleep(50);
+    Thread.sleep(100);
     int loopCount = loop.count.get();
     Assert.assertTrue("loopCount:" + loopCount, loopCount != 0);
 
     loop.runException = true;
     loop.wakeup();
-    Thread.sleep(50);
+    Thread.sleep(100);
     Assert.assertTrue(t.isAlive());
 
     loop.close();
     Assert.assertTrue(loop.isClosed());
-    Thread.sleep(50);
+    Thread.sleep(100);
 
     Assert.assertFalse(t.isAlive());
   }

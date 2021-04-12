@@ -25,10 +25,11 @@ import java.util.concurrent.ConcurrentMap;
  * @author zhuoyu.sjw
  * @version $Id : CustomClassSerializerManager.java, v 0.1 2018-05-05 23:43 zhuoyu.sjw Exp $$
  */
-public class CustomClassSerializerManager {
+public final class CustomClassSerializerManager {
 
   private static final ConcurrentMap<Class, Byte> serializerMap = new ConcurrentHashMap<>();
 
+  private CustomClassSerializerManager() {}
   /**
    * Register serializer.
    *
