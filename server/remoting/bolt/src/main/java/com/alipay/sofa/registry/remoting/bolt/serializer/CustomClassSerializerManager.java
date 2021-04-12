@@ -27,7 +27,7 @@ import java.util.concurrent.ConcurrentMap;
  */
 public class CustomClassSerializerManager {
 
-  private static ConcurrentMap<Class, Byte> serializerMap = new ConcurrentHashMap<>();
+  private static final ConcurrentMap<Class, Byte> serializerMap = new ConcurrentHashMap<>();
 
   /**
    * Register serializer.

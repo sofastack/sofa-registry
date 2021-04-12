@@ -48,9 +48,7 @@ public class KeyedTask<T extends Runnable> implements Runnable {
       }
       this.success = true;
     } catch (TaskErrorSilenceException ignored) {
-      if (LOGGER.isDebugEnabled()) {
-        LOGGER.debug("failed to run task {}, {}", key, runnable);
-      }
+      LOGGER.debug("failed to run task {}, {}", key, runnable);
     } catch (Throwable e) {
       LOGGER.error("failed to run task {}, {}", key, runnable, e);
     } finally {

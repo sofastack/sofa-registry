@@ -20,7 +20,7 @@ package com.alipay.sofa.registry.exception;
  * @author chen.zhu
  *     <p>Nov 13, 2020
  */
-public class StartException extends SofaRegistryException {
+public class StartException extends SofaRegistryRuntimeException {
 
   public StartException(String message) {
     super(message);

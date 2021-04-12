@@ -59,7 +59,7 @@ public class TaskEvent {
 
   private long sendTimeStamp;
 
-  private long createTime;
+  private final long createTime;
 
   private final String taskId;
 

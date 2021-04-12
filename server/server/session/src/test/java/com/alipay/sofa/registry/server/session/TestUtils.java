@@ -14,19 +14,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alipay.sofa.registry.lifecycle;
+package com.alipay.sofa.registry.server.session;
 
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
-/**
- * @author zhuchen
- * @date Nov 24, 2020, 4:24:34 PM
- *     <p>Annotation for whom install, an auto lifecycle start/end process will triggered through
- *     spring PostConstruct and PreDestroy
- */
-@Retention(RetentionPolicy.RUNTIME)
-@Target(ElementType.TYPE)
-public @interface SmartSpringLifecycle {}
+import com.alipay.sofa.registry.server.session.bootstrap.CommonConfig;
+import com.alipay.sofa.registry.server.session.bootstrap.SessionServerConfigBean;
+
+public class TestUtils {
+
+  public static SessionServerConfigBean newSessionConfig(String dataCenter) {
+    CommonConfig commonConfig = mock(CommonConfig.class);
+    when(commonConfig.getLocalDataCenter()).thenReturn(dataCenter);
+    SessionServerConfigBean configBean = new SessionServerConfigBean(commonConfig);
+    return configBean;
+  }
+}

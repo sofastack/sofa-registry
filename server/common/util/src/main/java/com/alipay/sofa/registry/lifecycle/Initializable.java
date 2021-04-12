@@ -24,9 +24,5 @@ import com.alipay.sofa.registry.exception.InitializeException;
  */
 public interface Initializable {
 
-  public static final String PHASE_NAME_BEGIN = "initializing";
-
-  public static final String PHASE_NAME_END = "initialized";
-
   void initialize() throws InitializeException;
 }
