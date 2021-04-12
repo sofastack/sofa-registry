@@ -17,7 +17,7 @@
 package com.alipay.sofa.registry.jdbc.repository.batch;
 
 import com.alipay.sofa.registry.common.model.appmeta.InterfaceMapping;
-import com.alipay.sofa.registry.jdbc.domain.InterfaceAppIndexQueryModel;
+import com.alipay.sofa.registry.jdbc.config.DefaultCommonConfig;
 import com.alipay.sofa.registry.jdbc.domain.InterfaceAppsIndexDomain;
 import com.alipay.sofa.registry.jdbc.mapper.InterfaceAppsIndexMapper;
 import com.alipay.sofa.registry.log.Logger;
@@ -25,26 +25,29 @@ import com.alipay.sofa.registry.log.LoggerFactory;
 import com.alipay.sofa.registry.util.BatchCallableRunnable;
 import com.alipay.sofa.registry.util.TimestampUtil;
 import com.google.common.collect.Sets;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.util.CollectionUtils;
+
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.util.CollectionUtils;
 
 /**
  * @author xiaojian.xj
  * @version $Id: InterfaceAppBatchQueryCallable.java, v 0.1 2021年01月26日 14:45 xiaojian.xj Exp $
  */
 public class InterfaceAppBatchQueryCallable
-    extends BatchCallableRunnable<InterfaceAppIndexQueryModel, InterfaceMapping> {
+    extends BatchCallableRunnable<String, InterfaceMapping> {
 
   private static final Logger LOG =
       LoggerFactory.getLogger("METADATA-EXCHANGE", "[InterfaceAppBatchQuery]");
 
   @Autowired private InterfaceAppsIndexMapper interfaceAppsIndexMapper;
+
+  @Autowired private DefaultCommonConfig defaultCommonConfig;
 
   public InterfaceAppBatchQueryCallable() {
     super(20, TimeUnit.MILLISECONDS, 200);
@@ -59,26 +62,14 @@ public class InterfaceAppBatchQueryCallable
     if (LOG.isInfoEnabled()) {
       LOG.info("commit interface_apps_index interface query, task size: " + taskEvents.size());
     }
-    List<InterfaceAppIndexQueryModel> querys =
+    List<String> interfaceNames =
         taskEvents.stream().map(task -> task.getData()).collect(Collectors.toList());
-    List<InterfaceAppsIndexDomain> domains = interfaceAppsIndexMapper.batchQueryByInterface(querys);
+    List<InterfaceAppsIndexDomain> domains =
+        interfaceAppsIndexMapper.batchQueryByInterface(
+            defaultCommonConfig.getClusterId(), interfaceNames);
 
-    Map<
-            String
-            /** interfaces */
-            ,
-            Set<String>
-        /** app */
-        >
-        indexResult = new HashMap<>();
-    Map<
-            String
-            /** interfaces */
-            ,
-            Long
-        /** version */
-        >
-        versionResult = new HashMap<>();
+    Map<String, Set<String>> indexResult = new HashMap<>();
+    Map<String, Long> versionResult = new HashMap<>();
     domains.forEach(
         domain -> {
           indexResult
@@ -94,7 +85,7 @@ public class InterfaceAppBatchQueryCallable
 
     taskEvents.forEach(
         taskEvent -> {
-          String interfaceName = taskEvent.getData().getInterfaceName();
+          String interfaceName = taskEvent.getData();
           InvokeFuture<InterfaceMapping> future = taskEvent.getFuture();
           Set<String> appNames = indexResult.get(interfaceName);
           Long version = versionResult.get(interfaceName);
