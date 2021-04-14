@@ -29,7 +29,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * @author xiaojian.xj
  * @version $Id: InterfaceAppsRaftRepository.java, v 0.1 2021年01月24日 19:44 xiaojian.xj Exp $
  */
-public class InterfaceAppsRaftRepository implements InterfaceAppsRepository, RaftRepository {
+public class InterfaceAppsRaftRepository implements InterfaceAppsRepository {
   protected static final Logger LOG = LoggerFactory.getLogger(InterfaceAppsRaftRepository.class);
 
   /** map: <interface, appNames> */

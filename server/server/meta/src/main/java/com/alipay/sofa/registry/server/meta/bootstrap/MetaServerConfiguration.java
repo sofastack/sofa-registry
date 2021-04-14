@@ -17,6 +17,7 @@
 package com.alipay.sofa.registry.server.meta.bootstrap;
 
 import com.alipay.sofa.registry.jdbc.config.JdbcConfiguration;
+import com.alipay.sofa.registry.jdbc.config.JdbcElectorConfiguration;
 import com.alipay.sofa.registry.jraft.config.RaftConfiguration;
 import com.alipay.sofa.registry.remoting.bolt.exchange.BoltExchange;
 import com.alipay.sofa.registry.remoting.exchange.Exchange;
@@ -39,13 +40,19 @@ import com.alipay.sofa.registry.server.meta.remoting.handler.HeartbeatRequestHan
 import com.alipay.sofa.registry.server.meta.remoting.handler.RegistryForbiddenServerHandler;
 import com.alipay.sofa.registry.server.meta.remoting.meta.MetaNodeExchange;
 import com.alipay.sofa.registry.server.meta.remoting.meta.MetaServerRenewService;
-import com.alipay.sofa.registry.server.meta.resource.*;
+import com.alipay.sofa.registry.server.meta.resource.BlacklistDataResource;
+import com.alipay.sofa.registry.server.meta.resource.HealthResource;
+import com.alipay.sofa.registry.server.meta.resource.MetaDigestResource;
+import com.alipay.sofa.registry.server.meta.resource.MetaLeaderResource;
+import com.alipay.sofa.registry.server.meta.resource.ProvideDataResource;
+import com.alipay.sofa.registry.server.meta.resource.RegistryCoreOpsResource;
+import com.alipay.sofa.registry.server.meta.resource.SlotSyncResource;
+import com.alipay.sofa.registry.server.meta.resource.SlotTableResource;
+import com.alipay.sofa.registry.server.meta.resource.StopPushDataResource;
 import com.alipay.sofa.registry.server.meta.resource.filter.LeaderAwareFilter;
 import com.alipay.sofa.registry.server.shared.remoting.AbstractServerHandler;
 import com.alipay.sofa.registry.server.shared.resource.MetricsResource;
 import com.alipay.sofa.registry.server.shared.resource.SlotGenericResource;
-import com.alipay.sofa.registry.store.api.driver.RepositoryConfig;
-import com.alipay.sofa.registry.store.api.spring.SpringContext;
 import com.alipay.sofa.registry.task.MetricsableThreadPoolExecutor;
 import com.alipay.sofa.registry.util.DefaultExecutorFactory;
 import com.alipay.sofa.registry.util.NamedThreadFactory;
@@ -54,7 +61,12 @@ import com.alipay.sofa.registry.util.PropertySplitter;
 import com.google.common.collect.Lists;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.concurrent.*;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 import org.glassfish.jersey.jackson.JacksonFeature;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -62,7 +74,6 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
-import org.springframework.context.annotation.Profile;
 
 /**
  * @author shangyu.wh
@@ -72,6 +83,7 @@ import org.springframework.context.annotation.Profile;
 @Import({
   MetaServerInitializerConfiguration.class,
   JdbcConfiguration.class,
+  JdbcElectorConfiguration.class,
   RaftConfiguration.class
 })
 @EnableConfigurationProperties
@@ -321,27 +333,6 @@ public class MetaServerConfiguration {
               new NamedThreadFactory("MetaHandler-DefaultRequest"));
       defaultRequestExecutor.allowCoreThreadTimeOut(true);
       return defaultRequestExecutor;
-    }
-  }
-
-  @Configuration
-  public static class MetaPersistenceConfiguration {
-
-    @Bean
-    public RepositoryConfig repositoryConfig() {
-      return new RepositoryConfig();
-    }
-
-    @Bean
-    @Profile(SpringContext.META_STORE_API_JDBC)
-    public JdbcConfiguration jdbcConfiguration() {
-      return new JdbcConfiguration();
-    }
-
-    @Bean
-    @Profile(SpringContext.META_STORE_API_RAFT)
-    public RaftConfiguration raftConfiguration() {
-      return new RaftConfiguration();
     }
   }
 }

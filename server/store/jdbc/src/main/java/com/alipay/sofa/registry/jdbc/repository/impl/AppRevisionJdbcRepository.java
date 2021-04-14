@@ -22,7 +22,6 @@ import com.alipay.sofa.registry.jdbc.convertor.AppRevisionDomainConvertor;
 import com.alipay.sofa.registry.jdbc.domain.AppRevisionDomain;
 import com.alipay.sofa.registry.jdbc.exception.RevisionNotExistException;
 import com.alipay.sofa.registry.jdbc.mapper.AppRevisionMapper;
-import com.alipay.sofa.registry.jdbc.repository.JdbcRepository;
 import com.alipay.sofa.registry.jdbc.repository.batch.AppRevisionBatchQueryCallable;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
@@ -44,7 +43,7 @@ import org.springframework.beans.factory.annotation.Autowired;
  * @author xiaojian.xj
  * @version $Id: AppRevisionJdbcRepository.java, v 0.1 2021年01月17日 15:45 xiaojian.xj Exp $
  */
-public class AppRevisionJdbcRepository implements AppRevisionRepository, JdbcRepository {
+public class AppRevisionJdbcRepository implements AppRevisionRepository {
 
   private static final Logger LOG = LoggerFactory.getLogger("METADATA-EXCHANGE", "[AppRevision]");
 

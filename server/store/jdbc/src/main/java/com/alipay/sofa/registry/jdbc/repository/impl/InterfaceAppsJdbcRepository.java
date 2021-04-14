@@ -22,7 +22,6 @@ import com.alipay.sofa.registry.jdbc.config.MetadataConfig;
 import com.alipay.sofa.registry.jdbc.domain.InterfaceAppsIndexDomain;
 import com.alipay.sofa.registry.jdbc.exception.InterfaceAppQueryException;
 import com.alipay.sofa.registry.jdbc.mapper.InterfaceAppsIndexMapper;
-import com.alipay.sofa.registry.jdbc.repository.JdbcRepository;
 import com.alipay.sofa.registry.jdbc.repository.batch.InterfaceAppBatchQueryCallable;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
@@ -44,7 +43,7 @@ import org.springframework.util.CollectionUtils;
  * @author xiaojian.xj
  * @version $Id: InterfaceAppsJdbcRepository.java, v 0.1 2021年01月24日 19:57 xiaojian.xj Exp $
  */
-public class InterfaceAppsJdbcRepository implements InterfaceAppsRepository, JdbcRepository {
+public class InterfaceAppsJdbcRepository implements InterfaceAppsRepository {
 
   private static final Logger LOG = LoggerFactory.getLogger("METADATA-EXCHANGE", "[InterfaceApps]");
 
