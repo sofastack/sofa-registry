@@ -16,11 +16,20 @@
  */
 package com.alipay.sofa.registry.jdbc.config;
 
-import static com.alibaba.druid.pool.DruidDataSourceFactory.*;
+import static com.alibaba.druid.pool.DruidDataSourceFactory.PROP_DRIVERCLASSNAME;
+import static com.alibaba.druid.pool.DruidDataSourceFactory.PROP_INIT;
+import static com.alibaba.druid.pool.DruidDataSourceFactory.PROP_LOGABANDONED;
+import static com.alibaba.druid.pool.DruidDataSourceFactory.PROP_MAXACTIVE;
+import static com.alibaba.druid.pool.DruidDataSourceFactory.PROP_MAXWAIT;
+import static com.alibaba.druid.pool.DruidDataSourceFactory.PROP_MINIDLE;
+import static com.alibaba.druid.pool.DruidDataSourceFactory.PROP_PASSWORD;
+import static com.alibaba.druid.pool.DruidDataSourceFactory.PROP_REMOVEABANDONED;
+import static com.alibaba.druid.pool.DruidDataSourceFactory.PROP_REMOVEABANDONEDTIMEOUT;
+import static com.alibaba.druid.pool.DruidDataSourceFactory.PROP_URL;
+import static com.alibaba.druid.pool.DruidDataSourceFactory.PROP_USERNAME;
 
 import com.alibaba.druid.filter.logging.Slf4jLogFilter;
 import com.alibaba.druid.pool.DruidDataSourceFactory;
-import com.alipay.sofa.registry.jdbc.elector.MetaJdbcLeaderElector;
 import com.alipay.sofa.registry.jdbc.repository.batch.AppRevisionBatchQueryCallable;
 import com.alipay.sofa.registry.jdbc.repository.batch.AppRevisionHeartbeatBatchCallable;
 import com.alipay.sofa.registry.jdbc.repository.batch.InterfaceAppBatchQueryCallable;
@@ -28,11 +37,11 @@ import com.alipay.sofa.registry.jdbc.repository.impl.AppRevisionHeartbeatJdbcRep
 import com.alipay.sofa.registry.jdbc.repository.impl.AppRevisionJdbcRepository;
 import com.alipay.sofa.registry.jdbc.repository.impl.InterfaceAppsJdbcRepository;
 import com.alipay.sofa.registry.jdbc.repository.impl.ProvideDataJdbcRepository;
-import com.alipay.sofa.registry.store.api.elector.LeaderElector;
 import com.alipay.sofa.registry.store.api.meta.ProvideDataRepository;
 import com.alipay.sofa.registry.store.api.repository.AppRevisionHeartbeatRepository;
 import com.alipay.sofa.registry.store.api.repository.AppRevisionRepository;
 import com.alipay.sofa.registry.store.api.repository.InterfaceAppsRepository;
+import com.alipay.sofa.registry.store.api.spring.SpringContext;
 import com.alipay.sofa.registry.util.SystemUtils;
 import com.google.common.collect.Lists;
 import java.util.Arrays;
@@ -42,6 +51,7 @@ import javax.sql.DataSource;
 import org.apache.ibatis.session.SqlSessionFactory;
 import org.mybatis.spring.SqlSessionFactoryBean;
 import org.mybatis.spring.annotation.MapperScan;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -57,6 +67,9 @@ import org.springframework.transaction.support.TransactionTemplate;
  */
 @Configuration
 @EnableConfigurationProperties
+@ConditionalOnProperty(
+    value = SpringContext.PERSISTENCE_PROFILE_ACTIVE,
+    havingValue = SpringContext.META_STORE_API_JDBC)
 public class JdbcConfiguration {
 
   @Configuration
@@ -193,11 +206,6 @@ public class JdbcConfiguration {
     @Bean
     public AppRevisionHeartbeatRepository appRevisionHeartbeatJdbcRepository() {
       return new AppRevisionHeartbeatJdbcRepository();
-    }
-
-    @Bean
-    public LeaderElector leaderElector() {
-      return new MetaJdbcLeaderElector();
     }
 
     @Bean

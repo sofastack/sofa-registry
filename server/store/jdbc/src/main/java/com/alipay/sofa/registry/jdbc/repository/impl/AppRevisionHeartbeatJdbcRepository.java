@@ -21,7 +21,6 @@ import com.alipay.sofa.registry.jdbc.config.DefaultCommonConfig;
 import com.alipay.sofa.registry.jdbc.config.MetadataConfig;
 import com.alipay.sofa.registry.jdbc.convertor.AppRevisionDomainConvertor;
 import com.alipay.sofa.registry.jdbc.mapper.AppRevisionMapper;
-import com.alipay.sofa.registry.jdbc.repository.JdbcRepository;
 import com.alipay.sofa.registry.jdbc.repository.batch.AppRevisionHeartbeatBatchCallable;
 import com.alipay.sofa.registry.log.Logger;
 import com.alipay.sofa.registry.log.LoggerFactory;
@@ -49,8 +48,7 @@ import org.springframework.beans.factory.annotation.Autowired;
  * @author xiaojian.xj
  * @version $Id: AppRevisionHeartbeatJdbcRepository.java, v 0.1 2021年02月09日 17:14 xiaojian.xj Exp $
  */
-public class AppRevisionHeartbeatJdbcRepository
-    implements AppRevisionHeartbeatRepository, JdbcRepository {
+public class AppRevisionHeartbeatJdbcRepository implements AppRevisionHeartbeatRepository {
 
   private static final Logger LOG =
       LoggerFactory.getLogger("METADATA-EXCHANGE", "[AppRevisionHeartbeat]");

@@ -17,19 +17,13 @@
 package com.alipay.sofa.registry.store.api.repository;
 
 import com.alipay.sofa.registry.common.model.appmeta.InterfaceMapping;
-import com.alipay.sofa.registry.store.api.driver.RegistryRepository;
 import java.util.Set;
 
 /**
  * @author xiaojian.xj
  * @version $Id: InterfaceAppsRepository.java, v 0.1 2021年01月24日 19:33 xiaojian.xj Exp $
  */
-public interface InterfaceAppsRepository extends RegistryRepository {
-
-  @Override
-  default Class<?> getInterfaceClass() {
-    return InterfaceAppsRepository.class;
-  }
+public interface InterfaceAppsRepository {
 
   /**
    * get revisions by interfaceName

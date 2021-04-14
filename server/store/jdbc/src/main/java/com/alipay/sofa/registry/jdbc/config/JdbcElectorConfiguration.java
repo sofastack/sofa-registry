@@ -14,12 +14,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alipay.sofa.registry.jraft.config;
+package com.alipay.sofa.registry.jdbc.config;
 
-import com.alipay.sofa.registry.jraft.repository.impl.AppRevisionHeartbeatRaftRepository;
-import com.alipay.sofa.registry.jraft.repository.impl.InterfaceAppsRaftRepository;
-import com.alipay.sofa.registry.store.api.repository.AppRevisionHeartbeatRepository;
-import com.alipay.sofa.registry.store.api.repository.InterfaceAppsRepository;
+import com.alipay.sofa.registry.jdbc.elector.MetaJdbcLeaderElector;
+import com.alipay.sofa.registry.store.api.elector.LeaderElector;
 import com.alipay.sofa.registry.store.api.spring.SpringContext;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -28,25 +26,21 @@ import org.springframework.context.annotation.Configuration;
 
 /**
  * @author xiaojian.xj
- * @version $Id: JdbcConfiguration.java, v 0.1 2021年01月17日 16:28 xiaojian.xj Exp $
+ * @version $Id: JdbcElectorConfiguration.java, v 0.1 2021年04月14日 19:47 xiaojian.xj Exp $
  */
 @Configuration
 @EnableConfigurationProperties
 @ConditionalOnProperty(
     value = SpringContext.PERSISTENCE_PROFILE_ACTIVE,
-    havingValue = SpringContext.META_STORE_API_RAFT)
-public class RaftConfiguration {
+    havingValue = SpringContext.META_STORE_API_JDBC)
+public class JdbcElectorConfiguration {
 
   @Configuration
-  public static class RepositoryBeanConfiguration {
-    @Bean
-    public InterfaceAppsRepository interfaceAppsRaftRepository() {
-      return new InterfaceAppsRaftRepository();
-    }
+  public static class JdbcElectorBeanConfiguration {
 
     @Bean
-    public AppRevisionHeartbeatRepository appRevisionHeartbeatRaftRepository() {
-      return new AppRevisionHeartbeatRaftRepository();
+    public LeaderElector leaderElector() {
+      return new MetaJdbcLeaderElector();
     }
   }
 }

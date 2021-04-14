@@ -17,18 +17,12 @@
 package com.alipay.sofa.registry.store.api.repository;
 
 import com.alipay.sofa.registry.common.model.store.AppRevision;
-import com.alipay.sofa.registry.store.api.driver.RegistryRepository;
 
 /**
  * @author xiaojian.xj
  * @version $Id: AppRevisionRepository.java, v 0.1 2021年01月17日 13:54 xiaojian.xj Exp $
  */
-public interface AppRevisionRepository extends RegistryRepository {
-
-  @Override
-  default Class<?> getInterfaceClass() {
-    return AppRevisionRepository.class;
-  }
+public interface AppRevisionRepository {
 
   /**
    * persistence appRevision
